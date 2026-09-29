@@ -10,7 +10,7 @@ plus the eight starts of the band no list has - `0x536BF0`, `0x536EC0` (FH's
 finding) and six `Field_ModeTailKinds` slots (section 5). Each read to its
 last instruction with capstone and fuzzed through the scenario harness's
 field mode ([`scenario_harness.md`](scenario_harness.md) section 7) without
-edits to it: 306,000 rounds, 0 mismatches. PLACEHOLDER_CONTROLS
+edits to it: 306,000 rounds, 0 mismatches. 135 controls planted one at a time: 132 refused by a count, 2 by a crash (their near variants by a count), 1 equivalent (its near variant refused).
 Fuzz-only except the three the owner's routes enter (section 9).
 
 | Part | Functions | Reached through |
@@ -221,7 +221,8 @@ bits (0x1000 .. 0x8000, the pairs), `WorldMap_RecordIndex` below 12,
 `Inventory_Count` a byte of 99 at most (`ItemTrade_PickCount` loops for ever
 past 227, section 6), `MapView_GroundAt` within 0xC0 of a seeded ground two
 times in three (the step helpers compare it with the sprite's height,
-`Field_WayBlockedWide` with 0xC0); **`Task_Sleep`** escaping
+`Field_WayBlockedWide` with 0xC0), `MapView_SlopeAt` at 0x3F..0x41 half
+the time (the probes' `> 0x40`); **`Task_Sleep`** escaping
 `PartySet_ErrorLoop` after one frame (on the original's side through the
 copy's frame, 0x3C above the stand-in's return; on ours through a naked
 wrapper's saved frame and registers); and **one typed stand-in per table
@@ -266,9 +267,12 @@ the tail state and argument, the trade bytes, the object's state and SC
 `+9`.
 
 **Result (this worktree):** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=field_e2`,
-exit 0: **306,000 rounds over 51 functions (6,000 each), 2,198,464 calls to
-the stand-ins, 0 MISMATCHES**; 28,504 bytes of state (55 regions) at that
-run - the run after the ground buffer PLACEHOLDER_RESULT. Every handler of
+exit 0: **306,000 rounds over 51 functions (6,000 each), 2,217,320 calls to
+the stand-ins, 0 MISMATCHES**; 28,508 bytes of state (56 regions) - the
+final build, with the ground and slope stand-ins (the first full run, before
+them, was 2,198,464 calls, 0 mismatches). `BOF3X_SHADOW='*'` on the same
+build: exit 0, 970 self-test lines of 0 mismatches, `inject: 6604 ours, 0
+left original` (6,553 + 51). Every handler of
 the swapped tables was reached (the 17 call-table entries, the 7 hooks, the
 12 world-map hooks, the 65 triggers, the four mode-11 states, the trade's
 steps and `0x594060`). The subset switch `BOF3X_FE2_ONLY=first,count`
@@ -422,7 +426,145 @@ route returns from a battle; the dragon route's chapter is 8 or more).
 
 ## 10. Controls
 
-PLACEHOLDER_CONTROL_TABLE
+135 controls planted one at a time (`controls.py` in the session scratchpad: anchor, rebuild, `BOF3X_FE2_ONLY` = the function, 3,000 rounds, restore, rebuild): **132 refused by a count**, 2 refused by a crash of ours (each with a near variant refused by a count), 1 equivalent (its near variant refused). `W1` was not refused on the first pass - the slope stand-in never answered 0x40 - and was refused after `MapView_SlopeAt` was made to answer at the boundary (the table has the re-run).
+
+| Id | Function | Planted | Result |
+|---|---|---|---|
+| C1 | `Scenario_CallB` | CallB: the index and 6 | refused in 1,611 of 3,000 rounds |
+| T1 | `Field_AfterBattleTally` | Tally: the byte capped at 0x1D | refused in 128 of 3,000 rounds |
+| T2 | `Field_AfterBattleTally` | Tally: the threshold floor 6 | refused in 68 of 3,000 rounds |
+| T3 | `Field_AfterBattleTally` | Tally: the first flags take the 0xB count | refused in 8 of 3,000 rounds |
+| T4 | `Field_AfterBattleTally` | Tally: key 1 counted below 8 | refused in 345 of 3,000 rounds |
+| T5 | `Field_AfterBattleTally` | Tally: kind 0xA counted | refused in 1,784 of 3,000 rounds |
+| U1 | `Records_CountUnpaired` | CountUnpaired: counted at one pair | refused in 2,665 of 3,000 rounds |
+| U2 | `Records_CountUnpaired` | CountUnpaired: kind 5 | refused in 759 of 3,000 rounds |
+| K1 | `Records_CountUnpairedOfKind` | OfKind: +2 for +3 | refused in 1,715 of 3,000 rounds |
+| K2 | `Records_CountUnpairedOfKind` | OfKind: counted at one pair | refused in 546 of 3,000 rounds |
+| F1 | `Field_FaceMode11Object` | Face: (-, 0) 5 | refused in 242 of 3,000 rounds |
+| F2 | `Field_FaceMode11Object` | Face: request 8 | refused in 2,235 of 3,000 rounds |
+| F3 | `Field_FaceMode11Object` | Face: (0, -) 2 | refused in 247 of 3,000 rounds |
+| H1 | `Field_FloorHurt` | FloorHurt: kind 4 flags 0x40 | refused in 322 of 3,000 rounds |
+| H2 | `Field_FloorHurt` | FloorHurt: bit 4 cleared | refused in 1,568 of 3,000 rounds |
+| H3 | `Field_FloorHurt` | FloorHurt: a quarter exactly not counted | refused in 371 of 3,000 rounds |
+| H4 | `Field_FloorHurt` | FloorHurt: EquipCount value 9 | refused in 3,000 of 3,000 rounds |
+| A1 | `AreaMap_CellsAllWide` | CellsAll: (x-1, z+1) not read | refused in 613 of 3,000 rounds |
+| A2 | `AreaMap_CellsAllWide` | CellsAll: the corner with an x fraction of 0 only | refused in 259 of 3,000 rounds |
+| A3 | `AreaMap_CellsAllWide` | Cells: the mask 0xE0 | refused in 350 of 3,000 rounds |
+| W1 | `Field_WayBlockedWide` | WayBlocked: slope 0x40 counts | refused in 104 of 3,000 rounds |
+| W2 | `Field_WayBlockedWide` | WayBlocked: 0xBF | refused in 2 of 3,000 rounds |
+| W3 | `Field_WayBlockedWide` | WayBlocked: the corner probe direction 2 | refused in 162 of 3,000 rounds |
+| W4 | `Field_WayBlockedWide` | WayBlocked: the height put back through the old pointer | refused in 16 of 3,000 rounds |
+| W5 | `Field_WayBlockedWide` | WayBlocked: the last z probe at z + 2 | refused in 312 of 3,000 rounds |
+| N1 | `AreaMap_CellsNoneWide` | CellsNone: doors and 0x31 | not refused: equivalent (a 0x2n cell has bit 4 clear); near variant N1b refused |
+| N2 | `AreaMap_CellsNoneWide` | CellsNone: the corner filtered | refused in 7 of 3,000 rounds |
+| P1 | `Leader_Pose3C` | Pose3C: facing 6 | refused in 1,138 of 3,000 rounds |
+| S1 | `Leader_HopStart` | HopSetUp: pace + 1 | refused in 3,000 of 3,000 rounds |
+| S2 | `Leader_HopStart` | HopSetUp: +9 times 4 | refused in 2,939 of 3,000 rounds |
+| S3 | `Leader_HopStart` | HopSetUp: animation +7 | refused in 3,000 of 3,000 rounds |
+| L1 | `Leader_HopFlight` | HopFlight: +0xA 5 | refused in 645 of 3,000 rounds |
+| L2 | `Leader_HopFlight` | HopFlight: the CLUT word off the half way | refused in 2,355 of 3,000 rounds |
+| O1 | `Leader_HopPose` | HopPose: 6 - n | refused in 716 of 3,000 rounds |
+| O2 | `Leader_HopPose` | HopPose: 0x36 | refused in 233 of 3,000 rounds |
+| O3 | `Leader_HopPose` | HopPose: +9 = 2 | refused in 2,226 of 3,000 rounds |
+| E1 | `Leader_Pose3E` | Pose3E: 0x3E always | refused in 1,344 of 3,000 rounds |
+| E2 | `Leader_Pose3E` | Pose3E: al 1 on no tick | refused in 1,028 of 3,000 rounds |
+| V1 | `Leader_StepUp` | StepUp: the rise added | refused in 1,639 of 3,000 rounds |
+| V2 | `Leader_StepUp` | StepUp: one lower | refused in 1,230 of 3,000 rounds |
+| V3 | `Leader_StepUp` | StepUp: the actor +0x8A | refused in 1,764 of 3,000 rounds |
+| V4 | `Leader_StepUp` | FollowAndTick: every eighth frame | refused in 1,010 of 3,000 rounds |
+| V5 | `Leader_StepUp` | FollowAndTick: bit 2 | refused in 951 of 3,000 rounds |
+| Q1 | `Leader_Pose34` | Pose34: the CLUT word 1 | refused in 3,000 of 3,000 rounds |
+| D1 | `Leader_StepDown` | StepDown: equal heights step | refused in 4 of 3,000 rounds |
+| D2 | `Leader_StepDown` | StepDown: the first ground kept | refused in 1,148 of 3,000 rounds |
+| G1 | `Leader_HopStartAfterTick` | HopAfterTick: the tick inverted | refused in 3,000 of 3,000 rounds |
+| B1 | `Leader_HopFall` | HopFall: +3 = 1 | refused in 645 of 3,000 rounds |
+| B2 | `Leader_HopFall` | HopFall: the palette off the half way | refused in 2,355 of 3,000 rounds |
+| R1 | `Leader_Rise` | Rise: up 0x11 | refused in 3,000 of 3,000 rounds |
+| R2 | `Leader_Rise` | Rise: at the floor not | refused in 3 of 3,000 rounds |
+| K3 | `Leader_Sink` | Sink: down 0xF | refused in 1,160 of 3,000 rounds |
+| K4 | `Leader_Sink` | Sink: +2 = 1 | refused in 1,860 of 3,000 rounds |
+| X1 | `Leader_TurnBack` | TurnBack: +0x20 = -16 | refused in 3,000 of 3,000 rounds |
+| X2 | `Leader_TurnBack` | TurnBack: 0x3C | refused in 2,049 of 3,000 rounds |
+| Y1 | `PartySet_ErrorLoop` | ErrorLoop: y 0x75 | refused in 3,000 of 3,000 rounds |
+| Y2 | `PartySet_ErrorLoop` | ErrorLoop: the ids swapped | refused in 2,986 of 3,000 rounds |
+| M1 | `Mode11_ObjectFrame` | ObjectFrame: held + 1 | refused in 3,000 of 3,000 rounds |
+| M2 | `Mode11_ObjectFrame` | ObjectFrame: the second record | refused in 3,000 of 3,000 rounds |
+| M3 | `Mode11_ObjectStart` | ObjectStart: +0x3C from z | refused in 3,000 of 3,000 rounds |
+| M4 | `Mode11_ObjectControl` | ObjectControl: divisor 0x21 | refused in 732 of 3,000 rounds |
+| M5 | `Mode11_ObjectControl` | ObjectControl: the pace swapped | refused in 75 of 3,000 rounds |
+| M6 | `Mode11_ObjectControl` | ObjectControl: x at 0x60000 far | refused in 36 of 3,000 rounds |
+| M7 | `Mode11_ObjectControl` | ObjectControl: >> 12 | refused in 724 of 3,000 rounds |
+| M8 | `Mode11_ObjectMove` | ObjectMove: +9 - 2 | refused in 1,451 of 3,000 rounds |
+| M9 | `Mode11_ObjectEnd` | ObjectEnd: request 1 | refused in 1,540 of 3,000 rounds |
+| M10 | `Mode11_ObjectHalt` | ObjectHalt: bit 15 not held | refused in 98 of 3,000 rounds |
+| M11 | `Mode11_ObjectHalt` | ObjectHalt: +9 cleared | refused in 2,978 of 3,000 rounds |
+| Z1 | `Mode11_ObjectDraw` | ObjectDraw: v 0x9C | refused in 1,168 of 3,000 rounds |
+| Z2 | `Mode11_ObjectDraw` | ObjectDraw: the radius * 3 | refused in 1,114 of 3,000 rounds |
+| Z3 | `Mode11_ObjectDraw` | ObjectDraw: x - 7 | refused in 2,245 of 3,000 rounds |
+| Z4 | `Mode11_ObjectDraw` | ObjectDraw: y signed, not a qword | refused in 1,126 of 3,000 rounds |
+| Z5 | `Mode11_ObjectDraw` | ObjectDraw: the half by a shift | refused in 557 of 3,000 rounds |
+| Z6 | `Mode11_ObjectDraw` | ObjectDraw: y from the x float | refused in 2,256 of 3,000 rounds |
+| J1 | `Field_ObjectTrigger` | Trigger: +0x86 0xFE | refused in 3,000 of 3,000 rounds |
+| J2 | `Field_ObjectTrigger` | Trigger: bit 5 | refused in 1,500 of 3,000 rounds |
+| J3 | `Field_ObjectTrigger` | Trigger: slot 2 | refused in 1,502 of 3,000 rounds |
+| I1 | `Scenario_CellHook` | CellHook: 0 not an answer | refused in 9 of 3,000 rounds |
+| I2 | `Scenario_CellHook` | CellHook: Sprite_Current not put back | refused in 56 of 3,000 rounds |
+| I3 | `Scenario_CellHook` | CellHook: slot 3 tested | refused by a crash of ours (the planted bug calls address 0 / walks past the record); a count variant below |
+| L3 | `FieldTail_LoadBank` | TailLoad: file 0x31D | refused in 412 of 3,000 rounds |
+| L4 | `FieldTail_LoadBank` | TailLoad: bank 0x2C3 | refused in 455 of 3,000 rounds |
+| L5 | `FieldTail_LoadBank` | TailLoad: Cond_ByteFE 3 | refused in 216 of 3,000 rounds |
+| L6 | `FieldTail_DropInMove` | TailDropIn: timer 0x11 | refused in 161 of 3,000 rounds |
+| L7 | `FieldTail_DropInMove` | TailDropIn: 0x30 | refused in 200 of 3,000 rounds |
+| L8 | `FieldTail_DropInMove` | TailDropIn: argument 5 no area | refused in 17 of 3,000 rounds |
+| L9 | `FieldTail_HealAndMenu` | TailHeal: 0x16 | refused in 121 of 3,000 rounds |
+| L10 | `FieldTail_HealAndMenu` | TailHeal: state 11 nothing | refused in 47 of 3,000 rounds |
+| L11 | `FieldTail_HealAndMenu` | TailHeal: pass flags 0x1E | refused in 170 of 3,000 rounds |
+| L12 | `FieldTail_HealAndMenu` | TailHeal: Game_Mode 3 | refused in 66 of 3,000 rounds |
+| L13 | `FieldTail_Message` | TailMessage: 0xD9 | refused in 1,291 of 3,000 rounds |
+| L14 | `FieldTail_WorldMapHook` | TailWorld: the index & 7 | refused in 977 of 3,000 rounds |
+| L15 | `FieldTail_FlagMessage` | TailFlag: 0x4173 | refused in 583 of 3,000 rounds |
+| L16 | `FieldTail_FlagMessage` | TailFlag: the byte 1 | refused in 392 of 3,000 rounds |
+| L17 | `FieldTail_FlagMessage` | TailFlag: 7 bytes copied | refused in 583 of 3,000 rounds |
+| L18 | `FieldTail_StoryWarp` | TailWarp: area step | refused in 103 of 3,000 rounds |
+| L19 | `FieldTail_StoryWarp` | TailWarp: flag 0x20 | refused in 235 of 3,000 rounds |
+| L20 | `FieldTail_StoryWarp` | TailWarp: z kept from x | refused in 339 of 3,000 rounds |
+| Q2 | `Field_ObjectTriggerByKind` | TriggerByKind: flags + 1 | refused in 3,000 of 3,000 rounds |
+| FR1 | `MapCell_DrawFrames` | DrawFrames: skip + 4 | refused by a crash of ours (the planted bug calls address 0 / walks past the record); a count variant below |
+| FR2 | `MapCell_DrawFrames` | DrawFrames: the threshold equal stops | refused in 167 of 3,000 rounds |
+| FR3 | `MapCell_DrawFrames` | DrawFrames: y0 one cell off | refused in 1,678 of 3,000 rounds |
+| FR4 | `MapCell_DrawFrames` | QuadVertex: y from byte 1 | refused in 1,678 of 3,000 rounds |
+| SH1 | `MapCell_DrawShaded` | DrawShaded: tpage 0x94 | refused in 1,672 of 3,000 rounds |
+| SH2 | `MapCell_DrawShaded` | DrawShaded: green >> 9 | refused in 1,672 of 3,000 rounds |
+| SH3 | `MapCell_DrawShaded` | DrawShaded: semi >> 30 | refused in 1,484 of 3,000 rounds |
+| SH4 | `MapCell_DrawShaded` | DrawShaded: the last draw mode dtd 1 | refused in 1,997 of 3,000 rounds |
+| SP1 | `MapCell_DrawSpinning` | DrawSpinning: x sign 0xF800 | refused in 1,430 of 3,000 rounds |
+| SP2 | `MapCell_DrawSpinning` | DrawSpinning: slot 7 | refused in 1,175 of 3,000 rounds |
+| SP3 | `MapCell_DrawSpinning` | DrawSpinning: angle y & 0x7FF | refused in 1,204 of 3,000 rounds |
+| SP4 | `MapCell_DrawSpinning` | DrawSpinning: x bits 10, 11 dropped | refused in 1,565 of 3,000 rounds |
+| SP5 | `MapCell_DrawSpinning` | DrawSpinning: the centre z from the high word | refused in 1,672 of 3,000 rounds |
+| CC1 | `AreaMap_ClearCell` | ClearCell: kind 10 | refused in 112 of 3,000 rounds |
+| CC2 | `AreaMap_ClearCell` | ClearCell: row + 2 | refused in 225 of 3,000 rounds |
+| CC3 | `AreaMap_ClearCell` | ClearCell: kind 0x31 | refused in 225 of 3,000 rounds |
+| CC4 | `AreaMap_ClearCell` | ClearCell: the byte 1 | refused in 3,000 of 3,000 rounds |
+| IT1 | `ItemTrade_Open` | TradeOpen: frame before cursor | refused in 3,000 of 3,000 rounds |
+| IT2 | `ItemTrade_OpenStart` | TradeOpenStart: quantity 2 | refused in 2,978 of 3,000 rounds |
+| IT3 | `ItemTrade_OpenWait` | TradeOpenWait: state 2 | refused in 1,517 of 3,000 rounds |
+| IT4 | `ItemTrade_Run` | TradeRun: hand y 0x50 | refused in 2,029 of 3,000 rounds |
+| IT5 | `ItemTrade_Run` | TradeRun: bit 6 draws | refused in 299 of 3,000 rounds |
+| IT6 | `ItemTrade_PickItem` | TradePick: wrap to count - 2 | refused in 473 of 3,000 rounds |
+| IT7 | `ItemTrade_PickItem` | TradePick: 99 held allowed | refused in 1 of 3,000 rounds |
+| IT8 | `ItemTrade_PickItem` | TradePick: step 2 on full | refused in 113 of 3,000 rounds |
+| IT9 | `ItemTrade_PickItem` | TradePick: cancel answer 0 | refused in 545 of 3,000 rounds |
+| IT10 | `ItemTrade_PickCount` | TradeCount: -11 | refused in 149 of 3,000 rounds |
+| IT11 | `ItemTrade_PickCount` | TradeCount: cap 0x62 | refused in 457 of 3,000 rounds |
+| IT12 | `ItemTrade_PickCount` | TradeCount: the sound inverted | refused in 3,000 of 3,000 rounds |
+| IT13 | `ItemTrade_Confirm` | TradeConfirm: sound 0x104 | refused in 120 of 3,000 rounds |
+| IT14 | `ItemTrade_Confirm` | TradeConfirm: hand step 35 | refused in 393 of 3,000 rounds |
+| IT15 | `ItemTrade_Confirm` | TradeConfirm: the names at step 1 | refused in 1,497 of 3,000 rounds |
+| IT16 | `ItemTrade_Confirm` | TradeConfirm: 12 bytes of the name | refused in 745 of 3,000 rounds |
+| N1b | `AreaMap_CellsNoneWide` | CellsNone: doors and 0x23 (near variant of N1) | refused in 108 of 3,000 rounds |
+| I3b | `Scenario_CellHook` | CellHook: the hook answer 2 | refused in 1,147 of 3,000 rounds |
+| FR1b | `MapCell_DrawFrames` | DrawFrames: the next texture word | refused in 1,678 of 3,000 rounds |
 
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
