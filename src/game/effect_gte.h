@@ -8,7 +8,7 @@
 // All four are cdecl and read their arguments from the stack; none reads a
 // register it was not handed. The world point they take (`point`) is three
 // dwords of the engine's world space: x, z and the height, the height's
-// integer part in its high word (docs/effect_gte.md section 2).
+// integer part in its high word (docs/effect_gte.md section 1).
 #pragma once
 
 extern "C" {

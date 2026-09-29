@@ -2,7 +2,7 @@
 // functions 0x494060..0x494270 of the cut (analysis/round13_cut.tsv), taken
 // before the round's 35 effect groups so that every one of them calls these by
 // name. Each read with capstone to its last instruction (docs/effect_gte.md
-// section 2); the labelling tool's "effect kind 186" for them was a hypothesis
+// section 1); the labelling tool's "effect kind 186" for them was a hypothesis
 // by address, and they are not a kind's code but helpers the kinds call.
 //
 // Every call out goes through the scenario harness (SH_CALL), so the start-up
