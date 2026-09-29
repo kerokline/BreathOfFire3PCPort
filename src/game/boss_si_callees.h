@@ -13,6 +13,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace boss_si {
 namespace at {
 
@@ -55,10 +60,10 @@ constexpr U kTurnClose = 0x4376A0;        // () the turn closed
 constexpr U kTurnChance = 0x4376F0;       // () a chance of 0x904AA8 bit 7 and a task
 
 // --- the Arwan task's stack table (BossArwanFx_Dispatch) ---------------------
-constexpr U kFxStart = 0x43F630;          // BossArwanFx_Start
-constexpr U kFxCount = 0x43F6C0;          // BossArwanFx_Count
-constexpr U kFxFinish = 0x43F750;         // BossArwanFx_Finish
-constexpr U kFxDone = 0x43FE80;           // MagicFx_DoneAndFree (round nine's, ours)
+constexpr U kFxStart = bof3::addr::BossArwanFx_Start;          // BossArwanFx_Start
+constexpr U kFxCount = bof3::addr::BossArwanFx_Count;          // BossArwanFx_Count
+constexpr U kFxFinish = bof3::addr::BossArwanFx_Finish;         // BossArwanFx_Finish
+constexpr U kFxDone = bof3::addr::MagicFx_DoneAndFree;           // MagicFx_DoneAndFree (round nine's, ours)
 
 }  // namespace at
 }  // namespace boss_si

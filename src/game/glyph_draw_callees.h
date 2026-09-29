@@ -7,10 +7,15 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace glyph_draw {
 
 // A bare `ret` (24 callers), called twice by the handler with a 1 pushed.
-constexpr std::uint32_t kRetOnly = 0x437CC0;
+constexpr std::uint32_t kRetOnly = bof3::addr::BareRet;
 
 // The glyph texture cache: 128 entries of 0x14 bytes from 0x7C9F50
 // (Font_TexCache): u16 glyph +0, u16 clut +2, u32 the CLUT row's generation

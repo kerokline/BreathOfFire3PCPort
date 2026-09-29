@@ -80,7 +80,7 @@ constexpr std::uint32_t kPollenOffsets = 0x65A998;    // PollenMote_Offsets: (dx
 // the tables (S30's MagicFx_EndWhenChildrenDone, BattleFx_Finish, S24's
 // MagicFx_EndWithChildren, BattleFx_FreeTask, S37's Combustion_Wait, S11's
 // MagicFx_UncountAndFree, C2's HolocaustBeam_Grow).
-constexpr std::uint32_t kScriptUntilDone = 0x43EC10;  // engine: the script ticked, the sprite queued, +2 on at the done flag
+constexpr std::uint32_t kScriptUntilDone = bof3::addr::BattleFx_ScriptUntilDone;  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(at::kOwner); }

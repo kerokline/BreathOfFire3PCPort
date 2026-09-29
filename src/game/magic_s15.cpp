@@ -138,7 +138,7 @@ void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 // The phase handlers of other units a table holds (docs/magic_s15.md
 // section 3): the engine's below by address; S11's MagicFx_UncountAndFree and
 // S12's MagicFx_CountDownRelease, ours now, named in the tables.
-constexpr std::uint32_t kScriptUntilDone = 0x43EC10;  // engine: the script ticked, the sprite queued, +2 on at the done flag
+constexpr std::uint32_t kScriptUntilDone = bof3::addr::BattleFx_ScriptUntilDone;  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);

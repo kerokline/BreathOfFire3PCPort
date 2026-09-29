@@ -13,6 +13,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace boss_sd {
 namespace at {
 
@@ -69,8 +74,8 @@ constexpr U kLeaderZ = 0x802D78;          // +0x38
 constexpr U kLeaderGround = 0x802D7E;     // +0x3E
 
 // --- the literals the set-ups store (their own functions and BH's) ----------------
-constexpr U kBareRetZero = 0x43C9F0;      // BareRetZero (BH)
-constexpr U kExitActor0Bit40 = 0x440820;  // BossHook_ExitActor0Bit40 (BH)
+constexpr U kBareRetZero = bof3::addr::BareRetZero;      // BareRetZero (BH)
+constexpr U kExitActor0Bit40 = bof3::addr::BossHook_ExitActor0Bit40;  // BossHook_ExitActor0Bit40 (BH)
 
 // --- the callees nobody owns -------------------------------------------------------
 constexpr U kEndWin = 0x446DE0;           // () the end phase, step 1

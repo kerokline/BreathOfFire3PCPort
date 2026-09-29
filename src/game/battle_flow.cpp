@@ -37,9 +37,14 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 }  // namespace
 
 const Callees kOriginals = {
-    {Fn<Handler>(0x42E470), Fn<Handler>(0x42E990), Fn<Handler>(0x42F070), Fn<Handler>(0x42F220),
-     Fn<Handler>(0x4302B0), Fn<Handler>(0x4311E0)},
-    {Fn<Handler>(0x4352A0), Fn<Handler>(0x435350), Fn<Handler>(0x4378B0), Fn<Handler>(0x4357D0)},
+    // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2): the
+    // same values by name. BattleBossFx_Dispatch is named, not ours (engine code of no
+    // round-eleven group, symbols.toml), so symbols.gen.h gives it as a pointer macro.
+    {Fn<Handler>(bof3::addr::BattleStart_Dispatch), Fn<Handler>(bof3::addr::BattleInput_Dispatch),
+     Fn<Handler>(bof3::addr::BattleCommit_Dispatch), Fn<Handler>(bof3::addr::Battle_ActionPhase),
+     Fn<Handler>(bof3::addr::BattleRoundEnd_Step), Fn<Handler>(bof3::addr::BattleEnd_Step)},
+    {Fn<Handler>(bof3::addr::BattleFx_Dispatch), Fn<Handler>(bof3::addr::BattleMagicFx_Dispatch),
+     Fn<Handler>(bof3::addr::BattleMagicRow_Run), BattleBossFx_Dispatch},
     BattleTask_Create, Battle_RollDrops, Battle_DrawNumber,
     Sprite_UpdateScreen, Sprite_EnsureAnimation, Sprite_ScriptTick, Sprite_ScriptTickOnce, Rand,
     Fn<void (__cdecl*)(unsigned)>(kRemoveFromTurnOrder), Fn<void (__cdecl*)(unsigned)>(kSetFlagBit),

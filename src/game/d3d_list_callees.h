@@ -5,11 +5,16 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
+
 namespace d3d_list {
 
 using U = std::uint32_t;
 
-constexpr U kRetOnly = 0x437CC0;
+constexpr U kRetOnly = bof3::addr::BareRet;
 constexpr U kDevice = 0x7CC350;        // D3d_Device
 constexpr U kRenderFlags = 0x6C3A4C;   // Gfx_RenderFlags, byte: bit 0 the software surfaces
 constexpr U kDrawEnable = 0x7DED17;    // Gfx_DrawEnable, byte (0x7DED16 the byte before it)

@@ -239,7 +239,7 @@ extern "C" void __cdecl BossMutant_Dispatch(unsigned passed) {
 // 0x64CE74, +0xF4 = BossMutant_Hook, +0xF8 = 0x64CE98; Sprite_Current +1 = 2;
 // jmp Sprite_ScriptTick (its al the answer).
 extern "C" unsigned char __cdecl BossMutant_Enter(void) {
-    PointEnemy(0x64CE74, 0x43A610, 0x64CE98);
+    PointEnemy(0x64CE74, bof3::addr::BossMutant_Hook, 0x64CE98);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -256,7 +256,7 @@ extern "C" void __cdecl BossMutant_Hook(unsigned code) { HookTable("BossMutant_H
 
 // original 0x43A620: Boss_SetupTable[17]: BattleHook_End = Boss17_End,
 // BattleHook_Exit = BossHook_ExitActor0Bit40, BattleHook_Event = BareRetZero.
-extern "C" void __cdecl Boss17_Setup(void) { StoreHooks(0x43A640, at::kExitActor0Bit40, at::kBareRetZero); }
+extern "C" void __cdecl Boss17_Setup(void) { StoreHooks(bof3::addr::Boss17_End, at::kExitActor0Bit40, at::kBareRetZero); }
 
 // original 0x43A640: the end hook: the win (0x904AE8 bit 1) sets the field's
 // move-script counter 0 to 0x14 and jumps to the end phase's step 1; else step 2.
@@ -274,7 +274,7 @@ extern "C" void __cdecl BossClaw_Dispatch(unsigned passed) {
 // 0x35 set. Then +0xFC = 0x64CF04, +0xF4 = BossClaw_Hook, +0xF8 = 0x64CF58,
 // Sprite_Current +1 = 1, Sprite_EnsureAnimation(2), jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossClaw_Enter(void) {
-    RestoreOrMark(0x35, 0x64CF04, 0x43A740, 0x64CF58);
+    RestoreOrMark(0x35, 0x64CF04, bof3::addr::BossClaw_Hook, 0x64CF58);
     Sprite_Current[1] = 1;
     BH_CALL(Sprite_EnsureAnimation)(2);
     return BH_CALL(Sprite_ScriptTick)();
@@ -291,7 +291,7 @@ extern "C" void __cdecl BossCawer_Dispatch(unsigned passed) {
 // original 0x43A790: BossCawer_Steps 0: BossClaw_Enter's body with flag 0x36,
 // +0xFC = 0x64CF10, +0xF4 = BossCawer_Hook, +0xF8 = 0x64CF60.
 extern "C" unsigned char __cdecl BossCawer_Enter(void) {
-    RestoreOrMark(0x36, 0x64CF10, 0x43A830, 0x64CF60);
+    RestoreOrMark(0x36, 0x64CF10, bof3::addr::BossCawer_Hook, 0x64CF60);
     Sprite_Current[1] = 1;
     BH_CALL(Sprite_EnsureAnimation)(2);
     return BH_CALL(Sprite_ScriptTick)();
@@ -309,7 +309,7 @@ extern "C" void __cdecl BossPatrio_Dispatch(unsigned passed) {
 // BossPatrio_Hook, +0xF8 = 0x64CF68; Sprite_Current +1 = 2 (no animation),
 // jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossPatrio_Enter(void) {
-    RestoreOrMark(0x37, 0x64CF1C, 0x43A8F0, 0x64CF68);
+    RestoreOrMark(0x37, 0x64CF1C, bof3::addr::BossPatrio_Hook, 0x64CF68);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -353,7 +353,7 @@ extern "C" unsigned char __cdecl BossDodai_Enter(void) {
     } else {
         SetCell(Enemy() + 0xFC, 0x64CF28);
     }
-    SetCell(Enemy() + 0xF4, 0x43AB40);
+    SetCell(Enemy() + 0xF4, bof3::addr::BossDodai_Hook);
     SetCell(Enemy() + 0xF8, 0x64CF70);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
@@ -409,7 +409,7 @@ extern "C" void __cdecl BossDodai_HitSound(unsigned) {
 
 // original 0x43ABA0: Boss_SetupTable[18]: End = Boss18_End, Exit = Boss18_Exit,
 // Event = Boss18_Event.
-extern "C" void __cdecl Boss18_Setup(void) { StoreHooks(0x43AC50, 0x43AD10, 0x43ABC0); }
+extern "C" void __cdecl Boss18_Setup(void) { StoreHooks(bof3::addr::Boss18_End, bof3::addr::Boss18_Exit, bof3::addr::Boss18_Event); }
 
 // original 0x43ABC0: the event hook (EventAreaFight above).
 extern "C" unsigned char __cdecl Boss18_Event(unsigned code) { return EventAreaFight(code); }
@@ -424,7 +424,7 @@ extern "C" void __cdecl Boss18_Exit(void) { ExitAreaFight(0); }
 
 // original 0x43AD60: Boss_SetupTable[19]: End = Boss19_End, Exit =
 // Boss19_Exit, Event = Boss19_Event.
-extern "C" void __cdecl Boss19_Setup(void) { StoreHooks(0x43AE10, 0x43AED0, 0x43AD80); }
+extern "C" void __cdecl Boss19_Setup(void) { StoreHooks(bof3::addr::Boss19_End, bof3::addr::Boss19_Exit, bof3::addr::Boss19_Event); }
 
 // original 0x43AD80: Boss18_Event's body.
 extern "C" unsigned char __cdecl Boss19_Event(unsigned code) { return EventAreaFight(code); }
@@ -437,7 +437,7 @@ extern "C" void __cdecl Boss19_Exit(void) { ExitAreaFight(1); }
 
 // original 0x43AF20: Boss_SetupTable[20]: End = Boss20_End, Exit =
 // Boss20_Exit, Event = Boss20_Event.
-extern "C" void __cdecl Boss20_Setup(void) { StoreHooks(0x43AFD0, 0x43B080, 0x43AF40); }
+extern "C" void __cdecl Boss20_Setup(void) { StoreHooks(bof3::addr::Boss20_End, bof3::addr::Boss20_Exit, bof3::addr::Boss20_Event); }
 
 // original 0x43AF40: Boss18_Event's body.
 extern "C" unsigned char __cdecl Boss20_Event(unsigned code) { return EventAreaFight(code); }
@@ -459,7 +459,7 @@ extern "C" void __cdecl BossEmitai_Dispatch(unsigned passed) {
 // original 0x43B2A0: BossEmitai_Steps 0: +0xFC = 0x64D0A0, +0xF4 =
 // BossEmitai_Hook, +0xF8 = 0x64D0B8; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossEmitai_Enter(void) {
-    PointEnemy(0x64D0A0, 0x43B360, 0x64D0B8);
+    PointEnemy(0x64D0A0, bof3::addr::BossEmitai_Hook, 0x64D0B8);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -494,7 +494,7 @@ extern "C" void __cdecl BossGolem_Dispatch(unsigned passed) {
 // original 0x43B390: BossGolem_Steps 0: +0xFC = 0x64D0AC, +0xF4 =
 // BossGolem_Hook, +0xF8 = 0x64D0C0; Sprite_Current +1 = 2; jmp Sprite_ScriptTick.
 extern "C" unsigned char __cdecl BossGolem_Enter(void) {
-    PointEnemy(0x64D0AC, 0x43B3D0, 0x64D0C0);
+    PointEnemy(0x64D0AC, bof3::addr::BossGolem_Hook, 0x64D0C0);
     Sprite_Current[1] = 2;
     return BH_CALL(Sprite_ScriptTick)();
 }
@@ -506,7 +506,7 @@ extern "C" void __cdecl BossGolem_Hook(unsigned code) { HookTable("BossGolem_Hoo
 
 // original 0x43B3E0: Boss_SetupTable[21]: End = Boss21_End, Exit =
 // Boss21_Exit, Event = Boss21_Event.
-extern "C" void __cdecl Boss21_Setup(void) { StoreHooks(0x43B730, 0x43B480, 0x43B400); }
+extern "C" void __cdecl Boss21_Setup(void) { StoreHooks(bof3::addr::Boss21_End, bof3::addr::Boss21_Exit, bof3::addr::Boss21_Event); }
 
 // original 0x43B400: the event hook: phase 3 - every actor 0..10 that
 // Battle_ActorIsOut answers al 0 for gets bit 0x10: members 0..2 in their
@@ -557,7 +557,7 @@ extern "C" void __cdecl BossGarr_Dispatch(unsigned passed) {
 // Sprite_SetAnimationBank(0x153); Sprite_Current (read after) +0x2A = 0;
 // Sprite_SetAnimation(0). Its eax is the last call's (no caller reads it).
 extern "C" void __cdecl BossGarr_Enter(void) {
-    PointEnemy(0x64D158, 0x43B5A0, 0x64D164);
+    PointEnemy(0x64D158, bof3::addr::BossGarr_Hook, 0x64D164);
     Sprite_Current[1] = 1;
     BH_CALL(Sprite_SetAnimationBank)(0x153);
     Sprite_Current[0x2A] = 0;

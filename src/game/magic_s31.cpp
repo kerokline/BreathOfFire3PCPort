@@ -135,7 +135,7 @@ void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 // the tables (S38's MagicFx_CountDownFlag10, S30's
 // MagicFx_EndWhenChildrenDone, S11's MagicFx_UncountAndFree, S15's
 // ChillRay_Grow / _Shrink, S12's MagicFx_CountDownRelease).
-constexpr std::uint32_t kScriptUntilDone = 0x43EC10;  // engine: the script ticked, the sprite queued, +2 on at the done flag
+constexpr std::uint32_t kScriptUntilDone = bof3::addr::BattleFx_ScriptUntilDone;  // engine: the script ticked, the sprite queued, +2 on at the done flag
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);

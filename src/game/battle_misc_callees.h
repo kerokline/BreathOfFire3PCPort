@@ -13,6 +13,9 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+// Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
+// every constant here whose target has a name in symbols.toml reads
+// bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
 
 namespace battle_misc {
 
@@ -60,9 +63,9 @@ constexpr U kPartyPages = 0x904605;          // 3 bytes: page, a byte, cursor (t
 constexpr U kBanners = 0x93B8E0;
 constexpr U kBannerCurrent = 0x93B8C0;
 constexpr U kBannerKinds = 0x904AE9;
-constexpr U kRetOnly = 0x437CC0;             // a bare ret: kinds 0, 3 and 4
-constexpr U kBannerKind1 = 0x44A740;         // kind 1's tick (timer, then NoneOfKind(1))
-constexpr U kBannerKind2 = 0x44A7B0;         // kind 2's tick (timer, then NoneOfKind(4))
+constexpr U kRetOnly = bof3::addr::BareRet;             // a bare ret: kinds 0, 3 and 4
+constexpr U kBannerKind1 = bof3::addr::BattleBanner_TickKind1;         // kind 1's tick (timer, then NoneOfKind(1))
+constexpr U kBannerKind2 = bof3::addr::BattleBanner_TickKind2;         // kind 2's tick (timer, then NoneOfKind(4))
 // The message queue: 16 entries of 8 (+0, +1 bytes, +4 a dword), its write
 // and read indices (PSX 0x801EB520, 0x801EC298 / 0x801EBE74).
 constexpr U kQueue = 0x93C2C0;

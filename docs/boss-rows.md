@@ -19,7 +19,11 @@ python tools/boss_rows.py --exe .../bof3/BOF3.exe --analysis .../analysis \
 
 The flags are `area_rows.py`'s (`--exe`, `--analysis`, `--sibling`,
 `--symbols`, `--unit`, `--clones`, `--groups`, `--group-size` default 50,
-`--quiet`). It writes `analysis/boss_rows.tsv` (a unit a line: root, how
+`--quiet`, and since round eleven's cleanup `--no-write`: a read-only run
+that writes neither TSV - the cut is recut from the current `symbols.toml`,
+so a run once the functions are ours would overwrite the canonical
+`boss_funcs_0928_4554.tsv`, as three groups saw,
+[`takeover-queue-round11.md`](takeover-queue-round11.md) section 4). It writes `analysis/boss_rows.tsv` (a unit a line: root, how
 reached, span, counts, its `.data` tables, its frontier, the sibling's file
 for a set-up, its group, every function) and `analysis/boss_funcs.tsv` (a
 function a line: start, size, the units that reach it, `exclusive` /

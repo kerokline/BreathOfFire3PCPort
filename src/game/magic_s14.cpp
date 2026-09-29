@@ -124,7 +124,7 @@ void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
 // steps +1 on; 0x437CC0 is a bare ret (a step that waits for a child to move
 // +2 on).
 constexpr std::uint32_t kStepOn = 0x492750;
-constexpr std::uint32_t kNothing = 0x437CC0;
+constexpr std::uint32_t kNothing = bof3::addr::BareRet;
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
