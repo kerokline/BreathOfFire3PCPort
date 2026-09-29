@@ -13,7 +13,7 @@ constexpr std::uint32_t kSndBufVolume = 0x5A6C60;     // (buffer, level): a Dire
 
 // Data.
 constexpr std::uint32_t kStoryFlags = 0x904030;       // the story flags (Cond_Flags' row 0x14): flag 0x1C held by
-                                                      // Effect_HoldFlag1C, cleared by effect kind 4 (0x469FB0)
+                                                      // Effect_HoldFlag1C, cleared by effect kind 4 (0x469FB0 EffectKind04_HoldTick)
 constexpr std::uint32_t kLeaderSlot = 0x904060;       // u8: the formation group Party_PlaceInFormation adds to
 constexpr std::uint32_t kFormation = 0x904AAC;        // u8: the event battle's formation (EventBattle_Records[n] +1)
 constexpr std::uint32_t kKeyItems = 0x904554;         // 32 bytes: the key-item ids (Inventory_IdLists[4])

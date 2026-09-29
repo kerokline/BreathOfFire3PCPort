@@ -79,7 +79,7 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
 }  // namespace
 
 // original 0x469FE0: Effect_FindFree; with a record (al not 0xFF), its +0 1
-// (in use), +5 4 (the kind: Effect_KindHandlers[4] = 0x469FB0, which counts
+// (in use), +5 4 (the kind: Effect_KindHandlers[4] = 0x469FB0 EffectKind04_HoldTick, which counts
 // +9 down a frame and at 0 clears story flag 0x1C and releases the record),
 // +9 the argument's low byte (the frames); then Flags_Set(0x904030, 0x1C).
 // No record: nothing, the flag not set either. Areas 49, 77, 86, 112, 117,
