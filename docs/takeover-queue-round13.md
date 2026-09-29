@@ -8,6 +8,9 @@ The cut is a **draft**: it must be regenerated at round twelve's tip once
 wave two (FC1, FC2, FC3, FE1, FE2, FO, FS) has merged (section 6). Listed as
 [`IDEAS.md`](IDEAS.md) I28; sketched in
 [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) section 9.
+**Read section 9 first**: it joins this draft to the labelling pass
+([`labelling-pass.md`](labelling-pass.md)), settles the harness from the
+code, and replaces section 5's waves and section 8's questions 1 and 2.
 
 ## 0. The question, and the answer in one paragraph
 
@@ -376,3 +379,105 @@ hand read); the `Effect_Spawn` scan is a linear sweep with restarts, and a
 kind stored by other means (script data, a computed byte) is not seen;
 the draft has not been regenerated at round twelve's tip, which does not
 exist yet.
+
+## 9. Joined to the labelling pass: one effect-engine round
+
+Written 2026-09-29 by the coordinator on `phase-3/round13-plan` (this
+branch merged with `phase-3/labelling-pass`), from the two tables in the
+session scratchpad (`round13/round13_cut_draft.tsv`,
+`labelling/out/labels.tsv`; the join is `merged/effect_engine_draft.tsv`).
+Still a draft, still to be regenerated at round twelve's tip.
+
+**The two sets are one engine and do not overlap.** The labelling pass
+read catalog parts 2 and 7 (2,234 starts) and proposes `effect objects`
+for 1,071 of them, 1 a switch case; this draft is part 5's 629, 2 of them
+cases. No entry is in both. Together: **1,697 takeable starts, 254,509
+bytes** (this draft's read sizes, the labelling table's catalog sizes), in
+the same address runs, interleaved:
+
+| Addresses | This draft | Labelling, `evidence` | Labelling, `hypothesis` | Together |
+|---|--:|--:|--:|--:|
+| `0x433640` | 0 | 0 | 1 | 1 |
+| `0x462B00..0x46FFB0` | 95 | 86 | 15 | 196 |
+| `0x470300..0x477E30` | 127 | 51 | 12 | 190 |
+| `0x4780D0..0x47FD80` | 55 | 122 | 12 | 189 |
+| `0x4801F0..0x487FE0` | 47 | 151 | 12 | 210 |
+| `0x488020..0x48FF00` | 95 | 125 | 20 | 240 |
+| `0x490090..0x4941E0` | 0 | 51 | 14 | 65 |
+| `0x4FD2E0..0x503FA0` | 10 | 150 | 3 | 163 |
+| `0x5043B0..0x50BFF0` | 69 | 94 | 7 | 170 |
+| `0x50C0D0..0x516A90` | 52 | 139 | 5 | 196 |
+| `0x528CD0..0x52CFE0` (EKF) | 63 | 0 | 0 | 63 |
+| `0x594060..0x594D50` (EKP) | 14 | 0 | 0 | 14 |
+| **All** | **627** | **969** | **101** | **1,697** |
+
+So the catalog's part (5 "area", 2 "boot table", 7 "unlabelled") says how
+a start got its label, not what it belongs to, and a round cut by part
+splits a kind from its dispatcher. **Open question 2 is answered by the
+join**: the dispatchers are in the labelling set, and a group takes its
+kinds whole - the entry in `Effect_KindHandlers`, the state table, the
+states and their callees.
+
+**The harness: `scenario_harness`, with one shape added.** Both reports
+were half right, read against the code at `61be26e` and wave two's
+branches:
+
+- `scenario_harness` holds `Effect_Objects` as a region (`at::kEffects`,
+  20 x 0x80) but `Sprite_Current` is only ever one of the first four
+  `Sprite_Objects` records: `Fix` and the disturbance's case 4 both set it
+  through `SpriteRecord(k % 4)`, and `kSprite`'s span draw writes `+1..+4`
+  of whatever it points at (`src/game/scenario_harness.cpp`). So no shape
+  runs a state on an effect record - section 5's finding stands.
+- Wave two's groups already take effect kinds on it all the same, each by
+  its own seed: FC1 (`field_c1_fuzz.cpp`: `Sprite_Current = Eff(...)` half
+  the time, `sprite_span = 20`, a checked `Effect_Objects` index in ours)
+  and FC2 (`field_c2.cpp`: kinds 0x30, 0x34, 0x3A, 0x41, a checked
+  `EffectRecord`). Read on their branches at `ad206f0` and `bf1e08d`, not
+  merged yet.
+
+So stage A (EKH) is a fold-back of what FC1 and FC2 wrote, as round
+eleven's cleanup folded its groups' stand-ins: a shape `kEffect`
+(`Sprite_Current` one of the 20 records, `+5` the group's kind, `+1` /
+`+2` below the state table's length, the disturbance moving it among
+effect records and not onto a sprite). It needs wave two merged first -
+its model is their code - and it touches one file no wave-two group owns
+after the merge. `area_harness` is not used.
+
+**Waves**, about 350 each, by address so that a kind stays whole; the
+group cut inside each (about fifty a group, at kind boundaries, callee
+first) is made at round twelve's tip with `band_rows.py --byte-tables`
+over the joined table:
+
+| Wave | Addresses | Starts | This draft's groups inside |
+|---|---|--:|---|
+| EKH | stage A: the `kEffect` shape | 0 | |
+| EW1 | `0x433640`, `0x462B00..0x46FFB0`, EKF, EKP | 274 | EK1, EK2, EKF, EKP (world 0's cluster, section 5) |
+| EW2 | `0x470300..0x47FD80` | 379 | EK3, EK4, EK5, part of EK6 |
+| EW3 | `0x4801F0..0x487FE0` | 210 | the rest of EK6 |
+| EW4 | `0x488020..0x4941E0` | 305 | EK7, EK8 |
+| EW5 | `0x4FD2E0..0x50BFF0` | 333 | ES1, part of ES2 (kind 0x18) |
+| EW6 | `0x50C0D0..0x516A90` | 196 | the rest of ES2, ES3 (kind 0x18) |
+
+EW3 and EW6 are small enough to run as one wave of 406. The labelling
+pass's waves EO1..EO3 are these addresses without this draft's rows; its
+FL, MW and BX (field core, menus, battle and the remainder, 977 starts)
+are the rounds after, unchanged. Its `community` rows (the faerie
+village, [`labelling-pass.md`](labelling-pass.md) section 5) belong to BX's
+remainder and want a recorded route.
+
+**What this leaves open for the owner** (replacing questions 1 and 2):
+
+1. Round thirteen as the whole effect engine (1,697 in six waves after
+   EKH), or this draft's 627 first and the rest as round fourteen. The
+   join argues for the whole: the same tables, the same shape, one
+   rebinding.
+2. The 101 `hypothesis` rows: read before the cut (the labelling pass's
+   own tier is about 94% right at `evidence`, 73% at `hypothesis`), or let
+   each group's brief say "a row that is not effect code goes back to the
+   coordinator".
+
+**Not verified here**: the join is by entry address only - no unit
+(state table) was computed for the labelling rows, so the wave bounds are
+address bounds and a kind may straddle one; FC1's and FC2's seeds were
+read, not run; the labelling table's one `effect objects` row at
+`0x433640` lies in the battle band and is `hypothesis`.
