@@ -7,7 +7,8 @@ BE4 are ours (`src/game/battle_e4.cpp`, shadow name `battle_e4`), each read
 to its last instruction with capstone and fuzzed through the boss harness as
 an engine group ([`boss_harness.md`](boss_harness.md) section 10) without
 edits to it: one `Run`, 60 clones (the 56 and four driven again through the
-dispatcher that reaches them), 360,000 rounds, 0 mismatches. CONTROLS_LINE
+dispatcher that reaches them), 360,000 rounds, 0 mismatches; 50 controls planted, 48 refused by a count and two equivalent
+mutants whose near variants are refused (section 6).
 Nine of the 56 are entered by the owner's `dragonTransform.txt` (section
 11); the rest are fuzz-only.
 
@@ -450,7 +451,78 @@ entries between 1,156 and 3,457 calls).
 
 ## 6. Controls
 
-CONTROLS_TABLE
+One change at a time in `battle_e4.cpp`, anchored on a unique string, by a
+script that plants, rebuilds, runs `BOF3X_SHADOW=battle_e4` with
+`BOF3X_BE4_RUN` set to the clones named, restores and rebuilds (the
+scratchpad's `controls.py`, 2026-09-29; counts in this worktree). **50
+planted, 48 refused by a count, two equivalent mutants** - each with a near
+variant planted and refused:
+
+- **23** (`top > 0x71` for `top > 0x72` in `EquipItemPick`'s page down): at
+  top 0x72 both branches give top 0x79 and cursor + 7, so no input tells
+  them apart; **50** (`top > 0x73`) differs at 0x73 and is refused.
+- **28** (`v >> 1` for `v / 2` in `Battle_PartyDefenceMean`): `v` is a
+  16-bit mean plus a u16, never negative, so the two agree on every input;
+  **49** (`(v + 1) / 2`) is refused.
+
+Control 33 (`BattleEquip_Preview`'s shift by `c & 7`) is refused because
+the seed draws character bytes past 7 for that function (section 5); control
+10 (the turn order's two stores swapped) is refused by the one front value,
+0x16, whose slot is the cursor itself. The four `via` rows share their
+clone's controls (20, 22, 25 refused on both rows).
+
+| # | Planted in ours | Clones run | Refused |
+|--:|---|---|---|
+| 1 | DrawTileTint: green from the blue byte | `4446E0` | 5,976 rounds |
+| 2 | DimScreen: height 241.0 | `444660` | 6,000 rounds |
+| 3 | EnemyOutpaces: highest >= pace | `445600` | 639 rounds |
+| 4 | PrevTarget: 9 for the top bound | `4457F0` | 11 rounds |
+| 5 | HitOrMissParty: <= for < | `446110` | 24 rounds |
+| 6 | HitOrMissEnemy: the miss clears bit 0x20 | `4461B0` | 575 rounds |
+| 7 | PartyDefenceMean: +0xA8 | `4463E0` | 6,000 rounds |
+| 8 | SetHpChange: + 4 | `446540` | 290 rounds |
+| 9 | ReloadPartyRecords: 0x28 dwords | `446600` | 4,993 rounds |
+| 10 | OrderPushFront: the slot stored before the cursor | `446700` | 175 rounds |
+| 11 | AutoBattle_FillCommands: command 2 | `446720` | 3,417 rounds |
+| 12 | TurnPair case 3: +x from a | `446770,4467C0` | 2,043 rounds |
+| 13 | MemberReactRoll: bit 14 for 15 | `446810` | 509 rounds |
+| 14 | WriteBackMember: & 0x60A1 | `446A80` | 1,520 rounds |
+| 15 | PickEnemyTarget: the first of equals | `446B00` | 34 rounds |
+| 16 | WakeRoll: 75 from 4 on | `446CB0` | 673 rounds |
+| 17 | ReturnItem: full at 98 | `446D90` | 1,852 rounds |
+| 18 | EnterStep2: step 1 | `446E00` | 6,000 rounds |
+| 19 | SetupForMember: the hand kind 9 | `447F40` | 6,000 rounds |
+| 20 | SideBegin: the next row's flags | `448BA0` | 12,000 rounds |
+| 21 | EquipMenu: option 0 at sub-state + 2 | `448CA0` | 207 rounds |
+| 22 | SlotCursor: wraps past 4 | `448DE0,4491D0` | 1,062 rounds |
+| 23 | EquipItemPick: page down caps from 0x72 | `448FC0` | **not refused** |
+| 24 | EquipUsePick: bit 0x2000 | `4491D0` | 202 rounds |
+| 25 | EquipUseKind: >> 3 | `4493E0` | 4,003 rounds |
+| 26 | EquipTargetDispatch: the table one entry on | `449480` | 6,000 rounds |
+| 27 | EquipPickMember: left as-is cue 0x102 | `449680` | 1,024 rounds |
+| 28 | PartyDefenceMean: >> 1 for / 2 (equivalent: the sum is never negative) | `4463E0` | **not refused** |
+| 29 | EquipCommit: member +1 = 3 | `449830` | 5,989 rounds |
+| 30 | EquipSideDispatch: through the state-8 table | `4498F0` | 6,000 rounds |
+| 31 | Apply: a preview equal to the slot swapped too | `449A00` | 5,897 rounds |
+| 32 | Preview: not-equippable 2 | `449BB0` | 2,275 rounds |
+| 33 | Preview: shift by c & 7 (equivalent under the seeds) | `449BB0` | 771 rounds |
+| 34 | RemoveSlot: slot 0 taken off too | `449C70` | 1,934 rounds |
+| 35 | RefreshMembers: 0x1C of the +0xC0 block | `449A00,449C70` | 7,489 rounds |
+| 36 | OpenChange: record 17 +2 = 5 | `449E90` | 6,000 rounds |
+| 37 | Escape_Roll: the second chance by 2 | `44A010` | 633 rounds |
+| 38 | Escape_Begin: command 4 gives the item back | `44A150` | 5,787 rounds |
+| 39 | Escape_StepBack: + 1 | `44A2E0` | 4,030 rounds |
+| 40 | Escape_Failed: flag 0x10 | `44A380` | 2,993 rounds |
+| 41 | Escape_WinDispatch: through the fail table | `44A450` | 4,013 rounds |
+| 42 | Escape_Leave: seven tints | `44A470` | 4,030 rounds |
+| 43 | Escape_Chance: + 8 at the third try | `44A520` | 2,757 rounds |
+| 44 | MemberNameToText: 9 bytes | `44A910` | 6,000 rounds |
+| 45 | BannerAddLine: nine to a row | `44AA90` | 4,839 rounds |
+| 46 | Escape_End: F3Divisor 1 | `44A4F0` | 4,030 rounds |
+| 47 | EquipCancel: word +4 0xFF39 | `4498A0` | 6,000 rounds |
+| 48 | EquipTargetBegin: Battle_DefaultTarget(4) | `4494A0` | 2,039 rounds |
+| 49 | PartyDefenceMean: (v + 1) / 2 (the near variant of 28) | `4463E0` | 2,995 rounds |
+| 50 | EquipItemPick: page down caps from 0x74 (the near variant of 23) | `448FC0` | 47 rounds |
 
 ## 7. Latent defects (Capcom's, kept)
 
