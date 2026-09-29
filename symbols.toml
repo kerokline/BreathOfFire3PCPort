@@ -81180,3 +81180,39 @@ ctype = "unsigned long"
 count = 4
 status = "hypothesis"
 evidence = "read 2026-09-29 (round twelve group FC1): EffectKind30_Run 0x46BB30 jmp by +1, unchecked: EffectKind30_Start, then 0x46BBF0, 0x46BD10, 0x46BDA0 (group FC2); the first three set +1 to 1, 2 or 3 and 1; where the table ends is not established (the dwords after point into .text for a while) - the count is what the fuzz exercises. docs/field_c1.md."
+
+[[func]]
+pc = 0x494060
+name = "EffectGte_LoadMapCamera"
+ret = "long"
+params = "void"
+impl = "src/game/effect_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen stage-A group EGT, capstone to the last instruction), 0x494060..0x49410A (0xAB bytes), cdecl, no arguments, every call relative and out: Gte_RotMatrix(Camera_Angles, a stack MATRIX); then the s16 vector (MapView_FocusX >> 1, MapView_FocusZ >> 1, MapView_Elevation >> 1) (shr, the low words stored) through Gte_ApplyMatrix(the MATRIX, it, a stack VECTOR); the MATRIX translation = (s16 Camera_ShiftX + x, s16 Camera_ShiftY + y, s16 Camera_Distance + z + 0x1194), all read after that call; Gte_RotMatrix(Camera_Angles, the MATRIX) again, Gte_SetRotMatrix, Gte_SetTransMatrix. eax at the ret is the translation z (Gte_SetTransMatrix's last load). PSX twin 0x801B0E10 (call-anchored, unnamed in the sibling). Labelled effect kind 186 by address only: a helper, 113 call sites. docs/effect_gte.md."
+
+[[func]]
+pc = 0x494110
+name = "EffectGte_ProjectPoint"
+ret = "float *"
+params = "const long *point, float *out"
+impl = "src/game/effect_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group EGT, capstone to the last instruction), 0x494110..0x494174 (0x65 bytes), cdecl: the point's three dwords read (z, x, height), the s16 vector ((x sar 9) - 0x4000, (z sar 9) - 0x4000, -((height sar 16) / 2) by cdq / sub / sar / neg); Gte_RotTransPers(vector, out, the slot of out, the slot of point) - the screen x and y floats to out[0..1], the depth cue into the caller-owned argument slot; Gte_StoreDepthF(out + 2). eax at the ret is out + 2. PSX twin 0x801B0EFC (call-anchored). 266 call sites; the whelpBoss route's trace enters it (10,207 calls). docs/effect_gte.md."
+
+[[func]]
+pc = 0x494180
+name = "EffectGte_SetDiagonalOne"
+ret = "short *"
+params = "short *matrix"
+impl = "src/game/effect_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group EGT), 0x494180..0x4941AE (0x2F bytes), cdecl, no calls: eax = the argument; words +0 = 1, +2 +4 +6 = 0, +8 = 1, +0xA +0xC +0xE = 0, +0x10 = 1, in that order. The PSX twin 0x801B0F5C (call-anchored) stores 0x1000 (addiu v0, zero, 0x1000; read in the sibling's generated overlay code): the PC port's 1 is not the GTE's identity (docs/effect_gte.md section 5). 7 call sites, each followed by Gte_RotMatrixX / Y / Z on the same matrix. docs/effect_gte.md."
+
+[[func]]
+pc = 0x4941E0
+name = "EffectGte_ProjectSize"
+ret = "long"
+params = "const long *point, const short *size, short *out"
+impl = "src/game/effect_gte.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group EGT, capstone to the last instruction), 0x4941E0..0x494270 (0x91 bytes), cdecl: the point's camera vector as EffectGte_ProjectPoint builds it, Gte_RotTrans(vector, a stack VECTOR, the slot of point); then with depth the VECTOR's z: out[0] = low word of (s16 size[0] * 1000) idiv depth, out[1] likewise from size[1], read after out[0] is written. eax at the ret is the second quotient. A depth of 0 faults (idiv): ours aborts. PSX twin 0x801B0FD0 (call-anchored). 42 call sites. docs/effect_gte.md."

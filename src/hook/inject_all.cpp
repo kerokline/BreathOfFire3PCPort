@@ -237,6 +237,7 @@
 #include "game/field_e1.h"
 #include "game/field_o.h"
 #include "game/field_c1.h"
+#include "game/effect_gte.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -890,6 +891,11 @@ void InjectAll() {
                                 // ScenarioHarnessFh_Inject (none of its thirteen is FC1's). config_text.cpp patches
                                 // operands inside 0x461800 (DIV-0015 / DIV-0017), which ours reads in place at each
                                 // call: order does not matter
+    EffectGte_Inject();         // round 13 stage-A group EGT (0x494060..0x494270: the map camera into the GTE, a
+                                // world point projected, a matrix's diagonal of ones, a size at a point's depth):
+                                // its clones' calls re-aimed at the scenario harness's recorders; every caller
+                                // that is ours calls it by the address it had, so order does not matter; no
+                                // module patches bytes inside its four (DIVERGENCE.md, cheats.cpp)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
