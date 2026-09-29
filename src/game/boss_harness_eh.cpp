@@ -104,8 +104,12 @@ const Control kControls[] = {
     {2, 0x42F640, 0x18, 0x03, 0x04, "kStep: 0x904AA1 = 4, not 3 (the via run's copy too)"},
     {3, 0x453A90, 0x2A, 0x95, 0x94, "kHelper: sete, not setne (the answer)"},
     {4, 0x441A30, 0x3C, 0x01, 0x02, "kMember: Sprite_Current +2 = 2, not 1"},
-    {5, 0x598DC0, 0x1D, 0x03, 0x02, "kWindow dispatch: by the record's +2, not +3"},
-    {6, 0x42F5E0, 0x3, 0xA3, 0xA2, "kDispatch state_cell: by 0x904AA2, not 0x904AA3"},
+    // 5 is not a byte: the stack table's entry 1 aimed at entry 2's handler (Copy). A
+    // byte control there (by the record's +2, not +3) indexes past the three
+    // entries with a random byte and faults instead of counting.
+    // (by 0x904AA2 instead faults: that byte is not drawn below five) - the load
+    // of 0x904AA3 made a store of al (0): always entry 0, and the byte zeroed
+    {6, 0x42F5E0, 0x2, 0xA0, 0xA2, "kDispatch state_cell: the byte stored, not read (entry 0 always)"},
     {7, 0x42D8C0, 0xD2, 0xDC, 0xD8, "the engine's Crt_sprintf: the other format"},
     {8, 0x4457F0, 0x7, 0x03, 0x04, "kHelper: cmp bl, 4, not 3 (the side's bound)"},
     {9, 0x42F5F0, 0x24, 0x01, 0x02, "kStep: window 3's +0x13 (0x8031F3) = 2, not 1"},
@@ -123,7 +127,10 @@ void* Copy(const char* name, U base, U size, const bh::CallSite* sites, int n, c
         if (had != imms[i].value)
             bof3::Fatal("boss_harness_eh: %s +0x%X holds 0x%X, not 0x%X", name, (unsigned)imms[i].offset, (unsigned)had,
                         (unsigned)imms[i].value);
-        const U to = static_cast<U>(reinterpret_cast<std::uintptr_t>(RouteTo(had)));
+        // control 5: the stack table's entry 1 aimed at entry 2's handler
+        const U aim = g_control == 5 && base == 0x598DC0 && had == 0x598E10 ? 0x598E50 : had;
+        if (aim != had) bof3::Log("shadow      boss_harness_eh: control 5 planted (kWindow dispatch: entry 1 is 0x598E50's)");
+        const U to = static_cast<U>(reinterpret_cast<std::uintptr_t>(RouteTo(aim)));
         std::memcpy(copy + imms[i].offset, &to, sizeof to);
     }
     for (const Control& c : kControls) {
