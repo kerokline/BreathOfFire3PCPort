@@ -239,6 +239,7 @@
 #include "game/field_o.h"
 #include "game/field_c1.h"
 #include "game/effect_gte.h"
+#include "game/effect_1f.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -903,6 +904,12 @@ void InjectAll() {
                                 // group's inject goes after it, whose self-test copies 0x462BC0 (E1A), 0x46F2B0,
                                 // 0x46F7D0 (E1D), 0x4FD470 (E5A), 0x500D20 (E5B), 0x479970 (E2E), 0x4857C0 (E3C),
                                 // 0x472770 (E2A) from the image (docs/scenario_harness.md section 8.8)
+    Effect1F_Inject();          // round 13 group E1F (0x52A6C0..0x52D07C: the extra-slot menu on effect record 6,
+                                // the scaled sprite pass, the effect records' reset, the kind points, game mode 8's
+                                // steps, UiSprite_SetMode / UiSprite_Draw): its clones' calls re-aimed at the
+                                // scenario harness's recorders; after ScenarioHarnessEkh_Inject (none of its eight
+                                // is E1F's); no module patches bytes inside its fifteen (DIVERGENCE.md, cheats.cpp,
+                                // widescreen.cpp)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
