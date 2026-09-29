@@ -74,8 +74,8 @@ constexpr std::uint32_t kStreak = 0x3C;
 // rotation and translation set from Camera_Angles and the map focus (no
 // arguments), and a world point (x, z, height << 16) projected into a
 // primitive's vertex (docs/magic_c2.md section 5).
-constexpr std::uint32_t kSetMapCamera = 0x494060;
-constexpr std::uint32_t kProjectPoint = 0x494110;
+constexpr std::uint32_t kSetMapCamera = bof3::addr::EffectGte_LoadMapCamera;
+constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
 // Other units' functions (docs/magic_c2.md section 6) are ours now and called
 // by name: the engine's MagicFx_WaitOwnerAnim, S38's MagicFx_CountDownFlag10,
 // S37's MagicFx_FreeCurrentRecord.

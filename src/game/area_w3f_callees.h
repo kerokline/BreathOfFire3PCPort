@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // EffectGte_* (round thirteen group EGT)
+
 namespace area_w3f {
 namespace at {
 
@@ -134,11 +136,11 @@ constexpr std::uint32_t kCellDelta = 0x66971C;
 
 // 0x494060 (no arguments): sets the map camera up for a draw (magic_c2.cpp's
 // kSetMapCamera). Engine; no group's.
-constexpr std::uint32_t kSetMapCamera = 0x494060;
+constexpr std::uint32_t kSetMapCamera = bof3::addr::EffectGte_LoadMapCamera;
 // 0x494110 (const long* point, float* vertex): projects a world point into a
 // vertex of three dwords (two floats and a depth) at its second argument
 // (magic_s32.cpp's kProjectPoint). Engine; no group's.
-constexpr std::uint32_t kProjectPoint = 0x494110;
+constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
 
 }  // namespace at
 }  // namespace area_w3f

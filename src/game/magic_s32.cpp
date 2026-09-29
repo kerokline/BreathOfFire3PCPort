@@ -87,8 +87,8 @@ constexpr unsigned kSpiralPoint = 0x34;
 // projected into a vertex (two floats and a depth), and the sign of the cross
 // product of three projected vertices, truncated by _ftol (docs/magic_c2.md
 // section 5 reads the first two).
-constexpr std::uint32_t kSetMapCamera = 0x494060;
-constexpr std::uint32_t kProjectPoint = 0x494110;
+constexpr std::uint32_t kSetMapCamera = bof3::addr::EffectGte_LoadMapCamera;
+constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
 constexpr std::uint32_t kFacing = 0x4941B0;
 
 unsigned char* Sc() { return Sprite_Current; }
