@@ -469,6 +469,13 @@ class World:
         v, t, k = self.units[i]
         return '%s %s %d (0x%06X)' % (t, UNIT_TABLES[t], k, v)
 
+    def own_name(self, base):
+        """A symbols.toml data item named at a table's base, or at base + 4 /
+        + 8 (a table read as base - 4 * k: Field_ObjectTriggers at 0x662E20 is
+        indexed from 0x662E1C, WorldMap_FieldHooks' last dword)."""
+        return next((self.data_name(b) for b in (base, base + 4, base + 8)
+                     if self.data_name(b) and '+' not in self.data_name(b)), None)
+
     def table_name(self, ts, cell):
         n = self.data_name(cell)
         if n:
@@ -520,8 +527,7 @@ class World:
             # the table's own name: a data item starting at its base (or at
             # base + 4, a table read as base - 4); a name that only covers
             # the cell may be a neighbour's count run long (EffectKind18_States)
-            tn = next((self.data_name(b) for b in (base, base + 4, base + 8)
-                       if self.data_name(b) and '+' not in self.data_name(b)), None)
+            tn = self.own_name(base)
             c = (classify(LABEL_CLASS, 'Table ' + tn) or classify(NAME_CLASS, tn)) if tn else None
             weak = False
             if not c and readers:
@@ -881,7 +887,7 @@ def main():
             vals = tvals[base]
             cnt = collections.Counter(vals)
             _, readers = w.table_readers(base, base)
-            wr.writerow(['0x%06X' % base, w.table_name(base, base) or '', len(vals), len(cnt),
+            wr.writerow(['0x%06X' % base, w.own_name(base) or w.table_name(base, base) or '', len(vals), len(cnt),
                          sum(cnt[b] for b in bare if b in cnt), sum(c - 1 for c in cnt.values() if c > 1),
                          sum(1 for v in cnt if len(holders[v]) > 1), sum(1 for v in cnt if v in boot),
                          sum(1 for v in cnt if w.known.get(v, ('', '', ''))[2] == 'ours'),
