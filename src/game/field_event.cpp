@@ -48,7 +48,7 @@ const Callees kOriginals = {
     Area_ZoneAt, Rand, Party_Count, Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned)>(0x535310),
     Fn<unsigned char (__cdecl*)(unsigned)>(0x589330),
     Flags_Test, Sprite_SetAnimationBank, Field_MemberSprite, Field_PartyLoad, Sprite_ReleaseTint, Sprite_LoadPalette,
-    Field_PartyPosition, Fn<void (__cdecl*)(long, long, unsigned)>(0x533690),
+    Field_PartyPosition, Fn<void (__cdecl*)(long, long, unsigned)>(bof3::addr::Field_LeaderPlaceOffset),
     Party_ClearActive, Field_LeaderFrame, Field_MemberFrame,
     reinterpret_cast<const std::uint32_t*>(at::kPendingJumps),
     Party_ClearAll, Sprite_SetTint, Field_MemberTimers,

@@ -79888,3 +79888,513 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group FC3): FieldCore_Recoil jmp by Sprite_Current +3: 0x526BA0, 0x526D30; another table's words (0x5288A0..) follow. docs/field_c3.md."
+
+# --- round twelve group FE1 (docs/field_e1.md): 0x52D080..0x533BA0 ---
+
+[[func]]
+pc = 0x52D080
+name = "FieldPanel_DrawHeader"
+psx = 0x801E0F28
+ret = "void"
+params = "int x, int y"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D080..0x52D0B7 (0x38 bytes): cdecl: 0x52CF60(0, 1); 0x52CFE0 panel sprites 0 at (x + 8, y) and 1 at (x + 0x108, y), slot 1. 16 E8 sites, all Capcom's (the panel states 0x466BE0..0x4670C0, 0x529960..0x52A0A0). The pair is the catalog's (pairs_propagated call), not a sibling name. PSX twin 0x801E0F28 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52D0C0
+name = "FieldPanel_DrawKindIcon"
+psx = 0x801E0FA4
+ret = "void"
+params = "int x, int y, unsigned kind"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D0C0..0x52D13A (0x7B bytes): cdecl: 0x52CF60(1, 1); panel sprite 2 at (x, y); unless the kind byte is 0xFF the primitive's +0x16 = ((kind >> 4) + 0x1EB) << 6 | kind & 0xF, +0x14 = (kind & 3) << 6, +0x15 = (kind >> 2) * 0x28 as a byte. eax is left as the path leaves it; each of its 18 Capcom call sites writes eax before reading it. PSX twin 0x801E0FA4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52D140
+name = "FieldPanel_DrawKindRow"
+psx = 0x801E105C
+ret = "void"
+params = "unsigned kind, unsigned count, unsigned row"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D140..0x52D31C (0x1DD bytes): cdecl, every argument read as a byte: sprites 3, 4, 5 at positions by the row (six bytes the code stores on its stack); the kind's 16-byte name into the text scratch 0x904BA0 (0x16 from 0x669CD8, 0xFF eight question marks and a NUL, else the 22-byte record 0x656FF8 + kind * 22) drawn at (0x70, 0x45 - row * 20); unless 0xFF, the count and 0x52CE60(kind, count) printed by the format 0x64E324 and drawn at (0x27 - row * 25, 0x73), (0xE7 + row * 25, 0x73). 15 Capcom call sites. PSX twin 0x801E105C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52D320
+name = "FieldPanel_DrawTotal"
+psx = 0x801E1378
+ret = "void"
+params = "int x, int y"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D320..0x52D55C (0x23D bytes): cdecl: 0x52CF60(3, 1), sprites 6 and 7; the total 0x52CED0 against 13 thresholds built on the stack (the first it is below is the rank, to 0x9045F4); the rank's 4-byte record (also stack-built): its sprite at (x + 0x1D, y + 0x1D), sprite 0x48 once or twice after; the total printed by 0x64ADD8 at (x + 0x3D, y + 9). The last threshold is 0xFFFF against a below-compare: a total of 0xFFFF walks the stack past the table (ours aborts). 12 Capcom call sites. PSX twin 0x801E1378 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52D560
+name = "FieldPanel_DrawMessage"
+psx = 0x801E1684
+ret = "void"
+params = "int x, int y, unsigned id"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D560..0x52D5BA (0x5B bytes): cdecl: 0x52CF60(3, 1), sprite 0xC at (x, y); unless the id's word is 0xFFFF Text_DrawAt(x + 0xA, y + 8, 0, 0xFF, MessagePools + u16[MessagePools + id * 2]). 10 Capcom call sites. PSX twin 0x801E1684 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52D5C0
+name = "FieldPanel_DrawShade"
+psx = 0x801E1734
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D5C0..0x52D60C (0x4D bytes): 0x52CF60(4, 2); Gpu_SetTile at Gfx_PacketNext, colour 0x20 0x20 0x20, (0, 0), 320.0 x 240.0 floats, Gpu_SetSemiTrans(p, 1), Gfx_CommitPrim(2, 0x1C). 18 Capcom sites, 8 of them tail jumps. PSX twin 0x801E1734 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52D610
+name = "FieldPanel_DrawBox3"
+psx = 0x801E17B0
+ret = "void"
+params = "int x, int y"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D610..0x52D74A (0x13B bytes): cdecl: Menu_DrawBox(x, y + 1, 0x64, 0x38, 0x80, the style byte 0x903A5A pushed as eax); 0x52CF60(9, 1); the frame of sprites 0x25..0x28, 0x30..0x32 and two 0x468950 sides; three script-pool messages by the words 0x8035FA / 0x8035FC / 0x8035FE. Called by 0x528C20, 0x528CD0, 0x528DA0 (Capcom's). PSX twin 0x801E17B0 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52D750
+name = "FieldPanel_DrawBox2"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D750..0x52D875 (0x126 bytes): cdecl: FieldPanel_DrawBox3's shape wider (0xB3 x 0x42, 15 top pieces, 21 bottom), two messages by 0x8035F8 / 0x803602. Called by 0x528E70, 0x528EC0, 0x528EF0 (Capcom's). docs/field_e1.md."
+
+[[func]]
+pc = 0x52D880
+name = "Inventory_Holds38To4DAt99"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D880..0x52D8B8 (0x39 bytes): no calls: counts the slots of the consumables' lists (ids 0x904154, counts 0x904354, 128) whose id is one of 0x38..0x4D and count 99; al 1 at 22 or more (setge; eax 0 or 1). One site, 0x528B05 in Capcom's 0x528A90, tests al. Also one of scenario_harness_fh's thirteen. docs/field_e1.md."
+
+[[func]]
+pc = 0x52D8C0
+name = "FieldPanel_DrawBlink"
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52D8C0..0x52D8EB (0x2C bytes): while the byte 0x939A28 and Frame_Counter bit 3: 0x52CF60(3, 1), sprite 0x47 at (0x1A, 0x5C). Two Capcom sites (0x529C4D, 0x529CD1). docs/field_e1.md."
+
+[[func]]
+pc = 0x52EC20
+name = "Field_PathClear"
+ret = "unsigned char"
+params = "long x, long z, unsigned raised"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52EC20..0x52ED7C (0x15D bytes): cdecl, al answered: from the leader's x (ObjTrio +0x34, read again each step) toward x in half units (|x - leader| >> 15, plus one, steps) at z, then from its z toward z at x; each step MapView_GroundAt within 0x40 of the leader's height +0x3E and not Field_WayBlocked(.., raised, ground), else al 0; al 1. Called by Field_SwapGather 0x52EA9B and Field_SwapExchange 0x52F04A (ours, event_leader.cpp, its kPathClear). pc_funcs had 0x160 through padding. docs/field_e1.md."
+
+[[func]]
+pc = 0x52F4F0
+name = "Field_FormActionState"
+psx = 0x801B3C30
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F4F0..0x52F562 (0x73 bytes): Field_LeaderStates[6]: Field_InputHeld not 0 clears Field_State +0x137, else calls 0x660A44[0x90412C & 0x7F] (19 entries, unchecked); once +0x137 is 0: Sprite_EnsureAnimation(+8), +9 = 0, Member_ClearState(0), state 1, +0xB = 0, tail Field_LeaderStand. pc_hidden put it in 0x52EC20; it is its own function, reached only through the table. PSX twin 0x801B3C30 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52F5C0
+name = "PartyAction_ScriptEnd"
+psx = 0x801B3D4C
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F5C0..0x52F5D5 (0x16 bytes): Sprite_ScriptTickOnce; al not 0 clears Field_State +0x137. 48 cells of the PartyAction run tables 0x65F998.. (band_rows' reach). Hidden after Sprite_TurnSense (ours, 0x41 bytes: no overlap). PSX twin 0x801B3D4C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52F8F0
+name = "Field_PassageTrigger"
+psx = 0x801B41E8
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F8F0..0x52F942 (0x53 bytes): Field_PassageSteps[3]: unless Field_Request is 2, a 0xA4-byte record on its stack with +0x86 = Field_State +0x12A and the word +0x88 = +0x12C (nothing else written) handed to Field_ObjectTrigger 0x56D6B0 (FE2's) unless +0x86 is 0xFF; Sprite_Current +2 = 2. PSX twin 0x801B41E8 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52F950
+name = "Field_JumpState"
+psx = 0x801B4258
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F950..0x52F961 (0x12 bytes): Field_LeaderStates[8]: jmp [0x66099C + Sprite_Current +2 * 4], unchecked. The state's steps call Field_JumpSetUp (through FE2's 0x535FE0) and Field_JumpCamera: the jump. PSX twin 0x801B4258 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52F970
+name = "Field_JumpBegin"
+psx = 0x801B429C
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F970..0x52F97E (0xF bytes): Field_JumpSteps[0] (and run 0x65F998[3]): 0x535FC0 (FE2's: pose 0x3C or 0x3D by +8), Sprite_Current +2 = 2. PSX twin 0x801B429C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52F980
+name = "Field_JumpOut"
+psx = 0x801B42C8
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F980..0x52F991 (0x12 bytes): Field_JumpSteps[1] (and run 0x65F998[4]): jmp [0x6609AC + Sprite_Current +3 * 4], unchecked. One of scenario_harness_fh's thirteen. PSX twin 0x801B42C8 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52F9A0
+name = "Field_JumpOut0"
+psx = 0x801B430C
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F9A0..0x52F9D8 (0x39 bytes): Field_JumpOutSteps[0]: 0x535FE0 (FE2's), then with +5 0 and bit 3 of neither 0x905BA4 nor 0x9039A2 Field_JumpCamera; +3 = 1. PSX twin 0x801B430C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52F9E0
+name = "Field_JumpOut1"
+psx = 0x801B4380
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52F9E0..0x52F9F2 (0x13 bytes): Field_JumpOutSteps[1]: 0x536050 (FE2's), al not 0: +3 = 2. PSX twin 0x801B4380 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FA00
+name = "Field_JumpOut2"
+psx = 0x801B43BC
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FA00..0x52FA12 (0x13 bytes): Field_JumpOutSteps[2]: 0x5360C0 (FE2's), al not 0: +3 = 3. PSX twin 0x801B43BC (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FA20
+name = "Field_JumpOut3"
+psx = 0x801B43F8
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FA20..0x52FA32 (0x13 bytes): Field_JumpOutSteps[3]: 0x536130 (FE2's), al not 0: +3 = 4. PSX twin 0x801B43F8 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FA40
+name = "Field_JumpOut4"
+psx = 0x801B4434
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FA40..0x52FA5C (0x1D bytes): Field_JumpOutSteps[4]: 0x536170 (FE2's), al not 0: +2 = 2, +3 = 0. PSX twin 0x801B4434 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FA60
+name = "Field_JumpAir"
+psx = 0x801B4480
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FA60..0x52FAB4 (0x55 bytes): Field_JumpSteps[2]: Field_InputHeld bit 12 0x5364D0, else bit 14 0x536550, else any bit shared with the word 0x903580 0x5365D0 (FE2's three); then unless bit 3 of 0x905BA4 | 0x9039A2, MapView_SetElevation(+0x3E) and a tail jump to Field_JumpCamera. PSX twin 0x801B4480 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FAC0
+name = "Field_JumpIn"
+psx = 0x801B4538
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FAC0..0x52FAD1 (0x12 bytes): Field_JumpSteps[3] (and run 0x65F998[6]): jmp [0x6609C0 + +3 * 4], unchecked. PSX twin 0x801B4538 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FAE0
+name = "Field_JumpIn0"
+psx = 0x801B457C
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FAE0..0x52FAEE (0xF bytes): Field_JumpInSteps[0]: 0x536290 (FE2's), +3 = 1. PSX twin 0x801B457C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FAF0
+name = "Field_JumpIn1"
+psx = 0x801B45A8
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FAF0..0x52FB02 (0x13 bytes): Field_JumpInSteps[1]: 0x5362D0 (FE2's), al not 0: +3 = 2. PSX twin 0x801B45A8 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FB10
+name = "Field_JumpIn2"
+psx = 0x801B45E4
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FB10..0x52FB47 (0x38 bytes): Field_JumpInSteps[2]: 0x5363C0 (FE2's), al not 0: Field_JumpCamera with +5 0 and bit 3 clear, +3 = 3. PSX twin 0x801B45E4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FB50
+name = "Field_JumpIn3"
+psx = 0x801B4668
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FB50..0x52FB54 (0x5 bytes): Field_JumpInSteps[3]: jmp 0x536440 (FE2's). PSX twin 0x801B4668 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FBB0
+name = "Field_ContentState"
+psx = 0x801B4714
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FBB0..0x52FBC6 (0x17 bytes): Field_LeaderStates[11]: call [0x660A1C + +2 * 4] (two entries, unchecked), tail Sprite_ScriptTick. PSX twin 0x801B4714 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FBD0
+name = "Field_ContentTake"
+psx = 0x801B4760
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FBD0..0x52FD83 (0x1B4 bytes): Field_ContentSteps[0]: the field object Sprite_Objects[Field_State +0x139]: its flag +5 set in the bank 0x9040CC - system message 1; else +0x18 0xFF - Field_GiveZenny(+0x19 * 40), the flag, the dword 0x904140 + 1; else Item_NamePtr(+0x18, +0x19) 16 bytes to Text_Records, Inventory_Add(.., 1, 0): taken - flag, sound 0x106, message 2, 0x904140 + 1; not - message 3. Then (not after message 1) unless the object's +0xB bit 0, Sprite_SetAnimation(1) with Sprite_Current lent to it. Field_Request 2, +2 + 1. The category and id reach the two callees with the frame's upper bytes (they read bytes). PSX twin 0x801B4760 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FD90
+name = "Field_ContentEnd"
+psx = 0x801B4A34
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FD90..0x52FE86 (0xF7 bytes): Field_ContentSteps[1]: once Field_Request is 0 - after message 3 (0x7DEE48) the object's animation 0 unless +0xB bit 0; else bit 0 removes it (+0 = 0) or, its +0x34 and +0x38 words 0, AreaMap_SetByte(+0x36, +0x3A, 0x10). Field_InputFlags bit 5: state 0xC; else Sprite_EnsureAnimation(+8), state 1; +2 = 0. PSX twin 0x801B4A34 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x52FE90
+name = "Field_AreaRunState"
+psx = 0x801B4BF4
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x52FE90..0x52FEA3 (0x14 bytes): Field_LeaderStates[12]: Game_AreaNumber 0x68 tail Area104_LeaderRun, else tail Area121_LeaderRun (area_w2e.cpp, area_w3b.cpp). PSX twin 0x801B4BF4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x5307C0
+name = "Field_GiveZenny"
+psx = 0x801B6E50
+ret = "void"
+params = "unsigned amount"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x5307C0..0x5307F9 (0x3A bytes): cdecl: Sound_PlayEffect(0x106), Crt_sprintf(Text_Records, Area08_MessageFormat, amount), Msg_OpenSystem(5), Field_Request 2, Zenny_Add(amount, 0). 21 E8 sites (17 in Capcom's 0x51C270..0x5251C6, Field_CellPickup, Field_PassageTake, Field_ContentTake, FC2's 0x46D180). The sibling's Field_GiveZenny 0x801B6E50 (names/functions.toml), verified by reading: the same five steps. docs/field_e1.md."
+
+[[func]]
+pc = 0x531120
+name = "Field_CellAroundLarge"
+psx = 0x801B54D4
+ret = "unsigned char"
+params = "unsigned code"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x531120..0x53153F (0x420 bytes): cdecl, al answered: with Sprite_Current's +0x34 and +0x38 words both 0, al 0; else rows of two or three cells ahead by the facing's step (0x66971C, 1 read as 2), the cell in 0x903850 / 0x903852, each AreaMap_ByteAt against the code: a match with an even facing turns it (to 1 / 5 or 7 / 3), along the row answers 1; the other rows; for the both-fractions shape Field_CellAroundSide on the facings two either side. Called by Field_CellAround 0x530CAF (ours, event_ops.cpp's kCellAroundLarge), which returns its eax. PSX twin 0x801B54D4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x531540
+name = "Field_CellAroundSide"
+ret = "unsigned char"
+params = "unsigned direction, unsigned code"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x531540..0x531655 (0x116 bytes): cdecl, bytes: the whole x, z of Sprite_Current plus the direction's step into 0x903850 / 0x903852; directions 1 and 5 walk x, 7 and 3 walk z, two cells each, AreaMap_ByteAt against the code: a match sets +8 to the direction, al 1; else al 0. Two sites in Field_CellAroundLarge. docs/field_e1.md."
+
+[[func]]
+pc = 0x531820
+name = "Field_GatewayExit"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x531820..0x531918 (0xF9 bytes): al answered: 0 with Field_ScriptFlags bit 14, party set 0xC, Field_CellHasEvent at the leader's whole x / z, or Field_ScriptFlags2 bit 12; area 0xBD the 3-byte record 0x660B08 by Cond_ByteFF == 0; else the area's record in the ten 8-byte ones of 0x660AB8 (none: 0). 0x937F82 the exit's area, 0x905B88 = 4, 0x903860 = x << 16, 0x90384C = z << 16, al 1. Called by Field_LeaderCellEvent 0x531A1F and FieldMenu_TopBarInput 0x589BCA (ours; event_ops' and menu_lists' kExitGateway). docs/field_e1.md."
+
+[[func]]
+pc = 0x532C10
+name = "Party_PlaceAtSlots"
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x532C10..0x532D05 (0xF6 bytes): each of Field_MemberCount members' x, z from the slot pairs 0x7E06E0; the member whose +0x89 is 0x904062 (the record after the last when none); unless 0x904AE5 bit 1: MoveScript_F3Divisor 0x20, Field_Kind2X / Z to its x, z, MoveScript_FAWord = (short)(AreaMap_Elevation - MapView_Elevation) / ((the larger distance >> 13) as a byte), 0 for a byte 0. One site, 0x496130 in a Capcom field-mode function. docs/field_e1.md."
+
+[[func]]
+pc = 0x532D10
+name = "Party_ScriptTicks"
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x532D10..0x532D47 (0x38 bytes): each member (count read again) Field_State = Sprite_Current = its ObjTrio record and Sprite_ScriptTick. Sites 0x496135, 0x4961F9 (Capcom's). docs/field_e1.md."
+
+[[func]]
+pc = 0x532D50
+name = "Party_PlacesByList"
+psx = 0x801C0B2C
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x532D50..0x532EC9 (0x17A bytes): the members' x saved to 0x903850.. and reassigned by each id's slot in the list 0x904065, then z likewise with MapView_GroundAt to +0x3E (the count read again); 0x904AE5 bit 7: Party_DropIn(0x92BF18), Field_MembersFrame; else each member current, +8 BattleFormation_Anims[0x904AAC], +0x29 = 6, the others +7 = 0 and +6 = +5 - 1, Field_MemberTimers, Sprite_SetAnimation(+8). One site 0x49617E (Capcom's). PSX twin 0x801C0B2C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x533690
+name = "Field_LeaderPlaceOffset"
+psx = 0x801C1904
+ret = "void"
+params = "long x, long z, unsigned direction"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x533690..0x53375E (0xCF bytes): cdecl: one member or none - the leader's +0x34 / +0x38 / +8 = x, z, direction; else x, z plus twice the pair 0x660B40[direction >> 1] (thrice with its +0x70), once more for the first later member with +0x70; +8 the direction. Called by Field_PartySetUp 0x533453 (ours, field_event.cpp's position_alt) under Field_ScriptFlags bit 11. PSX twin 0x801C1904 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x5338B0
+name = "Field_PendingJumpTurn"
+psx = 0x801C1CD4
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x5338B0..0x5338E2 (0x33 bytes): Field_PendingJumps[1]: Field_PendingRelease(2) when the member at 0x904EF2 faces 5 or 3, else (3). Hidden after Field_PendingJump (ours, 0x18 bytes). PSX twin 0x801C1CD4 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x5338F0
+name = "Field_PendingJumpKind4"
+psx = 0x801C1D2C
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x5338F0..0x5338F8 (0x9 bytes): Field_PendingJumps[2]: Field_PendingRelease(4). PSX twin 0x801C1D2C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x533900
+name = "Field_PendingDrop"
+psx = 0x801C1D4C
+ret = "void"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x533900..0x533991 (0x92 bytes): Field_PendingJumps[3]: when Field_PendingNext answers al: Sprite_EnsureAnimation(0x3A facing 3, else 0x3B), +0 bit 6 cleared, +0x3E = MapView_GroundAt + 0x7D0, Sprite_ClearSteps, +0x20 = -8, +1..+3 = 2, 3, 3, Field_State +0x138 bit 1 cleared. PSX twin 0x801C1D4C (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x5339A0
+name = "Field_PendingNext"
+psx = 0x801C1E40
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x5339A0..0x533A42 (0xA3 bytes): al answered: at 0x904EF2 = n not 0 waits (al 0) unless member n - 1 is in state 1; n 1 clears Field_ScriptFlags2 bit 3 and with one member bit 9 and 0x904EF0 (al 0); bit n (mod 32) cleared; member n made Sprite_Current and Field_State, 0x904EF2 + 1, at the count (more than one member) bits 3, 4, 9 cleared and 0x904EF0 = 0; al 1. One site, Field_PendingDrop. PSX twin 0x801C1E40 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[func]]
+pc = 0x533A50
+name = "Field_PendingRelease"
+psx = 0x801C1F94
+ret = "unsigned char"
+params = "unsigned kind"
+impl = "src/game/field_e1.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29, round twelve group FE1, 0x533A50..0x533B9F (0x150 bytes): cdecl, a byte: member n = 0x904EF2 waits (al 0) until bit n or n - 1 of Field_ScriptFlags (read once) is set or member n - 1 is in state 1 (at n 2 with bit 1 set, until member 0 is); bit n of Field_ScriptFlags2 cleared; unless bit n: +0 bit 6 cleared, +1..+4 = the 4-byte record 0x660B70[kind], +0x138 bit 1 cleared. 0x904EF2 + 1; at the count bit 4 cleared, 0x904EF0 = 0, al 2; else al 1. Shifts by n mod 32. Three sites, Field_PendingJumpTurn and Field_PendingJumpKind4. PSX twin 0x801C1F94 (pairs_propagated; a hypothesis, the sibling names none but 0x801B6E50). docs/field_e1.md."
+
+[[data]]
+pc = 0x66099C
+name = "Field_JumpSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_JumpState's jmp by Sprite_Current +2: Field_JumpBegin, Field_JumpOut, Field_JumpAir, Field_JumpIn; Field_JumpOutSteps follows (the run of code-pointer tables goes on to 0x660A24). docs/field_e1.md."
+
+[[data]]
+pc = 0x6609AC
+name = "Field_JumpOutSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_JumpOut's jmp by +3: Field_JumpOut0..4; Field_JumpInSteps follows. docs/field_e1.md."
+
+[[data]]
+pc = 0x6609C0
+name = "Field_JumpInSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_JumpIn's jmp by +3: Field_JumpIn0..3; Field_ActionBySet follows. docs/field_e1.md."
+
+[[data]]
+pc = 0x660A1C
+name = "Field_ContentSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_ContentState's call by +2: Field_ContentTake, Field_ContentEnd; bytes follow at 0x660A24. docs/field_e1.md."
+
+[[data]]
+pc = 0x660A44
+name = "Field_FormActions"
+ctype = "unsigned long"
+count = 19
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_FormActionState's call by the party set 0x90412C & 0x7F: 0x51C740 .. 0x525330, each 0x20 before Field_ActionBySet's entry of the same set; Field_EncounterAreas (data) follows. docs/field_e1.md."
+
+[[data]]
+pc = 0x660AB8
+name = "Field_GatewayExits"
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_GatewayExit: ten 8-byte records (area, the exit's area, x, z; words) searched by Game_AreaNumber, to 0x660B08. docs/field_e1.md."
+
+[[data]]
+pc = 0x660B08
+name = "Field_GatewayExits189"
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_GatewayExit in area 0xBD: two 3-byte records (area, x, z) by Cond_ByteFF == 0; Field_EventCells follows at 0x660B10. docs/field_e1.md."
+
+[[data]]
+pc = 0x660B40
+name = "Field_PlaceOffsets"
+ctype = "long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_LeaderPlaceOffset: four (x, z) pairs by the direction >> 1 (read unchecked); Field_PendingJumps follows. docs/field_e1.md."
+
+[[data]]
+pc = 0x660B70
+name = "Field_PendingStates"
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FE1): Field_PendingRelease: five 4-byte records of a member's state bytes +1..+4 by kind (2, 3, 4 used); Scenario_CallATables follows at 0x660B84. docs/field_e1.md."
