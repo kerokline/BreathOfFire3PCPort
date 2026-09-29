@@ -190,6 +190,7 @@
 #include "game/scena_sx2.h"
 #include "game/scenario_harness_fh.h"
 #include "game/scenario_harness_ekh.h"
+#include "game/effect_1e.h"
 #include "game/area_w1e.h"
 #include "game/area_w2a.h"
 #include "game/area_w1d.h"
@@ -903,6 +904,11 @@ void InjectAll() {
                                 // group's inject goes after it, whose self-test copies 0x462BC0 (E1A), 0x46F2B0,
                                 // 0x46F7D0 (E1D), 0x4FD470 (E5A), 0x500D20 (E5B), 0x479970 (E2E), 0x4857C0 (E3C),
                                 // 0x472770 (E2A) from the image (docs/scenario_harness.md section 8.8)
+    Effect1E_Inject();          // round 13 group E1E (0x528CD0..0x52A6B0: the leader's state 9, LeaderPanel_Stages'
+                                // stages 2..9 and five of stage 1's steps): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its eight steps tables swapped for the fuzz only; after
+                                // ScenarioHarnessEkh_Inject (none of its eight rows is E1E's); no module patches bytes
+                                // inside its 48 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
