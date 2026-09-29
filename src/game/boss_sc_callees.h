@@ -18,6 +18,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // bof3::addr: the constants below naming group BE6's functions (docs/battle_e6.md section 5)
+
 namespace boss_sc {
 namespace at {
 
@@ -66,8 +68,8 @@ constexpr U kEnemyExp = 0x96;             // u16
 constexpr U kEndWin = 0x446DE0;           // () the end phase, step 1
 constexpr U kEndOther = 0x446E00;         // () step 2
 constexpr U kEndThird = 0x446E20;         // () step 3
-constexpr U kSlotsReleaseFor = 0x454A80;  // (object)
-constexpr U kSlotStart = 0x455290;        // (object, script)
+constexpr U kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;  // 0x454A80 (object; BE6, 2026-09-29)
+constexpr U kSlotStart = bof3::addr::Field_SlotStart;               // 0x455290 (object, script; BE6, 2026-09-29)
 
 }  // namespace at
 }  // namespace boss_sc

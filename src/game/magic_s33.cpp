@@ -134,7 +134,7 @@ void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 // Capcom's, unnamed, in no group: resets the acting member's battle state
 // (its +0x138 / +0x13C, flag bits of +0x130 / +0x134, then more; not read to
 // its end here). Takes nothing.
-constexpr std::uint32_t kResetActor = 0x4514A0;
+constexpr std::uint32_t kResetActor = bof3::addr::DragonForm_Transform;   // rebound 2026-09-29 (round twelve, BE6): the value is unchanged, the fuzz keys on it
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {
     bof3::Fatal("%s: phase %u, past the %u-entry table", who, phase, entries);
