@@ -9,7 +9,7 @@ declarations generated from `symbols.toml`, the module header
 (`0x473F10`, kind 0x38's tile), each read to its last instruction with
 capstone and fuzzed through the scenario harness's effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8), the harness
-unchanged: 208,000 rounds, 0 mismatches. CONTROLS_SUMMARY All seven kinds are
+unchanged: 208,000 rounds, 0 mismatches. 100 controls planted one at a time: 99 refused by a count, one stopped by ours' own abort with its near variant refused (section 8). All seven kinds are
 fuzz only: no recorded route enters them (section 10).
 
 Every row is effect code: seven kinds of the `Effect_Objects` pool (20
@@ -351,7 +351,10 @@ lines of the coverage: 757..16,080 each, `Effect_StateRelease` 4,835), every
 callee reached (the rarest: `Msg_OpenScript` 665, `EffectKind3D_RingsClear`
 1,002, `EffectKind3D_RingSpawn` 1,169).
 
-STAR_RESULTS
+Under `BOF3X_SHADOW='*'` (the final build, this worktree): exit 0 on the first run,
+`inject: 7225 ours, 0 left original`, 687 self-test lines, every mismatch count 0,
+`effect_2b` 0 mismatches there too (9,302,776 calls: another stream). With
+`BOF3X_WIDE=1` (DIV-0041 on): `'*'` exit 0, 687 self-test lines, 0 mismatches.
 
 ## 5. Divergence
 
@@ -412,9 +415,110 @@ calls into the band.
 of `effect_2b.cpp` (found after that function's own first line, or its
 helper's), rebuilds, runs the self-test on the clone it touches
 (`BOF3X_E2B_ONLY`), restores the file and rebuilds. The count is the rounds
-that mismatched of 4,000. CONTROLS_DETAIL
+that mismatched of 4,000. **100 planted: 99 refused by a count, 1 (C26) stopped by ours' own abort and not by the comparison - its near variant C99 refused.** No equivalent mutant. The thinnest: C83 (217 rounds: `EffectKind3D_Glow`'s `Frame_Counter & 7` taken as `& 3`, which differs only when bit 2 is set and bits 0..1 are clear) and C51 (320: `EffectKind39_Grow`'s compare at 0x1E, reached where `+9` is seeded at 0x1D).
 
-CONTROLS_TABLE
+| # | Function (EffectKind...) | Plant | Refused |
+|---|---|---|--:|
+| C00 | 2F_Run | `Cur()[1], 2, -> (Cur()[1] + 1) % 2, 2,` | 4000 |
+| C01 | 2F_Start | `SetUL(r + 4, 0xC0000); -> SetUL(r + 4, 0xC0001);` | 4000 |
+| C02 | 2F_Start | `0x1000u * i / 3u -> 0x1000u * i / 4u` | 4000 |
+| C03 | 2F_Spin | `height - 0x400u -> height - 0x401u` | 4000 |
+| C04 | 2F_Spin | `if (Cur()[9] == 0) SH_CALL -> if (Cur()[9] == 1) SH_CALL` | 593 |
+| C05 | 2F_StepTrail | `for (U k = 31; k >= 1; --k) -> for (U k = 30; k >= 1; --k)` | 4000 |
+| C06 | 2F_StepTrail | `UL(r + 8) << 8 -> UL(r + 8) << 7` | 4000 |
+| C07 | 2F_DrawTrail | `(shade + 0x100) / 32 -> (shade + 0x100) / 16` | 4000 |
+| C08 | 2F_DrawTrail | `j < 31; -> j < 30;` | 4000 |
+| C09 | 2F_DrawTrail | `? 0xFFu : v -> ? 0xFEu : v` | 3185 |
+| C10 | 2F_InitTrail | `k < 32; -> k < 31;` | 4000 |
+| C11 | 33_Run | `Cur()[1], 4, -> (Cur()[1] + 1) % 4, 4,` | 3027 |
+| C12 | 33_Start | `Cur()[9] = 0xA; -> Cur()[9] = 0xB;` | 4000 |
+| C13 | 33_Start | `SetUL(s + 0x1C, 0); -> SetUL(s + 0x1C, 1);` | 4000 |
+| C14 | 33_Grow | `+ 0x1199u -> + 0x1198u` | 4000 |
+| C15 | 33_Grow | `Sound_PlayEffect)(0x20D) -> Sound_PlayEffect)(0x20E)` | 644 |
+| C16 | 33_DrawDisc | `i << 10, dx, dz -> i << 10, dz, dx` | 4000 |
+| C17 | 33_DrawQuarter | `slot += 0x100; -> slot += 0x101;` | 4000 |
+| C18 | 33_DrawQuarter | `prim[6] = 0x80; -> prim[6] = 0x81;` | 4000 |
+| C19 | 33_DrawQuarter | `q[2] = centre[2]; -> q[2] = centre[1];` | 4000 |
+| C20 | 35_Run | `Cur()[1], 3, -> (Cur()[1] + 1) % 3, 3,` | 4000 |
+| C21 | 35_Start | `s[1] + 1 -> s[1] + 2` | 4000 |
+| C22 | 35_Burst | `if (SH_CALL(EffectKind35_ShardsDraw)()) return; -> if (!SH_CALL(EffectKind35_ShardsDraw)()) return;` | 4000 |
+| C23 | 35_FreeModel | `At(at::kExtra1Use)[0] = 0; -> At(at::kExtra1Use)[0] = 1;` | 4000 |
+| C24 | 35_ShardsInit | `+ 0x28); -> + 0x2C);` | 4000 |
+| C25 | 35_ShardsDraw | `any = 1; -> any = 3;` | 4000 |
+| C26 | 35_ShardsDraw | `c += 0x28; -> c += 0x2C;` | **not refused by a count**: exit 3 by ours' own abort (`EffectKind35_ShardsDraw: index 238 past the 2 entries` - the mutant walks off the shards into bytes whose `+1` is past the table, where Capcom's copy would jump through the next cells). Near variant C99 refused |
+| C27 | 35_ShardQuad | `Gpu_GetTPage)(0, 2, 0x2C0, 0x100) -> Gpu_GetTPage)(0, 1, 0x2C0, 0x100)` | 4000 |
+| C28 | 35_ShardQuad | `prim[0x35] = 0x4F; -> prim[0x35] = 0x4E;` | 4000 |
+| C29 | 35_ShardFly | `+ 0x80u); -> + 0x81u);` | 4000 |
+| C30 | 35_ShardFade | `r[3] - 1 -> r[3] - 2` | 4000 |
+| C31 | 35_SplitModel | `SW(r + k) >> 7 -> SW(r + k) >> 8` | 4000 |
+| C32 | 35_SplitModel | `SW(d + 0x10)) >> 2 -> SW(d + 0x10)) >> 1` | 4000 |
+| C33 | 35_StepPieces | `Word(r + 0xC) + 1u -> Word(r + 0xC) + 2u` | 4000 |
+| C34 | 35_TurnPiece | `& 0xFC0u); -> & 0xFE0u);` | 1949 |
+| C35 | 35_TurnPiece | `static_cast<U>(out[1]) + Word(piece + 2) -> static_cast<U>(out[2]) + Word(piece + 2)` | 4000 |
+| C36 | 38_Run | `Cur()[1], 5, -> (Cur()[1] + 1) % 5, 5,` | 4000 |
+| C37 | 38_Start | `Cur()[9] = 0x10; -> Cur()[9] = 0x11;` | 4000 |
+| C38 | 38_Start | `Cur()[0x5E] = 0; -> Cur()[0x5E] = 1;` | 4000 |
+| C39 | 38_FadeIn | `TintStep(s, 6); -> TintStep(s, 7);` | 3330 |
+| C40 | 38_FadeIn | `Field_Request = 2; -> Field_Request = 3;` | 636 |
+| C41 | 38_FadeIn | `Msg_OpenScript)(0x1F) -> Msg_OpenScript)(0x20)` | 670 |
+| C42 | 38_FadeIn | `s[0x5F] + by) -> s[0x5F] + by + 1)` | 3330 |
+| C43 | 38_WaitMessage | `if (Field_Request != 2) -> if (Field_Request != 3)` | 1544 |
+| C44 | 38_WaitMessage | `Cur()[1] = 3; -> Cur()[1] = 4;` | 2384 |
+| C45 | 38_FadeOut | `TintStep(s, 0xFA); -> TintStep(s, 0xFB);` | 3330 |
+| C46 | 38_FadeOut | `s[1] = 4; -> s[1] = 5;` | 601 |
+| C47 | 38_DrawTint | `0x43700000u -> 0x43710000u` | 4000 |
+| C48 | 38_DrawTint | `SH_CALL(Gfx_CommitPrim)(2, 0x1C); -> SH_CALL(Gfx_CommitPrim)(2, 0x1D);` | 4000 |
+| C49 | 39_Run | `Cur()[1], 4, -> (Cur()[1] + 1) % 4, 4,` | 4000 |
+| C50 | 39_Start | `Sound_PlayEffect)(0x20E) -> Sound_PlayEffect)(0x20F)` | 4000 |
+| C51 | 39_Grow | `if (s[9] > 0x1E) -> if (s[9] >= 0x1E)` | 320 |
+| C52 | 39_Grow | `Word(s + 0x2E), Word(s + 0x30) -> Word(s + 0x30), Word(s + 0x2E)` | 4000 |
+| C53 | 39_Shrink | `s[9] - 1 -> s[9] - 2` | 4000 |
+| C54 | 39_DrawDisc | `Mode(1, 0x3C0, 0, 1); -> Mode(1, 0x3C0, 0, 0);` | 4000 |
+| C55 | 39_DrawDisc | `prim[6] = 0x80; -> prim[6] = 0x81;` | 4000 |
+| C56 | 39_DrawDisc | `< 0x1000u); -> < 0xF80u);` | 4000 |
+| C57 | 39_DrawDisc | `MulSar(trig, radius, 12) -> MulSar(trig, radius, 11)` | 4000 |
+| C58 | 3B_Run | `Cur()[1], 4, -> (Cur()[1] + 1) % 4, 4,` | 4000 |
+| C59 | 3B_Start | `Cur()[9] = 0x80; -> Cur()[9] = 0x81;` | 3959 |
+| C60 | 3B_Start | `Cur()[0xA] = 0; -> Cur()[0xA] = 1;` | 3967 |
+| C61 | 3B_Rise | `if (s[0xA] > 0x20) -> if (s[0xA] >= 0x20)` | 464 |
+| C62 | 3B_Rise | `height + 0xFFF90000u -> height + 0xFFF80000u` | 4000 |
+| C63 | 3B_Rise | `s[9] = 0x20; -> s[9] = 0x21;` | 478 |
+| C64 | 3B_Rise | `static_cast<U>(s[offset]) << 2 -> static_cast<U>(s[offset]) << 3` | 3370 |
+| C65 | 3B_Fade | `Word(r + 0x14) - 8u -> Word(r + 0x14) - 7u` | 4000 |
+| C66 | 3B_Fade | `Kind3BGlow(9); -> Kind3BGlow(0xA);` | 3830 |
+| C67 | 3B_DrawSpiral | `angle -= 0x20; -> angle -= 0x21;` | 4000 |
+| C68 | 3B_DrawSpiral | `radius += 0x18; -> radius += 0x19;` | 4000 |
+| C69 | 3B_DrawSpiral | `shade -= 4; -> shade -= 3;` | 2341 |
+| C70 | 3B_DrawSpiral | `shade = 0xFF; -> shade = 0xFE;` | 944 |
+| C71 | 3B_DrawSpiral | `0u - static_cast<U>(d[1]) -> static_cast<U>(d[1])` | 4000 |
+| C72 | 3B_DrawSpiral | `MulSar(c, rr, 4) -> MulSar(c, rr, 5)` | 4000 |
+| C73 | 3B_DrawSpiral | `return num / c; -> return num / c + 1;` | 4000 |
+| C74 | 3B_DrawSpiral | `length += SH_AT -> length = SH_AT` | 4000 |
+| C75 | 3B_InitSpirals | `SetWord(r + 0x12, 0xC00); -> SetWord(r + 0x12, 0xC01);` | 4000 |
+| C76 | 3B_InitSpirals | `+ 0x3800000u -> + 0x3700000u` | 4000 |
+| C77 | 3B_DrawGlow | `(Frame_Counter & 1u) << parity -> (Frame_Counter & 1u) << (parity + 1)` | 2278 |
+| C78 | 3B_DrawGlow | `prim[0x26] = rim_shade; -> prim[0x26] = static_cast<unsigned char>(centre);` | 3981 |
+| C79 | 3B_DrawGlow | `next & 0xFFFu -> next & 0x1FFFu` | 4000 |
+| C80 | 3D_Run | `Cur()[1], 4, -> (Cur()[1] + 1) % 4, 4,` | 4000 |
+| C81 | 3D_Start | `SetUL(Cur() + 0xC, 0x3C); -> SetUL(Cur() + 0xC, 0x3D);` | 4000 |
+| C82 | 3D_Wait | `SetUL(s + 0xC, 0x230); -> SetUL(s + 0xC, 0x231);` | 1011 |
+| C83 | 3D_Glow | `(Frame_Counter & 7u) == 0 -> (Frame_Counter & 3u) == 0` | 217 |
+| C84 | 3D_Glow | `SetUL(s + 0xC, 0x10); -> SetUL(s + 0xC, 0x11);` | 918 |
+| C85 | 3D_Fade | `if (timer > 0) -> if (timer >= 0)` | 487 |
+| C86 | 3D_Fade | `<< 3) & 0xFFFFu -> << 2) & 0xFFFFu` | 2016 |
+| C87 | 3D_DrawGlow | `+ 0x800000u)}; -> + 0x810000u)};` | 4000 |
+| C88 | 3D_DrawGlow | `0x60, 0); -> 0x61, 0);` | 4000 |
+| C89 | 3D_DrawFan | `GlowFan(point, size, centre, rim, 1); -> GlowFan(point, size, centre, rim, 0);` | 2278 |
+| C90 | 3D_RingsClear | `+ 0x14)[0] = 0; -> + 0x14)[0] = 1;` | 4000 |
+| C91 | 3D_RingSpawn | `r[0x15] = 0; -> r[0x15] = 1;` | 3993 |
+| C92 | 3D_RingsStep | `SetWord(r + 0x12, 0x10); -> SetWord(r + 0x12, 0x11);` | 3584 |
+| C93 | 3D_RingsStep | `if (count == 0) r[0x14] = 0; -> if (count == 1) r[0x14] = 0;` | 3759 |
+| C94 | 3D_RingsStep | `Word(r + 0x10) + 8u -> Word(r + 0x10) + 9u` | 3972 |
+| C95 | 3D_DrawRing | `if (pass != 0) h = -h; -> if (pass == 0) h = -h;` | 4000 |
+| C96 | 3D_DrawRing | `prim[0x26] = ring[0x17]; -> prim[0x26] = 0;` | 3984 |
+| C97 | 3D_DrawRing | `static_cast<int>(buf[4]) -> static_cast<int>(buf[5])` | 4000 |
+| C98 | 3D_DrawRing | `pass < 2; -> pass < 1;` | 4000 |
+| C99 | 35_ShardsDraw | `i < at::kShard35Count; -> i + 1 < at::kShard35Count;` | 4000 |
 
 ## 9. The rebinding
 
@@ -443,8 +547,8 @@ coordinator's frame-hash A/B.
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
 38 lines appended to the main checkout's file under a comment (the other 14
-of the 52 were there with the same extent): the 30 hidden starts, the six
-whose recorded extent ran over them (`00473460 143`, `00473600 20C`,
+of the 52 were there with the same extent): the 30 hidden starts, the smaller
+extents of the seven hosts whose recorded extent ran over them (`00473460 143`, `00473600 20C`,
 `004738A0 2BA`, `00473CE0 38A`, `00474070 391`, `004747D0 267`,
-`00474D20 3AE` - each cut by these), `00473EC0 50` and `00473F10 86`
-(new).
+`00474D20 3AE` - each cut by these), and `00473F10 86` (new; the hidden
+`00473EC0` is listed at 0x50, to it).
