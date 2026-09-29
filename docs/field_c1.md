@@ -10,7 +10,7 @@ found no code in the band that no list has, and every start is a function
 (section 5). Each read to its last instruction with capstone and fuzzed
 through the scenario harness's field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7) without edits to
-it: 246,000 rounds, **0 mismatches**. CONTROLS_SUMMARY. Fuzz-only, except
+it: 246,000 rounds, **0 mismatches**. **237 controls planted one at a time: 235 refused by a count, two equivalent (no input can tell them apart), each with a near variant refused** (section 6). Fuzz-only, except
 what the whelp route very likely entered (section 9).
 
 The band is labelled "field core" in the cut; read, it is almost all **effect
@@ -203,7 +203,7 @@ recorders (`EffectKind19_States` 3, `_Ticks` 6, `CameraZoom_States` 3,
 dispatchers' tables are not read by any function here.
 
 **In this worktree** (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=field_c1`, exit 0):
-246,000 rounds over 41 functions, 466,228 calls to the stand-ins, **0
+246,000 rounds over 41 functions, 465,961 calls to the stand-ins, **0
 mismatches**; 24,616 bytes of state in 38 regions; 271 stand-ins (174 of the
 field-standard set). Every callee and every table entry the five
 dispatchers reach was called (coverage line in the log: the fewest
@@ -290,7 +290,276 @@ stand-ins this group ran for the first time and found right as they stand:
 
 ## 6. Controls
 
-CONTROLS_SECTION
+A script (`controls.py` with `controls_list.py`, in the session
+scratchpad's `fc1/`) planted each control alone in `field_c1.cpp` - anchored
+on a string that must occur exactly once -, rebuilt, ran
+`BOF3X_SHADOW=field_c1`, restored, and rebuilt at the end; a control counts
+as refused when the harness names the planted function among those that
+mismatched (exit 3). **The first pass (the fuzz of commit `58d2bb1`) refused
+225 of 235.** The ten it did not were the fuzz's fault first, as rounds nine
+to eleven taught: `+6`'s bits 6 and 7 never seeded for `EffectKind37_Start`
+(J3, J4: `SeedRecord` kept it below 30 for `_Throw`'s index); `EventOp_6x`'s
+stand-in did not note the `DamageScratch` word it reads (L3); a speed and
+brake that land exactly on `0x1000` (Q1), the view point exactly `0x40000`
+from the block after its move (Q3, Q15), the settle target exactly where the
+step lands (S1), and position fractions whose low 12 bits are 0 (a9) never
+seeded. With those seeds (commit `8c782e4`) **the whole list was run again:
+235 of 237 refused by a count**, none by a Fatal alone. The two left are
+equivalent:
+
+- **Q16** (`view > ground` made `>=` in `_Slide`): at `view == ground` the
+  original stores 0 into `MoveScript_FAWord` before the test and the mutant
+  stores `0 / 20` - the same 0. No input tells them apart. Its near variant
+  **Q16b** (`view > ground + 0x80`) is refused (6 rounds).
+- **Y1** (`pos + 0x10000` made `pos + 0xFFFF` in `_AlignTarget`): the branch
+  runs only when the position's low word is not 0, and then both round down
+  to the same cell edge. Equivalent; its near variant **Y1b** (`pos + 0x8000`)
+  is refused (320 rounds).
+
+The weakest refusal is Q12 (`_Slide`'s rest state 5 made 4: 1 round of 6,000
+reaches that path - a stopped block on a whole cell, which needs `_Bump`,
+`_BlockedAt` and `_BlockedAhead`'s stand-ins to answer as they must); it is a
+count, not a Fatal, and seeding that path harder is left to a later pass. Counts are in this worktree.
+
+| | Function | Original | Planted | Refused in |
+|---|---|---|---|--:|
+| R1 | `Config_DrawRowLabel` | `s` | `s + 1` | 6,000 |
+| R2 | `Config_DrawRowLabel` | `0xF9` | `0xF8` | 6,000 |
+| R3 | `Config_DrawRowLabel` | `0xB` | `0xA` | 6,000 |
+| R4 | `Config_DrawRowLabel` | `style` | `style ^ 1` | 6,000 |
+| R5 | `Config_DrawRowLabel` | `r))` | `(r == 1 ? 2u : r)))` | 1,055 |
+| R6 | `Config_DrawRowLabel` | `6` | `5` | 1,776 |
+| R7 | `Config_DrawRowLabel` | `1` | `2` | 1,776 |
+| R8 | `Config_DrawRowLabel` | `1` | `2` | 881 |
+| R9 | `Config_DrawRowLabel` | `4` | `5` | 898 |
+| R10 | `Config_DrawRowLabel` | `4` | `3` | 4,224 |
+| R11 | `Config_DrawRowLabel` | `3` | `3 || s == 4` | 828 |
+| R12 | `Config_DrawRowLabel` | `0x74` | `0x75` | 6,000 |
+| R13 | `Config_DrawRowLabel` | `1` | `2` | 6,000 |
+| R14 | `Config_DrawRowLabel` | `9` | `8` | 6,000 |
+| R15 | `Config_DrawRowLabel` | `0x80` | `0x81` | 6,000 |
+| R16 | `Config_DrawRowLabel` | `0x20` | `0x1C` | 6,000 |
+| R17 | `Config_DrawRowLabel` | `kRowAnchorSmall)[0])` | `kRowAnchorBig)[0]) + 1` | 4,224 |
+| A1 | `EffectKind06_PlayOnce` | `1` | `2` | 3,991 |
+| A2 | `EffectKind06_PlayOnce` | `6` | `7` | 2,905 |
+| B1 | `EffectKind06_Fade` | `0xFA` | `0xFB` | 4,778 |
+| B2 | `EffectKind06_Fade` | `1` | `2` | 1,421 |
+| B3 | `EffectKind06_Fade` | `1u` | `2u` | 1,532 |
+| B4 | `EffectKind06_Fade` | `6` | `5` | 2,300 |
+| B5 | `EffectKind06_Fade` | `o = Cur();` | `(nothing)` | 168 |
+| B6 | `EffectKind06_Fade` | `1` | `2` | 5,987 |
+| C1 | `EffectKind19_Run` | `Cur()[1]` | `(Cur()[1] + 1) % 3u` | 6,000 |
+| C2 | `EffectKind19_Tick` | `Cur()[6]` | `(Cur()[6] + 1) % 6u` | 4,030 |
+| C3 | `EffectKind19_Tick` | `0xC` | `0xE` | 6,000 |
+| C4 | `EffectKind19_Tick` | `-` | `+` | 5,999 |
+| D1 | `EffectKind04_HoldTick` | `0x1C` | `0x1D` | 2,028 |
+| D2 | `EffectKind04_HoldTick` | `1` | `2` | 3,972 |
+| D3 | `EffectKind04_HoldTick` | `== 0` | `<= 1` | 2,083 |
+| E1 | `EffectKind31_Run` | `2` | `3` | 6,000 |
+| E2 | `EffectKind31_Run` | `Cur()[1]` | `(Cur()[1] + 1) % 3u` | 6,000 |
+| E3 | `CameraZoom_Start` | `16` | `15` | 5,194 |
+| E4 | `CameraZoom_Start` | `frames` | `frames + 1` | 5,193 |
+| E5 | `CameraZoom_Start` | `0xC` | `0x10` | 6,000 |
+| E6 | `CameraZoom_Step` | `target` | `target - 1` | 308 |
+| E7 | `CameraZoom_Step` | `target` | `target + 1` | 534 |
+| E8 | `CameraZoom_Step` | `16` | `15` | 4,044 |
+| E9 | `CameraZoom_Step` | `(nothing)` | `=` | 844 |
+| E10 | `CameraZoom_End` | `0xC` | `0xE` | 5,991 |
+| F1 | `EffectKind32_Run` | `Cur()[1]` | `(Cur()[1] + 1) % 4u` | 6,000 |
+| F2 | `EffectKind32_Throw` | `7` | `3` | 3,026 |
+| F3 | `EffectKind32_Throw` | `0x18` | `0x19` | 6,000 |
+| F4 | `EffectKind32_Throw` | `8` | `9` | 6,000 |
+| F5 | `EffectKind32_Throw` | `0x38` | `0x34` | 5,997 |
+| F6 | `EffectKind32_Throw` | `3` | `4` | 6,000 |
+| F7 | `EffectKind32_Throw` | `0` | `1` | 6,000 |
+| F8 | `EffectKind32_Throw` | `(nothing)` | `^ 1` | 6,000 |
+| F9 | `EffectKind32_Throw` | `SH_CALL(EffectKind32_Arc)()` | `Cur()[0x2A] = 0` | 6,000 |
+| F10 | `EffectKind32_Throw` | `0` | `1` | 6,000 |
+| G1 | `EffectKind32_Arc` | `=` | `(nothing)` | 138 |
+| G2 | `EffectKind32_Arc` | `0x80` | `0x40` | 752 |
+| G3 | `EffectKind32_Arc` | `0` | `1` | 1,319 |
+| G4 | `EffectKind32_Arc` | `o[2]` | `(o[2] ^ 1u)` | 4,761 |
+| G5 | `EffectKind32_Arc` | `4 + 8u` | `8u` | 4,758 |
+| G6 | `EffectKind32_Arc` | `+` | `-` | 5,999 |
+| G7 | `EffectKind32_Arc` | `1` | `2` | 4,666 |
+| H1 | `EffectKind32_Settle` | `0x80` | `0x7F` | 72 |
+| H2 | `EffectKind32_Settle` | `(nothing)` | `=` | 313 |
+| H3 | `EffectKind32_Settle` | `0x106` | `0x107` | 5,292 |
+| H4 | `EffectKind32_Settle` | `1` | `2` | 5,111 |
+| H5 | `EffectKind32_Settle` | `0x80` | `0x40` | 416 |
+| I1 | `Effect_StateRelease` | `Effect_Release` | `Sprite_UpdateScreen` | 6,000 |
+| J1 | `EffectKind37_Start` | `0x2C` | `0x2E` | 6,000 |
+| J2 | `EffectKind37_Start` | `1` | `2` | 6,000 |
+| J3 | `EffectKind37_Start` | `7` | `6` | 4,375 |
+| J4 | `EffectKind37_Start` | `0x7F` | `0x3F` | 2,976 |
+| J5 | `EffectKind37_Start` | `1` | `2` | 6,000 |
+| K1 | `EffectKind37_Play` | `2` | `3` | 949 |
+| K2 | `EffectKind37_Play` | `o[7] != 0 && static_cast` | `static_cast` | 1,063 |
+| K3 | `EffectKind37_Play` | `0x58` | `0x5A` | 1,106 |
+| K4 | `EffectKind37_Play` | `ended` | `!ended` | 5,987 |
+| K5 | `EffectKind37_Play` | `1` | `2` | 3,968 |
+| L1 | `EffectKind14_Start` | `0` | `2` | 1,353 |
+| L2 | `EffectKind14_Start` | `1` | `3` | 2,662 |
+| L3 | `EffectKind14_Start` | `3` | `4` | 2,592 |
+| L4 | `EffectKind14_Start` | `0xC` | `0xD` | 2,686 |
+| L5 | `EffectKind14_Start` | `self` | `Cur()` | 1,700 |
+| L6 | `EffectKind14_Start` | `0x1000u` | `0x800u` | 2,601 |
+| L7 | `EffectKind3C_Start` | `0xFFFFF000u` | `0xFFFFF800u` | 2,565 |
+| L8 | `EffectKind14_Start` | `0x20` | `0x10` | 2,637 |
+| L9 | `EffectKind14_Start` | `0` | `1` | 2,601 |
+| L10 | `EffectKind14_Start` | `0xF` | `0xE` | 2,686 |
+| L11 | `EffectKind14_Start` | `0` | `1` | 2,686 |
+| L12 | `EffectKind14_Start` | `Cur()` | `self` | 196 |
+| L13 | `EffectKind14_Start` | `+` | `-` | 2,686 |
+| L14 | `EffectKind3C_Start` | `op` | `op + 1` | 2,650 |
+| L15 | `EffectKind14_Start` | `Cur()` | `Sprite_Objects` | 3,496 |
+| M1 | `EffectKind14_Hold` | `0x40` | `0x20` | 2,996 |
+| M2 | `EffectKind14_Hold` | `0xBF` | `0x3F` | 981 |
+| M3 | `EffectKind14_Hold` | `0` | `1` | 1,994 |
+| M4 | `EffectKind14_Hold` | `2` | `3` | 1,994 |
+| M5 | `EffectKind14_Hold` | `1` | `2` | 4,006 |
+| N1 | `EffectKind3C_Hold` | `0x40` | `0x41` | 1,990 |
+| N2 | `EffectKind3C_Hold` | `0xBF` | `0xBE` | 912 |
+| N3 | `EffectKind3C_Hold` | `0` | `1` | 1,898 |
+| N4 | `EffectKind3C_Hold` | `2` | `1` | 2,007 |
+| N5 | `EffectKind3C_Hold` | `0xB]` | `0xA] % 20` | 2,865 |
+| O1 | `EffectKind17_Start` | `0xB` | `0xA` | 5,985 |
+| O2 | `EffectKind17_Start` | `6` | `7` | 6,000 |
+| O3 | `EffectKind17_Start` | `=` | `(nothing)` | 5,994 |
+| O4 | `EffectKind17_Start` | `0` | `1` | 5,983 |
+| O5 | `EffectKind17_Start` | `SH_CALL(EffectKind17_TakeCell)();` | `(nothing)` | 6,000 |
+| O6 | `EffectKind17_Start` | `0` | `1` | 6,000 |
+| P1 | `EffectKind17_Push` | `1` | `2` | 2,679 |
+| P2 | `EffectKind17_Push` | `5` | `4` | 408 |
+| P3 | `EffectKind17_Push` | `1` | `0` | 617 |
+| P4 | `EffectKind17_Push` | `0xC00u` | `0xB00u` | 1,071 |
+| P5 | `EffectKind17_Push` | `+` | `-` | 225 |
+| P6 | `EffectKind17_Push` | `2` | `3` | 811 |
+| P7 | `EffectKind17_Push` | `0xFFFFFC00u` | `0xFFFFFD00u` | 427 |
+| P8 | `EffectKind17_Push` | `0x400u` | `0x500u` | 375 |
+| P9 | `EffectKind17_Push` | `1` | `2` | 1,075 |
+| P10 | `EffectKind17_Push` | `4` | `3` | 2,135 |
+| P11 | `EffectKind17_Push` | `0xB` | `0xA` | 392 |
+| P12 | `EffectKind17_Push` | `push` | `push + 1` | 445 |
+| Q1 | `EffectKind17_Slide` | `(nothing)` | `=` | 243 |
+| Q2 | `EffectKind17_Slide` | `+` | `-` | 2,977 |
+| Q3 | `EffectKind17_Slide` | `(nothing)` | `=` | 326 |
+| Q4 | `EffectKind17_Slide` | `5u` | `4u` | 139 |
+| Q5 | `EffectKind17_Slide` | `20` | `16` | 223 |
+| Q6 | `EffectKind17_Slide` | `0x14` | `0x13` | 425 |
+| Q7 | `EffectKind17_Slide` | `0xFFFFFFF8u` | `0xFFFFFFF7u` | 2,939 |
+| Q8 | `EffectKind17_Slide` | `SH_CALL` | `!SH_CALL` | 6,000 |
+| Q9 | `EffectKind17_Slide` | `2` | `1` | 1,419 |
+| Q10 | `EffectKind17_Slide` | `1` | `0` | 1,421 |
+| Q11 | `EffectKind17_Slide` | `&&` | `||` | 24 |
+| Q12 | `EffectKind17_Slide` | `5` | `4` | 1 |
+| Q13 | `EffectKind17_Slide` | `== 0` | `!= 1` | 886 |
+| Q14 | `EffectKind17_Slide` | `== 0` | `!= 1` | 486 |
+| Q15 | `EffectKind17_Slide` | `0x38` | `0x34` | 424 |
+| Q16 | `EffectKind17_Slide` | `(nothing)` | `=` | NOT-refused |
+| Q17 | `EffectKind17_Slide` | `0x1C` | `0x18` | 732 |
+| S1 | `EffectKind17_Settle` | `(nothing)` | `=` | 866 |
+| S2 | `EffectKind17_Settle` | `<` | `>` | 440 |
+| S3 | `EffectKind17_Settle` | `(nothing)` | `=` | 31 |
+| S4 | `EffectKind17_Settle` | `start_x), S32(start_z` | `start_z), S32(start_x` | 1,114 |
+| S5 | `EffectKind17_Settle` | `4` | `3` | 262 |
+| S6 | `EffectKind17_Settle` | `||` | `&&` | 1,054 |
+| S7 | `EffectKind17_Settle` | `(nothing)` | `=` | 106 |
+| S8 | `EffectKind17_Settle` | `5` | `6` | 75 |
+| S9 | `EffectKind17_Settle` | `0x36), Word(o + 0x3A` | `0x3A), Word(o + 0x36` | 183 |
+| S10 | `EffectKind17_Settle` | `SetL(Cur() + 0x14, 0);` | `(nothing)` | 1,344 |
+| S11 | `EffectKind17_Settle` | `SH_CALL(EffectKind17_TakeCell)();` | `(nothing)` | 78 |
+| T1 | `EffectKind17_Grow` | `2` | `3` | 6,000 |
+| T2 | `EffectKind17_Grow` | `0x4000u` | `0x3000u` | 5,991 |
+| T3 | `EffectKind17_Grow` | `(nothing)` | `=` | 1,597 |
+| T4 | `EffectKind17_Grow` | `Field_Kind2Hold != 0 || o` | `o` | 500 |
+| T5 | `EffectKind17_Grow` | `0 && Field_Kind2Hold == 0` | `0` | 2,203 |
+| T6 | `EffectKind17_Grow` | `0x4000u` | `0x4001u` | 6,000 |
+| U1 | `EffectKind17_Rest` | `1` | `2` | 1,480 |
+| U2 | `EffectKind17_Rest` | `== 0` | `<= 1` | 813 |
+| U3 | `EffectKind17_Rest` | `SH_CALL(EffectKind17_CameraBack)();` | `(nothing)` | 1,522 |
+| V1 | `EffectKind17_TakeCell` | `0xB` | `0xA` | 5,991 |
+| V2 | `EffectKind17_TakeCell` | `0x10` | `0x11` | 6,000 |
+| V3 | `EffectKind17_TakeCell` | `0x3A` | `0x38` | 5,945 |
+| W1 | `EffectKind17_CameraBack` | `0u - fa` | `fa` | 6,000 |
+| W2 | `EffectKind17_CameraBack` | `0x40` | `0x41` | 6,000 |
+| W3 | `EffectKind17_CameraBack` | `1` | `2` | 6,000 |
+| W4 | `EffectKind17_CameraBack` | `0x34` | `0x38` | 6,000 |
+| X1 | `EffectKind17_Bump` | `1` | `2` | 2,984 |
+| X2 | `EffectKind17_Bump` | `0) Member(` | `1) Member(static_cast<signed char>(member) == 1 ? 0 :` | 887 |
+| X3 | `EffectKind17_Bump` | `2` | `3` | 870 |
+| X4 | `EffectKind17_Bump` | `4` | `5` | 5,195 |
+| X5 | `EffectKind17_Bump` | `0` | `2` | 695 |
+| X6 | `EffectKind17_Bump` | `0x1E ? SpriteRec(i, who) : ExtraRec(i - 0x1E` | `0x1D ? SpriteRec(i, who) : ExtraRec((i - 0x1D) % 4` | 847 |
+| Y1 | `EffectKind17_AlignTarget` | `0x10000u` | `0xFFFFu` | NOT-refused |
+| Y2 | `EffectKind17_AlignTarget` | `0xFF` | `0xFE` | 296 |
+| Y3 | `EffectKind17_AlignTarget` | `0xFFFF0000u` | `0xFFFF8000u` | 594 |
+| Y4 | `EffectKind17_AlignTarget` | `3` | `2` | 836 |
+| Y5 | `EffectKind17_AlignTarget` | `0x38` | `0x3A` | 2,722 |
+| Y6 | `EffectKind17_AlignTarget` | `0` | `1` | 789 |
+| Z1 | `EffectKind17_BlockedAhead` | `2u` | `3u` | 4,598 |
+| Z2 | `EffectKind17_BlockedAhead` | `4 + 8u` | `8u` | 4,756 |
+| Z3 | `EffectKind17_BlockedAhead` | `(nothing)` | `& 3` | 3,666 |
+| a1 | `EffectKind17_BlockedAt` | `0` | `1` | 395 |
+| a2 | `EffectKind17_BlockedAt` | `0x8000u` | `0x4000u` | 854 |
+| a3 | `EffectKind17_BlockedAt` | `(nothing)` | `^ 1` | 854 |
+| a4 | `EffectKind17_BlockedAt` | `(nothing)` | `=` | 32 |
+| a5 | `EffectKind17_BlockedAt` | `1` | `2` | 301 |
+| a6 | `EffectKind17_BlockedAt` | `cell_x` | `cell_x + 1` | 152 |
+| a7 | `EffectKind17_BlockedAt` | `=` | `(nothing)` | 86 |
+| a8 | `EffectKind17_BlockedAt` | `!` | `=` | 507 |
+| a9 | `EffectKind17_BlockedAt` | `0xFFFF` | `0xFFF` | 263 |
+| a10 | `EffectKind17_BlockedAt` | `1` | `2` | 3,966 |
+| b1 | `EffectKind17_CellBlocked` | `1` | `0` | 1,976 |
+| b2 | `EffectKind17_CellBlocked` | `=` | `(nothing)` | 23 |
+| b3 | `EffectKind17_CellBlocked` | `0xF0` | `0xE0` | 187 |
+| b4 | `EffectKind17_CellBlocked` | `0x10` | `0x11` | 66 |
+| b5 | `EffectKind17_CellBlocked` | `0xA0` | `0xB0` | 56 |
+| b6 | `EffectKind17_CellBlocked` | `(nothing)` | `- 1` | 54 |
+| b7 | `EffectKind17_CellBlocked` | `16` | `16 | 0x8000` | 4,024 |
+| b8 | `EffectKind17_CellBlocked` | `cx, cz` | `cz, cx` | 3,876 |
+| b9 | `EffectKind17_CellBlocked` | `0x20` | `0x30` | 40 |
+| c1 | `EffectKind1B_Start` | `8` | `9` | 5,964 |
+| c2 | `EffectKind1B_Start` | `0x7B` | `0x7C` | 6,000 |
+| c3 | `EffectKind1B_Start` | `0x4A` | `0x4B` | 6,000 |
+| c4 | `EffectKind1B_Start` | `1` | `2` | 6,000 |
+| c5 | `EffectKind1B_Start` | `0xC0u` | `0xBFu` | 6,000 |
+| c6 | `EffectKind1B_Start` | `4` | `3` | 4,520 |
+| c7 | `EffectKind1B_Start` | `1` | `2` | 3,021 |
+| c8 | `EffectKind1B_Start` | `2` | `3` | 2,972 |
+| d1 | `EffectKind1B_Fly` | `1` | `2` | 5,848 |
+| d2 | `EffectKind1B_Fly` | `1` | `2` | 830 |
+| d3 | `EffectKind1B_Fly` | `0x1B` | `0x1C` | 506 |
+| d4 | `EffectKind1B_Fly` | `3` | `2` | 506 |
+| d5 | `EffectKind1B_Fly` | `0x4F` | `0x50` | 1,988 |
+| d6 | `EffectKind1B_Fly` | `0x4E` | `0x4D` | 2,985 |
+| d7 | `EffectKind1B_Fly` | `!` | `=` | 4,524 |
+| d8 | `EffectKind1B_Fly` | `0` | `1` | 1,982 |
+| d9 | `EffectKind1B_Fly` | `0xC` | `0x10` | 4,441 |
+| e1 | `EffectKind1B_End` | `SH_CALL` | `!SH_CALL` | 6,000 |
+| f1 | `EffectKind1B_Trail` | `0xB]` | `0xA] % 20` | 5,674 |
+| f2 | `EffectKind1B_Trail` | `0x1D` | `0x1E` | 6,000 |
+| f3 | `EffectKind1B_Trail` | `0x4C` | `0x50` | 6,000 |
+| f4 | `EffectKind1B_Trail` | `0x29` | `0x28` | 5,980 |
+| f5 | `EffectKind1B_Trail` | `0x3E` | `0x3C` | 5,984 |
+| f6 | `EffectKind1B_Trail` | `0x4E` | `0x4F` | 6,000 |
+| f7 | `EffectKind1B_Trail` | `2` | `3` | 6,000 |
+| f8 | `EffectKind1B_Trail` | `0x2C` | `0x2E` | 6,000 |
+| f9 | `EffectKind1B_Trail` | `0` | `1` | 6,000 |
+| g1 | `EffectKind1B_Hit` | `0x40` | `0x41` | 41 |
+| g2 | `EffectKind1B_Hit` | `0x11` | `0x10` | 362 |
+| g3 | `EffectKind1B_Hit` | `1` | `0` | 3,899 |
+| h1 | `EffectKind30_Run` | `Cur()[1]` | `(Cur()[1] + 1) % 4u` | 6,000 |
+| h2 | `EffectKind30_Start` | `1` | `2` | 5,957 |
+| h3 | `EffectKind30_Start` | `8u` | `4u` | 5,707 |
+| h4 | `EffectKind30_Start` | `1` | `2` | 6,000 |
+| h5 | `EffectKind30_Start` | `0x80` | `0x81` | 6,000 |
+| h6 | `EffectKind30_Start` | `0` | `1` | 5,993 |
+| h7 | `EffectKind30_Start` | `0` | `1` | 5,985 |
+| h8 | `EffectKind30_Start` | `SH_AT(void (__cdecl*)(), at::kFc2Place)()` | `Cur()[0x28] = 0` | 6,000 |
+| h9 | `EffectKind30_Start` | `(nothing)` | `+ 8` | 6,000 |
+| Q16b | `EffectKind17_Slide` | `ground` | `ground + 0x80` | 6 |
+| Y1b | `EffectKind17_AlignTarget` | `0x10000u` | `0x8000u` | 320 |
 
 ## 7. Calls across groups
 
