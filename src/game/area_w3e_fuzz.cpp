@@ -246,7 +246,7 @@ const ah::Callee kCallees[] = {
     // any of the thirty field objects, or none
     {W3E_OURS(Sprite_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x1D},
     // the ops read the object word 0x903850: logged with each call
-    {W3E_THEIRS(EventOp_6x), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &NotesObjectWord},
+    {W3E_OURS(EventOp_6x), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &NotesObjectWord},
     {W3E_OURS(EventOp_0x), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &NotesObjectWord},
     {W3E_OURS(Flags_Toggle), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     {W3E_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &FlagsTestEffect},

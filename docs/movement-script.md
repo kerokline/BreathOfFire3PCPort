@@ -85,7 +85,7 @@ then the position advances by one, read again after the handler.
 | `F6 x` | 2 | `x` to `MoveScript_Var7` (PSX `0x80146870`) |
 | `F7` 6 bytes | 7 | `MoveCmd_OpF7` with two 8.8 coordinates |
 | `F8` | 2, or 5 when the mode is `7` | **attach**, section 2 |
-| `F9 a b` | 3; repeats while `MoveScript_WaitTest(a, b)` is non-zero | |
+| `F9 a b` | 3; repeats while `MoveCmd_OpF9(a, b)` is non-zero | |
 | `FA d n h l` | 5 | move, and set the height to `h:l` |
 | `FB`, `FC` | 1 | a test at the sprite's position; sound `0x103` if it passes |
 | `FD` | 1, or repeats | waits on `Sprite_ScriptTickOnce` (PSX `0x8014D9E0`) |

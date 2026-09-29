@@ -3332,8 +3332,9 @@ name = "ObjTrio_ClearBit40"
 psx = 0x8015CAA8
 ret = "void"
 params = "void"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-22, 12 instructions: clears bit 0x40 of the bytes 0x802D40, 0x802E8C, 0x802FD8 - three objects 0x14C apart. Flow op 0C with a non-zero operand."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C7E0..0x57C80C (0x2D bytes): bit 6 of 0x802D40, 0x802E8C, 0x802FD8 (the three ObjTrio records +0) cleared. Callers MoveScript_Flow 0x57701D (flow op 0C), Scena03_Scene5 0x5438DC. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015CAA8 gap4. docs/field_o.md."
 
 [[func]]
 pc = 0x57C810
@@ -3367,12 +3368,13 @@ evidence = "disasm 2026-09-22, 6 instructions: byte 0x8034E1 |= 0x40 (read befor
 
 [[func]]
 pc = 0x578FA0
-name = "MoveScript_WaitTest"
+name = "MoveCmd_OpF9"
 psx = 0x801AD33C
 ret = "int"
-params = "unsigned char a, unsigned char b"
+params = "unsigned char toward, unsigned char shift"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "call site 0x57798A in MoveScript_GroupF, 2026-09-22: op F9 b1 b2 calls it (b1, b2) and repeats while eax is non-zero. The body stores its arguments' low bytes into its own frame; not read further. psx_pair callers."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x578FA0..0x579298 (0x2F9 bytes), cdecl: op F9 a b (MoveScript_GroupF 0x57798A repeats while eax is not 0): the step 0x6696DC[facing] * Field_MoveSpeeds[Field_ActiveMember +0x84]; +0x3E from AreaMap_Elevation; with +0x18 + +0x1C 0 the target (Field_DirectionSteps * 2 * b past the position into Field_ActiveMember +0x8C / +0x90), velocity and acceleration set by a; velocity into position, acceleration into velocity; a party object (+6 0x0A) moves its member on a half-unit crossing and runs its party record tilt counts; at the target eax 0, else 1. Renamed from MoveScript_WaitTest (a call-site name). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801AD33C callers. docs/field_o.md."
 
 [[data]]
 pc = 0x929E80
@@ -3513,8 +3515,9 @@ name = "MoveCmd_Op87"
 psx = 0x801ADBC4
 ret = "void"
 params = "void"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "call site 0x5788F5, 2026-09-22: op 87, no arguments. Calls 0x454CC0. Unread."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x5795F0..0x579601 (0x12 bytes): jmp [0x663B04 + 4 * Sprite_Current +4] (MoveCmd_Op87States; past 1 EventScript_OpLengths bytes, not code: ours aborts). One caller MoveScript_Group8 0x5788F5 (op 87). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801ADBC4 callers. docs/field_o.md."
 
 [[func]]
 pc = 0x5794D0
@@ -3522,8 +3525,9 @@ name = "MoveCmd_Op88"
 psx = 0x801AD9D0
 ret = "void"
 params = "void"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "call site 0x578906, 2026-09-22: op 88, no arguments. Calls 0x454CC0. Unread."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x5794D0..0x5794E1 (0x12 bytes): jmp [0x663AFC + 4 * Sprite_Current +4] (MoveCmd_Op88States; 2 and 3 reach MoveCmd_Op87States, past them not code: ours aborts). One caller MoveScript_Group8 0x578906 (op 88). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801AD9D0 callers. docs/field_o.md."
 
 [[func]]
 pc = 0x517E90
@@ -3551,8 +3555,9 @@ name = "MoveCmd_OpE9"
 psx = 0x8015CC54
 ret = "unsigned char"
 params = "unsigned char *object, signed char a, signed char b, unsigned short c, unsigned short d, unsigned char e, unsigned char f"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-22: forwards its seven arguments to entry Sprite_Current[4] of the four-handler table 0x663B84 (0x57C920, 0x57CA80, 0x57CBB0, 0x57CCE0), which read a and b as signed bytes, c and d as words and f as a byte. Op E9 repeats while al is non-zero."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C8E0..0x57C918 (0x39 bytes): its seven words to MoveCmd_OpE9States[Sprite_Current +4] (4; past them not code: ours aborts), that eax the answer. Callers MoveScript_GroupE 0x5775B9, BossNue_EndMove, BossWeretigr_EndMove. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015CC54 gap4. docs/field_o.md."
 
 [[func]]
 pc = 0x454DC0
@@ -3570,8 +3575,9 @@ name = "MoveCmd_OpDB"
 psx = 0x8015D3BC
 ret = "void"
 params = "void"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "call site 0x577F20, 2026-09-22: op DB, then the sprite is grounded and tested as op DC. Unread."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57CD40..0x57CD88 (0x49 bytes): x plus its velocity +0xC when above 0, then & 0xFFFF8000; z with +0x10 likewise. Callers MoveScript_GroupD 0x577F20, MoveCmd_OpE9Arc, Scena06_LeapAir. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015D3BC gap4. docs/field_o.md."
 
 [[func]]
 pc = 0x4DF820
@@ -5817,8 +5823,9 @@ name = "EventScript_SkipIf"
 psx = 0x801A57A0
 ret = "const unsigned char *"
 params = "const unsigned char *at"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole, 72 bytes, not taken over): at is ON the F0 / F1; steps 3, then to the FE of its depth by lengths and EventScript_SkipControl, past an FD. Never reached by the attract cycle. psx_pair call."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x579CA0..0x579CE7 (0x48 bytes; in no round-twelve list - no catalog row starts here), cdecl: at ON the F0 / F1; +3, then to the FE of its depth by EventScript_OpLengths and EventScript_SkipControl (bytes F0..FC), an FD stepped over; returns past the FE; byte +1 loaded and unused; an FF never passed. Callers: EventScript_SkipControl (the event_script.cpp table skip_if). psx_pair call. docs/field_o.md."
 
 [[func]]
 pc = 0x579CF0
@@ -5916,8 +5923,9 @@ name = "EventOp_3x"
 psx = 0x801A6B80
 ret = "void"
 params = "const unsigned char *op"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 3x (18 bytes): a placement like EventOp_1x - EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face. Never reached by the attract cycle."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57A7C0..0x57A98F (0x1D0 bytes), cdecl: EventScript_Op handler 3 (18 bytes): below 30 in the count 0x903850, Sprite_Objects[count] placed as EventOp_2x with op[1]:op[2] the bank (Sprite_SetAnimationBank), op[6..9] x z, op[0x11] the dword +0x70, op[0x10] object +0x83, op[3] bit 7 / low nibble. One caller EventScript_Op 0x579F9A. docs/field_o.md."
 
 [[func]]
 pc = 0x57A990
@@ -5925,8 +5933,9 @@ name = "EventOp_4x"
 psx = 0x801A6F04
 ret = "void"
 params = "const unsigned char *op"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 4x (17 bytes): a placement like EventOp_1x - EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face. Never reached by the attract cycle."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57A990..0x57AB4A (0x1BB bytes), cdecl: handler 4 (17 bytes): op 3x layout without +0x83 / +0x70; op[0x10] is object +0xA0. One caller EventScript_Op 0x579F92. docs/field_o.md."
 
 [[func]]
 pc = 0x57AB50
@@ -5934,8 +5943,9 @@ name = "EventOp_7x"
 psx = 0x801A7244
 ret = "void"
 params = "const unsigned char *op"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 7x (17 bytes): a placement like EventOp_1x - EventObj_Reset, Sprite_SetAnimationBank, AreaMap_Elevation, EventObj_SetFlags, EventObj_Face. Never reached by the attract cycle."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57AB50..0x57AD06 (0x1B7 bytes), cdecl: handler 7 (17 bytes): bank op[1]:op[2], op[3] / op[4] +0x98 / +0x9A, op[5..8] x z, op[9] +1, op[0xA] +0x84, op[0xB] +2, op[0xC] flags, op[0xD]:op[0xE] +0x88, op[0xF] +0x83, op[0x10] +0x9E, +0x5C 2. One caller EventScript_Op 0x579F82. docs/field_o.md."
 
 [[func]]
 pc = 0x57AD10
@@ -5943,8 +5953,9 @@ name = "EventOp_6x"
 psx = 0x801A75A8
 ret = "void"
 params = "const unsigned char *op"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for 6x (16 bytes): EventOp_1x's calls with 0x533BA0 where the bank is set. Never reached by the attract cycle."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57AD10..0x57AEB0 (0x1A1 bytes), cdecl: handler 6 (16 bytes): Field_MemberSprite(op[1], op[0xF]) in place of the bank, op[2] / op[3] +0x98 / +0x9A, op[4..7] x z, op[8] +1, op[9] +0x84, op[0xA] +2, op[0xB] flags, op[0xC]:op[0xD] +0x88, op[0xE] +0x83, +0x5C 2. Callers: the scene placers (Area141_*, Scena08_SpawnPair, Scena13_SpawnPair*, Scena15), FC1 0x46A600, 15 sites. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801A75A8 callers. docs/field_o.md."
 
 [[func]]
 pc = 0x57AEC0
@@ -5952,8 +5963,9 @@ name = "EventOp_Ax"
 psx = 0x801A78C8
 ret = "void"
 params = "const unsigned char *op"
+impl = "src/game/field_o.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-22 (calls only, not taken over): EventScript_Op's handler for Ax (14 bytes): EventObj_Reset, Sprite_InitFromEntry, PartyRecord_Clear, AreaMap_Elevation, EventObj_SetFlags, 0x579F00 four times - EventOp_Bx's kind of placement. Never reached by the attract cycle."
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57AEC0..0x57B0F3 (0x234 bytes), cdecl: handler 10 (14 bytes): EventOp_Bx placement into Sprite_Objects[count]: Area_Descriptors[Game_AreaNumber] +8 entry op[9] (Sprite_InitFromEntry), PartyRecord_Clear(4), op[1..4] x z, +0x70 the entry byte 2 through +0x54, colour 0x80, +0x5C 2; +0x84 0: AreaMap_SetByte 0x10 on the cell and, by the halves, its right / lower neighbours. One caller EventScript_Op 0x579F72. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801A78C8 callers. docs/field_o.md."
 
 [[func]]
 pc = 0x57B100
@@ -80398,3 +80410,298 @@ pc = 0x660B70
 name = "Field_PendingStates"
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group FE1): Field_PendingRelease: five 4-byte records of a member's state bytes +1..+4 by kind (2, 3, 4 used); Scenario_CallATables follows at 0x660B84. docs/field_e1.md."
+
+# --- round twelve group FO (2026-09-29): field_o.cpp, docs/field_o.md
+
+[[func]]
+pc = 0x5738A0
+name = "Menu_DrawStatsPanel"
+ret = "void"
+params = "int x, int y, unsigned record"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x5738A0..0x573A77 (0x1D8 bytes), cdecl: Menu_DrawBox (x + 5, y + 3, 0x94, 0x2D); the four labels 0x66A0F8.. and CharacterRecords[record byte] words +0x24, +0x26, +0x2A, +0x28 (Crt_sprintf, Text_DrawFont8); trait +0x1F not 0xFF: Msg_SystemPtr(0x111 + trait) into text record 0 and message 0x34; pieces 0x663358, 16 x 0x663384, 0x663390. One caller 0x59A065 (the field menu panel list, not ours). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801D86D8 gap54. docs/field_o.md."
+
+[[func]]
+pc = 0x573BF0
+name = "Menu_DrawExpPanel"
+ret = "void"
+params = "int x, int y, unsigned record, unsigned next"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x573BF0..0x573CD6 (0xE7 bytes), cdecl: box (x + 3, y + 3, 0x65, 0x25); next byte 0: label 0x663670 and the record dword +0xC, else label 0x663674 and Char_ExpForLevel(record, level + 1) (-1 drawn as 0x6639B8); Text_DrawFont12 (x + 5, y + 0x1A); pieces 0x6634CC. Callers 0x59A237 (next 0), 0x59A2A7 (next 1). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801D8C34 gap54. docs/field_o.md."
+
+[[func]]
+pc = 0x573F70
+name = "Menu_DrawIconWheel"
+ret = "void"
+params = "int x, int y, unsigned kind, unsigned lit, int angle"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x573F70..0x5743F0 (0x481 bytes), cdecl: box (x + 3, y + 3, 0x45, 0x30); the kind name (28-byte entries 0x6636B0) by Text_DrawSmall; the triangle 0x6637C8 turned by Math_Cos / Math_Sin into 0x6BC860 and drawn as a POLY_G3 (0x34), corners shaded by z; 1 / 2 / 3 icons (kind 0 / 1..3 / more) turned into 0x6BC748, lit by the lit byte (Frame_Counter pulse) or 0x70, bubble-sorted by z (the swap truncates the moved coordinate to a signed byte), drawn by Menu_DrawCell8; pieces 0x6633E0, 6 x 0x663404, 0x663410. One caller 0x59A46E. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801D9874 call-disputed. docs/field_o.md."
+
+[[func]]
+pc = 0x574400
+name = "Menu_DrawTile16"
+ret = "void"
+params = "int x, int y, unsigned u, unsigned dim"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x574400..0x5744A0 (0xA1 bytes), cdecl: Gpu_SetDrawMode (page 0x2F), a 16 x 8 SPRT at (x & 0xFFFF, y & 0xFFFF) as floats, u = u << 4, v 0xD8, CLUT 0x7800, shade 0x10 (dim) or 0x80, Gpu_SetSprt, Gpu_SetSemiTrans(1), Gfx_CommitPrim(1, 0x1C). Callers: FS 0x581300 (three sites), 0x59AA80 (three). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801D9FC0 call-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x574EC0
+name = "Menu_DrawEquipCompare"
+ret = "void"
+params = "unsigned record, int x, int y, const unsigned char *set, unsigned no_preview, const unsigned char *panel"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x574EC0..0x575429 (0x56A bytes), cdecl: box (x + 4, y + 4, 0x78, 0xA3); the record name (5), four stat labels and values; no_preview byte 0: Equip_PreviewSet(record, set, marks, values) and four arrow cells (Menu_DrawCell8 u 0x11 / 0x12 / 0x13 by mark 4 / 1 / other) with the previewed value in the mark colour; six equipment names (the name tables by record +0x12..+0x17) with icons 0x66386C, the panel +0xB slot raised 7 / 2, +0xA 7 / 0; pieces. Callers 0x5969CC, 0x59A91E. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801DB094 callers. docs/field_o.md."
+
+[[func]]
+pc = 0x575F50
+name = "Menu_DrawAbilityPanel"
+ret = "void"
+params = "unsigned char *panel"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x575F50..0x5762C4 (0x375 bytes), cdecl: box; Char_AbilityList(panel +0xA, +0xB, 0) ten ids by Menu_DrawSkillRow (Skill_CanUse(panel +8, 0x929F06, id) dims to 7, row +0xD colour 2, rows +0xC / +0xD raised), Skill_FlagIndex, Skill_ApCost; title 0x663984[+0xB] centred; arrows by +9 bits 0 / 1, +9 high nibble counted down; pieces. One caller 0x59A9D9. docs/field_o.md."
+
+[[func]]
+pc = 0x5763F0
+name = "Menu_DrawItemPanel"
+ret = "void"
+params = "unsigned char *panel"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x5763F0..0x576948 + its 5-entry jump table 0x57694C (0x570 bytes; the catalog 0x759 ran on over Menu_DrawSaveSlot), cdecl: category +8 from +9 (1..3 -> 2, 4..5 -> 3, else 1); of the category 0x80 ids those Item_CanUse(4, member, category, id) passes (category 2 also by Item_IconKind) kept at 0x6BC760 / 0x6BC7E0, the rest zeroed; Menu_ListScroll; moving + 9 rows by Menu_DrawItemRow, the cursor row raised; title 0x663994[category]; count / 128; pieces; Menu_DrawScrollBar. Callers 0x596999, 0x59AA29. docs/field_o.md."
+
+[[func]]
+pc = 0x576960
+name = "Menu_DrawSaveSlot"
+ret = "void"
+params = "unsigned slot, int x, int y, const unsigned char *summary"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x576960..0x576B48 (0x1E9 bytes; in no function list before - the catalog 0x5763F0 ran over it), cdecl: box (x + 8, y, 0xC8, 0x30), slot number; with a summary: a draw mode, party icons +5..+7 (Menu_DrawBigIcon), the name +0..+4 and +0x16..+0x19 copied to 0x904BA0 and drawn at x + the disp8 at 0x576A48 (0x13; 0x15 under DIV-0029), level +8, time +0xC / +0xD, Menu_DrawExpBar; without, the text 0x669CCC; pieces 0x663584 (2 with +0x14); piece 0x3D. One caller SaveMenu_DrawSlots 0x588D6B. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x801DDC6C call. docs/field_o.md."
+
+[[func]]
+pc = 0x5794F0
+name = "MoveCmd_Op88Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x5794F0..0x57955A (0x6B bytes): Sprite_SetTint(Sprite_Current, 0, 0, 0, 1) into Field_ActiveMember +0x9F, +0 bit 5, colour 0xC0 x 3, +0x5C 1, Field_ActiveMember +0x8A less 1, state +4 1. MoveCmd_Op88States[0]. docs/field_o.md."
+
+[[func]]
+pc = 0x579560
+name = "MoveCmd_Op88Fade"
+ret = "void"
+params = "void"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x579560..0x5795E3 (0x84 bytes): +0x5D..+0x5F each less 4 unless 0x80; all 0x80: Tint_Release(Field_ActiveMember +0x9F), +0 bit 6, state 0; else +0x8A less 1. MoveCmd_Op88States[1]. docs/field_o.md."
+
+[[func]]
+pc = 0x579610
+name = "MoveCmd_Op87Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x579610..0x579687 (0x78 bytes): the tint record as MoveCmd_Op88Start, +0 bit 5 set and bit 6 cleared, +0x5C 1, colour 0x80 x 3, state 1, +0x8A less 1. MoveCmd_Op87States[0]. docs/field_o.md."
+
+[[func]]
+pc = 0x579690
+name = "MoveCmd_Op87Fade"
+ret = "void"
+params = "void"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x579690..0x579738 (0xA9 bytes): +0x5D..+0x5F each plus 4 while below 0xC0 as signed bytes; all 0xC0: Tint_Release, +0 bit 5 cleared, +0x5C..+0x5F and state 0; else +0x8A less 1. MoveCmd_Op87States[1]. docs/field_o.md."
+
+[[func]]
+pc = 0x57C1A0
+name = "EventCond_Area"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C1A0..0x57C1B4 (0x15 bytes): EventScript_Conditions[1]: Game_AreaNumber (u16) == the operand byte (sete). Inside Flags_Toggle catalog extent; reached only by the table. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C034 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C1F0
+name = "EventCond_Run"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C1F0..0x57C201 (0x12 bytes): EventScript_Conditions[7]: MoveScript_Var7 == the operand. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C098 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C230
+name = "EventCond_Status1"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C230..0x57C245 (0x16 bytes): EventScript_Conditions[9]: Field_StatusBits bit 0 (operand 1) or its complement (any other). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C0E8 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C250
+name = "EventCond_LeaderId"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C250..0x57C261 (0x12 bytes): EventScript_Conditions[11]: the byte 0x802DC9 (ObjTrio +0x89, the leader member id) == the operand. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C12C table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C270
+name = "EventCond_StoryFlag"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C270..0x57C286 (0x17 bytes): EventScript_Conditions[12]: Flags_Test(0x904030, operand), its eax. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C154 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C290
+name = "EventCond_KeyItem"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C290..0x57C2A1 (0x12 bytes): EventScript_Conditions[13]: KeyItem_Has(operand). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C188 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C2B0
+name = "EventCond_ChapterAtMost"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C2B0..0x57C2C1 (0x12 bytes): EventScript_Conditions[14]: Cond_ByteFA <= the operand (unsigned, setbe). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C1B4 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C2D0
+name = "EventCond_RecordBit0"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C2D0..0x57C2E9 (0x1A bytes): EventScript_Conditions[15]: CharacterRecords[operand] +0xB bit 0 (the operand a whole byte, unchecked). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C1E0 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C2F0
+name = "EventCond_Gene"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C2F0..0x57C306 (0x17 bytes): EventScript_Conditions[16]: Flags_Test(0x904650, operand) - the 18 gene bits (battle_e5.md). PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C22C table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C3E0
+name = "EventCond_Counter0"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C3E0..0x57C3F1 (0x12 bytes; in no round-twelve list - between MoveScript_Variable and its jump table end, reached only as EventScript_Conditions[3]): the counter byte 0x903848 == the operand. docs/field_o.md."
+
+[[func]]
+pc = 0x57C400
+name = "EventCond_Counter1"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C400..0x57C411 (0x12 bytes): EventScript_Conditions[4]: 0x903849 == the operand. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C3A4 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C420
+name = "EventCond_Counter2"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C420..0x57C431 (0x12 bytes): EventScript_Conditions[5]: 0x90384A == the operand. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C3CC table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C440
+name = "EventCond_Counter3"
+ret = "unsigned char"
+params = "const unsigned char **at"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C440..0x57C451 (0x12 bytes): EventScript_Conditions[6]: 0x90384B == the operand. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015C3F4 table-anchored. docs/field_o.md."
+
+[[func]]
+pc = 0x57C920
+name = "MoveCmd_OpE9Start"
+ret = "unsigned char"
+params = "unsigned char *object, signed char a, signed char b, unsigned short c, unsigned short d, unsigned char e, unsigned char f"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57C920..0x57CA7F (0x160 bytes): Field_MoveSpeeds[object +4] 0: al 0; else +9 0, +0xB max(|a|, |b|) - 1, +0xA 16 / speed, +0x14 c << 8; kind 2 (MoveScript_ObjectKind): Field_Kind2X / Z, F3Divisor speed * 8, FAWord 0, state 2; else velocity (a << 15) / (frames * steps) and b likewise (0 without steps), state 1; al 1. MoveCmd_OpE9States[0]. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015CCC4 gap4. docs/field_o.md."
+
+[[func]]
+pc = 0x57CA80
+name = "MoveCmd_OpE9Arc"
+ret = "unsigned char"
+params = "unsigned char *object, signed char a, signed char b, unsigned short c, unsigned short d, unsigned char e, unsigned char f"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57CA80..0x57CBA5 (0x126 bytes): velocity into x z, +0x14 >> 8 into +0x3E, d into +0x14, frames less 1; below the ground falling: landed (f bit 1: state 0, al 0); at the top e not 0xFF: +0x2A f bit 0 (kind 6 not), Sprite_EnsureAnimation(e); a step done: next step (16 / speed) or MoveCmd_OpDB and state 3; Party_ApplyRecord(object); al 1. MoveCmd_OpE9States[1]. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015CF30 gap4. docs/field_o.md."
+
+[[func]]
+pc = 0x57CBB0
+name = "MoveCmd_OpE9Kind2"
+ret = "unsigned char"
+params = "unsigned char *object, signed char a, signed char b, unsigned short c, unsigned short d, unsigned char e, unsigned char f"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57CBB0..0x57CCD5 (0x126 bytes): the kind-2 object: height and rise as state 1, MapView_SetElevation(Sprite_Kind2 +0x3E), ground at Field_Kind2X / Z; landed on it with f bit 1 state 0; steps as state 1; none left: at or above the ground lands on Field_Kind2X / Z (state 0, al 0), else frames 1. MoveCmd_OpE9States[2]. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015D140 gap4. docs/field_o.md."
+
+[[func]]
+pc = 0x57CCE0
+name = "MoveCmd_OpE9Fall"
+ret = "unsigned char"
+params = "unsigned char *object, signed char a, signed char b, unsigned short c, unsigned short d, unsigned char e, unsigned char f"
+impl = "src/game/field_o.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FO, capstone to the last instruction), 0x57CCE0..0x57CD34 (0x55 bytes): height and rise as state 1; below the ground: the ground, state 0, al 0; else al 1. MoveCmd_OpE9States[3]. PSX twin (analysis/pairs_propagated.json, a hypothesis, no sibling name): 0x8015D330 gap4. docs/field_o.md."
+
+[[data]]
+pc = 0x663AFC
+name = "MoveCmd_Op88States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FO): MoveCmd_Op88 jmp by Sprite_Current +4: 0x5794F0 MoveCmd_Op88Start, 0x579560 MoveCmd_Op88Fade; MoveCmd_Op87States follows (reached by bytes 2, 3). docs/field_o.md."
+
+[[data]]
+pc = 0x663B04
+name = "MoveCmd_Op87States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FO): MoveCmd_Op87 jmp by Sprite_Current +4: 0x579610 MoveCmd_Op87Start, 0x579690 MoveCmd_Op87Fade; EventScript_OpLengths follows. docs/field_o.md."
+
+[[data]]
+pc = 0x663B84
+name = "MoveCmd_OpE9States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FO): MoveCmd_OpE9 call by Sprite_Current +4 with its seven words: 0x57C920 Start, 0x57CA80 Arc, 0x57CBB0 Kind2, 0x57CCE0 Fall; data words follow. docs/field_o.md."
+
+[[data]]
+pc = 0x6696DC
+name = "MoveCmd_F9Steps"
+ctype = "long"
+count = 16
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FO): MoveCmd_OpF9 reads the (x, z) pair by Sprite_Current +8 & 7 as a step per unit of Field_MoveSpeeds; image data, never written. docs/field_o.md."

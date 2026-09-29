@@ -1504,6 +1504,13 @@ designed in rather than bolted on.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=SaveNameInset`. Only under a
   language overlay, not with `BOF3X_LANG=original` (it rides in
   `YesNoLayout_Inject`, `src/game/yes_no_layout.cpp`).
+- **Since round twelve (2026-09-29):** the panel is ours
+  (`Menu_DrawSaveSlot`, `src/game/field_o.cpp`, [`field_o.md`](field_o.md)
+  section 2). It reads the disp8 at `0x576A48` back - `0x13` or this entry's
+  `0x15`, anything else a Fatal - so the patch, and switching it off, work
+  unchanged. Read with it: the texture window of the draw mode the panel
+  sends is the `push 0` at `0x5769C8`; the `ebx` pushed at `0x5769C7` is a
+  register save, not an argument.
 
 ### The menu backdrop past Config's four draws nothing
 
