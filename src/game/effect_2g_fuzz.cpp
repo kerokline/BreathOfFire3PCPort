@@ -345,6 +345,16 @@ void Seed(unsigned k) {
         s[0x5D] = static_cast<unsigned char>(PickOf(0, 1, 0x1D, 0x80, 0x81, 0x7F, 0xFF, sh::Next()));
         s[0x5E] = static_cast<unsigned char>(PickOf(0, 1, 0x1E, 0x80, 0x7F, 0xFF, sh::Next()));
         break;
+    case k15Pose4:
+    case k15Pose8:
+        // the member's animation run through half the time, no hit to take
+        if (sh::Half()) {
+            SetWord(Mem(at::kMember1Pose), k == k15Pose4 ? 4 : 8);
+            Mem(at::kMember1PoseDone)[0] = 1;
+            Mem(at::kHit)[0] = 0;
+        }
+        break;
+    case k15Countdown: Mem(at::kHit)[0] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next())); break;
     case k57Show: Game_AreaNumber = static_cast<unsigned short>(PickOf(2, 2, 3, 0x102, sh::Next())); break;
     case k5BFade: s[0x5D] = static_cast<unsigned char>(PickOf(2, 1, 0x22, 0x21, 0x20, 0x42, 0, sh::Next())); break;
     default: break;
