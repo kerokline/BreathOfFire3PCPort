@@ -12,7 +12,7 @@
 // read by any function here.
 //
 // What the harness lacks for this group, listed here and reported for the
-// fold after the wave (docs/field_c1.md section 4.2): narrower masks where
+// fold after the wave (docs/field_c1.md section 4.1): narrower masks where
 // Capcom pushes a whole register for a word or a byte (Menu_DrawBox,
 // AreaMap_SetByte, AreaMap_Slope's direction, MoveCmd_Move's object); answers
 // in the callee's range (Sprite_FindFree, Sprite_ObjectAt, Party_MemberAt);
