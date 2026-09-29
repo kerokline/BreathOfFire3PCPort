@@ -143,7 +143,7 @@ extern "C" void __cdecl Party_PlaceInFormation(int x, int z, unsigned slot) {
 // + x] = the value's low byte - AreaMap_Elevation's layer (the width byte
 // times z, the base a u16), 32-bit sums, unbounded. eax is left the row
 // offset; no caller reads it. Area 52's block puzzle, areas 108 and 135, and
-// the engine's 0x46BF80 / 0x46C100 (layer value 0x10). PSX 0x80155AF4
+// EffectKind30_ClaimCells / _FreeCells (0x46BF80 / 0x46C100; values 0x10, 0). PSX 0x80155AF4
 // (pairs_propagated "call").
 extern "C" void __cdecl AreaMap_SetHeight(unsigned x, unsigned z, unsigned value) {
     const std::uint32_t width = AreaMap_Header[0];

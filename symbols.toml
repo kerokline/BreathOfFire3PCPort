@@ -77715,3 +77715,487 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group BE3): 0x442E40 jmp by +2: 0x442E60, 0x442F10, 0x442F80; bytes follow. docs/battle_e3.md."
+
+[[func]]
+pc = 0x46BBF0
+name = "EffectKind30_Push"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46BBF0..0x46BD08 (0x119 bytes), cdecl: kind 0x30 state 1, reached by FC1 0x46BB30 through 0x653FE4 entry 1 (hidden in FC1 0x46BA90): Game_Mode 1 nothing but the draw; Field_Request 5 EffectKind30_FreeCells; else with +0xB set: +8 the leader facing 0x802D48, +0xC / +0x10 twice the 0x6696DC unit, +9 16, the cells freed, EffectKind30_WayBlocked(x + 16 steps, z + 16 steps): clear EffectKind30_Slide and +1 up (return); blocked the model (signed byte at *(+0x54) times 40 bytes from *(+0x50)) copied into 0x8C5D80, +0x50 set to it, _ShardsInit, _SparksInit, Sound_PlayEffect(0x10E), +1 3. The draw Sprite_UpdateScreenA unless Field_Request is 3. PSX twin (analysis/pairs_propagated.json): 0x8019DCC0 call-disputed, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46BD10
+name = "EffectKind30_Slide"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46BD10..0x46BD9E (0x8F bytes), cdecl: kind 0x30 state 2 (0x653FE4 entry 2) and EffectKind30_Push callee: +9 down, x / z by +0xC / +0x10; at +9 0: area 0x54 story flag 0x36 set at exactly (0x118000, 0x4A8000) else cleared, EffectKind30_ClaimCells, +0xB 0, +1 1; tail jump Sprite_UpdateScreenA. The cut says 144 (padding). PSX twin (analysis/pairs_propagated.json): 0x8019DEE4 gap67, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46BDA0
+name = "EffectKind30_Shatter"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46BDA0..0x46BDE6 (0x47 bytes), cdecl: kind 0x30 state 3 (0x653FE4 entry 3; hidden in EffectKind30_Slide by the old extent): +9 down; not 0 EffectKind30_ShardsStep, _SparksDraw, tail jump Sprite_UpdateScreenA; 0: area 0x92 story flag 0x44 set, tail jump Effect_Release. PSX twin (analysis/pairs_propagated.json): 0x8019DFD4 gap67, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46BDF0
+name = "EffectKind30_WayBlocked"
+ret = "unsigned char"
+params = "long x, long z"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46BDF0..0x46BF3A (0x14B bytes), cdecl: Sprite_ObjectAt(x, z, 1) touches the object it names (+0x80 bit 0, unsigned index) and goes on; the four cells from the high words (0,0) (1,0) (0,1) (1,1): EffectKind30_CellSolid 1 answers al 1; after each AreaMap_Elevation of the cell corner; al 1 unless all four heights equal (16 bits). Writes its own argument slots. EffectKind30_Push only. PSX twin (analysis/pairs_propagated.json): 0x8019E05C gap67, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46BF40
+name = "EffectKind30_CellSolid"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46BF40..0x46BF72 (0x33 bytes), cdecl: AreaMap_ByteAt(x, z): al 0 for 0, 0xC0, 0x20 and rows 0x80 / 0xA0, else 1. EffectKind30_WayBlocked only. PSX twin (analysis/pairs_propagated.json): 0x8019E214 gap67, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46BF80
+name = "EffectKind30_ClaimCells"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46BF80..0x46C0FF (0x180 bytes), cdecl: its cell and the neighbours its fractions reach: AreaMap_SetHeight(cell, 0x10), the old AreaMap_ByteAt into byte 0..3 of the dword +0x14, AreaMap_SetByte(cell, 0x11); Sprite_Current read after every call. EffectKind30_Slide and FC1 0x46BB50. PSX twin (analysis/pairs_propagated.json): 0x8019E278 gap67, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C100
+name = "EffectKind30_FreeCells"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C100..0x46C1F9 (0xFA bytes), cdecl: EffectKind30_ClaimCells undone: AreaMap_SetHeight(cell, 0), AreaMap_SetByte(cell, byte k of +0x14). EffectKind30_Push only. PSX twin (analysis/pairs_propagated.json): 0x8019E4C4 gap67, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C200
+name = "EffectKind30_ShardsInit"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C200..0x46C30F (0x110 bytes), cdecl: for the 24 faces (0x28 bytes, four s16 vertices at +2) of the model *(+0x50): EffectKind30_Shards record i gets the centre (sums >> 2), the vertices relative to it at +0x18, the velocity Gte_VectorNormalS(centre) >> 6 at +8, angles 0. EffectKind30_Push and the engine 0x46D710. PSX twin (analysis/pairs_propagated.json): 0x8019E650 gap67, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C310
+name = "EffectKind30_ShardsStep"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C310..0x46C359 (0x4A bytes), cdecl: each of the 24 shards: +0xC up 2, the centre moved by the velocity (16 bits), EffectKind30_ShardTumble(shard, face i of *(+0x50)). EffectKind30_Shatter and the engine 0x46D770. PSX twin (analysis/pairs_propagated.json): 0x8019E808 gap67, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C360
+name = "EffectKind30_ShardTumble"
+ret = "void"
+params = "unsigned char *shard, unsigned char *face"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C360..0x46C42C (0xCD bytes), cdecl: Gte_PushMatrix; angles +0x10..+0x14 Rand & 0xFC0; Gte_RotMatrix into a stack MATRIX, translation 0, Gte_SetTransMatrix, Gte_SetRotMatrix; each relative vertex through Gte_RotTrans plus the centre into the face vertex; Gte_PopMatrix. EffectKind30_ShardsStep only. PSX twin (analysis/pairs_propagated.json): 0x8019E8C8 callers, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C430
+name = "EffectKind30_SparksInit"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C430..0x46C4AC (0x7D bytes), cdecl: EffectKind30_Sparks: shade 0x40, size 0; eight records of 0x20 at 0x92C4C4 the object x, z, height and a direction (Rand & 0xFF) - 0x80, (Rand & 0xFF) - 0x80, Rand & 0x7F normalised by Gte_VectorNormal, the third << 9. EffectKind30_Push and the engine 0x46D710. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C4B0
+name = "EffectKind30_SparksDraw"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C4B0..0x46C54B (0x9C bytes), cdecl: 0x494060 (the map camera); each spark EffectKind30_SparkQuad(it, size word, shade byte) and moved by its direction, doubled while +9 is 0xC or more; then size up 0x80 or shade down 5. EffectKind30_Shatter and the engine 0x46D770 (tail jump). No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C550
+name = "EffectKind30_SparkQuad"
+ret = "void"
+params = "const long *point, unsigned size, unsigned shade"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C550..0x46C72A (0x1DB bytes), cdecl: a semi-transparent POLY_FT4 at Gfx_PacketNext: 0x494110 projects the point (x, y, depth floats), 0x4941E0 the square size at its depth; corners by x87 at 53 bits, u 0xE0 / 0xFF, v 0x30 / 0x4F, Gpu_GetClut(0xA0, 0x1E3), Gpu_GetTPage(0, 1, 0x2C0, 0x100), colour the shade; MapView_LinkPrimAt(x, z, 2, 0x48). The cut says 480 (padding). No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C730
+name = "EffectKind34_Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C730..0x46C741 (0x12 bytes), cdecl: Effect_KindHandlers[0x34] (0x655420): jmp [EffectKind34_Variants + 4 * +1], 6 entries (ours aborts past them). A gap of the tool: in no cut row. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C750
+name = "EffectKind34_V0Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C750..0x46C761 (0x12 bytes), cdecl: EffectKind34_Variants[0]: jmp [EffectKind34_V0States + 4 * +2], 4 entries (ours aborts past them). The cut says 32 (padding). PSX twin (analysis/pairs_propagated.json): 0x8019EE18 table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C770
+name = "EffectKind34_V0Burst"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C770..0x46C803 (0x94 bytes), cdecl: EffectKind34_V0States[0]: ten Effect_FindFree records made kind 0x34 variant 0 state 2 (+6 the count) at Sprite_Current place; Sound_PlayEffect(0x10C); +0xB set: Camera_Distance down 0x80, MapView_Redraw 3, +2 up; else Effect_Release. PSX twin (analysis/pairs_propagated.json): 0x8019EE5C table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C810
+name = "EffectKind34_V0BurstEnd"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C810..0x46C81D (0xE bytes), cdecl: EffectKind34_V0States[1]: Camera_Distance 0, tail jump Effect_Release. PSX twin (analysis/pairs_propagated.json): 0x8019EF94 table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C820
+name = "EffectKind34_V0DebrisStart"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C820..0x46C973 (0x154 bytes), cdecl: EffectKind34_V0States[2] (a gap of the tool: in no cut row): Sprite_SetAnimationBank(0x212 when Game_AreaNumber is one of EffectKind34_V0Areas, else 0x1B), al set Effect_Release; else height up Rand & 0x7F, x / z up Rand & 0x7FFF, +0x14 0xFFF80000, +0xC / +0x10 Rand & 0xFFF, animation 1 when either is above 0x800 (+0x2A 1 for +0x10), +9 0x10, +0xA 8, +2 up. PSX twin (analysis/pairs_propagated.json): 0x8019EFBC table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C980
+name = "EffectKind34_V0DebrisFly"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C980..0x46C9EB (0x6C bytes), cdecl: EffectKind34_V0States[3]: x, z, height dwords by +0xC, +0x10, +0x14; Sprite_ScriptTick; +9 down with a draw (Sprite_UpdateScreenSlot), then +0xA down drawn on odd Frame_Counter; then Effect_Release. PSX twin (analysis/pairs_propagated.json): 0x8019F1A8 table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46C9F0
+name = "EffectKind34_V1Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46C9F0..0x46CA01 (0x12 bytes), cdecl: EffectKind34_Variants[1]: jmp [EffectKind34_V1States + 4 * +2], 2 entries (ours aborts past them). PSX twin (analysis/pairs_propagated.json): 0x8019F26C table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CA10
+name = "EffectKind34_V1Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CA10..0x46CA89 (0x7A bytes), cdecl: EffectKind34_V1States[0]: Sprite_SetAnimationBank(0x18), +0x14 0x40, +0x20 -8, Sprite_SetAnimation(8), +2 up. Spawned by EffectKind3A_Hit. PSX twin (analysis/pairs_propagated.json): 0x8019F2B0 gap74, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CA90
+name = "EffectKind34_V1Fall"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CA90..0x46CAFE (0x6F bytes), cdecl: EffectKind34_V1States[1]: +0x14 += +0x20, height word += it; Sprite_ScriptTick; at or below AreaMap_Elevation Effect_Release, more than 0x100 above drawn, else drawn on odd Frame_Counter. PSX twin (analysis/pairs_propagated.json): 0x8019F374 gap74, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CB00
+name = "EffectKind34_V2Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CB00..0x46CB11 (0x12 bytes), cdecl: EffectKind34_Variants[2]: jmp [EffectKind34_V2States + 4 * +2], 4 entries (ours aborts past them). PSX twin (analysis/pairs_propagated.json): 0x8019F42C table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CB20
+name = "EffectKind34_V2Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CB20..0x46CB3B (0x1C bytes), cdecl: EffectKind34_V2States[0]: +9 0, +0xA 5, +2 up. PSX twin (analysis/pairs_propagated.json): 0x8019F470 gap74, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CB40
+name = "EffectKind34_V2Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CB40..0x46CBCD (0x8E bytes), cdecl: EffectKind34_V2States[1]: +9 up; at 4 back to 0, an Effect_FindFree record made kind 0x34 variant 2 state 2 at the place, +0xA down, at 0 Effect_Release. PSX twin (analysis/pairs_propagated.json): 0x8019F4B0 gap74, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CBD0
+name = "EffectKind34_V2PieceStart"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CBD0..0x46CC93 (0xC4 bytes), cdecl: EffectKind34_V2States[2]: Sprite_SetAnimationBank(0x18), x / z up Rand & 0xFFFF, +0x14 0, +0x20 -8, Sprite_SetAnimation(0xB + min(Rand & 3, 2)), +2 up. PSX twin (analysis/pairs_propagated.json): 0x8019F5DC gap74, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CCA0
+name = "EffectKind34_V2PieceFall"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CCA0..0x46CCEC (0x4D bytes), cdecl: EffectKind34_V2States[3]: Sprite_ScriptTick, +0x14 += +0x20, height += it; at or below AreaMap_Elevation Effect_Release, else drawn. PSX twin (analysis/pairs_propagated.json): 0x8019F700 gap74, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CCF0
+name = "EffectKind34_V3Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CCF0..0x46CD01 (0x12 bytes), cdecl: EffectKind34_Variants[3]: jmp [EffectKind34_V3States + 4 * +2], 2 entries (ours aborts past them). PSX twin (analysis/pairs_propagated.json): 0x8019F788 table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CD10
+name = "EffectKind34_V3Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CD10..0x46CD85 (0x76 bytes), cdecl: EffectKind34_V3States[0]: Sprite_SetAnimationBank(0x18), +0x14 0, +0x20 -8, Sprite_SetAnimation(9), +2 up. PSX twin (analysis/pairs_propagated.json): 0x8019F7CC gap74, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CD90
+name = "EffectKind34_V3Fall"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CD90..0x46CDDC (0x4D bytes), cdecl: EffectKind34_V3States[1]: +0x14 += +0x20, height += it, Sprite_ScriptTick; at or above AreaMap_Elevation drawn, else Effect_Release. PSX twin (analysis/pairs_propagated.json): 0x8019F88C gap74, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CDE0
+name = "EffectKind34_V4Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CDE0..0x46CDF1 (0x12 bytes), cdecl: EffectKind34_Variants[4]: jmp [EffectKind34_V4States + 4 * +2], 2 entries (ours aborts past them). PSX twin (analysis/pairs_propagated.json): 0x8019F920 table-anchored, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CE00
+name = "EffectKind34_V4Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CE00..0x46CE9B (0x9C bytes), cdecl: EffectKind34_V4States[0]: Sprite_SetAnimationBank(0x46), al set Effect_Release; else +0x29 up, +0x48 1, step (0, -0x2000, 0x40), Sprite_SetAnimation(0), +2 up. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CEA0
+name = "EffectKind34_V4Move"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CEA0..0x46CEE1 (0x42 bytes), cdecl: EffectKind34_V4States[1]: x, z by +0xC, +0x10, height word by +0x14; +0 bit 7 Effect_Release, else drawn. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CEF0
+name = "EffectKind3A_Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CEF0..0x46CF01 (0x12 bytes), cdecl: Effect_KindHandlers[0x3A] (0x655438): jmp [EffectKind3A_States + 4 * +1], 3 entries (ours aborts past them). A gap of the tool: in no cut row. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CF10
+name = "EffectKind3A_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CF10..0x46CFB4 (0xA5 bytes), cdecl: EffectKind3A_States[0]: +8 the leader facing; x / z the leader plus Field_DirectionSteps for it, height the leader + 0xC0; step 16 times the 0x6696DC unit; +0xA 0xE, +0xB 0, +1 up. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46CFC0
+name = "EffectKind3A_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46CFC0..0x46D071 (0xB2 bytes), cdecl: EffectKind3A_States[1]: x / z by the step; the area block tile word at the cell 0 Effect_Release; EffectKind3A_Hit: EffectKind3A_LeaderPose, +0x27 the leader +0x27, Sprite_SetAnimation(0x4A), Sound_PlayEffect(0x10E), +1 up; else +0xA down, at 0 Effect_Release. PSX twin (analysis/pairs_propagated.json): 0x8019FC28 callers, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46D080
+name = "EffectKind3A_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46D080..0x46D0D8 (0x59 bytes), cdecl: EffectKind3A_States[2]: with Field_Request set and +0xB set Sprite_ScriptTickOnce (al: +0xB 1), drawn while +0xB is 2; with Field_Request 0 Sprite_ScriptTickOnce, al or +0xB set Effect_Release else drawn. PSX twin (analysis/pairs_propagated.json): 0x8019FD48 gap44, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46D0E0
+name = "EffectKind3A_LeaderPose"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46D0E0..0x46D177 (0x98 bytes), cdecl: Sprite_Current given the leader graphics bytes (+0x2C, +0x4C, +0x29 from ObjTrio 0) and +0x24 1, +0x28 2, +0x2B 1, +0x25 0x1D, the rest 0. EffectKind3A_Fly and FC1 0x46B7C0. PSX twin (analysis/pairs_propagated.json): 0x8019FE18 gap44, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46D180
+name = "EffectKind3A_Hit"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46D180..0x46D3F3 (0x274 bytes), cdecl: al: an object at the place (Sprite_ObjectAt margin 0, touched, signed index) 1; leader height more than 0x80 above the ground 0, ground more than 0x100 above it 1; area byte 0x11 1; the first 0xFD cell of the cell and the neighbours its fractions reach cleared by FE2 0x5728D0, none 0; one: Rand low nibble above 0xC +0xB 2, FE1 0x5307C0(10 or 5), an Effect_FindFree record made kind 0x34 variant 1 at the place, leader +7 1; else +0xB 0; 1. The cut says 640 (padding). PSX twin (analysis/pairs_propagated.json): 0x8019FEEC callers, not read. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46D400
+name = "EffectKind41_Run"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46D400..0x46D411 (0x12 bytes), cdecl: Effect_KindHandlers[0x41] (0x655454): jmp [EffectKind41_States + 4 * +1], 4 entries (ours aborts past them). A gap of the tool: in no cut row. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46D420
+name = "EffectKind41_Start"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46D420..0x46D476 (0x57 bytes), cdecl: EffectKind41_States[0]: offset word +0x38 0, +0x3A -10 with Field_InputFlags bit 0 else -20, rise +0x10 0x20000, commit slot +0x29 3, +9 6, +1 up. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46D480
+name = "EffectKind41_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46D480..0x46D4D7 (0x58 bytes), cdecl: EffectKind41_States[1]: +9 down, 0x46D5F0(member +0xB screen words +0x2E, +0x30 plus the offset, +6, +0x27); +9 0 +1 up. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46D4E0
+name = "EffectKind41_Bounce"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46D4E0..0x46D565 (0x86 bytes), cdecl: EffectKind41_States[2]: +0x10 up 0x14000, offset by it; offset high word not negative: +0x10 negated, +9 6, +1 up; drawn. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[func]]
+pc = 0x46D570
+name = "EffectKind41_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/field_c2.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group FC2, capstone to the last instruction), 0x46D570..0x46D5EC (0x7D bytes), cdecl: EffectKind41_States[3]: +9 0 Effect_Release; else +9 down, the offset moved as the bounce, drawn on odd Frame_Counter. No PSX twin paired. Fuzz only: neither recorded route enters it. docs/field_c2.md."
+
+[[data]]
+pc = 0x653FF4
+name = "EffectKind34_Variants"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind34_Run 0x46C730 jmp by +1: EffectKind34_V0Run .. V4Run and FC1 0x46A310; the count to the next table the code names (0x65400C), no compare. docs/field_c2.md."
+
+[[data]]
+pc = 0x65400C
+name = "EffectKind34_V0States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind34_V0Run jmp by +2: 0x46C770, 0x46C810, 0x46C820, 0x46C980; EffectKind34_V0Areas follows. docs/field_c2.md."
+
+[[data]]
+pc = 0x65401C
+name = "EffectKind34_V0Areas"
+ctype = "unsigned char"
+count = 9
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): nine area bytes EffectKind34_V0DebrisStart compares Game_AreaNumber with (index 8 down to 0). docs/field_c2.md."
+
+[[data]]
+pc = 0x654028
+name = "EffectKind34_V1States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind34_V1Run jmp by +2: 0x46CA10, 0x46CA90; EffectKind34_V2States follows. docs/field_c2.md."
+
+[[data]]
+pc = 0x654030
+name = "EffectKind34_V2States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind34_V2Run jmp by +2: 0x46CB20, 0x46CB40, 0x46CBD0, 0x46CCA0. docs/field_c2.md."
+
+[[data]]
+pc = 0x654040
+name = "EffectKind34_V3States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind34_V3Run jmp by +2: 0x46CD10, 0x46CD90. docs/field_c2.md."
+
+[[data]]
+pc = 0x654048
+name = "EffectKind34_V4States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind34_V4Run jmp by +2: 0x46CE00, 0x46CEA0; EffectKind3A_States follows. docs/field_c2.md."
+
+[[data]]
+pc = 0x654050
+name = "EffectKind3A_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind3A_Run 0x46CEF0 jmp by +1: 0x46CF10, 0x46CFC0, 0x46D080. docs/field_c2.md."
+
+[[data]]
+pc = 0x65405C
+name = "EffectKind41_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind41_Run 0x46D400 jmp by +1: 0x46D420, 0x46D480, 0x46D4E0, 0x46D570; EffectKind18_States 0x65406C follows. docs/field_c2.md."
+
+[[data]]
+pc = 0x92BF80
+name = "EffectKind30_Shards"
+ctype = "unsigned char"
+count = 1344
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): 24 records of 0x38 EffectKind30_ShardsInit writes and _ShardsStep / _ShardTumble move: +0 centre (3 s16), +8 velocity, +0x10 angles, +0x18 four relative vertices (stride 8); EffectKind30_Sparks follows. docs/field_c2.md."
+
+[[data]]
+pc = 0x92C4C0
+name = "EffectKind30_Sparks"
+ctype = "unsigned char"
+count = 260
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group FC2): EffectKind30_SparksInit / _SparksDraw: +0 shade byte, +2 size word, then eight records of 0x20 (+0 x, +4 z, +8 height, +0x10 direction three longs). docs/field_c2.md."
