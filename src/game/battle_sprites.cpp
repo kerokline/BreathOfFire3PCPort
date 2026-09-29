@@ -37,6 +37,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 // The group's functions, declared here for the pointers below; symbols.toml
 // binds each name to this file (bof3/symbols.gen.h).
 namespace battle_sprites {
@@ -70,7 +73,7 @@ const Callees kOriginals = {
     Battle_MemberCoinFlip,
     Raw<unsigned char (__cdecl*)(unsigned)>(0x452DD0),
     Raw<void (__cdecl*)(unsigned)>(0x454290),
-    Raw<void (__cdecl*)()>(0x446B00),
+    Raw<void (__cdecl*)()>(bof3::addr::Battle_PickEnemyTarget),
     Battle_MemberOutAction,
     Raw<unsigned char (__cdecl*)(unsigned)>(0x454260),
     Raw<unsigned char (__cdecl*)(unsigned)>(0x454310),

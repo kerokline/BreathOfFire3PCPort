@@ -20,6 +20,9 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
 // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
 // every constant here whose target has a name in symbols.toml reads
 // bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
@@ -110,9 +113,9 @@ constexpr U kPoseSet = 0x8C5D80;          // the frame set set-up 26's end hook 
 // --- the callees nobody owns ------------------------------------------------
 constexpr U kEnemySound = 0x437450;       // (sound)
 constexpr U kEnemyActEnd = 0x4376A0;      // ()
-constexpr U kEndWin = 0x446DE0;           // () the end phase, step 1
-constexpr U kEndOther = 0x446E00;         // () step 2
-constexpr U kEndThird = 0x446E20;         // () step 3
+constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
+constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
+constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
 
 }  // namespace at
 }  // namespace boss_se

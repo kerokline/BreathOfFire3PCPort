@@ -16,6 +16,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace battle_fx_tasks {
 
 namespace at {
@@ -58,7 +63,7 @@ constexpr unsigned kMagicRowCount = 151;
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, called by address.
-constexpr std::uint32_t kAfterAreaScript = 0x446E20;  // not in round 8's queue; tail-jumped to by 0x437720 (unread)
+constexpr std::uint32_t kAfterAreaScript = bof3::addr::BattleEnd_EnterStep3;  // not in round 8's queue; tail-jumped to by 0x437720 (unread)
 
 using Handler = void (__cdecl*)();
 

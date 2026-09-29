@@ -41,6 +41,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace {
 
 namespace at = magic_harness::at;
@@ -150,7 +153,7 @@ unsigned Alloc(std::uint32_t address) { return MH_AT(ByteFn, address)() & 0xFFu;
 
 // Capcom's, unnamed, in no group: turns the dx / dz pair +0xC / +0x10 of the
 // task it is given by its direction byte +8 (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = 0x446770;
+constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 
 // Other units' functions (docs/magic_s38.md section 3) are ours now and

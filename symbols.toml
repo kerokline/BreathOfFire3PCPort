@@ -76143,3 +76143,612 @@ ctype = "unsigned long"
 count = 2
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group BE6): BattleFxTrail_Dispatch's table by +1: BattleFxTrail_Start, then BossWeretigrFx_TrailFade (round eleven's, which frees the slot). docs/battle_e6.md."
+
+# --- round twelve group BE4 (docs/battle_e4.md): damage, the pace and target helpers, the item command's states 5..9 and the equipment window, the escape ---
+
+[[func]]
+pc = 0x444660
+name = "BattleWin_DimScreen"
+psx = 0x801D98D0
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x444660..0x4446DC (0x7D bytes): the page (0x3C0, 0) draw mode (Gpu_GetTPage(0, 2, 0x3C0, 0); Gpu_SetDrawMode with the fifth word the 0 left on the stack), Gfx_CommitPrim(1, 0xC), then a TILE at Gfx_PacketNext read again: (0, 0), 960.0 x 240.0, grey 0x28, Gpu_SetSemiTrans(1), Gfx_CommitPrim(1, 0x1C). Called by BE1 0x42EE00. PSX 0x801D98D0 (gap44). docs/battle_e4.md."
+
+[[func]]
+pc = 0x4446E0
+name = "BattleWin_DrawTileTint"
+psx = 0x801D997C
+ret = "void"
+params = "int x, int y, int size"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4446E0..0x4447A3 (0xC4 bytes): the same head, then BattleWin_DrawTile tile: s16 x, s16 y, w / h the u16 pair of 0x64E268 by the size byte, colour the bytes 0x903850..0x903852, semi-transparent mode 1. Called raw by 0x433300 and 0x433350. PSX 0x801D997C (gap44). docs/battle_e4.md."
+
+[[func]]
+pc = 0x445600
+name = "Battle_EnemyOutpaces"
+psx = 0x801DB3AC
+ret = "unsigned char"
+params = "unsigned actor, unsigned average, unsigned highest"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x445600..0x44563E (0x3F bytes): al 1 when the enemy object (actor - 3)'s u16 +0xB8 is at least twice the average's low word and not below the highest's low word. Battle_PartyOutpaces' enemy twin; Battle_MarkFasterSide 0x445520 calls it. PSX 0x801DB3AC (gap74). docs/battle_e4.md."
+
+[[func]]
+pc = 0x4457F0
+name = "Battle_PrevTarget"
+psx = 0x801DB6BC
+ret = "unsigned char"
+params = "unsigned actor"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4457F0..0x4458A0 (0xB1 bytes): Battle_DefaultTarget's downward twin: from the actor byte down within its side (0..2 or 3..10, signed byte compares) the first actor Battle_ActorIsOut answers 0, then from the side top down to just above it; 0xFF if none. Nine callers (the target picks). PSX 0x801DB6BC (gap74). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446110
+name = "Battle_HitOrMissParty"
+ret = "int"
+params = "int amount, unsigned attacker, unsigned target"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446110..0x4461AD (0x9E bytes): round flag 0x80: the amount. A miss when the attacker's status bit 8 (member +0x90, enemy +0x92) and Rand bit 1, or when 0x939F9B is not below Rand() % 100; a miss clears member target +0x12C bit 0x10, ax 0. Battle_CalcDamage's call on a member. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x4461B0
+name = "Battle_HitOrMissEnemy"
+ret = "int"
+params = "int amount, unsigned attacker, unsigned target"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4461B0..0x4462A9 (0xFA bytes): round flag 0x80: the amount; attacker status bit 8 and Rand bit 1: a miss; a member attacker with +0x134 bit 0x100: a hit; target +0x90 bit 4 and Rand bit 1: a miss; an enemy attacker: a hit; else a hit when the low byte of 0x939FFC is above Rand() % 100. A miss clears enemy target +0x10C bit 0x10, ax 0. Battle_CalcDamage's call on an enemy. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x4463E0
+name = "Battle_PartyDefenceMean"
+ret = "int"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4463E0..0x446429 (0x4A bytes): the members' u16 +0xA6 summed to 16 bits over the count (dword 0x904AB0 low byte), divided by it (idiv unchecked: ours aborts at 0), plus u16 0x939F86, halved toward 0. Battle_BaseDamage's call. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x446540
+name = "Battle_SetHpChange"
+psx = 0x801DCEC0
+ret = "void"
+params = "unsigned actor"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446540..0x4465F6 (0xB7 bytes): with status 0x80 (member +0x90, enemy +0x92) the HP change word (+0x128 / +0x108) = ((hp * 10) / 10 + 5) / 10 of HP +0x98 / +0xA4. BattleStep_Status80 calls it twice. PSX 0x801DCEC0 (call-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446600
+name = "Battle_ReloadPartyRecords"
+psx = 0x801DD054
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446600..0x446642 (0x43 bytes): for each of the count's members 0x29 dwords of its character record (0x903A70 + 0xA4 x its +0x148) over its +0x80. BattleEnd_Finish's call. PSX 0x801DD054 (call-anchored, the sibling's name Battle_ReloadPartyRecords read the same). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446700
+name = "Battle_OrderPushFront"
+ret = "void"
+params = "unsigned actor"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446700..0x44671A (0x1B bytes): 0x904AE2 one down (stored first), the actor byte at 0x904ACC + it. Boss34_Event's call. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x446720
+name = "AutoBattle_FillCommands"
+psx = 0x801DD264
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446720..0x44676F (0x50 bytes): from 0x904AC3 while below 3 (signed) the member 0x904AB6[count] (signed index) to the first 0xFF: 0x904AAE = it, its +0x125 = 1 and +0x124 = 3, the count one up and stored. Battle_RoundStart's call. PSX 0x801DD264 (call-anchored, the sibling's name AutoBattle_FillCommands read the same). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446770
+name = "Battle_TurnVectorC"
+psx = 0x801DD318
+ret = "void"
+params = "unsigned char *record"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446770..0x4467B0 (0x41 bytes): the dwords +0xC / +0x10 turned by the direction byte +8: 1 (x, z) to (-z, x), 2 to (-x, -z), 3 to (z, -x). 73 callers, the spells' tasks and BE2 / BE3's. PSX 0x801DD318 (call-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x4467C0
+name = "Battle_TurnVector18"
+psx = 0x801DD394
+ret = "void"
+params = "unsigned char *record"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4467C0..0x446800 (0x41 bytes): the same on +0x18 / +0x1C. BE3 0x437260's call. PSX 0x801DD394 (gap31). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446810
+name = "Battle_MemberReactRoll"
+psx = 0x801DD410
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446810..0x4468A7 (0x98 bytes): round flag 0x40 set: cleared (16-bit), 0. Else 0 for Field_State +0x130 bit 0, acting actor 0x904B34 below 3, +0x90 & 0x4864, kind 4 with ability 0xA1, or 0x904B8E set without +0x134 bit 0x10; 1 for +0x130 bit 15; else +0xB9 above Rand() % 100. BE3 0x441D80 sets the flag on a 1. PSX 0x801DD410 (call-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446A80
+name = "Battle_WriteBackMember"
+psx = 0x801DD874
+ret = "void"
+params = "unsigned member"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446A80..0x446AFA (0x7B bytes): a present member's (+0 bit 0) +0x98, +0x9A, +0x9C into its character record's +0x18, +0x1A, +0x1C, its +0x90 &= 0x60A0 and copied to the record's +0x10. Battle_WriteBackParty calls it for 0, 1, 2. PSX 0x801DD874 (gap44, the sibling's name Battle_WriteBackMember read the same). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446B00
+name = "Battle_PickEnemyTarget"
+psx = 0x801DD940
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446B00..0x446BAA (0xAB bytes): 0x904B44 = among enemies 3..10 not out, the highest u16 +0x98 (kept as a byte, compared zero-extended), then of those equal to it the lowest HP +0xA4 (last of equals); 0 if none. Battle_MemberAutoTarget calls it four times. PSX 0x801DD940 (gap44). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446CB0
+name = "Battle_WakeRoll"
+psx = 0x801DDC7C
+ret = "unsigned char"
+params = "unsigned actor"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446CB0..0x446D85 (0xD6 bytes): the status counter (member +0x12D, enemy +0x10D): 0 at 0; 1 when 75 (from 3 on) or 0x64E3E8 by the counter is not below Rand() % 100; else 1 when (200 - 0x64E3E0 by +0xB6 / +0xC6) x 50 is not below Rand() % 10000. Four BattleStep wake steps call it. PSX 0x801DDC7C (gap44). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446D90
+name = "Battle_ReturnItem"
+psx = 0x801DDE44
+ret = "unsigned char"
+params = "unsigned slot, unsigned item"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446D90..0x446DD4 (0x45 bytes): an item word (category << 8 | id) back to its slot: the count list 0x656B14[category] at the slot, al 1 at 99 and nothing, else one more and the id 0x656B00[category][slot] set, al 0. The category unchecked (4's count pointer is 0). Seven callers. PSX 0x801DDE44 (call). docs/battle_e4.md."
+
+[[func]]
+pc = 0x446DE0
+name = "BattleEnd_EnterStep1"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446DE0..0x446DF5 (0x16 bytes): 0x904AA0 = 5, 0x904AA1 = 1, 0x904AA2 = 0: BattleEnd_Steps' step 1 (the win). Round eleven's raw 0x446DE0, the boss end hooks' tail jump. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x446E00
+name = "BattleEnd_EnterStep2"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446E00..0x446E15 (0x16 bytes): the same with step 2 (BattleEnd_Steps' other way out). The boss end hooks' tail jump. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x446E20
+name = "BattleEnd_EnterStep3"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x446E20..0x446E35 (0x16 bytes): the same with step 3. The boss end hooks' and BattleHook_Area189Script's tail jump. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x447F40
+name = "ItemMenu_SetupForMember"
+psx = 0x80094FB0
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x447F40..0x447FCB (0x8C bytes): window record 16 (0x8033A0) as a list for the menu actor: +0..+3 1, 8, 2, 2; +0xA the actor's +5, +0xB 2, +0xD 0xFF, +8 2, +9 0, words +4 0x140, +6 0x3F, +0x14 the command record's +0x10 & 2; 0x929F06 the actor's +5; the hand record 19 +0 0, +1 8, +2 0. BE5's four Dragon-run steps call it (0x450200, 0x450680, 0x450A70, 0x450EF0). PSX 0x80094FB0 (call-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x448BA0
+name = "BattleItemCmd_SideBegin"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x448BA0..0x448BF0 (0x51 bytes): hidden, 0x64E4A0 entry 0 (0x448B80's table by 0x904AA4, state 5 of BattleItemCmd_States): the target a whole side by the list item's flag byte (0x591810; bit 0x20 0x40, else 0x80), 0x904AA4 = 1, latch 0x7E01B8 = 0, 0x904AAF = 1. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x448C00
+name = "BattleItemCmd_SidePick"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x448C00..0x448C7B (0x7C bytes): hidden, 0x64E4A0 entry 1: cancel 0x904AA4 = 3, confirm 2; Input_AutoRepeat(pressed & 0xF000) & 0xF000 with the list item's flag bit 0x80 flips the target (^ 0xC0), cue 0x101. No PSX twin in pairs_propagated. docs/battle_e4.md."
+
+[[func]]
+pc = 0x448CA0
+name = "BattleItemCmd_EquipMenu"
+psx = 0x8009632C
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x448CA0..0x448DD7 (0x138 bytes): hidden, 0x64E4B0 entry 0 (0x448C80's table, state 6): system message 0x2F / 0x31 by record 21's option +0xA into the last queue entry; the hand at the option; 0xA000 flips the option (cue 0x101); cancel or 0x4000 (cue 0x100): record 21 off, record 4 on, 0x904AA2 = 2, 0x904AA3 = 1; confirm (cue 0x103): option 0 BattleEquip_OpenUse and sub-state + 3, option 1 BattleEquip_OpenChange and sub-state + 1. PSX 0x8009632C (callers). docs/battle_e4.md."
+
+[[func]]
+pc = 0x448DE0
+name = "BattleItemCmd_EquipSlotPick"
+psx = 0x80096530
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x448DE0..0x448FBC (0x1DD bytes): hidden, 0x64E4B0 entry 1: the six slots (record 18) for a change: the hand, message 0x30 / 0x32; cancel (cue 0x106) restores the list, state 1, sub-state 0; button 0x10 BattleEquip_RemoveSlot (cue 0x103 / 0x107); confirm (cue 0x103) the slot chosen, record 17 reset, sub-state + 1; up / down the slot cursor 0..5 wrapped (cue 0x100). PSX 0x80096530 (callers). docs/battle_e4.md."
+
+[[func]]
+pc = 0x448FC0
+name = "BattleItemCmd_EquipItemPick"
+psx = 0x800967F8
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x448FC0..0x4491CF (0x210 bytes): hidden, 0x64E4B0 entry 2: the candidates (record 17): the hand, Input_AutoRepeat twice, the cursor +0xB and top +0xA moved (rows, pages of 7, 0x7F / 0x79 caps, scroll requests +0x10), cue 0x100 on a move, the item's help line queued; cancel (cue 0x106) or a confirmed candidate (cue 0x103, BattleEquip_Apply) back to the slots (sub-state - 1); BattleEquip_Preview each frame otherwise. PSX 0x800967F8 (callers). docs/battle_e4.md."
+
+[[func]]
+pc = 0x4491D0
+name = "BattleItemCmd_EquipUsePick"
+psx = 0x80096B3C
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4491D0..0x4493D1 (0x202 bytes): hidden, 0x64E4B0 entry 3: the six slots for use: cancel (cue 0x106) back to the list; confirm with record 18's word +0x10: the member's +0x130 bit 0x4000, its +0x126 and the command word +2 that word, its help line queued, state 7; without: cue 0x107; up / down the slot cursor. PSX 0x80096B3C (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x4493E0
+name = "BattleItemCmd_EquipUseKind"
+psx = 0x80096E48
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4493E0..0x44947A (0x9B bytes): hidden, BattleItemCmd_States entry 7: the member's +0x126 item's flag byte: bit 0x40 state 8 / 9 at sub-state 0 (cue 0x103); bit 0x80 target 0xC0, state 8, sub-state 3; else a side (bit 0x10) or the member, state 8, sub-state 3. PSX 0x80096E48 (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449480
+name = "BattleItemCmd_EquipTargetDispatch"
+psx = 0x80096F58
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449480..0x449490 (0x11 bytes): hidden, BattleItemCmd_States entry 8: jmp [0x64E4C0 + 4 x (dword 0x904AA4 & 0xFF)], five entries, no bound (ours aborts past five). PSX 0x80096F58 (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x4494A0
+name = "BattleItemCmd_EquipTargetBegin"
+psx = 0x80096F94
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4494A0..0x449532 (0x93 bytes): hidden, 0x64E4C0 entry 0: flag bit 0x20 Battle_DefaultTarget(3), sub-state 1; else target 0 while Battle_ReturnTrue answers, else Battle_DefaultTarget(0), sub-state 2; latch 0, 0x904AAF = 1. PSX 0x80096F94 (gap86, the sibling's hypothesis name Item_TargetSetup read the same). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449540
+name = "BattleItemCmd_EquipPickEnemy"
+psx = 0x8009706C
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449540..0x44967B (0x13C bytes): hidden, 0x64E4C0 entry 1: BattleItemCmd_PickEnemy with the member's +0x126 item: cancel 4, confirm 3, 0x5000 with flag bit 0x80 to the party (sub-state + 1), right / left through Battle_WrapIndex, Battle_DefaultTarget / Battle_PrevTarget, cue 0x101. PSX 0x8009706C (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449680
+name = "BattleItemCmd_EquipPickMember"
+psx = 0x8009721C
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449680..0x44982B (0x1AC bytes): hidden, 0x64E4C0 entry 2: BattleItemCmd_PickMember with the member's item: cancel 4, confirm 3, 0x5000 with flag bit 0x80 to the enemies (sub-state - 1), right / left wrapped to 0 .. count - 1 through Battle_ReturnTrue, Battle_DefaultTarget / Battle_PrevTarget. PSX 0x8009721C (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449830
+name = "BattleItemCmd_EquipCommit"
+psx = 0x80097430
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449830..0x449898 (0x69 bytes): hidden, 0x64E4C0 entry 3 and 0x64E4D4 entry 2: cue 0x104, 0x904AAF = 0, command +1 = 5, member +1 = 2, 0x904AC3 one up, last queue entry +1 = 1, ItemMenu_FreeWindows, 0x904AA2..4 = 0, 0x904AA1 = 1 (no item spent). PSX 0x80097430 (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x4498A0
+name = "BattleItemCmd_EquipCancel"
+psx = 0x800974E0
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4498A0..0x4498E9 (0x4A bytes): hidden, 0x64E4C0 entry 4 and 0x64E4D4 entry 3: cue 0x106, BattleBanner_ShowName(the member), 0x904AAF = 0, record 16 +3 = 2 and word +4 = 0xFF38, 0x904AA1..4 = 4, 2, 1, 0. PSX 0x800974E0 (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x4498F0
+name = "BattleItemCmd_EquipSideDispatch"
+psx = 0x80097558
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x4498F0..0x449900 (0x11 bytes): hidden, BattleItemCmd_States entry 9: jmp [0x64E4D4 + 4 x (dword 0x904AA4 & 0xFF)], four entries, no bound (ours aborts past four). PSX 0x80097558 (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449910
+name = "BattleItemCmd_EquipSideBegin"
+psx = 0x80097594
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449910..0x449961 (0x52 bytes): hidden, 0x64E4D4 entry 0: BattleItemCmd_SideBegin with the member's +0x126 item. PSX 0x80097594 (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449970
+name = "BattleItemCmd_EquipSidePick"
+psx = 0x8009762C
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449970..0x4499F2 (0x83 bytes): hidden, 0x64E4D4 entry 1: BattleItemCmd_SidePick with the member's item: cancel 3, confirm 2, a direction with flag bit 0x80 flips the side, cue 0x101. PSX 0x8009762C (gap86). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449A00
+name = "BattleEquip_Apply"
+psx = 0x8009770C
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449A00..0x449BA2 (0x1A3 bytes): the six preview bytes 0x675F18 put on the character (0x66972C[0x904065[record 18 +0xC]]): each set and different from +0x12 + slot taken out (Inventory_Remove(0x64E4E4[slot], new, 1, 0)) and the old given back (Inventory_Add(.., old, 1, 0)), the slot set; Char_RecalcStats; the members' +0x92..+0x97 and +0xC0 block refreshed from their records, Formation_ApplyStatMods, +0xC0 into +0xA0 for the present, BE5 0x44FDE0, BE6 0x453300 per member. PSX 0x8009770C (callers). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449BB0
+name = "BattleEquip_Preview"
+psx = 0x80097AB0
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449BB0..0x449C6C (0xBD bytes): record 18 +0xD = 1 when Item_EquipMask(record 17 +8, +0xD) has no bit 1 << character (an 8-bit shift); 0x675F18..0x675F1D the character's +0x12..+0x17, the byte at the slot cursor the candidate. PSX 0x80097AB0 (call-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449C70
+name = "BattleEquip_RemoveSlot"
+psx = 0x80097BE0
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449C70..0x449DFB (0x18C bytes): the slot at the cursor taken off unless slot 0 or empty (al 0): Inventory_Add(0x64E4EC[slot], item, 1, 0), the slot cleared at the cursor read again, Char_RecalcStats, the members refreshed as BattleEquip_Apply; al 1. The cursor indexes six stack pointers unchecked (ours aborts past 5). PSX 0x80097BE0 (gap89). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449E90
+name = "BattleEquip_OpenChange"
+psx = 0x80098004
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449E90..0x449F58 (0xC9 bytes): records 18 (the slots: 1, 8, 3, 2; cursor 0, chosen 0xFF, member the actor's +5, +0xD 1, dword +0x20 0x675F18, words 0xFF56 / 0x3F) and 17 (the candidates: 1, 8, 4, 1; words from record 16) opened, record 16 off with word +4 0x140, 0x929F06 the actor's +5. PSX 0x80098004 (gap89). docs/battle_e4.md."
+
+[[func]]
+pc = 0x449F60
+name = "BattleEquip_OpenUse"
+psx = 0x80098128
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x449F60..0x449FD2 (0x73 bytes): record 18 opened for use (+3 3, +0xD 3 at the end), record 16 +3 = 4, 0x929F06 the actor's +5. PSX 0x80098128 (gap89). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A010
+name = "Escape_Roll"
+psx = 0x80098278
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A010..0x44A122 (0x113 bytes): hidden, 0x64E4FC entry 0 (0x44A000's table by 0x904AA3): 0x904AE6 counted; event battle 0x904AAA: state + 1; from the third try state 2; else the enemies' mean +0xB8 (over 0x904AB3; the sum reads objects 3..10, not actor - 3) against the party's mean +0xA8 (over 0x904AB1), Escape_Chance of the difference against Rand & 0x3F: state 2, or 1 / 2 by 0x904AE4 == 1. Both divisors unchecked (ours aborts at 0). PSX 0x80098278 (table-anchored, the sibling's name Escape_Roll read the same). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A130
+name = "Escape_FailDispatch"
+psx = 0x80098414
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A130..0x44A140 (0x11 bytes): hidden, 0x64E4FC entry 1: jmp [0x64E508 + 4 x (dword 0x904AA4 & 0xFF)], four entries, no bound (ours aborts past four). PSX 0x80098414 (table-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A150
+name = "Escape_Begin"
+psx = 0x80098450
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A150..0x44A2DE (0x18F bytes): hidden, 0x64E508 entry 0 and 0x64E518 entry 0: BattleBanner_Add(1, 0, 0, 0x3C, the text at 0x669E08), 0x93B8E0 = 0; window 4 +3 = 1; MoveScript_F3Divisor 0x20; the kind-2 x / z high words stepped by the s8 pair 0x64E4F4[0x904AAC]; MoveScript_FAWord (elevation - MapView_Elevation) >> 5 in state 2, else 0; LoadDatFile(0xD1); command-5 members' items back (Battle_ReturnItem); members not out turned (+8 ^ 2), +0x125 0, +1 2, +2..+4 0; sub-state + 1. PSX 0x80098450 (table-anchored, the sibling's name Escape_Begin read the same). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A2E0
+name = "Escape_StepBack"
+psx = 0x800986C8
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A2E0..0x44A328 (0x49 bytes): hidden, 0x64E508 entry 1: unless Field_Kind2Hold, MoveScript_F3Divisor 0x80, the step taken back, sub-state + 2. PSX 0x800986C8 (table-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A330
+name = "Escape_StepOn"
+psx = 0x8009875C
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A330..0x44A378 (0x49 bytes): hidden, 0x64E508 entry 2: unless Field_Kind2Hold, MoveScript_F3Divisor 0x40, the step taken again, sub-state + 1. PSX 0x8009875C (table-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A380
+name = "Escape_Failed"
+psx = 0x800987F0
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A380..0x44A44C (0xCD bytes): hidden, 0x64E508 entry 3: unless Field_Kind2Hold, Battle_BuildTurnOrder; members not out turned back, +1 = 2, Battle_ReturnQueuedItem, Battle_RemoveFromTurnOrder; Battle_OpenMsgWindow, banner of system message 0xF; round flag 8; phase 3, steps 0. PSX 0x800987F0 (callers, the sibling's hypothesis name Escape_Failed read the same). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A450
+name = "Escape_WinDispatch"
+psx = 0x8009892C
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A450..0x44A460 (0x11 bytes): hidden, 0x64E4FC entry 2: jmp [0x64E518 + 4 x (dword 0x904AA4 & 0xFF)], three entries, no bound (ours aborts past three). PSX 0x8009892C (gap44). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A470
+name = "Escape_Leave"
+psx = 0x80098968
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A470..0x44A4E2 (0x73 bytes): hidden, 0x64E518 entry 1: unless Field_Kind2Hold, MapView_SetElevation(AreaMap_Elevation(kind-2 x, z)), Sprite_ReleaseTint on the eight enemy objects, 0x494E70, Battle_OpenMsgWindow, banner of system message 0x10, sub-state + 1. PSX 0x80098968 (callers). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A4F0
+name = "Escape_End"
+psx = 0x80098A44
+ret = "void"
+params = "void"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A4F0..0x44A51F (0x30 bytes): hidden, 0x64E518 entry 2: once 0x904AE9 is 0, MoveScript_F3Divisor 0, phase 5 at step 3, steps 2..4 0. PSX 0x80098A44 (table-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A520
+name = "Escape_Chance"
+psx = 0x80098A94
+ret = "unsigned char"
+params = "int diff"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A520..0x44A5B5 (0x96 bytes): row (diff + 0x20) / 16 toward 0: below 0 0x1C, above 5 0x38, else 0x64E524[row]; + 8 at 0x904AE6 == 2; + 8 once for a member not out with +0x91 bit 0x20; capped at 0x40, al. Escape_Roll's call. PSX 0x80098A94 (call-anchored, the sibling's name Escape_Chance read the same). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A910
+name = "Battle_MemberNameToText"
+psx = 0x801DE964
+ret = "void"
+params = "unsigned member"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A910..0x44A950 (0x41 bytes): Str_CopyN(Text_Records[0], the character record 0x66972C[member +0x89], 8). Six callers (BE1, BE3, the wake steps). PSX 0x801DE964 (call-anchored). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44A960
+name = "Battle_EnemyNameToText"
+psx = 0x801DE9D4
+ret = "void"
+params = "unsigned actor"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44A960..0x44A989 (0x2A bytes): Str_CopyN(Text_Records[0], the enemy's working record 0x93B9E0 + (actor - 3) x 0x128, 12). The two enemy wake steps' call. PSX 0x801DE9D4 (gap20). docs/battle_e4.md."
+
+[[func]]
+pc = 0x44AA90
+name = "BattleBanner_AddLine"
+psx = 0x801DEB80
+ret = "void"
+params = "unsigned row, unsigned column"
+impl = "src/game/battle_e4.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE4), 0x44AA90..0x44AAC8 (0x39 bytes): BattleBanner_Add(2, 0, 0, 0x2D, Msg_SystemPtr(u16 0x64E52C[row x 10 + column])), both unbounded. BE3 0x4424A0's call. PSX 0x801DEB80 (call-anchored). docs/battle_e4.md."
+
+[[data]]
+pc = 0x64E4A0
+name = "BattleItemCmd_SideSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE4): 0x448B80 (unowned) is mov eax, [0x904AA4]; and eax, 0xFF; jmp [eax*4 + 0x64E4A0]; state 5 of BattleItemCmd_States. Holds BattleItemCmd_SideBegin, _SidePick, BattleItemCmd_Commit, 0x448B40; the sub-states the entries set are 1..3. docs/battle_e4.md."
+
+[[data]]
+pc = 0x64E4B0
+name = "BattleItemCmd_EquipSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE4): 0x448C80 (unowned) indexes it the same way; state 6. Holds BattleItemCmd_EquipMenu, _EquipSlotPick, _EquipItemPick, _EquipUsePick (sub-states 0..3 set by them). docs/battle_e4.md."
+
+[[data]]
+pc = 0x64E4C0
+name = "BattleItemCmd_EquipTargetSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE4): BattleItemCmd_EquipTargetDispatch 0x449480 indexes it by the dword 0x904AA4 low byte; state 8. Holds _EquipTargetBegin, _EquipPickEnemy, _EquipPickMember, _EquipCommit, _EquipCancel (sub-states 0..4). docs/battle_e4.md."
+
+[[data]]
+pc = 0x64E4D4
+name = "BattleItemCmd_EquipSideSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE4): BattleItemCmd_EquipSideDispatch 0x4498F0 indexes it the same way; state 9. Holds _EquipSideBegin, _EquipSidePick, _EquipCommit, _EquipCancel. The byte tables 0x64E4E4 and 0x64E4EC follow. docs/battle_e4.md."
+
+[[data]]
+pc = 0x64E4FC
+name = "Escape_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE4): 0x44A000 (unowned, Battle_MenuSteps entry 6) is xor eax, eax; mov al, [0x904AA3]; jmp [eax*4 + 0x64E4FC]. Holds Escape_Roll, Escape_FailDispatch, Escape_WinDispatch (Escape_Roll sets 1 or 2). docs/battle_e4.md."
+
+[[data]]
+pc = 0x64E508
+name = "Escape_FailSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE4): Escape_FailDispatch 0x44A130 indexes it by the dword 0x904AA4 low byte. Holds Escape_Begin, Escape_StepBack, Escape_StepOn, Escape_Failed. docs/battle_e4.md."
+
+[[data]]
+pc = 0x64E518
+name = "Escape_WinSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE4): Escape_WinDispatch 0x44A450 indexes it the same way. Holds Escape_Begin, Escape_Leave, Escape_End; the byte row 0x64E524 follows. docs/battle_e4.md."

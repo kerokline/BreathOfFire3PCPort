@@ -12,6 +12,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace battle_setup {
 
 namespace at {
@@ -79,12 +84,12 @@ constexpr std::uint32_t kSetPending = 0x446FB0;      // BF: (actor): kPending |=
 constexpr std::uint32_t kMessage = 0x44A650;         // BF: (a, b, c, d, text) a battle message line, bytes + a pointer
 constexpr std::uint32_t kMessageAt = 0x44A6E0;       // BF: (slot, a, b, c, d, text) the same at a given slot
 constexpr std::uint32_t kStatusTint = 0x446BB0;      // BF: (status): a tint on Sprite_Current when bit 0x80 is set
-constexpr std::uint32_t kPartyName = 0x44A910;       // (actor): the member's name into Text_Records[0]
-constexpr std::uint32_t kEnemyName = 0x44A960;       // (actor): the enemy's 12-byte name into Text_Records[0]
-constexpr std::uint32_t kWakeRoll = 0x446CB0;        // (actor) -> al: the status counter's roll (Rand)
-constexpr std::uint32_t kSetHpChange = 0x446540;     // (actor): the HP change word from HP when status 0x80
-constexpr std::uint32_t kEnemyOutpaces = 0x445600;   // (actor, average, highest) -> al, 0x4455C0's enemy twin
-constexpr std::uint32_t kReturnItem = 0x446D90;      // (slot, item) -> al: one back into the inventory
+constexpr std::uint32_t kPartyName = bof3::addr::Battle_MemberNameToText;       // (actor): the member's name into Text_Records[0]
+constexpr std::uint32_t kEnemyName = bof3::addr::Battle_EnemyNameToText;       // (actor): the enemy's 12-byte name into Text_Records[0]
+constexpr std::uint32_t kWakeRoll = bof3::addr::Battle_WakeRoll;        // (actor) -> al: the status counter's roll (Rand)
+constexpr std::uint32_t kSetHpChange = bof3::addr::Battle_SetHpChange;     // (actor): the HP change word from HP when status 0x80
+constexpr std::uint32_t kEnemyOutpaces = bof3::addr::Battle_EnemyOutpaces;   // (actor, average, highest) -> al, 0x4455C0's enemy twin
+constexpr std::uint32_t kReturnItem = bof3::addr::Battle_ReturnItem;      // (slot, item) -> al: one back into the inventory
 
 // Every callee that answers in al is typed `unsigned` here and its answer's
 // low byte tested by hand: Capcom's leave the upper 24 bits as they fall, so

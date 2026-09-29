@@ -14,6 +14,9 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
 // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
 // every constant here whose target has a name in symbols.toml reads
 // bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
@@ -54,8 +57,8 @@ constexpr U kMusicTrack = 0x904131;       // u8 Music_Track
 constexpr U kChapterStep = 0x8034E5;      // u8: the chapter's step
 
 // --- the callees nobody owns -------------------------------------------------
-constexpr U kEndWin = 0x446DE0;           // () the end phase, step 1
-constexpr U kEndOther = 0x446E00;         // () the end phase, step 2
+constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
+constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () the end phase, step 2
 constexpr U kTurnClose = 0x4376A0;        // () the turn closed
 constexpr U kTurnChance = 0x4376F0;       // () a chance of 0x904AA8 bit 7 and a task
 

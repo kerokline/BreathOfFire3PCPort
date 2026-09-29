@@ -32,6 +32,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace {
 
 namespace at = magic_harness::at;
@@ -131,7 +134,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 constexpr std::uint32_t kSetPolyFT3 = 0x5A7590;
 // Rotates the dx / dz pair +0xC / +0x10 of the task it is given by its
 // direction byte +8 - Capcom's, unnamed, in no group (docs/magic_s22.md).
-constexpr std::uint32_t kTurnOffset = 0x446770;
+constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
 using PrimFn = void (__cdecl*)(unsigned char*);
 
 // The phase handlers of other units a stack table holds (docs/magic_s22.md)

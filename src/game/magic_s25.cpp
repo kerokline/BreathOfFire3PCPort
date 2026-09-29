@@ -46,6 +46,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace {
 
 namespace at = magic_harness::at;
@@ -105,7 +108,7 @@ constexpr std::uint32_t kSetLineG4 = 0x5A76F0;
 // sprite to the middle of the target side), MagicFx_StepTowardPoint (one step
 // towards a point), MagicFx_NearPoint3D ("is the sprite within a box of the
 // point"). The engine's 0x446770 turns +0xC / +0x10 by the facing +8.
-constexpr std::uint32_t kTurnByFacing = 0x446770;
+constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
 // Other units' phases in the stack tables, by name: S17's Leech_WaitOrbs
 // ("free once the owner's +0xB is 0xFF") and the engine's MagicFx_DoneAndFree.
 

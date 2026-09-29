@@ -21,6 +21,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace magic_s29 {
 
 namespace cell {
@@ -83,7 +88,7 @@ constexpr std::uint32_t kShadeSteps = 0x65BC20;     // ShadowMote_Steps, 4
 }  // namespace tbl
 
 // Other units' functions (above): the fuzz's keys for their stand-ins.
-constexpr std::uint32_t kTurnByFacing = 0x446770;
+constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
 constexpr std::uint32_t kFreeRecord = 0x4F6290;
 
 }  // namespace magic_s29

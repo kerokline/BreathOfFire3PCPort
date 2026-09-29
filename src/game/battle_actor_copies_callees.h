@@ -16,6 +16,11 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace battle_actor_copies {
 
 using U = std::uint32_t;
@@ -75,7 +80,7 @@ constexpr U kQueueText = 0x93C2C4;
 
 // Callees with no name in symbols.gen.h: unnamed Capcom functions, called by
 // address (the round's cross-group rule).
-constexpr U kPrevTarget = 0x4457F0;  // unnamed, in no round-8 group: Battle_DefaultTarget's downward twin
+constexpr U kPrevTarget = bof3::addr::Battle_PrevTarget;  // unnamed, in no round-8 group: Battle_DefaultTarget's downward twin
 
 // Every callee returns eax whole (U), so that a use of more than the original
 // reads shows in the fuzz; ours keep the byte where the original keeps al.

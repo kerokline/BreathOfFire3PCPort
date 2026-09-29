@@ -34,6 +34,9 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
+// Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
+// bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+
 namespace {
 
 namespace at = magic_harness::at;
@@ -102,7 +105,7 @@ using ByteFn = unsigned char (__cdecl*)();
 void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
 
 // Capcom's and other groups' code this group calls (docs/magic_c1.md section 8).
-constexpr std::uint32_t kTurnOffset = 0x446770;  // engine: +0xC / +0x10 of a task turned by its +8
+constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;  // engine: +0xC / +0x10 of a task turned by its +8
 // Other groups' functions and the phase handlers a stack table holds are ours
 // now and called by name (bof3::addr): Port_DroppedCall (MAGIC124's extent, a
 // bare ret) and S37's MagicFx_FreeCurrentRecord among them.
