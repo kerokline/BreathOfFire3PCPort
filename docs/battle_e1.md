@@ -8,8 +8,8 @@
 (`0x432430`, `0x432440`, section 2). Each was read to its last instruction
 with capstone and fuzzed through the boss harness's engine frame
 ([`boss_harness.md`](boss_harness.md) section 10) without edits to it: one
-`Run`, 246,000 rounds, 0 mismatches (this worktree). CONTROLS_LINE
-`BOF3X_SHADOW='*'`: STAR_LINE Three of the functions are entered by the
+`Run`, 246,000 rounds, 0 mismatches (this worktree). 62 negative controls planted, all refused by a count (section 6).
+`BOF3X_SHADOW='*'` headless at this branch's tip: exit 0, 656 self-test lines, every harness's runs 0 mismatches (`boss_harness_eh` and `battle_e1` among them). Three of the functions are entered by the
 owner's `dragonTransform` route (section 11); the rest are fuzz only.
 
 Game facts below are what the code does; where a name says more (the
@@ -284,16 +284,83 @@ function reads again after a call.
 
 **Result (this worktree):**
 
-    RESULT_LINE
+    shadow      battle_e1 self-test: 246000 rounds over 41 functions (6000 each), 1072742 calls to the stand-ins, 0 MISMATCHES; 38343 bytes of state (37 regions) and the stand-ins' log compared
+
+Every listed callee and every table entry was reached (the coverage line: `0x446D90` 678, `BattleQueue_Push` 720, `0x42E250` 545, `0x452EB0` 786, `0x452F10` 609 the rarest). Two first runs were not clean, both the fuzz's or the reading's: `Cmd_AutoBattle` walks `0x904AB6[i]` (the loop re-enters after the `xor eax, eax`, so the index is the counter - a first reading had it always entry 0), and `BattleAction_AbilityNotice` faulted on both sides for an actor past 0x30 (section 7.3), now seeded 0..10.
 
 ## 6. Negative controls
 
-`build/be1_controls.py` (a scratch script, not committed): each control
+`be1_controls.py` (a scratch script, not committed; run from `build/`): each control
 plants one change in `battle_e1.cpp` anchored on a unique string,
 rebuilds, runs that clone alone (`BOF3X_BE1_ONLY=<address>`), restores and
 rebuilds. Counts are rounds of 6,000 that mismatched, in this worktree.
 
-CONTROLS_TABLE
+| n | Clone | Planted | Refused (rounds of 6,000) |
+|---|---|---|--:|
+| C1 | `0x42D7A0` | TallyOpen: 0x929F08 = 1, not 0 | 2959 |
+| C2 | `0x42D7F0` | TallyCount: jae for ja (the count at its target waits) | 203 |
+| C3 | `0x42D7F0` | TallyCount: five rows, not six | 544 |
+| C4 | `0x42D880` | TallyClose: state 2, not 1 | 2959 |
+| C5 | `0x42D8C0` | DrawTally: the last line 1 higher | 6000 |
+| C6 | `0x42D8C0` | DrawTally: the row without esi's left-over upper half | 2018 |
+| C7 | `0x42DA60` | ApplyTally: below-or-equal 0x32 | 563 |
+| C8 | `0x42DA60` | ApplyTally: target [3] not re-read after the call | 4 |
+| C9 | `0x42DB40` | DrawPlus: the upright 1 longer | 6000 |
+| C10 | `0x42DC00` | EquipDispatch: entries 0 and 2 swapped | 4012 |
+| C11 | `0x42DC10` | EquipOpenDispatch: entries 0 and 2 swapped | 4012 |
+| C12 | `0x42DC20` | EquipOpen: the timer 3 | 2959 |
+| C13 | `0x42DC80` | EquipFadeIn: 0x675EC0 = 2 | 1594 |
+| C14 | `0x42DCD0` | EquipRun: the backdrop before the step | 6000 |
+| C15 | `0x42DCF0` | EquipSlotInput: xor 2 | 4472 |
+| C16 | `0x42DCF0` | EquipSlotInput: message 0xDD | 6000 |
+| C17 | `0x42DCF0` | EquipSlotInput: the cancel timer 6 | 1182 |
+| C18 | `0x42DE50` | EquipListInput: the cursor stops at 0x7E | 95 |
+| C19 | `0x42DE50` | EquipListInput: the page-on bound 0x6F | 19 |
+| C20 | `0x42DE50` | EquipListInput: the count from +0xC | 509 |
+| C21 | `0x42E040` | EquipLeaveDispatch: entries swapped | 6000 |
+| C22 | `0x42E050` | EquipFadeOut: Transition_Start(3) | 1594 |
+| C23 | `0x42E090` | EquipLeave: four bytes copied | 2948 |
+| C24 | `0x42ED90` | BattleHold_Dispatch: entries 0 and 2 swapped | 4012 |
+| C25 | `0x42EDA0` | Shrink: by 1 | 5540 |
+| C26 | `0x42EE00` | ShowAll: the icons 1 right | 6000 |
+| C27 | `0x42EE00` | ShowAll: the held bit 0x200 | 2991 |
+| C28 | `0x42EEA0` | Regrow: to 9 | 470 |
+| C29 | `0x42EF50` | Cmd_AutoBattle: command 4 given back | 826 |
+| C30 | `0x42EF50` | Cmd_AutoBattle: +0x134 bit 5 | 832 |
+| C31 | `0x42EF50` | Cmd_AutoBattle: round flag 0x20 | 4295 |
+| C32 | `0x42F5E0` | Kind3Dispatch: the table reversed | 4774 |
+| C33 | `0x42F5F0` | Kind3Banner: state 8 | 6000 |
+| C34 | `0x42F640` | Kind3Wait: round flag 8 | 2265 |
+| C35 | `0x42F9D0` | PickRandomAbility: party side 0xC0 | 46 |
+| C36 | `0x42F9D0` | PickRandomAbility: 0x8D for 0x8C | 1042 |
+| C37 | `0x42F9D0` | PickRandomAbility: the party side's targets swapped | 527 |
+| C38 | `0x42FE20` | AbilityNotice: flag 0x100 | 14 |
+| C39 | `0x42FE20` | AbilityNotice: the slot, not slot - 1 | 11 |
+| C40 | `0x4315C0` | AwaitRestore: status mask 0xBF7F | 1778 |
+| C41 | `0x4315C0` | AwaitRestore: position - 1 | 1756 |
+| C42 | `0x4319B0` | CountExpShares: bit 0x800 | 1550 |
+| C43 | `0x431C10` | LevelUpNotice: rows + 5 | 4023 |
+| C44 | `0x431C10` | LevelUpNotice: byte +5 for +7 | 2149 |
+| C45 | `0x431FE0` | ZennyBonus: 6 in +0x97 | 855 |
+| C46 | `0x432170` | Char_LevelUpGain: 98 the top | 282 |
+| C47 | `0x432170` | Char_LevelUpGain: stat 4 the high nibble | 104 |
+| C48 | `0x432170` | Char_LevelUpGain: a negative sum 1 | 353 |
+| C49 | `0x432170` | Char_LevelUpGain: jge for jg | 161 |
+| C50 | `0x432430` | BattleLoss_Dispatch: the table reversed | 4774 |
+| C51 | `0x432440` | FadeOut: row 0x1B | 6000 |
+| C52 | `0x432460` | ResetParty: the position words 2 on | 2713 |
+| C53 | `0x432460` | ResetParty: member 2 at count 2 | 1783 |
+| C54 | `0x4325F0` | Show: the bar 0x2D | 2959 |
+| C55 | `0x432630` | BarGrow: the bound 0xF3 | 553 |
+| C56 | `0x432630` | BarGrow: the grey / 4 | 2986 |
+| C57 | `0x432750` | Restart: 0x904AE6 for 0x904AE5 | 2959 |
+| C58 | `0x4327F0` | DrawPanels: the third 0x41 high | 6000 |
+| C59 | `0x432930` | DrawBlack: 241 high | 6000 |
+| C60 | `0x4329A0` | DrawCaption: 0x19 high | 6000 |
+| C61 | `0x432A30` | DrawBar: x1 w + 0x21 | 6000 |
+| C62 | `0x432A30` | DrawBar: the width's 15 bits | 1015 |
+
+All 62 refused by a count (exit 3, the mismatch on the planted function only); none equivalent. The smallest counts are the narrowest branches: C19 (the page-on bound, 19), C38 / C39 (the notice's learning path, 14 / 11), C8 (the target re-read after `Stat_AddClamped`, 4: the disturbance moves it in about one round in 1,500).
 
 ## 7. Latent defects and unchecked indexes (Capcom's, kept)
 
