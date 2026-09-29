@@ -74527,3 +74527,384 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-28 (round eleven group BSF): BossMyria_Hook's table: three BareRet. docs/boss_sf.md."
+
+# ---------------------------------------------------------------------------
+# Round twelve group BE6 (2026-09-29): the transformation, the gene cost, three
+# BattleFx_Dispatch tasks, the stat rebuild, the member roll, the AP pop-up,
+# the Field_Slots debts and BMAGIC's four map cells. docs/battle_e6.md.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x451480
+name = "DragonHistory_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x451480..0x45149A (0x1B bytes), cdecl, no calls: hidden in BE5's 0x450D60 catalogue extent; entry 6 of the step table 0x64ED50 that 0x450F30 jumps through by 0x904AA4 (the history of gene sets its step 5 0x451290 reads at 0x90460B). Window records 18 and 19 +3 = 4 and 2, 0x904AA3 = 3, 0x904AA4 = 2. PSX twin 0x800A37D8 (pairs_propagated, table-anchored; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x4514A0
+name = "DragonForm_Transform"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4514A0..0x451665 (0x1C6 bytes), cdecl, five calls: called by Accession_Start 0x4EAEA0. The actor's record +0x138 / +0x13C zeroed, +0x130 and +0x134 masked, Battle_RecalcStats; +0x134 bit 1; DragonForm_FindRecipe, then DragonForm_ApplyRecipe and the form code recipe + 4 (bits 16 / 17 of +0x134 for codes 8 / 7, 4) or DragonForm_Mix; the history of six four-byte gene sets at 0x904608 moved down, the chosen genes (0x904B84, count 0x904B87) and 0xFF into record 0, its byte 3 (group << 5) + code; 0x904B79 the group, 0x904B89 the code; Battle_RecalcStats again. Entered live by the owner's dragonTransform recipe (frame 1798). PSX twin 0x800A380C (pairs_propagated gap86; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x451670
+name = "DragonForm_FindRecipe"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x451670..0x4516EC (0x7D bytes), cdecl: the first recipe 0..10 whose three genes DragonForm_RecipeSlotHeld finds, its group code from 0x64ED6C into 0x675F57, answered in al; at recipe 6 DragonForm_TryPartyRecipe first (its answer when not 0, else 6 skipped); 0xFF for none. Entered live (dragonTransform, frame 1798). PSX twin 0x800A3B94 (gap86; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x4516F0
+name = "DragonForm_RecipeSlotHeld"
+ret = "unsigned char"
+params = "unsigned recipe, unsigned slot"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4516F0..0x451746 (0x57 bytes), cdecl, no calls: the gene at 0x64ED78 + 3 recipe + slot (low bytes); al 1 when it is 0xFF or among the chosen genes 0x904B84 (count 0x904B87), else 0. Entered live (frame 1798). PSX twin 0x800A3C60 (gap86; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x451750
+name = "DragonForm_TryPartyRecipe"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x451750..0x451796 (0x47 bytes), cdecl, one call: when a chosen gene is 0x10 and 0x904AB1 (the party's size, read once) is 3, DragonForm_PartyRecipe's al; else 0. Entered live (frame 1798). PSX twin 0x800A3CEC (gap86; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x4517A0
+name = "DragonForm_Mix"
+ret = "void"
+params = "unsigned unused"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4517A0..0x451C4B (0x4AC bytes), cdecl, 15 calls, its one word never read (DragonForm_Transform pushes 0xFF): the party backed up to 0x939AE0 (0x904AB0 records); fourteen s8 sums at 0x675F48 from the chosen genes' rows (0x64ED9C + 14 gene), gene 0xB negating ten, 0xA doubling, 0xC moving each by one with Rand; the form code 0..3 into 0x675F56 by sums 13, 11, 10; five stats through DragonForm_StatShift, the code's column of 0x64EE98 and 0x446F50 / 0x446F20, their changes at 0x939EE2..; the group code into 0x675F57; DragonForm_SetMixBytes, DragonForm_MixAbilities. Entered live (frame 1798). PSX twin 0x800A3D7C (callers; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x451C50
+name = "DragonForm_StatShift"
+ret = "unsigned char"
+params = "unsigned sum"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x451C50..0x451C7D (0x2E bytes), cdecl, no calls: al = the byte of 0x64EEAC by the s8 argument + 2 held to 0..4. Entered live (frame 1798). PSX twin 0x800A45B0 (gap89; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x451C80
+name = "DragonForm_SetMixBytes"
+ret = "unsigned char"
+params = "unsigned s0, unsigned s1, unsigned s2, unsigned s3, unsigned s4"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x451C80..0x451D9C (0x11D bytes), cdecl, no calls: the actor's nine form bytes +0xCF.. (mirrored +0xAF.., kept 0x939EEA..): s0..s2 through 0x64EEB4, two 2s, s4 through 0x64EEBE, a 2, s3 through 0x64EEB9 twice, each by the byte + 2 held to 0..4; al 0. Entered live (frame 1798). PSX twin 0x800A45FC (gap89; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x451DA0
+name = "DragonForm_MixAbilities"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x451DA0..0x451FDA (0x23B bytes), cdecl, 14 calls: the actor's ten-byte list +0xF4: the form code's abilities (0x64EEC4, three to a 0), DragonForm_AddAbilityRow by the sums above 0 (rows 0..9, 11..14), 0xD9 after the last and zeros. Entered live (frame 1798). PSX twin 0x800A4820 (gap89; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x451FE0
+name = "DragonForm_AddAbilityRow"
+ret = "unsigned char"
+params = "unsigned row, unsigned count"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x451FE0..0x45207E (0x9F bytes), cdecl, no calls: row's three abilities (0x64EED0 + 3 row) appended to the actor's list +0xF4 at count unless present, stopping at a 0 or at 9; the new count in al. Entered live (frame 1798). PSX twin 0x800A4AA8 (gap89; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x452080
+name = "DragonForm_ApplyRecipe"
+ret = "void"
+params = "unsigned recipe"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452080..0x4523B1 (0x332 bytes), cdecl, five calls: a recipe's form (0x64EF00 + 14 recipe: five stat percents through 0x446F50 / 0x446F20, nine bytes into +0xCF.., +0xAF.., 0x939EEA..), the party backed up first; its abilities from 0x64F028 + 8 recipe (to a 0, eight at most), 0xD9 and zeros. Entered live (frame 3163). PSX twin 0x800A4B7C (call-anchored; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x4523C0
+name = "DragonForm_PartyRecipe"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4523C0..0x452542 and its eight-case table 0x452544 (0x1A4 bytes; the cut's 0x452460 is its case for the byte 5 (table index 4), not a function), cdecl: the other members' +0x89 bytes (not out by Battle_ActorIsOut), the first two tried as a pair both ways round; four pairings answer a form 0xB..0x14 by DragonGenes_Held of 7, 5, 0xD or 3 (0x675F57 = 1 when held), one answers 0, else 0xFF. With fewer than two found it reads stack bytes it never wrote: ours aborts. PSX twin 0x800A4FC4 (call; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x452570
+name = "DragonGenes_Held"
+ret = "unsigned char"
+params = "unsigned gene"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452570..0x4525AB (0x3C bytes), cdecl, no calls: al 1 when the argument's low byte is among the chosen genes 0x904B84 (count 0x904B87), else 0. docs/battle_e6.md."
+
+[[func]]
+pc = 0x4525B0
+name = "DragonGenes_SumCost"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4525B0..0x4525E7 (0x38 bytes), cdecl, no calls: 0x904B78 = the byte sum of 0x64EC9C by each chosen gene, stored after each (battle_actions.md: the cost ability 0x97 is charged). Called by BE5's 0x44FFA0, 0x450610, 0x450700 (twice), 0x450E70; entered live (dragonTransform, frame 976). PSX twin 0x800A5260 (call-disputed; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x452680
+name = "BattleFxDash_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452680..0x4526A2 (0x23 bytes), cdecl: BattleFx_Dispatch slot 15 (the task 0x442E60 creates with BattleTask_Create(0, 15)): call through BattleFxDash_Steps by Sprite_Current +1, unbounded (ours aborts past 7), then a tail jmp Sprite_UpdateScreen while +0 is not 0. docs/battle_e6.md."
+
+[[func]]
+pc = 0x4526B0
+name = "BattleFxDash_Start"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4526B0..0x4526E7 (0x38 bytes), cdecl: BattleFxDash_Steps 0: +0x20 = +0x3C + 0x4000000, Sprite_SetAnimation(+8 + 0x38), +0xB = 0x10, +1 on. docs/battle_e6.md."
+
+[[func]]
+pc = 0x4526F0
+name = "BattleFxDash_WaitPose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4526F0..0x452715 (0x26 bytes), cdecl: BattleFxDash_Steps 1: when BattleObj_ScriptTickOnce answers, Sprite_SetAnimation(+8 + 0x3C) and +1 on. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452720
+name = "BattleFxDash_Rise"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452720..0x4527E1 (0xC2 bytes), cdecl: BattleFxDash_Steps 2: +0x3C up 0x1000000 while below +0x20; then +0x34 / +0x38 = Field_Kind2X / _Kind2Z + the s8 pair of 0x64E4F4 by 0x904AAC (its other pair and +8 ^= 2 for a member target), Sprite_SetAnimation(+8 + 0x40), +1 on; a tail jmp BattleObj_ScriptTickOnce. docs/battle_e6.md."
+
+[[func]]
+pc = 0x4527F0
+name = "BattleFxDash_Advance"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4527F0..0x45294B (0x15C bytes), cdecl, eight calls: BattleFxDash_Steps 3: a trail task BattleTask_Create(0, 0x12) (slot 18, tested for 0xFF) copied from the slot's 0x80 bytes; MagicFx_StepToward(target, 0x50), and near it (MagicFx_NearSprite3D 0x10000, eax tested whole) Sprite_SetAnimation(+8 + 0x44), Battle_SetTargetFlag40(target), +1 on; BattleObj_ScriptTickOnce's al. The engine's Restore Form call site MagicFx_StepToward's evidence names (0x4528A3) is this. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452950
+name = "BattleFxDash_Return"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452950..0x452A17 (0xC8 bytes), cdecl: BattleFxDash_Steps 4: when BattleObj_ScriptTickOnce answers, velocities toward the actor ((member - sprite) / 16 on +0x34, +0x38, +0x3C into +0xC, +0x10, +0x18), +0x14 = 0x40, +0x20 = -8, +1 on, a tail jmp BattleObj_ScriptTickOnce; else al 0. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452A20
+name = "BattleFxDash_Arc"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452A20..0x452A7B (0x60 bytes), cdecl: BattleFxDash_Steps 5: +0x34 += +0xC, +0x38 += +0x10, word +0x3E += word +0x14, +0x3C += +0x18, +0x14 += +0x20; at +0x14 == -0x40 +1 on; a tail jmp BattleObj_ScriptTickOnce. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452A80
+name = "BattleFxDash_Land"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452A80..0x452ACF (0x50 bytes), cdecl: BattleFxDash_Steps 6: the actor's +0 bit 6 cleared, Sprite_SetAnimation(owner +8 + 4) with Sprite_Current the owner (0x93B940) and put back, a tail jmp BattleTask_FreeCurrent. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452AD0
+name = "BattleFxPose_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452AD0..0x452AF2 (0x23 bytes), cdecl: BattleFx_Dispatch slot 16: call through BattleFxPose_Steps by +1 (ours aborts past 2), then a tail jmp Sprite_UpdateScreen while +0 is not 0. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452B00
+name = "BattleFxPose_Start"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452B00..0x452B34 (0x35 bytes), cdecl: BattleFxPose_Steps 0: Sprite_SetAnimation(+8 + 0x50), BattleObj_ScriptTickOnce (unread), +0x29 = 3, +9 = 8, +1 on. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452B40
+name = "BattleFxPose_WaitOwner"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452B40..0x452B55 (0x16 bytes), cdecl: BattleFxPose_Steps 1: BattleObj_ScriptTickOnce (unread); a tail jmp BattleTask_FreeCurrent once the owner's (0x93B940) +1 is 5. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452B60
+name = "BattleFxTrail_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452B60..0x452B82 (0x23 bytes), cdecl: BattleFx_Dispatch slot 18 (the trail BattleFxDash_Advance creates): call through BattleFxTrail_Steps by +1 (ours aborts past 2), then a tail jmp Sprite_UpdateScreen while +0 is not 0. docs/battle_e6.md."
+
+[[func]]
+pc = 0x452B90
+name = "BattleFxTrail_Start"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x452B90..0x452BE6 (0x57 bytes), cdecl: BattleFxTrail_Steps 0: +0 |= 0x20, +0x5C = 3, +0x5D / +0x5F / +0x5E = +0xB * 0xF0 (a byte), +9 = 8, +1 on; a tail jmp Sprite_ScriptTickOnce. docs/battle_e6.md."
+
+[[func]]
+pc = 0x453300
+name = "Battle_RecalcStats"
+ret = "void"
+params = "unsigned actor"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x453300..0x45355E (0x25F bytes), cdecl: an actor's stats rebuilt from its s8 buffs. A member: Battle_RecalcMemberStats(record + 0x80, actor). An enemy: four words +0xB4.. = 0x446F20(+0xD4.., buff * 2 + 100), four bytes +0xC9.. through 0x446F80, eight bytes copied, +0x114 bits 14 / 12 on +0xB4 / +0xB6, both through 0x446F20(v, 100). Then enemy (the index, a member's own number for a member) +0x114 bits 11 / 13 zero its +0xC4 / +0xBF. 26 call sites (BE2, BE3, BE4, BE5, magic_s12's 0x4B2060, Capcom's). Entered live (frame 1798). PSX twin 0x800A6B30 (call-anchored; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x453560
+name = "Battle_RecalcMemberStats"
+ret = "void"
+params = "unsigned char *view, unsigned member"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x453560..0x453799 (0x23A bytes), cdecl, twelve calls: view (the record + 0x80) four words +0x24.. through 0x446F20 by the member's buffs +0x138.., four bytes +0x39.. through 0x446F80 by +0x13C.., eight bytes +0x2F.. from +0x4F..; on the record +0x134 bits 0 and 14 triple +0xA4, bit 12 moves +0xA6 into it, bit 1 with form 0x16 (0x904B89) raises +0xBB / +0xBA by 0x1E through 0x446F80, bits 11 / 13 zero +0xB4 / +0xAF; +0xA4 / +0xA6 through 0x446F20(v, 100). Entered live (frame 1798). PSX twin 0x800A6F1C (call; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x453910
+name = "Battle_MemberRollByAction"
+ret = "unsigned char"
+params = "unsigned member"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x453910..0x453A01 (0xF2 bytes), cdecl, four calls: Battle_PickFlag8Member's test when the action record's +4 has bit 9: 0 when the member is out, lacks +0x130 bit 0, its +0x124 is not the actor, Battle_ActionBitSet(0x904B40 +2) or Battle_MemberListFull; else al 1 when Rand leaves no remainder by the odds (0x64F0FC, or 0x64F104 when 0x66972C + its +0x89 is 6) of the action row's high nibble (0x65C4D9 + 0x18 by 0x904B40's word +2). Ours aborts on odds 0. Entered live (frame 2366). PSX twin 0x800A7544 (callers; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x453A90
+name = "Battle_ActionBitSet"
+ret = "unsigned char"
+params = "unsigned action"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x453A90..0x453ABC (0x2D bytes), cdecl, no calls: al = bit (action & 31) of the dword 0x904088 + 4 (action >> 5), the argument's low byte (the set Battle_SettleFlag8 adds to). Also run by boss_harness_eh's self-test. PSX twin 0x800A77B4 (call-anchored; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x453AC0
+name = "Battle_MemberListFull"
+ret = "unsigned char"
+params = "unsigned member"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x453AC0..0x453B06 (0x47 bytes), cdecl, no calls: al 1 when all ten of the member's bytes +0xFE.. are not 0, else 0. Called by Battle_MemberRollByAction and Battle_MemberCoinFlip. PSX twin 0x800A77E4 (gap67; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x453EB0
+name = "Battle_SetApPopup"
+ret = "void"
+params = "unsigned amount, unsigned actor"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x453EB0..0x453F95 (0xE6 bytes), cdecl, one call: Battle_SetDamagePopup's twin for the AP change (EnemyOp_ReceiveAction passes the result's AP delta): BattleTask_Create(0, 1) unchecked (D54), +0xB = 1, +0x80 the actor's record, +0x60 the s16 amount's magnitude, +0x27 1 below 0 else 2, +7 4 / 2 / 0 by the actor's +0x12C / +0x10C bits 1, 3, 5. Called by EnemyOp_ReceiveAction, BE3's 0x441A90 / 0x442890, BE5's 0x44C5C0; entered live (frame 2526). PSX twin 0x800A7DF4 (gap67; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x454A80
+name = "Field_SlotsReleaseOwner"
+ret = "void"
+params = "const unsigned char *object"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6; read before by AR2B, area_w2b_callees.h), 0x454A80..0x454AAA (0x2B bytes), cdecl, one call: Field_SlotRelease(i) for every Field_Slots record i (8 of 0x10) whose +0xC is the object. Round eleven's debt: called by areas 85, 174, 198 and BossAmalgam_DeathEnd, BossMyria_Death. PSX twin 0x8014E3B0 (call; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x455290
+name = "Field_SlotStart"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned script"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6; read before by AR2B), 0x455290..0x4552F5 (0x66 bytes), cdecl, no calls: the first Field_Slots record without +0 bit 0 gets +0 = 1, +0xC the object, +4 the script, +2 = 0xFF, +3 the object's +0x27; al its index, 0xFF when none is free. Round eleven's debt: areas 85, 174, 198, BossAmalgam_Enter, BossMyria_Enter. PSX twin 0x80197CF0 (call; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x4CEB40
+name = "MapCell_DrawTexQuads"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4CEB40..0x4CED59 (0x21A bytes), cdecl, 15 calls: MapCell_Handlers[40] (hidden in FxSpiral_Draw's catalogue extent). Unless Area_TestCondition(the record's word) answers 0: five-dword entries after the head, each first vertex projected and, on screen by the bounds at 0x5C41FC..0x5C4208, an FT4 of its other three (Gte_Rtpt) with the fifth dword its texture, committed 0x48 to 7 / 4 / 6 / Draw_OtSlot by texture bits 14 and 30. PSX twin 0x801EFEFC (gap67; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x4CED60
+name = "MapCell_DrawShadedQuads"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4CED60..0x4CEFB0 (0x251 bytes), cdecl, twelve calls: MapCell_Handlers[41]. Unless Area_TestCondition answers 0: eight-dword entries, each a draw mode committed then a G4 of four vertices (Gte_RotTransPers4, order 1 2 3 0), semi-transparent by bit 31, four colours, committed 0x44; then draw mode 0x95. PSX twin 0x801F016C (gap67; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x4CEFC0
+name = "MapCell_DrawSpinQuads"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4CEFC0..0x4CF268 (0x2A9 bytes), cdecl, 15 calls: MapCell_Handlers[42]. Unless Area_TestCondition answers 0: a centre and three spin rates times Frame_Counter; six-dword entries each under a pushed matrix (the centre by Gte_RotTrans, its angles by Gte_RotMatrix times Camera_Matrix), an FT4 of four 10-bit vertices, the sixth dword its texture, committed 0x48. PSX twin 0x801F0488 (gap67; not read). docs/battle_e6.md."
+
+[[func]]
+pc = 0x4CF270
+name = "MapCell_DrawGroundSprite"
+ret = "void"
+params = "const unsigned char *record, unsigned b1, unsigned b0"
+impl = "src/game/battle_e6.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round twelve group BE6), 0x4CF270..0x4CF4A3 (0x234 bytes), cdecl, eight calls: MapCell_Handlers[43]. Unless Area_TestCondition answers 0: a point on AreaMap_Elevation projected (Gte_RotTransPers into MapView_ScreenXY); on screen and z not 0, a frame by Frame_Counter modulo byte 8 (unchecked: ours aborts on 0) against thresholds from byte 0xA, an FT4 of four s8 * 1125 / z corners, its texture, committed 0x48. PSX twin 0x801F0778 (callers; not read). docs/battle_e6.md."
+
+[[data]]
+pc = 0x64F0D0
+name = "BattleFxDash_Steps"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE6): BattleFxDash_Dispatch's table by +1: BattleFxDash_Start, _WaitPose, _Rise, _Advance, _Return, _Arc, _Land (the last frees the slot). docs/battle_e6.md."
+
+[[data]]
+pc = 0x64F0EC
+name = "BattleFxPose_Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE6): BattleFxPose_Dispatch's table by +1: BattleFxPose_Start, BattleFxPose_WaitOwner (never moves on). docs/battle_e6.md."
+
+[[data]]
+pc = 0x64F0F4
+name = "BattleFxTrail_Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE6): BattleFxTrail_Dispatch's table by +1: BattleFxTrail_Start, then BossWeretigrFx_TrailFade (round eleven's, which frees the slot). docs/battle_e6.md."
