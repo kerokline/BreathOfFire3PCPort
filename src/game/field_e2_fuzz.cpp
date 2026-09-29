@@ -266,6 +266,7 @@ static_assert(kCount == sizeof kClones / sizeof kClones[0], "one enum entry a cl
 alignas(16) unsigned char g_record[0x100];   // the map-cell record the draws are handed
 alignas(16) unsigned char g_grid[0x40];      // AreaMap_ByteAt's cells, 8 x 8 by the low bits of x and z
 alignas(16) unsigned char g_flagcell[0x10];  // what 0x903804 points at
+alignas(16) unsigned char g_ground[4];       // MapView_GroundAt's answers are near this s16
 
 // --- the stand-ins' effects ---------------------------------------------------------------------
 
@@ -335,6 +336,13 @@ U FxCommit(const U* a, U answer) {
 }
 U FxText(const U*, U answer) { return Key(sh::Text() + (answer & 0xF0)); }
 U FxGrid(const U* a, U answer) { return (answer & 0xFFFFFF00u) | g_grid[(a[0] & 7) + 8 * (a[1] & 7)]; }
+U FxGround(const U*, U answer) {
+    // a height within 0xC0 of the seeded one two times in three (the callers
+    // compare it with a sprite's height, and Field_WayBlockedWide with 0xC0)
+    const U n = sh::Noise();
+    if (n % 3 == 0) return answer;
+    return (answer & 0xFFFF0000u) | ((move_script::Word(g_ground) + (n >> 8) % 0x182u - 0xC1u) & 0xFFFFu);
+}
 U FxRepeat(const U*, U answer) {
     static const U kMoves[] = {0, 0x1000, 0x2000, 0x4000, 0x8000, 0xA000, 0x5000, 0xF000};
     const U n = sh::Noise();
@@ -381,6 +389,7 @@ const sh::Callee kFixed[] = {
     // louder: the cells from a seeded grid, the pad's moves, a record index below 12
     {FE2_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, kG, 0, 0, {}, &FxGrid},
     {FE2_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &FxRepeat},
+    {FE2_OURS(MapView_GroundAt), 2, {kAll, kAll}, kG, 0, 0, {}, &FxGround},
     {FE2_OURS(WorldMap_RecordIndex), 0, {}, sh::Answer::kByte, 0, 11},
     // not in either standard set
     {FE2_AT(537500), 2, {kU16, kU8}, kG, 0, 0},
@@ -471,6 +480,7 @@ const sh::Region kRegions[] = {
     {Key(g_record), sizeof g_record},
     {Key(g_grid), sizeof g_grid},
     {Key(g_flagcell), sizeof g_flagcell},
+    {Key(g_ground), sizeof g_ground},
 };
 
 // --- the moves -----------------------------------------------------------------------------------
@@ -590,6 +600,14 @@ void BuildRun(int row, int column) {
 void Seed(unsigned k) {
     SeedParty();
     sh::SetPointer(field_e2::at::kStreamFlag, g_flagcell + (sh::Next() & 7));
+    {
+        // the ground the heights are compared with: about the sprite's height
+        // plus its actor's offset (the step and hop helpers), or anywhere
+        const unsigned char* const s = Sprite_Current;
+        const U offset = W(field_e2::at::kPaceHeights + Field_State[0x89] * 2u);
+        const U height = move_script::Word(s + 0x3E);
+        move_script::SetWord(g_ground, PickOf(height + offset, height, height + 0x10 + offset, height - 0x10, sh::Next()));
+    }
     B(at::kEffectSlot) = static_cast<unsigned char>(sh::Often() ? 0 : 1 + sh::Next() % 0xFF);
     switch (k) {
     case kCallB:
@@ -663,7 +681,7 @@ void Seed(unsigned k) {
     case kObjFrame: B(at::kObject + 1) = static_cast<unsigned char>(sh::Next() % 4); break;
     case kObjControl: {
         const U pressed = sh::Next();
-        SetW(0x7E1BEC, sh::Half() ? pressed | 0x800u : pressed & ~0x800u);
+        SetW(0x7E1BEC, sh::Next() % 4 == 0 ? pressed | 0x800u : pressed & ~0x800u);
         SetW(at::kButtonsLeave, sh::Often() ? 0 : sh::Next());
         SetW(at::kButtonsRun, sh::Next());
         B(at::kRunDefault) = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
@@ -677,6 +695,7 @@ void Seed(unsigned k) {
         break;
     }
     case kObjHalt: SetW(at::kInputHeld, sh::Half() ? W(at::kInputHeld) & 0x0FFFu : W(at::kInputHeld)); break;
+    case kObjMove: Sprite_Current[9] = static_cast<unsigned char>(sh::Half() ? 0 : Sprite_Current[9]); break;
     case kObjEnd: B(at::kKind2Hold) = static_cast<unsigned char>(sh::Half() ? 0 : B(at::kKind2Hold)); break;
     case kObjDraw:
         B(at::kObject) = static_cast<unsigned char>(sh::Next() % 4 == 0 ? B(at::kObject) | 0x40 : B(at::kObject) & ~0x40);
@@ -774,6 +793,7 @@ void Args(unsigned k, U* a) {
     case kWayBlocked:
         a[0] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
         a[1] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
+        a[2] = (a[2] & 0xFFFF0000u) | ((move_script::Word(g_ground) + sh::Next() % 0x40u - 0x20u) & 0xFFFFu);
         break;
     case kCellHook: break;   // x, z any words
     case kDrawFrames:
