@@ -88,6 +88,11 @@ bool WantsShadow(const char* name);
 // tooling that must treat "a function we own" alike in both configurations.
 bool IsOwned(std::uint32_t original);
 
+// True if this original address was passed to Inject and the detour is ON -
+// false for one BOF3X_ORIGINAL left as Capcom's code. For the call trace's
+// BOF3X_CALLTRACE_REACH, which arms those.
+bool IsEnabled(std::uint32_t original);
+
 // Summary line for the log once every module has registered.
 void InjectReport();
 

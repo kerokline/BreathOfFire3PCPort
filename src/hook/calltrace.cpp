@@ -60,6 +60,12 @@ struct Call {
 Call g_detail[kMaxDetail];
 std::uint32_t g_details = 0;
 HANDLE g_out_detail = INVALID_HANDLE_VALUE;
+// BOF3X_CALLTRACE_REACH=1: an entry that is registered with Inject but left
+// original by BOF3X_ORIGINAL is armed like any other and its body is not an
+// owned range. A reach measurement over an all-original side (which of the
+// functions we own does a route enter?), not a frame hash: the counts are not
+// comparable with a run made without it.
+bool g_reach = false;
 // BOF3X_CALLTRACE_SPIN=n: burn n loop turns per counted call - a way to run
 // the game at a second speed, to find what depends on speed.
 std::uint32_t g_spin = 0;
@@ -318,6 +324,8 @@ void CallTrace_Start(void* dll_module) {
     if (!f) Fatal("calltrace: cannot open entry list %s", list);
     char line[512];  // longer than any comment line tools/calltrace.py writes
     int skipped = 0;
+    char reach[16];
+    g_reach = GetEnvironmentVariableA("BOF3X_CALLTRACE_REACH", reach, sizeof reach) != 0 && reach[0] == '1';
     while (std::fgets(line, sizeof line, f)) {
         if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
         char* end = line;
@@ -326,7 +334,7 @@ void CallTrace_Start(void* dll_module) {
         if (addr < lo || addr >= hi)
             Fatal("calltrace: %s lists 0x%08X, outside .text 0x%08X..0x%08X", list, (unsigned)addr,
                   (unsigned)lo, (unsigned)hi);
-        if (IsOwned(addr)) {
+        if (IsOwned(addr) && !(g_reach && !IsEnabled(addr))) {
             std::uint32_t size = static_cast<std::uint32_t>(std::strtoul(end, nullptr, 16));
             if (size == 0) Fatal("calltrace: %s gives no size for owned function 0x%08X", list, (unsigned)addr);
             if (g_owned_ranges == kMaxOwnedRanges) Fatal("calltrace: more than %d owned functions", kMaxOwnedRanges);
@@ -430,8 +438,8 @@ void CallTrace_Start(void* dll_module) {
         *At(g_entry[i]) = kInt3;
     }
     FlushInstructionCache(GetCurrentProcess(), At(lo), hi - lo);
-    Log("calltrace: %d entries armed from %s, %d left unarmed as owned, mode %s", g_entries, list,
-        skipped, g_all ? "all calls" : "first call");
+    Log("calltrace: %d entries armed from %s, %d left unarmed as owned, mode %s%s", g_entries, list,
+        skipped, g_all ? "all calls" : "first call", g_reach ? ", reach (left-original entries armed)" : "");
 }
 
 }  // namespace bof3
