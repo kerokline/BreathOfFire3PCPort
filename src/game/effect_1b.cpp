@@ -106,13 +106,17 @@ Handler StepAt(U table, unsigned index, unsigned count, const char* who) {
                     count, (unsigned)table);
     return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(table + 4 * index)))));
 }
-// A byte of one of the image's scripts or tables: the original reads past it
-// (or, at an index of -1, the byte before it); ours aborts there.
+// A byte of one of the image's scripts or tables: past its end the original
+// reads what follows, and ours aborts there. The steps read "the record before
+// +0xA", so with +0xA 0 the original reads up to four bytes BEFORE the script -
+// the last pointer of the step table in front of it, image constants - and ours
+// reads the same bytes (the steps' own start never gets there: +9 0 advances
+// +0xA before the read; a record left mid-step does, docs/effect_1b.md section 7).
 unsigned char ByteOf(U table, unsigned bytes, int index, const char* who) {
-    if (index < 0 || static_cast<unsigned>(index) >= bytes)
+    if (index < -4 || (index >= 0 && static_cast<unsigned>(index) >= bytes))
         bof3::Fatal("%s: byte %d of the %u-byte table 0x%X (the original reads past it)", who, index, bytes,
                     (unsigned)table);
-    return B(table + static_cast<U>(index));
+    return B(static_cast<U>(static_cast<std::int32_t>(table) + index));
 }
 std::uint16_t WordOf(U table, unsigned count, unsigned index, const char* who) {
     if (index >= count)

@@ -172,6 +172,7 @@ const sh::DataTable kTables[] = {
 // when there is one, else any. The rest see the effect-mode stand-in's
 // behaviour (0xFF a quarter of the time).
 bool g_unchecked;
+unsigned g_k;   // the clone being fuzzed (Seed's k), for Disturb
 U FxFindFree(const U*, U answer) {
     const U high = answer & 0xFFFFFF00u;
     if (!g_unchecked && (answer >> 8) % 4 == 0) return high | 0xFF;
@@ -243,7 +244,8 @@ void Disturb(U h) {
     case 3: B(at::kStyle) = static_cast<unsigned char>(v % 16); break;
     case 4: if (sh::InRegions(s, 0x80)) s[7] = static_cast<unsigned char>(s[7] ^ (1u << (v & 7))); break;
     case 5: if (sh::InRegions(s, 0x80)) SetLong(s + 0xC + 4 * (v & 1), static_cast<std::int32_t>(v % 12)); break;
-    case 6: B(v & 1 ? at::kRecord6State : at::kRecord6Hold) = static_cast<unsigned char>(v & 2 ? (v & 1 ? 0xE : 0) : v); break;
+    case 6:   // record 6's +1 is an index of kind 0x14's clone's table: for EffectKind0F_Child only
+        if (g_k == kChild) B(v & 1 ? at::kRecord6State : at::kRecord6Hold) = static_cast<unsigned char>(v & 2 ? (v & 1 ? 0xE : 0) : v); break;
     case 7: if (sh::InRegions(s, 0x80)) s[6] = static_cast<unsigned char>(v); break;
     case 8: B(at::kEquipA + 2 * (v & 1)) = static_cast<unsigned char>(v); break;
     default: break;
@@ -258,6 +260,7 @@ void ForRecords(void (*f)(unsigned char* r, bool current)) {
 }
 
 void Seed(unsigned k) {
+    g_k = k;
     g_unchecked = k == kListOpen || k == kChild2Gauge || k == kMessageList;
     unsigned char* const s = Sprite_Current;
     for (unsigned i = 0; i < 0x80; ++i) {
@@ -267,8 +270,6 @@ void Seed(unsigned k) {
     B(at::kStyle) = static_cast<unsigned char>(sh::Next() % 16);
     B(at::kLeader3) = static_cast<unsigned char>(PickOf(2, 3, 4, sh::Next()));
     B(at::kLeader4) = static_cast<unsigned char>(sh::Half() ? 2 : sh::Next() % 4);
-    B(at::kRecord6Hold) = static_cast<unsigned char>(sh::Often() ? 0 : sh::Next());
-    B(at::kRecord6State) = static_cast<unsigned char>(sh::Often() ? 0xE : PickOf(0xD, 0xF, sh::Next()));
     switch (k) {
     case kListOpen:
     case kListShow:
@@ -276,6 +277,10 @@ void Seed(unsigned k) {
         s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, sh::Next()));
         s[0xB] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
         s[6] = static_cast<unsigned char>(PickOf(0, 1, 2, sh::Next() % 32, sh::Next()));
+        break;
+    case kChild:   // record 6 holding state 0xE, or not (its +1 is kind 0x14's index elsewhere: seeded here only)
+        B(at::kRecord6Hold) = static_cast<unsigned char>(sh::Often() ? 0 : sh::Next());
+        B(at::kRecord6State) = static_cast<unsigned char>(sh::Often() ? 0xE : PickOf(0xD, 0xF, sh::Next()));
         break;
     case kChild0: s[3] = static_cast<unsigned char>(sh::Next() % at::kChild0Count); break;
     case kChild1: s[3] = static_cast<unsigned char>(sh::Next() % at::kChild1Count); break;
