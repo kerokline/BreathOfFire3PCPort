@@ -67,6 +67,39 @@ unsigned char Counter() { return static_cast<unsigned char>(bh::Often() ? BH_PIC
 // What both runs share
 // ===========================================================================
 
+// Battle_ApplyDamage and Effect_ApplyResult fill the result record 0x904B60
+// names (BattleObj_HitReceive points it at Field_State + 0x124 and zeroes its
+// +4 / +6 words and +8 byte first): its +8 bits (0 and 1 the two popups, 4),
+// the second word +6, and - Effect_ApplyResult - the first word +4, which
+// BattleObj_HitReceive stores from Battle_ApplyDamage's answer itself. These
+// stand-ins do the same with drawn values (0, positive, negative), louder
+// than the harness's quiet ones, after noting what the caller left there (its
+// zeroing is compared, not wiped).
+unsigned short Change(U n) {
+    switch (n % 4) {
+    case 0: return 0;
+    case 1: return static_cast<unsigned short>(1 + (n >> 8) % 999);
+    case 2: return static_cast<unsigned short>(0x10000 - 1 - (n >> 8) % 999);
+    default: return static_cast<unsigned short>(n >> 12);
+    }
+}
+void FillResult(bool first_word) {
+    unsigned char* const r = bh::Pointer(at::kResult);
+    bh::Note(Word(r + 4), Word(r + 6), r[8]);
+    const U n = bh::Noise();
+    if (first_word) SetWord(r + 4, Change(n));
+    SetWord(r + 6, Change(n >> 3));
+    r[8] = static_cast<unsigned char>((n >> 20) & 0x13);
+}
+U DamageEffect(const U*, U answer) {
+    FillResult(false);
+    return (answer & 0xFFFF0000u) | Change(bh::Noise());
+}
+U ResultEffect(const U*, U answer) {
+    FillResult(true);
+    return answer;
+}
+
 // Beyond the standard sets: the group's own functions its others call directly
 // (called by name in ours; kPhase logs the sprite they ran for, the loss test
 // answers a flag); the callees of the wave's other groups, raw; the standard
@@ -91,6 +124,10 @@ const bh::Callee kCallees[] = {
      bh::Answer::kFlag, 0, 0},
     {"Battle_SetDamagePopup", ::bof3::addr::Battle_SetDamagePopup, KeyOf(&::Battle_SetDamagePopup), 2, {kU16, kU8},
      bh::Answer::kGarbage, 0, 0},
+    {"Battle_ApplyDamage", ::bof3::addr::Battle_ApplyDamage, KeyOf(&::Battle_ApplyDamage), 2, {kAll, kAll}, bh::Answer::kGarbage, 0,
+     0, {}, &DamageEffect},
+    {"Effect_ApplyResult", ::bof3::addr::Effect_ApplyResult, KeyOf(&::Effect_ApplyResult), 0, {}, bh::Answer::kGarbage, 0, 0, {},
+     &ResultEffect},
     {"Battle_ReturnQueuedItem", ::bof3::addr::Battle_ReturnQueuedItem, KeyOf(&::Battle_ReturnQueuedItem), 1, {kU8},
      bh::Answer::kGarbage, 0, 0},
 };
@@ -331,8 +368,10 @@ void SeedChange() {
     MemberWord(0x98, hp);
     MemberWord(0x128, change & 0xFFFF);
     if (Flip()) MemberWord(0x12A, Flip() ? 0xFFFF - bh::Next() % 50 : 0);
-    const unsigned maxhp = bh::Next() % 4 == 0 ? (hp - change) & 0xFFFF : bh::Next() & 0xFFFF;
-    MemberWord(0xA0, bh::Half() ? maxhp : ((hp - change + 1) & 0xFFFF));
+    // the max HP against the result: one below it, at it, one above, or any
+    const unsigned result = hp - change;
+    const unsigned maxhp = bh::Often() ? result - 1 + bh::Next() % 3 : bh::Next();
+    MemberWord(0xA0, maxhp & 0xFFFF);
 }
 
 // The party side's cells: every member's character +0x148 inside the ten
