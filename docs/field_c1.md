@@ -257,7 +257,7 @@ stand-ins this group ran for the first time and found right as they stand:
 `_InitFromEntry`, `Effect_Release`, `Gfx_CommitPrim`, `Gpu_SetLineF2`,
 `Text_DrawSmall`, `Menu_DrawHand`, `CameraTurn_Start` / `_Step` / `_End`.
 
-### 4.2 Two fuzz faults found on the way (the fuzz's, not ours)
+### 4.2 Three fuzz faults found on the way (the fuzz's, not ours)
 
 - The first run mismatched in three functions with the logs equal: the
   group's disturbance and three effects chose values with `Pick` - the
