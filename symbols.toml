@@ -81216,3 +81216,329 @@ params = "const long *point, const short *size, short *out"
 impl = "src/game/effect_gte.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round thirteen group EGT, capstone to the last instruction), 0x4941E0..0x494270 (0x91 bytes), cdecl: the point's camera vector as EffectGte_ProjectPoint builds it, Gte_RotTrans(vector, a stack VECTOR, the slot of point); then with depth the VECTOR's z: out[0] = low word of (s16 size[0] * 1000) idiv depth, out[1] likewise from size[1], read after out[0] is written. eax at the ret is the second quotient. A depth of 0 faults (idiv): ours aborts. PSX twin 0x801B0FD0 (call-anchored). 42 call sites. docs/effect_gte.md."
+
+[[func]]
+pc = 0x46F2B0
+name = "EffectKind21_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F2B0..0x46F2C1 (0x12 bytes), cdecl: hidden in 0x46EE20 (E1C's): Effect_KindHandlers[0x21] (0x6553D4): jmp [EffectKind21_States + 4 * +1], 6 entries, no compare (ours aborts past them). The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F2D0
+name = "EffectKind21_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F2D0..0x46F2E1 (0x12 bytes), cdecl: EffectKind21_States[0]: +9 = 0xF, +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F2F0
+name = "EffectKind21_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F2F0..0x46F332 (0x43 bytes), cdecl: EffectKind21_States[1]: 0x46F570(record + 0xC) and 0x46F690(the same) - the arm's four points built and drawn; the word +0x5E (the arm's length) up 1 through the pointer taken on entry; +9 down, at 0 +9 = 8 and +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F340
+name = "EffectKind21_Lift"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F340..0x46F383 (0x44 bytes), cdecl: EffectKind21_States[2]: the arm built and drawn; the word +0x58 (the angle 0x46F570 takes cos and sin of) up 4; +9 down, at 0 +9 = 8 and +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F390
+name = "EffectKind21_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F390..0x46F3CE (0x3F bytes), cdecl: EffectKind21_States[3]: the arm built and drawn; +9 down, at 0 +9 = 0x80 and +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F3D0
+name = "EffectKind21_Swirl"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F3D0..0x46F40F (0x40 bytes), cdecl: EffectKind21_States[4]: the arm built and drawn; the words +0x5A down 8 and +0x5C down 0x40 (the two turns 0x46F570 applies); +9 down, at 0 +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F410
+name = "EffectKind21_Fold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F410..0x46F444 (0x35 bytes), cdecl: EffectKind21_States[5]: the arm built and drawn; +0x58 down 8; below 0 (s16) +6 = 1 (done, EffectKind22_WaitArms reads it) and a tail jmp to Effect_Release. The cut says 64 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F450
+name = "EffectKind22_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F450..0x46F461 (0x12 bytes), cdecl: hidden in 0x46EE20: Effect_KindHandlers[0x22] (0x6553D8): jmp [EffectKind22_States + 4 * +1], 3 entries, no compare (ours aborts past them). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F470
+name = "EffectKind22_Sound"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F470..0x46F485 (0x16 bytes), cdecl: EffectKind22_States[0]: Sound_PlayEffect(0x209), then +1 up (Sprite_Current read after the call). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F490
+name = "EffectKind22_SpawnArms"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F490..0x46F528 (0x99 bytes), cdecl: EffectKind22_States[1]: five times Effect_FindFree; each record found: its address into the dword +0xC + 4 i of the record current on entry (left unwritten on 0xFF), +0 = 1, +6 = 0, +5 = 0x21, +0xC / +0x10 / +0x14 = Sprite_Current's +0x34 / +0x38 / +0x3C, words +0x58 = 6, +0x5A = 0, +0x5E = 0, +0x5C = 0x333 i. Then +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F530
+name = "EffectKind22_WaitArms"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F530..0x46F56A (0x3B bytes), cdecl: EffectKind22_States[2]: returns while the byte +6 of any of the five records the dwords +0xC..+0x1C point at is 0 (each dereferenced unchecked); all five non-zero: the counter byte 0x903848 up and Effect_Release. Reads a stale cell when a spawn failed (docs/effect_1d.md section 7). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F790
+name = "EffectKind23_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F790..0x46F7A1 (0x12 bytes), cdecl: hidden in 0x46F6F0 (catalog part 6): Effect_KindHandlers[0x23] (0x6553DC): jmp [EffectKind23_States + 4 * +1], 3 entries, no compare (ours aborts past them). The labelling tier was hypothesis: it is effect code. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F7B0
+name = "EffectKind23_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F7B0..0x46F7CC (0x1D bytes), cdecl: EffectKind23_States[0]: +9 = 0x60, +1 up, then Sound_PlayEffect(0x204). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F7D0
+name = "EffectKind23_SpawnRays"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F7D0..0x46F81E (0x4F bytes), cdecl: EffectKind23_States[1]: with +9 bit 2, Effect_FindFree and a record found gets +0 = 1, +5 = 0x24; +9 down, at 0 +1 up. scenario_harness_ekh copies it (section 8.8). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F820
+name = "EffectKind24_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F820..0x46F831 (0x12 bytes), cdecl: hidden in 0x46F6F0: Effect_KindHandlers[0x24] (0x6553E0): jmp [EffectKind24_States + 4 * +1], 3 entries, no compare (ours aborts past them). The labelling tier was hypothesis: it is effect code. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F840
+name = "EffectKind24_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F840..0x46F8A6 (0x67 bytes), cdecl: EffectKind24_States[0]: through the record + 0xC taken on entry: word +0xC = 0x600, +0x12 = +0x14 = 0x100, +0xE = Rand & 0x700, +0x10 = Rand & 0xF00, bytes +0x18, +0x17, +0x16 = 0xFF, +0x16 = 0 on an odd Rand, +0x18 = 0 on the next odd; +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F8B0
+name = "EffectKind24_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F8B0..0x46F8F9 (0x4A bytes), cdecl: EffectKind24_States[1]: 0x46FAE0(record + 0xC) draws the ray; word +0x12 down 0x10, held at 0 (s16); while it is below 0x80, +0x14 down 0x10; once +0x14 is below 0 (s16), +0x12 = 0 (the original's store, not +0x14) and +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F900
+name = "EffectKind25_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F900..0x46F911 (0x12 bytes), cdecl: hidden in 0x46F6F0: Effect_KindHandlers[0x25] (0x6553E4): jmp [EffectKind25_States + 4 * +1], 5 entries, no compare (ours aborts past them). The labelling tier was hypothesis: it is effect code. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F920
+name = "EffectKind25_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F920..0x46F9C1 (0xA2 bytes), cdecl: EffectKind25_States[0]: Prim_VertexScratch [0] = (leader x 0x802D74 sar 9) - 0x4000, [2] = -(leader height word 0x802D7E / 2), [1] = (leader z sar 9) - 0x4000; Gte_RotTransPers(Prim_VertexScratch, MapView_ScreenXY, local, local) - its answer to the dword +0x60, the two floats through _ftol 0x5B9550 to the words +0x2E / +0x30; +9 = 0, +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46F9D0
+name = "EffectKind25_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46F9D0..0x46FA19 (0x4A bytes), cdecl: EffectKind25_States[1]: EffectKind25_DrawDisc(+0x2E, +0x30, +9, 0x80, 0); +9 up 0xF; above 0x3C (unsigned) +9 = 0xFF and +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FA20
+name = "EffectKind25_Glow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FA20..0x46FA8A (0x6B bytes), cdecl: EffectKind25_States[2]: EffectKind25_DrawDisc(+0x2E, +0x30, 0x3C + (+9 & 1), 0x80, 0); at +9 = 0xD7 Sound_PlayEffect(0x208); +9 down, at 0 +9 = 0x3C and +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FA90
+name = "EffectKind25_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FA90..0x46FAD0 (0x41 bytes), cdecl: EffectKind25_States[3]: EffectKind25_DrawDisc(+0x2E, +0x30, +9, 0x80, 0); +9 down; below 0 (s8) +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FCF0
+name = "EffectKind25_DrawDisc"
+ret = "void"
+params = "unsigned x, unsigned y, unsigned radius, unsigned centre, unsigned rim"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FCF0..0x46FE5D (0x16E bytes), cdecl: not hidden, called by kind 0x25's three states: a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0), Gpu_SetDrawMode, committed 0xC), then 32 Gouraud triangles (Gpu_SetPolyG3, Gpu_SetSemiTrans 1) of a fan round (x, y) as floats, the rim at (cos, sin)(a) * radius sar 12 for a = 0..0xF80 by 0x80, the centre shaded centre and the rim rim; committed 0x34 each. x, y, radius read as s16, the shades as bytes (callers push whole registers). The cut says 368 (padding); the recorded extent line 0x2B7 spans kind 0x26's starts. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FE60
+name = "EffectKind26_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FE60..0x46FE71 (0x12 bytes), cdecl: hidden in 0x46FCF0: Effect_KindHandlers[0x26] (0x6553E8): jmp [EffectKind26_States + 4 * +1], 3 entries, no compare (ours aborts past them). The labelling tier was hypothesis: it is effect code. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FE80
+name = "EffectKind26_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FE80..0x46FE94 (0x15 bytes), cdecl: EffectKind26_States[0]: the dword +0xC = 0, +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FEA0
+name = "EffectKind26_Widen"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FEA0..0x46FEDD (0x3E bytes), cdecl: EffectKind26_States[1]: EffectKind26_DrawBand(+0x34, +0x38, +0x3C, the word +0xC); the dword +0xC up 0x10; above 0x500 (signed) +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FFB0
+name = "EffectKind26_DrawBand"
+ret = "void"
+params = "long x, long z, long height, unsigned t"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FFB0..0x4702F5 (0x346 bytes), cdecl: not hidden, called by EffectKind26_Widen: a draw mode (as 0x46FCF0's) and EffectGte_LoadMapCamera; outer polar angle min(t, 0x400) shaded 0x80 (past 0x400, (0x500 - t) * 0x80 / 0x100), inner t - 0x100 shaded 0 (below 0 as s16: 0, shaded (0x100 - t) * 0x80 / 0x100); sixteen Gouraud quads (Gpu_SetPolyG4, Gpu_SetSemiTrans 1) at a = 0..0xF00 by 0x100, each vertex EffectGte_ProjectPoint of (x + (3 cos(a) sin(p) sar 8 & ~0xF), z + (3 sin(a) sin(p) sar 8 & ~0xF), height + 3 cos(p) << 12); committed 0x44. t read as its word. The cut says 848 (padding); the recorded extent line 0x434 is longer than the code. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FEE0
+name = "EffectKind27_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FEE0..0x46FEF1 (0x12 bytes), cdecl: hidden in 0x46FCF0: Effect_KindHandlers[0x27] (0x6553EC): jmp [EffectKind27_States + 4 * +1], 3 entries, no compare (ours aborts past them). Area81_SpawnEffect27AtObject 0x40F5B0 spawns the kind. The labelling tier was hypothesis: it is effect code. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FF00
+name = "EffectKind27_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FF00..0x46FF14 (0x15 bytes), cdecl: EffectKind27_States[0]: the dword +0xC = 0x1000, +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[func]]
+pc = 0x46FF20
+name = "EffectKind27_Emit"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1d.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E1D, capstone to the last instruction), 0x46FF20..0x46FFA6 (0x87 bytes), cdecl: EffectKind27_States[1]: when +0xC's low four bits are 0, Effect_FindFree; a record found gets +0 = 1, +5 = 0x26, +0x34 / +0x38 = Sprite_Current's and +0x3C = AreaMap_Elevation(+0x34, +0x38) sign-extended from its word << 16; the dword +0xC down, at 0 +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_1d.md."
+
+[[data]]
+pc = 0x654284
+name = "EffectKind21_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind21_Run 0x46F2B0 jmp by +1: 0x46F2D0, 0x46F2F0, 0x46F340, 0x46F390, 0x46F3D0, 0x46F410; EffectKind22_States follows. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_1d.md."
+
+[[data]]
+pc = 0x65429C
+name = "EffectKind22_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind22_Run 0x46F450 jmp by +1: 0x46F470, 0x46F490, 0x46F530; EffectKind23_States follows. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_1d.md."
+
+[[data]]
+pc = 0x6542A8
+name = "EffectKind23_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind23_Run 0x46F790 jmp by +1: 0x46F7B0, 0x46F7D0, Effect_StateRelease 0x46A310. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_1d.md."
+
+[[data]]
+pc = 0x6542B4
+name = "EffectKind24_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind24_Run 0x46F820 jmp by +1: 0x46F840, 0x46F8B0, Effect_StateRelease. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_1d.md."
+
+[[data]]
+pc = 0x6542C0
+name = "EffectKind25_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind25_Run 0x46F900 jmp by +1: 0x46F920, 0x46F9D0, 0x46FA20, 0x46FA90, Effect_StateRelease. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_1d.md."
+
+[[data]]
+pc = 0x6542D4
+name = "EffectKind26_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind26_Run 0x46FE60 jmp by +1: 0x46FE80, 0x46FEA0, Effect_StateRelease. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_1d.md."
+
+[[data]]
+pc = 0x6542E0
+name = "EffectKind27_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1D): EffectKind27_Run 0x46FEE0 jmp by +1: 0x46FF00, 0x46FF20, Effect_StateRelease; then two dwords that are not code (0x6542EC). The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_1d.md."
