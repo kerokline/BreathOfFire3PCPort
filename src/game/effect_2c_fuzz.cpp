@@ -1,7 +1,7 @@
 // BOF3X_SHADOW=effect_2c: group E2C's 53 functions through the scenario harness
 // in effect mode (scenario_harness.h, docs/scenario_harness.md section 8), once
-// at start-up. docs/effect_2c.md section 4. BOF3X_E2C_ONLY=<name> runs the
-// clones whose name contains it (the controls' speed-up).
+// at start-up. docs/effect_2c.md section 4. BOF3X_E2C_ONLY=<names> runs the
+// clones named (comma-separated; the controls' speed-up).
 //
 // The clone table is tools/band_rows.py --group E2C --clones --harness scenario
 // (2026-09-29), each extent read again to its last instruction (capstone), the
@@ -597,16 +597,31 @@ void Disturb(U h) {
     }
 }
 
+// BOF3X_E2C_ONLY: a comma-separated list; a clone runs when its name equals
+// one of them (a control's run: several controls, each in a function of its
+// own, share one build, and each is judged by its own clone's count).
+bool Chosen(const char* name, const char* only) {
+    if (!only || !*only) return true;
+    const std::size_t n = std::strlen(name);
+    for (const char* p = only; *p;) {
+        const char* const end = std::strchr(p, ',');
+        const std::size_t len = end ? static_cast<std::size_t>(end - p) : std::strlen(p);
+        if (len == n && std::strncmp(p, name, n) == 0) return true;
+        if (!end) break;
+        p = end + 1;
+    }
+    return false;
+}
+
 }  // namespace
 
 void SelfTest() {
-    // BOF3X_E2C_ONLY: the clones whose name contains it (a control's run)
     static sh::Clone chosen[kCount];
     static unsigned index[kCount];
     const char* const only = std::getenv("BOF3X_E2C_ONLY");
     unsigned n = 0;
     for (unsigned k = 0; k < kCount; ++k)
-        if (!only || !*only || std::strstr(kAll[k].name, only)) {
+        if (Chosen(kAll[k].name, only)) {
             index[n] = k;
             chosen[n++] = kAll[k];
         }
