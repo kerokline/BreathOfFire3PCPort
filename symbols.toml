@@ -74527,3 +74527,534 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-09-28 (round eleven group BSF): BossMyria_Hook's table: three BareRet. docs/boss_sf.md."
+
+# --- round twelve group BE3 (battle_e3, 2026-09-29): docs/battle_e3.md ---
+
+[[func]]
+pc = 0x437030
+name = "EnemyOp_CastDispatch"
+ret = "unsigned"
+params = "unsigned passed"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437030..0x437041 (0x12 bytes), cdecl: jmp [EnemyOp_CastSubs + 4 * Sprite_Current +2], 3 entries (ours aborts past them); the caller's word and the entry's eax passed through. Reached by EnemyOp_Steps[7] and 59 boss step tables' entry 7. PSX twin (analysis/pairs_propagated.json): 0x801E4A40 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437050
+name = "EnemyOp_CastStart"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437050..0x437115 (0xC6 bytes), cdecl: nothing (eax 0) until File_LoadDone; by 0x939AD8 +0x105 4 in an event battle +9 = 0 / 0x1E by Battle_LoadSoundByKey(+0x100 + 0x20, 0x904B8D), 4 outside one +9 kept, else +9 = 0; ability 0x904B80 byte 0x65C4DD + 24 id bit 3: +1 up; else +9 = enemy data byte 0x8C5653 + 0x8C * +0xF0, BattleEnemy_SetAnimation(6), +2 up; tail jump BattleEnemy_ScriptTickOnce (al the answer). Reached by EnemyOp_CastSubs[0]. PSX twin (analysis/pairs_propagated.json): 0x801E4A84 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437120
+name = "EnemyOp_CastCue"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437120..0x437178 (0x59 bytes), cdecl: +9 down while not 0; at 0 Sound_PlayEffectUnlessNone(word +2 of 0x939AD8 +0xF8's table) in an event battle, else Sound_PlayEffect(0x601 + 2 * +0xF0), +2 up; tail jump BattleEnemy_ScriptTickOnce. Reached by EnemyOp_CastSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E4BCC table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437180
+name = "EnemyOp_CastDoneDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437180..0x437196 (0x17 bytes), cdecl: call [EnemyOp_CastDoneSubs + 4 * +2], 3 entries (ours aborts past them), then tail jump EnemyOp_CastDoneCheck 0x437230. Reached by EnemyOp_Steps[8] and the boss step tables' entry 8. PSX twin (analysis/pairs_propagated.json): 0x801E4CDC table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x4371A0
+name = "EnemyOp_CastDoneCost"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x4371A0..0x4371F9 (0x5A bytes), cdecl: 0x939AD8 +0x105 4: its word +0xA6 -= byte 0x904B88; 0x904AA8 |= 0x800; +0x105 = 0; BattleEnemy_ScriptTickOnce unless the ability word 0x65C4DC + 24 id bit 11; +2 up. Reached by EnemyOp_CastDoneSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E4D60 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437200
+name = "EnemyOp_CastDoneTickUnless"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437200..0x437224 (0x25 bytes), cdecl: BattleEnemy_ScriptTickOnce unless the ability byte 0x65C4DD + 24 id bit 3; +9 up. The cut's 64 bytes ran 16 into 0x437230. Reached by EnemyOp_CastDoneSubs[2]. PSX twin (analysis/pairs_propagated.json): 0x801E4E14 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437230
+name = "EnemyOp_CastDoneCheck"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437230..0x43723E (0xF bytes), cdecl: 0x904AA8 bit 2: tail jump EnemyOp_EndAction. Reached by the tail jump of 0x437180 only (in no start list; after 0x437200's padding). PSX twin (analysis/pairs_propagated.json): none. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437240
+name = "EnemyOp_LeaveDispatch"
+ret = "unsigned"
+params = "unsigned passed"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437240..0x437251 (0x12 bytes), cdecl: jmp [EnemyOp_LeaveSubs + 4 * +2], 3 entries (ours aborts past them). Reached by EnemyOp_Steps[9] and the boss step tables' entry 9. PSX twin (analysis/pairs_propagated.json): 0x801E4EA4 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437260
+name = "EnemyOp_LeaveStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437260..0x43731B (0xBC bytes), cdecl: +0x18 = -0x1000, +0x1C = 0, 0x4467C0(Sprite_Current) (BE4's), +8 ^= 2, +0xC / +0x10 = 0, +9 = 0x10, +0xA = 8, BattleEnemy_SetAnimation(0), Sprite_SetTint(SC, -4, -4, -4, 1), +0 |= 0x20, +0x5C = 2, +0x5D..+0x5F = 0, Sound_PlayEffect(0x102), BattleEnemy_ScriptTick, +2 up. Reached by EnemyOp_LeaveSubs[0]. PSX twin (analysis/pairs_propagated.json): 0x801E4EE8 callers. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437320
+name = "EnemyOp_LeaveStep"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437320..0x4373B3 (0x94 bytes), cdecl: +9 down while not 0; then +0xA down, at 0 +2 up; else +0x5D..+0x5F -= 0x10, +0xC / +0x10 += +0x18 / +0x1C, +0x34 / +0x38 += +0xC / +0x10, tail jump BattleEnemy_ScriptTick. Reached by EnemyOp_LeaveSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E5000 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x4373C0
+name = "EnemyOp_LeaveEnd"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x4373C0..0x437413 (0x54 bytes), cdecl: Battle_RemoveFromTurnOrder(+5); 0x904AB3 down, at 0 0x904AE8 |= 2; Sprite_ReleaseTint(SC); Battle_ClearActorBit(+5); 0x8031F3 = 2; BattleBanner_ClearAll; tail jump Effect_Release. No Battle_EnemyDefeated. Reached by EnemyOp_LeaveSubs[2] and BossNina_WalkSteps[2]. PSX twin (analysis/pairs_propagated.json): 0x801E511C table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x437450
+name = "Sound_PlayEffectUnlessNone"
+ret = "void"
+params = "unsigned sound"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x437450..0x437461 (0x12 bytes), cdecl: Sound_PlayEffect(the dword) unless its low word is 0xFFFF. Reached by twelve calls (EnemyOp_CastCue, EnemyOp_ReceiveAction, EnemyOp_DeathFlash, BattleActor_PlaySound, six boss states, Paralyzer_Start, BE2's 0x436640). PSX twin (analysis/pairs_propagated.json): 0x801E5230 call-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x4376A0
+name = "EnemyOp_EndAction"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x4376A0..0x4376EF (0x50 bytes), cdecl: Sprite_Current +1 = 2, +2 = 0; Battle_ClearActorBit(+5); 0x939AD8 +0x110 &= ~0x200; its +0x105 = 0 unless 0x904AA8 bit 6. Reached by EnemyOp_CastDoneCheck's and seven boss states' tail jumps, BossMyria_State8Close's call, BE2's 0x4366B0. PSX twin (analysis/pairs_propagated.json): 0x801E55BC call. docs/battle_e3.md."
+
+[[func]]
+pc = 0x4376F0
+name = "EnemyOp_RollBit80Task"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x4376F0..0x43771A (0x2B bytes), cdecl: with 0x939AD8 +0x90 bit 3 and Rand() bit 0: 0x904AA8 |= 0x80, BattleTask_Create(0, 2). Reached by four boss states and BE2's 0x4366B0. PSX twin (analysis/pairs_propagated.json): none. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441090
+name = "Fixed_HighRoundUp"
+ret = "unsigned"
+params = "unsigned value, unsigned sign"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441090..0x4410AD (0x1E bytes), cdecl: ax = the high word of value, one more when sign >= 0 and value's low word is not 0; eax's high half is sign's. Reached by Area198_EffectA6Follow and BossMyriaFx_Follow (four calls each). PSX twin (analysis/pairs_propagated.json): none. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441510
+name = "BattleObj_HitPose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441510..0x441546 (0x37 bytes), cdecl: Sprite_EnsureAnimation(+8 + 0x34) under Field_State +0x91 bit 3, else (+8 + 0x10). Reached by BattleObj_HitReceive and BattleObj_State11 (in no start list; after BattleObj_PickPose's switch table 0x4414F8). PSX twin (analysis/pairs_propagated.json): none. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441A10
+name = "BattleObj_StateHit"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441A10..0x441A21 (0x12 bytes), cdecl: jmp [BattleObj_HitSubs + 4 * +2], 6 entries (ours aborts past them). Reached by BattleObj_StateTable[6]. PSX twin (analysis/pairs_propagated.json): 0x801DFB90 gap31. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441A30
+name = "BattleObj_HitEnter"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441A30..0x441A6D (0x3E bytes), cdecl: Field_State +0x12F = SC +0x4B, word +0x140 = SC word +0x58, +4 = 0, +2 = 1. Reached by BattleObj_HitSubs[0] and [2]. PSX twin (analysis/pairs_propagated.json): 0x801DFBD4 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441A70
+name = "BattleObj_HitReceiveDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441A70..0x441A81 (0x12 bytes), cdecl: jmp [BattleObj_HitReceiveSubs + 4 * +3], 3 entries. Reached by BattleObj_HitSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801DFC24 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441A90
+name = "BattleObj_HitReceive"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441A90..0x441D40 (0x2B1 bytes), cdecl: the party twin of EnemyOp_ReceiveAction: 0x904B98 / 9A = 0, 0x904B5C = SC, 0x904B54 = +5, 0x904B60 = Field_State + 0x124 (+4, +6, +8 zeroed), 32 bytes of FS +0xA0 to 0x939F80; +0x90 bit 11 -> 0x939F86 = 1; +0x130 bit 0 -> 0x939F9B += 25 to 100; kind 0x904B35 1 Battle_ApplyDamage(0x904B34, 0x904B54) to [0x904B60] +4, 4..5 Effect_ApplyResult; +0x12C bit 0 with word +0x128 0: +2 = 3; unless +0x130 bit 9 BattleObj_HitPose for kind 1, kind 4 without byte 0x65C4D8 + 24 id bit 2, kind 5 without 0x591810(0x904B81, 0x904B80) bit 2; the two popups; +0x90 |= 0x904B98; s16 +0x128 > 0: HP +0x98 0 -> +0x91 |= 0x40 (+0x134 bit 1) or +0x90 = 0x4000, cue 1 unless +0x134 bit 1, Sprite_ReleaseTint; else cue 0; +0x128 / +0x12A < 0 Sound_PlayById(0x206); unless 0x904AA8 bit 13 the hit sound and popup for kind 1 and kind 4 with word 0x65C4DC + 24 id bit 11, 0x904AA8 &= ~0x80; BattleObj_ScriptTick; +3 up. Reached by BattleObj_HitReceiveSubs[0]. PSX twin (analysis/pairs_propagated.json): 0x801DFC68 table-anchored (the sibling's Battle_ResolveAction_Party, a hypothesis there; not adopted). docs/battle_e3.md."
+
+[[func]]
+pc = 0x441D50
+name = "BattleObj_HitWaitPose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441D50..0x441D79 (0x2A bytes), cdecl: when Sprite_ScriptTickOnce answers: +3 up and, unless Field_State +0x90 bit 2, tail jump BattleObj_PickPose. Reached by BattleObj_HitReceiveSubs[1] and BattleObj_HpSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E0140 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441D80
+name = "BattleObj_HitEnd"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441D80..0x441EA6 (0x127 bytes), cdecl: the party twin of EnemyOp_HitEnd: BattleObj_ScriptTickOnce; +2 not 3 with FS +0x91 bit 6: 0x904AA8 &= ~0x40, +1..+3 = 6, 4, 0; 0x904AA8 bit 6: word = (it & ~0x40) | 0x1000; else unless 0x904B44 & 0xC0, 0x904AA8 |= 0x40 on 0x446810 (BE4's) for kind 1 and for kind 4 with ability byte +5 bit 3 and byte +0 lacking bit 4; Battle_ClearActorBit(+5); +0x130 &= ~0x70; BattleParty_AllDown -> 0x904AE8 |= 1; +0x130 &= ~0x200; +1..+3 = 2, 0, 0. Reached by BattleObj_HitReceiveSubs[2] and BattleObj_HitStepSubs[4]. PSX twin (analysis/pairs_propagated.json): 0x801E01B0 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441EB0
+name = "BattleObj_HitStepDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441EB0..0x441EC1 (0x12 bytes), cdecl: jmp [BattleObj_HitStepSubs + 4 * +3], 5 entries. Reached by BattleObj_HitSubs[3]. PSX twin (analysis/pairs_propagated.json): 0x801E0400 table-anchored (the sibling's Defend_Action, a callstack-venn hypothesis there; not adopted). docs/battle_e3.md."
+
+[[func]]
+pc = 0x441ED0
+name = "BattleObj_HitStepStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441ED0..0x441F40 (0x71 bytes), cdecl: FS +0x91 bit 6: +3 = 2, +0xA = 0; else word +0x128 = 0, +0xC = 0, +0x10 = -0x2000, 0x446770(SC) (BE4's), +0xA = 4, BattleObj_ScriptTickOnce, Sound_PlayById(0x205), +3 up. Reached by BattleObj_HitStepSubs[0]. PSX twin (analysis/pairs_propagated.json): 0x801E0444 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441F50
+name = "BattleObj_HitStepOut"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441F50..0x441F9E (0x4F bytes), cdecl: +0xA down, at 0 +0xA = 4 and +3 up; +0x34 / +0x38 += +0xC / +0x10; tail jump BattleObj_ScriptTickOnce. Reached by BattleObj_HitStepSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E04E8 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x441FA0
+name = "BattleObj_HitStepBack"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x441FA0..0x44204C (0xAD bytes), cdecl: +0xA not 0: +0x34 / +0x38 -= +0xC / +0x10, +0xA down, BattleObj_ScriptTickOnce; 0: FS +0x12C bit 4 Battle_SetDamagePopup(+0x128, +5), else BattleTask_Create(0, 1) with owner SC, +7 = 3, +0x27 = 0; +3 up. Reached by BattleObj_HitStepSubs[2]. PSX twin (analysis/pairs_propagated.json): 0x801E0580 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442050
+name = "BattleObj_HitStepPose"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442050..0x442070 (0x21 bytes), cdecl: +3 up; unless FS +0x90 bit 2, tail jump BattleObj_PickPose. Reached by BattleObj_HitStepSubs[3]. PSX twin (analysis/pairs_propagated.json): 0x801E0680 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442080
+name = "BattleObj_FallDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442080..0x442091 (0x12 bytes), cdecl: jmp [BattleObj_FallSubs + 4 * +3], 7 entries. Reached by BattleObj_HitSubs[4]. PSX twin (analysis/pairs_propagated.json): 0x801E06D8 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x4420A0
+name = "BattleObj_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x4420A0..0x44230E (0x26F bytes), cdecl: Battle_ReturnQueuedItem(+5), Battle_RemoveFromTurnOrder(+5); FS +0x130 bit 2: +9 = 0x1E, +3 = 1, +4 = 0; +0x134 bit 1: 0x904AA8 bit 14 cleared when 0x904B8A is +5, +3 = 4; +0x96 0x18 / +0x97 0x18 / +0x95 0x43: CharacterRecords[+0x148] +0x16 / +0x17 / +0x15 = 0, +9 = 0x1E, +3 = 3 / 6 / 5; else 0x904AB1 down, +0x138..+0x13F = 0, +0x134 &= 0xFFFB84FF, +0x12D, +0x142..+0x145 = 0, 0x453300(+5) (BE6's), BattleParty_AllDown or 0x904AB1 0 -> 0x904AE8 |= 1, bit 14 as above, +0x134 bit 0 -> +3 = 4, else Battle_ClearActorBit(+5), +0x130 &= ~0x70, ~0x200, +1..+3 = 3, 0, 0; each path BattleObj_ScriptTick. Reached by BattleObj_FallSubs[0]. PSX twin (analysis/pairs_propagated.json): 0x801E071C table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442310
+name = "BattleParty_RecalcStats"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442310..0x44241D (0x10E bytes), cdecl: Char_RecalcStats(CharacterRecords[FS +0x148]); for each of 0x904AB0 members +0x92..+0x97 from the record +0x12..+0x17 and 32 bytes +0xC0 from +0x20; Formation_ApplyStatMods; each member 32 bytes +0xC0 to +0xA0; 0x44FDE0 (BE5's); 0x453300(member) (BE6's) for each; the count re-read after each call (ours aborts past 3). Reached by BattleObj_ReviveByEquip, BE2's 0x433DA0 / 0x434340, Capcom's 0x433A50 (reach_dragon: from 0x433D60's extent, frame 2,731). PSX twin (analysis/pairs_propagated.json): 0x801E0AF8 call-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442420
+name = "BattleParty_AllDown"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442420..0x44249E (0x7F bytes), cdecl: al 0 when any in-use member (+0 bit 0) of ObjTrio's three is up: +0x90 & 0x4004 zero, +0x130 bit 2, +0x134 bit 1, or with +0x90 bit 14 +0x96 / +0x97 at 0x18 or +0x95 at 0x43; else 1. The catalogue's 0x5C0-byte extent ran over the state handlers after it. Reached by BattleObj_HitEnd and BattleObj_Fall (reach_dragon frame 1,769). PSX twin (analysis/pairs_propagated.json): 0x801E0DA0 gap15. docs/battle_e3.md."
+
+[[func]]
+pc = 0x4424A0
+name = "BattleObj_Revive"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x4424A0..0x442591 (0xF2 bytes), cdecl: +9 down; at 0 FS +0x90 &= ~0x4000, +0x130 &= ~4, word +0x98 = 1, +0x9C >>= 1, BattleTask_Create(0, 1) with owner SC, +7 = 1, +0x27 = 6, Sprite_SetAnimation(+8 + 4), Sound_PlayById(0x206), unless 0x904AE9 Battle_OpenMsgWindow, 0x44A910(+5), 0x44AA90(0, FS +0x89) (BE4's); +3 = 2; BattleObj_ScriptTick. Reached by BattleObj_FallSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E0EA0 gap15. docs/battle_e3.md."
+
+[[func]]
+pc = 0x4425A0
+name = "BattleObj_ReviveEnd"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x4425A0..0x4425F7 (0x58 bytes), cdecl: Battle_ClearActorBit(+5); FS +0x130 low byte &= 0x0F, bit 9 cleared; +1..+3 = 3, 0, 0. Reached by BattleObj_FallSubs[2]. PSX twin (analysis/pairs_propagated.json): 0x801E0FE4 gap15. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442600
+name = "BattleObj_ReviveByEquip"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442600..0x442730 (0x131 bytes), cdecl: +9 down; at 0 by +3: 3 FS +0x96 = 0, 5 +0x95 = 0 and BattleParty_RecalcStats, 6 +0x97 = 0; +0x90 &= ~0x4000, word +0x98 = +0xA0, +0x9C = +0xAE; BattleTask_Create(0, 1) with owner SC, +7 = 2, +0x27 = 6; Sprite_SetAnimation(+8 + 4); Sound_PlayById(0x206); unless 0x904AE9 Battle_OpenMsgWindow and BattleBanner_Add(2, 0, 0, 0x2D, Msg_SystemPtr(0x2E for +3 5, else 0x3B)); +3 = 2; BattleObj_ScriptTick. Reached by BattleObj_FallSubs[3], [5], [6]. PSX twin (analysis/pairs_propagated.json): 0x801E105C callers. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442740
+name = "BattleObj_FallTaskDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442740..0x442751 (0x12 bytes), cdecl: jmp [BattleObj_FallTaskSubs + 4 * +4], 2 entries. Reached by BattleObj_FallSubs[4]. PSX twin (analysis/pairs_propagated.json): 0x801E122C table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442760
+name = "BattleObj_FallTaskStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442760..0x4427F8 (0x99 bytes), cdecl: nothing while a member below 0x904AB0 has +0x130 bit 13 (ours aborts past 3); else FS +0x130 |= 0x2000, BattleTask_Create(0, 0xB for character +0x89 4, else 0xC) with owner SC, +4 up. Reached by BattleObj_FallTaskSubs[0]. PSX twin (analysis/pairs_propagated.json): 0x801E1270 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442800
+name = "BattleObj_FallTaskWait"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442800..0x442865 (0x66 bytes), cdecl: nothing while FS +0x130 bit 13; then +0x130 &= ~0x70 and ~0x200, Battle_ClearActorBit(+5), +1..+4 = 2, 0, 0, 0. Reached by BattleObj_FallTaskSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E134C table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442870
+name = "BattleObj_HpDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442870..0x442881 (0x12 bytes), cdecl: jmp [BattleObj_HpSubs + 4 * +3], 3 entries. Reached by BattleObj_HitSubs[5]. PSX twin (analysis/pairs_propagated.json): 0x801E13E4 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442890
+name = "BattleObj_HpApply"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442890..0x442978 (0xE9 bytes), cdecl: word +0x98 <= s16 +0x128 (signed): +0x90 = 0x4000, +0x98 = 0, Battle_PlayActorCue(1); else cue 0 (+0x128 >= 0) or Sound_PlayById(0x206), +0x98 -= +0x128, at most +0xA0 (unsigned); +0x12C bit 0 Battle_SetDamagePopup(+0x128, +5), bit 1 0x453EB0(+0x12A, +5) (BE6's); BattleObj_ScriptTick; +3 up. Reached by BattleObj_HpSubs[0]. PSX twin (analysis/pairs_propagated.json): 0x801E1428 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442980
+name = "BattleObj_HpEnd"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442980..0x4429DA (0x5B bytes), cdecl: BattleObj_ScriptTick; FS +0x91 bit 6: +1..+3 = 6, 4, 0; else Battle_ClearActorBit(+5), +1..+3 = 3, 0, 0. Reached by BattleObj_HpSubs[2]. PSX twin (analysis/pairs_propagated.json): 0x801E1560 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442C40
+name = "BattleObj_CastDoneScript"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442C40..0x442C44 (0x5 bytes), cdecl: jmp BattleObj_ScriptTick. Reached by BattleObj_CastDoneSubs[3]. PSX twin (analysis/pairs_propagated.json): 0x801E1A68 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442C70
+name = "BattleObj_State10"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442C70..0x442C81 (0x12 bytes), cdecl: jmp [BattleObj_State10Subs + 4 * +2], 2 entries. Reached by BattleObj_StateTable[10]. PSX twin (analysis/pairs_propagated.json): 0x801E1AE8 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442C90
+name = "BattleObj_State10Task"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442C90..0x442D07 (0x78 bytes), cdecl: BattleTask_Create(0, 5): its words +0x2E / +0x30 = SC +0x2E / +0x30 less the s8 pair 0x6699A0 + 2 * FS +0x89; +2 up. Reached by BattleObj_State10Subs[0]. PSX twin (analysis/pairs_propagated.json): 0x801E1B2C gap34. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442D10
+name = "BattleObj_State10End"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442D10..0x442D23 (0x14 bytes), cdecl: +1 = 2, +2 = 0. Reached by BattleObj_State10Subs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E1BDC gap34. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442D30
+name = "BattleObj_State11"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442D30..0x442D52 (0x23 bytes), cdecl: BattleObj_HitPose; FS +0x130 bit 4 tail jump BattleObj_ScriptTick, else bit 5 BattleObj_ScriptTickOnce. Reached by BattleObj_StateTable[11]. PSX twin (analysis/pairs_propagated.json): 0x801E1BFC table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442E40
+name = "BattleObj_StateSpecial"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442E40..0x442E51 (0x12 bytes), cdecl: jmp [BattleObj_SpecialSubs + 4 * +2], 3 entries. Reached by BattleObj_StateTable[26] (state 4's jump under +0x134 bit 0 and the character table's twelfth). PSX twin (analysis/pairs_propagated.json): 0x801E1E00 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442E60
+name = "BattleObj_SpecialStart"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442E60..0x442F0F (0xB0 bytes), cdecl: BattleTask_Create(0, 0xF): 0x80 bytes of ObjTrio[0x904B34] into the slot (ours aborts on an actor past 2), +6 = 0, +5 = 0xF, +1..+4 = 0, +0xB = the slot, owner SC; SC +0 |= 0x40, +9 = +0xA = 0x10, +2 up. Reached by BattleObj_SpecialSubs[0]. PSX twin (analysis/pairs_propagated.json): 0x801E1E44 table-anchored. docs/battle_e3.md."
+
+[[func]]
+pc = 0x442F10
+name = "BattleObj_SpecialCue"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442F10..0x442F7C (0x6D bytes), cdecl: +9 down; at 0 cue 3 on Battle_RollPendingFlag, else Rand() % 100 (signed) below FS +0xBA sets 0x904AA8 bit 7 and cue 3, else cue 2; Battle_PlayActorCue(cue), (4); +2 up. Reached by BattleObj_SpecialSubs[1]. PSX twin (analysis/pairs_propagated.json): 0x801E1FA8 table-anchored (the sibling's Battle_SwingCue_Step2, decompiled there as its swing cue without the leading call; the PC code read here is BattleObj_SwingCue's without its leading tick, so the description agrees). docs/battle_e3.md."
+
+[[func]]
+pc = 0x442F80
+name = "BattleObj_SpecialWait"
+ret = "void"
+params = "void"
+impl = "src/game/battle_e3.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round twelve group BE3, capstone to the last instruction), 0x442F80..0x442F96 (0x17 bytes), cdecl: once SC +0 lacks bit 6: 0x904AA8 |= 4, tail jump BattleObj_EndAction. Reached by BattleObj_SpecialSubs[2]. PSX twin (analysis/pairs_propagated.json): 0x801E20A4 table-anchored. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64B250
+name = "EnemyOp_CastSubs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): EnemyOp_CastDispatch 0x437030 jmp by +2: 0x437050, 0x437120, 0x4404F0 (BossMyria_State7End, shared); the count from the code (0x437120 steps +2 to 2, 0x4404F0 moves +1 on); the next dword starts EnemyOp_CastDoneSubs. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64B25C
+name = "EnemyOp_CastDoneSubs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): EnemyOp_CastDoneDispatch 0x437180 call by +2: 0x440540 (BossMyria_State8Tick, shared), 0x4371A0, 0x437200; the next dword starts EnemyOp_LeaveSubs. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64B268
+name = "EnemyOp_LeaveSubs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): EnemyOp_LeaveDispatch 0x437240 jmp by +2: 0x437260, 0x437320, 0x4373C0; ItemMagic_RowTables follows at 0x64B274. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64E07C
+name = "BattleObj_HitSubs"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): BattleObj_StateHit 0x441A10 jmp by +2: 0x441A30, 0x441A70, 0x441A30, 0x441EB0, 0x442080, 0x442870; the next dwords are the sub-tables below (BattleObj_HitReceiveSubs at [6]). docs/battle_e3.md."
+
+[[data]]
+pc = 0x64E094
+name = "BattleObj_HitReceiveSubs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): 0x441A70 jmp by +3: 0x441A90, 0x441D50, 0x441D80. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64E0A0
+name = "BattleObj_HitStepSubs"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): 0x441EB0 jmp by +3: 0x441ED0, 0x441F50, 0x441FA0, 0x442050, 0x441D80. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64E0B4
+name = "BattleObj_FallSubs"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): 0x442080 jmp by +3: 0x4420A0, 0x4424A0, 0x4425A0, 0x442600, 0x442740, 0x442600, 0x442600 (0x4420A0 sets +3 to 1, 3..6). docs/battle_e3.md."
+
+[[data]]
+pc = 0x64E0D0
+name = "BattleObj_FallTaskSubs"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): 0x442740 jmp by +4: 0x442760, 0x442800. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64E0D8
+name = "BattleObj_HpSubs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): 0x442870 jmp by +3: 0x442890, 0x441D50, 0x442980; 0x64E0E4 (BattleObj_CastSubs) follows. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64E12C
+name = "BattleObj_State10Subs"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): 0x442C70 jmp by +2: 0x442C90, 0x442D10; BattleObj_State12Subs follows. docs/battle_e3.md."
+
+[[data]]
+pc = 0x64E13C
+name = "BattleObj_SpecialSubs"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round twelve group BE3): 0x442E40 jmp by +2: 0x442E60, 0x442F10, 0x442F80; bytes follow. docs/battle_e3.md."
