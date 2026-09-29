@@ -400,7 +400,7 @@ extern "C" void __cdecl Area49_SwapFlags2To3(void) {
     AH_CALL(Flags_Set)(Mem(at::kStoryFlags), 3);
 }
 
-// original 0x409480 (called only by effect kind 0x70's handler 0x46D780 when
+// original 0x409480 (called only by effect kind 0x70's handler EffectKind70_Run 0x46D780 when
 // Game_AreaNumber is 0x31; Sprite_Current the effect, its +0xB a mask of
 // members). With Field_Request 5 and the area not the pending one 0x937F82:
 // Area49_SwapFlags2To3 and done. Otherwise Field_ScriptFlags bit 0x2000

@@ -130,7 +130,7 @@ unsigned char MemberRect(const at::Rects& t, unsigned member) {
 }
 
 // Areas 169 and 171's member frame (0x426810, 0x4276D0; called by the
-// engine's 0x46D780 every field frame in the area, one body over a Rects
+// engine's EffectKind70_Run 0x46D780 every field frame in the area, one body over a Rects
 // each). Area 117's frame (Area117_MembersFrame, AR3A) without its story-flag
 // turn of the facing and over five-byte rectangles. Field_ScriptFlags bit 13
 // cleared; for each member m below Field_MemberCount (read again after each
@@ -393,7 +393,7 @@ extern "C" void __cdecl Area169_InitClearFlag74(void) {
     if (Cond_ByteFD != 1) AH_CALL(Flags_Clear)(Story(), 0x74);
 }
 
-// original 0x426810 (called by 0x46D7C3, 0x46D780's case for area 169; a gap
+// original 0x426810 (called by 0x46D7C3, EffectKind70_Run's case for area 169; a gap
 // of the tool): the member frame over Area169_Rects.
 extern "C" void __cdecl Area169_MembersFrame(void) { MembersFrame(at::kRects169); }
 
@@ -732,7 +732,7 @@ extern "C" void __cdecl Area171_InitClearFlag74(void) {
     if (Cond_ByteFD != 3) AH_CALL(Flags_Clear)(Story(), 0x74);
 }
 
-// original 0x4276D0 (called by 0x46D7D0, 0x46D780's case for area 171; a gap
+// original 0x4276D0 (called by 0x46D7D0, EffectKind70_Run's case for area 171; a gap
 // of the tool): Area169_MembersFrame's code over Area171_Rects.
 extern "C" void __cdecl Area171_MembersFrame(void) { MembersFrame(at::kRects171); }
 
