@@ -7,16 +7,18 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // E2A's two below read bof3::addr::<Name> (group E2A, 2026-09-29): the same values
+
 namespace effect_1c::at {
 
 // Callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called through the harness by address (SH_AT) until the coordinator rebinds
 // them; or nobody's.
-constexpr std::uint32_t kShardSpawn = 0x471D10;   // E2A's (void): a free record of EffectKind30_Shards' 0x80 (+0 == 0) set
+constexpr std::uint32_t kShardSpawn = bof3::addr::EffectSpecks_Spawn;   // 0x471D10, E2A's (void): a free record of EffectKind30_Shards' 0x80 (+0 == 0) set
                                                   // round Sprite_Current's point - +0 1, +1 0x40, +2 a word 0x1000 +
                                                   // Rand & 0xFFF, +4 / +8 x / z at a random angle and Rand % the radius
                                                   // +0x2E, +0xC the height + (+0x30 << 16); al the index, 0x80 none
-constexpr std::uint32_t kShardTile = 0x471E20;    // E2A's (unsigned char *shard): a white or black TILE_1 at the shard's
+constexpr std::uint32_t kShardTile = bof3::addr::EffectSpecks_Draw;    // 0x471E20, E2A's (unsigned char *shard): a white or black TILE_1 at the shard's
                                                   // point (+4..+0xF, EffectGte_ProjectPoint), linked at its x, z
 constexpr std::uint32_t kShardTile2 = 0x46E190;   // nobody's this round (catalog part 6, PSX twin 0x801F752C): the same
                                                   // TILE_1 committed by Gfx_CommitPrim(1, 0x14) instead of linked

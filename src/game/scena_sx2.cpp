@@ -192,8 +192,8 @@ extern "C" unsigned char __cdecl Camera_TurnStepFB(unsigned angle, unsigned step
 // original 0x57C8A0: party member m's field object (ObjTrio + m * 0x14C, m
 // the first argument's low byte, unchecked): state +1 2, sub-state +2 8, +3 0,
 // +0xB the second argument's low byte - Field_TileTurn's state 2 / 8 for a
-// member by index. Area 51 passes 1; areas 148, the engine's 0x4703F0,
-// 0x4712E0 and 0x4849A0 pass 2 or a table byte. PSX 0x8015CC04
+// member by index. Area 51 passes 1; areas 148, EffectKind28_PushParty 0x4703F0,
+// EffectKind2A_PushParty 0x4712E0 and 0x4849A0 pass 2 or a table byte. PSX 0x8015CC04
 // (pairs_propagated "call").
 extern "C" void __cdecl Member_SetState2_8(unsigned member, unsigned value) {
     unsigned char* const o = ObjTrio + (member & 0xFF) * at::kObjStride;

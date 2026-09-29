@@ -234,15 +234,16 @@ bool OnStack(const void* p, unsigned n) {
 bool Writable(U at, unsigned n) { return sh::InRegions(P(at), n) || OnStack(P(at), n); }
 // A float with a random mantissa and an exponent 2^-17..2^18 (no NaN, no
 // infinity) - what the projections' screen words and depths are; one time in
-// sixteen a value _ftol answers with the integer indefinite (NaN, or past 2^63
-// either way), or a signalling NaN a load makes quiet.
+// eight a value _ftol answers with the integer indefinite (NaN, or past 2^63
+// either way), or a NaN of another sign or payload - quiet or signalling -
+// which an x87 sum of two NaNs picks by its own rule.
 void FillFloat(U at) {
     if (!Writable(at, 4)) return;
     const U n = sh::Noise();
     U bits;
-    if (n % 16 == 0) {
-        static const U kOdd[] = {0x7FC00000u, 0xFFC00000u, 0x5F000000u, 0xDF000001u, 0x7F7FFFFFu, 0xFF7FFFFFu, 0x7F800001u};
-        bits = kOdd[(n >> 4) % 7];
+    if (n % 8 == 0) {
+        static const U kOdd[] = {0x7FC00000u, 0xFFC00000u, 0x7FC00001u, 0x7F800001u, 0xFF800002u, 0x5F000000u, 0xDF000001u, 0x7F7FFFFFu};
+        bits = kOdd[(n >> 3) % 8];
     } else {
         bits = (n & 0x807FFFFFu) | ((0x6Eu + (sh::Noise() % 0x24u)) << 23);
     }
@@ -278,6 +279,15 @@ U FxSparkFree(const U*, U answer) {
 }
 U FxDropFree(const U*, U answer) {
     return FindIn(at::kDropStride, [](const unsigned char* r) { return Word(r + 0x14) == 0; }, answer);
+}
+// AreaMap_Elevation: half the time a low word of 0, 1, -1 or 2 (the sparks'
+// heights are seeded there, so "above the ground" meets its boundary), else
+// the answer; the upper half the answer's (the callers movsx the word).
+U FxGround(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 2) return answer;
+    static const U kLow[] = {0, 1, 0xFFFF, 2};
+    return (answer & 0xFFFF0000u) | kLow[(n >> 1) % 4];
 }
 
 #define E2A_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
@@ -319,6 +329,8 @@ const sh::Callee kCallees[] = {
     {E2A_OURS(EffectDrops_Launch), 1, {kW}, kG, 0, 0, {0x18}, nullptr, nullptr, true},
     // E1C's, already ours
     {E2A_OURS(EffectShards_Clear), 0, {}, kPh, 0, 0},
+    // the standard row, answering at the boundaries the sparks are seeded at
+    {E2A_OURS(AreaMap_Elevation), 2, {kW, kW}, kG, 0, 0, {}, &FxGround, nullptr, true},
     // standard entries re-listed: the point hashed (a stack vector's address
     // differs between the copy and ours), out not logged and filled; the size
     // hashed to its first word only - EffectSparks_Draw's second is stack the
@@ -358,20 +370,44 @@ const std::uint8_t kKinds[] = {0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E};
 U FrameCount() { return PickOf(0, 1, 2, 7, 8, 9, 0xE, 0xF, 0x19, 0x1A, 0x80, 0xFF, sh::Next()); }
 
 // The pool: some specks / sparks / drops in use, not all (the moves walk all
-// 0x80 and call per record in use).
+// 0x80 and call per record in use); a quarter of the time no speck (the move's
+// answer 0); some specks landing exactly on Sprite_Current's ground after the
+// move, some sparks at the heights the ground stand-in answers.
 void SeedPool() {
-    for (unsigned i = 0; i < at::kPoolCount; ++i) {
-        const bool live = sh::Next() % 4 == 0;
-        Pool(at::kSpeckStride, i)[0] = static_cast<unsigned char>(live ? PickOf(1, 0x80, sh::Next() | 1) : 0);
-    }
+    // the three families share the pool (a drop's +0x14 is a speck's +0 every
+    // fifth drop): the specks last, so "no speck in use" holds
     for (unsigned i = 0; i < at::kPoolCount; ++i) {
         const bool live = sh::Next() % 4 == 0;
         unsigned char* const r = Pool(at::kSparkStride, i);
         r[0x25] = static_cast<unsigned char>(live ? PickOf(1, 2, 0x80, sh::Next() | 1) : 0);
+        if (live && sh::Half()) {
+            SetLong(r + 8, static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu, 2)));
+            SetLong(r + 0x18, static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu)));
+        }
     }
     for (unsigned i = 0; i < at::kPoolCount; ++i) {
         const bool live = sh::Next() % 4 == 0;
-        SetWord(Pool(at::kDropStride, i) + 0x14, live ? PickOf(1, 2, 0x20, 0x8000, sh::Next() | 1) : 0);
+        unsigned char* const r = Pool(at::kDropStride, i);
+        SetWord(r + 0x14, live ? PickOf(1, 2, 0x20, 0x8000, sh::Next() | 1) : 0);
+        if (live && sh::Half()) {
+            // a whole y and bounds at, above and below its top and bottom
+            const std::int32_t y = static_cast<std::int16_t>(sh::Next() % 0x200 - 0x100);
+            const std::int32_t h = static_cast<std::int32_t>(sh::Next() % 0x40);
+            const float fy = static_cast<float>(y);
+            std::memcpy(r + 4, &fy, 4);
+            SetWord(r + 0xC, static_cast<U>(h));
+            SetWord(r + 0x10, static_cast<U>(y - h + static_cast<std::int32_t>(PickOf(0, 0, 1, 0xFFFFFFFFu))));
+            SetWord(r + 0x12, static_cast<U>(y + h + static_cast<std::int32_t>(PickOf(0, 0, 1, 0xFFFFFFFFu))));
+        }
+    }
+    const bool none = sh::Next() % 4 == 0;
+    for (unsigned i = 0; i < at::kPoolCount; ++i) {
+        const bool live = !none && sh::Next() % 4 == 0;
+        unsigned char* const r = Pool(at::kSpeckStride, i);
+        r[0] = static_cast<unsigned char>(live ? PickOf(1, 0x80, sh::Next() | 1) : 0);
+        if (live && sh::Next() % 4 == 0)
+            SetLong(r + 0xC, Long(Sprite_Current + 0x3C) + static_cast<std::int32_t>(static_cast<U>(static_cast<std::int16_t>(Word(r + 2))) << 8) +
+                                 static_cast<std::int32_t>(PickOf(0, 0, 1, 0xFFFFFFFFu)));
     }
 }
 
