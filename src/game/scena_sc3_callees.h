@@ -100,7 +100,7 @@ constexpr std::uint32_t kCellHandlers4 = 0x661010;  // Scena04_CellHandlers, 1 e
 // round's rebinding pass.
 constexpr std::uint32_t kLeaderState5 = bof3::addr::Field_StartEventBattle;     // group SE: (u8) - member 0's +1 = 5, 0x904AAA = the byte, 0x905BA5 |= 0x10
 constexpr std::uint32_t kEventObjFace = bof3::addr::EventObj_Face;     // group SE: EventObj_Face (Sprite_Current's facing)
-constexpr std::uint32_t kCallB = 0x5341C0;            // Scenario_CallB (SCH names it), the caller's arguments in place
+constexpr std::uint32_t kCallB = bof3::addr::Scenario_CallB;            // Scenario_CallB (SCH names it), the caller's arguments in place
 constexpr std::uint32_t kPlaceParty = bof3::addr::Party_PlaceForBattle;       // (x, z, u8): the party placed at a point
 constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;     // (): the party's records refreshed (Char_RecalcStats)
 constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;      // (): Field_StatusBits |= 0x80

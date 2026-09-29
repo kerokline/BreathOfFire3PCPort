@@ -52,6 +52,12 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 U LongAt(const unsigned char* p) { return static_cast<U>(Long(p)); }
 int S8(unsigned v) { return static_cast<signed char>(v); }
 int S16(unsigned v) { return static_cast<short>(v); }
+// `sub; cdq; xor; sub`: the 32-bit difference's magnitude, wrapping as the
+// original's (the magnitude of 0x80000000 is itself, negative).
+std::int32_t AbsDiff(U a, U b) {
+    const U d = a - b;
+    return static_cast<std::int32_t>(static_cast<std::int32_t>(d) < 0 ? 0u - d : d);
+}
 
 using Handler = void (__cdecl*)();
 
@@ -728,13 +734,10 @@ void LeaveRequest() {
 extern "C" void __cdecl Mode11_ObjectControl(void) {
     if (L(at::kInputPressed) & 0x800u) {
         unsigned char* const fs = Field_State;
-        const auto nx = static_cast<std::int32_t>(LongAt(fs + 0x34));
-        std::int32_t dx = static_cast<std::int32_t>(L(at::kKind2X)) - nx;
-        if (dx < 0) dx = -dx;
-        const auto nz = static_cast<std::int32_t>(LongAt(fs + 0x38));
-        std::int32_t dz = static_cast<std::int32_t>(L(at::kKind2Z)) - nz;
-        SetL(at::kKind2X, static_cast<U>(nx));
-        if (dz < 0) dz = -dz;
+        const U nx = LongAt(fs + 0x34);
+        const std::int32_t dx = AbsDiff(L(at::kKind2X), nx);
+        const std::int32_t dz = AbsDiff(L(at::kKind2Z), LongAt(fs + 0x38));
+        SetL(at::kKind2X, nx);
         SetL(at::kKind2Z, LongAt(fs + 0x38));
         SetW(at::kF3Divisor, 0x20);
         const std::int32_t far = dx >= dz ? dx : dz;
@@ -769,14 +772,9 @@ extern "C" void __cdecl Mode11_ObjectControl(void) {
     }
     unsigned char* const s = Sprite_Current;
     const U dir = s[8];
-    std::int32_t ax = static_cast<std::int32_t>(L(at::kLeaderX) - L(at::kDirectionSteps + dir * 8u) - LongAt(s + 0x34));
-    if (ax < 0) ax = -ax;
-    bool near = ax <= 0x60000;
-    if (near) {
-        std::int32_t az = static_cast<std::int32_t>(L(at::kLeaderZ) - L(at::kDirectionSteps + 4u + dir * 8u) - LongAt(s + 0x38));
-        if (az < 0) az = -az;
-        near = az <= 0x60000 && Field_Request != 5;
-    }
+    bool near = AbsDiff(L(at::kLeaderX) - L(at::kDirectionSteps + dir * 8u), LongAt(s + 0x34)) <= 0x60000;
+    if (near)
+        near = AbsDiff(L(at::kLeaderZ) - L(at::kDirectionSteps + 4u + dir * 8u), LongAt(s + 0x38)) <= 0x60000 && Field_Request != 5;
     if (!near) {
         ObjectStill(s, true);
         Sprite_Current[1] = 1;
@@ -1766,6 +1764,9 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
     const auto bag = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 1));
     const auto worn = static_cast<unsigned char>(SH_CALL(Inventory_Count)(B(record + 1), B(record), 0));
     const U held = static_cast<unsigned char>(bag + worn);
+    // The s8 quantity comes down until it plus the held count is 99 or less:
+    // with more than 227 held no s8 does, and the original loops for ever.
+    if (held > 227) bof3::Fatal("ItemTrade_PickCount: %u held - no quantity brings the sum to 99 (the original never ends)", (unsigned)held);
     unsigned char q = B(at::kTradeQuantity);
     while (static_cast<int>(S8(q)) + static_cast<int>(held) > 0x63) q = static_cast<unsigned char>(q - 1);
     B(at::kTradeQuantity) = q;

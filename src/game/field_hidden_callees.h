@@ -27,6 +27,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // round twelve group FE2's name below: the same value
+
 namespace field_hidden {
 
 namespace at {
@@ -69,7 +71,7 @@ constexpr unsigned kKindStride = 0x8C;
 constexpr std::uint32_t kTargetAhead = 0x51C390;
 constexpr std::uint32_t kSpawnAtCell = 0x524870;
 constexpr std::uint32_t kFoundZenny = 0x5307C0;
-constexpr std::uint32_t kClearCell = 0x5728D0;
+constexpr std::uint32_t kClearCell = bof3::addr::AreaMap_ClearCell;
 
 using Handler = void (__cdecl*)();
 using Byte0 = std::uint32_t (__cdecl*)();   // a u8 answer in al, no arguments

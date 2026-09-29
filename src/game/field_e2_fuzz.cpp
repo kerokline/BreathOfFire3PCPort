@@ -26,6 +26,7 @@
 //     and 4, Field_ObjectTriggers, WorldMap_FieldHooks), built from the
 //     image at start-up.
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -369,8 +370,10 @@ const sh::Callee kFixed[] = {
     {FE2_OURS(Msg_SystemPtr), 1, {kU16}, kG, 0, 0, {}, &FxText},
     // a SPRT at (u16 x - 0x16, u16 y + 2); the third word unread
     {FE2_OURS(Menu_DrawHand), 3, {kU16, kU16, 0}, kG, 0, 0},
-    // char_stats.cpp: the category's, the item's and the flag's low bytes
-    {FE2_OURS(Inventory_Count), 3, {kU8, kU8, kU8}, kG, 0, 0},
+    // char_stats.cpp: the category's, the item's and the flag's low bytes; the
+    // answer a count byte of 99 at most (a stack's count, or how many of the
+    // eight records wear it) - ItemTrade_PickCount's loop never ends past 227
+    {FE2_OURS(Inventory_Count), 3, {kU8, kU8, kU8}, sh::Answer::kByte, 0, 99},
     {FE2_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, kF, 0, 0},
     {FE2_OURS(Item_HelpMessage), 2, {kU8, kU8}, kG, 0, 0},
     // 0x594711 and ebp, 0xFF; 0x594767 and ecx, 0xFF
@@ -790,15 +793,32 @@ void Args(unsigned k, U* a) {
     }
 }
 
+// A subset for a control or a hunt (BOF3X_FE2_ONLY=first,count; the enum's
+// numbering) and the rounds (BOF3X_FE2_ROUNDS); the committed run is every
+// function at 6,000.
+unsigned g_first;
+void SeedFrom(unsigned k) { Seed(k + g_first); }
+void ArgsFrom(unsigned k, U* a) { Args(k + g_first, a); }
+
 }  // namespace
 
 void SelfTest() {
     fe2_escape_ours = &::PartySet_ErrorLoop;
     BuildCallees();
-    sh::Group group = {"field_e2", kClones, sizeof kClones / sizeof kClones[0], g_callees, g_callee_n,
+    unsigned first = 0, count = kCount, rounds = 6000;
+    if (const char* only = std::getenv("BOF3X_FE2_ONLY")) {
+        char* end = nullptr;
+        first = static_cast<unsigned>(std::strtoul(only, &end, 10));
+        if (end && *end == ',') count = static_cast<unsigned>(std::strtoul(end + 1, nullptr, 10));
+        if (first >= kCount) first = kCount - 1;
+        if (count == 0 || first + count > kCount) count = kCount - first;
+    }
+    if (const char* r = std::getenv("BOF3X_FE2_ROUNDS")) rounds = static_cast<unsigned>(std::strtoul(r, nullptr, 10));
+    g_first = first;
+    sh::Group group = {"field_e2", kClones + first, count, g_callees, g_callee_n,
                        kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-                       &Seed, &Disturb, 6000};
-    group.args = &Args;
+                       &SeedFrom, &Disturb, rounds};
+    group.args = &ArgsFrom;
     group.field = true;
     group.chapter = 6;
     sh::Run(group);
