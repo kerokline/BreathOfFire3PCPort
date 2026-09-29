@@ -144,6 +144,27 @@ U FxProjectPoint(const U* a, U answer) {
     return answer;
 }
 
+// Gte_RotTransPers: the screen point, two floats EffectKind25_Start takes
+// through _ftol - fractions (the effect-mode row fills whole numbers, which
+// cannot tell truncation from rounding), and one time in eight a value _ftol
+// answers with the integer indefinite (NaN, or past 2^63 either way); the
+// depth-cue word the callee writes through p filled too.
+U FxRotTransPers(const U* a, U answer) {
+    if (Writable(a[1], 8))
+        for (unsigned i = 0; i < 2; ++i) {
+            unsigned char* const at = P(a[1] + 4 * i);
+            const U n = sh::Noise();
+            if (n % 8 == 0) {
+                const U odd[] = {0x7FC00000u, 0xFFC00000u, 0x5F000000u, 0xDF000001u, 0x7F7FFFFFu, 0xFF7FFFFFu, 0x5EFFFFFFu};
+                std::memcpy(at, &odd[(n >> 3) % 7], 4);
+            } else {
+                FillFloat(at);
+            }
+        }
+    if (Writable(a[2], 4)) sh::FillBytes(P(a[2]), 4);
+    return answer;
+}
+
 #define E1D_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr U kW = 0xFFFFFFFFu, k16 = 0xFFFFu, k8 = 0xFFu;
@@ -161,6 +182,9 @@ const sh::Callee kCallees[] = {
     // (its address differs between the copy and ours): hashed, not logged; out
     // (the packet) logged and filled
     {E1D_OURS(EffectGte_ProjectPoint), 2, {0, kW}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
+    // the vertex and the screen point are Prim_VertexScratch and MapView_ScreenXY
+    // (fixed cells, logged); p is a local, not logged, filled
+    {E1D_OURS(Gte_RotTransPers), 3, {kW, kW, 0}, kG, 0, 0, {8, 0, 0}, &FxRotTransPers, nullptr, true},
 };
 #undef E1D_OURS
 
