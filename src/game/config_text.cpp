@@ -74,7 +74,10 @@ constexpr std::uint32_t kLabelRoom = 32;
 char g_labels[kLabels][kLabelRoom];
 
 // The six `mov dword ptr [esp + n], <label>` operands in the row draw
-// 0x461800, and the address each must hold before we touch it.
+// 0x461800 (Config_DrawRowLabel, ours since round twelve: field_c1.cpp reads
+// these operands, the anchors and the large call below from the original's
+// code at every call, so the patches hold for ours), and the address each must
+// hold before we touch it.
 struct LabelSite {
     std::uint32_t at;
     std::uint32_t expected;
@@ -291,8 +294,8 @@ void ConfigText_Inject() {
     // is what settled it.
     static const std::uint8_t anchor_was[] = {0x3A};
     static const std::uint8_t anchor_is[] = {0x5F};
-    bof3::PatchBytes("ConfigText", 0x46189D, anchor_was, anchor_is, 1);   // 0x461800 big path
-    bof3::PatchBytes("ConfigText", 0x4618ED, anchor_was, anchor_is, 1);   // 0x461800 small path
+    bof3::PatchBytes("ConfigText", 0x46189D, anchor_was, anchor_is, 1);   // Config_DrawRowLabel 0x461800 big path
+    bof3::PatchBytes("ConfigText", 0x4618ED, anchor_was, anchor_is, 1);   // Config_DrawRowLabel 0x461800 small path
 
     // --- the selected row (DIV-0017) ----------------------------------------
     // The glyph swap, and the branch's width reckoned at the 8 units a

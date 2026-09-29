@@ -861,6 +861,11 @@ designed in rather than bolted on.
   `en.FIRST.DAT` twice (the load, then the title), one `DIV-0015` line, no
   Fatal; the owner: "it successfully returned to the title", and F9 on the
   title "gracefully closed the game with no error message".
+- **Round twelve, 2026-09-29 (group FC1):** the row draw `0x461800` is ours
+  now (`Config_DrawRowLabel`, [`field_c1.md`](field_c1.md) section 2). It reads
+  the six label operands and the two anchor bytes from the original's code at
+  every call, so this entry's patches hold for ours unchanged; no behaviour
+  moved. Not yet seen in game through ours.
 - **Reversible?** play without `BOF3X_LANG`, or delete `en.FIRST.DAT`;
   `BOF3X_ORIGINAL=ConfigText` leaves all thirteen operands alone - the six
   label pointers and the seven layout numbers - so the labels stay Chinese and
@@ -978,7 +983,11 @@ designed in rather than bolted on.
 - **Checked:** builds and links; the two call sites and both byte patches are
   validated against the original bytes at start-up. **Seen in game by the
   owner, 2026-09-21: "looks perfect"** - the lowercase `g` is what shows the
-  large form is a different font and not a magnified one.
+  large form is a different font and not a magnified one. **Round twelve,
+  2026-09-29 (group FC1):** `0x461800` is ours (`Config_DrawRowLabel`); it
+  reads the width code at `0x461894` (either form, anything else a Fatal) and
+  the large call's target at `0x46189F` in place at every call, so this
+  entry holds for ours unchanged ([`field_c1.md`](field_c1.md) section 2).
 
 ### The menu's short verbs - the buttons above a panel - in the overlay's language
 
