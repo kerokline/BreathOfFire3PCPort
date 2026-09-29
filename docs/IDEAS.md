@@ -72,7 +72,7 @@ rule ([`README.md`](README.md)) here too.
 | I25 | The area round: the area overlays enumerated from their tables | engine | HIGH | **built 2026-09-27..28** in round ten's six waves - every area overlay of worlds 0..4 ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-areas.md`](takeover-queue-areas.md) |
 | I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | **done** 2026-09-28: round eleven, 531 functions, [`takeover-queue-round11.md`](takeover-queue-round11.md); the live check per fight and the debts remain |
 | I27 | Round twelve: the field modes and the battle engine, by address band | engine | HIGH | in progress: wave one (the battle side, 316 functions) merged 2026-09-29, [`takeover-queue-round12.md`](takeover-queue-round12.md); planned and cut in [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) (owner, 2026-09-28): 631 functions, 14 groups, two harness groups |
-| I28 | Round thirteen: the area overlays' remainder (629 functions the round-ten walk did not reach) | engine | HIGH | open; sketched in [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) section 9, to be cut with `tools/area_rows.py` at round twelve's tip |
+| I28 | Round thirteen: the effect-object engine (1,697 functions: the 627 the catalog labels area overlays, which are effect-kind code, and the 1,070 the labelling pass found beside them) | engine | HIGH | planned; [`takeover-queue-round13.md`](takeover-queue-round13.md) section 9 - the owner's scope of 2026-09-29, to be cut with `tools/band_rows.py` at round twelve's tip |
 
 ---
 

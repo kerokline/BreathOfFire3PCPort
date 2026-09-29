@@ -1,8 +1,8 @@
 # Round thirteen: the area overlays' remainder, which is effect-kind code
 
 **Status:** DRAFT (2026-09-29, measured at `61be26e`, the tip of round
-twelve's wave one; branch `phase-3/round13-prep`) - a plan and a draft cut,
-not scheduled. Nothing taken, nothing named, no C++ changed; one tool
+twelve's wave one; branch `phase-3/round13-plan`) - a plan and a draft cut;
+the scope is decided (section 9), the start waits for round twelve's tip. Nothing taken, nothing named, no C++ changed; one tool
 extended (`tools/band_rows.py`, [`band-rows.md`](band-rows.md) section 6).
 The cut is a **draft**: it must be regenerated at round twelve's tip once
 wave two (FC1, FC2, FC3, FE1, FE2, FO, FS) has merged (section 6). Listed as
@@ -465,16 +465,13 @@ are the rounds after, unchanged. Its `community` rows (the faerie
 village, [`labelling-pass.md`](labelling-pass.md) section 5) belong to BX's
 remainder and want a recorded route.
 
-**What this leaves open for the owner** (replacing questions 1 and 2):
+**Decided by the owner, 2026-09-29** (replacing questions 1 and 2):
 
-1. Round thirteen as the whole effect engine (1,697 in six waves after
-   EKH), or this draft's 627 first and the rest as round fourteen. The
-   join argues for the whole: the same tables, the same shape, one
-   rebinding.
-2. The 101 `hypothesis` rows: read before the cut (the labelling pass's
-   own tier is about 94% right at `evidence`, 73% at `hypothesis`), or let
-   each group's brief say "a row that is not effect code goes back to the
-   coordinator".
+1. **Round thirteen is the whole effect engine**: the 1,697 in six waves
+   after EKH, not this draft's 627 first.
+2. **The 101 `hypothesis` rows are not read before the cut.** Each group's
+   brief says: a row that turns out not to be effect code is not taken,
+   and goes back to the coordinator with what it is.
 
 **Not verified here**: the join is by entry address only - no unit
 (state table) was computed for the labelling rows, so the wave bounds are
