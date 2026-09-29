@@ -89,9 +89,9 @@ constexpr U kCountFormat = 0x64D3EC;      // Boss26Fx_CountFormat, the count's s
 constexpr U kMyriaSlotScript = 0x64DD04;  // .data: the script Myria's entrance hands 0x455290 (not read)
 
 // --- the callees nobody owns ------------------------------------------------
-constexpr U kEnemySound = 0x437450;       // (sound)
-constexpr U kEnemyActEnd = 0x4376A0;      // ()
-constexpr U kEnemyActChance = 0x4376F0;   // ()
+constexpr U kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;       // (sound) (BE3's since round twelve: the same value)
+constexpr U kEnemyActEnd = bof3::addr::EnemyOp_EndAction;      // () (BE3's since round twelve: the same value)
+constexpr U kEnemyActChance = bof3::addr::EnemyOp_RollBit80Task;   // () (BE3's since round twelve: the same value)
 constexpr U kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;  // 0x454A80 (object; BE6, 2026-09-29)
 constexpr U kSlotStart = bof3::addr::Field_SlotStart;               // 0x455290 (object, script; BE6, 2026-09-29)
 constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1

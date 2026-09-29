@@ -15,9 +15,9 @@
 
 #include "bof3/symbols.gen.h"
 
+
 // Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
 // bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
-
 namespace boss_sj {
 namespace at {
 
@@ -62,7 +62,7 @@ constexpr U kPoseSet = 0x8C5D80;          // the frame set the end hooks pose th
 constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
 constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () step 2
 constexpr U kEndThird = bof3::addr::BattleEnd_EnterStep3;         // () step 3
-constexpr U kRoundHigh = 0x441090;        // (value, sign) -> ax
+constexpr U kRoundHigh = bof3::addr::Fixed_HighRoundUp;        // (value, sign) -> ax (BE3's since round twelve: the same value)
 
 }  // namespace at
 }  // namespace boss_sj

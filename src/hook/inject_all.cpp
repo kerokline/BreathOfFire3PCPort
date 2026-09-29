@@ -229,6 +229,7 @@
 #include "game/battle_e6.h"
 #include "game/battle_e4.h"
 #include "game/battle_e2.h"
+#include "game/battle_e3.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -832,6 +833,11 @@ void InjectAll() {
                                 // EnemyOp_Steps 4 / 5, EnterSubs 1, ActSubs 3 / 5): its clones' calls re-aimed at the boss
                                 // harness's recorders, the EnemyOp tables swapped for the fuzz only; no module patches
                                 // bytes inside its 48 (DIVERGENCE.md, cheats.cpp): order does not matter
+    BattleE3_Inject();          // round 12 group BE3 (the enemy ops EnemyOp_Steps 7..9, the party objects' states 6,
+                                // 10, 11, 26, two party helpers, 0x437030..0x442F97): its clones' calls re-aimed at the
+                                // boss harness's recorders, its sub-tables swapped for the fuzz only; after
+                                // BossHarnessEh_Inject, whose self-test copies 0x441A10 / 0x441A30; no module patches
+                                // bytes inside its 49 (DIVERGENCE.md, cheats.cpp)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

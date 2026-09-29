@@ -55,7 +55,7 @@ constexpr std::uint32_t kCurrentEnemy = 0x939AD8;
 constexpr unsigned kEnemyCues = 0xF8;
 // Sound_PlayEffect(id) unless id is 0xFFFF - unnamed, no group's
 // (battle_items_callees.h, enemy_ai_ops_callees.h).
-constexpr std::uint32_t kPlayCue = 0x437450;
+constexpr std::uint32_t kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
 using PlayCueFn = void (__cdecl*)(unsigned);
 // A bit per actor with a reaction to show (docs/battle_actions.md).
 constexpr std::uint32_t kPending = 0x904B82;

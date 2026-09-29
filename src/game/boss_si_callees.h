@@ -59,8 +59,8 @@ constexpr U kChapterStep = 0x8034E5;      // u8: the chapter's step
 // --- the callees nobody owns -------------------------------------------------
 constexpr U kEndWin = bof3::addr::BattleEnd_EnterStep1;           // () the end phase, step 1
 constexpr U kEndOther = bof3::addr::BattleEnd_EnterStep2;         // () the end phase, step 2
-constexpr U kTurnClose = 0x4376A0;        // () the turn closed
-constexpr U kTurnChance = 0x4376F0;       // () a chance of 0x904AA8 bit 7 and a task
+constexpr U kTurnClose = bof3::addr::EnemyOp_EndAction;        // () the turn closed (BE3's since round twelve: the same value)
+constexpr U kTurnChance = bof3::addr::EnemyOp_RollBit80Task;       // () a chance of 0x904AA8 bit 7 and a task (BE3's since round twelve: the same value)
 
 // --- the Arwan task's stack table (BossArwanFx_Dispatch) ---------------------
 constexpr U kFxStart = bof3::addr::BossArwanFx_Start;          // BossArwanFx_Start
