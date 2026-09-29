@@ -106,7 +106,7 @@ struct Callees {
     U (__cdecl* ai_row_done)(U, U);             // 0x44B2C0 (group BE): EnemyAI_RowDone
     U (__cdecl* ai_apply)(U, U);                // 0x44B3A0 EnemyAI_ApplyAction (BE5)
     U (__cdecl* ai_set_done)(U, U, U);          // 0x44B2E0 EnemyAI_SetRowDone (BE5)
-    U (__cdecl* ai_finish)();                   // 0x44B920 EnemyAI_DedupQueue (BE5; its eax unread by the one caller)
+    U (__cdecl* ai_finish)();                   // 0x44B920 EnemyAI_DedupMessages (BE5; its eax unread by the one caller)
     U (__cdecl* update_screen_a)();             // Sprite_UpdateScreenA 0x57B830 (ours)
     U (__cdecl* update_screen_slot)();          // Sprite_UpdateScreenSlot 0x588F00 (group BG)
     U (__cdecl* init_context)();                // Battle_InitActorContext 0x446BD0 (this module)

@@ -8,9 +8,9 @@
 //   - the enemy AI's row helpers: the other rows' test EnemyAI_TurnCheck's
 //     condition 0x26 uses, the done bit, the element test of conditions 0..8
 //     and 0x21..0x23, a row applied (seven kinds through a jump table, then
-//     the row's common tail and the queue), its stat scaling and its byte
+//     the row's common tail and the enemy messages), its stat scaling and its byte
 //     setter (the latter two not in the cut: the cut's 0x44B8D0 is a case of
-//     the setter's switch), the queue deduplicated (not in the cut);
+//     the setter's switch), the enemy messages deduplicated (not in the cut);
 //   - three Effect_Handlers slots: 22 the HP drain, 23 the AP drain (not in
 //     the cut; also 0x44EB50's tail jump), 38 the quarter-chance attack;
 //   - BattleForm_ApplyStats: the transformation's block 0x939EE0.. into each
@@ -22,7 +22,7 @@
 // Every one is a faithful replacement: no DIVERGENCE.md entry is owed. The six
 // dispatchers abort past their tables where the original jumps through
 // whatever follows (the owner's rule for an unchecked index, round9 doc
-// section 6); EnemyAI_DedupQueue aborts where the original would write a
+// section 6); EnemyAI_DedupMessages aborts where the original would write a
 // ninth entry past its eight-dword stack buffer (onto its return address).
 // Every call goes through the harness (BH_CALL / BH_AT), so the start-up fuzz
 // can stand recorders in for the callees.
@@ -172,8 +172,9 @@ extern "C" void __cdecl EnemyAI_SetAttrByte(unsigned char* enemy, unsigned which
 //   7  0x904B97 = row +2;
 // then always: +0x8E = row +4, row +8..+15 into +0x9C..+0xA3,
 // 0x453300(enemy +5) (the word's upper bytes are row + 16's, the copy's
-// pointer), and - HP +0xA4 and the row's word +6 both not 0, the queue
-// 0x93C2A2 below 8 - a queue entry: enemy +5 minus 3, the word.
+// pointer), and - HP +0xA4 and the row's word +6 both not 0, the message
+// count 0x93C2A2 below 8 - an enemy message: enemy +5 minus 3, the word (a
+// system message BattleAction_EnemyMessages / BattleCommit_QueueMessages show).
 extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned char* row) {
     switch (row[1]) {
     case 1:
@@ -221,28 +222,28 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
     const U tail = static_cast<U>(reinterpret_cast<std::uintptr_t>(row + 16));
     BH_AT(U1, at::kStatusPick)((tail & 0xFFFFFF00u) | enemy[5]);
     if (Word(enemy + 0xA4) != 0 && Word(row + 6) != 0) {
-        const unsigned n = B(at::kAiQueueCount);
+        const unsigned n = B(at::kEnemyMessageCount);
         if (n < 8) {
-            B(at::kAiQueue + n * 4) = static_cast<unsigned char>(enemy[5] - 3);
-            SetW(at::kAiQueue + n * 4 + 2, Word(row + 6));
-            B(at::kAiQueueCount) = static_cast<unsigned char>(n + 1);
+            B(at::kEnemyMessages + n * 4) = static_cast<unsigned char>(enemy[5] - 3);
+            SetW(at::kEnemyMessages + n * 4 + 2, Word(row + 6));
+            B(at::kEnemyMessageCount) = static_cast<unsigned char>(n + 1);
         }
     }
 }
 
 // original 0x44B920 (EnemyAI_TurnCheck's and EnemyAI_ChooseActions' tail):
-// the queue 0x939FC0 (0x93C2A2 entries) with each entry dropped whose enemy's
-// +0x8C byte and action word match an entry kept before it; the kept ones
+// the enemy messages 0x939FC0 (0x93C2A2 entries) with each one dropped whose
+// enemy's +0x8C byte and message word match one kept before it; the kept ones
 // written back in order and counted. The original keeps them in an eight-dword
 // stack buffer: a ninth kept entry would land on its return address, so ours
 // aborts there. Its eax is not read (the one caller of EnemyAI_TurnCheck,
 // 0x436908, loads eax again at once).
-extern "C" void __cdecl EnemyAI_DedupQueue(void) {
-    const unsigned n = B(at::kAiQueueCount);
+extern "C" void __cdecl EnemyAI_DedupMessages(void) {
+    const unsigned n = B(at::kEnemyMessageCount);
     U kept[8];
     unsigned k = 0;
     for (unsigned i = 0; i < n; ++i) {
-        const U entry = at::kAiQueue + 4 * i;
+        const U entry = at::kEnemyMessages + 4 * i;
         bool dup = false;
         if (k != 0) {
             const unsigned char group = EnemyObj(B(entry))[0x8C];
@@ -251,13 +252,13 @@ extern "C" void __cdecl EnemyAI_DedupQueue(void) {
         }
         if (dup) continue;
         if (k == 8)
-            bof3::Fatal("EnemyAI_DedupQueue: a ninth distinct entry of %u - the original writes it past its eight-dword "
+            bof3::Fatal("EnemyAI_DedupMessages: a ninth distinct entry of %u - the original writes it past its eight-dword "
                         "buffer, onto its return address (docs/battle_e5.md section 7)",
                         n);
         kept[k++] = L(entry);
     }
-    B(at::kAiQueueCount) = static_cast<unsigned char>(k);
-    for (unsigned i = 0; i < k; ++i) SetLong(At(at::kAiQueue + 4 * i), static_cast<S32>(kept[i]));
+    B(at::kEnemyMessageCount) = static_cast<unsigned char>(k);
+    for (unsigned i = 0; i < k; ++i) SetLong(At(at::kEnemyMessages + 4 * i), static_cast<S32>(kept[i]));
 }
 
 // ===========================================================================
@@ -1207,7 +1208,7 @@ void BattleE5_Inject() {
     BOF3_INJECT(EnemyAI_ApplyAction);
     BOF3_INJECT(EnemyAI_ScaleStat);
     BOF3_INJECT(EnemyAI_SetAttrByte);
-    BOF3_INJECT(EnemyAI_DedupQueue);
+    BOF3_INJECT(EnemyAI_DedupMessages);
     BOF3_INJECT(Effect_DrainHp);
     BOF3_INJECT(Effect_DrainAp);
     BOF3_INJECT(Effect_QuarterAttack);

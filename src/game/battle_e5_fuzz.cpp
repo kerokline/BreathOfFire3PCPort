@@ -108,7 +108,7 @@ const bh::Clone kAll52[] = {
       kTables44B3A0, 1),
     C("EnemyAI_ScaleStat", 0x44B5E0, 0x290, nullptr, 0, BH_FN(EnemyAI_ScaleStat), S::kHelper, 0, kTables44B5E0, 1),
     C("EnemyAI_SetAttrByte", 0x44B870, 0xB0, nullptr, 0, BH_FN(EnemyAI_SetAttrByte), S::kHelper, 0, kTables44B870, 1),
-    C("EnemyAI_DedupQueue", 0x44B920, 0xC5, nullptr, 0, BH_FN(EnemyAI_DedupQueue), S::kHelper),
+    C("EnemyAI_DedupMessages", 0x44B920, 0xC5, nullptr, 0, BH_FN(EnemyAI_DedupMessages), S::kHelper),
     // Effect_Handlers slots 22, 23, 38
     C("Effect_DrainHp", 0x44C3D0, 0x1EE, kCalls44C3D0, BH_N(kCalls44C3D0), BH_FN(Effect_DrainHp), S::kStep),
     C("Effect_DrainAp", 0x44C5C0, 0x1F8, kCalls44C5C0, BH_N(kCalls44C5C0), BH_FN(Effect_DrainAp), S::kStep),
@@ -183,6 +183,25 @@ U DragonTaskEffect(const U*, U) {
     return bh::Noise();
 }
 
+// The drains mark the acting sprite's +8 (| 4 or | 8 when the stat runs past
+// its maximum) and clear it after the pop-up: the pop-ups' stand-ins note the
+// byte as they are called, so the mark is compared, not wiped.
+U PopupEffect(const U*, U answer) {
+    bh::Note(bh::Pointer(0x904B40)[8]);
+    return answer;
+}
+
+// The Dragon run's cursors read Input_Pressed again after a refusal's sound
+// (0x107): the sound's stand-in moves it half the time, the old word noted.
+U SoundEffect(const U*, U answer) {
+    const U n = bh::Noise();
+    if (n & 1) {
+        bh::Note(move_script::Word(Mem(at::kInputPressed)));
+        SetWord(Mem(at::kInputPressed), n >> 8);
+    }
+    return answer;
+}
+
 // Masks narrowed where the callee reads less than the word and the caller's
 // register above it is its own garbage (a different value in the copy and in
 // ours): each read of the callee's (capstone, 2026-09-29).
@@ -196,7 +215,7 @@ const bh::Callee kCallees[] = {
     {"Battle_ClearStatus", bof3::addr::Battle_ClearStatus, KeyOf(&::Battle_ClearStatus), 2, {kU8, kAll}, bh::Answer::kGarbage, 0, 0},
     // Battle_SetDamagePopup and 0x453EB0 read the actor's byte (cmp al, 2; and eax, 0xFF): the drains push it in ecx
     {"Battle_SetDamagePopup", bof3::addr::Battle_SetDamagePopup, KeyOf(&::Battle_SetDamagePopup), 2, {kU16, kU8},
-     bh::Answer::kGarbage, 0, 0},
+     bh::Answer::kGarbage, 0, 0, {}, &PopupEffect},
     // Battle_CalcDamage reads both actors' bytes (attacker & 0xFF, target & 0xFF): Effect_QuarterAttack pushes ecx
     {"Battle_CalcDamage", bof3::addr::Battle_CalcDamage, KeyOf(&::Battle_CalcDamage), 3, {kU8, kU8, kU16}, bh::Answer::kGarbage, 0, 0},
     // 0x44F6A0 hands its second word to 0x44F770, which reads its byte (cmp cl, 2; and eax, 0xFF)
@@ -205,7 +224,10 @@ const bh::Callee kCallees[] = {
     {"0x447F40", at::kTargetPrompt, at::kTargetPrompt, 0, {}, bh::Answer::kGarbage, 0, 0},
     {"0x4525B0", at::kDragonTask, at::kDragonTask, 0, {}, bh::Answer::kGarbage, 0, 0, {}, &DragonTaskEffect},
     {"0x453300", at::kStatusPick, at::kStatusPick, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
-    {"0x453EB0", at::kApPopup, at::kApPopup, 2, {kU16, kU8}, bh::Answer::kGarbage, 0, 0},
+    {"0x453EB0", at::kApPopup, at::kApPopup, 2, {kU16, kU8}, bh::Answer::kGarbage, 0, 0, {}, &PopupEffect},
+    // the standard Sound_PlayEffect (a short), louder (SoundEffect)
+    {"Sound_PlayEffect", bof3::addr::Sound_PlayEffect, KeyOf(&::Sound_PlayEffect), 1, {kU16}, bh::Answer::kGarbage, 0, 0, {},
+     &SoundEffect},
 };
 
 const bh::DataTable kTables[] = {
@@ -316,7 +338,7 @@ void Seed(unsigned k) {
         for (unsigned m = 0; m < 3; ++m) Member(m)[0x92] = static_cast<unsigned char>(bh::Next() % 0x80);
         break;
     }
-    case 0x44B3A0: {   // EnemyAI_ApplyAction: the row (kind 0..8 and past), HP, the queue's count at its end
+    case 0x44B3A0: {   // EnemyAI_ApplyAction: the row (kind 0..8 and past), HP, the message count at its end
         g_obj = Enemy(bh::Next());
         g_row = at::kAiScripts + (bh::Next() % 0x40) * 16;
         unsigned char* const row = Mem(g_row);
@@ -328,7 +350,7 @@ void Seed(unsigned k) {
         SetWord(g_obj + 0x94, Word16({0, 1, 0x7FFF, 0xFFFF, 6554, 6553}));
         SetWord(g_obj + 0x96, Word16({0, 1, 0x7FFF, 0xFFFF, 6554, 6553}));
         g_obj[5] = Byte({3, 4, 10, 0, 2});
-        Mem(at::kAiQueueCount)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 6, 7, 8, 8) : bh::Next() % 9);
+        Mem(at::kEnemyMessageCount)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(0, 1, 6, 7, 8, 8) : bh::Next() % 9);
         break;
     }
     case 0x44B5E0: {   // EnemyAI_ScaleStat: the stats against their caps
@@ -341,10 +363,10 @@ void Seed(unsigned k) {
         }
         break;
     }
-    case 0x44B920: {   // EnemyAI_DedupQueue: up to eight entries with repeats
-        Mem(at::kAiQueueCount)[0] = static_cast<unsigned char>(bh::Next() % 9);
+    case 0x44B920: {   // EnemyAI_DedupMessages: up to eight entries with repeats
+        Mem(at::kEnemyMessageCount)[0] = static_cast<unsigned char>(bh::Next() % 9);
         for (unsigned i = 0; i < 8; ++i) {
-            unsigned char* const q = Mem(at::kAiQueue + 4 * i);
+            unsigned char* const q = Mem(at::kEnemyMessages + 4 * i);
             q[0] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next() % 11);
             SetWord(q + 2, Word16({1, 2, 3, 2}));
         }

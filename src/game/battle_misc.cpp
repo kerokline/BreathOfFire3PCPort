@@ -64,7 +64,7 @@ const Callees kOriginals = {
     Fn<U __cdecl(U, U)>(0x44B2C0),
     Fn<U __cdecl(U, U)>(bof3::addr::EnemyAI_ApplyAction),
     Fn<U __cdecl(U, U, U)>(bof3::addr::EnemyAI_SetRowDone),
-    Fn<F0>(bof3::addr::EnemyAI_DedupQueue),
+    Fn<F0>(bof3::addr::EnemyAI_DedupMessages),
     As<U (__cdecl*)()>(Sprite_UpdateScreenA),
     Fn<F0>(0x588F00),
     As<U (__cdecl*)()>(Battle_InitActorContext),

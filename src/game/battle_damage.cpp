@@ -68,7 +68,7 @@ const Callees kOriginals = {
     Fn<void (__cdecl*)(unsigned char*, const unsigned char*)>(bof3::addr::EnemyAI_ApplyAction),
     Fn<void (__cdecl*)(unsigned char*, unsigned, unsigned)>(bof3::addr::EnemyAI_SetRowDone),
     Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::EnemyAI_OtherRowsDone),
-    Fn<void (__cdecl*)()>(bof3::addr::EnemyAI_DedupQueue),
+    Fn<void (__cdecl*)()>(bof3::addr::EnemyAI_DedupMessages),
 };
 Callees g = kOriginals;
 

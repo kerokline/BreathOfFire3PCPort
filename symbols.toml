@@ -74567,7 +74567,7 @@ ret = "void"
 params = "unsigned char *enemy, const unsigned char *row"
 impl = "src/game/battle_e5.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B3A0..0x44B5DF (0x240 bytes): cdecl, the jump table 0x44B5C4 (7) by row +1 - 1: 1 word +0x90 = row +2; 2 Sprite_Current the enemy for Battle_ClearStatus(+5, 0xFFFF) then 0x44F1D0(+5, +0x92 | row +2); 3 / 4 each bit of row +2 from the top to 0x44B5E0 / 0x44B870(enemy, bit, row +3); 5 +0xAA / +0xAE = row +3 by bits 1 / 0; 6 words +0x96 / +0x94 * row +3 / 10 capped 0xFFFF; 7 0x904B97 = row +2. Then +0x8E = row +4, row +8..+15 to +0x9C, 0x453300(+5), and with HP +0xA4 and row word +6 both non-zero a queue entry at 0x939FC0 + 4 * 0x93C2A2 (below 8). The cut's extent (1328) runs over 0x44B5E0, 0x44B870, 0x44B920. docs/battle_e5.md."
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B3A0..0x44B5DF (0x240 bytes): cdecl, the jump table 0x44B5C4 (7) by row +1 - 1: 1 word +0x90 = row +2; 2 Sprite_Current the enemy for Battle_ClearStatus(+5, 0xFFFF) then 0x44F1D0(+5, +0x92 | row +2); 3 / 4 each bit of row +2 from the top to 0x44B5E0 / 0x44B870(enemy, bit, row +3); 5 +0xAA / +0xAE = row +3 by bits 1 / 0; 6 words +0x96 / +0x94 * row +3 / 10 capped 0xFFFF; 7 0x904B97 = row +2. Then +0x8E = row +4, row +8..+15 to +0x9C, 0x453300(+5), and with HP +0xA4 and row word +6 both non-zero an enemy message at 0x939FC0 + 4 * 0x93C2A2 (below 8; the list BattleAction_EnemyMessages shows). The cut's extent (1328) runs over 0x44B5E0, 0x44B870, 0x44B920. docs/battle_e5.md."
 
 [[func]]
 pc = 0x44B5E0
@@ -74589,12 +74589,12 @@ evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B870..0x44B91F (0xB0
 
 [[func]]
 pc = 0x44B920
-name = "EnemyAI_DedupQueue"
+name = "EnemyAI_DedupMessages"
 ret = "void"
 params = "void"
 impl = "src/game/battle_e5.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B920..0x44B9E4 (0xC5 bytes): cdecl, no calls: the 0x93C2A2 queue entries at 0x939FC0 kept in order unless an earlier kept one has the same enemy +0x8C byte and action word; kept into an eight-dword stack buffer (a ninth would overwrite the return address), written back and counted. EnemyAI_ChooseActions' and EnemyAI_TurnCheck's tail; its eax unread (0x436908). Not in the cut (code between two of its starts, tools/band_rows.py). docs/battle_e5.md."
+evidence = "disasm 2026-09-29 (round twelve group BE5), 0x44B920..0x44B9E4 (0xC5 bytes): cdecl, no calls: the 0x93C2A2 enemy messages at 0x939FC0 kept in order unless an earlier kept one has the same enemy +0x8C byte and message word; kept into an eight-dword stack buffer (a ninth would overwrite the return address), written back and counted. EnemyAI_ChooseActions' and EnemyAI_TurnCheck's tail; its eax unread (0x436908). Not in the cut (code between two of its starts, tools/band_rows.py). docs/battle_e5.md."
 
 [[func]]
 pc = 0x44C3D0

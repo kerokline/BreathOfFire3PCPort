@@ -139,7 +139,7 @@ struct Callees {
     void (__cdecl* ai_apply)(unsigned char* enemy, const unsigned char* row);   // 0x44B3A0 EnemyAI_ApplyAction (group BE5, round 12)
     void (__cdecl* ai_set_done)(unsigned char* enemy, unsigned row, unsigned on);   // 0x44B2E0 EnemyAI_SetRowDone (BE5)
     unsigned char (__cdecl* ai_rows_left)(unsigned row, unsigned enemy);       // 0x44B240 EnemyAI_OtherRowsDone (BE5)
-    void (__cdecl* ai_finish)();                                                // 0x44B920 EnemyAI_DedupQueue (BE5)
+    void (__cdecl* ai_finish)();                                                // 0x44B920 EnemyAI_DedupMessages (BE5)
 };
 
 extern const Callees kOriginals;

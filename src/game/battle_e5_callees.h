@@ -77,10 +77,10 @@ constexpr U kMsgCount = 0x93C2A1;         // u8: the entries; the last is (count
 constexpr U kMsgFlag = 0x93C2C1;          // u8 of the entry: set by the commit
 constexpr U kMsgText = 0x93C2C4;          // const unsigned char * of the entry
 
-// --- the enemy AI's queue and scripts ---
+// --- the enemy AI's scripts and the enemy messages a turn shows ---
 constexpr U kAiScripts = 0x8C5600;        // the area's AI scripts, 0x8C bytes each: four rows of 16
-constexpr U kAiQueue = 0x939FC0;          // 8 entries of 4 bytes: +0 the enemy (actor - 3), +2 the action word
-constexpr U kAiQueueCount = 0x93C2A2;     // u8: entries in kAiQueue, 8 at most
+constexpr U kEnemyMessages = 0x939FC0;          // 8 entries of 4 bytes: +0 the enemy (actor - 3), +2 a system message (BattleAction_EnemyMessages)
+constexpr U kEnemyMessageCount = 0x93C2A2;     // u8: entries in kEnemyMessages, 8 at most
 constexpr U kEnemies = 0x93B960;          // the enemies' objects, stride 0x128
 constexpr U kEnemyStride = 0x128;
 constexpr U kCurrentEnemy = 0x939AD8;     // unsigned char *
