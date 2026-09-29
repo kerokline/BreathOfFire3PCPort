@@ -6,7 +6,7 @@ section 3), wave one, stage B. All 39 functions of the group are ours
 (`src/game/battle_e6.cpp`, shadow name `battle_e6`), each read to its last
 instruction with capstone and fuzzed through the boss harness's engine
 frame ([`boss_harness.md`](boss_harness.md) section 10) without edits to it:
-five `Run`s, 234,000 rounds, 0 mismatches. CONTROLS_SUMMARY The owner's
+five `Run`s, 234,000 rounds, 0 mismatches. 66 controls planted: 65 refused by a count, one a near-equivalent recorded with its near variant refused (section 8). The owner's
 `dragonTransform` recipe enters 15 of the 39 (section 9); the rest are fuzz
 only.
 
@@ -256,7 +256,29 @@ other callee is ours, by name.
 
 ## 5. The rebinding
 
-REBINDING
+The round-ten form: the constant keeps its value (the fuzz files key on
+it) and its initialiser names the function now that it is ours. The
+build, `ledger_check.py` and `BOF3X_SHADOW='*'` after (section 6).
+
+| File | Was | Now |
+|---|---|---|
+| `magic_s33.cpp` | `kResetActor = 0x4514A0` | `bof3::addr::DragonForm_Transform` |
+| `magic_s12.cpp` | `kStatChanged = 0x453300` | `bof3::addr::Battle_RecalcStats` |
+| `battle_fx_tasks.cpp` | `BattleFx_Dispatch`'s slots 15, 16, 18 `H(0x452680)`, `H(0x452AD0)`, `H(0x452B60)` | `H(bof3::addr::BattleFxDash_Dispatch)`, `_Pose_`, `_Trail_` |
+| `battle_sprites.cpp` (and the comments of `battle_sprites_callees.h`) | `Raw<..>(0x453910)`, `(0x453A90)`, `(0x453AC0)` | `bof3::addr::Battle_MemberRollByAction`, `Battle_ActionBitSet`, `Battle_MemberListFull` |
+| `enemy_ai_ops_callees.h` | `kApPopup = 0x453EB0` | `bof3::addr::Battle_SetApPopup` |
+| `area_w2b_callees.h`, `area_w4c_callees.h`, `area_w4f_callees.h`, `boss_sc_callees.h`, `boss_sf_callees.h` | `kSlotsReleaseFor = 0x454A80`, `kSlotStart = 0x455290` | `bof3::addr::Field_SlotsReleaseOwner`, `Field_SlotStart` (four headers gained the `symbols.gen.h` include) |
+
+**Left raw, on purpose**: the fuzz files' `CallSite` / `Imm` / `Callee`
+rows naming these addresses (`magic_s33_fuzz`, `magic_s12_fuzz`,
+`battle_fx_tasks_fuzz`, `battle_sprites_fuzz`, `enemy_ai_ops_fuzz`'s
+`case kApPopup`, the area and boss fuzzes' `0x454A80` / `0x455290` rows -
+they are the keys, the round-ten rule); `boss_harness_eh.cpp`'s copy of
+`0x453A90` (the harness's own self-test of Capcom's bytes); comments that
+cite an address; `boss_harness.h`'s band comment. **Not mine to edit**: no
+file another group of this wave writes names a BE6 function (BE2..BE5 call
+`0x453300`, `0x453EB0`, `0x4525B0` from code that is not ours yet - their
+own groups call them raw, and the coordinator rebinds after both merge).
 
 ## 6. The fuzz
 
@@ -276,9 +298,15 @@ function answering in `al`.
 | `stats` | 6 | 36,000 | 19,557 | 0 mismatches |
 | `tasks` | 13 | 78,000 | 148,416 | 0 mismatches |
 | `slots` | 2 | 12,000 | 23,969 | 0 mismatches |
-| `cells` | 4 | 24,000 | 158,147 | 0 mismatches |
+| `cells` | 4 | 24,000 | 187,820 | 0 mismatches |
 
 (This worktree's counts; they move with the build directory.)
+
+`BOF3X_SHADOW='*'` (every group of every harness, this worktree, the build
+with the rebinding of section 5): exit 0 on the first run, 958 lines of 0
+mismatches and none other, BE6's five `Run`s among them (their call counts
+within a few hundred of the table's: the build directory). `ledger_check.py`:
+0 errors (6,277 `impl` lines, 6,277 detoured).
 
 **Stand-ins beyond the harness's.** `FormEffect` on the recorders of
 `DragonForm_FindRecipe`, `_ApplyRecipe` and `_Mix`: notes and moves the form
@@ -299,13 +327,22 @@ matrix family (`Gte_PushMatrix`, `_PopMatrix`, `_RotTrans`,
 `_SetRotMatrix`, `_SetTransMatrix`) runs for real (`kThrough`), as the
 engine set's other GTE calls do, so the push and pop keep the matrix each
 pass starts from and the vectors built on the stack are compared through
-what they project.
+what they project. The cells' heights (`0x4CF4B0`, `AreaMap_Elevation`,
+whose `ax` alone is read) answer -256..256 (`SmallHeight`), so that a
+seeded projection lands the vertices near the screen.
 
 **Regions beyond the engine frame**: the work cells `0x675F48..0x675F57`,
 the party backup's tail `0x939B20..0x939EC0`, the action bits `0x904088`
 (0x20), `MoveScript_EffectState` (0x18), `Field_Slots` (0x80),
 `Field_Kind2Z` / `_Kind2X`, `Prim_VertexScratch` and `MapView_ScreenXY` (8
-each), `Draw_OtSlot`, and a 0x200-byte BMAGIC record of the fuzz's own.
+each), `Draw_OtSlot`, and a 0x200-byte BMAGIC record of the fuzz's own; for
+`cells` also the GTE's state `0x7DE428..0x7DE7A8` (`magic_s23_fuzz`'s
+region) less `Gte_Vertices` `0x7DE468..0x7DE47F` (the loads copy each
+vertex's fourth short, which the originals leave as stale stack bytes: L9)
+and `Camera_Matrix` (0x20). Seeded two times in three for a projection: a
+rotation near identity in `Gte_Matrix` and `Camera_Matrix`, a translation
+1000..4000 deep, a distance 300..800, offsets near the screen's middle,
+`Gte_MatrixDepth` 0..15.
 
 **Seeds.** The chosen genes 0..3 of them mostly (0..7 else), from 0..0x10
 mostly with one of 0xA / 0xB / 0xC half the time; the actor's character
@@ -366,10 +403,110 @@ the form byte (0x16 half the time).
 - **L8 - `DragonForm_Transform` copies `0x904B87` genes into the history**
   unbounded (more than three run into the older records, the form byte
   written after); kept.
+- **L9 - the BMAGIC cells hand the GTE vertices whose fourth short is stale
+  stack** (their SVECTORs' pad; `Gte_LoadVertex` / `_LoadVertices3` copy it
+  into `Gte_Vertices`, where nothing reads it): harmless, D101's kind. Ours
+  passes 0; the fuzz leaves those six dwords out of the compared state.
 
 ## 8. Controls
 
-CONTROLS
+`controls.py` (scratch; the round's form): each plant one change in
+`battle_e6.cpp`, anchored on a unique string, rebuilt, its unit run alone
+(`BOF3X_BE6_RUN`), restored and rebuilt. **66 planted, 65 refused by a
+count, one near-equivalent recorded and replaced** (in this worktree; the
+numbers are rounds of 6,000 that mismatched).
+
+| n | Run | Planted in ours | Refused (rounds) |
+|--:|---|---|---|
+| 1 | `form` | DragonHistory_Leave: 0x904AA4 = 3 | `DragonHistory_Leave` 6,000 |
+| 2 | `form` | Transform: code 8 sets bit 15, not 16 | `DragonForm_Transform` 98 |
+| 3 | `form` | Transform: the history moves four records | `DragonForm_Transform` 5,998 |
+| 4 | `form` | Transform: group << 4 | `DragonForm_Transform` 4,265 |
+| 5 | `form` | Transform: the mix code read before the mix | `DragonForm_Transform` 1,568 |
+| 6 | `form` | FindRecipe: recipes 0..9 | `DragonForm_FindRecipe` 87 |
+| 7 | `form` | FindRecipe: the party form answered as 6 | `DragonForm_FindRecipe` 480 |
+| 8 | `form` | RecipeSlotHeld: 0xFF not "any" | `DragonForm_RecipeSlotHeld` 1,039 |
+| 9 | `form` | TryPartyRecipe: party size 2 | `DragonForm_TryPartyRecipe` 1,298 |
+| 10 | `form` | Mix: gene 0xB negates nine | `DragonForm_Mix` 341 |
+| 11 | `form` | Mix: a zero sum moves one time in nine | `DragonForm_Mix` 537 |
+| 12 | `form` | Mix: the first stat 0 below 1 | `DragonForm_Mix` 2,619 |
+| 13 | `form` | Mix: group 6 for three positive | `DragonForm_Mix` 735 |
+| 14 | `form` | Mix: code 1 by sum 10 at least 1 | `DragonForm_Mix` 561 |
+| 15 | `form` | StatShift: held to 0..3 | `DragonForm_StatShift` 2,433 |
+| 16 | `form` | SetMixBytes: the fourth byte 3 | `DragonForm_SetMixBytes` 6,000 |
+| 17 | `form` | MixAbilities: row 13 for 14 | `DragonForm_MixAbilities` 1,108 |
+| 18 | `form` | AddAbilityRow: full at 8 | `DragonForm_AddAbilityRow` 772 |
+| 19 | `form` | ApplyRecipe: seven abilities at most | `DragonForm_ApplyRecipe` 725 |
+| 20 | `form` | ApplyRecipe: the fourth stat by the third percent | `DragonForm_ApplyRecipe` 1,036 |
+| 21 | `form` | PartyRecipe: 4 with 1 dropped | `DragonForm_PartyRecipe` 91 |
+| 22 | `form` | PartyRecipe: 6 unheld answers 0xE | `DragonForm_PartyRecipe` 64 |
+| 23 | `form` | GenesHeld: the last gene not searched | `DragonGenes_Held` 623 |
+| 24 | `form` | SumCost: the next gene's cost | `DragonGenes_SumCost` 3,946 |
+| 25 | `stats` | RecalcStats: the member view 4 bytes on | `Battle_RecalcStats` 1,634 |
+| 26 | `stats` | RecalcStats: an enemy buff times 3 | `Battle_RecalcStats` 958 |
+| 27 | `stats` | RecalcStats: bit 11 zeroes +0xC5 | `Battle_RecalcStats` 2,961 |
+| 28 | `stats` | RecalcMemberStats: form 0x17 | `Battle_RecalcMemberStats` 1,255 |
+| 29 | `stats` | RecalcMemberStats: +0x57 into +0x36 | `Battle_RecalcMemberStats` 6,000 |
+| 30 | `stats` | MemberRoll: the odds tables swapped | `Battle_MemberRollByAction` 106 |
+| 31 | `stats` | MemberRoll: +0x125 for the actor | `Battle_MemberRollByAction` 2,573 |
+| 32 | `stats` | ActionBitSet: bit & 15 | `Battle_ActionBitSet` 1,515 |
+| 33 | `stats` | ListFull: nine bytes | `Battle_MemberListFull` 199 |
+| 34 | `stats` | ApPopup: negative +0x27 = 2 | `Battle_SetApPopup` 2,617 |
+| 35 | `stats` | ApPopup: bit 2 for bit 3 | `Battle_SetApPopup` 769 |
+| 36 | `tasks` | TaskDispatch: +1 tested for the update | `BattleFxDash_Dispatch` 894; `BattleFxPose_Dispatch` 2,897; `BattleFxTrail_Dispatch` 2,916 |
+| 37 | `tasks` | DashStart: + 0x2000000 | `BattleFxDash_Start` 6,000 |
+| 38 | `tasks` | DashWaitPose: pose + 0x3D | `BattleFxDash_WaitPose` 3,984 |
+| 39 | `tasks` | DashRise: the enemy side read unflipped for a member | `BattleFxDash_Rise` 218 |
+| 40 | `tasks` | DashRise: an unsigned height compare | `BattleFxDash_Rise` 1,529 |
+| 41 | `tasks` | DashAdvance: the trail keeps bit 6, loses bit 7 | `BattleFxDash_Advance` 2,981 |
+| 42 | `tasks` | DashAdvance: near tested by al | `BattleFxDash_Advance` 1,020 |
+| 43 | `tasks` | DashReturn: sixteenths toward minus infinity | `BattleFxDash_Return` 3,384 |
+| 44 | `tasks` | DashArc: on at -0x38 | `BattleFxDash_Arc` 3,023 |
+| 45 | `tasks` | DashLand: owner pose + 5 | `BattleFxDash_Land` 6,000 |
+| 46 | `tasks` | PoseStart: +0x29 = 4 | `BattleFxPose_Start` 6,000 |
+| 47 | `tasks` | PoseWaitOwner: owner state 6 | `BattleFxPose_WaitOwner` 2,911 |
+| 48 | `tasks` | TrailStart: +0x5F by 0xE0 | `BattleFxTrail_Start` 5,626 |
+| 49 | `tasks` | PoseDispatch: its table one entry on (entry 1 for 0) | `BattleFxPose_Dispatch` 6,000 |
+| 50 | `slots` | SlotsReleaseOwner: seven slots | `Field_SlotsReleaseOwner` 3,023 |
+| 51 | `slots` | SlotStart: +2 = 0xFE | `Field_SlotStart` 2,972 |
+| 52 | `slots` | SlotStart: the object's +0x26 | `Field_SlotStart` 2,786 |
+| 53 | `cells` | TexQuads: bit 14 without 30 to slot 5 | `MapCell_DrawTexQuads` 688 |
+| 54 | `cells` | TexQuads: no left bound | `MapCell_DrawTexQuads` 183 |
+| 55 | `cells` | CellVertex: z by 3 times its byte | `MapCell_DrawTexQuads` 3,210; `MapCell_DrawShadedQuads` 3,290 |
+| 56 | `cells` | ShadedQuads: mode \| 0x94 | `MapCell_DrawShadedQuads` 3,290 |
+| 57 | `cells` | ShadedQuads: the green byte >> 9 | `MapCell_DrawShadedQuads` 3,290 |
+| 58 | `cells` | SpinQuads: the second angle times 2 | `MapCell_DrawSpinQuads` 3,141 |
+| 59 | `cells` | SpinQuads: the sign bit 8 | `MapCell_DrawSpinQuads` 3,105 |
+| 60 | `cells` | GroundSprite: 1124 | `MapCell_DrawGroundSprite` 160 |
+| 61 | `cells` | GroundSprite: the head + 4 | `MapCell_DrawGroundSprite` 310 |
+| 62 | `cells` | GroundSprite: the height + 1 | `MapCell_DrawGroundSprite` 3,991 |
+| 63 | `cells` | GroundSprite: the right bound exclusive | **not refused** (0 mismatches) |
+| 64 | `cells` | GroundSprite: the right bound 0x5C4204 (slot 40s) | `MapCell_DrawGroundSprite` 4 |
+| 65 | `form` | PartyRecipe: the pair tried one way only | `DragonForm_PartyRecipe` 608 |
+| 66 | `form` | Transform: the last rebuild for the first actor read | `DragonForm_Transform` 5,831 |
+
+What the first pass taught (each fixed in the fuzz, not in ours, then the
+control run again):
+
+- **25** first planted `actor <= 1` for the member test: member 2 then took
+  the enemy path with index 255 and ours faulted at `Enemy(255)` (exit
+  0xC0000005, not a count). Replaced by a plant inside the member path.
+- **49** first planted a one-entry table: refused by ours' own `Fatal` (a
+  state past it), not a count. Replaced by the table moved one entry on,
+  still two long.
+- **53, 54, 58..61, 63** were not refused at first: the GTE's state at
+  start-up projects every vertex to one degenerate point, so slot 40's
+  screen test never passed and slot 42's matrices changed nothing visible.
+  The fuzz now holds the GTE's state (`0x7DE428..0x7DE7A8`, less
+  `Gte_Vertices`) and `Camera_Matrix` as regions, seeds a sane projection
+  two times in three and small heights from `0x4CF4B0` /
+  `AreaMap_Elevation`, and fills the record with small vertex bytes; all
+  were refused on the re-run but 63.
+- **63** (slot 43's right bound `>` made `>= bound + 1`) is a near-
+  equivalent: only a projected x in (380, 381) tells them apart, and no
+  round landed there. Recorded as such; **64**, the bound read from slot
+  40's `0x5C4204` instead, is refused (in 4 rounds: few projections land
+  between the two bounds).
 
 ## 9. The live route
 
@@ -391,6 +528,18 @@ wave plays them; the other 24 (`DragonHistory_Leave`, `_PartyRecipe`,
   its read again of the actor (the clone runs calm; L1).
 - The divisions by zero and the loops past a record (L3..L5): ours' aborts
   are never taken by the seeds, by design.
-- Whether the BMAGIC cells' projections land on screen depends on the GTE's
-  matrix at start-up, the same on both passes; section 8 says which of the
-  draw paths the controls reached.
+- Slot 43's projected x in the one-unit window above its right bound
+  (control 63); few rounds land between slot 43's and slot 40's bounds
+  (control 64 refused in 4).
+- The cells with a real area's records and the game's camera: the fuzz's
+  records are its own (whole entries of small vertex bytes) and its
+  projection is seeded; no recorded route draws a BMAGIC cell.
+
+## 11. For `analysis/calltrace/entries_logic.txt`
+
+Eighteen lines appended to the main checkout's file (none was there): the
+hidden starts `0x451480` (0x1B, inside `0x450D60`'s 0x73B), the fourteen
+task states `0x452680..0x452B90` (after `0x4525B0`'s 0x40) and BMAGIC's four
+`0x4CEB40` (0x21A), `0x4CED60` (0x251), `0x4CEFC0` (0x2A9), `0x4CF270`
+(0x234). The other twenty-one were listed already with the catalogue's
+extents (`0x4523C0` as 0x1A9, its table and a few bytes of padding: left).

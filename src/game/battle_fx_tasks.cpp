@@ -46,7 +46,8 @@ const Callees kOriginals = {
     // key on the same values).
     {H(bof3::addr::BareRet), H(0x432B70), H(0x432F90), H(0x433190), H(0x4332B0), H(0x433380), H(0x433460),
      H(0x4337F0), H(bof3::addr::Boss26Fx_Dispatch), H(0x4348E0), H(0x434B90), H(0x433970), H(0x433B80), H(0x434D70),
-     H(0x434F40), H(0x452680), H(0x452AD0), H(0x434310), H(0x452B60)},
+     H(0x434F40), H(bof3::addr::BattleFxDash_Dispatch), H(bof3::addr::BattleFxPose_Dispatch), H(0x434310),
+     H(bof3::addr::BattleFxTrail_Dispatch)},   // slots 15, 16, 18 rebound 2026-09-29 (round twelve, BE6): the values unchanged
     {H(bof3::addr::BareRet), H(0x49AB60), H(0x4FB260), H(0x4D6E30), H(0x4AB570), H(0x4C0620), H(0x4A8360), H(0x4D80C0),
      H(0x4F1500), H(0x4A3C80), H(0x4CCAA0), H(0x4D0730), H(0x4CBAE0), H(0x4BDC40), H(0x4CAC40), H(0x4DAF00),
      H(0x4D5780), H(0x4B5B10), H(0x4B16C0), H(0x4B6A40), H(0x4C9E30), H(0x4C75B0), H(0x4C5110), H(0x4C8970),

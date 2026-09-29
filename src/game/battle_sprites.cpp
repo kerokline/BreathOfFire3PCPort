@@ -63,9 +63,10 @@ const Callees kOriginals = {
     AreaMap_Elevation,
     Sprite_SetAnimationBank,
     Sprite_UpdateScreen,
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x453910),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x453A90),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x453AC0),
+    // rebound 2026-09-29 (round twelve, BE6): the values unchanged, the fuzz keys on them
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberRollByAction),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_ActionBitSet),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberListFull),
     Battle_MemberCoinFlip,
     Raw<unsigned char (__cdecl*)(unsigned)>(0x452DD0),
     Raw<void (__cdecl*)(unsigned)>(0x454290),

@@ -6,16 +6,18 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // bof3::addr: the constants below naming group BE6's functions (docs/battle_e6.md section 5)
+
 namespace area_w4c {
 
 // --- engine callees nobody owns (raw; the rebinding pass names them) ---
 // 0x454A80 (object): releases every Field_Slots record whose +0xC is the
 // object (area_w2b_callees.h, read 2026-09-28 by AR2B, 0x454A80..0x454AAA).
-constexpr std::uint32_t kSlotsReleaseFor = 0x454A80;
+constexpr std::uint32_t kSlotsReleaseFor = bof3::addr::Field_SlotsReleaseOwner;   // 0x454A80 (BE6, 2026-09-29)
 // 0x455290 (object, script): the first free Field_Slots record of eight gets
 // the object and the script; al its index, 0xFF none (area_w2b_callees.h,
 // 0x455290..0x4552F5). Area 174's handler 0 does not read the answer.
-constexpr std::uint32_t kSlotStart = 0x455290;
+constexpr std::uint32_t kSlotStart = bof3::addr::Field_SlotStart;                  // 0x455290 (BE6, 2026-09-29)
 
 namespace at {
 

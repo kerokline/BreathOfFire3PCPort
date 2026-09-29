@@ -67,7 +67,7 @@ constexpr std::uint32_t kEndByte = 0x90465C;
 constexpr std::uint32_t kResultRecord = 0x904B60, kAbility = 0x904B80, kAbilityStep = 0x65C4DB;
 // Capcom's, unnamed, in no group: a stat change for the target
 // (MagicFx_ApplyBuff's 0x44F650 calls it the same way).
-constexpr std::uint32_t kStatChanged = 0x453300;
+constexpr std::uint32_t kStatChanged = bof3::addr::Battle_RecalcStats;   // rebound 2026-09-29 (round twelve, BE6): the value is unchanged, the fuzz keys on it
 // Celerity_Start's CLUT strip: 16 words at +0 and 16 at +0x20, copied over.
 constexpr std::uint32_t kClutFrom = 0x80E980, kClutTo = 0x812980;
 
