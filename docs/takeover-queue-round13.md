@@ -641,3 +641,64 @@ original bound. Ours now reads the operand ([`battle_e7.md`](battle_e7.md)
 §3). The verification worktree has no ini, so `verify_tip.sh` is narrow
 only: a wave's verification adds one `BOF3X_WIDE=1` star run.
 
+## 12. Wave one (launched 15:30 from `1bb41df`, merged 16:41..18:35)
+
+Seven Opus agents in worktrees. Each merge built and run in the detached
+verification worktree: the group's shadow and `'*'` narrow at every merge,
+`'*'` with `BOF3X_WIDE=1` at the first four and at the tip. The agents
+branched before `080e1c1` (`battle_e7`'s bounds), so each met `battle_e7`'s
+failure in its own wide run and reported it; their own modules passed wide.
+
+| Group | Branch tip | Merge | Functions | Controls (planted / refused by a count / equivalent) | Ours after | What it turned out to be |
+|---|---|---|--:|---|--:|---|
+| E1F | `5c0889d` | `643b2d4` | 15 | 92 / 90 / 1, one refused by a fault with a refused near variant | 6,910 | a field menu kept in effect record 6, `UiSprite_Draw` / `UiSprite_SetMode` (131 sites), game mode 8's steps, FE1's panel arithmetic, a scaled sprite pass |
+| E1B | `1d22386` | `40bc9dc` | 48 | 48 / 48 / 0 | 6,958 | kind 0xF's states 26..40 and six child sub-kinds, the panel and window helpers, kinds 0x11, 0x12, 0x14, 0x92 |
+| E1G | `edf4ddf` | `d48ffc8` | 14 | 45 / 45 / 0 | 6,972 | the rest of the item-trade screen (FE2 took its first seven states); not effect code |
+| E1D | `15ec038` | `d9e2d85` | 30 | 72 / 71 / 1 | 7,002 | kinds 0x21..0x27 |
+| E1E | `e7fd3f3` | `62f4b68` | 48 | 58 / 58 / 0 | 7,050 | the steps of the leader's state 9 (`Field_LeaderStates[9]` `0x528880`); not effect code |
+| E1A | `bc71a4d` | `50088e9` | 70 | 133 / 130 / 3 | 7,120 | kinds 1, 2, 3, 5, 7..0xD, 0xF, 0x1A; the cut's 64 and six dispatchers no list held |
+| E1C | `7e4e78c` | `1ad5ce3` | 53 | 73 / 71 / 2 | 7,173 | kinds 0x1C..0x20, 0x36, 0x3C, 0x70; the cut's 52 and `0x46F230` |
+
+**278 functions, 6,895 -> 7,173**, every group 0 mismatches, 521 controls:
+513 refused by a count, 7 equivalent mutants each with a refused near
+variant, 1 refused by a fault with a near variant refused by a count. Then
+the coordinator's `82cc33b`: sixteen `scenario_harness` rows by name. **The
+tip's proof** (`82cc33b`, scratch `verify_w1.log`): `scenario_harness_ekh`,
+`field_e1`, `field_e2` and `'*'` exit 0, 7,173 ours; `'*'` with
+`BOF3X_WIDE=1` exit 0; `ledger_check` 0 errors. The main checkout's build
+directory was not used for it: a running game held its DLL.
+
+**What the wave learned** (in the later waves' briefs):
+
+- The cut's `unit`, `unit_desc` and `label` columns are often wrong: the
+  unit scan attributed word-indexed dispatchers and cells 0x400 off. They
+  made the groups, they do not say what a row is.
+- A good part of the "effect engine" by address is field code: the item
+  trade, the leader's state 9, game mode 8. Catalogued rows are taken all
+  the same, in field mode.
+- The labelling pass filed six kind dispatchers of E1A's band under other
+  subsystems, so the join dropped them. A group looks at every
+  `Effect_KindHandlers` entry that points into its band.
+- The effect-mode stand-in for `Gte_RotTransPers` fills whole-number
+  floats; a function that rounds wants fractions (E1D's control 41).
+
+**In no group, to place** (the agents' reports; none read by the
+coordinator): `0x4941B0`; `0x46D770`, `0x46E190`; `0x46F570`, `0x46F690`,
+`0x46FAE0`; the rest of the leader's state 9 - `0x528880`, `0x5288A0`,
+`0x5289A0`, `0x52AF60`, `0x52B0E0`, `0x52B1B0`, `0x52B200`, `0x52B250`,
+`0x52B2A0`, `0x52B2E0`, `0x52B330`, `0x52B370`, `0x52B460`; `0x52B6C0`;
+`0x593950`, `0x594D90`; and 23 unlabelled catalogue rows in E1F's band.
+
+**Debts from wave one**: the rebinding of raw calls between the wave's own
+groups (each called the others raw; the addresses are in each group's doc);
+`EffectKind36_Frames` `0x653F88` lies inside FC1's hypothesis count of 32
+for `EffectKind14_Op`; `EffectKind1A_States` `0x653C5C` named by E1A holds
+E1B's states 13..16; the `entries_logic.txt` lines for `0x46FCF0` and
+`0x46FFB0` that are too long; the latent defects to number (each group's
+doc); E1B's read of up to four bytes before an animation script
+([`effect_1b.md`](effect_1b.md) section 7); `scenario_harness_ekh.cpp`
+still clones three of E1A's and E1D's functions by address, which works
+while its inject runs first. **Live**: `reach_whelp` enters two of EGT's
+helpers and one full cycle of kind 0x1C, so the whelp route's frame hash is
+owed at this tip; every other function of the wave is fuzz-only.
+

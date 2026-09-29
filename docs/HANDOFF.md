@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-29, round twelve merged to `main` as PR #33, `d1b411c`; round thirteen on `phase-3/capture-round-thirteen` from it: stage A merged, 6,895 ours, wave one next)
+**Status:** IN PROGRESS (2026-09-29, round twelve merged to `main` as PR #33, `d1b411c`; round thirteen on `phase-3/capture-round-thirteen` from it: wave one merged, 7,173 ours, wave two running)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**6,895 functions are ours** (`inject: 6895 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
+**7,173 functions are ours** (`inject: 7173 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
 `main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
 PR #28 and #29), and **round eleven's cleanup, the part a session without
 the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
@@ -46,19 +46,16 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-000. **Round thirteen, the effect engine: stage A is merged, wave one is next.** Branch
+000. **Round thirteen, the effect engine: wave one is merged (7,173 ours), wave two is running.** Branch
    `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34 merged in; nothing pushed.
-   [`takeover-queue-round13.md`](takeover-queue-round13.md) section 10 is the cut (1,695 functions, 35 groups E1A..E6D
-   in six waves, the merge order), section 11 stage A: EGT (the four projection helpers, 6,895 ours) and EKH (`kEffect`
-   in `scenario_harness`), both merged and verified, and what the groups must know. **Next: wave one**, E1A..E1G, 271
-   functions: the briefs `brief_e1a.md`..`brief_e1g.md` are filled but for `<TIP>` (the round branch's tip at launch),
-   in the session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`)
-   with `merge_group13.sh <group> <scratch>` (`MOD=effect_1a` ...), `verify_tip.sh`, `make_cut.py`, `join.py`. Merge
-   order E1F, E1B, E1A, E1G, E1C, E1D, E1E. Owed at this tip: the whelp route's frame hash (it enters two of EGT's
-   functions). The `battle_e7` failure in the main checkout's build directory (from `d1b411c`) is **fixed**: that
-   build's `bof3x.ini` has `wide=1`, and DIV-0041 widens three gene-list slide-out bounds that ours held as constants
-   ([`battle_e7.md`](battle_e7.md) §3). `verify_tip.sh` runs without an ini, so narrow only; **a round's verification
-   also wants one `BOF3X_WIDE=1` star run** (the ledger's DIV-0041 verification asks for both).
+   [`takeover-queue-round13.md`](takeover-queue-round13.md): section 10 the cut (35 groups E1A..E6D in six waves),
+   11 stage A, 12 wave one (278 functions, what it learned, the code in no group, the debts). Wave two is E2A..E2G,
+   379 functions, launched from wave one's tip. Everything a coordinator needs is in the session-`56ff1eb2` scratchpad
+   (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`): `make_briefs.py <scratch> <wave> <tip> <edges>`
+   writes a wave's briefs, `queue13.sh <scratch> <groups>` merges in order and stops at a failure (never edit
+   `merge_group13.sh` while it runs), `WIDE=1` adds the widescreen run to a merge, `verify_tip.sh` runs narrow and
+   wide. Owed at the tip: the whelp route's frame hash. The main checkout's `build/bof3x.ini` has `wide=1`
+   (`battle_e7.md` section 3).
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
