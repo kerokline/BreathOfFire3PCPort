@@ -107,6 +107,31 @@ constexpr std::uint32_t kMessageCellsSize = 0x60;
 constexpr std::uint32_t kTextRecords = 0x904CE0;    // Text_Records (a group lists it: FE1, FE2)
 constexpr std::uint32_t kMapCells = 0x904F20;       // MapView_Cells, 1568 words (a group lists it: FE2)
 
+// Round thirteen: the effect engine's cells (docs/scenario_harness.md section 8).
+// Effect_Objects is kEffects above: 20 records of kEffectStride, +0 in use, +1
+// the kind's state, +2 its sub-state, +5 the kind (Effect_RunObjects calls
+// Effect_KindHandlers[+5] with Sprite_Current the record). The standard regions
+// of effect mode are marked (E); the rest a group lists.
+constexpr std::uint32_t kEffectStride = 0x80;
+constexpr unsigned kEffectCount = 20;
+constexpr std::uint32_t kKindHandlers = 0x655350;   // Effect_KindHandlers, 187 dwords at most (symbols.toml: an upper bound)
+constexpr std::uint32_t kKind18States = 0x65406C;   // EffectKind18_States: kind 0x18's +1 table (its count 160 is an upper bound too)
+constexpr std::uint32_t kVertexScratch = 0x9037A0;  // (E) Prim_VertexScratch, the quads' four SVECTORs, and 0x9037C0..
+constexpr std::uint32_t kVertexScratchSize = 0x40;
+constexpr std::uint32_t kScreenXY = 0x903800;       // (E) Camera_ShiftX / Y, MapView_ScreenXY 0x903820 (floats) .. 0x903840
+constexpr std::uint32_t kScreenXYSize = 0x40;
+constexpr std::uint32_t kCameraCells = 0x905E20;    // (E) Cond_ByteFE .., Camera_Matrix 0x905E40 .. 0x905E60
+constexpr std::uint32_t kCameraCellsSize = 0x40;
+constexpr std::uint32_t kShards = 0x92BF80;         // (E) EffectKind30_Shards and the sparks after them, to 0x92C5C4 (FC2's region)
+constexpr std::uint32_t kShardsSize = 0x644;
+constexpr std::uint32_t kMenuButtons = 0x903584;    // (E) Field_MenuButton and the two after it (save data, read)
+constexpr std::uint32_t kMenuButtonsSize = 0x10;
+constexpr std::uint32_t kMessagePools = 0x803580;   // (E) MessagePools (wave one's panels read it)
+constexpr std::uint32_t kMessagePoolsSize = 0xE8;
+constexpr std::uint32_t kGameMode = 0x66C7E8;       // (E) Game_Mode, Game_Step
+constexpr std::uint32_t kPanelCells = 0x939A00;     // (E) the cells 0x939A00..0x939A2F three groups read
+constexpr std::uint32_t kPanelCellsSize = 0x30;
+
 // The spell harness's names, kept so a group file written for it compiles
 // (the contract). Nothing of the scenario engine reads them; the harness
 // neither seeds nor compares them.
@@ -199,14 +224,26 @@ struct JumpTable { std::uint32_t jmp_disp, table, entries; };
 //            menu block's state and step bytes 0x929F01 / 0x929F02 drawn
 //            below Group::menu_span when it is set.
 // A function answering in eax is any shape with Clone::ret_mask set.
-enum class Shape : std::uint8_t { kSlot, kState, kHook, kEntry, kObject, kSprite, kScript, kCursor, kCall, kMenu };
+// Added for round thirteen's effect groups (docs/scenario_harness.md section
+// 8); it puts the group in effect mode (Group::effect), which is field mode
+// and more:
+//   kEffect  an effect kind's state handler, dispatcher or sub-state: void, no
+//            arguments, run with Sprite_Current one of the 20 Effect_Objects
+//            records (+0 in use, +5 one of the group's kinds, +1 below the
+//            state span, +2 below the sub-state span - Capcom's dispatchers do
+//            not bound their index), the disturbance moving Sprite_Current
+//            among the effect records and never onto a sprite.
+// In effect mode every clone runs with Sprite_Current an effect record, the
+// kCall helpers too.
+enum class Shape : std::uint8_t { kSlot, kState, kHook, kEntry, kObject, kSprite, kScript, kCursor, kCall, kMenu, kEffect };
 
-// What an argument of a kCall (or any shape's) clone is, two bits per
-// argument in Clone::pointers: a random word, one of the first four
-// Sprite_Objects records, a pointer into the harness's scratch buffer
-// (Scratch(i), 0x40 bytes per argument), or the script cursor's op.
-enum class Arg : std::uint8_t { kWord, kSprite, kScratch, kScript };
-constexpr std::uint32_t ArgAt(unsigned i, Arg kind) { return static_cast<std::uint32_t>(kind) << (2 * i); }
+// What an argument of a kCall (or any shape's) clone is, three bits per
+// argument in Clone::pointers (the first ten arguments): a random word, one of
+// the first four Sprite_Objects records, a pointer into the harness's scratch
+// buffer (Scratch(i), 0x40 bytes per argument), the script cursor's op, or
+// (round thirteen) one of the 20 Effect_Objects records.
+enum class Arg : std::uint8_t { kWord, kSprite, kScratch, kScript, kEffect };
+constexpr std::uint32_t ArgAt(unsigned i, Arg kind) { return static_cast<std::uint32_t>(kind) << (3 * i); }
 
 struct Clone {
     const char* name;
@@ -230,11 +267,20 @@ struct Clone {
     // OR'ed together); 0, the default, leaves every argument as the shape
     // draws it.
     std::uint32_t pointers = 0;
+    // Added for round thirteen (effect mode): this function's own spans for
+    // Sprite_Current +1 and +2, where they differ from the group's (0: the
+    // group's), and its own kind (-1: one of the group's).
+    std::uint8_t state_span = 0;
+    std::uint8_t sub_span = 0;
+    std::int16_t kind = -1;
 };
 
-// The most arguments a recorder takes. A caller that pushes fewer leaves its
-// own frame in the rest, never logged.
-constexpr unsigned kArgs = 10;
+// The most arguments a recorder takes and a clone is called with (12 since
+// round thirteen: E3D's quad helper 0x486AB0 reads twelve). A caller that
+// pushes fewer leaves its own frame in the rest, never logged. Arguments 10
+// and 11 are derived from the first ten, not drawn, so the random stream of a
+// group that never reads them is what it was.
+constexpr unsigned kArgs = 12;
 
 // How a recorder answers (magic_harness.h's kinds, the same semantics):
 //   kGarbage  any eax;
@@ -329,6 +375,19 @@ struct Group {
     // Non-zero: the menu block's state and step bytes 0x929F01 / 0x929F02
     // likewise for a kMenu function.
     unsigned menu_span = 0;
+    // Added for round thirteen (docs/scenario_harness.md section 8). Effect
+    // mode: field mode, and Sprite_Current one of the 20 Effect_Objects records
+    // every round (for every clone), each record's +5 one of `kinds` (when
+    // given) and +1 / +2 below the spans (when set), some records free; the
+    // disturbance moves Sprite_Current among the records and a state byte
+    // inside its span; the effect regions and the effect-standard callees join.
+    // On when this is set or when any clone is a kEffect; false, the default,
+    // is exactly round twelve's harness.
+    bool effect = false;
+    const std::uint8_t* kinds = nullptr;
+    unsigned n_kinds = 0;
+    unsigned state_span = 0;          // Sprite_Current +1 (the kind's state table)
+    unsigned sub_span = 0;            // Sprite_Current +2 (a sub-state table, kind 0x18's)
 };
 
 // The field runs round twelve's groups take (docs/takeover-queue-field-battle.md
@@ -336,6 +395,11 @@ struct Group {
 // chapter bank is named in the log (not refused).
 bool InFieldRuns(std::uint32_t address);
 bool InChapterBank(std::uint32_t address);
+// Round thirteen: the effect runs (docs/takeover-queue-round13.md section 10):
+// 0x462B00..0x470000, 0x470000..0x4A0000 (0x470000..0x4941E0 and its callees),
+// 0x4FD2E0..0x517000, 0x528CD0..0x52D080, 0x594060..0x594D8A. A field-mode
+// clone there is not named either.
+bool InEffectRuns(std::uint32_t address);
 
 // Clones every function (before the caller injects), fuzzes each against ours
 // for g.rounds rounds, logs the counts, and is a Fatal on any difference.
@@ -351,6 +415,7 @@ std::uint32_t Pick(const std::uint32_t* values, unsigned n);
 
 unsigned char* Mem(std::uint32_t address);
 unsigned char* SpriteRecord(unsigned k);   // Sprite_Objects record k % 4
+unsigned char* EffectRecord(unsigned k);   // Effect_Objects record k % 20 (round thirteen)
 unsigned char* ObjectOf(unsigned k);       // ObjTrio record k % 3
 unsigned char* FlagRow();                  // what 0x929ED0 points at
 void SetPointer(std::uint32_t cell, const void* p);

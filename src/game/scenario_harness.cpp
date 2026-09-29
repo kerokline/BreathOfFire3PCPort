@@ -97,10 +97,16 @@ alignas(16) unsigned char g_packets[0x800];
 alignas(16) unsigned char g_text[0x200];
 alignas(16) unsigned char g_script[0x100];
 alignas(16) unsigned char* g_cursor[4];      // [0] the cursor a kCursor function is handed; the rest compared as padding
-alignas(16) unsigned char g_scratch[kArgs * 0x40];
+// Ten arguments' scratch, as before round thirteen's kArgs of 12: the buffer is
+// a region, and its size is in every field group's random fill.
+constexpr unsigned kScratchSlots = 10;
+alignas(16) unsigned char g_scratch[kScratchSlots * 0x40];
 
 const Group* g_group = nullptr;
 bool g_field = false;        // field mode for the group being run
+bool g_effect = false;       // effect mode (round thirteen) for the group being run
+unsigned g_state_span = 0;   // effect mode: the spans of +1 / +2 for the function being fuzzed
+unsigned g_sub_span = 0;
 
 unsigned char* Byte(std::uint32_t address) { return Mem(address); }
 std::uint16_t Word(std::uint32_t address) { return static_cast<std::uint16_t>(move_script::Word(Mem(address))); }
@@ -170,7 +176,8 @@ void Disturb() {
         if (InFlags(row)) row[v % 8] ^= static_cast<unsigned char>(1u << (b & 7));
         break;
     }
-    case 4: Sprite_Current = SpriteRecord(v); break;
+    // effect mode (round thirteen): among the 20 effect records, never onto a sprite
+    case 4: Sprite_Current = g_effect ? EffectRecord(v) : SpriteRecord(v); break;
     case 5: Frame_Counter = h >> 6; break;
     case 6: Byte(at::kCounter)[0] = b; break;
     case 7: Byte(at::kRequest)[0] = b % 3 ? 2 : b; break;
@@ -179,6 +186,15 @@ void Disturb() {
     // 10..13: field mode only (round twelve); without it these stay the
     // scenario round's no-ops, so its groups draw exactly what they drew.
     case 10:
+        // effect mode (round thirteen): the kind's state +1 or its sub-state +2
+        // of Sprite_Current, each only below its span (an unbounded index is
+        // Capcom's dispatcher jumping through what is not its table)
+        if (g_effect) {
+            unsigned char* const s = static_cast<unsigned char*>(Sprite_Current);
+            const unsigned span = v & 1 ? g_sub_span : g_state_span;
+            if (span && InRegions(s, 8)) s[v & 1 ? 2 : 1] = static_cast<unsigned char>(b % span);
+            break;
+        }
         // a state byte +1..+4 of Sprite_Current (below sprite_span when set)
         if (g_field) {
             unsigned char* const s = static_cast<unsigned char*>(Sprite_Current);
@@ -230,7 +246,7 @@ struct Slot {
     bool handler;            // a table's handler: logs the chapter bytes, answers garbage
     unsigned calls;          // the original's side, for the coverage line
 };
-constexpr unsigned kSlots = 512;   // 256 before round twelve's field-standard set
+constexpr unsigned kSlots = 768;   // 256 before round twelve's field-standard set, 512 before round thirteen's effect set
 Slot g_slots[kSlots];
 unsigned g_slot_n;
 
@@ -268,7 +284,8 @@ std::uint32_t Answering(const Slot& s) {
 
 template <unsigned I>
 std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2, std::uint32_t a3, std::uint32_t a4,
-                           std::uint32_t a5, std::uint32_t a6, std::uint32_t a7, std::uint32_t a8, std::uint32_t a9) {
+                           std::uint32_t a5, std::uint32_t a6, std::uint32_t a7, std::uint32_t a8, std::uint32_t a9,
+                           std::uint32_t a10, std::uint32_t a11) {
     const Slot& s = g_slots[I];
     if (s.handler) {
         Log5(kPhaseTag + I, Chapter(), Word(at::kTimer), Key(Sprite_Current), g_field ? FieldPhase() : 0);
@@ -281,7 +298,7 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
         Disturb();
         return Hash();
     }
-    const std::uint32_t a[kArgs] = {a0, a1, a2, a3, a4, a5, a6, a7, a8, a9};
+    const std::uint32_t a[kArgs] = {a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11};
     std::uint32_t r[kArgs] = {};
     for (unsigned i = 0; i < s.nargs && i < kArgs; ++i) {
         const void* const p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a[i]));
@@ -293,7 +310,7 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
     const unsigned entry = g_log_n;
     Log5(I, r[0], r[1], r[2], r[3]);
     if (s.nargs > 4) Log5(kMoreTag + I, r[4], r[5], r[6], r[7]);
-    if (s.nargs > 8) Log5(kMoreTag + I, r[8], r[9], 0, 0);
+    if (s.nargs > 8) Log5(kMoreTag + I, r[8], r[9], r[10], r[11]);   // r[10], r[11] 0 below eleven arguments, as before
     Disturb();
     std::uint32_t answer = Answering(s);
     if (s.effect) answer = s.effect(a, answer);
@@ -302,7 +319,8 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
 }
 
 using StubFn = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
-                                        std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
+                                        std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                        std::uint32_t, std::uint32_t);
 template <std::size_t... I> constexpr auto MakeStubs(std::index_sequence<I...>) {
     struct T { StubFn f[sizeof...(I)]; };
     return T{{&Stub<I>...}};
@@ -697,6 +715,275 @@ const Callee kField[] = {
 #undef FIELD_OURS
 #undef FIELD_THEIRS
 
+// --- round thirteen: the effect-standard callees -------------------------------------
+//
+// The frontier of the effect runs (docs/scenario_harness.md section 8.5): every
+// function the 1,695 rows of analysis/round13_cut.tsv call or tail-jump to that
+// is not a row of the cut, not in kStandard and not in kField - by EKH's pass
+// at d19d803 (capstone, each row to its extent). Registered in effect mode only,
+// after kField, so no group before round thirteen sees a difference. Ours typed
+// from symbols.toml's ret / params (as FH typed kField: a pointer argument
+// hashed where Readable - 16 bytes of char / void, 8 of short, 12 of long - an
+// out-parameter not logged and filled with noise); Capcom's unnamed ones typed
+// by reading each to its last instruction: the stack words it reads (their
+// widths give the masks), which it dereferences (hashed to the furthest byte
+// read) and writes through (not logged, filled to the furthest byte written),
+// and whether the callers read al or eax. `guard` on all.
+//
+// kEffectOverrides re-list, in effect mode only and before kStandard / kField,
+// the entries round thirteen's callers need louder: Effect_FindFree answers a
+// record that is free, Effect_Release clears what the real one clears, and the
+// five rows of the cut that other groups call raw until their owners merge
+// (0x52CFE0, 0x52CF60 of E1F; 0x469750, 0x468AC0 of E1B; 0x503FA0 of E5D) draw
+// into the packet buffer and move the cursor as the originals' commits do.
+#define FX_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
+#define FX_RAW(address) #address, address, address
+
+// The packet cursor moved by n bytes, the n filled with noise, while the packet
+// stays inside the harness's buffer (0x40 to spare); answers where it was.
+std::uint32_t Drew(unsigned n) {
+    unsigned char* const next = Pointer(at::kPacketNext);
+    if (next >= g_packets && next + n + 0x40 <= g_packets + sizeof g_packets) {
+        FillBytes(next, n);
+        SetPointer(at::kPacketNext, next + n);
+    }
+    return Key(next);
+}
+std::uint32_t FxFindFree(const std::uint32_t*, std::uint32_t answer) {
+    // a quarter of the time none (0xFF); else a free record (+0 == 0) looked for
+    // from a start the answer picks - not always the first, so a caller that
+    // finds its own record instead of using the answer shows - 0xFF when none
+    // is free; the rest of eax the answer's (the callers read al)
+    const std::uint32_t high = answer & 0xFFFFFF00u;
+    if ((answer >> 8) % 4 == 0) return high | 0xFF;
+    const unsigned from = (answer >> 12) % at::kEffectCount;
+    for (unsigned i = 0; i < at::kEffectCount; ++i) {
+        const unsigned k = (from + i) % at::kEffectCount;
+        if (EffectRecord(k)[0] == 0) return high | k;
+    }
+    return high | 0xFF;
+}
+std::uint32_t FxRelease(const std::uint32_t*, std::uint32_t answer) {
+    // bytes 0..4 of Sprite_Current to 0 (symbols.toml Effect_Release)
+    auto* const s = static_cast<unsigned char*>(Sprite_Current);
+    if (InRegions(s, 5)) std::memset(s, 0, 5);
+    return answer;
+}
+std::uint32_t FxReleaseAt(const std::uint32_t* a, std::uint32_t answer) {
+    // bytes 0..4 of record (index & 0xFF) to 0; an index past the 20 (the real
+    // one writes past the pool) is left alone and logged
+    if ((a[0] & 0xFF) < at::kEffectCount) std::memset(EffectRecord(a[0] & 0xFF), 0, 5);
+    return answer;
+}
+// 0x52CFE0 (id, slot, x, y): a sprite primitive of 0x1C at the cursor, committed;
+// eax the primitive. 0x52CF60 (id, slot): a draw mode of 0xC, committed.
+std::uint32_t FxSprtPrim(const std::uint32_t*, std::uint32_t) { return Drew(0x1C); }
+std::uint32_t FxModePrim(const std::uint32_t*, std::uint32_t answer) { Drew(0xC); return answer; }
+// 0x469750 (x, y, w, h, colour): a frame 0x469790 (x, y, w, h) and a fill
+// 0x469960 (x + 2, y + 2, w - 5, h - 5, colour), each several primitives: the
+// stand-in moves the cursor by 0x80, a size of its own (the originals' sum
+// depends on the path), so that a caller reading the cursor after it sees it move.
+std::uint32_t FxBoxPrims(const std::uint32_t*, std::uint32_t answer) { Drew(0x80); return answer; }
+// 0x468AC0 (x, y, bits): three boxes 0x468BB0 (x + 0x30 i, y, bit i of the byte)
+// and three Text_DrawAt lines; 0xC0 of its own, as above.
+std::uint32_t FxPanelPrims(const std::uint32_t*, std::uint32_t answer) { Drew(0xC0); return answer; }
+// 0x503FA0 (variant): nothing when Draw_PassFlags has bit 2; else sixteen
+// textured quads around Sprite_Current's point (a draw mode of 0xC and a quad
+// linked at 0x48 each), the four vertices in Prim_VertexScratch 0x9037A0.. and
+// MapView_ScreenXY 0x903820 written on the way - both filled here.
+std::uint32_t FxShadow(const std::uint32_t*, std::uint32_t answer) {
+    if (Byte(0x7E0918)[0] & 4) return answer;
+    if (InRegions(Mem(at::kVertexScratch), 0x20)) FillBytes(Mem(at::kVertexScratch), 0x20);
+    FillFloats(0x903820, 2);
+    Drew(16 * 0x54);
+    return answer;
+}
+std::uint32_t FxItemAt(const std::uint32_t*, std::uint32_t answer) {
+    // MapView_ItemAt: 0 (outside the view) a third of the time, else a small
+    // draw item (the callers index DrawItems by it; a random 12 bits would reach
+    // 0x90 * 0xFFF past it)
+    return answer % 3 == 0 ? 0u : 1u + (answer >> 8) % 0x3F;
+}
+std::uint32_t FxItemHalf(const std::uint32_t*, std::uint32_t answer) {
+    // MapView_ItemHalfAt: 0 a third of the time, else a 0x48-byte half the
+    // callers read and write, in the harness's own buffer
+    return answer % 3 == 0 ? 0u : Key(g_own + (answer & 0x70));
+}
+std::uint32_t FxRecordIndex(const std::uint32_t*, std::uint32_t answer) { return answer % 12; }   // 0..10, 11 none
+std::uint32_t FxMemberState2_8(const std::uint32_t* a, std::uint32_t answer) {
+    // ObjTrio + member * 0x14C: +1 = 2, +2 = 8, +3 = 0, +0xB = the value's byte
+    // (the member unchecked in the original; past the three it is left alone)
+    if ((a[0] & 0xFF) < 3) {
+        unsigned char* const o = ObjectOf(a[0] & 0xFF);
+        o[1] = 2;
+        o[2] = 8;
+        o[3] = 0;
+        o[0xB] = static_cast<unsigned char>(a[1]);
+    }
+    return answer;
+}
+std::uint32_t FxToggle(const std::uint32_t* a, std::uint32_t answer) {
+    // bits[(index & 0xFF) >> 3] ^= 1 << (index & 7), inside the regions
+    auto* const p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0])) + ((a[1] & 0xFF) >> 3);
+    if (InRegions(p, 1)) *p ^= static_cast<unsigned char>(1u << (a[1] & 7));
+    return answer;
+}
+std::uint32_t FxLinkPrim(const std::uint32_t* a, std::uint32_t answer) {
+    // *tail = item
+    auto* const p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    if (Writable(p, 4)) std::memcpy(p, &a[1], 4);
+    return answer;
+}
+std::uint32_t FxObjectMatrix(const std::uint32_t* a, std::uint32_t) {
+    // the rotation (nine s16) and the translation (three s32 at +0x14), not the
+    // padding word at +0x12 (DIV-0021)
+    FillNoise(a[0], 18);
+    FillNoise(a[0] + 0x14, 12);
+    return a[0];
+}
+std::uint32_t FxOut0_F1(const std::uint32_t* a, std::uint32_t answer) { FillFloats(a[0], 1); return answer; }
+std::uint32_t FxOut012_F1(const std::uint32_t* a, std::uint32_t answer) {
+    for (unsigned i = 0; i < 3; ++i) FillFloats(a[i], 1);
+    return answer;
+}
+std::uint32_t FxOut0_8(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 8); return answer; }
+std::uint32_t FxOut0_24(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 24); return answer; }
+std::uint32_t FxOut0_32(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 32); return answer; }
+std::uint32_t FxOut1_4(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[1], 4); return answer; }
+std::uint32_t FxOut2_6(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[2], 6); return answer; }
+std::uint32_t FxOut012_8(const std::uint32_t* a, std::uint32_t answer) {
+    for (unsigned i = 0; i < 3; ++i) FillNoise(a[i], 8);
+    return answer;
+}
+std::uint32_t FxPrim0_44(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 0x2C); return answer; }
+std::uint32_t FxPrim0_12(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 12); return answer; }
+
+const Callee kEffectOverrides[] = {
+    {FX_OURS(Effect_FindFree), 0, {}, Answer::kByte, 0xFF, 0x13, {}, FxFindFree, nullptr, true},   // E1A:4 E1B:6 E1D:3 E2C:1 E3A:1 E3B:4 E5C:2 E5D:2: unsigned char(void)
+    {FX_OURS(Effect_Release), 0, {}, Answer::kGarbage, 0, 0, {}, FxRelease, nullptr, true},   // 29 groups, 135 sites: void(void)
+    {FX_RAW(0x52CFE0), 4, {kU8, kAll, kU16, kU16}, Answer::kGarbage, 0, 0, {}, FxSprtPrim, nullptr, true},   // E1F's; 100 sites in the cut: (id byte, slot, s16 x, s16 y) -> the primitive
+    {FX_RAW(0x52CF60), 2, {kU8, kAll}, Answer::kGarbage, 0, 0, {}, FxModePrim, nullptr, true},   // E1F's; 31 sites: (id byte, slot)
+    {FX_RAW(0x469750), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxBoxPrims, nullptr, true},   // E1B's; 33 sites: (int x, int y, int w, int h, colour)
+    {FX_RAW(0x468AC0), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {}, FxPanelPrims, nullptr, true},   // E1B's; 19 sites: (int x, int y, bits byte)
+    {FX_RAW(0x503FA0), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxShadow, nullptr, true},   // E5D's; 15 sites: (variant, a whole word added to a table address)
+};
+
+const Callee kEffectStd[] = {
+    // ours, typed from symbols.toml (sites in the cut: groups)
+    {FX_OURS(Gte_PrimDepths4_10), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 53: void(void *prim)
+    {FX_OURS(Gpu_SetTile1), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 23: void(unsigned char *prim)
+    {FX_OURS(FieldPanel_DrawKindIcon), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 18: void(int x, int y, unsigned kind)
+    {FX_OURS(Gpu_SetPolyF4), 1, {0}, Answer::kGarbage, 0, 0, {16}, FxArg0, nullptr, true},   // 17: unsigned char *(unsigned char *prim)
+    {FX_OURS(FieldPanel_DrawHeader), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 16: void(int x, int y)
+    {FX_OURS(FieldPanel_DrawShade), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 16 (13 tail jumps): void(void)
+    {FX_OURS(FieldPanel_DrawKindRow), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 15: void(unsigned kind, unsigned count, unsigned row)
+    {FX_OURS(FieldPanel_DrawTotal), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 12: void(int x, int y)
+    {FX_OURS(Gpu_SetDrawMove), 4, {0, 0, kAll, kAll}, Answer::kGarbage, 0, 0, {16, 8}, FxArg0, nullptr, true},   // 12: unsigned char *(unsigned char *prim, const unsigned char *rect, unsigned long x, unsigned long y)
+    {FX_OURS(Math_Ratan2), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 12: int(float y, float x)
+    {FX_OURS(Gte_StoreDepthF), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_F1, nullptr, true},   // 11: void(float *out)
+    {FX_OURS(FieldPanel_DrawMessage), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 10: void(int x, int y, unsigned id)
+    {FX_OURS(Gpu_SetPolyGT4), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 10: void(unsigned char *prim)
+    {FX_OURS(Gte_RotMatrixZ), 2, {kAll, 0}, Answer::kGarbage, 0, 0, {}, FxRotMatrix, nullptr, true},   // 7: short *(int angle, short *matrix)
+    {FX_OURS(Gte_RotMatrixX), 2, {kAll, 0}, Answer::kGarbage, 0, 0, {}, FxRotMatrix, nullptr, true},   // 6: short *(int angle, short *matrix)
+    {FX_OURS(Gte_RotMatrixY), 2, {kAll, 0}, Answer::kGarbage, 0, 0, {}, FxRotMatrix, nullptr, true},   // 6: short *(int angle, short *matrix)
+    {FX_OURS(MapView_ItemAt), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxItemAt, nullptr, true},   // 7: unsigned long(long x, long y)
+    {FX_OURS(Member_SetState2_8), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {}, FxMemberState2_8, nullptr, true},   // 4: void(unsigned member, unsigned value)
+    {FX_OURS(Sprite_ReleaseTint), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 4: void(unsigned char *sprite)
+    {FX_OURS(Window_DrawFrame), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 3: void(int x, int y, int w, int h)
+    {FX_OURS(Gte_StoreDepthF3), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {}, FxOut012_F1, nullptr, true},   // 3: void(float *out0, float *out1, float *out2)
+    {FX_OURS(Gte_PrimDepths4_14), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 3: void(void *prim)
+    {FX_OURS(FieldPanel_DrawBox2), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 3: void(int x, int y)
+    {FX_OURS(Gpu_SetLineG2), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 5: void(unsigned char *prim)
+    {FX_OURS(Gte_PrimDepths4_10B), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 5: void(void *prim)
+    {FX_OURS(WorldMap_RecordIndex), 0, {}, Answer::kGarbage, 0, 0, {}, FxRecordIndex, nullptr, true},   // 2: unsigned(void), 0..11
+    {FX_OURS(Gpu_SetLineF3), 1, {0}, Answer::kGarbage, 0, 0, {16}, FxArg0, nullptr, true},   // 2: unsigned char *(unsigned char *prim)
+    {FX_OURS(Area146_DrawGlowCylinder), 1, {0}, Answer::kGarbage, 0, 0, {12}, nullptr, nullptr, true},   // 2: void(const long *point)
+    {FX_OURS(Gfx_ClearRect), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: void(int x, int y, int w, int h)
+    {FX_OURS(Window_DrawOutline), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: void(int x, int y, int w, int h)
+    {FX_OURS(BareRet), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: void(void)
+    {FX_OURS(Gte_PrimDepthFlat4_14), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 2: void(void *prim)
+    {FX_OURS(Gte_PrimDepths4_0C), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 2: void(void *prim)
+    {FX_OURS(Gpu_LinkPrim), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxLinkPrim, nullptr, true},   // 2: void(unsigned long *tail, unsigned long item)
+    {FX_OURS(MapView_ItemHalfAt), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxItemHalf, nullptr, true},   // 2: unsigned char *(long x, long y)
+    {FX_OURS(FieldPanel_DrawBox3), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: void(int x, int y)
+    {FX_OURS(FieldPanel_DrawBlink), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: void(void)
+    {FX_OURS(Area104_Kind5CRun), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1 (tail jump): void(void)
+    {FX_OURS(Area121_Kind5CRun), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1 (tail jump): void(void)
+    {FX_OURS(Gpu_SetSprt16), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 1: void(unsigned char *prim)
+    {FX_OURS(Gpu_SetSprt8), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 1: void(unsigned char *prim)
+    {FX_OURS(Gpu_SetCode6C), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 1: void(unsigned char *prim)
+    {FX_OURS(Area49_EffectFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(void)
+    {FX_OURS(Area117_MembersFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(void)
+    {FX_OURS(Area118_MembersFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(void)
+    {FX_OURS(Area169_MembersFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(void)
+    {FX_OURS(Area171_MembersFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(void)
+    {FX_OURS(Sprite_ObjectMatrix), 1, {0}, Answer::kGarbage, 0, 0, {}, FxObjectMatrix, nullptr, true},   // 1: short *(short *matrix)
+    {FX_OURS(Camera_LoadMatrix), 1, {0}, Answer::kGarbage, 0, 0, {18}, nullptr, nullptr, true},   // 1: void(short *matrix)
+    {FX_OURS(Gpu_SetLineF4), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 1: void(unsigned char *prim)
+    {FX_OURS(Area85_ClutShift), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(int delta)
+    {FX_OURS(MsgBox_FrameTask), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 1: unsigned char(void)
+    {FX_OURS(Flags_Toggle), 2, {kAll, kU8}, Answer::kGarbage, 0, 0, {}, FxToggle, nullptr, true},   // 1: void(unsigned char *bits, unsigned index)
+    {FX_OURS(Gte_SetGeomOffset), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(long x, long y)
+    {FX_OURS(Gte_LoadVertex), 1, {0}, Answer::kGarbage, 0, 0, {8}, nullptr, nullptr, true},   // 1: void(const unsigned long *vertex)
+    {FX_OURS(Gte_Rtps), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(void)
+    {FX_OURS(Gte_StoreScreenXY), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_8, nullptr, true},   // 1: void(unsigned long *out)
+    {FX_OURS(Sprite_FlashClut), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(unsigned colour)
+    {FX_OURS(Field_FloorHurt), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(unsigned kind)
+    {FX_OURS(DrawItemPool_Alloc), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: unsigned short(void)
+    {FX_OURS(Gfx_ClutAdjust), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: long(int columns, int rows, int red, int green, int blue)
+    {FX_OURS(Effect_ReleaseAt), 1, {kU8}, Answer::kGarbage, 0, 0, {}, FxReleaseAt, nullptr, true},   // 1: void(unsigned char index)
+    // Capcom's, unnamed, read to the last instruction (EKH, 2026-09-29)
+    {FX_RAW(0x5A7C70), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {18, 6}, FxOut2_6, nullptr, true},   // 12, library layer: a matrix (18 read), a vector (6 read) -> an out vector (6 written)
+    {FX_RAW(0x4794D0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 9: a record read to +0x440 and written to +0x402 (the first 16 hashed); calls 0x479970, the projection helpers
+    {FX_RAW(0x4796B0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 8: a record read to +0x400; draws G4 quads
+    {FX_RAW(0x5A7570), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxPrim0_44, nullptr, true},   // 7, library layer: 0x2C bytes of a primitive written (the packet pointer logged)
+    {FX_RAW(0x5A7840), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPrim0_12, nullptr, true},   // 6, library layer: 12 bytes of a primitive written
+    {FX_RAW(0x489630), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 6: three words, no calls
+    {FX_RAW(0x48ED80), 3, {0, 0, kU8}, Answer::kGarbage, 0, 0, {12, 12}, nullptr, nullptr, true},   // 6: two points (12 read each) and a byte; draws
+    {FX_RAW(0x509A70), 2, {0, kAll}, Answer::kGarbage, 0, 0, {4}, nullptr, nullptr, true},   // 6: a pointer (4 read) and a word; textured quads
+    {FX_RAW(0x46F570), 1, {0}, Answer::kGarbage, 0, 0, {84}, nullptr, nullptr, true},   // 5: a record read to +0x54; the GTE rotations
+    {FX_RAW(0x46F690), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: a word; a draw mode, 0x46F6F0
+    {FX_RAW(0x52B2A0), 1, {kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: a byte, no calls
+    {FX_RAW(0x52B1B0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: Sound_PlayEffect behind a test
+    {FX_RAW(0x5171E0), 1, {0}, Answer::kGarbage, 0, 0, {kDerefString}, nullptr, nullptr, true},   // 4: a string's characters counted (a byte above 0x7F takes two), eax the count
+    {FX_RAW(0x5A7A90), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 4, library layer: a word through _ftol, eax read
+    {FX_RAW(0x479260), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 4: al; calls through 0x654660 by a byte
+    {FX_RAW(0x479EE0), 1, {0}, Answer::kGarbage, 0, 0, {18}, nullptr, nullptr, true},   // 3: a record read to +0x12; G4 quads
+    {FX_RAW(0x479B70), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 3: a record read to +0xD20 (the first 16 hashed)
+    {FX_RAW(0x586160), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 3: five words; Menu_DrawOutline, FT4 quads
+    {FX_RAW(0x59E930), 2, {0, 0}, Answer::kGarbage, 0, 0, {8}, FxOut1_4, nullptr, true},   // 2, renderer: 8 read at the first, 4 written at the second
+    {FX_RAW(0x4790C0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: no arguments, no calls
+    {FX_RAW(0x47CF20), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: eax read by one caller
+    {FX_RAW(0x47A200), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; draws
+    {FX_RAW(0x4799C0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 2: a record read and written to +0xD20 (the first 16 hashed)
+    {FX_RAW(0x47D8B0), 4, {kU16, kU16, kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: four s16
+    {FX_RAW(0x4FEE70), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; Flags_Test
+    {FX_RAW(0x462F10), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; a sprite primitive
+    {FX_RAW(0x46E190), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; tiles, Rand
+    {FX_RAW(0x46FAE0), 1, {0}, Answer::kGarbage, 0, 0, {13}, nullptr, nullptr, true},   // 1: a record read to +0xD; lines
+    {FX_RAW(0x4941B0), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {}, FxOut012_8, nullptr, true},   // 1: three outs of 8 written; eax read (beside EGT's 0x494180, not EGT's)
+    {FX_RAW(0x4790F0), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 1: 24 bytes written; Rand
+    {FX_RAW(0x47A110), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: no arguments, no calls
+    {FX_RAW(0x47A130), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: eax read
+    {FX_RAW(0x47A150), 1, {0}, Answer::kGarbage, 0, 0, {8}, FxOut0_32, nullptr, true},   // 1: 8 read then 32 written; AreaMap_Elevation, Rand
+    {FX_RAW(0x479160), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 1: 24 bytes written; Rand
+    {FX_RAW(0x47CF40), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 1: al; calls through 0x65472C by a byte
+    {FX_RAW(0x4837B0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: lines; Rand
+    {FX_RAW(0x491E30), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: two words and a byte; G3
+    {FX_RAW(0x492260), 3, {kU16, kU16, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: two s16 and a byte; G3
+    {FX_RAW(0x4920F0), 1, {0}, Answer::kGarbage, 0, 0, {6}, nullptr, nullptr, true},   // 1: a record read to +6; G4
+    {FX_RAW(0x5100B0), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: two words; eax read
+    {FX_RAW(0x5101C0), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; lines
+    {FX_RAW(0x52B2E0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: no arguments, no calls
+    {FX_RAW(0x52B370), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: calls 0x52B460
+    {FX_RAW(0x52B200), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1 (a tail jump; a hidden start): sound, animation
+    {FX_RAW(0x52B330), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; Transition_Start
+    {FX_RAW(0x52B6C0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: calls through 0x660324 by a byte
+    {FX_RAW(0x593950), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1 (a tail jump): jmp [0x66A470 + byte 0x93985C * 4] - the dispatcher of EKP's run
+};
+#undef FX_OURS
+#undef FX_RAW
+
 constexpr std::uint32_t kImageLo = 0x401000, kImageHi = 0x5C3000;   // .text
 
 void Register(const Callee& c) {
@@ -862,6 +1149,35 @@ constexpr Band kFieldRuns[] = {
     {0x56D240, 0x5729F9}, {0x5738A0, 0x57CD8A}, {0x57FF80, 0x5859FA}, {0x58C7A0, 0x58C900}, {0x593960, 0x594061},
 };
 constexpr Band kChapterBank = {0x537F20, 0x56D5E0};
+// Round thirteen's effect runs (docs/takeover-queue-round13.md section 10, the
+// EKH brief): 0x470000..0x4A0000 is 0x470000..0x4941E0 and its callees, as the
+// brief draws it (it reaches past the spell band's first entry 0x498FE0; the
+// test only names a clone in the log, it refuses nothing).
+constexpr Band kEffectRuns[] = {
+    {0x462B00, 0x470000}, {0x470000, 0x4A0000}, {0x4FD2E0, 0x517000}, {0x528CD0, 0x52D080}, {0x594060, 0x594D8A},
+};
+
+// Effect mode's draws (round thirteen), after FixField and before the group's
+// seed: every one of the 20 records' +5 one of the kinds (the clone's own, or
+// one of the group's), +1 / +2 below the spans when set, a third of the other
+// records free (+0 0) and the rest in use; Sprite_Current one of them, in use.
+// Nothing is drawn outside effect mode.
+void FixEffect(const Group& g, const Clone& c) {
+    g_state_span = c.state_span ? c.state_span : g.state_span;
+    g_sub_span = c.sub_span ? c.sub_span : g.sub_span;
+    for (unsigned k = 0; k < at::kEffectCount; ++k) {
+        unsigned char* const r = EffectRecord(k);
+        if (c.kind >= 0) r[5] = static_cast<unsigned char>(c.kind);
+        else if (g.kinds && g.n_kinds) r[5] = g.kinds[Next() % g.n_kinds];
+        if (g_state_span) r[1] = static_cast<unsigned char>(Next() % g_state_span);
+        if (g_sub_span) r[2] = static_cast<unsigned char>(Next() % g_sub_span);
+        const std::uint32_t use = Next();
+        r[0] = use % 3 == 0 ? 0 : static_cast<unsigned char>(1 + (use >> 8) % 0xFF);
+    }
+    unsigned char* const s = EffectRecord(Next());
+    if (s[0] == 0) s[0] = 1;
+    Sprite_Current = s;
+}
 
 void PatchImms(void* copy, const Clone& c) {
     auto* code = static_cast<std::uint8_t*>(copy);
@@ -879,7 +1195,8 @@ void PatchImms(void* copy, const Clone& c) {
 }
 
 using FnArgs = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
-                                        std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
+                                        std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t,
+                                        std::uint32_t, std::uint32_t);
 
 }  // namespace
 
@@ -891,6 +1208,7 @@ bool Half() { return (Next() & 1) != 0; }
 std::uint32_t Pick(const std::uint32_t* v, unsigned n) { return v[Next() % n]; }
 unsigned char* Mem(std::uint32_t address) { return move_script::At(address); }
 unsigned char* SpriteRecord(unsigned k) { return Mem(at::kSprites + (k % 4) * at::kSpriteStride); }
+unsigned char* EffectRecord(unsigned k) { return Mem(at::kEffects + (k % at::kEffectCount) * at::kEffectStride); }
 unsigned char* ObjectOf(unsigned k) { return Mem(at::kObjTrio + (k % 3) * at::kObjStride); }
 unsigned char* FlagRow() { return Pointer(at::kFlagRow); }
 unsigned char* TaskAt(unsigned k) { return SpriteRecord(k); }
@@ -900,7 +1218,7 @@ unsigned char* EnemyOf(unsigned char target) {
 unsigned char* PartyOf(unsigned char actor) { return ObjectOf(actor); }
 unsigned char* Script() { return g_cursor[0]; }
 unsigned char** Cursor() { return &g_cursor[0]; }
-unsigned char* Scratch(unsigned i) { return g_scratch + (i % kArgs) * 0x40; }
+unsigned char* Scratch(unsigned i) { return g_scratch + (i % kScratchSlots) * 0x40; }
 unsigned char* Packets() { return g_packets; }
 unsigned char* Text() { return g_text; }
 bool InRegions(const void* p, unsigned n) {
@@ -916,6 +1234,11 @@ bool InFieldRuns(std::uint32_t address) {
     return false;
 }
 bool InChapterBank(std::uint32_t address) { return address >= kChapterBank.lo && address < kChapterBank.hi; }
+bool InEffectRuns(std::uint32_t address) {
+    for (const Band& b : kEffectRuns)
+        if (address >= b.lo && address < b.hi) return true;
+    return false;
+}
 void SetPointer(std::uint32_t cell, const void* p) { move_script::SetLong(Mem(cell), static_cast<std::int32_t>(Key(p))); }
 unsigned char* Pointer(std::uint32_t cell) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(move_script::Long(Mem(cell)))));
@@ -971,6 +1294,10 @@ const void* StandIn(std::uint32_t key) {
         if (c.key == key) address = c.address;
     for (const Callee& c : kField)
         if (c.key == key) address = c.address;
+    for (const Callee& c : kEffectOverrides)
+        if (c.key == key) address = c.address;
+    for (const Callee& c : kEffectStd)
+        if (c.key == key) address = c.address;
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return ForOurs(i, key);
     bof3::Fatal("scenario_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
@@ -980,10 +1307,16 @@ void Run(const Group& group) {
     const unsigned per = group.rounds ? group.rounds : 2000;
     g_group = &group;
     g_field = group.field;
-    for (unsigned k = 0; k < group.n_clones; ++k)
+    g_effect = group.effect;
+    for (unsigned k = 0; k < group.n_clones; ++k) {
         if (FieldShape(group.clones[k].shape)) g_field = true;
+        if (group.clones[k].shape == Shape::kEffect) g_effect = true;
+    }
+    if (g_effect) g_field = true;
     g_slot_n = 0;
     for (unsigned i = 0; i < group.n_callees; ++i) Register(group.callees[i]);
+    if (g_effect)
+        for (const Callee& c : kEffectOverrides) Register(c);
     if (g_field)
         for (const Callee& c : kFieldOverrides) Register(c);
     for (const Callee& c : kStandard) Register(c);
@@ -994,6 +1327,9 @@ void Run(const Group& group) {
             RegisterHandler(static_cast<std::uint32_t>(move_script::Long(Mem(group.data_tables[t].at + 4 * i))));
     // round twelve's field-standard set, after the handlers (a handler stays one)
     for (const Callee& c : kField) Register(c);
+    // round thirteen's effect-standard set, in effect mode only
+    if (g_effect)
+        for (const Callee& c : kEffectStd) Register(c);
 
     // the regions: the standard ones (docs/scenario_harness.md section 4), then the group's
     g_region_n = 0;
@@ -1042,6 +1378,22 @@ void Run(const Group& group) {
         };
         for (const Region& r : field) g_regions[g_region_n++] = r;
     }
+    if (g_effect) {
+        // effect mode's standard regions (docs/scenario_harness.md section 8.4):
+        // the cells three or more of round thirteen's groups name
+        const Region effect[] = {
+            {at::kVertexScratch, at::kVertexScratchSize},  // Prim_VertexScratch 0x9037A0.. (15 groups write it)
+            {at::kScreenXY, at::kScreenXYSize},            // Camera_ShiftX / Y, MapView_ScreenXY 0x903820 (9)
+            {at::kCameraCells, at::kCameraCellsSize},      // Cond_ByteFE .., Camera_Matrix 0x905E40 (13)
+            {at::kShards, at::kShardsSize},                // EffectKind30_Shards and the sparks (15)
+            {at::kMenuButtons, at::kMenuButtonsSize},      // Field_MenuButton .. (6)
+            {at::kMessagePools, at::kMessagePoolsSize},    // MessagePools (4)
+            {at::kGameMode, 4},                            // Game_Mode, Game_Step (6)
+            {at::kPanelCells, at::kPanelCellsSize},        // 0x939A00..0x939A2F (3)
+            {at::kMessageCells, at::kMessageCellsSize},    // MsgBoxState 0x7DEE40.. inside the message cells (3)
+        };
+        for (const Region& r : effect) g_regions[g_region_n++] = r;
+    }
     for (unsigned i = 0; i < group.n_regions; ++i) {
         if (g_region_n == kMaxRegions) bof3::Fatal("scenario_harness: %s: more than %u regions", group.shadow, kMaxRegions);
         g_regions[g_region_n++] = group.regions[i];
@@ -1062,15 +1414,17 @@ void Run(const Group& group) {
         }
         clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         PatchImms(clones[k], c);
-        if (g_field && !InFieldRuns(c.base) && !InChapterBank(c.base))
-            bof3::Log("shadow      %s: %s at 0x%X lies outside the field runs and the chapter bank", group.shadow, c.name,
-                      (unsigned)c.base);
+        if (g_field && !InFieldRuns(c.base) && !InChapterBank(c.base) && !InEffectRuns(c.base))
+            bof3::Log("shadow      %s: %s at 0x%X lies outside the field runs, the chapter bank and the effect runs",
+                      group.shadow, c.name, (unsigned)c.base);
     }
 
-    static std::uint32_t kept[64][32];
+    // 128 entries a table since round thirteen (32 before): kind 0xF's state
+    // table has 58, EffectKind18_States runs past 100
+    static std::uint32_t kept[64][128];
     if (group.n_data_tables > 64) bof3::Fatal("scenario_harness: %s: more than 64 .data tables", group.shadow);
     for (unsigned t = 0; t < group.n_data_tables; ++t) {
-        if (group.data_tables[t].entries > 32) bof3::Fatal("scenario_harness: %s: a .data table of more than 32", group.shadow);
+        if (group.data_tables[t].entries > 128) bof3::Fatal("scenario_harness: %s: a .data table of more than 128", group.shadow);
         for (unsigned i = 0; i < group.data_tables[t].entries; ++i) {
             const std::uint32_t cell = group.data_tables[t].at + 4 * i;
             kept[t][i] = static_cast<std::uint32_t>(move_script::Long(Mem(cell)));
@@ -1100,6 +1454,7 @@ void Run(const Group& group) {
             FixField();
             DrawSpans(group, c);
         }
+        if (g_effect) FixEffect(group, c);
         g_seed = Next();
         g_rand_hint = Next();
         if (group.seed) group.seed(k);
@@ -1107,7 +1462,11 @@ void Run(const Group& group) {
 
         // the arguments: random, then the shape's, then the group's
         std::uint32_t a[kArgs];
-        for (unsigned i = 0; i < kArgs; ++i) a[i] = Next();
+        for (unsigned i = 0; i < kScratchSlots; ++i) a[i] = Next();
+        // arguments 10 and 11 (round thirteen's twelve) derived, not drawn: the
+        // stream every group before them drew is unchanged
+        a[10] = (a[0] ^ a[9]) * 0x9E3779B1u;
+        a[11] = (a[1] ^ a[8]) * 0x85EBCA6Bu;
         if (c.shape == Shape::kHook) {
             a[0] = (Next() & 0x7F) << 16 | (a[0] & 0xFFFF);
             a[1] = (Next() & 0x7F) << 16 | (a[1] & 0xFFFF);
@@ -1118,12 +1477,14 @@ void Run(const Group& group) {
         } else if (c.shape == Shape::kCursor) {
             a[0] = Key(&g_cursor[0]);
         }
-        for (unsigned i = 0; i < kArgs && c.pointers; ++i) {
-            switch (static_cast<Arg>((c.pointers >> (2 * i)) & 3)) {
+        for (unsigned i = 0; i < kScratchSlots && c.pointers; ++i) {
+            switch (static_cast<Arg>((c.pointers >> (3 * i)) & 7)) {
             case Arg::kSprite: a[i] = Key(SpriteRecord(Next())); break;
             case Arg::kScratch: a[i] = Key(Scratch(i)); break;
             case Arg::kScript: a[i] = Key(g_cursor[0]); break;
+            case Arg::kEffect: a[i] = Key(EffectRecord(Next())); break;
             case Arg::kWord: break;
+            default: bof3::Fatal("scenario_harness: %s: argument %u has no kind %u", c.name, i, (unsigned)((c.pointers >> (3 * i)) & 7));
             }
         }
         if (group.args) group.args(k, a);
@@ -1136,8 +1497,8 @@ void Run(const Group& group) {
             State& out = pass ? ours : theirs;
             const void* const fn = pass ? c.ours : clones[k];
             g_active = pass == 1;
-            const std::uint32_t answer =
-                reinterpret_cast<FnArgs>(const_cast<void*>(fn))(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
+            const std::uint32_t answer = reinterpret_cast<FnArgs>(const_cast<void*>(fn))(a[0], a[1], a[2], a[3], a[4], a[5], a[6],
+                                                                                         a[7], a[8], a[9], a[10], a[11]);
             g_active = false;
             if (mask) Log5(kReturnTag, answer & mask, 0, 0, 0);
             Capture(out);
@@ -1197,6 +1558,11 @@ void Run(const Group& group) {
         bof3::Log("shadow      %s field mode: %u stand-ins (%u of the field-standard set), the field regions and the packet, "
                   "text, script and scratch buffers compared",
                   group.shadow, g_slot_n, static_cast<unsigned>(sizeof kField / sizeof kField[0]));
+    if (g_effect)
+        bof3::Log("shadow      %s effect mode: Sprite_Current one of the %u effect records, %u effect-standard callees and %u "
+                  "louder re-listings, the effect regions compared",
+                  group.shadow, at::kEffectCount, static_cast<unsigned>(sizeof kEffectStd / sizeof kEffectStd[0]),
+                  static_cast<unsigned>(sizeof kEffectOverrides / sizeof kEffectOverrides[0]));
     if (bad) {
         for (unsigned k = 0; k < group.n_clones; ++k)
             if (bad_per[k]) bof3::Log("shadow      %s: %s mismatched in %u rounds", group.shadow, group.clones[k].name, bad_per[k]);
@@ -1204,6 +1570,8 @@ void Run(const Group& group) {
     }
     g_group = nullptr;
     g_field = false;
+    g_effect = false;
+    g_state_span = g_sub_span = 0;
 }
 
 }  // namespace scenario_harness
