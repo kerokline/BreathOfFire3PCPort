@@ -7,7 +7,7 @@
 (`src/game/battle_e7.cpp`, shadow name `battle_e7`), each read to its last
 instruction with capstone and fuzzed through the boss harness as an engine
 group ([`boss_harness.md`](boss_harness.md) section 10) without edits to it:
-one `Run`, 186,000 rounds, 0 mismatches. CONTROLS_SUMMARY Five of the 31 are
+one `Run`, 186,000 rounds, 0 mismatches. 25 controls planted: 23 refused by a count, one an equivalent mutant (22), and one (19) equivalent by the table's bytes with a near variant (25) refused (section 6). Five of the 31 are
 entered by the owner's `dragonTransform` recipe (section 9); the rest are
 fuzz only.
 
@@ -160,7 +160,12 @@ The disturbance (`Disturb`, from the hash only) moves what the windows read
 again after a call: the drops' count, the window colour, the choice, the
 cost, the hand's row and column, a byte of the gene rows, BATE's member.
 
-    COUNTS_LINE
+    shadow      battle_e7 self-test: 186000 rounds over 31 functions (6000 each), 3263335 calls to the stand-ins, 0 MISMATCHES; 36256 bytes of state (30 regions) and the stand-ins' log compared
+
+(this worktree, the build at the fuzz's last commit; counts move with the
+build directory). Every recorder the originals call appears in the coverage
+line; the handler recorders of the four dispatchers' entries 1,162..2,036
+calls each.
 
 ## 6. Controls
 
@@ -168,7 +173,37 @@ cost, the hand's row and column, a byte of the gene rows, BATE's member.
 one change in `src/game/battle_e7.cpp` (anchored on a string found once),
 rebuilds, runs `BOF3X_SHADOW=battle_e7` headless, restores and rebuilds.
 
-CONTROLS_TABLE
+| n | Planted | Mismatched rounds |
+|--:|---|--:|
+| 1 | `BattleResultWin_DrawFrame`: the tile's y + 3, not + 2 | 6,000 |
+| 2 | `BattleResultWin_DrawLevelUp`: stats 4 and 5's labels swapped | 5,829 |
+| 3 | `BattleResultWin_DrawDrops`: the column 136 wide, not 138 | 3,189 |
+| 4 | `BattleResultWin_DrawItem`: the count drawn above 2, not 1 | 797 |
+| 5 | `GeneWin_DrawFrame`: the top edge one cell longer | 4,525 |
+| 6 | `GeneWin_ChoiceStates`: stack entries 1 and 2 swapped | 4,019 |
+| 7 | `GeneWin_ChoiceSlideIn`: held above 0x29, not at it | 527 |
+| 8 | `GeneWin_DrawChoices`: the others' colour 6, not 7 | 3,075 |
+| 9 | `GeneWin_ListOpen`: `+8` = 0x11, not 0x10 | 6,000 |
+| 10 | `GeneWin_List3SlideOut`: freed from 0x144, not 0x143 | 176 |
+| 11 | the lists' cost colour: 7 at an AP equal to the cost too | 486 |
+| 12 | `GeneWin_DrawList2`: no hand in sub-step 4, not 5 | 1,447 |
+| 13 | `GeneWin_DrawListFrame`: the title centred by 5 a character | 5,692 |
+| 14 | `GeneWin_DrawFormIcon`: u by v % 5 | 4,212 |
+| 15 | `GeneWin_DrawCursorBox`: the pulse + 0x3E on bit 3 | 1,784 |
+| 16 | `BattleEquipWin_Draw`: mark 4's bar colour 0x14 | 1,590 |
+| 17 | `BattleEquipWin_Draw`: the raised row's text by 1, not 2 | 4,924 |
+| 18 | the open states: `+9` the column, not the row | 18,000 |
+| 19 | the rows' cost: the third index added at 0xFF too (skipped at 0xFE) | **0 - equivalent**: the cost table's bytes at 0xFE and 0xFF (`0x64ED9A` / `0x64ED9B`) are both 0, so adding or skipping either adds nothing; no input tells them apart |
+| 20 | `GeneWin_DrawGrid`: the hand's rows 16 apart, not 32 | 1,483 |
+| 21 | `GeneWin_ChoiceSlideOut`: held below -0x17, not at it | 551 |
+| 22 | `GeneWin_ListShiftRight`: moved at 0x5B too | **0 - equivalent**: 0x5B + 0x20 is held back to 0x5B by the next test, so the record ends the same |
+| 23 | `BattleEquipWin_Draw`: `Item_CanUse` mode 3 | 3,043 |
+| 24 | `GeneWin_DrawList`: the row number + 2 | 6,000 |
+| 25 | the rows' cost: the third index 5 skipped (19's near variant) | 280 (after the seed drew the second and third indices inside the table half the time; before it, index 5 was a 1-in-512 draw) |
+
+Every control ran against the full `Run` (all 31 functions). Controls 1..24
+ran at `8e755f4` (before the seed change of `4a656b8`), 25 after it; the
+baseline at the later seed is the counts line of section 5.
 
 ## 7. Latent defects (Capcom's, kept)
 
