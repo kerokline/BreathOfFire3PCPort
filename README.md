@@ -14,12 +14,13 @@ release whose correctness criterion is "matches original hardware". The two
 projects have deliberately opposite invariants, and that is what makes them good
 collaborators rather than competitors. See [`docs/PLAN.md`](docs/PLAN.md) §6.
 
-> **Status: playable in English, and being replaced one function at a time.**
-> A launcher starts your own copy of the game with our DLL inside
-> it, and **1,025 of the port's functions now run as our C++** — everything
-> the attract sequence reaches, the field, menus, text, the world map and the
-> battle engine a recorded fight reaches — each checked against Capcom's
-> original before it was switched on. That is roughly a tenth of the ~10,200
+> **Status: playable in English, French, German and Japanese, and being
+> replaced one function at a time.** A launcher starts your own copy of the
+> game with our DLL inside it, and **6,891 of the port's functions now run as
+> our C++** — the field, menus, text and the world map; every spell, every
+> scenario chapter, every area overlay and every boss fight; and the battle
+> and field engines' resident code — each checked against Capcom's original
+> before it was switched on. That is about two-thirds of the ~10,200
 > functions in the binary; the rest still runs as Capcom shipped it.
 >
 > What is true today is in [`docs/STATUS.md`](docs/STATUS.md); every document
@@ -33,17 +34,21 @@ Every item below is a ledgered change (`DIV-nnnn`, in
 made reachable. Most are switches in the launcher; the originals stay available.
 
 - **English**, built on your machine from your own US PlayStation disc:
-  dialogue, menus, item and ability names, the Config screen, the title menu,
-  the battle commands (DIV-0005..0009, 0013..0020). Enemy and place names and
-  text painted into artwork are still Chinese.
+  dialogue, menus, item, ability and enemy names, the Config screen, the title
+  menu, the battle commands and banners, the world map's place plates
+  (DIV-0005..0009, 0013..0020, 0052, 0053, 0055). **French, German and
+  Japanese** the same way from those discs (DIV-0054, DIV-0056, DIV-0057),
+  less tested so far. Some labels and headers, the Japanese mode's
+  menu strings, and text painted into artwork are still Chinese.
 - **Display**: a Direct3D 11 renderer in place of DirectDraw (DIV-0031); a
   resizable window or borderless fullscreen with no display-mode change
   (DIV-0032, F8 toggles); integer scaling, snapped to whole multiples or
   fitted to the height (DIV-0036, DIV-0042); **widescreen 426 x 240**, the view
   widened the way Capcom's PSP release did it (DIV-0041); FMVs in the window
   (DIV-0035).
-- **Looks**: the port's smooth filter, a sharp point filter (DIV-0012), or the
-  SatPixie CRT shader with an options dialog (DIV-0043).
+- **Looks**: the port's smooth filter, a sharp point filter (DIV-0012), or
+  a CRT look — our own scanlines and glow (DIV-0037), or the SatPixie shader
+  with an options dialog (DIV-0043).
 - **Controls**: modern pads through SDL3, with a Nintendo-layout toggle
   (DIV-0050); keyboard and pad bindings set in the launcher by pressing the
   input; the Config panel's controller icons as the PlayStation drew them
@@ -96,13 +101,14 @@ the game's log is `bof3x.log`, in the same place. Details:
 [`docs/launcher-settings.md`](docs/launcher-settings.md).
 
 **English** needs one more step, run once, reading your own US PlayStation disc
-image and writing overlay files into the game's `DAT\` folder:
+image and writing overlay files into the game's `DAT\` folder (for French,
+German or Japanese, add `--lang fr`, `de` or `ja` and give that disc):
 
 ```bash
 python tools/loc_build.py all --disc "path/to/your US disc.cue" --game "C:/Games/BOF3"
 ```
 
-Then pick English in the launcher's Language box. See
+Then pick the language in the launcher's Language box. See
 [`docs/dialogue-localisation.md`](docs/dialogue-localisation.md).
 
 **The Capcom logo video** shipped as Indeo 5, which Windows no longer decodes.
@@ -150,7 +156,7 @@ function can be switched back to Capcom's with `BOF3X_ORIGINAL`
 - [**bof3ext**](https://github.com/TheRealBiggs/bof3ext) and [**bof3ext_resources**](https://github.com/TheRealBiggs/bof3ext_resources) by TheRealBiggs — a
   replacement `ddraw.dll` that translates most of the game to English, fixes
   bugs, and replaces the renderer with OpenGL. A **peer project, not a base**:
-  Its documented findings are cited and independently verified, the same way 
+  its documented findings are cited and independently verified, the same way
   this project treats any other source. See [`docs/PLAN.md`](docs/PLAN.md) §4.
 - [**BreathOfFire3Recomp**](https://github.com/kerokline/BreathOfFire3Recomp) —
   the archival sibling, built from the *PlayStation* release. Source of the
