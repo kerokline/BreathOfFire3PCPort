@@ -204,6 +204,22 @@ U FxFindSpark(const U*, U) {
     }
     return 0;
 }
+// 0x47CF20 / 0x47A130, as the real ones: the first puff (8 of 0x1C at
+// EffectKind30_Shards) or dust record (64 of 0x20 at 0x92D1DC) whose +0 is 0,
+// or null - the states hand it to 0x4790F0 / 0x47A150 only when not null.
+U FindFirstFree(U base, U stride, unsigned n) {
+    for (unsigned i = 0; i < n; ++i)
+        if (P(base + i * stride)[0] == 0) return base + i * stride;
+    return 0;
+}
+U FxPuffFind(const U*, U) { return FindFirstFree(Key(EffectKind30_Shards), 0x1C, 8); }
+U FxDustFind(const U*, U) { return FindFirstFree(at::kDust, 0x20, 64); }
+// EffectKind45_DrawLine / _FillRect read the colour bytes 0x6761C4..C6 at the
+// call: noted, so a colour set wrong and overwritten before the end shows.
+U FxColour(const U*, U answer) {
+    sh::NoteBytes(move_script::At(at::kPanelColour), 3);
+    return answer;
+}
 
 #define E2D_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage, kF = sh::Answer::kFlag, kPh = sh::Answer::kPhase;
@@ -213,7 +229,7 @@ const sh::Callee kCallees[] = {
     // the coordinates read as s16 (movsx), the callers pushing whole registers
     // with leftovers above; the shades and blends as bytes
     {E2D_OURS(EffectKind45_DrawPanel), 2, {kW, kW}, kG, 0, 0},
-    {E2D_OURS(EffectKind45_DrawLine), 4, {k16, k16, k16, k16}, kG, 0, 0},
+    {E2D_OURS(EffectKind45_DrawLine), 4, {k16, k16, k16, k16}, kG, 0, 0, {}, &FxColour},
     {E2D_OURS(EffectKind45_DrawMode), 1, {k8}, kG, 0, 0},
     {E2D_OURS(EffectKind45_PushSample), 6, {k16, k16, k16, k16, k16, k16}, kG, 0, 0},
     {E2D_OURS(EffectKind45_DrawTrace), 2, {kW, kW}, kG, 0, 0},
@@ -223,7 +239,7 @@ const sh::Callee kCallees[] = {
     // the point is the history (fixed) or the segment's stepping point (the
     // caller's stack): its two s16 hashed, the pointer not logged
     {E2D_OURS(EffectKind45_Plot), 2, {0, k8}, kG, 0, 0, {4, 0}, nullptr, nullptr, true},
-    {E2D_OURS(EffectKind45_FillRect), 4, {k16, k16, k16, k16}, kG, 0, 0},
+    {E2D_OURS(EffectKind45_FillRect), 4, {k16, k16, k16, k16}, kG, 0, 0, {}, &FxColour},
     {E2D_OURS(EffectKind46_DrawFlash), 0, {}, kPh, 0, 0},
     {E2D_OURS(EffectKind46_RedrawSprites), 0, {}, kPh, 0, 0},
     {E2D_OURS(EffectKind48_SpawnRing), 0, {}, kPh, 0, 0},
@@ -240,6 +256,10 @@ const sh::Callee kCallees[] = {
     // second size word is the original's uninitialised stack (not hashed)
     {E2D_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
     {E2D_OURS(EffectGte_ProjectSize), 3, {0, 0, 0}, kG, 0, 0, {12, 2, 0}, &FxProjectSize, nullptr, true},
+    // nobody's (the effect-standard rows answer garbage): the finds answer as
+    // the real ones, so the null test is reached (the starts then fill what they get)
+    {"0x47CF20", at::kPuffFindFree, at::kPuffFindFree, 0, {}, kG, 0, 0, {}, &FxPuffFind},
+    {"0x47A130", at::kDustFindFree, at::kDustFindFree, 0, {}, kG, 0, 0, {}, &FxDustFind},
 };
 #undef E2D_OURS
 
@@ -251,8 +271,9 @@ const sh::DataTable kTables[] = {
 };
 const std::uint8_t kKinds[] = {0x45, 0x46, 0x47, 0x48, 0x49};
 // The panel's colour bytes and the dust anchor pointer (0x6761C4..0x6761D3);
-// the word the anchor points at (0x92D1C8.., where 0x4789D0 aims it).
-const sh::Region kRegions[] = {{at::kPanelColour, 0x10}, {0x92D1C8, 0x20}};
+// the word the anchor points at (0x92D1C8.., where 0x4789D0 aims it) and the 64
+// dust records after it (0x92D1DC..).
+const sh::Region kRegions[] = {{at::kPanelColour, 0x10}, {0x92D1C8, 0x14 + 64 * 0x20}};
 
 // --- the seed ------------------------------------------------------------------------
 
@@ -268,10 +289,16 @@ void SpriteIndices() {
 unsigned char* Spark(unsigned i) { return EffectKind30_Shards + i * at::kSparkStride; }
 // The sparks' live bytes: all free, all live, or mixed; lives at 1 (to 0) and around.
 void Sparks() {
-    const U mode = sh::Next() % 3;
+    const U mode = sh::Next() % 4;
     for (unsigned i = 0; i < at::kSparks; ++i) {
         Spark(i)[0x15] = static_cast<unsigned char>(mode == 0 ? 0 : mode == 1 ? (sh::Next() | 1) : (sh::Half() ? 0 : sh::Next()));
         Spark(i)[0x16] = static_cast<unsigned char>(PickOf(0, 1, 2, 8, sh::Next()));
+    }
+    if (mode == 3) {   // one live spark on its last frame, the rest free
+        for (unsigned i = 0; i < at::kSparks; ++i) Spark(i)[0x15] = 0;
+        unsigned char* const last = Spark(sh::Next() % at::kSparks);
+        last[0x15] = 1;
+        last[0x16] = 1;
     }
 }
 // The history's points (x, y s16) near the clip (x 0x80..0xBF, the columns)
@@ -295,9 +322,11 @@ void Seed(unsigned k) {
         Input_Pressed = buttons;
         break;
     case k45Aim:
-        SetWord(s + 0x2E, PickOf(0x1B, 0x1C, 0x1D, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x46, 0x47, 1, 2, 0xFFFF, sh::Next()));
-        SetWord(s + 0x36, PickOf(0, 7, 8, 9, 0x10, 0x108, sh::Next()));
-        Input_Pressed = buttons;
+        // the phase at the window's edges after the two steps (0x1A -> 0x1C,
+        // 0x22 -> 0x24) and past them, at the markers' 0x20, at the wrap
+        SetWord(s + 0x2E, PickOf(0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x46, 0x47, 0, 1, 2, 0xFFFF, sh::Next()));
+        SetWord(s + 0x36, PickOf(0, 7, 8, 8, 9, 0x10, 0x108, sh::Next()));
+        Input_Pressed = sh::Half() ? Field_ConfirmButtons : buttons;
         break;
     case k45Panel:
     case k45Trace:
@@ -335,9 +364,19 @@ void Seed(unsigned k) {
         break;
     case k48Start:
         // half the time no other live kind-0x48 record
-        if (sh::Half())
+        // half the time no other live kind-0x48 record - and then half of
+        // those one free record of kind 0x48 (the in-use test decides)
+        if (sh::Half()) {
             for (unsigned r = 0; r < at::kEffects; ++r)
                 if (Rec(r) != s && Rec(r)[5] == 0x48) Rec(r)[5] = 0x47;
+            if (sh::Half()) {
+                unsigned char* const other = Rec(sh::Next() % at::kEffects);
+                if (other != s) {
+                    other[5] = 0x48;
+                    other[0] = 0;
+                }
+            }
+        }
         break;
     case k48Burst:
         s[9] = static_cast<unsigned char>(PickOf(0, 3, 4, 5, sh::Next()));
@@ -350,6 +389,7 @@ void Seed(unsigned k) {
         Sparks();
         break;
     case k49V0Emit:
+        for (unsigned i = 0; i < 8; ++i) EffectKind30_Shards[0x1C * i] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next() | 1);
         SetLong(s + 0xC, static_cast<std::int32_t>(PickOf(0, 1, 2, 8, 9, 0x40, 0x41, sh::Next())));
         break;
     case k49V1Fade:

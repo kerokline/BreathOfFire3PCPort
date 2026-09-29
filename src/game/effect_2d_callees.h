@@ -31,6 +31,7 @@ constexpr std::uint32_t kPanelColour = 0x6761C4;  // three bytes: the blue, gree
                                                    // rectangles (committed at +6, +5, +4)
 constexpr std::uint32_t kDustAnchor = 0x6761D0;    // a pointer (0x4789D0, kind 0x49's variant 4, sets it to 0x92D1C8):
                                                    // variant 3's burst adds to the word at +0x10 through it
+constexpr std::uint32_t kDust = 0x92D1DC;          // variant 3's dust, 64 records of 0x20
 constexpr std::uint32_t kGlow = 0x92C060;          // the glow record variant 2's states hand 0x4794D0 / 0x4796B0
 constexpr std::uint32_t kGlowHeight = 0x92C49E;    // a word of that record's that variant 2's states move
 constexpr std::uint32_t kTwinOps = 0x654540;       // kind 0x47's two EventOp_0x operands, 17 bytes each, by +0xB
