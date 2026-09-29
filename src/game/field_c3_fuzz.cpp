@@ -196,9 +196,23 @@ unsigned char* Sc() { return Sprite_Current; }
 
 // MapView_SlopeAt: AreaMap_Slope's "sloped" byte 0x903850, which every caller
 // here reads straight after (docs/field_c3.md section 3).
+// Its answer at the steepness boundary 0x40 half the time (the callers test
+// > 0x40 as a signed word).
 U SlopeEffect(const U*, U answer) {
-    Mem(at::kSloped)[0] = static_cast<unsigned char>(sh::Noise() % 3 ? 1 : 0);
+    const U h = sh::Noise();
+    Mem(at::kSloped)[0] = static_cast<unsigned char>(h % 3 ? 1 : 0);
+    if ((h >> 4) & 1) return (answer & 0xFFFF0000u) | (0x3F + (h >> 8) % 3);
     return answer;
+}
+// MapView_GroundAt: two answers in three at a boundary the callers compare the
+// height against - Sprite_Current's height word less or plus 0x200, 0x100 or
+// 0, give or take one (docs/field_c3.md section 4).
+U GroundEffect(const U*, U answer) {
+    static const int kDelta[] = {-0x200, 0x200, 0x100, -0x100, 0};
+    const U h = sh::Noise();
+    if (h % 3 == 0) return answer;
+    const int d = kDelta[(h >> 4) % 5] + static_cast<int>((h >> 8) % 3) - 1;
+    return (answer & 0xFFFF0000u) | (static_cast<U>(Word(Sc() + 0x3E) + d) & 0xFFFFu);
 }
 // MoveCmd_AttachOffset: its three words out (FieldCore_Attached adds them).
 U OffsetEffect(const U* a, U answer) {
@@ -207,7 +221,9 @@ U OffsetEffect(const U* a, U answer) {
 }
 // FieldCore_TileD0Probe: the word out, which FieldCore_TileD0Exit compares.
 U ProbeEffect(const U* a, U answer) {
-    const auto w = static_cast<std::uint16_t>(sh::Noise() >> 5);
+    // near Sprite_Current's height (the first best), so two probes tie often
+    const U h = sh::Noise();
+    const auto w = static_cast<std::uint16_t>(h % 4 ? Word(Sc() + 0x3E) - (h >> 4) % 3 : h >> 5);
     std::memcpy(reinterpret_cast<void*>(static_cast<std::uintptr_t>(a[2])), &w, sizeof w);
     return answer;
 }
@@ -265,6 +281,7 @@ const sh::Callee kCallees[] = {
     // louder stand-in
     {C3_OURS(Sprite_EnsureAnimation), 1, {0xFF}, kF, 0, 0, {}, nullptr, nullptr, true},     // Sprite_SetAnimationAt reads a byte (dl)
     {C3_OURS(MapView_SlopeAt), 3, {kAll, kAll, 0xFF}, kG, 0, 0, {}, &SlopeEffect, nullptr, true},   // AreaMap_Slope's direction byte n
+    {C3_OURS(MapView_GroundAt), 2, {kAll, kAll}, kG, 0, 0, {}, &GroundEffect, nullptr, true},     // answers at the height's boundaries
     {C3_OURS(MapView_SetElevation), 1, {0xFFFF}, kG, 0, 0, {}, nullptr, nullptr, true},     // only the low word reaches memory
     {C3_OURS(MoveCmd_AttachOffset), 2, {0, 0xFF}, kG, 0, 0, {}, &OffsetEffect, nullptr, true},   // the out pointer is the caller's frame
     {C3_OURS(Field_WayBlocked), 4, {kAll, kAll, 0xFF, 0xFFFF}, kF, 0, 0, {}, nullptr, nullptr, true},   // raised & 0xFF, ground a word
