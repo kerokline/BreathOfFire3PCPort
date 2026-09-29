@@ -295,6 +295,11 @@ it from the round's base commit.
 
 ## 9. Round thirteen: the area overlays' remainder
 
+*Measured further at `61be26e` in [`takeover-queue-round13.md`](takeover-queue-round13.md):
+the 629 hold, but 627 lie outside the area band and are effect-kind state
+code, so `area_rows.py` cannot cut them and `area_harness` unchanged does
+not fit; that doc's cut and plan replace the paragraph below.*
+
 Round ten took "every area overlay of worlds 0..4" as its tool enumerated
 them - the closures of the descriptors' call tables. The catalog at
 `c4b0d32` still labels **629 functions** as area overlays: world 0 171,
