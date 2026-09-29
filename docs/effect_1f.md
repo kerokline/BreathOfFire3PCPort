@@ -8,7 +8,7 @@ on the round branch's tip `1bb41df`. **15 functions ours**
 E1F (`analysis/round13_cut.tsv`), each read to its last instruction with
 capstone and fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8), used unchanged:
-120,000 rounds, 0 mismatches (in this worktree). @CONTROLS@ Fuzz only: no
+120,000 rounds, 0 mismatches (in this worktree). 92 controls planted one at a time: 90 refused by a count, 1 refused only by a fault with a near variant refused by a count, 1 equivalent mutant with a near variant refused (section 6a). Fuzz only: no
 recorded route enters any of them (section 9). No divergence.
 
 | Function | Entry | Bytes | Reached by | PSX twin |
@@ -241,7 +241,7 @@ clones whose name contains it.
   mask, a slot byte, a list byte, a count byte, `Sprite_Current +3` / `+4`,
   `+0x3C` / `+0x60`.
 
-**Result, in this worktree**: @RESULT@
+**Result, in this worktree**: `BOF3X_SHADOW=effect_1f` headless, exit 0: **120,000 rounds over 15 functions (8,000 each), 571,167 calls to the stand-ins, 0 mismatches**; 24,884 bytes of state in 46 regions. Coverage: every table entry reached (2,589..2,745 each), `Inventory_Remove` 356, `Inventory_Add` 197, `Sprite_UpdateScreenScaled` 120,135 (as a recorder), `FieldPanel_KindPoints` 128,018, `Effect_ReleaseAt` 104,000. `BOF3X_SHADOW='*'`: exit 0, 680 self-test lines, every one 0 mismatches, `inject: 6910 ours, 0 left original`; the same with `BOF3X_WIDE=1`: exit 3 at `battle_e7` (`GeneWin_ListSlideOut` 503 rounds, 1,832 in all: its slide bound reads DIV-0041's widened operand; not this group's code, and the main checkout holds another session's uncommitted `battle_e7` / `widescreen.h` edits), before `effect_1f` runs - `BOF3X_SHADOW=effect_1f BOF3X_WIDE=1` alone: exit 0, the same 571,167 calls, 0 mismatches (none of the fifteen has a widened operand).
 
 ## 4. Divergence
 
@@ -303,6 +303,38 @@ bytes in place (section 6).
   `0x90412E != id` first; and neither checks `Inventory_Remove`'s answer
   before filling the slot. Whether a failed remove can happen from this
   list (every id shown is in the inventory) is not measured.
+
+## 6a. Controls
+
+`scratchpad/e1f/controls.py` (the session scratchpad, not committed): each
+plant anchored on a unique string of `effect_1f.cpp`, rebuilt, run alone
+(`BOF3X_E1F_ONLY`), restored, and rebuilt at the end. Run against the final
+fuzz (8,000 rounds); the count is the mismatching rounds.
+
+| Function | Controls | Refused (rounds of 8,000) |
+|---|---|---|
+| `ChoiceMenu_Run` | C1 index + 1 | 8,000 |
+| `ExtraSlots_Step` | C2 index + 1 | 8,000 |
+| `ExtraSlots_Enter` | C3 state 4 dropped, C4 mask 0x3F, C5 hand y + 1, C6 +4 by 2 | 1,834; 1,316; 3,642; 3,642 |
+| `ExtraSlots_PickSlot` | C7 sound, C8 bit 6, C9 +3 by 2, C10 +4 = 1, C11 bit 2, C12 repeat mask, C13 `^ 6`, C14 + 3, C15 slots swapped, C16 bit 6 test, C17 hand << 3, C18 `Input_Pressed` read before the repeat call | 2,583; 1,990; 2,583; 2,583; 1,073; 455; 1,180; 1,671; 2,360; 1,930; 2,922; 117 |
+| `ExtraSlots_PickItem` | C19..C53 and C35b: kinds, counts, slot writes, cursor and scroll bounds, the loop bound, sounds, labels, the pull-back, the early `Input_Pressed` read | every one refused but C35, from 4 (C29, the pull-back's `count - 9`) and 9 (C51, the loop's 0x80) to 3,976 |
+| `Sprite_UpdateScreenScaled` | C54 +0x3C held at 1, C55 put back + 1, C56 mask, C57 lift << 2, C58 `far > 1`, C59 eax at 0, C60 put back on the record before the call | 7,982; 8,000; 2,914; 2,088; 730; 533; 303 |
+| `Sprite_UpdateAllScaled` | C61 in-use byte +1, C62 29 records | 8,000; 3,990 |
+| `Effect_ResetFirstSeven` | C63 six records, C64 +5 for +4, C65 from 8, C66 state 3 | 8,000 each |
+| `FieldPanel_KindPoints` | C67 threshold +0xE, C68 `>`, C68b `low + 1 >=`, C69 high word dropped, C70 `* 9`, C71 `/ 9` | 2,369; a fault; 630; 5,930; 678; 778 |
+| `FieldPanel_KindTotal` | C72 31 kinds, C73 kind + 1 | 4,000; 8,000 |
+| `GameMode8_*` | C74 first two calls swapped, C75 the sprite pass dropped, C76 the other raw callee | 8,000 each |
+| `UiSprite_SetMode` | C77 `d0 & 7`, C78 `dC & 0x300`, C79 `& 0x70`, C80 dfe 1, C81 size 0xD | 277; 3,929; 5,139; 8,000; 8,000 |
+| `UiSprite_Draw` | C82 colour, C83 x for y, C84 `& 0x1F`, C85 height from +8, C86 v from +0xC, C87 `Gpu_SetSprt` after the colour, C88 commit before the last byte, C89 x not narrowed to s16, C90 answer + 1 | 8,000; 8,000; 754; 5,306; 7,678; 7,957; 7,317; 8,000; 8,000 |
+
+**Not refused by a count, two**: **C35** (`scrolled >= 0` -> `> 0`) is an
+equivalent mutant - at a scrolled word of exactly 0 (an old word of 9) both
+branches write 0 and play 0x100 - and its near variant **C35b** (`>= -1`)
+is refused (27). **C68** (`low >= threshold` -> `>`) faults: at a threshold
+and count of 0 the mutant divides by 0 (exit 0xC0000005), which proves less;
+**C68b** (`low + 1 >= threshold`) is refused by a count (630). Before the
+final seeds (the list's kind count and the cursors' boundaries seeded, 6,000
+rounds) C29 and C51 were not refused; the seeds are the fix, not the plant.
 
 ## 7. Calls across groups
 
