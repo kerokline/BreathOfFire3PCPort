@@ -152,6 +152,13 @@ template <typename... T> U PickOf(T... v) {
     const U values[] = {static_cast<U>(v)...};
     return sh::Pick(values, sizeof...(v));
 }
+// The same chosen by a hash (the disturbance and the stand-ins' effects draw
+// only from the hash they are given, never the harness's Next(), or the two
+// passes would draw differently).
+template <typename... T> U PickBy(U h, T... v) {
+    const U values[] = {static_cast<U>(v)...};
+    return values[h % sizeof...(v)];
+}
 unsigned char* Eff(unsigned i) { return Effect_Objects + (i % at::kEffectCount) * at::kEffectStride; }
 
 // --- the moves ---------------------------------------------------------------------
@@ -161,19 +168,24 @@ unsigned char* Eff(unsigned i) { return Effect_Objects + (i % at::kEffectCount) 
 // fractions, its height word, its scale; Field_Kind2Hold; DamageScratch; the
 // leader's height and point; the view's kind-2 point and elevation; Camera_
 // Distance. Every index byte stays inside the records it indexes.
+unsigned g_k;   // the function being fuzzed (Seed's k)
+
 void Move(U h) {
     const U v = (h >> 8) & 0xFF;
     const U w = h >> 16;
     unsigned char* const o = Cur();
     if (!sh::InRegions(o, 0x80)) return;
     switch (h % 16) {
-    case 0: o[9] = static_cast<unsigned char>(PickOf(0, 1, 2, v)); break;
-    case 1: o[0xA] = static_cast<unsigned char>(PickOf(0, 1, 2, v)); break;
+    case 0:
+        // never 0 under CameraZoom_Start, which divides by it after its call (as CameraTurn_Start does before)
+        o[9] = static_cast<unsigned char>(g_k == kZoomStart ? 1 + v % 0xFF : PickBy(w, 0, 1, 2, v));
+        break;
+    case 1: o[0xA] = static_cast<unsigned char>(PickBy(w, 0, 1, 2, v)); break;
     case 2: o[6 + v % 2] = static_cast<unsigned char>(w % 3); break;
     case 3: o[8] = static_cast<unsigned char>(w % 8); break;
     case 4: {
         static const unsigned char kOff[] = {0xC, 0x10, 0x14, 0x18, 0x1C, 0x20};
-        SetLong(o + kOff[v % 6], static_cast<std::int32_t>(PickOf(0, w, 0u - w, 0x1000, 0xFFFFF000u, 0x4000, 0x4001)));
+        SetLong(o + kOff[v % 6], static_cast<std::int32_t>(PickBy(h >> 24, 0, w, 0u - w, 0x1000, 0xFFFFF000u, 0x4000, 0x4001)));
         break;
     }
     case 5: SetWord(o + (v & 1 ? 0x34 : 0x38), w & 1 ? 0 : w); break;
@@ -183,7 +195,7 @@ void Move(U h) {
     case 9: SetWord(ObjTrio + 0x3E, w); break;
     case 10: Field_Kind2X = Long(ObjTrio + 0x34); Field_Kind2Z = v & 1 ? Long(ObjTrio + 0x38) : static_cast<long>(w); break;
     case 11: Camera_Distance = static_cast<short>(w); break;
-    case 12: SetLong(o + 0x40, static_cast<std::int32_t>(PickOf(0x1C000, 0x1FFFF, 0x20000, w << 1))); break;
+    case 12: SetLong(o + 0x40, static_cast<std::int32_t>(PickBy(v, 0x1C000, 0x1FFFF, 0x20000, w << 1))); break;
     case 13: o[0xB] = static_cast<unsigned char>(w % 20); break;
     case 14: o[3 + v % 2] = static_cast<unsigned char>(w % 20); break;
     default: MapView_Elevation = static_cast<long>(static_cast<short>(w)); break;
@@ -218,7 +230,7 @@ std::uint32_t Ground(const std::uint32_t*, std::uint32_t answer) {
 std::uint32_t CellByte(const std::uint32_t*, std::uint32_t answer) {
     const U n = sh::Noise();
     const U low = (n >> 8) & 0xF;
-    const U b = PickOf(0x10, 0x11, 0x20 | low, 0xA0 | low, 0xF0 | low, (n >> 12) & 0xFF);
+    const U b = PickBy(n >> 20, 0x10, 0x11, 0x20 | low, 0xA0 | low, 0xF0 | low, (n >> 12) & 0xFF);
     return (answer & 0xFFFFFF00u) | b;
 }
 
@@ -357,10 +369,14 @@ std::int32_t Near(std::int32_t base) {
 }
 
 void Seed(unsigned k) {
+    g_k = k;
     // Sprite_Current: one of the first four sprite records (the harness's), or
     // an effect record half the time - the pool these handlers run on
     if (sh::Half()) Sprite_Current = Eff(sh::Next());
     unsigned char* const o = Cur();
+    // the records a disturbance or EventOp's stand-in can move Sprite_Current
+    // to (the first four sprite records) get index bytes inside the records too
+    for (unsigned i = 0; i < 4; ++i) SeedRecord(sh::SpriteRecord(i));
     SeedRecord(o);
     ObjTrio[0xB] = static_cast<unsigned char>(sh::Next() % 20);
     if (sh::Half()) Field_Kind2Hold = 0;
