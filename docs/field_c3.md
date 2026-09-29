@@ -498,6 +498,19 @@ These are RT's `--edges` twelve (FH's 7.6 table) and the three unowned.
 | `FieldCore_ScriptMove`, `FieldCore_Attached`, the seven dispatchers | `FieldCore_State2Steps`, read in place by ours' `FieldCore_State2` |
 | everything else | this group's own tables and calls |
 
+**The rebinding.** Nothing to rebind: every raw reference to the 63 or their
+tables in `src/` is left raw on purpose - the fuzz keys of other modules
+(`move_groups.cpp`'s `case 0x518B20` and `kCallsE`; `object_kinds.cpp`'s
+stub cases, `CallSite` rows and its fade-table patch expectations
+`0x65F654` / `0x65F65C`), the harness's own (`scenario_harness.cpp`'s field
+runs, `scenario_harness_fh.cpp`'s copy of `0x525CC0` - which is why
+`FieldC3_Inject` runs after `ScenarioHarnessFh_Inject`), and comments
+(`mode_states.cpp`, `mode_states_callees.h`, `area_w4f.cpp`). The callers
+that are ours (`MoveScript_GroupE`, `Field_ObjectApproach` / `Avoid`) already
+call by name, and the name now binds to ours. A note for the fold: a data
+name with a `ctype` is a macro, so `bof3::addr::<table>` does not compile for
+it - the fuzz names the tables by `Key(<name>)`.
+
 ## 9. The live route
 
 Of the 63, only `FieldCore_ScriptMove` appears in the owner's two traces
