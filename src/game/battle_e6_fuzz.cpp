@@ -234,8 +234,17 @@ const bh::Callee kTaskCallees[] = {
 // rest of eax is theirs); the GTE's matrix family run for real - the push and
 // pop keep the matrix both passes start from, and the rotation / translation
 // the cells build go through pointers into their frames
+// The heights the cells add to their vertices (0x4CF4B0, AreaMap_Elevation;
+// only ax is read) answered small, so that a seeded matrix projects the
+// vertices on screen and the draws past the screen tests run.
+std::uint32_t SmallHeight(const std::uint32_t*, std::uint32_t answer) {
+    return (answer & 0xFFFF0000u) | (static_cast<U>(static_cast<int>(bh::Noise() % 513) - 256) & 0xFFFFu);
+}
+
 const bh::Callee kCellCallees[] = {
     {BE6_OURS(Area_TestCondition), 1, {kU16}, A::kFlag, 0, 0},
+    {"0x4CF4B0", at::kCellHeight, at::kCellHeight, 2, {kAll, kAll}, A::kGarbage, 0, 0, {}, &SmallHeight},
+    {BE6_OURS(AreaMap_Elevation), 2, {kAll, kAll}, A::kGarbage, 0, 0, {}, &SmallHeight},
     {BE6_OURS(Gte_PushMatrix), 0, {}, A::kThrough, 0, 0},
     {BE6_OURS(Gte_PopMatrix), 0, {}, A::kThrough, 0, 0},
     {BE6_OURS(Gte_RotTrans), 2, {kAll, kAll}, A::kThrough, 0, 0},
@@ -260,6 +269,25 @@ const bh::Region kRegions[] = {
     {at::kScreenXY, 8},    // and its projection
     {at::kOtSlot, 1},
     {0, sizeof g_cell},                   // g_cell (filled in at SelfTest)
+};
+// the cells' run also holds the GTE's state and the camera's matrix: random,
+// then (two times in three) a sane projection seeded
+constexpr U kGte = 0x7DE428;              // Gte_RampFar .. Gte_Depth: the whole GTE state (magic_s23_fuzz.cpp's region)
+constexpr U kGteSize = 0x380;
+constexpr U kGteDepth = 0x7DE450;         // Gte_MatrixDepth: kept 0..15 (the pushes stay in the stack)
+constexpr U kGteMatrix = 0x7DE4A0;        // Gte_Matrix: 3 x 3 s16, pad, 3 x s32
+constexpr U kGteNearZ = 0x7DE498;
+constexpr U kGteH = 0x7DE780;             // Gte_ProjDistance
+constexpr U kGteOffsetY = 0x7DE78C;
+constexpr U kGteOffsetX = 0x7DE790;
+// Gte_Vertices (0x7DE468, six dwords) is left out: the loads copy each
+// vertex's fourth short, which the originals leave as stale stack bytes (the
+// GTE reads only the first three; section 7, L9)
+constexpr U kGteVertices = 0x7DE468;
+const bh::Region kCellRegions[] = {
+    {kGte, kGteVertices - kGte},
+    {kGteVertices + 0x18, kGte + kGteSize - (kGteVertices + 0x18)},
+    {at::kCameraMatrix, 0x20},
 };
 
 // ===========================================================================
@@ -308,6 +336,26 @@ unsigned char* Record(unsigned v) {
     case 1: return bh::EnemyAt(v >> 2);
     default: return bh::SpriteRecord(v);
     }
+}
+
+// The GTE's matrix stack depth inside the stack; two times in three a
+// projection that lands the cells' vertices near the screen: a rotation near
+// identity (Gte_Matrix and Camera_Matrix), a translation 1000..4000 deep, a
+// distance 300..800 and the offsets near the screen's middle.
+void SeedGte() {
+    SetLong(Mem(kGteDepth), static_cast<std::int32_t>(bh::Next() % 0x10));
+    if (!bh::Often()) return;
+    const U matrices[2] = {kGteMatrix, at::kCameraMatrix};
+    for (U m : matrices)
+        for (unsigned i = 0; i < 9; ++i)
+            SetWord(Mem(m + 2 * i), static_cast<U>((i % 4 == 0 ? 0x1000 : 0) + (bh::Half() ? static_cast<int>(bh::Next() % 129) - 64 : 0)));
+    SetLong(Mem(kGteMatrix + 0x14), static_cast<std::int32_t>(bh::Next() % 401) - 200);
+    SetLong(Mem(kGteMatrix + 0x18), static_cast<std::int32_t>(bh::Next() % 401) - 200);
+    SetLong(Mem(kGteMatrix + 0x1C), static_cast<std::int32_t>(1000 + bh::Next() % 3000));
+    SetLong(Mem(kGteH), static_cast<std::int32_t>(300 + bh::Next() % 500));
+    SetLong(Mem(kGteOffsetX), static_cast<std::int32_t>(140 + bh::Next() % 41));
+    SetLong(Mem(kGteOffsetY), static_cast<std::int32_t>(100 + bh::Next() % 41));
+    SetLong(Mem(kGteNearZ), static_cast<std::int32_t>(16 + bh::Next() % 200));
 }
 
 void Seed(unsigned k) {
@@ -449,6 +497,15 @@ void Seed(unsigned k) {
     case 0x4CEB40: case 0x4CED60: case 0x4CEFC0: case 0x4CF270: {
         const unsigned step = c.base == 0x4CEB40 ? 5 : c.base == 0x4CED60 ? 8 : 6;
         const unsigned first = c.base == 0x4CEFC0 ? 3 : 1;
+        SeedGte();
+        // the record's dwords: small signed x and z bytes, a low word to 0x40FF
+        // (bit 14 a texture's), more bits half the time
+        for (unsigned i = 4; i + 4 <= sizeof g_cell; i += 4) {
+            U v = (static_cast<U>(static_cast<unsigned char>(static_cast<int>(bh::Next() % 65) - 32)) << 24) |
+                  (static_cast<U>(static_cast<unsigned char>(static_cast<int>(bh::Next() % 65) - 32)) << 16) | (bh::Next() & 0x40FF);
+            if (bh::Half()) v ^= bh::Next() & 0x3FFF3F00u;
+            SetLong(g_cell + i, static_cast<std::int32_t>(v));
+        }
         g_cell[2] = static_cast<unsigned char>(first + step * (bh::Next() % 5));
         if (c.base == 0x4CF270) {
             g_cell[8] = static_cast<unsigned char>(1 + bh::Next() % 255);
@@ -456,8 +513,8 @@ void Seed(unsigned k) {
             g_cell[0xA + 3] = 0xFF;   // the thresholds end by the fourth frame
         }
         g_args[0] = Key(g_cell);
-        g_args[1] = bh::Often() ? bh::Next() & 0xFF : bh::Next();
-        g_args[2] = bh::Often() ? bh::Next() & 0xFF : bh::Next();
+        g_args[1] = bh::Often() ? 0x7E + bh::Next() % 5 : bh::Often() ? bh::Next() & 0xFF : bh::Next();
+        g_args[2] = bh::Often() ? 0x7E + bh::Next() % 5 : bh::Often() ? bh::Next() & 0xFF : bh::Next();
         break;
     }
     default:
@@ -492,13 +549,16 @@ bool Wants(const char* run) {
 }
 
 void RunUnit(const char* run, const bh::Clone* clones, unsigned n, const bh::Callee* callees, unsigned n_callees,
-             const bh::DataTable* tables, unsigned n_tables, unsigned phase_span) {
+             const bh::DataTable* tables, unsigned n_tables, unsigned phase_span, bool gte = false) {
     if (!Wants(run)) return;
-    static bh::Region regions[BH_COUNT(kRegions)];
-    std::memcpy(regions, kRegions, sizeof regions);
+    static bh::Region regions[BH_COUNT(kRegions) + 3];
+    std::memcpy(regions, kRegions, sizeof kRegions);
     regions[BH_COUNT(kRegions) - 1].at = Key(g_cell);
+    unsigned n_regions = BH_COUNT(kRegions);
+    if (gte)
+        for (const bh::Region& r : kCellRegions) regions[n_regions++] = r;
     g_cur = clones;
-    bh::Group g{"battle_e6", clones, n, callees, n_callees, tables, n_tables, regions, BH_COUNT(kRegions), &Seed, &Disturb, 6000};
+    bh::Group g{"battle_e6", clones, n, callees, n_callees, tables, n_tables, regions, n_regions, &Seed, &Disturb, 6000};
     g.args = &Args;
     g.engine = true;
     g.phase_span = phase_span;
@@ -514,7 +574,7 @@ void SelfTest() {
     RunUnit("stats", kStats, BH_COUNT(kStats), kStatsCallees, BH_COUNT(kStatsCallees), nullptr, 0, 0);
     RunUnit("tasks", kTasks, BH_COUNT(kTasks), kTaskCallees, BH_COUNT(kTaskCallees), kTaskTables, BH_COUNT(kTaskTables), 7);
     RunUnit("slots", kSlots, BH_COUNT(kSlots), nullptr, 0, nullptr, 0, 0);
-    RunUnit("cells", kCells, BH_COUNT(kCells), kCellCallees, BH_COUNT(kCellCallees), nullptr, 0, 0);
+    RunUnit("cells", kCells, BH_COUNT(kCells), kCellCallees, BH_COUNT(kCellCallees), nullptr, 0, 0, true);
 }
 
 }  // namespace battle_e6
