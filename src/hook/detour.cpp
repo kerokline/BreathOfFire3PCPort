@@ -20,6 +20,7 @@ int g_disabled = 0;
 // Every address passed to Inject, both directions, for IsOwned.
 constexpr int kMaxOwned = 16384;  // 4,096 hit at 4,097 ours (round 10 SC5 merge, 2026-09-27); ~10,200 real functions in the exe
 std::uint32_t g_owned[kMaxOwned];
+bool g_owned_on[kMaxOwned];  // true where the detour is ON (not left original)
 
 // A name, `*` for every name, or `-NAME` to take one back out: `*,-LoadDatFile`
 // is every name but LoadDatFile. An exclusion wins wherever it stands.
@@ -85,7 +86,8 @@ void Inject(const char* name, std::uint32_t original, void* ours) {
     auto* mine = static_cast<std::uint8_t*>(ours);
     if (g_enabled + g_disabled == kMaxOwned) Fatal("%s: more than %d injected functions", name, kMaxOwned);
     g_owned[g_enabled + g_disabled] = original;
-    if (WantsOriginal(name)) {
+    g_owned_on[g_enabled + g_disabled] = !WantsOriginal(name);
+    if (!g_owned_on[g_enabled + g_disabled]) {
         WriteJmp(name, mine, orig);
         ++g_disabled;
         Log("inject  OFF  %-24s ours %p -> original 0x%08X", name, ours, (unsigned)original);
@@ -205,6 +207,12 @@ bool WantsShadow(const char* name) {
 bool IsOwned(std::uint32_t original) {
     for (int i = 0; i < g_enabled + g_disabled; ++i)
         if (g_owned[i] == original) return true;
+    return false;
+}
+
+bool IsEnabled(std::uint32_t original) {
+    for (int i = 0; i < g_enabled + g_disabled; ++i)
+        if (g_owned[i] == original) return g_owned_on[i];
     return false;
 }
 

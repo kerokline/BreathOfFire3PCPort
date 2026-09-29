@@ -1,0 +1,154 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# save adult_ryu
+wait 34
+hold start 5
+wait 60
+hold start 6
+wait 76
+hold triangle 3
+wait 32
+hold square 3
+wait 12
+hold circle 4
+wait 42
+hold circle 4
+wait 15
+hold circle 3
+wait 66
+hold left 28
+hold up+left 106
+wait 4
+hold right+down 2
+hold right 10
+hold right+down 127
+wait 107
+hold up 31
+hold circle+up 3
+hold up 47
+hold triangle+up 4
+hold up 12
+hold cross+up 4
+hold up 12
+wait 26
+hold right 5
+wait 16
+hold right 5
+wait 17
+hold right 5
+wait 29
+hold cross 4
+wait 11
+shot gene 1
+wait 46
+hold down 4
+wait 66
+hold down 6
+wait 46
+hold down 6
+wait 44
+hold right 4
+wait 44
+hold right 6
+wait 43
+hold right 6
+wait 46
+hold up 5
+wait 38
+hold up 6
+wait 32
+hold right 7
+wait 29
+hold right 5
+wait 34
+hold cross 4
+wait 40
+hold left 5
+wait 12
+hold left 6
+wait 12
+hold left 4
+wait 13
+hold left 5
+wait 13
+hold left 5
+wait 17
+hold up 5
+wait 22
+hold cross 5
+wait 560
+hold up 12
+hold cross+up 3
+hold up 5
+wait 58
+hold down 5
+wait 10
+hold cross 5
+wait 9
+hold cross 4
+wait 225
+hold up 6
+hold cross+up 5
+wait 37
+hold right 5
+wait 13
+hold left 5
+wait 33
+hold down 5
+wait 5
+hold down 5
+wait 1
+hold cross 5
+wait 125
+hold up 7
+hold cross+up 5
+wait 34
+hold down 5
+wait 19
+hold up 4
+wait 1
+hold cross 4
+wait 55
+hold cross 6
+wait 34
+hold cross 5
+wait 7
+hold right 5
+wait 16
+hold cross 5
+wait 2
+hold right 5
+wait 13
+hold cross 5
+wait 6
+hold up 2
+wait 8
+hold cross 4
+wait 411
+hold up 4
+hold cross+up 3
+hold cross 2
+wait 157
+hold down 4
+wait 4
+hold down 4
+wait 5
+hold down 4
+wait 8
+hold down 4
+wait 56
+hold up 5
+wait 24
+hold up 4
+wait 22
+hold down 4
+wait 4
+hold cross 5
+wait 287
+hold cross 6
+wait 46
+hold cross 6
+wait 33
+hold cross 6
+wait 136
