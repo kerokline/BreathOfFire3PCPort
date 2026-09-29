@@ -3088,7 +3088,14 @@ designed in rather than bolted on.
   array capped at 1,024 reproduced the old 7 exactly, which is what
   separated the priming fault from the relocation. The owner's eye owed.
 - **Reversible?** `BOF3X_ORIGINAL=DrawPool` leaves the arrays and the
-  fourteen patches alone.
+  fourteen patches alone. So does `BOF3X_ORIGINAL` naming any of the twelve
+  owned functions whose original names the arrays (the pool's three, the two
+  resets, `MapView_Build`, `MapView_CellTextures`, `MapView_ItemHalfAt`,
+  `AreaMap_ApplyPatch`, `MapCell_FlatOverlay`, `Sprite_DrawPass`,
+  `Area40_DrawGrid`; `DrawPool_Grow`'s list): the patch sites cover only code
+  we do not own, and one original body on the old arrays beside ours on the
+  new would hand one item to two cells. Logged, 2026-09-29 (the capture
+  review of rounds 10..12).
 
 ### The party's dragon form with a partner missing: no form, where the original read its stack
 
@@ -3103,13 +3110,14 @@ designed in rather than bolted on.
   form before recipe 6: `DragonForm_PartyRecipe` collects the `+0x89` byte
   of each member who is not the actor and not out by `Battle_ActorIsOut`
   into a list on its stack, and tries the first two as a pair against five
-  pairings. Two pairings of the five answer 0, which the search reads as
-  "no party form": recipe 6 is skipped and the search goes on. When fewer
+  pairings. One pairing of the five answers 0 for two pairs of partners
+  (`+0x89` 2 with 4, and 2 with 5, either way round; `battle_e6.cpp`,
+  `case 2`), which the search reads as "no party form": recipe 6 is skipped and the search goes on. When fewer
   than two such members are found the list is one byte or none, and the
   function dispatches on and compares stack bytes it never wrote: what it
   answers depends on what its callers left there.
 - **New behaviour:** fewer than two found answers 0, the answer of the
-  pairings that fail. Every case with two or more found is unchanged.
+  two pairs that fail. Every case with two or more found is unchanged.
 - **Rationale:** a reimplementation cannot reproduce the read, and an abort
   there (what the takeover first did) would end a battle an ordinary party
   can reach: three members, one of the other two down, the gene chosen.

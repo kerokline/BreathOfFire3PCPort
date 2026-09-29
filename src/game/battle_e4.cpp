@@ -43,6 +43,8 @@ namespace {
 
 namespace at = battle_e4::at;
 using U = std::uint32_t;
+// A named .data table's address (symbols.gen.h binds the name to a typed pointer).
+template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
@@ -1331,7 +1333,7 @@ extern "C" void __cdecl Escape_Roll(void) {
 // original 0x44A130 (hidden, 0x64E4FC's entry 1; PSX 0x80098414): state 1,
 // the failed path, by the sub-state through 0x64E508 - Escape_Begin,
 // Escape_StepBack, Escape_StepOn, Escape_Failed; a Fatal past four.
-extern "C" void __cdecl Escape_FailDispatch(void) { DispatchStep4("Escape_FailDispatch", 0x64E508, 4); }
+extern "C" void __cdecl Escape_FailDispatch(void) { DispatchStep4("Escape_FailDispatch", AddressOf(Escape_FailSteps), 4); }
 
 // original 0x44A150 (hidden, 0x64E508's entry 0 and 0x64E518's entry 0; PSX
 // Escape_Begin 0x80098450, the sibling's name): the banner of 0x669E08's text
@@ -1440,7 +1442,7 @@ extern "C" void __cdecl Escape_Failed(void) {
 // original 0x44A450 (hidden, 0x64E4FC's entry 2; PSX 0x8009892C, gap44):
 // state 2, the escaped path, through 0x64E518 - Escape_Begin, Escape_Leave,
 // Escape_End; a Fatal past three.
-extern "C" void __cdecl Escape_WinDispatch(void) { DispatchStep4("Escape_WinDispatch", 0x64E518, 3); }
+extern "C" void __cdecl Escape_WinDispatch(void) { DispatchStep4("Escape_WinDispatch", AddressOf(Escape_WinSteps), 3); }
 
 // original 0x44A470 (hidden, 0x64E518's entry 1; PSX 0x80098968): unless
 // Field_Kind2Hold is set, MapView_SetElevation of the elevation at the kind-2

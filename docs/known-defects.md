@@ -3980,7 +3980,7 @@ controls refused on.
 2026-09-28, groups BH, BSA, BSB, BSC, BSD, BSH and BSJ (their docs' §6;
 [`boss_sc.md`](boss_sc.md) §7).
 
-**Established:** `BossActor_Find` `0x4948E0` answers null when no field actor
+**Established:** `BossActor_Find` `0x494920` answers null when no field actor
 carries the tag. BH's spawn writers `BossActor_ClearBit40`,
 `BossActor_CopyFrom` (for `what` 0 and 1) and `BossActor_Clear` use the
 answer without a test (22, 9 and 7 units call them, with constant tags where
@@ -3990,9 +3990,15 @@ do the same in their own code: `Boss08_Exit`..`Boss10_Exit` (BSB, stores at
 inside `Sprite_SetAnimationBank`, which reads `Sprite_Current`),
 `Boss11_Exit` and `Boss16_Exit` (BSC, each preceded by the same tag's
 `BossActor_ClearBit40`, so the second write is unreachable), `Boss21_Exit`
-(BSD, `+0x2A`), `Boss34_Exit` (BSH). `Boss52_Exit` (BSJ) stores the null into
-`Field_ActiveMember` and `Sprite_Current` and calls `Sprite_SetAnimation` on
-it, dereferencing nothing itself, so ours does the same there. BSA's end walk
+(BSD, `+0x2A`), `Boss22_Exit` (BSE, `+0x2A` and `+0x48`, preceded by the
+same tag's `BossActor_ClearBit40`, so unreachable like BSC's), `Boss34_Exit`
+(BSH; its abort follows two calls that already read `Sprite_Current`, so it is
+the preceding `BossActor_ClearBit40` that stops a null first).
+`Boss52_Exit` (BSJ) and BSG's `ActorZero` (the exit hooks of set-ups 31 and
+32) store the null into `Field_ActiveMember` and `Sprite_Current` and call
+`Sprite_SetAnimation` on it, dereferencing nothing themselves, so ours does
+the same there. (BSE's and BSG's added, and the address corrected from
+`0x4948E0` - `EnemyData_FindByTag` - by the capture review of 2026-09-29.) BSA's end walk
 trusts `BossActor_Index(0)` likewise: 0xFF with no actor tagged 0 hands
 `MoveCmd_OpE9` `0x7DEF00 + 0xFF * 0xA4` = `0x80925C`, far past the 30 field
 objects (kept: the pointer is only passed on). Whether a scene can lack its

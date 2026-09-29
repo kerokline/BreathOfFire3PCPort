@@ -136,6 +136,15 @@ bool Readable(const void* p, unsigned n) {
     const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
     return InRegions(p, n) || OnStack(p, n) || (at >= 0x400000 && at + n > at && at + n <= 0x93F000);
 }
+// A kDerefString argument: the string at p hashed to its NUL, 64 bytes at
+// most, each byte read only if Readable; the length mixed in last.
+std::uint32_t HashString(const void* p) {
+    const auto* s = static_cast<const unsigned char*>(p);
+    std::uint32_t h = 0x811C9DC5u;
+    unsigned n = 0;
+    while (n < 64 && Readable(s + n, 1) && s[n] != 0) h = (h ^ s[n++]) * 0x01000193u;
+    return (h ^ n) * 0x01000193u;
+}
 // What a field-standard stand-in's effect may write: the regions or the stack.
 bool Writable(const void* p, unsigned n) { return InRegions(p, n) || OnStack(p, n); }
 
@@ -276,7 +285,10 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
     std::uint32_t r[kArgs] = {};
     for (unsigned i = 0; i < s.nargs && i < kArgs; ++i) {
         const void* const p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a[i]));
-        r[i] = s.deref[i] && (!s.guard || Readable(p, s.deref[i])) ? HashBytes(p, s.deref[i]) : a[i] & s.masks[i];
+        if (s.deref[i] == kDerefString)
+            r[i] = Readable(p, 1) ? HashString(p) : a[i] & s.masks[i];
+        else
+            r[i] = s.deref[i] && (!s.guard || Readable(p, s.deref[i])) ? HashBytes(p, s.deref[i]) : a[i] & s.masks[i];
     }
     const unsigned entry = g_log_n;
     Log5(I, r[0], r[1], r[2], r[3]);
@@ -514,7 +526,7 @@ const Callee kField[] = {
     {FIELD_OURS(Sprite_UpdateScreenSlot), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:15 FC2:9: void(void)
     {FIELD_OURS(MapView_SlopeAt), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC3:10 FE2:14: long(long x, long y, unsigned long direction)
     {FIELD_OURS(MapView_GroundAt), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC3:12 FE1:4 FE2:7: long(long x, long z)
-    {FIELD_OURS(Text_DrawFont8), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 16}, nullptr, nullptr, true},   // FE2:2 FO:10 FS:8: void(int x, int y, int colour, const unsigned char *text)
+    {FIELD_OURS(Text_DrawFont8), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, kDerefString}, nullptr, nullptr, true},   // FE2:2 FO:10 FS:8: void(int x, int y, int colour, const unsigned char *text)
     {FIELD_OURS(Menu_DrawPieces), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 16, 0}, nullptr, nullptr, true},   // FO:12 FS:7: void(int x, int y, const unsigned char *list, int flags)
     {FIELD_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FC1:1 FE1:2 FO:8 FS:7: void(int x, int y, int w, int h, int flags, int colour)
     {FIELD_OURS(Effect_Release), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:4 FC2:14: void(void)
@@ -526,9 +538,9 @@ const Callee kField[] = {
     {FIELD_OURS(Field_LeaderStepTick), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:9 FE2:1: unsigned char(void)
     {FIELD_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0, {16, 0, 0, 0, 0}, nullptr, nullptr, true},   // FC1:4 FC3:2 FO:3: unsigned char(unsigned char *sprite, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
     {"0x52CF60", 0x52CF60, 0x52CF60, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:9: a draw-mode primitive, committed
-    {FIELD_OURS(Menu_DrawSkillRow), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 16, 0, 0}, nullptr, nullptr, true},   // FO:3 FS:6: void(int x, int y, int colour, unsigned kind, const unsigned char *name, unsigned cost, int dim)
+    {FIELD_OURS(Menu_DrawSkillRow), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, kDerefString, 0, 0}, nullptr, nullptr, true},   // FO:3 FS:6: void(int x, int y, int colour, unsigned kind, const unsigned char *name, unsigned cost, int dim)
     {FIELD_OURS(AreaMap_SetHeight), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC2:8: void(unsigned x, unsigned z, unsigned value)
-    {FIELD_OURS(Text_CharCount), 1, {kAll}, Answer::kFlag, 0, 0, {16}, nullptr, nullptr, true},   // FO:6 FS:2: unsigned char(const unsigned char *text)
+    {FIELD_OURS(Text_CharCount), 1, {kAll}, Answer::kFlag, 0, 0, {kDerefString}, nullptr, nullptr, true},   // FO:6 FS:2: unsigned char(const unsigned char *text)
     {FIELD_OURS(Sprite_ClearSteps), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:4 FE1:1 FE2:2: void(void)
     {FIELD_OURS(Menu_DrawCursorBox), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FS:7: void(int x, int y, int w, int h, int blink, int flags)
     {FIELD_OURS(Sprite_ApplyVelocity), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:2 FE2:4: void(void)
@@ -573,7 +585,7 @@ const Callee kField[] = {
     {FIELD_OURS(Gte_RotTransPers4), 9, {kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {8, 8, 8, 8, 0, 0, 0, 0, 0}, FxRotTransPers4, nullptr, true},   // FE2:3: long(const short *v0, const short *v1, const short *v2, const short *v3, float *sxy0, float *sxy1, float *sxy2, float *sxy3, long *p)
     {FIELD_OURS(Gte_StoreDepthF4), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, FxStoreDepthF4, nullptr, true},   // FE2:3: void(float *out0, float *out1, float *out2, float *out3)
     {FIELD_OURS(TextRecord_Set), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 16}, nullptr, nullptr, true},   // FO:1 FS:2: void(unsigned slot, unsigned length, const unsigned char *text)
-    {FIELD_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 16}, nullptr, nullptr, true},   // FO:1 FS:2: void(int x, int y, int colour, const unsigned char *text)
+    {FIELD_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, kDerefString}, nullptr, nullptr, true},   // FO:1 FS:2: void(int x, int y, int colour, const unsigned char *text)
     {FIELD_OURS(Skill_FlagIndex), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FO:1 FS:2: unsigned char(unsigned id)
     {FIELD_OURS(Menu_DrawItemRow), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:3: void(int x, int y, int colour, unsigned category, unsigned id, unsigned count, int dim)
     {FIELD_OURS(Menu_DrawBackdrop), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FS:3: void(unsigned kind)

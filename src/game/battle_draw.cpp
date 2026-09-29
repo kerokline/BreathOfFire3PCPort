@@ -248,9 +248,7 @@ namespace {
 // under DIV-0059 the same centre, x + 78, less half the real width.
 int ListTitleX(const unsigned char* label, int n) {
     if (!g_list_title_centre) return 6 * (13 - n);
-    int width = 0;
-    for (const unsigned char* t = label; *t; t += (*t & 0x80) ? 2 : 1) width += TextAdvance_Of(t);
-    return 78 - width / 2;
+    return 78 - static_cast<int>(TextAdvance_Width(label) / 2);
 }
 }  // namespace
 
@@ -436,9 +434,7 @@ void BattleDraw_Inject() {
     // DIVERGENCE DIV-0059: a Latin language overlay only, as MenuLists_Inject
     // tests it for DIV-0058.
     {
-        char lang[16];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
-        if (n != 0 && n < sizeof lang && std::strcmp(lang, "original") != 0 && !Lang_FullWidth()) {
+        if (Lang_Latin()) {
             static const std::uint8_t was = 0, is = 1;
             bof3::PatchBytes("BattleListTitleCentre",
                              static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_list_title_centre)),

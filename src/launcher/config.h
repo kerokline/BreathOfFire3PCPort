@@ -118,7 +118,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg);
 // A variable already present in the environment wins: the documented developer
 // invocations (`BOF3X_LANG=en build/bof3x-launcher.exe`, docs/HANDOFF.md) must
 // keep overriding whatever the file says.
-void ConfigApplyEnvironment(const Config& cfg);
+// The language is exported only when its overlay is in <game_dir>\DAT
+// (ConfigLanguagesAvailable), as the dialog offers it.
+void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg);
 
 // Reads display and renderer OUT of <game_dir>\BOF3.CFG into `cfg`. Called
 // when there is no settings file yet, so that a first run adopts whatever the

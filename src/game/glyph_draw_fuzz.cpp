@@ -4,9 +4,10 @@
 //
 // D3d_DrawGlyph: a random primitive, random scales, a random vertex block;
 // Capcom's copy, then from the same state ours - once with the texel inset 0
-// (Capcom's arithmetic: everything compared byte for byte) and once with 0.5
-// (DIV-0025: everything byte for byte except each tu and tv, which must be
-// the copy's plus exactly 1/64). Its five callees are recording stand-ins and
+// (Capcom's arithmetic: everything compared byte for byte) and once with the
+// switch on (DIV-0025: everything byte for byte except each tu and tv, which
+// must be the copy's plus TexelInset(scale) / 32 for the round's own scale,
+// SameWithInset). Its five callees are recording stand-ins and
 // the device is the harness's fake.
 //
 // Font_GlyphTexture: a random cache with hits, stale hits, near-misses and
@@ -194,7 +195,7 @@ void RandomVertices() {
 }
 
 // DIV-0025's rule for one block of four vertices: every byte the original's,
-// but each tu and tv its value plus 1/64 exactly.
+// but each tu and tv its value plus the inset.
 // Capcom's tu is float(2u / 32), exact, so 2u = tu * 32 recovers the byte;
 // ours must be float((2u + TexelInset(scale)) / 32) with the round's own
 // scales (still in place at compare time: Restore(g_start) put them back),

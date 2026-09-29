@@ -377,7 +377,8 @@ void BalioSunderEnter(U fc, U f4, U f8, unsigned short bank) {
     BH_CALL(Sprite_SetAnimation)(0);
     Sprite_Current[0x2A] = 1;
 }
-// Kinds 13 and 17's hit hook's floor: 0x939AD8's HP +0xA4 at 0 made 1.
+// Kinds 13 and 14's hit hooks' floor (Balio's and Sunder's, fights 13 and 16):
+// 0x939AD8's HP +0xA4 at 0 made 1.
 void HpFloor() {
     unsigned char* const e = Enemy();
     if (Word(e + 0xA4) == 0) SetWord(e + 0xA4, 1);

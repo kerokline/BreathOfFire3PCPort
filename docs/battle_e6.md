@@ -379,8 +379,8 @@ the form byte (0x16 half the time).
   the party's size byte at 3, which an ordinary battle can be (a party of
   three with one member down); what the original then does depends on the
   stack its callers left. **Ours answers 0** - no party form, recipe 6
-  skipped, the answer the two failing pairings give - by the owner's
-  account of the game, 2026-09-29 (DIV-0063). As first taken it aborted
+  skipped, the answer the two failing pairs of partners give (one pairing, 2
+  with 4 or 5) - by the owner's account of the game, 2026-09-29 (DIV-0063). As first taken it aborted
   (D106's rule), and the group's suggestion was 0xFF; 0 is the path the
   game's own failures take. The self-test's seven rows for it run ours
   alone; the owner's check in game is owed.

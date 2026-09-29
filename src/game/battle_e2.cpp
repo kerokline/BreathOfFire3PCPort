@@ -42,6 +42,8 @@ namespace {
 
 namespace at = battle_e2::at;
 using U = std::uint32_t;
+// A named .data table's address (symbols.gen.h binds the name to a typed pointer).
+template <typename T> U AddressOf(T* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 using boss_harness::Phase;
 using move_script::At;
 using move_script::Long;
@@ -936,7 +938,7 @@ extern "C" void __cdecl BattleEnemy_PickAction(unsigned enemy) {
 // extent): EnemyOp_EnterSubs 1 - through EnemyOp_EnterSubs2 0x64B1E4 by +3
 // (2 entries; ours aborts past them).
 extern "C" unsigned long __cdecl EnemyOp_SlideDispatch(unsigned long word) {
-    return Dispatch("EnemyOp_SlideDispatch", 0x64B1E4, 2, 3, word);
+    return Dispatch("EnemyOp_SlideDispatch", AddressOf(EnemyOp_EnterSubs2), 2, 3, word);
 }
 
 // original 0x436290 (PSX 0x801E33F4, gap44): EnemyOp_EnterSubs2 0: +0 bit
@@ -997,7 +999,7 @@ extern "C" void __cdecl EnemyOp_TurnStart(void) {
 // kind's Steps 5) - through EnemyOp_Step5Subs 0x64B1F4 by +2 (2 entries; ours
 // aborts past them).
 extern "C" unsigned long __cdecl EnemyOp_CueDispatch(unsigned long word) {
-    return Dispatch("EnemyOp_CueDispatch", 0x64B1F4, 2, 2, word);
+    return Dispatch("EnemyOp_CueDispatch", AddressOf(EnemyOp_Step5Subs), 2, 2, word);
 }
 
 // original 0x436640 (PSX 0x801E39BC, the sibling's Battle_PlayCreatureCue,
@@ -1037,7 +1039,7 @@ extern "C" unsigned long __cdecl EnemyOp_CueEnd(void) {
 // catalogue extent): EnemyOp_ActSubs 3 (and the kinds' ActSubs 3) - through
 // EnemyOp_Act3Subs 0x64B220 by +3 (5 entries; ours aborts past them).
 extern "C" unsigned long __cdecl EnemyOp_Act3Dispatch(unsigned long word) {
-    return Dispatch("EnemyOp_Act3Dispatch", 0x64B220, 5, 3, word);
+    return Dispatch("EnemyOp_Act3Dispatch", AddressOf(EnemyOp_Act3Subs), 5, 3, word);
 }
 
 // original 0x436BE0 (PSX 0x801E442C, table-anchored): EnemyOp_Act3Subs 0:
@@ -1117,7 +1119,7 @@ extern "C" void __cdecl EnemyOp_KnockPose(void) {
 // extent): EnemyOp_ActSubs 5 (and the kinds' ActSubs 5) - through
 // EnemyOp_Act5Subs 0x64B244 by +3 (3 entries; ours aborts past them).
 extern "C" unsigned long __cdecl EnemyOp_Act5Dispatch(unsigned long word) {
-    return Dispatch("EnemyOp_Act5Dispatch", 0x64B244, 3, 3, word);
+    return Dispatch("EnemyOp_Act5Dispatch", AddressOf(EnemyOp_Act5Subs), 3, 3, word);
 }
 
 // original 0x436F20 (PSX 0x801E48C4, table-anchored): EnemyOp_Act5Subs 0,

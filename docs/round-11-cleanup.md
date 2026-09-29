@@ -120,8 +120,12 @@ the values unchanged so the fuzz keys stand. 195 constants in 28 files:
   skill helpers in `battle_draw_callees.h`, the banner kinds, the battle
   windows' state tables, `msgbox`'s and `window_kinds`' callees).
 - `0x4357D0` (`BattleBossFx_Dispatch`, named, not taken) in `battle_flow.cpp`'s
-  task table - as the generated pointer macro, since a named-not-ours
-  function has no `bof3::addr` constant - with the other three tables'
+  task table - as the generated pointer macro. (`bof3::addr` has the
+  constant, as for every function, but the macro of a named-not-ours
+  function expands inside the qualified name; since the capture review of
+  2026-09-29 the entry reads it with the macro set aside - `push_macro` /
+  `#undef` / `pop_macro` - so a later takeover cannot bind the table to ours
+  past `BOF3X_ORIGINAL`) - with the other three tables'
   entries and `battle_flow_callees.h`'s three cross-group callees;
   `kEventHook`'s comment there corrected (the hook is stored by the boss
   set-ups, not "set by 0x437CC0").

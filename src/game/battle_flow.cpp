@@ -34,17 +34,25 @@ using move_script::Word;
 
 namespace {
 template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(static_cast<std::uintptr_t>(address)); }
+// BattleBossFx_Dispatch is still Capcom's, so symbols.gen.h also defines its
+// name as a pointer macro, which would expand inside bof3::addr:: - the
+// constant is read with the macro set aside. The entry then stays the
+// original's address once the function is ours too (the macro gone, the bare
+// name would bind to our implementation, past BOF3X_ORIGINAL).
+#pragma push_macro("BattleBossFx_Dispatch")
+#undef BattleBossFx_Dispatch
+constexpr std::uint32_t kBossFxDispatch = bof3::addr::BattleBossFx_Dispatch;
+#pragma pop_macro("BattleBossFx_Dispatch")
 }  // namespace
 
 const Callees kOriginals = {
     // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2): the
-    // same values by name. BattleBossFx_Dispatch is named, not ours (engine code of no
-    // round-eleven group, symbols.toml), so symbols.gen.h gives it as a pointer macro.
+    // same values by name, every entry through bof3::addr (kBossFxDispatch above).
     {Fn<Handler>(bof3::addr::BattleStart_Dispatch), Fn<Handler>(bof3::addr::BattleInput_Dispatch),
      Fn<Handler>(bof3::addr::BattleCommit_Dispatch), Fn<Handler>(bof3::addr::Battle_ActionPhase),
      Fn<Handler>(bof3::addr::BattleRoundEnd_Step), Fn<Handler>(bof3::addr::BattleEnd_Step)},
     {Fn<Handler>(bof3::addr::BattleFx_Dispatch), Fn<Handler>(bof3::addr::BattleMagicFx_Dispatch),
-     Fn<Handler>(bof3::addr::BattleMagicRow_Run), BattleBossFx_Dispatch},
+     Fn<Handler>(bof3::addr::BattleMagicRow_Run), Fn<Handler>(kBossFxDispatch)},
     BattleTask_Create, Battle_RollDrops, Battle_DrawNumber,
     Sprite_UpdateScreen, Sprite_EnsureAnimation, Sprite_ScriptTick, Sprite_ScriptTickOnce, Rand,
     Fn<void (__cdecl*)(unsigned)>(kRemoveFromTurnOrder), Fn<void (__cdecl*)(unsigned)>(kSetFlagBit),
