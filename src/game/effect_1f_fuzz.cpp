@@ -228,21 +228,31 @@ void Menu() {
     r[7] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x80, 0x81, 0x7F, 0xFF, 0xFE, sh::Next()));
     r[8] = static_cast<unsigned char>(sh::Next());
     r[0xA] = static_cast<unsigned char>(sh::Often() ? 0 : sh::Next() % 4);
-    Put32(at::kRecord6 + 0xC, Counter());
-    Put32(at::kRecord6 + 0x10, Counter());
-    Put32(at::kRecord6 + 0x18, Counter());
-    Put32(at::kRecord6 + 0x1C, PickOf(Counter(), 0x40 + sh::Next() % 0x40, 9, 17, 18));
-    Put32(at::kRecord6 + 0x38, (sh::Next() & 0xFFFF0000u) | PickOf(0, 1, 8, 9, 10, 0x7F, 0x8000, 0xFFFF, 0xFFF8, sh::Next() % 0x80));
+    for (unsigned i = 0; i < 0x80; ++i) M(at::kAccessoryIds)[i] = IdOf(sh::Next());
+    // the list's kind-0xA count, which the confirm's scroll pull compares with
+    U count = 0;
+    for (unsigned i = 0; i < 0x80; ++i)
+        if (*reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at::kAccessoryKind + 24 * M(at::kAccessoryIds)[i])) == 0xA) ++count;
+    const U cursor = Counter();
+    Put32(at::kRecord6 + 0xC, cursor);
+    Put32(at::kRecord6 + 0x18, PickOf(Counter(), cursor + 1, cursor + 2, cursor + 3, cursor));
+    Put32(at::kRecord6 + 0x10, PickOf(Counter(), 0, 8, 8, 7, 9));
+    const U scroll = PickOf(0, 1, 8, 9, 10, 0x7F, 0x8000, 0xFFFF, 0xFFF8, sh::Next() % 0x80, count - 9, count - 8, count - 10, count - 9);
+    Put32(at::kRecord6 + 0x38, (sh::Next() & 0xFFFF0000u) | (scroll & 0xFFFF));
+    Put32(at::kRecord6 + 0x1C, PickOf(Counter(), 0x40 + sh::Next() % 0x40, 9, 17, 18, count, count, count - 1, count + 1,
+                                      (scroll & 0xFFFF) + 8, (scroll & 0xFFFF) + 9, (scroll & 0xFFFF) + 7));
     Put16(at::kRecord6 + 0x36, ListIndex());
     Put16(at::kRecord6 + 0x3A, ListIndex());
-    for (unsigned i = 0; i < 0x80; ++i) M(at::kAccessoryIds)[i] = IdOf(sh::Next());
     // the slots: empty, random, or the id the cursor is on
     const auto at36 = static_cast<short>(Get32(at::kRecord6 + 0x36) & 0xFFFF);
     const auto at3A = static_cast<short>(Get32(at::kRecord6 + 0x3A) & 0xFFFF);
+    // half the time the id under each cursor of the kind its list shows (the
+    // confirms' swaps run; the count above may then be one off, also wanted)
+    if (at36 >= 0 && at36 < 0x80 && sh::Half()) M(at::kAccessoryIds)[at36] = IdOf(1);
+    if (at3A >= 0 && at3A < 0x80 && sh::Half()) M(at::kAccessoryIds)[at3A] = IdOf(0);
     M(at::kExtraAccessory)[0] = static_cast<unsigned char>(PickOf(0, sh::Next(), IdOf(1), 0));
     const unsigned char under = *reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(at::kAccessoryIds + static_cast<U>(static_cast<int>(at3A))));
     M(at::kExtraItem)[0] = static_cast<unsigned char>(PickOf(0, sh::Next(), under, under, IdOf(0)));
-    (void)at36;
     Buttons();
 }
 
@@ -351,7 +361,7 @@ void SelfTest() {
     static unsigned* s_index = index;
     sh::Group g = {"effect_1f", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 6000};
+                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 8000};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.settle = &KeepDivisor;
     g.effect = true;
