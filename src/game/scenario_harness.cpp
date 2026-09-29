@@ -89,7 +89,18 @@ bool g_calm = false;
 // harness's own, compared as a region.
 alignas(16) unsigned char g_own[0x100];
 
+// Round twelve's field mode (docs/scenario_harness.md section 7): the packet
+// buffer Gfx_PacketNext points into, the text buffer the pointer-answering
+// stand-ins answer into, the script buffer and its cursor cell, the scratch a
+// kCall's pointer arguments point into. Each is a region of field mode.
+alignas(16) unsigned char g_packets[0x800];
+alignas(16) unsigned char g_text[0x200];
+alignas(16) unsigned char g_script[0x100];
+alignas(16) unsigned char* g_cursor[4];      // [0] the cursor a kCursor function is handed; the rest compared as padding
+alignas(16) unsigned char g_scratch[kArgs * 0x40];
+
 const Group* g_group = nullptr;
+bool g_field = false;        // field mode for the group being run
 
 unsigned char* Byte(std::uint32_t address) { return Mem(address); }
 std::uint16_t Word(std::uint32_t address) { return static_cast<std::uint16_t>(move_script::Word(Mem(address))); }
@@ -99,6 +110,34 @@ std::uint32_t Chapter() {
     return Byte(at::kState)[0] | static_cast<std::uint32_t>(Byte(at::kRun)[0]) << 8 |
            static_cast<std::uint32_t>(Byte(at::kStep)[0]) << 16 | static_cast<std::uint32_t>(Byte(at::kChapter)[0]) << 24;
 }
+
+// Field mode's fourth word of a handler's entry: Sprite_Current's state bytes
+// +1..+3 (0xFFFFFF when it points outside the regions) and the menu block's
+// state byte 0x929F01 on top.
+std::uint32_t FieldPhase() {
+    const unsigned char* const s = static_cast<const unsigned char*>(Sprite_Current);
+    const std::uint32_t bytes = InRegions(s, 8) ? (s[1] | static_cast<std::uint32_t>(s[2]) << 8 | static_cast<std::uint32_t>(s[3]) << 16)
+                                                : 0xFFFFFFu;
+    return bytes | static_cast<std::uint32_t>(Byte(at::kMenuState)[0]) << 24;
+}
+
+// The calling thread's stack from just below the caller's frame to its base
+// (the TIB's StackBase): what a caller's locals are.
+bool OnStack(const void* p, unsigned n) {
+    std::uint32_t base;
+    __asm__("movl %%fs:4, %0" : "=r"(base));
+    const auto here = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&base));
+    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+    return at > here && at + n > at && at + n <= base;
+}
+// What a guarded dereference may read: the regions, the stack, or the image
+// (0x400000 .. the end of .rsrc; every section of BOF3.exe is readable).
+bool Readable(const void* p, unsigned n) {
+    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+    return InRegions(p, n) || OnStack(p, n) || (at >= 0x400000 && at + n > at && at + n <= 0x93F000);
+}
+// What a field-standard stand-in's effect may write: the regions or the stack.
+bool Writable(const void* p, unsigned n) { return InRegions(p, n) || OnStack(p, n); }
 
 bool InFlags(const unsigned char* p) {
     return p >= Mem(at::kCondFlags) && p + 8 <= Mem(at::kCondFlags + at::kCondFlagsSize);
@@ -128,6 +167,35 @@ void Disturb() {
     case 7: Byte(at::kRequest)[0] = b % 3 ? 2 : b; break;
     case 8: move_script::SetWord(Mem(at::kTimer), h >> 16); break;
     case 9: Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags ^ (1u << (b & 15))); break;
+    // 10..13: field mode only (round twelve); without it these stay the
+    // scenario round's no-ops, so its groups draw exactly what they drew.
+    case 10:
+        // a state byte +1..+4 of Sprite_Current (below sprite_span when set)
+        if (g_field) {
+            unsigned char* const s = static_cast<unsigned char*>(Sprite_Current);
+            const unsigned span = g_group ? g_group->sprite_span : 0;
+            if (InRegions(s, 8)) s[1 + v % 4] = span ? static_cast<unsigned char>(b % span) : b;
+        }
+        break;
+    case 11:
+        // the menu block's state or step byte (below menu_span when set), or its timer
+        if (g_field) {
+            const unsigned span = g_group ? g_group->menu_span : 0;
+            if (v % 3 == 2) Byte(at::kMenuTimer)[0] = b;
+            else Byte(v & 1 ? at::kMenuStep : at::kMenuState)[0] = span ? static_cast<unsigned char>(b % span) : b;
+        }
+        break;
+    case 12:
+        // the packet cursor, as a callee that drew moves it
+        if (g_field) SetPointer(at::kPacketNext, g_packets + ((h >> 8) & 0x3F0));
+        break;
+    case 13:
+        // a bit of Field_ScriptFlags2, or the pad's pressed word
+        if (g_field) {
+            if (b & 1) move_script::SetWord(Mem(0x905BA4), Word(0x905BA4) ^ (1u << ((b >> 1) & 15)));
+            else move_script::SetWord(Mem(0x7E1BEC), h >> 16);
+        }
+        break;
     case 14:
         if (g_group && g_group->disturb) g_group->disturb(h);
         break;
@@ -149,10 +217,11 @@ struct Slot {
     std::uint8_t deref[kArgs];
     Effect effect;
     const void* custom;      // the group's own stand-in, or null for the pool's
+    bool guard;              // deref only what Readable says (the field-standard callees)
     bool handler;            // a table's handler: logs the chapter bytes, answers garbage
     unsigned calls;          // the original's side, for the coverage line
 };
-constexpr unsigned kSlots = 256;
+constexpr unsigned kSlots = 512;   // 256 before round twelve's field-standard set
 Slot g_slots[kSlots];
 unsigned g_slot_n;
 
@@ -193,7 +262,7 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
                            std::uint32_t a5, std::uint32_t a6, std::uint32_t a7, std::uint32_t a8, std::uint32_t a9) {
     const Slot& s = g_slots[I];
     if (s.handler) {
-        Log5(kPhaseTag + I, Chapter(), Word(at::kTimer), Key(Sprite_Current), 0);
+        Log5(kPhaseTag + I, Chapter(), Word(at::kTimer), Key(Sprite_Current), g_field ? FieldPhase() : 0);
         Disturb();
         return Hash();
     }
@@ -205,9 +274,10 @@ std::uint32_t __cdecl Stub(std::uint32_t a0, std::uint32_t a1, std::uint32_t a2,
     }
     const std::uint32_t a[kArgs] = {a0, a1, a2, a3, a4, a5, a6, a7, a8, a9};
     std::uint32_t r[kArgs] = {};
-    for (unsigned i = 0; i < s.nargs && i < kArgs; ++i)
-        r[i] = s.deref[i] ? HashBytes(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a[i])), s.deref[i])
-                          : a[i] & s.masks[i];
+    for (unsigned i = 0; i < s.nargs && i < kArgs; ++i) {
+        const void* const p = reinterpret_cast<const void*>(static_cast<std::uintptr_t>(a[i]));
+        r[i] = s.deref[i] && (!s.guard || Readable(p, s.deref[i])) ? HashBytes(p, s.deref[i]) : a[i] & s.masks[i];
+    }
     const unsigned entry = g_log_n;
     Log5(I, r[0], r[1], r[2], r[3]);
     if (s.nargs > 4) Log5(kMoreTag + I, r[4], r[5], r[6], r[7]);
@@ -265,10 +335,10 @@ const Callee kStandard[] = {
     {SH_OURS(ScriptFlags_Set40), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(ScriptFlags_Clear40), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(ObjTrio_SetBit40), 0, {}, Answer::kGarbage, 0, 0},
-    {SH_THEIRS(ObjTrio_ClearBit40), 0, {}, Answer::kGarbage, 0, 0},
+    {"ObjTrio_ClearBit40", 0x57C7E0, KeyOf(ObjTrio_ClearBit40), 0, {}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
     // the scenario engine
     {SH_OURS(Scenario_CallA), 1, {kU8}, Answer::kGarbage, 0, 0},
-    {SH_THEIRS(Scenario_CallB), 1, {kU8}, Answer::kGarbage, 0, 0},
+    {"Scenario_CallB", 0x5341C0, KeyOf(Scenario_CallB), 1, {kU8}, Answer::kGarbage, 0, 0},   // FE2 takes it (round twelve)
     {SH_OURS(Transition_Start), 1, {kU8}, Answer::kGarbage, 0, 0},
     {SH_OURS(ClutStrip_FadeTo), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(ClutStrip_Restore), 0, {}, Answer::kGarbage, 0, 0},
@@ -283,7 +353,7 @@ const Callee kStandard[] = {
     {SH_OURS(EventObj_Face), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(EventObj_SetFlags), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(EventObj_Reset), 0, {}, Answer::kGarbage, 0, 0},
-    {SH_THEIRS(EventOp_6x), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {"EventOp_6x", 0x57AD10, KeyOf(EventOp_6x), 1, {kAll}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
     {SH_OURS(Field_ObjectInHome), 1, {kAll}, Answer::kFlag, 0, 0},
     {SH_OURS(Effect_FindFree), 0, {}, Answer::kByte, 0xFF, 0x13},
     {SH_THEIRS(Effect_SpawnAt), 6, {kU8, kU8, kU8, kAll, kAll, kAll}, Answer::kByte, 0xFF, 0x13},
@@ -330,6 +400,291 @@ const Callee kStandard[] = {
 #undef SH_OURS
 #undef SH_THEIRS
 
+// --- round twelve: the field-standard callees ------------------------------------
+//
+// The frontier of the field runs (docs/scenario_harness.md section 7.4): every
+// function the 323 functions of groups FC1..FS call that is not one of the 323
+// and not in kStandard above, 174 of them, by FH's pass over the cut table
+// analysis/round12_cut.tsv at 430f34b. Registered for every group after its
+// handlers, so a handler address stays a handler; a scenario group that never
+// calls them sees no difference. Typed from symbols.toml's ret / params (masks
+// by the parameter types, kFlag for a byte answer), the 26 unnamed ones by
+// reading; `guard` set on all: a pointer argument is hashed (16 bytes of
+// char / void, 8 of short, 12 of long) only where Readable says, else logged
+// as its value. Louder where the caller reads back: the pointer answers land
+// in the harness's buffers, the out-parameters are written with noise, the
+// packet cursor advances, Party_Zenny moves.
+//
+// FIELD_OURS as SH_OURS. FIELD_THEIRS names the address as well, so the entry
+// holds whichever side has the name: when a group takes the function the key
+// becomes ours and the entry still registers (Register's checks pass both ways).
+#define FIELD_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
+#define FIELD_THEIRS(name, address) #name, address, KeyOf(name)
+
+// Effects (the same on both passes: they draw from Noise() and the state only).
+void FillNoise(std::uint32_t at, unsigned n) {
+    void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(at));
+    if (Writable(p, n)) FillBytes(p, n);
+}
+void FillFloats(std::uint32_t at, unsigned n) {
+    // small whole numbers, not raw bytes: an x87 caller converts them back
+    void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(at));
+    if (!Writable(p, 4 * n)) return;
+    for (unsigned i = 0; i < n; ++i) {
+        const float f = static_cast<float>(static_cast<std::int16_t>(Noise() >> 9));
+        std::memcpy(static_cast<unsigned char*>(p) + 4 * i, &f, 4);
+    }
+}
+std::uint32_t FxText(const std::uint32_t*, std::uint32_t answer) { return Key(g_text + (answer & 0xF0)); }
+std::uint32_t FxArg0(const std::uint32_t* a, std::uint32_t) { return a[0]; }
+std::uint32_t FxArg4(const std::uint32_t* a, std::uint32_t) { return a[4]; }
+std::uint32_t FxPacket(const std::uint32_t*, std::uint32_t) { return Key(Pointer(at::kPacketNext)); }
+std::uint32_t FxRotMatrix(const std::uint32_t* a, std::uint32_t) { FillNoise(a[1], 18); return a[1]; }
+std::uint32_t FxMulMatrix0(const std::uint32_t* a, std::uint32_t) { FillNoise(a[2], 18); return a[2]; }
+std::uint32_t FxOut0_12(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 12); return answer; }
+std::uint32_t FxOut1_12(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[1], 12); return answer; }
+std::uint32_t FxOut1_6(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[1], 6); return answer; }
+std::uint32_t FxRotTransPers(const std::uint32_t* a, std::uint32_t answer) {
+    FillNoise(a[1], 4);
+    FillNoise(a[2], 4);
+    return answer;
+}
+std::uint32_t FxRotTransPers3(const std::uint32_t* a, std::uint32_t answer) {
+    for (unsigned i = 3; i < 6; ++i) FillFloats(a[i], 2);
+    FillNoise(a[6], 4);
+    return answer;
+}
+std::uint32_t FxRotTransPers4(const std::uint32_t* a, std::uint32_t answer) {
+    for (unsigned i = 4; i < 8; ++i) FillFloats(a[i], 2);
+    FillNoise(a[8], 4);
+    return answer;
+}
+std::uint32_t FxStoreDepthF4(const std::uint32_t* a, std::uint32_t answer) {
+    for (unsigned i = 0; i < 4; ++i) FillFloats(a[i], 1);
+    return answer;
+}
+std::uint32_t FxSprintf(const std::uint32_t* a, std::uint32_t answer) {
+    // up to seven letters and a NUL where the caller's buffer is ours to write
+    auto* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    if (!Writable(dst, 8)) return answer;
+    const unsigned n = Noise() % 8;
+    for (unsigned i = 0; i < n; ++i) dst[i] = static_cast<unsigned char>('0' + Noise() % 43);
+    dst[n] = 0;
+    return n;
+}
+std::uint32_t FxCommitPrim(const std::uint32_t* a, std::uint32_t answer) {
+    // Gfx_PacketNext += size (a byte) while the packet stays in the buffer
+    unsigned char* const next = Pointer(at::kPacketNext);
+    const unsigned size = a[1] & 0xFF;
+    if (next >= g_packets && next + size + 0x40 <= g_packets + sizeof g_packets) SetPointer(at::kPacketNext, next + size);
+    return answer;
+}
+std::uint32_t FxZennyAdd(const std::uint32_t* a, std::uint32_t answer) {
+    // Party_Zenny += amount (and the tally 0x904138 with the second argument's
+    // byte), held at 9,999,999 with al 0 - as Zenny_Add (docs/scena_sx.md)
+    unsigned char* const z = Mem(at::kZenny);
+    if (!InRegions(z, 4)) return answer;
+    std::uint32_t v = static_cast<std::uint32_t>(move_script::Long(z)) + a[0];
+    if ((a[1] & 0xFF) && InRegions(Mem(0x904138), 4))
+        move_script::SetLong(Mem(0x904138), static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(Mem(0x904138))) + a[0]));
+    const bool held = v > 9999999u;
+    if (held) v = 9999999u;
+    move_script::SetLong(z, static_cast<std::int32_t>(v));
+    return (answer & 0xFFFFFF00u) | (held ? 0u : 1u);
+}
+std::uint32_t FxSwap(const std::uint32_t* a, std::uint32_t answer) {
+    auto* const x = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    auto* const y = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[1]));
+    if (InRegions(x, 1) && InRegions(y, 1)) std::swap(*x, *y);
+    return answer;
+}
+
+// Field mode's re-listing of a kStandard entry (registered before kStandard,
+// so it stands, in field mode only): answers the field code dereferences.
+const Callee kFieldOverrides[] = {
+    // callers read the name through the answer (mov ecx, [eax])
+    {FIELD_OURS(Item_NamePtr), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxText, nullptr, true},
+};
+
+const Callee kField[] = {
+    {FIELD_OURS(Menu_DrawPiece), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:31 FS:17: void(int x, int y, unsigned id, unsigned flags)
+    {FIELD_OURS(Sprite_ScriptTick), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:12 FC2:4 FC3:10 FE1:2 FE2:5: unsigned char(void)
+    {FIELD_THEIRS(Crt_sprintf, 0x5B9380), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16}, FxSprintf, nullptr, true},   // FE1:4 FE2:1 FO:12 FS:10: int(char *dst, const char *fmt, ...)
+    {"0x52CFE0", 0x52CFE0, 0x52CFE0, 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPacket, nullptr, true},   // FE1:25: a sprite primitive at Gfx_PacketNext, committed; eax the primitive (callers write through it)
+    {FIELD_OURS(Sprite_UpdateScreenSlot), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:15 FC2:9: void(void)
+    {FIELD_OURS(MapView_SlopeAt), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC3:10 FE2:14: long(long x, long y, unsigned long direction)
+    {FIELD_OURS(MapView_GroundAt), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC3:12 FE1:4 FE2:7: long(long x, long z)
+    {FIELD_OURS(Text_DrawFont8), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 16}, nullptr, nullptr, true},   // FE2:2 FO:10 FS:8: void(int x, int y, int colour, const unsigned char *text)
+    {FIELD_OURS(Menu_DrawPieces), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 16, 0}, nullptr, nullptr, true},   // FO:12 FS:7: void(int x, int y, const unsigned char *list, int flags)
+    {FIELD_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FC1:1 FE1:2 FO:8 FS:7: void(int x, int y, int w, int h, int flags, int colour)
+    {FIELD_OURS(Effect_Release), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:4 FC2:14: void(void)
+    {FIELD_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, FxCommitPrim, nullptr, true},   // FC1:1 FE1:1 FE2:8 FO:4: void(unsigned slot, unsigned size)
+    {FIELD_OURS(Party_Count), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FS:14: int(unsigned slot)
+    {FIELD_OURS(Sprite_ScriptTickOnce), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:3 FC2:2 FC3:3 FE1:1 FE2:4: unsigned char(void)
+    {FIELD_OURS(Input_AutoRepeat), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:3 FS:10: unsigned(unsigned pressed)
+    {FIELD_OURS(Msg_SystemPtr), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, FxText, nullptr, true},   // FE2:1 FO:2 FS:9: const unsigned char *(unsigned id)
+    {FIELD_OURS(Field_LeaderStepTick), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:9 FE2:1: unsigned char(void)
+    {FIELD_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0, {16, 0, 0, 0, 0}, nullptr, nullptr, true},   // FC1:4 FC3:2 FO:3: unsigned char(unsigned char *sprite, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+    {"0x52CF60", 0x52CF60, 0x52CF60, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:9: a draw-mode primitive, committed
+    {FIELD_OURS(Menu_DrawSkillRow), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 16, 0, 0}, nullptr, nullptr, true},   // FO:3 FS:6: void(int x, int y, int colour, unsigned kind, const unsigned char *name, unsigned cost, int dim)
+    {FIELD_OURS(AreaMap_SetHeight), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC2:8: void(unsigned x, unsigned z, unsigned value)
+    {FIELD_OURS(Text_CharCount), 1, {kAll}, Answer::kFlag, 0, 0, {16}, nullptr, nullptr, true},   // FO:6 FS:2: unsigned char(const unsigned char *text)
+    {FIELD_OURS(Sprite_ClearSteps), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:4 FE1:1 FE2:2: void(void)
+    {FIELD_OURS(Menu_DrawCursorBox), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FS:7: void(int x, int y, int w, int h, int blink, int flags)
+    {FIELD_OURS(Sprite_ApplyVelocity), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:2 FE2:4: void(void)
+    {FIELD_OURS(Math_Cos), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:2 FO:4: int(int angle)
+    {FIELD_OURS(Math_Sin), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:2 FO:4: int(int angle)
+    {FIELD_OURS(Menu_DrawHand), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:1 FE2:3 FS:1: void(int x, int y, int unused)
+    {FIELD_OURS(Sprite_ObjectAt), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:2 FC2:2 FE2:1: unsigned char(long x, long y, unsigned margin)
+    {FIELD_OURS(Sprite_LoadPalette), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {8, 0}, nullptr, nullptr, true},   // FC1:1 FC3:1 FE2:3: void(unsigned short *dst, unsigned index)
+    {FIELD_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FC2:1 FE1:1 FE2:2 FO:1: void(unsigned char *prim, unsigned abe)
+    {FIELD_OURS(Sprite_ShadeFadeBegin), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:5: void(void)
+    {FIELD_OURS(Field_JumpStart), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:5: void(void)
+    {FIELD_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0, 0, 0, 0}, nullptr, nullptr, true},   // FE2:3 FO:2: void(unsigned char *prim, int dfe, int dtd, unsigned tpage, unsigned long tw)
+    {FIELD_OURS(Menu_DrawIcon8), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:5: void(int x, int y, int icon, int dim)
+    {FIELD_OURS(KeyItem_Has), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FO:1 FS:4: unsigned char(unsigned item)
+    {"0x58BD50", 0x58BD50, 0x58BD50, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxSwap, nullptr, true},   // FS:5: swaps the bytes its two pointers name
+    {FIELD_OURS(Sprite_UpdateScreen), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:4: void(void)
+    {FIELD_OURS(Sprite_FindFree), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:4: unsigned char(void)
+    {FIELD_OURS(Sprite_UpdateScreenA), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1 FC2:3: void(void)
+    {FIELD_OURS(Gpu_SetPolyFT4), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FC2:1 FE2:3: void(unsigned char *prim)
+    {FIELD_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC2:1 FE2:3: void(unsigned long x, unsigned long z, int dy, unsigned size)
+    {FIELD_OURS(Tint_Release), 1, {kU8}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FC3:2 FO:2: void(unsigned char index)
+    {"0x468950", 0x468950, 0x468950, 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:4: a textured quad, committed
+    {"0x469750", 0x469750, 0x469750, 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: five words, calls 0x469790 / 0x469960
+    {"0x594410", 0x594410, 0x594410, 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: a list window drawn (Text_DrawAt, Item_NamePtr)
+    {FIELD_OURS(Field_MemberSprite), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1 FS:3: void(unsigned member, unsigned slot)
+    {FIELD_OURS(Menu_DrawTitleBox), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FS:4: void(int x, int y, int w, int h, int colour)
+    {FIELD_OURS(Menu_DrawBlackScreen), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FS:4: void(void)
+    {FIELD_OURS(Text_DrawSmall), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 16}, FxArg4, nullptr, true},   // FC1:1 FO:1 FS:1: const unsigned char *(int x, int y, unsigned colour, unsigned count, const unsigned char *text)
+    {FIELD_OURS(Gte_PushMatrix), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(void)
+    {FIELD_OURS(Gte_RotMatrix), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {8, 0}, FxRotMatrix, nullptr, true},   // FC2:1 FE2:2: short *(const short *angles, short *matrix)
+    {FIELD_OURS(Gte_SetTransMatrix), 1, {kAll}, Answer::kGarbage, 0, 0, {12}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(const unsigned long *matrix)
+    {FIELD_OURS(Gte_SetRotMatrix), 1, {kAll}, Answer::kGarbage, 0, 0, {12}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(const unsigned long *matrix)
+    {FIELD_OURS(Gte_RotTrans), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {8, 0}, FxOut1_12, nullptr, true},   // FC2:1 FE2:2: void(const short *vector, long *out)
+    {FIELD_OURS(Gte_PopMatrix), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(void)
+    {FIELD_OURS(Gpu_GetClut), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC2:1 FO:2: unsigned(int x, int y)
+    {"0x46D5F0", 0x46D5F0, 0x46D5F0, 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:3: a number drawn (sprintf, sprites)
+    {FIELD_OURS(Sprite_ShadeFadeStep), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FC3:3: unsigned char(unsigned step)
+    {FIELD_OURS(Field_CellAhead), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:3: unsigned char(void)
+    {FIELD_OURS(Field_WayBlocked), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC3:1 FE1:2: unsigned char(long x, long z, unsigned raised, long ground)
+    {FIELD_OURS(Field_JumpCamera), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:3: void(void)
+    {FIELD_OURS(Area_TestCondition), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FE2:3: unsigned char(unsigned long code)
+    {FIELD_OURS(Gte_RotTransPers4), 9, {kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {8, 8, 8, 8, 0, 0, 0, 0, 0}, FxRotTransPers4, nullptr, true},   // FE2:3: long(const short *v0, const short *v1, const short *v2, const short *v3, float *sxy0, float *sxy1, float *sxy2, float *sxy3, long *p)
+    {FIELD_OURS(Gte_StoreDepthF4), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, FxStoreDepthF4, nullptr, true},   // FE2:3: void(float *out0, float *out1, float *out2, float *out3)
+    {FIELD_OURS(TextRecord_Set), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 16}, nullptr, nullptr, true},   // FO:1 FS:2: void(unsigned slot, unsigned length, const unsigned char *text)
+    {FIELD_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 16}, nullptr, nullptr, true},   // FO:1 FS:2: void(int x, int y, int colour, const unsigned char *text)
+    {FIELD_OURS(Skill_FlagIndex), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FO:1 FS:2: unsigned char(unsigned id)
+    {FIELD_OURS(Menu_DrawItemRow), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:3: void(int x, int y, int colour, unsigned category, unsigned id, unsigned count, int dim)
+    {FIELD_OURS(Menu_DrawBackdrop), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FS:3: void(unsigned kind)
+    {FIELD_OURS(Menu_DrawMemberStatus), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:3: unsigned long(int x, int y, unsigned member, unsigned highlight)
+    {FIELD_OURS(Sprite_QueueOverlay), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:2: void(void)
+    {FIELD_OURS(EventOp_0x), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FC1:2: void(const unsigned char *op)
+    {FIELD_OURS(AreaMap_Slope), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:2: long(long x, long y, unsigned long direction)
+    {FIELD_OURS(Sprite_InitFromEntry), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FC1:1 FO:1: void(unsigned char *entry)
+    {FIELD_OURS(Field_MembersFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1 FE1:1: void(void)
+    {FIELD_OURS(Field_RunTaskRecords), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:2: void(void)
+    {FIELD_OURS(Field_ObjectRandomTurn), 1, {kAll}, Answer::kFlag, 0, 0, {16}, nullptr, nullptr, true},   // FC3:2: unsigned char(unsigned char *object)
+    {FIELD_OURS(Field_ObjectOpenDirection), 1, {kAll}, Answer::kFlag, 0, 0, {16}, nullptr, nullptr, true},   // FC3:2: unsigned char(unsigned char *object)
+    {FIELD_OURS(Field_MemberTimers), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1 FE1:1: void(void)
+    {FIELD_OURS(AreaMap_CellsNone), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FC3:2: unsigned char(long x, long z, unsigned wide, unsigned code, unsigned mask)
+    {FIELD_OURS(Field_JumpSetUp), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: void(void)
+    {"0x5B9550", 0x5B9550, 0x5B9550, 0, {}, Answer::kThrough, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: the CRT's _ftol: pops st(0), answers edx:eax - called for real on both sides
+    {FIELD_OURS(Gte_MulMatrix0), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {8, 8, 0}, FxMulMatrix0, nullptr, true},   // FE2:2: short *(const short *a, const short *b, short *out)
+    {FIELD_OURS(Gpu_SetPolyG3), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE2:1 FO:1: void(unsigned char *prim)
+    {FIELD_OURS(Gpu_SetShadeTex), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FE2:2: void(unsigned char *prim, unsigned tge)
+    {FIELD_OURS(Prim_SetTexture), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16, 0}, nullptr, nullptr, true},   // FE2:2: void(unsigned long texture, unsigned char *prim, int count)
+    {"0x5947D0", 0x5947D0, 0x5947D0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window drawn
+    {"0x5942C0", 0x5942C0, 0x5942C0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window frame drawn
+    {"0x594700", 0x594700, 0x594700, 2, {kAll, kAll}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: al: an inventory test (Inventory_Count)
+    {FIELD_OURS(Item_HelpMessage), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1 FS:1: unsigned(unsigned category, unsigned item)
+    {"0x594AD0", 0x594AD0, 0x594AD0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window drawn
+    {FIELD_OURS(Menu_DrawCell8), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:2: unsigned long(unsigned x, unsigned y, unsigned u, unsigned v, unsigned clut, unsigned shade)
+    {FIELD_OURS(Menu_ListScroll), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {16, 16, 16, 16}, nullptr, nullptr, true},   // FO:1 FS:1: unsigned char(unsigned char *top, unsigned char *offset, unsigned char *moving, unsigned char *state)
+    {FIELD_OURS(Menu_DrawScrollBar), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1 FS:1: void(const unsigned char *items, unsigned top, int x, int y, unsigned rows, unsigned total, unsigned height)
+    {FIELD_OURS(Party_ApplyRecord), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FO:2: void(unsigned char *context)
+    {FIELD_OURS(Menu_YesNo), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FS:2: unsigned char(void)
+    {FIELD_OURS(Field_PartyLoad), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FS:2: void(unsigned slot)
+    {FIELD_OURS(Char_RecalcStats), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FS:2: void(unsigned char *record)
+    {FIELD_OURS(Gpu_SetLineF2), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FC1:1: void(unsigned char *prim)
+    {FIELD_OURS(CameraTurn_Start), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1: void(void)
+    {FIELD_OURS(CameraTurn_Step), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1: void(void)
+    {FIELD_OURS(CameraTurn_End), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1: void(void)
+    {FIELD_THEIRS(MoveCmd_Move, 0x578C10), 2, {kAll, kU8}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FC1:1: void(unsigned char *object, unsigned char direction)
+    {FIELD_OURS(Party_MemberAt), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:1: unsigned char(long x, long y, unsigned margin)
+    {FIELD_OURS(Gte_VectorNormalS), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {12, 0}, FxOut1_6, nullptr, true},   // FC2:1: long(const long *in, short *out)
+    {FIELD_OURS(Gte_VectorNormal), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {12, 0}, FxOut1_12, nullptr, true},   // FC2:1: long(const long *in, long *out)
+    {"0x494060", 0x494060, 0x494060, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: the camera matrices from Camera_Angles and the focus
+    {"0x494110", 0x494110, 0x494110, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: a point projected (Gte_RotTransPers)
+    {"0x4941E0", 0x4941E0, 0x4941E0, 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1: a vector turned (Gte_RotTrans)
+    {FIELD_OURS(Gpu_GetTPage), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC2:1: unsigned(unsigned tp, unsigned abr, int x, int y)
+    {FIELD_OURS(AreaMap_Frame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void()
+    {FIELD_OURS(Party_ExtraScreens), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
+    {FIELD_OURS(Party_UpdateScreens), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
+    {"0x5372E0", 0x5372E0, 0x5372E0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: the party screens updated
+    {FIELD_OURS(Effect_RunObjects), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
+    {FIELD_OURS(MoveScript_TintFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
+    {FIELD_OURS(Field_DrawFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
+    {"0x42D710", 0x42D710, 0x42D710, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: jmp through 0x64ADAC by the menu byte 0x929F00
+    {"0x57DFF0", 0x57DFF0, 0x57DFF0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: jmp through 0x663DD0 by the menu byte 0x929F00
+    {FIELD_OURS(Field_ObjectBlockedAhead), 1, {kAll}, Answer::kFlag, 0, 0, {16}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned char *object)
+    {FIELD_OURS(MoveScript_Step), 2, {kAll, kAll}, Answer::kFlag, 0, 0, {16, 16}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned char *object, const unsigned char *script)
+    {FIELD_OURS(Sprite_ShadeLower), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned step)
+    {FIELD_OURS(MoveCmd_AttachOffset), 2, {kAll, kU8}, Answer::kGarbage, 0, 0, {0, 0}, FxOut0_12, nullptr, true},   // FC3:1: void(long *out, unsigned char index)
+    {FIELD_OURS(Field_TileD0), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: unsigned char(void)
+    {FIELD_OURS(Area_LinkAt), 2, {kAll, kAll}, Answer::kFlag, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned x, unsigned z)
+    {FIELD_OURS(Field_LeaderPushObjects), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: unsigned char(void)
+    {"0x52CE60", 0x52CE60, 0x52CE60, 2, {kU8, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: a word from the 36-byte records at 0x66A6AC scaled by the second argument
+    {"0x52CED0", 0x52CED0, 0x52CED0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: the sum of 0x52CE60 over the 32 bytes at 0x9040EC
+    {FIELD_OURS(Gpu_SetTile), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE1:1: void(unsigned char *prim)
+    {FIELD_OURS(Member_ClearState), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE1:1: void(unsigned member)
+    {FIELD_OURS(Field_LeaderStand), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: void(void)
+    {FIELD_OURS(Area104_LeaderRun), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: void(void)
+    {FIELD_OURS(Area121_LeaderRun), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: void(void)
+    {FIELD_OURS(Zenny_Add), 2, {kAll, kAll}, Answer::kFlag, 0, 0, {0, 0}, FxZennyAdd, nullptr, true},   // FE1:1: unsigned char(unsigned amount, unsigned tally)
+    {FIELD_OURS(Field_CellHasEvent), 2, {kAll, kAll}, Answer::kFlag, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE1:1: unsigned char(long x, long z)
+    {FIELD_OURS(Char_LoseHp), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1: unsigned(unsigned amount, unsigned member)
+    {"0x537500", 0x537500, 0x537500, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: two words, no calls
+    {FIELD_OURS(Actor_EquipCount), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FE2:1: unsigned char(unsigned member, unsigned kind, unsigned value)
+    {FIELD_OURS(Field_CellsBlock), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FE2:1: unsigned char(long x, long z, unsigned wide)
+    {FIELD_OURS(Gte_RotTransPers), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {8, 0, 0}, FxRotTransPers, nullptr, true},   // FE2:1: long(const short *vertex, unsigned long *sxy, long *p)
+    {FIELD_OURS(Gte_PrimDepthFlat4_10), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE2:1: void(void *prim)
+    {FIELD_OURS(Gte_RotTransPers3), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {8, 8, 8, 0, 0, 0, 0}, FxRotTransPers3, nullptr, true},   // FE2:1: long(const short *v0, const short *v1, const short *v2, float *sxy0, float *sxy1, float *sxy2, long *p)
+    {FIELD_OURS(Gte_PrimDepths3_10B), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE2:1: void(void *prim)
+    {FIELD_OURS(Scena17_DrawLogo), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1: void(int x, int y)
+    {FIELD_OURS(Area_CellHook), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1: int(unsigned x, unsigned z)
+    {FIELD_OURS(Snd_LoadBankFile), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:1: void(unsigned index)
+    {"0x586670", 0x586670, 0x586670, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: jmp through 0x66450C by the byte 0x9398CF
+    {FIELD_OURS(Gfx_ClutStripCopyRow), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:1: void(unsigned row)
+    {"0x585A00", 0x585A00, 0x585A00, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: no arguments, no calls
+    {FIELD_OURS(Gpu_SetPolyG4), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, FxArg0, nullptr, true},   // FE2:1: unsigned char *(unsigned char *prim)
+    {"0x594790", 0x594790, 0x594790, 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: al (the caller stores it at 0x6BE08D)
+    {"0x594D90", 0x594D90, 0x594D90, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: Inventory_Remove behind a test
+    {FIELD_OURS(Char_ExpForLevel), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: int(unsigned member, unsigned level)
+    {FIELD_OURS(Gpu_SetSprt), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FO:1: void(unsigned char *prim)
+    {FIELD_OURS(Equip_PreviewSet), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16, 16, 8}, nullptr, nullptr, true},   // FO:1: void(unsigned id, const unsigned char *set, unsigned char *marks, unsigned short *values)
+    {FIELD_OURS(Char_AbilityList), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, FxText, nullptr, true},   // FO:1: unsigned char *(unsigned member, unsigned type, unsigned battle)
+    {FIELD_OURS(Skill_CanUse), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned mode, unsigned member, unsigned id)
+    {FIELD_OURS(Skill_ApCost), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned member, unsigned id, unsigned battle)
+    {FIELD_OURS(Item_CanUse), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned mode, unsigned member, unsigned category, unsigned item)
+    {FIELD_OURS(Item_IconKind), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: unsigned(unsigned category, unsigned item)
+    {FIELD_OURS(MoveCmd_TestFC), 2, {kU16, kU16}, Answer::kFlag, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(short x, short z)
+    {FIELD_THEIRS(Effect_Spawn, 0x57CE10), 5, {kU8, kU8, kU8, kU16, kU16}, Answer::kFlag, 0, 0, {0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned char kind, signed char a, signed char b, short x, short z)
+    {FIELD_OURS(Party_MoveMember), 2, {kAll, kU8}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FO:1: void(unsigned char *object, unsigned char direction)
+    {FIELD_OURS(PartyRecord_Clear), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FO:1: void(unsigned index)
+    {FIELD_OURS(MoveScript_ObjectKind), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FO:1: int(void)
+    {FIELD_OURS(SaveMenu_DrawSlots), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, unsigned highlight)
+    {FIELD_OURS(Area_RunPlacement), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FS:1: void(const unsigned char *script)
+    {FIELD_OURS(Menu_DrawItemIcon), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int icon, int shade)
+    {FIELD_OURS(Menu_DrawBorder), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int w, int h)
+    {FIELD_OURS(Menu_DrawMoneyBox), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int unused, unsigned value)
+    {FIELD_OURS(Inventory_Remove), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FS:1: unsigned char(unsigned category, unsigned item, unsigned count)
+    {FIELD_OURS(AbilityList_Add), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: unsigned char(unsigned id, unsigned member, unsigned shared, unsigned which)
+    {"0x591AC0", 0x591AC0, 0x591AC0, 3, {kU8, kU8, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FS:1: a record's list pointer by member and page (the caller keeps a byte)
+};
+#undef FIELD_OURS
+#undef FIELD_THEIRS
+
 constexpr std::uint32_t kImageLo = 0x401000, kImageHi = 0x5C3000;   // .text
 
 void Register(const Callee& c) {
@@ -356,6 +711,7 @@ void Register(const Callee& c) {
     std::memcpy(s.deref, c.deref, sizeof s.deref);
     s.effect = c.effect;
     s.custom = c.custom;
+    s.guard = c.guard;
 }
 void RegisterHandler(std::uint32_t address) {
     for (unsigned i = 0; i < g_slot_n; ++i)
@@ -383,7 +739,7 @@ const void* StubFor(std::uint32_t address, const char* who) { return StubOf(Slot
 
 // --- the state both passes start from ------------------------------------------
 
-constexpr unsigned kMaxRegions = 48;
+constexpr unsigned kMaxRegions = 64;   // 48 before round twelve's field regions
 Region g_regions[kMaxRegions];
 unsigned g_region_n;
 constexpr unsigned kMaxBytes = 0x10000;
@@ -454,6 +810,47 @@ void Fix(int chapter) {
     MapView_CornerPtr = g_own + (Next() & 0x7E);
 }
 
+// Field mode's put-backs, after Fix (docs/scenario_harness.md section 7.3):
+// the packet cursor into the packet buffer, AreaMap_Bytes into the area block,
+// the area header's width and height below 0x20 and its offset word below
+// 0x100 (so a cell index from a bounded x, z stays near the 8 KiB compared),
+// the script cursor into the script buffer, MapView_Row / MapView_Column
+// inside the view's 0x38 x 0x1C.
+void FixField() {
+    SetPointer(at::kPacketNext, g_packets + (Next() & 0x1F0));
+    SetPointer(at::kAreaBytes, Mem(at::kAreaBlock + 0x800));
+    unsigned char* const header = Mem(at::kAreaBlock);
+    header[0] &= 0x1F;
+    header[1] &= 0x1F;
+    header[3] = 0;
+    g_cursor[0] = g_script + (Next() & 0x3F);
+    // the view's row and column as the view keeps them (MapView_Cells is 0x38
+    // rows of 0x1C; its readers wrap an index once, not twice)
+    move_script::SetWord(Mem(0x929F24), Next() % 0x38);   // MapView_Row
+    move_script::SetWord(Mem(0x929F20), Next() % 0x1C);   // MapView_Column
+}
+// The span draws of kSprite and kMenu, before the group's seed.
+void DrawSpans(const Group& g, const Clone& c) {
+    if (c.shape == Shape::kSprite && g.sprite_span) {
+        unsigned char* const s = static_cast<unsigned char*>(Sprite_Current);
+        for (unsigned i = 1; i <= 4; ++i) s[i] = static_cast<unsigned char>(Next() % g.sprite_span);
+    }
+    if (c.shape == Shape::kMenu && g.menu_span) {
+        Byte(at::kMenuState)[0] = static_cast<unsigned char>(Next() % g.menu_span);
+        Byte(at::kMenuStep)[0] = static_cast<unsigned char>(Next() % g.menu_span);
+    }
+}
+bool FieldShape(Shape s) { return s >= Shape::kSprite; }
+
+// The field runs (docs/takeover-queue-field-battle.md section 1) and the
+// chapter bank (tools/scenario_rows.py's BANK_LO..BANK_HI).
+struct Band { std::uint32_t lo, hi; };
+constexpr Band kFieldRuns[] = {
+    {0x461800, 0x461980}, {0x469D10, 0x46D5F0}, {0x5172C0, 0x519600}, {0x525390, 0x526DB0}, {0x52D080, 0x5372D9},
+    {0x56D240, 0x5729F9}, {0x5738A0, 0x57CD8A}, {0x57FF80, 0x5859FA}, {0x58C7A0, 0x58C900}, {0x593960, 0x594061},
+};
+constexpr Band kChapterBank = {0x537F20, 0x56D5E0};
+
 void PatchImms(void* copy, const Clone& c) {
     auto* code = static_cast<std::uint8_t*>(copy);
     for (int i = 0; i < c.n_imms; ++i) {
@@ -489,6 +886,24 @@ unsigned char* EnemyOf(unsigned char target) {
     return Mem(at::kEnemies + static_cast<std::uint32_t>((static_cast<int>(target) - 3) * static_cast<int>(at::kEnemyStride)));
 }
 unsigned char* PartyOf(unsigned char actor) { return ObjectOf(actor); }
+unsigned char* Script() { return g_cursor[0]; }
+unsigned char** Cursor() { return &g_cursor[0]; }
+unsigned char* Scratch(unsigned i) { return g_scratch + (i % kArgs) * 0x40; }
+unsigned char* Packets() { return g_packets; }
+unsigned char* Text() { return g_text; }
+bool InRegions(const void* p, unsigned n) {
+    const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(p));
+    if (at + n < at) return false;
+    for (unsigned i = 0; i < g_region_n; ++i)
+        if (at >= g_regions[i].at && at + n <= g_regions[i].at + g_regions[i].size) return true;
+    return false;
+}
+bool InFieldRuns(std::uint32_t address) {
+    for (const Band& b : kFieldRuns)
+        if (address >= b.lo && address < b.hi) return true;
+    return false;
+}
+bool InChapterBank(std::uint32_t address) { return address >= kChapterBank.lo && address < kChapterBank.hi; }
 void SetPointer(std::uint32_t cell, const void* p) { move_script::SetLong(Mem(cell), static_cast<std::int32_t>(Key(p))); }
 unsigned char* Pointer(std::uint32_t cell) {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(static_cast<std::uint32_t>(move_script::Long(Mem(cell)))));
@@ -542,6 +957,8 @@ const void* StandIn(std::uint32_t key) {
     std::uint32_t address = key;
     for (const Callee& c : kStandard)
         if (c.key == key) address = c.address;
+    for (const Callee& c : kField)
+        if (c.key == key) address = c.address;
     for (unsigned i = 0; i < g_slot_n; ++i)
         if (g_slots[i].address == address) return ForOurs(i, key);
     bof3::Fatal("scenario_harness: ours calls 0x%X, which no stand-in covers: list it in the group's callees", (unsigned)key);
@@ -550,14 +967,21 @@ const void* StandIn(std::uint32_t key) {
 void Run(const Group& group) {
     const unsigned per = group.rounds ? group.rounds : 2000;
     g_group = &group;
+    g_field = group.field;
+    for (unsigned k = 0; k < group.n_clones; ++k)
+        if (FieldShape(group.clones[k].shape)) g_field = true;
     g_slot_n = 0;
     for (unsigned i = 0; i < group.n_callees; ++i) Register(group.callees[i]);
+    if (g_field)
+        for (const Callee& c : kFieldOverrides) Register(c);
     for (const Callee& c : kStandard) Register(c);
     for (unsigned k = 0; k < group.n_clones; ++k)
         for (int i = 0; i < group.clones[k].n_imms; ++i) RegisterHandler(group.clones[k].imms[i].value);
     for (unsigned t = 0; t < group.n_data_tables; ++t)
         for (unsigned i = 0; i < group.data_tables[t].entries; ++i)
             RegisterHandler(static_cast<std::uint32_t>(move_script::Long(Mem(group.data_tables[t].at + 4 * i))));
+    // round twelve's field-standard set, after the handlers (a handler stays one)
+    for (const Callee& c : kField) Register(c);
 
     // the regions: the standard ones (docs/scenario_harness.md section 4), then the group's
     g_region_n = 0;
@@ -586,6 +1010,26 @@ void Run(const Group& group) {
         {Key(g_own), sizeof g_own},
     };
     for (const Region& r : standard) g_regions[g_region_n++] = r;
+    if (g_field) {
+        // field mode's standard regions (docs/scenario_harness.md section 7.3)
+        const Region field[] = {
+            {at::kPacketNext, 4},                          // Gfx_PacketNext, into the packet buffer
+            {at::kCameraTurn, at::kCameraTurnSize},        // CameraTurn_Steps, Field_EdgeBits, Field_InputFlags, Field_ScriptFlags2, Field_InputHeld
+            {at::kMenuBlock, at::kMenuBlockSize},          // MapView_BuildFlags, the menu block 0x929F00.., Field_Kind2Hold
+            {at::kStyle, at::kStyleSize},                  // the window style byte 0x903A5A, the records 0x903A70.., Field_ActorStates
+            {at::kTextBuffer, at::kTextBufferSize},        // the text scratch 0x904BA0
+            {at::kSaveFlags, at::kSaveFlagsSize},          // the save block past Cond_Flags, to 0x904160
+            {at::kSaveBytes, at::kSaveBytesSize},          // the save block's bytes 0x904560..0x904700
+            {at::kAreaBlock, at::kAreaBlockSize},          // AreaMap_Header and the area block's first 8 KiB
+            {at::kAreaBytes, 4},                           // AreaMap_Bytes, into the area block
+            {Key(g_packets), sizeof g_packets},
+            {Key(g_text), sizeof g_text},
+            {Key(g_script), sizeof g_script},
+            {Key(g_cursor), sizeof g_cursor},
+            {Key(g_scratch), sizeof g_scratch},
+        };
+        for (const Region& r : field) g_regions[g_region_n++] = r;
+    }
     for (unsigned i = 0; i < group.n_regions; ++i) {
         if (g_region_n == kMaxRegions) bof3::Fatal("scenario_harness: %s: more than %u regions", group.shadow, kMaxRegions);
         g_regions[g_region_n++] = group.regions[i];
@@ -606,6 +1050,9 @@ void Run(const Group& group) {
         }
         clones[k] = bof3::CloneOriginal(c.name, c.base, c.size, calls, c.n_calls);
         PatchImms(clones[k], c);
+        if (g_field && !InFieldRuns(c.base) && !InChapterBank(c.base))
+            bof3::Log("shadow      %s: %s at 0x%X lies outside the field runs and the chapter bank", group.shadow, c.name,
+                      (unsigned)c.base);
     }
 
     static std::uint32_t kept[64][32];
@@ -637,6 +1084,10 @@ void Run(const Group& group) {
         g_rand_first = -1;
         Apply(input);
         Fix(group.chapter);
+        if (g_field) {
+            FixField();
+            DrawSpans(group, c);
+        }
         g_seed = Next();
         g_rand_hint = Next();
         if (group.seed) group.seed(k);
@@ -650,9 +1101,23 @@ void Run(const Group& group) {
             a[1] = (Next() & 0x7F) << 16 | (a[1] & 0xFFFF);
         } else if (c.shape == Shape::kObject) {
             a[0] = Key(SpriteRecord(Next()));
+        } else if (c.shape == Shape::kScript) {
+            a[0] = Key(g_cursor[0]);
+        } else if (c.shape == Shape::kCursor) {
+            a[0] = Key(&g_cursor[0]);
+        }
+        for (unsigned i = 0; i < kArgs && c.pointers; ++i) {
+            switch (static_cast<Arg>((c.pointers >> (2 * i)) & 3)) {
+            case Arg::kSprite: a[i] = Key(SpriteRecord(Next())); break;
+            case Arg::kScratch: a[i] = Key(Scratch(i)); break;
+            case Arg::kScript: a[i] = Key(g_cursor[0]); break;
+            case Arg::kWord: break;
+            }
         }
         if (group.args) group.args(k, a);
-        const std::uint32_t mask = c.ret_mask ? c.ret_mask : c.shape == Shape::kHook ? 0xFFu : 0u;
+        const std::uint32_t mask = c.ret_mask                                                ? c.ret_mask
+                                   : c.shape == Shape::kHook || c.shape == Shape::kCursor ? 0xFFu
+                                                                                          : 0u;
         g_calm = c.calm;
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input);
@@ -716,12 +1181,17 @@ void Run(const Group& group) {
     }
     if (n || !more)
         bof3::Log("shadow      %s coverage%s: %s", group.shadow, more ? ", continued" : " (calls the originals made)", n ? line : "none");
+    if (g_field)
+        bof3::Log("shadow      %s field mode: %u stand-ins (%u of the field-standard set), the field regions and the packet, "
+                  "text, script and scratch buffers compared",
+                  group.shadow, g_slot_n, static_cast<unsigned>(sizeof kField / sizeof kField[0]));
     if (bad) {
         for (unsigned k = 0; k < group.n_clones; ++k)
             if (bad_per[k]) bof3::Log("shadow      %s: %s mismatched in %u rounds", group.shadow, group.clones[k].name, bad_per[k]);
         bof3::Fatal("%s differs from the original in %u self-test rounds", group.shadow, bad);
     }
     g_group = nullptr;
+    g_field = false;
 }
 
 }  // namespace scenario_harness

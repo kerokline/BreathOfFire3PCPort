@@ -188,6 +188,7 @@
 #include "game/scena_sc2.h"
 #include "game/scena_sc13.h"
 #include "game/scena_sx2.h"
+#include "game/scenario_harness_fh.h"
 #include "game/area_w1e.h"
 #include "game/area_w2a.h"
 #include "game/area_w1d.h"
@@ -789,6 +790,10 @@ void InjectAll() {
     BossHarnessEh_Inject();     // round 12 group EH: the boss harness's own self-test of its battle-engine frame
                                 // (the new shapes, state_cell, the engine set) with Capcom's code on both sides;
                                 // takes no function and patches nothing: order does not matter
+    ScenarioHarnessFh_Inject(); // round 12 group FH: the scenario harness's field mode proved on Capcom's code, a copy
+                                // of each of thirteen field functions against the original in place - injects
+                                // nothing, takes nothing; after every scenario group, so their random streams are
+                                // the ones they had (docs/scenario_harness.md section 7.7)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

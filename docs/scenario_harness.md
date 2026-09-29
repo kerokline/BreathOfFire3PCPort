@@ -3,7 +3,12 @@
 **Status:** MEASURED (2026-09-28; every scenario group of round ten ran through it, 0 mismatches each, [`takeover-queue-round10.md`](takeover-queue-round10.md)) - built and proved on chapter 0
 ([`scena_sc0.md`](scena_sc0.md): 19 functions, 0 mismatches in 76,000
 rounds, 105 of 105 controls refused). Round ten group SCH
-([`takeover-queue-round10.md`](takeover-queue-round10.md) §1).
+([`takeover-queue-round10.md`](takeover-queue-round10.md) §1). **Widened for
+round twelve's field groups** (2026-09-28, group FH, pin `430f34b`): field
+mode, five shapes, the field regions and 174 field-standard callees, section
+7 - every scenario shadow and `'*'` unchanged, the self-test
+`scenario_harness_fh` 0 mismatches over 13 field functions with Capcom's on
+both sides, 6 of 6 controls refused.
 
 `src/game/scenario_harness.h` / `.cpp`: what every scenario group needs to
 take a chapter's code, so that a group writes only its functions, a list
@@ -243,3 +248,392 @@ scenario's are `at::kChapter`, `kState`, `kRun`, `kStep`, `kTimer`,
 `kByteFD`, `kCondFlags`, `kFlagRow`, `kWait`, `kRequest`, `kArea`,
 `kCounter`, `kObjTrio`, `kSprites`, `kEffects`. `SH_PICK`, `SpriteRecord`,
 `ObjectOf`, `FlagRow` are the seeding helpers.
+
+## 7. Round twelve: the field engine's groups
+
+Round twelve's seven field groups - FC1, FC2, FC3, FE1, FE2, FO, FS, 323
+functions, the field rows of `analysis/round12_cut.tsv`
+([`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) §3) - run
+through this harness in wave two. Group FH (2026-09-28, stage A of wave one,
+pin `430f34b`) widened it for them. Everything below is **field mode**: a
+group turns it on with `g.field = true`, or by giving any clone one of the
+new shapes. Without it the harness is the scenario round's to the byte (the
+proof, 7.8). FH's measurements are in the session scratchpad (`fh/`:
+`frontier.py`, `field_rows.tsv`, `frontier.tsv`, `cross.tsv`, `shapes.tsv`),
+game-derived and not committed; `tools/band_rows.py` (group RT) is the
+clone-table tool the groups use.
+
+### 7.1 What changed
+
+| Where | Added | Default (today's behaviour) |
+|---|---|---|
+| `Shape` | `kSprite`, `kScript`, `kCursor`, `kCall`, `kMenu` (7.4) | the five shapes of section 1 unchanged |
+| `Clone::pointers` | which arguments are pointers, `ArgAt(i, Arg::k...)` OR'ed | 0: every argument as the shape draws it |
+| `Group::field` | field mode: the field regions, put-backs, disturbance, handler log | false (also on when a clone has a new shape) |
+| `Group::sprite_span` | `Sprite_Current` +1..+4 drawn below it (kSprite) and kept below it by the disturbance | 0: random |
+| `Group::menu_span` | the menu block's `0x929F01` / `0x929F02` likewise (kMenu) | 0: random |
+| `Callee::guard` | a pointer argument dereferenced only where readable | false: as before |
+| `at::` | the field cells (7.3), `kWindows`, `kMessageCells`, `kTextRecords`, `kMapCells` | |
+| helpers | `Script()`, `Cursor()`, `Scratch(i)`, `Packets()`, `Text()`, `InRegions()`, `InFieldRuns()`, `InChapterBank()` | |
+| stand-ins | `kSlots` 512 (was 256), `kMaxRegions` 64 (was 48); the 174 field-standard callees (7.5) registered for every group **after** its handlers | a handler address stays a handler |
+| disturbance | cases 10..13 move field cells (7.3) | no-ops outside field mode |
+| a handler's recorder | its fourth word `Sprite_Current` +1..+3 and `0x929F01` | 0 outside field mode |
+
+Three entries of `kStandard` are round-twelve functions - `Scenario_CallB`
+(FE2), `EventOp_6x` and `ObjTrio_ClearBit40` (FO). They now name their
+address and take the key from the name, so they register whichever side holds
+the name: the owning group takes them without a harness edit.
+
+### 7.2 The band: what each test accepts
+
+The harness has one address test of its own and gains one:
+
+- **`Register`** (unchanged): a callee listed as Capcom's (key equal to its
+  address) must lie in `.text` `0x401000..0x5C3000`, and one listed as ours
+  must not. Every field run lies inside `.text`, so it accepts every field
+  function as a callee, Capcom's or ours; `FIELD_THEIRS` entries and the three
+  above pass both ways.
+- **`InFieldRuns` / `InChapterBank`** (new, field mode only): a clone whose
+  base lies outside the field runs of plan section 1 - `0x461800`,
+  `0x469D10..0x46D5ED`, `0x5172C0..0x5195F9`, `0x525390..0x526DB0`,
+  `0x52D080..0x5372D8`, `0x56D240..0x5729F8`, `0x5738A0..0x57CD89`,
+  `0x57FF80..0x5859F9`, `0x58C7A0`, `0x593960..0x594060` - and outside the
+  chapter bank `0x537F20..0x56D5E0` is **named in the log**, not refused (a
+  group may clone a shared tail outside its band).
+- The chapter bank itself is `tools/scenario_rows.py`'s (`BANK_LO`,
+  `BANK_HI`), a tool's, not the harness's; the field runs' clone tables are
+  `tools/band_rows.py`'s.
+
+### 7.3 The regions and the seeds
+
+FH read every absolute address in the 323 (instruction operands and
+immediates, capstone, each function to its extent) and counted the groups
+touching each cell. **Standard in field mode** - three or more groups:
+
+| Region | Groups | What, and what is put back each round |
+|---|---|---|
+| `Gfx_PacketNext` `0x7E0670` | FC1 FC2 FE1 FE2 FO | the packet cursor: into the harness's packet buffer (0x800) at `+0..0x1F0` |
+| `0x905B70` + `0x38` | FC2 FC3 FE1 FE2 FS | `CameraTurn_Steps`, `Field_EdgeBits`, `Field_InputFlags`, `Field_ScriptFlags2` `0x905BA4`, `Field_InputHeld` |
+| `0x929ED4` + `0x40` | FC1 FE2 FO FS | `MapView_BuildFlags`, the menu block `0x929F00..` (mode, state `+1`, step `+2`, timer `+4`, cursor bytes), `Field_Kind2Hold` `0x929F12` |
+| `0x903A14` + `0x80` | FC1 FE1 FE2 FO FS | the window style byte `0x903A5A` (`Menu_DrawBox`'s colour), the records `0x903A70..`, `Field_ActorStates` |
+| `0x904BA0` + `0x20` | FE1 FE2 FO FS | the text scratch the name copies and `sprintf` write |
+| `0x904098` + `0xC8` | FE1 FE2 FS | the save block past `Cond_Flags`' `0x108`, to `0x904160` (`Party_Zenny` `0x904058` is already inside `Cond_Flags`) |
+| `0x904560` + `0x1A0` | FE1 FE2 FO FS | the save block's bytes `0x904560..0x904700` |
+| `AreaMap_Header` `0x8CB580` + `0x2000` | FC1 FC2 FE2 | the area block's first 8 KiB (as `area_harness`'s): width and height bytes below `0x20`, the offset word below `0x100` |
+| `AreaMap_Bytes` `0x905D94` | (with the block) | into the block, `+0x800` |
+| the harness's packet, text, script, cursor and scratch buffers | | random; the cursor into the script buffer at `+0..0x3F` |
+
+Also put back in field mode: `MapView_Row` below `0x38` and `MapView_Column`
+below `0x1C` (they sit in the standard `0x929F14` region; `MapView_Cells`'
+readers wrap an index once, so a random word indexes far outside the table -
+the self-test's `0x5728D0` faulted on it until this).
+
+Already standard before round twelve, and read by the field runs: the chapter
+bytes, `Cond_Flags` with the story flags and `Party_Zenny`, `Field_Request`,
+`Game_AreaNumber` / `MoveScript_FAWord`, `0x903840..` (`Camera_Distance`, the
+counters, `0x903850`), `Field_ScriptFlags`, `Sprite_Current` (194 of the 323
+read it), `Frame_Counter`, `MoveScript_F3Divisor`, `ObjTrio` (the party's
+working records, their HP included) and `Field_State` (34), `Sprite_Objects`,
+`Effect_Objects`, `Field_Kind2X` / `Z`, the view focus, the pad.
+
+**A group lists it** (one or two groups; `at::` names the ones FH met):
+`WindowRecords` `0x803160` + 22 x `0x24` (FS: the shop's window cells
+`0x803160..0x803478`, `at::kWindows`), `Text_Records` `0x904CE0` (FE1, FE2),
+`MapView_Cells` `0x904F20` + `0xC40` (FE2), the message cells `0x7DEE20` +
+`0x60` (`EventScript_FlagBank`, the message word, pen and line; FE1),
+`0x903860..` (FE1), `0x9039A8..0x9039F8` (FE2), `0x6BC740..0x6BC8C8` (FO,
+FS), `0x6BE080..` and `0x939850..` (FE2), `0x803480` `MoveScript_PartyRecords`
+(FO), `0x7E0700` (FC3), `0x92C4C0` and `0x7E1200..` (FC2), `0x9048B0..` and
+the save block's words past `0x904160` (FE1, FE2). **Not a region, on
+purpose** (as `area_harness`'s): the image's tables - `Area_Descriptors`, the
+`NameTable_*`, `Field_DirectionSteps`, `Field_MoveSpeeds`,
+`MoveScript_EffectState`, `0x6696DC` / `0x6696E0` - which no field function
+writes; they stay in place and are read for real.
+
+**The field disturbance** (cases 10..13 of the 16, field mode only): a state
+byte `+1..+4` of `Sprite_Current` (below `sprite_span` when set), the menu
+state or step byte (below `menu_span`) or its timer, the packet cursor, a bit
+of `Field_ScriptFlags2` or the pad's pressed word.
+
+### 7.4 The shapes
+
+FH classified the 323 by how they are reached (`pc_hidden.json`'s references,
+the `E8` sites in `pc_funcs.json`'s callers) and what they read (a first
+shape per function in `fh/shapes.tsv`; the group reads and decides):
+
+| Shape | What | Of the 323 (FH's first pass) |
+|---|---|--:|
+| `kSprite` | an object's state handler, void, no arguments, run on `Sprite_Current`; the field code dispatches on its bytes `+1` (`Field_LeaderFrame` `0x660918`, `Field_MemberFrame` `0x65F960`), `+2`, `+3` (`0x525390` through `0x660140`), `+4` (`0x525CC0` through `0x66017C`), each `jmp [table + byte * 4]` unchecked - `sprite_span` keeps them inside | 133 |
+| `kMenu` | a shop, save-point or field-menu state: void, no arguments, dispatched on the menu block's state `0x929F01` (`0x5837E0` through `0x6641BC`, `0x58C2C0` through `0x66739C`) or step `0x929F02` - `menu_span` keeps them inside | 33 (FS) |
+| `kCursor` | an event-script condition: `EventScript_Conditions` `0x663B30`'s entries take `const unsigned char **position` and answer `al`; a[0] is `Cursor()`, the cursor cell pointing into the script buffer | 12 (FO) |
+| `kScript` | an event-script op: `EventOp_3x`, `4x`, `6x`, `7x`, `Ax` take `const unsigned char *op`; a[0] is the cursor's op, `Script()` | 5 (FO) |
+| `kCall` | a cdecl helper called by `E8`: 20 read more than three words (`MoveCmd_OpE9` seven), 31 answer in `eax` / `al` that a caller reads (set `ret_mask`); `pointers` makes argument *i* a sprite record, a scratch pointer (`Scratch(i)`, 0x40 bytes each) or the op | 77 |
+| `kState` (unchanged) | a state handler of a `.data` table that does not read `Sprite_Current` (FE2's draw layers, the camera turn's states), or a direct no-argument call | 63 |
+
+A function answering in `eax` is any shape with `ret_mask`; a hook `(x, z)`
+(`kHook`) and a call-table entry (`kEntry`) keep their meanings. Of the 323,
+202 are reached through a `.data` table - the group lists each table as a
+`DataTable` (its length to the next table's start; `pc_xref.json` names the
+dispatcher), and seeds or spans the byte it indexes by.
+
+### 7.5 The standard callees
+
+**The frontier**: every call and tail `jmp` out of the 323 that lands outside
+them - 208 callees. 32 were in `kStandard` already; two are not callees but
+code inside a cut row's extent (7.6); **174 are new**, `kField` in
+`scenario_harness.cpp`, typed from `symbols.toml`'s `ret` / `params` (masks by
+parameter type, `kFlag` for a byte answer), the 26 without a signature typed
+by reading. `guard` is set on all of them: a pointer argument is hashed (16
+bytes of a char or void pointer, 8 of short, 12 of long) where it is
+readable, and logged as its value where not. The most called (sites in the
+323): `Sound_PlayEffect` 86, `Sprite_EnsureAnimation` 52 (standard),
+`Menu_DrawPiece` 48, `Text_DrawAt` 45 (standard), `AreaMap_ByteAt` 41
+(standard), `Sprite_ScriptTick` 33, `AreaMap_Elevation` 33 (standard),
+`Crt_sprintf` 27, `0x52CFE0` 25, `Sprite_UpdateScreenSlot` 24,
+`MapView_SlopeAt` 24, `MapView_GroundAt` 23, `Text_DrawFont8` 20,
+`Menu_DrawPieces` 19, `Menu_DrawBox` 18, `Effect_Release` 18. By family:
+
+- **Field** (20): `Field_CellAhead`, `CellHasEvent`, `CellsBlock`, `DrawFrame`,
+  `JumpCamera`, `JumpSetUp`, `JumpStart`, `LeaderPushObjects`, `LeaderStand`,
+  `LeaderStepTick`, `MemberSprite`, `MemberTimers`, `MembersFrame`,
+  `ObjectBlockedAhead`, `ObjectOpenDirection`, `ObjectRandomTurn`,
+  `PartyLoad`, `RunTaskRecords`, `TileD0`, `WayBlocked`.
+- **Menu** (19): `Menu_DrawBackdrop`, `DrawBlackScreen`, `DrawBorder`,
+  `DrawBox`, `DrawCell8`, `DrawCursorBox`, `DrawHand`, `DrawIcon8`,
+  `DrawItemIcon`, `DrawItemRow`, `DrawMemberStatus`, `DrawMoneyBox`,
+  `DrawPiece`, `DrawPieces`, `DrawScrollBar`, `DrawSkillRow`, `DrawTitleBox`,
+  `ListScroll`, `YesNo`.
+- **Sprite** (16): `ApplyVelocity`, `ClearSteps`, `FindFree`, `InitFromEntry`,
+  `LoadPalette`, `ObjectAt`, `QueueOverlay`, `ScriptTick`, `ScriptTickOnce`,
+  `SetTint`, `ShadeFadeBegin`, `ShadeFadeStep`, `ShadeLower`, `UpdateScreen`,
+  `UpdateScreenA`, `UpdateScreenSlot`.
+- **Gte** (15) and **Gpu** (11): `Gte_MulMatrix0`, `PopMatrix`,
+  `PrimDepthFlat4_10`, `PrimDepths3_10B`, `PushMatrix`, `RotMatrix`,
+  `RotTrans`, `RotTransPers`, `RotTransPers3`, `RotTransPers4`,
+  `SetRotMatrix`, `SetTransMatrix`, `StoreDepthF4`, `VectorNormal`,
+  `VectorNormalS`; `Gpu_GetClut`, `GetTPage`, `SetDrawMode`, `SetLineF2`,
+  `SetPolyFT4`, `SetPolyG3`, `SetPolyG4`, `SetSemiTrans`, `SetShadeTex`,
+  `SetSprt`, `SetTile`; with `Gfx_CommitPrim`, `Gfx_ClutStripCopyRow`,
+  `Prim_SetTexture`, `MapView_LinkPrimAt`.
+- **The party, items and text**: `Party_ApplyRecord`, `Count`,
+  `ExtraScreens`, `MemberAt`, `MoveMember`, `UpdateScreens`;
+  `Char_AbilityList`, `ExpForLevel`, `LoseHp`, `RecalcStats`; `Skill_ApCost`,
+  `CanUse`, `FlagIndex`; `Item_CanUse`, `HelpMessage`, `IconKind`;
+  `KeyItem_Has`, `Inventory_Remove`, `AbilityList_Add`, `Equip_PreviewSet`,
+  `Actor_EquipCount`, `Member_ClearState`, `PartyRecord_Clear`, `Zenny_Add`;
+  `Text_CharCount`, `DrawFont12`, `DrawFont8`, `DrawSmall`, `TextRecord_Set`,
+  `Msg_SystemPtr`, `SaveMenu_DrawSlots`, `Input_AutoRepeat`.
+- **The map, areas, camera, movement**: `AreaMap_CellsNone`, `Frame`,
+  `SetHeight`, `Slope`; `MapView_GroundAt`, `SlopeAt`; `Area_CellHook`,
+  `LinkAt`, `RunPlacement`, `TestCondition`; `CameraTurn_Start`, `Step`,
+  `End`; `MoveCmd_AttachOffset`, `Move`, `TestFC`; `MoveScript_ObjectKind`,
+  `Step`, `TintFrame`; `Effect_Release`, `RunObjects`, `Spawn`;
+  `Tint_Release`, `Math_Sin`, `Cos`, `EventOp_0x`, `Snd_LoadBankFile`,
+  `Scena17_DrawLogo`, `Area104_LeaderRun`, `Area121_LeaderRun`.
+- **Capcom's by name** (`FIELD_THEIRS`, hand-agnostic): `Crt_sprintf`,
+  `MoveCmd_Move`, `Effect_Spawn`.
+- **Unnamed, by address** (26, typed by reading): the draw helpers
+  `0x52CFE0` (a sprite primitive at the packet cursor; answers it),
+  `0x52CF60`, `0x468950`, `0x469750`, `0x46D5F0`, `0x5942C0`, `0x5947D0`,
+  `0x594410`, `0x594AD0`; the camera matrices `0x494060`, `0x494110`,
+  `0x4941E0`; the dispatchers `0x42D710`, `0x57DFF0` (by `0x929F00`),
+  `0x586670` (by `0x9398CF`); `0x52CE60`, `0x52CED0`, `0x537500`,
+  `0x5372E0`, `0x585A00`, `0x594700` (al), `0x594790` (al), `0x594D90`,
+  `0x591AC0`, `0x58BD50` (swaps two bytes); `0x5B9550`, the CRT's `_ftol`, is
+  `kThrough` - it pops `st(0)`, so no recorder can stand in for it. Of the
+  26, twelve are round thirteen's area-overlay rows (world 0), twelve are
+  part 2 or part 7 rows of the catalog, `0x586670` a part-6 row and
+  `0x5B9550` the CRT's; entries by address stay valid when a later round
+  takes them.
+
+**Louder where the caller reads back**: the pointer answers land in the
+harness's buffers - `Msg_SystemPtr`, `Char_AbilityList` and, in field mode,
+`Item_NamePtr` (its callers read the name through it; a field re-listing of
+the `kStandard` entry) answer into the text buffer, `Gpu_SetPolyG4` its
+primitive, `Text_DrawSmall` its text, `0x52CFE0` the packet cursor;
+`Gte_RotMatrix` / `MulMatrix0` fill their matrix and answer it, the other
+`Gte_*` outputs and `MoveCmd_AttachOffset`'s are filled with noise (floats as
+small whole numbers), `Crt_sprintf` writes up to seven letters;
+`Gfx_CommitPrim` advances the packet cursor by its size; `Zenny_Add` moves
+`Party_Zenny` (held at 9,999,999, al 0 then) and the tally `0x904138`;
+`0x58BD50` swaps. An effect writes only inside the regions or the caller's
+stack.
+
+### 7.6 The cross-group edges
+
+A callee that is one of the 323 is not standard: its owning group takes it,
+and the others call it by address (`SH_AT`, listed in their callees) until it
+merges. FH's pass over the 323's `E8` / `E9` sites (`fh/cross.tsv`):
+
+| Caller group | Callee | Callee group | Callers |
+|---|---|---|---|
+| FC1 | `0x46BF80` | FC2 | `0x46BB50` |
+| FC1 | `0x46D0E0` | FC2 | `0x46B7C0` |
+| FC1 | `0x57AD10` `EventOp_6x` | FO | `0x46A600` (standard, hand-agnostic) |
+| FC2 | `0x5307C0` | FE1 | `0x46D180` |
+| FC2 | `0x5728D0` | FE2 | `0x46D180` |
+| FC3 | `0x534C20` | FE2 | `0x526BA0` |
+| FC3 | `0x535FC0`, `0x535FE0`, `0x536050`, `0x5360C0`, `0x536130`, `0x536170`, `0x536290`, `0x5362D0`, `0x5363C0`, `0x536440` | FE2 | ten of FC3's leader states `0x525CE0..0x525F90` |
+| FC3 | `0x536F10` | FE2 | `0x5172C0` |
+| FE1 | the same ten, and `0x5364D0`, `0x536550`, `0x5365D0` | FE2 | FE1's turn states `0x52F970..0x52FB50` |
+| FE1 | `0x56D6B0` `Field_ObjectTrigger` | FE2 | `0x52F8F0` |
+| FS | `0x574400` | FO | `0x581300` |
+
+No field function calls a battle group's (BE1..BE7) and none calls back into
+a group that calls it: the graph is acyclic. Callee first, a merge order that
+never leaves a raw call to code already ours is **FE2, FO, FE1, FC3, FS,
+FC2, FC1** (FE2 is called by four groups; FC1 calls three). Raw calls are
+correct in any order - the address is the jmp to ours once the callee is
+taken - so the order matters only to the rebinding step.
+
+**Two starts that are not in the cut** but are reached from outside the
+function whose extent holds them: `0x5254A0` (code after `0x5253E0`'s first
+`ret`, inside FC3's `0x5253E0`, tail-jumped from `0x52548E` in it and from
+`0x5256C7` in FC3's `0x5256A0`) and `0x536EC0` (inside FE2's `0x536E90`,
+tail-jumped from `0x536E7D` in FE2's `0x536E70`). Each group copies its host
+whole and lists the target as a `kPhase` callee of the other function, or
+takes it as a function of its own; both are group-internal.
+
+### 7.7 Worked examples
+
+**A hidden state handler** (FC3's `0x525CC0`, hidden in `0x525390`, reached
+through `0x660174`): it reads `Sprite_Current` `+4` and jumps through the
+eight-entry table `0x66017C` - a `kSprite` with a `DataTable`, the span
+keeping `+4` inside. Ours would read the byte and call the table's word in
+place (the table swapped for recorders while the fuzz runs):
+
+```cpp
+// src/game/field_fc3.cpp
+extern "C" void __cdecl Fc3_LeaderSubstate() {   // 0x525CC0
+    const unsigned char k = static_cast<unsigned char*>(Sprite_Current)[4];
+    reinterpret_cast<void (__cdecl*)()>(static_cast<std::uintptr_t>(
+        move_script::Long(scenario_harness::Mem(0x66017C + 4u * k))))();
+}
+// src/game/field_fc3_fuzz.cpp
+namespace sh = scenario_harness;
+const sh::Clone kClones[] = {
+    {"Fc3_LeaderSubstate", 0x525CC0, 0x12, nullptr, 0, nullptr, 0, nullptr, 0,
+     reinterpret_cast<const void*>(&::Fc3_LeaderSubstate), 0, false, sh::Shape::kSprite},
+};
+const sh::DataTable kTables[] = {{0x66017C, 8}};   // to 0x66019C, the next table
+void Run() {
+    sh::Group g = {"field_fc3", kClones, 1, nullptr, 0, kTables, 1, nullptr, 0, nullptr, nullptr, 0};
+    g.sprite_span = 8;   // +1..+4 below 8: inside 0x66017C
+    sh::Run(g);
+}
+```
+
+**A cdecl helper** (FE2's `0x5343C0`, called by `E8` from `0x5341E0`): a byte
+and a pointer to a dword it increments when no pair of `0x9046D0..` names a
+record of `0x9048B0..` of kind 4 with that byte - a `kCall`, the pointer a
+scratch, the records seeded so the match happens:
+
+```cpp
+const sh::Clone kClones[] = {
+    {"Fe2_CountUnpaired", 0x5343C0, 0x55, nullptr, 0, nullptr, 0, nullptr, 0,
+     reinterpret_cast<const void*>(&::Fe2_CountUnpaired), 0, false, sh::Shape::kCall,
+     sh::ArgAt(1, sh::Arg::kScratch)},
+};
+const sh::Region kRegions[] = {{0x904700, 0x200}};   // to the records' end, 0x9048F8
+void Seed(unsigned) {
+    for (unsigned i = 0; i < 8; ++i)
+        if (sh::Half()) sh::Mem(0x9048B0 + 8 * i)[0] = 4;
+}
+void Args(unsigned, std::uint32_t* a) { a[0] = sh::Mem(0x9048B1 + 8 * (sh::Next() % 8))[0]; }
+void Run() {
+    sh::Group g = {"field_fe2", kClones, 1, nullptr, 0, nullptr, 0, kRegions, 1, Seed, nullptr, 0};
+    g.args = Args;
+    sh::Run(g);   // field mode by the kCall shape
+}
+```
+
+The names are placeholders (a group names its functions); the extents,
+tables and seeds are the ones `scenario_harness_fh.cpp` runs.
+
+### 7.8 The proof
+
+**(a) Nothing moved.** `BOF3X_SHADOW='*'` headless at `430f34b` (this
+worktree's build, `fh/star_base.log`) and at FH's tip (`fh/star_after.log`):
+both exit 0, 949 lines of `0 MISMATCHES` after. **All 25 self-test lines
+of the 17 scenario shadows** (`scena_sc0`, `se`, `sc1`, `sc2`, `sc3` two
+chapters, `sc5`, `sc6`, `sc7` two, `sc9a`, `sc9b` two, `sc11`, `sc12`, `sc13`
+two, `sc15` five, `sx`, `sx2`, `calls` - 4,833,000 rounds) **and their
+coverage lines are byte-identical**: the same rounds, the same calls to the
+stand-ins, 0 mismatches. `'*'` has 656 self-test lines against 655, the one
+more `scenario_harness_fh`'s. Twelve lines of modules that do not use this
+harness moved their call counts and nothing else, all still 0 mismatches:
+`sound` (117,993 -> 117,996), `magic_fx_reached` (248,158 -> 248,160),
+`magic_s16`, `magic_s17`, `magic_s34`, `magic_s35`, `area_w0b`, `area_w1b`,
+`area_w1e`, `area_w2b` (both), `area_w3a` (each by under 0.5 %). That is the
+trap [`HANDOFF.md`](HANDOFF.md) records ("a spell fuzz's call counts depend
+on the build directory"): `magic_harness` and `area_harness` put pointers to
+records in our DLL into game memory (`g_records`), and this change grew the
+DLL (the 256 more recorders, the field buffers), so those pointers moved. Their
+sources and harnesses are untouched. A second `'*'` on FH's build
+(`fh/star_after2.log`) repeats every self-test and coverage line of the first byte for byte: the runs are deterministic, so what moved is the build, not chance.
+
+**(b) The new shapes run.** `BOF3X_SHADOW=scenario_harness_fh`
+(`src/game/scenario_harness_fh.cpp`, after every group's self-test in
+`inject_all.cpp`): thirteen functions of the field runs, each a copy of the
+original against the original in place, so any difference is the harness's -
+
+| Shape | Functions (group) | Through |
+|---|---|---|
+| `kSprite` | `0x52F980` (FE1), `0x525CC0` (FC3) | `0x6609AC` (5), `0x66017C` (8); `sprite_span` 5 |
+| `kMenu` | `0x5837E0`, `0x5811B0`, `0x5845E0` (FS) | `0x6641BC` (8); `menu_span` 8 |
+| `kCursor` | `0x57C1A0`, `0x57C230` (FO; conditions 1 and 9) | the cursor cell; al |
+| `kScript` | `0x56E020` (FE2) | `0x662E1C` (12) |
+| `kCall` | `MoveCmd_OpE9` `0x57C8E0` (FO; seven words, a sprite record, al), `0x5343C0` (FE2; a scratch pointer), `0x534420` (FE2), `0x52D880` (FE1; al), `0x5728D0` (FE2; the area block through `AreaMap_Bytes`) | `0x663B84` (4) |
+
+`scenario_harness_fh` alone: 26,000 rounds over 13 functions (2,000 each),
+10,000 calls to the stand-ins (the table handlers of `kSprite`, `kMenu`,
+`kScript` and `MoveCmd_OpE9`), **0 mismatches**; 26,852 bytes of state (39
+regions); 281 stand-ins registered, 174 of them the field-standard set - every
+one passing `Register`'s checks. Every entry of the five tables inside the
+spans was reached (`0x6609AC`'s five, `0x66017C`'s first five by
+`sprite_span`, `0x6641BC`'s eight, `0x663B84`'s four, `0x662E1C`'s twelve).
+Under `'*'` it runs last of the scenario harness's users and draws another
+stream (the harness's generator is shared), 0 mismatches there too.
+
+`0x56E020` is handed an object record in the game, not an op: no leaf of
+the 323 is handed an op (the five `EventOp_*` call out, and the original in
+place would reach the real callee where the copy reaches a recorder). It
+proves `kScript`'s mechanics - a[0] the cursor's op, read through, the buffer
+compared. For the same reason the field-standard stand-ins are proved by
+registration only (all 174 pass `Register`'s checks at start-up, and a group
+calling one it did not list fails loudly); their effects run first in wave
+two's fuzzes.
+
+**Controls** (a one-off build with an environment switch standing another
+original in as "ours", not committed): `kSprite` `0x52F980` against
+`0x525CC0` refused in 2,000 of 2,000 rounds; `kMenu` `0x5811B0` against
+`0x5845E0` 2,000; `kCursor` `0x57C1A0` against `0x57C230` 987; `kScript`
+`0x56E020` against `0x534420` 2,000; `kCall` `0x5343C0` against `0x534420`
+1,812; `kCall` `0x52D880` against `0x5845E0` 2,000 - **6 of 6 refused by a
+count**; `0x5728D0` against itself passed.
+
+### 7.9 Limits
+
+- **The field-standard stand-ins' effects are unproved** until a wave-two
+  group's fuzz runs them (7.8); their typing is `symbols.toml`'s, whose
+  evidence a group re-reads for a callee it depends on.
+- **Spans are per group, not per function**: a group whose tables differ in
+  length seeds the byte per function (`seed`), as `scenario_harness_fh` does
+  for `MoveCmd_OpE9`'s `+4`.
+- **The area block is 8 KiB and bounded only by the header's dims**: a
+  function indexing it by a sprite's coordinates, or walking its records from
+  `AreaMap_CellBase` (`0x5728D0` past its cell test), wants its seed to bound
+  the index, or a region of its own (as `area_harness` §5 says).
+- **`MapView_Cells` is not standard** (one group): `0x5728D0`'s readers of it
+  seed it (the self-test empties it).
+- **The out-parameter fills trust the size** FH read from the signature (a
+  `MATRIX`'s nine shorts, a `VECTOR`'s three longs, a float pair); a caller
+  whose local is smaller would be written past. FH checked `0x494060`'s only;
+  a group re-reads the callers it owns.
+- **A pointer into the heap** (a loaded file) is logged as its value, not
+  dereferenced: `Readable` knows the regions, the stack and the image only.
+- **A subset of shadows draws other numbers than `'*'`**: the counts depend
+  on which shadows ran before (the base build's subset run moved four scenario
+  groups' call counts exactly as the new build's did), so before / after
+  comparisons are `'*'` against `'*'`, as 7.8's.
+- Everything in sections 5 and 6 still holds.
