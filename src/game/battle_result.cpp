@@ -477,9 +477,7 @@ void BattleResult_Inject() {
     // DIVERGENCE DIV-0060: a Latin language overlay only, as MenuLists_Inject
     // tests it for DIV-0058.
     {
-        char lang[16];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
-        if (n != 0 && n < sizeof lang && std::strcmp(lang, "original") != 0 && !Lang_FullWidth()) {
+        if (Lang_Latin()) {
             static const std::uint8_t was = 0, is = 1;
             bof3::PatchBytes("BattleResultExpLayout",
                              static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_exp_layout_us)),

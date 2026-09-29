@@ -322,9 +322,7 @@ namespace {
 // DIV-0061 the same middle less half the real width.
 unsigned BannerTextX(unsigned x, unsigned n, bool wide, const unsigned char* text) {
     if (!g_banner_centre) return wide ? x - 6 * n + 0x26 : x + 6 * (6 - n);
-    unsigned width = 0;
-    for (const unsigned char* t = text; *t; t += (*t & 0x80) ? 2 : 1) width += static_cast<unsigned>(TextAdvance_Of(t));
-    return x + (wide ? 0x26u : 0x24u) - width / 2;
+    return x + (wide ? 0x26u : 0x24u) - TextAdvance_Width(text) / 2;
 }
 }  // namespace
 
@@ -512,9 +510,7 @@ void BattleWinStates_Inject() {
     // DIVERGENCE DIV-0061: a Latin language overlay only, as MenuLists_Inject
     // tests it for DIV-0058.
     {
-        char lang[16];
-        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
-        if (n != 0 && n < sizeof lang && std::strcmp(lang, "original") != 0 && !Lang_FullWidth()) {
+        if (Lang_Latin()) {
             static const std::uint8_t was = 0, is = 1;
             bof3::PatchBytes("BattleBannerCentre",
                              static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_banner_centre)),

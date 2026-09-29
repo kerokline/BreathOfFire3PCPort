@@ -10,3 +10,10 @@ bool Lang_FullWidth() {
     if (n == 0 || n >= sizeof lang) return false;
     return std::strcmp(lang, "ja") == 0 || std::strcmp(lang, "zh") == 0;
 }
+
+bool Lang_Latin() {
+    char lang[16];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    if (n == 0 || n >= sizeof lang || std::strcmp(lang, "original") == 0) return false;
+    return !Lang_FullWidth();
+}

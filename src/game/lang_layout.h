@@ -11,3 +11,9 @@
 // "original" and unset included, answers false - so the Latin paths behave
 // exactly as they did before this existed.
 bool Lang_FullWidth();
+
+// True when BOF3X_LANG names an overlay to lay out as Latin text: set, not
+// "original", and not full-width. The one test behind every Latin layout
+// patch (DIV-0015..0018, -0026, -0027, -0051, -0058..0061), so a new rule
+// for it changes one place.
+bool Lang_Latin();

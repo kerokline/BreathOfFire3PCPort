@@ -329,7 +329,7 @@ unsigned long D3d_BuildPageTexture(int page, int clut, int mode) {
         static unsigned full_logged = 0;
         if (!asked) {
             char text[8];
-            want = GetEnvironmentVariableA("BOF3X_TEXPAGELOG", text, sizeof text) != 0;
+            want = GetEnvironmentVariableA("BOF3X_TEXPAGELOG", text, sizeof text) != 0 && text[0] == '1';
             asked = true;
         }
         if (slot == 0x20 && full_logged < 64) {
