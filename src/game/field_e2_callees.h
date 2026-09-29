@@ -15,12 +15,12 @@ constexpr std::uint32_t kFtol = 0x5B9550;            // the CRT's _ftol - st(0) 
 constexpr std::uint32_t kLoadWait = 0x585A00;        // no arguments, no calls (FieldTail_LoadBank's step 1)
 constexpr std::uint32_t kLoadStep = 0x586670;        // jmp through 0x66450C by the byte 0x9398CF (FieldTail_LoadBank's step 2, a tail jump)
 constexpr std::uint32_t kTradeBox = ::bof3::addr::Panel_DrawWindow;   // 0x469750 (E1B's): five words: a window drawn (the trade screen's frame)
-constexpr std::uint32_t kTradeList = 0x594410;       // (flag): the trade list drawn
-constexpr std::uint32_t kTradeCursor = 0x5947D0;     // no arguments: a window drawn
-constexpr std::uint32_t kTradeFrame = 0x5942C0;      // no arguments: a window frame drawn
-constexpr std::uint32_t kTradeRows = 0x594790;       // al: the row count, stored at 0x6BE08D
-constexpr std::uint32_t kTradeLacks = 0x594700;      // (row byte, quantity byte), al: 1 when an ingredient falls short
-constexpr std::uint32_t kTradeCount = 0x594AD0;      // no arguments: a window drawn
+constexpr std::uint32_t kTradeList = bof3::addr::ItemTrade_DrawList;       // (flag): the trade list drawn
+constexpr std::uint32_t kTradeCursor = bof3::addr::ItemTrade_DrawNeeds;     // no arguments: a window drawn
+constexpr std::uint32_t kTradeFrame = bof3::addr::ItemTrade_DrawBackground;      // no arguments: a window frame drawn
+constexpr std::uint32_t kTradeRows = bof3::addr::ItemTrade_RowCount;       // al: the row count, stored at 0x6BE08D
+constexpr std::uint32_t kTradeLacks = bof3::addr::ItemTrade_Lacks;      // (row byte, quantity byte), al: 1 when an ingredient falls short
+constexpr std::uint32_t kTradeCount = bof3::addr::ItemTrade_DrawCount;      // no arguments: a window drawn
 constexpr std::uint32_t kTradeTake = 0x594D90;       // no arguments: the ingredients taken (Inventory_Remove behind a test)
 
 // --- the event records (save block +0xCF0..) ----------------------------------

@@ -241,6 +241,7 @@
 #include "game/effect_gte.h"
 #include "game/effect_1f.h"
 #include "game/effect_1b.h"
+#include "game/effect_1g.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -916,6 +917,12 @@ void InjectAll() {
                                 // tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
                                 // eight is E1B's); no module patches bytes inside its 48 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    Effect1G_Inject();          // round 13 group E1G (0x594060..0x594D8A: the item-trade screen's rest - its fourth
+                                // run step, its leave state and steps, the backdrop, list, ingredient and count
+                                // windows, the ingredient test, the row count - and Item_DrawIcon): its clones' calls
+                                // re-aimed at the scenario harness's recorders; after ScenarioHarnessEkh_Inject (none
+                                // of its eight is E1G's) and FieldE2_Inject (whose trade states call these by the
+                                // addresses they had); no module patches bytes inside the fourteen
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
