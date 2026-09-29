@@ -9,6 +9,9 @@ between groups (docs/band-rows.md, docs/takeover-queue-field-battle.md).
     python tools/band_rows.py ... --function 0x446DE0      -> one row and its clone
     python tools/band_rows.py ... --group BE4 --refs       -> raw 0x... in src/game
     python tools/band_rows.py ... --edges [--group BE4]    -> calls between groups
+    python tools/band_rows.py ... --cut <tsv> --byte-tables --group EK1 --clones --harness area
+                                  (round thirteen: any cut table, area_harness's form,
+                                   two-level switches bounded; docs/band-rows.md section 6)
 
 Rounds nine to eleven each had a table that enumerated their code (Magic_Rows,
 the chapter vtables, the area descriptors, the boss set-ups). Round twelve's
