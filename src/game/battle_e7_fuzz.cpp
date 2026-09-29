@@ -246,8 +246,8 @@ void Rows(U list, unsigned rows, unsigned top_max) {
     for (unsigned r = 0; r < rows; ++r) {
         unsigned char* const row = Mem(list + 4 * r);
         if (bh::Often()) row[0] = static_cast<unsigned char>(bh::Next() % 20);
-        if (bh::Half()) row[1] = 0xFF;
-        if (bh::Half()) row[2] = 0xFF;
+        row[1] = bh::Half() ? 0xFF : static_cast<unsigned char>(bh::Often() ? bh::Next() % 20 : bh::Next());
+        row[2] = bh::Half() ? 0xFF : static_cast<unsigned char>(bh::Often() ? bh::Next() % 20 : bh::Next());
         row[3] = bh::Often() ? (bh::Half() ? 0xFF : static_cast<unsigned char>(bh::Next() % 32)) : static_cast<unsigned char>(bh::Next());
     }
     unsigned char* const rec = Rec();
