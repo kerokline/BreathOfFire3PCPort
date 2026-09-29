@@ -34,27 +34,40 @@ The votes, each family a distribution over classes, weighted by FAMILY:
              jmp or jcc (a linear sweep of .text, band_rows.sweep_refs), or
              an immediate (a pushed or stored function pointer); one vote per
              distinct caller with a class.
-  tables     every aligned dword of .rdata / .data that holds the start, the
-             run of code pointers it sits in (band_rows.run_start), named when
-             a symbols.toml data item covers the cell; the table votes its
-             name's class, or else the classes of its other slots.
+  tables     every aligned dword of .rdata / .data that holds the start. The
+             table is the one the code indexes: the nearest address at or
+             below the cell some start touches (table_readers; a run of code
+             pointers is often several tables back to back). It votes the
+             class of a symbols.toml data item named at that base, else the
+             class of the code that indexes it (a kind's entry and its state
+             table), else the classes of its other slots.
+  dispatches the slots of every table this start indexes: a dispatcher is
+             part of what it dispatches to (BATE's root 0x42D710, whose only
+             caller is a game-mode frame).
   callees    for each start this one calls: the classes of that callee's
-             other callers (so a helper everyone calls votes for no one).
-  data       for each absolute data address it touches: the classes of the
-             other starts that touch the same address (named ones are written
-             into the evidence by their symbols.toml data or block name).
+             other callers, each class's count divided by its size and the
+             whole weighted by 1 / the classes sharing it (spread()), so a
+             helper everyone calls votes for no one.
+  data       the same, for each absolute data address it touches (named ones
+             are written into the evidence by their symbols.toml name).
   neighbours the nearest classed start below and above, within 0x3000 bytes
-             (the linker kept the source's file order, SHARED_SOURCE.md s2).
+             (the linker kept the source's file order, SHARED_SOURCE.md s2);
+             one that is ours counts double one the catalogue placed.
   psx        a pairs_propagated.json pair, never the call-disputed tier: its
              overlay's class.
+  weak       a caller, reader or slot whose own class is only the
+             catalogue's address guess (WEAK_SOURCES: range, neighbour,
+             host) votes here instead of as structure.
 
 The class with the most weight is proposed. The tier, in symbols.toml's
-vocabulary: `evidence` when a structural family (callers, tables, psx) is
-unanimous for the proposed class and one of the others agrees - evidence of
-membership in a subsystem, not of a name; `hypothesis` for any other
-proposal (neighbours alone is always this); `unnamed` when nothing votes.
-Proposals at `evidence` are fed back as known for a second and third pass
-(a helper called only from an unlabelled caller the first pass placed).
+vocabulary: `evidence` when the structural families present (callers,
+tables, dispatches, psx) are unanimous for the proposed class and one other
+family agrees - evidence of membership in a subsystem, not of a name;
+`hypothesis` for any other proposal (neighbours alone is always this);
+`unnamed` when nothing votes. Proposals at `evidence` are fed back as known
+for a second and third pass (a helper called only from an unlabelled caller
+the first pass placed). The passes also cover the boot-resident starts whose
+catalogue label maps to no class ('Boot: unnamed').
 
 Suspects (column `suspect`), independent of the label:
 
@@ -71,8 +84,9 @@ Suspects (column `suspect`), independent of the label:
              out of takeover scope by the owner's choice.
 
 --validate runs the same vote for every start that is ours with its own class
-hidden and prints the hit rate per tier, the measurement that says what a tier
-is worth. Writes only under --out (a scratch directory: the rows are derived
+hidden - by default with its whole impl file hidden, as an unlabelled run's
+neighbours are - and prints the hit rate per tier, the measurement that says
+what a tier is worth. Writes only under --out (a scratch directory: the rows are derived
 from copyrighted game code and are never committed, CLAUDE.md rule 1).
 Addresses are load-bearing constants (rule 3).
 """
@@ -86,8 +100,15 @@ import band_rows as br   # noqa: E402
 
 DATA_LO, DATA_HI = 0x5C4000, 0x93D6EC      # .rdata, .data and its zero fill (section headers)
 NEIGHBOUR_GAP = 0x3000
-FAMILY = {'callers': 4.0, 'tables': 4.0, 'psx': 5.0, 'callees': 2.0, 'data': 2.0, 'neighbours': 2.0}
-STRUCTURAL = ('callers', 'tables', 'psx')
+FAMILY = {'callers': 4.0, 'tables': 4.0, 'psx': 5.0, 'callees': 2.0, 'data': 2.0, 'neighbours': 2.0,
+          'weak': 1.0, 'dispatches': 4.0}
+STRUCTURAL = ('callers', 'tables', 'psx', 'dispatches')
+# A caller or a table reader whose own class is only the catalogue's address
+# guess (a range, a neighbour, a host) votes in the weak family, not as
+# structure: the game-mode frames at 0x517330 / 0x517340 are "Field objects"
+# by range and would otherwise make BATE's root 0x42D710 field code (the
+# spot check, docs/labelling-pass.md section 5).
+WEAK_SOURCES = ('catalog:range', 'catalog:neighbour', 'catalog:host')
 
 # The statically linked libraries, out of takeover scope (owner's choice). The
 # extents are measured (docs/labelling-pass.md section 4): the decoder's first
@@ -102,7 +123,7 @@ UNIT_TABLES = {'Effect_KindHandlers': 'effect kind'}
 CLASSES = ['battle engine', 'battle effects', 'boss scripts', 'effect objects', 'field core',
            'event script', 'text, windows, menus', 'shop, inn, save point', 'world map',
            'area overlays', 'scenario banks', 'party state, items', 'minigames, master',
-           'party character sets', 'top-level, platform', 'renderer, PSX library', 'sound',
+           'top-level, platform', 'renderer, PSX library', 'sound',
            'MP3 decoder', 'MSVC CRT']
 
 IMPL_CLASS = [
@@ -125,7 +146,8 @@ IMPL_CLASS = [
 
 LABEL_CLASS = [
     (r'^Table (Effect_KindHandlers|EffectKind)', 'effect objects'),
-    (r'^Table (Effect_Handlers|Battle|PartyAction|Member_States)', 'battle engine'),
+    (r'^Table (PartyAction|Member_States)', 'field core'),
+    (r'^Table (Effect_Handlers|Battle)', 'battle engine'),
     (r'^Table (Shop|Inn|FieldSave)', 'shop, inn, save point'),
     (r'^Table (MenuList|FieldMenu|Window_)', 'text, windows, menus'),
     (r'^Table WorldMap', 'world map'),
@@ -137,7 +159,9 @@ LABEL_CLASS = [
     (r'^Area overlays', 'area overlays'),
     (r'^Scenario|^Boot: Scena', 'scenario banks'),
     (r'^Communication|^Master', 'minigames, master'),
-    (r'^Party character', 'party character sets'),
+    # the PSX's PLP overlays are the party sets' field actions, which the PC
+    # holds with the rest of the field code (field_hidden.cpp's PartyAction*)
+    (r'^Party character', 'field core'),
     (r'^Event script', 'event script'),
     (r'^Shop', 'shop, inn, save point'),
     (r'^Field menu|^Text and windows|^Boot: text', 'text, windows, menus'),
@@ -160,6 +184,7 @@ NAME_CLASS = [
     (r'^WorldMap', 'world map'),
     (r'^Scena', 'scenario banks'),
     (r'^(Event|Move)', 'event script'),
+    (r'^(PartyAction|Member_)', 'field core'),
     (r'^(Msg|Text|Font|Glyph|Window|Menu|Choice|TitleMenu)', 'text, windows, menus'),
     (r'^(Shop|Inn)', 'shop, inn, save point'),
     (r'^(Inventory|Item|Equip|Char_|Ability|Zenny|Party)', 'party state, items'),
@@ -289,7 +314,9 @@ class World:
         if x:
             return x, x, 'range'
         r = self.cat.get(e)
-        if r and r['part'] != '7 Unlabelled':
+        if r and r['part'] != '7 Unlabelled' and r['how'] != 'pair:call-disputed':
+            # (the catalogue's first-pair-wins lets seven call-disputed pairs
+            # label a row; that tier is never used here)
             c = classify(LABEL_CLASS, r['label'])
             if c:
                 return c, r['label'], 'catalog:' + r['how'].split(':')[0]
@@ -403,6 +430,12 @@ class World:
         for t, lst in self.rev.items():
             for o, k in lst:
                 self.callers_of[t].add(o)
+        # the slots of every table, by the base its code indexes
+        self.slots_of_base = collections.defaultdict(set)
+        for t, lst in self.tables.items():
+            for ts, cell in lst:
+                base, _ = self.table_readers(ts, cell)
+                self.slots_of_base[base].add(t)
 
     def table_readers(self, ts, cell):
         """The code that indexes the table holding `cell`: the starts touching
@@ -476,33 +509,48 @@ class World:
                 continue
             k = kc(o)
             if k:
-                fam['callers'][k[0]] += 1
+                fam['weak' if k[2] in WEAK_SOURCES else 'callers'][k[0]] += 1
                 detail[(k[0], k[1])] += 1
-            ev['callers'].append('%s%s' % (self.sname(o), '(%s)' % k[0] if k else '(?)'))
+            ev['callers'].append('%s%s' % (self.sname(o), '(%s%s)' % (
+                '~' if k[2] in WEAK_SOURCES else '', k[0]) if k else '(?)'))
         # tables
         for ts, cell in sorted(set(self.tables.get(e, ()))):
-            tn = self.table_name(ts, cell)
             slots = self.table_slots.get(ts, [])
-            c = (classify(LABEL_CLASS, 'Table ' + tn) or classify(NAME_CLASS, tn)) if tn else None
             base, readers = self.table_readers(ts, cell)
+            # the table's own name: a data item starting at its base (or at
+            # base + 4, a table read as base - 4); a name that only covers
+            # the cell may be a neighbour's count run long (EffectKind18_States)
+            tn = next((self.data_name(b) for b in (base, base + 4, base + 8)
+                       if self.data_name(b) and '+' not in self.data_name(b)), None)
+            c = (classify(LABEL_CLASS, 'Table ' + tn) or classify(NAME_CLASS, tn)) if tn else None
+            weak = False
             if not c and readers:
                 # the code that indexes the table: a kind's dispatcher and its
                 # state table, a mode and its steps
-                rc = collections.Counter(kc(o)[0] for o in readers if kc(o))
+                rk = [kc(o) for o in readers if kc(o)]
+                rc = collections.Counter(k[0] for k in rk)
                 if rc:
                     c = rc.most_common(1)[0][0]
-                    tn = tn or 'table 0x%06X read by %s' % (base, self.sname(sorted(readers)[0]))
+                    weak = all(k[2] in WEAK_SOURCES for k in rk)
+                    tn = 'table 0x%06X read by %s' % (base, self.sname(sorted(readers)[0]))
+            if not c:
+                tn = tn or self.table_name(ts, cell)
+                c = (classify(LABEL_CLASS, 'Table ' + tn) or classify(NAME_CLASS, tn)) if tn else None
+            ts = base
             if not c:
                 sc = collections.Counter()
+                wk = []
                 for _, t in slots:
                     if t != e:
                         k = kc(t)
                         if k:
                             sc[k[0]] += 1
+                            wk.append(k[2] in WEAK_SOURCES)
                 if sc:
                     c = sc.most_common(1)[0][0]
+                    weak = all(wk)
             if c:
-                fam['tables'][c] += 1
+                fam['weak' if weak else 'tables'][c] += 1
                 detail[(c, tn or 'table 0x%06X' % ts)] += 1
             ev['tables'].append('%s[%d]%s' % (tn or 'table 0x%06X' % ts, (cell - ts) // 4, '(%s)' % c if c else '(?)'))
         # psx
@@ -511,8 +559,19 @@ class World:
             if pc[0]:
                 fam['psx'][pc[0]] += 1
             ev['psx'].append(pc[1])
-        # callees
         f = self.fwd.get(e, {})
+        # dispatches: the slots of the tables this start indexes (a kind's
+        # entry and its states, a mode's root and its steps)
+        for v in sorted(f.get('data', ())):
+            for t in sorted(self.slots_of_base.get(v, ())):
+                if t == e:
+                    continue
+                k = kc(t)
+                if k:
+                    fam['weak' if k[2] in WEAK_SOURCES else 'dispatches'][k[0]] += 1
+                    detail[(k[0], k[1])] += 1
+                ev['dispatches'].append('%s%s' % (self.sname(t), '(%s)' % k[0] if k else '(?)'))
+        # callees
         n = 0
         for g in sorted(f.get('calls', ())):
             if g == e or g not in self.ext:
@@ -571,8 +630,11 @@ class World:
         for x in (lo, hi):
             if x is not None:
                 k = kc(x)
-                fam['neighbours'][k[0]] += 0.5
-                detail[(k[0], k[1])] += 0.5
+                # a neighbour that is ours (read and written) counts double
+                # one the catalogue placed by address
+                wn = 1.0 if k[2] == 'ours' else 0.5
+                fam['neighbours'][k[0]] += wn
+                detail[(k[0], k[1])] += wn
         ev['neighbours'] = ['%s(%s)' % (self.sname(x), kc(x)[0]) if x is not None else '-' for x in (lo, hi)]
         return fam, detail, ev
 
@@ -636,7 +698,7 @@ class World:
 
 def fmt_ev(ev):
     parts = []
-    for k in ('callers', 'tables', 'psx', 'callees', 'imports', 'data', 'neighbours'):
+    for k in ('callers', 'tables', 'dispatches', 'psx', 'callees', 'imports', 'data', 'neighbours'):
         v = ev.get(k)
         if v:
             more = '' if len(v) <= 6 else ' +%d' % (len(v) - 6)
@@ -718,10 +780,13 @@ def main():
         if targets[e] == '7':
             known.pop(e, None)
     res = {}
+    # the passes run over the unlabelled starts and the boot-resident ones the
+    # catalogue's label gives no class ('Boot: unnamed', an unknown name prefix)
+    passing = {e for e in targets if targets[e] == '7' or e not in known}
     for p in range(1, a.passes + 1):
         added = 0
-        for e in sorted(targets):
-            if targets[e] != '7' or (e in res and res[e][2] == 'evidence'):
+        for e in sorted(passing):
+            if e in res and res[e][2] == 'evidence':
                 continue
             c, det, tier, fam, ev = w.propose(e, known)
             res[e] = (c, det, tier, ev, p)
@@ -731,7 +796,7 @@ def main():
                 added += 1
         print('pass %d: %d evidence proposals fed back' % (p, added))
     for e in targets:
-        if targets[e] == '2':
+        if targets[e] == '2' and e not in passing:
             c, det, tier, fam, ev = w.propose(e, known)
             res[e] = (c, det, tier, ev, 0)
 
