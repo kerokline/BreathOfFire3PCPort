@@ -966,7 +966,67 @@ leader's words byte by byte; the same values).
 
 ### 8.8 The proof
 
-PROOF_PLACEHOLDER
+**(a) Nothing moved that uses this harness.** `BOF3X_SHADOW='*'` headless on
+`d19d803` built in this worktree (`ekh/star_base.log`) and on EKH's build with
+the effect mode and the mask fold (`ekh/star_after.log`): both exit 0,
+`inject: 6891 ours, 0 left original`, **677 self-test lines before and 678
+after**, the one more `scenario_harness_ekh`'s. Of 1,305 self-test, coverage
+and mode lines, **1,276 are byte-identical**, among them every line of every
+shadow that runs through `scenario_harness` - the 17 scenario shadows, the
+seven field groups, `scenario_harness_fh`. What moved, all still 0
+mismatches, only call counts: `sound` (117,994 -> 117,997), `magic_s16`,
+`magic_s17`, `magic_s34`, `magic_s35`, `area_w0b`, `area_w1b`, `area_w1e`,
+`area_w2b` (both), `area_w3a` and `battle_e7` (3,249,681 -> 3,249,684) - the
+same modules as FH's 7.8 (plus `battle_e7`, which did not exist then), none of
+which uses this harness, whose harnesses (`magic_harness`, `area_harness`,
+`boss_harness`) and sources are untouched: the build-directory trap
+([`HANDOFF.md`](HANDOFF.md)), their records' pointers into our DLL moving as
+the DLL grew (256 more recorders, twelve arguments, the effect tables). Two
+`field_s` lines changed their text only: the "lies outside" line now says
+"and the effect runs", and one names our own `PartyForm_DrawReserve` at its
+DLL address, which moved with the build.
+
+**(b) The new shape runs.** `BOF3X_SHADOW=scenario_harness_ekh`
+(`src/game/scenario_harness_ekh.cpp`, after every scenario and field group in
+`inject_all.cpp`; every effect group's inject goes after it, since it copies
+eight of their rows): eight rows of the cut, each a copy of the original
+against Capcom's on the other side, so any difference is the harness's -
+
+| Shape | Row (group) | Through |
+|---|---|---|
+| `kEffect`, a hidden state reached by a cell | `0x462BC0` (E1A) | kind 1, `state_span` 2; `+0x18` seeded below 4 |
+| `kEffect`, a kind's dispatcher with its table | `0x46F2B0` (E1D) | `Effect_KindHandlers[0x21]`, `0x654284` (6), `state_span` 6 |
+| `kEffect`, a kind-0x18 sub-state dispatcher | `0x4FD470` (E5A) | `EffectKind18_States[4]`, `0x65DAE8` (4), `sub_span` 4 |
+| `kEffect`, a kind-0x18 sub-state | `0x500D20` (E5B) | 8.7's seeds |
+| `kCall` answering `eax` | `0x479970` (E2E) | `ret_mask` `0xFFFFFFFF`, the angles seeded across `0x800` |
+| `kCall` handed a record | `0x4857C0` (E3C) | `ArgAt(0, Arg::kEffect)` |
+| `kEffect`, a spawner | `0x46F7D0` (E1D) | kind 0x23; `Effect_FindFree`'s effect-mode stand-in |
+| `kEffect`, a release | `0x472770` (E2A) | `Effect_Release`'s effect-mode stand-in, by a tail `jmp` |
+
+The first six call nothing (or only through their table, swapped on both
+sides), so "ours" is the original in place. The spawner and the release call a
+callee the original in place would reach for real, so their "ours" is a second
+byte-copy of the original with that call re-aimed at a trampoline that asks
+`StandIn` for the callee's stand-in - as ours does through `SH_CALL`; Capcom's
+code on both sides still. Alone: **16,000 rounds over 8 functions, 6,973 calls
+to the stand-ins, 0 mismatches**; 24,756 bytes of state in 45 regions; 365
+stand-ins registered - the 174 field-standard, 109 effect-standard and 10
+re-listings among them, every one passing `Register`'s checks. Every entry of
+both tables was reached (`0x654284`'s six 312..353 times each, `0x65DAE8`'s
+four about 500 each); `Effect_FindFree` 973 calls, `Effect_Release` 2,000.
+Under `'*'` it runs last of this harness's users and draws another stream
+(6,986 calls), 0 mismatches there too.
+
+**(c) Controls** (`BOF3X_EKH_CONTROL`, in the committed file, off by default):
+`1` stands in for `0x462BC0` a copy whose `mov byte [eax + 1], 1` writes 2 -
+**refused in 2,000 of 2,000 rounds**, exit 3; `2` makes the spawner's copy
+write the new record's kind 0x25 instead of 0x24 - **refused in 731 rounds**
+(the rounds where the stand-in answered a free record and the spawn ran),
+exit 3. **2 of 2 refused by a count.**
+
+`tools/ledger_check.py`: 63 entries, 0 errors. No function is taken: no
+`BOF3_INJECT`, no `impl`, no ledger entry needed (the harness changes what the
+fuzz does, not what the game does).
 
 ### 8.9 Limits and debts
 
