@@ -297,6 +297,17 @@ bits.
 regions. Every state-table entry and the world map cells reached (coverage in
 the log: `phase 0x...` for each).
 
+**Self-tests** (headless, this worktree, 2026-09-29): `BOF3X_SHADOW=effect_1a`
+exit 0, as above. `BOF3X_SHADOW='*'` exit 0: 680 self-test lines, every one 0
+mismatches, `inject: 6965 ours, 0 left original` (6,895 at the base plus these
+70); `effect_1a` inside it 563,270 calls (the shared stream). With
+`BOF3X_WIDE=1` (DIV-0041's patches on, no site in this band): `effect_1a` alone
+0 mismatches; `'*'` stops at `battle_e7` (`GeneWin_ListSlideOut` /
+`GeneWin_List3SlideOut`, 1,832 rounds) - round twelve's group, whose bounds
+widescreen patches (the stage-A note on `battle_e7`), not this group's;
+`'*,-battle_e7'` exit 0, 679 lines, 0 mismatches. `tools/ledger_check.py`: 63
+entries, 0 errors.
+
 ## 5. Calls across groups
 
 **Out, raw until the owners merge** (`effect_1a_callees.h`):
@@ -390,12 +401,146 @@ Every one of the 70 functions has at least one refused control.
 
 ### 7.2 The table
 
-CONTROLS_TABLE
+| Id | Function | Plant | Verdict |
+|---|---|---|---|
+| D01 | `EffectKind01_Run` | kind 1 through kind 7 table | refused, 3,000 rounds |
+| D07 | `EffectKind07_Run` | kind 7 through kind 8 table | refused, 3,000 rounds |
+| D08 | `EffectKind08_Run` | kind 8 through kind 9 table | refused, 3,000 rounds |
+| D09 | `EffectKind09_Run` | kind 9 state xor 1 | refused, 3,000 rounds |
+| D0B | `EffectKind0B_Run` | kind B state halved | refused, 2,425 rounds |
+| D02 | `EffectKind02_Run` | kind 2 state one down | refused, 2,425 rounds |
+| D03 | `EffectKind03_Run` | kind 3 state & 2 | refused, 1,494 rounds |
+| D05 | `EffectKind05_Run` | kind 5 by +2 | refused, 2,520 rounds |
+| D0A | `EffectKind0A_Run` | kind A always 0 | refused, 1,494 rounds |
+| D0C | `EffectKind0C_Run` | kind C 2 as 1 | refused, 925 rounds |
+| D0D | `EffectKind0D_Run` | kind D 4 as 3 | refused, 602 rounds |
+| D1A | `EffectKind1A_Run` | kind 1A 16 as 15 | refused, 158 rounds |
+| D0F1 | `EffectKind0F_Run` | kind F record 3 bound | refused, 287 rounds |
+| D0F2 | `EffectKind0F_Run` | kind F record 4 not 3 | refused, 799 rounds |
+| W0E | `EffectKind0E_WorldMap` | kind E slot 8 | refused, 2,735 rounds |
+| W16 | `EffectKind16_WorldMap` | index 3 as 4 | refused, 226 rounds |
+| K5C | `EffectKind5C_Run` | area 0x69 | refused, 994 rounds |
+| K01S | `EffectKind01_Start` | extra +0x50 | refused, 3,000 rounds |
+| K01S2 | `EffectKind01_Start` | state 2 | refused, 3,000 rounds |
+| K01D1 | `EffectKind01_Draw` | offset index +0x1B | refused, 2,989 rounds |
+| K01D2 | `EffectKind01_Draw` | x - 8 as x + 8 | refused, 2,986 rounds |
+| K01D3 | `EffectKind01_Draw` | v below + 1 | refused, 2,987 rounds |
+| K01D4 | `EffectKind01_Draw` | Sprite_Current restored after GetClut | refused, 253 rounds |
+| K01D5 | `EffectKind01_Draw` | height >> 1 not / 2 | refused, 740 rounds |
+| K07S | `EffectKind07_Start` | +9 0xF1 | refused, 3,000 rounds |
+| K07F1 | `EffectKind07_FadeIn` | sprite 0 | refused, 3,000 rounds |
+| K07F2 | `EffectKind07_FadeIn` | >= 0x80 | refused, 1,435 rounds |
+| K07F3 | `EffectKind07_FadeIn` | +0x5F by 1 | refused, 3,000 rounds |
+| K10A | `EffectKind10_Run` | y copied through the FPU | not refused: equivalent (7.1) |
+| K10B | `EffectKind10_Run` | second offset by +0x10 | refused, 2,991 rounds |
+| K10C | `EffectKind10_Run` | no abs | refused, 1,462 rounds |
+| K10D | `EffectKind10_Run` | second extra by +0xC | refused, 2,105 rounds |
+| H1 | `EffectHud_Draw` | count 0x3F | refused, 1,103 rounds |
+| H2 | `EffectHud_Draw` | > 0x32 | refused, 2 rounds |
+| H3 | `EffectHud_Draw` | x + 0x101 | refused, 3,000 rounds |
+| H4 | `EffectHud_Draw` | frame bit 3 | refused, 108 rounds |
+| G1 | `EffectHud_DrawGauge` | marker compared 32-bit | refused, 272 rounds |
+| G2 | `EffectHud_DrawGauge` | lift >> 5 | refused, 1,134 rounds |
+| G3 | `EffectHud_DrawGauge` | sprite y + | refused, 251 rounds |
+| G4 | `EffectHud_DrawGauge` | green 0x21 | refused, 3,000 rounds |
+| G5 | `EffectHud_DrawGauge` | height >= 0 | not refused: equivalent (7.1) |
+| B1 | `EffectHud_Bar` | bottom + 16 | refused, 3,000 rounds |
+| B2 | `EffectHud_Bar` | blue 0x51 | refused, 3,000 rounds |
+| M1 | `EffectHud_Marker` | shade by >> 2 | refused, 1,872 rounds |
+| M2 | `EffectHud_Marker` | mode 1 | refused, 3,000 rounds |
+| S8 | `EffectHud_Sprite8` | x as int | refused, 3,000 rounds |
+| TB1 | `EffectHud_TwoBars` | second y + 5 | refused, 3,000 rounds |
+| TB2 | `EffectHud_TwoBars` | green 0x81 | refused, 3,000 rounds |
+| DC1 | `EffectHud_DrawCount` | n + 0x18 | refused, 3,000 rounds |
+| DC2 | `EffectHud_DrawCount` | answer bits 8..15 lost (masked: equivalent) | not refused: equivalent (7.1) |
+| K03S | `EffectKind03_Start` | step from byte 1 | refused, 2,986 rounds |
+| K03F1 | `EffectKind03_Fade` | mode 2 > 0 | refused, 16 rounds |
+| K03F2 | `EffectKind03_Fade` | mode 1 >= | refused, 219 rounds |
+| K03F3 | `EffectKind03_Fade` | mode 0 < 0 | refused, 11 rounds |
+| K03F4 | `EffectKind03_Fade` | / 256 | refused, 1,301 rounds |
+| K03F5 | `EffectKind03_Fade` | leader +2 4 | refused, 2,048 rounds |
+| K03F6 | `EffectKind03_Fade` | mode 2 > 0xFF | refused, 5 rounds |
+| K03N1 | `EffectKind03_ShowName` | frame bit 5 | refused, 1,470 rounds |
+| K03N2 | `EffectKind03_ShowName` | at most 3 | refused, 1,069 rounds |
+| K03N3 | `EffectKind03_ShowName` | y - 0x17 | refused, 1,928 rounds |
+| K05S1 | `EffectKind05_Start` | + 9 | refused, 3,000 rounds |
+| K05S2 | `EffectKind05_Start` | at most 2 | refused, 2,953 rounds |
+| K05S3 | `EffectKind05_Start` | spawn kind 0xB | refused, 2,259 rounds |
+| K05S4 | `EffectKind05_Start` | clamp low wrong | refused, 1,505 rounds |
+| K05R1 | `EffectKind05_Rise` | hold inverted | refused, 762 rounds |
+| K05R2 | `EffectKind05_Rise` | z step 0x3000 | refused, 2,238 rounds |
+| K05R3 | `EffectKind05_Rise` | divisor at 0x3C4000 | refused, 1,486 rounds |
+| K05R4 | `EffectKind05_Rise` | step from the offset | refused, 368 rounds |
+| K05L | `EffectKind05_Land` | animation 2 | refused, 2,000 rounds |
+| K05B1 | `EffectKind05_Bounce` | +7 >= | refused, 91 rounds |
+| K05B2 | `EffectKind05_Bounce` | height 0 sets +0xB 1 | refused, 122 rounds |
+| K05B3 | `EffectKind05_Bounce` | anim 0 / 3 swapped | refused, 1,491 rounds |
+| K05B4 | `EffectKind05_Bounce` | rise 0x48000 | refused, 493 rounds |
+| K05F | `EffectKind05_Follow` | record 5 > 0 | refused, 784 rounds |
+| K0AS | `EffectKind0A_Start` | +0x28 not copied | refused, 2,811 rounds |
+| K0AF1 | `EffectKind0A_Follow` | height < 0 | refused, 265 rounds |
+| K0AF2 | `EffectKind0A_Follow` | +0x5A from +0x58 | refused, 735 rounds |
+| K0CS | `EffectKind0C_Start` | +0xC not +0xB | refused, 2,997 rounds |
+| K0CA1 | `EffectKind0C_Aim` | count to 0xE | refused, 39 rounds |
+| K0CA2 | `EffectKind0C_Aim` | outside >= | refused, 221 rounds |
+| K0CA3 | `EffectKind0C_Aim` | clamp hi - 1 | refused, 529 rounds |
+| K0CA4 | `EffectKind0C_Aim` | arrow low 0x91 | refused, 269 rounds |
+| K0CA5 | `EffectKind0C_Aim` | every 8th | refused, 6 rounds |
+| K0CA6 | `EffectKind0C_Aim` | line end 0x87 | refused, 1,937 rounds |
+| K0CA7 | `EffectKind0C_Aim` | near low - 1 | refused, 161 rounds |
+| HA | `EffectHud_DrawArrow` | u swapped below | refused, 3,000 rounds |
+| HM1 | `EffectHud_DrawMark` | u + 1 | refused, 3,000 rounds |
+| HM2 | `EffectHud_DrawMark` | frame bit 2 | refused, 767 rounds |
+| K0DS | `EffectKind0D_Start` | none 0xFFFE | refused, 994 rounds |
+| K0DI | `EffectKind0D_SlideIn` | < 0xA0 | refused, 460 rounds |
+| K0DH | `EffectKind0D_Hold` | at 1 | refused, 321 rounds |
+| K0DO | `EffectKind0D_SlideOut` | < -0x46 | refused, 441 rounds |
+| K0FS | `EffectKind0F_Start` | -0x18 | refused, 3,000 rounds |
+| K0FO | `EffectKind0F_Open` | >= 0x12 | refused, 448 rounds |
+| K0FO2 | `EffectKind0F_Open` | y without the high half (kAll mask) | refused, 3,000 rounds |
+| K0FC1 | `EffectKind0F_Choose` | spawn state 7 | refused, 1,239 rounds |
+| K0FC2 | `EffectKind0F_Choose` | column 1 | refused, 1,295 rounds |
+| K0FT | `EffectKind0F_Title` | y 0x15 | refused, 3,000 rounds |
+| K0FTC | `EffectKind0F_TitleClose` | y + 3 | refused, 3,000 rounds |
+| K0FF | `EffectKind0F_Frame` | h 0x14 | refused, 3,000 rounds |
+| K0FCl | `EffectKind0F_Close` | <= -0x19 | refused, 397 rounds |
+| K0FLS | `EffectKind0F_LineStart` | x 0x124 | refused, 3,000 rounds |
+| K0FLT1 | `EffectKind0F_LineType` | bit 6 not 7 | refused, 103 rounds |
+| K0FLT2 | `EffectKind0F_LineType` | <= count | refused, 13 rounds |
+| K0FLT3 | `EffectKind0F_LineType` | x 0x118 | refused, 2,668 rounds |
+| K0FLN1 | `EffectKind0F_LineNext` | no 0xFF test | refused, 35 rounds |
+| K0FLN2 | `EffectKind0F_LineNext` | record 3 state 6 | refused, 26 rounds |
+| K0FLN3 | `EffectKind0F_LineNext` | label 11 a character | refused, 555 rounds |
+| K0FSc1 | `EffectKind0F_LineScroll` | <= 0x1D | refused, 501 rounds |
+| K0FSc2 | `EffectKind0F_LineScroll` | fading text +0x50 | refused, 2,760 rounds |
+| K0FSc3 | `EffectKind0F_LineScroll` | +9 5 | refused, 79 rounds |
+| K0FLF | `EffectKind0F_LineFade` | width / 0x81 | refused, 2,683 rounds |
+| K1AS | `EffectKind1A_Start` | +0x2C 0xFFFE | refused, 3,000 rounds |
+| K1AO1 | `EffectKind1A_Open` | +7 bit 1 | refused, 135 rounds |
+| K1AO2 | `EffectKind1A_Open` | rows by 44 | refused, 3,000 rounds |
+| K1AO3 | `EffectKind1A_Open` | option bits 1 | refused, 1,721 rounds |
+| K1AIA | `EffectKind1A_ItemsA` | list B | refused, 3,000 rounds |
+| K1AIB | `EffectKind1A_ItemsB` | rows y 0x41 | refused, 3,000 rounds |
+| K1AC | `EffectKind1A_Close` | +1 0xB | refused, 1 rounds |
+| K1AF1 | `EffectKind1A_FindKind` | wrap at 0x1F | refused, 320 rounds |
+| K1AF2 | `EffectKind1A_FindKind` | +0x3C 2 | refused, 798 rounds |
+| K1API | `EffectKind1A_PanelIn` | total by 31 | refused, 2,720 rounds |
+| K1AP | `EffectKind1A_Panel` | message +0x3C | refused, 983 rounds |
+| K1APK | `EffectKind1A_PanelIn` | icon 0x81 | refused, 3,000 rounds |
+| K1APN | `EffectKind1A_PanelNext` | sign swapped | refused, 2,997 rounds |
+| K1APN2 | `EffectKind1A_PanelNext` | +0x3E + 1 | refused, 7 rounds |
+| K1APB | `EffectKind1A_PanelBack` | +1 9 | refused, 227 rounds |
+| K1APO | `EffectKind1A_PanelOut` | +1 3 | refused, 2 rounds |
+| K1APO2 | `EffectKind1A_PanelOut` | boxes x high half from the record (kAll) | refused, 1,013 rounds |
+| K1AR | `EffectKind1A_Reset` | +9 3 | refused, 3,000 rounds |
+| K1AOB | `EffectKind1A_Open` | option bit at 4 | refused, 566 rounds |
+| K10A2 | `EffectKind10_Run` | near K10A: +0x1C from the depth | refused, 2,987 rounds |
+| G5b | `EffectHud_DrawGauge` | near G5: above 0x20 | refused, 103 rounds |
 
 ## 8. The rebinding
 
 No code of ours named any of the 70 by a raw address (the tool's `--refs`:
-22 references in 6 files, all comments or harness files). Rebound (comments,
+22 references in 7 files, all comments or harness files). Rebound (comments,
 the line only): `area_w2e.cpp` 21 and 839, `area_w3b.cpp` 20 and 1064 name
 `EffectKind5C_Run`; `worldmap_area.cpp` 596 names `EffectKind01_States` and
 `EffectKind01_Run`. **Left for the coordinator:** `field_e1.cpp` 127 (a
