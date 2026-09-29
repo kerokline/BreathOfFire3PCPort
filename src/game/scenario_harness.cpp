@@ -37,6 +37,9 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_gte.h"
+#include "game/effect_1b.h"
+#include "game/effect_1f.h"
+#include "game/effect_1g.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -541,7 +544,7 @@ const Callee kField[] = {
     {FIELD_OURS(Menu_DrawPiece), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:31 FS:17: void(int x, int y, unsigned id, unsigned flags)
     {FIELD_OURS(Sprite_ScriptTick), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:12 FC2:4 FC3:10 FE1:2 FE2:5: unsigned char(void)
     {FIELD_THEIRS(Crt_sprintf, 0x5B9380), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16}, FxSprintf, nullptr, true},   // FE1:4 FE2:1 FO:12 FS:10: int(char *dst, const char *fmt, ...)
-    {"0x52CFE0", 0x52CFE0, 0x52CFE0, 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPacket, nullptr, true},   // FE1:25: a sprite primitive at Gfx_PacketNext, committed; eax the primitive (callers write through it)
+    {FIELD_OURS(UiSprite_Draw), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPacket, nullptr, true},   // FE1:25: a sprite primitive at Gfx_PacketNext, committed; eax the primitive (callers write through it)
     {FIELD_OURS(Sprite_UpdateScreenSlot), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:15 FC2:9: void(void)
     {FIELD_OURS(MapView_SlopeAt), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC3:10 FE2:14: long(long x, long y, unsigned long direction)
     {FIELD_OURS(MapView_GroundAt), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC3:12 FE1:4 FE2:7: long(long x, long z)
@@ -556,7 +559,7 @@ const Callee kField[] = {
     {FIELD_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0, {0}, FxText, nullptr, true},   // FE2:1 FO:2 FS:9: const unsigned char *(unsigned id)
     {FIELD_OURS(Field_LeaderStepTick), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:9 FE2:1: unsigned char(void)
     {FIELD_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0, {16, 0, 0, 0, 0}, nullptr, nullptr, true},   // FC1:4 FC3:2 FO:3: unsigned char(unsigned char *sprite, unsigned char r, unsigned char g, unsigned char b, unsigned char a)
-    {"0x52CF60", 0x52CF60, 0x52CF60, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:9: a draw-mode primitive, committed
+    {FIELD_OURS(UiSprite_SetMode), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:9: a draw-mode primitive, committed
     {FIELD_OURS(Menu_DrawSkillRow), 7, {kU16, kU16, kU8, kU8, kAll, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, kDerefString, 0, 0}, nullptr, nullptr, true},   // FO:3 FS:6: void(int x, int y, int colour, unsigned kind, const unsigned char *name, unsigned cost, int dim)
     {FIELD_OURS(AreaMap_SetHeight), 3, {kU16, kU16, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC2:8: void(unsigned x, unsigned z, unsigned value)
     {FIELD_OURS(Text_CharCount), 1, {kAll}, Answer::kFlag, 0, 0, {kDerefString}, nullptr, nullptr, true},   // FO:6 FS:2: unsigned char(const unsigned char *text)
@@ -581,9 +584,9 @@ const Callee kField[] = {
     {FIELD_OURS(Gpu_SetPolyFT4), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FC2:1 FE2:3: void(unsigned char *prim)
     {FIELD_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC2:1 FE2:3: void(unsigned long x, unsigned long z, int dy, unsigned size)
     {FIELD_OURS(Tint_Release), 1, {kU8}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FC3:2 FO:2: void(unsigned char index)
-    {"0x468950", 0x468950, 0x468950, 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:4: a textured quad, committed
-    {"0x469750", 0x469750, 0x469750, 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: five words, calls 0x469790 / 0x469960
-    {"0x594410", 0x594410, 0x594410, 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: a list window drawn (Text_DrawAt, Item_NamePtr)
+    {FIELD_OURS(Panel_DrawEdgeQuad), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:4: a textured quad, committed
+    {FIELD_OURS(Panel_DrawWindow), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: five words, calls 0x469790 / 0x469960
+    {FIELD_OURS(ItemTrade_DrawList), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: a list window drawn (Text_DrawAt, Item_NamePtr)
     {FIELD_OURS(Field_MemberSprite), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1 FS:3: void(unsigned member, unsigned slot)
     {FIELD_OURS(Menu_DrawTitleBox), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FS:4: void(int x, int y, int w, int h, int colour)
     {FIELD_OURS(Menu_DrawBlackScreen), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FS:4: void(void)
@@ -625,11 +628,11 @@ const Callee kField[] = {
     {FIELD_OURS(Gpu_SetPolyG3), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE2:1 FO:1: void(unsigned char *prim)
     {FIELD_OURS(Gpu_SetShadeTex), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FE2:2: void(unsigned char *prim, unsigned tge)
     {FIELD_OURS(Prim_SetTexture), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16, 0}, nullptr, nullptr, true},   // FE2:2: void(unsigned long texture, unsigned char *prim, int count)
-    {"0x5947D0", 0x5947D0, 0x5947D0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window drawn
-    {"0x5942C0", 0x5942C0, 0x5942C0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window frame drawn
-    {"0x594700", 0x594700, 0x594700, 2, {kU8, kU8}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: al: an inventory test (Inventory_Count)
+    {FIELD_OURS(ItemTrade_DrawNeeds), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window drawn
+    {FIELD_OURS(ItemTrade_DrawBackground), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window frame drawn
+    {FIELD_OURS(ItemTrade_Lacks), 2, {kU8, kU8}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: al: an inventory test (Inventory_Count)
     {FIELD_OURS(Item_HelpMessage), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1 FS:1: unsigned(unsigned category, unsigned item)
-    {"0x594AD0", 0x594AD0, 0x594AD0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window drawn
+    {FIELD_OURS(ItemTrade_DrawCount), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window drawn
     {FIELD_OURS(Menu_DrawCell8), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:2: unsigned long(unsigned x, unsigned y, unsigned u, unsigned v, unsigned clut, unsigned shade)
     {FIELD_OURS(Menu_ListScroll), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {16, 16, 16, 16}, nullptr, nullptr, true},   // FO:1 FS:1: unsigned char(unsigned char *top, unsigned char *offset, unsigned char *moving, unsigned char *state)
     {FIELD_OURS(Menu_DrawScrollBar), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1 FS:1: void(const unsigned char *items, unsigned top, int x, int y, unsigned rows, unsigned total, unsigned height)
@@ -665,8 +668,8 @@ const Callee kField[] = {
     {FIELD_OURS(Field_TileD0), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: unsigned char(void)
     {FIELD_OURS(Area_LinkAt), 2, {kU8, kU8}, Answer::kFlag, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned x, unsigned z)
     {FIELD_OURS(Field_LeaderPushObjects), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: unsigned char(void)
-    {"0x52CE60", 0x52CE60, 0x52CE60, 2, {kU8, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: a word from the 36-byte records at 0x66A6AC scaled by the second argument
-    {"0x52CED0", 0x52CED0, 0x52CED0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: the sum of 0x52CE60 over the 32 bytes at 0x9040EC
+    {FIELD_OURS(FieldPanel_KindPoints), 2, {kU8, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: a word from the 36-byte records at 0x66A6AC scaled by the second argument
+    {FIELD_OURS(FieldPanel_KindTotal), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: the sum of 0x52CE60 over the 32 bytes at 0x9040EC
     {FIELD_OURS(Gpu_SetTile), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE1:1: void(unsigned char *prim)
     {FIELD_OURS(Member_ClearState), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE1:1: void(unsigned member)
     {FIELD_OURS(Field_LeaderStand), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:1: void(void)
@@ -689,7 +692,7 @@ const Callee kField[] = {
     {FIELD_OURS(Gfx_ClutStripCopyRow), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:1: void(unsigned row)
     {"0x585A00", 0x585A00, 0x585A00, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: no arguments, no calls
     {FIELD_OURS(Gpu_SetPolyG4), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, FxArg0, nullptr, true},   // FE2:1: unsigned char *(unsigned char *prim)
-    {"0x594790", 0x594790, 0x594790, 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: al (the caller stores it at 0x6BE08D)
+    {FIELD_OURS(ItemTrade_RowCount), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: al (the caller stores it at 0x6BE08D)
     {"0x594D90", 0x594D90, 0x594D90, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: Inventory_Remove behind a test
     {FIELD_OURS(Char_ExpForLevel), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: int(unsigned member, unsigned level)
     {FIELD_OURS(Gpu_SetSprt), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FO:1: void(unsigned char *prim)
@@ -882,10 +885,10 @@ std::uint32_t FxPrim0_12(const std::uint32_t* a, std::uint32_t answer) { FillNoi
 const Callee kEffectOverrides[] = {
     {FX_OURS(Effect_FindFree), 0, {}, Answer::kByte, 0xFF, 0x13, {}, FxFindFree, nullptr, true},   // E1A:4 E1B:6 E1D:3 E2C:1 E3A:1 E3B:4 E5C:2 E5D:2: unsigned char(void)
     {FX_OURS(Effect_Release), 0, {}, Answer::kGarbage, 0, 0, {}, FxRelease, nullptr, true},   // 29 groups, 135 sites: void(void)
-    {FX_RAW(0x52CFE0), 4, {kU8, kAll, kU16, kU16}, Answer::kGarbage, 0, 0, {}, FxSprtPrim, nullptr, true},   // E1F's; 100 sites in the cut: (id byte, slot, s16 x, s16 y) -> the primitive
-    {FX_RAW(0x52CF60), 2, {kU8, kAll}, Answer::kGarbage, 0, 0, {}, FxModePrim, nullptr, true},   // E1F's; 31 sites: (id byte, slot)
-    {FX_RAW(0x469750), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxBoxPrims, nullptr, true},   // E1B's; 33 sites: (int x, int y, int w, int h, colour)
-    {FX_RAW(0x468AC0), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {}, FxPanelPrims, nullptr, true},   // E1B's; 19 sites: (int x, int y, bits byte)
+    {FX_OURS(UiSprite_Draw), 4, {kU8, kAll, kU16, kU16}, Answer::kGarbage, 0, 0, {}, FxSprtPrim, nullptr, true},   // E1F's; 100 sites in the cut: (id byte, slot, s16 x, s16 y) -> the primitive
+    {FX_OURS(UiSprite_SetMode), 2, {kU8, kAll}, Answer::kGarbage, 0, 0, {}, FxModePrim, nullptr, true},   // E1F's; 31 sites: (id byte, slot)
+    {FX_OURS(Panel_DrawWindow), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxBoxPrims, nullptr, true},   // E1B's; 33 sites: (int x, int y, int w, int h, colour)
+    {FX_OURS(EffectKind0F_DrawToggles), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {}, FxPanelPrims, nullptr, true},   // E1B's; 19 sites: (int x, int y, bits byte)
     {FX_RAW(0x503FA0), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxShadow, nullptr, true},   // E5D's; 15 sites: (variant, a whole word added to a table address)
     // round twelve's behaviour folds (section 8.6), for the effect groups that call them
     {FX_OURS(Sprite_FindFree), 0, {}, Answer::kFlag, 0, 0, {}, FxSpriteSlot, nullptr, true},   // E2D:2 E2F:2 E4A:2: unsigned char(void)
