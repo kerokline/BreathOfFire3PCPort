@@ -31,6 +31,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <initializer_list>
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_1a_callees.h"
@@ -251,13 +252,15 @@ void AreaRect(U y, U w, U h) {
 
 // A world point with an attachment's offset turned into the GTE's vector: x
 // and z as (v >> 9) - 0x4000, the height -(s16 +0x3E + out[2]) / 2, each an
-// s16. The fourth word is not written (the original's is stale stack; the
-// projection reads three).
+// s16. The fourth word is 0: the original never writes it (stale stack), so
+// it cannot be reproduced, only replaced - DIV-0023's ruling, as field_e2's
+// Mode11_ObjectDraw; the projection reads x, y and z.
 void AttachVector(const unsigned char* o, const long* out, short* v) {
     v[0] = static_cast<short>(static_cast<U>((static_cast<std::int32_t>(L(o + 0x34) + static_cast<U>(out[0]))) >> 9) - 0x4000u);
     v[1] = static_cast<short>(static_cast<U>((static_cast<std::int32_t>(L(o + 0x38) + static_cast<U>(out[1]))) >> 9) - 0x4000u);
     const std::int32_t h = static_cast<std::int32_t>(static_cast<U>(SW(o + 0x3E)) + static_cast<U>(out[2]));
     v[2] = static_cast<short>(-(h / 2));
+    v[3] = 0;
 }
 
 // kinds 0xF's windows: ObjTrio 0's +3 at 3 or more names the option bit.
@@ -994,7 +997,7 @@ extern "C" void __cdecl EffectKind05_Land(void) {
 // +7 down. x += +0xC, z += +0x10, +0x14 += +0x20, the height +0x3C += +0x14.
 // A height above 0 with no step +0x20 and +0xB set: the rise 0x40000, the step
 // -0x8000 and a kind-0xA record spawned; with +0xB clear: the height 0; with a
-// step: +0xB 1. A height of 0: +0xB 1; below 0: the step 0 and +0xB 0. Then
+// step: +0xB 1. A height of 0: +0xB 0; below 0: the step 0 and +0xB 0. Then
 // +0x5C 0; +0 bit 5 set when the word +0x3E is not above 0, else cleared with
 // +0x5D 0; +0x5E / +0x5F = +0x5D; Sprite_EnsureAnimation(2 / 3 / 0 by +0x10
 // above, at, below 0), Sprite_ScriptTick, +0x48 = 2, 0x52CD50. PSX 0x801D2644.
@@ -1038,7 +1041,7 @@ extern "C" void __cdecl EffectKind05_Bounce(void) {
             }
         }
     } else if (height == 0) {
-        a[0xB] = 1;
+        a[0xB] = 0;   // 0x4657A0 jge lands on 0x4657DA's jle, taken at 0
     } else {
         if (L(a + 0x20) != 0) {
             SetL(a + 0x20, 0);
@@ -1629,11 +1632,13 @@ void WindowAndLists() {
     else
         ItemListB(lists, 0x40);
 }
-// The panel's kind icon and row (_PanelIn, _PanelOut): +0x3E's count byte
-// 0x9040EC decides whether the kind or 0xFF is drawn.
-void PanelKind(U icon_x) {
+// The panel's kind icon at (0x80 + 48 * +9, 0x5B) and its row (_PanelIn,
+// _PanelOut): +0x3E's count byte 0x9040EC decides whether the kind or 0xFF is
+// drawn.
+void PanelKind() {
     unsigned char* a = S();
     const unsigned char count = B(at::kKindCounts + static_cast<U>(SW(a + 0x3E)));
+    const U icon_x = a[9] * 48u + 0x80;
     if (count != 0) {
         SH_CALL(FieldPanel_DrawKindIcon)(static_cast<int>(icon_x), 0x5B, a[0x3E]);
         a = S();
@@ -1643,9 +1648,10 @@ void PanelKind(U icon_x) {
         SH_CALL(FieldPanel_DrawKindRow)(0xFF, 0, S()[9]);
     }
 }
-// The panel's header, row and icon in place (_Panel, _PanelNext, _PanelBack's
-// head): the row at 0, the header at (0, 0x4E).
-void PanelRow() {
+// The panel's header and row in place (_Panel, _PanelNext, _PanelBack's head):
+// the header at (0, 0x4E), the row at 0; whether the kind has a count (_Panel
+// goes on by it, read before the row's call).
+bool PanelRow() {
     SH_CALL(FieldPanel_DrawHeader)(0, 0x4E);
     unsigned char* const a = S();
     const unsigned char count = B(at::kKindCounts + static_cast<U>(SW(a + 0x3E)));
@@ -1653,6 +1659,7 @@ void PanelRow() {
         SH_CALL(FieldPanel_DrawKindRow)(a[0x3E], count, 0);
     else
         SH_CALL(FieldPanel_DrawKindRow)(0xFF, 0, 0);
+    return count != 0;
 }
 // The panel's tail: the total at (0xB0, 0x9C), the message 0xFFFF at (8,
 // 0x94), the title 0x468A40, the window at 0x12 and the option boxes.
@@ -1777,7 +1784,7 @@ extern "C" void __cdecl EffectKind1A_PanelIn(void) {
     S()[9] = static_cast<unsigned char>(S()[9] - 1);
     const unsigned char nine = S()[9];
     SH_CALL(FieldPanel_DrawHeader)(-80 * static_cast<int>(nine), 0x4E);
-    PanelKind(nine * 48u + 0x80);
+    PanelKind();
     SH_CALL(FieldPanel_DrawTotal)(0xB0, static_cast<int>(S()[9] * 30u + 0x9C));
     SH_CALL(FieldPanel_DrawMessage)(8, static_cast<int>(S()[9] * 30u + 0x94), 0xFFFF);
     WindowBox(0x14, 0x12, 0x118, 0x13, 0);
@@ -1791,9 +1798,7 @@ extern "C" void __cdecl EffectKind1A_PanelIn(void) {
 // (8, 0x94) - or 0xFF / 0xFFFF without a count; the total, the title, the
 // window and the option boxes. PSX 0x801D4B7C.
 extern "C" void __cdecl EffectKind1A_Panel(void) {
-    PanelRow();
-    unsigned char* const a = S();
-    if (B(at::kKindCounts + static_cast<U>(SW(a + 0x3E))) != 0) {
+    if (PanelRow()) {
         SH_CALL(FieldPanel_DrawKindIcon)(0x80, 0x5B, S()[0x3E]);
         SH_CALL(FieldPanel_DrawMessage)(8, 0x94, W(S() + 0x3E));
     } else {
@@ -1862,7 +1867,7 @@ extern "C" void __cdecl EffectKind1A_PanelOut(void) {
     S()[9] = static_cast<unsigned char>(S()[9] + 1);
     const unsigned char nine = S()[9];
     SH_CALL(FieldPanel_DrawHeader)(-80 * static_cast<int>(nine), 0x4E);
-    PanelKind(nine * 48u + 0x80);
+    PanelKind();
     SH_CALL(FieldPanel_DrawTotal)(0xB0, static_cast<int>(S()[9] * 30u + 0x9C));
     SH_CALL(FieldPanel_DrawMessage)(8, static_cast<int>(S()[9] * 30u + 0x94), 0xFFFF);
     a = S();

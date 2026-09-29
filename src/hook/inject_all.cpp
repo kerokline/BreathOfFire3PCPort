@@ -239,6 +239,7 @@
 #include "game/field_o.h"
 #include "game/field_c1.h"
 #include "game/effect_gte.h"
+#include "game/effect_1a.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -903,6 +904,13 @@ void InjectAll() {
                                 // group's inject goes after it, whose self-test copies 0x462BC0 (E1A), 0x46F2B0,
                                 // 0x46F7D0 (E1D), 0x4FD470 (E5A), 0x500D20 (E5B), 0x479970 (E2E), 0x4857C0 (E3C),
                                 // 0x472770 (E2A) from the image (docs/scenario_harness.md section 8.8)
+    Effect1A_Inject();          // round 13 group E1A (0x462B00..0x4672F0: the dispatchers of effect kinds 1, 2, 3, 5,
+                                // 7, 8, 9, 0xA..0x10, 0x16, 0x1A, 0x5C, the states of kinds 1, 3, 5, 7, 0xA, 0xC, 0xD,
+                                // 0xF, 0x1A and the panel draws EffectHud_*): its clones' calls re-aimed at the
+                                // scenario harness's recorders, its thirteen state tables and WorldMap_Records'
+                                // +4 / +8 cells swapped for the fuzz only; after ScenarioHarnessEkh_Inject, which
+                                // copies E1A's 0x462BC0; no module patches bytes inside its 70 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();
