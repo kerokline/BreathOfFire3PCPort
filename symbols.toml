@@ -81216,3 +81216,172 @@ params = "const long *point, const short *size, short *out"
 impl = "src/game/effect_gte.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round thirteen group EGT, capstone to the last instruction), 0x4941E0..0x494270 (0x91 bytes), cdecl: the point's camera vector as EffectGte_ProjectPoint builds it, Gte_RotTrans(vector, a stack VECTOR, the slot of point); then with depth the VECTOR's z: out[0] = low word of (s16 size[0] * 1000) idiv depth, out[1] likewise from size[1], read after out[0] is written. eax at the ret is the second quotient. A depth of 0 faults (idiv): ours aborts. PSX twin 0x801B0FD0 (call-anchored). 42 call sites. docs/effect_gte.md."
+
+# --- round thirteen group E1F (docs/effect_1f.md): 0x52A6C0..0x52D07C ---
+
+[[func]]
+pc = 0x52A6C0
+name = "ChoiceMenu_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52A6C0..0x52A6CD (0xE bytes): jmp [ChoiceMenu_Choices + 4 * byte 0x7E14E6] (Effect_Objects record 6 +6, the three-way choice that 0x52A4A0 (E1E) steps and wraps 0..2), unchecked; ours aborts past the three. Entry 3 of the +3 table 0x6602E0 that 0x52A420 (E1E) dispatches. Hidden in 0x5298A0's catalogue extent (E1E's); reached only through that cell. No PSX twin paired. docs/effect_1f.md."
+
+[[func]]
+pc = 0x52A6D0
+name = "ExtraSlots_Step"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52A6D0..0x52A6E1 (0x12 bytes): jmp [ExtraSlots_Steps + 4 * Sprite_Current +4], unchecked; ours aborts past the three. ChoiceMenu_Choices[0]; also the cell Field_FormActions[13] 0x522B40 reaches with a word +0x2C of 0x100 (0x65FEF4 + 0x400). Hidden in 0x5298A0's catalogue extent. docs/effect_1f.md."
+
+[[func]]
+pc = 0x52A6F0
+name = "ExtraSlots_Enter"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52A6F0..0x52A77B (0x8C bytes): when Effect_Objects record 6 +1 is 3 or 4: its +7 &= 0x7F, Menu_DrawHand(0x1C, 0x58 + 16 * (+7 & 0x7F), 0), Sprite_Current +4 up; then Text_DrawAt(0x1D, 0x14, 0, 0xFF, MessagePools + the word 0x803622 or 0x803624 by bit 0 of record 6 +7). ExtraSlots_Steps[0]. Hidden in 0x5298A0's catalogue extent. docs/effect_1f.md."
+
+[[func]]
+pc = 0x52A780
+name = "ExtraSlots_PickSlot"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52A780..0x52A8EE (0x16F bytes): Input_AutoRepeat(Input_Pressed & 0x5000); Field_CancelButtons: Sound_PlayEffect(0x106), record 6 +7 |= 0x80, +0x2C = 0xFFFF, Sprite_Current +3 down, +4 = 0, return; Field_ConfirmButtons: Sound_PlayEffect(0x103), +7 |= 2, +4 up; the repeat's bit 12 or 14: Sound_PlayEffect(0x100), +7 ^= 1, record 6 +1 ^= 7, +4 down. Then the label (MessagePools + word 0x803622 / 0x803624 by +7 bit 0); unless +7 bit 7, record 6 +0x2C = the byte 0x904130 (bit 0 clear) or 0x90412E (set) + 4, 0xFFFF when 0; Menu_DrawHand(0x1C, 0x58 + 16 * bit 0, 0). ExtraSlots_Steps[1]. Hidden in 0x5298A0's catalogue extent. docs/effect_1f.md."
+
+[[func]]
+pc = 0x52A8F0
+name = "ExtraSlots_PickItem"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52A8F0..0x52AD93 (0x4A4 bytes): a list of category-3 ids (0x9042D4) filtered by the byte +0x12 of their 24-byte NameTable_Accessories records. Record 6 +7 bit 0 clear: kind 0xB, cursor dword +0xC below +0x18 - 1, the id at s16 +0x36; confirm swaps it into the byte 0x904130 (Inventory_Remove(3, id, 1), Inventory_Add(3, old, 1)). Set: kind 0xA, cursor dword +0x10 over 9 rows, scroll word +0x38, count +0x1C, the id at s16 +0x3A; confirm (not while +0xA) swaps a different id into 0x90412E with 0x90412F = 1 and pulls the scroll back; input bits 2 / 3 page by 9. Cancel or confirm: Sound_PlayEffect(0x106 / 0x103), +7 &= 0xFD, Sprite_Current +4 down. +0x2C = id + 4 or 0xFFFF; Menu_DrawHand(0xA8, 13 * cursor + 0x5A, 0). ExtraSlots_Steps[2]. PSX twin 0x801DD050 (call-disputed, unnamed in the sibling). Hidden in 0x5298A0's catalogue extent. docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CD50
+name = "Sprite_UpdateScreenScaled"
+ret = "unsigned long"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CD50..0x52CDE9 (0x9A bytes): Sprite_UpdateScreen with Sprite_Current +0x3C held at 0 (put back on the record current after the call); then +0x40 and +0x44 = 0x4650000 idiv d with the low byte cleared, d = +0x60 when above 0, +0x60 - 2 * s16 +0x3E when below (a divide fault at 0: ours aborts), both 0 at 0. eax at the ret: that quotient, or Sprite_Current at 0. Called by Sprite_UpdateAllScaled (E1F), 0x4656C0 and jumped to by 0x465840 (E1A). PSX twin 0x801E08A4 (call-anchored, unnamed in the sibling). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CDF0
+name = "Sprite_UpdateAllScaled"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CDF0..0x52CE15 (0x26 bytes): for each of the 30 Sprite_Objects records (0xA4) whose +0 is not 0, Sprite_Current = it and Sprite_UpdateScreenScaled; Sprite_Current is left at the last. Called by GameMode8_Frame and GameMode8_WaitFrame. PSX twin 0x801E0A0C (gap54). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CE20
+name = "Effect_ResetFirstSeven"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CE20..0x52CE5B (0x3C bytes): bytes +1..+4 of Effect_Objects records 0..6 to 0; Effect_ReleaseAt(7..19); record 2 +1 = 2. Called by 0x52A370 (E1E). PSX twin 0x801E0A88 (call-anchored). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CE60
+name = "FieldPanel_KindPoints"
+ret = "unsigned long"
+params = "unsigned kind, unsigned count"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CE60..0x52CEC2 (0x63 bytes), cdecl: the 36-byte record kind & 0xFF from 0x66A6A0 (byte +0xF a threshold, word +0x12 the points); count's low word at or above the threshold: eax = count's high word and the points; below: (count16 * 10 idiv threshold) * points / 10 (signed, by the 0x66666667 multiply). Unchecked kind (a read of the image past the kinds, no fault). Called by FieldPanel_KindTotal and FieldPanel_DrawKindRow (FE1). PSX twin 0x801E0B14 (call-anchored). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CED0
+name = "FieldPanel_KindTotal"
+ret = "unsigned short"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CED0..0x52CEFB (0x2C bytes): the sum of FieldPanel_KindPoints(i, count) over the 32 count bytes 0x9040EC that are not 0; ax the sum's low word. Called by FieldPanel_DrawTotal (FE1). PSX twin 0x801E0BC4 (call-anchored). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CF00
+name = "GameMode8_Frame"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CF00..0x52CF22 (0x23 bytes): Field_MembersFrame, 0x52B6C0, AreaMap_Frame, Party_UpdateScreens, Sprite_UpdateAllScaled, Effect_RunObjects, tail Field_DrawFrame. Entry 1 of game mode 8's step table 0x656AB8 (0x496430 jumps by Game_Step), called once by its entry 0 0x496440. Not effect code: a game mode's frame. PSX twin 0x801E0C28 (gap31). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CF30
+name = "GameMode8_TradeStep"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F), 0x52CF30..0x52CF34 (5 bytes): tail jmp 0x593950 (the dispatcher by the byte 0x93985C: ItemTrade_Open, ItemTrade_Run, ...). Entry 3 of game mode 8's step table 0x656AB8; hidden after GameMode8_Frame. Not effect code. PSX twin 0x801E0C78 (gap31). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CF40
+name = "GameMode8_WaitFrame"
+ret = "void"
+params = "void"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CF40..0x52CF58 (0x19 bytes): AreaMap_Frame, Party_UpdateScreens, Sprite_UpdateAllScaled, Effect_RunObjects, tail Field_DrawFrame. Called by mode 8's step 2 0x4964E0 in its two wait loops. Not effect code. PSX twin 0x801E0C98 (gap31). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CF60
+name = "UiSprite_SetMode"
+ret = "void"
+params = "unsigned index, unsigned slot"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CF60..0x52CFD8 (0x79 bytes), cdecl: the 16-byte record index & 0xFF of UiSprite_Modes (dwords: colour mode, blend, page x, page y): Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, the texture page getTPage builds from them - ((d0 & 3) << 7) | ((d4 & 3) << 5) | ((dC & 0x200) << 2) | ((dC & 0x100) >> 4) | ((d8 sar 6) & 0xF) -, 0), Gfx_CommitPrim(slot, 0xC). Unchecked index (a read past the ten records, no fault). 31 call sites, 0..9 each. PSX twin 0x801E0CD8 (call-anchored). docs/effect_1f.md."
+
+[[func]]
+pc = 0x52CFE0
+name = "UiSprite_Draw"
+ret = "unsigned char *"
+params = "unsigned sprite, unsigned slot, int x, int y"
+impl = "src/game/effect_1f.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E1F, capstone to the last instruction), 0x52CFE0..0x52D07B (0x9C bytes), cdecl: p = Gfx_PacketNext; Gpu_SetSprt(p); p +4..+6 = 0x80; +8, +0xC = s16 x, s16 y as floats; from the 16-byte record sprite & 0xFF of UiSprite_Sheet: +0x16 = (word +4 << 6) | ((dword +0 sar 4) & 0x3F), +0x18 = word +8, +0x1A = word +0xA, +0x14 = byte +0xC, +0x15 = byte +0xD; Gfx_CommitPrim(slot, 0x1C); eax = p. Unchecked sprite (a read past the 74 records, no fault). 100 call sites, 0..0x48 where an immediate. PSX twin 0x801E0E24 (call-anchored). docs/effect_1f.md."
+
+[[data]]
+pc = 0x6602F4
+name = "ChoiceMenu_Choices"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1F): ChoiceMenu_Run's jmp by Effect_Objects record 6 +6: ExtraSlots_Step, 0x52ADA0, 0x52AE80; ExtraSlots_Steps (0x52A6D0's) follows. docs/effect_1f.md."
+
+[[data]]
+pc = 0x660300
+name = "ExtraSlots_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1F): ExtraSlots_Step's jmp by Sprite_Current +4: ExtraSlots_Enter, ExtraSlots_PickSlot, ExtraSlots_PickItem; 0x66030C (0x52AF60's table) follows. docs/effect_1f.md."
+
+[[data]]
+pc = 0x660394
+name = "UiSprite_Modes"
+ctype = "unsigned char"
+count = 160
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1F): UiSprite_SetMode's ten 16-byte records (four dwords: colour mode, blend, page x, page y - getTPage's arguments); UiSprite_Sheet begins 4 bytes after the tenth. docs/effect_1f.md."
+
+[[data]]
+pc = 0x660438
+name = "UiSprite_Sheet"
+ctype = "unsigned char"
+count = 1184
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E1F): UiSprite_Draw's 74 16-byte records (dword +0 the CLUT x, word +4 its y, words +8 / +0xA the size, bytes +0xC / +0xD u, v); 0x6608D8 (read by 0x5305D6) follows. docs/effect_1f.md."
