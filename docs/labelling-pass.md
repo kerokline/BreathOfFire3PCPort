@@ -168,7 +168,7 @@ or more (143 smaller bands hold 285 more starts, 37 of them area, 21 field,
 |---|--:|--:|--:|---|--:|--:|
 | `0x42D710..0x42E362` | 9 | 8 | 1 | battle engine (BATE's root and steps) | 3 | 0 |
 | `0x4468B0..0x454373` | 166 | 20 | 146 | battle engine (`Effect_Handlers`' slots) | 161 | 4 |
-| `0x4561A0..0x45763C` | 43 | 23 | 20 | field core (but see R0008, section 5) | 23 | 0 |
+| `0x4561A0..0x45763C` | 43 | 23 | 20 | field core (but R0008 in it is the community / faerie village, section 5) | 23 | 0 |
 | `0x4603F0..0x460CAE` | 13 | 13 | 0 | minigames, master | 9 | 0 |
 | `0x460CB0..0x461710` | 10 | 10 | 0 | text, windows, menus | 0 | 1 |
 | `0x462B00..0x463452` | 11 | 0 | 11 | effect objects | 6 | 0 |
@@ -322,6 +322,30 @@ now hold; **R0008 does not** and is reported instead: `0x455450` (boot,
 R0011 look like one system entered from area 179 - labelled `minigames,
 master` would match the pairing; what it is in play is a question for the
 owner.
+
+**Answered 2026-09-29: it is the faerie village.** Three sources, none of
+them a read of the PC code, so the label stays `hypothesis`:
+
+- The sibling's `names/places.toml` (the debug map-select list of
+  `MTEST.EMI` joined to each area script's message 0, keyed by AREA
+  number; `../BreathOfFire3Recomp/docs/TEXT_TABLES.md` "Places") gives
+  areas 175..185 one developer label, *kyoudoutai* ("community"): 175 is
+  the list's "community, basic" and 176..185 its "A-1".."A-A". None of the
+  eleven has a caption or an English name there, and the sibling leaves
+  `COMMU00`..`COMMU05` unnamed - `COMMU` reads as that word abbreviated.
+- The sibling's `docs/loader_records/AREA.md` records that bit 4 of the
+  area flags byte gates the `COMMU00` load (PSX `0x801987C4` /
+  `0x80199440`): the overlay is reached by a flag, not by a descriptor
+  call table, which is why round ten's walk did not enter this code.
+- The owner (2026-09-29) confirms the faerie village, and points to a
+  Japanese fan site that uses the same word for it and defines it as the
+  faeries' village
+  (<https://game.daihouko.com/bof/3/bof3.kyoudoutai.htm>, read that day).
+
+So R0008 and R0011 are proposed as one subsystem, `community` (the faerie
+village), to be cut together. Not checked: that `Area175_Init`..
+`Area185_Init` other than 179 enter the same chain, and whether the PC
+keeps the debug list.
 
 **Sample B: 15 functions** drawn at random (seed 20260929, stratified by
 class, 3 from the `hypothesis` tier) *after* the fixes: `0x48D9F0`,
