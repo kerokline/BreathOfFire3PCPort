@@ -1087,6 +1087,100 @@ def convert_battle_commands(game, donor):
     return [(KIND_BATTLE, 0, bytes(payload))]
 
 
+# The short labels (DIV-0064, src/game/labels.cpp): five groups of slots in
+# BOF3.exe's .data, one chunk each, the tag the group's number.
+#
+#   1  the status words, 2 x 8 at 0x66A0E8, and
+#   2  the menu's stats, 4 x 8 at 0x66A0F8. START.EMI has both as two 8-byte
+#      and four 4-byte slots between bytes the PC still has: LABEL_HEAD before
+#      them and LABEL_TAIL after.
+#   3  the item types, 0x66A120. START.EMI has them right after the sixteen
+#      bytes the PC has before its pointer table LABEL_TYPES_HEAD, packed and
+#      4-byte aligned, then their five pointers.
+#   4  the skill types, 0x66A200, and
+#   5  the battle's stats, 4 x 8 at 0x669CF0. BATTLE.EMI has five skill types
+#      (the fifth the PC's 0x66A220), their five pointers, four 6-byte stat
+#      slots and then the sixteen bytes the PC has at LABEL_BATTLE_TAIL.
+#
+# Groups 3 and 4 are repointed by the DLL into 16-byte buffers of its own
+# (their readers all go through pointer tables), so their room is 16; the
+# others are written into their slots. A string that does not fit goes out
+# empty, and the slot stays as shipped.
+KIND_LABELS = 15
+LABEL_HEAD, LABEL_HEAD_LEN, LABEL_TAIL, LABEL_TAIL_LEN = 0x663648, 24, 0x663660, 8
+LABEL_TYPES_HEAD, LABEL_BATTLE_TAIL = 0x663960, 0x66B5B4
+LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8)}
+LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats"}
+
+
+def label_pointers(donor, at, count):
+    """`count` ascending PSX pointers at `at`, or None."""
+    if at < 0 or at + 4 * count > len(donor):
+        return None
+    ptrs = struct.unpack_from("<%dI" % count, donor, at)
+    if any(not 0x80000000 <= p < 0x80200000 for p in ptrs) or any(b <= a for a, b in zip(ptrs, ptrs[1:])):
+        return None
+    return ptrs
+
+
+def label_chunk(tag, raws, report):
+    payload, kept = bytearray([len(raws)]), 0
+    for i, (raw, room) in enumerate(zip(raws, LABEL_ROOMS[tag])):
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("labels: %s %d holds a code this language does not have: %s"
+                             % (LABEL_NAMES[tag], i, raw.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > room:
+            out, kept = b"", kept + 1
+        payload += out + b"\0"
+    report.append("%s %d%s" % (LABEL_NAMES[tag], len(raws), " (%d kept)" % kept if kept else ""))
+    return (KIND_LABELS, tag, bytes(payload))
+
+
+def convert_labels(game, start, battle):
+    """[(kind, tag, payload)] and a report, from the whole START.EMI and BATTLE.EMI (either may be None)."""
+    chunks, report = [], []
+    cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
+    if start:
+        head, tail = exe_bytes(game, LABEL_HEAD, LABEL_HEAD_LEN), exe_bytes(game, LABEL_TAIL, LABEL_TAIL_LEN)
+        at = start.find(head)
+        while at >= 0 and start[at + LABEL_HEAD_LEN + 32:at + LABEL_HEAD_LEN + 32 + LABEL_TAIL_LEN] != tail:
+            at = start.find(head, at + 1)
+        if at >= 0:
+            first = at + LABEL_HEAD_LEN
+            chunks.append(label_chunk(1, [cut(start, first + 8 * i, 8) for i in range(2)], report))
+            chunks.append(label_chunk(2, [cut(start, first + 16 + 4 * i, 4) for i in range(4)], report))
+        at = start.find(exe_bytes(game, LABEL_TYPES_HEAD, 16))
+        if at >= 0:
+            first = at + 16
+            table = next((t for t in range(first + 4, first + 0x80, 4) if label_pointers(start, t, 5)), None)
+            if table is None:
+                raise SystemExit("labels: no pointer table after the item types")
+            ptrs = label_pointers(start, table, 5)
+            starts = [first + p - ptrs[0] for p in ptrs]
+            if starts[-1] >= table or 0 in [start[s] for s in starts]:
+                raise SystemExit("labels: the item types' pointers do not fit their strings")
+            chunks.append(label_chunk(3, [cut(start, s, 16) for s in starts], report))
+    if battle:
+        at = battle.find(exe_bytes(game, LABEL_BATTLE_TAIL, 16))
+        table = at - 24 - 20
+        ptrs = label_pointers(battle, table, 5) if at >= 0 else None
+        if ptrs:
+            for pad in range(1, 17):         # the last string's NUL and any alignment
+                starts = [table - pad - (ptrs[-1] - p) for p in ptrs]
+                end = battle.find(b"\0", starts[-1])
+                if starts[0] > 0 and all(battle[s] != 0 for s in starts) \
+                        and all(battle[s - 1] == 0 for s in starts[1:]) \
+                        and end < table and not any(battle[end:table]):
+                    break
+            else:
+                raise SystemExit("labels: no placement of the skill types fits their pointer table")
+            chunks.append(label_chunk(4, [cut(battle, s, 16) for s in starts], report))
+            chunks.append(label_chunk(5, [cut(battle, at - 24 + 6 * i, 6) for i in range(4)], report))
+    return chunks, report
+
+
 # The battle banner's twelve messages (DIV-0052, src/game/battle_text.cpp): the
 # PC's pointer table at MESSAGE_TABLE, read only by 0x44A8E0 and, for message
 # 1, 0x44A990. The US BATTLE.EMI has the same twelve as 13-byte slots, found
@@ -1479,17 +1573,45 @@ def build_title(args, disc):
     donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == TITLE_TAG] if found else []
     if len(base) != 1 or len(donor) != 1 or len(donor[0]) != base[0].size:
         raise SystemExit("START: no title menu sheet to rebuild")
-    if not hashlib.sha256(donor[0]).hexdigest().startswith(TITLE_DONOR_SHA256):
-        print("title menu: this disc's sheet is not the one the letters were measured on; left as shipped")
-        return []
     sheet = tiles_to_rows(donor[0], 2)
     page = [[0] * 256 for _ in range(256)]
     top = (TITLE_BAND - TITLE_CAP) // 2     # the port's rows are 32 tall about the same centre
     widths = []
+    measured = hashlib.sha256(donor[0]).hexdigest().startswith(TITLE_DONOR_SHA256)
     for i, (x0, y0, w) in enumerate((TITLE_NEW, TITLE_LOAD)):
+        if not measured:
+            # Another disc's lettering in the same two bands (the French and
+            # German discs, 2026-09-29: NOUVEAU JEU / CHARGER JEU, NEUES SPIEL /
+            # SPIEL LADEN): its width is the ink's right edge plus 2, which is
+            # what the measured widths above are for the US sheet (128 -> 130,
+            # 138 -> 140).
+            w = max(x for y in range(y0, y0 + TITLE_CAP) for x, v in enumerate(sheet[y]) if v) + 2
+            w += w & 1                  # even, as the draw centres it at 160 - w / 2
         for y in range(TITLE_CAP):
             page[TITLE_BAND * i + top + y][:w] = sheet[y0 + y][x0:x0 + w]
         widths.append(w)
+    if not measured:
+        # The third row is the port's, and no disc's letters were measured
+        # but the US sheet's (the French and German sheets lack the letters
+        # for CONFIG anyway): take it from the English page already built
+        # from the US disc, `en.START.DAT` beside the shipped file - the
+        # owner's choice, 2026-09-29: each disc's own two rows, our CONFIG.
+        en_path = os.path.join(dat_dir(args.game), "en.START.DAT")
+        if not os.path.exists(en_path):
+            print("title menu: this disc's sheet is not the one the letters were measured on, and no "
+                  "en.START.DAT holds a CONFIG row to borrow (build the English overlay first); left as shipped")
+            return []
+        en_blob, en_chunks = dat.load(en_path)
+        en_sheet = [c for c in en_chunks if c.kind == 1 and c.tag == TITLE_TAG]
+        en_widths = [c for c in en_chunks if c.kind == TITLE_KIND]
+        if len(en_sheet) != 1 or len(en_widths) != 1 or en_widths[0].size != 3:
+            raise SystemExit("title menu: en.START.DAT has no title page and widths to borrow from")
+        en_rows = tiles_to_rows(en_blob[en_sheet[0].offset:en_sheet[0].offset + en_sheet[0].size], 2)
+        for y in range(TITLE_BAND):
+            page[TITLE_BAND * 2 + y] = list(en_rows[TITLE_BAND * 2 + y])
+        widths.append(en_blob[en_widths[0].offset + 2])
+        print("title menu: this disc's two rows (%d and %d wide), CONFIG from en.START.DAT (%d)" % tuple(widths))
+        return [(1, TITLE_TAG, rows_to_tiles(page, 2)), (TITLE_KIND, 0, bytes(widths))]
     # CONFIG. Gaps in columns, by eye against NEW GAME's own spacing.
     word = ((title_c(sheet), 1), (title_letter(sheet, "O"), 1), (title_letter(sheet, "N"), 2),
             (title_f(sheet), 0), (title_stem(sheet), 2), (title_letter(sheet, "G"), 0))
@@ -1651,6 +1773,11 @@ def cmd_all(args):
         msgs = convert_battle_messages(args.game, disc.read(battle_emi[0]))
         overlays["FIRST.DAT"] += msgs
         print("battle messages: " + ("%d" % MESSAGE_COUNT if msgs else "not found on this disc"))
+    if (start_emi or battle_emi) and not args.only:
+        labels, report = convert_labels(args.game, disc.read(start_emi[0]) if start_emi else None,
+                                        disc.read(battle_emi[0]) if battle_emi else None)
+        overlays["FIRST.DAT"] += labels
+        print("labels: " + (", ".join(report) if report else "not found on this disc"))
 
     game_emi = disc.find("GAME.EMI")
     if game_emi and not args.only:

@@ -4190,3 +4190,28 @@ whether it stays within the list is not known.
   the next reader does not look for them.
 
 **Status:** latent, harmless by reading.
+
+## D174 — `ConfigText_Inject` laid the Chinese Config screen out for Latin text under `BOF3X_LANG=original` (fixed)
+
+**Seen:** `BOF3X_SHADOW='*'` headless in the main checkout, 2026-09-29:
+`FATAL: Config_DrawRowLabel: the call at +0x9F reaches ..., not 0x00516B30:
+the site is re-aimed already, cannot clone` - group FC1's fuzz, with the
+launcher handing the ini's `language=en` to the game, or with
+`BOF3X_LANG=original` set by hand.
+
+**Established:** `ConfigText_Inject` (`src/game/config_text.cpp`) applied
+DIV-0015's anchor and DIV-0017's widths whenever `BOF3X_LANG` was set and not
+full-width - `original` included, which `DatLoad_Inject` reads as no
+overlay. Noted in [`glyph-draw.md`](glyph-draw.md) §8 on 2026-09-22 and left
+("not this group's"); only the controller panel's patch made the exception.
+So an all-original reference run (`attract_run.py` pins `original`) had the
+Latin layout over Chinese text on the Config screen, and FC1's clone of
+`0x461800` refused the re-aimed site.
+
+**Fixed 2026-09-29:** the function tests `Lang_Latin()` as every other
+layout patch does; the inner `original` test went with it. The fuzz passes
+with `BOF3X_LANG=original`. With `language=en` in the ini the FC1 clone still
+refuses (rightly: the overlay is on) - the headless run wants the language
+off, `BOF3X_LANG=original` in the environment or a scratch ini.
+
+**Status:** fixed.

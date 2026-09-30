@@ -210,7 +210,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
        which slots the PC's scripts reach is unread;
      - 37 / 54 accented enemy names over the banner's 8 bytes (pair codes
        or one-byte accents would fix it);
-     - the title art.
+     - ~~the title art~~ built 2026-09-29 (DIV-0014's French and German
+       paragraph): the discs' own two rows and the English CONFIG.
    - **Furigana** is idea I21, for its own branch.
 6. **Localisation: the exe's remaining Chinese**
    ([`dialogue-localisation.md`](dialogue-localisation.md) §6 the open list,
@@ -222,25 +223,31 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    ([`battle_windows.md`](battle_windows.md)); the enemy names, the banner
    messages and the EX suffix are done (DIV-0053, DIV-0052); the ability names are
    the 16-byte GBK field at `0x65C4C8 + id * 0x18`
-   ([`battle_window_draw.md`](battle_window_draw.md)). **Staged for a
-   localisation session, 2026-09-27** (the owner's captures: the item and
-   ability lists' headers `物品` / `武器` / `攻击` and the Equip screen's
-   stat column `攻击` `防御` `智力` `速度` still Chinese under English):
-   both draws are already ours (`menu_windows.cpp`'s `kStatLabels`
-   `0x66A0F8..`; the list headers behind `0x66A220`), so each wants only a
-   `loc_build.py` chunk kind carrying the US disc's strings and a width
-   check against its box. Older and still open:
-   the stat labels at `0x669CF0` (the US `Pwr` `Def` `Int` `Agl` stand
-   before the verb table in `STATUS.EMI`; check `Pwr` fits the box); the
-   skill list's header `龙技` `0x66A220` and the item list's `物品`; the turn
-   counter's `残留` / `回合` at `0x669D10` / `0x669D18` (read only by
-   `0x43B130`). Captures: `tools/recipes/menu_screens.txt`,
+   ([`battle_window_draw.md`](battle_window_draw.md)). **Built 2026-09-29
+   on `loc/remaining-labels`, DIV-0064** (chunk kind 15, `src/game/labels.cpp`):
+   the list headers, the Equip column's and the battle's stats, and the
+   status words, from the US disc; the list titles' centring (DIV-0059)
+   extended to every list; and D174 fixed on the way (`ConfigText_Inject`
+   under `BOF3X_LANG=original`). Seen by capture: `ITEM`, `HEAL`, `Pwr Def
+   Int Agl` (`analysis/shots/labels_en`). **Owed the owner's eye:** the
+   status words on a poisoned member, a battle's stat panel and skill
+   titles, the shops' `WEAPON` / `ARMOR`; the French weapon and skill
+   pages (`ARMEMENT`, `CAPACITE` - the item and skill types are repointed
+   into the DLL's buffers, so nothing is kept) and the German build. Still
+   Chinese, with readers
+   named in [`dialogue-localisation.md`](dialogue-localisation.md) §8: the
+   turn counter, the Skill Ink count's label, the shop's master / apprentice
+   words, and some fifty strings of the shop and tactics screens at
+   `0x669E10..0x66A0B0` / `0x66A14C..0x66A1E0`. Captures:
+   `tools/recipes/menu_screens.txt`,
    `battle_commands.txt`, `combat.txt`. Also from §6 there: the seven
    character-at-a-time `Text_DrawAt` callers still at 12 px (`0x45B490`,
    `0x45B5F0`, `0x460730`, `0x460920`, `0x466260`, `0x4B1090`, `0x4B11F0`)
-   plus `0x4987E0` and the 8 px UI font `0x516E70`; text in artwork; longer
-   names (16-byte fields against the disc's 12, DIV-0008 - owner's call);
-   a better upscale; German and French (10 glyph slots free). Saved names
+   plus `0x4987E0` and the 8 px UI font `0x516E70`; text in artwork;
+   a better upscale; German and French (10 glyph slots free). **Closed by
+   the owner, 2026-09-29:** longer names - the port widened the fields
+   for two-byte glyphs, not for more letters; the boxes on screen are the
+   same size, so the US disc's 12-letter names stay. Saved names
    stay as they are (owner's decision).
 7. **Widescreen's debts** ([`widescreen.md`](widescreen.md) §4, §5):
    the oracle and the frame hash once with `BOF3X_WIDE=1`; the attract A/B

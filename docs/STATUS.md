@@ -295,7 +295,9 @@ What is established:
   [`dialogue-localisation.md`](dialogue-localisation.md) §8): the menu's
   button verbs on Config, Items, Ability, Equipment and Tactics (DIV-0018),
   the battle's command labels (DIV-0019), and New Game's default names -
-  Ryu ... Peco, the Whelp - and Manillo the fish merchant's (DIV-0020). Each
+  Ryu ... Peco, the Whelp - and Manillo the fish merchant's (DIV-0020);
+  on 2026-09-29 the list headers, the stats and the status words
+  (DIV-0064, kind 15). Each
   is a slot table in `.data` whose US twin sits beside data the PC kept byte
   for byte, which is how the build finds it on the player's disc. All but
   Manillo's are captured in game. Saves keep their names; the owner accepted
