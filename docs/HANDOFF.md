@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-29, round twelve merged to `main` as PR #33, `d1b411c`; round thirteen on `phase-3/capture-round-thirteen` from it: wave one merged, 7,173 ours, wave two running)
+**Status:** IN PROGRESS (2026-09-29, round twelve merged to `main` as PR #33, `d1b411c`; round thirteen on `phase-3/capture-round-thirteen` from it: waves one and two merged, 7,568 ours, paused before wave three)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**7,173 functions are ours** (`inject: 7173 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
+**7,568 functions are ours** (`inject: 7568 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
 `main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
 PR #28 and #29), and **round eleven's cleanup, the part a session without
 the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
@@ -46,16 +46,19 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-000. **Round thirteen, the effect engine: wave one is merged (7,173 ours), wave two is running.** Branch
-   `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34 merged in; nothing pushed.
-   [`takeover-queue-round13.md`](takeover-queue-round13.md): section 10 the cut (35 groups E1A..E6D in six waves),
-   11 stage A, 12 wave one (278 functions, what it learned, the code in no group, the debts). Wave two is E2A..E2G,
-   379 functions, launched from wave one's tip. Everything a coordinator needs is in the session-`56ff1eb2` scratchpad
-   (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`): `make_briefs.py <scratch> <wave> <tip> <edges>`
-   writes a wave's briefs, `queue13.sh <scratch> <groups>` merges in order and stops at a failure (never edit
-   `merge_group13.sh` while it runs), `WIDE=1` adds the widescreen run to a merge, `verify_tip.sh` runs narrow and
-   wide. Owed at the tip: the whelp route's frame hash. The main checkout's `build/bof3x.ini` has `wide=1`
-   (`battle_e7.md` section 3).
+000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
+   owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
+   merged in; nothing pushed. [`takeover-queue-round13.md`](takeover-queue-round13.md): section 10 the cut (35 groups
+   E1A..E6D in six waves), 11 stage A, 12 wave one (278), 13 wave two (395). **Before wave three, in order:** the
+   harness fold section 13 names (the quiet effect-standard rows five groups re-listed); the whelp route's frame hash
+   (it enters functions of EGT, E1C and E2A; `live_batch12w2c.sh` in the session-`6ae930a8` scratchpad is the model);
+   then `make_briefs.py <scratch> 3 <tip> band_edges_w2.txt` and four agents, E3A..E3D, 210 functions, E3B
+   merged before E3C. Waves three and six are small enough to run together (406). The scripts are in the
+   session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`): `runner13.sh
+   <scratch>` merges the groups appended to `pending13.txt` one at a time and stops at a failure (`END` ends it;
+   never edit `merge_group13.sh` while it runs), `verify_tip.sh` runs narrow and wide, `fold_names.py` points the
+   harness rows at names. The main checkout's `build/bof3x.ini` has `wide=1` and a running game locks its DLL: verify
+   in the verification worktree. The wave's agent worktrees and branches are merged and still present.
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,

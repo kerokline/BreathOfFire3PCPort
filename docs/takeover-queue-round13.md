@@ -702,3 +702,70 @@ while its inject runs first. **Live**: `reach_whelp` enters two of EGT's
 helpers and one full cycle of kind 0x1C, so the whelp route's frame hash is
 owed at this tip; every other function of the wave is fuzz-only.
 
+## 13. Wave two (launched about 19:20 from `dcef661`, merged 19:55..21:11)
+
+Seven Opus agents in worktrees, the owner away and the waves his to launch
+at will; paused after this wave at the owner's word (the account's usage
+cap). Each merge built and run in the detached verification worktree, the
+group's shadow and `'*'` narrow; every agent ran `'*'` narrow and with
+`BOF3X_WIDE=1` in its own worktree, all exit 0.
+
+| Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Kinds |
+|---|---|---|--:|---|--:|---|
+| E2G | `e1ac01e` | `83022d9` | 56 + 2 | 80 / 78 / 2 | 7,231 | 0x15, 0x54, 0x55, 0x57, 0x5A, 0x5B, 0x5D's and 0x5E's dispatchers, 0x5F, 0x66, kind 0x18's sub-kind 0x20 |
+| E2B | `f92e99e` | `a7182d3` | 51 + 1 | 100 / 99 / 0, one stopped by ours' abort with a refused near variant | 7,283 | 0x2F, 0x33, 0x35, 0x38, 0x39, 0x3B, 0x3D |
+| E2D | `dec056b` | `99eb61a` | 54 | 148 / 145 / 3 | 7,337 | 0x45..0x48, 0x49's dispatcher and variants 0..4 |
+| E2C | `2d38a24` | `c0a9da9` | 51 + 2 | 169 / 167 / 2 | 7,390 | 0x3E, 0x3F, 0x40, 0x42, 0x43, 0x44, 0x6B |
+| E2F | `510d5e7` | `7dbb79c` | 52 + 10 | 126 / 125 / 1 | 7,452 | 0x4F..0x53, 0x56, kind 0x4E's disc; nine part-7 rows of no group; the `NOTFN` start `0x47C420` inside `0x47C370` |
+| E2E | `a8a271d` | `9f351c2` | 51 | 94 / 93 / 1 | 7,503 | kind 0x48's states 7..12, 0x4A..0x4E, the angle and sphere helpers |
+| E2A | `1d2e0ec` | `45a698a` | 64 + 1 | 134 / 131 / 3 | 7,568 | 0x28..0x2E |
+
+**395 functions, 7,173 -> 7,568**, every group 0 mismatches, 851 controls:
+838 refused by a count, 12 equivalent mutants each with a refused near
+variant, 1 stopped by ours' own abort with a refused near variant. All of
+it effect code, unlike wave one. Then the coordinator's fold: three
+`scenario_harness` rows by name (E2F's). **The tip's proof** (scratch
+`verify_w2.log`): `scenario_harness_ekh`, `effect_2d`, `effect_2e` and `'*'`
+exit 0, 7,568 ours; `'*'` with `BOF3X_WIDE=1` exit 0; `ledger_check` 0 errors.
+
+**What the wave learned**:
+
+- The harness's effect-standard rows are too quiet for much of this code,
+  and five groups re-listed the same ones in their own fuzz files: the
+  `EffectGte_ProjectPoint`, `EffectGte_ProjectSize` and `Gte_VectorNormal`
+  rows log stack pointers by value; `Math_Cos`, the square root `0x5A7A90`,
+  `0x47CF20` and `0x47A130` answer garbage where the callers need the real
+  answer; the `0x4941B0` row writes where the function only reads;
+  `Sprite_UpdateScreen` and `MapView_LinkPrimAt` do not log
+  `Sprite_Current`. **The fold is owed before wave three** (each group's
+  doc has its list: `effect_2b.md`, `effect_2c.md` section 8, `effect_2d.md`,
+  `effect_2e.md`), beside the rows that must not change what merged groups
+  draw.
+- A draw that several states tail-jump to is a function of its own when it
+  has its own frame and `ret` (E2A's `0x471A60`, E2B's `0x473F10`, E2D's
+  `0x477DB0`, E2G's `0x47E120`): four of section 4's "shared tail" kind,
+  all taken whole.
+- The tool's table counts run on into the next table: E2G's kinds 0x5D and
+  0x5F (5 and 10, not 9 and 16), E2A's kind 0x2E (3 of a run of 17).
+
+**In no group, to place** (beside section 12's list): the states of kinds
+0x5D and 0x5E, `0x47F2D0..0x47FD7F` but `0x47F5D0`; of `0x4790C0..0x47A3D0`
+what E2F did not take - `0x4790C0`, `0x4790F0`, `0x479260`, `0x4792E0`,
+`0x4794D0`, `0x4796B0`, `0x47A110`, `0x47A130`, `0x47A150`, `0x47A200`;
+`0x59E930`.
+
+**Debts from wave two**: the harness fold above; one defect entry for the
+pools that overlap inside `EffectKind30_Shards` (E2A, E2B, E2E, E2F each
+describe it), and the symbol's count (E2B: used to `0x92CFC0`); E2C's
+reading that E2B's kind 0x35 table ends before `0x654468`, to check against
+E2B's `[[data]]` count; `Window_DrawFrame`'s evidence names `0x47DAC0` as a
+caller where the callers are E2G's (E2F); the latent defects to number;
+`scenario_harness_ekh.cpp` clones `0x472770` and `0x479970` by address.
+**Live**: `reach_whelp` enters E2A's `0x471D10` and `0x471E20`; with EGT's
+two helpers and E1C's kind 0x1C the whelp route's frame hash is owed at this
+tip, not run (the agents' self-tests and the owner's game held the machine).
+
+**Wave three is not launched.** Its briefs are generated but for the tip
+(`make_briefs.py <scratch> 3 <tip> band_edges_w2.txt`); the merge order is
+E3B before E3C.
+
