@@ -102,6 +102,13 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    a transition of Capcom's runs longer there than under ours, so a reach measurement of this route must be a
    trace on our side (plain `BOF3X_CALLTRACE`, which arms only what is not ours), not `REACH=1` on the original.
    Which transition, and why the frame count differs, is worth knowing: it is a divergence no ledger entry names.
+   **The route's reach on our side** (plain `BOF3X_CALLTRACE`, 2026-09-30): 27 Capcom functions entered after the
+   boot, all unnamed - 11 in the camp (the skill-note and masters windows: `0x596330`'s host of 14 + 11 hidden,
+   `Window_Handler7KindTable`'s kinds at `0x59C110`.., `0x58BD50`, `0x591AC0`) and 16 in fishing (`0x52AF80`..
+   `0x52CD47`: three hosts of 6, 8 and 18 recorded functions plus 11 hidden - the cast, the lure, the fish and the
+   fight). Round 14 candidates: **the camp's window kinds and the fishing minigame**, about 80 functions, with the
+   route to reach them. The owner on the fish, 2026-09-30: the placement looks fixed by the frame and only the
+   activity random, so the random draw is in the bite, not the cast; a re-recording that catches a fish may replay.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
