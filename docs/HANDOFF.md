@@ -71,6 +71,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    for the four `Menu_YesNo` prompts, on a chooser DIV-0027 does not reach. Find its draw (`BOF3X_TEXTLOG` on the
    line, then the hand's x constant in that caller - a SHISU / SISYOU or scenario function, or a boot-resident
    chooser) and give it DIV-0027's stops, 218 on Yes and 274 on No, under a language overlay only; amend DIV-0027.
+   Also: **the world map's party sprite has its shadow cut off** (three of the owner's crops in
+   `analysis/shots/owner_catalogue/worldmap_shadow_*.png`, the pack-carrying walk: the shadow's ellipse ends at a
+   straight edge under the feet). First tell wide from narrow (`tools/recipes/worldmap_sliver.txt` both ways), then
+   whether it is the pinned sprite (`WorldMap_PinSprite`, ours in `area_backdrop.cpp`, pinned at (160, 80)) or the
+   shadow's own draw; the sibling's PSX capture of the same walk says what the shadow should look like.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
