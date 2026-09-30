@@ -3240,10 +3240,11 @@ designed in rather than bolted on.
   now accepts that address as the table check already did; the strings
   are written into the same buffers again and the tables re-aimed at
   what they already hold.
-  **Owed the owner's eye:** the status words (no member on the recipe save
-  is poisoned or confused), the battle's stats, the `WEAPON`..`VITAL` and
-  `ASSIST`..`SKILL` titles, the German build and the French weapon and
-  skill pages.
+  **The owner, 2026-09-30:** `Pois` after Teepo's level in the Items
+  screen's member panel, English - the status word through the 8 px draw
+  confirmed (their capture). **Owed the owner's eye:** `Conf`, the
+  battle's stats, the `WEAPON`..`VITAL` and `ASSIST`..`SKILL` titles, the
+  German build and the French weapon and skill pages.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 
