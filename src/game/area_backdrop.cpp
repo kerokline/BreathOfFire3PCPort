@@ -20,6 +20,7 @@ namespace area_backdrop {
 const Callees kOriginals = {
     Gpu_SetDrawMode, Gfx_CommitPrim, Gpu_SetPolyG4, Gpu_SetSemiTrans,
     Area_TestCondition, Gpu_SetDrawMove,
+    Gpu_SetPolyF4,
 };
 Callees g = kOriginals;
 
@@ -164,6 +165,39 @@ extern "C" void __cdecl Gfx_DrawSkyGradient(unsigned r, unsigned g_, unsigned b)
     g.commit(7, 0x44);
 }
 
+// original 0x4FD3E0 (read 2026-09-30): the sunset's glow over the sky above -
+// Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0xB5, 0) committed (3, 0xC), then a
+// POLY_F4 at the new cursor, semi-transparent (Gpu_SetSemiTrans 1), (0, 0)..
+// (320, 240) as floats, red = Sprite_Current's word +0x2E / 8 (a signed
+// division: the step the caller of Gfx_DrawSkyGradient climbs to 0xBF),
+// green and blue 0; committed (3, 0x38). Caller 0x4FD2E0 as the gradient's.
+// DIV-0041: (-53, 0)..(373, 240) under a wide picture, the fuzz (before
+// Widescreen_Inject) comparing the original's.
+extern "C" void __cdecl Gfx_DrawSunsetGlow(void) {
+    g.draw_mode(Gfx_PacketNext, 0, 0, 0xB5, 0);
+    g.commit(3, 0xC);
+    unsigned char* const quad = Gfx_PacketNext;
+    g.set_poly_f4(quad);
+    g.set_semi(quad, 1);
+    const float wide = static_cast<float>(Widescreen_Live());
+    const float left = 0.0f - wide;   // not -wide: -0.0f when wide is 0
+    const float right = 320.0f + wide;
+    SetFloat(quad + 0x8, left);
+    SetDword(quad + 0xC, 0);
+    SetFloat(quad + 0x14, right);
+    SetDword(quad + 0x18, 0);
+    SetFloat(quad + 0x20, left);
+    SetFloat(quad + 0x24, 240.0f);
+    SetFloat(quad + 0x2C, right);
+    SetFloat(quad + 0x30, 240.0f);
+    std::int16_t step;
+    std::memcpy(&step, Sprite_Current + 0x2E, sizeof step);
+    quad[5] = 0;
+    quad[6] = 0;
+    quad[4] = static_cast<unsigned char>(static_cast<int>(step) / 8);   // cdq / and 7 / sar 3: toward zero
+    g.commit(3, 0x38);
+}
+
 // original 0x571D30: AreaMap_EntryHandlers 2 (PSX FUN_801592EC) - a texture
 // cycle: a VRAM rectangle copied over another on a frame schedule. Byte 0 of
 // the entry plus one is the period; word +4 a condition; then pairs of
@@ -254,6 +288,7 @@ void AreaBackdrop_Inject() {
     if (bof3::WantsShadow("area_backdrop")) area_backdrop::SelfTest();
     BOF3_INJECT(AreaMap_DrawBackdrop);
     BOF3_INJECT(Gfx_DrawSkyGradient);
+    BOF3_INJECT(Gfx_DrawSunsetGlow);
     BOF3_INJECT(AreaMap_TextureCycle);
     BOF3_INJECT(AreaMap_SlotZones);
     BOF3_INJECT(WorldMap_PinSprite);

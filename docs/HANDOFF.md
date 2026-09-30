@@ -58,8 +58,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    are still Capcom's or unnamed (the DIV-0041 amendment lists them). The sunset sky of area 23's cutscene was
    Capcom's `0x4FD350`, found by a detail call trace (`BOF3X_CALLTRACE_DETAIL=380-383` under `REACH=1` and
    `BOF3X_ORIGINAL='*'`, the only `Gpu_SetPolyG4` builder): now `Gfx_DrawSkyGradient` in `area_backdrop.cpp`, widened
-   and fuzzed. Left at that frame: a thin brightening of the middle 320 columns (a semi-transparent layer still
-   320 wide, 188 against 203 in red) - the same detail trace at the frame, `Gpu_SetTile` / `Gpu_SetSprt` callers.
+   and fuzzed; the glow over it (`0x4FD3E0`, the only other full-frame quad at frame 600) likewise, as
+   `Gfx_DrawSunsetGlow`. The sunset now reads one colour across the frame (`analysis/shots/nue_sunset/`).
    The Nue question of `boss_sa.md` is settled by the same route's trace (fight 2 = area 23, kind 1).
    The owner confirmed the pad skip on the intro videos. **Owed the owner's eye** in a fight of their own (the Equip
    labels, the wide game over), and a held pad input across a video's start (no skip until released).

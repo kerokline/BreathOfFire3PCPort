@@ -11150,6 +11150,15 @@ status = "evidence"
 evidence = "disasm 2026-09-30, 0x4FD350..0x4FD3DE (0x8E bytes), cdecl, four calls, no jumps: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x95, 0), Gfx_CommitPrim(7, 0xC); Gpu_SetPolyG4 at the new Gfx_PacketNext; y 239.0 at +0x2C / +0x3C, the three argument bytes (al of each) to +4..+6 and +0x14..+0x16, x 0 (ebx) at +8 / +0x28 and 319.0 (0x439F8000) at +0x18 / +0x38, y 0 at +0xC / +0x1C, black at +0x24..+0x26 / +0x34..+0x36 (semi-transparency untouched); Gfx_CommitPrim(7, 0x44). The screen-wide gradient of a colour over black: callers 0x4FD326 and 0x4FD347 in the function at 0x4FD2E0 (Capcom's), which steps a word at 0x937F88 + 0x2E toward 0xBF and passes (0x40 + 2 * step, 0x5A, 0xFF - 2 * step) - the sunset of area 23's cutscene (the owner's cutsceneAndNue.txt, frame 600; a detail trace of frames 380..383 found it the only POLY_G4 builder). DIV-0041: ours widens it."
 
 [[func]]
+pc = 0x4FD3E0
+name = "Gfx_DrawSunsetGlow"
+ret = "void"
+params = "void"
+impl = "src/game/area_backdrop.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-30, 0x4FD3E0..0x4FD461 (0x81 bytes), cdecl, five calls, no jumps: Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0xB5, 0), Gfx_CommitPrim(3, 0xC); Gpu_SetPolyF4 at the new Gfx_PacketNext, Gpu_SetSemiTrans(it, 1); x 0 (ebx) at +8 / +0x20 and 320.0 at +0x14 / +0x2C, y 0 at +0xC / +0x18 and 240.0 at +0x24 / +0x30; red +4 = Sprite_Current's word +0x2E / 8 (cdq, and 7, sar 3), green +5 and blue +6 = 0; Gfx_CommitPrim(3, 0x38). The sunset's semi-transparent red glow over Gfx_DrawSkyGradient's sky: the same caller 0x4FD2E0 (Capcom's), the step word it climbs. Found by the same detail trace at frames 598..600 (the only POLY_F4 builder beside the map cells). DIV-0041: ours widens it."
+
+[[func]]
 pc = 0x5A9907
 name = "Task_SetStackBase"
 ret = "void"

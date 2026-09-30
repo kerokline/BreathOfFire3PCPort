@@ -2097,9 +2097,14 @@ designed in rather than bolted on.
   `(-53, 0)..(372, 239)` by the same rule and fuzzed against its clone
   (20,000 rounds, 0 mismatches); the sunset now fills the frame
   (`analysis/shots/nue_after/f0600.png` before, the session's
-  `shots_sky` after). A thin brightening over the middle 320 columns
-  remains at that frame (188 against 203 in the bands' red), one more
-  layer to name. Not yet: five sites in `.text` no symbol names
+  `shots_sky` after). The thin brightening left over the middle 320
+  columns (188 against 203 in the bands' red) was the sunset's glow,
+  Capcom's `0x4FD3E0` next door - a semi-transparent POLY_F4 of
+  `(0, 0)..(320, 240)`, red the step word over eight - found by the same
+  detail trace at frames 598..600 (the only POLY_F4 builder beside the map
+  cells): now `Gfx_DrawSunsetGlow`, ours beside the gradient, widened the
+  same way, 20,000 rounds at 0 mismatches; the sky reads the same colour
+  at every column (`analysis/shots/nue_sunset/`). Not yet: five sites in `.text` no symbol names
   (`0x489D47`, `0x48CB07`, `0x48CD10`, `0x48DC19`, `0x493308` in the magic
   engine's range; `0x507BDC`, `0x507CE3`, `0x50B4B5`, `0x50F7B5` after
   `Gfx_BeginFrame`), Capcom's still, and any fill built from integers or
