@@ -252,7 +252,11 @@ tables reached (each handler recorder 476..2,039 calls; `WeretigerFx_Next`
 996, `Effect_StateRelease` 1,367), `Effect_Release` 5,548, `0x47CF20` 2,758
 and `0x479160` 604 (a spark set), the sphere's `0x5A7A90` 964,377.
 
-SHADOW_ALL
+**Every shadow** (this worktree, no `bof3x.ini`, so narrow):
+`BOF3X_SHADOW='*'` exit 0, 687 self-test lines, none with a mismatch, `inject:
+7224 ours, 0 left original`; `effect_2e` there 204,000 rounds, 22,652,602
+calls, 0 mismatches. **With `BOF3X_WIDE=1`**: `'*'` exit 0, the same 687
+lines, none with a mismatch, `effect_2e` the same. Neither run died silently.
 
 ## 5. What the cut and the tool said, settled
 
