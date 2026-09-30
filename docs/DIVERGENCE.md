@@ -3302,7 +3302,9 @@ designed in rather than bolted on.
   joystick included.
 - **New behaviour:** the pump drains the queue with `PeekMessage` and
   dispatches as before, then polls the pad (`PadRead_AnyInputDown`: any
-  input down, bound or not, after `PadSdl_Poll`) and waits up to 16 ms
+  input down, bound or not, after `PadSdl_Poll`; it starts SDL's pad
+  itself, since the two intro videos play before `DInput_Init` would -
+  the owner's first try skipped nothing for that reason) and waits up to 16 ms
   for the next message (`MsgWaitForMultipleObjects`). An input going down
   during the video clears `Fmv_Playing` as a key does; one held from
   before the video is ignored until it is released. A `WM_QUIT` taken off

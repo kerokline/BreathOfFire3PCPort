@@ -270,6 +270,11 @@ extern "C" void __cdecl DInput_Init(void* hinstance, void* hwnd) {
 }
 
 bool PadRead_AnyInputDown() {
+    // The intro videos play before DInput_Init (win_main.cpp: the two
+    // Fmv_Play calls come first), so the pad is started here when it has not
+    // been; DInput_Init's StartSdl then does nothing. The owner's first try,
+    // 2026-09-30: no skip, the pad not yet open.
+    StartSdl();
     if (!input::PadSdl_Started()) return false;
     input::PadSdl_Poll();
     return input::PadSdl_FirstInputDown() >= 0;
