@@ -744,15 +744,28 @@ extern "C" void __cdecl GeneWin_List3States(void) {
 // the record's +0x10 = category << 8 | item, and it is first drawn dim in
 // colour 7; the row +0xA / +0xB raised by 2 pixels; then its icon
 // (0x66B5B4) and name. Last the pieces 0x66B508 and the frame's edges.
+//
+// DIVERGENCE DIV-0065: the labels' row. The original draws label k at y +
+// 0x27 + 13 k and the values at y + 0x1C + 13 k, so each label sits two
+// pixels above the next stat's value - the first value has no label and the
+// fourth label is drawn under the frame, off the box. The field's member
+// panel (0x5738A0: the label at y + 8, the value at y + 0xA) has the label
+// two pixels above its own value; 0x27 is that relation one 13-pixel row
+// down, 0x1A + 0xD. Ours draws the labels at y + 0x1A + 13 k once the flag
+// is on; BattleE7_Inject sets it after the self-test, which compares the
+// original's rows.
+unsigned char g_equip_labels_row = 0;
+
 extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, U record) {
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
+    const int label_y = g_equip_labels_row ? 0x1A : 0x27;
     BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, B(at::kColour));
     unsigned char* const ch = At(at::kCharRecords + (member & 0xFF) * at::kCharStride);
     unsigned n = BH_CALL(Text_CharCount)(ch) & 0xFF;
     if (n > 5) n = 5;
     BH_CALL(Text_DrawAt)(xi - 6 * static_cast<int>(n) + 0x3E, yi + 7, 0, 5, ch);
     for (unsigned k = 0; k < 4; ++k)
-        BH_CALL(Text_DrawAt)(xi + 5, yi + 0x27 + 13 * static_cast<int>(k), 0, 4, Text(at::kStatLabels[k]));
+        BH_CALL(Text_DrawAt)(xi + 5, yi + label_y + 13 * static_cast<int>(k), 0, 4, Text(at::kStatLabels[k]));
     BH_CALL(Char_RecalcStats)(ch);
     static constexpr unsigned kStats[4] = {0x24, 0x26, 0x2A, 0x28};
     for (unsigned k = 0; k < 4; ++k) {
@@ -856,6 +869,13 @@ void BattleE7_Inject() {
     CheckSlideBound(at::kList2OutBound, 0x15B);
     CheckSlideBound(at::kList3OutBound, 0x143);
     if (bof3::WantsShadow("battle_e7")) battle_e7::SelfTest();
+    // DIVERGENCE DIV-0065: after the self-test, which compares the original's rows.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleEquipLabelsRow", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_equip_labels_row)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0065    the battle equip window's stat labels beside their values");
+    }
     BOF3_INJECT(BattleResultWin_DrawLevelUp);
     BOF3_INJECT(BattleResultWin_DrawFrame);
     BOF3_INJECT(BattleResultWin_DrawDrops);

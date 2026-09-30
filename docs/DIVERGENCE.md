@@ -2061,6 +2061,15 @@ designed in rather than bolted on.
   The middle-640 comparison against the narrow capture is not reported
   there. Still owed: the oracle and the frame hash with `BOF3X_WIDE=1`, the
   cropped attract A/B, the owner's eye.
+  **The loss screen's black, 2026-09-30** (the owner's shot: GAME OVER
+  over a black middle, the battle field in both bands, the caption's bar
+  sliding on into the right one): `BattleLoss_DrawBlack` `0x432930`
+  (ours, `src/game/battle_e1.cpp`) draws its TILE at `(-53, 0)` 426 x
+  240 by the fade tile's rule. The columns are read into a byte flag by
+  `BattleE1_Inject` after its self-test, since that inject runs after
+  `Widescreen_Inject` and the fuzz compares the original's 320; the bar
+  and caption are as they were, now over black in the band. Off, bit for
+  bit the original's.
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
@@ -3223,9 +3232,55 @@ designed in rather than bolted on.
   whelp's list titled `DRAGON`; `combat_ab.txt` -> `labels_combat`, 43
   frames, nothing amiss. French, `menu_screens.txt` -> `labels_fr`:
   `OBJET`, `GUERIR`, and the log's `5 of 5` for both repointed groups.
+  **2026-09-30:** the overlay's second load - the title's `FIRST.DAT`
+  after a game over (the owner's `tools/recipes/gameover.txt`, its run
+  ending in `FATAL: item types: 0x00663970 holds ...`) - aborted in
+  `Labels_Apply`: a repointed group's witness is its first pointer table's
+  entry, which the first load had re-aimed at our buffer. The slot check
+  now accepts that address as the table check already did; the strings
+  are written into the same buffers again and the tables re-aimed at
+  what they already hold.
   **Owed the owner's eye:** the status words (no member on the recipe save
   is poisoned or confused), the battle's stats, the `WEAPON`..`VITAL` and
   `ASSIST`..`SKILL` titles, the German build and the French weapon and
   skill pages.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
+
+### The battle equip window's stat labels beside their own values
+
+- **ID:** DIV-0065
+- **Date:** 2026-09-30
+- **Subsystem:** battle menu, the Equip window (`BattleEquipWin_Draw`
+  `0x59D640`, ours in `src/game/battle_e7.cpp`, kind 3 of
+  `Window_Handler8Kinds`)
+- **Tier:** Sensible
+- **Original behaviour:** the window lists a member's four stats with a
+  label each. The values go at `y + 0x1C + 13 k` (the 8 px font, read at
+  `0x59D722`), the labels at `y + 0x27 + 13 k` (`0x59D6B6`, `lea ecx,
+  [esi + 0x27]`, `Text_DrawAt` with `0x66A0F8..`): each label sits two
+  pixels above the *next* stat's value, the first value has no label, and
+  the fourth label is drawn under the frame's bottom edge, off the box.
+  Capcom's own constant, not a slip of ours - the run of
+  `tools/recipes/gameover.txt` under `BOF3X_ORIGINAL='*'` (Chinese, since
+  `'*'` leaves the overlay off; frames 540 and 720) shows 29 alone, 攻击
+  beside 16, 防御 beside 22, 智力 beside 18 and 速度 clipped, the owner's
+  English capture the same with `Pwr Def Int`. The field's member panel
+  (`0x5738A0`: the label at `y + 8`, the value at `y + 0xA`) puts a label
+  two pixels above its own value; `0x27` is that relation one 13-pixel
+  row down (`0x1A + 0xD`).
+- **New behaviour:** the labels at `y + 0x1A + 13 k`, beside their own
+  values, once a byte flag is on. `BattleE7_Inject` sets it (`PatchBytes
+  BattleEquipLabelsRow`) after the module's self-test, whose fuzz compares
+  the original's rows; every other pixel of the window is as it was.
+- **Rationale:** the owner, 2026-09-30, from the equip window in a fight:
+  "str shows up next to defense, def next to intelligence". A label
+  belongs to its own value; the field's panel shows where Capcom put it.
+- **Also in the PSX version?** Not read: `0x59D640` has no PSX twin in
+  the pairs, and the sibling has no name for the battle equip window.
+- **Verification:** `BOF3X_SHADOW='*'` headless: 0 mismatches (the flag is
+  set after the fuzz). Live: the recipe above on ours, English, frames 540
+  and 720 - `Pwr Def Int Agl` each beside its value, the fourth inside the
+  box.
+- **Reversible?** `BOF3X_ORIGINAL=BattleEquipWin_Draw` leaves Capcom's
+  function and its rows.
