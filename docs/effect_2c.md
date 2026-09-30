@@ -11,7 +11,7 @@ dispatcher, `Effect_KindHandlers[0x44]`, a catalog part-2 row); no start
 dropped. Each read to its last instruction with capstone and fuzzed through the
 scenario harness in effect mode ([`scenario_harness.md`](scenario_harness.md)
 section 8) without edits to it: 318,000 rounds, 0 mismatches.
-CONTROLS_SUMMARY **Fuzz only**: no recorded route enters any of the 53
+169 controls planted, 167 refused by a count, two equivalent (each with a near variant refused). **Fuzz only**: no recorded route enters any of the 53
 (section 9).
 
 All 53 are effect code. The two `hypothesis` rows of the cut (`0x475090`,
@@ -214,23 +214,250 @@ table ends before it.
 
 ## 4. The fuzz (`effect_2c_fuzz.cpp`)
 
-FUZZ_SECTION
+One `scenario_harness::Group` (`effect_2c`), effect mode, the kinds `0x3E,
+0x3F, 0x40, 0x42, 0x43, 0x44, 0x6B`, 6,000 rounds a function.
+`BOF3X_E2C_ONLY=<names>` (a comma list, names whole) runs those clones only.
+
+**Clones.** The table `band_rows.py --group E2C --clones --harness scenario`
+printed (extents as read; the cut's sizes were padding for 26 and wrong for
+`0x4762D0`, section 5), with `0x476680` added by hand. The seven dispatchers
+and the states are `kEffect` with the kind and, for a dispatcher, `state_span`
+its table's count (so `+1` is drawn inside the table; `EffectKind3E_Bolts` has
+`sub_span` 2 for its sub-state table); the void helpers that read the record
+are `kEffect` with no span; the helpers taking arguments `kCall`, a point or
+screen point in the harness's scratch buffers (`Arg::kScratch`), a record
+(shard, spark, ring) handed in by `args` from the records the seed wrote.
+`EffectKind43_SparksRun` is compared on `al` (`ret_mask` 0xFF), the two finds
+on `eax`. `EffectKind43_SparksRun`'s five-case jump table is moved into its
+copy (`JumpTable {0x39, 0x27C, 5}`).
+
+**Tables.** The eight tables are `DataTable`s, swapped for recorders on both
+sides while the fuzz runs: every entry was reached (coverage: `phase 0x...`,
+0x46A310 `Effect_StateRelease` and E2G's `0x47EEC0` among them).
+
+**Regions** beyond the effect-standard ones: kind 0x43's 256 records past the
+shards' 0x644 (to `0x92DB80`); kind 0x6B's first 80 particles (`0x92EC80`,
+0x640); the cells `0x67610C..0x6761C3`; and `EffectKind6B_Frame`'s four words,
+seeded - the original's 0x50 x 0x48 makes 5,760 particles (0x1C200 bytes), past
+the 64 KiB of state the harness holds, so the fuzz draws w and h with w x h at
+most 80 (w up to the original's 0x50 with one row), and 0, negative and
+0x8000 values. 32,112 bytes of state in 49 regions.
+
+**Stand-ins** (the group's `Callee` list, registered before the standard sets):
+the group's own 23 callees by name - record and packet pointers logged by value
+and their points hashed (`deref` 12), a caller's local hashed only, radii and
+angles masked to the word the callee reads (`movsx` / `and 0xFFFF`: the callers
+push whole registers); `EffectKind40_ShardDraw` logs the shard cursor it reads;
+`EffectKind40_ShardFind` / `EffectKind44_SparkFind` answer 0 a third of the
+time, else one of their records (the callers write through the answer).
+Re-listed louder than the standard rows:
+
+| Callee | Why |
+|---|---|
+| `EffectGte_ProjectPoint` | the standard row logs both pointers; the point is often a local here (different in the copy and ours): hashed, and `out` logged only when it is not a local (a ring's or spark's cells), and filled with finite floats |
+| `EffectGte_ProjectSize` | as above; `out` filled (a small radius half the time) |
+| `Gte_VectorNormal` | in place on a local in `EffectKind3E_BoltGlow`: hashed, `out` filled |
+| `Sprite_UpdateScreen` | the standard row logs nothing: here the record it draws is a borrowed effect record - `Sprite_Current` and its 0x80 bytes logged |
+| `0x4941B0` | the effect-standard row writes 8 bytes at each of its three pointers; the real one only reads them (the ring's projections): hashed (8 each), nothing written |
+| `0x59E930` | the rectangle hashed, its target logged and filled `w * h` words (at most 0x100) |
+
+**Seeds**, per function: `+9` at 1, 2, 0, 0x10 or anything; `Field_Request` 5
+half the time for kind 0x3E's sub-states; the counter byte `0x903848` at 0x19
+(kind 0x40) or 0x11 (kind 0x43) a third of the time; the radius `+0x2E` round
+0x3C0..0x401 and the sign; kind 0x40's 32 shards in use or not, their heights
+`+8` never 0 (the original divides by it, and a disturbed cursor may land on
+any), their offsets inside the rim or not, and the disc's rim 32 points of a
+circle anticlockwise (inside test passing), clockwise, all at one point (every
+product 0.0) or noise; the in-use bytes of the shard, kind-0x43 and kind-0x44
+records all taken a quarter of the time; kind 0x43's sparks in every phase
+(and past the five), counts at 1, both sides, the record's `+6` 0..3; kind
+0x6B's rectangle as above, its heights round the particles' y, its particles
+in every flag phase with counts at 1 and columns inside the 80; kind 0x44's
+ring cell on one of eight records, their radius words round 0x150..0x181, their
+projected points on and off the screen; `Frame_Counter & 3` 0 half the time;
+the screen points handed to the cap, band and glow finite three times in four.
+
+**Disturbance** (the group's case, from the hash only): the shard and spark
+cursors among their records, the ring cell among the eight, the counter byte
+(0x19 / 0x11 / anything), `+9`, the particle count (at most 80), the words
+`+0x32` and `+0x2E`.
+
+**Result** (2026-09-29, this worktree): `BOF3X_SELFTEST_ONLY=1
+BOF3X_SHADOW=effect_2c`, exit 0 - **318,000 rounds over 53 functions,
+5,884,722 calls to the stand-ins, 0 mismatches**. Coverage, calls the
+originals made: every standard callee the band calls, the three raw ones
+(`0x4941B0` 96,000, `0x59E930` 2,004, `0x5A7570` 48,000), every table entry,
+`Effect_FindFree` 6,000, `Effect_Release` 7,591. `BOF3X_SHADOW='*'` (every earlier group's fuzz and this one), exit 0, every
+self-test line 0 mismatches, `inject: 7226 ours, 0 left original`
+(`effect_2c` there: 318,000 rounds, 5,881,143 calls, 0 mismatches - another
+stream); and again with `BOF3X_WIDE=1`: exit 0, every self-test line 0 mismatches. Neither run died silently.
+
+### 4.1 Controls
+
+A script (scratch `controls.py`) plants each mutation in `effect_2c.cpp`,
+rebuilds (a second build directory, `build2`), runs the self-test on the
+planted functions' clones only, restores and rebuilds. Plants in different
+functions share a build and a run (`BOF3X_E2C_ONLY` a list): a plant changes
+ours of its own function only (every call out of ours goes to a recorder), so
+each is judged by its own clone's count ("`<name>` mismatched in N rounds").
+**169 planted, 167 refused by a count, 2 not refused - both equivalent**:
+`W3` (`>= 0x400` as `> 0x400` before setting 0x400: at 0x400 both leave
+0x400), its near variant `W3b` (the compare unsigned) refused; `A1` (the climb
+`v / 32` as `v sar 5`: v is a multiple of 0x10000, so both are exact), its
+near variant `A1b` (of `v - 1`, where truncation and flooring differ) refused.
+
+| Function | Controls (id: plant - rounds refused of 6,000) |
+|---|---|
+| `EffectKind3E_Run` | D3E: kind 3E state xor 1 - 6000 |
+| `EffectKind3F_Run` | D3F: kind 3F 1 as 0 - 3016 |
+| `EffectKind40_Run` | D40: kind 40 2 as 1 - 2012 |
+| `EffectKind42_Run` | D42: kind 42 always 0 - 2993 |
+| `EffectKind43_Run` | D43: kind 43 3 as 2 - 1497 |
+| `EffectKind6B_Run` | D6B: kind 6B 4 as 3 - 1198 |
+| `EffectKind44_Run` | D44: kind 44 5 as 4 - 1052 |
+| `EffectKind3E_Start` | S3E1: x 0x318001 - 6000; S3E2: sound 0x209 - 6000; S3E3: +2 = 1 - 6000 |
+| `EffectKind3E_Bolts` | B3E1: x1 | 0x8001 - 6000; B3E2: ends swapped - 6000; B3E3: bolts in another order - 6000; B3E4: sub-state xor 1 - 6000 |
+| `EffectKind3E_SubWait` | W3E: request 4 - 3056 |
+| `EffectKind3E_SubSound` | U3E: sound 0x20A - 2995 |
+| `EffectKind3E_DrawBolt` | L1: x step / 32 - 6000; L2: z step sar not divide - 2843; L3: last joint jittered - 6000; L4: jitter - 0x7FF - 6000; L5: grey 0x7F - 6000; L6: abr 2 - 6000 |
+| `EffectKind3E_BoltGlow` | G1: no fchs - 4768; G2: nx * 4 - 4480; G3: second quad x - ny - 5378; G4: shade 0x41 - 5953; G5: x from y - 5570; G6: copy 0x40 not 0x44 - 6000 |
+| `EffectKind3F_Draw` | F3F: to + 0x1C - 6000 |
+| `EffectKind3F_DrawBeam` | M1: cap angle + 0x401 - 6000; M2: frame bit 1 - 5031; M3: size (0x10, 1) - 6000; M4: dy negated - 6000; M5: band a1 = a0 - 6000 |
+| `EffectKind3F_DrawCap` | C1: step 0x80 - 6000; C2: radius whole - 5814; C3: centre blue 1 - 6000; C4: depth from y - 5917 |
+| `EffectKind3F_DrawBand` | N1: p1 rim + 0x400 - 6000; N2: second quad at the cursor - 1528; N3: a0 + 0x800 masked - 192; N4: second quad p0 radius r1 - 5059; N5: green 0x81 - 6000 |
+| `EffectKind40_Start` | S40: radius 1 - 6000 |
+| `EffectKind40_Grow` | W1: counter 0x18 - 1970; W2: + 0x41 - 1749; W3: > 0x400 (equivalent: sets the same) - **not refused** (equivalent); W3b: unsigned compare - 1071; W4: radius + 1 - 4020 |
+| `EffectKind40_ShardsClear` | X1: 31 records - 6000 |
+| `EffectKind40_ShardsStep` | T1: fall 0x1F - 6000; T2: <= 0x80 - 4798; T3: one spawn - 6000; T4: slot 1 - 6000; T5: cursor not read after the draw - 587 |
+| `EffectKind40_ShardDraw` | R1: << 6 - 5350; R2: > 0.0 - 1205; R3: cross negated - 675; R4: shade << 5 - 1202; R5: semi-transparent - 1495; R6: rim & 0xF - 371 |
+| `EffectKind40_ShardSpawn` | P1: height 0x281 - 6000; P2: - 0x7F - 6000 |
+| `EffectKind40_ShardFind` | F1: 31 searched - 1496; F2: cursor not kept - 3736 |
+| `EffectKind40_DrawDisc` | Q1: first angle 0xFF00 - 6000; Q2: centre y from depth - 6000; Q3: rim kept as centre - 6000; Q4: centre 0xFE - 6000; Q5: radius unsigned - 2136; Q6: Sprite_Current not read after Math_Sin - 5995 |
+| `EffectKind42_Glow` | K42: z from height - 6000 |
+| `EffectKind43_Start` | A43S1: count 0x77 - 5953; A43S2: sound 0x202 - 6000 |
+| `EffectKind43_Gather` | A43G1: three sparks - 6000; A43G2: count 0x3D - 1979 |
+| `EffectKind43_Wait` | A43W1: counter 0x12 - 1895; A43W2: phase 3 - 1989 |
+| `EffectKind43_Fade` | A43F: inverted - 6000 |
+| `EffectKind43_Setup` | A43U1: z + 1 - 6000; A43U2: 255 cleared - 5974 |
+| `EffectKind43_AddSpark` | A43A1: side not flipped - 4488; A43A2: phase 1 - 4505 |
+| `EffectKind43_SparksRun` | A0: z - 0x29000 - 6000; A1: climb sar not divide (equivalent: v a multiple of 0x10000) - **not refused** (equivalent); A2: drift 0xB00 - 5977; A3: angle 0x401 - 5842; A4: phase + 2 - 5978; A5: circle - 0x5000 - 6000; A6: angle & 0x1FFF - 6000; A7: phase test 1 - 2308; A8: speed + 0x81 - 1541; A9: fly sar 5 - 6000; A10: al 2 - 6000; A11: phases past 4 not drawn - 6000; A12: Sprite_Current read before Math_Sin - 4316; A1b: climb of v - 1: truncation shows - 5783 |
+| `EffectKind43_SparkDraw` | K1: x 0x3C0 - 6000; K2: << 6 - 3928; K3: x - 0.5 - 6000; K4: h 4.0 - 6000; K5: link 0x18 - 6000 |
+| `EffectKind6B_Capture` | CP1: clear h 0x80 - 4471; CP2: | 0x80 - 2215; CP3: +9 3 - 4518; CP4: release the wrong record - 4493; CP5: copy 0x7C - 4510 |
+| `EffectKind6B_Store` | ST1: y 0x101 - 2085; ST2: to + 2 - 1998 |
+| `EffectKind6B_Scatter` | SC1: column + 1 - 1270; SC2: height + 1 - 620; SC3: + row - 728; SC4: speed & 0x3F - 1300; SC5: pixels 4 apart - 1265; SC6: depth from y - 1250; SC7: h 0 enters (equivalent: the row loop is a do-while on h) - 1265 |
+| `EffectKind6B_Arm` | AR1: flags 1 - 5004; AR2: sound 0x201 - 6000 |
+| `EffectKind6B_Fall` | FA1: | 0x20 - 4479; FA2: flags + 0x20 - 2854; FA3: speed + 3 - 3589; FA4: height + 1 - 69; FA5: green >> 3 - 4599; FA6: one fewer - 2505; FA7: release inverted - 6000; FA8: x * 0.5 - 4415 |
+| `EffectKind44_Start` | E44S1: top 0x400 up - 6000; E44S2: shade 0x21 - 6000; E44S3: +9 0x11 - 6000; E44S4: ring cell + 4 - 5967 |
+| `EffectKind44_FadeIn` | E44I1: shade + 2 - 6000; E44I2: +9 0x77 - 1892 |
+| `EffectKind44_Sparks` | E44P1: +9 0x1F - 1782; E44P2: emit before step - 6000 |
+| `EffectKind44_Widen` | E44W1: + 0x31 - 1879; E44W2: clamp 0x17F - 3365; E44W3: +9 0x79 - 1698 |
+| `EffectKind44_Follow` | E44F1: z from height - 6000; E44F2: +9 0x11 - 1759 |
+| `EffectKind44_FadeOut` | E44O1: shade - 4 - 6000; E44O2: release at 1 - 2609 |
+| `EffectKind44_RingProject` | RP1: x sar 5 - 5229; RP2: angles 0x80 apart - 6000; RP3: centre to +0x2C - 6000 |
+| `EffectKind44_RingDraw` | RD1: lowest + 1 - 5997; RD2: side inverted - 6000; RD3: middle of i alone - 4792; RD4: below to 0xEF - 6000; RD5: j & 7 - 6000; RD6: highest - 1 - 5935 |
+| `EffectKind44_RingCone` | RC1: >= 0 - 1; RC2: shade +0x23 - 5355; RC3: winding order - 6000 |
+| `EffectKind44_SparksClear` | SL: the defect fixed: all eight cleared - 6000 |
+| `EffectKind44_SparksStep` | SS1: x by vz - 5981; SS2: dies at 1 - 5504; SS3: cursor not read after the trail - 282 |
+| `EffectKind44_SparkTrail` | TR1: red fades by half - 5948; TR2: two shifted - 6000; TR3: v3 from a - 6000; TR4: v3 red as green - 5984 |
+| `EffectKind44_SparkEmit` | E1: every other frame - 466; E2: top 0x500 up - 2297; E3: speed angle + 0x400 - 2299; E4: another colour - 2299; E5: life 0x21 - 2367; E6: two copies - 2452; E7: ground x << 7 - 2452 |
+| `EffectKind44_SparkFind` | SF: seven searched - 1516 |
+
 
 ## 5. What the cut and the tool said, settled
 
-TOOL_SECTION
+- **Extents.** `band_rows.py`'s extents are right for every row: 26 of the
+  cut's sizes are padding to the next 16-byte start, and `0x4762D0`'s 944
+  spans `0x476560`, kind 0x44's dispatcher and its first two states (ours
+  0x290: the code to the `ret` at `0x476548` and its five-case jump table at
+  `0x47654C`).
+- **Added: `0x476560`** (0x114 bytes), called by `0x4762D0` only, "code no list
+  has" - `EffectKind43_SparkDraw`. **Added: `0x476680`** (0x12), kind 0x44's
+  dispatcher, `Effect_KindHandlers[0x44]`: a catalog part-2 row ("Table
+  Effect_KindHandlers", hidden in `0x4762D0`) the cut does not list, found by
+  scanning `Effect_KindHandlers` for entries in the band (the brief's
+  addendum). Its table's cell `0x6544D4` is named by it alone.
+- **No start dropped.** None of the 51 is a case, a shared tail or a second
+  entry: each is reached by a `.data` cell or an `E8` from this group's own
+  code, and none is reached by a `jmp` (the `jmp` in `0x4762D0` goes through
+  its own table).
+- **The cut's `unit` and `unit_desc` are wrong for 30 rows**: `0x474F60`,
+  `0x474FC0` are kind 0x3E's states (not kind 0x35's run `0x654410`); the
+  kind-0x40 and kind-0x42 rows are not `Fn_474FC0`'s; the rows from `0x475D10`
+  on are kinds 0x43, 0x6B and 0x44 (not one run `0x6544AC`): section 3.
+- **The labels** "world 1 / 2 / 3" are the PSX twins' overlays; the twins
+  (`0x801F2F30`, `0x801F311C`, `0x801F3468`, `0x801F2DE0..0x801F3B98`, 14 in all)
+  are AREA overlay copies with no name in the sibling - cited in the evidence
+  strings, the names ours.
 
 ## 6. Aborts
 
-ABORTS_SECTION
+Where the original reads or jumps through what it indexes past, ours aborts
+(`bof3::Fatal`) with a message naming the function and this section; the fuzz
+keeps every one of them out of reach (its seeds), and no ordinary play reaches
+any:
+
+- **A state byte past its table** (each dispatcher, and `EffectKind3E_Bolts`'
+  sub-state): only the kind's own states write `+1` / `+2`, inside their tables.
+- **`EffectKind40_ShardDraw` with a shard's height 0**: the original's `idiv`
+  faults. A shard starts at 0x280 and is stepped down 0x20 a frame; it is taken
+  out of use below 0x80 (at 0x60) and drawn once more there: its height is
+  never 0.
+- **`EffectKind6B_Scatter` / `_Fall` past the 80 column heights** (a column of
+  0x50 or more): the rectangle's w is 0x50, so the column is below it.
+- **`EffectKind6B_Scatter` with w or h above 0xFF**: the row and column are
+  bytes, so the original never ends; the rectangle is 0x50 x 0x48.
+- **`EffectKind6B_Capture` with `Effect_FindFree` above 19**: the callee
+  answers 0..19 or 0xFF.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-DEFECTS_SECTION
+- **`EffectKind44_SparksClear` clears one spark of eight.** It sets the cursor
+  `0x6761B8` to the first spark record and then clears the in-use byte the
+  cursor points at eight times, never moving it. Sparks 1..7 keep whatever
+  their bytes held: the records lie inside the shared buffer at `0x92BF80`
+  (kind 0x43's spark records 9..32, kind 0x6B's read-back pixels, kind 0x40's
+  shards and disc), so a kind-0x44 ring started after one of those kinds ran
+  may step and draw up to seven stale "sparks" - their life byte up to 0xFF
+  frames, their speed and colour whatever lay there. Kind 0x44's first state
+  and its fade-in both call it. Reach: area 78 / 80's choice (section 9);
+  whether stale bytes are left there in play depends on what ran before - not
+  measured.
+- **`EffectKind6B_Scatter` writes particles without a bound.** Its rectangle is
+  0x50 x 0x48 (5,760 pixels); each pixel not 0 becomes a particle of 0x14 at
+  `0x92EC80 + 0x14 n`. The 1,882nd lands on `0x937F84` (`Gfx_CurrentEnv`,
+  then `Sprite_Current`, `Frame_Counter`, `MapView_CellItems`, the desktop
+  cells at `0x939A2C..`): a captured sprite with more than 1,881 opaque
+  pixels (of 5,760) overwrites `Sprite_Current`'s bytes 1..3 with a count and a
+  colour, and the next state's `Sprite_Current` access goes astray. What the
+  PSX reserved there is not read here; on the PC the unnamed room before
+  `0x937F84` holds 1,881. Reach: chapter 10's run 13 captures sprite record 2;
+  its pixel count is the sprite's - not measured.
+- **`EffectKind43_SparksRun` phases above 4 never end.** A spark whose phase is
+  5 or more is drawn each frame and never taken out of use. The phase after
+  rising is `1 + the record's +6 + 1`, and only kind 0x43's states write `+6`
+  (0, 1, 2): not reachable from them.
 
 ## 8. Calls across groups
 
-CROSS_SECTION
+- **Out of the group, to groups of this round**: none (`band_rows.py
+  --edges`: 27 edges, all to EGT's `EffectGte_LoadMapCamera` /
+  `EffectGte_ProjectPoint` / `EffectGte_ProjectSize`, merged and ours, called
+  by name). Kind 0x42's table holds `0x47EEC0` (group E2G's state 0): read in
+  place, not called by ours.
+- **Raw, to nobody's** (in `effect_2c_callees.h`, called through `SH_AT`):
+  `0x59E930` (the VRAM shadow read back into memory), `0x4941B0` (the winding
+  test, EGT's doc section 7), `0x5A7570` (libgpu's `SetPolyF3`).
+- **Inbound from outside the group**: none - no call, `jmp` or pointer to any
+  of the 53 outside this group's code and its tables (`band_rows.py` reach
+  column, and a raw scan of the image for every address: only the
+  `Effect_KindHandlers` cells and this group's tables).
+- **Harness gaps met** (not edited; for the coordinator's fold): the
+  standard rows of `EffectGte_ProjectPoint` / `EffectGte_ProjectSize` /
+  `Gte_VectorNormal` log their pointers by value, which fails when a caller
+  hands a local; `Sprite_UpdateScreen`'s logs nothing of the record it draws;
+  the effect-standard `0x4941B0` writes where the real one only reads;
+  `MapView_LinkPrimAt`'s row does not move the packet cursor (kind 0x43's
+  spark draw writes its primitives at one place in the fuzz).
 
 ## 9. The live route
 
