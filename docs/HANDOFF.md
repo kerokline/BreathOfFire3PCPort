@@ -66,6 +66,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    The owner confirmed the pad skip on the intro videos, and later that day the sunset, the night shading and the
    Equip labels in game. **Owed the owner's eye:** the wide game over in a fight of their own, the trees at the
    edges, and a held pad input across a video's start (no skip until released).
+   **The owner's catalogue, 2026-09-30 evening - to fix:** the master's (apprentice) "Is this OK?  Yes No" prompt
+   over the party's stat panels has its hand a word's width left of `Yes` - the Chinese-fitted stop DIV-0027 moved
+   for the four `Menu_YesNo` prompts, on a chooser DIV-0027 does not reach. Find its draw (`BOF3X_TEXTLOG` on the
+   line, then the hand's x constant in that caller - a SHISU / SISYOU or scenario function, or a boot-resident
+   chooser) and give it DIV-0027's stops, 218 on Yes and 274 on No, under a language overlay only; amend DIV-0027.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
