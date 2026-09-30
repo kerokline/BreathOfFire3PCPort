@@ -37,6 +37,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_gte.h"
+#include "game/effect_2f.h"
 #include "game/effect_1b.h"
 #include "game/effect_1f.h"
 #include "game/effect_1g.h"
@@ -981,10 +982,10 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x586160), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 3: five words; Menu_DrawOutline, FT4 quads
     {FX_RAW(0x59E930), 2, {0, 0}, Answer::kGarbage, 0, 0, {8}, FxOut1_4, nullptr, true},   // 2, renderer: 8 read at the first, 4 written at the second
     {FX_RAW(0x4790C0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: no arguments, no calls
-    {FX_RAW(0x47CF20), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: eax read by one caller
+    {FX_OURS(EffectSpark_FindFree), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: eax read by one caller
     {FX_RAW(0x47A200), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; draws
     {FX_RAW(0x4799C0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 2: a record read and written to +0xD20 (the first 16 hashed)
-    {FX_RAW(0x47D8B0), 4, {kU16, kU16, kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: four s16
+    {FX_OURS(EffectKind53_TexWindow), 4, {kU16, kU16, kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: four s16
     {FX_RAW(0x4FEE70), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; Flags_Test
     {FX_RAW(0x462F10), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; a sprite primitive
     {FX_RAW(0x46E190), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; tiles, Rand
@@ -996,7 +997,7 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x47A130), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: eax read
     {FX_RAW(0x47A150), 1, {0}, Answer::kGarbage, 0, 0, {8}, FxOut0_32, nullptr, true},   // 1: 8 read then 32 written; AreaMap_Elevation, Rand
     {FX_RAW(0x479160), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 1: 24 bytes written; Rand
-    {FX_RAW(0x47CF40), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 1: al; calls through 0x65472C by a byte
+    {FX_OURS(EffectKind52_MoveSparks), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 1: al; calls through 0x65472C by a byte
     {FX_RAW(0x4837B0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: lines; Rand
     {FX_RAW(0x491E30), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: two words and a byte; G3
     {FX_RAW(0x492260), 3, {kU16, kU16, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: two s16 and a byte; G3
