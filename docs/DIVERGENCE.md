@@ -2104,7 +2104,8 @@ designed in rather than bolted on.
   detail trace at frames 598..600 (the only POLY_F4 builder beside the map
   cells): now `Gfx_DrawSunsetGlow`, ours beside the gradient, widened the
   same way, 20,000 rounds at 0 mismatches; the sky reads the same colour
-  at every column (`analysis/shots/nue_sunset/`).
+  at every column (`analysis/shots/nue_sunset/`). The owner, in game the
+  same day: the sunset and the night shading correct.
   **The object culls, the same day** (the owner: trees popping in and out
   at the periphery under the wide view): four x culls of ours moved
   outward by the columns through `Widescreen_Fill()`, so each keeps beyond
@@ -3336,7 +3337,7 @@ designed in rather than bolted on.
 - **Verification:** `BOF3X_SHADOW='*'` headless: 0 mismatches (the flag is
   set after the fuzz). Live: the recipe above on ours, English, frames 540
   and 720 - `Pwr Def Int Agl` each beside its value, the fourth inside the
-  box.
+  box. The owner, in game the same day: correct.
 - **Reversible?** `BOF3X_ORIGINAL=BattleEquipWin_Draw` leaves Capcom's
   function and its rows.
 

@@ -62,9 +62,10 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    `Gfx_DrawSunsetGlow`. The sunset now reads one colour across the frame (`analysis/shots/nue_sunset/`).
    The Nue question of `boss_sa.md` is settled by the same route's trace (fight 2 = area 23, kind 1). Then the
    owner saw trees pop at the periphery: four field x culls of ours moved out by the columns (`widescreen.md` §3b's
-   table says which; the battle field's two read Capcom's `.rdata` and are left). **Owed the owner's eye** on the trees.
-   The owner confirmed the pad skip on the intro videos. **Owed the owner's eye** in a fight of their own (the Equip
-   labels, the wide game over), and a held pad input across a video's start (no skip until released).
+   table says which; the battle field's two read Capcom's `.rdata` and are left). Owed the owner's eye on the trees.
+   The owner confirmed the pad skip on the intro videos, and later that day the sunset, the night shading and the
+   Equip labels in game. **Owed the owner's eye:** the wide game over in a fight of their own, the trees at the
+   edges, and a held pad input across a video's start (no skip until released).
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
