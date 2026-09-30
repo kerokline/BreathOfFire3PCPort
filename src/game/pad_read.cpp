@@ -269,6 +269,12 @@ extern "C" void __cdecl DInput_Init(void* hinstance, void* hwnd) {
     StartSdl();
 }
 
+bool PadRead_AnyInputDown() {
+    if (!input::PadSdl_Started()) return false;
+    input::PadSdl_Poll();
+    return input::PadSdl_FirstInputDown() >= 0;
+}
+
 // Pad_Read 0x5A9700: the keyboard as the original, the pad from SDL. The
 // high word is 0, as the original's always was (pad 2 never had a device).
 extern "C" unsigned int __cdecl Pad_Read(void) {

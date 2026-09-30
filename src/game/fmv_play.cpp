@@ -35,6 +35,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/display_setup.h"
+#include "game/pad_read.h"
 #include "game/win_main.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -110,11 +111,37 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
 
     mciSendStringA(Str(kPlay), nullptr, 0, hwnd);
     Fmv_Playing = 1;
+    // DIVERGENCE DIV-0066: the pad skips too. The original's pump is a
+    // blocking GetMessage, ended by Fmv_WndProc (a key, a click, the video's
+    // end, WM_DESTROY); the pad reaches the game only through Pad_Read, which
+    // the loop never calls. Ours drains the queue the same way, then polls
+    // the pad and waits up to a frame for the next message. A pad input
+    // going down during the video ends it as a key does; one held from
+    // before the video is ignored until released. A WM_QUIT taken off the
+    // queue is put back for WinMain's loop, which GetMessage returning 0
+    // used to leave there.
+    bool pad_was_down = PadRead_AnyInputDown();
     MSG msg;
-    while (GetMessageA(&msg, nullptr, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+    while (Fmv_Playing) {
+        while (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                Fmv_Playing = 0;
+                PostQuitMessage(static_cast<int>(msg.wParam));
+                break;
+            }
+            TranslateMessage(&msg);
+            DispatchMessageA(&msg);
+            if (!Fmv_Playing) break;
+        }
         if (!Fmv_Playing) break;
+        const bool pad_down = PadRead_AnyInputDown();
+        if (pad_down && !pad_was_down) {
+            bof3::Log("DIV-0066    %s skipped by the pad", filename);
+            Fmv_Playing = 0;
+            break;
+        }
+        pad_was_down = pad_down;
+        MsgWaitForMultipleObjects(0, nullptr, FALSE, 16, QS_ALLINPUT);
     }
     mciSendStringA(Str(kStop), nullptr, 0, nullptr);
     mciSendStringA(Str(kClose), nullptr, 0, nullptr);

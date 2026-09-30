@@ -3284,3 +3284,38 @@ designed in rather than bolted on.
   box.
 - **Reversible?** `BOF3X_ORIGINAL=BattleEquipWin_Draw` leaves Capcom's
   function and its rows.
+
+### A pad press skips an FMV as a key does
+
+- **ID:** DIV-0066
+- **Date:** 2026-09-30
+- **Subsystem:** platform (`Fmv_Play` `0x59E360`, ours since DIV-0035,
+  `src/game/fmv_play.cpp`; the pad through `src/game/pad_read.cpp`,
+  DIV-0050)
+- **Tier:** Sensible
+- **Original behaviour:** while a video plays, `Fmv_Play` pumps messages
+  with a blocking `GetMessage` until `Fmv_WndProc` `0x59E570` clears
+  `Fmv_Playing`: on `WM_KEYDOWN`, `WM_LBUTTONDOWN`, `WM_RBUTTONDOWN`, the
+  MCI notify at the video's end, or `WM_DESTROY`. A pad reaches the game
+  only through `Pad_Read` from WinMain's latch, which the pump never
+  calls, so a pad press does nothing to a video - the original's own
+  joystick included.
+- **New behaviour:** the pump drains the queue with `PeekMessage` and
+  dispatches as before, then polls the pad (`PadRead_AnyInputDown`: any
+  input down, bound or not, after `PadSdl_Poll`) and waits up to 16 ms
+  for the next message (`MsgWaitForMultipleObjects`). An input going down
+  during the video clears `Fmv_Playing` as a key does; one held from
+  before the video is ignored until it is released. A `WM_QUIT` taken off
+  the queue is posted again for WinMain's loop, which the original's
+  `GetMessage` returning 0 left there. The key, click and end-of-video
+  paths are `Fmv_WndProc`'s, unchanged; the log says `DIV-0066 NAME
+  skipped by the pad`.
+- **Rationale:** the owner, 2026-09-30: "can we have controller button
+  presses skip the intro fmvs like keyboard strokes do?"
+- **Also in the PSX version?** The PlayStation's movies are skipped by the
+  pad (its only input); the PC port's keyboard-only skip is the port's.
+- **Verification:** builds; self-test `'*'` unchanged (the player is not
+  fuzzed - it runs MCI). Owed the owner's press: the two videos before
+  the title, once with a pad input held from before the video (no skip
+  until released, then the next press skips).
+- **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player.
