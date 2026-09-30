@@ -204,7 +204,7 @@ extern "C" void __cdecl EffectKind36_Run(void) {
 
 // original 0x46A930 (Effect_KindHandlers[0x3C], hidden in ours
 // EffectKind32_Arc's recorded extent): a tail jump through EffectKind3C_States
-// by +1 (three entries: FC1's _Start, _Hold, E2D's 0x478160).
+// by +1 (three entries: FC1's _Start, _Hold, E2D's EffectTwinSprites_Release).
 extern "C" void __cdecl EffectKind3C_Run(void) {
     Entry(AddressOf(EffectKind3C_States), Cur()[1], 3, "EffectKind3C_Run")();
 }
