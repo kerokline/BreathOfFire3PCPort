@@ -97,6 +97,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    recipe's reach** - the owner's run caught one, the replay did not: the fishing AI draws on something the frame
    count does not fix (wall clock? `Rand` seeded elsewhere?) - so the route is deterministic to the cast only. Worth
    a look when the fishing overlay is taken: what it seeds from, and whether a recipe run should pin it (a DIV).
+   **The route does not replay on the all-original side** (`--original '*'`): ours shows the party choice at frame
+   960 where the original shows black, and the original never leaves the camp room (the session's `camp_ab.png`) -
+   a transition of Capcom's runs longer there than under ours, so a reach measurement of this route must be a
+   trace on our side (plain `BOF3X_CALLTRACE`, which arms only what is not ours), not `REACH=1` on the original.
+   Which transition, and why the frame count differs, is worth knowing: it is a divergence no ledger entry names.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
