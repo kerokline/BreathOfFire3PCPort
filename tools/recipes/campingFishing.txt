@@ -1,0 +1,425 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# The owner's route, 2026-09-30: load, the world map to the camp (AREA090: the skill note, the party choice, the
+# masters), then the fishing spot (AREA030): the equip menu, the data page, a cast. The fish is random - more so
+# than the rest of the game - so whether it is caught differs run to run; the route is good up to the cast.
+# About 5,300 frames: give input_run.py --minutes 5. The nine shots were added.
+# save camping
+wait 35
+hold start 4
+wait 58
+hold start 6
+wait 26
+hold start 5
+wait 55
+hold circle 4
+wait 42
+hold circle 6
+wait 35
+hold circle 5
+wait 64
+hold right 5
+hold right+down 21
+hold down 1
+wait 44
+hold right 6
+hold right+down 1
+hold right 1
+wait 11
+hold left 3
+hold down+left 15
+hold down 2
+hold right+down 8
+wait 15
+hold down+left 18
+wait 54
+hold start 6
+wait 88
+hold right 1
+hold up+right 30
+hold right 2
+wait 26
+hold right 1
+hold up+right 21
+hold right 3
+hold right+down 10
+hold circle+right+down 5
+hold right+down 4
+wait 14
+hold circle 5
+wait 19
+hold circle 3
+wait 40
+hold down 3
+wait 25
+hold down 4
+wait 8
+hold circle 5
+wait 37
+hold right 5
+wait 7
+hold circle 4
+wait 10
+hold right 5
+wait 7
+hold left 5
+wait 4
+hold circle 3
+shot party_choice 1 circle
+hold circle 2
+wait 6
+hold down 3
+wait 7
+hold down 3
+wait 4
+hold circle 5
+wait 3
+hold up 3
+wait 4
+hold up 3
+wait 2
+hold circle 5
+wait 9
+hold down 4
+wait 2
+hold circle 4
+wait 2
+hold down 4
+wait 3
+hold circle 5
+wait 7
+hold up 3
+wait 4
+hold cross 4
+wait 27
+hold circle 4
+wait 43
+hold circle 4
+wait 18
+hold down 2
+wait 3
+hold down 4
+wait 2
+hold down 4
+wait 16
+hold circle 5
+wait 43
+hold right 4
+wait 24
+hold left 4
+wait 12
+hold circle 4
+wait 63
+hold left 4
+wait 12
+hold up 5
+wait 15
+hold down 5
+wait 5
+hold circle 5
+wait 8
+hold right 3
+wait 11
+hold right 4
+wait 6
+hold left 3
+wait 3
+hold left 3
+wait 1
+shot skill_note 1
+wait 7
+hold cross 5
+wait 12
+hold cross 6
+wait 10
+hold right 3
+wait 4
+hold circle 6
+wait 27
+hold right 5
+wait 28
+hold left 6
+wait 47
+hold circle 6
+wait 41
+hold circle 6
+wait 22
+hold circle 4
+wait 9
+hold right 3
+wait 5
+hold circle 5
+wait 12
+hold cross 4
+wait 15
+hold right 4
+wait 18
+hold circle 4
+wait 12
+hold circle 4
+wait 9
+hold right 4
+wait 6
+hold down 4
+wait 3
+hold circle 5
+wait 15
+hold down 4
+wait 2
+hold circle 5
+wait 4
+hold right 4
+wait 6
+hold down 4
+wait 2
+hold circle 6
+wait 5
+hold cross 4
+wait 14
+hold right 4
+wait 11
+hold circle 5
+wait 14
+shot skill_note_rei 1
+wait 8
+hold up 4
+wait 2
+hold circle 5
+wait 5
+hold right 3
+wait 7
+hold down 3
+wait 3
+hold down 4
+wait 9
+hold down 4
+wait 3
+hold circle 5
+wait 12
+hold cross 5
+wait 11
+hold right 4
+wait 10
+hold circle 4
+wait 11
+hold right 3
+wait 6
+hold down 4
+wait 12
+hold up 4
+wait 2
+hold circle 4
+wait 10
+hold down 4
+wait 2
+hold down 3
+wait 2
+hold down 3
+wait 4
+hold circle 4
+wait 8
+hold cross 5
+wait 19
+hold cross 6
+wait 18
+hold cross 5
+wait 19
+hold circle 5
+wait 25
+hold circle 5
+wait 8
+hold circle 4
+wait 15
+hold down 3
+wait 5
+hold down 2
+wait 7
+hold down 3
+wait 7
+hold down 3
+wait 10
+hold circle 5
+wait 58
+hold circle 5
+wait 41
+shot masters 1
+wait 27
+hold circle 5
+wait 8
+hold cross 7
+wait 14
+hold cross 6
+wait 31
+hold circle 5
+wait 16
+hold circle 5
+wait 10
+hold circle 5
+wait 31
+hold circle 4
+wait 278
+hold down 1
+hold down+left 10
+hold square+down+left 13
+hold down+left 6
+hold down 1
+wait 42
+hold left 1
+hold up+left 5
+wait 15
+hold down+left 15
+hold down 1
+wait 16
+hold circle 5
+wait 90
+hold circle 4
+wait 43
+shot fishing_banner 1
+wait 20
+hold circle 7
+wait 25
+hold circle 4
+wait 8
+hold circle 4
+wait 12
+hold circle 5
+wait 28
+hold down 5
+wait 21
+hold circle 5
+wait 96
+shot fishing_equip 1
+wait 23
+hold down 2
+wait 37
+hold down 4
+wait 19
+hold down 4
+wait 48
+hold up 3
+wait 6
+hold up 3
+wait 4
+hold up 3
+wait 3
+hold circle 3
+wait 21
+hold cross 5
+wait 8
+hold right 4
+wait 8
+hold circle 6
+wait 26
+shot fishing_data 1
+wait 2
+hold right 4
+wait 14
+hold left 4
+wait 11
+hold cross 6
+wait 8
+hold right 4
+wait 14
+hold circle 6
+wait 21
+hold right 6
+wait 8
+hold cross 5
+wait 11
+hold left 3
+wait 10
+hold left 5
+wait 26
+hold circle 6
+wait 78
+hold cross 2
+wait 18
+hold cross 7
+wait 12
+hold circle 5
+wait 31
+hold circle 3
+wait 124
+hold right 15
+wait 1
+hold left 10
+shot fishing_action 1 left
+hold left 8
+wait 6
+hold circle 4
+wait 7
+hold circle 5
+wait 19
+hold circle 5
+wait 6
+hold circle 4
+wait 8
+hold right 14
+wait 1
+hold left 24
+wait 14
+hold right 9
+wait 4
+hold right 8
+wait 15
+hold right 10
+wait 3
+hold right 9
+wait 17
+hold circle 4
+wait 6
+hold circle 7
+wait 18
+hold circle 4
+wait 7
+hold circle 6
+wait 19
+hold circle 4
+wait 22
+hold circle 5
+wait 7
+hold circle 2
+hold circle+right 10
+hold circle 7
+hold circle+right 4
+hold circle 7
+hold circle+left 4
+hold circle 2
+hold circle+left 12
+hold circle 15
+hold circle+right 7
+hold circle 13
+hold circle+right 9
+hold circle 25
+hold circle+right 5
+hold circle 17
+hold circle+right 4
+hold circle 4
+hold circle+right 13
+hold circle 11
+shot fishing_vs 1 circle
+hold circle 5
+hold circle+right 5
+hold circle 7
+hold circle+right 4
+hold circle 16
+hold circle+right 5
+hold circle 13
+hold circle+left 6
+hold circle 2
+hold circle+left 6
+hold circle 247
+wait 7
+hold circle 5
+wait 26
+hold circle 6
+wait 25
+hold circle 6
+wait 87
+hold cross 5
+wait 26
+hold down 4
+wait 11
+hold circle 4
+wait 185

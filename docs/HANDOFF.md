@@ -89,6 +89,14 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    overlay's own strings; (3) **a stray frame line**: a vertical piece hangs right of the EQUIP and GUIDE boxes
    and a short one under EQUIP's bottom edge - a box drawn a column wider than its pieces, or pieces from the
    Chinese layout under DIV-0026-style widening; compare the same screen with `BOF3X_LANG=original` and narrow.
+   **The owner's `tools/recipes/campingFishing.txt`** (`# save camping`; the camp's skill note, party choice and
+   masters, then the fishing spot: equip menu, data page, a cast; `analysis/shots/camping/` every 240 frames) reaches
+   all of the above and more still Chinese: the fishing banners at every step (frames 3120 "钓竿与鱼饵的装备",
+   4080 / 4320 the cast's, 4560 / 4800 "鱼饵落空 鱼儿逃脱!" - the bait lost, the fish got away), the data page's
+   `?????????` / `NO DATA` box, the masters screen's headers (frame 2400). **The fish is random beyond the
+   recipe's reach** - the owner's run caught one, the replay did not: the fishing AI draws on something the frame
+   count does not fix (wall clock? `Rand` seeded elsewhere?) - so the route is deterministic to the cast only. Worth
+   a look when the fishing overlay is taken: what it seeds from, and whether a recipe run should pin it (a DIV).
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
