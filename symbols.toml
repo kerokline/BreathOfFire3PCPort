@@ -84827,3 +84827,560 @@ ctype = "unsigned long"
 count = 10
 status = "evidence"
 evidence = "read 2026-09-29 (round thirteen group E2G): EffectKind5F_Run 0x47FD80 by +1: Task_StartHold60, 0x47FDC0 .. 0x480190 (catalog part 6 and E3A rows). E3A's dispatcher 0x4801F0 indexes the table from its eleventh cell 0x65492C. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand (a raw scan of the image for each cell address). docs/effect_2g.md section 3."
+
+# --- round thirteen group E2B (effect_2b, 2026-09-29): effect kinds 0x2F, 0x33, 0x35, 0x38, 0x39, 0x3B, 0x3D, 0x4731A0..0x474F34. docs/effect_2b.md ---
+
+[[func]]
+pc = 0x4731A0
+name = "EffectKind2F_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4731A0..0x4731B2 (0x12 bytes): Effect_KindHandlers[0x2F] (cell 0x65540C; hidden in E2A's 0x473100's recorded extent): jmp [EffectKind2F_States + 4 * +1], no bound. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4731C0
+name = "EffectKind2F_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4731C0..0x47323E (0x7E bytes): EffectKind2F_States[0]: three trail records of 0x198 at EffectKind30_Shards - centre (0x20000, 0xC0000), height 0xB0000, radius 0x20000, angle word 0x1000 * i / 3 - each set up by EffectKind2F_InitTrail; Sound_PlayEffect(0x206); +9 0x40, +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473240
+name = "EffectKind2F_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473240..0x4732C8 (0x88 bytes): EffectKind2F_States[1]: each trail four times height -0x400, radius -0x200, angle +0x40 and EffectKind2F_StepTrail, then EffectKind2F_DrawTrail; +9 down, at 0 Effect_Release. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4732D0
+name = "EffectKind2F_StepTrail"
+ret = "void"
+params = "unsigned char *trail"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4732D0..0x47335D (0x8D bytes): cdecl: the trail's 32 points of three floats from +0x18 moved down one from the last; the head (cos / sin of the zero-extended angle word +0x14 times the radius +0x10, >> 12, round +0 / +4; the height +8 << 8) projected into the first after EffectGte_LoadMapCamera. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473360
+name = "EffectKind2F_DrawTrail"
+ret = "void"
+params = "unsigned char *trail"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473360..0x473454 (0xF4 bytes): cdecl: a draw mode (page (0x380, 0x100), abr 1, dtd 0) committed at slot 1; 31 semi-transparent LINE_G2 from point j to j + 1, red (0x2000 - 0x100 j) / 32 and (0x1F00 - 0x100 j) / 32 clamped to 0xFF, committed at slot 1 (0x24). docs/effect_2b.md."
+
+[[func]]
+pc = 0x473460
+name = "EffectKind2F_InitTrail"
+ret = "void"
+params = "unsigned char *trail"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473460..0x4734EA (0x8A bytes): cdecl: the head projected into the first point (as EffectKind2F_StepTrail) and copied into the other 31. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4734F0
+name = "EffectKind33_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4734F0..0x473502 (0x12 bytes): Effect_KindHandlers[0x33] (cell 0x65541C; hidden in 0x473460's recorded extent): jmp [EffectKind33_States + 4 * +1], no bound. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473510
+name = "EffectKind33_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473510..0x473550 (0x40 bytes): EffectKind33_States[0]: +0xC..+0x14 the point +0x34..+0x3C, the radius +0x1C 0; +9 0xA, +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473550
+name = "EffectKind33_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473550..0x4735A3 (0x53 bytes): EffectKind33_States[1]: EffectKind33_DrawDisc(+0xC, +0x1C); +0x1C up 0x1199; +9 down, at 0 Sound_PlayEffect(0x20D) and +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4735B0
+name = "EffectKind33_DrawDisc"
+ret = "void"
+params = "const long *centre, long radius"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4735B0..0x4735F5 (0x45 bytes): cdecl: EffectGte_LoadMapCamera; EffectKind33_DrawQuarter(centre, radius, 0x400 i, EffectKind33_SignX[i], EffectKind33_SignZ[i]) for i 0..3. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473600
+name = "EffectKind33_DrawQuarter"
+ret = "void"
+params = "const long *centre, long radius, unsigned angle, long dx, long dz"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473600..0x47379C (0x19C bytes): cdecl: the centre and the point at the angle (low 16 bits) and radius round it projected; four times a draw mode (page (0x380, 0x100), abr 2, dtd 0) and a semi-transparent POLY_F3 (0x5A7570) from the centre to the last and the next point (angle + 0x100 in the argument's slot), grey 0x80, both linked at (x + dx, z + dz) by MapView_LinkPrimAt(.., 0, 0x38). docs/effect_2b.md."
+
+[[func]]
+pc = 0x4737A0
+name = "EffectKind35_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4737A0..0x4737B2 (0x12 bytes): Effect_KindHandlers[0x35] (cell 0x655424; hidden in 0x473600's recorded extent): jmp [EffectKind35_States + 4 * +1], no bound. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4737C0
+name = "EffectKind35_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4737C0..0x4737D3 (0x13 bytes): EffectKind35_States[0]: EffectKind35_ShardsInit, EffectKind35_SplitModel; +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4737E0
+name = "EffectKind35_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4737E0..0x4737F7 (0x17 bytes): EffectKind35_States[1]: EffectKind35_StepPieces; EffectKind35_ShardsDraw answering al 0: +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473800
+name = "EffectKind35_FreeModel"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473800..0x47380C (0xC bytes): EffectKind35_States[2]: Sprite_ObjectsExtra[1] +0 (0x8020A4) = 0; a tail jump to Effect_Release. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473810
+name = "EffectKind35_ShardsInit"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473810..0x473842 (0x32 bytes): EffectKind1E_ShardsInit with sixteen shards and the cursor EffectKind35_ShardCursor: EffectKind1E_ShardInit (E1C's) on each. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473850
+name = "EffectKind35_ShardsDraw"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473850..0x47389E (0x4E bytes): EffectKind1E_ShardsDraw with sixteen: EffectGte_LoadMapCamera; each shard in use stepped by call [EffectKind35_ShardStates + 4 * its +1] and drawn by EffectKind35_ShardQuad; al 1 when any was in use. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4738A0
+name = "EffectKind35_ShardQuad"
+ret = "void"
+params = "unsigned char *shard"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4738A0..0x473A84 (0x1E4 bytes): cdecl: EffectKind1E_ShardQuad instruction for instruction but the page's abr (Gpu_GetTPage(0, 2, 0x2C0, 0x100)): a semi-transparent POLY_FT4 at the shard's projected point sized by EffectGte_ProjectSize, linked by MapView_LinkPrimAt(x, z, 2, 0x48). docs/effect_2b.md."
+
+[[func]]
+pc = 0x473A90
+name = "EffectKind35_ShardFly"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473A90..0x473AF7 (0x67 bytes): EffectKind35_ShardStates[0]: EffectKind1E_ShardFly on the cursor 0x676108: moved by twice its direction, size +0x80, count down, at 0 count 0x40 and +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473B00
+name = "EffectKind35_ShardFade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473B00..0x473B5A (0x5A bytes): EffectKind35_ShardStates[1]: EffectKind1E_ShardFade on the cursor 0x676108: moved by its direction, shade and count down, at 0 freed. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473B60
+name = "EffectKind35_SplitModel"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473B60..0x473C7B (0x11B bytes): EffectKind1E_SplitModel with 55 faces from Sprite_ObjectsExtra[1] +0x50 (0x8020F4): copies at 0x92C728, pieces of 0x18 at 0x92C200, the normalised centre >> 7 (kind 0x1E's >> 8), the vertices made relative. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473C80
+name = "EffectKind35_StepPieces"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473C80..0x473CD2 (0x52 bytes): EffectKind1E_StepPieces with 55 and the z velocity up 1 every frame (kind 0x1E's by the frame's parity); EffectKind35_TurnPiece(copy, face, piece). docs/effect_2b.md."
+
+[[func]]
+pc = 0x473CE0
+name = "EffectKind35_TurnPiece"
+ret = "void"
+params = "const unsigned char *copy, unsigned char *face, unsigned char *piece"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473CE0..0x473DCA (0xEA bytes): cdecl: EffectKind1E_TurnPiece as a loop: three Rand & 0xFC0 angles, Gte_RotMatrix, a zero translation, Gte_SetTransMatrix / Gte_SetRotMatrix, the four vertices turned (Gte_RotTrans) plus the centre. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473DD0
+name = "EffectKind38_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473DD0..0x473DE2 (0x12 bytes): Effect_KindHandlers[0x38] (cell 0x655430; hidden in 0x473CE0's recorded extent): jmp [EffectKind38_States + 4 * +1], no bound. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473DF0
+name = "EffectKind38_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473DF0..0x473E21 (0x31 bytes): EffectKind38_States[0]: +9 0x10, +1 1, the colour +0x5D..+0x5F 0. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473E30
+name = "EffectKind38_FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473E30..0x473E89 (0x59 bytes): EffectKind38_States[1]: +9 down - not 0, +0x5D..+0x5F up 6; 0, Msg_OpenScript(0x1F), Field_Request 2, +1 2; a jmp to EffectKind38_DrawTint. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473E90
+name = "EffectKind38_WaitMessage"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473E90..0x473EB1 (0x21 bytes): EffectKind38_States[2]: Field_Request not 2: +9 0x10, +1 3; a jmp to EffectKind38_DrawTint. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473EC0
+name = "EffectKind38_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473EC0..0x473F10 (0x50 bytes): EffectKind38_States[3]: +9 down - not 0, +0x5D..+0x5F down 6; 0, +1 4; a jmp into its own tail EffectKind38_DrawTint (the extent 0xD6 with the tail). docs/effect_2b.md."
+
+[[func]]
+pc = 0x473F10
+name = "EffectKind38_DrawTint"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473F10..0x473F96 (0x86 bytes): the tail of 0x473EC0 (no list had it), reached by jmp from 0x473E30, 0x473E90 and 0x473EC0: Gpu_SetDrawMode(packet, 0, 1, 0x4F, 0) committed at slot 2; a semi-transparent untextured TILE at (0, 0), 320.0 x 240.0, coloured +0x5D..+0x5F, committed at slot 2 (0x1C). docs/effect_2b.md."
+
+[[func]]
+pc = 0x473FA0
+name = "EffectKind39_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473FA0..0x473FB2 (0x12 bytes): Effect_KindHandlers[0x39] (cell 0x655434; hidden in 0x473CE0's recorded extent): jmp [EffectKind39_States + 4 * +1], no bound. docs/effect_2b.md."
+
+[[func]]
+pc = 0x473FC0
+name = "EffectKind39_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473FC0..0x473FDD (0x1D bytes): EffectKind39_States[0]: +9 0, +1 up; Sound_PlayEffect(0x20E). docs/effect_2b.md."
+
+[[func]]
+pc = 0x473FE0
+name = "EffectKind39_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x473FE0..0x474022 (0x42 bytes): EffectKind39_States[1]: EffectKind39_DrawDisc(+0x2E, +0x30, +9); +9 up, past 0x1E +9 0x1E and +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474030
+name = "EffectKind39_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474030..0x47406A (0x3A bytes): EffectKind39_States[2]: EffectKind39_DrawDisc(+0x2E, +0x30, +9); +9 down, at 0 +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474070
+name = "EffectKind39_DrawDisc"
+ret = "void"
+params = "int x, int y, int radius"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474070..0x4741DD (0x16D bytes): cdecl, three s16 read: a draw mode (page (0x3C0, 0), abr 1, dtd 1) committed at slot 1; 32 semi-transparent G3 triangles fanned round the screen point (x, y) at the radius, grey 0x80 at the centre and black at the rim, committed at slot 1 (0x34). docs/effect_2b.md."
+
+[[func]]
+pc = 0x4741E0
+name = "EffectKind3B_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4741E0..0x4741F2 (0x12 bytes): Effect_KindHandlers[0x3B] (cell 0x65543C; hidden in 0x474070's recorded extent): jmp [EffectKind3B_States + 4 * +1], no bound. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474200
+name = "EffectKind3B_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474200..0x474238 (0x38 bytes): EffectKind3B_States[0]: EffectKind3B_InitSpirals; +9 0x80, +0xA 0, +1 up; Sound_PlayEffect(0x200), (0x20A). docs/effect_2b.md."
+
+[[func]]
+pc = 0x474240
+name = "EffectKind3B_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474240..0x47433D (0xFD bytes): EffectKind3B_States[1]: a draw mode committed; EffectKind3B_DrawGlow(the point, +0xA << 2, 0x80, 0); EffectGte_LoadMapCamera; each spiral drawn (EffectKind3B_DrawSpiral), shade +4, +0xA up (past 0x20: 0x20 and shade 0x80), angle +0x40, radius -0x18, height -0x70000; +9 down, at 0 +9 0x20 and +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474340
+name = "EffectKind3B_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474340..0x474401 (0xC1 bytes): EffectKind3B_States[2]: the glow at +9 << 2; each spiral drawn, angle +0x40, shade -8; +9 down, at 0 +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474410
+name = "EffectKind3B_DrawSpiral"
+ret = "void"
+params = "unsigned char *spiral"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474410..0x474768 (0x358 bytes): cdecl: 32 semi-transparent G4 quads along a spiral round +0 / +4 (angle -0x20 and radius +0x18 a step, (trig * radius) >> 4), each step's width Sin(0x40) * the running length (Gte_VectorNormal, 0x5A7A90) / Cos(0x80) along the perpendicular, the shade word +0x14 clamped and down 4 a quad, committed at slot 1 (0x44). docs/effect_2b.md."
+
+[[func]]
+pc = 0x474770
+name = "EffectKind3B_InitSpirals"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474770..0x4747CC (0x5C bytes): the three spirals of 0x4BC at EffectKind30_Shards round Sprite_Current's point (read once): height +0x3800000, radius 0xC00, shade 0, angle 0x1000 * i / 3. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4747D0
+name = "EffectKind3B_DrawGlow"
+ret = "void"
+params = "const long *point, unsigned size, unsigned centre, unsigned rim"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4747D0..0x474934 (0x164 bytes): cdecl: EffectGte_LoadMapCamera; the point projected, the size word scaled at its depth (EffectGte_ProjectSize, its second in word the stack's leftover) plus the frame's parity; 32 semi-transparent G3 triangles fanned round it, the centre byte and the rim byte shades, committed at slot 1 (0x34). docs/effect_2b.md."
+
+[[func]]
+pc = 0x474940
+name = "EffectKind3D_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474940..0x474952 (0x12 bytes): Effect_KindHandlers[0x3D] (cell 0x655444; hidden in 0x4747D0's recorded extent): jmp [EffectKind3D_States + 4 * +1], no bound. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474960
+name = "EffectKind3D_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474960..0x474975 (0x15 bytes): EffectKind3D_States[0]: the timer dword +0xC 0x3C, +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474980
+name = "EffectKind3D_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474980..0x4749AD (0x2D bytes): EffectKind3D_States[1]: +0xC down, at 0 +0xC 0x230, EffectKind3D_RingsClear, +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x4749B0
+name = "EffectKind3D_Glow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x4749B0..0x4749F8 (0x48 bytes): EffectKind3D_States[2]: EffectKind3D_DrawGlow(0x80), EffectKind3D_RingsStep, every eighth frame EffectKind3D_RingSpawn; +0xC down, at 0 +0xC 0x10 and +1 up. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474A00
+name = "EffectKind3D_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474A00..0x474A37 (0x37 bytes): EffectKind3D_States[3]: +0xC down while above 0; EffectKind3D_DrawGlow(+0xC's word << 3); EffectKind3D_RingsStep answering 0: a tail jump to Effect_Release. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474A40
+name = "EffectKind3D_DrawGlow"
+ret = "void"
+params = "unsigned size"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474A40..0x474AB2 (0x72 bytes): cdecl: a draw mode (page (0x380, 0x100), abr 1, dtd 1) committed at slot 1; EffectKind3D_DrawFan(the leader's point ObjTrio +0x34.. with the height + 0x800000, size, 0x60, 0). docs/effect_2b.md."
+
+[[func]]
+pc = 0x474AC0
+name = "EffectKind3D_DrawFan"
+ret = "void"
+params = "const long *point, unsigned size, unsigned centre, unsigned rim"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474AC0..0x474C26 (0x166 bytes): cdecl: EffectKind3B_DrawGlow instruction for instruction but twice the frame's parity in the radius. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474C30
+name = "EffectKind3D_RingsClear"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474C30..0x474C44 (0x14 bytes): the sixteen ring records' (0x18 at EffectKind30_Shards) in-use bytes +0x14 cleared. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474C50
+name = "EffectKind3D_RingSpawn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474C50..0x474C72 (0x22 bytes): the first free ring of sixteen: +0x14 1, +0x15 0. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474C80
+name = "EffectKind3D_RingsStep"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474C80..0x474D13 (0x93 bytes): each ring in use by +0x15: 0 its width 0, half-thickness 0x10, shade and count 0x20, state up; 1 at the leader's point (height + 0x800000), width +8, shade and count down (count 0: freed), EffectKind3D_DrawRing; al 1 when any was in use. docs/effect_2b.md."
+
+[[func]]
+pc = 0x474D20
+name = "EffectKind3D_DrawRing"
+ret = "void"
+params = "unsigned char *ring"
+impl = "src/game/effect_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-29 (round thirteen group E2B, capstone to the last instruction), 0x474D20..0x474F34 (0x214 bytes): cdecl (PSX twin 0x801F2F60, pairs_propagated.json by callers, unnamed in the sibling): the ring's point projected; twice (+ and - the half-thickness) the width and the width +- h scaled (EffectGte_ProjectSize into its argument's slot) and 32 semi-transparent G4 quads round the screen point, the outer edge black and the inner the shade +0x17, committed at slot 1 (0x44). docs/effect_2b.md."
+
+[[data]]
+pc = 0x6543D8
+name = "EffectKind2F_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): jumped through by EffectKind2F_Run 0x4731A0 (Effect_KindHandlers[0x2F]) by +1: _Start, _Spin; kind 0x33's table follows. docs/effect_2b.md."
+
+[[data]]
+pc = 0x6543E0
+name = "EffectKind33_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): jumped through by EffectKind33_Run 0x4734F0 (Effect_KindHandlers[0x33]) by +1: _Start, _Grow, Effect_StateRelease, Effect_StateRelease; EffectKind33_SignX follows. docs/effect_2b.md."
+
+[[data]]
+pc = 0x6543F0
+name = "EffectKind33_SignX"
+ctype = "long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): read by EffectKind33_DrawDisc 0x4735B0: the x step of quarter i's link point, 1 / -1 (EffectKind33_SignZ follows). docs/effect_2b.md."
+
+[[data]]
+pc = 0x654400
+name = "EffectKind33_SignZ"
+ctype = "long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): read by EffectKind33_DrawDisc 0x4735B0: the z step of quarter i's link point, 1 / -1 (four dwords, then 0x654410 EffectKind35_States). docs/effect_2b.md."
+
+[[data]]
+pc = 0x654410
+name = "EffectKind35_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): jumped through by EffectKind35_Run 0x4737A0 (Effect_KindHandlers[0x35]) by +1: _Start, _Burst, _FreeModel; EffectKind35_ShardStates follows. docs/effect_2b.md."
+
+[[data]]
+pc = 0x65441C
+name = "EffectKind35_ShardStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): called through by EffectKind35_ShardsDraw 0x473850 by a shard's +1: _ShardFly, _ShardFade; kind 0x38's table follows. docs/effect_2b.md."
+
+[[data]]
+pc = 0x654424
+name = "EffectKind38_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): jumped through by EffectKind38_Run 0x473DD0 (Effect_KindHandlers[0x38]) by +1: _Start, _FadeIn, _WaitMessage, _FadeOut, Effect_StateRelease; kind 0x39's follows. docs/effect_2b.md."
+
+[[data]]
+pc = 0x654438
+name = "EffectKind39_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): jumped through by EffectKind39_Run 0x473FA0 (Effect_KindHandlers[0x39]) by +1: _Start, _Grow, _Shrink, Effect_StateRelease; kind 0x3B's follows. docs/effect_2b.md."
+
+[[data]]
+pc = 0x654448
+name = "EffectKind3B_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): jumped through by EffectKind3B_Run 0x4741E0 (Effect_KindHandlers[0x3B]) by +1: _Start, _Rise, _Fade, Effect_StateRelease; kind 0x3D's follows. docs/effect_2b.md."
+
+[[data]]
+pc = 0x654458
+name = "EffectKind3D_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): jumped through by EffectKind3D_Run 0x474940 (Effect_KindHandlers[0x3D]) by +1: _Start, _Wait, _Glow, _Fade; kind 0x3E's table 0x654468 (0x474F40's, not this group's) follows. docs/effect_2b.md."
+
+[[data]]
+pc = 0x676108
+name = "EffectKind35_ShardCursor"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2B): the shard EffectKind35_ShardsInit / _ShardsDraw walk (0x28 apart from EffectKind30_Shards, sixteen) and the two EffectKind35_ShardStates handlers step. docs/effect_2b.md."
