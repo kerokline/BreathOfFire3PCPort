@@ -993,6 +993,8 @@ void InjectAll() {
                                 // the fuzz only; after ScenarioHarnessEkh_Inject, whose self-test copies 0x472770,
                                 // and Effect1C_Inject, whose kinds 0x1C / 0x1D call 0x471D10 and 0x471E20; no module
                                 // patches bytes inside its 65 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Widescreen_ArmFills();      // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
+                                // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

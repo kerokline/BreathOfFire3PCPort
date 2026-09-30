@@ -27,3 +27,14 @@ extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 // operand (menu_lists, menu_draw_helpers, battle_e7). Does nothing unless the
 // view is wide.
 void Widescreen_Inject();
+
+// The columns each side for a full-frame fill - a fade, a tint, a flash, a
+// shade, the loss screen's black: 0 until Widescreen_ArmFills has run, which
+// InjectAll does after every module's self-test, so a fuzz of any module,
+// whichever side of Widescreen_Inject it sits, compares the original's
+// (0, 0) 320 x 240; then Widescreen_Live's columns. A fill draws at
+// (Widescreen_FillX(), 0) Widescreen_FillWidth() x 240 (DIV-0041 section 3c).
+unsigned Widescreen_Fill();
+float Widescreen_FillX();       // 0.0f - columns: not -columns, which is -0.0f when narrow
+float Widescreen_FillWidth();   // 320.0f + 2 * columns
+void Widescreen_ArmFills();

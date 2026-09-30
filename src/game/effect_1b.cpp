@@ -70,6 +70,7 @@
 #include "game/effect_1b_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1350,13 +1351,16 @@ extern "C" void __cdecl EffectKind11_DrawShade() {
     SH_CALL(Gfx_CommitPrim)(6, 0xC);
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG4)(p);
-    F(p + 8, 0);
+    // DIV-0041: the left corners at -53 and the right at 373 under the wide
+    // picture (widescreen.h: 0 until every self-test has run).
+    const int left = -static_cast<int>(Widescreen_Fill()), right = 320 + static_cast<int>(Widescreen_Fill());
+    F(p + 8, left);
     F(p + 0xC, 0);
-    F(p + 0x18, 320);
+    F(p + 0x18, right);
     F(p + 0x1C, 0);
-    F(p + 0x28, 0);
+    F(p + 0x28, left);
     F(p + 0x2C, 320);
-    F(p + 0x38, 320);
+    F(p + 0x38, right);
     F(p + 0x3C, 320);
     p[4] = p[5] = p[6] = 0;
     p[0x14] = p[0x15] = p[0x16] = 0;

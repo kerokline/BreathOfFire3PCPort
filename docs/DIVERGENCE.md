@@ -2069,7 +2069,31 @@ designed in rather than bolted on.
   `BattleE1_Inject` after its self-test, since that inject runs after
   `Widescreen_Inject` and the fuzz compares the original's 320; the bar
   and caption are as they were, now over black in the band. Off, bit for
-  bit the original's.
+  bit the original's. **Later that day, the rest of section 3c** (the
+  owner's `cutsceneAndNue.txt`: the night's sepia and dark tint, the
+  critical hit's flash, both 320 wide): every full-frame fill found by a
+  scan of `.text` for `320.0f` beside `240.0f` (22 sites, 2026-09-30) that
+  is ours draws through `Widescreen_Fill()` - the columns once
+  `Widescreen_ArmFills` has run, which `InjectAll` calls after every
+  module's self-test, so a fuzz on either side of `Widescreen_Inject`
+  compares the original's (0, 0) 320 x 240 and the per-module flag above
+  is gone. Widened: `EffectKind38_DrawTint` `0x473F10` (the tint),
+  `EffectKind46_DrawFlash` `0x477D20` (the flash), `EffectKind11_DrawShade`
+  `0x46A450` (the POLY_G4 shade), `FieldPanel_DrawShade` `0x52D5C0`,
+  `Area145_DrawGradient` `0x421F10`, `Magic020_DrawFade` `0x4A3A70`,
+  `IdentifyDim_Draw` `0x4B1770`, `Scena17_DrawFade` `0x56CBA0` (its tile;
+  the frame copy's two sprites stay 320, being a copy of the 320 view),
+  `BattleLoss_DrawBlack`, and three area sky gradients a grep of ours for
+  `320.0f` found (`area_w3b.cpp`, `area_w3c.cpp`, `Area172_DrawShade` in
+  `area_w4b.cpp`, their corners as `Area145_DrawGradient`'s). Seen in the
+  recipe's captures (`analysis/shots/nue_before` / `nue_after`, frames 600
+  and 1500): the night's shade now over the whole frame. **Still 320: the
+  sunset sky of area 23's cutscene** (frame 600, orange over black bands)
+  - no site of ours or of the scan draws it; to find. Not yet: five sites in `.text` no symbol names
+  (`0x489D47`, `0x48CB07`, `0x48CD10`, `0x48DC19`, `0x493308` in the magic
+  engine's range; `0x507BDC`, `0x507CE3`, `0x50B4B5`, `0x50F7B5` after
+  `Gfx_BeginFrame`), Capcom's still, and any fill built from integers or
+  registers the scan cannot see - the owner's eye finds those.
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;

@@ -32,6 +32,7 @@
 // (docs/effect_2d.md section 2).
 #include "game/effect_2d.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -40,6 +41,7 @@
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -537,10 +539,10 @@ extern "C" void __cdecl EffectKind46_DrawFlash(void) {
     p[4] = S()[0x5D];
     p[5] = S()[0x5E];
     const unsigned char blue = S()[0x5F];
-    SetLong(p + 8, 0);
+    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
     p[6] = blue;
     SetLong(p + 0xC, 0);
-    SetUL(p + 0x14, 0x43A00000u);   // 320.0f
+    SetUL(p + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // 0x43A00000, 320.0f narrow
     SetUL(p + 0x18, 0x43700000u);   // 240.0f
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     SH_CALL(Gpu_SetShadeTex)(p, 0);

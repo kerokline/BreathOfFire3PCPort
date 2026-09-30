@@ -25,6 +25,7 @@
 // section 7).
 #include "game/effect_2b.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -32,6 +33,7 @@
 #include "game/effect_2b_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -639,10 +641,10 @@ extern "C" void __cdecl EffectKind38_DrawTint(void) {
     prim[4] = Cur()[0x5D];
     prim[5] = Cur()[0x5E];
     const unsigned char blue = Cur()[0x5F];
-    SetUL(prim + 8, 0);
+    SetUL(prim + 8, std::bit_cast<std::uint32_t>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
     prim[6] = blue;
     SetUL(prim + 0xC, 0);
-    SetUL(prim + 0x14, 0x43A00000u);   // 320.0f
+    SetUL(prim + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // 0x43A00000, 320.0f narrow
     SetUL(prim + 0x18, 0x43700000u);   // 240.0f
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     SH_CALL(Gpu_SetShadeTex)(prim, 0);

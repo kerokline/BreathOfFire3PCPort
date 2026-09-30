@@ -14,6 +14,7 @@
 // same way, so each function is fuzzed alone.
 #include "game/area_w4b.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -21,6 +22,7 @@
 #include "game/area_harness.h"
 #include "game/area_w4b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1149,7 +1151,9 @@ extern "C" void __cdecl Area172_DrawShade(int x, int y) {
     AH_CALL(Gpu_SetPolyG4)(p);
     const int sx = static_cast<std::int16_t>(x);
     const int sy = static_cast<std::int16_t>(y);
-    constexpr std::int32_t k320 = 0x43A00000;   // 320.0f
+    // DIV-0041: the right edge at 373 under the wide picture (widescreen.h: 0
+    // until every self-test has run); the left, at x - 0x40, is the caller's.
+    const auto k320 = std::bit_cast<std::int32_t>(320.0f + static_cast<float>(Widescreen_Fill()));   // 0x43A00000 narrow
     SetLong(p + 0x38, k320);
     SetLong(p + 0x18, k320);
     SetFloatInt(p + 8, sx - 0x40);

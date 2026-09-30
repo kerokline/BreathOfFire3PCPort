@@ -52,6 +52,12 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    the recipe to `done` on ours; the recipe plays `# save combat` (the owner: the same save as `combat.txt`).
    Then DIV-0066: a pad press skips an FMV (the pump polls `PadRead_AnyInputDown` between messages; built and
    `pad_read` shadow 0 differ in a second build directory while the owner's game held `build/`'s DLL).
+   Then the owner's `cutsceneAndNue.txt` (`# save nue`, the cutscene, the dialogue, the first Nue fight): its night
+   tint and critical flash showed 320 wide, so every ours full-frame fill the `320.0f`/`240.0f` scan found now draws
+   through `Widescreen_Fill()` (widescreen.h), armed in `InjectAll` after every self-test; nine sites the scan found
+   are still Capcom's or unnamed (the DIV-0041 amendment lists them). **The sunset sky of area 23's cutscene is
+   still 320 wide** (`analysis/shots/nue_after/f0600.png`: orange over black bands) and no draw of ours has it -
+   find what draws it (not a `320.0f` beside `240.0f` in `.text`; a textured sprite or an integer quad).
    The owner confirmed the pad skip on the intro videos. **Owed the owner's eye** in a fight of their own (the Equip
    labels, the wide game over), and a held pad input across a video's start (no skip until released).
 

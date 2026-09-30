@@ -1013,19 +1013,15 @@ extern "C" void __cdecl BattleLoss_DrawPanels(unsigned shade) {
 //
 // DIV-0041: under a wide picture the black covers it whole, (-53, 0) 426 x
 // 240, as the fade tile and the save menu's black do - the owner's shot,
-// 2026-09-30: the battle field showing in both bands beside GAME OVER. The
-// columns are read once, by BattleE1_Inject after the self-test (which runs
-// after Widescreen_Inject and compares the original's 320).
-unsigned char g_loss_black_columns = 0;
-
+// 2026-09-30: the battle field showing in both bands beside GAME OVER.
+// Widescreen_Fill is 0 until every self-test has run (widescreen.h).
 extern "C" void __cdecl BattleLoss_DrawBlack(void) {
     DrawMode(0, 0, 0x3C0, 0, 2);
     unsigned char* const p = Packet();
     BH_CALL(Gpu_SetTile)(p);
-    const float wide = static_cast<float>(g_loss_black_columns);
-    SetLong(p + 8, std::bit_cast<std::uint32_t>(0.0f - wide));   // 0.0f - wide, not -wide: -0.0f when narrow (mode_flow.cpp)
+    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));
     SetLong(p + 0xC, 0);
-    SetLong(p + 0x14, std::bit_cast<std::uint32_t>(320.0f + 2 * wide));   // 0x43A00000 narrow
+    SetLong(p + 0x14, std::bit_cast<std::int32_t>(Widescreen_FillWidth()));   // 0x43A00000 narrow
     SetLong(p + 0x18, 0x43700000);
     Rgb(p, 4, 0);
     BH_CALL(Gfx_CommitPrim)(2, 0x1C);
@@ -1076,14 +1072,6 @@ extern "C" void __cdecl BattleLoss_DrawBar(unsigned width) {
 
 void BattleE1_Inject() {
     if (bof3::WantsShadow("battle_e1")) battle_e1::SelfTest();
-    // DIV-0041: the loss screen's black over the wide picture, after the self-test.
-    if (const unsigned columns = Widescreen_Live()) {
-        static const std::uint8_t was = 0;
-        const auto is = static_cast<std::uint8_t>(columns);
-        bof3::PatchBytes("BattleLossBlackWide", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_loss_black_columns)),
-                         &was, &is, 1);
-        bof3::Log("DIV-0041    the loss screen's black %u columns wider a side", columns);
-    }
     BOF3_INJECT(BattleExtra_TallyOpen);
     BOF3_INJECT(BattleExtra_TallyCount);
     BOF3_INJECT(BattleExtra_TallyClose);

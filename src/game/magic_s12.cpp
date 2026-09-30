@@ -27,6 +27,7 @@
 // same code).
 #include "game/magic_s12.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -34,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -486,8 +488,8 @@ MS12_EXPORT void __cdecl IdentifyDim_Draw(void) {
     MH_CALL(Gpu_SetTile)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     SetLong(p + 0xC, 0);
-    SetLong(p + 8, 0);
-    SetLong(p + 0x14, 0x43A00000);   // 320.0f
+    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
+    SetLong(p + 0x14, std::bit_cast<std::int32_t>(Widescreen_FillWidth()));   // 0x43A00000, 320.0f narrow
     SetLong(p + 0x18, 0x43700000);   // 240.0f
     const unsigned grey = SC()[9];
     SetDd(4, grey);

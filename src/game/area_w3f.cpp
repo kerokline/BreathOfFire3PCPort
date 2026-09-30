@@ -14,12 +14,14 @@
 // so each function is fuzzed alone.
 #include "game/area_w3f.h"
 
+#include <bit>
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
 #include "game/area_harness.h"
 #include "game/area_w3f_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -965,12 +967,16 @@ extern "C" void __cdecl Area145_DrawGradient(void) {
     SetLong(prim + 0x3C, k240);
     prim[0x15] = prim[5] = 0xC8;
     prim[0x16] = prim[6] = 0xFF;
-    SetLong(prim + 8, 0);
+    // DIV-0041: the left corners at -53 and the right at 373 under the wide
+    // picture (widescreen.h: 0 until every self-test has run).
+    const auto left = std::bit_cast<std::int32_t>(Widescreen_FillX());
+    const auto right = std::bit_cast<std::int32_t>(320.0f + static_cast<float>(Widescreen_Fill()));
+    SetLong(prim + 8, left);
     SetLong(prim + 0xC, 0);
-    SetLong(prim + 0x18, k320);
+    SetLong(prim + 0x18, right);
     SetLong(prim + 0x1C, 0);
-    SetLong(prim + 0x28, 0);
-    SetLong(prim + 0x38, k320);
+    SetLong(prim + 0x28, left);
+    SetLong(prim + 0x38, right);
     prim[0x14] = prim[4] = 0;
     prim[0x34] = prim[0x24] = 0;
     prim[0x35] = prim[0x25] = 0;
