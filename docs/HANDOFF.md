@@ -49,9 +49,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 0000. **2026-09-30, three fixes from the owner's `tools/recipes/gameover.txt`** (a fight with Rei's Equip window, the party
    lost, GAME OVER, the title): DIV-0064's second load (the fatal the owner hit), DIV-0065 (the Equip window's stat
    labels a row up - Capcom's own offset), the loss screen's black widened (DIV-0041). Self-test `'*'` 0 mismatches,
-   the recipe to `done` on ours. **Owed the owner's eye** in a fight of their own, and a `# save` for the recipe: it
-   plays the owner's slot 0 as it was that morning, so it desyncs once that save moves on (copy the slot to
-   `tools/recipe_saves/gameover.DAT` and add the header, [`input-script.md`](input-script.md) §1a).
+   the recipe to `done` on ours; the recipe plays `# save combat` (the owner: the same save as `combat.txt`).
+   **Owed the owner's eye** in a fight of their own.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34

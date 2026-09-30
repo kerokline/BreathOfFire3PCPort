@@ -3,6 +3,7 @@
 # language, since text timing differs between them. F12 wrote the shots.
 # The owner's route, 2026-09-30: slot 0 loaded, a fight with Rei's Equip window opened twice, the party lost,
 # GAME OVER, back to the title (which reloads FIRST.DAT: DIV-0064's second load). The three shots were added.
+# save combat
 wait 36
 hold start 4
 wait 62
