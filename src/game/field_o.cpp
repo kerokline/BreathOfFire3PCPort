@@ -39,6 +39,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/field_o_callees.h"
+#include "game/list_title.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -411,8 +412,15 @@ unsigned char ShownMember() {
     const unsigned char id = At(at::kPartyList + Sb(At(at::kShownMember)[0]))[0];
     return MoveScript_EffectState[id];
 }
-// A title of a table of pointers, centred on 13 six-unit columns.
-int Centred(int x, unsigned n) { return x + 6 * (0xD - static_cast<int>(n)); }
+// A title of a table of pointers, centred on 13 six-unit columns - or, under
+// DIVERGENCE DIV-0059, on the width its pen covers.
+// g_title_live is set by FieldO_Inject after the fuzz, which runs later than
+// BattleDraw_Inject's patch and compares with the original's arithmetic.
+bool g_title_live = false;
+int Centred(int x, unsigned n, const unsigned char* title) {
+    const int count = static_cast<int>(n);
+    return x + (g_title_live ? ListTitle_X(title, count) : 6 * (0xD - count));
+}
 
 }  // namespace
 
@@ -452,8 +460,9 @@ extern "C" void __cdecl Menu_DrawAbilityPanel(unsigned char* panel) {
     }
     const char* const title = Str(static_cast<U>(Long(At(at::kAbilityTitles + panel[0xB] * 4u))));
     const int ty = PanelY(panel) + 7;
-    SH_CALL(Text_DrawAt)(Centred(PanelX(panel), static_cast<unsigned>(std::strlen(title))), ty, 0, 0x10,
-                         reinterpret_cast<const unsigned char*>(title));
+    SH_CALL(Text_DrawAt)(Centred(PanelX(panel), static_cast<unsigned>(std::strlen(title)),
+                                 reinterpret_cast<const unsigned char*>(title)),
+                         ty, 0, 0x10, reinterpret_cast<const unsigned char*>(title));
     SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 2 ? at::kListPiecesLit : at::kListPiecesA), 1);
     SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(panel[9] & 1 ? at::kListPiecesBLit : at::kListPiecesB), 1);
     const unsigned char arrows = panel[9];
@@ -537,7 +546,7 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
     const unsigned category = panel[8];
     const unsigned char* const title = Text(static_cast<U>(Long(At(at::kItemTitles + category * 4u))));
     const int ty = PanelY(panel) + 7;
-    SH_CALL(Text_DrawAt)(Centred(PanelX(panel), SH_CALL(Text_CharCount)(title)), ty, 0, 0x10, title);
+    SH_CALL(Text_DrawAt)(Centred(PanelX(panel), SH_CALL(Text_CharCount)(title), title), ty, 0, 0x10, title);
     Sprintf(at::kFmtCount, static_cast<unsigned>(total), 0x80u);
     SH_CALL(Text_DrawFont8)(PanelX(panel) + 0x55, PanelY(panel) + 0x92, 0, Buf());
     SH_CALL(Menu_DrawPieces)(PanelX(panel), PanelY(panel), Text(at::kListPiecesA), 1);
@@ -1283,6 +1292,7 @@ extern "C" void __cdecl ObjTrio_ClearBit40(void) {
 
 void FieldO_Inject() {
     if (bof3::WantsShadow("field_o")) field_o::SelfTest();
+    g_title_live = true;   // DIV-0059, from here on
     BOF3_INJECT(Menu_DrawStatsPanel);
     BOF3_INJECT(Menu_DrawExpPanel);
     BOF3_INJECT(Menu_DrawIconWheel);

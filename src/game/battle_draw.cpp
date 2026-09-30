@@ -31,6 +31,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
+#include "game/list_title.h"
 #include "game/text_advance.h"
 #include "game/battle_draw_callees.h"
 #include "hook/detour.h"
@@ -250,7 +251,23 @@ int ListTitleX(const unsigned char* label, int n) {
     if (!g_list_title_centre) return 6 * (13 - n);
     return 78 - static_cast<int>(TextAdvance_Width(label) / 2);
 }
+
+constexpr U kTextDrawAt = 0x516B30;    // its name is a macro here
+// The title draws of the two list windows that are still Capcom's: the
+// Text_DrawAt call after `6 * (13 - Text_CharCount) + x` in each.
+constexpr U kTitleCallA = 0x596D13;    // titles 0x66AF10
+constexpr U kTitleCallB = 0x59DEFA;    // titles 0x66B5C4
+
+// What those two calls reach under DIV-0059: the x they reckoned, 6 * (13 -
+// n) + the window's, moved to the centre less half the real width.
+extern "C" const unsigned char* __cdecl ListTitle_DrawAt(int x, int y, int colour, int count,
+                                                         const unsigned char* text) {
+    const int n = static_cast<int>(Text_CharCount(text) & 0xFF);
+    return Text_DrawAt(x - 6 * (13 - n) + ListTitle_X(text, n), y, colour, count, text);
+}
 }  // namespace
+
+int ListTitle_X(const unsigned char* label, int n) { return ListTitleX(label, n); }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x82, w[9], Byte(kColour));
@@ -440,6 +457,10 @@ void BattleDraw_Inject() {
                              static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_list_title_centre)),
                              &was, &is, 1);
             bof3::Log("DIV-0059    list titles centred on their width: %s", g_list_title_centre ? "on" : "off");
+            bof3::RetargetCall("BattleListTitleCentre", kTitleCallA, kTextDrawAt,
+                               reinterpret_cast<void*>(&ListTitle_DrawAt));
+            bof3::RetargetCall("BattleListTitleCentre", kTitleCallB, kTextDrawAt,
+                               reinterpret_cast<void*>(&ListTitle_DrawAt));
         }
     }
     BOF3_INJECT(D3d_DrawPolyG3);

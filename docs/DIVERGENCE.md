@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 63 entries, DIV-0001..0063)
+**Status:** IN PROGRESS (opened 2026-09-18; 64 entries, DIV-0001..0064)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -779,6 +779,15 @@ designed in rather than bolted on.
 - **Also in the PSX version?** the first two rows restore the PlayStation's
   lettering (US and JP pages are byte-identical). The third row does not exist
   there: the PlayStation title has two.
+- **French and German, 2026-09-29 (the owner's choice):** their discs carry
+  their own lettering in the same style - `NOUVEAU JEU` / `CHARGER JEU`,
+  `NEUES SPIEL` / `SPIEL LADEN` - and no letters to spell CONFIG. So
+  `fr.START.DAT` and `de.START.DAT` take the disc's two rows as they are,
+  each row's width the ink's right edge plus 2 (the rule the US widths
+  obey: 172 / 172, 156 / 162), and the third row from `en.START.DAT` beside
+  them - the English overlay is built first; without it the page is left as
+  shipped and the build says so. Seen by capture (`analysis/shots/title_fr`,
+  `title_de`). Japanese needs nothing: its sheet is the US one.
 - **Reversible?** play without `BOF3X_LANG`, or delete `en.START.DAT`;
   `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the original widths (the English
   rows are then cut off - for A/B only).
@@ -2942,6 +2951,15 @@ designed in rather than bolted on.
   Under a Latin overlay ours puts it on the middle; without one the
   original's placement stands. `g_list_title_centre`, patched to 1 at inject
   under the name `BattleListTitleCentre`. DIV-0058's fix, one box over.
+  **Extended 2026-09-29** (DIV-0064's headers made it visible) to every
+  list that draws such a title: the field menu's item list
+  (`Menu_DrawItemList` `0x5759C0`, `src/game/menu_windows.cpp`), its
+  ability and item panels (`Menu_DrawAbilityPanel` `0x575F50`,
+  `Menu_DrawItemPanel` `0x5763F0`, `src/game/field_o.cpp`, whose own
+  switch is set after their fuzz, which runs later than the patch) and the
+  two title draws still Capcom's (the `Text_DrawAt` calls at `0x596D13`
+  and `0x59DEFA`, re-aimed under the same name at `ListTitle_DrawAt`) -
+  all through `ListTitle_X` (`src/game/list_title.h`).
 - **Rationale:** as DIV-0018 and DIV-0058.
 - **Also in the PSX version?** The US disc's own draw centres its own font;
   not checked how.
@@ -3147,3 +3165,67 @@ designed in rather than bolted on.
   has the gene and a full party - a partner down, and each failing pair.
 - **Reversible?** `BOF3X_ORIGINAL=DragonForm_PartyRecipe` leaves Capcom's
   function, its read with it.
+
+### The short labels from a language overlay: status words, stats, item and skill types
+
+- **ID:** DIV-0064
+- **Date:** 2026-09-29
+- **Subsystem:** menu and battle text (`src/game/labels.cpp`, chunk kind 15
+  of `tools/loc_build.py`; the 8 px draw `Text_DrawSmall` `0x516E70` in
+  `src/game/mode_states.cpp`; [`dialogue-localisation.md`](dialogue-localisation.md) §8)
+- **Tier:** Sensible
+- **Original behaviour:** five groups of NUL-padded slots in `BOF3.exe`'s
+  `.data` hold Chinese labels that every overlay left as shipped: the
+  status words 中毒 / 昏乱 (2 x 8 at `0x66A0E8`, drawn after a member's
+  level by the 8 px draw), the menu's stats 攻击 防御 智力 速度 (4 x 8 at
+  `0x66A0F8`, the Equip column and the shops' member panel), the item
+  types 物品 武器 防具 选项 重要道具 (`0x66A120`, four of 8 and one of 12,
+  behind the pointer table `0x663970` and its copies - the item lists'
+  titles), the skill types 治疗 辅助 攻击 技能 龙技 (5 x 8 at `0x66A200`
+  behind `0x663984`, the fifth behind `0x66B5B0` alone - the skill lists'
+  titles) and the battle's stats (4 x 8 at `0x669CF0` behind `0x64AE08`).
+  The US disc has each group beside bytes the PC still has (`START.EMI`:
+  `Pois Conf` and `Pwr Def Int Agl` between the bytes at `0x663648` and
+  `0x663660`, `ITEM WEAPON ARMOR OPTION VITAL` after the sixteen at
+  `0x663960`; `BATTLE.EMI`: `HEAL ASSIST ATTACK SKILL DRAGON` and the
+  four stats before the sixteen at `0x66B5B4`); the French and German
+  discs the same tables, found by the same bytes.
+- **New behaviour:** `loc_build.py` writes the disc's strings as kind-15
+  chunks (tag = the group), one byte a letter as the verbs are (DIV-0018).
+  `Labels_Apply` writes the status words and both stat groups into their
+  slots after checking the push operand or pointer that names each; the
+  item and skill types, which nothing reaches but their pointer tables (a
+  scan of the image for each slot's address), go into 16-byte buffers of
+  the DLL's and the eight tables are re-aimed at them after each entry is
+  checked - so the French `ARMEMENT` and `CAPACITE` and the German
+  `RÜSTUNG`, eight letters against slots of 8 bytes, fit (the owner's
+  question, 2026-09-29: the box has the room, the slot had not; a pair
+  code would not have helped, since two one-byte letters paired are still
+  two bytes). A string over its room is sent empty and the slot stays as
+  shipped. The status words alone go through the 8 px draw,
+  which samples a whole glyph into an 8-unit quad: `Text_DrawSmall` asks
+  `Labels_SmallGlyph` for a one-byte character inside those two slots and
+  draws the overlay's 8 x 8 cell of the letter (glyph `0xA00 + code -
+  0x30`, DIV-0015's set) once a chunk has written them - two bytes a
+  letter, as the Config screen's text has, would be 9 bytes in a slot of
+  8. Everything else draws through `Text_DrawAt` unchanged; the titles'
+  centring is DIV-0059's, extended today to every list that draws one.
+- **Rationale:** as DIV-0018: the exe's own strings are the last Chinese
+  under an English overlay; the owner's captures of 2026-09-27 (HANDOFF
+  item 6).
+- **Also in the PSX version?** These are the US disc's own strings in the
+  US disc's own slots; the PC's slots are wider.
+- **Verification:** `BOF3X_SHADOW='*'` headless with `BOF3X_LANG=original`
+  (the fuzz runs before any overlay loads): 0 mismatches. Live, English:
+  `tools/recipes/menu_screens.txt` -> `analysis/shots/labels_en` - `ITEM`
+  and `HEAL` on their boxes' middles, `Pwr Def Int Agl` in the Equip
+  column; `battle_commands.txt` -> `analysis/shots/labels_cmd` - the
+  whelp's list titled `DRAGON`; `combat_ab.txt` -> `labels_combat`, 43
+  frames, nothing amiss. French, `menu_screens.txt` -> `labels_fr`:
+  `OBJET`, `GUERIR`, and the log's `5 of 5` for both repointed groups.
+  **Owed the owner's eye:** the status words (no member on the recipe save
+  is poisoned or confused), the battle's stats, the `WEAPON`..`VITAL` and
+  `ASSIST`..`SKILL` titles, the German build and the French weapon and
+  skill pages.
+- **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
+  Not by a `BOF3X_ORIGINAL` name: the slots are data.
