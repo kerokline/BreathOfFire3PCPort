@@ -779,6 +779,15 @@ designed in rather than bolted on.
 - **Also in the PSX version?** the first two rows restore the PlayStation's
   lettering (US and JP pages are byte-identical). The third row does not exist
   there: the PlayStation title has two.
+- **French and German, 2026-09-29 (the owner's choice):** their discs carry
+  their own lettering in the same style - `NOUVEAU JEU` / `CHARGER JEU`,
+  `NEUES SPIEL` / `SPIEL LADEN` - and no letters to spell CONFIG. So
+  `fr.START.DAT` and `de.START.DAT` take the disc's two rows as they are,
+  each row's width the ink's right edge plus 2 (the rule the US widths
+  obey: 172 / 172, 156 / 162), and the third row from `en.START.DAT` beside
+  them - the English overlay is built first; without it the page is left as
+  shipped and the build says so. Seen by capture (`analysis/shots/title_fr`,
+  `title_de`). Japanese needs nothing: its sheet is the US one.
 - **Reversible?** play without `BOF3X_LANG`, or delete `en.START.DAT`;
   `BOF3X_ORIGINAL=TitleMenu_Widths` keeps the original widths (the English
   rows are then cut off - for A/B only).

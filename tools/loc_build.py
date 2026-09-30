@@ -1573,17 +1573,45 @@ def build_title(args, disc):
     donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == TITLE_TAG] if found else []
     if len(base) != 1 or len(donor) != 1 or len(donor[0]) != base[0].size:
         raise SystemExit("START: no title menu sheet to rebuild")
-    if not hashlib.sha256(donor[0]).hexdigest().startswith(TITLE_DONOR_SHA256):
-        print("title menu: this disc's sheet is not the one the letters were measured on; left as shipped")
-        return []
     sheet = tiles_to_rows(donor[0], 2)
     page = [[0] * 256 for _ in range(256)]
     top = (TITLE_BAND - TITLE_CAP) // 2     # the port's rows are 32 tall about the same centre
     widths = []
+    measured = hashlib.sha256(donor[0]).hexdigest().startswith(TITLE_DONOR_SHA256)
     for i, (x0, y0, w) in enumerate((TITLE_NEW, TITLE_LOAD)):
+        if not measured:
+            # Another disc's lettering in the same two bands (the French and
+            # German discs, 2026-09-29: NOUVEAU JEU / CHARGER JEU, NEUES SPIEL /
+            # SPIEL LADEN): its width is the ink's right edge plus 2, which is
+            # what the measured widths above are for the US sheet (128 -> 130,
+            # 138 -> 140).
+            w = max(x for y in range(y0, y0 + TITLE_CAP) for x, v in enumerate(sheet[y]) if v) + 2
+            w += w & 1                  # even, as the draw centres it at 160 - w / 2
         for y in range(TITLE_CAP):
             page[TITLE_BAND * i + top + y][:w] = sheet[y0 + y][x0:x0 + w]
         widths.append(w)
+    if not measured:
+        # The third row is the port's, and no disc's letters were measured
+        # but the US sheet's (the French and German sheets lack the letters
+        # for CONFIG anyway): take it from the English page already built
+        # from the US disc, `en.START.DAT` beside the shipped file - the
+        # owner's choice, 2026-09-29: each disc's own two rows, our CONFIG.
+        en_path = os.path.join(dat_dir(args.game), "en.START.DAT")
+        if not os.path.exists(en_path):
+            print("title menu: this disc's sheet is not the one the letters were measured on, and no "
+                  "en.START.DAT holds a CONFIG row to borrow (build the English overlay first); left as shipped")
+            return []
+        en_blob, en_chunks = dat.load(en_path)
+        en_sheet = [c for c in en_chunks if c.kind == 1 and c.tag == TITLE_TAG]
+        en_widths = [c for c in en_chunks if c.kind == TITLE_KIND]
+        if len(en_sheet) != 1 or len(en_widths) != 1 or en_widths[0].size != 3:
+            raise SystemExit("title menu: en.START.DAT has no title page and widths to borrow from")
+        en_rows = tiles_to_rows(en_blob[en_sheet[0].offset:en_sheet[0].offset + en_sheet[0].size], 2)
+        for y in range(TITLE_BAND):
+            page[TITLE_BAND * 2 + y] = list(en_rows[TITLE_BAND * 2 + y])
+        widths.append(en_blob[en_widths[0].offset + 2])
+        print("title menu: this disc's two rows (%d and %d wide), CONFIG from en.START.DAT (%d)" % tuple(widths))
+        return [(1, TITLE_TAG, rows_to_tiles(page, 2)), (TITLE_KIND, 0, bytes(widths))]
     # CONFIG. Gaps in columns, by eye against NEW GAME's own spacing.
     word = ((title_c(sheet), 1), (title_letter(sheet, "O"), 1), (title_letter(sheet, "N"), 2),
             (title_f(sheet), 0), (title_stem(sheet), 2), (title_letter(sheet, "G"), 0))

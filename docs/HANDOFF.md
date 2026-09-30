@@ -210,7 +210,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
        which slots the PC's scripts reach is unread;
      - 37 / 54 accented enemy names over the banner's 8 bytes (pair codes
        or one-byte accents would fix it);
-     - the title art.
+     - ~~the title art~~ built 2026-09-29 (DIV-0014's French and German
+       paragraph): the discs' own two rows and the English CONFIG.
    - **Furigana** is idea I21, for its own branch.
 6. **Localisation: the exe's remaining Chinese**
    ([`dialogue-localisation.md`](dialogue-localisation.md) §6 the open list,
