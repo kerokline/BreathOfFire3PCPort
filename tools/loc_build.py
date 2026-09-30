@@ -1102,12 +1102,14 @@ def convert_battle_commands(game, donor):
 #      (the fifth the PC's 0x66A220), their five pointers, four 6-byte stat
 #      slots and then the sixteen bytes the PC has at LABEL_BATTLE_TAIL.
 #
-# A string that does not fit its slot goes out empty, and the slot stays as
-# shipped (the French disc's two eight-letter titles).
+# Groups 3 and 4 are repointed by the DLL into 16-byte buffers of its own
+# (their readers all go through pointer tables), so their room is 16; the
+# others are written into their slots. A string that does not fit goes out
+# empty, and the slot stays as shipped.
 KIND_LABELS = 15
 LABEL_HEAD, LABEL_HEAD_LEN, LABEL_TAIL, LABEL_TAIL_LEN = 0x663648, 24, 0x663660, 8
 LABEL_TYPES_HEAD, LABEL_BATTLE_TAIL = 0x663960, 0x66B5B4
-LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (8, 8, 8, 8, 12), 4: (8, 8, 8, 8, 8), 5: (8, 8, 8, 8)}
+LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8)}
 LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats"}
 
 

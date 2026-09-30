@@ -376,7 +376,7 @@ All of them load with `FIRST.DAT`.
 | 9 | the battle's command labels (Atk ... Esc) | 7 x 8 at `0x669D28` via `0x669D60` | the box table `0x64E2C8` (`BATTLE.EMI`) | DIV-0019 |
 | 10 | New Game's default names (Ryu ... Whelp) | name fields of 8 records at `0x64B390` | the records past the name, 4 bytes earlier (`START.EMI`) | DIV-0020 |
 | 11 | Manillo, the fish merchant | 8 bytes at `0x669CD8` | twelve bytes at `0x6608CC` (the fishing areas) | DIV-0020 |
-| 15 | the status words, the stats (menu and battle), the item and skill types | `0x66A0E8`, `0x66A0F8`, `0x66A120`, `0x66A200`, `0x669CF0` | the bytes at `0x663648` / `0x663660`, `0x663960`, `0x66B5B4` (`START.EMI`, `BATTLE.EMI`) | DIV-0064 |
+| 15 | the status words, the stats (menu and battle), the item and skill types (the last two repointed into the DLL's buffers) | `0x66A0E8`, `0x66A0F8`, `0x66A120`, `0x66A200`, `0x669CF0` | the bytes at `0x663648` / `0x663660`, `0x663960`, `0x66B5B4` (`START.EMI`, `BATTLE.EMI`) | DIV-0064 |
 
 What makes this cheap: the US abbreviations were made to fit the PlayStation's
 boxes, and the PC's boxes were made for two 12-unit Chinese glyphs - which are

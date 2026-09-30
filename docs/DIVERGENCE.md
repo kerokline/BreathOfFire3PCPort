@@ -3176,11 +3176,18 @@ designed in rather than bolted on.
   four stats before the sixteen at `0x66B5B4`); the French and German
   discs the same tables, found by the same bytes.
 - **New behaviour:** `loc_build.py` writes the disc's strings as kind-15
-  chunks (tag = the group), one byte a letter as the verbs are (DIV-0018),
-  and `Labels_Apply` writes each into its slot after checking the pointer
-  or push operand that names it; a string that does not fit its slot is
-  sent empty and the slot stays as shipped (French `ARMEMENT`, `CAPACITE`;
-  German `RÜSTUNG`). The status words alone go through the 8 px draw,
+  chunks (tag = the group), one byte a letter as the verbs are (DIV-0018).
+  `Labels_Apply` writes the status words and both stat groups into their
+  slots after checking the push operand or pointer that names each; the
+  item and skill types, which nothing reaches but their pointer tables (a
+  scan of the image for each slot's address), go into 16-byte buffers of
+  the DLL's and the eight tables are re-aimed at them after each entry is
+  checked - so the French `ARMEMENT` and `CAPACITE` and the German
+  `RÜSTUNG`, eight letters against slots of 8 bytes, fit (the owner's
+  question, 2026-09-29: the box has the room, the slot had not; a pair
+  code would not have helped, since two one-byte letters paired are still
+  two bytes). A string over its room is sent empty and the slot stays as
+  shipped. The status words alone go through the 8 px draw,
   which samples a whole glyph into an 8-unit quad: `Text_DrawSmall` asks
   `Labels_SmallGlyph` for a one-byte character inside those two slots and
   draws the overlay's 8 x 8 cell of the letter (glyph `0xA00 + code -
@@ -3197,9 +3204,13 @@ designed in rather than bolted on.
   (the fuzz runs before any overlay loads): 0 mismatches. Live, English:
   `tools/recipes/menu_screens.txt` -> `analysis/shots/labels_en` - `ITEM`
   and `HEAL` on their boxes' middles, `Pwr Def Int Agl` in the Equip
-  column. **Owed the owner's eye:** the status words (no member on the
-  recipe save is poisoned or confused), the battle's stats and the
-  `WEAPON`..`VITAL`, `ASSIST`..`DRAGON` titles, the French and German
-  builds.
+  column; `battle_commands.txt` -> `analysis/shots/labels_cmd` - the
+  whelp's list titled `DRAGON`; `combat_ab.txt` -> `labels_combat`, 43
+  frames, nothing amiss. French, `menu_screens.txt` -> `labels_fr`:
+  `OBJET`, `GUERIR`, and the log's `5 of 5` for both repointed groups.
+  **Owed the owner's eye:** the status words (no member on the recipe save
+  is poisoned or confused), the battle's stats, the `WEAPON`..`VITAL` and
+  `ASSIST`..`SKILL` titles, the German build and the French weapon and
+  skill pages.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.

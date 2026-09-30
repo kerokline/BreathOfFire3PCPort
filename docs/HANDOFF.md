@@ -230,10 +230,10 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    under `BOF3X_LANG=original`). Seen by capture: `ITEM`, `HEAL`, `Pwr Def
    Int Agl` (`analysis/shots/labels_en`). **Owed the owner's eye:** the
    status words on a poisoned member, a battle's stat panel and skill
-   titles, the shops' `WEAPON` / `ARMOR`; then the French and German
-   builds, where `ARMEMENT`, `CAPACITE` and `RÜSTUNG` stay Chinese (8-byte
-   slots; a repoint into our own buffer would fit them - the item and skill
-   types are reached through pointer tables). Still Chinese, with readers
+   titles, the shops' `WEAPON` / `ARMOR`; the French weapon and skill
+   pages (`ARMEMENT`, `CAPACITE` - the item and skill types are repointed
+   into the DLL's buffers, so nothing is kept) and the German build. Still
+   Chinese, with readers
    named in [`dialogue-localisation.md`](dialogue-localisation.md) §8: the
    turn counter, the Skill Ink count's label, the shop's master / apprentice
    words, and some fifty strings of the shop and tactics screens at
