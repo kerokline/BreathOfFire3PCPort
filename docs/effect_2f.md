@@ -13,7 +13,8 @@ kinds taken whole, section 5). No start dropped: `0x47C420` (the cut's `NOTFN`
 row) is case 3 of `EffectKind50_MoveSpecks`' switch, taken inside it. Each read
 to its last instruction with capstone and fuzzed through the scenario harness
 in effect mode ([`scenario_harness.md`](scenario_harness.md) section 8)
-without edits to it: 372,000 rounds, 0 mismatches. CONTROLS_SUMMARY
+without edits to it: 372,000 rounds, 0 mismatches. 126 controls planted one at a time: 125 refused by a count, one
+equivalent with its near variant refused (section 6).
 **Fuzz only**: no recorded route enters any of the 62 (section 9).
 
 All 62 are effect code, the four `hypothesis` rows of the labelling pass among
@@ -253,7 +254,9 @@ counter bytes at 0xB and 0xA / 0xE; `EffectKind4F_Start`: every record's `+3` /
 their switches and table, the counts at 0..2, all in use half the time for the
 two finders; `SpawnSpeck`'s `+6` at 7; the trail's screen floats with equal
 and near neighbours and angle words at 0x1000; the extra sprite index below 4,
-its `+9` zero or not; kind 0x56's grounds near the heights and never in the
+its `+9` zero or not and its `+0x14` at 0, 1, -1 and the sign's ends; a third of
+`EffectKind52_TrailUpdate`'s rounds every trail point the record's (a world
+point equal to the one below it projects to the same screen point); kind 0x56's grounds near the heights and never in the
 lowest 2^24. **Arguments**: the specks, sparks and trail by their addresses,
 `_DrawColumn`'s half-height inside 0..0x20 (and 0, 0xFFFF, 0x8000),
 `_DrawDisc`'s radius in 0..0x4B half the time. **Disturbance** (the group's,
@@ -261,14 +264,18 @@ from the hash only): `+9`, the timer, the half-height, the two counter bytes,
 a screen float.
 
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_2f`,
-exit 0): 372,000 rounds over 62 functions, 10,253,313 calls to the stand-ins,
+exit 0): 372,000 rounds over 62 functions, 10,212,640 calls to the stand-ins,
 **0 mismatches**; 25,842 bytes of state in 47 regions. Every entry of the
-eight swapped tables reached (each state's handler recorder 473..3,045 calls),
+eight swapped tables reached (each state's handler recorder 474..3,032 calls),
 the spark states run for real in `EffectKind52_MoveSparks`, `Effect_Release`
-8,343 calls, `Sprite_FindFree` 9,609, `0x479970` 180,000, `Math_Ratan2`
-131,262, `EffectKind56_DrawCross` 73,622 (the walk's length).
+8,251 calls, `Sprite_FindFree` 9,666, `0x479970` 180,000, `Math_Ratan2`
+85,425, `EffectKind56_DrawCross` 78,423 (the walk's length).
 
-STAR_RESULTS
+**Every shadow** (this worktree, no `bof3x.ini`, so narrow): `BOF3X_SHADOW='*'`
+exit 0, 687 self-test lines, every one 0 mismatches, `inject: 7235 ours, 0 left
+original`; `effect_2f` there 372,000 rounds, 0 mismatches. **With
+`BOF3X_WIDE=1`**: `'*'` exit 0, 687 self-test lines, no mismatch, 7,235 ours. No
+run died silently; neither needed a re-run.
 
 ## 5. What the cut and the tool said, settled
 
@@ -300,7 +307,148 @@ STAR_RESULTS
 
 ## 6. Controls
 
-CONTROLS_TABLE
+Planted one at a time in a scratch copy of `effect_2f.cpp` (scratch `controls.py`: plant on a unique
+string, rebuild, run under `BOF3X_E2F_ONLY=<its function>`, restore, rebuild; the committed file has no
+switch). Counts are rounds refused of 6,000 (a filter naming two functions refuses in both), in this worktree.
+
+| # | Function | Plant | Refused |
+|--:|---|---|--:|
+| 1 | `EffectKind4F_Run` | the next entry | 6000 |
+| 2 | `EffectKind50_Run` | the next entry | 6000 |
+| 3 | `EffectKind51_Run` | the next entry | 6000 |
+| 4 | `EffectKind52_Run` | the next entry | 6000 |
+| 5 | `EffectKind52_Sparks` | the next entry | 6000 |
+| 6 | `EffectKind52_Trail` | the next entry | 6000 |
+| 7 | `EffectKind53_Run` | the next entry | 6000 |
+| 8 | `EffectKind56_Run` | the next entry | 6000 |
+| 9 | `EffectKind4E_DrawDisc` | b = a + 0x81 | 6000 |
+| 10 | `EffectKind4E_DrawDisc` | vertex 0 blue the rim | 5973 |
+| 11 | `EffectKind4E_DrawDisc` | a depth copied by mov (a signalling NaN not quietened) | 80 |
+| 12 | `EffectKind4F_Start` | tint 0xE | 2230 |
+| 13 | `EffectKind4F_Start` | z + 0x800 | 2230 |
+| 14 | `EffectKind4F_Start` | the first kept on failure | 1479 |
+| 15 | `EffectKind4F_Start` | Sprite_Current not put back | 163 |
+| 16 | `EffectKind50_Start` | direction 1 | 6000 |
+| 17 | `EffectKind50_Emit` | one frame in eight | 732 |
+| 18 | `EffectKind50_Emit` | mask 0x1FFF | 3058 |
+| 19 | `EffectKind50_Drain` | released while specks live | 6000 |
+| 20 | `EffectKind50_ClearSpecks` | 63 specks | 5970 |
+| 21 | `EffectKind50_MoveSpecks` | phase 0 count 9 | 5944 |
+| 22 | `EffectKind50_MoveSpecks` | shade up 7 | 5933 |
+| 23 | `EffectKind50_MoveSpecks` | freed a frame early | 4613 |
+| 24 | `EffectKind50_MoveSpecks` | fall + 0x201 | 6000 |
+| 25 | `EffectKind50_MoveSpecks` | the answer inverted | 6000 |
+| 26 | `EffectKind50_MoveSpecks` | dtd 1 | 6000 |
+| 27 | `EffectKind50_SpeckQuad` | size shr 5 | 6000 |
+| 28 | `EffectKind50_SpeckQuad` | left x - w - 1 | 6000 |
+| 29 | `EffectKind50_SpeckQuad` | v 0x4E | 6000 |
+| 30 | `EffectKind50_SpeckQuad` | red from +2 | 5971 |
+| 31 | `EffectKind50_SpawnSpeck` | e + 0x401 | 2449 |
+| 32 | `EffectKind50_SpawnSpeck` | height shr (logical) | 2239 |
+| 33 | `EffectKind50_SpawnSpeck` | step 2 cos | 4542 |
+| 34 | `EffectKind50_FreeSpeck` | the first speck skipped | 1531 |
+| 35 | `EffectKind51_Start` | timer 0x21 | 4579, 4575 |
+| 36 | `EffectKind51_Start` | 0x3F pushes | 6000, 6000 |
+| 37 | `EffectKind51_Start2` | sound 0x203 | 6000 |
+| 38 | `EffectKind51_Grow` | Rand & 0x7F | 2947, 2996 |
+| 39 | `EffectKind51_Wait` | the sway address taken after Rand | 233, 259 |
+| 40 | `EffectKind51_Grow` | width every second | 1159, 1130 |
+| 41 | `EffectKind51_Grow` | half-height + 2 | 6000, 6000 |
+| 42 | `EffectKind51_Grow` | reload 0x95 | 471 |
+| 43 | `EffectKind51_Wait` | counter 0xC | 2784, 2784 |
+| 44 | `EffectKind51_Shrink` | sound at 3 | 913 |
+| 45 | `EffectKind51_Shrink` | reload 0x41 | 471 |
+| 46 | `EffectKind51_RingIn` | sound 0x20A | 495 |
+| 47 | `EffectKind51_RingOut` | radius + 0x11 | 5996 |
+| 48 | `EffectKind51_RingFade` | the radius kept | 5995 |
+| 49 | `EffectKind51_Burst` | radius 0x141 | 5933 |
+| 50 | `EffectKind51_Burst` | projected to +0x70 | 6000 |
+| 51 | `EffectKind51_RingClose` | radius - 0xF | 5996 |
+| 52 | `EffectKind51_DrawMoves` | x - 63 | 5127 |
+| 53 | `EffectKind51_DrawMoves` | ftol rounding to nearest | 1761 |
+| 54 | `EffectKind51_DrawMoves` | y 0x181 | 6000 |
+| 55 | `EffectKind51_PushAngle` | word 1 not moved | 6000 |
+| 56 | `EffectKind51_DrawFrame` | arguments swapped | 6000 |
+| 57 | `EffectKind51_DrawColumn` | root of + 1 | 3985 |
+| 58 | `EffectKind51_DrawColumn` | v + 0x42 | 3985 |
+| 59 | `EffectKind51_DrawColumn` | row height 2 | 3774 |
+| 60 | `EffectKind51_DrawColumn` | the sum reassociated | **0: equivalent** |
+| 61 | `EffectKind51_DrawColumn` | one row more | 3985 |
+| 62 | `EffectKind51_DrawRing` | start 0xFC01 | 6000 |
+| 63 | `EffectKind51_DrawRing` | x0 read after the call | 1687 |
+| 64 | `EffectKind51_DrawRing` | u 0x3E | 6000 |
+| 65 | `EffectKind51_DrawRing` | v - 0x3F | 6000 |
+| 66 | `EffectKind52_SparksClear` | timer 0x3F | 6000 |
+| 67 | `EffectKind52_SparksEmit` | sound at 5 | 964 |
+| 68 | `EffectKind52_SparksEmit` | a spark every fourth | 548 |
+| 69 | `EffectKind52_SparksDrain` | released while sparks live | 6000 |
+| 70 | `EffectKind52_Trail` | drawn before updated | 6000 |
+| 71 | `EffectKind52_TrailStart` | width 0xC1 | 6000 |
+| 72 | `EffectKind52_TrailStart` | x + 1 | 6000 |
+| 73 | `EffectKind52_TrailTurn` | ground << 15 | 889 |
+| 74 | `EffectKind52_TrailRise` | half a cell | 6000 |
+| 75 | `EffectKind52_TrailTurn` | z 0x77 | 889 |
+| 76 | `EffectKind52_TrailFall` | reload 0x7F | 889 |
+| 77 | `EffectKind52_TrailHold` | reload 9 | 889 |
+| 78 | `EffectKind52_TrailFade` | width - 0x17 | 6000 |
+| 79 | `EffectKind52_ClearSparks` | seven sparks | 5977 |
+| 80 | `EffectSpark_FindFree` | the first spark skipped | 1500 |
+| 81 | `EffectKind52_MoveSparks` | answers 2 | 5980 |
+| 82 | `EffectKind52_MoveSparks` | the spark not drawn | 5980 |
+| 83 | `EffectKind52_SparkGlow` | reload from +3 | 1029 |
+| 84 | `EffectSpark_Wait` | reload 0x1F | 1033 |
+| 85 | `EffectKind52_SparkRise` | speed + 0x40001 | 6000 |
+| 86 | `EffectKind52_SparkRise` | state reset, not freed | 857 |
+| 87 | `EffectKind52_TrailUpdate` | point 0 not moved down | 6000 |
+| 88 | `EffectKind52_TrailUpdate` | none when either step is 0 | 5995 |
+| 89 | `EffectKind52_TrailUpdate` | none left 0x1000 | 1969 (second run; 0 on the first, below) |
+| 90 | `EffectKind52_TrailUpdate` | Ratan2 arguments swapped | 6000 |
+| 91 | `EffectKind52_TrailUpdate` | last angle from 29 | 4259 |
+| 92 | `EffectKind52_TrailUpdate` | the last angle not searched | 1211 |
+| 93 | `EffectKind52_TrailDraw` | next shade - 3 | 6000 |
+| 94 | `EffectKind52_TrailDraw` | skipped when either is equal | 5997 |
+| 95 | `EffectKind52_TrailDraw` | the copy at + 0x400 | 6000 |
+| 96 | `EffectKind52_TrailDraw` | the last cap at 0x80 | 6000 |
+| 97 | `EffectKind52_TrailDraw` | the copy 0x40 bytes | 6000 |
+| 98 | `EffectKind52_TrailDraw` | NaN not equal (fcomp unordered sets C3) | 181 |
+| 99 | `EffectTrail_DrawCap` | step 0x101 | 6000 |
+| 100 | `EffectTrail_DrawCap` | centre red 0 | 5976 |
+| 101 | `EffectKind53_Start` | +9 = 1 | 6000 |
+| 102 | `EffectKind53_Beam` | down at 0 | 485 (second run; 0 on the first, below) |
+| 103 | `EffectKind53_Beam` | right x + 7 | 5275 |
+| 104 | `EffectKind53_Beam` | NaN y clamped to 240 | 214 |
+| 105 | `EffectKind53_Beam` | depth >= 0x1E0 | 240 |
+| 106 | `EffectKind53_Beam` | shade + 0x21 | 1105 |
+| 107 | `EffectKind53_Beam` | Sprite_Current not put back | 5378 |
+| 108 | `EffectKind53_Beam` | height halved by floor | 1506 |
+| 109 | `EffectKind53_Beam` | v & 0x17 | 2449 |
+| 110 | `EffectKind53_TexWindow` | cursor + 0xC | 6000 |
+| 111 | `EffectKind53_TexWindow` | h = w | 6000 |
+| 112 | `EffectKind56_Start` | state 2 | 6000 |
+| 113 | `EffectKind56_Wait` | counter 0xB | 3001 |
+| 114 | `EffectKind56_Arm` | state 4 | 6000 |
+| 115 | `EffectKind56_Markers` | phase << 19 | 4626 |
+| 116 | `EffectKind56_Markers` | red + 0x2B | 472 |
+| 117 | `EffectKind56_Markers` | unsigned compare | 1667 |
+| 118 | `EffectKind56_Markers` | counter 0xD | 1473 |
+| 119 | `EffectKind56_Place` | height scale 2 | 6000 |
+| 120 | `EffectKind56_Place` | height from z | 6000 |
+| 121 | `EffectKind56_DrawCross` | x - 0x3FFF | 6000 |
+| 122 | `EffectKind56_DrawCross` | semi before the commit | 6000 |
+| 123 | `EffectKind56_DrawCross` | red from +0x5C | 5976 |
+| 124 | `EffectKind51_Grow2` | reload 0x2E | 470 |
+| 125 | `EffectKind51_Wait2` | the timer high byte cleared after | 741 |
+| 126 | `EffectKind51_DrawColumn` | x - w rounded to a float before + dx (60's near variant) | 2069 |
+
+**125 of 126 refused by a count.** Control 60 is an equivalent mutant: `(x - w) + dx` against `x - (w - dx)`
+with w and dx whole numbers the column can hold and x a float - every intermediate is exact at the x87's 53 (or
+64) bits, so the one rounding to the stored float is the same; its near variant 126 (the difference rounded to a
+float first) is refused. Controls 89 and 102 passed on the first run - the fuzz's fault: no round made all 31
+trail steps zero (so no angle was left unfound) and no extra sprite's `+0x14` was 0. The fuzz then seeded whole
+trails at the record's point (with `EffectGte_ProjectPoint`'s stand-in projecting equal world points equally) and
+the sprite's `+0x14` at its sign's boundary; both refused on the second run. Every other control was refused on
+the first run. Control 11 shows the `fld` / `fstp` copies are observable (a signalling NaN in the depth is
+quietened by the original), control 98 the `fcomp` unordered case, control 104 the `test ah, 1` NaN case.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
