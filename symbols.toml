@@ -87748,3 +87748,645 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-09-29 (round thirteen group E2E): EffectKind4E_Run 0x47B630 jmp by +1: 0x47B650, 0x47B6E0, 0x47B720, 0x47B790, Effect_StateRelease (state 3 steps +1 onto 4); E2F's kind 0x4F table 0x6546A4 follows. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2e.md."
+
+[[func]]
+pc = 0x470300
+name = "EffectKind28_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470300..0x470311 (0x12 bytes), cdecl, hidden in 0x46FFB0: Effect_KindHandlers[0x28] (0x6553F0): jmp [EffectKind28_States + 4 * +1], 4 entries, no compare (ours aborts past them). The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470320
+name = "EffectKind28_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470320..0x47038E (0x6F bytes), cdecl, hidden in 0x46FFB0: EffectKind28_States[0]: AreaMap_Elevation(+0xC, +0x10): the heights +0x14 / +0x20 = (its word + 0x100) << 16, +0x3E its word, +0x70 0; +1 = 1 while story flag 0xB is clear, else 2. The cut says 112 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470390
+name = "EffectKind28_WaitFlag"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470390..0x4703AC (0x1D bytes), cdecl, hidden in 0x46FFB0: EffectKind28_States[1]: once story flag 0xB is set, +1 = 0. The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4703B0
+name = "EffectKind28_Beam"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4703B0..0x4703E3 (0x34 bytes), cdecl, hidden in 0x46FFB0: EffectKind28_States[2]: EffectKind28_DrawBeam(+0xC, +0x18), EffectKind28_PushParty; flag 0xB clear: +1 = 0. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4703F0
+name = "EffectKind28_PushParty"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4703F0..0x470462 (0x73 bytes), cdecl: called by EffectKind28_Beam: for the eight x cells of the byte table 0x654308 at z 0x10: +0x34 / +0x38 the cell, Party_MemberAt(+0x34, +0x38, 0); a member there with Field_ScriptFlags2 & 0x1400 clear and Field_Request 0: Member_SetState2_8(member, 2). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470470
+name = "EffectKind28_DrawBeam"
+ret = "void"
+params = "const long *a, const long *b"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470470..0x47063B (0x1CC bytes), cdecl: called by EffectKind28_Beam: a draw mode (committed slot 3) and EffectGte_LoadMapCamera; an F2 line a to b (EffectGte_ProjectPoint into it) coloured by +6 (three bytes at 0x6542EC); the angle Math_Ratan2 of the screen difference (_ftol); at each end EffectGte_ProjectSize(end, {0x40, 0}) + the frame bit and EffectKind28_DrawEnd (angle + 0x400 / + 0xC00); EffectKind28_DrawSides between them. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470640
+name = "EffectKind28_DrawEnd"
+ret = "void"
+params = "unsigned x, unsigned y, unsigned radius, unsigned angle"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470640..0x47079F (0x160 bytes), cdecl: called twice by EffectKind28_DrawBeam: eight semi-transparent G3 triangles (committed 0x34, slot 3): the centre coloured by +6 (0x6542EC), two rim points at radius (s16) and angle u, u + 0x100 from the angle (masked each call): half a circle. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4707A0
+name = "EffectKind28_DrawSides"
+ret = "void"
+params = "unsigned x0, unsigned y0, unsigned r0, unsigned a0, unsigned x1, unsigned y1, unsigned r1, unsigned a1"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4707A0..0x4709D3 (0x234 bytes), cdecl: called by EffectKind28_DrawBeam: a semi-transparent G4 from the two centres (coloured by +6) to their circles at a0 and a1 + 0x800, then its copy at p + 0x44 with a0 + 0x800 and a1; committed 0x44 each; every argument read as its low word. The cut says 576 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4709E0
+name = "EffectKind29_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4709E0..0x4709F1 (0x12 bytes), cdecl, hidden in 0x4707A0: Effect_KindHandlers[0x29] (0x6553F4): jmp [EffectKind29_States + 4 * +1], 6 entries, no compare (ours aborts past them). The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470A00
+name = "EffectKind29_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470A00..0x470A60 (0x61 bytes), cdecl, hidden in 0x4707A0: EffectKind29_States[0]: two boxes at +0xC and +0x24 (a point and half sizes, constants), EffectKind29_SetSegments; +9 = 8, +1 up. The cut says 112 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470A70
+name = "EffectKind29_Extend"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470A70..0x470AE5 (0x76 bytes), cdecl, hidden in 0x4707A0: EffectKind29_States[1]: box B moved (+0x24 + 0x10000, +0x38 + 0x220000, +0x34 + 0x2000); EffectKind29_DrawSegments(0x10 - 2 * +9, 0xFF), EffectKind29_DrawBoxes; +9 down, at 0 +9 = 0x40 and +1 up. The cut says 128 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470AF0
+name = "EffectKind29_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470AF0..0x470B32 (0x43 bytes), cdecl, hidden in 0x4707A0: EffectKind29_States[2]: the boxes and the whole segments drawn; +9 down, at 0 +9 = 4 and +1 up. The cut says 80 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470B40
+name = "EffectKind29_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470B40..0x470BB5 (0x76 bytes), cdecl, hidden in 0x4707A0: EffectKind29_States[3]: +0x1C + 0x4000, +0x34 + 0x10000; the boxes, the segments shaded 0xFF at +9 = 8 else +9 << 5; +9 down, at 0 +9 = 0x20 and +1 up. The cut says 128 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470BC0
+name = "EffectKind29_Linger"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470BC0..0x470BED (0x2E bytes), cdecl, hidden in 0x4707A0: EffectKind29_States[4]: the boxes drawn; +9 down, at 0 +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470BF0
+name = "EffectKind29_DrawBoxes"
+ret = "void"
+params = "const unsigned char *boxes"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470BF0..0x470D79 (0x18A bytes), cdecl: called by EffectKind29_Extend, _Hold, _Fade, _Linger: a draw mode (slot 1); the eight corners of the two boxes into 0x676080; EffectGte_LoadMapCamera; five EffectKind29_DrawFace. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470D80
+name = "EffectKind29_DrawFace"
+ret = "void"
+params = "unsigned i0, unsigned i1, unsigned i2, unsigned i3, unsigned shade0, unsigned shade1"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470D80..0x470E61 (0xE2 bytes), cdecl: called five times by EffectKind29_DrawBoxes: a semi-transparent G4 of the four corners 0x676080 + 0x10 * index (EffectGte_ProjectPoint), shaded ((shade << 5) + the frame bit) << 2 (bytes), blue at half; committed 0x44, slot 1. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470E70
+name = "EffectKind29_SetSegments"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470E70..0x470F69 (0xFA bytes), cdecl: called by EffectKind29_Start: thirty dword stores of constants: the five segments at 0x675FE0 (two points each, 0x20 apart). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x470F70
+name = "EffectKind29_DrawSegments"
+ret = "void"
+params = "unsigned t, unsigned shade"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x470F70..0x471095 (0x126 bytes), cdecl: called by EffectKind29_Extend, _Hold, _Fade: a draw mode (slot 1), EffectGte_LoadMapCamera; for the five segments a semi-transparent G2 line from A to A + ((B - A) * t sar 4), shaded by shade and the frame bit; committed 0x24; t and shade read as bytes. The cut says 304 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4710A0
+name = "EffectKind2A_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4710A0..0x4710B1 (0x12 bytes), cdecl, hidden in 0x470F70: Effect_KindHandlers[0x2A] (0x6553F8): jmp [EffectKind2A_States + 4 * +1], 4 entries, no compare (ours aborts past them). The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4710C0
+name = "EffectKind2A_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4710C0..0x471100 (0x41 bytes), cdecl, hidden in 0x470F70: EffectKind2A_States[0]: +1 = 2 while story flag 0xD is clear, else 1; +0x3C = 0x1000000. The cut says 80 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471110
+name = "EffectKind2A_Beam"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471110..0x4711AF (0xA0 bytes), cdecl, hidden in 0x470F70: EffectKind2A_States[1]: +6 = 1; the beam (0x608000, 0x118000) - (0x6B8000, 0x118000) at the ground + 0x100 (AreaMap_Elevation), EffectKind2A_DrawBeam, EffectKind2A_PushParty; flag 0xD clear: +1 = 2. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4711B0
+name = "EffectKind2A_Beams"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4711B0..0x4712D1 (0x122 bytes), cdecl, hidden in 0x470F70: EffectKind2A_States[2]: the same beam at z 0xD8000 (+6 = 0) and 0x158000 (+6 = 2), each drawn and pushed; flag 0xD set: +1 = 1. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4712E0
+name = "EffectKind2A_PushParty"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4712E0..0x4713B7 (0xD8 bytes), cdecl: called by EffectKind2A_Beam / _Beams: for the ten x cells 0x61..0x6A (+ 0x8000) at the z cell of +6's row (0x654344 + 2 * +6): Party_MemberAt; a member there (flags 0x1400 and Field_Request clear): its ObjTrio +8 = 5 when the row lies past its z, else 1; its +1 = 1: Member_SetState2_8(member, the row's second byte). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4713C0
+name = "EffectKind2A_DrawBeam"
+ret = "void"
+params = "const long *a, const long *b"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4713C0..0x47158B (0x1CC bytes), cdecl: called by EffectKind2A_Beam / _Beams: EffectKind28_DrawBeam's copy: the colours 0x654328, its own end and side draws. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471590
+name = "EffectKind2A_DrawEnd"
+ret = "void"
+params = "unsigned x, unsigned y, unsigned radius, unsigned angle"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471590..0x4716EF (0x160 bytes), cdecl: called twice by EffectKind2A_DrawBeam: EffectKind28_DrawEnd's copy (colours 0x654328). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4716F0
+name = "EffectKind2A_DrawSides"
+ret = "void"
+params = "unsigned x0, unsigned y0, unsigned r0, unsigned a0, unsigned x1, unsigned y1, unsigned r1, unsigned a1"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4716F0..0x471923 (0x234 bytes), cdecl: called by EffectKind2A_DrawBeam: EffectKind28_DrawSides' copy (colours 0x654328). The cut says 576 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471930
+name = "EffectKind2B_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471930..0x471954 (0x25 bytes), cdecl, hidden in 0x4716F0: Effect_KindHandlers[0x2B] (0x6553FC): call [EffectKind2B_States + 4 * +1], 5 entries, no compare (ours aborts past them); then +1 not 0: a tail jmp to EffectKind2B_Draw. The cut says 48 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471960
+name = "EffectKind2B_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471960..0x47198B (0x2C bytes), cdecl, hidden in 0x4716F0: EffectKind2B_States[0]: the words +0x2E (radius) = 0x100, +0x30 (rise) = 0, +0x32 (count) = 0x18; +1 up. The cut says 48 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471990
+name = "EffectKind2B_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471990..0x4719D4 (0x45 bytes), cdecl, hidden in 0x4716F0: EffectKind2B_States[1]: +0x30 up 0x80, +0x32 down; at 0 EffectShards_Clear, +0x32 = 0x12C, +1 up, Sound_PlayEffect(0x209). The cut says 80 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4719E0
+name = "EffectKind2B_Specks"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4719E0..0x471A04 (0x25 bytes), cdecl, hidden in 0x4716F0: EffectKind2B_States[2]: odd frames EffectSpecks_Spawn; EffectSpecks_Move; the counter byte 0x903848 at 0x29: +1 up. The cut says 48 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471A10
+name = "EffectKind2B_Settle"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471A10..0x471A2C (0x1D bytes), cdecl, hidden in 0x4716F0: EffectKind2B_States[3]: EffectSpecks_Move answering 0 (none left): +0x32 = 0x10, +1 up. The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471A30
+name = "EffectKind2B_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471A30..0x471A54 (0x25 bytes), cdecl, hidden in 0x4716F0: EffectKind2B_States[4]: +0x2E down 0x10, +0x32 down; at 0 a tail jmp to Effect_Release. The cut says 731: it ran on over 0x471A60, a function of its own no list held. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471A60
+name = "EffectKind2B_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471A60..0x471D0A (0x2AB bytes), cdecl: reached only by EffectKind2B_Run's tail jmp; no list held it (band_rows.py: code no list has, in the span of 0x471A30): EffectGte_LoadMapCamera; sixteen semi-transparent G4 quads of a ring (radius +0x2E sar 4 round +0x34 / +0x38) from the ground +0x3C to +0x3C + (+0x30 << 16), each between two draw modes, all linked by MapView_LinkPrimAt at the angle's point; the shade (8 + the frame bit) * 4 moving by 4 a quad. Not in the cut (band_rows.py: code no list has). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471D10
+name = "EffectSpecks_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471D10..0x471DC6 (0xB7 bytes), cdecl: called by EffectKind2B_Specks and E1C's EffectKind1C_Rise / _Hold, EffectKind1D_Rise / _Hold: the first free speck (0x80 of 0x14 at EffectKind30_Shards): +0 1, +1 0x40, a random point within Rand % +0x2E of +0x34 / +0x38 (sar 4), +0xC the rise << 16 + +0x3C, +2 (Rand & 0xFFF) + 0x1000. No answer a caller reads. No PSX twin paired (analysis/pairs_propagated.json). Entered on the reach_whelp route (analysis/calltrace, from kind 0x1C). docs/effect_2a.md."
+
+[[func]]
+pc = 0x471DD0
+name = "EffectSpecks_Move"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471DD0..0x471E1A (0x4B bytes), cdecl: called by EffectKind2B_Specks, _Settle: each speck in use: +0xC down (+2 << 8), EffectSpecks_Draw, freed below Sprite_Current +0x3C; al 1 when any was in use. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471E20
+name = "EffectSpecks_Draw"
+ret = "void"
+params = "const unsigned char *speck"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471E20..0x471E96 (0x77 bytes), cdecl: called by EffectSpecks_Move and E1C's EffectKind1C_MoveShards: EffectGte_ProjectPoint of +4 into a stack vector; a TILE_1 there, white or black by Rand; MapView_LinkPrimAt(x, z, 0, 0x14). The cut says 128 (padding). No PSX twin paired (analysis/pairs_propagated.json). Entered on the reach_whelp route (analysis/calltrace, from kind 0x1C). docs/effect_2a.md."
+
+[[func]]
+pc = 0x471EA0
+name = "EffectKind2C_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471EA0..0x471EB1 (0x12 bytes), cdecl, hidden in 0x471E20: Effect_KindHandlers[0x2C] (0x655400): jmp [EffectKind2C_States + 4 * +1], 3 entries, no compare (ours aborts past them). The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471EC0
+name = "EffectKind2C_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471EC0..0x471F51 (0x92 bytes), cdecl, hidden in 0x471E20: EffectKind2C_States[0]: the centre 0x92D380 from Sprite_ObjectsExtra[0] (height sar 8); eight ground points 0x92D390 at the offsets 0x65436C / 0x65438C (AreaMap_Elevation << 8); EffectSparks_Clear; +0xC = 0x200, +1 up. The cut says 160 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x471F60
+name = "EffectKind2C_Emit"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x471F60..0x472054 (0xF5 bytes), cdecl, hidden in 0x471E20: EffectKind2C_States[1]: every 16 frames a spark from the centre toward each ground point (velocity (point - centre) sar 4, Gte_VectorNormal), shade 0x80, size 0x1000, 0x80 frames; the centre again, EffectSparks_Move; +0xC down, at 0 +1 up. The cut says 256 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472060
+name = "EffectKind2E_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472060..0x472071 (0x12 bytes), cdecl, hidden in 0x471E20: Effect_KindHandlers[0x2E] (0x655408): jmp [EffectKind2E_States + 4 * +1], 3 entries (kind 0x2D's table follows), no compare (ours aborts past them). The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472080
+name = "EffectKind2E_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472080..0x47208D (0xE bytes), cdecl, hidden in 0x471E20: EffectKind2E_States[0]: EffectSparks_Clear, +1 up. The cut says 16 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472090
+name = "EffectKind2E_Trickle"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472090..0x4720EF (0x60 bytes), cdecl, hidden in 0x471E20: EffectKind2E_States[1]: every eighth frame a still spark at Sprite_Objects[1]'s point (shade 0x80, size 0x800, 0x80 frames); EffectSparks_Move; the counter byte 0x903848 at 3: +1 up. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4720F0
+name = "EffectKind2E_Burst"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4720F0..0x472190 (0xA1 bytes), cdecl, hidden in 0x471E20: EffectKind2E_States[2]: sixteen sparks at Sprite_Objects[1]'s point thrown flat at the angles 0x100 k (sin, cos sar 2), shade 0x40, size 0x800, 0x40 frames; EffectSparks_Move; +0xC = 0x40; +1 not moved. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4721A0
+name = "EffectSparks_Move"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4721A0..0x47223F (0xA0 bytes), cdecl: called by EffectKind2C_Emit, EffectKind2E_Trickle, _Burst: EffectGte_LoadMapCamera; each spark alive: EffectSparks_Draw, moved by its velocity, held on the ground (AreaMap_Elevation; its vertical velocity 0 and Gte_VectorNormal), shade down one, size up 4, frames down one. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472240
+name = "EffectSparks_Draw"
+ret = "void"
+params = "const unsigned char *spark"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472240..0x4723D7 (0x198 bytes), cdecl: called by EffectSparks_Move: a draw mode linked at its x, z; a semi-transparent FT4 of half size EffectGte_ProjectSize(point, {+0x20 >> 6, -}) round EffectGte_ProjectPoint(point), CLUT (0xA0, 0x1E3), page (0x2C0, 0x100), shaded +0x24; MapView_LinkPrimAt(x, z, 1, 0x48). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4723E0
+name = "EffectSparks_Clear"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4723E0..0x4723F3 (0x14 bytes), cdecl: called by EffectKind2C_Start, EffectKind2E_Start: every spark (0x80 of 0x28 at EffectKind30_Shards) +0x25 = 0. No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472400
+name = "EffectSparks_FindFree"
+ret = "unsigned char *"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472400..0x47241A (0x1B bytes), cdecl: called by EffectKind2C_Emit, EffectKind2E_Trickle, _Burst: the first spark with +0x25 0, else 0 (eax). The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472420
+name = "EffectKind2D_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472420..0x472431 (0x12 bytes), cdecl, hidden in 0x472400: Effect_KindHandlers[0x2D] (0x655404): jmp [EffectKind2D_States + 4 * +1], 8 entries, no compare (ours aborts past them). The cut says 32 (padding). No PSX twin paired (analysis/pairs_propagated.json). Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472440
+name = "EffectKind2D_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472440..0x472526 (0xE7 bytes), cdecl, hidden in 0x472400: EffectKind2D_States[0]: the link cell 0x676100 = (0x1C0000, 0x180000); EffectGte_LoadMapCamera; Sprite_Objects[0] and [1] projected and added into +0xC..+0x14, x and y scaled by the float 0x5C41D8, +0x18 / +0x1A 0; Msg_OpenScript(0x14), Field_Request 2, +9 = 0x32, +1 up, Sound_PlayEffect(0x200). The cut says 240 (padding). PSX twin 0x801F2C48 (analysis/pairs_propagated.json, callers), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472530
+name = "EffectKind2D_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472530..0x472577 (0x48 bytes), cdecl, hidden in 0x472400: EffectKind2D_States[1]: +0x18 up 2 while +9 > 0x19 else down 2, +0x1A up 0x40, EffectKind2D_DrawRays; +9 down, at 0 +1 up. The cut says 80 (padding). PSX twin 0x801F2DA0 (analysis/pairs_propagated.json, gap81), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472580
+name = "EffectKind2D_Pause"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472580..0x4725AF (0x30 bytes), cdecl, hidden in 0x472400: EffectKind2D_States[2]: +0x18 / +0x1A = 0, +9 = 0x5A, +1 up, Sound_PlayEffect(0x201). PSX twin 0x801F2E48 (analysis/pairs_propagated.json, gap81), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4725B0
+name = "EffectKind2D_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4725B0..0x472614 (0x65 bytes), cdecl, hidden in 0x472400: EffectKind2D_States[3]: +0x18 up one, held at 0x40; +0x1A up 0x40; EffectKind2D_DrawRings; +9 down, at 0 EffectDrops_Clear, +0x1C 0, +1 up. The cut says 112 (padding). PSX twin 0x801F2E98 (analysis/pairs_propagated.json, gap81), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472620
+name = "EffectKind2D_Pour"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472620..0x4726A3 (0x84 bytes), cdecl, hidden in 0x472400: EffectKind2D_States[4]: +0x1A up 0x40, +0x1C up 2; +9 up (0xF: Sound_PlayEffect(0x202)); the rings, EffectDrops_Move, the curtain; odd frames a drop launched; +0x1C > 0x100: +9 = 7, +1 up. The cut says 144 (padding). PSX twin 0x801F2F5C (analysis/pairs_propagated.json, gap81), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x4726B0
+name = "EffectKind2D_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x4726B0..0x472714 (0x65 bytes), cdecl, hidden in 0x472400: EffectKind2D_States[5]: the curtain; +0x18 down 8; +9 down, at 0 the counter byte 0x903848 = 0x31, +0x18 = 2, +0x1A = 0, +9 = 0xF, +1 up, Sound_PlayEffect(0x203). The cut says 112 (padding). PSX twin 0x801F3048 (analysis/pairs_propagated.json, gap81), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472720
+name = "EffectKind2D_Lift"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472720..0x47276E (0x4F bytes), cdecl, hidden in 0x472400: EffectKind2D_States[6]: the curtain; +0x1A up 2, the screen y up by it; the curtain again; +9 down, at 0 +1 up. The cut says 80 (padding). PSX twin 0x801F30EC (analysis/pairs_propagated.json, gap81), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472770
+name = "EffectKind2D_End"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472770..0x472782 (0x13 bytes), cdecl, hidden in 0x472400: EffectKind2D_States[7]: the byte 0x7DEE44 |= 2, the counter byte 0x903848 = 0x32, a tail jmp to Effect_Release. PSX twin 0x801F318C (analysis/pairs_propagated.json, gap81), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472790
+name = "EffectKind2D_DrawRays"
+ret = "void"
+params = "const unsigned char *q"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472790..0x472910 (0x181 bytes), cdecl: called by EffectKind2D_Spin: a draw mode linked at 0x676100 (4, 0xC); eight semi-transparent G2 lines from the screen point at angles +0xE + 0x200 k, radius +0xC sar 12 / 13 by k's parity; EffectKind2D_DrawDisc; the draw mode again. PSX twin 0x801F31C8 (analysis/pairs_propagated.json, gap81), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472920
+name = "EffectKind2D_DrawDisc"
+ret = "void"
+params = "const unsigned char *q"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472920..0x472AAB (0x18C bytes), cdecl: called by EffectKind2D_DrawRays: for the rows i = -h..h (h = +0xC sar 2) two TILE_1s at x -/+ 0x5A7A90(h * h - i * i) (a square root), y + i, grey 0x40, linked (4, 0x14); between two draw modes. PSX twin 0x801F3394 (analysis/pairs_propagated.json, callers), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472AB0
+name = "EffectKind2D_DrawRings"
+ret = "void"
+params = "const unsigned char *q"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472AB0..0x472D63 (0x2B4 bytes), cdecl: called by EffectKind2D_Open, _Pour: eight rings of sixteen semi-transparent G4 quads between the radii j R / 8 and (j + 1) R / 8 (an ellipse, y sar 13), the angle stepping back 0x80 a ring; shaded 0 inside, 0x40 outside; linked (4, 0x44). PSX twin 0x801F358C (analysis/pairs_propagated.json, call-anchored), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472D70
+name = "EffectDrops_Clear"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472D70..0x472D85 (0x16 bytes), cdecl: called by EffectKind2D_Open: every drop (0x80 of 0x18 at EffectKind30_Shards) word +0x14 = 0. PSX twin 0x801F39AC (analysis/pairs_propagated.json, call), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472D90
+name = "EffectDrops_Move"
+ret = "void"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472D90..0x472DF6 (0x67 bytes), cdecl: called by EffectKind2D_Pour: each drop alive: EffectDrops_Draw; y down by the speed word +0xE, the speed + the frames' low bit, +0xC up one, frames down one - at 0 EffectDrops_Launch. PSX twin 0x801F39D8 (analysis/pairs_propagated.json, call-anchored), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472E00
+name = "EffectDrops_Draw"
+ret = "void"
+params = "const unsigned char *drop"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472E00..0x472EDE (0xDF bytes), cdecl: called by EffectDrops_Move: an opaque F4 grey 0x80: x .. x + the float 0x5C41C0, y -/+ the word +0xC held within +0x10 / +0x12 (x87 compares), at the drop's depth; linked (4, 0x38). PSX twin 0x801F38A0 (analysis/pairs_propagated.json, call-anchored), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472EE0
+name = "EffectDrops_FindFree"
+ret = "unsigned char *"
+params = "void"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472EE0..0x472EFA (0x1B bytes), cdecl: called by EffectKind2D_Pour: the first drop with the word +0x14 0, else 0 (eax). PSX twin 0x801F3A9C (analysis/pairs_propagated.json, call-anchored), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x472F00
+name = "EffectKind2D_DrawCurtain"
+ret = "void"
+params = "const unsigned char *q"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x472F00..0x4730F5 (0x1F6 bytes), cdecl: called by EffectKind2D_Pour, _Close, _Lift (twice): a draw mode linked (4, 0xC); eight semi-transparent G4 quads from y 0 down to the half ellipse (radius +0xC) over u = 0..0x800, shaded by the level word +0x10 clamped to a byte, moving by 4 a quad; linked (4, 0x44). PSX twin 0x801F3AD8 (analysis/pairs_propagated.json, call-anchored), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[func]]
+pc = 0x473100
+name = "EffectDrops_Launch"
+ret = "void"
+params = "unsigned char *drop"
+impl = "src/game/effect_2a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-09-29 (round thirteen group E2A, capstone to the last instruction), 0x473100..0x473191 (0x92 bytes), cdecl: called by EffectKind2D_Pour and EffectDrops_Move: the drop at the record's screen point + (cos, sin (sar 13)) of Rand & 0xFC0 at Rand & 0x38, the depth copied, +0x12 = _ftol(y), +0xC / +0xE / +0x10 = 0, +0x14 = 0x20. The cut says 160 (padding). PSX twin 0x801F3D54 (analysis/pairs_propagated.json, call-anchored), in AREA067's overlay (area 67's handler 2 spawns the kind); the sibling's names/*.toml name none of its seventeen. Fuzz only: no recorded route enters it. docs/effect_2a.md."
+
+[[data]]
+pc = 0x6542F8
+name = "EffectKind28_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2A): EffectKind28_Run 0x470300 by +1: _Start, _WaitFlag, _Beam, Effect_StateRelease; two dwords of bytes (0x654308, EffectKind28_PushParty's x cells) follow. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2a.md."
+
+[[data]]
+pc = 0x654310
+name = "EffectKind29_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2A): EffectKind29_Run 0x4709E0 by +1: _Start, _Extend, _Hold, _Fade, _Linger, Effect_StateRelease; kind 0x2A's colours (0x654328) follow. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2a.md."
+
+[[data]]
+pc = 0x654334
+name = "EffectKind2A_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2A): EffectKind2A_Run 0x4710A0 by +1: _Start, _Beam, _Beams, Effect_StateRelease; the rows 0x654344 (bytes) follow. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2a.md."
+
+[[data]]
+pc = 0x65434C
+name = "EffectKind2B_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2A): EffectKind2B_Run 0x471930 (a call, not a jmp) by +1: _Start, _Rise, _Specks, _Settle, _Shrink; kind 0x2C's table follows at 0x654360. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2a.md."
+
+[[data]]
+pc = 0x654360
+name = "EffectKind2C_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2A): EffectKind2C_Run 0x471EA0 by +1: _Start, _Emit, Effect_StateRelease; kind 0x2C's offsets 0x65436C (dwords) follow. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2a.md."
+
+[[data]]
+pc = 0x6543AC
+name = "EffectKind2E_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2A): EffectKind2E_Run 0x472060 by +1: _Start, _Trickle, _Burst; kind 0x2D's table follows at 0x6543B8 (the run of code pointers goes on: the count is the table's own length). The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2a.md."
+
+[[data]]
+pc = 0x6543B8
+name = "EffectKind2D_States"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-09-29 (round thirteen group E2A): EffectKind2D_Run 0x472420 by +1: _Start, _Spin, _Pause, _Open, _Pour, _Close, _Lift, _End; kind 0x2F's table (E2B's 0x4731A0 indexes it) follows at 0x6543D8. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2a.md."
+

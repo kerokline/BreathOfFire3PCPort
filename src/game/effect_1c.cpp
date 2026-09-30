@@ -12,7 +12,7 @@
 //   EffectKind1C_MoveShards    0x46DD00  the 0x80 specks risen and drawn (E8)
 //   EffectKind1D_Run .. _End   0x46DD50 .. 0x46DE70  Effect_KindHandlers[0x1D], EffectKind1D_States 0..4
 //   EffectKind1D_DrawRing      0x46DE80  thirty-two G4 quads, the back eleven not committed (E8)
-//   EffectShards_Clear         0x46E120  the 0x80 specks freed (kinds 0x1C, 0x1D, E2A's 0x471990)
+//   EffectShards_Clear         0x46E120  the 0x80 specks freed (kinds 0x1C, 0x1D, EffectKind2B_Rise)
 //   EffectKind1D_MoveShards    0x46E140  as kind 0x1C's, drawn by 0x46E190
 //   EffectKind1E_Run .. _FreeModel  0x46E200 .. 0x46E2D0  Effect_KindHandlers[0x1E], EffectKind1E_States 0..3
 //   EffectKind1E_ShardsInit .. _ShardQuad  0x46E2E0 .. 0x46E400  eight shards (E8)
@@ -272,7 +272,7 @@ extern "C" void __cdecl EffectKind1C_Start(void) {
 }
 
 // original 0x46D930 (EffectKind1C_States[1]): the ring at brightness +9, a
-// speck spawned (E2A's 0x471D10) on even frames, the specks moved; +9 up 4 -
+// speck spawned (EffectSpecks_Spawn) on even frames, the specks moved; +9 up 4 -
 // at 0 (a wrap), +9 0x20 and +1 up.
 extern "C" void __cdecl EffectKind1C_Rise(void) {
     SH_CALL(EffectKind1C_DrawRing)(Cur()[9]);
@@ -362,7 +362,7 @@ extern "C" void __cdecl EffectKind1C_DrawRing(unsigned brightness) {
     }
 }
 
-// original 0x46DD00: kind 0x1C's specks moved and drawn (E2A's 0x471E20, a
+// original 0x46DD00: kind 0x1C's specks moved and drawn (EffectSpecks_Draw, a
 // TILE_1 linked at the speck's point); al 1 when any was in use.
 extern "C" unsigned char __cdecl EffectKind1C_MoveShards(void) { return MoveShards(at::kShardTile); }
 
@@ -386,7 +386,7 @@ extern "C" void __cdecl EffectKind1D_Start(void) {
 }
 
 // original 0x46DDA0 (EffectKind1D_States[1]): the ring at brightness +9, a
-// speck spawned (E2A's 0x471D10) on odd frames, the specks moved; +9 up 4 -
+// speck spawned (EffectSpecks_Spawn) on odd frames, the specks moved; +9 up 4 -
 // at 0, +9 0x20 and +1 up.
 extern "C" void __cdecl EffectKind1D_Rise(void) {
     SH_CALL(EffectKind1D_DrawRing)(Cur()[9]);
@@ -467,7 +467,7 @@ extern "C" void __cdecl EffectKind1D_DrawRing(unsigned brightness) {
 }
 
 // original 0x46E120: every speck of EffectKind30_Shards' 0x80 (0x14 apart)
-// freed (+0 = 0). Kind 0x1C's and 0x1D's starts and E2A's 0x471990.
+// freed (+0 = 0). Kind 0x1C's and 0x1D's starts and EffectKind2B_Rise.
 extern "C" void __cdecl EffectShards_Clear(void) {
     for (U r = 0; r < at::kShardCount; ++r) At(Shards() + r * at::kShardStride)[0] = 0;
 }
