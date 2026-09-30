@@ -109,6 +109,20 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    fight). Round 14 candidates: **the camp's window kinds and the fishing minigame**, about 80 functions, with the
    route to reach them. The owner on the fish, 2026-09-30: the placement looks fixed by the frame and only the
    activity random, so the random draw is in the bite, not the cast; a re-recording that catches a fish may replay.
+   **It did not** (`tools/recipes/caughFish.txt`, `analysis/shots/fishing_catch/`): the fish sat elsewhere on the
+   replay and the cast found nothing - the placement is random too. **Why, read 2026-09-30:** the game's `Rand`
+   `0x5B93D2` is the MSVC6 CRT `rand()` (per-thread seed at ptd + 0x14), and **no `srand` is in the binary** (the
+   linker dropped it: no call stores anything but rand's own product to that slot), so the sequence is fixed from
+   boot - which is why battles replay. The fishing code (`0x52AF80..0x52CD47`) reads no clock; it calls `Rand`. What
+   moves the sequence off the frame count is **draw code that calls `Rand` once per rendered frame**:
+   `MapCell_DrawRising` `0x570660` (ours, `map_cells.cpp`: eight squares, one `Rand` each, every frame it is
+   drawn), and a recipe's skipped frames replay as unrendered logic (win_main.cpp), so the number of draws - and of
+   `Rand` calls - between two inputs depends on how fast the machine rendered. The water-side spot draws those
+   cells. Anything else on the draw side calling `Rand` does the same (to list: the `Rand` callers among the
+   draw-pass functions). **The fix is a DIV:** give draw-side callers a generator of their own (a private LCG
+   stepped per drawn frame, seeded from `Frame_Counter`), so the logic's `Rand` stream depends on logic frames
+   alone - fishing, encounters, item drops all replay, and nothing the player sees changes but the sparkle's
+   exact pattern. Until then, fishing recipes are good to the cast.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
