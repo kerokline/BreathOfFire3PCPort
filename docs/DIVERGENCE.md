@@ -2087,9 +2087,19 @@ designed in rather than bolted on.
   `320.0f` found (`area_w3b.cpp`, `area_w3c.cpp`, `Area172_DrawShade` in
   `area_w4b.cpp`, their corners as `Area145_DrawGradient`'s). Seen in the
   recipe's captures (`analysis/shots/nue_before` / `nue_after`, frames 600
-  and 1500): the night's shade now over the whole frame. **Still 320: the
-  sunset sky of area 23's cutscene** (frame 600, orange over black bands)
-  - no site of ours or of the scan draws it; to find. Not yet: five sites in `.text` no symbol names
+  and 1500): the night's shade now over the whole frame. **The sunset sky
+  of area 23's cutscene** (frame 600, orange over black bands) was none of
+  these: a detail call trace of the scene (`BOF3X_CALLTRACE_DETAIL`, the
+  only `Gpu_SetPolyG4` builder in its frames) found Capcom's `0x4FD350`,
+  a screen-wide gradient of a colour over black `(0, 0)..(319, 239)`
+  whose left x is a zeroed register - now `Gfx_DrawSkyGradient`, ours in
+  `src/game/area_backdrop.cpp` beside the area backdrop, its corners at
+  `(-53, 0)..(372, 239)` by the same rule and fuzzed against its clone
+  (20,000 rounds, 0 mismatches); the sunset now fills the frame
+  (`analysis/shots/nue_after/f0600.png` before, the session's
+  `shots_sky` after). A thin brightening over the middle 320 columns
+  remains at that frame (188 against 203 in the bands' red), one more
+  layer to name. Not yet: five sites in `.text` no symbol names
   (`0x489D47`, `0x48CB07`, `0x48CD10`, `0x48DC19`, `0x493308` in the magic
   engine's range; `0x507BDC`, `0x507CE3`, `0x50B4B5`, `0x50F7B5` after
   `Gfx_BeginFrame`), Capcom's still, and any fill built from integers or

@@ -55,9 +55,12 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    Then the owner's `cutsceneAndNue.txt` (`# save nue`, the cutscene, the dialogue, the first Nue fight): its night
    tint and critical flash showed 320 wide, so every ours full-frame fill the `320.0f`/`240.0f` scan found now draws
    through `Widescreen_Fill()` (widescreen.h), armed in `InjectAll` after every self-test; nine sites the scan found
-   are still Capcom's or unnamed (the DIV-0041 amendment lists them). **The sunset sky of area 23's cutscene is
-   still 320 wide** (`analysis/shots/nue_after/f0600.png`: orange over black bands) and no draw of ours has it -
-   find what draws it (not a `320.0f` beside `240.0f` in `.text`; a textured sprite or an integer quad).
+   are still Capcom's or unnamed (the DIV-0041 amendment lists them). The sunset sky of area 23's cutscene was
+   Capcom's `0x4FD350`, found by a detail call trace (`BOF3X_CALLTRACE_DETAIL=380-383` under `REACH=1` and
+   `BOF3X_ORIGINAL='*'`, the only `Gpu_SetPolyG4` builder): now `Gfx_DrawSkyGradient` in `area_backdrop.cpp`, widened
+   and fuzzed. Left at that frame: a thin brightening of the middle 320 columns (a semi-transparent layer still
+   320 wide, 188 against 203 in red) - the same detail trace at the frame, `Gpu_SetTile` / `Gpu_SetSprt` callers.
+   The Nue question of `boss_sa.md` is settled by the same route's trace (fight 2 = area 23, kind 1).
    The owner confirmed the pad skip on the intro videos. **Owed the owner's eye** in a fight of their own (the Equip
    labels, the wide game over), and a held pad input across a video's start (no skip until released).
 

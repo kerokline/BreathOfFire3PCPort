@@ -166,6 +166,7 @@ struct Call { std::uint32_t offset, target; };
 constexpr Call kBackdropCalls[] = {{0x83, 0x5A77C0}, {0x8C, 0x461E50}, {0x98, 0x5A7610}, {0x9F, 0x5A7780},
                                    {0x13B, 0x461E50}};
 constexpr Call kCycleCalls[] = {{0xD, 0x56FF00}, {0xCE, 0x5A7810}, {0xD7, 0x461E50}};
+constexpr Call kSkyCalls[] = {{0x13, 0x5A77C0}, {0x1C, 0x461E50}, {0x28, 0x5A7610}, {0x83, 0x461E50}};   // 0x4FD350, 2026-09-30
 
 template <unsigned N>
 void* Clone(const char* name, std::uint32_t base, std::uint32_t size, const Call (&calls)[N]) {
@@ -308,6 +309,31 @@ void SelfTestBackdrop(void (__cdecl* theirs)(const unsigned char*)) {
                   "colour, %u with the cursor held by the first commit",
                   off, outside, drawn, alternate, held);
     Report("AreaMap_DrawBackdrop", kRounds, bad, detail);
+}
+
+// --- Gfx_DrawSkyGradient ----------------------------------------------------------------------
+
+// The three arguments as whole dwords with stale high bytes, since the
+// original reads al of each; the cursor anywhere in the scratch pool.
+void SelfTestSky(void (__cdecl* theirs)(unsigned, unsigned, unsigned)) {
+    constexpr unsigned kRounds = 20000;
+    const Region r[] = {R(Gfx_PacketNext), R(g_packets)};
+    constexpr unsigned n = sizeof r / sizeof r[0];
+    Capture(r, n, g_saved);
+    g_rng = 0x4FD35001u;
+    unsigned bad = 0, held = 0;
+    for (unsigned round = 0; round < kRounds; ++round) {
+        Randomize(r, n);
+        Gfx_PacketNext = g_packets + 4 * (Next() % 0x80);
+        const unsigned cr = Next(), cg = Next(), cb = Next();
+        Pair("Gfx_DrawSkyGradient", round, r, n, [&] { theirs(cr, cg, cb); }, [&] { Gfx_DrawSkyGradient(cr, cg, cb); },
+             bad);
+        held += g_logs[0].counts[2] == 2 && g_logs[0].keep[2][3] == g_logs[0].keep[4][3];
+    }
+    Apply(r, n, g_saved);
+    char detail[128];
+    std::snprintf(detail, sizeof detail, "the colour's three dwords random, %u with the cursor held by the first commit", held);
+    Report("Gfx_DrawSkyGradient", kRounds, bad, detail);
 }
 
 // --- AreaMap_TextureCycle -------------------------------------------------------------------
@@ -463,10 +489,12 @@ void SelfTestPinSprite(void (__cdecl* theirs)()) {
 void SelfTest() {
     void* const backdrop = Clone("AreaMap_DrawBackdrop", bof3::addr::AreaMap_DrawBackdrop, 0x147, kBackdropCalls);
     void* const cycle = Clone("AreaMap_TextureCycle", bof3::addr::AreaMap_TextureCycle, 0xE5, kCycleCalls);
+    void* const sky = Clone("Gfx_DrawSkyGradient", bof3::addr::Gfx_DrawSkyGradient, 0x8E, kSkyCalls);
     void* const zones = bof3::CloneOriginal("AreaMap_SlotZones", bof3::addr::AreaMap_SlotZones, 0x1C7);
     void* const pin = bof3::CloneOriginal("WorldMap_PinSprite", bof3::addr::WorldMap_PinSprite, 0x18);
     g = kStubs;
     SelfTestBackdrop(reinterpret_cast<void(__cdecl*)(const unsigned char*)>(backdrop));
+    SelfTestSky(reinterpret_cast<void(__cdecl*)(unsigned, unsigned, unsigned)>(sky));
     SelfTestTextureCycle(reinterpret_cast<void(__cdecl*)(const unsigned char*)>(cycle));
     SelfTestSlotZones(reinterpret_cast<void(__cdecl*)(const unsigned char*)>(zones));
     SelfTestPinSprite(reinterpret_cast<void(__cdecl*)()>(pin));

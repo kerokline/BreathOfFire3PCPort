@@ -11141,6 +11141,15 @@ status = "evidence"
 evidence = "disasm 2026-09-23, 0x4FD290..0x4FD2DA (0x4A bytes, pc_funcs' 0xC0 runs on): for i in 0..7: 0x5A7540(Gfx_CurrentEnv + 0x70 + 4i, &Gfx_OtPointers[Gfx_BufferIndex * 8 + i], the count dword at 0x929E30 + 4i). Sole caller WinMain 0x4FCFE0, after the frame's logic."
 
 [[func]]
+pc = 0x4FD350
+name = "Gfx_DrawSkyGradient"
+ret = "void"
+params = "unsigned r, unsigned g, unsigned b"
+impl = "src/game/area_backdrop.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-30, 0x4FD350..0x4FD3DE (0x8E bytes), cdecl, four calls, no jumps: Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x95, 0), Gfx_CommitPrim(7, 0xC); Gpu_SetPolyG4 at the new Gfx_PacketNext; y 239.0 at +0x2C / +0x3C, the three argument bytes (al of each) to +4..+6 and +0x14..+0x16, x 0 (ebx) at +8 / +0x28 and 319.0 (0x439F8000) at +0x18 / +0x38, y 0 at +0xC / +0x1C, black at +0x24..+0x26 / +0x34..+0x36 (semi-transparency untouched); Gfx_CommitPrim(7, 0x44). The screen-wide gradient of a colour over black: callers 0x4FD326 and 0x4FD347 in the function at 0x4FD2E0 (Capcom's), which steps a word at 0x937F88 + 0x2E toward 0xBF and passes (0x40 + 2 * step, 0x5A, 0xFF - 2 * step) - the sunset of area 23's cutscene (the owner's cutsceneAndNue.txt, frame 600; a detail trace of frames 380..383 found it the only POLY_G4 builder). DIV-0041: ours widens it."
+
+[[func]]
 pc = 0x5A9907
 name = "Task_SetStackBase"
 ret = "void"
