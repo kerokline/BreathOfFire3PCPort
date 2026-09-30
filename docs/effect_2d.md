@@ -216,7 +216,9 @@ One `Run` under `BOF3X_SHADOW=effect_2d`, effect mode (kinds 0x45..0x49),
 6,000 rounds a function (`BOF3X_E2D_ONLY=<name>` runs the clones whose name
 holds it). Shapes: 44 `kEffect` (each clone's own kind; the dispatchers'
 `state_span` 4, 5, 3, 3, 10 and the variants' `sub_span` 3, 2, 8, 3, 4), ten
-`kCall` (the helpers with arguments). The ten tables are `DataTable`s,
+`kCall` (the helpers with arguments). Two answer: `EffectKind48_StepSparks`
+in `al` (`ret_mask` `0xFF`; its callers `test al, al`) and
+`EffectKind48_FindFreeSpark` a pointer in `eax` (`ret_mask` `0xFFFFFFFF`). The ten tables are `DataTable`s,
 swapped for recorders on both sides. Regions beyond effect mode's: the panel's
 colour bytes and the dust anchor (`0x6761C4`, 0x10), the anchor's word and the
 64 dust records (`0x92D1C8`, 0x814).
@@ -261,13 +263,17 @@ at the compared word. **Disturbance** (the group's, from the hash only):
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_2d`,
 exit 0): 324,000 rounds over 54 functions, 2,093,653 calls to the
 stand-ins, **0 mismatches**; 26,840 bytes of state in 47 regions. Every entry
-of the ten tables reached (each state's handler recorder 554..3,044 calls; E2E's
-nine cells among them), `Effect_Release` 22,179, `Sprite_FindFree` 9,717,
-`Flags_Set` 236 (the window hit), `EffectKind45_DrawSegment` about 50,000 and
-`EffectKind45_Plot` about a million, `0x47CF20` / `0x47A130` answering null
-and not.
+of the ten tables reached (each handler recorder 564..3,006 calls in the `'*'`
+run below; E2E's nine cells among them), `Effect_Release` 22,242,
+`Sprite_FindFree` 9,639, `Flags_Set` 478 (the window hit),
+`EffectKind45_DrawSegment` 52,943, `0x47CF20` 2,302 and `0x47A130` 8,069
+(answering null and not).
 
-STAR_LINES
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+687 self-test lines, none with a mismatch, `inject: 7227 ours, 0 left
+original`; `effect_2d` there 324,000 rounds, 2,123,101 calls, 0 mismatches.
+**With `BOF3X_WIDE=1`**: the same - exit 0, 687 lines, 7,227 ours, 0
+mismatches (scratch `e2d/star_narrow.log`, `star_wide.log`).
 
 ## 5. What the cut and the tool said, settled
 
@@ -567,4 +573,4 @@ references).
 Appended to the main checkout's file (2026-09-29, a commented block): the 39
 hidden starts, and the smaller extents of `0x477B20` (0x7D), `0x477D20` (0x86)
 and `0x4783C0` (0x18A), their old lines left for the merger to drop. The
-fifteen others already had lines matching the code.
+twelve other non-hidden rows already had lines matching the code.
