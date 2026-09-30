@@ -3316,8 +3316,8 @@ designed in rather than bolted on.
   presses skip the intro fmvs like keyboard strokes do?"
 - **Also in the PSX version?** The PlayStation's movies are skipped by the
   pad (its only input); the PC port's keyboard-only skip is the port's.
-- **Verification:** builds; self-test `'*'` unchanged (the player is not
-  fuzzed - it runs MCI). Owed the owner's press: the two videos before
-  the title, once with a pad input held from before the video (no skip
-  until released, then the next press skips).
+- **Verification:** builds; `pad_read` shadow 0 differ (the player is not
+  fuzzed - it runs MCI). The owner, 2026-09-30, on the intro videos: "it
+  works now" (after the pad's start moved ahead of them). Not yet tried:
+  a pad input held from before the video (no skip until released).
 - **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player.

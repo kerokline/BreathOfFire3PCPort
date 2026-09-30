@@ -52,8 +52,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    the recipe to `done` on ours; the recipe plays `# save combat` (the owner: the same save as `combat.txt`).
    Then DIV-0066: a pad press skips an FMV (the pump polls `PadRead_AnyInputDown` between messages; built and
    `pad_read` shadow 0 differ in a second build directory while the owner's game held `build/`'s DLL).
-   **Owed the owner's eye** in a fight of their own, and their pad on the two intro videos (a held input must not
-   skip until released).
+   The owner confirmed the pad skip on the intro videos. **Owed the owner's eye** in a fight of their own (the Equip
+   labels, the wide game over), and a held pad input across a video's start (no skip until released).
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
