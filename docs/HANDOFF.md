@@ -243,9 +243,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    `battle_commands.txt`, `combat.txt`. Also from §6 there: the seven
    character-at-a-time `Text_DrawAt` callers still at 12 px (`0x45B490`,
    `0x45B5F0`, `0x460730`, `0x460920`, `0x466260`, `0x4B1090`, `0x4B11F0`)
-   plus `0x4987E0` and the 8 px UI font `0x516E70`; text in artwork; longer
-   names (16-byte fields against the disc's 12, DIV-0008 - owner's call);
-   a better upscale; German and French (10 glyph slots free). Saved names
+   plus `0x4987E0` and the 8 px UI font `0x516E70`; text in artwork;
+   a better upscale; German and French (10 glyph slots free). **Closed by
+   the owner, 2026-09-29:** longer names - the port widened the fields
+   for two-byte glyphs, not for more letters; the boxes on screen are the
+   same size, so the US disc's 12-letter names stay. Saved names
    stay as they are (owner's decision).
 7. **Widescreen's debts** ([`widescreen.md`](widescreen.md) §4, §5):
    the oracle and the frame hash once with `BOF3X_WIDE=1`; the attract A/B
