@@ -398,7 +398,11 @@ seven tables reached (each state's handler recorder 688..2,021 calls, FC1's
 `EffectShards_Clear` 1,214, `EffectSpecks_Spawn` 2,982, `EffectDrops_Clear`
 482, `Member_SetState2_8` 14,367, `0x5A7A90` 134,011.
 
-**Every shadow** (this worktree, no `bof3x.ini`): @STAR@
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0, 687
+self-test lines, every mismatch count 0, `inject: 7238 ours, 0 left original`;
+`effect_2a` there 390,000 rounds, 14,125,392 calls, 0 mismatches. **With
+`BOF3X_WIDE=1`**: `'*'` exit 0, 687 self-test lines, all 0 mismatches. No
+silent death (exit 127) met. `tools/ledger_check.py`: 63 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
