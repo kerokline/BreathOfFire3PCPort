@@ -276,9 +276,11 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
 void ConfigText_Inject() {
     // Layout only, and only under a language overlay: with the shipped Chinese
     // text every number below is right as it stands.
-    char lang[16];
-    if (GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang) == 0) return;
-    if (Lang_FullWidth()) return;   // DIV-0056: the original layout is the full-width one
+    // Lang_Latin: set, not "original", not full-width (DIV-0056). Until
+    // 2026-09-29 this tested "set" and "not full-width" alone, so
+    // BOF3X_LANG=original laid the Chinese screen out for Latin text, and
+    // group FC1's fuzz found the row draw's call re-aimed (known-defects D174).
+    if (!Lang_Latin()) return;
 
     // --- the label column, right-aligned -----------------------------------
     // Both branches of the row draw 0x461800 place a label at
@@ -330,9 +332,10 @@ void ConfigText_Inject() {
     // swap. The right edge, row x + 0x20, is the original's (the doc says why
     // it is not enough: docs/config-screen.md section 9). Not under
     // BOF3X_LANG=original, which DatLoad_Inject reads as no overlay: the
-    // Chinese names advance 12 and want the original's width. (The patches
-    // above this one do not make that exception; docs/glyph-draw.md section 8.)
-    if (std::strcmp(lang, "original") != 0) {
+    // Chinese names advance 12 and want the original's width - since
+    // 2026-09-29 the Lang_Latin test at the top makes that exception for
+    // every patch here (docs/glyph-draw.md section 8 had it for this one).
+    {
         bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt,
                            reinterpret_cast<void*>(&ConfigText_DrawSelected));
         static const std::uint8_t ctrl_was[] = {0x8D, 0x04, 0x49};

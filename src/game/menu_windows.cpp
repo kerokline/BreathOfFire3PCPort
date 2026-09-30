@@ -31,6 +31,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/list_title.h"
 #include "game/menu_verbs.h"
 #include "game/menu_windows_callees.h"
 #include "game/move_script_bytes.h"
@@ -1311,7 +1312,8 @@ extern "C" void __cdecl Menu_DrawItemList(unsigned char* window) {
         const int label_y = Word(w + 6) + 7;
         const unsigned char* const label = Ptr(at::kCategoryLabels + w[0xA] * 4u);
         const unsigned n = g.char_count(label);
-        g.text_draw_at(static_cast<std::uint16_t>(6 * (13 - static_cast<int>(n)) + Word(w + 4)), label_y, grey, 0x10,
+        // DIVERGENCE DIV-0059: the original's 6 * (13 - n) unless a Latin overlay is on.
+        g.text_draw_at(static_cast<std::uint16_t>(ListTitle_X(label, static_cast<int>(n)) + Word(w + 4)), label_y, grey, 0x10,
                        label);
     }
     {

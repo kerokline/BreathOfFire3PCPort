@@ -19,6 +19,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/labels.h"
 #include "game/mode_states_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -437,6 +438,9 @@ extern "C" const unsigned char* __cdecl Text_DrawSmall(int x, int y, unsigned co
                 ++p;
             } else {
                 glyph = (ch - 0x26u) & 0xFFFF;
+                // DIVERGENCE DIV-0064: the status words under a language
+                // overlay, from its 8 x 8 set.
+                if (const unsigned small = Labels_SmallGlyph(p)) glyph = small;
             }
             SetWord(Gfx_PacketNext + 0x16, glyph);
             g.emit_glyph(pen_x, pen_y, 8, static_cast<int>(8 - v), static_cast<int>(u), static_cast<int>(v), clut);

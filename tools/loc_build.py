@@ -1087,6 +1087,98 @@ def convert_battle_commands(game, donor):
     return [(KIND_BATTLE, 0, bytes(payload))]
 
 
+# The short labels (DIV-0064, src/game/labels.cpp): five groups of slots in
+# BOF3.exe's .data, one chunk each, the tag the group's number.
+#
+#   1  the status words, 2 x 8 at 0x66A0E8, and
+#   2  the menu's stats, 4 x 8 at 0x66A0F8. START.EMI has both as two 8-byte
+#      and four 4-byte slots between bytes the PC still has: LABEL_HEAD before
+#      them and LABEL_TAIL after.
+#   3  the item types, 0x66A120. START.EMI has them right after the sixteen
+#      bytes the PC has before its pointer table LABEL_TYPES_HEAD, packed and
+#      4-byte aligned, then their five pointers.
+#   4  the skill types, 0x66A200, and
+#   5  the battle's stats, 4 x 8 at 0x669CF0. BATTLE.EMI has five skill types
+#      (the fifth the PC's 0x66A220), their five pointers, four 6-byte stat
+#      slots and then the sixteen bytes the PC has at LABEL_BATTLE_TAIL.
+#
+# A string that does not fit its slot goes out empty, and the slot stays as
+# shipped (the French disc's two eight-letter titles).
+KIND_LABELS = 15
+LABEL_HEAD, LABEL_HEAD_LEN, LABEL_TAIL, LABEL_TAIL_LEN = 0x663648, 24, 0x663660, 8
+LABEL_TYPES_HEAD, LABEL_BATTLE_TAIL = 0x663960, 0x66B5B4
+LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (8, 8, 8, 8, 12), 4: (8, 8, 8, 8, 8), 5: (8, 8, 8, 8)}
+LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats"}
+
+
+def label_pointers(donor, at, count):
+    """`count` ascending PSX pointers at `at`, or None."""
+    if at < 0 or at + 4 * count > len(donor):
+        return None
+    ptrs = struct.unpack_from("<%dI" % count, donor, at)
+    if any(not 0x80000000 <= p < 0x80200000 for p in ptrs) or any(b <= a for a, b in zip(ptrs, ptrs[1:])):
+        return None
+    return ptrs
+
+
+def label_chunk(tag, raws, report):
+    payload, kept = bytearray([len(raws)]), 0
+    for i, (raw, room) in enumerate(zip(raws, LABEL_ROOMS[tag])):
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("labels: %s %d holds a code this language does not have: %s"
+                             % (LABEL_NAMES[tag], i, raw.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > room:
+            out, kept = b"", kept + 1
+        payload += out + b"\0"
+    report.append("%s %d%s" % (LABEL_NAMES[tag], len(raws), " (%d kept)" % kept if kept else ""))
+    return (KIND_LABELS, tag, bytes(payload))
+
+
+def convert_labels(game, start, battle):
+    """[(kind, tag, payload)] and a report, from the whole START.EMI and BATTLE.EMI (either may be None)."""
+    chunks, report = [], []
+    cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
+    if start:
+        head, tail = exe_bytes(game, LABEL_HEAD, LABEL_HEAD_LEN), exe_bytes(game, LABEL_TAIL, LABEL_TAIL_LEN)
+        at = start.find(head)
+        while at >= 0 and start[at + LABEL_HEAD_LEN + 32:at + LABEL_HEAD_LEN + 32 + LABEL_TAIL_LEN] != tail:
+            at = start.find(head, at + 1)
+        if at >= 0:
+            first = at + LABEL_HEAD_LEN
+            chunks.append(label_chunk(1, [cut(start, first + 8 * i, 8) for i in range(2)], report))
+            chunks.append(label_chunk(2, [cut(start, first + 16 + 4 * i, 4) for i in range(4)], report))
+        at = start.find(exe_bytes(game, LABEL_TYPES_HEAD, 16))
+        if at >= 0:
+            first = at + 16
+            table = next((t for t in range(first + 4, first + 0x80, 4) if label_pointers(start, t, 5)), None)
+            if table is None:
+                raise SystemExit("labels: no pointer table after the item types")
+            ptrs = label_pointers(start, table, 5)
+            starts = [first + p - ptrs[0] for p in ptrs]
+            if starts[-1] >= table or 0 in [start[s] for s in starts]:
+                raise SystemExit("labels: the item types' pointers do not fit their strings")
+            chunks.append(label_chunk(3, [cut(start, s, 16) for s in starts], report))
+    if battle:
+        at = battle.find(exe_bytes(game, LABEL_BATTLE_TAIL, 16))
+        table = at - 24 - 20
+        ptrs = label_pointers(battle, table, 5) if at >= 0 else None
+        if ptrs:
+            for pad in range(1, 17):         # the last string's NUL and any alignment
+                starts = [table - pad - (ptrs[-1] - p) for p in ptrs]
+                end = battle.find(b"\0", starts[-1])
+                if starts[0] > 0 and all(battle[s] != 0 for s in starts) \
+                        and all(battle[s - 1] == 0 for s in starts[1:]) \
+                        and end < table and not any(battle[end:table]):
+                    break
+            else:
+                raise SystemExit("labels: no placement of the skill types fits their pointer table")
+            chunks.append(label_chunk(4, [cut(battle, s, 16) for s in starts], report))
+            chunks.append(label_chunk(5, [cut(battle, at - 24 + 6 * i, 6) for i in range(4)], report))
+    return chunks, report
+
+
 # The battle banner's twelve messages (DIV-0052, src/game/battle_text.cpp): the
 # PC's pointer table at MESSAGE_TABLE, read only by 0x44A8E0 and, for message
 # 1, 0x44A990. The US BATTLE.EMI has the same twelve as 13-byte slots, found
@@ -1651,6 +1743,11 @@ def cmd_all(args):
         msgs = convert_battle_messages(args.game, disc.read(battle_emi[0]))
         overlays["FIRST.DAT"] += msgs
         print("battle messages: " + ("%d" % MESSAGE_COUNT if msgs else "not found on this disc"))
+    if (start_emi or battle_emi) and not args.only:
+        labels, report = convert_labels(args.game, disc.read(start_emi[0]) if start_emi else None,
+                                        disc.read(battle_emi[0]) if battle_emi else None)
+        overlays["FIRST.DAT"] += labels
+        print("labels: " + (", ".join(report) if report else "not found on this disc"))
 
     game_emi = disc.find("GAME.EMI")
     if game_emi and not args.only:
