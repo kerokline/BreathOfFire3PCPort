@@ -81,6 +81,14 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    overlay's string: find where the fishing overlay or the exe holds it (`BOF3X_TEXTLOG` on a cast), then either a
    label chunk (DIV-0064's kind 15, if the slot is a NUL-padded table) or the overlay's own text through
    `loc_build.py`; the US disc's fishing strings give the words.
+   And the fishing equip menu (`analysis/shots/owner_catalogue/fishing_equip_menu.webp`), three things: (1) **the
+   rod list truncates its names** - `Wooden R` for Wooden Rod - a count-limited `Text_DrawAt` like the ones DIV-0064
+   and the list titles met (find the caller's count, and whether the Chinese slot is the limit or the draw's
+   argument is); (2) **the three tab buttons 装备 / 资料 / 说明 are Chinese** (Equip, Data, Guide) - a verb set
+   outside DIV-0018's nine `Menu_DrawButtonRow` sets, so either a tenth set in the same table or the fishing
+   overlay's own strings; (3) **a stray frame line**: a vertical piece hangs right of the EQUIP and GUIDE boxes
+   and a short one under EQUIP's bottom edge - a box drawn a column wider than its pieces, or pieces from the
+   Chinese layout under DIV-0026-style widening; compare the same screen with `BOF3X_LANG=original` and narrow.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
