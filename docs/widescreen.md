@@ -67,12 +67,12 @@ screen-x intervals, from psp-widescreen §3a / §3b and `bof3ext`'s list:
 | Terrain | `MapView_Build` `0x56EC00` (`0x56EDFA` / `0x56EE14`), **ours** | `[-50, 370]` | about `[-117, 437]` | PSP widened by 46 for 32; ours - patch our source |
 | Area-map frame pass, wide | `AreaMap_FrameAreaBD` `0x510780` (`0x51097E` / `0x510991`) | `[-200, 520]` | `[-252, 572]` | PSP +31 for 32 |
 | Area-map frame pass, narrow | same (`0x5109BB` / `0x5109D2`) | `[-50, 370]` | `[-102, 422]` | PSP +31 for 32 |
-| Sprite | `0x4CF319`, `0x4FF6A3`, `0x571366` | `[-60, 380]` | beyond `[-53, 373]` + sprite width | 7 px of margin left: pops |
+| Sprite | `0x4CF319`, `0x4FF6A3`, `0x571366` | `[-60, 380]` | beyond `[-53, 373]` + sprite width | 7 px of margin left: pops. `0x571366` is `MapCell_DrawAnimated`, ours: **`[-113, 433]` since 2026-09-30** (`Widescreen_Fill`); `0x4CF319` is the battle field's, reading `.rdata`, left |
 | `[-40, 360]` | PSX `80161ef4`; PC twin unread | `[-40, 360]` | wider | inside the new view: pops |
 | "unknown" | `0x5054E3` / `0x5054FA` | `[-20, 340]` | wider | inside the new view: pops |
-| Object | `0x4CEC09`, `0x5700D1` | `[-100, 420]` | - | 47 px margin, probably fine |
-| Object 2 | `0x570319` / `0x570333` | `[-80, 400]` | - | 27 px, watch |
-| `Sprite_Draw` | `0x59360B` / `0x593615` (int16), **ours** | `[-64, 384]` | - | 11 px, watch |
+| Object | `0x4CEC09`, `0x5700D1` | `[-100, 420]` | - | 47 px margin, probably fine. `0x5700D1` is `MapCell_DrawQuads`, ours: **`[-153, 473]` since 2026-09-30**; `0x4CEC09` the battle field's, left |
+| Object 2 | `0x570319` / `0x570333` | `[-80, 400]` | - | 27 px: **the trees popped** (the owner, 2026-09-30). `MapCell_DrawUprights`, ours: **`[-133, 453]`** |
+| `Sprite_Draw` | `0x59360B` / `0x593615` (int16), **ours** | `[-64, 384]` | - | 11 px: **`[-117, 437]` since 2026-09-30** |
 | `0x59293A` | in `bof3ext`'s list | ? | ? | unread |
 
 Every one is read before it is changed: many sit in functions that are ours

@@ -60,7 +60,9 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    `BOF3X_ORIGINAL='*'`, the only `Gpu_SetPolyG4` builder): now `Gfx_DrawSkyGradient` in `area_backdrop.cpp`, widened
    and fuzzed; the glow over it (`0x4FD3E0`, the only other full-frame quad at frame 600) likewise, as
    `Gfx_DrawSunsetGlow`. The sunset now reads one colour across the frame (`analysis/shots/nue_sunset/`).
-   The Nue question of `boss_sa.md` is settled by the same route's trace (fight 2 = area 23, kind 1).
+   The Nue question of `boss_sa.md` is settled by the same route's trace (fight 2 = area 23, kind 1). Then the
+   owner saw trees pop at the periphery: four field x culls of ours moved out by the columns (`widescreen.md` §3b's
+   table says which; the battle field's two read Capcom's `.rdata` and are left). **Owed the owner's eye** on the trees.
    The owner confirmed the pad skip on the intro videos. **Owed the owner's eye** in a fight of their own (the Equip
    labels, the wide game over), and a held pad input across a video's start (no skip until released).
 

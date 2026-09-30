@@ -32,6 +32,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/map_field_objects_callees.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -179,8 +180,12 @@ extern "C" void __cdecl MapCell_DrawUprights(const unsigned char* record, unsign
            FloatAt(kScreen2), &p);
     float depth0 = 0, depth1 = 0, depth2 = 0;
     g.depth_f3(&depth0, &depth1, &depth2);
-    if (!(Float(kScreen0) >= -80.0f)) return;       // fcomp [0x5C4264]; test ah, 1
-    if (Float(kScreen0) > 400.0f) return;           // fcomp [0x5C4260]; test ah, 0x41
+    // DIV-0041: the x cull moved outward by the wide picture's columns (0
+    // until every self-test has run, widescreen.h): the margin an upright
+    // had beyond the 320 view, kept beyond the 426.
+    const float cull = static_cast<float>(Widescreen_Fill());
+    if (!(Float(kScreen0) >= -80.0f - cull)) return;       // fcomp [0x5C4264]; test ah, 1
+    if (Float(kScreen0) > 400.0f + cull) return;           // fcomp [0x5C4260]; test ah, 0x41
     if (!(Float(kScreen1 + 4) >= -20.0f)) return;   // fcomp [0x5C422C]; test ah, 1
     if (Float(kScreen0 + 4) > 260.0f) return;       // fcomp [0x5C425C]; test ah, 0x41
     if (Byte(at::UprightCountsAt() + e) == 0) return;
@@ -336,8 +341,9 @@ extern "C" void __cdecl MapCell_DrawAnimated(const unsigned char* record, unsign
     long depth = 0;
     const auto p = static_cast<std::int32_t>(
         g.rtp(Vertex(kVertex0), reinterpret_cast<unsigned long*>(At(kScreen0)), &depth));
-    if (!(Float(kScreen0) >= -60.0f)) return;      // fcomp [0x5C4210]; test ah, 1
-    if (Float(kScreen0) > 380.0f) return;          // fcomp [0x5C420C]; test ah, 0x41
+    const float cull = static_cast<float>(Widescreen_Fill());   // DIV-0041, as MapCell_DrawUprights
+    if (!(Float(kScreen0) >= -60.0f - cull)) return;      // fcomp [0x5C4210]; test ah, 1
+    if (Float(kScreen0) > 380.0f + cull) return;          // fcomp [0x5C420C]; test ah, 0x41
     if (!(Float(kScreen0 + 4) >= -150.0f)) return; // fcomp [0x5C4200]; test ah, 1
     if (Float(kScreen0 + 4) > 300.0f) return;      // fcomp [0x5C41FC]; test ah, 0x41
     if (p == 0) return;

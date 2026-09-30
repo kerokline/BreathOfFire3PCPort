@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -161,7 +162,8 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
         unsigned char* const prim = Gfx_PacketNext;
         Gte_StoreScreenXY(reinterpret_cast<unsigned long*>(prim + 8));
         const float sx = Get<float>(prim, 8), sy = Get<float>(prim, 0xC);
-        if (sx > -100.0f && sx < 420.0f && sy > -150.0f && sy < 300.0f) {
+        const float cull = static_cast<float>(Widescreen_Fill());   // DIV-0041: the x cull out by the columns
+        if (sx > -100.0f - cull && sx < 420.0f + cull && sy > -150.0f && sy < 300.0f) {
             Gpu_SetPolyFT4(prim);
             Gpu_SetShadeTex(prim, 0);
             alignas(4) short rest[12];

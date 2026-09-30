@@ -2104,7 +2104,22 @@ designed in rather than bolted on.
   detail trace at frames 598..600 (the only POLY_F4 builder beside the map
   cells): now `Gfx_DrawSunsetGlow`, ours beside the gradient, widened the
   same way, 20,000 rounds at 0 mismatches; the sky reads the same colour
-  at every column (`analysis/shots/nue_sunset/`). Not yet: five sites in `.text` no symbol names
+  at every column (`analysis/shots/nue_sunset/`).
+  **The object culls, the same day** (the owner: trees popping in and out
+  at the periphery under the wide view): four x culls of ours moved
+  outward by the columns through `Widescreen_Fill()`, so each keeps beyond
+  the 426 view the margin it had beyond the 320 - `MapCell_DrawUprights`
+  `[-80, 400]` (the trees and other uprights; 27 px of margin were left),
+  `MapCell_DrawAnimated` `[-60, 380]`, `MapCell_DrawQuads` `[-100, 420]`
+  and `Sprite_Draw` `[-64, 384]` ([`widescreen.md`](widescreen.md) §3b's
+  table). The y bounds are as they were. Their modules' shadows at 0
+  mismatches (23 self-test lines); the fuzz compares the original bounds,
+  `Widescreen_Fill` being 0 until every self-test has run. Not moved: the
+  battle field's `MapCell_DrawTexQuads` and `MapCell_DrawGroundSprite`
+  (`battle_e6.cpp`), which read Capcom's `.rdata` floats that his
+  remaining code shares; `Encounter_OnScreen` `[-40, 360]`, which gates
+  logic; and the unnamed `0x5054E3` `[-20, 340]`. Owed the owner's eye on
+  the trees. Not yet: five sites in `.text` no symbol names
   (`0x489D47`, `0x48CB07`, `0x48CD10`, `0x48DC19`, `0x493308` in the magic
   engine's range; `0x507BDC`, `0x507CE3`, `0x50B4B5`, `0x50F7B5` after
   `Gfx_BeginFrame`), Capcom's still, and any fill built from integers or
