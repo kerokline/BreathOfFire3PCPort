@@ -76,6 +76,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    straight edge under the feet). First tell wide from narrow (`tools/recipes/worldmap_sliver.txt` both ways), then
    whether it is the pinned sprite (`WorldMap_PinSprite`, ours in `area_backdrop.cpp`, pinned at (160, 80)) or the
    shadow's own draw; the sibling's PSX capture of the same walk says what the shadow should look like.
+   Also: **the fishing minigame's control banner is still Chinese** (`analysis/shots/owner_catalogue/fishing_banner.png`:
+   "鱼饵的装备" with the button glyphs, "钓鱼终了" with its button - bait equipment, end fishing). Not a dialogue
+   overlay's string: find where the fishing overlay or the exe holds it (`BOF3X_TEXTLOG` on a cast), then either a
+   label chunk (DIV-0064's kind 15, if the slot is a NUL-padded table) or the overlay's own text through
+   `loc_build.py`; the US disc's fishing strings give the words.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
