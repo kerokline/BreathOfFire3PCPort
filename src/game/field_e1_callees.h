@@ -5,6 +5,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
+
 namespace field_e1::at {
 
 // --- callees nobody owns (engine rows, no group of round twelve), by address ---
@@ -19,20 +21,20 @@ constexpr std::uint32_t kKindTotal = 0x52CED0;    // () -> u16: kKindPoints summ
 constexpr std::uint32_t kDrawQuad = 0x468950;     // (x, y, height, which): a textured quad, committed
 
 // --- callees round twelve's FE2 owns (docs/scenario_harness.md 7.6), raw until it merges ---
-constexpr std::uint32_t kObjectTrigger = 0x56D6B0;   // Field_ObjectTrigger(object): FE2's
-constexpr std::uint32_t kJumpPose = 0x535FC0;        // (): the jump's first pose (0x3C or 0x3D by +8)
-constexpr std::uint32_t kJumpSetUp = 0x535FE0;       // (): Field_JumpSetUp, the frames, the pose, a step
-constexpr std::uint32_t kJumpOut1 = 0x536050;        // () -> al: FE2's
-constexpr std::uint32_t kJumpOut2 = 0x5360C0;        // () -> al
-constexpr std::uint32_t kJumpOut3 = 0x536130;        // () -> al
-constexpr std::uint32_t kJumpOut4 = 0x536170;        // () -> al
-constexpr std::uint32_t kJumpAirA = 0x5364D0;        // (): by Field_InputHeld bit 12
-constexpr std::uint32_t kJumpAirB = 0x536550;        // (): by bit 14
-constexpr std::uint32_t kJumpAirC = 0x5365D0;        // (): by the button map word 0x903580
-constexpr std::uint32_t kJumpIn0 = 0x536290;         // ()
-constexpr std::uint32_t kJumpIn1 = 0x5362D0;         // () -> al
-constexpr std::uint32_t kJumpIn2 = 0x5363C0;         // () -> al
-constexpr std::uint32_t kJumpIn3 = 0x536440;         // () (a tail jump)
+constexpr std::uint32_t kObjectTrigger = bof3::addr::Field_ObjectTrigger;   // Field_ObjectTrigger(object): FE2's
+constexpr std::uint32_t kJumpPose = bof3::addr::Leader_Pose3C;        // (): the jump's first pose (0x3C or 0x3D by +8)
+constexpr std::uint32_t kJumpSetUp = bof3::addr::Leader_HopStart;       // (): Field_JumpSetUp, the frames, the pose, a step
+constexpr std::uint32_t kJumpOut1 = bof3::addr::Leader_HopFlight;        // () -> al: FE2's
+constexpr std::uint32_t kJumpOut2 = bof3::addr::Leader_HopPose;        // () -> al
+constexpr std::uint32_t kJumpOut3 = bof3::addr::Leader_Pose3E;        // () -> al
+constexpr std::uint32_t kJumpOut4 = bof3::addr::Leader_StepUp;        // () -> al
+constexpr std::uint32_t kJumpAirA = bof3::addr::Leader_Rise;        // (): by Field_InputHeld bit 12
+constexpr std::uint32_t kJumpAirB = bof3::addr::Leader_Sink;        // (): by bit 14
+constexpr std::uint32_t kJumpAirC = bof3::addr::Leader_TurnBack;        // (): by the button map word 0x903580
+constexpr std::uint32_t kJumpIn0 = bof3::addr::Leader_Pose34;         // ()
+constexpr std::uint32_t kJumpIn1 = bof3::addr::Leader_StepDown;         // () -> al
+constexpr std::uint32_t kJumpIn2 = bof3::addr::Leader_HopStartAfterTick;         // () -> al
+constexpr std::uint32_t kJumpIn3 = bof3::addr::Leader_HopFall;         // () (a tail jump)
 
 // --- data ---
 // The .data dispatch tables this group's dispatchers read in place (entries to

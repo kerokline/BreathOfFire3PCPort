@@ -109,10 +109,10 @@ constexpr U kSlots2Steps = 0x64ED34;      // 7
 constexpr U kStoreSteps = 0x64ED50;       // 7 (the last BE6's 0x451480)
 
 // --- the callees nobody owns yet ---
-constexpr U kTargetPrompt = 0x447F40;     // BE4's
-constexpr U kDragonTask = 0x4525B0;       // BE6's
-constexpr U kStatusPick = 0x453300;       // BE6's
-constexpr U kApPopup = 0x453EB0;          // BE6's
+constexpr U kTargetPrompt = bof3::addr::ItemMenu_SetupForMember;     // BE4's
+constexpr U kDragonTask = bof3::addr::DragonGenes_SumCost;       // BE6's
+constexpr U kStatusPick = bof3::addr::Battle_RecalcStats;       // BE6's
+constexpr U kApPopup = bof3::addr::Battle_SetApPopup;          // BE6's
 constexpr U kInflict = 0x44F1D0;          // nobody's
 constexpr U kResisted = 0x44F6A0;         // nobody's
 constexpr U kMissTail = 0x44FB30;         // nobody's

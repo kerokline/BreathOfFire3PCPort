@@ -26,18 +26,20 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
+
 namespace battle_e2 {
 namespace at {
 
 using U = std::uint32_t;
 
 // --- raw callees (above) ------------------------------------------------------
-constexpr U kMemberRecalc = 0x442310;     // BE3
-constexpr U kMemberStatusSet = 0x453300;  // BE6
-constexpr U kTurnVelocity = 0x446770;     // BE4
-constexpr U kPlayCue = 0x437450;          // BE3
-constexpr U kEnemyTaskChance = 0x4376F0;  // BE3
-constexpr U kEnemyOpEnd = 0x4376A0;       // BE3
+constexpr U kMemberRecalc = bof3::addr::BattleParty_RecalcStats;     // BE3
+constexpr U kMemberStatusSet = bof3::addr::Battle_RecalcStats;  // BE6
+constexpr U kTurnVelocity = bof3::addr::Battle_TurnVectorC;     // BE4
+constexpr U kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;          // BE3
+constexpr U kEnemyTaskChance = bof3::addr::EnemyOp_RollBit80Task;  // BE3
+constexpr U kEnemyOpEnd = bof3::addr::EnemyOp_EndAction;       // BE3
 constexpr U kActorMayAct = 0x452DD0;      // nobody's
 
 // --- the battle bytes (the harness's 0x904AA0..0x904BA0) ----------------------
