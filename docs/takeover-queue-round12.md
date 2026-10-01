@@ -243,34 +243,25 @@ with the boss set-up and its kinds among them.
    extents beside the host lines they meant to cut; `--dedupe` keeps the
    smaller. The tracer registers a range per line, duplicates included, so
    the hash never minded; what the dedupe fixes is attribution (a Capcom
-   caller past a host's over-long extent logged as owned). **Run
-   2026-10-01 on the owner's machine**: `--dedupe --append` dropped the 49
-   larger extents (every dropped line was the host's, the groups' cut-down
-   lines all kept; 39 of them round thirteen's effect band
-   `0x464EC0..0x47F040`) and added the 16; a second run changed nothing
-   and reports 0 owned starts without a line. **The frame hash reference
-   is now owed before any A/B is read** (section 5's `r9_orig` was
-   recorded under the old list): the 16 new armed entries change the
-   sequence, and so do the dropped host ranges, whose calls from Capcom
-   code past the hosts' real ends now log their real return addresses -
-   both sides alike, the original twice then ours, as every reference. **Run 2026-10-01
+   caller past a host's over-long extent logged as owned). **Run 2026-10-01
    on the owner's machine**: `--dedupe --append` in one run dropped the 49
    larger lines (every pair's host extent, the groups' cut-down lines kept:
    `0x464EC0..0x47F040` is round thirteen's effect band, where the same had
    happened) and added the 16; a second run reported no change and 0 owned
    starts without a line. `analysis/` is not in git, so the file itself is
    the owner's. **Owed before the next A/B: the hash reference re-recorded**
-   (HANDOFF's trap at its head).
+   (HANDOFF's trap at its head). The reference changes twice over: the 16
+   new armed entries, and the dropped host ranges, whose calls from Capcom
+   code past the hosts' real ends now log their real return addresses -
+   both sides alike.
    **The tool is written, 2026-10-01** (a cloud session without `analysis/`):
    `tools/entries_audit.py` lists every `impl` start with no line and says,
    for each, whether a listed owned function's registered range holds it
    (covered: the tracer already claims its calls), whether an `--exclude`
    list names it (the nine wall-clock exclusions), which `--reach` runs
    entered it (`BOF3X_CALLTRACE_REACH=1` outputs), and proposes the line
-   from `pc_funcs.json` or the code's extent (`--exe`). **The run and the
-   verdicts are owed**: at the tip, with the five routes' reach files and
-   `wallclock_reach.json`, into this section; a start that is uncovered
-   and entered gets its line before the next route.
+   from `pc_funcs.json` or the code's extent (`--exe`); `--append` and
+   `--dedupe` write the file. The run and its verdicts are above.
 5. **The pointer scan** of section 8 over all fourteen bands, and its two cases folded into `tools/band_rows.py`.
    **Folded 2026-10-01 as `--pointer-scan`** ([`band-rows.md`](band-rows.md)
    section 7; off by default, the output without it unchanged): the starts in
