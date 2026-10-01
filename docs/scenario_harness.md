@@ -875,14 +875,46 @@ Round twelve's section 7 items 1 and 6, where they touch this harness:
   (FC1), `Gte_RotTransPers` filling its screen point as two floats (FE2). In
   place they would change what the wave-two groups that use the standard rows
   draw.
-- **Not folded, left for the coordinator**: `Zenny_Add`'s tally test inverted
-  (FE1), `Port_DroppedCall` at four words, `Party_Count` answering 0..3,
-  `Menu_ListScroll`'s out-bytes (FS), `AreaMap_Slope`'s `DamageScratch` and
-  `MapView_SlopeAt`'s `0x903850` (FC1, FC3), `Gte_SetRotMatrix` hashing 18 bytes
-  and `Gte_SetTransMatrix` its translation (FC2): each changes what a standard
-  row writes or hashes, so in place it could move an existing group's counts or
-  hash bytes a caller never wrote; the effect frontier calls none of them but
-  `Gte_SetRotMatrix` / `SetTransMatrix` (12 sites each), which a group re-lists.
+- **Folded 2026-10-01, in place** (the coordinator's pass, a cloud session;
+  the i686 build verified it, the `'*'` run at the tip is the owner's):
+  `Zenny_Add`'s tally test the right way round (`FxZennyAdd` adds to
+  `0x904138` when the byte is 0, as `scena_sx.cpp` does; FE1);
+  `Party_Count` answering 0..3 (FS: a random count ran the callers' loops
+  past `ObjTrio`); `Menu_ListScroll` writing its out-bytes (`FxListScroll`,
+  FS's form, the writes guarded); `AreaMap_Slope` and `MapView_SlopeAt`
+  setting the "sloped" byte `0x903850` (`FxSloped`, FC1, FC3; inside the
+  effect-slot region already); `MoveScript_Step` answering `0xFF..0x0F` and
+  moving the context's flag byte (`FxStepFlag`, FC3); `Field_CellAhead`
+  0..4 (FC3); `Item_IconKind` 2..7 (FO); `Gte_SetRotMatrix` hashing its
+  nine shorts (18 bytes) and `Gte_SetTransMatrix` noting its translation
+  `+0x14..+0x1F` instead of hashing the rotation it never reads
+  (`FxSetTrans`, FC2 and FE2 agree); the SVECTOR arguments of
+  `Gte_RotMatrix`, `_RotTrans`, `_RotTransPers` / `3` / `4` hashed as six
+  bytes, not eight (the fourth short is the pad DIV-0023 found stale);
+  `Gte_MulMatrix0`'s two matrices as 18 bytes, not 8;
+  `Equip_PreviewSet` filling and noting the caller's marks and values
+  (`FxPreviewSet`, FO: the row hashed the two buffers before anything had
+  filled them). **The masks the first pass left**, now at what the callee
+  reads: `Menu_DrawPiece`, `_DrawPieces`, `_DrawIcon8`, `_DrawScrollBar`,
+  `_DrawCell8`, `_DrawItemRow`, `_DrawTitleBox`, `_DrawItemIcon`,
+  `_DrawBorder`, `Text_DrawAt` (`kStandard`), `Text_DrawSmall`,
+  `TextRecord_Set`, `Char_ExpForLevel`, `Char_AbilityList`, `Skill_CanUse`,
+  `Skill_ApCost`, `Item_CanUse`, `KeyItem_Has`, `PartySet_Load`
+  (`kStandard`), `0x46D5F0`, `UiSprite_Draw` (FO, FS, FE1, FC2). **Two
+  regions for the field runs** (not effect mode, whose `kMenuButtons` and
+  `kMessagePools` hold them already): `Field_ConfirmButtons` /
+  `_CancelButtons` `0x90358C` (8) and `MessagePools`' first 0x200 offset
+  words `0x803580` (0x400; FE1: empty at start-up, so a script-pool message
+  drawn by id could not show). **The regions move every field group's
+  draw** (the random fill is one stream over the regions), so FC1..FS's
+  counts change at the next `'*'`; 0 mismatches is the bar, as for every
+  cleanup. An effect's writes draw from `Noise()`, not the stream, so the
+  louder forms move no count; a new mismatch under one is a finding.
+- **Still not folded**: `Port_DroppedCall` at four words (FS's `0x581300`
+  pushes four; every other caller one - a per-site count the row cannot
+  hold, so FS's own listing stands) and the groups' reach effects
+  (`AreaMap_ByteAt` / `_Elevation` answering what the callers compare,
+  `MapView_GroundAt` at the height's boundaries, `Char_ExpForLevel`'s -1).
 
 ### 8.7 Worked examples
 

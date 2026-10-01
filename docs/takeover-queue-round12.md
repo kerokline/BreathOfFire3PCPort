@@ -175,7 +175,11 @@ with the boss set-up and its kinds among them.
    `kEngineStandard`; `PreviewEffect` for `Equip_PreviewSet` (BE7); the
    louder pop-up stand-ins (BE5); `Rand`'s negative answers and a turning
    stand-in for `0x446770` (BE2); the standard rows `0x437230` and
-   `0x441510`, now named (BE3).
+   `0x441510`, now named (BE3). **Done 2026-10-01** on round thirteen's tip
+   ([`boss_harness.md`](boss_harness.md) section 10.10): the 38 masks, the
+   five louder forms (`Rand`, the pop-ups, `Sound_PlayEffect`,
+   `Battle_TurnVectorC`, `Equip_PreviewSet`), the five rows as `BH_OURS`;
+   verified by the i686 build, the `'*'` run at the tip owed.
 2. **The rebinding left for the coordinator**: the raw calls between this
    wave's groups (RT's `--edges`; each group doc lists its own), and the
    harness files' raw routes (`boss_harness.cpp`, `boss_harness_eh.cpp`).
@@ -212,6 +216,7 @@ with the boss set-up and its kinds among them.
    dragon route showed what one costs. Audit them before the next route.
 5. **The pointer scan** of section 8 over all fourteen bands, and its two cases folded into `tools/band_rows.py`.
 6. **Wave two's folds** into `scenario_harness`: the masks, `Zenny_Add`'s test, the confirm and cancel cells as a region, `Crt_sprintf` at three words, the GTE rows that log stack pointers; and wave two's defects with wave one's in item 3.
+   **Done**: round thirteen's EKH pass folded 38 masks, `Crt_sprintf` and the stack pointers ([`scenario_harness.md`](scenario_harness.md) section 8.6), the defects are item 3's; **the rest 2026-10-01** on round thirteen's tip (the same section): `Zenny_Add`'s test, the two regions (the confirm and cancel words, `MessagePools`' offset words - these move every field group's draw, so FC1..FS's counts change at the next `'*'`), the louder forms (`Party_Count`, `Menu_ListScroll`, the sloped byte, `MoveScript_Step`, `Equip_PreviewSet`, `Gte_SetTransMatrix`) and the masks the first pass left. `Port_DroppedCall` at four words stays FS's own.
 7. **Housekeeping**: the seventeen `phase-3/round12-*` branches and the agents'
    worktrees under `.claude/worktrees/` are merged and can go; the
    controls scripts live in the session-`6ae930a8` scratchpad
