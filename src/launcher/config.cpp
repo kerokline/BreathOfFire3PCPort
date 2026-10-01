@@ -143,9 +143,6 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         } else if (key == "wide") {
             if (value == "0") cfg.wide = false;
             else if (value == "1") cfg.wide = true;
-        } else if (key == "draw_rand") {
-            if (value == "0") cfg.draw_rand = false;
-            else if (value == "1") cfg.draw_rand = true;
         } else if (key == "cheat.exp" || key == "cheat.zenny") {
             char* end = nullptr;
             const long v = std::strtol(value.c_str(), &end, 10);
@@ -194,8 +191,6 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "scale=" + std::to_string(cfg.scale) + "\r\n";
     out += "# 1 the wide picture, 426 x 240 (DIV-0041, survey build) | 0 the original's 320 x 240\r\n";
     out += std::string("wide=") + (cfg.wide ? "1" : "0") + "\r\n";
-    out += "# 1 the field's rising squares draw random numbers of their own, so fishing replays (DIV-0067) | 0 the original's\r\n";
-    out += std::string("draw_rand=") + (cfg.draw_rand ? "1" : "0") + "\r\n";
     out += "# 1 keeps the game running while its window is not in front (DIV-0033) | 0 the original's freeze\r\n";
     out += std::string("background=") + (cfg.background ? "1" : "0") + "\r\n";
     out += "# 1 (shipped default) | 0 -> line 2 of the game's BOF3.CFG\r\n";
@@ -280,8 +275,6 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
 
     if (GetEnvironmentVariableW(L"BOF3X_WIDE", existing, 64) == 0 && cfg.wide)
         SetEnvironmentVariableW(L"BOF3X_WIDE", L"1");
-    if (GetEnvironmentVariableW(L"BOF3X_DRAW_RAND", existing, 64) == 0 && cfg.draw_rand)
-        SetEnvironmentVariableW(L"BOF3X_DRAW_RAND", L"1");
 
     if (GetEnvironmentVariableW(L"BOF3X_SCALE", existing, 64) == 0 && cfg.scale != 2) {
         const wchar_t k[2] = {static_cast<wchar_t>(L'0' + cfg.scale), 0};

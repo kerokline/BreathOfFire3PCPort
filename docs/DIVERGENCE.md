@@ -3378,58 +3378,26 @@ designed in rather than bolted on.
   a pad input held from before the video (no skip until released).
 - **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player.
 
-### The rising squares' random numbers from a generator of their own (opt-in)
+### Withdrawn: the rising squares' random numbers from a generator of their own
 
-- **CORRECTION, 2026-09-30 night - the premise below is wrong; the switch
-  is a candidate for removal.** `Game_WinMain`'s loop (`win_main.cpp`) runs
-  every game function - the tasks, and with them `MapCell_DrawRising` - on
-  every logic frame; the branch a late frame skips only replays the built
-  ordering table to the GPU (`Gfx_DrawOTag`). So `Rand` was never consumed
-  "once per rendered frame", and the sequence already moved with logic
-  frames alone. What made the fish differ on replay was the shot-bearing
-  copies this session's ad-hoc splitter wrote, each `shot NAME 1` an extra
-  frame (corrected in `9689c71`; `tools/recipe_shots.py` keeps the total),
-  and, in the owner's first two recordings, a walk that diverged at a
-  world-map ledge. The measurement that stands: with the switch on, a
-  recording's and its replay's `Rand` counts agree on all 3,889 frames
-  (`randlog`), and the catch replays - with one end shot, and under the
-  call trace. Whether they agree with it off was never measured; by the
-  loop's reading they would. `tools/recipes/caughFish.txt` was recorded
-  under the switch and needs it on (the squares' calls are out of the
-  stream), so removing it means recording that recipe again. Off, the
-  default, nothing here changes anything.
-- **ID:** DIV-0067
-- **Date:** 2026-09-30
-- **Subsystem:** field draw (`MapCell_DrawRising` `0x570660`, ours in
-  `src/game/map_cells.cpp`); the recipes ([`input-script.md`](input-script.md))
-- **Tier:** Sensible
-- **Original behaviour:** the game's `Rand` `0x5B93D2` is the MSVC6 CRT
-  `rand()` - the per-thread seed at ptd + 0x14, stepped by `0x343FD` and
-  `0x269EC3` - and **the binary holds no `srand`** (every store to that
-  slot is rand's own; the linker dropped the unreferenced function), so
-  the sequence is fixed from boot and everything that draws on it in logic
-  replays frame for frame: battles, encounters, drops. `MapCell_DrawRising`
-  takes one `Rand` per square, eight a frame, each frame the cell is drawn
-  - and a frame the machine did not render is replayed as unrendered logic
-  (`win_main.cpp`), so between two inputs the number of draws, and of
-  `Rand` calls, depends on how fast the machine rendered. At the water the
-  fish's placement reads the sequence after those calls: the owner's
-  `tools/recipes/caughFish.txt` caught a fish when recorded and found
-  none on replay, the fish elsewhere (`analysis/shots/fishing_catch/`).
-- **New behaviour:** under `BOF3X_DRAW_RAND=1` the squares take their
-  numbers from `DrawRand`, a generator of the same shape whose state is
-  seeded from `Frame_Counter` on each new frame, so the logic's stream
-  moves with logic frames alone and the squares' pattern is the frame's.
-  Off, the default, the squares call Capcom's `Rand` as before.
-- **Rationale:** the owner, 2026-09-30: a recipe that catches a fish should
-  replay, and it should be a switch, so the other recipes and saves keep
-  the sequence they were recorded under.
-- **Also in the PSX version?** The PSX `Rand` is a BIOS routine with its own
-  sequence; the sparkle there draws on it the same way, and its frames are
-  never skipped, so the question does not arise.
-- **Verification:** `BOF3X_SHADOW=map_cells` 0 mismatches (the switch is
-  read after the self-test). Live: two replays of `caughFish.txt` under the
-  switch put the fish in the same place both times (frames 1320 and 1440
-  of the session's `shots_fish_r1` / `_r2`), where without it the two runs
-  differed; a catch wants a recording made under the switch.
-- **Reversible?** Leave `BOF3X_DRAW_RAND` unset.
+- **ID:** DIV-0067 (withdrawn and removed 2026-09-30, the day it was made;
+  the number is not reused)
+- **What it was:** an opt-in switch (`BOF3X_DRAW_RAND=1`, the launcher's
+  `draw_rand`) giving `MapCell_DrawRising` `0x570660` a private generator in
+  place of Capcom's `Rand`, on the belief that draw code consumed the
+  shared sequence once per *rendered* frame and so made a fishing recipe
+  replay differently.
+- **Why it is gone:** the belief was wrong. `Game_WinMain`'s loop runs every
+  game function on every logic frame; a late frame skips only
+  `Gfx_DrawOTag`. The fish differed because this session's ad-hoc shot
+  copies added a frame per shot (`tools/recipe_shots.py` is the tool; a
+  shot line is a frame of the route) and, in the owner's first two
+  recordings, a walk diverged at a world-map ledge. Measured after the
+  removal: `tools/recipes/caughFish.txt`, recorded with the switch on,
+  replays without it - the `Rand` count identical on all 3,889 frames
+  (`randlog`), the fish caught - so the squares never ran on that route.
+- **What stays, none of it a divergence:** the finding that `Rand`
+  `0x5B93D2` is the MSVC6 CRT `rand()` and the binary holds no `srand`, so
+  the sequence is fixed from boot; and the per-frame `randlog` line in
+  recorded and scripted runs (`src/hook/input_script.cpp`), a counting
+  replacement over a byte-copy of `rand` that changes no value.

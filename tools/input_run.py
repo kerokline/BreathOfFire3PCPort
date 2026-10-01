@@ -29,6 +29,15 @@ stay free to play in. Another run waits for the hand-back; a game that is not
 a scripted run (no BOF3X_INPUT) refuses the swap.
 
 Needs the game windowed (BOF3.CFG first line 0, or the launcher dialog).
+
+A `shot NAME 1 [BUTTONS]` line IS one frame of the route: it stands in place
+of a frame, holding that frame's buttons. To add shots to a recorded recipe
+use tools/recipe_shots.py, which keeps the total. Never insert shot lines by
+hand or with an ad-hoc splitter without taking a frame out of the run they
+split: every later input then lands a frame late per shot, the replay drifts
+(a cast misses its fish, a walk misses its ledge), and it looks like the game
+being random. 2026-09-30 cost a day and a withdrawn ledger entry (DIV-0067).
+One game at a time, too: two runs share build/bof3x.log and build/bof3x.dll.
 Exit status 0 when the recipe finished, 1 when it FAILED or timed out.
 """
 import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threading, time

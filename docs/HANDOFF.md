@@ -137,8 +137,9 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    nothing.** The frame loop runs all game code every logic frame; a late frame skips only `Gfx_DrawOTag`. The
    fish differed because this session's shot copies added a frame per shot (fixed by the other session in
    `9689c71`; use `tools/recipe_shots.py`, never an ad-hoc splitter) and because of the ledge walk. DIV-0067's
-   entry carries the correction. **To decide with the owner: remove the switch** (code, launcher key, ini line)
-   and record `caughFish.txt` again with it off - or keep it, off by default, as a harmless leftover. Also
+   entry carries the correction. **The switch is removed** (the owner's word, the same night: code, launcher
+   key, ini line; DIV-0067 a withdrawn record), and `caughFish.txt` needs no new recording - replayed without
+   the switch its `Rand` count matches the recording's on every frame and the fish is caught. Also
    suspect for the same reason: the note above that `campingFishing.txt` "does not replay on the all-original
    side" - that run used a shifted shot copy; recheck with a `recipe_shots.py` copy before believing it.
    **The catch route's reach** (plain trace, one end shot, the catch and Manillo reached): the same 16 fishing
