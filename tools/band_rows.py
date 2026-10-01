@@ -436,9 +436,31 @@ class Band:
                     inside = members[i]
                     break
                 i -= 1
+            # ... and the listed start before it, any list's (pc_funcs, the
+            # hidden, the named): a dword that lands inside a Capcom function's
+            # body is a constant that reads as an address, not an entry. The
+            # first run (2026-10-01) printed 305 hits, most of them this.
+            if inside is None:
+                j = bisect.bisect_right(self.starts, w) - 1
+                while j >= 0 and self.starts[j] in self.absorbed:
+                    j -= 1
+                if j >= 0 and self.starts[j] not in members and self.limit(self.starts[j]) > w:
+                    d = self.extent(self.starts[j])
+                    if w in d['seen'] or any(lo <= w < hi for lo, hi in d['tables']):
+                        inside = self.starts[j]
+            # a function of its own starts where MSVC puts one - on a 16-byte
+            # boundary or right after padding - and decodes to its returns
+            # without running into the next start (the 2026-10-01 run's rows of
+            # 1..9 bytes at 0x430001, 0x440001, 0x580000.. were short pairs
+            # and small constants, not code)
+            boundary = w % 16 == 0 or img.u8(w - 1) in PADDING
             decodes = mr.decode(img, w) is not None and img.u8(w) not in PADDING + (0,)
+            if decodes and inside is None:
+                d = read_extent(img, w, self.limit(w))
+                decodes = d['bad'] is None and not d['falls'] and d['end'] > w
             out[w] = dict(group=g, before=before, cells=[(c, sec) for c, sec, _ in cells], inside=inside,
-                          decodes=decodes, row=decodes and inside is None and before is not None)
+                          decodes=decodes, boundary=boundary,
+                          row=decodes and boundary and inside is None and before is not None)
         self._pscan = out
         return out
 
@@ -839,13 +861,18 @@ def print_pointer_scan(b, group=None):
     the cut starts the scan found to be a case of a table read short."""
     ps = b.pointer_scan(dict(b.extra_of()))     # settled already: the cache answers
     groups = [group] if group else b.groups
-    print('\npointer scan: %d starts in the bands that a cell outside .text names and no list knows' % (
-        sum(1 for w, i in ps.items() if i['group'] in groups)))
+    hits = {w: i for w, i in ps.items() if i['group'] in groups}
+    rows = sum(1 for i in hits.values() if i['row'])
+    entries = sum(1 for i in hits.values() if not i['row'] and i['inside'] is not None)
+    print('\npointer scan: %d dwords outside .text hold a band address no list knows: %d rows, %d entries into '
+          'read code, %d data (a value that reads as an address: inside no read, not a function start, '
+          'or not decoding to a return)' % (len(hits), rows, entries, len(hits) - rows - entries))
     for g in groups:
-        ws = sorted(w for w, i in ps.items() if i['group'] == g)
+        ws = sorted(w for w, i in hits.items() if i['group'] == g)
         if not ws:
             continue
         print('  %s (band %#x..%#x):' % ((g,) + b.band_of(g)))
+        data = []
         for w in ws:
             i = ps[w]
             cells = ', '.join('%s cell %#x %s' % (sec, c, b.table_name(c)) for c, sec in i['cells'])
@@ -854,11 +881,14 @@ def print_pointer_scan(b, group=None):
             elif i['inside'] is not None:
                 what = "inside %#x's code or table (%s): an entry into it, not a function of its own" % (
                     i['inside'], b.who(i['inside']))
-            elif not i['decodes']:
-                what = 'does not decode (data)'
-            else:
+            elif i['decodes'] and i['boundary'] and i['before'] is None:
                 what = 'before the first cut row of the band'
+            else:
+                data.append(w)
+                continue
             print('    %#x  %s  <- %s' % (w, what, cells))
+        if data:
+            print('    data (%d): %s' % (len(data), ' '.join('%#x' % w for w in data)))
     cases = []
     for s in sorted(b.cut):
         if group and b.cut[s]['group'] != group:

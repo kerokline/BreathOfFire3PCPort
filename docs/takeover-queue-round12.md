@@ -267,16 +267,26 @@ with the boss set-up and its kinds among them.
    a band that only a `.data` cell names become rows, flagged with the cell
    and its table; a cut start whose only reference is a `.text` cell in the
    run of a jump table read short is flagged a case of that table's owner and
-   absorbed. Written without the exe, compiled and linted; **the regression
-   and the run over the fourteen bands are owed** (the recipe is section 7
-   there: FC2's four, FC3's five and FO's `0x578A40` are the expectations).
+   absorbed. **Run by the owner 2026-10-01** ([`band-rows.md`](band-rows.md)
+   7.1): FO's `0x578A40` as expected; FC2's and FC3's cannot fire since wave
+   two named them; 305 hits, six real - BE5's `Effect_Handlers` slots 4, 7,
+   11, 47, 91 and FS's `ShopMode_States[9]` `0x583350` - and the noise (dwords
+   inside listed functions, one-instruction "decodes") filtered in the code
+   since. **Owed: the regression without the flag, and the second run** with
+   the filter (its expectations are the table in 7.1).
 6. **Wave two's folds** into `scenario_harness`: the masks, `Zenny_Add`'s test, the confirm and cancel cells as a region, `Crt_sprintf` at three words, the GTE rows that log stack pointers; and wave two's defects with wave one's in item 3.
    **Done**: round thirteen's EKH pass folded 38 masks, `Crt_sprintf` and the stack pointers ([`scenario_harness.md`](scenario_harness.md) section 8.6), the defects are item 3's; **the rest 2026-10-01** on round thirteen's tip (the same section): `Zenny_Add`'s test, the two regions (the confirm and cancel words, `MessagePools`' offset words - these move every field group's draw, so FC1..FS's counts change at the next `'*'`), the louder forms (`Party_Count`, `Menu_ListScroll`, the sloped byte, `MoveScript_Step`, `Equip_PreviewSet`, `Gte_SetTransMatrix`) and the masks the first pass left. `Port_DroppedCall` at four words stays FS's own.
 7. **Housekeeping**: the seventeen `phase-3/round12-*` branches and the agents'
    worktrees under `.claude/worktrees/` are merged and can go (local to the
    owner's machine; `origin` carries only `phase-3/round12-plan` of them, and
    the three `claude/round-12-*` branches of PRs #37..#39, merged, which can
-   go too); the controls scripts live in the session-`6ae930a8` scratchpad
+   go too - **verified 2026-10-01**: all four are ancestors of
+   `origin/phase-3/capture-round-thirteen`, the first three of `origin/main`
+   as well, so `git push origin --delete phase-3/round12-plan
+   claude/round-12-defects claude/round-12-rebinding
+   claude/round-12-harness-folds` loses nothing; `claude/round-12-debt-tools`
+   is the same commit as round thirteen's tip and can go with them); the
+   controls scripts live in the session-`6ae930a8` scratchpad
    (`<group>/`), a Temp folder. `docs/README.md`'s duplicated `band-rows.md`
    row was folded 2026-10-01.
 

@@ -177,9 +177,12 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    ~~mask and stand-in folds into both harnesses~~ (2026-10-01, on round thirteen's tip: `boss_harness.md` 10.10,
    `scenario_harness.md` 8.6, **merged as PR #39** - **the next `'*'` moves FC1..FS's counts**, two field regions added;
    0 mismatches the bar), ~~the defects to number~~ (D175..D196, PR #37), ~~the rebinding between the groups~~ (82
-   constants, PR #38), and two tools written 2026-10-01 in a cloud session **whose first run is yours**: the pointer
-   scan as `band_rows.py --pointer-scan` ([`band-rows.md`](band-rows.md) section 7 - run its regression without the
-   flag first, then `--groups --pointer-scan`; FC2's four, FC3's five and FO's `0x578A40` are the expectations) and
+   constants, PR #38), and two tools written 2026-10-01 in a cloud session: the pointer
+   scan as `band_rows.py --pointer-scan` (**first run by the owner 2026-10-01**, [`band-rows.md`](band-rows.md) 7.1:
+   FO's `0x578A40` as expected, FC2's and FC3's named since wave two so they cannot fire, 305 hits of which six are
+   real - BE5's `Effect_Handlers` slots 4, 7, 11, 47, 91 and `ShopMode_States[9]` `0x583350` - the noise filtered in
+   the code since; **owed: the regression without the flag, then a second `--pointer-scan` run** against 7.1's
+   table; the branches of debt 7 are verified merged and the delete command is in the round doc's item 7) and
    the audit of the 33 owned starts without an `entries_logic.txt` line as `tools/entries_audit.py` (give it `--exe`,
    `--exclude analysis/calltrace/wallclock_reach.json` and each route's reach `bof3x.calltrace.tsv` as `--reach` -
    the reach runs are default-mode traces, `callcounts.tsv` is `MODE=all`'s; **run 2026-10-01**, the verdicts in the

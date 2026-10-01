@@ -309,11 +309,11 @@ area: 2**.
 
 Round twelve's debt 5 ([`takeover-queue-round12.md`](takeover-queue-round12.md)
 section 7): wave two found two shapes the tool could not see, and the fold
-is this flag. **Written in a cloud session without the exe; compiled and
-linted, not yet run.** The first run over the fourteen bands is the owner's,
-with the regression below; until then this section describes the code, not
-a measurement. **Off by default**, and with it off nothing in the output
-changes (the row gains an internal field the TSV does not write).
+is this flag. Written in a cloud session without the exe; **first run by the
+owner 2026-10-01** (the measurement is 7.1 below: 305 hits, eleven of them
+real, and the filter that run bought). **Off by default**, and with it off
+nothing in the output changes (the row gains an internal field the TSV does
+not write).
 
 - **Starts only a `.data` pointer names.** FC2's `0x46C730`, `0x46CEF0`,
   `0x46D400` (`Effect_KindHandlers` `0x34`, `0x3A`, `0x41`) and `0x46C820`
@@ -362,6 +362,62 @@ above with it. What the scan prints beyond them - any other start in the
 fourteen bands that only a pointer names - is the debt's answer and goes
 here, with the group whose band holds it; the cut is not rewritten (section
 5), the group that owns the band decides whether to take it.
+
+**The FC2 and FC3 expectations cannot fire any more**: wave two named all
+nine (`symbols.toml` has `0x46C730`, `0x46C820`, `0x46CEF0`, `0x46D400`,
+`0x525CA0`, `0x5261E0`, `0x526490`, `0x526A90`, `0x526B80`), and a start a
+list knows is not a hit by definition. They stand as the shape the flag
+was written for; the live analogue is BE5's `Effect_Handlers` slots below.
+
+### 7.1 The first run, 2026-10-01 (the owner's machine, the tip `edd9c5c`)
+
+`py tools/band_rows.py --pointer-scan` (the owner's command; the fourteen
+groups' tables unchanged from section 3's shape). The FO expectation held:
+`0x578A40` is reported a case of `MoveScript_Group9`'s table `0x578AD8`
+without `--byte-tables`. The scan printed **305 hits**, almost all noise,
+and the noise had two causes the first code did not guard against:
+
+- **A hit inside a listed function's body.** The `inside` test only read the
+  cut's members and the unlisted code between them, so a dword that landed
+  in a Capcom function `pc_funcs` or `pc_hidden` lists was "a row now" -
+  `0x430001`, `0x440000`, `0x530000`, `0x540200`, `0x550000`, `0x580000`
+  (43 cells), `0x580002` (66 cells), `0x544144` (a 12-byte-stride array of
+  ~380 records whose first dword is that value): short pairs and small
+  constants whose value falls in `0x42D7A0..0x58CAE0`, as any dword of the
+  form `0x00NN00MM` with `NN` in `0x43..0x58` does.
+- **"Decodes" was one instruction.** Rows of 1..9 bytes (`0x430048`,
+  `0x43202F`, `0x45003F`, `0x520044`, `0x570013`...) decoded a byte or two
+  and stopped at something that did not.
+
+**The filter, in the code now** (`Band.pointer_scan`): a hit inside the
+read of the listed start before it, any list's, is an entry into that
+function, not a row; a row must sit where MSVC puts a function (a 16-byte
+boundary, or right after padding) and `read_extent` from it must reach its
+returns with nothing undecodable and without running into the next start.
+The report now prints the rows and the entries in full and the rest as one
+`data (n): ...` line per group. **Not re-run yet** (no exe in the session
+that wrote the filter): the second run is the owner's, and these are its
+expectations, read off the first run's hits that the filter should keep:
+
+| Group | Start | Cell | What the first run said | Why it is real |
+|---|---|---|---|---|
+| BE5 | `0x44C040` | `Effect_Handlers[4]` | a row, 57 bytes | five slots of a named handler table, 16-aligned, after `0x44B8D0`; [`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md) already listed them as entries the hidden scan missed (`0x44C5C0` of that list is BE5's since) |
+| BE5 | `0x44C120` | `Effect_Handlers[7]` | a row, 32 bytes | same |
+| BE5 | `0x44C170` | `Effect_Handlers[11]` | a row, 125 bytes | same |
+| BE5 | `0x44CF60` | `Effect_Handlers[47]` | a row, 83 bytes | same |
+| BE5 | `0x44D8B0` | `Effect_Handlers[91]` | a row, 111 bytes | same; the kinship doc read its HP accesses |
+| FS | `0x583350` | `ShopMode_States[9]` | a row, 14 bytes | ShopMode 9's step, which [`field_s.md`](field_s.md) 1.3 says is nobody's |
+
+Six real; the five BE5 handlers are the debt's answer for the battle engine
+(BE5 owns the band and decides), ShopMode 9's for the field. Hits the filter
+may keep that are **unread**, 16-aligned and inside no member's read on
+the first run: `0x4613B0` (BE6, 611 bytes, cell `0x6536CC`, a run of four),
+`0x464970` (FC1, after `EffectKind02_States`), `0x51FA30` (FC3, after
+`PartyAction5_Forms`), `0x52FF40` (FE1), `0x537B10` (FE2, `0x660CA0[5]`),
+`0x44FFC0` (BE5), `0x525A40` (FC3), `0x560D60`, `0x571F30`, `0x573130`
+(FE2). Each wants a look at the second run: a real one is in a run of code
+pointers or decodes to a function; `0x53E0F0` and the other `.rsrc` cells
+are the resource section's and are not.
 
 What it does not do: a pointer computed at run time (`add eax, imm`, a
 table base in a register) is invisible, as in section 4; a cell in `.text`
