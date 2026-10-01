@@ -409,15 +409,46 @@ expectations, read off the first run's hits that the filter should keep:
 | FS | `0x583350` | `ShopMode_States[9]` | a row, 14 bytes | ShopMode 9's step, which [`field_s.md`](field_s.md) 1.3 says is nobody's |
 
 Six real; the five BE5 handlers are the debt's answer for the battle engine
-(BE5 owns the band and decides), ShopMode 9's for the field. Hits the filter
-may keep that are **unread**, 16-aligned and inside no member's read on
-the first run: `0x4613B0` (BE6, 611 bytes, cell `0x6536CC`, a run of four),
-`0x464970` (FC1, after `EffectKind02_States`), `0x51FA30` (FC3, after
-`PartyAction5_Forms`), `0x52FF40` (FE1), `0x537B10` (FE2, `0x660CA0[5]`),
-`0x44FFC0` (BE5), `0x525A40` (FC3), `0x560D60`, `0x571F30`, `0x573130`
-(FE2). Each wants a look at the second run: a real one is in a run of code
-pointers or decodes to a function; `0x53E0F0` and the other `.rsrc` cells
-are the resource section's and are not.
+(BE5 owns the band and decides), ShopMode 9's for the field.
+
+### 7.2 The second run, 2026-10-01 (the filter of 7.1, at `52342db`)
+
+The same command: **305 hits, 33 rows, 81 entries into read code, 191
+data**; the six of 7.1's table all rows, the FO case unchanged. 81 of the
+first run's "rows" were inside the read of the listed function before them
+(`0x460000`, `0x460001`, `0x460018`, `0x460073` all in `0x45FE90`'s;
+`0x520001`, `0x520016`, `0x520025`, `0x520048` in `0x520000`'s; the rest
+in ours). The 27 rows beyond the six fall in three kinds:
+
+- **Candidates to read** (16-aligned, a plausible size, named once or from
+  a run): `0x4613B0` (BE6, 611 bytes, `0x6536C0[3]`, a run of four),
+  `0x51FA30` (FC3, 53, `PartyAction5_Forms` + 22), `0x52FF40` (FE1, 144,
+  `0x61DC80[1]`), `0x43FEC0` (BE3, 51), `0x44FFC0` (BE5, 170), `0x525A40`
+  (FC3, 220), `0x537B10` (FE2, 63, `0x660CA0[5]`), `0x571F30` (FE2, 183),
+  `0x580E30` (FS, 71), `0x520030` (FC3, 234), `0x520420` (FC3, 436), and
+  the pair `0x520E80` / `0x520EA0` (FC3, 7 and 6 bytes, two thunks or two
+  constants). None is read; each is the band owner's to look at.
+- **Constants that recur in records**: `0x580000` from 43 cells, `0x540200`
+  from 22, `0x550000` from 3, each cell a run of one - the `0x00NN00MM`
+  short-pair shape, decoding only because a function's tail happens to
+  sit there. With them the one-cell values of that shape: `0x440000`,
+  `0x530000`, `0x540000`, `0x560000`, `0x570000`, `0x580020`, `0x540E00`,
+  `0x544450`, `0x530E80`, and `0x570002` (1 byte, inside `0x570000`'s own
+  read). `0x53E0F0` (712 bytes) is named only from `.rsrc`, the resource
+  section's.
+- **Hits that disappeared as rows and were right to**: `0x464970`,
+  `0x560D60`, `0x573130` of 7.1's unread list are entries into `0x4648F0`,
+  `Scena12_Run8` and `Kind2_Script`.
+
+**The filter's second tightening, in the code** (not yet run): a value named
+only from `.rsrc` is data; a value named from more than four cells none of
+which sits in a run of code pointers or a sized table of `symbols.toml` is
+a constant; a row inside another row's read is an entry into it. That
+settles `0x580000`, `0x540200`, `0x53E0F0` and `0x570002` by rule; the
+one-cell `0x5N0000` values stay rows until someone reads them, since the
+tool cannot tell a short pair from a pointer to a tail without reading.
+The third run's expectation is **29 rows**: the six, the thirteen
+candidates, and ten of the `0x5N0000` shape.
 
 What it does not do: a pointer computed at run time (`add eax, imm`, a
 table base in a register) is invisible, as in section 4; a cell in `.text`

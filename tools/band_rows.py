@@ -458,11 +458,38 @@ class Band:
             if decodes and inside is None:
                 d = read_extent(img, w, self.limit(w))
                 decodes = d['bad'] is None and not d['falls'] and d['end'] > w
+            # the second run (2026-10-01): a value named only from .rsrc is a
+            # resource's (0x53E0F0); one named from many cells, none in a run
+            # of code pointers or a sized table, is a constant that recurs in
+            # records (0x580000 from 43, 0x540200 from 22), not a pointer a
+            # function would have in a table
+            constant = all(sec == '.rsrc' for _, sec, _ in cells) or (
+                len(cells) > 4 and all(self._lone_cell(c) for c, _, _ in cells))
             out[w] = dict(group=g, before=before, cells=[(c, sec) for c, sec, _ in cells], inside=inside,
-                          decodes=decodes, boundary=boundary,
-                          row=decodes and boundary and inside is None and before is not None)
+                          decodes=decodes, boundary=boundary, constant=constant,
+                          row=decodes and boundary and not constant and inside is None and before is not None)
+        # a row inside another row's read is an entry into it (0x570002 in
+        # 0x570000's, the second run)
+        rows = sorted(w for w, i in out.items() if i['row'])
+        for w in rows:
+            i = bisect.bisect_left(rows, w) - 1
+            while i >= 0 and self.limit(rows[i]) > w:
+                d = read_extent(img, rows[i], self.limit(rows[i]))
+                if w in d['seen'] or any(lo <= w < hi for lo, hi in d['tables']):
+                    out[w]['inside'], out[w]['row'] = rows[i], False
+                    break
+                i -= 1
         self._pscan = out
         return out
+
+    def _lone_cell(self, cell):
+        """True when the cell is a run of one (no code pointer beside it) and
+        in no sized table of symbols.toml."""
+        if any(lo <= cell < hi for lo, hi, _ in self.data_sized):
+            return False
+        img = self.img
+        nxt = img.u32(cell + 4)
+        return run_start(img, cell) == cell and not (nxt is not None and img.in_text(nxt))
 
     def table_owner(self, cell):
         """(owner start, table base) when `cell` lies in the run of .text code
@@ -866,7 +893,7 @@ def print_pointer_scan(b, group=None):
     entries = sum(1 for i in hits.values() if not i['row'] and i['inside'] is not None)
     print('\npointer scan: %d dwords outside .text hold a band address no list knows: %d rows, %d entries into '
           'read code, %d data (a value that reads as an address: inside no read, not a function start, '
-          'or not decoding to a return)' % (len(hits), rows, entries, len(hits) - rows - entries))
+          'not decoding to a return, or a constant recurring in records)' % (len(hits), rows, entries, len(hits) - rows - entries))
     for g in groups:
         ws = sorted(w for w, i in hits.items() if i['group'] == g)
         if not ws:
