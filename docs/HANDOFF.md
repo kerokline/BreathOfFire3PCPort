@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-29, round twelve merged to `main` as PR #33, `d1b411c`; round thirteen on `phase-3/capture-round-thirteen` from it: waves one and two merged, 7,568 ours, paused before wave three)
+**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, paused before wave three)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -167,10 +167,15 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
    pushed 2026-09-29 and **merged as PR #33 (`d1b411c`)**. Next, in order: the round's debts (section 7 there: the
    ~~mask and stand-in folds into both harnesses~~ (2026-10-01, on round thirteen's tip: `boss_harness.md` 10.10,
-   `scenario_harness.md` 8.6 - **the next `'*'` moves FC1..FS's counts**, two field regions added; 0 mismatches the bar),
-   ~~the defects to number~~ (D175..D196, PR #37), ~~the rebinding between the groups~~ (82 constants, PR #38), the
-   pointer scan `band_rows.py` lacks, the 33
-   owned starts without an `entries_logic.txt` line); **round thirteen**, the effect engine
+   `scenario_harness.md` 8.6, **merged as PR #39** - **the next `'*'` moves FC1..FS's counts**, two field regions added;
+   0 mismatches the bar), ~~the defects to number~~ (D175..D196, PR #37), ~~the rebinding between the groups~~ (82
+   constants, PR #38), and two tools written 2026-10-01 in a cloud session **whose first run is yours**: the pointer
+   scan as `band_rows.py --pointer-scan` ([`band-rows.md`](band-rows.md) section 7 - run its regression without the
+   flag first, then `--groups --pointer-scan`; FC2's four, FC3's five and FO's `0x578A40` are the expectations) and
+   the audit of the 33 owned starts without an `entries_logic.txt` line as `tools/entries_audit.py` (give it `--exe`,
+   `--exclude analysis/calltrace/wallclock_reach.json` and each route's reach `bof3x.callcounts.tsv` as `--reach`;
+   a start it calls UNCOVERED and entered gets its line before the next route; the verdicts go into the round
+   doc's section 7, item 4)); **round thirteen**, the effect engine
    ([`takeover-queue-round13.md`](takeover-queue-round13.md), planned by another session, starts from this tip). Owed
    by the owner: DIV-0063 in game (the gene with a partner down, and each failing pair), the Config screen under an
    overlay, the field recipes (section 6 there). The scripts and briefs are in the session-`6ae930a8` scratchpad
@@ -267,10 +272,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
      (`tools/recipe_saves/adult_ryu`, `combat.txt`) would reach the first
      spell functions ever run live.
    - **34 owned functions have no `entries_logic.txt` line** (round9 doc
-     section 10, re-checked after wave five: the same 34): 9 are the
-     wall-clock exclusions, 25 to audit - the hash matched with them
-     absent, so each is covered by a host extent or off the attract path;
-     say which.
+     section 10, re-checked after wave five: the same 34; 33 since
+     `Sparkle_Launch` got its line): 9 are the wall-clock exclusions, the
+     rest to audit - the hash matched with them absent, so each is covered
+     by a host's registered range or off the attract path; `tools/entries_audit.py`
+     says which (item 00 above).
 2. **Housekeeping.** Round nine is merged (PR #27). The controls scripts of every
    round-nine group live in session scratchpads, not in git: waves one to
    three and the other earlier groups in

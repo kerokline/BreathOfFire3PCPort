@@ -214,13 +214,34 @@ with the boss set-up and its kinds among them.
    `BattleObj_Fall`'s unchecked character byte; BE6's L1 (fixed, DIV-0063).
 4. **The 33 other owned starts without an `entries_logic.txt` line**: the
    dragon route showed what one costs. Audit them before the next route.
+   **The tool is written, 2026-10-01** (a cloud session without `analysis/`):
+   `tools/entries_audit.py` lists every `impl` start with no line and says,
+   for each, whether a listed owned function's registered range holds it
+   (covered: the tracer already claims its calls), whether an `--exclude`
+   list names it (the nine wall-clock exclusions), which `--reach` runs
+   entered it (`BOF3X_CALLTRACE_REACH=1` outputs), and proposes the line
+   from `pc_funcs.json` or the code's extent (`--exe`). **The run and the
+   verdicts are owed**: at the tip, with the five routes' reach files and
+   `wallclock_reach.json`, into this section; a start that is uncovered
+   and entered gets its line before the next route.
 5. **The pointer scan** of section 8 over all fourteen bands, and its two cases folded into `tools/band_rows.py`.
+   **Folded 2026-10-01 as `--pointer-scan`** ([`band-rows.md`](band-rows.md)
+   section 7; off by default, the output without it unchanged): the starts in
+   a band that only a `.data` cell names become rows, flagged with the cell
+   and its table; a cut start whose only reference is a `.text` cell in the
+   run of a jump table read short is flagged a case of that table's owner and
+   absorbed. Written without the exe, compiled and linted; **the regression
+   and the run over the fourteen bands are owed** (the recipe is section 7
+   there: FC2's four, FC3's five and FO's `0x578A40` are the expectations).
 6. **Wave two's folds** into `scenario_harness`: the masks, `Zenny_Add`'s test, the confirm and cancel cells as a region, `Crt_sprintf` at three words, the GTE rows that log stack pointers; and wave two's defects with wave one's in item 3.
    **Done**: round thirteen's EKH pass folded 38 masks, `Crt_sprintf` and the stack pointers ([`scenario_harness.md`](scenario_harness.md) section 8.6), the defects are item 3's; **the rest 2026-10-01** on round thirteen's tip (the same section): `Zenny_Add`'s test, the two regions (the confirm and cancel words, `MessagePools`' offset words - these move every field group's draw, so FC1..FS's counts change at the next `'*'`), the louder forms (`Party_Count`, `Menu_ListScroll`, the sloped byte, `MoveScript_Step`, `Equip_PreviewSet`, `Gte_SetTransMatrix`) and the masks the first pass left. `Port_DroppedCall` at four words stays FS's own.
 7. **Housekeeping**: the seventeen `phase-3/round12-*` branches and the agents'
-   worktrees under `.claude/worktrees/` are merged and can go; the
-   controls scripts live in the session-`6ae930a8` scratchpad
-   (`<group>/`), a Temp folder.
+   worktrees under `.claude/worktrees/` are merged and can go (local to the
+   owner's machine; `origin` carries only `phase-3/round12-plan` of them, and
+   the three `claude/round-12-*` branches of PRs #37..#39, merged, which can
+   go too); the controls scripts live in the session-`6ae930a8` scratchpad
+   (`<group>/`), a Temp folder. `docs/README.md`'s duplicated `band-rows.md`
+   row was folded 2026-10-01.
 
 ## 8. Wave two: the field side (staged from `61be26e`, merged 06:58..08:35)
 
