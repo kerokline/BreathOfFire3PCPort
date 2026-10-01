@@ -78,6 +78,10 @@ struct Config {
     } sp;
     // DIV-0041: the wide picture, 426 x 240 (BOF3X_WIDE=1). Survey build.
     bool wide = false;
+    // DIV-0067: the field's rising squares draw their random numbers from a
+    // generator of their own (BOF3X_DRAW_RAND=1), so a recipe replays what
+    // the player saw where the logic reads Rand after them - fishing.
+    bool draw_rand = false;
     // DIV-0042: the picture on the window at whole multiples of its size
     // (the default) or stretched to the client's height (BOF3X_SNAP=0).
     bool snap = true;

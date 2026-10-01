@@ -3377,3 +3377,41 @@ designed in rather than bolted on.
   works now" (after the pad's start moved ahead of them). Not yet tried:
   a pad input held from before the video (no skip until released).
 - **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player.
+
+### The rising squares' random numbers from a generator of their own (opt-in)
+
+- **ID:** DIV-0067
+- **Date:** 2026-09-30
+- **Subsystem:** field draw (`MapCell_DrawRising` `0x570660`, ours in
+  `src/game/map_cells.cpp`); the recipes ([`input-script.md`](input-script.md))
+- **Tier:** Sensible
+- **Original behaviour:** the game's `Rand` `0x5B93D2` is the MSVC6 CRT
+  `rand()` - the per-thread seed at ptd + 0x14, stepped by `0x343FD` and
+  `0x269EC3` - and **the binary holds no `srand`** (every store to that
+  slot is rand's own; the linker dropped the unreferenced function), so
+  the sequence is fixed from boot and everything that draws on it in logic
+  replays frame for frame: battles, encounters, drops. `MapCell_DrawRising`
+  takes one `Rand` per square, eight a frame, each frame the cell is drawn
+  - and a frame the machine did not render is replayed as unrendered logic
+  (`win_main.cpp`), so between two inputs the number of draws, and of
+  `Rand` calls, depends on how fast the machine rendered. At the water the
+  fish's placement reads the sequence after those calls: the owner's
+  `tools/recipes/caughFish.txt` caught a fish when recorded and found
+  none on replay, the fish elsewhere (`analysis/shots/fishing_catch/`).
+- **New behaviour:** under `BOF3X_DRAW_RAND=1` the squares take their
+  numbers from `DrawRand`, a generator of the same shape whose state is
+  seeded from `Frame_Counter` on each new frame, so the logic's stream
+  moves with logic frames alone and the squares' pattern is the frame's.
+  Off, the default, the squares call Capcom's `Rand` as before.
+- **Rationale:** the owner, 2026-09-30: a recipe that catches a fish should
+  replay, and it should be a switch, so the other recipes and saves keep
+  the sequence they were recorded under.
+- **Also in the PSX version?** The PSX `Rand` is a BIOS routine with its own
+  sequence; the sparkle there draws on it the same way, and its frames are
+  never skipped, so the question does not arise.
+- **Verification:** `BOF3X_SHADOW=map_cells` 0 mismatches (the switch is
+  read after the self-test). Live: two replays of `caughFish.txt` under the
+  switch put the fish in the same place both times (frames 1320 and 1440
+  of the session's `shots_fish_r1` / `_r2`), where without it the two runs
+  differed; a catch wants a recording made under the switch.
+- **Reversible?** Leave `BOF3X_DRAW_RAND` unset.

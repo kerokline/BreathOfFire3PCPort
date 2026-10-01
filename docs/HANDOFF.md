@@ -122,7 +122,10 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    draw-pass functions). **The fix is a DIV:** give draw-side callers a generator of their own (a private LCG
    stepped per drawn frame, seeded from `Frame_Counter`), so the logic's `Rand` stream depends on logic frames
    alone - fishing, encounters, item drops all replay, and nothing the player sees changes but the sparkle's
-   exact pattern. Until then, fishing recipes are good to the cast.
+   exact pattern. **Done the same evening as DIV-0067, opt-in:** `BOF3X_DRAW_RAND=1`, or `draw_rand=1` in the
+   launcher's ini (no dialog box yet); two switched replays of `caughFish.txt` identical frame for frame. A catch
+   wants a recording made with it on; the owner's ini has it on for the fishing save. Recipes recorded with it
+   off (every one before this) stay as they were: the key is off by default.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34

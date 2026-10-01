@@ -1,5 +1,7 @@
 #include "game/map_cells.h"
 
+#include <windows.h>
+
 #include <cstdint>
 #include <cstring>
 
@@ -29,6 +31,24 @@ int S8(unsigned v) { return static_cast<signed char>(v); }
 // during the start-up fuzz, which runs before the exe's C runtime is set up
 // (the launcher loads us into a suspended process) and so cannot call it.
 int (__cdecl* g_rand)(void) = Rand;
+
+// DIVERGENCE DIV-0067 (BOF3X_DRAW_RAND=1): the rising squares' numbers from a
+// generator of their own, so the logic's Rand stream - the CRT rand(), never
+// reseeded (no srand in the binary) - moves with logic frames alone and a
+// recipe replays what the player saw at the water (the fish's placement,
+// 2026-09-30). The same multiplier and increment as the CRT's, the state
+// seeded from Frame_Counter on each new frame, so the pattern is the frame's
+// alone. Off (the default) the squares take Capcom's Rand as before.
+int __cdecl DrawRand() {
+    static std::uint32_t state = 0, last_frame = 0xFFFFFFFFu;
+    const std::uint32_t frame = Frame_Counter;
+    if (frame != last_frame) {
+        last_frame = frame;
+        state = frame * 0x9E3779B1u + 0x7F4A7C15u;
+    }
+    state = state * 0x343FDu + 0x269EC3u;
+    return static_cast<int>((state >> 16) & 0x7FFFu);
+}
 
 // A vertex dword of MapCell_DrawQuads: the s8 at byte 3 and the s8 at byte 2,
 // each doubled, about the cell's origin; the low word is the third coordinate.
@@ -721,7 +741,19 @@ extern "C" void __cdecl MapCell_DrawRising(const unsigned char* record, unsigned
     else DrawRising(record, b1, b0);
 }
 
+void MapCells_InjectBody();
+
 void MapCells_Inject() {
+    MapCells_InjectBody();
+    // DIVERGENCE DIV-0067: after the self-test, which compares Capcom's Rand on both sides.
+    char text[8];
+    if (GetEnvironmentVariableA("BOF3X_DRAW_RAND", text, sizeof text) && text[0] == '1') {
+        g_rand = DrawRand;
+        bof3::Log("DIV-0067    the rising squares' random numbers from the frame's own generator (BOF3X_DRAW_RAND)");
+    }
+}
+
+void MapCells_InjectBody() {
     // Called BEFORE every module that owns a callee of these four: the
     // clones' calls go where the originals' went, which must still be
     // Capcom's code while the fuzz runs. Offsets of every call: capstone over
