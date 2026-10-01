@@ -473,8 +473,13 @@ entry into `0x570000`'s), the FO case unchanged. The flag is settled: the
 debt's answer is 7.1's six plus 7.2's thirteen candidates, and the ten
 `0x5N0000` rows (`0x440000`, `0x530000`, `0x540000`, `0x550000`,
 `0x560000`, `0x570000`, `0x580020`, `0x540E00`, `0x544450`, `0x530E80`)
-are the tool's honest remainder, a read each to settle. Still owed: the
-regression without the flag (above), never run.
+are the tool's honest remainder, a read each to settle. **The regression
+without the flag ran 2026-10-01** (the owner, `45b6959` against `edd9c5c`,
+the exe and `analysis/` of the main checkout passed to both trees): all
+seven outputs identical - `--groups --tsv`, `--edges`, `--group BE5
+--clones`, `--group FE2 --clones`, `--group FO`, `--function
+0x446DE0,0x452460 --harness boss`, and round thirteen's cut's `--groups
+--tsv --byte-tables`. The flag off changes nothing; the debt is closed.
 
 What it does not do: a pointer computed at run time (`add eax, imm`, a
 table base in a register) is invisible, as in section 4; a cell in `.text`
