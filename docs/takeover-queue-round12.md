@@ -272,8 +272,10 @@ with the boss set-up and its kinds among them.
    two named them; 305 hits, six real - BE5's `Effect_Handlers` slots 4, 7,
    11, 47, 91 and FS's `ShopMode_States[9]` `0x583350` - and the noise (dwords
    inside listed functions, one-instruction "decodes") filtered in the code
-   since. **Owed: the regression without the flag, and the second run** with
-   the filter (its expectations are the table in 7.1).
+   since. The second run (7.2 there) 33 rows: the six, thirteen candidates for the
+   band owners to read, the rest constants of the `0x5N0000` shape, two more
+   rules in the code since. **Owed: the regression without the flag, and
+   the third run** (29 rows the expectation).
 6. **Wave two's folds** into `scenario_harness`: the masks, `Zenny_Add`'s test, the confirm and cancel cells as a region, `Crt_sprintf` at three words, the GTE rows that log stack pointers; and wave two's defects with wave one's in item 3.
    **Done**: round thirteen's EKH pass folded 38 masks, `Crt_sprintf` and the stack pointers ([`scenario_harness.md`](scenario_harness.md) section 8.6), the defects are item 3's; **the rest 2026-10-01** on round thirteen's tip (the same section): `Zenny_Add`'s test, the two regions (the confirm and cancel words, `MessagePools`' offset words - these move every field group's draw, so FC1..FS's counts change at the next `'*'`), the louder forms (`Party_Count`, `Menu_ListScroll`, the sloped byte, `MoveScript_Step`, `Equip_PreviewSet`, `Gte_SetTransMatrix`) and the masks the first pass left. `Port_DroppedCall` at four words stays FS's own.
 7. **Housekeeping**: the seventeen `phase-3/round12-*` branches and the agents'

@@ -181,8 +181,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    scan as `band_rows.py --pointer-scan` (**first run by the owner 2026-10-01**, [`band-rows.md`](band-rows.md) 7.1:
    FO's `0x578A40` as expected, FC2's and FC3's named since wave two so they cannot fire, 305 hits of which six are
    real - BE5's `Effect_Handlers` slots 4, 7, 11, 47, 91 and `ShopMode_States[9]` `0x583350` - the noise filtered in
-   the code since; **owed: the regression without the flag, then a second `--pointer-scan` run** against 7.1's
-   table; the branches of debt 7 are verified merged and the delete command is in the round doc's item 7) and
+   the code since; the second run (7.2 there) 33 rows, thirteen of them candidates for their band owners to read;
+   **owed: the regression without the flag, then a third `--pointer-scan` run** (29 rows the expectation); the branches of debt 7 are verified merged and the delete command is in the round doc's item 7) and
    the audit of the 33 owned starts without an `entries_logic.txt` line as `tools/entries_audit.py` (give it `--exe`,
    `--exclude analysis/calltrace/wallclock_reach.json` and each route's reach `bof3x.calltrace.tsv` as `--reach` -
    the reach runs are default-mode traces, `callcounts.tsv` is `MODE=all`'s; **run 2026-10-01**, the verdicts in the
