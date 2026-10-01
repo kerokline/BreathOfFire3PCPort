@@ -32,6 +32,14 @@ are [`round-11-cleanup.md`](round-11-cleanup.md) (item 0); round ten's are
 [`round-10-cleanup.md`](round-10-cleanup.md) (item 0a). The rest is
 [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
+**The frame hash reference is stale as of 2026-10-01 and must be re-recorded
+before any A/B is read** (the original twice, then ours, as every reference):
+`entries_logic.txt` changed under it - `tools/entries_audit.py --dedupe
+--append` dropped the 49 hosts' over-long duplicate lines (their ranges had
+claimed Capcom code past the hosts' real ends as owned, on both sides alike)
+and added 16 armed entries (round twelve doc section 7 item 4). Both move the
+`(entry, caller)` sequence on both sides; `r9_orig` was recorded under the
+old list. Until then, the record below is the last good one.
 **The frame hash reference** is `analysis/calltrace/r9_orig` (twin
 `r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
 reference sides `--original "*,-Game_Clock"`, `renderer=1`, windowed,

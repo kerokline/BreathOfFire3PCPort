@@ -243,7 +243,14 @@ with the boss set-up and its kinds among them.
    extents beside the host lines they meant to cut; `--dedupe` keeps the
    smaller. The tracer registers a range per line, duplicates included, so
    the hash never minded; what the dedupe fixes is attribution (a Capcom
-   caller past a host's over-long extent logged as owned).
+   caller past a host's over-long extent logged as owned). **Run 2026-10-01
+   on the owner's machine**: `--dedupe --append` in one run dropped the 49
+   larger lines (every pair's host extent, the groups' cut-down lines kept:
+   `0x464EC0..0x47F040` is round thirteen's effect band, where the same had
+   happened) and added the 16; a second run reported no change and 0 owned
+   starts without a line. `analysis/` is not in git, so the file itself is
+   the owner's. **Owed before the next A/B: the hash reference re-recorded**
+   (HANDOFF's trap at its head).
    **The tool is written, 2026-10-01** (a cloud session without `analysis/`):
    `tools/entries_audit.py` lists every `impl` start with no line and says,
    for each, whether a listed owned function's registered range holds it
