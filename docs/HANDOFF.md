@@ -173,9 +173,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    scan as `band_rows.py --pointer-scan` ([`band-rows.md`](band-rows.md) section 7 - run its regression without the
    flag first, then `--groups --pointer-scan`; FC2's four, FC3's five and FO's `0x578A40` are the expectations) and
    the audit of the 33 owned starts without an `entries_logic.txt` line as `tools/entries_audit.py` (give it `--exe`,
-   `--exclude analysis/calltrace/wallclock_reach.json` and each route's reach `bof3x.callcounts.tsv` as `--reach`;
-   a start it calls UNCOVERED and entered gets its line before the next route; the verdicts go into the round
-   doc's section 7, item 4)); **round thirteen**, the effect engine
+   `--exclude analysis/calltrace/wallclock_reach.json` and each route's reach `bof3x.calltrace.tsv` as `--reach` -
+   the reach runs are default-mode traces, `callcounts.tsv` is `MODE=all`'s; **run 2026-10-01**, the verdicts in the
+   round doc's section 7 item 4: 9 covered, 9 excluded, 16 lines owed, which `--append` writes, and 49 duplicates,
+   which `--dedupe` resolves - both on the machine with `analysis/`; **then the hash reference is re-recorded**, the
+   armed set having grown by 16)); **round thirteen**, the effect engine
    ([`takeover-queue-round13.md`](takeover-queue-round13.md), planned by another session, starts from this tip). Owed
    by the owner: DIV-0063 in game (the gene with a partner down, and each failing pair), the Config screen under an
    overlay, the field recipes (section 6 there). The scripts and briefs are in the session-`6ae930a8` scratchpad

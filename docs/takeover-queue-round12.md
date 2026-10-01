@@ -214,6 +214,36 @@ with the boss set-up and its kinds among them.
    `BattleObj_Fall`'s unchecked character byte; BE6's L1 (fixed, DIV-0063).
 4. **The 33 other owned starts without an `entries_logic.txt` line**: the
    dragon route showed what one costs. Audit them before the next route.
+   **Audited 2026-10-01** (`tools/entries_audit.py` with `--exe`, the
+   wall-clock exclusions and the two reach runs; 34 at the run, 7,571 owned):
+   **9 covered** - inside another owned function's registered range
+   (`Battle_MemberOutAction` in `Battle_MemberAutoTarget`, `ClutMap_FindFree`
+   / `_FindOwner` in `ClutMap_Mark`, `Battle_InitBossEncounter` /
+   `_InitEnemies` in `Battle_InitEncounterKind`, `Sparkle_Free` in
+   `Sparkle_Alloc`, `Gfx_DrawSunsetGlow` in `Gfx_DrawSkyGradient`,
+   `MoveScript_GroupD` in `GroupF`, `MoveScript_Group9` in `Group8`), no
+   line owed; **9 left out on purpose** - `wallclock_reach.json`'s
+   (`Gfx_FlushDirtyStrip`, `Gfx_FlushUploadQueue`, `Gfx_UploadPacked5`,
+   `Gfx_InvalidateTextures`, `Gfx_LoadImage`, `Gfx_LoadImageIfChanged`,
+   `Gfx_ConvertRow`, `Gfx_ClutPixels`, `Gfx_TexCacheFind`); **16 want a
+   line**, each at the extent capstone reads: `Sparkle_Rise` 0x6C,
+   `Sparkle_Fade` 0x85, `Game_WndProc` 0x3C4, `Field_ObjectFollow` 0x10F,
+   `AreaMap_DrawBackdrop` 0x147, `AreaMap_TextureCycle` 0xE5,
+   `AreaMap_SlotZones` 0x1C7, `MoveScript_CounterSet` 0x18, `_CounterTest`
+   0x20, `_CounterStep` 0x1F, `Fmv_WndProc` 0xD4 (inside
+   `Fmv_EnterFullscreen`'s listed span, which Capcom runs: no range of its
+   own without a line), `Gfx_MoveImage` 0xC8, `D3d_DrawPolyG3` 0x1C8,
+   `D3d_DrawLineG2` 0x14D, `D3d_DrawLineG3` 0x1BE, `Gfx_MoveCells` 0x4E.
+   **The reach runs say nothing about the 16**: a start without a line is
+   never armed, so no run could have seen it enter (`Game_WndProc` runs on
+   every message of every run). `--append` writes the 16; then **the frame
+   hash reference is re-recorded** (16 more armed entries change the
+   sequence on both sides: the original twice, then ours, as every
+   reference). **49 addresses are listed twice** - the groups' cut-down
+   extents beside the host lines they meant to cut; `--dedupe` keeps the
+   smaller. The tracer registers a range per line, duplicates included, so
+   the hash never minded; what the dedupe fixes is attribution (a Capcom
+   caller past a host's over-long extent logged as owned).
    **The tool is written, 2026-10-01** (a cloud session without `analysis/`):
    `tools/entries_audit.py` lists every `impl` start with no line and says,
    for each, whether a listed owned function's registered range holds it
