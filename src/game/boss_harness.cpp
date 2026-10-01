@@ -570,9 +570,9 @@ const Callee kStandard[] = {
     {BH_OURS(Port_DroppedCall), 1, {kU8}, Answer::kGarbage, 0, 0},
     // the battle's way out, the hooks' tail jumps (engine code nobody owns):
     // 0x904AA0 = 5 and 0x904AA2 = 0, with 0x904AA1 = 1 (the win), 2, 3
-    {"0x446DE0", 0x446DE0, 0x446DE0, 0, {}, Answer::kGarbage, 0, 0, {}, &EndWinEffect},
-    {"0x446E00", 0x446E00, 0x446E00, 0, {}, Answer::kGarbage, 0, 0},
-    {"0x446E20", 0x446E20, 0x446E20, 0, {}, Answer::kGarbage, 0, 0},
+    {"BattleEnd_EnterStep1", bof3::addr::BattleEnd_EnterStep1, bof3::addr::BattleEnd_EnterStep1, 0, {}, Answer::kGarbage, 0, 0, {}, &EndWinEffect},
+    {"BattleEnd_EnterStep2", bof3::addr::BattleEnd_EnterStep2, bof3::addr::BattleEnd_EnterStep2, 0, {}, Answer::kGarbage, 0, 0},
+    {"BattleEnd_EnterStep3", bof3::addr::BattleEnd_EnterStep3, bof3::addr::BattleEnd_EnterStep3, 0, {}, Answer::kGarbage, 0, 0},
     // the spawn helpers (boss_spawn.cpp): the field actors a set-up finds by tag
     {BH_OURS(EnemyData_FindByTag), 1, {kU8}, Answer::kByte, 0xFF, 7},
     {BH_OURS(BossActor_Find), 1, {kU8}, Answer::kGarbage, 0, 0, {}, &ActorFindEffect},
@@ -738,8 +738,8 @@ const Callee kEngineStandard[] = {
     {"0x42E0E0", 0x42E0E0, 0x42E0E0, 0, {}, Answer::kGarbage, 0, 0},             // BATE's, unlisted in the cut (part 7)
     {"0x42E250", 0x42E250, 0x42E250, 0, {}, Answer::kGarbage, 0, 0},
     {"0x42E2F0", 0x42E2F0, 0x42E2F0, 0, {}, Answer::kFlag, 0, 0},
-    {"0x437230", 0x437230, 0x437230, 0, {}, Answer::kGarbage, 0, 0},             // no start list has it (after 0x437200's padding)
-    {"0x441510", 0x441510, 0x441510, 0, {}, Answer::kGarbage, 0, 0},             // no start list has it (after BattleObj_PickPose's table)
+    {"EnemyOp_CastDoneCheck", bof3::addr::EnemyOp_CastDoneCheck, bof3::addr::EnemyOp_CastDoneCheck, 0, {}, Answer::kGarbage, 0, 0},             // no start list has it (after 0x437200's padding)
+    {"BattleObj_HitPose", bof3::addr::BattleObj_HitPose, bof3::addr::BattleObj_HitPose, 0, {}, Answer::kGarbage, 0, 0},             // no start list has it (after BattleObj_PickPose's table)
     {"0x44F1D0", 0x44F1D0, 0x44F1D0, 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
     {"0x44F6A0", 0x44F6A0, 0x44F6A0, 2, {0, kAll}, Answer::kFlag, 0, 0},         // reads its second word only
     {"0x44FB30", 0x44FB30, 0x44FB30, 0, {}, Answer::kGarbage, 0, 0},

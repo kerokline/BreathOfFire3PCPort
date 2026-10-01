@@ -347,10 +347,10 @@ const Callee kStandard[] = {
     {SH_OURS(ScriptFlags_Set40), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(ScriptFlags_Clear40), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(ObjTrio_SetBit40), 0, {}, Answer::kGarbage, 0, 0},
-    {"ObjTrio_ClearBit40", 0x57C7E0, KeyOf(ObjTrio_ClearBit40), 0, {}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
+    {"ObjTrio_ClearBit40", bof3::addr::ObjTrio_ClearBit40, KeyOf(ObjTrio_ClearBit40), 0, {}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
     // the scenario engine
     {SH_OURS(Scenario_CallA), 1, {kU8}, Answer::kGarbage, 0, 0},
-    {"Scenario_CallB", 0x5341C0, KeyOf(Scenario_CallB), 1, {kU8}, Answer::kGarbage, 0, 0},   // FE2 takes it (round twelve)
+    {"Scenario_CallB", bof3::addr::Scenario_CallB, KeyOf(Scenario_CallB), 1, {kU8}, Answer::kGarbage, 0, 0},   // FE2 takes it (round twelve)
     {SH_OURS(Transition_Start), 1, {kU8}, Answer::kGarbage, 0, 0},
     {SH_OURS(ClutStrip_FadeTo), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(ClutStrip_Restore), 0, {}, Answer::kGarbage, 0, 0},
@@ -365,7 +365,7 @@ const Callee kStandard[] = {
     {SH_OURS(EventObj_Face), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(EventObj_SetFlags), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(EventObj_Reset), 0, {}, Answer::kGarbage, 0, 0},
-    {"EventOp_6x", 0x57AD10, KeyOf(EventOp_6x), 1, {kAll}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
+    {"EventOp_6x", bof3::addr::EventOp_6x, KeyOf(EventOp_6x), 1, {kAll}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
     {SH_OURS(Field_ObjectInHome), 1, {kAll}, Answer::kFlag, 0, 0},
     {SH_OURS(Effect_FindFree), 0, {}, Answer::kByte, 0xFF, 0x13},
     {SH_THEIRS(Effect_SpawnAt), 6, {kU8, kU8, kU8, kAll, kAll, kAll}, Answer::kByte, 0xFF, 0x13},
@@ -399,15 +399,15 @@ const Callee kStandard[] = {
     {SH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
     // unnamed, by address (docs/scena_sc0.md section 6)
     // SE's (round ten): the event battle's set-up by index - 0x904AAA, 0x802D41 = 5
-    {"0x4410B0", 0x4410B0, 0x4410B0, 1, {kU8}, Answer::kGarbage, 0, 0},
+    {"Field_StartEventBattle", bof3::addr::Field_StartEventBattle, bof3::addr::Field_StartEventBattle, 1, {kU8}, Answer::kGarbage, 0, 0},
     // x, z (dwords to 0x903780 / 84) and an index: an event battle's party placement
-    {"0x532ED0", 0x532ED0, 0x532ED0, 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0},
+    {"Party_PlaceForBattle", bof3::addr::Party_PlaceForBattle, bof3::addr::Party_PlaceForBattle, 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0},
     // the camera turned toward an angle (s16) at a speed (s8), al 1 while turning
-    {"0x57C6B0", 0x57C6B0, 0x57C6B0, 2, {kU16, kU8}, Answer::kFlag, 0, 0},
+    {"Camera_EaseAngleFB", bof3::addr::Camera_EaseAngleFB, bof3::addr::Camera_EaseAngleFB, 2, {kU16, kU8}, Answer::kFlag, 0, 0},
     // the view shift after a focus test (PSX 0x80155154, docs/field-modes.md)
-    {"0x56FCA0", 0x56FCA0, 0x56FCA0, 0, {}, Answer::kGarbage, 0, 0},
+    {"MapView_FillCells", bof3::addr::MapView_FillCells, bof3::addr::MapView_FillCells, 0, {}, Answer::kGarbage, 0, 0},
     // Field_StatusBits |= 0x80
-    {"0x56D6F0", 0x56D6F0, 0x56D6F0, 0, {}, Answer::kGarbage, 0, 0},
+    {"Field_SetStatus80", bof3::addr::Field_SetStatus80, bof3::addr::Field_SetStatus80, 0, {}, Answer::kGarbage, 0, 0},
 };
 #undef SH_OURS
 #undef SH_THEIRS

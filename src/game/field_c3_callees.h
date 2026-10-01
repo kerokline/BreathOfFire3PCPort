@@ -4,24 +4,26 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
+
 namespace field_c3::at {
 
 // Callees another group of round twelve's wave two owns (the cut table
 // analysis/round12_cut.tsv), called through the harness by address (SH_AT)
 // until they merge; the coordinator rebinds them after (docs/field_c3.md
 // section 8). All FE2's.
-constexpr std::uint32_t kEventObjectFrame = 0x536F10;   // FE2: void(void); Sprite_Current = 0x905DA0, the event object's frame
-constexpr std::uint32_t kUpFace = 0x535FC0;             // FE2: void(void); animation 0x3C facing 7, else 0x3D
-constexpr std::uint32_t kDownJumpSetUp = 0x535FE0;      // FE2: void(void); pace +0x70 + 2, Field_JumpSetUp, the frames doubled
-constexpr std::uint32_t kDownWait1 = 0x536050;          // FE2: unsigned char(void); al 1 when +9 has run out
-constexpr std::uint32_t kDownWait2 = 0x5360C0;          // FE2: unsigned char(void)
-constexpr std::uint32_t kDownWait3 = 0x536130;          // FE2: unsigned char(void)
-constexpr std::uint32_t kDownWait4 = 0x536170;          // FE2: unsigned char(void)
-constexpr std::uint32_t kUpLanded = 0x536290;           // FE2: void(void); a CLUT word 0, animation 0x37 facing 7, else 0x34
-constexpr std::uint32_t kUpWait5 = 0x5362D0;            // FE2: unsigned char(void)
-constexpr std::uint32_t kUpWait6 = 0x5363C0;            // FE2: unsigned char(void)
-constexpr std::uint32_t kUpWait7 = 0x536440;            // FE2: unsigned char(void); al 1 once the object is back in state 1
-constexpr std::uint32_t kRecoilFace = 0x534C20;         // FE2: void(unsigned char), reads the byte (and eax, 0xFF)
+constexpr std::uint32_t kEventObjectFrame = bof3::addr::Mode11_ObjectDraw;   // FE2: void(void); Sprite_Current = 0x905DA0, the event object's frame
+constexpr std::uint32_t kUpFace = bof3::addr::Leader_Pose3C;             // FE2: void(void); animation 0x3C facing 7, else 0x3D
+constexpr std::uint32_t kDownJumpSetUp = bof3::addr::Leader_HopStart;      // FE2: void(void); pace +0x70 + 2, Field_JumpSetUp, the frames doubled
+constexpr std::uint32_t kDownWait1 = bof3::addr::Leader_HopFlight;          // FE2: unsigned char(void); al 1 when +9 has run out
+constexpr std::uint32_t kDownWait2 = bof3::addr::Leader_HopPose;          // FE2: unsigned char(void)
+constexpr std::uint32_t kDownWait3 = bof3::addr::Leader_Pose3E;          // FE2: unsigned char(void)
+constexpr std::uint32_t kDownWait4 = bof3::addr::Leader_StepUp;          // FE2: unsigned char(void)
+constexpr std::uint32_t kUpLanded = bof3::addr::Leader_Pose34;           // FE2: void(void); a CLUT word 0, animation 0x37 facing 7, else 0x34
+constexpr std::uint32_t kUpWait5 = bof3::addr::Leader_StepDown;            // FE2: unsigned char(void)
+constexpr std::uint32_t kUpWait6 = bof3::addr::Leader_HopStartAfterTick;            // FE2: unsigned char(void)
+constexpr std::uint32_t kUpWait7 = bof3::addr::Leader_HopFall;            // FE2: unsigned char(void); al 1 once the object is back in state 1
+constexpr std::uint32_t kRecoilFace = bof3::addr::Field_FloorHurt;         // FE2: void(unsigned char), reads the byte (and eax, 0xFF)
 
 // Callees nobody owns, in the harness's field-standard set by address.
 constexpr std::uint32_t kPartyScreens = 0x5372E0;       // void(void), mode 11's frame's sixth call

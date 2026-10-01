@@ -16,6 +16,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
+
 namespace battle_e4 {
 namespace at {
 
@@ -116,8 +118,8 @@ constexpr U kListReset = 0x929F04;        // u8: zeroed as the candidates open
 constexpr U kTextRecord0 = 0x904CE0;      // Text_Records[0]
 
 // --- callees nobody owns yet ----------------------------------------------------
-constexpr U kAfterEquip = 0x44FDE0;       // () BE5's
-constexpr U kMemberRefresh = 0x453300;    // (actor) BE6's
+constexpr U kAfterEquip = bof3::addr::BattleForm_ApplyStats;       // () BE5's
+constexpr U kMemberRefresh = bof3::addr::Battle_RecalcStats;    // (actor) BE6's
 constexpr U kItemFlags = 0x591810;        // (category, item) -> al
 constexpr U kEnemiesClear = 0x494E70;     // ()
 

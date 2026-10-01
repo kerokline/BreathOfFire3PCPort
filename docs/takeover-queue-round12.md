@@ -179,6 +179,21 @@ with the boss set-up and its kinds among them.
 2. **The rebinding left for the coordinator**: the raw calls between this
    wave's groups (RT's `--edges`; each group doc lists its own), and the
    harness files' raw routes (`boss_harness.cpp`, `boss_harness_eh.cpp`).
+   **Done 2026-10-01** (a cloud session, verified by the i686 build,
+   `ledger_check.py`, `gen_symbols.py`): 82 constants in 14 files, the
+   round-ten form (the same values, so every fuzz key stands) - the eleven
+   `_callees.h` of BE1..BE5, BE7, FC1..FC3, FE1 and FS (55: the wave's
+   cross-group calls), `battle_e2.cpp`'s seven stack tables (14),
+   `boss_harness.cpp`'s five raw standard rows (`BattleEnd_EnterStep1..3`,
+   `EnemyOp_CastDoneCheck`, `BattleObj_HitPose`; key still the address, so
+   the `BH_OURS` fold of item 1 is still owed with its `'*'` run) and
+   `scenario_harness.cpp`'s eight (the five raw standard rows and the three
+   `KeyOf` rows). **Left raw, on purpose:** `boss_harness_eh.cpp`'s routes,
+   call sites, controls and copies and `scenario_harness_fh.cpp`'s
+   `FH_CLONE` rows (each harness's self-test copies Capcom's bytes and keys
+   its routes and byte controls on those addresses: coordinates of the test,
+   as every group doc said), the image and band bounds (`0x401000`,
+   `kEngineBands`, `kChapterBank`), and the fuzz files' keys.
 3. **Number the defects** in `known-defects.md` from the seven docs'
    "latent defects". **Done 2026-10-01, both waves' fourteen docs: D175..D196**
    (a cloud session; D175 the dispatchers, D176 `BattleTask_Create`'s 0xFF,
