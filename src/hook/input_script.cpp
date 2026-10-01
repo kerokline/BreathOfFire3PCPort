@@ -62,6 +62,8 @@
 // back: Input_Latch's own words stand from the next frame on.
 
 namespace bof3 {
+
+void RandCountFrame();   // below, outside the anonymous namespace
 namespace {
 
 enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Mark, End };
@@ -479,6 +481,7 @@ void __cdecl ScriptedLatch() {
         g_prev = g_cur;
         g_cur = NextWord();
         ++g_frame;
+        RandCountFrame();
         if (!g_active) return;
     }
     Input_Held = g_cur;
@@ -575,6 +578,7 @@ void __cdecl RecordingLatch() {
         g_cur = Input_Held;   // the player's word, as Capcom's latch just read it
         Record(g_cur);
         ++g_frame;
+        RandCountFrame();
     }
     Input_Held = g_cur;
     Input_Previous = g_prev;
@@ -605,6 +609,36 @@ void RecordStart(const char* path) {
 
 }  // namespace
 
+// --- The Rand count (recorded and scripted runs) ------------------------------
+//
+// The game's Rand 0x5B93D2 is the CRT rand(), never reseeded (no srand in
+// the binary), so what a run draws depends on how many calls came before.
+// For a recording and its replay to be compared, each frame's running total
+// goes to the log: `randlog     frame F rand K`. The first frame whose K
+// differs between the two logs is where a consumer the frame count does not
+// fix ran (2026-09-30, the fish that would not replay). Rand is replaced by
+// a counter that calls a byte-copy of the original; the copy's one call, the
+// per-thread-data getter at its entry, is kept.
+std::uint32_t g_rand_calls = 0;
+int (__cdecl* g_rand_copy)() = nullptr;
+
+int __cdecl CountingRand() {
+    ++g_rand_calls;
+    return g_rand_copy();
+}
+
+void RandCountStart() {
+    constexpr std::uint32_t kRand = 0x5B93D2, kRandSize = 0x22, kGetPtd = 0x5BAD64;
+    const bof3::CloneCall calls[] = {{0, nullptr, kGetPtd}};
+    g_rand_copy = reinterpret_cast<int (__cdecl*)()>(bof3::CloneOriginal("Rand", kRand, kRandSize, calls, 1));
+    bof3::Inject("Rand", kRand, reinterpret_cast<void*>(&CountingRand));
+    Log("input       randlog: Rand counted, one line a frame");
+}
+
+void RandCountFrame() {
+    if (g_rand_copy) Log("randlog     frame %u rand %u", g_frame, g_rand_calls);
+}
+
 void InputScript_Stop() {
     if (!g_rec) return;
     FlushRun();
@@ -622,9 +656,11 @@ void InputScript_Start() {
     if (n >= sizeof path) Fatal("BOF3X_INPUT: the path is %lu characters, over MAX_PATH", (unsigned long)n);
     if (r > 0) {
         RecordStart(rec);
+        RandCountStart();
         return;
     }
     if (n == 0) return;
+    RandCountStart();
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
     wchar_t dir[MAX_PATH];

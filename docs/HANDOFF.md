@@ -125,7 +125,14 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    exact pattern. **Done the same evening as DIV-0067, opt-in:** `BOF3X_DRAW_RAND=1`, or `draw_rand=1` in the
    launcher's ini (no dialog box yet); two switched replays of `caughFish.txt` identical frame for frame. A catch
    wants a recording made with it on; the owner's ini has it on for the fishing save. Recipes recorded with it
-   off (every one before this) stay as they were: the key is off by default.
+   off (every one before this) stay as they were: the key is off by default. **The catch replays** (the third
+   `caughFish.txt`, 2026-09-30 night, the owner watching): the first two recordings under the switch missed on
+   replay because their walk diverged at a ledge on the world map - a press shorter than a frame boundary -
+   not because of the sequence; spacing the presses fixed it. Proof the sequence is fixed now: **recorded and
+   scripted runs log `randlog     frame F rand K`** (the running `Rand` count, a counting replacement over a
+   byte-copy of the CRT's; `input_script.cpp`), and the recording's and the replay's were identical on every
+   one of 3,889 frames (`analysis/shots/fishing_catch2/randlog_*.txt`). That instrument stays: the first
+   differing frame between two logs names any future consumer.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
