@@ -3380,6 +3380,24 @@ designed in rather than bolted on.
 
 ### The rising squares' random numbers from a generator of their own (opt-in)
 
+- **CORRECTION, 2026-09-30 night - the premise below is wrong; the switch
+  is a candidate for removal.** `Game_WinMain`'s loop (`win_main.cpp`) runs
+  every game function - the tasks, and with them `MapCell_DrawRising` - on
+  every logic frame; the branch a late frame skips only replays the built
+  ordering table to the GPU (`Gfx_DrawOTag`). So `Rand` was never consumed
+  "once per rendered frame", and the sequence already moved with logic
+  frames alone. What made the fish differ on replay was the shot-bearing
+  copies this session's ad-hoc splitter wrote, each `shot NAME 1` an extra
+  frame (corrected in `9689c71`; `tools/recipe_shots.py` keeps the total),
+  and, in the owner's first two recordings, a walk that diverged at a
+  world-map ledge. The measurement that stands: with the switch on, a
+  recording's and its replay's `Rand` counts agree on all 3,889 frames
+  (`randlog`), and the catch replays - with one end shot, and under the
+  call trace. Whether they agree with it off was never measured; by the
+  loop's reading they would. `tools/recipes/caughFish.txt` was recorded
+  under the switch and needs it on (the squares' calls are out of the
+  stream), so removing it means recording that recipe again. Off, the
+  default, nothing here changes anything.
 - **ID:** DIV-0067
 - **Date:** 2026-09-30
 - **Subsystem:** field draw (`MapCell_DrawRising` `0x570660`, ours in

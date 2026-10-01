@@ -133,6 +133,20 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    byte-copy of the CRT's; `input_script.cpp`), and the recording's and the replay's were identical on every
    one of 3,889 frames (`analysis/shots/fishing_catch2/randlog_*.txt`). That instrument stays: the first
    differing frame between two logs names any future consumer.
+   **CORRECTION, later that night: the "per rendered frame" mechanism above is wrong, and DIV-0067 rests on
+   nothing.** The frame loop runs all game code every logic frame; a late frame skips only `Gfx_DrawOTag`. The
+   fish differed because this session's shot copies added a frame per shot (fixed by the other session in
+   `9689c71`; use `tools/recipe_shots.py`, never an ad-hoc splitter) and because of the ledge walk. DIV-0067's
+   entry carries the correction. **To decide with the owner: remove the switch** (code, launcher key, ini line)
+   and record `caughFish.txt` again with it off - or keep it, off by default, as a harmless leftover. Also
+   suspect for the same reason: the note above that `campingFishing.txt` "does not replay on the all-original
+   side" - that run used a shifted shot copy; recheck with a `recipe_shots.py` copy before believing it.
+   **The catch route's reach** (plain trace, one end shot, the catch and Manillo reached): the same 16 fishing
+   functions as the camping route (`0x52B1B0`..`0x52CCD0`) and nothing more armed - Manillo's screen is the shop
+   code already ours or table-reached. **Manillo's screen, for the catalogue**
+   (`analysis/shots/owner_catalogue/manillo_will_that_be_all.png`): "Will that be all?  Yes No" has the hand a
+   word left of `Yes` (DIV-0027's stops again, with the master's prompt and, the owner says, two more
+   pointer-to-choice mismatches on that screen), and **its tiled backdrop is 320 wide under the wide picture**.
 
 000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
    owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
