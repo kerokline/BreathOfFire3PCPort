@@ -7,7 +7,7 @@ line (round twelve's debt 4, docs/takeover-queue-round12.md section 7).
         [--funcs analysis/pc_funcs.json] [--hidden analysis/pc_hidden.json]
         [--exclude analysis/calltrace/wallclock_reach.json ...]
         [--reach <bof3x.calltrace.tsv | bof3x.callcounts.tsv> ...]
-        [--exe bof3/BOF3.exe] [--tsv <path>]
+        [--exe bof3/BOF3.exe] [--tsv <path>] [--append] [--dedupe]
 
 Why a missing line matters (src/hook/calltrace.cpp, CallTrace_Start): the
 tracer registers an owned range [addr, addr + size) only for a listed entry
@@ -38,10 +38,24 @@ from pc_funcs.json's size, or from the code's own extent when --exe is given
 the group's doc or a read confirms it (battle_flow.md section 7 lists sizes
 the catalogue got wrong).
 
-It writes nothing unless --tsv names a path. Everything it prints is
-addresses and our own names: fine for a doc; the entries file itself is
-derived from the exe and stays under analysis/ (CLAUDE.md rule 1). Addresses
-are load-bearing (rule 3).
+A start without a line is never armed (the tracer arms the listed entries
+only), so no reach run can have seen it enter: the reach runs settle only the
+listed starts of --all (a line with a size of 0) and say nothing about the
+missing ones, whose verdict is always "add a line". --append writes the
+proposed lines to the entries file under a dated comment, as the groups did
+(the sizes from the code when --exe is given; it refuses a start whose size
+is unknown). --dedupe rewrites the entries file keeping, of each address
+listed more than once, the line with the smallest non-zero size (the
+consolidation the group docs deferred: "duplicates keep the smaller"). The
+tracer registers a range per line, duplicates included (calltrace.cpp,
+CallTrace_Start), so a host's over-long extent beside its cut-down line
+still claims the calls of whatever Capcom code lies past the host - on both
+sides alike, so the hash holds, but a Capcom caller is logged as owned; the
+dedupe is attribution, not the hash. Both writes are made on the machine
+that holds analysis/ (the file is derived from the exe, CLAUDE.md rule 1);
+a run with neither writes nothing but --tsv. Everything it prints is
+addresses and our own names: fine for a doc. Addresses are load-bearing
+(rule 3).
 """
 import argparse, bisect, collections, csv, json, os, re, sys, tomllib
 
@@ -176,6 +190,10 @@ def main():
     ap.add_argument('--exe', help="BOF3.exe, to read each start's extent for the proposed line (capstone)")
     ap.add_argument('--all', action='store_true', help='also list the owned starts that have a line but a size of 0')
     ap.add_argument('--tsv', help='write the table to this path')
+    ap.add_argument('--append', action='store_true',
+                    help='append the proposed lines (the starts to add, with a known size) to the entries file')
+    ap.add_argument('--dedupe', action='store_true',
+                    help='rewrite the entries file keeping the smallest non-zero size of each address listed twice')
     a = ap.parse_args()
 
     funcs, owned = load_symbols(a.symbols)
@@ -246,10 +264,12 @@ def main():
             verdict = 'left out on purpose (%s)' % ', '.join(sorted(set(excl)))
         elif hit:
             verdict = 'UNCOVERED and entered by a route: add a line'
-        elif reach:
-            verdict = 'uncovered, no given route enters it: add a line before a route does'
+        elif s in listed:
+            verdict = ('uncovered, no given route enters it: add a line before a route does' if reach
+                       else 'uncovered (no --reach given): add a line')
         else:
-            verdict = 'uncovered (no --reach given): add a line'
+            # never armed (no line), so the reach runs could not have seen it
+            verdict = 'uncovered: add a line (a start without a line is never armed, so no reach run could see it)'
         if other_host:
             verdict += "; lies in the listed span of %s, which Capcom still runs (no range)" % (
                 funcs.get(other_host[1], {}).get('name', '0x%X' % other_host[1]))
@@ -299,6 +319,72 @@ def main():
             for r in rows:
                 w.writerow(['0x%X' % r['pc']] + [r[k] for k in keys[1:]])
         print('wrote %s (%d rows)' % (a.tsv, len(rows)), file=sys.stderr)
+
+    if a.dedupe:
+        dedupe_entries(a.entries)
+    if a.append:
+        append_entries(a.entries, rows, read is not None)
+
+
+def dedupe_entries(path):
+    """Of each address listed more than once, keep the line with the smallest
+    non-zero size (a size of 0 only when no line has one); every other line of
+    that address goes. Comments and order are kept."""
+    with open(path, encoding='utf-8', errors='replace') as fh:
+        lines = fh.read().split('\n')
+    best = {}                                       # addr -> (size key, line index)
+    for i, line in enumerate(lines):
+        s = line.strip()
+        if not s or s[0] == '#':
+            continue
+        parts = s.split()
+        addr = int(parts[0], 16)
+        size = int(parts[1], 16) if len(parts) > 1 else 0
+        key = (0, size) if size else (1, 0)         # a sized line beats an unsized one; then the smaller
+        if addr not in best or key < best[addr][0]:
+            best[addr] = (key, i)
+    keep = {i for _, i in best.values()}
+    dropped = []
+    out = []
+    for i, line in enumerate(lines):
+        s = line.strip()
+        if s and s[0] != '#' and i not in keep:
+            dropped.append((int(s.split()[0], 16), i + 1, s))
+            continue
+        out.append(line)
+    if not dropped:
+        print('dedupe: no address is listed twice; %s unchanged' % path)
+        return
+    with open(path, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write('\n'.join(out))
+    print('dedupe: %d line(s) dropped from %s (the smallest non-zero size of each address kept):' % (len(dropped), path))
+    for addr, n, s in dropped:
+        print('    line %d: %s' % (n, s))
+
+
+def append_entries(path, rows, sized_from_code):
+    """The proposed lines of the rows that want one, appended under a dated
+    comment. Refuses when a start's size is unknown (give --exe)."""
+    import datetime
+    want = [r for r in rows if r['verdict'].startswith('uncovered') or r['verdict'].startswith('UNCOVERED')]
+    want = [r for r in want if not r['listed']]     # a listed line with a size of 0 is edited by hand
+    if not want:
+        print('append: nothing to add')
+        return
+    missing = [r for r in want if not r['line']]
+    if missing:
+        sys.exit('append: %d start(s) have no size (%s): give --exe so the extent is read from the code' % (
+            len(missing), ', '.join('0x%X' % r['pc'] for r in missing)))
+    today = datetime.date.today().isoformat()
+    with open(path, 'a', encoding='utf-8', newline='\n') as fh:
+        fh.write('\n# tools/entries_audit.py %s: the %d owned starts without a line, each at its code extent%s '
+                 '(docs/takeover-queue-round12.md section 7 item 4)\n' % (
+                     today, len(want), ' read with capstone' if sized_from_code else ''))
+        for r in want:                              # the name on its own comment line: every reader
+            fh.write('# %s\n%s\n' % (r['name'], r['line']))   # of the list splits a bare "ADDR SIZE"
+    print('append: %d line(s) added to %s:' % (len(want), path))
+    for r in want:
+        print('    %s  # %s' % (r['line'], r['name']))
 
 
 if __name__ == '__main__':
