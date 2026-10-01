@@ -304,3 +304,67 @@ so it was pointed at a copy): band `0x401000..0x430000`, 1,457 starts, 1,414
 ours; 1,566 functions after discovery, 1,554 ours; worlds 0..4 "to take" 3,
 0, 0, 0, 0; **catalogue "Area overlays" outside the band: 627; reached by an
 area: 2**.
+
+## 7. `--pointer-scan`: the starts only a pointer names, and the cases a table read short (2026-10-01)
+
+Round twelve's debt 5 ([`takeover-queue-round12.md`](takeover-queue-round12.md)
+section 7): wave two found two shapes the tool could not see, and the fold
+is this flag. **Written in a cloud session without the exe; compiled and
+linted, not yet run.** The first run over the fourteen bands is the owner's,
+with the regression below; until then this section describes the code, not
+a measurement. **Off by default**, and with it off nothing in the output
+changes (the row gains an internal field the TSV does not write).
+
+- **Starts only a `.data` pointer names.** FC2's `0x46C730`, `0x46CEF0`,
+  `0x46D400` (`Effect_KindHandlers` `0x34`, `0x3A`, `0x41`) and `0x46C820`
+  (`EffectKind34_V0States[2]`), FC3's `FieldCore_State2Steps` entries 4..8:
+  each a dispatcher of 0x12..0x23 bytes in the padding after a function,
+  reached by a table's cell and by nothing in `.text`, so no descent reached
+  it and the 16-byte rule (section 2, "code no list has") did not either -
+  `--group FC2` printed "0 not listed" ([`field_c2.md`](field_c2.md)
+  section 5, [`field_c3.md`](field_c3.md) section 5). `Band.pointer_scan`
+  reads every 4-aligned dword of every section but `.text`; a value inside a
+  group's band (its first cut entry to the span end of its last) that no
+  list knows - `pc_funcs`, `pc_hidden`, `symbols.toml`, the cut, the
+  absorbed starts, the code the 16-byte rule found - is a hit. A hit that
+  decodes and lies in no member's descent or table **becomes a member**
+  (`Band.extra_of`, so it gets a row, a clone, the flags and the edges),
+  flagged `not in the cut: code no list has, found by the pointer scan
+  (<the cells, with their table's name>)`. A hit inside a member's code is
+  printed as an entry into it, not a function; one that does not decode as
+  data. The report at the end of `--groups` or `--group` lists them all.
+- **A cut start that is a case of a table read short.** `0x578A40` (FO) was
+  reached only by the `.text` cell `0x578AD8`, which no reader had placed in
+  a table: `MoveScript_Group9`'s two-level switch had no cap without
+  `--byte-tables` (section 6). `--byte-tables` settled that one; the general
+  shape is any jump table whose read stopped before the cell - a `cmp` bound
+  smaller than the table, a switch the descent did not reach. `Band.table_owner`
+  takes every table any member's or bound's descent read and follows its run
+  of `.text` pointers past the read's end (up to `TABLE_RUN_MAX` cells, 4-aligned);
+  a cut start whose only references are `.text` cells inside such a run is
+  flagged `inside host, no address reference (a case of <owner>'s table <base>
+  (cell <c>, past the read; <who>))` and absorbed by `settle` like the other
+  cases. The report counts them.
+
+```
+python tools/band_rows.py --exe .../BOF3.exe --analysis .../analysis --groups --pointer-scan
+python tools/band_rows.py ... --group FC2 --pointer-scan        (expect 0x46C730, 0x46C820, 0x46CEF0, 0x46D400 as rows)
+python tools/band_rows.py ... --group FC3 --pointer-scan        (expect 0x525CA0, 0x5261E0, 0x526490, 0x526A90, 0x526B80)
+python tools/band_rows.py ... --group FO --pointer-scan         (expect 0x578A40 a case of 0x578A00's table 0x578AD8, without --byte-tables)
+```
+
+**The regression to run first**, section 6's: `--groups --tsv`, `--edges`,
+`--group BE5 --clones`, `--group FE2 --clones`, `--group FO`, `--function
+0x446DE0,0x452460 --harness boss`, and round thirteen's cut's `--groups
+--tsv`, at this commit and the one before it, **without the flag: every
+output must be identical, line for line.** Then the three expectations
+above with it. What the scan prints beyond them - any other start in the
+fourteen bands that only a pointer names - is the debt's answer and goes
+here, with the group whose band holds it; the cut is not rewritten (section
+5), the group that owns the band decides whether to take it.
+
+What it does not do: a pointer computed at run time (`add eax, imm`, a
+table base in a register) is invisible, as in section 4; a cell in `.text`
+that is not in any table's run (a stack table's immediate is an
+instruction operand, filtered in `reach`) names nothing here; a hit before
+a band's first cut row or between two bands is not reported.

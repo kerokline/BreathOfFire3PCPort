@@ -12,6 +12,10 @@ between groups (docs/band-rows.md, docs/takeover-queue-field-battle.md).
     python tools/band_rows.py ... --cut <tsv> --byte-tables --group EK1 --clones --harness area
                                   (round thirteen: any cut table, area_harness's form,
                                    two-level switches bounded; docs/band-rows.md section 6)
+    python tools/band_rows.py ... --pointer-scan --groups
+                                  (round twelve's debt 5: the starts in a band that only a
+                                   .data pointer reaches, and the cut starts that are a case of
+                                   a jump table read short; docs/band-rows.md section 7)
 
 Rounds nine to eleven each had a table that enumerated their code (Magic_Rows,
 the chapter vtables, the area descriptors, the boss set-ups). Round twelve's
@@ -64,6 +68,8 @@ HARNESS = {'boss': ('boss_harness', 'BH_N'), 'scenario': ('scenario_harness', 'S
            'area': ('area_harness', 'AH_N')}     # round thirteen's cut (docs/band-rows.md section 6)
 POINTER_CTYPES = ('unsigned long', 'void *', 'const void *', 'unsigned int')
 BYTE_TABLES = False        # --byte-tables (off: the output round twelve's groups were given)
+POINTER_SCAN = False       # --pointer-scan (off: the same; docs/band-rows.md section 7)
+TABLE_RUN_MAX = 1024       # the most cells a .text jump table is followed for, past its read
 
 
 def load_toml(path):
@@ -354,18 +360,115 @@ class Band:
             for f in load_toml(sib).get('func', []):
                 self.psx_names[f['pc']] = f['name']
         self._ext, self._host, self._reach, self._extra = {}, {}, None, None
+        self._pscan, self._tables, self._rows = None, None, {}
         self.absorbed = set()
 
     def extra_of(self):
         """{start: (group, the cut start before it)} for the code no list has
         inside a cut function's span (Band.unlisted): functions the cut does
-        not list, printed with the group whose span holds them, flagged."""
+        not list, printed with the group whose span holds them, flagged.
+        With --pointer-scan, also the starts in a group's band that a .data
+        pointer names and no descent reaches (Band.pointer_scan)."""
         if self._extra is None:
-            self._extra = {}
+            extra = {}
             for s0, r in self.cut.items():
                 for q, _ in self.unlisted(s0, self.limit(s0))[0]:
-                    self._extra.setdefault(q, (r['group'], s0))
+                    extra.setdefault(q, (r['group'], s0))
+            if POINTER_SCAN:
+                for w, info in self.pointer_scan(extra).items():
+                    if info['row'] and w not in extra:
+                        extra[w] = (info['group'], info['before'])
+            self._extra = extra
         return self._extra
+
+    # ---- the pointer scan (--pointer-scan; docs/band-rows.md section 7) ----
+    def band_of(self, g):
+        """A group's band: its first cut entry to the span end of its last."""
+        es = [e for e, r in self.cut.items() if r['group'] == g]
+        return min(es), self.limit(max(es))
+
+    def pointer_scan(self, extra):
+        """{start: info} for every 4-aligned dword outside .text that holds a
+        .text address inside a group's band which no list knows (pc_funcs,
+        pc_hidden, symbols.toml, the cut, the code Band.unlisted found - the
+        `extra` passed in). FC2's four dispatchers and FC3's five were such
+        starts: an 18-byte dispatcher in the padding after a function, named
+        by Effect_KindHandlers' or FieldCore_State2Steps' cell and by nothing
+        in .text, so no descent and no 16-byte rule found them (round twelve
+        section 8). info: group, before (the cut start before it), cells
+        ([(cell, section)]), inside (the member whose descent or table holds
+        the address, else None), decodes, row (True when it becomes a member:
+        decodes and inside no member's code)."""
+        if self._pscan is not None:
+            return self._pscan
+        bands = sorted((lo, hi, g) for g in self.groups for lo, hi in [self.band_of(g)])
+        known = set(self.starts) | self.absorbed | set(extra)
+        found = collections.defaultdict(list)
+        lows = [b[0] for b in bands]
+        img = self.img
+        for name, va, _, raw, rsz in img.secs:
+            if name == '.text':
+                continue
+            lo = (va + 3) & ~3
+            o = raw + (lo - va)
+            n = (rsz - (lo - va)) // 4
+            if n <= 0:
+                continue
+            for i, (w,) in enumerate(struct.iter_unpack('<I', img.data[o:o + 4 * n])):
+                if not img.in_text(w) or w in known:
+                    continue
+                k = bisect.bisect_right(lows, w) - 1
+                if k < 0 or not bands[k][0] <= w < bands[k][1]:
+                    continue
+                found[w].append((lo + 4 * i, name, bands[k][2]))
+        out = {}
+        members = sorted(set(self.cut) | set(extra))
+        for w, cells in sorted(found.items()):
+            g = cells[0][2]
+            before = max((e for e, r in self.cut.items() if r['group'] == g and e <= w), default=None)
+            # the members before w whose span still runs over it, any group's:
+            # the last of one band can run into the next
+            inside = None
+            i = bisect.bisect_left(members, w) - 1
+            while i >= 0 and self.limit(members[i]) > w:
+                d = self.extent(members[i])
+                if w in d['seen'] or any(lo <= w < hi for lo, hi in d['tables']):
+                    inside = members[i]
+                    break
+                i -= 1
+            decodes = mr.decode(img, w) is not None and img.u8(w) not in PADDING + (0,)
+            out[w] = dict(group=g, before=before, cells=[(c, sec) for c, sec, _ in cells], inside=inside,
+                          decodes=decodes, row=decodes and inside is None and before is not None)
+        self._pscan = out
+        return out
+
+    def table_owner(self, cell):
+        """(owner start, table base) when `cell` lies in the run of .text code
+        pointers that continues a jump table some descent read - a case the
+        read stopped short of (its cmp bound, or a two-level switch without
+        --byte-tables), as 0x578A40 was of MoveScript_Group9's table at
+        0x578AD8 (round twelve section 8). None when no table runs to it."""
+        if self._tables is None:
+            tabs = []
+            for m in sorted(self.members_all() | self.bounds()):
+                for lo, hi in self.extent(m)['tables']:
+                    tabs.append((lo, hi, m))
+            self._tables = sorted(tabs)
+        img = self.img
+        best = None
+        for lo, hi, m in self._tables:
+            if lo > cell:
+                break
+            if lo <= cell < hi:
+                return m, lo
+            if (cell - lo) // 4 > TABLE_RUN_MAX or (cell - lo) % 4:
+                continue
+            p = hi
+            while p <= cell and (w := img.u32(p)) is not None and img.in_text(w):
+                p += 4
+            if p > cell:
+                best = (m, lo)
+        return best
 
     def members_all(self):
         return set(self.cut) | set(self.extra_of())
@@ -404,6 +507,7 @@ class Band:
                 return
             self.absorbed |= new
             self._ext, self._host, self._reach, self._extra = {}, {}, None, None
+            self._pscan, self._tables, self._rows = None, None, {}
         sys.exit('settle: no fixpoint in 8 rounds')
 
     def prev_start(self, s):
@@ -524,6 +628,11 @@ class Band:
 
     # ---- one row ----------------------------------------------------------
     def row(self, s):
+        if s not in self._rows:
+            self._rows[s] = self._row(s)
+        return self._rows[s]
+
+    def _row(self, s):
         r = self.cut.get(s)
         ex = self.extent(s)
         lim = self.limit(s)
@@ -546,12 +655,26 @@ class Band:
         own_cells, ext_cells = [], []
         for c, sec in sorted(cells.get(s, [])):
             (own_cells if sec == '.text' and any(lo <= c < hi for lo, hi in tabs) else ext_cells).append((c, sec))
+        # --pointer-scan: a .text cell no reader placed in a table may continue a
+        # jump table some other descent read short; then it is that table's case
+        far_cells = []
+        if POINTER_SCAN and not body_refs and ext_cells and all(sec == '.text' for _, sec in ext_cells):
+            for c, sec in list(ext_cells):
+                to_ = self.table_owner(c)
+                if to_ is not None and to_[0] != s:
+                    far_cells.append((c, to_[0], to_[1]))
+                    ext_cells.remove((c, sec))
         flags = []
         if r is None and s in self.extra_of():
-            flags.append('not in the cut: code no list has, in the span of %#x' % self.extra_of()[s][1])
+            ps = self._pscan.get(s) if POINTER_SCAN and self._pscan else None
+            if ps and ps['row']:
+                flags.append('not in the cut: code no list has, found by the pointer scan (%s), in the span of %#x' % (
+                    ', '.join('%s cell %#x %s' % (sec, c, self.table_name(c)) for c, sec in ps['cells']), ps['before']))
+            else:
+                flags.append('not in the cut: code no list has, in the span of %#x' % self.extra_of()[s][1])
         by_host = hr is not None and (s in hr['seen'] or s in hr['far'])
         by_prev = pd is not None and ((pd['falls'] and pd['bad'] is None) or s in pd['far'])
-        if (by_host or by_prev or own_refs or own_cells) and not body_refs and not ext_cells:
+        if (by_host or by_prev or own_refs or own_cells or far_cells) and not body_refs and not ext_cells:
             how = []
             if by_host:
                 how.append('reached by host %#x' % host)
@@ -560,6 +683,8 @@ class Band:
                                          ', code no list has' if pre_unl else ''))
             if own_cells:
                 how.append("a case in its host's jump table")
+            for c, m, lo in far_cells:
+                how.append("a case of %#x's table %#x (cell %#x, past the read; %s)" % (m, lo, c, self.who(m)))
             flags.append('inside host, no address reference (%s)' % ', '.join(how))
         if any(lo <= s < hi for lo, hi in tabs) or ex['bad'] == s:
             flags.append('data: %s' % ('in a table of %#x' % (host if hr and any(lo <= s < hi for lo, hi in hr['tables']) else prv)
@@ -581,7 +706,7 @@ class Band:
         pad_only = cat is not None and all(self.img.u8(x) in PADDING for x in range(min(s + cat, ex['end']), max(s + cat, ex['end'])))
         return dict(s=s, r=r, ex=ex, size=ex['end'] - s, cat=cat, lim=lim, differs=cat is not None and not pad_only,
                     host=host, unlisted=unl, refs=body_refs, own_refs=own_refs, cells=ext_cells, own_cells=own_cells,
-                    flags=flags, group=r['group'] if r else (self.group_any(s) or '-'))
+                    far_cells=far_cells, flags=flags, group=r['group'] if r else (self.group_any(s) or '-'))
 
     def reach_text(self, row, full=True):
         parts = []
@@ -594,6 +719,8 @@ class Band:
             parts.append('%s cell %#x %s' % (sec, c, self.table_name(c)) if sec != '.text' else '.text cell %#x' % c)
         for c, sec in row['own_cells']:
             parts.append("case %#x of its host's table" % c)
+        for c, m, lo in row.get('far_cells', []):
+            parts.append("case %#x of %#x's table %#x" % (c, m, lo))
         return parts
 
 
@@ -706,6 +833,44 @@ def edges(b):
     return out
 
 
+def print_pointer_scan(b, group=None):
+    """The --pointer-scan report: per group, every start in the band that
+    only a .data pointer names, with its cells and what became of it; then
+    the cut starts the scan found to be a case of a table read short."""
+    ps = b.pointer_scan(dict(b.extra_of()))     # settled already: the cache answers
+    groups = [group] if group else b.groups
+    print('\npointer scan: %d starts in the bands that a cell outside .text names and no list knows' % (
+        sum(1 for w, i in ps.items() if i['group'] in groups)))
+    for g in groups:
+        ws = sorted(w for w, i in ps.items() if i['group'] == g)
+        if not ws:
+            continue
+        print('  %s (band %#x..%#x):' % ((g,) + b.band_of(g)))
+        for w in ws:
+            i = ps[w]
+            cells = ', '.join('%s cell %#x %s' % (sec, c, b.table_name(c)) for c, sec in i['cells'])
+            if i['row']:
+                what = 'a row now: %d bytes (code no list has, after %#x)' % (b.row(w)['size'], i['before'])
+            elif i['inside'] is not None:
+                what = "inside %#x's code or table (%s): an entry into it, not a function of its own" % (
+                    i['inside'], b.who(i['inside']))
+            elif not i['decodes']:
+                what = 'does not decode (data)'
+            else:
+                what = 'before the first cut row of the band'
+            print('    %#x  %s  <- %s' % (w, what, cells))
+    cases = []
+    for s in sorted(b.cut):
+        if group and b.cut[s]['group'] != group:
+            continue
+        row = b.row(s)
+        for c, m, lo in row['far_cells']:
+            cases.append((s, c, m, lo))
+    print('  %d cut starts are a case of a jump table read short:' % len(cases))
+    for s, c, m, lo in cases:
+        print('    %#x (%s) is cell %#x of %#x\'s table %#x (%s)' % (s, b.cut[s]['group'], c, m, lo, b.who(m)))
+
+
 def grep_refs(repo, addrs):
     """{addr: [(file, line, text)]} for every raw 0x... of addrs in src/game."""
     pats = {x: re.compile(r'(?<![0-9A-Za-z_])0[xX]0*%X(?![0-9A-Fa-f])' % x, re.I) for x in addrs}
@@ -749,9 +914,14 @@ def main():
     ap.add_argument('--byte-tables', action='store_true',
                     help="bound a two-level switch's dword table by its byte table's largest entry, so a case "
                          'past the span is read as a case (off by default: the output round twelve used)')
+    ap.add_argument('--pointer-scan', action='store_true',
+                    help='find the starts in a band that only a .data pointer names (rows, flagged) and the cut '
+                         'starts that are a case of a jump table read short (flagged inside host, absorbed); '
+                         'docs/band-rows.md section 7 (off by default: the output round twelve used)')
     a = ap.parse_args()
-    global BYTE_TABLES
+    global BYTE_TABLES, POINTER_SCAN
     BYTE_TABLES = a.byte_tables
+    POINTER_SCAN = a.pointer_scan
     a.cut = a.cut or os.path.join(a.analysis, 'round12_cut.tsv')
     if a.tsv and os.path.exists(a.tsv) and os.path.samefile(a.tsv, a.cut):
         sys.exit('--tsv %s is the cut table: refusing to write it' % a.tsv)
@@ -851,6 +1021,9 @@ def main():
                 fl('no reference'),
                 clones, sum(1 for e in es if e[0] == g), sum(1 for e in es if e[5] == g)))
         print('\n(pc_xref.json added %d immediates the sweep had not seen)' % b.xref_extra)
+
+    if a.pointer_scan and (a.groups or a.group):
+        print_pointer_scan(b, a.group)
 
     if a.tsv:
         with open(a.tsv, 'w', newline='', encoding='utf-8') as fh:
