@@ -243,7 +243,17 @@ with the boss set-up and its kinds among them.
    extents beside the host lines they meant to cut; `--dedupe` keeps the
    smaller. The tracer registers a range per line, duplicates included, so
    the hash never minded; what the dedupe fixes is attribution (a Capcom
-   caller past a host's over-long extent logged as owned). **Run 2026-10-01
+   caller past a host's over-long extent logged as owned). **Run
+   2026-10-01 on the owner's machine**: `--dedupe --append` dropped the 49
+   larger extents (every dropped line was the host's, the groups' cut-down
+   lines all kept; 39 of them round thirteen's effect band
+   `0x464EC0..0x47F040`) and added the 16; a second run changed nothing
+   and reports 0 owned starts without a line. **The frame hash reference
+   is now owed before any A/B is read** (section 5's `r9_orig` was
+   recorded under the old list): the 16 new armed entries change the
+   sequence, and so do the dropped host ranges, whose calls from Capcom
+   code past the hosts' real ends now log their real return addresses -
+   both sides alike, the original twice then ours, as every reference. **Run 2026-10-01
    on the owner's machine**: `--dedupe --append` in one run dropped the 49
    larger lines (every pair's host extent, the groups' cut-down lines kept:
    `0x464EC0..0x47F040` is round thirteen's effect band, where the same had
