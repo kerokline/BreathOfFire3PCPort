@@ -467,9 +467,14 @@ said. The two over the expectation were the two new rules read short:
   nested-row test is now the span, start to end, not the instruction
   starts.
 
-Both in the code, not yet run; the fourth run's expectation is **29 rows**,
-the same 29. The debt's answer stands as 7.1's six plus 7.2's thirteen
-candidates; the ten `0x5N0000` rows are the tool's honest remainder.
+**The fourth run, 2026-10-01 (at `6f36fb7`): 29 rows, 82 entries, 194
+data - the 29 expected, line for line** (`0x540200` data, `0x570002` an
+entry into `0x570000`'s), the FO case unchanged. The flag is settled: the
+debt's answer is 7.1's six plus 7.2's thirteen candidates, and the ten
+`0x5N0000` rows (`0x440000`, `0x530000`, `0x540000`, `0x550000`,
+`0x560000`, `0x570000`, `0x580020`, `0x540E00`, `0x544450`, `0x530E80`)
+are the tool's honest remainder, a read each to settle. Still owed: the
+regression without the flag (above), never run.
 
 What it does not do: a pointer computed at run time (`add eax, imm`, a
 table base in a register) is invisible, as in section 4; a cell in `.text`
