@@ -50,8 +50,7 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
    pushed 2026-09-29 and **its PR open, the merge the owner's**. Next, in order: the round's debts (section 7 there: the
-   mask and stand-in folds into both harnesses, the defects to number (PR #37), ~~the rebinding between the
-   groups~~ (82 constants, 2026-10-01), the pointer scan `band_rows.py` lacks, the 33
+   mask and stand-in folds into both harnesses, ~~the defects to number~~ (D175..D196, 2026-10-01), the pointer scan `band_rows.py` lacks, the 33
    owned starts without an `entries_logic.txt` line); **round thirteen**, the effect engine
    ([`takeover-queue-round13.md`](takeover-queue-round13.md), planned by another session, starts from this tip). Owed
    by the owner: DIV-0063 in game (the gene with a partner down, and each failing pair), the Config screen under an

@@ -195,7 +195,12 @@ with the boss set-up and its kinds among them.
    as every group doc said), the image and band bounds (`0x401000`,
    `kEngineBands`, `kChapterBank`), and the fuzz files' keys.
 3. **Number the defects** in `known-defects.md` from the seven docs'
-   "latent defects". The common classes: dispatchers indexing unchecked;
+   "latent defects". **Done 2026-10-01, both waves' fourteen docs: D175..D196**
+   (a cloud session; D175 the dispatchers, D176 `BattleTask_Create`'s 0xFF,
+   D177 the divisions, D178 the unchecked indexes, D179..D195 the singular
+   ones, D196 the small slips; `BattleObj_Fall`'s byte is a line of D178, and
+   D47 and D54 carry the round's notes). Item 6's "defects with wave one's"
+   is covered. The common classes: dispatchers indexing unchecked;
    `BattleTask_Create`'s 0xFF answer untested (D163's class, eleven more
    places); divisions by a count that can be 0. The singular ones:
    `EnemyAI_DedupMessages`' eight-dword stack buffer; `Escape_Roll`
