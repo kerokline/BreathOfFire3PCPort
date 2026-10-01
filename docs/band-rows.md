@@ -450,6 +450,27 @@ tool cannot tell a short pair from a pointer to a tail without reading.
 The third run's expectation is **29 rows**: the six, the thirteen
 candidates, and ten of the `0x5N0000` shape.
 
+### 7.3 The third run, 2026-10-01 (at `4b4153c`)
+
+**31 rows, 81 entries, 193 data**: the six and the thirteen candidates all
+rows, the FO case unchanged, `0x580000` and `0x53E0F0` data as the rules
+said. The two over the expectation were the two new rules read short:
+
+- `0x540200` stayed a row: five of its 22 cells (`0x613868[1]`,
+  `0x613D98[1]`, `0x6375FC[1]`, `0x637B44[1]`, `0x637C4C[1]`) have a dword
+  of the same short-pair shape before them, so they counted as a run of
+  code pointers. The run test is gone; the rule is now **more than four
+  cells, none in a sized table of `symbols.toml`** - a function pointer in
+  no known table is named from one cell, not five.
+- `0x570002` stayed a row (1 byte): it is the third byte of `0x570000`'s
+  first instruction, so it was in no instruction start of that read. The
+  nested-row test is now the span, start to end, not the instruction
+  starts.
+
+Both in the code, not yet run; the fourth run's expectation is **29 rows**,
+the same 29. The debt's answer stands as 7.1's six plus 7.2's thirteen
+candidates; the ten `0x5N0000` rows are the tool's honest remainder.
+
 What it does not do: a pointer computed at run time (`add eax, imm`, a
 table base in a register) is invisible, as in section 4; a cell in `.text`
 that is not in any table's run (a stack table's immediate is an

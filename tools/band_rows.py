@@ -463,33 +463,33 @@ class Band:
             # of code pointers or a sized table, is a constant that recurs in
             # records (0x580000 from 43, 0x540200 from 22), not a pointer a
             # function would have in a table
+            # (the third run: five of 0x540200's 22 cells had a dword of the
+            # same shape before them and counted as a run, so the test is
+            # the sized tables alone - a function pointer in no known table
+            # is named from one cell, not from five)
             constant = all(sec == '.rsrc' for _, sec, _ in cells) or (
-                len(cells) > 4 and all(self._lone_cell(c) for c, _, _ in cells))
+                len(cells) > 4 and not any(self._in_sized(c) for c, _, _ in cells))
             out[w] = dict(group=g, before=before, cells=[(c, sec) for c, sec, _ in cells], inside=inside,
                           decodes=decodes, boundary=boundary, constant=constant,
                           row=decodes and boundary and not constant and inside is None and before is not None)
-        # a row inside another row's read is an entry into it (0x570002 in
-        # 0x570000's, the second run)
+        # a row inside another row's span is an entry into it - its span,
+        # not its instruction starts: 0x570002 is the third byte of
+        # 0x570000's first instruction (the third run)
         rows = sorted(w for w, i in out.items() if i['row'])
         for w in rows:
             i = bisect.bisect_left(rows, w) - 1
             while i >= 0 and self.limit(rows[i]) > w:
                 d = read_extent(img, rows[i], self.limit(rows[i]))
-                if w in d['seen'] or any(lo <= w < hi for lo, hi in d['tables']):
+                if rows[i] <= w < d['end']:
                     out[w]['inside'], out[w]['row'] = rows[i], False
                     break
                 i -= 1
         self._pscan = out
         return out
 
-    def _lone_cell(self, cell):
-        """True when the cell is a run of one (no code pointer beside it) and
-        in no sized table of symbols.toml."""
-        if any(lo <= cell < hi for lo, hi, _ in self.data_sized):
-            return False
-        img = self.img
-        nxt = img.u32(cell + 4)
-        return run_start(img, cell) == cell and not (nxt is not None and img.in_text(nxt))
+    def _in_sized(self, cell):
+        """True when the cell is in a sized pointer table of symbols.toml."""
+        return any(lo <= cell < hi for lo, hi, _ in self.data_sized)
 
     def table_owner(self, cell):
         """(owner start, table base) when `cell` lies in the run of .text code
