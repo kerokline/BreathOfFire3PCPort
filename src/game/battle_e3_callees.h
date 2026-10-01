@@ -24,20 +24,22 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
+
 namespace battle_e3 {
 namespace at {
 
 using U = std::uint32_t;
 
 // --- raw callees of other groups (docs/battle_e3.md section 7) ---
-constexpr U kTurnVelocityC = 0x446770;    // (sprite) BE4
-constexpr U kTurnVelocity18 = 0x4467C0;   // (sprite) BE4
-constexpr U kRollB9 = 0x446810;           // () -> al, BE4
-constexpr U kNameToText = 0x44A910;       // (member) BE4
-constexpr U kBannerByPair = 0x44AA90;     // (byte, byte) BE4
-constexpr U kPass44FDE0 = 0x44FDE0;       // () BE5
-constexpr U kPass453300 = 0x453300;       // (actor) BE6
-constexpr U kSecondPopup = 0x453EB0;      // (word, actor) BE6
+constexpr U kTurnVelocityC = bof3::addr::Battle_TurnVectorC;    // (sprite) BE4
+constexpr U kTurnVelocity18 = bof3::addr::Battle_TurnVector18;   // (sprite) BE4
+constexpr U kRollB9 = bof3::addr::Battle_MemberReactRoll;           // () -> al, BE4
+constexpr U kNameToText = bof3::addr::Battle_MemberNameToText;       // (member) BE4
+constexpr U kBannerByPair = bof3::addr::BattleBanner_AddLine;     // (byte, byte) BE4
+constexpr U kPass44FDE0 = bof3::addr::BattleForm_ApplyStats;       // () BE5
+constexpr U kPass453300 = bof3::addr::Battle_RecalcStats;       // (actor) BE6
+constexpr U kSecondPopup = bof3::addr::Battle_SetApPopup;      // (word, actor) BE6
 constexpr U kItemClass = 0x591810;        // (byte, byte) -> al, nobody's
 
 // --- the battle bytes (0x904AA0..0x904BA0, the harness's battle frame) ---

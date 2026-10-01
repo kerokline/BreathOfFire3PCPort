@@ -482,7 +482,7 @@ extern "C" void __cdecl BattleFx_RestoreFade(void) {
 // BattleFx_Dispatch slot 17: by +1 through {BattleFx_RestoreMember,
 // BattleFx_RestoreFade} (a stack table; ours aborts past 1).
 extern "C" void __cdecl BattleFx_RestoreMemberTask(void) {
-    static constexpr U kSteps[2] = {0x434340, 0x4346C0};
+    static constexpr U kSteps[2] = {bof3::addr::BattleFx_RestoreMember, bof3::addr::BattleFx_RestoreFade};
     CallState("BattleFx_RestoreMemberTask", kSteps, 2, Sprite_Current[1]);
 }
 
@@ -494,7 +494,7 @@ extern "C" void __cdecl BattleFx_RestoreMemberTask(void) {
 // BattleFx_Dispatch slot 9, with the battle's pose pool: by +1 through
 // {_GridMarkStart, _GridMarkRun, BattleFx_FreeTask} (ours aborts past 2).
 extern "C" void __cdecl BattleFx_GridMark(void) {
-    static constexpr U kSteps[3] = {0x434930, 0x434A10, bof3::addr::BattleFx_FreeTask};
+    static constexpr U kSteps[3] = {bof3::addr::BattleFx_GridMarkStart, bof3::addr::BattleFx_GridMarkRun, bof3::addr::BattleFx_FreeTask};
     WithBattlePoses("BattleFx_GridMark", kSteps, 3);
 }
 
@@ -514,7 +514,7 @@ extern "C" void __cdecl BattleFx_GridMarkStart(void) {
 // not in use (+0 bit 0) +1 = 2 and +2 = 0, else the script ticked and the
 // overlay queued.
 extern "C" void __cdecl BattleFx_GridMarkRun(void) {
-    static constexpr U kSteps[2] = {0x434A60, 0x434B10};
+    static constexpr U kSteps[2] = {bof3::addr::BattleFx_GridMarkCount, bof3::addr::BattleFx_GridMarkPlace};
     CallState("BattleFx_GridMarkRun", kSteps, 2, Sprite_Current[2]);
     if ((B(at::kWindow21) & 1) == 0) {
         Sc()[1] = 2;
@@ -567,7 +567,7 @@ extern "C" void __cdecl BattleFx_GridMarkPlace(void) {
 // with the battle's pose pool: by +1 through {_ListHandStart, _ListHandRun,
 // BattleFx_FreeTask} (ours aborts past 2).
 extern "C" void __cdecl BattleFx_ListHand(void) {
-    static constexpr U kSteps[3] = {0x434BE0, 0x434C80, bof3::addr::BattleFx_FreeTask};
+    static constexpr U kSteps[3] = {bof3::addr::BattleFx_ListHandStart, bof3::addr::BattleFx_ListHandRun, bof3::addr::BattleFx_FreeTask};
     WithBattlePoses("BattleFx_ListHand", kSteps, 3);
 }
 
@@ -588,7 +588,7 @@ extern "C" void __cdecl BattleFx_ListHandStart(void) {
 // 0): record 21 not in use, +1 = 2 and +2 = 0; else placed as at the start
 // and the overlay queued.
 extern "C" void __cdecl BattleFx_ListHandRun(void) {
-    static constexpr U kSteps[2] = {0x434D00, 0x434D30};
+    static constexpr U kSteps[2] = {bof3::addr::BattleFx_ListHandPress, bof3::addr::BattleFx_ListHandWait};
     CallState("BattleFx_ListHandRun", kSteps, 2, Sprite_Current[2]);
     unsigned char* const s = Sprite_Current;
     if ((s[0] & 1) == 0) return;
@@ -673,7 +673,7 @@ void CursorRun(U window, U grid) {
 // with the battle's pose pool: by +1 through {_Win18CursorStart,
 // _Win18CursorRun, BattleFx_FreeTask} (ours aborts past 2).
 extern "C" void __cdecl BattleFx_Win18Cursor(void) {
-    static constexpr U kSteps[3] = {0x434DC0, 0x434E80, bof3::addr::BattleFx_FreeTask};
+    static constexpr U kSteps[3] = {bof3::addr::BattleFx_Win18CursorStart, bof3::addr::BattleFx_Win18CursorRun, bof3::addr::BattleFx_FreeTask};
     WithBattlePoses("BattleFx_Win18Cursor", kSteps, 3);
 }
 
@@ -689,7 +689,7 @@ extern "C" void __cdecl BattleFx_Win18CursorRun(void) { CursorRun(at::kWindow18,
 // with the battle's pose pool: by +1 through {_Win19CursorStart,
 // _Win19CursorRun, BattleFx_FreeTask} (ours aborts past 2).
 extern "C" void __cdecl BattleFx_Win19Cursor(void) {
-    static constexpr U kSteps[3] = {0x434F90, 0x435050, bof3::addr::BattleFx_FreeTask};
+    static constexpr U kSteps[3] = {bof3::addr::BattleFx_Win19CursorStart, bof3::addr::BattleFx_Win19CursorRun, bof3::addr::BattleFx_FreeTask};
     WithBattlePoses("BattleFx_Win19Cursor", kSteps, 3);
 }
 

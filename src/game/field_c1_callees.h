@@ -5,15 +5,15 @@
 
 #include <cstdint>
 
-#include "bof3/symbols.gen.h"
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
 
 namespace field_c1::at {
 
 // Callees another group of round twelve's wave two owns (group FC2, by
 // analysis/round12_cut.tsv), called through the harness by address (SH_AT)
 // until FC2 merges; the coordinator rebinds them after both have merged.
-constexpr std::uint32_t kFc2Aim = 0x46D0E0;          // void(void): EffectKind1B_Start's one callee (FC2)
-constexpr std::uint32_t kFc2Place = 0x46BF80;        // void(void): EffectKind30_Start's one callee (FC2)
+constexpr std::uint32_t kFc2Aim = bof3::addr::EffectKind3A_LeaderPose;          // void(void): EffectKind1B_Start's one callee (FC2)
+constexpr std::uint32_t kFc2Place = bof3::addr::EffectKind30_ClaimCells;        // void(void): EffectKind30_Start's one callee (FC2)
 
 // The effect kinds' state tables are named in symbols.toml and taken by
 // name (AddressOf(EffectKind19_States), ...): EffectKind19_States (3, by +1),
