@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 64 entries, DIV-0001..0064)
+**Status:** IN PROGRESS (opened 2026-09-18; 67 entries, DIV-0001..0067, the last withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3382,6 +3382,21 @@ designed in rather than bolted on.
 
 - **ID:** DIV-0067 (withdrawn and removed 2026-09-30, the day it was made;
   the number is not reused)
+- **Date:** 2026-09-30
+- **Subsystem:** display (`MapCell_DrawRising` `0x570660`; the switch and
+  its code are gone)
+- **Tier:** Sensible - withdrawn: the premise was wrong, see below
+- **Original behaviour:** the rising squares draw their random numbers
+  from the shared `Rand` `0x5B93D2`, as every caller does.
+- **New behaviour:** none. The entry is kept so the number and the story
+  are not lost; nothing in the code differs from the original on this
+  account.
+- **Rationale:** the fields below ("what it was", "why it is gone") are the
+  record; the required fields above are here so the ledger's checker reads
+  the entry as one (2026-10-01).
+- **Also in the PSX version?** Moot: no divergence stands.
+- **Reversible?** Nothing to reverse; the switch, its launcher key and its
+  code were removed with the withdrawal.
 - **What it was:** an opt-in switch (`BOF3X_DRAW_RAND=1`, the launcher's
   `draw_rand`) giving `MapCell_DrawRising` `0x570660` a private generator in
   place of Capcom's `Rand`, on the belief that draw code consumed the
