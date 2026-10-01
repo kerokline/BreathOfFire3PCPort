@@ -527,6 +527,12 @@ Local only, gitignored, worth keeping:
 
 ## Traps already paid for
 
+- **A `shot` line is a frame of the route** (2026-09-30). `shot NAME 1 [BUTTONS]` holds its buttons for one frame; a
+  shot inserted without taking that frame out of the run it splits puts every later input a frame late. An ad-hoc
+  splitter did that to copies of the owner's recordings - menus and dialogue tolerated it, a fishing cast did not, and
+  three committed recipes had to be repaired (`9689c71`). Use `tools/recipe_shots.py RECIPE --every N --out COPY`,
+  which keeps the total; a hand-placed shot replaces a frame (decrement its neighbour).
+
 _One line each, with a pointer. Add when something costs more than an hour._
 
 - **A route A/B's off-list and scratch ini go stale**: the three
