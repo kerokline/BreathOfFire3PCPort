@@ -3,7 +3,7 @@
 # language, since text timing differs between them. F12 wrote the shots.
 # The owner's route, 2026-09-30: from the bridge outside the house, the sunset cutscene (a full-frame tint),
 # the night in the house and its dialogue, then the first Nue fight (the Equip window, a critical hit's flash).
-# About 7,400 frames: give input_run.py --minutes 7. The five shots were added.
+# About 7,400 frames: give input_run.py --minutes 7. The five shots were added, each in place of a frame.
 # save nue
 hold start 4
 wait 2
@@ -34,7 +34,7 @@ hold right 1
 hold up+right 34
 wait 278
 shot sunset_tint 1
-wait 147
+wait 146
 hold up+right 8
 hold right 5
 hold right+down 1
@@ -131,7 +131,7 @@ wait 16
 hold circle 3
 wait 30
 shot night_house 1
-wait 11
+wait 10
 hold circle 3
 wait 18
 hold circle 9
@@ -199,7 +199,7 @@ wait 87
 hold circle 5
 wait 5
 shot dialogue 1
-wait 17
+wait 16
 hold circle 5
 wait 66
 hold circle 6
@@ -267,7 +267,7 @@ wait 2
 hold circle 5
 wait 19
 shot equip_window 1
-wait 8
+wait 7
 hold circle 3
 wait 15
 hold down 4
@@ -394,7 +394,6 @@ hold circle 2
 wait 4
 hold circle 1
 shot nue_attack 1 circle
-hold circle 1
 wait 3
 hold circle 2
 wait 3

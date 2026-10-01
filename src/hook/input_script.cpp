@@ -628,6 +628,14 @@ int __cdecl CountingRand() {
 }
 
 void RandCountStart() {
+    // The call trace arms every unowned entry - Rand's among them - before
+    // this runs (dllmain.cpp: CallTrace_Start first), and a copy of an armed
+    // entry is refused. A traced run goes without the count.
+    char trace[4];
+    if (GetEnvironmentVariableA("BOF3X_CALLTRACE", trace, sizeof trace)) {
+        Log("input       randlog: off under BOF3X_CALLTRACE (Rand's entry is the trace's)");
+        return;
+    }
     constexpr std::uint32_t kRand = 0x5B93D2, kRandSize = 0x22, kGetPtd = 0x5BAD64;
     const bof3::CloneCall calls[] = {{0, nullptr, kGetPtd}};
     g_rand_copy = reinterpret_cast<int (__cdecl*)()>(bof3::CloneOriginal("Rand", kRand, kRandSize, calls, 1));

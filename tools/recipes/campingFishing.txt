@@ -4,7 +4,7 @@
 # The owner's route, 2026-09-30: load, the world map to the camp (AREA090: the skill note, the party choice, the
 # masters), then the fishing spot (AREA030): the equip menu, the data page, a cast. The fish is random - more so
 # than the rest of the game - so whether it is caught differs run to run; the route is good up to the cast.
-# About 5,300 frames: give input_run.py --minutes 5. The nine shots were added.
+# About 5,300 frames: give input_run.py --minutes 5. The nine shots were added, each in place of a frame.
 # save camping
 wait 35
 hold start 4
@@ -67,7 +67,7 @@ hold left 5
 wait 4
 hold circle 3
 shot party_choice 1 circle
-hold circle 2
+hold circle 1
 wait 6
 hold down 3
 wait 7
@@ -128,7 +128,7 @@ wait 3
 hold left 3
 wait 1
 shot skill_note 1
-wait 7
+wait 6
 hold cross 5
 wait 12
 hold cross 6
@@ -182,7 +182,7 @@ wait 11
 hold circle 5
 wait 14
 shot skill_note_rei 1
-wait 8
+wait 7
 hold up 4
 wait 2
 hold circle 5
@@ -244,7 +244,7 @@ wait 58
 hold circle 5
 wait 41
 shot masters 1
-wait 27
+wait 26
 hold circle 5
 wait 8
 hold cross 7
@@ -276,7 +276,7 @@ wait 90
 hold circle 4
 wait 43
 shot fishing_banner 1
-wait 20
+wait 19
 hold circle 7
 wait 25
 hold circle 4
@@ -290,7 +290,7 @@ wait 21
 hold circle 5
 wait 96
 shot fishing_equip 1
-wait 23
+wait 22
 hold down 2
 wait 37
 hold down 4
@@ -312,7 +312,7 @@ wait 8
 hold circle 6
 wait 26
 shot fishing_data 1
-wait 2
+wait 1
 hold right 4
 wait 14
 hold left 4
@@ -345,7 +345,7 @@ hold right 15
 wait 1
 hold left 10
 shot fishing_action 1 left
-hold left 8
+hold left 7
 wait 6
 hold circle 4
 wait 7
@@ -399,7 +399,7 @@ hold circle 4
 hold circle+right 13
 hold circle 11
 shot fishing_vs 1 circle
-hold circle 5
+hold circle 4
 hold circle+right 5
 hold circle 7
 hold circle+right 4
