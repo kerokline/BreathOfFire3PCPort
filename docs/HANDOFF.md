@@ -50,13 +50,7 @@ attract path - every spell group is fuzz-only - so it stands for this
 build until something on the attract path is taken (nothing in round
 ten's six waves is). `r9_*_0926` and
 `r9_orig_0927_loaded` (a side recorded under a concurrent build, four
-frames of 25,000 calls) are history; `r8_*` and older too. **Stale since
-2026-10-01: re-record it before any A/B is read.** `entries_logic.txt`
-changed under it - `tools/entries_audit.py --dedupe --append` dropped 49
-over-long host extents and added 16 lines (round twelve doc section 7 item
-4) - so the armed set and the owned ranges differ from the ones `r9_orig`
-was traced with. The original twice, then ours, at the tip of round
-thirteen's branch; the new frame-0 figures go beside this paragraph.
+frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
