@@ -350,12 +350,12 @@ const Callee kStandard[] = {
     // messages
     {SH_OURS(Msg_OpenScript), 1, {kU16}, Answer::kGarbage, 0, 0},
     {SH_OURS(Msg_OpenSystem), 1, {kU16}, Answer::kGarbage, 0, 0},
-    {SH_OURS(Text_DrawAt), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {SH_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, kAll}, Answer::kGarbage, 0, 0},   // shorts, Text_DrawString's bytes, the text by value (round twelve's fold)
     // the area, the party
     {SH_OURS(Field_ChangeArea), 4, {kU16, kAll, kAll, kU8}, Answer::kGarbage, 0, 0},
     {SH_OURS(Party_DropIn), 1, {kU8}, Answer::kGarbage, 0, 0},
     {SH_OURS(Party_Join), 1, {kU8}, Answer::kFlag, 0, 0},
-    {SH_OURS(PartySet_Load), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {SH_OURS(PartySet_Load), 4, {kU8, kU8, kU8, kU8}, Answer::kGarbage, 0, 0},   // bytes (FS, round twelve's fold)
     {SH_OURS(PartySet_LoadFirst), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(PartySet_LoadSecond), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(Char_HealHp), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0},
@@ -370,10 +370,10 @@ const Callee kStandard[] = {
     {SH_OURS(ScriptFlags_Set40), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(ScriptFlags_Clear40), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(ObjTrio_SetBit40), 0, {}, Answer::kGarbage, 0, 0},
-    {"ObjTrio_ClearBit40", 0x57C7E0, KeyOf(ObjTrio_ClearBit40), 0, {}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
+    {"ObjTrio_ClearBit40", bof3::addr::ObjTrio_ClearBit40, KeyOf(ObjTrio_ClearBit40), 0, {}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
     // the scenario engine
     {SH_OURS(Scenario_CallA), 1, {kU8}, Answer::kGarbage, 0, 0},
-    {"Scenario_CallB", 0x5341C0, KeyOf(Scenario_CallB), 1, {kU8}, Answer::kGarbage, 0, 0},   // FE2 takes it (round twelve)
+    {"Scenario_CallB", bof3::addr::Scenario_CallB, KeyOf(Scenario_CallB), 1, {kU8}, Answer::kGarbage, 0, 0},   // FE2 takes it (round twelve)
     {SH_OURS(Transition_Start), 1, {kU8}, Answer::kGarbage, 0, 0},
     {SH_OURS(ClutStrip_FadeTo), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(ClutStrip_Restore), 0, {}, Answer::kGarbage, 0, 0},
@@ -388,7 +388,7 @@ const Callee kStandard[] = {
     {SH_OURS(EventObj_Face), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(EventObj_SetFlags), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(EventObj_Reset), 0, {}, Answer::kGarbage, 0, 0},
-    {"EventOp_6x", 0x57AD10, KeyOf(EventOp_6x), 1, {kAll}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
+    {"EventOp_6x", bof3::addr::EventOp_6x, KeyOf(EventOp_6x), 1, {kAll}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
     {SH_OURS(Field_ObjectInHome), 1, {kAll}, Answer::kFlag, 0, 0},
     {SH_OURS(Effect_FindFree), 0, {}, Answer::kByte, 0xFF, 0x13},
     {SH_THEIRS(Effect_SpawnAt), 6, {kU8, kU8, kU8, kAll, kAll, kAll}, Answer::kByte, 0xFF, 0x13},
@@ -422,15 +422,15 @@ const Callee kStandard[] = {
     {SH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
     // unnamed, by address (docs/scena_sc0.md section 6)
     // SE's (round ten): the event battle's set-up by index - 0x904AAA, 0x802D41 = 5
-    {"0x4410B0", 0x4410B0, 0x4410B0, 1, {kU8}, Answer::kGarbage, 0, 0},
+    {"Field_StartEventBattle", bof3::addr::Field_StartEventBattle, bof3::addr::Field_StartEventBattle, 1, {kU8}, Answer::kGarbage, 0, 0},
     // x, z (dwords to 0x903780 / 84) and an index: an event battle's party placement
-    {"0x532ED0", 0x532ED0, 0x532ED0, 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0},
+    {"Party_PlaceForBattle", bof3::addr::Party_PlaceForBattle, bof3::addr::Party_PlaceForBattle, 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0},
     // the camera turned toward an angle (s16) at a speed (s8), al 1 while turning
-    {"0x57C6B0", 0x57C6B0, 0x57C6B0, 2, {kU16, kU8}, Answer::kFlag, 0, 0},
+    {"Camera_EaseAngleFB", bof3::addr::Camera_EaseAngleFB, bof3::addr::Camera_EaseAngleFB, 2, {kU16, kU8}, Answer::kFlag, 0, 0},
     // the view shift after a focus test (PSX 0x80155154, docs/field-modes.md)
-    {"0x56FCA0", 0x56FCA0, 0x56FCA0, 0, {}, Answer::kGarbage, 0, 0},
+    {"MapView_FillCells", bof3::addr::MapView_FillCells, bof3::addr::MapView_FillCells, 0, {}, Answer::kGarbage, 0, 0},
     // Field_StatusBits |= 0x80
-    {"0x56D6F0", 0x56D6F0, 0x56D6F0, 0, {}, Answer::kGarbage, 0, 0},
+    {"Field_SetStatus80", bof3::addr::Field_SetStatus80, bof3::addr::Field_SetStatus80, 0, {}, Answer::kGarbage, 0, 0},
 };
 #undef SH_OURS
 #undef SH_THEIRS
@@ -515,12 +515,13 @@ std::uint32_t FxCommitPrim(const std::uint32_t* a, std::uint32_t answer) {
     return answer;
 }
 std::uint32_t FxZennyAdd(const std::uint32_t* a, std::uint32_t answer) {
-    // Party_Zenny += amount (and the tally 0x904138 with the second argument's
-    // byte), held at 9,999,999 with al 0 - as Zenny_Add (docs/scena_sx.md)
+    // Party_Zenny += amount (and the tally 0x904138 when the second argument's
+    // byte is 0), held at 9,999,999 with al 0 - as Zenny_Add (scena_sx.cpp,
+    // docs/scena_sx.md; the test was inverted until 2026-10-01, FE1's finding)
     unsigned char* const z = Mem(at::kZenny);
     if (!InRegions(z, 4)) return answer;
     std::uint32_t v = static_cast<std::uint32_t>(move_script::Long(z)) + a[0];
-    if ((a[1] & 0xFF) && InRegions(Mem(0x904138), 4))
+    if ((a[1] & 0xFF) == 0 && InRegions(Mem(0x904138), 4))
         move_script::SetLong(Mem(0x904138), static_cast<std::int32_t>(static_cast<std::uint32_t>(move_script::Long(Mem(0x904138))) + a[0]));
     const bool held = v > 9999999u;
     if (held) v = 9999999u;
@@ -533,6 +534,64 @@ std::uint32_t FxSwap(const std::uint32_t* a, std::uint32_t answer) {
     if (InRegions(x, 1) && InRegions(y, 1)) std::swap(*x, *y);
     return answer;
 }
+// Round twelve's folds (2026-10-01; docs/scenario_harness.md section 8.6): the
+// louder forms the wave-two groups kept to themselves, in place.
+// Gte_SetTransMatrix reads the MATRIX's translation, +0x14..+0x1F (psx_gte.cpp):
+// noted where readable; the rotation it never reads is not hashed (FC2, FE2).
+std::uint32_t FxSetTrans(const std::uint32_t* a, std::uint32_t answer) {
+    const auto* const t = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(a[0] + 0x14));
+    if (Readable(t, 12)) NoteBytes(t, 12);
+    else Note(0xFFFFFFFFu);
+    return answer;
+}
+// AreaMap_Slope's "sloped" byte 0x903850 (DamageScratch's first; the effect slot
+// region), which its callers and MapView_SlopeAt's read straight after the call
+// (FC1, FC3): 0 (flat) a third of the time, else 1.
+std::uint32_t FxSloped(const std::uint32_t*, std::uint32_t answer) {
+    if (InRegions(Mem(0x903850), 1)) Mem(0x903850)[0] = static_cast<unsigned char>(Noise() % 3 == 0 ? 0 : 1);
+    return answer;
+}
+// MoveScript_Step moves the context's flag byte it is handed (Field_State
+// +0x124), which FieldCore_ScriptMoveNext reads after it (FC3).
+std::uint32_t FxStepFlag(const std::uint32_t* a, std::uint32_t answer) {
+    const std::uint32_t n = Noise();
+    auto* const p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    if ((n & 1) && InRegions(p, 1)) p[0] = static_cast<unsigned char>(n >> 8);
+    return answer;
+}
+// Menu_ListScroll writes both out-bytes on every path (menu_windows.cpp): the
+// offset any byte, moving 0 or 1; the top and the state as a step can leave
+// them. The panels read all four after it (FS).
+std::uint32_t FxListScroll(const std::uint32_t* a, std::uint32_t answer) {
+    auto* const top = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    auto* const offset = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[1]));
+    auto* const moving = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[2]));
+    auto* const state = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[3]));
+    const std::uint32_t n = Noise();
+    if (Writable(offset, 1)) *offset = static_cast<unsigned char>(n);
+    if (Writable(moving, 1)) *moving = static_cast<unsigned char>((n >> 8) & 1);
+    if (Writable(top, 1) && (n & 0x10000)) *top = static_cast<unsigned char>(*top + ((n >> 17) & 1 ? 1 : 0xFF));
+    if (Writable(state, 1) && (n & 0x40000)) *state = static_cast<unsigned char>(n >> 24);
+    return (answer & 0xFFFFFF00u) | (Readable(top, 1) ? *top : answer & 0xFF);
+}
+// Equip_PreviewSet fills the caller's marks (0, 1, 2 or 4 a stat: the callers
+// compare with 4 and 1) and values (eight bytes) as the real one does, and
+// notes both, so the draws after read the same bytes on both passes (FO;
+// the standard row hashed the two buffers before anything had filled them).
+std::uint32_t FxPreviewSet(const std::uint32_t* a, std::uint32_t answer) {
+    auto* const marks = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[2]));
+    auto* const values = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[3]));
+    static const unsigned char kMarks[] = {0, 1, 2, 4};
+    if (Writable(marks, 4)) {
+        for (unsigned i = 0; i < 4; ++i) marks[i] = kMarks[Noise() % 4];
+        NoteBytes(marks, 4);
+    }
+    if (Writable(values, 8)) {
+        FillBytes(values, 8);
+        NoteBytes(values, 8);
+    }
+    return answer;
+}
 
 // Field mode's re-listing of a kStandard entry (registered before kStandard,
 // so it stands, in field mode only): answers the field code dereferences.
@@ -542,19 +601,19 @@ const Callee kFieldOverrides[] = {
 };
 
 const Callee kField[] = {
-    {FIELD_OURS(Menu_DrawPiece), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:31 FS:17: void(int x, int y, unsigned id, unsigned flags)
+    {FIELD_OURS(Menu_DrawPiece), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:31 FS:17: void(int x, int y, unsigned id, unsigned flags)
     {FIELD_OURS(Sprite_ScriptTick), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:12 FC2:4 FC3:10 FE1:2 FE2:5: unsigned char(void)
     {FIELD_THEIRS(Crt_sprintf, 0x5B9380), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16}, FxSprintf, nullptr, true},   // FE1:4 FE2:1 FO:12 FS:10: int(char *dst, const char *fmt, ...)
-    {FIELD_OURS(UiSprite_Draw), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPacket, nullptr, true},   // FE1:25: a sprite primitive at Gfx_PacketNext, committed; eax the primitive (callers write through it)
+    {FIELD_OURS(UiSprite_Draw), 4, {kU8, kAll, kU16, kU16}, Answer::kGarbage, 0, 0, {}, FxPacket, nullptr, true},   // FE1:25: a sprite primitive at Gfx_PacketNext, committed; eax the primitive (callers write through it)
     {FIELD_OURS(Sprite_UpdateScreenSlot), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:15 FC2:9: void(void)
-    {FIELD_OURS(MapView_SlopeAt), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC3:10 FE2:14: long(long x, long y, unsigned long direction)
+    {FIELD_OURS(MapView_SlopeAt), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0}, FxSloped, nullptr, true},   // FC3:10 FE2:14: long(long x, long y, unsigned long direction)
     {FIELD_OURS(MapView_GroundAt), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC3:12 FE1:4 FE2:7: long(long x, long z)
     {FIELD_OURS(Text_DrawFont8), 4, {kU16, kU16, 0x3Fu, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, kDerefString}, nullptr, nullptr, true},   // FE2:2 FO:10 FS:8: void(int x, int y, int colour, const unsigned char *text)
-    {FIELD_OURS(Menu_DrawPieces), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 16, 0}, nullptr, nullptr, true},   // FO:12 FS:7: void(int x, int y, const unsigned char *list, int flags)
+    {FIELD_OURS(Menu_DrawPieces), 4, {kU16, kU16, kAll, kU8}, Answer::kGarbage, 0, 0, {0, 0, 16, 0}, nullptr, nullptr, true},   // FO:12 FS:7: void(int x, int y, const unsigned char *list, int flags)
     {FIELD_OURS(Menu_DrawBox), 6, {kU16, kU16, kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FC1:1 FE1:2 FO:8 FS:7: void(int x, int y, int w, int h, int flags, int colour)
     {FIELD_OURS(Effect_Release), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:4 FC2:14: void(void)
     {FIELD_OURS(Gfx_CommitPrim), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0}, FxCommitPrim, nullptr, true},   // FC1:1 FE1:1 FE2:8 FO:4: void(unsigned slot, unsigned size)
-    {FIELD_OURS(Party_Count), 1, {kU8}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FS:14: int(unsigned slot)
+    {FIELD_OURS(Party_Count), 1, {kU8}, Answer::kByte, 0, 3, {0}, nullptr, nullptr, true},   // FS:14: int(unsigned slot)
     {FIELD_OURS(Sprite_ScriptTickOnce), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:3 FC2:2 FC3:3 FE1:1 FE2:4: unsigned char(void)
     {FIELD_OURS(Input_AutoRepeat), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:3 FS:10: unsigned(unsigned pressed)
     {FIELD_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0, {0}, FxText, nullptr, true},   // FE2:1 FO:2 FS:9: const unsigned char *(unsigned id)
@@ -576,8 +635,8 @@ const Callee kField[] = {
     {FIELD_OURS(Sprite_ShadeFadeBegin), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:5: void(void)
     {FIELD_OURS(Field_JumpStart), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:5: void(void)
     {FIELD_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0, 0, 0, 0}, nullptr, nullptr, true},   // FE2:3 FO:2: void(unsigned char *prim, int dfe, int dtd, unsigned tpage, unsigned long tw)
-    {FIELD_OURS(Menu_DrawIcon8), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:5: void(int x, int y, int icon, int dim)
-    {FIELD_OURS(KeyItem_Has), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FO:1 FS:4: unsigned char(unsigned item)
+    {FIELD_OURS(Menu_DrawIcon8), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:5: void(int x, int y, int icon, int dim)
+    {FIELD_OURS(KeyItem_Has), 1, {kU8}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FO:1 FS:4: unsigned char(unsigned item)
     {"0x58BD50", 0x58BD50, 0x58BD50, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxSwap, nullptr, true},   // FS:5: swaps the bytes its two pointers name
     {FIELD_OURS(Sprite_UpdateScreen), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:4: void(void)
     {FIELD_OURS(Sprite_FindFree), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:4: unsigned char(void)
@@ -589,33 +648,33 @@ const Callee kField[] = {
     {FIELD_OURS(Panel_DrawWindow), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: five words, calls 0x469790 / 0x469960
     {FIELD_OURS(ItemTrade_DrawList), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: a list window drawn (Text_DrawAt, Item_NamePtr)
     {FIELD_OURS(Field_MemberSprite), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1 FS:3: void(unsigned member, unsigned slot)
-    {FIELD_OURS(Menu_DrawTitleBox), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FS:4: void(int x, int y, int w, int h, int colour)
+    {FIELD_OURS(Menu_DrawTitleBox), 5, {kU16, kU16, kU16, kU16, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FS:4: void(int x, int y, int w, int h, int colour)
     {FIELD_OURS(Menu_DrawBlackScreen), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FS:4: void(void)
-    {FIELD_OURS(Text_DrawSmall), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 16}, FxArg4, nullptr, true},   // FC1:1 FO:1 FS:1: const unsigned char *(int x, int y, unsigned colour, unsigned count, const unsigned char *text)
+    {FIELD_OURS(Text_DrawSmall), 5, {kU16, kU16, kU8, kU8, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 16}, FxArg4, nullptr, true},   // FC1:1 FO:1 FS:1: const unsigned char *(int x, int y, unsigned colour, unsigned count, const unsigned char *text)
     {FIELD_OURS(Gte_PushMatrix), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(void)
-    {FIELD_OURS(Gte_RotMatrix), 2, {kAll, 0}, Answer::kGarbage, 0, 0, {8, 0}, FxRotMatrix, nullptr, true},   // FC2:1 FE2:2: short *(const short *angles, short *matrix)
-    {FIELD_OURS(Gte_SetTransMatrix), 1, {kAll}, Answer::kGarbage, 0, 0, {12}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(const unsigned long *matrix)
-    {FIELD_OURS(Gte_SetRotMatrix), 1, {kAll}, Answer::kGarbage, 0, 0, {12}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(const unsigned long *matrix)
-    {FIELD_OURS(Gte_RotTrans), 2, {kAll, 0}, Answer::kGarbage, 0, 0, {8, 0}, FxOut1_12, nullptr, true},   // FC2:1 FE2:2: void(const short *vector, long *out)
+    {FIELD_OURS(Gte_RotMatrix), 2, {kAll, 0}, Answer::kGarbage, 0, 0, {6, 0}, FxRotMatrix, nullptr, true},   // FC2:1 FE2:2: short *(const short *angles, short *matrix)
+    {FIELD_OURS(Gte_SetTransMatrix), 1, {0}, Answer::kGarbage, 0, 0, {}, FxSetTrans, nullptr, true},   // FC2:1 FE2:2: void(const unsigned long *matrix)
+    {FIELD_OURS(Gte_SetRotMatrix), 1, {kAll}, Answer::kGarbage, 0, 0, {18}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(const unsigned long *matrix)
+    {FIELD_OURS(Gte_RotTrans), 2, {kAll, 0}, Answer::kGarbage, 0, 0, {6, 0}, FxOut1_12, nullptr, true},   // FC2:1 FE2:2: void(const short *vector, long *out)
     {FIELD_OURS(Gte_PopMatrix), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(void)
     {FIELD_OURS(Gpu_GetClut), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC2:1 FO:2: unsigned(int x, int y)
-    {"0x46D5F0", 0x46D5F0, 0x46D5F0, 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:3: a number drawn (sprintf, sprites)
+    {"0x46D5F0", 0x46D5F0, 0x46D5F0, 4, {kU16, kU16, 0, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:3: a number drawn (sprintf, sprites)
     {FIELD_OURS(Sprite_ShadeFadeStep), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FC3:3: unsigned char(unsigned step)
-    {FIELD_OURS(Field_CellAhead), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:3: unsigned char(void)
+    {FIELD_OURS(Field_CellAhead), 0, {}, Answer::kByte, 0, 4, {}, nullptr, nullptr, true},   // FC3:3: unsigned char(void)
     {FIELD_OURS(Field_WayBlocked), 4, {kAll, kAll, kU8, kU16}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC3:1 FE1:2: unsigned char(long x, long z, unsigned raised, long ground)
     {FIELD_OURS(Field_JumpCamera), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:3: void(void)
     {FIELD_OURS(Area_TestCondition), 1, {kU16}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FE2:3: unsigned char(unsigned long code)
-    {FIELD_OURS(Gte_RotTransPers4), 9, {kAll, kAll, kAll, kAll, 0, 0, 0, 0, 0}, Answer::kGarbage, 0, 0, {8, 8, 8, 8, 0, 0, 0, 0, 0}, FxRotTransPers4, nullptr, true},   // FE2:3: long(const short *v0, const short *v1, const short *v2, const short *v3, float *sxy0, float *sxy1, float *sxy2, float *sxy3, long *p)
+    {FIELD_OURS(Gte_RotTransPers4), 9, {kAll, kAll, kAll, kAll, 0, 0, 0, 0, 0}, Answer::kGarbage, 0, 0, {6, 6, 6, 6, 0, 0, 0, 0, 0}, FxRotTransPers4, nullptr, true},   // FE2:3: long(const short *v0, const short *v1, const short *v2, const short *v3, float *sxy0, float *sxy1, float *sxy2, float *sxy3, long *p)
     {FIELD_OURS(Gte_StoreDepthF4), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, FxStoreDepthF4, nullptr, true},   // FE2:3: void(float *out0, float *out1, float *out2, float *out3)
-    {FIELD_OURS(TextRecord_Set), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 16}, nullptr, nullptr, true},   // FO:1 FS:2: void(unsigned slot, unsigned length, const unsigned char *text)
+    {FIELD_OURS(TextRecord_Set), 3, {kU8, kU8, kAll}, Answer::kGarbage, 0, 0, {0, 0, 16}, nullptr, nullptr, true},   // FO:1 FS:2: void(unsigned slot, unsigned length, const unsigned char *text)
     {FIELD_OURS(Text_DrawFont12), 4, {kU16, kU16, 0x3Fu, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, kDerefString}, nullptr, nullptr, true},   // FO:1 FS:2: void(int x, int y, int colour, const unsigned char *text)
     {FIELD_OURS(Skill_FlagIndex), 1, {kU8}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FO:1 FS:2: unsigned char(unsigned id)
-    {FIELD_OURS(Menu_DrawItemRow), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:3: void(int x, int y, int colour, unsigned category, unsigned id, unsigned count, int dim)
+    {FIELD_OURS(Menu_DrawItemRow), 7, {kU16, kU16, kU8, kU8, kU8, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:3: void(int x, int y, int colour, unsigned category, unsigned id, unsigned count, int dim)
     {FIELD_OURS(Menu_DrawBackdrop), 1, {kU8}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FS:3: void(unsigned kind)
     {FIELD_OURS(Menu_DrawMemberStatus), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:3: unsigned long(int x, int y, unsigned member, unsigned highlight)
     {FIELD_OURS(Sprite_QueueOverlay), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:2: void(void)
     {FIELD_OURS(EventOp_0x), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FC1:2: void(const unsigned char *op)
-    {FIELD_OURS(AreaMap_Slope), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:2: long(long x, long y, unsigned long direction)
+    {FIELD_OURS(AreaMap_Slope), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0}, FxSloped, nullptr, true},   // FC1:2: long(long x, long y, unsigned long direction)
     {FIELD_OURS(Sprite_InitFromEntry), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FC1:1 FO:1: void(unsigned char *entry)
     {FIELD_OURS(Field_MembersFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1 FE1:1: void(void)
     {FIELD_OURS(Field_RunTaskRecords), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:2: void(void)
@@ -625,7 +684,7 @@ const Callee kField[] = {
     {FIELD_OURS(AreaMap_CellsNone), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FC3:2: unsigned char(long x, long z, unsigned wide, unsigned code, unsigned mask)
     {FIELD_OURS(Field_JumpSetUp), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: void(void)
     {"0x5B9550", 0x5B9550, 0x5B9550, 0, {}, Answer::kThrough, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: the CRT's _ftol: pops st(0), answers edx:eax - called for real on both sides
-    {FIELD_OURS(Gte_MulMatrix0), 3, {kAll, kAll, 0}, Answer::kGarbage, 0, 0, {8, 8, 0}, FxMulMatrix0, nullptr, true},   // FE2:2: short *(const short *a, const short *b, short *out)
+    {FIELD_OURS(Gte_MulMatrix0), 3, {kAll, kAll, 0}, Answer::kGarbage, 0, 0, {18, 18, 0}, FxMulMatrix0, nullptr, true},   // FE2:2: short *(const short *a, const short *b, short *out)
     {FIELD_OURS(Gpu_SetPolyG3), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE2:1 FO:1: void(unsigned char *prim)
     {FIELD_OURS(Gpu_SetShadeTex), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FE2:2: void(unsigned char *prim, unsigned tge)
     {FIELD_OURS(Prim_SetTexture), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16, 0}, nullptr, nullptr, true},   // FE2:2: void(unsigned long texture, unsigned char *prim, int count)
@@ -634,9 +693,9 @@ const Callee kField[] = {
     {FIELD_OURS(ItemTrade_Lacks), 2, {kU8, kU8}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: al: an inventory test (Inventory_Count)
     {FIELD_OURS(Item_HelpMessage), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1 FS:1: unsigned(unsigned category, unsigned item)
     {FIELD_OURS(ItemTrade_DrawCount), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:2: a window drawn
-    {FIELD_OURS(Menu_DrawCell8), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:2: unsigned long(unsigned x, unsigned y, unsigned u, unsigned v, unsigned clut, unsigned shade)
-    {FIELD_OURS(Menu_ListScroll), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {16, 16, 16, 16}, nullptr, nullptr, true},   // FO:1 FS:1: unsigned char(unsigned char *top, unsigned char *offset, unsigned char *moving, unsigned char *state)
-    {FIELD_OURS(Menu_DrawScrollBar), 7, {kAll, kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1 FS:1: void(const unsigned char *items, unsigned top, int x, int y, unsigned rows, unsigned total, unsigned height)
+    {FIELD_OURS(Menu_DrawCell8), 6, {kU16, kU16, kU8, kU8, kU16, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:2: unsigned long(unsigned x, unsigned y, unsigned u, unsigned v, unsigned clut, unsigned shade)
+    {FIELD_OURS(Menu_ListScroll), 4, {kAll, 0, 0, kAll}, Answer::kFlag, 0, 0, {}, FxListScroll, nullptr, true},   // FO:1 FS:1: unsigned char(unsigned char *top, unsigned char *offset, unsigned char *moving, unsigned char *state)
+    {FIELD_OURS(Menu_DrawScrollBar), 7, {kAll, kU8, kU16, kU16, kU8, kU8, kU8}, Answer::kGarbage, 0, 0, {16, 0, 0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1 FS:1: void(const unsigned char *items, unsigned top, int x, int y, unsigned rows, unsigned total, unsigned height)
     {FIELD_OURS(Party_ApplyRecord), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FO:2: void(unsigned char *context)
     {FIELD_OURS(Menu_YesNo), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FS:2: unsigned char(void)
     {FIELD_OURS(Field_PartyLoad), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FS:2: void(unsigned slot)
@@ -663,7 +722,7 @@ const Callee kField[] = {
     {"0x42D710", 0x42D710, 0x42D710, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: jmp through 0x64ADAC by the menu byte 0x929F00
     {"0x57DFF0", 0x57DFF0, 0x57DFF0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: jmp through 0x663DD0 by the menu byte 0x929F00
     {FIELD_OURS(Field_ObjectBlockedAhead), 1, {kAll}, Answer::kFlag, 0, 0, {16}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned char *object)
-    {FIELD_OURS(MoveScript_Step), 2, {kAll, kAll}, Answer::kFlag, 0, 0, {16, 16}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned char *object, const unsigned char *script)
+    {FIELD_OURS(MoveScript_Step), 2, {kAll, kAll}, Answer::kByte, 0xFF, 0x0F, {16, 16}, FxStepFlag, nullptr, true},   // FC3:1: unsigned char(unsigned char *object, const unsigned char *script)
     {FIELD_OURS(Sprite_ShadeLower), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned step)
     {FIELD_OURS(MoveCmd_AttachOffset), 2, {0, kU8}, Answer::kGarbage, 0, 0, {0, 0}, FxOut0_12, nullptr, true},   // FC3:1: void(long *out, unsigned char index)
     {FIELD_OURS(Field_TileD0), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: unsigned char(void)
@@ -682,9 +741,9 @@ const Callee kField[] = {
     {"0x537500", 0x537500, 0x537500, 2, {kU16, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: two words, no calls
     {FIELD_OURS(Actor_EquipCount), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FE2:1: unsigned char(unsigned member, unsigned kind, unsigned value)
     {FIELD_OURS(Field_CellsBlock), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FE2:1: unsigned char(long x, long z, unsigned wide)
-    {FIELD_OURS(Gte_RotTransPers), 3, {kAll, 0, 0}, Answer::kGarbage, 0, 0, {8, 0, 0}, FxRotTransPers, nullptr, true},   // FE2:1: long(const short *vertex, unsigned long *sxy, long *p)
+    {FIELD_OURS(Gte_RotTransPers), 3, {kAll, 0, 0}, Answer::kGarbage, 0, 0, {6, 0, 0}, FxRotTransPers, nullptr, true},   // FE2:1: long(const short *vertex, unsigned long *sxy, long *p)
     {FIELD_OURS(Gte_PrimDepthFlat4_10), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE2:1: void(void *prim)
-    {FIELD_OURS(Gte_RotTransPers3), 7, {kAll, kAll, kAll, 0, 0, 0, 0}, Answer::kGarbage, 0, 0, {8, 8, 8, 0, 0, 0, 0}, FxRotTransPers3, nullptr, true},   // FE2:1: long(const short *v0, const short *v1, const short *v2, float *sxy0, float *sxy1, float *sxy2, long *p)
+    {FIELD_OURS(Gte_RotTransPers3), 7, {kAll, kAll, kAll, 0, 0, 0, 0}, Answer::kGarbage, 0, 0, {6, 6, 6, 0, 0, 0, 0}, FxRotTransPers3, nullptr, true},   // FE2:1: long(const short *v0, const short *v1, const short *v2, float *sxy0, float *sxy1, float *sxy2, long *p)
     {FIELD_OURS(Gte_PrimDepths3_10B), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FE2:1: void(void *prim)
     {FIELD_OURS(Scena17_DrawLogo), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1: void(int x, int y)
     {FIELD_OURS(Area_CellHook), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1: int(unsigned x, unsigned z)
@@ -695,14 +754,14 @@ const Callee kField[] = {
     {FIELD_OURS(Gpu_SetPolyG4), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, FxArg0, nullptr, true},   // FE2:1: unsigned char *(unsigned char *prim)
     {FIELD_OURS(ItemTrade_RowCount), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: al (the caller stores it at 0x6BE08D)
     {"0x594D90", 0x594D90, 0x594D90, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: Inventory_Remove behind a test
-    {FIELD_OURS(Char_ExpForLevel), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: int(unsigned member, unsigned level)
+    {FIELD_OURS(Char_ExpForLevel), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: int(unsigned member, unsigned level)
     {FIELD_OURS(Gpu_SetSprt), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FO:1: void(unsigned char *prim)
-    {FIELD_OURS(Equip_PreviewSet), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16, 16, 8}, nullptr, nullptr, true},   // FO:1: void(unsigned id, const unsigned char *set, unsigned char *marks, unsigned short *values)
-    {FIELD_OURS(Char_AbilityList), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, FxText, nullptr, true},   // FO:1: unsigned char *(unsigned member, unsigned type, unsigned battle)
-    {FIELD_OURS(Skill_CanUse), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned mode, unsigned member, unsigned id)
-    {FIELD_OURS(Skill_ApCost), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned member, unsigned id, unsigned battle)
-    {FIELD_OURS(Item_CanUse), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned mode, unsigned member, unsigned category, unsigned item)
-    {FIELD_OURS(Item_IconKind), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: unsigned(unsigned category, unsigned item)
+    {FIELD_OURS(Equip_PreviewSet), 4, {kU8, kAll, 0, 0}, Answer::kGarbage, 0, 0, {0, 6, 0, 0}, FxPreviewSet, nullptr, true},   // FO:1: void(unsigned id, const unsigned char *set, unsigned char *marks, unsigned short *values)
+    {FIELD_OURS(Char_AbilityList), 3, {kU8, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0}, FxText, nullptr, true},   // FO:1: unsigned char *(unsigned member, unsigned type, unsigned battle)
+    {FIELD_OURS(Skill_CanUse), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned mode, unsigned member, unsigned id)
+    {FIELD_OURS(Skill_ApCost), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned member, unsigned id, unsigned battle)
+    {FIELD_OURS(Item_CanUse), 4, {kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned mode, unsigned member, unsigned category, unsigned item)
+    {FIELD_OURS(Item_IconKind), 2, {kU8, kU8}, Answer::kByte, 2, 7, {0, 0}, nullptr, nullptr, true},   // FO:1: unsigned(unsigned category, unsigned item)
     {FIELD_OURS(MoveCmd_TestFC), 2, {kU16, kU16}, Answer::kFlag, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(short x, short z)
     {FIELD_THEIRS(Effect_Spawn, 0x57CE10), 5, {kU8, kU8, kU8, kU16, kU16}, Answer::kFlag, 0, 0, {0, 0, 0, 0, 0}, nullptr, nullptr, true},   // FO:1: unsigned char(unsigned char kind, signed char a, signed char b, short x, short z)
     {FIELD_OURS(Party_MoveMember), 2, {kAll, kU8}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FO:1: void(unsigned char *object, unsigned char direction)
@@ -710,8 +769,8 @@ const Callee kField[] = {
     {FIELD_OURS(MoveScript_ObjectKind), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FO:1: int(void)
     {FIELD_OURS(SaveMenu_DrawSlots), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, unsigned highlight)
     {FIELD_OURS(Area_RunPlacement), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FS:1: void(const unsigned char *script)
-    {FIELD_OURS(Menu_DrawItemIcon), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int icon, int shade)
-    {FIELD_OURS(Menu_DrawBorder), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int w, int h)
+    {FIELD_OURS(Menu_DrawItemIcon), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int icon, int shade)
+    {FIELD_OURS(Menu_DrawBorder), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int w, int h)
     {FIELD_OURS(Menu_DrawMoneyBox), 4, {kU16, kU16, 0, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int unused, unsigned value)
     {FIELD_OURS(Inventory_Remove), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FS:1: unsigned char(unsigned category, unsigned item, unsigned count)
     {FIELD_OURS(AbilityList_Add), 4, {kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: unsigned char(unsigned id, unsigned member, unsigned shared, unsigned which)
@@ -1407,6 +1466,15 @@ void Run(const Group& group) {
             {Key(g_scratch), sizeof g_scratch},
         };
         for (const Region& r : field) g_regions[g_region_n++] = r;
+        // round twelve's folds (2026-10-01; docs/scenario_harness.md section 8.6):
+        // the confirm and cancel words the panels test, and MessagePools' first
+        // 0x200 offset words (empty at start-up: a script-pool message drawn by
+        // id cannot show otherwise, FE1). Effect mode holds both inside its own
+        // regions (kMenuButtons, kMessagePools), so only the field runs add them.
+        if (!g_effect) {
+            g_regions[g_region_n++] = {0x90358C, 8};      // Field_ConfirmButtons, Field_CancelButtons
+            g_regions[g_region_n++] = {0x803580, 0x400};  // MessagePools' offset words
+        }
     }
     if (g_effect) {
         // effect mode's standard regions (docs/scenario_harness.md section 8.4):

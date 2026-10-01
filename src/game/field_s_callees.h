@@ -4,13 +4,13 @@
 
 #include <cstdint>
 
-#include "bof3/symbols.gen.h"
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
 
 namespace field_s::at {
 
 // Callees nobody owns (or another group of this wave owns), called through the
 // harness by address (SH_AT).
-constexpr std::uint32_t kDrawTag = 0x574400;          // (x, y, kind, dim): a 16 x 8 SPRT on page 0x2F at (x, y), u = kind << 4,
+constexpr std::uint32_t kDrawTag = bof3::addr::Menu_DrawTile16;          // (x, y, kind, dim): a 16 x 8 SPRT on page 0x2F at (x, y), u = kind << 4,
                                                       // v 0xD8, shade 0x80 or 0x10 by dim, 16-bit x and y; round twelve group FO's
 constexpr std::uint32_t kSwapBytes = 0x58BD50;        // (a, b): swaps the bytes a and b point at; nobody's
 constexpr std::uint32_t kAbilityListCount = 0x591AC0; // (member, which, current) -> al: one of a record's four

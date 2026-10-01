@@ -22,6 +22,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
+
 namespace battle_e1 {
 namespace at {
 
@@ -144,9 +146,9 @@ constexpr U kMemcpy = 0x5B9450;
 constexpr U kEnemiesClear = 0x494E70;
 constexpr U kSideTargetA = 0x452EB0;
 constexpr U kSideTargetB = 0x452F10;
-constexpr U kBe4Draw444660 = 0x444660;   // BE4's
-constexpr U kBe4ReturnItem = 0x446D90;   // BE4's
-constexpr U kBe4MemberName = 0x44A910;   // BE4's
+constexpr U kBe4Draw444660 = bof3::addr::BattleWin_DimScreen;   // BE4's
+constexpr U kBe4ReturnItem = bof3::addr::Battle_ReturnItem;   // BE4's
+constexpr U kBe4MemberName = bof3::addr::Battle_MemberNameToText;   // BE4's
 
 }  // namespace at
 }  // namespace battle_e1

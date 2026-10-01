@@ -842,3 +842,48 @@ Two byte controls first tried for 5 and 6 (dispatch by the record's `+2`, by
   128 KiB in all).
 - **Counts depend on the build directory**, as ever; the before / after
   comparison below is one worktree's two builds.
+
+### 10.10 Round twelve's debts folded (2026-10-01)
+
+Round twelve's section 7 item 1, in `kEngineStandard` (a cloud session,
+verified by the i686 build; the `'*'` run at the tip is the owner's):
+
+- **The masks, at what ours reads**, where a group re-listed a row narrower
+  (BE1 9, BE2 2, BE4 3, BE5 4, BE7 15; each read cited in the group's fuzz
+  file): the text draws (`Text_DrawAt`, `_DrawSmall` shorts and bytes;
+  `Text_DrawFont12` / `8` the colour's six bits), the menu draws
+  (`Menu_DrawBox`, `_DrawBorder`, `_DrawBackdrop`, `_DrawHand`, `_DrawPiece`,
+  `_DrawPieces`, `_DrawIcon`, `_DrawIcon8`, `_DrawScrollBar`), the battle
+  window draws (`BattleWin_DrawCommandLabel`, `_DrawCommandCross`,
+  `_DrawPartyStatus`, `_DrawQuadF4`, `_DrawLineAdd` / `Half`),
+  `Battle_CalcDamage`, `Battle_ClearStatus`, `Battle_ReturnQueuedItem`,
+  `Battle_SetDamagePopup`, `0x452DD0`, `0x44F6A0`, `Inventory_Add` /
+  `_Remove`, `Item_CanUse`, `Item_IconKind`, `Stat_AddClamped`,
+  `Stat_AddCap999`, `PartySet_Select`, `Sprite_AnimFromSet`. A mask never
+  changes a draw or a count, and a narrower one compares less, so no engine
+  group can start to mismatch from these; the groups' own re-listings
+  stand as they were.
+- **The louder forms, in place** (each a group's, now every engine group's):
+  `Rand` answering 15 bits as the CRT's (`RandRangeEffect`, BE2: the
+  standard recorder's garbage quarter was a negative value an `idiv` indexes
+  by); the pop-ups' note of the acting sprite's `+8` (`PopupEffect` on
+  `Battle_SetDamagePopup` and a new row for BE6's `Battle_SetApPopup`, BE5);
+  `Sound_PlayEffect` moving `Input_Pressed` half the time with the old word
+  noted (`SoundInputEffect`, BE5: the cursors read it again after a
+  refusal's sound; guarded to the engine region `0x7E1BE8`); a new row for
+  BE4's `Battle_TurnVectorC` turning the velocity pair as the real one does
+  (`TurnEffect`, BE2); `Equip_PreviewSet` filling and noting the caller's
+  marks and values (`PreviewEffect`, BE7: the standard row left them
+  unfilled). **These can move an engine group's mismatch count where its
+  own listing did not cover the call**: a new mismatch there is a finding
+  (ours reads a cell the original does not, or the reverse), not noise.
+- **The five raw standard rows as `BH_OURS`** (`BattleEnd_EnterStep1..3`,
+  `EnemyOp_CastDoneCheck`, `BattleObj_HitPose`): the key is our function
+  now, the address the row's `address`; the boss files' `BH_AT` calls by
+  address resolve through it (`StandIn`'s second pass), BE3's `BH_CALL`
+  calls by name through the key. The pair BE4's doc section 12 asked for in
+  one commit.
+- **Not folded**: BE5's `DragonTaskEffect` (BE6's `DragonGenes_SumCost`
+  moving the gene count: one caller, reach not correctness) and the groups'
+  answer-range effects (`Battle_ActorIsOut`'s ruled-in actor, the target
+  helpers' ranges) stay the groups' own.

@@ -6,13 +6,15 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
+
 namespace battle_e7 {
 namespace at {
 
 // --- functions of another group of this wave, or of no group ---------------
 // 0x432170 (BE1's, not merged): (member, stat 1..6) - a level's gain of one
 // stat, answered in ax (0 none). 0x597FC0 calls it twice per stat.
-constexpr std::uint32_t kStatGain = 0x432170;
+constexpr std::uint32_t kStatGain = bof3::addr::Char_LevelUpGain;
 // 0x59DB70 (in no group: catalogue part 7): (x, y, colour, width, clut,
 // shade) - a SPRT8 strip, 0x59D640's preview bars. Read as words and bytes.
 constexpr std::uint32_t kDrawBar = 0x59DB70;

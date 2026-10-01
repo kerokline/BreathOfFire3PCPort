@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-#include "bof3/symbols.gen.h"   // EffectGte_* (round thirteen group EGT)
+#include "bof3/symbols.gen.h"   // EffectGte_* (round thirteen group EGT); the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
 
 namespace field_c2::at {
 
@@ -22,9 +22,9 @@ constexpr std::uint32_t kProjectSize = bof3::addr::EffectGte_ProjectSize;      /
 constexpr std::uint32_t kDrawNumber = 0x46D5F0;       // (x s16, y s16, unused, clut byte): Sprite_Current +6 printed by
                                                       // Crt_sprintf into 0x904BA0 and drawn a SPRT per digit at the
                                                       // commit slot +0x29. Nobody's (just past this band)
-constexpr std::uint32_t kClearCell = 0x5728D0;        // FE2's (x s16, z s16): the area byte of the cell cleared and the
+constexpr std::uint32_t kClearCell = bof3::addr::AreaMap_ClearCell;        // FE2's (x s16, z s16): the area byte of the cell cleared and the
                                                       // view's cell redrawn (scenario_harness.md 7.6)
-constexpr std::uint32_t kZennyFind = 0x5307C0;        // FE1's (amount): Sound_PlayEffect(0x106), the amount printed into
+constexpr std::uint32_t kZennyFind = bof3::addr::Field_GiveZenny;        // FE1's (amount): Sound_PlayEffect(0x106), the amount printed into
                                                       // Text_Records, Msg_OpenSystem(5), Field_Request 2, Zenny_Add(amount, 0)
 
 // Data.
