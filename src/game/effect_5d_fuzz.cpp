@@ -273,6 +273,14 @@ U FxPers1(const U* a, U answer) {
     return answer;
 }
 
+// AreaMap_Elevation: half the time one of four heights (the callers read ax),
+// else the answer's garbage.
+U FxElevation(const U*, U answer) {
+    static const U kHeights[] = {0, 1, 0xFFFF, 0x100};
+    if (answer % 2 == 0) return (answer & 0xFFFF0000u) | kHeights[(answer >> 8) % 4];
+    return answer;
+}
+
 // Effect_FindFree as the effect-mode row (scenario_harness.cpp FxFindFree: none
 // a quarter of the time, else a free record from a start the answer picks), but
 // never Sprite_Current's own: in the game the running record is in use, and the
@@ -319,6 +327,9 @@ const sh::Callee kCallees[] = {
     {E5D_OURS(Gte_RotTransPers), 3, {kW, 0, 0}, kG, 0, 0, {8, 0, 0}, &FxPers1, nullptr, true},
     // louder: the cursor the draws read again after it; dy's byte
     {E5D_OURS(MapView_LinkPrimAt), 4, {kW, kW, k8, k8}, kG, 0, 0, {}, &FxLink, nullptr, true},
+    // AreaMap_Elevation answering a few heights half the time, so two calls can agree
+    // (EffectKind18Sub1D_Start compares one with the other: a > or >= shows)
+    {E5D_OURS(AreaMap_Elevation), 2, {kW, kW}, kG, 0, 0, {}, &FxElevation},
     {E5D_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxFindFree, nullptr, true},
 };
 #undef E5D_OURS
@@ -373,8 +384,10 @@ void Records(unsigned k) {
 void Seed(unsigned k) {
     Records(k);
     unsigned char* const s = Sprite_Current;
-    // the frame count at the compares' boundaries
-    s[9] = SafeCount(PickOf(0, 1, 5, 7, 9, 0xF, 0x10, 0x18, 0x19, 0x1C, 0x1D, 0x1E, 0x1F, 0x6C, 0x6D, 0x7F, 0x80, 0xFF, sh::Next()));
+    // the frame count at the compares' boundaries (each compare's value and the
+    // one below it: the states step +9 before they compare)
+    s[9] = SafeCount(PickOf(0, 1, 5, 6, 7, 9, 0xE, 0xF, 0x10, 0x17, 0x18, 0x19, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x6B, 0x6C, 0x6D,
+                            0x7E, 0x7F, 0x80, 0xFF, sh::Next()));
     if (k == k17Close) s[9] = static_cast<unsigned char>(PickOf(0, 5, 10, 15, 19, 20, 21, 25, 1, sh::Next() % 40));
     // the sub-state compared (sub-kind 0x19 tests it against 0, 0x22's map and
     // draw against 2); a dispatcher's is the harness's, below its table's length
