@@ -33,6 +33,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/boss_sc_callees.h"
+#include "game/cheats.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -601,9 +602,15 @@ extern "C" unsigned char __cdecl Boss16_Event(unsigned code) {
 // Sprite_Current = enemy 2, Sprite_SetAnimationBank(0xF9), +0x24 &= 0xFE,
 // +0x2A = 1, Sprite_SetAnimation(1); 0x903848 = 0x50, 0x446E20. Both ways
 // then the word 0x9039A2 &= 0xFF7F and 0x904131 = 0x31.
+//
+// DIV-0045: the sum times the EXP multiplier (src/game/cheats.cpp; 1 unless
+// BOF3X_EXP is set, so the fuzz below compares the original's sum). This is
+// the second Balio and Sunder fight's whole EXP: their hit hooks put HP 0
+// back to 1, so Battle_EnemyDefeated - where the multiplier otherwise
+// applies - never adds theirs, and this store replaces whatever it did add.
 extern "C" void __cdecl Boss16_End(void) {
     if (B(at::kBattleEnd) & 2) {
-        const U sum = static_cast<U>(Word(At(at::kEnemy1 + at::kEnemyExp))) + Word(At(at::kEnemy0 + at::kEnemyExp));
+        const U sum = (static_cast<U>(Word(At(at::kEnemy1 + at::kEnemyExp))) + Word(At(at::kEnemy0 + at::kEnemyExp))) * Cheats_ExpMultiplier();
         B(at::kMoveCounter) = 0x14;
         SetLong(At(at::kBattleExp), static_cast<std::int32_t>(sum));
         BH_AT(Handler, at::kEndWin)();
