@@ -1444,6 +1444,55 @@ designed in rather than bolted on.
   inn's save: "looked right". All four prompts change together.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
+- **Amended 2026-10-03 (fix wave, group YN; [`yes-no-prompts.md`](yes-no-prompts.md)):**
+  the owner's captures of 2026-09-30 and 2026-10-03 found the same fault on
+  choosers `Menu_YesNo` does not reach: the hand a word short of `Yes`, and
+  on `No` over `Yes`. The owner: "move the yes hand and yes word to the left
+  to match the spacing on the load save screen". Each gets the load / save
+  screen's offsets - three spaces moved from before `Yes` into the gap, the
+  hand two units left of each word (its tip three before it), `No` where it
+  was - with the stops measured from the line as the pen draws it
+  (`YesNoLayout_Tail`, `YesNoLayout_ShopHandX`; DIV-0006's advances), so
+  French and German answers of other lengths are met too:
+  - **the master's "Is this OK?"** (areas 3, 37, 41, 50, 55, 59, 61, 68,
+    74, 91, 98, 113, 116, 143): Capcom's `0x586D20` - its line call
+    `0x586E78` (`Text_DrawAt`) and hand call `0x586E97` (`Menu_DrawHand`,
+    `0xCF + 36 * answer`, 0 Yes) re-aimed (`BOF3X_ORIGINAL=MasterAskLayout`);
+    English: `Yes` 243 -> 219, the hand 207 / 243 -> 217 / 273;
+  - **Manillo's "Will that be all?"** (`ItemTrade_LeaveAsk` /
+    `ItemTrade_LeaveWait`, ours, `effect_1g.cpp`'s `LeavePrompt`; the
+    original's hand `0xE0 + 36 * answer`): `Yes` 240 -> 216, the hand
+    224 / 260 -> 214 / 270 (`BOF3X_ORIGINAL=TradeLeaveLayout`);
+  - **the shop's yes / no** - "Buy ...?" (help `0x49`), "Equip it?"
+    (`0x4A`), "Sell ...?" (`0x52`) and "use the item?" (`0x36`,
+    `SharedList_UseItem`): `ShopWin_TitleRun` draws system message `0xF`,
+    Menu_YesNo's own line, over the help line, and `YesNoFrame`
+    (`shop_states2.cpp`) / `SharedList_UseItem` (`field_s.cpp`) put the
+    hand at window x `+ 0xE8 - 36 * answer` (1 Yes) - the original stops
+    over the unmoved line. Now the line is `Respace`d as Menu_YesNo's and
+    the hand stops over it (`BOF3X_ORIGINAL=ShopYesNoLayout`, all three
+    sites);
+  - **Manillo's "Want to buy anything?"** (message `0x44` of area 30's
+    pool, `LeaderPanel_S4Again`, ours, `effect_1e.cpp`): the hand's row,
+    not its x. The original puts it at `0xAA + 12 * answer`, the second row
+    of the message - right for a one-row question; the English question
+    wraps, so the hand pointed at its second row. The owner: "it just needs
+    to be one row lower". Ours counts the message's rows (newlines less one
+    is the first answer's row) and moves the hand by the difference - 12
+    units for the English line, nothing for a one-row question
+    (`BOF3X_ORIGINAL=ShopAskRow`). Its x (tip 3 units before `Yes`) was
+    already aligned.
+  Each only under a Latin overlay (DIV-0056), switched on after its module's
+  self-test, which compares the original's draw. **Verification:**
+  `BOF3X_SHADOW=yes_no_layout` re-spaces four prompt shapes (en, de, fr
+  with a two-byte code) and checks the stops against the pen summed
+  separately; `'*'` headless 0 mismatches; the captures are owed
+  ([`yes-no-prompts.md`](yes-no-prompts.md) section 6 has the recipes and
+  frames). Not touched, same fault likely: Manillo's per-item "Is ... OK?
+  Yes No" (`ItemTrade_Confirm`, the hand `0xDC + 36 * answer` over "Yes No"
+  at `0xDE`), and the two other help-line choosers that draw message `0xF`
+  (`MenuList_TitleBox` for help `0x1A` / `0x31`, Capcom's `0x59AE00`) -
+  not marked by the owner.
 
 ### Music fades step once per logic frame
 

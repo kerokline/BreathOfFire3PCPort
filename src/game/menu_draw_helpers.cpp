@@ -2,7 +2,8 @@
 // handlers 7 and 8 of Field_RunTaskRecords, the window kinds under them that
 // draw a shop or battle-menu panel, and the slides those kinds step through.
 // Each read to its last instruction with capstone against bof3/BOF3.exe
-// (2026-09-25). Faithful: no divergence of its own; DIV-0041's widened bound
+// (2026-09-25). Faithful but for DIV-0027's shop yes / no line under a Latin
+// overlay (ShopWin_TitleRun, amended 2026-10-03); DIV-0041's widened bound
 // inside MenuWin_SlideOutLeft is read back from the patched immediate. The
 // start-up fuzz is menu_draw_helpers_fuzz.cpp.
 //
@@ -45,7 +46,9 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/menu_draw_helpers_callees.h"
+#include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -138,6 +141,16 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Window_Handler7Kinds
 // Text_DrawAt (whose +0x10 is tested again). The original's id argument is
 // the record pointer's upper half over the word; Msg_SystemPtr reads the low
 // word alone.
+//
+// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): the shop's yes / no.
+// System message 0xF is Menu_YesNo's own line, and the hand the shop's steps
+// place (shop_states2.cpp's YesNoFrame, field_s.cpp's SharedList_UseItem) was
+// fitted, like Menu_YesNo's, to the Chinese line. With the flag on (a Latin
+// overlay; set after the self-test, which compares the original's draw) the
+// line is DIV-0027's re-spaced one - Yes three spaces left, No kept - and the
+// hands move with it (YesNoLayout_ShopHandX).
+unsigned char g_shop_yes_no_line = 0;
+
 extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_TitleRun(void) {
     Step(table::kTitleSteps);
     const unsigned colour = At(at::kColour)[0];
@@ -151,6 +164,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_TitleRun(voi
     const unsigned again = Word(Rec() + 0x10);
     if (again != 0x36 && again != 0x49 && again != 0x4A && again != 0x52) return;
     text = g.msg_system(0xF);
+    if (g_shop_yes_no_line) text = YesNoLayout_SystemLine(text);   // DIV-0027, amended 2026-10-03
     w = Rec();
     g.text_draw_at(static_cast<std::uint16_t>(X(w) + 7), static_cast<std::uint16_t>(Y(w) + 3), 0, 0xFF, text);
 }
@@ -338,6 +352,14 @@ void MenuDrawHelpers_Inject() {
     bof3::Log("menu_draw_helpers: MenuWin_SlideOutLeft's bound %d (0x59B446; -150 unless DIV-0041 widened it)",
               static_cast<int>(static_cast<short>(Word(At(at::kSlideLeftBound)))));
     if (bof3::WantsShadow("menu_draw_helpers")) menu_draw_helpers::SelfTest();
+    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
+    // compares the original's line; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ShopYesNoLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_shop_yes_no_line)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    the shop's yes / no line re-spaced as Menu_YesNo's");
+    }
     BOF3_INJECT(Window_Handler7Kinds);
     BOF3_INJECT(ShopWin_TitleRun);
     BOF3_INJECT(ShopWin_ButtonsRun);

@@ -16,7 +16,8 @@
 //
 // Every call goes through the scenario harness (SH_CALL / SH_AT, a table's word
 // read in place), so the start-up fuzz (effect_1g_fuzz.cpp) stands recorders in
-// for ours as for the originals' copies. Faithful: no divergence. Where an
+// for ours as for the originals' copies. Faithful but for DIV-0027's leave
+// prompt under a Latin overlay (LeavePrompt, amended 2026-10-03). Where an
 // original indexes past its table, ours aborts with a message
 // (docs/effect_1g.md section 6).
 #include "game/effect_1g.h"
@@ -25,8 +26,10 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_1g_callees.h"
+#include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -77,12 +80,31 @@ void PieceMode(unsigned id) { SH_AT(void (__cdecl*)(unsigned, unsigned), at::kPi
 void Piece(unsigned id, U x, U y) { SH_AT(void (__cdecl*)(unsigned, unsigned, U, U), at::kPiece)(id, 1, x, y); }
 void Quad(U x, U y, unsigned length, unsigned piece) { SH_AT(void (__cdecl*)(U, U, unsigned, unsigned), at::kQuad)(x, y, length, piece); }
 
+}  // namespace
+
+// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): Manillo's "Will that be
+// all?  Yes No". The original's hand stops (0xE0 and 0x104) were fitted to the
+// Chinese line; under the English overlay the hand on Yes is a word short of
+// it and the hand on No covers Yes. With the flag on (Effect1G_Inject, a Latin
+// overlay, after the self-test, which compares the original's draw) the line is
+// re-spaced and the hand stops two units left of each answer - the load / save
+// screen's spacing (yes_no_layout.cpp's YesNoLayout_Tail).
+unsigned char g_trade_leave_layout = 0;
+
+namespace {
+
 // The yes / no prompt of the leave steps: the frame, the question, the hand
 // at (36 * the answer + 0xE0, 0x16), the list, the ingredients, the backdrop.
 void LeavePrompt() {
     TradeBox();
-    SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(at::kPoolWordAsk));
-    SH_CALL(Menu_DrawHand)(static_cast<int>(36u * B(at::kTradeAnswer) + 0xE0u), 0x16, 0);
+    if (g_trade_leave_layout) {
+        const YesNoTail t = YesNoLayout_Tail(Pool(at::kPoolWordAsk), 0x18, "Manillo's prompt");
+        SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, t.line);
+        SH_CALL(Menu_DrawHand)(t.stop[0] + static_cast<int>(B(at::kTradeAnswer)) * (t.stop[1] - t.stop[0]), 0x16, 0);
+    } else {
+        SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(at::kPoolWordAsk));
+        SH_CALL(Menu_DrawHand)(static_cast<int>(36u * B(at::kTradeAnswer) + 0xE0u), 0x16, 0);
+    }
     SH_CALL(ItemTrade_DrawList)(0);
     SH_CALL(ItemTrade_DrawNeeds)();
     SH_CALL(ItemTrade_DrawBackground)();
@@ -464,6 +486,14 @@ extern "C" void __cdecl Item_DrawIcon(int x, int y, unsigned item, unsigned cate
 
 void Effect1G_Inject() {
     if (bof3::WantsShadow("effect_1g")) effect_1g::SelfTest();
+    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
+    // compares the original's prompt; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("TradeLeaveLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_trade_leave_layout)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    Manillo's \"Will that be all?\": answers re-spaced, the hand two units left of each");
+    }
     BOF3_INJECT(ItemTrade_FullMessage);
     BOF3_INJECT(ItemTrade_Leave);
     BOF3_INJECT(ItemTrade_LeaveAsk);

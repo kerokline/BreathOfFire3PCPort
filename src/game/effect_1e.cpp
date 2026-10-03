@@ -25,7 +25,8 @@
 //                                      cleared, a transition
 //   stage 9 (3 of 5 steps)             a three-way menu on effect record 6
 //
-// Every one is a faithful replacement: no DIVERGENCE.md entry is owed. The
+// Every one is a faithful replacement but one: LeaderPanel_S4Again's hand row
+// under a Latin overlay (DIV-0027, amended 2026-10-03 - g_shop_ask_row). The
 // stage dispatchers abort past their tables (the original jumps through the
 // dword after, the next table's entry), and a read of the Sprite_Objects
 // record 0x939A1C names aborts when the byte is 30 or more (the original reads
@@ -49,6 +50,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_1e_callees.h"
+#include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -875,6 +877,37 @@ extern "C" void __cdecl LeaderPanel_S4AnyKey(void) {
 // panel with message 0x44; up / down toggle +6 (sound 0x100); else 0x20
 // (sound 0x103) or 0x40 (+6 = 1, sound 0x106), then sound 0x102 and +3 up;
 // the hand at 0xAA + 12 a +6; Sprite_ScriptTick, the shade.
+//
+// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): the hand's row. Message
+// 0x44 (in area 30's pool: Manillo's "want to buy anything?", the answers on
+// its last two rows) is drawn by FieldPanel_DrawMessage at y 0x94, its first
+// row at 0x9C, rows 12 apart; the original's hand at 0xAA + 12 * the answer
+// is the row-1 answer of a one-row question - the Chinese line's shape. The
+// English question takes two rows, so the hand pointed at the question's
+// second row (the owner's capture, 2026-10-03). With the flag on (a Latin
+// overlay; set after the self-test, which compares the original's draw) the
+// row of the first answer is counted from the message itself: the number of
+// newlines less one, so a one-row question gives the original's 0xAA.
+unsigned char g_shop_ask_row = 0;
+
+namespace {
+
+// The row of the first of a message's two answers - its last two rows: the
+// newlines (0x01) less one. The argument bytes of 0x05 and 0x07 are stepped
+// over as the draw steps them, as is a two-byte code's second byte.
+unsigned FirstAnswerRow(const unsigned char* text, unsigned id) {
+    unsigned rows = 0;
+    for (unsigned i = 0; text[i]; ++i) {
+        const unsigned char c = text[i];
+        if (c == 0x01) ++rows;
+        else if ((c == 0x05 || c == 0x07 || (c & 0x80)) && text[i + 1]) ++i;
+    }
+    if (rows < 2) bof3::Fatal("DIV-0027: message 0x%X has %u newlines - not a question over two answer rows", id, rows);
+    return rows - 1;
+}
+
+}  // namespace
+
 extern "C" void __cdecl LeaderPanel_S4Again(void) {
     PanelHead("LeaderPanel_S4Again");
     Total(0x9C);
@@ -895,7 +928,12 @@ extern "C" void __cdecl LeaderPanel_S4Again(void) {
         unsigned char* const t = S();
         t[3] = static_cast<unsigned char>(t[3] + 1);
     }
-    Hand(0x20, 12u * S()[6] + 0xAAu);
+    if (g_shop_ask_row) {
+        const U row = FirstAnswerRow(At(at::kPools + Word(At(at::kPools + 0x44u * 2u))), 0x44);
+        Hand(0x20, 12u * S()[6] + 0xAAu + 12u * (row - 1u));
+    } else {
+        Hand(0x20, 12u * S()[6] + 0xAAu);
+    }
     Tick();
     Shade();
 }
@@ -1143,6 +1181,14 @@ extern "C" void __cdecl LeaderPanel_S9Menu(void) {
 
 void Effect1E_Inject() {
     if (bof3::WantsShadow("effect_1e")) effect_1e::SelfTest();
+    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
+    // compares the original's hand; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ShopAskRow", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_shop_ask_row)), &was,
+                         &is, 1);
+        bof3::Log("DIV-0027    the field panel's message 0x44: the hand on the row of its first answer");
+    }
     BOF3_INJECT(LeaderPanel_S1Choose);
     BOF3_INJECT(LeaderPanel_S1Out);
     BOF3_INJECT(LeaderPanel_S1Box2In);
