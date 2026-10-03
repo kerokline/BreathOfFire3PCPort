@@ -258,6 +258,9 @@
 #include "game/effect_3d.h"
 #include "game/effect_3c.h"
 #include "game/effect_3a.h"
+#include "game/effect_4c.h"
+#include "game/effect_4f.h"
+#include "game/effect_4d.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1010,6 +1013,12 @@ void InjectAll() {
                                 // and the wave-two groups it calls (E2E's angle mean, E2F's trail cap); DrawPool
                                 // re-aims the immediate at 0x486EBD inside EffectKind7D_SetMap (DIV-0062), after
                                 // every self-test; no other module patches bytes inside its 68
+    Effect4D_Inject();          // round 13 group E4D (0x48C990..0x48DF87: effect kinds 0x91, 0x94..0x98, 0x9A and the
+                                // screen tint 0x48CA90 - dispatchers, states, draws): its clones' calls re-aimed at
+                                // the scenario harness's recorders, its seven state tables swapped for the fuzz only;
+                                // after ScenarioHarnessEkh_Inject (none of its eight rows is E4D's) and before the
+                                // first Widescreen_ArmFills (its three fills compare the original's 320 x 240); no
+                                // module patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     Widescreen_ArmFills();      // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
@@ -1025,6 +1034,19 @@ void InjectAll() {
                                 // harness's recorders, its five state tables swapped for the fuzz only; after
                                 // ScenarioHarnessEkh_Inject (none of its eight rows is E3A's); no module patches bytes
                                 // inside its 48 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Effect4C_Inject();          // round 13 group E4C (0x48B200..0x48C985: effect kinds 0x8D, 0x8E, 0x8F, 0x90, 0x93
+                                // and 0x99 - dispatchers, states, pools and draws): its clones' calls re-aimed at the
+                                // scenario harness's recorders, its six state tables swapped for the fuzz only; after
+                                // ScenarioHarnessEkh_Inject (none of its eight rows is E4C's) and Effect3C_Inject,
+                                // whose EffectKind6E_FindShard it calls by name; no module patches bytes inside its
+                                // 50 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Effect4F_Inject();          // round 13 group E4F (0x491D70..0x494026: effect kinds 0xAA..0xB1, 0xB9 and 0xBA -
+                                // dispatchers, states and draws): its clones' calls re-aimed at the scenario harness's
+                                // recorders, its ten state tables swapped for the fuzz only; after
+                                // ScenarioHarnessEkh_Inject (none of its eight rows is E4F's) and Effect3A_Inject /
+                                // Effect1C_Inject, which call 0x493B50, 0x493C60 and 0x493090 by address; no module
+                                // patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp, widescreen.cpp - DIV-0041
+                                // names 0x493308, inside EffectKindAF_DrawScreen, as a site not yet widened)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,

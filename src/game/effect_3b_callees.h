@@ -4,10 +4,14 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-10-03 (round thirteen E4D): 0x48CA90 is ours, Effect_DrawScreenTint - the value
+// unchanged, so the fuzz keys on it as before.
+
 namespace effect_3b::at {
 
 // --- callees nobody of this round's earlier waves owns, called by address (SH_AT) --
-constexpr std::uint32_t kScreenTint = 0x48CA90;    // E4D's (wave four): void(void), a 320 x 240 semi-transparent
+constexpr std::uint32_t kScreenTint = bof3::addr::Effect_DrawScreenTint;    // E4D's (wave four): void(void), a 320 x 240 semi-transparent
                                                    // TILE in Sprite_Current's +0x5D / +0x5E / +0x5F, committed to
                                                    // slot 5 after its draw mode (0xC + 0x1C of packet)
 constexpr std::uint32_t kKind69Lines = 0x4837B0;   // in no group (catalog part 6, "Scenario effects"; PSX
