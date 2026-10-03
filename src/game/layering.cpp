@@ -222,7 +222,7 @@ unsigned LayerFor(unsigned index, unsigned layer) {
 }  // namespace
 
 void Arm() {
-    g_mode = EnvInt("BOF3X_LAYERING", kOff, 0, 2);
+    g_mode = EnvInt("BOF3X_LAYERING", kFloor, 0, 2);   // on unless BOF3X_LAYERING=0 (the owner, 2026-10-03)
     if (g_mode == kOff) return;
     g_ahead = EnvInt("BOF3X_LAYERING_AHEAD", g_ahead, 1, 8);
     g_rise = EnvInt("BOF3X_LAYERING_RISE", g_rise, 0, 64);

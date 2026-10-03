@@ -1,6 +1,6 @@
 // DIVERGENCE DIV-0071: ground that is not above a sprite's feet does not cover
 // them (docs/sprite-draw-order.md section 19). BOF3X_LAYERING picks the mode;
-// unset or 0 is the original's order.
+// unset is mode 1 (the default since 2026-10-03), 0 is the original's order.
 //
 // The original's draw pass is a painter's order by diagonal row: every cell of
 // a nearer row is drawn after a sprite, flat floor included, so the floor of

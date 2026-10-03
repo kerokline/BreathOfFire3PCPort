@@ -1449,7 +1449,8 @@ owner wants it (2026-10-03), as an Intent change beyond the original.
 
 ## 19. The fix: walkable floor does not cover a sprite's feet (DIV-0071, 2026-10-03)
 
-**Built on `fix/tile-layering`, off by default (`BOF3X_LAYERING=1`).** The
+**Built on `fix/tile-layering`, merged into round thirteen's branch and on by
+default since 2026-10-03 (`BOF3X_LAYERING=0` turns it off).** The
 ledger entry has the rule; this section has how it was arrived at and what
 is left.
 

@@ -3766,8 +3766,12 @@ designed in rather than bolted on.
   `0x593060`, ours in `src/game/draw_pass.cpp`; the rule in
   `src/game/layering.cpp`)
 - **Tier:** Intent - the owner's decision, 2026-10-03, beyond the original
-- **Status:** built, **off by default** (`BOF3X_LAYERING=1` turns it on);
-  the owner has seen captures, not yet played with it
+- **Status:** built, **on by default since 2026-10-03** (the owner's word,
+  with the branch merged into round thirteen's; `BOF3X_LAYERING=0` is the
+  original's order); the owner has seen captures, not yet played with it.
+  Reference and A/B runs pin `BOF3X_LAYERING=0` (`attract_run.py`, the
+  `validate_*.sh` scripts): the rule moves sprites' places in the draw
+  list, so an ours side with it on differs from Capcom's by design
 - **Original behaviour:** a painter's order by diagonal row. Every cell of
   a nearer row is emitted after a sprite of the row behind, flat floor
   included, and there is no depth test, so the floor of the next one to
@@ -3823,7 +3827,7 @@ designed in rather than bolted on.
   draw them before the sprite - the lists outlive a frame while the view is
   still, and a cell moved before the rows behind it is painted over by
   them on a hillside.
-- **Reversible?** Unset `BOF3X_LAYERING`, or `0`. `BOF3X_LAYERING_AHEAD`
+- **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
   sprite's verdict and what stopped it.

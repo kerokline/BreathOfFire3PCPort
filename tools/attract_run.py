@@ -168,6 +168,9 @@ def main():
     env['BOF3X_LANG'] = a.lang
     env['BOF3X_FILTER'] = a.filter
     env['BOF3X_PRESENT'] = 'clean'   # not the owner's screen=satpixie (DIV-0043)
+    # DIV-0071 is on by default and moves sprites in the draw list: an oracle or
+    # hash side compares against Capcom's order unless the caller asks otherwise
+    env.setdefault('BOF3X_LAYERING', '0')
     launcher = a.launcher
     # --no-config: an oracle run must not stop on the settings dialog, and must
     # take the settings file's values without a human touching them
