@@ -9,7 +9,7 @@ start no list of the cut has - kind 0x8E's dispatcher `0x48B300`,
 `Effect_KindHandlers[0x8E]` (section 5). Each read to its last instruction
 with capstone and fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
-200,000 rounds, 0 mismatches; CONTROLS_SUMMARY. **Fuzz only**: no recorded
+200,000 rounds, 0 mismatches; 58 of 61 controls refused, the other three equivalent mutants whose near variants are refused. **Fuzz only**: no recorded
 route enters any of the 50 (section 9). Every row is effect code: the four
 `hypothesis` rows of the cut (`0x48B850`, `0x48B870`, `0x48BFB0`, `0x48C0E0`)
 are kind 0x8E's dot pool and kinds 0x93's and 0x99's dispatchers - taken.
@@ -95,7 +95,8 @@ States 0..8: `_Start` (the sixteen shards cleared), `_Burst` (rows 6, 9, 0xD
 spawned, `+9` 0x3C), `_Rise` (moved for 0x3C frames), `_Arm` (`+9` 0x96),
 `_Trickle` (two shuffled spawns every fifteenth count, moved), `_Settle`
 (moved until none live), `_ResetClock` (`+0x2E`, `+0x30` 0), `_Sequence`,
-`_Fade` (moved; none live: `Effect_Release`). Each steps `+1` by one.
+`_Fade` (moved; none live: `Effect_Release`). Each steps `+1` by one when its
+work is done.
 
 - `_Sequence` `0x48BA70` (state 7) - the frame word `+0x2E` (s16) at 0x1A4
   or more: `+1` up. Below: the stage byte `0x676290` by it (below 0x3C 0,
@@ -113,8 +114,9 @@ spawned, `+9` 0x3C), `_Rise` (moved for 0x3C frames), `_Arm` (`+9` 0x96),
   freed at frame 0x20; x / z on by their speeds, the size up 8, the height
   `AreaMap_Elevation << 16`; drawn. Answer al.
 - `_DrawShard` `0x48BD10` - a sized `POLY_FT4`: the point projected, the size
-  scaled at its depth (`EffectGte_ProjectSize`), the corners on the x87 (E3C's
-  `EffectKind73_DrawSpark`'s quad without its draw mode); colour (`+3`,
+  scaled at its depth (`EffectGte_ProjectSize`), the corners on the x87 - the
+  shape of E3C's `EffectKind73_DrawSpark` (that one with a draw mode first, its
+  point at `+4`, size at `+0x14`, page abr 2); colour (`+3`,
   `(+3 >> 2) * 3`, `+3 >> 1`); linked (dy 3, 0x48).
 - `_ClearShards` `0x48BC40` - `+0` 0 in the sixteen.
 
@@ -292,7 +294,82 @@ on a unique string of `effect_4c.cpp`, rebuilt, run under
 committed file has no switch). Counts are rounds refused of 4,000 per function
 run, in this worktree; every refused run exited 3.
 
-CONTROLS_TABLE
+**58 of 61 refused** (56 by a count; 27 and 34, a dispatch through the wrong
+table, mismatch and then reach ours' abort past the planted table). The three
+not refused are equivalent mutants, each with a near variant that is refused:
+9 (the two `Rand` draws of a swap exchanged - a swap is symmetric; 26 refused),
+24 (x and z of the emitted shard read in the other order - no call between the
+reads; 25, the tag read before the finder, refused) and 56 (`Cond_ByteFE` set
+after `MoveCmd_TestFB` - the callee never reads it, by its listing
+`0x572650..0x572789`; 61, the value 2, refused). Controls 13, 17, 19 and 25
+(a cell read before or after a call) are refused only in the rounds where the
+harness's disturbance moved `Sprite_Current` or the cell after that call
+(29..130 of 4,000); control 46 (the finder's 32nd record never looked at) in
+2, the rounds whose 31 first records were all in use.
+
+| # | Run (`_ONLY`) | Plant | Refused |
+|--:|---|---|---|
+| 1 | `EffectKind8D_Pull` | the distance - 0x2B | 3718 |
+| 2 | `EffectKind8D_Start` | `+1` stepped, not set to 1 | 3984 |
+| 3 | `EffectKind8D_End` | `MoveScript_Var7` stepped, not the byte after | 4000 |
+| 4 | `EffectKind8E_Run` | through kind 0x8D's table | 4000 |
+| 5 | `EffectKind8E_MoveChips` | the bounce negates the old speed | 4000 |
+| 6 | `EffectKind8E_DrawChip` | the depth copied by `mov` (no NaN quieting) | 85 |
+| 7 | `EffectKind8E_InitChips` | first masked to 17 bits | 888 |
+| 8 | `EffectKind8E_MoveDots` | shade - 4 | 4000 |
+| 9 | `EffectKind8F_SpawnShuffled` | the two `Rand` draws of a swap in the other order | **not refused** (exit 0, equivalent) |
+| 10 | `EffectKind8F_SpawnShard` | the z speed << 4 | 2121 |
+| 11 | `EffectKind8F_MoveShards` | freed at frame 0x1F | 1959 |
+| 12 | `EffectKind8F_Sequence` | stage 4 from 0x167 | 247 |
+| 13 | `EffectKind8F_Sequence` | the wait written through the record read at entry | 54 |
+| 14 | `EffectKind90_MoveShards` | the tag read once before the walk | 2428 |
+| 15 | `EffectKind90_MoveShards` | case 2 ends at 0x17 | 550 |
+| 16 | `EffectKind8F_DrawShard` | green `(+3 * 3) >> 2` | 1984 |
+| 17 | `EffectKind90_Start` | the record read before the clear | 51 |
+| 18 | `EffectKind93_Draw` | grey 0x80 (kind 0x74's) | 3815 |
+| 19 | `EffectKind99_DrawFan` | the point's z read before `Math_Sin` | 29 |
+| 20 | `EffectKind99_Start` | z - 0x20000 | 4000 |
+| 21 | `EffectKind8F_ResetClock` | the wait cleared as a byte | 3981 |
+| 22 | `EffectKind8F_MoveShards` | `AreaMap_Elevation(z, x)` | 4000 |
+| 23 | `EffectKind8E_InitDots` | the speed + 0x1000 | 1753 |
+| 24 | `EffectKind90_EmitOne` | x and z read in the other order | **not refused** (exit 0, equivalent) |
+| 25 | `EffectKind90_EmitOne` | the tag read before the finder | 130 |
+| 26 | `EffectKind8F_SpawnShuffled` | the second draw & 7 | 3136 |
+| 27 | `EffectKind8D_Run` | through kind 0x8E's table (three) | refused: ours' abort (`+1` past the planted table) after mismatching rounds |
+| 28 | `EffectKind8D_Hold` | the tint dropped | 4000 |
+| 29 | `EffectKind8E_Start` | the dots' corners swapped | 4000 |
+| 30 | `EffectKind8E_Fall` | `||` for `&&` | 1781 |
+| 31 | `EffectKind8E_ClearChips` | 127 cleared | 3979 |
+| 32 | `EffectKind8E_DrawDot` | the second link dy -1 | 4000 |
+| 33 | `EffectKind8E_ClearDots` | the dots stepped by 0x28 | 4000 |
+| 34 | `EffectKind8F_Run` | through its table one entry on (eight) | refused: ours' abort (`+1` past the planted table) after mismatching rounds |
+| 35 | `EffectKind8F_Start` | `+1` not stepped | 4000 |
+| 36 | `EffectKind8F_Burst` | row 0xC for 0xD | 4000 |
+| 37 | `EffectKind8F_Rise` | the count test inverted | 4000 |
+| 38 | `EffectKind8F_Arm` | `+9` 0x95 | 4000 |
+| 39 | `EffectKind8F_Trickle` | every sixteenth | 1974 |
+| 40 | `EffectKind8F_Settle` | the test inverted | 4000 |
+| 41 | `EffectKind8F_Fade` | the test inverted | 4000 |
+| 42 | `EffectKind8F_ClearShards` | fifteen cleared | 3982 |
+| 43 | `EffectKind90_Run` | through kind 0x93's table | 4000 |
+| 44 | `EffectKind90_Emit` | every eighth | 635 |
+| 45 | `EffectKind90_Fade` | the test inverted | 4000 |
+| 46 | `EffectKind90_FindShard` | thirty-one looked at | 2 |
+| 47 | `EffectKind90_ClearShards` | thirty-one cleared | 3979 |
+| 48 | `EffectKind90_DrawShard` | committed to slot 2 | 4000 |
+| 49 | `EffectKind93_Run` | through kind 0x99's table | 2974 |
+| 50 | `EffectKind93_Start` | sound 0x207 | 4000 |
+| 51 | `EffectKind93_Rise` | the cap + 1 | 1712 |
+| 52 | `EffectKind93_Fade` | the width step 0xFFF00001 | 3723 |
+| 53 | `EffectKind99_Run` | through kind 0x93's table | 2974 |
+| 54 | `EffectKind99_Spread` | the radius + 0x1198 | 4000 |
+| 55 | `EffectKind99_DrawDisc` | the fans at i << 9 | 4000 |
+| 56 | `EffectKind8E_Fall` | `Cond_ByteFE` set after `MoveCmd_TestFB` | **not refused** (exit 0, equivalent) |
+| 57 | `EffectKind8D_Pull` | `+0x5E` down 2 | 2780 |
+| 58 | `EffectKind8E_MoveChips` | the shape `Rand & 3` | 4000 |
+| 59 | `EffectKind90_MoveShards` | the shade - 7 | 2823 |
+| 60 | `EffectKind8F_DrawShard` | linked dy 2 | 4000 |
+| 61 | `EffectKind8E_Fall` | `Cond_ByteFE` 2 (56's near variant) | 2049 |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
@@ -367,4 +444,10 @@ right). Left raw here: E4D's `0x48CA90` (section 8).
 
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
-Appended to the main checkout's file (2026-10-03): ENTRIES_SUMMARY
+Appended to the main checkout's file (2026-10-03): 32 lines, the read extents of the 50 less eighteen already listed right. Three
+of them correct host lines left in place: `0048B870 2CF` (the code is 0xBF; the
+old line spans kind 0x8F's dispatcher and states after its `ret`),
+`0048BD10 4A3` (0x1ED; kinds 0x90, 0x93 and 0x99's) and `0048C7F0 295` (0x195;
+the old line runs into E4D's `0x48CA90`). E4B's host line `0048A8E0 BBB` spans
+thirteen of this band's starts (to `0x48B49B`); its extent is E4B's to fix.
+
