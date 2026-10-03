@@ -1019,12 +1019,9 @@ void InjectAll() {
     Effect4D_Inject();          // round 13 group E4D (0x48C990..0x48DF87: effect kinds 0x91, 0x94..0x98, 0x9A and the
                                 // screen tint 0x48CA90 - dispatchers, states, draws): its clones' calls re-aimed at
                                 // the scenario harness's recorders, its seven state tables swapped for the fuzz only;
-                                // after ScenarioHarnessEkh_Inject (none of its eight rows is E4D's) and before the
-                                // first Widescreen_ArmFills (its three fills compare the original's 320 x 240); no
+                                // after ScenarioHarnessEkh_Inject (none of its eight rows is E4D's) and before
+                                // Widescreen_ArmFills (its three fills compare the original's 320 x 240); no
                                 // module patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
-    FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
-                                // all compared Capcom's (effect_1a's and effect_1b's draws read it)
-    Widescreen_ArmFills();      // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
     Effect3C_Inject();          // round 13 group E3C (0x484050..0x485CA0: effect kinds 0x6D, 0x6E, 0x6F, 0x72..0x75,
                                 // their dispatchers, states and draws, and the debris draw and set-up kinds 0x1E,
                                 // 0x1F and 0x4B share): its clones' calls re-aimed at the scenario harness's
@@ -1067,6 +1064,8 @@ void InjectAll() {
                                 // after ScenarioHarnessEkh_Inject (none of its eight rows is E4A's) and Effect3D_Inject
                                 // (kind 0x82's first states, whose table holds eight of these); no module patches
                                 // bytes inside its 51 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
+                                // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,

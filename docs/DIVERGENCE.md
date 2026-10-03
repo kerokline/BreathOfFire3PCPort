@@ -3574,6 +3574,8 @@ designed in rather than bolted on.
   live: no recorded route reaches kind 0x64.
 - **Reversible?** `BOF3X_ORIGINAL=EffectKind64_DrawGlow` runs Capcom's
   function, its stale depth included.
+- **The owner's word, 2026-10-03:** kept as written; the owner will say if
+  the glow looks wrong in game.
 
 ### The fishing minigame's text in the overlay's language, laid out for Latin letters
 

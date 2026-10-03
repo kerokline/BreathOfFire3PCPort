@@ -37,6 +37,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_gte.h"
+#include "game/effect_4b.h"
 #include "game/effect_2f.h"
 #include "game/effect_1b.h"
 #include "game/effect_1f.h"
@@ -1092,7 +1093,7 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x4796B0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 8: a record read to +0x400; draws G4 quads
     {FX_RAW(0x5A7570), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxPrim0_44, nullptr, true},   // 7, library layer: 0x2C bytes of a primitive written (the packet pointer logged)
     {FX_RAW(0x5A7840), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPrim0_12, nullptr, true},   // 6, library layer: 12 bytes of a primitive written
-    {FX_RAW(0x489630), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 6: three words, no calls
+    {FX_OURS(EffectKind87_Midpoint), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 6: three words, no calls
     {FX_RAW(0x48ED80), 3, {0, 0, kU8}, Answer::kGarbage, 0, 0, {12, 12}, nullptr, nullptr, true},   // 6: two points (12 read each) and a byte; draws
     {FX_RAW(0x509A70), 2, {0, kAll}, Answer::kGarbage, 0, 0, {4}, nullptr, nullptr, true},   // 6: a pointer (4 read) and a word; textured quads
     {FX_RAW(0x46F570), 1, {0}, Answer::kGarbage, 0, 0, {84}, nullptr, nullptr, true},   // 5: a record read to +0x54; the GTE rotations
