@@ -267,6 +267,7 @@
 #include "game/effect_4e.h"
 #include "game/effect_4b.h"
 #include "game/effect_5g.h"
+#include "game/effect_6c.h"
 #include "game/effect_5a.h"
 #include "game/effect_5b.h"
 #include "game/effect_5f.h"
@@ -1114,6 +1115,13 @@ void InjectAll() {
                                 // tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
                                 // eight rows is E5C's); no module patches bytes inside its 62 (DIVERGENCE.md,
                                 // cheats.cpp, widescreen.cpp)
+    Effect6C_Inject();          // round 13 group E6C (0x510C90..0x51426B: effect kind 0x18's sub-kinds 0x44 (frame
+                                // and sky), 0x45, 0x51, 0x53, 0x55, 0x59, 0x5A, 0x5B, 0x66, and AreaMap_CornerHeight):
+                                // its clones' calls re-aimed at the scenario harness's recorders, its six state tables
+                                // swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its eight rows is
+                                // E6C's) and before Widescreen_ArmFills (sub-kind 0x44's red fill is DIV-0041's) and
+                                // DrawPool_Grow (five DIV-0062 sites); no module patches bytes inside its 50 but
+                                // draw_pool.cpp's six DrawItems immediates
     FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
