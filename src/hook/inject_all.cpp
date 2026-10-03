@@ -261,6 +261,7 @@
 #include "game/effect_4c.h"
 #include "game/effect_4f.h"
 #include "game/effect_4d.h"
+#include "game/effect_4e.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1047,6 +1048,12 @@ void InjectAll() {
                                 // Effect1C_Inject, which call 0x493B50, 0x493C60 and 0x493090 by address; no module
                                 // patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp, widescreen.cpp - DIV-0041
                                 // names 0x493308, inside EffectKindAF_DrawScreen, as a site not yet widened)
+    Effect4E_Inject();          // round 13 group E4E (0x48DF90..0x491C96: effect kinds 0x9B, 0x9C and 0xA0 whole,
+                                // kind 0x9E's dispatcher and draws, the dispatchers of 0xA1..0xA3 and 0xA7..0xA9):
+                                // its clones' calls re-aimed at the scenario harness's recorders, its ten state
+                                // tables swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its
+                                // eight rows is E4E's) and Effect3A_Inject (EffectKind64_DrawSpark called by name);
+                                // no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
