@@ -1450,8 +1450,9 @@ designed in rather than bolted on.
   the same layout: its two answers drawn from `0xDE` less three spaces, three
   spaces more between them, the hand two units left of each
   (`g_trade_confirm_layout`, armed after the self-test under a Latin overlay;
-  `sheet_manillo_item2.png`). A sixteen-character item name was not measured
-  against the hand's new first stop.
+  `sheet_manillo_item2.png`). A long item name was not measured against the
+  hand's new first stop; the owner (2026-10-03): a name is twelve letters at
+  most, they think, which would come close but should fit.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
 - **Amended 2026-10-03 (fix wave, group YN; [`yes-no-prompts.md`](yes-no-prompts.md)):**
