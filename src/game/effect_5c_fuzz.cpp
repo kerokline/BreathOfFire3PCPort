@@ -385,6 +385,8 @@ void Seed(unsigned k) {
     Gfx_BufferIndex = static_cast<unsigned char>(sh::Next() % 2);
     for (unsigned b = 0; b < 2; ++b)
         SetLong(Mem(at::kLayer15Tails + 8 * b), static_cast<std::int32_t>(sh::Half() ? Key(sh::Scratch(b) + (sh::Next() & 0x1C)) : sh::Next()));
+    // sub-kind 0x57's spawn: +9 at 1 half the time (it spawns when +9 reaches 0)
+    if (k == k57Spawn && sh::Half()) Sprite_Current[9] = 1;
     g_size = PickOf(0x48, 0x44, 0xC, 0, 0xFF, sh::Next() & 0xFF);
     if (k == k15Link && sh::Half()) {
         // the cursor at the pool's room test: the real pool's address, the
@@ -426,7 +428,11 @@ void Disturb(U h) {
     unsigned char* const s = Sprite_Current;
     if (!sh::InRegions(s, 0x80)) return;
     switch (h % 8) {
-    case 0: s[9] = static_cast<unsigned char>((v & 1) ? PickOf(0, 1, 7, 8, 0xF, 0x14, 0x1E, 0x78) : v >> 1); break;
+    case 0: {
+        static const unsigned char kNine[] = {0, 1, 7, 8, 0xF, 0x14, 0x1E, 0x78};
+        s[9] = static_cast<unsigned char>((v & 1) ? kNine[(v >> 1) & 7] : v >> 4);
+        break;
+    }
     case 1: s[0xB] = static_cast<unsigned char>(v & 1); break;
     case 2: SetWord(s + 0x30, (v & 1) ? 0xFF00u : v >> 1); break;
     case 3: SetWord(s + 0x32, (v & 1) ? 0x80u : v >> 1); break;
