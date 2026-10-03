@@ -1116,8 +1116,18 @@ extern "C" void __cdecl EffectKind18Sub59_DrawRing(int glow_word) {
             SH_CALL(Gpu_SetPolyGT4)(q);
             SH_CALL(Gpu_SetShadeTex)(q, 0);
             SH_CALL(Gpu_SetSemiTrans)(q, 1);
-            static const unsigned kPoints[] = {8, 0x1C, 0x30, 0x44};
-            for (const unsigned point : kPoints) std::memmove(q + point, p + point, 12);
+            // the first's four screen points, dword by dword in the original's
+            // order (the disturbance can leave the cursor less than a prim
+            // past p, and a forward copy then reads what it has written), the
+            // last dword read before two uv bytes are written and stored after
+            static const unsigned kPoints[] = {8, 0xC, 0x10, 0x1C, 0x20, 0x24, 0x30, 0x34, 0x38, 0x44, 0x48};
+            for (const unsigned at : kPoints) SetUL(q + at, UL(p + at));
+            {
+                const U last = UL(p + 0x4C);
+                q[0x14] = 0xB0;
+                q[0x15] = 0x20;
+                SetUL(q + 0x4C, last);
+            }
             dress(q, 0xB5, 0x7900);
             unsigned char* const s = S();
             SH_CALL(MapView_LinkPrimAt)(UL(s + 0x34), UL(s + 0x38), I(row), 0x54);
