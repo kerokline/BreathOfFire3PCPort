@@ -3861,5 +3861,5 @@ designed in rather than bolted on.
   recorded route reaches sub-kinds 0x4B / 0x4C.
 - **Reversible?** `BOF3X_ORIGINAL=EffectKind18Sub4B_Run` runs Capcom's
   function, its stale word included.
-- **The owner's word:** owed (entered by the coordinator, 2026-10-03, from
-  E5F's report).
+- **The owner's word, 2026-10-03:** kept as written (entered by the
+  coordinator from E5F's report).

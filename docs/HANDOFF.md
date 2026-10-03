@@ -240,8 +240,8 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    2026-10-03.** Wave five (E5A..E5G, 346 functions) and `fix/tile-layering` are in; the tip `e652bbe` is verified
    narrow and wide ([`takeover-queue-round13.md`](takeover-queue-round13.md) section 16), and **DIV-0071 is on by
    default since `f316416`** (`BOF3X_LAYERING=0` turns it off; reference runs pin it off; no launcher key yet).
-   **Owed the owner's word: DIV-0072** (E5F's `EffectKind18Sub4B_Run`, a stack word Capcom never wrote - the same
-   class as DIV-0068, which the owner kept). **Wave six:** four Opus agents, E6A..E6D, 196 functions, branches
+   DIV-0072 (E5F's `EffectKind18Sub4B_Run`, a stack word Capcom never wrote) has the owner's word, as DIV-0068 has:
+   kept as written. **Wave six:** four Opus agents, E6A..E6D, 196 functions, branches
    `phase-3/round13-e6a`..`e6d`; append each group to `pending13.txt` as it reports and run `runner13.sh <scratch>`
    (E6A and E6C before E6B; `END` ends it; never edit `merge_group13.sh` while it runs), then `fold_names.py`,
    `analysis/consolidate_entries.py`, check `inject_all.cpp` has each arm call once and last, `verify_tip.sh`, the

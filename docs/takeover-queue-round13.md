@@ -942,8 +942,8 @@ the wrong way round (E5D's reading: the original draws only with bit 2
 set) - corrected, so E5C's fifteen calls are fuzzed against the right one;
 `fold_names.py` two rows; `FishingText_Arm` once (a merge had doubled it
 again); `consolidate_entries.py` 9,099 entries; **DIV-0072** entered for
-E5F's `EffectKind18Sub4B_Run` (a stack word the original never writes, the
-owner's word owed); DIV-0041 amended for the three fills E5E and E5G
+E5F's `EffectKind18Sub4B_Run` (a stack word the original never writes; the
+owner kept it as written the same evening); DIV-0041 amended for the three fills E5E and E5G
 widened. **The tip's proof** (`e652bbe`, scratch `verify_w5.log`):
 `scenario_harness_ekh`, `effect_5c`, `effect_5d`, `effect_5e`, `effect_5g`
 and `'*'` exit 0, 8,449 ours; `'*'` with `BOF3X_WIDE=1` exit 0;
