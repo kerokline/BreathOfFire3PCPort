@@ -357,6 +357,10 @@ const sh::Region kRegions[] = {
 unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
 
 bool Sub22(unsigned k) { return k >= k22Run && k <= k22Draw; }
+// The functions that index a table by the place word +0x36 (sub-kinds 0x14 /
+// 0x1E and 0x22) or copy its byte into +0xB (0x19); the rest leave it the
+// harness's random x cell, so the draws see points far from the map's origin.
+bool Placed(unsigned k) { return Sub22(k) || k == k19Run || (k >= k14Run && k <= k14Tiles); }
 
 // A frame count the columns take whole or >> 2 without reaching 8 (their
 // divisor 8 - rise; past it the original faults), the boundaries kept.
@@ -375,7 +379,7 @@ void Records(unsigned k) {
     const unsigned places = Sub22(k) ? at::kSub22Count : 2;
     for (unsigned r = 0; r < 20; ++r) {
         unsigned char* const e = Rec(r);
-        SetWord(e + 0x36, sh::Next() % places);
+        if (Placed(k)) SetWord(e + 0x36, sh::Next() % places);
         e[0xB] = static_cast<unsigned char>(sh::Next() % at::kSub19Count);
         e[9] = k == k17Close ? static_cast<unsigned char>(sh::Next() % 40) : SafeCount(sh::Next());
     }

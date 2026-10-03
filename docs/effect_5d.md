@@ -447,8 +447,9 @@ frame-hash A/B cover it.
 
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
-The main checkout's file (2026-10-03): 43 lines appended for the functions not
-listed before, and nine host lines whose catalog extents ran over the hidden
+The main checkout's file (2026-10-03): 40 lines appended for the functions not
+listed before; three were listed at the read extent already (`00503FA0`,
+`00504570`, `005052D0`); and nine host lines whose catalog extents ran over the hidden
 starts cut to the read extents - `005043B0 1BE` to `75`, `005047A0 856` to
 `15F`, `00505000 2CF` to `F2`, `00505480 34F` to `BA`, `005057D0 26E` to
 `1C4`, `00505A40 1AF` to `6A`, `00505BF0 26A` to `22A`, `00505E60 7DC` to
