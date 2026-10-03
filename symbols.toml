@@ -93440,3 +93440,520 @@ ctype = "unsigned long"
 count = 23
 status = "evidence"
 evidence = "read 2026-10-03 (round thirteen group E4B): EffectKind8C_Run 0x48AC30 by +1: 0 _Start, 1 _WaitA, 2 BareRet, 3 _PressA, 4 _WaitB, 5..9 BareRet, 10 _Check, 11 _Steer, 12 _SteerWait, 13 _SteerBack, 14 BareRet, 15 _Ready, 16 _CountA, 17 _CountPress, 18 _CountB, 19 BareRet, 20 _Judge, 21 _Pass, 22 _Fail (the highest state any sets is 0x16); the next table 0x654FA4 (0x48B220..) is another kind's. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, and the highest state the kind's code sets, checked by hand. docs/effect_4b.md section 3."
+
+# --- round thirteen group E4A (effect_4a, 2026-10-03): effect kinds 0x82 (states 11..23), 0x83..0x87, 0x488020..0x48902E and 0x433640. docs/effect_4a.md ---
+
+[[func]]
+pc = 0x488020
+name = "EffectKind82_Check11"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488020..0x488051 (0x32 bytes): Field_State = ObjTrio; Sprite_Objects record 0's x at or past the leader's (signed): +1 0xD, +9 0; else +1 0xC. Reached by EffectKind82_States[11], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488060
+name = "EffectKind82_Restart"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488060..0x488084 (0x25 bytes): +1 0; 0x903849 0 when it is 0xFF or 0x90384A is 0x80. Reached by EffectKind82_States[12], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488090
+name = "EffectKind82_Nudge13"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488090..0x4880CE (0x3F bytes): Sprite_Current pointed at Sprite_Objects record 0 for two adds of 0x4000 to its +0x38 (z), +1 0xE, Sprite_Current put back, +9 8. Reached by EffectKind82_States[13], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4880D0
+name = "EffectKind82_Nudge15"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4880D0..0x48810E (0x3F bytes): EffectKind82_Nudge13 with four adds of -0x4000, +1 0x10, +9 8. Reached by EffectKind82_States[15], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488110
+name = "EffectKind82_Nudge17"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488110..0x48814A (0x3B bytes): EffectKind82_Nudge13 with +1 0x12 and +9 left. Reached by EffectKind82_States[17], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488150
+name = "EffectKind82_Count18"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488150..0x488178 (0x29 bytes): +2 up one; +1 0x14 when it was below 0xF, else 0xD. Reached by EffectKind82_States[18], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488180
+name = "EffectKind82_Again"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488180..0x4881BF (0x40 bytes): 0x903849 0xFF or 0x90384A 0x80: +1 0x17, +2 0; else 0x903849 0, +1 0, +2 0. Reached by EffectKind82_States[20], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4881C0
+name = "EffectKind82_End"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4881C0..0x488210 (0x51 bytes): Field_State = ObjTrio record 2 (0x802FD8); its +0x34 at 0x340000 or past (signed): 0x903849 0xFF, the step 0x8034E5 0x14; else 0x903849 0xFE, the step 0x1E; 0x90384A / 0x90384B 0; a tail jmp to Effect_Release. Reached by EffectKind82_States[22], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488220
+name = "EffectKind83_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488220..0x488231 (0x12 bytes): jmp [EffectKind83_States + +1 * 4], no compare. Reached by Effect_KindHandlers[0x83] (0x65555C), hidden in 0x487BF0 (a hypothesis row of the cut). Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488240
+name = "EffectKind83_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488240..0x4883C0 (0x181 bytes): EffectKind82_Wait's code again (record 0's x, not record 1's, against the leader: +1 0x16; 0x90384A 0x80: +1 0x17; then MSVC's switch on 0x903849 through the byte table 0x4882C4 and the jump table 0x4882B0 inside the extent: 3 +1 6, 4 +1 4, 5 +1 2, 0xFF a tail jmp to Effect_Release, else nothing). Reached by EffectKind83_States[1], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4883D0
+name = "EffectKind83_Push2"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4883D0..0x48840A (0x3B bytes): Sprite_Current pointed at Sprite_Objects record 1 for four adds of 0x4000 to its +0x34 (a cell in x), +1 3, put back. Not in the cut (code no list has, in the cut's span of 0x488240). Reached by EffectKind83_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488410
+name = "EffectKind83_Check3"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488410..0x488441 (0x32 bytes): EffectKind82_Check11 for record 1 (0x7DEF58) with +1 4. Reached by EffectKind83_States[3], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488450
+name = "EffectKind83_Push4"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488450..0x48848A (0x3B bytes): EffectKind83_Push2 with +1 5. Reached by EffectKind83_States[4], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488490
+name = "EffectKind83_Check5"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488490..0x4884C1 (0x32 bytes): EffectKind83_Check3 with +1 6. Reached by EffectKind83_States[5], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4884D0
+name = "EffectKind83_Push6"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4884D0..0x48850A (0x3B bytes): EffectKind83_Push2 with +1 7. Reached by EffectKind83_States[6], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488510
+name = "EffectKind83_Check7"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488510..0x488541 (0x32 bytes): EffectKind83_Check3 with +1 8. Reached by EffectKind83_States[7], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488550
+name = "EffectKind83_Push8"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488550..0x48858A (0x3B bytes): EffectKind83_Push2 with +1 9. Reached by EffectKind83_States[8], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488590
+name = "EffectKind83_Check9"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488590..0x4885C1 (0x32 bytes): EffectKind83_Check3 with +1 0xA. Reached by EffectKind83_States[9], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4885D0
+name = "EffectKind83_Push10"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4885D0..0x48860A (0x3B bytes): EffectKind83_Push2 with +1 0xB. Reached by EffectKind83_States[10], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488610
+name = "EffectKind83_Check11"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488610..0x488641 (0x32 bytes): EffectKind83_Check3 with +1 0xC. Reached by EffectKind83_States[11], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488650
+name = "EffectKind83_Nudge13"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488650..0x48868E (0x3F bytes): EffectKind82_Nudge13 for record 1 (+0x38 + 0x4000 twice, +1 0xE, +9 8). Reached by EffectKind83_States[13], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488690
+name = "EffectKind83_Hold14"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488690..0x4886AD (0x1E bytes): +9 down one; +1 0xF when it was 0. Reached by EffectKind82_States[14] and EffectKind83_States[14], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4886B0
+name = "EffectKind83_Nudge15"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4886B0..0x4886EE (0x3F bytes): record 1's +0x38 - 0x4000 four times, +1 0x10, +9 8. Reached by EffectKind83_States[15], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4886F0
+name = "EffectKind83_Hold16"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4886F0..0x48870D (0x1E bytes): EffectKind83_Hold14 with +1 0x11. Reached by EffectKind82_States[16] and EffectKind83_States[16], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488710
+name = "EffectKind83_Nudge17"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488710..0x48874A (0x3B bytes): record 1's +0x38 + 0x4000 twice, +1 0x12. Reached by EffectKind83_States[17], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488750
+name = "EffectKind83_Count18"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488750..0x4887AD (0x5E bytes): +2 up one; when it was 0xF or more +1 0xD; else EffectKind82_Again's code in line (EffectKind83_States[20] is BareRet). Reached by EffectKind83_States[18], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4887B0
+name = "EffectKind83_Finish"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4887B0..0x4887DB (0x2C bytes): Field_State = ObjTrio; +0x34 the leader's x less Sprite_Objects record 0's; the step 0x8034E5 0x1E; a tail jmp to Effect_Release. Reached by EffectKind82_States[23] and EffectKind83_States[23], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4887E0
+name = "EffectKind84_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4887E0..0x4887F1 (0x12 bytes): jmp [EffectKind84_States + +1 * 4], no compare. Reached by Effect_KindHandlers[0x84] (0x655560), hidden in 0x487BF0 (a hypothesis row of the cut). Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488800
+name = "EffectKind84_WaitPress"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488800..0x488821 (0x22 bytes): +1 1 when Input_Held (a word) is 0x3000, 0x6000 or 0x2000. Reached by EffectKind84_States[0], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488830
+name = "EffectKind84_Pick"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488830..0x4888A1 (0x72 bytes): 0x903849 0xFE: Effect_Release, and on; Field_State = ObjTrio record 2, its +0x34 at 0x340000 or past: 0x903849 0xFF, 0x90384A / B 0, the step 0x14, Effect_Release; else 0x903849 = EffectKind84_PushCounts[Rand & 0xF], +1 2. Reached by EffectKind84_States[1], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4888B0
+name = "EffectKind84_Mash"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4888B0..0x488965 (0xB6 bytes): the stop and the line as EffectKind84_Pick; else 0x903849 0: +9 = EffectKind84_Waits[Rand & 0xF], +1 3; else while Input_Held is one of the three words 0x90384A up one, and when it was 0x10 or more 0x90384A 0x80 and Effect_Release. Reached by EffectKind84_States[2], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488970
+name = "EffectKind84_Pause"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488970..0x4889DB (0x6C bytes): the stop and the line as EffectKind84_Pick (the line a tail jmp); else +9 down, and when it was 0 the word 0x8034E6 0 and +1 1. Reached by EffectKind84_States[3], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x4889E0
+name = "EffectKind85_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x4889E0..0x4889F1 (0x12 bytes): jmp [EffectKind85_States + +1 * 4], no compare. Reached by Effect_KindHandlers[0x85] (0x655564), hidden in 0x487BF0; spawned by Area144_SpawnEffect85 (+6 the active member's Sprite_Objects index). Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488A00
+name = "EffectKind85_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488A00..0x488A4B (0x4C bytes): +0x5D..+0x5F 0, +0xB 0x33, Msg_OpenScript(+0xB), Field_Request 2, +1 1. Reached by EffectKind85_States[0], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488A50
+name = "EffectKind85_WaitMessage"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488A50..0x488A78 (0x29 bytes): Field_Request not 2: +9 0x1E, +1 2; then 0x48CA90 (E4D's tile, coloured by +0x5D..+0x5F) and a tail jmp to EffectKind85_ShowObjects. Reached by EffectKind85_States[1], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488A80
+name = "EffectKind85_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488A80..0x488AD0 (0x51 bytes): +9 down; not 0: +0x5D, +0x5E, +0x5F up 2 each; else +9 0x1E, +1 3; then the tile and the objects as state 1. Reached by EffectKind85_States[2], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488AE0
+name = "EffectKind85_NextMessage"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488AE0..0x488B64 (0x85 bytes): +9 down; at 0 +0xB up one: 0x37: +0x5D..+0x5F 0xFF, +1 4, the counter 0x903848 up one; else Msg_OpenScript(+0xB), Field_Request 2, +1 1; then the tile and the objects. Reached by EffectKind85_States[3], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488B70
+name = "EffectKind85_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488B70..0x488B87 (0x18 bytes): the counter 0x903848 0x35: Effect_Release; then the tile and the objects. The tool's extent (0x68) ran over EffectKind85_ShowObjects, its tail. Reached by EffectKind85_States[4], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488B90
+name = "EffectKind85_ShowObjects"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488B90..0x488BD7 (0x48 bytes): Sprite_Current = Sprite_Objects record +6 (unchecked), its +0x29 2, Sprite_UpdateScreen; Sprite_Current = ObjTrio, +0x29 2, Sprite_UpdateScreen; Sprite_Current put back. Its own frame (push esi) and ret, reached only by the tail jmps of EffectKind85_States[1..4]; not in the cut (the tool counted it into 0x488B70). Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488BE0
+name = "EffectKind86_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488BE0..0x488BF1 (0x12 bytes): jmp [EffectKind86_States + +1 * 4], no compare. Reached by Effect_KindHandlers[0x86] (0x655568), hidden in 0x487BF0; a catalog row (Table Effect_KindHandlers) in no group of the cut, inside E4A's band. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488C00
+name = "EffectKind86_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488C00..0x488D9C (0x19D bytes): two Sprite_FindFree slots into +3 and +4 (each +0 1 as found; none: nothing, the first freed when the second is none); each placed by EventOp_0x(0x654D88) with the count word 0x903850 the slot; Sprite_Current put back; the first's +0x38 - 0x10000, the second's + 0x10000, +0 | 0x20 and +0x5C 1 on both; Sprite_SetTint(first, 0xF, 0, 0, 1), (second, 0, 0, 0xF, 1); +9 0x20, +1 1. Reached by EffectKind86_States[0] (0x654D74, the cut's unit column says kind 0x85), hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488DA0
+name = "EffectKind86_Slide"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488DA0..0x488E00 (0x61 bytes): +9 not 0: Sprite_Objects[+3] +0x38 + 0x800, [+4] - 0x800, +9 down; else +9 0xF, +1 2. Reached by EffectKind86_States[1], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488E10
+name = "EffectKind86_Tint"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488E10..0x488EE3 (0xD4 bytes): +9 not 0: Sprite_Objects[+3] and [+4] +0x5D..+0x5F up 8 each, +9 down; else the counter 0x903848 up one, +1 3. Reached by EffectKind86_States[2], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488EF0
+name = "EffectKind86_End"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488EF0..0x488F5C (0x6D bytes): Sprite_Objects[+3] and [+4] +0 0, Sprite_ReleaseTint on each (+4 read again after the first call), Effect_Release. Reached by EffectKind86_States[3], hidden in 0x487BF0; psx twin 801F36B4 (callers), no sibling name. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488F60
+name = "EffectKind87_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488F60..0x488F71 (0x12 bytes): jmp [EffectKind87_States + +1 * 4], no compare. Reached by Effect_KindHandlers[0x87] (0x65556C), hidden in 0x487BF0 (a hypothesis row of the cut). Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488F80
+name = "EffectKind87_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488F80..0x488FA9 (0x2A bytes): +6 = Draw_PassFlags' low byte, which becomes 0x1B; 0x489030 (E4B's); 0x676280 0; +1 up one. Reached by EffectKind87_States[0], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488FB0
+name = "EffectKind87_Step1"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488FB0..0x488FD3 (0x24 bytes): 0x489220 (E4B's) answering al 0: 0x4891F0 (E4B's), Sound_PlayEffect(0x203), +1 up one. Reached by EffectKind87_States[1], hidden in 0x487BF0; psx twin 801F2CA4 (callers), no sibling name. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x488FE0
+name = "EffectKind87_Step2"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x488FE0..0x488FF1 (0x12 bytes): 0x489220 answering al 0: +1 up one. Reached by EffectKind87_States[2], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x489000
+name = "EffectKind87_Restore"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x489000..0x489016 (0x17 bytes): Draw_PassFlags' low byte = +6, +1 up one. Reached by EffectKind87_States[3], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x489020
+name = "EffectKind87_End"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x489020..0x48902E (0xF bytes): Effect_Release, then the word 0x8034E6 0. Reached by EffectKind87_States[8], hidden in 0x487BF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no first-call trace names it). docs/effect_4a.md."
+
+[[func]]
+pc = 0x433640
+name = "Sprite_StateRestart"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4a.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E4A, capstone to the last instruction), 0x433640..0x433649 (0xA bytes): Sprite_Current +1 = 0. Reached by EffectKind83_States[12] (0x654D18; kind 0x82's state 12 is EffectKind82_Restart instead) and the stack table of BattleFx_ActorWatch 0x433460 (its state 2, the immediate at 0x43347A); hidden in 0x432F10 (BattleFx_RollingDigits, which ends at 0x43363E), a hypothesis row of the cut: code shared by an effect kind and a battle task, taken whole. The catalog's combat column has -98 for it (the actor watch's path); no first-call trace names it. docs/effect_4a.md."
+
+[[data]]
+pc = 0x654CE8
+name = "EffectKind83_States"
+ctype = "unsigned long"
+count = 24
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4A): EffectKind83_Run 0x488220 by +1: EffectKind82_Start (E3D's), _Wait, _Push2, _Check3, .., _Push10, _Check11, Sprite_StateRestart (12), _Nudge13, _Hold14, _Nudge15, _Hold16, _Nudge17, _Count18, BareRet (19, 20), Effect_StateRelease (21, 22), _Finish (23); _Wait sends +1 to 0x16 and 0x17. Kind 0x84's table follows at 0x654D48 (the tool's run counted on to 29). The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +1. docs/effect_4a.md section 3."
+
+[[data]]
+pc = 0x654D48
+name = "EffectKind84_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4A): EffectKind84_Run 0x4887E0 by +1: _WaitPress, _Pick, _Mash, _Pause, Effect_StateRelease (4, which no state stores); a null dword follows at 0x654D5C. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +1. docs/effect_4a.md section 3."
+
+[[data]]
+pc = 0x654D60
+name = "EffectKind85_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4A): EffectKind85_Run 0x4889E0 by +1: _Start, _WaitMessage, _Brighten, _NextMessage, _Wait (the states store 1..4); kind 0x86's table follows at 0x654D74, which the tool's run of nine counted in. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +1. docs/effect_4a.md section 3."
+
+[[data]]
+pc = 0x654D74
+name = "EffectKind86_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4A): EffectKind86_Run 0x488BE0 by +1: _Spawn, _Slide, _Tint, _End; a null dword follows at 0x654D84. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +1. docs/effect_4a.md section 3."
+
+[[data]]
+pc = 0x654E88
+name = "EffectKind87_States"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4A): EffectKind87_Run 0x488F60 by +1: _Start, _Step1, _Step2, _Restore, 0x492750 (4..7, a catalog row no group holds: +1 up one), _End (8); kind 0x88's table (0x4896A0 indexes it) follows at 0x654EAC (the tool's run counted on to 28). The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +1. docs/effect_4a.md section 3."
+
+[[data]]
+pc = 0x654C68
+name = "EffectKind84_PushCounts"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4A): 16 bytes by Rand & 0xF, the push count EffectKind84_Pick stores into 0x903849 (the counts kinds 0x82 / 0x83 push by). docs/effect_4a.md section 3."
+
+[[data]]
+pc = 0x654C78
+name = "EffectKind84_Waits"
+ctype = "unsigned char"
+count = 16
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4A): 16 bytes by Rand & 0xF, the frames EffectKind84_Mash stores into +9 for EffectKind84_Pause. docs/effect_4a.md section 3."

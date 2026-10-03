@@ -256,6 +256,7 @@
 #include "game/effect_2a.h"
 #include "game/effect_3b.h"
 #include "game/effect_3d.h"
+#include "game/effect_4a.h"
 #include "game/effect_3c.h"
 #include "game/effect_3a.h"
 #include "game/effect_4c.h"
@@ -1060,6 +1061,12 @@ void InjectAll() {
                                 // the scenario harness's recorders, its eight state tables swapped for the fuzz only;
                                 // after ScenarioHarnessEkh_Inject (none of its eight rows is E4B's); no module patches
                                 // bytes inside its 66 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Effect4A_Inject();          // round 13 group E4A (0x488020..0x48902E and 0x433640: effect kinds 0x82 (states
+                                // 11..23), 0x83..0x87 - dispatchers and states): its clones' calls re-aimed at the
+                                // scenario harness's recorders, its five state tables swapped for the fuzz only;
+                                // after ScenarioHarnessEkh_Inject (none of its eight rows is E4A's) and Effect3D_Inject
+                                // (kind 0x82's first states, whose table holds eight of these); no module patches
+                                // bytes inside its 51 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
