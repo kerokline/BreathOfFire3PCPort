@@ -1442,6 +1442,17 @@ designed in rather than bolted on.
 - **Verification:** the re-spacing at start-up (`BOF3X_SHADOW=yes_no_layout`,
   both line shapes). **Confirmed in game by the owner, 2026-09-23**, at an
   inn's save: "looked right". All four prompts change together.
+- **Amended again 2026-10-03, from the owner's `masterAndManillo.txt`:** the
+  master's "Is this OK?" seen fixed in game (frames 3990, 4020, 4950, 4980,
+  `analysis/shots/validate_1003/sheet_master.png`). Manillo's per-item
+  "Is <item> OK?" (`ItemTrade_Confirm` `0x593E60`, `field_e2.cpp`) had been
+  left as Capcom's - the hand on No over Yes (frames 2700, 3030) - and now has
+  the same layout: its two answers drawn from `0xDE` less three spaces, three
+  spaces more between them, the hand two units left of each
+  (`g_trade_confirm_layout`, armed after the self-test under a Latin overlay;
+  `sheet_manillo_item2.png`). A long item name was not measured against the
+  hand's new first stop; the owner (2026-10-03): a name is twelve letters at
+  most, they think, which would come close but should fit.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
 - **Amended 2026-10-03 (fix wave, group YN; [`yes-no-prompts.md`](yes-no-prompts.md)):**
@@ -3653,6 +3664,15 @@ designed in rather than bolted on.
   tabs, the full names; the French tabs (`Equip`, `Données`, seven letters
   over a 40-unit box - the French disc widened its boxes) and the German
   build.
+- **Found by the live check, 2026-10-03:** the banner's one-byte draw
+  (`EffectKind0F_DrawGlyph`) makes glyph `0x20 - 0x26` of a space, far past the
+  font - the disc's English lines have spaces, Capcom's have none - and both
+  fishing routes crashed in `Font_UnpackGlyph` at the first banner. Under the
+  Latin layout a space now draws nothing (the callers move the pen). And
+  `tools/dat.py` did not know chunk kind 16, so `loc_build.py all` stopped
+  after its first file. After both: `caughFish.txt` and `campingFishing.txt`
+  to `done`, no crash, the banners, tabs and names in English
+  (`analysis/shots/validate_1003/camping_b`, `caughFish_b`).
 - **The owner's word, 2026-10-03:** the tab words are the English disc's
   (Gear / Data / Rule). The banner's button icons stay the port's (circle, cross,
   triangle) although the US disc shows cross, triangle, square - the owner reads

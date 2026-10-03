@@ -28,8 +28,10 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/field_e2_callees.h"
+#include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1789,6 +1791,52 @@ extern "C" void __cdecl ItemTrade_PickCount(void) {
     SH_CALL(Menu_DrawHand)(0x1A, 0x6B, 0);
 }
 
+// DIVERGENCE DIV-0027 (amended 2026-10-03, after the live check): the per-item
+// "Is <item> OK?" answers. Capcom draws the two answer words, one space apart,
+// at x 0xDE and the hand at 0xDC + 36 * the answer - stops fitted to the Chinese
+// words: under the English overlay the hand on No covers Yes (the owner's
+// masterAndManillo.txt, frames 2700 and 3030). With the flag on (FieldE2_Inject,
+// a Latin overlay, after the self-test) the layout is the load / save screen's,
+// as the leave prompt's is (effect_1g.cpp, yes_no_layout.cpp): the first answer
+// three spaces further left, the second where it was, the hand two units left
+// of each.
+unsigned char g_trade_confirm_layout = 0;
+
+namespace {
+
+struct ConfirmAnswers {
+    const unsigned char* line;   // a static buffer, good until the next call
+    int x;
+    int stop[2];                 // the hand on the first answer, on the second
+};
+
+ConfirmAnswers ConfirmLayout(const unsigned char* s) {
+    constexpr unsigned kMoved = 3;
+    static unsigned char line[32];
+    static const unsigned char kSpace[2] = {0x20, 0};
+    unsigned first = 0;
+    while (s[first] && s[first] != 0x20) ++first;
+    unsigned second = first;
+    while (s[second] == 0x20) ++second;
+    unsigned end = second;
+    while (s[end] && s[end] != 0x20) ++end;
+    bool plain = first != 0 && second != first && end != second && s[end] == 0 && end + kMoved < sizeof line;
+    for (unsigned i = 0; plain && i < end; ++i) plain = s[i] >= 0x20 && s[i] < 0x80;
+    if (!plain) bof3::Fatal("DIV-0027: the trade's answers are not two one-byte words with spaces between");
+    unsigned n = 0;
+    for (unsigned i = 0; i < first; ++i) line[n++] = s[i];
+    for (unsigned i = 0; i < second - first + kMoved; ++i) line[n++] = 0x20;
+    const unsigned second_at = n;
+    for (unsigned i = second; i < end; ++i) line[n++] = s[i];
+    line[n] = 0;
+    const int x = 0xDE - static_cast<int>(kMoved) * TextAdvance_Of(kSpace);
+    int pen = x;
+    for (unsigned i = 0; i < second_at; ++i) pen += TextAdvance_Of(line + i);
+    return {line, x, {x - 2, pen - 2}};
+}
+
+}  // namespace
+
 // original 0x593E60 (ItemTrade_RunSteps[2]): the yes / no. Left or right
 // (Input_AutoRepeat of 0xA000) flips the hand 0x6BE08F, sound 0x100. Else
 // cancel: sound 0x106, the step down; confirm on no: the same; confirm on
@@ -1831,8 +1879,14 @@ extern "C" void __cdecl ItemTrade_Confirm(void) {
         const unsigned char* const name = SH_CALL(Item_NamePtr)(B(record + 1), B(record));
         std::memcpy(At(at::kTextRecords), name, 0x10);
         SH_CALL(Text_DrawAt)(0x18, 0x14, 0, 0xFF, Pool(at::kPoolWordName));
-        SH_CALL(Text_DrawAt)(0xDE, 0x14, 0, 0xFF, Pool(at::kPoolWordAsk));
-        SH_CALL(Menu_DrawHand)(static_cast<int>(B(at::kTradeAnswer) * 36u + 0xDCu), 0x16, 0);
+        if (g_trade_confirm_layout) {
+            const ConfirmAnswers a = ConfirmLayout(Pool(at::kPoolWordAsk));
+            SH_CALL(Text_DrawAt)(a.x, 0x14, 0, 0xFF, a.line);
+            SH_CALL(Menu_DrawHand)(a.stop[B(at::kTradeAnswer) != 0 ? 1 : 0], 0x16, 0);
+        } else {
+            SH_CALL(Text_DrawAt)(0xDE, 0x14, 0, 0xFF, Pool(at::kPoolWordAsk));
+            SH_CALL(Menu_DrawHand)(static_cast<int>(B(at::kTradeAnswer) * 36u + 0xDCu), 0x16, 0);
+        }
     }
     TradeList(1);
     if (B(at::kTradeStep) == 0) return;
@@ -1894,4 +1948,12 @@ void FieldE2_Inject() {
     BOF3_INJECT(ItemTrade_PickItem);
     BOF3_INJECT(ItemTrade_PickCount);
     BOF3_INJECT(ItemTrade_Confirm);
+    // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
+    // compares the original's prompt; a Latin overlay only (DIV-0056).
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("TradeConfirmLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_trade_confirm_layout)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    Manillo's \"Is <item> OK?\": answers re-spaced, the hand two units left of each");
+    }
 }

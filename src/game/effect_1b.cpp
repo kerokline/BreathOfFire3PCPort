@@ -1304,7 +1304,13 @@ extern "C" void __cdecl Panel_DrawWindowEdges(int x, int y, int w, int h, unsign
 // (width & 0x7F); v 0..0xC; x, x + (width & 0x7F) (words); y record 3's dword
 // +0x30 + 3, + 0xC more; shade 0x80; CLUT 0x7800 | (clut & 0xF); committed (1,
 // 0x28).
+//
+// DIV-0069: under the Latin layout a space draws nothing. The one-byte branch
+// makes glyph 0x20 - 0x26 = 0xFFFA of it, far past the font (Capcom's lines
+// hold no one-byte space; the disc's English ones do - the crash the live check
+// met at the first banner, 2026-10-03). The callers move the pen themselves.
 extern "C" void __cdecl EffectKind0F_DrawGlyph(unsigned clut, const unsigned char* text, unsigned width, int x) {
+    if (FishingText_On() && text[0] == 0x20) return;
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetCode6C)(p);
     const unsigned char c0 = text[0];

@@ -50,7 +50,8 @@ KINDS = {0: "data", 1: "image", 2: "audio bank", 3: "kind3", 4: "advances (ours,
          12: "battle banner messages (ours, DIV-0052)",
          13: "text pair codes (ours, DIV-0057)",
          14: "F9 pause lines (ours, DIV-0038)",
-         15: "short labels (ours, DIV-0064)"}
+         15: "short labels (ours, DIV-0064)",
+         16: "fishing text (ours, DIV-0069)"}
 BANK_TOC = 0x188
 BANK_SLOTS = 61
 BANK_DATA = 0x380
