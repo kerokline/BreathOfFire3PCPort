@@ -293,6 +293,10 @@ unsigned char* Rec(unsigned r) { return sh::EffectRecord(r); }
 // EffectKind18Sub44_Commit's size, drawn by the seed (which may put the cursor
 // at the pool's room test for it) and handed by Args.
 U g_size = 0;
+// DrawStars' rounds that pin the camera's z cell where the second star's y is
+// 89..91 (the disturbance would move it before the test is reached): the value
+// put back after every disturbance, 0 when not pinned.
+U g_pin_z = 0;
 
 // The area map as the cell-record functions index it, kept inside the area
 // block's 8 KiB: a width and height 1..16, the cells' base 0..0x3F, every cell
@@ -336,6 +340,7 @@ void CornerPoint(U* a) {
 }
 
 void Seed(unsigned k) {
+    g_pin_z = 0;
     // every record the disturbance may move Sprite_Current to: the variant
     // +0x36 of sub-kind 0x51 inside its five, the counters about their bounds
     for (unsigned r = 0; r < 20; ++r) {
@@ -408,6 +413,15 @@ void Seed(unsigned k) {
         if (sh::Half()) SetLong(Mem(at::kLeaderMoving), 0);
         if (sh::Half()) s[0x4B] = Mem(at::kLeaderAnimation)[0];
         break;
+    case k44Stars:
+        if (sh::Half()) {
+            // or, for the third star, |0x1400 - z| whose square lies just below
+            // a multiple of 98304 (where the divide's rounding shows)
+            g_pin_z = sh::Half() ? 85 * PickOf(90, 91, 92) + sh::Next() % 85
+                                 : (0x1400u + (sh::Half() ? 1u : 0u - 1u) * PickOf(3723, 4703, 5075, 5661, 5687, 6494)) & 0xFFFF;
+            SetWord(Mem(at::kKind2ZHigh), g_pin_z);
+        }
+        break;
     case k44Commit:
         g_size = PickOf(0xC, 0x14, 0x1C, 0x44, 0x48, 0, 0xFF, sh::Next());
         if (sh::Half()) {
@@ -473,11 +487,20 @@ void Disturb(U h) {
     case 3:
         if (sh::InRegions(s, 0x80)) SetWord(s + 0x36, v % 5);
         break;
-    case 4: SetWord(Mem((v & 1) ? at::kKind2XHigh : at::kKind2ZHigh), v >> 1); break;
+    case 4:
+        // a camera cell word: any, or z where the second star's y is 89..91
+        if ((v & 6) == 6)
+            SetWord(Mem(at::kKind2ZHigh), 85 * (90 + (v >> 3) % 3) + (v >> 5) % 85);
+        else
+            SetWord(Mem((v & 1) ? at::kKind2XHigh : at::kKind2ZHigh), v >> 1);
+        break;
     case 5: SetWord(Mem(at::kWalkClock), v % 0x3C0); break;
     case 6: Camera_Distance = static_cast<short>((v & 0xFFFF) == 0xEE6C ? 0xEE6D : v); break;
     default: break;
     }
+}
+void Settle() {
+    if (g_pin_z != 0) SetWord(Mem(at::kKind2ZHigh), g_pin_z);
 }
 
 }  // namespace
@@ -499,6 +522,7 @@ void SelfTest() {
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
                    [](unsigned k) { Seed(s_index[k]); }, &Disturb, 4000};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
+    g.settle = &Settle;
     g.effect = true;
     g.kinds = kKinds;
     g.n_kinds = sizeof kKinds;
