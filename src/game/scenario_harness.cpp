@@ -916,10 +916,6 @@ std::uint32_t FxOut0_24(const std::uint32_t* a, std::uint32_t answer) { FillNois
 std::uint32_t FxOut0_32(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 32); return answer; }
 std::uint32_t FxOut1_4(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[1], 4); return answer; }
 std::uint32_t FxOut2_6(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[2], 6); return answer; }
-std::uint32_t FxOut012_8(const std::uint32_t* a, std::uint32_t answer) {
-    for (unsigned i = 0; i < 3; ++i) FillNoise(a[i], 8);
-    return answer;
-}
 // Round twelve's behaviour folds (its doc section 7 items 1 and 6), beside the
 // standard rows, in effect mode only - in place they would change what the
 // wave-two groups that use the standard rows draw:
@@ -941,6 +937,69 @@ std::uint32_t FxRotTransPers2F(const std::uint32_t* a, std::uint32_t answer) {
 }
 std::uint32_t FxPrim0_44(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 0x2C); return answer; }
 std::uint32_t FxPrim0_12(const std::uint32_t* a, std::uint32_t answer) { FillNoise(a[0], 12); return answer; }
+// Wave two's fold (round thirteen's doc section 13): the rows five groups
+// re-listed in their own fuzz files, here for the waves after them.
+// A finite float with a fraction, 2^-17..2^18 in size, either sign: the callers
+// round (_ftol) and compare, which FillFloats' whole numbers do not test.
+void FillFractions(std::uint32_t at, unsigned n) {
+    void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(at));
+    if (!Writable(p, 4 * n)) return;
+    for (unsigned i = 0; i < n; ++i) {
+        const std::uint32_t bits = (Noise() & 0x807FFFFFu) | ((0x6Eu + Noise() % 0x24u) << 23);
+        std::memcpy(static_cast<unsigned char*>(p) + 4 * i, &bits, 4);
+    }
+}
+std::uint32_t FxProjectPoint(const std::uint32_t* a, std::uint32_t answer) {
+    // EffectGte_ProjectPoint(in, out): out[0..2] the screen x, y and depth, floats
+    FillFractions(a[1], 3);
+    return answer;
+}
+std::uint32_t FxProjectSize(const std::uint32_t* a, std::uint32_t answer) {
+    // EffectGte_ProjectSize(in, size, out): out's two s16, small and positive
+    // half the time, as a radius is
+    void* const p = reinterpret_cast<void*>(static_cast<std::uintptr_t>(a[2]));
+    if (Writable(p, 4)) {
+        const std::uint32_t n = Noise();
+        const std::uint32_t v = (n & 1) ? (n >> 1) : ((n >> 1) & 0x003F003Fu);
+        std::memcpy(p, &v, 4);
+    }
+    return answer;
+}
+std::uint32_t FxCosNot0(const std::uint32_t*, std::uint32_t answer) {
+    // Math_Cos: anything but 0 and -1 (E2B: a caller divides by Math_Cos(0x80),
+    // and the original's idiv faults on a 0 and on 0x80000000 / -1)
+    return answer == 0 || answer == 0xFFFFFFFFu ? 1u : answer;
+}
+std::uint32_t FxOnCurrent80(const std::uint32_t*, std::uint32_t answer) {
+    // Sprite_UpdateScreen draws Sprite_Current: its address and record logged
+    auto* const s = static_cast<unsigned char*>(Sprite_Current);
+    Note(Key(s));
+    if (InRegions(s, 0x80)) NoteBytes(s, 0x80);
+    return answer;
+}
+std::uint32_t FxLinkAdvance(const std::uint32_t* a, std::uint32_t answer) {
+    // MapView_LinkPrimAt: the cursor += size & 0xFF when the row is on the map,
+    // two times in three here; nothing filled - the caller wrote the primitive
+    if (Noise() % 3 != 0) {
+        unsigned char* const next = Pointer(at::kPacketNext);
+        const unsigned n = a[3] & 0xFF;
+        if (next >= g_packets && next + n + 0x40 <= g_packets + sizeof g_packets) SetPointer(at::kPacketNext, next + n);
+    }
+    return answer;
+}
+std::uint32_t FirstFree(std::uint32_t base, unsigned stride, unsigned n, std::uint32_t answer) {
+    // as the real finds: the first record whose +0 is 0, or null; null also a
+    // quarter of the time, and whenever the pool is not in the regions
+    auto* const p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(base));
+    if (answer % 4 == 0 || !InRegions(p, stride * n)) return 0;
+    for (unsigned i = 0; i < n; ++i)
+        if (p[i * stride] == 0) return base + i * stride;
+    return 0;
+}
+// EffectSpark_FindFree 0x47CF20: 8 records of 0x1C at EffectKind30_Shards;
+// 0x47A130: 64 of 0x20 at 0x92D1DC (E2D's reading of both)
+std::uint32_t FxSparkFindFree(const std::uint32_t*, std::uint32_t answer) { return FirstFree(at::kShards, 0x1C, 8, answer); }
+std::uint32_t FxDustFindFree(const std::uint32_t*, std::uint32_t answer) { return FirstFree(0x92D1DC, 0x20, 64, answer); }
 
 const Callee kEffectOverrides[] = {
     {FX_OURS(Effect_FindFree), 0, {}, Answer::kByte, 0xFF, 0x13, {}, FxFindFree, nullptr, true},   // E1A:4 E1B:6 E1D:3 E2C:1 E3A:1 E3B:4 E5C:2 E5D:2: unsigned char(void)
@@ -954,6 +1013,13 @@ const Callee kEffectOverrides[] = {
     {FX_OURS(Sprite_FindFree), 0, {}, Answer::kFlag, 0, 0, {}, FxSpriteSlot, nullptr, true},   // E2D:2 E2F:2 E4A:2: unsigned char(void)
     {FX_OURS(Party_MemberAt), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {}, FxMemberAt, nullptr, true},   // E2A:2 E3C:2 E5D:1: unsigned char(long x, long y, unsigned margin)
     {FX_OURS(Gte_RotTransPers), 3, {kAll, 0, 0}, Answer::kGarbage, 0, 0, {8, 0, 0}, FxRotTransPers2F, nullptr, true},   // 22 sites, 11 groups: long(const short *vertex, unsigned long *sxy, long *p)
+    // wave two's fold (round thirteen's doc section 13): no pointer logged by value - the callers hand locals, whose addresses differ between the copy and ours
+    {FX_OURS(EffectGte_ProjectPoint), 2, {0, 0}, Answer::kGarbage, 0, 0, {12, 0}, FxProjectPoint, nullptr, true},   // the point hashed, out three fractional floats
+    {FX_OURS(EffectGte_ProjectSize), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {12, 2, 0}, FxProjectSize, nullptr, true},   // the point hashed, the size's first word only (the second is stack the original never wrote in several callers), out two s16
+    {FX_OURS(Gte_VectorNormal), 2, {0, 0}, Answer::kGarbage, 0, 0, {12, 0}, FxOut1_12, nullptr, true},   // in hashed, out three longs filled
+    {FX_OURS(Math_Cos), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxCosNot0, nullptr, true},   // never 0 or -1
+    {FX_OURS(Sprite_UpdateScreen), 0, {}, Answer::kGarbage, 0, 0, {}, FxOnCurrent80, nullptr, true},   // Sprite_Current and its 0x80 bytes logged
+    {FX_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxLinkAdvance, nullptr, true},   // the cursor moves by the size two times in three
 };
 
 const Callee kEffectStd[] = {
@@ -1041,7 +1107,7 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x586160), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 3: five words; Menu_DrawOutline, FT4 quads
     {FX_RAW(0x59E930), 2, {0, 0}, Answer::kGarbage, 0, 0, {8}, FxOut1_4, nullptr, true},   // 2, renderer: 8 read at the first, 4 written at the second
     {FX_RAW(0x4790C0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: no arguments, no calls
-    {FX_OURS(EffectSpark_FindFree), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: eax read by one caller
+    {FX_OURS(EffectSpark_FindFree), 0, {}, Answer::kGarbage, 0, 0, {}, FxSparkFindFree, nullptr, true},   // 2: the first free record or null, as the real one (wave two's fold)
     {FX_RAW(0x47A200), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; draws
     {FX_RAW(0x4799C0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 2: a record read and written to +0xD20 (the first 16 hashed)
     {FX_OURS(EffectKind53_TexWindow), 4, {kU16, kU16, kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: four s16
@@ -1050,10 +1116,10 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x46E190), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; tiles, Rand
     {FX_RAW(0x46FAE0), 1, {0}, Answer::kGarbage, 0, 0, {13}, nullptr, nullptr, true},   // 1: a record read to +0xD; lines
     {FX_OURS(EffectGte_SetDiagonalOne), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_18, nullptr, true},   // EGT (round thirteen): short*(short *matrix), 18 bytes written (docs/effect_gte.md section 7)
-    {FX_RAW(0x4941B0), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {}, FxOut012_8, nullptr, true},   // 1: three outs of 8 written; eax read (beside EGT's 0x494180, not EGT's)
+    {FX_RAW(0x4941B0), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {8, 8, 8}, nullptr, nullptr, true},   // 1: three points of 8 read, nothing written (E2C's reading; EKH had them written); eax read (beside EGT's 0x494180, not EGT's)
     {FX_RAW(0x4790F0), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 1: 24 bytes written; Rand
     {FX_RAW(0x47A110), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: no arguments, no calls
-    {FX_RAW(0x47A130), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: eax read
+    {FX_RAW(0x47A130), 0, {}, Answer::kGarbage, 0, 0, {}, FxDustFindFree, nullptr, true},   // 1: the first free dust record or null (wave two's fold)
     {FX_RAW(0x47A150), 1, {0}, Answer::kGarbage, 0, 0, {8}, FxOut0_32, nullptr, true},   // 1: 8 read then 32 written; AreaMap_Elevation, Rand
     {FX_RAW(0x479160), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 1: 24 bytes written; Rand
     {FX_OURS(EffectKind52_MoveSparks), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 1: al; calls through 0x65472C by a byte
