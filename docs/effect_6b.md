@@ -250,7 +250,15 @@ E6A's `0x50E1C0` 45,027, E6C's two 4,000 each, `0x5100B0` 898, `0x5101C0`
 2,674, `Math_Sin` 528,220, `AreaMap_Elevation` 19,773, `Effect_Release`
 2,118, `Flags_Test` 5,272, `Flags_Set` and `MoveCmd_TestFB` 509 each.
 
-STAR_RESULTS
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` - 714
+self-test lines, every one 0 mismatches, `inject: 8499 ours, 0 left
+original`; `effect_6b` there 200,000 rounds, 1,057,173 calls, 0 mismatches.
+The first run's launcher was stopped by this session's tool timeout (not a
+Fatal); its game process (pid 21440, ours) ran on to the end and wrote the
+`inject:` line, so the exit code of that run is not recorded. **With
+`BOF3X_WIDE=1`**: `'*'` exit 0, 714 self-test lines, no mismatch, the same
+counts. `ledger_check`: 72 entries, 0 errors (8,500 impl lines, 8,500
+functions detoured). Neither run died silently.
 
 ## 6. What the cut and the tool said, settled
 
