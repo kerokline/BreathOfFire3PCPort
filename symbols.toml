@@ -93957,3 +93957,514 @@ ctype = "unsigned char"
 count = 16
 status = "evidence"
 evidence = "read 2026-10-03 (round thirteen group E4A): 16 bytes by Rand & 0xF, the frames EffectKind84_Mash stores into +9 for EffectKind84_Pause. docs/effect_4a.md section 3."
+
+# ---------------------------------------------------------------------------
+# Round thirteen group E5B (docs/effect_5b.md): effect kind 0x18's sub-kinds
+# 0x0B..0x0F, 0x13 and 0x4F (0x4FF320..0x5014F2).
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x4FF320
+name = "EffectKind18Sub0D_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF320..0x4FF331 (0x12 bytes), cdecl: jmp [EffectKind18Sub0D_States + +2 * 4], unbounded. Reached by EffectKind18_States[13] (0x6540A0); hidden in E5A's 0x4FF150. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF340
+name = "EffectKind18Sub0D_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF340..0x4FF39E (0x5F bytes), cdecl: +9 = 0; +0x36 (the column) 0 and Flags_Test(0x904030, 0xD) set: EffectKind18Sub0D_MoveFrame(0, 3), +2 = 3; else _MoveFrame(+0x36, 0), +2 = 1 (+0x36 read again after the test). Reached by EffectKind18Sub0D_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF3A0
+name = "EffectKind18Sub0D_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF3A0..0x4FF3F4 (0x55 bytes), cdecl: column 0 with story flag 0xD set, or another column with area 48's count 0x92BEE7 not 0 (+0x36 read again after the test): Sound_PlayEffect(0x20D), +9 = 0, +2 up. Nothing drawn. Reached by EffectKind18Sub0D_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF400
+name = "EffectKind18Sub0D_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF400..0x4FF45B (0x5C bytes), cdecl: _MoveFrame(+0x36, the byte 0x65DF64[+9 >> 1]); +9 up, past 4: +9 = 0, +2 up; EffectKind18Sub0D_DrawGlow(+0x36). Reached by EffectKind18Sub0D_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF460
+name = "EffectKind18Sub0D_Idle"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF460..0x4FF4E5 (0x86 bytes), cdecl: the light's condition gone (column 0: story flag 0xD; another: area 48's count): +9 = 0, +2 up; +9 up, past 0x40: +9 = 0 and on an odd Rand +2 = 5; _DrawGlow(+0x36). Reached by EffectKind18Sub0D_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF4F0
+name = "EffectKind18Sub0D_Shut"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF4F0..0x4FF53C (0x4D bytes), cdecl: _MoveFrame(+0x36, the byte 0x65DF68[+9 / 3]); +9 up, past 3: +2 = 1. Reached by EffectKind18Sub0D_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF540
+name = "EffectKind18Sub0D_Flash"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF540..0x4FF598 (0x59 bytes), cdecl: _MoveFrame(+0x36, the byte 0x65DF6C[+9 >> 1]); +9 up, past 6: +9 = 0, +2 = 3; _DrawGlow(+0x36). Reached by EffectKind18Sub0D_States[5]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF5A0
+name = "EffectKind18Sub0D_MoveFrame"
+ret = "void"
+params = "int column, unsigned frame"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF5A0..0x4FF608 (0x69 bytes), cdecl: Gpu_SetDrawMove(Gfx_PacketNext, the stack rect ((frame + 1) * 8 + column * 64 + 0x240, 0x160, 8, 0x78), column * 64 + 0x240, 0x160) (each product through cdq / sub / sar of a doubled value), Gfx_CommitPrim(6, 0x18): a VRAM column's frame. Reached by calls from _Start, _Open, _Shut, _Flash. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF610
+name = "EffectKind18Sub0D_DrawGlow"
+ret = "void"
+params = "int column"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF610..0x4FF965 (0x356 bytes), cdecl: the point ((0x65DF70[column] - 0x80) << 7, (0x65DF74[column] - 0x80) << 7, -0x65DF78[column] * 8) in Prim_VertexScratch through Gte_RotTransPers into MapView_ScreenXY; culled unless -60 <= x <= 380, -150 <= y <= 300 (fcomp 0x5C4210 / 0C / 00 / 41FC, the sprite cull docs/widescreen.md lists at 0x4FF6A3) and the depth not 0. Gpu_SetDrawMode(prim, 0, 1, 0xB5, 0) and MapView_LinkPrimAt(cell x << 16, cell z << 16, 1, 0xC); a diamond in Prim_VertexScratch, half-widths s * 1125 / depth across and (|sin(Camera_Angles) * s >> 13| + s) * 1125 / depth (Math_Sin twice) up and down, s = 0x65DF7C[column] (x87 fild / fadd / fsub, _ftol 0x5B9550); four semi-transparent POLY_G3 fans (Gpu_SetPolyG3, Gpu_SetSemiTrans, Gte_StoreDepthF copied through the FPU), centre colour (((0x92BEE7 + 1) * column) << 4 | c, that << 4, c), c 0x50 for column 0, rims black, each MapView_LinkPrimAt(.., 1, 0x34); Gpu_SetDrawMode(prim, 0, 0, 0xB5, 0) linked last. Reached by calls from _Open, _Idle, _Flash. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF970
+name = "EffectKind18Sub0B_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF970..0x4FF981 (0x12 bytes), cdecl: jmp [EffectKind18Sub0B_States + +2 * 4], unbounded. Reached by EffectKind18_States[11] (0x654098); hidden in 0x4FF610. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF990
+name = "EffectKind18Sub0B_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF990..0x4FF9E7 (0x58 bytes), cdecl: story flag 0x11 set (Flags_Test(0x904030, 0x11)): Sound_PlayEffect(0x202), +0x3C = -0x180, +0xB = 0x80, +9 = 0, +2 up, EffectKind18Sub0B_DrawTiles(-0x180, 0x800000). Reached by EffectKind18Sub0B_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FF9F0
+name = "EffectKind18Sub0B_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FF9F0..0x4FFA25 (0x36 bytes), cdecl: _DrawTiles(+0x3C, 0x800000); +0x3C up 4; above -0x100: +2 up. Reached by EffectKind18Sub0B_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFA30
+name = "EffectKind18Sub0B_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFA30..0x4FFA84 (0x55 bytes), cdecl: _DrawTiles(+0x3C, (+0xB & 0xF8) << 16); +0x3C up 4, +0xB down 4; above -0x80: the byte 0x9039F4 = 4 and a tail jump to Effect_Release. Reached by EffectKind18Sub0B_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFA90
+name = "EffectKind18Sub0B_DrawTiles"
+ret = "void"
+params = "int height, unsigned long colour"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFA90..0x4FFBA8 (0x119 bytes), cdecl: for the eighteen (cell x, cell z, dy) byte triples 0x65DF8C..0x65DFC1: a POLY_FT4 (Gpu_SetPolyFT4, Gpu_SetShadeTex 0) over the cell, corners x * 0x80 - 0x40C0 / - 0x3FC0 and z likewise in Prim_VertexScratch, every y the low word of height, Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture(colour | 0xB600B100, prim, 1), MapView_LinkPrimAt(x << 16, z << 16, dy, 0x48) - dy pushed as a byte over a register's leftover. Reached by calls from _Start, _Rise, _Fade. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFBB0
+name = "EffectKind18Sub0C_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFBB0..0x4FFBC1 (0x12 bytes), cdecl: jmp [EffectKind18Sub0C_States + +2 * 4], unbounded. Reached by EffectKind18_States[12] (0x65409C); hidden in 0x4FFA90. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFBD0
+name = "EffectKind18Sub0C_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFBD0..0x4FFC24 (0x55 bytes), cdecl: +9 = 0; story flag 0x65DFC4[+0x36] set: EffectKind18Sub0C_MoveFrame(3), +2 = 3; clear: _MoveFrame(0), +2 = 1. Reached by EffectKind18Sub0C_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFC30
+name = "EffectKind18Sub0C_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFC30..0x4FFC6F (0x40 bytes), cdecl: story flag 0x65DFC4[+0x36] set: Sound_PlayEffect(0x201), +9 = 0, +2 up. Reached by EffectKind18Sub0C_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFC70
+name = "EffectKind18Sub0C_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFC70..0x4FFCB2 (0x43 bytes), cdecl: _MoveFrame(0x65DFE4[+9 >> 1]); +9 up, past 4: +9 = 0, +2 up. Reached by EffectKind18Sub0C_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFCC0
+name = "EffectKind18Sub0C_Idle"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFCC0..0x4FFD21 (0x62 bytes), cdecl: story flag 0x65DFC4[+0x36] clear: +9 = 0, +2 up; +9 up, past 0x40: +9 = 0 and on an odd Rand +2 = 5. Reached by EffectKind18Sub0C_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFD30
+name = "EffectKind18Sub0C_Shut"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFD30..0x4FFD74 (0x45 bytes), cdecl: _MoveFrame(0x65DFE8[+9 / 3]); +9 up, past 3: +2 = 1. Reached by EffectKind18Sub0C_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFD80
+name = "EffectKind18Sub0C_Flash"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFD80..0x4FFDC3 (0x44 bytes), cdecl: _MoveFrame(0x65DFEC[+9 >> 1]); +9 up, past 6: +9 = 0, +2 = 3. Reached by EffectKind18Sub0C_States[5]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFDD0
+name = "EffectKind18Sub0C_MoveFrame"
+ret = "void"
+params = "unsigned frame"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFDD0..0x4FFE39 (0x6A bytes), cdecl: Gpu_SetDrawMove(Gfx_PacketNext, the stack rect ((frame + 1) * 8 + 0x1C0, 0x160, 8, 0x78), 0x65DFF0[+0x36] + 0x1C0, 0x160), Gfx_CommitPrim(6, 0x18). Reached by calls from _Start, _Open, _Shut, _Flash. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFE40
+name = "EffectKind18Sub0E_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFE40..0x4FFE51 (0x12 bytes), cdecl: jmp [EffectKind18Sub0E_States + +2 * 4], unbounded. Reached by EffectKind18_States[14] (0x6540A4); hidden in 0x4FFDD0. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFE60
+name = "EffectKind18Sub0E_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFE60..0x4FFF77 (0x118 bytes), cdecl: +0x30 = 0; Flags_Test(0x903FD8, 0xC) clear: the AreaMap_Bytes cells (1, 21), (1, 22) (offsets 21w + 1, 22w + 1, w AreaMap_Header's byte 0) 0x50, +2 = 5; set: the cells 0xA1, +2 up, and the leader within 0x8000 of x 0x28000 and 0x10000 of z 0x150000 or 0x160000: +0x30 = 0xFF00, +2 = 3. Then EffectKind18Sub0E_DrawGate. Reached by EffectKind18Sub0E_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x4FFF80
+name = "EffectKind18Sub0E_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x4FFF80..0x50001C (0x9D bytes), cdecl: Cond_ByteFE not 0: Sound_PlayEffect(0x200) when Field_Request is 0, +2 = 2; the leader at the gate (as _Start): the same; then _DrawGate. Reached by EffectKind18Sub0E_States[1] and a call from _Raise. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500020
+name = "EffectKind18Sub0E_Lower"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500020..0x50003E (0x1F bytes), cdecl: +0x30 down 0x20; at -0x100 or below (s16): +2 up; a tail jump to _DrawGate. Reached by EffectKind18Sub0E_States[2] (the tool's other 23 cells are data words that read as this address). Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500040
+name = "EffectKind18Sub0E_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500040..0x5000AE (0x6F bytes), cdecl: the leader beyond 0x18000 of x 0x28000, or of both z 0x150000 and 0x160000: +2 = 4; Cond_ByteFE not 0: +2 = 3; a tail jump to _DrawGate. Reached by EffectKind18Sub0E_States[3] (the tool's other 25 cells are data words). Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x5000B0
+name = "EffectKind18Sub0E_Raise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x5000B0..0x5000F5 (0x46 bytes), cdecl: +0x30 up 0x20; below 0 (s16): a tail jump to _DrawGate; else EffectKind18Sub0E_Wait (which draws), +2 2 after it: return; else +2 = 1, Sound_PlayEffect(0x201) when Field_Request is 0, a tail jump to _DrawGate (drawn twice that frame). Reached by EffectKind18Sub0E_States[4] (the tool's other cells are data words). Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500100
+name = "EffectKind18Sub0E_Closed"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500100..0x50015C (0x5D bytes), cdecl: Flags_Test(0x903FD8, 0xC) set: the cells 0xA1, +2 = 1; a tail jump to _DrawGate. Reached by EffectKind18Sub0E_States[5] (0x65F4A8 a data word). Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500160
+name = "EffectKind18Sub0E_DrawGate"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500160..0x5002F7 (0x198 bytes), cdecl: under Draw_PassFlags bit 2: Gpu_SetDrawMode(prim, 0, 0, 0x95, 0), Gfx_CommitPrim(6, 0xC); a POLY_FT4 (Gpu_SetPolyFT4, Gpu_SetShadeTex 0) at x -0x3F40 from z +0x30 - 0x34C0 to +0x30 - 0x35C0, y 0x40 and 0x180 less half of AreaMap_Elevation at each end (four calls), Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture(0x25500123, prim, 1), Gfx_CommitPrim(6, 0x48). Reached by tail jumps from _Lower, _Open, _Raise, _Closed and calls from _Start, _Wait. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500300
+name = "EffectKind18Sub13_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500300..0x500311 (0x12 bytes), cdecl: jmp [EffectKind18Sub13_States + +2 * 4], unbounded. Reached by EffectKind18_States[19] (0x6540B8); hidden in 0x500160 (the tool's cell 0x66824C is a data word). Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500320
+name = "EffectKind18Sub13_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500320..0x50039F (0x80 bytes), cdecl: +0xB = the byte +0x36; +0x34 / +0x38 = the byte pair 0x65E02C[+0xB] << 16; Flags_Test(0x903FD8, 0x65E010[+0xB]) set: +2 up and a jmp into EffectKind18Sub13_Shown; clear: +2 = 3 and a tail jump to _Hidden. The tool's extent 0xF7 ran on through _Shown. Reached by EffectKind18Sub13_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x5003A0
+name = "EffectKind18Sub13_Shown"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x5003A0..0x500416 (0x77 bytes), cdecl: Flags_Test(0x903FD8, 0x65E010[+0xB]) clear: +9 = 9, +2 up; EffectKind18Sub13_DrawPanel(+0xB + 4 * Flags_Test(0x903FD8, 0x65E014[+0xB]) + 1, 0x40) (the 0x40 pushed before the test's arguments); a tail jump to _DrawLine. A start the cut does not list. Reached by EffectKind18Sub13_States[1] and the jmp at 0x500387. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500420
+name = "EffectKind18Sub13_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500420..0x500490 (0x71 bytes), cdecl: +9 down one, at 0: +2 up; _DrawPanel(0, 0x40); _DrawPanel(+0xB + 4 * Flags_Test(0x903FD8, 0x65E014[+0xB]) + 1, +9 << 3); a tail jump to _DrawLine. Reached by EffectKind18Sub13_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x5004A0
+name = "EffectKind18Sub13_Hidden"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x5004A0..0x5004E0 (0x41 bytes), cdecl: Flags_Test(0x903FD8, 0x65E010[+0xB]) set: +9 = 9, +2 up; _DrawPanel(0, 0x40). A start the cut does not list (code no list has, inside the cut's span of 0x500420). Reached by EffectKind18Sub13_States[3] and the jmp at 0x500396. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x5004F0
+name = "EffectKind18Sub13_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x5004F0..0x500603 (0x114 bytes), cdecl: +9 down one, at 0: +2 = 1; Gpu_SetDrawMode(prim, 0, 0, 0xB5, 0) linked at +0x34 / +0x38 (0xC); _DrawPanel(+0xB + 4 * Flags_Test(0x903FD8, 0x65E014[+0xB]) + 1, 0x40); a semi-transparent POLY_F4 (Gpu_SetPolyF4, Gpu_SetSemiTrans 1) grey +9 * 0x1E over Prim_VertexScratch's four vertices (Gte_RotTransPers4, Gte_PrimDepths4_0C), linked (0x38); _DrawLine. Reached by EffectKind18Sub13_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500610
+name = "EffectKind18Sub13_DrawPanel"
+ret = "void"
+params = "unsigned long texture, int height"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500610..0x5007AC (0x19D bytes), cdecl: a POLY_FT4 standing at x +0x36 * 0x80 - 0x3FC0 between z +0x3A * 0x80 + height - 0x4008 and - height - 0x3FF8, y 0x48 - height and height + 0x40 less half of AreaMap_Elevation at each end (four calls), Gpu_SetPolyFT4, Gpu_SetShadeTex 0, Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture(texture + 0x275000F3, prim, 1), MapView_LinkPrimAt(+0x34, +0x38, 1, 0x48). Reached by calls from _Shown, _Fall, _Hidden, _Rise. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x5007B0
+name = "EffectKind18Sub13_DrawLine"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x5007B0..0x500926 (0x177 bytes), cdecl: Gpu_SetDrawMode(prim, 0, 1, 0x95, 0) linked at +0x34 / +0x38 (0xC); a semi-transparent LINE_F2 (Gpu_SetLineF2), grey (Frame_Counter & 1) << 7, from Prim_VertexScratch's first two vertices with y 2 * (Frame_Counter % 48) + 4 less half of AreaMap_Elevation, Gte_RotTransPers3 (the third vertex into MapView_ScreenXY), Gte_StoreDepthF3, linked (0x20); Gpu_SetDrawMode(prim, 0, 0, 0x95, 0) linked (0xC). Reached by tail jumps from _Shown and _Fall, a call from _Rise. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500930
+name = "EffectKind18Sub0F_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500930..0x500941 (0x12 bytes), cdecl: jmp [EffectKind18Sub0F_States + +2 * 4], unbounded. Reached by EffectKind18_States[15] (0x6540A8); hidden in 0x5007B0. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500950
+name = "EffectKind18Sub0F_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500950..0x500BC2 (0x273 bytes), cdecl: the variant v = +0x36: +0xA = the byte +0x3A + 1, +0xB = 0x65E034[+0x3A], +0x36 / +0x3A = the byte pair 0x65E058[v], +8 = (v == 0), +0x3E = -0x65E038[v] - half of AreaMap_Elevation(+0x34, +0x38), +0x32 = 0x65E038[v], +0x2E = 0x65E048[v], +0x30 = 0; Flags_Test(0x903FD8, +0xB) clear: the AreaMap_Bytes cells (x, z) and (x + +8, z + (+8 == 0)) 0x52, +2 = 5; set: the cells 0xA1, +2 up, the leader at the gate (+8: z within 0x8000 of the next row's centre, x within 0x10000 of the cell or the next; else the axes swapped): +0x30 = 0xFF00, +2 = 3. Then EffectKind18Sub0F_DrawGate(0). Reached by EffectKind18Sub0F_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500BD0
+name = "EffectKind18Sub0F_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500BD0..0x500CED (0x11E bytes), cdecl: Cond_ByteFD 0 and Cond_ByteFE the record's +0xA: Sound_PlayEffect(0x200) when Field_Request is 0, +2 = 2; the leader at the gate (as _Start): the same; _DrawGate(1). Reached by EffectKind18Sub0F_States[1] and a call from _Raise. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500CF0
+name = "EffectKind18Sub0F_Lower"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500CF0..0x500D12 (0x23 bytes), cdecl: +0x30 down 0x20; at -0x100 or below (s16): +2 up; _DrawGate(0). Reached by EffectKind18Sub0F_States[2] and EffectKind18Sub4F_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500D20
+name = "EffectKind18Sub0F_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500D20..0x500DF0 (0xD1 bytes), cdecl: unless Cond_ByteFD is 0 and Cond_ByteFE the record's +0xA: the leader beyond the gate (0x20000 both ways, the _Start test's shape): +2 = 4. Nothing drawn, no call. Reached by EffectKind18Sub0F_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500E00
+name = "EffectKind18Sub0F_Raise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500E00..0x500E4F (0x50 bytes), cdecl: +0x30 up 0x20; below 0 (s16): _DrawGate(0); else EffectKind18Sub0F_Wait (which draws), +2 2 after it: return; else Sound_PlayEffect(0x201) when Field_Request is 0, +2 = 1, _DrawGate(0) (drawn twice that frame). Reached by EffectKind18Sub0F_States[4] and EffectKind18Sub4F_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500E50
+name = "EffectKind18Sub0F_Closed"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500E50..0x500EE2 (0x93 bytes), cdecl: Flags_Test(0x903FD8, +0xB) set: the cells (x, z) and (x + +8, z + (+8 == 0)) 0xA1, +2 = 1; _DrawGate(1). Reached by EffectKind18Sub0F_States[5]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x500EF0
+name = "EffectKind18Sub0F_DrawGate"
+ret = "void"
+params = "int ground"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x500EF0..0x501192 (0x2A3 bytes), cdecl: under Draw_PassFlags bit 2: Gpu_SetDrawMode(prim, 0, 0, 0x95, 0), Gfx_CommitPrim(6, 0xC); a POLY_FT4 (Gpu_SetPolyFT4, Gpu_SetShadeTex 0) standing over the cell - +8 set: x +0x36 * 0x80 - +0x30 - 0x3F40 and 0x100 less, z +0x3A * 0x80 - 0x3FC0; clear: x +0x36 * 0x80 - 0x3FC0, z +0x3A * 0x80 + +0x30 - 0x3F40 and 0x100 less - its feet at -(half of AreaMap_Elevation at each end) - +0x3E when ground is not 0 (four calls), else +0x32, its heads 0x140 above; Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture((+8 * 41) << 16 | (s16) +0x2E | 0x26500000, prim, 1), Gfx_CommitPrim(6, 0x48). Reached by calls from every state of sub-kinds 0x0F and 0x4F but _Open. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x5011A0
+name = "EffectKind18Sub4F_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x5011A0..0x5011B1 (0x12 bytes), cdecl: jmp [EffectKind18Sub4F_States + +2 * 4], unbounded. Reached by EffectKind18_States[79] (0x6541A8); hidden in 0x500EF0. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x5011C0
+name = "EffectKind18Sub4F_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x5011C0..0x501399 (0x1DA bytes), cdecl: _Start of sub-kind 0x0F but +0xA = 8 - the byte v; the cells (x, z) and (x, z + 1) 0x52, +2 up; the leader within 0x8000 of x's next column centre and 0x10000 of z's cell or the next (the +8 clear test whatever +8 holds): the cells 0xA1, +0x30 = 0xFF00, +2 = 3; EffectKind18Sub0F_DrawGate(0). No flag test. Reached by EffectKind18Sub4F_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x5013A0
+name = "EffectKind18Sub4F_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x5013A0..0x50142A (0x8B bytes), cdecl: Cond_ByteFE the record's +0xA: Sound_PlayEffect(0x200) when Field_Request is 0, the cells (x, z) and (x, z + 1) 0xA1, +2 = 2; EffectKind18Sub0F_DrawGate(1). Reached by EffectKind18Sub4F_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[func]]
+pc = 0x501430
+name = "EffectKind18Sub4F_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_5b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E5B, capstone to the last instruction), 0x501430..0x5014F2 (0xC3 bytes), cdecl: unless Cond_ByteFE is the record's +0xA: the leader beyond 0x20000 of x's next column centre, or of z's cell and the next: the cells 0x52, +2 = 4; EffectKind18Sub0F_DrawGate(0). Reached by EffectKind18Sub4F_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty; no file under analysis/calltrace names it). docs/effect_5b.md."
+
+[[data]]
+pc = 0x65DF4C
+name = "EffectKind18Sub0D_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E5B): EffectKind18Sub0D_Run 0x4FF320 by +2: _Start, _Wait, _Open, _Idle, _Shut, _Flash; byte arrays (0x65DF64, _Open's frames) follow. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +2. docs/effect_5b.md section 3."
+
+[[data]]
+pc = 0x65DF80
+name = "EffectKind18Sub0B_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E5B): EffectKind18Sub0B_Run 0x4FF970 by +2: _Start, _Rise, _Fade; the tile triples (0x65DF8C) follow. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +2. docs/effect_5b.md section 3."
+
+[[data]]
+pc = 0x65DFCC
+name = "EffectKind18Sub0C_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E5B): EffectKind18Sub0C_Run 0x4FFBB0 by +2: _Start, _Wait, _Open, _Idle, _Shut, _Flash; byte arrays (0x65DFE4) follow. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +2. docs/effect_5b.md section 3."
+
+[[data]]
+pc = 0x65DFF8
+name = "EffectKind18Sub0E_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E5B): EffectKind18Sub0E_Run 0x4FFE40 by +2: _Start, _Wait, _Lower, _Open, _Raise, _Closed; byte arrays (0x65E010) follow. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +2. docs/effect_5b.md section 3."
+
+[[data]]
+pc = 0x65E018
+name = "EffectKind18Sub13_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E5B): EffectKind18Sub13_Run 0x500300 by +2: _Start, _Shown (0x5003A0, inside the tool's extent of _Start), _Fall, _Hidden (0x5004A0), _Rise; byte arrays (0x65E02C) follow. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +2. docs/effect_5b.md section 3."
+
+[[data]]
+pc = 0x65E068
+name = "EffectKind18Sub0F_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E5B): EffectKind18Sub0F_Run 0x500930 by +2: _Start, _Wait, _Lower, _Open, _Raise, _Closed; EffectKind18Sub4F_Run 0x5011A0 indexes 0x65E080 (the tool's run of eleven counted on into it). The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +2. docs/effect_5b.md section 3."
+
+[[data]]
+pc = 0x65E080
+name = "EffectKind18Sub4F_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E5B): EffectKind18Sub4F_Run 0x5011A0 by +2: _Start, _Wait, EffectKind18Sub0F_Lower, _Open, EffectKind18Sub0F_Raise; a data dword (0x65E094) follows. The dispatcher does not bound its index; the count is the table's own length to the next table a dispatcher indexes or the first dword that is not code, checked by hand against what the states store into +2. docs/effect_5b.md section 3."
