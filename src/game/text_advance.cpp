@@ -18,7 +18,7 @@
 //
 // Not covered: the stepper's other draw, 0x4987E0, taken while flag 8 of
 // 0x7DEE44 is set - the grow / shrink effect, ours since 2026-10-03 as
-// MsgBox_EffectDraw (src/game/msgbox.cpp, DIV-0068), which advances 12 + P a
+// MsgBox_EffectDraw (src/game/msgbox.cpp, DIV-0070), which advances 12 + P a
 // character and does not take this table (docs/msgbox.md section 3). The
 // string draw's own pen - every other caller of Text_DrawAt - takes the same
 // table in src/game/text_draw.cpp.

@@ -813,7 +813,7 @@ void SelfTest() {
 
     static State input, their_out, our_out;
     unsigned bad = 0, calls = 0, per[kCount] = {}, bad_per[kCount] = {};
-    unsigned fix_spaces = 0, fix_glyphs = 0, capcom_space_commits = 0, fix_bad = 0;   // DIV-0068
+    unsigned fix_spaces = 0, fix_glyphs = 0, capcom_space_commits = 0, fix_bad = 0;   // DIV-0070
     for (unsigned round = 0; round < kRounds; ++round) {
         const unsigned k = round % kCount;
         ++per[k];
@@ -845,7 +845,7 @@ void SelfTest() {
                           static_cast<unsigned>(their_out.ret), static_cast<unsigned>(our_out.ret));
         }
         if (k == kEffectDrawFn) {
-            // DIV-0068, switched on: a glyph is Capcom's to the byte; a space
+            // DIV-0070, switched on: a glyph is Capcom's to the byte; a space
             // is Capcom's state with nothing after the branch - the clut word
             // written, the pen moved, the rest of the packet slot untouched,
             // the cursor where it was, Gpu_GetClut the only call.
@@ -868,7 +868,7 @@ void SelfTest() {
                 want.log_n = 1;
             }
             if (std::memcmp(&want, &fixed, sizeof want) != 0 && ++fix_bad <= 12)
-                bof3::Log("shadow      msgbox DIV-0068 MISMATCH: round %u, %s, log %u / %u", round,
+                bof3::Log("shadow      msgbox DIV-0070 MISMATCH: round %u, %s, log %u / %u", round,
                           space ? "a space" : "a glyph", want.log_n, fixed.log_n);
         }
     }
@@ -900,12 +900,12 @@ void SelfTest() {
               "a window taken %u",
               c.printed, c.substituted, c.drawn, c.wrapped, c.scrolled, c.effect_ended, c.cursor_moved,
               c.window_taken);
-    bof3::Log("shadow      msgbox DIV-0068 (MsgBox_EffectDraw, the fix on): %u spaces, %u of them committed by "
+    bof3::Log("shadow      msgbox DIV-0070 (MsgBox_EffectDraw, the fix on): %u spaces, %u of them committed by "
               "Capcom's copy, %u glyphs; %u MISMATCHES against Capcom's state with the space's primitive taken out",
               fix_spaces, capcom_space_commits, fix_glyphs, fix_bad);
     if (bad) bof3::Fatal("the message box differs from the original in %u of %u self-test rounds", bad, kRounds);
     if (fix_bad || fix_spaces == 0 || capcom_space_commits != fix_spaces)
-        bof3::Fatal("msgbox: DIV-0068 differs from its rule in %u rounds (%u spaces, %u committed by Capcom's)", fix_bad,
+        bof3::Fatal("msgbox: DIV-0070 differs from its rule in %u rounds (%u spaces, %u committed by Capcom's)", fix_bad,
                     fix_spaces, capcom_space_commits);
 }
 

@@ -109,7 +109,7 @@ struct Callees {
     unsigned (__cdecl* get_clut)(int, int);                   // Gpu_GetClut (ours, psx_gpu.cpp)
 };
 
-// DIVERGENCE DIV-0068: 0 is Capcom's (a space commits a primitive with a stale
+// DIVERGENCE DIV-0070: 0 is Capcom's (a space commits a primitive with a stale
 // glyph word and stale texture bytes), 1 ours (a space commits nothing).
 // Off until MsgBox_Inject has run the self-test, which compares Capcom's.
 extern unsigned char g_effect_space_skips;

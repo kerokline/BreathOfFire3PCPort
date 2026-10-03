@@ -4,7 +4,7 @@
 // its 23-entry table, the eight state handlers under MsgBox_StateDispatch and
 // their own stack-built tables, the box effect task and its five effects, the
 // window slot allocator, the two remaining text pens, and (2026-10-03) the
-// grow / shrink draw MsgBox_EffectDraw - DIV-0068 lives there.
+// grow / shrink draw MsgBox_EffectDraw - DIV-0070 lives there.
 //
 // DIVERGENCE DIV-0006 lives here now: MsgBox_Step's one draw call goes to
 // MsgBox_DrawChar (src/game/text_advance.cpp) rather than straight to
@@ -60,7 +60,7 @@ const Callees kOriginals = {
     Gpu_GetClut,
 };
 Callees g = kOriginals;
-unsigned char g_effect_space_skips = 0;   // DIV-0068, set by MsgBox_Inject after the self-test
+unsigned char g_effect_space_skips = 0;   // DIV-0070, set by MsgBox_Inject after the self-test
 
 namespace {
 
@@ -999,7 +999,7 @@ extern "C" void __cdecl MsgBox_RiseStep(void) {
 //     no tpage, no u, v, the corners and the commit), so the slip is the
 //     PlayStation's, carried over with 0x20 standing for 0xFF.
 //
-// DIVERGENCE DIV-0068: a space commits nothing. The clut word is written and
+// DIVERGENCE DIV-0070: a space commits nothing. The clut word is written and
 // the pen moves by P exactly as the original's do; the quad is not built and
 // not committed. The stale glyph word was what crashed Font_UnpackGlyph on
 // 2026-10-02 (area 0x63, message 0x24, docs/msgbox.md section 4).
@@ -1028,7 +1028,7 @@ extern "C" void __cdecl MsgBox_EffectDraw(unsigned color, const unsigned char* t
         p[0x24] = extent;
         p[0x25] = static_cast<unsigned char>(extent - B(kClipTable + B(kColorHigh)));
     } else if (g_effect_space_skips) {
-        MsgBox_PenX = static_cast<short>(MsgBox_PenX + W(kEffectOff));   // DIV-0068
+        MsgBox_PenX = static_cast<short>(MsgBox_PenX + W(kEffectOff));   // DIV-0070
         return;
     }
     unsigned char* const p = Gfx_PacketNext;
@@ -1137,12 +1137,12 @@ extern "C" void __cdecl Text_EmitGlyph(int x, int y, int w, int h, int u, int v,
 
 void MsgBox_Inject() {
     if (bof3::WantsShadow("msgbox")) msgbox::SelfTest();
-    // DIVERGENCE DIV-0068: after the self-test, which compares Capcom's spaces.
+    // DIVERGENCE DIV-0070: after the self-test, which compares Capcom's spaces.
     {
         static const std::uint8_t was = 0, is = 1;
         bof3::PatchBytes("MsgBoxEffectSpaceSkips",
                          static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_effect_space_skips)), &was, &is, 1);
-        bof3::Log("DIV-0068    a space in a growing or shrinking shout commits no primitive");
+        bof3::Log("DIV-0070    a space in a growing or shrinking shout commits no primitive");
     }
     BOF3_INJECT(Msg_OpenScript);
     BOF3_INJECT(MsgBox_Reset);

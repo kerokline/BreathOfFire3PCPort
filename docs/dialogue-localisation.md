@@ -244,7 +244,7 @@ it is a table, a proportional font is a data change.
 3. **The stepper's second draw, `0x4987E0`** (flag 8 of `0x7DEE44`), the
    PSX grow/shrink text effect. **Read and ours 2026-10-03**
    (`MsgBox_EffectDraw`, [`msgbox.md`](msgbox.md) §9): a space inside a
-   grow span no longer draws a stale glyph (DIV-0068 - it crashed the owner's
+   grow span no longer draws a stale glyph (DIV-0070 - it crashed the owner's
    game in area `0x63`). It still advances `12 + P` a character, space
    included, not DIV-0006's table - open, the owner's call.
 4. **Menus: built 2026-09-20, seen 2026-09-21** (DIV-0008, §7; captured by

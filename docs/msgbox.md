@@ -5,7 +5,7 @@
 **The live batch, 2026-09-22 (`ab24`, `analysis/validate_ab24.sh`):** the whole third round - groups H, J, K, L and M, 137 functions, 466 ours - checked at once, original against ours: the field, new-game, field-menu and menu-screens capture pairs identical (4, 9, 7, 5 of each), the 9-minute attract 55 of 55 (and 55 of 55 against `ab22`'s ours), the same attract in English 55 of 55, the oracle identical at all 7,478 compared frames, the memory dump identical, and the frame hash identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`, beside an original-vs-original pair identical on 10,062).
 
 **2026-10-03 (fix wave, group GS):** a forty-fourth, the grow / shrink draw
-`0x4987E0`, is ours as `MsgBox_EffectDraw` with DIV-0068 - a space in a
+`0x4987E0`, is ours as `MsgBox_EffectDraw` with DIV-0070 - a space in a
 growing shout no longer commits a primitive with a stale glyph word, which
 crashed the owner's game in area `0x63` (§9).
 
@@ -181,7 +181,7 @@ owner runs `BOF3X_ORIGINAL=MsgBox_Step` and Capcom's body executes.
 [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0006 has the note.
 
 `MsgBox_Step`'s other draw, `0x4987E0`, taken while flag 8 of `0x7DEE44` is
-set, is ours since 2026-10-03 as `MsgBox_EffectDraw` (§9, DIV-0068). One
+set, is ours since 2026-10-03 as `MsgBox_EffectDraw` (§9, DIV-0070). One
 detail the takeover settled: the original pushes the colour local there as a
 **dword whose upper three bytes are stack it never wrote**, and `0x4987E0`
 reads `mov al, [esp+4]` then `and eax, 0xF` - so only the low nibble can
@@ -224,7 +224,7 @@ for `Text_DrawAt` (`src/game/config_text.cpp`) and is not a change here.
   pointer to the area's table of choice handlers.
 - ~~**`0x4987E0`**, the stepper's effect draw.~~ **Taken over 2026-10-03**
   (fix wave group GS) as `MsgBox_EffectDraw`, after its space crashed the
-  game (§9, DIV-0068). It was the last unconverted pen of the dialogue path.
+  game (§9, DIV-0070). It was the last unconverted pen of the dialogue path.
 - **`0x498D20`**, the "more" arrow, and **`0x461EB0`**, the pad auto-repeat:
   both small and both read enough to call correctly, but outside this
   group's list. Called by address, with recording stand-ins in the fuzz.
@@ -437,7 +437,7 @@ which nothing in the tree has yet. It is not in this change.
 - `tools/recipe_shots.py` - `--from` / `--to` (2026-10-03), so a window of
   close shots around one frame can be added without hundreds elsewhere (§9).
 
-## 9. The growing shout's spaces (2026-10-03, DIV-0068)
+## 9. The growing shout's spaces (2026-10-03, DIV-0070)
 
 **What the owner saw** (2026-10-02, in play, `HANDOFF.md` item `00000`): the
 game crashed. `build/bof3x.crash-30104-0.dmp` in the main checkout: an access
@@ -481,7 +481,7 @@ measured (the sibling's script census could say).
 named difference behind `g_effect_space_skips` (set by `MsgBox_Inject` after
 the self-test): a space writes the CLUT word as Capcom's does and moves the
 pen by `P` exactly as Capcom's does, and builds and commits nothing. The gap
-is the same width; nothing is drawn in it. DIV-0068, tier Intent (the
+is the same width; nothing is drawn in it. DIV-0070, tier Intent (the
 original's own branch says a space has nothing to texture; committing the
 quad anyway draws garbage and here crashes).
 
@@ -533,9 +533,9 @@ quad anyway draws garbage and here crashes).
 | C30 | the final pen move dropped | 950 | 617 |
 | C31 | the final pen + 12 | 1,000 | 646 |
 | C32 | `P` read before `Gpu_GetClut` | 8 | 8 |
-| C33 | DIV-0068: the space's pen + 12, not `P` | 0 | 339 |
-| C34 | DIV-0068: the space's pen not moved | 0 | 333 |
-| C35 | DIV-0068: the clut word skipped for a space | 0 | 354 |
+| C33 | DIV-0070: the space's pen + 12, not `P` | 0 | 339 |
+| C34 | DIV-0070: the space's pen not moved | 0 | 333 |
+| C35 | DIV-0070: the clut word skipped for a space | 0 | 354 |
 
   C17 is the one that matters most: ours with the fix stuck on is refused
   by the faithful comparison in every space round. The thinnest is C32 (8):

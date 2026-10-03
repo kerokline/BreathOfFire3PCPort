@@ -4725,7 +4725,7 @@ in each; none is known to show.
 and `AreaMap_ClearCell`'s walk abort in ours where the original would read
 on.
 
-## D-TBD-GS — A space in a growing shout commits a primitive with a stale glyph word (fixed by DIV-0068)
+## D-TBD-GS — A space in a growing shout commits a primitive with a stale glyph word (fixed by DIV-0070)
 
 **Seen:** the owner, 2026-10-02, in play, English overlay: the game crashed
 in area `0x63`, message `0x24`, the message box in its grow effect
@@ -4742,5 +4742,5 @@ space in a grow span; the English overlays do in 15 places (areas 11, 40,
 41, 99), each a stale quad on the original draw and a crash when the word
 is far enough out ([`msgbox.md`](msgbox.md) §9).
 
-**Status:** fixed by DIV-0068 (a space commits nothing); recurs under
+**Status:** fixed by DIV-0070 (a space commits nothing); recurs under
 `BOF3X_ORIGINAL=MsgBox_EffectDraw`. Not yet seen fixed in game.

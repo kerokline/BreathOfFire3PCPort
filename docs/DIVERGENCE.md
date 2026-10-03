@@ -435,7 +435,7 @@ designed in rather than bolted on.
   clone with both sides calling the same stand-in. `Text_DrawAt` `0x516B30`
   itself is now ours too, faithful.
 - **Not covered:** the stepper's other draw, `0x4987E0` (flag 8 of
-  `0x7DEE44`). Read 2026-10-03 and ours as `MsgBox_EffectDraw` (DIV-0068):
+  `0x7DEE44`). Read 2026-10-03 and ours as `MsgBox_EffectDraw` (DIV-0070):
   it advances `12 + P` a character, space included, and does not take this
   table - an open question for the owner ([`msgbox.md`](msgbox.md) §3).
 - **Rationale:** English at a 12 px advance overflows the box on the first
@@ -2886,7 +2886,7 @@ designed in rather than bolted on.
   - The 361 enemy names and 72 item names that do not fit.
   - The launcher's settings file, which knows only `en` and `original`.
   - The grow / shrink draw `0x4987E0` (ours since 2026-10-03,
-    `MsgBox_EffectDraw`, DIV-0068; no pair handling), which Japanese shouts use.
+    `MsgBox_EffectDraw`, DIV-0070; no pair handling), which Japanese shouts use.
 - **Reversible?** play without `BOF3X_LANG`.
 
 ### Two kana in one glyph code: pair codes for Japanese names
@@ -3422,7 +3422,7 @@ designed in rather than bolted on.
 
 ### A space in a growing shout draws nothing
 
-- **ID:** DIV-0068
+- **ID:** DIV-0070
 - **Date:** 2026-10-03
 - **Subsystem:** text (`MsgBox_EffectDraw` `0x4987E0`, ours in
   `src/game/msgbox.cpp`; `MsgBox_Step`'s draw under flag 8 of `0x7DEE44`,
