@@ -30,7 +30,7 @@
 // again wherever the original reads [0x937F88] again after a call. No
 // divergence: each is a faithful replacement. Where the original jumps
 // through a sub-state table past its end or indexes a variant or sign table
-// past its room, ours aborts with a message (docs/effect_6a.md section 6).
+// past its room, ours aborts with a message (docs/effect_6a.md section 7).
 #include "game/effect_6a.h"
 
 #include <cstdint>
@@ -68,7 +68,7 @@ void Dispatch(const char* who, U table, unsigned entries) {
     const unsigned sub = Sprite_Current[2];
     if (sub >= entries)
         bof3::Fatal("%s: sub-state byte +2 is %u, past the %u entries of 0x%X - the original jumps through the dword "
-                    "after (docs/effect_6a.md section 6)",
+                    "after (docs/effect_6a.md section 7)",
                     who, sub, entries, (unsigned)table);
     reinterpret_cast<Handler>(static_cast<std::uintptr_t>(UL(At(table + 4 * sub))))();
 }
@@ -79,7 +79,7 @@ U Variant(const char* who, const unsigned char* s, unsigned room) {
     const std::int32_t v = S16(s + 0x36);
     if (v < 0 || v >= static_cast<std::int32_t>(room))
         bof3::Fatal("%s: the variant +0x36 is %d, past the %u its tables have room for - the original reads on into "
-                    "the next table (docs/effect_6a.md section 6)",
+                    "the next table (docs/effect_6a.md section 7)",
                     who, (int)v, room);
     return static_cast<U>(v);
 }
@@ -304,7 +304,7 @@ extern "C" void __cdecl EffectKind18Sub2D_Draw(void) {
         const unsigned side = s[0xA];
         if (side >= at::kSidesRoom)
             bof3::Fatal("EffectKind18Sub2D_Draw: +0xA is %u, past the %u signs of 0x%X - the original reads on into "
-                        "EffectKind18Sub3E_States (docs/effect_6a.md section 6)",
+                        "EffectKind18Sub3E_States (docs/effect_6a.md section 7)",
                         side, at::kSidesRoom, (unsigned)at::kSub2DSides);
         const U sign = static_cast<U>(static_cast<std::int32_t>(static_cast<signed char>(At(at::kSub2DSides)[side])));
         const U slide = sign * Word(s + 0x30);

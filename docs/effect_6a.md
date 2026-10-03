@@ -8,7 +8,7 @@ for E6A (`analysis/round13_cut.tsv`, the band `0x50C0D0..0x50E3FA`), none
 added, none dropped. Each read to its last instruction with capstone and
 fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
-192,000 rounds, 0 mismatches; CONTROLS_SUMMARY. **Fuzz only**: no recorded
+192,000 rounds, 0 mismatches; 70 of 72 controls refused, the other two equivalent mutants (a compare whose answer lands on bits already set) whose near variant is refused. **Fuzz only**: no recorded
 route enters any of the 48 (section 9). Every row is effect code (no
 `hypothesis` row in the group; none left original). No full-frame fill in
 the band (no DIV-0041 site); no divergence.
@@ -163,7 +163,7 @@ entry of each zero); its signs `0x65EB04` (s8 by `+0xA`, room four before
 `0x65EBB8` (room 2 each). Each of the last five is followed by a two-byte
 sign pair of the shape 0x2D's `0x65EB04` and E5G's `0x65EA5C` hold, which no
 code in the band reads (the ground draws add or subtract the slide
-directly). Ours aborts on an index past a table's room (section 6).
+directly). Ours aborts on an index past a table's room (section 7).
 
 ## 4. The fuzz (`effect_6a_fuzz.cpp`)
 
@@ -214,7 +214,12 @@ entry of the seven tables reached (each handler recorder 703..899 calls);
 7,255, `MapView_LinkPrimAt` 8,000, the draws 4,000..40,000 (the first run
 found one mismatch class, section 5).
 
-STAR_RESULTS
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+714 self-test lines, no `MISMATCH` but `0 MISMATCHES`, `inject: 8497 ours, 0
+left original`; `effect_6a` there 192,000 rounds, 386,198 calls, 0
+mismatches. **With `BOF3X_WIDE=1`**: `'*'` exit 0, 714 self-test lines, no
+mismatch, the same counts. `ledger_check`: 72 entries, 0 errors (8,498 impl
+lines, 8,498 functions detoured). Neither run died silently.
 
 ## 5. What the cut and the tool said, settled
 
@@ -248,10 +253,99 @@ STAR_RESULTS
   other sub-kind's; the original's is 0x8000 (`cmp eax, 0x8000` at
   `0x50C959` and `0x50C9B6`). Read again and fixed in ours; 0 since.
 - **PSX twins**: none in the band.
+- **The harness's rows**: none of the 48 addresses has a row in
+  `scenario_harness.cpp`'s `kEffectOverrides` / `kEffectStd` (a grep).
 
 ## 6. Controls
 
-CONTROLS
+Planted one at a time by a scratch script (`build/controls.py`, in the worktree's ignored build directory: each plant
+anchored on a unique string of `effect_6a.cpp` or `effect_6a_callees.h`,
+rebuilt, run under `BOF3X_E6A_ONLY=<filter>`, the file restored and rebuilt
+at the end; the committed file has no switch). The harness stops at the
+first differing round, so the column is the round that refused it (0-based)
+in this worktree; every refused run exited 3 on a `MISMATCH` line. **70 of 72
+refused.** Not refused: **66** and **67**, equivalent mutants -
+`EffectKind18Sub31_Draw`'s compare `(+8 == 0) < 0x10` is always true and its
+answer is ORed into `0x150010F`, whose low four bits are set, so changing the
+compare's bound (66) or its answer to 2 (67) cannot be told apart by any
+input (section 7); the near variant **72** (the answer 0x10, a bit
+`0x150010F` lacks) is refused. 13 and 40 drop a `Sprite_Current` re-read
+after a call (the disturbance moves it).
+
+| # | Run (`_ONLY`) | Plant | Refused at |
+|--:|---|---|---|
+| 1 | `Sub2D_Run` | `ctKind18Sub2E_States), EffectKind18Sub2E_State` for `ctKind18Sub2D_States), EffectKind18Sub2D_State` | round 0 |
+| 2 | `Sub3E_Run` | `ectKind18Sub2D_States), EffectKind18Sub2D_State` for `ectKind18Sub3E_States), EffectKind18Sub3E_State` | round 0 |
+| 3 | `Sub2E_Run` | `ctKind18Sub2F_States), EffectKind18Sub2F_State` for `ctKind18Sub2E_States), EffectKind18Sub2E_State` | round 0 |
+| 4 | `Sub2F_Run` | `ectKind18Sub30_States), EffectKind18Sub30_State` for `ectKind18Sub2F_States), EffectKind18Sub2F_State` | round 0 |
+| 5 | `Sub30_Run` | `ctKind18Sub31_States), EffectKind18Sub31_State` for `ctKind18Sub30_States), EffectKind18Sub30_State` | round 0 |
+| 6 | `Sub31_Run` | `ctKind18Sub32_States), EffectKind18Sub32_State` for `ctKind18Sub31_States), EffectKind18Sub31_State` | round 0 |
+| 7 | `Sub32_Run` | `ectKind18Sub2E_States), EffectKind18Sub2E_State` for `ectKind18Sub32_States), EffectKind18Sub32_State` | round 0 |
+| 8 | `Sub4A_WaitCond` | `_Request != 3)` for `_Request != 2)` | round 2 |
+| 9 | `Sub4A_WaitCond` | `(s[0xA] & Co` for `(s[0xB] & Co` | round 1 |
+| 10 | `Sub4A_WaitCond` | `s + 0x3A) + 2u) & 0` for `s + 0x3A) + 1u) & 0` | round 1 |
+| 11 | `Sub4A_WaitCond` | `apOpen = 0xA0;` for `apOpen = 0xA1;` (`effect_6a_callees.h`) | round 1 |
+| 12 | `Sub4A_WaitCond` | `eld_Request != 1) SH_C` for `eld_Request == 0) SH_C` | round 26 |
+| 13 | `Sub4A_WaitCond` | `:kMapOpen); ` for `:kMapOpen);             s = S(); ` | round 147 |
+| 14 | `Sub4A_WaitCond` | `ctKind18Sub2E_Draw)` for `ctKind18Sub2C_Draw)` | round 0 |
+| 15 | `Sub2D_Place` | `char>(z) >> 2) & 1` for `char>(z) >> 1) & 1` | round 3 |
+| 16 | `Sub2D_Place` | `igned char>(z & 1)` for `igned char>(~z & 1)` | round 0 |
+| 17 | `Sub2D_Place` | `ghts + 2 * v + 2)` for `ghts + 2 * v)` | round 0 |
+| 18 | `Sub2D_Place` | `s + 0x30, 0xE0);   ` for `s + 0x30, 0x100);   ` | round 17 |
+| 19 | `Sub2D_Place` | `ells + 2 * v)[0]);` for `ells + 2 * v + 1)[0]);` | round 0 |
+| 20 | `Sub2D_Draw` | `s + 0x38), -1, 0xC)` for `s + 0x38), -2, 0xC)` | round 0 |
+| 21 | `Sub2D_Draw` | `38), -2, 0x44);` for `38), -2, 0x48);` | round 0 |
+| 22 | `Sub2D_Draw` | `\| 0x1500107u, p,` for `\| 0x1500117u, p,` | round 0 |
+| 23 | `Sub2D_Draw` | ` ? 1u : 0u) \| r[0xA` for ` ? 1u : 0u) ^ r[0xA` | round 0 |
+| 24 | `Sub2D_Draw` | ` 0x3E) - 0x180u);` for ` 0x3E) - 0x140u);` | round 0 |
+| 25 | `Sub2D_Draw` | `t U slide = Word(s` for `t U slide = sign * Word(s` | round 0 |
+| 26 | `Sub2D_Draw` | `DSides)[side ^ 1]` for `DSides)[side]` | round 0 |
+| 27 | `Sub2D_Draw` | `const U y = 0u - slide ` for `const U y = slide ` | round 0 |
+| 28 | `Sub2D_WaitNear` | `tNear(kFront3E);    ` for `tNear(kFront);    ` | round 8 |
+| 29 | `Sub2D_Open` | `Open(false);   ` for `Open(true);   ` | round 0 |
+| 30 | `Sub2D_WaitFar` | `itFar(kFront3E);    ` for `itFar(kFront);    ` | round 3 |
+| 31 | `Sub2D_Close` | `Close(false);   ` for `Close(true);   ` | round 0 |
+| 32 | `Sub2F_Open` | `slide > 0x100` for `slide >= 0x100` | round 14 |
+| 33 | `Sub2E_Open` | `00 : slide < -0x10` for `00 : slide <= -0x10` | round 14 |
+| 34 | `Sub32_Close` | `up ? slide >= 0 : s` for `up ? slide > 0 : s` | round 2 |
+| 35 | `Sub30_Close` | ` 0 : slide <= 0) re` for ` 0 : slide < 0) re` | round 2 |
+| 36 | `Sub31_Close` | `)(at::kSoundOpen);` for `)(at::kSoundShut);` | round 2 |
+| 37 | `Sub3E_Close` | `   S()[2] = 2; }` for `   S()[2] = 1; }` | round 2 |
+| 38 | `Sub3E_Open` | `(up ? 0x10u : 0` for `(up ? 0x20u : 0` | round 0 |
+| 39 | `Sub31_Close` | `0xFFE0u : 0x10u)` for `0xFFE0u : 0x20u)` | round 0 |
+| 40 | `Sub2F_WaitNear` | `dOpen);     }` for `dOpen);         s = S();     }` | round 2263 |
+| 41 | `Sub30_WaitNear` | `eld_Request != 1) {   ` for `eld_Request == 0) {   ` | round 23 |
+| 42 | `Sub2E_WaitNear` | `eaderX(), cx + 1)` for `eaderX(), cx)` | round 33 |
+| 43 | `Sub32_WaitFar` | `, cx + delta + 1)` for `, cx + delta)` | round 0 |
+| 44 | `Sub31_WaitNear` | `<< 16) \| 0x4000u);` for `<< 16) \| 0x8000u);` | round 71 |
+| 45 | `Sub2F_WaitFar` | ` 0x10000u) < secon` for ` 0x10000u) <= secon` | round 264 |
+| 46 | `Sub30_WaitFar` | ` 0x20000, 0x1F000)` for ` 0x20000, 0x20000)` | round 16 |
+| 47 | `Sub3E_WaitFar` | `kFront3E, 0x9000, 0` for `kFront3E, 0x8000, 0` | round 71 |
+| 48 | `Sub3E_WaitNear` | `kFront3E = -1;` for `kFront3E = -2;` | round 20 |
+| 49 | `Sub2F_Place` | ` == 0 ? 1 : 2;` for ` == 0 ? 1 : 0;` | round 2 |
+| 50 | `Sub2E_Place` | `ells + 2 * v + 1)[0]);` for `ells + 2 * v)[0]);` | round 0 |
+| 51 | `Sub3E_Place` | `+ 0x30, open + 0x20);` for `+ 0x30, open);` | round 23 |
+| 52 | `Sub2E_Place` | `kFront, 0xFF20);` for `kFront, 0xFF00);` | round 17 |
+| 53 | `Sub30_Place` | `", at::kSub31Cells` for `", at::kSub30Cells` | round 0 |
+| 54 | `Sub32_Place` | `, kFront, 0xFF00);` for `, kFront, 0x100);` | round 17 |
+| 55 | `Sub3E_Place` | `ants, kFront, 0x10` for `ants, kFront3E, 0x10` | round 17 |
+| 56 | `Sub2E_Draw` | `CommitPrim)(5, 0xC)` for `CommitPrim)(6, 0xC)` | round 0 |
+| 57 | `Sub30_Draw` | `4, Above(0x48, h));` for `4, Above(0x40, h));` | round 0 |
+| 58 | `Sub31_Draw` | `C, Above(0x100, h))` for `C, Above(0x180, h))` | round 0 |
+| 59 | `Sub2F_Draw` | ` Ground(v + 0x10), y1 = Ground(v + 0x12);` for ` Ground(v + 8), y1 = Ground(v + 0xA);` | round 0 |
+| 60 | `Sub2E_Draw` | `x36)) << 7) + slide` for `x36)) << 7) - slide` | round 3 |
+| 61 | `Sub2F_Draw` | `x3A)) << 7) - slide` for `x3A)) << 7) + slide` | round 0 |
+| 62 | `Sub30_Draw` | `& 0xFFFFu) >> 1;` for `& 0xFFFFu) / 2;` | round 0 |
+| 63 | `Sub31_Draw` | ` 0x4000) << 8); }` for ` 0x4000) << 9); }` | round 0 |
+| 64 | `Sub2E_Draw` | `* 0x20u) << ` for `* 0x21u) << ` | round 3 |
+| 65 | `Sub30_Draw` | ` 1 : 0) << 17)` for ` 1 : 0) << 16)` | round 0 |
+| 66 | `Sub31_Draw` | `(flag < 0x1u ? 1u` for `(flag < 0x10u ? 1u` | **not refused** |
+| 67 | `Sub31_Draw` | `g < 0x10u ? 2u : 0u` for `g < 0x10u ? 1u : 0u` | **not refused** |
+| 68 | `Sub2F_Draw` | `>(s[8]) << 20) \| 0x` for `>(s[8]) << 21) \| 0x` | round 3 |
+| 69 | `Sub2E_Draw` | `e)(word, p, 0);` for `e)(word, p, 1);` | round 0 |
+| 70 | `Sub3E_Open` | `Open(true); SH_CALL(EffectKind18Sub2F_Draw)(); }` for `Open(true); }` | round 0 |
+| 71 | `Sub30_Draw` | `tion)(x0, y0 + 1);    ` for `tion)(x0, y0);    ` | round 0 |
+| 72 | `Sub31_Draw` | `g < 0x10u ? 0x10u : 0u` for `g < 0x10u ? 1u : 0u` | round 0 |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
