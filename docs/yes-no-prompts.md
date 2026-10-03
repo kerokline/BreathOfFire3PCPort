@@ -211,3 +211,19 @@ gives the before picture with everything else equal.
 
 **Owed the owner's eye:** all four prompts on screen; whether the per-item
 "Is <item> OK?" should get the same treatment; the masters' headers' words.
+
+## 7. Seen in game, 2026-10-03 (the owner's `masterAndManillo.txt`)
+
+`# save masterAndManillo`, 5,519 frames, a shot every 30
+(`analysis/shots/validate_1003/mm_before` on the 30 September build,
+`mm_after` on the fix wave's merge, `mm_after2` with the change below).
+
+- **The master's "Is this OK?"** (frames 3990, 4020, 4950, 4980): the hand
+  against `Yes`, and beside `No` with `No` apart - the load screen's spacing.
+- **Manillo's per-item "Is <item> OK?"** (frames 2640..2730, 2970..3030):
+  section 5's table had it as likely the same fault and unchanged; the
+  captures show it (the hand on `No` over `Yes`). `ItemTrade_Confirm` now lays
+  its answers out as the leave prompt's are (DIV-0027's amendment): only the
+  seven shots of that prompt differ between `mm_after` and `mm_after2`.
+- **"Will that be all?"** (3120..3180) and the stacked `Yes` / `No` under the
+  master's messages (4200, 4830): as fixed, and as they were.

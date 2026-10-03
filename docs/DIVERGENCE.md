@@ -1442,6 +1442,16 @@ designed in rather than bolted on.
 - **Verification:** the re-spacing at start-up (`BOF3X_SHADOW=yes_no_layout`,
   both line shapes). **Confirmed in game by the owner, 2026-09-23**, at an
   inn's save: "looked right". All four prompts change together.
+- **Amended again 2026-10-03, from the owner's `masterAndManillo.txt`:** the
+  master's "Is this OK?" seen fixed in game (frames 3990, 4020, 4950, 4980,
+  `analysis/shots/validate_1003/sheet_master.png`). Manillo's per-item
+  "Is <item> OK?" (`ItemTrade_Confirm` `0x593E60`, `field_e2.cpp`) had been
+  left as Capcom's - the hand on No over Yes (frames 2700, 3030) - and now has
+  the same layout: its two answers drawn from `0xDE` less three spaces, three
+  spaces more between them, the hand two units left of each
+  (`g_trade_confirm_layout`, armed after the self-test under a Latin overlay;
+  `sheet_manillo_item2.png`). A sixteen-character item name was not measured
+  against the hand's new first stop.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
 - **Amended 2026-10-03 (fix wave, group YN; [`yes-no-prompts.md`](yes-no-prompts.md)):**
