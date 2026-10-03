@@ -54,8 +54,10 @@
 //   EffectKind14_Run             0x46A5E0  kind 0x14: EffectKind14_States[+1]
 //
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
-// can stand recorders in for ours as for the originals' copies. No divergence:
-// each is a faithful replacement. Sprite_Current is read afresh at each use, as
+// can stand recorders in for ours as for the originals' copies. Each is a
+// faithful replacement; the one divergence, DIV-0069 (the toggles' labels and the
+// accessories' names under a Latin overlay, src/game/fishing_text.cpp), is armed
+// only after every self-test, so the fuzz compares Capcom's. Sprite_Current is read afresh at each use, as
 // the originals read [0x937F88] after every call (where one keeps it in a
 // register across code with no call, the two are the same). Where an original
 // indexes past one of its tables - a state table, an animation script, the
@@ -68,8 +70,10 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_1b_callees.h"
+#include "game/fishing_text.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/text_advance.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -152,6 +156,9 @@ unsigned char Category(unsigned char id, const char* who) {
 const unsigned char* AccessoryName(unsigned char id) {
     return At(bof3::addr::NameTable_Accessories + at::kAccessoryStride * id);
 }
+// The characters a name is drawn to: the original's 8, or 12 under a Latin
+// overlay (DIVERGENCE DIV-0069: the US name field; 8 cut "Wooden Rod" to "Wooden R").
+int NameCount() { return static_cast<int>(FishingText_NameCount()); }
 // A script-pool message: MessagePools + its u16 offset.
 const unsigned char* Pool(unsigned id) { return At(at::kPools + Word(At(at::kPools + 2 * id))); }
 
@@ -915,7 +922,15 @@ extern "C" void __cdecl EffectKind0F_DrawToggles(int x, int y, unsigned bits) {
     for (int i = 0; i < 3; ++i) {
         const auto text = static_cast<U>(Long(At(at::kToggleText + 4u * i)));
         const int colour = byte == 0 ? 0 : static_cast<unsigned char>(7 - 7 * lit[i]);
-        DrawAt(x + kX[i], y + 4, colour, kCount[i], Text(text));
+        if (FishingText_On()) {
+            // DIVERGENCE DIV-0069: under a Latin overlay the label whole, centred
+            // in its box (x + 0x30 i + 2, 0x28 wide) by its real width - the US
+            // module's x + 6 + 0x30 i for its four letters.
+            const int width = static_cast<int>(TextAdvance_Width(Text(text)));
+            DrawAt(x + 0x30 * i + 0x16 - width / 2, y + 4, colour, 0xFF, Text(text));
+        } else {
+            DrawAt(x + kX[i], y + 4, colour, kCount[i], Text(text));
+        }
     }
 }
 
@@ -950,8 +965,8 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
         s = Sc();
         const int row = y + 13 * static_cast<int>(drawn);
         if (B(at::kLeader4) == 2 && (s[7] & 1) == 0 && Long(s + 0xC) == static_cast<std::int32_t>(drawn)) {
-            DrawAt(x + 5, row + 0x19, 7, 8, AccessoryName(B(at::kItemIds + n)));
-            DrawAt(x + 5, row + 0x17, 0, 8, AccessoryName(B(at::kItemIds + n)));
+            DrawAt(x + 5, row + 0x19, 7, NameCount(), AccessoryName(B(at::kItemIds + n)));
+            DrawAt(x + 5, row + 0x17, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
             const unsigned char count = B(at::kItemCounts + n);
             if (count > 1) {
                 SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(at::kCountFormat)), static_cast<unsigned>(count));
@@ -959,7 +974,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsB(int x, int y) {
                 SH_CALL(Text_DrawFont8)(x + 0x68, row + 0x1B, 0, Text(at::kPrint));
             }
         } else {
-            DrawAt(x + 5, row + 0x19, 0, 8, AccessoryName(B(at::kItemIds + n)));
+            DrawAt(x + 5, row + 0x19, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
             const unsigned char count = B(at::kItemCounts + n);
             if (count > 1) {
                 SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(at::kCountFormat)), static_cast<unsigned>(count));
@@ -1039,8 +1054,8 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
             s = Sc();
             const int row = y + 13 * static_cast<int>(drawn) + offset;
             if (B(at::kLeader4) == 2 && (s[7] & 1) != 0 && Long(s + 0x10) == static_cast<std::int32_t>(drawn)) {
-                DrawAt(x + 5, row, 7, 8, AccessoryName(id));
-                DrawAt(x + 5, row - 2, 0, 8, AccessoryName(B(at::kItemIds + n)));
+                DrawAt(x + 5, row, 7, NameCount(), AccessoryName(id));
+                DrawAt(x + 5, row - 2, 0, NameCount(), AccessoryName(B(at::kItemIds + n)));
                 const unsigned char c = B(at::kItemCounts + n);
                 if (c > 1) {
                     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(at::kCountFormat)), static_cast<unsigned>(c));
@@ -1048,7 +1063,7 @@ extern "C" void __cdecl EffectKind0F_DrawItemsA(int x, int y) {
                     SH_CALL(Text_DrawFont8)(x + 0x68, row + 2, 0, Text(at::kPrint));
                 }
             } else {
-                DrawAt(x + 5, row, 0, 8, AccessoryName(id));
+                DrawAt(x + 5, row, 0, NameCount(), AccessoryName(id));
                 const unsigned char c = B(at::kItemCounts + n);
                 if (c > 1) {
                     SH_CALL(Crt_sprintf)(Print(), reinterpret_cast<const char*>(Text(at::kCountFormat)), static_cast<unsigned>(c));
@@ -1100,23 +1115,23 @@ extern "C" void __cdecl EffectKind0F_DrawEquipped(int x, int y) {
     auto icon = [ix](int iy, unsigned char item, U flag) { Call5(at::kE1gItemIcon, ix, static_cast<U>(iy), item, 3, flag); };
     if ((bits & 0x80) != 0) {
         icon(y + 0x1C, B(at::kEquipA), 0);
-        DrawAt(x + 0x1C, y + 0x1A, 0, 8, AccessoryName(B(at::kEquipA)));
+        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(at::kEquipA)));
         icon(y + 0x2C, B(at::kEquipB), 0);
-        DrawAt(x + 0x1C, y + 0x2A, 0, 8, AccessoryName(B(at::kEquipB)));
+        DrawAt(x + 0x1C, y + 0x2A, 0, NameCount(), AccessoryName(B(at::kEquipB)));
     } else if ((bits & 1) == 0) {
         icon(y + 0x1C, B(at::kEquipA), 1);
-        DrawAt(x + 0x1C, y + 0x1A, 7, 8, AccessoryName(B(at::kEquipA)));
+        DrawAt(x + 0x1C, y + 0x1A, 7, NameCount(), AccessoryName(B(at::kEquipA)));
         icon(y + 0x1A, B(at::kEquipA), 0);
-        DrawAt(x + 0x1C, y + 0x18, Sc()[7], 8, AccessoryName(B(at::kEquipA)));
+        DrawAt(x + 0x1C, y + 0x18, Sc()[7], NameCount(), AccessoryName(B(at::kEquipA)));
         icon(y + 0x2C, B(at::kEquipB), 0);
-        DrawAt(x + 0x1C, y + 0x2A, 0, 8, AccessoryName(B(at::kEquipB)));
+        DrawAt(x + 0x1C, y + 0x2A, 0, NameCount(), AccessoryName(B(at::kEquipB)));
     } else {
         icon(y + 0x1C, B(at::kEquipA), 0);
-        DrawAt(x + 0x1C, y + 0x1A, 0, 8, AccessoryName(B(at::kEquipA)));
+        DrawAt(x + 0x1C, y + 0x1A, 0, NameCount(), AccessoryName(B(at::kEquipA)));
         icon(y + 0x2C, B(at::kEquipB), 1);
-        DrawAt(x + 0x1C, y + 0x2A, 7, 8, AccessoryName(B(at::kEquipB)));
+        DrawAt(x + 0x1C, y + 0x2A, 7, NameCount(), AccessoryName(B(at::kEquipB)));
         icon(y + 0x2A, B(at::kEquipB), 0);
-        DrawAt(x + 0x1C, y + 0x28, Sc()[7] & 2, 8, AccessoryName(B(at::kEquipB)));
+        DrawAt(x + 0x1C, y + 0x28, Sc()[7] & 2, NameCount(), AccessoryName(B(at::kEquipB)));
     }
     DrawAt(x + 0x2A, y + 0x47, 0, 5, Text(at::kEquipLabel2));
     const std::uint16_t message = Word(Sc() + 0x2C);
