@@ -765,7 +765,30 @@ caller where the callers are E2G's (E2F); the latent defects to number;
 two helpers and E1C's kind 0x1C the whelp route's frame hash is owed at this
 tip, not run (the agents' self-tests and the owner's game held the machine).
 
-**Wave three is not launched.** Its briefs are generated but for the tip
-(`make_briefs.py <scratch> 3 <tip> band_edges_w2.txt`); the merge order is
-E3B before E3C.
+**The fold, done 2026-10-03** (`f8d410a`; [`scenario_harness.md`](scenario_harness.md)
+8.5 has the rows): in effect mode `EffectGte_ProjectPoint`, `EffectGte_ProjectSize`
+and `Gte_VectorNormal` hash their points and log no pointer by value;
+`Math_Cos` never answers 0 or -1; `Sprite_UpdateScreen` logs `Sprite_Current`
+and its record; `MapView_LinkPrimAt` moves the packet cursor;
+`EffectSpark_FindFree` and `0x47A130` answer the first free record or null;
+`0x4941B0` reads its three points and writes nothing. Left to the groups: the
+square root `0x5A7A90` (what a caller needs of it differs by caller). The
+groups' own re-listings stand over these rows, so only the functions that used
+the standard rows see them: wave one's and the rest of wave two's fuzz ran
+under the louder rows with 0 mismatches. **The proof** (the verification
+worktree, scratch `verify_98d0631.log` for the tip before it and
+`verify_f8d410a.log`): `scenario_harness_ekh`, `effect_1a`, `effect_2c`,
+`effect_2g` and `'*'` exit 0, 7,570 ours (7,568 and the two sky draws of
+2026-09-30), `'*'` with `BOF3X_WIDE=1` exit 0, `ledger_check` 0 errors.
+**Not done before wave three: the whelp route's frame hash** - it wants the
+machine hands-off and the hash reference re-recorded first (HANDOFF); it
+checks merged code and does not gate the wave.
+
+## 14. Wave three (launched 2026-10-03)
+
+Four Opus agents in worktrees, E3A..E3D, 210 functions; the briefs from
+`make_briefs.py <scratch> 3 <tip> band_edges_w2.txt` with wave two's addendum
+(the fold's rows, the tail draws, the table counts); the merge order is E3B
+before E3C. From this wave on the live runs log their wall time
+(`analysis/run_times.tsv`, `tools/run_times.py`).
 

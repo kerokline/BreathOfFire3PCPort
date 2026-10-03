@@ -839,6 +839,18 @@ first in effect mode so they stand over `kStandard` / `kField`:
 | `0x468AC0` (E1B, 19) | `(x, y, bits byte)`: three boxes `0x468BB0(x + 0x30 i, y, bit i)` and three `Text_DrawAt` lines by the byte. The cursor moves 0xC0, its own size |
 | `0x503FA0` (E5D, 15) | `(variant)`, a whole word added to a table address: nothing when `Draw_PassFlags` has bit 2; else sixteen textured quads around `Sprite_Current`'s point (`AreaMap_Elevation`, `Gte_RotTransPers4`, `MapView_LinkPrimAt`). Fills `Prim_VertexScratch`' four vertices and `MapView_ScreenXY`, moves the cursor 16 x 0x54 |
 | `Sprite_FindFree`, `Party_MemberAt`, `Gte_RotTransPers` | round twelve's behaviour folds (8.6) |
+| `EffectGte_ProjectPoint`, `EffectGte_ProjectSize`, `Gte_VectorNormal` | wave two's fold (2026-10-03): no pointer logged by value - the callers hand locals, whose addresses differ between the copy and ours. The point hashed (12 bytes); the size's first word only (several callers leave the second as stack the original never wrote); the outs filled - three floats with fractions, two s16 small half the time, three longs |
+| `Math_Cos` | never 0 or -1: E2B's spiral divides by it |
+| `Sprite_UpdateScreen` | logs `Sprite_Current` and its 0x80 bytes: a draw on the wrong record shows |
+| `MapView_LinkPrimAt` | moves the packet cursor by `size & 0xFF` two times in three, as the real one does for a row on the map; nothing filled |
+
+Wave two's fold also changed three `kEffectStd` rows in place: `EffectSpark_FindFree`
+(`0x47CF20`, 8 records of 0x1C at `EffectKind30_Shards`) and `0x47A130` (64 of
+0x20 at `0x92D1DC`) answer the first record whose `+0` is 0, or null - null also
+a quarter of the time, and always when the pool is outside the group's regions;
+`0x4941B0` hashes 8 bytes at each of its three pointers and writes nothing (E2C's
+reading; EKH's row wrote them). The square root `0x5A7A90` stays garbage: what
+its callers need differs by caller (E2E's clamp), so a group re-lists it.
 
 **The five cross-group rows are owned by their groups** (E1F, E1B, E5D) and not
 taken here; the others call them raw (`SH_AT`) until they merge, and the rows
