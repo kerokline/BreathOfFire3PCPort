@@ -17,7 +17,9 @@
 // Every call goes through the scenario harness (SH_CALL / SH_AT, a table's word
 // read in place), so the start-up fuzz (effect_1g_fuzz.cpp) stands recorders in
 // for ours as for the originals' copies. Faithful but for DIV-0027's leave
-// prompt under a Latin overlay (LeavePrompt, amended 2026-10-03). Where an
+// prompt under a Latin overlay (LeavePrompt, amended 2026-10-03) and the
+// backdrop under a wide picture (DIV-0041, ItemTrade_DrawBackground; off in
+// the fuzz). Where an
 // original indexes past its table, ours aborts with a message
 // (docs/effect_1g.md section 6).
 #include "game/effect_1g.h"
@@ -29,6 +31,7 @@
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -111,6 +114,32 @@ void LeavePrompt() {
 }
 
 }  // namespace
+
+// DIV-0041 (effect_1g.h): the left quad from 0 - columns to 0xA0, its u from
+// (-columns) mod 32, so the texel at column 0 is u 0 mod 32 as in the
+// original; the right one from 0xA0 to 0x140 + columns, u from 0. The page
+// texture is the 32 x 32 window tiled over 256 x 256 (Tex_Convert4 /
+// Tex_Convert8), so any u below 256 repeats the pattern.
+effect_1g::BackdropSpan effect_1g::ItemTrade_BackdropSpan(unsigned half, unsigned columns) {
+    BackdropSpan s;
+    if (half == 0) {
+        const unsigned u0 = (32u - (columns & 31u)) & 31u;
+        const unsigned u1 = u0 + 0xA0u + columns;
+        if (u1 > 0xFFu) bof3::Fatal("ItemTrade_BackdropSpan: %u columns put the left u at %u, past the byte", columns, u1);
+        s.x0 = 0.0f - static_cast<float>(columns);   // not -columns: -0.0f when narrow
+        s.x1 = static_cast<float>(0xA0);
+        s.u0 = static_cast<unsigned char>(u0);
+        s.u1 = static_cast<unsigned char>(u1);
+    } else {
+        const unsigned u1 = 0xA0u + columns;
+        if (u1 > 0xFFu) bof3::Fatal("ItemTrade_BackdropSpan: %u columns put the right u at %u, past the byte", columns, u1);
+        s.x0 = static_cast<float>(0xA0);
+        s.x1 = static_cast<float>(0x140u + columns);
+        s.u0 = 0;
+        s.u1 = static_cast<unsigned char>(u1);
+    }
+    return s;
+}
 
 // ============================================================================
 // The states
@@ -210,6 +239,13 @@ extern "C" void __cdecl ItemTrade_LeaveWait(void) {
 // each committed to slot 7 (0x48); then a draw mode whose texture window is
 // the RECT (0, 0, 0x100, 0x100), committed to slot 7. The quads are built at
 // Gfx_PacketNext as read before Gpu_SetPolyFT4.
+//
+// Not as the original under a wide picture (DIV-0041, docs/widescreen.md
+// section 3d): the left quad starts at 0 - columns and the right one ends at
+// 320 + columns, each with its u range grown by the same columns, so the
+// pattern carries on into the bands - more tiles, not a stretch
+// (ItemTrade_BackdropSpan). Off, and while any self-test runs
+// (Widescreen_Fill() is 0 until InjectAll arms it), the original's quads.
 extern "C" void __cdecl ItemTrade_DrawBackground(void) {
     unsigned char* rect = Gfx_PacketNext;
     Gfx_PacketNext = rect + 8;
@@ -219,10 +255,12 @@ extern "C" void __cdecl ItemTrade_DrawBackground(void) {
     SetWord(rect + 4, 0x20);
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, static_cast<unsigned long>(Key(rect)));
     SH_CALL(Gfx_CommitPrim)(7, 0xC);
-    for (int x = 0; x < 0x140; x += 0xA0) {
+    const unsigned columns = Widescreen_Fill();
+    for (unsigned half = 0; half < 2; ++half) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(prim);
-        const float x0 = static_cast<float>(x), x1 = static_cast<float>(x + 0xA0), y1 = 240.0f;
+        const effect_1g::BackdropSpan s = effect_1g::ItemTrade_BackdropSpan(half, columns);
+        const float x0 = s.x0, x1 = s.x1, y1 = 240.0f;
         PutFloat(prim + 8, x0);
         SetWord(prim + 0x26, 0x95);
         SetWord(prim + 0x16, 0x7A80);
@@ -233,13 +271,13 @@ extern "C" void __cdecl ItemTrade_DrawBackground(void) {
         PutFloat(prim + 0x28, x0);
         PutFloat(prim + 0x38, x1);
         PutFloat(prim + 0x3C, y1);
-        prim[0x14] = 0;
+        prim[0x14] = s.u0;
         prim[0x15] = 0;
-        prim[0x24] = 0xA0;
+        prim[0x24] = s.u1;
         prim[0x25] = 0;
-        prim[0x34] = 0;
+        prim[0x34] = s.u0;
         prim[0x35] = 0xF0;
-        prim[0x44] = 0xA0;
+        prim[0x44] = s.u1;
         prim[0x45] = 0xF0;
         prim[4] = 0x40;
         prim[5] = 0x40;

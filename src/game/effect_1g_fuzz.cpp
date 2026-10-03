@@ -20,6 +20,7 @@
 //     from the moves, Inventory_Count near the counts the records need,
 //     Item_IconKind a nibble (as the real one answers), Sound_PlayEffect and
 //     Transition_Start logging the trade bytes too.
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -249,9 +250,38 @@ unsigned g_first;
 void SeedFrom(unsigned k) { Seed(k + g_first); }
 void ArgsFrom(unsigned k, U* a) { Args(k + g_first, a); }
 
+// DIV-0041: ItemTrade_DrawBackground's wide quads, which the clone comparison
+// cannot see (Widescreen_Fill() is 0 while it runs, so it compares the
+// original's). For no columns, the original's two quads exactly; for every
+// count up to the widest the span allows: the left edge at 0 - columns and the
+// right at 320 + columns, the two halves meeting at 0xA0, as many texels as
+// columns in each (no stretch), and the texel under every column of the 426
+// view in the original's phase (u = x mod 32 at x = 0 and x = 0xA0, so the
+// tile under column x is the one the original would put there if it drew it).
+void CheckWideSpans() {
+    auto bad = [](unsigned columns, unsigned half, const char* what) {
+        bof3::Fatal("effect_1g: ItemTrade_BackdropSpan(%u, %u): %s", half, columns, what);
+    };
+    for (unsigned columns = 0; columns <= 63; ++columns) {
+        for (unsigned half = 0; half < 2; ++half) {
+            const BackdropSpan s = ItemTrade_BackdropSpan(half, columns);
+            const float left = half == 0 ? 0.0f - static_cast<float>(columns) : 160.0f;
+            const float right = half == 0 ? 160.0f : 320.0f + static_cast<float>(columns);
+            if (s.x0 != left || s.x1 != right) bad(columns, half, "the edges");
+            if (columns == 0 && std::signbit(s.x0)) bad(columns, half, "-0.0 for the original's 0");
+            if (static_cast<float>(s.u1 - s.u0) != s.x1 - s.x0) bad(columns, half, "texels against columns (a stretch)");
+            if (half == 0 && (s.u0 + columns) % 32 != 0) bad(columns, half, "the pattern's phase at column 0");
+            if (half == 1 && s.u0 != 0) bad(columns, half, "the pattern's phase at column 0xA0");
+            if (columns == 0 && (s.u0 != 0 || s.u1 != 0xA0)) bad(columns, half, "the original's u 0..0xA0");
+        }
+    }
+    bof3::Log("effect_1g: DIV-0041 backdrop spans checked for 0..63 columns (edges, no stretch, phase)");
+}
+
 }  // namespace
 
 void SelfTest() {
+    CheckWideSpans();
     unsigned first = 0, count = kCount, rounds = 6000;
     if (const char* only = std::getenv("BOF3X_E1G_ONLY")) {
         char* end = nullptr;

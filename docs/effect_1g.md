@@ -83,6 +83,9 @@ None. Where an original indexes past its table ours aborts with a message
 `Item_IconKind` answers a nibble). `tools/ledger_check.py`: 63 entries, 0
 errors.
 
+*Since 2026-10-03:* one, under a wide picture only - the backdrop's quads
+reach the band edges (DIV-0041's amendment of that date; section 12).
+
 ## 3. The arguments pushed with leftovers - the re-listed stand-ins
 
 | Callee | Mask | The read | Pushed by |
@@ -301,3 +304,36 @@ it); the main checkout holds another session's uncommitted `battle_e7` /
 Appended to the main checkout's `analysis/calltrace/entries_logic.txt` (the
 four hidden starts, which had no line; the other ten had theirs):
 `00594060 8C`, `005940F0 E`, `00594100 132`, `00594240 74`.
+
+## 12. The backdrop under a wide picture (fix wave MB, 2026-10-03)
+
+The owner saw Manillo's trade screen with its tiled backdrop 320 wide under
+`BOF3X_WIDE=1`. `ItemTrade_DrawBackground` now takes its columns from
+`Widescreen_Fill()` and its two quads from `ItemTrade_BackdropSpan`
+(`effect_1g.h`): the left from `0 - c` with u from `(-c) mod 32`, the right
+to `320 + c`, each u range grown by `c` - more tiles, never a stretch, the
+pattern's phase kept. The cause, the geometry and the coordinator's live
+check are in [`widescreen.md`](widescreen.md) section 5 ("Manillo's trade
+screen"); the ledger is DIV-0041.
+
+**Verification.** `BOF3X_SHADOW=effect_1g`, narrow and `BOF3X_WIDE=1`: 84,000
+rounds, 0 mismatches each (the fuzz compares the original's quads: the
+columns are 0 until `InjectAll` arms the fills). `SelfTest` now opens with
+`CheckWideSpans`, a property check of the spans for 0..63 columns: the edges,
+texels equal to columns, the phase at column 0 and at 0xA0, columns 0 the
+original's u `0..0xA0` with a +0.0 left edge. Six controls planted one at a
+time by a script (`mb/controls.py` in the session scratchpad), **6 of 6
+refused** (exit 3):
+
+| # | Mutant | Run | Refused by |
+|--:|---|---|---|
+| 1 | the columns from `Widescreen_Live()` (wide during the fuzz) | wide | the clone fuzz, 6,000 of 6,000 rounds |
+| 2 | the left u not phased (u0 0) | narrow | the span check: phase |
+| 3 | the left u range not grown | narrow | the span check: a stretch |
+| 4 | the right u range not grown | narrow | the span check: a stretch |
+| 5 | the right edge one column short | narrow | the span check: the edges |
+| 6 | `-columns` for the left edge (-0.0 narrow) | narrow | the span check: -0.0 |
+
+`BOF3X_SHADOW='*'` narrow and with `BOF3X_WIDE=1` on the branch tip: exit 0
+both, every group at 0 mismatches. `tools/ledger_check.py`: 67 entries, 0
+errors.
