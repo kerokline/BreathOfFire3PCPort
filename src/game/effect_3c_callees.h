@@ -5,6 +5,10 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+// Rebound 2026-10-03 (round thirteen E4D): 0x48CA90 is ours, Effect_DrawScreenTint - the value
+// unchanged, so the fuzz keys on it as before.
+
 namespace effect_3c::at {
 
 // --- callees another group of round thirteen owns (analysis/round13_cut.tsv),
@@ -15,7 +19,7 @@ constexpr std::uint32_t kShardsSpread = 0x483C10;   // E3B's (void): the sixteen
                                                     // +0x38 / +0x3C), Rand directions; steps the cursor kShardCursor
 constexpr std::uint32_t kShardQuad = 0x483DA0;      // E3B's (unsigned char *shard): a shard's POLY_FT4 at Gfx_PacketNext,
                                                     // its point +4, its size +0x24 (EffectGte_ProjectSize), linked
-constexpr std::uint32_t kScreenTile = 0x48CA90;     // E4D's (void): a full-screen TILE of Sprite_Current's +0x5D..+0x5F,
+constexpr std::uint32_t kScreenTile = bof3::addr::Effect_DrawScreenTint;     // E4D's (void): a full-screen TILE of Sprite_Current's +0x5D..+0x5F,
                                                     // semi-transparent, committed (Gfx_CommitPrim(5, ..))
 
 // --- library layer (nobody's), the effect-standard set lists both --------------
