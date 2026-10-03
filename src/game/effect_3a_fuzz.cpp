@@ -314,7 +314,8 @@ void SeedFrames() {
         U w = PickOf(0, 0xFFFF, 0x8000, 1, 2, 3, 5, 8, 0x10, 0x20, 0x40, 1 + sh::Next() % 16);
         U h;
         if (static_cast<std::int16_t>(w) > 0)
-            h = PickOf(0, 0xFFFF, 0x8000, 1, 1 + sh::Next() % (kParticlesSeeded / w));
+            // at most 0xFF rows: the original's row byte never passes 0x100 (it never ends)
+            h = PickOf(0, 0xFFFF, 0x8000, 1, 1 + sh::Next() % (kParticlesSeeded / w < 0xFF ? kParticlesSeeded / w : 0xFF));
         else
             h = PickOf(0, 1, 3, 0xFFFF);
         SetWord(f + 4, w);
@@ -522,6 +523,7 @@ void SelfTest() {
     sh::Group g = {"effect_3a", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
                    [](unsigned k) { Seed(s_index[k]); }, &Disturb, 4000};
+    if (const char* r = std::getenv("BOF3X_E3A_ROUNDS")) g.rounds = static_cast<unsigned>(std::atoi(r));
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.effect = true;
     g.kinds = kKinds;
