@@ -541,8 +541,9 @@ quad anyway draws garbage and here crashes).
   by the faithful comparison in every space round. The thinnest is C32 (8):
   only a `Gpu_GetClut` stand-in disturbance of `0x7DEE68` across the 12 / 13
   edge tells the early read apart.
-- `BOF3X_SHADOW='*'` narrow, every group's fuzz: see the report of this
-  wave (the number is in the commit message).
+- `BOF3X_SHADOW='*'` narrow, every group's fuzz, on `a8700be` plus this
+  change: exit 0, `inject: 7688 ours, 0 left original`. Not run wide:
+  nothing here is a DIV-0041 site (the box's pen is not widened).
 - `python tools/ledger_check.py`: 0 errors.
 
 **Owed the owner's eye** - nothing here was run live:
