@@ -20,7 +20,7 @@
 //   kind 0x85   a run of messages 0x33..0x36 under a full-screen tile that
 //               brightens between them; then waits for the counter at 0x35
 //   kind 0x86   two free sprites placed by EventOp_0x, one cell either side in
-//               z, slid together, tinted brighter, then freed
+//               z, slid back over 32 frames, tinted brighter, then freed
 //   kind 0x87   E4B's records in EffectKind30_Shards set up, run to their end,
 //               the draw pass flags kept and put back
 //

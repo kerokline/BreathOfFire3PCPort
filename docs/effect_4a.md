@@ -9,7 +9,7 @@ starts no list of the cut has - kind 0x83's state 2 `0x4883D0`, kind 0x85's
 draw tail `0x488B90` and kind 0x86's dispatcher `0x488BE0` (section 5). Each
 read to its last instruction with capstone and fuzzed through the scenario
 harness in effect mode ([`scenario_harness.md`](scenario_harness.md) section
-8) without edits to it: @ROUNDS@ rounds, 0 mismatches; @CONTROLS@. **Fuzz
+8) without edits to it: 204,000 rounds, 0 mismatches; 100 of 100 controls refused, by a count or (one) by ours' abort. **Fuzz
 only**: no recorded route enters any of the 50 effect functions (section 9).
 
 Every row is effect code. One is also battle code: **`0x433640`
@@ -26,7 +26,7 @@ what it does on whatever `Sprite_Current` is (section 5).
 | 0x83: kind 0x82 again for record 1 - pushed a cell at a time by `0x903849`'s count while short of the leader, nudged, restarted or ended | 20 | `Effect_KindHandlers[0x83]` (`0x65555C`), `EffectKind83_States` `0x654CE8` (24): entry 0 E3D's `EffectKind82_Start`, 12 `Sprite_StateRestart`, 19 / 20 `BareRet`, 21 / 22 `Effect_StateRelease` |
 | 0x84: the count's driver - waits for one of three held-button words, picks the push count, counts the presses, ends at a line or on 0xFE | 5 | `[0x84]` (`0x655560`), `EffectKind84_States` `0x654D48` (5; entry 4 `Effect_StateRelease`) |
 | 0x85: a run of messages 0x33..0x36 under a full-screen tile that brightens between them, then a wait on the counter (`Area144_SpawnEffect85` spawns it) | 7 | `[0x85]` (`0x655564`), `EffectKind85_States` `0x654D60` (5) |
-| 0x86: two free sprites placed by `EventOp_0x`, a cell apart in z, slid together, brightened, then freed | 5 | `[0x86]` (`0x655568`), `EffectKind86_States` `0x654D74` (4) |
+| 0x86: two free sprites placed by `EventOp_0x`, set a cell either side in z and slid back over 32 frames, brightened, then freed | 5 | `[0x86]` (`0x655568`), `EffectKind86_States` `0x654D74` (4) |
 | 0x87: E4B's records set up and run to their end, the draw pass flags kept and put back | 6 | `[0x87]` (`0x65556C`), `EffectKind87_States` `0x654E88` (9; 4..7 `0x492750`) |
 
 Every name is a hypothesis from what the code does (`symbols.toml` status
@@ -116,7 +116,7 @@ the slot (the op moves `Sprite_Current`; the state keeps its record in `esi`
 and puts it back); the first's z a cell less, the second's a cell more, `+0`
 bit 5 and `+0x5C` 1 on both, tinted (`Sprite_SetTint(first, 0xF, 0, 0, 1)`,
 `(second, 0, 0, 0xF, 1)`), `+9` 0x20, `+1` 1. `_Slide`: 32 frames of 0x800
-towards each other, then `+9` 0xF, `+1` 2. `_Tint`: 15 frames of `+0x5D..+0x5F`
+back towards where they were placed (a cell in all), then `+9` 0xF, `+1` 2. `_Tint`: 15 frames of `+0x5D..+0x5F`
 up 8 on both, then the counter `0x903848` up one, `+1` 3. `_End`: both freed
 (`+0` 0), `Sprite_ReleaseTint` on each (`+4` read again after the first
 call), `Effect_Release`.
@@ -193,7 +193,7 @@ bytes (the step `0x8034E5`, the word `0x8034E6`), `Field_State`,
 field-standard row leaves `Sprite_Current` alone; the real op points it at the
 object it places and steps the count word, and so does this stand-in, so a
 `_Spawn` that read `Sprite_Current` after the op rather than the record it
-kept would be refused (control @C_NOTBACK@).
+kept would be refused (control 79).
 
 **Seeds** (every round, after the harness's fill): all 20 records' `+3`, `+4`,
 `+6` below 30 (past them both sides write past `Sprite_Objects`, outside the
@@ -209,9 +209,21 @@ the hash only): `+9`, `+3` / `+4` / `+6` (below 30), `0x903849`, the third
 member's x about the line, `+0xB`, `Input_Held`, the counter, `Field_Request`.
 
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_4a`,
-exit 0): @RESULT@
+exit 0): 204,000 rounds over 51 functions, 126,125 calls
+to the stand-ins, **0 mismatches**; 24,760 bytes of state in 46 regions.
+Every entry of the five tables reached (each handler recorder 142..1,802
+calls: kind 0x83's 142..189, `BareRet` 355, `Effect_StateRelease` 1,190,
+`0x492750` 1,802, kinds 0x84..0x87's 427..1,059), `Effect_Release` 23,474,
+`Sprite_FindFree` 6,453, `EventOp_0x` 3,044, `Sprite_SetTint` 3,044,
+`Msg_OpenScript` 4,478, `Rand` 2,860, `0x48CA90` 16,000, `0x489220` 8,000,
+`0x4891F0` 1,386.
 
-**Every shadow** (this worktree, no `bof3x.ini`): @STAR@
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+700 self-test lines, no `MISMATCH` line, `inject: 7838 ours, 0 left original`;
+`effect_4a` there 204,000 rounds, 125,657 calls, 0 mismatches. **With
+`BOF3X_WIDE=1`**: `'*'` exit 0, 700 self-test lines, no `MISMATCH` line.
+Neither run died silently. `tools/ledger_check.py`: 70 entries, 0 errors
+(7,839 `impl` lines, 7,839 detoured).
 
 ## 5. What the cut and the tool said, settled
 
@@ -254,7 +266,108 @@ of 4,000 per function run, in this worktree; every refused run exited 3. At
 least one plant a function, several for the larger; each dispatcher swapped
 onto another table of at least its length.
 
-@CONTROLS_TABLE@
+| # | Run (`_ONLY`) | Plant | Refused |
+|--:|---|---|---|
+| 1 | `EffectKind82_Check11` | +1 0xB | 1734 of 4000 |
+| 2 | `EffectKind82_Check11` | > (Reached) | 525 of 4000 |
+| 3 | `EffectKind82_Restart` | 0x81 | 902 of 4000 |
+| 4 | `EffectKind82_Restart` | +1 1 | 4000 of 4000 |
+| 5 | `EffectKind82_Nudge13` | three adds | 4000 of 4000 |
+| 6 | `EffectKind82_Nudge15` | x not z | 4000 of 4000 |
+| 7 | `EffectKind82_Nudge17` | +9 written | 3434 of 4000 |
+| 8 | `EffectKind83_Push4` | Sprite_Current not put back | 4000 of 4000 |
+| 9 | `EffectKind82_Count18` | <= | 663 of 4000 |
+| 10 | `EffectKind82_Count18` | +2 up two | 4000 of 4000 |
+| 11 | `EffectKind82_Again` | 0x16 | 980 of 4000 |
+| 12 | `EffectKind82_Again` | counter kept | 2618 of 4000 |
+| 13 | `EffectKind82_End` | 0xFD | 2553 of 4000 |
+| 14 | `EffectKind82_End` | step 0x1F | 2446 of 4000 |
+| 15 | `EffectKind82_End` | <= the line | 602 of 4000 |
+| 16 | `EffectKind82_End` | step 0x15 | 1360 of 4000 |
+| 17 | `EffectKind83_Run` | 82 table | 4000 of 4000 |
+| 18 | `EffectKind83_Wait` | 3 to 7 | 423 of 4000 |
+| 19 | `EffectKind83_Wait` | release at 0xFE | 878 of 4000 |
+| 20 | `EffectKind83_Wait` | record 1 | 831 of 4000 |
+| 21 | `EffectKind83_Wait` | 0x15 | 1104 of 4000 |
+| 22 | `EffectKind83_Push2` | + 0x4001 | 4000 of 4000 |
+| 23 | `EffectKind83_Check3` | record 0 | 1830 of 4000 |
+| 24 | `EffectKind83_Push4` | +1 6 | 4000 of 4000 |
+| 25 | `EffectKind83_Check5` | +1 7 | 1782 of 4000 |
+| 26 | `EffectKind83_Push6` | three adds | 4000 of 4000 |
+| 27 | `EffectKind83_Check7` | +1 9 | 1782 of 4000 |
+| 28 | `EffectKind83_Push8` | z not x | 4000 of 4000 |
+| 29 | `EffectKind83_Check9` | +1 0xB | 1782 of 4000 |
+| 30 | `EffectKind83_Push10` | +1 0xC | 4000 of 4000 |
+| 31 | `EffectKind83_Check11` | +1 0xD | 1782 of 4000 |
+| 32 | `EffectKind83_Check5` | +9 1 (Check) | 2218 of 4000 |
+| 33 | `Sprite_StateRestart` | +1 1 | 4000 of 4000 |
+| 34 | `EffectKind83_Nudge13` | +9 9 | 4000 of 4000 |
+| 35 | `EffectKind83_Hold14` | +1 0x10 | 581 of 4000 |
+| 36 | `EffectKind83_Hold16` | at 1 (Hold) | 1154 of 4000 |
+| 37 | `EffectKind83_Nudge15` | - 0x3FFF | 4000 of 4000 |
+| 38 | `EffectKind83_Hold16` | +1 0x12 | 581 of 4000 |
+| 39 | `EffectKind83_Nudge17` | +1 0x13 | 4000 of 4000 |
+| 40 | `EffectKind83_Count18` | >= 0x10 | 663 of 4000 |
+| 41 | `EffectKind83_Count18` | +1 0xE | 2639 of 4000 |
+| 42 | `EffectKind83_Finish` | reversed | 2897 of 4000 |
+| 43 | `EffectKind83_Finish` | step 0x1D | 3806 of 4000 |
+| 44 | `EffectKind83_Finish` | Field_State + 1 | 4000 of 4000 |
+| 45 | `EffectKind84_Run` | 85 table | 4000 of 4000 |
+| 46 | `EffectKind84_WaitPress` | no 0x2000 | 479 of 4000 |
+| 47 | `EffectKind84_WaitPress` | +1 2 | 1480 of 4000 |
+| 48 | `EffectKind84_Pick` | waits table | 2569 of 4000 |
+| 49 | `EffectKind84_Pick` | & 7 | 905 of 4000 |
+| 50 | `EffectKind84_Pick` | +1 3 | 2569 of 4000 |
+| 51 | `EffectKind84_Pick` | stop at 0xFD | 432 of 4000 |
+| 52 | `EffectKind84_Mash` | counts table | 279 of 4000 |
+| 53 | `EffectKind84_Mash` | +1 4 | 279 of 4000 |
+| 54 | `EffectKind84_Mash` | 0x11 | 115 of 4000 |
+| 55 | `EffectKind84_Mash` | 0x81 | 599 of 4000 |
+| 56 | `EffectKind84_Mash` | done at 1 | 283 of 4000 |
+| 57 | `EffectKind84_Pause` | word 1 | 368 of 4000 |
+| 58 | `EffectKind84_Pause` | at 1 | 744 of 4000 |
+| 59 | `EffectKind85_Run` | 84 table | 4000 of 4000 |
+| 60 | `EffectKind85_Start` | message 0x34 | 4000 of 4000 |
+| 61 | `EffectKind85_Start` | +0x5D 1 | 4000 of 4000 |
+| 62 | `EffectKind85_Start` | +1 2 | 4000 of 4000 |
+| 63 | `EffectKind85_ShowObjects` | +0x29 3 | 4000 of 4000 |
+| 64 | `EffectKind85_ShowObjects` | leader +0x29 1 | 4000 of 4000 |
+| 65 | `EffectKind85_ShowObjects` | +3 not +6 | 3864 of 4000 |
+| 66 | `EffectKind85_WaitMessage` | request 1 | 1611 of 4000 |
+| 67 | `EffectKind85_WaitMessage` | +9 0x1D | 3195 of 4000 |
+| 68 | `EffectKind85_Brighten` | +3 | 3417 of 4000 |
+| 69 | `EffectKind85_Brighten` | +1 4 | 583 of 4000 |
+| 70 | `EffectKind85_NextMessage` | 0x38 | 218 of 4000 |
+| 71 | `EffectKind85_NextMessage` | +1 5 | 109 of 4000 |
+| 72 | `EffectKind85_NextMessage` | counter + 2 | 100 of 4000 |
+| 73 | `EffectKind85_NextMessage` | message + 1 | 474 of 4000 |
+| 74 | `EffectKind85_Wait` | 0x36 | 1590 of 8000 |
+| 75 | `EffectKind85_WaitMessage` | calls swapped | 4000 of 4000 |
+| 76 | `EffectKind86_Run` | 85 table | 4000 of 4000 |
+| 77 | `EffectKind86_Spawn` | two cells | 1518 of 4000 |
+| 78 | `EffectKind86_Spawn` | tint 0xE | 1518 of 4000 |
+| 79 | `EffectKind86_Spawn` | Sprite_Current not put back | 1378 of 4000 |
+| 80 | `EffectKind86_Spawn` | first not freed | 948 of 4000 |
+| 81 | `EffectKind86_Spawn` | second placed as the first | 1473 of 4000 |
+| 82 | `EffectKind86_Spawn` | +0x5C 2 | 1473 of 4000 |
+| 83 | `EffectKind86_Spawn` | +9 0x21 | 1518 of 4000 |
+| 84 | `EffectKind86_Slide` | + 0x801 | 3419 of 4000 |
+| 85 | `EffectKind86_Slide` | +9 0xE | 581 of 4000 |
+| 86 | `EffectKind86_Slide` | bound 29 (ours aborts) | refused (ours aborts: the `Fatal` of section 2) |
+| 87 | `EffectKind86_Tint` | + 7 | 3419 of 4000 |
+| 88 | `EffectKind86_Tint` | first twice | 3297 of 4000 |
+| 89 | `EffectKind86_Tint` | +1 4 | 581 of 4000 |
+| 90 | `EffectKind86_End` | +4 not read again | 165 of 4000 |
+| 91 | `EffectKind86_End` | second not freed | 3846 of 4000 |
+| 92 | `EffectKind87_Run` | 83 table | 4000 of 4000 |
+| 93 | `EffectKind87_Start` | 0x1A | 4000 of 4000 |
+| 94 | `EffectKind87_Start` | flag 1 | 4000 of 4000 |
+| 95 | `EffectKind87_Start` | kept in +7 | 4000 of 4000 |
+| 96 | `EffectKind87_Step1` | sound 0x204 | 1334 of 4000 |
+| 97 | `EffectKind87_Step1` | no reset | 1334 of 4000 |
+| 98 | `EffectKind87_Step2` | at 1 | 1334 of 4000 |
+| 99 | `EffectKind87_Restore` | from +7 | 3978 of 4000 |
+| 100 | `EffectKind87_End` | word 1 | 4000 of 4000 |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
@@ -267,8 +380,7 @@ onto another table of at least its length.
   states call `Effect_Release` on 0xFE and then carry on with the record they
   have just freed: the line check, `Rand`, and the writes of `+1` / `+9` land
   in a record whose `+0` is now 0 (the next `Effect_FindFree` may hand it out
-  with those bytes set). `_Mash`'s seventeenth press and the line do the same
-  after their own release only where the code returns at once - they do.
+  with those bytes set).
 - **Kind 0x85's `_Wait` draws after its release**: at counter 0x35 it frees
   the record, then still calls the tile and `_ShowObjects`, reading `+6` and
   the colour of the freed record that frame.
