@@ -377,6 +377,7 @@ All of them load with `FIRST.DAT`.
 | 10 | New Game's default names (Ryu ... Whelp) | name fields of 8 records at `0x64B390` | the records past the name, 4 bytes earlier (`START.EMI`) | DIV-0020 |
 | 11 | Manillo, the fish merchant | 8 bytes at `0x669CD8` | twelve bytes at `0x6608CC` (the fishing areas) | DIV-0020 |
 | 15 | the status words, the stats (menu and battle), the item and skill types (the last two repointed into the DLL's buffers) | `0x66A0E8`, `0x66A0F8`, `0x66A120`, `0x66A200`, `0x669CF0` | the bytes at `0x663648` / `0x663660`, `0x663960`, `0x66B5B4` (`START.EMI`, `BATTLE.EMI`) | DIV-0064 |
+| 16 | the fishing spot's banner lines and tabs (both repointed into the DLL's buffers; [`fishing-text.md`](fishing-text.md)) | 13 records at `0x653B98`, the table `0x66A088` | the row table `0x653C04` and the edge-quad records `0x653E6C` (the fishing areas) | DIV-0069 |
 
 What makes this cheap: the US abbreviations were made to fit the PlayStation's
 boxes, and the PC's boxes were made for two 12-unit Chinese glyphs - which are
