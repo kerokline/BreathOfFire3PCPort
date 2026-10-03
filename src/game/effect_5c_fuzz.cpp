@@ -385,6 +385,10 @@ void Seed(unsigned k) {
     Gfx_BufferIndex = static_cast<unsigned char>(sh::Next() % 2);
     for (unsigned b = 0; b < 2; ++b)
         SetLong(Mem(at::kLayer15Tails + 8 * b), static_cast<std::int32_t>(sh::Half() ? Key(sh::Scratch(b) + (sh::Next() & 0x1C)) : sh::Next()));
+    // sub-kind 0x15's scroll: (Frame_Counter >> 3) & 0xFF at 0x3E..0x42 half the
+    // time, where the middle quad's right edge crosses 320
+    if (k == k15Draw && sh::Half())
+        Frame_Counter = (sh::Next() & ~0x7FFu) | ((0x3Eu + sh::Next() % 5) << 3) | (sh::Next() & 7u);
     // sub-kind 0x57's spawn: +9 at 1 half the time (it spawns when +9 reaches 0)
     if (k == k57Spawn && sh::Half()) Sprite_Current[9] = 1;
     g_size = PickOf(0x48, 0x44, 0xC, 0, 0xFF, sh::Next() & 0xFF);
