@@ -268,7 +268,12 @@ entry of the nine tables reached (each handler recorder 959..2,048 calls,
 `Effect_StateRelease` 1,359); `Effect_Release` 5,901, `Party_MemberAt` 10,712,
 `Member_SetState2_8` 1,815, E3B's quad 47,063, `Rand` 621,702.
 
-STAR_RESULTS
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+696 self-test lines, no `MISMATCH` line, `inject: 7621 ours, 0 left
+original`; `effect_3c` there 204,000 rounds, 2,112,821 calls, 0 mismatches.
+**With `BOF3X_WIDE=1`**: `'*'` exit 0, 696 self-test lines, no `MISMATCH`
+line. Run three times (once before the `EffectGte_ProjectPoint` re-listing,
+twice after it); none died silently.
 
 ## 5. What the cut and the tool said, settled
 
