@@ -2523,6 +2523,20 @@ designed in rather than bolted on.
 - **Also in the PSX version?** No.
 - **Tooling that comes with it:** `BOF3X_FPS_LOG=1` writes one `fps` line a
   second to the log - frames drawn, logic frames, the speed in force.
+- **Tooling, 2026-10-03 (no behaviour of play changes):** `BOF3X_SPEED=n`
+  (1..64) starts a run at that speed, for scripted runs nobody watches
+  (`input_run.py --speed N`). Two things keep a recipe recorded at speed 1 in
+  step: a frame a recipe `shot` is about to save is drawn even when the loop
+  is late, and while a stream started by `Sound_LoadStream` plays the loop
+  runs at the ordinary period - audio plays in wall time and scenes wait on
+  it (the inn counts 150 frames, then waits for its jingle;
+  `src/hook/run_speed.h`). Measured the same day: `shop.txt` with a shot every
+  30 frames, 105 shots pixel-identical and the `randlog` identical at x8
+  against x1 (180 s to 97 s); `balioAndSunder_2.txt`, 21,835 frames, `randlog`
+  identical (746 s to 114 s). A route with another wall-clock wait would show
+  as a `randlog` or shot difference against its x1 run: check each new route
+  once. `attract_run.py` does not take it (`attract_watch.py` counts frames
+  by polling and would undercount).
 - **Verification:** 2026-09-24. An attract run with F1 posted to the window
   at 75 s (`analysis/attract/f1_speed.log`): 31.0 drawn / 31.0 logic a
   second before, then `DIV-0048 speed x2 (F1) at Frame_Counter 1857` and

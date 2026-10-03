@@ -67,6 +67,7 @@
 #include "game/pause_text.h"
 #include "hook/detour.h"
 #include "hook/input_script.h"
+#include "hook/run_speed.h"
 #include "hook/log.h"
 #include "render/render_d3d11.h"
 #include "render/render_shim.h"
@@ -113,7 +114,9 @@ double g_frame_ms = kFrameMs;
 // frames run per frame of wall time. Logic counts frames and reads no
 // clock, so what the game computes is the same; when drawing cannot keep
 // up the loop skips presents as it does catching up after a stall. Read by
-// the loop, which rebases the deadline when it changes.
+// the loop, which rebases the deadline when it changes. BOF3X_SPEED=n
+// (tooling, 1..64) starts a run at that speed - for scripted runs nobody
+// watches (input_run.py --speed); F1 then toggles between 1 and 2 as ever.
 int g_speed = 1;
 bool g_fps_log = false;   // BOF3X_FPS_LOG=1 (tooling): drawn and logic frames a second, to the log
 constexpr const char* kStrSpeed2 = "Speed x2";
@@ -479,6 +482,14 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             g_frame_ms = v;
         }
         if (GetEnvironmentVariableA("BOF3X_FPS_LOG", text, sizeof text) > 0 && text[0] == '1') g_fps_log = true;
+        const DWORD sn = GetEnvironmentVariableA("BOF3X_SPEED", text, sizeof text);
+        if (sn > 0) {
+            char* end = nullptr;
+            const long v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
+            if (end == nullptr || *end != '\0' || v < 1 || v > 64) bof3::Fatal("BOF3X_SPEED must be 1..64");
+            g_speed = static_cast<int>(v);
+            if (g_speed != 1) bof3::Log("DIV-0048    speed x%d from the start (BOF3X_SPEED)", g_speed);
+        }
     }
 
     if (!Disc_Probe(Str(kStrCapcomAvi), Str(kStrBof3Exe))) {
@@ -567,6 +578,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         double deadline_base = 0.0;
         std::uint64_t deadline_frames = 0;
         int speed = 1;   // the period in force: g_frame_ms / speed (DIV-0048)
+        unsigned stream_hold_frames = 0;   // BOF3X_SPEED: frames held at speed 1 for a playing stream
         while (!quit) {
             Task_Create(0, reinterpret_cast<void*>(static_cast<std::uintptr_t>(bof3::addr::Boot_Task)));
             deadline_base = Now() + kFirstFrameMs;
@@ -592,12 +604,25 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Task_SetStackBase();
                     break;   // Task_Create again
                 }
-                if (g_speed != speed) {
+                // While a stream plays the loop runs at the ordinary period (run_speed.h).
+                // A hold of two minutes is no jingle - looping music has the
+                // buffer the stream had - and is dropped.
+                bool stream_hold = g_speed != 1 && bof3::RunSpeed_StreamPlaying();
+                stream_hold_frames = stream_hold ? stream_hold_frames + 1 : 0;
+                if (stream_hold_frames > 3600) {
+                    bof3::Log("DIV-0048    BOF3X_SPEED: a stream still playing after 3600 frames at Frame_Counter %lu; held no longer",
+                              static_cast<unsigned long>(Frame_Counter));
+                    bof3::RunSpeed_StreamForget();
+                    stream_hold = false;
+                    stream_hold_frames = 0;
+                }
+                const int want_speed = stream_hold ? 1 : g_speed;
+                if (want_speed != speed) {
                     // DIV-0048: the count so far at the old period becomes the
                     // base, so the change starts from the current deadline.
                     deadline_base += static_cast<double>(deadline_frames) * (g_frame_ms / speed);
                     deadline_frames = 0;
-                    speed = g_speed;
+                    speed = want_speed;
                 }
                 double now = Now();
                 double deadline = deadline_base + static_cast<double>(deadline_frames) * (g_frame_ms / speed);
@@ -609,7 +634,9 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     deadline_frames = 0;
                     deadline = deadline_base;
                 }
-                if (now < deadline) {
+                // A late frame is not drawn - except one a scripted shot is
+                // about to save, so a capture is the same frame at any speed.
+                if (now < deadline || bof3::InputScript_ShotPending()) {
                     if (g_fps_log) QueryPerformanceCounter(&q0);
                     unsigned char* env = Gfx_CurrentEnv;
                     Gpu_PutDispEnv(env);
