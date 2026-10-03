@@ -326,14 +326,21 @@ it now copies in the original's order (the last dword read before two uv bytes
 are written).
 
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_6c`,
-exit 0): 200,000 rounds over 50 functions, 18,120,732 calls to the stand-ins,
+exit 0): 200,000 rounds over 50 functions, 18,023,900 calls to the stand-ins,
 **0 mismatches**; 34,160 bytes of state in 49 regions. Every entry of the six
-tables reached (each handler recorder 484..1,386 calls); `DrawGlow` 725 calls
-from the sky, `DrawStars` 2,735, `DrawTwinkle` 7,885, `Gfx_ClutAdjust`
-2,108, `Gpu_LinkPrim` 819 (the commit's room test passed), `AreaMap_Elevation`
-1,999, `Sprite_ScriptTick` 2,020, `Math_Ratan2` 11,643.
+tables reached (each handler recorder about 450..1,390 calls); `DrawGlow`
+about 700 calls from the sky, `DrawStars` 2,714, `DrawTwinkle` 6,819,
+`Gfx_ClutAdjust` about 2,100, `Gpu_LinkPrim` about 800 (the commit's room
+test passed), `AreaMap_Elevation` about 2,000, `Sprite_ScriptTick` about
+2,000, `Math_Ratan2` about 11,600 (counts in this worktree).
 
-STAR_RESULTS
+**Every shadow** (this worktree, no `bof3x.ini`, at the final fuzz):
+`BOF3X_SHADOW='*'` exit 0, 713 self-test lines, no `MISMATCH:` line,
+`inject: 8499 ours, 0 left original` (8,449 + 50); `effect_6c` there 200,000
+rounds, 18,087,233 calls, 0 mismatches. **With `BOF3X_WIDE=1`**: `'*'` exit 0,
+713 self-test lines, no mismatch, the same counts. An earlier `'*'` narrow
+(before the controls' seed fixes) also exited 0 with 713 lines. Neither run
+died silently. `tools/ledger_check.py`: 72 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -364,7 +371,240 @@ STAR_RESULTS
 
 ## 6. Controls
 
-CONTROLS
+Planted one at a time by a scratch script (`controls.py`: each plant
+anchored on a unique string of `effect_6c.cpp`, rebuilt, run under
+`BOF3X_E6C_ONLY=<filter>`, the file restored and rebuilt at the end; the
+committed file has no switch). The harness stops counting at the first
+differing round only in its log, so the column is the first round that refused
+it (0-based) in this worktree; every refused run exited 3 on a `MISMATCH`
+line. **195 planted: 191 refused by a count, 3 equivalent mutants each with a
+refused near variant, 1 stopped by ours' own abort with a refused near
+variant.** Controls 1..191 ran under the first seeds; six were not refused
+there, and the fuzz was mended for two of them:
+
+- **67** (`_Open`'s inner `< 0xFF`) and **153** (`_Animate`'s end at 0xCF):
+  the fuzz's fault - the radius `+0x3C` was random 32 bits and `+9` never
+  0xCE. The seeds now put `+0x3C` about 0xF8, 0x118 and 0x1F8 and `+9` at
+  0xCE; both refused (rounds 4 and 5).
+- **23** (`Follow`'s quiet copy of the screen y made a plain one):
+  equivalent under the harness - the y is always the `Gte_RotTransPers`
+  stand-in's whole-number float, never a signalling NaN, the one value the two
+  copies differ on. Near variant **192** (the copy's low bit flipped) refused.
+- **32** (the third star's `/ 98304` as `/ 98303`): equivalent - the two
+  divides differ only for `|0x1400 - z|` of 3,723 or more, where y is at least
+  148 and the star is never drawn, and its stored y is overwritten at the same
+  cursor by the next star's size before anything reads it. The seeds now pin
+  such z (and the second star's y at 89..91, through `settle`, for `DrawStars`'
+  rounds); near variant **195** (`/ 65536`) refused.
+- **165** (the link word `& 0x7FF` for `& 0xFFF`): equivalent - they differ
+  only for a link of 0x800 or more, past the 1,024 items the pool has during
+  the self-test, where ours aborts. The link seeds now run to 0x3FF; near
+  variant **194** (`& 0x1FF`) refused.
+- **51** (the sky's third band ending at 0x38F): **stopped by ours' abort** -
+  the frame word 0x38F then reaches the last band with `n` = `(0x38F - 0x390) /
+  3`, past the sixteen tints, where the original reads on. Near variant
+  **193** (`0x391`) refused.
+
+The other 185 of the first run were not re-run under the final seeds (the
+seeds only add values).
+
+| # | Run (`_ONLY`) | Plant | For | Refused at |
+|--:|---|---|---|---|
+| 1 | `CornerHeight` | `const U xi = Sar(ux + 0x7FFFu, 16) & 0xFF` | `const U xi = Sar(ux + 0x8000u, 16) & 0xFF` | round 9 |
+| 2 | `CornerHeight` | `* 0x61 + (((block & 0xF) << 4)` | `* 0x60 + (((block & 0xF) << 4)` | round 0 |
+| 3 | `CornerHeight` | `if (I(fz + fx) < 0x10000) {` | `if (I(fz + fx) <= 0x10000) {` | round 7 |
+| 4 | `CornerHeight` | `Sar(static_cast<U>(c2 - c0) * fz, 16)` | `DivP2(static_cast<U>(c2 - c0) * fz, 16)` | round 0 |
+| 5 | `CornerHeight` | `h = static_cast<U>(c3) - from_z + from_x;` | `h = static_cast<U>(c3) - from_z - from_x;` | round 4 |
+| 6 | `CornerHeight` | `return static_cast<long>(h << 4);` | `return static_cast<long>(h << 5);` | round 0 |
+| 7 | `CornerHeight` | `const std::int32_t c1 = static_cast<unsigned char>((corners >> 8) &...` | `const std::int32_t c1 = static_cast<signed char>((corners >> 8) & 0...` | round 3 |
+| 8 | `Sub44_Commit` | `if (limit < AddressOf(next) + bytes) return;` | `if (limit <= AddressOf(next) + bytes) return;` | round 8 |
+| 9 | `Sub44_Commit` | `SetUL(at::kLayerTails + 8u * Gfx_BufferIndex, AddressOf(next));` | `SetUL(at::kLayerTails + 8u * Gfx_BufferIndex, AddressOf(now));` | round 18 |
+| 10 | `Sub44_Commit` | `const U bytes = size & 0x7Fu;` | `const U bytes = size & 0xFFu;` | round 33 |
+| 11 | `Sub44_Follow` | `` | `        S()[0x4B] = *At(at::kLeaderAnimation); ` | round 5 |
+| 12 | `Sub44_Follow` | `if (*At(at::kLeaderState) == 2) SH_CALL` | `if (*At(at::kLeaderState) == 3) SH_CALL` | round 0 |
+| 13 | `Sub44_Follow` | `        S()[0x5E] = 0x80;         S()[0x5F] = 0x81;         Cond_By...` | `        S()[0x5E] = 0x80;         S()[0x5F] = 0x80;         Cond_By...` | round 3 |
+| 14 | `Sub44_Follow` | `SetWord(S() + 0x32, 0x3201);` | `SetWord(S() + 0x32, 0x3200);` | round 0 |
+| 15 | `Sub44_Follow` | `SetV(4, 0u - Sar(static_cast<U>(S16(at::kLeaderLift)), 1));` | `SetV(4, 0u - DivP2(static_cast<U>(S16(at::kLeaderLift)), 1));` | round 1 |
+| 16 | `Sub44_Follow` | `SetV(2, Sar(((static_cast<U>(Field_Kind2Z) - 1u) & 0xFFFFFFu) + 0u,...` | `SetV(2, Sar(((static_cast<U>(Field_Kind2Z) - 1u) & 0xFFFFFFu) + 1u,...` | round 512 |
+| 17 | `Sub44_Follow` | `SetUL(S() + 0x74, 0x43210000u);` | `SetUL(S() + 0x74, 0x43200000u);` | round 0 |
+| 18 | `Sub44_Follow` | `        SetWord(At(at::kLeaderDepth), Ftol(D(at::kScreenY)) + 1u);` | `        SetWord(At(at::kLeaderDepth), Ftol(D(at::kScreenY)));` | round 4 |
+| 19 | `Sub44_Follow` | `SetD(S() + 0x78, Fi(static_cast<U>(Word(At(at::kLeaderDepth)))));` | `SetD(S() + 0x78, Fi(static_cast<U>(S16(at::kLeaderDepth))));` | round 1 |
+| 20 | `Sub44_Follow` | `if (count < 0x27) {` | `if (count < 0x28) {` | round 0 |
+| 21 | `Sub44_Follow` | `        prim[4] = 0xFE;         prim[5] = 0;` | `        prim[4] = 0xFF;         prim[5] = 0;` | round 4 |
+| 22 | `Sub44_Follow` | `SH_CALL(Gfx_CommitPrim)(3, 0x18);` | `SH_CALL(Gfx_CommitPrim)(3, 0x1C);` | round 4 |
+| 23 | `Sub44_Follow` | `SetUL(S() + 0x78, UL(at::kScreenY));` | `CopyQuiet(S() + 0x78, At(at::kScreenY));` | **equivalent** (section 6) |
+| 24 | `Sub44_DrawTwinkle` | `p[5] = static_cast<unsigned char>(tile[5] >> 1);` | `p[5] = static_cast<unsigned char>(tile[5] >> 2);` | round 0 |
+| 25 | `Sub44_DrawTwinkle` | `S8(at::kTwinkle + 2 * i)` | `S8(at::kTwinkle + 2 * i + 1)` | round 1 |
+| 26 | `Sub44_DrawTwinkle` | `for (unsigned i = 0; i < 3; ++i) {         unsigned char* const p =...` | `for (unsigned i = 0; i < 4; ++i) {         unsigned char* const p =...` | round 0 |
+| 27 | `Sub44_DrawStars` | `DivP2(level * 0xFEu, 7)` | `DivP2(level * 0xFFu, 7)` | round 1 |
+| 28 | `Sub44_DrawStars` | `SetUL(p + 0xC, 0x42300000u);` | `SetUL(p + 0xC, 0x42340000u);` | round 0 |
+| 29 | `Sub44_DrawStars` | `S16(at::kKind2ZHigh) / 84 - 1` | `S16(at::kKind2ZHigh) / 85 - 1` | round 2 |
+| 30 | `Sub44_DrawStars` | `if (!(y < F(at::kZero)) && y <= F(at::kNinety)) {` | `if (!(y < F(at::kZero)) && y < F(at::kNinety)) {` | round 1073 |
+| 31 | `Sub44_DrawStars` | `>= 0xE00 ? 1u : 0u;` | `>= 0xF00 ? 1u : 0u;` | round 15 |
+| 32 | `Sub44_DrawStars` | `I(dz * dz) / 98303)` | `I(dz * dz) / 98304)` | **equivalent** (section 6) |
+| 33 | `Sub44_DrawStars` | `- 0x1480) / 16);` | `- 0x1480) / 17);` | round 0 |
+| 34 | `Sub44_DrawStars` | `p[c] = static_cast<unsigned char>(DivP2(((r + 0x80u) & 0x7F) * leve...` | `p[c] = static_cast<unsigned char>(DivP2(((r - 0x80u) & 0xFF) * leve...` | round 0 |
+| 35 | `Sub44_DrawStars` | `I(0xD00u - az - ax) / 42 + 0x14` | `I(0xD00u - az - ax) / 43 + 0x14` | round 0 |
+| 36 | `Sub44_DrawStars` | `if (fs >= F(at::kEightyNine)) continue;` | `if (fs > F(at::kEightyNine)) continue;` | round 81 |
+| 37 | `Sub44_DrawStars` | `(x > 0x1E01 ? 0x1E01 : x)` | `(x > 0x1E00 ? 0x1E00 : x)` | round 37 |
+| 38 | `Sub44_DrawStars` | `(r + Cond_AngleFB + 0x632u) & 0xFFF) - back` | `(r + Cond_AngleFB + 0x633u) & 0xFFF) - back` | round 0 |
+| 39 | `Sub44_DrawStars` | `SH_CALL(Math_Ratan2)(static_cast<float>(cx - 0x1480), static_cast<f...` | `SH_CALL(Math_Ratan2)(static_cast<float>(cz - 0x1380), static_cast<f...` | round 0 |
+| 40 | `Sub44_DrawGlow` | `right = static_cast<float>(Fi(x + 0x4Fu));` | `right = static_cast<float>(Fi(x + 0x4Eu));` | round 0 |
+| 41 | `Sub44_DrawGlow` | `SetWord(p + 0x26, 0xD6);` | `SetWord(p + 0x26, 0xD7);` | round 0 |
+| 42 | `Sub44_DrawGlow` | `SetWord(p + 0x16, (row + 0x1E7) << 6);` | `SetWord(p + 0x16, (row + 0x1E6) << 6);` | round 0 |
+| 43 | `Sub44_DrawGlow` | `S16(VertexAddress(8 * row + 2 * c))) * level, 6)` | `S16(VertexAddress(8 * row + 2 * c))) * level, 7)` | round 0 |
+| 44 | `Sub44_DrawGlow` | `static_cast<unsigned char>(row * 0x40);` | `static_cast<unsigned char>(row * 0x50);` | round 0 |
+| 45 | `Sub44_Draw` | `unsigned char* const window = Rect(0x20, 0, 0x20, 0x10);` | `unsigned char* const window = Rect(0x20, 0, 0x20, 0x20);` | round 0 |
+| 46 | `Sub44_Draw` | `SH_CALL(Gpu_SetShadeTex)(p, 0);` | `SH_CALL(Gpu_SetShadeTex)(p, 1);` | round 0 |
+| 47 | `Sub44_Draw` | `SetUL(p + 0x2C, 0x42F00000u);  // 122.0f` | `SetUL(p + 0x2C, 0x42F40000u);  // 122.0f` | round 0 |
+| 48 | `Sub44_Draw` | `SetUL(p + 0xC, 0x42400000u);   // 50.0f` | `SetUL(p + 0xC, 0x42480000u);   // 50.0f` | round 0 |
+| 49 | `Sub44_Draw` | `if (clock < 0x1B1) {` | `if (clock < 0x1B0) {` | round 24 |
+| 50 | `Sub44_Draw` | `I(n * 4) / 10 - 6, I(n) / 8 - 1, 0);` | `I(n * 4) / 10 - 6, I(n) / 8 - 2, 0);` | round 8 |
+| 51 | `Sub44_Draw` | `} else if (clock < 0x38F) {` | `} else if (clock < 0x390) {` | **stopped by ours' abort** (section 6) |
+| 52 | `Sub44_Draw` | `SetV(0, 0x80u - past * 8u);` | `SetV(0, 0x80u - past * 12u);` | round 4 |
+| 53 | `Sub44_Draw` | `S8(at::kSkyTints + 3 * n + 2),` | `S8(at::kSkyTints + 3 * n + 1),` | round 12 |
+| 54 | `Sub44_Draw` | `const U past = FloorZero(n - 5);` | `const U past = FloorZero(n - 6);` | round 4 |
+| 55 | `Sub44_Draw` | `SetD(p + 8, Fi((AngleX(Cond_AngleFB) & 0x7F) + column - 0x100u));` | `SetD(p + 8, Fi((AngleX(Cond_AngleFB) & 0xFF) + column - 0x100u));` | round 4 |
+| 56 | `Sub44_Draw` | `v1 = static_cast<unsigned char>(v0 + 0x5B);` | `v1 = static_cast<unsigned char>(v0 + 0x5A);` | round 0 |
+| 57 | `Sub44_Draw` | `SetD(p + 0x3C, Fi(*At(at::kSkyYs + m)));` | `SetD(p + 0x3C, Fi(*At(at::kSkyYs + m + 1)));` | round 0 |
+| 58 | `Sub44_Draw` | `            RowColour(p + 0x14, row ^ 1);` | `            RowColour(p + 0x14, row);` | round 0 |
+| 59 | `Sub44_Draw` | `U level = 0xC1u - static_cast<U>(I(near) / 3);` | `U level = 0xC0u - static_cast<U>(I(near) / 3);` | round 4 |
+| 60 | `Sub44_Draw` | `U level = 0x100u - DivP2(Abs(dz) + Abs(dx), 1);` | `U level = 0x100u - DivP2(Abs(dz) + Abs(dx), 2);` | round 12 |
+| 61 | `Sub44_Draw` | `static_cast<float>(I(dx)), static_cast<float>(z)` | `static_cast<float>(I(dx)), static_cast<float>(-z)` | round 12 |
+| 62 | `Sub44_Draw` | `if (SH_CALL(Flags_Test)(At(at::kFlagRow), 5) == 0) return;` | `if (SH_CALL(Flags_Test)(At(at::kFlagRow), 4) == 0) return;` | round 0 |
+| 63 | `Sub44_Draw` | `unsigned char* const p = Gfx_PacketNext;` | `unsigned char* const p = first + 0x44 * m;` | round 0 |
+| 64 | `Sub45_Run` | `Dispatch("EffectKind18Sub45_Run", E6C_TABLE(EffectKind18Sub51_State...` | `Dispatch("EffectKind18Sub45_Run", E6C_TABLE(EffectKind18Sub45_State...` | round 0 |
+| 65 | `Sub45_Wait` | `    S()[0xB] = 1;     SetUL(S() + 0x3C, 0);` | `    S()[0xB] = 0;     SetUL(S() + 0x3C, 0);` | round 3 |
+| 66 | `Sub45_Open` | `const U inner = Ring(v, 0x18, false);` | `const U inner = Ring(v, 0x20, false);` | round 0 |
+| 67 | `Sub45_Open` | `if (I(inner) < 0xFF) return;` | `if (I(inner) <= 0xFF) return;` | round 4 |
+| 68 | `Sub45_Spread` | `SH_CALL(EffectKind18Sub45_DrawRing)(I(r[k]), I(r[k + 1]), (k & 1) ?...` | `SH_CALL(EffectKind18Sub45_DrawRing)(I(r[k]), I(r[k + 1]), (k & 1) ?...` | round 0 |
+| 69 | `Sub45_Spread` | `if (cap && I(r) > 0xFF) return 0xFF;` | `if (cap && I(r) > 0xFF) return 0x100;` | round 0 |
+| 70 | `Sub45_Spread` | `SH_CALL(MoveCmd_TestFB)(0xB, 0x21);` | `SH_CALL(MoveCmd_TestFB)(0xB, 0x22);` | round 845 |
+| 71 | `Sub45_Spread` | `        Cond_ByteFE = 3;         SH_CALL(Effect_Release)();` | `        Cond_ByteFE = 2;         SH_CALL(Effect_Release)();` | round 0 |
+| 72 | `Sub45_DrawRing` | `SetUL(at::kScreenY, 0xC63C0000u);` | `SetUL(at::kScreenY, 0xC63D0000u);` | round 0 |
+| 73 | `Sub45_DrawRing` | `SetV(8 * v + 2, Ftol(D(at::kScreenY) + Fi(sine)));` | `SetV(8 * v + 2, Ftol(D(at::kScreenY) - Fi(sine)));` | round 0 |
+| 74 | `Sub45_DrawRing` | `radius, 12);             SetV(8 * v + 4` | `radius, 13);             SetV(8 * v + 4` | round 0 |
+| 75 | `Sub45_DrawRing` | `(Sar((half << 7) + 0x100u, 6) & 0xF) \| 0x90u` | `(Sar((half << 7) + 0x140u, 6) & 0xF) \| 0x90u` | round 0 |
+| 76 | `Sub45_DrawRing` | `p[c.at] = static_cast<unsigned char>(Sar(sine * c.radius, 16) + uv[...` | `p[c.at] = static_cast<unsigned char>(Sar(sine * c.radius, 16) + uv[...` | round 0 |
+| 77 | `Sub45_DrawRing` | `{0x34, q1, inner}` | `{0x34, q0, inner}` | round 0 |
+| 78 | `Sub45_DrawRing` | `UL(s + 0x38), 1, 0x48);     } }` | `UL(s + 0x38), 0, 0x48);     } }` | round 0 |
+| 79 | `Sub45_DrawRing` | `SH_CALL(Gpu_SetSemiTrans)(p, 1);         p[6] = 0x50;` | `SH_CALL(Gpu_SetSemiTrans)(p, 0);         p[6] = 0x50;` | round 0 |
+| 80 | `Sub51_Run` | `E6C_TABLE(EffectKind18Sub45_States)); }` | `E6C_TABLE(EffectKind18Sub51_States)); }` | round 0 |
+| 81 | `Sub51_Place` | `SetUL(record, UL(record) & 0xFF0FFFFFu);` | `SetUL(record, UL(record) & 0xFF07FFFFu);` | round 0 |
+| 82 | `Sub51_Place` | `Item("EffectKind18Sub51_Place", item), 1);` | `Item("EffectKind18Sub51_Place", item), 2);` | round 0 |
+| 83 | `Sub51_Place` | `for (U z = Rect51(who, 1); I(z) < I(Rect51(who, 3)); ++z)` | `for (U z = Rect51(who, 1); I(z) <= I(Rect51(who, 3)); ++z)` | round 3 |
+| 84 | `Sub51_Place` | `const U half = (height * width) / 2;` | `const U half = (height * width + 1) / 2;` | round 6 |
+| 85 | `Sub51_Place` | `return At(at::kAreaHeader + 4 * (word + half + run));` | `return At(at::kAreaHeader + 4 * (base + word + half + run));` | round 0 |
+| 86 | `Sub51_Wait` | `if (v > 3) return;` | `if (v > 4) return;` | round 9 |
+| 87 | `Sub51_Wait` | `SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x79 + (v - 2))` | `SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x7A + (v - 2))` | round 4 |
+| 88 | `Sub51_Wait` | `v == 0 ? SH_CALL(Flags_Test)(At(at::kStoryFlags), 0x14)` | `v == 0 ? SH_CALL(Flags_Test)(At(at::kFlagRow), 0x14)` | round 0 |
+| 89 | `Sub51_Wait` | `if (Cond_ByteFE == 2) s[2]` | `if (Cond_ByteFE == 1) s[2]` | round 3 |
+| 90 | `Sub51_Fade` | `const U step = S()[9] > 0xF ? 0xFu : S()[9];` | `const U step = S()[9] > 0x10 ? 0x10u : S()[9];` | round 1 |
+| 91 | `Sub51_Fade` | `\| (step << 18));` | `\| (step << 19));` | round 1 |
+| 92 | `Sub51_Fade` | `const U half = item * 2;` | `const U half = Gfx_BufferIndex + item * 2;` | round 1 |
+| 93 | `Sub51_Fade` | `if (S()[9] > 0x10) SH_CALL(Effect_Release)();` | `if (S()[9] > 0x11) SH_CALL(Effect_Release)();` | round 35 |
+| 94 | `Sub53_Run` | `if (I(near) >= 0x14) return;` | `if (I(near) > 0x14) return;` | round 213 |
+| 95 | `Sub53_Run` | `S()[9] = static_cast<unsigned char>(S()[9] + 1);` | `S()[9] = static_cast<unsigned char>(S()[9] + 2);` | round 21 |
+| 96 | `Sub53_Run` | `0xFEu - ((S()[9] - ring) & 0xFF)` | `0xFFu - ((S()[9] - ring) & 0xFF)` | round 21 |
+| 97 | `Sub53_Run` | `SetV(0, Sar(sine, 6) * 3 + Sar(UL(S() + 0x34), 8) - 0x4000u);` | `SetV(0, Sar(sine, 6) * 3 + Sar(UL(S() + 0x34), 9) - 0x4000u);` | round 21 |
+| 98 | `Sub53_Run` | `SetV(4, (0u - DivP2(UL(s + 0x3C), 1)) - lift);` | `SetV(4, (0u - DivP2(UL(s + 0x3C), 1)) - (lift << 1));` | round 21 |
+| 99 | `Sub53_Run` | `SetUL(S() + 0x3C, static_cast<U>(h));` | `SetUL(S() + 0x3C, static_cast<U>(static_cast<std::int16_t>(static_c...` | round 0 |
+| 100 | `Sub53_Run` | `UL(s + 0x38), 2, 0x14);` | `UL(s + 0x38), 1, 0x14);` | round 21 |
+| 101 | `Sub53_Run` | `const std::int32_t spin = S8(at::kSpin53 + ((k + 1) & 1));` | `const std::int32_t spin = S8(at::kSpin53 + (k & 1));` | round 21 |
+| 102 | `Sub55_Run` | `E6C_TABLE(EffectKind18Sub51_States));` | `E6C_TABLE(EffectKind18Sub55_States));` | round 0 |
+| 103 | `Sub55_Wait` | `SH_CALL(EffectKind18Sub55_Draw)(0x7F, 0);` | `SH_CALL(EffectKind18Sub55_Draw)(0x80, 0);` | round 0 |
+| 104 | `Sub55_Wait` | `Flags_Test)(At(at::kFlagRow), 0xF)` | `Flags_Test)(At(at::kFlagRow), 0xE)` | round 0 |
+| 105 | `Sub55_Fade` | `if (S()[9] > 0x10) SH_CALL(Effect_Release)();` | `if (S()[9] > 0xF) SH_CALL(Effect_Release)();` | round 69 |
+| 106 | `Sub55_Fade` | `SH_CALL(EffectKind18Sub55_Draw)(I((0x10u - n) << 3), I(n * 4));` | `SH_CALL(EffectKind18Sub55_Draw)(I((0x10u - n) << 3), I(n * 8));` | round 1 |
+| 107 | `Sub55_Draw` | `if (((x + z) & 1) == 0) continue;` | `if (((x + z) & 1) != 0) continue;` | round 0 |
+| 108 | `Sub55_Draw` | `SetV(2, (((z - 0x80u) << 6) + lift) << 1);` | `SetV(2, (((z - 0x80u) << 6) - lift) << 1);` | round 0 |
+| 109 | `Sub55_Draw` | `Abs(3u - (((Frame_Counter / 3) + x + z) & 7)) + 0x17` | `Abs(3u - (((Frame_Counter / 3) + x + z) & 7)) + 0x18` | round 0 |
+| 110 | `Sub55_Draw` | `SetD(p + 0x2C, (sy - h) + h);` | `SetD(p + 0x2C, (sy - h) + side);` | round 0 |
+| 111 | `Sub55_Draw` | `DivP2(shade << 5, 7)` | `DivP2(shade << 6, 7)` | round 2 |
+| 112 | `Sub55_Draw` | `SH_CALL(MapView_LinkPrimAt)(z << 16, x << 16, 1, 0x48);` | `SH_CALL(MapView_LinkPrimAt)(x << 16, z << 16, 1, 0x48);` | round 0 |
+| 113 | `Sub59_Run` | `E6C_TABLE(EffectKind18Sub5A_States));` | `E6C_TABLE(EffectKind18Sub59_States));` | round 0 |
+| 114 | `Sub59_Move` | `SetWord(rect + 2, 0x140u - (S()[0xA] >> 2));` | `SetWord(rect + 2, 0x140u - (S()[0xA] >> 1));` | round 0 |
+| 115 | `Sub59_Move` | `SH_CALL(Gpu_SetDrawMove)(Gfx_PacketNext, rect, 0x198, 0x121);` | `SH_CALL(Gpu_SetDrawMove)(Gfx_PacketNext, rect, 0x198, 0x120);` | round 0 |
+| 116 | `Sub59_Start` | `    S()[0xA] = 1;     S()[2] = static_cast<unsigned char>(S()[2] + ...` | `    S()[0xA] = 0;     S()[2] = static_cast<unsigned char>(S()[2] + ...` | round 0 |
+| 117 | `Sub59_Wait` | `if (Cond_ByteFE == 1) S()[2] = static_cast<unsigned char>(S()[2] + ...` | `if (Cond_ByteFE == 1) S()[2] = static_cast<unsigned char>(S()[2] + ...` | round 0 |
+| 118 | `Sub59_Rise` | `if (S()[9] < 0x1F) S()[9]` | `if (S()[9] < 0x20) S()[9]` | round 53 |
+| 119 | `Sub59_Rise` | `SH_CALL(EffectKind18Sub59_DrawRing)(I(0x20u + S()[9]));` | `SH_CALL(EffectKind18Sub59_DrawRing)(I(0x20u - S()[9]));` | round 0 |
+| 120 | `Sub59_Hold` | `Scroll59(3);` | `Scroll59(2);` | round 0 |
+| 121 | `Sub59_Fade` | `if (n == 3 \|\| shades[e + n] >= 0x60) break;` | `if (n == 3 \|\| shades[e + n] > 0x60) break;` | round 1 |
+| 122 | `Sub59_Fade` | `shades[e + n] = static_cast<unsigned char>(shades[e + n] - 1);` | `shades[e + n] = static_cast<unsigned char>(shades[e + n] - 2);` | round 0 |
+| 123 | `Sub59_Fade` | `for (unsigned e = 0; e < 8; ++e) {` | `for (unsigned e = 0; e < 9; ++e) {` | round 4 |
+| 124 | `Sub59_Fade` | `if (*At(at::kShades59 + 7) != 0) return;` | `if (*At(at::kShades59 + 8) != 0) return;` | round 1 |
+| 125 | `Sub59_Fade` | `const U glow = S()[9] > 0x5F ? 0x5Fu : S()[9];` | `const U glow = S()[9] > 0x60 ? 0x60u : S()[9];` | round 5 |
+| 126 | `Sub59_Close` | `S()[9] = static_cast<unsigned char>(S()[9] - 2);` | `S()[9] = static_cast<unsigned char>(S()[9] - 4);` | round 0 |
+| 127 | `Sub59_DrawRing` | `const U b0 = DivP2(angle, 4), b1 = DivP2(angle + 0x800u, 4);` | `const U b0 = DivP2(angle, 4), b1 = DivP2(angle + 0x1000u, 4);` | round 0 |
+| 128 | `Sub59_DrawRing` | `{0x10, b0, at::kRadii59 + 8 + ki, at::kHeights59 + 7 + ki},` | `{0x10, b0, at::kRadii59 + 8 + ki, at::kHeights59 + 8 + ki},` | round 0 |
+| 129 | `Sub59_DrawRing` | `SetV(c.at + 4, 0u - (static_cast<U>(*At(c.height)) << 4));` | `SetV(c.at + 4, 0u - (static_cast<U>(*At(c.height)) << 5));` | round 0 |
+| 130 | `Sub59_DrawRing` | `q[0x3D] = 0x3E;` | `q[0x3D] = 0x3F;` | round 0 |
+| 131 | `Sub59_DrawRing` | `dress(p, 0xD5, 0x7900);` | `dress(p, 0xD5, 0x7940);` | round 0 |
+| 132 | `Sub59_DrawRing` | `far = *At(at::kShades59 + 7 + ki);` | `far = *At(at::kShades59 + 8 + ki);` | round 0 |
+| 133 | `Sub59_DrawRing` | `I((Abs(3u - ((half + Frame_Counter) & 7)) + 0x10) * 4500u) / diviso...` | `I((Abs(3u - ((half + Frame_Counter) & 7)) + 0x10) * 4500u) / diviso...` | round 0 |
+| 134 | `Sub59_DrawRing` | `const U half = i;` | `const U half = DivP2(i, 1);` | round 0 |
+| 135 | `Sub59_DrawRing` | `p[6] = bright;` | `p[6] = blue;` | round 0 |
+| 136 | `Sub59_DrawRing` | `UL(s + 0x38), I(row), 0x48);` | `UL(s + 0x38), I((row + 1) & 0xFF), 0x48);` | round 0 |
+| 137 | `Sub59_DrawRing` | `for (U back = 0; I(back) < 0x10; back += 8, e += 0x40) {` | `for (U back = 0; I(back) < 0x10; back += 8, e += 0x80) {` | round 0 |
+| 138 | `Sub59_DrawRing` | `                SetUL(q + 0x4C, last + 1u);` | `                SetUL(q + 0x4C, last);` | round 0 |
+| 139 | `Sub59_DrawRing` | `SetD(p + 0x1C, D(at::kGlowXY) - h);` | `SetD(p + 0x1C, D(at::kGlowY) - h);` | round 0 |
+| 140 | `Sub66_Run` | `shades[0] = edge;` | `shades[0] = Sar(edge, 1);` | round 2 |
+| 141 | `Sub66_Run` | `if (I(distance) >= 0x40) {` | `if (I(distance) > 0x40) {` | round 6 |
+| 142 | `Sub66_Run` | `Sar(Sar(cosine, 7) + 0x50u, 1)` | `Sar(Sar(cosine, 7) + 0x60u, 1)` | round 6 |
+| 143 | `Sub66_Run` | `const U offsets[2] = {0u - (m & 0x3F), 0u - ((m & 0x3F) << 1)};` | `const U offsets[2] = {0u - (m & 0x3F), 0u - ((m & 0x1F) << 1)};` | round 3 |
+| 144 | `Sub66_Run` | `const U xs[3] = {0u - d - 0x80u, 0u - d + 0x80u, 0u - d + 0x170u};` | `const U xs[3] = {0u - d - 0x80u, 0u - d + 0x80u, 0u - d + 0x180u};` | round 2 |
+| 145 | `Sub66_Run` | `SetWord(p + 0x26, 0x7A);` | `SetWord(p + 0x26, 0x7B);` | round 2 |
+| 146 | `Sub66_Run` | `unsigned char* const whole = Rect(0, 0, 0x100, 0xFF);` | `unsigned char* const whole = Rect(0, 0, 0x100, 0x100);` | round 2 |
+| 147 | `Sub66_Run` | `S()[9] = static_cast<unsigned char>(S()[9] + 3);     if (S()[9] == ...` | `S()[9] = static_cast<unsigned char>(S()[9] + 4);     if (S()[9] == ...` | round 2 |
+| 148 | `Sub66_Run` | `if (Cond_ByteFE == 1) return;` | `if (Cond_ByteFE == 0) return;` | round 0 |
+| 149 | `Sub5A_Run` | `E6C_TABLE(EffectKind18Sub59_States));` | `E6C_TABLE(EffectKind18Sub5A_States));` | round 0 |
+| 150 | `Sub5A_Start` | `        S()[2] = 4;` | `        S()[2] = 5;` | round 0 |
+| 151 | `Sub5A_Wait` | `if (Cond_ByteFE == 3) S()[2] = static_cast<unsigned char>(S()[2] + ...` | `if (Cond_ByteFE == 2) S()[2] = static_cast<unsigned char>(S()[2] + ...` | round 4 |
+| 152 | `Sub5A_Animate` | `SH_CALL(EffectKind18Sub5A_SetTiles)(I(n >> 3), I((n >> 1) & 1));` | `SH_CALL(EffectKind18Sub5A_SetTiles)(I(n >> 3), I((n >> 2) & 1));` | round 10 |
+| 153 | `Sub5A_Animate` | `if (S()[9] >= 0xCF)` | `if (S()[9] >= 0xD0)` | round 5 |
+| 154 | `Sub5A_Set` | `SH_CALL(EffectKind18Sub5A_Move)(0xC0, 1);` | `SH_CALL(EffectKind18Sub5A_Move)(0xC0, 0);` | round 0 |
+| 155 | `Sub5A_Set` | `CellRecord(e + 0x11, 0x60, 0);` | `CellRecord(e + 0x11, 0x61, 0);` | round 0 |
+| 156 | `Sub5A_Set` | `\| (e + 0xE5));` | `\| (e + 0xE6));` | round 0 |
+| 157 | `Sub5A_Set` | `SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x81);` | `SH_CALL(Flags_Set)(At(at::kStoryFlags), 0x80);` | round 0 |
+| 158 | `Sub5A_Cycle` | `s[9] = static_cast<unsigned char>(n < 0x12 ? n : 0);` | `s[9] = static_cast<unsigned char>(n < 0x18 ? n : 0);` | round 2 |
+| 159 | `Sub5A_Cycle` | `if (n % 4 != 0) return;` | `if (n % 6 != 0) return;` | round 2 |
+| 160 | `Sub5A_Cycle` | `Cycle5A(at::kSlide5A, 0xB0); }` | `Cycle5A(at::kSlide5A, 0xC0); }` | round 0 |
+| 161 | `Sub5A_CycleOpen` | `Cycle5A(at::kSlide5A, 0); }` | `Cycle5A(at::kSlide5B, 0); }` | round 0 |
+| 162 | `Sub5A_SetTiles` | `static const unsigned char kFirst[6] = {5, 4, 3, 0xB, 0xA, 8};` | `static const unsigned char kFirst[6] = {5, 4, 3, 0xB, 0xA, 9};` | round 3 |
+| 163 | `Sub5A_SetTiles` | `const U z = step + 0x48;` | `const U z = step + 0x47;` | round 0 |
+| 164 | `Sub5A_SetTiles` | `unsigned char* const record = CellRecord(0xD, z, 0);` | `unsigned char* const record = CellRecord(0xD, z, 1);` | round 0 |
+| 165 | `Sub5A_SetTiles` | `Word(Item("EffectKind18Sub5A_SetTiles", item) + at::kItemLink) & 0x...` | `Word(Item("EffectKind18Sub5A_SetTiles", item) + at::kItemLink) & 0x...` | **equivalent** (section 6) |
+| 166 | `Sub5A_SetTiles` | `\| (e + 2) \| mark);` | `\| (e + 3) \| mark);` | round 0 |
+| 167 | `Sub5A_SetTiles` | `const U pick = static_cast<U>(I(step) % 3) + bank * 2;` | `const U pick = static_cast<U>(I(step) % 3) + bank * 3;` | round 0 |
+| 168 | `Sub5A_Move` | `SetWord(rect + 2, static_cast<U>(x_word) + 0xF0u);` | `SetWord(rect + 2, static_cast<U>(x_word) + 0x100u);` | round 0 |
+| 169 | `Sub5A_Move` | `SetWord(rect + 4, 0x50);` | `SetWord(rect + 4, 0x58);` | round 0 |
+| 170 | `Sub5A_Move` | `rect, 0x240, static_cast<U>(y_word) + 0x101u);` | `rect, 0x240, static_cast<U>(y_word) + 0x100u);` | round 0 |
+| 171 | `Sub5B_Run` | `E6C_TABLE(EffectKind18Sub5A_States));` | `E6C_TABLE(EffectKind18Sub5B_States));` | round 0 |
+| 172 | `Sub5B_Start` | `        S()[2] = 7;` | `        S()[2] = 6;` | round 0 |
+| 173 | `Sub5B_Start` | `    Cond_ByteFE = 2; ` | `    Cond_ByteFE = 3; ` | round 2 |
+| 174 | `Sub5B_Wait` | `static_cast<unsigned short>(at::kSoundStep5B));` | `static_cast<unsigned short>(at::kSoundOpen5B));` | round 14 |
+| 175 | `Sub5B_SlideOut` | `SlideOut(void) { Slide5B(9); }` | `SlideOut(void) { Slide5B(8); }` | round 3 |
+| 176 | `Sub5B_SlideOut` | `    OffsetX(true, 3);     Part(0);     OffsetX(true, 3);` | `    OffsetX(true, 3);     Part(0);     OffsetX(false, 3);` | round 0 |
+| 177 | `Sub5B_SlideWide` | `Slide5B(0x2F); }` | `Slide5B(0x30); }` | round 1173 |
+| 178 | `Sub5B_Hold` | `SetOffset(0xC2700000u, 0);   // -64.0f` | `SetOffset(0xC2800000u, 0);   // -64.0f` | round 0 |
+| 179 | `Sub5B_Hold` | `    S()[9] = 9; ` | `    S()[9] = 8; ` | round 1 |
+| 180 | `Sub5B_Lift` | `SetD(at::kOffsetY, Fi(static_cast<U>(S()[9]) << 2));` | `SetD(at::kOffsetY, Fi(static_cast<U>(S()[9]) << 3));` | round 0 |
+| 181 | `Sub5B_Lift` | `SH_CALL(MoveCmd_TestFB)(0x30, 0x70);` | `SH_CALL(MoveCmd_TestFB)(0x30, 0x71);` | round 1 |
+| 182 | `Sub5B_Reopen` | `    Part(2);     S()[9] = 0x5F; ` | `    Part(2);     S()[9] = 0x60; ` | round 14 |
+| 183 | `Sub5B_Reopen` | `SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x80);` | `SH_CALL(Flags_Clear)(At(at::kStoryFlags), 0x81);` | round 14 |
+| 184 | `Sub5B_Close` | `s[9] = static_cast<unsigned char>(s[9] - 1);` | `if (s[9] != 0) s[9] = static_cast<unsigned char>(s[9] - 1);` | round 49 |
+| 185 | `Sub5B_Close` | `    OffsetX(true, 2);     Part(0);     OffsetX(false, 3);` | `    OffsetX(true, 2);     Part(0);     OffsetX(false, 2);` | round 0 |
+| 186 | `Sub5B_DrawPart` | `Ftol(Fi(static_cast<U>(c[0]) << 6) + D(AddressOf(MapView_ScreenXY)))` | `Ftol((Fi(static_cast<U>(c[0]) << 6) + D(at::kOffsetX)) + D(AddressO...` | round 1 |
+| 187 | `Sub5B_DrawPart` | `SetV(8 * v + 4, Ftol(Fi((7u - c[2]) << 6) + D(at::kOffsetY)));` | `SetV(8 * v + 4, Ftol(Fi((6u - c[2]) << 6) + D(at::kOffsetY)));` | round 1 |
+| 188 | `Sub5B_DrawPart` | `D(at::kOffsetX) * 2.0);` | `D(at::kOffsetX) * D(at::kPieceScale));` | round 1 |
+| 189 | `Sub5B_DrawPart` | `SH_CALL(Prim_SetTexture)(UL(r + 0xC), p, 1);` | `SH_CALL(Prim_SetTexture)(UL(r + 0x10), p, 1);` | round 0 |
+| 190 | `Sub5B_DrawPart` | `I(j) <= I(*At(at::kParts5B + 2 * part + 1))` | `I(j) < I(*At(at::kParts5B + 2 * part + 1))` | round 0 |
+| 191 | `Sub5B_DrawPart` | `SetD(at::kScreenY, Fi((static_cast<U>(r[1]) << 7) - 0x4000u));     ...` | `SetD(at::kScreenY, Fi((static_cast<U>(r[1]) << 7) - 0x4040u));     ...` | round 0 |
+| 192 | `Sub44_Follow` | `SetUL(S() + 0x78, UL(at::kScreenY) ^ 1u);` | `CopyQuiet(S() + 0x78, At(at::kScreenY));` | round 0 |
+| 193 | `Sub44_Draw` | `} else if (clock < 0x391) {` | `} else if (clock < 0x390) {` | round 76 |
+| 194 | `Sub5A_SetTiles` | `at::kItemLink) & 0x1FF;` | `at::kItemLink) & 0xFFF;` | round 34 |
+| 195 | `Sub44_DrawStars` | `I(dz * dz) / 65536)` | `I(dz * dz) / 98304)` | round 6 |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
