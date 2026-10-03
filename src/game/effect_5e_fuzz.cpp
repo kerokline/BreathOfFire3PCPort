@@ -1,7 +1,7 @@
 // BOF3X_SHADOW=effect_5e: group E5E's 54 functions through the scenario harness
 // in effect mode (scenario_harness.h, docs/scenario_harness.md section 8), once
-// at start-up. docs/effect_5e.md section 4. BOF3X_E5E_ONLY=<name> runs the
-// clones whose name contains it (the controls' speed-up).
+// at start-up. docs/effect_5e.md section 4. BOF3X_E5E_ONLY=<name>,<name>,...
+// runs the clones it names exactly (the controls' speed-up).
 //
 // The clone table is tools/band_rows.py --group E5E --clones --harness scenario
 // (2026-10-03), each extent read again to its last instruction (capstone) and
@@ -332,13 +332,20 @@ void Disturb(U h) {
 }  // namespace
 
 void SelfTest() {
-    // BOF3X_E5E_ONLY: the clones whose name contains it (a control's run)
+    // BOF3X_E5E_ONLY: the clones it names, exactly, separated by commas (a
+    // control's run; several controls share a build)
     static sh::Clone chosen[kCount];
     static unsigned index[kCount];
     const char* const only = std::getenv("BOF3X_E5E_ONLY");
+    const auto named = [only](const char* name) {
+        const std::size_t length = std::strlen(name);
+        for (const char* p = only; (p = std::strstr(p, name)) != nullptr; p += length)
+            if ((p == only || p[-1] == ',') && (p[length] == ',' || p[length] == 0)) return true;
+        return false;
+    };
     unsigned n = 0;
     for (unsigned k = 0; k < kCount; ++k)
-        if (!only || !*only || std::strstr(kAll[k].name, only)) {
+        if (!only || !*only || named(kAll[k].name)) {
             index[n] = k;
             chosen[n++] = kAll[k];
         }
