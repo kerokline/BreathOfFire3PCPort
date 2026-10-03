@@ -182,16 +182,24 @@ constexpr unsigned kPacketsSize = 0x800;
 // in ours (DIV-0068), so the committed triangle's +0x10 is copied over both on
 // either side before the packet is compared.
 bool g_glow = false;
+// The triangle Gpu_SetPolyG3 last made (the harness's disturbance may move the
+// cursor before the commit, so the commit's cursor is not always it).
+unsigned char* g_triangle = nullptr;
+U FxTriangle(const U* a, U answer) {
+    g_triangle = P(a[0]);
+    return answer;
+}
 // Gfx_CommitPrim: the cursor += size (a byte) while the packet stays in the
 // buffer, as the harness's FxCommitPrim; the glow's depths levelled first.
 U FxCommit(const U* a, U answer) {
     unsigned char* const next = Gfx_PacketNext;
     unsigned char* const base = sh::Packets();
     const unsigned size = a[1] & 0xFF;
-    if (g_glow && size == 0x34 && sh::InRegions(next, 0x34)) {
-        std::memcpy(next + 0x20, next + 0x10, 4);
-        std::memcpy(next + 0x30, next + 0x10, 4);
+    if (g_glow && size == 0x34 && g_triangle != nullptr && sh::InRegions(g_triangle, 0x34)) {
+        std::memcpy(g_triangle + 0x20, g_triangle + 0x10, 4);
+        std::memcpy(g_triangle + 0x30, g_triangle + 0x10, 4);
     }
+    g_triangle = nullptr;
     if (next >= base && next + size + 0x40 <= base + kPacketsSize) Gfx_PacketNext = next + size;
     return answer;
 }
@@ -252,6 +260,7 @@ const sh::Callee kCallees[] = {
     // standard rows re-listed: the cursor with the glow's depths levelled;
     // Sprite_SetAnimation logging Sprite_Current; 0x59E930 filling the pixels
     {E3A_OURS(Gfx_CommitPrim), 2, {k8, k8}, kG, 0, 0, {0, 0}, &FxCommit, nullptr, true},
+    {E3A_OURS(Gpu_SetPolyG3), 1, {kW}, kG, 0, 0, {16}, &FxTriangle, nullptr, true},
     {E3A_OURS(Sprite_SetAnimation), 1, {k8}, kG, 0, 0, {}, &FxOnCurrent, nullptr, true},
     {"0x59E930", at::kStoreImage, at::kStoreImage, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
 };
