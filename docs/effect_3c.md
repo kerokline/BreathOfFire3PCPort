@@ -8,7 +8,7 @@ for E3C (`analysis/round13_cut.tsv`, the band `0x484050..0x485C50`) and one
 start no list of the cut has - kind 0x75's shared tail `0x485C60` (section 5).
 Each read to its last instruction with capstone and fuzzed through the
 scenario harness in effect mode ([`scenario_harness.md`](scenario_harness.md)
-section 8) without edits to it: 204,000 rounds, 0 mismatches; CONTROLS_SUMMARY.
+section 8) without edits to it: 204,000 rounds, 0 mismatches; 84 of 85 controls refused by a count, the other an equivalent mutant whose near variant is refused.
 **Fuzz only**: no recorded route enters any of the 51 (section 9).
 
 | Kind | Functions | Reached through |
@@ -220,10 +220,15 @@ fractional floats) / `_ProjectSize` (the point and the size's first word
 hashed, out two s16) / `_SetDiagonalOne`, `Gte_RotMatrixX` / `Y` / `Z`,
 `0x5A7C70`, `0x5A7570`, `Sprite_UpdateScreen` (`Sprite_Current` and its 0x80
 bytes logged), `MapView_LinkPrimAt` (the cursor moved two times in three),
-`Gfx_CommitPrim`, the `Gpu_*`; `_ftol` called for real on both sides. None is
-re-listed: the size `EffectKind6F_DrawSegment` hands `EffectGte_ProjectSize`
-has its second word written ({0x40, 0}) and the spark draw's two words are
-equal, so the standard first-word hash loses nothing. **The group's own**
+`Gfx_CommitPrim`, the `Gpu_*`; `_ftol` called for real on both sides.
+**Re-listed**: `EffectGte_ProjectPoint`, out filled as E2A's `FillFloat` does -
+fractional floats, and one time in eight a NaN (quiet or signalling) or a value
+past `_ftol`'s range: the standard row's floats never reach the integer
+indefinite nor the signalling NaN the particle draw's FPU copy turns quiet
+(control 21 is refused by it). `EffectGte_ProjectSize` is not re-listed: the
+size `EffectKind6F_DrawSegment` hands it has its second word written ({0x40,
+0}) and the spark draw's two words are equal, so the standard first-word hash
+loses nothing. **The group's own**
 called directly, listed by name: the three movers as `kFlag` (al read), the
 two finders answering the first free record or null (a quarter of the time
 null; the spark finder also leaves the cursor where the real one does), the
@@ -291,7 +296,105 @@ STAR_RESULTS
 
 ## 6. Controls
 
-CONTROLS_TABLE
+Planted one at a time by a scratch script (`controls.py`: each plant anchored on a
+unique string of `effect_3c.cpp`, rebuilt, run under `BOF3X_E3C_ONLY=<filter>`,
+the file restored and rebuilt at the end; the committed file has no switch).
+Counts are rounds refused of 4,000 per function run, in this worktree; every
+refused run exited 3. **84 of 85 refused by a count**; the one not refused
+(62) is an equivalent mutant - when the top equals the cap, `>` and `>=` both
+leave it at the cap - and its near variant (85: `>=` storing the cap + 1) is
+refused. Control 11 is refused in one round only: the finder's sixteenth
+record is the answer only when the fifteen before it are all in use (a fifth
+of the rounds seed the pool full, and the sixteenth is then free a third of
+the time - most rounds leave an earlier record free); refused, so left.
+
+| # | Run (`_ONLY`) | Plant | Refused |
+|--:|---|---|---|
+| 1 | `EffectKind6E_Run` | the dispatch through kind 0x6F's table | 4000 |
+| 2 | `EffectKind6E_Run` | the tail draw dropped | 4000 |
+| 3 | `EffectKind6E_Start` | +9 0xB5 | 4000 |
+| 4 | `EffectKind6E_Start` | bit 5 set | 2981 |
+| 5 | `EffectKind6E_Emit` | the rise 0x200001 | 1459 |
+| 6 | `EffectKind6E_Emit` | +0xC 0x200001 | 400 |
+| 7 | `EffectKind6E_EmitSlower` | the rise down 0x20000 | 1447 |
+| 8 | `EffectKind6E_EmitSlower` | the count not stepped | 4000 |
+| 9 | `EffectKind6E_Fade` | bit 0 cleared too | 682 |
+| 10 | `EffectKind6E_ShardInit` | +0x26 3 | 4000 |
+| 11 | `EffectKind6E_FindShard` | fifteen looked at | 1 |
+| 12 | `EffectKind6E_DrawShards` | shade -5 | 4000 |
+| 13 | `EffectKind6E_DrawShards` | the cursor not read again after the quad | 262 |
+| 14 | `EffectKind6D_Run` | through kind 0x6E's table | 4000 |
+| 15 | `EffectKind6D_Start` | +9 0xFE | 4000 |
+| 16 | `EffectKind6D_Move` | the release test inverted | 4000 |
+| 17 | `EffectKind6D_ClearParticles` | +0 = 1 | 4000 |
+| 18 | `EffectKind6D_MoveParticles` | gravity 0x50000 | 4000 |
+| 19 | `EffectKind6D_MoveParticles` | shape & 3 | 4000 |
+| 20 | `EffectKind6D_DrawParticle` | the fourth offset the third | 3515 |
+| 21 | `EffectKind6D_DrawParticle` | the depth copied by mov (no NaN quieting) | 117 |
+| 22 | `EffectKind6D_InitParticles` | shade 0x61 | 4000 |
+| 23 | `EffectKind6D_InitParticles` | box 1 +0xC -0x1000 | 3802 |
+| 24 | `EffectKind6D_InitParticles` | box 0 always | 3802 |
+| 25 | `EffectKind6F_Run` | through kind 0x6E's table | 4000 |
+| 26 | `EffectKind6F_Start` | state 3 for 2 | 759 |
+| 27 | `EffectKind6F_AlongZ` | z from 0x99000 | 4000 |
+| 28 | `EffectKind6F_AlongZ` | pushed along x | 4000 |
+| 29 | `EffectKind6F_AlongX` | x from 0x3D9000 | 4000 |
+| 30 | `EffectKind6F_AlongX` | flag 0x5C | 4000 |
+| 31 | `EffectKind6F_Watch` | sound 0x207 | 760 |
+| 32 | `EffectKind6F_PushParty` | facing 2 | 260 |
+| 33 | `EffectKind6F_PushParty` | facing 4 | 237 |
+| 34 | `EffectKind6F_PushParty` | bit 10 not tested | 150 |
+| 35 | `EffectKind6F_PushParty` | state 3 | 739 |
+| 36 | `EffectKind6F_DrawSegment` | frame & 3 | 1257 |
+| 37 | `EffectKind6F_DrawSegment` | angle + 0x401 | 4000 |
+| 38 | `EffectKind6F_DrawSegment` | dtd 0 | 4000 |
+| 39 | `EffectKind6F_DrawRibbon` | angle + 0x801 | 4000 |
+| 40 | `EffectKind6F_DrawRibbon` | 0x40 bytes copied | 4000 |
+| 41 | `EffectKind6F_DrawRibbon` | the b radius a's | 4000 |
+| 42 | `EffectKind72_Run` | through kind 0x74's table | 4000 |
+| 43 | `EffectKind72_Start` | +9 1 | 4000 |
+| 44 | `EffectKind72_Debris` | >= 0x44 | 127 |
+| 45 | `EffectKind72_Debris` | below 5 | 911 |
+| 46 | `EffectDebris_Draw` | blue v >> 2 | 1729 |
+| 47 | `EffectDebris_Draw` | the clamp at 0x100 | 486 |
+| 48 | `EffectDebris_Draw` | the turn's sign | 4000 |
+| 49 | `EffectDebris_InitOne` | scale 9 + | 4000 |
+| 50 | `EffectDebris_InitOne` | Math_Sin(0x10) | 4000 |
+| 51 | `EffectKind73_Run` | through 73B's table | 4000 |
+| 52 | `EffectKind73_RunA` | through kind 0x72's table | 4000 |
+| 53 | `EffectKind73A_Start` | +9 0x41 | 3978 |
+| 54 | `EffectKind73A_Emit` | every eighth | 861 |
+| 55 | `EffectKind73A_Fade` | the test inverted | 4000 |
+| 56 | `EffectKind73_RunB` | through kind 0x6D's table | 4000 |
+| 57 | `EffectKind73B_Burst` | angle n + 1 | 3200 |
+| 58 | `EffectKind73B_Burst` | +0xB inverted | 4000 |
+| 59 | `EffectKind73B_Fade` | the test inverted | 4000 |
+| 60 | `EffectKind74_Run` | through kind 0x75's table | 4000 |
+| 61 | `EffectKind74_Start` | width + 1 | 4000 |
+| 62 | `EffectKind74_Rise` | cap at >= | **not refused** (exit 0, equivalent) |
+| 63 | `EffectKind74_Rise` | turn 0xFF00 | 4000 |
+| 64 | `EffectKind74_Fade` | width - 0xFFFFF | 3595 |
+| 65 | `EffectKind74_Draw` | step 0x100001 | 3082 |
+| 66 | `EffectKind74_Draw` | v 0xE1 | 3813 |
+| 67 | `EffectKind74_Draw` | the floor + 1 | 3992 |
+| 68 | `EffectKind73_SparkInit` | colour bits 6 | 4000 |
+| 69 | `EffectKind73_FindSpark` | the cursor off by one | 2939 |
+| 70 | `EffectKind73_ClearSparks` | thirty-one cleared | 4000 |
+| 71 | `EffectKind73_MoveSparks` | shade -3 | 4000 |
+| 72 | `EffectKind73_MoveSparks` | spread << 7 | 2959 |
+| 73 | `EffectKind73_MoveSparks` | the cursor not read again after the draw | 820 |
+| 74 | `EffectKind73_DrawSpark` | v 0x4E | 4000 |
+| 75 | `EffectKind73_DrawSpark` | green on bit 2 | 1970 |
+| 76 | `EffectKind73_DrawSpark` | the last corner + w | 3455 |
+| 77 | `EffectKind75_Run` | through kind 0x72's table | 4000 |
+| 78 | `EffectKind75_Start` | +9 0xE | 4000 |
+| 79 | `EffectKind75_Brighten` | blue + 6 | 3589 |
+| 80 | `EffectKind75_Brighten` | state 1 kept | 405 |
+| 81 | `EffectKind75_Hold` | the tile dropped | 4000 |
+| 82 | `EffectKind75_MarkSprites` | +0x29 4 | 3995 |
+| 83 | `EffectKind75_MarkSprites` | pose 6 or more | 3996 |
+| 84 | `EffectKind75_MarkSprites` | Sprite_Current not put back | 3998 |
+| 85 | `EffectKind74_Rise` | cap at >=, the cap + 1 (62's near variant) | 2363 |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
