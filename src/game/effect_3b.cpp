@@ -945,15 +945,16 @@ extern "C" void __cdecl EffectKind69_DrawGlow(void) {
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
         Fild(S16(Word(S() + 0x2E)), p + 8);
         Fild(S16(Word(S() + 0x30)), p + 0xC);
-        U v = Sar(Mul(SH_CALL(Math_Sin)(static_cast<int>(a)), UL(at::kScale)), 12);
-        Fild(v + S16(Word(S() + 0x2E)), p + 0x18);
-        v = Sar(Mul(SH_CALL(Math_Cos)(static_cast<int>(a)), UL(at::kScale)), 12);
-        Fild(v + S16(Word(S() + 0x30)), p + 0x1C);
+        // each answer scaled by DamageScratch read after its call
+        int t = SH_CALL(Math_Sin)(static_cast<int>(a));
+        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(Word(S() + 0x2E)), p + 0x18);
+        t = SH_CALL(Math_Cos)(static_cast<int>(a));
+        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(Word(S() + 0x30)), p + 0x1C);
         a += 0x200;
-        v = Sar(Mul(SH_CALL(Math_Sin)(static_cast<int>(a)), UL(at::kScale)), 12);
-        Fild(v + S16(Word(S() + 0x2E)), p + 0x28);
-        v = Sar(Mul(SH_CALL(Math_Cos)(static_cast<int>(a)), UL(at::kScale)), 12);
-        Fild(v + S16(Word(S() + 0x30)), p + 0x2C);
+        t = SH_CALL(Math_Sin)(static_cast<int>(a));
+        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(Word(S() + 0x2E)), p + 0x28);
+        t = SH_CALL(Math_Cos)(static_cast<int>(a));
+        Fild(Sar(Mul(t, UL(at::kScale)), 12) + S16(Word(S() + 0x30)), p + 0x2C);
         const unsigned char level = S()[0xA];
         p[4] = static_cast<unsigned char>(level << 3);
         p[5] = static_cast<unsigned char>(level << 3);
@@ -1021,14 +1022,18 @@ extern "C" void __cdecl EffectKind6C_Live(void) {
 // 4.
 extern "C" void __cdecl EffectKind6C_ScatterSparks(void) {
     SetUL(at::kSparkCursor, at::kSparks);
-    for (unsigned n = at::kSparkCount; n != 0; --n) {
+    for (unsigned left = at::kSparkCount; left != 0; --left) {
         SetUL(Spark() + 4, UL(S() + 0x34));
         SetUL(Spark() + 8, UL(S() + 0x38));
         SetUL(Spark() + 0xC, UL(S() + 0x3C));
         const U distance = (static_cast<U>(SH_CALL(Rand)()) & 0x7F) << 2;
         const U angle = ((static_cast<U>(SH_CALL(Rand)()) & 0x3FF) + 0x200) & 0xFFFF;
-        SetUL(Spark() + 0x14, Sar(Mul(SH_CALL(Math_Cos)(static_cast<int>(angle)), distance), 7));
-        SetUL(Spark() + 0x18, Sar(Mul(SH_CALL(Math_Sin)(static_cast<int>(angle)), distance), 7));
+        // the cursor read after each call (kept out of the call's expression:
+        // C++ leaves the order of an expression's operands open)
+        const int c = SH_CALL(Math_Cos)(static_cast<int>(angle));
+        SetUL(Spark() + 0x14, Sar(Mul(c, distance), 7));
+        const int n = SH_CALL(Math_Sin)(static_cast<int>(angle));
+        SetUL(Spark() + 0x18, Sar(Mul(n, distance), 7));
         Spark()[0] = 1;
         Spark()[1] = 0;
         SetWord(Spark() + 0x24, 0);
