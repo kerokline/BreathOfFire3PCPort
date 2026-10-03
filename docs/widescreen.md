@@ -298,7 +298,7 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
   | `0x507BDC` | `0x507BC0` (hidden, host `0x5073D0`) | E5E (**widened** 2026-10-03, `EffectKind18Sub3F_WhiteOut`) | a world-2 overlay's step: an opaque white POLY_F4 over the frame, sound `0x202`, then a scene call (a white-out) |
   | `0x507CE3` | `0x507CB0` | E5E (**widened** 2026-10-03, `EffectKind18Sub3F_DrawSky`) | a POLY_G4 gradient over the frame, two 15-bit colours from the argument (a sky, like `Gfx_DrawSkyGradient`) |
   | `0x50B4B5` | `0x50B480` (hidden, host `0x50B220`) | E5G (**widened** 2026-10-03, `EffectKind18Sub36_Pulse`) | `EffectKind18_States`: a semi-transparent POLY_F4 `(0, 0x30, b)` over the frame, b from a 4-step table - a pulsing blue tint |
-  | `0x50F7B5` | `0x50F780` (hidden, host `0x50F590`) | E6B | the same pulsing tint, its own table |
+  | `0x50F7B5` | `0x50F780` (hidden, host `0x50F590`) | E6B (**widened** 2026-10-03, `EffectKind18Sub54_Pulse`) | the same pulsing tint, its own table |
 
   Each is a plain full-frame fill, so when its group's wave takes it, the
   fill moves to `Widescreen_FillX()` / `Widescreen_FillWidth()` (§3c) -
