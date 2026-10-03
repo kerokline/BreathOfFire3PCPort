@@ -88408,3 +88408,530 @@ count = 8
 status = "evidence"
 evidence = "read 2026-09-29 (round thirteen group E2A): EffectKind2D_Run 0x472420 by +1: _Start, _Spin, _Pause, _Open, _Pour, _Close, _Lift, _End; kind 0x2F's table (E2B's 0x4731A0 indexes it) follows at 0x6543D8. The count is the table's own length to the next table a dispatcher names, no compare. docs/effect_2a.md."
 
+[[func]]
+pc = 0x4823D0
+name = "EffectKind63_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4823D0..0x4823E1 (0x12 bytes), cdecl: jmp [EffectKind63_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x63] (0x6554DC); hidden in E3A's 0x482360. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x4823F0
+name = "EffectKind63_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4823F0..0x482462 (0x73 bytes), cdecl: the point +0x34 / +0x38 = (0x240000, 0x418000), AreaMap_Elevation(x, z) to the word +0x3E, +0x18 = 0, +0x5C = 0x3D, +1 = 1, +0x5D..+0x5F = 0 (eax cleared after the call). Reached by EffectKind63_States[0]; hidden in E3A's 0x482360. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482470
+name = "EffectKind63_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482470..0x4824D3 (0x64 bytes), cdecl: EffectGte_ProjectPoint(+0x34, +0x74), EffectKind63_DrawDisc(the word +0x18, 0xFF, +0x5C); +0x18 += 5, +0x5C += 2; past 0x190 (signed) +9 = 0xF and +1 up. Reached by EffectKind63_States[1]; hidden in E3A's 0x482360. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x4824E0
+name = "EffectKind63_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4824E0..0x482546 (0x67 bytes), cdecl: the point projected, EffectKind63_DrawDisc(+0x18, 0xFF, 0xFF); +9 down, at 0 +0x5D..+0x5F = 0x60 and +1 up. Reached by EffectKind63_States[2]; hidden in E3A's 0x482360. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482550
+name = "EffectKind63_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482550..0x4825C5 (0x76 bytes), cdecl: the point projected, the disc (+0x18, 0xFF, +0x5C), E4D's 0x48CA90 (a full-screen tint in +0x5D..+0x5F), EffectKind63_RefreshSprites; +0x18 -= 10, +0x5C -= 2; at 0 or below the counter byte 0x903848 up and +1 up. Reached by EffectKind63_States[3]; hidden in E3A's 0x482360. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x4825D0
+name = "EffectKind63_WaitCue"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4825D0..0x4825F5 (0x26 bytes), cdecl: the counter 0x903848 at 0x2B: +9 = 0x10, +1 = 5; then 0x48CA90 and a tail jmp to EffectKind63_RefreshSprites. Reached by EffectKind63_States[4]; hidden in E3A's 0x482360. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482600
+name = "EffectKind63_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482600..0x482647 (0x48 bytes), cdecl: +9 down; not 0: +0x5D..+0x5F each down 6; 0: +1 = 6; then 0x48CA90 and a tail jmp to EffectKind63_RefreshSprites. Reached by EffectKind63_States[5]; hidden in E3A's 0x482360. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482650
+name = "EffectKind63_End"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482650..0x4826A3 (0x54 bytes), cdecl: ObjTrio + 0x14C * i +0x29 = 6 for each i below Field_MemberCount (byte, unchecked: past the three records the original writes what follows; ours aborts), Sprite_Current written back, Effect_Release. Reached by EffectKind63_States[6]; hidden in E3A's 0x482360. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x4826B0
+name = "EffectKind63_RefreshSprites"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4826B0..0x482733 (0x84 bytes), cdecl: Sprite_Current saved; set to each of the thirty Sprite_Objects records, a live one (+0 bit 0) +0x29 = 5 and Sprite_UpdateScreen; then each ObjTrio member below Field_MemberCount (read again after each call) the same; Sprite_Current restored. Reached by called by EffectKind63_Shrink, tail-jumped to by _WaitCue and _FadeOut. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482740
+name = "EffectKind63_DrawDisc"
+ret = "void"
+params = "unsigned radius, unsigned centre, unsigned rim"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482740..0x4828AC (0x16D bytes), cdecl: a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 1) in slot 1 and 32 semi-transparent POLY_G3s in slot 1: the centre the floats +0x74 / +0x78 (copied as dwords) and +0x7C (fld / fst), shade the low byte of centre; the rim at a and a + 0x80 (a = 0..0xF80): cos / sin * the s16 radius sar 12 fild-added to x / y, shade the low byte of rim. The angle lives in the first argument's slot. Reached by called by EffectKind63_Grow, _Hold, _Shrink. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x4828B0
+name = "EffectKind65_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4828B0..0x4828C1 (0x12 bytes), cdecl: jmp [EffectKind65_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x65] (0x6554E4); hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x4828D0
+name = "EffectKind65_WaitRequest"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4828D0..0x4828E2 (0x13 bytes), cdecl: Field_Request 3: +1 = 1. Reached by EffectKind65_States[0]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x4828F0
+name = "EffectKind65_Check"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4828F0..0x482924 (0x35 bytes), cdecl: nothing while Field_Request is 3; else the dword 0x904134 % 5 (div, unsigned) not 0: +1 = 0; 0: ScriptFlags_Set40, +1 = 2. Reached by EffectKind65_States[1]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482930
+name = "EffectKind65_WaitInput"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482930..0x482966 (0x37 bytes), cdecl: Input_Held not 0: Sound_PlayEffect(0x202), Flags_Toggle(0x904030, 0x4F), +9 = 0x3C, +1 = 3. Reached by EffectKind65_States[2]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482970
+name = "EffectKind65_Shake"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482970..0x4829C1 (0x52 bytes), cdecl: +9 down; 0: Msg_OpenScript(1), Field_Request = 2, +1 = 4; else MapView_Redraw = 2 and Camera_ShiftY += 4 * the signed byte EffectKind65_ShakeSteps[+9 & 3]. Reached by EffectKind65_States[3]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x4829D0
+name = "EffectKind65_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x4829D0..0x4829F4 (0x25 bytes), cdecl: Field_Request not 2: ScriptFlags_Clear40, Sound_PlayEffect(0x206), +1 = 0. Reached by EffectKind65_States[4]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482A00
+name = "EffectKind67_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482A00..0x482A11 (0x12 bytes), cdecl: jmp [EffectKind67_States + +1 * 4], unbounded (the table: EffectKind54_Start, EffectKind67_SpawnKind13, BareRet). Reached by Effect_KindHandlers[0x67] (0x6554EC); hidden in 0x482740 (the cut's tier hypothesis; read: effect code). Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482A20
+name = "EffectKind67_SpawnKind13"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482A20..0x482A71 (0x52 bytes), cdecl: Effect_FindFree's byte to 0x903850; not 0xFF: that record +0 = 1, +5 = 0x13, +0x64 = -0x386, +0x68 = the s16 at Camera_Angles + 2, +0x6C = 0xE2, +9 = 0x1E. Its own +1 is not moved. Reached by EffectKind67_States[1]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482A80
+name = "EffectKind69_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482A80..0x482AAD (0x2E bytes), cdecl: call [esp + +1 * 4] of a stack table {EffectKind69_Spawn, _WaitParts, _PartRun}, unbounded. Reached by Effect_KindHandlers[0x69] (0x6554F4); hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482AB0
+name = "EffectKind69_Spawn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482AB0..0x482BA3 (0xF4 bytes), cdecl: Sprite_Current to 0x676268; nine records from Effect_FindFree (0xFF not tested: the original writes past the pool; ours aborts), each +0 = 1, +5 = 0x69, +1 = 2, +3 = 0: +2 = 0; +2 = 1 with +4 = 0..3; +2 = 2 with +4 = 0..3; own +0xB = 0, +1 up, Sound_PlayEffect(0x203). Reached by EffectKind69_Run's stack table [0]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482BB0
+name = "EffectKind69_WaitParts"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482BB0..0x482BC0 (0x11 bytes), cdecl: +0xB at 9: a tail jmp to Effect_Release. Reached by EffectKind69_Run's stack table [1]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482BD0
+name = "EffectKind69_PartRun"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482BD0..0x482BE1 (0x12 bytes), cdecl: jmp [EffectKind69_Parts + +2 * 4], unbounded. Reached by EffectKind69_Run's stack table [2]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482BF0
+name = "EffectKind69_Part0"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482BF0..0x482C2C (0x3D bytes), cdecl: call [EffectKind69_Part0Steps + +3 * 4] (unbounded), EffectKind69_UpdateScreenXY; +3 not 0 (read again): EffectKind69_PushPointMatrix, EffectKind69_DrawColumn(0x60, 0x20, 7), a tail jmp to Gte_PopMatrix. Reached by EffectKind69_Parts[0]; hidden in 0x482740. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482C30
+name = "EffectKind69_PushPointMatrix"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482C30..0x482CDD (0xAE bytes), cdecl: Gte_PushMatrix; a stack MATRIX: Gte_RotTrans of the SVECTOR (x +0x34 sar 9 - 0x4000, z +0x38 sar 9 - 0x4000, -(s16 +0x3E / 2)) into its translation, Gte_RotMatrix of (0, 0, 0x400; 0 with +8 bit 0), Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix. Reached by called by EffectKind69_Part0, _Part1, _Part2. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482CE0
+name = "EffectKind69_Part0Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482CE0..0x482D4F (0x70 bytes), cdecl: +0xB = Rand() & 0xF, +9 = +0xA = 0, x / z the parent's (0x676268), AreaMap_Elevation to the word +0x3E, +3 up. Reached by EffectKind69_Part0Steps[0]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482D50
+name = "EffectKind69_Part0Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482D50..0x482D7C (0x2D bytes), cdecl: +0xB up; +0xA += 2 below 0x12, else +9 = 0x3C and +3 up. Reached by EffectKind69_Part0Steps[1]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482D80
+name = "EffectKind69_Part0Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482D80..0x482DA9 (0x2A bytes), cdecl: +0xB up, +9 down, at 0 +3 up. Reached by EffectKind69_Part0Steps[2]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482DB0
+name = "EffectKind69_Part0Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482DB0..0x482DE3 (0x34 bytes), cdecl: +0xB up, +0xA down; at 0 the parent's +0xB up and a tail jmp to Effect_Release. Reached by EffectKind69_Part0Steps[3]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482DF0
+name = "EffectKind69_Part1"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482DF0..0x482E31 (0x42 bytes), cdecl: call [EffectKind69_Part1Steps + +3 * 4] (unbounded), EffectKind69_UpdateScreenXY; +3 not 0: EffectKind69_PushPointMatrix, EffectKind69_DrawColumn(0x20, 0x50, 0x1F), EffectKind69_DrawGlow, a tail jmp to Gte_PopMatrix. Reached by EffectKind69_Parts[1]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482E40
+name = "EffectKind69_Part1Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482E40..0x482EF6 (0xB7 bytes), cdecl: +0xB = Rand() & 0xF, +9 = +0xA = 0, +0xC = +4 << 5; DamageScratch = 0x20, 0x903854 = (+0xC & 0x7F) << 5; x = Math_Cos * DamageScratch + the parent's x, z = Math_Sin(0x903854) * DamageScratch + its z (both cells read again); the parent's height; +3 up. Reached by EffectKind69_Part1Steps[0]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482F00
+name = "EffectKind69_Part1Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482F00..0x482F2C (0x2D bytes), cdecl: +0xB up; +0xA += 2 below 0x10, else +9 = 0x3C and +3 up. Reached by EffectKind69_Part1Steps[1]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482F30
+name = "EffectKind69_Part1Orbit"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482F30..0x482FCC (0x9D bytes), cdecl: +0xB up, +0xC up, the orbit of radius 0x20 round the parent (as _Part1Place); +9 down, at 0 +3 up. Reached by EffectKind69_Part1Steps[2]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x482FD0
+name = "EffectKind69_Part1Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x482FD0..0x483076 (0xA7 bytes), cdecl: +0xB up, +0xC up, the orbit at 0x20; +0xA down, at 0 the parent's +0xB up and a tail jmp to Effect_Release. Reached by EffectKind69_Part1Steps[3]; hidden in 0x482C30. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483080
+name = "EffectKind69_DrawColumn"
+ret = "void"
+params = "unsigned width, unsigned base, unsigned spread"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483080..0x48353C (0x4BD bytes), cdecl: a draw mode (0x35, dtd 1) in slot 2; for i = 1..0x11 a ring at y = Math_Sin(((+0xB + i) & 0xF) << 8) * R sar 12 (R = s16 base +/- (Rand() & s16 spread), Rand bit 0 the sign), z = -64 i, the previous ring kept, in Prim_VertexScratch (x 0); four semi-transparent POLY_G4s (Gte_RotTransPers4, Gte_PrimDepths4_10B, slot 2, 0x44) offset by the low word of width, shaded from 7 * +0xA (0x903858, re-read) and 13 * +0xA, the first ring 1; the rest of a ring skipped unless the float at 0x5C41DC is below the first quad's third y (or unordered). Reached by called by EffectKind69_Part0, _Part1. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483540
+name = "EffectKind69_Part2"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483540..0x483578 (0x39 bytes), cdecl: call [EffectKind69_Part2Steps + +3 * 4] (unbounded), EffectKind69_UpdateScreenXY; +3 not 0: EffectKind69_PushPointMatrix, 0x4837B0 (catalog part 6, no group), EffectKind69_DrawGlow, a tail jmp to Gte_PopMatrix. Reached by EffectKind69_Parts[2]; hidden in 0x483080. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483580
+name = "EffectKind69_Part2Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483580..0x483639 (0xBA bytes), cdecl: as EffectKind69_Part1Place with +0xC = (+4 << 5) + 0x10 and radius 0x18. Reached by EffectKind69_Part2Steps[0]; hidden in 0x483080. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483640
+name = "EffectKind69_Part2Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483640..0x48365F (0x20 bytes), cdecl: +0xA += 2 below 0x10, else +9 = 0x3C and +3 up (no +0xB step). Reached by EffectKind69_Part2Steps[1]; hidden in 0x483080. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483660
+name = "EffectKind69_Part2Orbit"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483660..0x4836FC (0x9D bytes), cdecl: +0xB up, +0xC up, the orbit at radius 0x10; +9 down, at 0 +3 up. Reached by EffectKind69_Part2Steps[2]; hidden in 0x483080. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483700
+name = "EffectKind69_Part2Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483700..0x4837A7 (0xA8 bytes), cdecl: +0xB up, +0xC up, the orbit at 0x18; +0xA -= 2, at 0 the parent's +0xB up and a tail jmp to Effect_Release. Reached by EffectKind69_Part2Steps[3]; hidden in 0x483080. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483970
+name = "EffectKind69_DrawGlow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483970..0x483AF4 (0x185 bytes), cdecl: DamageScratch = (Rand() & 7) + 3 * +0xA; a draw mode (0x35, dtd 1) in slot 2; eight semi-transparent POLY_G3s in slot 2 round the screen point (s16 +0x2E, +0x30): centre shaded (+0xA << 3, +0xA << 3, 6 * +0xA), the rim at a and a + 0x200 (Math_Sin / Math_Cos * DamageScratch sar 12 + the point, fild) shaded 1. Reached by called by EffectKind69_Part1, _Part2. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483B00
+name = "EffectKind69_UpdateScreenXY"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483B00..0x483B94 (0x95 bytes), cdecl: BattleActor_UpdateScreenXY's shape (0x4FBD10, the same 0x95 bytes): the point's SVECTOR, Gpu_SetTile1(Gfx_PacketNext) never committed, Gte_RotTransPers(v, prim + 8, ..), Gte_StoreDepthF(prim + 0x10), the floats at prim + 8 / + 0xC through _ftol 0x5B9550 to the words +0x2E / +0x30. Reached by called by EffectKind69_Part0, _Part1, _Part2. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483BA0
+name = "EffectKind6C_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483BA0..0x483BB1 (0x12 bytes), cdecl: jmp [EffectKind6C_States + +1 * 4], unbounded. Reached by Effect_KindHandlers[0x6C] (0x655500); hidden in 0x483B00. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483BC0
+name = "EffectKind6C_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483BC0..0x483BF3 (0x34 bytes), cdecl: the point (0xB8000, 0x548000, 0x1000000), EffectKind6C_ScatterSparks, +1 up. Reached by EffectKind6C_States[0]; hidden in 0x483B00. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483C00
+name = "EffectKind6C_Live"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483C00..0x483C0E (0xF bytes), cdecl: EffectKind6C_DrawSparks answering al 0: a tail jmp to Effect_Release. Reached by EffectKind6C_States[1]; hidden in 0x483B00. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483C10
+name = "EffectKind6C_ScatterSparks"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483C10..0x483D00 (0xF1 bytes), cdecl: the cursor 0x67626C = EffectKind30_Shards, then sixteen records of 0x28 (cursor read for each access): +4 / +8 / +0xC Sprite_Current's +0x34 / +0x38 / +0x3C, d = (Rand() & 0x7F) << 2, a = (Rand() & 0x3FF) + 0x200, +0x14 = Math_Cos(a) * d sar 7, +0x18 = Math_Sin(a) * d sar 7, +0 = 1, +1 = 0, the word +0x24 = 0, +3 = 0x40, +0x26 = 7, +2 = 4. Reached by called by EffectKind6C_Start and by E3C's 0x484070. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483D10
+name = "EffectKind6C_DrawSparks"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483D10..0x483D92 (0x83 bytes), cdecl: EffectGte_LoadMapCamera, a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 0) in slot 2; for the sixteen spark records (the cursor 0x67626C stepped) each live one: call [EffectKind6C_SparkStates + +1 * 4] (unbounded), EffectKind6C_DrawSpark(cursor), the cursor read back; al 1 when any was live. Reached by called by EffectKind6C_Live. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483DA0
+name = "EffectKind6C_DrawSpark"
+ret = "void"
+params = "unsigned char *spark"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483DA0..0x483F97 (0x1F8 bytes), cdecl: a semi-transparent POLY_FT4: EffectGte_ProjectPoint(+4) then EffectGte_ProjectSize(+4, (w, h) = the word +0x24 twice, into the same words); corners x - (w sar 1) .. + w, y - (h sar 1) .. + h (fild / fsubr / fiadd), the depth copied, u 0xE0 / 0xFF, v 0x30 / 0x4F, Gpu_GetClut(0x50, 0x1E3), Gpu_GetTPage(0, 1, 0x2C0, 0x100), r / g / b the spark's +3 where +0x26 has bit 2 / 1 / 0; slot 2, 0x48. Reached by called by EffectKind6C_DrawSparks and by E3C's 0x4841E0. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x483FA0
+name = "EffectKind6C_SparkFly"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x483FA0..0x483FF4 (0x55 bytes), cdecl: the spark at the cursor 0x67626C: +4 += +0x14 << 1, +8 += +0x18 << 1, the word +0x24 += 0x80; +2 down, at 0 +2 = 0x40 and +1 up. Reached by EffectKind6C_SparkStates[0]; hidden in 0x483DA0. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[func]]
+pc = 0x484000
+name = "EffectKind6C_SparkFade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_3b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E3B, capstone to the last instruction), 0x484000..0x484049 (0x4A bytes), cdecl: the spark at the cursor: +4 += +0x14, +8 += +0x18, +3 down, +2 down, at 0 +0 = 0. Reached by EffectKind6C_SparkStates[1]; hidden in 0x483DA0. Fuzz only: no recorded route enters it (catalog reach columns empty, no calltrace). docs/effect_3b.md."
+
+[[data]]
+pc = 0x6549B8
+name = "EffectKind63_States"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind63_Run 0x4823D0 by +1: _Start, _Grow, _Hold, _Shrink, _WaitCue, _FadeOut, _End; each steps +1 to the next (_WaitCue to 5, _FadeOut to 6). EffectKind65_States follows. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x6549D4
+name = "EffectKind65_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind65_Run 0x4828B0 by +1: _WaitRequest, _Check, _WaitInput, _Shake, _Close. EffectKind65_ShakeSteps (four bytes) follows. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x6549E8
+name = "EffectKind65_ShakeSteps"
+ctype = "signed char"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind65_Shake 0x482970 reads one signed byte by +9 & 3 (movsx) and adds four times it to Camera_ShiftY. docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x6549EC
+name = "EffectKind67_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind67_Run 0x482A00 by +1: EffectKind54_Start (E2G's: +9 = 0, +1 = 1), EffectKind67_SpawnKind13 (which never moves +1), BareRet. EffectKind69_Parts follows. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x6549F8
+name = "EffectKind69_Parts"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind69_PartRun 0x482BD0 by +2 (jmp): _Part0, _Part1, _Part2 - the part roles EffectKind69_Spawn sets. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x654A04
+name = "EffectKind69_Part0Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind69_Part0 0x482BF0 by +3 (call): _Part0Place, _Part0Grow, _Part0Hold, _Part0Fade. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x654A14
+name = "EffectKind69_Part1Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind69_Part1 0x482DF0 by +3 (call): _Part1Place, _Part1Grow, _Part1Orbit, _Part1Fade. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x654A24
+name = "EffectKind69_Part2Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind69_Part2 0x483540 by +3 (call): _Part2Place, _Part2Grow, _Part2Orbit, _Part2Fade. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x654A34
+name = "EffectKind6C_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind6C_Run 0x483BA0 by +1: _Start, _Live. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x654A3C
+name = "EffectKind6C_SparkStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind6C_DrawSparks 0x483D10 by a spark record's +1 (call): _SparkFly, _SparkFade. The next cell, 0x654A44, is the table E3C's 0x484050.. indexes. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher indexes, checked by hand (a raw scan of the image for each cell address). docs/effect_3b.md section 3."
+
+[[data]]
+pc = 0x676268
+name = "EffectKind69_Parent"
+ctype = "unsigned char *"
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E3B): EffectKind69_Spawn 0x482AB0 stores Sprite_Current; the parts read the parent's point and height through it and raise its +0xB as each ends (EffectKind69_WaitParts waits for 9). docs/effect_3b.md section 3."
