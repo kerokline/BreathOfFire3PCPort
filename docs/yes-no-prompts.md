@@ -206,7 +206,8 @@ gives the before picture with everything else equal.
 - With `BOF3X_LANG=en` the log shows the two retargets and four bytes on
   (`MasterAskLayout`, `ShopYesNoLayout` x 3, `TradeLeaveLayout`,
   `ShopAskRow`).
-- `BOF3X_SHADOW='*'` headless: see the branch's report.
+- `BOF3X_SHADOW='*'` headless, narrow, on `e4dcf99`: exit 0, no group with a
+  mismatch, no Fatal. Not run wide: nothing here touches what DIV-0041 widens.
 
 **Owed the owner's eye:** all four prompts on screen; whether the per-item
 "Is <item> OK?" should get the same treatment; the masters' headers' words.
