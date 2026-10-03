@@ -910,5 +910,80 @@ owner's eye: kind 0x90's tag `0x676294` never reset (the 256th record takes
 tag 0 and owns every free shard) and kind 0xA0's trail dots without a count
 (ours aborts past 0x400). **Live**: every function of the wave is fuzz-only.
 
-**Next**: wave five, `make_briefs.py <scratch> 5 <tip> band_edges_w2.txt`,
-E5A..E5G (333); E5D merges before E5C.
+## 16. Wave five (2026-10-03: launched about 15:15 from `0834edf`, merged 15:47..17:22)
+
+Seven Opus agents in worktrees: kind 0x18's sub-kinds (`EffectKind18_States`
+`0x65406C`). The briefs with wave four's addendum (when to re-list
+`EffectGte_ProjectSize`, DIV-0041's listed fills drawn through the
+widescreen fill, no ledger entry from a group). Each merge built and run in
+the detached verification worktree, the group's shadow and `'*'` narrow;
+every agent ran `'*'` narrow and with `BOF3X_WIDE=1` in its own worktree,
+all exit 0. The owner's `cc39306` (saves, documents, tools) landed on the
+branch during the wave and the merges went on top of it.
+
+| Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Sub-kinds of kind 0x18 |
+|---|---|---|--:|---|--:|---|
+| E5G | `ac50b75` | `58f93b8` | 24 | 78 / 77 / 1 | 8,127 | 0x2B, 0x2C, 0x36, 0x3A, 0x4A |
+| E5A | `e5be0d0` | `e033cca` | 51 + 4 (two cut rows already ours: the sky gradient and the sunset glow) | 55 / 55 / 0 | 8,182 | 0x04..0x08, 0x0A, 0x1A, 0x1F |
+| E5B | `036db72` | `5df598d` | 48 + 2 | 149 / 149 / 0 (five refused only after fuzz fixes; the other 144 not re-run under the final fuzz) | 8,232 | 0x0B..0x0F, 0x13, 0x4F |
+| E5F | `0ef7fd6` | `88afc5b` | 48 + 1 | 136 / 135 / 1 | 8,281 | 0x27..0x2A, 0x3C, 0x42, 0x48, 0x49, 0x4B / 0x4C |
+| E5E | `24e5506` | `41b635a` | 51 + 3 | 178 / 175 / 3 | 8,335 | 0x23..0x26, 0x39, 0x3F |
+| E5D | `f159a34` | `3a3ccd6` | 49 + 3 | 117 / 116 / 1 | 8,387 | 0x14, 0x18, 0x1C..0x1E, 0x21, 0x22, 0x43; the patch draw `0x503FA0` |
+| E5C | `ff710f7` | `c05c190` | 60 + 2 | 161 / 157 / 4 | 8,449 | 0x10..0x12, 0x15..0x17, 0x50, 0x56..0x58 |
+
+**346 functions, 8,103 -> 8,449**, every group 0 mismatches, 874 controls:
+864 refused by a count, 10 equivalent mutants each with a refused near
+variant (E5C's control 159 a mis-planted near variant of 104).
+
+**Then** `fix/tile-layering` merged in at the owner's word (DIV-0071) and
+the coordinator's pass (`e652bbe`): the harness's stand-in for
+`EffectKind18Sub17_DrawPatch` `0x503FA0` had its `Draw_PassFlags` test
+the wrong way round (E5D's reading: the original draws only with bit 2
+set) - corrected, so E5C's fifteen calls are fuzzed against the right one;
+`fold_names.py` two rows; `FishingText_Arm` once (a merge had doubled it
+again); `consolidate_entries.py` 9,099 entries; **DIV-0072** entered for
+E5F's `EffectKind18Sub4B_Run` (a stack word the original never writes, the
+owner's word owed); DIV-0041 amended for the three fills E5E and E5G
+widened. **The tip's proof** (`e652bbe`, scratch `verify_w5.log`):
+`scenario_harness_ekh`, `effect_5c`, `effect_5d`, `effect_5e`, `effect_5g`
+and `'*'` exit 0, 8,449 ours; `'*'` with `BOF3X_WIDE=1` exit 0;
+`ledger_check` 72 entries, 0 errors.
+
+**DIV-0071 on by default** (`f316416`, the owner's word once the tip
+checked out): `BOF3X_LAYERING` unset is the floor rule, `0` the original's
+order; `attract_run.py` and the `validate_*.sh` scripts pin it off, since an
+ours side with it on differs from Capcom's draw order by design. Seen
+running, not judged: `worldMapAndAreaTransition.txt` at `--speed 8` from
+that build to `done` with the rule logged on, and again with
+`BOF3X_LAYERING=0` and nothing logged; no CRASH or FATAL line. No launcher
+key yet.
+
+**What the wave learned**:
+
+- A stand-in written from a first reading can have a test backwards and
+  nothing shows until the owner of the function reads it: ask each group
+  whose function has a louder row whether the row matches.
+- `MapView_LinkPrimAt`'s dy is read as a signed byte (E5A): the standard
+  row compares the whole word. The `kEffectStd` row for `0x4FEE70` is
+  `kFlag` where the caller compares `eax`; the row for `0x509A70` (now
+  E5F's) took its first argument for a pointer - it is the variant byte.
+  For the next fold.
+- The live inference: DIV-0041's detail trace drew area 23's sunset through
+  `0x4FD350`, whose only caller is E5A's `0x4FD2E0` - sub-kind 1 runs on
+  `cutsceneAndNue.txt`, the first route into anything of waves three to five.
+
+**In no group, to place**: `0x4FEE70`, `0x4FEEB0` (E5A's band).
+
+**Debts from wave five**: the rebinding of E5C's 34 raw calls to E5D and
+E6A's tail jump into E5G's `0x50B8B0`; `scenario_harness_ekh.cpp` still
+copies `0x500D20` (`EffectKind18Sub0F_Open`) and E5A's `0x4FD470` by
+address; the table `0x65E034` shared by E5B and E5C, named by neither;
+E5B's `entries_logic.txt` line over five of E5C's starts, if the
+consolidation did not cut it; `tools/scenario_rows.py`'s `SE_ADDRS` lists
+`0x508000` and `0x5080A0` as chapter helpers where one is a `ChangeArea`
+coordinate (E5E); the widescreen survey's new items (DIV-0041's
+amendment); the latent defects to number. **Live**: fuzz-only but E5A's
+sub-kind 1 by inference.
+
+**Next**: wave six, `make_briefs.py <scratch> 6 <tip> band_edges_w2.txt`,
+E6A..E6D (196); E6A and E6C merge before E6B.
