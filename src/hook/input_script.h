@@ -28,4 +28,9 @@ void InputScript_Stop();
 // (BOF3X_ORIGINAL=Game_WinMain) keeps its RetargetCall'd site instead.
 void InputScript_Latch();
 
+// True from the latch that enters a recipe's `shot` step until the shot is
+// taken: WinMain's loop draws those frames even when it is running late
+// (BOF3X_SPEED, a stall), so the frame a shot saves is the one it names.
+bool InputScript_ShotPending();
+
 }  // namespace bof3

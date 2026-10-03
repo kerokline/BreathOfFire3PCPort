@@ -129,6 +129,10 @@ def main():
     ap.add_argument('--lang', default=None, help='BOF3X_LANG, e.g. en')
     ap.add_argument('--original', default=None, metavar='LIST', help='BOF3X_ORIGINAL')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
+    ap.add_argument('--speed', type=int, default=1, metavar='N',
+                    help='BOF3X_SPEED: N logic frames per frame of wall time (1..64). The recipe is frame-indexed, '
+                         'so it replays the same; shots are still drawn. Late frames are not drawn, so do not '
+                         'watch it')
     ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
                     help='another copy of the launcher, with its own bof3x.ini, bof3x.dll and bof3x.log beside it')
     ap.add_argument('--no-front', action='store_true',
@@ -166,6 +170,8 @@ def main():
         env['BOF3X_LANG'] = a.lang
     if a.original:
         env['BOF3X_ORIGINAL'] = a.original
+    if a.speed != 1:
+        env['BOF3X_SPEED'] = str(a.speed)
     for kv in a.env:
         k, _, v = kv.partition('=')
         env[k] = v

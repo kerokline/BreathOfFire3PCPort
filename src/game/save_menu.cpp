@@ -22,6 +22,7 @@
 //
 // Faithful: no divergence. Every call out goes through save_menu::g, so the
 // start-up fuzz can stand recorders in for the callees.
+#include "hook/run_speed.h"
 #include "game/save_menu.h"
 
 #include <cstdint>
@@ -302,6 +303,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     g.file_close(handle);
     if (Long(at::kStreamKind) != 0) {
         g.voice_play(At(Long(at::kStreamData)));
+        bof3::RunSpeed_StreamStarted();
         return;
     }
     if (Long(at::kFadeCount) != 0) {
@@ -311,6 +313,7 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     }
     g.music_start(At(Long(at::kStreamData)), static_cast<unsigned>(size), 0);
     g.music_volume(at::kStreamVolume);
+    bof3::RunSpeed_StreamStarted();
 }
 
 // 0x587A00 (PSX 0x80164890 reads its stream's byte). 1 once the last stream
@@ -320,6 +323,21 @@ extern "C" void __cdecl Sound_LoadStream(unsigned id) {
 extern "C" int __cdecl Sound_StreamDone(void) {
     if (Long(at::kStreamKind) != 0) return g.voice_playing() ^ 1;
     return g.music_playing() ^ 1;
+}
+
+// hook/run_speed.h: whether the stream Sound_LoadStream last started is still
+// playing - Sound_StreamDone's question, asked by WinMain's loop under
+// BOF3X_SPEED. The flag is ours (no game state) and drops once the stream
+// has stopped, so a stream nobody waits on costs a few status reads.
+namespace {
+bool g_stream_started = false;
+}
+void bof3::RunSpeed_StreamStarted() { g_stream_started = true; }
+void bof3::RunSpeed_StreamForget() { g_stream_started = false; }
+bool bof3::RunSpeed_StreamPlaying() {
+    if (!g_stream_started) return false;
+    if (Sound_StreamDone() != 0) g_stream_started = false;
+    return g_stream_started;
 }
 
 // ============================================================================

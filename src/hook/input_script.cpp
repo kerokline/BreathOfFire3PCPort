@@ -695,6 +695,10 @@ void InputScript_Start() {
     g_active = true;
 }
 
+bool InputScript_ShotPending() {
+    return g_active && g_scripted && g_index < g_steps.size() && g_steps[g_index].kind == Kind::Shot;
+}
+
 void InputScript_Latch() {
     if (g_rec) RecordingLatch();
     else if (g_scripted) ScriptedLatch();

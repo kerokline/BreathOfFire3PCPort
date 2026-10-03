@@ -532,7 +532,8 @@ _Verified 2026-09-24._
 - **Routes and captures:** `python tools/input_run.py tools/recipes/X.txt
   --out analysis/shots/X [--lang en] [--no-front]` - the game writes its own
   frames (`BOF3X_SHOT_DIR`, [`input-script.md`](input-script.md) §3); the
-  owner records with `BOF3X_RECORD`. Route A/Bs: `analysis/validate_combat.sh`,
+  owner records with `BOF3X_RECORD`. `--speed 8` runs a recipe fast (`BOF3X_SPEED`,
+  DIV-0048's tooling note: same frames, same shots; compare the `randlog` against an x1 run once per route). Route A/Bs: `analysis/validate_combat.sh`,
   `validate_shop.sh`, the world map's in [`world-map.md`](world-map.md).
 - **What the live runs cost:** `attract_run.py` and `input_run.py` append a line a run to
   `analysis/run_times.tsv` (start, tool, what, wall seconds, the recipe frame reached, status,
