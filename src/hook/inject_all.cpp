@@ -1089,7 +1089,6 @@ void InjectAll() {
                                 // harness's recorders, its seven sub-state tables swapped for the fuzz only; after
                                 // ScenarioHarnessEkh_Inject, whose self-test copies 0x500D20 by address; no module
                                 // patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
-    FishingText_Arm();         // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
     Effect5F_Inject();          // round 13 group E5F (0x508CC0..0x50AF8D: kind 0x18's sub-kinds 0x27, 0x28, 0x29, 0x2A,
                                 // 0x3C, 0x42, 0x48, 0x49 and 0x4B / 0x4C - dispatchers, states, draws): its clones'
                                 // calls re-aimed at the scenario harness's recorders, its eight state tables swapped for

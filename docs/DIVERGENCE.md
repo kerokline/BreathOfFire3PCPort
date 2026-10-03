@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 71 entries, DIV-0001..0071, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 72 entries, DIV-0001..0072, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2196,6 +2196,16 @@ designed in rather than bolted on.
   still 320 wide - to widen the same way. `EffectKind96_Pulse`'s quad
   `(0, 0)..(320, 320)`, its 320s from a register, is not widened (no
   spawner found).
+  **Wave five, the same day**: the next three are ours and widened the
+  same way - E5E's `EffectKind18Sub3F_WhiteOut` (`0x507BDC`) and
+  `EffectKind18Sub3F_DrawSky` (`0x507CE3`), E5G's
+  `EffectKind18Sub36_Pulse` (`0x50B4B5`; left corners at
+  `Widescreen_FillX()`, right at `320 + Widescreen_Fill()`), each fuzzed
+  against the original's 320 x 240 with the fill unarmed. `0x50F7B5`
+  (E6B's) is the last of the nine. Found by the wave and not widened:
+  sub-kind 0x15's 320-wide strips and gradients (E5C), the spiral
+  `0x505E60` centred on the constants 160 / 120 (E5D), the glow's cull
+  `0x4FF6A3` at Capcom's `[-60, 380]` (E5B), `0x5054E3` as above.
   **Manillo's backdrop, 2026-10-03** (the owner's catalogue,
   `manillo_will_that_be_all.png`: the trade screen's tiled fish pattern
   320 wide, black bands): `ItemTrade_DrawBackground` `0x5942C0` (ours
@@ -3817,3 +3827,35 @@ designed in rather than bolted on.
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
   sprite's verdict and what stopped it.
+
+### A panel's far corners from the quad's own x, where the original reads a stack word it never wrote
+
+- **ID:** DIV-0072
+- **Date:** 2026-10-03
+- **Subsystem:** effects (`EffectKind18Sub4B_Run` `0x50A510`, ours in
+  `src/game/effect_5f.cpp`; kind 0x18's sub-kinds 0x4B and 0x4C)
+- **Tier:** Forced
+- **Original behaviour:** on a frame of the draw pass the function builds
+  three shaded quads, quad k's corners at `x0 + 0xA00 k -/+ b`. It keeps
+  x0 in `ebp`, adds the quad's offset for the near corners, then reloads
+  `ebp` from `[esp + 0x20]` - a local no instruction of the function
+  writes - and builds the far corners' x (v1, v3) from it; from the second
+  quad on `ebp` is that word, so all four corners' x come from it. The far
+  corners of the first quad and the whole of the other two sit wherever
+  the caller's stale stack puts them.
+- **New behaviour:** ours uses x0 for that word: v0 / v2 at
+  `x0 + 0xA00 k - b`, v1 / v3 at `x0 + 0xA00 k + b`, each quad symmetric
+  about its column. Every other byte of every primitive is the original's.
+- **Rationale:** a stack word the function never writes cannot be
+  reproduced, only replaced (DIV-0023's and DIV-0068's class). x0 is the
+  base the near corners already use and the only x the function computes.
+- **Also in the PSX version?** Not read; the pairs give `0x801F38F0`, an
+  AREA overlay copy.
+- **Verification:** `BOF3X_SHADOW=effect_5f` headless: the fuzz levels
+  those x words on both sides and compares every other byte, 0 mismatches
+  ([`effect_5f.md`](effect_5f.md) sections 4 and 7). Not seen live: no
+  recorded route reaches sub-kinds 0x4B / 0x4C.
+- **Reversible?** `BOF3X_ORIGINAL=EffectKind18Sub4B_Run` runs Capcom's
+  function, its stale word included.
+- **The owner's word:** owed (entered by the coordinator, 2026-10-03, from
+  E5F's report).

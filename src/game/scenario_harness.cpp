@@ -37,6 +37,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_gte.h"
+#include "game/effect_5d.h"
+#include "game/effect_5f.h"
 #include "game/effect_4b.h"
 #include "game/effect_2f.h"
 #include "game/effect_1b.h"
@@ -852,12 +854,13 @@ std::uint32_t FxBoxPrims(const std::uint32_t*, std::uint32_t answer) { Drew(0x80
 // 0x468AC0 (x, y, bits): three boxes 0x468BB0 (x + 0x30 i, y, bit i of the byte)
 // and three Text_DrawAt lines; 0xC0 of its own, as above.
 std::uint32_t FxPanelPrims(const std::uint32_t*, std::uint32_t answer) { Drew(0xC0); return answer; }
-// 0x503FA0 (variant): nothing when Draw_PassFlags has bit 2; else sixteen
+// 0x503FA0 (variant): nothing unless Draw_PassFlags has bit 2 (E5D's reading,
+// 2026-10-03: EKH had the test the other way round); then sixteen
 // textured quads around Sprite_Current's point (a draw mode of 0xC and a quad
 // linked at 0x48 each), the four vertices in Prim_VertexScratch 0x9037A0.. and
 // MapView_ScreenXY 0x903820 written on the way - both filled here.
 std::uint32_t FxShadow(const std::uint32_t*, std::uint32_t answer) {
-    if (Byte(0x7E0918)[0] & 4) return answer;
+    if (!(Byte(0x7E0918)[0] & 4)) return answer;
     if (InRegions(Mem(at::kVertexScratch), 0x20)) FillBytes(Mem(at::kVertexScratch), 0x20);
     FillFloats(0x903820, 2);
     Drew(16 * 0x54);
@@ -1009,7 +1012,7 @@ const Callee kEffectOverrides[] = {
     {FX_OURS(UiSprite_SetMode), 2, {kU8, kAll}, Answer::kGarbage, 0, 0, {}, FxModePrim, nullptr, true},   // E1F's; 31 sites: (id byte, slot)
     {FX_OURS(Panel_DrawWindow), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxBoxPrims, nullptr, true},   // E1B's; 33 sites: (int x, int y, int w, int h, colour)
     {FX_OURS(EffectKind0F_DrawToggles), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {}, FxPanelPrims, nullptr, true},   // E1B's; 19 sites: (int x, int y, bits byte)
-    {FX_RAW(0x503FA0), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxShadow, nullptr, true},   // E5D's; 15 sites: (variant, a whole word added to a table address)
+    {FX_OURS(EffectKind18Sub17_DrawPatch), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxShadow, nullptr, true},   // E5D's; 15 sites: (variant, a whole word added to a table address)
     // round twelve's behaviour folds (section 8.6), for the effect groups that call them
     {FX_OURS(Sprite_FindFree), 0, {}, Answer::kFlag, 0, 0, {}, FxSpriteSlot, nullptr, true},   // E2D:2 E2F:2 E4A:2: unsigned char(void)
     {FX_OURS(Party_MemberAt), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {}, FxMemberAt, nullptr, true},   // E2A:2 E3C:2 E5D:1: unsigned char(long x, long y, unsigned margin)
@@ -1095,7 +1098,7 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x5A7840), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPrim0_12, nullptr, true},   // 6, library layer: 12 bytes of a primitive written
     {FX_OURS(EffectKind87_Midpoint), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 6: three words, no calls
     {FX_RAW(0x48ED80), 3, {0, 0, kU8}, Answer::kGarbage, 0, 0, {12, 12}, nullptr, nullptr, true},   // 6: two points (12 read each) and a byte; draws
-    {FX_RAW(0x509A70), 2, {0, kAll}, Answer::kGarbage, 0, 0, {4}, nullptr, nullptr, true},   // 6: a pointer (4 read) and a word; textured quads
+    {FX_OURS(EffectKind18Sub42_Draw), 2, {0, kAll}, Answer::kGarbage, 0, 0, {4}, nullptr, nullptr, true},   // 6: a pointer (4 read) and a word; textured quads
     {FX_RAW(0x46F570), 1, {0}, Answer::kGarbage, 0, 0, {84}, nullptr, nullptr, true},   // 5: a record read to +0x54; the GTE rotations
     {FX_RAW(0x46F690), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: a word; a draw mode, 0x46F6F0
     {FX_RAW(0x52B2A0), 1, {kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: a byte, no calls
