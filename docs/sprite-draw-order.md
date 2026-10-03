@@ -1423,3 +1423,26 @@ owner's worst case, the owner records a route that ends standing on the spot
 (`BOF3X_RECORD`, [`input-script.md`](input-script.md)) and adds a `shot`
 line with `tools/recipe_shots.py`. The same command then takes that recipe,
 its shot frame ±2 and the rectangle round the feet.
+
+### 18.9 Measured, 2026-10-03: one shared cause (H1)
+
+The two runs of the plan above, narrow, on the merged build
+(`analysis/shots/validate_1003/ws_wm/bof3x.log`, `ws_field/bof3x.log`; three
+frames each, identical within a run but for the buffer):
+
+- **World map** (`worldmap_sliver.txt` 1258..1260): the party's code-0x84
+  primitive is #489, slot 6, layer 25, box y 91.7..123.7. After it in the same
+  slot come five `list0` cells of layers 26, 27 and 28 (#497, #498, #512, #513,
+  #526), ordinary view cells, the first two with boxes from y 115.2 and 119.7 -
+  over the sprite's lower part.
+- **Field** (`field_view.txt` 1278..1280): the party is #114, slot 6, layer 22,
+  box y 81.8..127.8. After it, two `list0` cells of layer 23 (#120, #121), boxes
+  from y 124.7.
+
+Both are H1: `list0` cells of nearer rows, drawn after the sprite in the same
+slot. Not H2 (nothing in slot 4 over the rectangle), not H5 (the `list1`
+pieces logged are of earlier layers, before the sprite), not H4 (nothing
+world-map-only is logged after the sprite). H3 is not excluded by this - the
+sprite's layer against the cell it stands on was not checked here. So the two
+kinds of map share the cause, and one fix in the shared path serves both; the
+owner wants it (2026-10-03), as an Intent change beyond the original.
