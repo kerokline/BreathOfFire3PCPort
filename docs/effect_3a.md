@@ -245,7 +245,8 @@ Before the frame-row fix above, `'*'` died twice the same way (exit
 0xC0000005, no `FATAL`, no crash line) inside `effect_3a`: reproducible, not
 the silent flake HANDOFF records; bisected by `BOF3X_E3A_ONLY` with
 `BOF3X_E3A_ROUNDS=40000` to `EffectKind61_Scatter`. After it, 1,920,000 rounds
-alone (40,000 a function), 0 mismatches. WIDE_LINE_PLACEHOLDER
+alone (40,000 a function), 0 mismatches. **With `BOF3X_WIDE=1`**: `'*'` exit 0,
+697 self-test lines, no mismatch, `effect_3a` 0 mismatches.
 
 ## 5. Controls
 
