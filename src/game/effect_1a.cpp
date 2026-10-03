@@ -23,8 +23,10 @@
 //                    lists, a panel sliding by +9
 //
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
-// can stand recorders in for ours as for the originals' copies. No divergence:
-// each is a faithful replacement. Where the original indexes a table past its
+// can stand recorders in for ours as for the originals' copies. Each is a
+// faithful replacement; the one divergence, DIV-0069 (kind 0xF's lines and kind
+// 3's name under a Latin overlay, src/game/fishing_text.cpp), is armed only after
+// every self-test, so the fuzz compares Capcom's. Where the original indexes a table past its
 // end, an object list past its records or the effect pool past its twenty,
 // ours aborts with a message (docs/effect_1a.md section 6).
 #include "game/effect_1a.h"
@@ -35,6 +37,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/effect_1a_callees.h"
+#include "game/fishing_text.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -832,7 +835,7 @@ extern "C" void __cdecl EffectKind03_Fade(void) {
 extern "C" void __cdecl EffectKind03_ShowName(void) {
     const U name = (Frame_Counter & 0x40) != 0 ? at::kAccessoryNames + (L(at::kAccessoryA) & 0xFF) * 0x18u
                                                : at::kAccessoryNames + B(at::kAccessoryB) * 0x18u;
-    DrawText(0x8A, 0xC8, 0, 8, name);
+    DrawText(0x8A, 0xC8, 0, FishingText_NameCount(), name);   // DIV-0069: 12 under a Latin overlay, else 8
     const unsigned char* const set = PtrAt(at::kPanelSet);
     const auto left = static_cast<signed char>(B(at::kRecord0 + 7) - set[0xF]);
     if (left < 0) return;
@@ -1409,7 +1412,10 @@ extern "C" void __cdecl EffectKind0F_LineStart(void) {
     SetL(a + 0x50, L(Text(kWho, a[0x4B])));
     SetW(S() + 0x58, 0);
     S()[0x49] = 0;
-    S()[9] = 6;
+    // DIVERGENCE DIV-0069: under a Latin overlay the first character is typed
+    // after half its own advance (the US module's 4 for 8 units), so it lands
+    // where the flip cursor ends; 6 for a 12-unit glyph, the original's.
+    S()[9] = FishingText_On() ? static_cast<unsigned char>(FishingText_HalfAdvance(TextAt(L(S() + 0x50)))) : 6;
     SetW(S() + 0x2E, 0x125);
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
@@ -1437,7 +1443,10 @@ extern "C" void __cdecl EffectKind0F_LineType(void) {
         }
         SetL(c + 0x50, L(c + 0x50) + 1);
         S()[0x49] = static_cast<unsigned char>(S()[0x49] + 1);
-        S()[9] = 6;
+        // DIV-0069: the next character after half its advance (LineStart's
+        // note); at the NUL the branch below sets the pause anyway.
+        const unsigned char* const next = TextAt(L(S() + 0x50));
+        S()[9] = FishingText_On() && next[0] != 0 ? static_cast<unsigned char>(FishingText_HalfAdvance(next)) : 6;
         const U count = StringCount(L(Text(kWho, S()[0x4B])));
         c = S();
         if (static_cast<std::int32_t>(c[0x49]) < static_cast<std::int32_t>(count)) {
@@ -1456,6 +1465,13 @@ extern "C" void __cdecl EffectKind0F_LineType(void) {
             eax = Key(a);
             c = S();
         }
+    } else if (FishingText_On()) {
+        // DIV-0069: the flip cursor as wide as the character's advance A, its
+        // right edge at 0x125 as the original's (12 wide at 2 * left + 0x119):
+        // the US module's 8 - 2 * left at 2 * left + 0x11D for its 8 units.
+        const U a = 2u * FishingText_HalfAdvance(TextAt(L(c + 0x50)));
+        eax = MessageLine(0, L(c + 0x50), static_cast<unsigned char>(a - (left << 1)), (2u * left + 0x125 - a) & 0xFFFF);
+        c = S();
     } else {
         eax = MessageLine(0, L(c + 0x50), static_cast<unsigned char>(0xC - (left << 1)), (2u * left + 0x119) & 0xFFFF);
         c = S();
@@ -1482,7 +1498,9 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
         c = S();
         const unsigned char wait = c[0xA];
         const unsigned line = Line(kWho, B(Text(kWho, c[0x4B]) + 4));
-        MessageLine(B(at::kKind0FLabels + line), L(at::kLabelTexts + 4 * line), static_cast<unsigned char>(0xC - (wait << 1)),
+        // DIV-0069: under a Latin overlay the label is DIV-0051's icon for its button.
+        const U label = FishingText_On() ? Key(FishingText_Label(line)) : L(at::kLabelTexts + 4 * line);
+        MessageLine(B(at::kKind0FLabels + line), label, static_cast<unsigned char>(0xC - (wait << 1)),
                     (2u * wait + 0x119) & 0xFFFF);
     } else {
         c[9] = static_cast<unsigned char>(c[9] - 1);
@@ -1514,8 +1532,16 @@ extern "C" void __cdecl EffectKind0F_LineNext(void) {
         const unsigned char label = B(Text(kWho, a[0x4B]) + 4);
         if (label != 0xFF) {
             const unsigned line = Line(kWho, label);
-            DrawText(static_cast<std::uint16_t>(a[0x49] * 12u + W(a + 0x2E)), L(at::kRecord3 + 0x30) + 2,
-                     B(at::kKind0FLabels + line), 1, L(at::kLabelTexts + 4 * line));
+            if (FishingText_On()) {
+                // DIV-0069: after the line's real pen width, not 12 a character;
+                // the icon for the button.
+                const U width = FishingText_Width(TextAt(L(Text(kWho, a[0x4B]))), a[0x49]);
+                DrawText(static_cast<std::uint16_t>(width + W(a + 0x2E)), L(at::kRecord3 + 0x30) + 2,
+                         B(at::kKind0FLabels + line), 1, Key(FishingText_Label(line)));
+            } else {
+                DrawText(static_cast<std::uint16_t>(a[0x49] * 12u + W(a + 0x2E)), L(at::kRecord3 + 0x30) + 2,
+                         B(at::kKind0FLabels + line), 1, L(at::kLabelTexts + 4 * line));
+            }
         }
     }
     unsigned char* const a = S();
@@ -1545,8 +1571,18 @@ extern "C" void __cdecl EffectKind0F_LineScroll(void) {
         SetL(a + 0x50, L(a + 0x50) + 1);
         a = S();
         a[0x49] = static_cast<unsigned char>(a[0x49] - 1);
-        SetW(S() + 0x2E, 0x27);
-        S()[9] = 6;
+        if (FishingText_On()) {
+            // DIV-0069: the line moves on by the leaving character's advance (an
+            // even one, so +0x2E stays odd and still meets 0x1D below), and
+            // it leaves over half that in frames; 0x27 = 0x1B + 12 and 6 for
+            // a 12-unit glyph, the original's.
+            const unsigned half = FishingText_HalfAdvance(TextAt(L(a + 0x54)));
+            SetW(S() + 0x2E, 0x1B + 2 * half);
+            S()[9] = static_cast<unsigned char>(half);
+        } else {
+            SetW(S() + 0x2E, 0x27);
+            S()[9] = 6;
+        }
         a = S();
     }
     if (a[9] != 0) {
@@ -1562,8 +1598,15 @@ extern "C" void __cdecl EffectKind0F_LineScroll(void) {
         const unsigned char label = B(Text(kWho, c[0x4B]) + 4);
         if (label == 0xFF) return;
         const unsigned line = Line(kWho, label);
-        DrawText(static_cast<std::uint16_t>(c[0x49] * 12u + W(c + 0x2E)), L(at::kRecord3 + 0x30) + 2,
-                 B(at::kKind0FLabels + line), 1, L(at::kLabelTexts + 4 * line));
+        if (FishingText_On()) {
+            // DIV-0069: after the typed characters' real width; the icon.
+            const U width = FishingText_Width(TextAt(L(c + 0x50)), c[0x49]);
+            DrawText(static_cast<std::uint16_t>(width + W(c + 0x2E)), L(at::kRecord3 + 0x30) + 2,
+                     B(at::kKind0FLabels + line), 1, Key(FishingText_Label(line)));
+        } else {
+            DrawText(static_cast<std::uint16_t>(c[0x49] * 12u + W(c + 0x2E)), L(at::kRecord3 + 0x30) + 2,
+                     B(at::kKind0FLabels + line), 1, L(at::kLabelTexts + 4 * line));
+        }
         return;
     }
     const unsigned char label = B(Text(kWho, a[0x4B]) + 4);
@@ -1572,7 +1615,8 @@ extern "C" void __cdecl EffectKind0F_LineScroll(void) {
         return;
     }
     const unsigned line = Line(kWho, label);
-    DrawText(W(a + 0x2E), L(at::kRecord3 + 0x30) + 2, B(at::kKind0FLabels + line), 1, L(at::kLabelTexts + 4 * line));
+    DrawText(W(a + 0x2E), L(at::kRecord3 + 0x30) + 2, B(at::kKind0FLabels + line), 1,
+             FishingText_On() ? Key(FishingText_Label(line)) : L(at::kLabelTexts + 4 * line));   // DIV-0069: the icon
     a = S();
     if (W(a + 0x2E) != 0x1D) return;
     a[9] = 6;
@@ -1592,8 +1636,8 @@ extern "C" void __cdecl EffectKind0F_LineFade(void) {
         return;
     }
     const unsigned line = Line(kWho, B(Text(kWho, c[0x4B]) + 4));
-    MessageLine(B(at::kKind0FLabels + line), L(at::kLabelTexts + 4 * line), static_cast<unsigned char>((left << 1) | 0x80),
-                0x1D);
+    const U text = FishingText_On() ? Key(FishingText_Label(line)) : L(at::kLabelTexts + 4 * line);   // DIV-0069
+    MessageLine(B(at::kKind0FLabels + line), text, static_cast<unsigned char>((left << 1) | 0x80), 0x1D);
 }
 
 // ===========================================================================

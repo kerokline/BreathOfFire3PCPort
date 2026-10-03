@@ -2,6 +2,7 @@
 
 #include "game/config_text.h"
 #include "game/dat_load.h"
+#include "game/fishing_text.h"
 #include "game/file_io.h"
 #include "game/game_clock.h"
 #include "game/save_io.h"
@@ -1009,6 +1010,8 @@ void InjectAll() {
                                 // and the wave-two groups it calls (E2E's angle mean, E2F's trail cap); DrawPool
                                 // re-aims the immediate at 0x486EBD inside EffectKind7D_SetMap (DIV-0062), after
                                 // every self-test; no other module patches bytes inside its 68
+    FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
+                                // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     Widescreen_ArmFills();      // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
     Effect3C_Inject();          // round 13 group E3C (0x484050..0x485CA0: effect kinds 0x6D, 0x6E, 0x6F, 0x72..0x75,
                                 // their dispatchers, states and draws, and the debris draw and set-up kinds 0x1E,

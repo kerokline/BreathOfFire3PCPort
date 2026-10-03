@@ -4744,3 +4744,53 @@ is far enough out ([`msgbox.md`](msgbox.md) §9).
 
 **Status:** fixed by DIV-0070 (a space commits nothing); recurs under
 `BOF3X_ORIGINAL=MsgBox_EffectDraw`. Not yet seen fixed in game.
+
+## D-TBD-FL — A textured quad's far edge samples the texel past it above scale 1: the fishing menu's stray frame lines
+
+**Seen:** owner, 2026-09-30 (`analysis/shots/owner_catalogue/fishing_equip_menu.webp`),
+English, the wide picture at scale 4: a thin vertical line right of the
+EQUIP and GUIDE boxes of the fishing equip menu (and right of the ROD / LURE
+list), and a short mark under EQUIP's bottom edge. The camping route's frame
+3360 (`analysis/shots/camping/f3360.png`, 1704 x 960) shows the same:
+measured off it, the line is **two screen pixels wide - half a game pixel** -
+at game x 159.75 (narrow), 3.75 units right of the box's frame, olive like
+the frame; it runs y 88..118 beside EQUIP, y 150..215 beside GUIDE and
+y 105..207 beside the list - **0x1E, 0x40 and 0x68 high: exactly the heights
+of the side quads** `Panel_DrawEdgeQuad(x + 0x88, y + 0x18, 0x1E, 1)`,
+`(x + 0x88, y + 0x58, 0x40, 1)` (`EffectKind0F_DrawTwinFrame` `0x469490`)
+and `(x + 0x80, y + 0x28, 0x68, 4)` (`EffectKind0F_DrawItemFrame`
+`0x469630`). **Configuration:** ours, English, wide; not yet seen narrow or
+under `BOF3X_ORIGINAL='*'` (the reading below says both show it).
+
+**Cause, read 2026-10-03 (FL of the fix wave).** `Panel_DrawEdgeQuad`
+`0x468950` (ours, faithful) builds a `POLY_FT4` the PlayStation way: the
+quad `w` units wide (the record's word, 8 for records 0..3 at `0x653E6C`),
+texture u from `u` to `u + w` (`0x10 .. 0x18` for record 1). The PlayStation
+never samples `u + w`: its rasteriser leaves out the right column. The
+port's `D3d_DrawPolyFT4` `0x5A0C40` takes each corner's coordinate from
+`D3d_TexCoords` `0x7CA9E0`, `tc[i] = (i + 0.512) / 256`, so the far corner
+is `u + w + 0.512` texels; at scale `k` the last screen pixel of the quad
+samples `u + w + 0.512 - 1 / k`, past `u + w` once `k` is 2 or more - the
+last half game pixel at 2 (the port's own 640 x 480), the last two of four
+screen columns at 4. The texel there is the next piece of the frame art
+in the page, opaque: the line. The records are the PlayStation's byte for
+byte (the US module's at `0x801E2190`), so the data is not at fault; the
+port's coordinate table is. The mark under EQUIP is probably the same on a
+sprite's bottom (or right) edge (`UiSprite_Draw` `0x52CFE0` builds the same
+primitive) - not settled. It is D28's and DIV-0010's family (`SPRT`'s far
+edge), on the polygon path, which nobody had read for its far `u` (d3d-draw.md
+section 6's last paragraph: "depends on the far `u` the game's builders put
+in the primitive").
+
+**Ours does the same** (`D3d_DrawPolyFT4` and `Panel_DrawEdgeQuad` are ours
+and fuzzed equal). **Not fixed here:** the cure is renderer-wide - every
+`POLY_FT4` whose far edge is `u + w` (DIV-0010's rule for the polygon path:
+move a far corner in by `1 / k` texels, or the table's 0.512 to 0.5 with
+half a texel in) - and changes every textured quad of the game, so it is
+the owner's call and an entry of its own. **What settles it** (for the
+coordinator, no route needed beyond `campingFishing.txt` frame 3360):
+the same frame with `BOF3X_LANG=original` and with `wide=0` (the line
+should stay, it is neither language nor width), and `BOF3X_SCALE=1` (the
+line should go).
+
+**Status:** Capcom's (the port's), by reading; seen in ours at scale 4.

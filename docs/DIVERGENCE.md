@@ -3582,3 +3582,97 @@ designed in rather than bolted on.
   owner's call, [`msgbox.md`](msgbox.md) §3).
 - **Reversible?** `BOF3X_ORIGINAL=MsgBox_EffectDraw` runs Capcom's draw,
   stale quad and all.
+
+### The fishing minigame's text in the overlay's language, laid out for Latin letters
+
+- **ID:** DIV-0069
+- **Date:** 2026-10-03
+- **Subsystem:** field text, the fishing spot (only with a language overlay;
+  `src/game/fishing_text.cpp`, chunk kind 16 of `tools/loc_build.py`; the
+  draws effect kind 0xF's lines in `src/game/effect_1a.cpp`, its tabs and
+  name lists in `src/game/effect_1b.cpp`;
+  [`fishing-text.md`](fishing-text.md))
+- **Tier:** Sensible
+- **Original behaviour:** the fishing spot's banner - the lines effect
+  kind 0xF types right to left across the top window ("set rod and lure",
+  "quit fishing", the cast's, the lost catch's) - is thirteen strings of
+  the port's glyph codes at `0x669FC0..0x66A06D`, reached only through the
+  8-byte records at `0x653B98` (a pointer, a label byte, a pause byte); the
+  three tabs over the equip menu are three 8-byte slots at `0x66A070`
+  behind the pointer table `0x66A088`. Every overlay left both Chinese
+  (the owner's `fishing_banner.png`, `fishing_equip_menu.webp`, the
+  camping route's frames 3120..4800). The layout is the 12-unit glyph's:
+  a character is typed every 6 frames as the line moves 2 units a frame
+  (`0x466310`, `+9` = 6; the first by `0x4662B0`), the flip cursor is 12
+  wide at `2 * left + 0x119`, a line's button label goes 12 units a
+  character after the line's start (`0x466460`, `0x4665E0`), the leaving
+  character moves the line on by 12 (`0x27` = `0x1B + 12`); the tabs are
+  drawn at `x + 0xA / 0x35 / 0x6A` with counts 2, 3, 2 (`0x468AC0`); an
+  accessory's name is drawn to 8 characters (`0x468C50`, `0x468F00`,
+  `0x469210`, `0x465230`). The label itself is a single-byte glyph,
+  `0x66A2FC[line]` - the port's circled numerals 1, 2, 3, which are its
+  stand-ins for circle, cross, triangle (the same table and colours 2, 1,
+  6 the Config screen's `0x461C00` uses, DIV-0051) - and an overlay
+  paints those single-byte slots with letters: the owner saw `b`, `c`,
+  `d` after the lines, and `aa` where the Chinese text has its two-dot
+  ellipsis (glyph `0x3B`).
+- **New behaviour:** `loc_build.py` finds the fishing module every fishing
+  area carries on the disc (the US `AREA030.EMI` section at `0x801D0C00`)
+  by the row table the PC still has byte for byte (`0x653C04`, 36 bytes):
+  the disc's thirteen line records end twelve bytes before it - 12 bytes
+  each, a count added, the label and pause bytes the PC's - and its tab
+  labels follow the edge-quad records the PC has at `0x653E6C`, at the
+  fixed width the module's own code hands the draw (`addiu $a3, $zero, n`
+  before the `lui` / `addiu` of their address: US and German 4, French 7).
+  Chunk kind 16, tag 1 the lines, tag 2 the tabs; `FishingText_Apply`
+  copies each into a buffer of ours and re-aims the record's pointer (or
+  the table entry) after checking it names the shipped string or our
+  buffer (a second load of `FIRST.DAT`). US: the tabs `Gear`, `Data`,
+  `Rule`; the lines are the module's own (not copied here), its `>>>`
+  the dialogue font's ellipsis where the port has its two dots. And,
+  armed in `InjectAll` after every self-test
+  under a Latin overlay only (`Lang_Latin`): each character typed after
+  half its own advance in frames, so it lands where the flip cursor ends
+  (the US module's own constant is 4 for its 8 units, `0x801D3A28`,
+  `0x801D3AEC`), the flip cursor as wide as that advance with its right
+  edge at `0x125` as before, the leaving character moving the line on by
+  its advance (kept even, so the line still meets `0x1D`); the label
+  after the line's real pen width, drawn as DIV-0051's PlayStation icon
+  for the button the port's numeral names (circle, cross, triangle, in
+  the line's own colour); the tabs whole and centred in their 0x28-wide
+  boxes by their real width (the US module's `x + 6 + 0x30 i` for four
+  letters); an accessory's name to 12 characters, the US field - `Wooden
+  Rod`, `Heavy Ca...` no longer cut at 8. For 12-unit glyphs every one of
+  these computes the original's number.
+- **Rationale:** the stage-2 text swap (DIV-0005) for the last Chinese on
+  the fishing screens, and the layout the swap needs, as DIV-0018 and
+  DIV-0059 re-centred theirs: English typed at the 12-unit cadence lands
+  four units further left of the flip cursor with each character, and its
+  label floats half the line's width past its end. The label's icon follows the
+  port's buttons, not the US disc's: the US module's labels are `x`,
+  triangle, square (codes `0x81..0x83`, colours 1, 6, 5), the US release's
+  button layout; the PC's numerals name circle, cross, triangle, which is
+  what the port's input answers to, and the Config screen shows them the
+  same way under an overlay (DIV-0051).
+- **Also in the PSX version?** The strings are the PlayStation's own, the
+  layout constants its 8-unit ones; the icons are the port's buttons drawn
+  in the PlayStation's shapes.
+- **Verification:** `BOF3X_SHADOW=effect_1a` and `effect_1b` headless (the
+  fuzz runs before the layout is armed): 210,000 and 288,000 rounds, 0
+  mismatches; armed during the fuzz instead (a control), 10,281 and 23,399
+  mismatches - `LineNext`, `LineScroll`, `LineFade`, `ShowName`,
+  `DrawToggles`, `DrawItemsB`, `DrawItemsA`, `DrawEquipped` - which is to
+  say the fuzz sees the change and the 12-unit cadence is unchanged
+  (`LineStart`, `LineType` equal under 12-unit advances, by construction).
+  `BOF3X_SHADOW='*'` headless, narrow: exit 0, 7,687 ours, 0 mismatches.
+  `loc_build.py`'s converter run on the US, French and German discs: 13
+  lines and 3 tabs each. **Not seen in game** (a headless wave): the
+  coordinator's live check is in [`fishing-text.md`](fishing-text.md)
+  section 6. Owed the owner's eye: the banner's cadence and labels, the
+  tabs, the full names; the French tabs (`Equip`, `Données`, seven letters
+  over a 40-unit box - the French disc widened its boxes) and the German
+  build.
+- **Reversible?** play without `BOF3X_LANG` (or `BOF3X_LANG=original`): no
+  chunk, and the layout is never armed. `BOF3X_ORIGINAL` on any of the
+  draws named above leaves Capcom's, which reads the re-aimed pointers
+  with the original's layout.

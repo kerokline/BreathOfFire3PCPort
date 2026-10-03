@@ -8,6 +8,7 @@
 #include "game/battle_text.h"
 #include "game/char_names.h"
 #include "game/config_text.h"
+#include "game/fishing_text.h"
 #include "game/labels.h"
 #include "game/menu_verbs.h"
 
@@ -198,6 +199,9 @@ void WalkDatFile(const char* path) {
             break;
         case 15:  // DIV-0064: ours.
             Labels_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
+            break;
+        case 16:  // DIV-0069: ours.
+            FishingText_Apply(h.tag, payload, static_cast<std::uint32_t>(h.size));
             break;
         default:
             break;
