@@ -27,7 +27,7 @@ constexpr std::uint32_t kDebrisDraw = bof3::addr::EffectDebris_Draw;   // 0x4850
                                                   // +0x28, the shade +0x2A clamped to a byte; Gfx_CommitPrim(1, 0x34)
 constexpr std::uint32_t kDebrisInit = bof3::addr::EffectDebris_InitOne;   // 0x4851E0, E3C's (unsigned char *debris): EffectKind1E_DebrisInitOne with the
                                                   // edges' angle 0x20 and the scale 8 + Rand % 8 (0x2C bytes written)
-constexpr std::uint32_t kCone = 0x493090;         // E4F's (const long *point, w, h, angle - three s16 -, shade byte,
+constexpr std::uint32_t kCone = bof3::addr::Effect_DrawEllipse;         // 0x493090, E4F's (const long *point, w, h, angle - three s16 -, shade byte,
                                                   // flag byte): G3 triangles round the point's screen position, sized
                                                   // by EffectGte_ProjectSize (w, h) and turned by the angle
 constexpr std::uint32_t kMatrixVector = 0x5A7C70; // library layer (nobody's): (matrix, in, out) - an SVECTOR turned by
