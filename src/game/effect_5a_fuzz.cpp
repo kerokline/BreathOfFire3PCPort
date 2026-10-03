@@ -175,6 +175,18 @@ U FxPattern(const U*, U) {
     return 1 + (n >> 2) % 8;
 }
 
+// MapView_LinkPrimAt, as effect mode's row has it (the cursor + size & 0xFF two
+// times in three, inside the packet buffer), its dy compared on the low byte
+// only: the real one reads a signed byte (symbols.toml), and
+// EffectKind18_0A_DrawDoor pushes dl over whatever Prim_SetTexture left in edx.
+U FxLink(const U* a, U answer) {
+    if (sh::Noise() % 3 != 0) {
+        unsigned char* const next = sh::Pointer(0x7E0670);
+        const unsigned n = a[3] & 0xFF;
+        if (next >= sh::Packets() && next + n + 0x40 <= sh::Packets() + 0x800) sh::SetPointer(0x7E0670, next + n);
+    }
+    return answer;
+}
 #define E5A_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage, kPh = sh::Answer::kPhase;
 constexpr U kW = 0xFFFFFFFFu;
@@ -202,6 +214,8 @@ const sh::Callee kCallees[] = {
     // no group's: re-listed over effect mode's kFlag row (a byte with garbage
     // above), which the whole-eax compare cannot use
     {"0x4FEE70 (no group)", at::kPattern, at::kPattern, 0, {}, kG, 0, 0, {}, &FxPattern},
+    // re-listed: dy (a signed byte to the real one) masked to its byte
+    {E5A_OURS(MapView_LinkPrimAt), 4, {kW, kW, 0xFF, 0xFF}, kG, 0, 0, {}, &FxLink, nullptr, true},
 };
 #undef E5A_OURS
 
@@ -269,7 +283,9 @@ void Seed(unsigned k) {
     s[0xA] = static_cast<unsigned char>(PickOf(0, 8, 9, 0xA, 1, sh::Next()) % 0xC);
     SetWord(s + 0x2E, PickOf(0xBE, 0xBF, 0xC0, 0, 0x7F, 0x80, 0xFFFF, 0x8000, sh::Next()));
     SetLong(s + 0xC, static_cast<std::int32_t>(PickOf(0x3E0, 0x3FF, 0x400, 0x401, 0, 0xFFFFFFFFu, 0x80000000u, sh::Next())));
-    SetLong(s + 0x38, static_cast<std::int32_t>(PickOf(0x340000, 0x350000, 0x34E000, 0x342000, 0x352000, 0x33E000, sh::Next())));
+    // (not over sub-kind 6's level word +0x3A, the dword's high half)
+    if (!In(0x4FDF20, 0x4FE1A0))
+        SetLong(s + 0x38, static_cast<std::int32_t>(PickOf(0x340000, 0x350000, 0x34E000, 0x342000, 0x352000, 0x33E000, sh::Next())));
     SetWord(s + 0x3E, PickOf(0xFE00, 0xFE40, 0xFF80, 0xFE80, 0x320, sh::Next()));
     if (!In(0x4FDF20, 0x4FE1A0) && sh::Half()) SetWord(s + 0x3A, sh::Next());
 }
