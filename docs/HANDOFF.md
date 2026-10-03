@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, paused before wave three)
+**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, wave three launched 2026-10-03)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -183,19 +183,19 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    word left of `Yes` (DIV-0027's stops again, with the master's prompt and, the owner says, two more
    pointer-to-choice mismatches on that screen), and **its tiled backdrop is 320 wide under the wide picture**.
 
-000. **Round thirteen, the effect engine: waves one and two are merged (7,568 ours); paused before wave three** at the
-   owner's word (the usage cap). Branch `phase-3/capture-round-thirteen` from `main` `d1b411c`, with `main`'s PR #34
-   merged in; nothing pushed. [`takeover-queue-round13.md`](takeover-queue-round13.md): section 10 the cut (35 groups
-   E1A..E6D in six waves), 11 stage A, 12 wave one (278), 13 wave two (395). **Before wave three, in order:** the
-   harness fold section 13 names (the quiet effect-standard rows five groups re-listed); the whelp route's frame hash
-   (it enters functions of EGT, E1C and E2A; `live_batch12w2c.sh` in the session-`6ae930a8` scratchpad is the model);
-   then `make_briefs.py <scratch> 3 <tip> band_edges_w2.txt` and four agents, E3A..E3D, 210 functions, E3B
-   merged before E3C. Waves three and six are small enough to run together (406). The scripts are in the
-   session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`): `runner13.sh
-   <scratch>` merges the groups appended to `pending13.txt` one at a time and stops at a failure (`END` ends it;
-   never edit `merge_group13.sh` while it runs), `verify_tip.sh` runs narrow and wide, `fold_names.py` points the
-   harness rows at names. The main checkout's `build/bof3x.ini` has `wide=1` and a running game locks its DLL: verify
-   in the verification worktree. The wave's agent worktrees and branches are merged and still present.
+000. **Round thirteen, the effect engine: waves one and two are merged (7,570 ours with the two sky draws); wave three
+   launched 2026-10-03 from `0e0532c`** - four Opus agents in worktrees, E3A..E3D, 210 functions, branches
+   `phase-3/round13-e3a`..`e3d`. [`takeover-queue-round13.md`](takeover-queue-round13.md): section 13 has the harness
+   fold that came first (`f8d410a`, verified narrow and wide), section 14 the wave. **Merging:** append each group to
+   `pending13.txt` as it reports and run `runner13.sh <scratch>` (E3B before E3C; `END` ends it; never edit
+   `merge_group13.sh` while it runs), then `verify_tip.sh` narrow and wide, `fold_names.py`, the wave's table in
+   section 14. **Owed, not gating:** the whelp route's frame hash (it enters functions of EGT, E1C and E2A;
+   `live_batch12w2c.sh` in the session-`6ae930a8` scratchpad is the model) - after the hash reference is re-recorded,
+   with the machine hands-off. Then wave four (`make_briefs.py <scratch> 4 <tip> band_edges_w2.txt`, E4F first, then
+   E4D, E4B, E4A), five, six. The scripts are in the session-`56ff1eb2` scratchpad
+   (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`). The main checkout's `build/bof3x.ini` has
+   `wide=1` and a running game locks its DLL: verify in the verification worktree (a full `verify_tip.sh` took 22
+   minutes on 2026-10-03 with the owner's game running beside it).
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
