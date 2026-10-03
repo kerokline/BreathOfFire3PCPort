@@ -226,13 +226,26 @@ U FxProjectGlow(const U* a, U answer) {
         const U n = sh::Noise();
         std::memcpy(P(a[2]), &n, 4);
     }
-    switch (answer % 5) {
+    switch (answer % 6) {
     case 0: return 0;
+    case 5: return (answer >> 8) & 1 ? 1u : 0xFFFFFFFFu;
     case 1: return 1 + (answer >> 8) % 0x400;
     case 2: return 0u - (1 + (answer >> 8) % 0x400);
     case 3: return 0x100 + (answer >> 8) % 0x2000;
     default: return answer;
     }
+}
+// Gte_StoreDepthF(out): a depth with a fraction, and one time in eight a
+// signalling or quiet NaN or an infinity - the glow copies it through the FPU,
+// which quietens a signalling NaN (the effect row writes whole numbers only).
+U FxDepth(const U* a, U answer) {
+    if (Writable(a[0], 4)) {
+        const U n = sh::Noise();
+        static const U kOdd[] = {0x7F800001u, 0xFF800123u, 0x7FC00000u, 0x7F800000u};
+        const U v = n % 8 == 0 ? kOdd[(n >> 3) % 4] : ((n & 0x807FFFFFu) | ((0x6Eu + ((n >> 9) % 0x24u)) << 23));
+        std::memcpy(P(a[0]), &v, 4);
+    }
+    return answer;
 }
 // MapView_LinkPrimAt(x, z, dy, size): as the effect row (the packet cursor moves
 // by size & 0xFF two times in three) but the dy and size compared as the bytes
@@ -269,6 +282,7 @@ const sh::Callee kCallees[] = {
     // small; the link's dy and size as bytes
     {E5B_OURS(Gte_RotTransPers), 3, {0, 0, 0}, kG, 0, 0, {6, 0, 0}, &FxProjectGlow, nullptr, true},
     {E5B_OURS(MapView_LinkPrimAt), 4, {kW, kW, k8, k8}, kG, 0, 0, {}, &FxLink, nullptr, true},
+    {E5B_OURS(Gte_StoreDepthF), 1, {0}, kG, 0, 0, {}, &FxDepth, nullptr, true},
 };
 #undef E5B_OURS
 
@@ -328,11 +342,18 @@ void Records(unsigned k) {
 
 // The leader within, at and past the gates' bounds of the record (16.16 offsets
 // about the next row's or column's centre and the cell's corner).
-void Leader(const unsigned char* s) {
-    const U x = static_cast<U>(static_cast<std::int16_t>(Word(s + 0x36)));
-    const U z = static_cast<U>(static_cast<std::int16_t>(Word(s + 0x3A)));
+// A gate start replaces its words by the variant's cell (_Cells 0x65E058) first,
+// so the leader is placed about that cell for it.
+void Leader(const unsigned char* s, bool start) {
+    U x = static_cast<U>(static_cast<std::int16_t>(Word(s + 0x36)));
+    U z = static_cast<U>(static_cast<std::int16_t>(Word(s + 0x3A)));
+    if (start && x < at::kGateCount) {
+        z = P(at::kGateCells + 1 + 2 * x)[0];
+        x = P(at::kGateCells + 2 * x)[0];
+    }
     const U off[] = {0, 0x8000, 0x8001, 0xFFFF8000u, 0xFFFF7FFFu, 0x10000, 0x10001, 0x20000, 0x20001,
-                     0xFFFE0000u, 0xFFFDFFFFu, 0x30000, 0x30001, sh::Next()};
+                     0xFFFE0000u, 0xFFFDFFFFu, 0x30000, 0x30001, 0x18000, 0x18001, 0xFFFE8000u, 0xFFFE7FFFu,
+                     sh::Next()};
     const U n = sizeof off / sizeof off[0];
     U lx, lz;
     if (sh::Half()) {   // about the gate's cell, either axis
@@ -352,7 +373,7 @@ void Leader(const unsigned char* s) {
 void Seed(unsigned k) {
     Records(k);
     unsigned char* const s = Sprite_Current;
-    Leader(s);
+    Leader(s, GateStart(k));
     AreaMap_Header[0] = static_cast<unsigned char>(PickOf(0x40, 0x20, 1, sh::Next() % 0x41));
     if (sh::Next() % 3 == 0) Field_Request = 0;
     if (sh::Next() % 3 == 0) Cond_ByteFD = 0;
