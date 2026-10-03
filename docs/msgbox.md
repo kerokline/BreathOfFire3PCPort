@@ -4,6 +4,11 @@
 
 **The live batch, 2026-09-22 (`ab24`, `analysis/validate_ab24.sh`):** the whole third round - groups H, J, K, L and M, 137 functions, 466 ours - checked at once, original against ours: the field, new-game, field-menu and menu-screens capture pairs identical (4, 9, 7, 5 of each), the 9-minute attract 55 of 55 (and 55 of 55 against `ab22`'s ours), the same attract in English 55 of 55, the oracle identical at all 7,478 compared frames, the memory dump identical, and the frame hash identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`, beside an original-vs-original pair identical on 10,062).
 
+**2026-10-03 (fix wave, group GS):** a forty-fourth, the grow / shrink draw
+`0x4987E0`, is ours as `MsgBox_EffectDraw` with DIV-0068 - a space in a
+growing shout no longer commits a primitive with a stale glyph word, which
+crashed the owner's game in area `0x63` (§9).
+
 Forty-three functions of the message box and the last two text pens, taken
 over in `src/game/msgbox.cpp` (+ `msgbox_callees.h`, `msgbox_fuzz.cpp`) as
 group H of the third parallel round. Every one was read to its last
@@ -176,11 +181,22 @@ owner runs `BOF3X_ORIGINAL=MsgBox_Step` and Capcom's body executes.
 [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0006 has the note.
 
 `MsgBox_Step`'s other draw, `0x4987E0`, taken while flag 8 of `0x7DEE44` is
-set, is still Capcom's and still 12 px (§4). One detail the takeover
-settles: the original pushes the colour local there as a **dword whose upper
-three bytes are stack it never wrote**, and `0x4987E0` reads
-`mov al, [esp+4]` then `and eax, 0xF` - so only the low nibble can reach it
-and passing the byte zero-extended is exactly equivalent. Likewise
+set, is ours since 2026-10-03 as `MsgBox_EffectDraw` (§9, DIV-0068). One
+detail the takeover settled: the original pushes the colour local there as a
+**dword whose upper three bytes are stack it never wrote**, and `0x4987E0`
+reads `mov al, [esp+4]` then `and eax, 0xF` - so only the low nibble can
+reach it and passing the byte zero-extended is exactly equivalent.
+
+**`MsgBox_EffectDraw` and DIV-0006's advance table.** It does not consult
+it, and is left so. Its pen moves by `P` (the signed word `0x7DEE68`) and
+the stepper adds its 12, so every character inside a growing or shrinking
+span - letters and spaces alike - advances `12 + P`, the drawn width of the
+scaled 12-unit cell. Honouring the table would mean an advance of
+`advance * (12 + P) / 12` per glyph (8 px letters, the 8 px space): the
+English shout would sit as tight as the text around it instead of 12 + P
+apart. That is a layout change for every character of every shout, not the
+space fix, and the right width is the owner's eye to judge (§9, the
+question). Likewise
 `0x498D20` takes both of `MsgBox_State3Arrow`'s arguments with
 `movsx ecx, word ptr` (`0x498D7C`), so the stale upper halves the original's
 registers carry there are unobservable.
@@ -206,10 +222,9 @@ for `Text_DrawAt` (`src/game/config_text.cpp`) and is not a change here.
   `0x498A30`, which stays Capcom's: [`item-use.md`](item-use.md) section 5. The
   call is `[[descriptor + 0x34] + 4 * id]` - the descriptor's +0x34 holds a
   pointer to the area's table of choice handlers.
-- **`0x4987E0`**, the stepper's effect draw. Unread, 12 px, named in
-  `src/game/text_advance.cpp` as the last unconverted pen of the dialogue
-  path. Its argument handling is now settled (above) but its body is not
-  read. Ours calls it by address.
+- ~~**`0x4987E0`**, the stepper's effect draw.~~ **Taken over 2026-10-03**
+  (fix wave group GS) as `MsgBox_EffectDraw`, after its space crashed the
+  game (§9, DIV-0068). It was the last unconverted pen of the dialogue path.
 - **`0x498D20`**, the "more" arrow, and **`0x461EB0`**, the pad auto-repeat:
   both small and both read enough to call correctly, but outside this
   group's list. Called by address, with recording stand-ins in the fuzz.
@@ -417,4 +432,165 @@ which nothing in the tree has yet. It is not in this change.
   end, plus a signature and `impl` on the eight that already existed.
 - `analysis/calltrace/entries_logic_round3_h.txt` (local, gitignored) - the
   43 ranges for the trace list, with the three sizes that must be *replaced*
-  rather than appended (§6).
+  rather than appended (§6). `MsgBox_EffectDraw`'s range is
+  `0x4987E0..0x498A2B` (0x24B bytes).
+- `tools/recipe_shots.py` - `--from` / `--to` (2026-10-03), so a window of
+  close shots around one frame can be added without hundreds elsewhere (§9).
+
+## 9. The growing shout's spaces (2026-10-03, DIV-0068)
+
+**What the owner saw** (2026-10-02, in play, `HANDOFF.md` item `00000`): the
+game crashed. `build/bof3x.crash-30104-0.dmp` in the main checkout: an access
+violation in `Font_UnpackGlyph` (`tex_cells.cpp:240`) reading `0x17053EA0`.
+The dump's message box (`crash_report.py --u32`): state 2, effect kind 2,
+flag word `0x0008`, message `0x24`, 9 characters stepped, pen (`0x115`,
+`0xB0`), `P` (`0x7DEE68`) = 11 - message `0x24` of area `0x63` held big by
+preset 10 (kind 2, `P` 11, `0xFFFF` frames: for ever).
+
+**The cause** (disassembly, §3's function, read 2026-10-03 to `0x498A2A`):
+`0x4987E0` writes the CLUT word, then `cmp cl, 0x20 / je 0x4988BE` at
+`0x498819` - for a space it jumps over the glyph word `+0x16` and all eight
+texture bytes, but `0x4988BE` onward still writes the shade and the four
+corners and calls `Gpu_SetCode6C`, `Gpu_SetSemiTrans` and `Gfx_CommitPrim`.
+The packet slot's glyph word is whatever the last primitive there left -
+here half of a float, `0xC254`, 14 MB past `Font_GlyphData` when the
+renderer unpacked it. The English overlay of area 99, message `0x24`, has
+nine characters in its grow span (`0x0D` .. `0x0E`), four of them `0x20`
+(`shouts.py` over `en.AREA099.DAT`, 2026-10-03; the Chinese file's span is
+four characters and no space - Capcom's own script never meets the skip);
+the dump's row of nine 23 px quads (12 + `P`) has stale glyph words in
+exactly the four space slots. **The census** (the same scan over every area
+file, 2026-10-03): the shipped Chinese `AREA*.DAT` hold 63 grow presets
+(code `0x0F` naming a kind-2 or kind-3 record after a `0x0D` span) and none
+of their spans holds a `0x20`; the English overlays hold 65, and 15 spans
+have one or more - area 11 message `0x05`, area 40 messages `0x07`, `0x0B`,
+`0x0C` (eleven spans, preset 9: `P` 6, for ever), area 41 message `0x07`
+and area 99 message `0x24`. Every one of those was a stale quad on the
+original draw; area 99's is the one the owner hit.
+
+**The PlayStation does the same.** The twin `0x80151F4C` (the quad blitter
+of the sibling's `TEXT_ENGINE.md`, "Two blitters") tests the JP word
+separator `0xFF` at `0x80152010` and jumps to `0x80152BF8`: no tpage word,
+no `u`, `v`, and then the corners and the commit. So the slip is the
+original's, and the port carried it over with `0x20` standing for `0xFF`.
+What the PSX shows in such a gap is a quad textured from whatever the slot
+last held; whether any JP shout has an `0xFF` inside a grow span was not
+measured (the sibling's script census could say).
+
+**What ours does.** `MsgBox_EffectDraw` is Capcom's to the byte, with one
+named difference behind `g_effect_space_skips` (set by `MsgBox_Inject` after
+the self-test): a space writes the CLUT word as Capcom's does and moves the
+pen by `P` exactly as Capcom's does, and builds and commits nothing. The gap
+is the same width; nothing is drawn in it. DIV-0068, tier Intent (the
+original's own branch says a space has nothing to texture; committing the
+quad anyway draws garbage and here crashes).
+
+**How it was checked** (headless only, this wave):
+
+- `BOF3X_SHADOW=msgbox`: 44,000 rounds, 1,000 of them `MsgBox_EffectDraw`
+  against a byte-copy of `0x4987E0` with its four calls re-aimed, 0
+  MISMATCHES. The packet slot is random bytes and compared whole, so
+  Capcom's stale commit of a space is compared byte for byte (354 spaces,
+  every one committed by the copy). Then the fix switched on, on the same
+  1,000 inputs: a glyph identical to Capcom's, a space equal to Capcom's
+  state with the primitive taken out (the clut word kept, the cursor and the
+  rest of the slot untouched, `Gpu_GetClut` the only call) - 0 MISMATCHES.
+- 35 controls, one at a time (`fixwave/gs/controls.py` in the session
+  scratchpad): every one refused. Rounds of 1,000; the second column is the
+  fix-on check's count.
+
+| # | Planted | Faithful | Fix on |
+|---|---|--:|--:|
+| C01 | colour nibble widened to 5 bits | 497 | 497 |
+| C02 | `Gpu_GetClut` y `0x1F0` | 1,000 | 1,000 |
+| C03 | the clut word + 1 | 1,000 | 1,000 |
+| C04 | the extent edge `P < 12`, not `<= 12` | 32 | 32 |
+| C05 | the extent compare unsigned | 249 | 249 |
+| C06 | the extent 10 above the edge, not 11 | 221 | 221 |
+| C07 | the glyph bias `0x25` | 494 | 494 |
+| C08 | the lead byte keeps bit 7 | 152 | 152 |
+| C09 | the second byte ignored | 150 | 150 |
+| C10 | the glyph word stored as a byte | 644 | 644 |
+| C11 | `v0` 1 | 646 | 646 |
+| C12 | `u1` a flat 12 | 221 | 221 |
+| C13 | `u2` not written | 643 | 643 |
+| C14 | `v2` not clipped | 521 | 521 |
+| C15 | `v3` from the clip table + 1 | 553 | 553 |
+| C16 | the space test `0x21` | 359 | 359 |
+| C17 | **the fix always on** | 354 | 0 |
+| C18 | shade `0x7F` | 1,000 | 646 |
+| C19 | `y0` + 1 | 1,000 | 646 |
+| C20 | the right edge + 13 | 1,000 | 646 |
+| C21 | `y1` the bottom | 832 | 541 |
+| C22 | `x2` the right | 941 | 606 |
+| C23 | the scale divided by 11 | 605 | 399 |
+| C24 | the scale divided unsigned | 196 | 120 |
+| C25 | the cut `>> 3` | 708 | 467 |
+| C26 | the clip row masked to 3 bits | 200 | 129 |
+| C27 | the bottom without `P` | 950 | 617 |
+| C28 | semi-transparency 0 | 1,000 | 646 |
+| C29 | commit size `0x20` | 1,000 | 646 |
+| C30 | the final pen move dropped | 950 | 617 |
+| C31 | the final pen + 12 | 1,000 | 646 |
+| C32 | `P` read before `Gpu_GetClut` | 8 | 8 |
+| C33 | DIV-0068: the space's pen + 12, not `P` | 0 | 339 |
+| C34 | DIV-0068: the space's pen not moved | 0 | 333 |
+| C35 | DIV-0068: the clut word skipped for a space | 0 | 354 |
+
+  C17 is the one that matters most: ours with the fix stuck on is refused
+  by the faithful comparison in every space round. The thinnest is C32 (8):
+  only a `Gpu_GetClut` stand-in disturbance of `0x7DEE68` across the 12 / 13
+  edge tells the early read apart.
+- `BOF3X_SHADOW='*'` narrow, every group's fuzz: see the report of this
+  wave (the number is in the commit message).
+- `python tools/ledger_check.py`: 0 errors.
+
+**Owed the owner's eye** - nothing here was run live:
+
+1. The shout with clean gaps (the live check below).
+2. **The question:** should a growing shout take DIV-0006's advance table?
+   Today every character of a grow span, space included, advances `12 + P`
+   (§3) - an English shout spaced letter by letter by its translators sits
+   wide. Narrowing it is a one-line change in `MsgBox_EffectDraw`, an
+   amendment to DIV-0006, and the owner's call on how it looks.
+
+### For the coordinator's live check
+
+The owner's `tools/recipes/balioAndSunder_2.txt` (untracked in the main
+checkout; `# save balioAndSunder_2`; it ends by saving to slot 6 on purpose -
+leave that) enters `0x4987E0` first at recipe frame **11,482**
+(`analysis/calltrace/reach_balioAndSunder_2_1003/reach_new.txt`). The
+route's own log puts that frame in area 41 (`en.AREA041.DAT` opened at frame
+9,685, the boss file at 17,202). Area 41's English message `0x07` has an
+11-character grow span with **one** `0x20` in it, preset 4 (kind 2, `P` 11,
+30 frames): the span is drawn at 23 px a character for about 30 frames, then
+shrinks by 2 a frame back to 12 (`MsgBox_GrowStep`). On the 30 September
+build that one space committed a stale primitive and did not happen to
+crash.
+
+1. The shots copy (frames 11,476..11,544, every 4 - 18 shots; the recipe
+   holds `circle` on 11,500..11,512, which the shots keep):
+
+       python tools/recipe_shots.py tools/recipes/balioAndSunder_2.txt --every 4 --from 11476 --to 11544 --out tools/recipes/balioAndSunder_2_shout.txt
+
+2. The run, as the recipe header says it was recorded (`BOF3X_LANG=en`,
+   `BOF3X_FILTER=point`), on the merged build, the game writing its own
+   frames:
+
+       python tools/input_run.py tools/recipes/balioAndSunder_2_shout.txt --out analysis/shots/gs_shout --lang en --env BOF3X_FILTER=point --no-front
+
+   and the same with `--original MsgBox_EffectDraw` into
+   `analysis/shots/gs_shout_orig` for the A/B (Capcom's draw, the stale
+   quad back).
+
+3. **Right:** in `f11480`..`f11512` the shout is drawn large, with a clean
+   gap - the box's own background - where the space is, the same width as a
+   letter cell; the letters either side are unchanged from the original
+   side. **Wrong:** anything drawn in the gap (a glyph or a smear of
+   texture), a gap of a different width (the letters after it shifted
+   against the original side), or no growing at all (the shots missed the
+   effect - widen the window to 11,600). On the original side the gap holds
+   whatever the slot last had, or the run crashes in `Font_UnpackGlyph`.
+
+The owner's own crash (area `0x63`, message `0x24`, four spaces, `P` 11 for
+ever) is reached by no recipe; that one is the owner's to see in play.

@@ -241,8 +241,12 @@ it is a table, a proportional font is a data change.
 2. **Owner, in game.** Only the attract sequence has been seen: a caption and
    two speakers. Choice menus, name inserts (`0x03` `0x04` `0x07`), colour,
    the instant-print spans and page breaks are converted by rule and unseen.
-3. **The stepper's second draw, `0x4987E0`** (flag 8 of `0x7DEE44`), still
-   advances 12. Unread; by position it is the PSX grow/shrink text effect.
+3. **The stepper's second draw, `0x4987E0`** (flag 8 of `0x7DEE44`), the
+   PSX grow/shrink text effect. **Read and ours 2026-10-03**
+   (`MsgBox_EffectDraw`, [`msgbox.md`](msgbox.md) §9): a space inside a
+   grow span no longer draws a stale glyph (DIV-0068 - it crashed the owner's
+   game in area `0x63`). It still advances `12 + P` a character, space
+   included, not DIV-0006's table - open, the owner's call.
 4. **Menus: built 2026-09-20, seen 2026-09-21** (DIV-0008, §7; captured by
    input recipe on every menu screen). Left in Chinese: place names (enemy
    names since DIV-0053; the stat labels, the list headers and the status
@@ -446,8 +450,9 @@ readers by `pe_xref.py`:
   - the unowned 8-unit glyph draw `0x516E70`;
   - `Text_DrawFont8` `0x517090`, which the same functions call only for
     numbers;
-  - the effect draw `0x4987E0`, reached only by `MsgBox_Step` under a
-    grow/shrink span.
+  - the effect draw `0x4987E0` (`MsgBox_EffectDraw`, ours since
+    2026-10-03 but with Capcom's glyph word, no pair handling), reached only
+    by `MsgBox_Step` under a grow/shrink span.
 
   A name inserted inside such a span would show the pair's placeholder
   glyph.

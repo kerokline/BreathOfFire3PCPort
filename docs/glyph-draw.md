@@ -44,7 +44,12 @@ callers of `Gpu_SetCode6C`, `analysis/pc_funcs.json`): `Text_EmitGlyph`
 `0x516D50` (every string), `0x4987E0` (under `MsgBox_Step`), `0x4FC420`
 (six strings over an object), `0x469AD0` and `0x4B1520`. The first four were
 checked to store a glyph index at `+0x16` (the last is 2,880 bytes and was
-not read). **So every code-`0x6C` primitive is a glyph, and DIV-0025 applies
+not read). **One exception, found 2026-10-03:** `0x4987E0` (ours since then,
+`MsgBox_EffectDraw`) skips that store for a space and committed the
+primitive anyway, so a space in a growing shout reached `Font_UnpackGlyph`
+with whatever glyph word the packet slot last held - the crash of
+2026-10-02. DIV-0068: ours commits nothing for a space
+([`msgbox.md`](msgbox.md) §9). **So every code-`0x6C` primitive is a glyph, and DIV-0025 applies
 to all of them.** Nothing else in the exe reads the `1/32` double at
 `0x5C4618`: its eight references (a raw scan of `.text`) are all inside
 `D3d_DrawGlyph`. The sprite handlers' texture coordinates come from the

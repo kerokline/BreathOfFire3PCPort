@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 67 entries, DIV-0001..0067, the last withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 68 entries, DIV-0001..0068, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -435,7 +435,9 @@ designed in rather than bolted on.
   clone with both sides calling the same stand-in. `Text_DrawAt` `0x516B30`
   itself is now ours too, faithful.
 - **Not covered:** the stepper's other draw, `0x4987E0` (flag 8 of
-  `0x7DEE44`; unread).
+  `0x7DEE44`). Read 2026-10-03 and ours as `MsgBox_EffectDraw` (DIV-0068):
+  it advances `12 + P` a character, space included, and does not take this
+  table - an open question for the owner ([`msgbox.md`](msgbox.md) §3).
 - **Rationale:** English at a 12 px advance overflows the box on the first
   line (seen 2026-09-20); the donor script's line breaks are authored for 8.
 - **Verification:** attract run, 2026-09-20: `retarget ON MsgBox_DrawChar` and
@@ -2883,7 +2885,8 @@ designed in rather than bolted on.
     labels.
   - The 361 enemy names and 72 item names that do not fit.
   - The launcher's settings file, which knows only `en` and `original`.
-  - The grow / shrink draw `0x4987E0` (unread), which Japanese shouts use.
+  - The grow / shrink draw `0x4987E0` (ours since 2026-10-03,
+    `MsgBox_EffectDraw`, DIV-0068; no pair handling), which Japanese shouts use.
 - **Reversible?** play without `BOF3X_LANG`.
 
 ### Two kana in one glyph code: pair codes for Japanese names
@@ -3416,3 +3419,56 @@ designed in rather than bolted on.
   the sequence is fixed from boot; and the per-frame `randlog` line in
   recorded and scripted runs (`src/hook/input_script.cpp`), a counting
   replacement over a byte-copy of `rand` that changes no value.
+
+### A space in a growing shout draws nothing
+
+- **ID:** DIV-0068
+- **Date:** 2026-10-03
+- **Subsystem:** text (`MsgBox_EffectDraw` `0x4987E0`, ours in
+  `src/game/msgbox.cpp`; `MsgBox_Step`'s draw under flag 8 of `0x7DEE44`,
+  the grow / shrink effects 2 and 3)
+- **Tier:** Intent - the original crashes, and its own branch shows a space
+  was meant to have nothing to texture
+- **Original behaviour:** for a character inside a grow span the draw
+  writes the CLUT word, then `cmp cl, 0x20 / je 0x4988BE` at `0x498819`:
+  a space skips the glyph word `+0x16` and all eight texture bytes, yet
+  `0x4988BE` onward writes the shade and the corners and commits the
+  primitive (`Gpu_SetCode6C`, `Gpu_SetSemiTrans`, `Gfx_CommitPrim`). The
+  slot's glyph word and texture are whatever the last primitive there left
+  (disassembly 2026-10-03, [`msgbox.md`](msgbox.md) §9). Capcom's Chinese
+  script never puts a space in a grow span (63 grow presets over the
+  shipped `AREA*.DAT`, none after a span with a `0x20`); the English
+  overlay does - 15 of its 65, in areas 11, 40, 41 and 99 - and on
+  2026-10-02 the owner's game crashed at one (area 99, message `0x24`:
+  nine characters, four of them `0x20`):
+  `build/bof3x.crash-30104-0.dmp`, `Font_UnpackGlyph` reading `0x17053EA0`
+  for the stale word `0xC254`, the dump's four space slots holding stale
+  words.
+- **New behaviour:** a space writes the CLUT word and moves the pen by `P`
+  (`0x7DEE68`) exactly as the original does, and builds and commits no
+  primitive: the gap is the same width with nothing in it. Every other
+  character is the original's to the byte. A byte flag
+  (`g_effect_space_skips`, `PatchBytes MsgBoxEffectSpaceSkips`) turns it on
+  after the `msgbox` self-test, whose fuzz compares Capcom's spaces.
+- **Rationale:** the owner's crash. A primitive with an unwritten glyph
+  word draws an arbitrary glyph at best and faults the renderer at worst;
+  the original's own skip says a space has no texture.
+- **Also in the PSX version?** Yes, the same shape: the twin `0x80151F4C`
+  takes its word separator `0xFF` from `0x80152010` to `0x80152BF8`,
+  skipping the tpage word and the `u`, `v` bytes and still writing the
+  corners and committing (sibling `disasm_exe.py`, SLPS). The port
+  carried the slip over with `0x20` for `0xFF`. Whether a JP shout puts an
+  `0xFF` in a grow span was not measured.
+- **Verification:** `BOF3X_SHADOW=msgbox` 44,000 rounds, 0 mismatches,
+  1,000 of them this function against a byte-copy with the packet slot
+  random and compared (354 spaces, each committed by the copy); with the
+  flag on, the same inputs: glyphs identical, spaces equal to the copy's
+  state with the primitive taken out, 0 mismatches. 35 controls planted,
+  35 refused, including the fix stuck on (refused in all 354 space
+  rounds). Not run live in this wave: [`msgbox.md`](msgbox.md) §9 has the
+  route and frames (`balioAndSunder_2.txt`, frames 11,476..11,544).
+- **Not changed:** the advance. A grow span advances `12 + P` a
+  character, space included; DIV-0006's table is not consulted (the
+  owner's call, [`msgbox.md`](msgbox.md) §3).
+- **Reversible?** `BOF3X_ORIGINAL=MsgBox_EffectDraw` runs Capcom's draw,
+  stale quad and all.
