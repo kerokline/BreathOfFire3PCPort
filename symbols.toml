@@ -97551,3 +97551,525 @@ ctype = "unsigned long"
 count = 16
 status = "evidence"
 evidence = "read 2026-10-03 (round thirteen group E5C): EffectKind18Sub17_Run 0x503660 by +2: _Start, _WaitCue, _Rise, _MoveZ, _MoveXZ, _MoveX, _Count, _WaitEnemy0, _Settle, _End, _Start10, _WaitCue11, _Count12, _WaitEnemy1, _Settle14 and entry 15 0x503DE0 (group E5D's, round thirteen wave five: at +9 / 5 = 4 MoveCmd_TestFC(0x43, 0x1A) and Effect_Release) - _Settle14 steps +2 to 15; _WaitCue spawns a record at 10; data follows at 0x65E1E8. The dispatcher does not bound its index; the count is the table's own length (the sub-states the code sets, and the next table or data), checked by hand - band_rows.py's runs continue into the next table. docs/effect_5c.md section 3."
+
+[[func]]
+pc = 0x50E400
+name = "EffectKind18Sub33_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E400..0x50E411 (0x12 bytes), cdecl: jmp [EffectKind18Sub33_States + +2 * 4], unbounded (hidden in E6A's 0x50E1C0). Reached by EffectKind18_States[0x33] (0x654138). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E420
+name = "EffectKind18Sub33_Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E420..0x50E539 (0x11A bytes), cdecl: sub-state 0: +8 = (s16 +0x3A == 0); the variant s16 +0x36 (unchecked) names a cell pair at 0x65EBD4 (room 2) put into +0x36 / +0x3A; +0x30 = 0, +2 up; the leader (ObjTrio +0x34 / +0x38) at the cell's front (z first when +8: |p - ((cell + 1) << 16 | 0x8000)| <= 0x8000, then |p - (cell << 16)| or that - 0x10000 <= 0x10000): +0x30 = 0x100, +2 = 3. Then E6A's draw 0x50E1C0. Hidden in 0x50E1C0; EffectKind18Sub33_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E540
+name = "EffectKind18Sub33_WaitNear"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E540..0x50E61E (0xDF bytes), cdecl: sub-state 1: the leader at the cell's front: sound 0x200 unless Field_Request, +2 up (Sprite_Current read after the sound). E6A's draw. Hidden in 0x50E1C0; EffectKind18Sub33_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E620
+name = "EffectKind18Sub33_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E620..0x50E63E (0x1F bytes), cdecl: sub-state 2: +0x30 += 0x20; at 0x100 (signed) +2 up. A tail jump to E6A's draw. Hidden in 0x50E1C0; EffectKind18Sub33_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E640
+name = "EffectKind18Sub33_WaitFar"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E640..0x50E701 (0xC2 bytes), cdecl: sub-state 3: the front test at 0x20000 both ways fails: +2 up. E6A's draw. Hidden in 0x50E1C0; EffectKind18Sub33_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E710
+name = "EffectKind18Sub33_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E710..0x50E74A (0x3B bytes), cdecl: sub-state 4: +0x30 -= 0x20; at 0 or below sound 0x201 unless Field_Request and +2 = 1. A tail jump to E6A's draw. Hidden in 0x50E1C0; EffectKind18Sub33_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E750
+name = "EffectKind18Sub34_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E750..0x50E761 (0x12 bytes), cdecl: jmp [EffectKind18Sub34_States + +2 * 4], unbounded (hidden in E6A's 0x50E1C0). Reached by EffectKind18_States[0x34] (0x65413C). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E770
+name = "EffectKind18Sub34_Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E770..0x50E889 (0x11A bytes), cdecl: sub-state 0: EffectKind18Sub33_Place with the cell pairs at 0x65EBEC (room 2). E6A's draw. Hidden in 0x50E1C0; EffectKind18Sub34_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E890
+name = "EffectKind18Sub34_WaitNear"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E890..0x50E96E (0xDF bytes), cdecl: sub-state 1: as EffectKind18Sub33_WaitNear. Hidden in 0x50E1C0; EffectKind18Sub34_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E970
+name = "EffectKind18Sub34_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E970..0x50E98E (0x1F bytes), cdecl: sub-state 2: as EffectKind18Sub33_Open. Hidden in 0x50E1C0; EffectKind18Sub34_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50E990
+name = "EffectKind18Sub34_WaitFar"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50E990..0x50EA51 (0xC2 bytes), cdecl: sub-state 3: as EffectKind18Sub33_WaitFar. Hidden in 0x50E1C0; EffectKind18Sub34_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EA60
+name = "EffectKind18Sub34_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EA60..0x50EA9A (0x3B bytes), cdecl: sub-state 4: as EffectKind18Sub33_Close. Hidden in 0x50E1C0; EffectKind18Sub34_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EAA0
+name = "EffectKind18Sub37_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EAA0..0x50EAB1 (0x12 bytes), cdecl: jmp [EffectKind18Sub37_States + +2 * 4], unbounded (hidden in E6A's 0x50E1C0). Reached by EffectKind18_States[0x37] (0x654148). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EAC0
+name = "EffectKind18Sub37_Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EAC0..0x50EB19 (0x5A bytes), cdecl: sub-state 0: +8 = (s16 +0x3A == 0); the variant's cell pair at 0x65EC04 (room 2); +0x3E = 0xFF80, +0x30 = 0x100, +2 up. Nothing drawn. Hidden in 0x50E1C0; EffectKind18Sub37_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EB20
+name = "EffectKind18Sub37_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EB20..0x50EB3B (0x1C bytes), cdecl: sub-state 1 of sub-kinds 0x37 and 0x38: +9 >= 8 (unsigned): +2 up; +9 up. Nothing drawn. Hidden in 0x50E1C0; EffectKind18Sub37_States[1], EffectKind18Sub38_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EB40
+name = "EffectKind18Sub37_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EB40..0x50EB79 (0x3A bytes), cdecl: sub-state 2: +0x30 -= 0x10; at 0 or below sound 0x201 unless Field_Request and +2 up (to state 3, E6A's 0x50E1C0 itself). A tail jump to E6A's draw. Hidden in 0x50E1C0; EffectKind18Sub37_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EB80
+name = "EffectKind18Sub35_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EB80..0x50EB91 (0x12 bytes), cdecl: jmp [EffectKind18Sub35_States + +2 * 4], unbounded (hidden in E6A's 0x50E1C0). Reached by EffectKind18_States[0x35] (0x654140). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EBA0
+name = "EffectKind18Sub35_Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EBA0..0x50ECB9 (0x11A bytes), cdecl: sub-state 0: EffectKind18Sub33_Place with the cell pairs at 0x65EC1C (room 4) and the open slide 0xFF00 (-0x100). EffectKind18Sub35_Draw. Hidden in 0x50E1C0; EffectKind18Sub35_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50ECC0
+name = "EffectKind18Sub35_WaitNear"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50ECC0..0x50ED9E (0xDF bytes), cdecl: sub-state 1: as EffectKind18Sub33_WaitNear, drawn by EffectKind18Sub35_Draw. Hidden in 0x50E1C0; EffectKind18Sub35_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EDA0
+name = "EffectKind18Sub35_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EDA0..0x50EDBE (0x1F bytes), cdecl: sub-state 2: +0x30 -= 0x20; at -0x100 or below +2 up. A tail jump to EffectKind18Sub35_Draw. Hidden in 0x50E1C0; EffectKind18Sub35_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EDC0
+name = "EffectKind18Sub35_WaitFar"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EDC0..0x50EE81 (0xC2 bytes), cdecl: sub-state 3: as EffectKind18Sub33_WaitFar, drawn by EffectKind18Sub35_Draw. Hidden in 0x50E1C0; EffectKind18Sub35_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EE90
+name = "EffectKind18Sub35_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EE90..0x50EECA (0x3B bytes), cdecl: sub-state 4: +0x30 += 0x20; at 0 or above sound 0x201 unless Field_Request and +2 = 1. A tail jump to EffectKind18Sub35_Draw. Hidden in 0x50E1C0; EffectKind18Sub35_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50EED0
+name = "EffectKind18Sub35_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50EED0..0x50F10A (0x23B bytes), cdecl: Gpu_SetDrawMode(page 0x95), Gfx_CommitPrim(6, 0xC); one POLY_FT4 in Prim_VertexScratch: with +8 z (+0x3A << 7) - 0x3FC0 and x (+0x36 << 7) - +0x30 - 0x3F40 / - 0x4040, else x (+0x36 << 7) - 0x3FC0 and z (+0x3A << 7) + +0x30 - 0x3F40 / - 0x4040; heights 0x40 / 0x180 less half of AreaMap_Elevation at vertex 0's and vertex 1's ground point (four calls); Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture((+8 << 21) | 0x151010F), Gfx_CommitPrim(6, 0x48). The catalog's extent 0x6BB spans the hidden starts after its ret. Called or tail-jumped to by sub-kind 0x35's states and 0x38's close; EffectKind18Sub38_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F110
+name = "EffectKind18Sub38_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F110..0x50F121 (0x12 bytes), cdecl: jmp [EffectKind18Sub38_States + +2 * 4], unbounded (hidden in 0x50EED0). Reached by EffectKind18_States[0x38] (0x65414C). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F130
+name = "EffectKind18Sub38_Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F130..0x50F1EC (0xBD bytes), cdecl: sub-state 0: +8 = (s16 +0x3A == 0); the variant's cell pair at 0x65EC38 (room 4); +0x3E = 0xFF80; the leader at the cell's front, z first whatever +8 says: +0x30 = 0xFF00 and +2 up; else +0x30 = 0 and +2 = 3. Nothing drawn. Hidden in 0x50EED0; EffectKind18Sub38_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F1F0
+name = "EffectKind18Sub38_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F1F0..0x50F229 (0x3A bytes), cdecl: sub-state 2: +0x30 += 0x10; at 0 or above sound 0x201 unless Field_Request and +2 up. A tail jump to EffectKind18Sub35_Draw. Hidden in 0x50EED0; EffectKind18Sub38_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F230
+name = "EffectKind18Sub3B_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F230..0x50F241 (0x12 bytes), cdecl: jmp [EffectKind18Sub3B_States + +2 * 4], unbounded (hidden in 0x50EED0). Reached by EffectKind18_States[0x3B] (0x654158). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F250
+name = "EffectKind18Sub3B_Place"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F250..0x50F37C (0x12D bytes), cdecl: sub-state 0: EffectKind18Sub33_Place with the cell pairs at 0x65EC58 (room 2), the variant's s16 at 0x65EC54 into +0x3E and the open slide 0xC0. EffectKind18Sub3B_Draw. Hidden in 0x50EED0; EffectKind18Sub3B_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F380
+name = "EffectKind18Sub3B_WaitNear"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F380..0x50F45E (0xDF bytes), cdecl: sub-state 1: as EffectKind18Sub33_WaitNear, drawn by EffectKind18Sub3B_Draw. Hidden in 0x50EED0; EffectKind18Sub3B_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F460
+name = "EffectKind18Sub3B_Open"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F460..0x50F47E (0x1F bytes), cdecl: sub-state 2: +0x30 += 0x10; at 0xC0 +2 up. A tail jump to EffectKind18Sub3B_Draw. Hidden in 0x50EED0; EffectKind18Sub3B_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F480
+name = "EffectKind18Sub3B_WaitFar"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F480..0x50F541 (0xC2 bytes), cdecl: sub-state 3: as EffectKind18Sub33_WaitFar, drawn by EffectKind18Sub3B_Draw. Hidden in 0x50EED0; EffectKind18Sub3B_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F550
+name = "EffectKind18Sub3B_Close"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F550..0x50F58A (0x3B bytes), cdecl: sub-state 4: +0x30 -= 0x10; at 0 or below sound 0x201 unless Field_Request and +2 = 1. A tail jump to EffectKind18Sub3B_Draw. Hidden in 0x50EED0; EffectKind18Sub3B_States[4]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F590
+name = "EffectKind18Sub3B_Draw"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F590..0x50F771 (0x1E2 bytes), cdecl: with +8 the corners' z (+0x3A << 7) - 0x3FC0, else their x (+0x36 << 7) - 0x3FC0; heights +0x3E - 0x180 (corners 0, 1) and +0x3E (2, 3); Gpu_SetDrawMode(page 0x95), Gfx_CommitPrim(6, 0xC); two POLY_FT4s, side 0 and 1: the other axis (cell << 7) - 0x3F40 / - 0x4040 plus +0x30 times the s8 0x65EC5C[side] (a 16-bit imul); Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture((+8 << 21) | (0x10C - side) | 0x12510000), Gfx_CommitPrim(6, 0x48). The catalog's extent 0x54E spans the hidden starts after its ret. Called or tail-jumped to by sub-kind 0x3B's five states. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F780
+name = "EffectKind18Sub54_Pulse"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F780..0x50F81B (0x9C bytes), cdecl: Gpu_SetDrawMode(page 0xB5), Gfx_CommitPrim(3, 0xC); a semi-transparent POLY_F4 (0, 0)..(320, 240) as floats (the 320.0 at 0x50F7B5 - DIV-0041's listed fill), colour (0, 0x30, 0x65EC60[+2] << 3), Gfx_CommitPrim(3, 0x38); Frame_Counter & 7 = 0: +2 = (+2 + 1) & 3. +2 unbounded (room four). EffectKind18Sub36_Pulse's code with its own table. Hidden in 0x50F590. Reached by EffectKind18_States[0x54] (0x6541BC). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50F820
+name = "EffectKind18Sub3D_Ripple"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50F820..0x50F9F4 (0x1D5 bytes), cdecl: Cond_ByteFE 0: nothing. Else 35 rows from (s16 0x905E62) - 0x14, k = 0, 3, .. 0x66: a = (Math_Sin(((F + k) << 7) & 0xFFF) >> 10) - (Math_Sin((((F + k) << 7) - 0x80) & 0xFFF) >> 10), b = (Math_Sin(((F + k + 3) << 7) & 0xFFF) >> 10) - (Math_Sin(((F + k + 2) << 7) & 0xFFF) >> 10), F Frame_Counter read before each call; 35 columns from (s16 0x905E66) - 0x14: a cell inside AreaMap_Header's width and height (signed tests) has its AreaMap_Corners bytes 0, 1 += a and 2, 3 += b. Then word 0x802D7E (ObjTrio +0x3E) = AreaMap_Elevation(ObjTrio +0x34, +0x38) and MapView_Redraw = 2. Hidden in 0x50F590. Reached by EffectKind18_States[0x3D] (0x654160). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FA00
+name = "EffectKind18Sub40_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FA00..0x50FA11 (0x12 bytes), cdecl: jmp [EffectKind18Sub40_States + +2 * 4], unbounded (hidden in 0x50F590). Reached by EffectKind18_States[0x40] (0x65416C). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FA20
+name = "EffectKind18Sub40_WaitCue"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FA20..0x50FA47 (0x28 bytes), cdecl: sub-state 0: MoveScript_Var7 == 0xC and byte 0x8034E5 == 2: sound 0x202, +2 up. Nothing drawn. Hidden in 0x50F590; EffectKind18Sub40_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FA50
+name = "EffectKind18Sub40_WaitOne"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FA50..0x50FA69 (0x1A bytes), cdecl: sub-state 1: Cond_ByteFE == 1: +2 up and EffectKind18Sub40_Draw(0); otherwise nothing drawn. Hidden in 0x50F590; EffectKind18Sub40_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FA70
+name = "EffectKind18Sub40_WaitTwo"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FA70..0x50FAA0 (0x31 bytes), cdecl: sub-state 2: Cond_ByteFE == 2: sounds 0x206 and 0x203, +2 up. EffectKind18Sub40_Draw(0). Hidden in 0x50F590; EffectKind18Sub40_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FAB0
+name = "EffectKind18Sub40_Move"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FAB0..0x50FADD (0x2E bytes), cdecl: sub-state 3: +9 up; Cond_ByteFE == 0: Effect_Release. EffectKind18Sub40_Draw(+9) (read after the release). Hidden in 0x50F590; EffectKind18Sub40_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FAE0
+name = "EffectKind18Sub40_Draw"
+ret = "void"
+params = "int step"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FAE0..0x50FD28 (0x249 bytes), cdecl: a RECT {0x60, 0x10, 0x10, 0x10} at the packet cursor (cursor += 8) the texture window of Gpu_SetDrawMode(page 0x1B), Gfx_CommitPrim(5, 0xC); three semi-transparent POLY_FT4s (tpage 0x7B, clut 0x78C6, colour 0x80): pane i from 0x65EC74 + 4i (t0..t3): x ((t0 << 5) + step) * 4 - 0x4040 .. (((t0 + t2) << 5) + step) * 4 - 0x4040, z likewise from t1, t3; heights 6 * step - 0x380; pane 2's corner 0 + 8 * step in x and z; u, v up to (t2 << 4) - 1, (t3 << 4) - 1; Gte_RotTransPers4, Gte_PrimDepths4_10, Gfx_CommitPrim(5, 0x48). Then a RECT {0, 0, 0x100, 0x100} likewise. The original stores 6 * step - 0x380 over its own argument slot. The catalog's extent 0x423 spans the hidden starts after its ret. Called by sub-kind 0x40's states 1..3. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FD30
+name = "EffectKind18Sub41_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FD30..0x50FD41 (0x12 bytes), cdecl: jmp [EffectKind18Sub41_States + +2 * 4], unbounded (hidden in 0x50FAE0). Reached by EffectKind18_States[0x41] (0x654170). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FD50
+name = "EffectKind18Sub41_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FD50..0x50FD5F (0x10 bytes), cdecl: sub-state 0: Cond_ByteFE = 2, +2 up. PSX twin 0x801F2C8C (AREA106, table-anchored; no sibling name). Hidden in 0x50FAE0; EffectKind18Sub41_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FD60
+name = "EffectKind18Sub41_WaitOne"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FD60..0x50FD86 (0x27 bytes), cdecl: sub-state 1: Cond_ByteFE == 1: +9 = 0, +2 up, EffectKind18Sub41_Draw(0, 0); otherwise nothing drawn. PSX twin 0x801F2CB4 (AREA106, table-anchored; no sibling name). Hidden in 0x50FAE0; EffectKind18Sub41_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FD90
+name = "EffectKind18Sub41_Turn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FD90..0x50FE1A (0x8B bytes), cdecl: sub-state 2: EffectKind18Sub41_Draw(+9 > 0xB, 0x65EC80[+9] << 4); +9 up; past 0xF: sound 0x200 when Flags_Test(0x904030, 0x4F) else 0x201, +0xA = 0, +2 up. +9 unbounded into 0x65EC80 (room 0x1C). PSX twin 0x801F2D0C (AREA106, callers; no sibling name). Hidden in 0x50FAE0; EffectKind18Sub41_States[2]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FE20
+name = "EffectKind18Sub41_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FE20..0x50FF02 (0xE3 bytes), cdecl: sub-state 3: +9 not 0: EffectKind18Sub41_Draw(1, 0x65EC80[+9] << 4), +9 up; +9 == 0x17: Flags_Set(0x904030, 0x50), MoveCmd_TestFB(0x13, 0x25), +9 = 0; Flags_Test(0x904030, 0x4F): 0x5100B0(0x65ECAC[+0xA] << 2, 0x65ECC8[+0xA >> 1]) when +0xA < 0x19, then 0x5101C0(+0xA); +0xA up; past 0x30 a tail jump to Effect_Release. PSX twin 0x801F2DDC (AREA106, gap67; no sibling name); the cell 0x6001E0 that also holds 0x0050FE20 is two s16 of data, not a pointer. Hidden in 0x50FAE0; EffectKind18Sub41_States[3]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x50FF10
+name = "EffectKind18Sub41_Draw"
+ret = "void"
+params = "unsigned variant, int angle"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x50FF10..0x5100A9 (0x19A bytes), cdecl: Gpu_SetDrawMode(page 0x95), Gfx_CommitPrim(5, 0xC); Gte_PushMatrix; the point (0xC840, 0xD240, 0xFB80) by Gte_RotTrans into a MATRIX's translation, Gte_RotMatrix of (0, -angle, 0), Gte_MulMatrix0(Camera_Matrix, m, m), Gte_SetRotMatrix, Gte_SetTransMatrix; four POLY_FT4s: quad q = 0x65ED08[variant * 4 + i], its vertices from the 12 bytes at 0x65ECD8 + 12q (x, z, -y, << 7), Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture(0x65ED10[q] + (((s8 0x65ED20[q] * angle) & 0xFFFFF800) << 8)), Gfx_CommitPrim(5, 0x48); Gte_PopMatrix. PSX twin 0x801F2F38 (AREA106, callers; no sibling name); the 18 .data cells band_rows.py lists holding 0x0050FF10 are s16 pairs, not pointers. Called by sub-kind 0x41's states 1..3. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x510C20
+name = "EffectKind18Sub44_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x510C20..0x510C31 (0x12 bytes), cdecl: jmp [EffectKind18Sub44_States + +2 * 4], unbounded (hidden in Capcom's 0x510BB0, a helper in no group). Reached by EffectKind18_States[0x44] (0x65417C). Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x510C40
+name = "EffectKind18Sub44_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x510C40..0x510C79 (0x3A bytes), cdecl: sub-state 0: Sprite_SetAnimationBank(0x2A8), +0x24 = 0, Sprite_SetAnimation(0), +0x29 = 6, +0x48 = 0, +2 up (Sprite_Current read afresh for each). Hidden in 0x510BB0; EffectKind18Sub44_States[0]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[func]]
+pc = 0x510C80
+name = "EffectKind18Sub44_Step"
+ret = "void"
+params = "void"
+impl = "src/game/effect_6b.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-03 (round thirteen group E6B, capstone to the last instruction), 0x510C80..0x510C89 (0xA bytes), cdecl: sub-state 1: call E6C's 0x510C90, jmp E6C's 0x510EB0. Hidden in 0x510BB0; EffectKind18Sub44_States[1]. Fuzz only: no recorded route enters it (catalog reach columns empty, no first-call trace hit). docs/effect_6b.md."
+
+[[data]]
+pc = 0x65EBC0
+name = "EffectKind18Sub33_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub33_Run 0x50E400 by +2: _Place, _WaitNear, _Open, _WaitFar, _Close (the states step +2 through 1..4 and back to 1); sub-kind 0x33's cell pairs (data) follow at 0x65EBD4. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
+
+[[data]]
+pc = 0x65EBD8
+name = "EffectKind18Sub34_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub34_Run 0x50E750 by +2: _Place, _WaitNear, _Open, _WaitFar, _Close; sub-kind 0x34's cell pairs (data) follow at 0x65EBEC. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
+
+[[data]]
+pc = 0x65EBF4
+name = "EffectKind18Sub37_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub37_Run 0x50EAA0 by +2: _Place, _Hold, _Close and E6A's draw 0x50E1C0 (held); sub-kind 0x37's cell pairs (data) follow at 0x65EC04. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
+
+[[data]]
+pc = 0x65EC08
+name = "EffectKind18Sub35_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub35_Run 0x50EB80 by +2: _Place, _WaitNear, _Open, _WaitFar, _Close; sub-kind 0x35's cell pairs (data) follow at 0x65EC1C. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
+
+[[data]]
+pc = 0x65EC28
+name = "EffectKind18Sub38_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub38_Run 0x50F110 by +2: _Place, EffectKind18Sub37_Hold, _Close and EffectKind18Sub35_Draw (held); sub-kind 0x38's cell pairs (data) follow at 0x65EC38. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
+
+[[data]]
+pc = 0x65EC40
+name = "EffectKind18Sub3B_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub3B_Run 0x50F230 by +2: _Place, _WaitNear, _Open, _WaitFar, _Close; sub-kind 0x3B's lifts (data) follow at 0x65EC54. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
+
+[[data]]
+pc = 0x65EC64
+name = "EffectKind18Sub40_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub40_Run 0x50FA00 by +2: _WaitCue, _WaitOne, _WaitTwo, _Move; the panes' bytes (data) follow at 0x65EC74. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
+
+[[data]]
+pc = 0x65EC9C
+name = "EffectKind18Sub41_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub41_Run 0x50FD30 by +2: _Start, _WaitOne, _Turn, _Hold; bytes (data) follow at 0x65ECAC. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
+
+[[data]]
+pc = 0x65EE78
+name = "EffectKind18Sub44_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E6B): EffectKind18Sub44_Run 0x510C20 by +2: _Start, _Step; the dword after (0x003C0000) is not code. The dispatcher does not bound its index; the count is the table's own length to the next table or the first dword that is not code, checked by hand. docs/effect_6b.md section 3."
