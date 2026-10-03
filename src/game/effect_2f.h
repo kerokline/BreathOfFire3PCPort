@@ -85,7 +85,7 @@ void __cdecl EffectKind52_TrailDraw(unsigned char* trail);
 // original 0x47D4F0: a half fan of eight Gouraud triangles round a screen
 // point (three floats: x, y, depth), `size` read as s16, `angle` as its low
 // word, `shade` as its low byte. Kind 0x52's trail and two callers of other
-// groups (E2E's 0x4796B0, E3D's 0x4875C0) draw a trail's end caps with it.
+// groups (E2E's 0x4796B0, E3D's 0x4875C0 EffectKind80_DrawTrail) draw a trail's end caps with it.
 void __cdecl EffectTrail_DrawCap(const unsigned char* point, unsigned size, unsigned angle, unsigned shade);
 
 // Kind 0x53: a beam from the top of the screen onto an extra sprite;

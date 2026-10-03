@@ -140,8 +140,9 @@ constexpr unsigned kArea172EffectCount = 3;
 // 0x486D60: void (void), engine code (called only by area 170's init): story
 // flag 0x7E, then map bytes (AreaMap_SetByte) and map items
 // (MapView_ItemAt, Prim_SetTexture) over tables of the 0x63CAxx block. Not
-// read further here.
-constexpr std::uint32_t kArea170MapSetUp = 0x486D60;
+// read further here. Ours since round thirteen: EffectKind7D_SetMap (E3D,
+// docs/effect_3d.md), which kind 0x7D's state 2 calls too.
+constexpr std::uint32_t kArea170MapSetUp = bof3::addr::EffectKind7D_SetMap;
 
 }  // namespace at
 }  // namespace area_w4b
