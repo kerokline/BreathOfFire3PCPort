@@ -1,4 +1,4 @@
-// BOF3X_SHADOW=msgbox: a differential fuzz of the forty-three functions of
+// BOF3X_SHADOW=msgbox: a differential fuzz of the forty-four functions of
 // msgbox.cpp against byte-copies of Capcom's, once at start-up
 // (docs/msgbox.md section 5).
 //
@@ -173,6 +173,16 @@ const unsigned char* __cdecl StubDrawString(unsigned color, unsigned count, cons
     Disturb();
     return text + 2;
 }
+// Gpu_GetClut as MsgBox_EffectDraw calls it: a hashed answer, so the clut word
+// and the extent byte the copy forms on top of it (setle al / add eax, 0xB
+// keep the answer's upper bytes) both show, and a disturbance, so a read of
+// 0x7DEE68 taken before the call would.
+unsigned __cdecl StubGetClut(int x, int y) {
+    const std::uint32_t h = Hash();
+    Record(0x5A79E0, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+    Disturb();
+    return h;
+}
 void __cdecl StubSetCode(unsigned char* prim) { Record(0x5A7760, Id(prim)); }
 void __cdecl StubSetSemi(unsigned char* prim, unsigned abe) { Record(0x5A7780, Id(prim), abe); }
 // Moves the packet cursor, as Gfx_CommitPrim does, so a cursor read too late
@@ -198,6 +208,7 @@ const void* StubFor(std::uint32_t target) {
     case 0x461EB0: return f(&StubRepeat);
     case 0x587740: return f(&StubSound);
     case 0x516B70: return f(&StubDrawString);
+    case 0x5A79E0: return f(&StubGetClut);
     case 0x5A7760: return f(&StubSetCode);
     case 0x5A7780: return f(&StubSetSemi);
     case 0x461E50: return f(&StubCommit);
@@ -285,6 +296,7 @@ constexpr Site kMenuOpenCalls[] = {{0xB, 0x59E2D0}};
 constexpr Site kMenuInputCalls[] = {{0x1B, 0x461EB0}};
 constexpr Site kDrawAtCalls[] = {{0x2C, 0x516B70}};
 constexpr Site kEmitCalls[] = {{0xF9, 0x5A7760}, {0x106, 0x5A7780}, {0x10F, 0x461E50}};
+constexpr Site kEffectDrawCalls[] = {{0x11, 0x5A79E0}, {0x21D, 0x5A7760}, {0x22A, 0x5A7780}, {0x233, 0x461E50}};
 
 constexpr Site kDispatchImms[] = {{0x0C, 0x497B30}, {0x19, 0x497E90}, {0x21, 0x497EB0}, {0x29, 0x497F40},
                                   {0x31, 0x498050}, {0x39, 0x4982C0}, {0x41, 0x498450}, {0x49, 0x498470}};
@@ -309,7 +321,7 @@ enum : unsigned {
     kChoiceInput, kChoiceWaitShut, kChoiceReopen, kChoiceDone, kReopen, kState5, kMenuOpen,
     kMenuWaitOpen, kMenuInput, kMenuDone, kState6, kState7, kState7Delay, kEffectTask, kShake,
     kShakeOut, kShakeBack, kGrow, kGrowStart, kGrowStep, kWander, kRise, kRiseStart, kRiseStep,
-    kWindowAlloc, kDrawAt, kEmitGlyph, kCount
+    kWindowAlloc, kDrawAt, kEmitGlyph, kEffectDrawFn, kCount
 };
 
 #define MB_N(a) (static_cast<int>(sizeof(a) / sizeof((a)[0])))
@@ -357,6 +369,7 @@ const Clone kClones[kCount] = {
     {"Window_Alloc", 0x59E2D0, 0x40, nullptr, 0, nullptr, 0, {0, 0, 0}, 0xFFFFFFFFu},
     {"Text_DrawAt", 0x516B30, 0x35, kDrawAtCalls, MB_N(kDrawAtCalls), nullptr, 0, {0, 0, 0}, 0xFFFFFFFFu},
     {"Text_EmitGlyph", 0x516D50, 0x11B, kEmitCalls, MB_N(kEmitCalls), nullptr, 0, {0, 0, 0}, 0},
+    {"MsgBox_EffectDraw", 0x4987E0, 0x24B, kEffectDrawCalls, MB_N(kEffectDrawCalls), nullptr, 0, {0, 0, 0}, 0},
 };
 #undef MB_N
 
@@ -630,6 +643,28 @@ void Seed(unsigned k, std::uint32_t (&args)[7]) {
         for (int i = 0; i < 7; ++i) args[i] = Next() % 2 ? kEdge[Next() % 9] : Next();
         break;
     }
+    case kEffectDrawFn: {
+        // The character: a space a third of the time (the packet slot's
+        // stale bytes are random, so Capcom's commit of them is compared), a
+        // two-byte lead, a byte under 0x26 (the word wraps), or a plain glyph.
+        // P on both sides of the 12 / 13 extent edge, at zero, negative, and
+        // at the word's ends; the clip row 0..7 as the scroll leaves it.
+        unsigned char* const text = g_msg + Next() % 0x100;
+        switch (Next() % 6) {
+        case 0:
+        case 1: text[0] = 0x20; break;
+        case 2: text[0] = static_cast<unsigned char>(0x80 | (Next() & 0x7F)); break;
+        case 3: text[0] = static_cast<unsigned char>(0x12 + Next() % 0x14); break;
+        default: text[0] = static_cast<unsigned char>(0x26 + Next() % 0x5A); break;
+        }
+        text[1] = static_cast<unsigned char>(Next());
+        args[0] = Next() % 2 ? Next() % 0x20 : Next();
+        args[1] = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(text));
+        static const std::uint16_t kOff[] = {0, 1, 2, 0xB, 0xC, 0xD, 0x18, 0xFFF4, 0xFFF3, 0xFFFE, 0x7FFF, 0x8000};
+        if (Often()) SetW(kEffectOff, kOff[Next() % 12]);
+        if (Often()) SetB(kColorHigh, Next() % 8);
+        break;
+    }
     default:
         break;
     }
@@ -680,7 +715,7 @@ void PatchImms(void* copy, const Clone& c) {
 }  // namespace
 
 void SelfTest() {
-    constexpr unsigned kRounds = 43000;
+    constexpr unsigned kRounds = 44000;
     unsigned region_bytes = 0;
     for (const Region& r : kRegions) region_bytes += r.size;
     if (region_bytes != kRegionBytes)
@@ -732,6 +767,7 @@ void SelfTest() {
     s.set_code6c = &StubSetCode;
     s.set_semitrans = &StubSetSemi;
     s.commit = &StubCommit;
+    s.get_clut = &StubGetClut;
 
     const void* const ours[kCount] = {
         reinterpret_cast<const void*>(&Msg_OpenScript),        reinterpret_cast<const void*>(&MsgBox_Reset),
@@ -755,7 +791,7 @@ void SelfTest() {
         reinterpret_cast<const void*>(&MsgBox_EffectWander),   reinterpret_cast<const void*>(&MsgBox_EffectRise),
         reinterpret_cast<const void*>(&MsgBox_RiseStart),      reinterpret_cast<const void*>(&MsgBox_RiseStep),
         reinterpret_cast<const void*>(&Window_Alloc),          reinterpret_cast<const void*>(&Text_DrawAt),
-        reinterpret_cast<const void*>(&Text_EmitGlyph),
+        reinterpret_cast<const void*>(&Text_EmitGlyph),        reinterpret_cast<const void*>(&MsgBox_EffectDraw),
     };
 
     // Everything the rounds write, put back at the end.
@@ -777,6 +813,7 @@ void SelfTest() {
 
     static State input, their_out, our_out;
     unsigned bad = 0, calls = 0, per[kCount] = {}, bad_per[kCount] = {};
+    unsigned fix_spaces = 0, fix_glyphs = 0, capcom_space_commits = 0, fix_bad = 0;   // DIV-0068
     for (unsigned round = 0; round < kRounds; ++round) {
         const unsigned k = round % kCount;
         ++per[k];
@@ -807,6 +844,33 @@ void SelfTest() {
                           round, kClones[k].name, their_out.log_n, our_out.log_n,
                           static_cast<unsigned>(their_out.ret), static_cast<unsigned>(our_out.ret));
         }
+        if (k == kEffectDrawFn) {
+            // DIV-0068, switched on: a glyph is Capcom's to the byte; a space
+            // is Capcom's state with nothing after the branch - the clut word
+            // written, the pen moved, the rest of the packet slot untouched,
+            // the cursor where it was, Gpu_GetClut the only call.
+            const bool space = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(args[1]))[0] == 0x20;
+            if (space) ++fix_spaces; else ++fix_glyphs;
+            if (space && their_out.log_n == 4) ++capcom_space_commits;
+            static State fixed, want;
+            g_effect_space_skips = 1;
+            Apply(input);
+            MsgBox_EffectDraw(args[0], reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(args[1])));
+            Capture(fixed, 0);
+            g_effect_space_skips = 0;
+            want = their_out;
+            if (space) {
+                const unsigned clut_at = input.packet - 0x20000 + 0x0E;
+                std::memcpy(want.prim, input.prim, sizeof want.prim);
+                std::memcpy(want.prim + clut_at, their_out.prim + clut_at, 2);
+                want.packet = input.packet;
+                std::memset(want.log + 1, 0, sizeof want.log - sizeof want.log[0]);
+                want.log_n = 1;
+            }
+            if (std::memcmp(&want, &fixed, sizeof want) != 0 && ++fix_bad <= 12)
+                bof3::Log("shadow      msgbox DIV-0068 MISMATCH: round %u, %s, log %u / %u", round,
+                          space ? "a space" : "a glyph", want.log_n, fixed.log_n);
+        }
     }
 
     g = saved_callees;
@@ -836,7 +900,13 @@ void SelfTest() {
               "a window taken %u",
               c.printed, c.substituted, c.drawn, c.wrapped, c.scrolled, c.effect_ended, c.cursor_moved,
               c.window_taken);
+    bof3::Log("shadow      msgbox DIV-0068 (MsgBox_EffectDraw, the fix on): %u spaces, %u of them committed by "
+              "Capcom's copy, %u glyphs; %u MISMATCHES against Capcom's state with the space's primitive taken out",
+              fix_spaces, capcom_space_commits, fix_glyphs, fix_bad);
     if (bad) bof3::Fatal("the message box differs from the original in %u of %u self-test rounds", bad, kRounds);
+    if (fix_bad || fix_spaces == 0 || capcom_space_commits != fix_spaces)
+        bof3::Fatal("msgbox: DIV-0068 differs from its rule in %u rounds (%u spaces, %u committed by Capcom's)", fix_bad,
+                    fix_spaces, capcom_space_commits);
 }
 
 }  // namespace msgbox
