@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 67 entries, DIV-0001..0067, the last withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 68 entries, DIV-0001..0068, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3416,3 +3416,37 @@ designed in rather than bolted on.
   the sequence is fixed from boot; and the per-frame `randlog` line in
   recorded and scripted runs (`src/hook/input_script.cpp`), a counting
   replacement over a byte-copy of `rand` that changes no value.
+
+### Kind 0x64's glow: the rim vertices' depth the centre's
+
+- **ID:** DIV-0068
+- **Date:** 2026-10-03
+- **Subsystem:** effects (`EffectKind64_DrawGlow` `0x481740`, ours in
+  `src/game/effect_3a.cpp`; effect kind 0x64, chapter 10's run 2)
+- **Tier:** Forced
+- **Original behaviour:** the glow is a fan of 32 semi-transparent
+  `POLY_G3`, the centre the projected point, the two rim vertices points on
+  a circle round it. Each vertex is three dwords (x, y, depth) and the
+  renderer reads the depth (`0x5A0E80` divides by it, `+0x10` / `+0x20` /
+  `+0x30`). The centre's depth is the projection's; the rim's x and y are
+  computed into two stack locals at `esp + 0x20` / `+ 0x24` of the frame,
+  but their depth is read from `esp + 0x28` (`0x481836`, `0x48189D`), a dword
+  the function never writes: whatever the stack held there.
+- **New behaviour:** ours writes the centre's depth to the rim vertices
+  (`+0x20`, `+0x30`). Every other byte of every primitive is the original's.
+- **Rationale:** a stack word the function never writes cannot be
+  reproduced, only replaced (DIV-0023's class). The centre's depth is what
+  the two sibling discs of the same kinds write to all three vertices
+  (`EffectKind64_DrawSpark` `0x4820C0`, `EffectKind68_DrawMote` `0x481CC0`,
+  read 2026-10-03): a flat disc at the point's depth, which a zero (a divide
+  by zero in the renderer) would not be.
+- **Also in the PSX version?** Not read: `0x481740` has no PSX twin in the
+  pairs.
+- **Verification:** `BOF3X_SHADOW=effect_3a` headless: the fuzz compares
+  every byte of the packet but those two dwords of the glow's triangles
+  (its `Gfx_CommitPrim` stand-in copies `+0x10` over them on both sides
+  while `0x481740` runs), 0 mismatches; a control planting a wrong centre
+  depth is refused ([`effect_3a.md`](effect_3a.md) section 5). Not seen
+  live: no recorded route reaches kind 0x64.
+- **Reversible?** `BOF3X_ORIGINAL=EffectKind64_DrawGlow` runs Capcom's
+  function, its stale depth included.
