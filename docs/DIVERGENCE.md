@@ -3498,6 +3498,7 @@ designed in rather than bolted on.
   `DrawToggles`, `DrawItemsB`, `DrawItemsA`, `DrawEquipped` - which is to
   say the fuzz sees the change and the 12-unit cadence is unchanged
   (`LineStart`, `LineType` equal under 12-unit advances, by construction).
+  `BOF3X_SHADOW='*'` headless, narrow: exit 0, 7,687 ours, 0 mismatches.
   `loc_build.py`'s converter run on the US, French and German discs: 13
   lines and 3 tabs each. **Not seen in game** (a headless wave): the
   coordinator's live check is in [`fishing-text.md`](fishing-text.md)
