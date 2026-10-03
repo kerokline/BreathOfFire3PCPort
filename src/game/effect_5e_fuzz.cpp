@@ -226,9 +226,12 @@ unsigned g_k = 0;   // the clone this round runs (Disturb keeps a lid index for 
 bool LidDraw(unsigned k) { return k == k25Draw || k == k26Draw; }
 
 U Level() { return PickOf(0, 2, 4, 6, 0x10, 0x40, 0x41, 0x3F, 0x70, 0x78, 0x7F, 0x80, 0xFC, 0x100, 0xFFF0, 0x8000, sh::Next()); }
+// The speed +0x14 at its tests' boundaries - before the spin's step (q - 10) q
+// is added, and so that the step lands on them: 0xA5155, 0xF7079 and 0x14A5A5
+// step to 0xA6040, 0xF9060 and 0x14E790 exactly.
 U Speed() {
     return PickOf(0xA6040, 0xA603F, 0xF9060, 0xF9061, 0xF905F, 0x14E790, 0x14E78F, 0x53020, 0, 0xFFFFFFFFu, 0x80000000u,
-                  sh::Next());
+                  0xA5155, 0xA5154, 0xA5156, 0xF7079, 0xF7078, 0xF707A, 0x14A5A5, 0x14A5A4, sh::Next());
 }
 U Cue() { return PickOf(5, 6, 7, 0x26, 0x29, 0x32, 0x35, 0x37, 0x3A, 0x3B, 4, 0x25, sh::Next()); }
 U Count9() { return PickOf(0, 1, 2, 3, 7, 8, 0xE, 0xF, 0x10, 0x11, 0x59, 0x5A, 0x5B, 0x77, 0x78, 0x79, 0xFF, sh::Next()); }
@@ -246,7 +249,8 @@ void Seed(unsigned k) {
         e[8] = static_cast<unsigned char>(PickOf(0, 1, 0, 1, 0x80, sh::Next()));
         e[0xB] = static_cast<unsigned char>(PickOf(0, 0, 1, 2, sh::Next()));
         SetWord(e + 0x30, Level());
-        const U angle = sh::Next();
+        // the angle (sub-kinds 0x24, 0x3F) or the lid (0x25, 0x26: 0 is none)
+        const U angle = PickOf(0, 0, 1, 2, sh::Next(), sh::Next());
         SetWord(e + 0x32, LidDraw(k) ? sh::Next() % 3 : angle);
         // +0x2E the angle's last value: bit 11 the same or not
         SetWord(e + 0x2E, sh::Half() ? (Word(e + 0x32) ^ 0x800u) : (Word(e + 0x32) ^ (sh::Next() & 0x7FFu)));
@@ -261,12 +265,20 @@ void Seed(unsigned k) {
             SetWord(e + 0x36, PickOf(0, 1, 0x7F, 0xFFFF, 0x8000, sh::Next()));
         SetWord(e + 0x3A, PickOf(0, 0, 1, 0x40, 0xFFFF, sh::Next()));
     }
-    // the leader at the boundaries of the current record's cell
+    // the leader at the boundaries of the current record's cell - for the
+    // starts the cell their variant picks (read in place) and +8 as they set it
     unsigned char* const s = Sprite_Current;
     if (sh::InRegions(s, 0x80)) {
-        const bool along = s[8] != 0;
-        const U cell = static_cast<U>(static_cast<std::int16_t>(Word(s + (along ? 0x36 : 0x3A)))) << 16;
-        const U row = ((static_cast<U>(static_cast<std::int16_t>(Word(s + (along ? 0x3A : 0x36)))) + 1u) << 16) | 0x8000u;
+        bool along = s[8] != 0;
+        U x = Word(s + 0x36), z = Word(s + 0x3A);
+        if (k == k25Start || k == k26Start) {
+            const U cells = k == k25Start ? at::kSub25Cells : at::kSub26Cells;
+            along = Word(s + 0x3A) == 0;
+            x = move_script::At(cells + 2 * Word(s + 0x36))[0];
+            z = move_script::At(cells + 2 * Word(s + 0x36) + 1)[0];
+        }
+        const U cell = static_cast<U>(static_cast<std::int16_t>(along ? x : z)) << 16;
+        const U row = ((static_cast<U>(static_cast<std::int16_t>(along ? z : x)) + 1u) << 16) | 0x8000u;
         const U a = row + Near(), b = cell + PickOf(0, 0x10000, 0x20000) + Near();
         SetLong(Mem(along ? at::kLeaderZ : at::kLeaderX), static_cast<std::int32_t>(a));
         SetLong(Mem(along ? at::kLeaderX : at::kLeaderZ), static_cast<std::int32_t>(b));
