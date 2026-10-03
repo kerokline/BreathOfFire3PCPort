@@ -2187,6 +2187,15 @@ designed in rather than bolted on.
   engine's range; `0x507BDC`, `0x507CE3`, `0x50B4B5`, `0x50F7B5` after
   `Gfx_BeginFrame`), Capcom's still, and any fill built from integers or
   registers the scan cannot see - the owner's eye finds those.
+  **Round thirteen's wave four, 2026-10-03**: the first five are ours
+  now. E4D's three draw through `Widescreen_FillX` / `Widescreen_FillWidth`
+  (`Effect_DrawScreenTint` `0x48CA90`, its blend variant `0x48CC90`,
+  `EffectKind98_DrawFlash` `0x48DBA0`; `src/game/effect_4d.cpp`, fuzzed
+  against the original's 320 x 240 with the fill unarmed); E4B's
+  `0x489D47` and E4F's `0x493308` (`EffectKindAF_DrawScreen`) are ours and
+  still 320 wide - to widen the same way. `EffectKind96_Pulse`'s quad
+  `(0, 0)..(320, 320)`, its 320s from a register, is not widened (no
+  spawner found).
   **Manillo's backdrop, 2026-10-03** (the owner's catalogue,
   `manillo_will_that_be_all.png`: the trade screen's tiled fish pattern
   320 wide, black bands): `ItemTrade_DrawBackground` `0x5942C0` (ours

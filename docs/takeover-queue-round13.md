@@ -845,5 +845,70 @@ sixteen of E3D's (the consolidation cut it); the latent defects to number
 (each group's doc). **Live**: every function of the wave is fuzz-only; the
 whelp route's frame hash is still owed for waves one and two.
 
-**Next**: wave four, `make_briefs.py <scratch> 4 <tip> band_edges_w2.txt`,
-E4A..E4F (302); merge order E4F, then E4D, E4B, E4A.
+## 15. Wave four (2026-10-03: launched about 12:10 from `89c25e1`, merged 13:12..14:26)
+
+The base is the round branch with the fix wave and `BOF3X_SPEED` merged in
+by another session (`dcf4307`), verified here narrow and wide (7,787 ours,
+scratch `verify_89c25e1.log`). Six Opus agents in worktrees; the briefs with
+wave three's addendum, which also told the groups to add no `DIVERGENCE.md`
+entry (none did). Each merge built and run in the detached verification
+worktree, the group's shadow and `'*'` narrow; every agent ran `'*'` narrow
+and with `BOF3X_WIDE=1` in its own worktree, all exit 0.
+
+| Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Kinds |
+|---|---|---|--:|---|--:|---|
+| E4C | `55180bc` | `1f904d9` | 49 + 1 | 61 / 58 / 3 | 7,837 | 0x8D, 0x8E (its dispatcher `0x48B300` in no list), 0x8F, 0x90, 0x93, 0x99 |
+| E4F | `fedc6d3` | `e4a6a67` | 45 + 4 | 55 / 54 / 0, one stopped by ours' abort | 7,886 | 0xAA..0xB1, 0xB9, 0xBA; `0x492AF0` a tail draw; the unplaced `0x492530`, `0x492750` (`Effect_StateNext`), `0x492CF0` |
+| E4D | `2863427` | `82222cf` | 51 | 96 / 95 / 1 | 7,937 | 0x91, 0x94..0x98, 0x9A, the screen tint `Effect_DrawScreenTint` `0x48CA90` and its blend variant |
+| E4E | `4f52a7d` | `988759a` | 48 + 1 | 107 / 105 / 2 | 7,986 | 0x9B, 0x9C, 0xA0 whole; kind 0x9E's dispatcher and quads; the dispatchers of 0xA1..0xA3 (`0x4912F0` in no list) and 0xA7..0xA9 |
+| E4B | `9aa8f3d` | `4467b0b` | 61 + 5 | 105 / 104 / 1 | 8,052 | 0x87's draws, 0x88..0x8C, 0x9D, 0x9F, 0xA4; two tails with their own `ret` taken whole |
+| E4A | `89d7c15` | `9edc93b` | 48 + 3 | 100 / 99 / 0, one stopped by ours' abort | 8,103 | 0x82's states 11..23, 0x83..0x87; `Sprite_StateRestart` `0x433640` |
+
+**316 functions, 7,787 -> 8,103**, every group 0 mismatches, 524 controls:
+515 refused by a count, 7 equivalent mutants each with a refused near variant,
+2 stopped by ours' own abort. The order was E4F before E4D, E4B and E4A as
+section 10 asks; E4C and E4E had no constraint.
+
+**Then** the fix wave's follow-up merged in at the owner's word (`c82ba2e`:
+`fix/1003-merge`, the fishing banner's space and DIV-0027's per-item prompt),
+and the coordinator's pass (`9554aba`): `FishingText_Arm` and a doubled
+`Widescreen_ArmFills` had come to sit before E3C's and E3A's self-tests (a
+merge artifact two groups reported) and run once now, after every module's;
+`fold_names.py` named one harness row (`EffectKind87_Midpoint`);
+`consolidate_entries.py` 8,808 entries; the owner's word on DIV-0068 (kept as
+written). **The tip's proof** (`9554aba`, scratch `verify_w4.log`):
+`scenario_harness_ekh`, `effect_4d`, `effect_3c`, `effect_3a`, `effect_1b`,
+`field_e2` and `'*'` exit 0, 8,103 ours; `'*'` with `BOF3X_WIDE=1` exit
+0; `ledger_check` 70 entries, 0 errors.
+
+**What the wave learned**:
+
+- **Two sessions used the verification worktree at once**, or a launcher
+  returned before its game: E4F's `'*'` reported exit 0 in three minutes
+  while its game ran eleven, and E4D's build then failed on the held DLL
+  (the runner stopped, loudly). The run finished clean (7,886 ours, 0
+  mismatches) and the queue was restarted from E4D. A session that
+  verifies beside a running queue wants a worktree of its own.
+- Three groups (E4B, E4E, E4F, and E3D before them) re-listed
+  `EffectGte_ProjectSize` to hash both size words: their callers write
+  both. The fold's first-word-only row is the conservative one; a second
+  standard row is not possible, so the brief should say when to re-list.
+- E4D widened its three full-frame fills under DIV-0041 (the entry and
+  [`widescreen.md`](widescreen.md) say which); E4B's `0x489D47` and E4F's
+  `0x493308` are ours and still 320 wide.
+
+**In no group, to place**: the part-6 rows E4F lists in its band
+(`0x491D90`..`0x493E50`, eighteen), E4E's ([`effect_4e.md`](effect_4e.md)
+section 9), `0x48ED80`, `0x5A7570`, `0x5A7C70`.
+
+**Debts from wave four**: the rebinding of the wave's raw calls (E4A's and
+E4C's to `Effect_DrawScreenTint`, E4A's to E4B's three, E4F's to E4E's
+`EffectKindA0_DrawGlow`); E4B's `entries_logic.txt` line `0048A8E0 BBB`
+over thirteen of E4C's starts, if the consolidation did not cut it; the two
+fills to widen; the latent defects to number - among them two for the
+owner's eye: kind 0x90's tag `0x676294` never reset (the 256th record takes
+tag 0 and owns every free shard) and kind 0xA0's trail dots without a count
+(ours aborts past 0x400). **Live**: every function of the wave is fuzz-only.
+
+**Next**: wave five, `make_briefs.py <scratch> 5 <tip> band_edges_w2.txt`,
+E5A..E5G (333); E5D merges before E5C.

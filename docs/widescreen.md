@@ -290,11 +290,11 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
 
   | Site | Function (cut) | Group | What it draws |
   |---|---|---|---|
-  | `0x489D47` | `0x489CD0` | E4B | effect kind 137's unit: a semi-transparent TILE `(0, 0)` 320 x 240, colour from the effect record `+0x5D..+0x5F` (a tint) |
-  | `0x48CB07` | `0x48CA90` | E4D | kind 145's unit: the same tint, slot 5 |
-  | `0x48CD10` | `0x48CC90` | E4D | kind 148's unit: the same tint, its blend mode an argument |
-  | `0x48DC19` | `0x48DBA0` | E4D | kind 152's unit: a grey TILE, blend 1, level the clamped argument (a white flash or a fade) |
-  | `0x493308` | `0x4932E0` | E4F | kind 176's unit: a red TILE (red the argument), semi-transparent (a red flash) |
+  | `0x489D47` | `0x489CD0` | E4B (ours 2026-10-03, still 320 wide) | effect kind 137's unit: a semi-transparent TILE `(0, 0)` 320 x 240, colour from the effect record `+0x5D..+0x5F` (a tint) |
+  | `0x48CB07` | `0x48CA90` | E4D (**widened** 2026-10-03, `Effect_DrawScreenTint`) | kind 145's unit: the same tint, slot 5 |
+  | `0x48CD10` | `0x48CC90` | E4D (**widened** 2026-10-03) | kind 148's unit: the same tint, its blend mode an argument |
+  | `0x48DC19` | `0x48DBA0` | E4D (**widened** 2026-10-03, `EffectKind98_DrawFlash`) | kind 152's unit: a grey TILE, blend 1, level the clamped argument (a white flash or a fade) |
+  | `0x493308` | `0x4932E0` | E4F (ours 2026-10-03, `EffectKindAF_DrawScreen`, still 320 wide) | kind 176's unit: a red TILE (red the argument), semi-transparent (a red flash) |
   | `0x507BDC` | `0x507BC0` (hidden, host `0x5073D0`) | E5E | a world-2 overlay's step: an opaque white POLY_F4 over the frame, sound `0x202`, then a scene call (a white-out) |
   | `0x507CE3` | `0x507CB0` | E5E | a POLY_G4 gradient over the frame, two 15-bit colours from the argument (a sky, like `Gfx_DrawSkyGradient`) |
   | `0x50B4B5` | `0x50B480` (hidden, host `0x50B220`) | E5G | `EffectKind18_States`: a semi-transparent POLY_F4 `(0, 0x30, b)` over the frame, b from a 4-step table - a pulsing blue tint |
