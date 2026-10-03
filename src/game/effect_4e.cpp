@@ -98,7 +98,6 @@ U Ftol(LD v) {
 }
 
 long* Point(unsigned char* p) { return reinterpret_cast<long*>(p); }
-const long* Point(const unsigned char* p) { return reinterpret_cast<const long*>(p); }
 float* Out(unsigned char* p) { return reinterpret_cast<float*>(p); }
 const unsigned char* Bytes(const long* p) { return reinterpret_cast<const unsigned char*>(p); }
 unsigned char* Bytes(long* p) { return reinterpret_cast<unsigned char*>(p); }
