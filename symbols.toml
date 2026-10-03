@@ -90674,3 +90674,548 @@ ctype = "unsigned char"
 count = 16
 status = "evidence"
 evidence = "read 2026-10-03 (round thirteen group E3A): two records of 8 (s16 x, y, w, h) by the frame byte 0x676266 (ObjTrio[+7] +0x148 not 0): x / y the screen position kind 0x61's borrowed record draws the member at, w / h the rectangle read back from VRAM (0x340, 0x100) and scattered. Read by EffectKind61_Capture, _Store, _Scatter. docs/effect_3a.md section 3."
+
+[[func]]
+pc = 0x48DF90
+name = "EffectKind9B_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48DF90..0x48DFA1 (0x12 bytes; the cut says 32, padding), cdecl: jmp [EffectKind9B_States + +1 * 4], unbounded (three states). Reached by Effect_KindHandlers[0x9B] (0x6555BC); hidden in E4D's 0x48DC40. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48DFB0
+name = "EffectKind9B_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48DFB0..0x48DFF0 (0x41 bytes; the cut says 80, padding), cdecl: +0x3C = AreaMap_Elevation(+0x34, +0x38) as an s16 << 16; the height +0x14 and its speed +0x20 = 0; +1 up. Reached by EffectKind9B_States[0]; hidden in E4D's 0x48DC40. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E000
+name = "EffectKind9B_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E000..0x48E063 (0x64 bytes; the cut says 112, padding), cdecl: the speed +0x20 up 0x100000, the height +0x14 up by it; EffectKind9B_DrawRing at a copy of (+0x34, +0x38, +0x3C) that high; at 0x8000000 or more (signed) +1 up. Reached by EffectKind9B_States[1]; hidden in E4D's 0x48DC40. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E070
+name = "EffectKind9B_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E070..0x48E09F (0x30 bytes), cdecl: EffectKind9B_DrawRing at a copy of (+0x34, +0x38, +0x3C), 0x8000000 high; never leaves. Reached by EffectKind9B_States[2]; hidden in E4D's 0x48DC40. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E0A0
+name = "EffectKind9B_DrawRing"
+ret = "void"
+params = "const long *point, long height"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E0A0..0x48E310 (0x271 bytes; the cut says 640, padding), cdecl: EffectGte_LoadMapCamera; sixteen semi-transparent POLY_G4 round the point, radius (cos << 9) sar 4 on x and (sin << 9) sar 4 on z, angles 0x100 apart, each quad from the ground (point.y) to height above, its corners projected for the angle before and this one; per quad a draw mode (0, 1, 0x3C0, 0; dtd 1) linked 0xC at the corner, the quad linked 0x44, a draw mode (dtd 0) linked 0xC (MapView_LinkPrimAt); the shade ((Frame_Counter & 1) + 8) << 2 carried on, +4 for quads 0..3 and 12..15, -4 for 4..11. Reached by called by EffectKind9B_Rise and _Hold. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E320
+name = "EffectKind9C_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E320..0x48E331 (0x12 bytes; the cut says 32, padding), cdecl: jmp [EffectKind9C_States + +1 * 4], unbounded (eight states). Reached by Effect_KindHandlers[0x9C] (0x6555C0); hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E340
+name = "EffectKind9C_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E340..0x48E3C9 (0x8A bytes; the cut says 144, padding), cdecl: the point (0x308000, 0x740000), +0x3C its AreaMap_Elevation as an s16 << 16; +0xC..+0x14 = (0x308000, 0x718000, 0xFEC00000); the word +0x2E and the byte +0x5D = 0; +9 = 8; +1 up. Reached by EffectKind9C_States[0]; hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E3D0
+name = "EffectKind9C_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E3D0..0x48E446 (0x77 bytes; the cut says 128, padding), cdecl: the word +0x2E up 0x10, the byte +0x5D up 8; the trail 0x48ED80(+0x34, +0xC, +0x5D) (catalog part 6) and EffectKindA0_DrawGlow(+0x34, +0x2E, 2); +9 down, at 0: +9 = 0x3C, +1 up, Sound_PlayEffect(0x20D). Reached by EffectKind9C_States[1]; hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E450
+name = "EffectKind9C_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E450..0x48E4AD (0x5E bytes; the cut says 96, padding), cdecl: the trail and the glow; +9 down, at 0: +0x5E = 0, +9 = 4, +1 up. Reached by EffectKind9C_States[2]; hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E4B0
+name = "EffectKind9C_PanelsIn"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E4B0..0x48E52D (0x7E bytes; the cut says 128, padding), cdecl: +0x5E up 0x40, EffectKind9C_DrawPanels in it (0xFF when it is 0); the trail and the glow; +9 down, at 0: +9 = 4, +1 up. Reached by EffectKind9C_States[3]; hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E530
+name = "EffectKind9C_PanelsOut"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E530..0x48E5A6 (0x77 bytes; the cut says 128, padding), cdecl: +0x5E up 0xC0, EffectKind9C_DrawPanels in it; the trail, the glow, EffectKind9C_DrawBeams(0x40); +9 down, at 0: +9 = 0x3C, +1 up. Reached by EffectKind9C_States[4]; hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E5B0
+name = "EffectKind9C_Beams"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E5B0..0x48E615 (0x66 bytes; the cut says 112, padding), cdecl: the trail, the glow, EffectKind9C_DrawBeams(0x40); +9 down, at 0: +9 = 0x3C, +1 up, Sound_PlayEffect(0x20E). Reached by EffectKind9C_States[5]; hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E620
+name = "EffectKind9C_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E620..0x48E6AD (0x8E bytes; the cut says 144, padding), cdecl: the word +0x2E down 0x10 while above 0 (s16), +0x5D down 8 while above 0 (s8); the trail, the glow, the beams (0x40); +9 down, at 0: +9 = 0x10, +0x2E = 0x40, +1 up. Reached by EffectKind9C_States[6]; hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E6B0
+name = "EffectKind9C_End"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E6B0..0x48E6EB (0x3C bytes), cdecl: the word +0x2E down 4, EffectKind9C_DrawBeams in it (the word pushed in ecx); +9 down, at 0 Effect_Release (a tail jmp). Reached by EffectKind9C_States[7]; hidden in 0x48E0A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E6F0
+name = "EffectKind9C_DrawPanels"
+ret = "void"
+params = "unsigned shade"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E6F0..0x48E7F2 (0x103 bytes), cdecl: eight semi-transparent POLY_F4 panels, x 0x2C8000 by 0x10000, z 0x718000, height 0 to 0xFD000000: each a draw mode (0, 1, 0x3C0, 0; dtd 1) linked 0xC at its left edge, four corners projected, (shade, shade, shade) - the byte read -, committed 0x38 to slot 1. Reached by called by EffectKind9C_PanelsIn, _PanelsOut. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E800
+name = "EffectKind9C_DrawBeams"
+ret = "void"
+params = "unsigned size"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E800..0x48E8D5 (0xD6 bytes), cdecl: five EffectKind9C_DrawBeam between six points of the column at z 0x718000 (x 0x308000 / 0x300000, heights 0xFD000000 down to 0), the size passed on. Reached by called by kind 0x9C's states 4..7. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48E8E0
+name = "EffectKind9C_DrawBeam"
+ret = "void"
+params = "const long *from, const long *to, unsigned size"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48E8E0..0x48EA77 (0x198 bytes), cdecl: a draw mode (0, 1, 0x3C0, 0; dtd 1) committed to slot 3; EffectGte_LoadMapCamera; an opaque LINE_F2 (0x40, 0, 0) between the points projected, committed 0x20 to slot 3; its angle Math_Ratan2 of the _ftol screen differences as floats; at each end EffectKind9C_DrawBeamEnd (radius EffectGte_ProjectSize(end, {size, size}) + (Frame_Counter & 1), angles +0x400 / +0xC00), then EffectKind9C_DrawBeamSides; the ends' screen points the _ftol of the line's packet floats, read again before each use. Reached by called by EffectKind9C_DrawBeams (five sites). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48EA80
+name = "EffectKind9C_DrawBeamEnd"
+ret = "void"
+params = "unsigned x, unsigned y, unsigned radius, unsigned angle"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48EA80..0x48EBAA (0x12B bytes), cdecl: eight semi-transparent POLY_G3 fanned round the screen point (x, y) (s16), centre (0x40, 0, 0), rim black at (cos, sin) * r sar 12 (r s16), from the angle (& 0xFFFF) by 0x100; committed 0x34 to slot 3. Reached by called by EffectKind9C_DrawBeam (two sites). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48EBB0
+name = "EffectKind9C_DrawBeamSides"
+ret = "void"
+params = "unsigned x1, unsigned y1, unsigned r1, unsigned a1, unsigned x2, unsigned y2, unsigned r2, unsigned a2"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48EBB0..0x48ED79 (0x1CA bytes), cdecl: two semi-transparent POLY_G4 along the beam between the screen points (s16): the first with outer corners at a1 and a2 + 0x800, the second (rep movsd of the first to 0x44 bytes on, where the first's commit moved the cursor) at a1 + 0x800 and a2; the beam's corners (0x40, 0, 0), the outer black; each committed 0x44 to slot 3. Reached by called by EffectKind9C_DrawBeam. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48F070
+name = "EffectKind9E_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48F070..0x48F081 (0x12 bytes; the cut says 32, padding), cdecl: jmp [EffectKind9E_States + +1 * 4], unbounded (seven states, catalog part 6 rows and Effect_StateRelease). Reached by Effect_KindHandlers[0x9E] (0x6555C8); hidden in 0x48ED80 (catalog part 6). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48F5D0
+name = "EffectKind9E_DrawPlate"
+ret = "void"
+params = "const long *a, const long *b"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48F5D0..0x48F714 (0x145 bytes), cdecl: an opaque white POLY_F4: corners a + b, a +- b by Sprite_Current +6 bit 0 (which of x / z takes the sum), the other, a - b, projected; linked 0x38 at (a.x, a.z). Reached by called by catalog part 6's 0x48F1E0 and 0x48F300 (kind 0x9E's states 2 and 4). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48F720
+name = "EffectKind9E_DrawTexPlate"
+ret = "void"
+params = "const long *a, const long *b"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48F720..0x48F8E7 (0x1C8 bytes), cdecl: a semi-transparent POLY_FT4 (0x20, 0x20, 0x20), corners projected into +8 / +0x18 / +0x28 / +0x38; texture from EffectKind9E_Pages record 0 or 1 (+6 bit 2): u / v, +0x18 / +0x10 at the corners, Gpu_GetTPage(1, 1, x, y), Gpu_GetClut(0xA0, 0x1F0); linked 0x48 at (a.x, a.z). Reached by called by catalog part 6's 0x48F240 (kind 0x9E's state 3). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48F8F0
+name = "EffectKind9E_DrawWall"
+ret = "void"
+params = "const long *a, const long *b"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48F8F0..0x48FA74 (0x185 bytes), cdecl: an opaque POLY_F4 wall: a + b and the +6-bit-0 corner, each also 0x100000 higher, projected; shade ((+6 & 0xFE) << 6, (~+6 & 0xFE) << 6, 0); linked 0x38 at (a.x, a.z). Reached by called by catalog part 6's 0x48F240 with b the cells 0x6762A0. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FA80
+name = "EffectKind9E_DrawShadePlate"
+ret = "void"
+params = "const long *a, const long *b"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FA80..0x48FC1C (0x19D bytes; the cut says 416, padding), cdecl: a draw mode (0, 0, 0x3C0, 0; dtd 1) linked 0xC at (a.x, a.z); a semi-transparent POLY_F4 with EffectKind9E_DrawPlate's corners and EffectKind9E_DrawWall's shade; linked 0x38. Reached by called by catalog part 6's 0x48F240. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FC20
+name = "EffectKindA0_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FC20..0x48FC31 (0x12 bytes; the cut says 32, padding), cdecl: jmp [EffectKindA0_States + +1 * 4], unbounded (nine states). Reached by Effect_KindHandlers[0xA0] (0x6555D0); hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FC40
+name = "EffectKindA0_Start"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FC40..0x48FC99 (0x5A bytes; the cut says 96, padding), cdecl: +0x64..+0x6C = the leader's point (ObjTrio +0x34..), height + 0x800000; the word +0x2E = 0; +9 = 8; +1 up; Sound_PlayEffect(0x20B). Reached by EffectKindA0_States[0]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FCA0
+name = "EffectKindA0_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FCA0..0x48FCE7 (0x48 bytes; the cut says 80, padding), cdecl: the word +0x2E up 0x20; EffectKindA0_DrawGlow(+0x64, +0x2E, 6); +9 down, at 0: +9 = 0x40, +1 up. Reached by EffectKindA0_States[1]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FCF0
+name = "EffectKindA0_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FCF0..0x48FD2D (0x3E bytes; the cut says 64, padding), cdecl: the glow; +9 down, at 0: +9 = 0x20, +1 up. Reached by EffectKindA0_States[2]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FD30
+name = "EffectKindA0_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FD30..0x48FDEE (0xBF bytes; the cut says 192, padding), cdecl: +0x6C up 0xC0000, +0x2E down 6, the glow; +9 down, at 0: +9 = 0x20, +6 = 0, +1 up, EffectKindA0_ClearSparks, +0x34..+0x3C = +0x64..+0x6C, shards 0..15 EffectKindA0_InitShard, shards 16..31 +0x28 / +0x2A = 0. Reached by EffectKindA0_States[3]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FDF0
+name = "EffectKindA0_Sparkle"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FDF0..0x48FEA6 (0xB7 bytes; the cut says 192, padding), cdecl: +6 up (a spark spawned when it was a multiple of 4); EffectKindA0_DrawShards, _StepSparks; at the count 0x903848 == 0x14: +0x18.. = +0x64.., +0xC..+0x14 = 0, +0x64.. = ((0x2F8000, 0x278000, 0xF000000) - +0x64..) sar 7, +1 up. Reached by EffectKindA0_States[4]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FEB0
+name = "EffectKindA0_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FEB0..0x48FEF2 (0x43 bytes; the cut says 80, padding), cdecl: the +6 tick, the shards, the sparks; +9 = 0x20, +1 up, Sound_PlayEffect(0x209). Reached by EffectKindA0_States[5]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x48FF00
+name = "EffectKindA0_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x48FF00..0x49008E (0x18F bytes; the cut says 400, padding), cdecl: the tick, the sparks, the shards, EffectKindA0_DrawTrail(+0x18, +0x34, 0x40); +0xC.. += +0x64.., +0x18.. += +0xC.., held at (0x2F8000, 0x278000, 0xF000000) once +0x18 < 0x2F8000; +3 down 4; +9 down, at 0: shards 16..31 set up at +0x18.. (the points swapped round them by EffectKindA0_SwapLong), +9 = 0x80, +1 up. Reached by EffectKindA0_States[6]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490090
+name = "EffectKindA0_FlyWait"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490090..0x490170 (0xE1 bytes; the cut says 240, padding), cdecl: the tick - every fourth a spark at +0x34.. and one at +0x18.. (points swapped round the second); the sparks, the shards, the trail (0x40); at the count 0x903848 == 0x17: +3 = 0x80, +9 = 8, +1 up, Sound_PlayEffect(0x20A). Reached by EffectKindA0_States[7]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490180
+name = "EffectKindA0_Fade"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490180..0x4901CF (0x50 bytes), cdecl: the word +0x2E down 0x10, +3 down 8; the sparks; the trail in the shade +3; +9 down, at 0 Effect_Release (a tail jmp). Reached by EffectKindA0_States[8]; hidden in 0x48FA80. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x4901D0
+name = "EffectKindA0_DrawGlow"
+ret = "void"
+params = "const long *point, unsigned size, unsigned colour"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x4901D0..0x490386 (0x1B7 bytes), cdecl: a draw mode (0, 1, 0x2C0, 0x100; dtd 1) committed to slot 2; EffectGte_LoadMapCamera; o the point projected, r = EffectGte_ProjectSize(point, {size, size})'s first word + (Frame_Counter & 1); a fan of 32 semi-transparent POLY_G3 round o, centre ((c & 0xFC) << 5, (c & 0xFE) << 6, c << 7), rim black at (cos, sin) * r sar 12 by 0x80, every vertex at o's depth; each committed 0x34 to slot 2 (EffectKind64_DrawGlow's form, without its unwritten rim depth). Reached by called by kind 0x9C's states 1..6, kind 0xA0's states 1..3, E4F's 0x493570, 0x4935D0, 0x493610. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490390
+name = "EffectKindA0_DrawTrail"
+ret = "void"
+params = "const long *from, const long *to, unsigned shade"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490390..0x490622 (0x293 bytes), cdecl: EffectKind64_DrawTrail's two semi-transparent POLY_G4 (half-width the float 0x5C41B8), committed 0x44 to slot 2; then TILE_1 dots (shade, shade, 0) from to + (Frame_Counter & 0xF) * Sprite_Current's +0x64.., stepping +0x64.. << 4 (read afresh), while x is above from's - no count (docs/effect_4e.md section 7). Reached by called by EffectKindA0_Fly, _FlyWait, _Fade. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490630
+name = "EffectKindA0_ClearSparks"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490630..0x490643 (0x14 bytes), cdecl: the sixteen sparks of EffectKindA0_Sparks out of use. Reached by called by EffectKindA0_Rise. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490650
+name = "EffectKindA0_SpawnSpark"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490650..0x490699 (0x4A bytes), cdecl: the first spark out of use put in use at Sprite_Current +0x34..: +1 = 0, +2 = 0x10, +0x14 = 0x100, +0x16 = 0x60, +0x17 = 0; none free: nothing. Reached by called by kind 0xA0's states 4..7. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x4906A0
+name = "EffectKindA0_StepSparks"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x4906A0..0x4906E4 (0x45 bytes), cdecl: EffectGte_LoadMapCamera; each spark in use: +0x14 down 0x10, +2 down (0: out of use), EffectKind64_DrawSpark (E3A); al 1 when one was in use (EffectKind64_StepSparks' form over sixteen; no caller reads al). Reached by called by kind 0xA0's states 4..8. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x4906F0
+name = "EffectKindA0_InitShard"
+ret = "void"
+params = "unsigned char *shard"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x4906F0..0x490803 (0x114 bytes), cdecl: EffectKind64_InitShard's form: the point Sprite_Current +0x34..; Rand angles; edge vectors (cos, sin of +-0x10) turned by EffectGte_SetDiagonalOne + Gte_RotMatrixX / Y (-y) / Z through 0x5A7C70; +0x2A = 0x40 (that one's 0x20), +0x28 = (Rand & 2) + 3, +0x20..+0x25 = 0. Reached by called by EffectKindA0_Rise and _Fly. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490810
+name = "EffectKindA0_DrawShards"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490810..0x490872 (0x63 bytes), cdecl: a draw mode (0, 1, 0x380, 0x100; dtd 1) committed to slot 2; EffectGte_LoadMapCamera; each of the 32 shards of EffectKindA0_Shards EffectKindA0_DrawShard, its angle +0x24 up 0x10. Reached by called by kind 0xA0's states 4..7. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490880
+name = "EffectKindA0_DrawShard"
+ret = "void"
+params = "unsigned char *shard"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490880..0x490A2A (0x1AB bytes), cdecl: a semi-transparent POLY_G3: the point projected, and point + each edge (+0x10, +0x18) turned by the angle +0x24 ((cos e0 - sin e1) sar 8, (sin e0 + cos e1) sar 8, e2 << 12) times the speed +0x28, projected; (shade, shade, 0) on the first vertex, the shade +0x2A held to 0..0xFF; committed 0x34 to slot 2. Reached by called by EffectKindA0_DrawShards. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490A30
+name = "EffectKindA0_SwapLong"
+ret = "void"
+params = "long *a, long *b"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490A30..0x490A52 (0x23 bytes; the cut says 48, padding), cdecl: the two dwords swapped by three xors. Reached by called by EffectKindA0_Fly and _FlyWait (12 sites). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x490A60
+name = "EffectKindA1_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x490A60..0x490A71 (0x12 bytes; the cut says 32, padding), cdecl: jmp [EffectKindA1_States + +1 * 4], unbounded (six states, catalog part 6 rows and Effect_StateRelease). Reached by Effect_KindHandlers[0xA1] (0x6555D4); hidden in 0x490A30. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x4910D0
+name = "EffectKindA2_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x4910D0..0x4910E1 (0x12 bytes; the cut says 32, padding), cdecl: jmp [EffectKindA2_States + +1 * 4], unbounded (four states, catalog part 6 rows). Reached by Effect_KindHandlers[0xA2] (0x6555D8); hidden in 0x490A30. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x4912F0
+name = "EffectKindA3_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x4912F0..0x491301 (0x12 bytes; in no list), cdecl: jmp [EffectKindA3_States + +1 * 4], unbounded (eleven states, kind 0xA1's five then six of its own, catalog part 6 rows, and Effect_StateRelease). Reached by Effect_KindHandlers[0xA3] (0x6555DC); in no list (a catalog part 2 row, hidden in 0x490A30), taken as a kind's dispatcher in the band. No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x491AA0
+name = "EffectKindA7_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x491AA0..0x491AD1 (0x32 bytes; the cut says 64, padding), cdecl: call [EffectKindA7_States + +1 * 4], unbounded (four states, catalog part 6 rows); then while +1 is not 0 the glow 0x491E30(+0x34, the word +0xC, 7) (catalog part 6). Reached by Effect_KindHandlers[0xA7] (0x6555EC); hidden in 0x4918B0 (catalog part 6). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x491BA0
+name = "EffectKindA8_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x491BA0..0x491BB1 (0x12 bytes; the cut says 32, padding), cdecl: jmp [EffectKindA8_States + +1 * 4], unbounded (three states, catalog part 6 rows). Reached by Effect_KindHandlers[0xA8] (0x6555F0); hidden in 0x4918B0 (catalog part 6). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[func]]
+pc = 0x491C60
+name = "EffectKindA9_Run"
+ret = "void"
+params = "void"
+impl = "src/game/effect_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03 (round thirteen group E4E, capstone to the last instruction), 0x491C60..0x491C95 (0x36 bytes; the cut says 64, padding), cdecl: call [EffectKindA9_States + +1 * 4], unbounded (four states, catalog part 6 rows); then while +1 is not 0 the disc 0x492260(the word +0x2E, the word +0x30, 0x80) (catalog part 6). Reached by Effect_KindHandlers[0xA9] (0x6555F4); hidden in 0x4918B0 (catalog part 6). No PSX twin paired. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/effect_4e.md."
+
+[[data]]
+pc = 0x655190
+name = "EffectKind9B_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKind9B_Run 0x48DF90 by +1: _Start, _Rise, _Hold; kind 0x9C's table follows at 0x65519C. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x65519C
+name = "EffectKind9C_States"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKind9C_Run 0x48E320 by +1: _Start, _Grow, _Hold, _PanelsIn, _PanelsOut, _Beams, _Shrink, _End; kind 0x9E's table follows at 0x6551BC. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x6551BC
+name = "EffectKind9E_States"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKind9E_Run 0x48F070 by +1: catalog part 6 rows 0x48F090, 0x48F170, 0x48F1E0, 0x48F240, 0x48F300, 0x48F360 and Effect_StateRelease; EffectKind9E_Pages (data) follows at 0x6551D8. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x6551D8
+name = "EffectKind9E_Pages"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): two records of 6 (s16 x, s16 y, u8 u, u8 v) EffectKind9E_DrawTexPlate picks by Sprite_Current +6 bit 2: the texture page Gpu_GetTPage(1, 1, x, y) and the corner u / v. Read only by it (mov edi, imm32 at 0x48F72F / 0x48F739). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x6551E4
+name = "EffectKindA0_States"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKindA0_Run 0x48FC20 by +1: _Start, _Grow, _Hold, _Rise, _Sparkle, _Launch, _Fly, _FlyWait, _Fade; data (0x655208, read by catalog part 6 code) follows. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x655220
+name = "EffectKindA1_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKindA1_Run 0x490A60 by +1: catalog part 6 rows 0x490A80, 0x490BB0, 0x490C50, 0x490E20, 0x490FA0 and Effect_StateRelease; kind 0xA2's table follows at 0x655238. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x655238
+name = "EffectKindA2_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKindA2_Run 0x4910D0 by +1: catalog part 6 rows 0x4910F0, 0x491140, 0x4911C0, 0x491270; kind 0xA3's table follows at 0x655248. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x655248
+name = "EffectKindA3_States"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKindA3_Run 0x4912F0 by +1: kind 0xA1's five (0x490A80..0x490FA0), catalog part 6 rows 0x491310, 0x491410, 0x4914B0, 0x491680, 0x4917C0, Effect_StateRelease; kind 0xA7's table follows at 0x655274. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x655274
+name = "EffectKindA7_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKindA7_Run 0x491AA0 calls by +1: catalog part 6 rows 0x491AE0, 0x491B00, 0x491B40, 0x491B70; kind 0xA8's table follows at 0x655284. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x655284
+name = "EffectKindA8_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKindA8_Run 0x491BA0 by +1: catalog part 6 rows 0x491BC0, 0x491BF0, 0x491C40; kind 0xA9's table follows at 0x655290. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x655290
+name = "EffectKindA9_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): EffectKindA9_Run 0x491C60 calls by +1: catalog part 6 rows 0x491CA0, 0x491CD0, 0x491D10, 0x491D30; kind 0xAA's table (E4F's 0x491D70) begins at 0x6552A0, inside the run of seven code pointers. The dispatchers do not bound their index; the count is the table's own length to the next table a dispatcher names or the first dword that is not code, checked by hand (a raw scan of the image for every cell address). docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x6762B0
+name = "EffectKindA0_Sparks"
+ctype = "unsigned char"
+count = 384
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): kind 0xA0's sixteen sparks of 0x18 (EffectKind64's spark form: +0 in use, +2 life, +4..+0xF point, +0x14 size, +0x16 / +0x17 shades). Written by EffectKindA0_ClearSparks, _SpawnSpark, _StepSparks; read by EffectKind64_DrawSpark through _StepSparks. docs/effect_4e.md section 3."
+
+[[data]]
+pc = 0x676430
+name = "EffectKindA0_Shards"
+ctype = "unsigned char"
+count = 1408
+status = "evidence"
+evidence = "read 2026-10-03 (round thirteen group E4E): kind 0xA0's 32 shards of 0x2C (EffectKind64's shard form: point, two edge SVECTORs +0x10 / +0x18, angles +0x20..+0x25, speed +0x28, shade +0x2A), two runs of sixteen (the second at 0x6766F0). Written by EffectKindA0_InitShard, _Rise, _DrawShards; read by EffectKindA0_DrawShard. SuperComboHit_Pool begins after it at 0x6769C0. docs/effect_4e.md section 3."
