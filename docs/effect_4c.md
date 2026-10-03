@@ -263,6 +263,12 @@ calls to the stand-ins, **0 mismatches**; 32,888 bytes of state in 47 regions.
 Every entry of the six tables was reached (`phase` lines of the coverage:
 428..1,377 a state; `Effect_StateRelease` 4,306).
 
+**Under `BOF3X_SHADOW='*'`** (this worktree, at this tip): exit 0, `inject:
+7837 ours, 0 left original`, 1,001 self-test summary lines, every one 0
+mismatches (effect_4c's own: 200,000 rounds, 2,887,420 calls - its stream
+differs from the lone run's); and again with `BOF3X_WIDE=1`: exit 0, the same
+1,001 lines, 0 mismatches. Neither run died silently.
+
 ## 5. What the cut and the tool said, settled
 
 - **Added: `0x48B300`**, kind 0x8E's dispatcher - `Effect_KindHandlers[0x8E]`
