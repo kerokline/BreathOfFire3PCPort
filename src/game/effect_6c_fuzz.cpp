@@ -308,10 +308,11 @@ void SeedAreaMap() {
         SetWord(header + offset + 2, (n >> 16) & 0x3F);
     }
 }
-// The 64 draw items' link words (& 0xFFF) inside the region's 64.
+// The 64 draw items' link words (& 0xFFF) inside the pool's first 1,024 (the
+// region holds 64; Prim_SetTexture's stand-in hashes a readable item past it).
 void SeedItems() {
     for (U i = 0; i < 0x40; ++i)
-        SetWord(Mem(0x905E80 + i * at::kDrawItemStride + at::kItemLink), (sh::Next() % 0x40) | (sh::Next() & 0xF000));
+        SetWord(Mem(0x905E80 + i * at::kDrawItemStride + at::kItemLink), (sh::Next() % 0x400) | (sh::Next() & 0xF000));
 }
 // AreaMap_CornerHeight's point: a cell whose block keeps the corner dword
 // inside the area block (block & 0xF0 is 0, or 0x10 with the cell's z & 0xF at
@@ -342,7 +343,10 @@ void Seed(unsigned k) {
         SetWord(e + 0x36, PickOf(0, 1, 2, 3, 4));
         e[9] = static_cast<unsigned char>(PickOf(0, 1, 3, 4, 5, 8, 9, 0xF, 0x10, 0x11, 0x12, 0x17, 0x18, 0x1E, 0x1F, 0x20,
                                                  0x21, 0x30, 0x31, 0x40, 0x5F, 0x60, 0x61, 0x7F, 0x80, 0x81, 0xBF, 0xC0,
-                                                 0xCF, 0xD0, 0xFC, 0xFF, sh::Next()));
+                                                 0xCE, 0xCF, 0xD0, 0xFC, 0xFF, sh::Next()));
+        // sub-kind 0x45's radius +0x3C about its ends (0x100 for the outer,
+        // 0x11F for the inner and the last ring)
+        SetLong(e + 0x3C, static_cast<std::int32_t>(PickOf(0, 0xF0, 0xF8, 0xF7, 0x110, 0x117, 0x118, 0x1F7, 0x1F8, 0x1FF, sh::Next() % 0x220, sh::Next())));
     }
     unsigned char* const s = Sprite_Current;
     Cond_ByteFE = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next()));
@@ -356,12 +360,13 @@ void Seed(unsigned k) {
     // the stars' clamps, sub-kind 0x53's record (within and past 20), or anywhere
     {
         U x = Word(Mem(at::kKind2XHigh)), z = Word(Mem(at::kKind2ZHigh));
-        switch (sh::Next() % 6) {
+        switch (sh::Next() % 7) {
         case 0: x = 0x1780 + sh::Next() % 0x301 - 0x180; z = 0x1380 + sh::Next() % 0x301 - 0x180; break;
         case 1: x = 0x1780 + sh::Next() % 0x401 - 0x200; z = 0xE00 + sh::Next() % 0x401 - 0x200; break;
         case 2: x = 0x1480 + sh::Next() % 0x1201 - 0x900; z = 0x1380 + sh::Next() % 0x801 - 0x400; break;
         case 3: x = Word(s + 0x36) + sh::Next() % 0x31 - 0x18; z = Word(s + 0x3A) + sh::Next() % 0x31 - 0x18; break;
         case 4: x = PickOf(0xAFF, 0xB00, 0x1E00, 0x1E01, 0x1400); z = PickOf(0xEFF, 0xF00, 0x1800, 0x1801, 0x1400); break;
+        case 5: z = 85 * PickOf(0, 1, 90, 91, 92) + sh::Next() % 85; break;   // the second star's y at 0 / 90
         default: break;
         }
         SetWord(Mem(at::kKind2XHigh), x);
