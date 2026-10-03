@@ -11,7 +11,7 @@ sub-kinds 0x1C `0x505100` and 0x1D `0x505540` (`EffectKind18_States[28]` /
 `[29]`, catalog part 2 rows no group of the round held; section 5). Each read
 to its last instruction with capstone and fuzzed through the scenario harness
 in effect mode ([`scenario_harness.md`](scenario_harness.md) section 8)
-without edits to it: 208,000 rounds, 0 mismatches; CONTROLS_SUMMARY. **Fuzz
+without edits to it: 208,000 rounds, 0 mismatches; 116 of 117 controls refused, the other an equivalent mutant whose near variant is refused. **Fuzz
 only**: no recorded route enters any of the 52 (section 9).
 
 Every row is effect code, the three `hypothesis` rows (`0x504F70`, `0x505AB0`,
@@ -306,9 +306,21 @@ columns' rise never 8, the rest at their compares' boundaries. **Disturbance**
 `+0x3E`, `+0x3A`, `Draw_PassFlags` bit 2.
 
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_5d`,
-exit 0): RESULT_LINE
+exit 0): 208,000 rounds over 52 functions, 6,415,196 calls to
+the stand-ins, **0 mismatches**; 24,820 bytes of state in 47 regions. Every
+entry of the six tables reached (each handler recorder 424..3,022 calls;
+`WeretigerFx_Next` 3,022, `MagicFx_ClearCount9` 1,997), the group's own
+helpers 681..16,000 (`_OnScreen` 1,611), `Effect_FindFree` 5,292,
+`Effect_Release` 7,018, `Party_MemberAt` 8,000 (`Field_FloorHurt` 1,657),
+`Flags_Clear` 434, `MoveCmd_TestFB` 901, `_TestFC` 830, sub-kind 0x19's GTE
+matrix calls 253 each.
 
-STAR_LINES
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+706 self-test lines, none with a mismatch, `inject: 8155 ours, 0 left
+original`; `effect_5d` there 208,000 rounds, 6,375,331 calls, 0 mismatches.
+**With `BOF3X_WIDE=1`**: `'*'` exit 0, 706 self-test lines, none with a
+mismatch. Neither run died silently. `tools/ledger_check.py`: 70 entries,
+0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -347,7 +359,147 @@ STAR_LINES
 
 ## 6. Controls
 
-CONTROLS_TABLE
+Planted in `effect_5d.cpp` one at a time by a script (scratch `controls.py`:
+a unique anchor replaced, rebuild, run under `BOF3X_E5D_ONLY=<filter>`,
+restore, rebuild; never with a commit in between), against the final fuzz.
+Counts are rounds refused of 4,000 per function run, in this worktree; every
+refused run exited 3. At least one plant a function, several for the draws;
+each dispatcher sent to another table of at least its length or to the next
+entry. **116 of 117 refused**; the one not refused is an equivalent mutant.
+
+| # | Run (`_ONLY`) | Plant | Refused |
+|--:|---|---|---|
+| 1 | `Sub17_Close` | end at q 3 | 1745 of 4000 |
+| 2 | `Sub17_Close` | frame 6 - q | 2007 of 4000 |
+| 3 | `Sub17_Scroll` | x 0x271 | 4000 of 4000 |
+| 4 | `Sub17_Scroll` | v >> 11 | 3881 of 4000 |
+| 5 | `Sub17_DrawPatch` | bit 1 | 1949 of 4000 |
+| 6 | `Sub17_DrawPatch` | height byte 2 | 2003 of 4000 |
+| 7 | `Sub17_DrawPatch` | page 0x2190 | 703 of 4000 |
+| 8 | `Sub17_DrawPatch` | flag order | 2003 of 4000 |
+| 9 | `Sub17_DrawPatch` | >> 7 (floor) | 1744 of 4000 |
+| 10 | `Sub17_DrawPatch` | x rounded to float first | **not refused**: equivalent (below) |
+| 11 | `Sub17_DrawPatch` | x less 0.5 (the near variant) | 992 of 4000 |
+| 12 | `Sub17_CopyFrame` | +0xB + 13 | 4000 of 4000 |
+| 13 | `Sub17_CopyFrame` | v from u | 3603 of 4000 |
+| 14 | `Sub18_Run` | 0x22 table | 4000 of 4000 |
+| 15 | `Sub18_Grow` | > 6 | 138 of 4000 |
+| 16 | `Sub18_Hold` | <= 0x10 | 148 of 4000 |
+| 17 | `Sub18_Shrink` | > 0x17 | 160 of 4000 |
+| 18 | `Sub18_Shrink` | t >> 2 (floor) | 765 of 4000 |
+| 19 | `Sub18_End` | > 0x1D | 165 of 4000 |
+| 20 | `Sub18_DrawColumn` | start 9 | 4000 of 4000 |
+| 21 | `Sub18_DrawColumn` | shade - 7 | 4000 of 4000 |
+| 22 | `Sub18_DrawColumn` | dy 3 | 4000 of 4000 |
+| 23 | `Sub18_DrawRing` | ^ 0x3E | 4000 of 4000 |
+| 24 | `Sub18_DrawRing` | cos >> 14 | 3217 of 4000 |
+| 25 | `Sub18_DrawRing` | no drop | 3824 of 4000 |
+| 26 | `Sub19` | x - 0x3FC0 | 715 of 4000 |
+| 27 | `Sub19` | x within 11 | 94 of 4000 |
+| 28 | `Sub19` | strip x half | 268 of 4000 |
+| 29 | `Sub19` | clut 0x78CE | 268 of 4000 |
+| 30 | `Sub19` | z -0x8F | 268 of 4000 |
+| 31 | `Sub19` | turn about y | 264 of 4000 |
+| 32 | `Sub68` | x 0x2E | 84 of 4000 |
+| 33 | `Sub68` | lift >> 4 | 239 of 4000 |
+| 34 | `Sub68` | x * 4 | 239 of 4000 |
+| 35 | `Sub68` | first 4 arcs | 239 of 4000 |
+| 36 | `Sub1B` | at 6 | 864 of 4000 |
+| 37 | `Sub1B` | flag 0x1D | 474 of 4000 |
+| 38 | `Sub1B` | z + 1 | 436 of 4000 |
+| 39 | `Sub43_Run` | the next entry | 4000 of 4000 |
+| 40 | `Sub43_Glow` | > 0x6B | 26 of 4000 |
+| 41 | `Sub43_Glow` | counter 0x10 | 181 of 4000 |
+| 42 | `Sub43_End` | at 0x1D | 680 of 4000 |
+| 43 | `Sub43_DrawQuad` | & 0xFC | 1233 of 4000 |
+| 44 | `Sub43_DrawQuad` | y0 + 4 | 4000 of 4000 |
+| 45 | `Sub1C_Run` | the next entry | 4000 of 4000 |
+| 46 | `Sub1C_Start` | & 0x3F | 2019 of 4000 |
+| 47 | `Sub1C_Start` | byte 1 | 4000 of 4000 |
+| 48 | `Sub1C_Start` | parity swapped | 2015 of 4000 |
+| 49 | `Sub1C_Wait` | sound 0x201 | 510 of 4000 |
+| 50 | `Wait` | request 1 passes | 1961 of 20000 |
+| 51 | `Sub1C_Rise` | byte 0x8B | 3231 of 4000 |
+| 52 | `Sub1C_Hold` | > 0x1D | 160 of 4000 |
+| 53 | `Sub1C_Fall` | >> 1 | 3671 of 4000 |
+| 54 | `Sub1C_Draw` | <= (the fourth) | 3475 of 4000 |
+| 55 | `Sub1C_Draw` | + 5 | 3915 of 4000 |
+| 56 | `Sub1C_Draw` | y for x | 4000 of 4000 |
+| 57 | `Sub1C_Draw` | & 0xFC0000 | 2948 of 4000 |
+| 58 | `Sub1C_Draw` | >> 4 (floor) | 312 of 4000 |
+| 59 | `Sub1C_OnScreen` | >= 340 | 117 of 4000 |
+| 60 | `Sub1C_OnScreen` | NaN inside | 98 of 4000 |
+| 61 | `Sub1C_OnScreen` | x - 0x7F | 4000 of 4000 |
+| 62 | `Sub1D_Run` | 0x1C table | 4000 of 4000 |
+| 63 | `Sub1D_Start` | >= | 230 of 4000 |
+| 64 | `Sub1D_Start` | x + 0x8001 | 4000 of 4000 |
+| 65 | `Sub1D_Rise` | +9 + 1 | 4000 of 4000 |
+| 66 | `Sub1D_Hurt` | one cell | 4000 of 4000 |
+| 67 | `Sub1D_Hurt` | bit 4 | 60 of 4000 |
+| 68 | `Sub1D_Hurt` | not put back | 3201 of 4000 |
+| 69 | `Sub1D_Hurt` | hurt 6 | 1472 of 4000 |
+| 70 | `Sub1D_Hurt` | Field_State left | 2225 of 4000 |
+| 71 | `Sub1D_Fall` | >> 3 | 3669 of 4000 |
+| 72 | `Sub1D_Draw` | x by +0x10 | 3479 of 4000 |
+| 73 | `Sub1D_Draw` | green 0 | 4000 of 4000 |
+| 74 | `Sub14_Run` | 0x1D table | 4000 of 4000 |
+| 75 | `Sub14_Start` | 0x41 | 2680 of 4000 |
+| 76 | `Sub14_Dim` | >= 0x7F | 86 of 4000 |
+| 77 | `Sub14_Dim` | >> 2 | 2467 of 4000 |
+| 78 | `Sub14_ScaleClut` | bit 15 lost | 3883 of 4000 |
+| 79 | `Sub14_ScaleClut` | dirty 2 | 4000 of 4000 |
+| 80 | `Sub14_ScaleClut` | red >> 7 (floor) | 698 of 4000 |
+| 81 | `Sub1E_Run` | 0x14 table | 4000 of 4000 |
+| 82 | `Sub14_WaitFlag` | height + 1 | 1995 of 4000 |
+| 83 | `Sub14_WaitFlag` | kind 0x6C | 1998 of 4000 |
+| 84 | `Sub14_WaitFlag` | shade 0x81 | 4000 of 4000 |
+| 85 | `Sub14_WaitFlag` | z from x | 1995 of 4000 |
+| 86 | `Sub14_Fade` | odd frames | 4000 of 4000 |
+| 87 | `Sub14_DrawTiles` | even cells | 4000 of 4000 |
+| 88 | `Sub14_DrawTiles` | + 0x19 | 4000 of 4000 |
+| 89 | `Sub14_DrawTiles` | clut 0x78C4 | 4000 of 4000 |
+| 90 | `Sub14_DrawTiles` | rounded between | 2430 of 4000 |
+| 91 | `Sub21_Run` | +9 + 1 | 4000 of 4000 |
+| 92 | `Sub21_Step` | + 3 | 4000 of 4000 |
+| 93 | `Sub21_DrawSpiral` | x + 0xA1 | 2003 of 4000 |
+| 94 | `Sub21_DrawSpiral` | phase - 0xFF | 2003 of 4000 |
+| 95 | `Sub21_DrawSpiral` | g3 +0x25 1 | 2003 of 4000 |
+| 96 | `Sub21_DrawSpiral` | radius >> 3 | 2003 of 4000 |
+| 97 | `Sub52` | > 0x13 | 169 of 4000 |
+| 98 | `Sub52` | << 2 | 796 of 4000 |
+| 99 | `Sub52` | +9 + 1 | 796 of 4000 |
+| 100 | `Sub52` | sign swapped | 796 of 4000 |
+| 101 | `Sub22_Run` | 0x14 table | 4000 of 4000 |
+| 102 | `Sub22_Start` | - 0x7F | 2662 of 4000 |
+| 103 | `Sub22_Start` | +2 3 | 1338 of 4000 |
+| 104 | `Sub22_Start` | flag + 1 | 4000 of 4000 |
+| 105 | `Sub22_WaitSet` | step -9 | 2564 of 4000 |
+| 106 | `Sub22_Move` | > 0x10 | 172 of 4000 |
+| 107 | `Sub22_WaitClear` | step 9 | 1287 of 4000 |
+| 108 | `Sub22_Wait` | sound 0x200 | 3963 of 8000 |
+| 109 | `Sub22_SetMap` | byte 0x12 | 838 of 4000 |
+| 110 | `Sub22_SetMap` | corner 3 kept | 2998 of 4000 |
+| 111 | `Sub22_SetMap` | >> 5 (floor) | 2834 of 4000 |
+| 112 | `Sub22_SetMap` | other row | 2998 of 4000 |
+| 113 | `Sub22_SetMap` | height once | 3997 of 4000 |
+| 114 | `Sub22_Draw` | row by != 2 | 4000 of 4000 |
+| 115 | `Sub22_Draw` | dy << 6 | 3653 of 4000 |
+| 116 | `Sub22_Draw` | slot 4 | 145 of 4000 |
+| 117 | `Sub22_Draw` | x - 0x3F80 | 4000 of 4000 |
+
+**Control 10 is equivalent**: rounding the patch corner's `fx + SX` to a float
+before subtracting 64.0 cannot change it, because `_DrawPatch` itself stores
+`MapView_ScreenXY` as a whole number (`fild` of `(x >> 9) - 0x4000`) and `fx`
+is a multiple of 128, so the sum is an integer below 2^24 and exact as a
+float. No input can tell. Its near variant, control 11 (the corner 0.5 less
+before the truncation), is refused. (Control 11 was not refused on the second
+run, when the seeds kept every record's `+0x36` small, so every patch lay at
+negative x, where truncating `n - 0.5` gives `n` again: the seeds now bound the
+place word only for the functions that index by it - the fuzz's fault, fixed.
+The first run's other two not refused - `_Glow`'s `> 0x6B` and `_Sub1D_Start`'s
+`>=` - were the seeds' and the elevation stand-in's too: `+9` now sits at
+every compare's value and the one below, and `AreaMap_Elevation` answers one
+of four heights half the time so two calls can agree.)
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
