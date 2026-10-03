@@ -54,8 +54,50 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-000000. **2026-10-03, the fix wave for the owner's play reports: merged at `dcf4307`, headless-verified, NOT yet seen in
-   game.** Six Opus agents from `a8700be`, headless only; merged in a worktree (`fix/1003-merge`), `'*'` exit 0 narrow
+0000000. **NEXT, the owner's word 2026-10-03: the layering fix - ground tiles drawn over the party's feet and shadow.**
+   Wanted on the world map and on field maps, as an Intent change beyond the original (the PlayStation and Capcom's
+   port both do it; `known-defects.md` D199). Nothing of the fix is written. What is settled:
+   - **The cause is one, shared, and measured:** [`sprite-draw-order.md`](sprite-draw-order.md) section 18 (the path
+     both kinds of map share, five hypotheses, the instrument) and 18.9 (the measurement): `Sprite_DrawPass` emits each
+     layer's cells and then its sprites, there is no depth test, so `list0` cells of the next one to three layers are
+     drawn after the party's code-0x84 primitive in the same slot 6 and cover its lower part. World map
+     (`worldmap_sliver.txt` 1258..1260): sprite #489 layer 25, then cells of layers 26..28. Field (`field_view.txt`
+     1278..1280): sprite #114 layer 22, then two cells of layer 23. H3 (the sprite's layer one early on a cell boundary)
+     is not excluded. Logs: `analysis/shots/validate_1003/ws_wm/bof3x.log`, `ws_field/bof3x.log`.
+   - **The instrument:** `BOF3X_DRAWORDER=F0-F1:X0,Y0,X1,Y1` (recipe frames, a 320 x 240 rectangle), `src/hook/draw_order.*`;
+     it logs our code only, so nothing under `--original "*"`.
+   - **The two shapes of fix** ([`world-map.md`](world-map.md) section 8.3), both unbuilt: (1) the party's draw key a
+     layer later - simple, but its body then shows over terrain that should hide the feet; (2) the shadow as its own
+     primitive drawn after the map - cleaner, and it first needs to know whether the shadow is pixels of the sprite's
+     cell texture (a flat `0x292929`, opaque on the PC) or a separate piece of the frame (`Sprite_Draw`'s pieces at
+     `+0x54` / `+0x5A`). The owner asked whether (1) could be world-map only: it can be keyed on the area, but the path
+     is shared (`WorldMap_PinSprite` is the place plate's, not the party's), and the owner then asked for the cause to be
+     narrowed first - done, above. **Not yet asked of the owner:** which shape, and whether feet over terrain is
+     acceptable; show both as captures before settling (the owner tunes by eye).
+   - **What right looks like:** the owner's PlayStation screenshot of the Lost Shore map - a whole ellipse under the
+     party on open ground. The owner's crops of the fault: `analysis/shots/owner_catalogue/worldmap_shadow_1..3.png`; in
+     the field, the 2026-09-21 "floor over Ryu's left foot" (`sprite-draw-order.md` section 11, `field_view.txt`'s
+     `field2`).
+   - **Mechanics:** the next DIV number is 0071, tier Intent, with a switch; the functions are ours (`draw_pass.cpp`,
+     `map_cells.cpp`, `draw_emit.cpp`), fuzzed - the fix goes in off during the fuzz, as DIV-0069's and DIV-0041's do
+     (armed in `InjectAll` after the self-tests). Check with `--speed 8` only on a route whose `randlog` has been
+     compared against x1 (`shop.txt` and `balioAndSunder_2.txt` have). A/B: the same shots with the switch off.
+   - **Before starting:** `60daff3` (the fishing space, `dat.py` kind 16, section 18.9) and this entry are on
+     `fix/1003-merge` (worktree `<session 0a6f4f8e scratchpad>/fixmerge`), which also holds the round branch as of
+     `82222cf`. If the round branch does not have them yet, merge `fix/1003-merge` into it first, when no merge runner
+     is active in the main checkout.
+
+000000. **2026-10-03, the fix wave for the owner's play reports: merged at `dcf4307`, then validated live the same
+   afternoon - the owner: "That looks right to me".** The validation (`analysis/shots/validate_1003/`, run from the
+   merge worktree's build, not `build/`): GS's shout with a clean gap against Capcom's stray glyph (`bs2`, `bs2_orig`);
+   CH's second fight paying 0 EXP under `BOF3X_EXP=0` where `--original Boss16_End` pays 110, the first fight 0 too
+   (`bs1`); YN's shop and Manillo prompts (`shop`, `caughFish_b`); MB's backdrop wide; FL's banners, tabs and names in
+   English (`camping_b`). **It found two FL defects, fixed in `60daff3`:** a space in the banner's one-byte draw was
+   glyph `0xFFFA` (both fishing routes crashed in `Font_UnpackGlyph` at the first banner), and `tools/dat.py` did not
+   know chunk kind 16 (`loc_build.py all` stopped after `en.FIRST.DAT`). Not seen: the master's prompt (no route), the
+   stray frame line at window scale 1 (a capture is the render target, not the window - the owner's eye), the trigger-mode
+   enemies (no route). As first written:
+   *merged at `dcf4307`, headless-verified, NOT yet seen in game.* Six Opus agents from `a8700be`, headless only; merged in a worktree (`fix/1003-merge`), `'*'` exit 0 narrow
    and wide (1,001 groups, 7,787 ours), `ledger_check` 0 errors, then this branch fast-forwarded. `build/` was not
    rebuilt (the owner's play DLL is still 30 September's). What merged, each with its own doc section for the live check:
    - **GS, DIV-0070** (renumbered: the capture wave took 0068): `MsgBox_EffectDraw` `0x4987E0` taken over, a space in a
