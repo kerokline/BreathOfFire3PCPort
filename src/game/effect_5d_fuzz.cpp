@@ -254,6 +254,25 @@ U FxLink(const U* a, U answer) {
     return answer;
 }
 
+// Gte_RotTransPers: the screen point two floats (as the effect-mode row), here
+// a third of the time at or just past EffectKind18Sub1C_OnScreen's bounds
+// (-20.0, 340.0) or a quiet NaN, so both its answers and the x87's unordered
+// compare show; the rest the row's fractional floats.
+U FxPers1(const U* a, U answer) {
+    static const U kNear[] = {0xC1A00000u, 0xC1A00001u, 0xC19FFFFFu, 0x43AA0000u, 0x43AA0001u, 0x43A9FFFFu, 0x7FC00000u, 0x43200000u};
+    for (unsigned i = 0; i < 2; ++i) {
+        const U at = a[1] + 4 * i;
+        if (sh::Noise() % 3 == 0 && Writable(at, 4)) {
+            const U bits = kNear[sh::Noise() % (sizeof kNear / sizeof kNear[0])];
+            std::memcpy(P(at), &bits, 4);
+        } else {
+            FillFloat(at);
+        }
+    }
+    Fill(a[2], 4);
+    return answer;
+}
+
 // Effect_FindFree as the effect-mode row (scenario_harness.cpp FxFindFree: none
 // a quarter of the time, else a free record from a start the answer picks), but
 // never Sprite_Current's own: in the game the running record is in use, and the
@@ -297,6 +316,7 @@ const sh::Callee kCallees[] = {
     {E5D_OURS(Gte_RotTransPers4), 9, {0, 0, 0, 0, 0, 0, 0, 0, 0}, kG, 0, 0, {6, 6, 6, 6, 0, 0, 0, 0, 0}, &FxPers4, nullptr, true},
     {E5D_OURS(Gte_SetTransMatrix), 1, {0}, kG, 0, 0, {18}, &FxSetTrans, nullptr, true},
     {E5D_OURS(Gte_SetRotMatrix), 1, {0}, kG, 0, 0, {18}, nullptr, nullptr, true},
+    {E5D_OURS(Gte_RotTransPers), 3, {kW, 0, 0}, kG, 0, 0, {8, 0, 0}, &FxPers1, nullptr, true},
     // louder: the cursor the draws read again after it; dy's byte
     {E5D_OURS(MapView_LinkPrimAt), 4, {kW, kW, k8, k8}, kG, 0, 0, {}, &FxLink, nullptr, true},
     {E5D_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxFindFree, nullptr, true},
@@ -391,6 +411,9 @@ void Seed(unsigned k) {
         AreaMap_HeightBase = static_cast<unsigned short>(sh::Next() % 0x700);
         break;
     }
+    case k1BRun: s[9] = static_cast<unsigned char>(PickOf(0, 4, 0xE, 0xD, 0xF, 3, 1, 5, sh::Next())); break;
+    case k1CWait:
+    case k1DWait: s[9] = static_cast<unsigned char>(PickOf(1, 1, 0, 2, sh::Next())); break;
     case k1DHurt:
         // the direction toward and along both axes
         SetLong(s + 0xC, static_cast<std::int32_t>(PickOf(0, 1, 0xFFFFFFFFu, sh::Next())));
