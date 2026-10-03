@@ -14,13 +14,13 @@ route enters any of the 51 (section 9). Every row is effect code (no
 
 | Kind | Functions | Reached through |
 |---|--:|---|
-| 0x91: a full-screen tint brightened one step a frame over 0x3C frames, then message 0x86 opened; once it closes the chapter's step byte raised; the tint held (chapter 14's `Scena14_Run7` spawns it) | 5 | `Effect_KindHandlers[0x91]` (`0x655594`), `EffectKind91_States` `0x655100` (4) |
+| 0x91: a full-screen tint brightened one step a frame over 0x3C frames, then message 0x86 opened; once it closes the chapter's step byte raised; the tint held (chapter 14's `Scena14_Run2` spawns it) | 5 | `Effect_KindHandlers[0x91]` (`0x655594`), `EffectKind91_States` `0x655100` (4) |
 | the screen tint itself (`0x48CA90`), which kind 0x91 tail-jumps to and kinds 0x63 (E3B), 0x75 (E3C) and E4A's / E4C's states call | 1 | calls and tail jumps |
 | 0x94: the tint faded in over 0x5A frames (blend 2) with the first six field sprites and the party members at `ObjTrio +0x89` 7 drawn again over it, held; or, spawned at `+1` 3 (`Scena14_Run6`), a white flash (blend 1) for four frames | 8 | `Effect_KindHandlers[0x94]` (`0x6555A0`), `EffectKind94_States` `0x655110` (5) |
 | 0x95: a clock - the word `0x67629A` counted in ticks of 30 frames (40 with its bit 15) while no message, menu, mode 3 / 4 or party byte stops it; at 15 ticks the flag 0x40 set, the chapter's run 7 step 5, released | 4 | `Effect_KindHandlers[0x95]` (`0x6555A4`), `EffectKind95_States` `0x65512C` (3) |
 | 0x96: a semi-transparent magenta quad (0, 0)..(320, 320), its level stepped through an eight-entry table every seventeen frames; never released by its own code | 3 | `Effect_KindHandlers[0x96]` (`0x6555A8`), `EffectKind96_States` `0x655138` (2) |
 | 0x97: a grey ring of 32 triangles grown at the record's point; at the counter `0x903848` = 10 a burst of 32 debris triangles and rising spark rings, transitions 8 and 9, the chapter's step 0x14 (`Scena14_Run7` spawns it) | 15 | `Effect_KindHandlers[0x97]` (`0x6555AC`), `EffectKind97_States` `0x655140` (6) |
-| 0x98: a grey full-screen flash rising over 0x20 frames, then a burst ring of 32 triangles at the record's point whose rim and then centre fade (`Scena14`'s spawns) | 7 | `Effect_KindHandlers[0x98]` (`0x6555B0`), `EffectKind98_States` `0x655158` (4) |
+| 0x98: a grey full-screen flash rising over 0x20 frames, then a burst ring of 32 triangles at the record's point whose rim and then centre fade (`Scena14_EnterArea`'s and `Scena14_Run7`'s spawns) | 7 | `Effect_KindHandlers[0x98]` (`0x6555B0`), `EffectKind98_States` `0x655158` (4) |
 | 0x9A: `Sprite_Objects` record 1 nudged 0x1000 along y or x (by `Rand & 7` through a table) for five frames and back, again until the counter `0x903848` is 0x28 | 9 | `Effect_KindHandlers[0x9A]` (`0x6555B8`), `EffectKind9A_States` `0x655170` (8) |
 
 What each kind looks like in the game is not stated here (the owner's to
@@ -250,7 +250,11 @@ entry of the seven tables reached (each handler recorder 477..2,026 calls);
 `Effect_Release` 4,891, `Msg_OpenScript` 436, `Transition_Start` 2,459,
 `EffectKind64_ClearSparks` 915, `Sprite_UpdateScreen` 26,390.
 
-STAR_RESULTS
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+700 self-test lines, no `MISMATCH` line but the "0 MISMATCHES" counts,
+`inject: 7838 ours, 0 left original`; `effect_4d` there 204,000 rounds,
+3,087,037 calls, 0 mismatches. **With `BOF3X_WIDE=1`**: `'*'` exit 0, 700
+self-test lines, no mismatch, the same counts. Neither run died silently.
 
 ## 5. What the cut and the tool said, settled
 
@@ -342,7 +346,7 @@ put in.
 | 43 | `EffectKind97_Burst` | `7` for `8` | round 6 |
 | 44 | `EffectKind97_Fade` | `1` for `0` | round 0 |
 | 45 | `EffectKind97_End` | `0x15` for `0x14` | round 0 |
-| 46 | `EffectKind97_Run` | `EffectKind9A_States` for `EffectKind97_States` | ROW46 |
+| 46 | `EffectKind97_Run` | `EffectKind9A_States` for `EffectKind97_States` | round 0 |
 | 47 | `EffectKind98_Start` | `0x21` for `0x20` | round 0 |
 | 48 | `EffectKind98_Flash` | `9u` for `8u` | round 0 |
 | 49 | `EffectKind98_Flash` | `0x1E` for `0x1F` | round 28 |
@@ -447,7 +451,7 @@ nobody's: `0x5A7C70` (the library's matrix turn; an effect-standard row).
 combat) are empty for all 51 rows, and no first-call trace under
 `analysis/calltrace` names any of the 51 addresses (a grep of every trace;
 the only hits are hash columns). **Fuzz only.** No live run was made (the
-brief). Chapter 14's scenes (`Scena14_Run6`, `_Run7`, `_EnterArea`) spawn
+brief). Chapter 14's scenes (`Scena14_Run2`, `_Run6`, `_Run7`, `_EnterArea`) spawn
 kinds 0x91, 0x94, 0x97 and 0x98; a recorded route through them would let
 the coordinator's frame-hash A/B cover those kinds, and the screen tint
 whichever of kinds 0x63 / 0x75 the route shows.

@@ -8,7 +8,7 @@
 //
 //   kind 0x91   a full-screen tint brightened over 0x3C frames, then message
 //               0x86 opened; once it closes the chapter's step byte raised; the
-//               tint held (chapter 14's scenes spawn it: Scena14_Run7)
+//               tint held (chapter 14's scenes spawn it: Scena14_Run2)
 //   kind 0x94   the tint faded in over 0x5A frames (blend 2) with the first six
 //               field sprites and the party members at pose 7 drawn again over
 //               it, held; or (+1 = 3, Scena14_Run6's spawn) a white flash (blend
@@ -23,7 +23,8 @@
 //               counter 0x903848 = 10, transitions 8 and 9, the chapter's step
 //               0x14 (Scena14_Run7's spawns)
 //   kind 0x98   a grey flash rising over 0x20 frames, then a burst ring of 32
-//               triangles at the record's point fading (Scena14's spawns)
+//               triangles at the record's point fading (Scena14_EnterArea's and
+//               Scena14_Run7's spawns)
 //   kind 0x9A   Sprite_Objects record 1 nudged 0x1000 along y or x for five
 //               frames and back, again and again until the counter 0x903848 is
 //               0x28
