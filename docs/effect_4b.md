@@ -311,7 +311,14 @@ entry of the eight tables reached (each handler recorder 147..1,400 calls,
 `BareRet` 2,382); `Effect_Release` 13,756, `Scena15_RecordWord` 240,000,
 `Sprite_SetAnimation` 5,373, `EffectKind88_ScreenAngle` 89,392.
 
-STAR_RESULT
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+701 self-test lines, no `MISMATCH` line, `inject: 7853 ours, 0 left
+original`; `effect_4b` there 264,000 rounds, 2,074,730 calls, 0 mismatches.
+**With `BOF3X_WIDE=1`**: `'*'` exit 0, 701 self-test lines, no `MISMATCH`
+line, the same `effect_4b` counts. Neither died silently (a first attempt
+exited 127 before starting the game: the script's own quoting of
+`BOF3X_SHADOW`, fixed and re-run). `tools/ledger_check.py`: 70 entries, 0
+errors.
 
 ## 5. What the cut and the tool said, settled
 
