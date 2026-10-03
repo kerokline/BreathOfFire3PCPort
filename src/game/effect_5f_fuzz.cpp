@@ -307,10 +307,8 @@ void Records(unsigned k) {
 
 // The leader near the record's cell half the time: within two cells on each
 // axis, the fraction random (the gate's and the far test's boundaries both).
-void Leader(const unsigned char* s) {
+void Leader(std::int32_t x, std::int32_t z) {
     if (!sh::Half()) return;
-    const std::int32_t x = static_cast<std::int16_t>(Word(s + 0x36));
-    const std::int32_t z = static_cast<std::int16_t>(Word(s + 0x3A));
     const std::int32_t dx = static_cast<std::int32_t>(sh::Next() % 6) - 2;
     const std::int32_t dz = static_cast<std::int32_t>(sh::Next() % 6) - 2;
     const U fx = PickOf(0, 0x8000, 0xFFFF, 0x7FFF, sh::Next() & 0xFFFF);
@@ -357,7 +355,22 @@ void Seed(unsigned k) {
     g_quad = 0;
     Records(k);
     unsigned char* const s = Sprite_Current;
-    Leader(s);
+    // a start tests the leader against the placement's cell it has just
+    // written (its +8 from the old +0x3A being 0), the rest against the record's
+    U table = 0;
+    switch (k) {
+    case k27Start: table = at::kSub27Cell; break;
+    case k29Start: table = at::kSub29Cell; break;
+    case k2AStart: table = at::kSub2ACell; break;
+    default: break;
+    }
+    if (table != 0) {
+        SetWord(s + 0x3A, PickOf(0, 0, 1, sh::Next()));
+        const U i = Word(s + 0x36);
+        Leader(Mem(table + 2 * i)[0], Mem(table + 2 * i + 1)[0]);
+    } else {
+        Leader(static_cast<std::int16_t>(Word(s + 0x36)), static_cast<std::int16_t>(Word(s + 0x3A)));
+    }
     Cond_ByteFE = static_cast<unsigned char>(PickOf(0x10, 0x20, 0x10, 0x20, 0, sh::Next()));
     Field_Request = static_cast<unsigned char>(PickOf(0, 0, 2, sh::Next()));   // the sounds wait on 0
     Draw_PassFlags = static_cast<unsigned char>(sh::Next() % 3 == 0 ? sh::Next() & ~4u : sh::Next() | 4u);
@@ -402,7 +415,9 @@ void Seed(unsigned k) {
             const U bound = sh::Next() & 0xFFFF;
             SetWord(s + 0x30, bound);
             SetWord(s + 0x3A, bound + PickOf(0, 1, 0xFFFF, 8, 0xFFF9));
+            SetLong(s + 0x10, static_cast<std::int32_t>(PickOf(0, 0, 0x100, sh::Next())));   // +0x3A is +0x38's high word: the drift keeps it
         }
+        if (sh::Half()) SetWord(s + 0x34, 0);   // the bound pair's pick
         break;
     default: break;
     }
