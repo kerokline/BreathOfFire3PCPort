@@ -34,6 +34,11 @@
 // not full-width - DIV-0056): the Chinese line is what the stops were made
 // for. All four prompts that use the chooser get the new layout, since it is
 // one function. YesNoLayout_Inject also applies DIV-0029 (below).
+//
+// Amended 2026-10-03 (group YN, docs/yes-no-prompts.md): two prompts outside
+// Menu_YesNo that carry their answers on the question's own line get the
+// same spacing - YesNoLayout_Tail - the master's here (Capcom's 0x586D20,
+// two calls re-aimed) and Manillo's in effect_1g.cpp (ours).
 #include "game/yes_no_layout.h"
 
 #include <windows.h>
@@ -43,6 +48,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
+#include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -94,6 +100,115 @@ const unsigned char* Respace(const unsigned char* s, unsigned id) {
 
 extern "C" const unsigned char* __cdecl YesNo_Line(unsigned id) { return Respace(Msg_SystemPtr(id), id); }
 
+// ---------------------------------------------------------------------------
+// DIV-0027, amended 2026-10-03 (group YN): prompts that carry their own
+// answers at the end of the question's line - the master's "Is this OK?"
+// (Capcom's 0x586D20) and Manillo's "Will that be all?" (ours,
+// effect_1g.cpp's LeavePrompt). Each draws one line - the question, spaces,
+// the two answers one space apart, ending at the line's 33rd character - and
+// puts the hand at a Chinese-fitted base + 36 * the answer. The load / save
+// screen's spacing, which the owner asked for (2026-10-03): the first answer
+// three spaces further left, the hand two units left of each answer (its
+// visible tip three units before the word), the second answer where it was.
+
+unsigned char g_tail[128];
+
+// A character's byte length: two where the first byte has bit 7 (a second
+// byte may be anything, 0x20 included), else one.
+unsigned CharLen(const unsigned char* s, unsigned i) { return (s[i] & 0x80) ? 2u : 1u; }
+
+}  // namespace
+
+YesNoTail YesNoLayout_Tail(const unsigned char* s, int x, const char* who) {
+    // The characters' byte offsets, refusing a control byte (the width below
+    // would not know it) and a two-byte code cut short.
+    unsigned starts[128];
+    unsigned n = 0, i = 0;
+    while (s[i]) {
+        if (n == sizeof starts / sizeof starts[0]) bof3::Fatal("DIV-0027: %s's line is over %u characters", who, n);
+        if (s[i] < 0x20 || ((s[i] & 0x80) && !s[i + 1]))
+            bof3::Fatal("DIV-0027: %s's line has byte 0x%02X at %u - not a character this layout can measure", who,
+                        s[i], i);
+        starts[n++] = i;
+        i += CharLen(s, i);
+    }
+    const unsigned len = i;
+    auto space = [&](unsigned k) { return s[starts[k]] == 0x20; };
+    // From the end: the second answer, its gap, the first answer, its gap.
+    unsigned k = n;
+    const unsigned w2_end = k;
+    while (k > 0 && !space(k - 1)) --k;
+    const unsigned w2 = k;
+    while (k > 0 && space(k - 1)) --k;
+    const unsigned g2 = k;
+    while (k > 0 && !space(k - 1)) --k;
+    const unsigned w1 = k;
+    while (k > 0 && space(k - 1)) --k;
+    const unsigned g1 = k;
+    if (w2 == w2_end || g2 == w2 || w1 == g2 || g1 == 0 || w1 - g1 < kMoved + 1)
+        bof3::Fatal("DIV-0027: %s's line is not a question, spaces, a word, spaces, a word with %u spaces to spare "
+                    "(%u characters: question to %u, answers at %u and %u)",
+                    who, kMoved + 1, n, g1, w1, w2);
+    if (len + 1 > sizeof g_tail) bof3::Fatal("DIV-0027: %s's line is %u bytes", who, len);
+    // The same bytes with kMoved spaces moved from the first gap to the second.
+    unsigned out = 0;
+    auto copy = [&](unsigned from, unsigned to) {   // characters [from, to)
+        const unsigned a = starts[from], b = to < n ? starts[to] : len;
+        std::memcpy(g_tail + out, s + a, b - a);
+        out += b - a;
+    };
+    copy(0, w1 - kMoved);
+    copy(w1, g2);
+    for (unsigned m = 0; m < kMoved; ++m) g_tail[out++] = 0x20;
+    copy(g2, n);
+    g_tail[out] = 0;
+    // The pen's place at each answer, the advances summed as the draw sums them.
+    int pen = x, stop[2] = {0, 0};
+    unsigned at = 0, word = 0;
+    while (g_tail[at]) {
+        if (word < 2 && at == (word == 0 ? starts[w1] - kMoved : starts[w2])) stop[word++] = pen - 2;
+        pen += TextAdvance_Of(g_tail + at);
+        at += CharLen(g_tail, at);
+    }
+    if (word != 2) bof3::Fatal("DIV-0027: %s's re-spaced line lost an answer", who);
+    return {g_tail, {stop[0], stop[1]}};
+}
+
+namespace {
+
+// The master's prompt, Capcom's 0x586D20 (docs/yes-no-prompts.md): its line
+// Text_DrawAt(0x1B, 0x13, 0, 0xFF, MessagePools + word) at 0x586E78 and its
+// hand Menu_DrawHand(0xCF + 36 * the byte 0x9398D2, 0x15, 0) at 0x586E97 -
+// 0 is Yes. Both calls re-aimed here; the line's stops kept for the hand.
+constexpr std::uint32_t kMasterLineCall = 0x586E78;
+constexpr std::uint32_t kMasterHandCall = 0x586E97;
+constexpr std::uint32_t kMenuDrawHand = 0x5905D0;
+constexpr std::uint32_t kTextDrawAt = 0x516B30;
+constexpr unsigned kMasterHandBase = 0xCF, kMasterHandStep = 36;
+
+int g_master_stop[2];
+bool g_master_line = false;
+
+extern "C" const unsigned char* __cdecl MasterAsk_Line(int x, int y, int color, int count, const unsigned char* s) {
+    const YesNoTail t = YesNoLayout_Tail(s, x, "the master's prompt");
+    g_master_stop[0] = t.stop[0];
+    g_master_stop[1] = t.stop[1];
+    g_master_line = true;
+    const unsigned char* end = Text_DrawAt(x, y, color, count, t.line);
+    return s + (end - t.line);   // same length: where the original's return would point
+}
+
+extern "C" void __cdecl MasterAsk_Hand(int x, int y, int unused) {
+    // Capcom's x is 0xCF + 36 * the answer byte; Menu_DrawHand keeps its low 16 bits.
+    const unsigned v = static_cast<unsigned>(x) & 0xFFFF;
+    if (!g_master_line || v < kMasterHandBase || (v - kMasterHandBase) % kMasterHandStep)
+        bof3::Fatal("DIV-0027: the master's hand at x 0x%X (%s) is not 0x%X + %u * an answer after its line", v,
+                    g_master_line ? "line drawn" : "no line", kMasterHandBase, kMasterHandStep);
+    g_master_line = false;
+    const int answer = static_cast<int>((v - kMasterHandBase) / kMasterHandStep);
+    Menu_DrawHand(g_master_stop[0] + answer * (g_master_stop[1] - g_master_stop[0]), y, unused);
+}
+
 // BOF3X_SHADOW=yes_no_layout: the re-spacing on the two lines it will meet,
 // built here - the English line's shape and the Chinese line's (two-byte
 // codes) - against the lines it must make.
@@ -123,8 +238,49 @@ void SelfTest() {
             bof3::Fatal("DIV-0027 self-test: a line of lead %u and gap %u was not re-spaced to %u and %u", c.lead,
                         c.gap, c.lead - kMoved, c.gap + kMoved);
     }
-    bof3::Log("shadow      yes_no_layout self-test: %u lines re-spaced as wanted",
-              (unsigned)(sizeof kCases / sizeof kCases[0]));
+    // The amendment's prompts: question, gap, answer, gap, answer - the
+    // shapes the en / fr / de overlays carry (a question with spaces of its
+    // own, a two-byte code in it, answers of 2..4 letters), checked against
+    // the line they must make and the pen's place at each answer, summed
+    // here character by character.
+    struct TailCase { const char* question; unsigned gap1; const char* a1; unsigned gap2; const char* a2; };
+    static const TailCase kTails[] = {
+        {"Will that be all?", 10, "Yes", 1, "No"},
+        {"Is this OK?", 16, "Yes", 1, "No"},
+        {"Ist das okay?", 13, "Ja", 1, "Nein"},
+        {"Est-ce que \x8a\x89" "a va?", 9, "Oui", 1, "Non"},
+    };
+    auto tail = [](unsigned char* out, const TailCase& c, unsigned gap1, unsigned gap2, unsigned* a1_at, unsigned* a2_at) {
+        unsigned n = 0;
+        for (const char* p = c.question; *p; ++p) out[n++] = static_cast<unsigned char>(*p);
+        for (unsigned k = 0; k < gap1; ++k) out[n++] = 0x20;
+        *a1_at = n;
+        for (const char* p = c.a1; *p; ++p) out[n++] = static_cast<unsigned char>(*p);
+        for (unsigned k = 0; k < gap2; ++k) out[n++] = 0x20;
+        *a2_at = n;
+        for (const char* p = c.a2; *p; ++p) out[n++] = static_cast<unsigned char>(*p);
+        out[n] = 0;
+    };
+    for (const TailCase& c : kTails) {
+        unsigned char in[96], want[96];
+        unsigned a1, a2, w1, w2;
+        tail(in, c, c.gap1, c.gap2, &a1, &a2);
+        tail(want, c, c.gap1 - kMoved, c.gap2 + kMoved, &w1, &w2);
+        const int x = 0x18;
+        const YesNoTail got = YesNoLayout_Tail(in, x, "the self-test");
+        int pen = x, at1 = 0, at2 = 0;
+        for (unsigned i = 0; want[i]; i += (want[i] & 0x80) ? 2 : 1) {
+            if (i == w1) at1 = pen;
+            if (i == w2) at2 = pen;
+            pen += TextAdvance_Of(want + i);
+        }
+        if (std::strcmp(reinterpret_cast<const char*>(got.line), reinterpret_cast<const char*>(want)) != 0 ||
+            got.stop[0] != at1 - 2 || got.stop[1] != at2 - 2)
+            bof3::Fatal("DIV-0027 self-test: \"%s\" re-spaced wrong or stopped at %d / %d, not %d / %d", c.question,
+                        got.stop[0], got.stop[1], at1 - 2, at2 - 2);
+    }
+    bof3::Log("shadow      yes_no_layout self-test: %u lines re-spaced as wanted, %u prompts' tails and stops",
+              (unsigned)(sizeof kCases / sizeof kCases[0]), (unsigned)(sizeof kTails / sizeof kTails[0]));
 }
 
 }  // namespace
@@ -144,6 +300,12 @@ void YesNoLayout_Inject() {
     static const std::uint8_t shift_is[] = {0x90, 0x90, 0x90};
     bof3::PatchBytes("YesNoLayout", 0x5747FC, shift_was, shift_is, 3);
     bof3::Log("DIV-0027    Yes / No: %u spaces into the gap, hand stops 218 and 274 (on unless the lines above say OFF)", kMoved);
+
+    // DIV-0027, amended 2026-10-03: the master's "Is this OK?" (0x586D20).
+    bof3::RetargetCall("MasterAskLayout", kMasterLineCall, kTextDrawAt, reinterpret_cast<void*>(&MasterAsk_Line));
+    bof3::RetargetCall("MasterAskLayout", kMasterHandCall, kMenuDrawHand, reinterpret_cast<void*>(&MasterAsk_Hand));
+    bof3::Log("DIV-0027    the master's prompt: its answers re-spaced, the hand two units left of each (on unless the "
+              "lines above say OFF)");
 
     // DIV-0029: the save / load slot's name two units further in. The slot
     // panel 0x576960 draws the name - five bytes of the save header copied to
