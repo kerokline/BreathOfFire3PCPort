@@ -83,7 +83,7 @@ struct Callees {
     // BattleFx_PoseTask 0x433190's: 0x4331D0, 0x433290 (this file's)
     Handler pose[2];
     // BattleFx_ActorWatch 0x433460's: 0x4334C0 (this file's), 0x433550,
-    // 0x433640, 0x433650 (BE2's BattleFx_WatchIcon), 0x433790 (unread)
+    // 0x433640 (E4A's Sprite_StateRestart), 0x433650 (BE2's BattleFx_WatchIcon), 0x433790 (unread)
     Handler watch[5];
     // BattleFx_Follow 0x4337F0's: 0x433810 (this file's)
     Handler follow[1];

@@ -65,7 +65,7 @@ const Callees kOriginals = {
      H(0x4B30F0), H(0x4E5220), H(0x4E33B0), H(0x4F4C40), H(0x4E9B70), H(0x4EA0F0)},
     {H(0x432C40), H(0x432DB0), H(0x432DE0), H(0x432E50), H(0x432EA0)},
     {H(0x4331D0), H(0x433290)},
-    {H(0x4334C0), H(0x433550), H(0x433640), H(bof3::addr::BattleFx_WatchIcon), H(0x433790)},
+    {H(0x4334C0), H(0x433550), H(bof3::addr::Sprite_StateRestart), H(bof3::addr::BattleFx_WatchIcon), H(0x433790)},
     {H(0x433810)},
     BattleFx_RollingDigits, Battle_DrawNumber, Battle_DrawLabel, BattleTask_FreeCurrent, Battle_ActorIsOut,
     Sprite_SetAnimation, Sprite_QueueOverlay, Sprite_ScriptTick, Sprite_UpdateScreen, ScriptFlags_Set40,
@@ -382,7 +382,7 @@ extern "C" void __cdecl BattleFx_StepReset(void) {
 
 // original 0x433460 (no PSX twin paired): nothing in phase 5 (byte
 // 0x904AA0); otherwise state Sprite_Current +1 of a five-entry stack table -
-// 0x4334C0, then 0x433550, 0x433640, BattleFx_WatchIcon 0x433650 (group BE2's),
+// 0x4334C0, then 0x433550, Sprite_StateRestart 0x433640 (E4A's), BattleFx_WatchIcon 0x433650 (group BE2's),
 // 0x433790 (unread) - with the
 // animation set pointer 0x9039D8 at 0x8C5D80 around it, as the pose task.
 //
