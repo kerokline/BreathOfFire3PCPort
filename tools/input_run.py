@@ -45,7 +45,7 @@ import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threadin
 from PIL import ImageGrab
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front  # noqa: E402
+from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front, log_run_time  # noqa: E402
 import recipe_saves  # noqa: E402
 
 u = ctypes.WinDLL('user32')
@@ -188,6 +188,7 @@ def run(a, env, slot0):
     """Launch, follow the log to the recipe's end, end the game. The status
     word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
     logs the save loaded: the file is not read again after that."""
+    started, frames = time.time(), ''
     launch(a.launcher, a.game, env)
 
     stop = threading.Event()
@@ -215,12 +216,13 @@ def run(a, env, slot0):
                 elif m := SHOT.search(line):
                     time.sleep(a.delay)
                     print(f'shot {m[1]} at recipe frame {m[2]}{" (frozen)" if m[3] else ""}')
+                    frames = m[2]
                     grab(os.path.join(a.out, m[1] + '.png'))
                     if m[3]:
                         release(game_pid())
                 elif m := END.search(line):
                     print(f'recipe {m[1]} at recipe frame {m[2]}')
-                    status = m[1]
+                    status, frames = m[1], m[2]
                 elif re.search(r'input\s+(mark|peek|line) ', line):
                     print(line.strip())
                 elif m := LOADED.search(line):
@@ -232,6 +234,8 @@ def run(a, env, slot0):
     finally:
         stop.set()
         kill_game()
+        log_run_time('input_run', os.path.splitext(os.path.basename(a.recipe))[0], started, status or 'interrupted',
+                     env, a.launcher, frames)
     return status
 
 

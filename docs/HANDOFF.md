@@ -533,6 +533,12 @@ _Verified 2026-09-24._
   frames (`BOF3X_SHOT_DIR`, [`input-script.md`](input-script.md) §3); the
   owner records with `BOF3X_RECORD`. Route A/Bs: `analysis/validate_combat.sh`,
   `validate_shop.sh`, the world map's in [`world-map.md`](world-map.md).
+- **What the live runs cost:** `attract_run.py` and `input_run.py` append a line a run to
+  `analysis/run_times.tsv` (start, tool, what, wall seconds, the recipe frame reached, status,
+  `BOF3X_ORIGINAL`, the tracer's variables, the launcher's directory); `python tools/run_times.py
+  [--since "2026-10-03"] [--by tool|what|side]` sums it, with frames / 60 beside the wall time - the
+  part a fast-forward could remove (the owner's question, 2026-10-03; logged from round thirteen's
+  wave three on).
 - **Takeover recipe:** read to the last instruction; `symbols.toml` entry
   with evidence and `impl`; clone and fuzz under `BOF3X_SHADOW`, every call
   out re-aimed at a recording stand-in, boundaries seeded; plant a bug per
