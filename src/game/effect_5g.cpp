@@ -258,7 +258,7 @@ extern "C" void __cdecl EffectKind18Sub2B_Draw(int follow) {
 }
 
 // original 0x50B8B0 (sub-kinds 0x2C's and 0x4A's draw: called by 0x2C's states
-// and 0x4A's first, a tail jump from 0x2C's third and E6A's 0x50C0D0, and
+// and 0x4A's first, a tail jump from 0x2C's third and E6A's EffectKind18Sub4A_WaitCond, and
 // EffectKind18Sub4A_States' fourth entry itself): with +8 the panels lie across
 // z - their y (+0x3A << 7) - 0x3FC0 - and slide along x; without, across x and
 // slide along z. Two quads, side 0 and 1: a draw mode (page 0x95) linked at
@@ -609,7 +609,7 @@ extern "C" void __cdecl EffectKind18Sub3A_Close(void) {
 
 // ===========================================================================
 // Sub-kind 0x4A: EffectKind18_States[0x4A] (0x654194), EffectKind18Sub4A_States
-// (four) by +2: this state, E6A's 0x50C0D0, EffectKind18Sub2C_Open, the draw
+// (four) by +2: this state, E6A's EffectKind18Sub4A_WaitCond, EffectKind18Sub2C_Open, the draw
 // ===========================================================================
 
 // original 0x50BFD0 (hidden in 0x50BDC0): jmp [EffectKind18Sub4A_States + +2 *

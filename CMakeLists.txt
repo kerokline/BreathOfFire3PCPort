@@ -567,6 +567,8 @@ add_library(bof3x SHARED
   src/game/effect_4a_fuzz.cpp
   src/game/effect_5g.cpp
   src/game/effect_5g_fuzz.cpp
+  src/game/effect_6a.cpp
+  src/game/effect_6a_fuzz.cpp
   src/game/effect_5a.cpp
   src/game/effect_5a_fuzz.cpp
   src/game/effect_5b.cpp
