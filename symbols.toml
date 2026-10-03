@@ -140,7 +140,7 @@ params = "void"
 impl = "src/game/msgbox.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x497840..0x497A6C (557 bytes) with its 23-entry jump table at 0x497A70 (92 bytes, dispatched by jmp [eax*4 + 0x497A70] at 0x4978B2) - NOT the 752 bytes pe_funcs.py reports, which run on through the table into MsgBox_StateDispatch. One frame of the printer: the pen is reset to the box origin and the message re-walked from the top until the drawn count EQUALS 0x7DEE59. Codes 0x12 0x13 0x15 and everything above 0x16 draw; 0x03 0x04 0x07 0x08 substitute (8, 8, 32 and 16 characters); 0x01 is a newline of 14 px; 0x0D / 0x0E turn the offset pen on and off. The PSX twin is 0x80150598 (lw 0x801490A8 into the walk register, the two pen words from 0x801490BC/BE, the count byte 0x801490B5 - the MsgBoxState block at the same offsets), instruction for instruction; the newline's 0xE and the 0x2A hang are the PSX's (0x80150690, 0x801507A8). The 0x8015096C this entry used to carry is MsgBox_StatePrint's twin, not this one."
-note = "The one call of Text_DrawAt, at 0x497A22, is DIV-0006's: ours calls MsgBox_DrawChar there (src/game/text_advance.cpp), which is what the RetargetCall puts into Capcom's body for BOF3X_ORIGINAL=MsgBox_Step. It also calls 0x4987E0, the effect draw, which is unread and still 12 px."
+note = "The one call of Text_DrawAt, at 0x497A22, is DIV-0006's: ours calls MsgBox_DrawChar there (src/game/text_advance.cpp), which is what the RetargetCall puts into Capcom's body for BOF3X_ORIGINAL=MsgBox_Step. It also calls 0x4987E0, the effect draw, ours since 2026-10-03 as MsgBox_EffectDraw (DIV-0070); its advance is 12 + P, not DIV-0006's table."
 
 [[func]]
 pc = 0x59E2D0
@@ -6475,6 +6475,17 @@ params = "void"
 impl = "src/game/msgbox.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x4987A0..0x4987D7 (56 bytes), no calls. Adds the speed to the accumulator every frame and the accumulator's HIGH byte - taken before the add - to the y offset; once the y offset is no longer negative it and the kind are cleared. The high byte is taken with sar edx, 8 on a register whose upper half is stale, which cannot reach dl."
+
+[[func]]
+pc = 0x4987E0
+psx = 0x80151F4C
+name = "MsgBox_EffectDraw"
+ret = "void"
+params = "unsigned color, const unsigned char *text"
+impl = "src/game/msgbox.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-03, 0x4987E0..0x498A2A (587 bytes), cdecl, calls Gpu_GetClut 0x5A79E0 ((color & 0xF) << 4, 0x1E0), Gpu_SetCode6C 0x5A7760, Gpu_SetSemiTrans 0x5A7780 (prim, 1), Gfx_CommitPrim 0x461E50 (1, 0x28). Sole caller MsgBox_Step 0x4979D4, under flag 8 of 0x7DEE44 inside a 0x0D span. A POLY_FT4-shaped record scaled by the signed word P at 0x7DEE68: corners x .. x + P + 12 and y .. y + P + 12 - (T * ((P + 12) * 16 / 12) >> 4), T the byte 0x658F00[0x7DEE58]; texture 0 .. W (W 12 while P <= 12, else 11) and 0 .. W - T; glyph word +0x16 as Text_DrawString derives it; then 0x7DEE5C += P. A space (cmp cl, 0x20 / je 0x4988BE at 0x498819) skips the glyph word and the eight texture bytes yet commits the primitive - DIV-0070. PSX twin 0x80151F4C (the 0x0F preset's quad blitter, sibling docs/TEXT_ENGINE.md 'Two blitters'): the same vertex sums and 11 / 12 extent (0x80151FCC), its word separator 0xFF taking the same skip (0x80152010 -> 0x80152BF8). Fuzz group msgbox (BOF3X_SHADOW=msgbox)."
+note = "DIV-0070: ours commits nothing for a space once MsgBox_Inject has run the self-test (g_effect_space_skips); the pen moves by P either way. The advance is 12 + P for every character: DIV-0006's table is not consulted here (docs/msgbox.md section 4)."
 # ---------------------------------------------------------------------------
 # --- 2026-09-22 (third round), group J: the window/task layer and the
 # area-change funnel above it in the image (src/game/window_task.cpp,

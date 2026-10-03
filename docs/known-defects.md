@@ -4724,3 +4724,23 @@ in each; none is known to show.
 **Status:** latent, harmless by reading; `Field_FloorHurt`, the BMAGIC loops
 and `AreaMap_ClearCell`'s walk abort in ours where the original would read
 on.
+
+## D-TBD-GS — A space in a growing shout commits a primitive with a stale glyph word (fixed by DIV-0070)
+
+**Seen:** the owner, 2026-10-02, in play, English overlay: the game crashed
+in area `0x63`, message `0x24`, the message box in its grow effect
+(`build/bof3x.crash-30104-0.dmp` in the main checkout: `Font_UnpackGlyph`
+reading `0x17053EA0`). Capcom's, not ours: `0x4987E0` was still Capcom's
+code, called by address from our `MsgBox_Step`.
+
+**Established:** `0x4987E0` (now `MsgBox_EffectDraw`) jumps over the glyph
+word `+0x16` and the eight texture bytes for a `0x20` (`0x498819`) and
+commits the primitive anyway, so the packet slot's leftover glyph word is
+drawn - here `0xC254`, 14 MB past `Font_GlyphData`. The PSX twin does the
+same for its word separator `0xFF`. Capcom's Chinese script never puts a
+space in a grow span; the English overlays do in 15 places (areas 11, 40,
+41, 99), each a stale quad on the original draw and a crash when the word
+is far enough out ([`msgbox.md`](msgbox.md) §9).
+
+**Status:** fixed by DIV-0070 (a space commits nothing); recurs under
+`BOF3X_ORIGINAL=MsgBox_EffectDraw`. Not yet seen fixed in game.
