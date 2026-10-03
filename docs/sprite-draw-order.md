@@ -1446,3 +1446,55 @@ world-map-only is logged after the sprite). H3 is not excluded by this - the
 sprite's layer against the cell it stands on was not checked here. So the two
 kinds of map share the cause, and one fix in the shared path serves both; the
 owner wants it (2026-10-03), as an Intent change beyond the original.
+
+## 19. The fix: walkable floor does not cover a sprite's feet (DIV-0071, 2026-10-03)
+
+**Built on `fix/tile-layering`, off by default (`BOF3X_LAYERING=1`).** The
+ledger entry has the rule; this section has how it was arrived at and what
+is left.
+
+**What the two cuts are.** Both measured cases (section 18.9) are flat or
+nearly flat floor of the next rows:
+- `field_view.txt`: the party stands in cell (96, 47), layer 22, near the
+  cell's left corner; cell (96, 48) of layer 23 is the same flat floor, and
+  its top corner covers the shadow's lower left and the left foot.
+- the world map: the cells of layers 26 to 28 under the party at the Cedar
+  Woods node have corners 20..23 against feet at 20.
+
+**What tells floor from forest.** Not the geometry: on the world map a
+forest cell is a flat quad at the path's height with trees painted on it,
+and the party behind it is meant to be covered (the owner, on the first
+captures: "the trees are the giveaway"). The game's own answer is the
+area's cell byte: `AreaMap_CellBlocked` (`field-blocked.md` §1.2, high
+nibbles 1-5, A, B, F). At the route's `f01620` the covering cell (32, 28)
+is walkable and the forest cell (33, 27) beside it has byte `0x10`.
+
+**Three shapes tried, in order** (`analysis/shots/layering_1003/`):
+1. *The floor cells of the next layers lifted out of their lists and linked
+   before the sprite.* Wrong twice. `MapView_Build` relinks the lists only
+   when the view moves, so a cell taken out was gone from the next frame on
+   (the owner saw the tiles flicker as Ryu walked). With the lists put back
+   each pass it drew, but a floor cell moved ahead of the rows behind it is
+   painted over by them wherever they overlap it on screen - a hillside
+   (`route` `f01080`, `f01800`).
+2. *Every key one layer later* (`BOF3X_LAYERING=2`). Whole shadows, and the
+   party in front of the forest at the node and at `f01200`.
+3. *The sprite drawn later only over floor* - the ledger's rule. The order
+   of the terrain is untouched; only a sprite's place among the layers
+   moves, and only past things that could not have hidden it.
+
+**The overlap test** is the quad's shape against the box (a separating
+edge), not its bounding box: at `f01620` the forest cell's bounding box
+reached the feet's box and its diamond did not.
+
+**Left open.**
+- The owner's emulator shots of the PlayStation release look less cut than
+  the PC at the same kind of spot. The key function is the same; the cause
+  is not found.
+- The feet's box and the body's box are fixed sizes (28 x 14 and 28 x 50).
+  A large sprite's shadow is wider.
+- A cell record within two cells stops the rule whatever the record draws.
+  If a field map turns out to carry records under every floor cell, the
+  rule never fires there; `BOF3X_LAYERING_LOG=1` says so ("a cell record
+  nearby").
+- A launcher key and the default: the owner's call after playing with it.

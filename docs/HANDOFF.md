@@ -54,38 +54,20 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
-0000000. **NEXT, the owner's word 2026-10-03: the layering fix - ground tiles drawn over the party's feet and shadow.**
-   Wanted on the world map and on field maps, as an Intent change beyond the original (the PlayStation and Capcom's
-   port both do it; `known-defects.md` D199). Nothing of the fix is written. What is settled:
-   - **The cause is one, shared, and measured:** [`sprite-draw-order.md`](sprite-draw-order.md) section 18 (the path
-     both kinds of map share, five hypotheses, the instrument) and 18.9 (the measurement): `Sprite_DrawPass` emits each
-     layer's cells and then its sprites, there is no depth test, so `list0` cells of the next one to three layers are
-     drawn after the party's code-0x84 primitive in the same slot 6 and cover its lower part. World map
-     (`worldmap_sliver.txt` 1258..1260): sprite #489 layer 25, then cells of layers 26..28. Field (`field_view.txt`
-     1278..1280): sprite #114 layer 22, then two cells of layer 23. H3 (the sprite's layer one early on a cell boundary)
-     is not excluded. Logs: `analysis/shots/validate_1003/ws_wm/bof3x.log`, `ws_field/bof3x.log`.
-   - **The instrument:** `BOF3X_DRAWORDER=F0-F1:X0,Y0,X1,Y1` (recipe frames, a 320 x 240 rectangle), `src/hook/draw_order.*`;
-     it logs our code only, so nothing under `--original "*"`.
-   - **The two shapes of fix** ([`world-map.md`](world-map.md) section 8.3), both unbuilt: (1) the party's draw key a
-     layer later - simple, but its body then shows over terrain that should hide the feet; (2) the shadow as its own
-     primitive drawn after the map - cleaner, and it first needs to know whether the shadow is pixels of the sprite's
-     cell texture (a flat `0x292929`, opaque on the PC) or a separate piece of the frame (`Sprite_Draw`'s pieces at
-     `+0x54` / `+0x5A`). The owner asked whether (1) could be world-map only: it can be keyed on the area, but the path
-     is shared (`WorldMap_PinSprite` is the place plate's, not the party's), and the owner then asked for the cause to be
-     narrowed first - done, above. **Not yet asked of the owner:** which shape, and whether feet over terrain is
-     acceptable; show both as captures before settling (the owner tunes by eye).
-   - **What right looks like:** the owner's PlayStation screenshot of the Lost Shore map - a whole ellipse under the
-     party on open ground. The owner's crops of the fault: `analysis/shots/owner_catalogue/worldmap_shadow_1..3.png`; in
-     the field, the 2026-09-21 "floor over Ryu's left foot" (`sprite-draw-order.md` section 11, `field_view.txt`'s
-     `field2`).
-   - **Mechanics:** the next DIV number is 0071, tier Intent, with a switch; the functions are ours (`draw_pass.cpp`,
-     `map_cells.cpp`, `draw_emit.cpp`), fuzzed - the fix goes in off during the fuzz, as DIV-0069's and DIV-0041's do
-     (armed in `InjectAll` after the self-tests). Check with `--speed 8` only on a route whose `randlog` has been
-     compared against x1 (`shop.txt` and `balioAndSunder_2.txt` have). A/B: the same shots with the switch off.
-   - **Before starting:** `60daff3` (the fishing space, `dat.py` kind 16, section 18.9) and this entry are on
-     `fix/1003-merge` (worktree `<session 0a6f4f8e scratchpad>/fixmerge`), which also holds the round branch as of
-     `82222cf`. If the round branch does not have them yet, merge `fix/1003-merge` into it first, when no merge runner
-     is active in the main checkout.
+0000000. **The layering fix is built on `fix/tile-layering` (from `cc39306`), DIV-0071, off by default - the owner's
+   eye in play is what it waits on.** `BOF3X_LAYERING=1`: a sprite is drawn up to three layers later while only
+   walkable floor lies under its feet ([`sprite-draw-order.md`](sprite-draw-order.md) section 19 has the three shapes
+   tried and why this one; the ledger entry has the rule). Captures, off against on: `analysis/shots/layering_1003/`
+   (`layering_fix.png`, `fix_others.png`). The owner saw the first sheet and set the test - repair the corner on open
+   ground, the forest still in front - and has not yet seen the build that passes it in play.
+   - **To do with the owner:** play with `BOF3X_LAYERING=1` (a town, stairs, a bridge, followers close behind); then
+     the default and a launcher key. The owner on the captures: "this looks perfect".
+   - **Open:** why the owner's PlayStation emulator shots look less cut than the PC ("a layer higher") - the key
+     function is the same on both; not measured.
+   - **Mechanics:** the worktree is `<session e10cf965 scratchpad>/layering`, its own `build/`; live runs used
+     `input_run.py --launcher <that build> --slot0-shared` while the wave-five agents' headless self-tests were up.
+     The branch is off the round branch so the running sessions are not disturbed; merge it there when no merge
+     runner is active.
 
 000000. **2026-10-03, the fix wave for the owner's play reports: merged at `dcf4307`, then validated live the same
    afternoon - the owner: "That looks right to me".** The validation (`analysis/shots/validate_1003/`, run from the

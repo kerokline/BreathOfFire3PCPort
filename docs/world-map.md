@@ -344,6 +344,10 @@ owner wants the fix below, it needs that measurement first:
 
 ### 8.3 What ours does now, and the proposal
 
+**Superseded 2026-10-03: built as DIV-0071**, neither of the two ways below
+but a third ([`sprite-draw-order.md`](sprite-draw-order.md) §19), on world
+and field maps alike, off unless `BOF3X_LAYERING=1`.
+
 Ours is unchanged. Capcom's PC port clips where the PlayStation clips, for the
 same reason, so this is the original's behaviour. **No ledger entry; the
 DIV number reserved for this item is unused.** `known-defects.md` `D199` records it, so it is not
