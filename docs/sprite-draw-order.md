@@ -1373,7 +1373,8 @@ like the call tracer: off unless set, no behaviour change, no ledger entry.
   pixel-identical over these frames.
 - **Checked headless, 2026-10-03:**
   - `BOF3X_SHADOW=draw_emit,draw_pass,map_cells,d3d_draw`: 0 mismatches;
-  - `BOF3X_SHADOW='*'`, narrow and wide: see the fix-wave report.
+  - `BOF3X_SHADOW='*'`, narrow and wide (`wide=1` in the build directory's
+    `bof3x.ini`): exit 0, no non-zero mismatch line, 7,687 ours.
 
   Not run live: this wave is headless.
 
