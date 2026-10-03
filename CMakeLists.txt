@@ -584,7 +584,9 @@ add_library(bof3x SHARED
   src/game/effect_6d.cpp
   src/game/effect_6d_fuzz.cpp
   src/game/effect_6c.cpp
-  src/game/effect_6c_fuzz.cpp)
+  src/game/effect_6c_fuzz.cpp
+  src/game/effect_6b.cpp
+  src/game/effect_6b_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
