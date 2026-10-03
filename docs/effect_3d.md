@@ -317,7 +317,12 @@ eleven tables reached (each handler recorder 145..3,397 calls; E4A's thirteen
 `EffectKind7D_DrawMark` 252,000, `EffectKind81_DrawDrop` 564,580,
 `EffectKind81_FindFreeDrop` 42,712.
 
-STAR_PARAGRAPH
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+696 self-test lines, every one 0 mismatches, `inject: 7638 ours, 0 left
+original`; `effect_3d` there 272,000 rounds, 6,189,025 calls, 0 mismatches.
+**With `BOF3X_WIDE=1`**: `'*'` exit 0, 696 self-test lines, all 0
+mismatches. Neither run died silently. `tools/ledger_check.py`: 67 entries,
+0 errors (7,639 `impl` lines, 7,639 detoured).
 
 ## 5. What the cut and the tool said, settled
 
