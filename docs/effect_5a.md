@@ -279,6 +279,11 @@ was reached (the coverage line: 525..1,385 a handler).
   (the original read past `0x65DB88`): `+0x38` is now seeded only outside
   sub-kind 6.
 
+**Every shadow** (in this worktree, at this branch's tip): `BOF3X_SHADOW='*'`
+exit 0, `inject: 8158 ours, 0 left original` (8,103 + these 55), every
+self-test line at 0 mismatches; again with `BOF3X_WIDE=1`, exit 0. Neither run
+died silently. `tools/ledger_check.py`: 70 entries, 0 errors.
+
 **Not re-listed, and why**: `Gte_RotTransPers` (effect mode's row fills
 `MapView_ScreenXY` with fractional floats, which `_Crash`'s x87 corners read:
 both sides compute the same); `Gte_RotTransPers4`, `Gte_RotTrans`,
