@@ -39,6 +39,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/boss_sa_callees.h"
+#include "game/cheats.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -570,9 +571,12 @@ extern "C" void __cdecl BossWeretigr_EndPose(void) {
 // original 0x43D5A0: BossWeretigr_State4Steps 4 - the walk (EndWalk); when it
 // is over, 0x904AE8 |= 2 (the win), the experience 0x904AEC += 0x939AD8's
 // word +0x96 (both read after the calls), and a tail jump to Effect_Release.
+//
+// DIV-0045: that +0x96 times the EXP multiplier (src/game/cheats.cpp; 1
+// unless BOF3X_EXP is set), as Battle_EnemyDefeated scales a fallen enemy's.
 extern "C" void __cdecl BossWeretigr_EndMove(void) {
     if (!EndWalk()) return;
-    const unsigned exp = Word(Enemy() + 0x96);
+    const unsigned exp = Word(Enemy() + 0x96) * Cheats_ExpMultiplier();
     B(at::kBattleEnd) |= 2;
     AddLong(At(at::kExp), exp);
     BH_CALL(Effect_Release)();

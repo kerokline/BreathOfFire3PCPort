@@ -82,7 +82,7 @@ struct Config {
     // (the default) or stretched to the client's height (BOF3X_SNAP=0).
     bool snap = true;
     // DIV-0045 / DIV-0046: the cheats behind the "Cheats..." button
-    // (docs/cheats.md). The multipliers, 0..50, go out as BOF3X_EXP /
+    // (docs/cheats.md). The multipliers, 0..10, go out as BOF3X_EXP /
     // BOF3X_ZENNY when not 1; the steal switch as BOF3X_STEAL=1 when on.
     struct Cheats {
         int exp = 1, zenny = 1;

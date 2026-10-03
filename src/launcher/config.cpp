@@ -146,7 +146,11 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         } else if (key == "cheat.exp" || key == "cheat.zenny") {
             char* end = nullptr;
             const long v = std::strtol(value.c_str(), &end, 10);
-            if (end == value.c_str() || *end || v < 0 || v > 50) continue;
+            // DIV-0045: 0..10 since 2026-10-03 (it was 0..50). A larger number,
+            // as an ini saved before then may hold, is kept as written and
+            // goes out as it is; the DLL clamps it to 10 and logs that
+            // (src/game/cheats.cpp), and the Cheats dialog shows and saves 10.
+            if (end == value.c_str() || *end || v < 0 || v > 1000000) continue;
             (key == "cheat.exp" ? cfg.cheats.exp : cfg.cheats.zenny) = static_cast<int>(v);
         } else if (key == "cheat.steal") {
             if (value == "0") cfg.cheats.steal = false;
@@ -195,7 +199,7 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += std::string("background=") + (cfg.background ? "1" : "0") + "\r\n";
     out += "# 1 (shipped default) | 0 -> line 2 of the game's BOF3.CFG\r\n";
     out += std::string("renderer=") + (cfg.renderer ? "1" : "0") + "\r\n";
-    out += "# cheats (docs/cheats.md): EXP and zenny won in battle times 0..50, 1 the original's (DIV-0045);\r\n";
+    out += "# cheats (docs/cheats.md): EXP and zenny won in battle times 0..10, 1 the original's (DIV-0045);\r\n";
     out += "# steal 1 makes Pilfer and Steal take an item whenever the enemy carries one (DIV-0046)\r\n";
     out += "cheat.exp=" + std::to_string(cfg.cheats.exp) + "\r\n";
     out += "cheat.zenny=" + std::to_string(cfg.cheats.zenny) + "\r\n";

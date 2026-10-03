@@ -10,7 +10,9 @@
 void Cheats_Inject();
 
 // 1 unless BOF3X_EXP / BOF3X_ZENNY was set: what Battle_EnemyDefeated
-// multiplies a fallen enemy's yield by before adding it to the battle total.
+// multiplies a fallen enemy's yield by before adding it to the battle total
+// (0..10). The EXP one also scales the two boss hooks that write the EXP
+// total themselves, Boss16_End and BossWeretigr_EndMove.
 std::uint32_t Cheats_ExpMultiplier();
 std::uint32_t Cheats_ZennyMultiplier();
 

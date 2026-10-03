@@ -2298,6 +2298,33 @@ designed in rather than bolted on.
   watched by the owner: "30xp scaling correctly from 3". Owed: the zenny
   line read off the results screen.
 - **Reversible?** Yes: the sliders at 1, or the variables unset.
+- **Amended 2026-10-03 (fix wave, group CH): the cap is 10, and two boss
+  hooks are scaled too.** (1) The owner, 2026-10-02: 50 is humorously large
+  for this game - the multipliers stop at 10 (launcher sliders 0..10, the
+  ini comment, `Multiplier` in `src/game/cheats.cpp`). A number above 10, as
+  an ini saved under the old cap holds (the owner's had `cheat.zenny=50`),
+  is **clamped to 10 and logged** (`DIV-0045    BOF3X_ZENNY=50 is above the
+  cap, 10 used`), not a `Fatal`: the owner is not locked out by their own
+  file; the Cheats dialog shows and saves 10. Not a number, or negative, is
+  still a `Fatal` (`must be 0..10`). (2) The owner, 2026-10-02: Balio and
+  Sunder's second fight ignores `cheat.exp=0`. Its EXP is not
+  `Battle_EnemyDefeated`'s: the fight's end hook `Boss16_End` `0x43A190`
+  (ours since round eleven, `src/game/boss_sc.cpp`) **stores** enemy 0's
+  plus enemy 1's `+0x96` into `0x904AEC` on a win (`mov [0x904AEC], eax` at
+  `0x43A1B3`), replacing whatever the kills had added. An operand scan of
+  `.text` for `0x904AEC` / `0x904AF0` finds one more writer outside the
+  battle set-up and the result screen: `BossWeretigr_EndMove` `0x43D5A0`
+  (`src/game/boss_sa.cpp`, `add` at `0x43D616`), Weretigr's end walk. Both
+  now multiply the EXP they write by `Cheats_ExpMultiplier()`; nothing else
+  writes the zenny total, so zenny needed nothing. Same feature, same kind
+  of change, so an amendment and not a new entry. Verified headless: with
+  the variables unset the `boss_sc`, `boss_sa` and `battle_flow` fuzz pass
+  (0 mismatches); with `BOF3X_EXP=0` `boss_sc` mismatches in `Boss16_End`
+  alone (3,033 of 24,000 rounds) and `boss_sa` in `BossWeretigr_EndMove`
+  alone (2,007), the first differing byte `0x904AEC` - the multiplier
+  reaches those two stores and nothing else. Owed: the live run in
+  [`cheats.md`](cheats.md) §5 (the second fight's EXP at 0, and the first
+  fight's, measured).
 
 ### Pilfer and Steal take the item whenever the enemy has one
 
