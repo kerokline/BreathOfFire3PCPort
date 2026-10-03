@@ -54,6 +54,34 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
+000000. **2026-10-03, the fix wave for the owner's play reports: merged at `dcf4307`, headless-verified, NOT yet seen in
+   game.** Six Opus agents from `a8700be`, headless only; merged in a worktree (`fix/1003-merge`), `'*'` exit 0 narrow
+   and wide (1,001 groups, 7,787 ours), `ledger_check` 0 errors, then this branch fast-forwarded. `build/` was not
+   rebuilt (the owner's play DLL is still 30 September's). What merged, each with its own doc section for the live check:
+   - **GS, DIV-0070** (renumbered: the capture wave took 0068): `MsgBox_EffectDraw` `0x4987E0` taken over, a space in a
+     growing shout commits nothing - the 2026-10-02 crash (D197). `msgbox.md` section 9: `balioAndSunder_2.txt`, shots
+     every 4 frames over 11476..11544. The owner's open question: the shout's fixed 12 px advance - judge from captures.
+   - **CH, DIV-0045 amended:** the multipliers stop at 10 (a larger ini value is clamped and logged); `Boss16_End` and
+     `BossWeretigr_EndMove` wrote the EXP total past `Battle_EnemyDefeated` and now go through the multiplier.
+     `cheats.md` section 5. The owner recorded both Balio and Sunder routes with EXP 0, zenny 1.
+   - **YN, DIV-0027 amended:** the hand and `Yes` at the load screen's spacing on the master's prompt, Manillo's two
+     prompts and the shop's shared chooser; `yes-no-prompts.md` section 6 (`caughFish.txt` 3465, 3510, 3690, 3735;
+     `shop.txt` 1050, 1680, 1980 against 270). Owed from the owner: a route for the master's prompt; whether
+     `ItemTrade_Confirm`'s per-item prompt gets the same; the two masters-screen headers' PlayStation text.
+   - **FL, DIV-0069:** the fishing banner and tabs from the disc (`loc_build.py all` first - it must print "fishing: 13
+     lines, 3 tabs"), names to 12 characters; `fishing-text.md` section 6. Banner timing changed under English, so
+     `campingFishing.txt` may drift: compare `randlog`. The stray frame line is Capcom's renderer (D198), not fixed.
+   - **MB, DIV-0041 amended:** Manillo's backdrop tiled into the bands; `widescreen.md` section 5.
+   - **WS, no behaviour change:** the shadow is covered by terrain drawn after the sprite, on world and field maps by
+     one shared path, in the original too (D199). The owner wants it fixed beyond the original once the cause is
+     measured: `BOF3X_DRAWORDER` (`sprite-draw-order.md` section 18) at `worldmap_sliver.txt` 1258-1260 and
+     `field_view.txt` 1278-1280.
+   - **Tooling:** `BOF3X_SPEED` / `input_run.py --speed N` (DIV-0048's note): x8 identical to x1 on two routes.
+   - **Held:** the trigger-mode enemies (tar men, volts) - no route reaches them; a save and a recorded fight wanted.
+   The owner's four routes (`balioAndSunder_1`, `_2`, `bossAndFlash`, `dragonGene`) have their `# save` lines and are
+   still untracked; `balioAndSunder_2` saves to slot 6 on purpose. Today's captures: `analysis/shots/manillo_1003`,
+   `shop_1003`, `speedtest`; reach traces `analysis/calltrace/reach_*_1003` (nothing uncatalogued).
+
 00000. **2026-10-02, the owner's play notes - catalogued, nothing fixed, nothing ledgered yet.**
    - **Crash, diagnosed** (`build/bof3x.crash-30104-0.dmp`, `CRASH 0:` at the end of that run's `bof3x.log`): access
      violation in `Font_UnpackGlyph` (`tex_cells.cpp:240`) reading `0x17053EA0`, area `0x63`, message `0x24`, the
