@@ -306,7 +306,9 @@ for `EffectKind69_DrawGlow`'s scratch).
 **Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
 696 self-test lines, every one 0 mismatches, `inject: 7619 ours, 0 left
 original`; `effect_3b` there 196,000 rounds, 2,862,228 calls, 0 mismatches.
-@WIDE@
+**With `BOF3X_WIDE=1`** (the log's DIV-0041 line: 53 columns a side): `'*'`
+exit 0, 696 self-test lines, all 0 mismatches, `effect_3b` the same counts.
+Neither run died silently.
 
 ## 5. What the cut and the tool said, settled
 
