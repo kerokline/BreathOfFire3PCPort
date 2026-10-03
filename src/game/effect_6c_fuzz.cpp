@@ -352,12 +352,20 @@ void Seed(unsigned k) {
     // the sky's frame word inside its wrap (Area189_StepArrive: 0..0x3BF), at
     // its four bands' edges
     SetWord(Mem(at::kWalkClock), PickOf(0, 0x1AF, 0x1B0, 0x1B3, 0x1DF, 0x1E0, 0x38F, 0x390, 0x3A8, 0x3BF, sh::Next() % 0x3C0));
-    // the camera's cell about the glows' and rings' points, or anywhere
-    if (sh::Often()) {
-        const U x = PickOf(0x1780, 0x1480, 0xB00, 0x1E00, s[0x36]);
-        const U z = PickOf(0x1380, 0xE00, 0xF00, 0x1800, 0x1400, s[0x3A]);
-        SetWord(Mem(at::kKind2XHigh), x + sh::Next() % 0x81 - 0x40);
-        SetWord(Mem(at::kKind2ZHigh), z + sh::Next() % 0x81 - 0x40);
+    // the camera's cell about the glows' points (inside and past their reach),
+    // the stars' clamps, sub-kind 0x53's record (within and past 20), or anywhere
+    {
+        U x = Word(Mem(at::kKind2XHigh)), z = Word(Mem(at::kKind2ZHigh));
+        switch (sh::Next() % 6) {
+        case 0: x = 0x1780 + sh::Next() % 0x301 - 0x180; z = 0x1380 + sh::Next() % 0x301 - 0x180; break;
+        case 1: x = 0x1780 + sh::Next() % 0x401 - 0x200; z = 0xE00 + sh::Next() % 0x401 - 0x200; break;
+        case 2: x = 0x1480 + sh::Next() % 0x1201 - 0x900; z = 0x1380 + sh::Next() % 0x801 - 0x400; break;
+        case 3: x = Word(s + 0x36) + sh::Next() % 0x31 - 0x18; z = Word(s + 0x3A) + sh::Next() % 0x31 - 0x18; break;
+        case 4: x = PickOf(0xAFF, 0xB00, 0x1E00, 0x1E01, 0x1400); z = PickOf(0xEFF, 0xF00, 0x1800, 0x1801, 0x1400); break;
+        default: break;
+        }
+        SetWord(Mem(at::kKind2XHigh), x);
+        SetWord(Mem(at::kKind2ZHigh), z);
     }
     // never the one distance the glow divides by zero at (ours aborts there)
     if (static_cast<std::int16_t>(Camera_Distance) == -0x1194) Camera_Distance = -0x1193;
@@ -384,6 +392,16 @@ void Seed(unsigned k) {
     }
     case k66Run:
         if (sh::Half()) Cond_ByteFE = 0;
+        break;
+    case k53Run:
+        if (sh::Half()) s[2] = 0;   // the ground read once
+        break;
+    case k44Follow:
+        // the leader in state 3 (Sprite_ScriptTick), moving or not, the
+        // record on its animation or not
+        if (sh::Half()) Mem(at::kLeaderState)[0] = 3;
+        if (sh::Half()) SetLong(Mem(at::kLeaderMoving), 0);
+        if (sh::Half()) s[0x4B] = Mem(at::kLeaderAnimation)[0];
         break;
     case k44Commit:
         g_size = PickOf(0xC, 0x14, 0x1C, 0x44, 0x48, 0, 0xFF, sh::Next());
