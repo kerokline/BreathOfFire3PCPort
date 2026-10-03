@@ -264,6 +264,7 @@
 #include "game/effect_4d.h"
 #include "game/effect_4e.h"
 #include "game/effect_4b.h"
+#include "game/effect_5d.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1064,6 +1065,12 @@ void InjectAll() {
                                 // after ScenarioHarnessEkh_Inject (none of its eight rows is E4A's) and Effect3D_Inject
                                 // (kind 0x82's first states, whose table holds eight of these); no module patches
                                 // bytes inside its 51 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Effect5D_Inject();          // round 13 group E5D (0x503DE0..0x506A00: effect kind 0x18's sub-kinds 0x14, 0x18,
+                                // 0x19, 0x1B..0x1E, 0x21, 0x22, 0x43, 0x52, 0x68 and four of sub-kind 0x17's helpers):
+                                // its clones' calls re-aimed at the scenario harness's recorders, its six state tables
+                                // swapped for the fuzz only; after ScenarioHarnessEkh_Inject (none of its eight rows is
+                                // E5D's; kEffectOverrides' 0x503FA0 row stands in for E5C's raw calls); no module
+                                // patches bytes inside its 52 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
