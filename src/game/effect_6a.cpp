@@ -427,7 +427,14 @@ extern "C" void __cdecl EffectKind18Sub3E_WaitNear(void) { WaitNear(kFront3E); }
 extern "C" void __cdecl EffectKind18Sub3E_Open(void) { Open(true); }
 
 // original 0x50C930 (sub-state 3): the leader two cells off (cell - 2): +2 up.
-extern "C" void __cdecl EffectKind18Sub3E_WaitFar(void) { WaitFar(kFront3E); }
+// Not WaitFar: the first test (against the centre, on the axis +8 names) is
+// at 0x8000, not 0x20000 (cmp eax, 0x8000 at 0x50C959 and 0x50C9B6; every
+// other sub-kind's far test has 0x20000 there) - the leader need only leave
+// the front's half-width across that axis (section 7).
+extern "C" void __cdecl EffectKind18Sub3E_WaitFar(void) {
+    unsigned char* const s = S();
+    if (!LeaderAt(s, kFront3E, 0x8000, 0x20000)) s[2] = static_cast<unsigned char>(s[2] + 1);
+}
 
 // original 0x50CA00 (sub-state 4): the slide down 0x20; at 0 or below sound
 // 0x201 and +2 = 1.
