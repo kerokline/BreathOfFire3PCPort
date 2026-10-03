@@ -8,7 +8,7 @@ for E5G (`analysis/round13_cut.tsv`, the band `0x50AF90..0x50BFF0`), none
 added, none dropped. Each read to its last instruction with capstone and
 fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
-@@FUZZ@@. **Fuzz only**: no recorded route enters any of the 24 (section 9).
+96,000 rounds, 0 mismatches; 77 of 78 controls refused, the other an equivalent mutant (a dead store) whose near variant is refused. **Fuzz only**: no recorded route enters any of the 24 (section 9).
 Every row is effect code (no `hypothesis` row in the group; none left
 original). **DIV-0041's listed fill `0x50B4B5` is in this band** (sub-kind
 0x36, section 2): it now draws through `Widescreen_FillX` /
@@ -189,7 +189,19 @@ low three bits 0 half the time. **Arguments**: `follow` 0 half the time, else
 callers' 0..3, -1 or any. **Disturbance** (the group's, from the hash only):
 the slide at or about 0xC0 / any, `+8`, the leader's x or z, a cell word.
 
-@@RESULT@@
+**Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_5g`,
+exit 0): 96,000 rounds over 24 functions, 354,255 calls to the stand-ins,
+**0 mismatches**; 24,756 bytes of state in 45 regions; 376 stand-ins. Every
+entry of the four tables reached (each handler recorder 761..1,823 calls,
+E6A's `0x50C0D0` 1,034); `AreaMap_Elevation` 75,752, `AreaMap_SetByte` 8,000,
+`Sound_PlayEffect` 2,390..2,503, `MapView_LinkPrimAt` 24,000.
+
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+706 self-test lines, no `MISMATCH`, `inject: 8127 ours, 0 left original`;
+`effect_5g` there 96,000 rounds, 354,216 calls, 0 mismatches. **With
+`BOF3X_WIDE=1`**: `'*'` exit 0, 706 self-test lines, no mismatch, the same
+counts. `ledger_check`: 70 entries, 0 errors (8,128 impl lines, 8,128
+functions detoured). Neither run died silently.
 
 ## 5. What the cut and the tool said, settled
 
@@ -219,7 +231,102 @@ the slide at or about 0xC0 / any, `+8`, the leader's x or z, a cell word.
 
 ## 6. Controls
 
-@@CONTROLS@@
+Planted one at a time by a scratch script (`controls.py`: each plant anchored on a
+unique string of `effect_5g.cpp` or `effect_5g_callees.h`, rebuilt, run under
+`BOF3X_E5G_ONLY=<filter>`, the file restored and rebuilt at the end; the
+committed file has no switch). The harness stops at the first differing round,
+so the column is the round that refused it (0-based) in this worktree; every
+refused run exited 3 on a `MISMATCH` line. **77 of 78 refused** (the second
+full run, after the seed fix below). Not refused: **53**, an equivalent mutant -
+`EffectKind18Sub2C_Draw`'s first height stores are overwritten by the ground
+before anything reads them (section 7); its near variant **54** (a y word the
+`+8` branch keeps) is refused. In the first run **16** (`_Open`'s end 0xB0 for
+0xC0) was not refused: the seed's slides were 0xB0 / 0xBF, which reach both ends
+after one step - the fuzz's fault; the slide seed now puts each end one step
+away and one either side (0xAF, 0xB0, 0xB1, 0x6F..0x71, 0xF..0x11), and 16 is
+refused. 14 and 77 drop a `Sprite_Current` re-read after a call (the
+disturbance moves it).
+
+| # | Run (`_ONLY`) | Plant | Refused at |
+|--:|---|---|---|
+| 1 | `Sub2B_Run` | `ctKind18Sub2C_States), EffectKind18Sub2C_Sta` for `ctKind18Sub2B_States), EffectKind18Sub2B_Sta` | round 0 |
+| 2 | `Sub2C_Run` | `ectKind18Sub3A_States), EffectKind18Sub3A_Sta` for `ectKind18Sub2C_States), EffectKind18Sub2C_Sta` | round 0 |
+| 3 | `Sub3A_Run` | `ectKind18Sub2C_States), EffectKind18Sub2C_Sta` for `ectKind18Sub3A_States), EffectKind18Sub3A_Sta` | round 0 |
+| 4 | `Sub4A_Run` | `ectKind18Sub3A_States), 4u)` for `ectKind18Sub4A_States), EffectKind18Sub4A_States_count)` | round 0 |
+| 5 | `Sub2B_Place` | `0x32, height + 1u);` for `0x32, height);` | round 0 |
+| 6 | `Sub2B_Place` | `v)[0]) << 23);` for `v)[0]) << 24);` | round 2 |
+| 7 | `Sub2B_Place` | `s + 0x30, 0xB0);` for `s + 0x30, 0xC0);` | round 5 |
+| 8 | `Sub2B_Place` | `Sub2B_Draw)(0);` for `Sub2B_Draw)(1);` | round 0 |
+| 9 | `Sub2B_Place` | `ells + 2 * v)[0]` for `ells + 2 * v + 1)[0]` | round 2 |
+| 10 | `Sub2B_Place` | `u - height) + sta` for `u - height) - sta` | round 0 |
+| 11 | `Sub2B_WaitNear` | `eaderX(), cx + 1), f` for `eaderX(), cx), f` | round 7 |
+| 12 | `Sub2B_WaitNear` | `<< 16) \| 0x4000u` for `<< 16) \| 0x8000u` | round 7 |
+| 13 | `Sub2B_WaitFar` | `eturn Abs(b + 0x1` for `eturn Abs(b - 0x1` | round 3 |
+| 14 | `Sub2B_WaitNear` | `n); }` for `n); s = S(); }` | round 410 |
+| 15 | `Sub2B_WaitNear` | `dOpen = 0x204;` for `dOpen = 0x200;` (`effect_5g_callees.h`) | round 21 |
+| 16 | `Sub2B_Open` | `f (Opened(0xB0))` for `f (Opened(0xC0))` | round 3 |
+| 17 | `Sub2B_Open` | `Sub2B_Draw)(1);` for `Sub2B_Draw)(0);` | round 0 |
+| 18 | `Sub2B_WaitFar` | `0x20000, 0x1F000)` for `0x20000, 0x20000)` | round 3 |
+| 19 | `Sub2B_Close` | `t(at::kSoundOpen);` for `t(at::kSoundShut);` | round 1 |
+| 20 | `Sub2B_Close` | `() + 0x30) < 0;` for `() + 0x30) <= 0;` | round 7 |
+| 21 | `Sub2C_Close` | `S()[2] = 2; }` for `S()[2] = 1; }` | round 0 |
+| 22 | `Sub3A_Close` | `eld_Request != 1) SH` for `eld_Request == 0) SH` | round 0 |
+| 23 | `Sub2B_Draw` | `- 0x3FB0u;` for `- 0x3FC0u;` | round 0 |
+| 24 | `Sub2B_Draw` | `e + z - 0x4000u);` for `e + z - 0x4040u);` | round 0 |
+| 25 | `Sub2B_Draw` | `xture \| 0x1680000` for `xture \| 0x1690000` | round 2 |
+| 26 | `Sub2B_Draw` | `xture = 0x131;` for `xture = 0x130;` | round 0 |
+| 27 | `Sub2B_Draw` | `rd(s + 0x32) + 1u);` for `rd(s + 0x32));` | round 1 |
+| 28 | `Sub2B_Draw` | `Prim)(6, 0x44);` for `Prim)(6, 0x48);` | round 0 |
+| 29 | `Sub2C_Draw` | `Lift(h, S()) - 0x180u);` for `Lift(h, S()));` | round 0 |
+| 30 | `Sub2C_Draw` | `Ground(v + 0x10), y1 = Ground(v + 0x12);` for `Ground(v + 8), y1 = Ground(v + 0xA);` | round 0 |
+| 31 | `Sub2C_Draw` | `(static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) >> 1);` for `static_cast<std::int16_t>(static_cast<U>(height) & 0xFFFFu) / 2;` | round 0 |
+| 32 | `Sub2C_Draw` | `0x4000) << 8); }` for `0x4000) << 9); }` | round 0 |
+| 33 | `Sub36_Pulse` | `p[5] = 0x31;` for `p[5] = 0x30;` | round 0 |
+| 34 | `Sub36_Pulse` | `[step] << 2);` for `[step] << 3);` | round 0 |
+| 35 | `Sub36_Pulse` | `0x24, 0x43710000` for `0x24, 0x43700000` | round 0 |
+| 36 | `Sub36_Pulse` | `e_Counter & 3) ==` for `e_Counter & 7) ==` | round 6 |
+| 37 | `Sub36_Pulse` | `s[2] + 1) & 7)` for `s[2] + 1) & 3)` | round 13 |
+| 38 | `Sub36_Pulse` | `miTrans)(p, 0);` for `miTrans)(p, 1);` | round 0 |
+| 39 | `Sub36_Pulse` | `xt, 0, 0, 0x95, 0` for `xt, 0, 0, 0xB5, 0` | round 0 |
+| 40 | `Sub36_Pulse` | `L(p + 0x2C, left);` for `L(p + 0x2C, right);` | round 0 |
+| 41 | `Sub2C_Place` | `== 0 ? 1 : 2;` for `== 0 ? 1 : 0;` | round 5 |
+| 42 | `Sub2C_Place` | `ures + 4 * v + 4))` for `ures + 4 * v))` | round 3 |
+| 43 | `Sub2C_Place` | `s + 0x30, 0x70);` for `s + 0x30, 0x80);` | round 14 |
+| 44 | `Sub2C_Place` | `rAt(s, s[8] == 0,` for `rAt(s, s[8] != 0,` | round 28 |
+| 45 | `Sub2C_WaitNear` | `LeaderX(), cz), s` for `LeaderX(), cx), s` | round 7 |
+| 46 | `Sub2C_WaitFar` | `0x20000, 0x21000)` for `0x20000, 0x20000)` | round 32 |
+| 47 | `Sub2C_Open` | `f (Opened(0x90))` for `f (Opened(0x80))` | round 10 |
+| 48 | `Sub2C_Draw` | `s + 0x38), -2, 0x` for `s + 0x38), -1, 0x` | round 0 |
+| 49 | `Sub2C_Draw` | `>(r[8]) << 20)` for `>(r[8]) << 21)` | round 1 |
+| 50 | `Sub2C_Draw` | `v + 0x10, x + sli` for `v + 0x10, x - sli` | round 1 |
+| 51 | `Sub2C_Draw` | `d(s + 0x3A) + sid` for `d(s + 0x3A) - sid` | round 0 |
+| 52 | `Sub2C_Draw` | `slide - 0x3F40u);` for `slide - 0x3FC0u);` | round 0 |
+| 53 | `Sub2C_Draw` | `0x3E) - 0x100u);` for `0x3E) - 0x180u);` | **not refused** |
+| 54 | `Sub2C_Draw` | `(v + 0x1A, y + 1u);` for `(v + 0x1A, y);` | round 1 |
+| 55 | `DrawPanel` | `+ 0x3A) - 0x7Fu) <` for `+ 0x3A) - 0x80u) <` | round 0 |
+| 56 | `DrawPanel` | `0x20) + side + 1, p,` for `0x20) + side, p,` | round 0 |
+| 57 | `DrawPanel` | `+ 0x38), dy + 1, 0x` for `+ 0x38), dy, 0x` | round 0 |
+| 58 | `DrawPanel` | `Word(s + 0x32);` for `Word(s + 0x30);` | round 4 |
+| 59 | `Sub3A_Start` | `0, 0x28709127u);` for `0, 0x28709126u);` | round 0 |
+| 60 | `Sub3A_Start` | `ub3APair(1, 3); }` for `ub3APair(1, 2); }` | round 0 |
+| 61 | `Sub3A_WaitParty` | `if (r[0] == 1) co` for `if (r[0] == 0) co` | round 16 |
+| 62 | `Sub3A_WaitParty` | `m < 2; ++` for `m < at::kTrioCount; ++` | round 10 |
+| 63 | `Sub3A_WaitParty` | `rtyAt(s, 0x17000,` for `rtyAt(s, 0x18000,` | round 23 |
+| 64 | `Sub3A_WaitClear` | `0x28000, 0x1F000)` for `0x28000, 0x20000)` | round 5 |
+| 65 | `Sub3A_Open` | `ub3APair(0, 2); }` for `ub3APair(0, 3); }` | round 0 |
+| 66 | `Sub3A_Close` | `::kSoundShut);` for `::kSoundShut3A);` | round 1 |
+| 67 | `Sub3A_WaitParty` | `::kSoundOpen);` for `::kSoundOpen3A);` | round 4 |
+| 68 | `Sub4A_Place` | `inds + 4 * v + 1)[0]` for `inds + 4 * v)[0]` | round 1 |
+| 69 | `Sub4A_Place` | `s + 0x3A) + 2u) &` for `s + 0x3A) + 1u) &` | round 0 |
+| 70 | `Sub4A_Place` | `0x3A), mark[1]);` for `0x3A), mark[0]);` | round 0 |
+| 71 | `Sub2C_Place` | `+ Wor` for `- Wor` | round 0 |
+| 72 | `Sub2B_Place` | `ells + 2 * v + 1)[0]` for `ells + 2 * v)[0]` | round 2 |
+| 73 | `Sub2B_Place` | `Long(s + 0x38), Long(s + 0x34));` for `Long(s + 0x34), Long(s + 0x38));` | round 0 |
+| 74 | `Sub2B_Draw` | `if (follow == 1) {` for `if (follow != 0) {` | round 0 |
+| 75 | `Sub2B_Draw` | `Sub2BSides)[1 - i]` for `Sub2BSides)[i]` | round 0 |
+| 76 | `Sub2B_WaitFar` | `(s[2] + 1); SH_CALL(EffectKind18Sub2B_Draw)(0); }` for `(s[2] + 1); }` | round 0 |
+| 77 | `Sub2C_Place` | `/ 2; SetW` for `/ 2; s = S(); SetW` | round 35 |
+| 78 | `Sub2B_Draw` | `hadeTex)(p, 1);` for `hadeTex)(p, 0);` | round 0 |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
