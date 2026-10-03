@@ -54,6 +54,32 @@ frames of 25,000 calls) are history; `r8_*` and older too.
 
 ## Pick up here
 
+00000. **2026-10-02, the owner's play notes - catalogued, nothing fixed, nothing ledgered yet.**
+   - **Crash, diagnosed** (`build/bof3x.crash-30104-0.dmp`, `CRASH 0:` at the end of that run's `bof3x.log`): access
+     violation in `Font_UnpackGlyph` (`tex_cells.cpp:240`) reading `0x17053EA0`, area `0x63`, message `0x24`, the
+     message box in its grow effect (kind 2, flag 8 of `0x7DEE44`). Cause is Capcom's effect draw `0x4987E0` (not
+     ours, called by address): `cmp cl, 0x20 / je 0x4988BE` at `0x498819` skips the glyph word `+0x16` and all eight
+     u, v bytes for a space but still writes position and colour and commits the primitive, so each space of a
+     growing shout draws whatever glyph index the packet buffer held. Here the stale word was `0xC254` (half of a
+     float), 14 MB past `Font_GlyphData` (`0x162AA020`). The English message has `0x20` between the shout's letters;
+     the dump's row of nine 23 px quads at y 176 has stale glyph words in exactly the four space slots. Proposed:
+     take `0x4987E0` over, a space emits no primitive and only advances the pen - a DIVERGENCE entry and a
+     known-defects entry with it. Not yet recorded in either.
+   - **Enemies whose mode changes on a trigger do not change** (the owner, in play; not traced): tar men should
+     take more physical damage once hit with a frost spell, volts should give extra EXP once hit with an electric
+     spell. Neither happens. Unknown whether ours or Capcom's - compare against `BOF3X_ORIGINAL` first.
+   - **Balio and Sunder's second fight ignores `cheat.exp=0`** (DIV-0045): its EXP presumably comes by another
+     path than the one the cheat scales. Not traced. The owner's recipes `tools/recipes/balioAndSunder_1.txt` and
+     `_2.txt` (untracked) reach it.
+   - **The owner's four new recipes carry no `# save` line** (`balioAndSunder_1`, `balioAndSunder_2`,
+     `bossAndFlash`, `sunderPeeing`, all untracked): the owner put each one's save in `tools/recipe_saves/` under
+     the recipe's own name. Seen there 2026-10-02: `balioAndSunder_1.DAT`, `balioAndSunder_2.DAT`,
+     `bossAndFlash.DAT`. `sunderPeeing` starts from the `balioAndSunder_2` save; the owner thinks it duplicates
+     `balioAndSunder_2.txt` and is removing it - if it is still there, leave it to them. Add the `# save` lines to
+     the other three before running them.
+   - **The EXP / zenny multipliers should stop at 10, not 50** (the owner: 50 is humorously large for this game).
+     Launcher dialog, `bof3x.ini` comment, `docs/cheats.md`, DIV-0045's text.
+
 0000. **2026-09-30, three fixes from the owner's `tools/recipes/gameover.txt`** (a fight with Rei's Equip window, the party
    lost, GAME OVER, the title): DIV-0064's second load (the fatal the owner hit), DIV-0065 (the Equip window's stat
    labels a row up - Capcom's own offset), the loss screen's black widened (DIV-0041). Self-test `'*'` 0 mismatches,
