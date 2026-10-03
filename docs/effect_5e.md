@@ -12,7 +12,7 @@ dispatchers `0x506BD0` and `0x507620` of `EffectKind18_States` 36 and 63
 group's). None dropped. Each read to its last instruction with capstone and
 fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to
-it: 216,000 rounds, 0 mismatches; CONTROLS_SUMMARY. **Fuzz only**: no
+it: 216,000 rounds, 0 mismatches; 178 controls planted, 175 refused, the other three equivalent mutants each with a near variant that is refused (section 12). **Fuzz only**: no
 recorded route enters any of the 54 (section 9). Every row is effect code (no
 `hypothesis`-tier row in the group; none left original). **DIV-0041's two
 listed full-frame fills in this band, `0x507BDC` and `0x507CE3`, are
@@ -196,8 +196,10 @@ table's count; the six helpers with arguments `kCall`.
 - **Seed** (every record the disturbance may move `Sprite_Current` to):
   `+9` at its compares' boundaries (2, 3, 7, 8, 0xF..0x11, 0x5A, 0x5B,
   0x78, 0x79), `+8` 0 / 1 / other, `+0xB` 0..2, the level `+0x30` round
-  0x40, 0x80, 0x100 and its steps, the angle `+0x32` and `+0x2E` with bit 11
-  the same or not, the speed `+0x14` round 0xA6040, 0xF9060, 0x14E790, the
+  0x40, 0x80, 0x100 and its steps, the angle `+0x32` (0 a third of the time:
+  for the lids it is the cap) and `+0x2E` with bit 11
+  the same or not, the speed `+0x14` round 0xA6040, 0xF9060, 0x14E790 and at
+  the speeds the spin's step lands on them from (0xA5155, 0xF6C79, 0x14A5A5), the
   cell `+0x36` / `+0x3A`; the starts' variant inside its tables, the lid
   draws' `+0x32` 0..2 (ours aborts past a table); the leader's x and z at
   the near / away tests' boundaries round the current record's cell; the
@@ -215,8 +217,8 @@ table's count; the six helpers with arguments `kCall`.
 - `BOF3X_E5E_ONLY=<name>,<name>,...` runs the clones it names exactly.
 
 **Results in this worktree** (`BOF3X_SELFTEST_ONLY=1`): `effect_5e` 216,000
-rounds over 54 functions, 1,006,945 calls to the stand-ins, 0 mismatches.
-STAR_RESULTS
+rounds over 54 functions, 1,003,865 calls to the stand-ins, 0 mismatches.
+`BOF3X_SHADOW='*'` passed in this worktree at the final code (exit 0, about 16 minutes; `effect_5e` 0 mismatches among every earlier group's), and again with `BOF3X_WIDE=1` (exit 0; the widescreen patches on, the fills unarmed during the self-tests, so ours compares the original's 320 x 240). Neither died silently.
 
 ## 5. What the cut and the tool said, settled
 
@@ -322,4 +324,185 @@ E5D's `00506640 B4F` listed, which cut it.
 
 ## 12. Controls
 
-CONTROLS_TABLE
+Each control plants one change in ours (`controls.py` in the session scratchpad: anchor on a unique string, rebuild, run the clones it touches with `BOF3X_E5E_ONLY`, restore, rebuild), all run against the final fuzz. Before the final seeds three were not refused and were the fuzz's fault: the spin's speed bands (the step `(q - 10) q` is added before the test, so the seeds now include the speeds that step onto 0xA6040, 0xF9060 and 0x14E790 exactly), the lids' near test at the start (the leader was placed round the variant number instead of the cell the variant picks) and the lid word (the angle seed was almost never 0). Seven anchors were mistyped the first time and re-planted.
+
+| # | Control (what was planted in ours) | Verdict | Mismatched rounds (of 4,000) |
+|--:|---|---|---|
+| 1 | Sub23_Run table | refused | `Sub23_Run` 4000 |
+| 2 | Sub23_Start level | refused | `Sub23_Start` 3942 |
+| 3 | Sub23_Start flag | refused | `Sub23_Start` 4000 |
+| 4 | Sub23_WaitFlag test | refused | `Sub23_WaitFlag` 4000 |
+| 5 | Sub23_Slide step | refused | `Sub23_Slide` 3965 |
+| 6 | Sub23_Slide bound | refused | `Sub23_Slide` 239 |
+| 7 | Sub23_Draw x | refused | `Sub23_Draw` 4000 |
+| 8 | Sub23_Draw link size | refused | `Sub23_Draw` 4000 |
+| 9 | Sub23_Draw z | refused | `Sub23_Draw` 4000 |
+| 10 | Sub24_Run table | refused | `Sub24_Run` 4000 |
+| 11 | Sub24_Start cue | refused | `Sub24_Start` 675 |
+| 12 | Sub24_Start level | refused | `Sub24_Start` 327 |
+| 13 | Sub24_Start sound | refused | `Sub24_Start` 334 |
+| 14 | Sub24_Start flag bit | refused | `Sub24_Start` 334 |
+| 15 | Sub24_Start +0xB | refused | `Sub24_Start` 330 |
+| 16 | Place speed | refused | `Sub24_Start` 303, `Sub3F_Start` 4000 |
+| 17 | Place x | refused | `Sub24_Start` 309, `Sub3F_Start` 4000 |
+| 18 | Beat bound | refused | `Sub24_Beat1` 222, `Sub24_Beat2` 223 |
+| 19 | Sub24_Beat3 reset | refused | `Sub24_Beat3` 1967 |
+| 20 | Sub24_Trails count | refused | `Sub24_Trails` 4000 |
+| 21 | Sub24_Trails gate | refused | `Sub24_Trails` 218 |
+| 22 | Sub24_Trails turn | refused | `Sub24_Trails` 690 |
+| 23 | Sub24_Trails corner scale | refused | `Sub24_Trails` 3310 |
+| 24 | Sub24_Trails end | refused | `Sub24_Trails` 224 |
+| 25 | Sub24_Trails order | refused | `Sub24_Trails` 101 |
+| 26 | Sub24_TrailsOut from | refused | `Sub24_TrailsOut` 4000 |
+| 27 | Sub24_TrailsOut counter | refused | `Sub24_TrailsOut` 2149 |
+| 28 | CornerZ | refused | `Sub24_Trails` 3332, `Sub24_TrailsOut` 4000 |
+| 29 | Sub24_Spin speed | refused | `Sub24_Spin` 3554 |
+| 30 | Sub24_Spin band | refused | `Sub24_Spin` 202 |
+| 31 | Sub24_Spin hand | refused | `Sub24_Spin` 148 |
+| 32 | Sub24_Spin end | refused | `Sub24_Spin` 157 |
+| 33 | Sub24_Spin reread | refused | `Sub24_Spin` 33 |
+| 34 | Kick sound byte | refused | `Sub24_Spin` 1971, `Sub24_Fade` 896 |
+| 35 | Kick fading bound | refused | `Sub24_Fade` 108 |
+| 36 | Turn mask | refused | `Sub3F_Spin` 1872, `Sub3F_SpinFade` 1924 |
+| 37 | Speed shift | refused | `Sub24_Fade` 3543, `Sub3F_Spin` 3593 |
+| 38 | Jitter | refused | `Sub24_Spin` 501 |
+| 39 | Sub24_Fade level | refused | `Sub24_Fade` 3974 |
+| 40 | Sub24_Fade counter | refused | `Sub24_Fade` 202 |
+| 41 | Sub24_Draw texture | refused | `Sub24_Draw` 2409 |
+| 42 | Sub24_Draw sound | refused | `Sub24_Draw` 2409 |
+| 43 | Sub24_Draw clear | refused | `Sub24_Draw` 2135 |
+| 44 | Sub24_Draw next corner | refused | `Sub24_Draw` 4000 |
+| 45 | Sub24_Draw level gate | refused | `Sub24_Draw` 381 |
+| 46 | Sub24_Draw cosine | refused | `Sub24_Draw` 2479 |
+| 47 | Sub24_Draw level bits | refused | `Sub24_Draw` 2397 |
+| 48 | Sub24_Draw turn | refused | `Sub24_Draw` 2279 |
+| 49 | Sub24_Draw depth | refused | `Sub24_Draw` 4000 |
+| 50 | Sub24_Draw angles | refused | `Sub24_Draw` 4000 |
+| 51 | Sub24_Draw S reread | refused | `Sub24_Draw` 235 |
+| 52 | DrawTrail y | refused | `Sub24_DrawTrail` 2059 |
+| 53 | DrawTrail z | refused | `Sub24_DrawTrail` 1997 |
+| 54 | DrawTrail colour | refused | `Sub24_DrawTrail` 2059 |
+| 55 | DrawTrail offset y1 | refused | `Sub24_DrawTrail` 2059 |
+| 56 | DrawTrail offset x1 src | refused | `Sub24_DrawTrail` 2059 |
+| 57 | DrawTrail depth copy | refused | `Sub24_DrawTrail` 2059 |
+| 58 | DrawTrail rotz | refused | `Sub24_DrawTrail` 4000 |
+| 59 | DrawTrail end mode | refused | `Sub24_DrawTrail` 4000 |
+| 60 | DrawTrail passes | refused | `Sub24_DrawTrail` 2059 |
+| 61 | DrawTrail fpu copy | refused | `Sub24_DrawTrail` 2059 |
+| 62 | Sub3F_Run table | refused | - |
+| 63 | Sub3F_Start level | refused | `Sub3F_Start` 4000 |
+| 64 | Sub3F_WaitDim level | refused | `Sub3F_WaitDim` 297 |
+| 65 | Sub3F_WaitDim order | refused | `Sub3F_WaitDim` 5 |
+| 66 | Sub3F_WaitDim cue | refused | `Sub3F_WaitDim` 593 |
+| 67 | Sub3F_Undim flag | refused | `Sub3F_Undim` 4000 |
+| 68 | SkyWarm q | refused | `Sub3F_SkyWarm` 1950, `Sub3F_SkyDim` 1965 |
+| 69 | SkyWarm bottom | refused | `Sub3F_SkyWarm` 2662, `Sub3F_SkyDim` 2688 |
+| 70 | SkyWarm end | refused | `Sub3F_SkyWarm` 213 |
+| 71 | Sub3F_WaitCue29 | refused | `Sub3F_WaitCue29` 571 |
+| 72 | SkyCool shift | refused | `Sub3F_SkyCool` 3687 |
+| 73 | SkyCool r | refused | `Sub3F_SkyCool` 2656 |
+| 74 | SkyCool end | refused | `Sub3F_SkyCool` 231 |
+| 75 | Sub3F_WaitCue32 sound | refused | `Sub3F_WaitCue32` 296 |
+| 76 | Sub3F_SkyDim clut | refused | `Sub3F_SkyDim` 4000 |
+| 77 | Sub3F_SkyDim shade | refused | `Sub3F_SkyDim` 3321 |
+| 78 | Sub3F_SkyDim shade store | refused | `Sub3F_SkyDim` 4000 |
+| 79 | Sub3F_SkyDim end | refused | `Sub3F_SkyDim` 228 |
+| 80 | Sub3F_WaitCue35 sound | refused | `Sub3F_WaitCue35` 312 |
+| 81 | Sub3F_Trail point | refused | `Sub3F_Trail` 4000 |
+| 82 | Sub3F_Trail turn | refused | `Sub3F_Trail` 3998 |
+| 83 | Sub3F_Trail end | refused | `Sub3F_Trail` 225 |
+| 84 | Sub3F_WaitCue37 | refused | `Sub3F_WaitCue37` 589 |
+| 85 | Sub3F_Flash sounds | refused | `Sub3F_Flash` 4000 |
+| 86 | Sub3F_Spin cue | refused | `Sub3F_Spin` 566 |
+| 87 | Sub3F_SpinFade level | refused | `Sub3F_SpinFade` 3970 |
+| 88 | Sub3F_SpinFade end | refused | `Sub3F_SpinFade` 249 |
+| 89 | Sub3F_WaitCue3B | refused | `Sub3F_WaitCue3B` 597 |
+| 90 | HoldUntil sky | refused | `Sub3F_WaitCue37` 4000, `Sub3F_WaitCue3B` 4000 |
+| 91 | Sky flags | refused | `Sub3F_WaitCue29` 4000, `Sub3F_Flash` 4000 |
+| 92 | WhiteOut y | refused | `Sub3F_WhiteOut` 4000 |
+| 93 | WhiteOut commit | refused | `Sub3F_WhiteOut` 4000 |
+| 94 | WhiteOut shade | refused | `Sub3F_WhiteOut` 4000 |
+| 95 | WhiteOut colour | refused | `Sub3F_WhiteOut` 4000 |
+| 96 | WhiteOut right | refused | `Sub3F_WhiteOut` 4000 |
+| 97 | WhiteOut flags | refused | `Sub3F_WhiteOut` 4000 |
+| 98 | ShadeClut stp | refused | `Sub3F_ShadeClut` 3573 |
+| 99 | ShadeClut blue | refused | `Sub3F_ShadeClut` 2846 |
+| 100 | ShadeClut dirty | refused | `Sub3F_ShadeClut` 4000 |
+| 101 | ShadeClut clamp | refused | `Sub3F_ShadeClut` 1220 |
+| 102 | DrawSky bottom | refused | `Sub3F_DrawSky` 981 |
+| 103 | DrawSky y | refused | `Sub3F_DrawSky` 4000 |
+| 104 | DrawSky commit | refused | `Sub3F_DrawSky` 4000 |
+| 105 | DrawSky right | refused | `Sub3F_DrawSky` 4000 |
+| 106 | DrawSky mode | refused | `Sub3F_DrawSky` 4000 |
+| 107 | Sub25_Run table | refused | `Sub25_Run` 3190 |
+| 108 | StartLid +8 | refused | `Sub25_Start` 1328, `Sub26_Start` 1348 |
+| 109 | StartLid z | refused | `Sub25_Start` 4000, `Sub26_Start` 4000 |
+| 110 | StartLid open | refused | `Sub25_Start` 618, `Sub26_Start` 614 |
+| 111 | StartLid lid | refused | `Sub25_Start` 2963, `Sub26_Start` 3206 |
+| 112 | LeaderAt middle | refused | `Sub25_WaitNear` 319, `Sub25_WaitAway` 446 |
+| 113 | LeaderAt next | refused | `Sub25_WaitNear` 55, `Sub25_WaitAway` 149 |
+| 114 | LeaderAt along | refused | `Sub25_WaitNear` 43, `Sub25_WaitAway` 43 |
+| 115 | LeaderAt across | refused | `Sub25_WaitNear` 201, `Sub25_WaitAway` 294 |
+| 116 | WaitNear sound | refused | `Sub25_WaitNear` 287, `Sub26_WaitNear` 245 |
+| 117 | WaitNear request | refused | `Sub25_WaitNear` 238, `Sub26_WaitNear` 242 |
+| 118 | WaitNear reread | refused | `Sub25_WaitNear` 19, `Sub26_WaitNear` 11 |
+| 119 | Open step | refused | `Sub25_Open` 3965, `Sub26_Open` 3976 |
+| 120 | Open dy | refused | `Sub25_Open` 1313, `Sub26_Open` 1311 |
+| 121 | Close state | refused | `Sub25_Close` 1565, `Sub26_Close` 1568 |
+| 122 | Close bound | refused | `Sub25_Close` 242, `Sub26_Close` 241 |
+| 123 | Close sound | refused | `Sub25_Close` 617, `Sub26_Close` 628 |
+| 124 | WaitAway along | refused | `Sub25_WaitAway` 197 |
+| 125 | Sub25_Start draw | refused | `Sub25_Start` 4000 |
+| 126 | Sub25_WaitNear draw | refused | `Sub25_WaitNear` 4000 |
+| 127 | Sub25_Open draw | refused | `Sub25_Open` 4000 |
+| 128 | Sub25_Close draw | refused | `Sub25_Close` 4000 |
+| 129 | Draw25 low | refused | `Sub25_Draw` 4000 |
+| 130 | Draw25 word | refused | `Sub25_Draw` 4000 |
+| 131 | Leaf a | refused | `Sub25_Draw` 2863, `Sub26_Draw` 2904 |
+| 132 | Leaf else a | refused | `Sub25_Draw` 1553, `Sub26_Draw` 1570 |
+| 133 | Leaf else base | refused | `Sub25_Draw` 1334, `Sub26_Draw` 1348 |
+| 134 | LidCorners a | refused | `Sub25_Draw` 1782, `Sub26_Draw` 1748 |
+| 135 | LidCorners else a | refused | `Sub25_Draw` 853, `Sub26_Draw` 890 |
+| 136 | Draw25 lid height | refused | `Sub25_Draw` 2623 |
+| 137 | Draw25 lid dy | refused | `Sub25_Draw` 2623 |
+| 138 | CellEdge y | refused | `Sub25_Draw` 2569, `Sub26_Draw` 2613 |
+| 139 | CellEdge x | refused | `Sub25_Draw` 1263, `Sub26_Draw` 1229 |
+| 140 | LidTexture | refused | `Sub25_Draw` 2635, `Sub26_Draw` 2638 |
+| 141 | Draw25 lid gate reread | refused | `Sub25_Draw` 148 |
+| 142 | Sub26_Run table | refused | `Sub26_Run` 3190 |
+| 143 | Sub26 words | refused | `Sub26_Start` 3179 |
+| 144 | Sub26_Start draw | refused | `Sub26_Start` 4000 |
+| 145 | Sub26_WaitNear draw | refused | `Sub26_WaitNear` 4000 |
+| 146 | Sub26_Open draw | refused | `Sub26_Open` 4000 |
+| 147 | Sub26_Close draw | refused | `Sub26_Close` 4000 |
+| 148 | Draw26 low | refused | `Sub26_Draw` 4000 |
+| 149 | Draw26 word | refused | `Sub26_Draw` 2373 |
+| 150 | Draw26 lid height kept | refused | `Sub26_Draw` 2623 |
+| 151 | Draw26 signs (equivalent) | equivalent: `0x65E79C`'s and `0x65E804`'s two low bytes are both (1, -1); the near variant (`+ 1`, the signs (-1, 0)) is refused | - |
+| 152 | Draw26 signs (near variant) | refused | `Sub26_Draw` 3826 |
+| 153 | Sub39_Run table | refused | `Sub39_Run` 4000 |
+| 154 | Sub39_Start level | refused | `Sub39_Start` 2661 |
+| 155 | Sub39_Start dy | refused | `Sub39_Start` 2682 |
+| 156 | Sub39_WaitFlag sound | refused | `Sub39_WaitFlag` 1051 |
+| 157 | Sub39_WaitFlag draw | refused | `Sub39_WaitFlag` 4000 |
+| 158 | Sub39_Open step | refused | `Sub39_Open` 3943 |
+| 159 | Sub39_Open dy | refused | `Sub39_Open` 4000 |
+| 160 | Sub39_Hold | refused | `Sub39_Hold` 4000 |
+| 161 | Sub39_Draw shift | refused | `Sub39_Draw` 1339 |
+| 162 | Sub39_Draw z | refused | `Sub39_Draw` 4000 |
+| 163 | Sub39_Draw texture | refused | `Sub39_Draw` 2698 |
+| 164 | Sub39_Draw sign | refused | `Sub39_Draw` 3734 |
+| 165 | Dispatch byte | refused | `Sub23_Run` 1339, `Sub39_Run` 1999 |
+| 166 | Sub23_Draw texture | refused | `Sub23_Draw` 4000 |
+| 167 | Sub24_Beat1 kick | refused | `Sub24_Beat1` 1948 |
+| 168 | Sub24_Beat2 kick | refused | `Sub24_Beat2` 1948 |
+| 169 | Sub24_Spin band low | refused | `Sub24_Spin` 199 |
+| 170 | DrawTrail range (equivalent) | equivalent: `from <= to` with from == to makes a count of 0, and the loop runs while the count is not 0 - nothing drawn either way; the near variant (`from + 1 < to`) is refused | - |
+| 171 | DrawTrail range (near variant) | refused | `Sub24_DrawTrail` 583 |
+| 172 | Sub3F_Undim level | refused | `Sub3F_Undim` 4000 |
+| 173 | Sub3F_Flash sky | refused | `Sub3F_Flash` 4000 |
+| 174 | Sub39_Start flag | refused | `Sub39_Start` 4000 |
+| 175 | LeaderAt abs (equivalent) | equivalent: the mask changes only `|0x80000000|`, to 0, and both pass every `<=` compare the tests make (0x8000, 0x10000, 0x20000); the near variant (that value as `INT32_MAX`) is refused | - |
+| 176 | LeaderAt abs (near variant) | refused | `Sub25_WaitNear` 129, `Sub25_WaitAway` 238 |
+| 177 | Sub24_Spin band high | refused | `Sub24_Spin` 189 |
+| 178 | StartLid across | refused | `Sub25_Start` 205, `Sub26_Start` 181 |
