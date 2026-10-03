@@ -10,7 +10,7 @@ the catalog's `0x501520` ran on through, and `0x5016E0`, its state 3
 (section 5). Each read to its last instruction with capstone and fuzzed
 through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
-248,000 rounds, 0 mismatches; 156 of 160 controls refused by a count, the other four equivalent mutants (three with a near variant refused, the fourth a near variant of one of those that turned out equivalent too). **Fuzz only**: no recorded route
+248,000 rounds, 0 mismatches; 157 of 161 controls refused by a count, the other four equivalent mutants (three with a near variant refused, the fourth a near variant of one of those that turned out equivalent too). **Fuzz only**: no recorded route
 enters any of the 62 (section 9). Every row is effect code: the cut's three
 `hypothesis` rows (`0x502020`, `0x502670`, `0x503660`) are a sub-kind
 dispatcher, a sub-kind's draw and a sub-kind dispatcher - all taken, none left
@@ -276,7 +276,12 @@ first pass, each to load a compare the controls showed thin: sub-kind 0x57's
 `+9` at 1 (its spawn ran in 54 rounds of 4,000, now about 900) and sub-kind
 0x15's scroll at the 320 edge (control 160 refused in 12 rounds, then 188).
 
-STAR_RESULTS
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+707 self-test lines, no `MISMATCH` line but the "0 MISMATCHES" counts,
+`inject: 8165 ours, 0 left original`; `effect_5c` there 248,000 rounds,
+2,988,184 calls, 0 mismatches. **With `BOF3X_WIDE=1`**: `'*'` exit 0, 707
+self-test lines, no mismatch, the same counts. Neither run died silently.
+`tools/ledger_check.py`: 70 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -323,9 +328,9 @@ STAR_RESULTS
 A script in the session scratchpad (`e5c/controls.py`) plants each mutation
 in `effect_5c.cpp` (anchored on a unique string), rebuilds, runs
 `BOF3X_SHADOW=effect_5c` with `BOF3X_E5C_ONLY=<function>`, restores and
-rebuilds; results in `e5c/controls.tsv`. **160 planted: 156 refused by a
+rebuilds; results in `e5c/controls.tsv`. **161 planted: 157 refused by a
 count (exit 3 on a `MISMATCH` count; none by an abort of ours), 4 equivalent
-mutants**, at least one a function (every one of the 62). The equivalents:
+mutants**; every one of the 62 functions has at least one. The equivalents:
 
 - **48** (`EffectKind18Sub56_Glow`, `t > 0x58` -> `t >= 0x58`): at `+9` =
   0x58 the original's level is 0x80 and the mutant's (0x78 - 0x58) x 4 =
@@ -350,33 +355,33 @@ original's re-read sees; 116 (the pointer + 4) in 850.
 |--:|---|---|---|
 | 1 | `EffectKind18Sub50_Run` | `EffectKind18Sub50_States` -> `EffectKind18Sub17_States` | refused in 4000 rounds |
 | 2 | `EffectKind18Sub50_Start` | `s[0xB] = s[0x36];` -> `s[0xB] = s[0x37] & 1;` | refused in 1990 rounds |
-| 3 | `EffectKind18Sub50_Start` | `SetUL(s + 0x38, static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v + 1)[0]) << 1` -> `SetUL(s + 0x38, static_cast<U>(At(AddressOf(EffectKind18Sub50_Cells) + 2 * v + 1)[0]) << 1` | refused in 4000 rounds |
+| 3 | `EffectKind18Sub50_Start` | `...0_Cells) + 2 * v + 1)[0]) << 16);` -> `...0_Cells) + 2 * v + 1)[0]) << 15);` | refused in 4000 rounds |
 | 4 | `EffectKind18Sub50_Start` | `(0u - HalfOf(ground)) - Word(At(AddressOf(EffectKind18Sub50_Heights) + 2 * v)));` -> `(0u - HalfOf(ground)) + Word(At(AddressOf(EffectKind18Sub50_Heights) + 2 * v)));` | refused in 3953 rounds |
 | 5 | `EffectKind18Sub50_Start` | `s[2] = 3;` -> `s[2] = 4;` | refused in 1307 rounds |
 | 6 | `EffectKind18Sub50_Start` | `SH_CALL(EffectKind18Sub50_Shine)();` -> `SH_CALL(EffectKind18Sub50_WaitSet)();` | refused in 2693 rounds |
 | 7 | `EffectKind18Sub50_Shine` | `s[9] = 9;` -> `s[9] = 8;` | refused in 1303 rounds |
-| 8 | `EffectKind18Sub50_Shine` | `SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 1u, 0x40);` -> `SH_CALL(EffectKind18Sub50_DrawWall)(s[0xB] + light * 4u + 2u, 0x40);` | refused in 4000 rounds |
-| 9 | `EffectKind18Sub50_Sink` | `const U height = static_cast<U>(s[9]) << 3;` -> `const U height = static_cast<U>(s[9]) << 2;` | refused in 3830 rounds |
-| 10 | `EffectKind18Sub50_Sink` | `SH_CALL(EffectKind18Sub50_DrawWall)(0, 0x40);` -> `SH_CALL(EffectKind18Sub50_DrawWall)(1, 0x40);` | refused in 4000 rounds |
-| 11 | `EffectKind18Sub50_WaitSet` | `Sub50Byte("EffectKind18Sub50_WaitSet", AddressOf(EffectKind18Sub50_Flags), s[0xB])` -> `Sub50Byte("EffectKind18Sub50_WaitSet", at::kSub50Lights, s[0xB])` | refused in 4000 rounds |
+| 8 | `EffectKind18Sub50_Shine` | `...awWall)(s[0xB] + light * 4u + 1u, 0x40);` -> `...awWall)(s[0xB] + light * 4u + 2u, 0x40);` | refused in 4000 rounds |
+| 9 | `EffectKind18Sub50_Sink` | `...ght = static_cast<U>(s[9]) << 3;` -> `...ght = static_cast<U>(s[9]) << 2;` | refused in 3830 rounds |
+| 10 | `EffectKind18Sub50_Sink` | `...L(EffectKind18Sub50_DrawWall)(0, 0x40);` -> `...L(EffectKind18Sub50_DrawWall)(1, 0x40);` | refused in 4000 rounds |
+| 11 | `EffectKind18Sub50_WaitSet` | `...("EffectKind18Sub50_WaitSet", AddressOf(EffectKind18Sub50_Flags), s[0xB])` -> `...("EffectKind18Sub50_WaitSet", at::kSub50Lights, s[0xB])` | refused in 4000 rounds |
 | 12 | `EffectKind18Sub50_Flash` | `0x1E` -> `0x1F` | refused in 3845 rounds |
 | 13 | `EffectKind18Sub50_Flash` | `0xB5` -> `0xB4` | refused in 4000 rounds |
 | 14 | `EffectKind18Sub50_Flash` | `Project4(prim, 8, 0x14, 0x20, 0x2C);` -> `Project4(prim, 8, 0x14, 0x2C, 0x20);` | refused in 4000 rounds |
 | 15 | `EffectKind18Sub50_Flash` | `if (s[9] == 0) s[2] = 1;` -> `if (s[9] == 0) s[2] = 2;` | refused in 166 rounds |
 | 16 | `EffectKind18Sub50_DrawWall` | `0x3FC0u` -> `0x3FC1u` | refused in 4000 rounds |
-| 17 | `EffectKind18Sub50_DrawWall` | `const U z0 = (static_cast<U>(Word(s + 0x3A)) << 7) + b - 0x4008u;` -> `const U z0 = (static_cast<U>(Word(s + 0x3A)) << 7) - b - 0x4008u;` | refused in 3204 rounds |
-| 18 | `EffectKind18Sub50_DrawWall` | `SetWord(VS(0x14), (0u - HalfOf(ground)) - Word(S() + 0x3E) + b);` -> `SetWord(VS(0x14), (0u - HalfOf(ground)) - Word(S() + 0x3E) - b);` | refused in 3204 rounds |
+| 17 | `EffectKind18Sub50_DrawWall` | `...cast<U>(Word(s + 0x3A)) << 7) + b - 0x4008u;` -> `...cast<U>(Word(s + 0x3A)) << 7) - b - 0x4008u;` | refused in 3204 rounds |
+| 18 | `EffectKind18Sub50_DrawWall` | `...f(ground)) - Word(S() + 0x3E) + b);` -> `...f(ground)) - Word(S() + 0x3E) - b);` | refused in 3204 rounds |
 | 19 | `EffectKind18Sub50_DrawWall` | `kTexture50` -> `kTexture50 + 1` | refused in 4000 rounds |
 | 20 | `EffectKind18Sub50_DrawWall` | `const U ez2 = VertexCell(0xA);` -> `const U ez2 = VertexCell(8);` | refused in 3988 rounds |
-| 21 | `EffectKind18Sub50_DrawLine` | `static_cast<unsigned char>((Frame_Counter & 1u) << 7);` -> `static_cast<unsigned char>((Frame_Counter & 1u) << 6);` | refused in 2319 rounds |
+| 21 | `EffectKind18Sub50_DrawLine` | `...char>((Frame_Counter & 1u) << 7);` -> `...char>((Frame_Counter & 1u) << 6);` | refused in 2319 rounds |
 | 22 | `EffectKind18Sub50_DrawLine` | `0x3Cu` -> `0x3Bu` | refused in 4000 rounds |
-| 23 | `EffectKind18Sub50_DrawLine` | `SH_CALL(Gte_StoreDepthF3)(F(prim + 0x10), F(prim + 0x1C), &third);` -> `SH_CALL(Gte_StoreDepthF3)(F(prim + 0x1C), F(prim + 0x10), &third);` | refused in 3999 rounds |
+| 23 | `EffectKind18Sub50_DrawLine` | `...Gte_StoreDepthF3)(F(prim + 0x10), F(prim + 0x1C), &third);` -> `...Gte_StoreDepthF3)(F(prim + 0x1C), F(prim + 0x10), &third);` | refused in 3999 rounds |
 | 24 | `EffectKind18Sub50_DrawLine` | `0x20` -> `0x21` | refused in 4000 rounds |
 | 25 | `EffectKind18Sub10_Run` | `EffectKind18Sub10_States` -> `EffectKind18Sub17_States` | refused in 4000 rounds |
 | 26 | `EffectKind18Sub10_Start` | `0x52` -> `0x53` | refused in 1322 rounds |
 | 27 | `EffectKind18Sub10_Start` | `S()[2] = 5;` -> `S()[2] = 4;` | refused in 1322 rounds |
 | 28 | `EffectKind18Sub10_Start` | `0xFF00` -> `0xFF01` | refused in 452 rounds |
-| 29 | `EffectKind18Sub10_Wait` | `if (dx <= I(xr) && I(Abs(z - 0x3E0000u)) <= I(zr)) return true;` -> `if (dx <= I(xr) && I(Abs(z - 0x3E0000u)) < I(zr)) return true;` | refused in 34 rounds |
+| 29 | `EffectKind18Sub10_Wait` | `...xr) && I(Abs(z - 0x3E0000u)) <= I(zr)) return true;` -> `...xr) && I(Abs(z - 0x3E0000u)) < I(zr)) return true;` | refused in 34 rounds |
 | 30 | `EffectKind18Sub10_Wait` | `0x3F0000u` -> `0x3F0001u` | refused in 31 rounds |
 | 31 | `EffectKind18Sub10_Start` | `0x428000u` -> `0x427FFFu` | refused in 291 rounds |
 | 32 | `EffectKind18Sub10_Wait` | `if (Cond_ByteFE != 0) {` -> `if (Cond_ByteFE == 1) {` | refused in 1415 rounds |
@@ -399,12 +404,12 @@ original's re-read sees; 116 (the pointer + 4) in 850.
 | 49 | `EffectKind18Sub56_Glow` | `if (t >= 0x78) SH_CALL(Effect_Release)();` -> `if (t > 0x78) SH_CALL(Effect_Release)();` | refused in 145 rounds |
 | 50 | `EffectKind18Sub56_Glow` | `if (t < 0x20) level = t * 4u;` -> `if (t < 0x20) level = t * 3u;` | refused in 2466 rounds |
 | 51 | `EffectKind18Sub56_DrawRays` | `const U lean = (j - 1u) * spread;` -> `const U lean = (j - 2u) * spread;` | refused in 4000 rounds |
-| 52 | `EffectKind18Sub56_DrawRays` | `const U y = (0xFFFFFFCEu - i * 8u - f) << 3;` -> `const U y = (0xFFFFFFCEu - i * 8u - f) << 2;` | refused in 4000 rounds |
-| 53 | `EffectKind18Sub56_DrawRays` | `prim[5] = static_cast<unsigned char>(I(green - c) / 128);` -> `prim[5] = static_cast<unsigned char>(I(green + c) / 128);` | refused in 2942 rounds |
+| 52 | `EffectKind18Sub56_DrawRays` | `...(0xFFFFFFCEu - i * 8u - f) << 3;` -> `...(0xFFFFFFCEu - i * 8u - f) << 2;` | refused in 4000 rounds |
+| 53 | `EffectKind18Sub56_DrawRays` | `...c_cast<unsigned char>(I(green - c) / 128);` -> `...c_cast<unsigned char>(I(green + c) / 128);` | refused in 2942 rounds |
 | 54 | `EffectKind18Sub56_DrawRays` | `0x10u` -> `0x11u` | refused in 4000 rounds |
-| 55 | `EffectKind18Sub56_DrawRays` | `CentreQuad(MapView_ScreenXY, I(half), I(half * 2u), prim);` -> `CentreQuad(MapView_ScreenXY, I(half), I(half * 2u + 1u), prim);` | refused in 4000 rounds |
+| 55 | `EffectKind18Sub56_DrawRays` | `...ScreenXY, I(half), I(half * 2u), prim);` -> `...ScreenXY, I(half), I(half * 2u + 1u), prim);` | refused in 4000 rounds |
 | 56 | `EffectKind18Sub56_DrawRays` | `0x3D0000` -> `0x3E0000` | refused in 4000 rounds |
-| 57 | `EffectKind18Sub56_DrawRays` | `const U turn = 3u - (((Frame_Counter / 3u) + j) & 7u);` -> `const U turn = 3u - (((Frame_Counter / 4u) + j) & 7u);` | refused in 3941 rounds |
+| 57 | `EffectKind18Sub56_DrawRays` | `...urn = 3u - (((Frame_Counter / 3u) + j) & 7u);` -> `...urn = 3u - (((Frame_Counter / 4u) + j) & 7u);` | refused in 3941 rounds |
 | 58 | `EffectKind18Sub56_DrawRays` | `} while (I(z) < I(0xFFFFE000u));` -> `} while (I(z) <= I(0xFFFFE000u));` | refused in 4000 rounds |
 | 59 | `EffectKind18Sub56_DrawRays` | the centre quad's `fadd st(1)` before `fstps [+0x2C]` dropped (asm) | refused in 4000 rounds |
 | 60 | `EffectKind18Sub57_Run` | `EffectKind18Sub57_States` -> `EffectKind18Sub56_States` | refused in 4000 rounds |
@@ -412,22 +417,22 @@ original's re-read sees; 116 (the pointer + 4) in 850.
 | 62 | `EffectKind18Sub57_Spawn` | `0x58` -> `0x57` | refused in 918 rounds |
 | 63 | `EffectKind18Sub57_Spawn` | `Points) + 4 * k + 2))) << 12);` -> `Points) + 4 * k + 2))) << 11);` | refused in 918 rounds |
 | 64 | `EffectKind18Sub57_Spawn` | `0x14` -> `0x15` | refused in 918 rounds |
-| 65 | `EffectKind18Sub57_Spawn` | `s[0xB] = static_cast<unsigned char>((s[0xB] + 1) & 7);` -> `s[0xB] = static_cast<unsigned char>((s[0xB] + 1) & 3);` | refused in 436 rounds |
+| 65 | `EffectKind18Sub57_Spawn` | `...unsigned char>((s[0xB] + 1) & 7);` -> `...unsigned char>((s[0xB] + 1) & 3);` | refused in 436 rounds |
 | 66 | `EffectKind18Sub57_Spawn` | `rec[2] = 0;` -> `rec[2] = 1;` | refused in 918 rounds |
 | 67 | `EffectKind18Sub58_Run` | `EffectKind18Sub58_States` -> `EffectKind18Sub11_States` | refused in 4000 rounds |
 | 68 | `EffectKind18Sub58_Start` | `0x202` -> `0x203` | refused in 4000 rounds |
 | 69 | `EffectKind18Sub58_Grow` | `if (s[9] > 7) {` -> `if (s[9] > 8) {` | refused in 172 rounds |
-| 70 | `EffectKind18Sub58_Hold` | `SH_CALL(EffectKind18Sub58_DrawColumn)(7);` -> `SH_CALL(EffectKind18Sub58_DrawColumn)(6);` | refused in 4000 rounds |
+| 70 | `EffectKind18Sub58_Hold` | `...EffectKind18Sub58_DrawColumn)(7);` -> `...EffectKind18Sub58_DrawColumn)(6);` | refused in 4000 rounds |
 | 71 | `EffectKind18Sub58_Hold` | `0x1F` -> `0x1E` | refused in 1513 rounds |
 | 72 | `EffectKind18Sub58_Fade` | `if (s[9] < 8) SH_CALL(Effect_Release)();` -> `if (s[9] < 9) SH_CALL(Effect_Release)();` | refused in 139 rounds |
-| 73 | `EffectKind18Sub58_Fade` | `SH_CALL(EffectKind18Sub58_DrawColumn)(static_cast<unsigned>(S()[9]) >> 2);` -> `SH_CALL(EffectKind18Sub58_DrawColumn)(static_cast<unsigned>(S()[9]) >> 1);` | refused in 3691 rounds |
-| 74 | `EffectKind18Sub58_DrawColumn` | `const U lift = static_cast<U>(I(b * n) / 16);` -> `const U lift = static_cast<U>(I(b * n) / 8);` | refused in 1667 rounds |
+| 73 | `EffectKind18Sub58_Fade` | `...tic_cast<unsigned>(S()[9]) >> 2);` -> `...tic_cast<unsigned>(S()[9]) >> 1);` | refused in 3691 rounds |
+| 74 | `EffectKind18Sub58_DrawColumn` | `...t = static_cast<U>(I(b * n) / 16);` -> `...t = static_cast<U>(I(b * n) / 8);` | refused in 1667 rounds |
 | 75 | `EffectKind18Sub58_DrawColumn` | `const U m = I(y) < 0x1380000 ? 4u : c;` -> `const U m = I(y) <= 0x1380000 ? 4u : c;` | refused in 3690 rounds |
 | 76 | `EffectKind18Sub58_DrawColumn` | `0xF80000u` -> `0xFC0000u` | refused in 3177 rounds |
-| 77 | `EffectKind18Sub58_DrawColumn` | `prim[5] = static_cast<unsigned char>(prim[5] >> 1);` -> `prim[5] = static_cast<unsigned char>(prim[5] >> 2);` | refused in 4000 rounds |
-| 78 | `EffectKind18Sub58_DrawColumn` | `SetWord(VS(4), 0xFFFFFF80u - (b + c * 8u) * n);` -> `SetWord(VS(4), 0xFFFFFF80u - (b + c * 4u) * n);` | refused in 3690 rounds |
+| 77 | `EffectKind18Sub58_DrawColumn` | `...ast<unsigned char>(prim[5] >> 1);` -> `...ast<unsigned char>(prim[5] >> 2);` | refused in 4000 rounds |
+| 78 | `EffectKind18Sub58_DrawColumn` | `...VS(4), 0xFFFFFF80u - (b + c * 8u) * n);` -> `...VS(4), 0xFFFFFF80u - (b + c * 4u) * n);` | refused in 3690 rounds |
 | 79 | `EffectKind18Sub58_DrawColumn` | `"fadds (%[xy])\n\t"` -> `"fadds 4(%[xy])\n\t"` | refused in 4000 rounds |
-| 80 | `EffectKind18Sub58_DrawColumn` | `const U b = (Frame_Counter & 1u) << 2;` -> `const U b = (Frame_Counter & 1u) << 3;` | refused in 2008 rounds |
+| 80 | `EffectKind18Sub58_DrawColumn` | `...U b = (Frame_Counter & 1u) << 2;` -> `...U b = (Frame_Counter & 1u) << 3;` | refused in 2008 rounds |
 | 81 | `EffectKind18Sub11_Run` | `EffectKind18Sub11_States` -> `EffectKind18Sub58_States` | refused in 4000 rounds |
 | 82 | `EffectKind18Sub11_Start` | `0x22` -> `0x23` | refused in 4000 rounds |
 | 83 | `EffectKind18Sub11_Wait` | `return Cond_ByteFA <= 7;` -> `return Cond_ByteFA < 7;` | refused in 132 rounds |
@@ -443,35 +448,35 @@ original's re-read sees; 116 (the pointer + 4) in 850.
 | 93 | `EffectKind18Sub11_DrawTiles` | `0x3FC0u` -> `0x3FC1u` | refused in 4000 rounds |
 | 94 | `EffectKind18Sub12_DrawTiles` | `At(e + 1)[0], 0x48);` -> `At(e + 1)[0] + 1, 0x48);` | refused in 4000 rounds |
 | 95 | `EffectKind18Sub12_DrawTiles` | `EffectKind18Sub12_Tiles` -> `EffectKind18Sub11_Tiles` | equivalent: the two tile tables hold the same 45 bytes; near variant 96 refused |
-| 96 | `EffectKind18Sub12_DrawTiles` | `Tiles(AddressOf(EffectKind18Sub12_Tiles), y, shade)` -> `Tiles(AddressOf(EffectKind18Sub12_Tiles) + 3, y, shade)` | refused in 4000 rounds |
-| 97 | `EffectKind18Sub11_Sink` | `SetUL(s + 0x3C, UL(s + 0x3C) + 1u);` -> `SetUL(s + 0x3C, UL(s + 0x3C) + 2u);` | refused in 3987 rounds |
+| 96 | `EffectKind18Sub12_DrawTiles` | `...essOf(EffectKind18Sub12_Tiles), y, shade)` -> `...essOf(EffectKind18Sub12_Tiles) + 3, y, shade)` | refused in 4000 rounds |
+| 97 | `EffectKind18Sub11_Sink` | `...etUL(s + 0x3C, UL(s + 0x3C) + 1u);` -> `...etUL(s + 0x3C, UL(s + 0x3C) + 2u);` | refused in 3987 rounds |
 | 98 | `EffectKind18Sub15_Run` | `AddressOf(EffectKind18Sub15_States), EffectKind18Sub15_States_count` -> `AddressOf(EffectKind18Sub56_States), EffectKind18Sub15_States_count` | refused in 4000 rounds |
 | 99 | `EffectKind18Sub15_Start` | `SH_CALL(Gte_SetGeomOffset)(0xA0, 0x90);` -> `SH_CALL(Gte_SetGeomOffset)(0x90, 0xA0);` | refused in 4000 rounds |
 | 100 | `EffectKind18Sub15_Start` | `0xFCC0` -> `0xFCC1` | refused in 4000 rounds |
 | 101 | `EffectKind18Sub15_Draw` | `0x42B00000u` -> `0x42B10000u` | refused in 3763 rounds |
 | 102 | `EffectKind18Sub15_Draw` | `0x100` -> `0xFF` | refused in 3834 rounds |
-| 103 | `EffectKind18Sub15_Draw` | `const U left = ((Frame_Counter >> 3) & 0xFFu) + col - 0x100u;` -> `const U left = ((Frame_Counter >> 2) & 0xFFu) + col - 0x100u;` | refused in 3989 rounds |
+| 103 | `EffectKind18Sub15_Draw` | `...t U left = ((Frame_Counter >> 3) & 0xFFu) + col - 0x100u;` -> `...t U left = ((Frame_Counter >> 2) & 0xFFu) + col - 0x100u;` | refused in 3989 rounds |
 | 104 | `EffectKind18Sub15_Draw` | `if (I(right) > 0x140) {` -> `if (I(right) >= 0x140) {` | equivalent: at a right edge of 0x140 both write 320.0 and u 0xFF; near variant 160 refused |
 | 105 | `EffectKind18Sub15_Draw` | `0x3Fu` -> `0x40u` | refused in 3598 rounds |
-| 106 | `EffectKind18Sub15_Draw` | `SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);` -> `SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);` | refused in 4000 rounds |
-| 107 | `EffectKind18Sub15_Draw` | `const U shift = 0u - Sar(static_cast<U>(Field_Kind2X) - 0x2D0000u, 15);` -> `const U shift = 0u - Sar(static_cast<U>(Field_Kind2X) - 0x2D0000u, 14);` | refused in 4000 rounds |
+| 106 | `EffectKind18Sub15_Draw` | `...tDrawMode)(Gfx_PacketNext, 0, 1, 0xB5, 0);` -> `...tDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);` | refused in 4000 rounds |
+| 107 | `EffectKind18Sub15_Draw` | `...>(Field_Kind2X) - 0x2D0000u, 15);` -> `...>(Field_Kind2X) - 0x2D0000u, 14);` | refused in 4000 rounds |
 | 108 | `EffectKind18Sub15_Draw` | `k + 1` -> `k` | refused in 4000 rounds |
-| 109 | `EffectKind18Sub15_Draw` | `for (U k = 0; k < 4; ++k, quad += 0x44) {` -> `for (U k = 0; k < 4; ++k, quad = Gfx_PacketNext) {` | refused in 3216 rounds |
+| 109 | `EffectKind18Sub15_Draw` | `...or (U k = 0; k < 4; ++k, quad += 0x44) {` -> `...or (U k = 0; k < 4; ++k, quad = Gfx_PacketNext) {` | refused in 3216 rounds |
 | 110 | `EffectKind18Sub15_Draw` | `0x20u` -> `0x21u` | refused in 3881 rounds |
 | 111 | `EffectKind18Sub15_Draw` | `const U row = centre - j - 4u;` -> `const U row = centre - j - 3u;` | refused in 3881 rounds |
 | 112 | `EffectKind18Sub15_Draw` | `slope` -> `slope + 1u` | refused in 3881 rounds |
 | 113 | `EffectKind18Sub15_LinkLayer` | `if (limit <= AddressOf(next) + bytes) return;` -> `if (limit < AddressOf(next) + bytes) return;` | refused in 389 rounds |
 | 114 | `EffectKind18Sub15_LinkLayer` | `bytes` -> `bytes + 1` | refused in 850 rounds |
-| 115 | `EffectKind18Sub15_LinkLayer` | `SetUL(At(at::kLayer15Tails + 8u * Gfx_BufferIndex), AddressOf(now));` -> `SetUL(At(at::kLayer15Tails + 8u * Gfx_BufferIndex), AddressOf(next));` | refused in 37 rounds |
-| 116 | `EffectKind18Sub15_LinkLayer` | `SetUL(At(at::kLayer15Tails + 8u * Gfx_BufferIndex), AddressOf(now));` -> `SetUL(At(at::kLayer15Tails + 8u * Gfx_BufferIndex), AddressOf(now) + 4);` | refused in 850 rounds |
+| 115 | `EffectKind18Sub15_LinkLayer` | `... Gfx_BufferIndex), AddressOf(now));` -> `... Gfx_BufferIndex), AddressOf(next));` | refused in 37 rounds |
+| 116 | `EffectKind18Sub15_LinkLayer` | `...x_BufferIndex), AddressOf(now));` -> `...x_BufferIndex), AddressOf(now) + 4);` | refused in 850 rounds |
 | 117 | `EffectKind18Sub16_Run` | `0xFFFFC780u` -> `0xFFFFC781u` | refused in 2020 rounds |
 | 118 | `EffectKind18Sub16_Run` | `0x26u` -> `0x27u` | refused in 4000 rounds |
 | 119 | `EffectKind18Sub16_Run` | `before` -> `b` | refused in 4000 rounds |
-| 120 | `EffectKind18Sub16_Run` | `SetWord(VS(0x1A), static_cast<U>(I(static_cast<U>(sine) * (b + 1u)) >> 12));` -> `SetWord(VS(0x1A), static_cast<U>(I(static_cast<U>(sine) * (b + 1u)) >> 11));` | refused in 4000 rounds |
-| 121 | `EffectKind18Sub16_Run` | `const short angles[3] = {0, 0, 0};` -> `const short angles[3] = {0, 0, 1};` | refused in 4000 rounds |
+| 120 | `EffectKind18Sub16_Run` | `...cast<U>(sine) * (b + 1u)) >> 12));` -> `...cast<U>(sine) * (b + 1u)) >> 11));` | refused in 4000 rounds |
+| 121 | `EffectKind18Sub16_Run` | `...onst short angles[3] = {0, 0, 0};` -> `...onst short angles[3] = {0, 0, 1};` | refused in 4000 rounds |
 | 122 | `EffectKind18Sub16_Run` | `Project4(prim, 8, 0x1C, 0x30, 0x44);` -> `Project4(prim, 8, 0x1C, 0x44, 0x30);` | refused in 4000 rounds |
 | 123 | `EffectKind18Sub16_Run` | `0xFF40` -> `0xFF41` | refused in 4000 rounds |
-| 124 | `EffectKind18Sub16_Run` | `const U next = Frame_Counter - b - 1u;` -> `const U next = Frame_Counter - b - 2u;` | refused in 4000 rounds |
+| 124 | `EffectKind18Sub16_Run` | `... U next = Frame_Counter - b - 1u;` -> `... U next = Frame_Counter - b - 2u;` | refused in 4000 rounds |
 | 125 | `EffectKind18Sub16_Run` | `SH_CALL(Gte_MulMatrix0)(Camera_Matrix, m.m, m.m);` -> `SH_CALL(Gte_MulMatrix0)(m.m, Camera_Matrix, m.m);` | refused in 4000 rounds |
 | 126 | `EffectKind18Sub16_Run` | added `m.t[2] = 0;` | refused in 4000 rounds |
 | 127 | `EffectKind18Sub17_Run` | the table read one entry on (`+ 4`, count - 1) | refused |
@@ -479,18 +484,18 @@ original's re-read sees; 116 (the pointer + 4) in 850.
 | 129 | `EffectKind18Sub17_WaitCue` | `if (At(at::kCounter)[0] == 0xC) {` -> `if (At(at::kCounter)[0] == 0xD) {` | refused in 1273 rounds |
 | 130 | `EffectKind18Sub17_WaitCue` | `rec[2] = 0xA;` -> `rec[2] = 0xB;` | refused in 613 rounds |
 | 131 | `EffectKind18Sub17_WaitCue` | `0x23` -> `0x22` | refused in 594 rounds |
-| 132 | `EffectKind18Sub17_Rise` | `if (f % 5u == 0) Step((f / 5u) & 3u);` -> `if (f % 5u == 0) Step((f / 5u) & 7u);` | refused in 663 rounds |
+| 132 | `EffectKind18Sub17_Rise` | `...(f % 5u == 0) Step((f / 5u) & 3u);` -> `...(f % 5u == 0) Step((f / 5u) & 7u);` | refused in 663 rounds |
 | 133 | `EffectKind18Sub17_MoveZ` | the tail's `Quads(0); Quads(1);` swapped | refused in 4000 rounds |
 | 134 | `EffectKind18Sub17_Rise` | `if (SW(w) < 0x80) {` -> `if (SW(w) <= 0x80) {` | refused in 378 rounds |
 | 135 | `EffectKind18Sub17_Rise` | `At(at::kCounter)[0] = 0xD;` -> `At(at::kCounter)[0] = 0xE;` | refused in 1138 rounds |
 | 136 | `EffectKind18Sub17_MoveZ` | `0x19` -> `0x1A` | refused in 447 rounds |
 | 137 | `EffectKind18Sub17_MoveXZ` | `0x800u` -> `0x801u` | refused in 2407 rounds |
 | 138 | `EffectKind18Sub17_MoveX` | `if (SW(Word(s + 0x36)) >= 0x4F)` -> `if (SW(Word(s + 0x36)) > 0x4F)` | refused in 674 rounds |
-| 139 | `EffectKind18Sub17_MoveX` | `else if (((Frame_Counter / 5u) & 3u) == 3)` -> `else if (((Frame_Counter / 5u) & 3u) == 2)` | refused in 828 rounds |
+| 139 | `EffectKind18Sub17_MoveX` | `...(Frame_Counter / 5u) & 3u) == 3)` -> `...(Frame_Counter / 5u) & 3u) == 2)` | refused in 828 rounds |
 | 140 | `EffectKind18Sub17_Count` | `Step(t / 5 + 4);` -> `Step(t / 5 + 5);` | refused in 1206 rounds |
 | 141 | `EffectKind18Sub17_Count` | `Cond_ByteFE = 0;` -> `Cond_ByteFE = 1;` | refused in 462 rounds |
 | 142 | `EffectKind18Sub17_WaitEnemy0` | `0x4000u` -> `0x8000u` | refused in 510 rounds |
-| 143 | `EffectKind18Sub17_WaitEnemy0` | `if (Game_Mode == 5 && Game_Step == 5` -> `if (Game_Mode == 5 && Game_Step == 4` | refused in 931 rounds |
+| 143 | `EffectKind18Sub17_WaitEnemy0` | `...ame_Mode == 5 && Game_Step == 5` -> `...ame_Mode == 5 && Game_Step == 4` | refused in 931 rounds |
 | 144 | `EffectKind18Sub17_WaitEnemy1` | `Step(t / 5 + 7);` -> `Step(t / 5 + 6);` | refused in 1261 rounds |
 | 145 | `EffectKind18Sub17_WaitEnemy1` | `kEnemy1Bits` -> `kEnemy0Bits` | refused in 501 rounds |
 | 146 | `EffectKind18Sub17_Settle` | `} else if (s[9] / 5 == 0) {` -> `} else if (s[9] / 5 == 1) {` | refused in 1140 rounds |
@@ -503,11 +508,12 @@ original's re-read sees; 116 (the pointer + 4) in 850.
 | 153 | `EffectKind18Sub17_WaitCue11` | `Quads(2);` -> `Quads(1);` | refused in 3831 rounds |
 | 154 | `EffectKind18Sub17_Count12` | `S()[9] = 1;` -> `S()[9] = 2;` | refused in 452 rounds |
 | 155 | `EffectKind18Sub17_Settle14` | `0x18` -> `0x19` | refused in 4000 rounds |
-| 156 | `EffectKind18Sub17_Settle14` | `const std::int32_t lean = SW(Word(S() + 0x32)) / 6;` -> `const std::int32_t lean = SW(Word(S() + 0x32)) / 5;` | refused in 2565 rounds |
+| 156 | `EffectKind18Sub17_Settle14` | `...lean = SW(Word(S() + 0x32)) / 6;` -> `...lean = SW(Word(S() + 0x32)) / 5;` | refused in 2565 rounds |
 | 157 | `EffectKind18Sub17_Settle` | `if (s[9] == 0xF) {` -> `if (s[9] == 0xE) {` | refused in 618 rounds |
 | 158 | `EffectKind18Sub56_Glow` | `0x58` -> `0x59` | refused in 132 rounds |
 | 159 | `EffectKind18Sub15_Draw` | `0x140` -> `0x13F` | equivalent (a near variant planted wrong: it differs only at the same edge 0x140); 160 refused |
 | 160 | `EffectKind18Sub15_Draw` | `0x140` -> `0x141` | refused in 188 rounds |
+| 161 | `EffectKind18Sub12_Run` | `EffectKind18Sub12_States` -> `EffectKind18Sub11_States` | refused in 4000 rounds |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
