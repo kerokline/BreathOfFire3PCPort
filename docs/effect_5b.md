@@ -243,7 +243,10 @@ byte, the leader's x moved by ±0x8000.
 **Result** (this worktree, `effect_5b_st1.log` in the scratch):
 200,000 rounds over 50 functions, 944,140 calls to the stand-ins, **0
 mismatches**; 24,761 bytes of state in 47 regions (the final fuzz,
-`st2.log`). Every table entry reached (each sub-state's recorder 625..1,539
+`st2.log`). **`BOF3X_SHADOW='*'`** in this worktree: exit 0, 706 self-test
+lines, every one 0 mismatches, `inject: 8153 ours` (965 s); **with
+`BOF3X_WIDE=1`**: exit 0, 706 lines, 8,153 ours (1,104 s). Neither died
+silently. `tools/ledger_check.py`: 70 entries, 0 errors. Every table entry reached (each sub-state's recorder 625..1,539
 times); `Gte_RotTransPers` 4,000, of which the glow drew past the cull 1,970
 times (`Math_Sin` 3,940 = two a glow); `Effect_Release` 749; `Rand` 2,025.
 
