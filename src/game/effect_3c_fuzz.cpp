@@ -220,6 +220,40 @@ U FxTile(const U*, U answer) {
     return answer;
 }
 
+// The caller's stack from just below this frame to its base (the TIB's
+// StackBase): where the originals' and ours' locals are.
+bool OnStack(const void* p, unsigned n) {
+    std::uint32_t base;
+    __asm__("movl %%fs:4, %0" : "=r"(base));
+    const auto here = static_cast<U>(reinterpret_cast<std::uintptr_t>(&base));
+    const auto at = static_cast<U>(reinterpret_cast<std::uintptr_t>(p));
+    return at > here && at + n > at && at + n <= base;
+}
+bool Writable(U at, unsigned n) { return sh::InRegions(P(at), n) || OnStack(P(at), n); }
+// A float with a random mantissa and an exponent 2^-17..2^18 (no NaN, no
+// infinity) - what the projections' screen words and depths are; one time in
+// eight a value _ftol answers with the integer indefinite (NaN, or past 2^63
+// either way), or a NaN quiet or signalling, which the particle draw's copy
+// through the FPU turns quiet (E2A's FillFloat).
+void FillFloat(U at) {
+    if (!Writable(at, 4)) return;
+    const U n = sh::Noise();
+    U bits;
+    if (n % 8 == 0) {
+        static const U kOdd[] = {0x7FC00000u, 0xFFC00000u, 0x7FC00001u, 0x7F800001u, 0xFF800002u, 0x5F000000u, 0xDF000001u, 0x7F7FFFFFu};
+        bits = kOdd[(n >> 3) % 8];
+    } else {
+        bits = (n & 0x807FFFFFu) | ((0x6Eu + (sh::Noise() % 0x24u)) << 23);
+    }
+    std::memcpy(P(at), &bits, 4);
+}
+// EffectGte_ProjectPoint: out[0..2] the screen x, y and depth, which every
+// caller reads (into the packet, or a local it copies from); the point hashed.
+U FxProjectPoint(const U* a, U answer) {
+    for (unsigned i = 0; i < 3; ++i) FillFloat(a[1] + 4 * i);
+    return answer;
+}
+
 #define E3C_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage, kF = sh::Answer::kFlag, kPh = sh::Answer::kPhase;
 constexpr U kW = 0xFFFFFFFFu, k16 = 0xFFFFu, k8 = 0xFFu;
@@ -251,6 +285,9 @@ const sh::Callee kCallees[] = {
     {"0x483C10 (E3B)", at::kShardsSpread, at::kShardsSpread, 0, {}, kG, 0, 0, {}, &FxSpread},
     {"0x483DA0 (E3B)", at::kShardQuad, at::kShardQuad, 1, {kW}, kG, 0, 0, {0x28}, nullptr, nullptr, true},
     {"0x48CA90 (E4D)", at::kScreenTile, at::kScreenTile, 0, {}, kG, 0, 0, {}, &FxTile},
+    // re-listed: the standard row's fractional floats never reach _ftol's
+    // indefinite nor a NaN, which the particle draw quiets in its FPU copy
+    {E3C_OURS(EffectGte_ProjectPoint), 2, {0, 0}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},
 };
 #undef E3C_OURS
 
