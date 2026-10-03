@@ -257,6 +257,10 @@ chapter's count (read after the trail), `Camera_Angles[1]` (read again after
 calls to the stand-ins, **0 mismatches**, 29,552 bytes of state (46 regions)
 and the stand-ins' log compared, first run.
 
+`BOF3X_SHADOW='*'` after the rebinding (section 11): exit 0, 683 self-test
+summary lines, every one 0 mismatches; again with `BOF3X_WIDE=1`: the same.
+No silent death.
+
 ## 5. Controls
 
 A script (the session scratchpad's `e4f/controls.py`) plants each in
