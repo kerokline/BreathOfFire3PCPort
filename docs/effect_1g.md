@@ -333,3 +333,7 @@ refused** (exit 3):
 | 4 | the right u range not grown | narrow | the span check: a stretch |
 | 5 | the right edge one column short | narrow | the span check: the edges |
 | 6 | `-columns` for the left edge (-0.0 narrow) | narrow | the span check: -0.0 |
+
+`BOF3X_SHADOW='*'` narrow and with `BOF3X_WIDE=1` on the branch tip: exit 0
+both, every group at 0 mismatches. `tools/ledger_check.py`: 67 entries, 0
+errors.
