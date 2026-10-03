@@ -8,7 +8,7 @@ for E3A (`analysis/round13_cut.tsv`, the band `0x4801F0..0x4823C2`), none
 added, none dropped (section 9). Each read to its last instruction with
 capstone and fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
-192,000 rounds, 0 mismatches; controls in section 5. One forced divergence,
+192,000 rounds, 0 mismatches; 65 of 65 controls refused (section 5). One forced divergence,
 ledgered: **DIV-0068** (section 2). **Fuzz only**: no recorded route enters any
 of the 48 (section 10).
 
@@ -211,7 +211,10 @@ word, takes a square root or reads a projected point's NaN.
 `Sprite_Current` onto the record kind 0x61 fills from ObjTrio); the frame
 byte 0 or 1; the particle count at 0, 1, 2, 0x10, 0x11, 0x100 or below it; both
 frames with x / y small and w x h at most 0x100 (0, negatives, single rows up
-to 0x40); `+9` at 0, 1, 2, 0x13..0x15, 0xFF; `+6` at 0..4, 0x10. By function:
+to 0x40), h below 0x100 (a first seed let w = 1 draw h = 0x100: the original's
+row byte never reaches it, so its copy ran on writing particles until it
+faulted - an access violation the crash reporter did not log - under `'*'`'s
+stream and in 40,000 rounds alone, never in 4,000 alone); `+9` at 0, 1, 2, 0x13..0x15, 0xFF; `+6` at 0..4, 0x10. By function:
 the members' `+0x148` 0 or 1 (capture); particles with flags 0 / 1 / other,
 counts 0, 1, 2, 0x28, sane fractional floats (arm, twinkle); the wait at the
 gap half the time, `Field_Request` / the message word / the step at and round
@@ -235,11 +238,95 @@ the five tables reached (each handler recorder 411..1,344 calls); the group's
 own callees all reached (`EffectKind68_InitMote` 1,385 the fewest),
 `0x59E930` 904, `Effect_Release` 5,914, `Rand` 967,488.
 
-**Every shadow** (this worktree, no `bof3x.ini`): see section 5's foot.
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+696 self-test lines, no mismatch anywhere, `inject: 7618 ours, 0 left
+original`; `effect_3a` there 192,000 rounds, 5,251,650 calls, 0 mismatches.
+Before the frame-row fix above, `'*'` died twice the same way (exit
+0xC0000005, no `FATAL`, no crash line) inside `effect_3a`: reproducible, not
+the silent flake HANDOFF records; bisected by `BOF3X_E3A_ONLY` with
+`BOF3X_E3A_ROUNDS=40000` to `EffectKind61_Scatter`. After it, 1,920,000 rounds
+alone (40,000 a function), 0 mismatches. WIDE_LINE_PLACEHOLDER
 
 ## 5. Controls
 
-STAND-IN: filled in by the controls run.
+Planted behind `BOF3X_E3A_CTL=<n>` in a scratch copy of `effect_3a.cpp`
+(`build/e3a_plant.py`, `build/e3a_ctl.sh` in this worktree, not committed:
+every plant behind the switch, one on at a time; rebuilt once, each run under
+`BOF3X_E3A_ONLY=<filter>`, then the file restored and rebuilt; the committed
+file has no switch). **65 of 65 refused by a count**, every refused run exit
+3; counts are rounds refused of 4,000 a function, in this worktree. Control 65
+plants the stale record read before `Gfx_ClearRect` (refused only in the rounds
+where the disturbance moved `Sprite_Current` across the call). The rim depths
+DIV-0068 replaces are levelled on both sides, so a plant there cannot be
+refused by design; control 39 plants the centre's depth instead.
+
+| # | Run (`_ONLY`) | Plant | Refused (of 4,000 a function) |
+|--:|---|---|---|
+| 1 | `_Run` | every dispatcher to the next entry of its table | EffectKind60_Run 2637; EffectKind61_Run 3218; EffectKind62_Run 2634; EffectKind64_Run 3545; EffectKind68_Run 3017 |
+| 2 | `EffectKind60_DrawLine` | the line's grey 0x41 | EffectKind60_DrawLine 4000 |
+| 3 | `EffectKind61_Capture` | the borrowed record's kind 0x3B | EffectKind61_Capture 2964 |
+| 4 | `EffectKind61_Capture` | the frame byte inverted | EffectKind61_Capture 2964 |
+| 5 | `EffectKind61_Capture` | Sprite_Current left on the borrowed record | EffectKind61_Capture 2918 |
+| 6 | `EffectKind61_Store` | the rectangle at x 0x341 | EffectKind61_Store 863 |
+| 7 | `EffectKind61_Scatter` | x one column on | EffectKind61_Scatter 1248 |
+| 8 | `EffectKind61_Scatter` | the count stored one short | EffectKind61_Scatter 1248 |
+| 9 | `EffectKind61_Arm` | the pattern (i + 1) & 1 | EffectKind61_Arm 3452 |
+| 10 | `EffectKind61_Arm` | the in-count + 0xB | EffectKind61_Arm 1394 |
+| 11 | `EffectKind61_Arm` | the out-count 0x29 - | EffectKind61_Arm 3342 |
+| 12 | `EffectKind61_Twinkle` | green >> 3 | EffectKind61_Twinkle 3300 |
+| 13 | `EffectKind61_Twinkle` | the flags of the unflagged not toggled | EffectKind61_Twinkle 2578 |
+| 14 | `EffectKind61_Twinkle` | with +6 set the point moved while the count lasts | EffectKind61_Twinkle 2824 |
+| 15 | `EffectKind62_Start` | the gap 0x11 | EffectKind62_Start 3978 |
+| 16 | `EffectKind62_Rays` | the gap down 1 | EffectKind62_Rays 1579 |
+| 17 | `EffectKind62_Rays` | message 0x13 | EffectKind62_Rays 357 |
+| 18 | `EffectKind62_Rays` | the wait not cleared after a ray | EffectKind62_Rays 1588 |
+| 19 | `EffectKind62_Blast` | the outer speed up 0x8D | EffectKind62_Blast 4000 |
+| 20 | `EffectKind62_Blast` | released with the rays still in use | EffectKind62_Blast 874 |
+| 21 | `EffectKind62_ClearRays` | only 23 rays cleared | EffectKind62_ClearRays 1996 |
+| 22 | `EffectKind62_SpawnRay` | the shades one up | EffectKind62_SpawnRay 4000 |
+| 23 | `EffectKind62_SpawnRay` | the speed's z not negated | EffectKind62_SpawnRay 4000 |
+| 24 | `EffectKind62_StepRays` | phase 1's shade down 9 | EffectKind62_StepRays 3944 |
+| 25 | `EffectKind62_StepRays` | phase 0's count reload 7 | EffectKind62_StepRays 3019 |
+| 26 | `EffectKind62_DrawRay` | green >> 2 | EffectKind62_DrawRay 3960 |
+| 27 | `EffectKind62_DrawRing` | the inner colour 0x7E | EffectKind62_DrawRing 4000 |
+| 28 | `EffectKind62_DrawRing` | the outer radius << 5 at angle 0 | EffectKind62_DrawRing 3338 |
+| 29 | `EffectKind64_Start` | the height 0x800001 up | EffectKind64_Start 4000 |
+| 30 | `EffectKind64_Grow` | +9 = 0x81 | EffectKind64_Grow 853 |
+| 31 | `EffectKind64_Hold` | the glow's colour 7 | EffectKind64_Hold 4000 |
+| 32 | `EffectKind64_Rise` | fifteen shards | EffectKind64_Rise 857 |
+| 33 | `EffectKind64_B` | a spark every eighth frame | EffectKind64_Burst 582 |
+| 34 | `EffectKind64_Burst` | the trail's x speed -0x1001 | EffectKind64_Burst 793 |
+| 35 | `EffectKind64_Launch` | +9 = 0x21 | EffectKind64_Launch 4000 |
+| 36 | `EffectKind64_Fly` | the z speed down 0x1FF | EffectKind64_Fly 4000 |
+| 37 | `EffectKind64_FlyWait` | the count 0x17 | EffectKind64_FlyWait 2033 |
+| 38 | `EffectKind64_Fade` | the shade down 7 | EffectKind64_Fade 3981 |
+| 39 | `EffectKind64_DrawGlow` | the centre's depth the rim x | EffectKind64_DrawGlow 4000 |
+| 40 | `EffectKind64_DrawGlow` | green (c & 0xFC) << 6 | EffectKind64_DrawGlow 2586 |
+| 41 | `EffectKind64_DrawGlow` | the radius without the frame bit | EffectKind64_DrawGlow 2465 |
+| 42 | `EffectKind64_DrawTrail` | the dots step 0x8000 | EffectKind64_DrawTrail 2826 |
+| 43 | `EffectKind64_DrawTrail` | the first quad's y + half | EffectKind64_DrawTrail 3954 |
+| 44 | `EffectKind64_ClearSparks` | seven sparks | EffectKind64_ClearSparks 1941 |
+| 45 | `EffectKind64_StepSparks` | the size down 0x11 | EffectKind64_StepSparks 3984 |
+| 46 | `EffectKind64_DrawSpark` | the rim (+0x16) on the second vertex | EffectKind64_DrawSpark 3984 |
+| 47 | `EffectKind64_InitShard` | the speed (Rand & 2) + 4 | EffectKind64_InitShard 4000 |
+| 48 | `EffectKind64_InitShard` | Y turned by +y | EffectKind64_InitShard 3997 |
+| 49 | `EffectKind64_DrawShards` | the angle up 0x11 | EffectKind64_DrawShards 4000 |
+| 50 | `EffectKind68_Start` | the count 0x41 | EffectKind68_Start 3977 |
+| 51 | `EffectKind68_Rise` | a mote every eighth | EffectKind68_Rise 614 |
+| 52 | `EffectKind68_Wall` | the count 0x5B after the motes | EffectKind68_Wall 1359 |
+| 53 | `EffectKind68_` | the wall's shade - 0x167 | EffectKind68_Wall 1393; EffectKind68_End 1488 |
+| 54 | `EffectKind68_End` | drawn from 0x5A | EffectKind68_End 419 |
+| 55 | `EffectKind68_ClearMotes` | flag A kept | EffectKind68_ClearMotes 1949 |
+| 56 | `EffectKind68_FindMote` | the second free | EffectKind68_FindMote 2032 |
+| 57 | `EffectKind68_InitMote` | the rise % 0x301 | EffectKind68_InitMote 3929 |
+| 58 | `EffectKind68_StepMotes` | the motes drawn before their state | EffectKind68_StepMotes 4000 |
+| 59 | `EffectKind68_DrawMote` | the step 0x101 | EffectKind68_DrawMote 4000 |
+| 60 | `EffectKind68_MoteGlow` | the shade up 0x11 | EffectKind68_MoteGlow 4000 |
+| 61 | `EffectKind68_MoteHold` | the count 0x11 | EffectKind68_MoteHold 1289 |
+| 62 | `EffectKind68_MoteRise` | the speed up 0x401 | EffectKind68_MoteRise 4000 |
+| 63 | `EffectKind68_DrawWall` | the wall's blue + 1 | EffectKind68_DrawWall 4000 |
+| 64 | `EffectKind68_DrawWall` | the wall linked at z + 1 | EffectKind68_DrawWall 4000 |
+| 65 | `EffectKind61_Capture` | the copy from the record read before the clear | EffectKind61_Capture 85 |
 
 ## 6. Aborts
 
