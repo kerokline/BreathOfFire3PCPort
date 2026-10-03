@@ -217,3 +217,164 @@ discs, while the map section `0x80104000` does not (§5.2 there, and item 2
 of §5 above). Found beside them: the map's code exists in eleven copies, one
 per world-map area; the HUD's own state machine `0x404230` and the task
 frame `0x404150` are pointer-reached and not in the queue (§6 there).
+
+## 8. The party sprite's cut shadow: the map cells in front paint over it (fix wave WS, 2026-10-03)
+
+**What the owner saw** (`HANDOFF.md` 0000, the crops
+`analysis/shots/owner_catalogue/worldmap_shadow_1..3.png`, the pack-carrying
+walk): the dark ellipse under the world-map party sprite ends at a straight
+edge instead of closing below the feet. Their reference, a PlayStation
+screenshot on the Lost Shore map, has the whole ellipse. In their words, the
+original also clips it "on some renders, but not all", probably depending on
+the map, and it is not in the sprite work.
+
+**Correction.** The first draft of this section (commit `9e33b6f`) said the
+cut was in the sprite's art, because ours, Capcom's and the sibling's
+PlayStation renders all showed a flat-bottomed shadow. The measurements were
+right, but that conclusion was wrong. Every frame it compared happened to stand
+where a cell in front cut the shadow. Across more frames and maps, the
+ellipse is whole on open ground and cut where terrain stands in front of the
+party, and the same thing happens on the PlayStation. The zooms and scripts
+are in the session scratch `fixwave/ws/` (`walk.png`, `node.png`,
+`psx_feet.png`, `masks.py`, `mask2.py`).
+
+### 8.1 What the captures show
+
+- **Ours against Capcom's: identical.** A 60 x 90 px box round the sprite
+  (640 x 480, x 290..350, y 180..270) at the map frames of
+  `worldMapAndAreaTransition_ab.txt` (`f01140`, `f01260`, `f01380`, `f01620`,
+  `f01740`) is pixel-identical in four runs: `worldmap_r12w2_ours`,
+  `worldmap_r12w2_orig`, `wave2_worldmap_orig` and `worldmap_orig` of
+  2026-09-23. The last is Capcom's code under Capcom's own DirectDraw device.
+  The old `worldmap_ours` differs by 34 px, which is the pre-DIV-0044 needle
+  sliver (§2). The wide run `wave2_worldmap_wide/f01140` shows the same
+  shadow. So the cut is not ours, and not the widening.
+  `WorldMap_PinSprite` only writes the screen point (160, 80).
+- **The cut moves with the ground, not with the sprite.** The sprite stays
+  pinned at the view's centre while the map moves under it. On the PC route
+  (all Yraall, `AREA033`):
+  - `f01140`: standing, facing the camera, on open ground. The shadow closes
+    in a 7 px bottom row, rounded and whole.
+  - `f01200`: mid-walk. A hedge covers all but the shadow's right edge.
+  - `f01260`..`f01380`: the Cedar Woods node, facing away. The hedge's
+    diagonal edge runs across the lower left, over the shadow and the left
+    foot.
+  - `f01620` and `f01740`: the shadow's lower left follows a diagonal
+    terrain edge.
+  - `f01680`: nearly whole.
+
+  The edge of each cut is the edge of a map feature, and it lies at a
+  different place relative to the feet in each frame. A cut in the sprite's
+  own texture would sit at the same place in every frame of the same pose.
+- **The PlayStation does the same.** These are the sibling checkout's renders
+  of the JP disc (`../BreathOfFire3Recomp/analysis/area_shots/`, `warp_shots/`),
+  at game resolution:
+  - **Whole** (rounded, closing 1..2 rows below the feet in a narrower row):
+    `AREA033_f136786`, `f160235`, `f270037`, `f58330`, `f59332`;
+    `AREA045_f458500`; `AREA087_f407177`; `AREA088_f422291`;
+    `AREA151_f348569`; `AREA152_f311164`; and the warp shots of areas 016,
+    033, 087, 088, 115, 151 and 152.
+  - **Cut or covered by terrain in front:** `AREA016_f192463` (a flat bottom
+    row 13 px wide, as in the owner's crop 1), `AREA033_f12249`, `f141611`,
+    `f169626` and `f5568` (hedges), `f187589` (a fence), and `AREA065_f404480`.
+  - **The same spot on both platforms:** `AREA033_f141611` is the Cedar Woods
+    node on the PlayStation and `f01260` is the same node on the PC
+    (`node.png`). Both have the shadow's lower left under the hedge.
+
+  The sibling is the recompiled PlayStation code drawing its own ordering
+  table on an emulated GPU. A GPU draws primitives in the order the table
+  hands them over, so the order is the game code's. That fits the owner's word
+  that the original clips "on some renders". This is not a fault of the
+  sibling's renderer, so no note for that project is owed.
+
+### 8.2 The mechanism (case a)
+
+**Superseded in part by [`sprite-draw-order.md`](sprite-draw-order.md) §18
+(2026-10-03, the owner's decision to fix it).** That section has the full
+order for both the world map and the field:
+- the terrain's own lists from `MapView_Build`, list 1 after the sprites;
+- the slot order, 7 drawn first;
+- `Draw_OtSlot` 6 on both;
+- the hypotheses H1..H5;
+- the instrument `BOF3X_DRAWORDER` that replaces the "temporary log" asked
+  for below, and the live commands for this node and for the field's foot.
+
+One correction to the text below: `WorldMap_PinSprite` belongs to the place
+plate's states, not the party.
+
+This is read from the code already taken over
+([`sprite-draw-order.md`](sprite-draw-order.md) §2, §15 and §16). It has not
+been measured.
+
+`Sprite_DrawPass` walks 0x37 layers. Each layer starts with `DrawLayer_Open`,
+which emits one row of the map's cells (row `MapView_Row + layer + 1`) through
+the cell handlers (`MapCell_DrawQuads` and the rest). Then come that layer's
+sprites, by their `+0x32` draw key. Ordering-table slots are appended at the
+tail, so draw order within a slot is emission order. That gives a painter's
+order:
+- the cells of the rows nearer the camera are emitted after the party sprite;
+- wherever those cells' quads reach up the screen over the spot under the
+  feet (a hedge, a slope, a cliff, a fence, a raised tile), they paint over
+  the shadow, which lies below the feet, and sometimes over a foot.
+
+On flat open ground the next row's quads stay below the shadow, so it shows
+whole. That is why the cut depends on the map and on where on it the party
+stands.
+
+`MapCell_DrawQuads` chooses the slot from the texture word: bit 14 sends a
+quad to slot 4 (7 with bit 30), and the rest go to `Draw_OtSlot` (6 with bit
+30). So whether a given cell interleaves with the sprite also depends on the
+cell's own flags.
+
+The same mechanism is very likely behind the owner's 2026-09-21 "floor over
+Ryu's left foot" in the field ([`sprite-draw-order.md`](sprite-draw-order.md)
+§11). That case was also identical all-original.
+
+**Not settled headless:** which slots the party's code-0x84 primitive and the
+covering quads land in, and in what order. The conclusion does not depend on
+it, because the PC matches the PlayStation at the one spot both have. If the
+owner wants the fix below, it needs that measurement first:
+- At `worldmap_sliver.txt` frame 1260 (the Cedar Woods node), log the
+  ordering-table slot and link position of each primitive committed while
+  `Sprite_DrawPass` runs.
+- Cover the party's code-0x84 primitive (from `Sprite_Draw`) and every
+  `MapCell_DrawQuads` quad whose screen box overlaps 640 x 480 x 300..340,
+  y 236..256.
+- A temporary log in ours behind an environment switch is enough.
+
+### 8.3 What ours does now, and the proposal
+
+Ours is unchanged. Capcom's PC port clips where the PlayStation clips, for the
+same reason, so this is the original's behaviour. **No ledger entry; the
+DIV number reserved for this item is unused.** `known-defects.md` `D-TBD-WS` records it, so it is not
+reported again as a port defect.
+
+**Proposal for the owner** (an Intent change beyond the original; not built):
+on the world-map areas only, draw the party's shadow after the cells in front
+of it. Two ways:
+1. Give the party sprite a draw key one layer later on the world map. This is
+   simple, but the sprite's body would then draw over terrain that should
+   hide its feet.
+2. Draw the shadow as its own primitive after the map. This is cleaner, but
+   it needs to find out whether the shadow is pixels of the sprite's cell
+   texture (its colour is a flat `0x292929`, drawn opaque on the PC) or a
+   separate piece of the frame. That means reading the party's frame
+   (`Sprite_Draw`'s pieces at `+0x54` / `+0x5A`).
+
+Either way it would get a switch and a DIV entry, tier Intent with the
+PlayStation's open-ground picture as the intent.
+
+### 8.4 For the coordinator's live check (optional)
+
+None of this needs a live run to stand. To show the owner the mechanism
+on our build:
+- `python tools/input_run.py tools/recipes/worldmap_sliver.txt --out analysis/shots/ws_narrow --no-front --env BOF3X_WIDE=0`
+  (the shot `wm` at frame 1260, the Cedar Woods node). Expect the hedge over
+  the shadow's lower left, as in `f01260`.
+- `python tools/input_run.py tools/recipes/worldMapAndAreaTransition_ab.txt --out analysis/shots/ws_route --no-front --env BOF3X_WIDE=0`.
+  Expect `f01140` and `f01680` whole, and `f01200`, `f01260`, `f01620` and
+  `f01740` cut along terrain edges.
+
+What is wrong: a cut at the same place relative to the feet on every frame of
+one pose, whatever the ground. Run the same with `--original "*"` and expect
+identical crops.

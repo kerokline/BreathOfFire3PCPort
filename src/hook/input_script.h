@@ -28,4 +28,9 @@ void InputScript_Stop();
 // (BOF3X_ORIGINAL=Game_WinMain) keeps its RetargetCall'd site instead.
 void InputScript_Latch();
 
+// The recipe frame the scripted latch has reached (the number the log's
+// `recipe frame` lines and the recipe's `shot` lines count), 0 when no recipe
+// is playing. Read by the draw-order log (BOF3X_DRAWORDER).
+unsigned InputScript_Frame();
+
 }  // namespace bof3

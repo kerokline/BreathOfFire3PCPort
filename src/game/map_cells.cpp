@@ -6,6 +6,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 // Two of the map-cell handlers DrawLayer_Open hands a cell's records to, and
@@ -175,6 +176,7 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
             unsigned slot;
             if (texture & 0x4000u) slot = texture & 0x40000000u ? 7u : 4u;
             else slot = texture & 0x40000000u ? 6u : Draw_OtSlot;
+            if (draw_order::g_on) draw_order::g_ctx.texture = texture;   // BOF3X_DRAWORDER, diagnostic only
             Gfx_CommitPrim(slot, kPrimBytes);
             Gte_StoreScreenXY3(reinterpret_cast<unsigned long*>(prim + 0x18), reinterpret_cast<unsigned long*>(prim + 0x28),
                                reinterpret_cast<unsigned long*>(prim + 0x38));

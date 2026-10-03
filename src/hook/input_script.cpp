@@ -701,4 +701,6 @@ void InputScript_Latch() {
     else DeviceLatch();
 }
 
+unsigned InputScript_Frame() { return g_scripted ? g_frame : 0; }
+
 }  // namespace bof3

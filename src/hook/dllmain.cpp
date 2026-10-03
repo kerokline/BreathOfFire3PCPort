@@ -13,6 +13,7 @@
 #include "hook/calltrace.h"
 #include "hook/crash.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/inject_all.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
@@ -42,6 +43,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         }
         bof3::CallTrace_Start(module);
         bof3::InputScript_Start();
+        draw_order::Start();
     } else if (reason == DLL_PROCESS_DETACH) {
         bof3::Log("bof3x detaching");
         // Our streams are still open here: ExitProcess detaches this DLL
