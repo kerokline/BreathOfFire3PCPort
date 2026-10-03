@@ -217,3 +217,64 @@ discs, while the map section `0x80104000` does not (§5.2 there, and item 2
 of §5 above). Found beside them: the map's code exists in eleven copies, one
 per world-map area; the HUD's own state machine `0x404230` and the task
 frame `0x404150` are pointer-reached and not in the queue (§6 there).
+
+## 8. The party sprite's "cut" shadow: the art, on every platform (fix wave WS, 2026-10-03)
+
+**What the owner saw** (`HANDOFF.md` 0000, the crops
+`analysis/shots/owner_catalogue/worldmap_shadow_1..3.png`, the pack-carrying
+walk): the dark shadow under the world-map party sprite ends at a straight
+horizontal edge level with the bottom of the feet instead of closing as an
+ellipse below them.
+
+**What it is: not a fault of ours, nor of Capcom's port - the PlayStation draws
+the same shape.** Measured headless from captures already on disk (this wave
+ran nothing live); the zooms are in the session scratch `fixwave/ws/`
+(`cmp2.png`, `psx3.png`, `zoom.png`, `wide.png`):
+
+1. **Ours against Capcom's.** The 60 x 90 px box round the sprite (640 x 480
+   capture, x 290..350, y 180..270) at the five map frames of
+   `worldMapAndAreaTransition_ab.txt` (`f01140`, `f01260`, `f01380`, `f01620`,
+   `f01740`) is pixel-identical between `worldmap_r12w2_orig` (`BOF3X_ORIGINAL`
+   `'*'` less the language keep-list, `analysis/validate_worldmap.sh`) and
+   `worldmap_r12w2_ours`, and between those and `worldmap_orig` of 2026-09-23 -
+   Capcom's code under **Capcom's own DirectDraw device** - and
+   `wave2_worldmap_orig` (0 pixels differ by more than 24 per channel in every
+   pair). `worldmap_ours` of 2026-09-23 differs by 34 pixels: the pre-DIV-0044
+   needle sliver, which ran from the dial to the party (§2). So the shape comes
+   to ours unchanged from Capcom's path, renderer included.
+2. **Wide against narrow.** `wave2_worldmap_wide/f01140` shows the same shadow
+   with the same flat bottom at the wide picture's scale. DIV-0041's widening
+   does not touch it, and `WorldMap_PinSprite` only writes the screen point
+   (160, 80): it sets no size, clip or texture rectangle.
+3. **The PlayStation.** The sibling checkout's renders of the JP disc
+   (`../BreathOfFire3Recomp/analysis/area_shots/AREA016_f192463.png`, the
+   Yraall map facing the camera, and `AREA033_f12249.png`, walking) show the
+   same shadow: a dark band behind the feet, a stepped corner each side, one
+   narrower bottom row, and a flat bottom edge one row under the feet - the
+   shape in the owner's crops. Caveat: those are the recompiled game on the
+   sibling's emulated GPU, not a hardware capture (no Mednafen snapshot there
+   reaches the map); but that renderer and the PC port's Direct3D path share
+   nothing except the game's data, and they agree, so the cut is in the data -
+   the sprite's painted shadow ends at its cell, or the cell ends at the shadow.
+
+**What ours does now:** unchanged. There is no ledger entry (no behaviour
+changed) and no fuzz control is owed (no function of ours differs from
+Capcom's here). DIV-0070, reserved for this item, is unused.
+
+**Owed the owner (a question, not a fix):** the original game draws this
+shadow flat-bottomed on the PlayStation too. If the owner wants a closed
+ellipse anyway, that is an Intent change beyond the original - new art or a
+drawn shadow primitive - and wants their word first; the next step would be to
+find whether the shadow is painted in the sprite's cell (the area's
+`0x800D3800` sprite-frame section, PC kind-0 chunk `0xB0000`, §5) or a
+primitive of its own, from the map's sprite draw.
+
+**For the coordinator's live check (optional; settles nothing new unless the
+owner's own build differs):** `python tools/input_run.py
+tools/recipes/worldmap_sliver.txt --out analysis/shots/ws_narrow --no-front
+--env BOF3X_WIDE=0`, the same with `--env BOF3X_WIDE=1` (`ws_wide`), and the
+narrow one again with `--original "*"` (`ws_orig`); the recipe's own shot `wm`
+is on the map at frame 1260. Right: all three show the same flat-bottomed
+shadow as the owner's crops (the sprite at the view's centre). Wrong (a bug of
+ours after all): `ws_orig` closes the ellipse below the feet and `ws_narrow`
+does not.
