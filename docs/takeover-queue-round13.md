@@ -784,11 +784,66 @@ worktree, scratch `verify_98d0631.log` for the tip before it and
 machine hands-off and the hash reference re-recorded first (HANDOFF); it
 checks merged code and does not gate the wave.
 
-## 14. Wave three (launched 2026-10-03)
+## 14. Wave three (2026-10-03: launched about 08:35 from `0e0532c`, merged 09:16..10:10)
 
-Four Opus agents in worktrees, E3A..E3D, 210 functions; the briefs from
-`make_briefs.py <scratch> 3 <tip> band_edges_w2.txt` with wave two's addendum
-(the fold's rows, the tail draws, the table counts); the merge order is E3B
-before E3C. From this wave on the live runs log their wall time
-(`analysis/run_times.tsv`, `tools/run_times.py`).
+Four Opus agents in worktrees; the briefs from `make_briefs.py <scratch> 3
+<tip> band_edges_w2.txt` with wave two's addendum (the fold's rows, the tail
+draws, the table counts). Each merge built and run in the detached
+verification worktree, the group's shadow and `'*'` narrow; every agent ran
+`'*'` narrow and with `BOF3X_WIDE=1` in its own worktree, all exit 0.
 
+| Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Kinds |
+|---|---|---|--:|---|--:|---|
+| E3B | `d2b5954` | `6faad58` | 49 | 101 / 100 / 0, one stopped by ours' abort with a refused near variant | 7,619 | 0x63, 0x65, 0x67, 0x69, 0x6C |
+| E3D | `37bb107` | `a8700be` | 63 + 5 | 148 / 146 / 1, one stopped by ours' abort | 7,687 | 0x77 (whole: its dispatcher and three sub-states were rows of no group), 0x78, 0x7B..0x7D, 0x7F..0x82 (kind 0x82's states 11..23 are E4A's) |
+| E3C | `60f8859` | `8ee6c6a` | 50 + 1 | 85 / 84 / 1 | 7,738 | 0x6D, 0x6E, 0x6F, 0x72..0x75, the shared debris draw and set-up; `0x485C60`, kind 0x75's tail with its own frame |
+| E3A | `5a01f47` | `bfc8162` | 48 | 65 / 65 / 0 | 7,786 | 0x60, 0x61, 0x62, 0x64, 0x68 |
+
+**216 functions, 7,570 -> 7,786**, every group 0 mismatches, 399 controls:
+395 refused by a count, 2 equivalent mutants each with a refused near variant,
+2 stopped by ours' own abort (E3B's with a near variant refused by a count).
+`fold_names.py` found no harness row to name; `consolidate_entries.py` 8,577
+entries, every one of the 216 with a line. **The tip's proof**
+(`bfc8162`, scratch `verify_w3.log`): `scenario_harness_ekh`, the four
+groups' shadows and `'*'` exit 0, 7,786 ours; `'*'` with `BOF3X_WIDE=1` exit
+0; `ledger_check` 68 entries, 0 errors.
+
+**One divergence came with the wave, for the owner's word: DIV-0068**
+(Forced, E3A). `EffectKind64_DrawGlow` `0x481740` reads its rim vertices'
+depth from a stack word the original never writes; ours writes the centre's
+depth, as the two sibling discs do. `BOF3X_ORIGINAL=EffectKind64_DrawGlow`
+runs Capcom's. Not seen live.
+
+**What the wave learned**:
+
+- The first wave under the fold's rows. E3D re-listed a trail projection
+  louder in its own file for one control; what else the groups re-listed is
+  in their docs and not yet read against the fold.
+- A memory read in the same C++ expression as a call can run before the
+  call (E3B's 347 mismatches in `EffectKind6C_ScatterSparks`): compute each
+  call's answer into a local first, in the original's order.
+- A seed can hand the original a loop that never ends (E3A's frame height
+  0x100 in `EffectKind61_Scatter`: `'*'` died twice with no FATAL line
+  before the seed was fixed) - a silent death that repeats is a seed.
+- The tool's count for `EffectKind82_States` was 53; the dispatcher reaches 24.
+
+**In no group, to place** (beside sections 12's and 13's lists): `0x4837B0`
+(called by `EffectKind69_Part2`); `0x480210`, `0x480270`, `0x4802C0` (kind
+0x60's states) and `0x480300`; `0x492750` (kind 0x80's states 4..7),
+`0x492530` and `0x492CF0` (callers of E3D's drop helpers).
+
+**Debts from wave three**: the rebinding between the wave's groups (E3C's
+raw calls to E3B's `0x483C10` and `0x483DA0`) and of the inbound calls each
+doc lists for wave four (E4A's table entry `EffectKind82_Start`, E4C's call
+to `0x4841C0`, E4D's, E4E's and E4F's calls into E3A's); the spark cursor
+`0x67626C`, written by E3B's and E3C's code and named by neither;
+`scenario_harness_ekh.cpp` still copies `0x4857C0` by address and
+`scenario_harness.h`'s comment names `0x486AB0` (`EffectKind7D_FillF4`);
+E3D's `EffectKind7D_SetMap` is DIV-0062's site and is in `draw_pool.cpp`'s
+`kOwnedUsers` now; E3C's `entries_logic.txt` line for `0x485960` spanned
+sixteen of E3D's (the consolidation cut it); the latent defects to number
+(each group's doc). **Live**: every function of the wave is fuzz-only; the
+whelp route's frame hash is still owed for waves one and two.
+
+**Next**: wave four, `make_briefs.py <scratch> 4 <tip> band_edges_w2.txt`,
+E4A..E4F (302); merge order E4F, then E4D, E4B, E4A.
