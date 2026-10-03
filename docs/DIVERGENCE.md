@@ -2125,6 +2125,26 @@ designed in rather than bolted on.
   engine's range; `0x507BDC`, `0x507CE3`, `0x50B4B5`, `0x50F7B5` after
   `Gfx_BeginFrame`), Capcom's still, and any fill built from integers or
   registers the scan cannot see - the owner's eye finds those.
+  **Manillo's backdrop, 2026-10-03** (the owner's catalogue,
+  `manillo_will_that_be_all.png`: the trade screen's tiled fish pattern
+  320 wide, black bands): `ItemTrade_DrawBackground` `0x5942C0` (ours
+  since round thirteen's E1G, `src/game/effect_1g.cpp`), two POLY_FT4s
+  `(0, 0)..(0xA0, 240)` and `(0xA0, 0)..(0x140, 240)`, u `0..0xA0`,
+  textured through a 32 x 32 texture window that the port builds as the
+  tile repeated over a 256 x 256 page (`Tex_Convert4` / `_8`). A
+  pattern wants more tiles, not a stretch: under the columns the left
+  quad runs from `0 - columns` with u from `(-columns) mod 32` (11 for
+  53) and the right one to `320 + columns`, each u range grown by its
+  columns (u up to 224), so every column shows the tile the original's
+  phase puts there and the 426 columns are covered exactly
+  (`ItemTrade_BackdropSpan`; a span past u 255 aborts). The columns are
+  `Widescreen_Fill()`'s, 0 until every self-test has run, so the clone
+  fuzz compares the original's quads; a property check in the same
+  self-test proves the spans for 0..63 columns (edges, texels = columns,
+  phase). Off, bit for bit the original's. `BOF3X_ORIGINAL=ItemTrade_DrawBackground`
+  brings back the 320-wide pattern. [`widescreen.md`](widescreen.md) §5
+  has the check owed and the nine sites above as the owner's routes
+  reach them (none seen).
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
