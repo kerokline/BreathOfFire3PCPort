@@ -163,7 +163,8 @@ operand - the same case as DIV-0012's filter immediates.
   of 24,000 rounds) and `boss_sa` in `BossWeretigr_EndMove` only (2,007 of
   6,000), the first differing byte `0x904AA0 + 0x4C` = `0x904AEC` each time:
   the multiplier now reaches both stores and changes nothing else those
-  fuzz groups cover. `BOF3X_SHADOW='*'` with the variables unset: STARRESULT.
+  fuzz groups cover. `BOF3X_SHADOW='*'` with the variables unset: exit 0, 997 fuzz summaries all at 0
+  mismatches, 7,687 ours (narrow; nothing here is widened by DIV-0041).
 
 ## 5. For the coordinator's live check (owed, 2026-10-03)
 
