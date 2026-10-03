@@ -209,6 +209,27 @@ extern "C" void __cdecl MasterAsk_Hand(int x, int y, int unused) {
     Menu_DrawHand(g_master_stop[0] + answer * (g_master_stop[1] - g_master_stop[0]), y, unused);
 }
 
+}  // namespace
+
+const unsigned char* YesNoLayout_SystemLine(const unsigned char* line) { return Respace(line, 0xF); }
+
+int YesNoLayout_ShopHandX(int line_x, int answer) {
+    const unsigned char* const line = Respace(Msg_SystemPtr(0xF), 0xF);
+    // Respace has checked the shape: spaces, a word, spaces, a word.
+    int pen = line_x, word = 0, stops[2] = {0, 0};
+    bool in_word = false;
+    for (unsigned i = 0; line[i]; i += (line[i] & 0x80) ? 2u : 1u) {
+        const bool space = line[i] == 0x20;
+        if (!space && !in_word && word < 2) stops[word++] = pen - 2;
+        in_word = !space;
+        pen += TextAdvance_Of(line + i);
+    }
+    if (word != 2) bof3::Fatal("DIV-0027: system message 0xF re-spaced has %d words", word);
+    return stops[1] - answer * (stops[1] - stops[0]);
+}
+
+namespace {
+
 // BOF3X_SHADOW=yes_no_layout: the re-spacing on the two lines it will meet,
 // built here - the English line's shape and the Chinese line's (two-byte
 // codes) - against the lines it must make.

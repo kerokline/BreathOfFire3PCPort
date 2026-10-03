@@ -33,7 +33,8 @@
 //   Equip_ChooseSlot       0x58C7A0 0x338   SharedList_DrawItemCount 0x585940 0xB9
 //   Equip_ChooseItem       0x58CAE0 0x251
 //
-// Faithful: no divergence. Every call out goes through the harness (SH_CALL /
+// Faithful but for DIV-0027 in SharedList_UseItem under a Latin overlay
+// (amended 2026-10-03). Every call out goes through the harness (SH_CALL /
 // SH_AT), so the start-up fuzz can stand recorders in for the callees. Names
 // are from what the code does; the screens' meaning in the game is the
 // owner's to say (docs/field_s.md section 1).
@@ -49,8 +50,10 @@
 #include "bof3/symbols.gen.h"
 #include "game/field_s.h"
 #include "game/field_s_callees.h"
+#include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1277,8 +1280,16 @@ extern "C" void __cdecl SharedList_MoveStep(void) {
 // Inventory_Remove(0, 0x58, 1), windows 2 and 3 open on the joined record at
 // the pick (read again), the step up one. Confirm on no, or cancel: sound
 // 0x106 and the state down one.
+//
+// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): with the flag on (a
+// Latin overlay, set after the self-test) the hand over the line
+// ShopWin_TitleRun re-spaces (help 0x36 is one of its four yes / no ids).
+unsigned char g_use_item_yes_no_hand = 0;
+
 extern "C" void __cdecl SharedList_UseItem(void) {
-    const U hand_x = W(0x803164) - 36u * static_cast<U>(S8(B(at::kAnswer))) + 0xE8;
+    const U hand_x = g_use_item_yes_no_hand
+                         ? static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(W(0x803164)) + 7, S8(B(at::kAnswer))))
+                         : W(0x803164) - 36u * static_cast<U>(S8(B(at::kAnswer))) + 0xE8;
     const U hand_y = W(0x803166) + 5;
     U pressed = L(at::kPressed);
     SetW(0x803170, 0x36);
@@ -2069,6 +2080,12 @@ extern "C" void __cdecl Equip_ChooseItem(void) {
 
 void FieldS_Inject() {
     if (bof3::WantsShadow("field_s")) field_s::SelfTest();
+    if (Lang_Latin()) {   // DIVERGENCE DIV-0027 (amended 2026-10-03), DIV-0056
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ShopYesNoLayout",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_use_item_yes_no_hand)), &was, &is, 1);
+        bof3::Log("DIV-0027    SharedList_UseItem's yes / no hand over the re-spaced line");
+    }
     BOF3_INJECT(FieldSave_Confirm);
     BOF3_INJECT(Rest_Begin);
     BOF3_INJECT(Rest_PlaceParty);

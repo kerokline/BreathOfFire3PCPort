@@ -29,3 +29,16 @@ struct YesNoTail {
     int stop[2];   // [0] the first answer (Yes), [1] the second (No)
 };
 YesNoTail YesNoLayout_Tail(const unsigned char* s, int x, const char* who);
+
+// DIV-0027 (amended 2026-10-03): the shop's yes / no - the help window's
+// prompt with system message 0xF drawn over it (ShopWin_TitleRun, help ids
+// 0x36, 0x49, 0x4A, 0x52) and the hand the shop's steps place
+// (shop_states2.cpp's YesNoFrame, field_s.cpp's SharedList_UseItem). The
+// line as Menu_YesNo's DIV-0027 re-spaces it.
+const unsigned char* YesNoLayout_SystemLine(const unsigned char* line);
+
+// The help line's yes / no hand x over that line drawn at `line_x`: `answer`
+// 1 is Yes, 0 No, as 0x929F0B holds it; two units left of each word as the
+// pen places it, and linear in the answer as the original's 0xE8 - 36 *
+// answer is.
+int YesNoLayout_ShopHandX(int line_x, int answer);
