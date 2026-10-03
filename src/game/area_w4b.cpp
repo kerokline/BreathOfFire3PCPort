@@ -455,7 +455,7 @@ extern "C" void __cdecl Area170_ScriptFlagsSet1010(void) { Field_ScriptFlags = s
 extern "C" void __cdecl Area170_ScriptFlagsClear1010(void) { Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFEF); }
 
 // original 0x426C30 (area 170 +0x40; PSX 0x801F4ABC): tail kind 51 becomes
-// 37; the engine's 0x486D60; then the entry zone 2 with Cond_ByteFD 1 plays
+// 37; the engine's 0x486D60 (EffectKind7D_SetMap); then the entry zone 2 with Cond_ByteFD 1 plays
 // sound 0x20C (zone 2 with another value returns), and the zone (read again)
 // 3 with Cond_ByteFD 2 plays it.
 extern "C" void __cdecl Area170_Init(void) {

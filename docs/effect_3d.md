@@ -10,7 +10,7 @@ sub-state dispatcher `0x486280` and its three sub-states `0x4861C0`,
 `0x4861E0`, `0x4862A0` (section 5). Each read to its last instruction with
 capstone and fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
-272,000 rounds, 0 mismatches; CONTROLS_SUMMARY. **Fuzz only**: no recorded
+272,000 rounds, 0 mismatches; 147 of 148 controls refused by a count or the abort, the one other an equivalent mutant whose near variant is refused. **Fuzz only**: no recorded
 route enters any of the 68 (section 9).
 
 Every row is effect code but one: **`0x486D60` (`EffectKind7D_SetMap`, a
@@ -33,7 +33,7 @@ it applies.
 | 0x82: `Sprite_Objects` record 0 pushed a cell at a time (3, 4 or 5 pushes by `0x903849`) while it is short of the leader | 12 | `[0x82]`, `EffectKind82_States` `0x654C88` (24; states 11..23 E4A's) |
 
 Every name is a hypothesis from what the code does (`symbols.toml` status
-`hypothesis`; the thirteen dispatchers `evidence`). "Ring", "cone", "trail",
+`hypothesis`; the eleven dispatchers `evidence`). "Ring", "cone", "trail",
 "drops", "dials", "pushed" name the code's shape - the primitives it commits
 and the cells it steps - not a play-tested fact: what the game shows with
 these kinds and where was not traced (section 9; the owner's word, as the
@@ -200,7 +200,7 @@ after every self-test. Ours reads the pool through `draw_pool::Items()`
 (the switch runs after it). Checked 2026-10-03.
 
 Where the original indexes past a table ours aborts with a `Fatal` naming the
-function (the round-nine rule; nothing in the fuzz reaches it): the thirteen
+function (the round-nine rule; nothing in the fuzz reaches it): the eleven
 dispatchers past their tables; the pulse's index `0x676279` past the two
 shades (only these four functions write it, 0 or 1); `_Input`'s `+6` past the
 three dials; a dial's turn past the grid's nine columns in `_DrawDial` and
@@ -245,7 +245,7 @@ it reads; ours passes the values computed whole):
 One `Run` under `BOF3X_SHADOW=effect_3d`, effect mode (`g.effect`; kinds
 0x76..0x7D, 0x7F..0x82, each clone its own), 4,000 rounds a function
 (`BOF3X_E3D_ONLY=<name>` runs the clones whose name holds it,
-`BOF3X_E3D_ROUNDS` sets the rounds). Shapes: 56 `kEffect` (the thirteen
+`BOF3X_E3D_ROUNDS` sets the rounds). Shapes: 56 `kEffect` (the eleven
 dispatchers' `state_span` - or `sub_span` for kind 0x77's two by `+2` - their
 table's length, section 3; the no-argument helpers too, which read no
 argument), twelve `kCall` (the draws with arguments and the two trail
@@ -308,7 +308,16 @@ the 256. **Disturbance** (the group's, from the hash only): `+9`, `+0x2E` /
 `+0x30`, the counter, the tally, the pressed word, a trail point's angle,
 a drop's life, record 0's x, the record's point.
 
-RESULT_PARAGRAPH
+**Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_3d`,
+exit 0): 272,000 rounds over 68 functions, 6,174,314 calls to the stand-ins,
+**0 mismatches**; 29,632 bytes of state in 49 regions. Every entry of the
+eleven tables reached (each handler recorder 145..3,397 calls; E4A's thirteen
+145..182, `0x492750` 1,792, `Effect_StateRelease` 2,923, `BareRet` 166),
+`Effect_Release` 10,684, `Rand` 169,356, `Math_Ratan2` 58,951,
+`EffectKind7D_DrawMark` 252,000, `EffectKind81_DrawDrop` 564,580,
+`EffectKind81_FindFreeDrop` 42,712.
+
+STAR_PARAGRAPH
 
 ## 5. What the cut and the tool said, settled
 
@@ -319,10 +328,10 @@ RESULT_PARAGRAPH
   hold MSVC's switch tables (`0x487CC0`, five jumps; `0x487CD4`, 0xFD index
   bytes) after its last `ret`; the clone moves the jump table
   (`JumpTable{0x58, 0x70, 5}`) and reads the byte table in place.
-- **Hidden starts**: 44 of the cut's and the five added, each an entry by
+- **Hidden starts**: 44 of the cut's and four of the five added (`0x487DE0` is not hidden), each an entry by
   address - a cell of `Effect_KindHandlers` or of a kind's table - none a case
   or a shared tail. Their recorded hosts: E3C's `0x485960` (its catalog extent
-  `9AE` spans `0x485960..0x48630E`: thirteen of ours), and ours `0x486310`,
+  `9AE` spans `0x485960..0x48630E`: sixteen of ours), and ours `0x486310`,
   `0x4864C0`, `0x486D60`, `0x486FC0`, `0x4875C0`, `0x487BF0`, whose
   `entries_logic.txt` lines ran past their `ret` over them (section 11). No
   host contains our code as a fall-through.
@@ -352,7 +361,179 @@ RESULT_PARAGRAPH
 
 ## 6. Controls
 
-CONTROLS_SECTION
+Planted in `effect_3d.cpp` one at a time by a script (scratch `controls.py`:
+a unique anchor replaced, rebuild, run under `BOF3X_E3D_ONLY=<filter>`,
+restore, rebuild; never with a commit in between). Counts are rounds refused
+of 4,000 per function run, in this worktree; every refused run exited 3. At
+least one plant a function, several for the larger; each of the eleven
+dispatchers swapped onto another table of at least its length (kind 0x82's,
+the longest, one entry on).
+
+| # | Run (`_ONLY`) | Plant | Refused |
+|--:|---|---|---|
+| 1 | `EffectKind76` | abr 1 | 4000 of 4000 |
+| 2 | `EffectKind76` | a vertex red 1 | 4000 of 4000 |
+| 3 | `EffectKind79` | release at 2 | 1030 of 4000 |
+| 4 | `EffectKind7A` | abr 3 | 4000 of 4000 |
+| 5 | `EffectKind7A` | a corner y 0 | 4000 of 4000 |
+| 6 | `EffectKind7B_Run` | 7C table | 4000 of 4000 |
+| 7 | `EffectKind7B_Start` | shade 0xE | 4000 of 4000 |
+| 8 | `EffectKind7B_Pulse` | > 0x10 | 496 of 4000 |
+| 9 | `EffectKind7C_Run` | 7B table | 4000 of 4000 |
+| 10 | `EffectKind7C_Start` | +1 2 | 4000 of 4000 |
+| 11 | `EffectKind7C_Pulse` | index stays 1 | 1043 of 4000 |
+| 12 | `EffectKind7C_Pulse` | release at 5 | 538 of 4000 |
+| 13 | `EffectKind77_Run` | 7F table | 4000 of 4000 |
+| 14 | `EffectKind77_Count` | 81 table | 4000 of 4000 |
+| 15 | `EffectKind77_Resume` | 7B table | 4000 of 4000 |
+| 16 | `EffectKind77_Begin` | << 14 | 2701 of 4000 |
+| 17 | `EffectKind77_Tick` | pace 0 at 0x1F | 146 of 4000 |
+| 18 | `EffectKind77_Tick` | pace 1 at 0x27 | 147 of 4000 |
+| 19 | `EffectKind77_Tick` | count 0xC9 | 545 of 4000 |
+| 20 | `EffectKind77_Tick` | sound 0x20B | 901 of 4000 |
+| 21 | `EffectKind77_Tick` | pace bit 6 | 1030 of 4000 |
+| 22 | `EffectKind77_End` | step 0x18 | 746 of 4000 |
+| 23 | `EffectKind77_End` | run 6 | 746 of 4000 |
+| 24 | `EffectKind77_End` | flag sense | 2340 of 4000 |
+| 25 | `EffectKind77_Show` | request 3 | 703 of 4000 |
+| 26 | `EffectKind77_DrawCount` | box style 2 | 4000 of 4000 |
+| 27 | `EffectKind77_DrawCount` | text y 0x22 | 4000 of 4000 |
+| 28 | `EffectKind78_Run` | 7D table | 4000 of 4000 |
+| 29 | `EffectKind78_Start` | +9 0x15 | 4000 of 4000 |
+| 30 | `EffectKind78_Start` | +0x30 from x | 4000 of 4000 |
+| 31 | `EffectKind78_Grow` | rx + 0xE | 4000 of 4000 |
+| 32 | `EffectKind78_Grow` | +9 0x3D | 444 of 4000 |
+| 33 | `EffectKind78_Spin` | radii swapped | 4000 of 4000 |
+| 34 | `EffectKind78_End` | turn from +0x30 | 4000 of 4000 |
+| 35 | `EffectKind78_DrawRing` | step 0x81 | 4000 of 4000 |
+| 36 | `EffectKind78_DrawRing` | frame bit 3 | 3746 of 4000 |
+| 37 | `EffectKind78_DrawRing` | link size 0x2B | 4000 of 4000 |
+| 38 | `EffectKind78_DrawRing` | first x not sign-extended | 1460 of 4000 |
+| 39 | `EffectKind7D_Run` | 78 table | 4000 of 4000 |
+| 40 | `EffectKind7D_Start` | +0x2E 6 | 4000 of 4000 |
+| 41 | `EffectKind7D_Input` | wrap at 10 | 114 of 4000 |
+| 42 | `EffectKind7D_Input` | sound 0x203 | 1937 of 4000 |
+| 43 | `EffectKind7D_Input` | cancel +1 | 681 of 4000 |
+| 44 | `EffectKind7D_Input` | answer 2 | 1424 of 4000 |
+| 45 | `EffectKind7D_Input` | wrap to 7 | 220 of 4000 |
+| 46 | `EffectKind7D_Apply` | +1 up two | 4000 of 4000 |
+| 47 | `EffectKind7D_DrawMode` | y 0x101 | 4000 of 4000 |
+| 48 | `EffectKind7D_FillF4` | x3 from x2 | 4000 of 4000 |
+| 49 | `EffectKind7D_FillF4` | size 0x39 | 4000 of 4000 |
+| 50 | `EffectKind7D_FillF3` | size 0x2D | 4000 of 4000 |
+| 51 | `EffectKind7D_FillF3` | y2 from y1 | 4000 of 4000 |
+| 52 | `EffectKind7D_Line` | blue from green | 3980 of 4000 |
+| 53 | `EffectKind7D_Line` | x1 not sign-extended | 2037 of 4000 |
+| 54 | `EffectKind7D_DrawMark` | mark 2 | 1323 of 4000 |
+| 55 | `EffectKind7D_DrawMark` | blue 0xC7 | 680 of 4000 |
+| 56 | `EffectKind7D_DrawMark` | cross y + 9 | 660 of 4000 |
+| 57 | `EffectKind7D_DrawDial` | wrap to 1 | 3425 of 4000 |
+| 58 | `EffectKind7D_DrawDial` | line to 0x46 | 4000 of 4000 |
+| 59 | `EffectKind7D_DrawDial` | mode 3 | 4000 of 4000 |
+| 60 | `EffectKind7D_DrawPanel` | frame bit 5 | 2043 of 4000 |
+| 61 | `EffectKind7D_DrawPanel` | dial 1 from 2 | 3558 of 4000 |
+| 62 | `EffectKind7D_DrawPanel` | arrow x | 2021 of 4000 |
+| 63 | `EffectKind7D_DrawPanel` | right arrow | 2021 of 4000 |
+| 64 | `EffectKind7D_SetMap` | on above 1 | 1295 of 4000 |
+| 65 | `EffectKind7D_SetMap` | flag sense | 4000 of 4000 |
+| 66 | `EffectKind7D_SetMap` | row + 1 | 4000 of 4000 |
+| 67 | `EffectKind7D_SetMap` | / 4 | 2805 of 4000 |
+| 68 | `EffectKind7D_SetMap` | two bytes cleared | 4000 of 4000 |
+| 69 | `EffectKind7D_SetMap` | count 3 | 4000 of 4000 |
+| 70 | `EffectKind7D_SetMap` | turn wrap > 9 (ours aborts) | refused (ours aborts: the `Fatal` of section 2) |
+| 71 | `EffectKind7F_Run` | 77 table | 4000 of 4000 |
+| 72 | `EffectKind7F_Start` | +0x30 0x101 | 3985 of 4000 |
+| 73 | `EffectKind7F_Start` | sound 0x207 | 4000 of 4000 |
+| 74 | `EffectKind7F_Grow` | +0x41 | 4000 of 4000 |
+| 75 | `EffectKind7F_DrawCone` | >> 3 | 4000 of 4000 |
+| 76 | `EffectKind7F_DrawCone` | << 3 | 4000 of 4000 |
+| 77 | `EffectKind7F_DrawCone` | grey 0x81 | 4000 of 4000 |
+| 78 | `EffectKind7F_DrawCone` | dy 1 | 4000 of 4000 |
+| 79 | `EffectKind7F_DrawCone` | x written for the outer too (near-equivalent) | 53 of 4000 |
+| 80 | `EffectKind7F_DrawCone` | link z from height | 4000 of 4000 |
+| 81 | `EffectKind80_Run` | 82 table | 4000 of 4000 |
+| 82 | `EffectKind80_Start` | z 0x250001 | 3853 of 4000 |
+| 83 | `EffectKind80_Start` | size 0x61 | 4000 of 4000 |
+| 84 | `EffectKind80_Start` | 31 steps | 4000 of 4000 |
+| 85 | `EffectKind80_Rise` | end at 0x16 | 1487 of 4000 |
+| 86 | `EffectKind80_Rise` | sound at 1 | 1030 of 4000 |
+| 87 | `EffectKind80_Hold` | +9 0x11 | 427 of 4000 |
+| 88 | `EffectKind80_Fade` | - 5 | 4000 of 4000 |
+| 89 | `EffectKind80_TrailStep` | none 0x1001 | 4000 of 4000 |
+| 90 | `EffectKind80_TrailStep` | none left 1 | 974 of 4000 (after the projection re-listing; 0 before it) |
+| 91 | `EffectKind80_TrailStep` | search from c + 2 | 4000 of 4000 |
+| 92 | `EffectKind80_TrailStep` | x, y swapped | 4000 of 4000 |
+| 93 | `EffectKind80_TrailStep` | size second word 0 | 4000 of 4000 |
+| 94 | `EffectKind80_TrailStep` | half width from out[1] | 4000 of 4000 |
+| 95 | `EffectKind80_TrailStep` | last angle | 2531 of 4000 |
+| 96 | `EffectKind80_TrailStep` | integer difference | 4000 of 4000 |
+| 97 | `EffectKind80_DrawTrail` | shade - 3 | 4000 of 4000 |
+| 98 | `EffectKind80_DrawTrail` | or | 3987 of 4000 |
+| 99 | `EffectKind80_DrawTrail` | copy from - 0x40 | 4000 of 4000 |
+| 100 | `EffectKind80_DrawTrail` | end cap angle | 4000 of 4000 |
+| 101 | `EffectKind80_DrawTrail` | depth from b | 4000 of 4000 |
+| 102 | `EffectKind80_DrawTrail` | NaN not equal | 244 of 4000 |
+| 103 | `EffectKind80_DrawTrail` | depth copied by mov (sNaN kept) | 136 of 4000 |
+| 104 | `EffectKind80_DrawTrail` | second rim +0x400 | 4000 of 4000 |
+| 105 | `EffectKind81_Run` | 77 steps table | 4000 of 4000 |
+| 106 | `EffectKind81_Start` | height from z | 3983 of 4000 |
+| 107 | `EffectKind81_Pour` | at 0xD | 673 of 4000 |
+| 108 | `EffectKind81_Drain` | != 1 | 1345 of 4000 |
+| 109 | `EffectKind81_ClearDrops` | byte 3 | 4000 of 4000 |
+| 110 | `EffectKind81_MoveDrops` | speed + 0x20001 | 3026 of 4000 |
+| 111 | `EffectKind81_MoveDrops` | blink ^ 2 | 3026 of 4000 |
+| 112 | `EffectKind81_MoveDrops` | +1 1 | 3026 of 4000 |
+| 113 | `EffectKind81_MoveDrops` | count from 1 | 4000 of 4000 |
+| 114 | `EffectKind81_DrawDrop` | life not blink | 25 of 4000 |
+| 115 | `EffectKind81_DrawDrop` | w 2.0 | 3990 of 4000 |
+| 116 | `EffectKind81_DrawDrop` | blue 9 | 3990 of 4000 |
+| 117 | `EffectKind81_DrawDrop` | link 0x15 | 3990 of 4000 |
+| 118 | `EffectKind81_DrawDrop` | next constant | 3990 of 4000 |
+| 119 | `EffectKind81_PlaceSources` | +1 1 | 4000 of 4000 |
+| 120 | `EffectKind81_PlaceSources` | - 0x11 | 4000 of 4000 |
+| 121 | `EffectKind81_PlaceSources` | z from x | 4000 of 4000 |
+| 122 | `EffectKind81_PlaceSources` | ground not sign-extended | **not refused** (exit 0) |
+| 123 | `EffectKind81_Emit` | life + 0x21 | 2519 of 4000 |
+| 124 | `EffectKind81_Emit` | << 7 | 2519 of 4000 |
+| 125 | `EffectKind81_Emit` | speed 1 | 2519 of 4000 |
+| 126 | `EffectKind81_Emit` | three drops | 3994 of 4000 |
+| 127 | `EffectKind81_Emit` | wait & 3 | 3720 of 4000 |
+| 128 | `EffectKind81_Emit` | al 2 | 4000 of 4000 |
+| 129 | `EffectKind81_FindFreeDrop` | byte 1 | 3447 of 4000 |
+| 130 | `EffectKind82_Run` | one entry on | 4000 of 4000 |
+| 131 | `EffectKind82_Start` | +2 1 | 4000 of 4000 |
+| 132 | `EffectKind82_Wait` | 3 to 7 | 498 of 4000 |
+| 133 | `EffectKind82_Wait` | 5 to 3 | 418 of 4000 |
+| 134 | `EffectKind82_Wait` | 0x81 | 1092 of 4000 |
+| 135 | `EffectKind82_Wait` | 0x15 | 978 of 4000 |
+| 136 | `EffectKind82_Wait` | > | 257 of 4000 |
+| 137 | `EffectKind82_Wait` | release at 6 (the first reading) | 912 of 4000 |
+| 138 | `EffectKind82_Push2` | +1 4 | 4000 of 4000 |
+| 139 | `EffectKind82_Push4` | + 0x4001 | 4000 of 4000 |
+| 140 | `EffectKind82_Push6` | Sprite_Current not put back | 4000 of 4000 |
+| 141 | `EffectKind82_Push8` | +1 8 | 4000 of 4000 |
+| 142 | `EffectKind82_Push10` | +1 0xC | 4000 of 4000 |
+| 143 | `EffectKind82_Check3` | +1 5 | 1719 of 4000 |
+| 144 | `EffectKind82_Check5` | 0xE | 2281 of 4000 |
+| 145 | `EffectKind82_Check7` | +9 1 | 2281 of 4000 |
+| 146 | `EffectKind82_Check9` | +1 0xB | 1719 of 4000 |
+| 147 | `EffectKind82_Check9` | Field_State member 1 | 4000 of 4000 |
+| 148 | `EffectKind81_PlaceSources` | ground << 15 (near variant of 122) | 4000 of 4000 |
+
+**Not refused, and why**: control 122 (`_PlaceSources` storing the ground's
+height without the sign extension) is an **equivalent mutant**: the original
+`movsx eax, ax; shl eax, 0x10` and `shl` alone give the same 32 bits - the
+shift drops the bits the extension sets. Its near variant (148, a shift of 15)
+is refused in 4,000 rounds. Control 90 (`_TrailStep` filling a trail with no
+direction at all with 1 instead of 0) was not refused on the first run: no
+round made all 31 directions "none". The fuzz's fault (the round-twelve
+lesson): the projection stand-in now gives the point before's projection
+exactly when the two world points are the same, as the real projection does,
+and a quarter of `_TrailStep`'s rounds start with every point at the record's;
+refused in 974 rounds after. Control 70 is refused by ours' own abort (a dial
+turn of 9 left unreduced), which shows that check fires. Control 79 (the cone
+writing x for the outer rim too) looks equivalent and is refused in 53 rounds:
+the disturbance moves the point between the two projections.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
@@ -385,7 +566,7 @@ CONTROLS_SECTION
   it was not looked at.
 - **Kind 0x78 restores record 2's turn only in `_End`**: a record released
   early (by `Effect_Release` from outside) leaves record 2 turned.
-- **The thirteen dispatchers do not bound their state bytes.** Every writer of
+- **The eleven dispatchers do not bound their state bytes.** Every writer of
   `+1` / `+2` in the band steps inside its table (kind 0x82's 0x16 / 0x17 are
   inside its 24); ours aborts past any of them.
 
@@ -452,5 +633,5 @@ lines - the read extents of the 68 less the 13 already listed right, six of
 them correcting host lines left in place that ran past their `ret` over the
 next starts: `00486310 1A5` (the code is 0x43), `004864C0 2DE` (0x173),
 `00486D60 25F` (0x1A6), `00486FC0 41C` (0x2A1), `004875C0 35F` (0x2D0),
-`00487BF0 143F` (0x1A). E3C's `00485960 9AE` spans thirteen of ours too; that
+`00487BF0 143F` (0x1A). E3C's `00485960 9AE` spans sixteen of ours too; that
 line is E3C's to fix.
