@@ -254,6 +254,24 @@ U FxLink(const U* a, U answer) {
     return answer;
 }
 
+// Effect_FindFree as the effect-mode row (scenario_harness.cpp FxFindFree: none
+// a quarter of the time, else a free record from a start the answer picks), but
+// never Sprite_Current's own: in the game the running record is in use, and the
+// disturbance can leave Sprite_Current on a free one, whose spawn would then
+// overwrite the place word sub-kind 0x14's spawn reads again after it
+// (docs/effect_5d.md section 4).
+U FxFindFree(const U*, U answer) {
+    const U high = answer & 0xFFFFFF00u;
+    if ((answer >> 8) % 4 == 0) return high | 0xFF;
+    const unsigned from = (answer >> 12) % at::kEffectCount;
+    for (unsigned i = 0; i < at::kEffectCount; ++i) {
+        const unsigned k = (from + i) % at::kEffectCount;
+        unsigned char* const e = sh::EffectRecord(k);
+        if (e[0] == 0 && e != Sprite_Current) return high | k;
+    }
+    return high | 0xFF;
+}
+
 #define E5D_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage, kPh = sh::Answer::kPhase, kB = sh::Answer::kBool;
 constexpr U kW = 0xFFFFFFFFu, k8 = 0xFFu;
@@ -281,6 +299,7 @@ const sh::Callee kCallees[] = {
     {E5D_OURS(Gte_SetRotMatrix), 1, {0}, kG, 0, 0, {18}, nullptr, nullptr, true},
     // louder: the cursor the draws read again after it; dy's byte
     {E5D_OURS(MapView_LinkPrimAt), 4, {kW, kW, k8, k8}, kG, 0, 0, {}, &FxLink, nullptr, true},
+    {E5D_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxFindFree, nullptr, true},
 };
 #undef E5D_OURS
 
@@ -337,8 +356,9 @@ void Seed(unsigned k) {
     // the frame count at the compares' boundaries
     s[9] = SafeCount(PickOf(0, 1, 5, 7, 9, 0xF, 0x10, 0x18, 0x19, 0x1C, 0x1D, 0x1E, 0x1F, 0x6C, 0x6D, 0x7F, 0x80, 0xFF, sh::Next()));
     if (k == k17Close) s[9] = static_cast<unsigned char>(PickOf(0, 5, 10, 15, 19, 20, 21, 25, 1, sh::Next() % 40));
-    // the sub-state compared (sub-kinds 0x19 and 0x22 test it against 0 and 2)
-    s[2] = static_cast<unsigned char>(PickOf(0, 2, 1, 3, 4, sh::Next()));
+    // the sub-state compared (sub-kind 0x19 tests it against 0, 0x22's map and
+    // draw against 2); a dispatcher's is the harness's, below its table's length
+    if (k == k19Run || k == k22SetMap || k == k22Draw) s[2] = static_cast<unsigned char>(PickOf(0, 2, 1, 3, 4, sh::Next()));
     Draw_PassFlags = static_cast<unsigned char>(sh::Half() ? (Draw_PassFlags | 4) : (Draw_PassFlags & ~4u));
     Field_Request = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     Mem(at::kCounter)[0] = static_cast<unsigned char>(PickOf(0xE, 0x1C, 0xD, 0xF, 0x1B, sh::Next()));
