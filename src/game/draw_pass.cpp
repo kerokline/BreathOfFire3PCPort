@@ -9,6 +9,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 namespace {
@@ -275,6 +276,8 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
         if (Draw_PassFlags & 0x10) {
             const unsigned long first = FrameNode(layer)[0];
             if (first != 0) {
+                if (draw_order::g_on)
+                    draw_order::TagList(first, FrameNode(layer)[1], draw_order::kFrameNode, layer, Draw_OtSlot);
                 Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], first);
                 Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
             }
@@ -297,6 +300,9 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                         return static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(
                             draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u));
                     };
+                    if (draw_order::g_on)
+                        draw_order::TagOne(at(), draw_order::kTable, layer, Draw_OtSlot, DrawTable[item] >> 16,
+                                           DrawTable[item] & 0xFFFu);
                     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at());
                     Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at()));
                     count = Sprite_DrawListCount;
@@ -352,11 +358,17 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                 if (record[1] & 0x80000000u) {
                     if (flags & 2) {
                         Sprite_Current = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[0]));
+                        if (draw_order::g_on)
+                            draw_order::Set(draw_order::kSprite, layer, Key(Sprite_Current),
+                                            static_cast<unsigned>(record[0]));
                         g_draw();
+                        if (draw_order::g_on) draw_order::Clear();
                     }
                 } else if (flags & 8) {
                     unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
                     const unsigned long prim = record[0];
+                    if (draw_order::g_on)
+                        draw_order::TagOne(prim, draw_order::kRecord, layer, owner[0x29], static_cast<unsigned>(record[2]), 0);
                     Sprite_Current = owner;
                     Gpu_LinkPrim(Gfx_OtPointers[owner[0x29]], prim);
                     Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(record[0]));

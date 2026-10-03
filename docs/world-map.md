@@ -289,6 +289,19 @@ are in the session scratch `fixwave/ws/` (`walk.png`, `node.png`,
 
 ### 8.2 The mechanism (case a)
 
+**Superseded in part by [`sprite-draw-order.md`](sprite-draw-order.md) §18
+(2026-10-03, the owner's decision to fix it).** That section has the full
+order for both the world map and the field:
+- the terrain's own lists from `MapView_Build`, list 1 after the sprites;
+- the slot order, 7 drawn first;
+- `Draw_OtSlot` 6 on both;
+- the hypotheses H1..H5;
+- the instrument `BOF3X_DRAWORDER` that replaces the "temporary log" asked
+  for below, and the live commands for this node and for the field's foot.
+
+One correction to the text below: `WorldMap_PinSprite` belongs to the place
+plate's states, not the party.
+
 This is read from the code already taken over
 ([`sprite-draw-order.md`](sprite-draw-order.md) §2, §15 and §16). It has not
 been measured.

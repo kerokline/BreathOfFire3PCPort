@@ -9,6 +9,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/d3d_list_callees.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 namespace d3d_list {
@@ -133,6 +134,7 @@ using namespace d3d_list;
 // argument).
 void Gfx_DrawOTag(unsigned long* ot) {
     if (At(kDrawEnable)[0] == 0) return;
+    if (draw_order::g_on) draw_order::LogWalk(ot);   // BOF3X_DRAWORDER, diagnostic only: reads the table, draws nothing
     if (Word(kAfterDrawFlag) != 0) {
         // Whether D3d_AfterDraw's request ever fires is unmeasured (display-setup.md section 7): say so once.
         static bool seen;

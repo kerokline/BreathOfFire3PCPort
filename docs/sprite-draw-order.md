@@ -1184,3 +1184,241 @@ not follow these two. The reference pair `clutref_a` / `clutref_b` still
 agree with each other; they predate DIV-0022's clock, which is a candidate
 cause, not a tested one. [`asset-loading-path.md`](asset-loading-path.md)
 §2 already has rows 482 and 483 moving with run speed.
+
+## 18. Angled tiles over sprites: one shared path, its hypotheses, and an instrument (fix wave WS, 2026-10-03)
+
+**The question.** The owner sees angled tiles layered wrongly over sprites
+in two places: the world map's party sprite, whose shadow is cut
+([`world-map.md`](world-map.md) §8), and the field, where the floor covers
+Ryu's left foot (section 11). The owner, 2026-10-03: *"There's definitely
+something in the angles of tiles being layered wrongly, both on the world map
+and regular maps, and I do think we should fix it even if it diverges from
+original, but I would like to narrow down if it's a shared path issue or
+something unique to each type of issue."*
+
+A fix is wanted. It would be an Intent divergence, ledgered when it is
+built. This section only answers the question and builds the measurement.
+No behaviour changes here.
+
+**The answer from the code: one path, shared end to end.** The world map is
+an area like any other: `WORLD00/AREA033` and the rest, run by the field
+task's `GameMode_Field`. Nothing in its own code draws ground or the party.
+Every function below is ours, faithful and fuzzed. The comparison is by
+reading, 2026-10-03.
+
+| Step | Function | World map | Field |
+|---|---|---|---|
+| Camera, scroll, rebuild | `AreaMap_Frame` `0x56E6C0` | the same | the same |
+| Terrain: a quad per cell from four corner heights; side triangles where a neighbour stands lower; which list each goes to | `MapView_Build` `0x56EC00`, `MapView_CellTextures` `0x56F9B0` ([`map-layers.md`](map-layers.md) §1) | the same | the same |
+| The draw key of a sprite: its layer and order | `Sprite_UpdateScreen` `0x588F20` | the same | the same |
+| Per layer: list 0, the view row's cell records | `DrawLayer_Open` `0x56FD20` → `MapCell_Handlers` (`MapCell_DrawQuads`, `MapCell_DrawWalls`, `MapCell_DrawRising`, ...) | the same, with the area's own records | the same |
+| Sprites merged with the draw table by key | `Sprite_DrawPass` `0x593060` | the same | the same |
+| The sprite's one primitive (code `0x84`) | `Sprite_Draw` `0x5935B0` → `Gfx_CommitPrim(+0x29)` | the same | the same |
+| Per layer: list 1, after the layer's sprites | `DrawLayer_Close` `0x56FE80` | the same | the same |
+| The eight slots joined, then walked and drawn | `Gfx_LinkOTags` `0x4FD290`, `Gfx_DrawOTag` `0x59EE50` → the Direct3D handlers | the same | the same |
+
+**Where they part.** Only in what they draw on top:
+- the dial, legend and needle (`WorldMap_DrawFrame`, `WorldMap_DrawSprite`,
+  `WorldMap_DrawNeedle`, all slot 1, after everything);
+- the place plates (effect kind 0). `WorldMap_PinSprite` is one of the
+  plate's state handlers (callers `0x404030` / `0x404080`,
+  `WorldMap33_PlateGrow` / `_PlateHold`). It is not the party: the party is
+  the field's kind-2 object, drawn as above;
+- the drift layer `0x4048E0`;
+- the data: the area's corner heights, tile texture words, cell records and
+  `MapView_HeightScale`.
+
+So if the two looks have different causes, the difference lies in the data
+fed to this shared code (which list a tile word picks, how tall a nearer
+cell's quad stands), not in a code path of the world map's own. The one
+world-map-only thing that could touch the party is the drift layer.
+**H4**, below, is the test for it.
+
+**Draw order, as the code builds it.** Three facts settle the order.
+1. **Which slot is drawn first.** `Gfx_DrawOTag` is handed the environment's
+   `+0x8C`, entry 7 of the eight heads `Gpu_ClearOTagR` cleared in reverse
+   (`Game_Init` `0x4FD110`, `0x4FD200`). The walk therefore draws slot 7
+   first and slot 0 last. A higher slot is further back.
+2. **What `Draw_OtSlot` is.** It is 6 for the field and, by the same code,
+   the world map. The immediate stores (raw `C6 05 19 BF 92 00`) are:
+   - 6 in `GameMode_Start` (`0x49584D`), `Boot_Task` (`0x496C44`) and
+     `0x49616F`;
+   - 4 at `0x495F79`, in the mode-1 step `0x495EC0` that first calls
+     `Encounter_PartyTurn` (with `Draw_SortOnX` from bit 0 of `0x904AAC`), and
+     in three scena handlers. By their place, 4 is the battle's.
+
+   The instrument's slot column will confirm it live.
+3. **What lands where in slot 6.** Everything lands in one slot in emission
+   order, layer by layer (j = 0..0x36, far to near). Within a layer:
+   1. list 0 of layer j: terrain items whose cell word has bit 15 clear and
+      bit 14 clear, cells with bits 15 and 14 set from layer j + 1, and side
+      triangles with cell-word bit 13 / 12 set;
+   2. view row `MapView_Row + j + 1`'s cell records. Each `MapCell_DrawQuads`
+      quad goes to slot 6 unless its texture word has bit 14 set: then it
+      goes to **slot 4** (drawn after all of slot 6), or to slot 7 (before
+      all) when bit 30 is also set;
+   3. the frame-node list (`MapView_LinkPrimAt`'s per-row primitives);
+   4. the draw table's items (terrain with cell-word bit 14 set and bit 15
+      clear) merged with the layer's sprites by the 16-bit key, the table
+      first on a tie;
+   5. list 1 (terrain with bit 15 set and bit 14 clear, and side triangles
+      without their bit), **after** the layer's sprites.
+
+   A sprite whose `+0x24` has bit 4 is given slot 4 instead
+   (`Field_UpdateObjects`), and so draws over all of slot 6.
+
+   There is no depth test anywhere: our backend aborts on one
+   (`render_shim.cpp`, `kRsZEnable`), and Capcom's DirectDraw picture is
+   pixel-identical ([`world-map.md`](world-map.md) §8.1). Order is
+   everything.
+
+**The sprite's layer.** `Sprite_UpdateScreen` computes the layer as the sum
+of the map cell words `+0x36` and `+0x3A`, less the two words of
+`MapView_Origin`, plus 2, plus `Sprite_KeyAdjust[+0x2B * 3 + whole x + whole
+z]`, less one for each whole coordinate. In effect, the diagonal row it
+stands on, with a per-class adjustment and one row later for each coordinate
+that is between cells. Under slot 6 the low byte is
+`((+0x3E ^ 0xF01F) >> 5) & 0xFF`, the height. It is the PSX's
+`FUN_8014D184` term for term.
+
+**What makes a tile "angled".** There are four kinds of primitive in the
+path whose screen extent reaches above the row they belong to:
+- a terrain quad on a slope (corner heights differ);
+- a side triangle (the step down to a lower neighbour);
+- `MapCell_DrawWalls`' 128-high walls;
+- `MapCell_DrawQuads`' free quads (hedges, fences, roofs: whatever the
+  area's records hold).
+
+Flat terrain of a nearer row stays below the sprite's feet on screen. A
+tilted or vertical piece of a nearer row, or of the sprite's own row drawn
+after it, reaches up over the feet and the shadow.
+
+**The floor over Ryu's foot (section 11) is the same path.** The field of
+`field_view.txt` (the `adult_ryu` save) goes through every row of the table
+above. Its `field2` (`analysis/shots/sprite_field_ours/field2.png`) shows
+the shadow's right side ending on a straight diagonal: a terrain edge, as on
+the world map. *Which* branch of the order puts that piece after the sprite
+cannot be read off a picture. That is what the instrument is for.
+
+### 18.1 The hypotheses
+
+| | Claim | The code says | The log confirms it when the piece over the feet is | It is killed when |
+|---|---|---|---|---|
+| **H1** | Painter's order by diagonal row, shared: a tilted or tall piece of a **nearer layer** is drawn after the sprite and covers what lies below its feet | Every layer after the sprite's is emitted after it (the table above), and the sprite's layer is one diagonal row | `list0`, `cell` or `table` with **layer > the sprite's layer**, slot 6, after the sprite | Every covering piece is of the sprite's own layer or in slot 4 |
+| **H5** | **List 1 of the sprite's own layer**: terrain or a side triangle the area's tile word sends after the layer's sprites | `MapView_Build`'s "1 / 0" row and the side triangles without bit 13 / 12 | `list1 layer L` with L the sprite's layer; the item's view cell, map cell and word are in the line | No `list1` piece overlaps the feet |
+| **H2** | **Slot 4 by texture word**: a cell quad with bit 14 set and bit 30 clear is drawn over all of slot 6, whatever its row | `MapCell_DrawQuads`' slot choice | `cell ... slot 4 ... bit14 1 bit30 0` | No slot-4 piece overlaps the feet |
+| **H3** | **The sprite's key is a row early**, from the cell sum and `Sprite_KeyAdjust` at a whole coordinate, so its own cell's nearer neighbour counts as "nearer" | `Sprite_UpdateScreen`'s layer: a whole x or z is one row earlier than a fraction | The sprite's `layer` is below the covering terrain's, the covering terrain is the cell under the feet (map x, y in the line against the leader's cell), and frames of a walk alternate cut / whole as the fraction changes | The covering piece is truly a row nearer than the feet's cell |
+| **H4** | **World-map only**: the drift layer or another overlay draw | `WorldMap33_DrawDrift` `0x4048E0` commits primitives of its own | The covering piece is `commit from 0x40xxxx` (a world-map overlay address) | The covering piece is terrain or a cell record |
+
+**Ranked, before any measurement.**
+1. **H1.** It explains the map dependence and the PlayStation's agreement
+   ([`world-map.md`](world-map.md) §8.1: same cut at the same node).
+2. **H5 and H3.** H3 is the one that would make a whole-cell sprite lose its
+   shadow on flat ground beside a slope; H5 is the field's foot.
+3. **H2.** It is possible only where an area's records carry bit 14.
+4. **H4.** Nothing in the drift layer's reading touches the party.
+
+H1 and H3 interact: the fix for either is the same lever, the sprite's
+layer against the nearer rows. That makes them the ones to tell apart first.
+
+### 18.2 The instrument: `BOF3X_DRAWORDER`
+
+`src/hook/draw_order.cpp` (`draw_order.h` has the contract). It is tooling
+like the call tracer: off unless set, no behaviour change, no ledger entry.
+
+    BOF3X_DRAWORDER=F0-F1:X0,Y0,X1,Y1
+
+- **The window.** F0..F1 are **recipe frames** while a recipe plays (the
+  count `shot` lines use; `bof3::InputScript_Frame()`, new), else
+  `Frame_Counter`.
+- **The rectangle.** X0..Y1 is in the primitives' own 320 x 240
+  coordinates. Run with `BOF3X_WIDE=0`; under the wide picture the shift is
+  applied later and the numbers move.
+- **What it logs.** For each rendered frame in the window, the walk of the
+  ordering table writes to `bof3x.log`, in draw order, every primitive whose
+  box overlaps the rectangle. Each line gives:
+  - its place in the walk and its slot;
+  - its GPU code and box. Boxes are computed for `POLY_FT4`, `POLY_G4`,
+    `POLY_GT4`, lines, `TILE`, `SPRT`s and the cell sprite `0x84`, whose box
+    comes from its cells as `D3d_BuildCellTexture` grows it. Other codes are
+    counted, not boxed;
+  - **who put it there**:
+    - `cell`: the layer, view row and column, the handler byte, b1 / b0, and
+      the texture word with bits 14 and 30;
+    - `sprite`: the layer, the key and the object;
+    - `list0` / `list1` / `framenode`: the layer, the draw item, its half,
+      and the view cell (map x, y and cell word) that names it, or "a side
+      triangle?" when no cell does;
+    - `table`: the layer, the key and the item;
+    - `record`: the object;
+    - `commit from`: the caller's return address, for everything else.
+
+  Then a count line for the frame.
+- **The hooks.** Each is one test of a byte that is never set unless the
+  variable is:
+  - `Gfx_CommitPrim`, `DrawLayer_Open` (list 0, and the context around each
+    cell handler), `DrawLayer_Close` (list 1);
+  - `Sprite_DrawPass` (the frame-node list, table items, the context around
+    `Sprite_Draw`, linked records);
+  - `MapCell_DrawQuads` (its texture word);
+  - `Gfx_DrawOTag` (the walk, read before the draw, which it does not
+    touch).
+
+  Tags go into a 32,768-entry table of its own, stamped by frame and reused
+  after four. Tagging runs only from two frames before the window to its
+  end.
+- **Arming and limits.** It arms after `InjectAll`, so no self-test sees it.
+  It reads our walk and our hooks: under `BOF3X_ORIGINAL='*'` it logs
+  nothing. That costs nothing here, since ours and Capcom's are
+  pixel-identical over these frames.
+- **Checked headless, 2026-10-03:**
+  - `BOF3X_SHADOW=draw_emit,draw_pass,map_cells,d3d_draw`: 0 mismatches;
+  - `BOF3X_SHADOW='*'`, narrow and wide: see the fix-wave report.
+
+  Not run live: this wave is headless.
+
+### 18.3 The live-check plan
+
+Both cases run on ours, narrow, from the coordinator's checkout, each a
+plain `input_run.py` with two variables. The log is the launcher's
+`bof3x.log`; keep a copy beside the shots.
+
+**World map: the Cedar Woods node.** Use `worldmap_sliver.txt`, whose shot
+`wm` is at recipe frame 1260. The party's feet are at about (150..172,
+118..128) in game coordinates (640 x 480: x 300..345, y 236..256).
+
+    python tools/input_run.py tools/recipes/worldmap_sliver.txt --out analysis/shots/ws_draworder_wm --no-front --env BOF3X_WIDE=0 --env BOF3X_DRAWORDER=1258-1260:145,110,178,132
+
+**Field: the floor over Ryu's foot.** Use `field_view.txt` (`# save
+adult_ryu`), whose shot `field2` was at recipe frame 1280 in every
+frozen-shot run (`analysis/attract/ab19_field_*.runlog`). The feet are at
+about (147..172, 112..128) (640 x 480: x 295..345, y 225..255,
+`sprite_field_ours/field2.png`).
+
+    python tools/input_run.py tools/recipes/field_view.txt --out analysis/shots/ws_draworder_field --no-front --env BOF3X_WIDE=0 --env BOF3X_DRAWORDER=1278-1280:142,108,178,132
+
+The window's frames ±1 cover the freeze. If the log's `shot field2 recipe
+frame` line says another number, move the window to it.
+
+**Reading the log.**
+1. Find the `sprite` line: the party's layer L and its place in the walk.
+2. Every line after it whose box overlaps the shadow's lower half (y 124..130
+   on the map) is a candidate cover.
+3. Classify each by the hypothesis table:
+   - **H1**: layer > L, slot 6;
+   - **H5**: `list1 layer L`;
+   - **H2**: slot 4 with bit 14;
+   - **H3**: the cover is the cell under the feet;
+   - **H4**: `commit from 0x40....`.
+
+**The same cause on both maps** is the owner's "shared path issue": the
+same class of line on both, and then one fix, in the shared order, for
+both. **Different classes** means two causes in the one path: for example
+H1 on the map and H5 in the field. Each fix is then a separate lever,
+ledgered separately.
+
+**The owner's own scenes.** If neither of these two pictures shows the
+owner's worst case, the owner records a route that ends standing on the spot
+(`BOF3X_RECORD`, [`input-script.md`](input-script.md)) and adds a `shot`
+line with `tools/recipe_shots.py`. The same command then takes that recipe,
+its shot frame ±2 and the rectangle round the feet.
