@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // E3C's EffectDebris_Draw below reads bof3::addr::<Name> (group E3C, 2026-10-03): the same value
+
 namespace effect_2e::at {
 
 // Callees in no group of the cut (catalog parts 6 and 7, read 2026-09-29 for
@@ -34,7 +36,7 @@ constexpr std::uint32_t kMatrixVector = 0x5A7C70; // library layer: (matrix, in,
                                                   // (18 bytes read), 6 bytes written; in and out may be one
 // Callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called by address until the coordinator rebinds them.
-constexpr std::uint32_t kDebrisDraw = 0x485030;   // E3C's (unsigned char *debris): a G3 of a 0x2C-byte debris record
+constexpr std::uint32_t kDebrisDraw = bof3::addr::EffectDebris_Draw;   // 0x485030, E3C's (unsigned char *debris): a G3 of a 0x2C-byte debris record
                                                   // (its point +0, edges +0x10 / +0x18 turned by +0x24, scaled by
                                                   // +0x28, shaded +0x2A); Gfx_CommitPrim(1, 0x34)
 constexpr std::uint32_t kDiscDraw = 0x47B7D0;     // E2F's (radius, centre, rim): a fan of 32 G3 triangles round the

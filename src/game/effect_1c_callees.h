@@ -22,10 +22,10 @@ constexpr std::uint32_t kShardTile = bof3::addr::EffectSpecks_Draw;    // 0x471E
                                                   // point (+4..+0xF, EffectGte_ProjectPoint), linked at its x, z
 constexpr std::uint32_t kShardTile2 = 0x46E190;   // nobody's this round (catalog part 6, PSX twin 0x801F752C): the same
                                                   // TILE_1 committed by Gfx_CommitPrim(1, 0x14) instead of linked
-constexpr std::uint32_t kDebrisDraw = 0x485030;   // E3C's (unsigned char *debris): a G3 of the 0x2C-byte debris record,
+constexpr std::uint32_t kDebrisDraw = bof3::addr::EffectDebris_Draw;   // 0x485030, E3C's (unsigned char *debris): a G3 of the 0x2C-byte debris record,
                                                   // its point +0, two edges +0x10 / +0x18 turned by +0x24 and scaled by
                                                   // +0x28, the shade +0x2A clamped to a byte; Gfx_CommitPrim(1, 0x34)
-constexpr std::uint32_t kDebrisInit = 0x4851E0;   // E3C's (unsigned char *debris): EffectKind1E_DebrisInitOne with the
+constexpr std::uint32_t kDebrisInit = bof3::addr::EffectDebris_InitOne;   // 0x4851E0, E3C's (unsigned char *debris): EffectKind1E_DebrisInitOne with the
                                                   // edges' angle 0x20 and the scale 8 + Rand % 8 (0x2C bytes written)
 constexpr std::uint32_t kCone = 0x493090;         // E4F's (const long *point, w, h, angle - three s16 -, shade byte,
                                                   // flag byte): G3 triangles round the point's screen position, sized

@@ -255,6 +255,7 @@
 #include "game/effect_2a.h"
 #include "game/effect_3b.h"
 #include "game/effect_3d.h"
+#include "game/effect_3c.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1008,6 +1009,14 @@ void InjectAll() {
                                 // re-aims the immediate at 0x486EBD inside EffectKind7D_SetMap (DIV-0062), after
                                 // every self-test; no other module patches bytes inside its 68
     Widescreen_ArmFills();      // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
+    Effect3C_Inject();          // round 13 group E3C (0x484050..0x485CA0: effect kinds 0x6D, 0x6E, 0x6F, 0x72..0x75,
+                                // their dispatchers, states and draws, and the debris draw and set-up kinds 0x1E,
+                                // 0x1F and 0x4B share): its clones' calls re-aimed at the scenario harness's
+                                // recorders, its nine state tables swapped for the fuzz only; after
+                                // ScenarioHarnessEkh_Inject, whose self-test copies 0x4857C0, and Effect1C_Inject /
+                                // Effect2E_Inject, which call 0x485030 and 0x4851E0 by address; no module patches
+                                // bytes inside its 51 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
