@@ -4724,3 +4724,31 @@ in each; none is known to show.
 **Status:** latent, harmless by reading; `Field_FloorHurt`, the BMAGIC loops
 and `AreaMap_ClearCell`'s walk abort in ours where the original would read
 on.
+
+## D-TBD-WS — The world map's nearer cells paint over the party's shadow (the original's, PlayStation too; a proposal, not fixed)
+
+**Seen:** the owner, 2026-09-30, in play on the world map. The party sprite's
+shadow ellipse ends at a straight or diagonal edge
+(`analysis/shots/owner_catalogue/worldmap_shadow_1..3.png`). On open ground,
+in their PlayStation screenshot of the Lost Shore, it is whole. **Configuration:
+Capcom's.** The sprite's box is pixel-identical between ours and
+`BOF3X_ORIGINAL='*'`, including under Capcom's DirectDraw device
+(`worldmap_orig`), and the same with the wide picture.
+
+**Established** ([`world-map.md`](world-map.md) §8): the cut moves with the
+ground, not with the sprite. It is whole on open ground and cut along hedge,
+slope and fence edges. The sibling's renders of the PlayStation code show the
+same thing: whole in some places and cut in others, and cut at the same node,
+Cedar Woods (`AREA033_f141611`), as the PC's `f01260`. By reading:
+- `Sprite_DrawPass` emits each layer's map-cell row (`DrawLayer_Open`) before
+  that layer's sprites, so the rows nearer the camera are drawn after the party;
+- their quads paint over whatever of the shadow lies below the feet, and
+  sometimes a foot (the field's "floor over Ryu's foot",
+  [`sprite-draw-order.md`](sprite-draw-order.md) §11).
+
+The slots involved are not measured.
+
+**Status:** the original design's painter's order, not a port defect. Kept.
+A world-map-only fix (draw the shadow after the cells in front) is proposed to
+the owner in `world-map.md` §8.3. It would be an Intent divergence, with the
+number this wave reserved for it.
