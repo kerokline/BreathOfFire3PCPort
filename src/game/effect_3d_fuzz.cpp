@@ -214,13 +214,15 @@ void FillFraction(unsigned char* at) {
 }
 // EffectGte_ProjectPoint(in, out): out the screen x, y, depth - three floats
 // with fractions; where out is a trail point's (+0x10 of points 1..31 at
-// 0x92BF80), a third of the time the point before's projection exactly, so
-// the trail's "no direction" (0x1000) and its fill run.
+// 0x92BF80), the point before's projection exactly when the two world points
+// are the same (as the real projection gives) and else a third of the time,
+// so the trail's "no direction" (0x1000) and its fills run.
 U FxProjectPoint(const U* a, U answer) {
     if (!Writable(a[1], 12)) return answer;
     const U trail = at::kTrail + 0x10;
     if (a[1] >= trail + at::kTrailStride && a[1] < trail + at::kTrailStride * at::kTrailPoints &&
-        (a[1] - trail) % at::kTrailStride == 0 && sh::Noise() % 3 == 0) {
+        (a[1] - trail) % at::kTrailStride == 0 && a[0] == a[1] - 0x10 &&
+        (std::memcmp(P(a[0]), P(a[0] - at::kTrailStride), 12) == 0 || sh::Noise() % 3 == 0)) {
         std::memcpy(P(a[1]), P(a[1] - at::kTrailStride), 12);
         return answer;
     }
@@ -363,6 +365,12 @@ void Seed(unsigned k) {
         break;
     case k7DSetMap: SeedAreaHeader(); break;
     case k80Rise: SetLong(s + 0x34, static_cast<std::int32_t>(PickOf(0x160000, 0x170000 - 0x10000, 0x16FFFF, 0x170000, sh::Next()))); break;
+    case k80Step:
+        // a quarter of the time every point at the record's point (as the
+        // start leaves the trail): no pair has a direction
+        if (sh::Next() % 4 == 0)
+            for (U i = 0; i < at::kTrailPoints; ++i) std::memcpy(Mem(at::kTrail + at::kTrailStride * i), s + 0x34, 12);
+        break;
     case k80Draw: {
         // some pairs on the same screen point (the skip), whole or one axis
         for (U i = 1; i < at::kTrailPoints; ++i) {
