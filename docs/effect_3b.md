@@ -8,7 +8,7 @@ E3B (`analysis/round13_cut.tsv`, the band `0x4823D0..0x484000`), none dropped,
 none added (section 5). Each read to its last instruction with capstone and
 fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
-196,000 rounds, 0 mismatches; @CONTROLS@. **Fuzz only**: no recorded route
+196,000 rounds, 0 mismatches; 101 of 101 controls refused - 100 by a count, one (38) by ours aborting, its near variant (101) refused by a count. **Fuzz only**: no recorded route
 enters any of the 49 (section 9).
 
 | Kind | Functions | Reached through |
@@ -225,7 +225,88 @@ The fuzz lists each with those masks; ours passes the values the callee reads.
 
 ## 4. The fuzz (`effect_3b_fuzz.cpp`)
 
-@FUZZ@
+One `Run` under `BOF3X_SHADOW=effect_3b`, effect mode (`g.effect`; kinds
+0x63, 0x65, 0x67, 0x69, 0x6C, each clone its own), 4,000 rounds a function
+(`BOF3X_E3B_ONLY=<name>` runs the clones whose name holds it). Shapes: 46
+`kEffect` (the five dispatchers' `state_span` their table's length - 7, 5, 3,
+3 (the stack table), 2 - and `EffectKind69_PartRun`'s `sub_span` 3;
+`EffectKind6C_DrawSparks` with `ret_mask` 0xFF), three `kCall`
+(`EffectKind63_DrawDisc`, `EffectKind69_DrawColumn`, `EffectKind6C_DrawSpark`).
+The nine `.data` state tables are `DataTable`s and kind 0x69's three stack
+immediates `Imm`s, swapped for recorders on both sides. **Regions** beyond
+effect mode's standard ones: `EffectKind69_Parent` and the spark cursor
+(`0x676268`, 8). Everything else the band touches is standard: the records,
+`Sprite_Current`, `Sprite_Objects`, `ObjTrio`, `Field_MemberCount`,
+`Field_Request`, `Input_Held`, the counter `0x903848` and the scratch
+`0x903850..0x90385F` (in `0x903840..`), `Prim_VertexScratch`,
+`Camera_ShiftY`, `MapView_Redraw`, `Camera_Angles`, the save block's
+`0x904134`, the story flags, `EffectKind30_Shards` (`0x92BF80`, 0x644), the
+packet buffer.
+
+**Callees**: the effect-standard rows for `Effect_Release` (clears `+0..+4`),
+`Sprite_UpdateScreen` (logs the record it drew), `EffectGte_ProjectPoint` /
+`_ProjectSize` (the point hashed, the outs filled), `Math_Cos` (never 0 or -1),
+`Math_Sin`, `Rand`, `AreaMap_Elevation`, `Flags_Toggle` (toggles),
+`ScriptFlags_Set40` / `Clear40`, `Msg_OpenScript`, `Sound_PlayEffect`, the
+`Gte_*` matrix calls (the stack vectors hashed by six bytes, the matrix by 18,
+the translation noted), `Gte_PrimDepths4_10B`, `Gte_StoreDepthF`,
+`EffectGte_LoadMapCamera`, the `Gpu_*`, `Gfx_CommitPrim` (moves the cursor),
+`_ftol` called for real. **Re-listed in the group**: its own six no-argument
+callees by name as `kPhase` (`EffectKind63_RefreshSprites`,
+`EffectKind69_PushPointMatrix`, `_DrawGlow`, `_UpdateScreenXY`,
+`EffectKind6C_ScatterSparks`, `_DrawSparks` - answering garbage, so `_Live`
+sees both answers); the disc and the column with section 3's masks, each
+logging `Sprite_Current` (they read its floats and bytes); `DrawSpark` with the
+record's value and its 0x28 bytes; the two raw callees (section 8);
+`Effect_FindFree` as the effect-mode row but never none for
+`EffectKind69_Spawn` (it does not test; its seed frees nine records);
+`Gte_RotTransPers` with the vertex hashed by six bytes (a stack local whose pad
+neither side writes - the effect-mode row hashes eight) and the screen point
+filled with fractions and, one time in eight, NaN or values past 2^63 (E1D's
+form: `_ftol` truncates them); `Gte_RotTransPers4` with each screen y a
+fraction or, half the time, 0.0, -0.0, NaN, the smallest values of either sign
+or one of either sign - the column culls on the third corner's y against the
+float at `0x5C41DC`, which `fcomp`'s C0 decides (controls 70 and 71 need the
+edges).
+
+**Seeds** (per function, after the harness's per-round fill): every record's
+`+3` below 4 (the parts' steps) and `+4` small half the time; the parent at one
+of the twenty records and the cursor at one of the sixteen sparks; forty spark
+records (the sixteen and the 24 a moved cursor can run on to, all inside the
+shards region) live two times in three with `+1` below 2 and `+2` at 0, 1, 2,
+0x40; `Field_MemberCount` 0..3; `+9` at 0, 1, 2, 0xFF; the disc's radius at
+0x190's neighbours and the signs (grow) or at 0, 1, 9, 10, 11 and -1
+(shrink); the counter at 0x2A..0x2C; `Field_Request` at 3, 2, 0 and the save
+dword a multiple of five half the time; `Input_Held` 0 half the time; nine or
+more free records for the spawner; `+0xB` at 8..10 for the wait; `+0xA` at
+each top's neighbours (grow) or at 0..3 (fade); `+3` 0 a third of the time for
+the parts; no spark live a quarter of the time for the draw. **Arguments**: the
+disc's radius at 0, 1, 0x18F, 0x190, 0x7FFF, 0x8000, 0xFFFF over random upper
+bytes; the column's two callers' triples half the time; a spark record.
+**Disturbance** (the group's, from the hash only): `+9`, `+0xA`, `+0xB`, `+3`
+(below 4), `+0x18`, `+0x5C..+0x5F`, the scratch dwords `0x903850` /
+`0x903854` and the shade byte `0x903858`, a word of `Prim_VertexScratch`, the
+parent (at a record), the cursor (at one of the sixteen), `Field_MemberCount`
+(0..3), the counter.
+
+**Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_3b`,
+exit 0): 196,000 rounds over 49 functions, 2,861,560 calls to the stand-ins,
+**0 mismatches**; 24,764 bytes of state in 46 regions. Every entry of the nine
+tables and the stack table reached (each handler recorder 545..2,038 calls;
+the sparks' two about 15,800 each; `EffectKind54_Start` 1,340, `BareRet`
+1,315), `Effect_Release` 9,630, `Effect_FindFree` 40,000,
+`Gte_RotTransPers4` 162,497 (31,499 of the column's 68,000 rings past the
+cull), `0x48CA90` 12,000, `0x4837B0` 2,059. The first run mismatched in 347
+rounds of `EffectKind6C_ScatterSparks`: ours had the cursor's read inside the
+expression holding the `Math_Cos` call, and C++ leaves the order of an
+expression's operands open, so the compiler read the cursor before the call
+the disturbance follows; fixed by computing each answer first (the same done
+for `EffectKind69_DrawGlow`'s scratch).
+
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+696 self-test lines, every one 0 mismatches, `inject: 7619 ours, 0 left
+original`; `effect_3b` there 196,000 rounds, 2,862,228 calls, 0 mismatches.
+@WIDE@
 
 ## 5. What the cut and the tool said, settled
 
@@ -258,7 +339,126 @@ The fuzz lists each with those masks; ours passes the values the callee reads.
 
 ## 6. Controls
 
-@CONTROLS_SECTION@
+Planted behind `BOF3X_E3B_CTL=<n>` in a scratch copy of `effect_3b.cpp`
+(scratch `plant.py`, `ctl.sh`: every plant behind the switch, one on at a
+time, rebuild once, run each under `BOF3X_E3B_ONLY=<filter>`, restore,
+rebuild; each anchored on a unique string). At least one plant a function,
+the dispatchers' tables entry by entry, and near variants where a careless
+port would differ only at an edge: the depth copy by a move instead of
+`fld` / `fst` (24: a signalling NaN in the record), the height `sar 1` instead
+of the divide (46), the cull's equal and unordered cases (70, 71), rounding
+instead of `_ftol`'s truncation (79), the half width unsigned (93), the corner
+in single floats instead of x87 (96), and every cell the code reads again
+after a call read once instead (54, 62, 73, 78, 87, 89). **101 of 101
+refused**: 100 by a count, control 38 by ours aborting (with the scratch byte
+not written, ours reads the record index back from the cell, as the original
+does, and finds it past the pool), its near variant 101 (the byte written as a
+dword) by a count. No equivalent mutant was found.
+
+| # | Clones run | Plant | Refused in |
+|--:|---|---|---|
+| 1 | `_Run` | dispatchers 0x63 / 0x65 / 0x67 / 0x6C: the next entry | 16000 rounds |
+| 2 | `EffectKind69_Run` | kind 0x69: the next stack entry | 4000 rounds |
+| 3 | `PartRun` | part dispatcher: the next entry | 4000 rounds |
+| 4 | `EffectKind69_Part` | part steps: the next entry | 16000 rounds |
+| 5 | `DrawSparks` | spark states: the next entry | 3016 rounds |
+| 6 | `EffectKind63_Start` | start: z 0x419000 | 4000 rounds |
+| 7 | `EffectKind63_Start` | start: rim 0x3E | 4000 rounds |
+| 8 | `EffectKind63_Start` | start: +0x5D left | 3989 rounds |
+| 9 | `EffectKind63_Grow` | grow: at 0x190 | 456 rounds |
+| 10 | `EffectKind63_Grow` | grow: rim up 3 | 4000 rounds |
+| 11 | `EffectKind63_Hold` | hold: tint 0x61 | 796 rounds |
+| 12 | `EffectKind63_Shrink` | shrink: ends below 0 | 420 rounds |
+| 13 | `EffectKind63_Shrink` | shrink: counter not raised | 2964 rounds |
+| 14 | `EffectKind63_WaitCue` | wait cue: +9 = 0x11 | 1592 rounds |
+| 15 | `EffectKind63_FadeOut` | fade out: green down 5 | 3161 rounds |
+| 16 | `EffectKind63_End` | end: +0x29 = 7 | 3001 rounds |
+| 17 | `EffectKind63_End` | end: Sprite_Current left on the first member | 3843 rounds |
+| 18 | `EffectKind63_RefreshSprites` | refresh: live is bit 1 | 4000 rounds |
+| 19 | `EffectKind63_RefreshSprites` | refresh: member +0x29 = 4 | 2998 rounds |
+| 20 | `EffectKind63_RefreshSprites` | refresh: Sprite_Current not put back | 3989 rounds |
+| 21 | `EffectKind63_DrawDisc` | disc: b one past | 4000 rounds |
+| 22 | `EffectKind63_DrawDisc` | disc: first cos sar 11 | 3511 rounds |
+| 23 | `EffectKind63_DrawDisc` | disc: first sin added to x | 3994 rounds |
+| 24 | `EffectKind63_DrawDisc` | disc: depth copied by a move (no quieting) | 46 rounds |
+| 25 | `EffectKind63_DrawDisc` | disc: centre blue the rim | 3982 rounds |
+| 26 | `EffectKind63_DrawDisc` | disc: slot 2 | 4000 rounds |
+| 27 | `EffectKind65_WaitRequest` | wait request: on 2 | 2631 rounds |
+| 28 | `EffectKind65_Check` | check: % 4 | 1471 rounds |
+| 29 | `EffectKind65_Check` | check: +1 = 3 | 1630 rounds |
+| 30 | `EffectKind65_WaitInput` | wait input: flag 0x4E | 2013 rounds |
+| 31 | `EffectKind65_WaitInput` | wait input: sound 0x203 | 2013 rounds |
+| 32 | `EffectKind65_Shake` | shake: request 3 | 836 rounds |
+| 33 | `EffectKind65_Shake` | shake: the next step | 3164 rounds |
+| 34 | `EffectKind65_Shake` | shake: twice the step | 1955 rounds |
+| 35 | `EffectKind65_Close` | close: waits on 3 | 2644 rounds |
+| 36 | `EffectKind67_SpawnKind13` | spawn: kind 0x14 | 3039 rounds |
+| 37 | `EffectKind67_SpawnKind13` | spawn: the angle not sign-extended | 1487 rounds |
+| 38 | `EffectKind67_SpawnKind13` | spawn: the scratch byte not written | a Fatal (ours aborts on the index read back from the cell, past the pool) |
+| 39 | `EffectKind69_Spawn` | spawn: parent not stored | 3673 rounds |
+| 40 | `EffectKind69_Spawn` | spawn: +4 = i + 1 | 4000 rounds |
+| 41 | `EffectKind69_Spawn` | spawn: sound 0x204 | 4000 rounds |
+| 42 | `EffectKind69_WaitParts` | wait parts: 8 | 2030 rounds |
+| 43 | `EffectKind69_PushPointMatrix` | matrix: angle 0x200 | 1978 rounds |
+| 44 | `EffectKind69_PushPointMatrix` | matrix: +8 bit 1 | 2008 rounds |
+| 45 | `EffectKind69_UpdateScreenXY` | vector: z from +0x34 | 4000 rounds |
+| 46 | `EffectKind69_UpdateScreenXY` | vector: height sar 1 (near the divide) | 986 rounds |
+| 47 | `EffectKind69_Part0Place` | place: height to +0x3C | 4000 rounds |
+| 48 | `EffectKind69_Part0Place` | place: +0xB & 7 | 2027 rounds |
+| 49 | `EffectKind69_Part0Grow` | part 0 grow: top 0x14 | 1141 rounds |
+| 50 | `EffectKind69_Part0Hold` | part 0 hold: +3 up 2 | 836 rounds |
+| 51 | `Fade` | fade: parent not raised | 4199 rounds |
+| 52 | `Grow` | rise: +9 = 0x3B | 6759 rounds |
+| 53 | `Orbit` | orbit: angle & 0x3F | 3965 rounds |
+| 54 | `EffectKind69_Part` | orbit: the radius not read again after the call | 63 rounds |
+| 55 | `Place` | place: +4 << 4 | 7017 rounds |
+| 56 | `Place` | place: height from the parent's +0x3C | 7999 rounds |
+| 57 | `EffectKind69_Part1Orbit` | part 1 orbit: +0xC up 2 | 4000 rounds |
+| 58 | `EffectKind69_Part1Fade` | part 1 fade: by 2 | 4000 rounds |
+| 59 | `EffectKind69_Part2Grow` | part 2 grow: top 0x12 | 1138 rounds |
+| 60 | `EffectKind69_Part2Orbit` | part 2 orbit: radius 0x18 | 3989 rounds |
+| 61 | `EffectKind69_Part2Fade` | part 2 fade: by 1 | 4000 rounds |
+| 62 | `EffectKind69_Part` | part frame: +3 not read again after the calls | 489 rounds |
+| 63 | `EffectKind69_Part1` | part 1: spread 0x1E | 2083 rounds |
+| 64 | `EffectKind69_Part0` | part 0: base 0x21 | 2083 rounds |
+| 65 | `EffectKind69_Part2` | part 2: no glow | 2083 rounds |
+| 66 | `EffectKind69_DrawColumn` | column: angle & 7 | 3995 rounds |
+| 67 | `EffectKind69_DrawColumn` | column: Rand bit 1 picks | 3999 rounds |
+| 68 | `EffectKind69_DrawColumn` | column: z = -32 i | 4000 rounds |
+| 69 | `EffectKind69_DrawColumn` | column: bright 12 * +0xA | 3988 rounds |
+| 70 | `EffectKind69_DrawColumn` | column: drawn when equal too (near the cull) | 3719 rounds |
+| 71 | `EffectKind69_DrawColumn` | column: not drawn when unordered (near the cull) | 2867 rounds |
+| 72 | `EffectKind69_DrawColumn` | column: third quad up by width | 4000 rounds |
+| 73 | `EffectKind69_DrawColumn` | column: shade byte read once | 2022 rounds |
+| 74 | `EffectKind69_DrawColumn` | column: the last step down skipped | 3999 rounds |
+| 75 | `EffectKind69_DrawColumn` | column: first quad +0x16 = 0 | 4000 rounds |
+| 76 | `EffectKind69_DrawGlow` | glow: 4 * +0xA | 3926 rounds |
+| 77 | `EffectKind69_DrawGlow` | glow: blue 7 * +0xA | 3999 rounds |
+| 78 | `EffectKind69_DrawGlow` | glow: the scratch not read again after the cos | 92 rounds |
+| 79 | `EffectKind69_UpdateScreenXY` | screen x rounded, not truncated (near _ftol) | 1001 rounds |
+| 80 | `EffectKind69_UpdateScreenXY` | screen: depth at +0x14 | 4000 rounds |
+| 81 | `EffectKind6C_Start` | sparks start: height 0x1000001 | 4000 rounds |
+| 82 | `EffectKind6C_Live` | live: release on al 1 | 4000 rounds |
+| 83 | `EffectKind6C_ScatterSparks` | scatter: distance & 0x3F | 3999 rounds |
+| 84 | `EffectKind6C_ScatterSparks` | scatter: angle + 0x100 | 4000 rounds |
+| 85 | `EffectKind6C_ScatterSparks` | scatter: sar 6 | 4000 rounds |
+| 86 | `EffectKind6C_ScatterSparks` | scatter: +0x26 = 6 | 4000 rounds |
+| 87 | `EffectKind6C_ScatterSparks` | scatter: the cursor not read again after the calls | 648 rounds |
+| 88 | `EffectKind6C_DrawSparks` | draw sparks: al 2 | 3016 rounds |
+| 89 | `EffectKind6C_DrawSparks` | draw sparks: the cursor not read back | 151 rounds |
+| 90 | `EffectKind6C_DrawSparks` | draw sparks: dtd 1 | 4000 rounds |
+| 91 | `EffectKind6C_DrawSpark` | spark: v 0x50 | 4000 rounds |
+| 92 | `EffectKind6C_DrawSpark` | spark: CLUT x 0x51 | 4000 rounds |
+| 93 | `EffectKind6C_DrawSpark` | spark: half width unsigned (near the sar) | 959 rounds |
+| 94 | `EffectKind6C_DrawSpark` | spark: height from the width | 3958 rounds |
+| 95 | `EffectKind6C_DrawSpark` | spark: red on bit 1 | 1944 rounds |
+| 96 | `EffectKind6C_DrawSpark` | spark: corner in single floats (near the x87) | 162 rounds |
+| 97 | `EffectKind6C_SparkFly` | fly: shl 2 | 4000 rounds |
+| 98 | `EffectKind6C_SparkFly` | fly: +2 = 0x3F | 802 rounds |
+| 99 | `EffectKind6C_SparkFade` | fade: +3 kept | 4000 rounds |
+| 100 | `EffectKind6C_SparkFade` | fade: freed at 1 | 1060 rounds |
+| 101 | `EffectKind67_SpawnKind13` | spawn: the scratch written as a dword (near 38) | 4000 rounds |
+
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
@@ -334,4 +534,6 @@ group's), both in `effect_3b_callees.h`, and the spark cursor `0x67626C`
 Appended to the main checkout's file, one line per function with the extent
 read (none was there with that extent; the hosts' longer lines - `00482740
 4ED`, `00482C30 447`, `00483080 728`, `00483B00 10F`, `00483DA0 3C8` - stay, the
-smaller extents now beside them): @ENTRIES@.
+smaller extents now beside them): 45 lines (`004823D0 12` .. `00484000 4A`); four were there with the
+extent read and were not repeated: `004826B0 84`, `00483970 185`,
+`00483C10 F1`, `00483D10 83`.
