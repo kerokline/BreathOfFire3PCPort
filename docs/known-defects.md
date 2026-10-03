@@ -4795,7 +4795,11 @@ line should go).
 
 **Status:** Capcom's (the port's), by reading; seen in ours at scale 4.
 
-## D199 — The world map's nearer cells paint over the party's shadow (the original's, PlayStation too; a proposal, not fixed)
+## D199 — The world map's nearer cells paint over the party's shadow (the original's, PlayStation too; fixed behind a switch, DIV-0071)
+
+**Fixed 2026-10-03, off by default:** `BOF3X_LAYERING=1` draws a sprite after
+the walkable floor under its feet ([`sprite-draw-order.md`](sprite-draw-order.md)
+§19). What follows is the defect as found.
 
 **Seen:** the owner, 2026-09-30, in play on the world map. The party sprite's
 shadow ellipse ends at a straight or diagonal edge

@@ -141,6 +141,7 @@ add_library(bof3x SHARED
   src/game/psx_gte_transform.cpp
   src/game/draw_emit.cpp
   src/game/draw_pass.cpp
+  src/game/layering.cpp
   src/game/field_modes.cpp
   src/game/field_modes_fuzz.cpp
   src/game/field_event.cpp

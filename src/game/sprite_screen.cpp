@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/layering.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -82,7 +83,9 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
         sprite[0] |= 0x80;
         return;
     }
-    SetWord(sprite + 0x32, static_cast<unsigned>(layer & 0xFF) << 8);
+    // DIV-0071's comparison mode (BOF3X_LAYERING=2, off during every fuzz): the key one layer later.
+    const int later = layering::g_mode == layering::kLayerLater && Draw_OtSlot == 6 && layer < 0x36;
+    SetWord(sprite + 0x32, static_cast<unsigned>((layer + later) & 0xFF) << 8);
     unsigned low;
     if (Draw_OtSlot == 4) {
         sprite = Sprite_Current;

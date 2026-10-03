@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 70 entries, DIV-0001..0070, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 71 entries, DIV-0001..0071, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3747,3 +3747,73 @@ designed in rather than bolted on.
   owner's call, [`msgbox.md`](msgbox.md) §3).
 - **Reversible?** `BOF3X_ORIGINAL=MsgBox_EffectDraw` runs Capcom's draw,
   stale quad and all.
+
+### Walkable floor does not cover a sprite's feet
+
+- **ID:** DIV-0071
+- **Date:** 2026-10-03
+- **Subsystem:** field and world-map draw order (`Sprite_DrawPass`
+  `0x593060`, ours in `src/game/draw_pass.cpp`; the rule in
+  `src/game/layering.cpp`)
+- **Tier:** Intent - the owner's decision, 2026-10-03, beyond the original
+- **Status:** built, **off by default** (`BOF3X_LAYERING=1` turns it on);
+  the owner has seen captures, not yet played with it
+- **Original behaviour:** a painter's order by diagonal row. Every cell of
+  a nearer row is emitted after a sprite of the row behind, flat floor
+  included, and there is no depth test, so the floor of the next one to
+  three rows is drawn over whatever of the sprite reaches past its own row
+  on screen: the shadow's lower corners, sometimes a foot
+  (`known-defects.md` D199; measured with `BOF3X_DRAWORDER`,
+  [`sprite-draw-order.md`](sprite-draw-order.md) §18.9). The same order
+  is what puts a forest, a roof or a wall of the next row in front of the
+  party, which is wanted.
+- **New behaviour:** after the pass's first sort, each sprite of the draw
+  list is given the layer it is drawn in: up to three layers later than its
+  own, one layer at a time, for as long as everything it would newly be
+  drawn over that reaches the box round its feet (28 x 14 px round the
+  screen point `+0x74` / `+0x78`) is *floor* - a cell's own quad, its
+  lowest corner no more than 2 units above the feet (the comparison the
+  original's draw table already makes inside one layer), and the cell not
+  blocked to walking (`AreaMap_CellBlocked`, the high nibble of the area's
+  cell byte). Anything else there stops it at the layer before: a blocked
+  cell (forest, water, a building), a raised cell, a side triangle, the
+  second list, a frame node, a table item that is not floor, a cell record
+  within two cells, or a later sprite's body. The key's layer byte is
+  changed for the pass, the list sorted again, and the key put back after
+  the pass. Nothing in the layers' lists is touched.
+- **Rationale:** ground the party can walk onto is never something standing
+  in front of it. The owner's test (2026-10-03, on the first captures): the
+  corner must be repaired on open ground *without* pushing the sprite over
+  the forest graphic - which a plain "one layer later" does.
+- **Also in the PSX version?** The order is the same code
+  (`FUN_8014D184`'s key is the PC's term for term) and the sibling's
+  renders show cuts too. The owner's emulator shots look less cut than the
+  PC, "a layer higher"; **why is not established** - the owner suspects
+  the GPU's rasterisation against Direct3D's, and nothing here measures it.
+- **Verification:** live, narrow, x8, English, ours with the switch off
+  against on (`analysis/shots/layering_1003/`, sheet `layering_fix.png`):
+  `field_view.txt` - the floor over Ryu's foot gone on all four shots;
+  `worldMapAndAreaTransition_ab.txt` - `f01620`, `f01680` whole where they
+  were cut, `f01200`, `f01260..f01380`, `f01740` (forest, roof) unchanged,
+  and no pixel outside a sprite's feet differs on any of the 32 frames;
+  `worldmap_sliver.txt` (the Cedar Woods node, forest in front) unchanged.
+  Three other characters' feet on the route are repaired the same way
+  (`fix_others.png`). The same route wide (`BOF3X_WIDE=1`, `route_wide_m0` / `_m1`): the
+  same six frames differ, the same boxes 106 px right. Headless with the
+  switch set: `BOF3X_SHADOW='*'` exit 0, no mismatch line, 8,103 ours (the
+  rule arms after the self-tests, so this shows only that they still pass
+  around the pass's split sort). **Not seen:** a crowded town, a bridge or
+  stairs, a battle (slot 4: the rule is off there by construction).
+- **The owner, 2026-10-03, on the captures:** "this looks perfect - trees
+  cover the character, shadows are unobstructed". In play: not yet.
+- **Rejected on the way** (the same sheet's first version,
+  `first_attempts_three_modes.png`): every sprite's key one layer later
+  (`BOF3X_LAYERING=2`, kept as a comparison build) - whole shadows, and the
+  party over the trees; and lifting the floor cells out of their lists to
+  draw them before the sprite - the lists outlive a frame while the view is
+  still, and a cell moved before the rows behind it is painted over by
+  them on a hillside.
+- **Reversible?** Unset `BOF3X_LAYERING`, or `0`. `BOF3X_LAYERING_AHEAD`
+  (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
+  `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
+  sprite's verdict and what stopped it.

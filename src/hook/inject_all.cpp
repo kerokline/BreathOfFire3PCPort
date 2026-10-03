@@ -3,6 +3,7 @@
 #include "game/config_text.h"
 #include "game/dat_load.h"
 #include "game/fishing_text.h"
+#include "game/layering.h"
 #include "game/file_io.h"
 #include "game/game_clock.h"
 #include "game/save_io.h"
@@ -1066,6 +1067,8 @@ void InjectAll() {
                                 // bytes inside its 51 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
+    layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
+                                // module's self-test, which all compared the original's order (layering.h)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
