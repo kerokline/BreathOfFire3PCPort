@@ -135,7 +135,7 @@ extern "C" void __cdecl AreaMap_DrawBackdrop(const unsigned char* entry) {
 // 0xC), then a POLY_G4 at the new cursor: (0, 0)..(319, 239) as floats, the
 // three argument bytes at the top corners, black at the bottom ones, the
 // semi-transparency left as Gpu_SetPolyG4 set it; committed (7, 0x44). Its
-// caller (0x4FD2E0, Capcom's) steps the colour from (0x40, 0x5A, 0xFF) toward
+// caller (EffectKind18_01_Sunset 0x4FD2E0, effect_5a.cpp) steps the colour from (0x40, 0x5A, 0xFF) toward
 // (0x40 + 0x17E, ...) as a word at 0x937F88 + 0x2E climbs to 0xBF: the sunset
 // of area 23's cutscene. DIV-0041: under a wide picture the corners are
 // (-53, 0)..(372, 239) - the same rule as AreaMap_DrawBackdrop above, and
@@ -170,7 +170,7 @@ extern "C" void __cdecl Gfx_DrawSkyGradient(unsigned r, unsigned g_, unsigned b)
 // POLY_F4 at the new cursor, semi-transparent (Gpu_SetSemiTrans 1), (0, 0)..
 // (320, 240) as floats, red = Sprite_Current's word +0x2E / 8 (a signed
 // division: the step the caller of Gfx_DrawSkyGradient climbs to 0xBF),
-// green and blue 0; committed (3, 0x38). Caller 0x4FD2E0 as the gradient's.
+// green and blue 0; committed (3, 0x38). Caller EffectKind18_01_Sunset 0x4FD2E0.
 // DIV-0041: (-53, 0)..(373, 240) under a wide picture, the fuzz (before
 // Widescreen_Inject) comparing the original's.
 extern "C" void __cdecl Gfx_DrawSunsetGlow(void) {
