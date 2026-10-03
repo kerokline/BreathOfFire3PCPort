@@ -104,7 +104,7 @@ has the same machine, built for 8-unit letters:
 
 ## 5. The stray frame lines (Capcom's; not fixed)
 
-[`known-defects.md`](known-defects.md) `D-TBD-FL`: the lines are the right
+[`known-defects.md`](known-defects.md) `D198`: the lines are the right
 column of the side quads `Panel_DrawEdgeQuad` builds (their heights 0x1E,
 0x40, 0x68 are the lines' measured heights), half a game pixel wide at
 scale 4: the port's `D3d_TexCoords` `(i + 0.512) / 256` with the
@@ -145,7 +145,7 @@ run's `randlog` lines with a run at the pre-merge tip before believing
 anything past the cast; the shots at 3120..3600 (the menu) come before the
 cast.
 
-**The stray line** (`D-TBD-FL`): frame 3360 with `--env BOF3X_SCALE=1` (the
+**The stray line** (`D198`): frame 3360 with `--env BOF3X_SCALE=1` (the
 line should be gone) and with `wide=0` in the launcher's ini (it should
 stay). Zoom right of the EQUIP box, game x 156..162.
 

@@ -346,7 +346,7 @@ owner wants the fix below, it needs that measurement first:
 
 Ours is unchanged. Capcom's PC port clips where the PlayStation clips, for the
 same reason, so this is the original's behaviour. **No ledger entry; the
-DIV number reserved for this item is unused.** `known-defects.md` `D-TBD-WS` records it, so it is not
+DIV number reserved for this item is unused.** `known-defects.md` `D199` records it, so it is not
 reported again as a port defect.
 
 **Proposal for the owner** (an Intent change beyond the original; not built):

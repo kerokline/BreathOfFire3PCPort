@@ -73,6 +73,7 @@ rule ([`README.md`](README.md)) here too.
 | I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | **done** 2026-09-28: round eleven, 531 functions, [`takeover-queue-round11.md`](takeover-queue-round11.md); the live check per fight and the debts remain |
 | I27 | Round twelve: the field modes and the battle engine, by address band | engine | HIGH | done 2026-09-29: 654 functions in fourteen groups, 6,891 ours, live-checked, [`takeover-queue-round12.md`](takeover-queue-round12.md); planned and cut in [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) (owner, 2026-09-28): 631 functions, 14 groups, two harness groups |
 | I28 | Round thirteen: the effect-object engine (1,697 functions: the 627 the catalog labels area overlays, which are effect-kind code, and the 1,070 the labelling pass found beside them) | engine | HIGH | planned; [`takeover-queue-round13.md`](takeover-queue-round13.md) section 9 - the owner's scope of 2026-09-29, to be cut with `tools/band_rows.py` at round twelve's tip |
+| I29 | Button prompts drawn from the bindings in force, not from each release's defaults | game behaviour | LOW | open 2026-10-03 (the owner, on the fishing banner; DIV-0069) |
 
 ---
 
@@ -1081,3 +1082,21 @@ BH and BSA; then wave one (BH, BSA..BSE, 278 functions) and wave two
 
 ### Outcome
 _(2026-09-28) open; planned and cut, not scheduled - after the area round._
+
+## I29 — Button prompts drawn from the bindings in force
+
+**Ask (2026-10-03, the owner, on the fishing banner):** the US disc's banner
+names cross / triangle / square where the port's names circle / cross /
+triangle. The owner's reading: the US release has different default bindings
+from the Japanese and Chinese ones, so neither set of icons is wrong - each
+shows its own defaults. Long term, a prompt should show the button the
+action is bound to now (`docs/controls.md`, the launcher's key and pad
+tables), whatever the language.
+
+### What it needs
+- The prompts that name buttons, listed: the fishing banner (DIV-0069), the
+  world map's HUD, the config screen, the battle's hints.
+- For each, which action the icon stands for, and the icon set (DIV-0051).
+
+### Outcome
+_(2026-10-03) open. Until then DIV-0069 keeps the port's icons, by the owner's word._

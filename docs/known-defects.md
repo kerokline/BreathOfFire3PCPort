@@ -4725,7 +4725,7 @@ in each; none is known to show.
 and `AreaMap_ClearCell`'s walk abort in ours where the original would read
 on.
 
-## D-TBD-GS — A space in a growing shout commits a primitive with a stale glyph word (fixed by DIV-0070)
+## D197 — A space in a growing shout commits a primitive with a stale glyph word (fixed by DIV-0070)
 
 **Seen:** the owner, 2026-10-02, in play, English overlay: the game crashed
 in area `0x63`, message `0x24`, the message box in its grow effect
@@ -4745,7 +4745,7 @@ is far enough out ([`msgbox.md`](msgbox.md) §9).
 **Status:** fixed by DIV-0070 (a space commits nothing); recurs under
 `BOF3X_ORIGINAL=MsgBox_EffectDraw`. Not yet seen fixed in game.
 
-## D-TBD-FL — A textured quad's far edge samples the texel past it above scale 1: the fishing menu's stray frame lines
+## D198 — A textured quad's far edge samples the texel past it above scale 1: the fishing menu's stray frame lines
 
 **Seen:** owner, 2026-09-30 (`analysis/shots/owner_catalogue/fishing_equip_menu.webp`),
 English, the wide picture at scale 4: a thin vertical line right of the
@@ -4795,7 +4795,7 @@ line should go).
 
 **Status:** Capcom's (the port's), by reading; seen in ours at scale 4.
 
-## D-TBD-WS — The world map's nearer cells paint over the party's shadow (the original's, PlayStation too; a proposal, not fixed)
+## D199 — The world map's nearer cells paint over the party's shadow (the original's, PlayStation too; a proposal, not fixed)
 
 **Seen:** the owner, 2026-09-30, in play on the world map. The party sprite's
 shadow ellipse ends at a straight or diagonal edge
