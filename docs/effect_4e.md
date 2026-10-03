@@ -8,7 +8,8 @@ for E4E (`analysis/round13_cut.tsv`, the band `0x48DF90..0x491C96`) and kind
 0xA3's dispatcher `0x4912F0`, which no list held (section 9). Each read to its
 last instruction with capstone and fuzzed through the scenario harness in
 effect mode ([`scenario_harness.md`](scenario_harness.md) section 8) without
-edits to it: 196,000 rounds, 0 mismatches; controls in section 5. **No
+edits to it: 196,000 rounds, 0 mismatches; 107 controls, 105 refused by a
+count and 2 equivalent mutants each with a refused near variant (section 5). **No
 divergence**; every row is effect code, the nine `hypothesis` rows among them
 (section 9). **Fuzz only**: no recorded route enters any of the 49
 (section 10).
@@ -292,7 +293,133 @@ section 8.
 
 ## 5. Controls
 
-CONTROLS_TABLE
+Planted one at a time in `effect_4e.cpp` by a scratch script (session
+scratchpad `e4e/controls.py`, not committed: each plant anchored on a unique
+string, rebuilt, run under `BOF3X_E4E_ONLY=<filter>` at 2,000 rounds a
+function, the file restored and rebuilt; the committed file has no switch).
+**107 planted: 105 refused by a count** (every refused run exit 3, "differs
+from the original"), **2 equivalent mutants**, each with a near variant that
+is refused:
+
+- **73** passes the fade's shade + 0x100 to the trail: the callee reads the
+  byte (`mov bl, [esp + 0x64]`), so no input can tell it apart; **106** (+1)
+  is refused in 2,000 of 2,000.
+- **94** clamps the shard's shade from 0xFE instead of 0xFF: at 0xFF both give
+  0xFF, so it is the same function; **107** (a negative shade gives 1, not 0)
+  is refused in 625.
+
+Counts are rounds refused of 2,000 a function, in this worktree (a filter
+that names several clones reports the sum over the mutated one only).
+
+| # | Run (`_ONLY`) | Plant | Refused (of 2,000) |
+|--:|---|---|---|
+| 1 | `EffectKind9B_Run` | `_Run", EffectKind9B_State` -> `_Run", EffectKind9C_State` | 2000 |
+| 2 | `EffectKind9B_Start` | `(elevation))) << 16);` -> `(elevation))) << 15);` | 2000 |
+| 3 | `EffectKind9B_Start` | `SetUL(S() + 0x20, 0);` -> `SetUL(S() + 0x20, 1);` | 2000 |
+| 4 | `EffectKind9B_Rise` | `UL(s + 0x20) + 0x100000u)` -> `UL(s + 0x20) + 0x110000u)` | 2000 |
+| 5 | `EffectKind9B_Rise` | `(SL(S() + 0x14) >= 0x800` -> `(SL(S() + 0x14) > 0x800` | 255 |
+| 6 | `EffectKind9B_Rise` | `t(q), Long(s + 0x14));` -> `t(q), Long(s + 0x10));` | 2000 |
+| 7 | `EffectKind9B_Hold` | `Ring)(Point(q), 0x8000000` -> `Ring)(Point(q), 0x7000000` | 2000 |
+| 8 | `EffectKind9B_DrawRing` | `nsigned char>(i < 4 \|\| i` -> `nsigned char>(i < 5 \|\| i` | 2000 |
+| 9 | `EffectKind9B_DrawRing` | `tic_cast<U>(c) << 9, 4) +` -> `tic_cast<U>(c) << 8, 4) +` | 2000 |
+| 10 | `EffectKind9B_DrawRing` | `Mode(1, 0x3C0, 0, 0);` -> `Mode(1, 0x3C0, 0, 1);` | 2000 |
+| 11 | `EffectKind9C_Run` | `C_Run", EffectKind9C_State` -> `C_Run", EffectKindA0_State` | 2000 |
+| 12 | `EffectKind9C_Start` | `UL(S() + 0x38, 0x740000);` -> `UL(S() + 0x38, 0x750000);` | 2000 |
+| 13 | `EffectKind9C_Start` | `L(S() + 0x14, 0xFEC00000u` -> `L(S() + 0x14, 0xFED00000u` | 2000 |
+| 14 | `EffectKind9C_Grow` | `d_PlayEffect)(0x20D);` -> `d_PlayEffect)(0x20C);` | 522 |
+| 15 | `EffectKind9C_Grow` | `d char>(s[0x5D] + 8);` -> `d char>(s[0x5D] + 9);` | 2000 |
+| 16 | `EffectKind9C_Hold` | `S()[0x5E] = 0;` -> `S()[0x5E] = 1;` | 522 |
+| 17 | `EffectKind9C_PanelsIn` | `!= 0 ? shade : 0xFFu` -> `!= 0 ? shade : 0xFEu` | 411 |
+| 18 | `EffectKind9C_PanelsIn` | `har>(s[0x5E] + 0x40);` -> `har>(s[0x5E] + 0x41);` | 2000 |
+| 19 | `EffectKind9C_PanelsOut` | `har>(s[0x5E] + 0xC0);` -> `har>(s[0x5E] + 0xC1);` | 2000 |
+| 20 | `EffectKind9C_PanelsOut` | `d9C_DrawBeams)(0x40);` -> `d9C_DrawBeams)(0x41);` | 2000 |
+| 21 | `EffectKind9C_Beams` | `d_PlayEffect)(0x20E);` -> `d_PlayEffect)(0x20F);` | 509 |
+| 22 | `EffectKind9C_Shrink` | `if (SW(s + 0x2E) > 0) {` -> `if (SW(s + 0x2E) >= 0) {` | 210 |
+| 23 | `EffectKind9C_Shrink` | `d char>(s[0x5D]) > 0)` -> `d char>(s[0x5D]) >= 0)` | 233 |
+| 24 | `EffectKind9C_Shrink` | `S()[9] = 0x10;` -> `S()[9] = 0x11;` | 509 |
+| 25 | `EffectKind9C_End` | `Word(s + 0x2E) - 4u);` -> `Word(s + 0x2E) - 3u);` | 2000 |
+| 26 | `EffectKind9C_End` | `)(Word(S() + 0x2E));` -> `)(Word(S() + 0x2E) + 1u);` | 2000 |
+| 27 | `EffectKind9C_DrawPanels` | `etUL(high + 8, 0xFD000000` -> `etUL(high + 8, 0xFE000000` | 2000 |
+| 28 | `EffectKind9C_DrawPanels` | `CommitPrim)(1, 0x38);` -> `CommitPrim)(1, 0x34);` | 2000 |
+| 29 | `EffectKind9C_DrawBeams` | `(a, 0x300000, 0xFE800000u` -> `(a, 0x300000, 0xFE900000u` | 2000 |
+| 30 | `EffectKind9C_DrawBeams` | `set(b, 0x308000, 0);` -> `set(b, 0x308000, 1);` | 2000 |
+| 31 | `EffectKind9C_DrawBeam` | `, r1, angle + 0x400u);` -> `, r1, angle + 0x401u);` | 2000 |
+| 32 | `EffectKind9C_DrawBeam` | `+ 0x18) - F(p + 0xC));` -> `+ 0x18) - F(p + 0x10));` | 1598 |
+| 33 | `EffectKind9C_DrawBeam` | `p[4] = 0x40;` -> `p[4] = 0x41;` | 2000 |
+| 34 | `EffectKind9C_DrawBeam` | `(Frame_Counter & 1u)` -> `(Frame_Counter & 3u)` | 633 |
+| 35 | `EffectKind9C_DrawBeam` | `const float fdx = AsFloat` -> `const float fdx = static`; `nst float fdx = AsFloat(I` -> `onst float fdx = static_cast<float>(`; `loat fdx = AsFloat(I(dx)` -> `static_cast<float>(static_cast<double>(I(dx)`; `x = AsFloat | 1564 |
+| 36 | `EffectKind9C_DrawBeamEnd` | `a += 0x100;` -> `a += 0x101;` | 2000 |
+| 37 | `EffectKind9C_DrawBeamEnd` | `, I(MulSar(c, r, 12) + cx` -> `, I(MulSar(c, r, 11) + cx` | 2000 |
+| 38 | `EffectKind9C_DrawBeamSides` | `:memmove(q, p, 0x44);` -> `:memmove(q, p, 0x40);` | 2000 |
+| 39 | `EffectKind9C_DrawBeamSides` | `ast<int>(eb + 0x800u));` -> `ast<int>(eb + 0x801u));` | 2000 |
+| 40 | `EffectKind9C_DrawBeamSides` | `= static_cast<U>(S16(r1)),` -> `= static_cast<U>(static_cast<std::int32_t>(r1)),` | 2000 |
+| 41 | `EffectKind9E_Run` | `E_Run", EffectKind9E_State` -> `E_Run", EffectKindA0_State` | 2000 |
+| 42 | `EffectKind9E_DrawPlate` | `p[4] = 0xFF;` -> `p[4] = 0xFE;` | 2000 |
+| 43 | `EffectKind9E_DrawPlate` | `_SetSemiTrans)(p, 0);` -> `_SetSemiTrans)(p, 1);` | 2000 |
+| 44 | `EffectKind9E_Draw` | `lusMinus(v, a, b, Bit0()` -> `lusMinus(v, a, b, !Bit0()` | 4000 |
+| 45 | `EffectKind9E_DrawTexPlate` | `har>(page[4] + 0x18);` -> `har>(page[4] + 0x17);` | 2000 |
+| 46 | `EffectKind9E_DrawTexPlate` | `(S()[6] & 4) != 0` -> `(S()[6] & 2) != 0` | 1229 |
+| 47 | `EffectKind9E_DrawTexPlate` | `etClut)(0xA0, 0x1F0)` -> `etClut)(0xA0, 0x1F1)` | 2000 |
+| 48 | `EffectKind9E_DrawTexPlate` | `sMinus(v, pa, pb, !Bit0()` -> `sMinus(v, pa, pb, Bit0()` | 2000 |
+| 49 | `EffectKind9E_DrawWall` | `Sum(v, pa, pb, 0x100000);` -> `Sum(v, pa, pb, 0x110000);` | 2000 |
+| 50 | `EffectKind9E_DrawWall` | `(pa + 8) + 0x100000u);` -> `(pa + 8) + 0x100001u);` | 2000 |
+| 51 | `EffectKind9E_DrawShadePlate` | `SetMode(0, 0x3C` -> `SetMode(1, 0x3C` | 2000 |
+| 52 | `EffectKind9E_Draw` | `ar>((~S()[6] & 0xFE) << 6` -> `ar>((~S()[6] & 0xFC) << 6` | 2662 |
+| 53 | `EffectKindA0_Run` | `_Run", EffectKindA0_State` -> `_Run", EffectKindA3_State` | 2000 |
+| 54 | `EffectKindA0_Start` | `rPoint + 8)) + 0x800000u)` -> `rPoint + 8)) + 0x810000u)` | 2000 |
+| 55 | `EffectKindA0_Start` | `d_PlayEffect)(0x20B);` -> `d_PlayEffect)(0x20C);` | 2000 |
+| 56 | `EffectKindA0_Grow` | `rd(s + 0x2E) + 0x20u);` -> `rd(s + 0x2E) + 0x21u);` | 2000 |
+| 57 | `EffectKindA0_Grow` | `S()[9] = 0x40;` -> `S()[9] = 0x41;` | 544 |
+| 58 | `EffectKindA0_Hold` | `S()[9] = 0x20;` -> `S()[9] = 0x21;` | 544 |
+| 59 | `EffectKindA0_Rise` | `UL(s + 0x6C) + 0xC0000u);` -> `UL(s + 0x6C) + 0xC1000u);` | 2000 |
+| 60 | `EffectKindA0_Rise` | `(Shard(i) + 0x2A, 0);` -> `(Shard(i) + 0x2A, 1);` | 548 |
+| 61 | `EffectKindA0_Rise` | `Word(s + 0x2E) - 6u);` -> `Word(s + 0x2E) - 5u);` | 2000 |
+| 62 | `EffectKindA0_Sparkle` | `Counter)[0] != 0x14) retu` -> `Counter)[0] != 0x15) retu` | 325 |
+| 63 | `EffectKindA0_Sparkle` | `u - UL(s + 0x68), 7));` -> `u - UL(s + 0x68), 6));` | 324 |
+| 64 | `EffectKindA0_Launch` | `d_PlayEffect)(0x209);` -> `d_PlayEffect)(0x208);` | 2000 |
+| 65 | `EffectKindA0_Launch` | `SH_CAL` -> `SH_CALL(EffectKindA0_StepSparks)();     SH_CAL`; `awShards)();     SH_CALL(EffectKindA0_StepSparks)();     S()[9]` -> `awShards)();     S()[9]` | 2000 |
+| 66 | `EffectKindA0_Fly` | `if (SL(s + 0x18) < 0x2F8` -> `if (SL(s + 0x18) <= 0x2F8` | 252 |
+| 67 | `EffectKindA0_Fly` | `d char>(s[3] + 0xFC);` -> `d char>(s[3] + 0xFD);` | 1956 |
+| 68 | `EffectKindA0_Fly` | `0x18) + UL(s + 0xC));` -> `0x18) + UL(s + 0x10));` | 1548 |
+| 69 | `EffectKindA0_Fly` | `CALL(EffectKindA0_StepSp` -> `CALL(EffectKindA0_DrawShards`; `ALL(EffectKindA0_StepSparks)(` -> `EffectKindA0_DrawShards)(`; `ectKindA0_StepSparks)();` -> `ectKindA0_DrawShards)();`; `CALL(EffectKindA0_DrawShards` -> `C | 2000 |
+| 70 | `EffectKindA0_FlyWait` | `Counter)[0] != 0x17) retu` -> `Counter)[0] != 0x16) retu` | 526 |
+| 71 | `EffectKindA0_FlyWait` | `pawnSpark)();         SwapPoints();     }` -> `pawnSpark)();     }` | 944 |
+| 72 | `EffectKindA0_Fade` | `d char>(s[3] + 0xF8);` -> `d char>(s[3] + 0xF9);` | 1982 |
+| 73 | `EffectKindA0_Fade` | `TrailA0(S()[3]);` -> `TrailA0(S()[3] + 0x100u);` | not refused (exit 0) |
+| 74 | `EffectKindA0_DrawGlow` | `ned char>((c & 0xFE) << 6` -> `ned char>((c & 0xFC) << 6` | 1289 |
+| 75 | `EffectKindA0_DrawGlow` | `DrawMode(1, 0x2C0, 0x10` -> `DrawMode(1, 0x2C1, 0x10` | 2000 |
+| 76 | `EffectKindA0_DrawGlow` | `(p + 0x20, UL(o + 8));` -> `(p + 0x20, UL(o + 4));` | 2000 |
+| 77 | `EffectKindA0_DrawGlow` | `(Frame_Counter & 1u));` -> `(Frame_Counter & 3u));` | 789 |
+| 78 | `EffectKindA0_DrawGlow` | `ic_cast<U>(radius)) + F(` -> `ic_cast<U>(radius) + 1u) + F(` | 1181 |
+| 79 | `EffectKindA0_DrawTrail` | `(UL(s + 0x64) << 4));` -> `(UL(s + 0x64) << 3));` | 686 |
+| 80 | `EffectKindA0_DrawTrail` | `dots = 0; SL(q) > SL(a)` -> `dots = 0; SL(q) >= SL(a)` | 15 |
+| 81 | `EffectKindA0_DrawTrail` | `+ 0x2C, F(o + 4) - half)` -> `+ 0x2C, F(o + 4) + half)` | 1990 |
+| 82 | `EffectKindA0_DrawTrail` | `Frame_Counter & 0xFu;` -> `Frame_Counter & 0x7u;` | 464 |
+| 83 | `EffectKindA0_DrawTrail` | `(UL(s + 0x68) << 4));` -> `(UL(s + 0x68) << 5));` | 558 |
+| 84 | `EffectKindA0_ClearSparks` | `(unsigned i = 0; i < at:` -> `(unsigned i = 0; i + 1 < at:` | 1016 |
+| 85 | `EffectKindA0_SpawnSpark` | `k[0x16] = 0x60;` -> `k[0x16] = 0x61;` | 2000 |
+| 86 | `EffectKindA0_SpawnSpark` | `ord(k + 0x14, 0x100);` -> `ord(k + 0x14, 0x101);` | 2000 |
+| 87 | `EffectKindA0_StepSparks` | `(k + 0x14) + 0xFFF0u);` -> `(k + 0x14) + 0xFFF1u);` | 2000 |
+| 88 | `EffectKindA0_StepSparks` | `return any;` -> `return static_cast<unsigned char>(any \|`; `return any;` -> `unsigned char>(any \| 2);` | 2000 |
+| 89 | `EffectKindA0_InitShard` | `(shard + 0x2A, 0x40);` -> `(shard + 0x2A, 0x41);` | 2000 |
+| 90 | `EffectKindA0_InitShard` | `L(Gte_RotMatrixY)(-S16(y)` -> `L(Gte_RotMatrixY)(S16(y)` | 1996 |
+| 91 | `EffectKindA0_DrawShards` | `hard + 0x24) + 0x10u);` -> `hard + 0x24) + 0x11u);` | 2000 |
+| 92 | `EffectKindA0_DrawShards` | `DrawMode(1, 0x380, 0x10` -> `DrawMode(1, 0x381, 0x10` | 2000 |
+| 93 | `EffectKindA0_DrawShard` | `U>(SW(edge + 2)), 8)` -> `U>(SW(edge + 2)), 7)` | 1615 |
+| 94 | `EffectKindA0_DrawShard` | `< 0 ? 0 : w > 0xFF ? 0xF` -> `< 0 ? 0 : w > 0xFE ? 0xF` | not refused (exit 0) |
+| 95 | `EffectKindA0_DrawShard` | `SW(edge + 4)) << 12)` -> `SW(edge + 4)) << 11)` | 1615 |
+| 96 | `EffectKindA0_SwapLong` | `Se` -> `const U t = UL(pa);     Se`; `SetUL(pa, UL(pa) ^ UL(pb` -> `pa);     SetUL(pa, UL(pb`; `));     SetUL(pb, UL(pb) ^ UL(pa));` -> `));     SetUL(pb, t);`; `UL(pb) ^ UL(pa));     SetUL(pa, UL(pa) ^ UL(pb));` -> `Se | 247 |
+| 97 | `EffectKindA1_Run` | `_Run", EffectKindA1_State` -> `_Run", EffectKindA0_State` | 2000 |
+| 98 | `EffectKindA2_Run` | `_Run", EffectKindA2_State` -> `_Run", EffectKindA1_State` | 2000 |
+| 99 | `EffectKindA3_Run` | `ffectKindA3_States,` -> `ffectKindA3_States + 1,` | 2000 |
+| 100 | `EffectKindA7_Run` | `), Word(s + 0xC), 7);` -> `), Word(s + 0xC), 6);` | 1520 |
+| 101 | `EffectKindA7_Run` | `if (s[1] == 0) retu` -> `if (s[1] == 1) retu` | 960 |
+| 102 | `EffectKindA7_Run` | `_Run", EffectKindA7_State` -> `_Run", EffectKindA2_State` | 2000 |
+| 103 | `EffectKindA8_Run` | `_Run", EffectKindA8_State` -> `_Run", EffectKindA7_State` | 2000 |
+| 104 | `EffectKindA9_Run` | `ord(s + 0x30), 0x80);` -> `ord(s + 0x30), 0x81);` | 1520 |
+| 105 | `EffectKindA9_Run` | `_Run", EffectKindA9_State` -> `_Run", EffectKindA7_State` | 2000 |
+| 106 | `EffectKindA0_Fade` | `TrailA0(S()[3]);` -> `TrailA0(S()[3] + 1u);` | 2000 |
+| 107 | `EffectKindA0_DrawShard` | `char k = w < 0 ? 0 : w >` -> `char k = w < 0 ? 1 : w >` | 625 |
 
 ## 6. Aborts
 
@@ -344,9 +471,17 @@ with a message (the round-nine rule, no ledger entry):
 
 ## 8. Self-tests
 
-STAR_RESULTS
+All headless, in this worktree (counts depend on the build directory):
 
-`tools/ledger_check.py`: LEDGER_RESULT.
+- `BOF3X_SHADOW=effect_4e`: exit 0, 196,000 rounds over 49 functions,
+  2,941,298 calls to the stand-ins, 0 mismatches.
+- `BOF3X_SHADOW='*'`: exit 0, `inject: 7836 ours, 0 left original`, 700
+  self-test lines, every group 0 mismatches (`effect_4e`'s line: 2,941,698
+  calls - it runs after the other effect groups and draws another stream).
+- `BOF3X_SHADOW='*'` with `BOF3X_WIDE=1`: exit 0, the same 7,836 ours and 700
+  lines, 0 mismatches. Neither run died silently.
+
+`tools/ledger_check.py`: 70 entries, 0 errors, 2 notes (7,837 `impl` lines, 7,837 functions detoured); `symbols.toml` read with `tomllib`: no address or name bound twice.
 
 ## 9. What the cut and the tool said, settled
 
