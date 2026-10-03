@@ -359,6 +359,7 @@ void Seed(unsigned k) {
     unsigned char* const s = Sprite_Current;
     Leader(s);
     Cond_ByteFE = static_cast<unsigned char>(PickOf(0x10, 0x20, 0x10, 0x20, 0, sh::Next()));
+    Field_Request = static_cast<unsigned char>(PickOf(0, 0, 2, sh::Next()));   // the sounds wait on 0
     Draw_PassFlags = static_cast<unsigned char>(sh::Next() % 3 == 0 ? sh::Next() & ~4u : sh::Next() | 4u);
     switch (k) {
     case k27Open:
