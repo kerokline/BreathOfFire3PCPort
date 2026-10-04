@@ -34,13 +34,18 @@
 //
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
 // can stand recorders in for ours as for the originals' copies. Sprite_Current
-// is read again wherever the original reads [0x937F88] again. No divergence:
-// each is a faithful replacement. Where the original jumps through a state
+// is read again wherever the original reads [0x937F88] again. The full-screen
+// fill of 0x489CD0 (EffectKind89_DrawTint, the site 0x489D47) is DIV-0041's
+// (section 3c): it draws at (Widescreen_FillX(), 0) Widescreen_FillWidth() x
+// 240, which is the original's (0, 0) 320 x 240 until Widescreen_ArmFills has
+// run and whenever the picture is narrow. Otherwise no divergence: each is a
+// faithful replacement. Where the original jumps through a state
 // table past its end, indexes a table of its own past its rows, or ObjTrio or
 // Sprite_Objects past their records, ours aborts with a message
 // (docs/effect_4b.md section 6).
 #include "game/effect_4b.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -49,6 +54,7 @@
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -626,8 +632,9 @@ extern "C" void __cdecl EffectKind89_Fade(void) {
 
 // original 0x489CD0 (kinds 0x89, 0x9F and 0xA4 draw it): a draw mode (page
 // (0x3C0, 0), abr 2, dtd 1) committed in slot 3; a TILE at the cursor, (0, 0)
-// 320 x 240 (the floats Capcom wrote: DIVERGENCE.md DIV-0041 names 0x489D47 a
-// fill not yet widened), of the record's +0x5D..+0x5F, semi-transparent,
+// 320 x 240 - DIV-0041's fill at 0x489D47: (Widescreen_FillX(), 0)
+// Widescreen_FillWidth() x 240, Capcom's floats while the fills are unarmed or
+// the picture narrow -, of the record's +0x5D..+0x5F, semi-transparent,
 // untextured-shaded off, committed (3, 0x1C).
 extern "C" void __cdecl EffectKind89_DrawTint(void) {
     DrawMode(2, 0x3C0, 0, 1);
@@ -637,9 +644,9 @@ extern "C" void __cdecl EffectKind89_DrawTint(void) {
     t[4] = S()[0x5D];
     t[5] = S()[0x5E];
     t[6] = S()[0x5F];
-    SetUL(t + 8, 0);
+    SetUL(t + 8, std::bit_cast<std::uint32_t>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
     SetUL(t + 0xC, 0);
-    SetUL(t + 0x14, 0x43A00000u);   // 320.0f
+    SetUL(t + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // 0x43A00000, 320.0f narrow
     SetUL(t + 0x18, 0x43700000u);   // 240.0f
     SH_CALL(Gpu_SetSemiTrans)(t, 1);
     SH_CALL(Gpu_SetShadeTex)(t, 0);

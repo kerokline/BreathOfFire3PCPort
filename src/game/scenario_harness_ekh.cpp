@@ -20,6 +20,14 @@
 // the new record's kind 0x25 instead of 0x24. Each must end in a Fatal.
 //
 // Extents read to the last instruction with capstone (2026-09-29, EKH).
+//
+// Every row here is ours now (round thirteen's groups took all eight, and
+// sprite_pose.cpp Effect_FindFree / Effect_Release), so each is named by its
+// address constant bof3::addr::Name - the ORIGINAL's address, the same value
+// the literal had: the copies are Capcom's bytes, and "ours in place" is the
+// original only because this self-test runs before every effect group's inject
+// (inject_all.cpp). Never &::Name here - that is our function, not Capcom's
+// (round thirteen's end fold, docs/scenario_harness.md section 8.10).
 #include "game/scenario_harness_ekh.h"
 
 #include <cstdint>
@@ -52,51 +60,59 @@ extern "C" std::uint32_t __cdecl EkhRelease() {
 
 // The copies' call sites (the E8 / E9 offsets): the spawner's call of
 // Effect_FindFree at +0xC, the release state's tail jmp at +0xE.
-constexpr sh::CallSite kCalls46F7D0[] = {{0xC, 0x589810}};
-constexpr sh::CallSite kCalls472770[] = {{0xE, 0x589840}};
+constexpr sh::CallSite kCalls46F7D0[] = {{0xC, bof3::addr::Effect_FindFree}};
+constexpr sh::CallSite kCalls472770[] = {{0xE, bof3::addr::Effect_Release}};
 
 enum : unsigned { kLeaf, kDispatch1, kDispatch2, kSubState, kAngle, kRecordArg, kSpawner, kRelease, kCount };
 
 sh::Clone g_clones[] = {
     // kEffect, a hidden state handler reached by a .data cell: E1A's 0x462BC0
-    // (in 0x462AC0; the cell 0x653A44, entry 0 of kind 1's state table, whose
-    // dispatcher 0x462BA0 is Effect_KindHandlers[1]): +0x54 = the dword +0x54
+    // EffectKind01_Start (in 0x462AC0; the cell 0x653A44, entry 0 of
+    // EffectKind01_States, whose dispatcher 0x462BA0 EffectKind01_Run is
+    // Effect_KindHandlers[1]): +0x54 = the dword +0x54
     // of Sprite_ObjectsExtra record (+0x18), then +1 = 1
-    {"E1A 0x462BC0", 0x462BC0, 0x23, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(0x462BC0), 0, false, Shape::kEffect, 0, 2, 0, 1},
-    // kEffect, a kind's dispatcher taken whole with its table: E1D's 0x46F2B0,
-    // Effect_KindHandlers[0x21]: jmp [0x654284 + +1 * 4], unbounded; the table
-    // has six entries before 0x65429C, the next dispatcher's (state_span 6)
-    {"E1D 0x46F2B0", 0x46F2B0, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(0x46F2B0), 0, false, Shape::kEffect, 0, 6, 0, 0x21},
-    // kEffect, a kind-0x18 sub-state dispatcher: E5A's 0x4FD470,
-    // EffectKind18_States[4]: jmp [0x65DAE8 + +2 * 4]; four code pointers,
+    {"E1A EffectKind01_Start", bof3::addr::EffectKind01_Start, 0x23, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(bof3::addr::EffectKind01_Start), 0, false, Shape::kEffect, 0, 2, 0, 1},
+    // kEffect, a kind's dispatcher taken whole with its table: E1D's 0x46F2B0
+    // EffectKind21_Run, Effect_KindHandlers[0x21]: jmp [0x654284
+    // (EffectKind21_States) + +1 * 4], unbounded; the table has six entries
+    // before 0x65429C, the next dispatcher's (state_span 6)
+    {"E1D EffectKind21_Run", bof3::addr::EffectKind21_Run, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(bof3::addr::EffectKind21_Run), 0, false, Shape::kEffect, 0, 6, 0, 0x21},
+    // kEffect, a kind-0x18 sub-state dispatcher: E5A's 0x4FD470
+    // EffectKind18_04_Run, EffectKind18_States[4]: jmp [0x65DAE8
+    // (EffectKind18_04_States) + +2 * 4]; four code pointers,
     // then bytes (sub_span 4)
-    {"E5A 0x4FD470", 0x4FD470, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(0x4FD470), 0, false, Shape::kEffect, 0, 0, 4, 0x18},
-    // kEffect, a kind-0x18 sub-state: E5B's 0x500D20, entry 3 of 0x65E068 (the
-    // table of 0x500930 = EffectKind18_States[15]; six entries before
+    {"E5A EffectKind18_04_Run", bof3::addr::EffectKind18_04_Run, 0x12, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(bof3::addr::EffectKind18_04_Run), 0, false, Shape::kEffect, 0, 0, 4, 0x18},
+    // kEffect, a kind-0x18 sub-state: E5B's 0x500D20 EffectKind18Sub0F_Open,
+    // entry 3 of 0x65E068 EffectKind18Sub0F_States (the table of 0x500930
+    // EffectKind18Sub0F_Run = EffectKind18_States[15]; six entries before
     // 0x65E080, 0x5011A0's): +2 = 4 when the leader stands within two cells of
     // the record, unless Cond_ByteFD is 0 and Cond_ByteFE equals +0xA
-    {"E5B 0x500D20", 0x500D20, 0xD1, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(0x500D20), 0, false, Shape::kEffect, 0, 16, 6, 0x18},
-    // kCall answering in eax: E2E's 0x479970 (a, b): the mean of two 12-bit
+    {"E5B EffectKind18Sub0F_Open", bof3::addr::EffectKind18Sub0F_Open, 0xD1, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(bof3::addr::EffectKind18Sub0F_Open), 0, false, Shape::kEffect, 0, 16, 6, 0x18},
+    // kCall answering in eax: E2E's 0x479970 EffectAngle_Mean (a, b): the mean of two 12-bit
     // angles, the short way round
-    {"E2E 0x479970", 0x479970, 0x44, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(0x479970), 0xFFFFFFFFu, false, Shape::kCall},
-    // kCall handed a record: E3C's 0x4857C0 (record) fills +0..+0x16 of the
-    // record it is handed from Sprite_Current's point. Its callers hand it a
-    // shard record (0x485810's answer, 0x92BF80..); here Arg::kEffect hands it
+    {"E2E EffectAngle_Mean", bof3::addr::EffectAngle_Mean, 0x44, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(bof3::addr::EffectAngle_Mean), 0xFFFFFFFFu, false, Shape::kCall},
+    // kCall handed a record: E3C's 0x4857C0 EffectKind73_SparkInit (record)
+    // fills +0..+0x16 of the record it is handed from Sprite_Current's point.
+    // Its callers hand it a shard record (0x485810 EffectKind73_FindSpark's
+    // answer, 0x92BF80..); here Arg::kEffect hands it
     // an effect record, which proves the mechanics, not its callers' use
-    {"E3C 0x4857C0", 0x4857C0, 0x41, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(0x4857C0), 0, false, Shape::kCall, ArgAt(0, Arg::kEffect)},
-    // kEffect, a spawner: E1D's 0x46F7D0, entry 1 of kind 0x23's table 0x6542A8:
+    {"E3C EffectKind73_SparkInit", bof3::addr::EffectKind73_SparkInit, 0x41, nullptr, 0, nullptr, 0, nullptr, 0, InPlace(bof3::addr::EffectKind73_SparkInit), 0, false, Shape::kCall, ArgAt(0, Arg::kEffect)},
+    // kEffect, a spawner: E1D's 0x46F7D0 EffectKind23_SpawnRays, entry 1 of
+    // kind 0x23's table 0x6542A8 EffectKind23_States:
     // with +9 bit 2 set, Effect_FindFree; a record found gets +0 = 1, +5 =
     // 0x24; then +9 down, +1 up at 0. Ours: a second copy, its call re-aimed
     // at EkhFindFree (set in Run below)
-    {"E1D 0x46F7D0", 0x46F7D0, 0x4F, kCalls46F7D0, 1, nullptr, 0, nullptr, 0, nullptr, 0, false, Shape::kEffect, 0, 3, 0, 0x23},
-    // kEffect, a release: E2A's 0x472770 (entry 10 of the run 0x6543AC):
+    {"E1D EffectKind23_SpawnRays", bof3::addr::EffectKind23_SpawnRays, 0x4F, kCalls46F7D0, 1, nullptr, 0, nullptr, 0, nullptr, 0, false, Shape::kEffect, 0, 3, 0, 0x23},
+    // kEffect, a release: E2A's 0x472770 EffectKind2D_End (entry 10 of the run 0x6543AC):
     // MsgBoxState +4 bit 1, the counter 0x903848 = 0x32, then a tail jmp to
     // Effect_Release. Ours: a second copy, its jmp re-aimed at EkhRelease
-    {"E2A 0x472770", 0x472770, 0x13, kCalls472770, 1, nullptr, 0, nullptr, 0, nullptr, 0, false, Shape::kEffect},
+    {"E2A EffectKind2D_End", bof3::addr::EffectKind2D_End, 0x13, kCalls472770, 1, nullptr, 0, nullptr, 0, nullptr, 0, false, Shape::kEffect},
 };
 static_assert(sizeof g_clones / sizeof g_clones[0] == kCount, "one enum entry a clone, in order");
 
 // The tables the two dispatchers jump through, swapped for recorders on both sides.
+// (EffectKind21_States, EffectKind18_04_States: data, whose names are macros
+// casting the address - the literals stay.)
 const sh::DataTable kTables[] = {{0x654284, 6}, {0x65DAE8, 4}};
 const std::uint8_t kKinds[] = {0x01, 0x18, 0x21, 0x23, 0x2E};
 
@@ -145,17 +161,17 @@ void Args(unsigned k, std::uint32_t* a) {
 
 // The two copies standing in as ours, and the controls (a byte of one patched).
 void MakeCopies() {
-    const bof3::CloneCall spawn[] = {{0xC, reinterpret_cast<const void*>(&EkhFindFree), 0x589810}};
-    const bof3::CloneCall release[] = {{0xE, reinterpret_cast<const void*>(&EkhRelease), 0x589840}};
-    auto* const spawner = static_cast<unsigned char*>(bof3::CloneOriginal("ekh ours 0x46F7D0", 0x46F7D0, 0x4F, spawn, 1));
-    auto* const releaser = static_cast<unsigned char*>(bof3::CloneOriginal("ekh ours 0x472770", 0x472770, 0x13, release, 1));
+    const bof3::CloneCall spawn[] = {{0xC, reinterpret_cast<const void*>(&EkhFindFree), bof3::addr::Effect_FindFree}};
+    const bof3::CloneCall release[] = {{0xE, reinterpret_cast<const void*>(&EkhRelease), bof3::addr::Effect_Release}};
+    auto* const spawner = static_cast<unsigned char*>(bof3::CloneOriginal("ekh ours EffectKind23_SpawnRays", bof3::addr::EffectKind23_SpawnRays, 0x4F, spawn, 1));
+    auto* const releaser = static_cast<unsigned char*>(bof3::CloneOriginal("ekh ours EffectKind2D_End", bof3::addr::EffectKind2D_End, 0x13, release, 1));
     g_clones[kSpawner].ours = spawner;
     g_clones[kRelease].ours = releaser;
     const char* const control = std::getenv("BOF3X_EKH_CONTROL");
     if (!control) return;
     if (control[0] == '1') {
         // the leaf state's `mov byte [eax + 1], 1` at +0x1E: its immediate +0x21 to 2
-        auto* const leaf = static_cast<unsigned char*>(bof3::CloneOriginal("ekh control 0x462BC0", 0x462BC0, 0x23));
+        auto* const leaf = static_cast<unsigned char*>(bof3::CloneOriginal("ekh control EffectKind01_Start", bof3::addr::EffectKind01_Start, 0x23));
         if (leaf[0x21] != 1) bof3::Fatal("scenario_harness_ekh: 0x462BC0 +0x21 holds 0x%X, not 1", leaf[0x21]);
         leaf[0x21] = 2;
         g_clones[kLeaf].ours = leaf;

@@ -32,13 +32,17 @@
 //
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
 // can stand recorders in for ours as for the originals' copies. Each is a
-// faithful replacement; where the original jumps through a state table past its
+// faithful replacement but kind 0xAF's full-screen tile (EffectKindAF_DrawScreen,
+// the site 0x493308), which is DIV-0041's fill (section 3c) and the original's
+// 320 x 240 while the fills are unarmed or the picture narrow; where the
+// original jumps through a state table past its
 // end ours aborts with a message (docs/effect_4f.md section 6). The x87
 // arithmetic is the originals' instructions (inline assembly) or long double,
 // which the compiler keeps on the x87 at the control word's precision, as the
 // originals' fild / fadd / fsub / fstp chains are.
 #include "game/effect_4f.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -47,6 +51,7 @@
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -625,16 +630,18 @@ extern "C" void __cdecl EffectKindAF_FadeOut(void) {
 
 // original 0x4932E0 (cdecl): a semi-transparent tile over the screen - (0, 0),
 // 320.0 by 240.0 (the floats at +0x14 / +0x18; +0x10 not written), the colour
-// (shade, 0, 0) - committed 0x1C to slot 1. The 320.0 is DIV-0041's site
-// 0x493308, not widened (docs/effect_4f.md section 6).
+// (shade, 0, 0) - committed 0x1C to slot 1. The fill is DIV-0041's site
+// 0x493308 (section 3c): (Widescreen_FillX(), 0) Widescreen_FillWidth() x 240,
+// which is the original's (0, 0) 320 x 240 until Widescreen_ArmFills has run
+// and whenever the picture is narrow (docs/effect_4f.md section 6).
 extern "C" void __cdecl EffectKindAF_DrawScreen(unsigned shade) {
     unsigned char* const p = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     const unsigned char c = static_cast<unsigned char>(shade);
-    SetUL(p + 8, 0);
+    SetBits(p + 8, std::bit_cast<U>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
     SetUL(p + 0xC, 0);
-    SetBits(p + 0x14, 0x43A00000u);   // 320.0f
+    SetBits(p + 0x14, std::bit_cast<U>(Widescreen_FillWidth()));   // 0x43A00000, 320.0f narrow
     SetBits(p + 0x18, 0x43700000u);   // 240.0f
     p[4] = c;
     p[5] = 0;

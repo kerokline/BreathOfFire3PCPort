@@ -276,7 +276,7 @@ struct Clone {
 };
 
 // The most arguments a recorder takes and a clone is called with (12 since
-// round thirteen: E3D's quad helper 0x486AB0 reads twelve). A caller that
+// round thirteen: E3D's quad helper EffectKind7D_FillF4 reads twelve). A caller that
 // pushes fewer leaves its own frame in the rest, never logged. Arguments 10
 // and 11 are derived from the first ten, not drawn, so the random stream of a
 // group that never reads them is what it was.

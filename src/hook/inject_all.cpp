@@ -939,7 +939,9 @@ void InjectAll() {
                                 // every scenario group, so their random streams are the ones they had; every effect
                                 // group's inject goes after it, whose self-test copies 0x462BC0 (E1A), 0x46F2B0,
                                 // 0x46F7D0 (E1D), 0x4FD470 (E5A), 0x500D20 (E5B), 0x479970 (E2E), 0x4857C0 (E3C),
-                                // 0x472770 (E2A) from the image (docs/scenario_harness.md section 8.8)
+                                // 0x472770 (E2A) from the image - all ours now, named by their bof3::addr constants
+                                // (the originals' addresses), and run "in place" as Capcom's only because those
+                                // groups inject below (docs/scenario_harness.md sections 8.8 and 8.10)
     Effect1F_Inject();          // round 13 group E1F (0x52A6C0..0x52D07C: the extra-slot menu on effect record 6,
                                 // the scaled sprite pass, the effect records' reset, the kind points, game mode 8's
                                 // steps, UiSprite_SetMode / UiSprite_Draw): its clones' calls re-aimed at the
@@ -1057,8 +1059,9 @@ void InjectAll() {
                                 // recorders, its ten state tables swapped for the fuzz only; after
                                 // ScenarioHarnessEkh_Inject (none of its eight rows is E4F's) and Effect3A_Inject /
                                 // Effect1C_Inject, which call 0x493B50, 0x493C60 and 0x493090 by address; no module
-                                // patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp, widescreen.cpp - DIV-0041
-                                // names 0x493308, inside EffectKindAF_DrawScreen, as a site not yet widened)
+                                // patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp, widescreen.cpp); before
+                                // Widescreen_ArmFills (EffectKindAF_DrawScreen's fill, DIV-0041's 0x493308, compares
+                                // the original's 320 x 240)
     Effect4E_Inject();          // round 13 group E4E (0x48DF90..0x491C96: effect kinds 0x9B, 0x9C and 0xA0 whole,
                                 // kind 0x9E's dispatcher and draws, the dispatchers of 0xA1..0xA3 and 0xA7..0xA9):
                                 // its clones' calls re-aimed at the scenario harness's recorders, its ten state
@@ -1068,8 +1071,10 @@ void InjectAll() {
     Effect4B_Inject();          // round 13 group E4B (0x489030..0x48B1FC: effect kinds 0x88..0x8C, 0x9D, 0x9F, 0xA4 -
                                 // dispatchers, states, draws - and kind 0x87's helpers): its clones' calls re-aimed at
                                 // the scenario harness's recorders, its eight state tables swapped for the fuzz only;
-                                // after ScenarioHarnessEkh_Inject (none of its eight rows is E4B's); no module patches
-                                // bytes inside its 66 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+                                // after ScenarioHarnessEkh_Inject (none of its eight rows is E4B's) and before
+                                // Widescreen_ArmFills (EffectKind89_DrawTint's fill, DIV-0041's 0x489D47, compares the
+                                // original's 320 x 240); no module patches bytes inside its 66 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
     Effect4A_Inject();          // round 13 group E4A (0x488020..0x48902E and 0x433640: effect kinds 0x82 (states
                                 // 11..23), 0x83..0x87 - dispatchers and states): its clones' calls re-aimed at the
                                 // scenario harness's recorders, its five state tables swapped for the fuzz only;
