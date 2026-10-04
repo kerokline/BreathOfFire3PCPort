@@ -305,3 +305,121 @@ build copied to a launcher of its own):
    one; each doc lists its own.
 5. The caught-fish route's original side (above), and R1E's minimal case.
 6. De-duplication of the repeated bodies is a refactor for after the round.
+
+## 10. Wave two, as it ran (2026-10-04)
+
+From `fa583bc`, eight Opus agents; the briefs carried wave one's addendum
+(one name once, R1E's caution, the stand-in and crash lessons).
+
+| Group | Functions | Rounds | Controls planted / refused | Merge | Ours after |
+|---|--:|--:|---|---|--:|
+| R2A ([`rest_2a.md`](rest_2a.md)) | 22 | 132,000 | 71 / 70 | `d9f424f` | 9,011 |
+| R2G ([`rest_2g.md`](rest_2g.md)) | 48 | 192,000 | 91 / 91 | `cee7a20` | 9,059 |
+| R2D ([`rest_2d.md`](rest_2d.md)) | 51 | 306,000 | 118 / 117 | `df20d18` | 9,110 |
+| R2E ([`rest_2e.md`](rest_2e.md)) | 49 | 294,000 | 121 / 119 | `8a110b1` | 9,159 |
+| R2H ([`rest_2h.md`](rest_2h.md)) | 36 | 144,000 | 84 / 83 | `76f1fc9` | 9,195 |
+| R2F ([`rest_2f.md`](rest_2f.md)) | 49 | 294,000 | 144 / 139 | `b5c84a9` | 9,244 |
+| R2C ([`rest_2c.md`](rest_2c.md)) | 61 | 244,000 | 188 / 186 | `10d770d` | 9,305 |
+| R2B ([`rest_2b.md`](rest_2b.md)) | 38 | 152,000 | 106 / 103 | `2698d13` | 9,343 |
+
+354 functions (the cut's 347 less three starts that are cases of hosts
+already ours - R2B's `0x551E40`, `0x553E50`, `0x559AD0` - plus ten no list
+had: R2A's `0x537760`, `0x537B10`, `0x537CE0`; R2B's `0x57E720`, `0x57EDF0`;
+R2C's `0x583350`; R2E's `0x58CFC0`; R2F's `0x596530`; R2H's `0x59C810` and
+`0x59E160`), every group 0 mismatches, every control not refused an equivalent
+mutant with a refused near variant. Each merge built and ran its shadow and
+`'*'`; the tip `f348fc1` (the last merge plus DIV-0073's text) was verified
+alone, narrow and wide: exit 0, 9,343 ours, `ledger_check` 73 entries 0
+errors.
+
+**What the wave found out.**
+
+- **The bands are not what the cut's labels said**: R2A is HP / AP helpers,
+  a mode-11 sprite pass and four linked-object handlers, not scenario code;
+  R2C holds `Save_BuildBlock` and `Save_QuickWrite` (F12's path, IDEAS I18);
+  R2H's `Menu_DrawVerbPair` `0x59E160` was filed as renderer by its address
+  range. **The "platform and library" rows from `0x59E4F0` on were not read
+  by anyone**: one of them was game code, so that bucket wants a pass before
+  the round is called complete.
+- **Two tables were named by two groups each** (an address entered twice,
+  which the merge's check refuses): `0x667354` (R2D's
+  `FieldMenuItems_State5Steps` kept, R2E's entry removed on its branch) and
+  `0x663E28` (R2C's `MasterFigure_States` kept, R2B's removed). The reader
+  is one group's and the entries another's; `collide.py` in the scratch
+  checks names and addresses across the reported branches before a merge.
+- **A merge left a second `FishingText_Arm()`** between two groups' injects
+  (wave one's keep-both resolution); removed in `48b7d97`, and `one_grow.py`
+  now keeps one block of each of the four arming calls before `InjectReport`.
+- **R2B edited two harness rows** (`Effect_Spawn` in `area_harness.cpp`,
+  `Effect_SpawnAt` in `scenario_harness.cpp`, theirs to ours, the masks
+  unchanged) and re-keyed eleven area fuzz files by name: once the two
+  names are ours `Register` stops at a row that lists them as Capcom's.
+  Read by the coordinator; they are right.
+- **DIV-0073** (R2B): the masters' model's light matrix, zeros where the
+  original copies 26 bytes of stale stack into `Gte_Matrix2`. The owner's
+  word is owed.
+- **The merge runner outlived its kill.** The harness stops a background
+  command at two hours; the runner's shell went on, merged R2B beside the
+  runner started to replace it, and three processes built and self-tested in
+  the verification worktree at once (a `Permission denied` from ninja, an
+  exit 126, a launcher gone, two games left running). The repository was
+  not harmed - one merge commit - and the tip was verified again alone.
+  **Before a second runner starts, `tasklist` for the first's shell**; a
+  wave of eight merges wants more than two hours, so queue it in two parts.
+
+**Live checks at `f348fc1`** (the machine quiet, the state hash, each route's
+pair recorded with this build):
+
+| Route | Ticks | Ours against the pair |
+|---|--:|---|
+| the attract sequence (the pair `attract_r14_*` of `dafd4a3`) | 10,305 | identical but tick 3 on seven pages (the start-up upload and a sound byte - the pages two originals differed on at tick 3 in the first trials); the oracle identical at every logged frame |
+| `combat.txt` | 2,561 | identical |
+| `menu_screens.txt` | 1,729 | identical |
+| `field_menu.txt` | 1,409 | identical |
+| `shop.txt` | 3,137 | **differs**, below |
+| `masterAndManillo.txt` | - | no pair: the original side crashes at `0x5A9E45` near frame 965, as `caughFish.txt`'s does; ours runs to `done` |
+
+**The shop route's two differences, neither wave two's.**
+
+1. One window record's x (`WindowRecords + 0x2F8`, `0x803458`) is `0xD9` in
+   ours and `0xD8` in the original for 141 ticks from tick 1000. It goes
+   away with the 2026-10-03 fix wave's layout divergences switched off
+   (`ShopYesNoLayout`, `ShopAskRow`, `MasterAskLayout`, `TradeLeaveLayout`,
+   `TradeConfirmLayout`, `BattleEquipLabelsRow`, `MsgBoxEffectSpaceSkips`):
+   DIV-0027's amendment, as meant. **The route A/Bs' `DIVS` list in
+   `analysis/validate_combat.sh` predates those seven names**; an ours side
+   compared against Capcom's wants them in it.
+2. From tick 2975 to the end, twelve bytes at `0x905BC6..0x905BD1` differ
+   and ours has built one more primitive a frame (`Gfx_PacketNext` 0x18
+   further). It stays with every one of wave two's 354 functions switched
+   back to Capcom's (8,990 ours) and with all the divergences above off, so
+   **it is older than this wave** - a difference the call hash of rounds
+   nine to thirteen could not see. `0x905BC0` is a table of 4-byte records
+   that `0x57F340`, `Save_BuildBlock` `0x5806F0`, `0x5809C0`, `0x587CD0` and
+   `0x588DC0` reference. Not diagnosed: which function of ours writes it
+   differently is the next read (a dump at tick 2975 on both sides, then
+   `BOF3X_ORIGINAL` by module over the callers of those five).
+
+**Debts added to section 9's list:**
+
+7. The shop route's second difference (above) - the state hash's first
+   finding that is not already in the ledger.
+8. The original side's crash at `0x5A9E45` on `caughFish.txt` and
+   `masterAndManillo.txt`: until it is understood those two routes have no
+   pair, and they are the routes that enter the fishing spot and the
+   masters' screens.
+9. `window_task_callees.h`'s `kRecordHandlers` line is still raw (R2F left
+   it, shared with R2G and R2H); DIV-0027's note names `MenuList_TitleBox`
+   where the function is `MenuList_WideTitleBox` `0x59A2E0` (R2G).
+10. Host-extent lines in `entries_logic.txt` to split, per group doc: R2A
+    one, R2B four, R2C four, R2D five, R2E three, R2F seven, R2G two, R2H
+    seven.
+11. The fuzz of three functions leaves a path out under a Latin overlay
+    (`Win2_DrawItemList` and `MasterScreen_AskYesNo`'s re-aimed calls,
+    R2H's DIV-0059 title site): the English paths there are unfuzzed.
+12. For the owner: `FieldMenu_CampAllowedCell` masks the cell with `0xF0`
+    and compares with `0xA1`, `0xAF`, `0x91`, which cannot match (R2D);
+    `Save_BuildBlock` shows the level and experience of record 0 beside the
+    leader's name (R2C); four more states read effect record 255 inside
+    `Gfx_PacketPools` when no effect slot is free (R2A - the read of
+    section 9's item 3).
