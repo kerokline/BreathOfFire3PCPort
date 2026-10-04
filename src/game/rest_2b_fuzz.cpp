@@ -189,6 +189,13 @@ U ElevationEffect(const U*, U answer) {
     const U high = static_cast<U>(Long(Mem(kBY))) >> 16;
     return (answer & 0xFFFF0000u) | ((high + (n >> 4) % 3 - 1) & 0xFFFFu);
 }
+// 0x4941B0 (the winding): ax at the callers' test's edge - 0, 1, -1, a high
+// half with ax 0 - or anything.
+U WindingEffect(const U*, U answer) {
+    static const U kAnswers[] = {0, 1, 0xFFFF, 0x10000, 0xFFFF0000u, 0x7FFF, 0x8000};
+    const U n = sh::Noise();
+    return n % 3 == 0 ? answer : kAnswers[(n >> 2) % 7];
+}
 // Gfx_CommitPrim: the packet cursor on by the size, as the real one moves it.
 U CommitEffect(const U* a, U answer) {
     unsigned char* const p = sh::Pointer(sh::at::kPacketNext);
@@ -263,7 +270,7 @@ const sh::Callee kCallees[] = {
     {G_OURS(Shisu_DrawModel), 1, {kAll}, kG, 0, 0},
     // not ours yet: R2C's model A draw, R3G's winding (rest_2b_callees.h)
     {"0x57F340", at::kModelADraw, at::kModelADraw, 0, {}, kG, 0, 0},
-    {"0x4941B0", at::kWinding, at::kWinding, 3, {kAll, kAll, kAll}, kG, 0, 0, {8, 8, 8}, nullptr, nullptr, true},
+    {"0x4941B0", at::kWinding, at::kWinding, 3, {kAll, kAll, kAll}, kG, 0, 0, {8, 8, 8}, &WindingEffect, nullptr, true},
     // ours, with the width each reads
     {G_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0},
     {G_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &RepeatEffect},
@@ -374,6 +381,9 @@ void Seed(unsigned k) {
     B(kBColour + 1) = static_cast<unsigned char>(PickOf(0xFF - three, 0xFE - three, 0x100 - three, 0x80, 0xFF, sh::Next()));
     B(kBColour + 2) = static_cast<unsigned char>(PickOf(three, three + 1, three - 1, 0, 0x80, sh::Next()));
     SetLong(Mem(kBAngle), Signed(PickOf(0, 0x1000, 0x2000, 0xFC0, 0x40, 0xFFF, 0x1001, sh::Next())));
+    // model B's y on a whole unit half the time (Shisu_ModelBDrop compares it,
+    // 0x200000 on, with the elevation << 16)
+    if (sh::Half()) SetLong(Mem(kBY), Signed(sh::Next() & 0xFFFF0000u));
     // the two models' headers and quads, and the first four sprite records'
     // (the disturbance can move Sprite_Current onto one inside Shisu_DrawModel)
     SeedModel(Mem(kModelA), HeaderA(), QuadsA());
