@@ -179,7 +179,7 @@ a fold follows a wave, as in round thirteen.
   generated (`make_briefs14.py <scratch> <round 13 scratch> <wave> <tip>`,
   `make_brief_r0a.py`) and carry `<TIP>` until then.
 
-## 6. Decided by the owner (2026-10-03), and what is still open
+## 6. Decided by the owner (2026-10-03)
 
 1. **The scope is the whole remainder, launched as three sessions** to keep
    a single session's size down: **session one** stage A (R0A), then wave
@@ -187,10 +187,9 @@ a fold follows a wave, as in round thirteen.
    three** wave four (326). The waves and groups are as cut; a wave is
    still launched and merged on its own inside a session.
 2. **The order is 1, 2, 3, 4** (callee first), as proposed.
-3. **Open: the `hypothesis` rule.** The briefs say every start that is a
-   function is the group's, whatever class the cut gave it (round thirteen
-   left such rows out, and they are this round's wave three). Not yet
-   answered; it stands as written unless the owner says otherwise.
+3. **The `hypothesis` rule stands as the briefs have it**: every start
+   that is a function is the group's, whatever class the cut gave it (round
+   thirteen left such rows out, and they are this round's wave three).
 4. **What follows the round**: parts 0 and 1 (533 starts) are not
    per-function takeovers - the MP3 decoder's replacement and the C runtime
    are [`IDEAS.md`](IDEAS.md) I8 / I12.
