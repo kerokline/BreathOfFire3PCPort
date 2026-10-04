@@ -217,3 +217,91 @@ The plan's worktree is `r14plan/` there (branch `phase-3/round14-plan`).
   thirteen's waves of 302 to 379 did.
 - The base's proof (`'*'` narrow and wide at `aed35f8`) is the round
   thirteen session's, not repeated here.
+
+## 9. Stage A and wave one, as they ran (2026-10-04)
+
+On `phase-3/capture-round-fourteen`, cut from `main` at `5a94224` (round
+thirteen, PR #40) with this plan's commits cherry-picked; the code at
+`aed35f8` and at that tip is the same, so the cut stood. Before stage A the
+state hash was built ([`state-hash.md`](state-hash.md)): the live check of
+this round, since the call trace has less to arm each wave.
+
+| Group | Functions | Rounds | Controls planted / refused | Merge | Ours after |
+|---|--:|--:|---|---|--:|
+| R0A ([`rest_0a.md`](rest_0a.md)) | 7 | 140,000 | 53 / 52 | `ba2c3c3` | 8,655 |
+| R1B ([`rest_1b.md`](rest_1b.md)) | 47 | 188,000 | 88 / 86 | `1a81381` | 8,702 |
+| R1E ([`rest_1e.md`](rest_1e.md)) | 47 | 188,000 | 76 / 76 | `454ee82` | 8,749 |
+| R1A ([`rest_1a.md`](rest_1a.md)) | 49 | 196,000 | 85 / 82 | `47ef5cb` | 8,798 |
+| R1C ([`rest_1c.md`](rest_1c.md)) | 51 | 204,000 | 101 / 100 | `71f85ed`, `1ae6e1a` | 8,849 |
+| R1G ([`rest_1g.md`](rest_1g.md)) | 45 | 270,000 | 103 / 103 | `db0c327` | 8,894 |
+| R1F ([`rest_1f.md`](rest_1f.md)) | 49 | 392,000 | 108 / 105 | `4df1600` | 8,943 |
+| R1D ([`rest_1d.md`](rest_1d.md)) | 46 | 276,000 | 103 / 101 | `4962b89` | 8,989 |
+
+341 functions (the cut's 338 and three starts no list had: R1C's `0x51FA30`,
+R1G's `0x528BE0` and `0x52BF90`), every group 0 mismatches, every control not
+refused an equivalent mutant with a refused near variant (each group's doc
+lists them). Each merge built and ran its own shadow and `'*'` in the
+verification worktree, exit 0, `ledger_check` 0 errors; the tip `4962b89`
+also with `BOF3X_WIDE=1`. No group needed a ledger entry.
+
+**What the wave found out.**
+
+- **R1G's band is the fishing spot**, not field actions: the rest of the
+  leader's state 9 and game mode 8's fish. The cut's 3,056 bytes for
+  `0x52BBD0` ran on over `0x52BF90`.
+- **Two groups gave one name to two functions**: R1A's `0x51D6D0` and R1C's
+  `0x520350` were both `PartyAction_WaitEffect`, and `gen_symbols.py` stopped
+  R1C's merge. R1C's is `PartyAction_WaitEffectEnd` since `1ae6e1a`. The
+  party sets repeat a handful of bodies instruction for instruction (the
+  Begin, Resolve, cell-pickup and strike shapes; R1F lists `0x524BB0` equal to
+  `0x51D4E0`, `0x51F880`, `0x522E20`), so the next waves' briefs say: a name
+  not carrying the group's own set, form or screen is checked against
+  `symbols.toml` and the sibling groups' likely names first.
+- **R1E reports the toolchain dropping bits** (its doc's section 4):
+  `(pointer & 0xFFFFFF00) | byte` passed as an `unsigned long` argument was
+  emitted as the byte alone; an empty `asm volatile` on the upper part is its
+  workaround. Read, not reproduced by the coordinator: a minimal case is owed
+  before it is called a compiler defect.
+
+**Live checks at `4962b89`** (the machine quiet; the verification worktree's
+build copied to a launcher of its own):
+
+- The attract sequence, state hash: identical to the pair `attract_r14_*` on
+  all 10,305 ticks; the oracle identical at every logged frame.
+- `combat.txt`, state hash: identical on all 2,561 ticks to a pair recorded
+  with the same build. Against the morning's pair it differed on seven pages
+  from tick 1 - the English overlay's pointers into our DLL, which moved with
+  the build. **Under a language overlay the reference pair is recorded with
+  the build under test** ([`state-hash.md`](state-hash.md) section 6).
+- `caughFish.txt`, the route that enters R1G: ours runs to `done`, and its
+  `Rand` count is the owner's recording's on all 3,889 frames
+  (`analysis/shots/fishing_catch2/randlog_recording.txt`). **The original side
+  of this route crashes** (`*` with the route A/Bs' keep list: an access
+  violation at `0x5A9E45`, Capcom's code, near recipe frame 852, both runs),
+  so the route has no state-hash pair. Only five functions are ours on that
+  side, so it is not wave one's; not diagnosed.
+
+**Debts** (for the round's end unless a wave trips on one):
+
+1. `entries_logic.txt` lines that carry a host's extent where the function is
+   now ours with its own: R1C's four (`0051F4B0`, `0051F880`, `005206C0`,
+   `00520C80` - the last runs into R1D's range), R1D's four (`00521200`,
+   `005218C0`, `00521F80`, `00522320`), R1F's four (`0x5242B0`, `0x524BB0`,
+   `0x525150`, `0x5287B0`), R0A's two that cover R1A's hidden starts.
+2. The harness fold: `Sprite_LoadPalette`'s standard row hashes a destination
+   the callee only writes (it hid a wrong stride from R1A's C74); R1C's six
+   field stand-ins the standard set lacks; `scenario_harness.cpp`'s `FX_RAW`
+   row for `0x52B330` answers garbage where the function answers al 0 / 1
+   (R1G); seven `FX_RAW` rows now name functions of ours.
+3. The owner's: `PartyAction_WaitEffectDone` `0x521A20` (R1D's L1, and the
+   same read in R1C's `0x520350`) reads a byte inside `Gfx_PacketPools` when
+   all 20 effect slots are full, which R1D says play reaches - ours copies the
+   read; ending the action instead would be a ledger entry. And R1B's: 5 of 16
+   strikes on a `0xF6` / `0xF7` cell set `Field_Request` to 2 without opening
+   a message.
+4. Unbounded indexes: every dispatcher of the wave aborts past its table and
+   several states abort on an effect index past 19 or an object index past
+   `0x21`, where the original reads on. No group could show play reaching
+   one; each doc lists its own.
+5. The caught-fish route's original side (above), and R1E's minimal case.
+6. De-duplication of the repeated bodies is a refactor for after the round.

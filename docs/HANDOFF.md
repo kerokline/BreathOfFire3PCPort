@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-04: round thirteen is `main`, PR #40; round fourteen on `phase-3/capture-round-fourteen` - the state hash built, stage A's R0A merged at `ba2c3c3`, 8,655 ours, wave one R1A..R1G running)
+**Status:** IN PROGRESS (2026-10-04: round thirteen is `main`, PR #40; round fourteen on `phase-3/capture-round-fourteen` - the state hash built, stage A and wave one merged, `4962b89`, 8,989 ours, live-checked; wave two R2A..R2H running)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -48,10 +48,11 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    1,341 functions, stage A and four waves). On `phase-3/capture-round-fourteen`, cut from `main` at `5a94224` (PR #40,
    round thirteen) with the plan's four commits cherry-picked - `phase-3/round14-plan` sits on the history from before the
    sign-off rewrite and must not be merged. **Done 2026-10-04:** R0A, the seven shared helpers
-   ([`rest_0a.md`](rest_0a.md)), merged at `ba2c3c3` and verified narrow and wide, 8,655 ours. **Running:** wave one,
-   R1A..R1G, seven Opus agents from `ba2c3c3`. **Next:** merge each as it reports (`merge_group14.sh`, any order in
-   wave one), the coordinator's pass, then the state-hash check at the wave's tip (below) and wave two (merge order
-   R2H R2G R2B R2C R2F R2E R2D). The owner's decisions: three launch sessions (R0A + waves one and two; wave three; wave
+   ([`rest_0a.md`](rest_0a.md)), merged at `ba2c3c3` and verified narrow and wide, 8,655 ours. **Wave one, R1A..R1G, merged at `4962b89`**: 341 functions, 8,989 ours, the
+   attract sequence and `combat.txt` identical on the state hash, `caughFish.txt`'s `Rand` count the recording's (the round
+   doc's section 9 has the record and the debts). **Running:** wave two, R2A..R2H, eight Opus agents. **Next:** merge in the
+   order R2H R2G R2B R2C R2F R2E R2D (R2A any time) through `runner14.sh` and `pending14.txt`, check for a name bound twice
+   before each merge, then the state-hash checks at the wave's tip with the machine quiet. The owner's decisions: three launch sessions (R0A + waves one and two; wave three; wave
    four); round thirteen's unplaced rows stay in wave three as R3E..R3G. The scripts and briefs are in the
    session-`309e3952` scratchpad (`.../309e3952-1e51-4cd8-8b59-6c0e2b38bc89/scratchpad/round14/`): `make_briefs14.py`
    then `post_brief.py <scratch> <wave> <tip>` (the `git commit -s` rule and stage A's addendum).
@@ -624,7 +625,7 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Round fourteen's wave one is running (item 00000000 above); nothing is pushed on `phase-3/capture-round-fourteen`.
+Round fourteen's wave two is running (item 00000000 above); nothing is pushed on `phase-3/capture-round-fourteen`.
 Before it: nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
 half is pushed on `claude/round-10-cleanup-handoff-qtwcrk` (item 0) and
 wants the `'*'` run and the other game-side checks before its PR. The wave

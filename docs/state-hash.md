@@ -170,8 +170,17 @@ noise.
 - **The reference** is a pair of original runs and is recorded per route once
   per skip list: `analysis/statehash/<route>_orig.sh`, `_origb.sh`. A change of
   the skip list, the recipe, the save or the launcher's settings wants a new
-  pair. The original side needs nothing of ours, so a reference outlives the
-  rounds - unlike the call hash's, whose armed set changed every round.
+  pair. Without a language overlay the original side needs nothing of ours, so the
+  reference outlives the rounds - unlike the call hash's, whose armed set
+  changed every round.
+- **Under a language overlay the pair is recorded with the build under
+  test.** The English, French, German and Japanese text is in our DLL and the
+  game's tables point at it (`Menu_Verbs`, the label and placement tables, six
+  pages in all on the combat route); the DLL's address moves with the build,
+  so a pair from another build differs on those pages from tick 1 (round
+  fourteen's wave one met it). The attract sequence runs without an overlay
+  and its pair does outlive builds: `attract_r14_*`, recorded at `dafd4a3`,
+  was identical to ours at `4962b89`.
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
 - **A new `DIVERGENCE.md` entry that changes state** shows as a page from its
