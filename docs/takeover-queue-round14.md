@@ -3,8 +3,8 @@
 **Status:** MEASURED (2026-10-03, at `aed35f8` on
 `phase-3/capture-round-thirteen`, while round thirteen's end was still in
 progress) - a plan, a cut and filled briefs. Nothing taken, nothing named,
-no C++ or tool changed. **The scope is a proposal and the owner's to
-decide** (section 6). The cut must be regenerated at the tip the round
+no C++ or tool changed. **The scope and the order are decided** (section 6: the whole
+remainder, in three launch sessions). The cut must be regenerated at the tip the round
 starts from if anything on the round branch takes a function first
 (section 5).
 
@@ -18,7 +18,7 @@ all that is left of it.** They fall into four address bands of about 340
 each: the party sets' field actions with the fishing minigame, the menus /
 windows / shop / master screens, the battle engine's last handlers with
 what round thirteen left in the effect bands, and the community band. The
-proposal is one round of **four waves, 28 groups, behind a stage-A group of
+round is **four waves, 28 groups, behind a stage-A group of
 seven shared helpers**, on the two harnesses that exist (no harness group).
 After it nothing of the game's own code is Capcom's.
 
@@ -179,19 +179,18 @@ a fold follows a wave, as in round thirteen.
   generated (`make_briefs14.py <scratch> <round 13 scratch> <wave> <tip>`,
   `make_brief_r0a.py`) and carry `<TIP>` until then.
 
-## 6. For the owner
+## 6. Decided by the owner (2026-10-03), and what is still open
 
-1. **The scope.** One round for the whole remainder (1,341, four waves), or
-   a smaller round first - [`HANDOFF.md`](HANDOFF.md) named the camp's
-   windows and fishing (about 80, with routes) as round fourteen's
-   candidates before this count was made. As cut, those are inside R1G and
-   wave two; wave one and wave two can run as a round of their own (678)
-   with the battle and community waves after.
-2. **The `hypothesis` rule.** Proposed: every start that is a function is
-   the group's, whatever class the cut gave it (round thirteen left such
-   rows out, and they are this round's wave three).
-3. **The order.** Proposed 1, 2, 3, 4 (callee first). The community wave
-   has no route; the fishing and camp rows have two.
+1. **The scope is the whole remainder, launched as three sessions** to keep
+   a single session's size down: **session one** stage A (R0A), then wave
+   one and wave two (685); **session two** wave three (330); **session
+   three** wave four (326). The waves and groups are as cut; a wave is
+   still launched and merged on its own inside a session.
+2. **The order is 1, 2, 3, 4** (callee first), as proposed.
+3. **Open: the  rule.** The briefs say every start that is a
+   function is the group's, whatever class the cut gave it (round thirteen
+   left such rows out, and they are this round's wave three). Not yet
+   answered; it stands as written unless the owner says otherwise.
 4. **What follows the round**: parts 0 and 1 (533 starts) are not
    per-function takeovers - the MP3 decoder's replacement and the C runtime
    are [`IDEAS.md`](IDEAS.md) I8 / I12.
