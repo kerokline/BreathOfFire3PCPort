@@ -10,8 +10,8 @@ and 4, band_rows' "code no list has"). None dropped: no start is a case or a
 shared tail. Each read to its last instruction with capstone and fuzzed
 through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8), used unchanged:
-200,000 rounds, **0 mismatches**; STAR_RESULT. Controls: CONTROLS_RESULT
-(section 5). **One divergence site**: `EffectKindAA_DrawFill` is a full-frame
+200,000 rounds, **0 mismatches**; STAR_RESULT. Controls: 111 of 112 refused, the
+other a crash re-planted inside its window and refused (section 5). **One divergence site**: `EffectKindAA_DrawFill` is a full-frame
 fill and is drawn through DIV-0041's widened fill (section 2) - the
 coordinator's amendment of DIV-0041. No new `.data` table: every state table
 the functions sit in was named by round thirteen. **Fuzz only**: no recorded
@@ -292,7 +292,131 @@ STAR_SECTION
 
 ## 5. Controls
 
-CONTROLS_SECTION
+Planted one at a time by a scratch script (`controls.py` in the session scratchpad's `r3f/`, not committed:
+each plant anchored on a unique string of `rest_3f.cpp` or `rest_3f_callees.h`, rebuilt, run under
+`BOF3X_R3F_ONLY=<filter>` at 2,000 rounds a function, the file restored, and rebuilt at the end; the
+committed file has no switch). The harness stops at the first differing round, so the column is the round
+that refused it (0-based) in this worktree; every refused run exited 3 on a `MISMATCH` line. **112 planted,
+111 refused.** Number 53 (the pixel cursor stepping 4) is **not counted**: its run printed a `MISMATCH` line
+and then crashed (the cursor walked past the read-back window), and a crash is not a refusal - re-planted
+inside the window as 111 (one column fewer a row) and 112 (the pixel stored `^ 1`), both refused. No
+equivalent mutant was met. Of note: 43 (`+0x2A` cleared on the borrowed record instead of on
+`Sprite_Current` read again after the animation call) is refused, so the fuzz's disturbance sees the re-read.
+
+| # | Run (`_ONLY`) | Plant (in `rest_3f.cpp` unless said) | Refused at |
+|--:|---|---|---|
+| 1 | `EffectKind60_Start` | `SetUL(s + 0x3C, 0x4000001);` for `SetUL(s + 0x3C, 0x4000000);` | round 0 |
+| 2 | `EffectKind60_Start` | `SetUL(s + 0xC, UL(s + 0x34) + 0x40001u);` for `SetUL(s + 0xC, UL(s + 0x34) + 0x40000u);` | round 0 |
+| 3 | `EffectKind60_SlideBoth` | `if (UL(s + 0x34) == 0x98001u)` for `if (UL(s + 0x34) == 0x98000u)` | round 1 |
+| 4 | `EffectKind60_SlideEnd` | `if (UL(s + 0xC) == 0x98001u)` for `if (UL(s + 0xC) == 0x98000u)` | round 1 |
+| 5 | `EffectKind60_SlideBoth` | `DrawLine)(Point(s + 0xC), Point(s + 0x34)); s = S(); if (UL(s + 0x34)` for `DrawLine)(Point(s + 0x34), Point(s + 0xC)); s = S(); if (UL(s + 0x34)` | round 0 |
+| 6 | `EffectKind5F_DrawLineDisc` | `alignas(4) short size[2] = {0x50, 0x51};` for `alignas(4) short size[2] = {0x50, 0x50};` | round 0 |
+| 7 | `EffectKind5F_DrawLineDisc` | `StF(p + 8, I(sin_a) + F(fb) + F(o) + F(fs));` for `StF(p + 8, I(sin_a) + F(fb) + F(o) - F(fs));` | round 0 |
+| 8 | `EffectKind5F_DrawLineDisc` | `b = ~b;` for `b = 0u - b;` | round 0 |
+| 9 | `EffectKind5F_DrawLineDisc` | `angle += static_cast<U>(SH_CALL(Rand)()) & 0x7Fu;` for `angle += static_cast<U>(SH_CALL(Rand)()) & 0xFFu;` | round 0 |
+| 10 | `EffectKind5F_DrawLineDisc` | `static_cast<int>(dy), 0x24);` for `static_cast<int>(dy), 0x20);` | round 0 |
+| 11 | `EffectKind5F_DrawLineDisc` | `if (static_cast<std::int16_t>(i) >= static_cast<std::int16_t>(radiu...` for `if (static_cast<std::int16_t>(i) > static_cast<std::int16_t>(radius...` | round 6 |
+| 12 | `EffectKind69_DrawLines` | `SetUL(At(at::kLineAmp), 0x41);` for `SetUL(At(at::kLineAmp), 0x40);` | round 0 |
+| 13 | `EffectKind69_DrawLines` | `((s[0xB] + i + 3u) & 0xFu) << 8` for `((s[0xB] + i + 2u) & 0xFu) << 8` | round 1 |
+| 14 | `EffectKind69_DrawLines` | `SetWord(v + 4, (0u - i) << 5);` for `SetWord(v + 4, (0u - i) << 6);` | round 1 |
+| 15 | `EffectKind69_DrawLines` | `p[6] = 0x21; const U next` for `p[6] = 0x20; const U next` | round 1 |
+| 16 | `EffectKind69_DrawLines` | `if (static_cast<std::int32_t>(Scratch_Swap) <= 2) return;` for `if (static_cast<std::int32_t>(Scratch_Swap) <= 1) return;` | round 1 |
+| 17 | `EffectKind69_DrawLines` | `p[0x15] = 0x3F;` for `p[0x15] = At(at::kLineShade)[0];` | round 1 |
+| 18 | `EffectKind9C_DrawTrail` | `StF(p + 8, F(o) + F(hy));` for `StF(p + 8, F(o) + F(hx));` | round 0 |
+| 19 | `EffectKind9C_DrawTrail` | `const U f = Frame_Counter & 3u;` for `const U f = Frame_Counter & 7u;` | round 0 |
+| 20 | `EffectKind9C_DrawTrail` | `for (unsigned j = 0; j < 7; ++j) {` for `for (unsigned j = 0; j < 8; ++j) {` | round 0 |
+| 21 | `EffectKind9C_DrawTrail` | `StF(p + 0xC, F(o + 4) - F(hy));` for `StF(p + 0xC, F(o + 4) - F(hx));` | round 0 |
+| 22 | `EffectKind9E_Start` | `SetUL(s + 0x20, 0x200001);` for `SetUL(s + 0x20, 0x200000);` | round 0 |
+| 23 | `EffectKind9E_Start` | `s[1] = static_cast<unsigned char>(s[1] + 2);` for `s[1] = static_cast<unsigned char>(s[1] + 3);` | round 8 |
+| 24 | `EffectKind9E_Start` | `if ((s[0xB] & 2) == 0) SH_CALL` for `if ((s[0xB] & 1) == 0) SH_CALL` | round 4 |
+| 25 | `EffectKind9E_Grow` | `EffectKind9E_Grow(void) { Step9E(-1); }` for `EffectKind9E_Grow(void) { Step9E(1); }` | round 0 |
+| 26 | `EffectKind9E_Shrink` | `EffectKind9E_Shrink(void) { Step9E(1); }` for `EffectKind9E_Shrink(void) { Step9E(-1); }` | round 0 |
+| 27 | `EffectKind9E_Flash` | `SetUL(w + 8, UL(s + 0x14));` for `SetUL(w + 8, 0u - UL(s + 0x14));` | round 0 |
+| 28 | `EffectKind9E_Flash` | `s[9] = 0x81;` for `s[9] = 0x80;` | round 0 |
+| 29 | `EffectKind9E_Hold` | `if (v == UL(s + 0x14)) SetUL(w + 8, 1u - v);` for `if (v == UL(s + 0x14)) SetUL(w + 8, 0u - v);` | round 4 |
+| 30 | `EffectKind9E_Hold` | `SetUL(s + 0x34, UL(s + 0x34) + 0x4001u);` for `SetUL(s + 0x34, UL(s + 0x34) + 0x4000u);` | round 0 |
+| 31 | `EffectKind9E_Hold` | `if (At(at::kCounter)[0] == s[8])` for `if (At(at::kCounter)[0] == s[7])` | round 2 |
+| 32 | `EffectKind9E_Close` | `S()[9] = 9; NextState(); s = S();` for `S()[9] = 8; NextState(); s = S();` | round 0 |
+| 33 | `EffectKind9E_Close` | `at::kSound9EShutA : at::kSound9EShutB` for `at::kSound9EShutB : at::kSound9EShutA` | round 0 |
+| 34 | `EffectKind9E_DrawOutline` | `Copy12(p + 0x20, o2);` for `Copy12(p + 0x20, o3);` | round 0 |
+| 35 | `EffectKind9E_DrawOutline` | `SH_CALL(Gpu_SetLineF4)(p); SH_CALL(Gpu_SetSemiTrans)(p, 1);` for `SH_CALL(Gpu_SetLineF4)(p); SH_CALL(Gpu_SetSemiTrans)(p, 0);` | round 0 |
+| 36 | `EffectKind9E_DrawOutline` | `static_cast<unsigned long>(a[1]), 0, 0x24);` for `static_cast<unsigned long>(a[1]), 0, 0x20);` | round 0 |
+| 37 | `EffectKind9E_DrawOutline` | `q[2] = static_cast<long>(static_cast<U>(a[2]) + static_cast<U>(b[2]...` for `q[2] = static_cast<long>(static_cast<U>(a[2]) - static_cast<U>(b[2]...` | round 0 |
+| 38 | `EffectKindA1_CaptureSprite` | `e[5] = 0x3B;` for `e[5] = 0x3A;` | round 0 |
+| 39 | `EffectKindA1_CaptureSprite` | `SH_CALL(Sprite_SetAnimationAt)(0x4D, 0x1D);` for `SH_CALL(Sprite_SetAnimationAt)(0x4D, 0x1C);` | round 2 |
+| 40 | `EffectKindA1_CaptureSprite` | `old[9] = 3;` for `old[9] = 2;` | round 0 |
+| 41 | `EffectKindA1_CaptureSprite` | `at::kCaptureY, 0x81, 0x100);` for `at::kCaptureY, 0x80, 0x100);` | round 0 |
+| 42 | `EffectKindA1_CaptureSprite` | `if (a3 \|\| (e[0x24] & 2) != 0) {` for `if (a3 \|\| (e[0x24] & 1) != 0) {` | round 2 |
+| 43 | `EffectKindA1_CaptureSprite` | `e[0x2A] = 0;` for `S()[0x2A] = 0;` | round 173 |
+| 44 | `EffectKindA3_CaptureSprite` | `if (At(at::kCounter)[0] != 0x28) return;` for `if (At(at::kCounter)[0] != 0x29) return;` | round 0 |
+| 45 | `EffectKindA3_CaptureSprite` | `SH_CALL(Sprite_SetAnimation)(6);` for `SH_CALL(Sprite_SetAnimation)(7);` | round 2 |
+| 46 | `ReadBack` | `SetUL(At(at::kPartCursor), at::kParticles + 0x14);` for `SetUL(At(at::kPartCursor), at::kParticles);` | round 2 |
+| 47 | `ReadBack` | `static_cast<short>(at::kCaptureY + 1),` for `static_cast<short>(at::kCaptureY),` | round 2 |
+| 48 | `SplitPixels` | `+ I(column + 1));` for `+ I(column));` | round 0 |
+| 49 | `SplitPixels` | `+ I(row + 1));` for `+ I(row));` | round 0 |
+| 50 | `SplitPixels` | `StF(P(UL(At(at::kPartCursor))) + 0xC, F(o + 4));` for `StF(P(UL(At(at::kPartCursor))) + 0xC, F(o + 8));` | round 0 |
+| 51 | `SplitPixels` | `SetUL(At(at::kPixCursor), UL(At(at::kPixCursor)) + 4);` for `SetUL(At(at::kPixCursor), UL(At(at::kPixCursor)) + 2);` | round 0 |
+| 52 | `SplitPixels` | `if (t[9] == 3) t[1]` for `if (t[9] == 2) t[1]` | round 0 |
+| 53 | `SplitPixels` | `static_cast<unsigned char>(((h >> 2) & 0xFFu) * s[9]);` for `static_cast<unsigned char>(((h >> 1) & 0xFFu) * s[9]);` | **crashed** (exit 0xC0000005 after its MISMATCH line; re-planted as 111, 112) |
+| 54 | `EffectKindA1_AimPixels` | `part[0x10] = static_cast<unsigned char>((SH_CALL(Rand)() & 0x1F) - ...` for `part[0x10] = static_cast<unsigned char>((SH_CALL(Rand)() & 0x1F) - ...` | round 8 |
+| 55 | `EffectKindA1_AimPixels` | `part[1] = static_cast<unsigned char>(0x29 - (SH_CALL(Rand)() & 0x1E));` for `part[1] = static_cast<unsigned char>(0x28 - (SH_CALL(Rand)() & 0x1E));` | round 0 |
+| 56 | `EffectKindA1_AimPixels` | `Offset(part, d, 1); } else {` for `Offset(part, d, -1); } else {` | round 17 |
+| 57 | `AimPixels` | `const unsigned b = static_cast<unsigned>(SH_CALL(Rand)()) & 0x7;` for `const unsigned b = static_cast<unsigned>(SH_CALL(Rand)()) & 0xF;` | round 0 |
+| 58 | `AimPixels` | `if (static_cast<signed char>(part[0x10]) > static_cast<signed char>...` for `if (static_cast<signed char>(part[0x10]) < static_cast<signed char>...` | round 0 |
+| 59 | `AimPixels` | `S()[9] = 0x51;` for `S()[9] = 0x50;` | round 0 |
+| 60 | `EffectKindA1_MovePixels` | `if (S()[6] == 1) {` for `if (S()[6] == 0) {` | round 0 |
+| 61 | `MovePixels` | `p[5] = static_cast<unsigned char>((Word(part + 2) >> 3) & 0xF8u);` for `p[5] = static_cast<unsigned char>((Word(part + 2) >> 2) & 0xF8u);` | round 0 |
+| 62 | `MovePixels` | `SH_CALL(Gfx_CommitPrim)(2, 0x18); }` for `SH_CALL(Gfx_CommitPrim)(2, 0x14); }` | round 0 |
+| 63 | `EffectKindA1_MovePixels` | `^ 3); } if (CountDown()) NextState();` for `^ 1); } if (CountDown()) NextState();` | round 0 |
+| 64 | `EffectKindA3_AimPixels` | `Offset(part, d, -1); } AimEnd();` for `Offset(part, d, 1); } AimEnd();` | round 0 |
+| 65 | `EffectKindA3_MovePixels` | `At(at::kCounter)[0] = 0x2C;` for `At(at::kCounter)[0] = 0x2B;` | round 3 |
+| 66 | `EffectKindA3_MovePixels` | `Offset(part, 2, -1);` for `Offset(part, 1, -1);` | round 0 |
+| 67 | `EffectKindA2_` | `constexpr unsigned kSoundRing = 0x209;` for `constexpr unsigned kSoundRing = 0x208;` (`rest_3f_callees.h`) | round 0 |
+| 68 | `EffectKindA2_Grow` | `SetUL(s + 0x18, UL(s + 0x18) + 0x201u);` for `SetUL(s + 0x18, UL(s + 0x18) + 0x200u);` | round 0 |
+| 69 | `EffectKindA2_Rewind` | `for (unsigned n = 0; n < 0x13; ++n) {` for `for (unsigned n = 0; n < 0x14; ++n) {` | round 0 |
+| 70 | `EffectKindA2_Shrink` | `SetUL(s + 0x1C, UL(s + 0x1C) + 0xFFFFFF00u);` for `SetUL(s + 0x1C, UL(s + 0x1C) + 0xFFFFFE00u);` | round 0 |
+| 71 | `EffectKindA2_Grow` | `Long(s + 0x10), Long(s + 0xC)); if (CountDown())` for `Long(s + 0xC), Long(s + 0x10)); if (CountDown())` | round 0 |
+| 72 | `EffectKindA2_DrawRing` | `p[5] = 0x7E; p[6] = 0; p[0x14] = 0;` for `p[5] = 0x7F; p[6] = 0; p[0x14] = 0;` | round 0 |
+| 73 | `EffectKindA2_DrawRing` | `q[0] = static_cast<long>((static_cast<U>(inner) << 3) + static_cast...` for `q[0] = static_cast<long>((static_cast<U>(inner) << 4) + static_cast...` | round 0 |
+| 74 | `EffectKindA2_DrawRing` | `Sar(s2 * static_cast<U>(outer), 7)` for `Sar(s2 * static_cast<U>(outer), 8)` | round 0 |
+| 75 | `EffectKindA2_DrawRing` | `return 1; }` for `return 0; }` | round 0 |
+| 76 | `EffectKindA7_DrawGlow` | `DrawMode(1, 0x2C0, 0x100, 1, 2);` for `DrawMode(1, 0x2C0, 0x100, 1, 7);` | round 0 |
+| 77 | `EffectKindA7_DrawGlow` | `SH_CALL(Gpu_SetSemiTrans)(p, 1); SetUL(p + 8, UL(o));` for `SH_CALL(Gpu_SetSemiTrans)(p, 0); SetUL(p + 8, UL(o));` | round 0 |
+| 78 | `EffectKindA7_DrawGlow` | `const unsigned char green = static_cast<unsigned char>((c & 0xFC) <...` for `const unsigned char green = static_cast<unsigned char>((c & 0xFE) <...` | round 0 |
+| 79 | `EffectKindA7_Start` | `SetUL(s + 0xC, 0); s[9] = 0x11;` for `SetUL(s + 0xC, 0); s[9] = 0x10;` | round 0 |
+| 80 | `EffectKindA7_Grow` | `S()[9] = 0x21;` for `S()[9] = 0x20;` | round 5 |
+| 81 | `EffectKindA7_Hold` | `EffectKindA7_Hold(void) { if (CountDown()) { S()[9] = 0x11;` for `EffectKindA7_Hold(void) { if (CountDown()) { S()[9] = 0x10;` | round 5 |
+| 82 | `EffectKindA7_Shrink` | `SetUL(s + 0xC, UL(s + 0xC) + 0xFFFFFFE0u);` for `SetUL(s + 0xC, UL(s + 0xC) + 0xFFFFFFF0u);` | round 0 |
+| 83 | `EffectKindA8_Start` | `SetWord(s + 0x2E, 0x12D);` for `SetWord(s + 0x2E, 0x12C);` | round 0 |
+| 84 | `EffectKindA8_Bars` | `next = static_cast<unsigned char>((r & 0xF) + 0x19);` for `next = static_cast<unsigned char>((r & 0xF) + 0x18);` | round 8 |
+| 85 | `EffectKindA8_Bars` | `if (At(at::kCounter)[0] == 0xF) NextState();` for `if (At(at::kCounter)[0] == 0xE) NextState();` | round 1 |
+| 86 | `EffectKindA8_End` | `if (SH_CALL(EffectKindA8_StepBars)(0xF0) != 0)` for `if (SH_CALL(EffectKindA8_StepBars)(0xF0) == 0)` | round 0 |
+| 87 | `EffectKindA8_Bars` | `SH_CALL(EffectKindA8_StepBars)(0xF1); if` for `SH_CALL(EffectKindA8_StepBars)(0xF0); if` | round 0 |
+| 88 | `EffectKindA8_ClearBars` | `for (unsigned i = 0; i < 15; ++i) Bar(i)[0] = 0;` for `for (unsigned i = 0; i < at::kBarCount; ++i) Bar(i)[0] = 0;` | round 0 |
+| 89 | `EffectKindA8_StartBar` | `b[2] = 1; return;` for `b[2] = 0; return;` | round 0 |
+| 90 | `EffectKindA8_StepBars` | `SetWord(b + 4, Word(b + 4) - 7u);` for `SetWord(b + 4, Word(b + 4) - 8u);` | round 0 |
+| 91 | `EffectKindA8_StepBars` | `if (b[2] > 1) SH_CALL(EffectKindA8_DrawBar)(b);` for `if (b[2] != 0) SH_CALL(EffectKindA8_DrawBar)(b);` | round 0 |
+| 92 | `EffectKindA8_StepBars` | `b[3] = 5;` for `b[3] = 4;` | round 0 |
+| 93 | `EffectKindA8_StepBars` | `return 0;` for `return any;` | round 0 |
+| 94 | `EffectKindA8_DrawBar` | `StF(p + 0xC, I(static_cast<U>(SW(bar + 4)) - bar[1] - f));` for `StF(p + 0xC, I(static_cast<U>(SW(bar + 4)) - bar[3] - f));` | round 0 |
+| 95 | `EffectKindA8_DrawBar` | `p[0x24] = 0x81;` for `p[0x24] = 0x80;` | round 0 |
+| 96 | `EffectKindA8_DrawBar` | `const U f = Frame_Counter & 3u;` for `const U f = Frame_Counter & 1u;` | round 0 |
+| 97 | `EffectKindA9_Grow` | `SetWord(s + 0x2E, Word(s + 0x2E) + 0x16u);` for `SetWord(s + 0x2E, Word(s + 0x2E) + 0x15u);` | round 0 |
+| 98 | `EffectKindA9_Wait` | `if (At(at::kCounter)[0] != 8) return;` for `if (At(at::kCounter)[0] != 9) return;` | round 1 |
+| 99 | `EffectKindA9_Shrink` | `SetWord(s + 0x30, Word(s + 0x30) + 0xFFFCu);` for `SetWord(s + 0x30, Word(s + 0x30) + 0xFFFDu);` | round 0 |
+| 100 | `EffectKindA9_Start` | `s[9] = 0xB;` for `s[9] = 0xA;` | round 0 |
+| 101 | `EffectKindA9_DrawDisc` | `SetUL(p + 8, 0x43210000u);` for `SetUL(p + 8, 0x43200000u);` | round 0 |
+| 102 | `EffectKindA9_DrawDisc` | `angle += 0x41;` for `angle += 0x40;` | round 0 |
+| 103 | `EffectKindA9_DrawDisc` | `static_cast<unsigned char>(shade) >> 3);` for `static_cast<unsigned char>(shade) >> 2);` | round 3 |
+| 104 | `EffectKindAA_DrawFill` | `SetUL(p + 0x2C, 0x42F20000u); // 120.0f` for `SetUL(p + 0x2C, 0x42F00000u); // 120.0f` | round 0 |
+| 105 | `EffectKindAA_DrawFill` | `p[0x24] = 0;` for `p[0x24] = c;` | round 0 |
+| 106 | `EffectKindAA_Start` | `const s = S(); s[9] = 0x11;` for `const s = S(); s[9] = 0x10;` | round 0 |
+| 107 | `EffectKindAA_FadeIn` | `S()[9] * 0xE0u` for `S()[9] * 0xF0u` | round 0 |
+| 108 | `EffectKindAA_FadeOut` | `static_cast<unsigned char>(n << 3)` for `static_cast<unsigned char>(n << 4)` | round 0 |
+| 109 | `EffectKindAB_Drops` | `if (Draw_PassFlags == 1) {` for `if (Draw_PassFlags == 0) {` | round 0 |
+| 110 | `EffectKindAB_Drops` | `SH_CALL(EffectKindAB_Emit)();` removed | round 6 |
+| 111 | `SplitPixels` | `} while (static_cast<std::int32_t>(column) < SW(P(rec + 4)) - 1);` for `} while (static_cast<std::int32_t>(column) < SW(P(rec + 4)));` | round 0 |
+| 112 | `SplitPixels` | `SetWord(P(UL(At(at::kPartCursor))) + 2, v ^ 1);` for `SetWord(P(UL(At(at::kPartCursor))) + 2, v);` | round 0 |
 
 ## 6. What the cut and the tool said, settled
 
