@@ -601,7 +601,9 @@ add_library(bof3x SHARED
   src/game/rest_1g.cpp
   src/game/rest_1g_fuzz.cpp
   src/game/rest_1f.cpp
-  src/game/rest_1f_fuzz.cpp)
+  src/game/rest_1f_fuzz.cpp
+  src/game/rest_1d.cpp
+  src/game/rest_1d_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
