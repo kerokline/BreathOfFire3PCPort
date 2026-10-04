@@ -69,7 +69,7 @@ constexpr unsigned kSlashAnimationCount = 12;
 // 0x435A70 plays animation `animation` on enemy `actor` (BattleEnemy_SetAnimation
 // with 0x939AD8 pointed at that enemy's record and put back).
 constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;
-constexpr std::uint32_t kEnemyAnimation = 0x435A70;
+constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70, R3A's (round 14)
 // Magic008Dash_Run's stack table names S04's KickImage_Tick (ours now).
 
 unsigned char* Sc() { return Sprite_Current; }

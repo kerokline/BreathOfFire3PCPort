@@ -14,7 +14,7 @@
 //
 // Every handler is `void`: the original's eax on return reaches only
 // BattleObj_RunState's tail jump, BattleParty_RunStates' tail jump and the
-// battle frame 0x42E2F0, whose next instruction after `call 0x441100`
+// battle frame Battle_Frame 0x42E370, whose next instruction after `call 0x441100`
 // (0x42E39E) is another call; the sub-state calls of states 3 and 8 overwrite
 // or ignore it. Everything here is a faithful replacement.
 #include "game/battle_obj_states.h"

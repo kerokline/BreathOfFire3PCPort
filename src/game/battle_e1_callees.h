@@ -31,7 +31,7 @@ using U = std::uint32_t;
 
 // --- BATE, game mode 9 (the byte block 0x929F00; menu-screens.md names the
 // field menu's use of the same block) ---
-constexpr U kMode = 0x929F00;        // u8: BATE's state (0x42D710 dispatches it through 0x64ADAC)
+constexpr U kMode = 0x929F00;        // u8: BATE's state (BattleExtra_Dispatch 0x42D710 dispatches it through BattleExtra_States 0x64ADAC)
 constexpr U kModeStep = 0x929F01;    // u8: the state's step
 constexpr U kModeSub = 0x929F02;     // u8: the step's sub-step
 constexpr U kModeTimer = 0x929F04;   // u8: a frame count the steps count down
@@ -131,7 +131,7 @@ constexpr U kClutB = 0x811380;
 
 // --- the .data tables the dispatchers jump through ---
 constexpr U kEquipSteps = 0x64ADE0;   // by 0x929F01: 3 (0x42DC10, 0x42DCD0, 0x42E040)
-constexpr U kEquipOpenSteps = 0x64ADEC;  // by 0x929F02: 3 (0x42D780, 0x42DC20, 0x42DC80)
+constexpr U kEquipOpenSteps = 0x64ADEC;  // by 0x929F02: 3 (BattleExtra_OpenTransition 0x42D780, 0x42DC20, 0x42DC80)
 constexpr U kEquipRunSteps = 0x64ADF8;   // by 0x929F02: 2, called (0x42DCF0, 0x42DE50)
 constexpr U kEquipLeaveSteps = 0x64AE00; // by 0x929F02: 2 (0x42E050, 0x42E090)
 constexpr U kHoldSteps = 0x64AE48;    // by 0x904AA2: 3 (0x42EDA0, 0x42EE00, 0x42EEA0)
@@ -139,9 +139,9 @@ constexpr U kKind3Steps = 0x64AEB4;   // by 0x904AA3: 5 (0x42F5F0, 0x42F640, the
 constexpr U kLossSteps = 0x64AFD8;    // by 0x904AA3: 5 (0x432440 .. 0x432750)
 
 // --- the callees nobody owns yet ---
-constexpr U kEquipOpenHelper = 0x42E0E0;
-constexpr U kEquipConfirmHelper = 0x42E250;
-constexpr U kEquipFrameHelper = 0x42E2F0;
+constexpr U kEquipOpenHelper = bof3::addr::BattleExtra_EquipSetupWindows;   // 0x42E0E0, R3A's (round 14)
+constexpr U kEquipConfirmHelper = bof3::addr::BattleExtra_EquipCommit;   // 0x42E250, R3A's
+constexpr U kEquipFrameHelper = bof3::addr::BattleExtra_EquipRefresh;   // 0x42E2F0, R3A's
 constexpr U kMemcpy = 0x5B9450;
 constexpr U kEnemiesClear = 0x494E70;
 constexpr U kSideTargetA = 0x452EB0;

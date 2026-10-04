@@ -84,7 +84,7 @@ void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 // the current enemy 0x939AD8 for a BattleEnemy_SetAnimation(animation), then
 // puts the old one back. The originals push the actor byte with stale upper
 // bytes; the callee masks them off.
-constexpr std::uint32_t kEnemyAnimation = 0x435A70;
+constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70, R3A's (round 14)
 using EnemyAnimFn = void (__cdecl*)(unsigned, unsigned);
 void EnemyAnimation(unsigned char actor, unsigned animation) { MH_AT(EnemyAnimFn, kEnemyAnimation)(actor, animation); }
 
