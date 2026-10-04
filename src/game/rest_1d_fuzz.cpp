@@ -208,6 +208,17 @@ U FxGround(const U*, U answer) {
     return WithAx(answer, n % 5 == 0 ? n >> 8 : h + kDelta[(n >> 3) % (sizeof kDelta / sizeof kDelta[0])]);
 }
 
+// Rand (the harness's draw, kRand): also flips Field_InputFlags' bit 1 or 2 a
+// third of the time, standing in for a frame's change between the pickups'
+// draw and their read of the flags after it (the read's order is then seen;
+// the disturbance alone reached it too rarely - docs/rest_1d.md section 6).
+U FxRandFlags(const U*, U answer) {
+    const U n = sh::Noise();
+    unsigned char* const flags = sh::Mem(0x905BA2);
+    if (n % 3 == 0 && sh::InRegions(flags, 1)) flags[0] = static_cast<unsigned char>(flags[0] ^ (2u << ((n >> 4) & 1)));
+    return answer;
+}
+
 // Masks by what each callee reads (symbols.toml's types and the reads cited in
 // docs/rest_1d.md section 4): bytes where the callee reads a byte (the
 // originals push whole registers whose upper bytes ours cannot hold), the
@@ -245,6 +256,7 @@ const sh::Callee kCallees[] = {
     {R1D_OURS(Msg_OpenSystem), 1, {kU16}, kG, 0, 0},
     {R1D_OURS(Sprite_FlashClut), 1, {kU8}, kG, 0, 0},                     // the colour's low byte
     {R1D_OURS(Char_LoseHp), 2, {kW, kU8}, kG, 0, 0},                      // the amount whole, the member byte
+    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, sh::Answer::kRand, 0, 0, {}, &FxRandFlags},   // Capcom's CRT rand, not ours
     // the group's own, called by E8
     {R1D_OURS(PartyAction9_CellPickup), 2, {kU16, kU16}, kF, 0, 0},
     {R1D_OURS(PartyAction10_CellPickup), 2, {kU16, kU16}, kF, 0, 0},
@@ -359,7 +371,7 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
-    switch (h % 12) {
+    switch (h % 16) {
     case 0: s[8] = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) & 7); break;
     case 1: s[9 + (v & 1)] = static_cast<unsigned char>((v >> 1) % 3); break;
     case 2: s[0xB] = static_cast<unsigned char>((v >> 1) % 20); break;
@@ -367,11 +379,15 @@ void Disturb(U h) {
     case 4: SetWord(s + 0x2C, v >> 4); break;
     case 5: SetLong(s + (v & 1 ? 0x34 : 0x38), static_cast<std::int32_t>(v << 7)); break;
     case 6: SetWord(s + 0x3E, v >> 2); break;
+    case 14:
+    case 15:
     case 7: {
         unsigned char* const fs = Field_State;
         if (sh::InRegions(fs + 0x89, 1) && sh::InRegions(fs + 0x138, 1)) fs[v & 1 ? 0x89 : 0x138] = static_cast<unsigned char>(v >> 1);
         break;
     }
+    case 12:
+    case 13:
     case 8: Field_InputFlags = static_cast<unsigned char>(Field_InputFlags ^ (2u << (v % 2))); break;
     case 9: sh::Mem(bof3::addr::DamageScratch)[0] = static_cast<unsigned char>(v & 1 ? 0 : v >> 1); break;
     case 10: SetLong(sh::Mem(at::kSteps) + 4 * (v % 16), static_cast<std::int32_t>(v << 6)); break;
