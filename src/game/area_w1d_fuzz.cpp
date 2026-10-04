@@ -258,7 +258,7 @@ const ah::Callee kCallees[] = {
     {W1D_OURS(MapView_SetElevation), 1, {kU16}, ah::Answer::kGarbage, 0, 0},
     {W1D_OURS(AreaMap_Elevation), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     // a slot 0..2, or none (0xFF)
-    {W1D_THEIRS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
+    {W1D_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
     {W1D_THEIRS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W1D_OURS(Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountAnswer},
     {W1D_OURS(Inventory_Remove), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},

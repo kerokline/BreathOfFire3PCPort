@@ -346,7 +346,7 @@ const Callee kStandard[] = {
     {AH_OURS(Gte_PrimDepths3_10B), 1, {kAll}, Answer::kGarbage, 0, 0},
     {AH_OURS(Gte_PrimDepths4_10B), 1, {kAll}, Answer::kGarbage, 0, 0},
     {AH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
-    {AH_THEIRS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, Answer::kFlag, 0, 0},
+    {AH_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, Answer::kFlag, 0, 0},
     {AH_OURS(Math_Sin), 1, {kAll}, Answer::kGarbage, 0, 0},
     {AH_OURS(Math_Cos), 1, {kAll}, Answer::kGarbage, 0, 0},
 };

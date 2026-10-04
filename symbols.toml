@@ -3488,8 +3488,9 @@ name = "Effect_Spawn"
 psx = 0x8015D508
 ret = "unsigned char"
 params = "unsigned char kind, signed char a, signed char b, short x, short z"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: ops 90..95 call it (op - 0x90, b1, b2, Sprite_Current +0x2E, +0x30) and store al to Sprite_Current[0xB], whose Effect_Objects record op 9F waits on. Its arguments read as a byte, two signed bytes and two words. Named by that use."
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22: ops 90..95 call it (op - 0x90, b1, b2, Sprite_Current +0x2E, +0x30) and store al to Sprite_Current[0xB], whose Effect_Objects record op 9F waits on. Its arguments read as a byte, two signed bytes and two words. Named by that use. Read to the last instruction 2026-10-04 (round fourteen group R2B), 0x57CE10..0x57CE72 (0x63 bytes): Effect_FindFree; 0xFF returns it; else record n = 0x7E11E0 + n * 0x80: +0 = 1, +5 = 6 (the kind), +6 = the first argument's byte, +0xC / +0x10 = the next two movsx bytes, +0x2E / +0x30 = the last two words; al = n (eax Effect_FindFree's). 77 E8 sites (64 ours). PSX twin 0x8015D508 (pairs_propagated boot call). docs/rest_2b.md."
 
 [[func]]
 pc = 0x57CE80
@@ -3497,8 +3498,9 @@ name = "Effect_SpawnAt"
 psx = 0x8015D5F0
 ret = "unsigned char"
 params = "unsigned char kind, signed char a, signed char b, long x, long y, long z"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: ops 98..9D and 8C call it with the sprite's three 16.16 coordinates; the rest as Effect_Spawn."
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22: ops 98..9D and 8C call it with the sprite's three 16.16 coordinates; the rest as Effect_Spawn. Read to the last instruction 2026-10-04 (round fourteen group R2B), 0x57CE80..0x57CEE8 (0x69 bytes): Effect_Spawn's record with +5 = 0x19 and the three dwords at +0x34, +0x38, +0x3C. Six E8 sites (area 67's three, Scena13_Run4, MoveScript_Group8, MoveScript_Group9's case 0x578A40). PSX twin 0x8015D5F0 (pairs_propagated boot call). docs/rest_2b.md."
 
 [[data]]
 pc = 0x7E11E0
@@ -103968,3 +103970,399 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R1D): 0x520840 0x51FC80 0x52F5C0 (PartyAction_ScriptEnd); jumped through by PartyFormAction13_Form0 0x5226B0 by Sprite_Current +2, unchecked; the next table starts at 0x65FEC4 (its own reader's). docs/rest_1d.md."
+
+# --- round fourteen group R2B (rest_2b.cpp, docs/rest_2b.md): 0x56E040..0x57F33C ---
+# Read with capstone to the last instruction (2026-10-04). Effect_Spawn and
+# Effect_SpawnAt are bound in place above. The cut's 0x551E40, 0x553E50 and
+# 0x559AD0 are jump-table cases of hosts already ours, not functions.
+
+[[func]]
+pc = 0x56E040
+name = "Field_TriggerCounterF0"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B, capstone to the last instruction), 0x56E040..0x56E049 (0xA bytes): Field_ObjectTriggers[1] (0x662E20), called by Field_ObjectTriggerByKind with (object, 0x904030), neither read: the byte 0x903848 = 0xF0, xor al, al (the rest of eax the caller's). Named by what it writes. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57CEF0
+name = "Menu_DrawGreyHLine"
+ret = "void"
+params = "int x, int y, unsigned w, unsigned bright"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57CEF0..0x57CF5E (0x6F bytes): Gpu_SetLineF2 at Gfx_PacketNext; r = g = b = 0x28 when the fourth argument's byte is non-zero, else 0x8C; x0 = fild of s16 x, x1 = x0 + the u16 w, y0 = y1 = fild of s16 y (floats at +8, +0x14, +0xC, +0x18; the argument slots used as fild scratch); Gfx_CommitPrim(1, 0x20). Two E8 callers, both community code (0x45D763, 0x45E2F3, R4D). No PSX pair. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57D520
+psx = 0x801AFD54
+name = "Menu_DrawOutlineNotched"
+ret = "void"
+params = "int x, int y, int w, int h, int flags"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57D520..0x57D759 (0x23A bytes): Menu_DrawOutline 0x57D420's sibling - the window colour (entry 0 of CLUT row s8 0x903A5A of the shadow 0x80B7A8, 5:5:5 << 3), abr 2 / 1 by flag bit 0; flag bits 4..7 make four notch words 3 or 0; four edges and up to four corner diagonals in Menu_DrawLine (eight E8 sites), each diagonal gated by the notch word before its own. Coordinates built from dwords spanning two notch words; Menu_DrawLine reads their low words. 11 E8 callers in community code (R4B, R4E). PSX twin 0x801AFD54 (pairs_propagated call-anchored), not read there. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57DFF0
+name = "Shisu_ModeDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57DFF0..0x57E000 (0x11 bytes): jmp [Shisu_Modes + (dword 0x929F00 and 0xFF) * 4], unchecked. Called by Mode8_Step8 0x517340 (game mode 8 step 8). The screen's PSX twins are in the SHISU overlay (0x801D1018, 0x801D2308). docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E010
+name = "Shisu_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E010..0x57E06A (0x5B bytes): Shisu_Modes[0] - Shisu_CountItems; the bytes 0x9399E9, 0x9399EA, 0x9399E8, 0x9399E4..0x9399E7 = 0; 0x9399EB = Shisu_ScaleIndex's al; Shisu_InitModels; 0x929F01 = 0x929F02 = 0, 0x929F00 (read after the calls) + 1. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E070
+name = "Shisu_OpenDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E070..0x57E07D (0xE bytes): Shisu_Modes[1] - jmp [Shisu_OpenStates + byte 0x929F01 * 4], unchecked. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E080
+name = "Shisu_OpenFade"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E080..0x57E095 (0x16 bytes): Shisu_OpenStates[0] - Transition_Start(3), Shisu_SetupWindows, 0x929F01 + 1. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E0A0
+name = "Shisu_OpenWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E0A0..0x57E0D4 (0x35 bytes): Shisu_OpenStates[1] - Menu_DrawBackdrop(byte 0x903A5B); MoveScript_WaitWordDA 0 (read after): 0x929F01 = 0, the word 0x803194 (WindowRecords[1] +0x10) = 0x2B, 0x929F00 + 1. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E0E0
+name = "Shisu_CloseDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E0E0..0x57E0ED (0xE bytes): Shisu_Modes[3] - jmp [Shisu_CloseStates + byte 0x929F01 * 4], unchecked. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E0F0
+name = "Shisu_CloseFade"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E0F0..0x57E110 (0x21 bytes): Shisu_CloseStates[0] - Menu_DrawBackdrop(byte 0x903A5B), Transition_Start(2), Shisu_CloseWindows, 0x929F01 + 1. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E120
+name = "Shisu_CloseWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E120..0x57E15A (0x3B bytes): Shisu_CloseStates[1] - MoveScript_WaitWordDA not 0: Menu_DrawBackdrop(byte 0x903A5B); 0: 0x929F01 = 0, 0x929F00 + 1, WindowRecords 1..3's first bytes 0. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E160
+psx = 0x801D1018
+name = "Shisu_Result"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E160..0x57E284 (0x125 bytes): Shisu_Modes[4] - 0x9399E8 0: the scenario step 0x8034E5 = 5. Else Inventory_Remove(0, item, given byte, 0) for 0x4D, 0x23, 0x24, 0x56 by 0x9399E4..0x9399E7; 0x8034E5 = 0x14; Shisu_Score; score 0x9399FC <= 0x32 (signed): 0x90384B = 1; else 0x90384B = 2 and 0x903F6A = 0 / 1 / 2 / 3 / 4 / 5 below 0x5A / 0x78 / 0x96 / 0xAA / 0xB4 / else. Then Window_ResetAll and the word Game_Step + 1. PSX twin 0x801D1018 in SHISU (pairs_propagated callers), not read there. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E290
+name = "Shisu_PickDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E290..0x57E2AC (0x1D bytes): Shisu_Modes[2] - Menu_DrawBackdrop(byte 0x903A5B), then jmp [Shisu_PickStates + byte 0x929F01 * 4] (read after the call), unchecked. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E2B0
+name = "Shisu_PickSide"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E2B0..0x57E487 (0x1D8 bytes): Shisu_PickStates[0] - Input_AutoRepeat(Input_Pressed and 0xF000): ah and 0xA0 flips 0x9399E9 (sound 0x101, message word 0x803194 = side + 0x2B); 0x10 / 0x40 state + 1 with 0x9399EA 3 / 0 (sound 0x100, message 0x2A). Else Field_ConfirmButtons with side 0: rounds 0x9399E8 >= 8 sound 0x107; not 0 sound 0x103 and rounds + 1; 0 with 0x9399E4 and 0x9399E5 set sound 0x103, state + 2; else sound 0x107, message 0x31. Confirm with side 1 or Field_CancelButtons: sound 0x103, mode + 1, state 0. Then WindowRecords[0] placed by the side, model A's y stacked on B's when rounds is not 0, Shisu_ModelBDispatch, tail jmp Shisu_ModelADispatch. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E490
+name = "Shisu_PickCounts"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E490..0x57E71C (0x28C bytes: code to 0x57E709, the 4-entry jump table 0x57E70C): Shisu_PickStates[1] - Input_AutoRepeat(Input_Pressed and 0x5000); 0x1000 / 0x4000 move the row 0x9399EA (sound 0x100), off either end back to state 0; confirm without cancel: row 0..3 moves one of item n from 0x9399E0 + n to 0x9399E4 + n (row 0 to 1 at most, the rest to 0x14; row 2 needs 0x9399E5, row 3 0x9399E4), messages 0x2D / 0x2E / 0x2F / 0x30 with sound 0x107 for a refusal, sound 0x103 for a take (row 0 sets model A's state 1, row 1's first model B's). Then WindowRecords[0] at the row, the rows' bytes, model A stacked, the models' dispatchers. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E720
+name = "Shisu_PickShow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E720..0x57E737 (0x18 bytes; in no list - code after 0x57E490's jump table): Shisu_PickStates[2] - call [Shisu_ShowSteps + byte 0x929F02 * 4], unchecked; Shisu_ModelBDispatch; tail jmp Shisu_ModelADispatch. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E740
+name = "Shisu_ShowStart"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E740..0x57E752 (0x13 bytes): Shisu_ShowSteps[0] - the models' states 0x9398E1, 0x939961 = 2; 0x929F02 + 1. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E760
+name = "Shisu_ShowDrop"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E760..0x57E784 (0x25 bytes): Shisu_ShowSteps[1] - both done bytes 0x9398E6, 0x939966 set: both states 3, 0x929F02 + 1. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E790
+name = "Shisu_ShowLanded"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E790..0x57E805 (0x76 bytes): Shisu_ShowSteps[2] - both done: both states 4, model A's colour 0x93993D..F kept at 0x6BC87C..E and B's 0x9399BD..F at 0x6BC878..A, the timer 0x929F04 = 0, 0x929F02 + 1. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E810
+name = "Shisu_ShowFlash"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E810..0x57E8B9 (0xAA bytes): Shisu_ShowSteps[3] - each of the six colour bytes the larger of its kept byte and the timer 0x929F04; timer 0x80: sound 0x200 (the timer read again); timer + 8; wrapped to 0: 0xF8 and 0x929F02 + 1. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E8C0
+name = "Shisu_ShowFade"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E8C0..0x57E999 (0xDA bytes): Shisu_ShowSteps[4] - the same floor; timer - 8; at 0 the kept colours back, model A's state 5, B's 1, rounds 0x9399E8 + 1, 0x929F01 - 2, 0x929F02 = 0. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E9A0
+name = "Shisu_CountItems"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E9A0..0x57E9E3 (0x44 bytes): Inventory_Count(0, item, 0)'s al for 0x4D, 0x23, 0x24, 0x56 into 0x9399E0..0x9399E3. E8 from Shisu_Begin. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57E9F0
+name = "Shisu_SetupWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57E9F0..0x57EAB3 (0xC4 bytes): no calls - WindowRecords 0..3 (0x803160, 0x24 a record) bytes and words for the screen, record 3 +0x20 = 0x9399E0. E8 from Shisu_OpenFade. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57EAC0
+name = "Shisu_CloseWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57EAC0..0x57EAD8 (0x19 bytes): WindowRecords[0] byte 0 = 0; records 1..3's +3 = 1. E8 from Shisu_CloseFade. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57EAE0
+name = "Shisu_ScaleIndex"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57EAE0..0x57EB16 (0x37 bytes): the byte 0x904101 below 0x26 / 0x28 / 0x2D / 0x32 / 0x3C / 0x41 / 0x44: al 9 / 0xA / 0xB / 0xC / 0xD / 0xE / 0xF, else 0x10 (the rest of eax the caller's). Its answer indexes Shisu_ModelScales for model A (R2C's 0x57F340). E8 from Shisu_Begin. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57EB20
+name = "Shisu_Score"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57EB20..0x57ECBE (0x19F bytes): no calls; four terms 0x9399EC..0x9399F8 from the scale index 0x9399EB, the given counts 0x9399E5..0x9399E7 and the rounds 0x9399E8 (three idiv ramps of 200 guarded against a 0 divisor, one linear term, each floored at 0) and the score 0x9399FC = (16 D + 10 L A + (C B / 100) g1) / 100, the divisions by 100 the magic 0x51EB851F, toward zero. E8 from Shisu_Result. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57ECC0
+name = "Shisu_InitModels"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57ECC0..0x57EDC7 (0x108 bytes): models B (0x939960) and A (0x9398E0) from the pointer 0x628C88 (B: header +0, quads [+4]; A: header +8, quads [+0xC]), each at Field_Kind2X / Z, state 0, scale 0x1000, +0x48 0, angles 0, colour 0x80; y = (AreaMap_Elevation there - 0x200 for B, + 0x200 for A) << 16; the pointer and the place read again after the first call. E8 from Shisu_Begin. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57EDD0
+name = "Shisu_ModelBDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57EDD0..0x57EDDD (0xE bytes): jmp [Shisu_ModelBStates + byte 0x939961 * 4], unchecked. E8 from Shisu_PickSide, Shisu_PickCounts, Shisu_PickShow. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57EDE0
+name = "Shisu_ModelBTurn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57EDE0..0x57EDEB (0xC bytes): Shisu_ModelBStates[1] - the dword 0x9399CC (model B's angle) + 0x20, tail jmp Shisu_ModelBDraw. The tools' extent 0x105 ran over Shisu_ModelBDraw. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57EDF0
+name = "Shisu_ModelBDraw"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57EDF0..0x57EEE4 (0xF5 bytes; in no list - inside 0x57EDE0's tool extent, a frame and ret of its own, jmp'd to by four states): model B's scale 0x9399A0 = Shisu_ModelScales[(s8 0x9399E5 - 0x9399E8) held to 1..0x14]; its colour lifted by 3 times 0x9399E6 in red and green and lowered in blue (saturating at 0xFF / 0); Shisu_DrawModel(0x939960); the three colour bytes put back. R2C's 0x57F340 is model A's twin. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57EEF0
+psx = 0x801D2308
+name = "Shisu_DrawModel"
+ret = "void"
+params = "unsigned char *record"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57EEF0..0x57F266 (0x377 bytes): Sprite_Current swapped for the record (xor-swap, put back at the end); Sprite_AddDrawRecords' matrix set-up with the light matrix a local of which Light_ObjectDirection fills three shorts (the other 26 bytes the stack's, into Gte_SetMatrix2); per quad of the s8 count at [+0x54] a POLY_FT4 at Gfx_PacketNext - Gte_RotTransPers4, Gte_PrimDepths4_10, the floats 0x5C4278 / 0x5C4274 added to x / y, the colour (Gte_NormalColor under flag 0x80), page, CLUT row 0x1E3, semi-transparency; Gfx_CommitPrim(1, 0x48) when 0x4941B0 (R3G) answers ax > 0. E8 from Shisu_ModelBDraw and R2C's 0x57F340. PSX twin 0x801D2308 in SHISU (pairs_propagated callers), not read there. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57F270
+name = "Shisu_ModelBSquare"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F270..0x57F29D (0x2E bytes): Shisu_ModelBStates[2] - angle 0x9399CC and 0xFFF not 0: angle = (angle + 0x40) and 0xFC0, done 0x939966 = 0; else done 1; tail jmp Shisu_ModelBDraw. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57F2A0
+name = "Shisu_ModelBDrop"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F2A0..0x57F30B (0x6C bytes): Shisu_ModelBStates[3] - model B's y 0x93999C + 0x200000; above AreaMap_Elevation(Field_Kind2X, Field_Kind2Z) << 16 (signed, y read again after the call): asked again, y = it << 16, done 1; else done 0; tail jmp Shisu_ModelBDraw. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57F310
+name = "Shisu_ModelBStill"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F310..0x57F314 (5 bytes): Shisu_ModelBStates[4] - jmp Shisu_ModelBDraw. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57F320
+name = "Shisu_ModelADispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F320..0x57F32D (0xE bytes): jmp [Shisu_ModelAStates + byte 0x9398E1 * 4], unchecked. Tail-jmp'd to by Shisu_PickSide, Shisu_PickCounts, Shisu_PickShow. docs/rest_2b.md."
+
+[[func]]
+pc = 0x57F330
+name = "Shisu_ModelATurn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F330..0x57F33B (0xC bytes): Shisu_ModelAStates[1] - the dword 0x93994C (model A's angle) - 0x20, tail jmp 0x57F340 (R2C, model A's draw). docs/rest_2b.md."
+
+[[data]]
+pc = 0x663D7C
+name = "Shisu_ModelScales"
+ctype = "unsigned long"
+count = 21
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2B): model scales (dwords, 0x1000 = 1) by index; Shisu_ModelBDraw reads [1..20] (its index held to 1..0x14), R2C's 0x57F340 reads by Shisu_ScaleIndex's 9..0x10. Shisu_Modes follows at 0x663DD0. docs/rest_2b.md."
+
+[[data]]
+pc = 0x663DD0
+name = "Shisu_Modes"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2B): Shisu_Begin, Shisu_OpenDispatch, Shisu_PickDispatch, Shisu_CloseDispatch, Shisu_Result; jumped through by Shisu_ModeDispatch 0x57DFF0 by 0x929F00, unchecked; modes run 0..4 (4 never moves on), and Shisu_OpenStates starts at 0x663DE4. docs/rest_2b.md."
+
+[[data]]
+pc = 0x663DE4
+name = "Shisu_OpenStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2B): Shisu_OpenFade, Shisu_OpenWait; jumped through by Shisu_OpenDispatch 0x57E070 by 0x929F01, unchecked; the next table starts at 0x663DEC (its own reader's). docs/rest_2b.md."
+
+[[data]]
+pc = 0x663DEC
+name = "Shisu_CloseStates"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2B): Shisu_CloseFade, Shisu_CloseWait; jumped through by Shisu_CloseDispatch 0x57E0E0 by 0x929F01, unchecked; the next table starts at 0x663DF4 (its own reader's). docs/rest_2b.md."
+
+[[data]]
+pc = 0x663DF4
+name = "Shisu_PickStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2B): Shisu_PickSide, Shisu_PickCounts, Shisu_PickShow; jumped through by Shisu_PickDispatch 0x57E290 by 0x929F01, unchecked; the states write 0..2 only (PickSide + 1 or + 2, PickCounts - 1, ShowFade - 2); Shisu_ShowSteps starts at 0x663E00. docs/rest_2b.md."
+
+[[data]]
+pc = 0x663E00
+name = "Shisu_ShowSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2B): Shisu_ShowStart, Shisu_ShowDrop, Shisu_ShowLanded, Shisu_ShowFlash, Shisu_ShowFade; called through by Shisu_PickShow 0x57E720 by 0x929F02, unchecked; steps run 0..4 (ShowFade sets 0); Shisu_ModelBStates starts at 0x663E14. docs/rest_2b.md."
+
+[[data]]
+pc = 0x663E14
+name = "Shisu_ModelBStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2B): BareRet 0x437CC0, Shisu_ModelBTurn, Shisu_ModelBSquare, Shisu_ModelBDrop, Shisu_ModelBStill; jumped through by Shisu_ModelBDispatch 0x57EDD0 by 0x939961, unchecked; the writers store 0..4; Shisu_ModelAStates starts at 0x663E28. docs/rest_2b.md."
+
+[[data]]
+pc = 0x663E28
+name = "Shisu_ModelAStates"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2B): BareRet 0x437CC0, Shisu_ModelATurn, then R2C's 0x57F420, 0x57F450, 0x57F4E0, 0x57F4F0 (model A's states 2..5, R2C's to name); jumped through by Shisu_ModelADispatch 0x57F320 by 0x9398E1, unchecked; the writers store 0..5 (Shisu_ShowFade 5). The run of code pointers continues into R2C's tables (0x663E40, 0x57F500's). docs/rest_2b.md."

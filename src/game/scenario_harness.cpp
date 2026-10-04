@@ -394,7 +394,7 @@ const Callee kStandard[] = {
     {"EventOp_6x", bof3::addr::EventOp_6x, KeyOf(EventOp_6x), 1, {kAll}, Answer::kGarbage, 0, 0},   // FO takes it (round twelve)
     {SH_OURS(Field_ObjectInHome), 1, {kAll}, Answer::kFlag, 0, 0},
     {SH_OURS(Effect_FindFree), 0, {}, Answer::kByte, 0xFF, 0x13},
-    {SH_THEIRS(Effect_SpawnAt), 6, {kU8, kU8, kU8, kAll, kAll, kAll}, Answer::kByte, 0xFF, 0x13},
+    {SH_OURS(Effect_SpawnAt), 6, {kU8, kU8, kU8, kAll, kAll, kAll}, Answer::kByte, 0xFF, 0x13},
     // the map and the camera
     {SH_OURS(MapView_SetElevation), 1, {kU16}, Answer::kGarbage, 0, 0},
     {SH_OURS(Kind2_Place), 1, {kU8}, Answer::kGarbage, 0, 0},

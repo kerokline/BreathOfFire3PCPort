@@ -28,7 +28,7 @@ constexpr std::uint32_t kRecoilFace = bof3::addr::Field_FloorHurt;         // FE
 // Callees nobody owns, in the harness's field-standard set by address.
 constexpr std::uint32_t kPartyScreens = 0x5372E0;       // void(void), mode 11's frame's sixth call
 constexpr std::uint32_t kMenuDispatchA = 0x42D710;      // void(void): jmp through 0x64ADAC by the menu byte 0x929F00
-constexpr std::uint32_t kMenuDispatchB = 0x57DFF0;      // void(void): jmp through 0x663DD0 by the menu byte 0x929F00
+constexpr std::uint32_t kMenuDispatchB = bof3::addr::Shisu_ModeDispatch;      // void(void): jmp through 0x663DD0 by the menu byte 0x929F00
 
 // Data.
 constexpr std::uint32_t kActiveMember = 0x9035A4;       // Field_ActiveMember (unsigned char *): its cell, a region of the fuzz's

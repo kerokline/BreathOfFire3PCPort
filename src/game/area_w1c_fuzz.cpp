@@ -254,7 +254,7 @@ const ah::Callee kCallees[] = {
     {"SpawnKind4_469FE0", at::kSpawnKind4, at::kSpawnKind4, 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     // slots inside the group's four effect records, or none; members 0..2 or none
     {W1C_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03},
-    {W1C_THEIRS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02},
+    {W1C_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02},
     {W1C_OURS(Party_MemberAt), 3, {kAll, kAll, kAll}, ah::Answer::kByte, 0xFE, 0x02},
     {W1C_OURS(Party_DropIn), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesSub},
     {W1C_OURS(Sound_PlayEffect), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &MovesMember},

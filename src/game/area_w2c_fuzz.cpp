@@ -493,7 +493,7 @@ const ah::Callee kCallees94[] = {
     {W2C_OURS(AreaMap_SetByte), 3, {kU16, kU16, kU8}, ah::Answer::kGarbage, 0, 0},
     {W2C_OURS(AreaMap_ApplyPatch), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {4}, &PatchEffect},
     // the byte and the words pushed with stale high bits; slots 0..2 or none
-    {W2C_THEIRS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
+    {W2C_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
 };
 const ah::Region kRegions94[] = {
     {at::kFlagRow, 4},

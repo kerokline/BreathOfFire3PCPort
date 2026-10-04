@@ -284,6 +284,7 @@
 #include "game/rest_1g.h"
 #include "game/rest_1f.h"
 #include "game/rest_1d.h"
+#include "game/rest_2b.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1195,6 +1196,12 @@ void InjectAll() {
                                 // fuzz only; after Rest0A_Inject (it calls R0A's helpers by name); reached only
                                 // through .data tables and its own E8 calls, so order among wave one does not matter;
                                 // no module patches bytes inside its 46 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest2B_Inject();            // round 14 wave-two group R2B (0x56E040..0x57F33C: Effect_Spawn / _SpawnAt, two menu
+                                // primitives the community band calls, Field_ObjectTriggers[1], game mode 8 step 8's
+                                // screen Shisu_* and its two models): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its seven tables swapped for the fuzz only; after every
+                                // harness's inject; ours that call Effect_Spawn / _SpawnAt call them by name; no
+                                // module patches bytes inside its 38 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     FishingText_Arm();         // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
     Rest1E_Inject();            // round 14 group R1E (0x5226D0..0x523EC2: the field actions of party sets 13, 14,
                                 // 15 and set 16's forms 0 and 1 - the dispatchers by the form word and the state
