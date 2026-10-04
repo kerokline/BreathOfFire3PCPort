@@ -299,6 +299,7 @@ written out), which `Register` refuses once the names are ours.
 | `area_harness.cpp` | `kStandard`'s `AH_THEIRS(Effect_Spawn)` -> `AH_OURS(Effect_Spawn)` - **a harness row, edited** |
 | `area_w1c`, `w1d`, `w1f`, `w2a`, `w2c`, `w3c`, `w3d`, `w3e` `_fuzz.cpp` | each group's `Wxx_THEIRS(Effect_Spawn)` row -> `Wxx_OURS(Effect_Spawn)` |
 | `area_011_fuzz.cpp`, `area_w3a_fuzz.cpp` | the row `{"Effect_Spawn", KeyOf(Effect_Spawn), KeyOf(Effect_Spawn), ...}` -> `{"Effect_Spawn", ::bof3::addr::Effect_Spawn, KeyOf(Effect_Spawn), ...}` (hand-agnostic; the first `'*'` run stopped at it) |
+| `area_w1e_fuzz.cpp` | its two rows `{"Effect_Spawn", 0x57CE10, 0x57CE10, ...}`, `{"Effect_SpawnAt", 0x57CE80, 0x57CE80, ...}` -> `bof3::addr::...`, `KeyOf(&::...)` (area 67's handlers call both by name; the area harness's standard set has no `Effect_SpawnAt` row to resolve the named key through, and the second `'*'` run stopped there) |
 
 **Why two harness rows moved.** `SH_THEIRS(name)` / `AH_THEIRS(name)` key a
 row on the name's pointer and require it to lie in `.text`; once the name is
@@ -312,9 +313,9 @@ is one token, the row's masks and answers untouched. `FIELD_THEIRS(Effect_Spawn,
 
 **Left raw, on purpose**: the fuzz files' `CallSite` tables naming `0x57CE10`
 / `0x57CE80` (`area_011`, `area_w0b`, `w1c`..`w3e`, `scena_sc13`; the
-disassembly's targets), `area_w0b_fuzz.cpp`'s and `area_w1e_fuzz.cpp`'s
-`{"Effect_Spawn", 0x57CE10, 0x57CE10, ...}` rows (keyed on the address;
-`StandIn` resolves the named key through the standard row's address),
+disassembly's targets), `area_w0b_fuzz.cpp`'s `{"Effect_Spawn", 0x57CE10,
+0x57CE10, ...}` row (keyed on the address; `StandIn` resolves the named key
+through the area harness's standard row, now `AH_OURS`),
 `move_groups.cpp`'s `case 0x57CE10` / `0x57CE80` and its `kCalls9` (the
 movement groups' call-site keys), `scenario_harness.cpp`'s field row for
 `0x57DFF0` (keyed on the address; a harness), comments in `scena_sc7_fuzz.cpp`
