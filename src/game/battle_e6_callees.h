@@ -121,9 +121,9 @@ constexpr U kCameraMatrix = 0x905E40;     // Camera_Matrix
 constexpr U kOtSlot = 0x92BF19;           // Draw_OtSlot
 
 // --- the callees nobody owns -----------------------------------------------
-constexpr U kPercent999 = 0x446F20;       // (value, percent)
-constexpr U kPercent9999 = 0x446F50;      // (value, percent)
-constexpr U kPercent100 = 0x446F80;       // (value, percent)
+constexpr U kPercent999 = bof3::addr::Stat_PercentCap999;   // 0x446F20, R3B's (round fourteen; the same value): (value, percent)
+constexpr U kPercent9999 = bof3::addr::Stat_PercentCap9999;   // 0x446F50, R3B's (round fourteen; the same value): (value, percent)
+constexpr U kPercent100 = bof3::addr::Stat_PercentCap100;   // 0x446F80, R3B's (round fourteen; the same value): (value, percent)
 constexpr U kCellHeight = 0x4CF4B0;       // (x, z): ax
 
 }  // namespace at

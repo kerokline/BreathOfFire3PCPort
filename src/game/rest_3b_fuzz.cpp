@@ -39,6 +39,7 @@ using S = bh::Shape;
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
 constexpr U kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
+constexpr U kRandAt = 0x5B93D2;   // Rand, Capcom's CRT (its name is a macro in symbols.gen.h)
 #define BH_N(a) static_cast<int>(sizeof a / sizeof a[0])
 #define BH_COUNT(a) static_cast<unsigned>(sizeof a / sizeof a[0])
 #define BH_FN(name) reinterpret_cast<const void*>(&::name)
@@ -219,6 +220,48 @@ U CountMoves(const U*, U answer) {
 // of 0..255 stays inside it.
 U AbilityListEffect(const U*, U) { return Key(bh::TextBuffer() + bh::Noise() % 0x100); }
 
+// A record as the originals index it by an actor / target byte (a member
+// below 3, else the enemy object byte - 3, the difference in 32 bits).
+unsigned char* Rec(unsigned n, U party_at, U enemy_at) {
+    return n < 3 ? Mem(at::kParty + n * at::kPartyStride + party_at)
+                 : Mem(at::kEnemies + static_cast<U>(static_cast<std::int32_t>(n) - 3) * at::kEnemyStride + enemy_at);
+}
+// Battle_CalcDamage answers, a third of the time, the target's HP less 1, 0
+// or plus 1 (slot 2 compares the delta with it: its boundary).
+U HitAtHpEffect(const U*, U answer) {
+    const U n = bh::Noise();
+    if (n % 3 != 0) return answer;
+    const unsigned t = Mem(at::kTarget)[0];
+    const U hp = move_script::Word(Rec(t, 0x98, 0xA4));
+    return (answer & 0xFFFF0000u) | ((hp + (n >> 8) % 3 - 1) & 0xFFFF);
+}
+// 0x44FCE0 answers, a third of the time, the target enemy object's +0xB6 less
+// 1, 0 or plus 1 (slot 6 subtracts it and clamps a negative delta).
+U ShareAtStatEffect(const U*, U answer) {
+    const U n = bh::Noise();
+    if (n % 3 != 0) return answer;
+    const unsigned t = Mem(at::kTarget)[0];
+    const U v = move_script::Word(Mem(at::kEnemies + static_cast<U>(static_cast<std::int32_t>(t) - 3) * at::kEnemyStride + 0xB6));
+    return (answer & 0xFFFF0000u) | ((v + (n >> 8) % 3 - 1) & 0xFFFF);
+}
+// Rand: 15 bits as the CRT's (the engine set's form), and the target moved
+// half the time (0..10, noted first): slots 1, 12 and 28 read it again after.
+U RandMovesTarget(const U*, U answer) {
+    const U n = bh::Noise();
+    if (n & 1) {
+        bh::Note(Mem(at::kTarget)[0]);
+        Mem(at::kTarget)[0] = static_cast<unsigned char>((n >> 8) % 11);
+    }
+    return answer & 0x7FFF;
+}
+// Battle_ClearStatus notes the two raise counters as it is called (slots 17,
+// 28 and 29 count one up around the call): a store moved across the call is
+// compared, not hidden.
+U ClearNotesCounts(const U*, U answer) {
+    bh::Note(Mem(at::kPartyUp)[0], Mem(at::kEnemiesLeft)[0]);
+    return answer;
+}
+
 const bh::Callee kCallees[] = {
     // the group's own, called directly (the member test and the roster index by
     // BattleResult_AddExp, slot 4 by slots 44..46 and 49's tail jump). The
@@ -243,7 +286,17 @@ const bh::Callee kCallees[] = {
     {"0x44FBB0", at::kStatMod, at::kStatMod, 1, {kAll}, bh::Answer::kFlag, 0, 0},
     {"0x44FC60", at::kInflictMiss, at::kInflictMiss, 1, {kAll}, bh::Answer::kFlag, 0, 0},
     {"0x44FCA0", at::kInflict, at::kInflict, 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"0x44FCE0", at::kHpShare, at::kHpShare, 1, {kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x44FCE0", at::kHpShare, at::kHpShare, 1, {kAll}, bh::Answer::kGarbage, 0, 0, {}, &ShareAtStatEffect},
+    // the engine set's rows, louder (the same masks): the answers at the
+    // slots' boundaries, the target moved by Rand, the counters noted
+    {"Battle_CalcDamage", bof3::addr::Battle_CalcDamage, KeyOf(&::Battle_CalcDamage), 3, {kU8, kU8, kU16}, bh::Answer::kGarbage, 0, 0,
+     {}, &HitAtHpEffect},
+    {"Rand", kRandAt, kRandAt, 0, {}, bh::Answer::kRand, 0, 0, {}, &RandMovesTarget},
+    // Battle_ActorIsOut answers al 0 or 1 (symbols.toml, its disassembly): the standard kFlag's "not 0" always
+    // has bit 4, so a test of al & 0xFE could not be told from al & 0xFF (control 7)
+    {"Battle_ActorIsOut", bof3::addr::Battle_ActorIsOut, KeyOf(&::Battle_ActorIsOut), 1, {kU8}, bh::Answer::kBool, 0, 0},
+    {"Battle_ClearStatus", bof3::addr::Battle_ClearStatus, KeyOf(&::Battle_ClearStatus), 2, {kU8, kAll}, bh::Answer::kGarbage, 0, 0,
+     {}, &ClearNotesCounts},
 };
 
 const bh::DataTable kTables[] = {
