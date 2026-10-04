@@ -200,7 +200,9 @@ FH_EXPORT void __cdecl PartyAction_Finish(void) {
 }
 
 // original 0x51F1B0: party set 5's action - the entry of PartyAction5_Forms
+
 // 0x65FC18 that the u16 +0x2C picks (0x51E910, PartyAction5_Form1, 0x5226D0), jumped
+// 0x65FC18 that the u16 +0x2C picks (0x51E910, 0x51ED10, PartyAction_NoAction), jumped
 // to, the index unchecked.
 FH_EXPORT void __cdecl PartyAction5_ByForm(void) { Entry(at::kForms, Word(Sprite_Current + 0x2C))(); }
 
