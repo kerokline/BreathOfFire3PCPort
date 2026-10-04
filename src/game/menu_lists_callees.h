@@ -89,7 +89,7 @@ constexpr std::uint32_t kRightOffBound = 0x59A5E6; // imm32 of `mov ecx, 0x140` 
 // Callees with no name in symbols.gen.h: other groups' functions this round,
 // or no group's, called by address.
 constexpr std::uint32_t kExitGateway = bof3::addr::Field_GatewayExit;   // u8(): an exit from the gateway tables (event_ops_callees.h); no group
-constexpr std::uint32_t kCampCell = 0x589FB0;      // u8(): 1 unless ObjTrio's cell is 0xA0 / 0xA1 / 0xAF / 0x91 (AreaMap_ByteAt & 0xF0); no group
+constexpr std::uint32_t kCampCell = bof3::addr::FieldMenu_CampAllowedCell;   // 0x589FB0, R2D's (rest_2d.cpp): u8(): 1 unless ObjTrio's cell is 0xA0 / 0xA1 / 0xAF / 0x91 (AreaMap_ByteAt & 0xF0)
 constexpr std::uint32_t kMemberBody = 0x573560;    // group DD's: a member's panel (x, y, record, flag, 0)
 constexpr std::uint32_t kMemberFace = 0x5744B0;    // group DD's: an 8 x 8 cell SPRT (x, y, u / 8, v / 8, clut, shade)
 constexpr std::uint32_t kTimeBox = 0x5746C0;       // group DD's: the play-time box (x, y)

@@ -286,6 +286,7 @@
 #include "game/rest_1d.h"
 #include "game/rest_2a.h"
 #include "game/rest_2g.h"
+#include "game/rest_2d.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1225,6 +1226,13 @@ void InjectAll() {
                                 // fuzz only; after every harness's inject and Widescreen_Inject (it reads DIV-0041's
                                 // six bounds from the operands); no other module patches a byte inside its 48
                                 // (DIVERGENCE.md, cheats.cpp, labels.cpp)
+    Rest2D_Inject();            // round 14 wave-two group R2D (0x5869A0..0x58B1CD: the masters' screen's pick, yes /
+                                // no prompt and states 3..6, the field menu's Status and Items screens, the top bar's
+                                // countdown and camp check, the field abilities' effects): its clones' calls re-aimed
+                                // at the scenario harness's recorders, its five state tables swapped for the fuzz only
+                                // and FieldAbility_Effects for typed stand-ins; after every harness's inject and after
+                                // YesNoLayout_Inject, whose DIV-0027 re-aims two call sites inside MasterScreen_AskYesNo
+                                // (ours reads where they reach; the fuzz runs that one only with them unpatched)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
