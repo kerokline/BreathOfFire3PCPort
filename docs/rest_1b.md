@@ -8,7 +8,7 @@ the round branch's tip `ba2c3c3`. **47 functions ours**
 `0x51D710..0x51F202`), none added, none dropped. Each read to its last
 instruction with capstone and fuzzed through the scenario harness in field
 mode ([`scenario_harness.md`](scenario_harness.md) section 7), used
-unchanged: 188,000 rounds, 0 mismatches. CONTROLS_SUMMARY **Fuzz only**: no
+unchanged: 188,000 rounds, 0 mismatches. 88 controls planted one at a time: 85 refused by a mismatch, 1 (C06) by a fault before any, 2 equivalent mutants not refused, each with a near variant refused (section 11). **Fuzz only**: no
 recorded route enters any of the 47 (section 9). No divergence, no full-frame
 fill, no byte patch inside the band.
 
@@ -295,7 +295,13 @@ reached (each handler recorder 786..11,900 calls); `AreaMap_ByteAt` 16,000,
 `MapView_GroundAt` 3,099, `Effect_SpawnAtCellHigh` 3,629, `Effect_SpawnAtCell`
 1,060, `Field_GiveZenny` 86, `Sprite_FlashClut` / `Char_LoseHp` 321,
 `Inventory_Add` 946, `Rand` 3,024, the cell handlers' recorders 1,170..2,398.
-STAR_RESULT
+
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+1,019 lines of `0 MISMATCHES` and no other mismatch line, `inject: 8702
+ours, 0 left original` (8,655 + 47); `rest_1b` there 188,000 rounds, 295,675
+calls, 0 mismatches. **With `BOF3X_WIDE=1`**: exit 0, the same 1,019 lines
+and counts. Each passed on its first run (neither died silently).
+`tools/ledger_check.py`: 72 entries, 0 errors.
 
 ## 4. Divergence
 
@@ -423,4 +429,103 @@ hidden starts after its `ret` (`2C6`, `50C`, `250`, `280`); the file's rule
 
 ## 11. Controls
 
-CONTROLS_TABLE
+`r1b/controls.py` (scratch): each plant replaces a string that occurs exactly once
+in `rest_1b.cpp`, rebuilds, runs the self-test on the clones whose name holds
+the filter (`BOF3X_R1B_ONLY`), restores the file and rebuilds. **88 planted:
+85 refused by a mismatch, C06 by a fault, 2 not refused - equivalent
+mutants, each with a near variant refused.** The count is the rounds that mismatched (of 4,000 per clone run),
+the round the first refusal came in; "fault" is a control whose wrong index
+sent the run through a table entry that is not a recorder after the first
+mismatch was logged (C03, C04) or before (C06): the process died, exit
+0xC0000005.
+
+| # | Run (`_ONLY`) | Plant | Refused |
+|---|---|---|---|
+| C01 | `PartyFormAction2_ByForm` | set 2's form-action table read as its action table | 4,000 (first round 0) |
+| C02 | `PartyAction3_Form1` | set 3's form 1 through the form-action form 1 table | 4,000 (first round 0) |
+| C03 | `PartyAction4_Form0` | the state dispatchers index by +3 | fault after the first mismatch, round 0 |
+| C04 | `Form2State0` | the step dispatchers index by +2 | fault after the first mismatch, round 0 |
+| C05 | `ByForm` | the form read as the byte +0x2C, not the word | **not refused**: equivalent - the form word is seeded below its table's 3 (an index past it would jump through the next table), so its high byte is 0 and the byte reads the same; near variants C06 and C88 refused |
+| C06 | `ByForm` | the form word read from +0x2A (C05's near variant) | fault (exit 0xC0000005, no mismatch logged first) |
+| C07 | `PartyAction6_Form0` | set 6's action form 0 through the form-action table | 4,000 (first round 0) |
+| C08 | `Form1State1` | set 5's state 1 steps through set 4's | 4,000 (first round 0) |
+| C09 | `PartyAction3_Form0Begin` | the first turn +1, not -1 | 1,930 (first round 1) |
+| C10 | `PartyAction3_Form0Begin` | the turn skipped on bit 1, not bit 0 | 1,683 (first round 3) |
+| C11 | `PartyAction3_Form0Begin` | the second turn +3 | 647 (first round 1) |
+| C12 | `PartyAction3_Form0Begin` | the third turn -1 | 213 (first round 16) |
+| C13 | `PartyAction4_Form0Begin` | the slope two steps ahead, not one | 3,326 (first round 0) |
+| C14 | `PartyAction3_Form0Begin` | steep from 0x40, not above it | 177 (first round 47) |
+| C15 | `PartyAction3_Form0Begin` | the steep pose + 0x45 | 1,010 (first round 0) |
+| C16 | `PartyAction3_Form0Begin` | +0xA = 6 | 2,990 (first round 1) |
+| C17 | `PartyAction4_Form0Begin` | the side probe clears when level too | 150 (first round 12) |
+| C18 | `PartyAction3_Form0Begin` | the second side probe direction 7 | 2,990 (first round 1) |
+| C19 | `PartyAction3_Form0Begin` | the form's sound + 0x101 | 2,990 (first round 1) |
+| C20 | `PartyAction3_Form0Begin` | +0xB = 1 at the end | 4,000 (first round 0) |
+| C21 | `PartyAction4_Form2Again` | the pose's half turn as >> 1 (direction 0 gives -1) | 337 (first round 16) |
+| C22 | `PartyAction3_Form0Begin` | Sprite_Current not re-read for the side probe's ground test | 40 (first round 49) |
+| C23 | `PartyAction3_Form0Resolve` | the object's +0x80 |= 2 | 548 (first round 10) |
+| C24 | `PartyAction4_Form0Resolve` | Sprite_ObjectsExtra one record on | 120 (first round 22) |
+| C25 | `PartyAction3_Form0Resolve` | object 0x1E taken as Sprite_Objects' | 31 (first round 197) |
+| C26 | `PartyAction3_Form0Resolve` | Sprite_ObjectAt margin 1 | 1,726 (first round 2) |
+| C27 | `PartyAction4_Form0Resolve` | x's fraction tested & 0xFFFE | 52 (first round 147) |
+| C28 | `PartyAction3_Form0Resolve` | the z cell one on in x too | 256 (first round 10) |
+| C29 | `PartyAction3_Form0Resolve` | the first cell's answer ignored | 1,020 (first round 2) |
+| C30 | `PartyAction4_Form0Resolve` | the count-down ends at 1 | 2,281 (first round 2) |
+| C31 | `PartyAction3_Form0Resolve` | three steps ahead, not two | 1,473 (first round 2) |
+| C32 | `PartyAction3_CellPickup` | zenny from 0xE | 22 (first round 90) |
+| C33 | `PartyAction4_CellPickup` | 6 zenny on 0xF | 12 (first round 31) |
+| C34 | `PartyAction3_CellPickup` | Field_InputFlags bit 2 only | 13 (first round 122) |
+| C35 | `PartyAction4_CellPickup` | times 11 | 13 (first round 333) |
+| C36 | `PartyAction3_CellPickup` | the zenny effect state 2 | 55 (first round 31) |
+| C37 | `PartyAction4_CellPickup` | item 0x57 | 253 (first round 43) |
+| C38 | `PartyAction3_CellPickup` | no object free: the cell not cleared | 12 (first round 351) |
+| C39 | `PartyAction4_CellPickup` | Field_Request 1 after the item | 239 (first round 43) |
+| C40 | `PartyAction3_CellPickup` | twelve bytes of the name | 253 (first round 43) |
+| C41 | `PartyAction3_Form1Begin` | the effect object's +0xA, not +0xB | 437 (first round 6) |
+| C42 | `PartyAction4_Form1Begin` | the pose +8 + 9 | 437 (first round 6) |
+| C43 | `PartyAction3_Form1Begin` | Field_State +0x128 = 3 | 437 (first round 6) |
+| C44 | `PartyAction4_Form1Begin` | Field_ScriptFlags bit 13 | 318 (first round 6) |
+| C45 | `PartyAction3_Form1Begin` | +9 one up | 437 (first round 6) |
+| C46 | `PartyAction3_Form1Begin` | Field_State +0x137 = 2 | 437 (first round 6) |
+| C47 | `PartyAction4_Form1Begin` | +0x138 tested & 2 | 78 (first round 96) |
+| C48 | `PartyAction3_Form1Begin` | Sprite_ObjectAt margin 0 | 129 (first round 17) |
+| C49 | `PartyAction4_Form1Begin` | both member tests needed | 3,822 (first round 0) |
+| C50 | `PartyAction3_Form1Begin` | the pose from Sprite_Current read before the sound | 15 (first round 6) |
+| C51 | `PartyAction4_Form1Begin` | the object marked signed (0x80.. before Sprite_Objects) | **not refused**: equivalent - `Sprite_ObjectAt` answers 0..0x21 or 0xFF, where the signed and unsigned compares agree (ours aborts on the rest); near variants C24, C25 refused |
+| C52 | `SpawnKind3A` | script position 0xB | 1,968 (first round 2) |
+| C53 | `SpawnKind3A` | kind 0x3B | 1,441 (first round 2) |
+| C54 | `SpawnKind3A` | +6 = 0, not +7 | 1,512 (first round 2) |
+| C55 | `SpawnKind3A` | the sound only with an object | 71 (first round 113) |
+| C56 | `PartyAction4_Form2Aim` | +0xB = 1 | 4,000 (first round 0) |
+| C57 | `PartyAction4_Form2Aim` | no side probes | 4,000 (first round 0) |
+| C58 | `PartyAction5_Form1Aim` | +7 = 0, not +6 | 4,000 (first round 0) |
+| C59 | `PartyAction5_Form1Aim` | +0xA = 9 | 4,000 (first round 0) |
+| C60 | `PartyAction4_Form2Aim` | the turn by PartyAction_TargetAhead | 1,930 (first round 1) |
+| C61 | `PartyAction4_Form2Hit` | +0xA 1 counted as 0 | 1,726 (first round 2) |
+| C62 | `PartyAction4_Form2Hit` | no form sound first | 1,726 (first round 2) |
+| C63 | `PartyAction4_Form2Hit` | the effect object's +0xA = 2 | 844 (first round 11) |
+| C64 | `PartyAction5_Form1Hit` | +3 one on, not two, for an effect object | 898 (first round 10) |
+| C65 | `PartyAction4_Form2Hit` | the mark's sound 0x10C | 434 (first round 2) |
+| C66 | `PartyAction5_Form1Hit` | Sprite_ObjectAt margin 1 | 824 (first round 2) |
+| C67 | `PartyAction5_Form1Hit` | set 5's with the form sound first | 1,726 (first round 2) |
+| C68 | `PartyAction4_Form2Hit` | the effect object faces +9 | 842 (first round 11) |
+| C69 | `PartyAction5_Form1Hit` | +6 written through Sprite_Current read before the sound | 30 (first round 145) |
+| C70 | `PartyAction4_CellHit` | 0xF5 for 0xF4 | 482 (first round 0) |
+| C71 | `PartyAction5_CellHit` | the second effect above 4 | 105 (first round 36) |
+| C72 | `PartyAction4_CellHit` | the second effect state 5 | 169 (first round 1) |
+| C73 | `PartyAction5_CellHit` | 0xF8 for 0xF7 | 496 (first round 10) |
+| C74 | `PartyAction4_CellHit` | the item from 7 | 31 (first round 27) |
+| C75 | `PartyAction5_CellHit` | the damage from 0xB | 31 (first round 10) |
+| C76 | `PartyAction4_CellHit` | item 0x28 | 217 (first round 51) |
+| C77 | `PartyAction5_CellHit` | +0xB = 3 after the item | 217 (first round 51) |
+| C78 | `PartyAction4_CellHit` | two points of damage | 146 (first round 111) |
+| C79 | `PartyAction5_CellHit` | message 0xDA | 146 (first round 111) |
+| C80 | `PartyAction4_CellHit` | Field_Request 1 | 501 (first round 10) |
+| C81 | `PartyAction5_CellHit` | the blocking codes answer 0 | 702 (first round 1) |
+| C82 | `PartyAction4_CellHit` | the sound before the effect object | 501 (first round 10) |
+| C83 | `PartyAction4_Form2Again` | +0xA = 0xC | 4,000 (first round 0) |
+| C84 | `PartyAction5_Form1Again` | +3 = 2 | 4,000 (first round 0) |
+| C85 | `PartyAction5_Form1Wait` | state 2, not 1 | 937 (first round 8) |
+| C86 | `PartyAction5_Form1Wait` | Field_Kind2Hold set | 2,350 (first round 0) |
+| C87 | `PartyAction5_Form1Wait` | free and in state 1 both | 1,066 (first round 3) |
+| C88 | `ByForm` | the form word one on, inside the table (C05's and C06's near variant) | 28,000 (first round 0) |
