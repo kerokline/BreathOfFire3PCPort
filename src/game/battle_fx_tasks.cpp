@@ -45,8 +45,8 @@ const Callees kOriginals = {
     // unchanged. The rest keep the round-eight form, raw (the fuzz's kFxImm / kMagicImm
     // key on the same values). Rebound 2026-09-29 (round twelve group BE2): slots 9, 10,
     // 13, 14 and 17 and the watch's state 3 read BE2's names, the values unchanged.
-    {H(bof3::addr::BareRet), H(0x432B70), H(0x432F90), H(0x433190), H(0x4332B0), H(0x433380), H(0x433460),
-     H(0x4337F0), H(bof3::addr::Boss26Fx_Dispatch), H(bof3::addr::BattleFx_GridMark), H(bof3::addr::BattleFx_ListHand), H(0x433970), H(0x433B80), H(bof3::addr::BattleFx_Win18Cursor),
+    {H(bof3::addr::BareRet), H(0x432B70), H(bof3::addr::BattleFxFlash_Dispatch), H(0x433190), H(bof3::addr::BattleFxTint_Dispatch), H(bof3::addr::BattleFxAnim_Dispatch), H(0x433460),
+     H(0x4337F0), H(bof3::addr::Boss26Fx_Dispatch), H(bof3::addr::BattleFx_GridMark), H(bof3::addr::BattleFx_ListHand), H(bof3::addr::BattleFxReform_Dispatch), H(bof3::addr::BattleFxRestore_Dispatch), H(bof3::addr::BattleFx_Win18Cursor),
      H(bof3::addr::BattleFx_Win19Cursor), H(bof3::addr::BattleFxDash_Dispatch), H(bof3::addr::BattleFxPose_Dispatch), H(bof3::addr::BattleFx_RestoreMemberTask),
      H(bof3::addr::BattleFxTrail_Dispatch)},   // slots 15, 16, 18 (BE6) and 9, 10, 13, 14, 17 (BE2) rebound 2026-09-29, round twelve: the values unchanged
     {H(bof3::addr::BareRet), H(0x49AB60), H(0x4FB260), H(0x4D6E30), H(0x4AB570), H(0x4C0620), H(0x4A8360), H(0x4D80C0),
@@ -65,7 +65,7 @@ const Callees kOriginals = {
      H(0x4B30F0), H(0x4E5220), H(0x4E33B0), H(0x4F4C40), H(0x4E9B70), H(0x4EA0F0)},
     {H(0x432C40), H(0x432DB0), H(0x432DE0), H(0x432E50), H(0x432EA0)},
     {H(0x4331D0), H(0x433290)},
-    {H(0x4334C0), H(0x433550), H(bof3::addr::Sprite_StateRestart), H(bof3::addr::BattleFx_WatchIcon), H(0x433790)},
+    {H(0x4334C0), H(bof3::addr::BattleFx_WatchIconStart), H(bof3::addr::Sprite_StateRestart), H(bof3::addr::BattleFx_WatchIcon), H(bof3::addr::BattleFx_WatchRecheck)},
     {H(0x433810)},
     BattleFx_RollingDigits, Battle_DrawNumber, Battle_DrawLabel, BattleTask_FreeCurrent, Battle_ActorIsOut,
     Sprite_SetAnimation, Sprite_QueueOverlay, Sprite_ScriptTick, Sprite_UpdateScreen, ScriptFlags_Set40,

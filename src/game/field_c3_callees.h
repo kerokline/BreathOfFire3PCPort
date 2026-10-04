@@ -27,7 +27,7 @@ constexpr std::uint32_t kRecoilFace = bof3::addr::Field_FloorHurt;         // FE
 
 // Callees nobody owns, in the harness's field-standard set by address.
 constexpr std::uint32_t kPartyScreens = bof3::addr::Mode11_ListedSpriteScreens;   // R2A: void(void), mode 11's frame's sixth call
-constexpr std::uint32_t kMenuDispatchA = 0x42D710;      // void(void): jmp through 0x64ADAC by the menu byte 0x929F00
+constexpr std::uint32_t kMenuDispatchA = bof3::addr::BattleExtra_Dispatch;      // void(void): jmp through 0x64ADAC by the menu byte 0x929F00
 constexpr std::uint32_t kMenuDispatchB = bof3::addr::Shisu_ModeDispatch;      // void(void): jmp through 0x663DD0 by the menu byte 0x929F00
 
 // Data.

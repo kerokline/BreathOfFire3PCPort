@@ -144,8 +144,8 @@ void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }
 // index - 3 (the index's low byte) given animation `arg` through
 // BattleEnemy_SetAnimation; 0x435A20 makes it Sprite_Current for the call,
 // 0x435A70 does not (docs/magic_s01.md).
-constexpr std::uint32_t kEnemyAnimCurrent = 0x435A20;
-constexpr std::uint32_t kEnemyAnim = 0x435A70;
+constexpr std::uint32_t kEnemyAnimCurrent = bof3::addr::BattleEnemy_SetAnimationAs;   // 0x435A20
+constexpr std::uint32_t kEnemyAnim = bof3::addr::BattleEnemy_SetAnimationOf;   // 0x435A70
 
 // The phase handlers and callees of other units (docs/magic_s10.md section 3)
 // are ours now and called by name: S38's MagicFx_CountDownFlag10 and
