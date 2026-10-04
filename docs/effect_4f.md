@@ -11,7 +11,8 @@ and three unplaced rows of the band that serve its own kinds (`0x492530`,
 capstone and fuzzed through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8) without edits to it:
 196,000 rounds, 0 mismatches; 55 of 55 controls refused (section 5). **No divergence**:
-every function is a faithful replacement. One latent defect kept as the
+every function is a faithful replacement (since round thirteen's end kind
+0xAF's tile is DIV-0041's widened fill, section 2). One latent defect kept as the
 original has it (`EffectKindAD_DrawArc`'s second vertex depth, section 7).
 **Fuzz only**: no recorded route enters any of the 49 (section 10). Every row
 of the cut is effect code, the seven `hypothesis` rows too: none left original.
@@ -109,7 +110,7 @@ State 0 (`0x492780`) is part 6.
 | `EffectKindAF_Start` `0x4929A0` | `+9 = 0`, `+6 = 0x10`, `+1` up |
 | `EffectKindAF_FadeIn` `0x4929C0` | `+9` up 0x10; wrapped to 0: drawn at 0xFF and `+1` up; else drawn at `+9` (pushed in `eax`, the record pointer's upper bytes above `al`) |
 | `EffectKindAF_FadeOut` `0x492A00` | `+9` down 0x10; drawn at `+9` while `Draw_PassFlags` is set; at `+9` 0: `Draw_PassFlags` 0 - a tail `jmp` to `Effect_Release`; else `+1` down (state 1 again) |
-| `EffectKindAF_DrawScreen` `0x4932E0` (shade) | a semi-transparent tile (`Gpu_SetTile`) at (0, 0), 320.0 by 240.0, `(shade, 0, 0)`, committed 0x1C to slot 1 (`+0x10` not written). The 320.0 (`0x493308`) is one of the sites DIV-0041 names as not widened |
+| `EffectKindAF_DrawScreen` `0x4932E0` (shade) | a semi-transparent tile (`Gpu_SetTile`) at (0, 0), 320.0 by 240.0, `(shade, 0, 0)`, committed 0x1C to slot 1 (`+0x10` not written). The 320.0 (`0x493308`) is one of the sites DIV-0041 names: **widened at round thirteen's end** (2026-10-03), `(Widescreen_FillX(), 0)` `Widescreen_FillWidth()` x 240, Capcom's floats while the fills are unarmed or the picture narrow |
 
 ### 1.6 Kind 0xB0: the bars
 
@@ -166,13 +167,15 @@ slot 1.
 
 ## 2. Divergence
 
-None. Every function is the original's behaviour; no DIVERGENCE.md entry.
-`DIVERGENCE.md` and `src/game/cheats.cpp` name none of the 49;
+None of this group's own: every function is the original's behaviour; no
+entry of its own. `src/game/cheats.cpp` names none of the 49;
 `src/game/widescreen.cpp` patches no operand inside them. DIV-0041 lists
-`0x493308` (`EffectKindAF_DrawScreen`'s 320.0) among the sites not yet
-widened: ours writes 320.0, as the original. Widening it now that it is ours
-(through `Widescreen_Fill()`, as `ItemTrade_DrawBackground` does) is the
-owner's call and DIV-0041's entry, not this group's.
+`0x493308` (`EffectKindAF_DrawScreen`'s 320.0) among its full-frame sites,
+and since round thirteen's end (2026-10-03) ours draws it as
+`Effect_DrawScreenTint` does: `(Widescreen_FillX(), 0)`
+`Widescreen_FillWidth()` x 240, which is the original's `(0, 0)` 320 x 240
+until `Widescreen_ArmFills` has run (the fuzz compares that) and whenever the
+picture is narrow (DIV-0041's round's-end amendment).
 
 ## 3. Tables and cells named
 
@@ -357,8 +360,8 @@ loops are counted (256, 8, 16), the source cells are read for eight.
 - **`EffectKindB0_StepBars` draws a bar once more after putting it out of
   use** (D204) (state 2, its word below 0: `+0 = 0`, then `+2` is still 2, so it is
   drawn). Probably intended (the last frame of the bar); described only.
-- **`EffectKindAF_DrawScreen`'s tile is 320 wide** (D238) under DIV-0041's wide
-  picture (section 2).
+- **`EffectKindAF_DrawScreen`'s tile was 320 wide** (D238) under DIV-0041's wide
+  picture; widened at round thirteen's end (section 2).
 - **`EffectKindB1` never ends** (D202): no state of its table releases the record;
   whatever spawns it must release it (not ours to see).
 

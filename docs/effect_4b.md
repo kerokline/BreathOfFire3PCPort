@@ -14,8 +14,9 @@ and fuzzed through the scenario harness in effect mode
 264,000 rounds, 0 mismatches; 104 of 105 controls refused by a count, the other an equivalent mutant whose near variant is refused (section 8). **Fuzz only**: no recorded
 route enters any of the 66 (section 10). Every row of the cut is effect code,
 the five `hypothesis` rows among them (the dispatchers of kinds 0x89, 0xA4,
-0x8A and 0x8C and the tile `0x489CD0`): all taken. **No divergence, no
-ledger entry**; no unwritten memory reaches an output (section 7).
+0x8A and 0x8C and the tile `0x489CD0`): all taken. **No divergence of its
+own, no ledger entry** (the tile's width is DIV-0041's since the round's
+end, section 1.3); no unwritten memory reaches an output (section 7).
 
 | Kind | Functions | Reached through |
 |---|--:|---|
@@ -104,10 +105,13 @@ down 2 while `+0x5D` is not 0, else the chapter's step byte `0x8034E5` up and
 `+1` = 3 (entry 3 is `BareRet`); then the tile. **`EffectKind89_DrawTint`**
 `0x489CD0`: a draw mode (page `(0x3C0, 0)`, abr 2, dtd 1) committed in slot
 3; a `TILE` at the cursor `(0, 0)` 320 x 240 in the record's colour,
-semi-transparent, committed (3, `0x1C`). The 320 at `0x489D47` is one of the
-fills [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0041 lists as not yet widened
-([`widescreen.md`](widescreen.md) names it); ours writes Capcom's floats, so
-widening it later is one line of ours and the owner's word.
+semi-transparent, committed (3, `0x1C`). The 320 at `0x489D47` is one of
+the fills [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0041 lists
+([`widescreen.md`](widescreen.md) section 5 names it): **widened at round
+thirteen's end** (2026-10-03), the tile at `(Widescreen_FillX(), 0)`
+`Widescreen_FillWidth()` x 240 as `Effect_DrawScreenTint` (E4D) draws -
+Capcom's `(0, 0)` 320 x 240 until `Widescreen_ArmFills` has run (so the fuzz
+still compares the original's floats) and whenever the picture is narrow.
 
 ### 1.4 Kind 0x9D
 
@@ -197,14 +201,16 @@ the chapter's step byte 0xF, released. `_Fail`: the step byte 8, released.
 
 ## 2. Divergence
 
-None. Every function is a faithful replacement; every call goes through
+None of this group's own: every function is a faithful replacement but the
+tile's width, DIV-0041's (below). Every call goes through
 `SH_CALL` (the fuzz stands recorders in); `Sprite_Current` is read again
 wherever the original reads `[0x937F88]` again; the FPU work (`fild` /
 `fadd` / `fsub` / `fstp`, `_ftol`'s truncation) is done in the FPU as
 Capcom's is. Where the original indexes past a table or a pool, ours aborts
 (section 6). `widescreen.cpp`, `cheats.cpp` and `DIVERGENCE.md` patch no byte
-inside the 66 (a grep for every address); DIV-0041 names `0x489D47` as an
-unwidened fill (section 1.3).
+inside the 66 (a grep for every address). DIV-0041 names `0x489D47`, and
+since round thirteen's end `EffectKind89_DrawTint` draws it widened under the
+wide picture (section 1.3; DIV-0041's round's-end amendment).
 
 ## 3. The tables
 

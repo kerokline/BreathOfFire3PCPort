@@ -645,7 +645,7 @@ const Callee kField[] = {
     {FIELD_OURS(Sprite_FindFree), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:4: unsigned char(void)
     {FIELD_OURS(Sprite_UpdateScreenA), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1 FC2:3: void(void)
     {FIELD_OURS(Gpu_SetPolyFT4), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FC2:1 FE2:3: void(unsigned char *prim)
-    {FIELD_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC2:1 FE2:3: void(unsigned long x, unsigned long z, int dy, unsigned size)
+    {FIELD_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC2:1 FE2:3: void(unsigned long x, unsigned long z, int dy, unsigned size); x, z whole (the low word tested, the high word summed), dy `movsx edx, byte [esp+0x14]`, size `and edi, 0xFF` (0x572FD6, 0x572FF6; round thirteen's end fold)
     {FIELD_OURS(Tint_Release), 1, {kU8}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FC3:2 FO:2: void(unsigned char index)
     {FIELD_OURS(Panel_DrawEdgeQuad), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE1:4: a textured quad, committed
     {FIELD_OURS(Panel_DrawWindow), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:4: five words, calls 0x469790 / 0x469960
@@ -1004,6 +1004,18 @@ std::uint32_t FirstFree(std::uint32_t base, unsigned stride, unsigned n, std::ui
 // 0x47A130: 64 of 0x20 at 0x92D1DC (E2D's reading of both)
 std::uint32_t FxSparkFindFree(const std::uint32_t*, std::uint32_t answer) { return FirstFree(at::kShards, 0x1C, 8, answer); }
 std::uint32_t FxDustFindFree(const std::uint32_t*, std::uint32_t answer) { return FirstFree(0x92D1DC, 0x20, 64, answer); }
+// The round's end fold (docs/scenario_harness.md section 8.10).
+// 0x4FEE70: the three story flags of 0x65DE60 as bits, plus 1 - lea eax,
+// [edi + 1] at 0x4FEE9F, so the whole eax is 1..8 and its caller
+// EffectKind18_09 (0x4FEDE3: cmp ecx, eax) compares all of it with the record's
+// +2. The kByte answer's low byte 1..8 with the rest of eax cleared; a quarter
+// of the time Sprite_Current's +2 when that is 1..8, so the "unchanged" path
+// runs (E5A's FxPattern, effect_5a_fuzz.cpp).
+std::uint32_t FxPattern(const std::uint32_t*, std::uint32_t answer) {
+    const auto* const s = static_cast<const unsigned char*>(Sprite_Current);
+    if ((answer >> 16) % 4 == 0 && InRegions(s, 0x80) && s[2] >= 1 && s[2] <= 8) return s[2];
+    return answer & 0xFF;
+}
 
 const Callee kEffectOverrides[] = {
     {FX_OURS(Effect_FindFree), 0, {}, Answer::kByte, 0xFF, 0x13, {}, FxFindFree, nullptr, true},   // E1A:4 E1B:6 E1D:3 E2C:1 E3A:1 E3B:4 E5C:2 E5D:2: unsigned char(void)
@@ -1023,7 +1035,7 @@ const Callee kEffectOverrides[] = {
     {FX_OURS(Gte_VectorNormal), 2, {0, 0}, Answer::kGarbage, 0, 0, {12, 0}, FxOut1_12, nullptr, true},   // in hashed, out three longs filled
     {FX_OURS(Math_Cos), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxCosNot0, nullptr, true},   // never 0 or -1
     {FX_OURS(Sprite_UpdateScreen), 0, {}, Answer::kGarbage, 0, 0, {}, FxOnCurrent80, nullptr, true},   // Sprite_Current and its 0x80 bytes logged
-    {FX_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxLinkAdvance, nullptr, true},   // the cursor moves by the size two times in three
+    {FX_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kU8, kU8}, Answer::kGarbage, 0, 0, {}, FxLinkAdvance, nullptr, true},   // the cursor moves by the size two times in three; x, z whole (the low word compared with 0, the high word summed), dy a signed byte (movsx edx, byte [esp+0x14] at 0x572FD6), size its low byte (and edi, 0xFF at 0x572FF6) - world_map.cpp's reading, E5A's (round thirteen's end fold)
 };
 
 const Callee kEffectStd[] = {
@@ -1098,7 +1110,7 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x5A7840), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPrim0_12, nullptr, true},   // 6, library layer: 12 bytes of a primitive written
     {FX_OURS(EffectKind87_Midpoint), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 6: three words, no calls
     {FX_RAW(0x48ED80), 3, {0, 0, kU8}, Answer::kGarbage, 0, 0, {12, 12}, nullptr, nullptr, true},   // 6: two points (12 read each) and a byte; draws
-    {FX_OURS(EffectKind18Sub42_Draw), 2, {0, kAll}, Answer::kGarbage, 0, 0, {4}, nullptr, nullptr, true},   // 6: a pointer (4 read) and a word; textured quads
+    {FX_OURS(EffectKind18Sub42_Draw), 2, {kAll, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 6: (variant, height) - not a pointer: the variant a whole word indexing the piece lists (lea eax, [ebp + ebp*2] at 0x509A83) and the lift words, the height's low word alone reaching the vertex word it is subtracted into (sub edx, ebp; mov [eax - 6], dx at 0x509B62); E5F's reading, effect_5f.cpp (round thirteen's end fold)
     {FX_RAW(0x46F570), 1, {0}, Answer::kGarbage, 0, 0, {84}, nullptr, nullptr, true},   // 5: a record read to +0x54; the GTE rotations
     {FX_RAW(0x46F690), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: a word; a draw mode, 0x46F6F0
     {FX_RAW(0x52B2A0), 1, {kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: a byte, no calls
@@ -1115,7 +1127,7 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x47A200), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; draws
     {FX_RAW(0x4799C0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 2: a record read and written to +0xD20 (the first 16 hashed)
     {FX_OURS(EffectKind53_TexWindow), 4, {kU16, kU16, kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: four s16
-    {FX_RAW(0x4FEE70), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; Flags_Test
+    {FX_RAW(0x4FEE70), 0, {}, Answer::kByte, 1, 8, {}, FxPattern, nullptr, true},   // 2: the three story flags 0x65DE60 as bits, plus 1 (lea eax, [edi + 1] at 0x4FEE9F): a whole eax 1..8, which EffectKind18_09 (0x4FEDE3) compares whole with +2 (round thirteen's end fold; E5A's reading)
     {FX_RAW(0x462F10), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; a sprite primitive
     {FX_RAW(0x46E190), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; tiles, Rand
     {FX_RAW(0x46FAE0), 1, {0}, Answer::kGarbage, 0, 0, {13}, nullptr, nullptr, true},   // 1: a record read to +0xD; lines
