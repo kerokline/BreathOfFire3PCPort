@@ -197,6 +197,23 @@ U StatModsEffect(const U*, U answer) {
     return answer;
 }
 
+// Battle_CalcDamage's answer is compared against the target's HP (slots 68,
+// 88: < and > on the words), against 0 (68, 105) and summed into a clamp (103):
+// garbage meets an HP or 0 one time in 65,536. Two times in three the stand-in
+// answers 0, 1, or the target's HP less one, equal or one more (its words
+// read after the disturbance, the same on both passes), the upper half kept.
+U CalcEffect(const U* a, U answer) {
+    const U n = bh::Noise();
+    if (n % 3 == 0) return answer;
+    const unsigned t = a[1] & 0xFF;
+    if (t > 10) return answer;
+    const unsigned hp = t < 3 ? Word(Mem(at::kParty + t * at::kPartyStride + 0x98)) : Word(Mem(at::kEnemies + (t - 3) * at::kEnemyStride + 0xA4));
+    static const unsigned kPick[] = {0, 1, 0xFFFFFFFFu, 0, 1};
+    const unsigned k = (n >> 4) % 5;
+    const unsigned v = k < 2 ? kPick[k] : hp + kPick[k];   // k 2..4: HP - 1, HP, HP + 1
+    return (answer & 0xFFFF0000u) | (v & 0xFFFF);
+}
+
 // Masks narrowed where the callee reads less than the word and the caller's
 // register above it is its own garbage (a different value in the copy and in
 // ours): each read of the callee's (capstone, 2026-10-04).
@@ -211,7 +228,10 @@ const bh::Callee kCallees[] = {
     // Battle_RecalcStats 0x453300: `mov al, [esp + 4]; cmp al, 2`, `and edi, 0xFF` (BE6's own listing, kU8)
     {"Battle_RecalcStats", bof3::addr::Battle_RecalcStats, KeyOf(&::Battle_RecalcStats), 1, {kU8}, bh::Answer::kGarbage, 0, 0},
     {"BattleForm_ApplyStats", bof3::addr::BattleForm_ApplyStats, KeyOf(&::BattleForm_ApplyStats), 0, {}, bh::Answer::kGarbage, 0, 0},
-    // the standard two, louder (RecordEffect, StatModsEffect)
+    // the standard three, louder (CalcEffect, RecordEffect, StatModsEffect); Battle_CalcDamage's masks the
+    // standard row's (both actors' bytes: the slots push eax / ecx / edx with stale upper bytes)
+    {"Battle_CalcDamage", bof3::addr::Battle_CalcDamage, KeyOf(&::Battle_CalcDamage), 3, {kU8, kU8, kU16}, bh::Answer::kGarbage,
+     0, 0, {}, &CalcEffect},
     {"Char_RecalcStats", bof3::addr::Char_RecalcStats, KeyOf(&::Char_RecalcStats), 1, {kAll}, bh::Answer::kGarbage, 0, 0, {},
      &RecordEffect},
     {"Formation_ApplyStatMods", bof3::addr::Formation_ApplyStatMods, KeyOf(&::Formation_ApplyStatMods), 0, {}, bh::Answer::kGarbage,
