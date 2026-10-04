@@ -238,8 +238,8 @@ const bh::DataTable kTables[] = {
 // The cells beyond the engine frame the group reads or writes.
 const bh::Region kRegions[] = {
     {0x903B24, 0x46C},   // CharacterRecords past the engine frame's head, to 0x903F90 (eight records): slot 118
-    {0x803478, 0x680},   // past WindowRecords to party index 10's +0x138: slot 129's party-indexed writes for an
-                         // enemy target, slots 117 / 118 for a party size past 3
+    {0x803478, 0x6F8},   // past WindowRecords to party index 10's +0x134 dword (0x803B6C): slot 129's party-indexed
+                         // writes for an enemy target 5..10 (3 and 4 land in WindowRecords)
 };
 
 // ===========================================================================

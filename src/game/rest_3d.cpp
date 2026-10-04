@@ -299,10 +299,10 @@ extern "C" void __cdecl Battle_InflictStatus(unsigned target, unsigned status) {
 // The shared tails of the effect slots
 // ===========================================================================
 
-// original 0x44FB30 (23 sites in R3B and R3C, eight here, Effect_QuarterAttack's
+// original 0x44FB30 (23 sites in R3B and R3C, ten here, Effect_QuarterAttack's
 // tail): the round flags' 0x2000 (0x904AA9 bit 5: no hit sound or pop-up), and
-// the target's +0x130 bit 9 set (no hit pose) and +0x12C bit 0 cleared (an
-// enemy's +0x110 and +0x10C).
+// the target's +0x130 bit 9 set (no hit pose) and +0x12C bit 0 cleared (the
+// damage pop-up's flag; an enemy's +0x110 and +0x10C).
 extern "C" void __cdecl Effect_NoHitReaction(void) {
     const unsigned t = Target();
     B(at::kRoundFlagsHi) = static_cast<unsigned char>(B(at::kRoundFlagsHi) | 0x20);
@@ -608,7 +608,7 @@ extern "C" void __cdecl Effect128_HalfAttackInflict4(void) {
 // out (Battle_ActorIsOut), the TARGET's member record +0x134 bit 18 cleared,
 // and for each actor 3..10 not out the target's enemy record +0x114 bit 18
 // cleared (the target read again after each test, indexed as a member and as an
-// enemy whatever it is: section 7 of the doc); then the target (the last read)
+// enemy whatever it is: docs/rest_3d.md section 7); then the target (the last read)
 // gets the bit.
 extern "C" void __cdecl Effect129_TargetSoleFlag40000(void) {
     BH_CALL(Effect_NoHitReaction)();

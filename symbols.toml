@@ -108037,7 +108037,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_3d.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FB30..0x44FBA5 (0x75 bytes): cdecl: 0x904AA9 |= 0x20 (the round flags' 0x2000: no hit sound or pop-up, EnemyOp_ReceiveAction's test); the target's (0x904B54) +0x130 |= 0x200 (no hit pose) and +0x12C &= ~1 (enemy +0x110, +0x10C). 23 call or tail-jump sites in R3B and R3C, eight in this group, Effect_QuarterAttack's tail. docs/rest_3d.md."
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FB30..0x44FBA5 (0x75 bytes): cdecl: 0x904AA9 |= 0x20 (the round flags' 0x2000: no hit sound or pop-up, EnemyOp_ReceiveAction's test); the target's (0x904B54) +0x130 |= 0x200 (no hit pose) and +0x12C &= ~1 (enemy +0x110, +0x10C; bit 0 the damage pop-up's flag the receivers test). 23 call or tail-jump sites in R3B and R3C (nine by jmp), ten in this group, Effect_QuarterAttack's tail. docs/rest_3d.md."
 
 [[func]]
 pc = 0x44FBB0
