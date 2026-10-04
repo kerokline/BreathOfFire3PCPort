@@ -99641,3 +99641,459 @@ params = "void"
 impl = "src/game/rest_0a.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R0A, capstone to the last instruction), 0x524DA0..0x524E4E (0xAF bytes), cdecl, no arguments: Sprite_Current +0x2B = 1; then for direction 3 and then 5 (Field_DirectionSteps' rows at 0x6697C8 and 0x6697D8 by address, the direction pushed as an immediate): the point one row from Sprite_Current (re-read); MapView_SlopeAt there; when DamageScratch's flag byte is set and the slope's low word, signed, exceeds 0x40, MapView_GroundAt there, and +0x2B = 0 when Sprite_Current's s16 +0x3E is below its low word. The same probe PartyAction5_Form0Begin 0x51E930 makes inline. 14 E8 sites; none reads eax (each writes it first). Fuzz only. docs/rest_0a.md."
+
+# --- round fourteen group R1G (rest_1g.cpp): 0x5289A0..0x52CD46, the fishing spot ---
+
+[[func]]
+pc = 0x5289A0
+name = "LeaderPanel_S1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x5289A0..0x5289B1 (0x12 bytes): LeaderPanel_Stages[1] (Field_LeaderStates[9] 0x528880, R1F's); jmp through LeaderPanel_Stage1Steps by Sprite_Current +3, unchecked (ours aborts past its 11). Hidden in 0x5287B0's catalogue extent; reached only through the cell. docs/rest_1g.md."
+
+[[func]]
+pc = 0x5289C0
+name = "LeaderPanel_S1Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x5289C0..0x528A61 (0xA2 bytes): LeaderPanel_Stage1Steps[0]: LeaderPanel_SetRecords; 0x939A1C = 0xFF; Sprite_Current +0xC..+0x23 and +9 cleared; LeaderPanel_Effect3Mode(0 when 0x90412E and 0x904130 are both set, else 6); Sprite_SetAnimationAt(0xA, 2) when Field_State +0x89 is 0, else Sprite_SetAnimation(0xB); +3 up. docs/rest_1g.md."
+
+[[func]]
+pc = 0x528A70
+name = "LeaderPanel_S1Wait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x528A70..0x528A81 (0x12 bytes): LeaderPanel_Stage1Steps[1]: effect record 3 +1 at 6: +3 up. docs/rest_1g.md."
+
+[[func]]
+pc = 0x528A90
+name = "LeaderPanel_S1Buttons"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x528A90..0x528BDC (0x14D bytes): LeaderPanel_Stage1Steps[2], with its jump tables (0x528B8C five dwords, 0x528BA0 61 bytes) to the end: by Input_Pressed's low byte & 0x74 exactly - 0x04 stage 10, 0x10 stage 9, 0x40 +3 up (each with records 3 = 7, 1 = 4), 0x20 record 3 = 7 then stage 2 (Inventory_Holds38To4DAt99 0 clears 0x6BC709; else the first time 0x6BC709 = 1, record 1 = 4, +3 = 7) or, an item byte 0, record 1 = 4 and stage 9. docs/rest_1g.md."
+
+[[func]]
+pc = 0x528BE0
+name = "LeaderPanel_S1Idle"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x528BE0..0x528C14 (0x35 bytes): not in the cut (band_rows' code no list has, in 0x528A90's span): LeaderPanel_Stage1Steps[3] and [7]; records 3 idle and 1 at 1: +9 = 4, Sound_PlayEffect(0x102), +3 up; tail jmp FieldPanel_DrawShade. docs/rest_1g.md."
+
+[[func]]
+pc = 0x528C20
+name = "LeaderPanel_S1Box3In"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x528C20..0x528CC7 (0xA8 bytes): LeaderPanel_Stage1Steps[4]: +9 down; FieldPanel_DrawBox3(0x6C + 0x50 * (Sprite_Current's upper half | +9), 0x56); at 0 +6 = 1 and +3 up; FieldPanel_DrawShade; Panel_DrawWindow(0x14, 0x12 - 8 * +9, 0x118, 0x13, 0); Text_DrawAt(0x1D, 0x15 - 8 * +9, 0, 0xFF, MessagePools + the word 0x803600). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52ADA0
+name = "ChoiceMenu_DataPage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52ADA0..0x52AE7F (0xE0 bytes): ChoiceMenu_Choices[1] (E1F's ChoiceMenu_Run jmp by record 6 +6): the title (MessagePools + word 0x803642); with record 6 at 8: 0x2000 / 0x8000 pressed: Sound_PlayEffect(0x102), record 6 +0x3C = +0x3E + / - 1 wrapping in 0..0x16, +8 = 0 / 1, record 6 up; a cancel button: sound 0x106, Sprite_Current +4 = 0, +3 down. The data tab (docs/fishing-text.md). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52AE80
+name = "ChoiceMenu_RulePage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52AE80..0x52AF2B (0xAC bytes): ChoiceMenu_Choices[2]: the title (MessagePools + word 0x803660); with record 6 at 0xE and its +8 clear: a cancel button: sound 0x106, +4 = 0, +3 down; 0x4000: +8 = 0xFF, record 6 +0x3C up wrapping past 5; 0x1000: +0x3C down (5 below 0), +8 = 1. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52AF30
+name = "LeaderPanel_S9Back"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52AF30..0x52AF58 (0x29 bytes): LeaderPanel_Stage9Steps[4]: record 6 idle: record 1 up, Sprite_Current +2 = 1, +3 = 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52AF60
+name = "LeaderPanel_S10"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52AF60..0x52AF71 (0x12 bytes): LeaderPanel_Stages[10]; jmp through LeaderPanel_Stage10Steps by Sprite_Current +3, unchecked (ours aborts past its 2). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52AF80
+name = "LeaderPanel_S10Look"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52AF80..0x52B0A9 (0x12A bytes): LeaderPanel_Stage10Steps[0]: with Field_Kind2Hold clear: Input_Held bit 0x40 or Field_Kind2Z 0x150000, and record 3 idle: MoveScript_F3Divisor 0x40, Field_Kind2Z 0x3C0000, +3 = 1; else the divisor 0x20 and Field_Kind2Z - 0x8000. With Frame_Counter bit 2: five F2 lines (Gpu_SetLineF2, two Gte_RotTransPers + Gte_StoreDepthF of (0xC000 / 0xCF00, (0x340000 - 0xA0000 i) >> 9 - 0x4000, 0), colour 0x80 0x80 0x80, Gfx_CommitPrim(2, 0x20)) into Gfx_PacketNext. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B0B0
+name = "LeaderPanel_S10End"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B0B0..0x52B0D8 (0x29 bytes): LeaderPanel_Stage10Steps[1]: Field_Kind2Hold clear: record 1 up, Sprite_Current +2 = 1, +3 = 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B0E0
+name = "LeaderPanel_S11"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B0E0..0x52B0F1 (0x12 bytes): LeaderPanel_Stages[11]; jmp through LeaderPanel_Stage11Steps by Sprite_Current +3, unchecked (ours aborts past its 4). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B100
+name = "LeaderPanel_S11FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B100..0x52B11B (0x1C bytes): LeaderPanel_Stage11Steps[0]: record 3 idle: Transition_Start(0), +3 up. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B120
+name = "LeaderPanel_S11Switch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B120..0x52B155 (0x36 bytes): LeaderPanel_Stage11Steps[1]: MoveScript_WaitWordDA clear: bytes 0x93985C..0x93985F and Draw_PassFlags cleared, Game_Step = 3, +3 up. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B160
+name = "LeaderPanel_S11FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B160..0x52B179 (0x1A bytes): LeaderPanel_Stage11Steps[2]: Transition_Start(1), Draw_PassFlags = 0x1F, +3 up. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B180
+name = "LeaderPanel_S11End"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B180..0x52B1A9 (0x2A bytes): LeaderPanel_Stage11Steps[3]: MoveScript_WaitWordDA clear: record 1 up, +2 = 1, +3 = 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B1B0
+name = "LeaderPanel_PoseSound"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B1B0..0x52B1F7 (0x48 bytes): E8 from LeaderPanel_S3Run (1 site) and LeaderPanel_S4Run (4): 0x6BC71D other than 0x6BC71C: Sound_PlayEffect 0x203 / 0x202 / 0x205 for 0 / 1 / 2 (none else); writes no cell. The catalogue's extent 0x92 ran on over 0x52B200. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B200
+name = "LeaderPanel_UseItemEnd"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B200..0x52B241 (0x42 bytes): LeaderPanel_Stage7Steps[0] and LeaderPanel_UseItem's tail jmp: Sprite_EnsureAnimation(9), Sound_PlayEffect(0x204), record 3 = 7, record 4 +1 up and +6 = 3, Sprite_Current +3 up, tail jmp Sprite_ScriptTick. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B250
+name = "LeaderPanel_SetRecords"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B250..0x52B292 (0x43 bytes): E8 from LeaderPanel_S1Begin: 0x90412E set: 0x939A24 = 0x66A528 + 20 * (it - 0x1C); 0x904130 set: 0x939A20 = 0x66A4E8 + 10 * (it - 0x2E). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B2A0
+name = "LeaderPanel_Effect3Mode"
+ret = "void"
+params = "unsigned mode"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B2A0..0x52B2D3 (0x34 bytes): E8 from LeaderPanel_S1Begin, S3Run, S4Music, S5Wait, S6Wait, S7Wait: record 3's +6 = the byte at [esp+4]; when its +1 is 0, 4 or 6 also +7 = 1 and +1 up. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B2E0
+name = "LeaderPanel_HoldTest"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B2E0..0x52B329 (0x4A bytes): E8 from LeaderPanel_S3Run: Input_Pressed bit 0x4000: 0x903850 = 1, Sprite_Current +0xA = 8; else Input_Held bit 0x4000 and +0xA not 0: +0xA down, 0x903850 = 1; else 0x903850 = 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B330
+name = "LeaderPanel_LeaveOnPress"
+ret = "unsigned char"
+params = "unsigned buttons"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B330..0x52B364 (0x35 bytes): E8 from LeaderPanel_Leave: (Input_Pressed & buttons) & 0xFFFF not 0: Transition_Start(2), +2 = 8, +3 = 0, al 1; else al 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B370
+name = "LeaderPanel_EffectsStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B370..0x52B451 (0xE2 bytes): E8 from LeaderPanel_S3Run: LeaderPanel_PressLatch, then four button sequences (rows of 0x66A4C8: a pointer to bytes, bit 7 the last, and a depth byte) stepped by 0x6BC717 with positions 0x6BC70C.. and frame counts 0x6BC710..; a sequence's last byte sets effect record 0's +7 to the depth + the 20-byte record's +0xF (when not below +7) and +0xA to its +0x10. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B460
+name = "LeaderPanel_PressLatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B460..0x52B47D (0x1E bytes): E8 from LeaderPanel_EffectsStep: 0x6BC708 = 0x6BC717; 0x6BC717 = (Input_Pressed & 0xE020) != 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B480
+name = "Fish_Spawn"
+psx = 0x801DE218
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B480..0x52B6BC (0x23D bytes): E8 from 0x496440 (game mode 8's entry, R3G's): for the 23 kinds, the spot's count (0x66A9CC + 23 * byte 0x905B88) of Sprite_Objects records from index 0 up: +0 = 0x21, +5 = index, +6 = kind; +0x9C a size from Rand by the kind's row of Fish_Kinds; +0x98 = +0x9A its strength; Rand odd grows a top-size fish; +1..+4, +0x5C cleared. Sprite_Current and Field_ActiveMember the record. The record index is not bounded (ours aborts at 30). PSX twin 0x801DE218 (analysis/pairs_propagated.json, call-anchored; unnamed in the sibling). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B6C0
+name = "Fish_RunAll"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B6C0..0x52B743 (0x84 bytes): E8 from GameMode8_Frame: for each of the 30 Sprite_Objects records in use: Sprite_Current = Field_ActiveMember = it, call through Fish_States by its +1 (unchecked; ours aborts past 7); +0x5D (copied to +0x5E, +0x5F) by +0 bit 5 and the height word: 0xC0 above 0, 0xC0 - h / 8 down to -0x200, else 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B750
+name = "Fish_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B750..0x52B8E1 (0x192 bytes): Fish_States[0]: the kind's bank (Fish_Kinds +0x10), +0x24 / +0x48 / +0x29 / +9 / +0xB set; Field_ActiveMember +0x9E a depth from Rand and the kind's +0x1A; x, z and the height word from Rand; the height kept off AreaMap_Elevation; +8 = 4, +0x14 = 0, Sprite_SetAnimation(0), +1 up. Four Rand calls. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52B8F0
+name = "Fish_Swim"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52B8F0..0x52BB1F (0x230 bytes): Fish_States[1]: while +9, Fish_Step and Sprite_ScriptTick; else Fish_LureInReach: state 3; else by one Rand byte a nibble (0x6BC716 = 1, bank +0x12, sound 0x206, state 2) or a turn, Fish_Heading, the climb toward AreaMap_Elevation, +9 = 0x10. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52BB20
+name = "Fish_Settle"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52BB20..0x52BBCE (0xAF bytes): Fish_States[2]: Sprite_ScriptTick done: 0x6BC716 = 0, bank +0x10, +0 bit 5 set, the direction's animation (0x660340), steps 0, 0, -2, +9 = 0x10, state 1. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52BBD0
+name = "Fish_Approach"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52BBD0..0x52BF83 (0x3B4 bytes): Fish_States[3], with its four-entry jump table (0x52BF74) to the end: toward effect record 0 by the signs of dx / dz, a turn by the lure's level against the kind's (clamped -1..3, the jump table), Fish_Heading, the climb, and with Fish_LureClose and a bite (Rand against the kind's +0x1C, or the 20-byte record's bit 7) hooked: ObjTrio's leader to stage 4, 0x939A1C = +5, record 0 to state 5, state 4. Three Rand calls. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52BF90
+name = "Fish_Hooked"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52BF90..0x52C7B7 (0x828 bytes): not in the cut (band_rows' code no list has, in 0x52BBD0's span): Fish_States[4]: the pull - the window around record 5's +0x30 by the 10-byte record's +3; landed at z 0x8000 (stage 6); a jump (+4 = 3); the tension +0xA against the window for the record's +8 / +9 frames gives Fish_Chance a go (stage 6 or 7); a new move by the strength tier (+0x9A / +0x98) and the kind's chances (Fish_Kinds +0..+0xF): jump, run, rest or drift; the strength worn by Fish_AdjustStrength; z, x and Field_Kind2Z pulled. Up to ten Rand calls. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C7C0
+name = "Fish_S5"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C7C0..0x52C7D1 (0x12 bytes): Fish_States[5]: jmp through Fish_S5Steps by Sprite_Current +2, unchecked (ours aborts past its 2). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C7E0
+name = "Fish_S5Center"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C7E0..0x52C823 (0x44 bytes): Fish_S5Steps[0]: +0xC / +0x10 = ((v & 0xFFFF8000) - v) >> 3 (logical) of x and z, +9 = 8, +2 up. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C830
+name = "Fish_S5Move"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C830..0x52C8A1 (0x72 bytes): Fish_S5Steps[1]: x, z moved by the steps, +9 down; at 0 steps cleared, x's and z's low words & 0x8000, +1 = 1, +2 = 0; tail jmp Sprite_ScriptTick. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C8B0
+name = "Fish_S6"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C8B0..0x52C8C1 (0x12 bytes): Fish_States[6]: jmp through Fish_S6Steps by Sprite_Current +2, unchecked (ours aborts past its 3). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C8D0
+name = "Fish_S6Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C8D0..0x52C934 (0x65 bytes): Fish_S6Steps[0]: +0x3C dword = 0, Sound_PlayEffect(0x206), bank +0x12, +0 bit 5 off, +0x2A = +0x48 = 0, Sprite_SetAnimation(0), +2 up. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C940
+name = "Fish_S6Wait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C940..0x52C960 (0x21 bytes): Fish_S6Steps[1]: the frame word +0x58 at the kind's u16 of 0x660364: +2 up; else tail jmp Sprite_ScriptTick. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C970
+name = "Fish_S6Release"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C970..0x52C981 (0x12 bytes): Fish_S6Steps[2]: ObjTrio +3 (the leader's step) above 9: Sprite_Current +0 = 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C990
+name = "Fish_AdjustStrength"
+ret = "void"
+params = "unsigned delta"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C990..0x52C9DE (0x4F bytes): E8 from Fish_Hooked (2 sites): Field_ActiveMember +0x9A += the signed byte at [esp+4], kept in 0..+0x98 (s16). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52C9E0
+name = "Fish_Chance"
+ret = "unsigned char"
+params = "unsigned edge, unsigned tier"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52C9E0..0x52CA7D (0x9E bytes): E8 from Fish_Hooked (2 sites, tier 1 and 2): the distance |+0xA - edge's byte| against a band ((the 10-byte record's +3 + 3) * tier) << 3 (bytes) gives odds 1, 2, 4, 8 or 0xE; al = odds > Rand & 0xF (eax 0 / 1). docs/rest_1g.md."
+
+[[func]]
+pc = 0x52CA80
+name = "Fish_Step"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52CA80..0x52CABF (0x40 bytes): E8 from Fish_Swim (2) and Fish_Approach (2): while +9: +9 down, x += +0xC, z += +0x10, the height word += +0x14's low word. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52CAC0
+name = "Fish_Heading"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52CAC0..0x52CC35 (0x176 bytes): E8 from Fish_Swim and Fish_Approach: +0xC / +0x10 from MoveCmd_F9Steps' row +8 (unmasked), doubled for 2 and 6; turned back at x 0x80000 / 0x140000 and inside the kind's z band (Fish_Kinds +0x1B, Field_ActiveMember +0x9E); +8 = the row whose (doubled when small) steps equal them, else 8. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52CC40
+name = "Fish_LureInReach"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52CC40..0x52CCCB (0x8C bytes): E8 from Fish_Swim and Fish_Approach: record 0 at state 4, 0x939A1C 0xFF, the leader at stage 3: al 1 for kind 0x16 with the 20-byte record's nibble 4, or when Sprite_PointInReach(x, z, height, record 0's +7 - the record's +0xF + 3, record 0) answers; else +1 = 1 and al 0. docs/rest_1g.md."
+
+[[func]]
+pc = 0x52CCD0
+name = "Fish_LureClose"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_1g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1G, capstone to the last instruction), 0x52CCD0..0x52CD46 (0x77 bytes): E8 from Fish_Approach: al 1 when record 0 is at state 4, 0x939A1C 0xFF, record 4 idle, the leader at stage 3 and the fish within 0x8000 of record 0 in x and z and 0x400 in height; else 0. docs/rest_1g.md."
+
+[[data]]
+pc = 0x66030C
+name = "LeaderPanel_Stage10Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1G): LeaderPanel_S10's jmp by +3, unbounded: LeaderPanel_S10Look, LeaderPanel_S10End; LeaderPanel_Stage11Steps follows (checked by hand). docs/rest_1g.md."
+
+[[data]]
+pc = 0x660314
+name = "LeaderPanel_Stage11Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1G): LeaderPanel_S11's jmp by +3, unbounded: S11FadeOut, S11Switch, S11FadeIn, S11End; Fish_States follows. docs/rest_1g.md."
+
+[[data]]
+pc = 0x660324
+name = "Fish_States"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1G): Fish_RunAll's call by each record's +1, unbounded: Fish_Begin, Fish_Swim, Fish_Settle, Fish_Approach, Fish_Hooked, Fish_S5, Fish_S6; the byte pairs 0x660340 (the direction animations) follow. docs/rest_1g.md."
+
+[[data]]
+pc = 0x660350
+name = "Fish_S5Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1G): Fish_S5's jmp by +2, unbounded: Fish_S5Center, Fish_S5Move; Fish_S6Steps follows. docs/rest_1g.md."
+
+[[data]]
+pc = 0x660358
+name = "Fish_S6Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1G): Fish_S6's jmp by +2, unbounded: Fish_S6Begin, Fish_S6Wait, Fish_S6Release; the u16 frames by kind 0x660364 follow. docs/rest_1g.md."
+
+[[data]]
+pc = 0x66A690
+name = "Fish_Kinds"
+ctype = "unsigned char"
+count = 828
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1G): 23 rows of 36 bytes (Fish_Spawn's 23 kinds), read in place by the kind byte +6 unbounded: +0..+0xF four tiers of chances, +0x10 / +0x12 banks, +0x14.. levels by the 20-byte record's nibble, +0x1A..+0x20 levels, sizes and flags. docs/rest_1g.md."
