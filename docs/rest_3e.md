@@ -355,7 +355,7 @@ this group's live check for the number; the other 49 are **fuzz only**.
 
 - `BOF3X_SHADOW=rest_3e`: exit 0, 200,000 rounds, 0 mismatches (this
   worktree).
-- STAR_RESULTS
+- `BOF3X_SHADOW='*'` in this worktree: exit 0 (1,080 s), and with `BOF3X_WIDE=1` exit 0 (1,081 s); 733 self-test lines each, no non-zero MISMATCHES line, `inject: 9393 ours`; `rest_3e`'s line 0 mismatches (9,265,953 calls - another stream than alone). Neither died silently.
 - `tools/ledger_check.py`: 73 ledger entries, 0 errors (2 notes, not this group's).
 - `analysis/calltrace/entries_logic.txt` (main checkout): the 20 starts that
   had no line appended with the extents read. The host lines `004792E0 1E8`
