@@ -7,7 +7,7 @@ round branch's tip `fa583bc`. **49 functions ours** (`src/game/rest_2e.cpp`,
 R2E (`analysis/round14_cut.tsv`) and the start in their span no list had
 (`0x58CFC0`, band_rows' "code no list has"). Each read to its last instruction
 with capstone and fuzzed through the scenario harness's **field** mode (used
-unchanged): 294,000 rounds, **0 mismatches**; CONTROLS_SUMMARY (section 6).
+unchanged): 294,000 rounds, **0 mismatches**; 119 of 121 controls refused, the two not refused equivalent mutants with refused near variants (section 6).
 Thirteen `.data` tables named. Fuzz only: no trace enters them (section 9).
 
 **What the band is.** Three of the field menu's screens
@@ -183,7 +183,7 @@ row, the member and answer bytes, the two cursors, an inventory byte, a preview
 byte, a party id (from the hash, one whose record is one of the eight).
 
 **Result** (this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_2e`, exit
-0): 294,000 rounds, 33,468,459 calls to the stand-ins, **0 mismatches**. Every
+0): 294,000 rounds, 33,531,669 calls to the stand-ins, **0 mismatches**. Every
 table entry reached (handler recorders 562..2,091 calls each; `Equip_ChooseSlot`
 and `Equip_ChooseItem` among them through `FieldEquip_States`); the thinnest
 callees `FieldItems_Sort` 1,686, `FieldEquip_BestByPower` 1,231, `0x58F050`
@@ -191,7 +191,7 @@ callees `FieldItems_Sort` 1,686, `FieldEquip_BestByPower` 1,231, `0x58F050`
 disturbance had drawn a member id from the harness's `Next()` (round ten's rule:
 from the hash only) - fixed before anything else.
 
-**Under `'*'`**: STAR_RESULT
+**Under `'*'`**: (this worktree, after the rebinding, `BOF3X_SHADOW='*'`): exit 0, `inject: 9038 ours, 0 left original`, 1,027 self-test lines of 0 mismatches and none other (among them `rest_2e` and `field_s`, whose three constants were rebound: 212,000 rounds, 0 mismatches); the same with `BOF3X_WIDE=1`: exit 0, 1,027, 9,038 ours. Each passed on its first run. `tools/ledger_check.py`: 72 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -224,9 +224,131 @@ from the hash only) - fixed before anything else.
 
 `r2e/controls.py` (scratch): each plant replaces a string that occurs once in
 `rest_2e.cpp`, rebuilds, runs the self-test on the clones whose name contains
-the filter, restores and rebuilds. CONTROLS_SUMMARY.
+the filter, restores and rebuilds. **121 planted, 119 refused** (every one exit 3, by a count of mismatching rounds; a filter naming several clones, C30, counts over their total). Every function has at least one. The first run left four unrefused and one refused by an abort (D11, the step ^ 1 driving step 4 to 5, past the table - a crash, not a refusal; re-planted inside the table): C46 (the member sound's signed compare, which differs only for a member byte at 0x80..0xFF) and C61 (the 8-bit bit, which differs only for a record index above 7) were the seed's - `FieldEquip_PickMember` now gets a member byte 0x80..0xFF and the record readers a party id of any record a quarter of the time, and both are refused. **Two are equivalent mutants**: D05 (row position 1 also sorts) - both rows of `FieldAbility_ArrangeRows` hold sort 1 at position 1, so no input tells them apart; its near variant D21 (position 0 sorts) is refused; D19 (the page-down from 0x6E inclusive) - at the top 0x6E both branches move the cursor and the top by 9 to 0x77; its near variant D22 (from 0x6D, with 0x6D now seeded) is refused. **The thinnest**: C55 (2 rounds: the slot moved and confirmed in one frame on slot 2), D22 (24), C64 (38), C88 (47), C08 (57).
 
-CONTROLS_TABLE
+| # | Function | Plant | Refused (rounds) |
+|---|---|---|--:|
+| C01 | `FieldItems_ArrangeCategory` | the hand x + 0x2B | 6,000 |
+| C02 | `FieldItems_ArrangeCategory` | the category wraps past 4 | 393 |
+| C03 | `FieldItems_ArrangeCategory` | the top not taken after a turn | 1,142 |
+| C04 | `FieldItems_ArrangeCategory` | cancel: the state down 2 | 1,461 |
+| C05 | `FieldItems_ArrangeHow` | the row wraps to the count | 1,223 |
+| C06 | `FieldItems_ArrangeHow` | the sort id from the row before | 3,013 |
+| C07 | `FieldItems_ArrangeHow` | the cursor from the tops | 1,527 |
+| C08 | `FieldItems_ArrangeMove` | the page-up threshold 8 | 57 |
+| C09 | `FieldItems_ArrangeMove` | scroll down at the page's ninth row | 130 |
+| C10 | `FieldItems_ArrangeMove` | the swap's second list the ids | 744 |
+| C11 | `FieldItems_ArrangeMove` | a pick of an empty entry kept | 378 |
+| C12 | `FieldItems_ArrangeMove` | the scroll word not tested | 2,794 |
+| C13 | `FieldItems_DiscardConfirm` | the hand 35 a step | 3,973 |
+| C14 | `FieldItems_DiscardConfirm` | only the count cleared | 529 |
+| C15 | `FieldItems_DiscardConfirm` | the flip on 0x2000 only | 1,032 |
+| C16 | `FieldItems_UseOnMember` | answer 3 counts as used | 515 |
+| C17 | `FieldItems_UseOnMember` | the id kept at count 0 | 95 |
+| C18 | `FieldItems_UseOnMember` | the member hand 52 a row | 4,651 |
+| C19 | `FieldItems_UseOnMember` | leaving: the state down 3 | 1,803 |
+| C20 | `FieldItems_ViewList32` | the last page's top 0x16 | 226 |
+| C21 | `FieldItems_ViewList32` | the top kept from category 1 | 1,083 |
+| C22 | `FieldItems_InitWindows` | the list window y 0x3F | 6,000 |
+| C23 | `FieldItems_InitWindows` | 0x803416 left | 5,982 |
+| C24 | `FieldItems_Sort` | the index + 1 (mod 7) | 6,000 |
+| C25 | `FieldMenu_SwapBytes` | the first byte copied only | 5,976 |
+| C26 | `FieldItemSort_Compact` | 126 passes | 4,351 |
+| C27 | `FieldItemSort_Compact` | an empty next moved too | 6,000 |
+| C28 | `FieldItemSort_ConsumableFlag1` | flag bit 2 | 4,095 |
+| C29 | `FieldItemSort_ConsumableFlag2` | the stride 21 | 5,216 |
+| C30 | `FieldItemSort_ConsumableFlag` | the counts 0x1FF on | 9,195 of 12,000 |
+| C31 | `FieldItemSort_WeaponsByPower` | ascending | 5,943 |
+| C32 | `FieldItemSort_WeaponsByPower` | the +0x14 byte | 5,319 |
+| C33 | `FieldItemSort_ArmourByPower` | the weapons' list | 5,966 |
+| C34 | `FieldItemSort_ArmourByPower` | a tie swaps | 1,457 |
+| C35 | `FieldItemSort_ByIconKind` | a tie swaps | 5,942 |
+| C36 | `FieldItemSort_ByIconKind` | the kinds asked in the other order | 5,953 |
+| C37 | `FieldItemSort_EquipableFirst` | a 32-bit bit | 170 |
+| C38 | `FieldItemSort_EquipableFirst` | the second asked first | 5,953 |
+| C39 | `FieldItems_CloseWindows` | 0x803310 left | 5,980 |
+| C40 | `FieldEquip_Run` | the state + 1 (mod 9) | 6,000 |
+| C41 | `FieldEquip_Open` | the timer 4 | 6,000 |
+| C42 | `FieldMenu_CountdownState` | the state up at 1 | 2,161 |
+| C43 | `FieldEquip_TopMenu` | else-if for the two turns | 1,530 |
+| C44 | `FieldEquip_TopMenu` | the hand 47 a step | 4,773 |
+| C45 | `FieldEquip_TopMenu` | cancel: the state up 4 | 1,479 |
+| C46 | `FieldEquip_PickMember` | the sound on an unsigned compare | 373 |
+| C47 | `FieldEquip_PickMember` | cursor 2 previews by power | 1,267 |
+| C48 | `FieldEquip_PickMember` | the flag from the help table | 2,211 |
+| C49 | `FieldEquip_PickMember` | the item list's top for slot 1 | 602 |
+| C50 | `FieldEquip_PickMember` | cursor 3 applies | 648 |
+| C51 | `FieldEquip_Close` | at 3 | 1,400 of 12,000 |
+| C52 | `FieldEquip_Close` | the member windows +3 5 | 543 of 12,000 |
+| C53 | `FieldEquip_RemoveSlot` | slot 3 an accessory | 792 |
+| C54 | `FieldEquip_RemoveSlot` | the turn past 5 to 0 | 504 |
+| C55 | `FieldEquip_RemoveSlot` | the cell taken after the turn | 2 |
+| C56 | `FieldEquip_RemoveSlot` | cancel only without a confirm | 1,244 |
+| C57 | `FieldEquip_InitWindows` | the preview pointer + 1 | 6,000 |
+| C58 | `FieldEquip_InitWindows` | window 0x803334 height 0xF | 6,000 |
+| C59 | `FieldEquip_BestByPower` | a tie takes the higher id | 116 |
+| C60 | `FieldEquip_BestByPower` | armour type 3 + slot | 6,000 |
+| C61 | `FieldEquip_BestByPower` | the mask's bit 1 << record (32-bit, ignored above 7) | 248 |
+| C62 | `FieldEquip_BestByPower` | the accessories swapped | 5,980 |
+| C63 | `FieldEquip_BestByOrder` | the weapon: highest +0x14 first | 5,877 |
+| C64 | `FieldEquip_BestByOrder` | the armour's tie on its own byte | 38 |
+| C65 | `FieldEquip_BestByOrder` | the armour's best +0x14 from +0x14 | 1,160 |
+| C66 | `FieldEquip_BestByOrder` | an empty chosen weapon not taken first | 1,151 |
+| C67 | `FieldEquip_ApplyPreview` | the old item's category from slot 0 | 5,154 |
+| C68 | `FieldEquip_ApplyPreview` | an equal slot swapped too | 1,561 |
+| C69 | `FieldEquip_ApplyPreview` | five slots | 2,116 |
+| C70 | `FieldEquip_PreviewItem` | 0x803341 inverted | 6,000 |
+| C71 | `FieldEquip_PreviewItem` | the item into slot + 1 | 6,000 |
+| C72 | `FieldEquip_PreviewRemove` | al 2 | 5,958 |
+| C73 | `FieldEquip_PreviewRemove` | the slot's byte kept | 5,958 |
+| C74 | `FieldEquip_CloseWindows` | 0x803358 left | 5,979 |
+| C75 | `FieldAbility_Run` | the state ^ 1 | 6,000 |
+| C76 | `FieldAbility_Open` | 0x929F06 from 0x905BA0 | 5,976 |
+| C77 | `FieldAbility_TopMenu` | the help word 2 apart | 4,713 |
+| C78 | `FieldAbility_TopMenu` | cursor 1: the state up 6 | 643 |
+| C79 | `FieldAbility_TopMenu` | cursor 2's type 2 | 671 |
+| C80 | `FieldAbility_TopMenu` | cursor 3's timer 5 | 800 |
+| C81 | `FieldAbility_PickMember` | 0x8033A8 2 for a cursor | 4,713 |
+| C82 | `FieldAbility_PickMember` | the type turned on cursor 2 | 1,246 |
+| C83 | `FieldAbility_PickMember` | the member wraps past count | 254 |
+| C84 | `FieldAbility_PickMember` | the type's turn mark 0x33 | 2,405 |
+| C85 | `FieldAbility_PickMember` | the kept cursor by 3 a member | 1,861 |
+| C86 | `FieldAbility_PickAbility` | the cursor below 8 | 132 |
+| C87 | `FieldAbility_PickAbility` | the flag 0x20 | 200 |
+| C88 | `FieldAbility_PickAbility` | answer 4 a success | 47 |
+| C89 | `FieldAbility_PickAbility` | the target windows' y 52 apart | 111 |
+| C90 | `FieldAbility_PickAbility` | the type's cursor not re-read after a turn | 3,557 |
+| C91 | `FieldAbility_PickAbility` | other cursors: the state up 1 | 1,609 |
+| C92 | `FieldAbility_PickTarget` | the target to its own record as user | 1,413 |
+| C93 | `FieldAbility_PickTarget` | the name 16 bytes on | 6,000 |
+| C94 | `FieldAbility_PickTarget` | cancel: the windows +3 8 | 1,042 |
+| C95 | `FieldAbility_ShareConfirm` | shared 0 | 2,036 |
+| C96 | `FieldAbility_ShareConfirm` | the entry kept | 2,036 |
+| C97 | `FieldAbility_ShareConfirm` | the state down 1 | 3,127 |
+| C98 | `FieldAbility_ArrangeRun` | the step + 1 (mod 3) | 6,000 |
+| C99 | `FieldAbility_ArrangeMember` | the sort window +0xA 4 + (type 3) | 3,160 |
+| D01 | `FieldAbility_ArrangeMember` | 0x929F06 not set | 4,676 |
+| D02 | `FieldAbility_ArrangeMember` | the hand x + 0x29 | 6,000 |
+| D03 | `FieldAbility_ArrangeHow` | the row by type 2 | 61 |
+| D04 | `FieldAbility_ArrangeHow` | the row wraps to the count | 1,228 |
+| D05 | `FieldAbility_ArrangeHow` | the sort id 0 sorts | **not refused** (exit 0, 0 of 6000) |
+| D06 | `FieldAbility_ArrangeMove` | the swap's arguments exchanged | 1,916 |
+| D07 | `FieldAbility_ArrangeMove` | the pick from 0x8033AD | 1,675 |
+| D08 | `FieldAbility_ArrangeMove` | the cursor kept by 4 a type | 4,800 |
+| D09 | `FieldAbility_Close` | 0x905BA1 left | 1,515 |
+| D10 | `FieldAbility_Close` | the mode 2 | 1,522 |
+| D11 | `FieldAbility_ViewRun` | the step + 1 (mod 5) | 6,000 |
+| D12 | `FieldAbility_ViewOpen` | cursor and top exchanged | 1,518 |
+| D13 | `FieldAbility_ViewWait` | the step up at 1 | 2,278 |
+| D14 | `FieldAbility_ViewBrowse` | the help 0x4184 + | 2,940 |
+| D15 | `FieldAbility_ViewBrowse` | the last page's top 8 | 335 |
+| D16 | `FieldAbility_ViewBrowse` | the scroll as a word | 1,581 |
+| D17 | `FieldAbility_ViewLeave` | 0x8033A3 3 | 1,522 |
+| D18 | `FieldAbility_ViewEnd` | the state down 6 | 1,522 |
+| D19 | `FieldItems_ArrangeMove` | the page-down from above 0x6D | **not refused** (exit 0, 0 of 6000) |
+| D20 | `FieldAbility_ArrangeMember` | the type wraps past 4 | 372 |
+| D21 | `FieldAbility_ArrangeHow` | row position 0 sorts (D05's near variant) | 957 |
+| D22 | `FieldItems_ArrangeMove` | the page-down from above 0x6C (D19's near variant) | 24 |
 
 ## 7. Latent defects and ranges (Capcom's, described, not fixed)
 
