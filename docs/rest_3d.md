@@ -7,7 +7,7 @@ section 10) without edits to it. **36 functions ours**
 (`src/game/rest_3d.cpp`, shadow name `rest_3d`), each read to its last
 instruction with capstone: the cut's 36 rows for R3D, every one a function
 (none a jump-table case, a shared tail or data; none added). One `Run`,
-216,000 rounds (6,000 a function), 0 mismatches; CONTROLS_SUMMARY (section
+216,000 rounds (6,000 a function), 0 mismatches; 77 controls planted, 76 refused by a count (section
 6). Two live routes enter five of them by the call traces under
 `analysis/calltrace` (section 11); the rest are fuzz-only.
 
@@ -215,21 +215,108 @@ after a call.
 
 Results (this worktree, 2026-10-04; counts depend on the build directory):
 
-    SELFTEST_LINE
+    shadow      rest_3d self-test: 216000 rounds over 36 functions (6000 each), 369134 calls to the stand-ins, 0 MISMATCHES; 38868 bytes of state (29 regions) and the stand-ins' log compared
 
-COVERAGE_LINE
+The coverage (calls the originals made): Effect_NoHitReaction 60000, Battle_StatusResisted 38970, Battle_StatusResisted20 6000, Battle_StatusResistedMask 6000, Battle_StatusResistRate 18000, Battle_StatusResistRate20 6000, Battle_InflictStatus 6050, Battle_LacksAccessory 6978, Battle_LacksArmour 1642, Effect_StepStatByte 3895, Effect_RollInflict 20014, Effect_HpBasedDamage 12000, Battle_CalcDamage 12000, Effect_SkillDamage 6000, Battle_ElementAffinity 2013, Battle_RecalcStats 21516, BattleForm_ApplyStats 1669, Effect_DrainAp 6000, 0x44D8B0 6000, Battle_ClearStatus 2929, Battle_ReturnQueuedItem 3207, Battle_SetDamagePopup 4016, Battle_StatusTint 6000, Formation_ApplyStatMods 1669, Char_RecalcStats 1669, Sprite_ReleaseTint 6000, Rand 27968, Battle_ActorIsOut 66000, Battle_RemoveFromTurnOrder 2929, phase 0x44FF10 886, phase 0x44FFA0 836, phase 0x450070 868, phase 0x450280 845, phase 0x4506C0 881, phase 0x450B20 836, phase 0x450F30 848
 
-`BOF3X_SHADOW='*'` in this worktree: STAR_RESULT
+`BOF3X_SHADOW='*'` in this worktree: exit 0 (headless, 2026-10-04, the committed fuzz), 733 totals lines, every self-test's count 0 mismatches, no Fatal, 995 s; rest_3d's line in it: 369,622 calls. With `BOF3X_WIDE=1` the same: exit 0, 733 lines, no Fatal, 1,093 s. Neither run died silently.
 
 ## 6. Controls
 
 `BOF3X_R3D_ONLY=<clone>` with one change planted in ours at a time (the
 scratch `controls.py`: plant on a unique anchor, rebuild, run, restore; one
-rebuild at the end), this worktree, 2026-10-04. CONTROLS_SUMMARY.
+rebuild at the end), this worktree, 2026-10-04. 77 controls planted, 76 refused by a count.
 
-CONTROLS_TABLE
+| n | Clones run | Planted | Refused in |
+|--:|---|---|--:|
+| 1 | `Effect112` | HpToOne: HP less 2 | 1017 of 6000 |
+| 2 | `Effect112` | HpToOne: Rand bit 1, not bit 0 | 2479 of 6000 |
+| 3 | `Effect113` | ActorNullDamage: the target flagged, not the actor | 4059 of 6000 |
+| 4 | `Effect114` | SkillApDamage: the mark 3 | 6000 of 6000 |
+| 5 | `Effect114` | SkillApDamage: psi 0 (the element branch) | 6000 of 6000 |
+| 6 | `Effect115` | HpToZero: the actor's HP | 1763 of 6000 |
+| 7 | `Effect116` | HpLessDefence: the member's +0xA4, not +0xA6 | 1186 of 6000 |
+| 8 | `Effect116` | HpLessDefence: the side read after the call | 850 of 6000 |
+| 9 | `Effect116` | Effect116: divisor 2 | 6000 of 6000 |
+| 10 | `Effect116` | HpLessDefence: no clamp at 0 (s16 < -1) | 486 of 6000 |
+| 11 | `Effect117` | PartyFlag400Others: bit 11 set | 1346 of 6000 |
+| 12 | `Effect117` | PartyFlag400Others: one member fewer | 517 of 6000 |
+| 13 | `Effect118` | RaiseCharByte1E: up to 9 inclusive | 239 of 6000 |
+| 14 | `Effect118` | RaiseCharByte1E: 31 bytes copied back | 1525 of 6000 |
+| 15 | `Effect118` | RaiseCharByte1E: the size not read again in the last loop | 19 of 6000 |
+| 16 | `Effect118` | RaiseCharByte1E: the equipment bytes from +0x13 | 1528 of 6000 |
+| 17 | `Effect119` | ActorFlag1000: bit 13 | 4515 of 6000 |
+| 18 | `Effect120` | TargetFlag800: the first flag word | 1443 of 6000 |
+| 19 | `Effect120` | TargetFlag800: no mark on the resisted path's tail | 6000 of 6000 |
+| 20 | `Effect121` | ActorFlag4000: +0x141 zeroed | 1815 of 6000 |
+| 21 | `Effect122` | InflictThree: 0x40 for 0x80 | 6000 of 6000 |
+| 22 | `Effect123` | Ability6A: 0x6B | 6000 of 6000 |
+| 23 | `Effect124` | Effect124: divisor 1 | 6000 of 6000 |
+| 24 | `Effect125` | Inflict8Roll80: the mask 0x40 | 6000 of 6000 |
+| 25 | `Effect126` | Ability4EDrainAp: 0x4F | 6000 of 6000 |
+| 26 | `Effect127` | AttackDoubledKind4: +0x8D of 5 | 1902 of 6000 |
+| 27 | `Effect127` | AttackDoubledKind4: the side read after the call | 198 of 6000 |
+| 28 | `Effect128` | HalfAttackInflict4: an arithmetic shift (floor), not toward 0 | 1422 of 6000 |
+| 29 | `Effect128` | HalfAttackInflict4: inflict 8 | 2000 of 6000 |
+| 30 | `Effect129` | TargetSoleFlag40000: each member cleared (the intended form) | 2925 of 6000 |
+| 31 | `Effect129` | TargetSoleFlag40000: actors 3..9 | 6000 of 6000 |
+| 32 | `Battle_PsiStatusDeathAffinity` | PsiAffinity: the resist table | 2277 of 6000 |
+| 33 | `Battle_PsiStatusDeathAffinity` | ClassLookup: 0x100 by +0xB6 | 2461 of 6000 |
+| 34 | `Battle_StatusResistRate` | ResistRate: 0xFFFE when none | 1494 of 12000 |
+| 35 | `Battle_StatusResistRate20` | ResistRate20: the member's +0xB5 | 474 of 6000 |
+| 36 | `Battle_StatusResisted` | RollAttack: capped at 99 | 22 of 24000 |
+| 37 | `Battle_StatusResisted` | RollDefence: at least 51 | 20 of 24000 |
+| 38 | `Battle_StatusResisted` | Roll: > for >= | 28 of 24000 |
+| 39 | `Battle_StatusResisted` | Roll: -1 resisted | 8101 of 24000 |
+| 40 | `Battle_StatusResistedMask` | ResistedMask: eight bits of the mask | 2671 of 6000 |
+| 41 | `Battle_StatusResisted20` | Resisted20: the mask 0x20 always | 5150 of 6000 |
+| 42 | `Battle_StatusResisted80` | Resisted80: the mask 0x40 | 6000 of 6000 |
+| 43 | `Battle_InflictStatus` | Inflict: 0x80 marks 0x40 | 1202 of 6000 |
+| 44 | `Battle_InflictStatus` | Inflict: the accessory 7 for 6 | 2374 of 6000 |
+| 45 | `Battle_InflictStatus` | Inflict: 0x20 blocked by 0x60 | 376 of 6000 |
+| 46 | `Battle_InflictStatus` | Inflict: +0x124 zeroed | 75 of 6000 |
+| 47 | `Battle_InflictStatus` | Inflict: the task byte 1 | 259 of 6000 |
+| 48 | `Battle_InflictStatus` | Inflict: the armour 0x2A | 1544 of 6000 |
+| 49 | `Battle_InflictStatus` | Inflict: 0x10 blocked by 0x10 only | 519 of 6000 |
+| 50 | `Battle_InflictStatus` | Inflict: ClearStatus 0x7F | 1367 of 6000 |
+| 51 | `Battle_InflictStatus` | Inflict: the snapshot ORed, not the word read again | 95 of 6000 |
+| 52 | `Battle_InflictStatus` | Inflict: bit 4 tested on the word read again | 8 of 6000 |
+| 53 | `Battle_InflictStatus` | Inflict: StatusTint without the offset's upper half | 0 of 6000 |
+| 54 | `Battle_LacksAccessory` | LacksAccessory: +0x98 for +0x97 | 229 of 6000 |
+| 55 | `Battle_LacksAccessory` | LacksAccessory: actor 3 counted a member | 169 of 6000 |
+| 56 | `Battle_LacksArmour` | LacksArmour: +0x95 | 276 of 6000 |
+| 57 | `Effect_StepStatByte` | StepStatByte: -26 for the floor | 3220 of 6000 |
+| 58 | `Effect_StepStatByte` | StepStatByte: +0x15 | 5975 of 6000 |
+| 59 | `Effect_StepStatByte` | StepStatByte: the ceiling 49 | 2111 of 6000 |
+| 60 | `Effect_NoHitReaction` | NoHitReaction: bit 10 | 1236 of 6000 |
+| 61 | `Effect_NoHitReaction` | NoHitReaction: the enemy's bit 1 cleared | 3210 of 6000 |
+| 62 | `Effect_NoHitReaction` | NoHitReaction: the round flags' bit 4 | 4535 of 6000 |
+| 63 | `Effect_RollStatStep` | RollStatStep: RecalcStats on the actor | 3768 of 12000 |
+| 64 | `Effect_RollStatStep` | RollStatStep: resisted al 2 | 7874 of 12000 |
+| 65 | `Effect_RollStatStepQuiet` | RollStatStepQuiet: no mark | 6000 of 6000 |
+| 66 | `Effect_RollStatStep` | RollStatStep: the step unsigned (movzx) | 184 of 12000 |
+| 67 | `Effect_RollInflict` | RollInflict: on the actor | 3698 of 12000 |
+| 68 | `Effect_RollInflictQuiet` | RollInflictQuiet: status / 1 | 1342 of 6000 |
+| 69 | `Effect_HpBasedDamage` | HpBasedDamage: affinity on 0x0F | 274 of 6000 |
+| 70 | `Effect_HpBasedDamage` | HpBasedDamage: 101 without an element | 1163 of 6000 |
+| 71 | `Effect_HpBasedDamage` | HpBasedDamage: the whole eax zeroed | 752 of 6000 |
+| 72 | `Effect_HpBasedDamage` | HpBasedDamage: the target's HP | 2027 of 6000 |
+| 73 | `Effect_HpBasedDamage` | HpBasedDamage: Rand & 3 | 1100 of 6000 |
+| 74 | `DragonCmd_PartDispatch` | PartDispatch: the next part | 6000 of 6000 |
+| 75 | `Battle_InflictStatus` | Inflict: StatusTint with bit 7 flipped (53's near variant) | 6000 of 6000 |
+| 76 | `Effect124` | HpLessDefence: no clamp at 0 (s16 < -1), through slot 124 | 486 of 6000 |
+| 77 | `DragonCmd_PartDispatch` | PartDispatch: the word not handed on | 6000 of 6000 |
 
-**Not refused, and why.** CONTROLS_NOT_REFUSED
+**A first pass** (74 controls, before the louder stand-ins of section 5)
+left three unrefused and one nearly so, each the fuzz's fault: 10 (the
+clamp at 0: the garbage answer of `Effect_HpBasedDamage` reaches -1 once in
+65,536 - now answered near the target's DEF), 27 and 8 (the side read after
+the call: 0 and 6 rounds - now `Battle_CalcDamage` and
+`Effect_HpBasedDamage` move the target), and 77, added then (the word not
+handed on: `DragonCmd_Parts`' recorders logged no word - now one). The table
+is the final pass, every control on the fuzz as committed.
+
+**Not refused, and why.** Control 53 is an equivalent mutant: `Battle_StatusTint` tests bit 7 of its word and nothing else (`testb $0x80, 4(%esp)` in ours, `battle_misc.cpp`, the original's first instruction likewise), so neither the offset's upper half nor bit 8 can be seen; its near variant, control 75 (bit 7 flipped), is refused.
 
 ## 7. Latent defects and ranges (Capcom's, kept)
 
