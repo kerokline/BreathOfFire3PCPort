@@ -630,7 +630,7 @@ R1C_EXPORT void __cdecl PartyAction_WaitEffect(void) {
     }
     if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return;
     unsigned char* const s = Sprite_Current;
-    if (At(bof3::addr::Effect_Objects + static_cast<U>(s[0xB]) * kEffectStride)[0] != 0) return;
+    if (Effect_Objects[static_cast<U>(s[0xB]) * kEffectStride] != 0) return;
     s[0x2B] = 0;
     Field_State[0x137] = 0;
 }

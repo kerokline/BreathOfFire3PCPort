@@ -202,10 +202,12 @@ U FxEffectAhead(const U*, U answer) {
     return WithAl(answer, n % 2 ? 0xFF : (n >> 8) % 20);
 }
 // Sprite_ObjectAt: none half the time, else an object 0..0x21 (the 30 and the
-// four extra; all it answers), the boundary 0x1D / 0x1E often.
+// four extra; all it answers), the boundary 0x1D / 0x1E often. (From Noise()
+// only: Pick draws the seed's stream, which the two passes do not share.)
 U FxObjectAt(const U*, U answer) {
+    static const U kEdges[] = {0, 0x1D, 0x1E, 0x21};
     const U n = sh::Noise();
-    return WithAl(answer, n % 2 ? 0xFF : (n >> 8) % 3 == 0 ? PickOf(0, 0x1D, 0x1E, 0x21) : (n >> 12) % 0x22);
+    return WithAl(answer, n % 2 ? 0xFF : (n >> 8) % 3 == 0 ? kEdges[(n >> 10) % 4] : (n >> 12) % 0x22);
 }
 // AreaMap_ByteAt: each code the pickups and the cell hits compare with, and
 // their neighbours.
@@ -268,6 +270,8 @@ const sh::Callee kCallees[] = {
     {R1C_OURS(Field_EffectAhead), 0, {}, kG, 0, 0, {}, &FxEffectAhead},
     // unsigned char (long x, long y, unsigned margin): 0..0x21 or 0xFF
     {R1C_OURS(Sprite_ObjectAt), 3, {kW, kW, kW}, kG, 0, 0, {}, &FxObjectAt},
+    // void (unsigned colour): the low byte indexes four words (0 pushed here)
+    {R1C_OURS(Sprite_FlashClut), 1, {kU8}, kG, 0, 0, {}},
     // unsigned char (unsigned target): the callers store al, whatever it is
     {R1C_OURS(Sprite_TurnSense), 1, {kW}, kG, 0, 0, {}},
     // unsigned char (short x, short y)
