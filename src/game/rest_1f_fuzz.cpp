@@ -199,6 +199,12 @@ U FxTurn(const U*, U answer) {
     if ((n & 1) && sh::InRegions(s + 8, 1)) s[8] = static_cast<unsigned char>(n % 16 == 1 ? n >> 8 : (n >> 8) % 8);
     return answer;
 }
+// Field_CornerTurn: 0 two times in three, so that Field_CellAheadRaised's
+// corner path goes on to its slope sides and Field_RaisedEdgeTurns.
+U FxCorner(const U*, U answer) {
+    const U n = sh::Noise();
+    return WithAl(answer, n % 3 == 0 ? 1 + (n >> 8) % 0xFF : 0);
+}
 U FxPairTurn(const U* a, U answer) {
     FxTurn(a, answer);
     const U n = sh::Noise();
@@ -218,7 +224,7 @@ const sh::Callee kCallees[] = {
     {R_OURS(PartyAction18_CellPickup), 2, {kU16, kU16}, kF, 0, 0},
     {R_OURS(PartyAction18_CellStrike), 2, {kU16, kU16}, kF, 0, 0},
     {R_OURS(Field_CellClass5), 5, {kW, kW, kW, kW, kW}, kG, 0, 0, {}, &FxClass},
-    {R_OURS(Field_CornerTurn), 0, {}, kF, 0, 0},
+    {R_OURS(Field_CornerTurn), 0, {}, kF, 0, 0, {}, &FxCorner},
     {R_OURS(Field_SlopeBetween), 5, {kU16, kU16, kU16, kU16, kW}, kF, 0, 0},
     {R_OURS(Field_RaisedEdgeTurns), 2, {kU16, kU16}, kG, 0, 0},
     {R_OURS(Field_ReadCellsRaised), 4, {kU16, kU16, kU16, kU16}, kG, 0, 0},
@@ -288,9 +294,14 @@ const sh::Region kRegions[] = {
 
 // --- the seed -----------------------------------------------------------------------------
 
-U Coordinate() {
+// A 16.16 coordinate: a cell at 0, small, at the s16 and u16 limits or random;
+// a fraction 0 three times in eight (`whole`: Field_CellAheadRaised's rounds,
+// which return at once when both are 0, one time in five), else a half, a
+// quarter, 1, 0xFFFF or random.
+U Coordinate(bool rare_whole) {
     const U cell = PickOf(0, 1, 2, sh::Next() % 0x80u, sh::Next() % 0x80u, 0x7FFF, 0x8000, 0xFFFF, 0xFFFE, sh::Next());
-    const U frac = PickOf(0, 0, 0, 0x8000, 0x4000, 1, 0xFFFF, sh::Next());
+    const U frac = rare_whole ? PickOf(0, 0x8000, 0x4000, 1, 0xFFFF, sh::Next())
+                              : PickOf(0, 0, 0, 0x8000, 0x4000, 1, 0xFFFF, sh::Next());
     return (cell << 16) | (frac & 0xFFFF);
 }
 U Height() { return PickOf(0, 1, 0xFFFF, 0x7FFF, 0x8000, 0x7FC0, 0xFFC0, 0x40, sh::Next() % 0x400u, sh::Next()); }
@@ -332,8 +343,8 @@ void SeedSprite(unsigned char* s, unsigned k) {
     // +0xB: an effect index below 20 where a function indexes the records by it
     s[0xB] = static_cast<unsigned char>(k == kEffectCountdown ? sh::Next() % 20 : PickOf(0, 1, 2, 0xFF, sh::Next() % 20, sh::Next()));
     SetWord(s + 0x2C, PickOf(0, 1, 2, 0xFF, 0x7F00, sh::Next()));
-    SetLong(s + 0x34, static_cast<std::int32_t>(Coordinate()));
-    SetLong(s + 0x38, static_cast<std::int32_t>(Coordinate()));
+    SetLong(s + 0x34, static_cast<std::int32_t>(Coordinate(k == kCellAheadRaised)));
+    SetLong(s + 0x38, static_cast<std::int32_t>(Coordinate(k == kCellAheadRaised)));
     SetWord(s + 0x3E, Height());
     s[0x70] = static_cast<unsigned char>(PickOf(0, 1, sh::Next()));
 }
@@ -444,7 +455,7 @@ void SelfTest() {
     static unsigned* s_index = index;
     sh::Group g = {"rest_1f", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0],
                    kTables, sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 6000};
+                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 8000};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
     g.sprite_span = 2;   // +1..+4 below the smallest table (two entries); each dispatcher's own index is seeded
