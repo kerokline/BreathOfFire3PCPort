@@ -2193,7 +2193,8 @@ designed in rather than bolted on.
   `EffectKind98_DrawFlash` `0x48DBA0`; `src/game/effect_4d.cpp`, fuzzed
   against the original's 320 x 240 with the fill unarmed); E4B's
   `0x489D47` and E4F's `0x493308` (`EffectKindAF_DrawScreen`) are ours and
-  still 320 wide - to widen the same way. `EffectKind96_Pulse`'s quad
+  still 320 wide - to widen the same way (done at the round's end,
+  below). `EffectKind96_Pulse`'s quad
   `(0, 0)..(320, 320)`, its 320s from a register, is not widened (no
   spawner found).
   **Wave five, the same day**: the next three are ours and widened the
@@ -2213,6 +2214,19 @@ designed in rather than bolted on.
   (`0x489D47`, `0x493308`) are ours at 320 wide. Found and not widened:
   sub-kind 0x44's full-width draws `0x510F12` and `0x510FE5` (E6C), E6D's
   overlay quads at `0..320 x 0..256` and its 512-wide mist layers.
+  **The round's end, the same day**: the last two are widened as
+  `Effect_DrawScreenTint` is - E4B's `EffectKind89_DrawTint` (`0x489CD0`,
+  the site `0x489D47`: the semi-transparent tint tile of kinds 0x89, 0x9F
+  and 0xA4) and E4F's `EffectKindAF_DrawScreen` (`0x4932E0`, the site
+  `0x493308`: kind 0xAF's red tile), each at `(Widescreen_FillX(), 0)`
+  `Widescreen_FillWidth()` x 240 (`src/game/effect_4b.cpp`,
+  `src/game/effect_4f.cpp`). Both groups inject before
+  `Widescreen_ArmFills`, so their fuzzes still compare the original's
+  `(0, 0)` 320 x 240 and narrow play is Capcom's to the bit. **All nine of
+  the scan's sites and E6C's `0x510E6C` are now widened.** Still not
+  widened, the owner's call: `EffectKind96_Pulse`, the spiral `0x505E60`,
+  the culls (`0x4FF6A3`, `0x5054E3`, `Encounter_OnScreen`, the battle
+  field's two), the strips and full-width draws listed above.
   **Manillo's backdrop, 2026-10-03** (the owner's catalogue,
   `manillo_will_that_be_all.png`: the trade screen's tiled fish pattern
   320 wide, black bands): `ItemTrade_DrawBackground` `0x5942C0` (ours
