@@ -101872,7 +101872,7 @@ evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last in
 
 [[func]]
 pc = 0x520350
-name = "PartyAction_WaitEffect"
+name = "PartyAction_WaitEffectEnd"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1c.cpp"
@@ -102046,7 +102046,7 @@ name = "PartyAction6_Form1States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction6_Form1 0x51F5F0 by +2: R1E 0x5239F0, R1B 0x51DE20, PartyAction_WaitEffect; 0x65FC54 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction6_Form1 0x51F5F0 by +2: R1E 0x5239F0, R1B 0x51DE20, PartyAction_WaitEffectEnd; 0x65FC54 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
 
 [[data]]
 pc = 0x65FC54
@@ -102182,7 +102182,7 @@ name = "PartyAction8_Form1States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction8_Form1 0x520330 by +2: R1E 0x5239F0, R1B 0x51DE20, PartyAction_WaitEffect; 0x65FD1C follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction8_Form1 0x520330 by +2: R1E 0x5239F0, R1B 0x51DE20, PartyAction_WaitEffectEnd; 0x65FD1C follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
 
 [[data]]
 pc = 0x65FD1C

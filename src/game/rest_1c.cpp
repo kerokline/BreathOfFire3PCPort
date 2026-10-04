@@ -27,7 +27,7 @@
 // or jump through a dispatch table to what is not code, ours aborts with a
 // message (the round-nine rule); no ordinary caller hands such an index
 // (section 5 of the doc). The one unchecked read ordinary play reaches
-// (PartyAction_WaitEffect's effect index) is reproduced in place.
+// (PartyAction_WaitEffectEnd's effect index) is reproduced in place.
 #include "game/rest_1c.h"
 
 #include <cstdint>
@@ -621,7 +621,7 @@ R1C_EXPORT void __cdecl PartyAction_TurnStep(void) {
 // 0xFF when no record is free, and moves on all the same; the byte 0xFF * 0x80
 // past Effect_Objects is then read (docs section 5). Reproduced in place: the
 // read does not fault and ordinary play can reach it.
-R1C_EXPORT void __cdecl PartyAction_WaitEffect(void) {
+R1C_EXPORT void __cdecl PartyAction_WaitEffectEnd(void) {
     if (Sprite_Current[7] != 0) {
         if (SH_CALL(Sprite_ScriptTickOnce)() == 0) return;
         SH_CALL(Sprite_EnsureAnimation)(Sprite_Current[8]);
@@ -670,7 +670,7 @@ void Rest1C_Inject() {
     BOF3_INJECT(PartyAction8_Form0Begin);
     BOF3_INJECT(PartyFormAction8_Form1);
     BOF3_INJECT(PartyAction8_Form1);
-    BOF3_INJECT(PartyAction_WaitEffect);
+    BOF3_INJECT(PartyAction_WaitEffectEnd);
     BOF3_INJECT(PartyFormAction8_Form2);
     BOF3_INJECT(PartyAction8_Form2);
     BOF3_INJECT(PartyAction8_Form2Begin);

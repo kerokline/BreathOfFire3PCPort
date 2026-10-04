@@ -133,7 +133,7 @@ const Row kRows[] = {
     R1C_STATE(PartyAction8_Form0Begin, 0x5201A0, 0x166, kCalls5201A0),
     R1C_DISPATCH(PartyFormAction8_Form1, 0x520310, 0x12, Kind::kState, 3),
     R1C_DISPATCH(PartyAction8_Form1, 0x520330, 0x12, Kind::kState, 3),
-    R1C_STATE(PartyAction_WaitEffect, 0x520350, 0x63, kCalls520350),
+    R1C_STATE(PartyAction_WaitEffectEnd, 0x520350, 0x63, kCalls520350),
     R1C_DISPATCH(PartyFormAction8_Form2, 0x5203C0, 0x12, Kind::kState, 3),
     R1C_DISPATCH(PartyAction8_Form2, 0x5203E0, 0x12, Kind::kState, 3),
     R1C_STATE(PartyAction8_Form2Begin, 0x520400, 0x1D4, kCalls520400),
@@ -360,7 +360,7 @@ void Seed(unsigned k) {
         s[3] = static_cast<unsigned char>(PickOf(3, 5, 3, 5, 4, 0, sh::Next()));
         if (sh::Half()) s[8] = s[3];
     }
-    // PartyAction_WaitEffect: the effect index a record mostly (0xFF and past the
+    // PartyAction_WaitEffectEnd: the effect index a record mostly (0xFF and past the
     // 20 read in place), the record in use or free
     if (r.clone.base == 0x520350) {
         s[0xB] = static_cast<unsigned char>(sh::Often() ? sh::Next() % 20 : PickOf(0xFF, 20, 21, sh::Next()));
@@ -383,7 +383,7 @@ void Args(unsigned k, U* a) {
 // harness's disturbance (from its hash only): Sprite_Current's direction,
 // position, height, form word and the bytes +6, +7, +9, +0xA, +0xB, +0x2B;
 // Field_State's bytes; an effect record's in-use byte (the one +0xB names, for
-// PartyAction_WaitEffect); the sloped flag; a row of Field_DirectionSteps.
+// PartyAction_WaitEffectEnd); the sloped flag; a row of Field_DirectionSteps.
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;

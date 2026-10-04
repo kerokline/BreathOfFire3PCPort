@@ -58,7 +58,7 @@ is bit 0 of `+0x80` of the object `Sprite_ObjectAt` found (`Sprite_Objects`
 | `PartyAction_TickThenFace` | `0x51F850` | 0x23 | a script tick, then face (9 cells) |
 | `PartyAction_TurnToSide` | `0x520840` | 0x70 | turn toward side 3 or 5 (34 cells) |
 | `PartyAction_TurnStep` | `0x51FC80` | 0x7E | its steps (31 cells) |
-| `PartyAction_WaitEffect` | `0x520350` | 0x63 | a script tick until an effect object ends (7 cells) |
+| `PartyAction_WaitEffectEnd` | `0x520350` | 0x63 | a script tick until an effect object ends (7 cells) |
 
 - **Form0Begin** (`0x51F210`): an even direction is turned back one eighth
   (`- 1`, `& 7`); when `PartyAction_TargetAhead` finds nothing that way, two
@@ -265,7 +265,7 @@ height around 0, 0x40, the s16 limits; `+0xA` 0, 1, 2, 5, 0xB, 0xFF or random;
 3, 0xFE or random and `+0x89` 0..2 or random. A dispatcher's index below its
 table's length (`+2`, `+3` or the u16 `+0x2C`); `PartyAction_TurnStep`'s side
 `+3` at 3, 5, 4, 0 or random and `+8` equal to it half the time;
-`PartyAction_WaitEffect`'s `+0xB` a record 0..19 two times in three, else 0xFF,
+`PartyAction_WaitEffectEnd`'s `+0xB` a record 0..19 two times in three, else 0xFF,
 20, 21 or random, and every record's in-use byte 0 or not; `Rand`'s hint at
 0xC..0xF, 0, 3..7, 0xB. The helpers' x and z low words 0, 1, 0x7FFF, 0x8000,
 0xFFFF, 0x40 or random under random upper halves.
@@ -290,7 +290,7 @@ original` (8,655 + 51). `BOF3X_SHADOW='*'` (this worktree, 2026-10-04): exit 0, 
 
 ## 5. Latent defects and ranges (Capcom's, described, not fixed)
 
-- **`PartyAction_WaitEffect` reads an effect index unchecked, and play can
+- **`PartyAction_WaitEffectEnd` reads an effect index unchecked, and play can
   hand it 0xFF.** The state before it in the form-1 tables (R1B's `0x51DE20`
   and its likes) stores `Effect_FindFree`'s answer in `+0xB`, 0xFF when the
   20 records are all in use, and moves to this state all the same; this one
@@ -325,7 +325,7 @@ original` (8,655 + 51). `BOF3X_SHADOW='*'` (this worktree, 2026-10-04): exit 0, 
   the cell one on is the dword + 1, its low word wrapping as ours does.
 
 None of these needs a ledger entry: nothing the original reads unwritten
-reaches what is drawn or decided except `PartyAction_WaitEffect`'s byte, which
+reaches what is drawn or decided except `PartyAction_WaitEffectEnd`'s byte, which
 ours reads exactly as the original does.
 
 ## 6. Controls
@@ -438,10 +438,10 @@ exactly 0x1D. Every function has at least one control refused in hundreds of rou
 | C92 | `PartyAction_TurnStep` | Sprite_Current not re-read after the animation | 50 |
 | C93 | `PartyAction_TickThenFace` | the animation from +9 | 2517 |
 | C94 | `PartyAction_TickThenFace` | +2 for +3 | 2712 |
-| C95 | `PartyAction_WaitEffect` | +6 for +7 | 1355 |
-| C96 | `PartyAction_WaitEffect` | +7 = 1 | 1304 |
-| C97 | `PartyAction_WaitEffect` | the record +1 for +0 | 445 |
-| C98 | `PartyAction_WaitEffect` | +0x2B = 1 | 900 |
+| C95 | `PartyAction_WaitEffectEnd` | +6 for +7 | 1355 |
+| C96 | `PartyAction_WaitEffectEnd` | +7 = 1 | 1304 |
+| C97 | `PartyAction_WaitEffectEnd` | the record +1 for +0 | 445 |
+| C98 | `PartyAction_WaitEffectEnd` | +0x2B = 1 | 900 |
 | C99 | `PartyAction6_Form2Probe` | +0xA = 0xC | 4000 |
 | C01b | `PartyAction6_Form1` | the state index ^ 1 (in the run of tables) | 4000 |
 | C02b | `PartyAction6_Form2State0` | the step index ^ 1 | 4000 |
@@ -471,7 +471,7 @@ Everything reaches R1C through `.data`: `Field_FormActions[6..8]` and
 `0x51F3D0`); R1D's tables `0x65FDAC` / `0x65FDB8` (the set-9 dispatchers); and
 the shared states from other sets' tables - `PartyAction_TurnToSide` 34
 cells, `PartyAction_TurnStep` 31, `PartyAction_TickThenFace` 9,
-`PartyAction_WaitEffect` 7 (`band_rows.py --byte-tables`, the cells listed in
+`PartyAction_WaitEffectEnd` 7 (`band_rows.py --byte-tables`, the cells listed in
 each `symbols.toml` entry). The 32 pickup / cell-hit sites are the group's
 own.
 
