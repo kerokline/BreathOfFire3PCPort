@@ -286,7 +286,7 @@ effect).
 **Result** (2026-10-04, this worktree, `BOF3X_SELFTEST_ONLY=1
 BOF3X_SHADOW=rest_1c`, exit 0): 204,000 rounds over 51 functions, 336,024
 calls to the stand-ins, **0 mismatches**; `inject: 8706 ours, 0 left
-original` (8,655 + 51). @STAR@
+original` (8,655 + 51). `BOF3X_SHADOW='*'` (this worktree, 2026-10-04): exit 0, `inject: 8706 ours, 0 left original`, 1,020 self-test lines of 0 mismatches and none other (`rest_1c` among them: 204,000 rounds, 0 mismatches); the same with `BOF3X_WIDE=1`: exit 0, 1,020, 8,706 ours. Each passed on its first complete run (a first `'*'` was stopped by the scratch runner's own timeout, not by a fault).
 
 ## 5. Latent defects and ranges (Capcom's, described, not fixed)
 
