@@ -17,7 +17,7 @@ namespace at {
 constexpr std::uint32_t kStatGain = bof3::addr::Char_LevelUpGain;
 // 0x59DB70 (in no group: catalogue part 7): (x, y, colour, width, clut,
 // shade) - a SPRT8 strip, 0x59D640's preview bars. Read as words and bytes.
-constexpr std::uint32_t kDrawBar = 0x59DB70;
+constexpr std::uint32_t kDrawBar = bof3::addr::BattleEquipWin_DrawBar;   // 0x59DB70, ours since round fourteen R2H
 
 // --- the slide-out bounds DIV-0041 widens -----------------------------------
 // The imm16 of each list's `cmp ax, imm16` (66 3D before it) in the
