@@ -9,12 +9,14 @@
 #           platform layer this project replaced, the grown draw pool
 #           (DrawPool_Grow), the stacks.
 # A range here is a place the hash cannot see. Add one only with the dump
-# that showed it and the reason it is not game state; never to quiet a
-# difference that has not been read.
+# that showed it and the reason it is not a defect - a platform object, or a
+# DIVERGENCE.md entry by number; never to quiet a difference nobody has read.
 
 # the task scheduler: saved stack pointers and the task stacks (return addresses, locals)
 0x66C7D4 4       # ours   a task record's saved esp (Task_Records+0x4)
 0x66C7F4 4       # ours   the next record's saved esp
+0x66C814 4       # ours   the third record's saved esp
+0x66C834 4       # ours   the fourth record's (by the stride; not yet seen to differ)
 0x66C854 37292   # both   Task_SchedulerEsp and the task stacks, to Area42_Rank
 
 # the window, the clock
@@ -22,31 +24,18 @@
 
 # sound and music: DirectSound objects, the stream
 0x6BC928 5400    # noise  Sound_Banks (buffer pointers in every record)
+0x6BDE44 4       # noise  the pointer before Music_FileSize (differs run to run while a track plays)
 0x6BDE50 4       # noise  Music_File
-0x6BDE5C 4       # noise  Music_Volume
+0x6BDE5C 4       # both   Music_Volume
 0x7CC378 73728   # noise  Music_Staging (the stream decodes on its own thread)
 0x7DE3B4 40      # noise  Music_Events, Snd_Device, Music_Notify, Music_Decoder, Music_Data
+0x7DE3E0 4       # noise  Music_Finished: set from the stream's own timing, a frame or twelve apart between two runs of one code
 
 # the display: DirectDraw / Direct3D state, which ours replaces (render_d3d11)
 0x6BE1D0 2096    # ours   Gfx_WindowRect and the mode list, to Dd_CellBackdrop
 0x6C3940 256     # both   the end of Gfx_ClutRows (the rows above 0x3D0: handles, a stack address)
 0x6C3A40 1280    # both   D3d_BackMaterialHandle, D3d_ShadeModeCache, Gfx_RenderFlags and the device description
-0x6C4250 8       # both   Gfx_TexCache record 0: its two surface pointers
-0x6C4850 8       # both   Gfx_TexCache record 1: its two surface pointers
-0x6C4E50 8       # both   Gfx_TexCache record 2: its two surface pointers
-0x6C5450 8       # both   Gfx_TexCache record 3: its two surface pointers
-0x6C5A50 8       # both   Gfx_TexCache record 4: its two surface pointers
-0x6C6050 8       # both   Gfx_TexCache record 5: its two surface pointers
-0x6C6650 8       # both   Gfx_TexCache record 6: its two surface pointers
-0x6C6C50 8       # both   Gfx_TexCache record 7: its two surface pointers
-0x6C7250 8       # both   Gfx_TexCache record 8: its two surface pointers
-0x6C7850 8       # both   Gfx_TexCache record 9: its two surface pointers
-0x6C7E50 8       # both   Gfx_TexCache record 10: its two surface pointers
-0x6C8450 8       # both   Gfx_TexCache record 11: its two surface pointers
-0x6C8A50 8       # both   Gfx_TexCache record 12: its two surface pointers
-0x6C9050 8       # both   Gfx_TexCache record 13: its two surface pointers
-0x6C9650 8       # both   Gfx_TexCache record 14: its two surface pointers
-0x6C9C50 8       # both   Gfx_TexCache record 15: its two surface pointers
+0x6C3F40 24576   # both   Gfx_TexCache (surface pointers and use stamps in every record; differs run to run)
 0x7C9F58 8       # both   Font_TexCache record 0: its two surface pointers
 0x7C9F6C 8       # both   Font_TexCache record 1: its two surface pointers
 0x7C9F80 8       # both   Font_TexCache record 2: its two surface pointers
@@ -176,7 +165,7 @@
 0x7CA930 8       # both   Font_TexCache record 126: its two surface pointers
 0x7CA944 8       # both   Font_TexCache record 127: its two surface pointers
 0x7CA958 136     # ours   D3d_Vertices (the quad the original's Direct3D draws with)
-0x7CC238 320     # both   D3d_DeviceDesc, Dd_DirectDraw and the surfaces after it
+0x7CAE38 5440    # both   D3d_CellTexCache, D3d_DeviceDesc, Dd_DirectDraw and the surfaces after it
 
 # input: DirectInput objects; the key table is the launcher's (docs/controls.md)
 0x7DE7A8 128     # ours   Key_Table
@@ -184,11 +173,22 @@
 
 # the draw-item pool: ours draws from a larger pool of its own (DrawPool_Grow), so Capcom's is unused and the lists point elsewhere
 0x7E09E0 2048    # ours   DrawItemPool_Free
+0x7E1C00 131072  # ours   Gfx_PacketPools: the packets name their draw items by address (0x90.... against ours' pool, DIV-0062); what they draw is the picture A/B's to see
 0x8022A0 2720    # ours   DrawLayers and Gfx_FrameNodes (pointers into the pool)
 0x9039D4 2       # ours   DrawItemPool_Top
 0x905E80 147456  # ours   DrawItems
+0x929EB8 4       # ours   Gfx_OtPointers+0x18: a pointer into the pool
 
 # the C runtime's own, at the end of .data
 0x93C5A0 4       # noise  a stack address
 0x93C6B4 4       # noise  a stack address
 0x93D6E0 12      # noise  a stack address and a heap pointer
+
+# ledgered divergences that change state
+0x6BDE54 4       # ours   Music_FadeCount: DIV-0028, a fade steps once a logic frame, so a count is left where the original's is already 0
+0x6BDE60 4       # ours   Music_FadeStep: DIV-0028, with it
+0x7DE46E 2       # ours   Gte_Vertices[1]'s top half: DIV-0023, ours writes 0 where the original leaves stale stack
+0x7DE476 2       # ours   Gte_Vertices[3]'s top half: DIV-0023
+0x7DE47E 2       # ours   Gte_Vertices[5]'s top half: DIV-0023
+0x66A418 8       # ours   Pause_LinesGame's two pointers: DIV-0038, the English lines are in our DLL (a language overlay only)
+0x66A448 8       # ours   Pause_LinesTitle's two pointers: DIV-0038
