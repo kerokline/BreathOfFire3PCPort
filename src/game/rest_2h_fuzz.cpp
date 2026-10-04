@@ -451,6 +451,13 @@ void Seed(unsigned k) {
         for (U a = 0x9041D4; a < 0x904354; ++a) Mem(a)[0] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
         break;
     }
+    case kGeneDraw:
+        // the gene list's top past 9 too (its rows then read past the 18 bytes, in
+        // place) with all eighteen set half the time: the first 0 ends the rows
+        g_window[0xA] = static_cast<unsigned char>(PickOf(1, 3, 6, 9, 10, 11, 14, 20));
+        if (sh::Half()) SetLong(Mem(at::kGenes), 0x3FFFF);
+        for (unsigned i = 0x12; i < 0x30; ++i) Mem(at::kGeneList + i)[0] = static_cast<unsigned char>(sh::Half() ? 0 : sh::Next());
+        break;
     case kKeys: break;
     case kEnum: {
         sh::SetPointer(Key(&DInput_Object), g_com);
@@ -496,6 +503,12 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     const U v = h >> 8;
     unsigned char* const self = Window(g_self_index);
+    // the item list: three cases of the thirteen move the lit row's id or count
+    // (read again for its second draw) instead of the cells the others read
+    if (g_k == kItemsDraw && h % 13 >= 9 && h % 13 <= 11) {
+        Mem((b & 1 ? at::kUseIds : at::kUseCounts) + g_window[0xB])[0] = static_cast<unsigned char>(v);
+        return;
+    }
     switch (h % 13) {
     case 0: sh::SetPointer(at::kCurrent, Window(b)); break;   // another record (the runs re-read 0x905B84)
     case 1: SetWord(self + (b & 1 ? 4 : 6), v & 0x1FF); break;
@@ -505,7 +518,7 @@ void Disturb(U h) {
     case 5: SetWord(g_window + (b & 1 ? 4 : 6), v & 0x1FF); break;
     case 6: Mem(at::kWindow1Master)[0] = static_cast<unsigned char>(b % 4); break;
     case 7: Record(b)[(b >> 3) & 1 ? 0xB : 0x1F] = static_cast<unsigned char>(v); break;
-    case 8: Mem(at::kUseIds + b % 0x80)[0] = static_cast<unsigned char>(v); break;
+    case 8: Mem(at::kUseIds + (b & 1 ? g_window[0xB] + (b >> 1) % 3 - 1u : b % 0x80u))[0] = static_cast<unsigned char>(v); break;
     case 9: g_window[0xC] = static_cast<unsigned char>(b % 3); break;
     case 10: Mem(at::kBattleParty + b % 3)[0] = static_cast<unsigned char>(v); break;
     case 11: g_window[9] = static_cast<unsigned char>(b % 7); break;
