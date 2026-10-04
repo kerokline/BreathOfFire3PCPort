@@ -107766,3 +107766,463 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R2B): BareRet 0x437CC0, Shisu_ModelBTurn, Shisu_ModelBSquare, Shisu_ModelBDrop, Shisu_ModelBStill; jumped through by Shisu_ModelBDispatch 0x57EDD0 by 0x939961, unchecked; the writers store 0..4; MasterFigure_States starts at 0x663E28. docs/rest_2b.md."
+
+# --- round fourteen group R3E (rest_3e, 2026-10-04): the effect band leftovers 0x46A320..0x4801ED. docs/rest_3e.md ---
+
+[[func]]
+pc = 0x46A320
+name = "EffectKind37_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46A320..0x46A331 (0x12 bytes), cdecl: hidden in 0x46A1E0 by the catalog extent (EffectKind32_Arc ends at 0x46A287): Effect_KindHandlers[0x37]: jmp [EffectKind37_States + +1 * 4], unbounded (ours aborts past its 3). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46ABB0
+name = "EffectKind17_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46ABB0..0x46ABC1 (0x12 bytes), cdecl: hidden in 0x46A1E0 by the catalog extent: Effect_KindHandlers[0x17]: jmp [EffectKind17_States + +1 * 4], unbounded (ours aborts past its 6). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46B7A0
+name = "EffectKind1B_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46B7A0..0x46B7B1 (0x12 bytes), cdecl: hidden in 0x46B6D0 by the catalog extent (EffectKind17_CellBlocked ends at 0x46B799): Effect_KindHandlers[0x1B]: jmp [EffectKind1B_States + +1 * 4], unbounded (ours aborts past its 4). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46D5F0
+name = "EffectKind41_DrawNumber"
+ret = "void"
+params = "int x, int y, int unused, unsigned clut"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46D5F0..0x46D703 (0x114 bytes), cdecl: Crt_sprintf(0x904BA0, Area08_MessageFormat, Sprite_Current +6); a draw mode (page 0xF) committed to the slot +0x29; each character from the first (taken whatever it is) to a NUL, a space skipped, else the character less 0x30 written back and an 8 x 8 SPRT at (x + 8 i, y), the low words signed, u (c + 0x16) * 8, v 0xD0, CLUT ((clut & 0xFF) << 4, 0x1E0), committed (0x1C); the index a byte. Called by EffectKind41_Hold, _Bounce, _Fade (FC2). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46D710
+name = "EffectShards_LoadModel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46D710..0x46D761 (0x52 bytes), cdecl: the byte *(+0x54), signed, times 0x28 bytes copied one at a time from *(+0x50) (stepped, Sprite_Current read each byte) to 0x8C5D80; +0x50 = 0x8C5D80; EffectKind30_ShardsInit, EffectKind30_SparksInit; +9 = 0x10. Called by Area135_SpawnCopy (area_w3d). PSX twin 0x801A0764 (analysis/pairs_propagated.json, call: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46D770
+name = "EffectShards_Step"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46D770..0x46D779 (0xA bytes), cdecl: EffectKind30_ShardsStep, then a tail jmp to EffectKind30_SparksDraw. Called by Area135_SpawnCountdown (area_w3d). PSX twin 0x801A0820 (analysis/pairs_propagated.json, call: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46E190
+name = "EffectKind1D_DrawSpeck"
+ret = "void"
+params = "const unsigned char *speck"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46E190..0x46E1F8 (0x69 bytes), cdecl: the speck point +4 projected (EffectGte_ProjectPoint, a stack vector); a TILE_1 at the packet cursor, opaque, white on an odd Rand else black; Gfx_CommitPrim(1, 0x14) - EffectSpecks_Draw links the same tile instead. Called by EffectKind1D_MoveShards (E1C). PSX twin 0x801F752C (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46F570
+name = "EffectKind21_ArmPoints"
+ret = "void"
+params = "unsigned char *arm"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46F570..0x46F68B (0x11C bytes), cdecl: c, s = cos, sin of +0x4C times +0x52 << 4; a matrix EffectGte_SetDiagonalOne, Gte_RotMatrixY(+0x4E), Gte_RotMatrixZ(+0x50); one Gte_ApplyMatrixLV of a stack vector never written, its answer dropped (ours passes zeros); the four points +0xC + 0x10 i: (0, 0), (c, s), (c, 0), (c, -s) through the matrix, x and y added to +0 / +4, z << 8 added to +8. Called by EffectKind21_Grow, _Lift, _Hold, _Swirl, _Fold (E1D). PSX twin 0x801F7FFC (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46F690
+name = "EffectKind21_DrawArm"
+ret = "void"
+params = "unsigned char *arm"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46F690..0x46F6E9 (0x5A bytes), cdecl: a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 1, slot 1); EffectGte_LoadMapCamera; EffectKind21_DrawArmTriangle(arm, 0, 1, 2) and (arm, 0, 3, 2). Called by EffectKind21_Grow, _Lift, _Hold, _Swirl, _Fold (E1D). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46F6F0
+name = "EffectKind21_DrawArmTriangle"
+ret = "void"
+params = "unsigned char *arm, unsigned a, unsigned b, unsigned c"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46F6F0..0x46F78A (0x9B bytes), cdecl: a POLY_G3, semi-transparent, of the arm points a, b, c (bytes, +0xC + 0x10 each) projected; shades 0x40, 0, 0x80; Gfx_CommitPrim(1, 0x34). Called by EffectKind21_DrawArm. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x46FAE0
+name = "EffectKind24_DrawRay"
+ret = "void"
+params = "const unsigned char *ray"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x46FAE0..0x46FCE3 (0x204 bytes), cdecl: a draw mode (as EffectKind21_DrawArm); the direction cos(+4) sin(+2) sar 8, sin(+4) sin(+2) sar 8, height step cos(+2) << 4; EffectGte_LoadMapCamera; four LINE_G2, semi-transparent, the direction a quarter turned each, from the leader point (ObjTrio +0x34..+0x3C) out by (+6 * +0) sar 8 to (+8 * +0) sar 8, coloured the scale word times +0xA..+0xC sar 8; Gfx_CommitPrim(1, 0x24). Called by EffectKind24_Shrink (E1D). PSX twin 0x801F88FC (analysis/pairs_propagated.json, call-disputed: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x4790C0
+name = "EffectGlowSparks_Clear"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x4790C0..0x4790E0 (0x21 bytes), cdecl: byte +0 of the 8 sparks of 0x1C at EffectKind30_Shards = 0; the sound flags 0x6761C9, 0x6761C8 = 0. Called by EffectKind49_V0Start (E2D), EffectKind48_State9_Start (E2E). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x4790F0
+name = "EffectGlowSparks_StartRise"
+ret = "void"
+params = "unsigned char *spark"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x4790F0..0x479157 (0x68 bytes), cdecl: +0 1, +1 0, +2 8, +3 0, +8 0, +4 0x40; x, z = ((Rand & 0xFF) - 0x80) << 11 plus Sprite_Current +0x34 / +0x38 (read after each Rand), the height its +0x3C. Called by EffectKind49_V0Emit (E2D), EffectKind52_SparksEmit (E2F). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x479160
+name = "EffectGlowSparks_StartBurst"
+ret = "void"
+params = "unsigned char *spark"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x479160..0x479251 (0xF2 bytes), cdecl: +0 1, +1 0, +2 8, +3 0, +8 0, +4 1; a = Rand & 0x7FF, b = Rand & 0xFFF, r the low word, signed, of ((Rand % 2) << 12 | Rand & 0xFFF); x = (sin a cos b sar 12) r sar 8, z = (sin a sin b sar 12) r sar 8 round Sprite_Current, the height cos a * r + its +0x3C + 0x2000000. Called by EffectKind48_State9_Emit (E2E). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x479260
+name = "EffectGlowSparks_Run"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x479260..0x4792D2 (0x73 bytes), cdecl: EffectKind52_MoveSparks instruction for instruction but its table: a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 1, slot 1), EffectGte_LoadMapCamera, each spark in use called through EffectGlowSparks_States by +1 (unbounded, handed the spark) and drawn (EffectGlowSparks_Draw); al 1 when one was in use. Called by EffectKind49_V0Emit, _V0End (E2D), EffectKind48_State9_Emit, _State9_Drain (E2E). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x4792E0
+name = "EffectGlowSparks_Draw"
+ret = "void"
+params = "unsigned char *spark"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x4792E0..0x47941D (0x13E bytes), cdecl: EffectKind68_DrawMote but the size 0x20 and slot 1: the point +0xC projected and its size {0x20, a stack word never written} (EffectGte_ProjectSize reads the first); r = the size + (Frame_Counter & 1); 16 POLY_G3, semi-transparent, round the point, centre the shade +3, rim black; Gfx_CommitPrim(1, 0x34) each. Called by EffectGlowSparks_Run and EffectKind52_MoveSparks (E2F). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x479420
+name = "EffectGlowSparks_Glow"
+ret = "void"
+params = "unsigned char *spark"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x479420..0x479462 (0x43 bytes), cdecl: hidden in 0x4792E0 by the catalog extent: EffectGlowSparks_States[0]: +3 up 6, +2 down, at 0 +2 = +4, +1 up, Sound_PlayEffect(0x200) once (flag 0x6761C9). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x479470
+name = "EffectGlowSparks_Rise"
+ret = "void"
+params = "unsigned char *spark"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x479470..0x4794C7 (0x58 bytes), cdecl: hidden in 0x4792E0 by the catalog extent: EffectGlowSparks_States[2]: once (flag 0x6761C8, set either way) Sound_PlayEffect(0x201) unless Sprite_Current +6; +8 up 0x40000, +0x14 up by it, +3 up 6, +2 down, at 0 +0 = 0. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x4794D0
+name = "EffectGlowTrail_Update"
+ret = "void"
+params = "unsigned char *trail"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x4794D0..0x4796A0 (0x1D1 bytes), cdecl: EffectKind52_TrailUpdate (0x47D040) and EffectKind80_TrailStep (0x4873E0) instruction for instruction but the call targets (the same callees): ours calls EffectKind52_TrailUpdate. Called with 0x92C060 by EffectKind49_V2Fly, _V2Wait, _V2Rise, _V2Sink (E2D), EffectKind48_State12_Start, _Travel, _Hold, _Grow, _Shrink (E2E). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x4796B0
+name = "EffectGlowTrail_Draw"
+ret = "void"
+params = "unsigned char *trail"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x4796B0..0x47996D (0x2BE bytes), cdecl: EffectKind52_TrailDraw without the depth words: a draw mode, the caps (EffectTrail_DrawCap) at points 0 and 31, and two semi-transparent POLY_G4 per pair of points whose screen x or y differ, shaded 0x80 down 4 a pair; Gfx_CommitPrim(1, 0x44) each. Called with 0x92C060 by E2D and E2E as EffectGlowTrail_Update. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x4799C0
+name = "EffectSpiral_Init"
+ret = "void"
+params = "unsigned char *spiral"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x4799C0..0x479B68 (0x1A9 bytes), cdecl: EffectGte_LoadMapCamera; the light +0xD14 = (0, 0x1000, 0x1000) normalised in place (Gte_VectorNormal); ring 0: 32 points at angle 0x80 i under the tilt +0xD10 - shade 0x70 when the light dot is at most 0, else ((0x5A7A90(dot), at most 0xFFF) sar 5 & 0x78) + 7, the point (centre + (a << 5, b << 5, c << 13)) projected to +0x10 + 12 i - each copied to rings 1..7 (+0x180 each, shades +0x20). Called by EffectKind48_State8_Start, _State10_Start (E2E). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x479B70
+name = "EffectSpiral_StepDraw"
+ret = "void"
+params = "unsigned char *spiral"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x479B70..0x479EDF (0x370 bytes), cdecl: rings 0..6 moved out one (the shades stay); ring 0 again (dark shade 7); a draw mode; 7 x 32 POLY_G4, semi-transparent, between rings k - 1 and k, shaded ring k - 1 shades i, i + 1 times (8 - k) / 7 and ring k shade i (twice - the fourth vertex reads i, not i + 1) times (7 - k) / 7; Gfx_CommitPrim(1, 0x44). Called by EffectKind48_State8_Turn, _State9_Emit, _State10_Turn (E2E). PSX twin 0x801F9330 (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x479EE0
+name = "EffectRing_Draw"
+ret = "void"
+params = "const unsigned char *ring"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x479EE0..0x47A108 (0x229 bytes), cdecl: 32 semi-transparent POLY_G4 round the point (+0, +4, +8): rim (x + cos t << 5, z + sin t << 5) at the height and at the height + 0x7000000, projected, t 0x80 apart; before each a draw mode linked at the new rim point (MapView_LinkPrimAt(x, z, 0, 0xC)), the quad linked there (0x44); shades min((s * +0x10) & 0xFFFF >> 7, 0xFF), s a byte from 0x80 down 4 for quads 4..19 else up 4. Called by EffectKind48_State7_Swell, _Widen, _Lift (E2E). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47A110
+name = "EffectDust_Clear"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47A110..0x47A123 (0x14 bytes), cdecl: byte +0 of the 64 dust records of 0x20 at 0x92D1DC = 0. Called by EffectKind49_V3Start (E2D). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47A130
+name = "EffectDust_FindFree"
+ret = "unsigned char *"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47A130..0x47A148 (0x19 bytes), cdecl: the first of the 64 dust records whose +0 is 0, or null (eax). Called by EffectKind49_V3Burst (E2D). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47A150
+name = "EffectDust_Start"
+ret = "void"
+params = "unsigned char *dust"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47A150..0x47A1F0 (0xA1 bytes), cdecl: +0 1, +1 0, +2 0x10, +0x18 = +0x14 = 0; radius ((Rand % 2) << 8 | Rand & 0xFF) << 8, angle Rand & 0xFC0; +4 / +8 = cos / sin * radius sar 12 round Sprite_Current +0x34 / +0x38; +0x1C = +0xC = AreaMap_Elevation(+4, +8) << 16 (low word signed). Called by EffectKind49_V3Burst (E2D). No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47A200
+name = "EffectDust_Run"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47A200..0x47A2A6 (0xA7 bytes), cdecl: a draw mode (Gpu_GetTPage(0, 1, 0x3C0, 0), dtd 1, slot 1); EffectGte_LoadMapCamera; each record in use: EffectDust_DrawColumn, EffectDust_DrawFan when that answered 1; +0x18 up 0x100000, +0xC up by it, +0x14 up 0x2000, +2 down, at 0 freed; al 1 when one was in use. Called by EffectKind49_V3Burst, _V3End (E2D). PSX twin 0x801F9EFC (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47A2B0
+name = "EffectDust_DrawColumn"
+ret = "unsigned char"
+params = "const unsigned char *dust"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47A2B0..0x47A3C3 (0x114 bytes), cdecl: a POLY_F4, semi-transparent, colour 0x40, between (x, z, +0xC + (+0x14 << 8)) and (x, z, +0xC - (+0x14 << 8)) raised to the ground +0x1C when below it (al 1 then, else 0), each projected, the screen x -/+ the float at 0x5C41B8; Gfx_CommitPrim(1, 0x38). Called by EffectDust_Run. PSX twin 0x801F9A80 (analysis/pairs_propagated.json, call-anchored: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47A3D0
+name = "EffectDust_DrawFan"
+ret = "void"
+params = "const unsigned char *dust"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47A3D0..0x47A553 (0x184 bytes), cdecl: 16 POLY_G3, semi-transparent, round the dust point: the centre at the ground AreaMap_Elevation(x, z) << 16 (shade 0x40), the rim at (x + cos t * 4, z + sin t * 4) with the height read again at the dust own point, black, t 0x100 apart; Gfx_CommitPrim(1, 0x34) each. Called by EffectDust_Run. PSX twin 0x801F9BDC (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F2D0
+name = "EffectKind5D_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F2D0..0x47F33C (0x6D bytes), cdecl: EffectKind5D_States[0]: Sprite_SetAnimationBank(0x1EA); +0x3E = 0x64, +0x48 +0x24 +0x2A +9 = 0, +0xA = 0x1E, +0x29 = 1; Sprite_SetAnimation(+6 - 0x4E); +1 = 1. Also called by EffectKind5E_Start. PSX twin 0x801F6FAC (analysis/pairs_propagated.json, call: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F340
+name = "EffectKind5D_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F340..0x47F3DA (0x9B bytes), cdecl: hidden in 0x47F2D0 by the catalog extent: EffectKind5D_States[1]: the three windows of 0x654858 (+7 bit j hides window j) outlined (Window_DrawOutline) at min(w, n), min(h, n), n = +9 * 16; +9 up; all six sides full: +1 = 2. PSX twin 0x801F7068 (analysis/pairs_propagated.json, gap47: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F3E0
+name = "EffectKind5D_Show"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F3E0..0x47F543 (0x164 bytes), cdecl: hidden in 0x47F2D0 by the catalog extent: EffectKind5D_States[2]: the shown windows framed (Window_DrawFrame); window 0: the sprite at its corner (+0x2E, +0x30), Sprite_ScriptTick, Sprite_QueueOverlay; window 1: the item +6 name and Inventory_Count(0, +6, 0) drawn (Crt_sprintf, Text_DrawAt); EffectKind5D_DrawBoard; +0xA down, at 0 any held button +1 = 3. PSX twin 0x801F719C (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F550
+name = "EffectKind5D_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F550..0x47F5CC (0x7D bytes), cdecl: hidden in 0x47F2D0 by the catalog extent: EffectKind5D_States[3]: the windows outlined as EffectKind5D_Open, +9 down, at 0 +1 = 4. PSX twin 0x801F73EC (analysis/pairs_propagated.json, gap44: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F5F0
+name = "EffectKind5E_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F5F0..0x47F608 (0x19 bytes), cdecl: hidden in 0x47F2D0 by the catalog extent: EffectKind5E_States[0]: +6 = 0x4E, EffectKind5D_Start, +2 = 0. PSX twin 0x801F755C (analysis/pairs_propagated.json, gap44: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F610
+name = "EffectKind5E_Pick"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F610..0x47F719 (0x10A bytes), cdecl: hidden in 0x47F2D0 by the catalog extent: EffectKind5E_States[1]: EffectKind5E_DrawMenu; Input_Pressed 0x1000 / 0x4000 move the pick +2 (& 7, sound 0x206, +6 = 0x4E + it, Sprite_SetAnimation); 0x10 sound 0x209, +0xA = 0x14, +1 = 2; else 0x40 sound 0x20C, +1 = 3; else 0x20: item +6 held (Inventory_Count) - 0x903A10[+2] up to 100, Inventory_Remove(0, +6, 1), sound 0x20A - else sound 0x20D. PSX twin 0x801F7590 (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F720
+name = "EffectKind5E_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F720..0x47F795 (0x76 bytes), cdecl: EffectKind5E_States[2]: the board frame (Window_DrawFrame of 0x654868) and EffectKind5D_DrawBoard; +0xA down, at 0 any pressed button: sound 0x20C, +1 = 1. PSX twin 0x801F7758 (analysis/pairs_propagated.json, gap44: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F7A0
+name = "EffectKind5D_DrawBoard"
+ret = "void"
+params = "int x, int y, int w, int h"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F7A0..0x47F909 (0x16A bytes), cdecl: an FT4 (page (0, 0, 0x2C0, 0x100), CLUT (0x40, 0x1E3)) at the low words (x, y) w x h, u 0 / 0x80, v 0x98 / 0xFF; Gfx_CommitPrim(1, 0x48); for each of 8 items min(0x903A10[i], 3) marks from row i of 0x6548BC (0xA none), EffectKind5D_DrawMark at (x, y) + the mark offsets of 0x6548D4 (ours aborts past 11). Called by EffectKind5D_Show, EffectKind5E_Wait. PSX twin 0x801F781C (analysis/pairs_propagated.json, call-anchored: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F910
+name = "EffectKind5D_DrawMark"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F910..0x47F9D5 (0xC6 bytes), cdecl: a 16 x 16 FT4 (CLUT (0x30, 0x1E3)) at the low words, u 0xB0 / 0xC0, v 0x50 / 0x60; Gfx_CommitPrim(1, 0x48). Called by EffectKind5D_DrawBoard. PSX twin 0x801F79E8 (analysis/pairs_propagated.json, call-anchored: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47F9E0
+name = "EffectKind5E_DrawMenu"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47F9E0..0x47FAE2 (0x103 bytes), cdecl: Menu_DrawBox of 0x654870 (flags 2, style 0x903A5A), the title 0x66A098 (Crt_sprintf, Text_DrawAt); EffectKind5E_DrawList; Menu_DrawHand at 0x654894 + 15 * (+2 & 7); EffectKind5E_DrawPanel; the sprite at 0x654880 corner, Window_DrawFrame of it; Sprite_ScriptTick, tail jmp Sprite_QueueOverlay. Called by EffectKind5E_Pick. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47FAF0
+name = "EffectKind5E_DrawList"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47FAF0..0x47FBD1 (0xE2 bytes), cdecl: Menu_DrawBox of 0x654878 (flags 0); for items 0x4E..0x55 a line 0xF apart: Item_NamePtr(0, item) in colour 0 when Inventory_Count is not 0 else 7 (Text_CharCount, Text_DrawAt), the count (format 0x653EC0, Text_DrawFont8). Called by EffectKind5E_DrawMenu. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47FBE0
+name = "EffectKind5E_DrawPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47FBE0..0x47FD72 (0x193 bytes), cdecl: Menu_DrawBox of 0x654888 (flags 0); an FT4 over it (CLUT (0x20, 0x1E3)), u 0xC0 / w - 0x41, v 0x50 / h + 0x50; Gfx_CommitPrim(1, 0x48). Called by EffectKind5E_DrawMenu. PSX twin 0x801F7C34 (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47FDC0
+name = "EffectKind5F_Launch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47FDC0..0x47FE25 (0x66 bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[1]: +9 down, at 0 the point (0x510000, 0x420000, 0x2C00000), +0x14 = 0x800000, +1 up, sounds 0x202, 0x203. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47FE30
+name = "EffectKind5F_Hop"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47FE30..0x47FED8 (0xA9 bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[2]: +0x34 down 0x10000, +0x3C up +0x14, +0x14 down 0x200000; 0x480300(+0x34, 0x20, 8, 0); at +0x34 0x490000 the velocity (0x38E3, 0x10000, 0xB8E38E), +1 up, sounds 0x202, 0x203. PSX twin 0x801F995C (analysis/pairs_propagated.json, callers: an overlay address the SCENA banks share; no sibling name, the code is effect code). Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47FEE0
+name = "EffectKind5F_Fly"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47FEE0..0x47FF53 (0x74 bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[3]: the point moved by +0xC..+0x14, +0x14 down 0x200000; 0x480300(+0x34, 0x20, 8, 0); at +0x38 0x4B0000 +9 = 0x3C, +1 up. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x47FF60
+name = "EffectKind5F_Bounce"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x47FF60..0x480004 (0xA5 bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[4]: +9 down, at 0 x = z = 0x4B0000, the height AreaMap_Elevation << 16, the velocity (0xFFFF4925, 0xFFFF0000, 0xFFCC30C4 + 0x800000), +1 up, sounds 0x202, 0x203. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x480010
+name = "EffectKind5F_FlyAway"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x480010..0x48007C (0x6D bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[5]: as _Fly with +0x14 down 0x100000; at +0x38 0x360000 a tail jmp to Effect_Release. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x480080
+name = "EffectKind5F_PlaceHigh"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x480080..0x4800D1 (0x52 bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[6]: the point (0x270000, 0x80000, 0x8000000), +0x14 = 0, +1 up, sounds 0x204, 0x205. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x4800E0
+name = "EffectKind5F_Slide"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x4800E0..0x48013D (0x5E bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[7]: +0x38 up 0x10000, +0x3C up +0x14, +0x14 down 0x200000; 0x480300(+0x34, 0x20, 8, 0); at +0x34 0xF0000 a tail jmp to Effect_Release. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x480140
+name = "EffectKind5F_PlaceLow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x480140..0x480185 (0x46 bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[8]: the point (0x190000, 0xF0000, 0x6000000), +0x14 = 0, +1 up, sound 0x20A. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x480190
+name = "EffectKind5F_SlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3E, capstone to the last instruction), 0x480190..0x4801ED (0x5E bytes), cdecl: hidden in 0x47FBE0 by the catalog extent: EffectKind5F_States[9]: as _Slide but 0x480300(.., 4); at +0x38 0x190000 or more a tail jmp to Effect_Release. No PSX twin paired. Fuzz only: no recorded route enters it. docs/rest_3e.md."
+
+[[data]]
+pc = 0x654660
+name = "EffectGlowSparks_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3E): called through by EffectGlowSparks_Run 0x479260 by a spark +1, unbounded, each handed the spark: EffectGlowSparks_Glow, EffectSpark_Wait (E2F), EffectGlowSparks_Rise; the next table (0x65466C, kind 0x4A) follows, a dispatcher of its own names it. docs/rest_3e.md."
