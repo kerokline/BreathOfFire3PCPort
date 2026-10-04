@@ -8,7 +8,7 @@ R3G (`analysis/round14_cut.tsv`, the band `0x4925C0..0x5171FB`), none added,
 none dropped (no start is a case, a shared tail or data). Each read to its
 last instruction with capstone and fuzzed through the scenario harness in
 effect mode ([`scenario_harness.md`](scenario_harness.md) section 8) without
-edits to it: 128,000 rounds, 0 mismatches; CONTROLS_SUMMARY. **Fuzz only**:
+edits to it: 128,000 rounds, 0 mismatches; 138 of 139 controls refused, the other an equivalent mutant whose near variant is refused. **Fuzz only**:
 no recorded route enters any of the 32 (section 9). Thirteen `hypothesis`
 rows of the cut are all functions. No full-frame fill is built by any of the
 32 (the gradient kind 0xAC's states call is R3F's `0x492400`). No divergence;
@@ -284,7 +284,23 @@ case is drawn from bits 8 up): `+9`, `+0x2E`, the counter byte, `Music_Track`,
 build's first column / row words, `0x904AB2`, a vertex word, a screen
 coordinate.
 
-RESULTS
+**Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_3g`,
+exit 0): 124,000 rounds over the 31, 5,042,930 calls to the stand-ins, **0
+mismatches**; the build 4,000 rounds, 1,356,297 calls, **0 mismatches**;
+37,548 bytes of state in 56 regions each. Every entry of the four step tables
+reached (each handler recorder about 1,000..2,700 calls), `Battle_PlaceBossActor`
+15,875 calls from the placement, `Area109_SwitchPattern` about 300 from the
+hook, `Effect_Release` 585 from the fade-out, `GameMode8_WaitFrame` 37,642
+(the leave's framed waits); the build kept about 3,000 cells over its 4,000
+rounds (`AreaMapBD_CellTexture`, `Gte_LoadVertices3`, `Gpu_LinkPrim` each).
+The first run found no mismatch class.
+
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+734 self-test lines, no `MISMATCHES` line but 0, `inject: 9375 ours, 0 left
+original`; **with `BOF3X_WIDE=1`** exit 0, 734 lines, no mismatch, the same
+`inject` line (`rest_3g` there 5,039,418 calls, the build 1,338,909 narrow /
+1,321,428 wide - the build's count moves with the stream). Neither run died
+silently. `tools/ledger_check.py`: 73 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -326,7 +342,159 @@ RESULTS
 
 ## 6. Controls
 
-CONTROLS
+Planted one at a time by a scratch script (`controls.py` in the group's scratch: each plant anchored on a
+unique string of `rest_3g.cpp`, the DLL rebuilt, the shadow run under `BOF3X_R3G_ONLY=<filter>`, the file
+restored and rebuilt at the end; the committed file has no switch). The column is the first differing round
+(0-based) in this worktree; every refused run exited 3 on a `MISMATCH` line. **138 of 139 refused.**
+Not refused: **133**, an equivalent mutant - the kept cell's screen x copied with `memcpy` instead of
+through the FPU: a cell is kept only when its x compared ordered against two bounds, so x is never a NaN
+and the two copies agree on every input; the near variant **139** (the y copy, which a kept cell may carry
+as a signalling NaN through the narrow test) is refused. A first pass found **37** (`0x904AB3` written 0
+instead of copied from `0x904AB2`) not refused: the group's disturbance then drew its case from the low
+bits of a hash the harness hands over with bits 4..7 fixed and never a multiple of 3, so four of its twelve
+cases never ran; the case is drawn from bits 8 up since, and 37 is refused.
+
+| # | Run (`_ONLY`) | Plant | For | Refused at |
+|--:|---|---|---|---|
+| 1 | `AC_Start` | `S()[9] = 9; S()[1] = static_cast<unsigned char>(S()[1] + 1); } // o...` | `S()[9] = 8; S()[1] = static_cast<unsigned char>(S()[1] + 1); } // o...` | round 0 |
+| 2 | `AC_Start` | `S()[9] = 8; S()[1] = static_cast<unsigned char>(S()[1] + 2); } // o...` | `S()[9] = 8; S()[1] = static_cast<unsigned char>(S()[1] + 1); } // o...` | round 0 |
+| 3 | `AC_FadeIn` | `S8(s[9]) * -0x10)` | `S8(s[9]) * -0x20)` | round 1 |
+| 4 | `AC_FadeIn` | `if (S()[9] != 1) return; S()[9] = 8;` | `if (S()[9] != 0) return; S()[9] = 8;` | round 2 |
+| 5 | `AC_FadeIn` | `(AddressOf(s) & 0xFFFF0000u) \| (product + 1)` | `(AddressOf(s) & 0xFFFF0000u) \| product` | round 0 |
+| 6 | `AC_FadeOut` | `n == 7 ? 0xFFu` | `n == 8 ? 0xFFu` | round 1 |
+| 7 | `AC_FadeOut` | `static_cast<unsigned char>(n << 4)` | `static_cast<unsigned char>(n << 5)` | round 2 |
+| 8 | `AC_FadeOut` | `if (S()[9] == 1) SH_CALL(Effect_Release)();` | `if (S()[9] == 0) SH_CALL(Effect_Release)();` | round 2 |
+| 9 | `AD_Start` | `SetUL(S() + 0x34, UL(at::kMember2Z));` | `SetUL(S() + 0x34, UL(at::kMember2X));` | round 0 |
+| 10 | `AD_Start` | `static_cast<U>(static_cast<std::int16_t>(h)) << 15);` | `static_cast<U>(static_cast<std::int16_t>(h)) << 16);` | round 0 |
+| 11 | `AD_Start` | `s[0x5E] = 0x81;` | `s[0x5E] = 0x80;` | round 0 |
+| 12 | `AD_Start` | `s[9] = 0x21;` | `s[9] = 0x20;` | round 0 |
+| 13 | `AD_Start` | `SetUL(s + 0x14, UL(s + 0x38));` | `SetUL(s + 0x14, UL(s + 0x3C));` | round 0 |
+| 14 | `AD_Rise` | `UL(s + 0x3C) + 0x400000u` | `UL(s + 0x3C) + 0x800000u` | round 0 |
+| 15 | `AD_Rise` | `s[0x5E], s[0x5D]);` | `s[0x5D], s[0x5E]);` | round 0 |
+| 16 | `AD_Rise` | `if (At(at::kCounter)[0] == 0xC)` | `if (At(at::kCounter)[0] == 0xB)` | round 1 |
+| 17 | `AE_Start` | `SetUL(S() + 0x38, 0x128000u);` | `SetUL(S() + 0x38, 0x120000u);` | round 0 |
+| 18 | `AE_Start` | `static_cast<std::int16_t>(h) + 0x400) << 16` | `static_cast<std::int16_t>(h) + 0x800) << 16` | round 0 |
+| 19 | `AE_Start` | `SetWord(s + 0x30, 0x181);` | `SetWord(s + 0x30, 0x180);` | round 0 |
+| 20 | `AE_Start` | `static_cast<U>(point[2]) - 0x800000u` | `static_cast<U>(point[2]) - 0x1000000u` | round 0 |
+| 21 | `AE_Start` | `SH_CALL(Math_Ratan2)(dx, dy);` | `SH_CALL(Math_Ratan2)(dy, dx);` | round 0 |
+| 22 | `AE_Start` | `static_cast<U>(angle) + 0x200u);` | `static_cast<U>(angle) + 0x400u);` | round 0 |
+| 23 | `AE_Start` | `SH_CALL(Sound_PlayEffect)(0x203); } // ====` | `SH_CALL(Sound_PlayEffect)(0x202); } // ====` | round 0 |
+| 24 | `AE_Start` | `const float dx = static_cast<float>(static_cast<long double>(b[0]) ...` | `const float dx = static_cast<float>(static_cast<long double>(b[0]) ...` | round 0 |
+| 25 | `BA_Line` | `* 3u) << 13, 11); const int cos2` | `* 3u) << 13, 12); const int cos2` | round 0 |
+| 26 | `BA_Line` | `SetUL(s + 0x38, UL(at::kExtra1Z) + d1);` | `SetUL(s + 0x38, UL(at::kExtra1Z) + d2);` | round 0 |
+| 27 | `BA_Line` | `(static_cast<U>(S16(s + 0x2E)) << 14)` | `(static_cast<U>(S16(s + 0x2E)) << 15)` | round 0 |
+| 28 | `BA_Line` | `if (Word(S() + 0x2E) != 0x149) return;` | `if (Word(S() + 0x2E) != 0x14A) return;` | round 1 |
+| 29 | `BA_Line` | `reinterpret_cast<const long*>(s + 0xC), 0x41);` | `reinterpret_cast<const long*>(s + 0xC), 0x40);` | round 0 |
+| 30 | `BA_Line` | `SH_CALL(Sound_PlayEffect)(0x215);` | `SH_CALL(Sound_PlayEffect)(0x216);` | round 1 |
+| 31 | `BA_Line` | `const int cos2 = SH_CALL(Math_Sin)(Long(S() + 0x6C));` | `const int cos2 = SH_CALL(Math_Cos)(Long(S() + 0x6C));` | round 0 |
+| 32 | `Winding` | `(static_cast<long double>(c[1]) - static_cast<long double>(a[1])) *` | `(static_cast<long double>(c[1]) - static_cast<long double>(b[1])) *` | round 0 |
+| 33 | `Winding` | `Ftol(second - first)` | `Ftol(first - second)` | round 0 |
+| 34 | `Winding` | `Ftol(first - second + 0.5L)` | `Ftol(first - second)` | round 3 |
+| 35 | `PlaceBossActors` | `if (kind == 0xFE) continue;` | `if (kind == 0xFF) continue;` | round 0 |
+| 36 | `PlaceBossActors` | `SH_CALL(Battle_PlaceBossActor)(slot, count + 1u, kind);` | `SH_CALL(Battle_PlaceBossActor)(slot, count, kind);` | round 0 |
+| 37 | `PlaceBossActors` | `At(at::kPlacedTotal)[0] = 0;` | `At(at::kPlacedTotal)[0] = At(at::kPlaced)[0];` | round 50 |
+| 38 | `PlaceBossActors` | `for (unsigned slot = 0; slot < 7; ++slot)` | `for (unsigned slot = 0; slot < 8; ++slot)` | round 3 |
+| 39 | `PlaceBossActor` | `for (unsigned i = 0; i < 0x7C; i += 4)` | `for (unsigned i = 0; i < 0x80; i += 4)` | round 1 |
+| 40 | `PlaceBossActor` | `s[5] = static_cast<unsigned char>(count + 2);` | `s[5] = static_cast<unsigned char>(count + 3);` | round 1 |
+| 41 | `PlaceBossActor` | `At(at::kFormation)[0] ^ 1);` | `At(at::kFormation)[0] ^ 2);` | round 1 |
+| 42 | `PlaceBossActor` | `SH_CALL(Battle_SetEnemyOffset)(count, kind & 0x7F);` | `SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);` | round 1 |
+| 43 | `PlaceBossActor` | `actor[0] = static_cast<unsigned char>(actor[0] \| 0x20);` | `actor[0] = static_cast<unsigned char>(actor[0] \| 0x40);` | round 1 |
+| 44 | `PlaceBossActor` | `+ 0x8E)[0] = 0;` | `+ 0x8F)[0] = 0;` | round 1 |
+| 45 | `PlaceBossActor` | `SetUL(s + 0x24, 0);` | `SetUL(s + 0x20, 0);` | round 1 |
+| 46 | `ClearStates` | `for (unsigned k = 0; k < 4; ++k) e[k] = 0;` | `for (unsigned k = 0; k < 5; ++k) e[k] = 0;` | round 0 |
+| 47 | `ClearStates` | `for (unsigned i = 0; i < 7; ++i) { unsigned char* const e` | `for (unsigned i = 0; i < at::kEnemyCount; ++i) { unsigned char* con...` | round 0 |
+| 48 | `GameMode8_Run` | `AddressOf(GameMode9_Steps), GameMode8_Steps_count);` | `AddressOf(GameMode8_Steps), GameMode8_Steps_count);` | round 0 |
+| 49 | `GameMode8_Enter` | `static_cast<U>(Gfx_BufferIndex) * 0xF0u + 0x40u);` | `static_cast<U>(Gfx_BufferIndex) * 0xF0u + 0x50u);` | round 0 |
+| 50 | `GameMode8_Enter` | `rect, 0x340, 0x101);` | `rect, 0x340, 0x100);` | round 0 |
+| 51 | `GameMode8_Enter` | `Word(At(at::kFlags2)) & 0xFF7Fu);` | `Word(At(at::kFlags2)) & 0xFFBFu);` | round 0 |
+| 52 | `GameMode8_Enter` | `SH_CALL(Transition_Start)(2); (void)0;` | `SH_CALL(Transition_Start)(1);` | round 0 |
+| 53 | `GameMode8_Leave` | `static_cast<unsigned char>(At(at::kFlags2)[0] \| 0x20);` | `static_cast<unsigned char>(At(at::kFlags2)[0] \| 0x40);` | round 1 |
+| 54 | `GameMode8_Leave` | `SH_CALL(Snd_LoadBankFile)((b & 0x7Fu) + 0x2C3u); } WaitLoad` | `SH_CALL(Snd_LoadBankFile)((b & 0x7Fu) + 0x2C2u); } WaitLoad` | round 0 |
+| 55 | `GameMode8_Leave` | `SH_CALL(Music_FadeOut)(0x11);` | `SH_CALL(Music_FadeOut)(0x10);` | round 0 |
+| 56 | `GameMode8_Leave` | `SH_CALL(Field_ChangeArea)(area, I(z), I(x), 4);` | `SH_CALL(Field_ChangeArea)(area, I(x), I(z), 4);` | round 0 |
+| 57 | `GameMode8_Leave` | `Game_Mode = 2;` | `Game_Mode = 1;` | round 0 |
+| 58 | `GameMode8_Leave` | `WaitLoad(nullptr);` | `WaitLoad(&Mode8Frame);` | round 6 |
+| 59 | `Leave` | `return track != 0xFE && At(at::kMusicPlaying)[0] != track;` | `return track != 0xFF && At(at::kMusicPlaying)[0] != track;` | round 4 |
+| 60 | `GameMode9_Run` | `AddressOf(GameMode10_Steps), GameMode9_Steps_count);` | `AddressOf(GameMode9_Steps), GameMode9_Steps_count);` | round 0 |
+| 61 | `GameMode9_Enter` | `void MenuModeEnter(int file) { SH_CALL(Transition_Start)(3);` | `void MenuModeEnter(int file) { SH_CALL(Transition_Start)(2);` | round 0 |
+| 62 | `GameMode9_Enter` | `Gfx_ClutStripDirty = 2;` | `Gfx_ClutStripDirty = 1;` | round 0 |
+| 63 | `GameMode9_Enter` | `SH_CALL(Gfx_ClutStripCopyRow)(3);` | `SH_CALL(Gfx_ClutStripCopyRow)(2);` | round 0 |
+| 64 | `GameMode9_Enter` | `WaitWord(&LoadingFrame); SH_CALL(Task_Sleep)(1); SH_CALL(LoadDatFile)` | `WaitWord(&LoadingFrame); SH_CALL(Task_Sleep)(1); SH_CALL(Task_Sleep...` | round 0 |
+| 65 | `GameMode9_Enter` | `MenuModeEnter(0xCC); }` | `MenuModeEnter(0xCB); }` | round 0 |
+| 66 | `GameMode9_Leave` | `SH_CALL(Transition_Start)(4);` | `SH_CALL(Transition_Start)(3);` | round 0 |
+| 67 | `GameMode9_Leave` | `Game_Mode = 2; Game_Step = 0; Field_Request = 1;` | `Game_Mode = 2; Game_Step = 0; Field_Request = 0;` | round 0 |
+| 68 | `GameMode9_Leave` | `` | `LoadBank();` | round 0 |
+| 69 | `GameMode10_Run` | `AddressOf(GameMode11_Steps), GameMode10_Steps_count);` | `AddressOf(GameMode10_Steps), GameMode10_Steps_count);` | round 0 |
+| 70 | `GameMode10_Enter` | `MenuModeEnter(0x31B); }` | `MenuModeEnter(0x31A); }` | round 0 |
+| 71 | `GameMode11_Run` | `AddressOf(GameMode10_Steps), GameMode11_Steps_count);` | `AddressOf(GameMode11_Steps), GameMode11_Steps_count);` | round 0 |
+| 72 | `GameMode11_Frame` | `if (Field_Request == 0) Game_Mode = 3;` | `if (Field_Request == 0) Game_Mode = 2;` | round 2 |
+| 73 | `GameMode11_Look` | `SH_CALL(Look_Return)();` | `SH_CALL(Look_PadControl)();` | round 0 |
+| 74 | `GameMode11_LookEnd` | `Word(At(at::kPitch)) == 0x201` | `Word(At(at::kPitch)) == 0x200` | round 1 |
+| 75 | `GameMode11_LookEnd` | `== 0xFD57 &&` | `== 0xFD56 &&` | round 1 |
+| 76 | `Quake` | `(static_cast<U>(S16(At(at::kQuakeX))) << 2)` | `(static_cast<U>(S16(At(at::kQuakeX))) << 1)` | round 3 |
+| 77 | `Quake` | `I(b) >= 0x1D` | `I(b) >= 0x1C` | round 103 |
+| 78 | `Quake` | `return (0u - (t(1) + t(0xF))) << 4;` | `return (0u - (t(1) + t(0xF))) << 3;` | round 4 |
+| 79 | `Quake` | `return (0u - (t(0x10) + t(2))) << 3;` | `return (0u - (t(0x10) + t(1))) << 3;` | round 8 |
+| 80 | `Quake` | `return (0u - t(0x10)) << 3;` | `return (0u - t(0x10)) << 4;` | round 5 |
+| 81 | `Quake` | `const U i = (Sar(a, 1) * 14u) + Sar(b, 1);` | `const U i = (Sar(a, 1) * 15u) + Sar(b, 1);` | round 3 |
+| 82 | `Quake` | `if (At(at::kQuakeFacing)[0] & 2) {` | `if (At(at::kQuakeFacing)[0] & 1) {` | round 3 |
+| 83 | `Quake` | `return a & 0xFFFF0001u;` | `return a & 0xFFFF0000u;` | round 0 |
+| 84 | `SwitchPattern` | `if (set != 0) bits \|= 2u << i;` | `if (set != 0) bits \|= 1u << i;` | round 0 |
+| 85 | `SwitchPattern` | `return static_cast<int>(bits + 2);` | `return static_cast<int>(bits + 1);` | round 0 |
+| 86 | `SwitchHook` | `(static_cast<U>(x) & 0xFF) != 0x1D` | `(static_cast<U>(x) & 0xFF) != 0x1C` | round 2 |
+| 87 | `SwitchHook` | `At(at::kLeaderFacing)[0] != 2) return 0;` | `At(at::kLeaderFacing)[0] != 3) return 0;` | round 2 |
+| 88 | `SwitchHook` | `int bits = pattern % 7;` | `int bits = pattern % 6;` | round 2 |
+| 89 | `SwitchHook` | `SH_CALL(Effect_HoldFlag1C)(0xE);` | `SH_CALL(Effect_HoldFlag1C)(0xF);` | round 2 |
+| 90 | `SwitchHook` | `SH_CALL(Sound_PlayEffect)(0x207);` | `SH_CALL(Sound_PlayEffect)(0x206);` | round 2 |
+| 91 | `SwitchHook` | `return 2; }` | `return 1; }` | round 2 |
+| 92 | `DrawPanels` | `(static_cast<U>(b[0]) << 7) - 0x37C1u` | `(static_cast<U>(b[0]) << 7) - 0x37C0u` | round 0 |
+| 93 | `DrawPanels` | `0xFFFFFC08u - static_cast<U>(b[1]) * lift` | `0xFFFFFC08u - static_cast<U>(b[2]) * lift` | round 0 |
+| 94 | `DrawPanels` | `(texture << 15) \| 0xBB009120u` | `(texture << 16) \| 0xBB009120u` | round 0 |
+| 95 | `DrawPanels` | `from += 6)` | `from += 12)` | round 0 |
+| 96 | `DrawPanels` | `SH_CALL(Gfx_CommitPrim)(5, 0x44);` | `SH_CALL(Gfx_CommitPrim)(5, 0x48);` | round 0 |
+| 97 | `DrawRings` | `U colour = (0x28u - static_cast<U>(size)) * 4u;` | `U colour = (0x28u - static_cast<U>(size)) * 5u;` | round 0 |
+| 98 | `DrawRings` | `if (I(c) > 0xFE) c = 0xFE;` | `if (I(c) > 0xFF) c = 0xFF;` | round 4 |
+| 99 | `DrawRings` | `const U big = Sar(r << 12, 11);` | `const U big = Sar(r << 12, 10);` | round 0 |
+| 100 | `DrawRings` | `SetWord(v + 2, big - 0x2CC1u); end(p, 8, 0x10);` | `SetWord(v + 2, big - 0x2CC0u); end(p, 8, 0x10);` | round 0 |
+| 101 | `DrawRings` | `SetUL(AddressOf(MapView_ScreenXY) + 4, 0xC6340000u);` | `SetUL(AddressOf(MapView_ScreenXY) + 4, 0xC6330000u);` | round 0 |
+| 102 | `DrawRings` | `radius_arg -= 0x8;` | `radius_arg -= 0x10;` | round 0 |
+| 103 | `DrawRings` | `if (k == 1) angle += 0x20;` | `if (k == 1) angle += 0x40;` | round 0 |
+| 104 | `DrawRings` | `const U r = I(radius_arg) < 0 ? 1u : radius_arg;` | `const U r = I(radius_arg) < 0 ? 0u : radius_arg;` | round 2 |
+| 105 | `DrawRings` | `p[6] = static_cast<unsigned char>(c8);` | `p[6] = half;` | round 0 |
+| 106 | `DrawRings` | `static_cast<long double>(Fl(AddressOf(MapView_ScreenXY))) + 0.5L));` | `static_cast<long double>(Fl(AddressOf(MapView_ScreenXY)))));` | round 0 |
+| 107 | `DrawRings` | `SetWord(v + 4, 0xFC09);` | `SetWord(v + 4, 0xFC08);` | round 0 |
+| 108 | `FrameAreaBD` | `Sar(0x800000u - static_cast<U>(Field_Kind2X), 7)` | `Sar(0x800000u - static_cast<U>(Field_Kind2X), 8)` | round 0 |
+| 109 | `FrameAreaBD` | `(second & 0xFFFFu) != Word(drawn + 6)` | `(second & 0xFFFFu) != Word(drawn + 4)` | round 0 |
+| 110 | `FrameAreaBD` | `MapView_Redraw = 2;` | `MapView_Redraw = 3;` | round 2 |
+| 111 | `FrameAreaBD` | `static_cast<U>(moved[2]) + 0x1193u` | `static_cast<U>(moved[2]) + 0x1194u` | round 0 |
+| 112 | `FrameAreaBD` | `static_cast<U>(MapView_Elevation) >> 2);` | `static_cast<U>(MapView_Elevation) >> 1);` | round 0 |
+| 113 | `FrameAreaBD` | `& 0x3FFFu) - 0x4000u); vector[1]` | `& 0x7FFFu) - 0x4000u); vector[1]` | round 1 |
+| 114 | `FrameAreaBD` | `MapView_Redraw = static_cast<unsigned char>(MapView_Redraw - 2);` | `MapView_Redraw = static_cast<unsigned char>(MapView_Redraw - 1);` | round 1 |
+| 115 | `CellTexture` | `((Sar(t, 24) & 0xFu) + 0x1E4u) << 6);` | `((Sar(t, 24) & 0xFu) + 0x1E3u) << 6);` | round 0 |
+| 116 | `CellTexture` | `quad[0x35] = static_cast<unsigned char>(v0 + 0xE);` | `quad[0x35] = static_cast<unsigned char>(v0 + 0xF);` | round 0 |
+| 117 | `CellTexture` | `SetWord(quad + 0x26, 0x96);` | `SetWord(quad + 0x26, 0x95);` | round 0 |
+| 118 | `CellTexture` | `SH_CALL(Gpu_SetSemiTrans)(quad, 1);` | `SH_CALL(Gpu_SetSemiTrans)(quad, 0);` | round 0 |
+| 119 | `CharCount` | `if (c & 0x40) ++text;` | `if (c & 0x80) ++text;` | round 0 |
+| 120 | `CharCount` | `if (c == 0) return 1;` | `if (c == 0) return 0;` | round 14 |
+| 121 | `BuildView` | `const U even = octant & 1u;` | `const U even = (~octant) & 1u;` | round 0 |
+| 122 | `BuildView` | `SetUL(list + 4, AddressOf(list) + 4);` | `SetUL(list + 4, AddressOf(list));` | round 0 |
+| 123 | `BuildView` | `static_cast<U>(S8(rec[0])) - fx + 0x101u;` | `static_cast<U>(S8(rec[0])) - fx + 0x100u;` | round 0 |
+| 124 | `BuildView` | `if (DrawItemPool_Top > Word(At(at::kTopBoundAt))) continue;` | `if (DrawItemPool_Top >= Word(At(at::kTopBoundAt))) continue;` | round 2 |
+| 125 | `BuildView` | `const U a = static_cast<U>(S8(rec[1])) * row;` | `const U a = static_cast<U>(S8(rec[2])) * row;` | round 1 |
+| 126 | `BuildView` | `const U z = static_cast<U>(I(b) >> 1)` | `const U z = static_cast<U>(I(b) / 2)` | round 5 |
+| 127 | `BuildView` | `const U map_row = (block & 0xF0u) \| (x & 0xFu);` | `const U map_row = (block & 0xF0u) \| (z & 0xFu);` | round 0 |
+| 128 | `BuildView` | `bool keep = sy >= Bound(at::kWideYAt)` | `bool keep = sy > Bound(at::kWideYAt)` | round 14 |
+| 129 | `BuildView` | `keep = y_ok && sx >= Bound(at::kNarrowLoAt)` | `keep = y_ok && sx > Bound(at::kNarrowLoAt)` | round 14 |
+| 130 | `BuildView` | `const bool y_ok = sy < Bound(at::kNarrowYAt);` | `const bool y_ok = !(sy >= Bound(at::kNarrowYAt));` | round 23 |
+| 131 | `BuildView` | `sx > Bound(at::kNarrowLoAt)` | `sx > Bound(at::kWideLoAt)` | round 4 |
+| 132 | `BuildView` | `FpuCopy(item + Gfx_BufferIndex * 0x48u + 0xC, MapView_ScreenXY);` | `FpuCopy(item + Gfx_BufferIndex * 0x48u + 0xC, MapView_ScreenXY + 1);` | round 0 |
+| 133 | `BuildView` | `std::memcpy(item + Gfx_BufferIndex * 0x48u + 8, MapView_ScreenXY, 4);` | `FpuCopy(item + Gfx_BufferIndex * 0x48u + 8, MapView_ScreenXY);` | **not refused** |
+| 134 | `BuildView` | `const U last = at::kLayerLast + (Gfx_BufferIndex - row * 6u + 2u) *...` | `const U last = at::kLayerLast + (Gfx_BufferIndex - row * 6u) * 8u;` | round 0 |
+| 135 | `BuildView` | `const U x1 = xy + 0x81u;` | `const U x1 = xy + 0x80u;` | round 0 |
+| 136 | `BuildView` | `static_cast<unsigned char>(UL(corner) >> 8)` | `static_cast<unsigned char>(UL(corner) >> 16)` | round 3 |
+| 137 | `BuildView` | `DrawItemPool_Top = static_cast<unsigned short>(top + 2);` | `DrawItemPool_Top = static_cast<unsigned short>(top + 1);` | round 2 |
+| 138 | `BuildView` | `static_cast<U>(I(product) / 2) + offset + tile + 1u;` | `static_cast<U>(I(product) / 2) + offset + tile;` | round 0 |
+| 139 | `BuildView` | `std::memcpy(item + Gfx_BufferIndex * 0x48u + 0xC, MapView_ScreenXY ...` | `FpuCopy(item + Gfx_BufferIndex * 0x48u + 0xC, MapView_ScreenXY + 1);` | round 23 |
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
