@@ -53,7 +53,7 @@ const ah::Callee kSet40 = {"ScriptFlags_Set40", bof3::addr::ScriptFlags_Set40, K
 const ah::Callee kClear40 = {"ScriptFlags_Clear40", bof3::addr::ScriptFlags_Clear40, KeyOf(&::ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0};
 // Effect_Spawn answers an Effect_Objects slot or 0xFF for none (area 11's
 // listing): the byte 0xFE..0x02 through 0xFF, garbage above.
-const ah::Callee kSpawn = {"Effect_Spawn", KeyOf(Effect_Spawn), KeyOf(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02};
+const ah::Callee kSpawn = {"Effect_Spawn", ::bof3::addr::Effect_Spawn, KeyOf(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02};
 
 // The fuzz's own literal addresses of the tables it plants (read off the exe,
 // docs/area_w3a.md): never the constants ours reads, so a wrong one in ours

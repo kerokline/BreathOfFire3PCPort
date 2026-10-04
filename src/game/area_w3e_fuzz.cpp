@@ -240,7 +240,7 @@ const ah::Callee kCallees[] = {
     {W3E_OURS(AreaMap_SetByte), 3, {kU16, kU16, kU8}, ah::Answer::kGarbage, 0, 0},
     {W3E_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0, {}, &ByteAtEffect},
     // an effect slot of the group's four records or none; Sprite_Current moved
-    {W3E_THEIRS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFF, 0x03, {}, &MovesCurrent},
+    {W3E_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFF, 0x03, {}, &MovesCurrent},
     {W3E_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03},
     {W3E_OURS(Effect_Release), 0, {}, ah::Answer::kGarbage, 0, 0},
     // any of the thirty field objects, or none
