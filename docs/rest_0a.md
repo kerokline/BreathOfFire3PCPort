@@ -196,8 +196,11 @@ BOF3X_SHADOW=rest_0a`, exit 0): 140,000 rounds over 7 functions, 303,357
 calls to the stand-ins, **0 mismatches**; coverage `Sprite_ObjectAt` 40,000,
 `AreaMap_ByteAt` 102,079, `Sprite_PointInReach` 57,497, `Field_EffectAhead`
 20,000, `Effect_FindFree` 20,000, `AreaMap_Elevation` 13,408,
-`MapView_SlopeAt` 40,000, `MapView_GroundAt` 10,373. `BOF3X_SHADOW='*'` narrow
-and with `BOF3X_WIDE=1`: section 8.
+`MapView_SlopeAt` 40,000, `MapView_GroundAt` 10,373. `BOF3X_SHADOW='*'` after
+the rebinding (2026-10-04, this worktree): exit 0, `inject: 8655 ours, 0 left
+original`, 1,018 self-test lines of 0 mismatches and none other (among them
+`rest_0a` and `field_hidden`, whose `0x51C390` constant was rebound); the same
+with `BOF3X_WIDE=1`: exit 0, 1,018, 8,655 ours. Each passed on its first run.
 
 ## 4. Divergence
 
