@@ -271,9 +271,9 @@ touched; a route through either would be the live check.
 
 - `BOF3X_SHADOW=rest_2a`: exit 0, 132,000 rounds, 0 mismatches (this
   worktree).
-- `BOF3X_SHADOW='*'`, narrow and with `BOF3X_WIDE=1`: see the round's
-  record (section 9 of the queue doc) for the coordinator's run; this
-  branch's runs are in the report.
+- `BOF3X_SHADOW='*'` in this worktree: exit 0 (1,114 s), and with
+  `BOF3X_WIDE=1` exit 0 (1,196 s); no mismatch in either log, `rest_2a`'s
+  line the same as alone. Neither died silently.
 - `tools/ledger_check.py`: 0 errors.
 - `analysis/calltrace/entries_logic.txt` (main checkout): the 15 starts that
   had no line appended with the extents read. `0x5372E0`, `0x5373F0`,
