@@ -10,7 +10,7 @@ and 4, band_rows' "code no list has"). None dropped: no start is a case or a
 shared tail. Each read to its last instruction with capstone and fuzzed
 through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) section 8), used unchanged:
-200,000 rounds, **0 mismatches**; STAR_RESULT. Controls: 111 of 112 refused, the
+200,000 rounds, **0 mismatches**; `BOF3X_SHADOW='*'` exit 0, narrow and with `BOF3X_WIDE=1`. Controls: 111 of 112 refused, the
 other a crash re-planted inside its window and refused (section 5). **One divergence site**: `EffectKindAA_DrawFill` is a full-frame
 fill and is drawn through DIV-0041's widened fill (section 2) - the
 coordinator's amendment of DIV-0041. No new `.data` table: every state table
@@ -288,7 +288,12 @@ stand-ins. Every callee reached (coverage line): `EffectKind9E_DrawOutline`
 1,548, `0x59E930` 1,716, `0x5A7A90` 277,430, `Rand` 1,314,419. The first run
 passed; the controls (section 5) are what show the fuzz sees each behaviour.
 
-STAR_SECTION
+**Every shadow** (this worktree, no `bof3x.ini`, after the rebinding):
+`BOF3X_SHADOW='*'` exit 0, 733 self-test lines, no `MISMATCH` line but `0
+MISMATCHES`, `inject: 9393 ours, 0 left original`; `rest_3f` there 200,000
+rounds, 6,561,232 calls, 0 mismatches. **With `BOF3X_WIDE=1`**: `'*'` exit 0,
+733 self-test lines, no mismatch, the same counts. Neither run died silently.
+`tools/ledger_check.py`: 73 entries, 0 errors.
 
 ## 5. Controls
 
