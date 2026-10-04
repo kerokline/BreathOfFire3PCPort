@@ -9,7 +9,7 @@ for R2H (`analysis/round14_cut.tsv`), the start in their span no list had
 catalogue filed under the renderer by its address range (section 5). Each
 read to its last instruction with capstone and fuzzed through the scenario
 harness's **field** mode (used unchanged): 144,000 rounds, **0 mismatches**;
-CONTROLS_LINE. Eleven `.data` tables named. No PSX twin is paired for any of
+84 controls planted, 83 refused by a count and one an equivalent mutant with its near variant refused (section 6). Eleven `.data` tables named. No PSX twin is paired for any of
 them (`analysis/pairs_propagated.json`). Fuzz only; the camp route's reach is
 section 9.
 
@@ -267,11 +267,16 @@ colour, the handed record's `+0xB`, `+8`, `+9`, `+0xC`, x / y, window 1's
 second party list. Never `+0xA` (section 7).
 
 **Result** (this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_2h`, exit
-0): 144,000 rounds, 1,964,566 calls to the stand-ins, **0 mismatches**.
+0): 144,000 rounds, 1,959,489 calls to the stand-ins, **0 mismatches** (the first run, before the last seed changes, passed too).
 Every step-table handler reached (842..11,333 calls); the thinnest callees
 `Flags_Test` 795, `MasterWin_SkillKnown` 2,118, `_stricmp` 2,642.
 
-STAR_LINE
+**Under `'*'`** (this worktree, after the rebinding): exit 0, `inject: 9025
+ours, 0 left original`, 1,026 self-test lines of 0 mismatches and none other
+(among them `rest_2h` and DI's `menu_draw_helpers`, whose table expectations
+were rebound, and BE7's `battle_e7`, whose `kDrawBar` was); the same with
+`BOF3X_WIDE=1`: exit 0, 1,026, 9,025 ours, the log's bound -173. Each passed
+on its first run. `tools/ledger_check.py`: 72 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -302,9 +307,108 @@ STAR_LINE
 
 `r2h/controls.py` (scratch): each plant replaces a string that occurs once in
 `rest_2h.cpp`, rebuilds, runs the self-test on the clones whose name contains
-the filter, restores and rebuilds. CONTROLS_DETAIL
+the filter, restores and rebuilds. **84 planted, 83 refused** (every one exit 3, by a count of mismatching
+rounds), every function at least one. **Not refused: C40** (the masters'
+list's empty entry ending the rows instead of being skipped) - an
+equivalent mutant: the list is built compact (entries, then zeros), and its
+rows never pass its 17 bytes (ours aborts there), so after the first empty
+entry every row is empty either way; its near variant C84 (entry 1 taken
+for empty) is refused. **The first run** (before the last two seed changes)
+left three more unrefused: C11 (the gene list's empty entry skipped - the
+same compactness, until the seed put the gene list's top past 9 with all
+eighteen set and bytes past the list, so the rows read past it), C69 (the
+lit item row's second draw not re-reading its id - refused once the
+disturbance moved the lit row's id and count for the item list), and
+C83 / C84 added then. **The thinnest**: C69 (2 rounds), C83 (3), C45 (3:
+one byte of the shared list's 128th), C19 and C80 (10: the record pointer
+moved during the step), C74 (43). The table is the last run of each.
 
-CONTROLS_TABLE
+| # | Function | Plant | Refused (rounds of 4,000) |
+|---|---|---|--:|
+| C01 | `MenuList_ReserveWinDraw` | dim on +0xB bit 0 | 2,349 |
+| C02 | `MenuList_ReserveWinDraw` | the box's flags 0x82 dim | 2,380 |
+| C03 | `MenuList_ReserveWinDraw` | the status colour 2 undimmed | 1,855 |
+| C04 | `MenuList_ReserveWinDraw` | HP colour 2 below 1 | 615 |
+| C05 | `MenuList_ReserveWinDraw` | three rows at most | 1,294 |
+| C06 | `MenuList_ReserveWinDraw` | AP's half for its quarter | 422 |
+| C07 | `MenuList_ReserveWinDraw` | the frame 0x13 wide | 4,000 |
+| C08 | `MenuList_ReserveWinDraw` | status A and B swapped on the frame bit | 1,387 |
+| C09 | `MenuList_ReserveWinDraw` | the name 6 characters | 3,345 |
+| C10 | `MenuList_GeneWinDraw` | 17 genes | 869 |
+| C11 | `MenuList_GeneWinDraw` | an empty entry skipped, not the end | 1,404 |
+| C12 | `MenuList_GeneWinDraw` | the lit row's message 0x4172 + | 1,405 |
+| C13 | `MenuList_GeneWinDraw` | +0xC by +0xA | 2,729 |
+| C14 | `MenuList_GeneWinDraw` | the scroll bar's total 0x11 | 4,000 |
+| C15 | `MenuList_GeneWinDraw` | rows to top + moving + 8 | 938 |
+| C16 | `MenuList_GeneWinDraw` | the icon three below | 3,520 |
+| C17 | `MenuList_GeneWinRun` | the caption's steps | 1,375 |
+| C18 | `ShopWin_SharedListSlideTo28` | the bound 0x29 | 217 |
+| C19 | `ShopWin_SharedListRun` | the record read before the step | 10 |
+| C20 | `ShopWin_SharedMemberRun` | draws the list | 4,000 |
+| C21 | `ShopWin_MemberStatusRun` | highlight 1 | 4,000 |
+| C22 | `ShopWin_DrawRowMenu` | the box 16 n + 0x18 high | 4,000 |
+| C23 | `ShopWin_DrawRowMenu` | the +0xA row's second draw in colour 1 | 1,225 |
+| C24 | `ShopWin_DrawRowMenu` | the row's text index one on | 4,000 |
+| C25 | `ShopWin_DrawRowMenu` | the last pieces 8 higher | 4,000 |
+| C26 | `ShopWin_MasterListRun` | draws the caption | 4,000 |
+| C27 | `MasterWin_SlideOut` | the constant -120, the immediate ignored | 2,165 |
+| C28 | `MasterWin_SlideTo64` | 0x10 a frame | 2,718 |
+| C29 | `MasterWin_CaptionSlideTo8C` | the test 0x8D | 311 |
+| C30 | `MasterWin_PupilsSlideDown` | x for y | 4,000 |
+| C31 | `MasterWin_PupilsSlideUp` | the test 0x7F | 225 |
+| C32 | `ShopWin_ItemCountRun` | x and y swapped | 3,892 |
+| C33 | `ShopWin_ItemCountSlideToD2` | stores 0xD1 | 1,683 |
+| C34 | `MasterWin_DrawList` | 16 masters | 2,015 |
+| C35 | `MasterWin_DrawList` | +0xD 0xFE when none | 1,482 |
+| C36 | `MasterWin_DrawList` | the picked colour 4 | 1,579 |
+| C37 | `MasterWin_DrawList` | the name 0x111 + | 3,819 |
+| C38 | `MasterWin_DrawList` | Available of the entry, not entry - 1 | 3,819 |
+| C39 | `MasterWin_DrawList` | the title at + 0x3B | 4,000 |
+| C40 | `MasterWin_DrawList` | an empty entry ends the rows | **not refused** |
+| C41 | `MasterWin_Available` | flag 0x6D | 740 |
+| C42 | `MasterWin_Available` | 0xD on bit 5 | 365 |
+| C43 | `MasterWin_Available` | an empty list 0 | 284 |
+| C44 | `MasterWin_SkillKnown` | six records | 171 |
+| C45 | `MasterWin_SkillKnown` | 127 of the shared list | 3 |
+| C46 | `MasterWin_DrawCaption` | message 0x101 + | 4,000 |
+| C47 | `MasterWin_DrawPupils` | +0xB bit 1 | 2,558 |
+| C48 | `MasterWin_DrawPupils` | a new row at 0x4A | 275 |
+| C49 | `MasterWin_DrawPortrait` | index 4 to 0xA | 343 |
+| C50 | `MasterWin_DrawPortrait` | from chapter 9 | 140 |
+| C51 | `MasterWin_DrawPortrait` | shade 1 is 0x31 | 963 |
+| C52 | `MasterWin_DrawPortrait` | the CLUT row 0x1DF | 4,000 |
+| C53 | `BattleMenuWin_ItemListSlideLeft` | stores 0x53 (the 'fix') | 1,680 |
+| C54 | `BattleMenuWin_EquipRun` | the member from the first party list | 3,097 |
+| C55 | `BattleMenuWin_EquipRun` | flags from +0xC | 3,805 |
+| C56 | `BattleMenuWin_EquipSlideTo62` | to 0x60 | 2,544 |
+| C57 | `BattleMenuWin_EquipItemsRun` | the equip window's steps | 3,038 |
+| C58 | `BattleMenuWin_EquipItemsSlideTo98` | the test 0x97 | 311 |
+| C59 | `BattleMenuWin_VerbPairRun` | +0xA selected | 3,650 |
+| C60 | `BattleEquipWin_DrawBar` | u and v swapped | 3,855 |
+| C61 | `BattleEquipWin_DrawBar` | semi-transparency 1 | 4,000 |
+| C62 | `BattleEquipWin_DrawBar` | x signed | 1,979 |
+| C63 | `BattleEquipWin_DrawItems` | slot 4 the armour | 515 |
+| C64 | `BattleEquipWin_DrawItems` | Item_CanUse mode 3 | 4,000 |
+| C65 | `BattleEquipWin_DrawItems` | the armour's kind +9 + 2 | 1,756 |
+| C66 | `BattleEquipWin_DrawItems` | the counts not cleared | 4,000 |
+| C67 | `BattleEquipWin_DrawItems` | the lit row by r alone | 710 |
+| C68 | `BattleEquipWin_DrawItems` | rows to moving + 8 | 1,767 |
+| C69 | `BattleEquipWin_DrawItems` | the second draw's id not re-read | 2 |
+| C70 | `BattleEquipWin_DrawItems` | the count one more | 4,000 |
+| C71 | `BattleEquipWin_DrawItems` | the title by +9 | 3,490 |
+| C72 | `Menu_DrawVerbPair` | the second verb dim on 0 | 1,616 |
+| C73 | `Menu_DrawVerbPair` | the second button 0x2F on | 4,000 |
+| C74 | `Menu_DrawVerbPair` | the colour not re-read | 43 |
+| C75 | `DInput_EnumJoystick` | a failed device stops | 1,310 |
+| C76 | `DInput_EnumJoystick` | found = 2 | 449 |
+| C77 | `DInput_EnumJoystick` | the name at +0x128 | 2,690 |
+| C78 | `Cfg_SetKeyTable` | 31 dwords | 4,000 |
+| C79 | `ShopWin_PupilsRun` | the master list's steps | 2,677 |
+| C80 | `ShopWin_MasterCaptionRun` | the record read before the step | 10 |
+| C81 | `ShopWin_RowMenuRun` | the caption drawn | 4,000 |
+| C82 | `MenuList_ReserveWinDraw` | the count read once | 339 |
+| C83 | `BattleEquipWin_DrawItems` | the top read once for the lit row | 3 |
+| C84 | `MasterWin_DrawList` | entry 1 skipped as empty | 86 |
 
 ## 7. Latent defects and ranges (Capcom's, described, not fixed)
 
