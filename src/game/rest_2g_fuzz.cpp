@@ -379,9 +379,11 @@ void Seed(unsigned k) {
         SetLong(c + 0xC, static_cast<std::int32_t>(PickOf({0, 1, 100, sh::Next() % 1000000, sh::Next()})));
     }
     // a slide's word around its bound: one step before it, within two of the frame that reaches it
+    // (the grid's slides compare before they move: around the bound itself)
     if (s.off) {
         const int bound = BoundOf(s, r);
-        const int at = bound - s.step + static_cast<int>(PickOf({0, 1, 2, 0xFFFFFFFF, 0xFFFFFFFE, 0, sh::Next() % 0x41 - 0x20}));
+        const int before = s.bound == kGrid ? bound : bound - s.step;
+        const int at = before + static_cast<int>(PickOf({0, 1, 2, 0xFFFFFFFF, 0xFFFFFFFE, 0, sh::Next() % 0x41 - 0x20}));
         SetWord(r + s.off, sh::Next() % 6 ? static_cast<unsigned>(at) : sh::Next());
     }
 }
