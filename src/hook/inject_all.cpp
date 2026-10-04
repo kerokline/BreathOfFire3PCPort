@@ -284,6 +284,7 @@
 #include "game/rest_1g.h"
 #include "game/rest_1f.h"
 #include "game/rest_1d.h"
+#include "game/rest_2a.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1209,6 +1210,13 @@ void InjectAll() {
                                 // only; after Rest0A_Inject (it calls R0A's helpers by name) and every harness's
                                 // inject; no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    Rest2A_Inject();            // round 14 wave-two group R2A (0x5372E0..0x537F1B: the field frame's listed-bank
+                                // screen pass, Char_GainHp / Char_LoseAp, Area_ObjectHandler and the four object
+                                // handlers of its fallback table Area_ObjectFallbacks with their states and spawns):
+                                // its clones' calls and stack-table immediates re-aimed at the scenario harness's
+                                // recorders, Area_ObjectFallbacks and Area74_Handlers swapped for the fuzz only; after
+                                // every harness's inject and wave one's; no module patches bytes inside its 22
+                                // (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
