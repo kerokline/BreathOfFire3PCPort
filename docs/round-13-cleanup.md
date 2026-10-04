@@ -160,5 +160,7 @@ is a `Fatal`).
 
 At `phase-3/round13-rebind`'s tip: the i686 build (llvm-mingw) clean, no
 warning or error from `src/`; `gen_symbols: 8649 ours`; `BOF3X_SHADOW='*'`
-headless narrow and with `BOF3X_WIDE=1` - see the results line below;
-`ledger_check.py` 0 errors.
+headless narrow and with `BOF3X_WIDE=1` (2026-10-03, at `06d7377`, the
+code commit): both exit 0, `inject: 8648 ours, 0 left original by
+BOF3X_ORIGINAL`, 1,021 `MISMATCHES` lines each and every one `0 MISMATCHES`;
+`ledger_check.py` 72 entries, 0 errors.
