@@ -85,8 +85,8 @@ change lets `'*'` pass. **One latent defect wants a ledger entry** (section
 | `Shisu_ModelBSquare` | `0x57F270` | 0x2E | `Shisu_ModelBStates[2]` | turn on by 0x40 to a whole turn; done flag |
 | `Shisu_ModelBDrop` | `0x57F2A0` | 0x6C | `Shisu_ModelBStates[3]` | y + 0x200000 to the ground; done flag |
 | `Shisu_ModelBStill` | `0x57F310` | 0x5 | `Shisu_ModelBStates[4]` | draw |
-| `Shisu_ModelADispatch` | `0x57F320` | 0xE | the three pick states (jmp) | jmp through `Shisu_ModelAStates` by `0x9398E1` |
-| `Shisu_ModelATurn` | `0x57F330` | 0xC | `Shisu_ModelAStates[1]` | angle - 0x20, R2C's draw `0x57F340` |
+| `Shisu_ModelADispatch` | `0x57F320` | 0xE | the three pick states (jmp) | jmp through `MasterFigure_States` by `0x9398E1` |
+| `Shisu_ModelATurn` | `0x57F330` | 0xC | `MasterFigure_States[1]` | angle - 0x20, R2C's draw `0x57F340` |
 
 ## 1. The tables named
 
@@ -103,7 +103,7 @@ index stores a value inside the count.
 | `Shisu_PickStates` | `0x663DF4` | 3 | `Shisu_PickDispatch` | |
 | `Shisu_ShowSteps` | `0x663E00` | 5 | `Shisu_PickShow` (a `call`) | |
 | `Shisu_ModelBStates` | `0x663E14` | 5 | `Shisu_ModelBDispatch` | entry 0 `BareRet` |
-| `Shisu_ModelAStates` | `0x663E28` | 6 | `Shisu_ModelADispatch` | entry 0 `BareRet`, 1 ours, 2..5 R2C's `0x57F420`, `0x57F450`, `0x57F4E0`, `0x57F4F0` |
+| `MasterFigure_States` | `0x663E28` | 6 | `Shisu_ModelADispatch` | entry 0 `BareRet`, 1 ours, 2..5 R2C's `0x57F420`, `0x57F450`, `0x57F4E0`, `0x57F4F0` |
 
 The seven state tables lie back to back from `0x663DD0` to `0x663E3F`; the
 tools read them as one run of code pointers (`0x663DD0`, "39 code entries").
@@ -375,7 +375,7 @@ model B's y seeded on whole units).
 - **Unbounded dispatchers** (seven): each `jmp` / `call [table + byte * 4]`
   is unchecked; ours aborts with a message past the counts of section 1.
   Every writer stores inside them, so play reaches none; a stray byte would
-  jump through the next table (or, past `Shisu_ModelAStates`, R2C's).
+  jump through the next table (or, past `MasterFigure_States`, R2C's).
 - **`Effect_Spawn` / `_SpawnAt`** write record `slot` for any answer but
   `0xFF`; `Effect_FindFree` answers 0..19 or `0xFF`, so ours aborts past 19
   (never reached).
@@ -396,7 +396,7 @@ model B's y seeded on whole units).
 
 Raw calls out (`rest_2b_callees.h`, the round's rebinding turns them into
 names): `0x57F340` (R2C, wave two: model A's draw - `Shisu_ModelATurn`'s
-tail jmp; `Shisu_ModelAStates[2..5]` are R2C's too, read in place) and
+tail jmp; `MasterFigure_States[2..5]` are R2C's too, read in place) and
 `0x4941B0` (R3G, wave three: the winding test, from `Shisu_DrawModel`).
 
 Inbound from outside the group (for the rebinding pass):

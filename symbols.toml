@@ -104292,7 +104292,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F320..0x57F32D (0xE bytes): jmp [Shisu_ModelAStates + byte 0x9398E1 * 4], unchecked. Tail-jmp'd to by Shisu_PickSide, Shisu_PickCounts, Shisu_PickShow. docs/rest_2b.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F320..0x57F32D (0xE bytes): jmp [MasterFigure_States + byte 0x9398E1 * 4], unchecked. Tail-jmp'd to by Shisu_PickSide, Shisu_PickCounts, Shisu_PickShow. docs/rest_2b.md."
 
 [[func]]
 pc = 0x57F330
@@ -104301,7 +104301,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2b.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F330..0x57F33B (0xC bytes): Shisu_ModelAStates[1] - the dword 0x93994C (model A's angle) - 0x20, tail jmp 0x57F340 (R2C, model A's draw). docs/rest_2b.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2B), 0x57F330..0x57F33B (0xC bytes): MasterFigure_States[1] - the dword 0x93994C (model A's angle) - 0x20, tail jmp 0x57F340 (R2C, model A's draw). docs/rest_2b.md."
 
 [[data]]
 pc = 0x663D7C
@@ -104357,12 +104357,4 @@ name = "Shisu_ModelBStates"
 ctype = "unsigned long"
 count = 5
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R2B): BareRet 0x437CC0, Shisu_ModelBTurn, Shisu_ModelBSquare, Shisu_ModelBDrop, Shisu_ModelBStill; jumped through by Shisu_ModelBDispatch 0x57EDD0 by 0x939961, unchecked; the writers store 0..4; Shisu_ModelAStates starts at 0x663E28. docs/rest_2b.md."
-
-[[data]]
-pc = 0x663E28
-name = "Shisu_ModelAStates"
-ctype = "unsigned long"
-count = 6
-status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R2B): BareRet 0x437CC0, Shisu_ModelATurn, then R2C's 0x57F420, 0x57F450, 0x57F4E0, 0x57F4F0 (model A's states 2..5, R2C's to name); jumped through by Shisu_ModelADispatch 0x57F320 by 0x9398E1, unchecked; the writers store 0..5 (Shisu_ShowFade 5). The run of code pointers continues into R2C's tables (0x663E40, 0x57F500's). docs/rest_2b.md."
+evidence = "read 2026-10-04 (round fourteen group R2B): BareRet 0x437CC0, Shisu_ModelBTurn, Shisu_ModelBSquare, Shisu_ModelBDrop, Shisu_ModelBStill; jumped through by Shisu_ModelBDispatch 0x57EDD0 by 0x939961, unchecked; the writers store 0..4; MasterFigure_States starts at 0x663E28. docs/rest_2b.md."

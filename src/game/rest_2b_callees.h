@@ -10,7 +10,7 @@ namespace rest_2b::at {
 // R2C (wave two): model A's draw - record A's (0x9398E0) scale from
 // Shisu_ModelScales by 0x9399EB, its colour tinted by the fourth count, drawn
 // through Shisu_DrawModel and the colour put back. void(void); reached by
-// Shisu_ModelATurn's tail jmp and Shisu_ModelAStates[2..5]'s.
+// Shisu_ModelATurn's tail jmp and MasterFigure_States[2..5]'s.
 constexpr std::uint32_t kModelADraw = 0x57F340;
 
 // R3G (wave three): the winding of three screen points - (const float *a,

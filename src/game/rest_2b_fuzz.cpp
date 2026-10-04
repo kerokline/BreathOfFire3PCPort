@@ -313,7 +313,7 @@ const sh::DataTable kTables[] = {
     {Key(Shisu_PickStates), Shisu_PickStates_count},
     {Key(Shisu_ShowSteps), Shisu_ShowSteps_count},
     {Key(Shisu_ModelBStates), Shisu_ModelBStates_count},
-    {Key(Shisu_ModelAStates), Shisu_ModelAStates_count},
+    {Key(MasterFigure_States), MasterFigure_States_count},
 };
 
 // Beyond field mode's standard regions: the two models and the screen's cells,
@@ -361,7 +361,7 @@ void Seed(unsigned k) {
     default: break;
     }
     B(kBState) = static_cast<unsigned char>(sh::Next() % Shisu_ModelBStates_count);
-    B(kAState) = static_cast<unsigned char>(sh::Next() % Shisu_ModelAStates_count);
+    B(kAState) = static_cast<unsigned char>(sh::Next() % MasterFigure_States_count);
     B(kADone) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
     B(kBDone) = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
     // the counts, the rounds, the side and the row at their compares

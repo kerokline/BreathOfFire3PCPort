@@ -14,7 +14,7 @@
 // side, then up to four counts - and shows the two models turning, dropping
 // and lighting up; 3 closes; 4 takes the given items, scores them and hands
 // the chapter its step. Each model has its own state table (Shisu_ModelBStates
-// here; Shisu_ModelAStates' draws past its entry 1 are R2C's).
+// here; MasterFigure_States' draws past its entry 1 are R2C's).
 //
 // Every one is a faithful replacement. Where the original indexes a .data
 // table by a byte it never bounds (every dispatcher here) ours aborts with a
@@ -967,14 +967,14 @@ extern "C" void __cdecl Shisu_ModelBDrop(void) {
 // original 0x57F310: Shisu_ModelBStates[4] - model B's draw (a tail jmp).
 extern "C" void __cdecl Shisu_ModelBStill(void) { SH_CALL(Shisu_ModelBDraw)(); }
 
-// original 0x57F320: jmp through Shisu_ModelAStates by model A's state
+// original 0x57F320: jmp through MasterFigure_States by model A's state
 // 0x9398E1, unchecked (ours aborts past its 6).
 extern "C" void __cdecl Shisu_ModelADispatch(void) {
-    Run("Shisu_ModelADispatch (0x57F320)", Shisu_ModelAStates, Shisu_ModelAStates_count, B(kAState),
+    Run("Shisu_ModelADispatch (0x57F320)", MasterFigure_States, MasterFigure_States_count, B(kAState),
         "model A's state 0x9398E1");
 }
 
-// original 0x57F330: Shisu_ModelAStates[1] - model A's angle +0x6C down 0x20,
+// original 0x57F330: MasterFigure_States[1] - model A's angle +0x6C down 0x20,
 // then its draw (a tail jmp to R2C's 0x57F340).
 extern "C" void __cdecl Shisu_ModelATurn(void) {
     SetL(kAAngle, L(kAAngle) - 0x20u);
