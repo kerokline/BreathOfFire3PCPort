@@ -89,7 +89,7 @@ constexpr unsigned kSpiralPoint = 0x34;
 // section 5 reads the first two).
 constexpr std::uint32_t kSetMapCamera = bof3::addr::EffectGte_LoadMapCamera;
 constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
-constexpr std::uint32_t kFacing = 0x4941B0;
+constexpr std::uint32_t kFacing = bof3::addr::Screen_TriangleWinding;
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(at::kOwner); }

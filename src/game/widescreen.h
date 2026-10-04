@@ -19,8 +19,8 @@ unsigned Widescreen_Live();
 // Widescreen_Inject to -150..470 when the view is wide.
 extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 
-// Re-aims the four x-range constants of AreaMap_FrameAreaBD 0x510780 (still
-// Capcom's) at wider copies, moves the menu boxes' fourteen slide-off bounds
+// Re-aims the four x-range constants of AreaMapBD_BuildView 0x510780 (ours,
+// R3G's; it reads them back) at wider copies, moves the menu boxes' fourteen slide-off bounds
 // outward by the columns added, and widens the terrain cull above. Placed
 // after the modules whose fuzz compares the original bounds; modules added
 // below it fuzz against the widened ones, so ours of a patched site reads the

@@ -16,9 +16,9 @@ constexpr std::uint32_t kE6ADraw = bof3::addr::EffectKind18Sub2F_Draw;        //
                                                     // 0x34 and 0x37 call or tail-jump to (EffectKind18Sub37_States[3])
 constexpr std::uint32_t kE6CStep = bof3::addr::EffectKind18Sub44_Follow;        // E6C (wave six): void(void), called by EffectKind18Sub44_Step
 constexpr std::uint32_t kE6CTail = bof3::addr::EffectKind18Sub44_Draw;        // E6C (wave six): void(void), EffectKind18Sub44_Step's tail jump
-constexpr std::uint32_t kWaveMark = 0x5100B0;       // no group (catalog part 7): (dword, byte) - sub-kind 0x41's
+constexpr std::uint32_t kWaveMark = bof3::addr::EffectKind18Sub41_DrawPanels;   // R3G's: (dword, byte) - sub-kind 0x41's
                                                     // fourth state, while story flag 0x4F is set and +0xA < 0x19
-constexpr std::uint32_t kWaveStep = 0x5101C0;       // no group (catalog part 7): (byte +0xA) - the same state
+constexpr std::uint32_t kWaveStep = bof3::addr::EffectKind18Sub41_DrawRings;    // R3G's: (byte +0xA) - the same state
 
 // --- the leader (ObjTrio record 0) and the map cells --------------------------------
 constexpr std::uint32_t kLeaderX = 0x802D74;        // ObjTrio +0x34: the leader's x, 16.16

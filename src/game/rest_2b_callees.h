@@ -5,6 +5,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"  // R3G's rebinding: Screen_TriangleWinding, the value unchanged
+
 namespace rest_2b::at {
 
 // R2C (wave two): model A's draw - record A's (0x9398E0) scale from
@@ -17,6 +19,6 @@ constexpr std::uint32_t kModelADraw = 0x57F340;
 // const float *b, const float *c), each an (x, y) float pair; the cross
 // product's z through _ftol (a tail jmp); the callers test ax signed
 // (effect_2c_callees.h's kWinding, docs/effect_gte.md section 7).
-constexpr std::uint32_t kWinding = 0x4941B0;
+constexpr std::uint32_t kWinding = bof3::addr::Screen_TriangleWinding;
 
 }  // namespace rest_2b::at

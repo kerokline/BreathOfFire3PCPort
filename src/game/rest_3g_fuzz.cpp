@@ -390,11 +390,13 @@ void Args(unsigned k, U* a) {
 }
 
 // What the functions read again after a call, moved by the group's case of the
-// harness's disturbance (from its hash only).
+// harness's disturbance (from its hash only). The harness hands over a hash
+// whose bits 4..7 are 14 and which is not a multiple of 3, so the case is
+// drawn from bits 8 up and the value from bits 12 up.
 void Disturb(U h) {
-    const U v = h >> 8;
+    const U v = h >> 12;
     unsigned char* const s = S();
-    switch (h % 12) {
+    switch ((h >> 8) % 12) {
     case 0:
         if (sh::InRegions(s, 0x80)) s[9] = static_cast<unsigned char>((v & 1) ? 1 + (v >> 1) % 8 : v >> 1);
         break;

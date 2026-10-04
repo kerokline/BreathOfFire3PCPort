@@ -11,7 +11,7 @@
 // The survey build (widescreen.md section 3e) widens the two the PSP widened:
 //   - the terrain cull in MapView_Build (ours): [-50, 370] to [-150, 470],
 //     wider than the PSP's [-96, 416] (kTerrainMargin says why);
-//   - the area-map frame pass AreaMap_FrameAreaBD 0x510780 (Capcom's): the
+//   - the area-map frame pass AreaMapBD_BuildView 0x510780 (ours, R3G's; it reads them back): the
 //     wide range [-200, 520] to [-252, 572] and the narrow [-50, 370] to
 //     [-102, 422] - the PSP widened both by 31 for 32 columns; 52 for 53.
 // The function reads them through `fcomp dword ptr [0x5C42xx]`: the .rdata

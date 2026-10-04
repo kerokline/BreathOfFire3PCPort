@@ -5,10 +5,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"  // R3G's rebinding: Area109_SwitchPattern, the value unchanged
+
 namespace effect_5a::at {
 
 // --- a callee no group of round thirteen holds, called by address (SH_AT) --
-constexpr std::uint32_t kPattern = 0x4FEE70;      // (void) -> eax: the three story flags 0x65DE60 as bits, plus 1 (1..8)
+constexpr std::uint32_t kPattern = bof3::addr::Area109_SwitchPattern;      // (void) -> eax: the three story flags 0x65DE60 as bits, plus 1 (1..8)
 
 // --- the flag rows ------------------------------------------------------------
 constexpr std::uint32_t kFlagRow2 = 0x903FA0;     // Cond_Flags + 2 * 8 (sub-kind 4's flag 0x17)

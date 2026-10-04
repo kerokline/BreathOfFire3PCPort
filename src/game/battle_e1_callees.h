@@ -10,7 +10,7 @@
 //   0x42E2F0  () -> al (unread by our caller): BATE's, Capcom's: called each
 //             frame of the list.
 //   0x5B9450  (dst, src, n): the CRT's memcpy, Capcom's (kThrough).
-//   0x494E70  (): the eight enemies' +0..+3 zeroed, Capcom's (kThrough).
+//   0x494E70  (): BattleEnemy_ClearStates, the eight enemies' +0..+4 zeroed, ours since R3G (kThrough).
 //   0x452EB0, 0x452F10  () -> al: the default targets of a side, Capcom's
 //             (no group); the engine set answers a flag.
 //   0x444660  (): group BE4's (the round's cut) - a draw BE1's 0x42EE00 makes.
@@ -143,7 +143,7 @@ constexpr U kEquipOpenHelper = 0x42E0E0;
 constexpr U kEquipConfirmHelper = 0x42E250;
 constexpr U kEquipFrameHelper = 0x42E2F0;
 constexpr U kMemcpy = 0x5B9450;
-constexpr U kEnemiesClear = 0x494E70;
+constexpr U kEnemiesClear = bof3::addr::BattleEnemy_ClearStates;
 constexpr U kSideTargetA = 0x452EB0;
 constexpr U kSideTargetB = 0x452F10;
 constexpr U kBe4Draw444660 = bof3::addr::BattleWin_DimScreen;   // BE4's
