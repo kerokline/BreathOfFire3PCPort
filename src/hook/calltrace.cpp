@@ -15,7 +15,7 @@
 namespace bof3 {
 namespace {
 
-constexpr int kMaxEntries = 8192;
+constexpr int kMaxEntries = 32768;   // 9,265 lines in entries_logic.txt after round thirteen (8,192 until 2026-10-03)
 constexpr std::uint8_t kInt3 = 0xCC;
 constexpr std::uint8_t kPushfd = 0x9C;
 constexpr DWORD kTrapFlag = 0x100;
@@ -100,7 +100,7 @@ Pending g_pending[kMaxThreads];
 // the same question with BOF3X_ORIGINAL set and without: that is what makes
 // original-vs-ours comparable (docs/call-trace.md section 7).
 constexpr std::uint32_t kOwnedCaller = 0xFFFFFFFFu;
-constexpr int kMaxOwnedRanges = 8192;  // 3,165 ours after spell wave four, 2026-09-27 (2,048 hit at 3,165)
+constexpr int kMaxOwnedRanges = 32768;  // 8,648 ours after round thirteen, 2026-10-03 (8,192 hit; 2,048 hit at 3,165)
 struct Range {
     std::uint32_t lo, hi;
 };
