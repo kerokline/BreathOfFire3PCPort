@@ -8,7 +8,7 @@ rows the cut `analysis/round14_cut.tsv` gives R1C and `0x51FA30`, code in the
 band no list had), each read with capstone to its last instruction and fuzzed
 through the scenario harness in field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7), used unchanged:
-204,000 rounds, 0 mismatches. @CONTROLS@ No recorded route enters any of the
+204,000 rounds, 0 mismatches. 101 controls planted one at a time: 97 refused by a count, 3 refused only by a crash (re-planted inside the tables and refused by a count), 1 equivalent mutant not refused, its near variant refused (section 6). No recorded route enters any of the
 51 (section 8): fuzz only.
 
 The band is **one thing**: the field actions of party sets 6, 7, 8 and part of
@@ -335,7 +335,118 @@ once in `rest_1c.cpp`, rebuilds, runs the self-test on the clones it names
 (`BOF3X_R1C_ONLY`), restores the file and rebuilds. The count is the rounds
 that mismatched of 4,000 a clone run.
 
-@CONTROLTABLE@
+**101 planted: 97 refused by a count; 3 (C01..C03) refused only by a crash** - the plant indexed past the run of
+tables into words that are not code, which the fuzz cannot count (HANDOFF's trap: a hang or crash proves less), so each
+was planted again inside the run (C01b..C03b) and refused in every round; **1 not refused (C85), an equivalent
+mutant**, its near variant C85b refused.
+
+The thinnest are the zenny's tenfold (C35, 3 rounds; C36 / C37, 6): it needs the 0xF2 cell, an effect free, a Rand
+nibble of 13..15, an input bit and a second Rand & 3 of 0 in one round. C29 (28) needs `Sprite_ObjectAt` to answer
+exactly 0x1D. Every function has at least one control refused in hundreds of rounds or more.
+
+| # | Clones run | Plant | Refused (rounds of 4,000) |
+|---|---|---|--:|
+| C01 | `PartyAction6_Form1` | the state dispatchers by +3 for +2 | a crash (0xC0000005): an index past the run of tables into words that are not code; see C01b |
+| C02 | `PartyAction6_Form2State0` | the step dispatchers by +2 for +3 | a crash (0xC0000005): an index past the run of tables into words that are not code; see C02b |
+| C03 | `PartyAction6_ByForm` | the form word +0x2E | a crash (0xC0000005): an index past the run of tables into words that are not code; see C03b |
+| C04 | `PartyAction7_ByForm` | set 7's action through the form actions' table | 4000 |
+| C05 | `PartyAction6_Form2` | the table one entry on | 4000 of 24,000 |
+| C06 | `PartyAction6_Form0Begin` | the first turn forward | 1930 |
+| C07 | `PartyAction6_Form0Begin` | the turn back by three | 486 |
+| C08 | `PartyAction6_Form0Begin` | the odd test on bit 1 | 1620 |
+| C09 | `PartyAction6_Form0Begin` | steep from 0x40 | 192 |
+| C10 | `PartyAction6_Form0Begin` | the steep animation 0x47 | 1087 |
+| C11 | `PartyAction6_Form0Begin` | the sound + 0x101 | 2913 |
+| C12 | `PartyAction6_Form0Begin` | +0xA = 6 | 2913 |
+| C13 | `PartyAction6_Form0Begin` | the end +0xB = 1 | 4000 |
+| C14 | `PartyAction6_Form0Begin` | the probe clears +0x2B to 2 | 676 |
+| C15 | `PartyAction6_Form0Begin` | the probe on level ground too | 95 |
+| C16 | `PartyAction6_Form0Begin` | the second probe pushes 7 | 2913 |
+| C17 | `PartyAction6_Form0Begin` | the first probe on row 5 | 2861 |
+| C18 | `PartyAction6_Form0Begin` | the turn by a shift (direction 0 gives -1) | 4000 |
+| C19 | `PartyAction6_Form0Begin` | the sloped flag not tested | 516 |
+| C20 | `PartyAction6_Form0Begin` | the slope two steps ahead in x | 3273 |
+| C21 | `PartyAction7_Form2Begin` | the rise from 0x40 | 207 |
+| C22 | `PartyAction7_Form2Begin` | the height before the ground call | 133 |
+| C23 | `PartyAction7_Form2Begin` | the slope direction not re-read | 133 |
+| C24 | `PartyAction7_Form2Begin` | the rise reversed | 1371 |
+| C25 | `PartyAction6_Form0Resolve` | the count by two | 4000 |
+| C26 | `PartyAction6_Form0Resolve` | the object margin 1 | 947 |
+| C27 | `PartyAction6_Form0Resolve` | the z probe one on in x too | 113 |
+| C28 | `PartyAction6_Form0Resolve` | the x probe answer inverted | 174 |
+| C29 | `PartyAction6_Form0Resolve` | object 0x1D among the extra | 28 |
+| C30 | `PartyAction6_Form0Resolve` | the mark bit 1 | 276 |
+| C31 | `PartyAction6_Form0Resolve` | the x cell from >> 15 | 872 |
+| C32 | `PartyAction6_CellPickup` | zenny from 14 | 16 |
+| C33 | `PartyAction6_CellPickup` | five on 14 too | 17 |
+| C34 | `PartyAction6_CellPickup` | the input bit 2 not tested | 11 |
+| C35 | `PartyAction6_CellPickup` | the tenfold on Rand & 1 | 3 |
+| C36 | `PartyAction6_CellPickup` | set 6's twentyfold | 6 |
+| C37 | `PartyAction7_CellPickup` | set 7's tenfold | 6 |
+| C38 | `PartyAction6_CellPickup` | the second spawn state 2 | 51 |
+| C39 | `PartyAction6_CellPickup` | twelve bytes of the name | 271 |
+| C40 | `PartyAction6_CellPickup` | two of the item | 271 |
+| C41 | `PartyAction6_CellPickup` | the cell 0xF3 | 537 |
+| C42 | `PartyAction6_CellPickup` | the find +0xB = 2 | 267 |
+| C43 | `PartyAction6_CellPickup` | the item request 3 | 253 |
+| C44 | `PartyAction6_Form2Begin` | the turn by TargetAhead | 1930 |
+| C45 | `PartyAction6_Form2Begin` | +0xB = 1 | 4000 |
+| C46 | `PartyAction6_Form2Begin` | +0xA = 0xA | 4000 |
+| C47 | `PartyAction6_Form2Resolve` | the count from 2 | 947 |
+| C48 | `PartyAction6_Form2Resolve` | the sound 0x10C | 479 |
+| C49 | `PartyAction6_Form2Resolve` | the record +8 from +9 | 441 |
+| C50 | `PartyAction6_Form2Resolve` | the record +0xA = 2 | 479 |
+| C51 | `PartyAction6_Form2Resolve` | the index into +7 | 479 |
+| C52 | `PartyAction6_Form2Resolve` | +3 one on, not two | 475 |
+| C53 | `PartyAction6_Form2Resolve` | the object margin 1 | 468 |
+| C54 | `PartyAction6_Form2Resolve` | no sound on the object | 225 |
+| C55 | `PartyAction6_Form2Resolve` | the x probe on the cell itself | 132 |
+| C57 | `PartyAction6_CellHit` | the cell 0xF5 for 0xF4 | 537 |
+| C58 | `PartyAction6_CellHit` | the second spawn above 4 | 138 |
+| C59 | `PartyAction6_CellHit` | the cell 0xF8 for 0xF7 | 546 |
+| C60 | `PartyAction6_CellHit` | the item below 6 | 31 |
+| C61 | `PartyAction6_CellHit` | the hurt from 0xB | 30 |
+| C62 | `PartyAction6_CellHit` | item 0x2A | 257 |
+| C63 | `PartyAction6_CellHit` | the item +0xB = 1 | 257 |
+| C64 | `PartyAction6_CellHit` | the member from +0x88 | 150 |
+| C65 | `PartyAction6_CellHit` | message 0xDA | 152 |
+| C66 | `PartyAction6_CellHit` | the hurt +0xB = 2 | 152 |
+| C67 | `PartyAction6_CellHit` | the request 3 | 539 |
+| C68 | `PartyAction6_CellHit` | the flash colour 1 | 152 |
+| C69 | `PartyAction6_CellHit` | the break sound 0x10A | 777 |
+| C70 | `PartyAction6_CellHit` | the second spawn state 5 | 172 |
+| C71 | `PartyAction7_Form0Begin` | the member on it tested against 1 | 871 |
+| C72 | `PartyAction7_Form0Begin` | the record +0xA | 288 |
+| C73 | `PartyAction7_Form0Begin` | the animation + 9 | 288 |
+| C74 | `PartyAction7_Form0Begin` | the pace 3 | 287 |
+| C75 | `PartyAction7_Form0Begin` | the flag 0x2000 | 218 |
+| C76 | `PartyAction7_Form0Begin` | +9 one up | 288 |
+| C77 | `PartyAction7_Form0Begin` | +0x137 = 2 | 288 |
+| C78 | `PartyAction7_Form0Begin` | the bit 1 of +0x138 | 653 |
+| C79 | `PartyAction7_Form0Begin` | the object margin 0 | 865 |
+| C80 | `PartyAction7_Form0Begin` | the end +0x137 = 1 | 1339 |
+| C81 | `PartyAction7_Form0Begin` | one step ahead in x | 729 |
+| C83 | `PartyAction_TurnToSide` | a tie to 5 | 345 |
+| C84 | `PartyAction_TurnToSide` | +9 = 3 | 4000 |
+| C85 | `PartyAction_TurnToSide` | the side 6 for 5 | **not refused**: equivalent - on integers \|d - 3\| > \|d - 6\| and \|d - 3\| > \|d - 5\| both mean d >= 5; near variant C85b refused |
+| C86 | `PartyAction_TurnToSide` | +0xB the side | 3984 |
+| C87 | `PartyAction_TurnStep` | the two animations swapped | 1250 |
+| C88 | `PartyAction_TurnStep` | side 4 for 5 | 944 |
+| C89 | `PartyAction_TurnStep` | +9 = 1 | 557 |
+| C90 | `PartyAction_TurnStep` | the direction & 3 | 254 |
+| C91 | `PartyAction_TurnStep` | the turn at +9 1 | 270 |
+| C92 | `PartyAction_TurnStep` | Sprite_Current not re-read after the animation | 50 |
+| C93 | `PartyAction_TickThenFace` | the animation from +9 | 2517 |
+| C94 | `PartyAction_TickThenFace` | +2 for +3 | 2712 |
+| C95 | `PartyAction_WaitEffect` | +6 for +7 | 1355 |
+| C96 | `PartyAction_WaitEffect` | +7 = 1 | 1304 |
+| C97 | `PartyAction_WaitEffect` | the record +1 for +0 | 445 |
+| C98 | `PartyAction_WaitEffect` | +0x2B = 1 | 900 |
+| C99 | `PartyAction6_Form2Probe` | +0xA = 0xC | 4000 |
+| C01b | `PartyAction6_Form1` | the state index ^ 1 (in the run of tables) | 4000 |
+| C02b | `PartyAction6_Form2State0` | the step index ^ 1 | 4000 |
+| C03b | `PartyAction6_ByForm` | the form index ^ 1 | 4000 |
+| C85b | `PartyAction_TurnToSide` | the side 7 for 5 (C85 near variant) | 337 |
 
 ## 7. Calls across groups
 
