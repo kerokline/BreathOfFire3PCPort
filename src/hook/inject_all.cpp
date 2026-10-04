@@ -285,6 +285,7 @@
 #include "game/rest_1f.h"
 #include "game/rest_1d.h"
 #include "game/rest_2a.h"
+#include "game/rest_2g.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1217,6 +1218,13 @@ void InjectAll() {
                                 // recorders, Area_ObjectFallbacks and Area74_Handlers swapped for the fuzz only; after
                                 // every harness's inject and wave one's; no module patches bytes inside its 22
                                 // (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp)
+    Rest2G_Inject();            // round 14 wave-two group R2G (0x597FA0..0x59AA77: record handler 4's kind 0 and the
+                                // EXP to the next level, handler 5's kind dispatch and the gene grid's states,
+                                // MenuList_Run's kinds 5..13 and 15..19 and 26 slide states): its clones' calls
+                                // re-aimed at the scenario harness's recorders, its 12 state tables swapped for the
+                                // fuzz only; after every harness's inject and Widescreen_Inject (it reads DIV-0041's
+                                // six bounds from the operands); no other module patches a byte inside its 48
+                                // (DIVERGENCE.md, cheats.cpp, labels.cpp)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

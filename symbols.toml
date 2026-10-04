@@ -104187,3 +104187,539 @@ ctype = "unsigned char"
 count = 4
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R2A): the amount LinkedObjectD_ShowAmount 0x537CE0 prints, by Sprite_Current +4 (states 1..3 reach it; entry 0 unread); four bytes to the pointer table at 0x660CD0. docs/rest_2a.md."
+
+[[func]]
+pc = 0x597FA0
+name = "BattleResultWin_LevelUpStates"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x597FA0..0x597FB9 (0x1A bytes): kind 0 of Window_Handler4Kinds (its stack table's entry 0): call [esp + 4 * record +3] over a stack table of one, BattleResultWin_DrawLevelUp; any other +3 calls the return address or the caller's stack (ours aborts). Hidden in Text_GlyphCount's catalog span. docs/rest_2g.md."
+
+[[func]]
+pc = 0x598810
+name = "BattleResultWin_ExpToNext"
+ret = "unsigned"
+params = "unsigned slot"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x598810..0x598888 (0x79 bytes): cdecl, answers eax: the EXP party slot (a byte) still needs: ObjTrio[slot] +0x89 through 0x4469D0 (R3B, CharId_ToRosterIndex) to a roster index r (al, stored over the argument), the sum of the first word of Char_ExpTable rows 0..level of r (0x318 a roster index, 8 a row; level CharacterRecords[r] +0xA, level + 1 rows), less the record's dword +0xC; 0 when the sum is below it (unsigned). Called by BattleResultWin_DrawExp 0x598639. Entered on the battle routes (analysis/calltrace reach_balioAndSunder_2_1003, reach_bossAndFlash_1003). docs/rest_2g.md."
+
+[[func]]
+pc = 0x598890
+name = "Window_Handler5Kinds"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x598890..0x5988CD (0x3E bytes): record handler 5 of Field_RunTaskRecords (its stack table's entry 5): call [esp + 4 * record +2] over a stack table of five - GeneWin_GridStates, GeneWin_ChoiceStates, GeneWin_ListStates, GeneWin_List2States, GeneWin_List3States (BE7's); past five the stack beyond (ours aborts). docs/rest_2g.md."
+
+[[func]]
+pc = 0x5988D0
+name = "GeneWin_GridStates"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x5988D0..0x5988FD (0x2E bytes): kind 0 of Window_Handler5Kinds: call [esp + 4 * record +3] over a stack table of three - GeneWin_GridOpen, GeneWin_GridSlideIn, GeneWin_GridSlideOut. docs/rest_2g.md."
+
+[[func]]
+pc = 0x598900
+name = "GeneWin_GridOpen"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x598900..0x5989A6 (0xA7 bytes): the gene grid's open state: record +8 = 0x18, +9 = 0x11 (0x905B84 re-read for each); the low byte of the eighteen words 0x939820.. zeroed; for each non-zero cell of 0x939A60[18], BattleTask_Create(0, 9) and the slot's +0xB and +0x4B = the cell index (a slot past the 48 writes past the pool; ours aborts); BattleTask_Create(0, 0xA); record +3 + 1. docs/rest_2g.md."
+
+[[func]]
+pc = 0x5989B0
+name = "GeneWin_GridSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x5989B0..0x5989EE (0x3F bytes): GeneWin_DrawGrid, then (the record read once) +0xA 0: x (+4, s16) > 0x42 steps -0x20 else is set 0x42; +0xA not 0: x < 0x42 steps +0x20 else 0x42. +3 untouched. docs/rest_2g.md."
+
+[[func]]
+pc = 0x5989F0
+name = "GeneWin_GridSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x5989F0..0x598A2C (0x3D bytes): GeneWin_DrawGrid, then +0xA 0: x >= 0x142 tail-jumps Window_FreeCurrent, else x + 0x20; +0xA not 0: x <= -0xBE frees, else x - 0x20. Both bounds are DIV-0041 patch sites (cmp cx, imm16 at 0x598A05 / 0x598A19), read from the operand by ours. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599C30
+name = "MenuList_SlideRightTo182"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599C30..0x599C57 (0x28 bytes): a slide state of MenuList_PanelStates[1]: word x + 0x20; above 0xB6 (s16, jle) it is 0xB6 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599C60
+name = "MenuList_SlideLeftTo92"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599C60..0x599C87 (0x28 bytes): a slide state of MenuList_PanelStates[3]: word x - 0x20; below 0x5C (jge) it is 0x5C and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599C90
+name = "MenuList_SlideRightTo92"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599C90..0x599CB7 (0x28 bytes): a slide state of MenuList_PanelStates[4]: word x + 0x20; above 0x5C (jle) it is 0x5C and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599CC0
+name = "MenuList_SlideLeftOff300"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599CC0..0x599CE7 (0x28 bytes): a slide state of MenuList_PanelStates[7]: word x - 0x20; at -300 or below (jg) it is -300 and +3 = 0; the bound is mov ecx, imm32 at 0x599CC5, DIV-0041's site 0x599CC6 (read from the operand by ours); 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599CF0
+name = "MenuList_SlideRightTo17Ge"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599CF0..0x599D17 (0x28 bytes): a slide state of MenuList_PanelStates[8]: word x + 0x20; at 0x11 or above (jl) it is 0x11 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599D20
+name = "MenuList_SlideLeftTo182"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599D20..0x599D47 (0x28 bytes): a slide state of MenuList_PanelStates[10]: word x - 0x20; below 0xB6 (jge) it is 0xB6 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599D90
+name = "MenuList_SlideLeftTo200"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599D90..0x599DB7 (0x28 bytes): a slide state of MenuList_MoneyStates[2]: word x - 0x20; below 0xC8 (jge) it is 0xC8 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599DF0
+name = "MenuList_SlideLeftOff100"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599DF0..0x599E17 (0x28 bytes): a slide state of MenuList_TimeStates[1]: word x - 0x20; below -100 (jge) it is -100 and +3 = 0; the bound is DIV-0041's site 0x599DF6 (read from the operand by ours); 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599E20
+name = "MenuList_SlideRightTo16"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599E20..0x599E47 (0x28 bytes): a slide state of MenuList_TimeStates[2]: word x + 0x20; above 0x10 (jle) it is 0x10 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x599F70
+name = "MenuList_SlideDownTo42"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x599F70..0x599F97 (0x28 bytes): a slide state of MenuList_IconStates[2]: word y + 0x10; above 0x2A (jle) it is 0x2A and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A030
+name = "MenuList_StatsPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A030..0x59A06D (0x3E bytes): MenuList_Kinds[5]: the state from MenuList_StatsStates by +3, then Menu_DrawStatsPanel(+4, +6, 0x66972C[0x904062[+0xA]]) (each push zero-extended). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A070
+name = "MenuList_SlideLeftBesidePanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A070..0x59A0A5 (0x36 bytes): a slide state of MenuList_StatsStates[2]: word x - 0x20; then the s16 at 0x8031F4 (window record 4's x) + 0x78 as an int: x below it (jge) takes its low word and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A0B0
+name = "MenuList_SlideUpTo62Le"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A0B0..0x59A0D7 (0x28 bytes): a slide state of MenuList_PanelStates[5], MenuList_StatsStates[3]: word y - 0x10; at 0x3E or below (jg) it is 0x3E and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A0E0
+name = "MenuList_SlideDownToPanelRow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A0E0..0x59A12B (0x4C bytes): a slide state of MenuList_PanelStates[6], MenuList_StatsStates[4]: word y + 0x10; at 0x3E + 0x36 * +0xA or above (jl; +0xA from the record re-read) it is that and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A130
+name = "MenuList_SlideLeftOff180"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A130..0x59A157 (0x28 bytes): a slide state of MenuList_StatsStates[5]: word x - 0x20; at -180 or below (jg) it is -180 and +3 = 0; the bound is DIV-0041's site 0x59A136 (read from the operand by ours); 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A160
+name = "MenuList_SlideRightTo137Ge"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A160..0x59A187 (0x28 bytes): a slide state of MenuList_StatsStates[6]: word x + 0x20; at 0x89 or above (jl) it is 0x89 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A190
+name = "MenuList_EquipPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A190..0x59A1CD (0x3E bytes): MenuList_Kinds[6]: the state from MenuList_EquipStates, then Menu_DrawEquipPanel(+4, +6, 0x66972C[0x904062[+0xA]]). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A1D0
+name = "MenuList_SlideLeftTo166"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A1D0..0x59A1F7 (0x28 bytes): a slide state of MenuList_EquipStates[2]: word x - 0x20; below 0xA6 (jge) it is 0xA6 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A200
+name = "MenuList_ExpPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A200..0x59A23F (0x40 bytes): MenuList_Kinds[7]: the state from MenuList_ExpStates, then Menu_DrawExpPanel(+4, +6, the record of party slot +0xA, 0). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A240
+name = "MenuList_SlideRightTo45"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A240..0x59A267 (0x28 bytes): a slide state of MenuList_ExpStates[2], MenuList_NextLevelStates[2]: word x + 0x20; above 0x2D (jle) it is 0x2D and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A270
+name = "MenuList_NextLevelPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A270..0x59A2AF (0x40 bytes): MenuList_Kinds[8]: the state from MenuList_NextLevelStates, then Menu_DrawExpPanel(+4, +6, the record of party slot +0xA, 1). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A2B0
+name = "MenuList_SlideLeftOff110"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A2B0..0x59A2D7 (0x28 bytes): a slide state of MenuList_ExpStates[1], MenuList_NextLevelStates[1]: word x - 0x20; below -110 (jge) it is -110 and +3 = 0; the bound is DIV-0041's site 0x59A2B6 (read from the operand by ours); 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A2E0
+name = "MenuList_WideTitleBox"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A2E0..0x59A395 (0xB6 bytes): MenuList_Kinds[9]: the state from MenuList_WideTitleStates; Menu_DrawTitleBox(+4, +6, 0x118, 0x13, 0x903A5A); word +0x10 not 0: Msg_SystemPtr(+0x10) by Text_DrawAt at (+4 + 7, +6 + 3), colour 0, 0xFF; for +0x10 0x1A or 0x31 also system text 0xF there. The record re-read after each call. No patch site (DIV-0027's note names 'MenuList_TitleBox for help 0x1A / 0x31', which is this function). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A400
+name = "MenuList_CursorBox"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A400..0x59A436 (0x37 bytes): MenuList_Kinds[10], no state table: Menu_DrawCursorBox(+4, +6, the word pair MenuList_CursorBoxSizes[+0xA], +0xB, 6) (+0xA unbounded, read in place). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A440
+name = "MenuList_IconWheel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A440..0x59A4AA (0x6B bytes): MenuList_Kinds[11]: the state from MenuList_IconWheelStates; Menu_DrawIconWheel(+4 under the s16 +0x10's sign-extension, +6, +0xA likewise, +0xC, s16 +0x10); with +0xC not 0, +0x10 += 0x40 and Menu_DrawCursorBox(+4 + 4, +6, 0x44, 0x34, 0, 6). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A4B0
+name = "MenuList_SlideRightOffColumn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A4B0..0x59A500 (0x51 bytes): a slide state of MenuList_IconWheelStates[1]: word x + 0x20; above 0x140 + 75 * (+0xB & 1) (jle; +0xB from the record re-read) it is that and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A510
+name = "MenuList_SlideLeftToColumn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A510..0x59A55E (0x4F bytes): a slide state of MenuList_IconWheelStates[2]: word x - 0x20; below 75 * ((+0xB & 1) + 2) (jge) it is that and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A560
+name = "MenuList_ItemList"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A560..0x59A57F (0x20 bytes): MenuList_Kinds[12]: the state from MenuList_ItemListStates, then Menu_DrawItemList(record). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A610
+name = "MenuList_SlideLeftTo152"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A610..0x59A637 (0x28 bytes): a slide state of MenuList_ItemListStates[4], MenuList_ItemPanelStates[4], 0x66AEF0, 0x66B588: word x - 0x20; below 0x98 (jge) it is 0x98 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A640
+name = "MenuList_ButtonRow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A640..0x59A673 (0x34 bytes): MenuList_Kinds[13]: the state from MenuList_ButtonRowStates, then Menu_DrawButtonRow(+4 under the record pointer's upper half, +6, +0xA, +0xB, 0). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A6B0
+name = "MenuList_LabelList"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A6B0..0x59A6BC (0xD bytes): MenuList_Kinds[15], no state table: MenuList_DrawLabelList(record). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A6C0
+name = "MenuList_DrawLabelList"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A6C0..0x59A8DC (0x21D bytes): cdecl, MenuList_LabelList's one caller: row +0xA of 0x66B158 (6 bytes: a count n, text indices) - Menu_DrawBox(x + 3, y + 3, 0x65, 16 n + 0x19, 0, 0x903A5A); the title 0x66B12C[0] at (x + 0x2A, y + 7); pieces 0x66B0CC; per line i the text 0x66B12C[index] at (x + 7, y + 16 i + 0x1A) - line +0xC in 7 and two up in 2, line +0xB in 7 and two up in 0, else once in 0 - and pieces 0x66B0F0 at y + 16 i + 0x18 and + 0x20; +0xA re-read after each line; closing pieces 0x66B0FC at y + 16 n + 0x18. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A8E0
+name = "MenuList_EquipCompare"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A8E0..0x59A926 (0x47 bytes): MenuList_Kinds[16]: the state from MenuList_EquipCompareStates, then Menu_DrawEquipCompare(the record of party slot +0xC under x's upper bytes, +4 under +0x20's upper half, +6, +0x20, +0xD, record). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A930
+name = "MenuList_SlideLeftTo165"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A930..0x59A957 (0x28 bytes): a slide state of MenuList_EquipCompareStates[2]: word x - 0x20; below 0xA5 (jge) it is 0xA5 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A960
+name = "MenuList_SlideLeftTo17"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A960..0x59A987 (0x28 bytes): a slide state of MenuList_PanelStates[2], MenuList_EquipCompareStates[3], MenuList_AbilityStates[4], 0x66B2F8, 0x66B390: word x - 0x20; below 0x11 (jge) it is 0x11 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A990
+name = "MenuList_SlideRightTo165"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A990..0x59A9B7 (0x28 bytes): a slide state of MenuList_EquipCompareStates[4]: word x + 0x20; above 0xA5 (jle) it is 0xA5 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A9C0
+name = "MenuList_AbilityPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A9C0..0x59A9DF (0x20 bytes): MenuList_Kinds[17]: the state from MenuList_AbilityStates, then Menu_DrawAbilityPanel(record). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59A9E0
+name = "MenuList_SlideRightTo150"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59A9E0..0x59AA07 (0x28 bytes): a slide state of MenuList_AbilityStates[3], 0x66B2FC: word x + 0x20; above 0x96 (jle) it is 0x96 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[func]]
+pc = 0x59AA10
+name = "MenuList_ItemPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59AA10..0x59AA2F (0x20 bytes): MenuList_Kinds[18]: the state from MenuList_ItemPanelStates, then Menu_DrawItemPanel(record). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59AA30
+name = "MenuList_ReservePanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59AA30..0x59AA4F (0x20 bytes): MenuList_Kinds[19]: the state from MenuList_ReserveStates, then 0x59AA80(record) (R2H's; the reserve list, menu_frame.cpp). docs/rest_2g.md."
+
+[[func]]
+pc = 0x59AA50
+name = "MenuList_SlideLeftTo150"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2G, capstone to the last instruction), 0x59AA50..0x59AA77 (0x28 bytes): a slide state of MenuList_AbilityStates[2], MenuList_ReserveStates[2], 0x66B1D4, 0x66B2E0, 0x66B2F4: word x - 0x20; below 0x96 (jge) it is 0x96 and +3 = 0; 0x905B84 re-read after the step and before +3. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B044
+name = "MenuList_StatsStates"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 5's states, called by MenuList_StatsPanel by +3, unchecked: 0x437CC0 (ret), MenuSlide_RightOff, MenuList_SlideLeftBesidePanel, MenuList_SlideUpTo62Le, MenuList_SlideDownToPanelRow, MenuList_SlideLeftOff180, MenuList_SlideRightTo137Ge; MenuList_EquipStates follows. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B060
+name = "MenuList_EquipStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 6's states, called by MenuList_EquipPanel: ret, MenuSlide_RightOff, MenuList_SlideLeftTo166. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B06C
+name = "MenuList_ExpStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 7's states, called by MenuList_ExpPanel: ret, MenuList_SlideLeftOff110, MenuList_SlideRightTo45. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B078
+name = "MenuList_NextLevelStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 8's states, called by MenuList_NextLevelPanel: ret, MenuList_SlideLeftOff110, MenuList_SlideRightTo45. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B084
+name = "MenuList_WideTitleStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 9's states, called by MenuList_WideTitleBox: ret, MenuSlide_UpOff, MenuSlide_DownTo16; MenuList_CursorBoxSizes follows. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B0A0
+name = "MenuList_IconWheelStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 11's states, called by MenuList_IconWheel: ret, MenuList_SlideRightOffColumn, MenuList_SlideLeftToColumn. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B0AC
+name = "MenuList_ItemListStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 12's states, called by MenuList_ItemList: ret, MenuSlide_LeftOff, MenuSlide_RightTo17, MenuSlide_RightOff, MenuList_SlideLeftTo152. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B0C0
+name = "MenuList_ButtonRowStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 13's states, called by MenuList_ButtonRow: ret, MenuSlide_UpOff, MenuSlide_DownTo38; kind 15's piece lists follow (0x66B0CC). The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B184
+name = "MenuList_EquipCompareStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 16's states, called by MenuList_EquipCompare: ret, MenuSlide_RightOff, MenuList_SlideLeftTo165, MenuList_SlideLeftTo17, MenuList_SlideRightTo165. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B198
+name = "MenuList_AbilityStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 17's states, called by MenuList_AbilityPanel: ret, MenuSlide_RightOff, MenuList_SlideLeftTo150, MenuList_SlideRightTo150, MenuList_SlideLeftTo17. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B1AC
+name = "MenuList_ItemPanelStates"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 18's states, called by MenuList_ItemPanel: ret, MenuSlide_LeftOff, MenuSlide_RightTo17, MenuSlide_RightOff, MenuList_SlideLeftTo152. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B1C0
+name = "MenuList_ReserveStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 19's states, called by MenuList_ReservePanel: ret, MenuSlide_RightOff, MenuList_SlideLeftTo150; kind 20's table (0x66B1CC, R2H's 0x59ADE0) follows. The count is the run to the next table (the reader does not bound +3); ours aborts past it. docs/rest_2g.md."
+
+[[data]]
+pc = 0x66B090
+name = "MenuList_CursorBoxSizes"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2G): kind 10's box sizes, a word pair (width, height) each, read by MenuList_CursorBox by +0xA, unbounded (past four it reads MenuList_IconWheelStates' pointers as sizes, in ours too). docs/rest_2g.md."
