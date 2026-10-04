@@ -161,10 +161,15 @@ U ElevationEffect(const U*, U answer) {
     if (h % 3 == 0 || !sh::InRegions(s + 0x3E, 2)) return answer;
     return (answer & 0xFFFF0000u) | ((Word(s + 0x3E) + (h >> 4) % 3 - 1) & 0xFFFFu);
 }
-// Fish_Heading: the direction +8 it writes, which its callers read after it.
+// Fish_Heading: the direction +8 it reads is logged (the real one turns it into
+// the steps), and half the time it writes a new one, which its callers read
+// after it.
 U HeadingEffect(const U*, U answer) {
     unsigned char* const s = Sc();
-    if (sh::InRegions(s + 8, 1)) s[8] = static_cast<unsigned char>(sh::Noise() % 9);
+    if (!sh::InRegions(s + 8, 1)) return answer;
+    sh::Note(s[8]);
+    const U n = sh::Noise();
+    if (n & 1) s[8] = static_cast<unsigned char>((n >> 1) % 9);
     return answer;
 }
 // LeaderPanel_PressLatch: 0x6BC717, which LeaderPanel_EffectsStep reads after it.
@@ -279,11 +284,16 @@ void SeedFish(unsigned char* r) {
     SetLong(r + 0x38, Signed(PickOf(0x8000, 0x8001, 0x150000, 0x150001, 0x3C0000, 0x3C0001, 0x1A0000, 0x19FFFF,
                                     0x3E0000, 0x3DFFFF, 0x110000, 0x320000, 0x3E8000, 0x3F0000, sh::Next() % 0x400000,
                                     sh::Next() % 0x400000, sh::Next())));
-    SetWord(r + 0x3E, PickOf(0, 0, 0xFFE0, 0xFFC0, 0xFFC1, 0xFFBF, 0xFE00, 0xFDFF, 0xFE07, 1, 8, 0x7FFF, 0x8000,
+    // 0, -0x20 (the landed / jump height), -0x40 (the jump's floor), -0x200
+    // (the shade's floor); -0x100 L - 0x20 and -0x100 (L + 1) + 0x20 (the
+    // rise's and the dive's bounds for the kind levels L 0..3), each +/- 1
+    static const U kRise[] = {0xFFE0, 0xFEE0, 0xFDE0, 0xFCE0, 0xFF20, 0xFE20, 0xFD20, 0xFC20};
+    const U edge = kRise[sh::Next() % 8] + PickOf(0, 0, 1, 0xFFFF);
+    SetWord(r + 0x3E, PickOf(0, 0, 0xFFE0, 0xFFC0, 0xFFC1, 0xFFBF, 0xFE00, 0xFDFF, 0xFE07, 1, 8, 0x7FFF, 0x8000, edge, edge,
                              sh::Next() % 0x400 - 0x200, sh::Next()));
     SetWord(r + 0x58, PickOf(0x14, 0x15, 0x13, 0x10, 0x12, 0xE, sh::Next() & 0x1F, sh::Next()));
     // what Field_ActiveMember is read for (+0x81, +0x98..+0x9E)
-    const U most = PickOf(sh::Next() % 0x100, sh::Next() % 0x100, 0, 0x40, 0x7FFF, sh::Next());
+    const U most = PickOf(sh::Next() % 0x100, sh::Next() % 0x100, 0, 0x40, 0x7FFF, 0xFFF0, 0x8000, sh::Next());
     SetWord(r + 0x98, most);
     const auto m = static_cast<short>(most);
     SetWord(r + 0x9A, PickOf(m, m >> 1, (m >> 1) - 1, m >> 2, (m >> 2) - 1, (m >> 2) * 3, (m >> 2) * 3 - 1, m >> 4,
@@ -315,7 +325,60 @@ unsigned Entries(unsigned k) {
     }
 }
 
+unsigned char KindByte(unsigned kind, unsigned at) { return Mem(0x66A690 + 36 * kind + at)[0]; }
+
+// Fish_AdjustStrength's delta, drawn by the seed (so that the strength word can
+// be planted at its negation) and handed over by Args.
+unsigned char g_delta;
+
+// Each function's own boundaries, two times in three (after the general seed):
+// the conditions its branches stand behind, which the general draws meet only
+// rarely together.
+void SeedFor(unsigned k, unsigned char* s) {
+    if (!sh::Often()) return;
+    unsigned char* const am = Active();
+    switch (k) {
+    case kSwim:
+        s[9] = 0;
+        if (sh::Half()) SetWord(s + 0x3E, 0);
+        Mem(kBiteHeld)[0] = 0;
+        break;
+    case kApproach:
+    case kInReach:
+    case kClose: {
+        s[9] = 0;
+        Mem(kEff0State)[0] = 4;
+        Mem(kSpriteIndex)[0] = 0xFF;
+        Mem(kEff4State)[0] = 0;
+        Mem(kLeaderStage)[0] = 3;
+        // the lure's level against the kind's: -2..4 around it
+        const unsigned nib = RecordB()[0xE] & 0xF;
+        Mem(kEff0Depth)[0] = static_cast<unsigned char>(KindByte(s[6], 0x14 + nib) + PickOf(0xFE, 0xFF, 0, 1, 2, 3, 4));
+        break;
+    }
+    case kHooked: {
+        s[4] = static_cast<unsigned char>(PickOf(0, 1, 2, 3));
+        Mem(kEff4State)[0] = 0;
+        if (sh::Half()) s[9] = 0;
+        // record 5's level at the tension's gap boundaries (-0x30, -0x18)
+        const auto t = static_cast<signed char>(s[0xA]);
+        SetWord(Mem(kEff5Level), static_cast<U>(t + static_cast<int>(PickOf(0x30, 0x2F, 0x31, 0x18, 0x17, 0x19, 0, 1, 0xFFFFFFFFu))));
+        if (sh::Half()) SetWord(s + 0x3E, PickOf(0xFFC0, 0xFFC1, 0xFFBF));
+        break;
+    }
+    case kAdjust:
+        if (sh::InRegions(am + 0x98, 4)) {
+            const auto d = static_cast<signed char>(g_delta);
+            SetWord(am + 0x9A, static_cast<U>(-d + static_cast<int>(PickOf(0, 0, 1, 0xFFFFFFFFu))));
+            if (sh::Half()) SetWord(am + 0x98, PickOf(0xFFF0, 0x8000, 0xFFFF, 0, 1));
+        }
+        break;
+    default: break;
+    }
+}
+
 void Seed(unsigned k) {
+    g_delta = static_cast<unsigned char>(PickOf(0xFB, 5, 1, 0xFF, 0x80, 0x7F, sh::Next()));
     for (unsigned i = 0; i < 3; ++i) SeedLeader(sh::ObjectOf(i));
     for (unsigned i = 0; i < 4; ++i) SeedFish(sh::SpriteRecord(i));
     // Fish_RunAll walks all 30: each in use or not, its state below the table's 7
@@ -392,13 +455,15 @@ void Seed(unsigned k) {
     Input_Held = static_cast<unsigned short>(PickOf(0x40, 0x4000, 0x4040, 0, sh::Next()));
     Field_CancelButtons = static_cast<unsigned short>(PickOf(0x10, 0x20, 0x40, 0x2000, sh::Next()));
     sh::SetRandHint(PickOf(0, 1, 2, 3, 4, 8, 0xC, 0xF, 0x10, 0x20, 0x40, 0x80, sh::Next()));
+    if (sh::Half()) Frame_Counter = (Frame_Counter & ~0xFu) | PickOf(0, 8, 1, 4);
+    SeedFor(k, s);
 }
 
 // The arguments of the four kCall functions, after the seed.
 void Args(unsigned k, U* a) {
     switch (k) {
     case kLeaveOnPress: a[0] = PickOf(0x60, 0x20, 0x40, 0x10000, a[0]); break;
-    case kAdjust: a[0] = (a[0] & 0xFFFFFF00u) | PickOf(0xFB, 5, 1, 0xFF, 0x80, 0x7F, a[0] & 0xFF); break;
+    case kAdjust: a[0] = (a[0] & 0xFFFFFF00u) | g_delta; break;
     case kChance: {
         const auto t = static_cast<signed char>(Sc()[0xA]);
         a[0] = (a[0] & 0xFFFFFF00u) | (PickOf(t, t + 1, t - 1, t + 0x10, t - 0x10, 0x30, 0xD0, a[0]) & 0xFF);
@@ -460,7 +525,7 @@ void SelfTest() {
     static unsigned* s_index = index;
     sh::Group g = {"rest_1g", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 4000};
+                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 6000};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
     g.sprite_span = 7;   // +1..+4 below Fish_States' 7, which Fish_RunAll reads after a call
