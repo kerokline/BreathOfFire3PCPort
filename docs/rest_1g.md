@@ -7,7 +7,8 @@ round branch's tip `ba2c3c3`. **45 functions ours** (`src/game/rest_1g.cpp`,
 (`analysis/round14_cut.tsv`) and the two starts in their spans no list had
 (`0x528BE0`, `0x52BF90`, band_rows' "code no list has"). Each read to its last
 instruction with capstone and fuzzed through the scenario harness's **field**
-mode (used unchanged): 180,000 rounds, **0 mismatches**. Controls: section 6.
+mode (used unchanged): 270,000 rounds, **0 mismatches**; 103 of 103 controls
+refused (section 6).
 Six `.data` tables named. Fuzz only here; two recorded routes reach the fish
 (section 9).
 
@@ -133,7 +134,7 @@ F2 lines, not a full-frame fill (nothing for DIV-0041).
 
 ## 4. The fuzz (`rest_1g_fuzz.cpp`)
 
-45 clones, 4,000 rounds each, field mode (`g.field`), **not effect mode**
+45 clones, 6,000 rounds each, field mode (`g.field`), **not effect mode**
 (neither machine runs on an effect record). 41 `kSprite`, four `kCall`
 (`Effect3Mode`, `LeaveOnPress`, `AdjustStrength`, `Chance`); `ret_mask` 0xFF
 on `LeaveOnPress`, `Chance`, `LureInReach`, `LureClose`. `sprite_span` 7
@@ -146,8 +147,8 @@ by `E8` (`SetRecords`, `Effect3Mode`, `PressLatch`, `LureInReach`,
 `LureClose`, `Step`, `Heading`, `AdjustStrength`, `Chance`) and eighteen of
 ours with the width each reads (section 3); `Rand` is the standard `kRand`.
 **Louder stand-ins:** `AreaMap_Elevation` answers at the record's height give
-or take one two times in three; `Fish_Heading` writes `+8` (0..8: its callers
-read it after); `LeaderPanel_PressLatch` writes `0x6BC717` 0..2;
+or take one two times in three; `Fish_Heading` logs the `+8` it is handed
+and half the time writes a new one (0..8: its callers read it after); `LeaderPanel_PressLatch` writes `0x6BC717` 0..2;
 `Gfx_CommitPrim` moves the packet cursor on 0x20 (each line its own packet).
 `Gte_RotTransPers` hashes its vertex (6 bytes on the stack) and logs the
 packet's sxy pointer.
@@ -182,10 +183,24 @@ the press latch; record 5's frame and level; record 4's state;
 `Field_Kind2Hold`; the 20-byte record's `+0xE` / `+0xF`.
 
 **Result** (this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_1g`, exit
-0, first run): 180,000 rounds, 389,057 calls to the stand-ins, **0
-mismatches**. Every table entry reached (handler recorders 326..12,240 calls
-each); the thinnest callees `Fish_Chance` 257, `Inventory_Holds38To4DAt99`
-325, `Sprite_PointInReach` 389, `Fish_AdjustStrength` 403 calls.
+0): 270,000 rounds, 608,028 calls to the stand-ins, **0 mismatches** (the first
+run, 4,000 rounds before `SeedFor`, passed too). Every table entry reached
+(handler recorders 493..18,387 calls each); the thinnest callees
+`Fish_AdjustStrength` 360, `Inventory_Holds38To4DAt99` 516, `Fish_Chance`
+1,337 calls. **`SeedFor`** adds, two times in three, each function's joint
+conditions: `Fish_Swim` at rest at height 0 with no nibble; the lure tests
+with record 0 at 4, nothing picked, record 4 idle, the leader at stage 3 and
+record 0's `+7` within -2..4 of the kind's level; `Fish_Hooked` with record 4
+idle, `+4` 0..3, record 5's level at the tension's gap bounds and the height
+at -0x40 +/- 1; `Fish_AdjustStrength`'s strength at the delta's negation and a
+negative `+0x98`. `Frame_Counter`'s low nibble 0, 8, 1 or 4 half the time.
+
+**Under `'*'`** (this worktree, `BOF3X_SHADOW='*'`, after the rebinding):
+exit 0, `inject: 8700 ours, 0 left original`, 1,019 self-test lines of 0
+mismatches and none other (among them `rest_1g`, 608,236 calls, and
+`effect_1e` / `effect_1f`, whose constants were rebound); the same with
+`BOF3X_WIDE=1`: exit 0, 1,019, 8,700 ours. Each passed on its first run.
+`tools/ledger_check.py`: 72 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -208,7 +223,124 @@ each); the thinnest callees `Fish_Chance` 257, `Inventory_Holds38To4DAt99`
 
 `r1g/controls.py` (scratch): each plant replaces a string that occurs once in
 `rest_1g.cpp`, rebuilds, runs the self-test on the clones whose name contains
-the filter, restores and rebuilds. CONTROLS_TABLE
+the filter, restores and rebuilds.
+**103 planted, 103 refused** (every one exit 3, by a count of mismatching
+rounds; a dispatcher's filter also runs its steps, hence "of" a larger total).
+Every function has at least one. The first run (4,000 rounds, before the
+per-function seeds of `SeedFor`) left two unrefused: C56 (the rise's bound,
+needing a height at `-0x100 L - 0x20` with the level's bits) and C91 (the
+strength kept from 1, which differs only for a strength of exactly 0 with a
+negative `+0x98`); the seeds now plant both, and `Fish_Heading`'s stand-in logs
+the direction it is handed (it had overwritten it, hiding `Fish_Approach`'s
+eight ways: C59 went 7 -> 599). **The thinnest**: C56 (1 round), C76 and C77
+(9), C15 (11), C71 and C74 (17) - each a single-value boundary behind several
+conditions in `Fish_Hooked` / `Fish_Swim` or the rule page's wrap.
+
+| # | Function | Plant | Refused (rounds of 6,000) |
+|---|---|---|--:|
+| C01 | `LeaderPanel_S1` | the step index + 1 (mod 11) | 6,000 of 84,000 |
+| C02 | `LeaderPanel_S1Begin` | the sprite index 0xFE | 5,958 |
+| C03 | `LeaderPanel_S1Begin` | record 3's mode 5 for 6 | 2,114 |
+| C04 | `LeaderPanel_S1Wait` | record 3 at 7 | 2,010 |
+| C05 | `LeaderPanel_S1Buttons` | the mask 0x75 | 35 |
+| C06 | `LeaderPanel_S1Buttons` | the warning 2 | 127 |
+| C07 | `LeaderPanel_S1Buttons` | stage 11 for 10 | 773 |
+| C08 | `LeaderPanel_S1Idle` | record 1 at 2 | 821 |
+| C09 | `LeaderPanel_S1Idle` | +9 = 5 | 821 |
+| C10 | `LeaderPanel_S1Box3In` | the pointer's upper half dropped | 6,000 |
+| C11 | `LeaderPanel_S1Box3In` | the message one lower | 6,000 |
+| C12 | `ChoiceMenu_DataPage` | 22 pages | 57 |
+| C13 | `ChoiceMenu_DataPage` | the wrap down to 0x15 | 48 |
+| C14 | `ChoiceMenu_DataPage` | +0x3E + 1 read from +0x3C | 263 |
+| C15 | `ChoiceMenu_RulePage` | seven pages | 11 |
+| C16 | `ChoiceMenu_RulePage` | +8 = 0xFE | 85 |
+| C17 | `LeaderPanel_S9Back` | record 6 at 1 | 839 |
+| C18 | `LeaderPanel_S10` | the step index ^ 1 | 6,000 of 18,000 |
+| C19 | `LeaderPanel_S10Look` | the camera 0x7000 nearer | 3,039 |
+| C20 | `LeaderPanel_S10Look` | frames with bit 3 | 2,287 |
+| C21 | `LeaderPanel_S10Look` | the far end 0xCE00 | 1,505 |
+| C22 | `LeaderPanel_S10Look` | a primitive of 0x1C | 1,505 |
+| C23 | `LeaderPanel_S10End` | Field_Kind2Hold 1 holds | 1,997 |
+| C24 | `LeaderPanel_S11` | the step index + 1 (mod 4) | 6,000 of 30,000 |
+| C25 | `LeaderPanel_S11FadeOut` | transition 3 | 2,024 |
+| C26 | `LeaderPanel_S11Switch` | Game_Step 4 | 4,026 |
+| C27 | `LeaderPanel_S11Switch` | 0x93985F left | 4,004 |
+| C28 | `LeaderPanel_S11FadeIn` | pass flags 0x1E | 6,000 |
+| C29 | `LeaderPanel_S11End` | the wait word 1 | 4,026 |
+| C30 | `LeaderPanel_PoseSound` | pose 2's sound 0x206 | 459 |
+| C31 | `LeaderPanel_PoseSound` | no test against the pose before | 2,170 |
+| C32 | `LeaderPanel_UseItemEnd` | record 4's +6 = 2 | 6,000 |
+| C33 | `LeaderPanel_UseItemEnd` | record 4 read before the calls | 38 |
+| C34 | `LeaderPanel_SetRecords` | the 20-byte base 0x1B | 4,859 |
+| C35 | `LeaderPanel_SetRecords` | the 10-byte stride 12 | 3,607 |
+| C36 | `LeaderPanel_Effect3Mode` | state 5 for 4 | 960 |
+| C37 | `LeaderPanel_HoldTest` | +0xA = 7 | 943 |
+| C38 | `LeaderPanel_HoldTest` | held bit 0x2000 | 2,022 |
+| C39 | `LeaderPanel_LeaveOnPress` | the low byte only | 256 |
+| C40 | `LeaderPanel_LeaveOnPress` | stage 9 | 1,901 |
+| C41 | `LeaderPanel_EffectsStep` | frames 0xB | 2,023 |
+| C42 | `LeaderPanel_EffectsStep` | 4 frames left still steps | 238 |
+| C43 | `LeaderPanel_EffectsStep` | +0xA from the record's +0x11 | 64 |
+| C44 | `LeaderPanel_EffectsStep` | the depth not carried | 46 |
+| C45 | `LeaderPanel_PressLatch` | the mask 0xE000 | 1,472 |
+| C46 | `Fish_Spawn` | +0 = 0x20 | 6,000 |
+| C47 | `Fish_Spawn` | kind 0x14 not grown | 65 |
+| C48 | `Fish_Spawn` | the growth bound M / 8 | 68 |
+| C49 | `Fish_Spawn` | the strength / 9 | 6,000 |
+| C50 | `Fish_RunAll` | the shade from -0x1F8 | 881 |
+| C51 | `Fish_RunAll` | Sprite_Current not re-read after the call | 3,426 |
+| C52 | `Fish_Begin` | +0x29 = 6 | 6,000 |
+| C53 | `Fish_Begin` | x from 0x15 cells | 6,000 |
+| C54 | `Fish_Begin` | a zero height -0x1F | 236 |
+| C55 | `Fish_Swim` | a nibble on bits 0..2 clear | 89 |
+| C56 | `Fish_Swim` | the rise from 0x21 | 1 |
+| C57 | `Fish_Swim` | stop on bit 7 | 503 |
+| C58 | `Fish_Settle` | state 0 | 4,007 |
+| C59 | `Fish_Approach` | dx < 0, dz > 0 as 5 | 599 |
+| C60 | `Fish_Approach` | the level clamped at 2 | 717 |
+| C61 | `Fish_Approach` | the leader to stage 5 | 975 |
+| C62 | `Fish_Approach` | the double one time in two | 67 |
+| C63 | `Fish_Approach` | level 0's turn on 0xC0 | 32 |
+| C64 | `Fish_Hooked` | landed with -8 | 506 |
+| C65 | `Fish_Hooked` | the jump's frame from 0x14 | 55 |
+| C66 | `Fish_Hooked` | the high count from +9 | 122 |
+| C67 | `Fish_Hooked` | the break to stage 8 | 865 |
+| C68 | `Fish_Hooked` | tier 1 at three quarters | 215 |
+| C69 | `Fish_Hooked` | a jump from -0x40 | 43 |
+| C70 | `Fish_Hooked` | the jump wears 4 | 123 |
+| C71 | `Fish_Hooked` | +0x81 0xFD from -0x2F | 17 |
+| C72 | `Fish_Hooked` | the run clamped at 4 | 44 |
+| C73 | `Fish_Hooked` | frames by 9 - tier | 1,751 |
+| C74 | `Fish_Hooked` | wear every 8th frame | 17 |
+| C75 | `Fish_Hooked` | reeled 0x800 | 373 |
+| C76 | `Fish_Hooked` | the left bank 0x60001 | 9 |
+| C77 | `Fish_Hooked` | direction 2 from 0x800 | 9 |
+| C78 | `Fish_Hooked` | the far line 0x3F | 593 |
+| C79 | `Fish_Hooked` | +4's direction 4 | 578 |
+| C80 | `Fish_Hooked` | the divisor 1 | 1,259 |
+| C81 | `Fish_Hooked` | the snap's chance at the low edge | 87 |
+| C82 | `Fish_S5` | the step index ^ 1 | 6,000 of 18,000 |
+| C83 | `Fish_S5Center` | an arithmetic shift | 3,858 |
+| C84 | `Fish_S5Move` | x's low word & 0xC000 | 357 |
+| C85 | `Fish_S5Move` | state 2 | 802 |
+| C86 | `Fish_S6` | the step index + 1 (mod 3) | 6,000 of 24,000 |
+| C87 | `Fish_S6Begin` | only +0x3C's word cleared | 5,242 |
+| C88 | `Fish_S6Wait` | the next kind's frame | 796 |
+| C89 | `Fish_S6Release` | freed above 8 | 1,242 |
+| C90 | `Fish_AdjustStrength` | the delta unsigned | 1,575 |
+| C91 | `Fish_AdjustStrength` | kept from 1 | 894 |
+| C92 | `Fish_Chance` | odds 9 under | 123 |
+| C93 | `Fish_Chance` | a tie wins | 487 |
+| C94 | `Fish_Chance` | the band's first odds 2 | 258 |
+| C95 | `Fish_Step` | the climb from +0x16 | 2,716 |
+| C96 | `Fish_Heading` | direction 7 doubled | 1,001 |
+| C97 | `Fish_Heading` | the left turn below 0x80000 | 199 |
+| C98 | `Fish_Heading` | small from below 0x400 | 961 |
+| C99 | `Fish_Heading` | the top band from 0x1B0000 | 37 |
+| D01 | `Fish_LureInReach` | margin + 4 | 3,923 |
+| D02 | `Fish_LureInReach` | nibble 5 | 312 |
+| D03 | `Fish_LureClose` | x within 0x8000 inclusive | 152 |
+| D04 | `Fish_LureClose` | the height within 0x401 | 132 |
 
 ## 7. Latent defects and ranges (Capcom's, described, not fixed)
 
