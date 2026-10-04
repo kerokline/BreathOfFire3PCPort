@@ -72,6 +72,16 @@ may be exactly right here — **provided it is in the ledger.**
    PSX disc decides what the original behaviour *was*. This project decides what
    the game *should do*. The second answer must never quietly overwrite the
    record of the first.
+7. **Every commit is signed off.** Commit with `git commit -s`: each non-merge
+   commit carries a `Signed-off-by: Name <email>` line, the owner's, in every
+   kind of session - local, cloud, or an agent in a worktree. CI checks it on
+   every pull request (`.github/workflows/dco.yml`;
+   [`CONTRIBUTING.md`](CONTRIBUTING.md) says what the line certifies, and
+   [`docs/LICENSING.md`](docs/LICENSING.md) why the project wants it). Before
+   opening a PR, read `git log --format=%B <base>..HEAD` for it. A commit
+   without one is not repaired by a silent history rewrite: seven from cloud
+   sessions cost a rewrite of 185 commits and of every hash the docs cited
+   (2026-10-04, `docs/HANDOFF.md` traps) - ask the owner first.
 
 ## Related checkouts on this machine
 
