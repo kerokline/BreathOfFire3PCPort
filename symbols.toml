@@ -480,13 +480,16 @@ note = "NOT a delta — the PSX scratchpad is 1 KB of on-chip fast RAM with no x
 
 [[func]]
 pc = 0x44F030
-psx = 0x8009FD08
+psx = 0x8009FE88
 psx_overlay = "BATTLE.EMI#15"
 name = "Battle_PsiStatusDeathAffinity"
 args = ["target", "mask"]
+ret = "int"
+params = "unsigned target, unsigned mask"
+impl = "src/game/rest_3d.cpp"
 status = "hypothesis"
-evidence = "disasm 2026-09-18: branches on actor <= 2 into party records (0x802D50, stride 0x14C) or enemy records (0x93B9E0, stride 0x128), and under mask bits 0x40 / 0x80 / 0x100 reads record +0xA5/+0xA6/+0xA7 (party) or +0x45/+0x46/+0x47 (enemy), indexing s16 table 0x64E97C. That is unambiguously the psionic / status / death affinity lookup."
-note = "hypothesis, not evidence, for the identification: BATTLE_RAM.md lists a sibling 0x8009FE88 on the same three fields with its own table (0x800B189C vs 0x800B188C) and nothing yet separates the two. PC 0x44F770 is a near-duplicate of this function and is the other candidate; both are left as one named and one unnamed rather than guessing the pairing."
+evidence = "disasm 2026-09-18: branches on actor <= 2 into party records (0x802D50, stride 0x14C) or enemy records (0x93B9E0, stride 0x128), and under mask bits 0x40 / 0x80 / 0x100 reads record +0xA5/+0xA6/+0xA7 (party) or +0x45/+0x46/+0x47 (enemy), indexing s16 table 0x64E97C. That is unambiguously the psionic / status / death affinity lookup. Read again 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F030..0x44F12D (0xFD bytes): cdecl, eax 0 to start, each later mask bit overriding (0x100 last), 0 when none is set; the class bytes unbounded. docs/rest_3d.md."
+note = "The twin is 0x8009FE88, not 0x8009FD08 as this entry had (2026-10-04, R3D): Effect_SkillDamage's term-for-term reading (its entry) has FUN_8009f820 call 0x8009FE88 where the PC calls 0x44F030, and BATTLE_RAM.md gives 0x8009FE88 the table 0x800B189C, the one laid out as this function's 0x64E97C; 0x8009FD08 reads 0x800B188C, laid out as 0x64E96C, which PC 0x44F770 (Battle_StatusResistRate) reads. Not read on the PSX side. The name's 'psi / status / death' is the sibling's reading of the three class bytes, kept as a hypothesis."
 
 [[func]]
 pc = 0x5B93D2
@@ -107766,3 +107769,359 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R2B): BareRet 0x437CC0, Shisu_ModelBTurn, Shisu_ModelBSquare, Shisu_ModelBDrop, Shisu_ModelBStill; jumped through by Shisu_ModelBDispatch 0x57EDD0 by 0x939961, unchecked; the writers store 0..4; MasterFigure_States starts at 0x663E28. docs/rest_2b.md."
+
+# ---------------------------------------------------------------------------
+# Group R3D of round fourteen (wave three): Effect_Handlers slots 112..129, their
+# helpers (the rolls, the inflict, the stat step, the no-hit mark) and the Dragon
+# command's part dispatcher (src/game/rest_3d.cpp, docs/rest_3d.md). Extents are
+# the code's, from the entry to the last ret or tail jmp.
+
+[[func]]
+pc = 0x44E4B0
+name = "Effect112_HpToOne"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E4B0..0x44E521 (0x71 bytes): Effect_Handlers slot 112: Rand bit 0 clear - nothing; Battle_StatusResisted(actor, target) - nothing; else the result's (*0x904B60) HP delta +4 = the target's (0x904B54) HP (+0x98 member, +0xA4 enemy) - 1. No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E530
+name = "Effect113_ActorNullDamage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E530..0x44E572 (0x42 bytes): Effect_Handlers slot 113: Effect_NoHitReaction, then the actor's (0x904B34) flag word +0x130 (enemy +0x110) |= 0x10000 (the flag Battle_CalcDamage and Effect_SkillDamage answer 0 for). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E580
+name = "Effect114_SkillApDamage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E580..0x44E5C2 (0x42 bytes): Effect_Handlers slot 114: result +8 = 2; result +6 (the AP delta, the result read again after the call) = Effect_SkillDamage(actor, target, NameTable_Abilities +3 of the ability 0x904B80 (movzx into dx: its upper half the entry's edx, which the callee does not read), 1). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E5D0
+name = "Effect115_HpToZero"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E5D0..0x44E634 (0x64 bytes): Effect_Handlers slot 115: Battle_StatusResisted20(actor, target) answering 0: result +4 = the target's whole HP. No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E640
+name = "Effect116_HpLessDefence"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E640..0x44E6B6 (0x76 bytes): Effect_Handlers slot 116: result +4 = Effect_HpBasedDamage(1)'s ax less the target's word +0xA6 (enemy +0xB6) - the side by the target read before the call, the record by the one read after - and 0 when that is negative (s16). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E6C0
+name = "Effect117_PartyFlag400Others"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E6C0..0x44E720 (0x60 bytes): Effect_Handlers slot 117: Effect_NoHitReaction; a member target (read after the call): every member below the party size byte 0x904AB0 (unbounded) gets +0x134 |= 0x400, then the target's +0x134 &= ~0x400; an enemy target nothing more. No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E720
+name = "Effect118_RaiseCharByte1E"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E720..0x44E8A1 (0x181 bytes): Effect_Handlers slot 118: a member target only. Its character (+0x148) record's (CharacterRecords + 0xA4 c) byte +0x1E below 9: +0x1E and the member's +0x9E each + 1. Char_RecalcStats(the record, c read again); for each member below 0x904AB0: +0x92..+0x97 = record +0x12..+0x17, +0xC0..+0xDF = record +0x20..+0x3F (rep movsd); Formation_ApplyStatMods; each member's +0xC0.. copied to +0xA0..+0xBF (the size read again); BattleForm_ApplyStats; Battle_RecalcStats(m) for m below the size (read again after each call; the word's upper bytes the entry's ecx, the callee reads the byte); result +4 = -(the target's, read again, +0xA0). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E8B0
+name = "Effect119_ActorFlag1000"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E8B0..0x44E918 (0x68 bytes): Effect_Handlers slot 119: Effect_NoHitReaction; the actor's +0x134 (enemy +0x114) |= 0x1000; Battle_RecalcStats(the target). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E920
+name = "Effect120_TargetFlag800"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E920..0x44E9B9 (0x99 bytes): Effect_Handlers slot 120: Battle_StatusResisted(actor, target): result +8 = 1, Battle_SetDamagePopup(0, target); else the target's (its dword) +0x134 (enemy +0x114) |= 0x800 and Battle_RecalcStats(that dword). Both paths end in a jmp to Effect_NoHitReaction. No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44E9C0
+name = "Effect121_ActorFlag4000"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44E9C0..0x44EA38 (0x78 bytes): Effect_Handlers slot 121: Effect_NoHitReaction; the actor's +0x134 |= 0x4000 and +0x142 = 0 (enemy +0x114, +0x122); Battle_RecalcStats(the target). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44EA40
+name = "Effect122_InflictThree"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44EA40..0x44EA61 (0x21 bytes): Effect_Handlers slot 122: Effect_NoHitReaction, then Effect_RollInflict(0x20), (0x80), (8), each its own roll, answers unread. No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44EA70
+name = "Effect123_Ability6A"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44EA70..0x44EA85 (0x15 bytes): Effect_Handlers slot 123: 0x904B35 = 4, word 0x904B80 = 0x6A, jmp 0x44D8B0 (group R3C's, round fourteen; a tail call, raw until it merges). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44EA90
+name = "Effect124_HalfHpLessDefence"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44EA90..0x44EB06 (0x76 bytes): Effect_Handlers slot 124: as Effect116_HpLessDefence with Effect_HpBasedDamage(2). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44EB10
+name = "Effect125_Inflict8Roll80"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44EB10..0x44EB45 (0x35 bytes): Effect_Handlers slot 125: Effect_NoHitReaction; Battle_StatusResistedMask(actor, target, 0x80) answering 0: Battle_InflictStatus(target, 8). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44EB50
+name = "Effect126_Ability4EDrainAp"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44EB50..0x44EB65 (0x15 bytes): Effect_Handlers slot 126 (docs/battle_e5.md says 124: the cell is 0x64E934, 126): 0x904B35 = 4, word 0x904B80 = 0x4E, jmp Effect_DrainAp. No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44EB70
+name = "Effect127_AttackDoubledKind4"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44EB70..0x44EBDF (0x6F bytes): Effect_Handlers slot 127: result +4 = Battle_CalcDamage(actor, target, 0xFFFF) (the target read before the call); for an enemy target, its object's (the target read again) +0x8D equal to 4 doubles the word (shl). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44EBE0
+name = "Effect128_HalfAttackInflict4"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44EBE0..0x44EC3B (0x5B bytes): Effect_Handlers slot 128: result +4 = s16 Battle_CalcDamage(actor, target, 0xFFFF) / 2 (cdq, sub, sar: toward 0); not 0 (the result read again) and Battle_StatusResisted answering 0: Effect_RollInflict(4). No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44EC40
+name = "Effect129_TargetSoleFlag40000"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44EC40..0x44ED07 (0xC7 bytes): Effect_Handlers slot 129: Effect_NoHitReaction; for actors 0..2 not out (Battle_ActorIsOut, the actor byte in a frame slot whose upper bytes are the entry's ecx) the TARGET's party-indexed +0x134 &= ~0x40000, for actors 3..10 not out the target's enemy-indexed +0x114 &= ~0x40000 (the target read again after each test; an enemy target's party index lands in WindowRecords, a member target's enemy index in the task slots); then the target (the last read) |= 0x40000. A latent defect (docs/rest_3d.md section 7), kept. No PSX twin paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44F1D0
+name = "Battle_InflictStatus"
+ret = "void"
+params = "unsigned target, unsigned status"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F1D0..0x44F451 (0x281 bytes): cdecl: the target's status word (+0x90 member, +0x92 enemy) read once into the argument slot; the status byte's 0x80, 1, 2 when new into 0x904B98; 0x40 with Battle_LacksAccessory(target, 6) - Battle_ClearStatus(target, 0x38), Battle_ReturnQueuedItem, Battle_RemoveFromTurnOrder; 0x20 with Battle_LacksAccessory(target, 8) and none of 0x64 - Battle_ReturnQueuedItem, byte 0x93A009 + 0x84 target = 0, +0x125 = 0, +0x130 &= ~2, +0x134 &= ~4 (enemy +0x105, +0x110); 8 with Battle_LacksAccessory(target, 9) and Battle_LacksArmour(target, 0x2B) and none of 0xC; 0x10 none of 0x14; 4 - ClearStatus(0x38), the item, the turn order; the status word's 0x800 into 0x904B99 bit 3 with ClearStatus(0x7E), the item, the turn order; every bit skipped when the old word has 0x800. Then Sprite_ReleaseTint(record), status word |= word 0x904B98, Battle_StatusTint(the word, upper half the offset's). Called by Battle_ApplyDamage, EnemyAI_ApplyAction, R3C's 0x44D580, Effect_RollInflict(Quiet), slot 125. The PSX inflict 0x800A0170 by the sibling's evidence of Battle_ApplyDamage and the AI row (names/functions.toml), not paired. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44F460
+name = "Battle_LacksAccessory"
+ret = "unsigned char"
+params = "unsigned actor, unsigned item"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F460..0x44F48A (0x2A bytes): cdecl, al: 1 for an actor byte above 2; else 0 when the item byte is Field_State's +0x96 or +0x97 (the accessory bytes a member copies from its character record +0x16 / +0x17) - Field_State, not the actor's record; else 1. Battle_InflictStatus's tests for 6, 8, 9. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44F490
+name = "Battle_LacksArmour"
+ret = "unsigned char"
+params = "unsigned actor, unsigned item"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F490..0x44F4B0 (0x20 bytes): cdecl, al: as Battle_LacksAccessory on Field_State's +0x94 (the character record's +0x14, an armour byte). Battle_InflictStatus's test for 0x2B. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44F650
+name = "Effect_StepStatByte"
+ret = "void"
+params = "unsigned step, unsigned stat"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F650..0x44F691 (0x41 bytes): cdecl: the result record's (*0x904B60) s8 at +0x14 + (stat & 0xFF) plus the signed word step: above 50 stored 50, below -25 stored -25, else the byte plus the step's byte. Called by Effect_RollStatStep(Quiet) and R3C's 0x44DCA0. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44F6A0
+name = "Battle_StatusResisted"
+ret = "unsigned char"
+params = "unsigned actor, unsigned target"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F6A0..0x44F769 (0xC9 bytes): cdecl, al 1 resisted: a = min(u16 0x939FEA * 100 / 500 + 50, 100), d = max(125 - u16 0x939F8A * 100 / 500, 50); rate = s16 Battle_StatusResistRate(target, NameTable_Abilities +4 of 0x904B80 & 0x1FF); -1: al 0 (the rest of eax the rate's); else Rand % 100 >= (rate * d * a) / 10000 (signed). The actor word is not read. 16 call sites. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44F770
+name = "Battle_StatusResistRate"
+psx = 0x8009FD08
+psx_overlay = "BATTLE.EMI#15"
+ret = "int"
+params = "unsigned actor, unsigned mask"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F770..0x44F871 (0x101 bytes): cdecl, eax: the s16 of Battle_StatusResistRates 0x64E96C by the actor's class byte for the last of mask bits 0x40 / 0x80 / 0x100 set (+0xB5..+0xB7 member, +0xC5..+0xC7 enemy; the byte unbounded), 0xFFFF when none of 0x1C0 is. PSX twin 0x8009FD08 by the table it reads (the sibling's BATTLE_RAM.md gives 0x8009FD08 the table 0x800B188C, laid out as 0x64E96C), not read on the PSX side. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44F880
+name = "Battle_StatusResistedMask"
+ret = "unsigned char"
+params = "unsigned actor, unsigned target, unsigned mask"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F880..0x44F939 (0xB9 bytes): cdecl, al: Battle_StatusResisted's roll with the rate of the caller's mask & 0x1FF. Slot 125's (0x80). docs/rest_3d.md."
+
+[[func]]
+pc = 0x44F940
+name = "Battle_StatusResisted20"
+ret = "unsigned char"
+params = "unsigned actor, unsigned target"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44F940..0x44FA09 (0xC9 bytes): cdecl, al: Battle_StatusResisted's roll on Battle_StatusResistRate20 (the ability's mask). Slot 115's. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FA10
+name = "Battle_StatusResistRate20"
+ret = "int"
+params = "unsigned actor, unsigned mask"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FA10..0x44FA6B (0x5B bytes): cdecl, eax: with the mask's byte & 0x20, the s16 of Battle_StatusResistRates20 0x64E98C by the class byte +0xB4 (enemy +0xC4; unbounded); else 0 (so its roll never answers 'cannot resist'). The sibling's BATTLE_RAM.md has the PSX record's +0x34 class indexed under mask bit 0x20. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FA70
+name = "Battle_StatusResisted80"
+ret = "unsigned char"
+params = "unsigned attacker, unsigned target"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FA70..0x44FB23 (0xB3 bytes): cdecl, al: Battle_StatusResisted's roll with Battle_StatusResistRate(target, 0x80). Battle_ApplyDamage's weapon-status test (three sites; PSX 0x800A0D78 by the sibling's Battle_ApplyDamage evidence, not paired). docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FB30
+name = "Effect_NoHitReaction"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FB30..0x44FBA5 (0x75 bytes): cdecl: 0x904AA9 |= 0x20 (the round flags' 0x2000: no hit sound or pop-up, EnemyOp_ReceiveAction's test); the target's (0x904B54) +0x130 |= 0x200 (no hit pose) and +0x12C &= ~1 (enemy +0x110, +0x10C). 23 call or tail-jump sites in R3B and R3C, eight in this group, Effect_QuarterAttack's tail. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FBB0
+name = "Effect_RollStatStepQuiet"
+ret = "unsigned char"
+params = "unsigned stat"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FBB0..0x44FC04 (0x54 bytes): cdecl, al: Effect_NoHitReaction; Battle_StatusResisted: al 1; else Effect_StepStatByte(the ability's s8 +3, stat), Battle_RecalcStats(the target, upper bytes the stat word's), al 0. Seven sites in R3B and R3C. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FC10
+name = "Effect_RollStatStep"
+ret = "unsigned char"
+params = "unsigned stat"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FC10..0x44FC5F (0x4F bytes): cdecl, al: Effect_RollStatStepQuiet without the mark. MagicFx_ApplyBuff's roll (magic_lib.cpp's kBuffRoll). docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FC60
+name = "Effect_RollInflictQuiet"
+ret = "unsigned char"
+params = "unsigned status"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FC60..0x44FC97 (0x37 bytes): cdecl, al: Effect_NoHitReaction; Battle_StatusResisted: al 1; else Battle_InflictStatus(target, status), al 0. Seven sites in R3B and R3C. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FCA0
+name = "Effect_RollInflict"
+ret = "unsigned char"
+params = "unsigned status"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FCA0..0x44FCD2 (0x32 bytes): cdecl, al: Effect_RollInflictQuiet without the mark. Twelve sites (R3B, R3C, slots 122 and 128). docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FCE0
+name = "Effect_HpBasedDamage"
+ret = "int"
+params = "int divisor"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FCE0..0x44FDD2 (0xF2 bytes): cdecl, eax: the actor's HP / divisor (idiv by the whole word) x s16 Effect_HpDamageVariance 0x64E9AC[Rand & 7] x the affinity (100 when the ability's mask has none of 0x1F, else s16 Battle_ElementAffinity(target, mask)) / 10000 signed; ax zeroed when the target (read again) has flag 0x10000. Callers take ax: slots 116 / 124 (1, 2) and R3B's and R3C's 0x44C0A0, 0x44D220, 0x44D240, 0x44D260. docs/rest_3d.md."
+
+[[func]]
+pc = 0x44FF00
+name = "DragonCmd_PartDispatch"
+psx = 0x800A15F0
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/rest_3d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3D, capstone to the last instruction), 0x44FF00..0x44FF0E (0xE bytes): jmp [DragonCmd_Parts + 4 * byte 0x904AA3], no compare: Battle_MenuSteps[7] (BattleMenu_ConfirmDispatch's Dragon command; group BE5's seven parts). Hidden in BattleForm_ApplyStats' catalogue extent; a function of its own (a .data cell reaches it). PSX twin 0x800A15F0 (pairs_propagated.json, table-anchored), not read. docs/rest_3d.md."
+
+[[data]]
+pc = 0x64E96C
+name = "Battle_StatusResistRates"
+ctype = "short"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3D): s16 by a class byte (unbounded): Battle_StatusResistRate 0x44F770 under mask bits 0x40 / 0x80 / 0x100. Eight by the spacing to Battle_PsiAffinityRates; the PSX's 0x800B188C (the sibling's BATTLE_RAM.md, the table 0x8009FD08 reads). docs/rest_3d.md."
+
+[[data]]
+pc = 0x64E97C
+name = "Battle_PsiAffinityRates"
+ctype = "short"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3D): s16 by a class byte (unbounded): Battle_PsiStatusDeathAffinity 0x44F030 under mask bits 0x40 / 0x80 / 0x100, Effect_SkillDamage's psi branch. Eight by the spacing to Battle_StatusResistRates20; the PSX's 0x800B189C (BATTLE_RAM.md, the table 0x8009FE88 reads). docs/rest_3d.md."
+
+[[data]]
+pc = 0x64E98C
+name = "Battle_StatusResistRates20"
+ctype = "short"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3D): s16 by the class byte +0xB4 / +0xC4 (unbounded): Battle_StatusResistRate20 0x44FA10 under mask bit 0x20. Eight by the spacing to Skill_HealByHoly 0x64E99C. docs/rest_3d.md."
+
+[[data]]
+pc = 0x64E9AC
+name = "Effect_HpDamageVariance"
+ctype = "short"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3D): s16 by Rand & 7, over 10000: Effect_HpBasedDamage 0x44FCE0. docs/rest_3d.md."
