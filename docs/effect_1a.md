@@ -333,7 +333,7 @@ and `_DrawMark`. Kind 2's scenario-bank states `0x464730`, `0x464780`,
 
 ## 6. What ours aborts on, and the latent defects
 
-Ours aborts with a message (the round-nine rule) where the original reads
+Ours aborts with a message (the round-nine rule) (D200) where the original reads
 past a table or a list: a dispatcher's `+1` past its table (all 13);
 `WorldMap_RecordIndex` past 11 and a record's handler of 0; an extra index
 (`+0x18`, `+0xC`) of 4 or more; `0x939A1C` of 30 or more; kind 5's `+6` past
@@ -348,34 +348,34 @@ changes what the game does (DIVERGENCE.md unchanged; `cheats.cpp`,
 **Latent defects** (Capcom's, described, not fixed; not numbered - the
 coordinator numbers them):
 
-1. **Kinds 0xE and 0x16 in area 104, or off a world map.** Record 6 (area
+1. **Kinds 0xE and 0x16 in area 104, or off a world map.** (D229) Record 6 (area
    104) of `WorldMap_Records` holds 0 at `+4` and `+8`: an effect of kind 0xE
    or 0x16 there jumps to address 0. Off a world map, index 11 reads
    `EffectKind01_States[1]` (`EffectKind01_Draw`) and `EffectKind07_States[0]`
    (`EffectKind07_Start`) - D73's reading for kinds 0 / 0x58 / 0x18, extended.
    Which scenes spawn kinds 0xE / 0x16 is not read.
-2. **Kind 0xF's rows 7 and 8 name texts 13 and 14**, past `0x653B98`'s
+2. **Kind 0xF's rows 7 and 8 name texts 13 and 14** (D230), past `0x653B98`'s
    thirteen records: a record of kind 0xF with `+6` 7 or 8 reads its "text"
    from the pen bytes and the row table as a pointer (`_Choose` / `_Title`,
    `_LineStart`). Which `+6` the spawner writes is not read; the rows exist, so
    either the spawner never writes 7 / 8 or the game reads garbage there.
 3. **`_LineNext` and `_LineFade` index the label tables by a line byte they do
-   not test for 0xFF**; they are safe only because `_LineType` sets the wait
+   not test for 0xFF** (D200); they are safe only because `_LineType` sets the wait
    `+0xA` for a line other than 0xFF and `_LineScroll` releases the record for
    0xFF. A disturbed `+0x4B` between the two would read `0x653C00 + 0xFF`.
-4. **Pushed registers with stale high halves** (section 4): coordinates for
+4. **Pushed registers with stale high halves** (D213) (section 4): coordinates for
    `0x469750`, `0x468AC0`, `0x469210`, `0x468C50`, `0x468F00`,
    `FieldPanel_*` and `Text_DrawAt` carry `Sprite_Current`'s high half or a
    previous callee's `eax` above the byte or word the original loaded; kind
    0xC's `flip` a stale stack word. Harmless where the callees were read (low
    16 bits); a reading of E1B's bodies should confirm for theirs.
-5. **`EffectKind05_Bounce` at a height of exactly 0** clears `+0xB` (the jump
+5. **`EffectKind05_Bounce` at a height of exactly 0** (D238) clears `+0xB` (the jump
    at `0x4657A0` lands on the `jle` at `0x4657DA`, taken at 0), where a
    height above 0 sets it: the bounce is re-armed only by an exact landing.
    Possibly intended; recorded because it reads like a compiler fold.
-6. **Kind 0xA copies record 0 whatever record 0 is**: it shadows record 0,
+6. **Kind 0xA copies record 0 whatever record 0 is** (D238): it shadows record 0,
    which is kind 5's sprite only when kind 5 took the first free record.
-7. **E1F's `0x52CD50`** divides by `+0x60 - 2 * s16 +0x3E` unchecked (E1F's to
+7. **E1F's `0x52CD50`** (D207) divides by `+0x60 - 2 * s16 +0x3E` unchecked (E1F's to
    describe; kind 5's last two states call it).
 
 ## 7. Controls

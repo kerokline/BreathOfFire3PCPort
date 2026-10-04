@@ -166,17 +166,17 @@ controls' speed-up).
 
 ## 6. Latent defects (Capcom's, described, not fixed)
 
-- **L1 `ItemTrade_LeaveAsk` with confirm and cancel in one frame** runs both
+- **L1 `ItemTrade_LeaveAsk` with confirm and cancel in one frame** (D238) runs both
   tests: cancel sets the hand to 1 and the state down, then confirm on that
   hand ("no") takes the state down again - state 2 to 0, `ItemTrade_Open`,
   whose step (still the leave step, 0) is `ItemTrade_OpenStart`: the screen
   opens again. Whether both buttons can be pressed in one frame in play was
   not traced; ours keeps it.
-- **L2 `ItemTrade_Leave`'s index is unbounded** - a step of 2 or more jumps
+- **L2 `ItemTrade_Leave`'s index is unbounded** (D200) - a step of 2 or more jumps
   through `Item_IconByKind`'s bytes (ours aborts). Unreachable by the code
   read: the state is entered from `ItemTrade_PickItem`'s cancel at step 0, and
   only `ItemTrade_LeaveAsk` moves the step (to 1).
-- **L3 an entry past its row** - the record numbers are read from
+- **L3 an entry past its row** (D200) - the record numbers are read from
   `0x66AD10 + 10 * row + k` and the record from `0x66AB58 + 8 * number`
   unchecked: a pick past the row count, or an entry byte of `0xFF`, reads a
   record past the table's 55 (within `.data`, no fault). Kept unchecked as

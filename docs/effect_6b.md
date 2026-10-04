@@ -423,7 +423,7 @@ test; 112 drops the matrix pop. No equivalent mutant was planted.
 
 ## 8. Latent defects (Capcom's, described, not fixed)
 
-- **Unchecked indexes**: the nine dispatchers do not bound `+2` (every writer
+- **Unchecked indexes** (D200): the nine dispatchers do not bound `+2` (every writer
   in the band keeps it inside its table); the variant index is the spawn's x
   cell, s16 and unchecked, into cell tables with room for two or four - a
   spawn whose x cell is past them reads the next table's bytes (state-table
@@ -431,21 +431,21 @@ test; 112 drops the matrix pop. No equivalent mutant was planted.
   (kept 0..3 by its own `& 3`, but read before that wrap); 0x41's `+9` into
   its curve (room 0x1C; the states keep it below 0x18) and the draw's variant
   into two rows (its callers pass 0 or 1). Ours aborts past any.
-- **The INT_MIN distance**: the waiting states' `cdq; xor; sub` absolute value
+- **The INT_MIN distance** (D212): the waiting states' `cdq; xor; sub` absolute value
   leaves `0x80000000` negative, so a leader exactly 0x8000 cells away counts
   as near. Unreachable on a map (cells are bytes); ours computes it the same
   way.
-- **0x38's place tests the leader z first whatever `+8` says**, where every
+- **0x38's place tests the leader z first whatever `+8` says** (D238), where every
   other place and wait state picks the axis by `+8`: as read, perhaps a slip.
-- **0x37's and 0x38's places draw nothing** in their first frame, and 0x40's
+- **0x37's and 0x38's places draw nothing** (D203) in their first frame, and 0x40's
   `_WaitOne` / 0x41's `_WaitOne` draw nothing until their cue: as read.
-- **0x41's `_Hold` stops drawing for good** once `+9` reaches 0x17 (it is set
+- **0x41's `_Hold` stops drawing for good** (D203) once `+9` reaches 0x17 (it is set
   to 0, and only a non-zero `+9` draws); the record lives on to `+0xA` 0x31.
-- **0x3D and 0x54 never end**: no state of them releases the record. 0x3D
+- **0x3D and 0x54 never end** (D202, D211): no state of them releases the record. 0x3D
   adds to the map's corner bytes every frame `Cond_ByteFE` is set (byte adds
   that wrap), so the corners drift by the running sum of the frames' `a` /
   `b`, which the sine differences keep oscillating rather than growing.
-- **0x40's draw writes over its own argument slot** (`mov [esp + 0x1C],
+- **0x40's draw writes over its own argument slot** (D213) (`mov [esp + 0x1C],
   ecx`): harmless, the callers pop it unread.
 - **No defect reads memory the original never wrote**: the projection's tenth
   argument (a flag local) and the matrix's pad words are never read by the

@@ -608,7 +608,7 @@ seeds only add values).
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Sub-kind 0x59's shades are `.data`, never restored.** The fade writes the
+- **Sub-kind 0x59's shades are `.data`, never restored.** (D226) The fade writes the
   twelve bytes `0x65EF0C..0x65EF17` of the image (initially 0x80 each) down to
   0 and nothing in the executable writes them back (a scan of `.text` for the
   addresses finds only this band's reads and the fade's writes). On the
@@ -617,7 +617,7 @@ seeds only add values).
   session starts faded: `_Fade` sees `0x65EF14` already 0 and moves straight
   on, the ring drawn dark. **For the owner's eye** - it changes what is drawn
   the second time; ours does as the original (no entry from the group).
-- **Unchecked indexes**: the seven dispatchers do not bound `+2`; sub-kind
+- **Unchecked indexes** (D200): the seven dispatchers do not bound `+2`; sub-kind
   0x51's variant `+0x36` indexes five rectangles unchecked (its `_Wait` bounds
   its own switch); `DrawRing`'s half indexes two uv pairs (callers 0 / 1);
   `SetTiles`' `step % 3 + 3 bank` six stack bytes (callers keep it 0..5; a
@@ -625,23 +625,23 @@ seeds only add values).
   0..2); the sky's tints sixteen triples by `(w - 0x390) / 3` - past 0x3BF the
   original reads the twinkle offsets, which `Area189_StepArrive`'s wrap at
   0x3C0 keeps from happening. Ours aborts past any.
-- **A divide by zero**: `DrawRing`'s glows divide by `Camera_Distance +
+- **A divide by zero** (D207): `DrawRing`'s glows divide by `Camera_Distance +
   0x1194`, zero at `Camera_Distance` -0x1194 (an integer divide fault in the
   original; ours aborts with a message). Whether play reaches that distance is
   not measured; no recorded route shows sub-kind 0x59.
-- **The draw-item indexes**: `MapView_ItemAt` answers up to 0xFFF and the
+- **The draw-item indexes** (D200): `MapView_ItemAt` answers up to 0xFFF and the
   link word `& 0xFFF` likewise; the original indexes `DrawItems` unchecked
   (1,024 items, 2,048 under DIV-0062). Ours aborts past `draw_pool::Count()`.
-- **The sky's bands past a full pool**: the four G4 bands are laid at the
+- **The sky's bands past a full pool** (D209): the four G4 bands are laid at the
   cursor + `0x44 m` without reading it again; when the commit's room test
   fails (the pool nearly full) they are written past the cursor and up to
   0x110 bytes past the pool's room margin, unlinked. Harmless unless the pool
   is that full; ours writes the same bytes.
-- **Stale writes**: `DrawStars` stores each star's y into the cursor's prim
+- **Stale writes** (D213): `DrawStars` stores each star's y into the cursor's prim
   before testing it, drawn or not; sub-kind 0x45's ring overwrites
   `MapView_ScreenXY` and `0x903828` (the camera cells other code reads) with
   its fixed point every call.
-- **Never ends by its own code**: sub-kind 0x53 (one state, no release);
+- **Never ends by its own code** (D202): sub-kind 0x53 (one state, no release);
   sub-kind 0x5A's cycles; sub-kind 0x44's states (E6B's dispatcher's).
 
 ## 8. Calls across groups

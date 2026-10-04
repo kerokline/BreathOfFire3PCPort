@@ -395,7 +395,7 @@ Planted one at a time by scratch `controls.py` in `effect_2e.cpp` (plant anchore
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **The kinds share one scratch.** Kind 0x4A's trail (`0x92BF80..0x92CC83`),
+- **The kinds share one scratch.** (D201) Kind 0x4A's trail (`0x92BF80..0x92CC83`),
   kind 0x4B's debris (`0x92CC84..0x92D203`), kind 0x48's spiral
   (`0x92C4A4..0x92D1C3`), ring (`0x92D1C8..0x92D1D9`), burst
   (`0x92C060..0x92C49F`) and sparks (`0x92BF80..0x92C05F`) overlap one another
@@ -404,18 +404,18 @@ Planted one at a time by scratch `controls.py` in `effect_2e.cpp` (plant anchore
   records, or a kind 0x4B beside a kind 0x48 in state 7 (debris 31 lies over
   the ring) - write over each other's points and counts. Whether the game ever
   spawns two at once was not traced.
-- **`EffectAngle_Mean` does not wrap its answer**: two angles in the upper
+- **`EffectAngle_Mean` does not wrap its answer** (D238): two angles in the upper
   half and 0x800 or more apart give up to 0x13FF. Its callers were not read
   for whether they mask it.
 - **`EffectKind4A_DrawGlow` hands `EffectGte_ProjectSize` its own argument
-  slot** as the size pair, the size word stored over the point's low word, so
+  slot** (D213, D216) as the size pair, the size word stored over the point's low word, so
   the callee's second size is the high word of the point's address (0x0092
   for the trail's head) and its second quotient, written to the stack pair's
   second word, is never read: harmless as compiled. A depth of 0 at the head
   is the callee's divide fault (EGT's latent defect, `effect_gte.md`).
 - **`EffectKind48_State7_Swell` indexes two eight-byte tables by `+9` with no
-  bound**; `+9` rises every 16 frames of the 0x5F, so 0..5 in play - inside.
-- **`EffectSphere_Draw` trusts the quads' vertex numbers** (u16, unchecked):
+  bound** (D200); `+9` rises every 16 frames of the 0x5F, so 0..5 in play - inside.
+- **`EffectSphere_Draw` trusts the quads' vertex numbers** (D200) (u16, unchecked):
   only `EffectSphere_Build` writes them, below 0x1E2; ours aborts past it.
 
 ## 8. Calls across groups

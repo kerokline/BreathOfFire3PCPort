@@ -411,7 +411,7 @@ any:
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **`EffectKind44_SparksClear` clears one spark of eight.** It sets the cursor
+- **`EffectKind44_SparksClear` clears one spark of eight.** (D232) It sets the cursor
   `0x6761B8` to the first spark record and then clears the in-use byte the
   cursor points at eight times, never moving it. Sparks 1..7 keep whatever
   their bytes held: the records lie inside the shared buffer at `0x92BF80`
@@ -422,7 +422,7 @@ any:
   and its fade-in both call it. Reach: area 78 / 80's choice (section 9);
   whether stale bytes are left there in play depends on what ran before - not
   measured.
-- **`EffectKind6B_Scatter` writes particles without a bound.** Its rectangle is
+- **`EffectKind6B_Scatter` writes particles without a bound.** (D217) Its rectangle is
   0x50 x 0x48 (5,760 pixels); each pixel not 0 becomes a particle of 0x14 at
   `0x92EC80 + 0x14 n`. The 1,882nd lands on `0x937F84` (`Gfx_CurrentEnv`,
   then `Sprite_Current`, `Frame_Counter`, `MapView_CellItems`, the desktop
@@ -432,7 +432,7 @@ any:
   PSX reserved there is not read here; on the PC the unnamed room before
   `0x937F84` holds 1,881. Reach: chapter 10's run 13 captures sprite record 2;
   its pixel count is the sprite's - not measured.
-- **`EffectKind43_SparksRun` phases above 4 never end.** A spark whose phase is
+- **`EffectKind43_SparksRun` phases above 4 never end.** (D238) A spark whose phase is
   5 or more is drawn each frame and never taken out of use. The phase after
   rising is `1 + the record's +6 + 1`, and only kind 0x43's states write `+6`
   (0, 1, 2): not reachable from them.

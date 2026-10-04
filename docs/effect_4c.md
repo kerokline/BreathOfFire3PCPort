@@ -379,7 +379,7 @@ harness's disturbance moved `Sprite_Current` or the cell after that call
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x90's tag wraps onto free shards.** `_Start` hands each kind-0x90
+- **Kind 0x90's tag wraps onto free shards.** (D221) `_Start` hands each kind-0x90
   record the next value of the dword `0x676294` as its tag (`+6`, the low
   byte), and `_MoveShards` / `_EmitOne` treat a shard whose `+0` equals the
   tag as the record's. Nothing resets the dword (a scan of the image: only
@@ -393,20 +393,20 @@ harness's disturbance moved `Sprite_Current` or the cell after that call
   entry are the owner's. Ordinary play reaching it needs 256 kind-0x90
   records (area 134's handlers 12 / 13 spawn one each) in one session - not
   measured.
-- **The pools overlap.** Kind 0x8E's two pools cover `0x92BF80..0x92E580`:
+- **The pools overlap.** (D201) Kind 0x8E's two pools cover `0x92BF80..0x92E580`:
   over the first 0x500 bytes kinds 0x8F, 0x90 and 0x93 use, E3C's kinds 0x6D /
   0x6E / 0x72 / 0x73 and every other user of `EffectKind30_Shards`, and over
   E2A's centre `0x92D380`. Two such kinds live at once trample each other;
   kind 0x93's start clears kind 0x90's shards outright. Whether the game ever
   runs two together was not traced.
-- **The six dispatchers do not bound their state bytes**; every writer of
+- **The six dispatchers do not bound their state bytes** (D200, D202); every writer of
   `+1` in the band steps it inside its table. Kind 0x8D's state 1 is never
   left by the band's code (something outside writes 2).
-- **The column's step count is unbounded** (E3C's section 7 for the twin):
+- **The column's step count is unbounded** (D208) (E3C's section 7 for the twin):
   `EffectKind93_Draw` steps 0x100000 at a time from the foot to the top +
   0x1000000 with signed compares; the states keep the top within 0x8000000 of
   the foot.
-- **Leftovers**: kind 0x8D sets the party records' byte `+0x48` and never puts
+- **Leftovers** (D213, D238): kind 0x8D sets the party records' byte `+0x48` and never puts
   it back (whoever reads it is outside the band); `_Fall` ignores
   `MoveCmd_TestFB`'s answer; `_DrawFan` steps its own argument slot; kind
   0x8F's stage byte is one cell for every kind-0x8F record (harmless: each

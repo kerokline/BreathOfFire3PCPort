@@ -237,7 +237,7 @@ word, `+0x34` / `+0x38`.
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_6d`,
 exit 0): 204,000 rounds over 51 functions, 10,534,193 calls to the stand-ins, **0 mismatches**; 27,596 bytes of state in 50 regions; 399 stand-ins. Every entry of the six tables reached (each handler recorder 542..1,351 calls; `0x5166C0` as `_Pulse` 880, `0x515160` as `_ClearTracks` 4,552); `MapView_ItemHalfAt` 426,588, `AreaMap_Elevation` 52,000, `Flags_Set` 5,154, `Flags_Clear` 2,049, `Effect_Release` 1,680.
 
-**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` was still running when this was written (slow under four parallel groups): over 940 self-test lines, every one 0 mismatches, none failed; its end and the `BOF3X_WIDE=1` run are owed to the coordinator's verification. `ledger_check`: 72 entries, 0 errors (8,501 impl lines, 8,501 functions detoured).
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` ran to its end after this paragraph was first written (slow under four parallel groups, it outlived its launcher): read from the log, 714 self-test lines, no mismatch, none failed; no exit code ([`takeover-queue-round13.md`](takeover-queue-round13.md) section 17, which gives the count; this paragraph's earlier "over 940 self-test lines" while it ran was not reconciled with it). This group ran no `BOF3X_WIDE=1` star run; the round tip's (`61001f7`, section 17) exited 0. `ledger_check`: 72 entries, 0 errors (8,501 impl lines, 8,501 functions detoured).
 
 ## 5. What the cut and the tool said, settled
 
@@ -449,7 +449,7 @@ refused run exited 3 on a `MISMATCH` line. **164 of 166 refused.** Not refused: 
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Sub-kind 0x5C's far wait can step `+2` past its table.** `_WaitFar` steps
+- **Sub-kind 0x5C's far wait can step `+2` past its table.** (D225) `_WaitFar` steps
   `+2` once when `Cond_ByteFE` is 1 and once more when the leader is away:
   both in one frame take it from 3 to 5, and the next frame's dispatch jumps
   through `0x65F388` - the variant cells read as a code pointer. Ours steps it
@@ -457,7 +457,7 @@ refused run exited 3 on a `MISMATCH` line. **164 of 166 refused.** Not refused: 
   area's script sets `Cond_ByteFE` to 1 while the leader is more than three
   cells from the open panels; not measured. The game's nearest answer would
   be 4 (`_Close`); the fix is the owner's word.
-- **Unchecked indexes**: the five dispatchers and the run do not bound their
+- **Unchecked indexes** (D200): the five dispatchers and the run do not bound their
   index (every writer in the band keeps `+2` inside its table but the case
   above; `Cond_ByteFE` is the areas' scripts'); the variant index is the
   spawn's x cell, s16 and unchecked, into tables with room for two (0x5C,
@@ -465,16 +465,16 @@ refused run exited 3 on a `MISMATCH` line. **164 of 166 refused.** Not refused: 
   signs by the side (its callers push 0 and 1); the tracks' ring by a head
   byte the code keeps below 32 (`& 0x1F`) but `_Reset` never writes. Ours
   aborts past any.
-- **The INT_MIN distance**: the waiting states' `cdq; xor; sub` absolute value
+- **The INT_MIN distance** (D212): the waiting states' `cdq; xor; sub` absolute value
   leaves `0x80000000` negative, so a leader exactly 0x8000 cells away counts as
   near. Unreachable on a map; ours computes it the same way.
-- **0x5C draws nothing while waiting shut or open**, and 0x64's `_Watch` can
+- **0x5C draws nothing while waiting shut or open** (D203, D238), and 0x64's `_Watch` can
   step `+2` down below 2 (`Game_Mode` 5 and `Game_Step` not, in state 2 gives
   1, `_WaitBattle`, which steps it back): as read, perhaps deliberate.
-- **`MapView_ScreenXY` as scratch**: 0x5C's draw stores its two base floats
+- **`MapView_ScreenXY` as scratch** (D213): 0x5C's draw stores its two base floats
   into the map view's screen point, which `MapView_Build` owns; harmless if
   the map view rewrites it before reading, not measured. Ours writes it too.
-- **0x62's ripple accumulates**: each frame adds the difference of two sine
+- **0x62's ripple accumulates** (D211): each frame adds the difference of two sine
   steps to the map's corner bytes, wrapping at 256, and never restores them.
 
 ## 8. Calls across groups

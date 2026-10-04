@@ -456,29 +456,29 @@ behaviour and seeds, and the full self-test after it is 0 mismatches.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **The seven dispatchers do not bound `+2`**: a sub-state past the table
+- **The seven dispatchers do not bound `+2`** (D200): a sub-state past the table
   jumps through the dword after it - the next table, bytes or a data dword.
   Ours aborts with a message. Every state stores only in-table values.
-- **Byte arrays read by a record byte, unchecked**: sub-kind 0x0D's glow by
+- **Byte arrays read by a record byte, unchecked** (D200): sub-kind 0x0D's glow by
   the column `+0x36` (four arrays of 4), its frames by `+9 >> 1` and `+9 / 3`
   (4 each; `+9` stays below 8 in play), sub-kind 0x0C's flag by `+0x36` (8)
   and its VRAM column by `+0x36` (8), sub-kind 0x13's by `+0xB` (the byte
   `+0x36` copied, 4), the gates' by the variant `+0x36` (8) and `+0x3A` (4).
   Past an extent the original reads the next array; ours aborts. Ordinary
   play reaches none of these unless a spawner writes an out-of-range variant.
-- **Cell writes unchecked**: the gates write `AreaMap_Bytes + z * width + x`
+- **Cell writes unchecked** (D211): the gates write `AreaMap_Bytes + z * width + x`
   (and the neighbour) from the record's words, with no bound against the
   map; sub-kind 0x0E writes the fixed cells (1, 21) and (1, 22) whatever the
   map's size. Faithful in ours (no bound either).
-- **Sub-kind 0x4F's variant 0 crosses its axes**: `_Start` sets +8 = (v ==
+- **Sub-kind 0x4F's variant 0 crosses its axes** (D237): `_Start` sets +8 = (v ==
   0) as 0x0F's does, so variant 0's gate is drawn along x, but 0x4F's cell
   writes ((x, z), (x, z + 1)) and its leader tests always take the along-z
   shape. A variant-0 gate of this sub-kind would mark and test cells across
   the quad it draws. Whether any area spawns 0x4F with variant 0 is not known.
-- **Two draws in one frame**: sub-kind 0x0E's `_Raise` and the gates' `_Raise`
+- **Two draws in one frame** (D205): sub-kind 0x0E's `_Raise` and the gates' `_Raise`
   call `_Wait` (which draws the gate) and, when it did not re-trigger, draw
   it again - two identical quads committed that frame.
-- **The gates' `_Open` draws nothing** (0x0F state 3): while a gate stands
+- **The gates' `_Open` draws nothing** (D203) (0x0F state 3): while a gate stands
   open its quad is not drawn at all (it is drawn lowered by +0x30 in `_Lower`
   and `_Raise`). By design or not is the owner's to see.
 - **`_DrawGlow` divides by the projection's depth** after testing it for 0:

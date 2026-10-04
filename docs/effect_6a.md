@@ -349,7 +349,7 @@ after a call (the disturbance moves it).
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Unchecked indexes**: the seven dispatchers do not bound `+2` (every
+- **Unchecked indexes** (D200): the seven dispatchers do not bound `+2` (every
   writer in the band keeps it inside its table: the states step 1..4 and
   back, the places set 3); the variant index is the spawn's x cell, s16 and
   unchecked, into tables with room for 16 (0x2D), 10 (0x3E), 4 (0x2E) and 2
@@ -357,7 +357,7 @@ after a call (the disturbance moves it).
   bytes (for 0x2E..0x32 the unused sign pair, then a state table's code
   pointers) as a cell; 0x2D's draw indexes its four signs by `+0xA` (only its
   place writes it, 0 or 1). Ours aborts past any.
-- **`EffectKind18Sub31_Draw`'s dead compare**: its texture word ORs in
+- **`EffectKind18Sub31_Draw`'s dead compare** (D224): its texture word ORs in
   `(+8 == 0) < 0x10` (`sete cl; cmp ecx, 0x10; setl dl`), which is always 1,
   into a word whose bit 0 is already set - so the word is `+8 << 21 |
   0x150010F` whatever `+8` is. Its siblings put `(+8 == 0)` at bit 16
@@ -366,13 +366,13 @@ after a call (the disturbance moves it).
   same either way for `+8` set; for `+8` clear 0x30's draw sets bit 16 where
   0x31's does not. Kept as read; whether 0x31 was meant to look like 0x30 is
   the owner's question, not a defect ours can settle.
-- **Sub-kind 0x3E's far test** crosses the centre at 0x8000 where every other
+- **Sub-kind 0x3E's far test** (D238) crosses the centre at 0x8000 where every other
   sub-kind's far test has 0x20000: the leader need only step half a cell off
   the front's axis for the slide to close. As read; perhaps deliberate.
-- **0x3E draws nothing**: its states slide and sound with no draw at all.
-- **The INT_MIN distance**: as in E5G - a leader exactly 0x8000 cells away
+- **0x3E draws nothing** (D203): its states slide and sound with no draw at all.
+- **The INT_MIN distance** (D212): as in E5G - a leader exactly 0x8000 cells away
   counts as near. Unreachable on a map; ours computes it the same way.
-- **`+0x3A` reused**: 0x2D's place reads the spawn's z cell's low byte for two
+- **`+0x3A` reused** (D238): 0x2D's place reads the spawn's z cell's low byte for two
   flags (`+8`, `+0xA`) and then overwrites `+0x3A` with the variant's cell;
   0x2E..0x32 and 0x3E test the whole word for 0. As read.
 

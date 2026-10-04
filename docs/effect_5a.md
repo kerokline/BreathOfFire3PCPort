@@ -393,9 +393,9 @@ refused.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Unbounded dispatchers**: the eight `_Run`s jump through `+2` with no
+- **Unbounded dispatchers** (D200): the eight `_Run`s jump through `+2` with no
   compare; ours aborts past the table's count.
-- **Unbounded table indexes by a record byte**: `+0x36` into sub-kind 5's rows
+- **Unbounded table indexes by a record byte** (D200): `+0x36` into sub-kind 5's rows
   (5), sub-kind 6's flags, rectangles and part runs (3), `+0x3A` into the
   levels (4), `+0xB` into sub-kind 7's doors (3), `+9` into `_Topple`'s
   (0x29) and `_Crash`'s (0xE) tables, `+2` into `_Pattern`'s heights and
@@ -403,20 +403,20 @@ refused.
   `0x65DF2C` (32): the original reads what follows; ours aborts with a
   message. In play each byte comes from the same tables or a bounded count
   (`+9` resets at the compare that ends the state), so none is reached.
-- **`Gfx_ClutStripCopy16` is unbounded**: rows and slots past the strip copy
+- **`Gfx_ClutStripCopy16` is unbounded** (D200): rows and slots past the strip copy
   outside it. `_05_FadeIn`'s slot `8 - +9 / 5` goes negative past `+9` 44, but
   the state resets `+9` past 0x1E. Ours aborts outside the strip.
 - **`_SetMap` writes the height bytes at `AreaMap_Header + 4 *
-  AreaMap_HeightBase`** with no bound on the base word: in play it is the
+  AreaMap_HeightBase`** (D211) with no bound on the base word: in play it is the
   area's (the rows after the header), so not a defect by itself; in the fuzz
   it is seeded below 0x600.
-- **`_DrawDoor`'s dy carries stale bytes**: `mov dl, [table]` over the `edx`
+- **`_DrawDoor`'s dy carries stale bytes** (D213): `mov dl, [table]` over the `edx`
   `Prim_SetTexture` returned with; `MapView_LinkPrimAt` reads only the signed
   byte, so nothing reads them (the fuzz compares the byte, section 4).
-- **`_DrawPanel` passes its own `angle` slot** to `Gte_RotTrans` as the flag
+- **`_DrawPanel` passes its own `angle` slot** (D213) to `Gte_RotTrans` as the flag
   out (Capcom's third word), and `_DrawTilted` reuses its argument's slot as a
   counter: both stack-only, read by nobody after.
-- **Stale SVECTOR pads**: the points `_DrawPanel`'s callers, `_DrawTilted` and
+- **Stale SVECTOR pads** (D213): the points `_DrawPanel`'s callers, `_DrawTilted` and
   `_DrawDoor` build leave the fourth short as stack; no GTE function of ours
   reads it (DIV-0023's pad, the effect rows hash six bytes).
 

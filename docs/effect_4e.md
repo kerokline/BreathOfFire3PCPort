@@ -434,7 +434,7 @@ with a message (the round-nine rule, no ledger entry):
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0xA0's trail can draw without end.** `EffectKindA0_DrawTrail`'s dots
+- **Kind 0xA0's trail can draw without end.** (D222) `EffectKindA0_DrawTrail`'s dots
   start at `to + (Frame_Counter & 0xF) * pull` and step `pull << 4` while x is
   above `from`'s; nothing counts them (kind 0x64's same trail stops at
   eight). State 4 sets the pull to `(0x2F8000 - x) sar 7` from the glow's
@@ -453,20 +453,20 @@ with a message (the round-nine rule, no ledger entry):
   0x400 dots (section 6); the nearest sensible answer would be E3A's count of
   eight. The fix and its ledger entry are the owner's word.
 - **`EffectKind9C_DrawBeamSides` copies its first quad to where it expects the
-  cursor**: `rep movsd` to the first quad's address + 0x44 regardless of
+  cursor** (D209): `rep movsd` to the first quad's address + 0x44 regardless of
   whether `Gfx_CommitPrim` moved the cursor; when the packet pool is full
   (the commit stops 0x54 short of the end) the copy writes up to 0x34 bytes
   past the pool. Ours copies the same.
-- **Shards 16..31 are drawn from state 4 on**, before state 6's end sets them
+- **Shards 16..31 are drawn from state 4 on** (D214), before state 6's end sets them
   up: state 3 zeroes only their speed and shade words, so each is drawn as a
   black triangle collapsed onto a stale point (whatever an earlier life of
   the kind left); not visible if the renderer drops degenerate triangles.
-- **Kind 0x9B never leaves state 2** (no release, no count): the ring stays
+- **Kind 0x9B never leaves state 2** (D202) (no release, no count): the ring stays
   until something else frees the record (the area's tail, an area change).
   Not a fault on its own; noted for whoever traces area 100.
-- **`EffectKindA0_StepSparks`' answer is read by no caller**, and kind 0xA0's
+- **`EffectKindA0_StepSparks`' answer is read by no caller** (D213), and kind 0xA0's
   state 8 lowers the glow's size word that no state draws any more.
-- `EffectKindA0_DrawGlow` calls `EffectGte_ProjectSize`, which divides by the
+- (D216) `EffectKindA0_DrawGlow` calls `EffectGte_ProjectSize`, which divides by the
   projected depth unchecked (EGT's defect, [`effect_gte.md`](effect_gte.md)).
 
 ## 8. Self-tests

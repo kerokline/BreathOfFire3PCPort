@@ -371,32 +371,32 @@ onto another table of at least its length.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x83's `_Wait` checks record 0, not record 1.** Every other state
+- **Kind 0x83's `_Wait` checks record 0, not record 1.** (D235) Every other state
   of kind 0x83 pushes and checks `Sprite_Objects` record 1; its `_Wait` is
   kind 0x82's code copied whole and still compares record 0's x with the
   leader's for its 0x16 exit (and `_Finish`, shared, stores record 0's
   distance). With both kinds alive the 0x16 exit follows record 0.
-- **`0x903849` 0xFE releases the record and runs on.** Kind 0x84's three
+- **`0x903849` 0xFE releases the record and runs on.** (D204) Kind 0x84's three
   states call `Effect_Release` on 0xFE and then carry on with the record they
   have just freed: the line check, `Rand`, and the writes of `+1` / `+9` land
   in a record whose `+0` is now 0 (the next `Effect_FindFree` may hand it out
   with those bytes set).
-- **Kind 0x85's `_Wait` draws after its release**: at counter 0x35 it frees
+- **Kind 0x85's `_Wait` draws after its release** (D204): at counter 0x35 it frees
   the record, then still calls the tile and `_ShowObjects`, reading `+6` and
   the colour of the freed record that frame.
-- **The sprite indexes are unchecked.** Kind 0x86's `+3` / `+4` come from
+- **The sprite indexes are unchecked.** (D200) Kind 0x86's `+3` / `+4` come from
   `Sprite_FindFree` (0..29, 0xFF checked in `_Spawn` only); kind 0x85's `+6`
   from `Area144_SpawnEffect85`, which takes `(Field_ActiveMember -
   Sprite_Objects) / 0xA4` without a check. A record whose bytes are past 29
   writes past `Sprite_Objects` into the draw records at `0x7E01C0`. Ours
   aborts.
-- **`_Count18` can never reach 0xF in play**: `EffectKind82_Start` and
+- **`_Count18` can never reach 0xF in play** (D238): `EffectKind82_Start` and
   `_Again` set `+2` 0 on every pass, so `+2` is 1 when `_Count18` reads it;
   the "0xF or more, back to 0xD" exit is dead unless `+2` is written
   elsewhere (nothing in the band does).
-- **Kind 0x84's entry 4 (`Effect_StateRelease`) is unreachable**: no state
+- **Kind 0x84's entry 4 (`Effect_StateRelease`) is unreachable** (D238): no state
   stores 4.
-- **The five dispatchers do not bound `+1`.** Every writer in the band stays
+- **The five dispatchers do not bound `+1`.** (D200) Every writer in the band stays
   inside its table (kinds 0x82 / 0x83's 0x16 / 0x17 among their 24); ours
   aborts past any of them.
 

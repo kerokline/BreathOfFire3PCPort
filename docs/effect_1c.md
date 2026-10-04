@@ -379,7 +379,7 @@ them).
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **`EffectKind1E_DrawModel`'s back-face test reads the halves of a float.**
+- **`EffectKind1E_DrawModel`'s back-face test reads the halves of a float.** (D231)
   `EffectKind1E_Winding` is the PlayStation's screen-space winding test on
   s16 `(x, y)` pairs, as the PSX GTE wrote them. On the PC,
   `Gte_RotTransPers4` writes each screen point as two **floats** (x at `+8`,
@@ -390,29 +390,29 @@ them).
   cross product on float vertices, in x87, three other callers) - which this
   caller does not use. What the model looks like on the PC is for the
   owner's eye; a fix would be a divergence.
-- **A negative face count** (`Sprite_ObjectsExtra[0]`'s `+0x54` byte 0x80 and
+- **A negative face count** (D208) (`Sprite_ObjectsExtra[0]`'s `+0x54` byte 0x80 and
   above) is `movsx`'d and the loop runs `0xFF80..0xFFFF` times, reading far
   past the model. Ours aborts. No reach is established.
-- **`EffectKind70_Run` with more than three members**: the bit `1 << i` is
+- **`EffectKind70_Run` with more than three members** (D200): the bit `1 << i` is
   taken with the shift count masked to five bits and its low byte, so only
   members below 8 (and 32..39) can be written; a set bit for member 3..7
   writes past ObjTrio's three records. Only when `Field_MemberCount` is above
   three and the spawner set those bits; ours aborts.
-- **The unbounded dispatchers** (seven: the table at the top) and
+- **The unbounded dispatchers** (D200) (seven: the table at the top) and
   `EffectKind36_Run`'s frame index: a state byte past its table jumps through
   the next table's cells or data. Ours aborts.
-- **`EffectKind1C_Start` overwrites its spawner's placement**:
+- **`EffectKind1C_Start` overwrites its spawner's placement** (D238):
   `Area10_SpawnEffect1C` sets `+0x34` / `+0x38` from its own object, and the
   first state replaces both with (0x600000, 0x110000). Observed, not
   necessarily a defect (the ring may belong at a fixed place in its area).
-- **One pool, several strides**: `EffectKind30_Shards` `0x92BF80` holds kind
+- **One pool, several strides** (D201): `EffectKind30_Shards` `0x92BF80` holds kind
   0x30's shards (FC2), kinds 0x1C / 0x1D's specks (0x14 apart), kind 0x1E's
   eight shards (0x28), kind 0x1F's debris (0x2C) and, from `0x92C0C0`, kind
   0x1E's pieces. Two of these kinds live at once would write over each other;
   nothing in the code prevents it.
-- **Dead states**: `EffectKind1E_ShardNext2` / `_ShardNext3` are unreachable
+- **Dead states** (D238): `EffectKind1E_ShardNext2` / `_ShardNext3` are unreachable
   (state 1 frees its shard and never steps).
-- **Ranges**: kind 0x20's `+0x64` floors at 8 only in `_Fall`; `_Rise`
+- **Ranges** (D238): kind 0x20's `+0x64` floors at 8 only in `_Fall`; `_Rise`
   takes it down 72 from 128 and `_Shrink` up 72 (net 0). Reproduced.
 
 ## 8. Controls
