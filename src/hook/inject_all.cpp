@@ -281,6 +281,7 @@
 #include "game/rest_1e.h"
 #include "game/rest_1a.h"
 #include "game/rest_1c.h"
+#include "game/rest_1g.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1173,6 +1174,13 @@ void InjectAll() {
                                 // fuzz only; after Rest0A_Inject (it calls R0A's helpers by name) and every harness's
                                 // inject; no module patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    Rest1G_Inject();            // round 14 wave-one group R1G (0x5289A0..0x52CD46: the fishing spot - the leader's
+                                // state 9 stages 1, 10, 11 and their steps, the menu's data and rule pages, the
+                                // stages' helpers; game mode 8's fish): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its six tables swapped for the fuzz only; after every
+                                // harness's inject; ours that call it (E1E, E1F) call it by the address it had;
+                                // before FishingText_Arm, which patches no byte inside its 45 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
     FishingText_Arm();         // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
     Rest1E_Inject();            // round 14 group R1E (0x5226D0..0x523EC2: the field actions of party sets 13, 14,
                                 // 15 and set 16's forms 0 and 1 - the dispatchers by the form word and the state
