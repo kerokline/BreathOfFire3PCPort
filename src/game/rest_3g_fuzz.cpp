@@ -10,8 +10,8 @@
 // kCall (Clone::pointers where an argument is a pointer, ret_mask where a
 // caller reads the answer); the game modes' dispatchers and steps, the boss
 // placement, the enemies' clear and area 0xBD's frame and build kState. Two
-// groups: the 31 at 4,000 rounds a function, and AreaMapBD_BuildView alone
-// (each call walks up to 2,240 cells) at fewer. The four mode step tables are
+// groups: the 31, and AreaMapBD_BuildView alone (each call walks up to 2,240
+// cells, so the disturbance cuts its walk short), 4,000 rounds a function. The four mode step tables are
 // DataTables. Every callee the group's code calls that no standard set lists,
 // or lists otherwise than the group needs, is listed here (registered before
 // the standard rows: the group's listing stands).
@@ -196,9 +196,11 @@ U ScreenXYEffect(const U* a, U answer) {
         PutFloat(p + 4, static_cast<float>(static_cast<int>((n >> 9) % 600) - 300));
         return answer;
     }
-    const U nan = 0x7FC00000u;
+    // a quiet NaN, or a signalling one (the kept point is copied through the
+    // FPU, which quietens it)
+    const U nan = (n >> 20) & 1 ? 0x7FC00000u : 0x7F800001u | ((n >> 21) & 0x3FFFFFu);
     const U x = (n >> 6) % 23 == 0 ? nan : FloatBits(kX[(n >> 6) % (sizeof kX / sizeof kX[0])]);
-    const U y = (n >> 12) % 17 == 0 ? nan : FloatBits(kY[(n >> 12) % (sizeof kY / sizeof kY[0])]);
+    const U y = (n >> 12) % 7 == 0 ? nan : FloatBits(kY[(n >> 12) % (sizeof kY / sizeof kY[0])]);
     std::memcpy(p, &x, 4);
     std::memcpy(p + 4, &y, 4);
     return answer;
@@ -335,7 +337,7 @@ void Seed(unsigned k) {
         break;
     }
     case kSwitch:
-        Mem(at::kLeaderFacing)[0] = static_cast<unsigned char>(PickOf(3, 3, 2, sh::Next()));
+        Mem(at::kLeaderFacing)[0] = static_cast<unsigned char>(PickOf(3, 3, 3, 3, 2, sh::Next()));
         break;
     case kCharCount: {
         // a string: Latin and two-byte characters, its NUL anywhere, two NULs
@@ -439,7 +441,7 @@ void SelfTest() {
     }
     if (!only || !*only || std::strstr(kBuild[0].name, only)) {
         sh::Group g = {"rest_3g build", kBuild, 1, kCallees, sizeof kCallees / sizeof kCallees[0], nullptr, 0,
-                       kRegions, sizeof kRegions / sizeof kRegions[0], [](unsigned) { Seed(kBuildView); }, &Disturb, 1500};
+                       kRegions, sizeof kRegions / sizeof kRegions[0], [](unsigned) { Seed(kBuildView); }, &Disturb, 4000};
         g.effect = true;
         g.kinds = kKinds;
         g.n_kinds = sizeof kKinds;
