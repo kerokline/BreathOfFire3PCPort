@@ -45,7 +45,7 @@ template <typename F> std::uint32_t KeyOf(F f) { return Key(reinterpret_cast<con
 // 0xFF, 0, 1, 2 (0xFF a fifth of the time, 0xFE the byte beside it).
 constexpr std::uint32_t kU8 = 0xFFu, kU16 = 0xFFFFu;
 const ah::Callee kCallees[] = {
-    {"Effect_Spawn", KeyOf(Effect_Spawn), KeyOf(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02},
+    {"Effect_Spawn", ::bof3::addr::Effect_Spawn, KeyOf(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02},
 };
 
 // The chain AreaMap_HeaderPass walks, built in the area block: 0..10 entries
