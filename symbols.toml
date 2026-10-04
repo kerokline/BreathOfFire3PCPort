@@ -4090,8 +4090,9 @@ name = "Area_ObjectHandler"
 psx = 0x801ADE10
 ret = "void"
 params = "unsigned short n"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (whole, 58 bytes): a tail-jump dispatcher - to the area descriptor +0x3C table [Field_ActiveMember +0xA0 & 0x7F], or, when that is 0x7F, to 0x660CA0[s16 n]. Reads its argument as a signed word. Called by Field_ObjectLinked."
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-09-22 (whole, 58 bytes); read again disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537540..0x537579 (0x3A bytes), cdecl, no calls: a tail jmp - with Field_ActiveMember +0xA0 & 0x7F not 0x7F through Area_Descriptors[Game_AreaNumber] +0x3C at that index (the area's table, no count the code knows: ours reads the cell in place, aborts past the 200 descriptors), else through Area_ObjectFallbacks[(short)n] (ours aborts outside 0..10). The handler runs with the caller's argument where it was; ours passes n on. Called by Field_ObjectLinked (twice). PSX 0x801ADE10. Fuzz only: no recorded route enters it. docs/rest_2a.md."
 
 [[func]]
 pc = 0x56D6B0
@@ -103968,3 +103969,221 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R1D): 0x520840 0x51FC80 0x52F5C0 (PartyAction_ScriptEnd); jumped through by PartyFormAction13_Form0 0x5226B0 by Sprite_Current +2, unchecked; the next table starts at 0x65FEC4 (its own reader's). docs/rest_1d.md."
+
+# Round fourteen group R2A: the band 0x5372E0..0x537F1B (docs/rest_2a.md)
+
+[[func]]
+pc = 0x5372E0
+name = "Mode11_ListedSpriteScreens"
+psx = 0x80168778
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5372E0..0x5373E2 (0x103 bytes), cdecl, two calls: for each of the 30 Sprite_Objects records Sprite_Current = it; with +0 bit 0: type +6 not 9 - +0x29 = 4 with +0x24 bit 4, else Draw_OtSlot; type 9 with Draw_OtSlot 4 - nothing more. Then type 0xA: Sprite_UpdateScreenA. Else the first of the bank list's count (byte 0x8C3580) 8-byte records at [0x7E0880] whose +7 equals the u16 +0x2C (none: the record at the count, read unchecked); its u16 +0 in Mode11_ScreenBanks (to its 0xFFFF): Sprite_UpdateScreen. Called by Mode11_FieldFrame (its sixth call). PSX twin 0x80168778 (pairs_propagated gap44, a hypothesis, not read). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x5373F0
+name = "Char_GainHp"
+psx = 0x80168954
+ret = "void"
+params = "unsigned amount, unsigned member"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5373F0..0x537478 (0x89 bytes), cdecl, no calls: the member byte's record (MoveScript_EffectState, unchecked; stride 0xA4): HP +0x18 below its maximum +0x20 (u16) - HP = (HP + amount) as a u16, held at the maximum; then the record Field_State +0x148 names: HP above (+0x20 >> 2) clears 0x2000 of its +0x10 and of Field_State word +0x90. HP at or above the maximum: nothing at all. eax is no answer. Called by Field_EquipTick (three sites). PSX twin 0x80168954 (pairs_propagated call-anchored). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537500
+name = "Char_LoseAp"
+psx = 0x80168BC0
+ret = "unsigned"
+params = "unsigned amount, unsigned member"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537500..0x537537 (0x38 bytes), cdecl, no calls: the member byte's record (MoveScript_EffectState, unchecked) AP +0x1A minus the amount while AP is above its word (16-bit, unsigned), else AP 1; eax the amount taken (the argument whole, or AP - 1). Char_LoseHp's twin without its actor test. Called by Field_FloorHurt. PSX twin 0x80168BC0 (pairs_propagated call). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x5375A0
+name = "LinkedObjectA_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5375A0..0x5375DD (0x3E bytes): a five-entry table on its own stack (LinkedObjectA_Roll, LinkedObject_Show2, _Show5, _EndAfterEffect, _EndAfterMessage), called by Sprite_Current +4 unchecked; ours aborts past the 5 (the original calls through its own frame), an index no state writes. Area_ObjectFallbacks entries 0, 7 and 9. A start hidden in Scena15_RecordWord's catalog extent; not scenario code. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x5375E0
+name = "LinkedObjectA_Roll"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5375E0..0x537735 (0x156 bytes, then its 8-entry jump table to 0x537758), cdecl: r = Rand & 0xF; unless Sprite_Current +7 bit 3, Sprite_FaceDirection((leader +8 ^ 0xFC) & 7) (the guard before it never jumps); Field_ScriptFlags |= 0x100; Field_ActiveMember +0xA0 bit 7 set already: LinkedObject_SpawnEffect19(1) for r 8..15, (3) else, state 3. Else the bit set and by r: 0..3 SpawnEffect19(1), state 3; 4..6 SpawnEffect19(1), Zenny_Add(2, 0), LinkedObject_SpawnEffect32(the member's Sprite_Objects index, signed / 0xA4), state 1; 7 the same with Zenny_Add(5, 0), state 2; 8..15 SpawnEffect19(3), state 3. LinkedObjectA_Run's state 0 (a stack immediate). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537760
+name = "LinkedObject_Show2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537760..0x5377A3 (0x44 bytes), cdecl, two calls: Effect_Objects[Sprite_Current +0xB] +0 bit 0 clear (the byte unchecked: 0xFF reads 0x7E9160, inside Gfx_PacketPools - ours reads it in place) - Crt_sprintf(Text_Records, Area08_MessageFormat, 2), Msg_OpenSystem(5), Field_Request = 2, state 4. A start no list had (inside the cut's extent of 0x5375E0); state 1 of LinkedObjectA_Run and LinkedObjectC_Run (stack immediates). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x5377B0
+name = "LinkedObject_Show5"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5377B0..0x5377F3 (0x44 bytes), cdecl, two calls: LinkedObject_Show2 with 5. State 2 of LinkedObjectA_Run and LinkedObjectC_Run (stack immediates). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537800
+name = "LinkedObject_EndAfterEffect"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537800..0x53784E (0x4F bytes), cdecl, one call: Effect_Objects[Sprite_Current +0xB] +0 bit 0 clear (unchecked as Show2) - unless +7 bit 3, Sprite_FaceDirection(+8); Field_ActiveMember +0x80 bit 0 cleared; Field_ScriptFlags &= 0xFEFF; state 0. State 3 of LinkedObjectA_Run and LinkedObjectC_Run, state 1 of LinkedObjectB_Run (stack immediates). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537850
+name = "LinkedObject_EndAfterMessage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537850..0x537897 (0x48 bytes), cdecl, one call: Field_Request not 2 - LinkedObject_EndAfterEffect's end. State 4 of LinkedObjectA_Run and LinkedObjectC_Run (stack immediates). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x5378A0
+name = "LinkedObjectB_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5378A0..0x5378C5 (0x26 bytes): a two-entry stack table (LinkedObjectB_Roll, LinkedObject_EndAfterEffect) called by Sprite_Current +4 unchecked; ours aborts past the 2. Area_ObjectFallbacks entries 1 and 8. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x5378D0
+name = "LinkedObjectB_Roll"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x5378D0..0x537946 (0x77 bytes), cdecl: r = Rand & 0xF; unless +7 bit 3, Sprite_FaceDirection((leader +8 ^ 0xFC) & 7); LinkedObject_SpawnEffect19(2) for r above 6, else (3); Field_ScriptFlags |= 0x100; state 1. No mark, no zenny. LinkedObjectB_Run's state 0. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537950
+name = "LinkedObjectC_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537950..0x53798D (0x3E bytes): LinkedObjectA_Run with LinkedObjectC_Roll as state 0; ours aborts past the 5. Area_ObjectFallbacks entries 3 and 6. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537990
+name = "LinkedObjectC_Roll"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537990..0x537AE5 (0x156 bytes, then its 8-entry jump table to 0x537B08), cdecl: LinkedObjectA_Roll with the second sub-kind 5 for 3 (the marked path's r 0..7 and the roll's 8..15). LinkedObjectC_Run's state 0. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537B10
+name = "LinkedObjectD_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537B10..0x537B4E (0x3F bytes): a six-entry stack table (LinkedObjectD_Roll, LinkedObjectD_ShowAmount three times, LinkedObjectD_WaitMessage, LinkedObjectD_ColourStep) called by Sprite_Current +4 unchecked; ours aborts past the 6. Area_ObjectFallbacks entry 5. A start no list had (inside the cut's extent of 0x537990). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537B50
+name = "LinkedObjectD_Roll"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537B50..0x537CBD (0x16E bytes, then its 8-entry jump table to 0x537CE0), cdecl: LinkedObjectA_Roll's body with Zenny_Add(1, 0) to state 2 and (10, 0) to state 3, every other path state 1; then Sprite_Current +0x5E, +0x5F, +0x5D = 0xB0. LinkedObjectD_Run's state 0. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537CE0
+name = "LinkedObjectD_ShowAmount"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537CE0..0x537D46 (0x67 bytes), cdecl, two calls: Effect_Objects[+0xB] +0 bit 0 clear (unchecked as Show2) - LinkedObjectD_Amounts[+4] (the state byte unchecked; ours aborts past the 4): not 0 Crt_sprintf(Text_Records, Area08_MessageFormat, it), Msg_OpenSystem(5), Field_Request = 2, state 4; 0 state 5. States 1..3 of LinkedObjectD_Run. A start no list had (inside the cut's extent of 0x537B50). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537D50
+name = "LinkedObjectD_WaitMessage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537D50..0x537D62 (0x13 bytes), cdecl: Field_Request not 2 - state 5. LinkedObjectD_Run's state 4. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537D70
+name = "LinkedObjectD_ColourStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537D70..0x537DD3 (0x64 bytes), cdecl, one call: +0x5D not 0 - +0x5D, +0x5F, +0x5E each += 0x10; 0 - LinkedObject_EndAfterEffect's end. LinkedObjectD_Run's state 5. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537DE0
+name = "LinkedObject_SpawnEffect19"
+ret = "void"
+params = "unsigned sub"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537DE0..0x537E95 (0xB6 bytes), cdecl, two calls: Effect_FindFree into Sprite_Current +0xB; not 0xFF: that record (by +0xB, re-read for each store) +0 = 1, +5 = 0x19, +6 = the argument's byte, dword +0xC = 0; dword +0x10 = (s8) LinkedObject_EffectRise + 0x28; dwords +0x34 / +0x38 / +0x3C = Sprite_Current's (read after the call). Called by the four rolls (17 sites). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537EA0
+name = "LinkedObject_EffectRise"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537EA0..0x537ECF (0x30 bytes), cdecl, no calls: (s8)(Sprite_Current +0x30 - byte 0x802D70, the leader's +0x30) / 28 (signed: imul 0x92492493, sar 4); negative, al << 2. Answers al. Called by LinkedObject_SpawnEffect19. Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[func]]
+pc = 0x537ED0
+name = "LinkedObject_SpawnEffect32"
+ret = "void"
+params = "unsigned sub"
+impl = "src/game/rest_2a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2A, capstone to the last instruction), 0x537ED0..0x537F1B (0x4C bytes), cdecl, one call: Effect_FindFree into Sprite_Current +0xB; not 0xFF: that record +0 = 1, +5 = 0x32, +6 = the argument's byte. Called by the three rolls' zenny paths (6 sites). Fuzz only: no recorded route enters it. docs/rest_2a.md."
+
+[[data]]
+pc = 0x660C3C
+name = "Mode11_ScreenBanks"
+ctype = "unsigned short"
+count = 31
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2A): a list of sprite bank words ended by 0xFFFF (30 banks and the terminator, counted by hand); Mode11_ListedSpriteScreens 0x5372E0 searches it to the 0xFFFF. docs/rest_2a.md."
+
+[[data]]
+pc = 0x660CA0
+name = "Area_ObjectFallbacks"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2A): 0x5375A0 0x5378A0 0x40D790 0x537950 0x40D790 0x537B10 0x537950 0x5375A0 0x5378A0 0x5375A0 0x40D790 (LinkedObjectA_Run, _B_Run, Area74_ClearMemberBit0, _C_Run, _D_Run); jumped through by Area_ObjectHandler 0x537540 by its (short) argument, unchecked; eleven code pointers to LinkedObjectD_Amounts 0x660CCC (bytes). docs/rest_2a.md."
+
+[[data]]
+pc = 0x660CCC
+name = "LinkedObjectD_Amounts"
+ctype = "unsigned char"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2A): the amount LinkedObjectD_ShowAmount 0x537CE0 prints, by Sprite_Current +4 (states 1..3 reach it; entry 0 unread); four bytes to the pointer table at 0x660CD0. docs/rest_2a.md."
