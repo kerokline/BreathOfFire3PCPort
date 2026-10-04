@@ -194,10 +194,13 @@ const sh::DataTable kTables[] = {
 // What the functions read again after a call: the menu block's state, step and
 // timer, the slot (kept below 16), window 1's cursor and first shown, the
 // pressed word, the master's step and slide, the member count (kept to 3) and
-// their record indexes, Field_Request, the figure's bytes.
+// their record indexes, Field_Request, the figure's bytes, a record's level and
+// experience.
 void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF;
-    switch (h % 16) {
+    switch (h % 18) {
+    case 16: B(at::kRecords + ((h >> 16) % 8) * at::kRecordStride + 0xA) = static_cast<unsigned char>(v); break;
+    case 17: SetL(at::kRecords + ((h >> 16) % 8) * at::kRecordStride + 0xC, h * 0x9E3779B1u); break;
     case 0: B(at::kState) = static_cast<unsigned char>(v); break;
     case 1: B(at::kStep) = static_cast<unsigned char>(v); break;
     case 2: B(at::kTimer) = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) % 3); break;
@@ -219,6 +222,13 @@ void Move(U h) {
 }
 
 U Stir(const U*, U answer) {
+    Move(sh::Noise());
+    return answer;
+}
+// R2B's 0x57EEF0 draws the record it is handed: its bytes (the faded colour,
+// the scale) are logged at the call, as the draw would see them.
+U FigureDraw(const U*, U answer) {
+    sh::NoteBytes(sh::Mem(at::kFigure), 0x110);
     Move(sh::Noise());
     return answer;
 }
@@ -249,12 +259,12 @@ U KeysAnswer(const U*, U answer) {
     return n % 6 == 0 ? answer : kKeys[(n >> 3) % (sizeof kKeys / sizeof kKeys[0])];
 }
 // AreaMap_Elevation: a low word from a small set (the seed puts the figure's
-// height around them) with garbage above; the settle reads it as a short.
-U ElevationAnswer(const U*, U answer) {
-    const U n = sh::Noise();
-    static const U kHeights[] = {0, 0x40, 0xFFC0, 0x100, 0x7FFF, 0x8000};
-    return (answer & 0xFFFF0000u) | kHeights[n % (sizeof kHeights / sizeof kHeights[0])];
-}
+// height around the target it makes) with garbage above; the settle reads it as
+// a short. One height a round, so the seed can put the height exactly where
+// the fall lands on the target.
+constexpr U kHeights[] = {0, 0x40, 0xFFC0, 0x100, 0x7FFF, 0x8000};
+unsigned g_height;   // the round's height (Seed's choice): both calls answer it
+U ElevationAnswer(const U*, U answer) { return (answer & 0xFFFF0000u) | kHeights[g_height]; }
 // MasterPanel_ExpForLevel: totals from a small set, so that the two calls agree
 // a third of the time (the bar's zero-length path) and straddle the experience.
 U ExpAnswer(const U*, U answer) {
@@ -270,14 +280,14 @@ const sh::Callee kCallees[] = {
     // the group's own, called directly (E8 / E9), with what each reads
     {R2C_OURS(MasterFigure_DrawFaded), 0, {}, kG, 0, 0},
     {R2C_OURS(Save_BuildBlock), 0, {}, kG, 0, 0, {}, &Stir},
-    {R2C_OURS(MasterPanel_DrawMember), 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},
-    {R2C_OURS(MasterPanel_DrawStats), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
+    {R2C_OURS(MasterPanel_DrawMember), 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &Stir},
+    {R2C_OURS(MasterPanel_DrawStats), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &Stir},
     {R2C_OURS(Menu_DrawPanelBox), 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // as Menu_DrawTitleBox: 16 bits
     {R2C_OURS(MasterPanel_DrawFace), 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},
     {R2C_OURS(MasterPanel_DrawExpBar), 5, {0xFFFF, 0xFFFF, 0xFF, 0xFF, kW}, kG, 0, 0},
     {R2C_OURS(MasterPanel_ExpForLevel), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ExpAnswer},
     // other groups' of this wave, by address (docs/rest_2c.md section 6)
-    {"0x57EEF0", at::kFigureDraw, at::kFigureDraw, 1, {kW}, kG, 0, 0, {}, &Stir},                     // R2B
+    {"0x57EEF0", at::kFigureDraw, at::kFigureDraw, 1, {kW}, kG, 0, 0, {}, &FigureDraw},                     // R2B
     {"0x5869A0", at::kPickAsk, at::kPickAsk, 2, {0xFFFF, 0xFF}, kG, 0, 0, {}, &Stir},                 // R2D: and ecx, 0xFFFF; dl
     {"0x59DB70", at::kGlyph, at::kGlyph, 6, {0xFFFF, 0xFFFF, 0xFF, 0xFF, 0xFFFF, 0xFF}, kG, 0, 0},    // R2H
     // the C runtime's strncpy: both sides call it for real
@@ -286,7 +296,7 @@ const sh::Callee kCallees[] = {
     {R2C_OURS(Menu_DrawTitleBox), 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
     {R2C_OURS(Menu_DrawMoneyBox), 4, {0xFFFF, 0xFFFF, 0, kW}, kG, 0, 0},
     {R2C_OURS(Menu_DrawBox), 6, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},
-    {R2C_OURS(Menu_DrawPieces), 4, {0xFFFF, 0xFFFF, kW, 0xFF}, kG, 0, 0, {0, 0, 16, 0}, nullptr, nullptr, true},
+    {R2C_OURS(Menu_DrawPieces), 4, {0xFFFF, 0xFFFF, kW, 0xFF}, kG, 0, 0, {0, 0, 16, 0}, &Stir, nullptr, true},
     {R2C_OURS(Menu_DrawOutline), 5, {kW, kW, kW, kW, kW}, kG, 0, 0},
     {R2C_OURS(Text_DrawAt), 5, {0xFFFF, 0xFFFF, 0xFF, 0xFF, kW}, kG, 0, 0},
     {R2C_OURS(Text_DrawFont8), 4, {0xFFFF, 0xFFFF, 0x3F, kW}, kG, 0, 0, {0, 0, 0, 16}, nullptr, nullptr, true},
@@ -344,12 +354,12 @@ void SeedButtons() {
 }
 
 void SeedMenu() {
-    B(at::kTimer) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 5, 6, 0x1E, sh::Next()));
+    B(at::kTimer) = static_cast<unsigned char>(PickOf(0, 1, 1, 2, 4, 4, 5, 6, 0x1E, sh::Next()));
     B(at::kAnswer) = static_cast<unsigned char>(PickOf(0, 0, 1, sh::Next()));
     B(at::kObject) = static_cast<unsigned char>(PickOf(0xFF, 0xFF, 0xFE, sh::Next()));
     B(at::kMsgFlags) = static_cast<unsigned char>(sh::Half() ? sh::Next() | 2 : sh::Next() & ~2u);
     B(at::kInputFlags) = static_cast<unsigned char>(PickOf(0x40, 0x40, 0, 0x41, sh::Next()));
-    SetW(at::kArea, PickOf(0xBC, 0x85, 0xC1, 0xBB, 0xBD, sh::Next()));
+    SetW(at::kArea, PickOf(0xBC, 0x85, 0xC1, 0xBB, 0xBD, 0x84, 0x86, 0xC0, 0xC2, sh::Next()));
     SetW(at::kWait, PickOf(0, 0, sh::Next()));
     SetL(at::kSlot, sh::Next() % at::kSlotCount);
 }
@@ -389,15 +399,33 @@ void SeedFigure() {
     SetL(at::kFigureAngle, PickOf(0, 0x1000, 0x40, 0xFC0, 0x1040, 0x20, sh::Next()));
     SetL(at::kFigureLift, PickOf(0, 1, 2, sh::Next() % 8, sh::Next()));
     // the height around the target for one of the elevation stand-in's heights
-    static const U kHeights[] = {0, 0x40, 0xFFC0, 0x100};
-    const U e = kHeights[sh::Next() % 4];
+    g_height = sh::Next() % (sizeof kHeights / sizeof kHeights[0]);
+    const U e = kHeights[g_height];
     const U lift = static_cast<U>(move_script::Long(sh::Mem(at::kFigureLift)));
     const U target = (static_cast<U>(static_cast<int>(static_cast<short>(e))) << 16) + lift * 0xA00u;
-    SetL(at::kFigureY, PickOf(target, target + 1, target - 1, target + 0x100000, target - 0x100000, sh::Next()));
+    const U fall = static_cast<U>(static_cast<int>(((static_cast<U>(static_cast<int>(static_cast<short>(e))) + 0x200u) << 16) - target) / 16);
+    // y - fall lands on the target, one either side, or far
+    SetL(at::kFigureY, PickOf(target + fall, target + fall, target + fall + 1, target + fall - 1, target + 0x100000,
+                              target - 0x100000, sh::Next()));
+}
+
+// The eight records' panel fields at their tests: HP 0, 1, 2; AP 0, at and
+// past a quarter of its maximum; the status word's bits 7, 5 and 0x2000.
+void SeedRecords() {
+    for (unsigned r = 0; r < 8; ++r) {
+        const U rec = at::kRecords + r * at::kRecordStride;
+        SetW(rec + 0x18, PickOf(0, 1, 2, sh::Next() % 1000));
+        const U max_ap = PickOf(0, 4, 100, 103, sh::Next() % 1000);
+        SetW(rec + 0x22, max_ap);
+        SetW(rec + 0x1A, PickOf(0, 1, max_ap >> 2, (max_ap >> 2) + 1, sh::Next() % 1000));
+        SetW(rec + 0x10, PickOf(0, 0x80, 0x20, 0xA0, 0x2000, 0x20A0, sh::Next()));
+        B(rec + 0xA) = static_cast<unsigned char>(PickOf(1, 50, 98, 99, 100, sh::Next()));
+    }
 }
 
 void Seed(unsigned k) {
     g_clone = k;
+    SeedRecords();
     const sh::Clone& c = kAll[k];
     SeedButtons();
     SeedMenu();

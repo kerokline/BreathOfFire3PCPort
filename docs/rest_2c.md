@@ -9,7 +9,7 @@ declarations in `src/game/rest_2c.h`, the tables' and cells' addresses in
 list had (section 2); each read to its last instruction with capstone and
 fuzzed through the scenario harness in field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7), used unchanged:
-244,000 rounds, 0 mismatches. CONTROLS_SUMMARY No recorded route is traced
+244,000 rounds, 0 mismatches. **188 controls planted** one at a time: 186 refused by a count, 2 equivalent mutants not refused, each with its near variant refused (section 6). No recorded route is traced
 entering any of the 61 (section 9): fuzz only here.
 
 The band is not one thing. In address order it holds: **the figure record's
@@ -219,6 +219,15 @@ upper half times 40 - the callees read 16 bits), the panel box's colour,
 half is the entry's (`mov al, count` left it), 0 in the game (the dispatcher
 zero-extends) and garbage under the fuzz; every reader of it uses 16 bits.
 
+**Strengthened by the controls** (section 6): R2B's draw stand-in logs the
+figure record's first 0x110 bytes at the call (the faded colour is put back
+after it, so only the draw sees it); `AreaMap_Elevation` answers one height a
+round, chosen by the seed, which puts the height exactly where the fall lands
+on the target and one either side; the timer's seed has 4 (the title's last
+slide frame) and the areas their neighbours; the eight records' HP at 0, 1, 2,
+AP at 0 and around a quarter of its maximum, the status bits; a record's
+level and experience move after `Menu_DrawPieces` and the panels' own calls.
+
 **Regions** beyond field mode's: `WindowRecords` (22), `0x6BC880..0x6BC8C8`,
 `0x903580..0x90358B`, the save block `0x9039E0..0x903A03`, the records past the
 style region `0x903A94..0x903F90`, the save block `0x904160..0x904560` and
@@ -244,7 +253,7 @@ slide, the member count and records, Field_Request, the figure's colour and
 height, the master byte.
 
 **In this worktree**: `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_2c`, exit 0:
-244,000 rounds over 61 functions, 623,949 calls to the stand-ins, **0
+244,000 rounds over 61 functions, 621,662 calls to the stand-ins, **0
 mismatches**; 330 stand-ins (174 field-standard). Every entry of the fourteen
 tables was reached (the coverage line lists each `phase`), every listed callee
 called.
@@ -279,7 +288,48 @@ called.
 
 ## 6. Controls
 
-CONTROLS_TABLE
+`controls.py` in the session scratchpad (`.../r2c/`): each plant replaces
+strings that occur once in `rest_2c.cpp`, rebuilds, runs `BOF3X_R2C_ONLY` on the
+clone(s) named, restores and rebuilds; results in `controls*.tsv`. Every
+refusal is by a count of mismatching rounds (none by a crash or a Fatal of
+ours).
+
+| Ids | Function(s) | Plants | Refused | Weakest refusal |
+|---|---|--:|--:|---|
+| F01..F15 | the figure record | 15 | 14 | F10 at the target (1,172 of 4,000) |
+| I01..I04 | `InnPrompt_NotEnough` | 4 | 4 | I01 (3,024) |
+| W01..W09 | `FieldSave_Write`, `_Written` | 9 | 9 | W06 the slot read before the write (181) |
+| P01..P03 | `FieldSave_PromptAnswer` | 3 | 3 | P01 (976) |
+| T01..T05 | `Inn_TitleOut` | 5 | 5 | T03 area 0x86 (87) |
+| R01..R10 | the rest | 10 | 10 | R10 the state up after the transition (6) |
+| B01..B12 | `Save_BuildBlock` | 12 | 12 | B08 `0x9039A2` read before `Flags_Test` (91) |
+| Q01..Q03 | `Save_QuickWrite` | 3 | 3 | Q02 (1,337) |
+| D01..D14 | the fourteen dispatchers | 14 | 14 | D03 (3,182) |
+| S01..S08 | ShopMode 8 | 8 | 8 | S07 (1,011) |
+| O01..O04, C01..C16, E01..E07 | ShopMode 9 | 27 | 27 | C06 the scroll at first + 8 (70) |
+| M01..M28 | the master's talk | 28 | 28 | M28 the master read before `Flags_Set` (9), M07 (16) |
+| K01..K20 | the stats and member panels | 20 | 20 | K20 the level read before the pieces (32) |
+| X01..X07, L01..L03 | the bar, the totals | 10 | 10 | L01 (465) |
+| Y01..Y13 | `Menu_DrawPanelBox` | 13 | 12 | Y13 (805) |
+| Z01..Z07 | `MasterPanel_DrawFace` | 7 | 7 | Z06 id 4 as 0xA (320) |
+| | | **188** | **186** | |
+
+**Not refused, equivalent:**
+- **F02** (`MasterFigure_DrawFaded`, the second colour byte's test `>` made
+  `>=`): at equality, `0xFF - G == 3 * step`, the original's 0xFF and the
+  mutant's `G + 3 * step` are the same byte - no input tells them apart. Near
+  variant **F15** (the test against `t + 1`) refused, 370 rounds.
+- **Y07** (`Menu_DrawPanelBox`, the half an arithmetic shift made logical):
+  the half is used only as its short and its low byte, which both shifts give
+  alike for every `w + 1` below 4. Near variant **Y13** (`/ 2`, rounding toward
+  0) refused, 805 rounds.
+
+**Refused only after the fuzz was strengthened** (the first run did not; the
+fixes are in section 4): F01, F10, T03, K12, K20, M27 (the stand-ins for the
+panels' calls moved nothing they re-read), and T02, T04, T05 (refused in 1 to
+5 rounds before the timer seed had 4). Three anchors (M20, M21, M24) matched a
+comment as well and were re-anchored. The first batch was not re-run on the
+stronger fuzz: it only adds seeds and stand-in effects.
 
 ## 7. Calls across groups
 
