@@ -507,12 +507,12 @@ enum : unsigned {
 static_assert(k67Trigger + 1 == sizeof kClones67 / sizeof kClones67[0], "area 67's seeding indices");
 
 // Effect_Spawn / Effect_SpawnAt answer an Effect_Objects slot or 0xFF for
-// none: a range through 0xFF (the handlers test it). Capcom's both: keyed by
-// their addresses. Effect_SpawnAt's third byte is pushed with a stale high
+// none: a range through 0xFF (the handlers test it). Ours both since round
+// fourteen (R2B): keyed by name. Effect_SpawnAt's third byte is pushed with a stale high
 // half (the table byte loaded into cl).
 const ah::Callee kCallees67[] = {
-    {"Effect_Spawn", 0x57CE10, 0x57CE10, 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02},
-    {"Effect_SpawnAt", 0x57CE80, 0x57CE80, 6, {kU8, kU8, kU8, kAll, kAll, kAll}, ah::Answer::kByte, 0xFE, 0x02},
+    {"Effect_Spawn", bof3::addr::Effect_Spawn, KeyOf(&::Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02},
+    {"Effect_SpawnAt", bof3::addr::Effect_SpawnAt, KeyOf(&::Effect_SpawnAt), 6, {kU8, kU8, kU8, kAll, kAll, kAll}, ah::Answer::kByte, 0xFE, 0x02},
     kFindFree, kSet40,
 };
 const ah::Region kRegions67[] = {{kActiveMember, 4}, {kEffects, 8 * 0x80}};

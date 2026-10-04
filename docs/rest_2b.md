@@ -288,7 +288,9 @@ L1 is the one `.data` difference to expect, and only once the screen draws.
 ## 10. The rebinding
 
 `band_rows.py --refs --group R2B` and `grep -rn -i` of the 38 over
-`src/game`: 66 raw references to four functions.
+`src/game`: 66 raw references to four functions, and twelve rows that name
+`Effect_Spawn` / `Effect_SpawnAt` as Capcom's (the `THEIRS` macros and two
+written out), which `Register` refuses once the names are ours.
 
 | File | Change |
 |---|---|
@@ -296,6 +298,7 @@ L1 is the one `.data` difference to expect, and only once the screen draws.
 | `scenario_harness.cpp` | `kStandard`'s `SH_THEIRS(Effect_SpawnAt)` -> `SH_OURS(Effect_SpawnAt)` - **a harness row, edited** (below) |
 | `area_harness.cpp` | `kStandard`'s `AH_THEIRS(Effect_Spawn)` -> `AH_OURS(Effect_Spawn)` - **a harness row, edited** |
 | `area_w1c`, `w1d`, `w1f`, `w2a`, `w2c`, `w3c`, `w3d`, `w3e` `_fuzz.cpp` | each group's `Wxx_THEIRS(Effect_Spawn)` row -> `Wxx_OURS(Effect_Spawn)` |
+| `area_011_fuzz.cpp`, `area_w3a_fuzz.cpp` | the row `{"Effect_Spawn", KeyOf(Effect_Spawn), KeyOf(Effect_Spawn), ...}` -> `{"Effect_Spawn", ::bof3::addr::Effect_Spawn, KeyOf(Effect_Spawn), ...}` (hand-agnostic; the first `'*'` run stopped at it) |
 
 **Why two harness rows moved.** `SH_THEIRS(name)` / `AH_THEIRS(name)` key a
 row on the name's pointer and require it to lie in `.text`; once the name is
