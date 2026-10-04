@@ -123,7 +123,7 @@ void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
 // Capcom's phase handlers a table holds, unnamed, in the engine: 0x492750
 // steps +1 on; 0x437CC0 is a bare ret (a step that waits for a child to move
 // +2 on).
-constexpr std::uint32_t kStepOn = 0x492750;
+constexpr std::uint32_t kStepOn = bof3::addr::Effect_StateNext;   // 0x492750, ours since round thirteen
 constexpr std::uint32_t kNothing = bof3::addr::BareRet;
 
 [[noreturn]] void PastTable(const char* who, unsigned phase, unsigned entries) {

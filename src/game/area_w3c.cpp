@@ -21,6 +21,7 @@
 #include "game/area_harness.h"
 #include "game/area_w3c_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -549,12 +550,14 @@ extern "C" void __cdecl Area132_EffectGradient(void) {
     p[0x05] = 0xC8;
     p[0x16] = 0xFF;
     p[0x06] = 0xFF;
-    SetLong(p + 0x08, 0);
+    // DIV-0041: the left corners at -53 and the right at 373 under the wide
+    // picture (widescreen.h: 0 until every self-test has run).
+    SetFloat(p + 0x08, Widescreen_FillX());
     SetLong(p + 0x0C, 0);
-    SetFloat(p + 0x18, 320.0f);
+    SetFloat(p + 0x18, 320.0f + static_cast<float>(Widescreen_Fill()));
     SetLong(p + 0x1C, 0);
-    SetLong(p + 0x28, 0);
-    SetFloat(p + 0x38, 320.0f);
+    SetFloat(p + 0x28, Widescreen_FillX());
+    SetFloat(p + 0x38, 320.0f + static_cast<float>(Widescreen_Fill()));
     p[0x14] = 0;
     p[0x04] = 0;
     p[0x34] = 0;

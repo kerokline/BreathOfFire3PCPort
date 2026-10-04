@@ -141,9 +141,19 @@ unsigned char* __cdecl StubSetDrawMove(unsigned char* prim, const unsigned char*
     return prim;
 }
 
+// As StubSetPolyG4 for the 0x38-byte POLY_F4: code 0x28, 0.01 at the four z.
+unsigned char* __cdecl StubSetPolyF4(unsigned char* prim) {
+    Record(7, Packet(prim));
+    for (unsigned i = 4; i < 0x38; ++i) prim[i] = static_cast<unsigned char>(Hash() >> (i % 24));
+    prim[7] = 0x28;
+    for (unsigned z = 0x10; z <= 0x34; z += 0xC) SetDword(prim + z, kPointZeroOne);
+    return prim;
+}
+
 const Callees kStubs = {
     StubDrawMode, StubCommit, StubSetPolyG4, StubSetSemi,
     StubTest, StubSetDrawMove,
+    StubSetPolyF4,
 };
 
 const void* StubFor(std::uint32_t target) {
@@ -155,6 +165,7 @@ const void* StubFor(std::uint32_t target) {
         case 0x5A7780: return f(kStubs.set_semi);
         case 0x56FF00: return f(kStubs.test);
         case 0x5A7810: return f(kStubs.set_draw_move);
+        case 0x5A75B0: return f(kStubs.set_poly_f4);
         default: bof3::Fatal("area_backdrop: no stand-in for a call to 0x%X", static_cast<unsigned>(target));
     }
 }
@@ -166,6 +177,9 @@ struct Call { std::uint32_t offset, target; };
 constexpr Call kBackdropCalls[] = {{0x83, 0x5A77C0}, {0x8C, 0x461E50}, {0x98, 0x5A7610}, {0x9F, 0x5A7780},
                                    {0x13B, 0x461E50}};
 constexpr Call kCycleCalls[] = {{0xD, 0x56FF00}, {0xCE, 0x5A7810}, {0xD7, 0x461E50}};
+constexpr Call kSkyCalls[] = {{0x13, 0x5A77C0}, {0x1C, 0x461E50}, {0x28, 0x5A7610}, {0x83, 0x461E50}};   // 0x4FD350, 2026-09-30
+constexpr Call kGlowCalls[] = {{0x12, 0x5A77C0}, {0x1B, 0x461E50}, {0x27, 0x5A75B0}, {0x2F, 0x5A7780},
+                               {0x76, 0x461E50}};   // 0x4FD3E0, 2026-09-30
 
 template <unsigned N>
 void* Clone(const char* name, std::uint32_t base, std::uint32_t size, const Call (&calls)[N]) {
@@ -308,6 +322,58 @@ void SelfTestBackdrop(void (__cdecl* theirs)(const unsigned char*)) {
                   "colour, %u with the cursor held by the first commit",
                   off, outside, drawn, alternate, held);
     Report("AreaMap_DrawBackdrop", kRounds, bad, detail);
+}
+
+// --- Gfx_DrawSkyGradient ----------------------------------------------------------------------
+
+// The three arguments as whole dwords with stale high bytes, since the
+// original reads al of each; the cursor anywhere in the scratch pool.
+void SelfTestSky(void (__cdecl* theirs)(unsigned, unsigned, unsigned)) {
+    constexpr unsigned kRounds = 20000;
+    const Region r[] = {R(Gfx_PacketNext), R(g_packets)};
+    constexpr unsigned n = sizeof r / sizeof r[0];
+    Capture(r, n, g_saved);
+    g_rng = 0x4FD35001u;
+    unsigned bad = 0, held = 0;
+    for (unsigned round = 0; round < kRounds; ++round) {
+        Randomize(r, n);
+        Gfx_PacketNext = g_packets + 4 * (Next() % 0x80);
+        const unsigned cr = Next(), cg = Next(), cb = Next();
+        Pair("Gfx_DrawSkyGradient", round, r, n, [&] { theirs(cr, cg, cb); }, [&] { Gfx_DrawSkyGradient(cr, cg, cb); },
+             bad);
+        held += g_logs[0].counts[2] == 2 && g_logs[0].keep[2][3] == g_logs[0].keep[4][3];
+    }
+    Apply(r, n, g_saved);
+    char detail[128];
+    std::snprintf(detail, sizeof detail, "the colour's three dwords random, %u with the cursor held by the first commit", held);
+    Report("Gfx_DrawSkyGradient", kRounds, bad, detail);
+}
+
+// --- Gfx_DrawSunsetGlow -----------------------------------------------------------------------
+
+alignas(4) unsigned char g_glow_record[0x40];
+
+// Sprite_Current aimed at a scratch record whose word +0x2E is random - both
+// signs, and near the caller's 0..0xBF - the rest of the record random.
+void SelfTestGlow(void (__cdecl* theirs)()) {
+    constexpr unsigned kRounds = 20000;
+    const Region r[] = {R(Gfx_PacketNext), R(g_packets), R(Sprite_Current), R(g_glow_record)};
+    constexpr unsigned n = sizeof r / sizeof r[0];
+    Capture(r, n, g_saved);
+    g_rng = 0x4FD3E001u;
+    unsigned bad = 0, negative = 0;
+    for (unsigned round = 0; round < kRounds; ++round) {
+        Randomize(r, n);
+        Gfx_PacketNext = g_packets + 4 * (Next() % 0x80);
+        Sprite_Current = g_glow_record;
+        if (OneIn(2)) SetDword(g_glow_record + 0x2C, (Next() & 0xFFFFu) | (Next() % 0xC0) << 16);
+        negative += (g_glow_record[0x2F] & 0x80) != 0;
+        Pair("Gfx_DrawSunsetGlow", round, r, n, [&] { theirs(); }, [&] { Gfx_DrawSunsetGlow(); }, bad);
+    }
+    Apply(r, n, g_saved);
+    char detail[128];
+    std::snprintf(detail, sizeof detail, "the step word random, %u negative", negative);
+    Report("Gfx_DrawSunsetGlow", kRounds, bad, detail);
 }
 
 // --- AreaMap_TextureCycle -------------------------------------------------------------------
@@ -463,10 +529,14 @@ void SelfTestPinSprite(void (__cdecl* theirs)()) {
 void SelfTest() {
     void* const backdrop = Clone("AreaMap_DrawBackdrop", bof3::addr::AreaMap_DrawBackdrop, 0x147, kBackdropCalls);
     void* const cycle = Clone("AreaMap_TextureCycle", bof3::addr::AreaMap_TextureCycle, 0xE5, kCycleCalls);
+    void* const sky = Clone("Gfx_DrawSkyGradient", bof3::addr::Gfx_DrawSkyGradient, 0x8E, kSkyCalls);
+    void* const glow = Clone("Gfx_DrawSunsetGlow", bof3::addr::Gfx_DrawSunsetGlow, 0x81, kGlowCalls);
     void* const zones = bof3::CloneOriginal("AreaMap_SlotZones", bof3::addr::AreaMap_SlotZones, 0x1C7);
     void* const pin = bof3::CloneOriginal("WorldMap_PinSprite", bof3::addr::WorldMap_PinSprite, 0x18);
     g = kStubs;
     SelfTestBackdrop(reinterpret_cast<void(__cdecl*)(const unsigned char*)>(backdrop));
+    SelfTestSky(reinterpret_cast<void(__cdecl*)(unsigned, unsigned, unsigned)>(sky));
+    SelfTestGlow(reinterpret_cast<void(__cdecl*)()>(glow));
     SelfTestTextureCycle(reinterpret_cast<void(__cdecl*)(const unsigned char*)>(cycle));
     SelfTestSlotZones(reinterpret_cast<void(__cdecl*)(const unsigned char*)>(zones));
     SelfTestPinSprite(reinterpret_cast<void(__cdecl*)()>(pin));

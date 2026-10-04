@@ -137,7 +137,7 @@ at `Boot_Task`.
 | `0x432630` | `BattleLoss_BarGrow` | black, panels, caption; the bar grown by 4 to 0xF4 and drawn; on any held button both CLUT runs (`0x812980`, `0x811380`, 0x100 words) greyed, `Gfx_ClutStripDirty` = 1, `Transition_Start(0xD)` |
 | `0x432750` | `BattleLoss_Restart` | black, panels, caption; once the transition is done the three tints released, `Window_ResetAll`, the battle bytes 0, `0x494E70`, `BattleTask_ClearAll`, `Sound_StopChannels`, `Task_Restart(Boot_Task)` (which does not return in the game; its recorder does) |
 | `0x4327F0` | `BattleLoss_DrawPanels(shade)` | three `SPRT` of page (0x340, 0x100), CLUT (0, 0x1FA) |
-| `0x432930` | `BattleLoss_DrawBlack` | a black `TILE` over 320 x 240 |
+| `0x432930` | `BattleLoss_DrawBlack` | a black `TILE` over 320 x 240 - under the wide picture (-53, 0) 426 x 240 by the fade tile's rule, the columns read into a byte flag after the self-test (DIV-0041, 2026-09-30) |
 | `0x4329A0` | `BattleLoss_DrawCaption(shade)` | one `SPRT` 0xA8 x 0x18 at (76, 48) |
 | `0x432A30` | `BattleLoss_DrawBar(width)` | a black `TILE` at (w + 0x20, 48) and a semi-transparent `POLY_G4` black to white from (w, 48) |
 

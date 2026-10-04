@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-09-28; 26 entries, I1..I26 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-04; 30 entries, I1..I30 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -73,6 +73,8 @@ rule ([`README.md`](README.md)) here too.
 | I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | **done** 2026-09-28: round eleven, 531 functions, [`takeover-queue-round11.md`](takeover-queue-round11.md); the live check per fight and the debts remain |
 | I27 | Round twelve: the field modes and the battle engine, by address band | engine | HIGH | done 2026-09-29: 654 functions in fourteen groups, 6,891 ours, live-checked, [`takeover-queue-round12.md`](takeover-queue-round12.md); planned and cut in [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) (owner, 2026-09-28): 631 functions, 14 groups, two harness groups |
 | I28 | Round thirteen: the effect-object engine (1,697 functions: the 627 the catalog labels area overlays, which are effect-kind code, and the 1,070 the labelling pass found beside them) | engine | HIGH | planned; [`takeover-queue-round13.md`](takeover-queue-round13.md) section 9 - the owner's scope of 2026-09-29, to be cut with `tools/band_rows.py` at round twelve's tip |
+| I29 | Button prompts drawn from the bindings in force, not from each release's defaults | game behaviour | LOW | open 2026-10-03 (the owner, on the fishing banner; DIV-0069) |
+| I30 | Machine-readable docs: Open Knowledge Format frontmatter and a generated wiki | docs / tooling | HIGH | open; parked until the spec hardens or is validated outside Google (owner, 2026-10-04) |
 
 ---
 
@@ -1081,3 +1083,96 @@ BH and BSA; then wave one (BH, BSA..BSE, 278 functions) and wave two
 
 ### Outcome
 _(2026-09-28) open; planned and cut, not scheduled - after the area round._
+
+## I29 — Button prompts drawn from the bindings in force
+
+**Ask (2026-10-03, the owner, on the fishing banner):** the US disc's banner
+names cross / triangle / square where the port's names circle / cross /
+triangle. The owner's reading: the US release has different default bindings
+from the Japanese and Chinese ones, so neither set of icons is wrong - each
+shows its own defaults. Long term, a prompt should show the button the
+action is bound to now (`docs/controls.md`, the launcher's key and pad
+tables), whatever the language.
+
+### What it needs
+- The prompts that name buttons, listed: the fishing banner (DIV-0069), the
+  world map's HUD, the config screen, the battle's hints.
+- For each, which action the icon stands for, and the icon set (DIV-0051).
+
+### Outcome
+_(2026-10-03) open. Until then DIV-0069 keeps the port's icons, by the owner's word._
+## I30 — Machine-readable docs: Open Knowledge Format frontmatter and a generated wiki
+
+**Ask (2026-10-04):** the owner: Google is validating a spec for curated
+knowledge as Markdown with YAML frontmatter
+([Open Knowledge Format](https://github.com/GoogleCloudPlatform/open-knowledge-format),
+OKF, v0.2, Apache-2.0). Could `docs/` adopt it, so the documentation indexes
+itself and is published automatically as a human-readable wiki?
+**Kind:** docs / tooling
+**Feasibility:** HIGH   **Gated on:** nobody for the format; the owner's
+choice to revisit once the spec is hardened or tested outside Google.
+
+### What already exists
+- `docs/` is an OKF bundle in everything but syntax. Measured 2026-10-04
+  (`grep`/`awk` over `docs/**/*.md`): 279 documents, 2,927 inter-document
+  Markdown links, 278 of 279 opening with a `**Status:**` line that carries
+  a verification date (the exception is `README.md`, the index itself). The
+  spec's `status` and `verified.at` are that line, unparsed; its link graph
+  and backlinks are those links, uncomputed.
+- The evidence rule and the three evidence tiers ([`README.md`](README.md))
+  are the spec's trust tiers, applied per claim instead of per document.
+- The spec's `index.md` is the hand-maintained 300-line table at the top of
+  [`README.md`](README.md), the part of `docs/` most prone to going stale.
+- The spec's "Attested Computation" (a computation, an executor that returns
+  a receipt, a deterministic attester) is the shape every takeover doc's
+  headline already takes: the harness command, the round count, the
+  mismatch count. Noted as a fit, not proposed - see "What is missing".
+- `tools/ledger_check.py` already parses `docs/` structurally in CI
+  (`.github/workflows/checks.yml`) and is the natural home for a conformance
+  check.
+- The spec itself is small: `type` is the only mandatory frontmatter key;
+  `title`, `tags`, `sources`, `generated`, `verified`, `status`
+  (`draft|stable|deprecated`), `stale_after`, reserved `index.md`/`log.md`
+  per directory; consumers must tolerate unknown `type` values, unknown
+  keys and broken links. Apache-2.0 is compatible with
+  [`LICENSING.md`](LICENSING.md); nothing would be vendored in any case -
+  only field names are adopted.
+
+### What is missing
+- Frontmatter on 279 files. Mechanical: `type` derives from the naming
+  rule (SCREAMING_CASE = subsystem, `area_`/`battle_`/`boss_`/`bsim_` =
+  takeover group, kebab-case = investigation, `prior-art/` = prior art);
+  `status` and `verified.at` derive from the Status line. Our vocabulary
+  (`IN PROGRESS`, `MEASURED`, `SUPERSEDED (by X)`) is wider than the spec's
+  three values; the spec permits extra values, so keep ours and map
+  `STABLE`→`stable`, `DRAFT`→`draft`, `SUPERSEDED`→`deprecated` only in the
+  renderer.
+- A rule that the human-readable Status line and the frontmatter agree,
+  enforced by `ledger_check.py`. Agents read the Status line; it stays.
+- The wiki. OKF ships no renderer - its reference consumer is a Cytoscape
+  graph viewer - so the wiki is ours: a generator in `tools/` emitting
+  `index.md` per directory and a backlinks section per page, published by
+  a workflow (MkDocs reads frontmatter natively and needs no code; a
+  static-HTML emitter of a few hundred lines avoids the dependency).
+- A rule-1 gate: publishing `docs/` makes it public-facing. The generator
+  refuses to publish if a scan finds extracted game data in any page.
+- Not proposed: per-claim `sources` footnotes across 1.3 million words of
+  existing prose, or Attested Computation entries for the harnesses. Both
+  fit; neither pays for itself retroactively. New documents may adopt them.
+
+### Risk
+The spec is v0.2 and self-described as proof of concept (17 open issues,
+2026-10-04), with one breaking rename already between v0.1 and v0.2
+(`timestamp`→`generated`). Exposure is five field names; a rename is a
+`sed`. Frontmatter itself is standard Markdown practice whatever happens
+to OKF.
+
+### First concrete step
+One session: a script that adds frontmatter to every document from its
+filename and Status line, and a `ledger_check.py` check that the two agree.
+No behaviour, no divergence. The wiki is a second step and waits on the
+first.
+
+### Outcome
+_(2026-10-04) open; parked by the owner until the spec is hardened or
+validated outside Google. Revisit then._

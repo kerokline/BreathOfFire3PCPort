@@ -152,9 +152,9 @@ constexpr WorldMapTables kWm151 = {
 }  // namespace at
 
 // The unowned callees (above).
-constexpr std::uint32_t kSetMapCamera = 0x494060;
-constexpr std::uint32_t kProjectPoint = 0x494110;
-constexpr std::uint32_t kScreenSize = 0x4941E0;
+constexpr std::uint32_t kSetMapCamera = bof3::addr::EffectGte_LoadMapCamera;
+constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;
+constexpr std::uint32_t kScreenSize = bof3::addr::EffectGte_ProjectSize;
 constexpr std::uint32_t kViewShift = bof3::addr::MapView_FillCells;
 
 }  // namespace area_w3g

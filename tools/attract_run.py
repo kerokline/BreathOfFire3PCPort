@@ -82,6 +82,31 @@ def launch(launcher, game, env):
     return OURS
 
 
+RUN_TIMES = os.path.join(ROOT, 'analysis', 'run_times.tsv')
+RUN_TIMES_HEAD = 'start\ttool\twhat\twall_s\tframes\tstatus\toriginal\ttrace\tlauncher\n'
+
+
+def log_run_time(tool, what, started, status, env, launcher, frames=''):
+    """One line per live run in analysis/run_times.tsv (gitignored): the wall
+    time from before the launch to after the game is ended, so the cost of the
+    attract, A/B and recipe runs can be summed (tools/run_times.py). `frames`
+    is the recipe frame the run ended at where the runner knows it: frames / 60
+    against wall_s says how much of a run is the game's own pace. Never fails
+    a run."""
+    try:
+        new = not os.path.exists(RUN_TIMES)
+        os.makedirs(os.path.dirname(RUN_TIMES), exist_ok=True)
+        trace = ','.join(k[6:] + '=' + env[k] for k in sorted(env) if k.startswith('BOF3X_CALLTRACE'))
+        with open(RUN_TIMES, 'a', encoding='utf-8', newline='\n') as f:
+            if new:
+                f.write(RUN_TIMES_HEAD)
+            f.write('\t'.join([time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(started)), tool, what,
+                               f'{time.time() - started:.1f}', str(frames), status, env.get('BOF3X_ORIGINAL', ''),
+                               trace, os.path.dirname(os.path.abspath(launcher))]) + '\n')
+    except OSError as e:
+        print(f'run_times: not logged ({e})')
+
+
 def keep_in_front(stop):
     """Foreground the game's window whenever it is not. Sends no input."""
     while not stop.is_set():
@@ -143,10 +168,14 @@ def main():
     env['BOF3X_LANG'] = a.lang
     env['BOF3X_FILTER'] = a.filter
     env['BOF3X_PRESENT'] = 'clean'   # not the owner's screen=satpixie (DIV-0043)
+    # DIV-0071 is on by default and moves sprites in the draw list: an oracle or
+    # hash side compares against Capcom's order unless the caller asks otherwise
+    env.setdefault('BOF3X_LAYERING', '0')
     launcher = a.launcher
     # --no-config: an oracle run must not stop on the settings dialog, and must
     # take the settings file's values without a human touching them
     # (docs/launcher-settings.md section 4).
+    started, status = time.time(), 'failed'
     launch(launcher, a.game, env)
 
     stop = threading.Event()
@@ -157,9 +186,11 @@ def main():
         subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'attract_watch.py'),
                         '--minutes', str(a.minutes), '--wait', '30', '--out', a.out], check=True,
                        env=dict(os.environ, BOF3X_RUN_PID=str(OURS)))
+        status = 'done'
     finally:
         stop.set()
         kill_game()
+        log_run_time('attract_run', os.path.basename(a.out), started, status, env, launcher)
     with open(a.out, 'a', encoding='utf-8', newline='\n') as f:
         f.write(f'# BOF3X_ORIGINAL={a.original or ""}\n')
         f.write(f'# BOF3X_LANG={a.lang} BOF3X_FILTER={a.filter}\n')

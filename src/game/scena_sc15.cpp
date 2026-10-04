@@ -34,6 +34,7 @@
 // doc, section 7.
 #include "game/scena_sc15.h"
 
+#include <bit>
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
@@ -44,6 +45,7 @@
 #include "game/move_script_bytes.h"
 #include "game/scena_sc15_callees.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -2280,9 +2282,9 @@ SC15_EXPORT void __cdecl Scena17_DrawFade(unsigned on, unsigned level) {
         SH_CALL(Gpu_SetTile)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
         Rgb(p, 4, static_cast<unsigned char>(c << 1));
-        SetL(p + 8, 0);
+        SetL(p + 8, std::bit_cast<std::uint32_t>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
         SetL(p + 0xC, 0);
-        SetL(p + 0x14, 0x43A00000);
+        SetL(p + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // 0x43A00000, 320.0f narrow
         SetL(p + 0x18, 0x43700000);
         Commit(2, 0x1C);
     }

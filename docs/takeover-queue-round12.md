@@ -175,7 +175,11 @@ with the boss set-up and its kinds among them.
    `kEngineStandard`; `PreviewEffect` for `Equip_PreviewSet` (BE7); the
    louder pop-up stand-ins (BE5); `Rand`'s negative answers and a turning
    stand-in for `0x446770` (BE2); the standard rows `0x437230` and
-   `0x441510`, now named (BE3).
+   `0x441510`, now named (BE3). **Done 2026-10-01** on round thirteen's tip
+   ([`boss_harness.md`](boss_harness.md) section 10.10): the 38 masks, the
+   five louder forms (`Rand`, the pop-ups, `Sound_PlayEffect`,
+   `Battle_TurnVectorC`, `Equip_PreviewSet`), the five rows as `BH_OURS`;
+   verified by the i686 build, the `'*'` run at the tip owed.
 2. **The rebinding left for the coordinator**: the raw calls between this
    wave's groups (RT's `--edges`; each group doc lists its own), and the
    harness files' raw routes (`boss_harness.cpp`, `boss_harness_eh.cpp`).
@@ -210,12 +214,88 @@ with the boss set-up and its kinds among them.
    `BattleObj_Fall`'s unchecked character byte; BE6's L1 (fixed, DIV-0063).
 4. **The 33 other owned starts without an `entries_logic.txt` line**: the
    dragon route showed what one costs. Audit them before the next route.
+   **Audited 2026-10-01** (`tools/entries_audit.py` with `--exe`, the
+   wall-clock exclusions and the two reach runs; 34 at the run, 7,571 owned):
+   **9 covered** - inside another owned function's registered range
+   (`Battle_MemberOutAction` in `Battle_MemberAutoTarget`, `ClutMap_FindFree`
+   / `_FindOwner` in `ClutMap_Mark`, `Battle_InitBossEncounter` /
+   `_InitEnemies` in `Battle_InitEncounterKind`, `Sparkle_Free` in
+   `Sparkle_Alloc`, `Gfx_DrawSunsetGlow` in `Gfx_DrawSkyGradient`,
+   `MoveScript_GroupD` in `GroupF`, `MoveScript_Group9` in `Group8`), no
+   line owed; **9 left out on purpose** - `wallclock_reach.json`'s
+   (`Gfx_FlushDirtyStrip`, `Gfx_FlushUploadQueue`, `Gfx_UploadPacked5`,
+   `Gfx_InvalidateTextures`, `Gfx_LoadImage`, `Gfx_LoadImageIfChanged`,
+   `Gfx_ConvertRow`, `Gfx_ClutPixels`, `Gfx_TexCacheFind`); **16 want a
+   line**, each at the extent capstone reads: `Sparkle_Rise` 0x6C,
+   `Sparkle_Fade` 0x85, `Game_WndProc` 0x3C4, `Field_ObjectFollow` 0x10F,
+   `AreaMap_DrawBackdrop` 0x147, `AreaMap_TextureCycle` 0xE5,
+   `AreaMap_SlotZones` 0x1C7, `MoveScript_CounterSet` 0x18, `_CounterTest`
+   0x20, `_CounterStep` 0x1F, `Fmv_WndProc` 0xD4 (inside
+   `Fmv_EnterFullscreen`'s listed span, which Capcom runs: no range of its
+   own without a line), `Gfx_MoveImage` 0xC8, `D3d_DrawPolyG3` 0x1C8,
+   `D3d_DrawLineG2` 0x14D, `D3d_DrawLineG3` 0x1BE, `Gfx_MoveCells` 0x4E.
+   **The reach runs say nothing about the 16**: a start without a line is
+   never armed, so no run could have seen it enter (`Game_WndProc` runs on
+   every message of every run). `--append` writes the 16; then **the frame
+   hash reference is re-recorded** (16 more armed entries change the
+   sequence on both sides: the original twice, then ours, as every
+   reference). **49 addresses are listed twice** - the groups' cut-down
+   extents beside the host lines they meant to cut; `--dedupe` keeps the
+   smaller. The tracer registers a range per line, duplicates included, so
+   the hash never minded; what the dedupe fixes is attribution (a Capcom
+   caller past a host's over-long extent logged as owned). **Run 2026-10-01
+   on the owner's machine**: `--dedupe --append` in one run dropped the 49
+   larger lines (every pair's host extent, the groups' cut-down lines kept:
+   `0x464EC0..0x47F040` is round thirteen's effect band, where the same had
+   happened) and added the 16; a second run reported no change and 0 owned
+   starts without a line. `analysis/` is not in git, so the file itself is
+   the owner's. **Owed before the next A/B: the hash reference re-recorded**
+   (HANDOFF's trap at its head). The reference changes twice over: the 16
+   new armed entries, and the dropped host ranges, whose calls from Capcom
+   code past the hosts' real ends now log their real return addresses -
+   both sides alike.
+   **The tool is written, 2026-10-01** (a cloud session without `analysis/`):
+   `tools/entries_audit.py` lists every `impl` start with no line and says,
+   for each, whether a listed owned function's registered range holds it
+   (covered: the tracer already claims its calls), whether an `--exclude`
+   list names it (the nine wall-clock exclusions), which `--reach` runs
+   entered it (`BOF3X_CALLTRACE_REACH=1` outputs), and proposes the line
+   from `pc_funcs.json` or the code's extent (`--exe`); `--append` and
+   `--dedupe` write the file. The run and its verdicts are above.
 5. **The pointer scan** of section 8 over all fourteen bands, and its two cases folded into `tools/band_rows.py`.
+   **Folded 2026-10-01 as `--pointer-scan`** ([`band-rows.md`](band-rows.md)
+   section 7; off by default, the output without it unchanged): the starts in
+   a band that only a `.data` cell names become rows, flagged with the cell
+   and its table; a cut start whose only reference is a `.text` cell in the
+   run of a jump table read short is flagged a case of that table's owner and
+   absorbed. **Run by the owner 2026-10-01** ([`band-rows.md`](band-rows.md)
+   7.1): FO's `0x578A40` as expected; FC2's and FC3's cannot fire since wave
+   two named them; 305 hits, six real - BE5's `Effect_Handlers` slots 4, 7,
+   11, 47, 91 and FS's `ShopMode_States[9]` `0x583350` - and the noise (dwords
+   inside listed functions, one-instruction "decodes") filtered in the code
+   since. The second run (7.2 there) 33 rows: the six, thirteen candidates for the
+   band owners to read, the rest constants of the `0x5N0000` shape, two more
+   rules in the code since. The third run 31 (7.3 there, two rules read short and fixed), **the fourth
+   29, the expected set: the flag is settled and the debt answered** - the
+   six are the band owners' to take (BE5's five handlers, FS's ShopMode 9),
+   the thirteen candidates theirs to read. The regression without the flag
+   ran the same day, seven outputs identical against `7fe6406`: **done**.
 6. **Wave two's folds** into `scenario_harness`: the masks, `Zenny_Add`'s test, the confirm and cancel cells as a region, `Crt_sprintf` at three words, the GTE rows that log stack pointers; and wave two's defects with wave one's in item 3.
+   **Done**: round thirteen's EKH pass folded 38 masks, `Crt_sprintf` and the stack pointers ([`scenario_harness.md`](scenario_harness.md) section 8.6), the defects are item 3's; **the rest 2026-10-01** on round thirteen's tip (the same section): `Zenny_Add`'s test, the two regions (the confirm and cancel words, `MessagePools`' offset words - these move every field group's draw, so FC1..FS's counts change at the next `'*'`), the louder forms (`Party_Count`, `Menu_ListScroll`, the sloped byte, `MoveScript_Step`, `Equip_PreviewSet`, `Gte_SetTransMatrix`) and the masks the first pass left. `Port_DroppedCall` at four words stays FS's own.
 7. **Housekeeping**: the seventeen `phase-3/round12-*` branches and the agents'
-   worktrees under `.claude/worktrees/` are merged and can go; the
+   worktrees under `.claude/worktrees/` are merged and can go (local to the
+   owner's machine; `origin` carries only `phase-3/round12-plan` of them, and
+   the three `claude/round-12-*` branches of PRs #37..#39, merged, which can
+   go too - **verified 2026-10-01**: all four are ancestors of
+   `origin/phase-3/capture-round-thirteen`, the first three of `origin/main`
+   as well, so `git push origin --delete phase-3/round12-plan
+   claude/round-12-defects claude/round-12-rebinding
+   claude/round-12-harness-folds` loses nothing; `claude/round-12-debt-tools`
+   is the same commit as round thirteen's tip and can go with them -
+   **deleted by the owner 2026-10-01**, item 7 done); the
    controls scripts live in the session-`6ae930a8` scratchpad
-   (`<group>/`), a Temp folder.
+   (`<group>/`), a Temp folder. `docs/README.md`'s duplicated `band-rows.md`
+   row was folded 2026-10-01.
 
 ## 8. Wave two: the field side (staged from `61be26e`, merged 06:58..08:35)
 

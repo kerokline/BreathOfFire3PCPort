@@ -20,7 +20,7 @@
 // 100 (areas 36 and 59 name it too), a step hook that drops the party in
 // (area 100's with two constants moved), an object trigger arming tail kind
 // 4, effect kind 0xB8's state dispatcher and its ring state. Areas 117 and
-// 118: a member frame the engine calls every frame in the area (0x46D780 by
+// 118: a member frame the engine calls every frame in the area (EffectKind70_Run 0x46D780 by
 // Game_AreaNumber), which turns the party members standing in a rectangle to
 // the rectangle's facing (reversed while story flag 0x85 is set) and jumps
 // them along it, its rectangle search, and a floor switch (a cell hook) that
@@ -908,7 +908,7 @@ unsigned char MemberRect(const TwinTables& t, unsigned member) {
     return 0xFF;
 }
 
-// The member frame (areas 117 / 118's, called by 0x46D780 every field frame
+// The member frame (areas 117 / 118's, called by EffectKind70_Run 0x46D780 every field frame
 // in the area). Field_ScriptFlags bit 13 cleared; for each member m below
 // Field_MemberCount (read again after each member; m a byte), with the bit b
 // = 1 << (m & 31) and its low byte b8 (0 for m & 31 of 8 and more, as the
@@ -1015,7 +1015,7 @@ unsigned char SwitchHook(const TwinTables& t, unsigned x, unsigned z) {
 
 }  // namespace
 
-// original 0x41A0A0 (called by 0x46D7A9, 0x46D780's case for area 117): the
+// original 0x41A0A0 (called by 0x46D7A9, EffectKind70_Run's case for area 117): the
 // member frame over Area117_Rects.
 extern "C" void __cdecl Area117_MembersFrame(void) { MembersFrame(at::kTw117); }
 // original 0x41A2D0 (called by Area117_MembersFrame; a gap of the tool): one

@@ -8,7 +8,13 @@ round twelve's field groups** (2026-09-28, group FH, pin `430f34b`): field
 mode, five shapes, the field regions and 174 field-standard callees, section
 7 - every scenario shadow and `'*'` unchanged, the self-test
 `scenario_harness_fh` 0 mismatches over 13 field functions with Capcom's on
-both sides, 6 of 6 controls refused.
+both sides, 6 of 6 controls refused. **Widened for round thirteen's effect
+groups** (2026-09-29, group EKH, pin `d19d803`): effect mode, the shape
+`kEffect` and `Arg::kEffect`, twelve arguments, nine effect regions, 109
+effect-standard callees and 10 louder re-listings, round twelve's masks folded,
+section 8 - every shadow of `'*'` unchanged in its counts, the self-test
+`scenario_harness_ekh` 0 mismatches over 8 rows of the cut with Capcom's on both
+sides, 2 of 2 controls refused.
 
 `src/game/scenario_harness.h` / `.cpp`: what every scenario group needs to
 take a chapter's code, so that a group writes only its functions, a list
@@ -638,3 +644,534 @@ count**; `0x5728D0` against itself passed.
   groups' call counts exactly as the new build's did), so before / after
   comparisons are `'*'` against `'*'`, as 7.8's.
 - Everything in sections 5 and 6 still holds.
+
+## 8. Round thirteen: the effect engine's groups
+
+Round thirteen takes the effect-object engine: 1,695 functions of
+`analysis/round13_cut.tsv` in 35 groups E1A..E6D and the stage-A group EGT
+([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9 and 10).
+Group EKH (2026-09-29, stage A, from the round branch's `d19d803`) gave this
+harness what they need: **effect mode**, a fold-back of what FC1 and FC2 wrote
+in their own seeds in round twelve. Everything below is off unless a group
+sets `g.effect = true` or gives a clone the shape `kEffect`; without it the
+harness is round twelve's to the draw (the proof, 8.8). EKH's measurements are
+in the session scratchpad (`ekh/`: `analyse.py` and `shapes.tsv` a row per cut
+function, `frontier2.py` / `frontier_typed.tsv` the callees, `typeraw.py` /
+`typeraw.txt` the unnamed callees read, `cells.py` / `cells.txt` the cells,
+`recarg.py` the record-handing callers), game-derived and not committed.
+
+### 8.1 What changed
+
+| Where | Added | Default (today's behaviour) |
+|---|---|---|
+| `Shape` | `kEffect` (8.3) | the ten shapes unchanged |
+| `Arg` | `kEffect`: argument *i* one of the 20 `Effect_Objects` records; `ArgAt` now three bits an argument (the first ten) | `ArgAt` is the only way groups encode it, so every existing clone line means what it meant |
+| `Clone` | `state_span`, `sub_span` (a function's own spans for `+1` / `+2`), `kind` (its own `+5`) | 0, 0, -1: the group's |
+| `Group` | `effect`, `kinds` / `n_kinds`, `state_span`, `sub_span` | false, none, 0, 0 |
+| `kArgs` | 12 (E3D's `0x486AB0` reads twelve words, `0x486B70` ten): the recorders take twelve, a clone is called with twelve; arguments 10 and 11 are **derived** from the first ten, not drawn, and a recorder's second extra log entry carries `r[10]`, `r[11]` (0 below eleven arguments) | the random stream, the scratch buffer (still ten slots of 0x40) and every log entry as before |
+| stand-ins | `kSlots` 768 (was 512); `kEffectOverrides` (10) registered first in effect mode, `kEffectStd` (109) after `kField` | registered in effect mode only |
+| `DataTable` | up to 128 entries a table (was 32: kind 0xF's table has 58) | |
+| disturbance | case 4 moves `Sprite_Current` among the 20 effect records; case 10 moves `+1` or `+2` inside its span | effect mode only |
+| regions | nine effect regions (8.4) | effect mode only |
+| `at::` | `kEffectStride`, `kEffectCount`, `kKindHandlers`, `kKind18States`, and the effect regions' cells | |
+| helpers | `EffectRecord(k)`, `InEffectRuns()` | |
+| masks | round twelve's narrower masks folded into `kStandard` / `kField` (8.6) | a mask only narrows what is compared: no draw, no count moves |
+
+### 8.2 The band: what each test accepts
+
+- **`Register`** (unchanged): a callee listed as Capcom's must lie in `.text`
+  `0x401000..0x5C3000`, one listed as ours outside it. Every effect run lies in
+  `.text`, so it accepts every effect function as a callee either way;
+  `kEffectOverrides`' five rows of the cut are listed by address (key = address),
+  which keeps passing when their owners take them and a group still calls them
+  raw.
+- **`InEffectRuns`** (new): `0x462B00..0x470000`, `0x470000..0x4A0000`
+  (`0x470000..0x4941E0` and its callees, as the brief draws it - it reaches past
+  the spell band's first entry `0x498FE0`), `0x4FD2E0..0x517000`,
+  `0x528CD0..0x52D080`, `0x594060..0x594D8A`. A field- or effect-mode clone whose
+  base lies outside the field runs, the chapter bank **and** these is named in
+  the log, not refused. So an effect group's clones are not named, but **E4A's
+  `0x433640`** (a `hypothesis` row in the battle band) will be - expected. The
+  test only names: nothing is refused by address.
+- `StandIn` looks a key up in the two new tables as in `kStandard` / `kField`.
+
+### 8.3 The shapes: `kEffect`, and the call shapes the cut has
+
+**How the effect code is reached** (EKH's `analyse.py` over the 1,706
+functions of the cut and the 15 its spans hold that no list has, EGT's four and
+the three non-functions left out): 1,259 only by `.data` cells, 382 only by
+calls, 28 by calls and jumps, 12 by a call and a cell, 11 only by `jmp` (shared
+tails), 8 by a cell and a jump, a stack immediate or a push, 6 by a stack
+immediate or nothing a sweep sees. **1,353 read `Sprite_Current`.**
+
+**`kEffect`**, the fold of FC1 and FC2: every round in effect mode, after the
+field put-backs and before the group's seed, all 20 records get `+5` one of
+the clone's kind or the group's `kinds`, `+1` below the state span and `+2`
+below the sub-state span (each when set), and `+0` 0 (free) a third of the
+time, else in use; `Sprite_Current` is one of them, in use. For **every** clone
+of an effect-mode group, `kCall` helpers too. The disturbance moves
+`Sprite_Current` among the records only, and `+1` / `+2` of the current one only
+inside their spans (never when a span is 0). What FC1 and FC2 agreed on and
+this keeps: `+5` the kind and a state byte kept inside the table the code
+indexes, because Capcom's dispatchers do not bound their index (FC1:
+`sprite_span` 20; FC2: per function in its seed); `Effect_FindFree`'s answer a
+byte `0xFF..0x13`. Where they differ: FC1 puts `Sprite_Current` on an effect
+record half the time and seeds the first four sprite records alike, because
+the round-twelve disturbance moves it onto sprites; FC2 leaves it on the four
+sprite records altogether (its records are sprite-sized and it seeds all
+four). **EKH chose FC1's record and neither's sprite**: an effect state runs
+with `Sprite_Current` an `Effect_Objects` record (`Effect_RunObjects`,
+`symbols.toml` evidence), so the record is always one and the disturbance never
+leaves the pool. FC1's and FC2's own fuzz files are not rewritten onto the
+shape (8.9).
+
+**The spans are the table's own length, not the run of code pointers**: the
+tables sit back to back - `0x65E068`'s run is eleven code pointers, but
+`0x5011A0` dispatches through `0x65E080`, its entry 6, so `0x500930`'s table
+has six. Measure each table to the next start any dispatcher indexes (the
+`disp` column of `shapes.tsv` lists them), or to the first dword that is not
+code (`0x65DAE8` has four, then bytes).
+
+**The dispatchers** (`jmp [T + byte * 4]` with `T` in `.data`): 128 index by
+`+1` (the kinds' `Effect_KindHandlers` entries, a state table each), 87 by
+`+2` (kind 0x18's `EffectKind18_States` entries - that table is indexed by
+`+1`, each entry a sub-kind's dispatcher by `+2` - and some kinds' own), 14 by
+`+3`, 1 by `+4`, 4 by a byte not of the record; 18 more call through a table
+(11 by `+1`). **A kind's dispatcher is taken whole with its table**: a
+`kEffect` clone with its table a `DataTable` and `state_span` its length (the
+harness swaps the entries for recorders on both sides, 8.8's `0x46F2B0`); a
+sub-state dispatcher the same with `sub_span`.
+
+**The call shapes beyond the state handler** (every row read for its stack
+arguments, register inputs, answer and calls):
+
+| Shape in the cut | Rows | How to fuzz it | New? |
+|---|--:|---|---|
+| a state handler, a kind's dispatcher, a kind-0x18 sub-state (void, no arguments, on `Sprite_Current`) | 1,454 take no stack word | `kEffect`, spans per clone | `kEffect` |
+| a cdecl helper with stack words | 252 (1: 111, 2: 60, 3: 33, 4: 28, 5: 6, 6: 6, 8: 6, 10: 1, 12: 1) | `kCall`; `kArgs` is 12 now | twelve words |
+| ... handed a record on the stack | about 34 by a scan of the callers (they push `Sprite_Current` or a register loaded from it) | `kCall` with `ArgAt(i, Arg::kEffect)` - or `Arg::kScratch` / `args` when the record is another pool's (8.8's `0x4857C0` is handed a shard record) | `Arg::kEffect` |
+| a helper answering in `al` / `eax` that a caller reads | 59 | `ret_mask` (`0xFF`, or `0xFFFFFFFF` for `0x479970`'s angle) | no |
+| a spawner: calls `Effect_FindFree` and fills the record it answers | 19 (23 sites, 8 groups) | `kEffect`; the effect-mode `Effect_FindFree` answers a free record (8.5) | louder stand-in |
+| **the record in a register** | **none**: 85 rows looked like it and were MSVC's `push ecx` for `sub esp, 4`, two more `or al, 0xFF` / `sbb edx, edx` (read by hand) | - | no shape needed |
+
+Three facts for the groups' seeds: some kinds keep **pointers in the record**
+(`0x46F530` reads dwords `+0xC..+0x1C` as pointers and their byte `+6`: seed
+them at records, or the original faults); some states **loop over a count**
+(`0x482650` writes `ObjTrio` + 0x14C * i for i below `Field_MemberCount`: seed
+it below 4); and **`EffectKind18_States`' count 160 is an upper bound**, so
+`band_rows.py` names cells past its end `EffectKind18_States[n]` - `0x6542AC`,
+"`[144]`", is entry 1 of kind 0x23's table `0x6542A8`.
+
+### 8.4 The regions and the seeds
+
+EKH read every absolute address the effect functions name (a memory operand
+with no base register, indexed or not, and every immediate in the data range;
+`cells.py`) and counted the groups. **Standard in effect mode** - three or more
+groups:
+
+| Region | Groups | What |
+|---|--:|---|
+| `0x9037A0` + `0x40` | 15 (all write) | `Prim_VertexScratch`, the quads' four vertices, and on to `0x9037E0` |
+| `0x903800` + `0x40` | 9 | `Camera_ShiftX` / `Y`, `MapView_ScreenXY` `0x903820` (two floats) |
+| `0x905E20` + `0x40` | 13 (9 write) | `Cond_ByteFE` .. `Camera_Matrix` `0x905E40` |
+| `0x92BF80` + `0x644` | 15 | `EffectKind30_Shards` and the sparks after them, FC2's region (`0x485810` hands out its 0x18-byte records) |
+| `0x903584` + `0x10` | 6 (read) | `Field_MenuButton` and the two after it |
+| `0x803580` + `0xE8` | 4 | `MessagePools` (FE1: empty at start-up, so a wrong id cannot show without it) |
+| `0x66C7E8` + 4 | 6 | `Game_Mode`, `Game_Step` |
+| `0x939A00` + `0x30` | 3 | cells E1A, E1E and E3D read |
+| `0x7DEE20` + `0x60` | 3 | round twelve's `kMessageCells`, which hold `MsgBoxState` `0x7DEE40..` |
+
+Already standard and read by the effect code: the effect records themselves
+(`0x7E11E0`, 20 x 0x80), `Sprite_Current`, `Frame_Counter`, `ObjTrio` (the
+leader's record: `0x500D20` reads its point), `Field_Request` (20 groups),
+`Camera_Distance` and the counters `0x903840..`, the chapter bytes, the flag
+rows; field mode's packet cursor (`Gfx_CommitPrim`, 327 sites, is the most
+called callee), the camera-turn cells, the menu block, the area block.
+
+**A group lists it** (one or two groups): `0x800000` (six groups, indexed: a
+table whose extent is not measured - a group reads it and lists it),
+`DrawItems` `0x905E80` (three, indexed: `MapView_ItemHalfAt`'s half records;
+the effect-mode stand-in answers into the harness's own buffer), `0x6BC644..`,
+`0x6BC704..` (E1E, E6D), `0x6BE08C` and `0x93985C` (E1G), `0x9036E0`
+`Sprite_DrawList` (E6C), `0x9039F4` (E3D, E5B), `DrawLayers` `0x802594` /
+`0x802B34`, `0x80BCC0..0x80C184` (E5D, E5E, E6D), the `0x92C208..0x931174` run
+of single cells (E1C..E4F, mostly E2E), the enemy records `0x93B9F2..` (E5C,
+E6D), and the image's `.data` tables each group reads (its state tables,
+swapped as `DataTable`s; `0x5C41B8..0x5C4254`, fifteen groups' float
+constants, read-only and left in place like every table of the image).
+
+### 8.5 The standard callees
+
+**The frontier**: every call and tail `jmp` out of the effect functions that
+lands outside the cut - **206 callees, 3,897 sites**. 29 are in `kStandard`, 60
+in `kField`; of the 117 new, 109 are `kEffectStd` and 8 are second entries or
+shared tails inside a group's own functions (`0x4FDCC0` in E5A's `0x4FDC80`,
+`0x488B90` E4A, `0x473F10` E2B, `0x47E120` E2G, `0x48A480` and `0x48A560` E4B,
+`0x506AB0` E5E, `0x485C60` E3C): the group lists each as a `kPhase` callee or
+takes it. The most called: `Gfx_CommitPrim` 327, `Math_Sin` 269, `Math_Cos`
+253, `Sound_PlayEffect` 232, `Gpu_SetSemiTrans` 202, `Gpu_SetDrawMode` 189,
+`MapView_LinkPrimAt` 172, `Rand` 146, `AreaMap_Elevation` 142,
+`Effect_Release` 135, `Gpu_GetTPage` 131, `_ftol` 106 (`kThrough`), `0x52CFE0`
+100 (a cut row).
+
+**`kEffectStd`** (109): the 64 ours typed from `symbols.toml` as FH typed
+`kField` (the draw primitives' `prim` hashed, `Gte_*` outs not logged and
+filled - `Gte_StoreDepthF` / `F3` as floats, `Gte_RotMatrixX` / `Y` / `Z` fill
+and answer their matrix -, `FieldPanel_*` FE1's panels, `Member_SetState2_8`
+writing what the real one writes, `Flags_Toggle` toggling, `Gpu_LinkPrim`
+linking, `Effect_ReleaseAt` clearing, `MapView_ItemAt` answering 0 or a small
+item, `MapView_ItemHalfAt` 0 or the harness's buffer, `WorldMap_RecordIndex`
+0..11); and 45 of Capcom's unnamed ones, each read to its last instruction
+(`typeraw.py`): the stack words and their widths, what is dereferenced (hashed
+to the furthest byte read) and written through (not logged, filled to the
+furthest byte), and whether a caller reads `al` (`kFlag`) or `eax`.
+
+**`kEffectOverrides`** (10), louder where the caller reads back, registered
+first in effect mode so they stand over `kStandard` / `kField`:
+
+| Callee | Louder how |
+|---|---|
+| `Effect_FindFree` | a quarter of the time none (`0xFF`); else a **free** record (`+0` 0) looked for from a start the answer picks - not always the first, so a caller that finds its own record shows -, `0xFF` when none is free |
+| `Effect_Release` | clears bytes 0..4 of `Sprite_Current`, as the real one: a state that reads `+1` again after it sees 0 |
+| `0x52CFE0` (E1F, 100 sites) | read to its last instruction: `(id byte, slot, s16 x, s16 y)`, a sprite primitive of 0x1C from the 16-byte records at `0x660438` committed at the cursor, `eax` the primitive. Masks by width; the cursor moves 0x1C over noise; answers the primitive |
+| `0x52CF60` (E1F, 31) | `(id byte, slot)`: a draw mode of 0xC from `0x660394`'s records, committed. The cursor moves 0xC |
+| `0x469750` (E1B, 33) | `(x, y, w, h, colour)`, whole ints: a frame `0x469790(x, y, w, h)` and a fill `0x469960(x + 2, y + 2, w - 5, h - 5, colour)`. The cursor moves 0x80, **a size of the stand-in's own** (the originals' sum depends on the path) |
+| `0x468AC0` (E1B, 19) | `(x, y, bits byte)`: three boxes `0x468BB0(x + 0x30 i, y, bit i)` and three `Text_DrawAt` lines by the byte. The cursor moves 0xC0, its own size |
+| `0x503FA0` (E5D, 15) | `(variant)`, a whole word added to a table address: nothing when `Draw_PassFlags` has bit 2; else sixteen textured quads around `Sprite_Current`'s point (`AreaMap_Elevation`, `Gte_RotTransPers4`, `MapView_LinkPrimAt`). Fills `Prim_VertexScratch`' four vertices and `MapView_ScreenXY`, moves the cursor 16 x 0x54 |
+| `Sprite_FindFree`, `Party_MemberAt`, `Gte_RotTransPers` | round twelve's behaviour folds (8.6) |
+| `EffectGte_ProjectPoint`, `EffectGte_ProjectSize`, `Gte_VectorNormal` | wave two's fold (2026-10-03): no pointer logged by value - the callers hand locals, whose addresses differ between the copy and ours. The point hashed (12 bytes); the size's first word only (several callers leave the second as stack the original never wrote); the outs filled - three floats with fractions, two s16 small half the time, three longs |
+| `Math_Cos` | never 0 or -1: E2B's spiral divides by it |
+| `Sprite_UpdateScreen` | logs `Sprite_Current` and its 0x80 bytes: a draw on the wrong record shows |
+| `MapView_LinkPrimAt` | moves the packet cursor by `size & 0xFF` two times in three, as the real one does for a row on the map; nothing filled |
+
+Wave two's fold also changed three `kEffectStd` rows in place: `EffectSpark_FindFree`
+(`0x47CF20`, 8 records of 0x1C at `EffectKind30_Shards`) and `0x47A130` (64 of
+0x20 at `0x92D1DC`) answer the first record whose `+0` is 0, or null - null also
+a quarter of the time, and always when the pool is outside the group's regions;
+`0x4941B0` hashes 8 bytes at each of its three pointers and writes nothing (E2C's
+reading; EKH's row wrote them). The square root `0x5A7A90` stays garbage: what
+its callers need differs by caller (E2E's clamp), so a group re-lists it.
+
+**The five cross-group rows are owned by their groups** (E1F, E1B, E5D) and not
+taken here; the others call them raw (`SH_AT`) until they merge, and the rows
+above serve those calls. **EGT's four** (`0x494060`, `0x494110`, `0x494180`,
+`0x4941E0`) are EGT's: nothing here. `kField` holds three of them **by address**
+(`"0x494060"`, `"0x494110"`, `"0x4941E0"`, FH's): a clone's `E8` to them still
+reaches those rows once EGT merges, but ours calling them **by name** will not
+(the key is the name's, not the address) - when EGT merges, those three rows
+want `FIELD_OURS(name)` and `0x494180` a row, or every effect group lists them.
+
+### 8.6 Round twelve's debts folded here
+
+Round twelve's section 7 items 1 and 6, where they touch this harness:
+
+- **The masks, in place** (38 rows of `kStandard` / `kField`), each the width
+  the callee reads as a wave-two group found it: `Inventory_Add` / `Count`,
+  `Party_Count`, `Skill_FlagIndex`, `Item_HelpMessage`, `AbilityList_Add`,
+  `Field_MemberSprite`, `Area_LinkAt`, `0x594700` bytes; `Msg_SystemPtr`,
+  `MapView_SetElevation`, `Area_TestCondition` words; `Sprite_EnsureAnimation`
+  its byte (FE2, FC3: `cmp [+0x4B], al`); `AreaMap_SetByte`,
+  `AreaMap_SetHeight` s16, s16, byte; `Menu_DrawBox`, `Menu_DrawCursorBox`
+  four words and two bytes; `Menu_DrawMemberStatus`, `Menu_DrawMoneyBox`,
+  `Menu_DrawSkillRow`, `Menu_DrawHand`, `Text_DrawFont8` / `12` (six bits of
+  the colour), `Char_LoseHp`, `0x537500`, `Field_WayBlocked`,
+  `MapView_SlopeAt`, `Gfx_CommitPrim` (two bytes); `Crt_sprintf` at three
+  words; the stack pointers of `Gte_RotMatrix`, `Gte_RotTrans`,
+  `Gte_MulMatrix0`, `Gte_RotTransPers`, `Gte_RotTransPers3` / `4`,
+  `MoveCmd_AttachOffset` and `MoveCmd_Move`'s object no longer logged by value.
+  **A mask never changes a draw or a count** (the recorders' stream is the log's
+  length, not its contents), and a narrower one compares less, so no existing
+  group can start to mismatch; 8.8 shows every count unchanged.
+- **The behaviour, beside the rows** (effect mode only, `kEffectOverrides`):
+  `Sprite_FindFree` answering 0..29 or `0xFF`, `Party_MemberAt` 0..2 or `0xFF`
+  (FC1), `Gte_RotTransPers` filling its screen point as two floats (FE2). In
+  place they would change what the wave-two groups that use the standard rows
+  draw.
+- **Folded 2026-10-01, in place** (the coordinator's pass, a cloud session;
+  the i686 build verified it, the `'*'` run at the tip is the owner's):
+  `Zenny_Add`'s tally test the right way round (`FxZennyAdd` adds to
+  `0x904138` when the byte is 0, as `scena_sx.cpp` does; FE1);
+  `Party_Count` answering 0..3 (FS: a random count ran the callers' loops
+  past `ObjTrio`); `Menu_ListScroll` writing its out-bytes (`FxListScroll`,
+  FS's form, the writes guarded); `AreaMap_Slope` and `MapView_SlopeAt`
+  setting the "sloped" byte `0x903850` (`FxSloped`, FC1, FC3; inside the
+  effect-slot region already); `MoveScript_Step` answering `0xFF..0x0F` and
+  moving the context's flag byte (`FxStepFlag`, FC3); `Field_CellAhead`
+  0..4 (FC3); `Item_IconKind` 2..7 (FO); `Gte_SetRotMatrix` hashing its
+  nine shorts (18 bytes) and `Gte_SetTransMatrix` noting its translation
+  `+0x14..+0x1F` instead of hashing the rotation it never reads
+  (`FxSetTrans`, FC2 and FE2 agree); the SVECTOR arguments of
+  `Gte_RotMatrix`, `_RotTrans`, `_RotTransPers` / `3` / `4` hashed as six
+  bytes, not eight (the fourth short is the pad DIV-0023 found stale);
+  `Gte_MulMatrix0`'s two matrices as 18 bytes, not 8;
+  `Equip_PreviewSet` filling and noting the caller's marks and values
+  (`FxPreviewSet`, FO: the row hashed the two buffers before anything had
+  filled them). **The masks the first pass left**, now at what the callee
+  reads: `Menu_DrawPiece`, `_DrawPieces`, `_DrawIcon8`, `_DrawScrollBar`,
+  `_DrawCell8`, `_DrawItemRow`, `_DrawTitleBox`, `_DrawItemIcon`,
+  `_DrawBorder`, `Text_DrawAt` (`kStandard`), `Text_DrawSmall`,
+  `TextRecord_Set`, `Char_ExpForLevel`, `Char_AbilityList`, `Skill_CanUse`,
+  `Skill_ApCost`, `Item_CanUse`, `KeyItem_Has`, `PartySet_Load`
+  (`kStandard`), `0x46D5F0`, `UiSprite_Draw` (FO, FS, FE1, FC2). **Two
+  regions for the field runs** (not effect mode, whose `kMenuButtons` and
+  `kMessagePools` hold them already): `Field_ConfirmButtons` /
+  `_CancelButtons` `0x90358C` (8) and `MessagePools`' first 0x200 offset
+  words `0x803580` (0x400; FE1: empty at start-up, so a script-pool message
+  drawn by id could not show). **The regions move every field group's
+  draw** (the random fill is one stream over the regions), so FC1..FS's
+  counts change at the next `'*'`; 0 mismatches is the bar, as for every
+  cleanup. An effect's writes draw from `Noise()`, not the stream, so the
+  louder forms move no count; a new mismatch under one is a finding.
+- **Still not folded**: `Port_DroppedCall` at four words (FS's `0x581300`
+  pushes four; every other caller one - a per-site count the row cannot
+  hold, so FS's own listing stands) and the groups' reach effects
+  (`AreaMap_ByteAt` / `_Elevation` answering what the callers compare,
+  `MapView_GroundAt` at the height's boundaries, `Char_ExpForLevel`'s -1).
+
+### 8.7 Worked examples
+
+**A hidden state handler reached by a `.data` cell** - E1A's `0x462BC0`
+(hidden in `0x462AC0`; the cell `0x653A44` is entry 0 of kind 1's state table,
+whose dispatcher `0x462BA0` is `Effect_KindHandlers[1]`, the table two entries
+to `0x653A4C`, kind 7's). It copies the dword `+0x54` of the
+`Sprite_ObjectsExtra` record `+0x18` names into the effect record's `+0x54` and
+sets `+1` to 1. Ours reads the index from the record the harness made current:
+
+```cpp
+// src/game/effect_1a.cpp
+extern "C" void __cdecl Effect1A_Kind01Start() {   // 0x462BC0
+    unsigned char* const s = static_cast<unsigned char*>(Sprite_Current);
+    const std::uint32_t k = static_cast<std::uint32_t>(move_script::Long(s + 0x18));
+    if (k >= 4) bof3::Fatal("Effect1A_Kind01Start: +0x18 is %u, past the four extra records", (unsigned)k);
+    move_script::SetLong(s + 0x54, move_script::Long(scenario_harness::Mem(0x802054 + 0xA4 * k)));
+    s[1] = 1;
+}
+// src/game/effect_1a_fuzz.cpp
+namespace sh = scenario_harness;
+const sh::Clone kClones[] = {
+    {"Effect1A_Kind01Start", 0x462BC0, 0x23, nullptr, 0, nullptr, 0, nullptr, 0,
+     reinterpret_cast<const void*>(&::Effect1A_Kind01Start), 0, false, sh::Shape::kEffect,
+     0, 2, 0, 1},   // pointers, state_span 2 (0x653A44's two), sub_span, kind 1
+};
+void Seed(unsigned) {
+    unsigned char* const s = static_cast<unsigned char*>(Sprite_Current);
+    s[0x18] = static_cast<unsigned char>(sh::Next() % 4);   // the original reads 0x802054 + 0xA4 * it
+    s[0x19] = s[0x1A] = s[0x1B] = 0;
+}
+void Run() {
+    sh::Group g = {"effect_1a", kClones, 1, nullptr, 0, nullptr, 0, nullptr, 0, Seed, nullptr, 0};
+    g.effect = true;
+    sh::Run(g);
+}
+```
+
+(A real index past the four is Capcom's read of whatever follows; ours aborts
+there, the round-nine rule - the seed keeps it inside.)
+
+**A kind-0x18 sub-state** - E5B's `0x500D20`, entry 3 of `0x65E068`, the
+table of `0x500930` = `EffectKind18_States[15]` (so the record's `+5` is 0x18,
+`+1` 15, `+2` 3; the table has six entries before `0x5011A0`'s at `0x65E080`).
+Unless `Cond_ByteFD` is 0 and `Cond_ByteFE` equals `+0xA`, it compares the
+leader's point (`ObjTrio +0x34` / `+0x38`) with the record's cell (`+0x36` /
+`+0x3A`, the high words; `+8` chooses the axis first) and, within two cells on
+both, sets `+2` to 4. No callee, no table:
+
+```cpp
+const sh::Clone kClones[] = {
+    {"Effect5B_Kind18_15Near", 0x500D20, 0xD1, nullptr, 0, nullptr, 0, nullptr, 0,
+     reinterpret_cast<const void*>(&::Effect5B_Kind18_15Near), 0, false, sh::Shape::kEffect,
+     0, 16, 6, 0x18},   // +1 below 16 (EffectKind18_States' entries this group runs), +2 below 6
+};
+void Seed(unsigned) {
+    unsigned char* const s = static_cast<unsigned char*>(Sprite_Current);
+    s[1] = 15;
+    if (sh::Half()) {   // the leader within, at and past two cells of the record
+        const std::int32_t dx = static_cast<std::int32_t>(sh::Next() % 5) - 2;
+        const std::int32_t dz = static_cast<std::int32_t>(sh::Next() % 5) - 2;
+        move_script::SetLong(ObjTrio + 0x34, static_cast<std::int32_t>(((move_script::Word(s + 0x36) + dx) << 16) | (sh::Next() & 0xFFFF)));
+        move_script::SetLong(ObjTrio + 0x38, static_cast<std::int32_t>(((move_script::Word(s + 0x3A) + dz) << 16) | (sh::Next() & 0xFFFF)));
+    }
+    if (sh::Next() % 3 == 0) sh::Mem(sh::at::kByteFD)[0] = 0;
+    if (sh::Next() % 3 == 0) sh::Mem(sh::at::kCameraCells)[0] = s[0xA];   // Cond_ByteFE
+}
+void Run() {
+    static const std::uint8_t kKinds[] = {0x18};
+    sh::Group g = {"effect_5b", kClones, 1, nullptr, 0, nullptr, 0, nullptr, 0, Seed, nullptr, 0};
+    g.effect = true;
+    g.kinds = kKinds;
+    g.n_kinds = 1;
+    sh::Run(g);
+}
+```
+
+The names are placeholders (a group names its functions); the extents, spans
+and seeds are the ones `scenario_harness_ekh.cpp` runs (its seed writes the
+leader's words byte by byte; the same values).
+
+### 8.8 The proof
+
+**(a) Nothing moved that uses this harness.** `BOF3X_SHADOW='*'` headless on
+`d19d803` built in this worktree (`ekh/star_base.log`) and on EKH's build with
+the effect mode and the mask fold (`ekh/star_after.log`): both exit 0,
+`inject: 6891 ours, 0 left original`, **677 self-test lines before and 678
+after**, the one more `scenario_harness_ekh`'s. Of 1,305 self-test, coverage
+and mode lines, **1,276 are byte-identical**, among them every line of every
+shadow that runs through `scenario_harness` - the 17 scenario shadows, the
+seven field groups, `scenario_harness_fh`. What moved, all still 0
+mismatches, only call counts: `sound` (117,994 -> 117,997), `magic_s16`,
+`magic_s17`, `magic_s34`, `magic_s35`, `area_w0b`, `area_w1b`, `area_w1e`,
+`area_w2b` (both), `area_w3a` and `battle_e7` (3,249,681 -> 3,249,684) - the
+same modules as FH's 7.8 (plus `battle_e7`, which did not exist then), none of
+which uses this harness, whose harnesses (`magic_harness`, `area_harness`,
+`boss_harness`) and sources are untouched: the build-directory trap
+([`HANDOFF.md`](HANDOFF.md)), their records' pointers into our DLL moving as
+the DLL grew (256 more recorders, twelve arguments, the effect tables). Two
+`field_s` lines changed their text only: the "lies outside" line now says
+"and the effect runs", and one names our own `PartyForm_DrawReserve` at its
+DLL address, which moved with the build.
+
+**(b) The new shape runs.** `BOF3X_SHADOW=scenario_harness_ekh`
+(`src/game/scenario_harness_ekh.cpp`, after every scenario and field group in
+`inject_all.cpp`; every effect group's inject goes after it, since it copies
+eight of their rows): eight rows of the cut, each a copy of the original
+against Capcom's on the other side, so any difference is the harness's -
+
+| Shape | Row (group) | Through |
+|---|---|---|
+| `kEffect`, a hidden state reached by a cell | `0x462BC0` (E1A) | kind 1, `state_span` 2; `+0x18` seeded below 4 |
+| `kEffect`, a kind's dispatcher with its table | `0x46F2B0` (E1D) | `Effect_KindHandlers[0x21]`, `0x654284` (6), `state_span` 6 |
+| `kEffect`, a kind-0x18 sub-state dispatcher | `0x4FD470` (E5A) | `EffectKind18_States[4]`, `0x65DAE8` (4), `sub_span` 4 |
+| `kEffect`, a kind-0x18 sub-state | `0x500D20` (E5B) | 8.7's seeds |
+| `kCall` answering `eax` | `0x479970` (E2E) | `ret_mask` `0xFFFFFFFF`, the angles seeded across `0x800` |
+| `kCall` handed a record | `0x4857C0` (E3C) | `ArgAt(0, Arg::kEffect)` |
+| `kEffect`, a spawner | `0x46F7D0` (E1D) | kind 0x23; `Effect_FindFree`'s effect-mode stand-in |
+| `kEffect`, a release | `0x472770` (E2A) | `Effect_Release`'s effect-mode stand-in, by a tail `jmp` |
+
+The first six call nothing (or only through their table, swapped on both
+sides), so "ours" is the original in place. The spawner and the release call a
+callee the original in place would reach for real, so their "ours" is a second
+byte-copy of the original with that call re-aimed at a trampoline that asks
+`StandIn` for the callee's stand-in - as ours does through `SH_CALL`; Capcom's
+code on both sides still. Alone: **16,000 rounds over 8 functions, 6,973 calls
+to the stand-ins, 0 mismatches**; 24,756 bytes of state in 45 regions; 365
+stand-ins registered - the 174 field-standard, 109 effect-standard and 10
+re-listings among them, every one passing `Register`'s checks. Every entry of
+both tables was reached (`0x654284`'s six 312..353 times each, `0x65DAE8`'s
+four about 500 each); `Effect_FindFree` 973 calls, `Effect_Release` 2,000.
+Under `'*'` it runs last of this harness's users and draws another stream
+(6,986 calls), 0 mismatches there too.
+
+**(c) Controls** (`BOF3X_EKH_CONTROL`, in the committed file, off by default):
+`1` stands in for `0x462BC0` a copy whose `mov byte [eax + 1], 1` writes 2 -
+**refused in 2,000 of 2,000 rounds**, exit 3; `2` makes the spawner's copy
+write the new record's kind 0x25 instead of 0x24 - **refused in 731 rounds**
+(the rounds where the stand-in answered a free record and the spawn ran),
+exit 3. **2 of 2 refused by a count.**
+
+`tools/ledger_check.py`: 63 entries, 0 errors. No function is taken: no
+`BOF3_INJECT`, no `impl`, no ledger entry needed (the harness changes what the
+fuzz does, not what the game does).
+
+### 8.9 Limits and debts
+
+- **FC1's and FC2's fuzz files are not on the new shape.** FC1's
+  `Sprite_Current = Eff(...)` and `sprite_span` 20, FC2's sprite-record seeds:
+  both still run round twelve's field mode unchanged. Moving them onto
+  `kEffect` changes what they draw; it is a debt for the round's cleanup, with a
+  re-run of their controls.
+- **The stand-ins' effects are proved by the self-test for `Effect_FindFree`
+  and `Effect_Release` only**; the other rows by registration (every one passes
+  `Register`'s checks at start-up in `scenario_harness_ekh`, 365 slots) and
+  their reading. The first effect groups to call them will re-list some, as
+  every wave-two group did.
+- **Weaker than wanted**: the unnamed callees handed a large record
+  (`0x4794D0` read to `+0x440`, `0x479B70` / `0x4799C0` to `+0xD20`) hash its
+  first 16 bytes and fill nothing; `0x469750` and `0x468AC0` move the cursor by
+  a size of their own; `0x503FA0`'s variant word is logged whole (it is added
+  to a table address, so all of it matters).
+- **Spans are per clone**: a function that indexes by `+3` or `+4` (15 rows)
+  seeds the byte itself.
+- **Records holding pointers** (kind 0x22's `+0xC..+0x1C`), **count loops**
+  over pools and **indexes into the image's tables** by a record byte are the
+  groups' seeds (8.3); a random record faults the original there.
+- **`0x593950`** is the dispatcher of EKP's run `0x66A470` (by the byte
+  `0x93985C`), which round thirteen's plan left open (its section 4): E1F
+  reaches it by a tail `jmp`. It is not in the cut; `kEffectStd` lists it.
+- **`0x5124C0`** (E6C) is a case of `0x512490`'s own switch, as the plan's
+  section 4 said: not a function.
+- Everything in sections 5, 6 and 7.9 still holds.
+
+### 8.10 The round's end fold
+
+2026-10-03, on the round branch's tip `8d3d064` (8,648 ours), the items
+[`takeover-queue-round13.md`](takeover-queue-round13.md) sections 16 and 18
+left this harness. Each row was read against the code (ours, and Capcom's
+with `tools/pe_disasm.py`) before it changed.
+
+| Row | Was | Now | What the code shows |
+|---|---|---|---|
+| `MapView_LinkPrimAt`, `kEffectOverrides` **and** `kField` | `{kAll, kAll, kAll, kAll}` | `{kAll, kAll, kU8, kU8}` | `0x572FA0`: x and z whole (each low word compared with 0, each high word summed), dy `movsx edx, byte [esp+0x14]` (`0x572FD6`), size `and edi, 0xFF` (`0x572FF6`); ours (`world_map.cpp`) reads the same. The `kField` row had the same whole-word dy; a mask only narrows, so it was folded with it |
+| `0x4FEE70` (`kEffectStd`, Capcom's) | `kFlag` | `kByte` 1..8 with `FxPattern` (the rest of `eax` 0; a quarter of the time `Sprite_Current`'s `+2` when 1..8) | `lea eax, [edi + 1]` (`0x4FEE9F`): the three story flags as bits, plus 1, a whole `eax`; its caller `EffectKind18_09_Pattern` compares all of it (`cmp ecx, eax`, `0x4FEDE3`) and indexes two tables by its byte. `kFlag`'s garbage above `al` never compared equal - E5A's own `FxPattern`, folded |
+| `EffectKind18Sub42_Draw` `0x509A70` (`kEffectStd`) | `{0, kAll}`, `deref {4}` (a pointer) | `{kAll, kU16}`, no `deref` | E5F's `(variant, height)`: the variant a whole word indexing the piece lists and lift words (`lea eax, [ebp + ebp*2]`, `0x509A83`; `[ebp*2 + 0x65E940]`), the height's low word alone reaching the vertex word it is subtracted into (`sub edx, ebp` / `mov [eax - 6], dx`, `0x509B62`) |
+
+**`scenario_harness_ekh.cpp`'s clone sources**: all eight rows and both
+callees are ours now, so each address literal became its symbol's constant,
+the value unchanged - `bof3::addr::EffectKind01_Start` (`0x462BC0`),
+`EffectKind21_Run` (`0x46F2B0`), `EffectKind18_04_Run` (`0x4FD470`),
+`EffectKind18Sub0F_Open` (`0x500D20`), `EffectAngle_Mean` (`0x479970`),
+`EffectKind73_SparkInit` (`0x4857C0`), `EffectKind23_SpawnRays`
+(`0x46F7D0`), `EffectKind2D_End` (`0x472770`), and the copies' call targets
+`Effect_FindFree` (`0x589810`) and `Effect_Release` (`0x589840`). Never
+`&::Name`: the copies are Capcom's bytes, and the six "in place" are the
+originals only because the self-test runs before every effect group's
+inject - `inject_all.cpp` still has `ScenarioHarnessEkh_Inject` above
+`Effect1F_Inject` and every `Effect*_Inject` (checked; its comment now says
+so). `SpritePose_Inject` (line 346) detours the two callees before it, which
+changes nothing: the copies' calls are re-aimed at the trampolines. The two
+`DataTable`s stay literals (`0x654284`, `0x65DAE8`): data names are macros
+casting the address, so `bof3::addr::` cannot spell them. The clones' log
+names now carry the symbol. `scenario_harness.h`'s `kArgs` comment names
+`EffectKind7D_FillF4`.
+
+**`FX_RAW` rows**: no `kEffectStd` row's address has an `impl` in
+`symbols.toml` (a script over all 42 at `8d3d064`) - `fold_names.py` had
+taken the rest. The 42 that remain are Capcom's, none named:
+`0x462F10`, `0x46E190`, `0x46F570`, `0x46F690`, `0x46FAE0`, `0x4790C0`,
+`0x4790F0`, `0x479160`, `0x479260`, `0x4794D0`, `0x4796B0`, `0x4799C0`,
+`0x479B70`, `0x479EE0`, `0x47A110`, `0x47A130`, `0x47A150`, `0x47A200`,
+`0x4837B0`, `0x48ED80`, `0x491E30`, `0x4920F0`, `0x492260`, `0x4941B0`,
+`0x4FEE70`, `0x5100B0`, `0x5101C0`, `0x5171E0`, `0x52B1B0`, `0x52B200`,
+`0x52B2A0`, `0x52B2E0`, `0x52B330`, `0x52B370`, `0x52B6C0`, `0x586160`,
+`0x593950`, `0x59E930`, `0x5A7570`, `0x5A7840`, `0x5A7A90`, `0x5A7C70`.
+(`kField`'s eleven rows keyed by address, `0x58BD50` .. `0x591AC0`, are
+Capcom's too.)
+
+**The proof** (this worktree's i686 build): `BOF3X_SHADOW='*'` headless,
+narrow and with `BOF3X_WIDE=1`: both exit 0, `inject: 8648 ours`, 716
+self-test lines, **no non-zero MISMATCHES line**. No merged group changed its
+verdict: the groups that call a changed row without re-listing it (E4F and
+E4B among those that call `MapView_LinkPrimAt` through a standard row) stay
+at 0; `0x4FEE70` and `0x509A70` are re-listed by their only callers
+(E5A, E5F), so the standard rows serve groups to come.
+
+**Controls** (each planted, built, its shadow run alone, restored and
+rebuilt; scratch `fold/control.py`):
+
+| Control | Shadow | Result |
+|---|---|---|
+| E4F's `EffectKindAB_DrawDrop` links with dy 1 instead of 0 | `effect_4f` | **refused**, 4,000 rounds (the log's entry, not a count) |
+| ... with dy `0x100` (only bits above the byte) | `effect_4f` | 0 mismatches - equivalent, as the real one reads the byte; the old `kAll` row would have refused it |
+| E5A's re-listing of `0x4FEE70` dropped (the standard row serving) | `effect_5a` | 0 mismatches |
+| ... and `EffectKind18_09_Pattern` always taking the "changed" path | `effect_5a` | **refused**, 1,065 rounds (the rounds where the row answered the record's `+2`) |
+| ... the same mutant against the old `kFlag` row | `effect_5a` | ours aborts (`+2` stored as a garbage byte, index 180 past `0x65DE62`'s nine): the old row could not serve this caller at all |
+| E5F's re-listing of `EffectKind18Sub42_Draw` dropped | `effect_5f` | 0 mismatches |
+| ... and `Draw42` passing the height + 1 | `effect_5f` | **refused**, 18,932 rounds over the six states |
+| ... and the height `^ 0x10000` (above the low word) | `effect_5f` | 0 mismatches - equivalent, as the real one stores the low word |
+| `EffectKindAF_DrawScreen`'s width `Widescreen_FillWidth() + 1` | `effect_4f` | **refused**, 4,000 rounds |
+| `EffectKind89_DrawTint`'s width `Widescreen_FillWidth() + 1` | `effect_4b` | **refused**, 4,000 rounds |
+
+The last two are the widened fills of DIV-0041's round's-end amendment
+(E4B's `0x489D47`, E4F's `0x493308`; [`widescreen.md`](widescreen.md)
+section 5): unarmed during every self-test, so the fuzz compares the
+original's 320 x 240 and a wrong width is refused. `tools/ledger_check.py`:
+72 entries, 0 errors.

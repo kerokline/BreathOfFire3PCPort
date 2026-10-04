@@ -223,6 +223,7 @@ unsigned Word(std::initializer_list<unsigned> v) {
     return v.begin()[bh::Next() % n] & 0xFFFF;
 }
 unsigned char* Rec() { return bh::CurrentWindow(); }
+unsigned Word16(U address) { return move_script::Word(Mem(address)); }
 
 // A slide's +4 / +6 at and around its bound, or anything.
 void Slide(unsigned at, std::initializer_list<unsigned> bounds) {
@@ -289,15 +290,21 @@ void Seed(unsigned k) {
     case 0x598E90:   // the choice: fixed or not, the box 0..2 mostly
         Mem(at::kGeneChoice)[0] = static_cast<unsigned char>((bh::Half() ? 0x80 : 0) | (bh::Often() ? bh::Next() % 3 : bh::Next() & 0x7F));
         break;
-    case 0x599020: case 0x599050: case 0x599080: case 0x5990B0:
-        Slide(4, {0x5B, 0x3B, 0x11, 0xFF5B, 0xFF7B, 0x31});
+    // the slide-outs' bounds as the code holds them: DIV-0041 widens them
+    // before this runs when the view is wide (battle_e7.cpp reads them there)
+    case 0x599020: case 0x599050: case 0x599080: case 0x5990B0: {
+        const unsigned out = Word16(at::kListOutBound);
+        Slide(4, {0x5B, 0x3B, 0x11, out, out + 0x20, 0x31});
         Rows(at::kGeneList, 6, 3);
         break;
+    }
     case 0x5990E0: Rows(at::kGeneList, 6, 3); break;
-    case 0x599410: case 0x599440: case 0x599510: case 0x599540:
-        Slide(4, {0x5B, 0x7B, 0x15B, 0x13B, 0xA3, 0xC3, 0x143, 0x123});
+    case 0x599410: case 0x599440: case 0x599510: case 0x599540: {
+        const unsigned out2 = Word16(at::kList2OutBound), out3 = Word16(at::kList3OutBound);
+        Slide(4, {0x5B, 0x7B, out2, out2 - 0x20, 0xA3, 0xC3, out3, out3 - 0x20});
         Rows(at::kGeneList2, 12, 9);
         break;
+    }
     case 0x599570: Rows(at::kGeneList2, 12, 9); break;
     case 0x59D640: {  // the record's rows +0xA / +0xB, +0xD bit 1, BATE's member
         g_record = bh::WindowAt(bh::Next());

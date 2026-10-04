@@ -4,19 +4,19 @@
 
 #include <cstdint>
 
-#include "bof3/symbols.gen.h"   // the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
+#include "bof3/symbols.gen.h"   // EffectGte_* (round thirteen group EGT); the constants below name their functions since 2026-10-01 (round twelve's debt 2): the same values, so the fuzz keys stand
 
 namespace field_c2::at {
 
 // Callees nobody owns, or another group of round twelve's wave two owns: called
 // through the harness by address (SH_AT) until the coordinator rebinds them.
-constexpr std::uint32_t kCameraMatrices = 0x494060;   // (): the map camera's rotation and translation from Camera_Angles
+constexpr std::uint32_t kCameraMatrices = bof3::addr::EffectGte_LoadMapCamera;   // (): the map camera's rotation and translation from Camera_Angles
                                                       // and the view focus (Gte_RotMatrix, Gte_ApplyMatrix, SetRotMatrix,
                                                       // SetTransMatrix). Nobody's (catalog part 2)
-constexpr std::uint32_t kProjectPoint = 0x494110;     // (const long *point, float *out): the point (x, z, height) turned
+constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;     // (const long *point, float *out): the point (x, z, height) turned
                                                       // into the camera's s16 vector and projected - Gte_RotTransPers to
                                                       // out[0..1] (screen x, y), Gte_StoreDepthF to out[2]. Nobody's
-constexpr std::uint32_t kProjectSize = 0x4941E0;      // (const long *point, const short *size, short *out): the point's
+constexpr std::uint32_t kProjectSize = bof3::addr::EffectGte_ProjectSize;      // (const long *point, const short *size, short *out): the point's
                                                       // camera vector by Gte_RotTrans, then out[i] = size[i] * 1000 / its
                                                       // depth (idiv). Nobody's
 constexpr std::uint32_t kDrawNumber = 0x46D5F0;       // (x s16, y s16, unused, clut byte): Sprite_Current +6 printed by

@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -98,7 +99,8 @@ void Draw() {
         Put<long>(object, 0x44, scale);
     }
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
-    if (x > 0x180 || x < -0x40 || y > 0x130 || y < -0x40) {
+    const int cull = static_cast<int>(Widescreen_Fill());   // DIV-0041: the x cull out by the columns
+    if (x > 0x180 + cull || x < -0x40 - cull || y > 0x130 || y < -0x40) {
         object[0] |= 0x80;
         return;
     }

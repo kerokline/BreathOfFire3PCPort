@@ -304,3 +304,185 @@ so it was pointed at a copy): band `0x401000..0x430000`, 1,457 starts, 1,414
 ours; 1,566 functions after discovery, 1,554 ours; worlds 0..4 "to take" 3,
 0, 0, 0, 0; **catalogue "Area overlays" outside the band: 627; reached by an
 area: 2**.
+
+## 7. `--pointer-scan`: the starts only a pointer names, and the cases a table read short (2026-10-01)
+
+Round twelve's debt 5 ([`takeover-queue-round12.md`](takeover-queue-round12.md)
+section 7): wave two found two shapes the tool could not see, and the fold
+is this flag. Written in a cloud session without the exe; **first run by the
+owner 2026-10-01** (the measurement is 7.1 below: 305 hits, eleven of them
+real, and the filter that run bought). **Off by default**, and with it off
+nothing in the output changes (the row gains an internal field the TSV does
+not write).
+
+- **Starts only a `.data` pointer names.** FC2's `0x46C730`, `0x46CEF0`,
+  `0x46D400` (`Effect_KindHandlers` `0x34`, `0x3A`, `0x41`) and `0x46C820`
+  (`EffectKind34_V0States[2]`), FC3's `FieldCore_State2Steps` entries 4..8:
+  each a dispatcher of 0x12..0x23 bytes in the padding after a function,
+  reached by a table's cell and by nothing in `.text`, so no descent reached
+  it and the 16-byte rule (section 2, "code no list has") did not either -
+  `--group FC2` printed "0 not listed" ([`field_c2.md`](field_c2.md)
+  section 5, [`field_c3.md`](field_c3.md) section 5). `Band.pointer_scan`
+  reads every 4-aligned dword of every section but `.text`; a value inside a
+  group's band (its first cut entry to the span end of its last) that no
+  list knows - `pc_funcs`, `pc_hidden`, `symbols.toml`, the cut, the
+  absorbed starts, the code the 16-byte rule found - is a hit. A hit that
+  decodes and lies in no member's descent or table **becomes a member**
+  (`Band.extra_of`, so it gets a row, a clone, the flags and the edges),
+  flagged `not in the cut: code no list has, found by the pointer scan
+  (<the cells, with their table's name>)`. A hit inside a member's code is
+  printed as an entry into it, not a function; one that does not decode as
+  data. The report at the end of `--groups` or `--group` lists them all.
+- **A cut start that is a case of a table read short.** `0x578A40` (FO) was
+  reached only by the `.text` cell `0x578AD8`, which no reader had placed in
+  a table: `MoveScript_Group9`'s two-level switch had no cap without
+  `--byte-tables` (section 6). `--byte-tables` settled that one; the general
+  shape is any jump table whose read stopped before the cell - a `cmp` bound
+  smaller than the table, a switch the descent did not reach. `Band.table_owner`
+  takes every table any member's or bound's descent read and follows its run
+  of `.text` pointers past the read's end (up to `TABLE_RUN_MAX` cells, 4-aligned);
+  a cut start whose only references are `.text` cells inside such a run is
+  flagged `inside host, no address reference (a case of <owner>'s table <base>
+  (cell <c>, past the read; <who>))` and absorbed by `settle` like the other
+  cases. The report counts them.
+
+```
+python tools/band_rows.py --exe .../BOF3.exe --analysis .../analysis --groups --pointer-scan
+python tools/band_rows.py ... --group FC2 --pointer-scan        (expect 0x46C730, 0x46C820, 0x46CEF0, 0x46D400 as rows)
+python tools/band_rows.py ... --group FC3 --pointer-scan        (expect 0x525CA0, 0x5261E0, 0x526490, 0x526A90, 0x526B80)
+python tools/band_rows.py ... --group FO --pointer-scan         (expect 0x578A40 a case of 0x578A00's table 0x578AD8, without --byte-tables)
+```
+
+**The regression to run first**, section 6's: `--groups --tsv`, `--edges`,
+`--group BE5 --clones`, `--group FE2 --clones`, `--group FO`, `--function
+0x446DE0,0x452460 --harness boss`, and round thirteen's cut's `--groups
+--tsv`, at this commit and the one before it, **without the flag: every
+output must be identical, line for line.** Then the three expectations
+above with it. What the scan prints beyond them - any other start in the
+fourteen bands that only a pointer names - is the debt's answer and goes
+here, with the group whose band holds it; the cut is not rewritten (section
+5), the group that owns the band decides whether to take it.
+
+**The FC2 and FC3 expectations cannot fire any more**: wave two named all
+nine (`symbols.toml` has `0x46C730`, `0x46C820`, `0x46CEF0`, `0x46D400`,
+`0x525CA0`, `0x5261E0`, `0x526490`, `0x526A90`, `0x526B80`), and a start a
+list knows is not a hit by definition. They stand as the shape the flag
+was written for; the live analogue is BE5's `Effect_Handlers` slots below.
+
+### 7.1 The first run, 2026-10-01 (the owner's machine, the tip `7fe6406`)
+
+`py tools/band_rows.py --pointer-scan` (the owner's command; the fourteen
+groups' tables unchanged from section 3's shape). The FO expectation held:
+`0x578A40` is reported a case of `MoveScript_Group9`'s table `0x578AD8`
+without `--byte-tables`. The scan printed **305 hits**, almost all noise,
+and the noise had two causes the first code did not guard against:
+
+- **A hit inside a listed function's body.** The `inside` test only read the
+  cut's members and the unlisted code between them, so a dword that landed
+  in a Capcom function `pc_funcs` or `pc_hidden` lists was "a row now" -
+  `0x430001`, `0x440000`, `0x530000`, `0x540200`, `0x550000`, `0x580000`
+  (43 cells), `0x580002` (66 cells), `0x544144` (a 12-byte-stride array of
+  ~380 records whose first dword is that value): short pairs and small
+  constants whose value falls in `0x42D7A0..0x58CAE0`, as any dword of the
+  form `0x00NN00MM` with `NN` in `0x43..0x58` does.
+- **"Decodes" was one instruction.** Rows of 1..9 bytes (`0x430048`,
+  `0x43202F`, `0x45003F`, `0x520044`, `0x570013`...) decoded a byte or two
+  and stopped at something that did not.
+
+**The filter, in the code now** (`Band.pointer_scan`): a hit inside the
+read of the listed start before it, any list's, is an entry into that
+function, not a row; a row must sit where MSVC puts a function (a 16-byte
+boundary, or right after padding) and `read_extent` from it must reach its
+returns with nothing undecodable and without running into the next start.
+The report now prints the rows and the entries in full and the rest as one
+`data (n): ...` line per group. **Not re-run yet** (no exe in the session
+that wrote the filter): the second run is the owner's, and these are its
+expectations, read off the first run's hits that the filter should keep:
+
+| Group | Start | Cell | What the first run said | Why it is real |
+|---|---|---|---|---|
+| BE5 | `0x44C040` | `Effect_Handlers[4]` | a row, 57 bytes | five slots of a named handler table, 16-aligned, after `0x44B8D0`; [`kinship-probe-battle-engine.md`](kinship-probe-battle-engine.md) already listed them as entries the hidden scan missed (`0x44C5C0` of that list is BE5's since) |
+| BE5 | `0x44C120` | `Effect_Handlers[7]` | a row, 32 bytes | same |
+| BE5 | `0x44C170` | `Effect_Handlers[11]` | a row, 125 bytes | same |
+| BE5 | `0x44CF60` | `Effect_Handlers[47]` | a row, 83 bytes | same |
+| BE5 | `0x44D8B0` | `Effect_Handlers[91]` | a row, 111 bytes | same; the kinship doc read its HP accesses |
+| FS | `0x583350` | `ShopMode_States[9]` | a row, 14 bytes | ShopMode 9's step, which [`field_s.md`](field_s.md) 1.3 says is nobody's |
+
+Six real; the five BE5 handlers are the debt's answer for the battle engine
+(BE5 owns the band and decides), ShopMode 9's for the field.
+
+### 7.2 The second run, 2026-10-01 (the filter of 7.1, at `6b6b319`)
+
+The same command: **305 hits, 33 rows, 81 entries into read code, 191
+data**; the six of 7.1's table all rows, the FO case unchanged. 81 of the
+first run's "rows" were inside the read of the listed function before them
+(`0x460000`, `0x460001`, `0x460018`, `0x460073` all in `0x45FE90`'s;
+`0x520001`, `0x520016`, `0x520025`, `0x520048` in `0x520000`'s; the rest
+in ours). The 27 rows beyond the six fall in three kinds:
+
+- **Candidates to read** (16-aligned, a plausible size, named once or from
+  a run): `0x4613B0` (BE6, 611 bytes, `0x6536C0[3]`, a run of four),
+  `0x51FA30` (FC3, 53, `PartyAction5_Forms` + 22), `0x52FF40` (FE1, 144,
+  `0x61DC80[1]`), `0x43FEC0` (BE3, 51), `0x44FFC0` (BE5, 170), `0x525A40`
+  (FC3, 220), `0x537B10` (FE2, 63, `0x660CA0[5]`), `0x571F30` (FE2, 183),
+  `0x580E30` (FS, 71), `0x520030` (FC3, 234), `0x520420` (FC3, 436), and
+  the pair `0x520E80` / `0x520EA0` (FC3, 7 and 6 bytes, two thunks or two
+  constants). None is read; each is the band owner's to look at.
+- **Constants that recur in records**: `0x580000` from 43 cells, `0x540200`
+  from 22, `0x550000` from 3, each cell a run of one - the `0x00NN00MM`
+  short-pair shape, decoding only because a function's tail happens to
+  sit there. With them the one-cell values of that shape: `0x440000`,
+  `0x530000`, `0x540000`, `0x560000`, `0x570000`, `0x580020`, `0x540E00`,
+  `0x544450`, `0x530E80`, and `0x570002` (1 byte, inside `0x570000`'s own
+  read). `0x53E0F0` (712 bytes) is named only from `.rsrc`, the resource
+  section's.
+- **Hits that disappeared as rows and were right to**: `0x464970`,
+  `0x560D60`, `0x573130` of 7.1's unread list are entries into `0x4648F0`,
+  `Scena12_Run8` and `Kind2_Script`.
+
+**The filter's second tightening, in the code** (not yet run): a value named
+only from `.rsrc` is data; a value named from more than four cells none of
+which sits in a run of code pointers or a sized table of `symbols.toml` is
+a constant; a row inside another row's read is an entry into it. That
+settles `0x580000`, `0x540200`, `0x53E0F0` and `0x570002` by rule; the
+one-cell `0x5N0000` values stay rows until someone reads them, since the
+tool cannot tell a short pair from a pointer to a tail without reading.
+The third run's expectation is **29 rows**: the six, the thirteen
+candidates, and ten of the `0x5N0000` shape.
+
+### 7.3 The third run, 2026-10-01 (at `a54ee6f`)
+
+**31 rows, 81 entries, 193 data**: the six and the thirteen candidates all
+rows, the FO case unchanged, `0x580000` and `0x53E0F0` data as the rules
+said. The two over the expectation were the two new rules read short:
+
+- `0x540200` stayed a row: five of its 22 cells (`0x613868[1]`,
+  `0x613D98[1]`, `0x6375FC[1]`, `0x637B44[1]`, `0x637C4C[1]`) have a dword
+  of the same short-pair shape before them, so they counted as a run of
+  code pointers. The run test is gone; the rule is now **more than four
+  cells, none in a sized table of `symbols.toml`** - a function pointer in
+  no known table is named from one cell, not five.
+- `0x570002` stayed a row (1 byte): it is the third byte of `0x570000`'s
+  first instruction, so it was in no instruction start of that read. The
+  nested-row test is now the span, start to end, not the instruction
+  starts.
+
+**The fourth run, 2026-10-01 (at `875599c`): 29 rows, 82 entries, 194
+data - the 29 expected, line for line** (`0x540200` data, `0x570002` an
+entry into `0x570000`'s), the FO case unchanged. The flag is settled: the
+debt's answer is 7.1's six plus 7.2's thirteen candidates, and the ten
+`0x5N0000` rows (`0x440000`, `0x530000`, `0x540000`, `0x550000`,
+`0x560000`, `0x570000`, `0x580020`, `0x540E00`, `0x544450`, `0x530E80`)
+are the tool's honest remainder, a read each to settle. **The regression
+without the flag ran 2026-10-01** (the owner, `9479e06` against `7fe6406`,
+the exe and `analysis/` of the main checkout passed to both trees): all
+seven outputs identical - `--groups --tsv`, `--edges`, `--group BE5
+--clones`, `--group FE2 --clones`, `--group FO`, `--function
+0x446DE0,0x452460 --harness boss`, and round thirteen's cut's `--groups
+--tsv --byte-tables`. The flag off changes nothing; the debt is closed.
+
+What it does not do: a pointer computed at run time (`add eax, imm`, a
+table base in a register) is invisible, as in section 4; a cell in `.text`
+that is not in any table's run (a stack table's immediate is an
+instruction operand, filtered in `reach`) names nothing here; a hit before
+a band's first cut row or between two bands is not reported.

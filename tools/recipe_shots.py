@@ -2,6 +2,7 @@
 """Put a frame-exact `shot` into a recorded recipe every N frames.
 
     python tools/recipe_shots.py tools/recipes/shop.txt --every 90 --out tools/recipes/shop_ab.txt
+    python tools/recipe_shots.py R.txt --every 4 --from 11476 --to 11540 --out R_window.txt
 
 For a recipe BOF3X_RECORD wrote (only `wait N` / `hold BUTTONS N` / `shot NAME 1
 [BUTTONS]` lines after the header comments). A shot of one frame holding that
@@ -15,6 +16,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('recipe')
     ap.add_argument('--every', type=int, default=90, help='frames between shots')
+    ap.add_argument('--from', dest='first', type=int, default=None,
+                    help='first frame to shoot (default: --every); with --to, a window of close shots')
+    ap.add_argument('--to', dest='last', type=int, default=None, help='last frame to shoot (default: the end)')
     ap.add_argument('--out', required=True)
     a = ap.parse_args()
 
@@ -35,7 +39,9 @@ def main():
             raise SystemExit(f'{a.recipe}: not a recorded recipe line: {line.strip()}')
 
     n = 0
-    for f in range(a.every, len(frames), a.every):
+    first = a.every if a.first is None else a.first
+    end = len(frames) if a.last is None else min(len(frames), a.last + 1)
+    for f in range(first, end, a.every):
         if frames[f][1] is None:
             n += 1
             frames[f] = (frames[f][0], f'f{f:05d}')

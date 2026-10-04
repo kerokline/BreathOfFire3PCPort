@@ -29,6 +29,7 @@
 // for the callees.
 #include "game/battle_e1.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -36,6 +37,7 @@
 #include "game/battle_e1_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1008,13 +1010,18 @@ extern "C" void __cdecl BattleLoss_DrawPanels(unsigned shade) {
 
 // original 0x432930: page (0x3C0, 0), then a black TILE over (0, 0) ..
 // (320, 240), Gfx_CommitPrim(2, 0x1C).
+//
+// DIV-0041: under a wide picture the black covers it whole, (-53, 0) 426 x
+// 240, as the fade tile and the save menu's black do - the owner's shot,
+// 2026-09-30: the battle field showing in both bands beside GAME OVER.
+// Widescreen_Fill is 0 until every self-test has run (widescreen.h).
 extern "C" void __cdecl BattleLoss_DrawBlack(void) {
     DrawMode(0, 0, 0x3C0, 0, 2);
     unsigned char* const p = Packet();
     BH_CALL(Gpu_SetTile)(p);
-    SetLong(p + 8, 0);
+    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));
     SetLong(p + 0xC, 0);
-    SetLong(p + 0x14, 0x43A00000);
+    SetLong(p + 0x14, std::bit_cast<std::int32_t>(Widescreen_FillWidth()));   // 0x43A00000 narrow
     SetLong(p + 0x18, 0x43700000);
     Rgb(p, 4, 0);
     BH_CALL(Gfx_CommitPrim)(2, 0x1C);

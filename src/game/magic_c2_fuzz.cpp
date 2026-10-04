@@ -318,8 +318,8 @@ const mh::Callee kCallees[] = {
     {C2_OURS(Math_Ratan2), 2, {kAll, kAll}, kG, 0, 0},
     // Capcom's, unnamed: the map camera, the point projection (the vector a
     // local of the caller's: its twelve bytes), MAGIC219's task clear
-    {C2_RAW(0x494060), 0, {}, kG, 0, 0},
-    {C2_RAW(0x494110), 2, {0, kAll}, kG, 0, 0, {12}},
+    {"0x494060", bof3::addr::EffectGte_LoadMapCamera, bof3::addr::EffectGte_LoadMapCamera, 0, {}, kG, 0, 0},
+    {"0x494110", bof3::addr::EffectGte_ProjectPoint, bof3::addr::EffectGte_ProjectPoint, 2, {0, kAll}, kG, 0, 0, {12}},
     {C2_RAW(0x4F6290), 0, {}, kG, 0, 0, {}, &NoteCurrent},
     // this group's own, called by address
     {C2_RAW(0x4BFC80), 0, {}, mh::Answer::kPhase, 0, 0},

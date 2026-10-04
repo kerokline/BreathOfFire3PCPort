@@ -10,15 +10,15 @@
 namespace field_e1::at {
 
 // --- callees nobody owns (engine rows, no group of round twelve), by address ---
-constexpr std::uint32_t kDrawMode = 0x52CF60;     // (index, slot): a draw-mode primitive from the 16-byte records
+constexpr std::uint32_t kDrawMode = bof3::addr::UiSprite_SetMode;   // (index, slot): a draw-mode primitive from the 16-byte records
                                                   // 0x660394, committed
-constexpr std::uint32_t kDrawSprite = 0x52CFE0;   // (sprite, slot, x, y) -> unsigned char *: a sprite primitive
+constexpr std::uint32_t kDrawSprite = bof3::addr::UiSprite_Draw;   // (sprite, slot, x, y) -> unsigned char *: a sprite primitive
                                                   // from the 16-byte records 0x660438 at (x, y) (words), committed;
                                                   // eax the primitive
-constexpr std::uint32_t kKindPoints = 0x52CE60;   // (kind, count) -> u16: a kind's points for a count, from the
+constexpr std::uint32_t kKindPoints = bof3::addr::FieldPanel_KindPoints;   // (kind, count) -> u16: a kind's points for a count, from the
                                                   // 36-byte records 0x66A6AC (count at or above +3: the word +6)
-constexpr std::uint32_t kKindTotal = 0x52CED0;    // () -> u16: kKindPoints summed over the 32 bytes 0x9040EC
-constexpr std::uint32_t kDrawQuad = 0x468950;     // (x, y, height, which): a textured quad, committed
+constexpr std::uint32_t kKindTotal = bof3::addr::FieldPanel_KindTotal;   // () -> u16: kKindPoints summed over the 32 bytes 0x9040EC
+constexpr std::uint32_t kDrawQuad = ::bof3::addr::Panel_DrawEdgeQuad;   // 0x468950 (E1B's): (x, y, height, which): a textured quad, committed
 
 // --- callees round twelve's FE2 owns (docs/scenario_harness.md 7.6), raw until it merges ---
 constexpr std::uint32_t kObjectTrigger = bof3::addr::Field_ObjectTrigger;   // Field_ObjectTrigger(object): FE2's

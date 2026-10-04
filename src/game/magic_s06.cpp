@@ -29,12 +29,14 @@
 // (docs/magic_fx_reached.md section 3, the precedent).
 #include "game/magic_s06.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -986,8 +988,8 @@ S06_EXPORT void __cdecl Magic020_DrawFade(void) {
     MH_CALL(Gpu_SetTile)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     PutU32(p + 0xC, kF0);
-    PutU32(p + 8, kF0);
-    PutU32(p + 0x14, kF320);
+    PutU32(p + 8, std::bit_cast<std::uint32_t>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
+    PutU32(p + 0x14, std::bit_cast<std::uint32_t>(Widescreen_FillWidth()));   // kF320 narrow
     PutU32(p + 0x18, kF240);
     const unsigned grey = (static_cast<unsigned>(Sc()[9]) * 15u) & 0xFFFF;
     SetWord(Mem(kShade), grey);

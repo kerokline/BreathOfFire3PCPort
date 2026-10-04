@@ -19,7 +19,8 @@
 //   ShopTrade_BuyConfirm  0x582090 0x147    TitleTask_Run         0x588E70 0x3A
 //   ShopTrade_BuyAskEquip 0x5821E0 0xDF     TitleMode_Load        0x588EB0 0x44
 //
-// Faithful: no divergence. Every call out goes through shop_states2::g, so
+// Faithful but for DIV-0027's yes / no hand under a Latin overlay
+// (YesNoFrame, amended 2026-10-03). Every call out goes through shop_states2::g, so
 // the start-up fuzz can stand recorders in for the callees.
 //
 // Registers the originals push whole - a byte loaded into al over whatever
@@ -32,7 +33,9 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
 #include "game/shop_states2_callees.h"
+#include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -51,6 +54,12 @@ Callees g = kOriginals;
 }  // namespace shop_states2
 
 using namespace shop_states2;
+
+// DIVERGENCE DIV-0027 (amended 2026-10-03, group YN): the shop's yes / no
+// hand (YesNoFrame) over DIV-0027's re-spaced line, set with
+// menu_draw_helpers.cpp's g_shop_yes_no_line under a Latin overlay, after
+// the self-test, which compares the original's hand.
+unsigned char g_shop_yes_no_hand = 0;
 
 namespace {
 
@@ -104,7 +113,10 @@ U YesNoFrame(U help) {
     const int answer = S8(Byte(at::kAnswer));
     const U y = Word(0x803166);
     PutWord(at::kHelp, help);
-    PutWord(at::kHandX, Long(0x803164) - static_cast<U>(answer * 36) + 0xE8);
+    if (g_shop_yes_no_hand)   // DIV-0027, amended 2026-10-03: over the line ShopWin_TitleRun draws at x + 7
+        PutWord(at::kHandX, static_cast<U>(YesNoLayout_ShopHandX(static_cast<short>(Word(0x803164)) + 7, answer)));
+    else
+        PutWord(at::kHandX, Long(0x803164) - static_cast<U>(answer * 36) + 0xE8);
     U pressed = Long(at::kPressed);
     PutByte(at::kHand, 1);
     PutWord(at::kHandY, y + 5);
@@ -1066,6 +1078,12 @@ extern "C" void __cdecl TitleMode_Load(void) {
 
 void ShopStates2_Inject() {
     if (bof3::WantsShadow("shop_states2")) shop_states2::SelfTest();
+    if (Lang_Latin()) {   // DIVERGENCE DIV-0027 (amended 2026-10-03), DIV-0056
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("ShopYesNoLayout", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_shop_yes_no_hand)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0027    the shop's buy / equip / sell yes / no hand over the re-spaced line");
+    }
     BOF3_INJECT(ShopTrade_Step);
     BOF3_INJECT(ShopTrade_OpenStep);
     BOF3_INJECT(ShopTrade_Open);

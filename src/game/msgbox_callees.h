@@ -69,10 +69,11 @@ constexpr std::uint32_t kNameMap = 0x66972C;       // u8[], that member's record
 constexpr std::uint32_t kSpeedTable = 0x658E94;    // u8[]: +0 held-fast, +1 normal, by the text-speed byte
 constexpr std::uint32_t kEffectTable = 0x658E98;   // 4-byte records: kind, s8 offset, u16 frames
 constexpr std::uint32_t kTextSpeed = 0x903A58;     // s8, the player's message-speed option
+constexpr std::uint32_t kClipTable = 0x658F00;     // u8[], by 0x7DEE58: the rows MsgBox_EffectDraw cuts off a glyph
 
 // --- Callees that are not ours and have no name in symbols.toml -----------
 constexpr std::uint32_t kRetOnly = bof3::addr::BareRet;       // a bare ret: effect kind 0, the only one the attract reaches
-constexpr std::uint32_t kEffectDraw = 0x4987E0;    // the stepper's own glyph draw under flag 8 (unread; still 12 px)
+constexpr std::uint32_t kEffectDraw = 0x4987E0;    // MsgBox_EffectDraw, ours since 2026-10-03 (the fuzz's stand-in key)
 constexpr std::uint32_t kPageArrow = bof3::addr::MsgBox_DrawArrow;     // draws the "more" arrow every other 32 frames
 constexpr std::uint32_t kChoiceCommit = bof3::addr::MsgBox_ChoiceCommit;  // state 4 sub 5: an indirect call through Area_Descriptors +0x34
 constexpr std::uint32_t kMenuCommit = bof3::addr::MsgBox_MenuCommit;    // state 5 sub 3: the same, for a menu
@@ -105,7 +106,13 @@ struct Callees {
     void (__cdecl* set_code6c)(unsigned char*);               // Gpu_SetCode6C
     void (__cdecl* set_semitrans)(unsigned char*, unsigned);  // Gpu_SetSemiTrans
     void (__cdecl* commit)(unsigned, unsigned);               // Gfx_CommitPrim
+    unsigned (__cdecl* get_clut)(int, int);                   // Gpu_GetClut (ours, psx_gpu.cpp)
 };
+
+// DIVERGENCE DIV-0070: 0 is Capcom's (a space commits a primitive with a stale
+// glyph word and stale texture bytes), 1 ours (a space commits nothing).
+// Off until MsgBox_Inject has run the self-test, which compares Capcom's.
+extern unsigned char g_effect_space_skips;
 
 extern const Callees kOriginals;
 extern Callees g;

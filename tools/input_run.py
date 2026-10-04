@@ -29,6 +29,15 @@ stay free to play in. Another run waits for the hand-back; a game that is not
 a scripted run (no BOF3X_INPUT) refuses the swap.
 
 Needs the game windowed (BOF3.CFG first line 0, or the launcher dialog).
+
+A `shot NAME 1 [BUTTONS]` line IS one frame of the route: it stands in place
+of a frame, holding that frame's buttons. To add shots to a recorded recipe
+use tools/recipe_shots.py, which keeps the total. Never insert shot lines by
+hand or with an ad-hoc splitter without taking a frame out of the run they
+split: every later input then lands a frame late per shot, the replay drifts
+(a cast misses its fish, a walk misses its ledge), and it looks like the game
+being random. 2026-09-30 cost a day and a withdrawn ledger entry (DIV-0067).
+One game at a time, too: two runs share build/bof3x.log and build/bof3x.dll.
 Exit status 0 when the recipe finished, 1 when it FAILED or timed out.
 """
 import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threading, time
@@ -36,7 +45,7 @@ import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threadin
 from PIL import ImageGrab
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front  # noqa: E402
+from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front, log_run_time  # noqa: E402
 import recipe_saves  # noqa: E402
 
 u = ctypes.WinDLL('user32')
@@ -120,6 +129,10 @@ def main():
     ap.add_argument('--lang', default=None, help='BOF3X_LANG, e.g. en')
     ap.add_argument('--original', default=None, metavar='LIST', help='BOF3X_ORIGINAL')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
+    ap.add_argument('--speed', type=int, default=1, metavar='N',
+                    help='BOF3X_SPEED: N logic frames per frame of wall time (1..64). The recipe is frame-indexed, '
+                         'so it replays the same; shots are still drawn. Late frames are not drawn, so do not '
+                         'watch it')
     ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
                     help='another copy of the launcher, with its own bof3x.ini, bof3x.dll and bof3x.log beside it')
     ap.add_argument('--no-front', action='store_true',
@@ -157,6 +170,8 @@ def main():
         env['BOF3X_LANG'] = a.lang
     if a.original:
         env['BOF3X_ORIGINAL'] = a.original
+    if a.speed != 1:
+        env['BOF3X_SPEED'] = str(a.speed)
     for kv in a.env:
         k, _, v = kv.partition('=')
         env[k] = v
@@ -179,6 +194,7 @@ def run(a, env, slot0):
     """Launch, follow the log to the recipe's end, end the game. The status
     word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
     logs the save loaded: the file is not read again after that."""
+    started, frames = time.time(), ''
     launch(a.launcher, a.game, env)
 
     stop = threading.Event()
@@ -206,12 +222,13 @@ def run(a, env, slot0):
                 elif m := SHOT.search(line):
                     time.sleep(a.delay)
                     print(f'shot {m[1]} at recipe frame {m[2]}{" (frozen)" if m[3] else ""}')
+                    frames = m[2]
                     grab(os.path.join(a.out, m[1] + '.png'))
                     if m[3]:
                         release(game_pid())
                 elif m := END.search(line):
                     print(f'recipe {m[1]} at recipe frame {m[2]}')
-                    status = m[1]
+                    status, frames = m[1], m[2]
                 elif re.search(r'input\s+(mark|peek|line) ', line):
                     print(line.strip())
                 elif m := LOADED.search(line):
@@ -223,6 +240,8 @@ def run(a, env, slot0):
     finally:
         stop.set()
         kill_game()
+        log_run_time('input_run', os.path.splitext(os.path.basename(a.recipe))[0], started, status or 'interrupted',
+                     env, a.launcher, frames)
     return status
 
 

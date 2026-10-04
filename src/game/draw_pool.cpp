@@ -300,6 +300,10 @@ void DrawPool_Grow() {
         bof3::addr::Field_ViewReset,     bof3::addr::Weretiger_ResetMapView, bof3::addr::MapView_Build,
         bof3::addr::MapView_CellTextures, bof3::addr::MapView_ItemHalfAt,  bof3::addr::AreaMap_ApplyPatch,
         bof3::addr::MapCell_FlatOverlay, bof3::addr::Sprite_DrawPass,      bof3::addr::Area40_DrawGrid,
+        bof3::addr::EffectKind7D_SetMap,   // round 13 E3D: the site 0x486EBD's function
+        bof3::addr::EffectKind18Sub42_Mark,   // round 13 E5F: the sites 0x5098F4..0x509930's function
+        bof3::addr::EffectKind18Sub51_Place, bof3::addr::EffectKind18Sub51_Fade,   // round 13 E6C: 0x51242A, 0x512607
+        bof3::addr::EffectKind18Sub5A_Set, bof3::addr::EffectKind18Sub5A_SetTiles,   // E6C: 0x5139C2; 0x513B9B, 0x513BAC, 0x513C41
     };
     for (const std::uint32_t user : kOwnedUsers) {
         if (bof3::IsOwned(user) && !bof3::IsEnabled(user)) {

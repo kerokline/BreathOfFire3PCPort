@@ -17,7 +17,7 @@
 // 12 (Field_LeaderStates[12] 0x52FE90 jumps here in every area but 104, which
 // has its own copy at 0x415020) - walk, turn, push an object, step off one, the
 // menu and request buttons - and effect kind 0x5C (Effect_KindHandlers[0x5C]
-// 0x462B60, likewise but for area 104's 0x415780): an object that follows the
+// EffectKind5C_Run 0x462B60, likewise but for area 104's 0x415780): an object that follows the
 // leader, turns with it, draws a two-row gauge, and four rings that rise from
 // the leader. Last, EffectKind18_States[70] (a full-width band at the top of
 // the screen) and Field_ObjectTriggers id 38 (arms the world map's field hook).
@@ -40,6 +40,7 @@
 #include "game/area_harness.h"
 #include "game/area_w3b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1061,7 +1062,7 @@ extern "C" unsigned char __cdecl Area121_TurnInput(void) {
 }
 
 // ===========================================================================
-// Area 121: effect kind 0x5C (Effect_KindHandlers[0x5C] 0x462B60: area 104 to
+// Area 121: effect kind 0x5C (Effect_KindHandlers[0x5C] EffectKind5C_Run 0x462B60: area 104 to
 // its own 0x415780, every other area here)
 // ===========================================================================
 
@@ -1324,12 +1325,14 @@ extern "C" void __cdecl Area121_DrawTopBand(void) {
     unsigned char* const prim = Gfx_PacketNext;
     AH_CALL(Gpu_SetPolyG4)(prim);
     AH_CALL(Gpu_SetSemiTrans)(prim, 0);
-    const float width = 320.0f;
-    SetLong(prim + 8, 0);
+    // DIV-0041: the left corners at -53 and the right at 373 under the wide
+    // picture (widescreen.h: 0 until every self-test has run).
+    const float width = 320.0f + static_cast<float>(Widescreen_Fill()), left = Widescreen_FillX();
+    std::memcpy(prim + 8, &left, 4);
     SetLong(prim + 0xC, 0);
     std::memcpy(prim + 0x18, &width, 4);
     SetLong(prim + 0x1C, 0);
-    SetLong(prim + 0x28, 0);
+    std::memcpy(prim + 0x28, &left, 4);
     const float height = static_cast<float>(At(at::kBandHeights + Cond_ByteFE)[0]);
     std::memcpy(prim + 0x38, &width, 4);
     std::memcpy(prim + 0x2C, &height, 4);

@@ -21,7 +21,20 @@ extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 
 // Re-aims the four x-range constants of AreaMap_FrameAreaBD 0x510780 (still
 // Capcom's) at wider copies, moves the menu boxes' fourteen slide-off bounds
-// outward by the columns added, and widens the terrain cull above. Last in
-// inject_all.cpp: every module's start-up fuzz has run against the original
-// bounds by then. Does nothing unless the view is wide.
+// outward by the columns added, and widens the terrain cull above. Placed
+// after the modules whose fuzz compares the original bounds; modules added
+// below it fuzz against the widened ones, so ours of a patched site reads the
+// operand (menu_lists, menu_draw_helpers, battle_e7). Does nothing unless the
+// view is wide.
 void Widescreen_Inject();
+
+// The columns each side for a full-frame fill - a fade, a tint, a flash, a
+// shade, the loss screen's black: 0 until Widescreen_ArmFills has run, which
+// InjectAll does after every module's self-test, so a fuzz of any module,
+// whichever side of Widescreen_Inject it sits, compares the original's
+// (0, 0) 320 x 240; then Widescreen_Live's columns. A fill draws at
+// (Widescreen_FillX(), 0) Widescreen_FillWidth() x 240 (DIV-0041 section 3c).
+unsigned Widescreen_Fill();
+float Widescreen_FillX();       // 0.0f - columns: not -columns, which is -0.0f when narrow
+float Widescreen_FillWidth();   // 320.0f + 2 * columns
+void Widescreen_ArmFills();

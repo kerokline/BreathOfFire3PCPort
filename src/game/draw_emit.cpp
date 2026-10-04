@@ -5,6 +5,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 namespace {
@@ -311,6 +312,8 @@ extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
     if (limit <= next + size) return;
     slot &= 0xFF;
+    if (draw_order::g_on)   // BOF3X_DRAWORDER, diagnostic only
+        draw_order::TagCommit(next, slot, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
     Gpu_LinkPrim(Gfx_OtPointers[slot], next);
     Gfx_OtPointers[slot] = reinterpret_cast<unsigned long*>(Gfx_PacketNext);
     Gfx_PacketNext = Gfx_PacketNext + size;
@@ -326,6 +329,7 @@ extern "C" void __cdecl DrawLayer_Close(int layer) {
     const std::uint32_t first = static_cast<std::uint32_t>(layer) * 6u;
     unsigned long* cell = DrawLayers + kSecondList + (Gfx_BufferIndex + first) * 2u;
     if (cell[0] == 0) return;
+    if (draw_order::g_on) draw_order::TagList(cell[0], cell[1], draw_order::kList1, static_cast<unsigned>(layer), Draw_OtSlot);
     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], cell[0]);
     // The index is read again after the call, as the original reads it.
     cell = DrawLayers + kSecondList + (Gfx_BufferIndex + first) * 2u;
@@ -354,6 +358,7 @@ extern "C" void __cdecl DrawLayer_Open(int layer) {
     const std::uint32_t first = static_cast<std::uint32_t>(layer) * 6u;
     unsigned long* cell = DrawLayers + (Gfx_BufferIndex + first) * 2u;
     if (cell[0] != 0) {
+        if (draw_order::g_on) draw_order::TagList(cell[0], cell[1], draw_order::kList0, static_cast<unsigned>(layer), 6);
         Gpu_LinkPrim(Gfx_OtPointers[6], cell[0]);
         // The index is read again after the call, as the original reads it.
         cell = DrawLayers + (Gfx_BufferIndex + first) * 2u;
@@ -382,10 +387,14 @@ extern "C" void __cdecl DrawLayer_Open(int layer) {
         while (record != end) {
             std::uint32_t dword;
             std::memcpy(&dword, record, 4);
+            if (draw_order::g_on)
+                draw_order::Set(draw_order::kCell, static_cast<unsigned>(layer), static_cast<unsigned>(row),
+                                static_cast<unsigned>(column), dword >> 24, b1 << 8 | b0);
             reinterpret_cast<Handler>(static_cast<std::uintptr_t>(MapCell_Handlers[dword >> 24]))(record, b1, b0);
             record += record[2] * 4u;
         }
     }
+    if (draw_order::g_on) draw_order::Clear();
 }
 
 void DrawEmit_Inject() {

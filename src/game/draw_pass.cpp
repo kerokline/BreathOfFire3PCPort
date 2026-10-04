@@ -1,6 +1,7 @@
 #include "game/draw_pass.h"
 
 #include "game/draw_pool.h"
+#include "game/layering.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -9,6 +10,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 namespace {
@@ -226,21 +228,10 @@ void SelfTest(DrawFn theirs) {
 
 }  // namespace
 
-// original 0x593060: the field's draw-order pass, once a logic frame
-// (docs/sprite-draw-order.md section 2).
-//
-// Pass 1 bubble-sorts Sprite_DrawList ascending on the u16 at +0x32 (layer,
-// then order), then the sum of the dwords +0x34 and +0x38, then the dword
-// +0x3C; equal neighbours stay put. Pass 2 walks 0x37 layers, merging the
-// layer's sprites with the draw table's items, lower key first and the table
-// first on a tie; sprites gathered into 12-byte records, sorted descending on
-// the s16 at record +4, and drawn or linked.
-//
-// As the original has it: every index is a byte; the record count is a
-// SIGNED byte; a slot byte other than 4 or 6, or a table out of order, never
-// returns (by reading - not something a test can show); and globals are read again wherever the original reads them again,
-// since three of the callees are free to change them.
-extern "C" void __cdecl Sprite_DrawPass(void) {
+namespace {
+
+// Pass 1 of Sprite_DrawPass, below.
+void SortDrawList() {
     unsigned char count = Sprite_DrawListCount;
     if (static_cast<int>(count) - 1 > 0) {
         unsigned char i = 0;
@@ -265,6 +256,29 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
             ++i;
         } while (static_cast<int>(i) < static_cast<int>(count) - 1);
     }
+}
+}  // namespace
+
+// original 0x593060: the field's draw-order pass, once a logic frame
+// (docs/sprite-draw-order.md section 2).
+//
+// Pass 1 bubble-sorts Sprite_DrawList ascending on the u16 at +0x32 (layer,
+// then order), then the sum of the dwords +0x34 and +0x38, then the dword
+// +0x3C; equal neighbours stay put. Pass 2 walks 0x37 layers, merging the
+// layer's sprites with the draw table's items, lower key first and the table
+// first on a tie; sprites gathered into 12-byte records, sorted descending on
+// the s16 at record +4, and drawn or linked.
+//
+// As the original has it: every index is a byte; the record count is a
+// SIGNED byte; a slot byte other than 4 or 6, or a table out of order, never
+// returns (by reading - not something a test can show); and globals are read again wherever the original reads them again,
+// since three of the callees are free to change them.
+extern "C" void __cdecl Sprite_DrawPass(void) {
+    SortDrawList();
+    // DIVERGENCE DIV-0071 (layering.h), off during every fuzz: a sprite drawn
+    // a layer or more later while only floor lies under its feet there.
+    if (layering::g_mode == layering::kFloor && layering::Defer()) SortDrawList();
+    unsigned char count;
 
     Gpu_SetDrawMode(Gfx_PacketNext, 0, 0, 0x95, 0);
     Gfx_CommitPrim(6, 0xC);
@@ -275,6 +289,8 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
         if (Draw_PassFlags & 0x10) {
             const unsigned long first = FrameNode(layer)[0];
             if (first != 0) {
+                if (draw_order::g_on)
+                    draw_order::TagList(first, FrameNode(layer)[1], draw_order::kFrameNode, layer, Draw_OtSlot);
                 Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], first);
                 Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(FrameNode(layer)[1]));
             }
@@ -297,6 +313,9 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                         return static_cast<unsigned long>(reinterpret_cast<std::uintptr_t>(
                             draw_pool::Items() + (Gfx_BufferIndex + (DrawTable[item] & 0xFFFu) * 2u) * 0x48u));
                     };
+                    if (draw_order::g_on)
+                        draw_order::TagOne(at(), draw_order::kTable, layer, Draw_OtSlot, DrawTable[item] >> 16,
+                                           DrawTable[item] & 0xFFFu);
                     Gpu_LinkPrim(Gfx_OtPointers[Draw_OtSlot], at());
                     Gfx_OtPointers[Draw_OtSlot] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(at()));
                     count = Sprite_DrawListCount;
@@ -352,11 +371,17 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
                 if (record[1] & 0x80000000u) {
                     if (flags & 2) {
                         Sprite_Current = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[0]));
+                        if (draw_order::g_on)
+                            draw_order::Set(draw_order::kSprite, layer, Key(Sprite_Current),
+                                            static_cast<unsigned>(record[0]));
                         g_draw();
+                        if (draw_order::g_on) draw_order::Clear();
                     }
                 } else if (flags & 8) {
                     unsigned char* const owner = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(record[2]));
                     const unsigned long prim = record[0];
+                    if (draw_order::g_on)
+                        draw_order::TagOne(prim, draw_order::kRecord, layer, owner[0x29], static_cast<unsigned>(record[2]), 0);
                     Sprite_Current = owner;
                     Gpu_LinkPrim(Gfx_OtPointers[owner[0x29]], prim);
                     Gfx_OtPointers[Sprite_Current[0x29]] = reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(record[0]));
@@ -366,6 +391,7 @@ extern "C" void __cdecl Sprite_DrawPass(void) {
 
         if (Draw_PassFlags & 4) DrawLayer_Close(static_cast<int>(layer));
     }
+    if (layering::g_mode == layering::kFloor) layering::Restore();
 }
 
 void DrawPass_Inject() {

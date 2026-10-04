@@ -14,6 +14,7 @@
 // same way, so each function is fuzzed alone.
 #include "game/area_w4b.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -21,6 +22,7 @@
 #include "game/area_harness.h"
 #include "game/area_w4b_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -130,7 +132,7 @@ unsigned char MemberRect(const at::Rects& t, unsigned member) {
 }
 
 // Areas 169 and 171's member frame (0x426810, 0x4276D0; called by the
-// engine's 0x46D780 every field frame in the area, one body over a Rects
+// engine's EffectKind70_Run 0x46D780 every field frame in the area, one body over a Rects
 // each). Area 117's frame (Area117_MembersFrame, AR3A) without its story-flag
 // turn of the facing and over five-byte rectangles. Field_ScriptFlags bit 13
 // cleared; for each member m below Field_MemberCount (read again after each
@@ -393,7 +395,7 @@ extern "C" void __cdecl Area169_InitClearFlag74(void) {
     if (Cond_ByteFD != 1) AH_CALL(Flags_Clear)(Story(), 0x74);
 }
 
-// original 0x426810 (called by 0x46D7C3, 0x46D780's case for area 169; a gap
+// original 0x426810 (called by 0x46D7C3, EffectKind70_Run's case for area 169; a gap
 // of the tool): the member frame over Area169_Rects.
 extern "C" void __cdecl Area169_MembersFrame(void) { MembersFrame(at::kRects169); }
 
@@ -453,7 +455,7 @@ extern "C" void __cdecl Area170_ScriptFlagsSet1010(void) { Field_ScriptFlags = s
 extern "C" void __cdecl Area170_ScriptFlagsClear1010(void) { Field_ScriptFlags = static_cast<unsigned short>(Field_ScriptFlags & 0xEFEF); }
 
 // original 0x426C30 (area 170 +0x40; PSX 0x801F4ABC): tail kind 51 becomes
-// 37; the engine's 0x486D60; then the entry zone 2 with Cond_ByteFD 1 plays
+// 37; the engine's 0x486D60 (EffectKind7D_SetMap); then the entry zone 2 with Cond_ByteFD 1 plays
 // sound 0x20C (zone 2 with another value returns), and the zone (read again)
 // 3 with Cond_ByteFD 2 plays it.
 extern "C" void __cdecl Area170_Init(void) {
@@ -732,7 +734,7 @@ extern "C" void __cdecl Area171_InitClearFlag74(void) {
     if (Cond_ByteFD != 3) AH_CALL(Flags_Clear)(Story(), 0x74);
 }
 
-// original 0x4276D0 (called by 0x46D7D0, 0x46D780's case for area 171; a gap
+// original 0x4276D0 (called by 0x46D7D0, EffectKind70_Run's case for area 171; a gap
 // of the tool): Area169_MembersFrame's code over Area171_Rects.
 extern "C" void __cdecl Area171_MembersFrame(void) { MembersFrame(at::kRects171); }
 
@@ -1149,7 +1151,9 @@ extern "C" void __cdecl Area172_DrawShade(int x, int y) {
     AH_CALL(Gpu_SetPolyG4)(p);
     const int sx = static_cast<std::int16_t>(x);
     const int sy = static_cast<std::int16_t>(y);
-    constexpr std::int32_t k320 = 0x43A00000;   // 320.0f
+    // DIV-0041: the right edge at 373 under the wide picture (widescreen.h: 0
+    // until every self-test has run); the left, at x - 0x40, is the caller's.
+    const auto k320 = std::bit_cast<std::int32_t>(320.0f + static_cast<float>(Widescreen_Fill()));   // 0x43A00000 narrow
     SetLong(p + 0x38, k320);
     SetLong(p + 0x18, k320);
     SetFloatInt(p + 8, sx - 0x40);

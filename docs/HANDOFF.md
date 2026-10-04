@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-09-29 midday, round twelve complete on `phase-3/capture-round-twelve` at `0e51ec7`, round thirteen's plan on top as `d76f0d8`; pushed, its PR open)
+**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, merged, 8,648 ours; its end done but the rows in no group)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**6,891 functions are ours** (`inject: 6891 ours, 0 left original`, on `phase-3/capture-round-twelve`; 6,237 on `main`);
+**8,648 functions are ours** (`inject: 8648 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
 `main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
 PR #28 and #29), and **round eleven's cleanup, the part a session without
 the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
@@ -32,26 +32,233 @@ are [`round-11-cleanup.md`](round-11-cleanup.md) (item 0); round ten's are
 [`round-10-cleanup.md`](round-10-cleanup.md) (item 0a). The rest is
 [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
-**The frame hash reference** is `analysis/calltrace/r9_orig` (twin
-`r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
-reference sides `--original "*,-Game_Clock"`, `renderer=1`, windowed,
-foreground held), re-recorded 2026-09-27 09:15 at 3,164 ours (`ed0cd6f`);
-`r9_ours` (08:50, the same build) identical but frame 0, the set-up (as
-since `rb1`). Wave five's 346 functions came after it and none is on the
-attract path - every spell group is fuzz-only - so it stands for this
-build until something on the attract path is taken (nothing in round
-ten's six waves is). `r9_*_0926` and
-`r9_orig_0927_loaded` (a side recorded under a concurrent build, four
-frames of 25,000 calls) are history; `r8_*` and older too.
+**The frame hash reference is `analysis/calltrace/r13_origb` (twin `r13_origc`,
+identical on all 10,308 frames)**, recorded 2026-10-03 night at 8,648 ours
+(the build `9d01ae9`; reference sides `--original "*,-Game_Clock"`,
+`renderer=1`, windowed, foreground held, `BOF3X_LAYERING=0`; the batch is
+`r13_live.sh` in the session-`e39af52c` scratchpad). `r13_ours` is identical
+but frame 0, the set-up (as since `rb1`). `r13_orig` lost focus for a frame
+and is not a reference; `r9_*` and older are history. **The hash sees less
+each round**: the tracer arms only what is not ours (635 entries now) -
+[`takeover-queue-round13.md`](takeover-queue-round13.md) section 18 item 6.
 
 ## Pick up here
 
+0000000. **The layering fix (DIV-0071) is merged into the round branch and on by default since 2026-10-03
+   (`5f8b831`); what follows was written on `fix/tile-layering`, where it was off by default - the owner's
+   eye in play is what it waits on.** `BOF3X_LAYERING=1`: a sprite is drawn up to three layers later while only
+   walkable floor lies under its feet ([`sprite-draw-order.md`](sprite-draw-order.md) section 19 has the three shapes
+   tried and why this one; the ledger entry has the rule). Captures, off against on: `analysis/shots/layering_1003/`
+   (`layering_fix.png`, `fix_others.png`). The owner saw the first sheet and set the test - repair the corner on open
+   ground, the forest still in front - and has not yet seen the build that passes it in play.
+   - **To do with the owner:** play with `BOF3X_LAYERING=1` (a town, stairs, a bridge, followers close behind); then
+     the default and a launcher key. The owner on the captures: "this looks perfect".
+   - **Open:** why the owner's PlayStation emulator shots look less cut than the PC ("a layer higher") - the key
+     function is the same on both; not measured.
+   - **Mechanics:** the worktree is `<session e10cf965 scratchpad>/layering`, its own `build/`; live runs used
+     `input_run.py --launcher <that build> --slot0-shared` while the wave-five agents' headless self-tests were up.
+     The branch is off the round branch so the running sessions are not disturbed; merge it there when no merge
+     runner is active.
+
+000000. **2026-10-03, the fix wave for the owner's play reports: merged at `3f17bd1`, then validated live the same
+   afternoon - the owner: "That looks right to me".** The validation (`analysis/shots/validate_1003/`, run from the
+   merge worktree's build, not `build/`): GS's shout with a clean gap against Capcom's stray glyph (`bs2`, `bs2_orig`);
+   CH's second fight paying 0 EXP under `BOF3X_EXP=0` where `--original Boss16_End` pays 110, the first fight 0 too
+   (`bs1`); YN's shop and Manillo prompts (`shop`, `caughFish_b`); MB's backdrop wide; FL's banners, tabs and names in
+   English (`camping_b`). **It found two FL defects, fixed in `42a7033`:** a space in the banner's one-byte draw was
+   glyph `0xFFFA` (both fishing routes crashed in `Font_UnpackGlyph` at the first banner), and `tools/dat.py` did not
+   know chunk kind 16 (`loc_build.py all` stopped after `en.FIRST.DAT`). Not seen: the master's prompt (no route), the
+   stray frame line at window scale 1 (a capture is the render target, not the window - the owner's eye), the trigger-mode
+   enemies (no route). As first written:
+   *merged at `3f17bd1`, headless-verified, NOT yet seen in game.* Six Opus agents from `189ec55`, headless only; merged in a worktree (`fix/1003-merge`), `'*'` exit 0 narrow
+   and wide (1,001 groups, 7,787 ours), `ledger_check` 0 errors, then this branch fast-forwarded. `build/` was not
+   rebuilt (the owner's play DLL is still 30 September's). What merged, each with its own doc section for the live check:
+   - **GS, DIV-0070** (renumbered: the capture wave took 0068): `MsgBox_EffectDraw` `0x4987E0` taken over, a space in a
+     growing shout commits nothing - the 2026-10-02 crash (D197). `msgbox.md` section 9: `balioAndSunder_2.txt`, shots
+     every 4 frames over 11476..11544. The owner's open question: the shout's fixed 12 px advance - judge from captures.
+   - **CH, DIV-0045 amended:** the multipliers stop at 10 (a larger ini value is clamped and logged); `Boss16_End` and
+     `BossWeretigr_EndMove` wrote the EXP total past `Battle_EnemyDefeated` and now go through the multiplier.
+     `cheats.md` section 5. The owner recorded both Balio and Sunder routes with EXP 0, zenny 1.
+   - **YN, DIV-0027 amended:** the hand and `Yes` at the load screen's spacing on the master's prompt, Manillo's two
+     prompts and the shop's shared chooser; `yes-no-prompts.md` section 6 (`caughFish.txt` 3465, 3510, 3690, 3735;
+     `shop.txt` 1050, 1680, 1980 against 270). Owed from the owner: a route for the master's prompt; whether
+     `ItemTrade_Confirm`'s per-item prompt gets the same; the two masters-screen headers' PlayStation text.
+   - **FL, DIV-0069:** the fishing banner and tabs from the disc (`loc_build.py all` first - it must print "fishing: 13
+     lines, 3 tabs"), names to 12 characters; `fishing-text.md` section 6. Banner timing changed under English, so
+     `campingFishing.txt` may drift: compare `randlog`. The stray frame line is Capcom's renderer (D198), not fixed.
+   - **MB, DIV-0041 amended:** Manillo's backdrop tiled into the bands; `widescreen.md` section 5.
+   - **WS, no behaviour change:** the shadow is covered by terrain drawn after the sprite, on world and field maps by
+     one shared path, in the original too (D199). The owner wants it fixed beyond the original once the cause is
+     measured: `BOF3X_DRAWORDER` (`sprite-draw-order.md` section 18) at `worldmap_sliver.txt` 1258-1260 and
+     `field_view.txt` 1278-1280.
+   - **Tooling:** `BOF3X_SPEED` / `input_run.py --speed N` (DIV-0048's note): x8 identical to x1 on two routes.
+   - **Held:** the trigger-mode enemies (tar men, volts) - no route reaches them; a save and a recorded fight wanted.
+   The owner's four routes (`balioAndSunder_1`, `_2`, `bossAndFlash`, `dragonGene`) have their `# save` lines and are
+   still untracked; `balioAndSunder_2` saves to slot 6 on purpose. Today's captures: `analysis/shots/manillo_1003`,
+   `shop_1003`, `speedtest`; reach traces `analysis/calltrace/reach_*_1003` (nothing uncatalogued).
+
+00000. **2026-10-02, the owner's play notes - catalogued, nothing fixed, nothing ledgered yet.**
+   - **Crash, diagnosed** (`build/bof3x.crash-30104-0.dmp`, `CRASH 0:` at the end of that run's `bof3x.log`): access
+     violation in `Font_UnpackGlyph` (`tex_cells.cpp:240`) reading `0x17053EA0`, area `0x63`, message `0x24`, the
+     message box in its grow effect (kind 2, flag 8 of `0x7DEE44`). Cause is Capcom's effect draw `0x4987E0` (not
+     ours, called by address): `cmp cl, 0x20 / je 0x4988BE` at `0x498819` skips the glyph word `+0x16` and all eight
+     u, v bytes for a space but still writes position and colour and commits the primitive, so each space of a
+     growing shout draws whatever glyph index the packet buffer held. Here the stale word was `0xC254` (half of a
+     float), 14 MB past `Font_GlyphData` (`0x162AA020`). The English message has `0x20` between the shout's letters;
+     the dump's row of nine 23 px quads at y 176 has stale glyph words in exactly the four space slots. Proposed:
+     take `0x4987E0` over, a space emits no primitive and only advances the pen - a DIVERGENCE entry and a
+     known-defects entry with it. Not yet recorded in either.
+   - **Enemies whose mode changes on a trigger do not change** (the owner, in play; not traced): tar men should
+     take more physical damage once hit with a frost spell, volts should give extra EXP once hit with an electric
+     spell. Neither happens. Unknown whether ours or Capcom's - compare against `BOF3X_ORIGINAL` first.
+   - **Balio and Sunder's second fight ignores `cheat.exp=0`** (DIV-0045): its EXP presumably comes by another
+     path than the one the cheat scales. Not traced. The owner's recipes `tools/recipes/balioAndSunder_1.txt` and
+     `_2.txt` (untracked) reach it.
+   - **The owner's four new recipes carry no `# save` line** (`balioAndSunder_1`, `balioAndSunder_2`,
+     `bossAndFlash`, `sunderPeeing`, all untracked): the owner put each one's save in `tools/recipe_saves/` under
+     the recipe's own name. Seen there 2026-10-02: `balioAndSunder_1.DAT`, `balioAndSunder_2.DAT`,
+     `bossAndFlash.DAT`. `sunderPeeing` starts from the `balioAndSunder_2` save; the owner thinks it duplicates
+     `balioAndSunder_2.txt` and is removing it - if it is still there, leave it to them. Add the `# save` lines to
+     the other three before running them.
+   - **The EXP / zenny multipliers should stop at 10, not 50** (the owner: 50 is humorously large for this game).
+     Launcher dialog, `bof3x.ini` comment, `docs/cheats.md`, DIV-0045's text.
+
+0000. **2026-09-30, three fixes from the owner's `tools/recipes/gameover.txt`** (a fight with Rei's Equip window, the party
+   lost, GAME OVER, the title): DIV-0064's second load (the fatal the owner hit), DIV-0065 (the Equip window's stat
+   labels a row up - Capcom's own offset), the loss screen's black widened (DIV-0041). Self-test `'*'` 0 mismatches,
+   the recipe to `done` on ours; the recipe plays `# save combat` (the owner: the same save as `combat.txt`).
+   Then DIV-0066: a pad press skips an FMV (the pump polls `PadRead_AnyInputDown` between messages; built and
+   `pad_read` shadow 0 differ in a second build directory while the owner's game held `build/`'s DLL).
+   Then the owner's `cutsceneAndNue.txt` (`# save nue`, the cutscene, the dialogue, the first Nue fight): its night
+   tint and critical flash showed 320 wide, so every ours full-frame fill the `320.0f`/`240.0f` scan found now draws
+   through `Widescreen_Fill()` (widescreen.h), armed in `InjectAll` after every self-test; nine sites the scan found
+   are still Capcom's or unnamed (the DIV-0041 amendment lists them). The sunset sky of area 23's cutscene was
+   Capcom's `0x4FD350`, found by a detail call trace (`BOF3X_CALLTRACE_DETAIL=380-383` under `REACH=1` and
+   `BOF3X_ORIGINAL='*'`, the only `Gpu_SetPolyG4` builder): now `Gfx_DrawSkyGradient` in `area_backdrop.cpp`, widened
+   and fuzzed; the glow over it (`0x4FD3E0`, the only other full-frame quad at frame 600) likewise, as
+   `Gfx_DrawSunsetGlow`. The sunset now reads one colour across the frame (`analysis/shots/nue_sunset/`).
+   The Nue question of `boss_sa.md` is settled by the same route's trace (fight 2 = area 23, kind 1). Then the
+   owner saw trees pop at the periphery: four field x culls of ours moved out by the columns (`widescreen.md` §3b's
+   table says which; the battle field's two read Capcom's `.rdata` and are left). Owed the owner's eye on the trees.
+   The owner confirmed the pad skip on the intro videos, and later that day the sunset, the night shading and the
+   Equip labels in game. **Owed the owner's eye:** the wide game over in a fight of their own, the trees at the
+   edges, and a held pad input across a video's start (no skip until released).
+   **The owner's catalogue, 2026-09-30 evening - to fix:** the master's (apprentice) "Is this OK?  Yes No" prompt
+   over the party's stat panels has its hand a word's width left of `Yes` - the Chinese-fitted stop DIV-0027 moved
+   for the four `Menu_YesNo` prompts, on a chooser DIV-0027 does not reach. Find its draw (`BOF3X_TEXTLOG` on the
+   line, then the hand's x constant in that caller - a SHISU / SISYOU or scenario function, or a boot-resident
+   chooser) and give it DIV-0027's stops, 218 on Yes and 274 on No, under a language overlay only; amend DIV-0027.
+   Also: **the world map's party sprite has its shadow cut off** (three of the owner's crops in
+   `analysis/shots/owner_catalogue/worldmap_shadow_*.png`, the pack-carrying walk: the shadow's ellipse ends at a
+   straight edge under the feet). First tell wide from narrow (`tools/recipes/worldmap_sliver.txt` both ways), then
+   whether it is the pinned sprite (`WorldMap_PinSprite`, ours in `area_backdrop.cpp`, pinned at (160, 80)) or the
+   shadow's own draw; the sibling's PSX capture of the same walk says what the shadow should look like.
+   Also: **the fishing minigame's control banner is still Chinese** (`analysis/shots/owner_catalogue/fishing_banner.png`:
+   "鱼饵的装备" with the button glyphs, "钓鱼终了" with its button - bait equipment, end fishing). Not a dialogue
+   overlay's string: find where the fishing overlay or the exe holds it (`BOF3X_TEXTLOG` on a cast), then either a
+   label chunk (DIV-0064's kind 15, if the slot is a NUL-padded table) or the overlay's own text through
+   `loc_build.py`; the US disc's fishing strings give the words.
+   And the fishing equip menu (`analysis/shots/owner_catalogue/fishing_equip_menu.webp`), three things: (1) **the
+   rod list truncates its names** - `Wooden R` for Wooden Rod - a count-limited `Text_DrawAt` like the ones DIV-0064
+   and the list titles met (find the caller's count, and whether the Chinese slot is the limit or the draw's
+   argument is); (2) **the three tab buttons 装备 / 资料 / 说明 are Chinese** (Equip, Data, Guide) - a verb set
+   outside DIV-0018's nine `Menu_DrawButtonRow` sets, so either a tenth set in the same table or the fishing
+   overlay's own strings; (3) **a stray frame line**: a vertical piece hangs right of the EQUIP and GUIDE boxes
+   and a short one under EQUIP's bottom edge - a box drawn a column wider than its pieces, or pieces from the
+   Chinese layout under DIV-0026-style widening; compare the same screen with `BOF3X_LANG=original` and narrow.
+   **The owner's `tools/recipes/campingFishing.txt`** (`# save camping`; the camp's skill note, party choice and
+   masters, then the fishing spot: equip menu, data page, a cast; `analysis/shots/camping/` every 240 frames) reaches
+   all of the above and more still Chinese: the fishing banners at every step (frames 3120 "钓竿与鱼饵的装备",
+   4080 / 4320 the cast's, 4560 / 4800 "鱼饵落空 鱼儿逃脱!" - the bait lost, the fish got away), the data page's
+   `?????????` / `NO DATA` box, the masters screen's headers (frame 2400). **The fish is random beyond the
+   recipe's reach** - the owner's run caught one, the replay did not: the fishing AI draws on something the frame
+   count does not fix (wall clock? `Rand` seeded elsewhere?) - so the route is deterministic to the cast only. Worth
+   a look when the fishing overlay is taken: what it seeds from, and whether a recipe run should pin it (a DIV).
+   **The route does not replay on the all-original side** (`--original '*'`): ours shows the party choice at frame
+   960 where the original shows black, and the original never leaves the camp room (the session's `camp_ab.png`) -
+   a transition of Capcom's runs longer there than under ours, so a reach measurement of this route must be a
+   trace on our side (plain `BOF3X_CALLTRACE`, which arms only what is not ours), not `REACH=1` on the original.
+   Which transition, and why the frame count differs, is worth knowing: it is a divergence no ledger entry names.
+   **The route's reach on our side** (plain `BOF3X_CALLTRACE`, 2026-09-30): 27 Capcom functions entered after the
+   boot, all unnamed - 11 in the camp (the skill-note and masters windows: `0x596330`'s host of 14 + 11 hidden,
+   `Window_Handler7KindTable`'s kinds at `0x59C110`.., `0x58BD50`, `0x591AC0`) and 16 in fishing (`0x52AF80`..
+   `0x52CD47`: three hosts of 6, 8 and 18 recorded functions plus 11 hidden - the cast, the lure, the fish and the
+   fight). Round 14 candidates: **the camp's window kinds and the fishing minigame**, about 80 functions, with the
+   route to reach them. The owner on the fish, 2026-09-30: the placement looks fixed by the frame and only the
+   activity random, so the random draw is in the bite, not the cast; a re-recording that catches a fish may replay.
+   **It did not** (`tools/recipes/caughFish.txt`, `analysis/shots/fishing_catch/`): the fish sat elsewhere on the
+   replay and the cast found nothing - the placement is random too. **Why, read 2026-09-30:** the game's `Rand`
+   `0x5B93D2` is the MSVC6 CRT `rand()` (per-thread seed at ptd + 0x14), and **no `srand` is in the binary** (the
+   linker dropped it: no call stores anything but rand's own product to that slot), so the sequence is fixed from
+   boot - which is why battles replay. The fishing code (`0x52AF80..0x52CD47`) reads no clock; it calls `Rand`. What
+   moves the sequence off the frame count is **draw code that calls `Rand` once per rendered frame**:
+   `MapCell_DrawRising` `0x570660` (ours, `map_cells.cpp`: eight squares, one `Rand` each, every frame it is
+   drawn), and a recipe's skipped frames replay as unrendered logic (win_main.cpp), so the number of draws - and of
+   `Rand` calls - between two inputs depends on how fast the machine rendered. The water-side spot draws those
+   cells. Anything else on the draw side calling `Rand` does the same (to list: the `Rand` callers among the
+   draw-pass functions). **The fix is a DIV:** give draw-side callers a generator of their own (a private LCG
+   stepped per drawn frame, seeded from `Frame_Counter`), so the logic's `Rand` stream depends on logic frames
+   alone - fishing, encounters, item drops all replay, and nothing the player sees changes but the sparkle's
+   exact pattern. **Done the same evening as DIV-0067, opt-in:** `BOF3X_DRAW_RAND=1`, or `draw_rand=1` in the
+   launcher's ini (no dialog box yet); two switched replays of `caughFish.txt` identical frame for frame. A catch
+   wants a recording made with it on; the owner's ini has it on for the fishing save. Recipes recorded with it
+   off (every one before this) stay as they were: the key is off by default. **The catch replays** (the third
+   `caughFish.txt`, 2026-09-30 night, the owner watching): the first two recordings under the switch missed on
+   replay because their walk diverged at a ledge on the world map - a press shorter than a frame boundary -
+   not because of the sequence; spacing the presses fixed it. Proof the sequence is fixed now: **recorded and
+   scripted runs log `randlog     frame F rand K`** (the running `Rand` count, a counting replacement over a
+   byte-copy of the CRT's; `input_script.cpp`), and the recording's and the replay's were identical on every
+   one of 3,889 frames (`analysis/shots/fishing_catch2/randlog_*.txt`). That instrument stays: the first
+   differing frame between two logs names any future consumer.
+   **CORRECTION, later that night: the "per rendered frame" mechanism above is wrong, and DIV-0067 rests on
+   nothing.** The frame loop runs all game code every logic frame; a late frame skips only `Gfx_DrawOTag`. The
+   fish differed because this session's shot copies added a frame per shot (fixed by the other session in
+   `9689c71`; use `tools/recipe_shots.py`, never an ad-hoc splitter) and because of the ledge walk. DIV-0067's
+   entry carries the correction. **The switch is removed** (the owner's word, the same night: code, launcher
+   key, ini line; DIV-0067 a withdrawn record), and `caughFish.txt` needs no new recording - replayed without
+   the switch its `Rand` count matches the recording's on every frame and the fish is caught. Also
+   suspect for the same reason: the note above that `campingFishing.txt` "does not replay on the all-original
+   side" - that run used a shifted shot copy; recheck with a `recipe_shots.py` copy before believing it.
+   **The catch route's reach** (plain trace, one end shot, the catch and Manillo reached): the same 16 fishing
+   functions as the camping route (`0x52B1B0`..`0x52CCD0`) and nothing more armed - Manillo's screen is the shop
+   code already ours or table-reached. **Manillo's screen, for the catalogue**
+   (`analysis/shots/owner_catalogue/manillo_will_that_be_all.png`): "Will that be all?  Yes No" has the hand a
+   word left of `Yes` (DIV-0027's stops again, with the master's prompt and, the owner says, two more
+   pointer-to-choice mismatches on that screen), and **its tiled backdrop is 320 wide under the wide picture**.
+
+000. **Round thirteen, the effect engine, is merged and its end is done but for one item: six waves, 35 groups and
+   stage A, 6,891 -> 8,648 ours** ([`takeover-queue-round13.md`](takeover-queue-round13.md); section 18 is the
+   round's end). Done 2026-10-03: the rebinding (58 constants, [`round-13-cleanup.md`](round-13-cleanup.md)), the
+   defects D200..D238, the harness's end fold and the last two listed fills (all nine of DIV-0041's widened), and
+   **the live checks** - the attract hash and six recipes (whelp, `cutsceneAndNue`, dragon, combat, shop, world
+   map), every one identical to the original but frame 0. DIV-0068 and DIV-0072 have the owner's word (kept);
+   DIV-0071 (layering) is on by default; nothing is pushed. **Left:** the rows in no group (about 90 functions, a
+   mop-up takeover wave - each wave's section lists them; the fishing rows are round fourteen's); the 61 run-time
+   raw calls of ours into ours ([`round-13-cleanup.md`](round-13-cleanup.md) 1.3, a decision); a launcher key for
+   the layering; **for the owner in game** [`USER_CHECKS.md`](USER_CHECKS.md) item 8 and DIV-0071 in play. The
+   scripts are in the session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`).
+   **The verification worktree is this queue's.** The main checkout's `build/bof3x.ini` has `wide=1` and a running
+   game locks its DLL. A full `verify_tip.sh` takes 22 to 31 minutes. **The tracer's tables are 32,768 since
+   `9d01ae9`** (8,192 was hit at 8,648 ours: check the ceilings in HANDOFF's traps before a round's first traced run).
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
-   pushed 2026-09-29 and **its PR open, the merge the owner's**. Next, in order: the round's debts (section 7 there: the
-   mask and stand-in folds into both harnesses, ~~the defects to number~~ (D175..D196, 2026-10-01), the pointer scan `band_rows.py` lacks, the 33
-   owned starts without an `entries_logic.txt` line); **round thirteen**, the effect engine
+   pushed 2026-09-29 and **merged as PR #33 (`d1b411c`)**. Next, in order: the round's debts (section 7 there: the
+   ~~mask and stand-in folds into both harnesses~~ (2026-10-01, on round thirteen's tip: `boss_harness.md` 10.10,
+   `scenario_harness.md` 8.6, **merged as PR #39** - **the next `'*'` moves FC1..FS's counts**, two field regions added;
+   0 mismatches the bar), ~~the defects to number~~ (D175..D196, PR #37), ~~the rebinding between the groups~~ (82
+   constants, PR #38), and two tools written 2026-10-01 in a cloud session: the pointer
+   scan as `band_rows.py --pointer-scan` (**first run by the owner 2026-10-01**, [`band-rows.md`](band-rows.md) 7.1:
+   FO's `0x578A40` as expected, FC2's and FC3's named since wave two so they cannot fire, 305 hits of which six are
+   real - BE5's `Effect_Handlers` slots 4, 7, 11, 47, 91 and `ShopMode_States[9]` `0x583350` - the noise filtered in
+   the code since; the second run (7.2 there) 33 rows, thirteen of them candidates for their band owners to read;
+   the fourth run **29 rows, the expected set, the flag settled** (7.3); the regression without the flag identical on all seven outputs (`9479e06` against `7fe6406`), **debt 5 closed**; the branches of debt 7 are verified merged and the delete command is in the round doc's item 7) and
+   the audit of the 33 owned starts without an `entries_logic.txt` line as `tools/entries_audit.py` (give it `--exe`,
+   `--exclude analysis/calltrace/wallclock_reach.json` and each route's reach `bof3x.calltrace.tsv` as `--reach` -
+   the reach runs are default-mode traces, `callcounts.tsv` is `MODE=all`'s; **run 2026-10-01**, the verdicts in the
+   round doc's section 7 item 4: 9 covered, 9 excluded, 16 lines owed, which `--append` writes, and 49 duplicates,
+   which `--dedupe` resolves - both on the machine with `analysis/`; **then the hash reference is re-recorded**, the
+   armed set having grown by 16)); **round thirteen**, the effect engine
    ([`takeover-queue-round13.md`](takeover-queue-round13.md), planned by another session, starts from this tip). Owed
    by the owner: DIV-0063 in game (the gene with a partner down, and each failing pair), the Config screen under an
    overlay, the field recipes (section 6 there). The scripts and briefs are in the session-`6ae930a8` scratchpad
@@ -148,10 +355,11 @@ frames of 25,000 calls) are history; `r8_*` and older too.
      (`tools/recipe_saves/adult_ryu`, `combat.txt`) would reach the first
      spell functions ever run live.
    - **34 owned functions have no `entries_logic.txt` line** (round9 doc
-     section 10, re-checked after wave five: the same 34): 9 are the
-     wall-clock exclusions, 25 to audit - the hash matched with them
-     absent, so each is covered by a host extent or off the attract path;
-     say which.
+     section 10, re-checked after wave five: the same 34; 33 since
+     `Sparkle_Launch` got its line): 9 are the wall-clock exclusions, the
+     rest to audit - the hash matched with them absent, so each is covered
+     by a host's registered range or off the attract path; `tools/entries_audit.py`
+     says which (item 00 above).
 2. **Housekeeping.** Round nine is merged (PR #27). The controls scripts of every
    round-nine group live in session scratchpads, not in git: waves one to
    three and the other earlier groups in
@@ -367,8 +575,15 @@ _Verified 2026-09-24._
 - **Routes and captures:** `python tools/input_run.py tools/recipes/X.txt
   --out analysis/shots/X [--lang en] [--no-front]` - the game writes its own
   frames (`BOF3X_SHOT_DIR`, [`input-script.md`](input-script.md) §3); the
-  owner records with `BOF3X_RECORD`. Route A/Bs: `analysis/validate_combat.sh`,
+  owner records with `BOF3X_RECORD`. `--speed 8` runs a recipe fast (`BOF3X_SPEED`,
+  DIV-0048's tooling note: same frames, same shots; compare the `randlog` against an x1 run once per route). Route A/Bs: `analysis/validate_combat.sh`,
   `validate_shop.sh`, the world map's in [`world-map.md`](world-map.md).
+- **What the live runs cost:** `attract_run.py` and `input_run.py` append a line a run to
+  `analysis/run_times.tsv` (start, tool, what, wall seconds, the recipe frame reached, status,
+  `BOF3X_ORIGINAL`, the tracer's variables, the launcher's directory); `python tools/run_times.py
+  [--since "2026-10-03"] [--by tool|what|side]` sums it, with frames / 60 beside the wall time - the
+  part a fast-forward could remove (the owner's question, 2026-10-03; logged from round thirteen's
+  wave three on).
 - **Takeover recipe:** read to the last instruction; `symbols.toml` entry
   with evidence and `impl`; clone and fuzz under `BOF3X_SHADOW`, every call
   out re-aimed at a recording stand-in, boundaries seeded; plant a bug per
@@ -426,7 +641,22 @@ Local only, gitignored, worth keeping:
 
 ## Traps already paid for
 
+- **A `shot` line is a frame of the route** (2026-09-30). `shot NAME 1 [BUTTONS]` holds its buttons for one frame; a
+  shot inserted without taking that frame out of the run it splits puts every later input a frame late. An ad-hoc
+  splitter did that to copies of the owner's recordings - menus and dialogue tolerated it, a fishing cast did not, and
+  three committed recipes had to be repaired (`9689c71`). Use `tools/recipe_shots.py RECIPE --every N --out COPY`,
+  which keeps the total; a hand-placed shot replaces a frame (decrement its neighbour).
+
 _One line each, with a pointer. Add when something costs more than an hour._
+
+- **Every commit wants its `Signed-off-by`** (`.github/workflows/dco.yml`, CONTRIBUTING.md): seven commits made by
+  cloud sessions on 2026-10-01 and 2026-10-04 had none and PR #40's check failed. At the owner's word the branch was
+  rewritten on 2026-10-04 (`git filter-branch --msg-filter` from `69e9d3c`, messages only: every tree identical) and
+  force-pushed: **185 commits from the old `2ab349b` on have new hashes**, the docs' citations were rewritten to
+  them, and the old-to-new map is `analysis/round13_signoff_sha_map.tsv`. The cloud sessions' SSH signatures on
+  the rewritten commits are gone (a rewritten commit cannot keep one). The local group branches
+  (`phase-3/round13-*`, `fix/1003-*`) and `backup/round13-before-signoff` still point at the old commits. Commit
+  with `git commit -s`; check `git log --format=%B <base>..HEAD` before opening a PR.
 
 - **A route A/B's off-list and scratch ini go stale**: the three
   `validate_*.sh` scripts' `DIVS` lists lacked the four 09-27 centring

@@ -111,9 +111,15 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
                         (unsigned)len + 1, (unsigned)room);
         // Every write is into BOF3.exe's .data, so check first that the slot
         // is the one the image names there.
+        // For a repointed group the witness is its first pointer table's
+        // entry, which an earlier load of the overlay re-aimed at our
+        // buffer: the title's FIRST.DAT is loaded again after a game over
+        // (the owner's gameover recipe, 2026-09-30: the second load aborted
+        // here), so that address is the slot's too.
         std::uint32_t named;
         std::memcpy(&named, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(slot.named_at)), sizeof named);
-        if (named != slot.va)
+        const auto ours = t->buffers ? static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i])) : slot.va;
+        if (named != slot.va && named != ours)
             bof3::Fatal("%s: 0x%08X holds 0x%08X, expected 0x%08X", t->what, (unsigned)slot.named_at,
                         (unsigned)named, (unsigned)slot.va);
         if (len == 0) continue;   // the overlay's builder had no string that fits: as shipped

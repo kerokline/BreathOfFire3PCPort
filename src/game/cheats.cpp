@@ -11,11 +11,17 @@
 // Cheats, the same three the archival sibling offers as mods (its
 // docs/EXP_BOOST.md and docs/STEAL.md), as launcher settings here.
 //
-// DIV-0045: BOF3X_EXP=n / BOF3X_ZENNY=n, 0..50. Battle_EnemyDefeated
-// (src/game/battle_flow.cpp, ours) multiplies the fallen enemy's yield by
-// this before adding it to the battle total, so the results screen, the
-// per-member split and any level-ups follow, and the enemy's own record is
-// left as it was. 1 is the original's; 0 grants nothing.
+// DIV-0045: BOF3X_EXP=n / BOF3X_ZENNY=n, 0..10 (more is clamped to 10, with
+// a log line, so that an older bof3x.ini's 50 still starts the game).
+// Battle_EnemyDefeated (src/game/battle_flow.cpp, ours) multiplies the fallen
+// enemy's yield by this before adding it to the battle total, so the results
+// screen, the per-member split and any level-ups follow, and the enemy's own
+// record is left as it was. Two boss hooks write the EXP total themselves
+// and take the EXP multiplier too: Boss16_End (0x43A190, Balio and Sunder's
+// second fight, src/game/boss_sc.cpp), which sets the total to the two
+// enemies' own +0x96 on a win, and BossWeretigr_EndMove (0x43D5A0,
+// src/game/boss_sa.cpp), which adds Weretigr's. 1 is the original's; 0
+// grants nothing.
 //
 // DIV-0046: BOF3X_STEAL=1. Pilfer and Steal each run from a copy of one
 // routine (the PSX's MAGIC065.EMI and MAGIC216.EMI, one function each in the
@@ -51,14 +57,22 @@ std::uint32_t g_exp = 1, g_zenny = 1;
 std::uint32_t g_pilfer_mask = 0xFF;   // the byte at kPilferMaskImm once Cheats_Inject has run
 std::uint32_t g_steal_mask = 0xFF;    // the byte at kStealMaskImm, the same
 
-// 0..50, 1 when unset; anything else is a Fatal, as a wrong BOF3X_FILTER is.
+constexpr long kMultiplierMax = 10;   // the owner, 2026-10-02: 50 was humorously large
+
+// 0..10, 1 when unset. A number above 10 is clamped to 10 and logged (an ini
+// saved while the cap was 50 must not lock its owner out); anything that is
+// not a whole number 0 or more is a Fatal, as a wrong BOF3X_FILTER is.
 std::uint32_t Multiplier(const char* var) {
     char text[16];
     const DWORD n = GetEnvironmentVariableA(var, text, sizeof text);
     if (n == 0) return 1;
     char* end = nullptr;
     const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
-    if (end == nullptr || *end != '\0' || v < 0 || v > 50) bof3::Fatal("%s must be 0..50", var);
+    if (end == nullptr || end == text || *end != '\0' || v < 0) bof3::Fatal("%s must be 0..%ld", var, kMultiplierMax);
+    if (v > kMultiplierMax) {
+        bof3::Log("DIV-0045    %s=%ld is above the cap, %ld used", var, v, kMultiplierMax);
+        return static_cast<std::uint32_t>(kMultiplierMax);
+    }
     return static_cast<std::uint32_t>(v);
 }
 

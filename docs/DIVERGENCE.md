@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 64 entries, DIV-0001..0064)
+**Status:** IN PROGRESS (opened 2026-09-18; 72 entries, DIV-0001..0072, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -435,7 +435,9 @@ designed in rather than bolted on.
   clone with both sides calling the same stand-in. `Text_DrawAt` `0x516B30`
   itself is now ours too, faithful.
 - **Not covered:** the stepper's other draw, `0x4987E0` (flag 8 of
-  `0x7DEE44`; unread).
+  `0x7DEE44`). Read 2026-10-03 and ours as `MsgBox_EffectDraw` (DIV-0070):
+  it advances `12 + P` a character, space included, and does not take this
+  table - an open question for the owner ([`msgbox.md`](msgbox.md) §3).
 - **Rationale:** English at a 12 px advance overflows the box on the first
   line (seen 2026-09-20); the donor script's line breaks are authored for 8.
 - **Verification:** attract run, 2026-09-20: `retarget ON MsgBox_DrawChar` and
@@ -1440,8 +1442,68 @@ designed in rather than bolted on.
 - **Verification:** the re-spacing at start-up (`BOF3X_SHADOW=yes_no_layout`,
   both line shapes). **Confirmed in game by the owner, 2026-09-23**, at an
   inn's save: "looked right". All four prompts change together.
+- **Amended again 2026-10-03, from the owner's `masterAndManillo.txt`:** the
+  master's "Is this OK?" seen fixed in game (frames 3990, 4020, 4950, 4980,
+  `analysis/shots/validate_1003/sheet_master.png`). Manillo's per-item
+  "Is <item> OK?" (`ItemTrade_Confirm` `0x593E60`, `field_e2.cpp`) had been
+  left as Capcom's - the hand on No over Yes (frames 2700, 3030) - and now has
+  the same layout: its two answers drawn from `0xDE` less three spaces, three
+  spaces more between them, the hand two units left of each
+  (`g_trade_confirm_layout`, armed after the self-test under a Latin overlay;
+  `sheet_manillo_item2.png`). A long item name was not measured against the
+  hand's new first stop; the owner (2026-10-03): a name is twelve letters at
+  most, they think, which would come close but should fit.
 - **Reversible?** Yes: `BOF3X_ORIGINAL=YesNoLayout`. Only under a language
   overlay, not with `BOF3X_LANG=original`.
+- **Amended 2026-10-03 (fix wave, group YN; [`yes-no-prompts.md`](yes-no-prompts.md)):**
+  the owner's captures of 2026-09-30 and 2026-10-03 found the same fault on
+  choosers `Menu_YesNo` does not reach: the hand a word short of `Yes`, and
+  on `No` over `Yes`. The owner: "move the yes hand and yes word to the left
+  to match the spacing on the load save screen". Each gets the load / save
+  screen's offsets - three spaces moved from before `Yes` into the gap, the
+  hand two units left of each word (its tip three before it), `No` where it
+  was - with the stops measured from the line as the pen draws it
+  (`YesNoLayout_Tail`, `YesNoLayout_ShopHandX`; DIV-0006's advances), so
+  French and German answers of other lengths are met too:
+  - **the master's "Is this OK?"** (areas 3, 37, 41, 50, 55, 59, 61, 68,
+    74, 91, 98, 113, 116, 143): Capcom's `0x586D20` - its line call
+    `0x586E78` (`Text_DrawAt`) and hand call `0x586E97` (`Menu_DrawHand`,
+    `0xCF + 36 * answer`, 0 Yes) re-aimed (`BOF3X_ORIGINAL=MasterAskLayout`);
+    English: `Yes` 243 -> 219, the hand 207 / 243 -> 217 / 273;
+  - **Manillo's "Will that be all?"** (`ItemTrade_LeaveAsk` /
+    `ItemTrade_LeaveWait`, ours, `effect_1g.cpp`'s `LeavePrompt`; the
+    original's hand `0xE0 + 36 * answer`): `Yes` 240 -> 216, the hand
+    224 / 260 -> 214 / 270 (`BOF3X_ORIGINAL=TradeLeaveLayout`);
+  - **the shop's yes / no** - "Buy ...?" (help `0x49`), "Equip it?"
+    (`0x4A`), "Sell ...?" (`0x52`) and "use the item?" (`0x36`,
+    `SharedList_UseItem`): `ShopWin_TitleRun` draws system message `0xF`,
+    Menu_YesNo's own line, over the help line, and `YesNoFrame`
+    (`shop_states2.cpp`) / `SharedList_UseItem` (`field_s.cpp`) put the
+    hand at window x `+ 0xE8 - 36 * answer` (1 Yes) - the original stops
+    over the unmoved line. Now the line is `Respace`d as Menu_YesNo's and
+    the hand stops over it (`BOF3X_ORIGINAL=ShopYesNoLayout`, all three
+    sites);
+  - **Manillo's "Want to buy anything?"** (message `0x44` of area 30's
+    pool, `LeaderPanel_S4Again`, ours, `effect_1e.cpp`): the hand's row,
+    not its x. The original puts it at `0xAA + 12 * answer`, the second row
+    of the message - right for a one-row question; the English question
+    wraps, so the hand pointed at its second row. The owner: "it just needs
+    to be one row lower". Ours counts the message's rows (newlines less one
+    is the first answer's row) and moves the hand by the difference - 12
+    units for the English line, nothing for a one-row question
+    (`BOF3X_ORIGINAL=ShopAskRow`). Its x (tip 3 units before `Yes`) was
+    already aligned.
+  Each only under a Latin overlay (DIV-0056), switched on after its module's
+  self-test, which compares the original's draw. **Verification:**
+  `BOF3X_SHADOW=yes_no_layout` re-spaces four prompt shapes (en, de, fr
+  with a two-byte code) and checks the stops against the pen summed
+  separately; `'*'` headless 0 mismatches; the captures are owed
+  ([`yes-no-prompts.md`](yes-no-prompts.md) section 6 has the recipes and
+  frames). Not touched, same fault likely: Manillo's per-item "Is ... OK?
+  Yes No" (`ItemTrade_Confirm`, the hand `0xDC + 36 * answer` over "Yes No"
+  at `0xDE`), and the two other help-line choosers that draw message `0xF`
+  (`MenuList_TitleBox` for help `0x1A` / `0x31`, Capcom's `0x59AE00`) -
+  not marked by the owner.
 
 ### Music fades step once per logic frame
 
@@ -2010,8 +2072,14 @@ designed in rather than bolted on.
   32, into a cropped 384 x 216 window (§2.4 there).
 - **Verification:** self-tests at 0 mismatches with `BOF3X_WIDE` 0 and 1
   (the patches log `patch ON Widescreen` x4 and one `DIV-0041` line;
-  `Widescreen_Inject` runs last in `inject_all.cpp`, after every fuzz, so
-  the fuzzes compare the original culls). Live 2026-09-23: the field recipe
+  `Widescreen_Inject` ran last in `inject_all.cpp` when written, after every
+  fuzz, so the fuzzes compared the original culls - modules added since sit
+  below it and fuzz against the widened bounds under `BOF3X_WIDE=1`, so a
+  takeover of a `kSlides` site must read its bound from the operand, as
+  `menu_lists`, `menu_draw_helpers` and `battle_e7` do: 2026-09-29, the
+  three gene-list slide-outs had held the original bounds since `d1b411c`,
+  found by `battle_e7`'s self-test failing in a build directory with
+  `wide=1`; [`battle_e7.md`](battle_e7.md) §3). Live 2026-09-23: the field recipe
   at k = 2, 852 x 480 captures (`analysis/shots/wide_field/`), the terrain
   continuous across all 852 columns, the sprite centred. The survey
   recipes' findings in `widescreen.md` §5; the same evening the menu
@@ -2055,6 +2123,130 @@ designed in rather than bolted on.
   The middle-640 comparison against the narrow capture is not reported
   there. Still owed: the oracle and the frame hash with `BOF3X_WIDE=1`, the
   cropped attract A/B, the owner's eye.
+  **The loss screen's black, 2026-09-30** (the owner's shot: GAME OVER
+  over a black middle, the battle field in both bands, the caption's bar
+  sliding on into the right one): `BattleLoss_DrawBlack` `0x432930`
+  (ours, `src/game/battle_e1.cpp`) draws its TILE at `(-53, 0)` 426 x
+  240 by the fade tile's rule. The columns are read into a byte flag by
+  `BattleE1_Inject` after its self-test, since that inject runs after
+  `Widescreen_Inject` and the fuzz compares the original's 320; the bar
+  and caption are as they were, now over black in the band. Off, bit for
+  bit the original's. **Later that day, the rest of section 3c** (the
+  owner's `cutsceneAndNue.txt`: the night's sepia and dark tint, the
+  critical hit's flash, both 320 wide): every full-frame fill found by a
+  scan of `.text` for `320.0f` beside `240.0f` (22 sites, 2026-09-30) that
+  is ours draws through `Widescreen_Fill()` - the columns once
+  `Widescreen_ArmFills` has run, which `InjectAll` calls after every
+  module's self-test, so a fuzz on either side of `Widescreen_Inject`
+  compares the original's (0, 0) 320 x 240 and the per-module flag above
+  is gone. Widened: `EffectKind38_DrawTint` `0x473F10` (the tint),
+  `EffectKind46_DrawFlash` `0x477D20` (the flash), `EffectKind11_DrawShade`
+  `0x46A450` (the POLY_G4 shade), `FieldPanel_DrawShade` `0x52D5C0`,
+  `Area145_DrawGradient` `0x421F10`, `Magic020_DrawFade` `0x4A3A70`,
+  `IdentifyDim_Draw` `0x4B1770`, `Scena17_DrawFade` `0x56CBA0` (its tile;
+  the frame copy's two sprites stay 320, being a copy of the 320 view),
+  `BattleLoss_DrawBlack`, and three area sky gradients a grep of ours for
+  `320.0f` found (`area_w3b.cpp`, `area_w3c.cpp`, `Area172_DrawShade` in
+  `area_w4b.cpp`, their corners as `Area145_DrawGradient`'s). Seen in the
+  recipe's captures (`analysis/shots/nue_before` / `nue_after`, frames 600
+  and 1500): the night's shade now over the whole frame. **The sunset sky
+  of area 23's cutscene** (frame 600, orange over black bands) was none of
+  these: a detail call trace of the scene (`BOF3X_CALLTRACE_DETAIL`, the
+  only `Gpu_SetPolyG4` builder in its frames) found Capcom's `0x4FD350`,
+  a screen-wide gradient of a colour over black `(0, 0)..(319, 239)`
+  whose left x is a zeroed register - now `Gfx_DrawSkyGradient`, ours in
+  `src/game/area_backdrop.cpp` beside the area backdrop, its corners at
+  `(-53, 0)..(372, 239)` by the same rule and fuzzed against its clone
+  (20,000 rounds, 0 mismatches); the sunset now fills the frame
+  (`analysis/shots/nue_after/f0600.png` before, the session's
+  `shots_sky` after). The thin brightening left over the middle 320
+  columns (188 against 203 in the bands' red) was the sunset's glow,
+  Capcom's `0x4FD3E0` next door - a semi-transparent POLY_F4 of
+  `(0, 0)..(320, 240)`, red the step word over eight - found by the same
+  detail trace at frames 598..600 (the only POLY_F4 builder beside the map
+  cells): now `Gfx_DrawSunsetGlow`, ours beside the gradient, widened the
+  same way, 20,000 rounds at 0 mismatches; the sky reads the same colour
+  at every column (`analysis/shots/nue_sunset/`). The owner, in game the
+  same day: the sunset and the night shading correct.
+  **The object culls, the same day** (the owner: trees popping in and out
+  at the periphery under the wide view): four x culls of ours moved
+  outward by the columns through `Widescreen_Fill()`, so each keeps beyond
+  the 426 view the margin it had beyond the 320 - `MapCell_DrawUprights`
+  `[-80, 400]` (the trees and other uprights; 27 px of margin were left),
+  `MapCell_DrawAnimated` `[-60, 380]`, `MapCell_DrawQuads` `[-100, 420]`
+  and `Sprite_Draw` `[-64, 384]` ([`widescreen.md`](widescreen.md) §3b's
+  table). The y bounds are as they were. Their modules' shadows at 0
+  mismatches (23 self-test lines); the fuzz compares the original bounds,
+  `Widescreen_Fill` being 0 until every self-test has run. Not moved: the
+  battle field's `MapCell_DrawTexQuads` and `MapCell_DrawGroundSprite`
+  (`battle_e6.cpp`), which read Capcom's `.rdata` floats that his
+  remaining code shares; `Encounter_OnScreen` `[-40, 360]`, which gates
+  logic; and the unnamed `0x5054E3` `[-20, 340]`. Owed the owner's eye on
+  the trees. Not yet: five sites in `.text` no symbol names
+  (`0x489D47`, `0x48CB07`, `0x48CD10`, `0x48DC19`, `0x493308` in the magic
+  engine's range; `0x507BDC`, `0x507CE3`, `0x50B4B5`, `0x50F7B5` after
+  `Gfx_BeginFrame`), Capcom's still, and any fill built from integers or
+  registers the scan cannot see - the owner's eye finds those.
+  **Round thirteen's wave four, 2026-10-03**: the first five are ours
+  now. E4D's three draw through `Widescreen_FillX` / `Widescreen_FillWidth`
+  (`Effect_DrawScreenTint` `0x48CA90`, its blend variant `0x48CC90`,
+  `EffectKind98_DrawFlash` `0x48DBA0`; `src/game/effect_4d.cpp`, fuzzed
+  against the original's 320 x 240 with the fill unarmed); E4B's
+  `0x489D47` and E4F's `0x493308` (`EffectKindAF_DrawScreen`) are ours and
+  still 320 wide - to widen the same way (done at the round's end,
+  below). `EffectKind96_Pulse`'s quad
+  `(0, 0)..(320, 320)`, its 320s from a register, is not widened (no
+  spawner found).
+  **Wave five, the same day**: the next three are ours and widened the
+  same way - E5E's `EffectKind18Sub3F_WhiteOut` (`0x507BDC`) and
+  `EffectKind18Sub3F_DrawSky` (`0x507CE3`), E5G's
+  `EffectKind18Sub36_Pulse` (`0x50B4B5`; left corners at
+  `Widescreen_FillX()`, right at `320 + Widescreen_Fill()`), each fuzzed
+  against the original's 320 x 240 with the fill unarmed. `0x50F7B5`
+  (E6B's) is the last of the nine. Found by the wave and not widened:
+  sub-kind 0x15's 320-wide strips and gradients (E5C), the spiral
+  `0x505E60` centred on the constants 160 / 120 (E5D), the glow's cull
+  `0x4FF6A3` at Capcom's `[-60, 380]` (E5B), `0x5054E3` as above.
+  **Wave six, the same day**: the last of the nine, E6B's
+  `EffectKind18Sub54_Pulse` (`0x50F7B5`), is ours and widened, and E6C
+  widened one the scan had not listed - sub-kind 0x44's red additive
+  full-frame tile (`0x510E6C`). So seven of the nine are widened and two
+  (`0x489D47`, `0x493308`) are ours at 320 wide. Found and not widened:
+  sub-kind 0x44's full-width draws `0x510F12` and `0x510FE5` (E6C), E6D's
+  overlay quads at `0..320 x 0..256` and its 512-wide mist layers.
+  **The round's end, the same day**: the last two are widened as
+  `Effect_DrawScreenTint` is - E4B's `EffectKind89_DrawTint` (`0x489CD0`,
+  the site `0x489D47`: the semi-transparent tint tile of kinds 0x89, 0x9F
+  and 0xA4) and E4F's `EffectKindAF_DrawScreen` (`0x4932E0`, the site
+  `0x493308`: kind 0xAF's red tile), each at `(Widescreen_FillX(), 0)`
+  `Widescreen_FillWidth()` x 240 (`src/game/effect_4b.cpp`,
+  `src/game/effect_4f.cpp`). Both groups inject before
+  `Widescreen_ArmFills`, so their fuzzes still compare the original's
+  `(0, 0)` 320 x 240 and narrow play is Capcom's to the bit. **All nine of
+  the scan's sites and E6C's `0x510E6C` are now widened.** Still not
+  widened, the owner's call: `EffectKind96_Pulse`, the spiral `0x505E60`,
+  the culls (`0x4FF6A3`, `0x5054E3`, `Encounter_OnScreen`, the battle
+  field's two), the strips and full-width draws listed above.
+  **Manillo's backdrop, 2026-10-03** (the owner's catalogue,
+  `manillo_will_that_be_all.png`: the trade screen's tiled fish pattern
+  320 wide, black bands): `ItemTrade_DrawBackground` `0x5942C0` (ours
+  since round thirteen's E1G, `src/game/effect_1g.cpp`), two POLY_FT4s
+  `(0, 0)..(0xA0, 240)` and `(0xA0, 0)..(0x140, 240)`, u `0..0xA0`,
+  textured through a 32 x 32 texture window that the port builds as the
+  tile repeated over a 256 x 256 page (`Tex_Convert4` / `_8`). A
+  pattern wants more tiles, not a stretch: under the columns the left
+  quad runs from `0 - columns` with u from `(-columns) mod 32` (11 for
+  53) and the right one to `320 + columns`, each u range grown by its
+  columns (u up to 224), so every column shows the tile the original's
+  phase puts there and the 426 columns are covered exactly
+  (`ItemTrade_BackdropSpan`; a span past u 255 aborts). The columns are
+  `Widescreen_Fill()`'s, 0 until every self-test has run, so the clone
+  fuzz compares the original's quads; a property check in the same
+  self-test proves the spans for 0..63 columns (edges, texels = columns,
+  phase). Off, bit for bit the original's. `BOF3X_ORIGINAL=ItemTrade_DrawBackground`
+  brings back the 320-wide pattern. [`widescreen.md`](widescreen.md) §5
+  has the check owed and the nine sites above as the owner's routes
+  reach them (none seen).
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
@@ -2228,6 +2420,33 @@ designed in rather than bolted on.
   watched by the owner: "30xp scaling correctly from 3". Owed: the zenny
   line read off the results screen.
 - **Reversible?** Yes: the sliders at 1, or the variables unset.
+- **Amended 2026-10-03 (fix wave, group CH): the cap is 10, and two boss
+  hooks are scaled too.** (1) The owner, 2026-10-02: 50 is humorously large
+  for this game - the multipliers stop at 10 (launcher sliders 0..10, the
+  ini comment, `Multiplier` in `src/game/cheats.cpp`). A number above 10, as
+  an ini saved under the old cap holds (the owner's had `cheat.zenny=50`),
+  is **clamped to 10 and logged** (`DIV-0045    BOF3X_ZENNY=50 is above the
+  cap, 10 used`), not a `Fatal`: the owner is not locked out by their own
+  file; the Cheats dialog shows and saves 10. Not a number, or negative, is
+  still a `Fatal` (`must be 0..10`). (2) The owner, 2026-10-02: Balio and
+  Sunder's second fight ignores `cheat.exp=0`. Its EXP is not
+  `Battle_EnemyDefeated`'s: the fight's end hook `Boss16_End` `0x43A190`
+  (ours since round eleven, `src/game/boss_sc.cpp`) **stores** enemy 0's
+  plus enemy 1's `+0x96` into `0x904AEC` on a win (`mov [0x904AEC], eax` at
+  `0x43A1B3`), replacing whatever the kills had added. An operand scan of
+  `.text` for `0x904AEC` / `0x904AF0` finds one more writer outside the
+  battle set-up and the result screen: `BossWeretigr_EndMove` `0x43D5A0`
+  (`src/game/boss_sa.cpp`, `add` at `0x43D616`), Weretigr's end walk. Both
+  now multiply the EXP they write by `Cheats_ExpMultiplier()`; nothing else
+  writes the zenny total, so zenny needed nothing. Same feature, same kind
+  of change, so an amendment and not a new entry. Verified headless: with
+  the variables unset the `boss_sc`, `boss_sa` and `battle_flow` fuzz pass
+  (0 mismatches); with `BOF3X_EXP=0` `boss_sc` mismatches in `Boss16_End`
+  alone (3,033 of 24,000 rounds) and `boss_sa` in `BossWeretigr_EndMove`
+  alone (2,007), the first differing byte `0x904AEC` - the multiplier
+  reaches those two stores and nothing else. Owed: the live run in
+  [`cheats.md`](cheats.md) §5 (the second fight's EXP at 0, and the first
+  fight's, measured).
 
 ### Pilfer and Steal take the item whenever the enemy has one
 
@@ -2355,6 +2574,20 @@ designed in rather than bolted on.
 - **Also in the PSX version?** No.
 - **Tooling that comes with it:** `BOF3X_FPS_LOG=1` writes one `fps` line a
   second to the log - frames drawn, logic frames, the speed in force.
+- **Tooling, 2026-10-03 (no behaviour of play changes):** `BOF3X_SPEED=n`
+  (1..64) starts a run at that speed, for scripted runs nobody watches
+  (`input_run.py --speed N`). Two things keep a recipe recorded at speed 1 in
+  step: a frame a recipe `shot` is about to save is drawn even when the loop
+  is late, and while a stream started by `Sound_LoadStream` plays the loop
+  runs at the ordinary period - audio plays in wall time and scenes wait on
+  it (the inn counts 150 frames, then waits for its jingle;
+  `src/hook/run_speed.h`). Measured the same day: `shop.txt` with a shot every
+  30 frames, 105 shots pixel-identical and the `randlog` identical at x8
+  against x1 (180 s to 97 s); `balioAndSunder_2.txt`, 21,835 frames, `randlog`
+  identical (746 s to 114 s). A route with another wall-clock wait would show
+  as a `randlog` or shot difference against its x1 run: check each new route
+  once. `attract_run.py` does not take it (`attract_watch.py` counts frames
+  by polling and would undercount).
 - **Verification:** 2026-09-24. An attract run with F1 posted to the window
   at 75 s (`analysis/attract/f1_speed.log`): 31.0 drawn / 31.0 logic a
   second before, then `DIV-0048 speed x2 (F1) at Frame_Counter 1857` and
@@ -2813,7 +3046,8 @@ designed in rather than bolted on.
     labels.
   - The 361 enemy names and 72 item names that do not fit.
   - The launcher's settings file, which knows only `en` and `original`.
-  - The grow / shrink draw `0x4987E0` (unread), which Japanese shouts use.
+  - The grow / shrink draw `0x4987E0` (ours since 2026-10-03,
+    `MsgBox_EffectDraw`, DIV-0070; no pair handling), which Japanese shouts use.
 - **Reversible?** play without `BOF3X_LANG`.
 
 ### Two kana in one glyph code: pair codes for Japanese names
@@ -3217,9 +3451,436 @@ designed in rather than bolted on.
   whelp's list titled `DRAGON`; `combat_ab.txt` -> `labels_combat`, 43
   frames, nothing amiss. French, `menu_screens.txt` -> `labels_fr`:
   `OBJET`, `GUERIR`, and the log's `5 of 5` for both repointed groups.
-  **Owed the owner's eye:** the status words (no member on the recipe save
-  is poisoned or confused), the battle's stats, the `WEAPON`..`VITAL` and
-  `ASSIST`..`SKILL` titles, the German build and the French weapon and
-  skill pages.
+  **2026-09-30:** the overlay's second load - the title's `FIRST.DAT`
+  after a game over (the owner's `tools/recipes/gameover.txt`, its run
+  ending in `FATAL: item types: 0x00663970 holds ...`) - aborted in
+  `Labels_Apply`: a repointed group's witness is its first pointer table's
+  entry, which the first load had re-aimed at our buffer. The slot check
+  now accepts that address as the table check already did; the strings
+  are written into the same buffers again and the tables re-aimed at
+  what they already hold.
+  **The owner, 2026-09-30:** `Pois` after Teepo's level in the Items
+  screen's member panel, English - the status word through the 8 px draw
+  confirmed (their capture). **Owed the owner's eye:** `Conf`, the
+  battle's stats, the `WEAPON`..`VITAL` and `ASSIST`..`SKILL` titles, the
+  German build and the French weapon and skill pages.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
+
+### The battle equip window's stat labels beside their own values
+
+- **ID:** DIV-0065
+- **Date:** 2026-09-30
+- **Subsystem:** battle menu, the Equip window (`BattleEquipWin_Draw`
+  `0x59D640`, ours in `src/game/battle_e7.cpp`, kind 3 of
+  `Window_Handler8Kinds`)
+- **Tier:** Sensible
+- **Original behaviour:** the window lists a member's four stats with a
+  label each. The values go at `y + 0x1C + 13 k` (the 8 px font, read at
+  `0x59D722`), the labels at `y + 0x27 + 13 k` (`0x59D6B6`, `lea ecx,
+  [esi + 0x27]`, `Text_DrawAt` with `0x66A0F8..`): each label sits two
+  pixels above the *next* stat's value, the first value has no label, and
+  the fourth label is drawn under the frame's bottom edge, off the box.
+  Capcom's own constant, not a slip of ours - the run of
+  `tools/recipes/gameover.txt` under `BOF3X_ORIGINAL='*'` (Chinese, since
+  `'*'` leaves the overlay off; frames 540 and 720) shows 29 alone, 攻击
+  beside 16, 防御 beside 22, 智力 beside 18 and 速度 clipped, the owner's
+  English capture the same with `Pwr Def Int`. The field's member panel
+  (`0x5738A0`: the label at `y + 8`, the value at `y + 0xA`) puts a label
+  two pixels above its own value; `0x27` is that relation one 13-pixel
+  row down (`0x1A + 0xD`).
+- **New behaviour:** the labels at `y + 0x1A + 13 k`, beside their own
+  values, once a byte flag is on. `BattleE7_Inject` sets it (`PatchBytes
+  BattleEquipLabelsRow`) after the module's self-test, whose fuzz compares
+  the original's rows; every other pixel of the window is as it was.
+- **Rationale:** the owner, 2026-09-30, from the equip window in a fight:
+  "str shows up next to defense, def next to intelligence". A label
+  belongs to its own value; the field's panel shows where Capcom put it.
+- **Also in the PSX version?** Not read: `0x59D640` has no PSX twin in
+  the pairs, and the sibling has no name for the battle equip window.
+- **Verification:** `BOF3X_SHADOW='*'` headless: 0 mismatches (the flag is
+  set after the fuzz). Live: the recipe above on ours, English, frames 540
+  and 720 - `Pwr Def Int Agl` each beside its value, the fourth inside the
+  box. The owner, in game the same day: correct.
+- **Reversible?** `BOF3X_ORIGINAL=BattleEquipWin_Draw` leaves Capcom's
+  function and its rows.
+
+### A pad press skips an FMV as a key does
+
+- **ID:** DIV-0066
+- **Date:** 2026-09-30
+- **Subsystem:** platform (`Fmv_Play` `0x59E360`, ours since DIV-0035,
+  `src/game/fmv_play.cpp`; the pad through `src/game/pad_read.cpp`,
+  DIV-0050)
+- **Tier:** Sensible
+- **Original behaviour:** while a video plays, `Fmv_Play` pumps messages
+  with a blocking `GetMessage` until `Fmv_WndProc` `0x59E570` clears
+  `Fmv_Playing`: on `WM_KEYDOWN`, `WM_LBUTTONDOWN`, `WM_RBUTTONDOWN`, the
+  MCI notify at the video's end, or `WM_DESTROY`. A pad reaches the game
+  only through `Pad_Read` from WinMain's latch, which the pump never
+  calls, so a pad press does nothing to a video - the original's own
+  joystick included.
+- **New behaviour:** the pump drains the queue with `PeekMessage` and
+  dispatches as before, then polls the pad (`PadRead_AnyInputDown`: any
+  input down, bound or not, after `PadSdl_Poll`; it starts SDL's pad
+  itself, since the two intro videos play before `DInput_Init` would -
+  the owner's first try skipped nothing for that reason) and waits up to 16 ms
+  for the next message (`MsgWaitForMultipleObjects`). An input going down
+  during the video clears `Fmv_Playing` as a key does; one held from
+  before the video is ignored until it is released. A `WM_QUIT` taken off
+  the queue is posted again for WinMain's loop, which the original's
+  `GetMessage` returning 0 left there. The key, click and end-of-video
+  paths are `Fmv_WndProc`'s, unchanged; the log says `DIV-0066 NAME
+  skipped by the pad`.
+- **Rationale:** the owner, 2026-09-30: "can we have controller button
+  presses skip the intro fmvs like keyboard strokes do?"
+- **Also in the PSX version?** The PlayStation's movies are skipped by the
+  pad (its only input); the PC port's keyboard-only skip is the port's.
+- **Verification:** builds; `pad_read` shadow 0 differ (the player is not
+  fuzzed - it runs MCI). The owner, 2026-09-30, on the intro videos: "it
+  works now" (after the pad's start moved ahead of them). Not yet tried:
+  a pad input held from before the video (no skip until released).
+- **Reversible?** `BOF3X_ORIGINAL=Fmv_Play` runs Capcom's player.
+
+### Withdrawn: the rising squares' random numbers from a generator of their own
+
+- **ID:** DIV-0067 (withdrawn and removed 2026-09-30, the day it was made;
+  the number is not reused)
+- **Date:** 2026-09-30
+- **Subsystem:** display (`MapCell_DrawRising` `0x570660`; the switch and
+  its code are gone)
+- **Tier:** Sensible - withdrawn: the premise was wrong, see below
+- **Original behaviour:** the rising squares draw their random numbers
+  from the shared `Rand` `0x5B93D2`, as every caller does.
+- **New behaviour:** none. The entry is kept so the number and the story
+  are not lost; nothing in the code differs from the original on this
+  account.
+- **Rationale:** the fields below ("what it was", "why it is gone") are the
+  record; the required fields above are here so the ledger's checker reads
+  the entry as one (2026-10-01).
+- **Also in the PSX version?** Moot: no divergence stands.
+- **Reversible?** Nothing to reverse; the switch, its launcher key and its
+  code were removed with the withdrawal.
+- **What it was:** an opt-in switch (`BOF3X_DRAW_RAND=1`, the launcher's
+  `draw_rand`) giving `MapCell_DrawRising` `0x570660` a private generator in
+  place of Capcom's `Rand`, on the belief that draw code consumed the
+  shared sequence once per *rendered* frame and so made a fishing recipe
+  replay differently.
+- **Why it is gone:** the belief was wrong. `Game_WinMain`'s loop runs every
+  game function on every logic frame; a late frame skips only
+  `Gfx_DrawOTag`. The fish differed because this session's ad-hoc shot
+  copies added a frame per shot (`tools/recipe_shots.py` is the tool; a
+  shot line is a frame of the route) and, in the owner's first two
+  recordings, a walk diverged at a world-map ledge. Measured after the
+  removal: `tools/recipes/caughFish.txt`, recorded with the switch on,
+  replays without it - the `Rand` count identical on all 3,889 frames
+  (`randlog`), the fish caught - so the squares never ran on that route.
+- **What stays, none of it a divergence:** the finding that `Rand`
+  `0x5B93D2` is the MSVC6 CRT `rand()` and the binary holds no `srand`, so
+  the sequence is fixed from boot; and the per-frame `randlog` line in
+  recorded and scripted runs (`src/hook/input_script.cpp`), a counting
+  replacement over a byte-copy of `rand` that changes no value.
+
+### Kind 0x64's glow: the rim vertices' depth the centre's
+
+- **ID:** DIV-0068
+- **Date:** 2026-10-03
+- **Subsystem:** effects (`EffectKind64_DrawGlow` `0x481740`, ours in
+  `src/game/effect_3a.cpp`; effect kind 0x64, chapter 10's run 2)
+- **Tier:** Forced
+- **Original behaviour:** the glow is a fan of 32 semi-transparent
+  `POLY_G3`, the centre the projected point, the two rim vertices points on
+  a circle round it. Each vertex is three dwords (x, y, depth) and the
+  renderer reads the depth (`0x5A0E80` divides by it, `+0x10` / `+0x20` /
+  `+0x30`). The centre's depth is the projection's; the rim's x and y are
+  computed into two stack locals at `esp + 0x20` / `+ 0x24` of the frame,
+  but their depth is read from `esp + 0x28` (`0x481836`, `0x48189D`), a dword
+  the function never writes: whatever the stack held there.
+- **New behaviour:** ours writes the centre's depth to the rim vertices
+  (`+0x20`, `+0x30`). Every other byte of every primitive is the original's.
+- **Rationale:** a stack word the function never writes cannot be
+  reproduced, only replaced (DIV-0023's class). The centre's depth is what
+  the two sibling discs of the same kinds write to all three vertices
+  (`EffectKind64_DrawSpark` `0x4820C0`, `EffectKind68_DrawMote` `0x481CC0`,
+  read 2026-10-03): a flat disc at the point's depth, which a zero (a divide
+  by zero in the renderer) would not be.
+- **Also in the PSX version?** Not read: `0x481740` has no PSX twin in the
+  pairs.
+- **Verification:** `BOF3X_SHADOW=effect_3a` headless: the fuzz compares
+  every byte of the packet but those two dwords of the glow's triangles
+  (its `Gfx_CommitPrim` stand-in copies `+0x10` over them on both sides
+  while `0x481740` runs), 0 mismatches; a control planting a wrong centre
+  depth is refused ([`effect_3a.md`](effect_3a.md) section 5). Not seen
+  live: no recorded route reaches kind 0x64.
+- **Reversible?** `BOF3X_ORIGINAL=EffectKind64_DrawGlow` runs Capcom's
+  function, its stale depth included.
+- **The owner's word, 2026-10-03:** kept as written; the owner will say if
+  the glow looks wrong in game.
+
+### The fishing minigame's text in the overlay's language, laid out for Latin letters
+
+- **ID:** DIV-0069
+- **Date:** 2026-10-03
+- **Subsystem:** field text, the fishing spot (only with a language overlay;
+  `src/game/fishing_text.cpp`, chunk kind 16 of `tools/loc_build.py`; the
+  draws effect kind 0xF's lines in `src/game/effect_1a.cpp`, its tabs and
+  name lists in `src/game/effect_1b.cpp`;
+  [`fishing-text.md`](fishing-text.md))
+- **Tier:** Sensible
+- **Original behaviour:** the fishing spot's banner - the lines effect
+  kind 0xF types right to left across the top window ("set rod and lure",
+  "quit fishing", the cast's, the lost catch's) - is thirteen strings of
+  the port's glyph codes at `0x669FC0..0x66A06D`, reached only through the
+  8-byte records at `0x653B98` (a pointer, a label byte, a pause byte); the
+  three tabs over the equip menu are three 8-byte slots at `0x66A070`
+  behind the pointer table `0x66A088`. Every overlay left both Chinese
+  (the owner's `fishing_banner.png`, `fishing_equip_menu.webp`, the
+  camping route's frames 3120..4800). The layout is the 12-unit glyph's:
+  a character is typed every 6 frames as the line moves 2 units a frame
+  (`0x466310`, `+9` = 6; the first by `0x4662B0`), the flip cursor is 12
+  wide at `2 * left + 0x119`, a line's button label goes 12 units a
+  character after the line's start (`0x466460`, `0x4665E0`), the leaving
+  character moves the line on by 12 (`0x27` = `0x1B + 12`); the tabs are
+  drawn at `x + 0xA / 0x35 / 0x6A` with counts 2, 3, 2 (`0x468AC0`); an
+  accessory's name is drawn to 8 characters (`0x468C50`, `0x468F00`,
+  `0x469210`, `0x465230`). The label itself is a single-byte glyph,
+  `0x66A2FC[line]` - the port's circled numerals 1, 2, 3, which are its
+  stand-ins for circle, cross, triangle (the same table and colours 2, 1,
+  6 the Config screen's `0x461C00` uses, DIV-0051) - and an overlay
+  paints those single-byte slots with letters: the owner saw `b`, `c`,
+  `d` after the lines, and `aa` where the Chinese text has its two-dot
+  ellipsis (glyph `0x3B`).
+- **New behaviour:** `loc_build.py` finds the fishing module every fishing
+  area carries on the disc (the US `AREA030.EMI` section at `0x801D0C00`)
+  by the row table the PC still has byte for byte (`0x653C04`, 36 bytes):
+  the disc's thirteen line records end twelve bytes before it - 12 bytes
+  each, a count added, the label and pause bytes the PC's - and its tab
+  labels follow the edge-quad records the PC has at `0x653E6C`, at the
+  fixed width the module's own code hands the draw (`addiu $a3, $zero, n`
+  before the `lui` / `addiu` of their address: US and German 4, French 7).
+  Chunk kind 16, tag 1 the lines, tag 2 the tabs; `FishingText_Apply`
+  copies each into a buffer of ours and re-aims the record's pointer (or
+  the table entry) after checking it names the shipped string or our
+  buffer (a second load of `FIRST.DAT`). US: the tabs `Gear`, `Data`,
+  `Rule`; the lines are the module's own (not copied here), its `>>>`
+  the dialogue font's ellipsis where the port has its two dots. And,
+  armed in `InjectAll` after every self-test
+  under a Latin overlay only (`Lang_Latin`): each character typed after
+  half its own advance in frames, so it lands where the flip cursor ends
+  (the US module's own constant is 4 for its 8 units, `0x801D3A28`,
+  `0x801D3AEC`), the flip cursor as wide as that advance with its right
+  edge at `0x125` as before, the leaving character moving the line on by
+  its advance (kept even, so the line still meets `0x1D`); the label
+  after the line's real pen width, drawn as DIV-0051's PlayStation icon
+  for the button the port's numeral names (circle, cross, triangle, in
+  the line's own colour); the tabs whole and centred in their 0x28-wide
+  boxes by their real width (the US module's `x + 6 + 0x30 i` for four
+  letters); an accessory's name to 12 characters, the US field - `Wooden
+  Rod`, `Heavy Ca...` no longer cut at 8. For 12-unit glyphs every one of
+  these computes the original's number.
+- **Rationale:** the stage-2 text swap (DIV-0005) for the last Chinese on
+  the fishing screens, and the layout the swap needs, as DIV-0018 and
+  DIV-0059 re-centred theirs: English typed at the 12-unit cadence lands
+  four units further left of the flip cursor with each character, and its
+  label floats half the line's width past its end. The label's icon follows the
+  port's buttons, not the US disc's: the US module's labels are `x`,
+  triangle, square (codes `0x81..0x83`, colours 1, 6, 5), the US release's
+  button layout; the PC's numerals name circle, cross, triangle, which is
+  what the port's input answers to, and the Config screen shows them the
+  same way under an overlay (DIV-0051).
+- **Also in the PSX version?** The strings are the PlayStation's own, the
+  layout constants its 8-unit ones; the icons are the port's buttons drawn
+  in the PlayStation's shapes.
+- **Verification:** `BOF3X_SHADOW=effect_1a` and `effect_1b` headless (the
+  fuzz runs before the layout is armed): 210,000 and 288,000 rounds, 0
+  mismatches; armed during the fuzz instead (a control), 10,281 and 23,399
+  mismatches - `LineNext`, `LineScroll`, `LineFade`, `ShowName`,
+  `DrawToggles`, `DrawItemsB`, `DrawItemsA`, `DrawEquipped` - which is to
+  say the fuzz sees the change and the 12-unit cadence is unchanged
+  (`LineStart`, `LineType` equal under 12-unit advances, by construction).
+  `BOF3X_SHADOW='*'` headless, narrow: exit 0, 7,687 ours, 0 mismatches.
+  `loc_build.py`'s converter run on the US, French and German discs: 13
+  lines and 3 tabs each. **Not seen in game** (a headless wave): the
+  coordinator's live check is in [`fishing-text.md`](fishing-text.md)
+  section 6. Owed the owner's eye: the banner's cadence and labels, the
+  tabs, the full names; the French tabs (`Equip`, `Données`, seven letters
+  over a 40-unit box - the French disc widened its boxes) and the German
+  build.
+- **Found by the live check, 2026-10-03:** the banner's one-byte draw
+  (`EffectKind0F_DrawGlyph`) makes glyph `0x20 - 0x26` of a space, far past the
+  font - the disc's English lines have spaces, Capcom's have none - and both
+  fishing routes crashed in `Font_UnpackGlyph` at the first banner. Under the
+  Latin layout a space now draws nothing (the callers move the pen). And
+  `tools/dat.py` did not know chunk kind 16, so `loc_build.py all` stopped
+  after its first file. After both: `caughFish.txt` and `campingFishing.txt`
+  to `done`, no crash, the banners, tabs and names in English
+  (`analysis/shots/validate_1003/camping_b`, `caughFish_b`).
+- **The owner's word, 2026-10-03:** the tab words are the English disc's
+  (Gear / Data / Rule). The banner's button icons stay the port's (circle, cross,
+  triangle) although the US disc shows cross, triangle, square - the owner reads
+  that as the US release's different default bindings - until the banner can draw
+  the icons of the bindings in force ([`IDEAS.md`](IDEAS.md) I29). The French
+  tab that overflows its box waits on a picture of the French game.
+- **Reversible?** play without `BOF3X_LANG` (or `BOF3X_LANG=original`): no
+  chunk, and the layout is never armed. `BOF3X_ORIGINAL` on any of the
+  draws named above leaves Capcom's, which reads the re-aimed pointers
+  with the original's layout.
+
+### A space in a growing shout draws nothing
+
+- **ID:** DIV-0070
+- **Date:** 2026-10-03
+- **Subsystem:** text (`MsgBox_EffectDraw` `0x4987E0`, ours in
+  `src/game/msgbox.cpp`; `MsgBox_Step`'s draw under flag 8 of `0x7DEE44`,
+  the grow / shrink effects 2 and 3)
+- **Tier:** Intent - the original crashes, and its own branch shows a space
+  was meant to have nothing to texture
+- **Original behaviour:** for a character inside a grow span the draw
+  writes the CLUT word, then `cmp cl, 0x20 / je 0x4988BE` at `0x498819`:
+  a space skips the glyph word `+0x16` and all eight texture bytes, yet
+  `0x4988BE` onward writes the shade and the corners and commits the
+  primitive (`Gpu_SetCode6C`, `Gpu_SetSemiTrans`, `Gfx_CommitPrim`). The
+  slot's glyph word and texture are whatever the last primitive there left
+  (disassembly 2026-10-03, [`msgbox.md`](msgbox.md) §9). Capcom's Chinese
+  script never puts a space in a grow span (63 grow presets over the
+  shipped `AREA*.DAT`, none after a span with a `0x20`); the English
+  overlay does - 15 of its 65, in areas 11, 40, 41 and 99 - and on
+  2026-10-02 the owner's game crashed at one (area 99, message `0x24`:
+  nine characters, four of them `0x20`):
+  `build/bof3x.crash-30104-0.dmp`, `Font_UnpackGlyph` reading `0x17053EA0`
+  for the stale word `0xC254`, the dump's four space slots holding stale
+  words.
+- **New behaviour:** a space writes the CLUT word and moves the pen by `P`
+  (`0x7DEE68`) exactly as the original does, and builds and commits no
+  primitive: the gap is the same width with nothing in it. Every other
+  character is the original's to the byte. A byte flag
+  (`g_effect_space_skips`, `PatchBytes MsgBoxEffectSpaceSkips`) turns it on
+  after the `msgbox` self-test, whose fuzz compares Capcom's spaces.
+- **Rationale:** the owner's crash. A primitive with an unwritten glyph
+  word draws an arbitrary glyph at best and faults the renderer at worst;
+  the original's own skip says a space has no texture.
+- **Also in the PSX version?** Yes, the same shape: the twin `0x80151F4C`
+  takes its word separator `0xFF` from `0x80152010` to `0x80152BF8`,
+  skipping the tpage word and the `u`, `v` bytes and still writing the
+  corners and committing (sibling `disasm_exe.py`, SLPS). The port
+  carried the slip over with `0x20` for `0xFF`. Whether a JP shout puts an
+  `0xFF` in a grow span was not measured.
+- **Verification:** `BOF3X_SHADOW=msgbox` 44,000 rounds, 0 mismatches,
+  1,000 of them this function against a byte-copy with the packet slot
+  random and compared (354 spaces, each committed by the copy); with the
+  flag on, the same inputs: glyphs identical, spaces equal to the copy's
+  state with the primitive taken out, 0 mismatches. 35 controls planted,
+  35 refused, including the fix stuck on (refused in all 354 space
+  rounds). Not run live in this wave: [`msgbox.md`](msgbox.md) §9 has the
+  route and frames (`balioAndSunder_2.txt`, frames 11,476..11,544).
+- **Not changed:** the advance. A grow span advances `12 + P` a
+  character, space included; DIV-0006's table is not consulted (the
+  owner's call, [`msgbox.md`](msgbox.md) §3).
+- **Reversible?** `BOF3X_ORIGINAL=MsgBox_EffectDraw` runs Capcom's draw,
+  stale quad and all.
+
+### Walkable floor does not cover a sprite's feet
+
+- **ID:** DIV-0071
+- **Date:** 2026-10-03
+- **Subsystem:** field and world-map draw order (`Sprite_DrawPass`
+  `0x593060`, ours in `src/game/draw_pass.cpp`; the rule in
+  `src/game/layering.cpp`)
+- **Tier:** Intent - the owner's decision, 2026-10-03, beyond the original
+- **Status:** built, **on by default since 2026-10-03** (the owner's word,
+  with the branch merged into round thirteen's; `BOF3X_LAYERING=0` is the
+  original's order); the owner has seen captures, not yet played with it.
+  Reference and A/B runs pin `BOF3X_LAYERING=0` (`attract_run.py`, the
+  `validate_*.sh` scripts): the rule moves sprites' places in the draw
+  list, so an ours side with it on differs from Capcom's by design
+- **Original behaviour:** a painter's order by diagonal row. Every cell of
+  a nearer row is emitted after a sprite of the row behind, flat floor
+  included, and there is no depth test, so the floor of the next one to
+  three rows is drawn over whatever of the sprite reaches past its own row
+  on screen: the shadow's lower corners, sometimes a foot
+  (`known-defects.md` D199; measured with `BOF3X_DRAWORDER`,
+  [`sprite-draw-order.md`](sprite-draw-order.md) §18.9). The same order
+  is what puts a forest, a roof or a wall of the next row in front of the
+  party, which is wanted.
+- **New behaviour:** after the pass's first sort, each sprite of the draw
+  list is given the layer it is drawn in: up to three layers later than its
+  own, one layer at a time, for as long as everything it would newly be
+  drawn over that reaches the box round its feet (28 x 14 px round the
+  screen point `+0x74` / `+0x78`) is *floor* - a cell's own quad, its
+  lowest corner no more than 2 units above the feet (the comparison the
+  original's draw table already makes inside one layer), and the cell not
+  blocked to walking (`AreaMap_CellBlocked`, the high nibble of the area's
+  cell byte). Anything else there stops it at the layer before: a blocked
+  cell (forest, water, a building), a raised cell, a side triangle, the
+  second list, a frame node, a table item that is not floor, a cell record
+  within two cells, or a later sprite's body. The key's layer byte is
+  changed for the pass, the list sorted again, and the key put back after
+  the pass. Nothing in the layers' lists is touched.
+- **Rationale:** ground the party can walk onto is never something standing
+  in front of it. The owner's test (2026-10-03, on the first captures): the
+  corner must be repaired on open ground *without* pushing the sprite over
+  the forest graphic - which a plain "one layer later" does.
+- **Also in the PSX version?** The order is the same code
+  (`FUN_8014D184`'s key is the PC's term for term) and the sibling's
+  renders show cuts too. The owner's emulator shots look less cut than the
+  PC, "a layer higher"; **why is not established** - the owner suspects
+  the GPU's rasterisation against Direct3D's, and nothing here measures it.
+- **Verification:** live, narrow, x8, English, ours with the switch off
+  against on (`analysis/shots/layering_1003/`, sheet `layering_fix.png`):
+  `field_view.txt` - the floor over Ryu's foot gone on all four shots;
+  `worldMapAndAreaTransition_ab.txt` - `f01620`, `f01680` whole where they
+  were cut, `f01200`, `f01260..f01380`, `f01740` (forest, roof) unchanged,
+  and no pixel outside a sprite's feet differs on any of the 32 frames;
+  `worldmap_sliver.txt` (the Cedar Woods node, forest in front) unchanged.
+  Three other characters' feet on the route are repaired the same way
+  (`fix_others.png`). The same route wide (`BOF3X_WIDE=1`, `route_wide_m0` / `_m1`): the
+  same six frames differ, the same boxes 106 px right. Headless with the
+  switch set: `BOF3X_SHADOW='*'` exit 0, no mismatch line, 8,103 ours (the
+  rule arms after the self-tests, so this shows only that they still pass
+  around the pass's split sort). **Not seen:** a crowded town, a bridge or
+  stairs, a battle (slot 4: the rule is off there by construction).
+- **The owner, 2026-10-03, on the captures:** "this looks perfect - trees
+  cover the character, shadows are unobstructed". In play: not yet.
+- **Rejected on the way** (the same sheet's first version,
+  `first_attempts_three_modes.png`): every sprite's key one layer later
+  (`BOF3X_LAYERING=2`, kept as a comparison build) - whole shadows, and the
+  party over the trees; and lifting the floor cells out of their lists to
+  draw them before the sprite - the lists outlive a frame while the view is
+  still, and a cell moved before the rows behind it is painted over by
+  them on a hillside.
+- **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
+  (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
+  `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
+  sprite's verdict and what stopped it.
+
+### A panel's far corners from the quad's own x, where the original reads a stack word it never wrote
+
+- **ID:** DIV-0072
+- **Date:** 2026-10-03
+- **Subsystem:** effects (`EffectKind18Sub4B_Run` `0x50A510`, ours in
+  `src/game/effect_5f.cpp`; kind 0x18's sub-kinds 0x4B and 0x4C)
+- **Tier:** Forced
+- **Original behaviour:** on a frame of the draw pass the function builds
+  three shaded quads, quad k's corners at `x0 + 0xA00 k -/+ b`. It keeps
+  x0 in `ebp`, adds the quad's offset for the near corners, then reloads
+  `ebp` from `[esp + 0x20]` - a local no instruction of the function
+  writes - and builds the far corners' x (v1, v3) from it; from the second
+  quad on `ebp` is that word, so all four corners' x come from it. The far
+  corners of the first quad and the whole of the other two sit wherever
+  the caller's stale stack puts them.
+- **New behaviour:** ours uses x0 for that word: v0 / v2 at
+  `x0 + 0xA00 k - b`, v1 / v3 at `x0 + 0xA00 k + b`, each quad symmetric
+  about its column. Every other byte of every primitive is the original's.
+- **Rationale:** a stack word the function never writes cannot be
+  reproduced, only replaced (DIV-0023's and DIV-0068's class). x0 is the
+  base the near corners already use and the only x the function computes.
+- **Also in the PSX version?** Not read; the pairs give `0x801F38F0`, an
+  AREA overlay copy.
+- **Verification:** `BOF3X_SHADOW=effect_5f` headless: the fuzz levels
+  those x words on both sides and compares every other byte, 0 mismatches
+  ([`effect_5f.md`](effect_5f.md) sections 4 and 7). Not seen live: no
+  recorded route reaches sub-kinds 0x4B / 0x4C.
+- **Reversible?** `BOF3X_ORIGINAL=EffectKind18Sub4B_Run` runs Capcom's
+  function, its stale word included.
+- **The owner's word, 2026-10-03:** kept as written (entered by the
+  coordinator from E5F's report).

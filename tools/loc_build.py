@@ -1181,6 +1181,103 @@ def convert_labels(game, start, battle):
     return chunks, report
 
 
+# The fishing minigame's text (DIV-0069, src/game/fishing_text.cpp,
+# docs/fishing-text.md). Two groups in BOF3.exe's .data that every overlay left
+# Chinese, one chunk each, the tag the group's number:
+#
+#   1  the thirteen lines effect kind 0xF types across the top window: 8-byte
+#      records at FISH_LINES (a pointer, a label byte, a pause byte), read
+#      through the pointers only, so repointed into the DLL's buffers;
+#   2  the three tab labels above the equip menu, behind the pointer table
+#      FISH_TABS, repointed likewise.
+#
+# On a disc the fishing module every fishing area carries (WORLDnn/AREAnnn.EMI)
+# has both: the lines as 12-byte records (a count, a pointer, the same label
+# and pause bytes) ending twelve bytes before the row table the PC still has
+# byte for byte at FISH_ROWS; the tabs right after the edge-quad records the
+# PC has at FISH_QUADS, fixed-width, the width the code's `addiu $a3, $zero, n`
+# before the `lui` / `addiu` of their address hands the draw (US and German 4,
+# French 7). Strings are the disc's own, one byte a letter as the verbs are.
+KIND_FISHING = 16
+FISH_LINES, FISH_LINE_COUNT, FISH_ROWS, FISH_ROWS_LEN = 0x653B98, 13, 0x653C04, 0x24
+FISH_QUADS, FISH_QUADS_LEN, FISH_TABS = 0x653E6C, 50, 0x66A088
+FISH_LINE_ROOM, FISH_TAB_ROOM = 64, 16      # src/game/fishing_text.cpp's buffers
+
+
+def fishing_tab_width(sec, dest, base):
+    """The fixed width the module's code draws its tab labels at, or None:
+    `addiu $a3, $zero, n` just before `lui r, hi; addiu r, r, lo` of `base`,
+    and the second label's `addiu rd, r, n` after it."""
+    hi, lo = ((base >> 16) + (1 if base & 0x8000 else 0)) & 0xFFFF, base & 0xFFFF
+    words = struct.unpack_from("<%dI" % (len(sec) // 4), sec)
+    for k in range(1, len(words) - 1):
+        w, nxt = words[k], words[k + 1]
+        if w >> 26 != 0x0F or w & 0xFFFF != hi:
+            continue
+        r = (w >> 16) & 31
+        if nxt >> 26 != 0x09 or (nxt >> 21) & 31 != r or (nxt >> 16) & 31 != r or nxt & 0xFFFF != lo:
+            continue
+        for j in range(k - 1, max(0, k - 4), -1):
+            a3 = words[j]
+            if a3 >> 26 == 0x09 and (a3 >> 21) & 31 == 0 and (a3 >> 16) & 31 == 7:
+                n = a3 & 0xFFFF
+                second = any(v >> 26 == 0x09 and (v >> 21) & 31 == r and v & 0xFFFF == n
+                             for v in words[k + 2:k + 32])
+                return n if second and 0 < n < FISH_TAB_ROOM else None
+    return None
+
+
+def convert_fishing(game, disc):
+    """[(kind, tag, payload)] and a report, from the first fishing module on `disc`."""
+    rows = exe_bytes(game, FISH_ROWS, FISH_ROWS_LEN)
+    quads = exe_bytes(game, FISH_QUADS, FISH_QUADS_LEN)
+    tails = exe_bytes(game, FISH_LINES, 8 * FISH_LINE_COUNT)
+    for name in sorted(disc.files):
+        if "/WORLD" not in name or not name.endswith(".EMI"):
+            continue
+        for dest, sec in emi_sections(disc.read(name)):
+            r = sec.find(rows)
+            if r < 0 or not dest & 0x80000000:
+                continue
+            chunks, report = [], []
+            first = r - 12 - 12 * FISH_LINE_COUNT
+            if first < 0:
+                raise SystemExit("fishing: %s's row table has no line records before it" % name)
+            payload = bytearray([FISH_LINE_COUNT])
+            for i in range(FISH_LINE_COUNT):
+                count, ptr = struct.unpack_from("<II", sec, first + 12 * i)
+                if sec[first + 12 * i + 8:first + 12 * i + 10] != tails[8 * i + 4:8 * i + 6]:
+                    raise SystemExit("fishing: %s line %d's label and pause bytes are not the PC's" % (name, i))
+                at = ptr - dest
+                if not 0 <= at < len(sec) or not 0 < count < FISH_LINE_ROOM:
+                    raise SystemExit("fishing: %s line %d points at 0x%08X, %d bytes" % (name, i, ptr, count))
+                raw = sec[at:at + count].split(b"\0")[0]   # a count may include the NUL, or end without one
+                out = encode_text(raw) if raw else None
+                if out is None or len(out) + 1 > FISH_LINE_ROOM:
+                    raise SystemExit("fishing: %s line %d holds a code this language does not have, or is long: %s"
+                                     % (name, i, sec[at:at + count].hex(" ")))
+                payload += out + b"\0"
+            chunks.append((KIND_FISHING, 1, bytes(payload)))
+            report.append("%d lines" % FISH_LINE_COUNT)
+            q = sec.find(quads)
+            base = None if q < 0 else (q + FISH_QUADS_LEN + 3) & ~3
+            width = None if base is None else fishing_tab_width(sec, dest, dest + base)
+            if width:
+                payload = bytearray([3])
+                for i in range(3):
+                    raw = sec[base + width * i:base + width * (i + 1)].split(b"\0")[0]
+                    out = encode_text(raw) if raw else None
+                    if out is None or len(out) + 1 > FISH_TAB_ROOM:
+                        raise SystemExit("fishing: %s tab %d does not convert: %s" % (name, i, raw.hex(" ")))
+                    payload += out + b"\0"
+                chunks.append((KIND_FISHING, 2, bytes(payload)))
+                report.append("3 tabs")
+            else:
+                report.append("no tabs found")
+            return chunks, report
+    return [], []
+
+
 # The battle banner's twelve messages (DIV-0052, src/game/battle_text.cpp): the
 # PC's pointer table at MESSAGE_TABLE, read only by 0x44A8E0 and, for message
 # 1, 0x44A990. The US BATTLE.EMI has the same twelve as 13-byte slots, found
@@ -1765,6 +1862,9 @@ def cmd_all(args):
         merchant = convert_merchant(args.game, disc)
         overlays["FIRST.DAT"] += merchant
         print("merchant name: " + ("found" if merchant else "not found on this disc"))
+        fishing, report = convert_fishing(args.game, disc)
+        overlays["FIRST.DAT"] += fishing
+        print("fishing: " + (", ".join(report) if report else "not found on this disc"))
     battle_emi = None if donor_ja else disc.find("BATTLE.EMI")
     if battle_emi and not args.only:
         cmds = convert_battle_commands(args.game, disc.read(battle_emi[0]))

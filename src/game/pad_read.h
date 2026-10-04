@@ -4,3 +4,10 @@
 #pragma once
 
 void PadRead_Inject();
+
+// Whether any input of the pad is down right now - a button, a trigger, a
+// direction - bound or not; false with no pad or SDL not started. Polls the
+// pad first - and starts SDL's pad if DInput_Init has not yet (the intro
+// videos play before it) - so it is for the main thread between latches (the
+// FMV player's skip, DIV-0066).
+bool PadRead_AnyInputDown();

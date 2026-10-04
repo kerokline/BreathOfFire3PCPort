@@ -88,14 +88,29 @@ every original re-reads `0x905B84` before each use, and so does ours.
 
 | Function | Address | Size | What |
 |---|---|--:|---|
-| `BattleEquipWin_Draw` | `0x59D640` | 0x521 | `(member, x, y, set, flags, record)`, called with `(0x66972C[0x904065[+0xC]], +4, +6, +0x20, +0xD, record)`: the box; the member's name (`CharacterRecords + 0xA4 member`, 5 characters at most) centred on `x + 0x3E`; four stat labels and, after `Char_RecalcStats`, the stats `+0x24`, `+0x26`, `+0x2A`, `+0x28`; unless `flags` bit 0, `Equip_PreviewSet(member, set, marks, values)` into its stack and per stat a bar (`0x59DB70`, colour `0x11` for mark 4, `0x12` for 1, else `0x13`) and the previewed value in the mark's colour; then the six equipped items (`+0x12..+0x17`, categories `0x66B5BC`, icons `0x66B5B4`): the record's `+0x10 = 0` first; row r in colour 2 on the record's `+0xB`; with the record's `+0xD` bit 1, an item `Item_CanUse(2, the member 0x66972C[0x904065[s8 0x929F06]], ...)` refuses is dimmed in colour 7, and one it allows on row `+0xA` sets `+0x10 = category << 8 | item`; every item not refused is drawn first dimmed in colour 7, then (rows `+0xA` / `+0xB` two pixels higher) in its colour; last the frame's pieces |
+| `BattleEquipWin_Draw` | `0x59D640` | 0x521 | `(member, x, y, set, flags, record)`, called with `(0x66972C[0x904065[+0xC]], +4, +6, +0x20, +0xD, record)`: the box; the member's name (`CharacterRecords + 0xA4 member`, 5 characters at most) centred on `x + 0x3E`; four stat labels and, after `Char_RecalcStats`, the stats `+0x24`, `+0x26`, `+0x2A`, `+0x28`; unless `flags` bit 0, `Equip_PreviewSet(member, set, marks, values)` into its stack and per stat a bar (`0x59DB70`, colour `0x11` for mark 4, `0x12` for 1, else `0x13`) and the previewed value in the mark's colour; then the six equipped items (`+0x12..+0x17`, categories `0x66B5BC`, icons `0x66B5B4`): the record's `+0x10 = 0` first; row r in colour 2 on the record's `+0xB`; with the record's `+0xD` bit 1, an item `Item_CanUse(2, the member 0x66972C[0x904065[s8 0x929F06]], ...)` refuses is dimmed in colour 7, and one it allows on row `+0xA` sets `+0x10 = category << 8 | item`; every item not refused is drawn first dimmed in colour 7, then (rows `+0xA` / `+0xB` two pixels higher) in its colour; last the frame's pieces. **DIV-0065 (2026-09-30):** the labels at `y + 0x1A + 13 k`, not the original's `0x27` (each label beside the next value, the fourth off the box), behind a byte flag set after the self-test |
 
 ## 3. Divergence
 
-None: every function is a faithful replacement, and no `DIVERGENCE.md`
-entry or `cheats.cpp` patch names an address of the band (grepped
-2026-09-29). Where the original indexes past a table, ours aborts with a
-message (the owner's rule, round9 doc section 6; section 7).
+None of its own: every function is a faithful replacement. Where the
+original indexes past a table, ours aborts with a message (the owner's rule,
+round9 doc section 6; section 7).
+
+One divergence has patch sites inside the band and survives in ours (added
+2026-09-29, after the takeover): **DIV-0041** (`widescreen.cpp` `kSlides`)
+moves the `cmp ax, imm16` bounds of the three list slide-outs outward by 53
+under `BOF3X_WIDE=1` - `0x599061` (-0xA5 to -0xDA), `0x599451` (0x15B to
+0x190), `0x599551` (0x143 to 0x178). Ours first held the original bounds as
+constants, so from `d1b411c` the wide view freed these windows at the old
+edge; `GeneWin_ListSlideOut`, `_List2SlideOut` and `_List3SlideOut` now read
+the bound from the operand (`battle_e7_callees.h` `kListOutBound` ..), and
+`BattleE7_Inject` refuses unless each operand follows `66 3D` and holds the
+original bound or the widened one. The takeover's grep of the ledger and
+patch tables missed them because `kSlides` writes its addresses `0X599061`.
+The symptom was `battle_e7` failing its self-test in any build directory
+whose `bof3x.ini` has `wide=1` (1,800 rounds, the three slide-outs, Capcom's
+copy holding the widened immediate and ours the original); the launcher sets
+`BOF3X_WIDE` from the ini under `--no-config` too.
 
 ## 4. The harness's use, and what it lacks
 
@@ -148,7 +163,9 @@ and counts of 0; the grid's step 4 (and 3, 5), row 0xFF or a cell, column
 0..4, the cost 0..0xFF and the menu actor's member byte 0..2 with its AP at
 the cost, one above, one below, 0x80 above; each slide's `+4` / `+6` at its
 bound and 1, 2, 0x10, 0x20 either side (`0x29`, `-0x17`, `0x5B`, `0x11`,
-`-0xA5`, `0x15B`, `0xA3`, `0x143`); the gene rows' indices (0xFF sometimes),
+`-0xA5`, `0x15B`, `0xA3`, `0x143`; the three slide-out bounds read from their
+operands, so under `BOF3X_WIDE=1` the widened ones - the same draws either
+way); the gene rows' indices (0xFF sometimes),
 form bytes (0xFF, 0..31, any), the top row inside the list (0..3 of six,
 0..9 of twelve), the cursor row 0..2, step 6 / sub-step 5 and their
 neighbours; the equipment window's record (a window record) with rows

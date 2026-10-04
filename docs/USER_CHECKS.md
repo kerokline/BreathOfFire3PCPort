@@ -131,3 +131,33 @@ compile, but nothing has run them.
       `BOF3X_SELFTEST_ONLY=1`: both self-tests report 0 MISMATCHES.
 - [ ] Walk into a wall and a river on the field: still blocked.
 - Result goes to: [`exe-table-audit.md`](exe-table-audit.md) §7.
+
+### 8. The ring in Manmo's area (effect sub-kind 0x59) and the desert's sky
+
+*Why:* [`effect_6c.md`](effect_6c.md) section 7 and
+[`takeover-queue-round13.md`](takeover-queue-round13.md) section 17. Kind
+0x18's sub-kind 0x59 - a ring of sixteen columns that rises, holds, fades and
+closes - fades through twelve bytes of the executable's data
+(`0x65EF0C..0x65EF17`) that nothing ever writes back: the PlayStation reloaded
+them with the area's overlay, the PC keeps them until the game is restarted.
+A second showing in one sitting would be drawn dark from the start. One
+script spawns it, area 196's (`E0 18 .. 59` at `0x648F97`, cell x 0x11, z
+0x17). **The owner, 2026-10-03:** area 196 is the Manmo fight in the Desert
+of Death, inside a cutscene of sorts that happens once - later crossings go
+back to area 189 - so this is **probably fine, to be verified in game**. The
+desert's navigation sky (stars, the horizon's light by the hour) is another
+effect, sub-kind 0x44 on area 189's frame word, and does not use those
+bytes. A community FAQ's section on the Desert of Death describes how the
+navigation is meant to work: <https://gamefaqs.gamespot.com/ps/196817-breath-of-fire-iii/faqs/24866>.
+
+- [ ] At the Manmo event: what the ring is on screen, and that it rises,
+      holds and fades as a lit ring (not dark from its first frame).
+- [ ] Whether anything lets it show twice without restarting the game (a
+      load of an earlier save and the event again is the case to try once).
+      Dark the second time is Capcom's defect, reproduced; the fix - the
+      twelve bytes back to 0x80 when the effect starts - would be a ledger
+      entry and is the owner's call.
+- [ ] In the desert (area 189): the stars and the horizon's light change
+      screen to screen and hour to hour as the FAQ describes, under ours.
+- Result goes to: [`effect_6c.md`](effect_6c.md) section 7, and
+  `known-defects.md` when the defect is numbered.

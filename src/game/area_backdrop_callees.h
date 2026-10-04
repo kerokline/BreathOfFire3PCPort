@@ -17,6 +17,8 @@ struct Callees {
     // AreaMap_TextureCycle
     unsigned char (__cdecl* test)(unsigned long);
     unsigned char* (__cdecl* set_draw_move)(unsigned char*, const unsigned char*, unsigned long, unsigned long);
+    // Gfx_DrawSunsetGlow
+    unsigned char* (__cdecl* set_poly_f4)(unsigned char*);
 };
 
 extern const Callees kOriginals;

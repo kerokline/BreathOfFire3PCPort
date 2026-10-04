@@ -545,6 +545,67 @@ namespace {
 #define BH_THEIRS(name) #name, KeyOf(name), KeyOf(name)
 constexpr std::uint32_t kAll = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 
+// --- round twelve's folds (2026-10-01; docs/boss_harness.md section 10.10) -----
+// Rand for the engine: the CRT's answer is 15 bits (0x5B93D2: the seed's bits
+// 16..30); the standard recorder's garbage quarter would be a negative value no
+// CRT Rand gives, by which an engine caller's idiv indexes a negative remainder
+// (BE2's Battle_RandomEnemy / _RandomMember).
+std::uint32_t RandRangeEffect(const std::uint32_t*, std::uint32_t answer) { return answer & 0x7FFF; }
+// The pop-ups note the acting sprite's +8 as they are called: the drains mark
+// it (| 4 or | 8 past a stat's maximum) and clear it after the pop-up, so the
+// mark is compared, not wiped (BE5).
+std::uint32_t PopupEffect(const std::uint32_t*, std::uint32_t answer) {
+    const unsigned char* const actor = Pointer(0x904B40);   // the acting sprite
+    Note(InRegions(actor + 8, 1) ? actor[8] : 0x100u);
+    return answer;
+}
+// Sound_PlayEffect for the engine, louder: Input_Pressed (0x7E1BEC, an engine
+// region) moved half the time, the old word noted first - the Dragon run's
+// cursors read it again after a refusal's sound (BE5).
+std::uint32_t SoundInputEffect(const std::uint32_t*, std::uint32_t answer) {
+    const std::uint32_t n = Noise();
+    if ((n & 1) && InRegions(Mem(0x7E1BEC), 2)) {
+        Note(move_script::Word(Mem(0x7E1BEC)));
+        move_script::SetWord(Mem(0x7E1BEC), n >> 8);
+    }
+    return answer;
+}
+// Battle_TurnVectorC (BE4's) turns the sprite's velocity pair (+0xC, +0x10) by
+// its facing +8 as the real one does (1: (-y, x), 2: (-x, -y), 3: (y, -x)): the
+// slide and the knock-back read the pair after the call (BE2). Only inside the
+// enemies' objects, the task slots, the party and the harness's records.
+std::uint32_t TurnEffect(const std::uint32_t* a, std::uint32_t answer) {
+    const std::uint32_t p = a[0];
+    const bool enemy = p >= 0x93A000 && p + 0x14 <= 0x93C8A0;
+    const bool member = p >= 0x802D40 && p + 0x14 <= 0x802D40 + 3 * 0x14C;
+    const bool record = (p >= Key(SpriteRecord(0)) && p + 0x14 <= Key(SpriteRecord(0)) + 0x140) ||
+                        (p >= Key(SpriteRecord(1)) && p + 0x14 <= Key(SpriteRecord(1)) + 0x140);
+    if (!enemy && !member && !record) return answer;
+    auto* s = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(p));
+    const auto x = static_cast<std::uint32_t>(move_script::Long(s + 0xC)), y = static_cast<std::uint32_t>(move_script::Long(s + 0x10));
+    switch (s[8]) {
+    case 1: move_script::SetLong(s + 0xC, static_cast<std::int32_t>(0u - y)); move_script::SetLong(s + 0x10, static_cast<std::int32_t>(x)); break;
+    case 2: move_script::SetLong(s + 0xC, static_cast<std::int32_t>(0u - x)); move_script::SetLong(s + 0x10, static_cast<std::int32_t>(0u - y)); break;
+    case 3: move_script::SetLong(s + 0xC, static_cast<std::int32_t>(y)); move_script::SetLong(s + 0x10, static_cast<std::int32_t>(0u - x)); break;
+    default: break;
+    }
+    return answer;
+}
+// Equip_PreviewSet fills the caller's two stack buffers as the real one does -
+// a mark a stat (0, 1, 2 or 4: the callers compare with 4 and 1) and a value
+// a stat - and notes both, so the draws after read the same bytes on both
+// passes (BE7; the standard row left them unfilled, "the group's").
+std::uint32_t PreviewEffect(const std::uint32_t* a, std::uint32_t answer) {
+    auto* const marks = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[2]));
+    auto* const values = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[3]));
+    static const unsigned char kMarks[] = {0, 1, 2, 4};
+    for (unsigned i = 0; i < 4; ++i) marks[i] = kMarks[Noise() % 4];
+    FillBytes(values, 8);
+    NoteBytes(marks, 4);
+    NoteBytes(values, 8);
+    return answer;
+}
+
 const Callee kStandard[] = {
     // the battle engine
     {BH_OURS(BattleTask_Create), 2, {kU8, kU8}, Answer::kByte, 0, at::kTaskCount - 1},
@@ -568,11 +629,13 @@ const Callee kStandard[] = {
     {BH_OURS(LoadDatFile), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(File_LoadDone), 0, {}, Answer::kFlag, 0, 0},
     {BH_OURS(Port_DroppedCall), 1, {kU8}, Answer::kGarbage, 0, 0},
-    // the battle's way out, the hooks' tail jumps (engine code nobody owns):
-    // 0x904AA0 = 5 and 0x904AA2 = 0, with 0x904AA1 = 1 (the win), 2, 3
-    {"BattleEnd_EnterStep1", bof3::addr::BattleEnd_EnterStep1, bof3::addr::BattleEnd_EnterStep1, 0, {}, Answer::kGarbage, 0, 0, {}, &EndWinEffect},
-    {"BattleEnd_EnterStep2", bof3::addr::BattleEnd_EnterStep2, bof3::addr::BattleEnd_EnterStep2, 0, {}, Answer::kGarbage, 0, 0},
-    {"BattleEnd_EnterStep3", bof3::addr::BattleEnd_EnterStep3, bof3::addr::BattleEnd_EnterStep3, 0, {}, Answer::kGarbage, 0, 0},
+    // the battle's way out, the hooks' tail jumps (BE4's since round twelve;
+    // the boss files call them by address, BH_AT, which StandIn resolves through
+    // the row's address): 0x904AA0 = 5 and 0x904AA2 = 0, with 0x904AA1 = 1 (the
+    // win), 2, 3
+    {BH_OURS(BattleEnd_EnterStep1), 0, {}, Answer::kGarbage, 0, 0, {}, &EndWinEffect},
+    {BH_OURS(BattleEnd_EnterStep2), 0, {}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleEnd_EnterStep3), 0, {}, Answer::kGarbage, 0, 0},
     // the spawn helpers (boss_spawn.cpp): the field actors a set-up finds by tag
     {BH_OURS(EnemyData_FindByTag), 1, {kU8}, Answer::kByte, 0xFF, 7},
     {BH_OURS(BossActor_Find), 1, {kU8}, Answer::kGarbage, 0, 0, {}, &ActorFindEffect},
@@ -651,7 +714,12 @@ const Callee kStandard[] = {
 // 0x446F50 / 0x446F80 are (a * b) / 100 clamped to 999 / 9999 / 100,
 // Battle_WrapIndex, 0x5B9450 is the CRT's memcpy) and the GTE family BE6's
 // BMAGIC slots read results of through pointers (Gte_* below; the five GTE
-// matrix calls kStandard records stay recorders).
+// matrix calls kStandard records stay recorders). Round twelve's folds
+// (2026-10-01, section 10.10): the masks at what ours reads where a group
+// re-listed a row narrower (BE1, BE2, BE4, BE5, BE7: the originals push whole
+// registers whose upper halves are leftovers), and the louder forms the groups
+// kept to themselves (Rand's 15 bits, the pop-ups' note, Input_Pressed moved
+// by a sound, the velocity pair turned, Equip_PreviewSet's buffers filled).
 const Callee kEngineStandard[] = {
     // text and messages: strings noted, pointers answered into the text buffer
     {BH_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0, {}, &TextPtrEffect},
@@ -659,10 +727,10 @@ const Callee kEngineStandard[] = {
     // the destination, the format and one value: a word past what the caller pushed is its own
     // frame, different in the copy and in ours (self-test); a group formatting more lists its own
     {BH_THEIRS(Crt_sprintf), 3, {0, kAll, kAll}, Answer::kGarbage, 0, 0, {}, &SprintfEffect},
-    {BH_OURS(Text_DrawAt), 5, {kAll, kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},
-    {BH_OURS(Text_DrawSmall), 5, {kAll, kAll, kAll, kU8, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},
-    {BH_OURS(Text_DrawFont12), 4, {kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &TextArg3Effect},
-    {BH_OURS(Text_DrawFont8), 4, {kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &TextArg3Effect},
+    {BH_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},   // msgbox.cpp: shorts; Text_DrawString bytes
+    {BH_OURS(Text_DrawSmall), 5, {kU16, kU16, kU8, kU8, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},
+    {BH_OURS(Text_DrawFont12), 4, {kU16, kU16, 0x3Fu, 0}, Answer::kGarbage, 0, 0, {}, &TextArg3Effect},   // S16 pen, colour & 0x3F
+    {BH_OURS(Text_DrawFont8), 4, {kU16, kU16, 0x3Fu, 0}, Answer::kGarbage, 0, 0, {}, &TextArg3Effect},
     {BH_OURS(Text_CharCount), 1, {0}, Answer::kByte, 0, 17, {}, &TextArg0Effect},
     {BH_OURS(BattleBanner_Add), 5, {kAll, kAll, kAll, kAll, 0}, Answer::kGarbage, 0, 0, {}, &BannerTextEffect},
     {BH_OURS(BattleBanner_Set), 6, {kAll, kU8, kU8, kU8, kU8, kAll}, Answer::kGarbage, 0, 0},
@@ -675,21 +743,21 @@ const Callee kEngineStandard[] = {
     {BH_OURS(Window_ResetAll), 0, {}, Answer::kGarbage, 0, 0},
     {BH_OURS(ItemMenu_FreeWindows), 0, {}, Answer::kGarbage, 0, 0},
     // menu and window drawing
-    {BH_OURS(Menu_DrawPiece), 4, {kU16, kU16, kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Menu_DrawPieces), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},   // the colour: a byte its callers load into al only (0x42D8C0), self-test
-    {BH_OURS(Menu_DrawBorder), 4, {kAll, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Menu_DrawBackdrop), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Menu_DrawHand), 3, {kAll, kAll, 0}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Menu_DrawIcon), 6, {kAll, kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Menu_DrawIcon8), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Menu_DrawScrollBar), 7, {kAll, kAll, kAll, kAll, kU8, kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(BattleWin_DrawCommandLabel), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(BattleWin_DrawCommandCross), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(BattleWin_DrawPartyStatus), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(BattleWin_DrawQuadF4), 4, {kAll, kU16, kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(BattleWin_DrawLineAdd), 7, {kU16, kU16, kU16, kU16, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},
-    {BH_OURS(BattleWin_DrawLineHalf), 7, {kU16, kU16, kU16, kU16, kAll, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawPiece), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0},   // Menu_PieceRect's id & 0xFF, the flag byte
+    {BH_OURS(Menu_DrawPieces), 4, {kU16, kU16, kAll, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawBox), 6, {kU16, kU16, kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0},   // menu_windows.cpp: U16 x / y / w / h;   // the colour: a byte its callers load into al only (0x42D8C0), self-test
+    {BH_OURS(Menu_DrawBorder), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawBackdrop), 1, {kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawHand), 3, {kU16, kU16, 0}, Answer::kGarbage, 0, 0},   // char_stats.cpp: x & 0xFFFF, y & 0xFFFF
+    {BH_OURS(Menu_DrawIcon), 6, {kU8, kU16, kU16, kU8, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawIcon8), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Menu_DrawScrollBar), 7, {kAll, kU8, kU16, kU16, kU8, kU8, kU8}, Answer::kGarbage, 0, 0},   // the counts bytes, x / y S16
+    {BH_OURS(BattleWin_DrawCommandLabel), 1, {kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawCommandCross), 2, {kU16, kU16}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawPartyStatus), 2, {kU16, kU16}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleWin_DrawQuadF4), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0},   // battle_window_draw.cpp: S16, bytes
+    {BH_OURS(BattleWin_DrawLineAdd), 7, {kU16, kU16, kU16, kU16, kU8, kU8, kU8}, Answer::kGarbage, 0, 0},   // the colours' low bytes (LineBody)
+    {BH_OURS(BattleWin_DrawLineHalf), 7, {kU16, kU16, kU16, kU16, kU8, kU8, kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(Gpu_GetClut), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Gpu_SetLineF2), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Gpu_SetLineF3), 1, {kAll}, Answer::kGarbage, 0, 0},
@@ -708,18 +776,18 @@ const Callee kEngineStandard[] = {
     {BH_OURS(BattleQueue_Push), 3, {kU8, kU8, kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(BattleTask_ClearAll), 0, {}, Answer::kGarbage, 0, 0},
     {BH_OURS(Battle_ApplyDamage), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Battle_CalcDamage), 3, {kAll, kAll, kU16}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_CalcDamage), 3, {kU8, kU8, kU16}, Answer::kGarbage, 0, 0},   // both actors' bytes
     {BH_OURS(Battle_BuildTurnOrder), 0, {}, Answer::kGarbage, 0, 0},
     {BH_OURS(Battle_ClearActingFlags), 0, {}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Battle_ClearStatus), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_ClearStatus), 2, {kU8, kAll}, Answer::kGarbage, 0, 0},   // the actor's byte (cmp dl, 2; and eax, 0xFF)
     {BH_OURS(Battle_DefaultTarget), 1, {kAll}, Answer::kByte, 0xFF, 10},   // an actor 0..10, or 0xFF for none
     {BH_OURS(Battle_PlayActorCue), 1, {kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(Battle_PlayHitSound), 0, {}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Battle_ReturnQueuedItem), 1, {kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_ReturnQueuedItem), 1, {kU8}, Answer::kGarbage, 0, 0},   // battle_setup.cpp: the low byte
     {BH_OURS(Battle_ReturnTrue), 0, {}, Answer::kFlag, 0, 0},
     {BH_OURS(Battle_RollPendingFlag), 0, {}, Answer::kFlag, 0, 0},
     {BH_OURS(Battle_SetActorBit), 1, {kU8}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Battle_SetDamagePopup), 2, {kU16, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Battle_SetDamagePopup), 2, {kU16, kU8}, Answer::kGarbage, 0, 0, {}, &PopupEffect},   // the actor's byte; the mark noted
     {BH_OURS(Battle_SetHitPopup), 0, {}, Answer::kGarbage, 0, 0},
     {BH_OURS(Battle_StatusTint), 1, {kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(Battle_WrapIndex), 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},
@@ -738,12 +806,12 @@ const Callee kEngineStandard[] = {
     {"0x42E0E0", 0x42E0E0, 0x42E0E0, 0, {}, Answer::kGarbage, 0, 0},             // BATE's, unlisted in the cut (part 7)
     {"0x42E250", 0x42E250, 0x42E250, 0, {}, Answer::kGarbage, 0, 0},
     {"0x42E2F0", 0x42E2F0, 0x42E2F0, 0, {}, Answer::kFlag, 0, 0},
-    {"EnemyOp_CastDoneCheck", bof3::addr::EnemyOp_CastDoneCheck, bof3::addr::EnemyOp_CastDoneCheck, 0, {}, Answer::kGarbage, 0, 0},             // no start list has it (after 0x437200's padding)
-    {"BattleObj_HitPose", bof3::addr::BattleObj_HitPose, bof3::addr::BattleObj_HitPose, 0, {}, Answer::kGarbage, 0, 0},             // no start list has it (after BattleObj_PickPose's table)
+    {BH_OURS(EnemyOp_CastDoneCheck), 0, {}, Answer::kGarbage, 0, 0},                // BE3's (no start list had it: after 0x437200's padding)
+    {BH_OURS(BattleObj_HitPose), 0, {}, Answer::kGarbage, 0, 0},                    // BE3's (no start list had it: after BattleObj_PickPose's table)
     {"0x44F1D0", 0x44F1D0, 0x44F1D0, 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {"0x44F6A0", 0x44F6A0, 0x44F6A0, 2, {0, kAll}, Answer::kFlag, 0, 0},         // reads its second word only
+    {"0x44F6A0", 0x44F6A0, 0x44F6A0, 2, {0, kU8}, Answer::kFlag, 0, 0},          // reads its second word only, and hands 0x44F770 its byte (cmp cl, 2)
     {"0x44FB30", 0x44FB30, 0x44FB30, 0, {}, Answer::kGarbage, 0, 0},
-    {"0x452DD0", 0x452DD0, 0x452DD0, 1, {kAll}, Answer::kFlag, 0, 0},
+    {"0x452DD0", 0x452DD0, 0x452DD0, 1, {kU8}, Answer::kFlag, 0, 0},         // reads the low byte (its disassembly); every caller pushes a register's stale upper bytes
     {"0x452EB0", 0x452EB0, 0x452EB0, 0, {}, Answer::kFlag, 0, 0},
     {"0x452F10", 0x452F10, 0x452F10, 0, {}, Answer::kFlag, 0, 0},
     {"0x4CF4B0", 0x4CF4B0, 0x4CF4B0, 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
@@ -752,23 +820,28 @@ const Callee kEngineStandard[] = {
     {"0x59DB70", 0x59DB70, 0x59DB70, 6, {kAll, kAll, kU8, kU8, kU16, kU8}, Answer::kGarbage, 0, 0},
     {"0x5B9450", 0x5B9450, 0x5B9450, 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},   // the CRT's memcpy
     // items, stats, the party
-    {BH_OURS(Inventory_Add), 3, {kAll, kU8, kAll}, Answer::kFlag, 0, 0},
-    {BH_OURS(Inventory_Remove), 3, {kAll, kU8, kU8}, Answer::kFlag, 0, 0},
-    {BH_OURS(Item_CanUse), 4, {kU8, kAll, kAll, kAll}, Answer::kFlag, 0, 0},
+    {BH_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0},   // char_stats.cpp, scena_sx.cpp: low bytes only
+    {BH_OURS(Inventory_Remove), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0},
+    {BH_OURS(Item_CanUse), 4, {kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0},   // menu_windows.cpp: mode 2 reads the category and the item as bytes
     {BH_OURS(Item_EquipMask), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Item_IconKind), 2, {kU8, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Equip_PreviewSet), 4, {kAll, kAll, 0, 0}, Answer::kGarbage, 0, 0},   // marks, values: the caller's buffers (the group's)
-    {BH_OURS(Stat_AddClamped), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {BH_OURS(Stat_AddCap999), 2, {kAll, kAll}, Answer::kFlag, 0, 0},
-    {BH_OURS(PartySet_Select), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Item_IconKind), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},   // char_stats.cpp: bytes
+    {BH_OURS(Equip_PreviewSet), 4, {kAll, kAll, 0, 0}, Answer::kGarbage, 0, 0, {}, &PreviewEffect},   // marks, values: the caller's buffers, filled and noted
+    {BH_OURS(Stat_AddClamped), 2, {kAll, kU16}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Stat_AddCap999), 2, {kAll, kU16}, Answer::kFlag, 0, 0},
+    {BH_OURS(PartySet_Select), 2, {kU8, kU8}, Answer::kGarbage, 0, 0},
     // sprites, sound, tasks
     {BH_OURS(Sprite_ReleaseTint), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Sprite_SetTint), 5, {kAll, kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0},
-    {BH_OURS(Sprite_AnimFromSet), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Sprite_AnimFromSet), 4, {kU8, kU16, kAll, kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Sprite_LoadPalette), 2, {kAll, kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(Sprite_SetClutStp), 0, {}, Answer::kGarbage, 0, 0},
     {BH_OURS(Sound_StopChannels), 0, {}, Answer::kGarbage, 0, 0},
     {BH_OURS(Task_Restart), 1, {kAll}, Answer::kGarbage, 0, 0},
+    // round twelve's folds, the louder forms (section 10.10): before kStandard, so these stand
+    {BH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0, {}, &RandRangeEffect},                       // 15 bits, as the CRT's (BE2)
+    {BH_OURS(Sound_PlayEffect), 1, {kU16}, Answer::kGarbage, 0, 0, {}, &SoundInputEffect},       // Input_Pressed moved half the time (BE5)
+    {BH_OURS(Battle_TurnVectorC), 1, {kAll}, Answer::kGarbage, 0, 0, {}, &TurnEffect},            // the velocity pair turned (BE2; BE4's function)
+    {BH_OURS(Battle_SetApPopup), 2, {kU16, kU8}, Answer::kGarbage, 0, 0, {}, &PopupEffect},        // the AP pop-up as the damage one (BE5; BE6's function)
     // the GTE BMAGIC reads back through pointers: both sides run the real one
     {BH_OURS(Gte_LoadVertex), 1, {kAll}, Answer::kThrough, 0, 0},
     {BH_OURS(Gte_LoadVertices3), 1, {kAll}, Answer::kThrough, 0, 0},

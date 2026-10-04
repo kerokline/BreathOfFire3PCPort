@@ -46,6 +46,7 @@
 // (docs/field_e1.md section 7).
 #include "game/field_e1.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -53,6 +54,7 @@
 #include "game/field_e1_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -242,9 +244,9 @@ extern "C" void __cdecl FieldPanel_DrawShade(void) {
     p[6] = 0x20;
     p[5] = 0x20;
     p[4] = 0x20;
-    SetLong(p + 8, 0);
+    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));   // DIV-0041: (-53, 0) 426 wide under the wide picture
     SetLong(p + 0xC, 0);
-    SetLong(p + 0x14, 0x43A00000);
+    SetLong(p + 0x14, std::bit_cast<std::int32_t>(Widescreen_FillWidth()));   // 0x43A00000, 320.0f narrow
     SetLong(p + 0x18, 0x43700000);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
     SH_CALL(Gfx_CommitPrim)(2, 0x1C);

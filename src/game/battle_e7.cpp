@@ -24,7 +24,10 @@
 // calls through whatever the stack holds beyond them, and the three open
 // states abort on a task slot past the pool where the original writes past it
 // (the owner's rule for an unchecked index, round9 doc section 6; both are
-// described in docs/battle_e7.md section 7, never fixed). Every call goes
+// described in docs/battle_e7.md section 7, never fixed). One divergence has
+// patch sites inside these bodies and survives in ours: DIV-0041
+// (widescreen.cpp) widens the three list slide-outs' bounds; ours reads each
+// bound from the operand it patches. Every call goes
 // through the harness (BH_CALL / BH_AT), so the start-up fuzz can stand
 // recorders in for the callees.
 #include "game/battle_e7.h"
@@ -36,6 +39,7 @@
 #include "game/battle_e7_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -592,12 +596,13 @@ extern "C" void __cdecl GeneWin_ListSlideIn(void) {
 }
 
 // original 0x599050: the list slides left by 0x20, after its draw; at +4 <=
-// -0xA5 (signed) the window is freed instead (a tail jump).
+// -0xA5 (signed) the window is freed instead (a tail jump). The bound is the
+// operand DIV-0041 widens (-0xDA in the wide view), read there.
 extern "C" void __cdecl GeneWin_ListSlideOut(void) {
     BH_CALL(GeneWin_DrawList)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v <= -0xA5) {
+    if (v <= S16(W(At(at::kListOutBound)))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -658,12 +663,12 @@ extern "C" void __cdecl GeneWin_List2SlideIn(void) {
 }
 
 // original 0x599440: after the draw, right by 0x20; at +4 >= 0x15B the
-// window is freed instead.
+// window is freed instead (DIV-0041's operand, 0x190 wide).
 extern "C" void __cdecl GeneWin_List2SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= 0x15B) {
+    if (v >= S16(W(At(at::kList2OutBound)))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -699,12 +704,12 @@ extern "C" void __cdecl GeneWin_List3SlideIn(void) {
 }
 
 // original 0x599540: after the draw, right by 0x20; at +4 >= 0x143 the
-// window is freed instead.
+// window is freed instead (DIV-0041's operand, 0x178 wide).
 extern "C" void __cdecl GeneWin_List3SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= 0x143) {
+    if (v >= S16(W(At(at::kList3OutBound)))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -739,15 +744,28 @@ extern "C" void __cdecl GeneWin_List3States(void) {
 // the record's +0x10 = category << 8 | item, and it is first drawn dim in
 // colour 7; the row +0xA / +0xB raised by 2 pixels; then its icon
 // (0x66B5B4) and name. Last the pieces 0x66B508 and the frame's edges.
+//
+// DIVERGENCE DIV-0065: the labels' row. The original draws label k at y +
+// 0x27 + 13 k and the values at y + 0x1C + 13 k, so each label sits two
+// pixels above the next stat's value - the first value has no label and the
+// fourth label is drawn under the frame, off the box. The field's member
+// panel (0x5738A0: the label at y + 8, the value at y + 0xA) has the label
+// two pixels above its own value; 0x27 is that relation one 13-pixel row
+// down, 0x1A + 0xD. Ours draws the labels at y + 0x1A + 13 k once the flag
+// is on; BattleE7_Inject sets it after the self-test, which compares the
+// original's rows.
+unsigned char g_equip_labels_row = 0;
+
 extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, U record) {
     const int xi = static_cast<int>(x), yi = static_cast<int>(y);
+    const int label_y = g_equip_labels_row ? 0x1A : 0x27;
     BH_CALL(Menu_DrawBox)(xi + 4, yi + 4, 0x78, 0xA3, 0, B(at::kColour));
     unsigned char* const ch = At(at::kCharRecords + (member & 0xFF) * at::kCharStride);
     unsigned n = BH_CALL(Text_CharCount)(ch) & 0xFF;
     if (n > 5) n = 5;
     BH_CALL(Text_DrawAt)(xi - 6 * static_cast<int>(n) + 0x3E, yi + 7, 0, 5, ch);
     for (unsigned k = 0; k < 4; ++k)
-        BH_CALL(Text_DrawAt)(xi + 5, yi + 0x27 + 13 * static_cast<int>(k), 0, 4, Text(at::kStatLabels[k]));
+        BH_CALL(Text_DrawAt)(xi + 5, yi + label_y + 13 * static_cast<int>(k), 0, 4, Text(at::kStatLabels[k]));
     BH_CALL(Char_RecalcStats)(ch);
     static constexpr unsigned kStats[4] = {0x24, 0x26, 0x2A, 0x28};
     for (unsigned k = 0; k < 4; ++k) {
@@ -832,8 +850,32 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
 
 // ============================================================================
 
+// DIV-0041's three patch sites inside our bodies: the slide-outs read their
+// bound from the imm16 of the original's `cmp ax, imm16` (widescreen.cpp
+// kSlides). Refused unless the two bytes before each are that instruction's
+// 66 3D and the bound is the original's or the widened one.
+namespace {
+void CheckSlideBound(U operand, int original) {
+    const int wide = original < 0 ? original - static_cast<int>(Widescreen_Live()) : original + static_cast<int>(Widescreen_Live());
+    const int bound = S16(W(At(operand)));
+    if (At(operand - 2)[0] != 0x66 || At(operand - 1)[0] != 0x3D || (bound != original && bound != wide))
+        bof3::Fatal("battle_e7: 0x%X should be `cmp ax, %d` (or %d, DIV-0041), holds %02X %02X then %d", operand - 2, original,
+                    wide, At(operand - 2)[0], At(operand - 1)[0], bound);
+}
+}  // namespace
+
 void BattleE7_Inject() {
+    CheckSlideBound(at::kListOutBound, -0xA5);
+    CheckSlideBound(at::kList2OutBound, 0x15B);
+    CheckSlideBound(at::kList3OutBound, 0x143);
     if (bof3::WantsShadow("battle_e7")) battle_e7::SelfTest();
+    // DIVERGENCE DIV-0065: after the self-test, which compares the original's rows.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("BattleEquipLabelsRow", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_equip_labels_row)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0065    the battle equip window's stat labels beside their values");
+    }
     BOF3_INJECT(BattleResultWin_DrawLevelUp);
     BOF3_INJECT(BattleResultWin_DrawFrame);
     BOF3_INJECT(BattleResultWin_DrawDrops);

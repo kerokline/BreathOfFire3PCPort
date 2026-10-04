@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-10-01 — one hundred and ninety-three entries, D1..D196 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful))
+**Status:** IN PROGRESS (2026-10-03 — two hundred and thirty-five entries, D1..D238 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -4724,3 +4724,1714 @@ in each; none is known to show.
 **Status:** latent, harmless by reading; `Field_FloorHurt`, the BMAGIC loops
 and `AreaMap_ClearCell`'s walk abort in ours where the original would read
 on.
+
+## D197 — A space in a growing shout commits a primitive with a stale glyph word (fixed by DIV-0070)
+
+**Seen:** the owner, 2026-10-02, in play, English overlay: the game crashed
+in area `0x63`, message `0x24`, the message box in its grow effect
+(`build/bof3x.crash-30104-0.dmp` in the main checkout: `Font_UnpackGlyph`
+reading `0x17053EA0`). Capcom's, not ours: `0x4987E0` was still Capcom's
+code, called by address from our `MsgBox_Step`.
+
+**Established:** `0x4987E0` (now `MsgBox_EffectDraw`) jumps over the glyph
+word `+0x16` and the eight texture bytes for a `0x20` (`0x498819`) and
+commits the primitive anyway, so the packet slot's leftover glyph word is
+drawn - here `0xC254`, 14 MB past `Font_GlyphData`. The PSX twin does the
+same for its word separator `0xFF`. Capcom's Chinese script never puts a
+space in a grow span; the English overlays do in 15 places (areas 11, 40,
+41, 99), each a stale quad on the original draw and a crash when the word
+is far enough out ([`msgbox.md`](msgbox.md) §9).
+
+**Status:** fixed by DIV-0070 (a space commits nothing); recurs under
+`BOF3X_ORIGINAL=MsgBox_EffectDraw`. Not yet seen fixed in game.
+
+## D198 — A textured quad's far edge samples the texel past it above scale 1: the fishing menu's stray frame lines
+
+**Seen:** owner, 2026-09-30 (`analysis/shots/owner_catalogue/fishing_equip_menu.webp`),
+English, the wide picture at scale 4: a thin vertical line right of the
+EQUIP and GUIDE boxes of the fishing equip menu (and right of the ROD / LURE
+list), and a short mark under EQUIP's bottom edge. The camping route's frame
+3360 (`analysis/shots/camping/f3360.png`, 1704 x 960) shows the same:
+measured off it, the line is **two screen pixels wide - half a game pixel** -
+at game x 159.75 (narrow), 3.75 units right of the box's frame, olive like
+the frame; it runs y 88..118 beside EQUIP, y 150..215 beside GUIDE and
+y 105..207 beside the list - **0x1E, 0x40 and 0x68 high: exactly the heights
+of the side quads** `Panel_DrawEdgeQuad(x + 0x88, y + 0x18, 0x1E, 1)`,
+`(x + 0x88, y + 0x58, 0x40, 1)` (`EffectKind0F_DrawTwinFrame` `0x469490`)
+and `(x + 0x80, y + 0x28, 0x68, 4)` (`EffectKind0F_DrawItemFrame`
+`0x469630`). **Configuration:** ours, English, wide; not yet seen narrow or
+under `BOF3X_ORIGINAL='*'` (the reading below says both show it).
+
+**Cause, read 2026-10-03 (FL of the fix wave).** `Panel_DrawEdgeQuad`
+`0x468950` (ours, faithful) builds a `POLY_FT4` the PlayStation way: the
+quad `w` units wide (the record's word, 8 for records 0..3 at `0x653E6C`),
+texture u from `u` to `u + w` (`0x10 .. 0x18` for record 1). The PlayStation
+never samples `u + w`: its rasteriser leaves out the right column. The
+port's `D3d_DrawPolyFT4` `0x5A0C40` takes each corner's coordinate from
+`D3d_TexCoords` `0x7CA9E0`, `tc[i] = (i + 0.512) / 256`, so the far corner
+is `u + w + 0.512` texels; at scale `k` the last screen pixel of the quad
+samples `u + w + 0.512 - 1 / k`, past `u + w` once `k` is 2 or more - the
+last half game pixel at 2 (the port's own 640 x 480), the last two of four
+screen columns at 4. The texel there is the next piece of the frame art
+in the page, opaque: the line. The records are the PlayStation's byte for
+byte (the US module's at `0x801E2190`), so the data is not at fault; the
+port's coordinate table is. The mark under EQUIP is probably the same on a
+sprite's bottom (or right) edge (`UiSprite_Draw` `0x52CFE0` builds the same
+primitive) - not settled. It is D28's and DIV-0010's family (`SPRT`'s far
+edge), on the polygon path, which nobody had read for its far `u` (d3d-draw.md
+section 6's last paragraph: "depends on the far `u` the game's builders put
+in the primitive").
+
+**Ours does the same** (`D3d_DrawPolyFT4` and `Panel_DrawEdgeQuad` are ours
+and fuzzed equal). **Not fixed here:** the cure is renderer-wide - every
+`POLY_FT4` whose far edge is `u + w` (DIV-0010's rule for the polygon path:
+move a far corner in by `1 / k` texels, or the table's 0.512 to 0.5 with
+half a texel in) - and changes every textured quad of the game, so it is
+the owner's call and an entry of its own. **What settles it** (for the
+coordinator, no route needed beyond `campingFishing.txt` frame 3360):
+the same frame with `BOF3X_LANG=original` and with `wide=0` (the line
+should stay, it is neither language nor width), and `BOF3X_SCALE=1` (the
+line should go).
+
+**Status:** Capcom's (the port's), by reading; seen in ours at scale 4.
+
+## D199 — The world map's nearer cells paint over the party's shadow (the original's, PlayStation too; fixed behind a switch, DIV-0071)
+
+**Fixed 2026-10-03, off by default:** `BOF3X_LAYERING=1` draws a sprite after
+the walkable floor under its feet ([`sprite-draw-order.md`](sprite-draw-order.md)
+§19). What follows is the defect as found.
+
+**Seen:** the owner, 2026-09-30, in play on the world map. The party sprite's
+shadow ellipse ends at a straight or diagonal edge
+(`analysis/shots/owner_catalogue/worldmap_shadow_1..3.png`). On open ground,
+in their PlayStation screenshot of the Lost Shore, it is whole. **Configuration:
+Capcom's.** The sprite's box is pixel-identical between ours and
+`BOF3X_ORIGINAL='*'`, including under Capcom's DirectDraw device
+(`worldmap_orig`), and the same with the wide picture.
+
+**Established** ([`world-map.md`](world-map.md) §8): the cut moves with the
+ground, not with the sprite. It is whole on open ground and cut along hedge,
+slope and fence edges. The sibling's renders of the PlayStation code show the
+same thing: whole in some places and cut in others, and cut at the same node,
+Cedar Woods (`AREA033_f141611`), as the PC's `f01260`. By reading:
+- `Sprite_DrawPass` emits each layer's map-cell row (`DrawLayer_Open`) before
+  that layer's sprites, so the rows nearer the camera are drawn after the party;
+- their quads paint over whatever of the shadow lies below the feet, and
+  sometimes a foot (the field's "floor over Ryu's foot",
+  [`sprite-draw-order.md`](sprite-draw-order.md) §11).
+
+The slots involved are not measured.
+
+**Status:** the original design's painter's order, not a port defect. Kept.
+A world-map-only fix (draw the shadow after the cells in front) is proposed to
+the owner in `world-map.md` §8.3. It would be an Intent divergence, with the
+number this wave reserved for it.
+
+## D200 — Round thirteen's dispatchers and table indexes, unchecked: 257 dispatchers and the indexes beside them, in the effect engine (latent; ours aborts past them)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, by every round-thirteen effect group (their docs'
+defects sections, named below). D59's, D133's, D162's and D175's class in
+the effect engine; one entry for the class, the groups' docs carry the
+tables.
+
+**Established, the dispatchers:** `jmp [table + 4 * byte]` (or `call`) with
+no compare, the byte a record's `+1` (a kind's state), `+2` (a sub-state, or
+kind 0x18's sub-kind's state), `+3` (a step) or a sub-record's `+1`. The
+tables lie end to end, so a byte past one runs the next table's entries or
+data. Every group found that the writers of the bytes **in its band** keep
+them inside their tables; the writers outside it the docs name are kind
+0x66's states 3..5 (set from outside, E2G), kind 0x73's `+1` (the spawner's:
+area 132 writes 0 and 1, E3C), kind 0x8D's state 2 (E4C), kind 0x94's state
+3 (the spawner's, E4D), `Scena07_TakeEffect49`'s argument stored into `+1`
+(its callers pass 0..9, E2D) and `Cond_ByteFE` for sub-kind 0x61's run (the
+areas' scripts', E6D). Kind 0x69's dispatcher calls through a stack table of
+three: past it, its own saved registers and return address (E3B). The one
+case where the band's own code steps a byte past its table is D225. The
+257 dispatchers, as the round's `symbols.toml` evidence strings record them
+(a search of the round's `[[func]]` rows for `jmp [` / `call [` beside
+"unbounded", "unchecked" or "no compare"; where a doc counts more - E2F's
+eight tables and `EffectKind52_MoveSparks`' call by a spark's `+1`, E6C's
+seven, E1E's other stages, E1B's animation scripts past their end - the
+doc's table is the fuller):
+
+- E1A ([`effect_1a.md`](effect_1a.md) §6, 13): `EffectKind01_Run` `0x462BA0`,
+  `EffectKind07_Run` `0x462E50`, `EffectKind08_Run` `0x463040`,
+  `EffectKind09_Run` `0x463440`, `EffectKind0B_Run` `0x463EE0`,
+  `EffectKind02_Run` `0x464660`, `EffectKind03_Run` `0x464F20`,
+  `EffectKind05_Run` `0x465310`, `EffectKind0A_Run` `0x4658C0`,
+  `EffectKind0C_Run` `0x465A60`, `EffectKind0D_Run` `0x465F10`,
+  `EffectKind0F_Run` `0x466080`, `EffectKind1A_Run` `0x4667A0`.
+- E1B ([`effect_1b.md`](effect_1b.md) §7, 7): `EffectKind0F_Child0`
+  `0x467520`, `EffectKind0F_Child1` `0x4677F0`, `EffectKind0F_Child2`
+  `0x467A60`, `EffectKind0F_Child3` `0x467D60`, `EffectKind0F_Child4`
+  `0x468020`, `EffectKind0F_Child5` `0x468320`, `EffectKind14_Run` `0x46A5E0`.
+- E1C ([`effect_1c.md`](effect_1c.md) §7, 7): `EffectKind3C_Run` `0x46A930`,
+  `EffectKind1C_Run` `0x46D890`, `EffectKind1D_Run` `0x46DD50`,
+  `EffectKind1E_Run` `0x46E200`, `EffectKind1E_ShardsDraw` `0x46E3B0`,
+  `EffectKind1F_Run` `0x46EE90`, `EffectKind20_Run` `0x46EF70`.
+- E1D ([`effect_1d.md`](effect_1d.md) §7, 7): `EffectKind21_Run` `0x46F2B0`,
+  `EffectKind22_Run` `0x46F450`, `EffectKind23_Run` `0x46F790`,
+  `EffectKind24_Run` `0x46F820`, `EffectKind25_Run` `0x46F900`,
+  `EffectKind26_Run` `0x46FE60`, `EffectKind27_Run` `0x46FEE0`.
+- E1E ([`effect_1e.md`](effect_1e.md) §10, 1): `LeaderPanel_S2` `0x528F50`.
+- E1F ([`effect_1f.md`](effect_1f.md) §6, 2): `ChoiceMenu_Run` `0x52A6C0`,
+  `ExtraSlots_Step` `0x52A6D0`.
+- E1G ([`effect_1g.md`](effect_1g.md) §6, 1): `ItemTrade_Leave` `0x5940F0`.
+- E2A ([`effect_2a.md`](effect_2a.md) §7, 7): `EffectKind28_Run` `0x470300`,
+  `EffectKind29_Run` `0x4709E0`, `EffectKind2A_Run` `0x4710A0`,
+  `EffectKind2B_Run` `0x471930`, `EffectKind2C_Run` `0x471EA0`,
+  `EffectKind2E_Run` `0x472060`, `EffectKind2D_Run` `0x472420`.
+- E2B ([`effect_2b.md`](effect_2b.md) §7, 8): `EffectKind2F_Run` `0x4731A0`,
+  `EffectKind33_Run` `0x4734F0`, `EffectKind35_Run` `0x4737A0`,
+  `EffectKind35_ShardsDraw` `0x473850`, `EffectKind38_Run` `0x473DD0`,
+  `EffectKind39_Run` `0x473FA0`, `EffectKind3B_Run` `0x4741E0`,
+  `EffectKind3D_Run` `0x474940`.
+- E2C ([`effect_2c.md`](effect_2c.md) §7, 7): `EffectKind3E_Run` `0x474F40`,
+  `EffectKind3F_Run` `0x475090`, `EffectKind40_Run` `0x475760`,
+  `EffectKind42_Run` `0x475CA0`, `EffectKind43_Run` `0x475CF0`,
+  `EffectKind6B_Run` `0x475DE0`, `EffectKind44_Run` `0x476680`.
+- E2D ([`effect_2d.md`](effect_2d.md) §7, 10): `EffectKind45_Run` `0x4771B0`,
+  `EffectKind46_Run` `0x477BA0`, `EffectKind47_Run` `0x477E10`,
+  `EffectKind48_Run` `0x4781B0`, `EffectKind49_Run` `0x478550`,
+  `EffectKind49_V0Run` `0x478570`, `EffectKind49_V1Run` `0x478600`,
+  `EffectKind49_V2Run` `0x478680`, `EffectKind49_V3Run` `0x478880`,
+  `EffectKind49_V4Run` `0x4789B0`.
+- E2E ([`effect_2e.md`](effect_2e.md) §7, 10): `EffectKind48_State8_Run`
+  `0x478B30`, `EffectKind48_State9_Run` `0x478C30`, `EffectKind48_State10_Run`
+  `0x478D30`, `EffectKind48_State11_Run` `0x478E40`,
+  `EffectKind48_State12_Run` `0x478EF0`, `EffectKind4A_Run` `0x47A950`,
+  `EffectKind4B_Run` `0x47AA50`, `EffectKind4C_Run` `0x47ABA0`,
+  `EffectKind4D_Run` `0x47B2B0`, `EffectKind4E_Run` `0x47B630`.
+- E2F ([`effect_2f.md`](effect_2f.md) §7, 7): `EffectKind4F_Run` `0x47B970`,
+  `EffectKind50_Run` `0x47BB70`, `EffectKind51_Run` `0x47BC10`,
+  `EffectKind52_Run` `0x47C090`, `EffectKind52_Sparks` `0x47C0B0`,
+  `EffectKind53_Run` `0x47D600`, `EffectKind56_Run` `0x47D910`.
+- E2G ([`effect_2g.md`](effect_2g.md) §7, 11): `EffectKind66_Run` `0x47DBE0`,
+  `EffectKind18Sub20_Run` `0x47DFD0`, `EffectKind15_Run` `0x47E2D0`,
+  `EffectKind54_Run` `0x47E680`, `EffectKind55_Run` `0x47EA90`,
+  `EffectKind57_Run` `0x47ECA0`, `EffectKind5A_Run` `0x47EEA0`,
+  `EffectKind5B_Run` `0x47EF40`, `EffectKind5D_Run` `0x47F2B0`,
+  `EffectKind5E_Run` `0x47F5D0`, `EffectKind5F_Run` `0x47FD80`.
+- E3A ([`effect_3a.md`](effect_3a.md) §7, 5): `EffectKind60_Run` `0x4801F0`,
+  `EffectKind61_Run` `0x480590`, `EffectKind62_Run` `0x480B70`,
+  `EffectKind64_Run` `0x480D40`, `EffectKind68_Run` `0x481150`.
+- E3B ([`effect_3b.md`](effect_3b.md) §7, 10): `EffectKind63_Run` `0x4823D0`,
+  `EffectKind65_Run` `0x4828B0`, `EffectKind67_Run` `0x482A00`,
+  `EffectKind69_Run` `0x482A80`, `EffectKind69_PartRun` `0x482BD0`,
+  `EffectKind69_Part0` `0x482BF0`, `EffectKind69_Part1` `0x482DF0`,
+  `EffectKind69_Part2` `0x483540`, `EffectKind6C_Run` `0x483BA0`,
+  `EffectKind6C_DrawSparks` `0x483D10`.
+- E3C ([`effect_3c.md`](effect_3c.md) §7, 9): `EffectKind6E_Run` `0x484050`,
+  `EffectKind6D_Run` `0x4842A0`, `EffectKind6F_Run` `0x4845F0`,
+  `EffectKind72_Run` `0x484F50`, `EffectKind73_Run` `0x4852F0`,
+  `EffectKind73_RunA` `0x485310`, `EffectKind73_RunB` `0x4853B0`,
+  `EffectKind74_Run` `0x485440`, `EffectKind75_Run` `0x485BA0`.
+- E3D ([`effect_3d.md`](effect_3d.md) §7, 11): `EffectKind7B_Run` `0x485EC0`,
+  `EffectKind7C_Run` `0x486020`, `EffectKind77_Run` `0x486180`,
+  `EffectKind77_Count` `0x4861A0`, `EffectKind77_Resume` `0x486280`,
+  `EffectKind78_Run` `0x486360`, `EffectKind7D_Run` `0x486640`,
+  `EffectKind7F_Run` `0x486F10`, `EffectKind80_Run` `0x487270`,
+  `EffectKind81_Run` `0x487890`, `EffectKind82_Run` `0x487C10`.
+- E4A ([`effect_4a.md`](effect_4a.md) §7, 5): `EffectKind83_Run` `0x488220`,
+  `EffectKind84_Run` `0x4887E0`, `EffectKind85_Run` `0x4889E0`,
+  `EffectKind86_Run` `0x488BE0`, `EffectKind87_Run` `0x488F60`.
+- E4B ([`effect_4b.md`](effect_4b.md) §7, 8): `EffectKind88_Run` `0x4896A0`,
+  `EffectKind89_Run` `0x489BE0`, `EffectKind9D_Run` `0x489D70`,
+  `EffectKind9F_Run` `0x48A350`, `EffectKindA4_Run` `0x48A4C0`,
+  `EffectKind8A_Run` `0x48A5F0`, `EffectKind8B_Run` `0x48AB30`,
+  `EffectKind8C_Run` `0x48AC30`.
+- E4C ([`effect_4c.md`](effect_4c.md) §7, 6): `EffectKind8D_Run` `0x48B200`,
+  `EffectKind8E_Run` `0x48B300`, `EffectKind8F_Run` `0x48B930`,
+  `EffectKind90_Run` `0x48BF00`, `EffectKind93_Run` `0x48BFB0`,
+  `EffectKind99_Run` `0x48C0E0`.
+- E4D ([`effect_4d.md`](effect_4d.md) §7, 7): `EffectKind91_Run` `0x48C990`,
+  `EffectKind94_Run` `0x48CB30`, `EffectKind95_Run` `0x48CDD0`,
+  `EffectKind96_Run` `0x48CF00`, `EffectKind97_Run` `0x48D070`,
+  `EffectKind98_Run` `0x48D290`, `EffectKind9A_Run` `0x48DDE0`.
+- E4E ([`effect_4e.md`](effect_4e.md) §7, 10): `EffectKind9B_Run` `0x48DF90`,
+  `EffectKind9C_Run` `0x48E320`, `EffectKind9E_Run` `0x48F070`,
+  `EffectKindA0_Run` `0x48FC20`, `EffectKindA1_Run` `0x490A60`,
+  `EffectKindA2_Run` `0x4910D0`, `EffectKindA3_Run` `0x4912F0`,
+  `EffectKindA7_Run` `0x491AA0`, `EffectKindA8_Run` `0x491BA0`,
+  `EffectKindA9_Run` `0x491C60`.
+- E4F ([`effect_4f.md`](effect_4f.md) §7, 10): `EffectKindAA_Run` `0x491D70`,
+  `EffectKindAB_Run` `0x492510`, `EffectKindAC_Run` `0x4925A0`,
+  `EffectKindAD_Run` `0x492660`, `EffectKindAE_Run` `0x492760`,
+  `EffectKindAF_Run` `0x492980`, `EffectKindB0_Run` `0x492A50`,
+  `EffectKindB1_Run` `0x493430`, `EffectKindB9_Run` `0x493550`,
+  `EffectKindBA_Run` `0x493E10`.
+- E5A ([`effect_5a.md`](effect_5a.md) §7, 8): `EffectKind18_04_Run`
+  `0x4FD470`, `EffectKind18_05_Run` `0x4FD7E0`, `EffectKind18_1A_Run`
+  `0x4FDBC0`, `EffectKind18_1F_Run` `0x4FDDD0`, `EffectKind18_06_Run`
+  `0x4FDF20`, `EffectKind18_07_Run` `0x4FE330`, `EffectKind18_08_Run`
+  `0x4FE750`, `EffectKind18_0A_Run` `0x4FEF50`.
+- E5B ([`effect_5b.md`](effect_5b.md) §7, 7): `EffectKind18Sub0D_Run`
+  `0x4FF320`, `EffectKind18Sub0B_Run` `0x4FF970`, `EffectKind18Sub0C_Run`
+  `0x4FFBB0`, `EffectKind18Sub0E_Run` `0x4FFE40`, `EffectKind18Sub13_Run`
+  `0x500300`, `EffectKind18Sub0F_Run` `0x500930`, `EffectKind18Sub4F_Run`
+  `0x5011A0`.
+- E5C ([`effect_5c.md`](effect_5c.md) §7, 9): `EffectKind18Sub50_Run`
+  `0x501500`, `EffectKind18Sub10_Run` `0x501BA0`, `EffectKind18Sub56_Run`
+  `0x502020`, `EffectKind18Sub57_Run` `0x502470`, `EffectKind18Sub58_Run`
+  `0x502580`, `EffectKind18Sub11_Run` `0x502810`, `EffectKind18Sub12_Run`
+  `0x502B30`, `EffectKind18Sub15_Run` `0x502E10`, `EffectKind18Sub17_Run`
+  `0x503660`.
+- E5D ([`effect_5d.md`](effect_5d.md) §7, 8): `EffectKind18Sub18_Run`
+  `0x504430`, `EffectKind18Sub43_Run` `0x504F70`, `EffectKind18Sub1C_Run`
+  `0x505100`, `EffectKind18Sub1D_Run` `0x505540`, `EffectKind18Sub14_Run`
+  `0x5059A0`, `EffectKind18Sub1E_Run` `0x505AB0`, `EffectKind18Sub21_Run`
+  `0x505E20`, `EffectKind18Sub22_Run` `0x5064A0`.
+- E5E ([`effect_5e.md`](effect_5e.md) §7, 6): `EffectKind18Sub23_Run`
+  `0x506A10`, `EffectKind18Sub24_Run` `0x506BD0`, `EffectKind18Sub3F_Run`
+  `0x507620`, `EffectKind18Sub25_Run` `0x507D90`, `EffectKind18Sub26_Run`
+  `0x5083B0`, `EffectKind18Sub39_Run` `0x508A80`.
+- E5F ([`effect_5f.md`](effect_5f.md) §7, 8): `EffectKind18Sub27_Run`
+  `0x508CC0`, `EffectKind18Sub28_Run` `0x509290`, `EffectKind18Sub42_Run`
+  `0x509690`, `EffectKind18Sub29_Run` `0x509C90`, `EffectKind18Sub48_Run`
+  `0x50A2D0`, `EffectKind18Sub49_Run` `0x50A3C0`, `EffectKind18Sub2A_Run`
+  `0x50A760`, `EffectKind18Sub3C_Run` `0x50ACB0`.
+- E5G ([`effect_5g.md`](effect_5g.md) §7, 4): `EffectKind18Sub2B_Run`
+  `0x50AF90`, `EffectKind18Sub2C_Run` `0x50B520`, `EffectKind18Sub3A_Run`
+  `0x50BB90`, `EffectKind18Sub4A_Run` `0x50BFD0`.
+- E6A ([`effect_6a.md`](effect_6a.md) §7, 7): `EffectKind18Sub2D_Run`
+  `0x50C140`, `EffectKind18Sub3E_Run` `0x50C6E0`, `EffectKind18Sub2E_Run`
+  `0x50CA40`, `EffectKind18Sub2F_Run` `0x50CFE0`, `EffectKind18Sub30_Run`
+  `0x50D330`, `EffectKind18Sub31_Run` `0x50D8D0`, `EffectKind18Sub32_Run`
+  `0x50DE70`.
+- E6B ([`effect_6b.md`](effect_6b.md) §8, 9): `EffectKind18Sub33_Run`
+  `0x50E400`, `EffectKind18Sub34_Run` `0x50E750`, `EffectKind18Sub37_Run`
+  `0x50EAA0`, `EffectKind18Sub35_Run` `0x50EB80`, `EffectKind18Sub38_Run`
+  `0x50F110`, `EffectKind18Sub3B_Run` `0x50F230`, `EffectKind18Sub40_Run`
+  `0x50FA00`, `EffectKind18Sub41_Run` `0x50FD30`, `EffectKind18Sub44_Run`
+  `0x510C20`.
+- E6C ([`effect_6c.md`](effect_6c.md) §7, 6): `EffectKind18Sub45_Run`
+  `0x511DD0`, `EffectKind18Sub51_Run` `0x512350`, `EffectKind18Sub55_Run`
+  `0x5128B0`, `EffectKind18Sub59_Run` `0x512B20`, `EffectKind18Sub5A_Run`
+  `0x513860`, `EffectKind18Sub5B_Run` `0x513CD0`.
+- E6D ([`effect_6d.md`](effect_6d.md) §7, 6): `EffectKind18Sub5C_Run`
+  `0x514270`, `EffectKind18Sub5E_Run` `0x514690`, `EffectKind18Sub5D_Run`
+  `0x514A70`, `EffectKind18Sub61_Run` `0x515000`, `EffectKind18Sub64_Run`
+  `0x516480`, `EffectKind18Sub65_Run` `0x5169F0`.
+**Established, the indexes** by a record byte, a count or an argument with no
+bound (the original reads, or writes, what follows):
+
+- E1A (§6): `WorldMap_RecordIndex` past 11 and a record's handler of 0
+  (D229); the extra indexes `+0x18`, `+0xC` of 4 or more; `0x939A1C` of 30 or
+  more; kind 5's `+6` past `0x653B44`'s four rows; kind 0xD's `+6` past its
+  six sound words; kind 0xF's text past thirteen (D230), a row or column past
+  `0x653C04`, a line byte of 3 or more in `EffectKind0F_LineNext` `0x466460`
+  and `_LineFade` `0x466750` (safe only because `_LineType` sets the wait for
+  a line other than 0xFF and `_LineScroll` releases the record for 0xFF).
+- E1B (§7): `Panel_DrawEdgeQuad`'s `which` past 5;
+  `EffectKind0F_DrawMessageList` `0x468560`'s title id past 6 and line index
+  past 0x36; an accessory id past `NameTable_Accessories`' 52 (`_DrawItemsA`
+  / `_DrawItemsB`); `EffectKind92_Follow` `0x46A3E0`'s sprite index past 30 (a
+  write past `Sprite_Objects`). "None is reached from the states' own
+  starts."
+- E1C (§7): `EffectKind36_Run` `0x46A850`'s frame index past
+  `EffectKind36_Frames`' four; `EffectKind70_Run` `0x46D780` with more than
+  three members (the bit `1 << i` with the count masked to five bits: members
+  3..7 write past `ObjTrio`'s three records - only when `Field_MemberCount` is
+  above three and the spawner set those bits).
+- E1E (§10 L1, L3): `0x939A1C` at 0xFF ("none", stage 1's step `0x5289C0`)
+  indexes `Sprite_Objects` in stage 4's steps, reading and writing
+  `0x7E91DC..` (whether play reaches stage 4 with 0xFF is not measured);
+  `0x9040EC + kind` by the sprite's `+6` (no bound known; ours reads as the
+  original).
+- E1F (§6 L3, reads): `UiSprite_SetMode` `0x52CF60` into ten records,
+  `UiSprite_Draw` `0x52CFE0` into 74 (every constant index at the 131 call
+  sites is inside), `FieldPanel_KindPoints` `0x52CE60` by a kind byte,
+  `ExtraSlots_PickItem` `0x52A8F0` by `+0x36` / `+0x3A` and by an id - in place
+  in the image or the save block, the same on both sides.
+- E1G (§6 L3, reads): the record numbers at `0x66AD10 + 10 * row + k` and the
+  record at `0x66AB58 + 8 * number` - a pick past the row count or an entry
+  byte 0xFF reads past the table's 55 (inside `.data`); kept unchecked as
+  FE2's `TradeRecord` is.
+- E2E (§7): `EffectKind48_State7_Swell` `0x478A40`'s two eight-byte tables by
+  `+9` (0..5 in play); `EffectSphere_Draw` `0x47A780` trusts its quads' vertex
+  numbers (only `EffectSphere_Build` `0x47A560` writes them, below 0x1E2).
+- E2G (§7): kind 0x54's `+0xB` into the thirty `Sprite_Objects` (area 8 stores
+  the active member's index, in range only while that member is a field
+  object of the pool); kind 0x5B's `+0xB` into area 75's two slots.
+- E3A (§6): kind 0x61's `+7` past `ObjTrio`'s three; the frame byte past the
+  two frames; a mote's `+1` past `EffectKind68_MoteStates`' three.
+- E3B (§7 item 4): `EffectKind63_End` `0x482650` and `_RefreshSprites`
+  `0x4826B0` walk `ObjTrio` by `Field_MemberCount` (writes past three; the
+  count is at most three in play).
+- E3C (§7): kind 0x6D's block `0x92C780 + 0x500 * +6` (no spawner found to say
+  how many blocks there are; the next pool, `0x92D1DC`, starts inside the
+  third), its shape `+4` into eight rows, kind 0x6F's colour `+6` into one row,
+  `Party_MemberAt`'s answer into `ObjTrio`.
+- E3D (§7): kind 0x7D's `+6`, which area 170's case 40 stores as the message
+  word's low byte less 0xB: `EffectKind7D_Input` `0x486690` writes the turn to
+  `0x675DC8 + +6` (a byte below 0xB or above 0xD writes past the three dials)
+  and `EffectKind7D_Start` `0x486660` takes that address unchecked.
+- E4A (§7): kind 0x86's `+3` / `+4` (from `Sprite_FindFree`, 0xFF tested in
+  `EffectKind86_Spawn` `0x488C00` only) and kind 0x85's `+6` from
+  `Area144_SpawnEffect85` `0x421090` (`(Field_ActiveMember - Sprite_Objects) /
+  0xA4`, unchecked): past 29 the writes land in the draw records at
+  `0x7E01C0`.
+- E4B (§6, §7): its indexes, all kept in range by the band's own code.
+- E4D (§7): kind 0x96's index (kept 0..7 by its own wrap); `Field_MemberCount`
+  into `ObjTrio`.
+- E5A (§7): `+0x36` into sub-kind 5's rows (5), sub-kind 6's flags, rectangles
+  and part runs (3), `+0x3A` into the levels (4), `+0xB` into sub-kind 7's
+  doors (3), `+9` into `_Topple`'s (0x29) and `_Crash`'s (0xE) tables, `+2`
+  into `_Pattern`'s heights and the `Cond_ByteFE` values, the door variant
+  into `0x65DF2C` (32); `Gfx_ClutStripCopy16` `0x4FDB70` past its strip
+  (`EffectKind18_05_FadeIn` `0x4FD910`'s slot goes negative past `+9` 44; the
+  state resets `+9` past 0x1E). "In play each byte comes from the same tables
+  or a bounded count."
+- E5B (§7): sub-kind 0x0D's glow by the column `+0x36` and its frames by
+  `+9 >> 1` / `+9 / 3`, sub-kind 0x0C's flag and VRAM column by `+0x36`,
+  sub-kind 0x13's by `+0xB`, the gates' by the variant `+0x36` (8) and `+0x3A`
+  (4: `0x65E034`, below).
+- E5C (§7): sub-kind 0x50's variant from the record's x byte into two cells
+  and its `+0xB` into four flag bytes (`0x65E034`); sub-kind 0x57's `+0xB`
+  into eight points; `Gfx_BufferIndex` into layer 15's two last pointers.
+- E5D (§7): sub-kinds 0x14 / 0x1E by the x cell word `+0x36` (two places),
+  0x22 by it (four), 0x19 by `+0xB` (two); E5C's `EffectKind18Sub17_DrawPatch`
+  `0x503FA0` by its argument (three) and `EffectKind18Sub17_CopyFrame`
+  `0x5043B0` by its (ten); `EffectKind18Sub22_SetMap` `0x506640`'s corner row
+  by a running count that the four rectangles (7, 11, 11, 11 cells) keep
+  inside its eleven.
+- E5E (§6, §7): `EffectKind18Sub24_TrailsOut` `0x506ED0` with `+9` below 8
+  would draw from before the polyline (not reached).
+- E5F (§6): its list.
+- E5G, E6A, E6B, E6D (§7, §7, §8, §7): the variant index is the spawn's x
+  cell, s16, into tables with room for four / five (E5G), 16 / 10 / 4 / 2
+  (E6A), two or four (E6B), two (E6D) - past them the next table's bytes, for
+  some kinds a state table's code pointers, are read as a cell; E5G's 0x36
+  and E6B's 0x54 index four bytes by `+2` before their own `& 3` wrap, from
+  what the spawn left; E5G's draw side into `0x65EA74`; E6A's 0x2D signs by
+  `+0xA`; E6B's 0x41 `+9` into its curve (room 0x1C, kept below 0x18) and the
+  draw's variant into two rows; E6D's 0x5C textures by `+0xB` and signs by
+  the side, the tracks' ring by a head byte `EffectKind18Sub61_Reset`
+  `0x515100` never writes.
+- E6C (§7): sub-kind 0x51's variant `+0x36` into five rectangles; `DrawRing`'s
+  half into two uv pairs; `SetTiles`' `step % 3 + 3 bank` into six stack bytes
+  (a negative step reads the frame); `DrawPart`'s part into three ranges; the
+  sky's tints by `(w - 0x390) / 3` (past 0x3BF the twinkle offsets;
+  `Area189_StepArrive`'s wrap at 0x3C0 keeps it from happening);
+  `MapView_ItemAt`'s answer and the link word `& 0xFFF` into `DrawItems`
+  (1,024 items, 2,048 under DIV-0062).
+
+**Readings that disagree** (each for one read of the code to settle; nothing
+is changed here):
+
+- **`EffectKind14_Op` `0x653F78` and `EffectKind36_Frames` `0x653F88`.** FC1
+  ([`field_c1.md`](field_c1.md) §1.7; `symbols.toml`, status hypothesis)
+  counts the event op 32 bytes, to `EffectKind3C_States` `0x653F98`. E1C
+  ([`effect_1c.md`](effect_1c.md)'s opening table; its `symbols.toml` row) reads
+  `0x653F88..0x653F97` as kind 0x36's four s16 pairs, which leaves the op 16
+  bytes. How much of the op `EventOp_6x` reads would decide it.
+- **`EffectKind0F_States` `0x653C28` and `EffectKind1A_States` `0x653C5C`.**
+  E1A ([`effect_1a.md`](effect_1a.md) §3, §10; `symbols.toml`) counts kind
+  0xF's table 13 and kind 0x1A's 17 from `0x653C5C`, its entries 13..16 being
+  E1B's states. E1B ([`effect_1b.md`](effect_1b.md) §1, §3) reads kind 0xF's
+  dispatcher `0x466080` through a 41-entry run from `0x653C28` - its states
+  26..40 E1B's, entries 30..40 the same cells as `EffectKind0F_Children`
+  `0x653CA0` and `EffectKind0F_Child0Steps` `0x653CB8`. The cells
+  `0x653C90..0x653C9F` are kind 0x1A's entries 13..16 by the one reading and
+  kind 0xF's 26..29 by the other; "past the table" for kind 0xF is entry 13
+  by E1A's count and 41 by E1B's.
+- **`0x654468`** (the round doc's wave-two debt). E2C
+  ([`effect_2c.md`](effect_2c.md) §3) found `band_rows.py` filing `0x474F60` /
+  `0x474FC0` as entries 22 and 23 of kind 0x35's run `0x654410` and reads
+  `0x654468` as kind 0x3E's (`EffectKind3E_States`, 2). Checked against E2B
+  for this entry: E2B's doc (its opening section, before §1) and its `[[data]]` rows count
+  `EffectKind35_States` 3 (to `EffectKind35_ShardStates` `0x65441C`) and name
+  `0x654468` as kind 0x3E's - **the two docs agree**; the disagreement was the
+  tool's run.
+- **`0x65E034`** (four bytes, named by neither group). E5B
+  ([`effect_5b.md`](effect_5b.md) §1, §3) reads it by `+0x3A` in
+  `EffectKind18Sub0F_Start` `0x500950`; E5C ([`effect_5c.md`](effect_5c.md)
+  §3) by `+0xB` in sub-kind 0x50's states (the wall's texture flag), and
+  names E5B's `0x50096F` and `0x5011E0` as readers too. Both count four
+  bytes; which index bytes stay below 4 is each group's reading.
+
+**What ours does:** aborts with a message past each table and each index
+above (the round-nine rule), except the reads E1E L3, E1F L3 and E1G L3,
+which ours makes in place as the original does, and E5C's
+`Gfx_BufferIndex`, which ours indexes as read.
+
+**Status:** latent; ours aborts where the original would jump wild or read
+or write past a table. No group found a writer that leaves its table other
+than those named above and D225.
+
+## D201 — The effect kinds' working pools overlap from `EffectKind30_Shards` `0x92BF80`: one copy per kind, no owner (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03: described as a defect by E1C, E2A, E2B, E2E, E2F, E3A,
+E3B, E3D and E4C (their docs' §7), and as layout by E2C, E2D, E3C, E4B, E4D
+and E4F (their §1, §3 or §4). The round doc's wave-two debt (one entry, and
+the symbol's extent).
+
+**Established:** a large part of the effect engine keeps its particles,
+shards, trails, rings and debris outside `Effect_Objects`, in the memory
+from `0x92BF80`, each kind with its own stride and its own "free" test, and
+one copy per **kind**, not per record. Nothing in the code checks that
+another kind is using it: two such kinds alive at once (or, for E2E's kind
+0x4A, two records of one kind) write over each other's records and counts.
+The docs' examples: a drop's frames word is every fifth speck's in-use byte
+(E2A); kind 0x4B's debris 31 lies over kind 0x48's ring (E2E); a kind-0x50
+speck in use over kind 0x52's trail is drawn from trail data and moves it
+(E2F); kind 0x93's start clears kind 0x90's shards outright (E4C); kind
+0x44's clear leaves another kind's bytes to be drawn as sparks (D232); kind
+0x45's trace reads kind 0x49's glow record (D233). **Reach, as the docs say
+it:** E2A - no two of these kinds are spawned together by anything found;
+E3A - chapter 10's run 2 spawns kinds 0x68, 0x61, 0x62, 0x69 and 0x64 on its
+count and timers, whether two are alive at once not measured; E2E, E4C - not
+traced; E2F - the owner's to say.
+
+The layouts, by doc:
+
+- E1C (§7): kinds 0x1C / 0x1D's specks (0x14 apart), kind 0x1E's eight
+  shards (0x28), kind 0x1F's debris (0x2C) and, from `0x92C0C0`, kind 0x1E's
+  pieces.
+- E2A (§1, §4, §7): specks (0x80 of 0x14), sparks (0x28) and drops (0x18); the
+  centre `0x92D380` and kind 0x2C's ground points `0x92D390` after them.
+- E2B (§7): kind 0x2F's three trails (to `0x92C448`), kind 0x35's sixteen
+  shards, 55 pieces and 55 face copies (to `0x92CFC0`), kind 0x3B's three
+  spirals (to `0x92CDB4`), kind 0x3D's sixteen rings (to `0x92C100`).
+- E2C (§1): kind 0x40's 32 shards of 0x18 and its disc (`0x92C280`,
+  `0x92C28C`), kind 0x43's 256 sparks of 0x1C, kind 0x44's ring record
+  (`0x92BF80`, through `EffectKind44_RingCell`) and its eight sparks of 0xA0
+  (`0x92C07C`), kind 0x6B's read-back pixels; its particles at `0x92EC80`
+  (D217).
+- E2D (§1, §7): kind 0x45's 36-sample history from `0x92BF80`, kind 0x49's
+  glow record `0x92C060`, sixteen sparks of 0x18, 64 dust records at
+  `0x92D1C8`.
+- E2E (its opening table, §4, §7): kind 0x4A's trail `0x92BF80..0x92CC83`, kind 0x4B's debris
+  `0x92CC84..0x92D203`, kind 0x48's spiral `0x92C4A4..0x92D1C3`, ring
+  `0x92D1C8..0x92D1D9`, burst `0x92C060..0x92C49F` and sparks
+  `0x92BF80..0x92C05F`; the sphere's light to `0x931174`.
+- E2F (§7): kind 0x50's 64 specks of 0x28 (to `0x92C980`), kind 0x52's eight
+  sparks of 0x1C (to `0x92C060`) and its trail `0x92C060..0x92C4A0`.
+- E3A (§3, §7): kind 0x62's 24 rays of 0x38 (to `0x92C4C0`), kind 0x64's
+  eight sparks of 0x18 (to `0x92C040`) and sixteen shards of 0x2C from
+  `0x92C040` (to `0x92C300`; kind 0x64 does not overlap itself), kind 0x68's
+  sixteen motes of 0x1C (to `0x92C140`), kind 0x61's read-back pixels from
+  `0x92BF80`; its particles from `0x92DF80` (D217).
+- E3B (§1, §7): kind 0x6C's sixteen sparks of 0x28, reached through the
+  cursor `0x67626C`.
+- E3C (§1, §3): kind 0x6E's sixteen shards of 0x28 (through the same cursor
+  `0x67626C`), kind 0x72's 32 debris of 0x2C, kind 0x73's 32 sparks of 0x18
+  (cursor `0x676274`); kind 0x6D's blocks at `0x92C780`, which E1C's kind
+  0x1E's debris shares.
+- E3D (§1, §4, §7): kind 0x80's trail (0x440 bytes), kind 0x81's 256 drops
+  (0x1800 bytes from `0x92BF80`) and its sources at `0x92D780`.
+- E4B (its opening table, §1): kind 0x87's six panes of 0x1C, kind 0x88's 32 particles of 0x2C.
+- E4C (its opening table, §4, §7): kind 0x8E's two pools over `0x92BF80..0x92E580` (128 chips
+  of 0x28; 128 dots of 0x24 at `0x92D380`, over E2A's centre); kinds 0x8F,
+  0x90 and 0x93 in the first 0x500 bytes.
+- E4D (§1, §3): kind 0x97's eight sparks of 0x18 and its 32 debris of 0x2C at
+  `0x92C040`.
+- E4F (§1): kind 0xAB's 256 drops of 0x18 (kind 0x81's pool) and eight
+  sources at `0x92D780`; kind 0xB9's eight sparks of 0x18 (also called by kind
+  0x64's states 4..7); kind 0xB0's bars.
+
+The functions that lay, clear, find or walk records there, as their
+`symbols.toml` evidence names the buffer (a search of the round's `[[func]]`
+rows for `EffectKind30_Shards` or an address in `0x92C000..0x92EFFF`; the
+states that only call them are not listed):
+
+- E1C ([`effect_1c.md`](effect_1c.md), 7): EffectKind1C_MoveShards `0x46DD00`,
+  EffectShards_Clear `0x46E120`, EffectKind1E_ShardsInit `0x46E2E0`,
+  EffectKind1E_SplitModel `0x46E6E0`, EffectKind1E_DebrisInit `0x46EA60`,
+  EffectKind1F_Start `0x46EEB0`, EffectKind1F_Debris `0x46EEE0`.
+- E2A ([`effect_2a.md`](effect_2a.md), 4): EffectSpecks_Spawn `0x471D10`,
+  EffectKind2C_Start `0x471EC0`, EffectSparks_Clear `0x4723E0`,
+  EffectDrops_Clear `0x472D70`.
+- E2B ([`effect_2b.md`](effect_2b.md), 4): EffectKind2F_Start `0x4731C0`,
+  EffectKind35_SplitModel `0x473B60`, EffectKind3B_InitSpirals `0x474770`,
+  EffectKind3D_RingsClear `0x474C30`.
+- E2C ([`effect_2c.md`](effect_2c.md), 9): EffectKind40_ShardsClear
+  `0x4757F0`, EffectKind40_ShardDraw `0x4758D0`, EffectKind40_DrawDisc
+  `0x475A90`, EffectKind43_Setup `0x476230`, EffectKind6B_Store `0x475EC0`,
+  EffectKind6B_Scatter `0x475F20`, EffectKind44_Start `0x4766A0`,
+  EffectKind44_SparksClear `0x476D00`, EffectKind44_SparksStep `0x476D20`.
+- E2D ([`effect_2d.md`](effect_2d.md), 8): EffectKind45_Start `0x4771D0`,
+  EffectKind45_PushSample `0x4777A0`, EffectKind45_DrawTrace `0x477820`,
+  EffectKind48_FindFreeSpark `0x478320`, EffectKind49_V2Launch `0x4786A0`,
+  EffectKind49_V2Fly `0x478720`, EffectKind49_V2Rise `0x4787F0`,
+  EffectKind49_V2Sink `0x478840`.
+- E2E ([`effect_2e.md`](effect_2e.md), 9): EffectKind48_State7_Start
+  `0x4789D0`, EffectKind48_State8_Start `0x478B50`, EffectKind48_State9_Emit
+  `0x478CC0`, EffectKind48_State12_Start `0x478F10`, EffectSphere_Build
+  `0x47A560`, EffectSphere_Draw `0x47A780`, EffectKind4A_Follow `0x47A9C0`,
+  EffectKind4A_TrailInit `0x47AC80`, EffectKind4B_Start `0x47AA70`.
+- E2F ([`effect_2f.md`](effect_2f.md), 8): EffectKind52_Trail `0x47C160`,
+  EffectKind52_TrailStart `0x47C190`, EffectKind52_TrailFade `0x47C320`,
+  EffectKind50_ClearSpecks `0x47C350`, EffectKind52_ClearSparks `0x47CF00`,
+  EffectSpark_FindFree `0x47CF20`, EffectKind52_TrailUpdate `0x47D040`,
+  EffectKind52_TrailDraw `0x47D220`.
+- E3A ([`effect_3a.md`](effect_3a.md), 6): EffectKind61_Store `0x480730`,
+  EffectKind61_Scatter `0x4807A0`, EffectKind62_ClearRays `0x4812B0`,
+  EffectKind64_ClearSparks `0x482050`, EffectKind64_DrawShards `0x482360`,
+  EffectKind68_ClearMotes `0x481B80`.
+- E3B ([`effect_3b.md`](effect_3b.md), 1): EffectKind6C_ScatterSparks
+  `0x483C10`.
+- E3C ([`effect_3c.md`](effect_3c.md), 4): EffectKind6E_FindShard `0x4841C0`,
+  EffectKind6D_ClearParticles `0x4842F0`, EffectKind72_Start `0x484F70`,
+  EffectKind73_FindSpark `0x485810`.
+- E3D ([`effect_3d.md`](effect_3d.md), 6): EffectKind80_Start `0x487290`,
+  EffectKind80_Fade `0x4873A0`, EffectKind80_TrailStep `0x4873E0`,
+  EffectKind81_ClearDrops `0x487920`, EffectKind81_PlaceSources `0x487AB0`,
+  EffectKind81_FindFreeDrop `0x487BF0`.
+- E4B ([`effect_4b.md`](effect_4b.md), 3): EffectKind87_Setup `0x489030`,
+  EffectKind87_StepPanes `0x489220`, EffectKind88_ClearParticles `0x4897A0`.
+- E4C ([`effect_4c.md`](effect_4c.md), 7): EffectKind8E_MoveChips `0x48B4A0`,
+  EffectKind8E_ClearChips `0x48B640`, EffectKind8E_MoveDots `0x48B730`,
+  EffectKind8E_ClearDots `0x48B850`, EffectKind8F_ClearShards `0x48BC40`,
+  EffectKind90_FindShard `0x48C220`, EffectKind90_ClearShards `0x48C240`.
+- E4D ([`effect_4d.md`](effect_4d.md), 3): EffectKind97_WaitCue `0x48D100`,
+  EffectKind97_EmitSpark `0x48D650`, EffectKind97_DrawDebris `0x48D980`.
+- E4F ([`effect_4f.md`](effect_4f.md), 5): EffectKindAB_MoveDrops `0x492AF0`,
+  EffectKindAB_PlaceSources `0x492C80`, EffectKindB0_ClearBars `0x493330`,
+  EffectKindB9_SpawnSpark `0x493B50`, EffectKindB9_DrawShards `0x493BF0`.
+**The extent, readings that differ.** `symbols.toml` gives
+`EffectKind30_Shards` **1,344 bytes** (FC2's 24 records of 0x38, to
+`0x92C4C0`; `EffectKind30_Sparks`, 260 bytes, after it), and E3D calls the
+symbol 0x540; the harness's standard region is **0x644** (both symbols; E2A,
+E2E, E2F, E3C and E4C cite it); E2B: kinds 0x35 and 0x3B use past the
+symbol, **to `0x92CFC0`** (the round doc's debt, "the symbol's count"); E2C:
+one buffer from `0x92BF80` **running on to the particles at `0x92EC80`**; E3D
+to `0x92D8C0`; E4C to `0x92E580`; E3A's particles to `0x941F80` (D217). No doc
+reads what the image places after the buffer beyond the cells named. One
+reading of where the PlayStation's pool ends would settle the symbol's count.
+
+**The cursor `0x67626C`** (the round doc's wave-three debt): written by E3B's
+kind 0x6C (`EffectKind6C_ScatterSparks` `0x483C10` sets it to the buffer and
+reads it again for every access) and E3C's kind 0x6E (`EffectKind6E_Emit`
+`0x484090`, `EffectKind6E_DrawShards` `0x4841E0`; E3C lists E3B's writers at
+`0x483C10`, `0x483D30..`, `0x483FA0`, `0x484000`), over the same sixteen
+records of 0x28. E3B calls it the **spark** cursor ([`effect_3b.md`](effect_3b.md)
+§1, §3), E3C the **shard** cursor ([`effect_3c.md`](effect_3c.md) §3), and each
+left it unnamed for the other or the coordinator. The docs agree on the cell
+and the records; they differ in the name only. The two kinds share the
+records as well as the cursor - an instance of this entry.
+
+**What ours does:** reproduces; each group's fuzz keeps the regions it
+touches (their §4).
+
+**Status:** latent, faithful; whether two users are ever alive at once is
+measured by no group.
+
+## D202 — Effects whose last state never releases the record (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E2A, E2B, E2D, E2F, E2G, E3B, E4B, E4C, E4D, E4E,
+E4F, E5G, E6B and E6C (their docs' §7, E6B's §8).
+
+**Established:** the kind's own states never step to a release; the record
+lives until something outside frees it, and the docs did not trace what does
+(E4E: "the area's tail, an area change").
+
+- E2A: kind 0x2E's `EffectKind2E_Burst` `0x4720F0` (state 2) never moves
+  `+1`: once its counter reaches 3 it throws up to sixteen sparks every frame,
+  as many as the pool has free. Whether a script releases it was not traced.
+- E2B: a kind-0x3D ring whose state is past 1 stays in use for ever, undrawn,
+  and keeps `EffectKind3D_RingsStep` `0x474C80` answering 1, so kind 0x3D never
+  releases - nothing writes such a state.
+- E2D: kind 0x46's state 4, `EffectKind46_Hold` `0x477D10`, draws the flash
+  and the redraw every frame; its spawner (chapter 7) waits on the counter and
+  something else must free the record. The redraw leaves every live sprite's
+  and the leader's `+0x29` at 5.
+- E2F: kinds 0x51 and 0x56 wait on the chapters' counters (`0x903848` = 0xB,
+  `0x90384B` = 0xA then 0xE); spawned where no event script sets them, they
+  wait for ever ("by design, not a fault").
+- E2G: kind 0x57's `EffectKind57_Show` `0x47ECC0` steps to its release only
+  outside area 2; there the ring is drawn until something else frees it.
+- E3B: `EffectKind67_SpawnKind13` `0x482A20` never leaves its state: one
+  kind-0x13 record a frame for as long as the kind-0x67 record lives (until
+  the pool is full, then one whenever a record frees). Whether that is meant
+  is the owner's question.
+- E4B: kind 0x89's `EffectKind89_Fade` `0x489C90` sets `+1` 3, a `BareRet`;
+  kinds 0x9D and 0x9F have a state 3 no code of the band sets, and kind 0x89's
+  state 2 is likewise set from outside.
+- E4C: kind 0x8D's state 1 is never left by the band's code (something
+  outside writes 2).
+- E4D: kind 0x96's `EffectKind96_Pulse` `0x48CF50` never advances nor
+  releases (its quad, 320 x 320, overhangs the frame by 80 rows, clipped); no
+  spawner of it was found.
+- E4E: kind 0x9B never leaves state 2: the ring stays until something else
+  frees the record ("noted for whoever traces area 100").
+- E4F: kind 0xB1 (`EffectKindB1_Run` `0x493430`): no state of its table
+  releases the record.
+- E5G: sub-kind 0x36 (`EffectKind18Sub36_Pulse` `0x50B480`): no state releases
+  or advances past itself.
+- E6B: sub-kinds 0x3D (`EffectKind18Sub3D_Ripple` `0x50F820`) and 0x54
+  (`EffectKind18Sub54_Pulse` `0x50F780`): no state releases (0x3D's corner
+  adds are D211's).
+- E6C: sub-kind 0x53 (`EffectKind18Sub53_Run` `0x512660`, one state, no
+  release); sub-kind 0x5A's cycles; sub-kind 0x44's states (E6B's
+  dispatcher).
+
+**What ours does:** reproduces.
+
+**Status:** latent, faithful; each is harmless while what spawns the kind
+also frees it, which no doc traced.
+
+## D203 — Draws skipped while a state waits (latent, faithful; the owner's eye)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E2G, E5B, E5C, E5E, E5F, E5G, E6A, E6B and E6D
+(their docs' §7, E6B's §8). Most of the docs say "as read, perhaps
+deliberate".
+
+**Established:** a state that waits returns before its draw, so the thing it
+shows is not drawn while it waits:
+
+- E2G: sub-kind 0x20's `EffectKind18Sub20_WaitSet` `0x47E040` and
+  `_WaitClear` `0x47E0B0` (sub-states 1 and 3): the strips are drawn only
+  while they move. Whether something else draws them at rest was not read.
+- E5B: the gates' `_Open` (sub-kind 0x0F's state 3, `EffectKind18Sub0F_Open`
+  `0x500D20`): while a gate stands open its quad is not drawn at all.
+- E5C: sub-kinds 0x11's and 0x12's state 1 draws its tiles only on the frame
+  it moves on (the map cells stay 0x10 until the flag).
+- E5E: `EffectKind18Sub25_WaitAway` `0x508670` (sub-state 3 of both lids): the
+  open lid is not drawn while the leader leaves - E5F counts the same function
+  as sub-kind 0x2A's state 3 (the far wait), where 0x27 and 0x29 draw through
+  theirs.
+- E5F: sub-kind 0x42's `EffectKind18Sub42_WaitFlag` `0x509740` and
+  `_WaitFlagBack` `0x509980` return before the draw when their test fails.
+- E5G: sub-kind 0x2B's waiting-open state, where 0x2C's draws.
+- E6A: sub-kind 0x3E draws nothing in any state (it slides and sounds).
+- E6B: sub-kinds 0x37's and 0x38's places draw nothing in their first frame;
+  0x40's `EffectKind18Sub40_WaitOne` `0x50FA50` and 0x41's
+  `EffectKind18Sub41_WaitOne` `0x50FD60` draw nothing until their cue; 0x41's
+  `EffectKind18Sub41_Hold` `0x50FE20` stops drawing for good once `+9` reaches
+  0x17 (the record lives on to `+0xA` 0x31).
+- E6D: sub-kind 0x5C draws nothing while waiting shut or open.
+
+**What ours does:** reproduces.
+
+**Status:** latent, faithful; whether any of these is a visible gap in play
+is for the owner's eye.
+
+## D204 — A released record still written or drawn from (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E2G, E3C, E4A, E4B, E4F, E5D and E5F (their docs'
+§7).
+
+**Established:** `Effect_Release` clears bytes `+0..+4` only; these go on
+after it:
+
+- E2G: kind 0x5B's `EffectKind5B_Fade` `0x47EFF0` releases at `+0x5D` 0, then
+  steps `+6` and draws the beam once more from the freed record.
+- E3C: on the frame kind 0x6E's record is released its dispatcher still
+  tail-jumps to the shard pass (`EffectKind6E_DrawShards` `0x4841E0`) from the
+  freed record (the rest of kind 0x6E's last state is D205's).
+- E4A: kind 0x84's three states call `Effect_Release` on `0x903849` = 0xFE and
+  carry on - the line check, `Rand`, the writes of `+1` / `+9` land in the
+  freed record, which the next `Effect_FindFree` may hand out with them set;
+  kind 0x85's `EffectKind85_Wait` `0x488B70` frees the record at counter 0x35
+  and still calls the tile and `EffectKind85_ShowObjects` `0x488B90` with the
+  freed record's `+6` and colour.
+- E4B: kind 0x88 draws a particle on the frame it dies (the draw follows the
+  `+3` clear).
+- E4F: `EffectKindB0_StepBars` `0x493370` draws a bar once more after putting
+  it out of use ("probably intended (the last frame of the bar)").
+- E5D: sub-kind 0x14's `EffectKind18Sub14_Start` `0x5059C0` steps `+2` to 1 on
+  the record it has just released; its `EffectKind18Sub14_Fade` `0x505BB0`
+  releases by a call and still draws the tiles with the freed record's `+9`.
+- E5F: `EffectKind18Sub3C_Rise` `0x50AD30` draws after releasing its record.
+
+**What ours does:** reproduces.
+
+**Status:** latent, faithful; harmless unless another spawner takes the
+record in the same frame, which no doc measured.
+
+## D205 — Draws committed twice in one frame (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, groups E3C, E5B and E5C (their docs' §7).
+
+**Established:**
+
+- E3C: kind 0x6E's dispatcher `0x484050` calls the state and then always
+  tail-jumps to the shard pass; state 3, `EffectKind6E_Fade` `0x484150`, runs
+  the pass itself first (to learn whether any shard is live). So in state 3
+  every live shard rises, grows, darkens and ages twice a frame and is drawn
+  twice. "Possibly intended (a faster fade)."
+- E5B: sub-kind 0x0E's `EffectKind18Sub0E_Raise` `0x5000B0` and the gates'
+  `_Raise` (`EffectKind18Sub0F_Raise` `0x500E00`) call `_Wait`, which draws
+  the gate, and when it did not re-trigger draw it again.
+- E5C: `EffectKind18Sub10_SlideIn` `0x501DD0` calls state 1 (which draws the
+  panel) and draws it again unless state 1 moved on.
+
+**What ours does:** reproduces.
+
+**Status:** latent, faithful; two identical quads that frame (twice the
+blend where the quad is semi-transparent - not measured).
+
+## D206 — `Effect_FindFree`'s "none" untested or stepped past (latent; ours aborts on the writes)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E1A, E1B, E1D, E3A, E3B and E5C. D54's, D163's and
+D176's class in the effect pool; the two writes of their own are D218 and
+D220, the arms' stale cell D234.
+
+**Established:** `Effect_FindFree` answers 0xFF when all twenty records are
+busy.
+
+- E1B (§7): `EffectKind0F_ListOpen` `0x4672F0` (the call at `0x46736A`),
+  `EffectKind0F_Child2Gauge` `0x467B10` (`0x467B8B`) and
+  `EffectKind0F_DrawMessageList` `0x468560` (`0x468626`) write the answer's
+  record without testing for 0xFF: with all 20 busy the original writes a
+  kind-0x1A record at `0x7E91E0`, past the pool. "Ordinary play needs 20 live
+  effects at that moment; not seen."
+- E1A (§6): an answer past the twenty, wherever the band uses one.
+- E3A (§7, §1's table): `EffectKind61_Capture` `0x4805B0` with no free record
+  still steps on (`+1` up and nothing more), so the store reads back whatever
+  VRAM `(0x340, 0x100)` held and the scatter makes particles of it.
+- E3B: `EffectKind69_Spawn` (D218). E5C: `EffectKind18Sub17_WaitCue` (D220).
+  E1D: `EffectKind22_SpawnArms` keeps a stale cell for a missing arm (D234).
+- Not a defect, for comparison: E5C's `EffectKind18Sub57_Spawn` `0x5024C0`
+  skips the spawn on none (`effect_5c.md` §7), and FC1's / E2F's
+  `EffectKind4F_Start` gives the first sprite back and retries
+  (`effect_2f.md` §7).
+
+**What ours does:** aborts with a message where the original would write past
+the pool (E1B's three, E1A); E3A's capture steps on as the original does.
+
+**Status:** latent; reachable only with the pool full at that frame, which
+no group measured.
+
+## D207 — Divisions by a value that may be 0 in the effect engine (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E1A, E1F, E2A, E2B, E5C, E5D and E6C. D177's class;
+EGT's `EffectGte_ProjectSize`, which most of the engine calls, has its own
+entry (D216).
+
+**Established:** an `idiv` with no test of the divisor:
+
+- `Sprite_UpdateScreenScaled` `0x52CD50` divides by `+0x60 - 2 * s16 +0x3E`
+  when `+0x60` is below 0, zero when the two meet; kind 5's last two states
+  call it ([`effect_1a.md`](effect_1a.md) §6 item 7,
+  [`effect_1f.md`](effect_1f.md) §6 L2: "whether any sprite reaches it is not
+  measured").
+- `EffectSpecks_Spawn` `0x471D10` tests `+0x2E` for 0, calls `Rand`, and reads
+  the word again for the divide: harmless in the game (`Sprite_Current` does
+  not change during the call); ours aborts where the two reads differ and the
+  second is 0 ([`effect_2a.md`](effect_2a.md) §7).
+- `EffectKind3B_DrawSpiral` `0x474410` divides by `Math_Cos(0x80)`, a constant
+  the compiler did not fold; never 0 in play; ours also aborts on the one
+  quotient `idiv` cannot hold ([`effect_2b.md`](effect_2b.md) §7).
+- `EffectKind18Sub58_DrawColumn` `0x502670` by `8 - n`: its callers pass `+9`
+  (0..7), 7, and `+9 >> 2` (2..7 while `_Fade` runs from 0x1F down to 8):
+  "unreachable in ordinary play" ([`effect_5c.md`](effect_5c.md) §7).
+- `EffectKind18Sub1C_Draw` `0x5052D0` and `EffectKind18Sub1D_Draw` `0x5057D0`
+  by `8 - rise`: never 8 in play, but a record reaching sub-state 2 or 4 with
+  `+9` 8 or 32..35 faults ([`effect_5d.md`](effect_5d.md) §7).
+- Sub-kind 0x59's `DrawRing` (`EffectKind18Sub59_DrawRing` `0x512D30`): its
+  glows divide by `Camera_Distance + 0x1194`, zero at a distance of -0x1194;
+  "whether play reaches that distance is not measured; no recorded route
+  shows sub-kind 0x59" ([`effect_6c.md`](effect_6c.md) §7).
+- Not a defect: E5B's `_DrawGlow` tests the depth first.
+
+**What ours does:** aborts with a message naming the function where the
+original would fault (an integer divide by zero, no handler).
+
+**Status:** latent; ours aborts where the original would end the process.
+
+## D208 — Loops whose bound play does not check: a count past a byte, a walk with no end, a column past the wrap (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E1C, E1E, E2F, E3A, E3C and E4C (their docs' §7,
+E1E's §10, E3A's §6). Kind 0x45's segment hang is D233's.
+
+**Established:**
+
+- E1C: a negative face count (`Sprite_ObjectsExtra[0]`'s `+0x54` byte 0x80 or
+  above) is `movsx`'d in kind 0x1E's model draw and the loop runs
+  `0xFF80..0xFFFF` times, reading far past the model. No reach is
+  established; ours aborts.
+- E1E L2: `LeaderPanel_S4Count` `0x529AE0` compares the byte `+9` with the
+  picked record's word `+0x9C`: at 0x100 or more the step never ends;
+  `LeaderPanel_S4Best` `0x5298F0` compares the word with a byte best and stores
+  its low byte. What ours does here the doc does not say.
+- E2F: `EffectKind51_DrawColumn` `0x47C870` - 65 angles and a byte row counter:
+  a half-height above 0x20 reads past `EffectKind51_Angles`, one above 0x80
+  never ends; the kind's states keep it within 0..0x20.
+  `EffectKind56_Markers` `0x47D980`'s walk never ends when the ground `+0x14`
+  lies in the lowest 2^24 of the signed range; ours aborts.
+- E3A (§6): a frame of w or h above 0xFF in `EffectKind61_Scatter` `0x4807A0`
+  never ends (the row and column are bytes); the two frames are 32 x 48 and
+  64 x 64, neither reaches it; ours aborts.
+- E3C, E4C: `EffectKind74_Draw` `0x485570` and its twin `EffectKind93_Draw`
+  `0x48C550` step 0x100000 at a time from the foot to the top + 0x1000000
+  with signed compares; the states keep the top within 0x8000000 of the
+  foot (at most 0x90 steps), but a foot near the signed limit would run the
+  loop past the wrap (up to 4,096 steps of 0x48 bytes).
+
+**What ours does:** aborts where the docs say so (E1C, E2F's walk, E3A);
+reproduces the columns.
+
+**Status:** latent; none is reached by the values the kinds' own states
+write, as the docs read them.
+
+## D209 — Quads laid out past a packet cursor that did not move (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, groups E4E, E5C and E6C (their docs' §7).
+
+**Established:** a draw that builds several primitives at fixed offsets from
+the cursor as it stood before them, without reading it again: when
+`Gfx_CommitPrim`'s room test fails (the pool nearly full; the commit stops
+0x54 short of the end and does not move the cursor) the later ones are
+written past the pool.
+
+- `EffectKind9C_DrawBeamSides` `0x48EBB0` copies its first quad (`rep movsd`)
+  to the first quad's address + 0x44 regardless: up to 0x34 bytes past the
+  pool ([`effect_4e.md`](effect_4e.md) §7).
+- `EffectKind18Sub15_Draw` `0x502E60` builds its four `POLY_G4`s 0x44 apart:
+  up to 0x11C bytes past a cursor within 0x54 of the end, about 0xC8 past the
+  pool ([`effect_5c.md`](effect_5c.md) §7).
+- The sky, `EffectKind18Sub44_Draw` `0x510EB0`: its four G4 bands at the
+  cursor + `0x44 m`, up to 0x110 bytes past the pool's room margin, unlinked
+  ([`effect_6c.md`](effect_6c.md) §1.2, §7).
+- Kind 0xA0's trail overwrites the last packet the same way (D222).
+
+**What ours does:** writes the same bytes (E4E and E6C say so; E5C's doc does
+not say).
+
+**Status:** latent, faithful; harmless unless the packet pool is that full.
+
+## D210 — `Sprite_Current` or `Field_State` left on a member or the leader (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E2G, E3D, E4B and E5D (their docs' §7).
+
+**Established:**
+
+- E2G: kind 0x15's `EffectKind15_WaitPose4` `0x47E370` and `_WaitPose8`
+  `0x47E5B0` point `Field_State` and `Sprite_Current` at `ObjTrio` record 1
+  before testing its animation and return without putting `Sprite_Current`
+  back while the animation has not run through; `Field_State` is left on the
+  member on every path of the kind.
+- E3D: kind 0x82's `EffectKind82_Wait` `0x487C50` and every check leave
+  `Field_State` on the leader.
+- E4B: kind 0x8B's `EffectKind8B_Pose` `0x48ABC0` makes the leader
+  `Sprite_Current` before its test and puts the record back only when the test
+  passes.
+- E5D: `EffectKind18Sub1D_Hurt` `0x505690` leaves `Field_State` on the party
+  member it pointed it at (`Sprite_Current` is put back).
+
+`Effect_RunObjects` sets `Sprite_Current` afresh for each record, so the next
+effect is not affected; whatever runs after the last record of the frame sees
+the member or the leader (E2G, E4B).
+
+**What ours does:** the same (E2G; E4B's control 77 is refused by it).
+
+**Status:** latent, faithful; what reads `Sprite_Current` or `Field_State`
+after the effect pass was not traced.
+
+## D211 — Writes into the area's map with no bound against the map, and corner bytes that accumulate (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, groups E3D, E5A, E5B, E5C, E5D, E6B and E6D (their docs' §7,
+E6B's §8).
+
+**Established:**
+
+- E3D: `EffectKind7D_SetMap` `0x486D60` rewrites a dword of the area block by
+  `AreaMap_Header`'s arithmetic over a cell word the map file supplies - right
+  for area 170's map, anywhere for another (DIV-0062's site).
+- E5A: `EffectKind18_06_SetMap` `0x4FE040` writes height bytes at
+  `AreaMap_Header + 4 * AreaMap_HeightBase` with no bound on the base word -
+  in play the area's own rows, "not a defect by itself".
+- E5B: the gates write `AreaMap_Bytes + z * width + x` (and the neighbour)
+  from the record's words; sub-kind 0x0E writes the fixed cells (1, 21) and
+  (1, 22) whatever the map's size.
+- E5C: sub-kind 0x15 rewrites rows `r - 17 .. r + 13` of columns 0x2D..0x30 of
+  the corner heights round `Field_Kind2Z`'s row every frame, with no test
+  against the map's height.
+- E5D: `EffectKind18Sub22_SetMap` `0x506640` writes `AreaMap_Bytes`,
+  `AreaMap_Corners` and the height bytes by its rectangles' cells and the
+  area's width, unchecked, "as the game's other map writers are".
+- E6B: sub-kind 0x3D (`EffectKind18Sub3D_Ripple` `0x50F820`) adds to the map's
+  corner bytes every frame `Cond_ByteFE` is set (byte adds that wrap): the
+  corners drift by the running sum, which the sine differences keep
+  oscillating rather than growing.
+- E6D: sub-kind 0x62 (`EffectKind18Sub62_Ripple` `0x516090`) adds the
+  difference of two sine steps to the corner bytes each frame, wrapping at
+  256, and never restores them.
+
+**What ours does:** reproduces (no bound either).
+
+**Status:** latent, faithful; right for the areas that spawn these, as far
+as the docs read; a spawn near a map's edge or in another area writes outside
+its grid.
+
+## D212 — The waiting states' absolute value leaves `0x80000000` negative (latent, unreachable)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, groups E5G, E6A, E6B and E6D (their docs' §7, E6B's §8).
+
+**Established:** the near / far tests of kind 0x18's panel sub-kinds take
+`|d|` as `cdq; xor; sub`, which leaves `0x80000000` negative, so a leader
+exactly 0x8000 cells away counts as near. "Unreachable on a map (cells are
+bytes)."
+
+**What ours does:** computes it the same way.
+
+**Status:** latent, unreachable.
+
+## D213 — Harmless leftovers: words handed on unwritten, stale register halves, argument slots reused, scratch written to cells others own (latent, harmless)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E1A, E2A, E2B, E2E, E2F, E3C, E4B, E4C, E4D, E4E,
+E5A, E5C, E5E, E5G, E6B, E6C and E6D. D101's kind.
+
+**Established:** none reaches a result the game reads, as each doc read it:
+
+- Half-written sizes handed to `EffectGte_ProjectSize`, whose second quotient
+  no caller reads: `EffectSparks_Draw` `0x472240` (E2A), `EffectKind3B_DrawGlow`
+  `0x4747D0` and `EffectKind3D_DrawFan` `0x474AC0` (E2B; ours writes 0),
+  `EffectKind4A_DrawGlow` `0x47AF10` (its own argument slot as the size pair,
+  E2E), `EffectKind50_SpeckQuad` `0x47C4A0` (E2F), `EffectKind97_DrawSpark`
+  `0x48D6F0` (E4D: ours hands the first word in both, which draws the same;
+  "no `DIVERGENCE.md` entry is needed for a value nobody reads").
+- Vertices whose fourth word, and flag pointers, are never written:
+  `EffectKind53_Beam` `0x47D650` (E2F), `EffectKind9D_Project` `0x48A2A0`
+  (E4B: also a fourth argument the port's `Gte_RotTransPers` does not take),
+  E5A's `_DrawPanel` callers, `EffectKind18_08_DrawTilted` `0x4FEC20` and
+  `EffectKind18_0A_DrawDoor` `0x4FF150` (DIV-0023's pad; no GTE function of
+  ours reads it).
+- Stale upper bytes: E1A's coordinates pushed with `Sprite_Current`'s or a
+  callee's high half for `0x469750`, `0x468AC0`, `0x469210`, `0x468C50`,
+  `0x468F00`, `FieldPanel_*` and `Text_DrawAt`, and kind 0xC's `flip` a stale
+  stack word (§6 item 4; E1B §2 reads the callees: they take the low bits);
+  `EffectKind52_TrailDraw` `0x47D220`'s shade dword (E2F);
+  `EffectKind18_0A_DrawDoor`'s dy (`mov dl` over `Prim_SetTexture`'s `edx`,
+  E5A).
+- Argument slots reused as locals or flag outs: `EffectKind18_04_DrawPanel`
+  `0x4FD6A0` and `EffectKind18_08_DrawTilted` (E5A), `EffectKind18Sub50_DrawWall`
+  `0x501850` (E5C), kind 0x8E's `_DrawFan` (E4C), `EffectKind18Sub40_Draw`
+  `0x50FAE0` (E6B), E3C's `EffectKind6F_PushParty` `0x4849A0` (its whole slot to
+  `Member_SetState2_8`; the upper bytes are 0).
+- Answers and writes nothing reads: E3C's `_AlongZ` / `_AlongX` call `BareRet`
+  with the line's points pushed, and kind 0x6D's start clears the block it then
+  sets up in full; kind 0x8E's `_Fall` ignores `MoveCmd_TestFB`'s answer (E4C);
+  `EffectKindA0_StepSparks` `0x4906A0`'s answer is read by no caller and kind
+  0xA0's state 8 lowers a glow size no state draws (E4E); E5G's
+  `EffectKind18Sub2C_Draw` `0x50B8B0` writes the four corners' heights before
+  the ground overwrites them.
+- Scratch written to cells another subsystem owns: `EffectKind18Sub24_DrawTrail`
+  `0x5073D0` hands `Gte_RotTransPers3` the global `MapView_ScreenXY` as its
+  third out (E5E); sub-kind 0x45's ring (`EffectKind18Sub45_DrawRing`
+  `0x512040`) overwrites `MapView_ScreenXY` and `0x903828` with its fixed point
+  every call, and `EffectKind18Sub44_DrawStars` `0x511740` stores each star's y
+  into the cursor's primitive before testing it (E6C); sub-kind 0x5C's draw
+  (`EffectKind18Sub5C_DrawPanel` `0x5144F0`) stores its two base floats into
+  `MapView_ScreenXY`, which `MapView_Build` owns - harmless if the map view
+  rewrites it before reading, "not measured" (E6D).
+
+**What ours does:** the same, except where noted (E2B's 0, E4D's first word,
+the pads ours does not read).
+
+**Status:** latent, harmless by reading.
+
+## D214 — Bytes read before anything wrote them: fields a kind never sets, pools drawn before they are set up (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, groups E1D, E2D, E3A, E3C, E4D and E4E (their docs' §7).
+
+**Established:**
+
+- E1D: kinds 0x21 (arms), 0x24 (rays) and 0x26 (bands) are given `+0` and `+5`
+  but not `+1`, so they start at state 0 only because `Effect_Release` cleared
+  `+1` (FC2's finding for kind 0x34, D196).
+- E2D: kind 0x45's state 0 leaves the offset `+0x36` unset; without flag 0x25
+  the samples are computed with whatever the record held.
+- E3A: the particles' `+0xC` is never written: `EffectKind61_Scatter`
+  `0x4807A0` writes `+2`, `+4`, `+8`, and `EffectKind61_Twinkle` `0x480A50`
+  copies `+4..+0xF` into the `TILE_1`, so the tile's depth is an earlier
+  effect's bytes; `EffectKind64_DrawShards` `0x482360` draws all sixteen shards
+  with no in-use test (state 3 has always started them, by the table's
+  order).
+- E3C: kind 0x6F's `EffectKind6F_AlongZ` `0x484670` (and `_AlongX` `0x4847D0`)
+  reads the elevation's coordinate before writing it, so the first frame's
+  ground comes from what the spawn left there.
+- E4D: the debris pass draws all 32 every frame whether set up or not
+  (`EffectKind97_Fade` `0x48D220` draws them after `_Burst`; nothing clears the
+  pool).
+- E4E: kind 0xA0's shards 16..31 are drawn from state 4 on, before state 6's
+  end sets them up (state 3 zeroes only their speed and shade words): black
+  triangles collapsed onto a stale point, "not visible if the renderer drops
+  degenerate triangles".
+
+**What ours does:** reads and copies the same bytes.
+
+**Status:** latent, faithful; what shows depends on what an earlier effect
+left in the record or the pool.
+
+## D215 — `EffectGte_SetDiagonalOne` writes 1 on the diagonal where the PlayStation twin writes 0x1000 (latent, faithful; the owner's eye)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group EGT ([`effect_gte.md`](effect_gte.md) §5; the round doc's
+stage-A debt, [`takeover-queue-round13.md`](takeover-queue-round13.md)
+section 11).
+
+**Established:** `EffectGte_SetDiagonalOne` `0x494180` stores 1 on the
+matrix's diagonal. Its PlayStation twin `0x801B0F5C` begins `addiu v0, zero,
+0x1000` and stores that (read in the sibling's generated overlay code,
+`overlays_static_0170.c`) - the identity in the GTE's 4.12 fixed point. The
+PC's 1 is 1/4096 of it, and its seven callers (E1C's `0x46EA80`, Capcom's
+`0x46F570`, E2E's `0x47B070`, E3A's `0x482240`, E3C's `0x4851E0`, E4D's
+`0x48D860`, E4E's `0x4906F0`) premultiply it by `Gte_RotMatrixX` / `Y` / `Z`
+(`MulMatrix0`, each element `>> 12`), so the matrix they build collapses to
+elements of 0, 1 and -1: whatever those effects draw with it would be
+squashed onto their translation. What it was on the PlayStation (0x1000) and
+what the PC does (1) stay separately answerable here; what the game should
+do is the owner's.
+
+**What ours does:** reproduces the 1s (control C22 refuses 0x1000).
+
+**Reach, as the doc says it:** no recorded route reaches any of the seven
+callers (`effect_gte.md` §9); what the effects look like on the PC is for
+the owner's eye, and a fix would be a divergence.
+
+**Status:** latent, faithful; a port defect against the PlayStation by
+reading, not seen.
+
+## D216 — `EffectGte_ProjectSize` divides by an unchecked depth and keeps 16 bits of the quotient (latent; ours aborts at depth 0)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group EGT ([`effect_gte.md`](effect_gte.md) §5); the round doc's
+stage-A debt (section 11).
+
+**Established:** `EffectGte_ProjectSize` `0x4941E0` divides `size * 1000` by
+the camera-space depth with no test: a point at depth exactly 0 faults
+(`idiv`, no handler, the process ends). It keeps the quotient's low 16 bits:
+near the eye the quotient passes 0x7FFF and wraps (size 0x40 at depth 1:
+64,000, stored as -1,536). The doc's "ranges, not defects" (the focus words
+and the point's x and z wrapping after their shifts, the height's fraction
+dropped) are reproduced and not counted here. Most of the engine calls it:
+E2E ([`effect_2e.md`](effect_2e.md) §7, `EffectKind4A_DrawGlow` at the trail's
+head) and E4E ([`effect_4e.md`](effect_4e.md) §7, `EffectKindA0_DrawGlow`
+`0x4901D0`) point at this entry for their depth; the half-written sizes
+handed to it are D213's. FC2 met the divide first (D177).
+
+**What ours does:** aborts with a `Fatal` naming the point at depth 0;
+reproduces the 16-bit wrap (control C33 refuses a saturating version). A
+fuzz that calls it for real keeps the point off the eye's plane (the round
+doc, section 11).
+
+**Reach, as the doc says it:** no recorded route enters `0x4941E0`; whether
+play ever puts a point on the eye's plane is not established.
+
+**Status:** latent; ours aborts where the original would end the process,
+and wraps as it does.
+
+## D217 — Kinds 0x61 and 0x6B make a particle of every opaque pixel, with no bound: past 2,048 (0x61) or 1,881 (0x6B) they overwrite `Sprite_Current` (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29 (E2C, [`effect_2c.md`](effect_2c.md) §7) and 2026-10-03 (E3A,
+[`effect_3a.md`](effect_3a.md) §7, which names E2C's kind as the same shape).
+
+**Established:** both read a member's sprite back from VRAM and turn each
+pixel that is not 0 into a particle of 0x14:
+
+- **Kind 0x61**, `EffectKind61_Scatter` `0x4807A0`: particles at `0x92DF80 +
+  0x14 n`, n up to w x h. The second frame (the member's `+0x148` not 0) is
+  64 x 64, up to 4,096 particles (to `0x941F80`); the 2,049th lands on
+  `0x937F80` - its `+4` float on `Gfx_CurrentEnv` `0x937F84`, its `+8` on
+  `Sprite_Current` `0x937F88`, then `Frame_Counter` - and the next state's
+  `Sprite_Current` access goes astray. The first frame (32 x 48, 1,536)
+  cannot reach it.
+- **Kind 0x6B**, `EffectKind6B_Scatter` `0x475F20`: a 0x50 x 0x48 rectangle
+  (5,760 pixels), particles at `0x92EC80 + 0x14 n`; the 1,882nd lands on
+  `0x937F84` (`Gfx_CurrentEnv`, then `Sprite_Current`, `Frame_Counter`,
+  `MapView_CellItems`, the desktop cells at `0x939A2C..`): more than 1,881
+  opaque pixels overwrite `Sprite_Current`'s bytes 1..3 with a count and a
+  colour. What the PlayStation reserved there is not read; on the PC the
+  unnamed room before `0x937F84` holds 1,881.
+
+**What ours does:** writes as the original (E3A says so; E2C's doc does not
+say otherwise).
+
+**Reach, as the docs say it:** E3A - whether a member's captured sprite has
+more than 2,048 opaque pixels in its 64 x 64 is not measured; E2C - chapter
+10's run 13 captures sprite record 2, its pixel count is the sprite's, not
+measured.
+
+**Status:** latent, faithful; a crash candidate if a captured sprite is
+opaque enough.
+
+## D218 — `EffectKind69_Spawn` writes nine records without testing `Effect_FindFree` for none (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E3B ([`effect_3b.md`](effect_3b.md) §7 item 1). D206's
+class, an entry of its own as its own spawner.
+
+**Established:** `EffectKind69_Spawn` `0x482AB0` takes nine records from
+`Effect_FindFree` and never tests the answer: with fewer than nine free
+records the original takes 0xFF as a record and writes kind 0x69's bytes at
+`Effect_Objects + 0xFF * 0x80` = `0x7E9160`, outside the pool (whatever lies
+there).
+
+**What ours does:** aborts with a message.
+
+**Reach, as the doc says it:** depends on how many effects are live when
+chapter 10's scene spawns the kind (`Scena10_Run2` spawns several kinds
+around it); not traced.
+
+**Status:** latent; ours aborts where the original would write past the
+pool.
+
+## D219 — `EffectKind69_Parent` is one cell for every kind-0x69 spawner (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E3B ([`effect_3b.md`](effect_3b.md) §7 item 2).
+
+**Established:** every part reads its parent through `EffectKind69_Parent`
+`0x676268`. A second kind-0x69 spawner while the first's parts live retargets
+all of them: the first never counts to nine (it waits for ever) and the
+second's `+0xB` is raised by both sets - a test for exactly 9 that the count
+can step past (four parts end in the same frame).
+
+**What ours does:** keeps the one cell, as the original.
+
+**Reach:** not stated in the doc beyond the shape (two spawners at once).
+
+**Status:** latent, faithful.
+
+## D220 — Sub-kind 0x17's spawn writes a record it did not find (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E5C ([`effect_5c.md`](effect_5c.md) §7). D206's class, an
+entry of its own.
+
+**Established:** `EffectKind18Sub17_WaitCue` `0x5036D0` takes
+`Effect_FindFree`'s answer `& 0xFF` and writes `+0`, `+5`, `+1`, `+2` of that
+record untested: with all twenty records live (0xFF) the four bytes land
+0x7F80 past `Effect_Objects`, at `0x7E9160`, `0x7E9165`, `0x7E9161`,
+`0x7E9162` - inside display buffer 0's packet pool (`0x7E1C00..0x7F1BFF`).
+The game's nearest answer would be to skip the spawn, as
+`EffectKind18Sub57_Spawn` does.
+
+**What ours does:** aborts there.
+
+**Reach, as the doc says it:** only if the effect pool is full on the frame
+the counter `0x903848` becomes 0xC; not measured.
+
+**Status:** latent; ours aborts where the original would write into a
+packet pool.
+
+## D221 — Kind 0x90's tag `0x676294` is never reset: the 256th record takes tag 0 and owns every free shard (latent, faithful; the owner's eye)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E4C ([`effect_4c.md`](effect_4c.md) §7); listed for the
+owner's eye in the round doc's wave-four debts
+([`takeover-queue-round13.md`](takeover-queue-round13.md) section 15).
+
+**Established:** `EffectKind90_Start` `0x48BF20` hands each kind-0x90 record
+the next value of the dword `0x676294` as its tag (`+6`, the low byte), and
+`EffectKind90_MoveShards` `0x48C260` / `EffectKind90_EmitOne` `0x48C1C0` treat
+a shard whose `+0` equals the tag as the record's. Nothing resets the dword
+(a scan of the image: only `_Start` names it), so the 256th kind-0x90 record
+of a session gets tag 0 - and every **free** shard (`+0` 0) is then its own:
+it moves and draws all of them (stale positions, whatever the pool last
+held), and its own emits are written with `+0` 0, free records the next emit
+may take. The pool is also cleared only before the first record of the
+session (the dword is 0 only then). The doc's nearest sensible value: skip
+tag 0, and clear the pool when no kind-0x90 record is live; "the fix and
+its ledger entry are the owner's".
+
+**What ours does:** as the original (no divergence was entered for it).
+
+**Reach, as the doc says it:** needs 256 kind-0x90 records in one session
+(area 134's handlers 12 and 13 spawn one each); not measured.
+
+**Status:** latent, faithful; a candidate for the owner.
+
+## D222 — Kind 0xA0's trail dots have no count: with the leader west of x 0x2F8000 the first frame of state 6 draws until x wraps (latent; ours aborts past 0x400 dots; the owner's eye)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E4E ([`effect_4e.md`](effect_4e.md) §6, §7); listed for
+the owner's eye in the round doc's wave-four debts (section 15).
+
+**Established:** `EffectKindA0_DrawTrail` `0x490390`'s dots start at `to +
+(Frame_Counter & 0xF) * pull` and step `pull << 4` while x is above `from`'s;
+nothing counts them (kind 0x64's same trail stops at eight). State 4 sets the
+pull to `(0x2F8000 - x) sar 7` from the glow's point, the leader's. With the
+leader **west of x 0x2F8000** (the pull positive), the first frame of state 6
+draws with `from` and `to` the same point: with `Frame_Counter & 0xF` not 0
+the first dot is east of `from` and every step moves it further east, so the
+loop runs until x passes 0x7FFFFFFF - far past `Gfx_CommitPrim`'s pool, which
+stops advancing 0x54 short of its end, so the dots overwrite the last packet
+until the loop ends (D209's shape). From the second frame the head is held at
+0x2F8000 and the loop ends at once; with the leader east of it the dots run
+back to the head and stop; a pull of 0 draws none. The doc's nearest
+sensible answer would be E3A's count of eight; "the fix and its ledger entry
+are the owner's word".
+
+**What ours does:** aborts past 0x400 dots (§6).
+
+**Reach, as the doc says it:** "ordinary play draws about nine" (§6); where
+chapter 15's run 4 has the leader when it spawns kind 0xA0 is not measured
+(§7).
+
+**Status:** latent; ours aborts where the original would draw on for a
+frame; a candidate for the owner.
+
+## D223 — `EffectKindAD_DrawArc`'s second vertex depth is a y (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E4F ([`effect_4f.md`](effect_4f.md) §7).
+
+**Established:** in `EffectKindAD_DrawArc` `0x492DC0` each `POLY_G4`'s `+0x20`
+(vertex 1's depth) is loaded from b's projection's `+4`, its y (`mov eax, [esp
++ 0x2c]` / `mov ecx, [esp + 0x2c]`, the same cell twice), where vertex 3's
+(`+0x40`) is its depth `+8`. The nearest sensible value is the depth.
+
+**What ours does:** copies the y as the original (control 8 plants the depth
+and is refused).
+
+**Reach, as the doc says it:** what the renderer does with the depth of a
+semi-transparent quad (its sort, its perspective) decides whether it shows;
+nothing measured it.
+
+**Status:** latent, faithful.
+
+## D224 — `EffectKind18Sub31_Draw`'s compare that never sets the bit 0x30's draw sets (latent, faithful; the owner's question)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E6A ([`effect_6a.md`](effect_6a.md) §7); the round doc's
+wave-six debts (section 17).
+
+**Established:** `EffectKind18Sub31_Draw` `0x50DC20`'s texture word ORs in
+`(+8 == 0) < 0x10` (`sete cl; cmp ecx, 0x10; setl dl`), always 1, into a word
+whose bit 0 is already set - so the word is `+8 << 21 | 0x150010F` whatever
+`+8` is. Its siblings put `(+8 == 0)` at bit 16 (`EffectKind18Sub30_Draw`
+`0x50D680`) or `+8` at bits 16 and 21 (`EffectKind18Sub2E_Draw` `0x50CD90`);
+the source perhaps meant `<< 0x10` (a shift typed as a compare). For `+8` set
+the draw is the same either way; for `+8` clear 0x30's draw sets bit 16 and
+0x31's does not.
+
+**What ours does:** kept as read.
+
+**Status:** latent, faithful; whether 0x31 was meant to look like 0x30 is the
+owner's question, "not a defect ours can settle".
+
+## D225 — `EffectKind18Sub5C_WaitFar` can step `+2` past its table (latent; ours aborts; the owner's word for a fix)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E6D ([`effect_6d.md`](effect_6d.md) §7); the round doc's
+wave-six debts (section 17). D200's shape, reached by the original's own
+code (as D179 was).
+
+**Established:** `EffectKind18Sub5C_WaitFar` `0x514410` steps `+2` once when
+`Cond_ByteFE` is 1 and once more when the leader is away: both in one frame
+take it from 3 to 5, and the next frame's dispatch (`EffectKind18Sub5C_Run`
+`0x514270`) jumps through `0x65F388` - the variant cells read as a code
+pointer. The game's nearest answer would be 4 (`EffectKind18Sub5C_Close`).
+
+**What ours does:** steps it the same and aborts in the dispatcher.
+
+**Reach, as the doc says it:** only if the area's script sets `Cond_ByteFE`
+to 1 while the leader is more than three cells from the open panels; not
+measured.
+
+**Status:** latent; ours aborts where the original would jump through data;
+the fix is the owner's word.
+
+## D226 — Sub-kind 0x59's twelve shade bytes in `.data` are never restored: a second showing in one session starts faded (latent, PC only; the owner: probably fine)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E6C ([`effect_6c.md`](effect_6c.md) §7); traced to its area
+by the coordinator ([`takeover-queue-round13.md`](takeover-queue-round13.md)
+section 17; [`USER_CHECKS.md`](USER_CHECKS.md) item 8).
+
+**Established:** `EffectKind18Sub59_Fade` `0x512C30` writes the twelve bytes
+`0x65EF0C..0x65EF17` of the image (initially 0x80 each) down to 0, and
+nothing in the executable writes them back (a scan of `.text` for the
+addresses finds only the band's reads and the fade's writes). On the
+PlayStation the twin's table lived in an AREA overlay, reloaded with the
+area; on the PC it is resident, so a second showing of sub-kind 0x59 in one
+session starts faded: `_Fade` sees `0x65EF14` already 0 and moves straight
+on, the ring drawn dark. Where it runs (section 17): effect records of kind
+0x18 are placed by the event script's op `E0`; the one op with kind 0x18 and
+sub-kind 0x59 in the executable's data is at `0x648F97`, inside the script
+that area 196's descriptor `0x6490A8` names first, and the PlayStation twin
+of the ring draw is in area 196's overlay alone. Kind 0x87's
+`EffectKind87_Setup` also rewrites `.data` (rows 8..13 of `0x654DA0`), but
+idempotently ([`effect_4b.md`](effect_4b.md) §7; D238).
+
+**What ours does:** as the original (no ledger entry from the group).
+
+**Reach, the owner's word** ([`USER_CHECKS.md`](USER_CHECKS.md) item 8,
+2026-10-03): area 196 is a one-time scene - **"probably fine, to be verified
+in game"**.
+
+**Status:** latent, PC only (the PlayStation reloaded the bytes); open until
+the owner's check in game. The wave's lesson stands beside it: a function
+that writes its own `.data` table in a kind that came from an AREA overlay is
+a defect of the port to look for (section 17).
+
+## D227 — `EffectKind64_DrawGlow` reads its rim vertices' depth from a stack word it never writes (the original's; ours differs by DIV-0068)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E3A ([`effect_3a.md`](effect_3a.md) §2, §7); entered in
+the ledger with the wave (round doc section 14).
+
+**Established (what the original does):** `EffectKind64_DrawGlow` `0x481740`
+draws a fan of 32 semi-transparent `POLY_G3`; the rim vertices' x and y are
+computed into stack locals, but their depth is read from `esp + 0x28`
+(`0x481836`, `0x48189D`), a dword the function never writes - whatever the
+stack held, which the renderer divides by.
+
+**What ours does:** differs by [DIV-0068](DIVERGENCE.md): ours writes the
+centre's depth to the rim vertices, as the sibling discs
+`EffectKind64_DrawSpark` and `EffectKind68_DrawMote` write to all three.
+`BOF3X_ORIGINAL=EffectKind64_DrawGlow` runs Capcom's, its stale depth
+included.
+
+**Reach:** not seen live; no recorded route reaches kind 0x64 (DIV-0068).
+
+**Status:** the original's defect; replaced in ours by DIV-0068 (the owner
+kept it as written, 2026-10-03).
+
+## D228 — `EffectKind18Sub4B_Run` builds its far corners' x from a stack word it never writes (the original's; ours differs by DIV-0072)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E5F ([`effect_5f.md`](effect_5f.md) §7); entered in the
+ledger by the coordinator (round doc section 16).
+
+**Established (what the original does):** in `EffectKind18Sub4B_Run`
+`0x50A510`'s quad loop x0 is kept in `ebp`; the near corners add the quad's
+offset (stored over x0's home `[esp + 0x24]`), then `ebp` is reloaded from
+`[esp + 0x20]`, a local no instruction of the function writes, and the far
+corners' x (v1, v3) are built from it; from the second quad on all four
+corners' x come from it. The original's far corners and its second and third
+quads sit wherever the caller's stale stack puts them.
+
+**What ours does:** differs by [DIV-0072](DIVERGENCE.md): ours uses x0 for
+that word (each quad symmetric about its column).
+`BOF3X_ORIGINAL=EffectKind18Sub4B_Run` runs Capcom's.
+
+**Reach:** not seen live; no recorded route reaches sub-kinds 0x4B / 0x4C
+(DIV-0072).
+
+**Status:** the original's defect; replaced in ours by DIV-0072 (kept as
+written, 2026-10-03).
+
+## D229 — Kinds 0xE and 0x16 jump to address 0 in area 104, and read other kinds' states off a world map (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group E1A ([`effect_1a.md`](effect_1a.md) §6 item 1). D73's
+reading for kinds 0 / 0x58 / 0x18, extended.
+
+**Established:** `EffectKind0E_WorldMap` `0x462B00` and
+`EffectKind16_WorldMap` `0x462B20` jump through the world-map record
+`WorldMap_RecordIndex` `0x462A90` picks. Record 6 (area 104) of
+`WorldMap_Records` holds 0 at `+4` and `+8`: an effect of kind 0xE or 0x16
+there jumps to address 0. Off a world map the index is 11, which reads
+`EffectKind01_States[1]` (`EffectKind01_Draw`) and `EffectKind07_States[0]`
+(`EffectKind07_Start`).
+
+**What ours does:** aborts with a message on a handler of 0 and on an index
+past 11 (§6).
+
+**Reach, as the doc says it:** which scenes spawn kinds 0xE / 0x16 is not
+read.
+
+**Status:** latent; ours aborts where the original would crash or run
+another kind's state.
+
+## D230 — Kind 0xF's rows 7 and 8 name texts 13 and 14, past the table's thirteen (latent; ours aborts)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group E1A ([`effect_1a.md`](effect_1a.md) §6 item 2).
+
+**Established:** a record of kind 0xF with `+6` 7 or 8 reads its "text" past
+`0x653B98`'s thirteen records - from the pen bytes and the row table as a
+pointer (`EffectKind0F_Choose` `0x466120`, `_Title` `0x4661B0`, `_LineStart`
+`0x4662B0`). The rows exist, so either the spawner never writes 7 or 8 or the
+game reads garbage there.
+
+**What ours does:** aborts on a text past thirteen (§6).
+
+**Reach, as the doc says it:** which `+6` the spawner writes is not read.
+
+**Status:** latent; ours aborts where the original would read a stray
+pointer.
+
+## D231 — Kind 0x1E's back-face test reads the halves of a float (latent, PC only; the owner's eye)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group E1C ([`effect_1c.md`](effect_1c.md) §7).
+
+**Established:** `EffectKind1E_Winding` `0x46EE20`, called by
+`EffectKind1E_DrawModel` `0x46EC20`, is the PlayStation's screen-space
+winding test on s16 `(x, y)` pairs, as the PSX GTE wrote them. On the PC
+`Gte_RotTransPers4` writes each screen point as two floats (x at `+8`, y at
+`+0xC`), so the pairs it is handed are the low and high 16 bits of each
+vertex's x float: their sign is noise in the mantissa, and which of the
+model's outlines are drawn does not follow their facing. The PC has the
+float version beside it - `0x4941B0` (the same cross product on float
+vertices, three other callers) - which this caller does not use.
+
+**What ours does:** reproduces (a fix would be a divergence).
+
+**Reach:** not stated in the doc; what the model looks like on the PC is for
+the owner's eye.
+
+**Status:** latent, PC only by reading (the PlayStation's pairs were s16).
+
+## D232 — `EffectKind44_SparksClear` clears one spark of eight (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group E2C ([`effect_2c.md`](effect_2c.md) §7, §9).
+
+**Established:** `EffectKind44_SparksClear` `0x476D00` sets the cursor
+`0x6761B8` to the first spark record and clears the in-use byte the cursor
+points at eight times, never moving it. Sparks 1..7 keep whatever their bytes
+held: the records lie in the shared buffer from `0x92BF80` (D201: kind 0x43's
+spark records, kind 0x6B's read-back pixels, kind 0x40's shards and disc), so
+a kind-0x44 ring started after one of those kinds ran may step and draw up to
+seven stale "sparks" - their life byte up to 0xFF frames, their speed and
+colour whatever lay there. Kind 0x44's first state and its fade-in both call
+it.
+
+**What ours does:** kept as read.
+
+**Reach, as the doc says it:** area 78 / 80's choice (§9); whether stale
+bytes are left there in play depends on what ran before - not measured.
+
+**Status:** latent, faithful.
+
+## D233 — Kind 0x45's trace reads 72 points from a 36-point history, and a stale point can hang its segment draw (latent; ours aborts at the hang)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group E2D ([`effect_2d.md`](effect_2d.md) §7).
+
+**Established:** `EffectKind45_PushSample` `0x4777A0` keeps 36 samples (it
+moves 35 dwords), while `EffectKind45_DrawTrace` `0x477820` hands
+`EffectKind45_DrawPoints` `0x4778A0` a count of 0x48, so the 36 dwords after
+the history (`0x92C010..0x92C09F`, inside `EffectKind30_Shards`' block, where
+kind 0x49's glow record `0x92C060` lies - D201) are read as points and
+plotted, or joined to a neighbour, when their x falls in the panel's clip
+columns; `EffectKind45_Start` `0x4771D0` clears 32 samples of the 36.
+`EffectKind45_DrawSegment` `0x477940` counts its steps in a byte against a
+16-bit distance: past 0xFF on the stepping axis it never returns. The trace's
+own samples stay close (the amplitude is capped at 0x18), but a segment from
+one of the stale points to a sample can be longer.
+
+**What ours does:** reads the same points; aborts with a message at a
+segment that would never end.
+
+**Reach:** not stated in the doc (kind 0x45 is spawned by `Scena06_Run13`,
+its `symbols.toml` row; fuzz only).
+
+**Status:** latent; ours aborts where the original would hang.
+
+## D234 — Kind 0x22 waits on arms through cells the spawn did not write, and on a "done" byte that outlives them (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group E1D ([`effect_1d.md`](effect_1d.md) §7).
+
+**Established:** when `Effect_FindFree` answers 0xFF for an arm (the pool of
+20 full), `EffectKind22_SpawnArms` `0x46F490` leaves the dword `+0xC + 4 i` as
+the record's last use left it - another kind's data, 0, or a record address
+from an earlier kind-0x22 life - and `EffectKind22_WaitArms` `0x46F530` reads
+byte `+6` through it: a small value faults, a stale address answers for a
+record that may be anything now. So a full pool can hang the effect (the byte
+0, for ever), end it early, or crash. And `Effect_Release` clears `+0..+4`
+only, so a folded arm's `+6` = 1 stays until the record is reused: if another
+spawner takes it first and writes `+6` (kind 0x22 itself writes 0), the parent
+waits on a record that is no longer its arm.
+
+**What ours does:** dereferences the cell as the original does.
+
+**Reach:** a full pool at the spawn (D206); not measured.
+
+**Status:** latent, faithful; a crash candidate with a full pool.
+
+## D235 — Kinds 0x82 and 0x83's wait: 6 does nothing where 0xFF ends it, the "reached" exit is overwritten, and 0x83's copy tests record 0 (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, groups E3D ([`effect_3d.md`](effect_3d.md) §7) and E4A
+([`effect_4a.md`](effect_4a.md) §7).
+
+**Established:**
+
+- `EffectKind82_Wait` `0x487C50` maps `0x903849` 3, 4, 5 to three, four, five
+  pushes and only 0xFF to the release; the byte table holds one more index
+  (3) at 0xFF and none at 6. A script that writes 6 to end the push leaves the
+  record waiting. Whether 6 is ever written was not traced (the writers of
+  `0x903849` are the event scripts').
+- The same function sets `+1` twice: when record 0 has reached the leader it
+  writes 0x16 (0x17 when `0x90384A` is 0x80), then the switch overwrites `+1`
+  for 3, 4, 5 and releases for 0xFF - the "reached" exit is lost whenever a
+  push count is pending. (It also leaves `Field_State` on the leader, D210.)
+- `EffectKind83_Wait` `0x488240` is kind 0x82's code copied whole: every other
+  state of kind 0x83 pushes and checks `Sprite_Objects` record 1, but this one
+  still compares record 0's x with the leader's for its 0x16 exit (and
+  `_Finish`, shared, stores record 0's distance). With both kinds alive the
+  0x16 exit follows record 0.
+
+**What ours does:** reproduces.
+
+**Status:** latent, faithful.
+
+## D236 — Kind 0x49's variant 3 writes through a pointer only variant 4 sets (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29, group E2D ([`effect_2d.md`](effect_2d.md) §7).
+
+**Established:** `EffectKind49_V3Burst` `0x478900` adds to the word `+0x10`
+behind `0x6761D0`, which only E2E's `0x4789D0` (variant 4's state 0) sets, to
+`0x92D1C8`; the image's initial value is not an address of the game.
+
+**What ours does:** writes through the same cell.
+
+**Reach, as the doc says it:** chapter 7 spawns variants 3 and 4 together, so
+variant 4 runs first in practice; a variant 3 alone would write through the
+stale value.
+
+**Status:** latent, faithful.
+
+## D237 — Sub-kind 0x4F's variant 0 is drawn along x and marks and tests cells along z (latent, faithful)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-10-03, group E5B ([`effect_5b.md`](effect_5b.md) §7).
+
+**Established:** `EffectKind18Sub4F_Start` `0x5011C0` sets `+8` = (v == 0) as
+sub-kind 0x0F's does, so variant 0's gate is drawn along x; but 0x4F's cell
+writes ((x, z), (x, z + 1)) and its leader tests always take the along-z
+shape. A variant-0 gate of this sub-kind would mark and test cells across
+the quad it draws.
+
+**What ours does:** reproduces.
+
+**Reach, as the doc says it:** whether any area spawns 0x4F with variant 0 is
+not known.
+
+**Status:** latent, faithful.
+
+## D238 — Small slips in round thirteen's effect code, each read once (latent)
+
+**Seen:** not seen in play; found by reading the code while taking it over,
+2026-09-29..10-03, by the round-thirteen groups (their docs' defects
+sections). Kept in each; none is known to show.
+
+**Established:**
+
+- `EffectKind05_Bounce` `0x4656C0` at a height of exactly 0 clears `+0xB`
+  (the jump at `0x4657A0` lands on the `jle` at `0x4657DA`) where a height
+  above 0 sets it: the bounce is re-armed only by an exact landing - "possibly
+  intended". Kind 0xA (`EffectKind0A_Start` `0x4658E0`) copies record 0
+  whatever record 0 is (kind 5's sprite only when kind 5 took the first free
+  record) (E1A).
+- The steps of kind 0xF's sub-kinds read "the record before `+0xA`": with
+  `+0xA` 0 and `+9` not 0 up to four bytes in front of the script (the high
+  bytes of the step table's last pointer); a record's own start never gets
+  there, a record left mid-step does - ours reads the same bytes rather than
+  abort. `EffectKind0F_DrawCountHeader` `0x468A40` writes 0x20 over a byte it
+  has just found to be 0x20. `EffectKind0F_Child3Grid` `0x467E10` takes the lit
+  mark's string at `0x66A32C + mark * 8` and the others' at `mark * 4` (with
+  the image's marks the lit one reads entry 0 or 2 of three) (E1B).
+- `EffectKind1C_Start` `0x46D8B0` overwrites the placement
+  `Area10_SpawnEffect1C` gives it with (0x600000, 0x110000) - "observed, not
+  necessarily a defect"; `EffectKind1E_ShardNext2` `0x46E6C0` and `_ShardNext3`
+  `0x46E6D0` are unreachable; kind 0x20's `+0x64` floors at 8 only in `_Fall`
+  (E1C).
+- `EffectKind24_Shrink` `0x46F8B0` stores 0 to `+0x12` (already 0) when `+0x14`
+  goes below 0 and leaves `+0x14` negative (no effect: the next state
+  releases; control 38); the rays are drawn from the
+  leader (`0x46FAE0` reads `ObjTrio`), not from the kind-0x23 record that
+  spawned them - "the owner's to say"; `EffectKind26_DrawBand` `0x46FFB0`'s
+  outer shade wraps past t = 0x500, which its one caller never passes (E1D).
+- `ExtraSlots_PickItem` `0x52A8F0`'s two slots are not symmetric: the kind-0xB
+  slot takes the id under the cursor even when it is already the slot's
+  (`Inventory_Remove` then `Inventory_Add` of the same id), where the kind-0xA
+  slot checks first, and neither checks `Inventory_Remove`'s answer; whether
+  a remove can fail from this list is not measured (E1F L4).
+- `ItemTrade_LeaveAsk` `0x594100` with confirm and cancel in one frame runs
+  both tests and the screen opens again; whether both can be pressed in one
+  frame was not traced; ours keeps it (E1G L1).
+- Kind 0x28's push leaves the record's point at its last cell; kind 0x2A's sets
+  a member's `+8` (5 or 1) whether or not its `+1` lets `Member_SetState2_8`
+  run; `EffectKind2E_Burst` sets a dword `+0xC` nothing of the kind reads
+  (E2A).
+- `EffectKind3B_Rise` `0x474240` steps `+0xA` three times a frame, once per
+  spiral, and resets only the spiral it is on to shade 0x80 when it caps: the
+  three spirals' shades are not stepped alike - "for the owner's eye". Kind
+  0x33's state 3 is dead (state 2 releases first). `EffectKind2F_DrawTrail`
+  `0x473360`'s clamp catches only the first line's first end (E2B).
+- `EffectKind43_SparksRun` `0x4762D0`: a spark whose phase is 5 or more is
+  drawn every frame and never taken out of use; only kind 0x43's states write
+  the `+6` it derives from (0, 1, 2), so not reachable from them (E2C).
+- Kind 0x47's lookup (`EffectKind47_Start` `0x477E30`) reads a sixth triple
+  past the five at `0x654564` when the model's animation byte is none of the
+  keys - zeros in the image: animation 0 from 0 (E2D).
+- `EffectAngle_Mean` `0x479970` does not wrap its answer: two angles in the
+  upper half and 0x800 or more apart give up to 0x13FF; its callers were not
+  read for a mask (E2E).
+- `EffectKind4F_Start` `0x47B990` keeps FC1's `EffectKind3C_Start` behaviour:
+  when the second sprite is not found the first is given back but `+3` keeps
+  its index and the next frame tries again (E2F).
+- Kind 0x76 (`EffectKind76_Shade` `0x485CB0`) draws colour 0 under abr 2
+  (subtract), nothing on the PlayStation's rule - what the port's renderer
+  makes of it was not looked at; kind 0x78 restores record 2's turn only in
+  `EffectKind78_End` `0x4864A0`, so a record released early leaves it turned
+  (E3D).
+- `EffectKind82_Count18` `0x488150` can never reach 0xF in play
+  (`EffectKind82_Start` and `_Again` set `+2` 0 on every pass): its "0xF or
+  more, back to 0xD" exit is dead; kind 0x84's entry 4 (`Effect_StateRelease`)
+  is unreachable (no state stores 4) (E4A).
+- Kind 0x88's states 1 and 2 wait for extra object 0's x to equal `0x3C8000` /
+  `0x408000` exactly - an object that steps past never moves the kind on;
+  `EffectKind87_Setup` `0x489030` recomputes rows 8..13 of `0x654DA0` in
+  `.data` every time - idempotent while rows 0..7 are constant (E4B; compare
+  D226).
+- Kind 0x8D sets the party records' byte `+0x48` and never puts it back
+  (whoever reads it is outside the band); kind 0x8F's stage byte is one cell
+  for every kind-0x8F record, harmless as each computes it before reading it
+  (E4C).
+- Kind 0x91 writes `Field_Request` 2 itself after `Msg_OpenScript`; kind 0x95's
+  two states test different party bytes (`0x80310F`, record 2's `+0x137`, in
+  `EffectKind95_Clock` `0x48CE10`; `0x802E77`, record 0's, in `_Finish`
+  `0x48CEA0`) - "as read, perhaps deliberate" (E4D).
+- Drawn 320 wide or centred on 320 x 240 under DIV-0041's wide picture:
+  `EffectKindAF_DrawScreen` `0x4932E0`'s tile (E4F), sub-kind 0x15's strip,
+  scrolled quads and gradients (E5C), `EffectKind18Sub21_DrawSpiral`
+  `0x505E60` (E5D) - for DIV-0041's survey (the round doc's section 18 item
+  5), not defects of the original.
+- E5D's `_DrawColumn`'s second argument is dead and `_DrawTiles`' never read
+  (the callers pass 0x80 / `(0x1F - +9) * 4` and 0) (E5D).
+- `EffectKind18Sub3F_ShadeClut` `0x507C40` does not clamp: a level above 0x80
+  carries a channel into the next (its callers never pass above 0x80); the
+  spin's angle mask `& 0xFFD` (`0x506FC0`, `0x5070E0`, `0x507AC0`, `0x507B20`)
+  also clears bit 1 (E5E).
+- `EffectKind18Sub42_WaitFlag` `0x509740` compares the flag's whole byte with
+  `+8` where `_WaitFlagBack` `0x509980` compares `(flag == 0)`: the same pair
+  of tests only while `+8` is 0 or 1 (the placements set it);
+  `EffectKind18Sub42_Mark` `0x509850` textures item 0 when the draw-item pool
+  is empty (the word stays 0, the next frame tries again);
+  `EffectKind18Sub49_WaitCue` `0x50A3E0` can step `+2` twice in one frame
+  (E5F).
+- Sub-kind 0x3E's far test (`EffectKind18Sub3E_WaitFar` `0x50C930`) crosses
+  the centre at 0x8000 where every other sub-kind's has 0x20000; 0x2D's place
+  (`EffectKind18Sub2D_Place` `0x50C160`) reads two flags from the spawn's z
+  cell's low byte and then overwrites `+0x3A`, which 0x2E..0x32 and 0x3E test
+  whole - both "as read" (E6A).
+- 0x38's place (`EffectKind18Sub38_Place` `0x50F130`) tests the leader's z
+  first whatever `+8` says, where every other place and wait picks the axis by
+  `+8` - "perhaps a slip" (E6B).
+- 0x64's `EffectKind18Sub64_Watch` `0x516560` can step `+2` down below 2
+  (`Game_Mode` 5 and `Game_Step` not, in state 2), which `_WaitBattle` steps
+  back - "as read, perhaps deliberate" (E6D).
+
+**What ours does:** reproduces each (E1B's script read reads where it could
+abort).
+
+**Status:** latent, harmless by reading or the owner's to judge where a doc
+says so.

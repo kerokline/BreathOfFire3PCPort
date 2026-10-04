@@ -72,6 +72,7 @@ add_library(bof3x SHARED
   src/hook/detour.cpp
   src/hook/calltrace.cpp
   src/hook/input_script.cpp
+  src/hook/draw_order.cpp
   src/hook/crash.cpp
   src/hook/log.cpp
   src/hook/inject_all.cpp
@@ -92,6 +93,7 @@ add_library(bof3x SHARED
   src/game/menu_verbs.cpp
   src/game/char_names.cpp
   src/game/labels.cpp
+  src/game/fishing_text.cpp
   src/game/battle_text.cpp
   src/game/title_menu.cpp
   src/game/gfx_frame.cpp
@@ -139,6 +141,7 @@ add_library(bof3x SHARED
   src/game/psx_gte_transform.cpp
   src/game/draw_emit.cpp
   src/game/draw_pass.cpp
+  src/game/layering.cpp
   src/game/field_modes.cpp
   src/game/field_modes_fuzz.cpp
   src/game/field_event.cpp
@@ -369,6 +372,7 @@ add_library(bof3x SHARED
   src/game/area_w0b_fuzz.cpp
   src/game/scenario_harness.cpp
   src/game/scenario_harness_fh.cpp
+  src/game/scenario_harness_ekh.cpp
   src/game/scena_sc0.cpp
   src/game/scena_sc0_fuzz.cpp
   src/game/scena_se.cpp
@@ -510,7 +514,79 @@ add_library(bof3x SHARED
   src/game/field_o.cpp
   src/game/field_o_fuzz.cpp
   src/game/field_c1.cpp
-  src/game/field_c1_fuzz.cpp)
+  src/game/field_c1_fuzz.cpp
+  src/game/effect_gte.cpp
+  src/game/effect_gte_fuzz.cpp
+  src/game/effect_1f.cpp
+  src/game/effect_1f_fuzz.cpp
+  src/game/effect_1b.cpp
+  src/game/effect_1b_fuzz.cpp
+  src/game/effect_1g.cpp
+  src/game/effect_1g_fuzz.cpp
+  src/game/effect_1d.cpp
+  src/game/effect_1d_fuzz.cpp
+  src/game/effect_1e.cpp
+  src/game/effect_1e_fuzz.cpp
+  src/game/effect_1a.cpp
+  src/game/effect_1a_fuzz.cpp
+  src/game/effect_1c.cpp
+  src/game/effect_1c_fuzz.cpp
+  src/game/effect_2g.cpp
+  src/game/effect_2g_fuzz.cpp
+  src/game/effect_2b.cpp
+  src/game/effect_2b_fuzz.cpp
+  src/game/effect_2d.cpp
+  src/game/effect_2d_fuzz.cpp
+  src/game/effect_2c.cpp
+  src/game/effect_2c_fuzz.cpp
+  src/game/effect_2f.cpp
+  src/game/effect_2f_fuzz.cpp
+  src/game/effect_2e.cpp
+  src/game/effect_2e_fuzz.cpp
+  src/game/effect_2a.cpp
+  src/game/effect_2a_fuzz.cpp
+  src/game/effect_3b.cpp
+  src/game/effect_3b_fuzz.cpp
+  src/game/effect_3d.cpp
+  src/game/effect_3d_fuzz.cpp
+  src/game/effect_3c.cpp
+  src/game/effect_3c_fuzz.cpp
+  src/game/effect_3a.cpp
+  src/game/effect_3a_fuzz.cpp
+  src/game/effect_4c.cpp
+  src/game/effect_4c_fuzz.cpp
+  src/game/effect_4f.cpp
+  src/game/effect_4f_fuzz.cpp
+  src/game/effect_4d.cpp
+  src/game/effect_4d_fuzz.cpp
+  src/game/effect_4e.cpp
+  src/game/effect_4e_fuzz.cpp
+  src/game/effect_4b.cpp
+  src/game/effect_4b_fuzz.cpp
+  src/game/effect_4a.cpp
+  src/game/effect_4a_fuzz.cpp
+  src/game/effect_5g.cpp
+  src/game/effect_5g_fuzz.cpp
+  src/game/effect_6a.cpp
+  src/game/effect_6a_fuzz.cpp
+  src/game/effect_5a.cpp
+  src/game/effect_5a_fuzz.cpp
+  src/game/effect_5b.cpp
+  src/game/effect_5b_fuzz.cpp
+  src/game/effect_5f.cpp
+  src/game/effect_5f_fuzz.cpp
+  src/game/effect_5e.cpp
+  src/game/effect_5e_fuzz.cpp
+  src/game/effect_5d.cpp
+  src/game/effect_5d_fuzz.cpp
+  src/game/effect_5c.cpp
+  src/game/effect_5c_fuzz.cpp
+  src/game/effect_6d.cpp
+  src/game/effect_6d_fuzz.cpp
+  src/game/effect_6c.cpp
+  src/game/effect_6c_fuzz.cpp
+  src/game/effect_6b.cpp
+  src/game/effect_6b_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

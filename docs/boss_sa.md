@@ -33,7 +33,15 @@ area records), not memory of the game:
 | `B39` | `Boss_SetupTable[39]` `0x438270` | `BOSS002` row 7 | 1 |
 | `K39` | `BossKind_Table[39]` `0x43D3D0` | Weretigr, area 35 (fight 33's, `BOSS033`) | 10 |
 
-**Which of fights 2, 3 and 39 is which area is left open.** The tool puts
+**Settled 2026-09-30, fight 2 = Nue in area 23:** the owner's
+`tools/recipes/cutsceneAndNue.txt` (area 23's cutscene into its Nue fight)
+under a first-call trace with every entry armed (`BOF3X_CALLTRACE`,
+`BOF3X_CALLTRACE_REACH=1`, `BOF3X_ORIGINAL='*'`) reaches `BossActor_Index`
+from `0x437F9E` inside `BossNue_Dispatch` `0x437EE0` (kind 1) at frame 7042
+and `BossActor_Clear` from `0x4381F5` inside `Boss02_Setup` `0x438190` at
+frame 7180; neither `Boss03_Setup` nor `Boss39_Setup` ranges appear. So B02
+is area 23's (kind 1, the first Nue the player meets), B03 area 22's (kind
+2) and B39 Sample 1's, as reasoned below. *As it stood before:* the tool puts
 all three on row 7 of areas 22, 23 and 158 (kinds 1, 2 and 46 precede them
 in `BOSS002`), and none of the eleven functions of those three set-ups and
 three kinds reads `0x904AAA`. What the code does say: fight 39 is chapter

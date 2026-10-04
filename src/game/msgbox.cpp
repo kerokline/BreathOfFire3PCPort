@@ -3,7 +3,8 @@
 // script-side opener, the reset, the frame task, the control-code stepper and
 // its 23-entry table, the eight state handlers under MsgBox_StateDispatch and
 // their own stack-built tables, the box effect task and its five effects, the
-// window slot allocator, and the two remaining text pens.
+// window slot allocator, the two remaining text pens, and (2026-10-03) the
+// grow / shrink draw MsgBox_EffectDraw - DIV-0070 lives there.
 //
 // DIVERGENCE DIV-0006 lives here now: MsgBox_Step's one draw call goes to
 // MsgBox_DrawChar (src/game/text_advance.cpp) rather than straight to
@@ -49,15 +50,17 @@ const Callees kOriginals = {
     MsgBox_Reopen,
     Sound_PlayEffect,
     MsgBox_DrawChar,   // DIV-0006; Text_DrawAt when no advance table is loaded
-    reinterpret_cast<void (__cdecl*)(unsigned, const unsigned char*)>(static_cast<std::uintptr_t>(kEffectDraw)),
+    MsgBox_EffectDraw,
     reinterpret_cast<void (__cdecl*)(int, int)>(static_cast<std::uintptr_t>(kPageArrow)),
     reinterpret_cast<unsigned (__cdecl*)(unsigned)>(static_cast<std::uintptr_t>(kAutoRepeat)),
     Text_DrawString,
     Gpu_SetCode6C,
     Gpu_SetSemiTrans,
     Gfx_CommitPrim,
+    Gpu_GetClut,
 };
 Callees g = kOriginals;
+unsigned char g_effect_space_skips = 0;   // DIV-0070, set by MsgBox_Inject after the self-test
 
 namespace {
 
@@ -968,6 +971,91 @@ extern "C" void __cdecl MsgBox_RiseStep(void) {
     SetB(kEffectKind, 0);
 }
 
+// original 0x4987E0 (PSX 0x80151F4C), 0x4987E0..0x498A2A. MsgBox_Step's draw
+// for a character inside an offset-pen span (0x0D .. 0x0E) while flag 8 of
+// 0x7DEE44 is set - effects 2 and 3, the grow and the shrink. One
+// POLY_FT4-shaped record at Gfx_PacketNext, scaled: the quad is 12 + P wide
+// and (about) 12 + P tall, P the signed word 0x7DEE68 that MsgBox_GrowStep
+// walks, out of the same 12-unit glyph cell; then the pen is moved by P, and
+// the stepper's own + 12 makes the advance the drawn width.
+//
+// As the original has it:
+//   - the CLUT word +0x0E is Gpu_GetClut((colour & 0xF) << 4, 0x1E0), only
+//     the low nibble of the pushed colour taken;
+//   - the texture extent W is 12 while P <= 12 (a signed compare), 11 above;
+//   - the glyph word +0x16 is ((c & 0x7F) << 8) + the next byte for a lead
+//     byte with bit 7 set, else c - 0x26 as a WORD (so 0x12..0x25 wrap);
+//   - the texture bytes are (0, 0), (W, 0), (0, W - T), (W, W - T), T the
+//     clip byte 0x658F00[0x7DEE58] - the row the page scroll is on;
+//   - the corners are (x, y), (x + P + 12, y), (x, y'), (x + P + 12, y') with
+//     y' = y + P + 12 - (T * (((P + 12) << 4) / 12) >> 4), the division
+//     signed and truncating (the 0x2AAAAAAB multiply), each stored as a word;
+//   - shade 0x80, code 0x6C, semi-transparency 1, Gfx_CommitPrim(1, 0x28);
+//   - a SPACE (0x20, `cmp cl, 0x20 / je 0x4988BE` at 0x498819) skips the
+//     glyph word and all eight texture bytes but still writes the shade and
+//     the corners and commits the primitive - whatever glyph word and
+//     texture the packet slot last held are drawn in the gap. The PSX twin
+//     does the same for its word separator 0xFF (0x80152010 -> 0x80152BF8:
+//     no tpage, no u, v, the corners and the commit), so the slip is the
+//     PlayStation's, carried over with 0x20 standing for 0xFF.
+//
+// DIVERGENCE DIV-0070: a space commits nothing. The clut word is written and
+// the pen moves by P exactly as the original's do; the quad is not built and
+// not committed. The stale glyph word was what crashed Font_UnpackGlyph on
+// 2026-10-02 (area 0x63, message 0x24, docs/msgbox.md section 4).
+//
+// Not DIV-0006's: the advance is 12 + P for every character, the space too;
+// the advance table is not consulted (docs/msgbox.md section 4).
+extern "C" void __cdecl MsgBox_EffectDraw(unsigned color, const unsigned char* text) {
+    const auto put = [](unsigned char* at, unsigned value) {
+        const auto word = static_cast<std::uint16_t>(value);
+        std::memcpy(at, &word, sizeof word);
+    };
+    const unsigned clut = g.get_clut(static_cast<int>((color & 0xFu) << 4), 0x1E0);
+    put(Gfx_PacketNext + 0x0E, clut);
+    const unsigned char extent = static_cast<std::int16_t>(W(kEffectOff)) <= 0x0C ? 0x0C : 0x0B;
+    const unsigned char c = text[0];
+    if (c != 0x20) {
+        const auto glyph = static_cast<std::uint16_t>((c & 0x80) ? ((c & 0x7Fu) << 8) + text[1] : c - 0x26u);
+        unsigned char* const p = Gfx_PacketNext;
+        put(p + 0x16, glyph);
+        p[0x0C] = 0;
+        p[0x0D] = 0;
+        p[0x14] = extent;
+        p[0x15] = 0;
+        p[0x1C] = 0;
+        p[0x1D] = static_cast<unsigned char>(extent - B(kClipTable + B(kColorHigh)));
+        p[0x24] = extent;
+        p[0x25] = static_cast<unsigned char>(extent - B(kClipTable + B(kColorHigh)));
+    } else if (g_effect_space_skips) {
+        MsgBox_PenX = static_cast<short>(MsgBox_PenX + W(kEffectOff));   // DIV-0070
+        return;
+    }
+    unsigned char* const p = Gfx_PacketNext;
+    p[4] = 0x80;
+    p[5] = 0x80;
+    p[6] = 0x80;
+    const auto x = static_cast<std::uint16_t>(MsgBox_PenX);
+    const std::uint16_t y = W(kPenY);
+    const auto off = static_cast<std::int16_t>(W(kEffectOff));
+    const auto right = static_cast<unsigned>(x + static_cast<std::uint16_t>(off) + 0x0C);
+    const int scale = ((off + 0x0C) << 4) / 0x0C;
+    const int cut = static_cast<int>(B(kClipTable + B(kColorHigh))) * scale >> 4;
+    const auto bottom = static_cast<unsigned>(y - static_cast<unsigned>(cut) + static_cast<std::uint16_t>(off) + 0x0C);
+    put(p + 0x08, x);
+    put(p + 0x0A, y);
+    put(p + 0x10, right);
+    put(p + 0x12, y);
+    put(p + 0x18, x);
+    put(p + 0x1A, bottom);
+    put(p + 0x20, right);
+    put(p + 0x22, bottom);
+    g.set_code6c(Gfx_PacketNext);
+    g.set_semitrans(Gfx_PacketNext, 1);
+    g.commit(1, 0x28);
+    MsgBox_PenX = static_cast<short>(MsgBox_PenX + W(kEffectOff));
+}
+
 // original 0x59E2D0 (PSX 0x80159874). Claims window record `slot` (stride
 // 0x24 off 0x803160) for `kind` if its first byte is free.
 //
@@ -1049,6 +1137,13 @@ extern "C" void __cdecl Text_EmitGlyph(int x, int y, int w, int h, int u, int v,
 
 void MsgBox_Inject() {
     if (bof3::WantsShadow("msgbox")) msgbox::SelfTest();
+    // DIVERGENCE DIV-0070: after the self-test, which compares Capcom's spaces.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("MsgBoxEffectSpaceSkips",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_effect_space_skips)), &was, &is, 1);
+        bof3::Log("DIV-0070    a space in a growing or shrinking shout commits no primitive");
+    }
     BOF3_INJECT(Msg_OpenScript);
     BOF3_INJECT(MsgBox_Reset);
     BOF3_INJECT(MsgBox_FrameTask);
@@ -1089,6 +1184,7 @@ void MsgBox_Inject() {
     BOF3_INJECT(MsgBox_EffectRise);
     BOF3_INJECT(MsgBox_RiseStart);
     BOF3_INJECT(MsgBox_RiseStep);
+    BOF3_INJECT(MsgBox_EffectDraw);
     BOF3_INJECT(Window_Alloc);
     BOF3_INJECT(Text_DrawAt);
     BOF3_INJECT(Text_EmitGlyph);

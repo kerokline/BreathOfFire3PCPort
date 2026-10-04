@@ -309,15 +309,17 @@ const CheatSlider kCheatSliders[] = {
     {IDC_CH_EXP, IDC_CH_EXP_V, &Config::Cheats::exp},
     {IDC_CH_ZENNY, IDC_CH_ZENNY_V, &Config::Cheats::zenny},
 };
-constexpr int kCheatMultiplierMax = 50;   // the DLL refuses more (src/game/cheats.cpp)
+constexpr int kCheatMultiplierMax = 10;   // the DLL clamps more to this (src/game/cheats.cpp)
 
 void CheatsPopulate(HWND dlg, const Config::Cheats& ch) {
     for (const CheatSlider& s : kCheatSliders) {
         HWND h = GetDlgItem(dlg, s.id);
         SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, kCheatMultiplierMax));
-        SendMessageW(h, TBM_SETTICFREQ, 5, 0);
-        SendMessageW(h, TBM_SETPOS, TRUE, static_cast<LPARAM>(ch.*s.value));
-        SetDlgItemInt(dlg, s.label, static_cast<UINT>(ch.*s.value), FALSE);
+        SendMessageW(h, TBM_SETTICFREQ, 1, 0);
+        // An ini saved while the cap was 50 may hold more: shown, and saved, as the cap.
+        const int v = ch.*s.value > kCheatMultiplierMax ? kCheatMultiplierMax : ch.*s.value;
+        SendMessageW(h, TBM_SETPOS, TRUE, static_cast<LPARAM>(v));
+        SetDlgItemInt(dlg, s.label, static_cast<UINT>(v), FALSE);
     }
     CheckDlgButton(dlg, IDC_CH_STEAL, ch.steal ? BST_CHECKED : BST_UNCHECKED);
 }

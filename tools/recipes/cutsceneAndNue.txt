@@ -1,0 +1,468 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# The owner's route, 2026-09-30: from the bridge outside the house, the sunset cutscene (a full-frame tint),
+# the night in the house and its dialogue, then the first Nue fight (the Equip window, a critical hit's flash).
+# About 7,400 frames: give input_run.py --minutes 7. The five shots were added, each in place of a frame.
+# save nue
+hold start 4
+wait 2
+hold start 4
+wait 35
+hold start 4
+wait 4
+hold start 5
+wait 3
+hold start 4
+wait 3
+hold start 3
+wait 4
+hold start 5
+wait 4
+hold start 4
+wait 30
+hold circle 4
+wait 34
+hold circle 4
+wait 8
+hold circle 4
+wait 56
+hold left 1
+hold down+left 11
+wait 47
+hold right 1
+hold up+right 34
+wait 278
+shot sunset_tint 1
+wait 146
+hold up+right 8
+hold right 5
+hold right+down 1
+hold circle+right+down 2
+hold circle+down 3
+hold down 4
+hold down+left 2
+hold circle+down+left 2
+hold circle+left 1
+hold left 3
+hold circle+up+left 3
+hold up+left 1
+hold up 3
+hold circle+up 1
+hold up+right 4
+hold circle+right 3
+hold right 5
+hold circle+right+down 3
+hold circle+down 1
+hold down 2
+hold down+left 1
+hold circle+down+left 3
+hold down+left 1
+hold left 2
+hold circle+left 2
+hold circle+up+left 1
+hold up+left 3
+hold circle+up 4
+wait 37
+hold circle 5
+wait 81
+hold circle 5
+wait 7
+hold circle 3
+wait 4
+hold circle 2
+wait 4
+hold circle 2
+wait 20
+hold circle 3
+wait 5
+hold circle 1
+wait 5
+hold circle 2
+wait 5
+hold circle 4
+wait 4
+hold circle 4
+wait 4
+hold circle 3
+wait 67
+hold circle 4
+wait 59
+hold circle 4
+wait 9
+hold circle 4
+wait 19
+hold circle 4
+wait 18
+hold circle 5
+wait 9
+hold circle 4
+wait 43
+hold circle 5
+wait 12
+hold circle 4
+wait 7
+hold circle 3
+wait 33
+hold circle 3
+wait 6
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 8
+hold circle 3
+wait 21
+hold circle 5
+wait 8
+hold circle 4
+wait 3
+hold circle 3
+wait 3
+hold circle 2
+wait 9
+hold circle 3
+wait 16
+hold circle 3
+wait 30
+shot night_house 1
+wait 10
+hold circle 3
+wait 18
+hold circle 9
+wait 14
+hold circle 4
+wait 4
+hold circle 4
+wait 21
+hold circle 4
+wait 25
+hold circle 4
+wait 10
+hold circle 4
+wait 5
+hold circle 4
+wait 34
+hold circle 5
+wait 5
+hold circle 4
+wait 58
+hold circle 4
+wait 9
+hold circle 4
+wait 18
+hold circle 4
+wait 29
+hold circle 5
+wait 7
+hold circle 3
+wait 44
+hold circle 5
+wait 7
+hold circle 4
+wait 8
+hold circle 5
+wait 11
+hold circle 4
+wait 48
+hold circle 5
+wait 41
+hold circle 4
+wait 41
+hold circle 4
+wait 7
+hold circle 3
+wait 4
+hold circle 2
+wait 12
+hold circle 4
+wait 6
+hold circle 3
+wait 4
+hold circle 2
+wait 3
+hold circle 2
+wait 7
+hold circle 2
+wait 4
+hold circle 5
+wait 84
+hold circle 4
+wait 78
+hold circle 3
+wait 87
+hold circle 5
+wait 5
+shot dialogue 1
+wait 16
+hold circle 5
+wait 66
+hold circle 6
+wait 103
+hold circle 3
+wait 14
+hold circle 4
+wait 49
+hold circle 3
+wait 83
+hold circle 3
+wait 57
+hold circle 5
+wait 15
+hold circle 3
+wait 58
+hold circle 5
+wait 78
+hold circle 4
+wait 11
+hold circle 3
+wait 164
+hold circle 4
+wait 223
+hold circle 6
+wait 136
+hold circle 5
+wait 5
+hold circle 5
+wait 5
+hold circle 4
+wait 14
+hold circle 4
+wait 105
+hold circle 4
+wait 84
+hold circle 4
+wait 22
+hold down+left 25
+hold left 12
+hold square+left 17
+hold square+down+left 16
+hold down+left 1
+hold down 1
+wait 335
+hold circle 4
+wait 144
+hold up 18
+wait 16
+hold circle 4
+wait 8
+hold circle 4
+wait 10
+hold circle 4
+wait 15
+hold circle 6
+wait 7
+hold down 4
+hold circle+down 5
+wait 15
+hold up 5
+wait 5
+hold right 4
+wait 2
+hold circle 5
+wait 19
+shot equip_window 1
+wait 7
+hold circle 3
+wait 15
+hold down 4
+wait 17
+hold circle 6
+wait 13
+hold cross 5
+wait 8
+hold cross 4
+wait 15
+hold circle 4
+wait 7
+hold circle 4
+wait 47
+hold circle 16
+wait 130
+hold circle 20
+wait 62
+hold circle 8
+wait 50
+hold up 9
+wait 6
+hold circle 3
+wait 3
+hold circle 3
+wait 29
+hold down 5
+hold circle+down 2
+hold down 1
+wait 6
+hold up 4
+wait 15
+hold up 4
+wait 3
+hold right 3
+wait 4
+hold circle 4
+wait 9
+hold circle 4
+wait 9
+hold down 3
+wait 6
+hold circle 5
+wait 4
+hold cross 5
+wait 9
+hold cross 4
+wait 10
+hold circle 4
+wait 8
+hold circle 5
+wait 7
+hold circle 4
+wait 3
+hold circle 4
+wait 48
+hold circle 19
+wait 64
+hold circle 17
+wait 142
+hold circle 7
+wait 57
+hold circle 3
+wait 4
+hold circle 3
+wait 43
+hold circle 4
+wait 4
+hold circle 3
+wait 5
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 51
+hold circle 13
+wait 37
+hold circle 6
+wait 18
+hold circle 6
+wait 48
+hold circle 3
+wait 4
+hold circle 3
+wait 2
+hold circle 6
+wait 61
+hold circle 3
+wait 3
+hold circle 3
+wait 15
+hold circle 5
+wait 8
+hold circle 3
+wait 5
+hold circle 3
+wait 7
+hold circle 3
+wait 9
+hold circle 3
+wait 4
+hold circle 3
+wait 3
+hold circle 2
+wait 14
+hold circle 3
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 3
+hold circle 3
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 2
+wait 4
+hold circle 1
+shot nue_attack 1 circle
+wait 3
+hold circle 2
+wait 3
+hold circle 2
+wait 3
+hold circle 3
+wait 45
+hold circle 13
+wait 132
+hold circle 14
+wait 58
+hold circle 22
+wait 46
+hold circle 6
+wait 35
+hold circle 3
+wait 4
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 2
+wait 3
+hold circle 3
+wait 3
+hold circle 2
+wait 49
+hold circle 17
+wait 140
+hold circle 5
+wait 39
+hold circle 4
+wait 18
+hold circle 5
+wait 22
+hold right 2
+hold up+right 71
+hold up 8
+hold up+left 6
+hold left 10
+hold up+left 8
+hold up 6
+hold up+left 9
+hold circle+up+left 4
+hold up+left 4
+wait 40
+hold circle 5
+wait 18
+hold circle 4
+wait 50
+hold circle 6
+wait 42
+hold down 3
+wait 3
+hold down 2
+wait 3
+hold down 2
+wait 4
+hold down 2
+wait 115
+hold circle 1
+wait 21
+hold left 2
+wait 155
+hold cross 2
+wait 33
+hold cross 4
+wait 3
+hold cross 3
+wait 3
+hold cross 4
+wait 45

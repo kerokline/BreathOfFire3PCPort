@@ -67,12 +67,12 @@ screen-x intervals, from psp-widescreen §3a / §3b and `bof3ext`'s list:
 | Terrain | `MapView_Build` `0x56EC00` (`0x56EDFA` / `0x56EE14`), **ours** | `[-50, 370]` | about `[-117, 437]` | PSP widened by 46 for 32; ours - patch our source |
 | Area-map frame pass, wide | `AreaMap_FrameAreaBD` `0x510780` (`0x51097E` / `0x510991`) | `[-200, 520]` | `[-252, 572]` | PSP +31 for 32 |
 | Area-map frame pass, narrow | same (`0x5109BB` / `0x5109D2`) | `[-50, 370]` | `[-102, 422]` | PSP +31 for 32 |
-| Sprite | `0x4CF319`, `0x4FF6A3`, `0x571366` | `[-60, 380]` | beyond `[-53, 373]` + sprite width | 7 px of margin left: pops |
+| Sprite | `0x4CF319`, `0x4FF6A3`, `0x571366` | `[-60, 380]` | beyond `[-53, 373]` + sprite width | 7 px of margin left: pops. `0x571366` is `MapCell_DrawAnimated`, ours: **`[-113, 433]` since 2026-09-30** (`Widescreen_Fill`); `0x4CF319` is the battle field's, reading `.rdata`, left |
 | `[-40, 360]` | PSX `80161ef4`; PC twin unread | `[-40, 360]` | wider | inside the new view: pops |
 | "unknown" | `0x5054E3` / `0x5054FA` | `[-20, 340]` | wider | inside the new view: pops |
-| Object | `0x4CEC09`, `0x5700D1` | `[-100, 420]` | - | 47 px margin, probably fine |
-| Object 2 | `0x570319` / `0x570333` | `[-80, 400]` | - | 27 px, watch |
-| `Sprite_Draw` | `0x59360B` / `0x593615` (int16), **ours** | `[-64, 384]` | - | 11 px, watch |
+| Object | `0x4CEC09`, `0x5700D1` | `[-100, 420]` | - | 47 px margin, probably fine. `0x5700D1` is `MapCell_DrawQuads`, ours: **`[-153, 473]` since 2026-09-30**; `0x4CEC09` the battle field's, left |
+| Object 2 | `0x570319` / `0x570333` | `[-80, 400]` | - | 27 px: **the trees popped** (the owner, 2026-09-30). `MapCell_DrawUprights`, ours: **`[-133, 453]`** |
+| `Sprite_Draw` | `0x59360B` / `0x593615` (int16), **ours** | `[-64, 384]` | - | 11 px: **`[-117, 437]` since 2026-09-30** |
 | `0x59293A` | in `bof3ext`'s list | ? | ? | unread |
 
 Every one is read before it is changed: many sit in functions that are ours
@@ -219,6 +219,95 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
     check).
   - Recorded in `wide_field_menu2`: the backdrop after its fix, seven
     column pairs, no band.
+- **Manillo's trade screen, 2026-10-03** (fix wave group MB; DIV-0041's
+  amendment of that date). *What the owner saw:* the tiled fish backdrop
+  of "Will that be all?  Yes No" 320 wide, black bands
+  (`owner_catalogue/manillo_will_that_be_all.png`; the same in
+  `analysis/shots/manillo_1003/` frames 3555..3735, `caughFish.txt` wide
+  at k = 5, 2130 x 1200, the morning's build). *The cause:* the screen's
+  backdrop is `ItemTrade_DrawBackground` `0x5942C0`, ours since round
+  thirteen's E1G (`effect_1g.cpp`; every trade state draws it last) -
+  two POLY_FT4s `(0, 0)..(0xA0, 240)` and `(0xA0, 0)..(0x140, 240)`, u
+  `0..0xA0`, v `0..0xF0`, under a draw mode whose texture window is a
+  32 x 32 tile `(32 * (Frame_Counter >> 4 & 3), 0x80)` - the pattern
+  steps through four tiles every 16 frames. The port has no texture
+  window in the GPU sense: the window is the page texture's cache key,
+  and `Tex_Convert4` / `_8` build the page by repeating the 32 x 32
+  block over 256 x 256, so u 0..255 is eight repeats. Nothing in the
+  draw knew about the bands. *What ours does:* under the columns the
+  left quad runs `(-53, 0)..(0xA0, 240)` with u `11..224`, the right
+  `(0xA0, 0)..(373, 240)` with u `0..213` - texels equal to columns, no
+  stretch, and u at column 0 still 0 mod 32, so the band columns show
+  the tiles the pattern would have had there (`ItemTrade_BackdropSpan`,
+  `effect_1g.h`). The columns come from `Widescreen_Fill()` (0 until
+  every self-test has run), not `Widescreen_Live()`: `Effect1G_Inject`
+  sits below `Widescreen_Inject` in `inject_all.cpp`, so `Live` would be
+  53 in its fuzz. *Checked:* `BOF3X_SHADOW=effect_1g` narrow and with
+  `BOF3X_WIDE=1`, 84,000 rounds at 0 mismatches each, plus a property
+  check of the spans for 0..63 columns in the same self-test (edges at
+  `0 - c` and `320 + c`, texels = columns, phase); controls in
+  [`effect_1g.md`](effect_1g.md) §12. *Owed the owner's eye:* the
+  coordinator's live check below.
+
+  **For the coordinator's live check.** The route is the owner's
+  `caughFish.txt` (`# save camping`, `BOF3X_LANG=en`, about 3,890
+  frames; the trade screen opens near frame 3,550 and "Will that be
+  all?" is up from about 3,690 to the end). A shot copy with
+  `tools/recipe_shots.py` (never by hand), then the run on the wide
+  ini (`wide=1` in the launcher's `bof3x.ini`, as the morning's
+  `caughFish_shots45` run had):
+
+      python tools/recipe_shots.py --every 45 --out <scratch>/caughFish_shots45.txt tools/recipes/caughFish.txt
+      python tools/input_run.py <scratch>/caughFish_shots45.txt --out analysis/shots/manillo_wide --lang en --no-front
+
+  Frames to look at: 3555, 3600, 3645 (the list, the needs), 3690 and
+  3735 ("Will that be all?"). Right: the fish pattern runs edge to edge
+  across all 426 columns, no black at either side, the tiles in the
+  bands continuing the columns of the middle 320 without a seam at
+  columns 53 and 373 (the same tile size as the middle - a stretch would
+  show wider fish at the sides), and the pattern still stepping every 16
+  frames. Wrong: black bands (ours not reached or not armed - check the
+  log's `DIV-0041    full-frame fills` line), wide fish in the bands (a
+  stretch), or a half-tile jump at the band edges (the phase). The
+  middle 320 columns must match `manillo_1003`'s pixel for pixel at the
+  same frames. Not touched and still to judge: the hand a word left of
+  `Yes` (DIV-0027's stops, another group's).
+
+  **The nine full-frame sites DIV-0041's 2026-09-30 amendment left
+  Capcom's** - read 2026-10-03 (`tools/pe_disasm.py`) and placed by
+  `analysis/round13_cut.tsv`, not taken. Whether an owner's recipe shows
+  one 320 wide was judged headless, from what is already on disk: the
+  390 call traces under `analysis/calltrace/` (today's
+  `reach_balioAndSunder_1/_2`, `reach_bossAndFlash`, `reach_dragonGene`
+  among them) record **no** entry into any of the hosts below, nor any
+  catalogued function in `0x484000..0x494000` or `0x500000..0x512000`;
+  and no capture under `analysis/shots/` shows a flash or tint with
+  bright or dark bands. So none is known to be visible on a recipe -
+  each is **unknown**, not "fine". (A trace arms only catalogued,
+  not-ours entries: the three marked hidden are entered through a
+  state table and could run unrecorded if their kind ran - their hosts'
+  state tables never did on any traced route.)
+
+  | Site | Function (cut) | Group | What it draws |
+  |---|---|---|---|
+  | `0x489D47` | `0x489CD0` | E4B (**widened** 2026-10-03 at the round's end, `EffectKind89_DrawTint`) | effect kind 137's unit: a semi-transparent TILE `(0, 0)` 320 x 240, colour from the effect record `+0x5D..+0x5F` (a tint) |
+  | `0x48CB07` | `0x48CA90` | E4D (**widened** 2026-10-03, `Effect_DrawScreenTint`) | kind 145's unit: the same tint, slot 5 |
+  | `0x48CD10` | `0x48CC90` | E4D (**widened** 2026-10-03) | kind 148's unit: the same tint, its blend mode an argument |
+  | `0x48DC19` | `0x48DBA0` | E4D (**widened** 2026-10-03, `EffectKind98_DrawFlash`) | kind 152's unit: a grey TILE, blend 1, level the clamped argument (a white flash or a fade) |
+  | `0x493308` | `0x4932E0` | E4F (**widened** 2026-10-03 at the round's end, `EffectKindAF_DrawScreen`) | kind 176's unit: a red TILE (red the argument), semi-transparent (a red flash) |
+  | `0x507BDC` | `0x507BC0` (hidden, host `0x5073D0`) | E5E (**widened** 2026-10-03, `EffectKind18Sub3F_WhiteOut`) | a world-2 overlay's step: an opaque white POLY_F4 over the frame, sound `0x202`, then a scene call (a white-out) |
+  | `0x507CE3` | `0x507CB0` | E5E (**widened** 2026-10-03, `EffectKind18Sub3F_DrawSky`) | a POLY_G4 gradient over the frame, two 15-bit colours from the argument (a sky, like `Gfx_DrawSkyGradient`) |
+  | `0x50B4B5` | `0x50B480` (hidden, host `0x50B220`) | E5G (**widened** 2026-10-03, `EffectKind18Sub36_Pulse`) | `EffectKind18_States`: a semi-transparent POLY_F4 `(0, 0x30, b)` over the frame, b from a 4-step table - a pulsing blue tint |
+  | `0x50F7B5` | `0x50F780` (hidden, host `0x50F590`) | E6B (**widened** 2026-10-03, `EffectKind18Sub54_Pulse`) | the same pulsing tint, its own table |
+
+  Each is a plain full-frame fill, so when its group's wave takes it, the
+  fill moves to `Widescreen_FillX()` / `Widescreen_FillWidth()` (§3c) -
+  except `0x507CB0`, a gradient, which takes `Gfx_DrawSkyGradient`'s
+  corners. The x cull `0x5054E3` (`[-20, 340]`, in `0x505480`, E5D) is
+  likewise unreached by any trace. **All nine are widened** since round
+  thirteen's end (E4B's and E4F's last, drawn as `Effect_DrawScreenTint`
+  is; their fuzzes compare the original's 320 x 240 with the fill
+  unarmed); nothing else was widened with them.
 - Since the survey the launcher has a "Widescreen" box (`wide=1` in
   `bof3x.ini`, which sets `BOF3X_WIDE=1`); the owner plays from it.
 - DIV-0036's k rule at 426 (the owner). *Overtaken (noted 2026-09-24): since

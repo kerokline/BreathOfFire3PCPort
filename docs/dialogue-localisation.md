@@ -241,8 +241,12 @@ it is a table, a proportional font is a data change.
 2. **Owner, in game.** Only the attract sequence has been seen: a caption and
    two speakers. Choice menus, name inserts (`0x03` `0x04` `0x07`), colour,
    the instant-print spans and page breaks are converted by rule and unseen.
-3. **The stepper's second draw, `0x4987E0`** (flag 8 of `0x7DEE44`), still
-   advances 12. Unread; by position it is the PSX grow/shrink text effect.
+3. **The stepper's second draw, `0x4987E0`** (flag 8 of `0x7DEE44`), the
+   PSX grow/shrink text effect. **Read and ours 2026-10-03**
+   (`MsgBox_EffectDraw`, [`msgbox.md`](msgbox.md) §9): a space inside a
+   grow span no longer draws a stale glyph (DIV-0070 - it crashed the owner's
+   game in area `0x63`). It still advances `12 + P` a character, space
+   included, not DIV-0006's table - open, the owner's call.
 4. **Menus: built 2026-09-20, seen 2026-09-21** (DIV-0008, §7; captured by
    input recipe on every menu screen). Left in Chinese: place names (enemy
    names since DIV-0053; the stat labels, the list headers and the status
@@ -377,6 +381,7 @@ All of them load with `FIRST.DAT`.
 | 10 | New Game's default names (Ryu ... Whelp) | name fields of 8 records at `0x64B390` | the records past the name, 4 bytes earlier (`START.EMI`) | DIV-0020 |
 | 11 | Manillo, the fish merchant | 8 bytes at `0x669CD8` | twelve bytes at `0x6608CC` (the fishing areas) | DIV-0020 |
 | 15 | the status words, the stats (menu and battle), the item and skill types (the last two repointed into the DLL's buffers) | `0x66A0E8`, `0x66A0F8`, `0x66A120`, `0x66A200`, `0x669CF0` | the bytes at `0x663648` / `0x663660`, `0x663960`, `0x66B5B4` (`START.EMI`, `BATTLE.EMI`) | DIV-0064 |
+| 16 | the fishing spot's banner lines and tabs (both repointed into the DLL's buffers; [`fishing-text.md`](fishing-text.md)) | 13 records at `0x653B98`, the table `0x66A088` | the row table `0x653C04` and the edge-quad records `0x653E6C` (the fishing areas) | DIV-0069 |
 
 What makes this cheap: the US abbreviations were made to fit the PlayStation's
 boxes, and the PC's boxes were made for two 12-unit Chinese glyphs - which are
@@ -446,8 +451,9 @@ readers by `pe_xref.py`:
   - the unowned 8-unit glyph draw `0x516E70`;
   - `Text_DrawFont8` `0x517090`, which the same functions call only for
     numbers;
-  - the effect draw `0x4987E0`, reached only by `MsgBox_Step` under a
-    grow/shrink span.
+  - the effect draw `0x4987E0` (`MsgBox_EffectDraw`, ours since
+    2026-10-03 but with Capcom's glyph word, no pair handling), reached only
+    by `MsgBox_Step` under a grow/shrink span.
 
   A name inserted inside such a span would show the pair's placeholder
   glyph.
