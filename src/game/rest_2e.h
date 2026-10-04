@@ -3,7 +3,7 @@
 // span no list had (0x58CFC0, band_rows' "code no list has"). docs/rest_2e.md.
 //
 // Three of the field menu's screens (docs/menu-screens.md section 1):
-//   - the Items screen's arrange steps (FieldItems_ArrangeSteps, the state R2D's
+//   - the Items screen's arrange steps (FieldMenuItems_State5Steps, the state R2D's
 //     0x58B1C0 runs), its discard prompt, its use-on-a-member state, a 32-entry
 //     list view, two window helpers, and the seven sorts behind FieldItems_Sort;
 //   - the Equipment screen (FieldMenu_States[4]): its dispatcher, its states but

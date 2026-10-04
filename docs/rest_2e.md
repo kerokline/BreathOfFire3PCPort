@@ -17,7 +17,7 @@ jumps by the state `0x929F01`, a few states by the step `0x929F02`):
 
 - **The Items screen** (`FieldMenu_States[2]`): its dispatcher `0x58AAE0` and
   table `0x667328` are R2D's. Here: the three arrange steps R2D's `0x58B1C0`
-  (state 5) jumps to through `FieldItems_ArrangeSteps`, states 6 (the discard
+  (state 5) jumps to through `FieldMenuItems_State5Steps`, states 6 (the discard
   prompt), 7 (a consumable used on a member) and 9 (a 32-entry list view), two
   window helpers R2D's states call, and `FieldItems_Sort` with its seven sorts.
 - **The Equipment screen** (`FieldMenu_States[4]`): `FieldEquip_Run` and its
@@ -35,7 +35,7 @@ answer `+0xB`) and `WindowRecords` `0x803160` (22 of `0x24`) are the cells.
 
 | Function | Entry | Bytes | Reached by | What |
 |---|---|--:|---|---|
-| `FieldItems_ArrangeCategory` | `0x58B1D0` | 0x15F | `FieldItems_ArrangeSteps[0]` | the category `0x80333E` turned through 0..3 by 0x8000 / 0x2000 (sound 0x101), the top from `0x9398B8`; confirm opens the sort window `0x803358`, step up; cancel state - 3 |
+| `FieldItems_ArrangeCategory` | `0x58B1D0` | 0x15F | `FieldMenuItems_State5Steps[0]` | the category `0x80333E` turned through 0..3 by 0x8000 / 0x2000 (sound 0x101), the top from `0x9398B8`; confirm opens the sort window `0x803358`, step up; cancel state - 3 |
 | `FieldItems_ArrangeHow` | `0x58B330` | 0x17B | [1] | the row `0x803363` over the category's `FieldItems_ArrangeRows` count; confirm: the row's sort id through `FieldItems_Sort`, or 0: the hand-arranged list (step up); cancel step down |
 | `FieldItems_ArrangeMove` | `0x58B4B0` | 0x298 | [2] | the list scroll (section 1.1); confirm picks an entry (`0x803341`) or swaps the pick with the cursor's entry in the id and count lists |
 | `FieldItems_DiscardConfirm` | `0x58B750` | 0x144 | Items state 6 (`0x667340`) | the item's name to text record 0; the yes / no hand by s8 `0x929F0B`, flipped by 0x2000 / 0x8000; yes clears the id and count; state - 3 |
@@ -214,7 +214,7 @@ from the hash only) - fixed before anything else.
   remove preview - the menu's code, not "field core".
 - **The tables**: `0x667328` (the Items states, 11) is R2D's dispatcher's and
   left to R2D; `0x667354` holds three entries, all R2E's, read by R2D's
-  `0x58B1C0` - named here `FieldItems_ArrangeSteps` (R2D may name it too: for
+  `0x58B1C0` - named `FieldMenuItems_State5Steps` by R2D, whose entry in `symbols.toml` stands (this group's own entry for it was removed at the merge: for
   the coordinator). Counts by hand: `FieldItems_Sorts` 7 (`0x66739C` follows),
   `FieldEquip_States` 9 (data follows), `FieldAbility_States` 10, its arrange
   steps 3 (the 12-byte rows follow), view steps 5 (R2F's `0x667444` sort table
@@ -406,7 +406,7 @@ names):
 |---|---|---|---|
 | `FieldMenu_Run` | ours | `FieldAbility_Run`, `FieldEquip_Run` | `FieldMenu_States[3]`, `[4]` |
 | `0x58AAE0` | R2D | `FieldItems_DiscardConfirm`, `_UseOnMember`, `_ViewList32` | table `0x667328` [6], [7], [9] |
-| `0x58B1C0` | R2D | the three arrange steps | `FieldItems_ArrangeSteps` |
+| `0x58B1C0` | R2D | the three arrange steps | `FieldMenuItems_State5Steps` |
 | `0x58AAF0` | R2D | `FieldItems_InitWindows` | E8 |
 | `0x58B130` | R2D | `FieldItems_CloseWindows` | E8 |
 | `0x58EE50`, `0x58EEC0`, `0x58EF60`, `0x58F370`, `0x590020` (2) | R2F | `FieldMenu_SwapBytes` | E8 |

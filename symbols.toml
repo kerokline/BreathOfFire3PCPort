@@ -103978,7 +103978,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B1D0..0x58B32E (0x15F bytes): FieldItems_ArrangeSteps[0] (R2D's 0x58B1C0 by the step 0x929F02): the backdrop; the hand at window 0x803334's x + 0x2A, y + 7, help 0x17; Input_AutoRepeat(pressed & 0xF00C); 0x803340 = 0xFF; 0x8000 / 0x2000 turn the category 0x80333E through 0..3 (sound 0x101, word 0x803344 = 0x32 / 0x31) and set the top 0x80333F from 0x9398B8[category]; confirm: sound 0x103, 0x803362 the category, the sort window 0x803358 opened, the step up; cancel: sound 0x106, the state down 3. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B1D0..0x58B32E (0x15F bytes): FieldMenuItems_State5Steps[0] (R2D's 0x58B1C0 by the step 0x929F02): the backdrop; the hand at window 0x803334's x + 0x2A, y + 7, help 0x17; Input_AutoRepeat(pressed & 0xF00C); 0x803340 = 0xFF; 0x8000 / 0x2000 turn the category 0x80333E through 0..3 (sound 0x101, word 0x803344 = 0x32 / 0x31) and set the top 0x80333F from 0x9398B8[category]; confirm: sound 0x103, 0x803362 the category, the sort window 0x803358 opened, the step up; cancel: sound 0x106, the state down 3. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
 
 [[func]]
 pc = 0x58B330
@@ -103987,7 +103987,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B330..0x58B4AA (0x17B bytes): FieldItems_ArrangeSteps[1]: the hand by the row 0x803363, help 0x18; 0x1000 / 0x4000 move the row over the category's FieldItems_ArrangeRows count (sound 0x100, wrapping); confirm: sound 0x103, the row's sort id - not 0: FieldItems_Sort(id); 0: 0x803341 = 0xFF, the cursor 0x803340 from 0x939898[category], the step up; cancel: sound 0x106, the step down, window 0x803358 closed. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B330..0x58B4AA (0x17B bytes): FieldMenuItems_State5Steps[1]: the hand by the row 0x803363, help 0x18; 0x1000 / 0x4000 move the row over the category's FieldItems_ArrangeRows count (sound 0x100, wrapping); confirm: sound 0x103, the row's sort id - not 0: FieldItems_Sort(id); 0: 0x803341 = 0xFF, the cursor 0x803340 from 0x939898[category], the step up; cancel: sound 0x106, the step down, window 0x803358 closed. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
 
 [[func]]
 pc = 0x58B4B0
@@ -103996,7 +103996,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B4B0..0x58B747 (0x298 bytes): FieldItems_ArrangeSteps[2]: the backdrop, the selected item's help (Item_HelpMessage), the hand by cursor - top; Input_AutoRepeat(pressed & 0x500C) scrolls a 128-entry list nine rows a page (word 0x803346 0xF0 / 0x10 when the cursor leaves the page), cursor and top kept at 0x939898 / 0x9398B8 by category, sound 0x100 when the cursor moved; with the scroll word 0: confirm picks a non-empty entry (0x803341) or swaps the picked entry with the cursor's in the id and count lists (FieldMenu_SwapBytes twice); cancel drops the pick or steps down. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B4B0..0x58B747 (0x298 bytes): FieldMenuItems_State5Steps[2]: the backdrop, the selected item's help (Item_HelpMessage), the hand by cursor - top; Input_AutoRepeat(pressed & 0x500C) scrolls a 128-entry list nine rows a page (word 0x803346 0xF0 / 0x10 when the cursor leaves the page), cursor and top kept at 0x939898 / 0x9398B8 by category, sound 0x100 when the cursor moved; with the scroll word 0: confirm picks a non-empty entry (0x803341) or swaps the picked entry with the cursor's in the id and count lists (FieldMenu_SwapBytes twice); cancel drops the pick or steps down. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
 
 [[func]]
 pc = 0x58B750
@@ -104411,14 +104411,6 @@ params = "void"
 impl = "src/game/rest_2e.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58ED10..0x58ED3F (0x30 bytes): FieldAbility_ViewSteps[4]: the timer down; at 0 the step 0, the state down 7. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
-
-[[data]]
-pc = 0x667354
-name = "FieldItems_ArrangeSteps"
-ctype = "unsigned long"
-count = 3
-status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R2E): R2D's 0x58B1C0 (the Items screen's state 5) jumps through it by the step 0x929F02, unbounded: FieldItems_ArrangeCategory, FieldItems_ArrangeHow, FieldItems_ArrangeMove; FieldItems_ArrangeRows follows. docs/rest_2e.md."
 
 [[data]]
 pc = 0x667360

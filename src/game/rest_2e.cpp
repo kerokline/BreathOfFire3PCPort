@@ -7,7 +7,7 @@
 //
 //   - The Items screen (FieldMenu_States[2], whose dispatcher 0x58AAE0 and
 //     state table 0x667328 are R2D's): the three arrange steps R2D's 0x58B1C0
-//     jumps to through FieldItems_ArrangeSteps, the discard prompt (state 6),
+//     jumps to through FieldMenuItems_State5Steps, the discard prompt (state 6),
 //     the use-on-a-member state (7), a 32-entry list view (9), two window
 //     helpers, and FieldItems_Sort with its seven sorts.
 //   - The Equipment screen (FieldMenu_States[4]): FieldEquip_Run and its
@@ -318,7 +318,7 @@ void MoveAbilityMember(U repeat, UC count) {
 // The Items screen
 // ===========================================================================
 
-// original 0x58B1D0: FieldItems_ArrangeSteps[0] - the category.
+// original 0x58B1D0: FieldMenuItems_State5Steps[0] - the category.
 extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
     Backdrop();
     const U pressed = W(kPressed) & 0xF00C;
@@ -373,7 +373,7 @@ extern "C" void __cdecl FieldItems_ArrangeCategory(void) {
     B(kState) = static_cast<UC>(B(kState) - 3);
 }
 
-// original 0x58B330: FieldItems_ArrangeSteps[1] - the sort, a row of the
+// original 0x58B330: FieldMenuItems_State5Steps[1] - the sort, a row of the
 // category's FieldItems_ArrangeRows.
 extern "C" void __cdecl FieldItems_ArrangeHow(void) {
     Backdrop();
@@ -422,7 +422,7 @@ extern "C" void __cdecl FieldItems_ArrangeHow(void) {
     B(kStep) = step;
 }
 
-// original 0x58B4B0: FieldItems_ArrangeSteps[2] - an entry picked and swapped
+// original 0x58B4B0: FieldMenuItems_State5Steps[2] - an entry picked and swapped
 // with another, the list scrolled.
 extern "C" void __cdecl FieldItems_ArrangeMove(void) {
     Backdrop();

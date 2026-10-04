@@ -136,7 +136,7 @@ static_assert(kCount == 49, "the group's 49 functions");
 U AddrOf(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 
 // The .data tables the group's dispatchers read in place (swapped for recorders
-// while the fuzz runs). FieldItems_ArrangeSteps is R2D's 0x58B1C0's to read.
+// while the fuzz runs). FieldMenuItems_State5Steps is R2D's 0x58B1C0's to read.
 const sh::DataTable kTables[] = {
     {AddrOf(FieldItems_Sorts), 7}, {AddrOf(FieldEquip_States), 9}, {AddrOf(FieldAbility_States), 10},
     {AddrOf(FieldAbility_ArrangeSteps), 3}, {AddrOf(FieldAbility_ViewSteps), 5},
