@@ -277,6 +277,7 @@
 #include "game/effect_6d.h"
 #include "game/effect_6b.h"
 #include "game/rest_0a.h"
+#include "game/rest_1e.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1156,7 +1157,14 @@ void InjectAll() {
                                 // every harness's inject; every caller that is ours (PartyAction5_Form0Begin) calls
                                 // it by the address it had, so order does not matter; no module patches bytes inside
                                 // its seven (DIVERGENCE.md, cheats.cpp)
-    FishingText_Arm();         // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
+    Rest1E_Inject();            // round 14 group R1E (0x5226D0..0x523EC2: the field actions of party sets 13, 14,
+                                // 15 and set 16's forms 0 and 1 - the dispatchers by the form word and the state
+                                // bytes, the turn-and-probe, resolve, cell-pickup and strike states): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its 28 state tables swapped for
+                                // the fuzz only; after Rest0A_Inject (it calls R0A's helpers by name) and every
+                                // harness's inject; no module patches bytes inside its 47 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
+    FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
                                 // module's self-test, which all compared the original's order (layering.h)

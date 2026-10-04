@@ -99641,3 +99641,656 @@ params = "void"
 impl = "src/game/rest_0a.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R0A, capstone to the last instruction), 0x524DA0..0x524E4E (0xAF bytes), cdecl, no arguments: Sprite_Current +0x2B = 1; then for direction 3 and then 5 (Field_DirectionSteps' rows at 0x6697C8 and 0x6697D8 by address, the direction pushed as an immediate): the point one row from Sprite_Current (re-read); MapView_SlopeAt there; when DamageScratch's flag byte is set and the slope's low word, signed, exceeds 0x40, MapView_GroundAt there, and +0x2B = 0 when Sprite_Current's s16 +0x3E is below its low word. The same probe PartyAction5_Form0Begin 0x51E930 makes inline. 14 E8 sites; none reads eax (each writes it first). Fuzz only. docs/rest_0a.md."
+
+# --- 2026-10-04, round fourteen wave-one group R1E: the field actions of party
+# sets 13, 14, 15 and set 16's forms 0 and 1 (docs/rest_1e.md), each read with
+# capstone to its last instruction. No PSX twin is paired for any of them
+# (pairs_propagated.json has none in 0x5226D0..0x523EC2); every name is from what
+# the PC code does and the table that reaches it.
+
+[[func]]
+pc = 0x5226D0
+name = "PartyAction_NoAction"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5226D0..0x5226DC (0xD bytes), cdecl, no arguments: Field_State +0x137 = 0 (the byte Field_FormActionState and PartyAction_Finish clear when an action ends). Reached only through .data: entry 0 of the forms tables of sets 13, 14, 15 (0x65FF00, 0x65FF70, 0x65FFC0) and entry 2 of PartyAction5_Forms, and six more cells (band_rows.py --byte-tables). The band tool put it inside R0A's PartyAction_BlockedAhead (0x522560, whose code ends at 0x52264C). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5226E0
+name = "PartyFormAction13_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5226E0..0x5226F1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FEC4 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction13_Form1States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyFormAction13_Forms entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522700
+name = "PartyAction13_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522700..0x522711 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FED0 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyAction13_Form1States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction13_Forms entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522720
+name = "PartyFormAction13_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522720..0x522731 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FEDC + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction13_Form2States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyFormAction13_Forms entry 2. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522740
+name = "PartyAction13_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522740..0x522751 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FEE8 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyAction13_Form2States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction13_Forms entry 2. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522760
+name = "PartyAction13_Form2Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522760..0x522933 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): DamageScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction13_Form2States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522940
+name = "PartyAction13_Form2Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522940..0x522A1A (0xDB bytes), cdecl, no arguments: +0xA counted down; at 0, the point two Field_DirectionSteps rows ahead; the object Sprite_ObjectAt(point, 0) finds gets bit 0 of its +0x80 (0..0x1D Sprite_Objects, 0x1E.. Sprite_ObjectsExtra; ours aborts on a byte past 0x21); the set's cell pickup on the point's cell (its high words, pushed as dwords over uninitialised stack), then, when that answers 0, on the cell one on in x (x's low word not 0), then one on in z (z's not 0); +2 one on. Sprite_ScriptTickOnce every time. PartyAction5_Form0Resolve 0x51EAF0's code instruction for instruction but the callee. Calls PartyAction13_CellPickup. Reached only through .data: PartyAction13_Form2States entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522A20
+name = "PartyAction13_CellPickup"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522A20..0x522B3E (0x11F bytes), cdecl (x, z: the dwords passed on; every callee reads their low words), answering al: Field_CellPickup 0x51EBD0's code with imul by 0x14, not 0xA (capstone diff: the one instruction). AreaMap_ByteAt(x, z): 0xF2 - with Effect_FindFree not 0xFF, Effect_SpawnAtCell(0, x, z); Rand & 0xF of 0xD..0xF: 2 zenny (5 on 0xF), times 20 when Field_InputFlags & 6 and Rand & 3 is 0, Field_GiveZenny, Effect_SpawnAtCell(1, x, z); +0xB = 1 (not when no object was free). 0xF8 - Effect_SpawnAtCell(0, x, z); Item_NamePtr(0, 0x56)'s 16 bytes to Text_Records; Inventory_Add(0, 0x56, 1): Sound_PlayEffect(0x106) and Msg_OpenSystem(2), else Msg_OpenSystem(3); Field_Request = 2; +0xB = 1. Both: AreaMap_ClearCell(x, z), al 1. Else al 0. The amount is kept in the low byte of the z argument's slot (the caller's stack, not read again). 3 E8 sites, all in PartyAction13_Form2Resolve, each testing al first. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522B40
+name = "PartyFormAction13_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522B40..0x522B52 (0x13 bytes, nop padding after), cdecl, no arguments: jmp [0x65FEF4 + the u16 form word +0x2C (mov ax, [ecx + 0x2C]) * 4] - PartyFormAction13_Forms (3 entries), the index unchecked (ours aborts past them). Reached only through .data: Field_FormActions entry 13 (0x660A78). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522B60
+name = "PartyAction13_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522B60..0x522B72 (0x13 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF00 + the u16 form word +0x2C (mov ax, [ecx + 0x2C]) * 4] - PartyAction13_Forms (3 entries), the index unchecked (ours aborts past them). Reached only through .data: Field_ActionBySet entry 13 (0x660A04). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522B80
+name = "PartyFormAction14_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522B80..0x522B91 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF0C + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction14_Form0States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyFormAction14_Forms entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522BA0
+name = "PartyFormAction14_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522BA0..0x522BB1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF18 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction14_Form1States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyFormAction14_Forms entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522BC0
+name = "PartyAction14_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522BC0..0x522BD1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF24 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyAction14_Form1Modes (2 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction14_Forms entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522BE0
+name = "PartyAction14_Form1Mode0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522BE0..0x522BF1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF2C + the state byte +3 (mov al, [ecx + 3]) * 4] - PartyAction14_Mode0States (5 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction14_Form1Modes entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522C00
+name = "PartyAction14_StrikeBegin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522C00..0x522C86 (0x87 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_BlockedAhead answers 0, two on, then two back (an odd +8 kept unmasked); PartyAction_SideProbes; Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42); +0xB = 0, +0xA = 0xB, +3 = 1. The two copies 0x522C00 / 0x523B40 are instruction for instruction the same. Reached only through .data: PartyAction14_Mode0States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522C90
+name = "PartyAction14_Strike"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522C90..0x522DDB (0x14C bytes), cdecl, no arguments: with +0xA not 0, +0xA counted down; at 0: Sound_PlayEffect(u16 +0x2C + 0x100); Field_EffectAhead not 0xFF - Sound_PlayEffect(0x10B), that effect object's +8 = the sprite's +8 and +0xA = 1 (the index movsx, unchecked: ours aborts past 19), +6 = the index, +3 two on; else the point two Field_DirectionSteps rows ahead, the object Sprite_ObjectAt(point, 0) finds gets bit 0 of its +0x80 and Sound_PlayEffect(0x10B), the set's strike cell on the point's cell, then the cells one on in x / z across a fraction while it answers 0, +3 one on. Sprite_ScriptTickOnce every time. The two copies 0x522C90 / 0x523BD0 differ only in the callee. Calls PartyAction14_StrikeCell. Reached only through .data: PartyAction14_Mode0States entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522DE0
+name = "PartyAction_StrikeWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522DE0..0x522E17 (0x38 bytes), cdecl, no arguments: the Effect_Objects record the sprite's +6 names (zero-extended, unchecked: ours aborts past 19) free (+0 zero) or in state 1 (+1 == 1), and Field_Kind2Hold 0: +6 = 0 and +3 = +3 - 2 (add 0xFE). Reached only through .data: entry 4 of PartyAction14_Mode0States and PartyAction16_Mode0States and seven more cells (band_rows.py --byte-tables), among them PartyAction2_Form0States' neighbours. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x522E20
+name = "PartyAction14_StrikeCell"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x522E20..0x522FA7 (0x188 bytes), cdecl (x, z, passed on whole), answering al: AreaMap_ByteAt(x, z) (the byte also stored into the low byte of the z argument's slot): 0xF0, 0xF1, 0xF4 - Effect_SpawnAtCellHigh(0, x, z), Rand & 7 above 5 (signed) Effect_SpawnAtCellHigh(4, x, z), Sound_PlayEffect(0x10B), al 1; 0xF6, 0xF7 - Effect_SpawnAtCellHigh(0, x, z), Sound_PlayEffect(0x10B), Rand & 0xF: below 7 Effect_SpawnAtCellHigh(3, x, z), Item_NamePtr(0, 0x29)'s 16 bytes to Text_Records, Inventory_Add(0, 0x29, 1) - Sound_PlayEffect(0x106) and Msg_OpenSystem(2), else Msg_OpenSystem(3) - and +0xB = 2; 7..0xB nothing more; 0xC..0xF Effect_SpawnAtCellHigh(2, x, z), Sprite_FlashClut(0), Char_LoseHp(1, Field_State +0x89 read after it), Msg_OpenSystem(0xD9), +0xB = 1; then Field_Request = 2, al 1. Else al 0. Effect_SpawnAtCellHigh is pushed a fourth dword, never read. The two copies 0x522E20 / 0x523D20 are instruction for instruction the same. 3 E8 sites, all in PartyAction14_Strike, each testing al first. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523030
+name = "PartyAction14_Form1Mode1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523030..0x523041 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF40 + the state byte +3 (mov al, [ecx + 3]) * 4] - PartyAction14_Mode1States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction14_Form1Modes entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523050
+name = "PartyAction14_Mode1Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523050..0x523084 (0x35 bytes), cdecl, no arguments: PartyAction_SideProbes; Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42); +0xA = 0xB, +3 = 1. Reached only through .data: PartyAction14_Mode1States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523090
+name = "PartyFormAction14_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523090..0x5230A1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF4C + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction14_Form2States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyFormAction14_Forms entry 2. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5230B0
+name = "PartyAction14_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5230B0..0x5230C1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF58 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyAction14_Form2States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction14_Forms entry 2. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5230D0
+name = "PartyAction14_Form2Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5230D0..0x5232A3 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): DamageScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction14_Form2States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5232B0
+name = "PartyAction14_Form2Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5232B0..0x52338A (0xDB bytes), cdecl, no arguments: +0xA counted down; at 0, the point two Field_DirectionSteps rows ahead; the object Sprite_ObjectAt(point, 0) finds gets bit 0 of its +0x80 (0..0x1D Sprite_Objects, 0x1E.. Sprite_ObjectsExtra; ours aborts on a byte past 0x21); the set's cell pickup on the point's cell (its high words, pushed as dwords over uninitialised stack), then, when that answers 0, on the cell one on in x (x's low word not 0), then one on in z (z's not 0); +2 one on. Sprite_ScriptTickOnce every time. PartyAction5_Form0Resolve 0x51EAF0's code instruction for instruction but the callee. Calls PartyAction14_CellPickup. Reached only through .data: PartyAction14_Form2States entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523390
+name = "PartyAction14_CellPickup"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523390..0x5234AE (0x11F bytes), cdecl (x, z: the dwords passed on; every callee reads their low words), answering al: Field_CellPickup 0x51EBD0's code with imul by 0x14, not 0xA (capstone diff: the one instruction). AreaMap_ByteAt(x, z): 0xF2 - with Effect_FindFree not 0xFF, Effect_SpawnAtCell(0, x, z); Rand & 0xF of 0xD..0xF: 2 zenny (5 on 0xF), times 20 when Field_InputFlags & 6 and Rand & 3 is 0, Field_GiveZenny, Effect_SpawnAtCell(1, x, z); +0xB = 1 (not when no object was free). 0xF8 - Effect_SpawnAtCell(0, x, z); Item_NamePtr(0, 0x56)'s 16 bytes to Text_Records; Inventory_Add(0, 0x56, 1): Sound_PlayEffect(0x106) and Msg_OpenSystem(2), else Msg_OpenSystem(3); Field_Request = 2; +0xB = 1. Both: AreaMap_ClearCell(x, z), al 1. Else al 0. The amount is kept in the low byte of the z argument's slot (the caller's stack, not read again). 3 E8 sites, all in PartyAction14_Form2Resolve. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5234B0
+name = "PartyFormAction14_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5234B0..0x5234C2 (0x13 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF64 + the u16 form word +0x2C (mov ax, [ecx + 0x2C]) * 4] - PartyFormAction14_Forms (3 entries), the index unchecked (ours aborts past them). Reached only through .data: Field_FormActions entry 14 (0x660A7C). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5234D0
+name = "PartyAction14_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5234D0..0x5234E2 (0x13 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF70 + the u16 form word +0x2C (mov ax, [ecx + 0x2C]) * 4] - PartyAction14_Forms (3 entries), the index unchecked (ours aborts past them). Reached only through .data: Field_ActionBySet entry 14 (0x660A08). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5234F0
+name = "PartyFormAction15_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5234F0..0x523501 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF7C + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction15_Form0States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyFormAction15_Forms entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523510
+name = "PartyFormAction15_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523510..0x523521 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF88 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction15_Form1States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyFormAction15_Forms entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523530
+name = "PartyAction15_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523530..0x523541 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FF94 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyAction15_Form1States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction15_Forms entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523550
+name = "PartyAction15_Form1Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523550..0x523723 (0x1D4 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_TargetAhead answers 0, two on, then two back (Sprite_Current re-read after each call; an odd +8 kept unmasked); MapView_GroundAt one Field_DirectionSteps row ahead (the unmasked direction) less the s16 height +0x3E (16 bits), and MapView_SlopeAt there with eax pushed whole (al the direction, the rest Sprite_Current's address; its answer unused): DamageScratch's flag set and that difference, signed, above 0x40 - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46) and +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 inline (PartyAction_SideProbes' code), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 5; then +0xB = 0 and +2 one on. PartyAction5_Form0Begin 0x51E930's code but for the steep test, which there is the slope's own low word (capstone diff). The three copies 0x522760 / 0x5230D0 / 0x523550 are instruction for instruction the same. Reached only through .data: PartyAction15_Form1States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523730
+name = "PartyAction15_Form1Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523730..0x52380A (0xDB bytes), cdecl, no arguments: +0xA counted down; at 0, the point two Field_DirectionSteps rows ahead; the object Sprite_ObjectAt(point, 0) finds gets bit 0 of its +0x80 (0..0x1D Sprite_Objects, 0x1E.. Sprite_ObjectsExtra; ours aborts on a byte past 0x21); the set's cell pickup on the point's cell (its high words, pushed as dwords over uninitialised stack), then, when that answers 0, on the cell one on in x (x's low word not 0), then one on in z (z's not 0); +2 one on. Sprite_ScriptTickOnce every time. PartyAction5_Form0Resolve 0x51EAF0's code instruction for instruction but the callee. Calls PartyAction15_CellPickup. Reached only through .data: PartyAction15_Form1States entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523810
+name = "PartyAction15_CellPickup"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523810..0x52392E (0x11F bytes), cdecl (x, z: the dwords passed on; every callee reads their low words), answering al: Field_CellPickup 0x51EBD0's code with imul by 0x14, not 0xA (capstone diff: the one instruction). AreaMap_ByteAt(x, z): 0xF2 - with Effect_FindFree not 0xFF, Effect_SpawnAtCell(0, x, z); Rand & 0xF of 0xD..0xF: 2 zenny (5 on 0xF), times 20 when Field_InputFlags & 6 and Rand & 3 is 0, Field_GiveZenny, Effect_SpawnAtCell(1, x, z); +0xB = 1 (not when no object was free). 0xF8 - Effect_SpawnAtCell(0, x, z); Item_NamePtr(0, 0x56)'s 16 bytes to Text_Records; Inventory_Add(0, 0x56, 1): Sound_PlayEffect(0x106) and Msg_OpenSystem(2), else Msg_OpenSystem(3); Field_Request = 2; +0xB = 1. Both: AreaMap_ClearCell(x, z), al 1. Else al 0. The amount is kept in the low byte of the z argument's slot (the caller's stack, not read again). 3 E8 sites, all in PartyAction15_Form1Resolve. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523930
+name = "PartyFormAction15_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523930..0x523941 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFA0 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction15_Form2States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyFormAction15_Forms entry 2. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523950
+name = "PartyAction15_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523950..0x523961 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFAC + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyAction15_Form2States (2 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction15_Forms entry 2. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523970
+name = "PartyFormAction15_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523970..0x523982 (0x13 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFB4 + the u16 form word +0x2C (mov ax, [ecx + 0x2C]) * 4] - PartyFormAction15_Forms (3 entries), the index unchecked (ours aborts past them). Reached only through .data: Field_FormActions entry 15 (0x660A80). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523990
+name = "PartyAction15_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523990..0x5239A2 (0x13 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFC0 + the u16 form word +0x2C (mov ax, [ecx + 0x2C]) * 4] - PartyAction15_Forms (3 entries), the index unchecked (ours aborts past them). Reached only through .data: Field_ActionBySet entry 15 (0x660A0C). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5239B0
+name = "PartyFormAction16_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5239B0..0x5239C1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFCC + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction16_Form0States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: entry 0 of 0x660030 (the forms table R1F's 0x5243D0, Field_FormActions entry 16, jumps through). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5239D0
+name = "PartyAction16_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5239D0..0x5239E1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFD8 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyAction16_Form0States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: entry 0 of 0x66003C (the forms table R1F's 0x5243F0, Field_ActionBySet entry 16, jumps through). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x5239F0
+name = "PartyAction_ProbeBegin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x5239F0..0x523AD6 (0xE7 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7; an odd one kept unmasked); +0x2B = 1; for direction 3 and then 5 (the rows 0x6697C8 / 0x6697D8 by address, the direction an immediate) the point one row from Sprite_Current (re-read), MapView_SlopeAt there, and with DamageScratch's flag set and the slope's low word, signed, above 0x40, MapView_GroundAt there and +0x2B = 0 when the s16 +0x3E is below its low word (PartyAction_SideProbes' code, inline); Sprite_EnsureAnimation((+8 >> 1) + 0x42, a byte); +2 one on. Reached only through .data: entry 0 of PartyAction13_Form1States and PartyAction16_Form0States and five more cells (sets 1, 2, 5 among them: band_rows.py --byte-tables). Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523AE0
+name = "PartyFormAction16_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523AE0..0x523AF1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFE4 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyFormAction16_Form1States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: entry 1 of 0x660030. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523B00
+name = "PartyAction16_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523B00..0x523B11 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFF0 + the state byte +2 (mov al, [ecx + 2]) * 4] - PartyAction16_Form1Modes (2 entries), the index unchecked (ours aborts past them). Reached only through .data: entry 1 of 0x66003C. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523B20
+name = "PartyAction16_Form1Mode0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523B20..0x523B31 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x65FFF8 + the state byte +3 (mov al, [ecx + 3]) * 4] - PartyAction16_Mode0States (5 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction16_Form1Modes entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523B40
+name = "PartyAction16_StrikeBegin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523B40..0x523BC6 (0x87 bytes), cdecl, no arguments: an even +8 turned one eighth back (& 7), and while PartyAction_BlockedAhead answers 0, two on, then two back (an odd +8 kept unmasked); PartyAction_SideProbes; Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42); +0xB = 0, +0xA = 0xB, +3 = 1. The two copies 0x522C00 / 0x523B40 are instruction for instruction the same. Reached only through .data: PartyAction16_Mode0States entry 0. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523BD0
+name = "PartyAction16_Strike"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523BD0..0x523D1B (0x14C bytes), cdecl, no arguments: with +0xA not 0, +0xA counted down; at 0: Sound_PlayEffect(u16 +0x2C + 0x100); Field_EffectAhead not 0xFF - Sound_PlayEffect(0x10B), that effect object's +8 = the sprite's +8 and +0xA = 1 (the index movsx, unchecked: ours aborts past 19), +6 = the index, +3 two on; else the point two Field_DirectionSteps rows ahead, the object Sprite_ObjectAt(point, 0) finds gets bit 0 of its +0x80 and Sound_PlayEffect(0x10B), the set's strike cell on the point's cell, then the cells one on in x / z across a fraction while it answers 0, +3 one on. Sprite_ScriptTickOnce every time. The two copies 0x522C90 / 0x523BD0 differ only in the callee. Calls PartyAction16_StrikeCell. Reached only through .data: PartyAction16_Mode0States entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523D20
+name = "PartyAction16_StrikeCell"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523D20..0x523EA7 (0x188 bytes), cdecl (x, z, passed on whole), answering al: AreaMap_ByteAt(x, z) (the byte also stored into the low byte of the z argument's slot): 0xF0, 0xF1, 0xF4 - Effect_SpawnAtCellHigh(0, x, z), Rand & 7 above 5 (signed) Effect_SpawnAtCellHigh(4, x, z), Sound_PlayEffect(0x10B), al 1; 0xF6, 0xF7 - Effect_SpawnAtCellHigh(0, x, z), Sound_PlayEffect(0x10B), Rand & 0xF: below 7 Effect_SpawnAtCellHigh(3, x, z), Item_NamePtr(0, 0x29)'s 16 bytes to Text_Records, Inventory_Add(0, 0x29, 1) - Sound_PlayEffect(0x106) and Msg_OpenSystem(2), else Msg_OpenSystem(3) - and +0xB = 2; 7..0xB nothing more; 0xC..0xF Effect_SpawnAtCellHigh(2, x, z), Sprite_FlashClut(0), Char_LoseHp(1, Field_State +0x89 read after it), Msg_OpenSystem(0xD9), +0xB = 1; then Field_Request = 2, al 1. Else al 0. Effect_SpawnAtCellHigh is pushed a fourth dword, never read. The two copies 0x522E20 / 0x523D20 are instruction for instruction the same. 3 E8 sites, all in PartyAction16_Strike. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[func]]
+pc = 0x523EB0
+name = "PartyAction16_Form1Mode1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1E, capstone to the last instruction), 0x523EB0..0x523EC1 (0x12 bytes, nop padding after), cdecl, no arguments: jmp [0x66000C + the state byte +3 (mov al, [ecx + 3]) * 4] - PartyAction16_Mode1States (3 entries), the index unchecked (ours aborts past them). Reached only through .data: PartyAction16_Form1Modes entry 1. Fuzz only: no recorded route enters it. docs/rest_1e.md."
+
+[[data]]
+pc = 0x65FEC4
+name = "PartyFormAction13_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520840 0x51FC80 (R1C's) 0x52F5C0; jumped through by PartyFormAction13_Form1 0x5226E0 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FED0
+name = "PartyAction13_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5239F0 (PartyAction_ProbeBegin) 0x51DE20 (R1B's) 0x520350 (R1C's); jumped through by PartyAction13_Form1 0x522700 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FEDC
+name = "PartyFormAction13_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520E90 (R1D's) 0x51FC80 (R1C's) 0x52F5C0; jumped through by PartyFormAction13_Form2 0x522720 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FEE8
+name = "PartyAction13_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x522760 (PartyAction13_Form2Begin) 0x522940 (PartyAction13_Form2Resolve) 0x51DA30 (PartyAction_Finish); jumped through by PartyAction13_Form2 0x522740 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FEF4
+name = "PartyFormAction13_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5226B0 (R1D's) 0x5226E0 (PartyFormAction13_Form1) 0x522720 (PartyFormAction13_Form2); jumped through by PartyFormAction13_ByForm 0x522B40 by u16 +0x2C, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF00
+name = "PartyAction13_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5226D0 (PartyAction_NoAction) 0x522700 (PartyAction13_Form1) 0x522740 (PartyAction13_Form2); jumped through by PartyAction13_ByForm 0x522B60 by u16 +0x2C, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF0C
+name = "PartyFormAction14_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520840 0x51FC80 0x52F5C0; jumped through by PartyFormAction14_Form0 0x522B80 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF18
+name = "PartyFormAction14_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520840 0x51FC80 0x437CA0; jumped through by PartyFormAction14_Form1 0x522BA0 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF24
+name = "PartyAction14_Form1Modes"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x522BE0 (PartyAction14_Form1Mode0) 0x523030 (PartyAction14_Form1Mode1); jumped through by PartyAction14_Form1 0x522BC0 by +2, the index unchecked. 2 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF2C
+name = "PartyAction14_Mode0States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x522C00 (PartyAction14_StrikeBegin) 0x522C90 (PartyAction14_Strike) 0x51D440 (R1A's) 0x51F850 (R1C's) 0x522DE0 (PartyAction_StrikeWait); jumped through by PartyAction14_Form1Mode0 0x522BE0 by +3, the index unchecked. 5 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF40
+name = "PartyAction14_Mode1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x523050 (PartyAction14_Mode1Begin) 0x523F10 (R1F's) 0x51D6D0 (R1A's); jumped through by PartyAction14_Form1Mode1 0x523030 by +3, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF4C
+name = "PartyFormAction14_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520E90 0x51FC80 0x52F5C0; jumped through by PartyFormAction14_Form2 0x523090 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF58
+name = "PartyAction14_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5230D0 (PartyAction14_Form2Begin) 0x5232B0 (PartyAction14_Form2Resolve) 0x51DA30 (PartyAction_Finish); jumped through by PartyAction14_Form2 0x5230B0 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF64
+name = "PartyFormAction14_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x522B80 0x522BA0 0x523090 (PartyFormAction14_Form0..2); jumped through by PartyFormAction14_ByForm 0x5234B0 by u16 +0x2C, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF70
+name = "PartyAction14_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5226D0 (PartyAction_NoAction) 0x522BC0 (PartyAction14_Form1) 0x5230B0 (PartyAction14_Form2); jumped through by PartyAction14_ByForm 0x5234D0 by u16 +0x2C, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF7C
+name = "PartyFormAction15_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520840 0x51FC80 0x52F5C0; jumped through by PartyFormAction15_Form0 0x5234F0 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF88
+name = "PartyFormAction15_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520E90 0x51FC80 0x52F5C0; jumped through by PartyFormAction15_Form1 0x523510 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FF94
+name = "PartyAction15_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x523550 (PartyAction15_Form1Begin) 0x523730 (PartyAction15_Form1Resolve) 0x51DA30 (PartyAction_Finish); jumped through by PartyAction15_Form1 0x523530 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFA0
+name = "PartyFormAction15_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520840 0x51C490 (R1A's) 0x52F5C0; jumped through by PartyFormAction15_Form2 0x523930 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFAC
+name = "PartyAction15_Form2States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5252B0 (R1F's) 0x521A20 (R1D's); jumped through by PartyAction15_Form2 0x523950 by +2, the index unchecked. 2 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFB4
+name = "PartyFormAction15_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5234F0 0x523510 0x523930 (PartyFormAction15_Form0..2); jumped through by PartyFormAction15_ByForm 0x523970 by u16 +0x2C, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFC0
+name = "PartyAction15_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5226D0 (PartyAction_NoAction) 0x523530 (PartyAction15_Form1) 0x523950 (PartyAction15_Form2); jumped through by PartyAction15_ByForm 0x523990 by u16 +0x2C, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFCC
+name = "PartyFormAction16_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520840 0x51FC80 0x52F5C0; jumped through by PartyFormAction16_Form0 0x5239B0 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFD8
+name = "PartyAction16_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x5239F0 (PartyAction_ProbeBegin) 0x51DE20 0x520350; jumped through by PartyAction16_Form0 0x5239D0 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFE4
+name = "PartyFormAction16_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x520840 0x51FC80 0x437CA0; jumped through by PartyFormAction16_Form1 0x523AE0 by +2, the index unchecked. 3 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFF0
+name = "PartyAction16_Form1Modes"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x523B20 (PartyAction16_Form1Mode0) 0x523EB0 (PartyAction16_Form1Mode1); jumped through by PartyAction16_Form1 0x523B00 by +2, the index unchecked. 2 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x65FFF8
+name = "PartyAction16_Mode0States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x523B40 (PartyAction16_StrikeBegin) 0x523BD0 (PartyAction16_Strike) 0x51D440 0x51F850 0x522DE0 (PartyAction_StrikeWait); jumped through by PartyAction16_Form1Mode0 0x523B20 by +3, the index unchecked. 5 entries: the run of code pointers to the next table, read by hand. docs/rest_1e.md section 3."
+
+[[data]]
+pc = 0x66000C
+name = "PartyAction16_Mode1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1E): 0x523ED0 0x523F10 (R1F's) 0x51D6D0 (R1A's); jumped through by PartyAction16_Form1Mode1 0x523EB0 by +3, the index unchecked. 3 entries: the run of code pointers to the next table; the next three dwords repeat a form-action states table's pattern, as PartyAction14_Mode1States holds three, read by hand. docs/rest_1e.md section 3."
