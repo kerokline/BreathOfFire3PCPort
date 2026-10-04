@@ -168,8 +168,8 @@ constexpr U kRet = 0x437CC0;
 struct Table { U at; unsigned n; U had[19]; };
 const Table kTables[] = {
     {table::kHandler7Kinds, 19, {0x59B240, 0x59B350, 0x59B310, 0x59CB20, 0x59B3C0, 0x59B3F0, 0x59B4F0, 0x59B560, 0x59B810,
-                                 0x59BB60, 0x59BBB0, 0x59BE50, 0x59BEA0, 0x59BEC0, 0x59BF00, 0x59C110, 0x59C190, 0x59C1E0,
-                                 0x59C260}},
+                                 0x59BB60, 0x59BBB0, bof3::addr::ShopWin_SharedListRun, bof3::addr::ShopWin_SharedMemberRun, bof3::addr::ShopWin_MemberStatusRun, bof3::addr::ShopWin_RowMenuRun, bof3::addr::ShopWin_MasterListRun, bof3::addr::ShopWin_MasterCaptionRun, bof3::addr::ShopWin_PupilsRun,
+                                 bof3::addr::ShopWin_ItemCountRun}},
     {table::kTitleSteps, 3, {kRet, 0x59A3A0, 0x59A3D0}},
     {table::kButtonsSteps, 3, {kRet, 0x59A3A0, 0x59A680}},
     {table::kMoneySteps, 3, {kRet, 0x59B390, 0x59A680}},
@@ -177,8 +177,8 @@ const Table kTables[] = {
     {table::kEquipSteps, 3, {kRet, 0x59B440, 0x59B530}},
     {table::kBuyListSteps, 4, {kRet, 0x59A5E0, 0x59B7B0, 0x59B7E0}},
     {table::kItemListSteps, 3, {kRet, 0x59A5E0, 0x59BB80}},
-    {table::kHandler8Kinds, 6, {0x59CB20, 0x59CB40, 0x59CBC0, 0x59CC10, 0x59CC90, 0x59CCE0}},
-    {table::kBattleItemSteps, 5, {kRet, 0x59A580, 0x59CB60, 0x59CB90, 0x59A5E0}},
+    {table::kHandler8Kinds, 6, {0x59CB20, 0x59CB40, 0x59CBC0, bof3::addr::BattleMenuWin_EquipRun, bof3::addr::BattleMenuWin_EquipItemsRun, bof3::addr::BattleMenuWin_VerbPairRun}},
+    {table::kBattleItemSteps, 5, {kRet, 0x59A580, 0x59CB60, bof3::addr::BattleMenuWin_ItemListSlideLeft, 0x59A5E0}},
     {table::kBattleSkillSteps, 3, {kRet, 0x59A5E0, 0x59CBE0}},
 };
 constexpr unsigned kTableCount = sizeof kTables / sizeof kTables[0];

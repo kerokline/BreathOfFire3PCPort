@@ -311,6 +311,7 @@ unsigned char* Window(unsigned k) { return Mem(at::kWindows + (k % 22) * at::kWi
 unsigned char* Record(unsigned n) { return Mem(at::kRecords + (n % 8) * at::kRecordStride); }
 unsigned char* g_window;   // the record a kCall draw is handed (a[0])
 unsigned g_self_index;
+unsigned g_k;              // the function this round fuzzes
 
 // Member ids whose 0x66972C byte is a record 0..7 (read at start-up, in place).
 unsigned char g_good_ids[256];
@@ -385,6 +386,7 @@ void SeedSkills(unsigned master) {
 }
 
 void Seed(unsigned k) {
+    g_k = k;
     // the window the handler is on, and the one a draw is handed
     g_self_index = sh::Next() % 22;
     unsigned char* const self = Window(g_self_index);
@@ -494,7 +496,7 @@ void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     const U v = h >> 8;
     unsigned char* const self = Window(g_self_index);
-    switch (h % 12) {
+    switch (h % 13) {
     case 0: sh::SetPointer(at::kCurrent, Window(b)); break;   // another record (the runs re-read 0x905B84)
     case 1: SetWord(self + (b & 1 ? 4 : 6), v & 0x1FF); break;
     case 2: Mem(at::kStyle)[0] = b; break;
@@ -507,6 +509,13 @@ void Disturb(U h) {
     case 9: g_window[0xC] = static_cast<unsigned char>(b % 3); break;
     case 10: Mem(at::kBattleParty + b % 3)[0] = static_cast<unsigned char>(v); break;
     case 11: g_window[9] = static_cast<unsigned char>(b % 7); break;
+    case 12:
+        // the reserve list's count (re-read at each row's end) and the item
+        // list's top (re-read for the lit row); never the masters' top, whose
+        // rows must stay inside its 17 entries
+        if (g_k == kReserve) g_window[0xA] = static_cast<unsigned char>(b % 6);
+        else if (g_k == kItemsDraw) g_window[0xA] = b;
+        break;
     default: break;
     }
 }
