@@ -103968,3 +103968,510 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R1D): 0x520840 0x51FC80 0x52F5C0 (PartyAction_ScriptEnd); jumped through by PartyFormAction13_Form0 0x5226B0 by Sprite_Current +2, unchecked; the next table starts at 0x65FEC4 (its own reader's). docs/rest_1d.md."
+
+[[func]]
+pc = 0x5869A0
+name = "MasterScreen_PickMember"
+ret = "void"
+params = "unsigned message, unsigned apprentices"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x5869A0..0x586B81 (0x1E2 bytes), cdecl: the masters' member pick. Input_AutoRepeat(Input_Pressed & 0x5000); confirm: the cursor's (0x9398CE) member's CharacterRecords +0x1F equal to the master byte 0x9039F5 exactly when the second argument's low byte is set - Sound_PlayEffect(0x104), the answer 0x9398D2 = 0, the step 0x9398D1 + 1; else 0x107. Cancel: the answer 1, 0x102, 0x106, step 4. Else 0x1000 / 0x4000 of the answer move the cursor over Field_MemberCount wrapping, 0x100. Then each member's panel 0x585DC0(0x11, 0x3E + 54 i, member, i) and label 0x585BE0(0x89, y, member) (R2C's), MasterScreen_DrawCursorFrame(0x11, 0x3E + 54 cursor, 0x110, 0x34, 1, 6), the box 0x586160(0x14, 0x10, 0x118, 0x13, byte 0x903A5A) and Text_DrawAt(0x1B, 0x13, 0, 0xFF, MessagePools + its word of the first argument & 0xFFFF). Called by R2C's 0x586980 and MasterQuit_Step2Pick. PSX twin of its callees: SHISU (pairs_propagated). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x586B90
+name = "MasterScreen_DrawCursorFrame"
+ret = "void"
+params = "unsigned x, unsigned y, unsigned w, unsigned h, unsigned blink, unsigned colours"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x586B90..0x586CF2 (0x163 bytes), cdecl: a cursor frame: Gpu_SetLineF3 at Gfx_PacketNext (x + 4, y), (x, y + 4), (x, y + h - 1), Gfx_CommitPrim(1, 0x2C); Gpu_SetLineF4 (x + 4, y), (x + w - 1, y), (x + w - 1, y + h - 1), (x, y + h - 1), Gfx_CommitPrim(1, 0x38) - the low words as floats (fild / fst); colour c 0xFF, or with the blink byte set ((Frame_Counter bit 3 ? it : ~it) & 6) << 5 + 0x3F, in the channels the colour bits 0..2 set (packet +6, +5, +4). PSX twin 0x801D1CC8 (call-anchored, pairs_propagated, a hypothesis; not read). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x586D00
+name = "MasterJoin_Step3Ask"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x586D00..0x586D1A (0x1B bytes), cdecl: step 3 of the masters' state 3 (R2C's step table 0x664548 entry 3): MasterScreen_AskYesNo(word 0x6644E8[master] + 0x11). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x586D20
+name = "MasterScreen_AskYesNo"
+ret = "void"
+params = "unsigned message"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x586D20..0x586EA0 (0x181 bytes), cdecl: the masters' yes / no prompt. Input_AutoRepeat(Input_Pressed & 0xA000); confirm: on yes (0x9398D2 0) Sound_PlayEffect(0x102) and the step + 1, on no the step - 1; then 0x104. Cancel: the answer 1, the step - 1, 0x106. Else any repeat (ax) 0x100 and the answer flipped. The member panels, the cursor frame (not blinking), the box, Text_DrawAt(0x1B, 0x13, 0, 0xFF, the message) at 0x586E78 and Menu_DrawHand(0xCF + 36 * answer, 0x15, 0) at 0x586E97 - DIV-0027's two re-aimed sites: ours calls where each reaches now. PSX twin 0x801D10AC (callers, pairs_propagated, a hypothesis). Fuzz only; live in the owner's masterAndManillo route (docs/yes-no-prompts.md section 7). docs/rest_2d.md."
+
+[[func]]
+pc = 0x586EB0
+name = "MasterJoin_Step5Apply"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x586EB0..0x587008 (0x159 bytes), cdecl: state 3 step 5 (0x664548[5]): on no message word 0x6644E8[master] + 4, Field_Request 2, state 0x9398CF 6, step 0. On yes: the cursor's member's record's first nine bytes (the name) to Text_Records, +0x1F = the master, +0x88 = the level +0xA, +0x89..+0x8E = the master's six bytes of 0x664370; message + 0xA, Field_Request 2, the step + 1. The member index unchecked (ours aborts past the 8 records). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587010
+name = "MasterJoin_Step6Told"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587010..0x587048 (0x39 bytes), cdecl: state 3 step 6 (0x664548[6]): once Field_Request is not 2, message word 0x6644E8[master] + 0xB, Field_Request 2, the step + 1. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587050
+name = "MasterJoin_Step7AllCheck"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587050..0x5870D0 (0x81 bytes), cdecl: state 3 step 7 (0x664548[7]): once Field_Request is not 2, every member from the first whose record +0x1F is the master (stopping at the first that is not): message + 7, Field_Request 2, the step + 1; else step 0. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x5870E0
+name = "MasterJoin_Step8Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x5870E0..0x587113 (0x34 bytes), cdecl: state 3 step 8 (0x664548[8]): once Field_Request is not 2, message word 0x6644E8[master] + 4, Field_Request 2, state 6. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587120
+name = "MasterQuit_ByStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587120..0x58712D (0xE bytes), cdecl: the masters' state 4 (R2C's 0x586670 through 0x66450C[4]): jmp [MasterQuit_Steps + 4 * byte 0x9398D1], unchecked (ours aborts past the 9). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587130
+name = "MasterQuit_Step2Pick"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587130..0x58714E (0x1F bytes), cdecl: state 4 step 2 (MasterQuit_Steps[2]): MasterScreen_PickMember(word 0x6644E8[master] + 0x10, 1). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587150
+name = "MasterQuit_Step3Ask"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587150..0x58716A (0x1B bytes), cdecl: state 4 step 3 (MasterQuit_Steps[3]): MasterScreen_AskYesNo(word 0x6644E8[master] + 0x11). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587170
+name = "MasterQuit_Step5Apply"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587170..0x587255 (0xE6 bytes), cdecl: state 4 step 5 (MasterQuit_Steps[5]): on no message + 4, step 0, Field_Request 2, state 6. On yes the cursor's member's name to Text_Records, its record +0x1F = 0xFF and +0x88..+0x8E = 0; message + 0xC, Field_Request 2, the step + 1. The member index unchecked (ours aborts past the 8 records). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587260
+name = "MasterQuit_Step6Told"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587260..0x587298 (0x39 bytes), cdecl: state 4 step 6 (MasterQuit_Steps[6]): once Field_Request is not 2, message + 0xD, Field_Request 2, the step + 1. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x5872A0
+name = "MasterQuit_Step7NoneLeftCheck"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x5872A0..0x587320 (0x81 bytes), cdecl: state 4 step 7 (MasterQuit_Steps[7]): once Field_Request is not 2, any member (from the first, stopping at it) whose record +0x1F is the master: step 0; none: message + 9, Field_Request 2, the step + 1. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587330
+name = "MasterQuit_Step8Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587330..0x587363 (0x34 bytes), cdecl: state 4 step 8 (MasterQuit_Steps[8]): once Field_Request is not 2, message + 4, Field_Request 2, state 6. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587370
+name = "MasterGrant_ByStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587370..0x58737D (0xE bytes), cdecl: the masters' state 5 (0x66450C[5]): jmp [MasterGrant_Steps + 4 * byte 0x9398D1], unchecked (ours aborts past the 3). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587380
+name = "MasterGrant_Step0Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587380..0x5873B6 (0x37 bytes), cdecl: state 5 step 0 (MasterGrant_Steps[0]): message word 0x6644E8[master] + 5, Field_Request 2, the cursor 0x9398CE 0, the step + 1. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x5873C0
+name = "MasterGrant_Step1Member"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x5873C0..0x587673 (0x2B4 bytes), cdecl: state 5 step 1 (MasterGrant_Steps[1]; its four-case table at 0x587664 inside it): once Field_Request is not 2, for the cursor's member when its record +0x1F is the master: g = level +0xA - the joining level +0x88 (a byte). Masters 0xB, 0xD, 0xE: at g >= 3 and bit 3 / 4 / 5 of 0x904061 clear, the bit set, MasterScreen_NameToText(member), message + 0xE. Master 0xC: at g >= 3, story flag 0x6C clear (Flags_Test 0x904030) and Inventory_Add(3, 0x16, 1) taking: Flags_Set, the name, message + 0xE. Others: the first of the master's six (level, ability) pairs at 0x6642A4 + 12 * master with level <= g, the ability's bit of 0x904088 clear and AbilityList_Add(ability, member, 0, 0) taking: the name, Ability_Records + 0x18 * ability's first 16 bytes to Text_Records + 0x20, the bit set, message + 0xE. Field_Request 2 with a message; the step + 1 on every path. PSX twin 0x801D3A2C (callers, pairs_propagated, a hypothesis). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x587680
+name = "MasterScreen_NameToText"
+ret = "void"
+params = "unsigned member"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x587680..0x5876B4 (0x35 bytes), cdecl: CharacterRecords[member & 0xFF]'s first nine bytes (two dwords and a byte: the name) to Text_Records. Called by MasterGrant_Step1Member. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x5876C0
+name = "MasterGrant_Step2Next"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x5876C0..0x5876EE (0x2F bytes), cdecl: state 5 step 2 (MasterGrant_Steps[2]): once Field_Request is not 2, the cursor + 1; at or past Field_MemberCount (unsigned) state 0x9398CF = 2; the step 1. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x5876F0
+name = "MasterScreen_State6Leave"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x5876F0..0x587732 (0x43 bytes), cdecl: the masters' state 6 (0x66450C[6]): once Field_Request is not 2, Sprite_Objects[byte 0x90384B] +1 = byte 0x66459C[master] unless that is 0xFF (the index unchecked: ours aborts past the 30 records); state 0x9398CF 0 and the field mode tail's step 0x9039F4 + 1. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x589E00
+name = "FieldMenu_TopBarCountdown"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x589E00..0x589E43 (0x44 bytes), cdecl: FieldMenu_TopBarSteps[1]: Menu_DrawBackdrop(byte 0x903A5B); the timer 0x929F04 - 1, at 0: the timer 5, the menu mode 0x929F00 = the top bar's entry 0x929F05 + 2, 0x929F01..0x929F03 = 0 - the screen of the entry chosen. Live: the field menu routes (menu_screens.txt). docs/menu_lists.md called it the countdown into a screen. docs/rest_2d.md."
+
+[[func]]
+pc = 0x589FB0
+name = "FieldMenu_CampAllowedCell"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x589FB0..0x589FDE (0x2F bytes), cdecl: AreaMap_ByteAt(word ObjTrio +0x36, word +0x3A) & 0xF0 compared with 0xA0, 0xA1, 0xAF and 0x91: al 0 on a match, else 1. Only 0xA0 can match after the mask (a latent defect: the other three compares are dead). Called by FieldMenu_TopBarInput (0x589BDC), the camp entry's check. Live: the field menu routes. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A0E0
+name = "FieldAbility_NotHere"
+ret = "unsigned char"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A0E0..0x58A0E2 (0x3 bytes), cdecl: FieldAbility_Effects[0]: mov al, 3; ret (eax's upper bytes the caller's). Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A0F0
+name = "FieldAbility_HealOne20"
+ret = "unsigned"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A0F0..0x58A13F (0x50 bytes), cdecl: FieldAbility_Effects[1]: Char_HealHp(target, (word CharacterRecords[caster & 0xFF] +0x2A + 100) * 20 / 100, battle) (the /100 by 0x51EB851F); eax 1 when al was set, else 4. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A140
+name = "FieldAbility_HealOne40"
+ret = "unsigned"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A140..0x58A18F (0x50 bytes), cdecl: FieldAbility_Effects[2]: as FieldAbility_HealOne20 at * 40. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A190
+name = "FieldAbility_HealOneFull"
+ret = "unsigned"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A190..0x58A1AD (0x1E bytes), cdecl: FieldAbility_Effects[3]: Char_HealHp(target, 0, battle) - 0 heals to the maximum; eax 1 / 4. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A1B0
+name = "FieldAbility_HealAll40"
+ret = "unsigned"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A1B0..0x58A258 (0xA9 bytes), cdecl: FieldAbility_Effects[4]: for each u8 i below Party_Count(0) (asked each pass) Char_HealHp(Field_Members[i], (stat + 100) * 40 / 100, battle), the stat re-read each pass; eax 1 when any al was set, else 4. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A260
+name = "FieldAbility_HealAll120"
+ret = "unsigned"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A260..0x58A30B (0xAC bytes), cdecl: FieldAbility_Effects[5]: as FieldAbility_HealAll40 at * 120. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A310
+name = "FieldAbility_Clear80"
+ret = "unsigned"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A310..0x58A330 (0x21 bytes), cdecl: FieldAbility_Effects[6]: Char_ClearStatus(target, 0x80, battle); eax 1 / 4. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A340
+name = "FieldAbility_NoEffect"
+ret = "unsigned char"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A340..0x58A342 (0x3 bytes), cdecl: FieldAbility_Effects[7]: mov al, 4; ret. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A350
+name = "FieldAbility_ClearA0"
+ret = "unsigned"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A350..0x58A370 (0x21 bytes), cdecl: FieldAbility_Effects[8]: Char_ClearStatus(target, 0xA0, battle); eax 1 / 4. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A380
+name = "FieldAbility_HealFullClearA0"
+ret = "unsigned"
+params = "unsigned caster, unsigned target, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A380..0x58A3B3 (0x34 bytes), cdecl: FieldAbility_Effects[9]: Char_HealHp(target, 0, battle), Char_ClearStatus(target, 0xA0, battle); eax 1 when either al was set, else 4. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A3C0
+name = "FieldAbility_Use"
+ret = "unsigned char"
+params = "unsigned caster, unsigned target, unsigned ability, unsigned battle"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A3C0..0x58A4B6 (0xF7 bytes), cdecl: an ability used from the field menu: the caster's record (0x802DC0 + 0x14C * caster with battle's low byte set, else CharacterRecords) and its AP word +0x1A below Skill_ApCost(caster, ability, 0): al 0. Else call [FieldAbility_Effects + 4 * k](caster, target, battle), k by the ability byte: 0x46..0x4B and 0xAE..0xB3 1..6, 0x50 7, 0x73 and 0xD7 8, 0xA8 9, else 0; an answer 1 or 5 takes Skill_ApCost (asked again) off the AP word. Answers the handler's al. Called by R2E's 0x58DC40 (0x58DEEA) and 0x58E070 (0x58E201), both with battle 0. Fuzz only. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A4C0
+name = "FieldMenuStatus_ByState"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A4C0..0x58A4CD (0xE bytes), cdecl: FieldMenu_States[6], the Status screen: jmp [FieldMenuStatus_States + 4 * byte 0x929F01], unchecked (ours aborts past the 5). Live: the field menu routes (catalog reach). docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A4D0
+name = "FieldMenuStatus_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A4D0..0x58A509 (0x3A bytes), cdecl: FieldMenuStatus_States[0]: Menu_DrawBackdrop(byte 0x903A5B), FieldMenuStatus_PlaceWindows; 0x929F06 = 0, the timer 0x929F04 = 8, the state + 1; Sound_PlayEffect(0x102). docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A510
+name = "FieldMenuStatus_SlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A510..0x58A56E (0x5F bytes), cdecl: FieldMenuStatus_States[1]: TextRecord_Set(0, 8, CharacterRecords + 0xA4 * MoveScript_EffectState[byte 0x904062[s8 0x929F06]]), window 11's word +0x10 (0x8032FC) = 0x12, Menu_DrawBackdrop; the timer - 1, the state + 1 when it was 0. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A570
+name = "FieldMenuStatus_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A570..0x58A727 (0x1B8 bytes), cdecl: FieldMenuStatus_States[2]: Menu_DrawBackdrop; window 19 on at window (4 + s8 cursor)'s +4 / +6; the name record; window 11's +0x10 = 0x12. Input_AutoRepeat(Input_Pressed & 0x5000): 0x1000 the cursor - 1, negative to Party_Count(0) - 1; else 0x4000 + 1, at or past the count (signed) 0; Sound_PlayEffect(0x100) when the cursor differs from the byte before (zero-extended against sign-extended: a negative cursor sounds every frame). Confirm: 0x103, 0x102, FieldMenuStatus_DetailWindows, window 19 off, the timer 8, the state + 1. Cancel (Input_Pressed re-read; both can run in one frame): 0x106, 0x102, windows 12 + i +3 = 1 for each member, window 11 +3 = 1, window 19 off, the timer 8, the state + 2. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A730
+name = "FieldMenuStatus_Detail"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A730..0x58A7C4 (0x95 bytes), cdecl: FieldMenuStatus_States[3]: Menu_DrawBackdrop, the name record, window 11's +0x10 = 0x12; with the timer set it counts down; at 0 a cancel: 0x106, 0x102, FieldMenuStatus_ListWindows, the timer 8, the state - 2. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A7D0
+name = "FieldMenuStatus_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A7D0..0x58A84E (0x7F bytes), cdecl: FieldMenuStatus_States[4]: Menu_DrawBackdrop; the timer - 1, at 0: FieldMenuStatus_ClearWindows, windows 4 + i +3 = 4 for each member, the timer 0, windows 7..10 +3 = 2, the mode 1 and the state 0 (back to the top bar). docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A850
+name = "FieldMenuStatus_PlaceWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A850..0x58A91E (0xCF bytes), cdecl: for each u8 i below Party_Count(0) (asked each pass): window 12 + i +1 6, +2 5, +3 2, +0 1, word +4 0x140, +0xA i, word +6 window (4 + i)'s +6; window 11 +1 6, +2 9, +3 2, +0 1, +4 0x14, +6 0xFFEC, +0x10 0; window 19 +1 6, +2 0xA, +0 0, +0xA 0, +0xB 1. Called by FieldMenuStatus_Open. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58A920
+name = "FieldMenuStatus_DetailWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58A920..0x58AA28 (0x109 bytes), cdecl: for each member i: window 4 + i +3 = 5 and window 12 + i +3 = 3 when i is the s8 cursor 0x929F06, else 7 and 5; windows 15, 16, 17 +3 2, +1 6, +2 6 / 7 / 8, +0 1, (+4, +6) (0x140, 0x74) / (0xFF9C, 0x78) / (0xFF9C, 0xA8), +0xA the cursor. Called by FieldMenuStatus_Choose. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58AA30
+name = "FieldMenuStatus_ListWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58AA30..0x58AAAF (0x80 bytes), cdecl: for each member i: window 4 + i +3 = 6 and window 12 + i +3 = 4 at the cursor, else 8 and 6; windows 15, 16, 17 +3 = 1. Called by FieldMenuStatus_Detail. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58AAB0
+name = "FieldMenuStatus_ClearWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58AAB0..0x58AAD0 (0x21 bytes), cdecl: windows 12..17's +0 = 0. Called by FieldMenuStatus_Close. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58AAE0
+name = "FieldMenuItems_ByState"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58AAE0..0x58AAED (0xE bytes), cdecl: FieldMenu_States[2], the Items screen: jmp [FieldMenuItems_States + 4 * byte 0x929F01], unchecked (ours aborts past the 11). Live: the field menu routes (catalog reach). docs/rest_2d.md."
+
+[[func]]
+pc = 0x58AAF0
+name = "FieldMenuItems_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58AAF0..0x58AB27 (0x38 bytes), cdecl: FieldMenuItems_States[0]: Menu_DrawBackdrop, R2E's 0x58BC30 (the windows), Sound_PlayEffect(0x102); the state + 1, the category cursor 0x6BDFA0 = 0, the timer 5. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58AB30
+name = "FieldMenuItems_SlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58AB30..0x58AB5F (0x30 bytes), cdecl: FieldMenuItems_States[1]: Menu_DrawBackdrop; the timer - 1, at 0 the timer 0 and the state + 1. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58AB60
+name = "FieldMenuItems_Category"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58AB60..0x58AD27 (0x1C8 bytes), cdecl: FieldMenuItems_States[2], the category row: Menu_DrawBackdrop; window 13 +8 0 and +0xC 0xFF, window 11 +0x10 the s8 category + 0x13, the hand (window 21) at window 12's (x + 48 * category, y + 4), window 12 +0xB 0xFF. Input_AutoRepeat(Input_Pressed & 0xA000): 0x8000 the category - 1 (negative to 3), 0x2000 + 1 (above 3 to 0), both tested; a change 0x101. Confirm: window 12 +0xB the category, 0x104; category 1 the step 0 and state + 3; 3 window 13's pick / top from 0x93989C / 0x9398BC, its list +0xA 4, state + 7; else window 13 +0xD 0xFF, its top / pick from 0x9398B8 / 0x939898 by its own +0xA, state + 1. Cancel: 0x106, 0x102, windows 11, 12, 13 +3 1, the hand off, the timer + 5, state + 2. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58AD30
+name = "FieldMenuItems_List"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58AD30..0x58B124 (0x3F5 bytes), cdecl: FieldMenuItems_States[3], the item list of window 13's category +0xA (Inventory_IdLists / Inventory_CountLists by it, unbounded: ours aborts past the five): window 13 +8 3 with the category row's cursor not 0 else 1; window 11 +0x10 = Item_HelpMessage(category, the picked item); the hand at (window 13 x + 7, y + 13 * (pick - top + 2)). Input_AutoRepeat(Input_Pressed & 0xF00C): 0x8000 / 0x2000 another category (window 13 +0x10 0x32 / 0x31, the old pick and top kept in 0x939898 / 0x9398B8, the new taken, 0..3 wrapping); else 0x1000 / 0x4000 the pick - / + 1 (0..0x7F), leaving the nine rows shown sets window 13 +0x12 0xF0 / 0x10; else 4 / 8 a page (the top by nine, 0..0x77); the pick and top kept; a moved pick 0x100. With +0x12 0: confirm on an empty slot 0x107; else 0x103 - the row's cursor not 0: Item_CanUse(+8, 0, category, item), taken: +0xD the pick, 0x929F0B 0, state + 3; 0: Item_CanUse, then an item with bit 4 of its NameTable_Consumables flags through ItemUse_Dispatch(0, item, 0) - answer 0 or 4: 0x104, its count - 1 and the slot emptied at 0, else 0x107 - and one without: 0x929F06 0, +0xD the pick, the hand off, state + 4. Cancel: 0x106, the state - 1. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58B130
+name = "FieldMenuItems_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58B130..0x58B1BC (0x8D bytes), cdecl: FieldMenuItems_States[4]: Menu_DrawBackdrop; the timer - 1, at 0: R2E's 0x58C2A0, windows 4 + i +3 = 3 for each member, the timer 0, windows 7..10 +3 2, the mode 1, the state 0. docs/rest_2d.md."
+
+[[func]]
+pc = 0x58B1C0
+name = "FieldMenuItems_State5ByStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2D, capstone to the last instruction), 0x58B1C0..0x58B1CD (0xE bytes), cdecl: FieldMenuItems_States[5]: jmp [FieldMenuItems_State5Steps + 4 * byte 0x929F02], unchecked (ours aborts past the 3). Fuzz only. docs/rest_2d.md."
+
+[[data]]
+pc = 0x6672EC
+name = "FieldAbility_Effects"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2D): FieldAbility_NotHere, FieldAbility_HealOne20, HealOne40, HealOneFull, HealAll40, HealAll120, Clear80, NoEffect, ClearA0, HealFullClearA0; called (caster, target, battle) by FieldAbility_Use 0x58A3C0 through call [0x6672EC + 4 k], k 0..9 by its own mapping of the ability byte; FieldMenuStatus_States follows at 0x667314. docs/rest_2d.md."
+
+[[data]]
+pc = 0x667314
+name = "FieldMenuStatus_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2D): FieldMenuStatus_Open, SlideIn, Choose, Detail, Close; jumped through by FieldMenuStatus_ByState 0x58A4C0 by byte 0x929F01, unchecked; its states write 0..4 only (Choose + 1 / + 2, Detail - 2, Close back to the top bar); FieldMenuItems_States follows at 0x667328. docs/rest_2d.md."
+
+[[data]]
+pc = 0x667328
+name = "FieldMenuItems_States"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2D): FieldMenuItems_Open, SlideIn, Category, List, Close, State5ByStep, then R2E's 0x58B750, 0x58B8A0, BareRet 0x437CC0, 0x58BA40 and FieldMenu_BackdropStep; jumped through by FieldMenuItems_ByState 0x58AAE0 by byte 0x929F01, unchecked; the run of code pointers to the next table, 0x667354 (FieldMenuItems_State5ByStep's) - Category reaches state 9 (+ 7 from 2). docs/rest_2d.md."
+
+[[data]]
+pc = 0x667354
+name = "FieldMenuItems_State5Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2D): R2E's 0x58B1D0, 0x58B330, 0x58B4B0; jumped through by FieldMenuItems_State5ByStep 0x58B1C0 by byte 0x929F02, unchecked; data follows at 0x667360. docs/rest_2d.md."
+
+[[data]]
+pc = 0x66456C
+name = "MasterQuit_Steps"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2D): R2C's 0x585A20, 0x585A50, MasterQuit_Step2Pick, Step3Ask, R2C's 0x585B20, Step5Apply, Step6Told, Step7NoneLeftCheck, Step8Close; jumped through by MasterQuit_ByStep 0x587120 by byte 0x9398D1, unchecked; the next table, 0x664590, is MasterGrant_ByStep's. docs/rest_2d.md."
+
+[[data]]
+pc = 0x664590
+name = "MasterGrant_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2D): MasterGrant_Step0Open, Step1Member, Step2Next; jumped through by MasterGrant_ByStep 0x587370 by byte 0x9398D1, unchecked; byte data (0x66459C, the masters' leave poses) follows. docs/rest_2d.md."
