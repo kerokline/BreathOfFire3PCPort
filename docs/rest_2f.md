@@ -8,7 +8,7 @@ R2F (`analysis/round14_cut.tsv`) and the one start in their spans no list had
 (`0x596530`, band_rows' "code no list has": `Field_RunTaskRecords`' handler 1).
 Each read to its last instruction with capstone and fuzzed through the scenario
 harness's **field** mode (used unchanged): 294,000 rounds, **0 mismatches**;
-controls in section 5. Fifteen `.data` tables named. Fuzz only: no recorded
+139 of 144 controls refused, the other five equivalent mutants with a near variant refused (section 5); `BOF3X_SHADOW='*'` exit 0, narrow and with `BOF3X_WIDE=1`. Fifteen `.data` tables named. Fuzz only: no recorded
 trace enters any of the 49 (section 9).
 
 **What the band is** (by the code; the screens' names are
@@ -247,7 +247,12 @@ a party byte; record 12's +0xA; the members rows.
 **Result** (this worktree's build, `BOF3X_SELFTEST_ONLY=1
 BOF3X_SHADOW=rest_2f`, exit 0):
 
-    shadow      rest_2f self-test: 294000 rounds over 49 functions (6000 each), 1843890 calls to the stand-ins, 0 MISMATCHES; 27236 bytes of state (48 regions) and the stand-ins' log compared
+    shadow      rest_2f self-test: 294000 rounds over 49 functions (6000 each), 1843398 calls to the stand-ins, 0 MISMATCHES; 27236 bytes of state (48 regions) and the stand-ins' log compared
+
+`BOF3X_SHADOW='*'` (this worktree, at the final commit): exit 0, 1,026 lines of
+`0 MISMATCHES` and none other; the same with `BOF3X_WIDE=1` (DIV-0041's bound
+inside `MenuSlide_LeftOff170` widened, read back by ours). Neither run died
+silently.
 
 Every table entry, stand-in and own callee was reached (the coverage lines:
 e.g. `TacticsMembers_Swap` 1,034 times as a callee, `0x58BD50` 322,462,
@@ -260,7 +265,154 @@ count list (section 7). Both bound in the seed / disturbance.
 
 ## 5. Controls
 
-CONTROLS_TABLE
+144 planted bugs, one at a time, each through a scratch driver that plants it in `rest_2f.cpp` (anchored on a unique string), rebuilds, runs `BOF3X_SHADOW=rest_2f` with `BOF3X_R2F_ONLY` on the function, restores and rebuilds (`r2f/controls.py`, `control_list.py` in the session scratchpad). **139 refused by a count of mismatches, in the function planted; 5 not refused, each an equivalent mutant** (no input can tell it apart; the reason is in its row) **with a near variant refused.** The first run left three more unrefused (C34, C124, C137: the seeds had no record of kind 0xB, no x of 0x31, no change of the list's category under the shadow row) and C144 weak; the seeds and the disturbance were widened and every control re-run - the table is that last run, on the committed fuzz.
+
+| # | Function | Planted | Refused in (rounds) |
+|---|---|---|--:|
+| 1 | `AbilityMenu_InitRecords` | record 16 x 0x141 | 6000 of 6000 |
+| 2 | `AbilityMenu_InitRecords` | record 12 +0xB 0xFE | 6000 of 6000 |
+| 3 | `AbilityList_SortBy` | mode 1 runs mode 2 | 1966 of 18000 |
+| 4 | `AbilityList_Compact` | compaction swaps on a second byte above 1 | 7 of 6000 |
+| 5 | `AbilityList_Compact` | the span not shortened after the first pass | 1119 of 6000 |
+| 6 | `AbilityList_Compact` | Char_AbilityList member and type swapped | 5312 of 6000 |
+| 7 | `SortByApDown` | down sort swaps on equal costs | 6000 of 6000 |
+| 8 | `SortByApUp` | up sort swaps on equal costs | 5778 of 6000 |
+| 9 | `AbilityMenu_InitRecord17` | record 17 y 0x3F | 6000 of 6000 |
+| 10 | `FieldMenu_FreeRecords13To18` | record 18 kept | 4465 of 6000 |
+| 11 | `Tactics_Run` | step 1 runs step 2 | 788 of 6000 |
+| 12 | `Tactics_Open` | record 18 x 0x71 | 5998 of 12000 |
+| 13 | `Tactics_Open` | the top choice 1 | 5980 of 12000 |
+| 14 | `Tactics_Open` | the step read before the sound | 49 of 12000 |
+| 15 | `Tactics_Top` | record 11 +0x10 0x20 + choice | 5996 of 6000 |
+| 16 | `Tactics_Top` | the hand 0x31 a choice | 603 of 6000 |
+| 17 | `Tactics_Top` | the toggle on 0x8000 only | 1516 of 6000 |
+| 18 | `Tactics_Top` | the members allowed by bit 1 | 612 of 6000 |
+| 19 | `Tactics_Top` | confirm steps on by choice + 2 | 1422 of 6000 |
+| 20 | `Tactics_Top` | cancel steps on by 4 | 1006 of 6000 |
+| 21 | `Tactics_Top` | record 18 +0xB 0xFE | 4578 of 6000 |
+| 22 | `Tactics_Formation` | sub-step 1 runs 2 | 2019 of 6000 |
+| 23 | `TacticsFormation_Enter` | the records +0xB = 2 | 1533 of 6000 |
+| 24 | `TacticsFormation_Enter` | the party loop one further | 606 of 6000 |
+| 25 | `TacticsFormation_Leave` | the countdown ends at 1 | 1004 of 6000 |
+| 26 | `TacticsFormation_Pick` | the pick mark +2 | 3008 of 6000 |
+| 27 | `TacticsFormation_Pick` | the set mark 6 off column 0 | 4039 of 6000 |
+| 28 | `TacticsFormation_Pick` | record 11 +0x10 0x77 + cell | 4036 of 6000 |
+| 29 | `TacticsFormation_Pick` | the swapped note takes the row twice | 869 of 6000 |
+| 30 | `TacticsFormation_Pick` | the rows noted when one apart | 157 of 6000 |
+| 31 | `TacticsFormation_Pick` | the swap arguments exchanged | 203 of 6000 |
+| 32 | `TacticsFormation_Pick` | direct entry on 2 | 120 of 6000 |
+| 33 | `TacticsFormation_Pick` | the formation written - 2 | **not refused** - equivalent: the formation byte is written again from the set at the function's end (near variant C39 refused) |
+| 34 | `TacticsFormation_Pick` | records of kind 0xC sent out | 270 of 6000 |
+| 35 | `TacticsFormation_Pick` | up on 0x2000 | 1415 of 6000 |
+| 36 | `TacticsFormation_Pick` | the sound only on a column move | 1438 of 6000 |
+| 37 | `TacticsFormation_Pick` | the columns move with a pick in column 1 | 1489 of 6000 |
+| 38 | `TacticsFormation_Pick` | left on 0x4000 | 1163 of 6000 |
+| 39 | `TacticsFormation_Pick` | the formation at the end without - 1 | 6000 of 6000 |
+| 40 | `TacticsFormation_Leave` | the step back by 2 | 2001 of 6000 |
+| 41 | `Tactics_Members` | sub-step 0 runs 1 | 1982 of 6000 |
+| 42 | `TacticsMembers_Enter` | the member flag bit 0 | 857 of 6000 |
+| 43 | `TacticsMembers_Enter` | the party byte at 2 rec[+0xB] | 534 of 6000 |
+| 44 | `TacticsMembers_Pick` | the cursor mark from +5 | 5993 of 6000 |
+| 45 | `TacticsMembers_Pick` | record 11 +0x10 0x62 | 2031 of 6000 |
+| 46 | `TacticsMembers_Pick` | the name 9 bytes | 3968 of 6000 |
+| 47 | `TacticsMembers_Pick` | the column on right only | 1216 of 6000 |
+| 48 | `TacticsMembers_Pick` | the party row held one lower | **not refused** - equivalent: at the boundary the clamp writes the row it already holds (near variant C49 refused) |
+| 49 | `TacticsMembers_Pick` | up wraps to count - 2 | 618 of 6000 |
+| 50 | `TacticsMembers_Pick` | down wraps at the last row | 120 of 6000 |
+| 51 | `TacticsMembers_Pick` | the sound only on a column change | 1738 of 6000 |
+| 52 | `TacticsMembers_Pick` | the done sound 0x104 | 110 of 6000 |
+| 53 | `TacticsMembers_Pick` | record 12 to state 2 | 501 of 6000 |
+| 54 | `TacticsMembers_Leave` | the step back by 1 | 2001 of 6000 |
+| 55 | `Tactics_Close` | the field menu state 2 | 2001 of 6000 |
+| 56 | `Tactics_Close` | the party records to state 3 | 1486 of 6000 |
+| 57 | `Tactics_OpenFormation` | the party rows 0x37 apart | 2260 of 6000 |
+| 58 | `Tactics_OpenFormation` | record 11 y 0x11 | 5999 of 6000 |
+| 59 | `TacticsFormation_Build` | the cells at x 0xF6 | 4304 of 6000 |
+| 60 | `TacticsFormation_Build` | the limit inclusive | 1508 of 6000 |
+| 61 | `TacticsFormation_Build` | two members limit 2 | 762 of 6000 |
+| 62 | `TacticsFormation_Build` | the set column + 2 | 6000 of 6000 |
+| 63 | `TacticsFormation_Build` | column 0 open to the count | 4509 of 6000 |
+| 64 | `TacticsMembers_Build` | the reserve by bit 1 | 5951 of 6000 |
+| 65 | `TacticsMembers_Build` | one reserve flag fewer | 4990 of 6000 |
+| 66 | `TacticsMembers_Build` | record 12 y 0x3C | 6000 of 6000 |
+| 67 | `TacticsMembers_Build` | the party flags cleared only below 2 | 1504 of 6000 |
+| 68 | `TacticsMembers_Build` | the list written again after the flags (the overlap undone) | 1359 of 6000 |
+| 69 | `TacticsMembers_Swap` | the +0xC bytes not exchanged | 818 of 6000 |
+| 70 | `TacticsMembers_Swap` | the party swap arguments exchanged | 884 of 6000 |
+| 71 | `TacticsMembers_Swap` | three portrait bytes | 883 of 6000 |
+| 72 | `TacticsMembers_Swap` | five of the six-byte cells | 884 of 6000 |
+| 73 | `TacticsMembers_Swap` | refusal by bit 2 | 1254 of 6000 |
+| 74 | `TacticsMembers_Swap` | the reserve refusal answers the party member | 616 of 6000 |
+| 75 | `TacticsMembers_Swap` | the copy not rewritten | 300 of 6000 |
+| 76 | `TacticsMembers_Swap` | the reserve not rewritten | 406 of 6000 |
+| 77 | `TacticsMembers_Swap` | the last portrait word at +3 | 1350 of 6000 |
+| 78 | `FieldMenu_FreeRecords12` | record 12 kept | 4443 of 6000 |
+| 79 | `FieldMenu_State8Run` | state 8 through the Config table (near variant of an equivalent mutant) | 6000 of 6000 |
+| 80 | `FieldMenu_State8Run` | state 8 step 0 runs step 1 (all four are BareRet) | **not refused** - equivalent: the four entries are one bare ret (near variant C79 refused) |
+| 81 | `ConfigMenu_Run` | step 0 runs 1 | 1982 of 6000 |
+| 82 | `ConfigMenu_Open` | 0x929F03 = 3 | 6000 of 6000 |
+| 83 | `ConfigMenu_Open` | the cursor not kept | 5972 of 6000 |
+| 84 | `ConfigMenu_Body` | a sound for the machine | 6000 of 6000 |
+| 85 | `ConfigMenu_Close` | the party x 0xFF6B | 4550 of 6000 |
+| 86 | `ConfigMenu_Close` | the cursor not restored | 5228 of 6000 |
+| 87 | `Stat_AddClampedTo` | the cap exclusive | **not refused** - equivalent: at sum = cap both give the stat cap and an answer whose low word is the delta (C89, C90 refused) |
+| 88 | `Stat_AddClampedTo` | a fall to 0 clamped | **not refused** - equivalent: at sum = 0 both give 0 and an answer whose low word is the delta (C89, C90 refused) |
+| 89 | `Stat_AddClampedTo` | at the cap the delta answered | 464 of 6000 |
+| 90 | `Stat_AddClampedTo` | the fall answer one less | 1146 of 6000 |
+| 91 | `AbilityList_CountSet` | list 2 at +0x75 | 8 of 6000 |
+| 92 | `AbilityList_CountSet` | the other list 0x7F bytes | 2103 of 6000 |
+| 93 | `AbilityList_CountSet` | the working record one on | 851 of 6000 |
+| 94 | `ItemTrade_TakeNeeds` | the item + 0x39 | 5868 of 6000 |
+| 95 | `ItemTrade_TakeNeeds` | the second kind by five bits | 1696 of 6000 |
+| 96 | `ItemTrade_TakeNeeds` | the end mark 0xFE | 2723 of 6000 |
+| 97 | `ItemTrade_TakeNeeds` | the multiplier unsigned | 2410 of 6000 |
+| 98 | `Window_Kind1List` | the next choice's y | 4641 of 6000 |
+| 99 | `Window_Kind1List` | the last choice not drawn | 3954 of 6000 |
+| 100 | `Window_Kind1Cursor` | the hand + 5 | 6000 of 6000 |
+| 101 | `Window_Kind1Layout` | a newline counts no line | 3524 of 6000 |
+| 102 | `Window_Kind1Layout` | two-byte glyphs from 0x40 | 2669 of 6000 |
+| 103 | `Window_Kind1Layout` | the width 0xDD | 6000 of 6000 |
+| 104 | `Window_Kind1Layout` | the +0x1A half by shift | 682 of 6000 |
+| 105 | `Window_Kind1Layout` | the rows 3 apart | 3954 of 6000 |
+| 106 | `Window_Kind1Layout` | the +0x14 a quarter | 6000 of 6000 |
+| 107 | `Window_Kind1Layout` | the height + 5 | 6000 of 6000 |
+| 108 | `Window_Handler1Kinds` | kind 1 runs kind 2 | 1537 of 6000 |
+| 109 | `Win1_TitleStrip` | the title box 0x117 wide | 6000 of 6000 |
+| 110 | `Win1_TitleStrip` | the pool index unsigned | 5 of 6000 |
+| 111 | `Win1_TitleStrip` | the record not re-read after the box | 28 of 6000 |
+| 112 | `Win1_ButtonRow` | set and selection exchanged | 5268 of 6000 |
+| 113 | `Win1_ShisuPanel` | the panel of the next record | 6000 of 6000 |
+| 114 | `Win1_DrawShisuPanel` | an empty row colour 6 | 85 of 6000 |
+| 115 | `Win1_DrawShisuPanel` | the cursor from +0xB | 4795 of 6000 |
+| 116 | `Win1_DrawShisuPanel` | the cursor row raised 1 | 4783 of 6000 |
+| 117 | `Win1_DrawShisuPanel` | the title 5 a byte | 6000 of 6000 |
+| 118 | `Win1_DrawShisuPanel` | one right-edge piece fewer | 6000 of 6000 |
+| 119 | `Win1_DrawShisuPanel` | corner piece 0x33 | 6000 of 6000 |
+| 120 | `Window_Handler2Kinds` | kind 2 runs kind 3 | 1241 of 6000 |
+| 121 | `Win2_ItemList` | the list of the next record | 6000 of 6000 |
+| 122 | `MenuSlide_LeftOff170` | held at the bound too | 285 of 6000 |
+| 123 | `MenuSlide_LeftOff170` | left 0x10 a frame | 4451 of 6000 |
+| 124 | `MenuSlide_RightTo80` | held above 0x51 | 328 of 6000 |
+| 125 | `MenuSlide_RightTo80` | right 0x10 a frame | 4002 of 6000 |
+| 126 | `Win2_ItemPanel` | the panel of the next record | 6000 of 6000 |
+| 127 | `Win2_EquipCompare` | no_preview from +0xC | 5507 of 6000 |
+| 128 | `Win2_TitleBox` | the title box 0x14 high | 6000 of 6000 |
+| 129 | `Win2_TitleBox` | the record not re-read after the message | 23 of 6000 |
+| 130 | `MenuSlide_DownTo40` | held at 0x28 too | 541 of 6000 |
+| 131 | `Win2_DrawItemList` | eight rows | 5979 of 6000 |
+| 132 | `Win2_DrawItemList` | dim inverted | 3022 of 6000 |
+| 133 | `Win2_DrawItemList` | the cursor colour 3 | 3524 of 6000 |
+| 134 | `Win2_DrawItemList` | key items count 2 | 1208 of 6000 |
+| 135 | `Win2_DrawItemList` | the marked row not raised | 2697 of 6000 |
+| 136 | `Win2_DrawItemList` | the shadow skipped on the cursor colour | 4274 of 6000 |
+| 137 | `Win2_DrawItemList` | the raised row's category not re-read | 5 of 6000 |
+| 138 | `Win2_DrawItemList` | the title 7 a character | 6000 of 6000 |
+| 139 | `Win2_DrawItemList` | the room 0x7F | 4792 of 6000 |
+| 140 | `Win2_DrawItemList` | the countdown on bits 5..7 | 506 of 6000 |
+| 141 | `Win2_DrawItemList` | the up arrow on bit 0 | 1660 of 6000 |
+| 142 | `Win2_DrawItemList` | the scroll bar over 8 rows | 6000 of 6000 |
+| 143 | `Win2_DrawItemList` | the scroll offset unsigned | 2983 of 6000 |
+| 144 | `Win2_DrawItemList` | the top not re-read per row | 63 of 6000 |
 
 ## 6. Cross-group calls, inbound calls, the rebinding
 
