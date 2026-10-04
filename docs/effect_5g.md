@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..13),
-wave five, from the round branch's tip `0834edf`. **24 functions ours**
+wave five, from the round branch's tip `42b2388`. **24 functions ours**
 (`src/game/effect_5g.cpp`, shadow name `effect_5g`): the cut table's 24 rows
 for E5G (`analysis/round13_cut.tsv`, the band `0x50AF90..0x50BFF0`), none
 added, none dropped. Each read to its last instruction with capstone and

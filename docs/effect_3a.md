@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..11),
-wave three, from the round branch's tip `0e0532c`. **48 functions ours**
+wave three, from the round branch's tip `4409f85`. **48 functions ours**
 (`src/game/effect_3a.cpp`, shadow name `effect_3a`): the cut table's 48 rows
 for E3A (`analysis/round13_cut.tsv`, the band `0x4801F0..0x4823C2`), none
 added, none dropped (section 9). Each read to its last instruction with

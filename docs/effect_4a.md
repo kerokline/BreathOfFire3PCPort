@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..14),
-wave four, from the round branch's tip `89c25e1`. **51 functions ours**
+wave four, from the round branch's tip `9bebe7f`. **51 functions ours**
 (`src/game/effect_4a.cpp`, shadow name `effect_4a`): the cut table's 48 rows
 for E4A (`analysis/round13_cut.tsv`, the band `0x433640..0x489020`) and three
 starts no list of the cut has - kind 0x83's state 2 `0x4883D0`, kind 0x85's

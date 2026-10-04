@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..13),
-wave five, from the round branch's tip `0834edf`. **54 functions ours**
+wave five, from the round branch's tip `42b2388`. **54 functions ours**
 (`src/game/effect_5e.cpp`, shadow name `effect_5e`): the cut table's 51 rows
 for E5E (`analysis/round13_cut.tsv`, the band `0x506A10..0x508BA0`) and three
 starts no list had - the draw `0x506AB0` that three sub-states tail-jump to

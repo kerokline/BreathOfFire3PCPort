@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..13),
-wave six, from the round branch's tip `c4deb22`. **51 functions ours**
+wave six, from the round branch's tip `c290566`. **51 functions ours**
 (`src/game/effect_6d.cpp`, shadow name `effect_6d`): the cut table's 50 rows
 for E6D (`analysis/round13_cut.tsv`, the band `0x514270..0x516A90`) and one
 start the band holds that no list has, `0x5166C0` (sub-kind 0x64's state 5,
@@ -237,7 +237,7 @@ word, `+0x34` / `+0x38`.
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=effect_6d`,
 exit 0): 204,000 rounds over 51 functions, 10,534,193 calls to the stand-ins, **0 mismatches**; 27,596 bytes of state in 50 regions; 399 stand-ins. Every entry of the six tables reached (each handler recorder 542..1,351 calls; `0x5166C0` as `_Pulse` 880, `0x515160` as `_ClearTracks` 4,552); `MapView_ItemHalfAt` 426,588, `AreaMap_Elevation` 52,000, `Flags_Set` 5,154, `Flags_Clear` 2,049, `Effect_Release` 1,680.
 
-**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` ran to its end after this paragraph was first written (slow under four parallel groups, it outlived its launcher): read from the log, 714 self-test lines, no mismatch, none failed; no exit code ([`takeover-queue-round13.md`](takeover-queue-round13.md) section 17, which gives the count; this paragraph's earlier "over 940 self-test lines" while it ran was not reconciled with it). This group ran no `BOF3X_WIDE=1` star run; the round tip's (`61001f7`, section 17) exited 0. `ledger_check`: 72 entries, 0 errors (8,501 impl lines, 8,501 functions detoured).
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` ran to its end after this paragraph was first written (slow under four parallel groups, it outlived its launcher): read from the log, 714 self-test lines, no mismatch, none failed; no exit code ([`takeover-queue-round13.md`](takeover-queue-round13.md) section 17, which gives the count; this paragraph's earlier "over 940 self-test lines" while it ran was not reconciled with it). This group ran no `BOF3X_WIDE=1` star run; the round tip's (`7136468`, section 17) exited 0. `ledger_check`: 72 entries, 0 errors (8,501 impl lines, 8,501 functions detoured).
 
 ## 5. What the cut and the tool said, settled
 

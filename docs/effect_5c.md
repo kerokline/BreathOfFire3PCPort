@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..15),
-wave five, from the round branch's tip `0834edf`. **62 functions ours**
+wave five, from the round branch's tip `42b2388`. **62 functions ours**
 (`src/game/effect_5c.cpp`, shadow name `effect_5c`): the cut table's 60 rows
 for E5C (`analysis/round13_cut.tsv`, the band `0x501500..0x503D30`) and two
 starts no list of the cut holds - `0x5015E0`, sub-kind 0x50's state 1, which

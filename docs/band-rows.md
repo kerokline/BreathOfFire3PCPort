@@ -369,7 +369,7 @@ nine (`symbols.toml` has `0x46C730`, `0x46C820`, `0x46CEF0`, `0x46D400`,
 list knows is not a hit by definition. They stand as the shape the flag
 was written for; the live analogue is BE5's `Effect_Handlers` slots below.
 
-### 7.1 The first run, 2026-10-01 (the owner's machine, the tip `edd9c5c`)
+### 7.1 The first run, 2026-10-01 (the owner's machine, the tip `7fe6406`)
 
 `py tools/band_rows.py --pointer-scan` (the owner's command; the fourteen
 groups' tables unchanged from section 3's shape). The FO expectation held:
@@ -411,7 +411,7 @@ expectations, read off the first run's hits that the filter should keep:
 Six real; the five BE5 handlers are the debt's answer for the battle engine
 (BE5 owns the band and decides), ShopMode 9's for the field.
 
-### 7.2 The second run, 2026-10-01 (the filter of 7.1, at `52342db`)
+### 7.2 The second run, 2026-10-01 (the filter of 7.1, at `6b6b319`)
 
 The same command: **305 hits, 33 rows, 81 entries into read code, 191
 data**; the six of 7.1's table all rows, the FO case unchanged. 81 of the
@@ -450,7 +450,7 @@ tool cannot tell a short pair from a pointer to a tail without reading.
 The third run's expectation is **29 rows**: the six, the thirteen
 candidates, and ten of the `0x5N0000` shape.
 
-### 7.3 The third run, 2026-10-01 (at `4b4153c`)
+### 7.3 The third run, 2026-10-01 (at `a54ee6f`)
 
 **31 rows, 81 entries, 193 data**: the six and the thirteen candidates all
 rows, the FO case unchanged, `0x580000` and `0x53E0F0` data as the rules
@@ -467,14 +467,14 @@ said. The two over the expectation were the two new rules read short:
   nested-row test is now the span, start to end, not the instruction
   starts.
 
-**The fourth run, 2026-10-01 (at `6f36fb7`): 29 rows, 82 entries, 194
+**The fourth run, 2026-10-01 (at `875599c`): 29 rows, 82 entries, 194
 data - the 29 expected, line for line** (`0x540200` data, `0x570002` an
 entry into `0x570000`'s), the FO case unchanged. The flag is settled: the
 debt's answer is 7.1's six plus 7.2's thirteen candidates, and the ten
 `0x5N0000` rows (`0x440000`, `0x530000`, `0x540000`, `0x550000`,
 `0x560000`, `0x570000`, `0x580020`, `0x540E00`, `0x544450`, `0x530E80`)
 are the tool's honest remainder, a read each to settle. **The regression
-without the flag ran 2026-10-01** (the owner, `45b6959` against `edd9c5c`,
+without the flag ran 2026-10-01** (the owner, `9479e06` against `7fe6406`,
 the exe and `analysis/` of the main checkout passed to both trees): all
 seven outputs identical - `--groups --tsv`, `--edges`, `--group BE5
 --clones`, `--group FE2 --clones`, `--group FO`, `--function

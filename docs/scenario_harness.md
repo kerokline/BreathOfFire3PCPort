@@ -1103,7 +1103,7 @@ fuzz does, not what the game does).
 
 ### 8.10 The round's end fold
 
-2026-10-03, on the round branch's tip `22446f5` (8,648 ours), the items
+2026-10-03, on the round branch's tip `8d3d064` (8,648 ours), the items
 [`takeover-queue-round13.md`](takeover-queue-round13.md) sections 16 and 18
 left this harness. Each row was read against the code (ours, and Capcom's
 with `tools/pe_disasm.py`) before it changed.
@@ -1134,7 +1134,7 @@ names now carry the symbol. `scenario_harness.h`'s `kArgs` comment names
 `EffectKind7D_FillF4`.
 
 **`FX_RAW` rows**: no `kEffectStd` row's address has an `impl` in
-`symbols.toml` (a script over all 42 at `22446f5`) - `fold_names.py` had
+`symbols.toml` (a script over all 42 at `8d3d064`) - `fold_names.py` had
 taken the rest. The 42 that remain are Capcom's, none named:
 `0x462F10`, `0x46E190`, `0x46F570`, `0x46F690`, `0x46FAE0`, `0x4790C0`,
 `0x4790F0`, `0x479160`, `0x479260`, `0x4794D0`, `0x4796B0`, `0x4799C0`,

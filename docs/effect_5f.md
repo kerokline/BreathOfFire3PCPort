@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..15),
-wave five, from the round branch's tip `0834edf`. **49 functions ours**
+wave five, from the round branch's tip `42b2388`. **49 functions ours**
 (`src/game/effect_5f.cpp`, shadow name `effect_5f`): the cut table's 48 rows
 for E5F (`analysis/round13_cut.tsv`, the band `0x508CC0..0x50AD70`) and one
 catalog row of no group inside the band, sub-kind 0x42's draw `0x509A70`

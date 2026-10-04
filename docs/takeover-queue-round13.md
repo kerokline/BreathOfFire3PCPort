@@ -765,7 +765,7 @@ caller where the callers are E2G's (E2F); the latent defects to number;
 two helpers and E1C's kind 0x1C the whelp route's frame hash is owed at this
 tip, not run (the agents' self-tests and the owner's game held the machine).
 
-**The fold, done 2026-10-03** (`f8d410a`; [`scenario_harness.md`](scenario_harness.md)
+**The fold, done 2026-10-03** (`73b0994`; [`scenario_harness.md`](scenario_harness.md)
 8.5 has the rows): in effect mode `EffectGte_ProjectPoint`, `EffectGte_ProjectSize`
 and `Gte_VectorNormal` hash their points and log no pointer by value;
 `Math_Cos` never answers 0 or -1; `Sprite_UpdateScreen` logs `Sprite_Current`
@@ -784,7 +784,7 @@ worktree, scratch `verify_98d0631.log` for the tip before it and
 machine hands-off and the hash reference re-recorded first (HANDOFF); it
 checks merged code and does not gate the wave.
 
-## 14. Wave three (2026-10-03: launched about 08:35 from `0e0532c`, merged 09:16..10:10)
+## 14. Wave three (2026-10-03: launched about 08:35 from `4409f85`, merged 09:16..10:10)
 
 Four Opus agents in worktrees; the briefs from `make_briefs.py <scratch> 3
 <tip> band_edges_w2.txt` with wave two's addendum (the fold's rows, the tail
@@ -794,17 +794,17 @@ verification worktree, the group's shadow and `'*'` narrow; every agent ran
 
 | Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Kinds |
 |---|---|---|--:|---|--:|---|
-| E3B | `d2b5954` | `6faad58` | 49 | 101 / 100 / 0, one stopped by ours' abort with a refused near variant | 7,619 | 0x63, 0x65, 0x67, 0x69, 0x6C |
-| E3D | `37bb107` | `a8700be` | 63 + 5 | 148 / 146 / 1, one stopped by ours' abort | 7,687 | 0x77 (whole: its dispatcher and three sub-states were rows of no group), 0x78, 0x7B..0x7D, 0x7F..0x82 (kind 0x82's states 11..23 are E4A's) |
-| E3C | `60f8859` | `8ee6c6a` | 50 + 1 | 85 / 84 / 1 | 7,738 | 0x6D, 0x6E, 0x6F, 0x72..0x75, the shared debris draw and set-up; `0x485C60`, kind 0x75's tail with its own frame |
-| E3A | `5a01f47` | `bfc8162` | 48 | 65 / 65 / 0 | 7,786 | 0x60, 0x61, 0x62, 0x64, 0x68 |
+| E3B | `9e72885` | `971fd22` | 49 | 101 / 100 / 0, one stopped by ours' abort with a refused near variant | 7,619 | 0x63, 0x65, 0x67, 0x69, 0x6C |
+| E3D | `56c7b99` | `189ec55` | 63 + 5 | 148 / 146 / 1, one stopped by ours' abort | 7,687 | 0x77 (whole: its dispatcher and three sub-states were rows of no group), 0x78, 0x7B..0x7D, 0x7F..0x82 (kind 0x82's states 11..23 are E4A's) |
+| E3C | `28e02e2` | `45b1060` | 50 + 1 | 85 / 84 / 1 | 7,738 | 0x6D, 0x6E, 0x6F, 0x72..0x75, the shared debris draw and set-up; `0x485C60`, kind 0x75's tail with its own frame |
+| E3A | `bc608f1` | `ddb4b18` | 48 | 65 / 65 / 0 | 7,786 | 0x60, 0x61, 0x62, 0x64, 0x68 |
 
 **216 functions, 7,570 -> 7,786**, every group 0 mismatches, 399 controls:
 395 refused by a count, 2 equivalent mutants each with a refused near variant,
 2 stopped by ours' own abort (E3B's with a near variant refused by a count).
 `fold_names.py` found no harness row to name; `consolidate_entries.py` 8,577
 entries, every one of the 216 with a line. **The tip's proof**
-(`bfc8162`, scratch `verify_w3.log`): `scenario_harness_ekh`, the four
+(`ddb4b18`, scratch `verify_w3.log`): `scenario_harness_ekh`, the four
 groups' shadows and `'*'` exit 0, 7,786 ours; `'*'` with `BOF3X_WIDE=1` exit
 0; `ledger_check` 68 entries, 0 errors.
 
@@ -845,10 +845,10 @@ sixteen of E3D's (the consolidation cut it); the latent defects to number
 (each group's doc). **Live**: every function of the wave is fuzz-only; the
 whelp route's frame hash is still owed for waves one and two.
 
-## 15. Wave four (2026-10-03: launched about 12:10 from `89c25e1`, merged 13:12..14:26)
+## 15. Wave four (2026-10-03: launched about 12:10 from `9bebe7f`, merged 13:12..14:26)
 
 The base is the round branch with the fix wave and `BOF3X_SPEED` merged in
-by another session (`dcf4307`), verified here narrow and wide (7,787 ours,
+by another session (`3f17bd1`), verified here narrow and wide (7,787 ours,
 scratch `verify_89c25e1.log`). Six Opus agents in worktrees; the briefs with
 wave three's addendum, which also told the groups to add no `DIVERGENCE.md`
 entry (none did). Each merge built and run in the detached verification
@@ -857,26 +857,26 @@ and with `BOF3X_WIDE=1` in its own worktree, all exit 0.
 
 | Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Kinds |
 |---|---|---|--:|---|--:|---|
-| E4C | `55180bc` | `1f904d9` | 49 + 1 | 61 / 58 / 3 | 7,837 | 0x8D, 0x8E (its dispatcher `0x48B300` in no list), 0x8F, 0x90, 0x93, 0x99 |
-| E4F | `fedc6d3` | `e4a6a67` | 45 + 4 | 55 / 54 / 0, one stopped by ours' abort | 7,886 | 0xAA..0xB1, 0xB9, 0xBA; `0x492AF0` a tail draw; the unplaced `0x492530`, `0x492750` (`Effect_StateNext`), `0x492CF0` |
-| E4D | `2863427` | `82222cf` | 51 | 96 / 95 / 1 | 7,937 | 0x91, 0x94..0x98, 0x9A, the screen tint `Effect_DrawScreenTint` `0x48CA90` and its blend variant |
-| E4E | `4f52a7d` | `988759a` | 48 + 1 | 107 / 105 / 2 | 7,986 | 0x9B, 0x9C, 0xA0 whole; kind 0x9E's dispatcher and quads; the dispatchers of 0xA1..0xA3 (`0x4912F0` in no list) and 0xA7..0xA9 |
-| E4B | `9aa8f3d` | `4467b0b` | 61 + 5 | 105 / 104 / 1 | 8,052 | 0x87's draws, 0x88..0x8C, 0x9D, 0x9F, 0xA4; two tails with their own `ret` taken whole |
-| E4A | `89d7c15` | `9edc93b` | 48 + 3 | 100 / 99 / 0, one stopped by ours' abort | 8,103 | 0x82's states 11..23, 0x83..0x87; `Sprite_StateRestart` `0x433640` |
+| E4C | `66da95e` | `d21101d` | 49 + 1 | 61 / 58 / 3 | 7,837 | 0x8D, 0x8E (its dispatcher `0x48B300` in no list), 0x8F, 0x90, 0x93, 0x99 |
+| E4F | `4736d01` | `dfd0255` | 45 + 4 | 55 / 54 / 0, one stopped by ours' abort | 7,886 | 0xAA..0xB1, 0xB9, 0xBA; `0x492AF0` a tail draw; the unplaced `0x492530`, `0x492750` (`Effect_StateNext`), `0x492CF0` |
+| E4D | `df4b67c` | `efcc0a0` | 51 | 96 / 95 / 1 | 7,937 | 0x91, 0x94..0x98, 0x9A, the screen tint `Effect_DrawScreenTint` `0x48CA90` and its blend variant |
+| E4E | `c615ef4` | `0c63089` | 48 + 1 | 107 / 105 / 2 | 7,986 | 0x9B, 0x9C, 0xA0 whole; kind 0x9E's dispatcher and quads; the dispatchers of 0xA1..0xA3 (`0x4912F0` in no list) and 0xA7..0xA9 |
+| E4B | `e91d4d5` | `9c81baa` | 61 + 5 | 105 / 104 / 1 | 8,052 | 0x87's draws, 0x88..0x8C, 0x9D, 0x9F, 0xA4; two tails with their own `ret` taken whole |
+| E4A | `6e01cff` | `cf89e68` | 48 + 3 | 100 / 99 / 0, one stopped by ours' abort | 8,103 | 0x82's states 11..23, 0x83..0x87; `Sprite_StateRestart` `0x433640` |
 
 **316 functions, 7,787 -> 8,103**, every group 0 mismatches, 524 controls:
 515 refused by a count, 7 equivalent mutants each with a refused near variant,
 2 stopped by ours' own abort. The order was E4F before E4D, E4B and E4A as
 section 10 asks; E4C and E4E had no constraint.
 
-**Then** the fix wave's follow-up merged in at the owner's word (`c82ba2e`:
+**Then** the fix wave's follow-up merged in at the owner's word (`4ae0280`:
 `fix/1003-merge`, the fishing banner's space and DIV-0027's per-item prompt),
-and the coordinator's pass (`9554aba`): `FishingText_Arm` and a doubled
+and the coordinator's pass (`81a6a1b`): `FishingText_Arm` and a doubled
 `Widescreen_ArmFills` had come to sit before E3C's and E3A's self-tests (a
 merge artifact two groups reported) and run once now, after every module's;
 `fold_names.py` named one harness row (`EffectKind87_Midpoint`);
 `consolidate_entries.py` 8,808 entries; the owner's word on DIV-0068 (kept as
-written). **The tip's proof** (`9554aba`, scratch `verify_w4.log`):
+written). **The tip's proof** (`81a6a1b`, scratch `verify_w4.log`):
 `scenario_harness_ekh`, `effect_4d`, `effect_3c`, `effect_3a`, `effect_1b`,
 `field_e2` and `'*'` exit 0, 8,103 ours; `'*'` with `BOF3X_WIDE=1` exit
 0; `ledger_check` 70 entries, 0 errors.
@@ -910,7 +910,7 @@ owner's eye: kind 0x90's tag `0x676294` never reset (the 256th record takes
 tag 0 and owns every free shard) and kind 0xA0's trail dots without a count
 (ours aborts past 0x400). **Live**: every function of the wave is fuzz-only.
 
-## 16. Wave five (2026-10-03: launched about 15:15 from `0834edf`, merged 15:47..17:22)
+## 16. Wave five (2026-10-03: launched about 15:15 from `42b2388`, merged 15:47..17:22)
 
 Seven Opus agents in worktrees: kind 0x18's sub-kinds (`EffectKind18_States`
 `0x65406C`). The briefs with wave four's addendum (when to re-list
@@ -918,25 +918,25 @@ Seven Opus agents in worktrees: kind 0x18's sub-kinds (`EffectKind18_States`
 widescreen fill, no ledger entry from a group). Each merge built and run in
 the detached verification worktree, the group's shadow and `'*'` narrow;
 every agent ran `'*'` narrow and with `BOF3X_WIDE=1` in its own worktree,
-all exit 0. The owner's `cc39306` (saves, documents, tools) landed on the
+all exit 0. The owner's `a6a7e90` (saves, documents, tools) landed on the
 branch during the wave and the merges went on top of it.
 
 | Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Sub-kinds of kind 0x18 |
 |---|---|---|--:|---|--:|---|
-| E5G | `ac50b75` | `58f93b8` | 24 | 78 / 77 / 1 | 8,127 | 0x2B, 0x2C, 0x36, 0x3A, 0x4A |
-| E5A | `e5be0d0` | `e033cca` | 51 + 4 (two cut rows already ours: the sky gradient and the sunset glow) | 55 / 55 / 0 | 8,182 | 0x04..0x08, 0x0A, 0x1A, 0x1F |
-| E5B | `036db72` | `5df598d` | 48 + 2 | 149 / 149 / 0 (five refused only after fuzz fixes; the other 144 not re-run under the final fuzz) | 8,232 | 0x0B..0x0F, 0x13, 0x4F |
-| E5F | `0ef7fd6` | `88afc5b` | 48 + 1 | 136 / 135 / 1 | 8,281 | 0x27..0x2A, 0x3C, 0x42, 0x48, 0x49, 0x4B / 0x4C |
-| E5E | `24e5506` | `41b635a` | 51 + 3 | 178 / 175 / 3 | 8,335 | 0x23..0x26, 0x39, 0x3F |
-| E5D | `f159a34` | `3a3ccd6` | 49 + 3 | 117 / 116 / 1 | 8,387 | 0x14, 0x18, 0x1C..0x1E, 0x21, 0x22, 0x43; the patch draw `0x503FA0` |
-| E5C | `ff710f7` | `c05c190` | 60 + 2 | 161 / 157 / 4 | 8,449 | 0x10..0x12, 0x15..0x17, 0x50, 0x56..0x58 |
+| E5G | `ba37a73` | `c09b695` | 24 | 78 / 77 / 1 | 8,127 | 0x2B, 0x2C, 0x36, 0x3A, 0x4A |
+| E5A | `10b6300` | `8998041` | 51 + 4 (two cut rows already ours: the sky gradient and the sunset glow) | 55 / 55 / 0 | 8,182 | 0x04..0x08, 0x0A, 0x1A, 0x1F |
+| E5B | `0468cac` | `3cd719a` | 48 + 2 | 149 / 149 / 0 (five refused only after fuzz fixes; the other 144 not re-run under the final fuzz) | 8,232 | 0x0B..0x0F, 0x13, 0x4F |
+| E5F | `9824d76` | `d51b450` | 48 + 1 | 136 / 135 / 1 | 8,281 | 0x27..0x2A, 0x3C, 0x42, 0x48, 0x49, 0x4B / 0x4C |
+| E5E | `d70fca8` | `234a1fb` | 51 + 3 | 178 / 175 / 3 | 8,335 | 0x23..0x26, 0x39, 0x3F |
+| E5D | `a9bd49a` | `9f858d6` | 49 + 3 | 117 / 116 / 1 | 8,387 | 0x14, 0x18, 0x1C..0x1E, 0x21, 0x22, 0x43; the patch draw `0x503FA0` |
+| E5C | `0d1e417` | `3e7485a` | 60 + 2 | 161 / 157 / 4 | 8,449 | 0x10..0x12, 0x15..0x17, 0x50, 0x56..0x58 |
 
 **346 functions, 8,103 -> 8,449**, every group 0 mismatches, 874 controls:
 864 refused by a count, 10 equivalent mutants each with a refused near
 variant (E5C's control 159 a mis-planted near variant of 104).
 
 **Then** `fix/tile-layering` merged in at the owner's word (DIV-0071) and
-the coordinator's pass (`e652bbe`): the harness's stand-in for
+the coordinator's pass (`efdc6de`): the harness's stand-in for
 `EffectKind18Sub17_DrawPatch` `0x503FA0` had its `Draw_PassFlags` test
 the wrong way round (E5D's reading: the original draws only with bit 2
 set) - corrected, so E5C's fifteen calls are fuzzed against the right one;
@@ -944,12 +944,12 @@ set) - corrected, so E5C's fifteen calls are fuzzed against the right one;
 again); `consolidate_entries.py` 9,099 entries; **DIV-0072** entered for
 E5F's `EffectKind18Sub4B_Run` (a stack word the original never writes; the
 owner kept it as written the same evening); DIV-0041 amended for the three fills E5E and E5G
-widened. **The tip's proof** (`e652bbe`, scratch `verify_w5.log`):
+widened. **The tip's proof** (`efdc6de`, scratch `verify_w5.log`):
 `scenario_harness_ekh`, `effect_5c`, `effect_5d`, `effect_5e`, `effect_5g`
 and `'*'` exit 0, 8,449 ours; `'*'` with `BOF3X_WIDE=1` exit 0;
 `ledger_check` 72 entries, 0 errors.
 
-**DIV-0071 on by default** (`f316416`, the owner's word once the tip
+**DIV-0071 on by default** (`5f8b831`, the owner's word once the tip
 checked out): `BOF3X_LAYERING` unset is the floor rule, `0` the original's
 order; `attract_run.py` and the `validate_*.sh` scripts pin it off, since an
 ours side with it on differs from Capcom's draw order by design. Seen
@@ -985,7 +985,7 @@ coordinate (E5E); the widescreen survey's new items (DIV-0041's
 amendment); the latent defects to number. **Live**: fuzz-only but E5A's
 sub-kind 1 by inference.
 
-## 17. Wave six, the last (2026-10-03: launched about 18:20 from `c4deb22`, merged 18:43..20:11)
+## 17. Wave six, the last (2026-10-03: launched about 18:20 from `c290566`, merged 18:43..20:11)
 
 Four Opus agents in worktrees: the rest of kind 0x18's sub-kinds. The briefs
 with wave five's addendum (a read of unwritten memory that reaches the
@@ -998,10 +998,10 @@ lines, no mismatch), and E6D ran no wide `'*'` - the tip's does.
 
 | Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Sub-kinds of kind 0x18 |
 |---|---|---|--:|---|--:|---|
-| E6D | `0492915` | `ac8456b` | 50 + 1 | 166 / 164 / 2 | 8,500 | 0x5C..0x5E, 0x61..0x65 |
-| E6A | `10f24aa` | `e81ef30` | 48 | 72 / 70 / 2 | 8,548 | 0x2D..0x32, 0x3E; state 1 of 0x4A |
-| E6C | `00cac0f` | `3593422` | 47 + 3 (the cut's `0x5124C0` is a case of `0x512490`'s switch, as its suspect column said) | 195 / 191 / 3, one stopped by ours' abort | 8,598 | 0x44's draws, 0x45, 0x51, 0x53, 0x55, 0x59, 0x5A, 0x5B, 0x66; `AreaMap_CornerHeight` `0x511C10` (area 189's, not effect code) |
-| E6B | `74ce640` | `61001f7` | 50 | 112 / 112 / 0 | 8,648 | 0x33..0x35, 0x37, 0x38, 0x3B, 0x3D, 0x40, 0x41, 0x44's dispatcher, 0x54 |
+| E6D | `a1f99c1` | `bb9e7a3` | 50 + 1 | 166 / 164 / 2 | 8,500 | 0x5C..0x5E, 0x61..0x65 |
+| E6A | `1771ab8` | `645a03c` | 48 | 72 / 70 / 2 | 8,548 | 0x2D..0x32, 0x3E; state 1 of 0x4A |
+| E6C | `293920f` | `c4c436e` | 47 + 3 (the cut's `0x5124C0` is a case of `0x512490`'s switch, as its suspect column said) | 195 / 191 / 3, one stopped by ours' abort | 8,598 | 0x44's draws, 0x45, 0x51, 0x53, 0x55, 0x59, 0x5A, 0x5B, 0x66; `AreaMap_CornerHeight` `0x511C10` (area 189's, not effect code) |
+| E6B | `861b1d9` | `7136468` | 50 | 112 / 112 / 0 | 8,648 | 0x33..0x35, 0x37, 0x38, 0x3B, 0x3D, 0x40, 0x41, 0x44's dispatcher, 0x54 |
 
 **199 functions, 8,449 -> 8,648**, every group 0 mismatches, 545 controls:
 537 refused by a count, 7 equivalent mutants each with a refused near
@@ -1009,7 +1009,7 @@ variant, 1 stopped by ours' own abort with a refused near variant. No group
 needed a ledger entry. `fold_names.py` found no row; `consolidate_entries.py`
 9,265 entries; `inject_all.cpp` has each arm call once, after every inject.
 DIV-0041 amended (E6B's `0x50F7B5`, E6C's unlisted `0x510E6C`).
-**The tip's proof** (`61001f7`, scratch `verify_w6.log`):
+**The tip's proof** (`7136468`, scratch `verify_w6.log`):
 `scenario_harness_ekh`, `effect_6b`, `effect_6c`, `effect_6d` and `'*'` exit
 0, 8,648 ours; `'*'` with `BOF3X_WIDE=1` exit 0; `ledger_check` 72 entries,
 0 errors.
@@ -1057,7 +1057,7 @@ done:
 
 1. The rebinding of the raw calls between the round's groups (each wave's
    debts name them). **Done 2026-10-03** (branch `phase-3/round13-rebind`,
-   merged `76deb0f`; [`round-13-cleanup.md`](round-13-cleanup.md)): 58
+   merged `b075777`; [`round-13-cleanup.md`](round-13-cleanup.md)): 58
    constants in 20 files by name, values unchanged. What the waves called
    raw calls are mostly fuzz keys and clone bases, which stay the original's
    addresses; **61 run-time raw calls of ours into ours are left as they
@@ -1065,7 +1065,7 @@ done:
    `BOF3X_ORIGINAL=NAME` switches, a decision and not a cleanup.
 2. The harness rows by address in `scenario_harness_ekh.cpp` and the next
    fold's items (section 16). **Done 2026-10-03** (branch
-   `phase-3/round13-fold`, merged `aed35f8`;
+   `phase-3/round13-fold`, merged `f0d720c`;
    [`scenario_harness.md`](scenario_harness.md) 8.10): `MapView_LinkPrimAt`'s
    dy and size by the byte it reads (the field-mode row too), `0x4FEE70`'s
    answer a whole word 1..8, sub-kind 0x42's draw without the pointer; EKH's
@@ -1103,7 +1103,7 @@ done:
    `EffectKindAF_DrawScreen`): all nine of DIV-0041's listed fills are
    widened. The survey's other items (the entry lists them) are the owner's.
 6. The live checks. **Run 2026-10-03, 21:22..22:50, the machine hands-off**
-   (the build `b038bc4`: the round's code and the tracer's tables at 32,768 -
+   (the build `9d01ae9`: the round's code and the tracer's tables at 32,768 -
    the first try stopped on `calltrace: more than 8192 owned functions`).
    Layering pinned off on every side.
    - **The attract frame-hash reference is `analysis/calltrace/r13_origb`,
@@ -1135,11 +1135,11 @@ done:
      60 frames a second; the rest is launch, the tracer's slow-down and
      teardown.
 
-**The round-end tip's proof** (`aed35f8`: the defects, the rebinding, the fold
+**The round-end tip's proof** (`f0d720c`: the defects, the rebinding, the fold
 and the tracer's tables together; scratch `verify_end.log`):
 `scenario_harness_ekh`, `effect_4b`, `effect_4f`, `effect_5a`, `effect_5f`,
 `field_e2` and `'*'` exit 0, 8,648 ours; `'*'` with `BOF3X_WIDE=1` exit 0;
-`ledger_check` 72 entries, 0 errors. (The live checks ran on `b038bc4`, the
+`ledger_check` 72 entries, 0 errors. (The live checks ran on `9d01ae9`, the
 code before the rebinding and the fold; neither changes what narrow play
 runs.)
 

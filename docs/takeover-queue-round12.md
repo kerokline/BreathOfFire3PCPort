@@ -279,7 +279,7 @@ with the boss set-up and its kinds among them.
    29, the expected set: the flag is settled and the debt answered** - the
    six are the band owners' to take (BE5's five handlers, FS's ShopMode 9),
    the thirteen candidates theirs to read. The regression without the flag
-   ran the same day, seven outputs identical against `edd9c5c`: **done**.
+   ran the same day, seven outputs identical against `7fe6406`: **done**.
 6. **Wave two's folds** into `scenario_harness`: the masks, `Zenny_Add`'s test, the confirm and cancel cells as a region, `Crt_sprintf` at three words, the GTE rows that log stack pointers; and wave two's defects with wave one's in item 3.
    **Done**: round thirteen's EKH pass folded 38 masks, `Crt_sprintf` and the stack pointers ([`scenario_harness.md`](scenario_harness.md) section 8.6), the defects are item 3's; **the rest 2026-10-01** on round thirteen's tip (the same section): `Zenny_Add`'s test, the two regions (the confirm and cancel words, `MessagePools`' offset words - these move every field group's draw, so FC1..FS's counts change at the next `'*'`), the louder forms (`Party_Count`, `Menu_ListScroll`, the sloped byte, `MoveScript_Step`, `Equip_PreviewSet`, `Gte_SetTransMatrix`) and the masks the first pass left. `Port_DroppedCall` at four words stays FS's own.
 7. **Housekeeping**: the seventeen `phase-3/round12-*` branches and the agents'

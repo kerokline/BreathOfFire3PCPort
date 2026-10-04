@@ -34,7 +34,7 @@ are [`round-11-cleanup.md`](round-11-cleanup.md) (item 0); round ten's are
 
 **The frame hash reference is `analysis/calltrace/r13_origb` (twin `r13_origc`,
 identical on all 10,308 frames)**, recorded 2026-10-03 night at 8,648 ours
-(the build `b038bc4`; reference sides `--original "*,-Game_Clock"`,
+(the build `9d01ae9`; reference sides `--original "*,-Game_Clock"`,
 `renderer=1`, windowed, foreground held, `BOF3X_LAYERING=0`; the batch is
 `r13_live.sh` in the session-`e39af52c` scratchpad). `r13_ours` is identical
 but frame 0, the set-up (as since `rb1`). `r13_orig` lost focus for a frame
@@ -45,7 +45,7 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 ## Pick up here
 
 0000000. **The layering fix (DIV-0071) is merged into the round branch and on by default since 2026-10-03
-   (`f316416`); what follows was written on `fix/tile-layering`, where it was off by default - the owner's
+   (`5f8b831`); what follows was written on `fix/tile-layering`, where it was off by default - the owner's
    eye in play is what it waits on.** `BOF3X_LAYERING=1`: a sprite is drawn up to three layers later while only
    walkable floor lies under its feet ([`sprite-draw-order.md`](sprite-draw-order.md) section 19 has the three shapes
    tried and why this one; the ledger entry has the rule). Captures, off against on: `analysis/shots/layering_1003/`
@@ -60,17 +60,17 @@ each round**: the tracer arms only what is not ours (635 entries now) -
      The branch is off the round branch so the running sessions are not disturbed; merge it there when no merge
      runner is active.
 
-000000. **2026-10-03, the fix wave for the owner's play reports: merged at `dcf4307`, then validated live the same
+000000. **2026-10-03, the fix wave for the owner's play reports: merged at `3f17bd1`, then validated live the same
    afternoon - the owner: "That looks right to me".** The validation (`analysis/shots/validate_1003/`, run from the
    merge worktree's build, not `build/`): GS's shout with a clean gap against Capcom's stray glyph (`bs2`, `bs2_orig`);
    CH's second fight paying 0 EXP under `BOF3X_EXP=0` where `--original Boss16_End` pays 110, the first fight 0 too
    (`bs1`); YN's shop and Manillo prompts (`shop`, `caughFish_b`); MB's backdrop wide; FL's banners, tabs and names in
-   English (`camping_b`). **It found two FL defects, fixed in `60daff3`:** a space in the banner's one-byte draw was
+   English (`camping_b`). **It found two FL defects, fixed in `42a7033`:** a space in the banner's one-byte draw was
    glyph `0xFFFA` (both fishing routes crashed in `Font_UnpackGlyph` at the first banner), and `tools/dat.py` did not
    know chunk kind 16 (`loc_build.py all` stopped after `en.FIRST.DAT`). Not seen: the master's prompt (no route), the
    stray frame line at window scale 1 (a capture is the render target, not the window - the owner's eye), the trigger-mode
    enemies (no route). As first written:
-   *merged at `dcf4307`, headless-verified, NOT yet seen in game.* Six Opus agents from `a8700be`, headless only; merged in a worktree (`fix/1003-merge`), `'*'` exit 0 narrow
+   *merged at `3f17bd1`, headless-verified, NOT yet seen in game.* Six Opus agents from `189ec55`, headless only; merged in a worktree (`fix/1003-merge`), `'*'` exit 0 narrow
    and wide (1,001 groups, 7,787 ours), `ledger_check` 0 errors, then this branch fast-forwarded. `build/` was not
    rebuilt (the owner's play DLL is still 30 September's). What merged, each with its own doc section for the live check:
    - **GS, DIV-0070** (renumbered: the capture wave took 0068): `MsgBox_EffectDraw` `0x4987E0` taken over, a space in a
@@ -239,7 +239,7 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    scripts are in the session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`).
    **The verification worktree is this queue's.** The main checkout's `build/bof3x.ini` has `wide=1` and a running
    game locks its DLL. A full `verify_tip.sh` takes 22 to 31 minutes. **The tracer's tables are 32,768 since
-   `b038bc4`** (8,192 was hit at 8,648 ours: check the ceilings in HANDOFF's traps before a round's first traced run).
+   `9d01ae9`** (8,192 was hit at 8,648 ours: check the ceilings in HANDOFF's traps before a round's first traced run).
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
@@ -252,7 +252,7 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    FO's `0x578A40` as expected, FC2's and FC3's named since wave two so they cannot fire, 305 hits of which six are
    real - BE5's `Effect_Handlers` slots 4, 7, 11, 47, 91 and `ShopMode_States[9]` `0x583350` - the noise filtered in
    the code since; the second run (7.2 there) 33 rows, thirteen of them candidates for their band owners to read;
-   the fourth run **29 rows, the expected set, the flag settled** (7.3); the regression without the flag identical on all seven outputs (`45b6959` against `edd9c5c`), **debt 5 closed**; the branches of debt 7 are verified merged and the delete command is in the round doc's item 7) and
+   the fourth run **29 rows, the expected set, the flag settled** (7.3); the regression without the flag identical on all seven outputs (`9479e06` against `7fe6406`), **debt 5 closed**; the branches of debt 7 are verified merged and the delete command is in the round doc's item 7) and
    the audit of the 33 owned starts without an `entries_logic.txt` line as `tools/entries_audit.py` (give it `--exe`,
    `--exclude analysis/calltrace/wallclock_reach.json` and each route's reach `bof3x.calltrace.tsv` as `--reach` -
    the reach runs are default-mode traces, `callcounts.tsv` is `MODE=all`'s; **run 2026-10-01**, the verdicts in the
@@ -648,6 +648,15 @@ Local only, gitignored, worth keeping:
   which keeps the total; a hand-placed shot replaces a frame (decrement its neighbour).
 
 _One line each, with a pointer. Add when something costs more than an hour._
+
+- **Every commit wants its `Signed-off-by`** (`.github/workflows/dco.yml`, CONTRIBUTING.md): seven commits made by
+  cloud sessions on 2026-10-01 and 2026-10-04 had none and PR #40's check failed. At the owner's word the branch was
+  rewritten on 2026-10-04 (`git filter-branch --msg-filter` from `69e9d3c`, messages only: every tree identical) and
+  force-pushed: **185 commits from the old `2ab349b` on have new hashes**, the docs' citations were rewritten to
+  them, and the old-to-new map is `analysis/round13_signoff_sha_map.tsv`. The cloud sessions' SSH signatures on
+  the rewritten commits are gone (a rewritten commit cannot keep one). The local group branches
+  (`phase-3/round13-*`, `fix/1003-*`) and `backup/round13-before-signoff` still point at the old commits. Commit
+  with `git commit -s`; check `git log --format=%B <base>..HEAD` before opening a PR.
 
 - **A route A/B's off-list and scratch ini go stale**: the three
   `validate_*.sh` scripts' `DIVS` lists lacked the four 09-27 centring

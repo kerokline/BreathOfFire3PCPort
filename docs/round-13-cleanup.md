@@ -6,7 +6,7 @@ after round thirteen's last wave. Every item is owed by
 wave's "Debts" paragraph in sections 11..17 names the evidence); nothing here
 changes game behaviour, so no DIVERGENCE entry is expected unless an item says
 so. Section 1 landed on branch `phase-3/round13-rebind` from the round's tip
-`22446f5`; the other items of section 18 are other sessions'.
+`8d3d064`; the other items of section 18 are other sessions'.
 
 Round thirteen took 1,757 functions in 37 groups (EGT, EKH and six waves;
 6,891 -> 8,648 ours), every group fuzz-only through `scenario_harness`. Each
@@ -160,7 +160,7 @@ is a `Fatal`).
 
 At `phase-3/round13-rebind`'s tip: the i686 build (llvm-mingw) clean, no
 warning or error from `src/`; `gen_symbols: 8649 ours`; `BOF3X_SHADOW='*'`
-headless narrow and with `BOF3X_WIDE=1` (2026-10-03, at `06d7377`, the
+headless narrow and with `BOF3X_WIDE=1` (2026-10-03, at `de4f8ee`, the
 code commit): both exit 0, `inject: 8648 ours, 0 left original by
 BOF3X_ORIGINAL`, 1,021 `MISMATCHES` lines each and every one `0 MISMATCHES`;
 `ledger_check.py` 72 entries, 0 errors.

@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..13),
-wave four, from the round branch's tip `89c25e1`. **51 functions ours**
+wave four, from the round branch's tip `9bebe7f`. **51 functions ours**
 (`src/game/effect_4d.cpp`, shadow name `effect_4d`): the cut table's 51 rows
 for E4D (`analysis/round13_cut.tsv`, the band `0x48C990..0x48DF70`), none
 added, none dropped. Each read to its last instruction with capstone and

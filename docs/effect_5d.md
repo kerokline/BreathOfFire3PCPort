@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..15),
-wave five, from the round branch's tip `0834edf`. **52 functions ours**
+wave five, from the round branch's tip `42b2388`. **52 functions ours**
 (`src/game/effect_5d.cpp`, shadow name `effect_5d`): the cut table's 49 rows
 for E5D (`analysis/round13_cut.tsv`, the band `0x503DE0..0x506860`) and three
 starts no list of the cut has - sub-kind 0x17's texture scroll `0x503E50`

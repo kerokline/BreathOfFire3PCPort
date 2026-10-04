@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..13),
-wave six, from the round branch's tip `c4deb22`. **48 functions ours**
+wave six, from the round branch's tip `c290566`. **48 functions ours**
 (`src/game/effect_6a.cpp`, shadow name `effect_6a`): the cut table's 48 rows
 for E6A (`analysis/round13_cut.tsv`, the band `0x50C0D0..0x50E3FA`), none
 added, none dropped. Each read to its last instruction with capstone and

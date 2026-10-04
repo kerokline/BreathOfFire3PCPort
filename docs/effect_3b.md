@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9, 10 and
-14), wave three, from the round branch's tip `0e0532c`. **49 functions ours**
+14), wave three, from the round branch's tip `4409f85`. **49 functions ours**
 (`src/game/effect_3b.cpp`, shadow name `effect_3b`): the cut table's 49 rows for
 E3B (`analysis/round13_cut.tsv`, the band `0x4823D0..0x484000`), none dropped,
 none added (section 5). Each read to its last instruction with capstone and

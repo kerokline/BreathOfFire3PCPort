@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..13),
-wave three, from the round branch's tip `0e0532c`. **51 functions ours**
+wave three, from the round branch's tip `4409f85`. **51 functions ours**
 (`src/game/effect_3c.cpp`, shadow name `effect_3c`): the cut table's 50 rows
 for E3C (`analysis/round13_cut.tsv`, the band `0x484050..0x485C50`) and one
 start no list of the cut has - kind 0x75's shared tail `0x485C60` (section 5).

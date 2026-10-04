@@ -2,7 +2,7 @@
 
 **Status:** MEASURED (2026-10-03) - round thirteen
 ([`takeover-queue-round13.md`](takeover-queue-round13.md) sections 9..11),
-wave four, from the round branch's tip `89c25e1`. **49 functions ours**
+wave four, from the round branch's tip `9bebe7f`. **49 functions ours**
 (`src/game/effect_4f.cpp`, shadow name `effect_4f`): the cut table's 45 rows
 for E4F (`analysis/round13_cut.tsv`, the band `0x491D70..0x493F70`), one the
 band holds that no list has (`0x492AF0`, inside the cut's `0x492AA0` extent),

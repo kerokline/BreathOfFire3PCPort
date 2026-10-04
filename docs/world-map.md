@@ -228,7 +228,7 @@ screenshot on the Lost Shore map, has the whole ellipse. In their words, the
 original also clips it "on some renders, but not all", probably depending on
 the map, and it is not in the sprite work.
 
-**Correction.** The first draft of this section (commit `9e33b6f`) said the
+**Correction.** The first draft of this section (commit `a88fa13`) said the
 cut was in the sprite's art, because ours, Capcom's and the sibling's
 PlayStation renders all showed a flat-bottomed shadow. The measurements were
 right, but that conclusion was wrong. Every frame it compared happened to stand
