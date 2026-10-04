@@ -108204,3 +108204,555 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R3A): BattleEnd_TasksBegin, BattleEnd_StartMemberTask, BattleEnd_AwaitRestore, BattleEnd_RestoreLoadBank, BattleEnd_RestoreAwaitBank; jumped through by BattleEnd_RestoreDispatch 0x4315B0 by 0x904AA2, unchecked (the last step sets 0x904AA1 = 4); BattleEnd_ExitSteps follows at 0x64AF90. docs/rest_3a.md."
+
+# Round fourteen, wave three, group R3C (2026-10-04, docs/rest_3c.md): 61
+# Effect_Handlers slots 50..85 and 87..111 in 0x44D000..0x44E4AA, all ours.
+
+[[func]]
+pc = 0x44D000
+name = "Effect_AsAbility60"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D000..0x44D014 (0x15 bytes): Effect_Handlers slot 50 (0x64E804), called by Effect_ApplyResult with no argument. 0x904B35 = 4, word 0x904B80 = 0x60, jmp 0x44C040 (R3B's kind-4 damage: result +4 = Effect_SkillDamage(actor, target, the ability's power byte, 0)); eax that callee's. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D020
+name = "Effect_AsAbility68"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D020..0x44D034 (0x15 bytes): Effect_Handlers slot 51 (0x64E808), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x68, jmp 0x44C040; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D040
+name = "Effect_AsAbility5B"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D040..0x44D054 (0x15 bytes): Effect_Handlers slot 52 (0x64E80C), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x5B, jmp 0x44C040; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D060
+name = "Effect_AsAbility52RaiseStat1"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D060..0x44D078 (0x19 bytes): Effect_Handlers slot 53 (0x64E810), called by Effect_ApplyResult with no argument. push 1; 0x904B35 = 4, 0x904B80 = 0x52; call 0x44FBB0 (R3D's: 0x44FB30, then unless 0x44F6A0 resists 0x44F650(the ability's s8 +3, 1) and Battle_RecalcStats(target)); pop ecx; ret - al that callee's. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D080
+name = "Effect_AsAbility5ARaiseStat1"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D080..0x44D098 (0x19 bytes): Effect_Handlers slot 54 (0x64E814), called by Effect_ApplyResult with no argument. push 1; 0x904B35 = 4, 0x904B80 = 0x5A; call 0x44FBB0(1); al forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D0A0
+name = "Effect_AsAbility5C"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D0A0..0x44D0B4 (0x15 bytes): Effect_Handlers slot 55 (0x64E818), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x5C, jmp 0x44C040; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D0C0
+name = "Effect_AsAbility64"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D0C0..0x44D0D4 (0x15 bytes): Effect_Handlers slot 56 (0x64E81C), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x64, jmp 0x44C040; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D0E0
+name = "Effect_AsAbility57Inflict10"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D0E0..0x44D0F8 (0x19 bytes): Effect_Handlers slot 57 (0x64E820), called by Effect_ApplyResult with no argument. push 0x10; 0x904B35 = 4, 0x904B80 = 0x57; call 0x44FC60 (R3D's: 0x44FB30, then unless resisted 0x44F1D0(target, 0x10)); al forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D100
+name = "Effect_AsAbility61"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D100..0x44D114 (0x15 bytes): Effect_Handlers slot 58 (0x64E824), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x61, jmp 0x44C040; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D120
+name = "Effect_AsAbility46"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D120..0x44D134 (0x15 bytes): Effect_Handlers slot 59 (0x64E828), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x46, jmp 0x44C120 (R3B's: result +4 = Effect_HealAmount(actor, target)); eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D140
+name = "Effect_AsAbility67"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D140..0x44D154 (0x15 bytes): Effect_Handlers slot 60 (0x64E82C), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x67, jmp 0x44C040; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D160
+name = "Effect_AsAbility56"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D160..0x44D174 (0x15 bytes): Effect_Handlers slot 61 (0x64E830), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x56, jmp 0x44CF60 (R3B's: 0x44FB30, then the target's +0x134 / +0x114 |= 0x200); eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D180
+name = "Effect_DoubleDamage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D180..0x44D1BD (0x3E bytes): Effect_Handlers slot 62 (0x64E834), called by Effect_ApplyResult with no argument. 0x904AA9 |= 0x20 and word 0x939F86 = 0 before Battle_CalcDamage(actor, target, 0xFFFF) (both bytes pushed in eax / ecx with stale upper bytes); result +4 = ax << 1 (shl eax, 1); byte 0x904660 = 5. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D1C0
+name = "Effect_QuarterDamage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D1C0..0x44D214 (0x55 bytes): Effect_Handlers slot 63 (0x64E838), called by Effect_ApplyResult with no argument. kind 0x904B35 4 and word 0x904B80 0x9A: 0x904AA9 |= 0x20; 0x939F86 = 0; result +4 = (s16) Battle_CalcDamage(actor, target, 0xFFFF) / 4 (cdq; and edx, 3; add; sar 2: truncated). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D220
+name = "Effect_ActorHpDamage3"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D220..0x44D234 (0x15 bytes): Effect_Handlers slot 64 (0x64E83C), called by Effect_ApplyResult with no argument. push 3; call 0x44FCE0 (R3D's: the actor's HP / divisor x a Rand variance x the ability's element affinity / 10000, 0 for a target with flag 0x10000); result +4 = ax, the pointer read after the call; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D240
+name = "Effect_ActorHpDamage1"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D240..0x44D254 (0x15 bytes): Effect_Handlers slot 65 (0x64E840), called by Effect_ApplyResult with no argument. 0x44FCE0(1) into result +4; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D260
+name = "Effect_ActorHpDamage2"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D260..0x44D274 (0x15 bytes): Effect_Handlers slot 66 (0x64E844), called by Effect_ApplyResult with no argument. 0x44FCE0(2) into result +4; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D280
+name = "Effect_InflictStatus4"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D280..0x44D288 (0x9 bytes): Effect_Handlers slot 67 (0x64E848), called by Effect_ApplyResult with no argument. push 4; call 0x44FC60 (R3D's: 0x44FB30, then unless 0x44F6A0 resists 0x44F1D0(target, 4)); pop ecx; ret - al forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D290
+name = "Effect_DamageInflict40"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D290..0x44D327 (0x98 bytes): Effect_Handlers slot 68 (0x64E84C), called by Effect_ApplyResult with no argument. the target's dword 0x904B54: below 3 a member's +0x98 (si) and +0x90 (bx), else enemy (t - 3)'s +0xA4 / +0x92; result +4 = Battle_CalcDamage(actor byte, the target dword, 2); the delta read again through 0x904B60: (s16) delta < si (jge), bl bit 6 clear and the delta not 0: 0x44FCA0(0x40). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D330
+name = "Effect_InflictStatus8"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D330..0x44D338 (0x9 bytes): Effect_Handlers slot 69 (0x64E850), called by Effect_ApplyResult with no argument. 0x44FC60(8); al forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D340
+name = "Effect_InflictStatus80"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D340..0x44D34B (0xC bytes): Effect_Handlers slot 70 (0x64E854), called by Effect_ApplyResult with no argument. 0x44FC60(0x80); al forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D350
+name = "Effect_InflictStatus20"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D350..0x44D35D (0xE bytes): Effect_Handlers slot 71 (0x64E858), called by Effect_ApplyResult with no argument. call 0x44FB30; push 0x20; call 0x44FCA0 (R3D's: unless 0x44F6A0 resists 0x44F1D0(target, 0x20)); al forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D360
+name = "Effect_Heal5Ap1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D360..0x44D385 (0x26 bytes): Effect_Handlers slot 72 (0x64E85C), called by Effect_ApplyResult with no argument. no calls: result +8 |= 2, +4 = 0xFFFB (-5: a heal; positive is damage), +6 = 0xFFFF, the pointer 0x904B60 read for each store. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D390
+name = "Effect_Attack80"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D390..0x44D41B (0x8C bytes): Effect_Handlers slot 73 (0x64E860), called by Effect_ApplyResult with no argument. ebx = dword 0x904B34; word 0x939FE4 (the attacker's power) = a member's +0xA4 / enemy (a - 3)'s +0xB4, read back as a dword & 0xFFFF, x 80 / 100 (imul 0x51EB851F, sar 5: signed, of a non-negative value); result +4 = Battle_CalcDamage(ebx, target, 0xFFFF). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D420
+name = "Effect_FlagActorPair"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D420..0x44D441 (0x22 bytes): Effect_Handlers slot 74 (0x64E864), called by Effect_ApplyResult with no argument. 0x904AA9 |= 0x40; byte 0x904B8A = the actor 0x904B34, 0x904B8B = byte 0x904B44; jmp 0x44FB30 (eax forwarded). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D450
+name = "Effect_TargetRecalcParty"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D450..0x44D57A (0x12B bytes): Effect_Handlers slot 75 (0x64E868), called by Effect_ApplyResult with no argument. call 0x44FB30; target above 2: return. Else Char_RecalcStats(CharacterRecords + 0xA4 x the target's +0x148); for each of the 0x904AB0 members (one count read) +0x92..+0x97 from the record's +0x12..+0x17 and 8 dwords +0xC0 from its +0x20 (rep movsd); Formation_ApplyStatMods; for each member 8 dwords +0xC0 to +0xA0; BattleForm_ApplyStats; Battle_RecalcStats(member) for member below 0x904AB0 (read again after each call; the word a stack slot whose low byte is the counter) - BattleParty_RecalcStats' body after its first call. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D580
+name = "Effect_Inflict40Heal20Ap4"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D580..0x44D5B6 (0x37 bytes): Effect_Handlers slot 76 (0x64E86C), called by Effect_ApplyResult with no argument. 0x44F1D0(target byte, pushed in eax with the caller's upper bytes, 0x40); then result +8 |= 2, +4 = 0xFFEC, +6 = 0xFFFC, 0x904B60 read after the call. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D5C0
+name = "Effect_Heal1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D5C0..0x44D5CB (0xC bytes): Effect_Handlers slot 77 (0x64E870), called by Effect_ApplyResult with no argument. result +4 = 0xFFFF. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D5D0
+name = "Effect_Heal80"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D5D0..0x44D5DB (0xC bytes): Effect_Handlers slot 78 (0x64E874), called by Effect_ApplyResult with no argument. result +4 = 0xFFB0. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D5E0
+name = "Effect_Heal240"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D5E0..0x44D5EB (0xC bytes): Effect_Handlers slot 79 (0x64E878), called by Effect_ApplyResult with no argument. result +4 = 0xFF10. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D5F0
+name = "Effect_RestoreAp5"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D5F0..0x44D605 (0x16 bytes): Effect_Handlers slot 80 (0x64E87C), called by Effect_ApplyResult with no argument. result +8 = 2, +6 = 0xFFFB. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D610
+name = "Effect_RestoreAp40"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D610..0x44D625 (0x16 bytes): Effect_Handlers slot 81 (0x64E880), called by Effect_ApplyResult with no argument. result +8 = 2, +6 = 0xFFD8. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D630
+name = "Effect_AsAbility66Half"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D630..0x44D67E (0x4F bytes): Effect_Handlers slot 82 (0x64E884), called by Effect_ApplyResult with no argument. movzx ax, byte 0x65CE6B (NameTable_Abilities + 0x66 x 24 + 3, the power byte); 0x904B35 = 4, 0x904B80 = 0x66; result +4 = Effect_SkillDamage(actor, target, that, 0); then (s16) result +4 / 2 (cdq; sub; sar 1: truncated) through 0x904B60 read again. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D680
+name = "Effect_AsAbility63"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D680..0x44D694 (0x15 bytes): Effect_Handlers slot 83 (0x64E888), called by Effect_ApplyResult with no argument. 0x904B35 = 4, 0x904B80 = 0x63, jmp 0x44C040; eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D6A0
+name = "Effect_CureBFCHealMax"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D6A0..0x44D6B7 (0x18 bytes): Effect_Handlers slot 84 (0x64E88C), called by Effect_ApplyResult with no argument. Battle_ClearStatus(target byte, 0xBFC); jmp 0x44C170 (R3B's: result +4 = -(a member target's +0xA0)); eax forwarded. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D6C0
+name = "Effect_Heal5"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D6C0..0x44D6CB (0xC bytes): Effect_Handlers slot 85 (0x64E890), called by Effect_ApplyResult with no argument. result +4 = 0xFFFB. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D6D0
+name = "Effect_EnemyRaiseAAAE"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D6D0..0x44D76D (0x9E bytes): Effect_Handlers slot 87 (0x64E898), called by Effect_ApplyResult with no argument. call 0x44FB30; e = enemy ((target - 3) & 0xFF, through a stack slot; no member branch): +0xAA not 0 with +0xAB bit 0 clear - +0xAB |= 1, +0xAA += 2; +0xAE not 0 with +0xAF bit 0 clear - +0xAF |= 1, +0xAE += 1; each of +0xAA / +0xAE above 7 (unsigned) = 7. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D770
+name = "Effect_AttackNoKill"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D770..0x44D7DC (0x6D bytes): Effect_Handlers slot 88 (0x64E89C), called by Effect_ApplyResult with no argument. result +4 = Battle_CalcDamage(actor, target, 0xFFFF); the target read again: its HP (a member's +0x98, an enemy's +0xA4) not above the delta (cmp ax, [ecx + 4]; jg - signed words): result +4 = HP - 1. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D7E0
+name = "Effect_HalveTargetHp"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D7E0..0x44D849 (0x6A bytes): Effect_Handlers slot 89 (0x64E8A0), called by Effect_ApplyResult with no argument. 0x44F6A0(actor, target) al not 0: return. Else result +4 = the target's HP (re-read target) shr 1. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D850
+name = "Effect_Inflict800Unguarded"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D850..0x44D8A8 (0x59 bytes): Effect_Handlers slot 90 (0x64E8A4), called by Effect_ApplyResult with no argument. t = byte 0x904B54; ObjTrio's +0x134 at t x 0x14C (for any t: an enemy target reads past the three members) & 3: result +8 = 1. Else t below 3: +0x143 = 0; 0x44FCA0(0x800) al not 0: result +8 = 1, else jmp 0x44FB30. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D8B0
+name = "Effect_DamageAllHp"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D8B0..0x44D91E (0x6F bytes): Effect_Handlers slot 91 (0x64E8A8), called by Effect_ApplyResult with no argument. 0x44F6A0(actor, target) resisting: result +8 = 1. Else result +4 = the target's HP (+0x98 / +0xA4). Not in the cut (code between 0x44D850's end and 0x44D920, tools/band_rows.py); Effect_Handlers slot 91 and R3D's 0x44EA70's tail jmp at 0x44EA80. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D920
+name = "Effect_RandomPowerAttack"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D920..0x44D9C4 (0xA5 bytes): Effect_Handlers slot 92 (0x64E8AC), called by Effect_ApplyResult with no argument. word 0x939FE4 = the actor's +0xA4 / +0xB4; by Rand & 3: 0 shr word 1, 1 kept, 2 += ax >> 1 (16 bits), 3 the dword x 2 stored as a word; result +4 = Battle_CalcDamage(actor, target, 0xFFFF), both bytes read after Rand. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44D9D0
+name = "Effect_TargetFlag2000"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44D9D0..0x44DA68 (0x99 bytes): Effect_Handlers slot 93 (0x64E8B0), called by Effect_ApplyResult with no argument. 0x44F6A0(actor, target) resisting: result +8 = 1, Battle_SetDamagePopup(0, target), jmp 0x44FB30. Else (target dword) below 3 a member's +0x134 |= 0x2000, else enemy's +0x114 |= 0x2000; Battle_RecalcStats(the target dword); jmp 0x44FB30. eax forwarded on both paths. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DA70
+name = "Effect_SureHitHalfDamage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DA70..0x44DB3C (0xCD bytes): Effect_Handlers slot 94 (0x64E8B4), called by Effect_ApplyResult with no argument. edx = dword 0x904B34; the actor's status word (+0x90 / enemy +0x92) bit 3 kept in esi and cleared; byte 0x939FFC = 0x64; result +4 = (s16) Battle_CalcDamage(edx, target, 0xFFFF) / 2 (truncated); the actor read again: its status word |= si. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DB40
+name = "Effect_EnemyDouble94And96"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DB40..0x44DBBC (0x7D bytes): Effect_Handlers slot 95 (0x64E8B8), called by Effect_ApplyResult with no argument. call 0x44FB30; enemy (target - 3, no member branch, 32-bit index): words +0x94 and +0x96 each doubled, 0xFFFF when x 2 passes 0xFFFF (cmp esi, 0xFFFF; jle). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DBC0
+name = "Effect_DropFromTurnOrder"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DBC0..0x44DC0F (0x50 bytes): Effect_Handlers slot 96 (0x64E8BC), called by Effect_ApplyResult with no argument. result +4 = 0; 0x44F6A0(actor, target) resisting: result +8 = 1. Else 0x44FB30, Battle_ReturnQueuedItem(target byte), Battle_RemoveFromTurnOrder(target byte, read again). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DC10
+name = "Effect_FlushTurnOrder"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DC10..0x44DC93 (0x84 bytes): Effect_Handlers slot 97 (0x64E8C0), called by Effect_ApplyResult with no argument. call 0x44FB30; bl = 0x904AE2; 0x904B8E = 4; ObjTrio +0x134 at the target's stride |= 0x10 (no enemy branch); slots bl - 1 .. 0x904AE3 inclusive (the end read again each pass; unsigned byte compares): 0x904ACC[i] not 0xFF - Battle_ReturnQueuedItem(i, the index's stack slot), 0x904ACC[i] = 0xFF. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DCA0
+name = "Effect_RaiseStat4By10"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DCA0..0x44DCBC (0x1D bytes): Effect_Handlers slot 98 (0x64E8C4), called by Effect_ApplyResult with no argument. call 0x44FB30; 0x44F650(0xA, 4) (R3D's: result record byte +0x14 + 4 += 10, held to -25..50); Battle_RecalcStats(target byte). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DCC0
+name = "Effect_ActorHpToDamage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DCC0..0x44DD54 (0x95 bytes): Effect_Handlers slot 99 (0x64E8C8), called by Effect_ApplyResult with no argument. 0x904AA9 |= 0x20; the actor (byte, then its dword read again): a member - result +4 = +0x98 - 1, +0x98 = 1; an enemy - result +4 = +0xA4 - 1, +0xA4 = 1. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DD60
+name = "Effect_DamageToOneHp"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DD60..0x44DDCD (0x6E bytes): Effect_Handlers slot 100 (0x64E8CC), called by Effect_ApplyResult with no argument. 0x44F6A0(actor, target) resisting: return. Else the target's HP: 1 - result +4 = 0, else HP - 1. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DDD0
+name = "Effect_HealAndCureBFC"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DDD0..0x44DDFF (0x30 bytes): Effect_Handlers slot 101 (0x64E8D0), called by Effect_ApplyResult with no argument. result +4 = Effect_HealAmount(actor, target); Battle_ClearStatus(target byte read again, 0xBFC). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DE00
+name = "Effect_RestoreAp10"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DE00..0x44DE15 (0x16 bytes): Effect_Handlers slot 102 (0x64E8D4), called by Effect_ApplyResult with no argument. result +8 = 2, +6 = 0xFFF6. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DE20
+name = "Effect_MultiHit"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DE20..0x44DEE9 (0xCA bytes): Effect_Handlers slot 103 (0x64E8D8), called by Effect_ApplyResult with no argument. for i below byte 0x904B96 (read again each pass): Battle_CalcDamage(actor, target, 0xFFFF) x f / 10 (imul 0x66666667, sar 2: truncated) summed in edi, f the s8 0x64E944[i] for i below 7, else 3; the sum held to 9999 / -9999 (0x270F, 0xFFFFD8F1, signed) into result +4. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DEF0
+name = "Effect_SkillDamageLessDef"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DEF0..0x44DF7B (0x8C bytes): Effect_Handlers slot 104 (0x64E8DC), called by Effect_ApplyResult with no argument. result +4 = Effect_SkillDamage(actor, target, the power byte NameTable_Abilities + 24 x (0x904B80 & 0xFFFF) + 3, 0) - 0x44C040's body; then less the target's +0xA6 (a member) / +0xB6 (an enemy), and 0 when below 0 (signed word). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DF80
+name = "Effect_HalfDamageInflict20"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DF80..0x44DFC0 (0x41 bytes): Effect_Handlers slot 105 (0x64E8E0), called by Effect_ApplyResult with no argument. result +4 = (s16) Battle_CalcDamage(actor, target, 0xFFFF) / 2 (truncated); the word not 0: 0x44FCA0(0x20). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44DFD0
+name = "Effect_ActorStepThenHpToOne"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44DFD0..0x44E25C (0x28D bytes): Effect_Handlers slot 106 (0x64E8E4), called by Effect_ApplyResult with no argument. ebx = dword 0x904B34. A member (bl <= 2): CharacterRecords[+0x148] +0x1E below 5 - it and the member's +0x9E up by one; Char_RecalcStats(the record); the party loops of Effect_TargetRecalcParty. An enemy whose +0xB0 is not 0xFFFF: q = the data record (0x8C55C8 + 0x8C x +0xF0) word +0x24 / 10; +0xB0 above q: +0xB0 -= q, +0xD0 += that word / -10 (imul 0x99999999, sar 2), +0xA4 held to +0xB0. Then 0x44F6A0(the actor dword, target) not resisting: result +4 = the target's HP - 1. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44E260
+name = "Effect_ActorFlag8000"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44E260..0x44E2AD (0x4E bytes): Effect_Handlers slot 107 (0x64E8E8), called by Effect_ApplyResult with no argument. call 0x44FB30; the actor's +0x130 (a member) / +0x110 (an enemy) |= 0x8000. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44E2B0
+name = "Effect_ActorFlag40Count"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44E2B0..0x44E325 (0x76 bytes): Effect_Handlers slot 108 (0x64E8EC), called by Effect_ApplyResult with no argument. call 0x44FB30; the actor's +0x134 / +0x114 |= 0x40; +0x144 / +0x124 below 2: + 1. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44E330
+name = "Effect_ActorFlag80Count"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44E330..0x44E3A5 (0x76 bytes): Effect_Handlers slot 109 (0x64E8F0), called by Effect_ApplyResult with no argument. call 0x44FB30; the actor's +0x134 / +0x114 |= 0x80; +0x145 / +0x125 below 2: + 1. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44E3B0
+name = "Effect_ActorFlag100"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44E3B0..0x44E3FD (0x4E bytes): Effect_Handlers slot 110 (0x64E8F4), called by Effect_ApplyResult with no argument. call 0x44FB30; the actor's +0x134 / +0x114 |= 0x100. No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
+
+[[func]]
+pc = 0x44E400
+name = "Effect_TargetClearBuffs"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R3C), 0x44E400..0x44E4A9 (0xAA bytes): Effect_Handlers slot 111 (0x64E8F8), called by Effect_ApplyResult with no argument. call 0x44FB30; the target (dword): a member's +0x138 / +0x13C = 0, +0x130 &= 0xFFFE7FFF, +0x134 &= 0xFFFBC43F (an enemy's +0x118 / +0x11C / +0x110 / +0x114); Battle_RecalcStats(the target dword). No PSX twin in pairs_propagated.json. The name is the code's shape, not a traced ability or item. docs/rest_3c.md."
