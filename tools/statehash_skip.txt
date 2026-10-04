@@ -1,0 +1,194 @@
+# The state hash's skip list (BOF3X_STATEHASH_SKIP, docs/state-hash.md): byte
+# ranges of BOF3.exe's .data hashed as zero, ADDRESS LENGTH # why.
+#
+# Two kinds, both measured (2026-10-04, raw dumps at ticks 100 and 1400 of the
+# attract sequence, original against original and original against ours):
+#   noise   differs between two runs of the same code - handles, heap
+#           pointers, stack addresses, the sound stream's timing;
+#   ours    differs between Capcom's code and ours by construction - the
+#           platform layer this project replaced, the grown draw pool
+#           (DrawPool_Grow), the stacks.
+# A range here is a place the hash cannot see. Add one only with the dump
+# that showed it and the reason it is not game state; never to quiet a
+# difference that has not been read.
+
+# the task scheduler: saved stack pointers and the task stacks (return addresses, locals)
+0x66C7D4 4       # ours   a task record's saved esp (Task_Records+0x4)
+0x66C7F4 4       # ours   the next record's saved esp
+0x66C854 37292   # both   Task_SchedulerEsp and the task stacks, to Area42_Rank
+
+# the window, the clock
+0x6BC620 12      # noise  Game_Hwnd, Game_HInstance, Frame_Deadline
+
+# sound and music: DirectSound objects, the stream
+0x6BC928 5400    # noise  Sound_Banks (buffer pointers in every record)
+0x6BDE50 4       # noise  Music_File
+0x6BDE5C 4       # noise  Music_Volume
+0x7CC378 73728   # noise  Music_Staging (the stream decodes on its own thread)
+0x7DE3B4 40      # noise  Music_Events, Snd_Device, Music_Notify, Music_Decoder, Music_Data
+
+# the display: DirectDraw / Direct3D state, which ours replaces (render_d3d11)
+0x6BE1D0 2096    # ours   Gfx_WindowRect and the mode list, to Dd_CellBackdrop
+0x6C3940 256     # both   the end of Gfx_ClutRows (the rows above 0x3D0: handles, a stack address)
+0x6C3A40 1280    # both   D3d_BackMaterialHandle, D3d_ShadeModeCache, Gfx_RenderFlags and the device description
+0x6C4250 8       # both   Gfx_TexCache record 0: its two surface pointers
+0x6C4850 8       # both   Gfx_TexCache record 1: its two surface pointers
+0x6C4E50 8       # both   Gfx_TexCache record 2: its two surface pointers
+0x6C5450 8       # both   Gfx_TexCache record 3: its two surface pointers
+0x6C5A50 8       # both   Gfx_TexCache record 4: its two surface pointers
+0x6C6050 8       # both   Gfx_TexCache record 5: its two surface pointers
+0x6C6650 8       # both   Gfx_TexCache record 6: its two surface pointers
+0x6C6C50 8       # both   Gfx_TexCache record 7: its two surface pointers
+0x6C7250 8       # both   Gfx_TexCache record 8: its two surface pointers
+0x6C7850 8       # both   Gfx_TexCache record 9: its two surface pointers
+0x6C7E50 8       # both   Gfx_TexCache record 10: its two surface pointers
+0x6C8450 8       # both   Gfx_TexCache record 11: its two surface pointers
+0x6C8A50 8       # both   Gfx_TexCache record 12: its two surface pointers
+0x6C9050 8       # both   Gfx_TexCache record 13: its two surface pointers
+0x6C9650 8       # both   Gfx_TexCache record 14: its two surface pointers
+0x6C9C50 8       # both   Gfx_TexCache record 15: its two surface pointers
+0x7C9F58 8       # both   Font_TexCache record 0: its two surface pointers
+0x7C9F6C 8       # both   Font_TexCache record 1: its two surface pointers
+0x7C9F80 8       # both   Font_TexCache record 2: its two surface pointers
+0x7C9F94 8       # both   Font_TexCache record 3: its two surface pointers
+0x7C9FA8 8       # both   Font_TexCache record 4: its two surface pointers
+0x7C9FBC 8       # both   Font_TexCache record 5: its two surface pointers
+0x7C9FD0 8       # both   Font_TexCache record 6: its two surface pointers
+0x7C9FE4 8       # both   Font_TexCache record 7: its two surface pointers
+0x7C9FF8 8       # both   Font_TexCache record 8: its two surface pointers
+0x7CA00C 8       # both   Font_TexCache record 9: its two surface pointers
+0x7CA020 8       # both   Font_TexCache record 10: its two surface pointers
+0x7CA034 8       # both   Font_TexCache record 11: its two surface pointers
+0x7CA048 8       # both   Font_TexCache record 12: its two surface pointers
+0x7CA05C 8       # both   Font_TexCache record 13: its two surface pointers
+0x7CA070 8       # both   Font_TexCache record 14: its two surface pointers
+0x7CA084 8       # both   Font_TexCache record 15: its two surface pointers
+0x7CA098 8       # both   Font_TexCache record 16: its two surface pointers
+0x7CA0AC 8       # both   Font_TexCache record 17: its two surface pointers
+0x7CA0C0 8       # both   Font_TexCache record 18: its two surface pointers
+0x7CA0D4 8       # both   Font_TexCache record 19: its two surface pointers
+0x7CA0E8 8       # both   Font_TexCache record 20: its two surface pointers
+0x7CA0FC 8       # both   Font_TexCache record 21: its two surface pointers
+0x7CA110 8       # both   Font_TexCache record 22: its two surface pointers
+0x7CA124 8       # both   Font_TexCache record 23: its two surface pointers
+0x7CA138 8       # both   Font_TexCache record 24: its two surface pointers
+0x7CA14C 8       # both   Font_TexCache record 25: its two surface pointers
+0x7CA160 8       # both   Font_TexCache record 26: its two surface pointers
+0x7CA174 8       # both   Font_TexCache record 27: its two surface pointers
+0x7CA188 8       # both   Font_TexCache record 28: its two surface pointers
+0x7CA19C 8       # both   Font_TexCache record 29: its two surface pointers
+0x7CA1B0 8       # both   Font_TexCache record 30: its two surface pointers
+0x7CA1C4 8       # both   Font_TexCache record 31: its two surface pointers
+0x7CA1D8 8       # both   Font_TexCache record 32: its two surface pointers
+0x7CA1EC 8       # both   Font_TexCache record 33: its two surface pointers
+0x7CA200 8       # both   Font_TexCache record 34: its two surface pointers
+0x7CA214 8       # both   Font_TexCache record 35: its two surface pointers
+0x7CA228 8       # both   Font_TexCache record 36: its two surface pointers
+0x7CA23C 8       # both   Font_TexCache record 37: its two surface pointers
+0x7CA250 8       # both   Font_TexCache record 38: its two surface pointers
+0x7CA264 8       # both   Font_TexCache record 39: its two surface pointers
+0x7CA278 8       # both   Font_TexCache record 40: its two surface pointers
+0x7CA28C 8       # both   Font_TexCache record 41: its two surface pointers
+0x7CA2A0 8       # both   Font_TexCache record 42: its two surface pointers
+0x7CA2B4 8       # both   Font_TexCache record 43: its two surface pointers
+0x7CA2C8 8       # both   Font_TexCache record 44: its two surface pointers
+0x7CA2DC 8       # both   Font_TexCache record 45: its two surface pointers
+0x7CA2F0 8       # both   Font_TexCache record 46: its two surface pointers
+0x7CA304 8       # both   Font_TexCache record 47: its two surface pointers
+0x7CA318 8       # both   Font_TexCache record 48: its two surface pointers
+0x7CA32C 8       # both   Font_TexCache record 49: its two surface pointers
+0x7CA340 8       # both   Font_TexCache record 50: its two surface pointers
+0x7CA354 8       # both   Font_TexCache record 51: its two surface pointers
+0x7CA368 8       # both   Font_TexCache record 52: its two surface pointers
+0x7CA37C 8       # both   Font_TexCache record 53: its two surface pointers
+0x7CA390 8       # both   Font_TexCache record 54: its two surface pointers
+0x7CA3A4 8       # both   Font_TexCache record 55: its two surface pointers
+0x7CA3B8 8       # both   Font_TexCache record 56: its two surface pointers
+0x7CA3CC 8       # both   Font_TexCache record 57: its two surface pointers
+0x7CA3E0 8       # both   Font_TexCache record 58: its two surface pointers
+0x7CA3F4 8       # both   Font_TexCache record 59: its two surface pointers
+0x7CA408 8       # both   Font_TexCache record 60: its two surface pointers
+0x7CA41C 8       # both   Font_TexCache record 61: its two surface pointers
+0x7CA430 8       # both   Font_TexCache record 62: its two surface pointers
+0x7CA444 8       # both   Font_TexCache record 63: its two surface pointers
+0x7CA458 8       # both   Font_TexCache record 64: its two surface pointers
+0x7CA46C 8       # both   Font_TexCache record 65: its two surface pointers
+0x7CA480 8       # both   Font_TexCache record 66: its two surface pointers
+0x7CA494 8       # both   Font_TexCache record 67: its two surface pointers
+0x7CA4A8 8       # both   Font_TexCache record 68: its two surface pointers
+0x7CA4BC 8       # both   Font_TexCache record 69: its two surface pointers
+0x7CA4D0 8       # both   Font_TexCache record 70: its two surface pointers
+0x7CA4E4 8       # both   Font_TexCache record 71: its two surface pointers
+0x7CA4F8 8       # both   Font_TexCache record 72: its two surface pointers
+0x7CA50C 8       # both   Font_TexCache record 73: its two surface pointers
+0x7CA520 8       # both   Font_TexCache record 74: its two surface pointers
+0x7CA534 8       # both   Font_TexCache record 75: its two surface pointers
+0x7CA548 8       # both   Font_TexCache record 76: its two surface pointers
+0x7CA55C 8       # both   Font_TexCache record 77: its two surface pointers
+0x7CA570 8       # both   Font_TexCache record 78: its two surface pointers
+0x7CA584 8       # both   Font_TexCache record 79: its two surface pointers
+0x7CA598 8       # both   Font_TexCache record 80: its two surface pointers
+0x7CA5AC 8       # both   Font_TexCache record 81: its two surface pointers
+0x7CA5C0 8       # both   Font_TexCache record 82: its two surface pointers
+0x7CA5D4 8       # both   Font_TexCache record 83: its two surface pointers
+0x7CA5E8 8       # both   Font_TexCache record 84: its two surface pointers
+0x7CA5FC 8       # both   Font_TexCache record 85: its two surface pointers
+0x7CA610 8       # both   Font_TexCache record 86: its two surface pointers
+0x7CA624 8       # both   Font_TexCache record 87: its two surface pointers
+0x7CA638 8       # both   Font_TexCache record 88: its two surface pointers
+0x7CA64C 8       # both   Font_TexCache record 89: its two surface pointers
+0x7CA660 8       # both   Font_TexCache record 90: its two surface pointers
+0x7CA674 8       # both   Font_TexCache record 91: its two surface pointers
+0x7CA688 8       # both   Font_TexCache record 92: its two surface pointers
+0x7CA69C 8       # both   Font_TexCache record 93: its two surface pointers
+0x7CA6B0 8       # both   Font_TexCache record 94: its two surface pointers
+0x7CA6C4 8       # both   Font_TexCache record 95: its two surface pointers
+0x7CA6D8 8       # both   Font_TexCache record 96: its two surface pointers
+0x7CA6EC 8       # both   Font_TexCache record 97: its two surface pointers
+0x7CA700 8       # both   Font_TexCache record 98: its two surface pointers
+0x7CA714 8       # both   Font_TexCache record 99: its two surface pointers
+0x7CA728 8       # both   Font_TexCache record 100: its two surface pointers
+0x7CA73C 8       # both   Font_TexCache record 101: its two surface pointers
+0x7CA750 8       # both   Font_TexCache record 102: its two surface pointers
+0x7CA764 8       # both   Font_TexCache record 103: its two surface pointers
+0x7CA778 8       # both   Font_TexCache record 104: its two surface pointers
+0x7CA78C 8       # both   Font_TexCache record 105: its two surface pointers
+0x7CA7A0 8       # both   Font_TexCache record 106: its two surface pointers
+0x7CA7B4 8       # both   Font_TexCache record 107: its two surface pointers
+0x7CA7C8 8       # both   Font_TexCache record 108: its two surface pointers
+0x7CA7DC 8       # both   Font_TexCache record 109: its two surface pointers
+0x7CA7F0 8       # both   Font_TexCache record 110: its two surface pointers
+0x7CA804 8       # both   Font_TexCache record 111: its two surface pointers
+0x7CA818 8       # both   Font_TexCache record 112: its two surface pointers
+0x7CA82C 8       # both   Font_TexCache record 113: its two surface pointers
+0x7CA840 8       # both   Font_TexCache record 114: its two surface pointers
+0x7CA854 8       # both   Font_TexCache record 115: its two surface pointers
+0x7CA868 8       # both   Font_TexCache record 116: its two surface pointers
+0x7CA87C 8       # both   Font_TexCache record 117: its two surface pointers
+0x7CA890 8       # both   Font_TexCache record 118: its two surface pointers
+0x7CA8A4 8       # both   Font_TexCache record 119: its two surface pointers
+0x7CA8B8 8       # both   Font_TexCache record 120: its two surface pointers
+0x7CA8CC 8       # both   Font_TexCache record 121: its two surface pointers
+0x7CA8E0 8       # both   Font_TexCache record 122: its two surface pointers
+0x7CA8F4 8       # both   Font_TexCache record 123: its two surface pointers
+0x7CA908 8       # both   Font_TexCache record 124: its two surface pointers
+0x7CA91C 8       # both   Font_TexCache record 125: its two surface pointers
+0x7CA930 8       # both   Font_TexCache record 126: its two surface pointers
+0x7CA944 8       # both   Font_TexCache record 127: its two surface pointers
+0x7CA958 136     # ours   D3d_Vertices (the quad the original's Direct3D draws with)
+0x7CC238 320     # both   D3d_DeviceDesc, Dd_DirectDraw and the surfaces after it
+
+# input: DirectInput objects; the key table is the launcher's (docs/controls.md)
+0x7DE7A8 128     # ours   Key_Table
+0x7DE928 952     # both   DInput_Object and the device records, to Gpu_DispEnv
+
+# the draw-item pool: ours draws from a larger pool of its own (DrawPool_Grow), so Capcom's is unused and the lists point elsewhere
+0x7E09E0 2048    # ours   DrawItemPool_Free
+0x8022A0 2720    # ours   DrawLayers and Gfx_FrameNodes (pointers into the pool)
+0x9039D4 2       # ours   DrawItemPool_Top
+0x905E80 147456  # ours   DrawItems
+
+# the C runtime's own, at the end of .data
+0x93C5A0 4       # noise  a stack address
+0x93C6B4 4       # noise  a stack address
+0x93D6E0 12      # noise  a stack address and a heap pointer
