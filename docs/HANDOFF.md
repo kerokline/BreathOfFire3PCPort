@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, all six waves merged, 8,648 ours; the round's end in progress)
+**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, merged, 8,648 ours; its end done but the rows in no group)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -32,25 +32,15 @@ are [`round-11-cleanup.md`](round-11-cleanup.md) (item 0); round ten's are
 [`round-10-cleanup.md`](round-10-cleanup.md) (item 0a). The rest is
 [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
-**The frame hash reference is stale as of 2026-10-01 and must be re-recorded
-before any A/B is read** (the original twice, then ours, as every reference):
-`entries_logic.txt` changed under it - `tools/entries_audit.py --dedupe
---append` dropped the 49 hosts' over-long duplicate lines (their ranges had
-claimed Capcom code past the hosts' real ends as owned, on both sides alike)
-and added 16 armed entries (round twelve doc section 7 item 4). Both move the
-`(entry, caller)` sequence on both sides; `r9_orig` was recorded under the
-old list. Until then, the record below is the last good one.
-**The frame hash reference** is `analysis/calltrace/r9_orig` (twin
-`r9_origb`, identical on all 10,317 frames; `analysis/validate_round9_hash.sh`,
-reference sides `--original "*,-Game_Clock"`, `renderer=1`, windowed,
-foreground held), re-recorded 2026-09-27 09:15 at 3,164 ours (`ed0cd6f`);
-`r9_ours` (08:50, the same build) identical but frame 0, the set-up (as
-since `rb1`). Wave five's 346 functions came after it and none is on the
-attract path - every spell group is fuzz-only - so it stands for this
-build until something on the attract path is taken (nothing in round
-ten's six waves is). `r9_*_0926` and
-`r9_orig_0927_loaded` (a side recorded under a concurrent build, four
-frames of 25,000 calls) are history; `r8_*` and older too.
+**The frame hash reference is `analysis/calltrace/r13_origb` (twin `r13_origc`,
+identical on all 10,308 frames)**, recorded 2026-10-03 night at 8,648 ours
+(the build `b038bc4`; reference sides `--original "*,-Game_Clock"`,
+`renderer=1`, windowed, foreground held, `BOF3X_LAYERING=0`; the batch is
+`r13_live.sh` in the session-`e39af52c` scratchpad). `r13_ours` is identical
+but frame 0, the set-up (as since `rb1`). `r13_orig` lost focus for a frame
+and is not a reference; `r9_*` and older are history. **The hash sees less
+each round**: the tracer arms only what is not ours (635 entries now) -
+[`takeover-queue-round13.md`](takeover-queue-round13.md) section 18 item 6.
 
 ## Pick up here
 
@@ -236,19 +226,20 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    word left of `Yes` (DIV-0027's stops again, with the master's prompt and, the owner says, two more
    pointer-to-choice mismatches on that screen), and **its tiled backdrop is 320 wide under the wide picture**.
 
-000. **Round thirteen, the effect engine, is merged: six waves, 35 groups and stage A, 6,891 -> 8,648 ours**
-   ([`takeover-queue-round13.md`](takeover-queue-round13.md); section 17 is wave six, section 18 the round's end).
-   The final tip `61001f7` is verified narrow and wide (`'*'` exit 0 both, `ledger_check` 72 entries, 0 errors).
-   DIV-0068 and DIV-0072 have the owner's word (kept); DIV-0071 (layering) is on by default; nothing is pushed.
-   **The round's end, in progress from 2026-10-03 evening** (section 18's list): the rebinding between the groups;
-   the harness rows still by address and the next fold's items; the rows in no group; the defects to number; the
-   two fills still 320 wide and the widescreen survey; then the live checks - the hash reference re-recorded, the
-   whelp route (EGT, E1C, E2A) and `cutsceneAndNue.txt` (E5A's sub-kind 1) - with the machine hands-off.
-   **For the owner in game:** [`USER_CHECKS.md`](USER_CHECKS.md) item 8 (the ring at the Manmo event, sub-kind
-   0x59's shade bytes never restored - probably fine, to be verified; the desert's sky). The scripts are in the
-   session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`). **The
-   verification worktree is this queue's.** The main checkout's `build/bof3x.ini` has `wide=1` and a running game
-   locks its DLL. A full `verify_tip.sh` takes 22 to 31 minutes.
+000. **Round thirteen, the effect engine, is merged and its end is done but for one item: six waves, 35 groups and
+   stage A, 6,891 -> 8,648 ours** ([`takeover-queue-round13.md`](takeover-queue-round13.md); section 18 is the
+   round's end). Done 2026-10-03: the rebinding (58 constants, [`round-13-cleanup.md`](round-13-cleanup.md)), the
+   defects D200..D238, the harness's end fold and the last two listed fills (all nine of DIV-0041's widened), and
+   **the live checks** - the attract hash and six recipes (whelp, `cutsceneAndNue`, dragon, combat, shop, world
+   map), every one identical to the original but frame 0. DIV-0068 and DIV-0072 have the owner's word (kept);
+   DIV-0071 (layering) is on by default; nothing is pushed. **Left:** the rows in no group (about 90 functions, a
+   mop-up takeover wave - each wave's section lists them; the fishing rows are round fourteen's); the 61 run-time
+   raw calls of ours into ours ([`round-13-cleanup.md`](round-13-cleanup.md) 1.3, a decision); a launcher key for
+   the layering; **for the owner in game** [`USER_CHECKS.md`](USER_CHECKS.md) item 8 and DIV-0071 in play. The
+   scripts are in the session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`).
+   **The verification worktree is this queue's.** The main checkout's `build/bof3x.ini` has `wide=1` and a running
+   game locks its DLL. A full `verify_tip.sh` takes 22 to 31 minutes. **The tracer's tables are 32,768 since
+   `b038bc4`** (8,192 was hit at 8,648 ours: check the ceilings in HANDOFF's traps before a round's first traced run).
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,

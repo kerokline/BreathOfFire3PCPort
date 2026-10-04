@@ -1056,9 +1056,21 @@ six waves, 6,891 -> 8,648 ours.** What is owed, in the order it is being
 done:
 
 1. The rebinding of the raw calls between the round's groups (each wave's
-   debts name them).
+   debts name them). **Done 2026-10-03** (branch `phase-3/round13-rebind`,
+   merged `76deb0f`; [`round-13-cleanup.md`](round-13-cleanup.md)): 58
+   constants in 20 files by name, values unchanged. What the waves called
+   raw calls are mostly fuzz keys and clone bases, which stay the original's
+   addresses; **61 run-time raw calls of ours into ours are left as they
+   are** (its section 1.3) - turning one into a direct call changes what
+   `BOF3X_ORIGINAL=NAME` switches, a decision and not a cleanup.
 2. The harness rows by address in `scenario_harness_ekh.cpp` and the next
-   fold's items (section 16).
+   fold's items (section 16). **Done 2026-10-03** (branch
+   `phase-3/round13-fold`, merged `aed35f8`;
+   [`scenario_harness.md`](scenario_harness.md) 8.10): `MapView_LinkPrimAt`'s
+   dy and size by the byte it reads (the field-mode row too), `0x4FEE70`'s
+   answer a whole word 1..8, sub-kind 0x42's draw without the pointer; EKH's
+   eight clone sources by name; 42 `FX_RAW` rows left, all Capcom's. No
+   merged group's verdict changed.
 3. The rows in no group, to place (sections 12 to 17).
 4. The latent defects, numbered in `known-defects.md`. **Done 2026-10-03
    (branch `phase-3/round13-defects`): D200..D238**, from the 36 group docs'
@@ -1086,7 +1098,52 @@ done:
    four bytes in both) and D201 (the pool's extent; `0x67626C` named the spark
    cursor by E3B, the shard cursor by E3C), each with both readings.
 5. The two full-frame fills still 320 wide (`0x489D47`, `0x493308`) and the
-   widescreen survey's list (DIV-0041's amendments).
-6. The live checks: the hash reference re-recorded, then the whelp route
-   (EGT, E1C, E2A) and `cutsceneAndNue.txt` (E5A's sub-kind 1) - the
-   machine hands-off.
+   widescreen survey's list (DIV-0041's amendments). **The two fills done
+   2026-10-03** with item 2 (`EffectKind89_DrawTint`,
+   `EffectKindAF_DrawScreen`): all nine of DIV-0041's listed fills are
+   widened. The survey's other items (the entry lists them) are the owner's.
+6. The live checks. **Run 2026-10-03, 21:22..22:50, the machine hands-off**
+   (the build `b038bc4`: the round's code and the tracer's tables at 32,768 -
+   the first try stopped on `calltrace: more than 8192 owned functions`).
+   Layering pinned off on every side.
+   - **The attract frame-hash reference is `analysis/calltrace/r13_origb`,
+     twin `r13_origc`**: identical on all 10,308 frames (reference sides
+     `--original "*,-Game_Clock"`, foreground held). `r13_orig`, the first
+     side, lost the window's focus once (one frame of 20,416 calls) and is
+     not the reference. **`r13_ours` (8,648 ours) is identical but frame 0**,
+     the set-up, as since `rb1`. The oracle: 1 of 9,001 frames disagrees
+     between `r13_origb` and ours, and 1 of 8,996 between the two originals -
+     the torn-sample kind.
+   - **Six recipes as frame hashes** (`hash_r13_<route>_orig` / `_origb` /
+     `_ours`; the originals `*` with the KEEP list, ours with the `DIVS`
+     off-list): whelp (13,183 frames), `cutsceneAndNue` (7,423), dragon
+     (4,332), combat (2,622), shop (3,158), world map (2,146) - **each pair
+     of originals identical, each ours identical but frame 0**; every run to
+     `done`, no FATAL or CRASH line.
+   - **What the hash can still see.** The tracer arms only entries that are
+     not ours - 635 of 9,265 lines now - and collapses every caller inside
+     ours to one. So it compares the sequence of calls into the Capcom code
+     that is left, per frame; it does not see which of ours ran. It still
+     refuses a change of control flow that changes those calls, and the
+     oracle (rand count, message, area per frame) is independent of it, but
+     its power falls as the round count rises: the next rounds want the
+     picture A/Bs and the memory dump beside it, or a tracer mode that
+     hashes ours' entries on both sides.
+   - **Wall time** (`tools/run_times.py`, the owner's question): the batch
+     84 minutes - the attract sides 6 minutes each by the clock (4 runs),
+     the 18 recipe sides 60 minutes of which 27 are the game's own pace at
+     60 frames a second; the rest is launch, the tracer's slow-down and
+     teardown.
+
+**The round-end tip's proof** (`aed35f8`: the defects, the rebinding, the fold
+and the tracer's tables together; scratch `verify_end.log`):
+`scenario_harness_ekh`, `effect_4b`, `effect_4f`, `effect_5a`, `effect_5f`,
+`field_e2` and `'*'` exit 0, 8,648 ours; `'*'` with `BOF3X_WIDE=1` exit 0;
+`ledger_check` 72 entries, 0 errors. (The live checks ran on `b038bc4`, the
+code before the rebinding and the fold; neither changes what narrow play
+runs.)
+
+**Still owed after this**: item 3, the rows in no group (about 90 functions:
+a mop-up takeover wave; the fishing rows in E1F's band are round fourteen's);
+the owner's eye ([`USER_CHECKS.md`](USER_CHECKS.md) item 8, DIV-0071 in
+play); the 61 run-time raw calls; a launcher key for the layering.
