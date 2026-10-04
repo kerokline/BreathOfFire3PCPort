@@ -101572,3 +101572,686 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R1A): 0x51D690 0x523F10 0x51D6D0; by PartyAction2_Form2State1 0x51D670 by +3; 0x65FAC8 (R1B's 0x51D710's) follows. The count is the run to the next table, read by hand: the reader has no bound. docs/rest_1a.md."
+
+[[func]]
+pc = 0x51F210
+name = "PartyAction6_Form0Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F210..0x51F3C0 (0x1B1 bytes): instruction for instruction PartyAction5_Form0Begin 0x51E930 (field_hidden.cpp), compared normalised (scratch r1c/r1dis.py --cmp): an even direction +8 turned back one (- 1, & 7), PartyAction_TargetAhead finding nothing turns it two on, again nothing back two; MapView_SlopeAt one step ahead in +8 (the whole ebx pushed, its low byte the direction): steep (DamageScratch flag 0x903850 set and the slope low word above 0x40 signed) - Sprite_EnsureAnimation((+8 - 1) / 2 + 0x46), +2 one on; else +0x2B = 1, the side probes in directions 3 and 5 (rows 0x6697C8 / 0x6697D8 by address), Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation(the turn + 0x42), +0xA = 5. Then +0xB = 0, +2 one on. PartyAction6_Form0States 0x65FC30[0] (R1B 0x51F1F0 reads that table). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F3D0
+name = "PartyAction6_Form0Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F3D0..0x51F4AA (0xDB bytes): PartyAction5_Form0Resolve 0x51EAF0 instruction for instruction but its three calls to 0x51F4B0 (PartyAction6_CellPickup) for Field_CellPickup: +0xA counted down; at 0 the point two steps ahead, the object Sprite_ObjectAt(point, 0) finds gets bit 0 of its +0x80 (signed index; ours aborts past 0x21), the pickup on the point cell, then the cell one on in x (x fraction), then in z (z fraction), each only while none found; +2 one on. Sprite_ScriptTickOnce every time. The cells are pushed as dwords over its uninitialised stack. 0x65FC30[1]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F4B0
+name = "PartyAction6_CellPickup"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F4B0..0x51F5CE (0x11F bytes), cdecl: Field_CellPickup 0x51EBD0 instruction for instruction (AreaMap_ByteAt 0xF2 with an effect free: Effect_SpawnAtCell(0), Rand nibble 13..15 zenny 2 / 5, ten times on Field_InputFlags bits 1-2 and Rand & 3 = 0, Field_GiveZenny, Effect_SpawnAtCell(1), +0xB = 1; 0xF8: item 0x56 name into Text_Records, Inventory_Add(0, 0x56, 1), Sound_PlayEffect(0x106) / Msg_OpenSystem(2) or (3), Field_Request 2, +0xB = 1; both AreaMap_ClearCell and al 1; else 0). Three E8 sites, all in PartyAction6_Form0Resolve, each testing al. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F5D0
+name = "PartyFormAction6_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F5D0..0x51F5E1 (0x12 bytes): jmp through PartyFormAction6_Form1States 0x65FC3C by Sprite_Current +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyFormAction6_Forms[1] 0x65FC8C. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F5F0
+name = "PartyAction6_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F5F0..0x51F601 (0x12 bytes): jmp through PartyAction6_Form1States 0x65FC48 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction6_Forms[1] 0x65FC98. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F610
+name = "PartyFormAction6_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F610..0x51F621 (0x12 bytes): jmp through PartyFormAction6_Form2States 0x65FC54 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyFormAction6_Forms[2] 0x65FC90. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F630
+name = "PartyAction6_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F630..0x51F641 (0x12 bytes): jmp through PartyAction6_Form2States 0x65FC60 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction6_Forms[2] 0x65FC9C. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F650
+name = "PartyAction6_Form2State0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F650..0x51F661 (0x12 bytes): jmp through PartyAction6_Form2State0Steps 0x65FC68 by Sprite_Current +3, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction6_Form2States[0] 0x65FC60. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F670
+name = "PartyAction6_Form2Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F670..0x51F6F6 (0x87 bytes): the first turn as PartyAction6_Form0Begin by PartyAction_BlockedAhead (an even +8 turned back one; not blocked, two on; still not, back two), PartyAction_SideProbes, Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xB = 0, +0xA = 0xB, +3 = 1. PartyAction6_Form2State0Steps 0x65FC68[0]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F700
+name = "PartyAction6_Form2Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F700..0x51F84B (0x14C bytes): +0xA counted down when not 0; at 0: Sound_PlayEffect(u16 +0x2C + 0x100); Field_EffectAhead not 0xFF: Sound_PlayEffect(0x10B), that record (movsx index; ours aborts past 19) +8 = the direction, +0xA = 1, +6 = its index, +3 one on; else the point two steps ahead, the object Sprite_ObjectAt(point, 0) finds marked (bit 0 of +0x80, signed index) with Sound_PlayEffect(0x10B), then PartyAction6_CellHit 0x51F880 on the point cell and the cells one on in x / z across a fraction, each only while none hit; then +3 one on. Sprite_ScriptTickOnce every time. 0x65FC68[1]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F850
+name = "PartyAction_TickThenFace"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F850..0x51F872 (0x23 bytes): Sprite_ScriptTickOnce; al non-zero: Sprite_SetAnimation(+8), +3 one on. Nine .data cells reach it (0x65FAB4, 0x65FB88, 0x65FBEC, 0x65FC74, 0x65FD80, 0x65FE80, 0x65FF38, 0x660004, 0x6600C4 - the step tables of several sets). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51F880
+name = "PartyAction6_CellHit"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51F880..0x51FA07 (0x188 bytes), cdecl: AreaMap_ByteAt(x, z) stored over its z slot low byte; 0xF0 / 0xF1 / 0xF4: Effect_SpawnAtCellHigh(0, x, z), a second (4) when Rand & 7 is above 5, Sound_PlayEffect(0x10B), al 1; 0xF6 / 0xF7: Effect_SpawnAtCellHigh(0), Sound_PlayEffect(0x10B), Rand & 0xF below 7: Effect_SpawnAtCellHigh(3), item 0x29 name into Text_Records, Inventory_Add(0, 0x29, 1) - Sound_PlayEffect(0x106) and Msg_OpenSystem(2), else Msg_OpenSystem(3) - +0xB = 2; 7..0xB nothing more; above 0xB Effect_SpawnAtCellHigh(2), Sprite_FlashClut(0), Char_LoseHp(1, Field_State +0x89), Msg_OpenSystem(0xD9), +0xB = 1; Field_Request 2, al 1; else al 0. The spawns are pushed a fourth dword (the z slot) never read. Three E8 sites in PartyAction6_Form2Resolve, each testing al. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FA10
+name = "PartyAction6_Form2State1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FA10..0x51FA21 (0x12 bytes): jmp through PartyAction6_Form2State1Steps 0x65FC7C by +3, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction6_Form2States[1] 0x65FC64. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FA30
+name = "PartyAction6_Form2Probe"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FA30..0x51FA64 (0x35 bytes; code in no list, inside the cut extent of 0x51FA10, reached only through PartyAction6_Form2State1Steps 0x65FC7C[0]): PartyAction_SideProbes, Sprite_EnsureAnimation((+8 - 1) / 2 + 0x42), +0xA = 0xB, +3 = 1. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FA70
+name = "PartyFormAction6_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FA70..0x51FA82 (0x13 bytes): jmp through PartyFormAction6_Forms 0x65FC88 by the u16 Sprite_Current +0x2C (the form), the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through Field_FormActions[6] 0x660A5C (Field_FormActionState 0x52F4F0 calls it by the party set). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FA90
+name = "PartyAction6_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FA90..0x51FAA2 (0x13 bytes): jmp through PartyAction6_Forms 0x65FC94 by the u16 +0x2C, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through Field_ActionBySet[6] 0x6609E8 (Field_ActionState 0x52FB60 by the party set). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FAB0
+name = "PartyFormAction7_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FAB0..0x51FAC1 (0x12 bytes): jmp through PartyFormAction7_Form0States 0x65FCA0 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyFormAction7_Forms[0] 0x65FCD8. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FAD0
+name = "PartyAction7_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FAD0..0x51FAE1 (0x12 bytes): jmp through PartyAction7_Form0States 0x65FCAC by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction7_Forms[0] 0x65FCE4. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FAF0
+name = "PartyAction7_Form0Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FAF0..0x51FC55 (0x166 bytes): PartyAction_Kind30Ahead into its own local low byte; not 0xFF: PartyAction_MemberOnEffect then PartyAction_MemberBeyondEffect with that dword (upper bytes the caller ecx), either non-zero: Field_State +0x137 = 0; else that record +0xB = 1, Sound_PlayEffect(u16 +0x2C + 0x100), Sprite_EnsureAnimation(+8 + 8, a byte), Field_State +0x128 = 2, Field_ScriptFlags high byte 0x9039A3 |= 0x10, Field_JumpStart, +9 one down, Field_LeaderStepTick, Field_State +0x137 = 1, +2 one on. 0xFF: the point two steps ahead; unless Field_State +0x138 bit 0, Sprite_ObjectAt(point, 1) found marked (bit 0 of +0x80, unsigned index, jae 0x1E to the extra four); Field_State +0x137 = 0. PartyAction7_Form0States 0x65FCAC[0]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FC60
+name = "PartyFormAction7_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FC60..0x51FC71 (0x12 bytes): jmp through PartyFormAction7_Form1States 0x65FCB4 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyFormAction7_Forms[1] 0x65FCDC. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FC80
+name = "PartyAction_TurnStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FC80..0x51FCFD (0x7E bytes): +8 equal to +3: Sprite_EnsureAnimation(0x40) at 3, (0x41) at 5, none else, +2 one on; otherwise +9 one down, at 0 +9 = 2, +8 = (+8 + +0xB) & 7, Sprite_EnsureAnimation(+8). 31 .data cells (state 1 of most form actions, after PartyAction_TurnToSide). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FD00
+name = "PartyFormAction7_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FD00..0x51FD11 (0x12 bytes): jmp through PartyFormAction7_Form2States 0x65FCC0 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyFormAction7_Forms[2] 0x65FCE0. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FD20
+name = "PartyAction7_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FD20..0x51FD31 (0x12 bytes): jmp through PartyAction7_Form2States 0x65FCCC by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction7_Forms[2] 0x65FCEC (entry 1 is R1E 0x5226D0, PartyAction5_Forms[2] too). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FD40
+name = "PartyAction7_Form2Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FD40..0x51FF13 (0x1D4 bytes): PartyAction6_Form0Begin but steep is the ground one step ahead: MapView_GroundAt(point) kept in its local slot, its low word minus +0x3E (Sprite_Current re-read) above 0x40 signed with the sloped flag set after MapView_SlopeAt(point, the re-read direction byte pushed in eax over Sprite_Current upper bytes), whose answer is dropped; the probes keep the slope in that slot. PartyAction7_Form2States 0x65FCCC[0]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x51FF20
+name = "PartyAction7_Form2Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x51FF20..0x51FFFA (0xDB bytes): PartyAction6_Form0Resolve code calling PartyAction7_CellPickup 0x520000. PartyAction7_Form2States 0x65FCCC[1]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520000
+name = "PartyAction7_CellPickup"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520000..0x52011E (0x11F bytes), cdecl: PartyAction6_CellPickup code but the zenny multiplier 20 (mov cl, 0x14) for 10. Three E8 sites in PartyAction7_Form2Resolve. The numbers 0x520000 in scena_sc1 / sc6 / sc9b / sc15 / mode_states are coordinates, not references (band_rows.py --refs). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520120
+name = "PartyFormAction7_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520120..0x520132 (0x13 bytes): jmp through PartyFormAction7_Forms 0x65FCD8 by the u16 +0x2C, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through Field_FormActions[7] 0x660A60. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520140
+name = "PartyAction7_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520140..0x520152 (0x13 bytes): jmp through PartyAction7_Forms 0x65FCE4 by the u16 +0x2C, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through Field_ActionBySet[7] 0x6609EC. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520160
+name = "PartyFormAction8_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520160..0x520171 (0x12 bytes): jmp through PartyFormAction8_Form0States 0x65FCF0 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyFormAction8_Forms[0] 0x65FD34. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520180
+name = "PartyAction8_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520180..0x520191 (0x12 bytes): jmp through PartyAction8_Form0States 0x65FCFC by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction8_Forms[0] 0x65FD40. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x5201A0
+name = "PartyAction8_Form0Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x5201A0..0x520305 (0x166 bytes): PartyAction7_Form0Begin code (identical). 0x65FCFC[0]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520310
+name = "PartyFormAction8_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520310..0x520321 (0x12 bytes): jmp through PartyFormAction8_Form1States 0x65FD04 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyFormAction8_Forms[1] 0x65FD38. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520330
+name = "PartyAction8_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520330..0x520341 (0x12 bytes): jmp through PartyAction8_Form1States 0x65FD10 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction8_Forms[1] 0x65FD44. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520350
+name = "PartyAction_WaitEffect"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520350..0x5203B2 (0x63 bytes): +7 set: Sprite_ScriptTickOnce, non-zero: Sprite_EnsureAnimation(+8), +7 = 0. Else Sprite_ScriptTickOnce, non-zero and Effect_Objects record +0xB not in use (+0 0, the index unchecked: 0xFF when the state before found no record free, e.g. R1B 0x51DE20; read in place): +0x2B = 0, Field_State +0x137 = 0. Seven .data cells (0x65FA4C, 0x65FB20, 0x65FC50, 0x65FD18, 0x65FED8, 0x65FFE0, 0x66005C). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x5203C0
+name = "PartyFormAction8_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x5203C0..0x5203D1 (0x12 bytes): jmp through PartyFormAction8_Form2States 0x65FD1C by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyFormAction8_Forms[2] 0x65FD3C. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x5203E0
+name = "PartyAction8_Form2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x5203E0..0x5203F1 (0x12 bytes): jmp through PartyAction8_Form2States 0x65FD28 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction8_Forms[2] 0x65FD48. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520400
+name = "PartyAction8_Form2Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520400..0x5205D3 (0x1D4 bytes): PartyAction7_Form2Begin code (normalised compare identical). PartyAction8_Form2States 0x65FD28[0]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x5205E0
+name = "PartyAction8_Form2Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x5205E0..0x5206BA (0xDB bytes): PartyAction6_Form0Resolve code calling PartyAction8_CellPickup 0x5206C0. PartyAction8_Form2States 0x65FD28[1]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x5206C0
+name = "PartyAction8_CellPickup"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x5206C0..0x5207DE (0x11F bytes), cdecl: PartyAction7_CellPickup code (the multiplier 20). Three E8 sites in PartyAction8_Form2Resolve. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x5207E0
+name = "PartyFormAction8_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x5207E0..0x5207F2 (0x13 bytes): jmp through PartyFormAction8_Forms 0x65FD34 by the u16 +0x2C, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through Field_FormActions[8] 0x660A64. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520800
+name = "PartyAction8_ByForm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520800..0x520812 (0x13 bytes): jmp through PartyAction8_Forms 0x65FD40 by the u16 +0x2C, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through Field_ActionBySet[8] 0x6609F0. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520820
+name = "PartyFormAction9_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520820..0x520831 (0x12 bytes): jmp through PartyFormAction9_Form0States 0x65FD4C by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through entry 0 of 0x65FDAC, the table Field_FormActions[9] (R1D 0x521320) reads by +0x2C. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520840
+name = "PartyAction_TurnToSide"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520840..0x5208AF (0x70 bytes): the direction +8 nearer side, |d - 3| against |d - 5| as ints (a tie 3): +0xB = Sprite_TurnSense(that side), +3 = it; +9 = 2, +2 one on. 34 .data cells (state 0 of most party sets form actions, 0x65F9E0 .. 0x65FDC4). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x5208B0
+name = "PartyAction9_Form0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x5208B0..0x5208C1 (0x12 bytes): jmp through PartyAction9_Form0States 0x65FD58 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through entry 0 of 0x65FDB8, the table Field_ActionBySet[9] (R1D 0x521340) reads by +0x2C. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x5208D0
+name = "PartyAction9_Form0Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x5208D0..0x520A35 (0x166 bytes): PartyAction7_Form0Begin code (identical). 0x65FD58[0]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520A40
+name = "PartyFormAction9_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520A40..0x520A51 (0x12 bytes): jmp through PartyFormAction9_Form1States 0x65FD60 by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through entry 1 of 0x65FDAC (R1D 0x521320). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520A60
+name = "PartyAction9_Form1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520A60..0x520A71 (0x12 bytes): jmp through PartyAction9_Form1States 0x65FD6C by +2, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through entry 1 of 0x65FDB8 (R1D 0x521340). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520A80
+name = "PartyAction9_Form1State0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520A80..0x520A91 (0x12 bytes): jmp through PartyAction9_Form1State0Steps 0x65FD74 by +3, the index unchecked (xor eax, eax; a byte or word load; jmp [eax*4 + table]). Reached through PartyAction9_Form1States[0] 0x65FD6C (entry 1 is R1D 0x520E10, by +3 through 0x65FD88). Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520AA0
+name = "PartyAction9_Form1Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520AA0..0x520B26 (0x87 bytes): PartyAction6_Form2Begin code (identical). PartyAction9_Form1State0Steps 0x65FD74[0]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520B30
+name = "PartyAction9_Form1Resolve"
+ret = "void"
+params = "void"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520B30..0x520C7B (0x14C bytes): PartyAction6_Form2Resolve code calling PartyAction9_CellHit 0x520C80. 0x65FD74[1]. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[func]]
+pc = 0x520C80
+name = "PartyAction9_CellHit"
+ret = "unsigned char"
+params = "unsigned x, unsigned z"
+impl = "src/game/rest_1c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R1C, capstone to the last instruction), 0x520C80..0x520E07 (0x188 bytes), cdecl: PartyAction6_CellHit code (identical). Three E8 sites in PartyAction9_Form1Resolve. Fuzz only: no recorded route enters it (docs/rest_1c.md section 8). docs/rest_1c.md."
+
+[[data]]
+pc = 0x65FC3C
+name = "PartyFormAction6_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction6_Form1 0x51F5D0 by +2: PartyAction_TurnToSide, PartyAction_TurnStep, PartyAction_ScriptEnd; 0x65FC48 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FC48
+name = "PartyAction6_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction6_Form1 0x51F5F0 by +2: R1E 0x5239F0, R1B 0x51DE20, PartyAction_WaitEffect; 0x65FC54 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FC54
+name = "PartyFormAction6_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction6_Form2 0x51F610 by +2: PartyAction_TurnToSide, PartyAction_TurnStep, BossOp_ScriptTick 0x437CA0; 0x65FC60 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FC60
+name = "PartyAction6_Form2States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction6_Form2 0x51F630 by +2: PartyAction6_Form2State0, PartyAction6_Form2State1; 0x65FC68 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FC68
+name = "PartyAction6_Form2State0Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction6_Form2State0 0x51F650 by +3: PartyAction6_Form2Begin, PartyAction6_Form2Resolve, R1B 0x51D440, PartyAction_TickThenFace, R1E 0x522DE0; 0x65FC7C follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FC7C
+name = "PartyAction6_Form2State1Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction6_Form2State1 0x51FA10 by +3: PartyAction6_Form2Probe, R1F 0x523F10, R1A 0x51D6D0; PartyFormAction6_Forms follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FC88
+name = "PartyFormAction6_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction6_ByForm 0x51FA70 by u16 +0x2C: R1B 0x51F1D0, PartyFormAction6_Form1, PartyFormAction6_Form2; PartyAction6_Forms follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FC94
+name = "PartyAction6_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction6_ByForm 0x51FA90 by u16 +0x2C: R1B 0x51F1F0, PartyAction6_Form1, PartyAction6_Form2; 0x65FCA0 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCA0
+name = "PartyFormAction7_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction7_Form0 0x51FAB0 by +2: PartyAction_TurnToSide, R1A 0x51C490, PartyAction_ScriptEnd; 0x65FCAC follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCAC
+name = "PartyAction7_Form0States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction7_Form0 0x51FAD0 by +2: PartyAction7_Form0Begin, R1D 0x521C40; 0x65FCB4 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCB4
+name = "PartyFormAction7_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction7_Form1 0x51FC60 by +2: PartyAction_TurnToSide, PartyAction_TurnStep, PartyAction_ScriptEnd; 0x65FCC0 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCC0
+name = "PartyFormAction7_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction7_Form2 0x51FD00 by +2: R1D 0x520E90, PartyAction_TurnStep, PartyAction_ScriptEnd; 0x65FCCC follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCCC
+name = "PartyAction7_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction7_Form2 0x51FD20 by +2: PartyAction7_Form2Begin, PartyAction7_Form2Resolve, PartyAction_Finish; PartyFormAction7_Forms follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCD8
+name = "PartyFormAction7_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction7_ByForm 0x520120 by u16 +0x2C: PartyFormAction7_Form0, PartyFormAction7_Form1, PartyFormAction7_Form2; PartyAction7_Forms follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCE4
+name = "PartyAction7_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction7_ByForm 0x520140 by u16 +0x2C: PartyAction7_Form0, R1E 0x5226D0 (PartyAction5_Forms[2] too), PartyAction7_Form2; 0x65FCF0 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCF0
+name = "PartyFormAction8_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction8_Form0 0x520160 by +2: PartyAction_TurnToSide, R1A 0x51C490, PartyAction_ScriptEnd; 0x65FCFC follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FCFC
+name = "PartyAction8_Form0States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction8_Form0 0x520180 by +2: PartyAction8_Form0Begin, R1D 0x521C40; 0x65FD04 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD04
+name = "PartyFormAction8_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction8_Form1 0x520310 by +2: PartyAction_TurnToSide, PartyAction_TurnStep, PartyAction_ScriptEnd; 0x65FD10 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD10
+name = "PartyAction8_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction8_Form1 0x520330 by +2: R1E 0x5239F0, R1B 0x51DE20, PartyAction_WaitEffect; 0x65FD1C follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD1C
+name = "PartyFormAction8_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction8_Form2 0x5203C0 by +2: R1D 0x520E90, PartyAction_TurnStep, PartyAction_ScriptEnd; 0x65FD28 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD28
+name = "PartyAction8_Form2States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction8_Form2 0x5203E0 by +2: PartyAction8_Form2Begin, PartyAction8_Form2Resolve, PartyAction_Finish; PartyFormAction8_Forms follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD34
+name = "PartyFormAction8_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction8_ByForm 0x5207E0 by u16 +0x2C: PartyFormAction8_Form0, _Form1, _Form2; PartyAction8_Forms follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD40
+name = "PartyAction8_Forms"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction8_ByForm 0x520800 by u16 +0x2C: PartyAction8_Form0, _Form1, _Form2; 0x65FD4C follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD4C
+name = "PartyFormAction9_Form0States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction9_Form0 0x520820 by +2: PartyAction_TurnToSide, R1A 0x51C490, PartyAction_ScriptEnd; 0x65FD58 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD58
+name = "PartyAction9_Form0States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction9_Form0 0x5208B0 by +2: PartyAction9_Form0Begin, R1D 0x521C40; 0x65FD60 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD60
+name = "PartyFormAction9_Form1States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyFormAction9_Form1 0x520A40 by +2: PartyAction_TurnToSide, PartyAction_TurnStep, BossOp_ScriptTick 0x437CA0; 0x65FD6C follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD6C
+name = "PartyAction9_Form1States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction9_Form1 0x520A60 by +2: PartyAction9_Form1State0, R1D 0x520E10 (by +3 through 0x65FD88); 0x65FD74 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
+
+[[data]]
+pc = 0x65FD74
+name = "PartyAction9_Form1State0Steps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R1C): PartyAction9_Form1State0 0x520A80 by +3: PartyAction9_Form1Begin, PartyAction9_Form1Resolve, R1B 0x51D440, PartyAction_TickThenFace, R1E 0x522DE0; R1D 0x520E10 table 0x65FD88 follows. The reader does not bound its index; the count is the run of code pointers up to the next table, read by hand (docs/rest_1c.md section 3)."
