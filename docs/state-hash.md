@@ -183,6 +183,9 @@ noise.
   was identical to ours at `4962b89`.
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
+- **Known and not skipped:** DIV-0073 - after the masters' model has drawn,
+  `Gte_Matrix2`'s bytes `0x7DE4E6..0x7DE4FF` are zeros in ours and stale stack
+  in the original. No route recorded so far opens that screen.
 - **A new `DIVERGENCE.md` entry that changes state** shows as a page from its
   first tick. Compare with the divergence switched off (`BOF3X_ORIGINAL=<its
   name>`), as the route A/Bs already do with `DIVS`.

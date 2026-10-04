@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 72 entries, DIV-0001..0072, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 73 entries, DIV-0001..0073, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3884,3 +3884,37 @@ designed in rather than bolted on.
   function, its stale word included.
 - **The owner's word, 2026-10-03:** kept as written (entered by the
   coordinator from E5F's report).
+
+### The masters' model's light matrix zeroed past its first row, where the original copies stale stack
+
+- **ID:** DIV-0073
+- **Date:** 2026-10-04
+- **Subsystem:** the masters' screen (`Shisu_DrawModel` `0x57EEF0`, ours in
+  `src/game/rest_2b.cpp`; game mode 8 step 8)
+- **Tier:** Forced
+- **Original behaviour:** the function's light matrix is a local at
+  `[esp + 0x7C]`, of which `Light_ObjectDirection` writes the first three
+  shorts - the light's row. `Gte_SetMatrix2` `0x5A8DA0` then copies all 32
+  bytes into `Gte_Matrix2` `0x7DE4E0`: the other two rows and the
+  translation, 26 bytes, are whatever the caller's stack held.
+- **New behaviour:** ours hands `Gte_SetMatrix2` the same first row and
+  zeros in the other 26 bytes. Every primitive the function draws is the
+  original's.
+- **Rationale:** stack the function never writes cannot be reproduced, only
+  replaced (DIV-0021's and DIV-0023's class). `Gte_Matrix2` is read only by
+  `Gte_NormalColor`, whose result the port throws away (the colour in is
+  copied over it, `src/game/psx_gte_transform.cpp`), so nothing drawn or
+  decided depends on the bytes; zero is the value that says so.
+- **Also in the PSX version?** Not read; the cut pairs the screen's rows
+  with the SHISU overlay.
+- **Verification:** `BOF3X_SHADOW=rest_2b` headless: the fuzz compares the
+  matrix's first row and levels the rest, 0 mismatches
+  ([`rest_2b.md`](rest_2b.md) section 7, L1). Not seen live: no recorded
+  route opens the masters' model. On a route that does, the state hash
+  ([`state-hash.md`](state-hash.md)) reports `0x7DE4E6..0x7DE4FF` from the
+  frame the model first draws - this entry, and not in the skip list, since
+  the field's own draws load the whole matrix there and are compared.
+- **Reversible?** `BOF3X_ORIGINAL=Shisu_DrawModel` runs Capcom's function,
+  its stale bytes included.
+- **The owner's word:** owed (entered by the coordinator from R2B's report,
+  2026-10-04).
