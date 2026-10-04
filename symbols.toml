@@ -11250,8 +11250,9 @@ pc = 0x5809C0
 name = "Save_QuickWrite"
 ret = "void"
 params = "void"
+impl = "src/game/rest_2c.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, first instructions: 0x9036D4 = 0, Crt_sprintf(0x904BA0, 0x664068, 0), the save block builder 0x5806F0, Crt_sprintf again with 0x9036D4, Save_WriteFile(0x904BA0, 0x12B0). No arguments. Sole caller WndProc F12, which then shows Save OK. Unread past that; group X's writer (docs/save-menu.md)."
+evidence = "disasm 2026-09-23, first instructions: 0x9036D4 = 0, Crt_sprintf(0x904BA0, 0x664068, 0), the save block builder 0x5806F0, Crt_sprintf again with 0x9036D4, Save_WriteFile(0x904BA0, 0x12B0). No arguments. Sole caller WndProc F12, which then shows Save OK. Unread past that; group X's writer (docs/save-menu.md). Read whole 2026-10-04 (round fourteen group R2C, 0x5809C0..0x580A31, 0x72 bytes): then, unless Save_WriteFile answered -1, the 7 dwords 0x904680 to the slot's summary 0x905BC0 + 0x1C * slot. Taken by R2C; docs/rest_2c.md."
 
 [[data]]
 pc = 0x6BC620
@@ -106758,3 +106759,620 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R2F): BareRet, MenuSlide_UpOff, MenuSlide_DownTo16, MenuSlide_DownTo40; called through by Win2_TitleBox 0x5969E0 by +3, unchecked; Win2_DrawItemList's title pointers 0x66AF10 follow. docs/rest_2f.md."
+
+# ---------------------------------------------------------------------------
+# Round fourteen, wave two, group R2C: the inn's, save point's and rest's last
+# states, the save block, the shop's browse and sell modes, the master's talk
+# and panels, the figure record's moves. docs/rest_2c.md.
+
+[[func]]
+pc = 0x57F340
+name = "MasterFigure_DrawFaded"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x57F340..0x57F414 (0xD5 bytes): no arguments: the record 0x9398E0 drawn by 0x57EEF0 (R2B, pushed the record) with its colour bytes +0x5D..+0x5F faded by 3 * the step +0x107 (the first and third down to 0, the second up to 0xFF, byte arithmetic) and put back after the draw; the scale +0x40 = the dword 0x663D7C[+0x10B] (read in place, unbounded). Entered by tail jumps from MasterFigure_States entries 1..5 (0x57F330 is R2B's) and by MasterFigure_Settle. Name: the record's role is a hypothesis (dispatched by R2B's 0x57F320 inside 0x57DFF0's menu modes). docs/rest_2c.md."
+
+[[func]]
+pc = 0x57F420
+name = "MasterFigure_TurnHome"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x57F420..0x57F44D (0x2E bytes): MasterFigure_States[2] (0x663E30): the angle dword +0x6C, low 12 bits not 0: (angle - 0x40) & 0xFC0 and +6 = 0; else +6 = 1; then a tail jump to MasterFigure_DrawFaded. docs/rest_2c.md."
+
+[[func]]
+pc = 0x57F450
+name = "MasterFigure_Settle"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x57F450..0x57F4D6 (0x87 bytes): MasterFigure_States[3]: target = (short)AreaMap_Elevation(Field_Kind2X, Field_Kind2Z) << 16 + dword +0xC0 * 0xA00; the height +0x3C less ((short)AreaMap_Elevation again + 0x200) << 16 - target) / 16 (signed); below the target (signed) set to it, +6 = 1, else +6 = 0; then MasterFigure_DrawFaded (two call sites, one per branch). docs/rest_2c.md."
+
+[[func]]
+pc = 0x57F4E0
+name = "MasterFigure_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x57F4E0..0x57F4E4 (0x5 bytes): MasterFigure_States[4]: a lone tail jump to MasterFigure_DrawFaded. docs/rest_2c.md."
+
+[[func]]
+pc = 0x57F4F0
+name = "MasterFigure_TurnOn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x57F4F0..0x57F4FB (0xC bytes): MasterFigure_States[5]: the angle dword +0x6C + 0x20 (entry 1, R2B's 0x57F330, takes 0x20), a tail jump to MasterFigure_DrawFaded. docs/rest_2c.md."
+
+[[func]]
+pc = 0x57FA40
+name = "InnPrompt_NotEnough"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x57FA40..0x57FAAE (0x6F bytes): InnPrompt_States[4] (InnPrompt_Choose's sub-state + 1 when the zenny is short): SaveMenu_DrawChoices(0x6E, 0x4C), Menu_DrawTitleBox(0x14, 0x12, 0x118, 0x13, 0x903A5A pushed in eax), with an object (0x929F0C not 0xFF) Menu_DrawMoneyBox(0x62, 0x28, 0, Party_Zenny), Text_DrawAt(0x1C, 0x16, 0, 0xFF, Msg_SystemPtr(0xA2)); Input_Pressed's word not 0: the sub-state 0x929F02 - 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x580010
+name = "FieldSave_Write"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580010..0x5800C0 (0xB1 bytes): FieldSave_States[4] (after FieldSave_Confirm's yes): the title box, system message 0x99, SaveMenu_DrawSlots(0x20, 0x30, 0), Save_BuildBlock, Crt_sprintf(0x904BA0, 0x664068, the slot 0x9036D4), Save_WriteFile(0x904BA0, 0x12B0); -1 a bare return (DIV-0003's path, 0x5800C0); else the sub-state + 1, the timer 0x929F04 = 0x1E, the 7 dwords 0x904680 to the slot's summary 0x905BC0 + 0x1C * slot (re-read; ours aborts past 16), 0x6BC881 = 2. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5800D0
+name = "FieldSave_Written"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5800D0..0x58014E (0x7F bytes): FieldSave_States[5]: the title box, system message 0x8F, the slots unlit, 0x6BC880 = 1; no button pressed: the timer down and wait while not 0; then timer 0, Sound_PlayEffect(0x104), the sub-state + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x580230
+name = "FieldSave_PromptAnswer"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580230..0x58027C (0x4D bytes): FieldSave_States[8] (FieldSave_End's question, system message 0xD0): the title box; once 0x7DEE44 bit 1: the answer 0x929F0B 0 - the timer 0 and the step 0x929F01 + 1 (the way out); else the step 3 (the save menu) and the sub-state 0. docs/rest_2c.md."
+
+[[func]]
+pc = 0x580280
+name = "Inn_TitleOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580280..0x5802F6 (0x77 bytes): Inn_Steps[4], the way out: the title box at y 0x12 - 20 * the timer (low 16 bits meaningful); the timer + 1, at 5: mode 0x929F00 = 1 (ShopMode_End), the step 0, and with Field_InputFlags 0x40 or area 0xBC, 0x85, 0xC1 (Inn_Begin's test) 0x929F0C = 0x929F0F. docs/rest_2c.md."
+
+[[func]]
+pc = 0x580300
+name = "Rest_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580300..0x58030D (0xE bytes): ShopMode_States[10]: jmp [Rest_States + 4 * 0x929F01], unchecked (ours aborts past 7). docs/rest_2c.md."
+
+[[func]]
+pc = 0x580560
+name = "Rest_LoadJingle"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580560..0x580582 (0x23 bytes): Rest_States[2]: Menu_DrawBlackScreen, Sound_LoadStream(0), the step + 1, the timer 0x96. docs/rest_2c.md."
+
+[[func]]
+pc = 0x580590
+name = "Rest_WaitJingle"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580590..0x5805C8 (0x39 bytes): Rest_States[3]: Menu_DrawBlackScreen; a timer above 0 counts down and waits; at 0, Sound_StreamDone not 0: the step + 1 and Transition_Start(1). docs/rest_2c.md."
+
+[[func]]
+pc = 0x5805D0
+name = "Rest_Restore"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5805D0..0x5805F0 (0x21 bytes): Rest_States[4]: the wait word 0x66C810 0: Party_RestoreAll(0) and the step + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x580600
+name = "Rest_End"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580600..0x58060E (0xF bytes): Rest_States[5]: mode 1 (ShopMode_End), the step 0. docs/rest_2c.md."
+
+[[func]]
+pc = 0x580610
+name = "Rest_EndAfterMessage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580610..0x580627 (0x18 bytes): Rest_States[6] (Rest_Begin's, after message 0xEF): 0x7DEE44 bit 1 - mode 1 and the step 0. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5806F0
+name = "Save_BuildBlock"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5806F0..0x5808D8 (0x1E9 bytes): no arguments (called by FieldSave_Write and Save_QuickWrite): the live block 0x9039E0 gathers the chapter dwords 0x8034E0..0x8034EC, the counter bytes 0x903848..0x90384B, ObjTrio record 0's +0x34 / +0x38 / +8, Game_AreaNumber, 0x903A50 = 0; the summary 0x904680 the buttons' dwords 0x903580..0x90358C and word 0x903590, strncpy (0x5B9450) of the leader's record name 5 + 4 bytes (record MoveScript_EffectState[party id 0]), the three party ids (id 4 is 0xB unless 0x90412C & 0x7F is 5 or 0xC), record 0's +0xA / +0xC, 0x9040C8, the style bytes 0x903A5A / 5B, Flags_Test(0x904030, 0x92); 0x90412D = 0x9039A2; then 0x10B0 bytes copied to 0x92A0E0 and summed (the low word to 0x92A150), 0xD50 more cleared, the summary copied to slot 0x9036D4's (ours aborts past 16). save-files.md had it by position; read whole here. docs/rest_2c.md."
+
+[[func]]
+pc = 0x580A40
+name = "PartyForm_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x580A40..0x580A4D (0xE bytes): ShopMode_States[6]: jmp [PartyForm_States + 4 * 0x929F01], unchecked (ours aborts past 4). docs/rest_2c.md."
+
+[[func]]
+pc = 0x582EB0
+name = "ShopSell_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x582EB0..0x582EBD (0xE bytes): ShopMode_States[8]: jmp [ShopSell_States + 4 * 0x929F01], unchecked (ours aborts past 4). docs/rest_2c.md."
+
+[[func]]
+pc = 0x582EC0
+name = "ShopSell_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x582EC0..0x582FAC (0xED bytes): ShopSell_States[0]: WindowRecords 0, 1, 7 on and placed (+3 2, +1 7; 0 at (0x14, -0x14), 1 at (0x68, -0x14), 7 at (0x140, 0x3E) with +2 9 and its bytes +8..+0xD and words +0x10 / +0x12), record 21 (the hand) +1 7 +2 3 off; 0x6BC8AA = 1, 0x6BC8A4 = 0; the state + 2, the step 0. docs/rest_2c.md."
+
+[[func]]
+pc = 0x582FB0
+name = "ShopSell_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x582FB0..0x582FE2 (0x33 bytes): ShopSell_States[1]: windows 0, 1, 7 +3 = 1, the hand off; the timer 5, the state + 2, the step 0. docs/rest_2c.md."
+
+[[func]]
+pc = 0x582FF0
+name = "ShopSell_SellStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x582FF0..0x582FFD (0xE bytes): ShopSell_States[2]: jmp [ShopSell_SellSteps + 4 * 0x929F02], unchecked (ours aborts past 5). docs/rest_2c.md."
+
+[[func]]
+pc = 0x583000
+name = "ShopSell_LeaveWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x583000..0x583015 (0x16 bytes): ShopSell_States[3]: the timer down; at 0 mode 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x583350
+name = "ShopBrowse_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x583350..0x58335D (0xE bytes): ShopMode_States[9]: jmp [ShopBrowse_States + 4 * 0x929F01], unchecked (ours aborts past 3). A start no list had (the cut, the catalog): reached only through the table; field_s.md 1.3 called ShopMode 9 nobody's. docs/rest_2c.md."
+
+[[func]]
+pc = 0x583360
+name = "ShopBrowse_OpenStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x583360..0x58336D (0xE bytes): ShopBrowse_States[0]: jmp [ShopBrowse_OpenSteps + 4 * 0x929F02] (ours aborts past 2). docs/rest_2c.md."
+
+[[func]]
+pc = 0x583370
+name = "ShopBrowse_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x583370..0x583395 (0x26 bytes): ShopBrowse_OpenSteps[0]: ShopBrowse_InitWindows, the step + 1, the timer 6, Sound_PlayEffect(0x102). docs/rest_2c.md."
+
+[[func]]
+pc = 0x5833A0
+name = "ShopBrowse_OpenWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5833A0..0x5833C1 (0x22 bytes): ShopBrowse_OpenSteps[1]: the timer down; at 0 the step 0 and the state + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5833D0
+name = "ShopBrowse_ChooseStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5833D0..0x5833DD (0xE bytes): ShopBrowse_States[1]: jmp [ShopBrowse_ChooseSteps + 4 * 0x929F02] (ours aborts past 3). docs/rest_2c.md."
+
+[[func]]
+pc = 0x5833E0
+name = "ShopBrowse_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5833E0..0x5835E3 (0x204 bytes): ShopBrowse_ChooseSteps[0]: window 1's list (+0xA first shown, +0xB cursor, +8 scroll, +0xD entry); the hand (record 21) at window 1's x + 4, y + 13 * (cursor - first + 2), on; Input_AutoRepeat(Input_Pressed & 0xF00C): up / down by one (0..0x10, the scroll 0xF0 / 0x10 at the window's edges), 0x0004 / 0x0008 a page of 9 back / on; a moved cursor Sound_PlayEffect(0x100); not scrolling: confirm - an entry 0x103, 0x102, ShopBrowse_OpenDetail, step + 1, timer 8; none 0x107; cancel - 0x106, 0x102, the state + 1, timer 0xA. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5835F0
+name = "ShopBrowse_Detail"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5835F0..0x583674 (0x85 bytes): ShopBrowse_ChooseSteps[1]: window 0 +0x10 = window 1's entry + 0x122 (a help id), window 1 +0xC = its cursor; a timer counts down; at 0 cancel: 0x106, 0x102, windows 2, 3 out, window 1 +3 2 and +0xC 0x7F, timer 8, step + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x583680
+name = "ShopBrowse_DetailClose"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x583680..0x583695 (0x16 bytes): ShopBrowse_ChooseSteps[2]: the timer down; at 0 the step - 2. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5836A0
+name = "ShopBrowse_CloseStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5836A0..0x5836AD (0xE bytes): ShopBrowse_States[2]: jmp [ShopBrowse_CloseSteps + 4 * 0x929F02] (ours aborts past 3); entry 0 is FS's Menu_StepAfterTimer. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5836B0
+name = "ShopBrowse_CloseNext"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5836B0..0x5836B6 (0x7 bytes): ShopBrowse_CloseSteps[1]: the step + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5836C0
+name = "ShopBrowse_End"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5836C0..0x5836D3 (0x14 bytes): ShopBrowse_CloseSteps[2]: mode 1, the state and step 0. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5837E0
+name = "ShopResist_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5837E0..0x5837ED (0xE bytes): ShopMode_States[5]: jmp [ShopResist_States + 4 * 0x929F01], unchecked (ours aborts past 8). docs/rest_2c.md."
+
+[[func]]
+pc = 0x584180
+name = "SharedList_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x584180..0x58418D (0xE bytes): ShopMode_States[7]: jmp [SharedList_States + 4 * 0x929F01], unchecked (ours aborts past 5). docs/rest_2c.md."
+
+[[func]]
+pc = 0x585A00
+name = "MasterTalk_Reset"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x585A00..0x585A1B (0x1C bytes): no arguments, no calls: 0x9398CF, 0x9398D1, 0x9398D0, 0x9398CD, 0x9398D3 = 0 (FieldTail_LoadBank's step 1; field_e2's kLoadWait). docs/rest_2c.md."
+
+[[func]]
+pc = 0x585A20
+name = "MasterTalk_PanelsOpen"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x585A20..0x585A40 (0x21 bytes): MasterTalk_PickSteps[0] (and R2D's 0x66456C[0]): Sound_PlayEffect(0x102), the slide 0x9398D3 = 4, the step 0x9398D1 + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x585A50
+name = "MasterTalk_PanelsIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x585A50..0x585B18 (0xC9 bytes): MasterTalk_PickSteps[1]: the slide - 1; per member (Field_MemberCount re-read) MasterPanel_DrawMember(0x11 - 36 * slide, 0x3E + 54 * slot, record, slot) and MasterPanel_DrawStats(0x89 + 40 * slide, y, record); Menu_DrawPanelBox(0x14, 0x10 - 10 * slide, 0x118, 0x13, the window colour); at slide 0 the pick 0x9398CE = 0 and the step + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x585B20
+name = "MasterTalk_PanelsOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x585B20..0x585BDB (0xBC bytes): MasterTalk_PickSteps[4]: the slide + 1, the same panels; at 4 the step + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x585BE0
+name = "MasterPanel_DrawStats"
+ret = "void"
+params = "int x, int y, unsigned record"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x585BE0..0x585DB7 (0x1D8 bytes): cdecl (x, y, record byte): Menu_DrawBox(x + 5, y + 3, 0x94, 0x2D, 0, colour); the four stat labels 0x66A0F8.. (DIV-0064's slots, in place) and the record's words +0x24, +0x26, +0x2A, +0x28 through 0x64E324 in the 8 px font; with a master (+0x1F not 0xFF) TextRecord_Set(0, 8, Msg_SystemPtr(0x111 + it)) and system message 0x34 at (x + 0xB, y + 0x22); Menu_DrawPieces 0x664468, sixteen of 0x664494 8 apart, 0x6644A0. PSX twin (analysis/pairs_propagated.json, a hypothesis, not read): 0x801D144C call-anchored. docs/rest_2c.md."
+
+[[func]]
+pc = 0x585DC0
+name = "MasterPanel_DrawMember"
+ret = "void"
+params = "int x, int y, unsigned record, unsigned slot"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x585DC0..0x58602E (0x26F bytes): cdecl (x, y, record byte, party slot byte): Menu_DrawBox(x + 3, y + 3, 0x7D, 0x30); MasterPanel_DrawFace(x + 0x56, y + 2, record +9, (+0x10 >> 6) & 2); the name (Text_DrawAt, 5 characters); the level; the status words 0x66A0E8 / 0x66A0F0 by +0x10 bits 7 and 5 (Frame_Counter bit 5 alternates) in the small font; HP +0x18 / +0x20 and AP +0x1A / +0x22 with their colours (4 low, 2 at 1 or 0); Menu_DrawPieces 0x6643D8; MasterPanel_DrawExpBar(x + 0x14, y + 0x12, record, +0xA, +0xC); a draw mode (0, 0, 0xF, 0); R2H's 0x59DB70(x + 9, y + 5, slot + 3, 0x1E, Gpu_GetClut(0x10, 0x1E0), 0x80). Also called by R2D's 0x5869A0 and 0x586D20. PSX twins (pairs_propagated.json, hypotheses, not read): 0x801D9810, 0x801D1784, 0x801E2F78 callers. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586030
+name = "MasterPanel_DrawExpBar"
+ret = "void"
+params = "int x, int y, unsigned record, unsigned level, unsigned exp"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586030..0x586103 (0xD4 bytes): cdecl: Gpu_SetLineF2 and Gpu_SetSemiTrans(0) at the packet cursor; from (x, y) (low 16 bits, floats) to x + 57 * (exp - E(level)) / (E(level + 1) - E(level)) (32-bit wrap, unsigned divide, the byte level + 1), E = MasterPanel_ExpForLevel(record, .); equal totals: the end is x (the float local); colour (0x80, 0, 0); Gfx_CommitPrim(1, 0x20). docs/rest_2c.md."
+
+[[func]]
+pc = 0x586110
+name = "MasterPanel_ExpForLevel"
+ret = "int"
+params = "unsigned record, unsigned level"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586110..0x586154 (0x45 bytes): cdecl, answers eax: Char_ExpForLevel's (0x574A60) body instruction for instruction: -1 for a level byte above 99, else the sum of the record byte's first level u16 steps of Char_ExpTable (0x318 bytes a member, 8 a step). Called by MasterPanel_DrawExpBar only. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586160
+name = "Menu_DrawPanelBox"
+ret = "void"
+params = "int x, int y, int w, int h, unsigned colour"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586160..0x586563 (0x404 bytes): cdecl (x, y, w, h, colour byte): a draw mode with the texture window (0, 0xF0, 16, 16) taken at the packet cursor; four FT4 edge quads (left, the middle's two halves, right) from CLUT (colour * 32 + 16, 0x1E1), page 0xF, grey 0xAC, corners offset by the floats 0x5C41B8..0x5C41C0; the window (0, 0, 256, 256); Menu_DrawOutline(x + 2, y + 2, w - 4, h - 4, 0). Called by the master's panels, R2D, R4D's community rows and ours (effect_2g, effect_3d kBox). PSX twin (pairs_propagated.json, a hypothesis, not read): 0x801D1E5C call-anchored. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586570
+name = "MasterPanel_DrawFace"
+ret = "void"
+params = "int x, int y, unsigned id, unsigned shade"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586570..0x586668 (0xF9 bytes): cdecl (x, y, id byte, shade byte): id 4 is 0xB unless 0x90412C & 0x7F is 5 or 0xC (Save_BuildBlock's test); a draw mode (0, 1, 0x1E, 0); a 40 x 48 sprite at (x, y) from 0x6644B8 + 4 id (u, v, the CLUT; read in place for any id), colour by shade (0 0x80 grey, 1 0x30, else (0x40, 0x40, 0x80)); Gfx_CommitPrim(1, 0x1C). docs/rest_2c.md."
+
+[[func]]
+pc = 0x586670
+name = "MasterTalk_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586670..0x58667D (0xE bytes): jmp [MasterTalk_States + 4 * 0x9398CF], unchecked (ours aborts past 7); FieldTail_LoadBank's step 2 tail-jumps here (field_e2's kLoadStep). docs/rest_2c.md."
+
+[[func]]
+pc = 0x586680
+name = "MasterTalk_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586680..0x5866C8 (0x49 bytes): MasterTalk_States[0]: Flags_Test(0x904657, the master 0x9039F5) set - mode 5; master 9 - Msg_OpenScript(0x2E), Field_Request 2, mode 6; else mode 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5866D0
+name = "MasterTalk_IntroStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5866D0..0x5866DD (0xE bytes): MasterTalk_States[1]: jmp [MasterTalk_IntroSteps + 4 * 0x9398D1] (ours aborts past 2). docs/rest_2c.md."
+
+[[func]]
+pc = 0x5866E0
+name = "MasterTalk_IntroSay"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5866E0..0x58671C (0x3D bytes): MasterTalk_IntroSteps[0]: Flags_Set(0x904654, master), Msg_OpenScript(the master's u16 0x6644E8[master]), Field_Request 2, the step + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586720
+name = "MasterTalk_IntroWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586720..0x58674A (0x2B bytes): MasterTalk_IntroSteps[1]: Field_Request not 2 - Flags_Set(0x904657, master), mode 3, step 0. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586750
+name = "MasterTalk_AskStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586750..0x58675D (0xE bytes): MasterTalk_States[2]: jmp [MasterTalk_AskSteps + 4 * 0x9398D1] (ours aborts past 6). docs/rest_2c.md."
+
+[[func]]
+pc = 0x586760
+name = "MasterTalk_Say5"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586760..0x58678F (0x30 bytes): MasterTalk_AskSteps[0]: Msg_OpenScript(master's base + 5), the step + 1, Field_Request 2. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586790
+name = "MasterTalk_Say6"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586790..0x5867C8 (0x39 bytes): MasterTalk_AskSteps[1]: Field_Request not 2 - message base + 6, the step + 1, Field_Request 2. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5867D0
+name = "MasterTalk_CheckAllPupils"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5867D0..0x586857 (0x88 bytes): MasterTalk_AskSteps[2]: Field_Request not 2 - a member whose record's +0x1F (its master) is not this master: mode 3, step 0; else message base + 7, the step + 1, Field_Request 2. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586860
+name = "MasterTalk_Say8"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586860..0x586898 (0x39 bytes): MasterTalk_AskSteps[3]: Field_Request not 2 - message base + 8, the step + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x5868A0
+name = "MasterTalk_CheckAnyPupil"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x5868A0..0x586927 (0x88 bytes): MasterTalk_AskSteps[4]: Field_Request not 2 - a member whose record's +0x1F is this master: mode 4, step 0; none: message base + 9, the step + 1. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586930
+name = "MasterTalk_SayFarewell"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586930..0x58696A (0x3B bytes): MasterTalk_AskSteps[5]: Field_Request not 2 - message base + 4, Field_Request 2, mode 6, step 0. docs/rest_2c.md."
+
+[[func]]
+pc = 0x586970
+name = "MasterTalk_PickStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586970..0x58697D (0xE bytes): MasterTalk_States[3]: jmp [MasterTalk_PickSteps + 4 * 0x9398D1] (ours aborts past 9). docs/rest_2c.md."
+
+[[func]]
+pc = 0x586980
+name = "MasterTalk_PickAsk"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2c.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2C, capstone to the last instruction), 0x586980..0x58699E (0x1F bytes): MasterTalk_PickSteps[2]: R2D's 0x5869A0(the master's base + 0xF as a word, 0). docs/rest_2c.md."
+
+[[data]]
+pc = 0x663E28
+name = "MasterFigure_States"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): 0x437CC0, 0x57F330 (R2B), MasterFigure_TurnHome, MasterFigure_Settle, MasterFigure_Hold, MasterFigure_TurnOn; jumped through by R2B's 0x57F320 by 0x9398E1, unchecked; ShopMode_States starts at 0x663E40. docs/rest_2c.md."
+
+[[data]]
+pc = 0x664190
+name = "ShopBrowse_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): ShopBrowse_OpenStep, ShopBrowse_ChooseStep, ShopBrowse_CloseStep; jumped through by ShopBrowse_Dispatch 0x583350 by 0x929F01, unchecked; the next table (its own reader's) starts at 0x66419C. docs/rest_2c.md."
+
+[[data]]
+pc = 0x66419C
+name = "ShopBrowse_OpenSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): ShopBrowse_Open, ShopBrowse_OpenWait; by ShopBrowse_OpenStep 0x583360 on 0x929F02; the next table starts at 0x6641A4. docs/rest_2c.md."
+
+[[data]]
+pc = 0x6641A4
+name = "ShopBrowse_ChooseSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): ShopBrowse_Choose, ShopBrowse_Detail, ShopBrowse_DetailClose; by ShopBrowse_ChooseStep 0x5833D0 on 0x929F02; the next table starts at 0x6641B0. docs/rest_2c.md."
+
+[[data]]
+pc = 0x6641B0
+name = "ShopBrowse_CloseSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): Menu_StepAfterTimer (FS), ShopBrowse_CloseNext, ShopBrowse_End; by ShopBrowse_CloseStep 0x5836A0 on 0x929F02; ShopResist_States starts at 0x6641BC. docs/rest_2c.md."
+
+[[data]]
+pc = 0x66450C
+name = "MasterTalk_States"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): MasterTalk_Begin, MasterTalk_IntroStep, MasterTalk_AskStep, MasterTalk_PickStep, R2D's 0x587120, 0x587370, 0x5876F0; by MasterTalk_Dispatch 0x586670 on 0x9398CF (the modes written are 0..6); the next table starts at 0x664528. docs/rest_2c.md."
+
+[[data]]
+pc = 0x664528
+name = "MasterTalk_IntroSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): MasterTalk_IntroSay, MasterTalk_IntroWait; by MasterTalk_IntroStep 0x5866D0 on 0x9398D1; the next table starts at 0x664530. docs/rest_2c.md."
+
+[[data]]
+pc = 0x664530
+name = "MasterTalk_AskSteps"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): MasterTalk_Say5, MasterTalk_Say6, MasterTalk_CheckAllPupils, MasterTalk_Say8, MasterTalk_CheckAnyPupil, MasterTalk_SayFarewell; by MasterTalk_AskStep 0x586750 on 0x9398D1; the next table starts at 0x664548. docs/rest_2c.md."
+
+[[data]]
+pc = 0x664548
+name = "MasterTalk_PickSteps"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2C): MasterTalk_PanelsOpen, MasterTalk_PanelsIn, MasterTalk_PickAsk, R2D's 0x586D00, MasterTalk_PanelsOut, R2D's 0x586EB0, 0x587010, 0x587050, 0x5870E0; by MasterTalk_PickStep 0x586970 on 0x9398D1; R2D's reader 0x587120's table starts at 0x66456C. docs/rest_2c.md."

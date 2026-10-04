@@ -4,12 +4,14 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace effect_3d::at {
 
 // --- callees nobody names, called by address (SH_AT); the effect-standard set
 // lists both (scenario_harness.cpp kEffectStd) ------------------------------
 constexpr std::uint32_t kPolyF3 = 0x5A7570;        // (unsigned char *prim): a flat triangle's tag and code (0x2C bytes)
-constexpr std::uint32_t kBox = 0x586160;           // (x, y, w, h, style) five words: a menu box (effect_2g_callees.h kBox)
+constexpr std::uint32_t kBox = bof3::addr::Menu_DrawPanelBox;   // (x, y, w, h, style) five words: a menu box (effect_2g_callees.h kBox)
 
 // --- the chapters' counters (scenario_harness at::kCounter) ----------------
 constexpr std::uint32_t kCounter = 0x903848;       // u8: the count the event scripts raise; kinds 0x77, 0x79, 0x7C, 0x81 wait on it

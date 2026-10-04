@@ -290,6 +290,7 @@
 #include "game/rest_2e.h"
 #include "game/rest_2h.h"
 #include "game/rest_2f.h"
+#include "game/rest_2c.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1256,6 +1257,15 @@ void InjectAll() {
                                 // 15 state tables swapped for the fuzz only; after Widescreen_Inject (DIV-0041's
                                 // bound inside MenuSlide_LeftOff170, read back) and BattleDraw_Inject (DIV-0059's
                                 // title call inside Win2_DrawItemList, read back) and every harness's inject
+    Rest2C_Inject();            // round 14 wave-two group R2C (0x57F340..0x58699F: the inn's, save point's and rest's
+                                // last states, the save block's builder and Save_QuickWrite, the shop's browse and
+                                // sell modes and four ShopMode dispatchers, the master's talk and its panels, the
+                                // figure record's moves): its clones' calls re-aimed at the scenario harness's
+                                // recorders, its 14 state tables swapped for the fuzz only; after every harness's
+                                // inject; ours that call it (Game_WndProc, FieldTail_LoadBank, effect_2g, effect_3d)
+                                // call it by the address it had; before FishingText_Arm; no module patches bytes
+                                // inside its 61 (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp,
+                                // yes_no_layout.cpp)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
