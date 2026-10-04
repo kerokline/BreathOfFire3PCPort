@@ -116,7 +116,7 @@ constexpr U kApPopup = bof3::addr::Battle_SetApPopup;          // BE6's
 constexpr U kInflict = 0x44F1D0;          // nobody's
 constexpr U kResisted = 0x44F6A0;         // nobody's
 constexpr U kMissTail = 0x44FB30;         // nobody's
-constexpr U kStatAdd = 0x590E80;          // nobody's
+constexpr U kStatAdd = bof3::addr::Stat_AddClampedTo;          // R2F's (round fourteen)
 
 }  // namespace at
 }  // namespace battle_e5

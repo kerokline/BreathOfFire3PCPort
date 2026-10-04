@@ -21,7 +21,7 @@ constexpr std::uint32_t kTradeFrame = bof3::addr::ItemTrade_DrawBackground;     
 constexpr std::uint32_t kTradeRows = bof3::addr::ItemTrade_RowCount;       // al: the row count, stored at 0x6BE08D
 constexpr std::uint32_t kTradeLacks = bof3::addr::ItemTrade_Lacks;      // (row byte, quantity byte), al: 1 when an ingredient falls short
 constexpr std::uint32_t kTradeCount = bof3::addr::ItemTrade_DrawCount;      // no arguments: a window drawn
-constexpr std::uint32_t kTradeTake = 0x594D90;       // no arguments: the ingredients taken (Inventory_Remove behind a test)
+constexpr std::uint32_t kTradeTake = bof3::addr::ItemTrade_TakeNeeds;       // no arguments: the ingredients taken (Inventory_Remove behind a test)
 
 // --- the event records (save block +0xCF0..) ----------------------------------
 constexpr std::uint32_t kPairs = 0x9046D0;           // 60 x 8 bytes: +0 in use, +1 the record it names (1-based)

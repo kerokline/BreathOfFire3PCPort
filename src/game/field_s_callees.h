@@ -13,7 +13,7 @@ namespace field_s::at {
 constexpr std::uint32_t kDrawTag = bof3::addr::Menu_DrawTile16;          // (x, y, kind, dim): a 16 x 8 SPRT on page 0x2F at (x, y), u = kind << 4,
                                                       // v 0xD8, shade 0x80 or 0x10 by dim, 16-bit x and y; round twelve group FO's
 constexpr std::uint32_t kSwapBytes = bof3::addr::FieldMenu_SwapBytes;  // (a, b): swaps the bytes a and b point at; R2E's
-constexpr std::uint32_t kAbilityListCount = 0x591AC0; // (member, which, current) -> al: one of a record's four
+constexpr std::uint32_t kAbilityListCount = bof3::addr::AbilityList_CountSet; // (member, which, current) -> al: one of a record's four
                                                       // ability lists (or the current name's); nobody's
 constexpr std::uint32_t kEquipPreview = bof3::addr::FieldEquip_PreviewItem;  // (): the equip screen's preview bytes 0x6BDFA8.. and 0x803341
                                                       // from the member and the chosen item; R2E's
