@@ -187,7 +187,7 @@ a fold follows a wave, as in round thirteen.
    three** wave four (326). The waves and groups are as cut; a wave is
    still launched and merged on its own inside a session.
 2. **The order is 1, 2, 3, 4** (callee first), as proposed.
-3. **Open: the  rule.** The briefs say every start that is a
+3. **Open: the `hypothesis` rule.** The briefs say every start that is a
    function is the group's, whatever class the cut gave it (round thirteen
    left such rows out, and they are this round's wave three). Not yet
    answered; it stands as written unless the owner says otherwise.
