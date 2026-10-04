@@ -3,12 +3,13 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_2f::at {
 
 // Callees nobody owns yet (read 2026-09-29 for what they read and write):
 // called through the harness by address (SH_AT).
-constexpr std::uint32_t kAngleMean = 0x479970;     // E2E (wave two): (a, b), each & 0xFFF; eax the mean angle of the
+constexpr std::uint32_t kAngleMean = bof3::addr::EffectAngle_Mean;     // E2E (wave two): (a, b), each & 0xFFF; eax the mean angle of the
                                                    // two, the short way round (+0x800 when they are 0x800 or more apart)
 constexpr std::uint32_t kSparkInit = 0x4790F0;     // nobody's (catalog part 7): (unsigned char *spark): +0 = 1, +1 = 0,
                                                    // +2 = 8, +3 = 0, +8 = 0, +4 = 0x40, +0xC / +0x10 Sprite_Current's

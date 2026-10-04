@@ -4,26 +4,27 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_1b::at {
 
 // --- callees round thirteen's E1F owns (raw until it merges) ----------------------
-constexpr std::uint32_t kDrawMode = 0x52CF60;     // (id, slot): a draw-mode primitive from the records 0x660394, committed
-constexpr std::uint32_t kDrawSprite = 0x52CFE0;   // (id, slot, x, y) -> the primitive: a sprite from the records 0x660438
+constexpr std::uint32_t kDrawMode = bof3::addr::UiSprite_SetMode;     // (id, slot): a draw-mode primitive from the records 0x660394, committed
+constexpr std::uint32_t kDrawSprite = bof3::addr::UiSprite_Draw;   // (id, slot, x, y) -> the primitive: a sprite from the records 0x660438
                                                   // at (x, y) (s16), committed
 
 // --- callees round thirteen's E1A owns (raw until it merges), each read for the
 // widths E1B's calls hand it (docs/effect_1b.md section 5) ---
-constexpr std::uint32_t kE1aBarG4 = 0x465120;     // (x, y, value, slot): x, y, value read as s16 words; G4 quads
-constexpr std::uint32_t kE1aGaugeA = 0x464DA0;    // (x, y, slot): G4 quads
-constexpr std::uint32_t kE1aGaugeB = 0x464E40;    // (x, y, slot): G4 quads
-constexpr std::uint32_t kE1aGaugeMark = 0x464EC0; // (x, y, slot): G4 quads
-constexpr std::uint32_t kE1aDigits = 0x4652D0;    // (x, y, flag, value byte): sprites
-constexpr std::uint32_t kE1aMarker = 0x465D90;    // (x, y, flag, slot): x, y s16, flag a byte; a textured quad
-constexpr std::uint32_t kE1aRange = 0x465E50;     // six words: a draw mode and a quad
+constexpr std::uint32_t kE1aBarG4 = bof3::addr::EffectHud_TwoBars;     // (x, y, value, slot): x, y, value read as s16 words; G4 quads
+constexpr std::uint32_t kE1aGaugeA = bof3::addr::EffectHud_Bar;    // (x, y, slot): G4 quads
+constexpr std::uint32_t kE1aGaugeB = bof3::addr::EffectHud_Marker;    // (x, y, slot): G4 quads
+constexpr std::uint32_t kE1aGaugeMark = bof3::addr::EffectHud_Sprite8; // (x, y, slot): G4 quads
+constexpr std::uint32_t kE1aDigits = bof3::addr::EffectHud_DrawCount;    // (x, y, flag, value byte): sprites
+constexpr std::uint32_t kE1aMarker = bof3::addr::EffectHud_DrawArrow;    // (x, y, flag, slot): x, y s16, flag a byte; a textured quad
+constexpr std::uint32_t kE1aRange = bof3::addr::EffectHud_DrawMark;     // six words: a draw mode and a quad
 
 // --- a callee round thirteen's E1G owns (raw until it merges) ---
-constexpr std::uint32_t kE1gItemIcon = 0x594D50;  // (x, y, item byte, category, flag): nothing for item 0; else
+constexpr std::uint32_t kE1gItemIcon = bof3::addr::Item_DrawIcon;  // (x, y, item byte, category, flag): nothing for item 0; else
                                                   // Item_IconKind and Menu_DrawIcon8
 
 // --- data (the image's; read in place, never written) ---

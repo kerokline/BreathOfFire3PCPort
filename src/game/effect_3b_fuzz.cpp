@@ -289,7 +289,7 @@ const sh::Callee kCallees[] = {
     // the spark record (the cursor's value, the same on both passes) and its 0x28 bytes
     {E3B_OURS(EffectKind6C_DrawSpark), 1, {kW}, kG, 0, 0, {0x28}, nullptr, nullptr, true},
     // raw: E4D's tint and the lines no group owns
-    {E3B_RAW(0x48CA90), 0, {}, kG, 0, 0, {}, &FxScreenTint, nullptr, true},   // at::kScreenTint
+    {"0x48CA90", at::kScreenTint, at::kScreenTint, 0, {}, kG, 0, 0, {}, &FxScreenTint, nullptr, true},   // at::kScreenTint
     {E3B_RAW(0x4837B0), 0, {}, kG, 0, 0, {}, &FxLines, nullptr, true},        // at::kKind69Lines
     // standard rows re-listed: kind 0x69's spawner never answered none
     {E3B_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxFindFree, nullptr, true},

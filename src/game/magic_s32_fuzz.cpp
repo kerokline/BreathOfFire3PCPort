@@ -253,8 +253,8 @@ const mh::Callee kCallees[] = {
     // of the caller's or a spiral point: its twelve bytes; the vertex it
     // writes, often the caller's local, not by address); the facing test of
     // three packet vertices (each by its two floats)
-    {S32_RAW(0x494060), 0, {}, kG, 0, 0},
-    {S32_RAW(0x494110), 2, {0, 0}, kG, 0, 0, {12}, &ProjectEffect},
+    {"0x494060", bof3::addr::EffectGte_LoadMapCamera, bof3::addr::EffectGte_LoadMapCamera, 0, {}, kG, 0, 0},
+    {"0x494110", bof3::addr::EffectGte_ProjectPoint, bof3::addr::EffectGte_ProjectPoint, 2, {0, 0}, kG, 0, 0, {12}, &ProjectEffect},
     {S32_RAW(0x4941B0), 3, {0, 0, 0}, kG, 0, 0, {8, 8, 8}},
     // this group's own, called directly
     {S32_RAW(0x4E95E0), 0, {}, mh::Answer::kPhase, 0, 0},

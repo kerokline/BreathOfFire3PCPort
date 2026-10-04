@@ -3,14 +3,15 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_1g::at {
 
 // --- callees another group of round thirteen owns, called by address (SH_AT) --
-constexpr std::uint32_t kTradeBox = 0x469750;        // E1B: (x, y, w, h, colour) five words - a window frame and a fill
-constexpr std::uint32_t kQuad = 0x468950;            // E1B: four words (x, y, a length, a piece 0..3) - a window side, committed
-constexpr std::uint32_t kPieceMode = 0x52CF60;       // E1F: (id, slot) - a draw-mode primitive, committed
-constexpr std::uint32_t kPiece = 0x52CFE0;           // E1F: (id, slot, x, y) - a sprite primitive, committed
+constexpr std::uint32_t kTradeBox = bof3::addr::Panel_DrawWindow;        // E1B: (x, y, w, h, colour) five words - a window frame and a fill
+constexpr std::uint32_t kQuad = bof3::addr::Panel_DrawEdgeQuad;            // E1B: four words (x, y, a length, a piece 0..3) - a window side, committed
+constexpr std::uint32_t kPieceMode = bof3::addr::UiSprite_SetMode;       // E1F: (id, slot) - a draw-mode primitive, committed
+constexpr std::uint32_t kPiece = bof3::addr::UiSprite_Draw;           // E1F: (id, slot, x, y) - a sprite primitive, committed
 
 // --- the trade screen's cells (field_e2_callees.h names the same ones) --------
 constexpr std::uint32_t kTradeState = 0x93985C;      // u8: ItemTrade_States' index (0x593950 dispatches)

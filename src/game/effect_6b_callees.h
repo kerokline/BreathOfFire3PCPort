@@ -7,14 +7,15 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_6b::at {
 
 // --- callees not ours ---------------------------------------------------------------
-constexpr std::uint32_t kE6ADraw = 0x50E1C0;        // E6A (wave six): void(void), the panel draw sub-kinds 0x33,
+constexpr std::uint32_t kE6ADraw = bof3::addr::EffectKind18Sub2F_Draw;        // E6A (wave six): void(void), the panel draw sub-kinds 0x33,
                                                     // 0x34 and 0x37 call or tail-jump to (EffectKind18Sub37_States[3])
-constexpr std::uint32_t kE6CStep = 0x510C90;        // E6C (wave six): void(void), called by EffectKind18Sub44_Step
-constexpr std::uint32_t kE6CTail = 0x510EB0;        // E6C (wave six): void(void), EffectKind18Sub44_Step's tail jump
+constexpr std::uint32_t kE6CStep = bof3::addr::EffectKind18Sub44_Follow;        // E6C (wave six): void(void), called by EffectKind18Sub44_Step
+constexpr std::uint32_t kE6CTail = bof3::addr::EffectKind18Sub44_Draw;        // E6C (wave six): void(void), EffectKind18Sub44_Step's tail jump
 constexpr std::uint32_t kWaveMark = 0x5100B0;       // no group (catalog part 7): (dword, byte) - sub-kind 0x41's
                                                     // fourth state, while story flag 0x4F is set and +0xA < 0x19
 constexpr std::uint32_t kWaveStep = 0x5101C0;       // no group (catalog part 7): (byte +0xA) - the same state

@@ -4,13 +4,14 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_4c::at {
 
 // --- callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called through the harness by address (SH_AT) until the coordinator rebinds
 // them ---------------------------------------------------------------------------
-constexpr std::uint32_t kScreenTile = 0x48CA90;     // E4D's (void): a full-screen TILE of Sprite_Current's +0x5D..+0x5F,
+constexpr std::uint32_t kScreenTile = bof3::addr::Effect_DrawScreenTint;     // E4D's (void): a full-screen TILE of Sprite_Current's +0x5D..+0x5F,
                                                     // semi-transparent, committed (Gfx_CommitPrim(5, ..)); kind 0x8D's
                                                     // states 1 and 2 jump to it
 

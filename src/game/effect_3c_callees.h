@@ -14,10 +14,10 @@ namespace effect_3c::at {
 // --- callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called through the harness by address (SH_AT) until the coordinator rebinds
 // them ---------------------------------------------------------------------------
-constexpr std::uint32_t kShardsSpread = 0x483C10;   // E3B's (void): the sixteen 0x28-byte shard records at
+constexpr std::uint32_t kShardsSpread = bof3::addr::EffectKind6C_ScatterSparks;   // E3B's (void): the sixteen 0x28-byte shard records at
                                                     // EffectKind30_Shards set round Sprite_Current's point (+0x34 /
                                                     // +0x38 / +0x3C), Rand directions; steps the cursor kShardCursor
-constexpr std::uint32_t kShardQuad = 0x483DA0;      // E3B's (unsigned char *shard): a shard's POLY_FT4 at Gfx_PacketNext,
+constexpr std::uint32_t kShardQuad = bof3::addr::EffectKind6C_DrawSpark;      // E3B's (unsigned char *shard): a shard's POLY_FT4 at Gfx_PacketNext,
                                                     // its point +4, its size +0x24 (EffectGte_ProjectSize), linked
 constexpr std::uint32_t kScreenTile = bof3::addr::Effect_DrawScreenTint;     // E4D's (void): a full-screen TILE of Sprite_Current's +0x5D..+0x5F,
                                                     // semi-transparent, committed (Gfx_CommitPrim(5, ..))
