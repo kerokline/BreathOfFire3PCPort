@@ -12,7 +12,9 @@
 // addresses below and are never bound here:
 //   0x51C390  a party action's "something ahead" test: Sprite_ObjectAt two
 //             steps ahead, or AreaMap_ByteAt 0xF2 there or one cell on
-//             across a fraction (u8, no arguments)
+//             across a fraction (u8, no arguments) - taken by round
+//             fourteen's R0A as PartyAction_TargetAhead (rest_0a.h); the
+//             constant below names it, its value unchanged
 //   0x524870  an effect object of kind 0x34 at a cell (kind byte, x, z words)
 //   0x5307C0  the zenny found: Sound_PlayEffect(0x106), the amount printed
 //             into Text_Records, Msg_OpenSystem(5), Field_Request = 2,
@@ -68,7 +70,7 @@ constexpr unsigned kKindStride = 0x8C;
 }  // namespace at
 
 // Nobody's (see above).
-constexpr std::uint32_t kTargetAhead = 0x51C390;
+constexpr std::uint32_t kTargetAhead = bof3::addr::PartyAction_TargetAhead;   // 0x51C390, round fourteen R0A
 constexpr std::uint32_t kSpawnAtCell = 0x524870;
 constexpr std::uint32_t kFoundZenny = bof3::addr::Field_GiveZenny;   // 0x5307C0, round twelve FE1
 constexpr std::uint32_t kClearCell = bof3::addr::AreaMap_ClearCell;
@@ -82,7 +84,7 @@ struct Callees {
     Byte0 effect_free;                                                   // Effect_FindFree
     void (__cdecl* set_animation)(unsigned);                             // Sprite_SetAnimation (a byte)
     std::uint32_t (__cdecl* ensure_animation)(unsigned);                 // Sprite_EnsureAnimation (a byte)
-    Byte0 target_ahead;                                                 // 0x51C390, nobody's
+    Byte0 target_ahead;                                                 // PartyAction_TargetAhead (R0A's)
     long (__cdecl* slope_at)(long, long, unsigned long);                 // MapView_SlopeAt
     long (__cdecl* ground_at)(long, long);                               // MapView_GroundAt
     void (__cdecl* play_effect)(unsigned);                               // Sound_PlayEffect (a word)
