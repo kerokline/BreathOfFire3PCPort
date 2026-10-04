@@ -280,7 +280,7 @@ void SeedMenu() {
 void SeedWindows(bool items) {
     // the category or slot, the list's top and cursor and pick
     B(0x80333E) = static_cast<UC>(items ? sh::Next() % 4 : PickOf(0, 1, 2, 3, 4, 5, 6, sh::Next() % 0x10));
-    const UC top = static_cast<UC>(PickOf(0, 1, 8, 9, 0xA, 0xE, 0xF, 0x17, 0x18, 0x6E, 0x6F, 0x77, sh::Next() & 0x7F));
+    const UC top = static_cast<UC>(PickOf(0, 1, 8, 9, 0xA, 0xD, 0xE, 0xF, 0x17, 0x18, 0x6D, 0x6E, 0x6F, 0x77, sh::Next() & 0x7F));
     B(0x80333F) = top;
     B(0x803340) = static_cast<UC>(items ? PickOf(0, 1, 0x1E, 0x1F, 0x7E, 0x7F, top, top + 8u, top + 9u, top - 1u, sh::Next() & 0x7F)
                                         : PickOf(0, 1, 2, sh::Next() % 3));
@@ -329,6 +329,13 @@ void Seed(unsigned k) {
         for (U i = 0; i < 6; ++i)
             if (sh::Half()) B(0x6BDFA8 + i) = rec[0x12 + i];
     }
+    // FieldEquip_PickMember's sound compares the old member as s8: a member byte
+    // at 0x80..0xFF (it only reads through it - the record for a text copy)
+    if (Is(k, "FieldEquip_PickMember") && sh::Next() % 4 == 0) B(0x803340) = static_cast<UC>(0x80 | sh::Next());
+    // the readers' record index above 7 (the 8-bit bit is then 0): a party id
+    // whose MoveScript_EffectState byte is any - these only read the record
+    if ((Has(k, "FieldEquip_Best") || Has(k, "FieldEquip_Preview") || Is(k, "FieldItemSort_EquipableFirst")) && sh::Next() % 4 == 0)
+        for (U i = 0; i < 3; ++i) B(0x904062 + i) = static_cast<UC>(sh::Next());
 }
 
 void Args(unsigned k, std::uint32_t* a) {
