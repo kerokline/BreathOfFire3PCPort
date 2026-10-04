@@ -985,5 +985,84 @@ coordinate (E5E); the widescreen survey's new items (DIV-0041's
 amendment); the latent defects to number. **Live**: fuzz-only but E5A's
 sub-kind 1 by inference.
 
-**Next**: wave six, `make_briefs.py <scratch> 6 <tip> band_edges_w2.txt`,
-E6A..E6D (196); E6A and E6C merge before E6B.
+## 17. Wave six, the last (2026-10-03: launched about 18:20 from `c4deb22`, merged 18:43..20:11)
+
+Four Opus agents in worktrees: the rest of kind 0x18's sub-kinds. The briefs
+with wave five's addendum (a read of unwritten memory that reaches the
+picture goes to the coordinator for its entry; a group says whether a
+harness row for its function matches; where the arm calls sit). Each merge
+built and run in the detached verification worktree, the group's shadow and
+`'*'` narrow. The machine was slow under four groups: E6D's and E6B's own
+narrow `'*'` runs outlived their launchers and were read from the log (714
+lines, no mismatch), and E6D ran no wide `'*'` - the tip's does.
+
+| Group | Branch tip | Merge | Functions (cut + added) | Controls (planted / refused by a count / equivalent) | Ours after | Sub-kinds of kind 0x18 |
+|---|---|---|--:|---|--:|---|
+| E6D | `0492915` | `ac8456b` | 50 + 1 | 166 / 164 / 2 | 8,500 | 0x5C..0x5E, 0x61..0x65 |
+| E6A | `10f24aa` | `e81ef30` | 48 | 72 / 70 / 2 | 8,548 | 0x2D..0x32, 0x3E; state 1 of 0x4A |
+| E6C | `00cac0f` | `3593422` | 47 + 3 (the cut's `0x5124C0` is a case of `0x512490`'s switch, as its suspect column said) | 195 / 191 / 3, one stopped by ours' abort | 8,598 | 0x44's draws, 0x45, 0x51, 0x53, 0x55, 0x59, 0x5A, 0x5B, 0x66; `AreaMap_CornerHeight` `0x511C10` (area 189's, not effect code) |
+| E6B | `74ce640` | `61001f7` | 50 | 112 / 112 / 0 | 8,648 | 0x33..0x35, 0x37, 0x38, 0x3B, 0x3D, 0x40, 0x41, 0x44's dispatcher, 0x54 |
+
+**199 functions, 8,449 -> 8,648**, every group 0 mismatches, 545 controls:
+537 refused by a count, 7 equivalent mutants each with a refused near
+variant, 1 stopped by ours' own abort with a refused near variant. No group
+needed a ledger entry. `fold_names.py` found no row; `consolidate_entries.py`
+9,265 entries; `inject_all.cpp` has each arm call once, after every inject.
+DIV-0041 amended (E6B's `0x50F7B5`, E6C's unlisted `0x510E6C`).
+**The tip's proof** (`61001f7`, scratch `verify_w6.log`):
+`scenario_harness_ekh`, `effect_6b`, `effect_6c`, `effect_6d` and `'*'` exit
+0, 8,648 ours; `'*'` with `BOF3X_WIDE=1` exit 0; `ledger_check` 72 entries,
+0 errors.
+
+**Sub-kind 0x59, for the owner's eye** ([`effect_6c.md`](effect_6c.md)
+section 7, [`USER_CHECKS.md`](USER_CHECKS.md) item 8). Its fade writes twelve
+shade bytes of `.data` (`0x65EF0C..0x65EF17`) and nothing writes them back;
+the PlayStation reloaded them with the area's overlay. Where it runs, read
+2026-10-03: effect records of kind 0x18 are placed by the event script's op
+`E0` (`EventOp_Ex`: the kind from byte 1, the sub-kind from byte 6); the one
+op with kind 0x18 and sub-kind 0x59 in the executable's data is at
+`0x648F97`, inside the script `0x648F7C..0x648FBC` that area 196's
+descriptor `0x6490A8` names first; the PSX twin of its ring draw is in area
+196's overlay section alone. (One byte match in `AREA112.DAT`'s chunk 6, tag
+`00008600`, not a script chunk by its tag, not read further.) The owner:
+area 196 is the Manmo fight in the Desert of Death, a one-time cutscene -
+**probably fine, to be verified in game**. The desert's navigation sky is
+sub-kind 0x44 on area 189's frame word, another effect.
+
+**What the wave learned**:
+
+- A PlayStation overlay's initialised data was reset by every area load;
+  the PC's is resident. A function that writes its own table is a defect
+  of the port to look for in every kind that came from an AREA overlay.
+- Under four parallel groups a full `'*'` outlives the tool's time limit:
+  an agent reads the log for the `inject:` line and says it has no exit code.
+
+**In no group, to place**: `0x5100B0`, `0x5101C0`, `0x510630`, `0x510780`,
+`0x510BB0` (E6B's band).
+
+**Debts from wave six**: the rebinding of E6B's raw calls to E6A's
+`EffectKind18Sub2F_Draw` (13 sites and `EffectKind18Sub37_States[3]`) and
+E6C's two; E6D's doc line that says its narrow `'*'` is in progress; the
+`entries_logic.txt` host lines the groups left (`005140C0 421` into E6D's
+band among them), if the consolidation did not cut them; the latent defects
+to number - sub-kind 0x59's shades, sub-kind 0x31's compare that never sets
+the bit 0x30 sets (E6A), `Sub5C_WaitFar`'s step past its table (E6D).
+**Live**: fuzz-only.
+
+## 18. The round's end
+
+**Round thirteen took the effect engine: 35 groups and two stage-A groups in
+six waves, 6,891 -> 8,648 ours.** What is owed, in the order it is being
+done:
+
+1. The rebinding of the raw calls between the round's groups (each wave's
+   debts name them).
+2. The harness rows by address in `scenario_harness_ekh.cpp` and the next
+   fold's items (section 16).
+3. The rows in no group, to place (sections 12 to 17).
+4. The latent defects, numbered in `known-defects.md`.
+5. The two full-frame fills still 320 wide (`0x489D47`, `0x493308`) and the
+   widescreen survey's list (DIV-0041's amendments).
+6. The live checks: the hash reference re-recorded, then the whelp route
+   (EGT, E1C, E2A) and `cutsceneAndNue.txt` (E5A's sub-kind 1) - the
+   machine hands-off.

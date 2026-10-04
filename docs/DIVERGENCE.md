@@ -2206,6 +2206,13 @@ designed in rather than bolted on.
   sub-kind 0x15's 320-wide strips and gradients (E5C), the spiral
   `0x505E60` centred on the constants 160 / 120 (E5D), the glow's cull
   `0x4FF6A3` at Capcom's `[-60, 380]` (E5B), `0x5054E3` as above.
+  **Wave six, the same day**: the last of the nine, E6B's
+  `EffectKind18Sub54_Pulse` (`0x50F7B5`), is ours and widened, and E6C
+  widened one the scan had not listed - sub-kind 0x44's red additive
+  full-frame tile (`0x510E6C`). So seven of the nine are widened and two
+  (`0x489D47`, `0x493308`) are ours at 320 wide. Found and not widened:
+  sub-kind 0x44's full-width draws `0x510F12` and `0x510FE5` (E6C), E6D's
+  overlay quads at `0..320 x 0..256` and its 512-wide mist layers.
   **Manillo's backdrop, 2026-10-03** (the owner's catalogue,
   `manillo_will_that_be_all.png`: the trade screen's tiled fish pattern
   320 wide, black bands): `ItemTrade_DrawBackground` `0x5942C0` (ours

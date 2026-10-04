@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, waves one to five merged, 8,449 ours)
+**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, all six waves merged, 8,648 ours; the round's end in progress)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,7 +14,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**8,449 functions are ours** (`inject: 8449 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
+**8,648 functions are ours** (`inject: 8648 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
 `main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
 PR #28 and #29), and **round eleven's cleanup, the part a session without
 the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
@@ -236,22 +236,19 @@ frames of 25,000 calls) are history; `r8_*` and older too.
    word left of `Yes` (DIV-0027's stops again, with the master's prompt and, the owner says, two more
    pointer-to-choice mismatches on that screen), and **its tiled backdrop is 320 wide under the wide picture**.
 
-000. **Round thirteen, the effect engine: waves one to five are merged (8,449 ours); wave six, the last, launched
-   2026-10-03.** Wave five (E5A..E5G, 346 functions) and `fix/tile-layering` are in; the tip `e652bbe` is verified
-   narrow and wide ([`takeover-queue-round13.md`](takeover-queue-round13.md) section 16), and **DIV-0071 is on by
-   default since `f316416`** (`BOF3X_LAYERING=0` turns it off; reference runs pin it off; no launcher key yet).
-   DIV-0072 (E5F's `EffectKind18Sub4B_Run`, a stack word Capcom never wrote) has the owner's word, as DIV-0068 has:
-   kept as written. **Wave six:** four Opus agents, E6A..E6D, 196 functions, branches
-   `phase-3/round13-e6a`..`e6d`; append each group to `pending13.txt` as it reports and run `runner13.sh <scratch>`
-   (E6A and E6C before E6B; `END` ends it; never edit `merge_group13.sh` while it runs), then `fold_names.py`,
-   `analysis/consolidate_entries.py`, check `inject_all.cpp` has each arm call once and last, `verify_tip.sh`, the
-   wave's section. **Then the round's end:** the rebinding between the groups, the unplaced rows (each wave's
-   section lists them), the defects to number, the harness fold's next items (section 16), the widescreen survey's
-   items (DIV-0041's amendments), and the live checks - the whelp route's frame hash (EGT, E1C, E2A) and
-   `cutsceneAndNue.txt` (E5A's sub-kind 1), after the hash reference is re-recorded, with the machine hands-off.
-   The scripts are in the session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`).
-   **The verification worktree is this queue's.** The main checkout's `build/bof3x.ini` has `wide=1` and a running
-   game locks its DLL. A full `verify_tip.sh` takes 22 to 25 minutes.
+000. **Round thirteen, the effect engine, is merged: six waves, 35 groups and stage A, 6,891 -> 8,648 ours**
+   ([`takeover-queue-round13.md`](takeover-queue-round13.md); section 17 is wave six, section 18 the round's end).
+   The final tip `61001f7` is verified narrow and wide (`'*'` exit 0 both, `ledger_check` 72 entries, 0 errors).
+   DIV-0068 and DIV-0072 have the owner's word (kept); DIV-0071 (layering) is on by default; nothing is pushed.
+   **The round's end, in progress from 2026-10-03 evening** (section 18's list): the rebinding between the groups;
+   the harness rows still by address and the next fold's items; the rows in no group; the defects to number; the
+   two fills still 320 wide and the widescreen survey; then the live checks - the hash reference re-recorded, the
+   whelp route (EGT, E1C, E2A) and `cutsceneAndNue.txt` (E5A's sub-kind 1) - with the machine hands-off.
+   **For the owner in game:** [`USER_CHECKS.md`](USER_CHECKS.md) item 8 (the ring at the Manmo event, sub-kind
+   0x59's shade bytes never restored - probably fine, to be verified; the desert's sky). The scripts are in the
+   session-`56ff1eb2` scratchpad (`.../56ff1eb2-8c2d-4d5f-82f0-a85df7f2d489/scratchpad/round13/`). **The
+   verification worktree is this queue's.** The main checkout's `build/bof3x.ini` has `wide=1` and a running game
+   locks its DLL. A full `verify_tip.sh` takes 22 to 31 minutes.
 00. **Round twelve is complete** - [`takeover-queue-round12.md`](takeover-queue-round12.md) is the record: 654 functions
    in fourteen groups, 6,237 -> 6,891, the tip `0e51ec7` live-checked (its section 9: the attract hash and five routes
    identical but frame 0, the pictures at their baselines). On `phase-3/capture-round-twelve` from `main` `430f34b`,
