@@ -296,6 +296,11 @@ const sh::Callee kCallees[] = {
     {R1A_OURS(Member_ClearState), 1, {kU8}, kG, 0, 0, {}},
     // void (unsigned colour): the low byte indexes its table (pushed 0)
     {R1A_OURS(Sprite_FlashClut), 1, {kW}, kG, 0, 0, {}},
+    // void (unsigned short *dst, unsigned index): dst logged by value - the
+    // standard row hashes 8 bytes at it, which the callee only writes, and the
+    // palettes at 0x80D380 are alike at start-up (a stride planted 0x20 for
+    // 0x40 passed that row)
+    {R1A_OURS(Sprite_LoadPalette), 2, {kW, kW}, kG, 0, 0, {}},
     // the group's own cell helpers, called by E8: (x, z) as words, al tested
     {R1A_OURS(PartyAction0_CellPickup), 2, {kU16, kU16}, kF, 0, 0, {}},
     {R1A_OURS(PartyAction1_CellPickup), 2, {kU16, kU16}, kF, 0, 0, {}},
