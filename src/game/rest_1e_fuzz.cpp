@@ -205,6 +205,17 @@ U FxRand(const U*, U answer) {
     const U n = sh::Noise();
     return n % 2 ? answer : WithAl(answer, (n & 0xF0) | kNibbles[(n >> 8) % (sizeof kNibbles / sizeof kNibbles[0])]);
 }
+// Sprite_FlashClut: Field_State +0x138 |= 8, as the real one does; and, in the
+// disturbance's role, Field_State +0x89 moved half the time - the strike cell
+// reads it after this call (control C72 went unrefused by the harness's
+// disturbance alone).
+U FxFlash(const U*, U answer) {
+    unsigned char* const state = Field_State;
+    if (sh::InRegions(state + 0x138, 1)) state[0x138] = static_cast<unsigned char>(state[0x138] | 8);
+    const U n = sh::Noise();
+    if (n % 2 && sh::InRegions(state + 0x89, 1)) state[0x89] = static_cast<unsigned char>(n >> 8);
+    return answer;
+}
 // PartyAction_SideProbes writes +0x2B (1, then 0 on a steep side).
 U FxSideProbes(const U*, U answer) {
     unsigned char* const s = Sprite_Current;
@@ -253,7 +264,7 @@ const sh::Callee kCallees[] = {
     // long (long x, long z)
     {R1E_OURS(MapView_GroundAt), 2, {kW, kW}, kG, 0, 0, {}, &FxGround},
     // void (unsigned colour): its low byte (symbols.toml)
-    {R1E_OURS(Sprite_FlashClut), 1, {kU8}, kG, 0, 0},
+    {R1E_OURS(Sprite_FlashClut), 1, {kU8}, kG, 0, 0, {}, &FxFlash},
     // int (void): Capcom's C runtime (its name is its address)
     {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, kG, 0, 0, {}, &FxRand},
 };
