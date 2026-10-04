@@ -235,7 +235,7 @@ const sh::Callee kCallees[] = {
     // the record pointer's upper bytes), the colour a byte; catalog part 6's
     // bar draw - the bar read to +5
     {"0x4901D0", at::kGlowDraw, at::kGlowDraw, 3, {kW, k16, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
-    {"0x4920F0", at::kBarDraw, at::kBarDraw, 1, {kW}, kG, 0, 0, {6}, nullptr, nullptr, true},
+    {"EffectKindA8_DrawBar", at::kBarDraw, at::kBarDraw, 1, {kW}, kG, 0, 0, {6}, nullptr, nullptr, true},
     // a standard row re-listed: the size's two words hashed
     {E4F_OURS(EffectGte_ProjectSize), 3, {0, 0, 0}, kG, 0, 0, {12, 4, 0}, &FxProjectSize, nullptr, true},
 };

@@ -1163,7 +1163,7 @@ extern "C" void __cdecl EffectKindA8_StartBar(void) {
 // original 0x4920F0 (bar): two opaque POLY_G4 across the screen, x 0..320
 // (0x43A00000) - from y (+4 - +3 - (Frame_Counter & 1)) black to y +4 red
 // (0x80, 0, 0), then from y +4 red to y (+4 + (Frame_Counter & 1) + +3) black;
-// each committed 0x44 to slot 7. The depth words are not written. Also called by
+// each committed 0x44 to slot 7. The depths are Gpu_SetPolyG4's (0.01). Also called by
 // E4F's EffectKindB0_StepBars.
 extern "C" void __cdecl EffectKindA8_DrawBar(const unsigned char* bar) {
     const U f = Frame_Counter & 1u;
@@ -1297,7 +1297,7 @@ extern "C" void __cdecl EffectKindA8_End(void) {
 // the angle 0x800 by 0x40 to 0x1000 at (160 + f + cos * rx sar 12, 240 + f +
 // sin * ry sar 12) - each a word, f = (Frame_Counter & 1) << 2 - the centre
 // (shade, shade >> 2, shade >> 2), the rim black; each committed 0x34 to slot
-// 7. The depth words are not written.
+// 7. The depths are Gpu_SetPolyG3's (0.01).
 extern "C" void __cdecl EffectKindA9_DrawDisc(unsigned rx, unsigned ry, unsigned shade) {
     DrawMode(1, 0x380, 0x100, 1, 7);
     const U f = (Frame_Counter & 1u) << 2;
@@ -1391,7 +1391,7 @@ extern "C" void __cdecl EffectKindA9_Shrink(void) {
 // original 0x492400 (shade, a byte): a draw mode (Gpu_GetTPage(0, 1, 0x380,
 // 0x100), dtd 1) committed 0xC to slot 7; two opaque POLY_G4 over the frame -
 // rows 0..120 from black to (shade, 0, 0), rows 120..240 back to black - each
-// committed 0x44 to slot 7; the depth words not written. A full-frame fill
+// committed 0x44 to slot 7; the depths Gpu_SetPolyG4's. A full-frame fill
 // (0, 0) 320 x 240: DIV-0041 section 3c's, drawn from Widescreen_FillX() to
 // 320 + Widescreen_Fill() (the original's 0 .. 320 narrow or unarmed: every
 // self-test compares those).

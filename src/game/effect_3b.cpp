@@ -891,7 +891,7 @@ extern "C" void __cdecl EffectKind69_DrawColumn(unsigned width, unsigned base, u
 
 // original 0x483540 (EffectKind69_Parts[2]): its step through
 // EffectKind69_Part2Steps by +3, the screen point; with +3 past 0 the matrix,
-// the lines 0x4837B0, the glow, a tail jump to Gte_PopMatrix.
+// the lines EffectKind69_DrawLines, the glow, a tail jump to Gte_PopMatrix.
 extern "C" void __cdecl EffectKind69_Part2(void) {
     PartFrame("EffectKind69_Part2", AddressOf(EffectKind69_Part2Steps), EffectKind69_Part2Steps_count, &DrawLines2);
 }

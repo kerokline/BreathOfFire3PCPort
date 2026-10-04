@@ -4,16 +4,18 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"  // R3F's rebinding: the targets that are ours read bof3::addr::<Name>, the values unchanged
+
 namespace effect_4e::at {
 
 // --- callees nobody of ours names, called by address (SH_AT) ------------------
 // Catalog part 6 rows ("Scenario effects"), in no group of round thirteen:
-constexpr std::uint32_t kTrail9C = 0x48ED80;     // (const long *from, const long *to, unsigned char shade): two
+constexpr std::uint32_t kTrail9C = bof3::addr::EffectKind9C_DrawTrail;     // (const long *from, const long *to, unsigned char shade): two
                                                  // POLY_G4 and TILE_1 dots between the two points projected
                                                  // (the effect-standard row: both points 12 read, the byte)
-constexpr std::uint32_t kGlowA7 = 0x491E30;      // (const long *point, short size, unsigned char colour): a glow
+constexpr std::uint32_t kGlowA7 = bof3::addr::EffectKindA7_DrawGlow;      // (const long *point, short size, unsigned char colour): a glow
                                                  // of 32 POLY_G3 (EffectKindA0_DrawGlow's form, slot 7)
-constexpr std::uint32_t kDiscA9 = 0x492260;      // (short x, short y, unsigned char shade): a disc of POLY_G3 on
+constexpr std::uint32_t kDiscA9 = bof3::addr::EffectKindA9_DrawDisc;      // (short x, short y, unsigned char shade): a disc of POLY_G3 on
                                                  // screen (two words read, the third pushed 0x80)
 // Capcom's library layer (the effect-standard set lists it):
 constexpr std::uint32_t kMatrixVector = 0x5A7C70;  // (matrix, in, out): an SVECTOR turned by the 3 x 3

@@ -7,7 +7,7 @@
 // kind is, as far as the code says (the spawners are chapter 8's run 11 and
 // chapter 10's run 2, scena_sc7.cpp and scena_sc9b.cpp):
 //
-//   kind 0x60  a dispatcher only here (its states 0x480210..0x4802C0 are
+//   kind 0x60  a dispatcher only here (its states EffectKind60_Start..EffectKind60_SlideEnd are
 //              catalog part 6 rows in no group), and the grey LINE_G2 its
 //              states 1 and 2 draw between two projected points
 //   kind 0x61  a party member (ObjTrio record +7) drawn off screen into VRAM
@@ -184,7 +184,7 @@ U WallShade(U frame) {
 // ===========================================================================
 
 // original 0x4801F0 (hidden in 0x47FBE0): jmp [EffectKind60_States + +1 * 4],
-// unbounded. Its states are catalog part 6 rows (0x480210, 0x480270, 0x4802C0),
+// unbounded. Its states are catalog part 6 rows (EffectKind60_Start, _SlideBoth, _SlideEnd),
 // 0x492750 twice and Effect_StateRelease.
 extern "C" void __cdecl EffectKind60_Run(void) {
     Dispatch("EffectKind60_Run", EffectKind60_States, EffectKind60_States_count);

@@ -12,7 +12,7 @@
 //              point, linked into the map, that rises (its height +0x14
 //              accelerating) to 0x8000000 and stays
 //   kind 0x9C  at a fixed place (0x308000, 0x740000): a glow and a trail
-//              (catalog part 6's 0x48ED80) that grow and hold; eight panels
+//              (EffectKind9C_DrawTrail) that grow and hold; eight panels
 //              that flicker in; five beams (LINE_F2, two fans and two quads
 //              each); the glow shrinking; the beams fading; released
 //   kind 0x9E  a dispatcher here (its seven states are catalog part 6 rows)
@@ -152,7 +152,7 @@ bool Tick() {
 unsigned char* Spark(unsigned i) { return EffectKindA0_Sparks + i * at::kSparkStride; }
 unsigned char* Shard(unsigned i) { return EffectKindA0_Shards + i * at::kShardStride; }
 
-// The trail of catalog part 6's 0x48ED80 that kind 0x9C's states 1..6 draw:
+// The trail of EffectKind9C_DrawTrail that kind 0x9C's states 1..6 draw:
 // (Sprite_Current +0x34, +0xC, the byte +0x5D).
 void Trail9C() {
     unsigned char* const s = S();
@@ -1283,7 +1283,7 @@ extern "C" void __cdecl EffectKindA3_Run(void) {
 
 // original 0x491AA0 (hidden in catalog part 6's 0x4918B0): call
 // [EffectKindA7_States + +1 * 4], unbounded; then, Sprite_Current read again,
-// while +1 is not 0 the glow 0x491E30(+0x34, the word +0xC, 7).
+// while +1 is not 0 the glow EffectKindA7_DrawGlow(+0x34, the word +0xC, 7).
 extern "C" void __cdecl EffectKindA7_Run(void) {
     Dispatch("EffectKindA7_Run", EffectKindA7_States, EffectKindA7_States_count);
     unsigned char* const s = S();
@@ -1299,7 +1299,7 @@ extern "C" void __cdecl EffectKindA8_Run(void) {
 }
 
 // original 0x491C60 (hidden in 0x4918B0): call [EffectKindA9_States + +1 *
-// 4], unbounded; then, while +1 is not 0, the disc 0x492260(the word +0x2E,
+// 4], unbounded; then, while +1 is not 0, the disc EffectKindA9_DrawDisc(the word +0x2E,
 // the word +0x30, 0x80).
 extern "C" void __cdecl EffectKindA9_Run(void) {
     Dispatch("EffectKindA9_Run", EffectKindA9_States, EffectKindA9_States_count);

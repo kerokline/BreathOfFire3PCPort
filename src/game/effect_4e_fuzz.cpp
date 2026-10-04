@@ -268,9 +268,9 @@ const sh::Callee kCallees[] = {
     {E4E_OURS(EffectKindA0_SwapLong), 2, {kW, kW}, kG, 0, 0, {4, 4}, &FxSwap, nullptr, true},
     // group E3A's (wave three, merged): the spark of 0x18
     {E4E_OURS(EffectKind64_DrawSpark), 1, {kW}, kG, 0, 0, {0x18}, nullptr, nullptr, true},
-    // catalog part 6's 0x491E30 (in no group): the point, the word +0xC (`mov
+    // R3F's EffectKindA7_DrawGlow: the point, the word +0xC (`mov
     // dx` over edx's leftover - the standard row compares the whole word), 7
-    {"0x491E30", at::kGlowA7, at::kGlowA7, 3, {kW, k16, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
+    {"EffectKindA7_DrawGlow", at::kGlowA7, at::kGlowA7, 3, {kW, k16, k8}, kG, 0, 0, {12}, nullptr, nullptr, true},
     // standard rows re-listed: the cursor's spare (0x90) for the commits and the
     // map links; EffectGte_ProjectSize hashing the size's two words
     {E4E_OURS(Gfx_CommitPrim), 2, {k8, k8}, kG, 0, 0, {0, 0}, &FxCommit, nullptr, true},
