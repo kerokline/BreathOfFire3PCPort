@@ -284,6 +284,7 @@
 #include "game/rest_1g.h"
 #include "game/rest_1f.h"
 #include "game/rest_1d.h"
+#include "game/rest_2h.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1210,6 +1211,13 @@ void InjectAll() {
                                 // only; after Rest0A_Inject (it calls R0A's helpers by name) and every harness's
                                 // inject; no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    Rest2H_Inject();            // round 14 wave-two group R2H (0x59AA80..0x5A9874: window kinds - handler 7's 11..18,
+                                // handler 8's 3..5, MenuList_Kinds[20] - the masters' windows, the battle equipment
+                                // window's items and bar, the joystick enumeration, Cfg_Load's key table): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its ten step tables swapped for
+                                // the fuzz only; after every harness's inject; after MenuFrame_Inject (DIV-0011) and
+                                // BattleDraw_Inject (DIV-0059), whose call sites inside 0x59AA80 / 0x59DBF0 ours reads,
+                                // and Widescreen_Inject (DIV-0041), whose bound inside 0x59C130 ours reads back
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

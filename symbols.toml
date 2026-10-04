@@ -103968,3 +103968,419 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R1D): 0x520840 0x51FC80 0x52F5C0 (PartyAction_ScriptEnd); jumped through by PartyFormAction13_Form0 0x5226B0 by Sprite_Current +2, unchecked; the next table starts at 0x65FEC4 (its own reader's). docs/rest_1d.md."
+
+# --- round fourteen group R2H (rest_2h.cpp): 0x59AA80..0x5A9874, window kinds (handler 7 kinds 11..18,
+# handler 8 kinds 3..5, MenuList_Kinds[20]), the masters, and three strays ---
+
+[[func]]
+pc = 0x59AA80
+name = "MenuList_ReserveWinDraw"
+ret = "void"
+params = "unsigned char *obj"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59AA80..0x59ADDC (0x35D bytes): the reserve list's panels for a record (called by 0x59AA30, MenuList_Kinds[19], R2G's): the call DIV-0011 re-aims at +0x18 (0x59AA98; ours calls what its rel32 reaches) with (x, y, 0x12, 0x15) from the words +4 / +6; then per id of the list the dword +0x20 points at, below the count +0xA, the record 0x66972C[id]: box (x + 7, y + 6 + 0x34 row, 0x7D, 0x30, 0x80 + dim), portrait, name, three Menu_DrawTile16 tags, level / HP / AP figures and the status text - a record with +0xB bit 1 dim (flags 0x81, shade 1, colour 7). PartyForm_DrawReserve's twin with the dimming. No PSX twin paired. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59ADE0
+name = "MenuList_GeneWinRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59ADE0..0x59ADFF (0x20 bytes): MenuList_Kinds[20]: call [MenuList_GeneWinSteps + 4 record +3] (unchecked; ours aborts past its 3), then MenuList_GeneWinDraw(record re-read). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59AE00
+name = "MenuList_GeneWinDraw"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59AE00..0x59B214 (0x415 bytes): the list 0x6BE0B0 from the 18 bits of 0x904650 (bit + 1 each, then 0s); box 0x99 x 0x9A; Menu_ListScroll(+0xA, &offset, &moving, +8); rows from the top while below top + moving + 9, the first 0 entry ending them: Msg_SystemPtr(0x4171 + entry) at (x + 0x11, y + offset + 0x1A + 13 row) with Menu_DrawIcon8(x + 7, .. + 2, 6, dim), the +0xB row drawn lit then two up; +0xC = the entry at +0xB; title 0x66B1F0 centred, pieces, scroll bar (0x6BE0B0, +0xA, x + 0x90, y + 0x18, 9, 0x12, 0x74). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59BE50
+name = "ShopWin_SharedListRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59BE50..0x59BE6F (0x20 bytes): Window_Handler7KindTable[11]: call [ShopWin_SharedListSteps + 4 record +3] (ours aborts past its 5), then SharedList_DrawList(record re-read). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59BE70
+name = "ShopWin_SharedListSlideTo28"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59BE70..0x59BE97 (0x28 bytes): ShopWin_SharedListSteps[3]: record x +4 += 0x20; above 0x28 (s16): 0x28 and step +3 = 0. Hidden in Shop_DrawSellDetail's catalogue extent. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59BEA0
+name = "ShopWin_SharedMemberRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59BEA0..0x59BEBF (0x20 bytes): Window_Handler7KindTable[12]: call [ShopWin_SharedMemberSteps + 4 record +3] (ours aborts past its 5), then SharedList_DrawMember(record re-read). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59BEC0
+name = "ShopWin_MemberStatusRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59BEC0..0x59BEF1 (0x32 bytes): Window_Handler7KindTable[13]: call [ShopWin_MemberStatusSteps + 4 record +3] (ours aborts past its 3), then Menu_DrawMemberStatus(+4, +6, +0xA, 0, 0) of the record re-read (a fifth word pushed, not read). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59BF00
+name = "ShopWin_RowMenuRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59BF00..0x59BF0C (0xD bytes): Window_Handler7KindTable[14]: ShopWin_DrawRowMenu(the record). No step. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59BF10
+name = "ShopWin_DrawRowMenu"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59BF10..0x59C10D (0x1FE bytes): n = the byte 0x66B37C; box (x + 3, y + 3, 0x65, 16 n + 0x19); the title 0x66B36C[0] at (x + 0x1E, y + 7); pieces 0x66B30C; row i below n (re-read): 0x66B36C[0x66B37D[i]] at (x + 7, y + 16 i + 0x1A), the +0xB row lit (7, then two up in 2), the +0xA row 7 then 0, others 0; pieces 0x66B330 twice; last pieces 0x66B33C at (x, y + 16 i + 0x18). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C110
+name = "ShopWin_MasterListRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C110..0x59C12F (0x20 bytes): Window_Handler7KindTable[15]: call [ShopWin_MasterListSteps + 4 record +3] (ours aborts past its 4), then MasterWin_DrawList(record re-read). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C130
+name = "MasterWin_SlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C130..0x59C157 (0x28 bytes): ShopWin_MasterListSteps[1]: x -= 0x20; below the bound, the bound and step 0. The bound is the imm32 of mov ecx at 0x59C135, -120, which DIV-0041 widens (0x59C136); ours reads the word there at every call. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C160
+name = "MasterWin_SlideTo64"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C160..0x59C187 (0x28 bytes): ShopWin_MasterListSteps[2]: x += 0x20; above 0x64, 0x64 and step 0. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C190
+name = "ShopWin_MasterCaptionRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C190..0x59C1AF (0x20 bytes): Window_Handler7KindTable[16]: call [ShopWin_MasterCaptionSteps + 4 record +3] (ours aborts past its 3), then MasterWin_DrawCaption(record re-read). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C1B0
+name = "MasterWin_CaptionSlideTo8C"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C1B0..0x59C1D7 (0x28 bytes): ShopWin_MasterCaptionSteps[2]: x -= 0x20; below 0x8C, 0x8C and step 0. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C1E0
+name = "ShopWin_PupilsRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C1E0..0x59C1FF (0x20 bytes): Window_Handler7KindTable[17]: call [ShopWin_PupilsSteps + 4 record +3] (ours aborts past its 3), then MasterWin_DrawPupils(record re-read). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C200
+name = "MasterWin_PupilsSlideDown"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C200..0x59C227 (0x28 bytes): ShopWin_PupilsSteps[1]: y +6 += 0x10; above 0xF0, 0xF0 and step 0. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C230
+name = "MasterWin_PupilsSlideUp"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C230..0x59C257 (0x28 bytes): ShopWin_PupilsSteps[2]: y -= 0x10; below 0x80, 0x80 and step 0. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C260
+name = "ShopWin_ItemCountRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C260..0x59C289 (0x2A bytes): Window_Handler7KindTable[18]: call [ShopWin_ItemCountSteps + 4 record +3] (ours aborts past its 3), then SharedList_DrawItemCount(+4, +6) of the record re-read. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C290
+name = "ShopWin_ItemCountSlideToD2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C290..0x59C2B7 (0x28 bytes): ShopWin_ItemCountSteps[2]: x -= 0x20; below 0xD2, 0xD2 and step 0. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C2C0
+name = "MasterWin_DrawList"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C2C0..0x59C77D (0x4BE bytes): a 17-byte stack list from the 17 bits of 0x904657.. (bit + 1 each, then 0s), +0xD = the bit of the entry at +0xB (0xFF when none); box 0x71 x 0x9A; Menu_ListScroll(+0xA, .., +8); rows from the top while below top + moving + 9, an empty entry skipped: MasterWin_Available(entry - 1), Msg_SystemPtr(0x110 + entry) at (x + 0x13, ..) and the mark 0x66A2D8 or Menu_DrawIcon8(x + 8, .., 6, dim), the +0xB row lit, the +0xC row in colour 2; title 0x66A1F0 at x + 0x3A - 6 n; scroll bar (the list, +0xA, x + 0x68, y + 0x18, 9, 0x11, 0x74). The rows index the stack list unbounded (ours aborts past 17). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C780
+name = "MasterWin_Available"
+ret = "unsigned char"
+params = "unsigned index"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C780..0x59C80B (0x8C bytes): al: index byte 0xB..0xE through the jump table 0x59C7FC: 0x904061 bit 3, Flags_Test(0x904030, 0x6C), 0x904061 bit 4, bit 5; any other: every byte of MasterWin_Requirements[index] up to 0xFF MasterWin_SkillKnown (1 for an empty list). The table holds 17 (ours aborts past it). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C810
+name = "MasterWin_SkillKnown"
+ret = "unsigned char"
+params = "unsigned skill"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C810..0x59C867 (0x58 bytes): al 1 when the byte is in the ten ability slots +0x7E of character records 0..6 (0x903AEE + 0xA4 k) or the shared list 0x904574's 128 bytes, else 0. A start no list had (band_rows.py: code no list has in 0x59C780's span); called only by MasterWin_Available. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C870
+name = "MasterWin_DrawCaption"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C870..0x59C8E2 (0x73 bytes): box (x + 3, y + 3, 0x9A, 0x39), Menu_DrawBorder(x, y, 0x12, 6), Msg_SystemPtr(0x100 + +0xA) at (x + 0xE, y + 4, 0, 0xFF). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59C8F0
+name = "MasterWin_DrawPupils"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59C8F0..0x59C9FC (0x10D bytes): box (x + 3, y + 3, 0x72, 0x58); each character record 0..7 with +0xB bit 0 and +0x1F equal to window 1's +0xD (0x803191): MasterWin_DrawPortrait(x + dx + 4, y + dy + 5, +9, 0), dx += 0x25, past 0x4A (s16) dx = 0 and dy += 0x2A; borders (x, y, 0xD, 0xA), label box (x - 0x25, y + 3, 0x22, 0x10) and border (x - 0x28, y, 3, 1), the label 0x66A1F8 at (x - 0x20, y + 4). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59CA00
+name = "MasterWin_DrawPortrait"
+ret = "void"
+params = "int x, int y, unsigned index, unsigned shade"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59CA00..0x59CAF7 (0xF8 bytes): index 4 is 0xB from Cond_ByteFA 8 on; Gpu_SetDrawMode(Gfx_PacketNext, 0, 1, 0x1E, 0), Gfx_CommitPrim(1, 0xC), a Gpu_SetSprt sprite at the cursor re-read: grey 0x80 (shade 0), 0x30 (1), else 0x80 / 0x40 / 0x40; x, y words as floats; u, v the cell 0x66B470[index] + 3 / + 5, CLUT ((cell 3 + 0x1E0) << 6 | cell 2 >> 4), 0x24 x 0x28; Gfx_CommitPrim(1, 0x1C). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59CB90
+name = "BattleMenuWin_ItemListSlideLeft"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59CB90..0x59CBB5 (0x26 bytes): BattleMenuWin_ItemListSteps[3]: x -= 0x20; below 0x53, x = 0x52 and step 0 (the test 0x53, the store 0x52, as BattleMenuWin_ItemListSlideRight's, D88). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59CC10
+name = "BattleMenuWin_EquipRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59CC10..0x59CC56 (0x47 bytes): Window_Handler8KindTable[3]: call [BattleMenuWin_EquipSteps + 4 record +3] (ours aborts past its 4), then BattleEquipWin_Draw(0x66972C[0x904065[+0xC]], +4, +6, +0x20, +0xD, record) of the record re-read. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59CC60
+name = "BattleMenuWin_EquipSlideTo62"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59CC60..0x59CC87 (0x28 bytes): BattleMenuWin_EquipSteps[3]: x += 0x20; above 0x62, 0x62 and step 0. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59CC90
+name = "BattleMenuWin_EquipItemsRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59CC90..0x59CCAF (0x20 bytes): Window_Handler8KindTable[4]: call [BattleMenuWin_EquipItemsSteps + 4 record +3] (ours aborts past its 4), then BattleEquipWin_DrawItems(record re-read). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59CCB0
+name = "BattleMenuWin_EquipItemsSlideTo98"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59CCB0..0x59CCD7 (0x28 bytes): BattleMenuWin_EquipItemsSteps[1]: x += 0x20; above 0x98, 0x98 and step 0. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59CCE0
+name = "BattleMenuWin_VerbPairRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59CCE0..0x59CCFB (0x1C bytes): Window_Handler8KindTable[5]: Menu_DrawVerbPair(+4, +6, +0xB) of the record. No step. docs/rest_2h.md."
+
+[[func]]
+pc = 0x59DB70
+name = "BattleEquipWin_DrawBar"
+ret = "void"
+params = "int x, int y, unsigned u, unsigned v, unsigned clut, unsigned shade"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59DB70..0x59DBE5 (0x76 bytes): at the packet cursor (read once) Gpu_SetSprt8; x, y words (unsigned) as floats +8 / +0xC; u << 3, v << 3 bytes +0x14 / +0x15; the CLUT word +0x16; the shade byte +4..+6; Gpu_SetSemiTrans(p, 0); Gfx_CommitPrim(1, 0x18). Called by BattleEquipWin_Draw (battle_e7's kDrawBar) and 0x585DC0 (R2C's). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59DBF0
+name = "BattleEquipWin_DrawItems"
+ret = "void"
+params = "unsigned char *window"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59DBF0..0x59E157 (0x568 bytes): +8 = 2 for slot +9 1..3, 3 for 4..5, else 1 (jump table 0x59E144); the category's 128 items (Inventory_IdLists / _CountLists) Item_CanUse(4, 0x66972C[0x904065[+0xC]], +8, id) allows - the armour's only with Item_IconKind(2, id) = +9 + 1 - into 0x6BE0C4 / 0x6BE144, then 0s; +0xD = the id at +0xB; box 0x99 x 0x82; Menu_ListScroll(+0xA, .., +0x10); rows below moving + 7 Menu_DrawItemRow, the row +0xA + r == +0xB lit; title 0x66B5C4[+8] centred through the site 0x59DEFA (DIV-0059 re-aims it; ours calls what it reaches); count n / 0x80 by 0x6639C8; pieces; scroll bar (0x6BE0C4, +0xA, x + 0x90, y + 0x18, 7, 0x80, 0x5C). docs/rest_2h.md."
+
+[[func]]
+pc = 0x59E160
+name = "Menu_DrawVerbPair"
+ret = "void"
+params = "int x, int y, unsigned selected"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x59E160..0x59E22A (0xCB bytes): two buttons: box (x, y, 0x2D, 0x14), verb 0x66A228 at (x + 0xA, y + 3, 7 unless selected is 0xFF or 0, 0x10), pieces 0x66B500 when selected is 0 else 0x66B4F8; the same at x + 0x30 for 0x66A240, 7 unless 0xFF or 1, pieces 0x66B500 when 1. Catalogued as the renderer's by its address range (part 1); game code, called only by BattleMenuWin_VerbPairRun. docs/rest_2h.md."
+
+[[func]]
+pc = 0x5A9620
+name = "DInput_EnumJoystick"
+ret = "int"
+params = "const void *instance, void *context"
+cc = "__stdcall"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x5A9620..0x5A9683 (0x64 bytes): stdcall (ret 8), the EnumDevices callback the original DInput_Init pushes (0x5A94FC): IDirectInput::CreateDevice(DInput_Object, instance +4, &DInput_Joystick, 0) failed: 1; else DInput_Joystick->QueryInterface(0x5C4718, &DInput_Joystick2), _stricmp (0x5C2B40) of instance +0x12C with 0x66C7B0 equal: DInput_JoystickFound = 1; 0. Hidden in DInput_Init (ours, DIV-0050), which never enumerates: reached only with BOF3X_ORIGINAL=DInput_Init. docs/rest_2h.md."
+
+[[func]]
+pc = 0x5A9860
+name = "Cfg_SetKeyTable"
+ret = "void"
+params = "const void *table"
+impl = "src/game/rest_2h.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x5A9860..0x5A9874 (0x15 bytes): rep movsd of 0x20 dwords from the argument into Key_Table. Cfg_Load's (0x4FD0DE) with more than two lines of BOF3.CFG. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B1CC
+name = "MenuList_GeneWinSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): 0x437CC0 (BareRet) 0x59A5E0 (MenuSlide_RightOff) 0x59AA50; jumped through by MenuList_GeneWinRun 0x59ADE0 by the record's +3, unchecked; 0x66B1D8 after it is a piece list. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B2D8
+name = "ShopWin_SharedListSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet MenuSlide_RightOff 0x59AA50 0x59BE70 (ShopWin_SharedListSlideTo28) 0x596920; jumped through by ShopWin_SharedListRun 0x59BE50 by +3, unchecked; the next table starts at 0x66B2EC. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B2EC
+name = "ShopWin_SharedMemberSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet MenuSlide_RightOff 0x59AA50 0x59A960 0x59A9E0; jumped through by ShopWin_SharedMemberRun 0x59BEA0 by +3, unchecked; the next table starts at 0x66B300. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B300
+name = "ShopWin_MemberStatusSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet MenuWin_SlideOutLeft MenuSlide_RightTo17; jumped through by ShopWin_MemberStatusRun 0x59BEC0 by +3, unchecked; 0x66B30C after it is a piece list. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B384
+name = "ShopWin_MasterListSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet 0x59C130 (MasterWin_SlideOut) 0x59C160 (MasterWin_SlideTo64) 0x59A960; jumped through by ShopWin_MasterListRun 0x59C110 by +3, unchecked; the next table starts at 0x66B394. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B394
+name = "ShopWin_MasterCaptionSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet MenuSlide_RightOff 0x59C1B0 (MasterWin_CaptionSlideTo8C); jumped through by ShopWin_MasterCaptionRun 0x59C190 by +3, unchecked; the next table starts at 0x66B3A0. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B3A0
+name = "ShopWin_PupilsSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet 0x59C200 0x59C230 (MasterWin_PupilsSlideDown, _SlideUp); jumped through by ShopWin_PupilsRun 0x59C1E0 by +3, unchecked; the next table starts at 0x66B3AC. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B3AC
+name = "ShopWin_ItemCountSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet MenuSlide_RightOff 0x59C290 (ShopWin_ItemCountSlideToD2); jumped through by ShopWin_ItemCountRun 0x59C260 by +3, unchecked; 0x66B3B8 after it is a piece list. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B56C
+name = "BattleMenuWin_EquipSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet 0x596920 MenuSlide_RightTo17 0x59CC60 (BattleMenuWin_EquipSlideTo62); jumped through by BattleMenuWin_EquipRun 0x59CC10 by +3, unchecked; the next table starts at 0x66B57C. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B57C
+name = "BattleMenuWin_EquipItemsSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): BareRet 0x59CCB0 (BattleMenuWin_EquipItemsSlideTo98) MenuSlide_RightOff 0x59A610; jumped through by BattleMenuWin_EquipItemsRun 0x59CC90 by +3, unchecked; 0x66B58C after it is a table of title pointers. docs/rest_2h.md."
+
+[[data]]
+pc = 0x66B424
+name = "MasterWin_Requirements"
+ctype = "unsigned long"
+count = 17
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2H): 17 pointers into the 0xFF-ended skill lists at 0x66B3D0..; read by MasterWin_Available 0x59C780 for an index outside 0xB..0xE, unchecked (the caller passes 0..16); ASCII follows at 0x66B468. docs/rest_2h.md."
