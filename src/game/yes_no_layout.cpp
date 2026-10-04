@@ -37,7 +37,7 @@
 //
 // Amended 2026-10-03 (group YN, docs/yes-no-prompts.md): two prompts outside
 // Menu_YesNo that carry their answers on the question's own line get the
-// same spacing - YesNoLayout_Tail - the master's here (Capcom's 0x586D20,
+// same spacing - YesNoLayout_Tail - the master's here (MasterScreen_AskYesNo 0x586D20,
 // two calls re-aimed) and Manillo's in effect_1g.cpp (ours).
 #include "game/yes_no_layout.h"
 
@@ -103,7 +103,7 @@ extern "C" const unsigned char* __cdecl YesNo_Line(unsigned id) { return Respace
 // ---------------------------------------------------------------------------
 // DIV-0027, amended 2026-10-03 (group YN): prompts that carry their own
 // answers at the end of the question's line - the master's "Is this OK?"
-// (Capcom's 0x586D20) and Manillo's "Will that be all?" (ours,
+// (MasterScreen_AskYesNo 0x586D20) and Manillo's "Will that be all?" (ours,
 // effect_1g.cpp's LeavePrompt). Each draws one line - the question, spaces,
 // the two answers one space apart, ending at the line's 33rd character - and
 // puts the hand at a Chinese-fitted base + 36 * the answer. The load / save
@@ -176,10 +176,12 @@ YesNoTail YesNoLayout_Tail(const unsigned char* s, int x, const char* who) {
 
 namespace {
 
-// The master's prompt, Capcom's 0x586D20 (docs/yes-no-prompts.md): its line
+// The master's prompt, MasterScreen_AskYesNo 0x586D20 (docs/yes-no-prompts.md): its line
 // Text_DrawAt(0x1B, 0x13, 0, 0xFF, MessagePools + word) at 0x586E78 and its
 // hand Menu_DrawHand(0xCF + 36 * the byte 0x9398D2, 0x15, 0) at 0x586E97 -
 // 0 is Yes. Both calls re-aimed here; the line's stops kept for the hand.
+// Ours since round fourteen (R2D, rest_2d.cpp): it calls where these two sites
+// reach, so the re-aim below acts on it as it did on the original body.
 constexpr std::uint32_t kMasterLineCall = 0x586E78;
 constexpr std::uint32_t kMasterHandCall = 0x586E97;
 constexpr std::uint32_t kMenuDrawHand = 0x5905D0;

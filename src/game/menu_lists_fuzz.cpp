@@ -291,7 +291,7 @@ const void* StubFor(std::uint32_t target) {
     case 0x590660: return f(kStubs.recalc_stats);
     case 0x531BB0: return f(kStubs.party_count);
     case 0x531820: return f(kStubs.exit_gateway);
-    case 0x589FB0: return f(kStubs.camp_cell);
+    case bof3::addr::FieldMenu_CampAllowedCell: return f(kStubs.camp_cell);
     case 0x461EB0: return f(kStubs.auto_repeat);
     case 0x587740: return f(kStubs.sound);
     case 0x59E330: return f(kStubs.window_reset);
@@ -335,7 +335,7 @@ struct Clone {
 };
 
 constexpr Call kOpenCalls[] = {{0x71, 0x590660}, {0x8E, 0x531BB0}, {0xBC, 0x531BB0}, {0x1AA, 0x589E60}};
-constexpr Call kInputCalls[] = {{0x08, 0x575690}, {0x5A, 0x531820}, {0x6C, 0x589FB0}, {0x96, 0x461EB0},
+constexpr Call kInputCalls[] = {{0x08, 0x575690}, {0x5A, 0x531820}, {0x6C, bof3::addr::FieldMenu_CampAllowedCell}, {0x96, 0x461EB0},
                                 {0xAD, 0x587740}, {0xDE, 0x587740}, {0x113, 0x589FE0}, {0x150, 0x589FE0},
                                 {0x176, 0x587740}, {0x186, 0x587740}, {0x1B9, 0x531BB0}, {0x1DD, 0x531BB0},
                                 {0x205, 0x531BB0}, {0x227, 0x531BB0}, {0x24B, 0x531BB0}, {0x26D, 0x531BB0}};
