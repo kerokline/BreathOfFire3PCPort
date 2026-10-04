@@ -108188,7 +108188,7 @@ ret = "void"
 params = "const unsigned char *bar"
 impl = "src/game/rest_3f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4920F0..0x49225F (0x170 bytes). Reached by E8 from EffectKindA8_StepBars and E4F's EffectKindB0_StepBars: two opaque POLY_G4 across the screen, x 0..320: from y +4 - +3 - (Frame_Counter & 1) black to y +4 red (0x80, 0, 0), then back to black at y +4 + (Frame_Counter & 1) + +3; each committed 0x44 to slot 7; the depth words not written. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4920F0..0x49225F (0x170 bytes). Reached by E8 from EffectKindA8_StepBars and E4F's EffectKindB0_StepBars: two opaque POLY_G4 across the screen, x 0..320: from y +4 - +3 - (Frame_Counter & 1) black to y +4 red (0x80, 0, 0), then back to black at y +4 + (Frame_Counter & 1) + +3; each committed 0x44 to slot 7 (the depths Gpu_SetPolyG4's). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
 
 [[func]]
 pc = 0x492260
