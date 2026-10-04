@@ -8,7 +8,10 @@ declarations in `src/game/rest_1a.h`, the group's addresses in
 R1A (`analysis/round14_cut.tsv`), each read to its last instruction with
 capstone and fuzzed through the scenario harness in field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7), used unchanged:
-196,000 rounds, 0 mismatches. Controls in section 6. 22 state tables named
+196,000 rounds, 0 mismatches. 85 controls planted (section 6): 77 refused
+by a count, 3 equivalent mutants with their near variants refused, 4
+refused by a fault only and replaced by in-table variants that are refused,
+1 (C74) not refused first - the fuzz's fault, fixed. 22 state tables named
 (section 2). No recorded route enters any of the 49 (section 9): fuzz only.
 
 The band `0x51BA80..0x51D70C` is one thing: the field core's party-member
@@ -296,8 +299,13 @@ words) for the three resolves and the strike. The rest are the harness's
 standard rows (`Sprite_EnsureAnimation`, `_SetAnimation`, `_SetAnimationAt`,
 `Sound_PlayEffect`, `Sprite_ScriptTick` / `Once`, `Flags_Test`,
 `Party_Count`, `Item_NamePtr` into the text buffer, `Inventory_Add`,
-`Msg_OpenSystem`, `Field_JumpStart`, `Field_LeaderStepTick`,
-`Sprite_LoadPalette`, `Char_LoseHp`).
+`Msg_OpenSystem`, `Field_JumpStart`, `Field_LeaderStepTick`, `Char_LoseHp`).
+`Sprite_LoadPalette` is re-listed with its destination logged by value: the
+field-standard row hashes 8 bytes at it (the callee only writes there), and
+the palettes at `0x80D380` are alike at start-up, so a stride planted 0x20
+for 0x40 passed it (C74). **For the harness's fold**: that row's `deref` of 8
+on an out-parameter it never reads hides a wrong pointer wherever the bytes
+there agree.
 
 **The state.** Field mode's standard regions and the group's one:
 `Text_Records`' first 16 bytes (the item paths copy a name in). 23,612 bytes,
@@ -337,14 +345,19 @@ height; `Field_State +0x137` / `+0x138`; `DamageScratch`'s flag;
 moves `Sprite_Current`, `Field_Request` and the rest of section 4 of its doc.
 
 **Result** (2026-10-04, this worktree, `BOF3X_SELFTEST_ONLY=1
-BOF3X_SHADOW=rest_1a`, exit 0, first run): 196,000 rounds over 49 functions,
+BOF3X_SHADOW=rest_1a`, exit 0, on the first run and again after C74's
+re-listing, the same totals): 196,000 rounds over 49 functions,
 312,245 calls to the stand-ins, **0 mismatches**; 333 stand-ins registered
 (174 field-standard). Coverage: every handler of the 26 tables reached
 (1,015 .. 10,545 calls each; `Field_FormActions`' 19 entries 18 .. 33 each,
 the member's form action stopping before the call most rounds), every
 callee called (`Sprite_FlashClut` / `Char_LoseHp` 172, `Field_GiveZenny`
 305, `Field_JumpStart` 300, the cell strike 827, `Leader_Sink` 418 the
-fewest). The log lines "lies outside the field runs" name every clone: the
+fewest). `BOF3X_SHADOW='*'` (2026-10-04, this worktree): exit 0, `inject:
+8704 ours, 0 left original`, 1,020 self-test lines of 0 mismatches and none
+other; the same with `BOF3X_WIDE=1`: exit 0, 1,020, 8,704 ours. Each passed
+on its first run. `tools/ledger_check.py`: 0 errors (2 notes, not this
+group's). The log lines "lies outside the field runs" name every clone: the
 band `0x51BA80..0x51D70C` is in none of round twelve's field runs (a note,
 not a refusal).
 
@@ -390,7 +403,106 @@ No full-frame fill, no float: nothing for DIV-0041.
 (`BOF3X_R1A_ONLY`), restores the file and rebuilds. The count is the rounds
 that mismatched (of 4,000 a clone).
 
-CONTROLS-TABLE
+**85 planted: 77 refused by a count; 3 equivalent mutants not refused, each
+with its near variant refused; 4 refused by a fault only (an index past its
+table into words the fuzz does not swap), each replaced by an in-table
+variant that is refused; 1 not refused first (C74), the fuzz's fault, fixed
+and refused (C74b).**
+
+| # | Function | Plant | Refused |
+|---|---|---|--:|
+| C01 | ResumeUnlessHeld800 | bit 10 for bit 11 | 1,987 |
+| C02 | FormActionState | leader kind 7 for 6 | 57 |
+| C03 | FormActionState | the reach 0x18001 | 34 |
+| C04 | FormActionState | the reach flag from `+0x71` | 148 |
+| C05 | FormActionState | flags 0xC00 for 0x1C00 | 33 |
+| C06 | FormActionState | `Member_ClearState(+6)` | 3,721 |
+| C07 | FormActionState | z's velocity from `+0xC` | 225 |
+| C08 | FormActionState | no `Member_Follow` tail | 3,734 |
+| C09 | FormActionState | `+0xB` = 1 | 3,724 |
+| C10 | FormActionState | `Field_State +0x136` tested | 3,714 |
+| C11 | JumpAir | 0x80 apart counts (`>=`) | 176 |
+| C12 | JumpAir | `mine >= theirs` for `>` | **not refused**: equivalent - in that branch the heights are more than 0x80 apart, never equal |
+| C12b | JumpAir | above and below swapped (C12's near variant) | 704 |
+| C13 | JumpAir | level turns back (`<` for `<=`) | 791 |
+| C14 | JumpAir | `+0x136` for `+0x137` | 1,635 |
+| C15 | JumpState | by `+3` | a fault only (`FieldCore_Recoil`'s Fatal: an index past the table reached real code) |
+| C15b | JumpState | the step's neighbour, `+2 ^ 1` | 4,000 |
+| C16 | FormAction0_ByForm | the action table `0x65FA00` | 4,000 |
+| C17 | FormAction0_ByForm | the byte `+0x2C` for the word | **not refused**: equivalent in the domain - the seed draws the form below the table's 3, so the high byte is 0; a form above 0xFF indexes 256 entries past the table |
+| C17b | FormAction0_ByForm | the word `+0x2E` | a fault only (random index past the table) |
+| C17c | FormAction0_ByForm | the next form, `(+0x2C + 1) % 3` (C17's near variant) | 4,000 |
+| C18 | Action0_Form1 | form 2's table | 4,000 |
+| C19 | Action2_Form2State0 | by `+2` | a fault only (index past the table) |
+| C19b | Action2_Form2State0 | the next step, `(+3 + 1) % 5` | 4,000 |
+| C20 | FormAction1_Form0 | set 2's table `0x65FA68` | **not refused**: equivalent - the two tables hold the same three addresses (section 4) |
+| C21 | FormAction1_Form0 | form 1's table (C20's near variant) | 2,623 |
+| C22 | Action2_Form2State1 | the table one dword on | a fault only (its third word is outside the swapped tables) |
+| C22b | Action2_Form2State1 | the next step, `(+3 + 1) % 3` | 4,000 |
+| C23 | Form0Begin (x4) | back one, not two | 622 |
+| C24 | Form0Begin | the steep pose 0x47 | 3,137 |
+| C25 | Form0Begin | `+0xA` = 6 | 8,863 |
+| C26 | Form0Begin | steep from 0x40 (`<`) | 852 |
+| C27 | Form0Begin | `Sprite_Current` not re-read in the side probe | 179 (by the disturbance) |
+| C28 | Form0Begin | the second probe pushes 3 | 8,863 |
+| C29 | Form0Begin | odd directions turned | 12,000 |
+| C30 | Resolve (x3) | the z probe one on in x too | 652 |
+| C31 | Resolve | at 1, not 0 | 8,663 |
+| C32 | Resolve | the found test inverted | 1,380 |
+| C33 | (all 49) | `MarkObject`: 0x1E a sprite object | 155 |
+| C34 | CellPickup (x3) | 5 zenny from 0xE | 67 |
+| C35 | CellPickup | nine times | 30 |
+| C36 | CellPickup | input bit 1 only | 47 |
+| C37 | CellPickup | item 0x57's name | 1,338 |
+| C38 | CellPickup | the clear's cell swapped | 2,424 |
+| C39 | CellPickup | the second spawn state 2 | 316 |
+| C40 | CellPickup | zenny from 0xC | 70 |
+| C41 | Turns (x3) | the low facing posed high | 1,504 |
+| C42 | Form1Turn | pose 0x42 | 739 |
+| C43 | Form2Turn | facing 4 for 5 | 799 |
+| C44 | Turns | `+9` = 3 | 1,889 |
+| C45 | Form0Turn | `Sprite_SetAnimationAt` start 1 | 671 |
+| C46 | Form0Turn | 0x52 tested | 1,070 |
+| C47 | FormAction_Form0Begin | ties to facing 3 | 24 |
+| C48 | FormAction_Form0Begin | pose 0x51 | 222 |
+| C49 | FormAction_Form0Begin | input 0x20 | 317 |
+| C50 | FormAction_Form0Begin | flag 0x17 | 4,000 |
+| C51 | FormAction_Form1Begin | ties to facing 7 | 250 |
+| C52 | Action0_Form2Begin | `+0x128` = 3 | 305 |
+| C53 | Action0_Form2Begin | margin 0 | 1,004 |
+| C54 | Action0_Form2Begin | `+0x138` bit 1 | 649 |
+| C55 | Action0_Form2Begin | script flag 0x20 | 218 |
+| C56 | Action0_Form2Begin | `+9` up | 304 |
+| C57 | Action0_Form2Begin | the two member tests in the other order | 2,661 |
+| C58 | Form2Aim | `+0xB` = 1 | 4,000 |
+| C59 | Form2Aim | the second test inverted | 624 |
+| C60 | Form2Reaim | pose 0x43 | 4,000 |
+| C61 | Form2Strike | the effect's `+0xA` = 2 | 1,339 |
+| C62 | Form2Strike | the index into `+7` | 1,339 |
+| C63 | Form2Strike | `+3` once with an effect ahead | 1,326 |
+| C64 | Form2Strike | the object's sound 0x10C | 311 |
+| C65 | Form2Strike | the z probe whatever x's answered | 26 |
+| C66 | CellStrike | the second spawn from 5 | 138 |
+| C67 | CellStrike | the item below 8 | 36 |
+| C68 | CellStrike | the hurt above 0xA | 29 |
+| C69 | CellStrike | the member from `+0x88` | 178 |
+| C70 | CellStrike | 0xF5 for 0xF4 | 462 |
+| C71 | CellStrike | `+0xB` = 3 | 157 |
+| C72 | CellStrike | item 0x28's name | 157 |
+| C73 | CellStrike | `Field_Request` = 3 | 447 |
+| C74 | FinishPalette | the palette stride 0x20 | **not refused**: the fuzz's fault - the standard `Sprite_LoadPalette` row hashes 8 bytes at `dst` (which the callee only writes) instead of logging it, and the palettes there are alike at start-up |
+| C74b | FinishPalette | C74 again, `Sprite_LoadPalette` re-listed by value | 1,152 |
+| C75 | FinishPalette | `+0xB` = 2 | 1,517 |
+| C76 | FinishPalette | 3 tested for 2 | 2,849 |
+| C77 | WaitEffect | state 2 | 609 |
+| C78 | WaitEffect | the hold inverted | 2,812 |
+
+The thinnest (C47 24, C65 26, C68 29, C35 30, C05 33, C03 34) each need a
+narrow join: a direction exactly between two facings, an x and a z fraction
+with the first probe answering 0, a `Rand` nibble of 0xB, the tenfold, the
+script flags and the reach at their bit. The "(x4)" / "(x3)" rows ran every
+clone the name matched (the three sets' copies and the form-action state of
+the same name).
 
 ## 7. Calls across groups
 
