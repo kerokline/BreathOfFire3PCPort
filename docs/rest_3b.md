@@ -9,7 +9,7 @@ and the callees nobody owns in `src/game/rest_3b_callees.h`, shadow name
 `Effect_Handlers` slots no list had (section 2); each read to its last
 instruction with capstone and fuzzed through the boss harness's engine frame
 ([`boss_harness.md`](boss_harness.md) section 10), used unchanged: 384,000
-rounds, 0 mismatches. CONTROLS_SUMMARY Six of the 64 were entered by recorded routes before
+rounds, 0 mismatches. **116 controls planted** one at a time: 114 refused by a count, one an equivalent mutant (its near variant refused), one a `Fatal` rather than a count (replaced by a near variant, refused) - section 4. Six of the 64 were entered by recorded routes before
 (section 8); the other 58 had no `entries_logic.txt` line until this group's,
 so no trace says whether play reaches them: fuzz only here.
 
@@ -167,7 +167,17 @@ and `Effect_HealAmount` (target byte, caster unread); BE4's
 over leftovers); R3D's four by address (`0x44FBB0`, `0x44FC60`, `0x44FCA0`
 flags, `0x44FCE0` garbage; one pushed immediate each).
 
-**Louder stand-ins**: `CharId_ToRosterIndex`'s moves a member's character
+**Louder stand-ins** (each found by a control the first pass left unrefused,
+section 4): `Battle_CalcDamage` answers, a third of the time, the target's HP
+less 1, 0 or plus 1 (slot 2's compare at its boundary); `0x44FCE0` the target
+enemy object's `+0xB6` less 1, 0 or plus 1 (slot 6's clamp at -1 / 0);
+`Rand` keeps the engine set's 15 bits and moves the target half the time
+(noted first: slots 1, 12 and 28 read it again after); `Battle_ClearStatus`
+notes the two raise counters `0x904AB1` / `0x904AB3` as it is called (slots
+17, 28, 29 count one up around the call); `Battle_ActorIsOut` answers
+exactly 0 or 1 (`kBool`, as the real one: the standard `kFlag`'s "not 0"
+always has bit 4, so `al & 0xFE` could not be told from `al & 0xFF`). And
+`CharId_ToRosterIndex`'s moves a member's character
 byte `+0x89` half the time (noted first) - `BattleResult_AddExp` reads it again
 for each of its calls; `BattleResult_MemberTakesExp`'s moves the count
 `0x904AB0` (0..3, noted first) - the loop reads it again each pass;
@@ -202,11 +212,146 @@ moves the result record, the menu actor and its record, and the step bytes.
 
 Results (this worktree, 2026-10-04; counts depend on the build directory):
 
-    RESULT_LINE
+    shadow      rest_3b self-test: 384000 rounds over 64 functions (6000 each), 425457 calls to the stand-ins, 0 MISMATCHES; 38856 bytes of state (31 regions) and the stand-ins' log compared
 
 ## 4. Controls
 
-CONTROLS_TABLE
+`BOF3X_R3B_ONLY=<clone>` with one change planted in ours at a time (scratch
+`controls.py`: plant on a unique anchor, rebuild, run, restore; one rebuild
+at the end), this worktree, 2026-10-04, at the tip of section 3. **116
+planted; 114 refused by a count.** The first pass (before the louder
+stand-ins of section 3) left five more unrefused - 7, 40, 50, 76, 79: each
+the fuzz's fault (a boundary no answer reached, a target never moved after
+`Rand`, a counter store the stand-in could not see, `Battle_ActorIsOut`'s
+answer never 1); all five are refused now.
+
+- **89 is an equivalent mutant**: `half + 30 >= 100` for `> 100` stores 100
+  at the bound either way (the byte computed there is 100 too). Its near
+  variant 116 (`> 0x65`) is refused.
+- **29 is a `Fatal`, not a count**: dispatching by `0x904AA3` instead of
+  `0x904AA4` reads a byte the harness does not draw below the table, and ours
+  aborts past 4 (section 5, L3) - a crash is not a refusal. Its replacement
+  115 (the wrong table) is refused in every round.
+
+| n | Clone | Planted | Refused in |
+|--:|---|---|--:|
+| 1 | `BattleResult_AddExp` | AddExp: the sum below or at the cap (<=) | 175 of 6,000 |
+| 2 | `BattleResult_AddExp` | AddExp: the cap stored 9999998 | 2,571 of 6,000 |
+| 3 | `BattleResult_AddExp` | AddExp: answers exp + 1 | 6,000 of 6,000 |
+| 4 | `BattleResult_AddExp` | AddExp: the count read once, not each pass | 1,845 of 6,000 |
+| 5 | `BattleResult_AddExp` | AddExp: the character byte not read again for the second call | 266 of 6,000 |
+| 6 | `BattleResult_MemberTakesExp` | MemberTakesExp: bit 9, not 10 | 1,003 of 6,000 |
+| 7 | `BattleResult_MemberTakesExp` | MemberTakesExp: the out test's al & 0xFE | 1,974 of 6,000 |
+| 8 | `CharId_ToRosterIndex` | CharId: 6 answered as 0 | 464 of 6,000 |
+| 9 | `CharId_ToRosterIndex` | CharId: the id & 0x7F | 775 of 6,000 |
+| 10 | `Stat_PercentCap` | Percent: divided by 99 | 1,495 of 6,000 |
+| 11 | `Stat_PercentCap999` | PercentCap999: capped at 998 | 2,079 of 6,000 |
+| 12 | `Stat_PercentCap100` | Percent: -1 kept (q < -1) | 158 of 6,000 |
+| 13 | `BattleTarget_PickParty` | PickParty: 0x4000 back to the enemies, not 0x5000 | 778 of 6,000 |
+| 14 | `BattleTarget_PickParty` | PickParty: the sub-state two down | 2,281 of 6,000 |
+| 15 | `BattleTarget_PickParty` | PickParty: 0x2000 moves by 2 | 33 of 6,000 |
+| 16 | `BattleTarget_PickParty` | PickParty: 0x8000 through Battle_DefaultTarget | 386 of 6,000 |
+| 17 | `BattleTarget_PickParty` | PickParty: back to Battle_DefaultTarget(0) | 2,282 of 6,000 |
+| 18 | `BattleTarget_PickParty` | PickParty: confirm before cancel | 1,064 of 6,000 |
+| 19 | `BattleTarget_Cancel` | Cancel: the sub-state 1 | 6,000 of 6,000 |
+| 20 | `BattleTarget_Cancel` | CancelHead: record 3's +3 = 2 | 6,000 of 6,000 |
+| 21 | `BattleAttackCmd_Cancel` | AttackCmd_Cancel: the sub-state zeroed too | 5,977 of 6,000 |
+| 22 | `BattleItem_CloseWait` | CloseWait: waits only past 1 | 1,271 of 6,000 |
+| 23 | `BattleItemCmd_CloseWait` | CloseWait: step 2 | 2,774 of 6,000 |
+| 24 | `BattleItem_TargetCancel` | Item TargetCancel: the command 2 | 6,000 of 6,000 |
+| 25 | `BattleItemCmd_TargetCancel` | ItemCmd TargetCancel: the command 1 | 6,000 of 6,000 |
+| 26 | `BattleItem_SideDispatch` | SideDispatch: through BattleItemCmd_SideSteps | 6,000 of 6,000 |
+| 27 | `BattleItemCmd_EquipDispatch` | EquipDispatch: through the side steps | 6,000 of 6,000 |
+| 28 | `Escape_Dispatch` | Escape_Dispatch: through the equip steps | 6,000 of 6,000 |
+| 29 | `BattleItemCmd_SideDispatch` | ItemCmd SideDispatch: by 0x904AA3 | a Fatal, not a count (section 4) |
+| 30 | `BattleItem_SideBegin` | SideBegin: bit 0x40 picks the enemies | 1,528 of 6,000 |
+| 31 | `BattleItem_SideBegin` | SideBegin: the latch 1 | 6,000 of 6,000 |
+| 32 | `BattleItem_SidePick` | SidePick: bit 0x40 flips | 756 of 6,000 |
+| 33 | `BattleItem_SidePick` | SidePick: directions 0x7000 | 192 of 6,000 |
+| 34 | `BattleItem_SidePick` | SidePick: the row & 0x7F | 581 of 6,000 |
+| 35 | `BattleItem_SidePick` | SidePick: flips 0x80 only | 838 of 6,000 |
+| 36 | `EffectSlot00_Miss` | Slot 0: 0x44FBB0(0) for the miss tail | 6,000 of 6,000 |
+| 37 | `EffectSlot01_VariedHit` | Slot 1: roll 2 adds the half | 2,519 of 6,000 |
+| 38 | `EffectSlot01_VariedHit` | Slot 1: a quarter added | 1,511 of 6,000 |
+| 39 | `EffectSlot01_VariedHit` | Slot 1: the actor's +0xA6 | 1,591 of 6,000 |
+| 40 | `EffectSlot02_HitInflict4` | Slot 2: below or at the HP | 363 of 6,000 |
+| 41 | `EffectSlot02_HitInflict4` | Slot 2: element 5 | 6,000 of 6,000 |
+| 42 | `EffectSlot02_HitInflict4` | Slot 2: the delta unsigned against the HP | 1,910 of 6,000 |
+| 43 | `EffectSlot03_HalfHitInflict20` | HalfHit: shifted (rounds down) | 1,373 of 6,000 |
+| 44 | `EffectSlot03_HalfHitInflict20` | Slot 3: status 0x21 | 5,371 of 6,000 |
+| 45 | `EffectSlot04_SkillPower` | Slot 4: the power byte +2 | 3,804 of 6,000 |
+| 46 | `EffectSlot05_Clear80` | Slot 5: mask 0x81 | 6,000 of 6,000 |
+| 47 | `EffectSlot14_Clear8` | ClearThenMiss: no miss tail | 6,000 of 6,000 |
+| 48 | `EffectSlot06_HpThirdHit` | Slot 6: character 0x0B | 873 of 6,000 |
+| 49 | `EffectSlot06_HpThirdHit` | Slot 6: 9998 | 819 of 6,000 |
+| 50 | `EffectSlot06_HpThirdHit` | Slot 6: -1 kept | 519 of 6,000 |
+| 51 | `EffectSlot06_HpThirdHit` | Slot 6: the enemy's +0xB4 | 3,793 of 6,000 |
+| 52 | `EffectSlot06_HpThirdHit` | Slot 6: the target not read again after 0x44FCE0 | 12 of 6,000 |
+| 53 | `EffectSlot07_Heal` | Slot 7: the actor and target swapped | 5,426 of 6,000 |
+| 54 | `EffectSlot09_Heal40` | Slot 9: -39 | 6,000 of 6,000 |
+| 55 | `EffectSlot11_HealFull` | Slot 11: 0xFFFE the special maximum | 754 of 6,000 |
+| 56 | `EffectSlot11_HealFull` | Slot 11: +0x10C |= 8 | 272 of 6,000 |
+| 57 | `EffectSlot11_HealFull` | Slot 11: a member's +0x9E | 1,665 of 6,000 |
+| 58 | `EffectSlot11_HealFull` | Slot 11: the target not read again for the mark | 277 of 6,000 |
+| 59 | `EffectSlot12_Heal5Clear68` | Slot 12: below 0x26 | 23 of 6,000 |
+| 60 | `EffectSlot12_Heal5Clear68` | Slot 12: mask 0x69 | 1,795 of 6,000 |
+| 61 | `EffectSlot15_Clear100` | Slot 15: mask 0x101 | 6,000 of 6,000 |
+| 62 | `EffectSlot16_ClearBFC` | Slot 16: mask 0xBFD | 6,000 of 6,000 |
+| 63 | `EffectSlot17_RaiseDown` | Slot 17: bit 0x2000 | 2,990 of 6,000 |
+| 64 | `EffectSlot17_RaiseDown` | Slot 17: target 2 counts the enemies | 280 of 6,000 |
+| 65 | `EffectSlot17_RaiseDown` | Slot 17: the delta 0xFFFE | 2,956 of 6,000 |
+| 66 | `EffectSlot18_HalfHitInflict80` | Slot 18: status 0x40 | 5,371 of 6,000 |
+| 67 | `EffectSlot19_StatMod0` | Slot 19: 0x44FBB0(4) | 6,000 of 6,000 |
+| 68 | `EffectSlot20_ApHeal20` | Slot 20: +8 = 3 | 6,000 of 6,000 |
+| 69 | `EffectSlot21_ApHeal100` | Slot 21: the HP delta, not the AP | 6,000 of 6,000 |
+| 70 | `EffectSlot25_StatMod2` | Slot 25: 0x44FBB0(1) | 6,000 of 6,000 |
+| 71 | `EffectSlot26_Inflict40` | Slot 26: through 0x44FCA0 | 6,000 of 6,000 |
+| 72 | `EffectSlot28_RaiseQuarter` | Slot 28: Rand & 1 | 140 of 6,000 |
+| 73 | `EffectSlot28_RaiseQuarter` | Slot 28: a member's half | 270 of 6,000 |
+| 74 | `EffectSlot28_RaiseQuarter` | Slot 28: an enemy target 3 taken | 569 of 6,000 |
+| 75 | `EffectSlot28_RaiseQuarter` | Slot 28: the status read after Rand | 241 of 6,000 |
+| 76 | `EffectSlot28_RaiseQuarter` | Slot 28: the quarter rounded toward 0 | 168 of 6,000 |
+| 77 | `EffectSlot29_RaiseFull` | Slot 29: -9999 | 783 of 6,000 |
+| 78 | `EffectSlot29_RaiseFull` | Slot 29: +0x91 bit 0x80 | 862 of 6,000 |
+| 79 | `EffectSlot29_RaiseFull` | Slot 29: the count stored after the call | 783 of 6,000 |
+| 80 | `EffectSlot30_HalfHitInflict8` | Slot 30: status 0x10 | 5,371 of 6,000 |
+| 81 | `EffectSlot32_HalfHitPlus1` | Slot 32: plus 2 | 6,000 of 6,000 |
+| 82 | `EffectSlot32_HalfHitPlus1` | Slot 32: the round flag 0x10 | 4,478 of 6,000 |
+| 83 | `EffectSlot33_HitDropTurn` | Slot 33: a half added | 6,000 of 6,000 |
+| 84 | `EffectSlot33_HitDropTurn` | Slot 33: the resist test inverted | 5,742 of 6,000 |
+| 85 | `EffectSlot33_HitDropTurn` | Slot 33: the target not read again for the turn order | 22 of 6,000 |
+| 86 | `EffectSlot34_HitIgnore8` | Slot 34: bits 8 and 4 cleared | 3,019 of 6,000 |
+| 87 | `EffectSlot34_HitIgnore8` | Slot 34: the actor not read again for the put-back | 121 of 6,000 |
+| 88 | `EffectSlot34_HitIgnore8` | Slot 34: the hit rate 99 | 6,000 of 6,000 |
+| 89 | `EffectSlot35_StatSumHit` | StatSumHit: 100 at the bound (>=) | not refused: equivalent (section 4) |
+| 90 | `EffectSlot35_StatSumHit` | StatSumHit: a member's record +0x46 | 1,591 of 6,000 |
+| 91 | `EffectSlot41_StatSumHit2` | StatSumHit: an enemy's +0xD6 | 4,409 of 6,000 |
+| 92 | `EffectSlot41_StatSumHit2` | Slot 41: the addend 0x939FE6 | 6,000 of 6,000 |
+| 93 | `EffectSlot35_StatSumHit` | StatSumHit: the power word 1 before the add | 6,000 of 6,000 |
+| 94 | `EffectSlot35_StatSumHit` | StatSumHit: the round flag 0x10 | 4,478 of 6,000 |
+| 95 | `EffectSlot36_Skill20` | Slot 36: power 0x15 | 6,000 of 6,000 |
+| 96 | `EffectSlot39_ElementHit` | Slot 39: the element & 0xFF | 84 of 6,000 |
+| 97 | `EffectSlot40_StatAAHit` | Slot 40: a member's +0xAC | 1,591 of 6,000 |
+| 98 | `EffectSlot42_DoubleHit20` | Slot 42: quadrupled | 6,000 of 6,000 |
+| 99 | `EffectSlot42_DoubleHit20` | Slot 42: element 0x21 | 6,000 of 6,000 |
+| 100 | `EffectSlot43_Inflict10` | Slot 43: status 0x11 | 6,000 of 6,000 |
+| 101 | `EffectSlot44_Skill66` | Slot 44: ability 0x67 | 6,000 of 6,000 |
+| 102 | `EffectSlot46_Skill62` | AsAbility: the acting kind 5 | 6,000 of 6,000 |
+| 103 | `EffectSlot47_MissMark200` | Slot 47: by the target's side (the latent defect fixed) | 1,849 of 6,000 |
+| 104 | `EffectSlot47_MissMark200` | Slot 47: bit 0x100 | 4,488 of 6,000 |
+| 105 | `EffectSlot48_StatMod0Skill55` | Slot 48: ability 0x56 | 6,000 of 6,000 |
+| 106 | `EffectSlot49_Skill5D` | Slot 49: ability 0x5E | 6,000 of 6,000 |
+| 107 | `EffectSlot39_ElementHit` | Hit: the actor and target swapped | 5,426 of 6,000 |
+| 108 | `EffectSlot10_Heal100` | Slot 10: -99 | 6,000 of 6,000 |
+| 109 | `EffectSlot13_Clear80` | Slot 13: mask 0x40 | 6,000 of 6,000 |
+| 110 | `EffectSlot24_StatMod1` | Slot 24: 0x44FBB0(2) | 6,000 of 6,000 |
+| 111 | `EffectSlot27_Inflict20` | Slot 27: status 0x40 | 6,000 of 6,000 |
+| 112 | `EffectSlot37_StatMod3` | Slot 37: 0x44FBB0(2) | 6,000 of 6,000 |
+| 113 | `EffectSlot45_Skill65` | Slot 45: ability 0x64 | 6,000 of 6,000 |
+| 114 | `BattleResult_MemberTakesExp` | MemberTakesExp: answers 1 for a member out (near variant of 7) | 4,045 of 6,000 |
+| 115 | `BattleItemCmd_SideDispatch` | ItemCmd SideDispatch: through BattleItem_SideSteps (for 29) | 6,000 of 6,000 |
+| 116 | `EffectSlot35_StatSumHit` | StatSumHit: capped above 0x65 (> 0x65; near variant of 89) | 573 of 6,000 |
+
 
 ## 5. Latent defects and ranges (Capcom's, described, not fixed)
 
@@ -309,7 +454,17 @@ hash) will say which a route enters.
 
 ## 9. Self-tests and the entry list
 
-STAR_LINES
+Headless, this worktree, 2026-10-04 (counts depend on the build directory):
+
+- `BOF3X_SHADOW=rest_3b`: exit 0, the line of section 3.
+- `BOF3X_SHADOW='*'` at the group's first build: exit 0, 733 self-test lines,
+  every differential one 0 mismatches, no Fatal; again at the final build,
+  narrow: exit 0, 733 self-test lines, no differential line with a mismatch, no Fatal.
+- `BOF3X_SHADOW='*'` with `BOF3X_WIDE=1` at the final build: exit 0, 733
+  self-test lines, no differential line with a mismatch, no Fatal; rest_3b's
+  line 424,868 calls, 0 mismatches.
+- `tools/ledger_check.py`: 73 ledger entries, 0 errors.
+- Neither `'*'` run died silently.
 
 `analysis/calltrace/entries_logic.txt` (the main checkout's): 58 lines
 appended with the code's extents; six were there with the same extents. The
