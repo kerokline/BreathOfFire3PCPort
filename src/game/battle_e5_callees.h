@@ -113,9 +113,9 @@ constexpr U kTargetPrompt = bof3::addr::ItemMenu_SetupForMember;     // BE4's
 constexpr U kDragonTask = bof3::addr::DragonGenes_SumCost;       // BE6's
 constexpr U kStatusPick = bof3::addr::Battle_RecalcStats;       // BE6's
 constexpr U kApPopup = bof3::addr::Battle_SetApPopup;          // BE6's
-constexpr U kInflict = 0x44F1D0;          // nobody's
-constexpr U kResisted = 0x44F6A0;         // nobody's
-constexpr U kMissTail = 0x44FB30;         // nobody's
+constexpr U kInflict = bof3::addr::Battle_InflictStatus;          // R3D's (round fourteen)
+constexpr U kResisted = bof3::addr::Battle_StatusResisted;         // R3D's (round fourteen)
+constexpr U kMissTail = bof3::addr::Effect_NoHitReaction;         // R3D's (round fourteen)
 constexpr U kStatAdd = bof3::addr::Stat_AddClampedTo;          // R2F's (round fourteen)
 
 }  // namespace at

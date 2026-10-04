@@ -44,7 +44,7 @@ constexpr std::uint32_t kStatsCopy = 0x939F80;      // 32 bytes: the actor's +0x
 constexpr std::uint32_t kFormation = 0x904B89;
 // The buff roll: 0x44FC10(stat), 1 in al when it was resisted - unnamed, the
 // engine's (in no group: docs/magic_lib.md section 4).
-constexpr std::uint32_t kBuffRoll = 0x44FC10;
+constexpr std::uint32_t kBuffRoll = bof3::addr::Effect_RollStatStep;   // R3D's (round fourteen, docs/rest_3d.md)
 using BuffRollFn = unsigned char (__cdecl*)(unsigned);
 
 // The packet pools' end (Gfx_PacketPools + 0x10000 - 0x54, symbols.toml), per
