@@ -267,7 +267,7 @@ const sh::Callee kCallees[] = {
     {G_OURS(Shisu_ModelBDispatch), 0, {}, kG, 0, 0},
     {G_OURS(Shisu_ModelADispatch), 0, {}, kG, 0, 0},
     {G_OURS(Shisu_ModelBDraw), 0, {}, kG, 0, 0},
-    {G_OURS(Shisu_DrawModel), 1, {kAll}, kG, 0, 0},
+    {G_OURS(Shisu_DrawModel), 1, {kAll}, kG, 0, 0, {0x80}},           // the record hashed: Shisu_ModelBDraw's scale and tint live only during the call
     // not ours yet: R2C's model A draw, R3G's winding (rest_2b_callees.h)
     {"0x57F340", at::kModelADraw, at::kModelADraw, 0, {}, kG, 0, 0},
     {"0x4941B0", at::kWinding, at::kWinding, 3, {kAll, kAll, kAll}, kG, 0, 0, {8, 8, 8}, &WindingEffect, nullptr, true},
