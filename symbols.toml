@@ -2963,8 +2963,9 @@ pc = 0x437820
 name = "NewGame_InitCharacters"
 ret = "void"
 params = "void"
+impl = "src/game/rest_3a.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-21, 0x437820..0x4378AA: seven default records copied, one byte derived per character from its byte +0x0A and a table at 0x64B8B0 (shl 4, idiv, add) stored at +0xAA, +0x78, +0x8A of the previous record's offset arithmetic, then the whelp's record into slot Char_WhelpSlot. The name is a guess from what it copies."
+evidence = "disasm 2026-09-21, 0x437820..0x4378AA: seven default records copied, one byte derived per character from its byte +0x0A and a table at 0x64B8B0 (shl 4, idiv, add) stored at +0xAA, +0x78, +0x8A of the previous record's offset arithmetic, then the whelp's record into slot Char_WhelpSlot. The name is a guess from what it copies. Read again to the last instruction 2026-10-04 (round fourteen group R3A), 0x437820..0x4378AA (0x8B bytes), cdecl, TitleFlow_NewGame's call: for n = 0..6 the 0xA4 bytes of Char_DefaultRecords n over CharacterRecords n (rep movsd), then (level +0xA << 4) / the byte 0x64B8B0[2n] (signed idiv) + 0x64B8B1[2n], its low byte stored at the record's +0x4E, +0x1C and +0x2E (the offsets the post-increment arithmetic makes, not those of the line above); then 0x64B80C over record Char_WhelpSlot. Ours aborts on a divisor of 0 and a slot past 7. docs/rest_3a.md."
 
 # ---------------------------------------------------------------------------
 # Two map-cell handlers, their condition test and the ground's elevation
@@ -67769,8 +67770,9 @@ pc = 0x4357D0
 name = "BattleBossFx_Dispatch"
 ret = "void"
 params = "void"
+impl = "src/game/rest_3a.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-28 (round eleven group BH), 0x4357D0..0x435825 (0x56 bytes), cdecl: BattleTask_RunAll's fourth kind (+6 == 3): call [esp + 4 * byte +5 of the slot 0x93B8C4] through an eight-entry stack table - BareRet, 0x499EB0, 0x43CA20, 0x43EB80, 0x43FAC0, 0x440830, 0x43D6D0, 0x43F5F0 - unchecked. Slots 2..7 are the boss band's effect tasks (tools/boss_rows.py units F2..F7), 1 is not in the band. Named, not taken: engine code of no round-eleven group. docs/takeover-queue-bosses.md section 1.2."
+evidence = "disasm 2026-09-28 (round eleven group BH), 0x4357D0..0x435825 (0x56 bytes), cdecl: BattleTask_RunAll's fourth kind (+6 == 3): call [esp + 4 * byte +5 of the slot 0x93B8C4] through an eight-entry stack table - BareRet, 0x499EB0, 0x43CA20, 0x43EB80, 0x43FAC0, 0x440830, 0x43D6D0, 0x43F5F0 - unchecked. Slots 2..7 are the boss band's effect tasks (tools/boss_rows.py units F2..F7), 1 is not in the band. Named, not taken: engine code of no round-eleven group. docs/takeover-queue-bosses.md section 1.2. Taken 2026-10-04 (round fourteen group R3A), read again to the last instruction: the entries now Magic002Ball_Task, BossGazerFx_Dispatch, BossAnglerFx_Dispatch, BossDLordFx_Dispatch, BossMyriaFx_Dispatch, BossWeretigrFx_Task, BossArwanFx_Dispatch; an entry finds the table's eight words above its return address (ours passes them); ours aborts past 7. docs/rest_3a.md."
 
 [[func]]
 pc = 0x437CA0
@@ -107766,3 +107768,439 @@ ctype = "unsigned long"
 count = 5
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R2B): BareRet 0x437CC0, Shisu_ModelBTurn, Shisu_ModelBSquare, Shisu_ModelBDrop, Shisu_ModelBStill; jumped through by Shisu_ModelBDispatch 0x57EDD0 by 0x939961, unchecked; the writers store 0..4; MasterFigure_States starts at 0x663E28. docs/rest_2b.md."
+
+# --- round fourteen group R3A (rest_3a.cpp, docs/rest_3a.md): 0x404180..0x4378AA ---
+# Read with capstone to the last instruction (2026-10-04). BattleBossFx_Dispatch
+# and NewGame_InitCharacters are bound in place above. 0x4041B0 is a start no
+# list had (WorldMap33_FrameStates[2]). PSX twins: 0x435A20 / 0x435A70 only
+# (pairs_propagated call-anchored); the sibling's name for 0x801E2500 does not
+# fit what the code does and is not transferred.
+
+[[func]]
+pc = 0x404180
+name = "WorldMap33_FrameSlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A, capstone to the last instruction), 0x404180..0x4041A0 (0x21 bytes): WorldMap33_FrameStates[1], a case block WorldMap_FrameStep (ours) carries inline: Sprite_Current's word +0x2E up 0x10; at 0x10 or more (signed) +2 up; a tail jmp to WorldMap33_FrameShown 0x4041B0. Reached only through the table, which our WorldMap_FrameStep does not read. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4041B0
+name = "WorldMap33_FrameShown"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4041B0..0x4041D7 (0x28 bytes): WorldMap33_FrameStates[2] and 0x404180's tail; in no group of the cut (a start no list had): the mode byte 0x9045FA 2 makes +2 = 3; WorldMap_DrawFrame(0x10, word +0x2E) - the y in edx with a stale high half. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4041E0
+name = "WorldMap33_FrameSlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4041E0..0x404220 (0x41 bytes): WorldMap33_FrameStates[3]: word +0x2E down 0x10; at -0x30 or less +2 = 0; unless 0x9045FA is 2, +2 = 1; WorldMap_DrawFrame(0x10, word +0x2E) - pushed in eax, the pointer's high half above. docs/rest_3a.md."
+
+[[func]]
+pc = 0x42D710
+name = "BattleExtra_Dispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42D710..0x42D720 (0x11 bytes): game mode 9's (BATE's) root, called by Mode8_Step5 0x517330: jmp [BattleExtra_States + 4 * (dword 0x929F00 & 0xFF)], unchecked; ours aborts past the four entries. docs/rest_3a.md."
+
+[[func]]
+pc = 0x42D730
+name = "BattleExtra_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42D730..0x42D748 (0x19 bytes): BattleExtra_States[0]: 0x929F00 = byte 0x904C9F + 2 (2 the equipment screen, 3 the tally), 0x929F01 = 0x929F02 = 0. docs/rest_3a.md."
+
+[[func]]
+pc = 0x42D750
+name = "BattleExtra_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42D750..0x42D75C (0xD bytes): BattleExtra_States[1] (where BattleExtra_TallyClose and BattleExtra_EquipLeave send it): Window_ResetAll, Game_Step + 1. docs/rest_3a.md."
+
+[[func]]
+pc = 0x42D760
+name = "BattleExtra_TallyDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42D760..0x42D76D (0xE bytes): BattleExtra_States[3]: jmp [BattleExtra_TallySteps + 4 * byte 0x929F01], unchecked; ours aborts past the three. docs/rest_3a.md."
+
+[[func]]
+pc = 0x42D770
+name = "BattleExtra_TallyOpenDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42D770..0x42D77D (0xE bytes): BattleExtra_TallySteps[0]: jmp [BattleExtra_TallyOpenSteps + 4 * byte 0x929F02], unchecked; ours aborts past the two. docs/rest_3a.md."
+
+[[func]]
+pc = 0x42D780
+name = "BattleExtra_OpenTransition"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42D780..0x42D796 (0x17 bytes): BattleExtra_TallyOpenSteps[0] and BattleExtra_EquipOpenSteps[0]: Transition_Start(3), 0x929F02 + 1 (read after the call). docs/rest_3a.md."
+
+[[func]]
+pc = 0x42E0E0
+name = "BattleExtra_EquipSetupWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42E0E0..0x42E249 (0x16A bytes): BattleExtra_EquipOpen's call: window records 0..4 set up (in use, kind / state bytes 2 / 2 / 2 or 2 / 3 / 2, positions, cursors 0, counts, records 1 and 2's +0x20 = 0x675EB8); record 0's +0xC = the first of the party list's three entries 0x904062 that is 0 or 7 (unchanged when none). docs/rest_3a.md."
+
+[[func]]
+pc = 0x42E250
+name = "BattleExtra_EquipCommit"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42E250..0x42E2EC (0x9D bytes): BattleExtra_EquipListInput's confirm: for each of the six equipment bytes of character record 7 (+0x12..+0x17), a chosen byte 0x675EB8[i] not 0 and not the one held: Inventory_Remove(0x64AE20[i], chosen, 1), Inventory_Add(0x64AE20[i], the held one read again, 1) (a fourth word 0 pushed to each), the chosen byte read again into the record; then Char_RecalcStats(record 7). docs/rest_3a.md."
+
+[[func]]
+pc = 0x42E2F0
+name = "BattleExtra_EquipRefresh"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x42E2F0..0x42E361 (0x72 bytes): BattleExtra_EquipListInput's frame call: window 13's +0xD = Item_EquipMask(window 0's +8, +0xD) bit 0 clear; record 7's +0x14, +0x12, +0x13, +0x15, +0x17 into 0x675EBA, B8, B9, BB, BC; 0x675EB8[window 1's +0xA] = window 0's +0xD (unchecked; ours aborts past 6); al the byte +0x17 (unread by the caller). docs/rest_3a.md."
+
+[[func]]
+pc = 0x431540
+name = "BattleEnd_LossDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x431540..0x43154D (0xE bytes): BattleEnd_Steps[2], the way 0x904AE8 bit 0 picks: jmp [BattleEnd_LossSteps + 4 * byte 0x904AA2], unchecked; ours aborts past the three. docs/rest_3a.md."
+
+[[func]]
+pc = 0x431550
+name = "BattleEnd_LossBanner"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x431550..0x43159D (0x4E bytes): BattleEnd_LossSteps[0]: unless 0x904AE5 bit 0x40, Music_FadeOutStop(10), Music_Play(0xA6, 10); Battle_OpenMsgWindow; BattleBanner_Set(0, 2, 0, 0, 0xFF, Msg_SystemPtr(0x11)); 0x904AA2 + 1. BattleEnd_WinBegin's counterpart (it plays 0xA5). docs/rest_3a.md."
+
+[[func]]
+pc = 0x4315A0
+name = "BattleEnd_LossAwaitLoad"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4315A0..0x4315AF (0x10 bytes): BattleEnd_LossSteps[1]: 0x904AA2 + 1 once File_LoadDone's eax is not 0; then BattleLoss_Dispatch. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4315B0
+name = "BattleEnd_RestoreDispatch"
+ret = "unsigned long"
+params = "unsigned long through"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4315B0..0x4315BD (0xE bytes): BattleEnd_Steps[3]: jmp [BattleEnd_RestoreSteps + 4 * byte 0x904AA2], unchecked; ours aborts past the five. docs/rest_3a.md."
+
+[[func]]
+pc = 0x431710
+name = "BattleEnd_RestoreLoadBank"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x431710..0x431739 (0x2A bytes): BattleEnd_RestoreSteps[3]: once File_LoadDone answers, Snd_LoadBankFile(Game_AreaNumber + 3) and 0x904AA2 + 1. docs/rest_3a.md."
+
+[[func]]
+pc = 0x431740
+name = "BattleEnd_RestoreAwaitBank"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x431740..0x431757 (0x18 bytes): BattleEnd_RestoreSteps[4]: once File_LoadDone answers, 0x904AA1 = 4 (BattleEnd_ExitStep), 0x904AA2 = 0. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4318F0
+name = "BattleEnd_ExitAwaitFade"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4318F0..0x43190D (0x1E bytes): BattleEnd_ExitSteps[3]: once MoveScript_WaitWordDA is 0, Draw_PassFlags = 0 and 0x904AA2 - 1. docs/rest_3a.md."
+
+[[func]]
+pc = 0x432F90
+name = "BattleFxFlash_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x432F90..0x432FBD (0x2E bytes): BattleFx_Dispatch's slot 2: call [esp + 4 * the slot 0x93B8C4's +1] through a three-entry stack table (BattleFxFlash_Banner, _Rise, _Fall), unchecked; ours aborts past it. docs/rest_3a.md."
+
+[[func]]
+pc = 0x432FC0
+name = "BattleFxFlash_Banner"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x432FC0..0x43301A (0x5B bytes): slot 2's state 0: BattleBanner_Add(1, 0, 0, 0x1E, [0x669DFC] for a party actor 0x904B34, [0x669E00] for an enemy); window 4's +3 = 1; the slot's +0xC = 0x100, +0x10 = 0, +9 = 2, +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433020
+name = "BattleFxFlash_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433020..0x4330DA (0xBB bytes): slot 2's state 1: Camera_Distance minus the slot's word +0xC; a draw mode (Gpu_GetTPage(0, 0, 0x3C0, 0)) committed (1, 0xC); BattleWin_DrawTileRgb(0, 0, 0xB, the word +0x10 * 0x421 for a party actor, << 10 for an enemy, 1); +0x10 up 8; MapView_Redraw = 2; +9 down, at 0 +1 up and +9 = 2. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4330E0
+name = "BattleFxFlash_Fall"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4330E0..0x43318C (0xAD bytes): slot 2's state 2: as _Rise with Camera_Distance plus +0xC and +0x10 down 8; at +9 0 a tail jmp to BattleTask_FreeCurrent. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4332B0
+name = "BattleFxTint_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4332B0..0x4332DD (0x2E bytes): BattleFx_Dispatch's slot 4: call through a three-entry stack table by the slot 0x93B8C4's +1 (BattleFx_StepReset, BattleFxTint_Brighten, _Hold), unchecked; ours aborts past it. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433300
+name = "BattleFxTint_Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433300..0x433340 (0x41 bytes): slot 4's state 1: Sprite_Current's +9 into the three bytes 0x903850..52; BattleWin_DrawTileTint(0, 0, 0xB); +9 up, at 0xFF +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433350
+name = "BattleFxTint_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433350..0x433375 (0x26 bytes): slot 4's state 2: +9 into 0x903850..52, BattleWin_DrawTileTint(0, 0, 0xB). docs/rest_3a.md."
+
+[[func]]
+pc = 0x433380
+name = "BattleFxAnim_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433380..0x4333BD (0x3E bytes): BattleFx_Dispatch's slot 5: call through a three-entry stack table by Sprite_Current's +1 (BattleFxAnim_Start, _Run, _Linger), unchecked (ours aborts past it); then Sprite_QueueOverlay while +0 has bit 0. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4333C0
+name = "BattleFxAnim_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4333C0..0x43340C (0x4D bytes): slot 5's state 0: Sprite_SetAnimationBank(0x18); +0x24 = 0x80, +0x2A = 0; Sprite_SetAnimation(0 when the byte 0x65C4DD + 24 * the action record's (0x904B40) word +2 has bit 1, else 2); +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433410
+name = "BattleFxAnim_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433410..0x43342F (0x20 bytes): slot 5's state 1: once Sprite_ScriptTick's al is not 0, +1 up and +9 = 0x10. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433430
+name = "BattleFxAnim_Linger"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433430..0x43345A (0x2B bytes): slot 5's state 2: Sprite_ScriptTickOnce; +9 down; at 0 the round flags 0x904AA8 |= 0x20 and a tail jmp to BattleTask_FreeCurrent. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433550
+name = "BattleFx_WatchIconStart"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433550..0x43363E (0xEF bytes): BattleFx_ActorWatch's state 1: +0xB = 0; i = BattleFx_NextStatusIcon; unless i is 0xFF or 0x64B048[i] is 0xFF: +0xB = i, the icon sprite's fields, BattleFx_PlaceOverOwner, Sprite_SetAnimation(0x64B048[i]), +1 up by 2 (to BattleFx_WatchIcon). The 16-byte table indexed unchecked; ours aborts past it. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433790
+name = "BattleFx_WatchRecheck"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433790..0x4337E9 (0x5A bytes): BattleFx_ActorWatch's state 4: with the round flags' bit 2, the owner's actor (+5): a member's +0x90, an enemy's +0x92 (index - 3, unchecked, kept); any of 0x58 set: +1 down by one, else +1 = 0. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433970
+name = "BattleFxReform_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433970..0x4339AD (0x3E bytes): BattleFx_Dispatch's slot 11: call through a five-entry stack table by Sprite_Current's +1 (BattleFxReform_Begin, _Shrink, _LoadDat, _Reload, _Grow), unchecked; ours aborts past it. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4339B0
+name = "BattleFxReform_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4339B0..0x4339C1 (0x12 bytes): slot 11's state 0: the owner 0x93B940's +0x48 = 2; +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x4339D0
+name = "BattleFxReform_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x4339D0..0x4339F5 (0x26 bytes): state 1 of slots 11 and 12 (both stack tables): the owner's u32 +0x40 down 0x2000 while not 0; at 0 the owner's +0 |= 0x40 and +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433A00
+name = "BattleFxReform_LoadDat"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433A00..0x433A49 (0x4A bytes): slot 11's state 2: LoadDatFile 0x2E8 / 0x2EA (the owner's word +0x2C 0; +8 0 or 1 / other) or 0x2E9 / 0x2EB (+0x2C not 0); +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433A50
+name = "BattleFxReform_Reload"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433A50..0x433B1D (0xCE bytes): slot 11's state 3: once File_LoadDone answers, the owner as Sprite_Current and its member (+5) as Field_State; Sprite_SetAnimation(+8 + 4), Sprite_ReleaseTint(member), Sprite_LoadPalette(0x80D380 + 0x40 * +5, 0), Battle_StatusTint(member +0x90), Sprite_SetClutStp; Field_State +0x134 bit 0 cleared; BattleParty_RecalcStats; Sprite_Current back, its +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433B20
+name = "BattleFxReform_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433B20..0x433B73 (0x54 bytes): slot 11's state 4: the owner's +0 bit 0x40 cleared; its u32 +0x40 up 0x2000 to 0x10000; there +0x48 = 0, its member's +0x130 bit 0x2000 cleared, a tail jmp to BattleTask_FreeCurrent. BattleFx_RestoreFade's form without the +0x134 mask. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433B80
+name = "BattleFxRestore_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433B80..0x433BBD (0x3E bytes): BattleFx_Dispatch's slot 12: call through a five-entry stack table by Sprite_Current's +1 (BattleFxRestore_Begin, BattleFxReform_Shrink, BattleFxRestore_LoadDat, BattleFx_RestoreParty, BattleFx_RestoreFade), unchecked; ours aborts past it. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433BC0
+name = "BattleFxRestore_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433BC0..0x433BF1 (0x32 bytes): slot 12's state 0: the owner's member (+5) gets +0x130 bit 0x2000; the owner's +0x48 = 2; +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x433C00
+name = "BattleFxRestore_LoadDat"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x433C00..0x433D56 (0x157 bytes): slot 12's state 2: with the round flags' bit 15 and Battle_BackupFlagged, LoadDatFile 0x122..0x125 or 0x126..0x129 for the party set 0x90412C 7, 0xD, 0xE, 0xF (the owner's +8 0 or 1 or other); without Battle_BackupFlagged, set + 0xFC or + 0x10F; without bit 15, the u16 of the set's entry in the 20 at [0x64EA84] or [0x64EA88] (ours aborts past 20); +1 up. docs/rest_3a.md."
+
+[[func]]
+pc = 0x435A20
+psx = 0x801E247C
+name = "BattleEnemy_SetAnimationAs"
+ret = "void"
+params = "unsigned actor, unsigned animation"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x435A20..0x435A6C (0x4D bytes), cdecl: the enemy object 0x93B960 + 0x128 * ((actor & 0xFF) - 3) made Sprite_Current and 0x939AD8 for BattleEnemy_SetAnimation(animation, the whole word), both put back. Called by Howling_Start and BattleActor_SetAnimation. PSX twin 0x801E247C (pairs_propagated call-anchored), not named there. Ours aborts on an actor outside 3..10. docs/rest_3a.md."
+
+[[func]]
+pc = 0x435A70
+psx = 0x801E2500
+name = "BattleEnemy_SetAnimationOf"
+ret = "void"
+params = "unsigned actor, unsigned animation"
+impl = "src/game/rest_3a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3A), 0x435A70..0x435AA9 (0x3A bytes), cdecl: the same with 0x939AD8 alone (Sprite_Current untouched). Twelve E8 callers in the magic effects (magic_s01, _s05, _s06, _s10). PSX twin 0x801E2500 (pairs_propagated call-anchored); the sibling's name Examine_EnemyMove_Tick (a callstack-diff hypothesis) does not fit what the code does and is not transferred. Ours aborts on an actor outside 3..10. docs/rest_3a.md."
+
+[[data]]
+pc = 0x64ADAC
+name = "BattleExtra_States"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3A): BattleExtra_Start, BattleExtra_Leave, BattleExtra_EquipDispatch, BattleExtra_TallyDispatch; jumped through by BattleExtra_Dispatch 0x42D710 by 0x929F00, unchecked; the writers store 1 (BattleExtra_TallyClose, BattleExtra_EquipLeave) and 0x904C9F + 2; BattleExtra_TallySteps follows. docs/rest_3a.md."
+
+[[data]]
+pc = 0x64ADBC
+name = "BattleExtra_TallySteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3A): BattleExtra_TallyOpenDispatch, BattleExtra_TallyCount, BattleExtra_TallyClose; jumped through by BattleExtra_TallyDispatch 0x42D760 by 0x929F01, unchecked (BattleExtra_TallyOpen and _TallyCount step it 0..2); BattleExtra_TallyOpenSteps follows. docs/rest_3a.md."
+
+[[data]]
+pc = 0x64ADC8
+name = "BattleExtra_TallyOpenSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3A): BattleExtra_OpenTransition, BattleExtra_TallyOpen; jumped through by BattleExtra_TallyOpenDispatch 0x42D770 by 0x929F02, unchecked; the tally's step bytes 0x64ADD0 (data) follow. docs/rest_3a.md."
+
+[[data]]
+pc = 0x64AF70
+name = "BattleEnd_LossSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3A): BattleEnd_LossBanner, BattleEnd_LossAwaitLoad, BattleLoss_Dispatch; jumped through by BattleEnd_LossDispatch 0x431540 by 0x904AA2, unchecked; BattleEnd_RestoreSteps follows. docs/rest_3a.md."
+
+[[data]]
+pc = 0x64AF7C
+name = "BattleEnd_RestoreSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3A): BattleEnd_TasksBegin, BattleEnd_StartMemberTask, BattleEnd_AwaitRestore, BattleEnd_RestoreLoadBank, BattleEnd_RestoreAwaitBank; jumped through by BattleEnd_RestoreDispatch 0x4315B0 by 0x904AA2, unchecked (the last step sets 0x904AA1 = 4); BattleEnd_ExitSteps follows at 0x64AF90. docs/rest_3a.md."
