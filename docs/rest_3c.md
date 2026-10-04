@@ -9,7 +9,8 @@ the round branch's tip `7f116a2`. **61 functions ours**
 **one start no list had**, `0x44D8B0` (slot 91). Each read to its last
 instruction with capstone and fuzzed through the boss harness's engine frame
 ([`boss_harness.md`](boss_harness.md) section 10), used unchanged: one `Run`,
-366,000 rounds (6,000 a function), 0 mismatches. CONTROLS_SUMMARY
+366,000 rounds (6,000 a function), 0 mismatches. 128 controls planted one at a time: 127 refused by a
+count, 1 an equivalent mutant with its near variant refused (section 5).
 Fuzz-only: no recorded route enters any of the 61 (section 8).
 
 The band is one thing: **61 consecutive slots of `Effect_Handlers`**
@@ -173,7 +174,7 @@ record's +0x12..+0x17 and +0x20..+0x3F the loop copies after it;
 second loop copies; `Battle_CalcDamage` (the standard masks) answers, two
 times in three, 0, 1, or the target's HP - 1 / HP / HP + 1 instead of
 garbage (the equality and zero branches of slots 68, 88, 105 and the
-clamps). CALC_NOTE
+clamps).
 
 **Regions** beyond the engine frame: `0x904654..0x904664` (slot 62's
 `0x904660`) and `CharacterRecords` past the engine region to ten records.
@@ -195,11 +196,173 @@ its slot's range), the actor, the party count, the turn order's end and a
 slot, the hit count, a member's or an enemy's HP, a status word's bit 3, the
 attacker's power word. The engine frame moves the result record's pointer.
 
-RESULT_LINES
+Result (this worktree, 2026-10-04; counts depend on the build directory),
+`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_3c`, exit 0:
+
+    shadow      rest_3c self-test: 366000 rounds over 61 functions (6000 each), 431664 calls to the stand-ins, 0 MISMATCHES; 37428 bytes of state (29 regions) and the stand-ins' log compared
+
+Every listed recorder was called (the coverage line), each of R3B's and
+R3D's twelve addresses among them.
 
 ## 5. Controls
 
-CONTROLS_TABLE
+A script (`controls.py` in the session scratchpad, its list `controls_list.py`)
+planted each one alone in `rest_3c.cpp` - every anchor a string that occurs
+once - rebuilt, self-tested with `BOF3X_R3C_ONLY` set to the clone, restored,
+and rebuilt at the end. The table is the second pass, with the final fuzz
+(this worktree, 2026-10-04): **128 planted, 127 refused by a count** (exit
+3), none by a Fatal alone.
+
+| | Function | Planted | Refused in (of 6,000) |
+|---|---|---|--:|
+| C1 | `Effect_AsAbility60` | ability 0x61 for 0x60 | 6,000 |
+| C2 | `Effect_AsAbility68` | AsAbility: kind 5 for 4 | 6,000 |
+| C3 | `Effect_AsAbility68` | tail to the heal (0x44C120) | 6,000 |
+| C4 | `Effect_AsAbility5B` | ability 0x5A | 6,000 |
+| C5 | `Effect_AsAbility52RaiseStat1` | ability 0x53 | 6,000 |
+| C6 | `Effect_AsAbility5ARaiseStat1` | 0x44FBB0(2) | 6,000 |
+| C7 | `Effect_AsAbility5C` | ability 0x5D | 6,000 |
+| C8 | `Effect_AsAbility64` | tail to 0x44CF60 | 6,000 |
+| C9 | `Effect_AsAbility57Inflict10` | status 0x20 | 6,000 |
+| C10 | `Effect_AsAbility61` | ability 0x60 | 6,000 |
+| C11 | `Effect_AsAbility46` | tail to 0x44C040 | 6,000 |
+| C12 | `Effect_AsAbility67` | ability 0x76 | 6,000 |
+| C13 | `Effect_AsAbility56` | tail to 0x44C040 | 6,000 |
+| C14 | `Effect_DoubleDamage` | << 2 | 4,803 |
+| C15 | `Effect_DoubleDamage` | 0x904660 = 4 | 6,000 |
+| C16 | `Effect_DoubleDamage` | actor and target swapped | 5,481 |
+| C17 | `Effect_QuarterDamage` | / 2 | 3,743 |
+| C18 | `Effect_QuarterDamage` | ability 0x9B | 334 |
+| C19 | `Effect_QuarterDamage` | 0x939F86 not zeroed | 6,000 |
+| C20 | `Effect_ActorHpDamage3` | divisor 4 | 6,000 |
+| C21 | `Effect_ActorHpDamage1` | the result cell read before the call | 39 |
+| C22 | `Effect_ActorHpDamage2` | eax ^ 0x100 | 6,000 |
+| C23 | `Effect_InflictStatus4` | status 2 | 6,000 |
+| C24 | `Effect_InflictStatus8` | 0x44FCA0 for 0x44FC60 | 6,000 |
+| C25 | `Effect_InflictStatus80` | status 0x40 | 6,000 |
+| C26 | `Effect_InflictStatus20` | no leading 0x44FB30 | 6,000 |
+| C27 | `Effect_DamageInflict40` | element 3 | 6,000 |
+| C28 | `Effect_DamageInflict40` | at or below the HP (<=) | 253 |
+| C29 | `Effect_DamageInflict40` | status bit 5 | 1,812 |
+| C30 | `Effect_DamageInflict40` | a zero delta inflicts too | 435 |
+| C31 | `Effect_DamageInflict40` | enemy status +0x90 | 1,305 |
+| C32 | `Effect_Heal5Ap1` | HP delta -6 | 6,000 |
+| C33 | `Effect_Heal5Ap1` | flags \| 1 | 4,446 |
+| C34 | `Effect_Attack80` | x 75 | 5,976 |
+| C35 | `Effect_Attack80` | enemy power +0xB6 | 4,332 |
+| C36 | `Effect_FlagActorPair` | 0x904AA9 \|= 0x20 | 4,503 |
+| C37 | `Effect_FlagActorPair` | 0x904B8A = the other | 5,440 |
+| C38 | `Effect_TargetRecalcParty` | member 2 skipped | 569 |
+| C39 | `Effect_TargetRecalcParty` | member 0's character | 991 |
+| C40 | `Effect_TargetRecalcParty` | five bytes +0x92.. (k < 5) | 1,272 |
+| C41 | `Effect_TargetRecalcParty` | 28 bytes to +0xC0 | 1,275 |
+| C42 | `Effect_TargetRecalcParty` | the count not read again after Formation_ApplyStatMods | 3 |
+| C43 | `Effect_ActorStepThenHpToOne` | Battle_RecalcStats(member ^ 1) | 1,228 |
+| C44 | `Effect_TargetRecalcParty` | the count not read again in the last loop | 4 |
+| C45 | `Effect_Inflict40Heal20Ap4` | status 0x80 | 6,000 |
+| C46 | `Effect_Inflict40Heal20Ap4` | AP delta -5 | 6,000 |
+| C47 | `Effect_Heal1` | -2 | 6,000 |
+| C48 | `Effect_Heal80` | -79 | 6,000 |
+| C49 | `Effect_Heal240` | -239 | 6,000 |
+| C50 | `Effect_Heal5` | -6 | 6,000 |
+| C51 | `Effect_RestoreAp5` | flags 3 | 6,000 |
+| C52 | `Effect_RestoreAp40` | -39 | 6,000 |
+| C53 | `Effect_RestoreAp10` | -9 | 6,000 |
+| C54 | `Effect_AsAbility66Half` | / 4 | 5,999 |
+| C55 | `Effect_AsAbility66Half` | ability 0x67's power | 6,000 |
+| C56 | `Effect_AsAbility66Half` | the result cell read before the call | 39 |
+| C57 | `Effect_AsAbility63` | ability 0x62 | 6,000 |
+| C58 | `Effect_CureBFCHealMax` | mask 0xBFD | 6,000 |
+| C59 | `Effect_EnemyRaiseAAAE` | +0xAA up by 1 | 1,501 |
+| C60 | `Effect_EnemyRaiseAAAE` | +0xAA held to 8 | 1,758 |
+| C61 | `Effect_EnemyRaiseAAAE` | +0xAF bit 1 | 2,283 |
+| C62 | `Effect_AttackNoKill` | >= for > | 977 |
+| C63 | `Effect_AttackNoKill` | the target not read again after the call | 12 |
+| C64 | `Effect_HalveTargetHp` | >> 2 | 1,605 |
+| C65 | `Effect_HalveTargetHp` | the resist ignored | 4,017 |
+| C66 | `Effect_Inflict800Unguarded` | & 1 for & 3 | 488 |
+| C67 | `Effect_Inflict800Unguarded` | +0x142 for +0x143 | 1,059 |
+| C68 | `Effect_Inflict800Unguarded` | status 0x400 | 4,581 |
+| C69 | `Effect_DamageAllHp` | enemy +0xA6 | 1,427 |
+| C70 | `Effect_DamageAllHp` | resisted: flags 2 | 4,017 |
+| C71 | `Effect_RandomPowerAttack` | roll 2: + a quarter | 985 |
+| C72 | `Effect_RandomPowerAttack` | roll 1 halves | 3,514 |
+| C73 | `Effect_RandomPowerAttack` | roll 3: x 3 | 1,481 |
+| C74 | `Effect_TargetFlag2000` | a member's 0x4000 | 424 |
+| C75 | `Effect_TargetFlag2000` | an enemy's +0x110 | 1,088 |
+| C76 | `Effect_TargetFlag2000` | the pop-up's amount 1 | 4,017 |
+| C77 | `Effect_TargetFlag2000` | Battle_RecalcStats(target + 1) | 1,983 |
+| C78 | `Effect_SureHitHalfDamage` | bit 2 kept | 3,003 |
+| C79 | `Effect_SureHitHalfDamage` | hit percent 99 | 6,000 |
+| C80 | `Effect_SureHitHalfDamage` | the actor not read again | 126 |
+| C81 | `Effect_SureHitHalfDamage` | / 4 | 3,743 |
+| C82 | `Effect_EnemyDouble94And96` | held to 0xFFFE | 2,621 |
+| C83 | `Effect_EnemyDouble94And96` | +0x98 read for +0x96 | 4,708 |
+| C84 | `Effect_DropFromTurnOrder` | the HP delta 1 | 6,000 |
+| C85 | `Effect_DropFromTurnOrder` | no 0x44FB30 | 1,983 |
+| C86 | `Effect_DropFromTurnOrder` | removes the actor | 1,818 |
+| C87 | `Effect_FlushTurnOrder` | +0x134 \|= 0x20 | 4,502 |
+| C88 | `Effect_FlushTurnOrder` | the end exclusive | 1,293 |
+| C89 | `Effect_FlushTurnOrder` | the slot's actor handed on | 2,506 |
+| C90 | `Effect_FlushTurnOrder` | 0x904B8E = 3 | 6,000 |
+| C91 | `Effect_FlushTurnOrder` | from the cursor, not one before | 1,867 |
+| C92 | `Effect_RaiseStat4By10` | stat 5 | 6,000 |
+| C93 | `Effect_RaiseStat4By10` | Battle_RecalcStats(actor) | 5,493 |
+| C94 | `Effect_ActorHpToDamage` | a member's HP 2 | 1,648 |
+| C95 | `Effect_ActorHpToDamage` | an enemy's delta HP - 2 | 4,352 |
+| C96 | `Effect_ActorHpToDamage` | 0x904AA9 \|= 0x40 | 4,503 |
+| C97 | `Effect_DamageToOneHp` | HP 2 for the 0 | 182 |
+| C98 | `Effect_DamageToOneHp` | the resist ignored | 4,017 |
+| C99 | `Effect_HealAndCureBFC` | the target not read again for the cure | 16 |
+| C100 | `Effect_HealAndCureBFC` | Effect_HealAmount(target, actor) | 5,481 |
+| C101 | `Effect_MultiHit` | the table to 6 | not refused: equivalent (section 5) |
+| C102 | `Effect_MultiHit` | 4 past the table | 611 |
+| C103 | `Effect_MultiHit` | held to 9998 | 1,443 |
+| C104 | `Effect_MultiHit` | the count not read again | 136 |
+| C105 | `Effect_SkillDamageLessDef` | an enemy's +0xB4 | 3,272 |
+| C106 | `Effect_SkillDamageLessDef` | held at -1 | 2 |
+| C107 | `Effect_SkillDamageLessDef` | the power byte +2 | 1,381 |
+| C108 | `Effect_HalfDamageInflict20` | status 0x10 | 3,743 |
+| C109 | `Effect_HalfDamageInflict20` | always inflicts | 2,257 |
+| C110 | `Effect_ActorStepThenHpToOne` | the record's byte below 6 | 269 |
+| C111 | `Effect_ActorStepThenHpToOne` | +0x9E not raised | 1,162 |
+| C112 | `Effect_ActorStepThenHpToOne` | / 8 for the maximum | 1,252 |
+| C113 | `Effect_ActorStepThenHpToOne` | +0xD0 raised (/ 10) | 1,218 |
+| C114 | `Effect_ActorStepThenHpToOne` | HP set to the maximum always | 897 |
+| C115 | `Effect_ActorStepThenHpToOne` | the delta HP - 2 | 1,956 |
+| C116 | `Effect_ActorStepThenHpToOne` | the 0xFFFF guard dropped | 877 |
+| C117 | `Effect_ActorFlag8000` | 0x4000 | 4,460 |
+| C118 | `Effect_ActorFlag40Count` | below 3 | 1,522 |
+| C119 | `Effect_ActorFlag80Count` | +0x146 | 3,041 |
+| C120 | `Effect_ActorFlag40Count` | flag 0x20 | 4,520 |
+| C121 | `Effect_ActorFlag100` | 0x200 | 4,471 |
+| C122 | `Effect_TargetClearBuffs` | +0x134 mask bit 0 cleared too | 2,584 |
+| C123 | `Effect_TargetClearBuffs` | +0x13C left | 6,000 |
+| C124 | `Effect_TargetClearBuffs` | +0x130 mask 0xFFFEFFFF | 2,954 |
+| C125 | `Effect_TargetFlag2000` | the resist ignored | 4,017 |
+| C126 | `Effect_SureHitHalfDamage` | an enemy's +0x90 | 2,107 |
+| C127 | `Effect_DamageInflict40` | the delta read before the store | 1,066 |
+| C128 | `Effect_MultiHit` | the table to 5 (C101's near variant) | 667 |
+
+**Not refused, and why.** C101 (`Effect_MultiHit`'s factor table cut to six
+entries, the seventh hit taking the default 3) is an equivalent mutant: the
+table's seventh signed byte is itself 3 (read off the exe), so no input tells
+the two apart. Its near variant C128 (the table cut to five) is refused.
+
+**Found by the controls, fixed in the fuzz before the table above.** The first
+pass (the same 127 plants) left C28 (`<=` for `<` against the HP), C30 (a
+zero delta inflicting) and C62 (`>=` for `>` in `Effect_AttackNoKill`)
+unrefused: `Battle_CalcDamage`'s standard recorder answers garbage, which
+meets an HP or 0 one time in 65,536. Its listing now answers 0, 1 or the
+target's HP - 1 / HP / HP + 1 two times in three (`CalcEffect`); all three are
+refused, and every other control's count stayed of the same order.
+
+**Thin, and why.** C42 / C44 (the party count not read again in the restat
+loops: refused in 3 and 4) need the group's disturbance to move `0x904AB0`
+during `Effect_TargetRecalcParty`'s two calls with a member target; C106
+(the clamp at -1) needs a delta of exactly -1 after the defence; C63 / C99
+(the target not read again) need the disturbance to move `0x904B54` inside
+the one call between the reads.
 
 ## 6. Calls across groups and the rebinding
 
@@ -269,7 +432,13 @@ one.
 
 ## 9. Self-tests and the entry list
 
-SELFTESTS
+- `BOF3X_SHADOW=rest_3c` (above): exit 0, 0 mismatches.
+- `BOF3X_SHADOW='*'` at the final code (this worktree, 2026-10-04): exit 0 in
+  18 minutes, 1,034 totals lines every one `0 MISMATCHES`, no Fatal,
+  `inject: 9404 ours, 0 left original by BOF3X_ORIGINAL` (9,343 + 61); the
+  same with `BOF3X_WIDE=1`: exit 0, 1,034 lines, 0 mismatches, 9,404 ours.
+  Neither run died silently.
+- `tools/ledger_check.py`: 73 ledger entries, 0 errors.
 
 **`analysis/calltrace/entries_logic.txt`** (main checkout, 2026-10-04): 61
 lines appended, the code's extents of section 1 (none was there; no host
