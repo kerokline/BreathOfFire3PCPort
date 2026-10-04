@@ -292,6 +292,7 @@
 #include "game/rest_2f.h"
 #include "game/rest_2c.h"
 #include "game/rest_2b.h"
+#include "game/rest_3b.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1273,6 +1274,13 @@ void InjectAll() {
                                 // call it by the address it had; before FishingText_Arm; no module patches bytes
                                 // inside its 61 (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp,
                                 // yes_no_layout.cpp)
+    Rest3B_Inject();            // round 14 wave-three group R3B (0x4468B0..0x44CFF4: the result screen's EXP
+                                // helpers, three percent clamps, the command menus' last steps and four
+                                // dispatchers, 45 Effect_Handlers slots): its clones' calls re-aimed at the boss
+                                // harness's recorders, four .data tables swapped for the fuzz only; after every
+                                // harness's inject; ours that call it (battle_result, battle_e6, rest_2g) call it by
+                                // the address it had; before FishingText_Arm; no module patches bytes inside its 64
+                                // (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
