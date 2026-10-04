@@ -193,10 +193,17 @@ U FxClass(const U*, U answer) {
 }
 // Field_TurnUnless and Field_CellPairTurn write the facing +8, which the
 // callers read again: half the time a direction (or rarely any byte).
+// Louder than the real ones: a quarter of the time a class value lands in one
+// of the cells 8..0xB, which Field_CellAheadRaised reads again after the turn.
 U FxTurn(const U*, U answer) {
     const U n = sh::Noise();
     unsigned char* const s = Sc();
     if ((n & 1) && sh::InRegions(s + 8, 1)) s[8] = static_cast<unsigned char>(n % 16 == 1 ? n >> 8 : (n >> 8) % 8);
+    if (((n >> 16) & 3) == 0) {
+        static const unsigned char kClasses[] = {0xB0, 0x70, 0x10, 0x20, 0xA0, 0xA1, 0xA2, 0xA3};
+        unsigned char* const cell = Mem(kCells + 8 + (n >> 18) % 4);
+        if (sh::InRegions(cell, 1)) cell[0] = kClasses[(n >> 20) % 8];
+    }
     return answer;
 }
 // Field_CornerTurn: 0 two times in three, so that Field_CellAheadRaised's
@@ -324,10 +331,14 @@ unsigned char CellValue() {
     return static_cast<unsigned char>(PickOf(0xB0, 0x70, 0x10, 0xFF, 0x20, 0x21, 0x22, 0x2F, 0xA0, 0xA1, 0xA2, 0xA3, 0xA5,
                                              0x00, 0x52, sh::Next()));
 }
-void SeedCells() {
+// Field_CellClass5's rounds: half the cells a slope or the two the rules
+// single out (0x70, 0xB0), so that its three- and two-cell slope rules are met.
+void SeedCells(unsigned k) {
     unsigned char* const c = Mem(kCells);
     c[0] = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
-    for (unsigned i = 1; i < 16; ++i) c[i] = CellValue();
+    for (unsigned i = 1; i < 16; ++i)
+        c[i] = k == kCellClass5 && sh::Half() ? static_cast<unsigned char>(PickOf(0xA0, 0xA1, 0xA2, 0xA3, 0xA0, 0xA2, 0x70, 0xB0))
+                                             : CellValue();
 }
 
 unsigned char Direction() { return static_cast<unsigned char>(sh::Often() ? sh::Next() % 8 : PickOf(8, 9, 15, 0x80, 0xFF, sh::Next())); }
@@ -383,7 +394,7 @@ void SeedIndex(unsigned k) {
 
 void Seed(unsigned k) {
     SeedSteps();
-    SeedCells();
+    SeedCells(k);
     for (unsigned i = 0; i < 4; ++i) SeedSprite(sh::SpriteRecord(i), k);
     SeedIndex(k);
     g_effect = k == kEffectCountdown ? Sc()[0xB] : 20;
