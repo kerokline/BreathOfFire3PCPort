@@ -405,9 +405,21 @@ pair recorded with this build):
 7. The shop route's second difference (above) - the state hash's first
    finding that is not already in the ledger.
 8. The original side's crash at `0x5A9E45` on `caughFish.txt` and
-   `masterAndManillo.txt`: until it is understood those two routes have no
-   pair, and they are the routes that enter the fishing spot and the
-   masters' screens.
+   `masterAndManillo.txt`. **Cause found 2026-10-04 evening** (captures every
+   15 frames to the crash, `analysis/shots/fish_crash_orig/`: it comes as the
+   fishing banner's first text starts to draw): the route A/Bs' keep list
+   leaves `LoadDatFile` ours, so the English fishing lines are loaded
+   (DIV-0069), while `*` hands the banner's draw back to Capcom's code, which
+   reads the one-byte Latin text as two-byte glyphs and unpacks a glyph far
+   outside the font. With the eight functions that consult
+   `FishingText_On()` kept ours as well (`EffectKind03_ShowName`,
+   `EffectKind0F_LineStart`, `_LineType`, `_LineNext`, `_LineScroll`,
+   `_LineFade`, `_DrawGlyph`, `_DrawToggles`) the original side of
+   `caughFish.txt` runs to `done` (13 ours). So it is the A/B's set-up, not a
+   defect of either code: **a fishing route's original side wants those eight
+   in its keep list**, and the pair for the two routes is owed at wave
+   three's live check (the machine quiet). The same shape as HANDOFF's trap
+   "an A/B original side that keeps a function ours can keep a dependency".
 9. `window_task_callees.h`'s `kRecordHandlers` line is still raw (R2F left
    it, shared with R2G and R2H); DIV-0027's note names `MenuList_TitleBox`
    where the function is `MenuList_WideTitleBox` `0x59A2E0` (R2G).
