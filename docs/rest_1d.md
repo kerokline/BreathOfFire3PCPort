@@ -8,8 +8,9 @@ declarations in `src/game/rest_1d.h`, the state tables' addresses in
 R1D (`analysis/round14_cut.tsv`), each read to its last instruction with
 capstone and fuzzed through the scenario harness in field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7), used unchanged:
-276,000 rounds, 0 mismatches. Controls: section 6. No recorded route enters
-any of the 46 (section 9).
+276,000 rounds, 0 mismatches. 103 controls planted one at a time: 101
+refused, 2 equivalent mutants not refused, each with its near variant
+refused (section 6). No recorded route enters any of the 46 (section 9).
 
 The band is one thing: **the dispatchers and state handlers of party sets 9,
 10, 11 and 12** (and one dispatcher of set 13) under the two tables the field
@@ -226,7 +227,7 @@ are swapped for recorders while the fuzz runs, so a dispatcher's clone and
 ours both land in the recorder of the entry they index, and a wrong table or
 index logs a different handler.
 
-**The callees** (31, all the group's own listing, registered before the
+**The callees** (32, all the group's own listing, registered before the
 standard rows):
 
 | Callee | Masks | Answers |
@@ -249,8 +250,10 @@ standard rows):
 | `Char_LoseHp` | whole, the member byte | garbage |
 | the group's `PartyAction9/10/11_CellPickup`, `PartyAction12_CellHit` | 16 bits each | `kFlag` |
 
-`Item_NamePtr` and `Rand` are the harness's standard rows (a name in the
-harness's text buffer; the harness's Rand with a hint).
+`Rand` (Capcom's CRT, `0x5B93D2`) is re-listed as the harness's `kRand` draw
+(with a hint the seed sets) that also flips `Field_InputFlags`' bit 1 or 2 a
+third of the time (section 6, P05). `Item_NamePtr` is the harness's standard
+field row (a name in its text buffer).
 
 **The state.** Field mode's standard regions and the group's two:
 `Field_DirectionSteps` `0x6697B0` (0x40 bytes) and `Text_Records`' first 16
@@ -283,7 +286,8 @@ and its state bytes.
 
 **Result** (2026-10-04, this worktree, `BOF3X_SELFTEST_ONLY=1
 BOF3X_SHADOW=rest_1d`, exit 0, its first run): 276,000 rounds over 46
-functions, 470,437 calls to the stand-ins, **0 mismatches**; every table
+functions, 470,461 calls to the stand-ins, **0 mismatches** (the final fuzz;
+the first form, before section 6's Rand flip, passed on its first run too); every table
 entry reached (coverage `phase 0x...` for all 72 cells' handlers), every
 callee reached (`Field_GiveZenny` 188, `Sprite_FlashClut` and `Char_LoseHp`
 204 the thinnest). `BOF3X_SHADOW='*'`: section 10.
@@ -326,7 +330,128 @@ callee reached (`Field_GiveZenny` 188, `Sprite_FlashClut` and `Char_LoseHp`
 
 ## 6. Controls
 
-(Section filled in by the controls run below.)
+`r1d/controls.py` (scratch): each plant replaces a string that occurs exactly
+once in `rest_1d.cpp`, rebuilds, runs the self-test on the clones it names
+(`BOF3X_R1D_ONLY`), restores the file and rebuilds. **103 planted: 101
+refused, 2 not refused - both equivalent mutants, each with its near variant
+refused.** A plant in a shared body was run on one copy (named below); the
+count is the rounds that mismatched of 6,000 (12,000 where the filter matched
+two clones).
+
+| # | Clone | Plant | Refused |
+|---|---|---|--:|
+| D01 | PartyAction9_ByForm | through FormActions' table | 6,000 |
+| D02 | PartyAction10_Form0 | by `+3`, not `+2` | 2,991 of 12,000 |
+| D03 | PartyAction12_Form0State0 | by `+2`, not `+3` | 4,848 |
+| D04 | PartyFormAction13_Form0 | through set 12 form 1's table | **not refused**: equivalent - the two tables hold the same three addresses (`0x520840`, `0x51FC80`, `0x52F5C0`), one recorder each. Near variant D05 refused |
+| D05 | PartyFormAction13_Form0 | through set 11 form 1's (D04's near variant) | 1,955 |
+| D06 | PartyAction10_ByForm | the form word's low byte | **not refused**: equivalent under the seed - the form words are below 3, so the high byte is 0 (an index above 0xFF aborts on both readings). Near variant D07 refused |
+| D07 | PartyAction10_ByForm | the high byte (D06's near variant) | 4,045 |
+| D08 | PartyAction9_Form1State1 | the steps one on | 6,000 |
+| F01 | PartyAction9_Form2Begin | the first turn one on, not back | 2,778 |
+| F02 | | the turn back one, not two | 307 |
+| F03 | | an odd direction turned too | 3,217 |
+| F04 | | steep from a rise of 0x40 | 370 |
+| F05 | | the slope's answer as the rise (`PartyAction5_Form0Begin`'s test) | 1,669 |
+| F06 | | the height read before the ground call | 57 (by the disturbance) |
+| F07 | | the slope's direction from before the ground call | 217 |
+| F08 | | the steep pose + 0x47 | 1,073 |
+| F09 | | the steep path moves `+2` once | 1,073 |
+| F10 | | `+0xA` = 4 | 4,927 |
+| F11 | | the side probes in the other order | 4,927 |
+| F12 | | a side slope steep from 0x40 | 461 |
+| F13 | | the side ground at the height clears too | 157 |
+| F14 | | the form's sound + 0x101 | 4,927 |
+| F15 | | `+0xB` = 1 at the end | 6,000 |
+| F16 | | `+0x2B` = 1 after the first probe | 663 |
+| F17 | | the side probe's height not re-read after the ground | 42 (by the disturbance) |
+| R01 | PartyAction9_Form2Resolve | `Sprite_ObjectAt` margin 1 | 2,392 |
+| R02 | | `+0xA` two down | 5,997 |
+| R03 | | `+2` two on | 2,365 |
+| R04 | | `Sprite_ScriptTick` for `TickOnce` | 6,000 |
+| R05 | | the z cell tried after x's found something | 311 |
+| R06 | | the z cell one on in x too | 306 |
+| R07 | | `Sprite_Objects` below 0x1D | 11 |
+| R08 | | the mark bit 1 | 689 |
+| R09 | | the point one step ahead | 2,045 |
+| R10 | PartyAction10_Form1Resolve | set 10's resolve calling set 9's pickup | 2,392 |
+| R11 | | the cell's fraction tested on 15 bits | 62 |
+| P01 | PartyAction9_CellPickup | the multiplier 10 (`Field_CellPickup`'s) | 13 |
+| P02 | | zenny from 0xC | 25 |
+| P03 | | 5 from 0xE | 16 |
+| P04 | | `Field_InputFlags` bit 1 only | 9 |
+| P05 | | `Field_InputFlags` read before the first draw | 14 (by the Rand stand-in's flip) |
+| P06 | | the second draw `& 7` | 5 |
+| P07 | | the zenny's object state 0 | 58 |
+| P08 | | `+0xB` = 1 with no object free too | 209 |
+| P09 | | item 0x57's name | 451 |
+| P10 | | 12 bytes of the name | 451 |
+| P11 | | message 4 when not taken | 151 |
+| P12 | | `Field_Request` 1 | 431 |
+| P13 | | the cell not cleared with no object free | 217 |
+| P14 | | 0xF9 for 0xF8 | 452 |
+| K01 | PartyAction10_Form0Begin | `MemberBeyondEffect` asked first | 3,018 |
+| K02 | | the object's `+0xC` | 1,632 |
+| K03 | | the animation `+8 + 9` | 1,632 |
+| K04 | | `Field_State +0x128` = 3 | 1,632 |
+| K05 | | `Field_ScriptFlags`' bit 0x2000 | 1,206 |
+| K06 | | `+9` down before the jump | 68 (by the disturbance) |
+| K07 | | `Field_State +0x137` = 0 on the jump | 1,632 |
+| K08 | | margin 0 with none lined up | 1,758 |
+| K09 | | `Field_State +0x138` tested `& 3` | 598 |
+| K10 | | a member on it leaves `+0x137` at 1 | 1,386 |
+| K11 | PartyAction11_Form0Begin | object 19 taken as none | 136 |
+| W01 | PartyAction_WaitEffectDone | the record's `+1` tested | 2,626 |
+| W02 | | `Sprite_ScriptTickOnce` for `Tick` | 6,000 |
+| W03 | | the index masked below 20 (the 0xFF read) | 765 |
+| S01 | PartyAction_StepCountdown | `& 0xDFFF` | 1,089 |
+| S02 | | the end at 1 | 1,469 |
+| S03 | | no step tick | 4,523 |
+| T01 | PartyFormAction_TurnToSide | the chapter 0xE | 2,578 |
+| T02 | | 5 also on a tie | 356 |
+| T03 | | `+9` = 3 | 4,330 |
+| T04 | | the direction masked to 7 | 907 |
+| T05 | | `+3` = the sense, not the target | 4,312 |
+| A01 | PartyAction9_Form1Start | `+0xA` = 0xC | 6,000 |
+| A02 | | the side probes after the pose | 6,000 |
+| A03 | | the pose `(d - 1) >> 1` unsigned | 516 |
+| B01 | PartyAction12_Form0Begin | `+6` = 1 | 6,000 |
+| B02 | | `+0xA` = 7 | 6,000 |
+| B03 | | back to the first turn when blocked | 957 |
+| B04 | | `PartyAction_TargetAhead` for `BlockedAhead` | 2,783 |
+| E01 | PartyAction12_Form0Resolve | the object's `+0xA` = 2 | 1,194 |
+| E02 | | `+3` one on with an object ahead | 1,186 |
+| E03 | | `+0xA` counted down from 0 | 1,213 |
+| E04 | | no sound for a marked object | 629 |
+| E05 | | margin 1 | 1,198 |
+| E06 | | the object's `+8` from `+9` | 1,111 |
+| E07 | | `+6` = the index + 1 | 1,194 |
+| E08 | | the cells hit by set 9's pickup | 1,198 |
+| H01 | PartyAction12_CellHit | 0xF4 not hit | 477 |
+| H02 | | the second object above 4 | 243 |
+| H03 | | the second object's state 5 | 299 |
+| H04 | | the item below 6 | 85 |
+| H05 | | the hurt above 0xA | 88 |
+| H06 | | item 0x28 | 382 |
+| H07 | | `+0xB` = 1 after the item | 382 |
+| H08 | | `Field_State +0x89` read before `Sprite_FlashClut` | 1 (by the disturbance) |
+| H09 | | message 0xD8 | 190 |
+| H10 | | `Field_Request` untouched between 7 and 0xB | 251 |
+| H11 | | the sound before the object (0xF6 / 0xF7) | 862 |
+| H12 | | the hurt's amount 2 | 190 |
+| X01 | PartyAction12_Form0EffectSet | `+3` = 1 at the script's end | 4,014 |
+| X02 | | `+7` not raised from 0 | 419 |
+| X03 | | the object's `+9` | 787 |
+| X04 | | `+0xA` counted down from 0 | 406 |
+
+The first run left P05 unrefused: the flags move only by the group's
+disturbance, one case in sixteen of one harness case in sixteen. The group
+now re-lists `Rand` (the harness's `kRand` draw) with an effect that flips
+`Field_InputFlags`' bit 1 or 2 a third of the time, and gives the flags and
+`Field_State` three disturbance cases each; P05 is refused (14). The
+thinnest: H08 (1 round: the disturbance must move `Field_State +0x89`
+between the flash and the read, on the hurt path), the zenny path's P01..P06
+(4..25: three conditions on two draws), R07 (11: the answers 0x1D only).
 
 ## 7. Calls across groups
 
@@ -370,4 +495,27 @@ the merge.
 
 ## 10. Self-tests and the entry list
 
-(Filled in below.)
+2026-10-04, this worktree, headless (`BOF3X_SELFTEST_ONLY=1`), the final
+build:
+
+- `BOF3X_SHADOW=rest_1d`: exit 0, 276,000 rounds, 0 mismatches.
+- `BOF3X_SHADOW='*'`: exit 0, `inject: 8701 ours, 0 left original`, 718
+  self-test lines, none with a mismatch (`rest_1d` among them).
+- `BOF3X_SHADOW='*'` with `BOF3X_WIDE=1`: exit 0, the same 718 and 8,701.
+  Each passed on its first run; none died silently. The same two passed
+  before the controls' fuzz change, too.
+- `tools/ledger_check.py`: 0 errors (2 notes, not this group's).
+
+**`analysis/calltrace/entries_logic.txt`** (the main checkout's): 42 lines
+appended with the extents read here (section 1). Four of the 46 already had
+lines carrying a **host's** extent - `00521200 306`, `005218C0 6BB`,
+`00521F80 3A0`, `00522320 231` (the catalog's hosts of the hidden starts after
+them, each covering this group's own later functions) - left as they are, as
+R0A left its seven: a second line for the same address would duplicate it;
+their read extents are 0x11F, 0x11F, 0x11F and 0x188. R0A's host lines
+`00521510 3AB` and `00522560 4BB` likewise cover this group's
+`0x5215C0..0x5218BA` and `0x522650..0x5226C1`, which now have lines of their
+own.
+
+**Code in the band that no group holds**: none - between the 46 extents are
+only `nop` / `int3` padding (`band_rows.py`: "0 not listed").
