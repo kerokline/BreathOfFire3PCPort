@@ -450,8 +450,11 @@ void Disturb(U h) {
     case 11: if (B(Rec(12, 0xA)) != 4) B(Rec(12, 0xA)) = static_cast<unsigned char>(b % 4); break;   // record 12 may be the list's
     case 12: B(b & 1 ? kRow : kHeldRow) = static_cast<unsigned char>(v % 5); break;
     case 13: if (rec) cur[9] = static_cast<unsigned char>(b & 1); break;
-    // the category of the record the two draws are handed (a 4 stays a 4)
-    case 14: if (B(Rec(g_arg_rec, 0xA)) != 4) B(Rec(g_arg_rec, 0xA)) = static_cast<unsigned char>(b % 4); break;
+    // the category (a 4 stays a 4) or the top of the record the two draws are handed
+    case 14:
+        if (b & 1) B(Rec(g_arg_rec, 0xB)) = static_cast<unsigned char>((b >> 1) % 0x78);
+        else if (B(Rec(g_arg_rec, 0xA)) != 4) B(Rec(g_arg_rec, 0xA)) = static_cast<unsigned char>((b >> 1) % 4);
+        break;
     default: break;
     }
 }
