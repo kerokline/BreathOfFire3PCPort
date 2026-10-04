@@ -4,11 +4,13 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace effect_2g::at {
 
 // --- callees nobody names, called by address (SH_AT); the effect-standard set
 // lists both (scenario_harness.cpp kEffectStd) ------------------------------
-constexpr std::uint32_t kBox = 0x586160;           // (x, y, w, h, style) five words: a menu box (kind 0x55's two)
+constexpr std::uint32_t kBox = bof3::addr::Menu_DrawPanelBox;   // (x, y, w, h, style) five words: a menu box (kind 0x55's two)
 constexpr std::uint32_t kPrimFromRect = 0x5A7840;  // (unsigned char *prim, const short *rect): a 12-byte texture-window
                                                    // primitive of the rectangle (effect_1a_callees.h kPrimFromRect)
 
