@@ -236,7 +236,8 @@ U FxApplyLV(const U* a, U answer) {
 // EffectGlowSparks_Run calls the entry with the spark: each stand-in logs it
 // under the handler's own address and moves the spark's shade, so the draw
 // after it shows which spark it was handed.
-constexpr U kSparkEntryAddress[EffectGlowSparks_States_count] = {0x479420, 0x47CFF0, 0x479470};
+constexpr U kSparkEntryAddress[EffectGlowSparks_States_count] = {bof3::addr::EffectGlowSparks_Glow, bof3::addr::EffectSpark_Wait,
+                                                                  bof3::addr::EffectGlowSparks_Rise};
 template <int I> void __cdecl SparkEntry(unsigned char* spark) {
     sh::Record(kSparkEntryAddress[I], Key(spark));
     sh::Stir();

@@ -20,7 +20,7 @@ constexpr std::uint32_t kShardSpawn = bof3::addr::EffectSpecks_Spawn;   // 0x471
                                                   // +0x2E, +0xC the height + (+0x30 << 16); al the index, 0x80 none
 constexpr std::uint32_t kShardTile = bof3::addr::EffectSpecks_Draw;    // 0x471E20, E2A's (unsigned char *shard): a white or black TILE_1 at the shard's
                                                   // point (+4..+0xF, EffectGte_ProjectPoint), linked at its x, z
-constexpr std::uint32_t kShardTile2 = 0x46E190;   // nobody's this round (catalog part 6, PSX twin 0x801F752C): the same
+constexpr std::uint32_t kShardTile2 = bof3::addr::EffectKind1D_DrawSpeck;   // 0x46E190, R3E's (round fourteen; PSX twin 0x801F752C): the same
                                                   // TILE_1 committed by Gfx_CommitPrim(1, 0x14) instead of linked
 constexpr std::uint32_t kDebrisDraw = bof3::addr::EffectDebris_Draw;   // 0x485030, E3C's (unsigned char *debris): a G3 of the 0x2C-byte debris record,
                                                   // its point +0, two edges +0x10 / +0x18 turned by +0x24 and scaled by

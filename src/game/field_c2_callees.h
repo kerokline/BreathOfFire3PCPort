@@ -19,7 +19,7 @@ constexpr std::uint32_t kProjectPoint = bof3::addr::EffectGte_ProjectPoint;     
 constexpr std::uint32_t kProjectSize = bof3::addr::EffectGte_ProjectSize;      // (const long *point, const short *size, short *out): the point's
                                                       // camera vector by Gte_RotTrans, then out[i] = size[i] * 1000 / its
                                                       // depth (idiv). Nobody's
-constexpr std::uint32_t kDrawNumber = 0x46D5F0;       // (x s16, y s16, unused, clut byte): Sprite_Current +6 printed by
+constexpr std::uint32_t kDrawNumber = bof3::addr::EffectKind41_DrawNumber;       // 0x46D5F0, R3E's: (x s16, y s16, unused, clut byte): Sprite_Current +6 printed by
                                                       // Crt_sprintf into 0x904BA0 and drawn a SPRT per digit at the
                                                       // commit slot +0x29. Nobody's (just past this band)
 constexpr std::uint32_t kClearCell = bof3::addr::AreaMap_ClearCell;        // FE2's (x s16, z s16): the area byte of the cell cleared and the
