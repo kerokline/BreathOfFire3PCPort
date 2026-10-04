@@ -7,9 +7,15 @@ round branch's tip `fa583bc`. **38 functions ours** (`src/game/rest_2b.cpp`,
 rows for R2B (`analysis/round14_cut.tsv`) and two starts no list had
 (`0x57E720`, `0x57EDF0`); the other three rows are jump-table cases (section
 5). Each read to its last instruction with capstone and fuzzed through the
-scenario harness's **field** mode: 152,000 rounds, **0 mismatches**; controls
-in section 6. Eight `.data` tables named. Fuzz only: no recorded route or
-trace enters the band (section 9).
+scenario harness's **field** mode: 152,000 rounds, **0 mismatches**; **106
+controls, 103 refused**, the other three equivalent mutants each with a
+refused near variant (section 6). `BOF3X_SHADOW='*'` exit 0, narrow and with
+`BOF3X_WIDE=1` (section 4). Eight `.data` tables named. Fuzz only: no
+recorded route or trace enters the band (section 9). **Two harness rows
+were edited** (one token each, section 10): taking `Effect_Spawn` /
+`Effect_SpawnAt` makes `Register` refuse their `THEIRS` rows, and no other
+change lets `'*'` pass. **One latent defect wants a ledger entry** (section
+7, L1).
 
 **What the band is.** By the code, four things:
 
@@ -177,13 +183,20 @@ side, row, a given count, model B's y and angle, `Game_Step`, the file
 pointer (between two valid places), the kind-2 sprite's x or z - each a cell
 a function reads again after a call.
 
-**Result** (this worktree): `BOF3X_SHADOW=rest_2b`, exit 0: 152,000 rounds
-over 38 functions, 310,429 calls to the stand-ins, **0 mismatches**; every
-callee listed was reached, every entry of the seven tables (the handler
-recorders' phase counts 638..2,015 each, `BareRet` 1,375), `Gte_ScaleMatrix`
-2,010, the lit path (`Gte_NormalColor`) 2,825, the committed quads 3,594 of
-7,300. The harness names each clone "outside the field runs" (it does not
-refuse them; the band lies between FS's runs).
+**Result** (this worktree, the committed fuzz): `BOF3X_SHADOW=rest_2b`, exit
+0: 152,000 rounds over 38 functions, 310,617 calls to the stand-ins, **0
+mismatches**; every callee listed was reached, every entry of the seven
+tables (the handler recorders' phase counts about 600..2,000 each),
+`Gte_ScaleMatrix` 2,054, the lit path (`Gte_NormalColor`) 2,911, the
+committed quads 2,593 of 7,409. The harness names each clone "outside the
+field runs" (it does not refuse them; the band lies between FS's runs).
+
+**`BOF3X_SHADOW='*'`** (this worktree, the committed tree): exit 0, 725
+self-test lines, none with a mismatch (`rest_2b`'s 310,296 calls there - the
+stream depends on what ran before). With `BOF3X_WIDE=1`: exit 0, 725 self-test lines, none
+with a mismatch. `tools/ledger_check.py`: 0 errors.
+The first two `'*'` runs stopped at `Register` on rows naming
+`Effect_Spawn` / `_SpawnAt` as Capcom's (section 10); neither died silently.
 
 ## 5. What the cut and the tool said, settled
 
@@ -211,7 +224,132 @@ refuse them; the band lies between FS's runs).
 
 ## 6. Controls
 
-CONTROLS_TABLE
+106 plants, one or more a function, each in `rest_2b.cpp` by a unique
+anchor: the scratch script `controls.py` (session `309e3952` scratchpad,
+`r2b/`) plants, rebuilds, runs `BOF3X_SHADOW=rest_2b` with `BOF3X_R2B_ONLY`
+naming the function, restores and rebuilds at the end (the tree clean
+after). **103 refused by a count** (exit 3, the harness's Fatal), **3 not,
+each an equivalent mutant** with a near variant planted and refused (C72 /
+C102, C75 / C103, C82 / C104). Every count is from the last run, at the
+committed fuzz.
+
+**What the controls fixed in the fuzz** (each first not refused, then
+refused once the fuzz could see it): C28 (the wait word never seeded at 1),
+C94 (the angle never seeded with 0x800 alone), and C104 / C105 / C106 -
+`Shisu_ModelBDraw`'s scale and tint exist only while `Shisu_DrawModel` runs
+(the colour is put back after it), so the draw's stand-in hashes the whole
+record now. Before the first control run C86 and C96 were predicted blind
+and fixed (the winding stand-in answers 0, 1, -1 and a high half with ax 0;
+model B's y seeded on whole units).
+
+| Control | Run on | Plant | Rounds refused |
+|---|---|---|--:|
+| C1 | `Field_TriggerCounterF0` | counter 0xF1 | 4000 |
+| C2 | `Field_TriggerCounterF0` | al 1 | 4000 |
+| C3 | `Effect_Spawn` | kind 7 | 3812 |
+| C4 | `Effect_Spawn` | z from x | 3812 |
+| C5 | `Effect_Spawn` | +0x10 from a | 3808 |
+| C6 | `Effect_SpawnAt` | kind 0x18 | 3805 |
+| C7 | `Effect_SpawnAt` | z from y | 3805 |
+| C8 | `Effect_SpawnAt` | al slot ^ 1 | 3805 |
+| C9 | `Menu_DrawGreyHLine` | shades swapped | 4000 |
+| C10 | `Menu_DrawGreyHLine` | x1 + 1 | 4000 |
+| C11 | `Menu_DrawGreyHLine` | w signed | 2028 |
+| C12 | `Menu_DrawOutlineNotched` | abr swapped | 4000 |
+| C13 | `Menu_DrawOutlineNotched` | gate by n3 | 1126 |
+| C14 | `Menu_DrawOutlineNotched` | blue field | 3873 |
+| C15 | `Menu_DrawOutlineNotched` | row stride | 3466 |
+| C16 | `Shisu_ModeDispatch` | next mode | 4000 |
+| C17 | `Shisu_Begin` | level + 1 | 4000 |
+| C18 | `Shisu_Begin` | mode read before the calls | 39 |
+| C19 | `Shisu_Begin` | rounds 1 | 3977 |
+| C20 | `Shisu_OpenDispatch` | next state | 4000 |
+| C21 | `Shisu_OpenFade` | transition 2 | 4000 |
+| C22 | `Shisu_OpenFade` | calls swapped | 4000 |
+| C23 | `Shisu_OpenWait` | message 0x2C | 2001 |
+| C24 | `Shisu_OpenWait` | wait test | 1014 |
+| C25 | `Shisu_CloseDispatch` | next state | 4000 |
+| C26 | `Shisu_CloseFade` | transition 3 | 4000 |
+| C27 | `Shisu_CloseWait` | window 3 byte 1 | 1987 |
+| C28 | `Shisu_CloseWait` | wait test | 1040 |
+| C29 | `Shisu_Result` | step 6 | 840 |
+| C30 | `Shisu_Result` | rank 2 bound | 131 |
+| C31 | `Shisu_Result` | low bound | 127 |
+| C32 | `Shisu_Result` | items swapped | 3120 |
+| C33 | `Shisu_Result` | rank 5 bound | 126 |
+| C34 | `Shisu_PickDispatch` | next state | 4000 |
+| C35 | `Shisu_PickDispatch` | state read before the backdrop | 43 |
+| C36 | `Shisu_PickSide` | flip mask | 479 |
+| C37 | `Shisu_PickSide` | cursor 2 | 661 |
+| C38 | `Shisu_PickSide` | eight bound | 22 |
+| C39 | `Shisu_PickSide` | side-1 confirm dropped | 167 |
+| C40 | `Shisu_PickSide` | window place | 2669 |
+| C41 | `Shisu_Pick` | stack factor | 6236 |
+| C42 | `Shisu_PickSide` | and to or | 6 |
+| C43 | `Shisu_PickCounts` | top bound | 237 |
+| C44 | `Shisu_PickCounts` | bottom bound | 101 |
+| C45 | `Shisu_PickCounts` | row 0 cap | 9 |
+| C46 | `Shisu_PickCounts` | row 2 prerequisite | 27 |
+| C47 | `Shisu_PickCounts` | row 1 model | 14 |
+| C48 | `Shisu_PickCounts` | row height | 4000 |
+| C49 | `Shisu_PickCounts` | any-button message dropped | 2926 |
+| C50 | `Shisu_PickCounts` | row 3 cap | 3 |
+| C51 | `Shisu_PickShow` | next step | 4000 |
+| C52 | `Shisu_PickShow` | models swapped | 4000 |
+| C53 | `Shisu_ShowStart` | A state 3 | 4000 |
+| C54 | `Shisu_ShowDrop` | or to and | 1486 |
+| C55 | `Shisu_ShowLanded` | saved from B | 2268 |
+| C56 | `Shisu_ShowLanded` | timer 1 | 2276 |
+| C57 | `Shisu_ShowFlash` | sound at 0x88 | 890 |
+| C58 | `Shisu_ShowFlash` | timer 0xF0 | 471 |
+| C59 | `Shisu_ShowFlash` | timer not re-read | 6 |
+| C60 | `Shisu_ShowFlash` | A red from green | 2686 |
+| C61 | `Shisu_ShowFade` | step 4 | 4000 |
+| C62 | `Shisu_ShowFade` | A state 4 | 462 |
+| C63 | `Shisu_ShowFade` | state - 1 | 462 |
+| C64 | `Shisu_ShowFade` | B red from green | 461 |
+| C65 | `Shisu_CountItems` | item 0x57 | 4000 |
+| C66 | `Shisu_SetupWindows` | word 0xFF89 | 4000 |
+| C67 | `Shisu_SetupWindows` | pointer to the given | 4000 |
+| C68 | `Shisu_CloseWindows` | window 2 byte 2 | 4000 |
+| C69 | `Shisu_ScaleIndex` | 0x2D bound | 222 |
+| C70 | `Shisu_ScaleIndex` | 0x44 bound | 260 |
+| C71 | `Shisu_Score` | A numerator | 1147 |
+| C72 | `Shisu_Score` | ramp edge | **0 - equivalent: at den = edge the quotient is exactly 100 (num = 100 edge), so q and 200 - q agree; near variant C102 refused** |
+| C73 | `Shisu_Score` | C base | 1320 |
+| C74 | `Shisu_Score` | part by g2 | 449 |
+| C75 | `Shisu_Score` | unsigned division | **0 - equivalent: the total is never negative (every term floored at 0, the products far below 2^31), so signed and unsigned division agree; near variant C103 refused** |
+| C76 | `Shisu_InitModels` | file not re-read | 3 |
+| C77 | `Shisu_InitModels` | B below 0x100 | 3985 |
+| C78 | `Shisu_InitModels` | B blue 0x81 | 4000 |
+| C79 | `Shisu_ModelBDispatch` | next state | 4000 |
+| C80 | `Shisu_ModelBTurn` | turn 0x40 | 3990 |
+| C81 | `Shisu_ModelBDraw` | clamp 0x13 | 562 |
+| C82 | `Shisu_ModelBDraw` | blue bound | **0 - equivalent: at blue = 3 g2 the lowered byte is 0 either way; near variant C104 refused** |
+| C83 | `Shisu_ModelBDraw` | green restored from red | 3443 |
+| C84 | `Shisu_ModelBDraw` | scale index - 1 | 4000 |
+| C85 | `Shisu_DrawModel` | mode 3 | 1094 |
+| C86 | `Shisu_DrawModel` | winding bound | 1736 |
+| C87 | `Shisu_DrawModel` | y offset from x | 3474 |
+| C88 | `Shisu_DrawModel` | green from red | 2176 |
+| C89 | `Shisu_DrawModel` | CLUT row | 3474 |
+| C90 | `Shisu_DrawModel` | scale test | 4000 |
+| C91 | `Shisu_DrawModel` | Sprite_Current not put back | 3357 |
+| C92 | `Shisu_DrawModel` | quad stride | 2363 |
+| C93 | `Shisu_ModelBSquare` | mask | 1963 |
+| C94 | `Shisu_ModelBSquare` | whole-turn test | 813 |
+| C95 | `Shisu_ModelBDrop` | step 0x100000 | 3352 |
+| C96 | `Shisu_ModelBDrop` | ground bound | 446 |
+| C97 | `Shisu_ModelBStill` | no draw | 4000 |
+| C98 | `Shisu_ModelADispatch` | next state | 4000 |
+| C99 | `Shisu_ModelATurn` | turn the other way | 4000 |
+| C100 | `Shisu_ModelBDrop` | x, z swapped | 4000 |
+| C101 | `Shisu_DrawModel` | winding read as a dword | 2350 |
+| C102 | `Shisu_Score` | ramp edge + 1 (C72 near variant) | 268 |
+| C103 | `Shisu_Score` | divisor 99 (C75 near variant) | 727 |
+| C104 | `Shisu_ModelBDraw` | blue bound + 1 (C82 near variant) | 692 |
+| C105 | `Shisu_ModelBDraw` | red lift + 1 | 2141 |
+| C106 | `Shisu_ModelBDraw` | scale + 1 during the draw | 4000 |
 
 ## 7. Latent defects and ranges (Capcom's, described, not fixed)
 
