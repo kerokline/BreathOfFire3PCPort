@@ -402,7 +402,18 @@ coordinator's A/Bs after the merge (the state hash).
 
 ## 10. Self-tests and the entry list
 
-SELFTESTS
+All in this worktree, headless (`BOF3X_SELFTEST_ONLY=1`), on the final build:
+
+- `BOF3X_SHADOW=rest_2c`: exit 0, 244,000 rounds, 621,662 calls to the
+  stand-ins, 0 mismatches.
+- `BOF3X_SHADOW='*'`, narrow (`BOF3X_WIDE=0`): exit 0, 725 self-test lines, no
+  mismatch, no Fatal; `rest_2c`'s line 244,000 rounds, 622,049 calls (another
+  stream than its own run: the harness's generator is shared), 0 mismatches.
+- `BOF3X_SHADOW='*'` with `BOF3X_WIDE=1`: exit 0, the same 725 lines, no
+  mismatch. No function of the group has an operand `widescreen.cpp` patches,
+  and none draws a full-frame fill (no TILE or quad at (0, 0) 320 x 240).
+- `scenario_harness_fh`'s "FS 0x5837E0" row (now `ShopResist_Dispatch`) passed
+  in both. No run died silently.
 
 `analysis/calltrace/entries_logic.txt` (the main checkout's): 55 lines
 appended (2026-10-04) - the 51 starts it lacked and the smaller extents
@@ -411,4 +422,4 @@ catalogue's host lines (`1C0`, `90`, `1DC`, `42F`), which carry a host's
 longer extent over this group's functions: **for the coordinator to split**.
 The other six were listed with the extents read here.
 
-`tools/ledger_check.py`: LEDGER
+`tools/ledger_check.py`: 72 ledger entries, 0 errors (2 notes, not this group's).
