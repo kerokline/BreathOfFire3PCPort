@@ -7,7 +7,7 @@ declarations in `src/game/rest_1f.h`, shadow name `rest_1f`): the cut's 49
 rows for R1F (`analysis/round14_cut.tsv`), each read to its last instruction
 with capstone and fuzzed through the scenario harness in field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7), used unchanged:
-392,000 rounds, 0 mismatches. CONTROLS_SUMMARY No recorded route enters any
+392,000 rounds, 0 mismatches. 108 controls planted one at a time: 105 refused, 3 equivalent mutants not refused, each with its near variant refused (section 5). No recorded route enters any
 of the 49 (section 9): fuzz only.
 
 The band is three things, not one (the cut's `unit` column guessed "field
@@ -346,7 +346,7 @@ swapped for recorders on both sides.
 | `Field_RaisedEdgeTurns`, `Field_ReadCellsRaised` | 16 bits each | garbage |
 | R0A's `PartyAction_TargetAhead`, `_BlockedAhead`, `_SideProbes` | - | `kFlag` / garbage |
 | `Effect_SpawnAtCellHigh`, `Effect_SpawnAtCell` | the state's byte, the cells' 16 bits | garbage |
-| `Field_TurnUnless`, `Field_CellPairTurn` | whole | **write the facing `+8`** half the time (the real ones do); the pair test al 1 a third of the time |
+| `Field_TurnUnless`, `Field_CellPairTurn` | whole | **write the facing `+8`** half the time (the real ones do), and a class value into one of cells 8..0xB a quarter of the time (louder than the real ones: `Field_CellAheadRaised` reads those cells again after the call); the pair test al 1 a third of the time |
 | `Field_CellSlope`, `Field_CellClass`, `Field_CellKind` | whole / whole / 16 bits | garbage / a class / garbage |
 | `AreaMap_ClearCell` | 16 bits each | garbage |
 | `Field_GiveZenny`, `Sprite_FlashClut` | whole | garbage |
@@ -374,7 +374,8 @@ records, `ObjTrio`, `Field_State`, `Effect_Objects`, the cells
 time the exe's shape (0, +-0x8000), else boundaries; the offsets -1, 0, 1
 mostly (1 counts 2), else 2, -2, 0x80, 0x7F or random; the cells 1..0xF a
 class or kind value (0xB0, 0x70, 0x10, 0xFF, 0x2_, 0xA0..0xA3, 0xA5, 0, 0x52)
-and the sloped flag; all four sprite records' facing (0..7 two times in
+and the sloped flag (for `Field_CellClass5`'s rounds half the cells 0xA0..0xA3,
+0x70 or 0xB0); all four sprite records' facing (0..7 two times in
 three, else 8, 9, 15, 0x80, 0xFF or random), `+7`, `+0xA` (0, 1, 2, 5),
 `+0xB` (below 20 for `PartyAction_EffectCountdown`, which indexes the
 records by it; else 0, 1, 2, 0xFF, below 20 or random), the form word, x
@@ -394,13 +395,14 @@ height and form word; the sloped flag and cells 8..0xB (a class value);
 `Sprite_Current` among the four sprite records.
 
 **Result** (2026-10-04, this worktree, `BOF3X_SELFTEST_ONLY=1
-BOF3X_SHADOW=rest_1f`, exit 0): **392,000 rounds over 49 functions, 701,527
-calls to the stand-ins, 0 mismatches**, on the first run. Coverage (calls
-the originals made) includes `Field_CellKind` 56,000, `Field_SlopeBetween`
-13,543, `Field_CellClass5` 10,798, `Field_TurnUnless` 10,035, the pickups
-about 3,700 each, `PartyAction18_CellStrike` 1,889, `Field_RaisedEdgeTurns`
-443, `Field_CellPairTurn` 131 (the diagonal one-fraction paths), every entry
-of the 24 tables (`LeaderPanel_Stages`' twelve about 500 each).
+BOF3X_SHADOW=rest_1f`, exit 0): **392,000 rounds over 49 functions, 700,177
+calls to the stand-ins, 0 mismatches**; every version of the fuzz passed on
+its first run. Coverage (calls the originals made) includes `Field_CellKind`
+56,000, `Field_SlopeBetween` 13,151, `Field_CellClass5` 10,812,
+`Field_TurnUnless` 9,750, the pickups about 3,650 each,
+`PartyAction18_CellStrike` 1,765, `Field_RaisedEdgeTurns` 436,
+`Field_CellPairTurn` 81 (the diagonal one-fraction paths, the thinnest), and
+every entry of the 24 tables (`LeaderPanel_Stages`' twelve about 500 each).
 STAR_RESULT
 
 ## 5. Controls
@@ -408,7 +410,120 @@ STAR_RESULT
 `r1f/controls.py` (scratch): each plant replaces a string that occurs
 exactly once in `rest_1f.cpp`, rebuilds, runs the self-test on the clones
 whose name contains the one it touches (`BOF3X_R1F_ONLY`), restores the
-file and rebuilds. CONTROLS_TABLE
+file and rebuilds. **108 planted: 105 refused, 3 not refused - three equivalent mutants, each with its near variant refused.** A clone filter (`BOF3X_R1F_ONLY`) that names a prefix runs every clone it matches, so some counts are of 16,000 or more rounds.
+
+| # | Function | Plant | Refused (rounds, of those run) |
+|---|---|---|---|
+| C01 | `PartyAction16_FormAction` | FormActions[16] through the ActionBySet forms table | 8000 of 16000 |
+| C02 | `PartyAction17_ByForm` | the form word read as a byte | **not refused**: equivalent - every form word below a table's three entries has a high byte of 0, and one past them aborts. Near variant C03 refused |
+| C03 | `PartyAction17_ByForm` | the form word at +0x2E (C02's near variant) | 5242 of 8000 |
+| C04 | `PartyAction18_Form1` | a state dispatcher by +3 | 5261 of 24000 |
+| C05 | `LeaderPanel_S0` | a step dispatcher by +2 | 5366 of 32000 |
+| C06 | `PartyAction17_FormAction0` | through FormAction1's states (same length) | 2682 of 8000 |
+| C07 | `LeaderPanel_Run` | the stage table's entry one on, wrapping | 8000 of 8000 |
+| C08 | `PartyAction16_Form2Begin` | the first turn & 0xF | 797 of 8000 |
+| C09 | `PartyAction17_Form1Begin` | the second turn +3 | 1245 of 8000 |
+| C10 | `PartyAction18_Form1Begin` | the rise height less ground | 2474 of 8000 |
+| C11 | `PartyAction16_Form2Begin` | the rise from 0x40 | 456 of 8000 |
+| C12 | `PartyAction16_Form2Begin` | the rise's height not re-read after the ground call | 76 of 8000 |
+| C13 | `PartyAction16_Form2Begin` | the slope's direction not re-read after the ground call | 223 of 8000 |
+| C14 | `PartyAction17_Form1Begin` | the steep pose 0x45 | 1476 of 8000 |
+| C15 | `PartyAction18_Form1Begin` | +2 once on the steep path | 1476 of 8000 |
+| C16 | `PartyAction16_Form2Begin` | +0xA = 4 | 6524 of 8000 |
+| C17 | `PartyAction16_Form2Begin` | the side probes 5 then 3 | 6524 of 8000 |
+| C18 | `PartyAction17_Form1Begin` | the side probe steep from 0x40 | 681 of 8000 |
+| C19 | `PartyAction18_Form1Begin` | the side probe's height not re-read | 49 of 8000 |
+| C20 | `PartyAction16_Form2Begin` | the sound id + 0x101 | 6524 of 8000 |
+| C21 | `PartyAction16_Form2Resolve` | one step ahead, not two | 2211 of 8000 |
+| C22 | `PartyAction17_Form1Resolve` | Sprite_ObjectAt margin 1 | 2605 of 8000 |
+| C23 | `PartyAction18_Form1Resolve` | the object's bit 1 | 861 of 8000 |
+| C24 | `PartyAction16_Form2Resolve` | an extra record's +0x81 | 110 of 8000 |
+| C25 | `PartyAction16_Form2Resolve` | the x probe on z's fraction | 270 of 8000 |
+| C26 | `PartyAction17_Form1Resolve` | the z probe after a find | 327 of 8000 |
+| C27 | `PartyAction18_Form1Resolve` | +2 by two | 2579 of 8000 |
+| C28 | `PartyAction16_Form2Resolve` | the countdown by two | 7986 of 8000 |
+| C29 | `PartyAction16_CellPickup` | ten times, not twenty (Field_CellPickup's) | 30 of 8000 |
+| C30 | `PartyAction17_CellPickup` | zenny from a nibble of 12 | 91 of 8000 |
+| C31 | `PartyAction18_CellPickup` | 5 from 14 | 39 of 8000 |
+| C32 | `PartyAction16_CellPickup` | Field_InputFlags bit 1 only | 32 of 8000 |
+| C33 | `PartyAction16_CellPickup` | the second Rand & 7 | 14 of 8000 |
+| C34 | `PartyAction17_CellPickup` | +0xB not set on 0xF2 | 694 of 8000 |
+| C35 | `PartyAction18_CellPickup` | item 0x57 | 977 of 8000 |
+| C36 | `PartyAction16_CellPickup` | Field_Request 3 on 0xF8 | 931 of 8000 |
+| C37 | `PartyAction17_CellPickup` | no effect object free answers 0 | 44 of 8000 |
+| C38 | `PartyAction18_CellPickup` | the name's 12 bytes | 977 of 8000 |
+| C39 | `PartyAction18_CellStrike` | 0xF4 not struck | 448 of 8000 |
+| C40 | `PartyAction18_CellStrike` | the second spawn from 5 | 191 of 8000 |
+| C41 | `PartyAction18_CellStrike` | the item below 8 | 87 of 8000 |
+| C42 | `PartyAction18_CellStrike` | the hurt from 0xB | 81 of 8000 |
+| C43 | `PartyAction18_CellStrike` | +0xB 3 after the item | 612 of 8000 |
+| C44 | `PartyAction18_CellStrike` | Field_Request untouched on 7..0xB | 661 of 8000 |
+| C45 | `PartyAction18_CellStrike` | the member Field_State +0x8A | 415 of 8000 |
+| C46 | `PartyAction18_CellStrike` | the first spawn's x and z swapped | 1414 of 8000 |
+| C47 | `PartyAction18_Form0Sub0Strike` | +3 once with an effect object ahead | 1271 of 8000 |
+| C48 | `PartyAction18_Form0Sub0Strike` | the effect object's +0xA = 2 | 1284 of 8000 |
+| C49 | `PartyAction18_Form0Sub0Strike` | Sprite_Current not re-read after the sound | 128 of 8000 |
+| C50 | `PartyAction18_Form0Sub0Strike` | the x probe one on in z too | 372 of 8000 |
+| C51 | `PartyAction18_Form0Sub0Strike` | the countdown from 2 | 2605 of 8000 |
+| C52 | `PartyAction18_Form0Sub0Begin` | the turns on a block, not an open way | 3720 of 8000 |
+| C53 | `PartyAction18_Form0Sub0Begin` | +0xB = 1 | 8000 of 8000 |
+| C54 | `PartyAction_ProbeStart` | +3 = 2 | 8000 of 8000 |
+| C55 | `PartyAction_EffectCountdown` | the object's +8 from +7 | 833 of 8000 |
+| C56 | `PartyAction_EffectCountdown` | +7 not raised to 1 | 361 of 8000 |
+| C57 | `PartyAction_EffectCountdown` | a count of 0 counted down | 415 of 8000 |
+| C58 | `PartyAction_EffectCountdown` | +3 = 1 when the script ends | 5334 of 8000 |
+| C59 | `PartyAction_EffectCountdown` | Sprite_Current not re-read after the sound | 24 of 8000 |
+| C60 | `PartyAction_SpawnKind1B` | kind 0x1C | 7634 of 8000 |
+| C61 | `PartyAction_SpawnKind1B` | the pose by the signed halving | 105 of 8000 |
+| C62 | `PartyAction_SpawnKind1B` | the pose by a halving of a direction one less (C61's near variant) | 8000 of 8000 |
+| C63 | `Field_CellAheadRaised` | a corner when either fraction is 0 | 1976 of 8000 |
+| C64 | `Field_CellAheadRaised` | an offset of 1 counts 1 | 1036 of 8000 |
+| C65 | `Field_CellAheadRaised` | the cell stepped from not one on | 1036 of 8000 |
+| C66 | `Field_CellAheadRaised` | Field_ScriptFlags bit 9 | 3896 of 8000 |
+| C67 | `Field_CellAheadRaised` | the z side's 0x70 turn (4, 6, 5) | 171 of 8000 |
+| C68 | `Field_CellAheadRaised` | the x side's slope for facings 1 and 3 | 9 of 8000 |
+| C69 | `Field_CellAheadRaised` | the facing not put back | 25 of 8000 |
+| C70 | `Field_CellAheadRaised` | a corner turn answers 1 | 603 of 8000 |
+| C71 | `Field_CellAheadRaised` | the x side's 0x20 not turned | 32 of 8000 |
+| C72 | `Field_CellAheadRaised` | the x side's second probe one on, not back | 195 of 8000 |
+| C73 | `Field_CellAheadRaised` | the z side's class not re-read after the turn | 2 of 8000 |
+| C74 | `Field_CellAheadRaised` | the diagonal mid-cell 0x10 answers 3 | 403 of 8000 |
+| C75 | `Field_CellAheadRaised` | the diagonal x side's 0xA2 turn 1 | 4 of 8000 |
+| C76 | `Field_CellAheadRaised` | the diagonal z side's 0x20 test on cell 2 | 6 of 8000 |
+| C77 | `Field_CellAheadRaised` | the last class 0x10 not a stop | 5 of 8000 |
+| C78 | `Field_CellAheadRaised` | cell 0xB from the register, not re-read | 1 of 8000 |
+| C79 | `Field_CellAheadRaised` | the diagonal x side for facings without bit 1 | 533 of 8000 |
+| C80 | `Field_CellAheadRaised` | the diagonal z side's second facing 7 | 13 of 8000 |
+| C81 | `Field_CellClass5` | two 0x70 not 0x70 | 21 of 8000 |
+| C82 | `Field_CellClass5` | 0xFF a 0x20 | 1986 of 8000 |
+| C83 | `Field_CellClass5` | the third not made 0xA1 | 8 of 8000 |
+| C84 | `Field_CellClass5` | 0xA3 with another 0x20 | 61 of 8000 |
+| C85 | `Field_CellClass5` | the facing's bit 1 for 0xA2 | 21 of 8000 |
+| C86 | `Field_CellClass5` | every 0x2_ compared | **not refused**: equivalent - when every later 0x2_ equals the first, they equal each other, so no later pair can differ. Near variant C107 refused |
+| C87 | `Field_CellClass5` | four cells at most | 24 of 8000 |
+| C88 | `Field_CellClass5` | one, four or five 0xA_ answer 0 | 2265 of 8000 |
+| C89 | `Field_CornerTurn` | the facing one back | 780 of 8000 |
+| C90 | `Field_CornerTurn` | cell 9's turn (4, 6, 5) | 117 of 8000 |
+| C91 | `Field_CornerTurn` | cell 8's 0x20 not a corner | 523 of 8000 |
+| C92 | `Field_SlopeBetween` | steep from 0x40 | 391 of 8000 |
+| C93 | `Field_SlopeBetween` | the halving a plain shift | **not refused**: equivalent - the sums are whole cells (`<< 16`), always even, so rounding toward zero never moves them. Near variant C108 refused |
+| C94 | `Field_SlopeBetween` | z from x1 | 8000 of 8000 |
+| C95 | `Field_SlopeBetween` | the sloped flag not tested | 815 of 8000 |
+| C96 | `Field_RaisedEdgeTurns` | the last probe's facings 0 and 4 | 810 of 8000 |
+| C97 | `Field_RaisedEdgeTurns` | the second probe by the facing's bit 1 | 1268 of 8000 |
+| C98 | `Field_RaisedEdgeTurns` | the first probe in direction 3 | 3773 of 8000 |
+| C99 | `Field_ReadCellsRaised` | cell 6 from zs + 1 | 8000 of 8000 |
+| C100 | `Field_ReadCellsRaised` | cell 4 seen from x0 | 8000 of 8000 |
+| C101 | `LeaderPanel_S0Begin` | +0x29 = 4 | 8000 of 8000 |
+| C102 | `LeaderPanel_S0Begin` | animation 0xC | 4780 of 8000 |
+| C103 | `LeaderPanel_S0Begin` | the height not re-read's sprite | 230 of 8000 |
+| C104 | `LeaderPanel_S0Wait` | the wait word ignored | 2769 of 8000 |
+| C105 | `LeaderPanel_S0End` | record 4 at 3 | 4788 of 8000 |
+| C106 | `LeaderPanel_S0End` | +3 kept | 1591 of 8000 |
+| C107 | `Field_CellClass5` | the 0x2_ search skipping the next cell (C86's near variant) | 25 of 8000 |
+| C108 | `Field_SlopeBetween` | the half cell dropped (C93's near variant) | 5982 of 8000 |
+
+The first run (the same plants less C107 / C108, before the turn stand-ins wrote the cells) also left C73 and C78 unrefused: both re-read a cell after a call, and the disturbance moved cells 8..0xB too rarely. The `Field_TurnUnless` / `Field_CellPairTurn` stand-ins now write a class value into one of cells 8..0xB a quarter of the time (louder than the real ones, which write only the facing); both are refused, and stay the thinnest (2 and 1 rounds) beside C75..C77, C83, C68 (4 to 9): they need a diagonal facing on a cell edge, a class of 0x10 / 0x20 and the right pair answers.
 
 ## 6. Divergence
 
