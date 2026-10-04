@@ -276,6 +276,7 @@
 #include "game/effect_5d.h"
 #include "game/effect_6d.h"
 #include "game/effect_6b.h"
+#include "game/rest_0a.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1148,7 +1149,14 @@ void InjectAll() {
                                 // its eight rows is E6B's) and before Widescreen_ArmFills (sub-kind 0x54's fill,
                                 // DIV-0041's 0x50F7B5, compares the original's 320 x 240); no module patches bytes
                                 // inside its 50 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
-    FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
+    Rest0A_Inject();            // round 14 stage-A group R0A (0x51C390..0x524E4E: the party sets' field actions' seven
+                                // shared helpers - the probes two steps ahead, the kind-0x30 effect object ahead and
+                                // the members in reach of it, an effect object of kind 0x34 on a cell, the side
+                                // probes): its clones' calls re-aimed at the scenario harness's recorders; after
+                                // every harness's inject; every caller that is ours (PartyAction5_Form0Begin) calls
+                                // it by the address it had, so order does not matter; no module patches bytes inside
+                                // its seven (DIVERGENCE.md, cheats.cpp)
+    FishingText_Arm();         // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
                                 // module's self-test, which all compared the original's order (layering.h)
