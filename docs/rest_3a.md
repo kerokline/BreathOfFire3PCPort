@@ -8,7 +8,10 @@ R3A (`analysis/round14_cut.tsv`, the band `0x404180..0x437820`) and one start
 no list had (`0x4041B0`, section 5); none dropped. Each read to its last
 instruction with capstone and fuzzed through the boss harness without edits
 to it - two `Run`s (section 4): 270,000 rounds, 0 mismatches (this
-worktree). CONTROLS_SUMMARY Reached by a recorded route: `0x435A20` (the
+worktree); 75 negative controls planted, all 75 refused by a count
+(section 6). `BOF3X_SHADOW='*'` headless at this branch: exit 0, 735
+self-test lines, no `MISMATCH`, `inject: 9388 ours, 0 left original`;
+the same with `BOF3X_WIDE=1`. Reached by a recorded route: `0x435A20` (the
 round-13 `nue` hash route), `0x404180` before `WorldMap_FrameStep` was ours
 (section 9); the rest fuzz only. No divergence; no full-frame fill (the
 flash and the tint draw through BE4's `BattleWin_DrawTileRgb` /
@@ -246,7 +249,12 @@ coverage lines: `Sprite_QueueOverlay` 3,019, `BattleFx_PlaceOverOwner`
 the engine group stopped on `BattleFxReform_Reload`'s abort (section 4's
 calm); no mismatch on any run.
 
-STAR_RESULTS
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0,
+735 self-test lines, no `MISMATCH` line, `inject: 9388 ours, 0 left
+original by BOF3X_ORIGINAL`; `rest_3a.outside` and `rest_3a` there as above
+(297,613 calls). **With `BOF3X_WIDE=1`**: exit 0, 735 lines, no mismatch,
+the same counts. Neither run died silently. `ledger_check`: 73 entries, 0
+errors (9,389 impl lines, 9,389 functions detoured).
 
 ## 5. What the cut and the tool said, settled
 
@@ -278,7 +286,97 @@ STAR_RESULTS
 
 ## 6. Controls
 
-CONTROLS_TABLE
+Planted one at a time by a scratch script (`controls.py` in the group's
+scratch directory, not committed): each plant anchored on a unique string
+of `rest_3a.cpp`, rebuilt, run under `BOF3X_R3A_ONLY=<address>`, the file
+restored and rebuilt at the end (the committed file has no switch). Counts
+are in this worktree; every refused run exited 3 on a `MISMATCH` line and a
+count. **75 of 75 refused**, at least one per function; none equivalent. The
+narrowest: C64 / C65 (one party set of four in the backup branch, 215 / 429),
+C49 / C50 / C54 / C61 / C71 (a status bit, the enemy read, the scale at 0,
+the member flag, the neighbouring enemy: 245..293). C16 (the chosen byte
+handed back instead of the held one) is refused by the argument itself; the
+held byte's re-read after `Inventory_Remove` is exercised by the group's
+disturbance of record 7's bytes but no control isolates it.
+
+| # | Clone | Planted | First round | Rounds of 6,000 |
+|--:|---|---|--:|--:|
+| C1 | `0x404180` | SlideIn: the bound 0x11 | 1 | 549 |
+| C2 | `0x404180` | SlideIn: the step 8 | 0 | 5,927 |
+| C3 | `0x4041B0` | Shown: state 2, not 3 | 2 | 982 |
+| C4 | `0x4041E0` | SlideOut: the bound -0x20 | 99 | 124 |
+| C5 | `0x4041E0` | SlideOut: mode 1 | 3 | 2,632 |
+| C6 | `0x42D710` | Dispatch: the entry one on | 0 | 6,000 |
+| C7 | `0x42D730` | Start: request + 3 | 0 | 6,000 |
+| C8 | `0x42D750` | Leave: Game_Step + 2 | 0 | 6,000 |
+| C9 | `0x42D760` | TallyDispatch: the entry one on | 0 | 6,000 |
+| C10 | `0x42D770` | TallyOpenDispatch: entries swapped | 0 | 6,000 |
+| C11 | `0x42D780` | OpenTransition: kind 2 | 0 | 6,000 |
+| C12 | `0x42E0E0` | SetupWindows: 6 for 7 | 0 | 2,881 |
+| C13 | `0x42E0E0` | SetupWindows: window 1 x | 0 | 6,000 |
+| C14 | `0x42E0E0` | SetupWindows: window 3 +3 | 0 | 6,000 |
+| C15 | `0x42E250` | Commit: the held test | 0 | 5,447 |
+| C16 | `0x42E250` | Commit: the held byte not read again | 0 | 5,447 |
+| C17 | `0x42E250` | Commit: record 8 | 0 | 6,000 |
+| C18 | `0x42E2F0` | Refresh: the bit not inverted | 0 | 6,000 |
+| C19 | `0x42E2F0` | Refresh: +0x16 for +0x17 | 0 | 5,649 |
+| C20 | `0x42E2F0` | Refresh: al +0x15 | 0 | 5,976 |
+| C21 | `0x431540` | LossDispatch: the entry one on | 0 | 6,000 |
+| C22 | `0x431550` | LossBanner: track 0xA5 | 1 | 2,966 |
+| C23 | `0x431550` | LossBanner: timer 0xFE | 0 | 6,000 |
+| C24 | `0x4315A0` | LossAwaitLoad: al, not eax | 1 | 964 |
+| C25 | `0x4315B0` | RestoreDispatch: the entry one on | 0 | 6,000 |
+| C26 | `0x431710` | RestoreLoadBank: area + 2 | 1 | 5,040 |
+| C27 | `0x431740` | RestoreAwaitBank: step 3 | 1 | 5,040 |
+| C28 | `0x4318F0` | ExitAwaitFade: pass flags 1 | 0 | 3,034 |
+| C29 | `0x432F90` | FlashDispatch: entries 1, 2 swapped | 2 | 4,010 |
+| C30 | `0x432FC0` | FlashBanner: actor < 2 | 6 | 674 |
+| C31 | `0x432FC0` | FlashBanner: +0xC 0x101 | 0 | 6,000 |
+| C32 | `0x433020` | FlashTile (Rise): grey 0x420 | 6 | 2,530 |
+| C33 | `0x4330E0` | FlashTile (Fall): red << 11 | 0 | 3,366 |
+| C34 | `0x433020` | Rise: +0x10 up 9 | 0 | 6,000 |
+| C35 | `0x433020` | Rise: Camera_Distance up | 0 | 6,000 |
+| C36 | `0x4330E0` | Fall: +0x10 down 7 | 0 | 5,991 |
+| C37 | `0x4332B0` | TintDispatch: entries 1, 2 swapped | 2 | 4,010 |
+| C38 | `0x433350` | TintTile (Hold): r + 1 | 0 | 6,000 |
+| C39 | `0x433300` | Brighten: 0xFE | 3 | 1,976 |
+| C40 | `0x433380` | AnimDispatch: bit 1 | 1 | 2,989 |
+| C41 | `0x433380` | AnimDispatch: entries 1, 2 swapped | 0 | 4,017 |
+| C42 | `0x4333C0` | AnimStart: ability bit 2 | 4 | 2,648 |
+| C43 | `0x4333C0` | AnimStart: +0x2A 1 | 0 | 6,000 |
+| C44 | `0x433410` | AnimRun: +9 0x11 | 2 | 4,013 |
+| C45 | `0x433430` | AnimLinger: flag 0x10 | 0 | 909 |
+| C46 | `0x433550` | WatchIconStart: +0x18 0x667 | 0 | 1,030 |
+| C47 | `0x433550` | WatchIconStart: +1 up 1 | 0 | 1,030 |
+| C48 | `0x433550` | WatchIconStart: 0xFE none | 1 | 4,627 |
+| C49 | `0x433790` | WatchRecheck: mask 0x50 | 5 | 245 |
+| C50 | `0x433790` | WatchRecheck: an enemy +0x91 | 34 | 293 |
+| C51 | `0x433970` | ReformDispatch: entries 0, 1 swapped | 1 | 2,390 |
+| C52 | `0x4339B0` | ReformBegin: +0x48 3 | 0 | 6,000 |
+| C53 | `0x4339D0` | Shrink: by 0x1000 | 0 | 5,619 |
+| C54 | `0x4339D0` | Shrink: bit 0x20 | 65 | 279 |
+| C55 | `0x433A00` | ReformLoadDat: 0x2EB | 0 | 1,973 |
+| C56 | `0x433A00` | ReformLoadDat: form 2 | 2 | 1,955 |
+| C57 | `0x433A50` | Reload: animation + 5 | 1 | 5,026 |
+| C58 | `0x433A50` | Reload: +0x134 bit 1 | 2 | 3,790 |
+| C59 | `0x433A50` | Reload: palette stride 0x20 | 1 | 3,323 |
+| C60 | `0x433B20` | Grow: below, not unequal | 0 | 4,419 |
+| C61 | `0x433B20` | Grow: bit 0x4000 | 28 | 288 |
+| C62 | `0x433B80` | RestoreDispatch: entries 0, 1 swapped | 1 | 2,390 |
+| C63 | `0x433BC0` | RestoreBegin: bit 0x4000 | 0 | 4,522 |
+| C64 | `0x433C00` | RestoreLoadDat: set 0xE other 0x127 | 12 | 215 |
+| C65 | `0x433C00` | RestoreLoadDat: set + 0xFD | 11 | 429 |
+| C66 | `0x433C00` | RestoreLoadDat: tables swapped | 2 | 2,927 |
+| C67 | `0x433C00` | RestoreLoadDat: bit 14 | 0 | 2,965 |
+| C68 | `0x4357D0` | BossFxDispatch: pairs swapped | 0 | 6,000 |
+| C69 | `0x435A20` | SetAnimationAs: Sprite_Current not put back | 0 | 5,606 |
+| C70 | `0x435A70` | SetAnimationOf: 0x939AD8 not put back | 0 | 5,221 |
+| C71 | `0x435A70` | EnemyByActor (Of): the neighbour | 24 | 271 |
+| C72 | `0x437820` | NewGame: +0x1D | 0 | 6,000 |
+| C73 | `0x437820` | NewGame: level << 3 | 0 | 6,000 |
+| C74 | `0x437820` | NewGame: the whelp 4 bytes short | 0 | 4,227 |
+| C75 | `0x42E2F0` | Refresh: the category, not the item | 0 | 5,979 |
+
 
 ## 7. Latent defects and unchecked indexes (Capcom's, described)
 
