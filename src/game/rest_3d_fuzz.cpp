@@ -159,6 +159,32 @@ U RateEffect(const U*, U answer) {
     }
 }
 
+// The target moved half the time (the old byte noted first, so a store ours
+// makes before the call is compared, not wiped): the slots read 0x904B54 again
+// after Battle_CalcDamage and Effect_HpBasedDamage, some to pick the record,
+// some not - the side of slots 116 / 124 / 127 is the read before the call.
+void MoveTarget(U n) {
+    if ((n & 1) == 0) return;
+    bh::Note(Mem(at::kTarget)[0]);
+    Mem(at::kTarget)[0] = static_cast<unsigned char>((n >> 8) % 11);
+}
+U CalcDamageEffect(const U*, U answer) {
+    MoveTarget(bh::Noise());
+    return answer;
+}
+// Effect_HpBasedDamage's: the target moved, then half the time an answer
+// within 2 of the (new) target's DEF, so slots 116 / 124's clamp at 0 sees
+// -2..2 (the garbage answer reaches -1 once in 65,536).
+U HpDamageEffect(const U*, U answer) {
+    const U n = bh::Noise();
+    MoveTarget(n);
+    if ((n & 2) == 0) return answer;
+    const unsigned t = Mem(at::kTarget)[0];
+    const U def = t <= 2 ? move_script::Word(Mem(at::kParty + t * at::kPartyStride + 0xA6))
+                         : move_script::Word(Mem(at::kEnemies + (t - 3) * at::kEnemyStride + 0xB6));
+    return (answer & 0xFFFF0000u) | ((def + (n >> 16) % 5 - 2) & 0xFFFF);
+}
+
 // Masks narrowed to what each callee reads, where the caller pushes a whole
 // register whose upper bytes are its own leftovers (a different value in the
 // copy and in ours): each read cited (capstone, 2026-10-04).
@@ -183,7 +209,11 @@ const bh::Callee kCallees[] = {
     // the step: the word's low half (mov bx, [esp+8]; movsx esi, bx) and the stat's byte (and eax, 0xFF)
     {"Effect_StepStatByte", 0x44F650, KeyOf(&::Effect_StepStatByte), 2, {kU16, kU8}, bh::Answer::kGarbage, 0, 0},
     {"Effect_RollInflict", 0x44FCA0, KeyOf(&::Effect_RollInflict), 1, {kAll}, bh::Answer::kFlag, 0, 0},
-    {"Effect_HpBasedDamage", 0x44FCE0, KeyOf(&::Effect_HpBasedDamage), 1, {kAll}, bh::Answer::kGarbage, 0, 0},
+    {"Effect_HpBasedDamage", 0x44FCE0, KeyOf(&::Effect_HpBasedDamage), 1, {kAll}, bh::Answer::kGarbage, 0, 0, {},
+     &HpDamageEffect},
+    // the engine set's row (both actors' bytes, the element word), louder: the target moved (CalcDamageEffect)
+    {"Battle_CalcDamage", bof3::addr::Battle_CalcDamage, KeyOf(&::Battle_CalcDamage), 3, {kU8, kU8, kU16}, bh::Answer::kGarbage,
+     0, 0, {}, &CalcDamageEffect},
     // ours already, not in the engine set
     // Effect_SkillDamage: the caster unread, the target's byte, the power's low word, the psi word's byte
     {"Effect_SkillDamage", bof3::addr::Effect_SkillDamage, KeyOf(&::Effect_SkillDamage), 4, {0, kU8, kU16, kU8},
@@ -200,7 +230,9 @@ const bh::Callee kCallees[] = {
 };
 
 const bh::DataTable kTables[] = {
-    {0x64ECCC, 7},   // DragonCmd_Parts (BE5's seven parts)
+    // DragonCmd_Parts (BE5's seven parts), one word: the jmp leaves the caller's word for the part, so its
+    // recorder logs it (the parts forward it, their steps do not read it)
+    {0x64ECCC, 7, 4, 1},
 };
 
 // The cells beyond the engine frame the group reads or writes.
