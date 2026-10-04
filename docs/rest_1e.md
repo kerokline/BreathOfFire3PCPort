@@ -264,7 +264,11 @@ scratch flag; an effect record's `+0` / `+1`; `Field_Kind2Hold`; `Field_State
 BOF3X_SHADOW=rest_1e`, exit 0): 188,000 rounds over 47 functions, 325,097
 calls to the stand-ins, **0 mismatches**; every table entry's recorder was
 reached (1,300..12,000 each), the helpers 1,169..2,479, `Field_GiveZenny`
-378, `Char_LoseHp` 456.
+378, `Char_LoseHp` 456. **`BOF3X_SHADOW='*'`** after the rebinding
+(2026-10-04, this worktree): exit 0, `inject: 8702 ours, 0 left original`,
+1,020 self-test lines of 0 mismatches and no `MISMATCH` line (among them
+`rest_0a`, `field_hidden` and `rest_1e`); the same with `BOF3X_WIDE=1`: exit
+0, 1,020, 8,702 ours. Each passed on its first run.
 
 **A trap paid for: the toolchain dropped the direction's upper bytes.** The
 first run mismatched every round of the three Begin copies (12,000) on
@@ -425,8 +429,9 @@ after the turns), C34, C39..C43 (the 0xF2 path behind `Effect_FindFree` and a
 - **Through the tables** (not calls ours makes): the dispatchers jump to
   R1A's `0x51C490`, `0x51D440`, `0x51D6D0`; R1B's `0x51DE20`; R1C's
   `0x51F850`, `0x51FC80`, `0x520350`, `0x520840`; R1D's `0x520E90`,
-  `0x5226B0`, `0x521A20`; R1F's `0x523ED0`, `0x523F10`, `0x5252B0`; and the
-  unowned `0x52F5C0`, `0x437CA0`. The fuzz swaps the cells for recorders; in
+  `0x5226B0`, `0x521A20`; R1F's `0x523ED0`, `0x523F10`, `0x5252B0`; and ours
+  `PartyAction_ScriptEnd` `0x52F5C0`, `BossOp_ScriptTick` `0x437CA0`,
+  `PartyAction_Finish` `0x51DA30`. The fuzz swaps the cells for recorders; in
   the game each is whatever is injected at that address.
 - **In**: no `E8` or `E9` from outside the group reaches any of the 47
   (`band_rows.py --byte-tables`). They are reached through `.data`: the
