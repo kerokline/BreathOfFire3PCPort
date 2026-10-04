@@ -301,9 +301,9 @@ unsigned StateEntries(unsigned k) {
 // A window record's bytes, at their boundaries.
 void SeedRecord(unsigned char* r) {
     r[0] = static_cast<unsigned char>(PickOf(0, 1, 1, sh::Next()));
-    r[2] = static_cast<unsigned char>(sh::Next() % 6);
+    r[2] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 0xB, 0xB, 0xC, sh::Next()));   // the kind tables, and records 12..17 of kind 0xB
     r[3] = static_cast<unsigned char>(PickOf(0, 1, 2, 2, 4, sh::Next()));
-    const U x = PickOf(0x50, 0x4F, 0x51, 0x30, 0x70, 0xFF56, 0xFF57, 0xFF55, 0xFF76, 0xFF36, 0x11, 0x140, 0x7FF0, 0x8010,
+    const U x = PickOf(0x50, 0x4F, 0x51, 0x30, 0x31, 0x2F, 0x70, 0xFF56, 0xFF57, 0xFF55, 0xFF76, 0xFF36, 0x11, 0x140, 0x7FF0, 0x8010,
                        sh::Next());
     SetWord(r + 4, x);
     SetWord(r + 6, PickOf(0x28, 0x27, 0x29, 0x18, 0x38, 0x10, 0xFFEC, 0x7FF8, 0x8008, sh::Next()));
@@ -404,12 +404,6 @@ void Seed(unsigned k) {
     // is the reserve's count above, drawn again here inside the categories)
     g_arg_rec = sh::Next() % 22;
     B(Rec(g_arg_rec, 0xA)) = static_cast<unsigned char>(sh::Next() % 5);
-    if (k == kDrawItemList && std::getenv("BOF3X_R2F_TRACE")) {
-        const unsigned char* r = Mem(Rec(g_arg_rec, 0));
-        bof3::Log("r2f trace rec %u cat %u top %u x %X y %X w10 %X 9 %u 8 %u shown %d cur %X", g_arg_rec, r[0xA], r[0xB],
-                  Word(r + 4), Word(r + 6), Word(r + 0x10), r[9], r[8], static_cast<signed char>(B(kShown)),
-                  Key(sh::Pointer(kCurrent)));
-    }
 }
 
 // The arguments of the five kCall functions, after the seed.
@@ -438,7 +432,7 @@ void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const cur = sh::Pointer(kCurrent);
     const bool rec = sh::InRegions(cur, 0x24);
-    switch (h % 14) {
+    switch (h % 15) {
     case 0: B(kStep) = static_cast<unsigned char>(b % 7); break;
     case 1: B(kSub) = static_cast<unsigned char>(b % 3); break;
     case 2: B(kTopChoice) = static_cast<unsigned char>(b & 1); break;
@@ -456,6 +450,8 @@ void Disturb(U h) {
     case 11: if (B(Rec(12, 0xA)) != 4) B(Rec(12, 0xA)) = static_cast<unsigned char>(b % 4); break;   // record 12 may be the list's
     case 12: B(b & 1 ? kRow : kHeldRow) = static_cast<unsigned char>(v % 5); break;
     case 13: if (rec) cur[9] = static_cast<unsigned char>(b & 1); break;
+    // the category of the record the two draws are handed (a 4 stays a 4)
+    case 14: if (B(Rec(g_arg_rec, 0xA)) != 4) B(Rec(g_arg_rec, 0xA)) = static_cast<unsigned char>(b % 4); break;
     default: break;
     }
 }
