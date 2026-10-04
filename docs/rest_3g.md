@@ -332,8 +332,9 @@ CONTROLS
 
 - **Unchecked step dispatchers**: `GameMode8_Run` .. `GameMode11_Run` index
   their tables by the word `Game_Step`, unbounded; every writer of this group
-  keeps it inside (steps go up by one or back to 0), and modes 8 and 9..10's
-  `Frame` / `TradeStep` steps are other groups'. Ours aborts past each table.
+  keeps it inside (steps go up by one or back to 0); the steps that are other
+  groups' (`GameMode8_Frame`, `_TradeStep`, `Mode8_Step5`, `Mode8_Step8`) were
+  not read here. Ours aborts past each table.
 - **The encounter row unchecked**: `Battle_PlaceBossActors` takes the row
   from `EventBattle_Records[0x904AAA] + 2` and reads `Encounter_Rows + 9 *
   row` for eight bytes; the first 24 records (the battle side's table has
@@ -409,7 +410,41 @@ these.
 
 ## 10. The rebinding
 
-REBINDING
+`grep -rn -i` of the 32 addresses in `src` (`band_rows.py --refs`: 99
+references to 21 of them). **Rebound**, the value unchanged so every fuzz key
+stands, each on the line it changes:
+
+| File | Was | Now |
+|---|---|---|
+| `battle_e1_callees.h`, `battle_e4_callees.h` | `kEnemiesClear = 0x494E70` | `bof3::addr::BattleEnemy_ClearStates` |
+| `battle_turn_steps_callees.h` | `kClearEnemies = 0x494E70` | the same |
+| `battle_e6_callees.h` | `kCellHeight = 0x4CF4B0` | `bof3::addr::Quake_VertexLift` |
+| `battle_sprites.cpp` | `Raw<void (__cdecl*)()>(0x494500)` in `kOriginals` | `Battle_PlaceBossActors` |
+| `effect_1a_callees.h` | `kStringCount = 0x5171E0` | `bof3::addr::EffectKind0F_CharCount` |
+| `effect_2c_callees.h`, `rest_2b_callees.h` | `kWinding = 0x4941B0` | `bof3::addr::Screen_TriangleWinding` (`rest_2b_callees.h` now includes `symbols.gen.h`) |
+| `magic_s32.cpp` | `kFacing = 0x4941B0` | the same |
+| `effect_5a_callees.h` | `kPattern = 0x4FEE70` | `bof3::addr::Area109_SwitchPattern` (now includes `symbols.gen.h`) |
+| `effect_6b_callees.h` | `kWaveMark = 0x5100B0`, `kWaveStep = 0x5101C0` | `EffectKind18Sub41_DrawPanels`, `_DrawRings` |
+
+Comments naming the functions as Capcom's or nobody's were brought up to
+date on their own lines (`battle_e1_callees.h`, `battle_e4_callees.h`,
+`battle_e6_callees.h`, `battle_e6.cpp`, `battle_sprites_callees.h`,
+`battle_turn_steps_callees.h`, `effect_6b.cpp`, `mode_states.cpp`,
+`field_e2.cpp`, `scena_sx2.cpp`, `widescreen.cpp`, `widescreen.h` (two
+lines), `draw_pool.cpp`).
+
+**Left raw, on purpose**: the fuzz files' `CallSite` tables and stand-in rows
+keyed by the address (`battle_e1_fuzz`, `battle_e4_fuzz`, `battle_e6_fuzz`,
+`battle_sprites_fuzz`, `battle_turn_steps_fuzz`, `effect_1a_fuzz`,
+`effect_2c_fuzz`, `effect_5a_fuzz`, `effect_6b_fuzz`, `magic_s32_fuzz`,
+`map_layers_fuzz`, `rest_2b_fuzz`: the copies' call targets, the round-ten
+rule); the harnesses' rows (`scenario_harness.cpp`'s five `FX_RAW`,
+`boss_harness.cpp`'s two - not this group's to edit, and keyed by address so
+they still serve, section 5); comments that only cite an address beside what
+it does (`effect_4f.cpp`'s "part 6" notes, `effect_2c.cpp`, `effect_5a.cpp`,
+`effect_6b.cpp` 801-802, `battle_e1.cpp`, `battle_e4.cpp`,
+`battle_turn_steps.cpp`, `rest_2b.cpp`, `magic_s32.cpp` 636, `widescreen.cpp`
+62). None is in a module of this round's groups (`rest_*`) but `rest_2b_callees.h` (wave two's, merged).
 
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
