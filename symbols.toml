@@ -103968,3 +103968,576 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R1D): 0x520840 0x51FC80 0x52F5C0 (PartyAction_ScriptEnd); jumped through by PartyFormAction13_Form0 0x5226B0 by Sprite_Current +2, unchecked; the next table starts at 0x65FEC4 (its own reader's). docs/rest_1d.md."
+
+# ---------------------------------------------------------------------------
+# Round fourteen, wave two, group R2F (2026-10-04, docs/rest_2f.md): 49
+# functions at 0x58ED40..0x596F98 - the field menu's Tactics screen, the
+# Config screen's steps and state 8, the Ability screen's helpers, window-record
+# handlers 1 and 2 with their kinds, window kind 1's list, three helpers called
+# by address - and the state tables they sit in. Read with capstone to the last
+# instruction; fuzzed under BOF3X_SHADOW=rest_2f.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x58ED40
+name = "AbilityMenu_InitRecords"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F, capstone to the last instruction), 0x58ED40..0x58EE3B (0xFC bytes), no calls: E8 from 0x58D7D0 (the Ability screen's step 0, table 0x6673E0, R2E): window records 11 (handler 6 kind 9, state 2, x 0x14, y -0x14), 12 (kind 0xD, x 0x40, +0xA 2, +0xB 0xFF) and 16 (kind 0x11, x 0x140, y 0x3E, +8..+0xD and +0x10 reset) set up and opened, 19 (kind 0xA) and 21 (kind 0xE) set up closed. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58EE40
+name = "AbilityList_SortBy"
+ret = "void"
+params = "unsigned mode"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58EE40..0x58EE4F (0x10 bytes): E8 from 0x58E640 (R2E) with a mode: jmp [AbilityList_SortModes + 4 * (mode and 0xFF)], unchecked (ours aborts past 3). docs/rest_2f.md."
+
+[[func]]
+pc = 0x58EE50
+name = "AbilityList_Compact"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58EE50..0x58EEBF (0x70 bytes): AbilityList_SortModes[0], and called first by the other two: nine bubble passes over Char_AbilityList(record 16 +0xA, +0xB, 0) fetched afresh each pass, a neighbouring pair swapped through 0x58BD50 (R2E) when its first byte is 0 and its second is not - the empty slots to the end. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58EEC0
+name = "AbilityList_SortByApDown"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58EEC0..0x58EF59 (0x9A bytes): AbilityList_SortModes[1]: AbilityList_Compact, then nine bubble passes swapping a pair of two abilities when the first's Ability_Records +0x12 byte (the AP cost, Skill_ApCost's field) is below the second's (unsigned, jae) - highest cost first. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58EF60
+name = "AbilityList_SortByApUp"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58EF60..0x58EFF9 (0x9A bytes): AbilityList_SortModes[2]: as AbilityList_SortByApDown with jbe - the pair swaps when the first costs more, lowest first. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F000
+name = "AbilityMenu_InitRecord17"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F000..0x58F044 (0x45 bytes), no calls: E8 from 0x58EA70 (R2E): window record 17 (handler 6 kind 0x14, state 2, x 0x140, y 0x3E) opened, +8 and +0xA..+0xC cleared. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F050
+name = "FieldMenu_FreeRecords13To18"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F050..0x58F070 (0x21 bytes): E8 from 0x58E9D0 (R2E): window records 13..18 byte +0 = 0. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F080
+name = "Tactics_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F080..0x58F08D (0xE bytes): FieldMenu_States[5] (the Tactics screen, docs/menu-screens.md section 1): jmp [TacticsMenu_Steps + 4 * byte 0x929F01], unchecked (ours aborts past 7). docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F090
+name = "Tactics_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F090..0x58F16B (0xDC bytes): TacticsMenu_Steps[0]: window records 11 (kind 9), 19 and 20 (kind 0xA, closed), 18 (kind 0xD at x 0x70, +0xA 7) and 21 (kind 0xE, closed) set up; Menu_DrawBackdrop(0x903A5B); 0x6BDFCB (the top's choice) 0; sound 0x102; 0x929F01 + 1, 0x929F02 0, 0x929F04 5. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F170
+name = "Tactics_Top"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F170..0x58F2E6 (0x177 bytes): TacticsMenu_Steps[1]: the backdrop; record 11's word +0x10 = 0x1F + the choice 0x6BDFCB; the hand (record 21) at record 18's x + 0x30 choice while 18's +3 is 0; Input_AutoRepeat(pressed and 0xA000) toggles the choice (sound 0x101); confirm: choice 0 TacticsFormation_Build, choice 1 TacticsMembers_Build when Field_InputFlags bit 0 (else sound 0x107 and nothing), sounds 0x102 0x104, 0x929F01 += choice + 1; cancel: sounds 0x102 0x106, records 11 and 18 to state 1, 19..21 closed, 0x929F01 += 3. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F2F0
+name = "Tactics_Formation"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F2F0..0x58F2FD (0xE bytes): TacticsMenu_Steps[2]: jmp [TacticsFormation_Steps + 4 * byte 0x929F02], unchecked (ours aborts past 3). docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F300
+name = "TacticsFormation_Enter"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F300..0x58F368 (0x69 bytes): TacticsFormation_Steps[0] (and TacticsMenu_Steps[6] by the layout): the backdrop; 0x929F04 down by one, at 0 the party's window records 4.. (below Party_Count(0), asked after each) get +0xB = 1 and 0x929F02 + 1. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F370
+name = "TacticsFormation_Pick"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F370..0x58F75E (0x3EF bytes): TacticsFormation_Steps[1], the formation grid: records 19 (the cell picked, 0x6BDFC6 / C8, 0x7F none) and 20 (the cursor 0x6BDFC9 / CA) placed from the 8-byte cells 0x667450 [3 row + col]; records 12..17 +0xC cleared and the set cell's (11 + col + 2 row of 0x6BDFC5 / C7) +0xC = 1 shl row on column 0, else 7; confirm sets the formation (column 1..2), picks a cell or swaps the two party bytes 0x904065 + row through 0x58BD50; cancel drops the pick, leaves the menu (0x929F10 1: Game_Step + 1, step 6) or writes 0x904060 and sends records 12..17 of kind 0xB out; the cursor by Input_AutoRepeat (0x5000 rows, 0xA000 columns while a cell is picked) wrapping over 0x6BDFBC's open cells; sound 0x101 when it moved. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F760
+name = "TacticsFormation_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F760..0x58F7C8 (0x69 bytes): TacticsFormation_Steps[2]: the backdrop; at 0x929F04's end the party's records 4.. +0xB = 0 and 0x929F01 - 1 (back to the top). docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F7D0
+name = "Tactics_Members"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F7D0..0x58F7DD (0xE bytes): TacticsMenu_Steps[3]: jmp [TacticsMembers_Steps + 4 * byte 0x929F02], unchecked (ours aborts past 3). docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F7E0
+name = "TacticsMembers_Enter"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F7E0..0x58F886 (0xA7 bytes): TacticsMembers_Steps[0]: the backdrop; at 0x929F04's end each party record 4.. whose member (0x904062 + 3 rec +0xB + rec +0xA, through MoveScript_EffectState) has CharacterRecords +0xB bit 1 gets +0xC = 1; 0x929F02 + 1. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58F890
+name = "TacticsMembers_Pick"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F890..0x58FB5F (0x2D0 bytes): TacticsMembers_Steps[1]: records 19 (cursor 0x929F08 / 09) and 20 (pick 0x929F0A / 0D) from the 8-byte cells 0x6674C8 [col + 2 row]; a refused member (0x6BDFD7) named through TextRecord_Set(0, 8, its record), record 11 +0x10 0x61, else 0x60; Input_AutoRepeat(0xF000): left / right switch columns while the reserve (record 12 +0xA) is not empty, the row held inside the column, up / down wrap; sound 0x100; confirm picks a cell (0x103) or runs TacticsMembers_Swap (its al to 0x6BDFD7, 0x103 or 0x107); cancel drops the pick or goes on to the leave step. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58FB60
+name = "TacticsMembers_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58FB60..0x58FBC8 (0x69 bytes): TacticsMembers_Steps[2]: the backdrop; at 0x929F04's end the party's records 4.. +0xC = 0 and 0x929F01 - 2 (back to the top). docs/rest_2f.md."
+
+[[func]]
+pc = 0x58FBD0
+name = "Tactics_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58FBD0..0x58FC5C (0x8D bytes): TacticsMenu_Steps[4]: the backdrop; at 0x929F04's end FieldMenu_FreeRecords12To18, the party's records 4.. to state 4, 0x929F04 5, records 7..10 to state 2, the field menu to its top bar (0x929F00 1, 0x929F01 0). docs/rest_2f.md."
+
+[[func]]
+pc = 0x58FC60
+name = "Tactics_OpenFormation"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58FC60..0x58FD50 (0xF1 bytes): TacticsMenu_Steps[5], Tactics entered at the formation: record 11 (kind 9, x 0x14, y 0x10), 19 and 20 set up closed, the party's records 4.. (handler 6 kind 0, +0xA the slot, x 0x11, y 0x3E + 0x36 slot, +0xB 1) opened; the backdrop; TacticsFormation_Build; 0x929F01 2, 0x929F02 0, 0x929F04 5. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58FD60
+name = "TacticsFormation_Build"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58FD60..0x58FEE4 (0x185 bytes): E8 from Tactics_Top and Tactics_OpenFormation: by Party_Count(0) (1, 2, else) a limit 1 / 3 / 6 and a base 0 / 1 / 4; the grid 0x6BDFBC: column 0 open below the count, columns 1..2 six cells n in order, open when 0x904061 bit n and n below the limit, each opening window record 12 + n (handler 6 kind 0xB, x 0xF5 + 0x4B col, y 0x3E + 0x36 row, +0xA n + base, +0xB n, +0x10 0xE00); the set from 0x904060 (column v and 1 plus 1, row v shr 1), the pick 0x7F, the cursor 0, 0. docs/rest_2f.md."
+
+[[func]]
+pc = 0x58FEF0
+name = "TacticsMembers_Build"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58FEF0..0x59001E (0x12F bytes): E8 from Tactics_Top: each of the eight CharacterRecords with +0xB bit 0 whose id +9 is not among the party's Party_Count(0) bytes 0x904062.. listed at 0x6BDFD4; record 12 (handler 6 kind 0x13, x 0x140, y 0x3B, +0xA the count, +0x20 the list) opened; the flags 0x6BDFCC + 2 row (party) and 0x6BDFCD + 2 row (reserve) written after the list, which they overlap from the reserve's fourth entry; the cursor 0, 0, the pick 0x7F, 0x6BDFD7 0xFF. docs/rest_2f.md."
+
+[[func]]
+pc = 0x590020
+name = "TacticsMembers_Swap"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x590020..0x590292 (0x273 bytes): E8 from TacticsMembers_Pick, answers al: cursor and pick in one column - the party's two records +0xC, party bytes (0x58BD50) and portrait cells 0x9398C0 + 4 row / 0x939880 and 0x9398A0 + 6 row exchanged, or the two reserve bytes (0x58BD50); al 0xFF. Across the columns: the party member or the reserve member whose CharacterRecords +0xB has bit 1 refuses and is the answer; else sound 0x103, the party bytes (and the copy 0x904065..) of the one become the other, the reserve's the reverse, the party row's portrait cells cleared; al 0xFF. docs/rest_2f.md."
+
+[[func]]
+pc = 0x5902A0
+name = "FieldMenu_FreeRecords12To18"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x5902A0..0x5902C5 (0x26 bytes): E8 from Tactics_Close: window records 12..18 byte +0 = 0. docs/rest_2f.md."
+
+[[func]]
+pc = 0x5902D0
+name = "FieldMenu_State8Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x5902D0..0x5902DD (0xE bytes): FieldMenu_States[8]: jmp [FieldMenu_State8Steps + 4 * byte 0x929F01], unchecked (ours aborts past 4). docs/rest_2f.md."
+
+[[func]]
+pc = 0x5902E0
+name = "ConfigMenu_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x5902E0..0x5902ED (0xE bytes): FieldMenu_States[7] (the Config screen, docs/menu-screens.md section 1): jmp [ConfigMenu_Steps + 4 * byte 0x929F01], unchecked (ours aborts past 3). docs/rest_2f.md."
+
+[[func]]
+pc = 0x5902F0
+name = "ConfigMenu_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x5902F0..0x590330 (0x41 bytes): ConfigMenu_Steps[0]: the backdrop; 0x929F01 + 1, 0x929F04 5, 0x929F02 0, 0x929F03 2; the top bar's cursor 0x929F05 kept at 0x6BDFD8 and cleared. docs/rest_2f.md."
+
+[[func]]
+pc = 0x590340
+name = "ConfigMenu_Body"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x590340..0x590344 (5 bytes): ConfigMenu_Steps[1]: jmp 0x460CB0, the Config screen's own machine (R4F's). docs/rest_2f.md."
+
+[[func]]
+pc = 0x590350
+name = "ConfigMenu_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x590350..0x5903E4 (0x95 bytes): ConfigMenu_Steps[2]: the backdrop; the party's records 4.. to state 4 at x 0xFF6A; records 7..10 to state 2; 0x929F04 0, the field menu to its top bar (0x929F00 1, 0x929F01 0, 0x929F02 0) with 0x929F05 from 0x6BDFD8. docs/rest_2f.md."
+
+[[func]]
+pc = 0x590E80
+name = "Stat_AddClampedTo"
+psx = 0x80165F60
+ret = "unsigned"
+params = "unsigned short *stat, unsigned cap, unsigned delta"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x590E80..0x590ED3 (0x54 bytes), no calls: E8 from Effect_DrainHp and Effect_DrainAp (battle_e5.cpp): the u16 stat plus the delta's low word as s16, clamped to the cap's low word (unsigned, jbe) on a rise and to 0 (s16) on a fall; answers the change made - ax 0 at the cap / at 0 / for a delta of 0, the delta unclamped, cap - old or -old clamped; only the low word is defined (the upper half is the delta's or the caller's ecx's), and the callers read it as a s16 amount. Stat_AddClamped 0x590E30 with the cap an argument. PSX twin 0x80165F60 (pairs_propagated gap47; no sibling name). docs/rest_2f.md."
+
+[[func]]
+pc = 0x591AC0
+name = "AbilityList_CountSet"
+ret = "unsigned char"
+params = "unsigned member, unsigned which, unsigned current"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x591AC0..0x591B4D and its 4-entry jump table 0x591B50 (0xA0 bytes; the cut's 96 stopped short), no calls: E8 from SharedList_DrawList (field_s.cpp): the record of member byte - CharacterRecords + 0xA4 m for current byte 0, else the working record 0x802DC0 + 0x14C m - plus 0x60 / 0x6A / 0x74 / 0x7E for which 0..3, ten bytes; any other which the 0x80 bytes at 0x904574; answers in al the count of non-zero bytes. Char_AbilityList's twin that counts. docs/rest_2f.md."
+
+[[func]]
+pc = 0x594D90
+name = "ItemTrade_TakeNeeds"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x594D90..0x594DF4 (0x65 bytes): E8 from ItemTrade_Confirm (field_e2.cpp): for k 0..2 of the trade kind 0x66AD10[s8 0x6BE08C + 10 * 0x905B88] (8 bytes a kind at 0x66AB5A: three item bytes, 0xFF ending, then their counts), Inventory_Remove(0, item + 0x38, the s8 count times the s8 0x6BE08E) - the kind looked up again by 0x6BE08C's low nibble for the item, a fourth word 0 pushed. docs/rest_2f.md."
+
+[[func]]
+pc = 0x596090
+name = "Window_Kind1List"
+psx = 0x8015AB60
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596090..0x5960C3 (0x34 bytes): E8 from Window_Kind1Frame: choices 0..the s8 0x7DEE66 each through Text_DrawImmediate(0x3A, its y byte 0x7DEE6F + n, the text from 0x7DEE50 and then where the last ended); the y dword's upper half is the text pointer's. PSX twin 0x8015AB60 (pairs_propagated gap47; no sibling name). docs/rest_2f.md."
+
+[[func]]
+pc = 0x596120
+name = "Window_Kind1Cursor"
+psx = 0x8015AC54
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596120..0x59614C (0x2D bytes): Window_Kind1Frame's tail jump: Menu_DrawHand((the current record's x s16 sar 4) + 4, the y byte of choice s8 0x7DEE67, 0). PSX twin 0x8015AC54 (pairs_propagated gap47; no sibling name). docs/rest_2f.md."
+
+[[func]]
+pc = 0x596330
+name = "Window_Kind1Layout"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596330..0x596505 and its tables 0x596508 (four jumps) / 0x596518 (ten bytes) (0x1F2 bytes; the cut's 544 ran over 0x596530), no calls: E8 from Window_Kind1Open: the choices' text from 0x7DEE50 walked (0 ends a choice and counts a line, 1 counts a line, 4 5 7 8 9 two bytes, a byte from 0x80 two bytes), each choice's first line at 0x7DEE6F + n; the current record's +0xA 0xDC, +0xB (last + 4) 2 + 13 lines, x / y (+4 / +6) in 16ths, +0x10 / +0x12 0, +0x14 / +0x16 a fifth of 16 w / h, +0x18 0x30, +0x1A 0x78 - (last + 13 lines) / 2; then each choice's y byte 13 line + 2 n + 0x7C - (last + 13 lines) / 2. docs/rest_2f.md."
+
+[[func]]
+pc = 0x596530
+name = "Window_Handler1Kinds"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F; in no list, band_rows.py flagged it inside 0x596330's catalog span), 0x596530..0x596541 (0x12 bytes): Field_RunTaskRecords' handler 1 (its stack table's imm32 at 0x59E245): jmp [Window_Handler1KindTable + 4 * the record's +2], unchecked (ours aborts past 4). docs/rest_2f.md."
+
+[[func]]
+pc = 0x596550
+name = "Win1_TitleStrip"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596550..0x5965CB (0x7C bytes): Window_Handler1KindTable[1]: call [Win1_TitleStripStates + 4 * the record's +3] (unchecked); Menu_DrawTitleBox(x, y, 0x118, 0x13, 0x903A5A); while the word +0x10 is not 0, Text_DrawAt(x + 7, y + 3, 0, 0xFF, MessagePools + the word MessagePools[s16 +0x10]). docs/rest_2f.md."
+
+[[func]]
+pc = 0x5965D0
+name = "Win1_ButtonRow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x5965D0..0x596603 (0x34 bytes): Window_Handler1KindTable[2]: call [Win1_ButtonRowStates + 4 * +3]; Menu_DrawButtonRow(x, y, +0xA, +0xB, 0). docs/rest_2f.md."
+
+[[func]]
+pc = 0x596610
+name = "Win1_ShisuPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596610..0x59662F (0x20 bytes): Window_Handler1KindTable[3]: call [Win1_ShisuPanelStates + 4 * +3]; Win1_DrawShisuPanel(the record). docs/rest_2f.md."
+
+[[func]]
+pc = 0x596630
+name = "Win1_DrawShisuPanel"
+ret = "void"
+params = "unsigned char *rec"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596630..0x5968D9 (0x2AA bytes): E8 from Win1_ShisuPanel: Menu_DrawBox(x + 3, y + 3, 0x95, 0xA0, 0, 0x903A5A); four Menu_DrawItemRow rows (category 0, id 0x66AE8C[i], count the byte i of the +0x20 list, colour 7 and dim for a 0 byte), the row at +0xA raised 2 over a colour-7 dim shadow; Text_DrawAt of the string 0x66AE90 (SHISU) at x + 6 (13 - its bytes), y + 7; Menu_DrawPieces 0x66AE74, 0x66AE80; 59 Menu_DrawPiece of the frame. docs/rest_2f.md."
+
+[[func]]
+pc = 0x5968E0
+name = "Window_Handler2Kinds"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x5968E0..0x5968F1 (0x12 bytes): Field_RunTaskRecords' handler 2 (its stack table's imm32 at 0x59E250): jmp [Window_Handler2KindTable + 4 * the record's +2], unchecked (ours aborts past 5). docs/rest_2f.md."
+
+[[func]]
+pc = 0x596900
+name = "Win2_ItemList"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596900..0x59691F (0x20 bytes): Window_Handler2KindTable[0]: call [Win2_ItemListStates + 4 * +3]; Win2_DrawItemList(the record). docs/rest_2f.md."
+
+[[func]]
+pc = 0x596920
+name = "MenuSlide_LeftOff170"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596920..0x596947 (0x28 bytes): word [rec + 4] -= 0x20; below the bound (s16, jge) it is the bound and +3 = 0; the bound is the imm32 of mov ecx, -170 at 0x596926, which DIV-0041 widens (widescreen.cpp kSlides); ours reads it there. A state of Win2_ItemListStates[1], Win2_EquipCompareStates[1], 0x66B2E8 and 0x66B570. docs/rest_2f.md."
+
+[[func]]
+pc = 0x596950
+name = "MenuSlide_RightTo80"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596950..0x596977 (0x28 bytes): word [rec + 4] += 0x20; above 0x50 (s16, jle) it is 0x50 and +3 = 0. Win2_ItemListStates[2]. docs/rest_2f.md."
+
+[[func]]
+pc = 0x596980
+name = "Win2_ItemPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596980..0x59699F (0x20 bytes): Window_Handler2KindTable[2]: call [Win2_ItemPanelStates + 4 * +3]; Menu_DrawItemPanel(the record). docs/rest_2f.md."
+
+[[func]]
+pc = 0x5969A0
+name = "Win2_EquipCompare"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x5969A0..0x5969D4 (0x35 bytes): Window_Handler2KindTable[3]: call [Win2_EquipCompareStates + 4 * +3]; Menu_DrawEquipCompare(7, x, y, the +0x20 pointer, +0xD, the record). docs/rest_2f.md."
+
+[[func]]
+pc = 0x5969E0
+name = "Win2_TitleBox"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x5969E0..0x596A53 (0x74 bytes): Window_Handler2KindTable[4]: call [Win2_TitleBoxStates + 4 * +3]; Menu_DrawTitleBox(x, y, word +0x12, 0x13, 0x903A5A); while the word +0x10 is not 0, Text_DrawAt(x + 7, y + 3, 0, 0xFF, Msg_SystemPtr(it)). docs/rest_2f.md."
+
+[[func]]
+pc = 0x596A60
+name = "MenuSlide_DownTo40"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596A60..0x596A87 (0x28 bytes): word [rec + 6] += 0x10; above 0x28 (s16, jle) it is 0x28 and +3 = 0. Win2_TitleBoxStates[3]. docs/rest_2f.md."
+
+[[func]]
+pc = 0x596A90
+name = "Win2_DrawItemList"
+ret = "void"
+params = "unsigned char *rec"
+impl = "src/game/rest_2f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x596A90..0x596F97 (0x508 bytes): E8 from Win2_ItemList - Menu_DrawItemList's shape with nine rows: the 0x99 x 0x9A box; Menu_ListScroll(+0xB, the offset in the record argument's own low byte, moving, +0x12); moving + 9 rows of Inventory_IdLists / CountLists[+0xA] from the top, dim by Item_CanUse(+8, the member of 0x904062[s8 0x929F06], category, id) unless +9, colour 2 on the cursor +0xD, the cursor's and +0xC's row raised 2 over a colour-7 shadow; the title 0x66AF10[category] at x + 6 (13 - Text_CharCount) through the Text_DrawAt call at 0x596D13 that DIV-0059 re-aims; %3d/%3d of Inventory_CountUsed and the room (0x20 / 0x80) in Text_DrawFont8; the arrows by +0x10 bits 1 and 0 and its high nibble counted down; the frame's pieces; Menu_DrawScrollBar over 9 rows. docs/rest_2f.md."
+
+[[data]]
+pc = 0x667444
+name = "AbilityList_SortModes"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): AbilityList_Compact, AbilityList_SortByApDown, AbilityList_SortByApUp; jumped through by AbilityList_SortBy 0x58EE40 by its argument byte, unchecked; the formation's 8-byte cursor places 0x667450 follow. docs/rest_2f.md."
+
+[[data]]
+pc = 0x667498
+name = "TacticsMenu_Steps"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): Tactics_Open, Tactics_Top, Tactics_Formation, Tactics_Members, Tactics_Close, Tactics_OpenFormation, and at 6 TacticsFormation_Enter - entries 6.. are TacticsFormation_Steps and TacticsMembers_Steps, the run of code pointers going on to 0x6674C8; jumped through by Tactics_Run 0x58F080 by 0x929F01, unchecked. The count is the reach of the screen's own writes of 0x929F01 (0..6; 6 is TacticsFormation_Pick's way out of the menu). docs/rest_2f.md."
+
+[[data]]
+pc = 0x6674B0
+name = "TacticsFormation_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): TacticsFormation_Enter, TacticsFormation_Pick, TacticsFormation_Leave; jumped through by Tactics_Formation 0x58F2F0 by 0x929F02, unchecked; TacticsMembers_Steps follows (its own reader's). docs/rest_2f.md."
+
+[[data]]
+pc = 0x6674BC
+name = "TacticsMembers_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): TacticsMembers_Enter, TacticsMembers_Pick, TacticsMembers_Leave; jumped through by Tactics_Members 0x58F7D0 by 0x929F02, unchecked; the members screen's 8-byte cursor places 0x6674C8 follow. docs/rest_2f.md."
+
+[[data]]
+pc = 0x6674F8
+name = "FieldMenu_State8Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): four BareRet 0x437CC0; jumped through by FieldMenu_State8Run 0x5902D0 by 0x929F01, unchecked; the run of code pointers ends at 0x667508 (data). docs/rest_2f.md."
+
+[[data]]
+pc = 0x66750C
+name = "ConfigMenu_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): ConfigMenu_Open, ConfigMenu_Body, ConfigMenu_Close; jumped through by ConfigMenu_Run 0x5902E0 by 0x929F01, unchecked; the run ends at 0x667518 (data). docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AE40
+name = "Window_Handler1KindTable"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): MenuWin_Hand, Win1_TitleStrip, Win1_ButtonRow, Win1_ShisuPanel; jumped through by Window_Handler1Kinds 0x596530 by the window record's +2, unchecked; Win1_TitleStripStates follows (its own reader's). docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AE50
+name = "Win1_TitleStripStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): BareRet, MenuSlide_UpOff, MenuSlide_DownTo16; called through by Win1_TitleStrip 0x596550 by the record's +3, unchecked; Win1_ButtonRowStates follows. docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AE5C
+name = "Win1_ButtonRowStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): BareRet, MenuSlide_UpOff, MenuSlide_DownTo38; called through by Win1_ButtonRow 0x5965D0 by +3, unchecked; Win1_ShisuPanelStates follows. docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AE68
+name = "Win1_ShisuPanelStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): BareRet, MenuSlide_LeftOff, MenuSlide_RightTo17; called through by Win1_ShisuPanel 0x596610 by +3, unchecked; the panel's piece lists 0x66AE74 follow. docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AEC8
+name = "Window_Handler2KindTable"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): Win2_ItemList, MenuWin_Hand, Win2_ItemPanel, Win2_EquipCompare, Win2_TitleBox; jumped through by Window_Handler2Kinds 0x5968E0 by the window record's +2, unchecked; Win2_ItemListStates follows. docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AEDC
+name = "Win2_ItemListStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): BareRet, MenuSlide_LeftOff170, MenuSlide_RightTo80; called through by Win2_ItemList 0x596900 by +3, unchecked; Win2_ItemPanelStates follows. docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AEE8
+name = "Win2_ItemPanelStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): BareRet, MenuSlide_RightOff, 0x59A610 (R2G's); called through by Win2_ItemPanel 0x596980 by +3, unchecked; Win2_EquipCompareStates follows. docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AEF4
+name = "Win2_EquipCompareStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): BareRet, MenuSlide_LeftOff170, MenuSlide_RightTo17; called through by Win2_EquipCompare 0x5969A0 by +3, unchecked; Win2_TitleBoxStates follows. docs/rest_2f.md."
+
+[[data]]
+pc = 0x66AF00
+name = "Win2_TitleBoxStates"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2F): BareRet, MenuSlide_UpOff, MenuSlide_DownTo16, MenuSlide_DownTo40; called through by Win2_TitleBox 0x5969E0 by +3, unchecked; Win2_DrawItemList's title pointers 0x66AF10 follow. docs/rest_2f.md."
