@@ -380,7 +380,7 @@ void Seed(unsigned k) {
     B(kBColour) = static_cast<unsigned char>(PickOf(0xFF - three, 0xFE - three, 0x100 - three, 0x80, 0xFF, 0, sh::Next()));
     B(kBColour + 1) = static_cast<unsigned char>(PickOf(0xFF - three, 0xFE - three, 0x100 - three, 0x80, 0xFF, sh::Next()));
     B(kBColour + 2) = static_cast<unsigned char>(PickOf(three, three + 1, three - 1, 0, 0x80, sh::Next()));
-    SetLong(Mem(kBAngle), Signed(PickOf(0, 0x1000, 0x2000, 0xFC0, 0x40, 0xFFF, 0x1001, sh::Next())));
+    SetLong(Mem(kBAngle), Signed(PickOf(0, 0x1000, 0x2000, 0xFC0, 0x40, 0xFFF, 0x1001, 0x800, 0x1800, sh::Next())));
     // model B's y on a whole unit half the time (Shisu_ModelBDrop compares it,
     // 0x200000 on, with the elevation << 16)
     if (sh::Half()) SetLong(Mem(kBY), Signed(sh::Next() & 0xFFFF0000u));
@@ -391,7 +391,7 @@ void Seed(unsigned k) {
     for (unsigned i = 0; i < 4; ++i) SeedModel(sh::SpriteRecord(i), sh::Half() ? HeaderA() : HeaderB(), sh::Half() ? QuadsA() : QuadsB());
     sh::SetPointer(kModelFile, File());
     // the pad
-    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, sh::Next()));
+    MoveScript_WaitWordDA = static_cast<unsigned short>(PickOf(0, 0, 1, sh::Next()));
     Input_Pressed = static_cast<unsigned short>(PickOf(0, 0x1000, 0x4000, 0x5000, 0x8000, 0x2000, 0xF000, 0x20, 0x40,
                                                        0x60, 0x10, sh::Next()));
     Field_ConfirmButtons = static_cast<unsigned short>(PickOf(0x20, 0x40, 0x60, 0, sh::Next()));
