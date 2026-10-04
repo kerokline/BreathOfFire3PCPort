@@ -52,7 +52,7 @@ const Callees kOriginals = {
     Field_CellAhead, Fn<long (__cdecl*)(long, long, unsigned)>(0x5725C0),
     Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(0x592890),
     Rand,
-    Fn<unsigned char (__cdecl*)()>(0x527640), Field_CellAheadFlat,
+    Fn<unsigned char (__cdecl*)()>(bof3::addr::Field_CellAheadRaised), Field_CellAheadFlat,
     Field_ReadCells, Field_CellClass, Field_TurnUnless, Field_CellSlope, Field_CellPairTurn,
     Field_CellKind,
     AreaMap_ByteAt, Field_CellFacing, Field_ObjectAhead,
@@ -616,7 +616,7 @@ extern "C" unsigned char __cdecl Member_Idle(void) {
 
 // --- the cell ahead ----------------------------------------------------------------
 
-// original 0x526DB0 (PSX 0x801BA590): the cell ahead, by 0x527640 for a raised
+// original 0x526DB0 (PSX 0x801BA590): the cell ahead, by Field_CellAheadRaised for a raised
 // sprite (+0x70) and Field_CellAheadFlat otherwise (tail jumps). Also called by
 // the leader (0x52E160) and 0x526530 / 0x526C80.
 extern "C" unsigned char __cdecl Field_CellAhead(void) {
