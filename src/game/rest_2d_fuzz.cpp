@@ -201,6 +201,15 @@ U FxCell(const U*, U answer) {
     const U n = sh::Noise();
     return WithAl(answer, n % 6 == 0 ? n >> 8 : kCodes[(n >> 3) % 10]);
 }
+// Input_AutoRepeat: none of the bits a third of the time, else one or two of
+// those the screens test (0x8000, 0x4000, 0x2000, 0x1000, 8, 4), else any.
+U FxRepeat(const U*, U answer) {
+    static const U kBits[] = {0x8000, 0x4000, 0x2000, 0x1000, 8, 4};
+    const U n = sh::Noise();
+    if (n % 3 == 0) return answer & 0xFFFF0000u;
+    if (n % 3 == 1) return (answer & 0xFFFF0000u) | kBits[(n >> 4) % 6] | (n & 0x100 ? kBits[(n >> 9) % 6] : 0);
+    return answer;
+}
 // Skill_ApCost: a cost around the AP words the seed puts in (0..0x30).
 U FxCost(const U*, U answer) {
     const U n = sh::Noise();
@@ -218,7 +227,7 @@ constexpr sh::Answer kG = sh::Answer::kGarbage, kF = sh::Answer::kFlag;
 constexpr U kW = 0xFFFFFFFFu, kU8 = 0xFFu, kU16 = 0xFFFFu;
 const sh::Callee kCallees[] = {
     // the engine's (ours), with the width each reads
-    {R2D_OURS(Input_AutoRepeat), 1, {kW}, kG, 0, 0},                       // the pressed bits, masked by the caller
+    {R2D_OURS(Input_AutoRepeat), 1, {kW}, kG, 0, 0, {}, &FxRepeat},        // the pressed bits, masked by the caller
     {R2D_OURS(Sound_PlayEffect), 1, {kU16}, kG, 0, 0},
     {R2D_OURS(Msg_OpenScript), 1, {kU16}, kG, 0, 0},                       // `mov cx, word`: the upper half the caller's
     {R2D_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, kW}, kG, 0, 0},
@@ -251,6 +260,14 @@ const sh::Callee kCallees[] = {
     {"0x586160", at::kPromptBox, at::kPromptBox, 5, {kW, kW, kW, kW, kU8}, kG, 0, 0},     // the style byte under garbage
     {"0x58BC30", at::kItemsWindows, at::kItemsWindows, 0, {}, kG, 0, 0},
     {"0x58C2A0", at::kItemsReset, at::kItemsReset, 0, {}, kG, 0, 0},
+    // FieldAbility_Effects' entries: the typed stand-ins' log slots, keyed on each
+    // handler's address (no clone calls one by E8; the table holds the stand-in)
+#define R2D_EFFECT(i, name) {"FieldAbility_Effects[" #i "] " #name, kEffectAddress[i], kEffectAddress[i], 3, {kW, kW, kW}, kG, 0, 0, \
+                              {}, nullptr, reinterpret_cast<const void*>(kEffectEntries[i])}
+    R2D_EFFECT(0, NotHere), R2D_EFFECT(1, HealOne20), R2D_EFFECT(2, HealOne40), R2D_EFFECT(3, HealOneFull),
+    R2D_EFFECT(4, HealAll40), R2D_EFFECT(5, HealAll120), R2D_EFFECT(6, Clear80), R2D_EFFECT(7, NoEffect),
+    R2D_EFFECT(8, ClearA0), R2D_EFFECT(9, HealFullClearA0),
+#undef R2D_EFFECT
 };
 #undef R2D_OURS
 
@@ -368,6 +385,16 @@ void Seed(unsigned k) {
             if (sh::Half()) Field_Request = 0;
         }
         break;
+    case 0x58AD30:   // the list: half the time a confirm with the scroll still, on a consumable of the first list
+        if (sh::Half()) {
+            SetWord(sh::Mem(0x803346), 0);
+            SetWord(sh::Mem(0x7E1BEC), Word(sh::Mem(0x90358E)));
+            if (sh::Half()) B(0x80333E) = 0;
+            const U list = static_cast<U>(Long(sh::Mem(at::kItemIdLists + 4u * B(0x80333E))));
+            B(list + B(0x803340)) = static_cast<unsigned char>(1 + sh::Next() % 92);
+            B(at::kItemsCategory) = static_cast<unsigned char>(PickOf(0, 0, 1, 3));
+        }
+        break;
     case 0x589FB0: {   // the leader's position words
         SetWord(ObjTrio + 0x36, PickOf(0, 1, 0x7F, 0x8000, sh::Next()));
         SetWord(ObjTrio + 0x3A, PickOf(0, 1, 0x7F, 0x8000, sh::Next()));
@@ -393,8 +420,10 @@ void Args(unsigned k, U* a) {
         a[3] = battle;
         const unsigned limit = (battle & 0xFF) ? 3 : 8;
         a[0] = PickOf(0, 0, hi, a[0] & 0xFFFFFF00u) | (sh::Next() % limit);
-        a[2] = (a[2] & 0xFFFFFF00u) |
-               PickOf(0x46, 0x4B, 0x45, 0x4C, 0xAE, 0xB3, 0xAD, 0xB4, 0x50, 0x73, 0xD7, 0xA8, 0, sh::Next() % 0x100);
+        // each byte the mapping tests, its neighbours, and the two ranges whole
+        a[2] = (a[2] & 0xFFFFFF00u) | PickOf(0x45, 0x4C, 0xAD, 0xB4, 0x50, 0x73, 0xD7, 0xA8, 0x4F, 0xA9, 0, sh::Next() % 0x100,
+                                             0x46 + sh::Next() % 6, 0x46 + sh::Next() % 6, 0xAE + sh::Next() % 6,
+                                             0xAE + sh::Next() % 6);
         break;
     }
     case 0x58A0F0: case 0x58A140: case 0x58A190: case 0x58A1B0: case 0x58A260:
