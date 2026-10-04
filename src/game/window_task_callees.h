@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace window_task {
 
 namespace at {
@@ -69,7 +71,7 @@ constexpr std::uint32_t kSetCursorDraw = 0x5960D0;     // kind 2's frame, a tail
 // The eight handlers of Field_RunTaskRecords' local table that are not ours:
 // entry 0 is Window_Run, entries 1..8 are the other record kinds, unread.
 constexpr std::uint32_t kRecordHandlers[9] = {
-    0x5954B0, 0x596530, 0x5968E0, 0x596FA0, 0x597F60, 0x598890, 0x599B50, 0x59B220, 0x59CB00,
+    0x5954B0, 0x596530, 0x5968E0, 0x596FA0, 0x597F60, bof3::addr::Window_Handler5Kinds, 0x599B50, 0x59B220, 0x59CB00,
 };
 
 using Handler = void (__cdecl*)();

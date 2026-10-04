@@ -55,7 +55,7 @@ constexpr std::uint32_t kNop = bof3::addr::BareRet;           // a bare `ret` (s
 // BattleResultWin_DrawDrops (round twelve: the same value, so the fuzz keys
 // stand); 0x597FA0 is in no group (its one stack entry is BE7's
 // BattleResultWin_DrawLevelUp).
-constexpr std::uint32_t kResultKinds[6] = {0x597FA0, bof3::addr::BattleResultWin_DrawDrops, 0, 0, bof3::addr::BattleResultWin_ExpState, bof3::addr::BattleResultWin_ZennyState};
+constexpr std::uint32_t kResultKinds[6] = {bof3::addr::BattleResultWin_LevelUpStates,bof3::addr::BattleResultWin_DrawDrops, 0, 0, bof3::addr::BattleResultWin_ExpState, bof3::addr::BattleResultWin_ZennyState};
 
 using Handler = void (__cdecl*)();
 
