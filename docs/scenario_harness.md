@@ -1100,3 +1100,78 @@ fuzz does, not what the game does).
 - **`0x5124C0`** (E6C) is a case of `0x512490`'s own switch, as the plan's
   section 4 said: not a function.
 - Everything in sections 5, 6 and 7.9 still holds.
+
+### 8.10 The round's end fold
+
+2026-10-03, on the round branch's tip `22446f5` (8,648 ours), the items
+[`takeover-queue-round13.md`](takeover-queue-round13.md) sections 16 and 18
+left this harness. Each row was read against the code (ours, and Capcom's
+with `tools/pe_disasm.py`) before it changed.
+
+| Row | Was | Now | What the code shows |
+|---|---|---|---|
+| `MapView_LinkPrimAt`, `kEffectOverrides` **and** `kField` | `{kAll, kAll, kAll, kAll}` | `{kAll, kAll, kU8, kU8}` | `0x572FA0`: x and z whole (each low word compared with 0, each high word summed), dy `movsx edx, byte [esp+0x14]` (`0x572FD6`), size `and edi, 0xFF` (`0x572FF6`); ours (`world_map.cpp`) reads the same. The `kField` row had the same whole-word dy; a mask only narrows, so it was folded with it |
+| `0x4FEE70` (`kEffectStd`, Capcom's) | `kFlag` | `kByte` 1..8 with `FxPattern` (the rest of `eax` 0; a quarter of the time `Sprite_Current`'s `+2` when 1..8) | `lea eax, [edi + 1]` (`0x4FEE9F`): the three story flags as bits, plus 1, a whole `eax`; its caller `EffectKind18_09_Pattern` compares all of it (`cmp ecx, eax`, `0x4FEDE3`) and indexes two tables by its byte. `kFlag`'s garbage above `al` never compared equal - E5A's own `FxPattern`, folded |
+| `EffectKind18Sub42_Draw` `0x509A70` (`kEffectStd`) | `{0, kAll}`, `deref {4}` (a pointer) | `{kAll, kU16}`, no `deref` | E5F's `(variant, height)`: the variant a whole word indexing the piece lists and lift words (`lea eax, [ebp + ebp*2]`, `0x509A83`; `[ebp*2 + 0x65E940]`), the height's low word alone reaching the vertex word it is subtracted into (`sub edx, ebp` / `mov [eax - 6], dx`, `0x509B62`) |
+
+**`scenario_harness_ekh.cpp`'s clone sources**: all eight rows and both
+callees are ours now, so each address literal became its symbol's constant,
+the value unchanged - `bof3::addr::EffectKind01_Start` (`0x462BC0`),
+`EffectKind21_Run` (`0x46F2B0`), `EffectKind18_04_Run` (`0x4FD470`),
+`EffectKind18Sub0F_Open` (`0x500D20`), `EffectAngle_Mean` (`0x479970`),
+`EffectKind73_SparkInit` (`0x4857C0`), `EffectKind23_SpawnRays`
+(`0x46F7D0`), `EffectKind2D_End` (`0x472770`), and the copies' call targets
+`Effect_FindFree` (`0x589810`) and `Effect_Release` (`0x589840`). Never
+`&::Name`: the copies are Capcom's bytes, and the six "in place" are the
+originals only because the self-test runs before every effect group's
+inject - `inject_all.cpp` still has `ScenarioHarnessEkh_Inject` above
+`Effect1F_Inject` and every `Effect*_Inject` (checked; its comment now says
+so). `SpritePose_Inject` (line 346) detours the two callees before it, which
+changes nothing: the copies' calls are re-aimed at the trampolines. The two
+`DataTable`s stay literals (`0x654284`, `0x65DAE8`): data names are macros
+casting the address, so `bof3::addr::` cannot spell them. The clones' log
+names now carry the symbol. `scenario_harness.h`'s `kArgs` comment names
+`EffectKind7D_FillF4`.
+
+**`FX_RAW` rows**: no `kEffectStd` row's address has an `impl` in
+`symbols.toml` (a script over all 42 at `22446f5`) - `fold_names.py` had
+taken the rest. The 42 that remain are Capcom's, none named:
+`0x462F10`, `0x46E190`, `0x46F570`, `0x46F690`, `0x46FAE0`, `0x4790C0`,
+`0x4790F0`, `0x479160`, `0x479260`, `0x4794D0`, `0x4796B0`, `0x4799C0`,
+`0x479B70`, `0x479EE0`, `0x47A110`, `0x47A130`, `0x47A150`, `0x47A200`,
+`0x4837B0`, `0x48ED80`, `0x491E30`, `0x4920F0`, `0x492260`, `0x4941B0`,
+`0x4FEE70`, `0x5100B0`, `0x5101C0`, `0x5171E0`, `0x52B1B0`, `0x52B200`,
+`0x52B2A0`, `0x52B2E0`, `0x52B330`, `0x52B370`, `0x52B6C0`, `0x586160`,
+`0x593950`, `0x59E930`, `0x5A7570`, `0x5A7840`, `0x5A7A90`, `0x5A7C70`.
+(`kField`'s eleven rows keyed by address, `0x58BD50` .. `0x591AC0`, are
+Capcom's too.)
+
+**The proof** (this worktree's i686 build): `BOF3X_SHADOW='*'` headless,
+narrow and with `BOF3X_WIDE=1`: both exit 0, `inject: 8648 ours`, 716
+self-test lines, **no non-zero MISMATCHES line**. No merged group changed its
+verdict: the groups that call a changed row without re-listing it (E4F and
+E4B among those that call `MapView_LinkPrimAt` through a standard row) stay
+at 0; `0x4FEE70` and `0x509A70` are re-listed by their only callers
+(E5A, E5F), so the standard rows serve groups to come.
+
+**Controls** (each planted, built, its shadow run alone, restored and
+rebuilt; scratch `fold/control.py`):
+
+| Control | Shadow | Result |
+|---|---|---|
+| E4F's `EffectKindAB_DrawDrop` links with dy 1 instead of 0 | `effect_4f` | **refused**, 4,000 rounds (the log's entry, not a count) |
+| ... with dy `0x100` (only bits above the byte) | `effect_4f` | 0 mismatches - equivalent, as the real one reads the byte; the old `kAll` row would have refused it |
+| E5A's re-listing of `0x4FEE70` dropped (the standard row serving) | `effect_5a` | 0 mismatches |
+| ... and `EffectKind18_09_Pattern` always taking the "changed" path | `effect_5a` | **refused**, 1,065 rounds (the rounds where the row answered the record's `+2`) |
+| ... the same mutant against the old `kFlag` row | `effect_5a` | ours aborts (`+2` stored as a garbage byte, index 180 past `0x65DE62`'s nine): the old row could not serve this caller at all |
+| E5F's re-listing of `EffectKind18Sub42_Draw` dropped | `effect_5f` | 0 mismatches |
+| ... and `Draw42` passing the height + 1 | `effect_5f` | **refused**, 18,932 rounds over the six states |
+| ... and the height `^ 0x10000` (above the low word) | `effect_5f` | 0 mismatches - equivalent, as the real one stores the low word |
+| `EffectKindAF_DrawScreen`'s width `Widescreen_FillWidth() + 1` | `effect_4f` | **refused**, 4,000 rounds |
+| `EffectKind89_DrawTint`'s width `Widescreen_FillWidth() + 1` | `effect_4b` | **refused**, 4,000 rounds |
+
+The last two are the widened fills of DIV-0041's round's-end amendment
+(E4B's `0x489D47`, E4F's `0x493308`; [`widescreen.md`](widescreen.md)
+section 5): unarmed during every self-test, so the fuzz compares the
+original's 320 x 240 and a wrong width is refused. `tools/ledger_check.py`:
+72 entries, 0 errors.
