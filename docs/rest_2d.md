@@ -424,7 +424,19 @@ hash on `menu_screens.txt` and the master route covers them after the merge.
 
 ## 10. Self-tests and the entry list
 
-SELFTESTS
+2026-10-04, this worktree, headless (`BOF3X_SELFTEST_ONLY=1`), the final
+build:
+
+- `BOF3X_SHADOW=rest_2d`: exit 0, 306,000 rounds over 51 functions, 0
+  mismatches (also with `menu_lists`, rebound: 0 mismatches).
+- `BOF3X_SHADOW=rest_2d` with `BOF3X_LANG=en`: exit 0; DIV-0027 re-aims the two
+  sites first, the log says so and the fuzz runs the other 50 (300,000
+  rounds, 0 mismatches).
+- `BOF3X_SHADOW='*'`: exit 0, `inject: 9040 ours, 0 left original`, 726
+  self-test lines, none with a mismatch.
+- `BOF3X_SHADOW='*'` with `BOF3X_WIDE=1`: exit 0, the same 726 and 9,040.
+  Each passed on its first run; none died silently.
+- `tools/ledger_check.py`: 0 errors (2 notes, not this group's).
 
 **`analysis/calltrace/entries_logic.txt`** (the main checkout's): 41 lines
 appended with the extents read here. Five of the 51 already had lines with
