@@ -3,12 +3,13 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_4f::at {
 
 // --- callees nobody of ours names, called by address (SH_AT) ------------------
 // Group E4E's (wave four, beside this one), raw until it merges:
-constexpr std::uint32_t kGlowDraw = 0x4901D0;      // (const long *point, size word, colour byte): kind 0xB9's glow,
+constexpr std::uint32_t kGlowDraw = bof3::addr::EffectKindA0_DrawGlow;      // (const long *point, size word, colour byte): kind 0xB9's glow,
                                                    // a copy of EffectKind64_DrawGlow (a draw mode, 32 POLY_G3)
 // Catalog part 6 (no group of round thirteen), read to its last instruction:
 constexpr std::uint32_t kBarDraw = 0x4920F0;       // (unsigned char *bar): one of kind 0xB0's sixteen bars of 6 drawn,

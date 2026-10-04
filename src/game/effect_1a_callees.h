@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_1a::at {
 
@@ -13,21 +14,21 @@ namespace effect_1a::at {
 // s16 x, s16 y), eax the primitive; the depth pair +0x40 / +0x44 of
 // Sprite_Current from 0x4650000 / (+0x60 - 2 * s16 +0x3E) after a
 // Sprite_UpdateScreen with +0x3C zeroed around it.
-constexpr std::uint32_t kDrawModeRecord = 0x52CF60;
-constexpr std::uint32_t kDrawSpriteRecord = 0x52CFE0;
-constexpr std::uint32_t kDepthPair = 0x52CD50;
+constexpr std::uint32_t kDrawModeRecord = bof3::addr::UiSprite_SetMode;
+constexpr std::uint32_t kDrawSpriteRecord = bof3::addr::UiSprite_Draw;
+constexpr std::uint32_t kDepthPair = bof3::addr::Sprite_UpdateScreenScaled;
 // E1B's (round thirteen): a window frame and fill (x, y, w, h, colour), each
 // read as 16 bits (0x469790 / 0x469960 `and 0xFFFF`), the colour's byte; the
 // three option boxes and their labels (x, y, bits byte); a message line (pen
 // byte, text, width byte, x word); the member rows (x, y); the two item
 // lists (x, y); the panel's title and count.
-constexpr std::uint32_t kWindowBox = 0x469750;
-constexpr std::uint32_t kOptionBoxes = 0x468AC0;
-constexpr std::uint32_t kMessageLine = 0x469AD0;
-constexpr std::uint32_t kMemberRows = 0x469210;
-constexpr std::uint32_t kItemListA = 0x468C50;
-constexpr std::uint32_t kItemListB = 0x468F00;
-constexpr std::uint32_t kPanelTitle = 0x468A40;
+constexpr std::uint32_t kWindowBox = bof3::addr::Panel_DrawWindow;
+constexpr std::uint32_t kOptionBoxes = bof3::addr::EffectKind0F_DrawToggles;
+constexpr std::uint32_t kMessageLine = bof3::addr::EffectKind0F_DrawGlyph;
+constexpr std::uint32_t kMemberRows = bof3::addr::EffectKind0F_DrawEquipped;
+constexpr std::uint32_t kItemListA = bof3::addr::EffectKind0F_DrawItemsB;
+constexpr std::uint32_t kItemListB = bof3::addr::EffectKind0F_DrawItemsA;
+constexpr std::uint32_t kPanelTitle = bof3::addr::EffectKind0F_DrawCountHeader;
 // Capcom's, in no group of this round (catalog part 6, kEffectStd's row): a
 // sprite primitive by the word it is handed.
 constexpr std::uint32_t kKind07Sprite = 0x462F10;
@@ -59,7 +60,7 @@ constexpr std::uint32_t kQuadEight = 0x5C41CC;      // 8.0f
 constexpr std::uint32_t kQuadSixteen = 0x5C41D0;    // 16.0f
 constexpr std::uint32_t kQuadThirtyTwo = 0x5C41D4;  // 32.0f
 constexpr std::uint32_t kCountFormat = 0x64D3EC;    // Boss26Fx_CountFormat
-constexpr std::uint32_t kAccessoryNames = 0x658450; // NameTable_Accessories, 0x18 bytes a name
+constexpr std::uint32_t kAccessoryNames = bof3::addr::NameTable_Accessories; // NameTable_Accessories, 0x18 bytes a name
 
 // The effect kinds' state tables (symbols.toml [[data]], this group's names).
 constexpr std::uint32_t kKind01States = 0x653A44;

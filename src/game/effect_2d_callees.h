@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_2d::at {
 
@@ -12,7 +13,7 @@ namespace effect_2d::at {
 // read 2026-09-29 for what they take and answer (docs/effect_2d.md section 8).
 constexpr std::uint32_t kPuffsClear = 0x4790C0;    // (void): byte +0 of the 8 puffs of 0x1C at EffectKind30_Shards
                                                    // = 0, and the two bytes 0x6761C8 / 0x6761C9 = 0
-constexpr std::uint32_t kPuffFindFree = 0x47CF20;  // (void): the first of those 8 puffs whose +0 is 0, or null (eax)
+constexpr std::uint32_t kPuffFindFree = bof3::addr::EffectSpark_FindFree;  // (void): the first of those 8 puffs whose +0 is 0, or null (eax)
 constexpr std::uint32_t kPuffStart = 0x4790F0;     // (unsigned char *puff): its +0..+0x17 set from Rand and
                                                    // Sprite_Current's point
 constexpr std::uint32_t kPuffsStep = 0x479260;     // (void): a draw mode, the map camera, each live puff stepped

@@ -195,8 +195,8 @@ const sh::Callee kCallees[] = {
     {E_OURS(Inventory_Remove), 3, {0xFF, 0xFF, 0xFF}, kF, 0, 0},              // 0x591B60 reads three bytes
     {E_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},
     // E1B's and E1F's, by address (docs/effect_1e.md section 8)
-    {E_RAW(0x469750), 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // 0x469790 / 0x469960 read x, y, w, h & 0xFFFF
-    {E_RAW(0x52CE20), 0, {}, kG, 0, 0},
+    {"0x469750", at::kBoxPrims, at::kBoxPrims, 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // 0x469790 / 0x469960 read x, y, w, h & 0xFFFF
+    {"0x52CE20", at::kClearEffects, at::kClearEffects, 0, {}, kG, 0, 0},
     // nobody's, by address
     {E_RAW(0x52B2A0), 1, {0xFF}, kG, 0, 0},
     {E_RAW(0x52B1B0), 0, {}, kG, 0, 0},

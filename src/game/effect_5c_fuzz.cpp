@@ -292,8 +292,8 @@ const sh::Callee kCallees[] = {
     // `and esi, 0xFF`
     {E5C_OURS(EffectKind18Sub15_LinkLayer), 1, {k8}, kG, 0, 0, {}, &FxLinkLayer},
     // group E5D's, raw: the step a whole word (an index); no argument
-    {E5C_RAW(0x5043B0), 1, {kW}, kG, 0, 0, {}, &FxStep},
-    {E5C_RAW(0x503E50), 0, {}, kG, 0, 0, {}, &FxMoves},
+    {"0x5043B0", at::kDrawMoveStep, at::kDrawMoveStep, 1, {kW}, kG, 0, 0, {}, &FxStep},
+    {"0x503E50", at::kDrawMoves, at::kDrawMoves, 0, {}, kG, 0, 0, {}, &FxMoves},
     {E5C_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxFindFree, nullptr, true},
     // re-listed: the tiles pass the row byte in dl over a leftover edx; the
     // callee reads it as a signed byte (world_map.cpp), and the size as a byte

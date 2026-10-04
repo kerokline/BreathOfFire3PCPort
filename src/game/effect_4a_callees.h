@@ -3,15 +3,16 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_4a::at {
 
 // --- callees of later groups of round thirteen, called by address (SH_AT)
 // until they merge (docs/effect_4a.md section 8) ------------------------------
-constexpr std::uint32_t kFade = 0x48CA90;          // E4D's (void): a full-screen tile coloured by Sprite_Current +0x5D..+0x5F
-constexpr std::uint32_t kKind87Setup = 0x489030;   // E4B's (void): kind 0x87's records in EffectKind30_Shards set up
-constexpr std::uint32_t kKind87Step = 0x489220;    // E4B's (void) -> al: kind 0x87's records moved and drawn, 0 when done
-constexpr std::uint32_t kKind87Reset = 0x4891F0;   // E4B's (void): six of those records reset
+constexpr std::uint32_t kFade = bof3::addr::Effect_DrawScreenTint;          // E4D's (void): a full-screen tile coloured by Sprite_Current +0x5D..+0x5F
+constexpr std::uint32_t kKind87Setup = bof3::addr::EffectKind87_Setup;   // E4B's (void): kind 0x87's records in EffectKind30_Shards set up
+constexpr std::uint32_t kKind87Step = bof3::addr::EffectKind87_StepPanes;    // E4B's (void) -> al: kind 0x87's records moved and drawn, 0 when done
+constexpr std::uint32_t kKind87Reset = bof3::addr::EffectKind87_FadePanes;   // E4B's (void): six of those records reset
 
 // --- the chapters' counters (scenario_harness at::kCounter) ----------------
 constexpr std::uint32_t kCounter = 0x903848;       // u8: kind 0x85 ends at 0x35; kinds 0x85 and 0x86 raise it

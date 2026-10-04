@@ -22,7 +22,7 @@ constexpr std::uint32_t kSpiralInit = 0x4799C0;   // (unsigned char *spiral): th
 constexpr std::uint32_t kSpiralDraw = 0x479B70;   // (unsigned char *spiral): that record stepped and drawn (read to
                                                   // +0xD20; PSX twin 0x801F9330)
 constexpr std::uint32_t kSparksInit = 0x4790C0;   // (void): no arguments, no calls
-constexpr std::uint32_t kSparkFree = 0x47CF20;    // (void): the first of the 8 records of 0x1C at 0x92BF80 whose +0 is
+constexpr std::uint32_t kSparkFree = bof3::addr::EffectSpark_FindFree;    // (void): the first of the 8 records of 0x1C at 0x92BF80 whose +0 is
                                                   // 0, or 0 when none is; eax
 constexpr std::uint32_t kSparkSet = 0x479160;     // (unsigned char *spark): the record's +0..+0x17 set (in use, +2 = 8,
                                                   // a point round Sprite_Current's at a random angle); Rand, Math_*
@@ -39,7 +39,7 @@ constexpr std::uint32_t kMatrixVector = 0x5A7C70; // library layer: (matrix, in,
 constexpr std::uint32_t kDebrisDraw = bof3::addr::EffectDebris_Draw;   // 0x485030, E3C's (unsigned char *debris): a G3 of a 0x2C-byte debris record
                                                   // (its point +0, edges +0x10 / +0x18 turned by +0x24, scaled by
                                                   // +0x28, shaded +0x2A); Gfx_CommitPrim(1, 0x34)
-constexpr std::uint32_t kDiscDraw = 0x47B7D0;     // E2F's (radius, centre, rim): a fan of 32 G3 triangles round the
+constexpr std::uint32_t kDiscDraw = bof3::addr::EffectKind4E_DrawDisc;     // E2F's (radius, centre, rim): a fan of 32 G3 triangles round the
                                                   // screen point Sprite_Current +0x74 / +0x78 (floats), the radius read
                                                   // as an s16 (movsx), the rim as a byte
 

@@ -6,16 +6,17 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_5c::at {
 
 // --- group E5D's (wave five; E5D merges before E5C) --------------------------------
-constexpr std::uint32_t kDrawMoveStep = 0x5043B0;   // (step): a Gpu_SetDrawMove from the byte pairs at 0x65E268 + 2 *
+constexpr std::uint32_t kDrawMoveStep = bof3::addr::EffectKind18Sub17_CopyFrame;   // (step): a Gpu_SetDrawMove from the byte pairs at 0x65E268 + 2 *
                                                     // step and Sprite_Current +0xB, committed at slot 6 (0x18) - the
                                                     // step read as a whole word (an index)
-constexpr std::uint32_t kDrawQuads = 0x503FA0;      // (variant): the scenario harness's 0x503FA0 row (E5D's; sixteen
+constexpr std::uint32_t kDrawQuads = bof3::addr::EffectKind18Sub17_DrawPatch;      // (variant): the scenario harness's 0x503FA0 row (E5D's; sixteen
                                                     // textured quads round Sprite_Current's point)
-constexpr std::uint32_t kDrawMoves = 0x503E50;      // (void): four Gpu_SetDrawMoves at Sprite_Current +0x34 / +0x38's
+constexpr std::uint32_t kDrawMoves = bof3::addr::EffectKind18Sub17_ScrollTexture;      // (void): four Gpu_SetDrawMoves at Sprite_Current +0x34 / +0x38's
                                                     // cell; sub-kind 0x17's states tail-jump to it
 
 // --- cells ------------------------------------------------------------------------

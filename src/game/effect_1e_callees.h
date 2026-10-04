@@ -3,14 +3,15 @@
 #pragma once
 
 #include <cstdint>
+#include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_1e::at {
 
 // Callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called through the harness by address (SH_AT) until they merge; the
 // coordinator rebinds them after (docs/effect_1e.md section 8).
-constexpr std::uint32_t kBoxPrims = 0x469750;       // E1B: void(int x, int y, int w, int h, colour); reads each & 0xFFFF, the colour a byte
-constexpr std::uint32_t kClearEffects = 0x52CE20;   // E1F: void(void); Effect_Objects +0..+3 of all 20 cleared, 7..19 released, record 1 +1 = 2
+constexpr std::uint32_t kBoxPrims = bof3::addr::Panel_DrawWindow;       // E1B: void(int x, int y, int w, int h, colour); reads each & 0xFFFF, the colour a byte
+constexpr std::uint32_t kClearEffects = bof3::addr::Effect_ResetFirstSeven;   // E1F: void(void); Effect_Objects +0..+3 of all 20 cleared, 7..19 released, record 1 +1 = 2
 
 // Callees nobody owns (catalog part 7, "Unlabelled"; not in the round's cut),
 // read to their last instruction for their arguments (docs/effect_1e.md
