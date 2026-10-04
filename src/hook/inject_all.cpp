@@ -294,6 +294,7 @@
 #include "game/rest_2b.h"
 #include "game/rest_3a.h"
 #include "game/rest_3c.h"
+#include "game/rest_3e.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1289,6 +1290,14 @@ void InjectAll() {
                                 // through Effect_Handlers (Effect_ApplyResult reads the cell) and R3D's 0x44EA70 tail
                                 // jump; after every harness's inject; no module patches bytes inside its 61
                                 // (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest3E_Inject();            // round 14 wave-three group R3E (0x46A320..0x4801ED: three kinds' dispatchers, the
+                                // helpers of kinds 0x1D / 0x21 / 0x24 / 0x30 / 0x41, the glow sparks, trail, spiral,
+                                // ring and dust of kinds 0x48 / 0x49, kinds 0x5D / 0x5E / 0x5F's states): its clones'
+                                // calls re-aimed at the scenario harness's recorders, three state tables swapped and
+                                // EffectGlowSparks_States patched for the fuzz only; after every harness's inject and
+                                // every effect group's (they call its functions by the addresses they had); before
+                                // FishingText_Arm; no module patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp,
+                                // widescreen.cpp)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
