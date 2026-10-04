@@ -517,7 +517,7 @@ original's re-read sees; 116 (the pointer + 4) in 850.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Sub-kind 0x17's spawn writes a record it did not find.**
+- **Sub-kind 0x17's spawn writes a record it did not find.** (D220)
   `EffectKind18Sub17_WaitCue` takes `Effect_FindFree`'s answer & 0xFF and
   writes `+0`, `+5`, `+1`, `+2` of that record untested: with all twenty
   records live (0xFF) the four bytes land 0x7F80 past `Effect_Objects`, at
@@ -526,36 +526,36 @@ original's re-read sees; 116 (the pointer + 4) in 850.
   there. Ordinary play reaches it only if the effect pool is full on the frame
   the counter `0x903848` becomes 0xC; not measured. The game's nearest answer
   would be to skip the spawn, as `EffectKind18Sub57_Spawn` does.
-- **Sub-kind 0x58's column divides by 8 - n.** n = 8 is an `idiv` by zero.
+- **Sub-kind 0x58's column divides by 8 - n.** (D207) n = 8 is an `idiv` by zero.
   Its callers pass `+9` (0..7 - `_Grow` steps on past 7), 7, and `+9` >> 2
   (2..7 while `_Fade` runs from 0x1F down to 8): unreachable in ordinary play.
 - **Sub-kind 0x15's gradients are built past a cursor that may not have
-  moved.** `EffectKind18Sub15_Draw` builds its four POLY_G4s 0x44 apart from
+  moved.** (D209) `EffectKind18Sub15_Draw` builds its four POLY_G4s 0x44 apart from
   the cursor as it stood before them and never reads it again; when the
   pool has no room the commit leaves the cursor and the next quad is written
   0x44 further on all the same - up to 0x11C bytes past a cursor already
   within 0x54 of the pool's end, so up to about 0xC8 bytes past the pool.
-- **Sub-kind 0x15 rewrites the map's corner heights unchecked**: rows r - 17
+- **Sub-kind 0x15 rewrites the map's corner heights unchecked** (D211): rows r - 17
   .. r + 13 of columns 0x2D..0x30 round `Field_Kind2Z`'s row r, every frame,
   with no test against the map's height - a row near the map's edge writes
   outside its corner grid.
-- **Sub-kind 0x15's draws are 320 wide** (the strip 0..320 x 56..88, the
+- **Sub-kind 0x15's draws are 320 wide** (D238) (the strip 0..320 x 56..88, the
   scrolled quads to 320, the gradients over 0..320): under the wide picture
   (DIV-0041) they leave the bands either side. Not one of DIV-0041's listed
   full-frame fills; for the owner's eye and the coordinator.
-- **Unchecked indexes**: the nine dispatchers do not bound `+2` (every writer
+- **Unchecked indexes** (D200): the nine dispatchers do not bound `+2` (every writer
   in the band keeps it in its table); sub-kind 0x50's variant from the
   record's x byte indexes two cells (its heights follow) and `+0xB` four flag
   bytes; sub-kind 0x57's `+0xB` eight points (its own `& 7` keeps it after the
   first); `Gfx_BufferIndex` into layer 15's two last pointers (as
   `Gfx_CommitPrim` leaves its slot). Ours aborts past each but the last.
-- **Draws twice, or not at all**: `EffectKind18Sub10_SlideIn` calls state 1
+- **Draws twice, or not at all** (D205, D203): `EffectKind18Sub10_SlideIn` calls state 1
   (which draws the panel) and then draws it again unless state 1 moved on -
   the panel committed twice that frame; sub-kinds 0x11's and 0x12's state 1
   draws its tiles only on the frame it moves on, so from the start until the
   flag the tiles are not drawn (the map cells stay 0x10) - as read, perhaps
   deliberate.
-- `EffectKind18Sub50_DrawWall` hands `Gte_RotTransPers4` its own second
+- (D213) `EffectKind18Sub50_DrawWall` hands `Gte_RotTransPers4` its own second
   argument's slot as the flag out (the compiler's reuse of a dead slot);
   harmless.
 

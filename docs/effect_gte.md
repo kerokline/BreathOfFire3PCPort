@@ -188,7 +188,7 @@ reproduce is the divide fault of section 5, where ours aborts with a message
 
 ## 5. Latent defects (Capcom's, described, not fixed)
 
-- **`EffectGte_SetDiagonalOne` writes 1, not 0x1000.** The PSX twin
+- **`EffectGte_SetDiagonalOne` writes 1, not 0x1000.** (D215) The PSX twin
   `0x801B0F5C` begins `addiu v0, zero, 0x1000` and stores it on the
   diagonal (read in the sibling's generated overlay code,
   `overlays_static_0170.c`); the PC port stores 1. In the GTE's 4.12 fixed
@@ -201,12 +201,12 @@ reproduce is the divide fault of section 5, where ours aborts with a message
   reproduces the 1s (control C22 refuses 0x1000). No recorded route reaches
   any of the seven (section 9); what the effect looks like on the PC is for
   the owner's eye, and a fix would be a divergence.
-- **`EffectGte_ProjectSize` divides by the depth unchecked**: a point at
+- **`EffectGte_ProjectSize` divides by the depth unchecked** (D216): a point at
   camera depth exactly 0 faults (`idiv`; no handler, the process ends). Ours
   aborts with a `Fatal` naming the point. No recorded route enters
   `0x4941E0`; whether play ever puts a point on the eye's plane is not
   established.
-- **`EffectGte_ProjectSize` keeps the quotient's low 16 bits**: near the
+- **`EffectGte_ProjectSize` keeps the quotient's low 16 bits** (D216): near the
   eye, `size * 1000 / depth` passes 0x7FFF and wraps (size 0x40 at depth 1:
   64,000, stored as -1,536). Reproduced (control C33 refuses a saturating
   version).

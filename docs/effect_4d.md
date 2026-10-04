@@ -400,7 +400,7 @@ put in.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **The spark draw projects a size whose second word is never written.**
+- **The spark draw projects a size whose second word is never written.** (D213)
   `EffectKind97_DrawSpark` writes one s16 of its two-word size local
   (`mov [esp + 0x38], cx`) before `EffectGte_ProjectSize`, which also reads
   the second and writes `out[1]` from it; the draw keeps only `out[0]` (the
@@ -409,19 +409,19 @@ put in.
   size), which is the nearest sensible value and draws the same. No
   `DIVERGENCE.md` entry is needed for a value nobody reads; named here for the
   coordinator.
-- **Kind 0x96 never ends.** `EffectKind96_Pulse` is its last state and never
+- **Kind 0x96 never ends.** (D202) `EffectKind96_Pulse` is its last state and never
   advances `+1` nor releases; its quad covers 320 x 320 - 80 rows below the
   240-row frame (harmless, clipped). No spawner of it is found (the
   table at the top).
-- **Unchecked indexes**: the seven dispatchers do not bound `+1` (every writer
+- **Unchecked indexes** (D200): the seven dispatchers do not bound `+1` (every writer
   in the band keeps it in its table; kind 0x94's state 3 is the spawner's);
   kind 0x96's index (kept 0..7 by its own wrap); `Field_MemberCount` into
   `ObjTrio` (three records). Ours aborts past any.
-- **Kind 0x91 writes `Field_Request` 2 itself** after `Msg_OpenScript`, and
+- **Kind 0x91 writes `Field_Request` 2 itself** (D238) after `Msg_OpenScript`, and
   kind 0x95's two states test different party bytes (`0x80310F`, record 2's
   `+0x137`, in the clock; `0x802E77`, record 0's, in the finish) - as read,
   perhaps deliberate.
-- **The debris pass draws all 32 every frame** whether set up or not:
+- **The debris pass draws all 32 every frame** (D214) whether set up or not:
   `EffectKind97_Fade` draws them after `_Burst`; nothing clears the pool.
 
 ## 8. Calls across groups

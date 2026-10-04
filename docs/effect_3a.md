@@ -347,7 +347,7 @@ own steps:
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x61's particles have no bound.** Each opaque pixel of the frame
+- **Kind 0x61's particles have no bound.** (D217) Each opaque pixel of the frame
   becomes a particle of 0x14 at `0x92DF80 + 0x14 n`, n up to w x h: the
   second frame (the member's `+0x148` not 0) is 64 x 64, up to 4,096
   particles (0x14000 bytes, to `0x941F80`). The 2,049th lands on
@@ -357,22 +357,22 @@ own steps:
   reach it. Whether a member's captured sprite has more than 2,048 opaque
   pixels in its 64 x 64 is not measured. E2C's kind 0x6B has the same shape
   ([`effect_2c.md`](effect_2c.md) section 7). Ours writes as the original.
-- **The particles' `+0xC` is never written.** `EffectKind61_Scatter` writes
+- **The particles' `+0xC` is never written.** (D214) `EffectKind61_Scatter` writes
   `+2`, `+4`, `+8`; `EffectKind61_Twinkle` copies `+4..+0xF` into the
   `TILE_1`, so the tile's depth is whatever the buffer held there (an earlier
   effect's bytes). Ours copies the same.
-- **The glow's rim depth** is an unwritten stack word: DIV-0068 (section 2).
-- **A capture with no free record** steps on anyway: `EffectKind61_Capture`
+- **The glow's rim depth** (D227) is an unwritten stack word: DIV-0068 (section 2).
+- **A capture with no free record** (D206) steps on anyway: `EffectKind61_Capture`
   with `Effect_FindFree` answering none still advances, so the store reads
   back whatever VRAM `(0x340, 0x100)` held and the scatter makes particles of
   it.
-- **The pools overlap between kinds.** Kinds 0x62 (rays), 0x64 (sparks and
+- **The pools overlap between kinds.** (D201) Kinds 0x62 (rays), 0x64 (sparks and
   shards), 0x68 (motes) and 0x61 (pixels) all start at `0x92BF80`, as do
   E2A..E2F's kinds there; kind 0x64's sparks end where its shards begin, so it
   does not overlap itself. Two of these alive at once would step each other's
   records. Chapter 10's run 2 spawns 0x68, 0x61, 0x62, 0x69, 0x64 on its count
   and timers; whether two are alive at once was not measured.
-- **`EffectKind64_DrawShards` draws all 16 shards with no in-use test**, from
+- **`EffectKind64_DrawShards` draws all 16 shards with no in-use test** (D214), from
   the first frame of state 4 whether or not state 3 started them in this
   kind's life (it always has, by the table's order).
 

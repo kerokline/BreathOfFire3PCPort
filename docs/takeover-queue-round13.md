@@ -1060,7 +1060,31 @@ done:
 2. The harness rows by address in `scenario_harness_ekh.cpp` and the next
    fold's items (section 16).
 3. The rows in no group, to place (sections 12 to 17).
-4. The latent defects, numbered in `known-defects.md`.
+4. The latent defects, numbered in `known-defects.md`. **Done 2026-10-03
+   (branch `phase-3/round13-defects`): D200..D238**, from the 36 group docs'
+   defects sections (EKH's, [`scenario_harness.md`](scenario_harness.md)
+   section 8, describes none); each group doc carries its numbers beside its
+   items. Fifteen common classes, one entry each: **D200** the dispatchers
+   (257, listed by name and address) and the unchecked indexes beside them;
+   **D201** the pools over `EffectKind30_Shards` (fifteen docs' layouts, 84
+   functions that lay or walk them, the symbol's extent as each doc gives it,
+   the cursor `0x67626C`); **D202** records no state releases; **D203** draws
+   skipped while a state waits; **D204** released records still used;
+   **D205** double draws; **D206** `Effect_FindFree`'s none; **D207** divides;
+   **D208** runaway loops; **D209** quads past an unmoved packet cursor;
+   **D210** `Sprite_Current` / `Field_State` left on a member; **D211** map
+   writes; **D212** the INT_MIN distance; **D213** harmless leftovers;
+   **D214** bytes read before written. Distinct: D215 and D216 (EGT's two),
+   D217 (kinds 0x61 / 0x6B's particles), D218 and D219 (kind 0x69), D220
+   (sub-kind 0x17), D221 (kind 0x90's tag), D222 (kind 0xA0's trail), D223
+   (`EffectKindAD_DrawArc`), D224 (sub-kind 0x31), D225 (`Sub5C_WaitFar`),
+   D226 (sub-kind 0x59's shades, USER_CHECKS 8), D227 and D228 (the originals
+   behind DIV-0068 and DIV-0072), D229..D237 (one each); D238 the small slips.
+   The docs' disagreements are written into D200 (`0x653F88` in FC1's count
+   for `EffectKind14_Op`; `0x653C5C` / kind 0xF's 13 or 41 entries; `0x654468`
+   checked - E2B and E2C agree, the tool did not; `0x65E034` read by both,
+   four bytes in both) and D201 (the pool's extent; `0x67626C` named the spark
+   cursor by E3B, the shard cursor by E3C), each with both readings.
 5. The two full-frame fills still 320 wide (`0x489D47`, `0x493308`) and the
    widescreen survey's list (DIV-0041's amendments).
 6. The live checks: the hash reference re-recorded, then the whelp route

@@ -542,36 +542,36 @@ the disturbance moves the point between the two projections.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x82's switch: 6 does nothing, 0xFF ends it.** `_Wait` maps
+- **Kind 0x82's switch: 6 does nothing, 0xFF ends it.** (D235) `_Wait` maps
   `0x903849` 3, 4, 5 to three, four, five pushes and only 0xFF to the release;
   the byte table holds one more index (3) at 0xFF, none at 6. A script that
   writes 6 to end the push leaves the record waiting. Whether 6 is ever written
   was not traced (the writers of `0x903849` are the event scripts').
-- **Kind 0x82's `_Wait` sets `+1` twice**: when record 0 has reached the
+- **Kind 0x82's `_Wait` sets `+1` twice** (D235, D210): when record 0 has reached the
   leader it writes 0x16 (0x17 when `0x90384A` is 0x80), then the switch
   overwrites `+1` for 3, 4, 5 and releases for 0xFF - the "reached" exit is
   lost whenever a push count is pending. `Field_State` is left on the leader by
   `_Wait` and every check.
-- **Kind 0x7D's `+6` is unchecked.** Area 170's case 40 stores the message
+- **Kind 0x7D's `+6` is unchecked.** (D200) Area 170's case 40 stores the message
   word's low byte less 0xB; `_Input`'s confirm writes the turn to `0x675DC8 +
   +6`, so a message byte below 0xB or above 0xD writes past the three dials.
   `_Start` takes the address `0x675DC8 + +6` without a check either. Ours
   aborts on the write.
-- **The pools overlap.** Kind 0x80's trail (0x440 bytes) and kind 0x81's 256
+- **The pools overlap.** (D201) Kind 0x80's trail (0x440 bytes) and kind 0x81's 256
   drops (0x1800 bytes from `0x92BF80`, past `EffectKind30_Shards`' 0x540 into
   the single cells round thirteen's other groups name at `0x92C208..`, E2E's
   among them) and its sources at `0x92D780` share `EffectKind30_Shards` with
   kind 0x30's shards and the sparks E2A, E2B, E2E, E2F describe. Two of these
   kinds live at once would trample each other; nothing in the band checks.
-- **`EffectKind7D_SetMap` indexes the area block by map data**: the dword it
+- **`EffectKind7D_SetMap` indexes the area block by map data** (D211): the dword it
   rewrites is `AreaMap_Header`'s arithmetic over a cell word the map file
   supplies, unchecked - right for area 170's map, anywhere for another.
-- **Kind 0x76 draws nothing visible on the PlayStation's rule**: colour 0 under
+- **Kind 0x76 draws nothing visible on the PlayStation's rule** (D238): colour 0 under
   abr 2 (subtract) leaves the frame as it was. What the port's renderer makes of
   it was not looked at.
-- **Kind 0x78 restores record 2's turn only in `_End`**: a record released
+- **Kind 0x78 restores record 2's turn only in `_End`** (D238): a record released
   early (by `Effect_Release` from outside) leaves record 2 turned.
-- **The eleven dispatchers do not bound their state bytes.** Every writer of
+- **The eleven dispatchers do not bound their state bytes.** (D200) Every writer of
   `+1` / `+2` in the band steps inside its table (kind 0x82's 0x16 / 0x17 are
   inside its 24); ours aborts past any of them.
 

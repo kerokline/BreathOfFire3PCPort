@@ -464,32 +464,32 @@ dword) by a count. No equivalent mutant was found.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-1. **`EffectKind69_Spawn` never tests `Effect_FindFree` for none.** With fewer
+1. **`EffectKind69_Spawn` never tests `Effect_FindFree` for none.** (D218) With fewer
    than nine free records the original takes 0xFF as a record and writes kind
    0x69's bytes at `Effect_Objects + 0xFF * 0x80` = `0x7E9160`, outside the
    pool (whatever lies there). Ours aborts with a message instead. Whether
    ordinary play reaches it depends on how many effects are live when chapter
    10's scene spawns the kind (`Scena10_Run2` spawns several kinds around it);
    not traced.
-2. **`EffectKind69_Parent` is one cell.** Every part reads its parent through
+2. **`EffectKind69_Parent` is one cell.** (D219) Every part reads its parent through
    `0x676268`; a second kind-0x69 spawner while the first's parts live
    retargets all of them, so the first never counts to nine (it waits forever)
    and the second's `+0xB` is raised by both sets - a test for exactly 9 that
    counts can step past (four parts end in the same frame). Ours keeps the one
    cell as the original does.
-3. **`EffectKind67_SpawnKind13` never leaves its state.** It spawns one
+3. **`EffectKind67_SpawnKind13` never leaves its state.** (D202) It spawns one
    kind-0x13 record a frame for as long as the kind-0x67 record lives (until
    the pool is full, then one whenever a record frees). Faithful; whether that
    is meant is the owner's question, not a fault ours fixes.
-4. **The member loops are unchecked.** `EffectKind63_End` and
+4. **The member loops are unchecked.** (D200) `EffectKind63_End` and
    `_RefreshSprites` walk `ObjTrio` by `Field_MemberCount` (a byte): a count
    past 3 writes and updates past the three records. Ours aborts past three;
    the count is at most three in play (the party's field objects).
-5. **The dispatchers are unbounded** (every kind here, kind 0x69's three
+5. **The dispatchers are unbounded** (D200) (every kind here, kind 0x69's three
    sub-dispatchers by `+2` / `+3`, the sparks by `+1`); kind 0x69's past its
    stack table of three calls its own saved registers and return address. Ours
    aborts.
-6. **The sparks share `EffectKind30_Shards`.** Kind 0x6C writes sixteen
+6. **The sparks share `EffectKind30_Shards`.** (D201) Kind 0x6C writes sixteen
    records of 0x28 from `0x92BF80`; kind 0x30's shards (24 of 0x38) and the
    sparks after them (wave two's E2A, E2B, E2E, E2F) and E3C's kind use the
    same bytes. Two such kinds live at once overwrite each other. Described,

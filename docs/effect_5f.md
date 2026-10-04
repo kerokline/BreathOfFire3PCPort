@@ -271,7 +271,7 @@ spawner hands a placement index out of range:
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **`EffectKind18Sub4B_Run` `0x50A510` reads a stack word it never writes.**
+- **`EffectKind18Sub4B_Run` `0x50A510` reads a stack word it never writes.** (D228, DIV-0072)
   In its quad loop it keeps x0 in `ebp`, adds the quad's offset into `ebp`
   for the near corners (and stores that over x0's home `[esp+0x24]`), then
   reloads `ebp` from `[esp+0x20]` - a local no instruction of the function
@@ -283,21 +283,21 @@ spawner hands a placement index out of range:
   `x0 + 0xA00 k + b`, a quad symmetric about its column), the nearest
   sensible value; the fuzz levels those words (section 4). Not seen live
   (no route); a ledger entry, if the owner wants one, is the coordinator's.
-- **Sub-kind 0x2A draws nothing in its state 3** (E5E's `0x508670`, the far
+- **Sub-kind 0x2A draws nothing in its state 3** (D203) (E5E's `0x508670`, the far
   wait): the panel vanishes while it waits open, where 0x27 and 0x29 draw
   through theirs. Possibly intended; the owner's eye would say.
-- **Sub-kind 0x42's waits draw nothing** when their test fails (`_WaitFlag`,
+- **Sub-kind 0x42's waits draw nothing** (D203) when their test fails (`_WaitFlag`,
   `_WaitFlagBack` return before the draw).
-- **`_WaitFlag` compares the flag's whole byte with `+8`** (`xor dl, [+8]`)
+- **`_WaitFlag` compares the flag's whole byte with `+8`** (D238) (`xor dl, [+8]`)
   while `_WaitFlagBack` compares `(flag == 0)` with `+8` as a word: the same
   pair of tests only while `+8` is 0 or 1 (the placements set it).
-- **`EffectKind18Sub42_Mark` textures item 0** when the pool is empty
+- **`EffectKind18Sub42_Mark` textures item 0** (D238) when the pool is empty
   (`DrawItemPool_Alloc` answers 0; the word stays 0 and the next frame tries
   again).
-- **`EffectKind18Sub49_WaitCue` can step `+2` twice in one frame** (the cue
+- **`EffectKind18Sub49_WaitCue` can step `+2` twice in one frame** (D238) (the cue
   and the gate both).
-- **`EffectKind18Sub3C_Rise` draws after releasing its record.**
-- **Unchecked indexes** (section 6).
+- **`EffectKind18Sub3C_Rise` draws after releasing its record.** (D204)
+- **Unchecked indexes** (D200) (section 6).
 
 ## 8. Controls
 

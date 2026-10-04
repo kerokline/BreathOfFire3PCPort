@@ -263,21 +263,21 @@ with `+9` from 8 (state 4 leaves it at 8; it is not reset), so i starts at 0.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **`_ShadeClut` does not clamp**: a level above 0x80 carries a channel past
+- **`_ShadeClut` does not clamp** (D238): a level above 0x80 carries a channel past
   31 into the next field (red into green, green into blue, blue into bit 15).
   Its callers pass 0x40, 0x80 and `0x80 - +9 / 3` (+9 0..0x5A), never above
   0x80 - so not reached in play.
-- **The angle mask `& 0xFFD`** in the spin (`0x506FC0`, `0x5070E0`,
+- **The angle mask `& 0xFFD`** (D238) in the spin (`0x506FC0`, `0x5070E0`,
   `0x507AC0`, `0x507B20`) clears bit 1 of the angle as well as bits 12..15:
   the spin's angle only takes every other step of 4096 when bit 1 would be
   set. Harmless; reproduced.
 - **`_DrawTrail` hands `Gte_RotTransPers3` the global `MapView_ScreenXY` as
-  its third out** and `Gte_StoreDepthF3` a local it never reads: the third
+  its third out** (D213) and `Gte_StoreDepthF3` a local it never reads: the third
   projected point and depth are written and dropped (the quad is built from
   the first two). Reproduced (ours writes the same global).
-- **`_TrailsOut` with `+9` below 8** (not reached: see section 6) would draw
+- **`_TrailsOut` with `+9` below 8** (D200) (not reached: see section 6) would draw
   segments from before the polyline.
-- `EffectKind18Sub25_WaitAway` (sub-state 3 of both lids) draws nothing:
+- (D203) `EffectKind18Sub25_WaitAway` (sub-state 3 of both lids) draws nothing:
   while it waits for the leader to leave, the open lid is not drawn at all.
   Not necessarily a defect - what the open lid should look like is the
   owner's to say; recorded because every other sub-state draws.

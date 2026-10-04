@@ -338,18 +338,18 @@ owner's to say.
 
 ## 10. Latent defects (Capcom's, described, not fixed)
 
-- **L1. The sprite index `0xFF`.** Stage 1's step 0 (`0x5289C0`) sets
+- **L1. The sprite index `0xFF`.** (D200) Stage 1's step 0 (`0x5289C0`) sets
   `0x939A1C` to 0xFF ("none"); `0x52B6C0` later stores a real index. Stage 4's
   steps index `Sprite_Objects` by it unchecked (`0x7DEE80 + 0xA4 * n`): at
   0xFF they read and write `0x7E91DC..` past the 30 records. Ours aborts at 30
   or more. Whether ordinary play reaches stage 4 with 0xFF is not measured.
-- **L2. A count of 256 or more.** `S4Count` compares the byte `+9` with the
+- **L2. A count of 256 or more.** (D208) `S4Count` compares the byte `+9` with the
   picked record's word `+0x9C`: at 0x100 or more the step never ends (`+9`
   wraps; 0x20 sets `+9` to the word's low byte, still unequal). `S4Best`
   compares the word with a byte best and stores its low byte.
-- **L3. The best table by kind.** `0x9040EC + kind` is indexed by the sprite's
+- **L3. The best table by kind.** (D200) `0x9040EC + kind` is indexed by the sprite's
   `+6` unchecked (no table bound is known; ours indexes as the original).
-- **L4. The dispatchers** do not bound `+3` (every stage) - ours aborts past
+- **L4. The dispatchers** (D200) do not bound `+3` (every stage) - ours aborts past
   each table.
 
 ## 11. For `analysis/calltrace/entries_logic.txt`

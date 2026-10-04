@@ -488,32 +488,32 @@ button or null paths inside a state with several calls.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x45's trace reads 72 points from a 36-point history.**
+- **Kind 0x45's trace reads 72 points from a 36-point history.** (D233)
   `_PushSample` keeps 36 samples (it moves 35 dwords), `_DrawTrace` hands
   `_DrawPoints` a count of 0x48, so the 36 dwords after the history
   (`0x92C010..0x92C09F`, inside `EffectKind30_Shards`' block, where kind 0x49's
   glow record `0x92C060` lies) are read as points: whatever lies there is
   plotted, or joined to its neighbour, when its x falls in the panel's clip
   columns. And `_Start` clears 32 samples of the 36.
-- **A stale point can hang the game.** `_DrawSegment` counts its steps in a
+- **A stale point can hang the game.** (D233) `_DrawSegment` counts its steps in a
   byte and compares with the 16-bit distance: past 0xFF on the stepping axis
   it never returns. The trace's own samples stay close (the amplitude is capped
   at 0x18), but a segment from one of the stale points above to a sample can
   be longer. Ours aborts with a message there.
-- **Kind 0x45's state 0 leaves the offset `+0x36` unset**: without flag 0x25
+- **Kind 0x45's state 0 leaves the offset `+0x36` unset** (D214): without flag 0x25
   the samples are computed with whatever the record held.
-- **Kind 0x46 never ends itself**: its state 4 draws the flash every frame;
+- **Kind 0x46 never ends itself** (D202): its state 4 draws the flash every frame;
   its spawner (chapter 7) waits on the counter and something else must free the
   record. The redraw leaves every live sprite's and the leader's `+0x29` at 5.
-- **Kind 0x47's lookup reads a sixth triple** past the five at `0x654564` when
+- **Kind 0x47's lookup reads a sixth triple** (D238) past the five at `0x654564` when
   the model's animation byte is none of the keys (`0x654573..0x654575`, zeros in
   the image): animation 0 from 0.
-- **Variant 3 writes through a pointer another variant sets.** `_V3Burst` adds
+- **Variant 3 writes through a pointer another variant sets.** (D236) `_V3Burst` adds
   to the word `+0x10` behind `0x6761D0`, which only E2E's `0x4789D0` (variant
   4's state 0) sets, to `0x92D1C8`; the image's initial value is not an address
   of the game. Chapter 7 spawns variants 3 and 4 together, so variant 4 runs
   first in practice; a variant 3 alone would write through the stale value.
-- **The five dispatchers and the five variant dispatchers index unchecked.**
+- **The five dispatchers and the five variant dispatchers index unchecked.** (D200)
   `Scena07_TakeEffect49` stores its argument into `+1` unchecked (its callers
   pass 0..9).
 

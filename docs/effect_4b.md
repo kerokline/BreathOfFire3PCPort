@@ -372,31 +372,31 @@ code every one is kept in range, so ordinary play does not reach them:
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x8B's `_Pose` leaves `Sprite_Current` on the leader** on every
+- **Kind 0x8B's `_Pose` leaves `Sprite_Current` on the leader** (D210) on every
   frame its test fails: it makes the leader `Sprite_Current` before the test
   and puts the record back only when the test passes. `Effect_RunObjects`
   sets `Sprite_Current` afresh for the next record, so the next effect is not
   affected; whatever runs after the last record of the frame sees the leader.
   Ours does the same (control 77 is refused by it).
-- **Kind 0x88 draws a particle on the frame it dies** (the draw follows the
+- **Kind 0x88 draws a particle on the frame it dies** (D204, D238) (the draw follows the
   `+3` clear), and states 1 and 2 wait for extra object 0's x to equal
   `0x3C8000` / `0x408000` exactly - an object that steps past it never moves
   the kind on.
 - **Kind 0x89 and kind 0x9D / 0x9F never leave their last states by
-  themselves**: kind 0x89's `_Fade` sets `+1` 3, a `BareRet`, and the record
+  themselves** (D202): kind 0x89's `_Fade` sets `+1` 3, a `BareRet`, and the record
   stays live; kinds 0x9D and 0x9F have a state 3 no code of the band sets
   (their spawners or scripts must). Kind 0x89's state 2 is likewise set from
   outside.
 - **`EffectKind9D_Project` hands `Gte_RotTransPers` an `SVECTOR` whose fourth
-  word it never writes** and a fourth argument - its own argument's stack slot
+  word it never writes** (D213) and a fourth argument - its own argument's stack slot
   as the PSX flag pointer - that the port's `Gte_RotTransPers` does not take.
   Neither reaches an output: ours reads three words and no flag
   ([`psx_gte_transform.cpp`](../src/game/psx_gte_transform.cpp)); the fuzz
   hashes six bytes (section 4).
-- **Kind 0x87 rewrites the image's `.data`**: `EffectKind87_Setup` recomputes
+- **Kind 0x87 rewrites the image's `.data`** (D238): `EffectKind87_Setup` recomputes
   rows 8..13 of `0x654DA0` every time - idempotent while rows 0..7 are
   constant.
-- **Unchecked indexes** (section 6): all kept in range by the band's own code.
+- **Unchecked indexes** (D200) (section 6): all kept in range by the band's own code.
 
 ## 8. Controls
 

@@ -503,36 +503,36 @@ of four heights half the time so two calls can agree.)
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **The columns divide by `8 - rise` unchecked** (`0x5052D0`, `0x5057D0`).
+- **The columns divide by `8 - rise` unchecked** (D207) (`0x5052D0`, `0x5057D0`).
   `rise` is `+9` at sub-state 2 (0..7), 7 at sub-state 3 and `+9 >> 2` at
   sub-state 4 (`+9` from 0x1F down to 8: 7..2) - never 8 in play, but a
   record reaching sub-state 2 or 4 with `+9` 8 or 32..35 faults the original
   (`idiv` by 0). Ours aborts naming the function.
-- **`_DrawColumn`'s second argument is dead** (section 1.2), and
+- **`_DrawColumn`'s second argument is dead** (D238) (section 1.2), and
   `_DrawTiles`' is never read; the callers pass 0x80 / `(0x1F - +9) * 4` and
   0.
-- **Sub-kind 0x14's `_Start` writes the record after releasing it**:
+- **Sub-kind 0x14's `_Start` writes the record after releasing it** (D204):
   `Effect_Release` clears `+0..+4`, then `+2` is stepped to 1 on the free
   record; `_Fade` releases by a call and still draws the tiles with the freed
   record's `+9` that frame (sub-kind 0x18's `_End` and 0x1B's are tail jumps
   and do not).
-- **`_Hurt` leaves `Field_State` on the party member** it pointed it at
+- **`_Hurt` leaves `Field_State` on the party member** (D210) it pointed it at
   (`Sprite_Current` is put back).
-- **The place indexes are unchecked**: sub-kinds 0x14 / 0x1E index their
+- **The place indexes are unchecked** (D200): sub-kinds 0x14 / 0x1E index their
   tables by the x cell word `+0x36` (two places), 0x22 by it (four places),
   0x19 by `+0xB` (the x cell's low byte, two places); E5C's `_DrawPatch` by
   its argument (three variant bytes) and `_CopyFrame` by its (ten frames).
   The spawner sets the cell; past the tables the original reads the data that
   follows (another table, code pointers). Ours aborts.
-- **`_SetMap`'s corner row** is read by a running count that is never
+- **`_SetMap`'s corner row** (D200, D211) is read by a running count that is never
   bounded: the four rectangles have 7, 11, 11 and 11 cells, so it stays in
   its eleven - ours aborts past them. Its writes into the area block
   (`AreaMap_Bytes`, `AreaMap_Corners`, the height bytes) are by the
   rectangles' cells and the area's own width, unchecked, as the game's other
   map writers are.
-- **The eight dispatchers do not bound `+2`.** Every writer in the band stays
+- **The eight dispatchers do not bound `+2`.** (D200) Every writer in the band stays
   inside its table; ours aborts past any of them.
-- **`_DrawSpiral` is centred on the 320 x 240 screen** (160.0, 120.0 as
+- **`_DrawSpiral` is centred on the 320 x 240 screen** (D238) (160.0, 120.0 as
   constants): under DIV-0041's wide view it would sit left of centre. Not a
   defect of the original; named for the coordinator (section 8), not changed.
 

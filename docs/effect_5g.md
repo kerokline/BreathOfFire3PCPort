@@ -330,7 +330,7 @@ disturbance moves it).
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Unchecked indexes**: the four dispatchers do not bound `+2` (every writer
+- **Unchecked indexes** (D200): the four dispatchers do not bound `+2` (every writer
   in the band keeps it inside its table: the states step 1..4 and back); the
   variant index is the spawn's x cell, s16 and unchecked, into tables with
   room for four (0x2B) and five (0x2C, 0x4A) - a spawn whose x cell is past
@@ -338,14 +338,14 @@ disturbance moves it).
   `+2` into four bytes (kept 0..3 by its own `& 3`, but read before that wrap
   from whatever the spawn left, where `EffectKind18_Start` zeroes it); the
   draw's side into `0x65EA74` (its callers push 0 and 1). Ours aborts past any.
-- **The INT_MIN distance**: the waiting states' `cdq; xor; sub` absolute value
+- **The INT_MIN distance** (D212): the waiting states' `cdq; xor; sub` absolute value
   leaves `0x80000000` negative, so a leader exactly 0x8000 cells away counts as
   near. Unreachable on a map (cells are bytes); ours computes it the same way.
-- **Dead stores**: `EffectKind18Sub2C_Draw` writes the four corners' heights
+- **Dead stores** (D213): `EffectKind18Sub2C_Draw` writes the four corners' heights
   from `+0x3E` before the ground overwrites every one of them; harmless, kept.
-- **0x2B's waiting-open state draws nothing** while 0x2C's draws: as read,
+- **0x2B's waiting-open state draws nothing** (D203) while 0x2C's draws: as read,
   perhaps deliberate (the panels slid out of sight).
-- **0x36 never ends**: no state of it releases the record or advances past
+- **0x36 never ends** (D202): no state of it releases the record or advances past
   itself.
 
 ## 8. Calls across groups

@@ -337,33 +337,33 @@ refused on the first run.
 ## 7. Latent defects (Capcom's, described, not fixed)
 
 - **`EffectKind22_WaitArms` reads a cell `EffectKind22_SpawnArms` did not
-  write.** When `Effect_FindFree` answers `0xFF` for an arm (the pool of 20 is
+  write.** (D234) When `Effect_FindFree` answers `0xFF` for an arm (the pool of 20 is
   full), the dword `+0xC + 4 i` keeps whatever the record held from its last
   use - another kind's data, 0, or a record address from an earlier kind-0x22
   life. The wait then reads byte `+6` through it: a small value faults, a
   stale record address answers for a record that may be anything now. So a
   full pool can hang the effect (the byte 0, forever), end it early, or crash.
   Ours dereferences the cell as the original does.
-- **The arms' "done" byte outlives them.** `Effect_Release` clears `+0..+4`
+- **The arms' "done" byte outlives them.** (D234) `Effect_Release` clears `+0..+4`
   only, so a folded arm's `+6` = 1 stays until its record is reused. If another
   spawner takes the record first and writes `+6` (kind 0x22 itself writes 0),
   the waiting parent sees "not done" and waits on a record that is no longer
   its arm.
-- **Spawned records rely on `+1` being 0**: kinds 0x21 (arms), 0x24 (rays) and
+- **Spawned records rely on `+1` being 0** (D214): kinds 0x21 (arms), 0x24 (rays) and
   0x26 (bands) get `+0` and `+5` but not `+1`, so they start at state 0 only
   because `Effect_Release` cleared `+1` (as FC2 found for kind 0x34).
-- **`EffectKind24_Shrink` zeroes the wrong scale**: when `+0x14` goes below 0
+- **`EffectKind24_Shrink` zeroes the wrong scale** (D238): when `+0x14` goes below 0
   it stores 0 to `+0x12` (already at 0 by then) and leaves `+0x14` negative. No
   effect: the next state is `Effect_StateRelease`, so the ray is not drawn
   again. Reproduced (control 38 shows it is observable in the record).
-- **Rays are drawn from the leader**, not from the kind-0x23 record that
+- **Rays are drawn from the leader** (D238), not from the kind-0x23 record that
   spawned them: `0x46FAE0` reads `ObjTrio` `+0x34..+0x3C`, and neither the
   spawner nor `EffectKind24_Start` gives the ray a position. Whether that is
   the intent (a burst round the party) is the owner's to say.
-- **`EffectKind26_DrawBand`'s outer shade wraps past t = 0x500** ((0x500 - t)
+- **`EffectKind26_DrawBand`'s outer shade wraps past t = 0x500** (D238) ((0x500 - t)
   * 0x80 / 0x100 is negative, its low byte bright). Unreached: the only caller
   draws with t up to 0x500 and stops.
-- **The seven dispatchers index unchecked.** Every writer of `+1` in the band
+- **The seven dispatchers index unchecked.** (D200) Every writer of `+1` in the band
   steps it inside its table; ours aborts past it.
 
 ## 8. Calls across groups

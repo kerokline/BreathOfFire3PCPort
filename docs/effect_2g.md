@@ -409,7 +409,7 @@ after it, 14), 70 and 71 (kind 0x5B's fade at its release, 15 and 22).
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x15 leaves `Sprite_Current` on the member.** `_WaitPose4` and
+- **Kind 0x15 leaves `Sprite_Current` on the member.** (D210) `_WaitPose4` and
   `_WaitPose8` point `Field_State` and `Sprite_Current` at `ObjTrio` record 1
   before testing its animation, and return without putting `Sprite_Current`
   back when the animation has not run through (every frame until it has). The
@@ -418,22 +418,22 @@ after it, 14), 70 and 71 (kind 0x5B's fade at its release, 15 and 22).
   one, whatever reads `Sprite_Current` after the effect pass sees the member,
   not an effect record. `Field_State` is left on the member on every path of
   kind 0x15 (the other states do not put it back either). Ours does the same.
-- **Kind 0x5B draws a released record.** `_Fade` calls `Effect_Release` when
+- **Kind 0x5B draws a released record.** (D204) `_Fade` calls `Effect_Release` when
   `+0x5D` reaches 0 and goes on: it steps `+6` and draws the beam once more from
   the freed record (whose `+0..+4` are 0 and the rest as it was).
-- **Unchecked indexes**: kind 0x54's `+0xB` into the thirty `Sprite_Objects`
+- **Unchecked indexes** (D200): kind 0x54's `+0xB` into the thirty `Sprite_Objects`
   (area 8 stores the active member's index, which is only in range while that
   member is a field object of the pool), kind 0x5B's `+0xB` into area 75's two
   slots, the eleven dispatchers' state bytes. Every writer of `+1` / `+2` in the
   band steps it inside its table; ours aborts past any of them.
-- **Sub-kind 0x20 draws nothing while it waits**: `_WaitSet` and `_WaitClear`
+- **Sub-kind 0x20 draws nothing while it waits** (D203): `_WaitSet` and `_WaitClear`
   (sub-states 1 and 3) do not call the draw, so the strips are drawn only while
   they move (sub-states 0, 2, 4). Whether something else draws them at rest is
   not read here; it may be the intent.
-- **Kind 0x57 never ends in area 2**: `_Show` steps to its release only
+- **Kind 0x57 never ends in area 2** (D202): `_Show` steps to its release only
   outside area 2, so there the ring is drawn until something else frees the
   record.
-- **Kind 0x66's states 3..5 are set from outside** and its dispatcher does
+- **Kind 0x66's states 3..5 are set from outside** (D200) and its dispatcher does
   not bound them; a writer past 5 would jump into the place records.
 
 ## 8. Calls across groups

@@ -346,7 +346,7 @@ loops are counted (256, 8, 16), the source cells are read for eight.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **`EffectKindAD_DrawArc` `0x492DC0`: the second vertex's depth is a y.**
+- **`EffectKindAD_DrawArc` `0x492DC0`: the second vertex's depth is a y.** (D223)
   Each `POLY_G4`'s `+0x20` (vertex 1's depth) is loaded from b's projection's
   `+4` (its y) - `mov eax, [esp + 0x2c]` / `mov ecx, [esp + 0x2c]` the same
   cell twice - where vertex 3's (`+0x40`) is its depth `+8`. The nearest
@@ -355,11 +355,11 @@ loops are counted (256, 8, 16), the source cells are read for eight.
   depth of a semi-transparent quad (its sort, its perspective) decides whether
   it shows; nothing here measured it.
 - **`EffectKindB0_StepBars` draws a bar once more after putting it out of
-  use** (state 2, its word below 0: `+0 = 0`, then `+2` is still 2, so it is
+  use** (D204) (state 2, its word below 0: `+0 = 0`, then `+2` is still 2, so it is
   drawn). Probably intended (the last frame of the bar); described only.
-- **`EffectKindAF_DrawScreen`'s tile is 320 wide** under DIV-0041's wide
+- **`EffectKindAF_DrawScreen`'s tile is 320 wide** (D238) under DIV-0041's wide
   picture (section 2).
-- **`EffectKindB1` never ends**: no state of its table releases the record;
+- **`EffectKindB1` never ends** (D202): no state of its table releases the record;
   whatever spawns it must release it (not ours to see).
 
 ## 8. Calls across groups

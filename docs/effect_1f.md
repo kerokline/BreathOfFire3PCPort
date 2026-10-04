@@ -280,15 +280,15 @@ bytes in place (section 6).
 
 ## 6. Latent defects (Capcom's, described, not fixed)
 
-- **L1 Unchecked dispatchers**: `ChoiceMenu_Run` by record 6 `+6` (three
+- **L1 Unchecked dispatchers** (D200): `ChoiceMenu_Run` by record 6 `+6` (three
   entries, `ExtraSlots_Steps` follows), `ExtraSlots_Step` by `+4` (three,
   the table `0x66030C` follows). `0x52A4A0` keeps `+6` in 0..2 and the steps
   keep `+4` in 0..2 by their own increments, so play should not reach it.
   Ours aborts.
-- **L2 `Sprite_UpdateScreenScaled` divides by `+0x60 - 2 * s16 +0x3E`** when
+- **L2 `Sprite_UpdateScreenScaled` divides by `+0x60 - 2 * s16 +0x3E`** (D207) when
   `+0x60` is below 0, which is 0 when the two meet; the original faults.
   Whether any sprite reaches it is not measured. Ours aborts.
-- **L3 Reads by unchecked indexes, no fault**: `UiSprite_SetMode` by a byte
+- **L3 Reads by unchecked indexes, no fault** (D200): `UiSprite_SetMode` by a byte
   into ten records (`UiSprite_Sheet` follows at `+0xA4`), `UiSprite_Draw`
   into 74 (`0x6608D8`'s bytes follow) - every constant index at the 131
   call sites is inside (0..9 and 0..0x48); `FieldPanel_KindPoints` by a byte
@@ -296,7 +296,7 @@ bytes in place (section 6).
   `ExtraSlots_PickItem` by the s16 words `+0x36` / `+0x3A` into the 128-byte
   id list, and by an id into `NameTable_Accessories`. All read the image or
   the save block in place, the same on both sides.
-- **L4 `ExtraSlots_PickItem`'s two slots are not symmetric**: the kind-0xB
+- **L4 `ExtraSlots_PickItem`'s two slots are not symmetric** (D238): the kind-0xB
   slot (`0x904130`) takes the id under the cursor even when it is already
   the slot's - `Inventory_Remove(3, id, 1)` then `Inventory_Add(3, id, 1)`,
   a net nothing if both succeed -, where the kind-0xA slot checks

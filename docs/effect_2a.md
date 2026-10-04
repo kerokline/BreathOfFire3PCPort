@@ -592,30 +592,30 @@ rule in place of `X87Add` - refused in 6 rounds.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x2E never leaves its burst.** `EffectKind2E_Burst` (state 2) does
+- **Kind 0x2E never leaves its burst.** (D202) `EffectKind2E_Burst` (state 2) does
   not move `+1`: once the counter byte reaches 3, the effect throws up to
   sixteen sparks every frame - as many as the pool has free - until something
   else releases the record. It sets the dword `+0xC` to 0x40 each frame,
   which nothing of the kind reads. Whether a script releases it was not
   traced.
-- **Three particle families share one pool.** Specks (0x14), sparks (0x28)
+- **Three particle families share one pool.** (D201) Specks (0x14), sparks (0x28)
   and drops (0x18) are all laid over `EffectKind30_Shards` (and FC2's kind
   0x30 and E1C's kind 0x1E use it with their own strides), each with its own
   "free" test: a drop's frames word is every fifth speck's in-use byte. Two
   kinds using different families at once would corrupt each other's records.
   Unreached as far as the code shows (no two of these kinds are spawned
   together by anything found).
-- **`EffectSpecks_Spawn` divides by a word it tested before a call.** `+0x2E`
+- **`EffectSpecks_Spawn` divides by a word it tested before a call.** (D207) `+0x2E`
   is tested for 0, then `Rand` is called and the word read again for the
   `idiv`. Harmless in the game (`Sprite_Current` does not change during the
   call); ours aborts where the two reads differ and the second is 0.
-- **`EffectSparks_Draw` hands `EffectGte_ProjectSize` a half-written size.**
+- **`EffectSparks_Draw` hands `EffectGte_ProjectSize` a half-written size.** (D213)
   Its second word is the caller's stack; the quotient computed from it is not
   read, so nothing shows.
-- **Kind 0x28's push leaves the record's point at its last cell**, and kind
+- **Kind 0x28's push leaves the record's point at its last cell** (D238), and kind
   0x2A's sets a member's `+8` (5 or 1) whether or not its `+1` lets
   `Member_SetState2_8` run.
-- **The dispatchers index unchecked.** Every writer of `+1` in the band keeps
+- **The dispatchers index unchecked.** (D200) Every writer of `+1` in the band keeps
   it inside its table; ours aborts past one.
 
 ## 8. Calls across groups

@@ -203,27 +203,27 @@ kinds; the coordinator's frame-hash A/B covers it then.
 
 ## 7. Latent defects (described, not fixed) and where ours aborts
 
-- **`Effect_FindFree` unchecked**: `_ListOpen` (the call at `0x46736A`), `_Child2Gauge`
+- **`Effect_FindFree` unchecked** (D206): `_ListOpen` (the call at `0x46736A`), `_Child2Gauge`
   (`0x467B8B`) and `_DrawMessageList` (`0x468626`) write the answer's record
   without testing for 0xFF (none free): with all 20 records busy the original
   writes a kind-0x1A record at `0x7E91E0`, past the pool. Ours aborts with a
   message. Ordinary play needs 20 live effects at that moment; not seen.
 - **Indexes past a table - ours aborts, the original reads or jumps through
-  what follows**: every `+2` / `+3` / `+1` dispatcher past its table's length;
+  what follows** (D200): every `+2` / `+3` / `+1` dispatcher past its table's length;
   the animation scripts past their end; `Panel_DrawEdgeQuad`'s `which` past 5;
   `_DrawMessageList`'s title id past 6 and line index past 0x36; an accessory
   id past NameTable_Accessories' 52 (`_DrawItemsA` / `_DrawItemsB`);
   `EffectKind92_Follow`'s sprite index past 30 (the original writes past
   `Sprite_Objects`). None is reached from the states' own starts.
-- **Reads before a script**: the steps read "the record before `+0xA`"; with
+- **Reads before a script** (D238): the steps read "the record before `+0xA`"; with
   `+0xA` 0 and `+9` not 0 the original reads up to four bytes in front of the
   script - the high bytes of the step table's last pointer, image constants.
   A record's own start never gets there (`+9` 0 advances `+0xA` first), but a
   record left mid-step does, so ours reads the same bytes rather than abort.
-- **A no-op store**: `_DrawCountHeader` compares the printed number's first
+- **A no-op store** (D238): `_DrawCountHeader` compares the printed number's first
   byte with 0x20 and writes 0x20 over it - no change (perhaps meant to blank
   a leading character).
-- **Strides**: `_Child3Grid` takes the lit mark's string at `0x66A32C + mark *
+- **Strides** (D238): `_Child3Grid` takes the lit mark's string at `0x66A32C + mark *
   8` and the others' at `mark * 4`; with the image's marks (0, 1) the lit one
   reads entry 0 or 2 of three.
 

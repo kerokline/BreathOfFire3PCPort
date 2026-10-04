@@ -380,33 +380,33 @@ calls into the band.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **One pool, many layouts.** `EffectKind30_Shards` `0x92BF80` is laid over
+- **One pool, many layouts.** (D201) `EffectKind30_Shards` `0x92BF80` is laid over
   by kind 0x2F's three trails (to `0x92C448`), kind 0x35's sixteen shards,
   55 pieces and 55 face copies (to `0x92CFC0`), kind 0x3B's three spirals (to
   `0x92CDB4`) and kind 0x3D's sixteen rings (to `0x92C100`) - as by E1C's
   kinds 0x1C..0x1F and FC2's kind 0x30. Two of them alive at once write over
   each other; nothing in the code prevents it. `symbols.toml` gives the pool
   1,344 bytes (to `0x92C4C0`); kinds 0x35 and 0x3B use past that.
-- **The unbounded dispatchers** (seven) and `EffectKind35_ShardsDraw`'s
+- **The unbounded dispatchers** (D200) (seven) and `EffectKind35_ShardsDraw`'s
   `call [0x65441C + 4 * +1]`: a state byte past its table jumps through the
   next table's cells or data. Ours aborts.
 - **`EffectKind3B_DrawGlow` and `EffectKind3D_DrawFan` hand
-  `EffectGte_ProjectSize` an uninitialised word**: only `in[0]` is written;
+  `EffectGte_ProjectSize` an uninitialised word** (D213): only `in[0]` is written;
   `in[1]` is whatever the stack held, and the helper scales it into `out[1]`,
   which neither reads. Harmless (no divide by it, and a depth of 0 is the
   helper's own abort); ours writes 0 there.
-- **`EffectKind3B_DrawSpiral` divides by `Math_Cos(0x80)`**, a constant the
+- **`EffectKind3B_DrawSpiral` divides by `Math_Cos(0x80)`** (D207), a constant the
   compiler did not fold (four times a quad). Never 0 in play; ours aborts on
   0 and on the one quotient idiv cannot hold.
-- **`EffectKind3B_Rise` steps `+0xA` three times a frame**, once per spiral,
+- **`EffectKind3B_Rise` steps `+0xA` three times a frame** (D238), once per spiral,
   and resets only the spiral it is on to shade 0x80 when it caps: the three
   spirals' shades are not stepped alike. Reproduced; whether that is the
   intent is for the owner's eye.
-- **Dead states.** Kind 0x33's state 3 (`Effect_StateRelease` twice: state 2
+- **Dead states.** (D202, D238) Kind 0x33's state 3 (`Effect_StateRelease` twice: state 2
   releases first); a ring whose state is past 1 stays in use for ever,
   undrawn, and keeps `EffectKind3D_RingsStep` answering 1, so kind 0x3D
   never releases - nothing writes such a state.
-- **`EffectKind2F_DrawTrail`'s clamp** catches only the first line's first
+- **`EffectKind2F_DrawTrail`'s clamp** (D238) catches only the first line's first
   end (0x2000 / 32 = 0x100): the head is 0xFF, not 0x100's low byte 0.
 
 ## 8. Controls

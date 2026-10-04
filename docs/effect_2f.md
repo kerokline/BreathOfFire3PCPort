@@ -452,34 +452,34 @@ quietened by the original), control 98 the `fcomp` unordered case, control 104 t
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **The dispatchers index unchecked** (eight tables, and
+- **The dispatchers index unchecked** (D200) (eight tables, and
   `EffectKind52_MoveSparks`' call by a spark's `+1`). Every writer of the bytes
   in the band steps them inside their tables; ours aborts past them.
-- **`EffectKind51_DrawColumn` trusts its half-height**: 65 angles and a byte row
+- **`EffectKind51_DrawColumn` trusts its half-height** (D208): 65 angles and a byte row
   counter, so a half-height above 0x20 reads past `EffectKind51_Angles` and one
   above 0x80 never ends. The kind's states keep it within 0..0x20 (they reset it
   to 0 at states 0 and 6 and raise it once a frame for 0x20 frames); the ring
   states use the same word as a radius (0x140 at state 10) but never draw the
   column.
-- **The effect pools overlap.** `EffectKind30_Shards` (`0x92BF80`) is kind
+- **The effect pools overlap.** (D201) `EffectKind30_Shards` (`0x92BF80`) is kind
   0x50's 64 specks of 0x28 (to `0x92C980`), kind 0x52's eight sparks of 0x1C
   (to `0x92C060`) and, straight after them, kind 0x52's trail
   (`0x92C060..0x92C4A0`), as well as FC2's sparks and E1C's shards, pieces and
   debris. Two of these kinds alive at once overwrite each other's records -
   a kind-0x50 speck in use over the trail would be drawn from trail data and
   move it. Whether the game ever runs two together is the owner's to say.
-- **Uninitialised words handed on**: `EffectKind50_SpeckQuad` hands
+- **Uninitialised words handed on** (D213): `EffectKind50_SpeckQuad` hands
   `EffectGte_ProjectSize` a size whose second word it never wrote (the answer's
   second word is not read); `EffectKind53_Beam` hands `Gte_RotTransPers` a
   vertex whose fourth word it never wrote (not read); `EffectKind52_TrailDraw`
   pushes its shade as a dword whose upper three bytes were never written (the
   cap reads the byte). No effect.
-- **`EffectKind56_Markers`' walk never ends** when the ground `+0x14` lies in
+- **`EffectKind56_Markers`' walk never ends** (D208) when the ground `+0x14` lies in
   the lowest 2^24 of the signed range (a ground of cell -0x8000); ours aborts.
-- **Kinds 0x51 and 0x56 wait on the chapters' counters** (`0x903848` = 0xB,
+- **Kinds 0x51 and 0x56 wait on the chapters' counters** (D202) (`0x903848` = 0xB,
   `0x90384B` = 0xA then 0xE): spawned where no event script sets them, they
   wait for ever (by design, not a fault).
-- **`EffectKind4F_Start`** keeps FC1's `EffectKind3C_Start`'s behaviour: when the
+- **`EffectKind4F_Start`** (D238) keeps FC1's `EffectKind3C_Start`'s behaviour: when the
   second sprite is not found the first is given back but `+3` keeps its index
   and the state stays 0, so the next frame tries again.
 

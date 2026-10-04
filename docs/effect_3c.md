@@ -403,33 +403,33 @@ the time - most rounds leave an earlier record free); refused, so left.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
-- **Kind 0x6E steps its shards twice in its last state.** Its dispatcher calls
+- **Kind 0x6E steps its shards twice in its last state.** (D205, D204) Its dispatcher calls
   the state and then always tail-jumps to the shard pass; state 3
   (`EffectKind6E_Fade`) itself runs the pass first (to learn whether any is
   live). So in state 3 every live shard rises, grows, darkens and ages twice a
   frame and is drawn twice, and on the frame the record is released the pass
   still runs once more from the freed record. Possibly intended (a faster
   fade); ours does the same.
-- **Kind 0x6F samples the ground at a stale point on its first frame.**
+- **Kind 0x6F samples the ground at a stale point on its first frame.** (D214)
   `_AlongZ` reads `+0x1C` (and `_AlongX` `+0x18`) for the elevation's
   coordinate before writing it, so the first frame's ground comes from what
   the spawn left there; from the second frame on it is the line's middle (the
   previous frame's loop leaves the end there).
-- **Unchecked indexes**: kind 0x6D's block `0x92C780 + 0x500 * +6` (a byte;
+- **Unchecked indexes** (D200): kind 0x6D's block `0x92C780 + 0x500 * +6` (a byte;
   no spawner found to say how many blocks there are - the next pool the image
   uses, `0x47A130`'s at `0x92D1DC`, starts inside the third block), kind 0x6D's
   shape `+4` into eight rows, kind 0x6F's colour `+6` into one row, and
   `Party_MemberAt`'s answer into `ObjTrio`. In the band's own code every one is
   kept in range; ours aborts past any of them.
-- **The nine dispatchers do not bound their state bytes**; every writer of
+- **The nine dispatchers do not bound their state bytes** (D200); every writer of
   `+1` / `+2` in the band steps it inside its table, and kind 0x73's `+1` is
   the spawner's (area 132 writes 0 and 1).
-- **The column's step count is unbounded**: `EffectKind74_Draw` steps
+- **The column's step count is unbounded** (D208): `EffectKind74_Draw` steps
   0x100000 at a time from the foot to the top + 0x1000000 with signed
   compares; the states keep the top within 0x8000000 of the foot (at most 0x90
   steps), but a foot near the signed limit would run the loop past the wrap
   (up to 4,096 steps of 0x48 bytes each).
-- **Leftovers**: `_AlongZ` / `_AlongX` call `BareRet` (a bare `ret`) with the
+- **Leftovers** (D213): `_AlongZ` / `_AlongX` call `BareRet` (a bare `ret`) with the
   line's two points pushed; kind 0x6D's start clears the block it then sets up
   in full; `EffectKind6F_PushParty` hands `Member_SetState2_8` its whole
   argument slot (the callers push 0 or 1, so the upper bytes are 0).
