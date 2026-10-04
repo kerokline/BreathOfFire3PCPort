@@ -105230,3 +105230,542 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R2D): MasterGrant_Step0Open, Step1Member, Step2Next; jumped through by MasterGrant_ByStep 0x587370 by byte 0x9398D1, unchecked; byte data (0x66459C, the masters' leave poses) follows. docs/rest_2d.md."
+
+# --- round fourteen group R2E (rest_2e.cpp): 0x58B1D0..0x58ED3F, the field menu's Items arrange screens, Equipment, Ability ---
+
+[[func]]
+pc = 0x58B1D0
+name = "FieldItems_ArrangeCategory"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B1D0..0x58B32E (0x15F bytes): FieldMenuItems_State5Steps[0] (R2D's 0x58B1C0 by the step 0x929F02): the backdrop; the hand at window 0x803334's x + 0x2A, y + 7, help 0x17; Input_AutoRepeat(pressed & 0xF00C); 0x803340 = 0xFF; 0x8000 / 0x2000 turn the category 0x80333E through 0..3 (sound 0x101, word 0x803344 = 0x32 / 0x31) and set the top 0x80333F from 0x9398B8[category]; confirm: sound 0x103, 0x803362 the category, the sort window 0x803358 opened, the step up; cancel: sound 0x106, the state down 3. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58B330
+name = "FieldItems_ArrangeHow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B330..0x58B4AA (0x17B bytes): FieldMenuItems_State5Steps[1]: the hand by the row 0x803363, help 0x18; 0x1000 / 0x4000 move the row over the category's FieldItems_ArrangeRows count (sound 0x100, wrapping); confirm: sound 0x103, the row's sort id - not 0: FieldItems_Sort(id); 0: 0x803341 = 0xFF, the cursor 0x803340 from 0x939898[category], the step up; cancel: sound 0x106, the step down, window 0x803358 closed. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58B4B0
+name = "FieldItems_ArrangeMove"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B4B0..0x58B747 (0x298 bytes): FieldMenuItems_State5Steps[2]: the backdrop, the selected item's help (Item_HelpMessage), the hand by cursor - top; Input_AutoRepeat(pressed & 0x500C) scrolls a 128-entry list nine rows a page (word 0x803346 0xF0 / 0x10 when the cursor leaves the page), cursor and top kept at 0x939898 / 0x9398B8 by category, sound 0x100 when the cursor moved; with the scroll word 0: confirm picks a non-empty entry (0x803341) or swaps the picked entry with the cursor's in the id and count lists (FieldMenu_SwapBytes twice); cancel drops the pick or steps down. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58B750
+name = "FieldItems_DiscardConfirm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B750..0x58B893 (0x144 bytes): FieldItemsStates 6 (0x667340): the item's name (Item_NamePtr) to text record 0; the yes / no hand by s8 0x929F0B, help 0x1A; 0x2000 or 0x8000 pressed flips the answer (sound 0x101); confirm with yes: sound 0x104, the item's id and count cleared, 0x803341 = 0xFF, the state down 3; confirm with no or cancel: sound 0x106, the same without clearing. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58B8A0
+name = "FieldItems_UseOnMember"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B8A0..0x58BA33 (0x194 bytes): Items state 7 (0x667344): the consumable's name to text record 0, help 0x19, the member hand (window 0x80340C) by s8 0x929F06; 0x1000 / 0x4000 move it over Party_Count(0) (sound 0x101); confirm: ItemUse_Dispatch(the member's record, the item, 0) - al 0 or 4 used (sound 0x104, the count down, at 0 the id cleared and the screen left), else sound 0x107; cancel: sound 0x106; leaving: the state down 4, 0x80340C 0, 0x803341 0xFF. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58BA40
+name = "FieldItems_ViewList32"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58BA40..0x58BC22 (0x1E3 bytes): Items state 9 (0x66734C): the selected item's help, the hand; the list scroll of FieldItems_ArrangeMove over 32 entries (cursor below 0x1F, top 0x17 the last page) kept at 0x939898 / 0x9398B8; with the scroll word 0 and cancel: sound 0x106, the state down 7, the category 0, the top from 0x9398B8, 0x803340 / 0x803341 0xFF. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58BC30
+name = "FieldItems_InitWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58BC30..0x58BD37 (0x108 bytes): E8 from R2D's 0x58AAF0 (the Items screen's state 0): window records 0x8032EC (the title), 0x803310, 0x803334 (the category list, top from 0x9398B8), 0x80340C and the hand 0x803454 set up; help word 0. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58BD40
+name = "FieldItems_Sort"
+ret = "void"
+params = "unsigned how"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58BD40..0x58BD4F (0x10 bytes): E8 from FieldItems_ArrangeHow: jmp through FieldItems_Sorts by the argument's low byte, unchecked (ours aborts past its 7); the entries take no argument. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58BD50
+name = "FieldMenu_SwapBytes"
+ret = "void"
+params = "unsigned char *a, unsigned char *b"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58BD50..0x58BD62 (0x13 bytes): E8 from 18 sites (FieldItems_ArrangeMove, the seven sorts, FieldAbility_ArrangeMove; FS's PartyForm_Swap, SharedList_Compact / SortCostDown / SortCostUp; R2F's 0x58EE50.. and 0x590020): the bytes a and b point at exchanged. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58BD70
+name = "FieldItemSort_Compact"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58BD70..0x58BDFB (0x8C bytes): FieldItems_Sorts[0] and E8 from the six other sorts: 127 passes over the category's (0x80333E, re-read each pass) id list, pass p over entries below 0x7F - p, an empty entry swapped with a non-empty next one in the id and count lists. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58BE00
+name = "FieldItemSort_ConsumableFlag1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58BE00..0x58BEA5 (0xA6 bytes): FieldItems_Sorts[1]: FieldItemSort_Compact, then 127 bubble passes over the consumables' list 0x904154 (counts 0x904354): a pair whose first's NameTable_Consumables flags lack bit 0 and second's have it exchanged. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58BEB0
+name = "FieldItemSort_ConsumableFlag2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58BEB0..0x58BF55 (0xA6 bytes): FieldItems_Sorts[2]: as FieldItemSort_ConsumableFlag1 on flag bit 1. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58BF60
+name = "FieldItemSort_WeaponsByPower"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58BF60..0x58C006 (0xA7 bytes): FieldItems_Sorts[3]: FieldItemSort_Compact, then 127 bubble passes over the weapons' list 0x9041D4: a pair whose first's byte NameTable_Weapons + 28 id + 0x16 is below the second's exchanged (descending). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C010
+name = "FieldItemSort_ArmourByPower"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C010..0x58C0AB (0x9C bytes): FieldItems_Sorts[4]: as the weapons' over the armour list 0x904254 by NameTable_Armour + 26 id + 0x14 (descending). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C0B0
+name = "FieldItemSort_ByIconKind"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C0B0..0x58C19A (0xEB bytes): FieldItems_Sorts[5]: FieldItemSort_Compact, then 127 bubble passes over the category's list by Item_IconKind (the second entry's asked first; ascending). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C1A0
+name = "FieldItemSort_EquipableFirst"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C1A0..0x58C296 (0xF7 bytes): FieldItems_Sorts[6] (no row of FieldItems_ArrangeRows names it): FieldItemSort_Compact, then 127 bubble passes over the category's list moving entries whose Item_EquipMask has the bit of party member s8 0x929F06's record (an 8-bit 1 << record) before those without. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C2A0
+name = "FieldItems_CloseWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C2A0..0x58C2B1 (0x12 bytes): E8 from R2D's 0x58B130 (the Items screen's close): window records 0x803310, 0x803334, 0x803358 cleared (+0 0). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C2C0
+name = "FieldEquip_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C2C0..0x58C2CD (0xE bytes): FieldMenu_States[4]: jmp through FieldEquip_States by the state byte 0x929F01, unchecked (ours aborts past its 9). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C2D0
+name = "FieldEquip_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C2D0..0x58C307 (0x38 bytes): FieldEquip_States[0]: the backdrop, FieldEquip_InitWindows, sound 0x102, the cursor 0x6BDFAF 0, the timer 5, the state up. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C310
+name = "FieldMenu_CountdownState"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C310..0x58C332 (0x23 bytes): FieldEquip_States[1] and [4], FieldAbility_States[1]: the backdrop; the timer 0x929F04 down, at 0 the state up. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C340
+name = "FieldEquip_TopMenu"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C340..0x58C491 (0x152 bytes): FieldEquip_States[2]: the help word FieldEquip_TopHelp[s8 cursor 0x6BDFAF], the hand at window 0x803310 + 48 cursor; 0x8000 then 0x2000 turn the cursor through 0..3 (both tested; sound 0x101 when it moved); confirm: sound 0x104, window 0x803310's +0xB the cursor, the state up; cancel: sounds 0x102, 0x106, three windows' +3 1, the state up 5, the timer 0. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58C4A0
+name = "FieldEquip_PickMember"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58C4A0..0x58C796 (0x2F7 bytes): FieldEquip_States[3]: the member hand by 0x803340 (0x1000 / 0x4000 over Party_Count(0), sound 0x101 when s8 old differs); cursor 1: FieldEquip_BestByPower(member), 2: FieldEquip_BestByOrder(member); the member's record to text record 0 (8 bytes); FieldEquip_MemberHelp / FieldEquip_MemberFlags by the cursor; confirm (sound 0x103): cursor 0 opens the slot window (each member window +3 7, the item window 0x803358 set, the state up), 3 the state up 5, 1 and 2 FieldEquip_ApplyPreview; cancel: sound 0x106, the state down, 0x937F8E = 0x929F06. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58CD40
+name = "FieldEquip_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58CD40..0x58CDCC (0x8D bytes): FieldEquip_States[7]: the timer up; at 4 FieldEquip_CloseWindows, each member window +3 4, four windows' +3 2, 0x937F8E = 0x929F06, the mode 1, the state 0 (the top bar). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58CDD0
+name = "FieldEquip_RemoveSlot"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58CDD0..0x58CFBB (0x1EC bytes): FieldEquip_States[8], with its five-entry jump table (+0x1D8) to the end: the slot 0x80333E's category and record byte (1..3 armour, 4 and 5 accessories, else the weapon), its help; 0x4000 / 0x1000 turn the slot through 1..5 (sound 0x101); FieldEquip_PreviewRemove; confirm: its al set - sound 0x103, Inventory_Add(the category and item read before the turn, 1), the byte 0, Char_RecalcStats, FieldEquip_ApplyPreview; else sound 0x107; cancel (tested after a confirm too): sound 0x106, the state down 5. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58CFC0
+name = "FieldEquip_InitWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58CFC0..0x58D0B3 (0xF4 bytes): not in the cut (band_rows' code no list has, in 0x58CDD0's span): E8 from FieldEquip_Open: window records 0x8032EC, 0x803310, 0x803334 (its +0x20 dword the preview bytes 0x6BDFA8), 0x80340C and the hand set up. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D0C0
+name = "FieldEquip_BestByPower"
+ret = "void"
+params = "unsigned member"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D0C0..0x58D2DF (0x220 bytes): E8 from FieldEquip_PickMember: the preview bytes 0x6BDFA8.. for party member (low byte): the weapon of the 128 in the weapons' list the member can equip (Item_EquipMask bit) with the highest NameTable_Weapons +0x16 (ties the lower id), then for armour slots 0..2 the armour of type 2 + slot with the highest NameTable_Armour +0x14; the accessories copied. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D2E0
+name = "FieldEquip_BestByOrder"
+ret = "void"
+params = "unsigned member"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D2E0..0x58D56F (0x290 bytes): E8 from FieldEquip_PickMember: as FieldEquip_BestByPower ranking first by the lowest NameTable_Weapons +0x14 / NameTable_Armour +0x13, then the highest +0x16 / +0x14; the armour's tie compares the weapon byte 0x6BDFA8 and its best +0x14 takes the +0x13 value (Capcom's, docs/rest_2e.md). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D570
+name = "FieldEquip_ApplyPreview"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D570..0x58D635 (0xC6 bytes): E8 from FieldEquip_PickMember, FieldEquip_RemoveSlot and FS's Equip_ChooseItem: for the six slots, a preview byte set and unlike the record's: Inventory_Remove(FieldEquip_SlotCategories[slot], it, 1), Inventory_Add(the category, the old byte, 1), the record byte set; then Char_RecalcStats(record). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D640
+name = "FieldEquip_PreviewItem"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D640..0x58D6FC (0xBD bytes): E8 from FS's Equip_ChooseItem: 0x803341 = whether Item_EquipMask(0x803360, 0x803365) lacks the member's bit; the preview bytes from the member's record +0x12..+0x17, then 0x6BDFA8[slot 0x80333E] = the chosen item (the slot unbounded). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D700
+name = "FieldEquip_PreviewRemove"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D700..0x58D7A1 (0xA2 bytes): E8 from FieldEquip_RemoveSlot: the preview bytes from the member's record; the slot's byte set: cleared, 0x803341 0, al 1; else 0x803341 1, al 0. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D7B0
+name = "FieldEquip_CloseWindows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D7B0..0x58D7BC (0xD bytes): E8 from FieldEquip_Close: window records 0x803334 and 0x803358 cleared. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D7C0
+name = "FieldAbility_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D7C0..0x58D7CD (0xE bytes): FieldMenu_States[3]: jmp through FieldAbility_States by the state byte 0x929F01, unchecked (ours aborts past its 10). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D7D0
+name = "FieldAbility_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D7D0..0x58D813 (0x44 bytes): FieldAbility_States[0]: the backdrop, R2F's 0x58ED40 (the windows), sound 0x102, the timer 5, 0x929F06 = 0x905BA1, the cursor 0x6BDFB7 0, the state up. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D820
+name = "FieldAbility_TopMenu"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D820..0x58D9B7 (0x198 bytes): FieldAbility_States[2]: help FieldAbility_TopHelp[s8 cursor 0x6BDFB7]; the cursor turned as FieldEquip_TopMenu's; confirm: sound 0x104, window 0x803310 +0xB the cursor; 1: the step 0, the state up 5; 3: 0x8033A3 1, the timer 7, the state up 7, the step 0; else (2: 0x8033AB 3) the state up; cancel: sounds 0x102, 0x106, the state up 6, the timer 5. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58D9C0
+name = "FieldAbility_PickMember"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58D9C0..0x58DC39 (0x27A bytes): FieldAbility_States[3]: 0x8033A8 3 or 1 by the cursor; the member hand by 0x8033AA (0x1000 / 0x4000 over Party_Count(0), sound 0x100); the member's record to text record 0; unless cursor 2, 0x8000 / 0x2000 turn the list type 0x8033AB through 0..3 (sound 0x101, 0x8033A9 0x32 / 0x31), else word 0x8033B0 1; sound 0x101 when the member differs from s8 old; 0x929F06 the member; confirm: sound 0x104, 0x8033AC from 0x9398C0[4 member + type], the state up; cancel: sound 0x106, the state down. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58DC40
+name = "FieldAbility_PickAbility"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58DC40..0x58E069 (0x42A bytes): FieldAbility_States[4]: the ability under the cursor 0x8033AC of Char_AbilityList(member, type, 0) and its help (NameTable_Abilities +6); the type turned (not cursor 2) with the cursor re-read from 0x9398C0; the cursor 0..9 by 0x1000 / 0x4000 (sound 0x100) kept at 0x9398C0; confirm on an ability: cursor 0 - Skill_CanUse, then flag 0x10 of its record: R2D's 0x58A3C0(record, 0, ability, 0) answering 1 or 5 (sound 0x109, else 0x107, into 0x6BDFB6), or without the flag the target windows opened (sound 0x103, the state up); other cursors - Skill_CanUse: the state up 2, 0x929F0B 0; cancel: the state down. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58E070
+name = "FieldAbility_PickTarget"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58E070..0x58E2BB (0x24C bytes): FieldAbility_States[5]: the target hand by s8 0x929F08 over Party_Count(0) (sound 0x101); the ability's name (Ability_Records) to text record 0; help 0x30; confirm: R2D's 0x58A3C0(member's record, target's record, ability, 0) answering 1 or 5: sound 0x109, else 0x107 (into 0x6BDFB6); cancel: sounds 0x106, 0x102, the target windows closed (+3 9, member windows +3 8), 0x8033A3 3, the state down. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58E2C0
+name = "FieldAbility_ShareConfirm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58E2C0..0x58E403 (0x144 bytes): FieldAbility_States[6]: the yes / no hand by s8 0x929F0B, help 0x31; 0x2000 / 0x8000 flip it (sound 0x101); confirm with yes: sound 0x104, AbilityList_Add(the ability, 0, 1, 0) and the list entry cleared; with no: sound 0x106; either way or cancel: 0x8033AD 0xFF, the state down 2. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58E410
+name = "FieldAbility_ArrangeRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58E410..0x58E41D (0xE bytes): FieldAbility_States[7]: jmp through FieldAbility_ArrangeSteps by the step byte 0x929F02, unchecked (ours aborts past its 3). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58E420
+name = "FieldAbility_ArrangeMember"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58E420..0x58E63D (0x21E bytes): FieldAbility_ArrangeSteps[0]: help 0x17; the member 0x8033AA (sound 0x100) and the list type 0x8033AB (sound 0x101) turned; 0x929F06 the member; confirm: sound 0x103, the sort window 0x8033E8 opened (+0xA 5 or, type 3, 6), the step up; cancel: sound 0x106, the state down 5. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58E640
+name = "FieldAbility_ArrangeHow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58E640..0x58E7DC (0x19D bytes): FieldAbility_ArrangeSteps[1]: help 0x18; the row 0x8033F3 over FieldAbility_ArrangeRows' count by type 3 or not (sound 0x100); confirm: sound 0x103, the row's sort id - not 0: R2F's 0x58EE40(id); 0: 0x8033AD 0xFF, the cursor 0x8033AC from 0x9398C0, the step up; cancel: sound 0x106, the step down, window 0x8033E8 closed. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58E7E0
+name = "FieldAbility_ArrangeMove"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58E7E0..0x58E9CB (0x1EC bytes): FieldAbility_ArrangeSteps[2]: the ability's help; the cursor 0..9 (kept at 0x9398C0, sound 0x100); confirm: pick a non-empty entry (0x8033AD, sound 0x103; empty: 0x107) or swap the picked entry with the cursor's (FieldMenu_SwapBytes on two Char_AbilityList pointers); cancel: drop the pick or the step down. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58E9D0
+name = "FieldAbility_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58E9D0..0x58EA5A (0x8B bytes): FieldAbility_States[8]: the timer down; at 0 R2F's 0x58F050 (windows closed), each member window +3 4, four windows' +3 2, 0x905BA1 = 0x929F06, the mode 1, the state 0. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58EA60
+name = "FieldAbility_ViewRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58EA60..0x58EA6D (0xE bytes): FieldAbility_States[9]: jmp through FieldAbility_ViewSteps by the step byte 0x929F02, unchecked (ours aborts past its 5). No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58EA70
+name = "FieldAbility_ViewOpen"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58EA70..0x58EAC9 (0x5A bytes): FieldAbility_ViewSteps[0]: the timer down; at 0 R2F's 0x58F000 (the list window), its cursor and top from 0x939892 / 0x9398CC, sound 0x102, the timer 7, the step up. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58EAD0
+name = "FieldAbility_ViewWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58EAD0..0x58EAF2 (0x23 bytes): FieldAbility_ViewSteps[1]: the backdrop; the timer down, at 0 the step up. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58EB00
+name = "FieldAbility_ViewBrowse"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58EB00..0x58ECB9 (0x1BA bytes): FieldAbility_ViewSteps[2]: help 0x4183 + 0x8033D0 (0 when it is 0); the list scroll of FieldItems_ArrangeMove over 18 entries (cursor below 0x11, top 9 the last page, the scroll byte 0x8033CC) kept at 0x939892 / 0x9398CC; cancel: sound 0x106, the step up, 0x8033C7 1, the timer 7. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58ECC0
+name = "FieldAbility_ViewLeave"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58ECC0..0x58ED03 (0x44 bytes): FieldAbility_ViewSteps[3]: the timer down; at 0 0x8033A3 2, sound 0x102, the timer 7, the step up. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[func]]
+pc = 0x58ED10
+name = "FieldAbility_ViewEnd"
+ret = "void"
+params = "void"
+impl = "src/game/rest_2e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58ED10..0x58ED3F (0x30 bytes): FieldAbility_ViewSteps[4]: the timer down; at 0 the step 0, the state down 7. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+
+[[data]]
+pc = 0x667360
+name = "FieldItems_ArrangeRows"
+ctype = "unsigned char"
+count = 24
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): four rows of 6 bytes by the category 0x803362 (FieldItems_ArrangeHow): +0 the row count, +1.. a FieldItems_Sorts index (0 the hand-arranged list); read unbounded by the category and row. docs/rest_2e.md."
+
+[[data]]
+pc = 0x667380
+name = "FieldItems_Sorts"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): FieldItems_Sort's jmp by its argument, unbounded: FieldItemSort_Compact, _ConsumableFlag1, _ConsumableFlag2, _WeaponsByPower, _ArmourByPower, _ByIconKind, _EquipableFirst; FieldEquip_States follows (checked by hand). docs/rest_2e.md."
+
+[[data]]
+pc = 0x66739C
+name = "FieldEquip_States"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): FieldEquip_Run's jmp by 0x929F01, unbounded: FieldEquip_Open, FieldMenu_CountdownState, FieldEquip_TopMenu, FieldEquip_PickMember, FieldMenu_CountdownState, Equip_ChooseSlot, Equip_ChooseItem (FS's), FieldEquip_Close, FieldEquip_RemoveSlot; FieldEquip_TopHelp follows. docs/rest_2e.md."
+
+[[data]]
+pc = 0x6673C0
+name = "FieldEquip_TopHelp"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): the help word of FieldEquip_TopMenu's four entries, by s8 0x6BDFAF. docs/rest_2e.md."
+
+[[data]]
+pc = 0x6673C8
+name = "FieldEquip_MemberHelp"
+ctype = "unsigned short"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): the help word FieldEquip_PickMember shows by s8 0x6BDFAF. docs/rest_2e.md."
+
+[[data]]
+pc = 0x6673D0
+name = "FieldEquip_MemberFlags"
+ctype = "unsigned char"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): a byte every second, by 2 * s8 0x6BDFAF: FieldEquip_PickMember's 0x803341. docs/rest_2e.md."
+
+[[data]]
+pc = 0x6673D8
+name = "FieldEquip_SlotCategories"
+ctype = "unsigned char"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): the item category of the six equipment slots (FieldEquip_ApplyPreview's Inventory_Remove / Inventory_Add). docs/rest_2e.md."
+
+[[data]]
+pc = 0x6673E0
+name = "FieldAbility_States"
+ctype = "unsigned long"
+count = 10
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): FieldAbility_Run's jmp by 0x929F01, unbounded: FieldAbility_Open, FieldMenu_CountdownState, FieldAbility_TopMenu, _PickMember, _PickAbility, _PickTarget, _ShareConfirm, _ArrangeRun, _Close, _ViewRun; FieldAbility_TopHelp follows. docs/rest_2e.md."
+
+[[data]]
+pc = 0x667408
+name = "FieldAbility_TopHelp"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): the help word (a dword each, the low word read) of FieldAbility_TopMenu's four entries, by s8 0x6BDFB7. docs/rest_2e.md."
+
+[[data]]
+pc = 0x667418
+name = "FieldAbility_ArrangeSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): FieldAbility_ArrangeRun's jmp by 0x929F02, unbounded: FieldAbility_ArrangeMember, _ArrangeHow, _ArrangeMove; FieldAbility_ArrangeRows follows. docs/rest_2e.md."
+
+[[data]]
+pc = 0x667424
+name = "FieldAbility_ArrangeRows"
+ctype = "unsigned char"
+count = 12
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): two rows of 6 bytes by (type 0x8033AB == 3), FieldAbility_ArrangeHow: +0 the count, +1.. a sort id for R2F's 0x58EE40 (0 the hand-arranged list). docs/rest_2e.md."
+
+[[data]]
+pc = 0x667430
+name = "FieldAbility_ViewSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R2E): FieldAbility_ViewRun's jmp by 0x929F02, unbounded: FieldAbility_ViewOpen, _ViewWait, _ViewBrowse, _ViewLeave, _ViewEnd; R2F's table 0x667444 (read by its 0x58EE40) follows. docs/rest_2e.md."
