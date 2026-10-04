@@ -403,7 +403,12 @@ its first run. Coverage (calls the originals made) includes `Field_CellKind`
 `PartyAction18_CellStrike` 1,765, `Field_RaisedEdgeTurns` 436,
 `Field_CellPairTurn` 81 (the diagonal one-fraction paths, the thinnest), and
 every entry of the 24 tables (`LeaderPanel_Stages`' twelve about 500 each).
-STAR_RESULT
+`BOF3X_SHADOW='*'` after the rebinding, at this branch's last code commit
+(2026-10-04, this worktree): exit 0, `inject: 8704 ours, 0 left original`,
+1,020 lines of 0 mismatches and none other (among them `rest_1f`, `rest_0a`
+and `member_sprites`, whose `0x527640` constant was rebound); the same with
+`BOF3X_WIDE=1`: exit 0, 1,020, 8,704 ours. Each passed on its first run (an
+earlier `'*'` before the rebinding passed too).
 
 ## 5. Controls
 
