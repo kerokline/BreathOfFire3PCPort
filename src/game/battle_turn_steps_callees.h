@@ -99,7 +99,7 @@ constexpr std::uint32_t kEndResultPages = 0x64AFAC;    // 5, by kState4 - 0x4319
 // Raw addresses of callees no group of this round owns (the rule above).
 constexpr std::uint32_t kWriteBackMember = bof3::addr::Battle_WriteBackMember;  // (actor): member's HP / AP / status into its CharacterRecord
                                                       // (PSX Battle_WriteBackMember, called by 0x801D71B0)
-constexpr std::uint32_t kClearEnemies = 0x494E70;     // (): bytes +0..+4 of the eight enemy objects zeroed
+constexpr std::uint32_t kClearEnemies = bof3::addr::BattleEnemy_ClearStates;     // (): bytes +0..+4 of the eight enemy objects zeroed
 constexpr std::uint32_t kReloadParty = bof3::addr::Battle_ReloadPartyRecords;      // (): each member's +0x80 re-copied from its CharacterRecord
 
 using Step = void (__cdecl*)();
@@ -125,7 +125,7 @@ struct Callees {
     int (__cdecl* load_done)();                           // File_LoadDone (mode_flow.cpp), always 1
     void (__cdecl* write_back_member)(unsigned);          // 0x446A80
     void (__cdecl* window_reset)();                       // Window_ResetAll (mode_flow.cpp)
-    void (__cdecl* clear_enemies)();                      // 0x494E70
+    void (__cdecl* clear_enemies)();                      // BattleEnemy_ClearStates 0x494E70
     void (__cdecl* task_clear_all)();                     // BattleTask_ClearAll (battle_flow.cpp)
     void (__cdecl* recalc_stats)(unsigned char*);         // Char_RecalcStats (char_stats.cpp)
     void (__cdecl* reload_party)();                       // 0x446600

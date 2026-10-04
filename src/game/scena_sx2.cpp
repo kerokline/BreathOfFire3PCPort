@@ -83,7 +83,7 @@ unsigned char TurnStep(std::uint32_t angle_cell, std::uint32_t light, std::uint3
 // +9 down a frame and at 0 clears story flag 0x1C and releases the record),
 // +9 the argument's low byte (the frames); then Flags_Set(0x904030, 0x1C).
 // No record: nothing, the flag not set either. Areas 49, 77, 86, 112, 117,
-// 118 and the engine's 0x4FEEB0 call it, each with 0xF; Area49_CellHook
+// 118 and Area109_SwitchHook 0x4FEEB0 call it, each with 0xF; Area49_CellHook
 // answers 0 while flag 0x1C is set (a switch's cool-down). PSX 0x8019BBB8
 // (pairs_propagated "gap74").
 extern "C" void __cdecl Effect_HoldFlag1C(unsigned frames) {

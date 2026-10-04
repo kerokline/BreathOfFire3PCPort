@@ -222,7 +222,7 @@ extern "C" void __cdecl GameMode_LookEnd(void) {
 // original 0x496290 (no PSX twin paired): Game_Mode 7 (GameMode_Handlers
 // entry 7) - a tail jump through GameMode_ShopSteps 0x656AAC on Game_Step:
 // 0 Shop_Open, 1 Shop_Frame, 2 Shop_Close. Unchecked: step 3 would run mode
-// 8's first step, 0x496440, the word after the table.
+// 8's first step, GameMode8_Enter 0x496440, the word after the table.
 extern "C" void __cdecl GameMode_Shop(void) { Entry(at::kShopSteps, Game_Step)(); }
 
 // original 0x4962A0 (no PSX twin paired): the shop's step 0. The object the

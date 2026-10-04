@@ -291,6 +291,7 @@
 #include "game/rest_2h.h"
 #include "game/rest_2f.h"
 #include "game/rest_2c.h"
+#include "game/rest_3g.h"
 #include "game/rest_2b.h"
 #include "game/rest_3a.h"
 #include "game/rest_3c.h"
@@ -1298,6 +1299,16 @@ void InjectAll() {
                                 // every effect group's (they call its functions by the addresses they had); before
                                 // FishingText_Arm; no module patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp,
                                 // widescreen.cpp)
+    Rest3G_Inject();            // round 14 wave-three group R3G (0x4925C0..0x5171FB: effect kinds 0xAC, 0xAD, 0xAE,
+                                // 0xBA's leftover states, a screen triangle's winding, the boss actors' placement,
+                                // game modes 8..11's dispatchers and steps, Quake's vertex lift, area 109's switch,
+                                // sub-kind 0x41's two draws, area 0xBD's view, kind 0xF's character count): its
+                                // clones' calls re-aimed at the scenario harness's recorders, its four mode step
+                                // tables swapped for the fuzz only; after every harness's inject and after
+                                // Widescreen_Inject (DIV-0041), whose four bounds inside AreaMapBD_BuildView ours
+                                // reads back, and before DrawPool_Grow (DIV-0062), whose item array and bound there
+                                // ours reads back too; ours that call it (E1A, E5A, E6B, BE6, the battle steps)
+                                // call it by the address it had
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

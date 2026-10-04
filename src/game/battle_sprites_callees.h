@@ -90,7 +90,7 @@ struct Callees {
     unsigned char (__cdecl* clut_mark)(unsigned, unsigned, unsigned);   // 0x454DF0 (ours)
     unsigned char (__cdecl* clut_find)(unsigned);             // 0x454F30 (ours)
     unsigned char (__cdecl* clut_owner)(unsigned);            // 0x455140 (ours)
-    void (__cdecl* boss_common)();                            // 0x494500, nobody's
+    void (__cdecl* boss_common)();                            // Battle_PlaceBossActors 0x494500 (R3G)
     void (__cdecl* boss_encounter)();                         // 0x4942A0 (ours)
     void (__cdecl* normal_encounter)();                       // 0x4942C0 (ours)
     void (__cdecl* setup_enemy)(unsigned, unsigned, long, long);   // 0x494320 (ours)

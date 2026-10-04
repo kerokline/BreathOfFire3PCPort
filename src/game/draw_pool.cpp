@@ -227,7 +227,7 @@ void DrawPool_Inject() {
 // the dll; the index is 12 bits in the cell word, so nothing else changes
 // shape. The thirteen sites in Capcom's code that name the item array as an
 // immediate (a raw scan of .text, each confirmed by disassembly) are re-aimed,
-// and the one bound AreaMap_FrameAreaBD compares its bump index with
+// and the one bound AreaMapBD_BuildView compares its bump index with
 // (`cmp word [Top], 0x400` at 0x510878) is raised to 0x800. Runs last, after
 // every self-test.
 namespace {

@@ -4738,8 +4738,9 @@ name = "AreaMap_FrameAreaBD"
 psx = 0x801F2C04
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22: AreaMap_Frame's whole work in area 0xBD - MapView_FocusX / Z from Field_Kind2X / Z directly ((0x800000 - x) >> 8), the angle check, Gte_RotMatrix, a translation. Not reached by the attract cycle (no calls in all_b or hidden_b)."
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x510630..0x510770 (0x141 bytes): AreaMap_Frame's whole work in area 0xBD - MapView_FocusX / Z = (0x800000 - Field_Kind2X / Z) sar 8, the angle check against Camera_AnglesDrawn (MapView_Redraw 3), Gte_RotMatrix, the focus vector through Gte_ApplyMatrix plus the camera shifts as the translation, the matrix set; with MapView_Redraw, AreaMapBD_BuildView and the byte down. The psx address is the area overlay entry the sibling's names/area_records.toml lists for many areas, transferred earlier, not read. docs/rest_3g.md."
 
 [[func]]
 pc = 0x56EA30
@@ -109216,3 +109217,314 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R3E): called through by EffectGlowSparks_Run 0x479260 by a spark +1, unbounded, each handed the spark: EffectGlowSparks_Glow, EffectSpark_Wait (E2F), EffectGlowSparks_Rise; the next table (0x65466C, kind 0x4A) follows, a dispatcher of its own names it. docs/rest_3e.md."
+
+[[func]]
+pc = 0x4925C0
+name = "EffectKindAC_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4925C0..0x4925D1 (0x12 bytes): +9 = 8, +1 up. EffectKindAC_States[0] (hidden in R3F's 0x492400; the catalog said 32, the rest padding). docs/rest_3g.md."
+
+[[func]]
+pc = 0x4925E0
+name = "EffectKindAC_FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4925E0..0x49261A (0x3B bytes): R3F's full-screen gradient 0x492400 with the shade s8(+9) * -0x20 (imul cl; the callee reads the byte), +9 down, at 0 +9 = 8 and +1 up - the shade 0x00..0xE0 as +9 runs 8..1. EffectKindAC_States[1]. docs/rest_3g.md."
+
+[[func]]
+pc = 0x492620
+name = "EffectKindAC_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x492620..0x49265E (0x3F bytes): the gradient with 0xFF while +9 is 8, else +9 << 5; +9 down, at 0 a tail jmp Effect_Release. EffectKindAC_States[2]. docs/rest_3g.md."
+
+[[func]]
+pc = 0x492680
+name = "EffectKindAD_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x492680..0x492706 (0x87 bytes): +0x34 / +0x38 the third member's x / z (ObjTrio record 2, 0x80300C / 0x803010), +0x3C AreaMap_Elevation there (s16 << 16), copied to +0xC..+0x14; +0x5D 0, +0x5E 0x80, +9 0x20, +1 up. EffectKindAD_States[0]. docs/rest_3g.md."
+
+[[func]]
+pc = 0x492710
+name = "EffectKindAD_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x492710..0x49274F (0x40 bytes): +0x3C up 0x800000; EffectKindAD_DrawArc(+0x34, +0xC, byte +0x5D, byte +0x5E); +1 up once the counter byte 0x903848 is 0xB. EffectKindAD_States[1]. docs/rest_3g.md."
+
+[[func]]
+pc = 0x492780
+name = "EffectKindAE_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x492780..0x49287D (0xFE bytes): the point (0x188000, 0x120000, (ground + 0x800) << 16) at +0x34..+0x3C, +0x2E 0x80, +0x30 0x180, +0x32 0, +9 8, +1 up; EffectGte_LoadMapCamera; the point projected and again 0x100 higher; +0x32 = Math_Ratan2(dy, dx) + 0x400 of the two projections (floats); sound 0x202. EffectKindAE_States[0]. PSX twin 0x801D10AC (pairs_propagated, callers), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x493E50
+name = "EffectKindBA_Line"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x493E50..0x493F66 (0x117 bytes): from the angle +0x6C (four Math_Sin / Math_Cos calls) two offsets ((3 sin - cos) * 3 << 13) sar 12 and ((-sin - 3 cos) * 3 << 13) sar 12 about Sprite_ObjectsExtra record 1's point; +0x34.. and +0xC.. (x less s16 +0x2E << 15) the line's ends, EffectKindBA_DrawLine(+0x34, +0xC, 0x40); the word +0x2E up, at 0x14A sound 0x216 and +1 up. EffectKindBA_States[1] (hidden in EffectKindB9_DrawShard 0x493C60). PSX twin 0x801F7C24 (call-disputed), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4941B0
+name = "Screen_TriangleWinding"
+ret = "int"
+params = "const float *a, const float *b, const float *c"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4941B0..0x4941DA (0x2B bytes), cdecl: (c.y - b.y)(b.x - a.x) - (b.y - a.y)(c.x - b.x) on x87, a tail jmp to _ftol 0x5B9550 (eax). Called by EffectKind44_RingCone, EyeBeam_DrawCylinder and Shisu_DrawModel, which test ax. PSX twin 0x801B0F88 (call-anchored), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x494500
+name = "Battle_PlaceBossActors"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x494500..0x49456E (0x6F bytes), cdecl: the encounter row EventBattle_Records[0x904AAA] byte +2 names; for each of its eight kinds not 0xFF Battle_PlaceBossActor(slot, count so far, kind); 0x904AB2 0 before, copied to 0x904AB3 after. Called first by Battle_InitBossEncounter 0x4942A0. docs/rest_3g.md."
+
+[[func]]
+pc = 0x494570
+name = "Battle_PlaceBossActor"
+ret = "void"
+params = "unsigned slot, unsigned count, unsigned kind"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x494570..0x4946B4 (0x145 bytes), cdecl: BossActor_Find(slot); none, nothing; else its 0x80 bytes into enemy record count (0x93B960 + 0x128 * count, rep movsd), Sprite_Current = it, its state bytes cleared, +0x29 4, +5 count + 3, +8 the formation byte 0x904AAC ^ 2; Battle_CopyEnemyData(count, kind), Battle_SetEnemyOffset(count, kind byte); +0x8F 0; the actor's +0 | 0x40; 0x904AB2 up. docs/rest_3g.md."
+
+[[func]]
+pc = 0x494E70
+name = "BattleEnemy_ClearStates"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x494E70..0x494E92 (0x23 bytes), cdecl: bytes +0..+4 of the eight enemy records (0x93B960, 0x128 apart) 0. Called by BattleEnd_Finish, BattleLoss_ResetParty, BattleLoss_Restart, Escape_Leave. PSX twin 0x800A9EB0 (call-anchored), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x496430
+name = "GameMode8_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x496430..0x49643E (0xF bytes): jmp [GameMode8_Steps + word Game_Step * 4], unchecked. GameMode_Handlers[8] (hidden in GameMode_LookEnd's catalog extent). docs/rest_3g.md."
+
+[[func]]
+pc = 0x496440
+name = "GameMode8_Enter"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x496440..0x4964D9 (0x9A bytes): the dword 0x904144 up; Fish_Spawn, Transition_Start(1), AreaMap_Frame, Field_DrawFrame; Gpu_SetDrawMove of (0, buffer * 0xF0 + 0x50, 0x40, 0x78) to (0x340, 0x100), committed at slot 5; GameMode8_Frame; Field_ScriptFlags2 bit 6 cleared, Game_Step up, Field_EdgeBits 0, Field_Request 0. GameMode8_Steps[0]. PSX twin 0x801994E8 (callers), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4964E0
+name = "GameMode8_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4964E0..0x4965B9 (0xDA bytes): Field_ScriptFlags2 bit 6 set; 0x90412C |= 0x80, Snd_LoadBankFile(its low 7 bits + 0x2C2) and the framed wait (GameMode8_WaitFrame, Task_Sleep); Music_FadeOut(0x10) if Music_Track changes; Transition_Start(0) and the wait-word wait; Field_ChangeArea(word 0x802290, dword 0x7E091C, dword 0x7E0920, 4); Music_FadeOutStop(0xA) if the track changes; Game_Mode 1, Game_Step 0. GameMode8_Steps[2]. PSX twin 0x80198620 (callers), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4965C0
+name = "GameMode9_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4965C0..0x4965CE (0xF bytes): jmp [GameMode9_Steps + word Game_Step * 4], unchecked. GameMode_Handlers[9]. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4965D0
+name = "GameMode9_Enter"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4965D0..0x496653 (0x84 bytes): Transition_Start(2) and its wait (Field_LoadingFrame, Task_Sleep), two sleeps, LoadDatFile(0xCB) and its wait, Gfx_ClutStripCopyRow(1) and (2), Game_Step up, Gfx_ClutStripDirty 1. GameMode9_Steps[0]. PSX twin 0x80199780 (table-anchored), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x496660
+name = "GameMode9_Leave"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x496660..0x4966D2 (0x73 bytes): two sleeps; 0x90412C |= 0x80 and Snd_LoadBankFile(its low 7 bits + 0x2C2), not waited for; Transition_Start(3) and its wait (Field_LoadingFrame); Game_Mode 2, Game_Step 0, Field_Request 0; a tail jmp Field_Frame. GameMode9_Steps[2] and GameMode10_Steps[2]. PSX twin 0x8019983C (table-anchored), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4966E0
+name = "GameMode10_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4966E0..0x4966EE (0xF bytes): jmp [GameMode10_Steps + word Game_Step * 4], unchecked. GameMode_Handlers[10]. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4966F0
+name = "GameMode10_Enter"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4966F0..0x496773 (0x84 bytes): GameMode9_Enter instruction for instruction with the file 0x31A. GameMode10_Steps[0]. PSX twin 0x80199940 (table-anchored), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x496780
+name = "GameMode11_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x496780..0x49678E (0xF bytes): jmp [GameMode11_Steps + word Game_Step * 4], unchecked. GameMode_Handlers[11]. docs/rest_3g.md."
+
+[[func]]
+pc = 0x496790
+name = "GameMode11_Frame"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x496790..0x4967AC (0x1D bytes): Mode11_ObjectFrame, Mode11_FieldFrame; with Field_Request 0, Game_Mode 2. GameMode11_Steps[0]. PSX twin 0x80199B00 (table-anchored), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4967B0
+name = "GameMode11_Look"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4967B0..0x4967B9 (0xA bytes): Look_PadControl, a tail jmp Mode11_FieldFrame. GameMode11_Steps[1]. PSX twin 0x80199B44 (table-anchored), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4967C0
+name = "GameMode11_LookEnd"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4967C0..0x4967E9 (0x2A bytes): Look_Return, Mode11_FieldFrame; with the words 0x929EC8 0xFD56 and 0x929ECC 0x200, Game_Step 0. GameMode11_Steps[2]. PSX twin 0x80199B6C (table-anchored), not read. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4CF4B0
+name = "Quake_VertexLift"
+ret = "unsigned"
+params = "long x, long z"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4CF4B0..0x4CF5E7 (0x138 bytes), cdecl: a BMAGIC cell vertex's (x, z) as cells of Quake's heaved block ((v + 0x4000) sar 6 less twice 0x695C2C / 0x695C2E, the axes by the facing 0x6959CC bit 0); outside 0x20 x 0x1C ax 0; inside, by the parities, one or two signed bytes of the lift table 0x695A2C negated and shifted (<< 3 or << 4). Callers (MapCell_DrawTexQuads, _DrawShadedQuads, _DrawSpinQuads) read ax. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4FEE70
+name = "Area109_SwitchPattern"
+ret = "int"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4FEE70..0x4FEEA4 (0x35 bytes), cdecl: the three story flags 0x65DE60 lists (Flags_Test on 0x904030) as bits 0..2, plus 1 - eax 1..8. Called by EffectKind18_09_Pattern (twice) and Area109_SwitchHook. docs/rest_3g.md."
+
+[[func]]
+pc = 0x4FEEB0
+name = "Area109_SwitchHook"
+ret = "unsigned char"
+params = "long x, long z"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x4FEEB0..0x4FEF4F (0xA0 bytes), cdecl: Area_CellHooks' entry for area 0x6D. At cell bytes (0x1C, 6) with the leader's facing ObjTrio +8 3 and story flag 0x1C clear: the pattern (Area109_SwitchPattern) mod 6 written back as the three flags (each cleared, then set by its bit), Effect_HoldFlag1C(0xF), sounds 0x206 and 0x202, al 1; otherwise al 0. docs/rest_3g.md."
+
+[[func]]
+pc = 0x5100B0
+name = "EffectKind18Sub41_DrawPanels"
+ret = "void"
+params = "unsigned lift, unsigned texture"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x5100B0..0x5101B0 (0x101 bytes), cdecl: a draw mode (page 0x95) at slot 5; two POLY_FT4 from the eight three-byte vertices at 0x65ED30 (x b0 << 7 - 0x37C0, z b1 << 7 - 0x2DC0, y -0x3F8 - b2 * lift), Gte_RotTransPers4, Gte_PrimDepths4_10, Prim_SetTexture((texture << 16) | 0xBB009120), committed at slot 5. Called by EffectKind18Sub41_Hold. docs/rest_3g.md."
+
+[[func]]
+pc = 0x5101C0
+name = "EffectKind18Sub41_DrawRings"
+ret = "void"
+params = "int size"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x5101C0..0x510626 (0x467 bytes), cdecl: three times (size, then 0x10 less; the colour (0x28 - size) * 5, then 0x10 more, clamped 0..0xFF): two semi-transparent LINE_F2 strokes and two circles of 16 chords (Math_Sin / Math_Cos times the size sar 10, plus a centre in MapView_ScreenXY, through _ftol) projected with Gte_RotTransPers and Gte_StoreDepthF, committed at slot 5; draw modes (page 0xB5) before and after. Called by EffectKind18Sub41_Hold. docs/rest_3g.md."
+
+[[func]]
+pc = 0x510780
+name = "AreaMapBD_BuildView"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x510780..0x510BA3 (0x424 bytes), cdecl: area 0xBD's view - this buffer's lists 0 and 1 of the 0x38 DrawLayers emptied; by the camera's octant a record of six s8 at 0x65ED48 and 0x38 x 0x1C or 0x2C x 0x28 cells walked through the 16 x 16 block map 0x65ED78 onto a 0x60-wide AreaMap_Corners; each cell's first corner projected and culled (y above 120 and x in (-200, 520), or y below 121 and x in (-50, 370)); a kept one takes the next draw item by DrawItemPool_Top (bound 0x400), AreaMapBD_CellTexture, the three other corners projected, linked into layer 0x37 - row. DIV-0041 re-aims four of its fcomp operands, DIV-0062 its item array and bound: ours reads them back. docs/rest_3g.md."
+
+[[func]]
+pc = 0x510BB0
+name = "AreaMapBD_CellTexture"
+ret = "void"
+params = "unsigned long texture, unsigned char *quad"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x510BB0..0x510C17 (0x68 bytes), cdecl: Gpu_SetSemiTrans(quad, 0); colour 0x80 x 3; CLUT ((texture sar 24) & 0xF) + 0x1E3 << 6, page 0x95; the 16 x 16 tile of the texture's low byte as the four u / v. Called by AreaMapBD_BuildView. docs/rest_3g.md."
+
+[[func]]
+pc = 0x5171E0
+name = "EffectKind0F_CharCount"
+ret = "int"
+params = "const unsigned char *text"
+impl = "src/game/rest_3g.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3G, capstone to the last instruction), 0x5171E0..0x5171FB (0x1C bytes), cdecl: the characters of a string to its NUL, a byte with bit 7 taking the next with it (unchecked for the NUL); eax. Called by EffectKind0F_Title, _TitleClose and _LineType (twice). docs/rest_3g.md."
+
+[[data]]
+pc = 0x656AB8
+name = "GameMode8_Steps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3G): GameMode8_Enter, GameMode8_Frame, GameMode8_Leave, GameMode8_TradeStep; GameMode8_Run 0x496430 jumps through it by the word Game_Step, unchecked; GameMode9_Steps starts at 0x656AC8 (its own reader's). docs/rest_3g.md."
+
+[[data]]
+pc = 0x656AC8
+name = "GameMode9_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3G): GameMode9_Enter, Mode8_Step5 0x517330, GameMode9_Leave; GameMode9_Run 0x4965C0 jumps through it by the word Game_Step, unchecked; GameMode10_Steps starts at 0x656AD4. docs/rest_3g.md."
+
+[[data]]
+pc = 0x656AD4
+name = "GameMode10_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3G): GameMode10_Enter, Mode8_Step8 0x517340, GameMode9_Leave; GameMode10_Run 0x4966E0 jumps through it by the word Game_Step, unchecked; GameMode11_Steps starts at 0x656AE0. docs/rest_3g.md."
+
+[[data]]
+pc = 0x656AE0
+name = "GameMode11_Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3G): GameMode11_Frame, GameMode11_Look, GameMode11_LookEnd; GameMode11_Run 0x496780 jumps through it by the word Game_Step, unchecked; data follows (the button map 0x656AEC Game_Boot copies). docs/rest_3g.md."

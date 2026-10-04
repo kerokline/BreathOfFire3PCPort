@@ -82,7 +82,7 @@ const Callees kOriginals = {
     ClutMap_Mark,
     ClutMap_FindFree,
     ClutMap_FindOwner,
-    Raw<void (__cdecl*)()>(0x494500),
+    Battle_PlaceBossActors,
     Battle_InitBossEncounter,
     Battle_InitEnemies,
     Battle_SetupEnemy,
