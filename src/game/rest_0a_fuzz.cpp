@@ -249,10 +249,20 @@ void Seed(unsigned k) {
 // random upper bytes (the callers push the dword a byte was stored into); the
 // cell words at their boundaries under random upper halves, the fourth dword
 // the callers push left random.
+// The round's effect index (0x51C6A0 / 0x51DD70: the argument's low byte;
+// else 20, none), set by Args before both passes, so that the disturbance
+// moves the record those two read again after each call far more often than
+// one of twenty at random would.
+unsigned g_index = 20;
+
 void Args(unsigned k, U* a) {
+    g_index = 20;
     switch (k) {
     case kBeyond:
-    case kOn: a[0] = (a[0] & 0xFFFFFF00u) | (sh::Next() % 20); break;
+    case kOn:
+        a[0] = (a[0] & 0xFFFFFF00u) | (sh::Next() % 20);
+        g_index = a[0] & 0xFF;
+        break;
     case kSpawn:
         a[1] = (a[1] & 0xFFFF0000u) | (PickOf(0, 1, 0x7FFF, 0x8000, 0xFFFF, 0x40, sh::Next()) & 0xFFFF);
         a[2] = (a[2] & 0xFFFF0000u) | (PickOf(0, 1, 0x7FFF, 0x8000, 0xFFFF, 0x40, sh::Next()) & 0xFFFF);
@@ -269,13 +279,17 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
-    switch (h % 10) {
+    switch (h % 13) {
     case 0: s[8] = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) & 7); break;
     case 1: SetLong(s + (v & 1 ? 0x34 : 0x38), static_cast<std::int32_t>(v << 7)); break;
     case 2: SetWord(s + 0x3E, v >> 2); break;
-    case 3: Field_MemberCount = static_cast<unsigned char>(v % 5); break;
+    case 3:
+    case 9: Field_MemberCount = static_cast<unsigned char>(v % 5); break;
+    case 10:
+    case 11:
+    case 12:
     case 4: {
-        unsigned char* const e = Effect(v % 20);
+        unsigned char* const e = Effect(h % 13 != 4 && g_index < 20 ? g_index : v % 20);
         static const unsigned kAt[] = {0x34, 0x38, 0x3E};
         const unsigned at = kAt[(v >> 5) % 3];   // from the hash: Next() is the seed's stream
         if (at == 0x3E) SetWord(e + at, v >> 5);
