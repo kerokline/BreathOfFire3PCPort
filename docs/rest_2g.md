@@ -415,7 +415,14 @@ In this worktree's build (2026-10-04):
 
 - `BOF3X_SHADOW=rest_2g`: exit 0, 0 mismatches (section 4); `inject: 9037
   ours` (8,989 + 48). The same with `BOF3X_WIDE=1`.
-- `BOF3X_SHADOW='*'` and `'*'` with `BOF3X_WIDE=1`: see the addendum below.
+- `BOF3X_SHADOW='*'`: exit 0 on the first run, 725 self-test lines, every
+  count line `0 MISMATCHES` (1,026), `rest_2g` among them (467,933 calls:
+  the shared generator draws another stream after the earlier shadows),
+  `inject: 9037 ours`.
+- `BOF3X_SHADOW='*'` with `BOF3X_WIDE=1`: exit 0 on the first run, the same
+  725 lines and 1,026 counts all `0 MISMATCHES`, `rest_2g` 467,926 calls.
+
+Neither `'*'` run died silently. `tools/ledger_check.py`: 0 errors.
 
 ## 10. The rebinding
 
