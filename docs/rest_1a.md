@@ -139,8 +139,8 @@ division the code makes (`dec; cdq; sub; sar`).
 
 **The dispatchers** (25): each reads its index - `+2`, `+3` or the u16
 `+0x2C` - and jumps through its table's word, the index unchecked (section
-2). Ours calls the word in place (`CodeAt`): where it is not code the
-original jumps into data and ours aborts with a message.
+2). Ours calls the word in place (`CodeAt`) and aborts with a message past
+the table's own count (section 5).
 
 **The form actions' states** (shared by the sets' tables).
 - `PartyFormAction_Form0Begin` - the pose `+4`: 0x41 without bit 0x16 of
@@ -366,9 +366,11 @@ not a refusal).
 - **The dispatchers are unbounded** (all 25): a state, step or form beyond
   its table's run reads the next table's entries (every table here is
   followed by another of code pointers, to `0x65FAC8`), and past the run of
-  tables the original jumps into data. Ours calls the word in place and aborts
-  where it is not code (`CodeAt`). Whether play ever holds such an index is
-  not established.
+  tables the original jumps into data. Ours aborts past the table's own count
+  (`CodeAt`; until 2026-10-05 it read on and aborted only where the word was
+  not code - [`rest_1b.md`](rest_1b.md) section 6 has the rule wave one's
+  seven groups share). Whether play ever holds such an index is not
+  established.
 - **`Sprite_ObjectAt`'s answer indexes the object records unchecked**
   (`0x51C190`'s three copies and `0x51D2F0` compare it signed - `movsx`,
   `jge` -, `0x51C530` unsigned): an answer of 0x22..0xFE would mark a byte past

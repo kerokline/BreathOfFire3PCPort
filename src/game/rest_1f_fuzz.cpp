@@ -284,8 +284,9 @@ const sh::Callee kCallees[] = {
     {R_OURS(Sprite_ObjectAt), 3, {kW, kW, kW}, kG, 0, 0, {}, &FxObjectAt},
     {R_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, kG, 0, 0, {}, &FxMapByte},
     {R_OURS(MapView_GroundAt), 2, {kW, kW}, kG, 0, 0, {}, &FxGround},
-    // the direction a byte: AreaMap_Slope reads one (the Begin states push it
-    // over Sprite_Current's address)
+    // the direction a byte (the Begin states push it over Sprite_Current's
+    // address): AreaMap_Slope reads the upper bytes only for a direction of 10
+    // or more, unreachable while directions stay 0..7 (rest_1e.md section 5)
     {R_OURS(MapView_SlopeAt), 3, {kW, kW, kU8}, kG, 0, 0, {}, &FxSlope},
 };
 #undef R_OURS

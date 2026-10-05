@@ -58,18 +58,18 @@ std::int32_t Abs32(std::int32_t v) {
 // (dec, cdq, sub, sar), so direction 0 gives 0.
 unsigned char HalfTurn(unsigned char d) { return static_cast<unsigned char>((static_cast<int>(d) - 1) / 2); }
 
-// A .data dispatch table read in place: the index unchecked, as the
-// original's; where the word is not code (past the run of code-pointer tables
-// the entry lies in) the original jumps into data - ours aborts. While the
-// fuzz runs, the entries are its recorders (outside .text).
+// A .data dispatch table read in place. The original's index is unchecked:
+// past the table it jumps through the next table's cell, or into data. Ours
+// aborts at the table's own count (its symbols.toml count), before the read -
+// the rule all seven of wave one's groups share (docs/rest_1b.md section 6).
+// While the fuzz runs, the entries are its recorders.
 using Handler = void (__cdecl*)();
-Handler CodeAt(U table, unsigned index, const char* who) {
+Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
     const U cell = table + 4u * index;
-    const auto entry = static_cast<U>(L(cell));
-    if (!scenario_harness::g_active && (entry < 0x401000 || entry >= 0x5C3000))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    static_cast<unsigned>(entry), static_cast<unsigned>(cell));
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry));
+    if (index >= count)
+        bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
+                    count, static_cast<unsigned>(table), static_cast<unsigned>(cell));
+    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(L(cell))));
 }
 
 // Sprite_ObjectAt's answer marked: bit 0 of the object's +0x80 - 0..0x1D a
@@ -284,7 +284,7 @@ extern "C" void __cdecl Member_FormActionState(void) {
         Abs32(static_cast<std::int32_t>(static_cast<U>(Long(s + 0x38)) - az)) > reach)
         stop = 1;
     if ((Field_ScriptFlags2 & 0x1C00) == 0 && stop == 0)
-        CodeAt(at::kFormActions, B(at::kPartySet) & 0x7Fu, "Member_FormActionState (0x51BAA0)")();
+        CodeAt(at::kFormActions, Field_FormActions_count, B(at::kPartySet) & 0x7Fu, "Member_FormActionState (0x51BAA0)")();
     else
         Fs()[0x137] = 0;
     if (Fs()[0x137] != 0) return;
@@ -300,7 +300,7 @@ extern "C" void __cdecl Member_FormActionState(void) {
 // Member_JumpSteps 0x65F9A4[+2] (Field_JumpBegin, Field_JumpOut,
 // Member_JumpAir, Field_JumpIn - the leader's Field_JumpSteps with this
 // group's step 2).
-extern "C" void __cdecl Member_JumpState(void) { CodeAt(at::kMemberJumpSteps, Sc()[2], "Member_JumpState (0x51BCF0)")(); }
+extern "C" void __cdecl Member_JumpState(void) { CodeAt(at::kMemberJumpSteps, Member_JumpSteps_count, Sc()[2], "Member_JumpState (0x51BCF0)")(); }
 
 // original 0x51BD10 (0x8D bytes), jump step 2: the member against the one it
 // follows (ObjTrio record +6, unchecked) - when that one's +0x137 is 3: more
@@ -333,55 +333,55 @@ extern "C" void __cdecl Member_JumpAir(void) {
 // ===========================================================================
 
 // original 0x51C740: Field_FormActions[0] - PartyFormAction0_Forms 0x65F9F4 by u16 +0x2C.
-extern "C" void __cdecl PartyFormAction0_ByForm(void) { CodeAt(at::kFormAction0Forms, Word(Sc() + 0x2C), "PartyFormAction0_ByForm (0x51C740)")(); }
+extern "C" void __cdecl PartyFormAction0_ByForm(void) { CodeAt(at::kFormAction0Forms, PartyFormAction0_Forms_count, Word(Sc() + 0x2C), "PartyFormAction0_ByForm (0x51C740)")(); }
 // original 0x51C760: Field_ActionBySet[0] - PartyAction0_Forms 0x65FA00 by u16 +0x2C.
-extern "C" void __cdecl PartyAction0_ByForm(void) { CodeAt(at::kAction0Forms, Word(Sc() + 0x2C), "PartyAction0_ByForm (0x51C760)")(); }
+extern "C" void __cdecl PartyAction0_ByForm(void) { CodeAt(at::kAction0Forms, PartyAction0_Forms_count, Word(Sc() + 0x2C), "PartyAction0_ByForm (0x51C760)")(); }
 // original 0x51CC00: Field_FormActions[1] - 0x65FA50 by u16 +0x2C.
-extern "C" void __cdecl PartyFormAction1_ByForm(void) { CodeAt(at::kFormAction1Forms, Word(Sc() + 0x2C), "PartyFormAction1_ByForm (0x51CC00)")(); }
+extern "C" void __cdecl PartyFormAction1_ByForm(void) { CodeAt(at::kFormAction1Forms, PartyFormAction1_Forms_count, Word(Sc() + 0x2C), "PartyFormAction1_ByForm (0x51CC00)")(); }
 // original 0x51CC20: Field_ActionBySet[1] - 0x65FA5C by u16 +0x2C.
-extern "C" void __cdecl PartyAction1_ByForm(void) { CodeAt(at::kAction1Forms, Word(Sc() + 0x2C), "PartyAction1_ByForm (0x51CC20)")(); }
+extern "C" void __cdecl PartyAction1_ByForm(void) { CodeAt(at::kAction1Forms, PartyAction1_Forms_count, Word(Sc() + 0x2C), "PartyAction1_ByForm (0x51CC20)")(); }
 
 // original 0x51BE90: 0x65F9B4 by +2 (PartyFormAction_Form0Begin, PartyFormAction_Form0Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction0_Form0(void) { CodeAt(at::kFormAction0Form0States, Sc()[2], "PartyFormAction0_Form0 (0x51BE90)")(); }
+extern "C" void __cdecl PartyFormAction0_Form0(void) { CodeAt(at::kFormAction0Form0States, PartyFormAction0_Form0States_count, Sc()[2], "PartyFormAction0_Form0 (0x51BE90)")(); }
 // original 0x51C430: 0x65F9CC by +2 (PartyFormAction_Form1Begin, PartyFormAction_Form1Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction0_Form1(void) { CodeAt(at::kFormAction0Form1States, Sc()[2], "PartyFormAction0_Form1 (0x51C430)")(); }
+extern "C" void __cdecl PartyFormAction0_Form1(void) { CodeAt(at::kFormAction0Form1States, PartyFormAction0_Form1States_count, Sc()[2], "PartyFormAction0_Form1 (0x51C430)")(); }
 // original 0x51C470: 0x65F9E0 by +2 (0x520840, PartyFormAction_Form2Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction0_Form2(void) { CodeAt(at::kFormAction0Form2States, Sc()[2], "PartyFormAction0_Form2 (0x51C470)")(); }
+extern "C" void __cdecl PartyFormAction0_Form2(void) { CodeAt(at::kFormAction0Form2States, PartyFormAction0_Form2States_count, Sc()[2], "PartyFormAction0_Form2 (0x51C470)")(); }
 // original 0x51BFB0: PartyAction0_Form0States 0x65F9C0 by +2.
-extern "C" void __cdecl PartyAction0_Form0(void) { CodeAt(at::kAction0Form0States, Sc()[2], "PartyAction0_Form0 (0x51BFB0)")(); }
+extern "C" void __cdecl PartyAction0_Form0(void) { CodeAt(at::kAction0Form0States, PartyAction0_Form0States_count, Sc()[2], "PartyAction0_Form0 (0x51BFB0)")(); }
 // original 0x51C450: 0x65F9D8 by +2 (0x5252B0, 0x521A20).
-extern "C" void __cdecl PartyAction0_Form1(void) { CodeAt(at::kAction0Form1States, Sc()[2], "PartyAction0_Form1 (0x51C450)")(); }
+extern "C" void __cdecl PartyAction0_Form1(void) { CodeAt(at::kAction0Form1States, PartyAction0_Form1States_count, Sc()[2], "PartyAction0_Form1 (0x51C450)")(); }
 // original 0x51C510: 0x65F9EC by +2 (PartyAction0_Form2Begin, 0x521C40).
-extern "C" void __cdecl PartyAction0_Form2(void) { CodeAt(at::kAction0Form2States, Sc()[2], "PartyAction0_Form2 (0x51C510)")(); }
+extern "C" void __cdecl PartyAction0_Form2(void) { CodeAt(at::kAction0Form2States, PartyAction0_Form2States_count, Sc()[2], "PartyAction0_Form2 (0x51C510)")(); }
 // original 0x51C780: 0x65FA0C by +2 (PartyFormAction_Form0Begin, PartyFormAction_Form0Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction1_Form0(void) { CodeAt(at::kFormAction1Form0States, Sc()[2], "PartyFormAction1_Form0 (0x51C780)")(); }
+extern "C" void __cdecl PartyFormAction1_Form0(void) { CodeAt(at::kFormAction1Form0States, PartyFormAction1_Form0States_count, Sc()[2], "PartyFormAction1_Form0 (0x51C780)")(); }
 // original 0x51CB80: 0x65FA24 by +2 (PartyFormAction_Form1Begin, PartyFormAction_Form1Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction1_Form1(void) { CodeAt(at::kFormAction1Form1States, Sc()[2], "PartyFormAction1_Form1 (0x51CB80)")(); }
+extern "C" void __cdecl PartyFormAction1_Form1(void) { CodeAt(at::kFormAction1Form1States, PartyFormAction1_Form1States_count, Sc()[2], "PartyFormAction1_Form1 (0x51CB80)")(); }
 // original 0x51CBC0: 0x65FA38 by +2 (0x520840, 0x51FC80, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction1_Form2(void) { CodeAt(at::kFormAction1Form2States, Sc()[2], "PartyFormAction1_Form2 (0x51CBC0)")(); }
+extern "C" void __cdecl PartyFormAction1_Form2(void) { CodeAt(at::kFormAction1Form2States, PartyFormAction1_Form2States_count, Sc()[2], "PartyFormAction1_Form2 (0x51CBC0)")(); }
 // original 0x51C7A0: PartyAction1_Form0States 0x65FA18 by +2.
-extern "C" void __cdecl PartyAction1_Form0(void) { CodeAt(at::kAction1Form0States, Sc()[2], "PartyAction1_Form0 (0x51C7A0)")(); }
+extern "C" void __cdecl PartyAction1_Form0(void) { CodeAt(at::kAction1Form0States, PartyAction1_Form0States_count, Sc()[2], "PartyAction1_Form0 (0x51C7A0)")(); }
 // original 0x51CBA0: 0x65FA30 by +2 (0x5252B0, 0x521A20).
-extern "C" void __cdecl PartyAction1_Form1(void) { CodeAt(at::kAction1Form1States, Sc()[2], "PartyAction1_Form1 (0x51CBA0)")(); }
+extern "C" void __cdecl PartyAction1_Form1(void) { CodeAt(at::kAction1Form1States, PartyAction1_Form1States_count, Sc()[2], "PartyAction1_Form1 (0x51CBA0)")(); }
 // original 0x51CBE0: 0x65FA44 by +2 (0x5239F0, 0x51DE20, 0x520350).
-extern "C" void __cdecl PartyAction1_Form2(void) { CodeAt(at::kAction1Form2States, Sc()[2], "PartyAction1_Form2 (0x51CBE0)")(); }
+extern "C" void __cdecl PartyAction1_Form2(void) { CodeAt(at::kAction1Form2States, PartyAction1_Form2States_count, Sc()[2], "PartyAction1_Form2 (0x51CBE0)")(); }
 // original 0x51CC40: 0x65FA68 by +2 (PartyFormAction_Form0Begin, PartyFormAction_Form0Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction2_Form0(void) { CodeAt(at::kFormAction2Form0States, Sc()[2], "PartyFormAction2_Form0 (0x51CC40)")(); }
+extern "C" void __cdecl PartyFormAction2_Form0(void) { CodeAt(at::kFormAction2Form0States, PartyFormAction2_Form0States_count, Sc()[2], "PartyFormAction2_Form0 (0x51CC40)")(); }
 // original 0x51D0D0: 0x65FA80 by +2 (PartyFormAction_Form1Begin, PartyFormAction_Form1Turn, PartyAction_ScriptEnd).
-extern "C" void __cdecl PartyFormAction2_Form1(void) { CodeAt(at::kFormAction2Form1States, Sc()[2], "PartyFormAction2_Form1 (0x51D0D0)")(); }
+extern "C" void __cdecl PartyFormAction2_Form1(void) { CodeAt(at::kFormAction2Form1States, PartyFormAction2_Form1States_count, Sc()[2], "PartyFormAction2_Form1 (0x51D0D0)")(); }
 // original 0x51D200: 0x65FA94 by +2 (0x520840, 0x51FC80, BossOp_ScriptTick).
-extern "C" void __cdecl PartyFormAction2_Form2(void) { CodeAt(at::kFormAction2Form2States, Sc()[2], "PartyFormAction2_Form2 (0x51D200)")(); }
+extern "C" void __cdecl PartyFormAction2_Form2(void) { CodeAt(at::kFormAction2Form2States, PartyFormAction2_Form2States_count, Sc()[2], "PartyFormAction2_Form2 (0x51D200)")(); }
 // original 0x51CCF0: PartyAction2_Form0States 0x65FA74 by +2.
-extern "C" void __cdecl PartyAction2_Form0(void) { CodeAt(at::kAction2Form0States, Sc()[2], "PartyAction2_Form0 (0x51CCF0)")(); }
+extern "C" void __cdecl PartyAction2_Form0(void) { CodeAt(at::kAction2Form0States, PartyAction2_Form0States_count, Sc()[2], "PartyAction2_Form0 (0x51CCF0)")(); }
 // original 0x51D1E0: 0x65FA8C by +2 (0x5252B0, 0x521A20).
-extern "C" void __cdecl PartyAction2_Form1(void) { CodeAt(at::kAction2Form1States, Sc()[2], "PartyAction2_Form1 (0x51D1E0)")(); }
+extern "C" void __cdecl PartyAction2_Form1(void) { CodeAt(at::kAction2Form1States, PartyAction2_Form1States_count, Sc()[2], "PartyAction2_Form1 (0x51D1E0)")(); }
 // original 0x51D220: 0x65FAA0 by +2 (PartyAction2_Form2State0, PartyAction2_Form2State1).
-extern "C" void __cdecl PartyAction2_Form2(void) { CodeAt(at::kAction2Form2States, Sc()[2], "PartyAction2_Form2 (0x51D220)")(); }
+extern "C" void __cdecl PartyAction2_Form2(void) { CodeAt(at::kAction2Form2States, PartyAction2_Form2States_count, Sc()[2], "PartyAction2_Form2 (0x51D220)")(); }
 // original 0x51D240: 0x65FAA8 by +3 (PartyAction2_Form2Aim, PartyAction2_Form2Strike,
 // PartyAction_FinishPalette, 0x51F850, 0x522DE0).
-extern "C" void __cdecl PartyAction2_Form2State0(void) { CodeAt(at::kAction2Form2State0Steps, Sc()[3], "PartyAction2_Form2State0 (0x51D240)")(); }
+extern "C" void __cdecl PartyAction2_Form2State0(void) { CodeAt(at::kAction2Form2State0Steps, PartyAction2_Form2State0Steps_count, Sc()[3], "PartyAction2_Form2State0 (0x51D240)")(); }
 // original 0x51D670: 0x65FABC by +3 (PartyAction2_Form2Reaim, 0x523F10, PartyAction_WaitEffect).
-extern "C" void __cdecl PartyAction2_Form2State1(void) { CodeAt(at::kAction2Form2State1Steps, Sc()[3], "PartyAction2_Form2State1 (0x51D670)")(); }
+extern "C" void __cdecl PartyAction2_Form2State1(void) { CodeAt(at::kAction2Form2State1Steps, PartyAction2_Form2State1Steps_count, Sc()[3], "PartyAction2_Form2State1 (0x51D670)")(); }
 
 // ===========================================================================
 // The form actions' states (shared: each sits in several sets' tables)

@@ -314,7 +314,9 @@ callee reached (`Field_GiveZenny` 188, `Sprite_FlashClut` and `Char_LoseHp`
 - **L3 - the dispatchers do not bound their index**: past its count each
   jumps through the next table's cells (always code here: the tables are
   contiguous). **Ours aborts** past the count; no handler writes such an index
-  (section 3).
+  (section 3). Wave one's seven groups share this rule since the round's end
+  (2026-10-05): R1A, R1B and R1C, which read on into the next table, abort at
+  the count too ([`rest_1b.md`](rest_1b.md) section 6).
 - **L4 - the object marks are indexed by `Sprite_ObjectAt`'s answer
   unchecked**, signed in the resolves and `PartyAction12_Form0Resolve` (an
   answer 0x80..0xFE would mark before `Sprite_Objects`), unsigned in the
