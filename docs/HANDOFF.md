@@ -44,6 +44,20 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
+0000000000. **2026-10-05: round fourteen so far has had a code review, read-only, nothing changed:
+   [`round-14-review.md`](round-14-review.md).** Seven reviewers read `5a94224..1c308c0` (the state hash, R0A, waves one to
+   three) without the game. **Fix before wave four:** in R1B, R1C, R1E, R1F, R1G, R2A, R2F and R3E a third of the group
+   disturbance never runs - each switches on `h % N` with N a multiple of 3, and the harness has already returned when
+   `h % 3 == 0` (R3G found this in its own fuzz, `c85840d`, and drew the case from `h >> 8`; nobody told the siblings; 13 older
+   fuzzes, `effect_1d`..`5f` and `field_c3`, have it too) - so the controls on those cells proved nothing; the fix is a line per
+   fuzz and a re-run of the controls. **Before the large validation:** round thirteen's Rand bypass (item 2 below) now matters,
+   since the original sides' `randlog` reads 0 and the state hash cannot see the CRT's seed; and `statehash.py check` never
+   compares the runs' headers, so a reference recorded with another skip list hides regressions and exits 0. Then
+   `battle_sprites.cpp:85`'s rebinding (R3G) now points at our `Battle_PlaceBossActors`, not `0x494500` (rule 3), and this
+   file's "Where things stand" (still round eleven's numbers; "DIV-0073 owing" too). Fourteen low items and the nits after
+   that: wave one's two dispatch rules, `Fish_Spawn`'s hang before its abort, DIV-0073 uncited in `rest_2b`, DIV-0041 missing
+   kind 0xAC, the cross-group disagreements, among them. All 119 commits carry the owner's sign-off; no stub, no game data.
+
 000000000. **2026-10-05: round thirteen has had a code review, read-only, nothing changed:
    [`round-13-review.md`](round-13-review.md).** Seven reviewers read `c567ca3..0a2257d` (PR #40) without the game.
    Fix first, both still open on this branch: **F1's double speed is held at x1 for up to two minutes whenever a
