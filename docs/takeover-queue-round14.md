@@ -539,3 +539,144 @@ executable the first goal of the phase 4 / 5 work.
     and `0x59AE00`; R2G says the function is `MenuList_WideTitleBox`
     `0x59A2E0`. The two do not agree and neither was read by the
     coordinator.
+
+## 12. The review's fixes before wave four (2026-10-05)
+
+[`round-14-review.md`](round-14-review.md) read the round at `1c308c0`. The
+owner's word the same morning: fix its high and medium items, and the low
+ones that are fuzz blindness or names; the other lows wait for the round's
+end; the dead disturbance repaired in every fuzz that has it, older rounds'
+too. Done on this branch from `ccf7395`, nothing pushed. What each item got:
+
+| Review item | What was done | Commit |
+|---|---|---|
+| 1 (high): a third of the group disturbance dead | `sh::DisturbCase(h, N)` (`scenario_harness.h`: a remix of the whole hash) in 22 fuzzes - the review's 21 and `field_e2`, the same shape through its `Move`, found by a scan of every `Disturb(h)`; `effect_1f` and `rest_2a` to `% 11` (11 cases under `% 12`). Then the controls, below | `b9dfe34`, the nine merges below |
+| 2 (medium): the Rand counter bypassed on reference sides | `Inject` takes an `instrument` flag and the counter passes it. `combat.txt`, Chinese: the original side's `randlog` equals ours on all 2,621 frames (2,017 draws); it read 0 before. `state-hash.md` section 3 names the CRT's seed | `8706e62` |
+| 3 (medium): `statehash.py` never compared headers | The header is `BOF3SH2` with a hash of the skip list's ranges; `diff` and `check` refuse runs hashed unlike (`BOF3SH1` files by the count, with a note); `check` names the pages its references never agree on. Tried on the round's references: `t1_orig.sh` (0 ranges) against `attract_r14_orig.sh` (165) is refused | `8706e62` |
+| 4 (medium): `battle_sprites.cpp:85` bound to ours | `Raw<...>(bof3::addr::Battle_PlaceBossActors)` again | `2f1507b` |
+| 5 (medium): HANDOFF's "Where things stand" | Rewritten | with this section |
+| 6: R3A's dispatchers' handed-on word unseen | `nargs` 1 on the five tables; controls C76, C77 (the word dropped: 6,000 of 6,000 in each of the five) | `72def8e` |
+| 9: `Fish_Spawn` hangs before its abort | The check is in the loop, before the subtraction | `451edeb` |
+| 10: DIV-0073 uncited | Cited at `Shisu_DrawModel` and in `rest_2b.md` | `2640cd7` |
+| 11: DIV-0041 without kind 0xAC; R3G's stale notes on `0x492400` | The amendment names `EffectKindAC_FadeIn` / `_FadeOut`; the comments say ours, opaque, widened | `2640cd7` |
+| 18: `AreaMap_FrameAreaBD` for `0x510780` | `AreaMapBD_BuildView` in DIV-0062, `widescreen.md`, `psp-widescreen.md`, `effect_6c.md` | `2640cd7` |
+
+**Left for the round's end** (the owner's word): items 7, 8, 12 to 17, 19
+and the nits. Of those, 16 and 17 are disagreements between groups that
+want one read of the bytes each, and the nits' "wave one's names" is a
+rename nobody has chosen.
+
+### 12.1 What the live cases found
+
+With the dead cases live, **every one of the 22 groups' shadows is 0
+mismatches**: no function of ours misses a re-read on a cell those cases
+move, as far as the fuzz reaches. Two groups mismatched on the first run
+and both were the fuzz: `effect_1d`'s and `effect_1f`'s case 0 drew a value
+from the seeds' stream (`PickOf`), which the two passes do not share, so
+every clone of the group parted the moment the case ran (6,694 and 1,753
+rounds). Both draw from the hash now. A case that never ran was never
+debugged.
+
+### 12.2 The controls, re-run and added
+
+Nine Opus agents, one worktree each from `451edeb`, headless, each group's
+own scratch script copied and pointed at the new worktree (the scripts'
+only repair: the checkouts are CRLF and the multi-line anchors were LF; no
+plant's string had stopped occurring exactly once). Each merged as
+`fix/r14-review-controls-a` .. `-i`; each group's doc has a dated paragraph
+and its new rows. The counts are the agents' reports, not re-run here:
+
+| Group | Existing: planted / refused | New controls | Fuzz changed |
+|---|---|---|---|
+| `rest_1b` | 88 / 83 by a count, 3 by the fault, 2 equivalents - as before | C89..C95 (7) | yes: three stand-ins move `Field_State +0x89`, `+0x138`, `Field_InputFlags` (C93..C95 were 0 without) |
+| `rest_1c` | 105 / 97, 3 by the crash (their in-table variants refused), 1 equivalent - as before | C100..C106 (7) | no |
+| `rest_1e` | 76 / 76 | C77..C84 (8) | no |
+| `rest_1f` | 108 / 105, 3 equivalents - as before | C109..C126 (18) | yes: the cell-class, corner and slope stand-ins move cells 8..0xB and the cell words (four of the new were 0 without) |
+| `rest_1g` | 103 / 103 | D05..D16 (12) | yes: **60,000 rounds a function, from 6,000** (D09, D10, D11, D13 were 0 at 6,000); the group's shadow takes 96 s where it took seconds |
+| `rest_2a` | 71 / 69, 1 equivalent, 1 the harness's Fatal - as before | C72..C79 (8) | no |
+| `rest_2f` | 144 / 139, 5 equivalents - as before | C145..C152 (8) | yes: `0x58BD50`'s stand-in moves the members row and the held row (C151, C152) |
+| `rest_3e` | 94 / 93, 1 equivalent - as before | C95..C99 (5) | yes: `Sound_PlayEffect`'s stand-in moves a sound flag (C98, C99) |
+| `effect_1d` | 72 / 71, 1 equivalent - as before | 73..78 (6) | no (case 0 repaired in `b9dfe34`) |
+| `effect_1e` | 58 / 58 | C59..C62 (4) | no |
+| `effect_1f` | 92 / 90, 1 equivalent, 1 the fault - as before | C91..C101 (11) | yes: `Sound_PlayEffect`, `Menu_DrawHand` and the inventory stand-in run the group's disturbance one time in two; the item cursor seeded 0 more often (four of the new were 0 without) |
+| `effect_2e` | 94 / 93, 1 equivalent - as before | 95..102 (8) | no |
+| `effect_2f` | 126 / 125, 1 equivalent - as before | 127..131 (5) | no |
+| `effect_3d` | 148 / 147, 1 equivalent - as before | 149..155 (7) | no |
+| `effect_4a` | 100 / 100 | 101, 102 (2) | no |
+| `effect_5a` | 55 / 55 | 4 | no |
+| `effect_5b` | 149 / 149 | 150..152 (3) | no |
+| `effect_5d` | 117 / 116, 1 equivalent - as before | 118..123 (6) | no |
+| `effect_5e` | 178 / 175, 3 equivalents - as before | 179..187 (9) | no |
+| `effect_5f` | 136 / 135, 1 equivalent - as before | 137..140 (4) | no |
+| `field_c3` | 160 / 160 | C161..C182 (22) | no |
+| `field_e2` | 135 / 131 by a count, 2 by ours' abort, 1 equivalent - as before | DS1..DS12 (12) | no |
+
+**No control refused before is unrefused now; no count went to 0 at its
+group's committed rounds; 176 new controls, and no defect of ours behind
+any of them.** What the re-run says beyond that:
+
+- **Most of the old "re-read" controls never needed the dead cases.** The
+  harness's own case 4 moves `Sprite_Current` to another record, and a
+  mutant that keeps a value read through it is refused by that alone. The
+  agents therefore planted a second kind: the stale value kept only while
+  the pointer is unchanged, which only the group's own case can refuse.
+  Under the old switch those are 0 everywhere - the measure of what the
+  dead third had left untested.
+- **The group's case is rare.** It runs after about one stand-in call in
+  150 to 430, so a re-read under one or two calls is seen in a handful of
+  rounds or none. Six fuzzes were made louder for it (the table); where
+  an agent left the fuzz alone the thin controls are named in the group's
+  doc.
+- **Still not refused, and not equivalent: `field_c3`'s C179..C181**
+  (`FieldCore_TileD0Slope`'s twins: 0 of 30,000) - where that fuzz's reach
+  ends. Thin: `effect_1e` C59 (1 of 3,000) and C62 (7), `rest_2f` C150 (2
+  of 6,000), `rest_1g` D11 (2 of 60,000), `effect_5a`'s `_05_Pulse` plant
+  (0 of 2,000, 72 of 40,000), `field_e2` DS5 and DS8 (1 of 6,000) and its
+  old D1 (4 of 6,000, 0 at 3,000). A debt: a louder stand-in on each
+  path, as the six above got.
+- **Cases that test nothing for their group** (no function re-reads the
+  cell after a call; each doc says so): `effect_4a` case 6, `effect_5b`
+  and `effect_5f` case 3, `field_c3` and `field_e2` case 6, two cells of
+  `effect_1f`'s case 0. In `rest_1b`, `rest_1c`, `rest_1e` and `rest_3e`
+  some cells are only written after a call, so their controls test the
+  order of the store.
+- **`effect_5f`'s control 42** fell from the doc's 4,000 to 2,063, and is
+  2,072 with case 0 off: the old figure predates that group's seed fix,
+  the agent's reading.
+
+**Debts added:**
+
+17. The thin and unrefused controls above (`field_c3` C179..C181 first).
+18. `rest_1g`'s 60,000 rounds cost every `'*'` run about a minute and a
+    half; a louder stand-in on `Fish_Hooked`'s and `Fish_Swim`'s paths
+    would let it go back to 6,000 (the agent's two tries at seeding the
+    boundary did not).
+19. Three docs' older sentences now out of step with their fuzz, left by
+    the agents as briefed: `rest_1g.md`'s 270,000-round result lines (it
+    is 2,700,000), `rest_2a.md`'s "one case of twelve" (eleven),
+    `effect_1f.md` section 3's callee list (three rows re-listed);
+    `rest_1c_fuzz.cpp`'s comment says +6, +7 and +0xA are read again after
+    a call (they are stored).
+
+### 12.3 Verification, and one thing seen under load
+
+`2640cd7` (every fix above but the controls' merges): `'*'` exit 0 narrow
+and wide, 9,681 ours, `ledger_check` 0 errors. `dd528ff` (the nine controls merges on top, six fuzzes changed by them): `'*'` exit 0 narrow and wide, 9,681 ours, `ledger_check` 0 errors (`verify_tip.sh`).
+
+**Windows Defender removed the verification worktree's launcher twice**
+during the wide run (detections 2026-10-05 06:30 and 06:32, and one on
+2026-10-04 20:22, on `...\verify\build\bof3x-launcher.exe`); a run then
+exits 126 or 2 with no self-test line. The launcher was rebuilt and the run
+repeated; no setting of Defender's was touched. An exclusion for the build
+directories is the owner's to add.
+
+**`combat.txt`, Chinese against Chinese, at `dd528ff`** (two originals
+`*,-Game_Clock` and ours, the machine quiet, the skip list's 165 ranges,
+`analysis/statehash/cn_q_combat_*`): ours identical to the reference on all
+2,561 compared ticks, the references disagreeing on 7 pages; each side's
+`randlog` identical to ours on every frame (2,017 draws by frame 2,621).
+**The same check run while the nine agents were building is not a
+result**: the references disagreed on 117 pages and ours "differed" on 15
+(the VRAM shadow in ticks 2..9, `0x7DE000`, `0x937000`;
+`cn_rt_combat_*`). The state hash wants the machine quiet, as
+`state-hash.md` says - a wave's agents and a live check do not share it.

@@ -2,7 +2,11 @@
 
 **Status:** DRAFT (2026-10-05) - a read-only review of the round as it stands
 at `1c308c0` (R0A and waves one to three merged, paused before wave four).
-Nothing was changed: every item below is open, for the owner to schedule.
+Nothing was changed by the review: every item below was open when it was
+written. **Since, 2026-10-05:** items 1 to 6, 9, 10, 11 and 18 are fixed
+([`takeover-queue-round14.md`](takeover-queue-round14.md) section 12 has what
+each got and the commits); 7, 8, 12 to 17, 19 and the nits wait for the
+round's end, at the owner's word.
 Line numbers are at `1c308c0`.
 
 ## What was reviewed, and how
