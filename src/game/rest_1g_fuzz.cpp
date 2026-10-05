@@ -523,9 +523,14 @@ void SelfTest() {
         }
     if (n == 0) bof3::Fatal("rest_1g: BOF3X_R1G_ONLY=%s names no clone", only);
     static unsigned* s_index = index;
+    // 60,000 rounds a function (6,000 until 2026-10-05): the group's case runs
+    // after about one call in 430, and Fish_Hooked's run reads the strength
+    // words and record 5's frame again after one or two Rands only, Fish_Swim
+    // the leader's stage after two calls; at 6,000 no round refused the
+    // mutants that skip those re-reads (docs/rest_1g.md section 6, D05..D16)
     sh::Group g = {"rest_1g", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 6000};
+                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 60000};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
     g.sprite_span = 7;   // +1..+4 below Fish_States' 7, which Fish_RunAll reads after a call

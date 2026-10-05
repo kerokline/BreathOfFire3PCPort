@@ -342,6 +342,52 @@ conditions in `Fish_Hooked` / `Fish_Swim` or the rule page's wrap.
 | D03 | `Fish_LureClose` | x within 0x8000 inclusive | 152 |
 | D04 | `Fish_LureClose` | the height within 0x401 | 132 |
 
+**Under the repaired disturbance** (2026-10-05, round fourteen's review
+item 1: the group's case drawn by `sh::DisturbCase(h, 18)`, so the cases 0,
+3, 6, 9, 12 and 15 - the fish's `+9`, its height, the member's strength
+words, the leader's stage, record 5's frame, the kind - run for the first
+time). The 103 controls re-run on `451edeb`, same script, 6,000 rounds:
+**103 refused**; 20 counts moved, by at most 11 rounds (C33 38 -> 27, C87
+5,242 -> 5,209, C71 17 -> 15; C56 still 1). Twelve new controls, at least
+one on each cell a formerly dead case moves that the group re-reads after a
+call, each the re-read replaced by the value read before the call *only
+while the pointer is unchanged* (so the harness's own move of
+`Sprite_Current` or the member cannot refuse it: only the group's case
+can). At 6,000 rounds eight were refused (D05 7, D06 14, D07 4, D08 11,
+D12 3, D14 238, D15 5, D16 6) and **four were not: D09, D10, D11, D13**.
+None is equivalent - each was refused at 60,000 rounds - and the
+unmutated self-test passes, so none points at ours: the fuzz was blind by
+rarity. The group's case runs after about one call in 432 (two in three
+hashes, case 14 of 16, one of 18), and those four re-reads follow only one
+or two `Rand`s in `Fish_Hooked`'s run (the strength words, record 5's
+frame) or two calls in `Fish_Swim` (the leader's stage). Boundary values
+in cases 6 and 9 (a strength word at the other's `>> 1/2/4` +/- 1, the
+stage 4 often) were tried and barely moved the counts (D09..D11 0, 1, 0 at
+6,000; 4, 7, 3 at 60,000), so they were not kept. **The fuzz's change:** 60,000 rounds a
+function (`rest_1g_fuzz.cpp`, was 6,000), nothing else. With it: the shadow
+(`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_1g`, this worktree) exit 0,
+2,700,000 rounds, 6,070,612 calls to the stand-ins, **0 mismatches** (96 s);
+the 103 controls again, **103 refused**, the thinnest C56 10, C77 83, C15
+86, C76 91 (of 60,000); and the twelve new ones, all refused:
+
+| # | Function | Plant | Refused (rounds of 60,000) |
+|---|---|---|--:|
+| D05 | `LeaderPanel_S1Box3In` | case 0: `+9` read before `FieldPanel_DrawBox3`, for the test at 0 | 50 |
+| D06 | `LeaderPanel_S1Box3In` | case 0: `+9` read before the shade, for the window's y | 115 |
+| D07 | `Fish_Begin` | case 3: the height read before `AreaMap_Elevation` | 71 |
+| D08 | `Fish_Approach` | case 3: the height read before `Fish_Heading` and `AreaMap_Elevation` | 82 |
+| D09 | `Fish_Hooked` | case 6: the run's test from `+0x9A` read before the `Rand`s | 6 |
+| D10 | `Fish_Hooked` | case 6: the run's test from `+0x98` read before the `Rand`s | 5 |
+| D11 | `Fish_Swim` | case 9: the leader's stage read before `Fish_LureInReach` and `Rand` | 2 |
+| D12 | `Fish_Hooked` | case 12: the let-out test from record 5's frame read at entry | 56 |
+| D13 | `Fish_Hooked` | case 12: the run's gap test from record 5's frame read at entry | 15 |
+| D14 | `Fish_Spawn` | case 15: the top size by the kind written before `Rand` | 2,402 |
+| D15 | `Fish_Settle` | case 15: the kind read before `Sprite_ScriptTick` | 57 |
+| D16 | `Fish_Approach` | case 15: the bite's kind read before `Fish_LureClose` | 23 |
+
+D11 (2 rounds) is the thinnest control of the group; section 4's result
+line and the table above it (to D04) are the 6,000-round measurements.
+
 ## 7. Latent defects and ranges (Capcom's, described, not fixed)
 
 - **The dispatchers are unbounded**: `LeaderPanel_S1` / `_S10` / `_S11` by
