@@ -1136,7 +1136,7 @@ extern "C" __attribute__((naked)) void __cdecl LoadMenu_Error(void) {
 
 // 0x587DB0, task 0's mode 1: `jmp [0x6671F4 + 4 Game_Step]`, the word
 // unchecked. Steps 0 TitleFlow_Begin, 1 the title menu, 2 the new game, 3 the
-// load menu, 4 the config screen 0x460CB0 (not ours), 5 TitleFlow_EnterGame.
+// load menu, 4 the config screen ConfigScreen_Run 0x460CB0, 5 TitleFlow_EnterGame.
 // A jump, as the original's: the step's function returns to task 0's loop.
 extern "C" void __cdecl TitleFlow_Step(void) {
     using Step = void (__cdecl*)();

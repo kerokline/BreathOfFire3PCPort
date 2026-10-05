@@ -793,7 +793,7 @@ extern "C" unsigned char __cdecl Field_CellHasEvent(long x, long z) {
 }
 
 // original 0x531AF0: the exit of the cell the leader stands on - a 0xA0 cell's
-// record in the area's exit list (0x462AC0) by the whole x and z: its area to
+// record in the area's exit list (WorldMap_ExitRecords) by the whole x and z: its area to
 // 0x937F82, its kind to 0x905B88, and the fixed entry point (0xE8000,
 // 0x410000). Called only by Field_LeaderCellEvent.
 // As the original has it: the list has no end test - a cell with no record
