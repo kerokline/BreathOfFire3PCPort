@@ -529,3 +529,44 @@ mismatch was logged (C03, C04) or before (C06): the process died, exit
 | C86 | `PartyAction5_Form1Wait` | Field_Kind2Hold set | 2,350 (first round 0) |
 | C87 | `PartyAction5_Form1Wait` | free and in state 1 both | 1,066 (first round 3) |
 | C88 | `ByForm` | the form word one on, inside the table (C05's and C06's near variant) | 28,000 (first round 0) |
+
+**2026-10-05, under the repaired disturbance (round fourteen's review item
+1).** The group case is now `sh::DisturbCase(h, 12)` (`b9dfe34`), so the cases
+0 (`+8`), 3 (`+0xA`), 6 (`Field_State` +0x89 / +0x138) and 9
+(`Field_InputFlags`), dead under `h % 12`, run. **C01..C88 re-run at
+`451edeb` with the fuzz change below: 88 planted, 83 refused by a count, C03,
+C04 and C06 by the same fault, C05 and C51 not refused (the same equivalent
+mutants).** No count went to 0. Moved against the table: C09 1,914, C11 640,
+C13 3,327, C21 336, C22 39, C34 15, C47 76, C48 116, C52 1,966, C53 1,436,
+C54 1,508, C55 72. New controls C89..C95, one or more per formerly dead case;
+each also run with the old switch put back (`h % 12`) to show what the case
+adds. Case 0: C89..C91 refused, 27 / 62 / 26 rounds under the old switch (the
+harness's move of `Sprite_Current` refuses a value read before a call too), 30
+/ 69 / 33 under the new. Case 3: no function re-reads `+0xA` after a call
+(each reads it at entry, or decrements and tests it with no call between);
+the case does test where a store sits against a call, so C92 is a store-order
+control (180 old, 206 new). Cases 6 and 9: **C93..C95 were not refused, 0
+rounds under both switches** - the fuzz was blind to them, not ours wrong. The
+three re-reads sit on paths that run in a few hundred rounds of 4,000 (C78,
+C47, C34), and the group case lands on about one call in 288, so the case
+never moved the cell in the calls between. **Fuzz change:** the stand-ins of
+`Sprite_FlashClut`, `PartyAction_Kind30Ahead` and `Effect_SpawnAtCell` now move
+`Field_State` +0x89, +0x138 and `Field_InputFlags` (respectively) a quarter of
+the time from the noise (`FxFlash`, `FxKind30`, `FxSpawn` in
+`rest_1b_fuzz.cpp`); the shadow passes, 188,000 rounds, 0 mismatches; C93..C95
+are then refused (counts below), and C01..C88 above were run on it. A
+second attribution, each control run with only its own case switched off
+(`if (sh::DisturbCase(h, 12) == N) return;` planted at the top of `Disturb`):
+C89..C92 give 27, 62, 26, 180, so cases 0 and 3 add 3, 7, 7 and 26 rounds;
+C93..C95 give 28, 23, 8 - the same as with the case on, so cases 6 and 9 add
+nothing to these controls and the stand-ins' moves are what refuses them.
+
+| # | Run (`_ONLY`) | Plant | Refused |
+|---|---|---|---|
+| C89 | `Form0Begin` | case 0, `+8`: `TurnUntil`'s second turn from the direction read before the probe | 30 (first round 305) |
+| C90 | `Form0Begin` | case 0, `+8`: `Begin`'s steep pose from the direction read before `MapView_SlopeAt` | 69 (first round 83) |
+| C91 | `PartyAction4_Form2Hit` | case 0, `+8`: the effect object's +8 from the direction read before the 0x10B sound | 33 (first round 36) |
+| C92 | `Form0Begin` | case 3, `+0xA`: `Begin`'s +0xA = 5 stored before the pose's call, not after (store order) | 206 (first round 4) |
+| C93 | `PartyAction4_CellHit` | case 6, `Field_State` +0x89: the member read before the spawn and the flash | 28 (first round 127); 0 before the fuzz change |
+| C94 | `PartyAction4_Form1Begin` | case 6, `Field_State` +0x138: read before `PartyAction_Kind30Ahead` | 23 (first round 93); 0 before the fuzz change |
+| C95 | `PartyAction3_CellPickup` | case 9, `Field_InputFlags`: read before `Effect_FindFree`, the spawn and `Rand` | 8 (first round 31); 0 before the fuzz change |
