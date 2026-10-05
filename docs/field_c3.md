@@ -457,6 +457,69 @@ No equivalent mutant was met.
 | C159 | `FieldCore_VerticalShade` | +4 up by 2 | 2026 |
 | C160 | `FieldCore_JumpExitIn` | the end at +0xA 1 | 302 |
 
+**2026-10-05, under the repaired disturbance (round fourteen's review item
+1).** The fuzz's `Disturb` switched on `h % 12` and is reached only with
+`h % 3 != 0`, so its cases 0 (`+9`), 3 (`+5`), 6 (the sloped byte) and 9 (a
+coordinate's low word) never ran; `b9dfe34` draws the case through
+`sh::DisturbCase`. The same script, re-run on `451edeb` (every one of the 160
+anchors still occurs once, none repaired): **160 planted, 160 refused by a
+count**, the baseline 0 mismatches. 43 counts are the table's, 117 moved (the
+generator's stream changed), none to 0: the smallest are C46 2 (was 1), C123
+6 (was 9), C133 14 (was 18), C136 18 (was 21); the largest fall C135 171 to
+139.
+
+New controls for the formerly dead cases, planted the same way (one build,
+`BOF3X_FC3_CTL=n`). Each was also run against the old switch (a temporary
+`BOF3X_DISTURB_OLD=1` toggle in the fuzz, `h % 12`, not committed): C161..C171
+are refused under both - the harness's own case 4 (`Sprite_Current` to another
+record) already exercised these re-reads -, so each has a twin C172..C182,
+the same mutant only while `Sprite_Current` is the record read before the call,
+which only the group's case can refuse: **every twin is 0 under the old switch**.
+Read before the call means the value the function read or stored before the
+callee named.
+
+| # | Function | Mutant | Case | Rounds refused (of 3,000), old switch in brackets |
+|---|---|---|---|--:|
+| C161 | `FieldCore_ScriptMoveStep` | +9 not re-read after Field_JumpStart | 0 | 7 (7) |
+| C162 | `FieldCore_TileD0Move` | +9 not re-read after Field_JumpStart | 0 | 5 (4) |
+| C163 | `FieldCore_HopLaunch` | +9 not re-read after the animation and the sound | 0 | 130 (116) |
+| C164 | `FieldCore_HopRise` | +5 not re-read after Field_LeaderStepTick | 3 | 51 (45) |
+| C165 | `FieldCore_HopFall` | +5 not re-read after the ground and the animation | 3 | 35 (34) |
+| C166 | `FieldCore_UpArrive` | +5 not re-read after the ground and the animation | 3 | 93 (84) |
+| C167 | `FieldCore_TileD0Slope` | flat, facing 3: the z low word not re-read after the slope | 9 | 4 (4) |
+| C168 | `FieldCore_TileD0Slope` | flat, facing 5: the x low word not re-read after the slope | 9 | 1 (1) |
+| C169 | `FieldCore_TileD0Slope` | raised, facing 3: the z low word not re-read after two slopes | 9 | **0** (0); 10 of 30,000 (10) |
+| C170 | `FieldCore_TileD0Slope` | raised, facing 5: the x low word not re-read after two slopes | 9 | 1 (1) |
+| C171 | `FieldCore_ScriptMoveAlign` | x / z not re-read after the slope and the animation | 9 | 68 (57) |
+| C172 | `FieldCore_ScriptMoveStep` | C161 with Sprite_Current kept | 0 | **0** (0); 8 of 30,000 (0) |
+| C173 | `FieldCore_TileD0Move` | C162 with Sprite_Current kept | 0 | 1 (0) |
+| C174 | `FieldCore_HopLaunch` | C163 with Sprite_Current kept | 0 | 15 (0) |
+| C175 | `FieldCore_HopRise` | C164 with Sprite_Current kept | 3 | 6 (0) |
+| C176 | `FieldCore_HopFall` | C165 with Sprite_Current kept | 3 | 1 (0) |
+| C177 | `FieldCore_UpArrive` | C166 with Sprite_Current kept | 3 | 9 (0) |
+| C178 | `FieldCore_TileD0Slope` | C167 with Sprite_Current kept | 9 | **0** (0); 1 of 30,000 (0) |
+| C179 | `FieldCore_TileD0Slope` | C168 with Sprite_Current kept | 9 | **0** (0); 0 of 30,000 |
+| C180 | `FieldCore_TileD0Slope` | C169 with Sprite_Current kept | 9 | **0** (0); 0 of 30,000 |
+| C181 | `FieldCore_TileD0Slope` | C170 with Sprite_Current kept | 9 | **0** (0); 0 of 30,000 |
+| C182 | `FieldCore_ScriptMoveAlign` | C171 with Sprite_Current kept | 9 | 11 (0) |
+
+The 30,000-round runs used a temporary rounds toggle (`BOF3X_FC3_ROUNDS`, not
+committed). What they say: cases 0, 3 and 9 are live tests now (C173..C177,
+C182); the raised and the facing-5 paths of `FieldCore_TileD0Slope` (C169,
+C179..C181) are thin, not blind - reaching a second slope read needs two steep
+answers in a row and a disturbance between them. C169 and C178 are refused at
+30,000; C179..C181 were not, and are not equivalent by construction (a low
+word moved between the slope reads changes the answer), so they mark where the
+fuzz's reach ends. The fuzz was not changed: raising the group's rounds would
+move every count above, and the committed run already refuses C167, C168 and
+C170 on the same function.
+**Case 6 is noise for this group**: the sloped byte `0x903850` is read only
+straight after `MapView_SlopeAt` (`FieldCore_TileD0Probe`, `Steep`), and that
+stand-in's effect (`SlopeEffect`) writes the byte after the harness's
+`Disturb()` has run (`scenario_harness.cpp`, `Stub`: `Disturb()` then
+`s.effect`), so no re-read can see what case 6 wrote; no control was planted
+for it.
+
 ## 7. What nothing reached, and the limits
 
 - **The tables' words past their counts** are not run (the seed keeps each
