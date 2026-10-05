@@ -1575,8 +1575,9 @@ pc = 0x461AF0
 name = "Config_DrawControllerRow"
 ret = "void"
 params = "int x, int y, int row"
+impl = "src/game/rest_4f.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-24, 0x461AF0..0x461BF0: cdecl (x, y, row). Menu_DrawRowBox 0x57CF60(x, y, 0x68, 0x10, 0, selected) - the row's dark box, 0x68 wide; the name from the pointer table 0x66A368[row] right-aligned at x + 0x20 (DIV-0026: x + 0x36) through Text_DrawAt 0x516B30 (DIV-0026: ConfigText_DrawSelected); then two 0x20-wide cells through 0x5A7650 / 0x461E50 at x + 0x3F and x + 0x53 (the second is skipped under DIV-0051). Called six times by 0x461A50 at x = panel x + 5, y = panel y + 6 + 18 * row."
+evidence = "taken 2026-10-05 (round fourteen group R4F, capstone to the last instruction; docs/rest_4f.md): ours reads the box width 0x461B07, the width lea 0x461B36, the edge 0x461B41, the call 0x461B43 and the second cell's code 0x461BAC in place at every call, so DIV-0026 / DIV-0051 hold; a row past six aborts (the original reads past 0x66A368). Fuzz only. disasm 2026-09-24, 0x461AF0..0x461BF0: cdecl (x, y, row). Menu_DrawRowBox 0x57CF60(x, y, 0x68, 0x10, 0, selected) - the row's dark box, 0x68 wide; the name from the pointer table 0x66A368[row] right-aligned at x + 0x20 (DIV-0026: x + 0x36) through Text_DrawAt 0x516B30 (DIV-0026: ConfigText_DrawSelected); then two 0x20-wide cells through 0x5A7650 / 0x461E50 at x + 0x3F and x + 0x53 (the second is skipped under DIV-0051). Called six times by 0x461A50 at x = panel x + 5, y = panel y + 6 + 18 * row."
 
 [[data]]
 pc = 0x937F94
@@ -110925,3 +110926,502 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R3B): BattleItem_SideBegin, BattleItem_SidePick, BattleItem_Confirm 0x447CC0, BattleItem_TargetCancel; jumped through by BattleItem_SideDispatch 0x447D70 by the dword 0x904AA4 & 0xFF, unchecked; the entries set 1..3 (SideBegin 1, SidePick 2 / 3) and TargetCancel 1 with the step moved; BattleAttackCmd_States starts at 0x64E44C. The twin of BattleItemCmd_SideSteps. docs/rest_3b.md."
+
+[[func]]
+pc = 0x460CB0
+name = "ConfigScreen_Run"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x460CB0..0x460CBD (0xE bytes): jmp [ConfigScreen_States + byte 0x929F02 * 4], unbounded (ours aborts past 5). ConfigMenu_Body's tail jump (ConfigMenu_Steps[1]); hidden in 0x460C40 (R4E's). The Config screen is field menu state 7 (docs/menu-screens.md section 1). Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x460CC0
+name = "ConfigScreen_OpenRun"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x460CC0..0x460CCD (0xE bytes): jmp [ConfigScreen_OpenStates + byte 0x929F03 * 4], unbounded (ours aborts past 3). ConfigScreen_States[0]; hidden in 0x460C40. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x460CD0
+name = "ConfigScreen_OpenFade"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x460CD0..0x460CED (0x1E bytes): Transition_Start(1); 0x929F03 up one (read after the call), the cursor 0x929F05 0. ConfigScreen_OpenStates[0]; hidden in 0x460C40. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x460CF0
+name = "ConfigScreen_OpenWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x460CF0..0x460D4F (0x60 bytes): Menu_DrawBackdrop(0x903A5B), Menu_DrawTitleBox(0x14, 0x10, 0x118, 0x13, 0x903A5A), Config_DrawPanel(0x1C, 0x40), ConfigScreen_DrawButtons(0xFF, 0x70, 0x26); with MoveScript_WaitWordDA 0 the counter 0x929F04 and 0x929F03 0, 0x929F02 up one. ConfigScreen_OpenStates[1]; hidden in 0x460C40. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x460D50
+name = "ConfigScreen_SlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x460D50..0x460E00 (0xB1 bytes): the cursor 0; sound 0x102 at the counter 5; the screen drawn slid by the counter c (read again after each draw): the title box at y 0x10 - 16c, the panel at x 0x1C + 64c, the buttons at y 0x26 - 16c; the counter down one, at 0 the state on and 0x929F03 0. ConfigScreen_OpenStates[2] (ConfigMenu_Open sets 0x929F03 2); hidden in 0x460C40. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x460E10
+name = "ConfigScreen_TopBar"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x460E10..0x461062 (0x253 bytes): the top bar's two buttons: the counter 0; the screen drawn, the title text Msg_SystemPtr(0xBC + s8 cursor) through Text_DrawAt, the hand at (cursor * 48 + 0x76, 0x2A); Input_AutoRepeat(Input_Pressed & 0xF000): 0xA000 flips the cursor 0 / 1 (sound 0x101), 0x1000 / 0x4000 enter the rows at cursor 7 / 2 (sound 0x100); a confirm button on cursor 0 leaves (state + 3; sounds 0x106, 0x102 unless Game_Step is 4), on cursor 1 the defaults (sound 0x104; the settings bytes 0x903A58..0x903A5E, six button words from 0x903580); a cancel button (or bit 0x800 at Game_Step 4) leaves. ConfigScreen_States[1]; hidden in 0x460C40. (The tool's second cell, 0x63F298, is inside a byte stream of data; no code names it.) Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x461070
+name = "ConfigScreen_Rows"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x461070..0x4613AF (0x340 bytes): the six rows (cursor 2..7), with its own jump table of six at 0x461398 (bounded, cursor - 2 <= 5): rows 0..2 step 0x903A58 (0..2), 0x903A5A, 0x903A5B (0..3) on 0x2000 / 0x8000 (row 2 tests 0x8000 first), rows 3 / 4 flip 0x903A59 / 0x903A5E on 0xA000, row 5 on a confirm button or 0xA000 opens the controller panel (state + 1, cursor 8); then Input_AutoRepeat 0x1000 / 0x4000 move the cursor (out of 2..7 back to the top bar, the state - 1), either sets the counter 1; else a cancel button or 0x800 back to the top bar (sound 0x106), the counter up to 3. Extent 0x461070..0x4613AF with its table (the catalog's 128 bytes ended mid-function). ConfigScreen_States[2]; hidden in 0x460C40. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x4613B0
+name = "ConfigScreen_Controller"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x4613B0..0x461612 (0x263 bytes): the controller panel (cursor 8..13): the screen drawn, the title text 0xBC + cursor (cursor 9: 0xC5 / 0xCA by 0x903A5E), Config_DrawControllerPanel(0xA8, 0x62), the hand (0xB0, 18 * cursor - 0x26); a face button (Input_Pressed's low byte & 0xFC, its lowest bit) moves to the cursor's row: the row holding it takes the cursor row's word (rows by the six bytes 0x6536F0, the cursor's by 0x6536E8 + cursor), bits 0 / 1 cleared and set again in 0x903580 and Field_ConfirmButtons (sound 0x103); Input_AutoRepeat 0x1000 / 0x4000 move the cursor through 8..13 wrapping; 0xA000 back to the rows (cursor 7), 0x800 to the top bar (state - 2). In the band, in no list of the cut (the catalog's extent of 0x461070 covered it). ConfigScreen_States[3]. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x461620
+name = "ConfigScreen_SlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x461620..0x4616EA (0xCB bytes): the backdrop; at Game_Step 4 the screen at rest, Transition_Start(0), Game_Step 5; else slid by the counter (title box y 0x10 - 16c, panel x 0x1C + 64c, buttons y 0x26 - 16c, none lit), the counter up one, at 5 the screen step 0x929F01 up one (ConfigMenu_Close). ConfigScreen_States[4]; hidden in 0x460C40. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x4616F0
+name = "ConfigScreen_DrawButtons"
+ret = "void"
+params = "int sel, int x, int y"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x4616F0..0x46170F (0x20 bytes): cdecl (sel, x, y): Menu_DrawButtonRow(x, y, 6, sel, the style byte 0x903A5A in the callee's unused fifth). Called by every Config state. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x461710
+name = "Config_DrawPanel"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x461710..0x4617FE (0xEF bytes): cdecl (x, y): the settings 0x903A58, 0x903A5A, 0x903A5B, 0x903A59, 0x903A5E read first (rows 0..4; row 5 none); the frame (x, y, 0x21, 0xD) through the call at 0x461778 (DIV-0011: Menu_DrawFrame; read in place); six rows at (x + 5, y + 9 + 15 row): Config_DrawRowLabel(.., row, state) and Config_DrawRowOptions(.., row, setting, state), the state the counter 0x929F04 on the row the cursor - 2 names, else 0 (the dword 0x929F04 read before each call). docs/config-screen.md section 1. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x461970
+name = "Config_DrawRowOptions"
+ret = "void"
+params = "int x, int y, unsigned row, unsigned setting, unsigned state"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x461970..0x461A4F (0xE0 bytes): cdecl (x, y, row, setting, state): the row byte's first record and count (0x653808, 0x653810; the count read again each pass); each 16-byte record at 0x6536F8 (count, s8 x, string): colour 2 for the setting's option (in the row argument's low byte); x = the s8 x as a 16-bit word - half the width + x + 0x74; the setting's option with state 3 large (count * 12, DIV-0017 * 8: the lea at 0x4619E1) through the call at 0x4619F9 at y - 2, the rest small (count * 8) Text_DrawSmall at y + 1. Both read in place. docs/config-screen.md section 1. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x461A50
+name = "Config_DrawControllerPanel"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x461A50..0x461AEC (0x9D bytes): cdecl (x, y): the frame (x, y, w, h) through the call at 0x461A84 (DIV-0011), w / h the immediates at 0x461A62 (0xC; DIV-0026 / DIV-0051 0xD) and 0x461A60 (0xF), read in place; rows 0..5 at y + 18 row + 6: Config_DrawControllerRow(x + 5, .., the row in the y argument's low byte), Config_DrawControllerCell(x + 0x58, .., the button word 0x903580 + 2 {0, 1, 6, 2, 3, 4}[row] under y's high half). Called by ConfigScreen_Controller. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x462AC0
+name = "WorldMap_ExitRecords"
+ret = "const unsigned char *"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x462AC0..0x462ADA (0x1B bytes): WorldMap_Records' +0x14 (0x653924 + 0x1C k) of the record WorldMap_RecordIndex's low byte k names: the area's exit records (x, z, area, kind) Field_ExitFromCell walks. Index 11 reads the dword after the eleventh record (EffectKind07_States[3]); ours aborts past 11. Area 104's record holds 0. Called by Field_ExitFromCell 0x531AF0 (event_leader_callees.h kAreaExits). Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x462F10
+name = "EffectKind07_DrawSprite"
+ret = "void"
+params = "int semi"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x462F10..0x462FB9 (0xAA bytes): cdecl (semi): Gpu_SetDrawMode(cursor, 0, 0, 0xDD, 0) committed (+0x29, 0xC); a SPRT at (32.0, 32.0), u 0, v 0x20, CLUT word 0x7A80, w 0x100, h 0x6E8, colour +0x5D..+0x5F, no shading, semi-transparency the argument's byte, committed (+0x29, 0x1C). Called by EffectKind07_FadeIn (E1A's), _Hold, _FadeOut. PSX twin 0x801F7134 (a SCENA overlay, analysis/pairs_propagated.json by callers; the sibling names none). Not a full-frame fill (DIV-0041 untouched). Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x462FC0
+name = "EffectKind07_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x462FC0..0x462FEE (0x2F bytes): EffectKind07_DrawSprite(1); +9 down one while not 0, else +1 up and +9 0xFF. EffectKind07_States[2] and [3]; hidden in 0x462F10. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x462FF0
+name = "EffectKind07_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x462FF0..0x463038 (0x49 bytes): EffectKind07_DrawSprite(1); +0x5D..+0x5F down 2; at +0x5D 0, +9 0 and Effect_Release (a tail jmp). EffectKind07_States[4]; hidden in 0x462F10. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463060
+name = "EffectKind08_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463060..0x4630AB (0x4C bytes): +0x34 0xB0000, +0x38 0xF8000, the word +0x3E AreaMap_Elevation there, +0x29 5, +1 = 1. EffectKind08_States[0]; hidden in 0x462F10. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x4630B0
+name = "EffectKind08_TraceLine"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x4630B0..0x4631A1 (0xF2 bytes): a grey (0xC0) line along the ground from the record's point to the z of Sprite_Objects[+6] (unchecked; ours aborts past 30) in steps of 0x8000: each step's height the ground's AreaMap_Elevation in the high word, the last the object's own z and height; EffectKind08_DrawLine from the new point back; +1 = 2 when the byte 0x90384A is 0x32. EffectKind08_States[1]; hidden in 0x462F10. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x4631B0
+name = "EffectKind08_TraceTwo"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x4631B0..0x463344 (0x195 bytes): the grey line as EffectKind08_TraceLine, then a dark (0x30) one from (0xB0000, 0x138000) down z to the object's, drawn from the last point to the new; +1 = 3 when 0x90384A is 0x34. Its height cell is not set before the first step (stale stack, only its high word is read). EffectKind08_States[2]; hidden in 0x462F10. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463350
+name = "EffectKind08_DrawLine"
+ret = "void"
+params = "int ax, int az, int ah, int bx, int bz, int bh, int colour"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463350..0x463434 (0xE5 bytes): cdecl, seven words by value (two points, each x, z and a height dword whose high word is read; a colour's three bytes): a LINE_F2 at Gfx_PacketNext, B then A as the GTE's vector ((v >> 9) - 0x4000 for x and z, -(s16 high word) / 2) through Gte_RotTransPers and Gte_StoreDepthF to +8 / +0x10 and +0x14 / +0x1C; the colour to +4..+6; committed (+0x29, 0x20). Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463460
+name = "EffectKind09_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463460..0x46353E (0xDF bytes): the point (0x638000, 0xD0000, the height word 0x300), +0x64..+0x6C 0, +9 0x78, the colour 0xFF, +0xC 1, +0x10 / +0x20 / +0x1C / +0x18 0, +0xA, +0xB, +8, +7, +6 0; sound 0x20E; +1 = 1. EffectKind09_States[0]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463540
+name = "EffectKind09_Open1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463540..0x46358A (0x4B bytes): fan 1 (the dword +0x18 with the angles (0x200, 0, 0)); +0x18 up 8; at 0x60 sound 0x20E and +1 = 2. Each fan EffectKind09_DrawFan(length, angles), Sprite_Current read before each. EffectKind09_States[1]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463590
+name = "EffectKind09_Open2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463590..0x46360E (0x7F bytes): fans 1, 2 (+0x1C; (0x71, 0, 0x8E3)); +0x1C up 0x10; the sound at 0x20; at 0xA0 the sound and +1 = 3. Each fan EffectKind09_DrawFan(length, angles), Sprite_Current read before each. EffectKind09_States[2]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463610
+name = "EffectKind09_Open3"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463610..0x46368F (0x80 bytes): fans 1..3 (the byte +0xB; (0x155, 0, 0x200)); +0xB up 0x10; at 0x60 the sound and +1 = 4. Each fan EffectKind09_DrawFan(length, angles), Sprite_Current read before each. EffectKind09_States[3]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463690
+name = "EffectKind09_Open4"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463690..0x46372C (0x9D bytes): fans 1..4 (+8; (0xE3, 0, 0xE38)); +8 up 8; at 0x60 the sound and +1 = 5. Each fan EffectKind09_DrawFan(length, angles), Sprite_Current read before each. EffectKind09_States[4]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463730
+name = "EffectKind09_Open5"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463730..0x463804 (0xD5 bytes): fans 1..5 (+0xA; (0x31C, 0, 0x555)); +0xA up 8; the sound at 0x10; at 0x60 the sound and +1 = 6. Each fan EffectKind09_DrawFan(length, angles), Sprite_Current read before each. EffectKind09_States[5]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463810
+name = "EffectKind09_Open6"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463810..0x463901 (0xF2 bytes): fans 1..6 (+6; (0x238, 0, 0xAAA)); +6 up 8; the sound at 0x10; at 0x60 the sound and +1 = 7. Each fan EffectKind09_DrawFan(length, angles), Sprite_Current read before each. EffectKind09_States[6]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463910
+name = "EffectKind09_Open7"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463910..0x463A02 (0xF3 bytes): fans 1..7 (+7; (0, 0, 0x71C)); +7 up 8; at 0x60 the sound and +1 = 8. Each fan EffectKind09_DrawFan(length, angles), Sprite_Current read before each. EffectKind09_States[7]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463A10
+name = "EffectKind09_Open8"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463A10..0x463B3F (0x130 bytes): fans 1..8 (the dword +0x20; (0, 0, 0xC00)); +0x20 up 8; the sound at 0x10; at 0x60 sound 0x203, the chapter's count 0x903848 up one, +1 = 9. Each fan EffectKind09_DrawFan(length, angles), Sprite_Current read before each. EffectKind09_States[8]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463B40
+name = "EffectKind09_Spin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463B40..0x463B9A (0x5B bytes): at +9 0 Effect_Release (a tail jmp); else EffectKind09_DrawBlades, +0xC up 4 while below 0x80, +0x10 up 2 to 0xB6 (s32), +9 down one. EffectKind09_States[9]; hidden in 0x463350. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463BA0
+name = "EffectKind09_DrawBlades"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463BA0..0x463D7A (0x1DB bytes): void, Sprite_Current: +0x6C = (+9 << 12) / 360 (a multiply by 0xB60B60B7); twenty-four POLY_G3 blades of the length L = +0xC, (0, 0, 0) - (L << 4, 0, 0) - (L cos >> 8, L sin >> 8, 0) at the angle +0x10 on odd blades and 0xAC on even ones, each under Gte_PushMatrix / Sprite_ObjectMatrix / Camera_LoadMatrix, Gte_RotTransPers3, Gte_PrimDepths3_10B; colour +0x5D..+0x5F at the root and -(2 * +9) at the tips; semi-transparent, committed (+0x29, 0x34); +0x6C up 0xAA after each. Called by EffectKind09_Spin. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463D80
+name = "EffectKind09_DrawFan"
+ret = "void"
+params = "int len, int a1, int a2, int a3"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463D80..0x463ED2 (0x153 bytes): cdecl (len, a1, a2, a3): the record's +0x64..+0x70 kept, +0x64 / +0x68 / +0x6C set to a1 / a2 / a3; one POLY_G3 (0, 0, 0) - (len << 4, 0, 0) - (len cos(0x4F) >> 8, len sin(0x4F) >> 8, 0) as a blade, colours 0x28 / 0x6E / 0x64; the four dwords put back into the record current afterwards. Called by EffectKind09_Open1..8. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463F00
+name = "EffectKind0B_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463F00..0x463F91 (0x92 bytes): +0x74 / +0x78 (floats) the first extra sprite's words +0x2E / +0x30 plus the s8 pair 0x653AAC; +0x7C 0.01f; +9 0; +6 0x20; the colour 0x80; EffectKind0B_DrawQuad; +1 = +7. EffectKind0B_States[0]; hidden in 0x463D80. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x463FA0
+name = "EffectKind0B_Rise"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x463FA0..0x46402A (0x8B bytes): x -= 4.0 (0x5C41C8); y += the s8 of 0x653AB0 by +9 >> 2 (read in place); at +0x5D 0 Effect_Release; else the colour down 2, +9 up, +6 up each fourth, EffectKind0B_DrawQuad. EffectKind0B_States[1]; hidden in 0x463D80. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464030
+name = "EffectKind0B_Drop"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464030..0x464086 (0x57 bytes): y -= 2.0 (0x5C41C0); at +0x5D 0 Effect_Release (tail jmp); else the colour down 4, +6 up when +9 & 7 is 0, EffectKind0B_DrawQuad (tail jmp). EffectKind0B_States[2]; hidden in 0x463D80. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464090
+name = "EffectKind0B_Attach"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464090..0x464137 (0xA8 bytes): the point +0x34..+0x3C and angles +0x64..+0x6C the first extra sprite's (0x802034.., 0x802064..); plus MoveCmd_AttachOffset(+0x1C): x, z and the height word +0x3E; +1 up. EffectKind0B_States[3]; hidden in 0x463D80. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464140
+name = "EffectKind0B_Follow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464140..0x4641C5 (0x86 bytes): the height word +0x3E up 0x20; the point projected into +0x74 (EffectGte_ProjectPoint); at +0x5D 0 Effect_Release; else the colour down 4, +6 up when +9 & 7 is 0, EffectKind0B_DrawQuad. PSX twin 0x801F8AB8 (a SCENA overlay, by callers; the sibling names none). EffectKind0B_States[4]; hidden in 0x463D80. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x4641D0
+name = "EffectKind0B_DrawQuad"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x4641D0..0x464349 (0x17A bytes): void, Sprite_Current: a POLY_FT4 square of side +6 at +0x74 / +0x78 less +6 >> 1 (x87), colour +0x5D..+0x5F, the depth +0x7C at each corner (through the FPU), u / v (0xE0, 0x30)-(0xFF, 0x50), Gpu_GetClut(0xA0, 0x1E3), Gpu_GetTPage(0, 1, 0x2C0, 0x100), no shading, semi-transparent; committed (3, 0x48) only while Draw_PassFlags is set. PSX twin 0x801F8BCC (a SCENA overlay, by callers; the sibling names none). Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464680
+name = "EffectKind02_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464680..0x464728 (0xA9 bytes): the leader's (ObjTrio 0, 0x802D40) +0x25..+0x28 copied; +0x29 2; +0x24 0x80; words +0x2E 0x39, +0x30 0xC8; +0x48, +0x5C and the colour 0; the panel's y +0x10 0xF0; +1 up. EffectKind02_States[0]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464730
+name = "EffectKind02_SlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464730..0x464771 (0x42 bytes): +0x10 down 8, below 0xAE held there and +1 up; EffectHud_Draw(0xC, y) (y the word under Sprite_Current's high half). EffectKind02_States[2]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464780
+name = "EffectKind02_Body"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464780..0x4647A7 (0x28 bytes): call [EffectKind02_Modes + +2 * 4] (unbounded; ours aborts past 4), then EffectHud_Draw(0xC, +0x10). EffectKind02_States[3]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x4647B0
+name = "EffectKind02_SlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x4647B0..0x464801 (0x52 bytes): +0x10 up 8, past 0xF0 held there with +1 = 1, +2 = +3 = 0; EffectHud_Draw(0xC, y). EffectKind02_States[4]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464810
+name = "EffectKind02_RunMode1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464810..0x464821 (0x12 bytes): jmp [EffectKind02_Mode1Steps + +3 * 4] (unbounded; ours aborts past 2). EffectKind02_Modes[1]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464830
+name = "EffectKind02_Mode1Tint"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464830..0x4648EA (0xBB bytes): palette 0x7B (0x811440) from the leader's (the CLUT shadow 0x80F580 + 64 * its +0x27): entries 1..30 with bit 15, 0 and 31 zero; Gfx_ClutStripDirty 1; +0x5C 1; with the word 0x905E62 above 0x38 (s16) +2 = 3, +3 = 2; else +0xB = +0x27, +0 bit 5, +0x27 0x7B, the colour 0x80, +3 up. EffectKind02_Mode1Steps[0]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x4648F0
+name = "EffectKind02_Mode1Brighten"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x4648F0..0x464965 (0x76 bytes): the colour up 0x10; at +0x5D 0xC0..0x7F (an s8 compare) the colour 0, +0 bit 5 clear, +0x27 = +0xB, +3 0, +2 up; then a tail jmp to EffectKind02_CopyLeader 0x464970. Extent 0x4648F0..0x464965 (the catalog's 304 bytes ran on over 0x464970). EffectKind02_Mode1Steps[1]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464970
+name = "EffectKind02_CopyLeader"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464970..0x464A12 (0xA3 bytes): with the leader's +2 (0x802D42) at 1, +2 = 0 and return; +2 = 3 when the word 0x905E62 is above 0x38; the leader's +0x2A, +0x49..+0x4B, +0x50, +0x54, words +0x58 / +0x5A copied; Sprite_QueueOverlay (tail jmp). EffectKind02_Modes[2], and the tail of EffectKind02_Mode1Brighten and _Mode3Darken; in the band inside the catalog's extent of 0x4648F0, in no list of the cut. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464A20
+name = "EffectKind02_RunMode3"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464A20..0x464A31 (0x12 bytes): jmp [EffectKind02_Mode3Steps + +3 * 4] (unbounded; ours aborts past 3). EffectKind02_Modes[3]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464A40
+name = "EffectKind02_Mode3Tint"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464A40..0x464AE0 (0xA1 bytes): palette 0x7B tinted as EffectKind02_Mode1Tint; +0xB = +0x27, +0 bit 5, +0x27 0x7B, +0x5C 1, the colour 0xC0; Gfx_ClutStripDirty 1; +3 up; Sprite_QueueOverlay (tail jmp). EffectKind02_Mode3Steps[0]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464AF0
+name = "EffectKind02_Mode3Darken"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464AF0..0x464B5E (0x6F bytes): the colour down 0x10; at +0x5D 0x80 the colour 0, +0 bit 5 clear, +0x27 = +0xB, +3 up; else a tail jmp to EffectKind02_CopyLeader. EffectKind02_Mode3Steps[1]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[func]]
+pc = 0x464B60
+name = "EffectKind02_Mode3Wait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4f.cpp"
+status = "hypothesis"
+evidence = "disasm 2026-10-05 (round fourteen group R4F, capstone to the last instruction), 0x464B60..0x464B9E (0x3F bytes): the leader's +2 at 1: +2 = +3 = 0; else while the word 0x905E62 is below 0x38 (s16), +2 = 1 and +3 = 0. EffectKind02_Mode3Steps[2]; hidden in 0x4641D0. Fuzz only: no recorded route enters it. docs/rest_4f.md."
+
+[[data]]
+pc = 0x6536C0
+name = "ConfigScreen_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4F): ConfigScreen_Run 0x460CB0 by the byte 0x929F02, unbounded: ConfigScreen_OpenRun, _TopBar, _Rows, _Controller, _SlideOut; ConfigScreen_OpenStates starts at its sixth cell (0x6536D4). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/rest_4f.md section 3."
+
+[[data]]
+pc = 0x6536D4
+name = "ConfigScreen_OpenStates"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4F): ConfigScreen_OpenRun 0x460CC0 by the byte 0x929F03, unbounded: ConfigScreen_OpenFade, _OpenWait, _SlideIn; data (not code) from 0x6536E0. The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/rest_4f.md section 3."
+
+[[data]]
+pc = 0x653AD4
+name = "EffectKind02_Modes"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4F): EffectKind02_Body 0x464780 calls through it by +2, unbounded: BareRet, EffectKind02_RunMode1, EffectKind02_CopyLeader, EffectKind02_RunMode3; EffectKind02_Mode1Steps starts at its fifth cell (0x653AE4). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/rest_4f.md section 3."
+
+[[data]]
+pc = 0x653AE4
+name = "EffectKind02_Mode1Steps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4F): EffectKind02_RunMode1 0x464810 by +3, unbounded: EffectKind02_Mode1Tint, _Mode1Brighten; EffectKind02_Mode3Steps starts at its third cell (0x653AEC). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/rest_4f.md section 3."
+
+[[data]]
+pc = 0x653AEC
+name = "EffectKind02_Mode3Steps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4F): EffectKind02_RunMode3 0x464A20 by +3, unbounded: EffectKind02_Mode3Tint, _Mode3Darken, _Mode3Wait; data from 0x653AF8 (EffectHud_Marker's bytes). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/rest_4f.md section 3."
