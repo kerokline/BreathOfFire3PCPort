@@ -291,6 +291,8 @@ void Seed(unsigned k) {
     // the boundaries each state compares against
     const unsigned nine = NineSpan();
     s[9] = static_cast<unsigned char>(PickOf(0, 4, 5, 8, 0x10, 0x1E, 0x1F, 0x20, 0x28, 0x30, 0x31, 0x40, 0x41, sh::Next()) % nine);
+    // _05_Pulse's end test, (+9 >> 2) % 6 == 0, half the time (it decides with the on-test)
+    if (g_base == 0x4FD9D0 && sh::Half()) s[9] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 0x18, 0x19, 0x1A, 0x1B));
     s[0xA] = static_cast<unsigned char>(PickOf(0, 8, 9, 0xA, 1, sh::Next()) % 0xC);
     SetWord(s + 0x2E, PickOf(0xBE, 0xBF, 0xC0, 0, 0x7F, 0x80, 0xFFFF, 0x8000, sh::Next()));
     SetLong(s + 0xC, static_cast<std::int32_t>(PickOf(0x3E0, 0x3FF, 0x400, 0x401, 0, 0xFFFFFFFFu, 0x80000000u, sh::Next())));

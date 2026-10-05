@@ -193,7 +193,13 @@ U RandEffect(const U*, U answer) {
     switch ((n >> 2) % 3) {
     case 0: {
         unsigned char* const am = Active();
-        if (sh::InRegions(am + 0x98, 4)) SetWord(am + (b & 1 ? 0x98 : 0x9A), (n >> 8) & 0x1FF);
+        if (!sh::InRegions(am + 0x98, 4)) break;
+        // half the time at the run's test (+0x9A against +0x98 >> 4), one either side
+        const auto most = static_cast<short>(Word(am + 0x98)), now = static_cast<short>(Word(am + 0x9A));
+        const int side = b & 2 ? 1 : -1;
+        if ((n >> 4) & 1) SetWord(am + (b & 1 ? 0x98 : 0x9A), (n >> 8) & 0x1FF);
+        else if (b & 1) SetWord(am + 0x98, static_cast<U>((now - side) * 16));
+        else SetWord(am + 0x9A, static_cast<U>((most >> 4) + side));
         break;
     }
     case 1: SetLong(Mem(kEff5Frame), b & 1 ? -7 : static_cast<std::int32_t>(b >> 1)); break;
