@@ -22,7 +22,7 @@ name for one of 60 slot cells (`0x9046D0`, names at `0x9048F0`) or for one of
 the seven character records with bit 0 of `+0xB` set, either drawn at random
 (R4E's `0x45ED70`) or entered. On the PC the entry is gone: its draws are
 calls of `BareRet` with the PlayStation's arguments, and its answer
-`BareRetZero` is always 0, so an entry always ends in message 0xF7 and state 4
+`BareRetZero` is always 0, so the original never leaves the entry's step and ours ends it in message 0xF7 and state 4 (DIV-0075)
 (section 5, L3). The two games share `Commu_LeaveWhenClosed` `0x45E6A0` (the
 last state of both tables and of two of R4E's).
 
@@ -256,10 +256,16 @@ was reached (the coverage line's `phase` rows), every listed callee called.
   none 0; ours aborts before the first `Rand`.
 - **L3. The PC's name entry is gone.** The PlayStation's entry steps' draws
   are calls of `BareRet` (a bare `ret`) with their arguments, and the answer
-  `BareRetZero` is always 0: `CommuName_SlotEntryOut` / `_MemberEntryOut`
-  always take the unanswered branch (message 0xF7, state 4) - the entry path
-  ends without a name. Described for the owner (an entry on the PC would be a
-  feature and a ledger entry, not a port).
+  `BareRetZero` is always 0. **Corrected 2026-10-05** (the coordinator, from
+  [`name-entry-restoration.md`](name-entry-restoration.md)): the original does
+  not end the entry in message 0xF7, it never leaves it - nothing in
+  `CommuName_SlotEntry` / `_MemberEntry` writes the step byte `0x939A3F`, which
+  the PlayStation's input step moved on, so `_SlotEntryOut` / `_MemberEntryOut`
+  are never reached from them. **DIV-0075** (the owner's word, 2026-10-05):
+  ours moves the step on after the answer, and the out step's unanswered
+  branch (message 0xF7, state 4) ends the entry without a name; the switch is
+  set after the self-test, which compares Capcom's steps. The entry itself
+  waits for the localisation rework.
 - **L4. Unbounded indexes**, one policy: a jump past a state table aborts
   (section 3); a dereference of `CommuName_RecordNames` past 7 aborts (R4E's
   `0x45F020` answers 0xFF when the cursor passes the records, and the original

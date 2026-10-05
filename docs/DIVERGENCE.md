@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 73 entries, DIV-0001..0073, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 75 entries, DIV-0001..0075, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3947,3 +3947,79 @@ designed in rather than bolted on.
   light matrix; the code there is the recompiler's output only. So the
   PlayStation side has not been read either, and "Also in the PSX
   version?" stays unanswered.
+
+### A random enemy from the bytes the function wrote, where the original's four-byte list overflows into stale stack
+
+- **ID:** DIV-0074
+- **Date:** 2026-10-05
+- **Subsystem:** battle (`Battle_RandomLiveEnemy` `0x452F10`, ours in
+  `src/game/rest_4a.cpp`; its caller is `BattleAction_PickRandomAbility`
+  `0x42F9D0`)
+- **Tier:** Forced
+- **Original behaviour:** the function lists the enemies 3..10 that are not
+  out in four bytes of a 12-byte stack frame and answers the one at
+  `Rand() % count`. Eight enemies can stand. From the fifth on, the writes
+  run over the count byte (the count becomes that enemy's number) and into
+  the two dwords after the list, so the pick is any of frame bytes 0..9 -
+  among them six bytes no instruction of the function writes (the upper
+  bytes of the count's dword and of the loop's): whatever the caller's
+  stack held.
+- **New behaviour:** ours keeps the same twelve bytes and makes the same
+  writes, the overflow included, so every pick the original makes from a
+  byte it wrote is ours too. The six never-written bytes are 0. With four
+  or fewer enemies standing nothing differs.
+- **Rationale:** stack the function never writes cannot be reproduced, only
+  replaced (DIV-0023's, DIV-0068's and DIV-0072's class); 0 is what the
+  function itself puts in those dwords' neighbours. The overflow itself is
+  Capcom's defect and is kept: a bound on the list would change which enemy
+  is picked in fights the original plays deterministically, and that is the
+  owner's to ask for, not this entry's.
+- **Also in the PSX version?** Not read.
+- **Verification:** `BOF3X_SHADOW=rest_4a` headless: the fuzz's
+  `Battle_ActorIsOut` stand-in zeroes those bytes on the original's side
+  and every answer is compared, 0 mismatches; control C6 (one of the bytes
+  not 0) is refused in 600 of 6,000 rounds
+  ([`rest_4a.md`](rest_4a.md) sections 6 and 7, L1). Not seen live: whether
+  a recorded battle calls it with five or more enemies standing is not
+  known.
+- **Reversible?** `BOF3X_ORIGINAL=Battle_RandomLiveEnemy` runs Capcom's
+  function, its stale bytes included.
+- **The owner's word:** owed.
+
+### The community's name entry ends unanswered, where the original never leaves its step
+
+- **ID:** DIV-0075
+- **Date:** 2026-10-05
+- **Subsystem:** the community's name screen (`CommuName_SlotEntry`
+  `0x45D730` and `CommuName_MemberEntry` `0x45E2C0`, ours in
+  `src/game/rest_4d.cpp`)
+- **Tier:** Intent - the port removed the PlayStation's name entry (its
+  grid's draws are calls of a bare `ret`, its input step a function that
+  answers 0) but left the step that waited on it.
+- **Original behaviour:** on the PlayStation the input step itself moves
+  the entry's step on, when a name is finished or the entry abandoned
+  ([`name-entry-restoration.md`](name-entry-restoration.md) section 4).
+  The port's replacement only answers 0 and nothing else writes the step
+  byte `0x939A3F`, so once play chooses to enter a name the screen stays
+  on this step for good: the panel, an underline, no grid and no input
+  that leaves it.
+- **New behaviour:** after the answer (still 0) ours moves the step on,
+  which is what the PlayStation's input does when the player abandons the
+  entry. The next step, unchanged, slides the panel out and takes its
+  unanswered branch: message 0xF7 and back to the screen's state 4. No
+  name is changed. Drawing a name at random, the screen's other choice,
+  is untouched.
+- **Rationale:** the owner's decision, 2026-10-05: fix the hang now;
+  bringing the entry itself back waits for the localisation rework, which
+  may change the font files the grid would draw from. Abandoning is the
+  one exit the PlayStation's routine has that needs no grid, no glyphs and
+  no input, and it leaves the save as it was.
+- **Also in the PSX version?** No: the PlayStation has the entry
+  (`COMMU02`, input step `0x801DA1D8`).
+- **Verification:** `BOF3X_SHADOW=rest_4d` headless compares Capcom's two
+  steps with the switch off (the switch is set after the self-test, as
+  DIV-0070's), 0 mismatches. Not seen live: no recorded route enters the
+  community, and whether the port's play can reach the entry at all is not
+  established.
+- **Reversible?** `BOF3X_ORIGINAL=CommuName_SlotEntry,CommuName_MemberEntry`
+  runs Capcom's steps, which do not return from the entry.

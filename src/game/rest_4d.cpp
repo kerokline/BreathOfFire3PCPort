@@ -85,6 +85,10 @@ void EntryBox(int a, int y, unsigned c, unsigned d) { SH_AT(void (__cdecl*)(int,
 void MemberRename() { SH_AT(void (__cdecl*)(), at::kMemberRename)(); }
 void SlotRename() { SH_AT(void (__cdecl*)(), at::kSlotRename)(); }
 
+// DIV-0075, set by Rest4D_Inject after the self-test: the two entry steps move
+// the step's step on, where the original's never does.
+unsigned char g_entry_abandons = 0;
+
 // BareRet (ours, a bare ret) called with the arguments the PSX's name entry
 // took; it reads none. BareRetZero likewise with none.
 template <typename... A> void Dropped(A... a) {
@@ -805,12 +809,17 @@ extern "C" void __cdecl CommuName_SlotEntryIn(void) {
 
 // original 0x45D730, step 7.1: the cursor slot's panel (flag 1), the column's
 // grey line at (0x4A + 12 * column, 0x42), the entry's draws, 0x675F96 =
-// BareRetZero (0: the PC's entry always ends unanswered).
+// BareRetZero (0). The original stops here: the PlayStation's input step
+// moved the step's step on and the port's BareRetZero does not, so the entry
+// never leaves this step. DIVERGENCE DIV-0075: ours moves it on, as the
+// PlayStation's input does when the entry is abandoned, and step 7.2 takes
+// its unanswered branch (message 0xF7, state 4).
 extern "C" void __cdecl CommuName_SlotEntry(void) {
     CursorSlotPanel(0x44, 1);
     SH_CALL(Menu_DrawGreyHLine)(0x4A + 12 * static_cast<int>(B(at::kEntryColumn)), 0x42, 0xC, 0);
     EntryDraws(0);
     B(at::kEntryDone) = DroppedZero();
+    if (g_entry_abandons) B(at::kStep2) = static_cast<unsigned char>(B(at::kStep2) + 1);   // DIV-0075
 }
 
 // original 0x45D7C0, step 7.2: the slide one more; the cursor slot's panel at
@@ -1070,12 +1079,13 @@ extern "C" void __cdecl CommuName_MemberEntryIn(void) {
 
 // original 0x45E2C0, step 7.1: the cursor member's panel (flag 1), the
 // column's grey line at (0x5B + 12 * column, 0x50), the entry's draws,
-// 0x675F96 = BareRetZero.
+// 0x675F96 = BareRetZero; the step's step on as the slot's (DIV-0075).
 extern "C" void __cdecl CommuName_MemberEntry(void) {
     CursorMemberPanel(0x20, 1);
     SH_CALL(Menu_DrawGreyHLine)(0x5B + 12 * static_cast<int>(B(at::kEntryColumn)), 0x50, 0xC, 0);
     EntryDraws(0);
     B(at::kEntryDone) = DroppedZero();
+    if (g_entry_abandons) B(at::kStep2) = static_cast<unsigned char>(B(at::kStep2) + 1);   // DIV-0075
 }
 
 // original 0x45E350, step 7.2: as the slot's, the panel at 0x20 (answered) or
@@ -1230,6 +1240,13 @@ extern "C" void __cdecl CommuName_DrawHeader(void) {
 
 void Rest4D_Inject() {
     if (bof3::WantsShadow("rest_4d")) rest_4d::SelfTest();
+    // DIVERGENCE DIV-0075: after the self-test, which compares Capcom's entry steps.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("CommuNameEntryAbandons",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_entry_abandons)), &was, &is, 1);
+        bof3::Log("DIV-0075    the community's name entry ends unanswered where the original never leaves its step");
+    }
     BOF3_INJECT(CommuBoard_DrawRows);
     BOF3_INJECT(CommuBoard_DrawFrame);
     BOF3_INJECT(CommuBoard_DrawRowCells);

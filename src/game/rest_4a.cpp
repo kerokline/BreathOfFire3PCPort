@@ -159,8 +159,8 @@ extern "C" unsigned char __cdecl Battle_RandomLiveMember(void) {
 // twelve bytes, so every pick the original can make is ours too - but the
 // upper bytes of the count and loop dwords (frame bytes 5..7 and 9..11), which
 // the original never writes before it may read them, are 0 here, where the
-// original has whatever the stack held (docs/rest_4a.md section 7, L1: wants a
-// ledger entry). With four or fewer enemies standing nothing differs.
+// original has whatever the stack held (DIVERGENCE DIV-0074; docs/rest_4a.md
+// section 7, L1). With four or fewer enemies standing nothing differs.
 extern "C" unsigned char __cdecl Battle_RandomLiveEnemy(void) {
     unsigned char f[12] = {};   // the list f[0..3], the count dword f[4..7], the loop dword f[8..11]
     unsigned char i = 3;

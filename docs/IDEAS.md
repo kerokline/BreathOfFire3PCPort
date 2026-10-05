@@ -78,6 +78,7 @@ rule ([`README.md`](README.md)) here too.
 | I31 | The platform layers: the C runtime, the MP3 decoder, the renderer's remainder, the small glue layers, and the cutover to our own executable | engine / platform | MIXED | **planned 2026-10-04**, not scheduled - [`platform-layers-plan.md`](platform-layers-plan.md); its first step (a read pass and a reach trace) needs no decision |
 | I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | open 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
 | I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31) |
+| I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
 
 ---
 
@@ -1392,3 +1393,29 @@ vocabulary for the kinds.
 
 ### Outcome
 _(2026-10-04) open; recorded, nothing decided or scheduled._
+
+## I34 — The name entry back: the community's renamer, and naming at New Game
+
+**Ask (2026-10-05, the owner):** take the name screen from the PlayStation
+game so it is at least available; the port removed it.
+**Kind:** gameplay / localisation
+**Feasibility:** HIGH for the community's renamer (the port kept every caller
+and both commit paths; only the grid's draw, its legend and its input step are
+gone), MEDIUM for New Game (the port left no call to re-arm).
+**Gated on:** the localisation rework of phases 4 and 5 - the owner's word,
+2026-10-05: it may change the structure of the font files, and the grid's
+glyphs, the encoding per language and the font all follow from it.
+
+[`name-entry-restoration.md`](name-entry-restoration.md) is the research: the
+PlayStation routine's two copies (COMMU02 and START.EMI), each function's
+arguments, state cells and control flow, what survives in `BOF3.exe`, and what
+the sibling has. Two pieces, in the owner's order:
+
+- **The community's renamer.** Until it is built the entry ends unanswered
+  (DIV-0075, 2026-10-05), where the port's never left its step.
+- **Naming at New Game, as an uplift** with the same work: the PlayStation asks
+  for the hero's name before the game starts and the port goes straight in
+  (DIV-0020's "Original behaviour").
+
+### Outcome
+_(2026-10-05) open; researched, deferred to the localisation rework._
