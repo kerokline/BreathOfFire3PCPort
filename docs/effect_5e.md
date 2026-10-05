@@ -506,3 +506,37 @@ Each control plants one change in ours (`controls.py` in the session scratchpad:
 | 176 | LeaderAt abs (near variant) | refused | `Sub25_WaitNear` 129, `Sub25_WaitAway` 238 |
 | 177 | Sub24_Spin band high | refused | `Sub24_Spin` 189 |
 | 178 | StartLid across | refused | `Sub25_Start` 205, `Sub26_Start` 181 |
+| 179 | +9 kept across the trails (`_Trails`' from, per trail) | refused | `Sub24_Trails` 59 |
+| 180 | +9 kept across the trails (`_Trails`' gate `>= 3`) | refused | `Sub24_Trails` 14 |
+| 181 | +9 kept across the corner trails (`_TrailsOut`' from) | refused | `Sub24_TrailsOut` 59 |
+| 182 | +9 kept across the sky (`_SkyDim`'s CLUT level) | refused | `Sub3F_SkyDim` 17 |
+| 183 | counter kept across the jitter (`_Spin`'s hand cue) | refused | `Sub24_Spin` 22 |
+| 184 | counter kept across the corner trails (`_TrailsOut`' raise) | refused | `Sub24_TrailsOut` 438 |
+| 185 | counter kept across the sky (`HoldUntil`'s cue) | refused | `Sub3F_WaitCue29` 18, `Sub3F_WaitCue37` 16, `Sub3F_WaitCue3B` 16 |
+| 186 | +0x2E kept across the jitter (`_Fade`'s kick) | refused | `Sub24_Fade` 13 |
+| 187 | +0x2E kept across the leaves (`Sub25_Draw`'s texture word) | refused | `Sub25_Draw` 137 |
+
+**Under the repaired disturbance** (2026-10-05, round fourteen's review item
+1: the group's `Disturb` switched on `h % 9`, which never reached cases 0, 3
+and 6 - `+9`, the counter at its cues, `+0x2E`'s bit 11 - until `b9dfe34`
+drew the case from `sh::DisturbCase`). Controls 1..178 re-run from the same
+plants (each taken by its name from the scripts, the re-plants' spelling
+where a control was re-planted; every anchor still unique, none repaired), on
+`451edeb`: **175 of 178 refused**, the three not refused the equivalent
+mutants 151, 170 and 175, as before. No count moved to 0; the largest moves
+are 43 (2135 to 2205), 46..48 (44..53 fewer), 2 (3942 to 3976), 158 (3943
+to 3968), 65 (5 to 8); the rest by 0..23. Eight rows now name
+one or two more clones than the table (16 / 36 / 37 / 90 / 91 / 112..115 /
+176: `Sub24_Spin`, `Sub24_Fade`, `Sub3F_WaitCue29`, `Sub3F_SkyWarm`,
+`Sub25_Start`): the filter named them before as well, but the old script kept
+only the log's last three lines. **Controls 179..187 are new**, one a
+function that reads the case's cell again after a call: each keeps the value
+read before the call (a record's cell only while `Sprite_Current` is still
+the same record after it, the pointer re-read kept). All nine refused. With
+the group's case knocked out of the fuzz (its line made a bare `break`) the
+six on `+9` and `+0x2E` ran 4,000 rounds without a mismatch - each refusal is
+the formerly dead case's. The three on the counter were still refused with
+case 3 out (`Sub24_Spin` 20, `Sub24_TrailsOut` 394, the waits 17 / 11 / 15):
+the harness's own case 6 sets the counter to a random byte, so the counter
+was moved all along and case 3 adds only its cue values. The fuzz is
+unchanged.
