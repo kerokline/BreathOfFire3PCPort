@@ -81,12 +81,12 @@ void VerifyImage() {
         (unsigned)image::kTimestamp);
 }
 
-void Inject(const char* name, std::uint32_t original, void* ours) {
+void Inject(const char* name, std::uint32_t original, void* ours, bool instrument) {
     auto* orig = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(original));
     auto* mine = static_cast<std::uint8_t*>(ours);
     if (g_enabled + g_disabled == kMaxOwned) Fatal("%s: more than %d injected functions", name, kMaxOwned);
     g_owned[g_enabled + g_disabled] = original;
-    g_owned_on[g_enabled + g_disabled] = !WantsOriginal(name);
+    g_owned_on[g_enabled + g_disabled] = instrument || !WantsOriginal(name);
     if (!g_owned_on[g_enabled + g_disabled]) {
         WriteJmp(name, mine, orig);
         ++g_disabled;

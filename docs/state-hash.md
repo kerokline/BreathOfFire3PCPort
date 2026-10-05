@@ -101,8 +101,14 @@ VRAM shadow, the task records but their stack pointers - is hashed.
 
 **What the hash does not see at all:** anything outside `.data` - the stack
 in use, the heap (`LoadDatFile`'s buffers live in the arena, which is
-`.data`), our own DLL's statics, and the state of the devices. And a
-difference inside a frame that is gone by the frame's end.
+`.data`), our own DLL's statics, and the state of the devices. **`Rand`'s
+seed is among them**: `0x5B93D2` is the CRT's `rand()` and its seed is in
+the per-thread data (ptd + 0x14), on the CRT's heap, so two runs whose
+sequences have parted hash alike until a draw changes something in `.data`.
+The instrument for that is the `randlog` line a frame (`input_script.cpp`),
+which counts on reference sides too since 2026-10-05 (it read 0 under
+`--original "*"` before: round thirteen's review item 2, round fourteen's
+item 2). And a difference inside a frame that is gone by the frame's end.
 
 ## 4. Measured
 
@@ -170,7 +176,13 @@ noise.
 - **The reference** is a pair of original runs and is recorded per route once
   per skip list: `analysis/statehash/<route>_orig.sh`, `_origb.sh`. A change of
   the skip list, the recipe, the save or the launcher's settings wants a new
-  pair. Without a language overlay the original side needs nothing of ours, so the
+  pair. **The tool enforces the skip list's part** (2026-10-05, round
+  fourteen's review item 3): `diff` and `check` refuse runs whose headers
+  differ - the base, the page count and size, the number of skip ranges and,
+  from the `BOF3SH2` header on, a hash of the ranges themselves (a `BOF3SH1`
+  file, every reference recorded before that day, has none and is compared by
+  the count alone, with a note). `check` also names the pages its two
+  references never agree on, where the run under test is never compared. Without a language overlay the original side needs nothing of ours, so the
   reference outlives the rounds - unlike the call hash's, whose armed set
   changed every round.
 - **Under a language overlay the pair is recorded with the build under

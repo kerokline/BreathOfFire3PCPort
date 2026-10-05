@@ -15,13 +15,17 @@
 
 // The file (little-endian, read by tools/statehash.py):
 //
-//   header   "BOF3SH1\0", u32 base, u32 pages, u32 page size, u32 skip ranges
+//   header   "BOF3SH2\0", u32 base, u32 pages, u32 page size, u32 skip ranges,
+//            u32 skip list hash (FNV-1a over each range's address and length
+//            in the list's order; 0 without a list)
 //   record   u32 tick, u32 Frame_Counter, u32 recipe frame, u32 n,
 //            then n times (u32 page index, u32 hash)
 //
 // A record lists only the pages whose hash differs from the record before;
 // the first lists every page. A tick is one logic frame seen by the latch,
-// counted from the first.
+// counted from the first. "BOF3SH1\0" (until 2026-10-05) had no skip list
+// hash: two runs under different lists of one length compared without a
+// word (round fourteen's review, item 3). The tool reads both.
 
 namespace bof3 {
 namespace {
@@ -132,11 +136,19 @@ bool StateHash_Start() {
     g_out = std::fopen(path, "wb");
     if (!g_out) Fatal("BOF3X_STATEHASH: cannot open %s for writing", path);
     std::setvbuf(g_out, nullptr, _IOFBF, 1 << 20);
-    std::fwrite("BOF3SH1", 1, 8, g_out);
+    std::fwrite("BOF3SH2", 1, 8, g_out);
     Put(kBase);
     Put(kPages);
     Put(kPage);
     Put(static_cast<std::uint32_t>(g_skips.size()));
+    std::uint32_t skip_hash = 0;
+    if (!g_skips.empty()) {
+        skip_hash = 2166136261u;
+        for (const Skip& s : g_skips)
+            for (const std::uint32_t w : {s.at, s.len})
+                for (int b = 0; b < 4; ++b) skip_hash = (skip_hash ^ ((w >> (8 * b)) & 0xFF)) * 16777619u;
+    }
+    Put(skip_hash);
     g_last.assign(kPages, 0);
     Log("statehash   %lu pages of .data from 0x%lX, a record a logic frame to %s; %u skip ranges, %u dump ticks",
         static_cast<unsigned long>(kPages), static_cast<unsigned long>(kBase), path, (unsigned)g_skips.size(),

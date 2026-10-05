@@ -30,14 +30,16 @@ BASE, END = 0x5DA000, 0x93E000
 class Run:
     def __init__(self, path, align='tick'):
         d = open(path, 'rb').read()
-        if d[:8] != b'BOF3SH1\0':
+        if d[:8] not in (b'BOF3SH1\0', b'BOF3SH2\0'):
             sys.exit(f'{path}: not a state hash file')
         self.base, self.pages, self.page, self.skips = struct.unpack_from('<4I', d, 8)
+        # BOF3SH2 adds a hash of the skip list's ranges; a BOF3SH1 file has none
+        self.skip_hash = struct.unpack_from('<I', d, 24)[0] if d[6:7] == b'2' else None
         self.path = path
         self.keys = []      # per record: the alignment key
         self.fc = []        # per record: Frame_Counter
         self.recs = []      # per record: [(page, hash)...] changed
-        o = 24
+        o = 24 if self.skip_hash is None else 28
         while o + 16 <= len(d):
             tick, fc, rf, n = struct.unpack_from('<4I', d, o)
             if o + 16 + 8 * n > len(d):
@@ -134,10 +136,31 @@ def report(per_page, run, total, what):
         print(f'0x{a:06X} {f:7d} {l:7d} {c:7d}  {names_in(a, a + run.page)}')
 
 
+def same_headers(runs):
+    """Refuse runs that were not hashed alike: a page holding a range one run
+    skipped and another did not differs at every tick, which `check` would call
+    noise and never compare (round fourteen's review, item 3)."""
+    first = runs[0]
+    for r in runs[1:]:
+        for what in ('base', 'pages', 'page', 'skips'):
+            if getattr(r, what) != getattr(first, what):
+                sys.exit(f'{r.path}: {what} is {getattr(r, what)}, {first.path} has {getattr(first, what)} - '
+                         'the runs were not hashed alike (another BOF3X_STATEHASH_SKIP list?); record a new pair')
+        if r.skip_hash is not None and first.skip_hash is not None and r.skip_hash != first.skip_hash:
+            sys.exit(f"{r.path}: its skip list (hash {r.skip_hash:08X}) is not {first.path}'s ({first.skip_hash:08X}), "
+                     'though both have the same number of ranges; record a new pair')
+    known = [r.skip_hash is not None for r in runs]
+    if first.skips and any(known) and not all(known):
+        print('note: a run here predates the skip list hash (BOF3SH1): the lists are compared by their length only')
+
+
 def cmd_info(a):
     r = Run(a.run)
+    if not r.recs:
+        sys.exit(f'{a.run}: a header and no whole record')
+    h = 'no skip list hash (BOF3SH1)' if r.skip_hash is None else f'skip list hash {r.skip_hash:08X}'
     print(f'{a.run}: {len(r.recs)} records, ticks {r.keys[0]}..{r.keys[-1]}, Frame_Counter {r.fc[0]}..{r.fc[-1]}, '
-          f'{r.pages} pages of 0x{r.page:X} from 0x{r.base:X}, {r.skips} skip ranges')
+          f'{r.pages} pages of 0x{r.page:X} from 0x{r.base:X}, {r.skips} skip ranges, {h}')
     busy = {}
     for ch in r.recs[1:]:
         for i in range(0, len(ch), 2):
@@ -147,6 +170,7 @@ def cmd_info(a):
 
 def cmd_diff(a):
     ra, rb = Run(a.a, a.align), Run(a.b, a.align)
+    same_headers([ra, rb])
     per, total = {}, 0
     for k, (sa, sb) in walk([ra, rb], a.lo, a.hi):
         total += 1
@@ -161,6 +185,7 @@ def cmd_diff(a):
 
 def cmd_check(a):
     ref, refb, new = Run(a.ref, a.align), Run(a.refb, a.align), Run(a.new, a.align)
+    same_headers([ref, refb, new])
     noise, per, total = {}, {}, 0
     for k, (sr, sb, sn) in walk([ref, refb, new], a.lo, a.hi):
         total += 1
@@ -175,6 +200,11 @@ def cmd_check(a):
                 per[p] = (k, k, 1) if v is None else (v[0], k, v[2] + 1)
     print(f'{total} ticks compared; the references disagree on {len(noise)} pages '
           f'({sum(1 for v in noise.values() if v[2] == total)} of them at every tick)')
+    always = sorted(p for p, v in noise.items() if v[2] == total)
+    if always and total > 1:
+        # never compared at all: say which, so a page that wants a skip range is seen
+        print('WARNING: pages the references never agree on, so NEW is never compared there: '
+              + ', '.join(f'0x{ref.base + p * ref.page:06X}' for p in always))
     if a.noise:
         report(noise, ref, total, 'noise (reference against reference)')
     report(per, ref, total, 'check (new against the reference, where the references agree)')

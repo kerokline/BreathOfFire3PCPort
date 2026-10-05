@@ -620,7 +620,9 @@ void RecordStart(const char* path) {
 // differs between the two logs is where a consumer the frame count does not
 // fix ran (2026-09-30, the fish that would not replay). Rand is replaced by
 // a counter that calls a byte-copy of the original; the copy's one call, the
-// per-thread-data getter at its entry, is kept.
+// per-thread-data getter at its entry, is kept. The counter is an instrument:
+// it is installed whatever BOF3X_ORIGINAL says, so a reference side under `*`
+// logs its count too (until 2026-10-05 it read 0 there on every frame).
 std::uint32_t g_rand_calls = 0;
 int (__cdecl* g_rand_copy)() = nullptr;
 
@@ -641,7 +643,7 @@ void RandCountStart() {
     constexpr std::uint32_t kRand = 0x5B93D2, kRandSize = 0x22, kGetPtd = 0x5BAD64;
     const bof3::CloneCall calls[] = {{0, nullptr, kGetPtd}};
     g_rand_copy = reinterpret_cast<int (__cdecl*)()>(bof3::CloneOriginal("Rand", kRand, kRandSize, calls, 1));
-    bof3::Inject("Rand", kRand, reinterpret_cast<void*>(&CountingRand));
+    bof3::Inject("Rand", kRand, reinterpret_cast<void*>(&CountingRand), true);
     Log("input       randlog: Rand counted, one line a frame");
 }
 

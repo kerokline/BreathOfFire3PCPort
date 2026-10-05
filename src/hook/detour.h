@@ -30,7 +30,11 @@ void VerifyImage();
 // variable (comma or space separated), or all of them with BOF3X_ORIGINAL=*;
 // `-NAME` takes one back out of `*` (NameListed in detour.cpp). Disabling
 // writes the jmp over the start of OUR function, not Capcom's.
-void Inject(const char* name, std::uint32_t original, void* ours);
+//
+// `instrument`: a probe that wraps Capcom's function and changes nothing it
+// does (the Rand counter) is not game code, and neither the name nor `*`
+// switches it off - as RetargetCall's flag below.
+void Inject(const char* name, std::uint32_t original, void* ours, bool instrument = false);
 
 // Re-aims ONE relative call inside an original function at ours, leaving the
 // callee and its other callers alone: for a divergence that belongs to one
