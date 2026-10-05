@@ -120,12 +120,31 @@ U FxCommit(const U* a, U answer) {
     }
     return answer;
 }
+// The menu's calls (Sound_PlayEffect, Menu_DrawHand, Inventory_Remove / _Add):
+// one time in two the group's disturbance (and its settle), from the noise.
+// The harness hands its hash to the group's disturb in one case of its
+// sixteen, and each of the group's eleven cases is one of those, which left
+// the menu's re-reads after its sounds, hand and inventory calls on paths of
+// a few hundred rounds untested (round fourteen's review, item 1: controls
+// C91, C93, C95 and C98 of docs/effect_1f.md section 6a passed).
+void Disturb(U h);
+void KeepDivisor();
+void MenuMove(U n) {
+    if (n % 2 != 0) return;
+    Disturb(n >> 2);
+    KeepDivisor();
+}
+U FxMenu(const U*, U answer) {
+    MenuMove(sh::Noise());
+    return answer;
+}
 // Inventory_Remove / Inventory_Add: the real ones rewrite the category's list;
 // ExtraSlots_PickItem counts that list after them. Half the time a byte of the
-// category-3 list moves.
+// category-3 list moves; and the menu's disturbance as above.
 U FxInventory(const U*, U answer) {
     const U n = sh::Noise();
     if (n & 1) M(at::kAccessoryIds)[(n >> 1) % 0x80] = static_cast<unsigned char>(n >> 9);
+    MenuMove(n >> 16);
     return answer;
 }
 // Sprite_UpdateScreen: Sprite_Current and its +0x3C (which the caller holds at
@@ -166,6 +185,9 @@ const sh::Callee kCallees[] = {
     {E1F_OURS(Gfx_CommitPrim), 2, {kU8, kU8}, kG, 0, 0, {}, &FxCommit, nullptr, true},
     {E1F_OURS(Sprite_UpdateScreen), 0, {}, kG, 0, 0, {}, &FxUpdateScreen, nullptr, true},
     {E1F_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &FxRepeat, nullptr, true},
+    // the standard rows' widths, with the menu's disturbance (FxMenu)
+    {E1F_OURS(Sound_PlayEffect), 1, {kU16}, kG, 0, 0, {}, &FxMenu},
+    {E1F_OURS(Menu_DrawHand), 3, {kU16, kU16, 0}, kG, 0, 0, {0, 0, 0}, &FxMenu, nullptr, true},
 };
 #undef E1F_OURS
 
@@ -236,7 +258,9 @@ void Menu() {
     const U cursor = Counter();
     Put32(at::kRecord6 + 0xC, cursor);
     Put32(at::kRecord6 + 0x18, PickOf(Counter(), cursor + 1, cursor + 2, cursor + 3, cursor));
-    Put32(at::kRecord6 + 0x10, PickOf(Counter(), 0, 8, 8, 7, 9));
+    // the item cursor at 0 about one time in three (the scroll-up branch, whose
+    // re-read of the scroll word after its sound control C95 tests)
+    Put32(at::kRecord6 + 0x10, PickOf(Counter(), 0, 0, 8, 8, 7, 9));
     const U scroll = PickOf(0, 1, 8, 9, 10, 0x7F, 0x8000, 0xFFFF, 0xFFF8, sh::Next() % 0x80, count - 9, count - 8, count - 10, count - 9);
     Put32(at::kRecord6 + 0x38, (sh::Next() & 0xFFFF0000u) | (scroll & 0xFFFF));
     Put32(at::kRecord6 + 0x1C, PickOf(Counter(), 0x40 + sh::Next() % 0x40, 9, 17, 18, count, count, count - 1, count + 1,
