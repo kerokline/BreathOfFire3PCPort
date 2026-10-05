@@ -459,10 +459,11 @@ void Seed(unsigned k) {
     const sh::Clone& c = kAll[k];
     if (const Dispatch* d = DispatchOf(c.base)) B(d->by) = static_cast<unsigned char>(sh::Next() % d->count);
     switch (c.base) {
-    case 0x457120: {   // RandomGift: the record's slot 1..8 (its level below 3), the marks 2 and 3 often
+    case 0x457120: {   // RandomGift: every record's slot 1..8 (their levels below 3: the disturbance moves the
+                       // argument), the marks 2 and 3 often
         const unsigned arg = B(at::kTailArg) % 60;
         B(at::kTailArg) = static_cast<unsigned char>(arg);
-        B(Rec(arg) + 1) = static_cast<unsigned char>(sh::Next() % 8 + 1);
+        for (unsigned r = 0; r < 60; ++r) B(Rec(r) + 1) = static_cast<unsigned char>(sh::Next() % 8 + 1);
         B(Rec(arg) + 2) = static_cast<unsigned char>(PickOf(2, 2, 3, 3, sh::Next()));
         break;
     }
