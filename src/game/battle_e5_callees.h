@@ -25,6 +25,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // bof3::addr, for the rebound callees below
+
 namespace battle_e5 {
 namespace at {
 

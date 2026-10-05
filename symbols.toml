@@ -105278,7 +105278,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B750..0x58B893 (0x144 bytes): FieldItemsStates 6 (0x667340): the item's name (Item_NamePtr) to text record 0; the yes / no hand by s8 0x929F0B, help 0x1A; 0x2000 or 0x8000 pressed flips the answer (sound 0x101); confirm with yes: sound 0x104, the item's id and count cleared, 0x803341 = 0xFF, the state down 3; confirm with no or cancel: sound 0x106, the same without clearing. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B750..0x58B893 (0x144 bytes): FieldMenuItems_States 6 (0x667340): the item's name (Item_NamePtr) to text record 0; the yes / no hand by s8 0x929F0B, help 0x1A; 0x2000 or 0x8000 pressed flips the answer (sound 0x101); confirm with yes: sound 0x104, the item's id and count cleared, 0x803341 = 0xFF, the state down 3; confirm with no or cancel: sound 0x106, the same without clearing. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
 
 [[func]]
 pc = 0x58B8A0
@@ -106321,7 +106321,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F370..0x58F75E (0x3EF bytes): TacticsFormation_Steps[1], the formation grid: records 19 (the cell picked, 0x6BDFC6 / C8, 0x7F none) and 20 (the cursor 0x6BDFC9 / CA) placed from the 8-byte cells 0x667450 [3 row + col]; records 12..17 +0xC cleared and the set cell's (11 + col + 2 row of 0x6BDFC5 / C7) +0xC = 1 shl row on column 0, else 7; confirm sets the formation (column 1..2), picks a cell or swaps the two party bytes 0x904065 + row through 0x58BD50; cancel drops the pick, leaves the menu (0x929F10 1: Game_Step + 1, step 6) or writes 0x904060 and sends records 12..17 of kind 0xB out; the cursor by Input_AutoRepeat (0x5000 rows, 0xA000 columns while a cell is picked) wrapping over 0x6BDFBC's open cells; sound 0x101 when it moved. docs/rest_2f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F370..0x58F75E (0x3EF bytes): TacticsFormation_Steps[1], the formation grid: records 19 (the cell picked, 0x6BDFC6 / C8, 0x7F none) and 20 (the cursor 0x6BDFC9 / CA) placed from the 8-byte cells 0x667450 [3 row + col]; records 12..17 +0xC cleared and the set cell's (11 + col + 2 row of 0x6BDFC5 / C7) +0xC = 1 shl row on column 0, else 7; confirm sets the formation (column 1..2), picks a cell or swaps the two party bytes 0x904065 + row through 0x58BD50; cancel drops the pick, leaves the menu (0x929F10 1: Game_Step + 1, step 6) or writes 0x904060 and sends records 12..17 of kind 0xB out; the cursor by Input_AutoRepeat (0x5000 rows, 0xA000 columns while 0x6BDFC6 is not 0: with no pick, since a pick is taken only on column 0; corrected 2026-10-05, round-14-review.md item 12) wrapping over 0x6BDFBC's open cells; sound 0x101 when it moved. docs/rest_2f.md."
 
 [[func]]
 pc = 0x58F760

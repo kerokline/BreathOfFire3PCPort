@@ -182,9 +182,9 @@ Already named and read by this group's dispatchers: `Rest_States` (7),
 `PartyForm_States` (4), `ShopSell_States` (4), `ShopSell_SellSteps` (5),
 `ShopResist_States` (8), `SharedList_States` (5). The tables this group's
 states sit in and others read (`ShopMode_States`, `Inn_Steps`,
-`InnPrompt_States`, `FieldSave_States`) are named already. **Not named, for
-R2D**: `0x66456C` (R2D's `0x587120` reads it; it holds three of this group's
-functions, `MasterTalk_PanelsOpen`, `_PanelsIn`, `_PanelsOut`).
+`InnPrompt_States`, `FieldSave_States`) are named already. **Named by R2D**:
+`0x66456C` is `MasterQuit_Steps` (R2D's `0x587120` reads it; it holds three of
+this group's functions, `MasterTalk_PanelsOpen`, `_PanelsIn`, `_PanelsOut`).
 `MasterFigure_States` is named here although its reader is R2B's: four of its
 six entries are this group's and the brief's hint gave it to R2C - **if R2B
 names `0x663E28` too, the coordinator keeps one**.

@@ -462,10 +462,13 @@ extern "C" void __cdecl TacticsFormation_Enter(void) {
 // directly (0x929F10 1) Game_Step on and the step 6; else 0x904060 written,
 // the sound 0x102, records 12..17 of kind 0xB in use to state 1, the sub-step
 // on and the countdown 5. Then up / down (0x5000) move the cursor's row with a
-// wrap, skipping cells the grid has 0 for; with a pick, left / right (0xA000)
-// its column likewise; sound 0x101 when the cell moved; 0x904060 = the set's
-// col + 2 row - 1 again. The grid loops never end on a column of three empty
-// cells, as the original's never would (section 7).
+// wrap, skipping cells the grid has 0 for; left / right (0xA000) its column
+// likewise, but only while 0x6BDFC6 is not 0 - with no pick (0x7F); a pick is
+// taken only on column 0 here, so a pick holds the column; sound 0x101 when
+// the cell moved; 0x904060 = the set's col + 2 row - 1 again. The grid loops
+// never end on a column of three empty cells, as the original's never would
+// (section 7): the grid is read through a volatile, so the compiler may not
+// assume they end.
 extern "C" void __cdecl TacticsFormation_Pick(void) {
     unsigned char vdelta = 0, hdelta = 0;
     const unsigned char zero = 0;
@@ -552,7 +555,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
             B(kSub) = static_cast<unsigned char>(sub + 1);
         }
     }
-    // the cursor: up / down, then (with a pick) left / right
+    // the cursor: up / down, then (while 0x6BDFC6 is not 0) left / right
     unsigned char step;
     const U v = Repeat(W(kPressed) & 0x5000);
     if (v & 0x1000) step = 0xFF;
@@ -569,7 +572,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
         row = static_cast<unsigned char>(row + step);
         if (static_cast<signed char>(row) < 0) row = 2;
         else if (static_cast<signed char>(row) > 2) row = 0;
-    } while (B(kGrid + static_cast<U>(3 * static_cast<signed char>(row) + ccol)) == 0);
+    } while (*static_cast<volatile unsigned char*>(At(kGrid + static_cast<U>(3 * static_cast<signed char>(row) + ccol))) == 0);
     B(kCurRow) = row;
     unsigned char before;
     if (B(kPickCol) == 0) {
@@ -586,7 +589,7 @@ extern "C" void __cdecl TacticsFormation_Pick(void) {
             c = static_cast<unsigned char>(c + hdelta);
             if (static_cast<signed char>(c) < 0) c = 2;
             else if (static_cast<signed char>(c) > 2) c = 0;
-        } while (B(kGrid + static_cast<U>(base + static_cast<signed char>(c))) == 0);
+        } while (*static_cast<volatile unsigned char*>(At(kGrid + static_cast<U>(base + static_cast<signed char>(c)))) == 0);
         B(kCurCol) = c;
     }
     if (before != c || old_row != row) Sound(0x101);
@@ -1050,7 +1053,7 @@ extern "C" void __cdecl ConfigMenu_Close(void) {
 // clamped; cap - old or -old when clamped. Callers (Effect_DrainHp /
 // Effect_DrainAp) read the answer's low word; the original's upper half is
 // the delta's, or in the clamped answers its caller's ecx's (not reproducible:
-// ours puts 0 there).
+// ours leaves cap's upper half there for a rise, 0xFFFF for a fall).
 extern "C" unsigned __cdecl Stat_AddClampedTo(unsigned short* stat, unsigned cap, unsigned delta) {
     const U old = *stat;
     const auto d = static_cast<short>(delta);
@@ -1514,7 +1517,8 @@ void CheckLeftOff170() {
                     At(kLeftOff170Bound - 1)[0], bound);
 }
 // DIV-0059's site inside Win2_DrawItemList: an E8 reaching Text_DrawAt, or the
-// ListTitle_DrawAt BattleDraw_Inject put there (anything else is refused).
+// ListTitle_DrawAt BattleDraw_Inject put there. A site that is not E8 is
+// refused; the target is not checked.
 U ReadTitleCall() {
     const unsigned char* const site = At(kTitleCall);
     if (site[0] != 0xE8) bof3::Fatal("rest_2f: 0x%X is not a call (%02X)", kTitleCall, site[0]);

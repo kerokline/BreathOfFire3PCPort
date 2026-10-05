@@ -14,7 +14,7 @@ namespace at {
 // --- callees of another group of this wave (raw until the rebinding) ---------------------
 // R2C's (0x57F340..0x586980): the masters' screen's draws.
 constexpr std::uint32_t kMemberPanel = 0x585DC0;   // (x, y, member, row): a member's stat panel
-constexpr std::uint32_t kMemberLabel = 0x585BE0;   // (x, y, member): the panel's label box
+constexpr std::uint32_t kMemberLabel = 0x585BE0;   // MasterPanel_DrawStats (x, y, record): the four stats, master line, box
 constexpr std::uint32_t kPromptBox = 0x586160;     // (x, y, w, h, style byte): the prompt's box
 // R2E's (0x58B1D0..0x58ED10): the Items screen's window set-ups.
 constexpr std::uint32_t kItemsWindows = 0x58BC30;  // (): the Items screen's windows placed
