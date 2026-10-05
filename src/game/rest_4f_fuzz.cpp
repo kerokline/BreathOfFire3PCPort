@@ -286,6 +286,19 @@ U FxRotTransPers(const U* a, U answer) {
     if (OnStack(P(a[2]), 4)) sh::FillBytes(P(a[2]), 4);
     return answer;
 }
+// Sound_PlayEffect (the standard row re-listed, louder): half the time the five
+// settings the disturbance's case 4 moves, each to 0..3 from the noise (both
+// passes the same) - ConfigScreen_Rows reads a setting again after its sound,
+// and the group's case alone reached that 3 times in 60,000 rounds (control
+// C21, docs/rest_4f.md section 8).
+U FxSound(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 2 == 0) {
+        static const U kCells[] = {at::kSetting0, at::kSetting3, at::kStyle, at::kBackdrop, at::kSetting4};
+        for (unsigned i = 0; i < 5; ++i) B(kCells[i]) = static_cast<unsigned char>((n >> (2 + 2 * i)) & 3);
+    }
+    return answer;
+}
 
 #define R4F_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage, kPh = sh::Answer::kPhase;
@@ -316,6 +329,8 @@ sh::Callee g_callees[] = {
     // its fourth word: DIV-0023, the original's stale stack, ours 0)
     {R4F_OURS(Gfx_CommitPrim), 2, {kU8, kU8}, kG, 0, 0, {0, 0}, &FxCommit, nullptr, true},
     {R4F_OURS(Gte_RotTransPers), 3, {0, kW, 0}, kG, 0, 0, {6, 0, 0}, &FxRotTransPers, nullptr, true},
+    // the sound's id a word (the standard row's mask); a setting moved under it (FxSound)
+    {R4F_OURS(Sound_PlayEffect), 1, {kU16}, kG, 0, 0, {}, &FxSound},
     // the Config titles: the text hashed to its NUL (the options' strings and the
     // names are the image's; the system messages the harness's text buffer)
     {R4F_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, kW}, kG, 0, 0, {0, 0, 0, 0, sh::kDerefString}, nullptr, nullptr, true},
