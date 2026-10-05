@@ -184,12 +184,36 @@ U FxSlope(const U*, U answer) {
     const U m = sh::Noise();
     return WithAx(answer, m % 5 == 0 ? m >> 8 : kWords[(m >> 3) % (sizeof kWords / sizeof kWords[0])]);
 }
+// In the disturbance's role, louder than the real ones (which write none of
+// these): a quarter of the time a class value into one of the cells 8..0xB.
+// Field_CellAheadRaised reads those cells again after its class calls and
+// after Field_CornerTurn; the group's case 6 alone, about one call in 290, left
+// controls C117, C118 and C120 unrefused (2026-10-05, docs/rest_1f.md section 5).
+void StirClassCell() {
+    const U n = sh::Noise();
+    if ((n & 3) != 0) return;
+    static const unsigned char kClasses[] = {0xB0, 0x70, 0x10, 0x20, 0xA0, 0xA1, 0xA2, 0xA3};
+    unsigned char* const cell = Mem(kCells + 8 + (n >> 2) % 4);
+    if (sh::InRegions(cell, 1)) cell[0] = kClasses[(n >> 4) % 8];
+}
 // A class answer (Field_CellClass, Field_CellClass5): the values the callers
-// compare with.
+// compare with; and StirClassCell.
 U FxClass(const U*, U answer) {
     static const U kClasses[] = {0xB0, 0x70, 0x10, 0x20, 0xA0, 0xA1, 0xA2, 0xA3, 0xA5, 0x00, 0x21, 0xFF};
     const U n = sh::Noise();
+    StirClassCell();
     return WithAl(answer, n % 8 == 0 ? n >> 8 : kClasses[(n >> 3) % (sizeof kClasses / sizeof kClasses[0])]);
+}
+// Field_SlopeBetween: in the disturbance's role (the real one writes neither),
+// a quarter of the time one of the sprite's cell words +0x36 / +0x3A moved -
+// Field_CellAheadRaised and Field_RaisedEdgeTurns read them again after the
+// call; the group's case 9 alone left control C124 unrefused (2026-10-05).
+U FxSlopeBetween(const U*, U answer) {
+    const U n = sh::Noise();
+    unsigned char* const s = Sc();
+    unsigned char* const word = s + ((n >> 2) & 1 ? 0x36 : 0x3A);
+    if ((n & 3) == 0 && sh::InRegions(word, 2)) SetWord(word, n >> 16);
+    return answer;
 }
 // Field_TurnUnless and Field_CellPairTurn write the facing +8, which the
 // callers read again: half the time a direction (or rarely any byte).
@@ -207,9 +231,11 @@ U FxTurn(const U*, U answer) {
     return answer;
 }
 // Field_CornerTurn: 0 two times in three, so that Field_CellAheadRaised's
-// corner path goes on to its slope sides and Field_RaisedEdgeTurns.
+// corner path goes on to its slope sides and Field_RaisedEdgeTurns; and
+// StirClassCell.
 U FxCorner(const U*, U answer) {
     const U n = sh::Noise();
+    StirClassCell();
     return WithAl(answer, n % 3 == 0 ? 1 + (n >> 8) % 0xFF : 0);
 }
 U FxPairTurn(const U* a, U answer) {
@@ -232,7 +258,7 @@ const sh::Callee kCallees[] = {
     {R_OURS(PartyAction18_CellStrike), 2, {kU16, kU16}, kF, 0, 0},
     {R_OURS(Field_CellClass5), 5, {kW, kW, kW, kW, kW}, kG, 0, 0, {}, &FxClass},
     {R_OURS(Field_CornerTurn), 0, {}, kF, 0, 0, {}, &FxCorner},
-    {R_OURS(Field_SlopeBetween), 5, {kU16, kU16, kU16, kU16, kW}, kF, 0, 0},
+    {R_OURS(Field_SlopeBetween), 5, {kU16, kU16, kU16, kU16, kW}, kF, 0, 0, {}, &FxSlopeBetween},
     {R_OURS(Field_RaisedEdgeTurns), 2, {kU16, kU16}, kG, 0, 0},
     {R_OURS(Field_ReadCellsRaised), 4, {kU16, kU16, kU16, kU16}, kG, 0, 0},
     // R0A's (docs/rest_0a.md section 7): the answers in al, the spawn's state a

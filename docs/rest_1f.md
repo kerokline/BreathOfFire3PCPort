@@ -340,14 +340,14 @@ swapped for recorders on both sides.
 | Callee | Masks | Answers |
 |---|---|---|
 | the group's own: the three pickups, `PartyAction18_CellStrike` | 16 bits each | `kFlag` |
-| `Field_CellClass5` | whole x5 | al a class value (0xB0, 0x70, 0x10, 0x20, 0xA0..0xA3, 0xA5, 0, 0x21, 0xFF) or any byte |
-| `Field_CornerTurn` | - | al 0 two times in three, else non-zero |
-| `Field_SlopeBetween` | 16 bits x4, the direction whole | `kFlag` |
+| `Field_CellClass5` | whole x5 | al a class value (0xB0, 0x70, 0x10, 0x20, 0xA0..0xA3, 0xA5, 0, 0x21, 0xFF) or any byte; a class into one of cells 8..0xB a quarter of the time (since 2026-10-05, section 5) |
+| `Field_CornerTurn` | - | al 0 two times in three, else non-zero; the same cell write (since 2026-10-05) |
+| `Field_SlopeBetween` | 16 bits x4, the direction whole | `kFlag`; one of the cell words `+0x36` / `+0x3A` moved a quarter of the time (since 2026-10-05) |
 | `Field_RaisedEdgeTurns`, `Field_ReadCellsRaised` | 16 bits each | garbage |
 | R0A's `PartyAction_TargetAhead`, `_BlockedAhead`, `_SideProbes` | - | `kFlag` / garbage |
 | `Effect_SpawnAtCellHigh`, `Effect_SpawnAtCell` | the state's byte, the cells' 16 bits | garbage |
 | `Field_TurnUnless`, `Field_CellPairTurn` | whole | **write the facing `+8`** half the time (the real ones do), and a class value into one of cells 8..0xB a quarter of the time (louder than the real ones: `Field_CellAheadRaised` reads those cells again after the call); the pair test al 1 a third of the time |
-| `Field_CellSlope`, `Field_CellClass`, `Field_CellKind` | whole / whole / 16 bits | garbage / a class / garbage |
+| `Field_CellSlope`, `Field_CellClass`, `Field_CellKind` | whole / whole / 16 bits | garbage / a class (and `Field_CellClass5`'s cell write, since 2026-10-05) / garbage |
 | `AreaMap_ClearCell` | 16 bits each | garbage |
 | `Field_GiveZenny`, `Sprite_FlashClut` | whole | garbage |
 | `Field_EffectAhead` | - | al 0xFF half the time, else 0..19 (what the real one answers) |
@@ -527,8 +527,28 @@ file and rebuilds. **108 planted: 105 refused, 3 not refused - three equivalent 
 | C106 | `LeaderPanel_S0End` | +3 kept | 1591 of 8000 |
 | C107 | `Field_CellClass5` | the 0x2_ search skipping the next cell (C86's near variant) | 25 of 8000 |
 | C108 | `Field_SlopeBetween` | the half cell dropped (C93's near variant) | 5982 of 8000 |
+| C109 | `Field_CellAheadRaised` | the facing held from before Field_ReadCellsRaised (case 0) | 136 of 8000 |
+| C110 | `PartyAction_EffectCountdown` | the object's +8 from the facing held from before the sound (case 0) | 26 of 8000 |
+| C111 | `PartyAction18_Form0Sub0Strike` | the object's +8 from the facing held from before the sound and the effect probe (case 0) | 126 of 8000 |
+| C112 | `PartyAction16_Form2Begin` | the steep pose's facing held from before the ground and slope calls (case 0) | 99 of 8000 |
+| C113 | `PartyAction_ProbeStart` | the pose's facing held from before PartyAction_SideProbes (case 0) | 218 of 8000 |
+| C114 | `Field_CellAheadRaised` | the x fraction held from before Field_ReadCellsRaised, the straight test (case 3) | 28 of 8000 |
+| C115 | `Field_CellAheadRaised` | the z fraction held from before Field_ReadCellsRaised, the straight mid-cell test (case 3) | 20 of 8000 |
+| C116 | `PartyAction18_Form0Sub0Strike` | x held from before the sound and the effect probe (case 3) | 71 of 8000 |
+| C117 | `Field_CellAheadRaised` | cell 8 tested from the class answer held, not re-read after the side classes (case 6) | 56 of 8000 |
+| C118 | `Field_CellAheadRaised` | cell 9's 0x70 test from the answer held, not re-read after the z side's class (case 6) | 27 of 8000 |
+| C119 | `Field_CellAheadRaised` | cell 9's high nibble from the answer held, not re-read after Field_CornerTurn (case 6) | 75 of 8000 |
+| C120 | `Field_CellAheadRaised` | cell 10's high nibble from the answer held, not re-read after Field_CornerTurn (case 6) | 21 of 8000 |
+| C121 | `Field_CellAheadRaised` | the diagonal side's cell 8 from the answer held, not re-read after the three single classes (case 6) | 71 of 8000 |
+| C122 | `Field_ReadCellsRaised` | zs + 1 from the zs held, not re-read after Field_CellKind (case 9) | 262 of 8000 |
+| C123 | `Field_ReadCellsRaised` | xs + 1 from the xs held, not re-read after Field_CellKind (case 9) | 261 of 8000 |
+| C124 | `Field_CellAheadRaised` | the diagonal z side's zs not re-read after the first slope probe (case 9) | 5 of 8000 |
+| C125 | `Field_CellAheadRaised` | the straight x-mid path's z0 not re-read after the first slope probe (case 9) | 29 of 8000 |
+| C126 | `Field_CellAheadRaised` | the straight z-mid path's x0 not re-read after the first slope probe (case 9) | 36 of 8000 |
 
 The first run (the same plants less C107 / C108, before the turn stand-ins wrote the cells) also left C73 and C78 unrefused: both re-read a cell after a call, and the disturbance moved cells 8..0xB too rarely. The `Field_TurnUnless` / `Field_CellPairTurn` stand-ins now write a class value into one of cells 8..0xB a quarter of the time (louder than the real ones, which write only the facing); both are refused, and stay the thinnest (2 and 1 rounds) beside C75..C77, C83, C68 (4 to 9): they need a diagonal facing on a cell edge, a class of 0x10 / 0x20 and the right pair answers.
+
+**Under the repaired disturbance, round fourteen's review item 1 (2026-10-05).** The group's `Disturb` switched on `h % 12`, and the harness hands it only hashes that are not a multiple of 3, so its cases 0 (the facing), 3 (the fraction words `+0x34` / `+0x38`), 6 (cells 8..0xB) and 9 (the cell words `+0x36` / `+0x3A`) never ran; `b9dfe34` draws the case from `sh::DisturbCase(h, 12)`. Re-run at `451edeb` (`r1f/controls.py` copied, all 108 anchors still occur once): **108 planted, 105 refused, the same three equivalent mutants (C02, C86, C93) not refused**; counts moved by at most 31 (C13 223 to 254, C61 105 to 124; C68 9 to 12, C29 30 to 28; the rest within a few rounds or equal). New controls C109..C126 above, on each cell those cases move that the group re-reads after a call. **The first run of them left four unrefused** - C117, C118, C120 (cells 8..0xB tested after a class call or `Field_CornerTurn`) and C124 (`zs` after a `Field_SlopeBetween` on the diagonal z side) - and C119 / C121 refused once each: none is equivalent (each holds a value across a call the original reads again), and run with case 6 or 9 switched off (scratch only) all six fell to 0, so the case alone reached them, too rarely (the group's case is about one stand-in call in 290). **The fuzz was changed**: the `Field_CellClass` / `Field_CellClass5` and `Field_CornerTurn` stand-ins now also write a class value into one of cells 8..0xB a quarter of the time, and `Field_SlopeBetween`'s moves one of the cell words `+0x36` / `+0x3A` a quarter of the time - both louder than the real ones, in the disturbance's role, as the turn stand-ins already were. The unplanted run then: 392,000 rounds, 699,818 calls, 0 mismatches; all 126 re-run on it: **126 planted, 123 refused (the three equivalents not)**; the rows C109..C126 give that run's counts (C01..C108 keep 2026-10-04's). Against the first re-run, only C67, C68, C69, C70, C72, C75, C80, C96 and C97 moved (by at most 32; C75 4 to 1, now the thinnest with C78's 1). The run with each case off also showed what else refuses the rest: the facing's five (C109..C113) and the fraction's three (C114..C116) still refused without their case (the harness moving `Sprite_Current` among the records), as were C122 / C123 / C125 / C126 (246, 244, 4, 10 without case 9, before the stand-in change).
 
 ## 6. Divergence
 
