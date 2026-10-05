@@ -66,7 +66,7 @@ U Window(unsigned index, const char* who) {
     return RecordChecked(at::kWindows, at::kWindowStride, at::kWindowCount, index, "WindowRecords", who);
 }
 
-// --- callees by address (R2C's and R2E's, raw until the round's rebinding) -----------------
+// --- callees by address (R2C's and R2E's, ours; named in rest_2d_callees.h) ----------------
 void MemberPanel(U x, U y, U member, U row) {
     SH_AT(void (__cdecl*)(U, U, U, U), at::kMemberPanel)(x, y, member, row);
 }

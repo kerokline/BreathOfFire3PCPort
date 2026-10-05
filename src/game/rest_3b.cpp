@@ -67,7 +67,7 @@ unsigned char* Enemy(unsigned n) { return At(at::kEnemies + static_cast<U>(stati
 unsigned char* CharRecord(unsigned roster) { return At(at::kCharRecords + (roster & 0xFF) * at::kCharStride); }
 unsigned char* AbilityRow(unsigned id) { return At(at::kAbilityRows + (id & 0xFFFF) * at::kAbilityStride); }
 
-// The callees nobody owns yet, by address (rest_3b_callees.h).
+// R3D's callees, ours, by address (named in rest_3b_callees.h).
 using Void0 = void (__cdecl*)();
 using U1 = U (__cdecl*)(U);
 using U2 = U (__cdecl*)(U, U);

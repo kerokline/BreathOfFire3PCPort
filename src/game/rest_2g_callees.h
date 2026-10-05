@@ -77,9 +77,9 @@ constexpr std::uint32_t kGridOutLeft = 0x598A1C;      // -0xBE in GeneWin_GridSl
 
 }  // namespace at
 
-// Callees no group has taken yet, by address (the rebinding at the round's end
-// names them).
+// Callees of other groups, by address: ours since their owners merged, named by
+// symbol, the values unchanged (round fourteen's rebinding, docs/round-14-cleanup.md).
 constexpr std::uint32_t kRosterIndex = bof3::addr::CharId_ToRosterIndex;      // 0x4469D0, R3B's (the same value): CharId_ToRosterIndex (battle_result_callees.h), the byte at 0x66972C + id, 7 is 0
-constexpr std::uint32_t kReserveList = 0x59AA80;      // R2H's: a panel's reserve list (menu_frame.cpp, DIV-0011's site 0x59AA98)
+constexpr std::uint32_t kReserveList = bof3::addr::MenuList_ReserveWinDraw;      // R2H's: a panel's reserve list (menu_frame.cpp, DIV-0011's site 0x59AA98)
 
 }  // namespace rest_2g

@@ -254,7 +254,7 @@ const sh::Callee kCallees[] = {
     {R2D_OURS(FieldMenuStatus_DetailWindows), 0, {}, kG, 0, 0},
     {R2D_OURS(FieldMenuStatus_ListWindows), 0, {}, kG, 0, 0},
     {R2D_OURS(FieldMenuStatus_ClearWindows), 0, {}, kG, 0, 0},
-    // R2C's and R2E's, by address until they merge (docs/rest_2d.md section 6)
+    // R2C's and R2E's, ours, keyed by address (docs/rest_2d.md section 6)
     {"0x585DC0", at::kMemberPanel, at::kMemberPanel, 4, {kW, kW, kU8, kW}, kG, 0, 0},   // `and eax, 0xFF` on the member
     {"0x585BE0", at::kMemberLabel, at::kMemberLabel, 3, {kW, kW, kU8}, kG, 0, 0},
     {"0x586160", at::kPromptBox, at::kPromptBox, 5, {kW, kW, kW, kW, kU8}, kG, 0, 0},     // the style byte under garbage

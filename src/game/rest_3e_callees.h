@@ -5,13 +5,17 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace rest_3e::at {
 
-// --- callees nobody owns yet (called through the harness by address) -------------------
+// --- callees called through the harness by address -----------------------------------
 // R3F's (round fourteen wave three; PSX twin 0x801F9F8C): (const long *point, size
 // s16, dy byte, a fourth word) - a draw mode linked at the point, then a ring of
-// lines round it at the projected size; kind 0x5F's moving states call it.
-constexpr std::uint32_t kR3FRing = 0x480300;
+// lines round it at the projected size; kind 0x5F's moving states call it. Ours
+// since R3F merged: EffectKind5F_DrawLineDisc, the value unchanged (round
+// fourteen's rebinding, docs/round-14-cleanup.md).
+constexpr std::uint32_t kR3FRing = bof3::addr::EffectKind5F_DrawLineDisc;
 // The library layer's integer square root (eax read, through _ftol): the spiral's
 // shade (an FX_RAW row of scenario_harness.cpp's kEffectStd).
 constexpr std::uint32_t kSqrt = 0x5A7A90;

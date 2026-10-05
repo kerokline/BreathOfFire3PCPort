@@ -2,13 +2,16 @@
 // code touches that symbols.toml has no name for, and the one callee nobody of
 // an earlier wave owns, by raw address. docs/rest_3d.md.
 //
-// Raw-address callees (the round's rebinding pass names them):
+// Callees by address (ours since R3C merged, named by symbol below, the value
+// unchanged: round fourteen's rebinding, docs/round-14-cleanup.md):
 //   0x44D8B0  (): R3C's (this wave, an Effect_Handlers helper of its band);
 //             Effect123_Ability6A sets the acting kind 4 and the ability 0x6A
 //             and jumps to it (a tail call). R3C names it.
 #pragma once
 
 #include <cstdint>
+
+#include "bof3/symbols.gen.h"
 
 namespace rest_3d {
 namespace at {
@@ -51,8 +54,8 @@ constexpr U kPsiRates = 0x64E97C;         // Battle_PsiAffinityRates: 8, by a cl
 constexpr U kResistRates20 = 0x64E98C;    // Battle_StatusResistRates20: 8, by a class byte (unbounded)
 constexpr U kHpVariance = 0x64E9AC;       // Effect_HpDamageVariance: 8, by Rand & 7
 
-// --- the callee no earlier wave owns ---
-constexpr U kAbility6AHelper = 0x44D8B0;  // R3C's
+// --- the callee of R3C, ours ---
+constexpr U kAbility6AHelper = bof3::addr::Effect_DamageAllHp;  // R3C's
 
 }  // namespace at
 }  // namespace rest_3d

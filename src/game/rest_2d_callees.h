@@ -1,6 +1,7 @@
 // Group R2D's raw addresses (round fourteen, wave two; docs/rest_2d.md): the
-// callees another group of this wave owns (called by address until it merges,
-// the round's rebinding names them), the .data tables the group's code reads,
+// callees another group of this wave owns (called by address; ours since their
+// owners merged, named by symbol, the values unchanged: round fourteen's
+// rebinding, docs/round-14-cleanup.md), the .data tables the group's code reads,
 // and the cells it names. The state tables its dispatchers jump through are
 // named [[data]] entries in symbols.toml, with their readers' counts (section 3
 // of the doc); their addresses are here for the code that reads them in place.
@@ -8,17 +9,19 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace rest_2d {
 namespace at {
 
-// --- callees of another group of this wave (raw until the rebinding) ---------------------
+// --- callees of another group of this wave (by address) ----------------------------------
 // R2C's (0x57F340..0x586980): the masters' screen's draws.
-constexpr std::uint32_t kMemberPanel = 0x585DC0;   // (x, y, member, row): a member's stat panel
-constexpr std::uint32_t kMemberLabel = 0x585BE0;   // (x, y, member): the panel's label box
-constexpr std::uint32_t kPromptBox = 0x586160;     // (x, y, w, h, style byte): the prompt's box
+constexpr std::uint32_t kMemberPanel = bof3::addr::MasterPanel_DrawMember;   // (x, y, member, row): a member's stat panel
+constexpr std::uint32_t kMemberLabel = bof3::addr::MasterPanel_DrawStats;   // (x, y, member): the panel's label box
+constexpr std::uint32_t kPromptBox = bof3::addr::Menu_DrawPanelBox;     // (x, y, w, h, style byte): the prompt's box
 // R2E's (0x58B1D0..0x58ED10): the Items screen's window set-ups.
-constexpr std::uint32_t kItemsWindows = 0x58BC30;  // (): the Items screen's windows placed
-constexpr std::uint32_t kItemsReset = 0x58C2A0;    // (): the Items screen's windows taken down
+constexpr std::uint32_t kItemsWindows = bof3::addr::FieldItems_InitWindows;  // (): the Items screen's windows placed
+constexpr std::uint32_t kItemsReset = bof3::addr::FieldItems_CloseWindows;    // (): the Items screen's windows taken down
 
 // --- the state tables (symbols.toml [[data]], counts by their readers) --------------------
 constexpr std::uint32_t kAbilityEffects = 0x6672EC;    // FieldAbility_Effects, 10: FieldAbility_Use's 0..9

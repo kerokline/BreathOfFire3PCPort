@@ -57,21 +57,24 @@ constexpr std::uint32_t kClutRow = 0x903A5A;        // s8: the window colour Win
 
 }  // namespace at
 
-// The callees with no name of their own in symbols.gen.h: called by address.
+// The callees called by address, each ours now and named by symbol, the value
+// unchanged (round fourteen's rebinding, docs/round-14-cleanup.md).
 // MsgBox_FrameTask is group H's - its entry and body are theirs; we only call
 // it, and only through this address (as title_states.cpp calls
 // Field_ModeDispatch).
-constexpr std::uint32_t kMsgBoxFrameTask = 0x4977F0;   // PSX 0x80150508
+constexpr std::uint32_t kMsgBoxFrameTask = bof3::addr::MsgBox_FrameTask;   // PSX 0x80150508
 constexpr std::uint32_t kListSetUp = bof3::addr::Window_Kind1Layout;         // kind 1's state 0 calls it; R2F's (round fourteen)
 constexpr std::uint32_t kListDraw = bof3::addr::Window_Kind1List;          // kind 1's frame; R2F's
 constexpr std::uint32_t kListCursorDraw = bof3::addr::Window_Kind1Cursor;    // kind 1's frame, a tail jump; R2F's
-constexpr std::uint32_t kSetDraw = 0x596020;           // kind 2's frame; unread
-constexpr std::uint32_t kSetCursorDraw = 0x5960D0;     // kind 2's frame, a tail jump; unread
+constexpr std::uint32_t kSetDraw = bof3::addr::Window_Kind2List;           // kind 2's frame (menu_windows.cpp)
+constexpr std::uint32_t kSetCursorDraw = bof3::addr::Window_DrawCursor;     // kind 2's frame, a tail jump (mode_states.cpp)
 
-// The eight handlers of Field_RunTaskRecords' local table that are not ours:
-// entry 0 is Window_Run, entries 1..8 are the other record kinds, unread.
+// The nine handlers of Field_RunTaskRecords' local table, every one ours now:
+// entry 0 is Window_Run, entries 1..8 are the other record kinds.
 constexpr std::uint32_t kRecordHandlers[9] = {
-    0x5954B0, 0x596530, 0x5968E0, 0x596FA0, 0x597F60, bof3::addr::Window_Handler5Kinds, 0x599B50, 0x59B220, 0x59CB00,
+    bof3::addr::Window_Run, bof3::addr::Window_Handler1Kinds, bof3::addr::Window_Handler2Kinds, bof3::addr::BattleWin_Run,
+    bof3::addr::Window_Handler4Kinds, bof3::addr::Window_Handler5Kinds, bof3::addr::MenuList_Run,
+    bof3::addr::Window_Handler7Kinds, bof3::addr::Window_Handler8Kinds,
 };
 
 using Handler = void (__cdecl*)();
