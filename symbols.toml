@@ -110925,3 +110925,639 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R3B): BattleItem_SideBegin, BattleItem_SidePick, BattleItem_Confirm 0x447CC0, BattleItem_TargetCancel; jumped through by BattleItem_SideDispatch 0x447D70 by the dword 0x904AA4 & 0xFF, unchecked; the entries set 1..3 (SideBegin 1, SidePick 2 / 3) and TargetCancel 1 with the step moved; BattleAttackCmd_States starts at 0x64E44C. The twin of BattleItemCmd_SideSteps. docs/rest_3b.md."
+
+[[func]]
+pc = 0x456D50
+name = "CommuTail14_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456D50..0x456D5D (0xE bytes): Field_ModeTailKinds[14] (0x662D20): jmp [CommuTail14_States + 4 * the s8 0x9039F4], unchecked (ours aborts outside 11). Hidden in R4A's 0x456AF0 run by the catalog. docs/rest_4b.md."
+
+[[func]]
+pc = 0x456D60
+name = "CommuTail14_OpenF8"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456D60..0x456D8F (0x30 bytes): CommuTail14_States[0]: nothing while Field_Request is 2; the next state once MsgBoxState's message index 0x7DEE48 is 0xF9; else Msg_OpenScript(0xF8), Field_Request 2. docs/rest_4b.md."
+
+[[func]]
+pc = 0x456D90
+name = "CommuTail14_LoadDat"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456D90..0x456DA9 (0x1A bytes): CommuTail14_States[1]: LoadDatFile(0x12B), the next state. docs/rest_4b.md."
+
+[[func]]
+pc = 0x456DB0
+name = "CommuTail_WaitLoad"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456DB0..0x456DEB (0x3C bytes): CommuTail14_States[2], CommuTail23_States[1] [10] [17], CommuTail26_States[1]: once File_LoadDone answers, Gfx_ClutStripRestore, Gfx_ClutStripDirty 1, 0x939A3C..0x939A41 cleared, the next state. docs/rest_4b.md."
+
+[[func]]
+pc = 0x456DF0
+name = "CommuTail_LoadSoundBank"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456DF0..0x456E19 (0x2A bytes): CommuTail14_States[4], CommuTail23_States[3] [12] [19], CommuTail26_States[3]: 0x90412C |= 0x80, Snd_LoadBankFile(its low seven bits + 0x2C2), the next state. docs/rest_4b.md."
+
+[[func]]
+pc = 0x456E20
+name = "CommuTail14_End"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456E20..0x456E3D (0x1E bytes): CommuTail14_States[5]: once File_LoadDone answers, Area131_DisarmTail, CommuTail_RestoreFacing, R4A's 0x456080, tail jmp R4A's 0x455950. docs/rest_4b.md."
+
+[[func]]
+pc = 0x456E40
+name = "CommuTail_RestoreFacing"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456E40..0x456E63 (0x24 bytes): Sprite_Current = the object 0x939A38 holds; its +8 = its +0x85; Sprite_FaceDirection(+8). Called by 0x456E20 and tail-jumped to by 0x4570C0, 0x457350, 0x457590. docs/rest_4b.md."
+
+[[func]]
+pc = 0x456E70
+name = "CommuTail21_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456E70..0x456E7D (0xE bytes): Field_ModeTailKinds[21] (0x662D3C): jmp [CommuTail21_States + 4 * the s8 0x9039F4], unchecked (ours aborts outside 5). docs/rest_4b.md."
+
+[[func]]
+pc = 0x456E80
+name = "CommuTail_TimedGift"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x456E80..0x4570B5 (0x236 bytes): CommuTail14_States[6], CommuTail21_States[0]: the clock 0x904134 less the record 0x9039F5's +4 looked up in a stack table of 20 {u16 bound, item, category}; none reached: message 0x98; else Item_NamePtr into Text_Records, message 0x96, Inventory_Add(category, item, 1): added, the record's +4 = the clock and the next state, else the state after it; Field_Request 2. docs/rest_4b.md."
+
+[[func]]
+pc = 0x4570C0
+name = "CommuTail_EndAfterMessage"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4570C0..0x4570D3 (0x14 bytes): CommuTail14_States[7] [10], CommuTail23_States[15]: once Field_Request is 0, Area131_DisarmTail and tail jmp CommuTail_RestoreFacing. docs/rest_4b.md."
+
+[[func]]
+pc = 0x4570E0
+name = "CommuTail_Open97"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4570E0..0x457109 (0x2A bytes): CommuTail14_States[8]: once Field_Request is 0, Msg_OpenScript(0x97), the state before, Field_Request 2. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457110
+name = "CommuTail22_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457110..0x45711D (0xE bytes): Field_ModeTailKinds[22] (0x662D40): jmp [CommuTail22_States + 4 * the s8 0x9039F4], unchecked (ours aborts outside 2). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457120
+name = "CommuTail_RandomGift"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457120..0x4572E4 (0x1C5 bytes): CommuTail14_States[9], CommuTail22_States[0]: by the record 0x9039F5's +2: 3 - message 0x52, the record kept (+4 the clock, +2 0, the kept object's +0x88 = 0x51); 2 - Rand & 0x7F (at most 100) counted down a 3-row stack table row picked by the level (+1) of the record's slot to a tier, Rand & 0xF one of the tier's 16 {item, category} at 0x652A10, Inventory_Add: message 0x50 or the name, message 0x4F and the record kept; then the next state, Field_Request 2. A level past 2 reads the frame above the table (ours aborts). PSX twin 0x801F1BB8 (callers; no name in the sibling). docs/rest_4b.md."
+
+[[func]]
+pc = 0x4572F0
+name = "CommuTail23_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4572F0..0x4572FD (0xE bytes): Field_ModeTailKinds[23] (0x662D44): jmp [CommuTail23_States + 4 * the s8 0x9039F4], unchecked (ours aborts outside 21). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457300
+name = "CommuTail23_LoadDat"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457300..0x457330 (0x31 bytes): CommuTail23_States[0]: Field_ScriptFlags2 |= 7, LoadDatFile(0x12D when 0x9039F5 is 3, else 0x12C), the next state. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457340
+name = "CommuTail_GameDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457340..0x45734D (0xE bytes): CommuTail23_States[2]: jmp [CommuTail_GameStates + 4 * the u8 0x9039F5], unchecked (ours aborts past 16). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457350
+name = "CommuTail_EndAfterLoad"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457350..0x45736C (0x1D bytes): CommuTail23_States[4] [13] [20]: once File_LoadDone answers, Field_ScriptFlags2 &= 0xFFF8, Area131_DisarmTail, tail jmp CommuTail_RestoreFacing. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457370
+name = "CommuTail24_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457370..0x45737D (0xE bytes): Field_ModeTailKinds[24] (0x662D48): jmp [CommuTail24_States + 4 * the s8 0x9039F4], unchecked (ours aborts outside 12). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457380
+name = "CommuTail24_LoadDat"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457380..0x4573A0 (0x21 bytes): CommuTail23_States[9]: Field_ScriptFlags2 |= 7, LoadDatFile(0x12E), the next state. docs/rest_4b.md."
+
+[[func]]
+pc = 0x4573B0
+name = "CommuTail25_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4573B0..0x4573BD (0xE bytes): Field_ModeTailKinds[25] (0x662D4C): jmp [CommuTail25_States + 4 * the s8 0x9039F4], unchecked (ours aborts outside 7). docs/rest_4b.md."
+
+[[func]]
+pc = 0x4573C0
+name = "CommuTail_NibbleGift"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4573C0..0x4574D0 (0x111 bytes): CommuTail23_States[14]: the record 0x9039F5's +3 high nibble picks a 6-byte row of 0x652AC4 {message, message, count}; count 0: message 1 (nibble 0: state 2); else Item_NamePtr into Text_Records, Inventory_Add(+3 & 0xF, +2, count): added, +2 and +3 cleared and message 1, else message 2; the next state, Field_Request 2. docs/rest_4b.md."
+
+[[func]]
+pc = 0x4574E0
+name = "CommuTail25_LoadDat"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4574E0..0x457509 (0x2A bytes): CommuTail23_States[16]: unless Field_Request is 2, Field_ScriptFlags2 |= 7, LoadDatFile(0x12F), the next state. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457510
+name = "CommuTail26_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457510..0x45751D (0xE bytes): Field_ModeTailKinds[26] (0x662D50): jmp [CommuTail26_States + 4 * the s8 0x9039F4], unchecked (ours aborts outside 5). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457520
+name = "CommuTail26_LoadDat"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457520..0x457563 (0x44 bytes): CommuTail26_States[0]: with Field_ScriptFlags, 0x904A90 and 0x937F80 all 0 the tail kind 0x9039F3 = 6; else Field_ScriptFlags2 |= 7, LoadDatFile(0x130), the next state. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457570
+name = "CommuTail26_End"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457570..0x457587 (0x18 bytes): CommuTail26_States[4]: once File_LoadDone answers, Field_ScriptFlags2 &= 0xFFF8, tail jmp Area131_DisarmTail. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457590
+name = "CommuTail60_Stream"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457590..0x45763B (0xAC bytes): Field_ModeTailKinds[60] (0x662DD8): switch on the s8 0x9039F4: 0 the music track kept in 0x939A3D, Music_FadeOutStop(10), Sound_LoadStream(8, or 0xA with 0x939A3C set), next; 1 once Sound_StreamDone, message 0x2A1, next, Field_Request 2; 2 unless Field_Request is 2, Music_Play(kept, 8), Field_ScriptFlags2 &= 0xFFF8, Area131_DisarmTail, tail jmp CommuTail_RestoreFacing. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457640
+name = "CommuBoard_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457640..0x45764D (0xE bytes): CommuTail14_States[3]: jmp [CommuBoard_States + 4 * the u8 0x939A3E], unchecked (ours aborts past 14). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457650
+name = "CommuBoard_Init"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457650..0x457678 (0x29 bytes): CommuBoard_States[0]: the grid cursor 0x675F74..76 = 0, 0, 1; help 0x675F7A = 0xB5; 0x939A3E + 1. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457680
+name = "CommuBoard_Grid"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457680..0x457772 (0xF3 bytes): CommuBoard_States[1]: the grid: cancel - help 0xFFFF, the tail's next state; confirm - the cursor kept in 0x675F84..86, 0x939A40 and 0x675F80 0, allowed by the cursor mode (0 / 2 the slot holds a record, 1 the slot within the area's limit 0x653601) sound 0x104, CommuBoard_SlotHelp, the next board state, else sound 0x107; else CommuBoard_MoveGridCursor(0x9039F5); then CommuBoard_DrawPanel, CommuBoard_DrawSlotLines(slot, 0). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457780
+name = "CommuBoard_ModeDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457780..0x45778D (0xE bytes): CommuBoard_States[2]: jmp [CommuBoard_ModeStates + 4 * the u8 0x675F86], unchecked (ours aborts past 11). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457790
+name = "CommuBoard_StepDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457790..0x45779D (0xE bytes): CommuBoard_States[3] [5], CommuBoard_ModeStates[0] [2]: jmp [CommuBoard_Steps + 4 * the u8 0x939A40], unchecked (ours aborts past 8). docs/rest_4b.md."
+
+[[func]]
+pc = 0x4577A0
+name = "CommuBoard_PickRecord"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4577A0..0x45798F (0x1F0 bytes): CommuBoard_Steps[0]: a record of the slot: cancel - sound 0x106, board state - 1, help 0xB5; confirm - sound 0x104, 0x675F7F = the slot, the next step, help 0x44; else the list cursor 0x675F80 stepped (Input_AutoRepeat 0x2000 / 0x8000, wrapping at the slot's count, sound 0x100); then the panel, the slot's lines, R4E's 0x45ECC0 at the cursor and the record's card. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457990
+name = "CommuBoard_MoveRecord"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457990..0x457AC2 (0x133 bytes): CommuBoard_Steps[1]: the target slot: cancel - sound 0x106, CommuBoard_SlotHelp, CommuBoard_CancelStep; confirm - CommuBoard_PlaceRecord(0), placed help 0xB5; else CommuBoard_MoveGridCursor and CommuBoard_PickHelp on 0x675F7F; then the panel, both slots' lines and unless placed the flashing hand and the card at (0xA0, 0x3E). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457AD0
+name = "CommuBoard_StepDispatchB"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457AD0..0x457ADD (0xE bytes): CommuBoard_States[4], CommuBoard_ModeStates[1]: jmp [CommuBoard_StepsB + 4 * the u8 0x939A40], unchecked (ours aborts past 6). docs/rest_4b.md."
+
+[[func]]
+pc = 0x457AE0
+name = "CommuBoard_PickRecordB"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457AE0..0x457CDF (0x200 bytes): CommuBoard_StepsB[0]: the slot's records and its kind: cancel as Steps[0]; confirm - sound 0x103, at a record help 0x44, 0x675F7F = the slot, next step; at 0 the kind picked (0x675F7F = kind - 4, 0x675F7E 0x675F7D 0, 0x675F83 0x675F82 0xFF, step 2); else the cursor stepped over 0..count; then the panel, the slot's lines, the hand at CommuBoard_SlotRecordXY and the card of the record before it. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457CE0
+name = "CommuBoard_MoveRecordB"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457CE0..0x457DC3 (0xE4 bytes): CommuBoard_StepsB[1]: as CommuBoard_MoveRecord with CommuBoard_PlaceRecord(1), cancel CancelStep then SlotHelp (no sound of its own), the hand beside the record position. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457DD0
+name = "CommuBoard_PickList"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457DD0..0x457FD1 (0x202 bytes): CommuBoard_Steps[4], StepsB[2]: the first list (0x675F7F over 0x9046CB rows): cancel - sound 0x106, SlotHelp, step 0; confirm - next list 0x652B44[row], 0xFF R4C's 0x459EE0, else 0x675F7E from the slot, 0x675F83 = it, sound 0x103, next step, help 0x652B50[it]; else the row stepped (0x1000 / 0x4000), help 0x652AF8[row]; then the panel, lines, hand, CommuBoard_DrawListBox and Menu_DrawHand. docs/rest_4b.md."
+
+[[func]]
+pc = 0x457FE0
+name = "CommuBoard_PickListB"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x457FE0..0x458237 (0x258 bytes): CommuBoard_Steps[5], StepsB[3]: the second list (0x675F7E over 0x652B58[2 * 0x675F83]): cancel - sound 0x106, step back, 0x675F83 0xFF; confirm - next 0x652B59[2 * list], 0xFF R4C's 0x459EE0, else 0x675F7D from the slot, 0x675F82 = it, sound 0x103, next step, help 0x46; else the row stepped; then the lists (CommuBoard_DrawListBoxB) and Menu_DrawHand. docs/rest_4b.md."
+
+[[func]]
+pc = 0x458240
+name = "CommuBoard_PickListC"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x458240..0x458401 (0x1C2 bytes): CommuBoard_Steps[6], StepsB[4]: cancel - sound 0x106, step back, help 0x45, 0x675F82 0xFF; confirm - R4C's 0x459EE0; else 0x1000 / 0x4000 flips 0x675F7D with sound 0x100; then the three lists and Menu_DrawHand. docs/rest_4b.md."
+
+[[func]]
+pc = 0x458410
+name = "CommuBoard_Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x458410..0x458822 (0x413 bytes): CommuBoard_Steps[7], StepsB[5]: the yes / no row 0x675F7C: confirm on yes - unless the slot holds the picks already, every record whose +1 is the slot and the slot itself restart (+4 the clock, +2 +3 0); the slot takes kind 0x675F7F + 4, +1 0x675F7E, +2 0x675F7D; the grid cursor back, sound 0x104, board state - 1, help 0xB5; on no or cancel - sound 0x106, help and step from 0x675F78 / 0x675F81; else 0x2000 / 0x8000 flips the row; then the lists and the hand. A slot outside 1..8 written: ours aborts. docs/rest_4b.md."
+
+[[func]]
+pc = 0x458830
+name = "CommuBoard_DrawRecordCard"
+ret = "void"
+params = "int x, int y, unsigned record, unsigned highlight"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x458830..0x458AD5 (0x2A6 bytes): (x, y, record, highlight): a record's card - Menu_DrawBox shadow and box, CommuBoard_DrawCardFrame, the 5-byte name 0x9048F0 + 5 * record (Text_DrawAt), a black Gpu_SetTile 60 x 16, four CommuBoard_DrawBar of 12 * the record's bytes 0x653210 + 20 * record, the one 0x652B60[k] names flashing when highlight is set (k by the slot 0x675F7F). docs/rest_4b.md."
+
+[[func]]
+pc = 0x458AE0
+name = "CommuBoard_DrawCardFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x458AE0..0x458B80 (0xA1 bytes): (x, y): the card's frame of CommuBoard_DrawSprite: corners 6 8 0xB 0xD, seven of 7 / 0xC along, four of 9 / 0xA down by 6. docs/rest_4b.md."
+
+[[func]]
+pc = 0x458B90
+name = "CommuBoard_DrawBar"
+ret = "void"
+params = "int x, int y, int w, unsigned row, unsigned flash"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x458B90..0x458D68 (0x1D9 bytes): (x, y, w, row, flash): two Gpu_SetPolyG4 quads x..x+w by 2 and 2, shaded dim (>> 2) and full; the colour row of a 4-row stack table times 0x80 or Frame_Counter's flash (8-bit signed multiply); a row past 3 reads the frame above (ours aborts). docs/rest_4b.md."
+
+[[func]]
+pc = 0x458D70
+name = "CommuBoard_DrawPanel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x458D70..0x459191 (0x422 bytes): the board's panel: the title box and outline, the help line (MessagePools by 0x675F7A) and for help 0x3D a flashing translucent tile at the yes / no row, the panel box and frame, the slot-0 row, the slots 9..11 and the eight slots (outline; past the area's limit a box; else sprite 0, the kind's digit CommuBoard_DrawDigits, a sprite at each record's place), sprite 2 and two counters (Crt_sprintf, Text_DrawFont12) beside the label 0x669E10. PSX twin 0x801D3038 (COMMU01, callers; no name in the sibling). docs/rest_4b.md."
+
+[[func]]
+pc = 0x4591A0
+name = "CommuBoard_DrawPanelFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4591A0..0x459243 (0xA4 bytes): (x, y): the panel's frame of CommuBoard_DrawSprite: corners 6 8 0xB 0xD at 0x110 by 0xA8, 33 along and 20 down by 8. docs/rest_4b.md."
+
+[[func]]
+pc = 0x459250
+name = "CommuBoard_DrawSlotLines"
+ret = "void"
+params = "unsigned slot, unsigned steady"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459250..0x459422 (0x1D3 bytes): (slot, steady): the slot's two Gpu_SetLineF3 from its 12-byte row 0x652B7C (six s16), colour (I, I, 0) with I 0xFF or Frame_Counter's flash; a slot 1..8 past the area's limit starts at other points. docs/rest_4b.md."
+
+[[func]]
+pc = 0x459430
+name = "Commu_CountInSlot"
+ret = "unsigned char"
+params = "unsigned slot"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459430..0x459455 (0x26 bytes): (slot) -> al: how many of the 60 records at 0x9046D0 are in use with +1 = slot. docs/rest_4b.md."
+
+[[func]]
+pc = 0x459460
+name = "Commu_NthInSlot"
+ret = "unsigned"
+params = "unsigned slot, unsigned nth"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459460..0x459490 (0x31 bytes): (slot, nth) -> eax: the index of the nth record in use in the slot, 0xFF when fewer. docs/rest_4b.md."
+
+[[func]]
+pc = 0x4594A0
+name = "CommuBoard_MoveGridCursor"
+ret = "void"
+params = "unsigned char* cell"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4594A0..0x45971C (0x27D bytes): (unsigned char *cell): the grid cursor at cell moved by Input_AutoRepeat(Input_Pressed & 0xF000) through the three cursor modes 0x675F74 with 0x675F75 / 0x675F76; sound 0x100 on any of the four keys. docs/rest_4b.md."
+
+[[func]]
+pc = 0x459720
+name = "CommuBoard_DrawDigits"
+ret = "void"
+params = "int x, int y, unsigned number"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459720..0x4597DE (0xBF bytes): (x, y, n): a draw-mode packet and a Gpu_SetSprt16 of the number n (u, v and CLUT from n / 10, n % 10 and 0x652C0C[n]). PSX twin 0x801D3F08 (COMMU01, callers; no name in the sibling). docs/rest_4b.md."
+
+[[func]]
+pc = 0x4597E0
+name = "CommuBoard_DrawSprite"
+ret = "void"
+params = "int x, int y, unsigned id"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4597E0..0x45989E (0xBF bytes): (x, y, id): a draw-mode packet and a Gpu_SetSprt of the board sprite id from its 6-byte row 0x652C18 {u, v, w, h, clut x, clut y}, grey 0x80. docs/rest_4b.md."
+
+[[func]]
+pc = 0x4598A0
+name = "CommuBoard_DrawListBox"
+ret = "void"
+params = "int x, int y, unsigned steady"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x4598A0..0x459952 (0xB3 bytes): (x, y, steady): the record list's box, 0x9046CB rows of 16 (shadow unless steady, box, CommuBoard_DrawListFrame, the lines 0x669E68[i] by Text_DrawAt in colour 7 * steady). docs/rest_4b.md."
+
+[[func]]
+pc = 0x459960
+name = "CommuBoard_DrawListFrame"
+ret = "void"
+params = "int x, int y, unsigned h"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459960..0x459A21 (0xC2 bytes): (x, y, h): a list's frame of CommuBoard_DrawSprite: corners at 0x28 by the byte h, four along, (h >> 3) - 1 down (a byte). docs/rest_4b.md."
+
+[[func]]
+pc = 0x459A30
+name = "CommuBoard_ListY"
+ret = "int"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459A30..0x459A75 (0x46 bytes): -> eax: the first list's y: 0x6A less 9 a row past four of 0x9046CB with 0x675F75 0, else 0xAC - 12 * 0x9046CB. docs/rest_4b.md."
+
+[[func]]
+pc = 0x459A80
+name = "CommuBoard_DrawListBoxB"
+ret = "unsigned short"
+params = "int x, int y, unsigned list, unsigned steady"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459A80..0x459B67 (0xE8 bytes): (x, y, list, steady) -> ax: list's box from its row 0x652C6C {first, count}, moved up to 0xD4 - 16 * count when it would pass 0xD8; shadow, box, frame and the lines 0x669EE0[first + i]; answers the y drawn at. docs/rest_4b.md."
+
+[[func]]
+pc = 0x459B70
+name = "CommuBoard_SlotRecordXY"
+ret = "void"
+params = "short* x, short* y, unsigned slot, unsigned k"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459B70..0x459C32 (0xC3 bytes): (short *x, short *y, slot, k): the slot's corner (52 * ((slot - 1) % 4) + 0x20, 61 * ((slot - 1) >> 2) + 0x6B); k 0 the corner + (0xA, 0), else + the offset 0x652C74[t + k - 1] (t 2 for two records, 1 for three). docs/rest_4b.md."
+
+[[func]]
+pc = 0x459C40
+name = "CommuBoard_CancelStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459C40..0x459C7B (0x3C bytes): the grid cursor put back from 0x675F84..86, sound 0x106, 0x939A40 - 1. docs/rest_4b.md."
+
+[[func]]
+pc = 0x459C80
+name = "CommuBoard_PlaceRecord"
+ret = "unsigned char"
+params = "unsigned back"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459C80..0x459D75 (0xF6 bytes): (back) -> al: the record at the list cursor less back moved to the slot 0x675F7F unless refused (cursor mode 1: the target holds three or passes the area's limit; mode not 0..2; the same slot): refused sound 0x107, al 0; moved: the grid cursor back, the record's +1 the target, +4 the clock, +2 +3 0, board state - 1, sound 0x103, al 1. A cursor past the slot's records writes record 255 (ours aborts). docs/rest_4b.md."
+
+[[func]]
+pc = 0x459D80
+name = "CommuBoard_SlotHelp"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459D80..0x459E46 (0xC7 bytes): the slot 0x9039F5's help line 0x675F7A: 0x6A for slot 0 or kind 0, 2 * slot + 0x2C from 9, +1 + 0x4A for kind 4, a 9-word stack table for kinds 5..13 (past it reads the frame above; ours aborts). docs/rest_4b.md."
+
+[[func]]
+pc = 0x459E50
+name = "CommuBoard_PickHelp"
+ret = "void"
+params = "unsigned char* cell"
+impl = "src/game/rest_4b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4B, capstone to the last instruction), 0x459E50..0x459ED9 (0x8A bytes): (unsigned char *cell): the help line for the slot at cell: 0x44 own slot or past the area's limit, 0x69 slot 0 or kind 0, 0x652C72[slot] from 9, else 0x652AF0[kind]. docs/rest_4b.md."
+
+[[data]]
+pc = 0x6529E4
+name = "CommuTail14_States"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuTail14_Dispatch 0x456D50 by the s8 0x9039F4, unchecked: eleven code words (0x456D60, 0x456D90, 0x456DB0, 0x457640, 0x456DF0, 0x456E20, 0x456E80, 0x4570C0, 0x4570E0, 0x457120, 0x4570C0), then a data word 0x002B002B; CommuTail21_States 0x6529FC and CommuTail22_States 0x652A08 are its tails. docs/rest_4b.md."
+
+[[data]]
+pc = 0x6529FC
+name = "CommuTail21_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuTail21_Dispatch 0x456E70 by the s8 0x9039F4, unchecked: CommuTail14_States[6..10], the run's end. docs/rest_4b.md."
+
+[[data]]
+pc = 0x652A08
+name = "CommuTail22_States"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuTail22_Dispatch 0x457110 by the s8 0x9039F4, unchecked: CommuTail14_States[9..10], the run's end (0x652A10 is CommuTail_RandomGift's item pairs). docs/rest_4b.md."
+
+[[data]]
+pc = 0x652A70
+name = "CommuTail23_States"
+ctype = "unsigned long"
+count = 21
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuTail23_Dispatch 0x4572F0 by the s8 0x9039F4, unchecked: 21 code words (six of them other groups' 0x459F20, 0x45B770, 0x45C8C0, 0x45D040, 0x45F750, 0x45FE00), then a data word 0xFFFF005E; CommuTail_GameStates, CommuTail24_States and CommuTail25_States are its tails. docs/rest_4b.md."
+
+[[data]]
+pc = 0x652A84
+name = "CommuTail_GameStates"
+ctype = "unsigned long"
+count = 16
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuTail_GameDispatch 0x457340 by the u8 0x9039F5, unchecked: CommuTail23_States[5..20], the run's end. docs/rest_4b.md."
+
+[[data]]
+pc = 0x652A94
+name = "CommuTail24_States"
+ctype = "unsigned long"
+count = 12
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuTail24_Dispatch 0x457370 by the s8 0x9039F4, unchecked: CommuTail23_States[9..20], the run's end. docs/rest_4b.md."
+
+[[data]]
+pc = 0x652AA8
+name = "CommuTail25_States"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuTail25_Dispatch 0x4573B0 by the s8 0x9039F4, unchecked: CommuTail23_States[14..20], the run's end. docs/rest_4b.md."
+
+[[data]]
+pc = 0x652AE4
+name = "CommuTail26_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuTail26_Dispatch 0x457510 by the s8 0x9039F4, unchecked: 0x457520, 0x456DB0, R4E's 0x460500, 0x456DF0, 0x457570, then data (0x00430048). docs/rest_4b.md."
+
+[[data]]
+pc = 0x652B0C
+name = "CommuBoard_States"
+ctype = "unsigned long"
+count = 14
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuBoard_Dispatch 0x457640 by the u8 0x939A3E, unchecked: 14 code words 0x457650..0x458410, then a data word 0xFFFF0200; CommuBoard_ModeStates, _Steps and _StepsB are its tails. docs/rest_4b.md."
+
+[[data]]
+pc = 0x652B18
+name = "CommuBoard_ModeStates"
+ctype = "unsigned long"
+count = 11
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuBoard_ModeDispatch 0x457780 by the u8 0x675F86 (the kept cursor mode, 0..2 in play), unchecked: CommuBoard_States[3..13], the run's end. docs/rest_4b.md."
+
+[[data]]
+pc = 0x652B24
+name = "CommuBoard_Steps"
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuBoard_StepDispatch 0x457790 by the u8 0x939A40, unchecked: CommuBoard_States[6..13], the run's end. docs/rest_4b.md."
+
+[[data]]
+pc = 0x652B2C
+name = "CommuBoard_StepsB"
+ctype = "unsigned long"
+count = 6
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuBoard_StepDispatchB 0x457AD0 by the u8 0x939A40, unchecked: CommuBoard_States[8..13], the run's end. docs/rest_4b.md."
