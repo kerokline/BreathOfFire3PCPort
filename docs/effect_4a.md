@@ -368,6 +368,25 @@ onto another table of at least its length.
 | 98 | `EffectKind87_Step2` | at 1 | 1334 of 4000 |
 | 99 | `EffectKind87_Restore` | from +7 | 3978 of 4000 |
 | 100 | `EffectKind87_End` | word 1 | 4000 of 4000 |
+| 101 | `EffectKind84_Pause` | +9 read before the release (case 0) | 6 of 4000; 124 of 40,000 |
+| 102 | `EffectKind84_Pick` | the third member's x read before the release (case 3) | 4 of 4000; 15 of 40,000 |
+
+**2026-10-05, under the repaired disturbance (round fourteen's review item 1).**
+The group's `Disturb` switched on `h % 9` behind the harness's `h % 3 != 0`,
+so its cases 0 (`+9`), 3 (the third member's x) and 6 (the counter) never ran;
+`b9dfe34` draws the case through `sh::DisturbCase`. Re-run at `451edeb`, the
+round's script unchanged but for this checkout's CRLF line ends: **100
+planted, 100 refused**, 92 at the count above, eight within a few rounds of
+it (13: 2558, 49: 906, 52 and 53: 280, 55: 598, 56: 284, 67: 3174). New
+controls, each also run with the group's switch put back to `h % 9` to see
+what the formerly dead case adds: 101 refused 6 rounds (5 under the old
+switch; 124 against 109 at 40,000) - most of it is the harness's own
+`Sprite_Current` move, since `_Pause` reads `+9` through `S()` after
+`Effect_Release`; 102 refused 4 rounds (0 under the old switch; 15 against
+0 at 40,000) - case 3 alone sees it. Case 6 has no control: no function of
+the group reads the counter `0x903848` after a call (`_NextMessage`,
+`_Wait` and `_Tint` read it before any), so for this group the case is
+noise. The fuzz is unchanged.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
