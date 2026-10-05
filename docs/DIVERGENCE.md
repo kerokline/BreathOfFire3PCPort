@@ -2232,8 +2232,16 @@ designed in rather than bolted on.
   from `Widescreen_FillX()` over `Widescreen_FillWidth()`, as
   `EffectKind18Sub36_Pulse` is (`src/game/rest_3f.cpp`; its inject is before
   `Widescreen_ArmFills`, so its fuzz compares the original's 320). Not
-  widened, the owner's call: `EffectKindA8_DrawBar` (`0x4920F0`), bars the
-  frame's width but not its height. Still not
+  widened: `EffectKindA8_DrawBar` (`0x4920F0`), sixteen red bars the frame's
+  width but not its height - **left as it is by the owner, 2026-10-04, to be
+  looked at in game under the wide picture.** Where it shows is not
+  established: no code of ours or Capcom's stores or pushes kind `0xA8` (a
+  scan of the image for `mov byte [reg + 5], 0xA8` and for `push 0xA8`
+  before a spawn found nothing), so the kind is asked for from data - a
+  script or a table. The neighbouring kind `0xA7` is spawned by area 198
+  (`Area198_SpawnEffectA7`; the sibling's `names/places.toml` gives that
+  area as `AREA198` of `WORLD04`), and kind `0xB0` (E4F) draws the same
+  bars: those two are where to look first. Still not
   widened, the owner's call: `EffectKind96_Pulse`, the spiral `0x505E60`,
   the culls (`0x4FF6A3`, `0x5054E3`, `Encounter_OnScreen`, the battle
   field's two), the strips and full-width draws listed above.
@@ -3926,5 +3934,11 @@ designed in rather than bolted on.
   the field's own draws load the whole matrix there and are compared.
 - **Reversible?** `BOF3X_ORIGINAL=Shisu_DrawModel` runs Capcom's function,
   its stale bytes included.
-- **The owner's word:** owed (entered by the coordinator from R2B's report,
-  2026-10-04).
+- **The owner's word, 2026-10-04:** kept as written, zeros in the unused
+  bytes as the other stale-byte entries have it - after a look at the
+  sibling for anything it knew of the function: `../BreathOfFire3Recomp`
+  has the SHISU overlay unnamed (`names/overlays.toml`, id `0x015`, no role,
+  no evidence), no name or note at the twin `0x801D2308`, and nothing on its
+  light matrix; the code there is the recompiler's output only. So the
+  PlayStation side has not been read either, and "Also in the PSX
+  version?" stays unanswered.

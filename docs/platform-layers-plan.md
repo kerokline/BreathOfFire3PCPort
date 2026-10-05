@@ -185,8 +185,9 @@ state hash's doc) - a small piece of work to do before it is needed.
 3. **The runtime boundary** (section 2.3) - `rand` first, because the
    recipes hang on it.
 4. **State 2 proved** by the tracer.
-5. **The decoder** (section 2.4) and then **state 3** - the two that are new
-   kinds of work and want the owner's decisions first.
+5. **The music investigation** (I23; section 5), which decides what section
+   2.4 becomes, and then **state 3** - our own executable, which the owner
+   has named the first goal of the phase 4 / 5 work.
 
 Steps 1 to 4 need no decision the project has not already made. They can
 follow round fourteen directly.
@@ -201,8 +202,15 @@ follow round fourteen directly.
   design choices (how the data sections are mapped, what the loader takes
   from which source) are judged by what they do for them. Not scheduled:
   round fourteen and section 4's steps 1 to 4 come first.
-- **The decoder**: replace it at the cutover as above, or go to I23's
-  sequences, or both by build.
+- **The decoder: an investigation first (the owner, 2026-10-04).** Before
+  any replacement is chosen the owner wants to hear how the PC's MP3s differ
+  from the disc's sequenced music, to judge whether two music paths are
+  worth keeping as a configuration choice. That is I23, and its method is
+  written and unrun ([`bgm-comparison.md`](bgm-comparison.md)): loop points,
+  reverb, codec, the track map. So section 2.4 is **not scheduled** and its
+  shape waits on that answer - one path or two, and which decoder if any.
+  The first step is a listening set: a few tracks rendered both ways, side
+  by side, for the owner's ear.
 - **`EffectKindA8_DrawBar` and the other owner's calls** are round
   fourteen's, not this plan's.
 
