@@ -334,6 +334,38 @@ effect-mode row's whole-number screen floats: the fuzz's fault (section 4),
 refused once the group re-listed `Gte_RotTransPers`; every other control was
 refused on the first run.
 
+**2026-10-05, under the repaired disturbance (round fourteen's review, item
+1).** Before `b9dfe34` the group's `Disturb` switched on `h % 6`, which never
+reached cases 0 (`+9`) and 3 (`+0x12`); it now draws `sh::DisturbCase(h, 6)`.
+The 72 controls re-run on `451edeb` (the same `plant.py` and `ctl.sh`, every
+plant's string still found once): **71 of 72 refused, 66 passes as before**
+(equivalent). Seventeen counts moved, none to 0: 10, 12 and 15 293 to 294; 16
+718 to 698; 17 3,560 to 3,575; 24 4,786 to 4,792; 30 6,000 to 5,947; 34 5,819
+to 5,861; 36 6,000 to 5,842; 37 551 to 546; 38 3,078 to 3,082; 43 3,252 to
+3,240; 44 348 to 350; 45 373 to 375; 47 316 to 319; 48 1,597 to 1,601; 56 1,207
+to 1,209. New controls for the two formerly dead cases, each a re-read after a
+call missed (the value read before the call used); the last column is the same
+plant with the old `h % 6` switch put back in a scratch build:
+
+| # | Function | Plant | Refused | Under `h % 6` |
+|--:|---|---|--:|--:|
+| 73 | `EffectKind25_Grow` | `+9` not re-read after the disc (case 0) | 169 | 141 |
+| 74 | `EffectKind25_Shrink` | `+9` not re-read after the disc (case 0) | 274 | 229 |
+| 75 | `EffectKind25_Glow` | `+9` not re-read after the disc for the sound test (case 0) | 19 | 13 |
+| 76 | `EffectKind23_SpawnRays` | `+9` not re-read after `Effect_FindFree` (case 0) | 153 | 122 |
+| 77 | `EffectKind21_Hold` | `+9` not re-read after the arm's build and draw (case 0) | 570 | 496 |
+| 78 | `EffectKind24_Shrink` | scale `+0x12` not re-read after the ray draw (case 3) | 28 | **0** |
+
+All six refused. The `+9` ones were refused under the old switch too: the
+harness's own case 4 moves `Sprite_Current` to another effect record during a
+call, and these functions read `+9` through `Sprite_Current` afresh, so a value
+from before the call already differed and the dead case cost those reads
+nothing (the harness's switch, `scenario_harness.cpp` `Disturb()`, read for
+this; not measured case by case). Control 78 reads `+0x12` through the ray
+pointer taken on entry, which case 4 does not move, so case 3 alone tested it:
+it passed under the old switch and is refused now. The fuzz is unchanged; the group's shadow on
+`451edeb`: 180,000 rounds, 0 mismatches.
+
 ## 7. Latent defects (Capcom's, described, not fixed)
 
 - **`EffectKind22_WaitArms` reads a cell `EffectKind22_SpawnArms` did not

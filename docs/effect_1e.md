@@ -290,6 +290,39 @@ A script (session scratchpad `e1e/controls.py`) planted each change in `effect_1
 | C57 | `LeaderPanel_S9Menu` | `if (c > 2) B(at::kEff6Choice) = 0;` -> `if (c > 3) B(at::kEff6Choice) = 0;` | refused, 121 of 3,000 rounds |
 | C58 | `LeaderPanel_S9Menu` | `else if (choice <= 1 && state == 0xE)` -> `else if (choice <= 2 && state == 0xE)` | refused, 3 of 3,000 rounds |
 
+**2026-10-05, under the repaired disturbance (round fourteen's review, item
+1).** Before `b9dfe34` the group's `Disturb` switched on `h % 12`, which never
+reached cases 0 (record 4's state `0x7E13E1`), 3 (the pose `0x6BC71D`), 6
+(`Sprite_Current +6`) and 9 (record 0's y step `0x7E11F0`); it now draws
+`sh::DisturbCase(h, 12)`. The 58 controls re-run on `451edeb` (the same
+script, every anchor still found once; the copy now matches the CRLF
+checkout): **58 of 58 refused**, every one exit 3. 38 counts moved, none to 0;
+the largest drops C2 635 to 549, C20 2,056 to 1,978, C21 1,215 to 1,157; the
+weakest C58 still 3, C12 15 to 18, C42 24 to 28. New controls, each a re-read
+after a call missed (the value read before the call used); "under `h % 12`" is
+the same plant with the old switch put back in a scratch build:
+
+| # | Function | Plant | Result |
+|---|---|---|---|
+| C59 | `LeaderPanel_S3Run` | record 4's state read once on entry, not again after `Effect3Mode(1)` (case 0) | refused, 1 of 3,000 rounds; under `h % 12` 0 |
+| C60 | `LeaderPanel_S3Run` | the pose for `0x6BC71C` read before `0x52B2E0`, not after `0x52B370` (case 3) | refused, 1,000 of 3,000 rounds; under `h % 12` 989 |
+| C61 | `LeaderPanel_S1Out` | `+6` read on entry, not after `FieldPanel_DrawBox3` (case 6) | refused, 2 of 3,000 rounds; under `h % 12` 2 |
+| C62 | `LeaderPanel_S3Run` | record 0's y step read before `0x52B1B0`, not after (case 9) | refused, 7 of 3,000 rounds; under `h % 12` 0 |
+
+All four refused. C59 and C62 test only the formerly dead cases (0 under the
+old switch) and are refused thinly, 1 and 7 rounds: `S3Run` reads record 4's
+state again only after the hand-over to record 3 (`+6` set and the state at
+3), and the case must land in that call. C60 was already refused by
+`0x52B370`'s stand-in, which moves the pose itself (section 4); case 3 adds 11
+rounds. C61 is refused by the harness's own case 4 (it moves
+`Sprite_Current`, and `S1Out` reads `+6` through it afresh), the same 2 rounds
+either way: every read of `+6` after a call in `effect_1e.cpp` (read by grep)
+goes through `Sprite_Current` afresh, so case 6 tests no re-read here beyond
+what case 4 already does.
+The fuzz is unchanged (no stand-in of the original moves record 4's state or
+the y step, so none was made to); the group's shadow on `451edeb`: 144,000
+rounds, 0 mismatches.
+
 ## 7. What nothing reached, and the limits
 
 - The dispatchers' Fatal (a step past the table) and `Picked`'s (a sprite
