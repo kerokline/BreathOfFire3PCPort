@@ -390,8 +390,28 @@ Planted one at a time by scratch `controls.py` in `effect_2e.cpp` (plant anchore
 | 92 | `EffectKind4D_DrawColumn` | the top read on the record before `ProjectPoint` (no reload) | 1634 |
 | 93 | `EffectKind4A_TrailStep` | the spin byte read on the record before `Math_Sin` (no reload) | 170 |
 | 94 | `EffectKind4E_Start` | the answer to `+0x64` | 4000 |
+| 95 | `EffectKind4E_Glow` | `+9` read before the disc (not re-read for the 0xD7 compare) | 17 |
+| 96 | `EffectKind4E_Grow` | `+9` read before the disc (the step from the value before) | 139 |
+| 97 | `EffectKind4E_Shrink` | `+9` read before the disc (the step from the value before) | 214 |
+| 98 | `EffectKind4A_TrailStep` | the spin byte 0x92CC82 read before `Math_Sin` | 12 |
+| 99 | `EffectKind4E_Glow` | 95 with the record re-read: the value from before kept only while `Sprite_Current` is the same record | 6 |
+| 100 | `EffectKind4E_Grow` | 96 with the record re-read, the same way | 17 |
+| 101 | `EffectKind4D_Rise` | `+9` read before the column, kept while `Sprite_Current` is the same record (the count down from it) | 26 |
+| 102 | `EffectKind48_State12_Hold` | `+9` read before the burst's frame, the same way | 52 |
 
 **93 of 94 refused by a count.** Control 39 is an equivalent mutant: the clamp keeps the root below 0x1000 only for `sar 7`, and 0xFFE and 0xFFF both give 0x1F - no root tells the two clamps apart; its near variants 89 and 90 are refused. Controls 39 and 91 first passed against EKH's rows for the square root (garbage eax) and `Gte_VectorNormal` (noise), which never reach the clamp or a dot of 0: the fuzz's fault, fixed by re-listing both (section 4); every other control was refused on the first run.
+
+**2026-10-05, under the repaired disturbance (round fourteen's review, item 1).** The group's case was `h % 6`
+until `b9dfe34`, so its cases 0 (`+9`) and 3 (the spin byte) never ran; it is now `sh::DisturbCase(h, 6)`. The
+94 controls above re-run on `451edeb` (the same plants; every anchor still unique): 93 refused by a count, 39 not
+refused (the equivalent mutant, as before). 20 counts moved, none to 0: the largest 26 (2813 to 3227) and 4 (2297
+to 2125), the rest by 1 to 17 rounds. Controls 95..102 are new, one or more for each formerly dead case, each run
+also with the old `h % 6` planted in the fuzz for attribution (counts under it in brackets): 95 [11], 96 [122],
+97 [187], 98 [0], 99 [0], 100 [0]. 95..97 are refused by the record moves of the harness's case 4 too; 99 and
+100 keep `Sprite_Current`'s re-read and miss only the byte's, and with 98 are refused only with the formerly dead
+cases live. 101 and 102 (the same way, on `+9` counted down after a call by `CountDown9`) are refused in 26 and
+52 rounds, and in none under the old switch. Control 93 tests the record's re-read in `_TrailStep`, not the spin
+byte's; 98 tests the byte, which no other function reads after a call. The fuzz is unchanged.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 

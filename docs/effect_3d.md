@@ -524,6 +524,13 @@ the longest, one entry on).
 | 146 | `EffectKind82_Check9` | +1 0xB | 1719 of 4000 |
 | 147 | `EffectKind82_Check9` | Field_State member 1 | 4000 of 4000 |
 | 148 | `EffectKind81_PlaceSources` | ground << 15 (near variant of 122) | 4000 of 4000 |
+| 149 | `EffectKind80_Hold` | +9 read before the trail step and draw (the count down from the value before) | 371 of 4000 |
+| 150 | `EffectKind78_Spin` | +9 read before the ring (the count down from the value before) | 190 of 4000 |
+| 151 | `EffectKind77_DrawCount` | the tally 0x939A00 read before the box | 18 of 4000 |
+| 152 | `EffectKind77_Tick` | the count read again after `Flags_Test` / `Sound_PlayEffect` (the original writes back the one it read before) | 5 of 4000 |
+| 153 | `EffectKind81_MoveDrops` | a drop's life +2 read before `EffectKind81_DrawDrop` | 13 of 4000 |
+| 154 | `EffectKind80_Hold` | 149 with the record re-read: the value from before kept only while `Sprite_Current` is the same record | 41 of 4000 |
+| 155 | `EffectKind78_Spin` | 150 with the record re-read, the same way | 19 of 4000 |
 
 **Not refused, and why**: control 122 (`_PlaceSources` storing the ground's
 height without the sign extension) is an **equivalent mutant**: the original
@@ -539,6 +546,22 @@ refused in 974 rounds after. Control 70 is refused by ours' own abort (a dial
 turn of 9 left unreduced), which shows that check fires. Control 79 (the cone
 writing x for the outer rim too) looks equivalent and is refused in 53 rounds:
 the disturbance moves the point between the two projections.
+
+**2026-10-05, under the repaired disturbance (round fourteen's review, item 1).** The group's case was `h % 9`
+until `b9dfe34`, so its cases 0 (+9), 3 (the tally 0x939A00) and 6 (a drop's life +2) never ran; it is now
+`sh::DisturbCase(h, 9)`. The 148 controls above re-run on `451edeb` (the same plants; every anchor still unique):
+146 refused by a count, 70 refused by ours' abort as before, 122 not refused (the equivalent mutant, as before). 18
+counts moved, none to 0; the largest falls are `EffectKind80_TrailStep`'s 91, 92 and 96 (4000 to about 3040) and
+95 (2531 to 1903) - the trail-point case runs a third less often than before -, and 79 (53 to 35); the rest moved
+by 1 to 60 rounds. Controls 149..155 are new, at least one for each formerly dead case, each run also with the old
+`h % 9` planted in the fuzz for attribution (counts under it in brackets): 149 [330], 150 [171], 151 [0], 152 [0],
+153 [0], 154 [0], 155 [0]. 149 and 150 are refused by the record moves of the harness's case 4 too; 154 and 155
+keep `Sprite_Current`'s re-read and miss only the byte's. 152 is the other way round: the original reads the tally
+once and writes back a count made from it after `Flags_Test` and `Sound_PlayEffect`, so a mutant that reads it
+again is refused once the tally moves in those calls - and ours, unplanted, is not (the shadow passes at 0
+mismatches with case 3 live). The counts of 151..153 are small (the tally moves in a call only when the round
+reaches it; case 6 picks one of the 256 drops); all three are 0 without the formerly dead cases. The fuzz is
+unchanged.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
