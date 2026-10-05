@@ -286,7 +286,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Frame(void) {
 // combination byte 0x90412C gets bit 7, and the sound bank 0x2C2 + its low
 // seven bits is loaded (the area's own, which the shop's file replaced) with
 // the framed wait; with Field_InputFlags bit 4, DAT 0x12A too, with its wait,
-// and the unread 0x4560D0; then mode 2 with Game_Step and Field_Request 0
+// and CommuSim_RollOffers 0x4560D0 (R4A's); then mode 2 with Game_Step and Field_Request 0
 // and a tail jump to Field_Frame.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Close(void) {
     const unsigned char combo = static_cast<unsigned char>(At(at::kPartyCombo)[0] | 0x80);

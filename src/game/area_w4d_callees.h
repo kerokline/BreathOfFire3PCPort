@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // kFieldReset names its function since round 14 (R4A)
+
 namespace area_w4d {
 namespace at {
 
@@ -101,15 +103,15 @@ constexpr unsigned kArea175ScriptCount = 14;
 // dwords +0x18 / +0x1C by the answer.
 constexpr std::uint32_t kArea187FocusPairs = 0x645A5C;    // Area187_FocusPairs, 4 pairs
 
-// --- the one callee nobody owns (raw address) ---
+// --- the one callee by address (R4A's CommuSim_AreaEnter since round 14) ---
 
-// 0x455450 (void): engine code nobody owns - when Game_AreaNumber differs
+// 0x455450 (void): CommuSim_AreaEnter, ours (docs/rest_4a.md) - when Game_AreaNumber differs
 // from the word 0x802290 it resets a block of field state (0x9039A0,
 // 0x904A90, 0x937F80, 0x9046B0..0x9046CE) through 0x45E6B0 / 0x4560D0 /
 // 0x455F40 / 0x4561A0 (read 2026-09-28 to 0x4554F8; the rest is its
 // owner's). Area 179's init (shared by areas 175..185) calls it when
 // Cond_ByteFA is above 7.
-constexpr std::uint32_t kFieldReset = 0x455450;
+constexpr std::uint32_t kFieldReset = bof3::addr::CommuSim_AreaEnter;   // the value unchanged, the fuzz keys stand
 
 }  // namespace at
 }  // namespace area_w4d

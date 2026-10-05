@@ -293,6 +293,7 @@
 #include "game/rest_3f.h"
 #include "game/rest_2c.h"
 #include "game/rest_3g.h"
+#include "game/rest_4a.h"
 #include "game/rest_2b.h"
 #include "game/rest_3a.h"
 #include "game/rest_3c.h"
@@ -1354,6 +1355,13 @@ void InjectAll() {
                                 // re-aimed at the scenario harness's recorders, eleven .data tables swapped for the
                                 // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
                                 // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest4A_Inject();            // round 14 wave-four group R4A (0x452DD0..0x456D4F: six battle targeting helpers,
+                                // Field_RunSlot and its CLUT copy, the community's simulation and its objects'
+                                // poses, twelve Field_ObjectTriggers entries): its clones' calls re-aimed at the
+                                // scenario harness's recorders; after every harness's inject; ours that call it
+                                // (battle_sprites, battle_e1, battle_e2, frame_callees, area_w4d, mode_states) call
+                                // it by the address it had; before FishingText_Arm; no module patches bytes inside
+                                // its 48 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
