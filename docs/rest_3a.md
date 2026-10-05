@@ -377,6 +377,20 @@ disturbance of record 7's bytes but no control isolates it.
 | C74 | `0x437820` | NewGame: the whelp 4 bytes short | 0 | 4,227 |
 | C75 | `0x42E2F0` | Refresh: the category, not the item | 0 | 5,979 |
 
+**2026-10-05, round fourteen's review item 6.** The five dispatchers hand the
+caller's stack word on to the entry (`Dispatch`'s `through`), and the fuzz's
+recorders logged no word: `kOutsideTables` and `kEngineTables` left the
+tables' `nargs` at 0, so a mutant that dropped the word passed. The tables
+give `nargs` 1 now (R3D's repair of the same blind spot, its control 77);
+`rest_3a` unchanged is 0 mismatches over the same 270,000 rounds. Two
+controls planted by hand in the verification worktree, each rebuilt, run
+under `BOF3X_SHADOW=rest_3a` and restored:
+
+| # | Clone | Planted | Rounds of 6,000 |
+|---|---|---|---|
+| C76 | `BattleExtra_Dispatch`, `_TallyDispatch`, `_TallyOpenDispatch` | `Dispatch` hands the entry 0, not the caller's word | 6,000 each (18,000) |
+| C77 | `BattleEnd_LossDispatch`, `BattleEnd_RestoreDispatch` | the two engine dispatchers hand 0 on | 6,000 each (12,000) |
+
 
 ## 7. Latent defects and unchecked indexes (Capcom's, described)
 

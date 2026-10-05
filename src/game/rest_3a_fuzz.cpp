@@ -219,8 +219,11 @@ const bh::Callee kEngineCallees[] = {
 };
 
 // The dispatchers' .data tables, their counts the code's (section 3 of the doc).
-const bh::DataTable kOutsideTables[] = {{at::kStates, 4}, {at::kTallySteps, 3}, {at::kTallyOpenSteps, 2}};
-const bh::DataTable kEngineTables[] = {{at::kLossSteps, 3}, {at::kRestoreSteps, 5}};
+// One argument each: the dispatchers hand the caller's word on to the entry,
+// and a recorder that logged no word could not see it dropped (round
+// fourteen's review, item 6; R3D's {0x64ECCC, 7, 4, 1} is the same repair).
+const bh::DataTable kOutsideTables[] = {{at::kStates, 4, 4, 1}, {at::kTallySteps, 3, 4, 1}, {at::kTallyOpenSteps, 2, 4, 1}};
+const bh::DataTable kEngineTables[] = {{at::kLossSteps, 3, 4, 1}, {at::kRestoreSteps, 5, 4, 1}};
 
 const bh::Region kOutsideRegions[] = {
     {at::kMode, 0x10},        // BATE's mode bytes
