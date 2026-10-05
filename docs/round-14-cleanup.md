@@ -137,4 +137,9 @@ a removed line carried is the `pc` of the `bof3::addr::<Name>` or `[[data]]`
 name its added line carries - 101 addresses, 0 hunks differing. The i686
 build (llvm-mingw) clean, no warning from a changed file; `gen_symbols:
 10010 ours`; `ledger_check.py` 75 entries, 0 errors; `symbols.toml` parses
-with no duplicate `pc`. `BOF3X_SHADOW='*'` headless: see below.
+with no duplicate `pc`. `BOF3X_SHADOW='*'` headless narrow and with
+`BOF3X_WIDE=1` (2026-10-05, at `8af13a3b`, the code commit): both exit 0,
+the log ending `self-test only: done`, `inject: 10009 ours, 0 left original
+by BOF3X_ORIGINAL`, 1,049 `MISMATCHES` lines each and every one `0
+MISMATCHES`. No stand-in's keying changed (every key is the same address),
+so no fuzz count should move.
