@@ -8,7 +8,8 @@ declarations in `src/game/rest_4b.h`, the tables' and cells' addresses in
 (`analysis/round14_cut.tsv`), no start dropped and none added; each read to its
 last instruction with capstone and fuzzed through the scenario harness in field
 mode ([`scenario_harness.md`](scenario_harness.md) section 7), used unchanged:
-360,000 rounds, 0 mismatches. **CONTROLS_SUMMARY** (section 6). **Fuzz only**:
+360,000 rounds, 0 mismatches. **162 controls planted** one at a time: 160 refused by a count, 2 equivalent
+mutants not refused, each with its near variant refused (section 6). **Fuzz only**:
 no recorded route enters the faerie village, and the catalog shows no row of
 this wave reached (section 9); the owner records a route once the code is ours.
 
@@ -271,7 +272,64 @@ ledger patch inside it. **Needs a ledger entry: none.**
 
 ## 6. Controls
 
-CONTROLS_SECTION
+**162 controls planted** one at a time by the scratch script `r4b/controls.py`
+(plant a string that occurs once in `rest_4b.cpp`, rebuild, run the shadow on
+the clone it names with `BOF3X_R4B_ONLY`, restore, rebuild); counts in this
+worktree, 6,000 rounds a clone. **160 refused by a count; 2 equivalent mutants
+not refused, each with a near variant refused.** None needed the fuzz changed
+after the first run.
+
+| Id | Clone | Plant | Refused |
+|---|---|---|--:|
+| C01..C08 | the seven tail dispatchers, `CommuTail_GameDispatch` | the next entry, another run, the state for the argument | 5,547..6,000 |
+| C09..C11 | `CommuTail14_OpenF8` | message 0xF9; index vs 0xF8; no Field_Request | 2,352..2,426 |
+| C12, C13 | `CommuTail14_LoadDat` | file 0x12C; **case 0**: the state read before the load | 6,000; 397 |
+| C14, C15 | `CommuTail_WaitLoad` | 0x939A41 kept; dirty 2 | 4,010; 4,030 |
+| C16, C17 | `CommuTail_LoadSoundBank` | + 0x2C3; the whole byte | 6,000 each |
+| C18 | `CommuTail14_End` | R4A's two swapped | 4,030 |
+| C19, C20 | `CommuTail_RestoreFacing` | +0x84; Sprite_Current not set | 5,983; 4,479 |
+| C21..C26 | `CommuTail_TimedGift` | bound + 1; row 14's category; message 0x97; one state; **case 12**: the clock read early; item / category swapped | 2,977; 180; 5,798; 2,004; 763; 5,798 |
+| C27, C28 | `_EndAfterMessage`, `_Open97` | waits on 2; the next state | 2,433; 1,215 |
+| **C30** | `CommuTail_RandomGift` | at most 99 for 100 | **0: equivalent** (99 and 100 fall in the same tier on all three rows); near variant **N01** at most 95: 230 |
+| C29, C31..C36 | `CommuTail_RandomGift` | Rand & 0xFF; a step reached; 8 pairs a tier; word 0x50; message 0x51; row 1's first; **case 1**: the argument read before Rand | 778; 397; 948; 2,430; 799; 176; 4 (thin) |
+| C37, C38 | `CommuTail23_LoadDat` | 0x12D for 2; flags `|= 3` | 979; 3,010 |
+| **C39** | `CommuTail_EndAfterLoad` | `&= 0xF8` on the low byte | **0: equivalent** (`& 0xFFF8` only touches the low byte); near variant **N02** `& 0xFFF0`: 2,046 |
+| C40, C46 | `CommuTail24_LoadDat`, `25_LoadDat` | the next file | 6,000; 3,648 |
+| C41..C45 | `CommuTail_NibbleGift` | low nibble; state 3; the other message; +3 kept; **case 10**: the record's bytes read before Item_NamePtr | 4,345; 1,531; 1,834; 1,832; 154 |
+| C47..C49 | `CommuTail26_*` | 0x904A90 untested; kind 7; no flags cleared | 862; 1,832; 3,524 |
+| C50..C53 | `CommuTail60_Stream` | stream 9; fade 8; message 0x2A0; Music_Track | 362; 1,055; 762; 646 |
+| B01..B03 | `CommuBoard_Dispatch`, `_Init` | next entry; column 0; help 0xB4 | 6,000 each |
+| B04..B09 | `CommuBoard_Grid` | limit + 1; mode 2 as other; A / B swapped; lines steady; **case 1**: the argument read before the panel; **case 2**: the board state read before the sounds | 19; 425; 1,481; 6,000; 365; 94 |
+| B10..B12 | the three board dispatchers | the cursor mode; the B table; next entry | 5,109; 6,000; 6,000 |
+| B13..B18 | `CommuBoard_PickRecord` | wrap + 1; key 0x4000; **case 3**: the step read early; card x; rows by 6; unsigned no-sound | 188; 537; 73; 749; 699; 197 |
+| B19..B21 | `CommuBoard_MoveRecord` | PlaceRecord(1); **case 5**: the pick read early; help after the step | 1,702; 606; 2,192 |
+| B22..B26 | `CommuBoard_PickRecordB` | kind - 5; step 3; wrap at count; **case 4**: the cursor captured early; card y | 202; 274; 35; 106; 4,824 |
+| B27, B28 | `CommuBoard_MoveRecordB` | hand x + 5; the record at the cursor | 4,874 each |
+| B29..B33 | `CommuBoard_PickList` | help + 1 row; +2 for +1; **case 7**: help from `next`; hand x; the column by slot % 4 | 1,588; 25; 24; 6,000; 18,000 (all three lists) |
+| B34..B37 | `CommuBoard_PickListB` | help 0x47; the count byte; **case 7**: the list read early; **case 6**: the row read early | 646; 287; 8 (thin); 87 |
+| B38..B40 | `CommuBoard_PickListC` | help 0x44; 0x1000 only; **case 13**: the toggle read early | 1,558; 483; 165 |
+| B41..B48 | `CommuBoard_Confirm` | no +2 test; +3 kept; used only; kind + 5; +1 from the toggle; 0x2000 only; step kept; no clock | 151..867 |
+| D01..D06 | `CommuBoard_DrawRecordCard` | 4 bytes; 64 wide; by 11; pick 9; row 1 never lit; records by 19 | 330..6,000 |
+| D07, D08, D22 | the two frames | six along; sides by 8; 32 along | 6,000 each |
+| D09..D13 | `CommuBoard_DrawBar` | 0x7F; >> 1; row 3; y + 5; width unsigned | 1,489..6,000 |
+| D14..D21 | `CommuBoard_DrawPanel` | tile x; **case 8**: help not read again; sprite r + 4; limit i + 1; kind 5; signed counter; **case 9**: the kind read before its sprite; sprites from k 0 | 2,736; 191; 6,000; 4,303; 1,715; 2,986; 4 (thin); 4,648 |
+| D23..D25 | `CommuBoard_DrawSlotLines` | a4 for a5; locked from 8; 0xFE | 5,787; 594; 4,015 |
+| D26..D28 | `Commu_CountInSlot`, `_NthInSlot` | unused counted; 0x3C; 1-based | 3,455; 3,075; 3,307 |
+| D29..D33 | `CommuBoard_MoveGridCursor` | 0xA wrap; column 3; no sound for 0x1000; **case 14**: the mode read before the keys; right past 5 | 332; 260; 581; 127; 24 |
+| D34..D37 | `_DrawDigits`, `_DrawSprite` | v; CLUT nibble; CLUT row; rows by 5 | 5,233..6,000 |
+| D38..D40 | `_DrawListBox`, `_DrawListFrame` | shadow y; **case 11**: the count held; rows h >> 4 | 773; 902; 3,719 |
+| D42..D46 | `_ListY`, `_DrawListBoxB` | past 5; 0xAD; bound 0xD9; first + 1; y before the move | 378; 3,987; 2 (thin); 3,991; 1,975 |
+| D47..D49 | `_SlotRecordXY` | x + 0xB; t swapped; unsigned remainder | 1,209; 1,945; 949 |
+| D50..D55 | `_CancelStep`, `_PlaceRecord` | step up; four; own slot; +3 kept; cursor not less back; limit unsigned | 6,000; 189; 1,957; 1,643; 1,120; 111 |
+| D56..D60 | `_SlotHelp`, `_PickHelp` | +0x4B; table + 1; 0x2B; >=; kind + 1 | 97..1,975 |
+
+**Every case of the disturbance has a control that misses a re-read of its
+cell after a call, refused**: 0 C13, 1 C36 / B08, 2 B09, 3 B15, 4 B25, 5
+B20, 6 B37, 7 B31 / B36, 8 D15, 9 D20, 10 C45, 11 D39, 12 C25, 13 B40, 14
+D32. **Thin** (refused in under 10 of 6,000): C36 (4), B36 (8), D20 (4), D44
+(2) - a louder stand-in on those paths is a debt, as round fourteen's review
+lists for other groups. (D41 was dropped before the run: its plant did not
+express a mutant.)
 
 ## 7. Calls across groups
 
@@ -307,4 +365,14 @@ is ours.
 
 ## 10. Self-tests and the entry list
 
-SELFTEST_SECTION
+In this worktree (counts depend on the build directory):
+
+- `BOF3X_SHADOW=rest_4b`: exit 0, 360,000 rounds over 60 functions (6,000
+  each), 0 mismatches, 45 regions compared.
+- `BOF3X_SHADOW='*'`: exit 0 (every group 0 mismatches), 9,741 ours; and again
+  with `BOF3X_WIDE=1`: exit 0, 9,741 ours, rest_4b 0 mismatches. Neither died
+  silently.
+- `tools/ledger_check.py`: 73 entries, 0 errors.
+- `analysis/calltrace/entries_logic.txt` (main checkout): the 39 hidden starts'
+  extents appended; `00456AF0 34E` and `00456E40 19E3` left for the round's
+  end (section 2); the 21 lines from `00458830` were already the read extents.
