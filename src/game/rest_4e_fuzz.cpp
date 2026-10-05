@@ -384,6 +384,13 @@ void Seed(unsigned k) {
     Field_ConfirmButtons = static_cast<unsigned short>(PickOf(0x20, 0x40, 0x60, 0, sh::Next()));
     Field_CancelButtons = static_cast<unsigned short>(PickOf(0x40, 0x10, 0, sh::Next()));
     Field_Request = static_cast<unsigned char>(PickOf(0, 2, 2, 1, sh::Next()));
+    // CommuItem_Choose: the window open, not scrolling and a confirm pressed
+    // most of the time, so the paths past its sounds run often
+    if (k == kChoose && sh::Often()) {
+        B(kWinOff) = 0;
+        SetWord(Mem(kScroll), 0);
+        if (sh::Half()) Field_ConfirmButtons = static_cast<unsigned short>(Field_ConfirmButtons | Input_Pressed | 0x20);
+    }
     // a label for CommuMusic_DrawLabel: letters, spaces, a NUL by the end
     unsigned char* const text = sh::Scratch(3);
     for (unsigned i = 0; i < 0x40; ++i)
@@ -425,12 +432,14 @@ void Disturb(U h) {
     case 4: B(kWinOff) = static_cast<unsigned char>(b & 1); break;
     case 5: B(kTab) = static_cast<unsigned char>(b % 5); break;
     case 6: B(kRow) = static_cast<unsigned char>(b & 0x7F); break;
-    case 7: SetWord(Mem(kScroll), b & 1 ? 0 : v); break;
+    case 7: SetWord(Mem(kScroll), b & 1 ? 0 : v | 1); break;
     case 8: B(kEntry) = static_cast<unsigned char>(b % 60); break;
     case 9: Music_Track = static_cast<unsigned char>(b & 1 ? 0xFF : b); break;
     case 10: B(kEdit + (b & 7)) = static_cast<unsigned char>(v); break;
     case 11: B(b % 3 == 0 ? kListA : b % 3 == 1 ? kListB : kListC) = static_cast<unsigned char>(v % 0x21); break;
-    case 12: B(kListAEntries + b % 0x20) = static_cast<unsigned char>(v); break;
+    case 12:   // every row of the first list, so the row being drawn moves
+        for (unsigned i = 0; i < 0x20; ++i) B(kListAEntries + i) ^= static_cast<unsigned char>(0x80 | (b & 0x7F));
+        break;
     case 13: B(kStyle) = static_cast<unsigned char>(b % 8); break;
     case 14: sh::Scratch(3)[b % 0x3F] = static_cast<unsigned char>(v); break;
     case 15: SetWord(Mem(kTrack), (v % 44) - 2); break;
@@ -458,7 +467,7 @@ void SelfTest() {
     static unsigned* s_index = index;
     sh::Group g = {"rest_4e", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 4000};
+                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 6000};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
     sh::Run(g);
