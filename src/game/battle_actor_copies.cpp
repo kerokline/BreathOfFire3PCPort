@@ -174,8 +174,8 @@ extern "C" void __cdecl BattleTarget_ShowPrompt(void) {
 }
 
 // original 0x447140: entry (dword 0x904AA4 & 0xFF) of BattleTarget_Picks
-// 0x64E3F4 - 0x447160, 0x447190, 0x447290 (the party's side, not ours),
-// 0x447390, 0x4473E0 (the cancel, not ours).
+// 0x64E3F4 - 0x447160, 0x447190, 0x447290 (the party's side, R3B's BattleTarget_PickParty),
+// 0x447390, 0x4473E0 (the cancel, R3B's BattleTarget_Cancel).
 extern "C" void __cdecl BattleTarget_PickDispatch(void) { Dispatch(BattleTarget_Picks, B(at::kSub)); }
 
 // original 0x447160: the target starts on Battle_DefaultTarget(3) - the first
@@ -232,7 +232,7 @@ extern "C" void __cdecl BattleTarget_Confirm(void) {
 
 // original 0x447430 (the catalogue pairs it with PSX 0x80093F00, not read):
 // entry 0x904AA3 of BattleItem_Steps 0x64E408 - 0x447440, 0x4474B0, 0x447880
-// (the closing window, not ours), 0x4478B0, 0x447940, 0x447D70 (not ours).
+// (the closing window, R3B's BattleItem_CloseWait), 0x4478B0, 0x447940, 0x447D70 (R3B's BattleItem_SideDispatch).
 extern "C" void __cdecl BattleItem_Dispatch(void) { Dispatch(BattleItem_Steps, B(at::kStep)); }
 
 // original 0x447440: entry (dword 0x904AA4 & 0xFF) of BattleItem_OpenSteps
@@ -415,7 +415,7 @@ extern "C" void __cdecl BattleItem_Choose(void) {
 
 // original 0x447940: entry (dword 0x904AA4 & 0xFF) of BattleItem_TargetSteps
 // 0x64E428 - 0x447960, 0x4479E0, 0x447B10, 0x447CC0, 0x447D30 (the cancel,
-// not ours).
+// R3B's BattleItem_TargetCancel).
 extern "C" void __cdecl BattleItem_TargetDispatch(void) { Dispatch(BattleItem_TargetSteps, B(at::kSub)); }
 
 // original 0x447960: the item's target starts. The record of the command's

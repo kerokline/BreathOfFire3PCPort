@@ -110337,3 +110337,591 @@ params = "void"
 impl = "src/game/rest_3f.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x492580..0x49259B (0x1C bytes). Reached by EffectKindAB_States[1] (hidden in 0x492400): Draw_PassFlags 0: +1 up; else EffectKindAB_Emit and a tail jmp to EffectKindAB_MoveDrops. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+# --- round fourteen group R3B (rest_3b.cpp, docs/rest_3b.md): 0x4468B0..0x44CFF4 ---
+# Read with capstone to the last instruction (2026-10-04). The cut's 60 rows and
+# four Effect_Handlers slots no list had (0x44C040, 0x44C120, 0x44C170, 0x44CF60).
+
+[[func]]
+pc = 0x4468B0
+name = "BattleResult_AddExp"
+ret = "unsigned"
+params = "unsigned exp"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x4468B0..0x446986 (0xD7 bytes): for each party slot below 0x904AB0 (read again each pass) that BattleResult_MemberTakesExp answers for, the slot's character +0x89 to a roster index (CharId_ToRosterIndex, called again for each use): EXP dword +0xC of that CharacterRecords record + exp below 9999999 (unsigned) adds exp to the record the second call names, else sets it to 9999999; eax = exp on both paths. Called by BattleResult_ExpTick (twice). PSX BattleResult_AddExp 0x801DD564 (pairs_propagated.json call-anchored; the sibling's name, verified by reading). docs/rest_3b.md."
+
+[[func]]
+pc = 0x446990
+name = "BattleResult_MemberTakesExp"
+ret = "unsigned char"
+params = "unsigned slot"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x446990..0x4469C6 (0x37 bytes): al 0 when Battle_ActorIsOut(slot) (the word pushed whole), else 1 when party record (slot & 0xFF)'s dword +0x134 has bit 10 clear. Called by BattleResult_AddExp. docs/rest_3b.md."
+
+[[func]]
+pc = 0x4469D0
+name = "CharId_ToRosterIndex"
+ret = "unsigned"
+params = "unsigned id"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x4469D0..0x4469E5 (0x16 bytes): the byte 0x66972C[id & 0xFF], 7 answered as 0; eax the byte zero-extended (and eax, 0xFF before the load). Called by BattleResult_AddExp, BattleResult_FindLevelUp, BattleResult_Setup, BattleResultWin_ExpToNext. PSX CharId_ToRosterIndex 0x801DD774 (pairs_propagated.json call; the sibling's name, verified by reading). docs/rest_3b.md."
+
+[[func]]
+pc = 0x446F20
+name = "Stat_PercentCap999"
+ret = "int"
+params = "int value, int percent"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x446F20..0x446F4F (0x30 bytes): (value * percent) / 100, the product in 32 bits, the division signed (imul 0x51EB851F, sar 5, + the sign bit); above 999 999, below 0 zero. Called by DragonForm_Mix, DragonForm_ApplyRecipe, Battle_RecalcStats, Battle_RecalcMemberStats. PSX 0x801DE074 (pairs_propagated.json call; unnamed there). docs/rest_3b.md."
+
+[[func]]
+pc = 0x446F50
+name = "Stat_PercentCap9999"
+ret = "int"
+params = "int value, int percent"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x446F50..0x446F7F (0x30 bytes): as Stat_PercentCap999, clamped to 0..9999. Called by DragonForm_Mix, DragonForm_ApplyRecipe. PSX 0x801DE0C0 (pairs_propagated.json call-anchored; unnamed there). docs/rest_3b.md."
+
+[[func]]
+pc = 0x446F80
+name = "Stat_PercentCap100"
+ret = "int"
+params = "int value, int percent"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x446F80..0x446FAD (0x2E bytes): as Stat_PercentCap999, clamped to 0..100. Called by Battle_RecalcStats, Battle_RecalcMemberStats. PSX 0x801DE10C (pairs_propagated.json call; unnamed there). docs/rest_3b.md."
+
+[[func]]
+pc = 0x447290
+name = "BattleTarget_PickParty"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x447290..0x447385 (0xF6 bytes): the pick among the party, BattleTarget_PickEnemy's twin: cancel sub-state 4, confirm 3; else Input_AutoRepeat(Input_Pressed & 0xF000): 0x5000 Battle_DefaultTarget(3) into the command's +0, 0x904AA4 - 1, cue 0x101; else 0x2000 Battle_DefaultTarget(Battle_WrapIndex(0x904AB0 - 1, 0, target + 1)) and 0x8000 Battle_PrevTarget(Battle_WrapIndex(.., target - 1)), each with cue 0x101. BattleTarget_Picks[2] (0x64E3FC). docs/rest_3b.md."
+
+[[func]]
+pc = 0x4473E0
+name = "BattleTarget_Cancel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x4473E0..0x447421 (0x42 bytes): cue 0x106, window records 3's and 2's +3 = 1, BattleBanner_ShowName(the menu actor), 0x904AAF = 0, 0x904AA1 = 2, 0x904AA2..AA4 = 0. BattleTarget_Picks[4] (0x64E404). docs/rest_3b.md."
+
+[[func]]
+pc = 0x447880
+name = "BattleItem_CloseWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x447880..0x4478A2 (0x23 bytes): once window record 16's +3 (0x8033A3) is 0: 0x904AA1 = 1, 0x904AA2 = 0x904AA3 = 0, tail jmp ItemMenu_FreeWindows. BattleItem_Steps[2] (0x64E410). docs/rest_3b.md."
+
+[[func]]
+pc = 0x447D30
+name = "BattleItem_TargetCancel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x447D30..0x447D69 (0x3A bytes): cue 0x106, BattleBanner_ShowName(the menu actor), 0x904AAF = 0, 0x904AA1 = 4, AA2 = 1, AA3 = 0, AA4 = 1. BattleItem_TargetSteps[4] (0x64E438) and BattleItem_SideSteps[3] (0x64E448). docs/rest_3b.md."
+
+[[func]]
+pc = 0x447D70
+name = "BattleItem_SideDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x447D70..0x447D80 (0x11 bytes): jmp [0x64E43C + 4 * (dword 0x904AA4 & 0xFF)] - BattleItem_SideSteps, unchecked (ours aborts past its 4). BattleItem_Steps[5] (0x64E41C). docs/rest_3b.md."
+
+[[func]]
+pc = 0x447D90
+name = "BattleItem_SideBegin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x447D90..0x447DCA (0x3B bytes): the command's +0 = 0x40 when byte +0 of the command word +2's NameTable_Abilities row has 0x20, else 0x80; 0x904AA4 = 1, the u16 0x7E01B8 = 0, 0x904AAF = 1 (BattleItemCmd_SideBegin's twin). BattleItem_SideSteps[0] (0x64E43C). docs/rest_3b.md."
+
+[[func]]
+pc = 0x447DD0
+name = "BattleItem_SidePick"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x447DD0..0x447E55 (0x86 bytes): cancel sub-state 3, confirm 2; else a direction Input_AutoRepeat lets through (0xF000) with bit 0x80 of byte +0 of the NameTable_Abilities row of Char_AbilityList(byte 0x929F06, byte 0x8033AB, 1)[dword 0x8033AC & 0xFF]: the command's +0 ^= 0xC0, cue 0x101 (BattleItemCmd_SidePick's twin). BattleItem_SideSteps[1] (0x64E440). docs/rest_3b.md."
+
+[[func]]
+pc = 0x448140
+name = "BattleAttackCmd_Cancel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x448140..0x44817C (0x3D bytes): cue 0x106, window records 3's and 2's +3 = 1, BattleBanner_ShowName(the menu actor), 0x904AAF = 0, 0x904AA1 = 2, AA2 = AA3 = 0 (0x904AA4 left). BattleAttackCmd_States[3] (0x64E458). docs/rest_3b.md."
+
+[[func]]
+pc = 0x448600
+name = "BattleItemCmd_CloseWait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x448600..0x448622 (0x23 bytes): as BattleItem_CloseWait (the same bytes). BattleItemCmd_States[2] (0x64E464). docs/rest_3b.md."
+
+[[func]]
+pc = 0x448B40
+name = "BattleItemCmd_TargetCancel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x448B40..0x448B79 (0x3A bytes): cue 0x106, BattleBanner_ShowName(the menu actor), 0x904AAF = 0, 0x904AA1 = 4, AA2 = 2, AA3 = 0, AA4 = 1. BattleItemCmd_TargetSteps[4] (0x64E49C) and BattleItemCmd_SideSteps[3] (0x64E4AC). docs/rest_3b.md."
+
+[[func]]
+pc = 0x448B80
+name = "BattleItemCmd_SideDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x448B80..0x448B90 (0x11 bytes): jmp [0x64E4A0 + 4 * (dword 0x904AA4 & 0xFF)] - BattleItemCmd_SideSteps, unchecked (ours aborts past its 4). BattleItemCmd_States[5] (0x64E470). docs/rest_3b.md."
+
+[[func]]
+pc = 0x448C80
+name = "BattleItemCmd_EquipDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x448C80..0x448C90 (0x11 bytes): jmp [0x64E4B0 + 4 * (dword 0x904AA4 & 0xFF)] - BattleItemCmd_EquipSteps, unchecked (ours aborts past its 4). BattleItemCmd_States[6] (0x64E474). docs/rest_3b.md."
+
+[[func]]
+pc = 0x44A000
+name = "Escape_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44A000..0x44A00D (0xE bytes): jmp [0x64E4FC + 4 * byte 0x904AA3] - Escape_States, unchecked (ours aborts past its 3). Battle_MenuSteps[6] (0x64AE6C). PSX 0x8009823C (pairs_propagated.json table-anchored; unnamed there). docs/rest_3b.md."
+
+[[func]]
+pc = 0x44BED0
+name = "EffectSlot00_Miss"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44BED0..0x44BED4 (0x5 bytes): jmp 0x44FB30 (the miss tail, R3D's). Effect_Handlers[0] (0x64E73C), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44BEE0
+name = "EffectSlot01_VariedHit"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44BEE0..0x44BF6F (0x90 bytes): the power word 0x939FE4 = the actor's +0xA4 / +0xB4; Rand & 3: 0 halves it, 3 adds its half (16 bits); the HP delta Battle_CalcDamage(actor, target, 0xFFFF). Effect_Handlers[1] (0x64E740), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44BF70
+name = "EffectSlot02_HitInflict4"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44BF70..0x44BFEB (0x7C bytes): the HP delta Battle_CalcDamage(actor, target, 4); then, the delta signed below the target's HP (+0x98 / +0xA4) and not 0, 0x44FCA0(4). Effect_Handlers[2] (0x64E744), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44BFF0
+name = "EffectSlot03_HalfHitInflict20"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44BFF0..0x44C030 (0x41 bytes): the HP delta Battle_CalcDamage(actor, target, 0xFFFF) / 2 (signed, toward 0); not 0: 0x44FCA0(0x20). Effect_Handlers[3] (0x64E748), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C040
+name = "EffectSlot04_SkillPower"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C040..0x44C078 (0x39 bytes): not in the cut. The HP delta Effect_SkillDamage(actor, target, the ability's power byte NameTable_Abilities +3, 0). Also the tail of slots 44, 45, 46, 49 and of R3C's 0x44D000, 0x44D020, 0x44D040, 0x44D0A0, 0x44D0C0, 0x44D100, 0x44D140, 0x44D680 (their jmp). Effect_Handlers[4] (0x64E74C), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C080
+name = "EffectSlot05_Clear80"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C080..0x44C097 (0x18 bytes): Battle_ClearStatus(target, 0x80), tail jmp 0x44FB30. Effect_Handlers[5] (0x64E750), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C0A0
+name = "EffectSlot06_HpThirdHit"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C0A0..0x44C114 (0x75 bytes): the actor's party record (by the actor byte, either side) +0x89 0x0A: 0x44FB30, the HP delta 9999; else 0x44FCE0(3) less the target's enemy object +0xB6 (by the target byte, either side); a negative delta then 0. Effect_Handlers[6] (0x64E754), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C120
+name = "EffectSlot07_Heal"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C120..0x44C13F (0x20 bytes): not in the cut. The HP delta Effect_HealAmount(actor, target). Also R3C's 0x44D120's jmp target. Effect_Handlers[7] (0x64E758), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C150
+name = "EffectSlot09_Heal40"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C150..0x44C15B (0xC bytes): the HP delta 0xFFD8 (-40). Effect_Handlers[9] (0x64E760), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C160
+name = "EffectSlot10_Heal100"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C160..0x44C16B (0xC bytes): the HP delta 0xFF9C (-100). Effect_Handlers[10] (0x64E764), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C170
+name = "EffectSlot11_HealFull"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C170..0x44C1EC (0x7D bytes): not in the cut. A member target: the HP delta -(+0xA0); an enemy: +0xB0 0xFFFF gives 0xFFFF and +0x10C |= 4, else -(+0xB0). Also R3C's 0x44D6A0's jmp target. Effect_Handlers[11] (0x64E768), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C1F0
+name = "EffectSlot12_Heal5Clear68"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C1F0..0x44C218 (0x29 bytes): the HP delta 0xFFFB (-5); (Rand & 0x7F) <= 0x26: Battle_ClearStatus(target, 0x68). Effect_Handlers[12] (0x64E76C), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C220
+name = "EffectSlot13_Clear80"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C220..0x44C237 (0x18 bytes): Battle_ClearStatus(target, 0x80), tail jmp 0x44FB30 (slot 5's bytes). Effect_Handlers[13] (0x64E770), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C240
+name = "EffectSlot14_Clear8"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C240..0x44C254 (0x15 bytes): Battle_ClearStatus(target, 8), tail jmp 0x44FB30. Effect_Handlers[14] (0x64E774), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C260
+name = "EffectSlot15_Clear100"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C260..0x44C277 (0x18 bytes): Battle_ClearStatus(target, 0x100), tail jmp 0x44FB30. Effect_Handlers[15] (0x64E778), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C280
+name = "EffectSlot16_ClearBFC"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C280..0x44C297 (0x18 bytes): Battle_ClearStatus(target, 0xBFC), tail jmp 0x44FB30. Effect_Handlers[16] (0x64E77C), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C2A0
+name = "EffectSlot17_RaiseDown"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C2A0..0x44C323 (0x84 bytes): a target whose status word (+0x90 / +0x92) has 0x4000 (Battle_ActorIsOut's out bit): the HP delta 0xFFFF, Battle_ClearStatus(target, 0x4000), 0x904AB1 (a member) or 0x904AB3 one up; else the delta 0. Effect_Handlers[17] (0x64E780), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C330
+name = "EffectSlot18_HalfHitInflict80"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C330..0x44C373 (0x44 bytes): half a hit as slot 3, then 0x44FCA0(0x80). Effect_Handlers[18] (0x64E784), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C380
+name = "EffectSlot19_StatMod0"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C380..0x44C388 (0x9 bytes): 0x44FBB0(0). Effect_Handlers[19] (0x64E788), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C390
+name = "EffectSlot20_ApHeal20"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C390..0x44C3A5 (0x16 bytes): the result's +8 = 2, the AP delta 0xFFEC (-20). Effect_Handlers[20] (0x64E78C), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C3B0
+name = "EffectSlot21_ApHeal100"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C3B0..0x44C3C5 (0x16 bytes): the result's +8 = 2, the AP delta 0xFF9C (-100). Effect_Handlers[21] (0x64E790), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C7C0
+name = "EffectSlot24_StatMod1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C7C0..0x44C7C8 (0x9 bytes): 0x44FBB0(1). Effect_Handlers[24] (0x64E79C), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C7D0
+name = "EffectSlot25_StatMod2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C7D0..0x44C7D8 (0x9 bytes): 0x44FBB0(2). Effect_Handlers[25] (0x64E7A0), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C7E0
+name = "EffectSlot26_Inflict40"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C7E0..0x44C7E8 (0x9 bytes): 0x44FC60(0x40). Effect_Handlers[26] (0x64E7A4), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C7F0
+name = "EffectSlot27_Inflict20"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C7F0..0x44C7F8 (0x9 bytes): 0x44FC60(0x20). Effect_Handlers[27] (0x64E7A8), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C800
+name = "EffectSlot28_RaiseQuarter"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C800..0x44C8D8 (0xD9 bytes): a member target only: its status word read; Rand & 3 not 0 and the word's 0x4000: the HP delta -(maximum) >> 2 (the target read again, either side), 0x904AB1 / 0x904AB3 one up, Battle_ClearStatus(target, 0x4000); else the result's +8 = 1. Effect_Handlers[28] (0x64E7AC), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C8E0
+name = "EffectSlot29_RaiseFull"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C8E0..0x44C93E (0x5F bytes): a member target only: +0x91 bit 0x40: the HP delta 0xD8F0 (-10000), 0x904AB1 one up, Battle_ClearStatus(target, 0x4000); else the delta 0. Effect_Handlers[29] (0x64E7B0), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C940
+name = "EffectSlot30_HalfHitInflict8"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C940..0x44C980 (0x41 bytes): half a hit as slot 3, then 0x44FCA0(8). Effect_Handlers[30] (0x64E7B4), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C9C0
+name = "EffectSlot32_HalfHitPlus1"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C9C0..0x44C9EF (0x30 bytes): 0x904AA9 |= 0x20; the HP delta (Battle_CalcDamage(actor, target, 0xFFFF) sar 1) + 1. Effect_Handlers[32] (0x64E7BC), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44C9F0
+name = "EffectSlot33_HitDropTurn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44C9F0..0x44CAA3 (0xB4 bytes): 0x904AA9 |= 0x20; the power word = the actor's +0xA4 / +0xB4 plus a quarter (16 bits); the HP delta Battle_CalcDamage(actor, target, 0xFFFF); not 0 and 0x44F6A0(actor, target) al 0: Battle_ReturnQueuedItem(target), Battle_RemoveFromTurnOrder(target). Effect_Handlers[33] (0x64E7C0), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CAB0
+name = "EffectSlot34_HitIgnore8"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CAB0..0x44CB83 (0xD4 bytes): the actor's status word bit 8 kept and cleared; 0x904AA8 |= 0x80, 0x939FFC = 100; the HP delta Battle_CalcDamage(actor, target, 0xFFFF); the bit put back into the status word of the actor read again. Effect_Handlers[34] (0x64E7C4), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CB90
+name = "EffectSlot35_StatSumHit"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CB90..0x44CC55 (0xC6 bytes): 0x904AA9 |= 0x20; the actor's stat (a member's CharacterRecords +0x44 by 0x66972C[+0x89], an enemy's +0xD4); 0x939FFC = min(word 0x939FE8 / 2 + 30, 100); 0x939FE4 = 0, Stat_AddClamped(0x939FE4, word 0x939FE6 + the stat); the HP delta Battle_CalcDamage(actor, target, 0xFFFF). Effect_Handlers[35] (0x64E7C8), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CC60
+name = "EffectSlot36_Skill20"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CC60..0x44CC83 (0x24 bytes): the HP delta Effect_SkillDamage(actor, target, 0x14, 0). Effect_Handlers[36] (0x64E7CC), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CC90
+name = "EffectSlot37_StatMod3"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CC90..0x44CC98 (0x9 bytes): 0x44FBB0(3). Effect_Handlers[37] (0x64E7D0), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CD00
+name = "EffectSlot39_ElementHit"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CD00..0x44CD3B (0x3C bytes): the HP delta Battle_CalcDamage(actor, target, the ability's NameTable_Abilities +4 word & 0x1FF). Effect_Handlers[39] (0x64E7D8), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CD40
+name = "EffectSlot40_StatAAHit"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CD40..0x44CDA0 (0x61 bytes): the power word = the actor's +0xAA / +0xBA; the HP delta Battle_CalcDamage(actor, target, 0xFFFF). Effect_Handlers[40] (0x64E7DC), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CDB0
+name = "EffectSlot41_StatSumHit2"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CDB0..0x44CE71 (0xC2 bytes): slot 35 with the addend word 0x939FE8 for 0x939FE6. Effect_Handlers[41] (0x64E7E0), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CE80
+name = "EffectSlot42_DoubleHit20"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CE80..0x44CEE0 (0x61 bytes): the power word = the actor's +0xA4 / +0xB4 doubled (16 bits); the HP delta Battle_CalcDamage(actor, target, 0x20). Effect_Handlers[42] (0x64E7E4), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CEF0
+name = "EffectSlot43_Inflict10"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CEF0..0x44CEF8 (0x9 bytes): 0x44FC60(0x10). Effect_Handlers[43] (0x64E7E8), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CF00
+name = "EffectSlot44_Skill66"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CF00..0x44CF14 (0x15 bytes): 0x904B35 = 4, the ability word 0x904B80 = 0x66, tail jmp slot 4. Effect_Handlers[44] (0x64E7EC), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CF20
+name = "EffectSlot45_Skill65"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CF20..0x44CF34 (0x15 bytes): ... the ability 0x65, tail jmp slot 4. Effect_Handlers[45] (0x64E7F0), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CF40
+name = "EffectSlot46_Skill62"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CF40..0x44CF54 (0x15 bytes): ... the ability 0x62, tail jmp slot 4. Effect_Handlers[46] (0x64E7F4), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CF60
+name = "EffectSlot47_MissMark200"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CF60..0x44CFB2 (0x53 bytes): not in the cut. 0x44FB30; then by the ACTOR's side the TARGET's second flags |= 0x200 (a member actor: party record by the target byte +0x134; an enemy actor: enemy object by it +0x114), unchecked. Also R3C's 0x44D160's jmp target. Effect_Handlers[47] (0x64E7F8), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CFC0
+name = "EffectSlot48_StatMod0Skill55"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CFC0..0x44CFD8 (0x19 bytes): 0x904B35 = 4, the ability 0x55, 0x44FBB0(0). Effect_Handlers[48] (0x64E7FC), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[func]]
+pc = 0x44CFE0
+name = "EffectSlot49_Skill5D"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3b.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3B, capstone to the last instruction), 0x44CFE0..0x44CFF4 (0x15 bytes): 0x904B35 = 4, the ability 0x5D, tail jmp slot 4. Effect_Handlers[49] (0x64E800), called by Effect_ApplyResult with no argument, eax not read. docs/rest_3b.md."
+
+[[data]]
+pc = 0x64E43C
+name = "BattleItem_SideSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-04 (round fourteen group R3B): BattleItem_SideBegin, BattleItem_SidePick, BattleItem_Confirm 0x447CC0, BattleItem_TargetCancel; jumped through by BattleItem_SideDispatch 0x447D70 by the dword 0x904AA4 & 0xFF, unchecked; the entries set 1..3 (SideBegin 1, SidePick 2 / 3) and TargetCancel 1 with the step moved; BattleAttackCmd_States starts at 0x64E44C. The twin of BattleItemCmd_SideSteps. docs/rest_3b.md."
