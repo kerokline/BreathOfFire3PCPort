@@ -193,11 +193,14 @@ follow round fourteen directly.
 
 ## 5. For the owner
 
-- **Is state 3 a goal for its own sake**, or only when portability or a
-  handoff calls for it? States 1 and 2 already give "source that can be
-  changed and extended"; state 3 removes the dependence on Capcom's code
-  being present in the process and is what a clean engine / data split
-  finally looks like.
+- **Our own executable (state 3): answered 2026-10-04.** The owner: it is
+  the first goal of the phase 4 / 5 work, not for what it buys alone but as
+  what several other goals pass through - a build made from the player's
+  disc or their PC game ([`ASSET_SOURCES.md`](ASSET_SOURCES.md)), 64-bit
+  builds, and the like. So it is planned as the route to those, and its
+  design choices (how the data sections are mapped, what the loader takes
+  from which source) are judged by what they do for them. Not scheduled:
+  round fourteen and section 4's steps 1 to 4 come first.
 - **The decoder**: replace it at the cutover as above, or go to I23's
   sequences, or both by build.
 - **`EffectKindA8_DrawBar` and the other owner's calls** are round
