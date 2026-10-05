@@ -356,7 +356,10 @@ conditions in `Fish_Hooked` / `Fish_Swim` or the rule page's wrap.
   halves by it in a loop: a kind with 0 faults, with 1 never ends. The 23
   shipped kinds are 20..240; the kind is re-read from `Sprite_Current` after
   `Rand`, so only a `Sprite_Current` moved mid-spawn could meet another. Ours
-  aborts on 0.
+  aborts in the loop when M / 2 is 0 and the size is above M (a top size of 0
+  or 1: the check is before the subtraction since 2026-10-05, round fourteen's
+  review item 9 - it was after the loop, which never ended), and at the divide
+  on a top size of 0 with a roll of 0.
 - **The kind and the direction index image tables unmasked** (`Fish_Kinds`
   by `+6`, `0x660340` / `MoveCmd_F9Steps` by `+8`, `0x660364` by `+6`): read
   in place, as R0A's direction (no fault inside the image).

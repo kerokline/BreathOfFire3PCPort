@@ -656,7 +656,7 @@ extern "C" void __cdecl LeaderPanel_PressLatch(void) {
 // original 0x52B480 (PSX twin 0x801DE218): for each of the 23 kinds k, the
 // spot's count (kSpotCounts by 0x905B88) of Sprite_Objects records from the
 // next free index: +0 = 0x21, +5 = the index, +6 = k; its size word +0x9C =
-// Rand & 0xFF, halved by the kind's top size M (+0x1F) while above it, raised
+// Rand & 0xFF, lowered by M / 2 at a time (M the kind's top size, +0x1F) while above it, raised
 // to M / 2 when below that; +0x98 = +0x9A = size * 10 / M * the kind's +0x1E /
 // 10; a fish of exactly M (kinds other than 0x15) grows by one while Rand is
 // odd, at most M / 10 + 1 times; then +1..+4 and +0x5C cleared. Sprite_Current
@@ -687,6 +687,10 @@ extern "C" void __cdecl Fish_Spawn(void) {
                 unsigned char* const am = AM();
                 const U size = Word(am + 0x9C);
                 if (size <= m) break;
+                if ((m >> 1) == 0)
+                    bof3::Fatal("Fish_Spawn (0x52B480): kind %u's top size (0x%X) is %u and the size rolled is %u - the "
+                                "original subtracts M / 2 = 0 for ever (docs/rest_1g.md section 7)",
+                                (unsigned)S()[6], (unsigned)(kFishKinds + kKindStride * S()[6] + 0x1F), (unsigned)m, (unsigned)size);
                 SetWord(am + 0x9C, size - (m >> 1));
             }
             {
