@@ -799,25 +799,25 @@ const Callee kEngineStandard[] = {
     {BH_OURS(Field_SlotRelease), 1, {kU8}, Answer::kGarbage, 0, 0},
     {BH_OURS(Gfx_ClutStripCopyRow), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(MapView_SetElevation), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {"0x446F20", 0x446F20, 0x446F20, 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // (a * b) / 100, 0..999
-    {"0x446F50", 0x446F50, 0x446F50, 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // ..., 0..9999
-    {"0x446F80", 0x446F80, 0x446F80, 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // ..., 0..100
-    {"0x494E70", 0x494E70, 0x494E70, 0, {}, Answer::kThrough, 0, 0},             // the eight enemies' +0..+3 zeroed (compared)
-    {"0x42E0E0", 0x42E0E0, 0x42E0E0, 0, {}, Answer::kGarbage, 0, 0},             // BATE's, unlisted in the cut (part 7)
-    {"0x42E250", 0x42E250, 0x42E250, 0, {}, Answer::kGarbage, 0, 0},
-    {"0x42E2F0", 0x42E2F0, 0x42E2F0, 0, {}, Answer::kFlag, 0, 0},
+    {BH_OURS(Stat_PercentCap999), 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // 0x446F20, (a * b) / 100, 0..999
+    {BH_OURS(Stat_PercentCap9999), 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // 0x446F50, ..., 0..9999
+    {BH_OURS(Stat_PercentCap100), 2, {kAll, kAll}, Answer::kThrough, 0, 0},   // 0x446F80, ..., 0..100
+    {BH_OURS(BattleEnemy_ClearStates), 0, {}, Answer::kThrough, 0, 0},             // 0x494E70, the eight enemies' +0..+3 zeroed (compared)
+    {BH_OURS(BattleExtra_EquipSetupWindows), 0, {}, Answer::kGarbage, 0, 0},             // 0x42E0E0, BATE's, unlisted in the cut (part 7)
+    {BH_OURS(BattleExtra_EquipCommit), 0, {}, Answer::kGarbage, 0, 0},   // 0x42E250
+    {BH_OURS(BattleExtra_EquipRefresh), 0, {}, Answer::kFlag, 0, 0},   // 0x42E2F0
     {BH_OURS(EnemyOp_CastDoneCheck), 0, {}, Answer::kGarbage, 0, 0},                // BE3's (no start list had it: after 0x437200's padding)
     {BH_OURS(BattleObj_HitPose), 0, {}, Answer::kGarbage, 0, 0},                    // BE3's (no start list had it: after BattleObj_PickPose's table)
-    {"0x44F1D0", 0x44F1D0, 0x44F1D0, 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {"0x44F6A0", 0x44F6A0, 0x44F6A0, 2, {0, kU8}, Answer::kFlag, 0, 0},          // reads its second word only, and hands 0x44F770 its byte (cmp cl, 2)
-    {"0x44FB30", 0x44FB30, 0x44FB30, 0, {}, Answer::kGarbage, 0, 0},
-    {"0x452DD0", 0x452DD0, 0x452DD0, 1, {kU8}, Answer::kFlag, 0, 0},         // reads the low byte (its disassembly); every caller pushes a register's stale upper bytes
-    {"0x452EB0", 0x452EB0, 0x452EB0, 0, {}, Answer::kFlag, 0, 0},
-    {"0x452F10", 0x452F10, 0x452F10, 0, {}, Answer::kFlag, 0, 0},
-    {"0x4CF4B0", 0x4CF4B0, 0x4CF4B0, 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
-    {"0x590E80", 0x590E80, 0x590E80, 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},   // (u16 *stat, cap, delta): a stat add
+    {BH_OURS(Battle_InflictStatus), 2, {kU8, kU16}, Answer::kGarbage, 0, 0},   // 0x44F1D0: the target's byte (cmp bl, 2; and esi, 0xFF at 0x44F1D6; handed on whole to callees that read its byte) and the status's byte and 0x800 (rest_3d.cpp; R3D's reading, round fourteen's fold)
+    {BH_OURS(Battle_StatusResisted), 2, {0, kU8}, Answer::kFlag, 0, 0},          // 0x44F6A0, reads its second word only, and hands 0x44F770 its byte (cmp cl, 2)
+    {BH_OURS(Effect_NoHitReaction), 0, {}, Answer::kGarbage, 0, 0},   // 0x44FB30
+    {BH_OURS(Battle_AutoTargetCheck), 1, {kU8}, Answer::kFlag, 0, 0},         // 0x452DD0, reads the low byte (its disassembly); every caller pushes a register's stale upper bytes
+    {BH_OURS(Battle_RandomLiveMember), 0, {}, Answer::kFlag, 0, 0},   // 0x452EB0
+    {BH_OURS(Battle_RandomLiveEnemy), 0, {}, Answer::kFlag, 0, 0},   // 0x452F10
+    {BH_OURS(Quake_VertexLift), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},   // 0x4CF4B0
+    {BH_OURS(Stat_AddClampedTo), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},   // 0x590E80, (u16 *stat, cap, delta): a stat add
     {"0x591810", 0x591810, 0x591810, 2, {kU8, kU8}, Answer::kFlag, 0, 0},         // no start list has it (after 0x5917D0's)
-    {"0x59DB70", 0x59DB70, 0x59DB70, 6, {kAll, kAll, kU8, kU8, kU16, kU8}, Answer::kGarbage, 0, 0},
+    {BH_OURS(BattleEquipWin_DrawBar), 6, {kAll, kAll, kU8, kU8, kU16, kU8}, Answer::kGarbage, 0, 0},   // 0x59DB70
     {"0x5B9450", 0x5B9450, 0x5B9450, 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},   // the CRT's memcpy
     // items, stats, the party
     {BH_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0},   // char_stats.cpp, scena_sx.cpp: low bytes only
