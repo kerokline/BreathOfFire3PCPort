@@ -408,6 +408,14 @@ clones, 12,000).
 | C74 | `PartyAction14_StrikeCell` | message 0xDA | 227 |
 | C75 | `PartyAction14_StrikeCell` | 0xF8 for 0xF7 | 804 |
 | C76 | `PartyAction14_StrikeCell` | Field_Request = 3 | 781 |
+| C77 | `PartyAction13_Form2Begin` | the steep pose's direction held from before the ground and slope calls (case 0) | 64 |
+| C78 | `PartyAction13_Form2Begin` | the slope's direction byte held from before the ground call (case 0) | 142 |
+| C79 | `PartyAction_ProbeBegin` | the pose's direction held from before the side probes (case 0) | 339 |
+| C80 | `PartyAction14_Strike` | the effect object's direction held from before the sound and the effect probe (case 0) | 89 of 12,000 |
+| C81 | `PartyAction14_StrikeBegin` | the pose's direction held from before `PartyAction_SideProbes` (case 0) | 142 |
+| C82 | `PartyAction_ProbeBegin` | the side probe's clear of +0x2B a read-modify-write (`&= 0xFE`; case 3) | 76 |
+| C83 | `PartyAction_ProbeBegin` | the scratch flag tested again after the ground call (case 6) | 2 |
+| C84 | `PartyAction14_StrikeCell` | the member read before the hurt's spawn and the flash (case 9) | 108 |
 
 **The first run left C72 unrefused** (the strike cell's `Field_State +0x89`
 read before `Sprite_FlashClut`, not after): the harness's disturbance moved
@@ -418,6 +426,31 @@ and the group's run stayed at 0 mismatches. The thinnest of the rest (under
 50): C28 (12: the half turn by an arithmetic shift differs only at direction 0
 after the turns), C34, C39..C43 (the 0xF2 path behind `Effect_FindFree` and a
 `Rand` nibble, the bonus behind two more conditions).
+
+**Under the repaired disturbance, round fourteen's review item 1
+(2026-10-05).** The group's `Disturb` switched on `h % 12`, and the harness
+hands it only hashes that are not a multiple of 3, so its cases 0 (the
+direction), 3 (`+0x2B`), 6 (the scratch flag) and 9 (`Field_State +0x89`)
+never ran; `b9dfe34` draws the case from `sh::DisturbCase(h, 12)`. That is
+also why the harness moved `+0x89` "about one call in three hundred" above:
+only its own row did. Re-run at `451edeb` (`r1e/controls.py` copied, its
+anchors unchanged - all 76 still occur once): **76 planted, 76 refused**;
+the unplanted run 188,000 rounds, 0 mismatches. Ten counts moved by 1 to 34
+(C07 1,924, C13 114, C15 3,255, C17 657, C18 106, C23 / C26 815, C24 / C27
+3,185, C28 14), the rest equal. New controls C77..C84 above, one or more on
+each cell a formerly dead case moves; **8 planted, 8 refused**. Each was run
+again with its case switched off in the fuzz (scratch only), to see what
+refuses it without the case: the direction's five (C77..C81) are still
+refused (61, 136, 312, 81 of 12,000, 136) - mostly by the harness moving
+`Sprite_Current` among the sprite records, so the held byte is another
+sprite's; C82 still 70 (the same move; **no function of the group reads
+`+0x2B`**, only writes it, so case 3 can test only that the clear is a plain
+store, which C82 does); **C83 is refused by case 6 alone** (2 with it, 0
+without: every other read of the flag directly follows `MapView_SlopeAt`,
+whose stand-in writes it, so the case is otherwise noise here - and the 2 are
+thin); C84 still 108 with case 9 off (`Sprite_FlashClut`'s stand-in moves
+`+0x89` half the time), and with that stand-in's move off instead, case 9
+alone refuses it once (1 of 4,000). The fuzz is unchanged.
 
 ## 7. Calls across groups
 
