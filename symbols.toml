@@ -109887,3 +109887,453 @@ ctype = "short"
 count = 8
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R3D): s16 by Rand & 7, over 10000: Effect_HpBasedDamage 0x44FCE0. docs/rest_3d.md."
+
+[[func]]
+pc = 0x480210
+name = "EffectKind60_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x480210..0x480262 (0x53 bytes). Reached by EffectKind60_States[0] (hidden in R3E's 0x47FBE0): the point +0x34.. (0x198000, 0x198000, 0x4000000), the line's other end +0xC.. that plus 0x40000 in x; +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x480270
+name = "EffectKind60_SlideBoth"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x480270..0x4802B5 (0x46 bytes). Reached by EffectKind60_States[1] (hidden in 0x47FBE0): both ends' x down 0x20000; EffectKind60_DrawLine(+0x34, +0xC); +1 up once +0x34 is 0x98000. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x4802C0
+name = "EffectKind60_SlideEnd"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4802C0..0x4802F7 (0x38 bytes). Reached by EffectKind60_States[2] (hidden in 0x47FBE0): the other end's x down 0x20000; the line; +1 up once +0xC is 0x98000. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x480300
+name = "EffectKind5F_DrawLineDisc"
+ret = "void"
+params = "const long *point, unsigned unused, unsigned wobble, unsigned dy"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x480300..0x4804B6 (0x1B7 bytes). Reached by E8 from R3E's kind 0x5F states 0x47FE30, 0x47FEE0, 0x480010, 0x4800E0, 0x480190; PSX twin 0x801F9F8C (by callers; no name in the sibling): a draw mode linked 0xC at the point (dy the fourth word); r = EffectGte_ProjectSize(point, {0x50, 0x50}); for each row -r..r (s16) a semi-transparent black LINE_F2 half sqrt(r*r - i*i) (0x5A7A90) wide either side of the projection, offset by Math_Sin of an angle stepped by Rand & 0xFF and by the wobble word negated every row, linked 0x20; the second word not read. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x4837B0
+name = "EffectKind69_DrawLines"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4837B0..0x48396F (0x1C0 bytes). Reached by E8 from EffectKind69_Part2 0x483540 (E3B); PSX twin 0x801D218C (call-disputed; no name): in DamageScratch +0/+4/+8 and Scratch_Swap the amplitude 0x40, the angle ((+0xB + 2) & 0xF) << 8, a shade, the count +0xA; for i below the count a draw mode committed 0xC to slot 2 and a semi-transparent LINE_G2 between Prim_VertexScratch projected before and after it moves to (0, Math_Sin(((+0xB + i + 2) & 0xF) << 8) * amplitude sar 12, -i << 6), the amplitude 0x80 +/- Rand & 0x3F, committed 0x24 to slot 2. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x48ED80
+name = "EffectKind9C_DrawTrail"
+ret = "void"
+params = "const long *from, const long *to, unsigned shade"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x48ED80..0x48F064 (0x2E5 bytes). Reached by E8 from E4E's EffectKind9C_Grow, _Hold, _PanelsIn, _PanelsOut, _Beams, _Shrink; PSX twin 0x801D1C1C (by callers; no name): a draw mode committed 0xC to slot 2; two semi-transparent POLY_G4 between from and to projected, offset by the floats 0x5C41B8 / 0x5C41C0, shaded by the byte, committed 0x44 to slot 2; up to eight TILE_1 dots from from + (Frame_Counter & 7) * d, d = (to - from) sar 6, stepping 8 d while the y is not below to's, committed 0x14. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x48F090
+name = "EffectKind9E_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x48F090..0x48F167 (0xD8 bytes). Reached by EffectKind9E_States[0] (hidden in 0x48ED80): the half-extent +0xC.. 0, its speed +0x18.. (0x3000, 0, 0x200000) or (0, 0x3000, 0x200000) by +6 bit 0; +6 bit 3: eight steps on and +1 up three, else +9 = 8 and +1 up; unless +0xB bit 0 sound 0x207 (0x202 when +6 bit 2). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x48F170
+name = "EffectKind9E_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x48F170..0x48F1D6 (0x67 bytes). Reached by EffectKind9E_States[1] (hidden in 0x48ED80): the extent up by its speed; EffectGte_LoadMapCamera; EffectKind9E_DrawOutline(+0x34, +0xC); +9 down, at 0 +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x48F1E0
+name = "EffectKind9E_Flash"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x48F1E0..0x48F23E (0x5F bytes). Reached by EffectKind9E_States[2]; code no list had (the cut's 0x48F170 ran over it; band_rows.py flags it): the outline and EffectKind9E_DrawPlate; the wall vector 0x6762A0 = -extent; +9 = 0x80, +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x48F240
+name = "EffectKind9E_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x48F240..0x48F2FE (0xBF bytes). Reached by EffectKind9E_States[3] (hidden in 0x48ED80): the wall vector's third word up +0x20 sar 1, negated at +0x14; odd frames the shaded plate and the textured plate 0x4000 along x (y when +6 bit 0), even frames EffectKind9E_DrawWall(+0x34, 0x6762A0); +1 up once the count 0x903848 equals +7. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x48F300
+name = "EffectKind9E_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x48F300..0x48F353 (0x54 bytes). Reached by EffectKind9E_States[4]; code no list had (the cut's 0x48F240 ran over it): the plate; +9 = 8, +1 up; unless +0xB bit 1 sound 0x208 (0x203 when +6 bit 2). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x48F360
+name = "EffectKind9E_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x48F360..0x48F3C6 (0x67 bytes). Reached by EffectKind9E_States[5] (hidden in 0x48ED80): the extent down by its speed; the outline; +9 down, at 0 +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x48F3D0
+name = "EffectKind9E_DrawOutline"
+ret = "void"
+params = "const long *a, const long *b"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x48F3D0..0x48F5C3 (0x1F4 bytes). Reached by E8 from EffectKind9E_Grow, _Flash, _Shrink; PSX twin 0x801F9020 (by callers; no name): a + b, the two crossed corners (+6 bit 0 chooses which of x / y takes the sum) and a - b projected; an opaque white LINE_F4 round them linked 0x38 at a's x, y and a LINE_F2 across linked 0x20. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x490A80
+name = "EffectKindA1_CaptureSprite"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x490A80..0x490BA4 (0x125 bytes). Reached by EffectKindA1_States[0] = EffectKindA3_States[0] (hidden in E4E's EffectKindA0_SwapLong); PSX twin 0x801D21B4 (by callers; no name): Effect_FindFree (none: +1 up); kPixIndex 0x6769BA = 1; Gfx_ClearRect(0x340, 0x100, 0x80, 0x100); the sprite +0x4C points at copied (0x80 bytes) into the free record, made kind 0x3A state 2 with the capture record's offsets, its page and animation set by +0x24 bit 0 and +0x2C, Sprite_UpdateScreen with it current, Effect_Release; Sprite_Current put back, +9 = 2, +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x490BB0
+name = "EffectKindA1_ReadBack"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x490BB0..0x490C40 (0x91 bytes). Reached by EffectKindA1_States[1] = EffectKindA3_States[1] (hidden in EffectKindA0_SwapLong): +9 down; at 0 the capture record's rectangle at (0x340, 0x100) read back by 0x59E930 into EffectKind30_Shards, the cursors 0x6769B0 / 0x6769B4 at it and at the particles 0x931980, the count 0x6769B8 0, +9 0, +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x490C50
+name = "EffectKindA1_SplitPixels"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x490C50..0x490E16 (0x1C7 bytes). Reached by EffectKindA1_States[2] = EffectKindA3_States[2] (hidden in EffectKindA0_SwapLong): the sprite's point projected; half the read-back's rows (+9 chooses) walked, every pixel not 0 a particle of 0x14 at the cursor (pixel, x, y, depth); +9 up, at 2 +1 up; ours aborts where the row byte could never reach the bound. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x490E20
+name = "EffectKindA1_AimPixels"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x490E20..0x490F9F (0x180 bytes). Reached by EffectKindA1_States[3] = EffectKindA3_States[3] (hidden in EffectKindA0_SwapLong): every particle a blink from a shuffled order of eight 0s and eight 1s (sixteen Rand swaps every sixteenth), a step (+0xB 0: two of (Rand & 0x1F) - 0x10; else 0..0xF, the larger first, the second negated) and, +6 0, a delay d = (Rand & 0x1E) + 0xA with the particle d steps back, else the delay 0x28 - (Rand & 0x1E); +9 = 0x50, +1 up, sound 0x20C. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x490FA0
+name = "EffectKindA1_MovePixels"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x490FA0..0x4910C5 (0x126 bytes). Reached by EffectKindA1_States[4] = EffectKindA3_States[4] (hidden in EffectKindA0_SwapLong): the sprite's byte +0 |= 0x40; every particle shown this frame steps (during its delay when +6 is 0, after it otherwise) and is drawn as a TILE_1 coloured from its 15-bit pixel, committed 0x14 to slot 2; every particle's blink flipped; +9 down, at 0 +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x4910F0
+name = "EffectKindA2_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4910F0..0x491132 (0x43 bytes). Reached by EffectKindA2_States[0] (hidden in EffectKindA0_SwapLong): the radii +0xC, +0x10 and speeds +0x18, +0x1C 0; +9 = 0x14, +1 up; sound 0x208. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491140
+name = "EffectKindA2_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491140..0x4911B9 (0x7A bytes). Reached by EffectKindA2_States[1] (hidden in EffectKindA0_SwapLong): the speeds up 0x200 / 0x100 and the radii by them; EffectKindA2_DrawRing(+0x34, +0xC, +0x10); +9 down, at 0 Effect_Release (a tail jmp). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x4911C0
+name = "EffectKindA2_Rewind"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4911C0..0x49126D (0xAE bytes). Reached by EffectKindA2_States[2] (hidden in EffectKindA0_SwapLong): the radii and speeds 0, twenty steps of 0x100 / 0x200, the radii negated; +9 = 0x14, +1 up; sound 0x208. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491270
+name = "EffectKindA2_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491270..0x4912E9 (0x7A bytes). Reached by EffectKindA2_States[3] (hidden in EffectKindA0_SwapLong): the ring; the radii up by the speeds, the speeds down 0x100 / 0x200; +9 down, at 0 Effect_Release (a tail jmp). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491310
+name = "EffectKindA3_CaptureSprite"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491310..0x49140B (0xFC bytes). Reached by EffectKindA3_States[5] (hidden in EffectKindA0_SwapLong): nothing until the count 0x903848 is 0x29; then EffectKindA1_CaptureSprite's capture with the page always set and Sprite_SetAnimation(7). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491410
+name = "EffectKindA3_ReadBack"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491410..0x4914A0 (0x91 bytes). Reached by EffectKindA3_States[6] (hidden in EffectKindA0_SwapLong): the same code as EffectKindA1_ReadBack (instruction for instruction). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x4914B0
+name = "EffectKindA3_SplitPixels"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4914B0..0x491676 (0x1C7 bytes). Reached by EffectKindA3_States[7] (hidden in EffectKindA0_SwapLong): the same code as EffectKindA1_SplitPixels (instruction for instruction). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491680
+name = "EffectKindA3_AimPixels"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491680..0x4917BD (0x13E bytes). Reached by EffectKindA3_States[8] (hidden in EffectKindA0_SwapLong): every particle a blink (the shuffled order), a step 0..0xF (the larger first, the second negated) and a delay d = (Rand & 0x1E) + 0xA, the particle d steps on; +9 = 0x50, +1 up, sound 0x20C. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x4917C0
+name = "EffectKindA3_MovePixels"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4917C0..0x4918AF (0xF0 bytes). Reached by EffectKindA3_States[9] (hidden in EffectKindA0_SwapLong): the sprite's byte +0 |= 0x40; every particle shown this frame steps back during its delay and is drawn; the blinks flipped; +9 down, at 0 the count 0x903848 = 0x2B and +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x4918B0
+name = "EffectKindA2_DrawRing"
+ret = "unsigned char"
+params = "const long *point, long inner, long outer"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4918B0..0x491A91 (0x1E2 bytes). Reached by E8 from EffectKindA2_Grow and _Shrink: a draw mode committed 0xC to slot 2; EffectGte_LoadMapCamera; a ring of 32 semi-transparent POLY_G4 round the point in x and y between the radii (cos / sin * radius sar 8, the angle 0x80 by 0x80), inner corners (0xFF, 0x7F, 0), outer black, committed 0x44 to slot 2; al 0. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491AE0
+name = "EffectKindA7_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491AE0..0x491AFE (0x1F bytes). Reached by EffectKindA7_States[0] (hidden in 0x4918B0): the size +0xC 0, +9 = 0x10, +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491B00
+name = "EffectKindA7_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491B00..0x491B33 (0x34 bytes). Reached by EffectKindA7_States[1] (hidden in 0x4918B0): the size up 0x10; +9 down, at 0 +9 = 0x20 and +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491B40
+name = "EffectKindA7_Hold"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491B40..0x491B65 (0x26 bytes). Reached by EffectKindA7_States[2] (hidden in 0x4918B0): +9 down, at 0 +9 = 0x10 and +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491B70
+name = "EffectKindA7_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491B70..0x491B9C (0x2D bytes). Reached by EffectKindA7_States[3] (hidden in 0x4918B0): the size down 0x10; +9 down, at 0 Effect_Release (a tail jmp). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491BC0
+name = "EffectKindA8_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491BC0..0x491BE2 (0x23 bytes). Reached by EffectKindA8_States[0] (hidden in 0x4918B0): the word +0x2E = 0x12C, +9 = 0; EffectKindA8_ClearBars; +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491BF0
+name = "EffectKindA8_Bars"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491BF0..0x491C36 (0x47 bytes). Reached by EffectKindA8_States[1] (hidden in 0x4918B0): +9 0: EffectKindA8_StartBar and +9 = (Rand & 0xF) + 0x18; else +9 down; EffectKindA8_StepBars(0xF0); +1 up once the count 0x903848 is 0xE. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491C40
+name = "EffectKindA8_End"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491C40..0x491C56 (0x17 bytes). Reached by EffectKindA8_States[2] (hidden in 0x4918B0): EffectKindA8_StepBars(0xF0); al 0 (none in use): Effect_Release (a tail jmp). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491CA0
+name = "EffectKindA9_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491CA0..0x491CC7 (0x28 bytes). Reached by EffectKindA9_States[0] (hidden in 0x4918B0): the radii words +0x2E, +0x30 0, +9 = 0xA, +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491CD0
+name = "EffectKindA9_Grow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491CD0..0x491D09 (0x3A bytes). Reached by EffectKindA9_States[1] (hidden in 0x4918B0): the radii up 0x15 / 9; +9 down, at 0 +9 = 0x5A and +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491D10
+name = "EffectKindA9_Wait"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491D10..0x491D2A (0x1B bytes). Reached by EffectKindA9_States[2] (hidden in 0x4918B0): once the count 0x903848 is 9: +9 = 0x1E, +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491D30
+name = "EffectKindA9_Shrink"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491D30..0x491D62 (0x33 bytes). Reached by EffectKindA9_States[3] (hidden in 0x4918B0): the radii down 7 / 3; +9 down, at 0 Effect_Release (a tail jmp). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491D90
+name = "EffectKindAA_Start"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491D90..0x491DA1 (0x12 bytes). Reached by EffectKindAA_States[0] (hidden in 0x4918B0): +9 = 0x10, +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491DB0
+name = "EffectKindAA_FadeIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491DB0..0x491DEA (0x3B bytes). Reached by EffectKindAA_States[1] (hidden in 0x4918B0): EffectKindAA_DrawFill(the low byte of +9 * 0xF0); +9 down, at 0 +9 = 0x10 and +1 up. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491DF0
+name = "EffectKindAA_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491DF0..0x491E2E (0x3F bytes). Reached by EffectKindAA_States[2] (hidden in 0x4918B0): EffectKindAA_DrawFill(0xFF when +9 is 0x10, else +9 << 4); +9 down, at 0 Effect_Release (a tail jmp). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491E30
+name = "EffectKindA7_DrawGlow"
+ret = "void"
+params = "const long *point, unsigned size, unsigned colour"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491E30..0x491FE6 (0x1B7 bytes). Reached by E8 from E4E's EffectKindA7_Run (point +0x34, the word +0xC, 7): EffectKindA0_DrawGlow's code (compared instruction by instruction) with the draw mode and the fan committed to slot 7 and the POLY_G3 opaque: a fan of 32 round the point projected, the radius EffectGte_ProjectSize's first word + (Frame_Counter & 1). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x491FF0
+name = "EffectKindA8_ClearBars"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x491FF0..0x492003 (0x14 bytes). Reached by E8 from EffectKindA8_Start: the sixteen bars of 6 at EffectKind30_Shards out of use (+0 = 0). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x492010
+name = "EffectKindA8_StartBar"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x492010..0x49202E (0x1F bytes). Reached by E8 from EffectKindA8_Bars: the first bar out of use put in use (+0 = 1, +2 = 0). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x492030
+name = "EffectKindA8_StepBars"
+ret = "unsigned char"
+params = "unsigned length"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x492030..0x4920E6 (0xB7 bytes). Reached by E8 from EffectKindA8_Bars and _End: a draw mode committed 0xC to slot 7; EffectGte_LoadMapCamera; each bar in use by its step +2: 0 - +1 = +3 = 4, +4 = the length's low word, +2 = 1; 1 - +2 = 2; 2 - +4 down 8, below 0 out of use; drawn (EffectKindA8_DrawBar) unless +2 is 0; al 1 when any was in use. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x4920F0
+name = "EffectKindA8_DrawBar"
+ret = "void"
+params = "const unsigned char *bar"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x4920F0..0x49225F (0x170 bytes). Reached by E8 from EffectKindA8_StepBars and E4F's EffectKindB0_StepBars: two opaque POLY_G4 across the screen, x 0..320: from y +4 - +3 - (Frame_Counter & 1) black to y +4 red (0x80, 0, 0), then back to black at y +4 + (Frame_Counter & 1) + +3; each committed 0x44 to slot 7 (the depths Gpu_SetPolyG4's). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x492260
+name = "EffectKindA9_DrawDisc"
+ret = "void"
+params = "unsigned rx, unsigned ry, unsigned shade"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x492260..0x4923FC (0x19D bytes). Reached by E8 from E4E's EffectKindA9_Run (the words +0x2E, +0x30, 0x80): a draw mode committed 0xC to slot 7; a fan of 32 semi-transparent POLY_G3 from the screen point (160, 240), its rim from the angle 0x800 by 0x40 at (160 + f + cos * rx sar 12, 240 + f + sin * ry sar 12), f = (Frame_Counter & 1) << 2, the centre (shade, shade >> 2, shade >> 2), the rim black; committed 0x34 to slot 7. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x492400
+name = "EffectKindAA_DrawFill"
+ret = "void"
+params = "unsigned shade"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x492400..0x492507 (0x108 bytes). Reached by E8 from EffectKindAA_FadeIn, _FadeOut and R3G's 0x4925E0, 0x492620: a draw mode committed 0xC to slot 7; two opaque POLY_G4 over the frame, black at rows 0 and 240 and (shade, 0, 0) at row 120, each committed 0x44 to slot 7; a full-frame fill drawn through DIV-0041's Widescreen_FillX / Widescreen_Fill (the original's 0..320 narrow or unarmed). Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."
+
+[[func]]
+pc = 0x492580
+name = "EffectKindAB_Drops"
+ret = "void"
+params = "void"
+impl = "src/game/rest_3f.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-04 (round fourteen group R3F, capstone to the last instruction), 0x492580..0x49259B (0x1C bytes). Reached by EffectKindAB_States[1] (hidden in 0x492400): Draw_PassFlags 0: +1 up; else EffectKindAB_Emit and a tail jmp to EffectKindAB_MoveDrops. Fuzz only: no recorded route enters it (catalog reach columns empty; analysis/calltrace). docs/rest_3f.md."

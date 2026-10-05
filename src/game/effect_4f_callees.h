@@ -12,7 +12,7 @@ namespace effect_4f::at {
 constexpr std::uint32_t kGlowDraw = bof3::addr::EffectKindA0_DrawGlow;      // (const long *point, size word, colour byte): kind 0xB9's glow,
                                                    // a copy of EffectKind64_DrawGlow (a draw mode, 32 POLY_G3)
 // Catalog part 6 (no group of round thirteen), read to its last instruction:
-constexpr std::uint32_t kBarDraw = 0x4920F0;       // (unsigned char *bar): one of kind 0xB0's sixteen bars of 6 drawn,
+constexpr std::uint32_t kBarDraw = bof3::addr::EffectKindA8_DrawBar;       // (unsigned char *bar): one of kind 0xB0's sixteen bars of 6 drawn,
                                                    // two POLY_G4 from its +3 and +4; reads it to +5, writes nothing of it
 
 // --- kind 0xAB: drops from eight sources (a copy of kind 0x81's, effect_3d) ---
