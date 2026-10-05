@@ -455,6 +455,34 @@ all refused, in 101..951 rounds.
 | 134 | `EffectKind18Sub3C_Rise` | `s + 0x30)) >= 0x100) {` -> `s + 0x30)) > 0x100) {` | refused (635 rounds) |
 | 135 | `EffectKind18Sub3C_Rise` | `estFB)(9, 0xF);` -> `estFB)(9, 0xE);` | refused (1669 rounds) |
 | 136 | `EffectKind18Sub3C_Rise` | `SH_CALL(Effect_Release)();` -> `;` | refused (1669 rounds) |
+| 137 | `EffectKind18Sub27_Draw` | the texture's `s[8]` -> `+8` as read before `GroundFixed` / `Project` while `S()` is the same record | refused (29 rounds) |
+| 138 | `EffectKind18Sub29_Draw` | each half's `if (s[8] != 0)` -> `+8` as read at entry, before the halves' links, while `S()` is the same record | refused (118 rounds) |
+| 139 | `EffectKind18Sub42_WaitFlag` | `set ^ s[8]` -> `+8` as read before `Flags_Test` while `S()` is the same record | refused (14 rounds of 8000) |
+| 140 | `EffectKind18Sub42_Mark` | the keep word's half `s[8] != 0` -> `b`, `+8` as read before `MapView_ItemAt`, while `S()` is the same record | refused (21 rounds) |
+
+**Under the repaired disturbance** (2026-10-05, round fourteen's review item
+1: the group's `Disturb` switched on `h % 6`, which never reached cases 0 and
+3 - `+8` and `Cond_ByteFE` - until `b9dfe34` drew the case from
+`sh::DisturbCase`). Controls 1..136 re-run from the same plants (every anchor
+still unique, none repaired), on `451edeb`: **135 of 136 refused**, 113 not
+(the equivalent mutant, as before). No count went to 0. One fell by half:
+**42** (`+8` 2 for 0), 4000 to 2063 rounds; with case 0 knocked out of the
+fuzz it was refused in 2072, so the fall is not the disturbance's - the
+mutant differs only when `+0x3A` is not 0, and the 4000 was the first run's,
+before the seeds were fixed (the seven re-run rows did not include it). The
+others moved by 0..90 rounds (the most: 105 2032 to 1946, 111 2434 to 2507,
+106 / 107 / 109 / 110 / 112 by 60..62, 116 by 57, 32 by 47). Control 71..74
+ran two clones (`Sub42_WaitFlag` and `_WaitFlagBack`, 8,000 rounds) as
+before. **Controls 137..140 are new**, one a function that reads `+8` (case
+0) again after a call: each keeps the value read before the call while
+`Sprite_Current` is still the same record after it (the pointer re-read
+kept), so only a move of `+8` itself can refuse it. All four refused; with
+case 0 knocked out (its line a bare `break`) all four ran without a mismatch,
+so each refusal is the formerly dead case's. **Case 3 (`Cond_ByteFE`) has no
+control: no function of the group reads it after a call** - `Sub48_WaitCue`,
+`Sub49_WaitCue` and `Sub49_WaitFar` read it once, first, before any call, and
+the disturbance runs only inside the stand-ins - so for this group the case
+is noise, not a test. The fuzz is unchanged.
 
 
 ## 9. Calls across groups
