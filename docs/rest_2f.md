@@ -413,6 +413,16 @@ count list (section 7). Both bound in the seed / disturbance.
 | 142 | `Win2_DrawItemList` | the scroll bar over 8 rows | 6000 of 6000 |
 | 143 | `Win2_DrawItemList` | the scroll offset unsigned | 2983 of 6000 |
 | 144 | `Win2_DrawItemList` | the top not re-read per row | 63 of 6000 |
+| 145 | `Tactics_Top` | the step read before the cancel's two sounds | 28 of 6000 |
+| 146 | `TacticsFormation_Leave` | the step read before the backdrop | 80 of 6000 |
+| 147 | `TacticsFormation_Enter` | the countdown read before the backdrop | 89 of 6000 |
+| 148 | `Win1_ButtonRow` | the selection +0xB read before the state call | 31 of 6000 |
+| 149 | `Window_Kind1List` | the last index read once, before the draws | 30 of 6000 |
+| 150 | `TacticsMembers_Pick` | the held row from the row read before the sound | 2 of 6000 |
+| 151 | `TacticsMembers_Swap` | the held row not re-read after the party swap | 135 of 6000 |
+| 152 | `TacticsMembers_Swap` | the row not re-read after the party swap | 108 of 6000 |
+
+**Under the repaired disturbance (2026-10-05, round fourteen's review item 1).** Before `b9dfe34` the group's cases 0, 3, 6, 9 and 12 never ran (the step, the countdown, the current record's +0xB, the kind-1 last index, the members rows); rows 1..144 were refused by the other cases. The 144 were re-run on the repaired fuzz (a copy of the driver, `controls/rest_2f/` in session 8cb2a236's scratchpad, anchors converted for a CRLF checkout, none repaired): **139 refused, the same five equivalents not refused**; 38 counts moved, none to 0. The four weakest fell - C111 28 to 21, C129 23 to 12, C137 5 to 3, C144 63 to 45, each a record re-read that the live cases 8 and 14 now move a third less often. Rows 145..152 are new, on cells only the formerly dead cases moved (case 0: 145, 146; case 3: 147; case 6: 148; case 9: 149; case 12: 150..152). With those cases skipped (a scratch gate, not committed) 149 and 150 fall to 0 and 148 from 31 to 8; 145..147 keep 22, 69 and 73 (the harness's own case 11 moves the step and countdown bytes too). 151 and 152 were refused in 2 and 0 rounds by case 12 alone: the stand-in in the way is 0x58BD50, and the fuzz now re-lists it (`SwapEffect`: the swap as the field-standard row's `FxSwap`, and a quarter of the time the members row or held row moved to 0..4), since `TacticsMembers_Swap` reads both again after its party swap. On that fuzz the shadow is `294000 rounds over 49 functions (6000 each), 1842536 calls to the stand-ins, 0 MISMATCHES`, and all 152 were run again: 139 of 1..144 refused, the same five not, 43 counts moved by at most 51 (C96), none to 0; rows 145..152 above are that run. 150 stays at 2 rounds: its re-read is under a sound, which only case 12 reaches.
 
 ## 6. Cross-group calls, inbound calls, the rebinding
 
