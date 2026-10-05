@@ -478,7 +478,54 @@ void Args(unsigned k, U* a) {
     }
 }
 
+// DIV-0075's row, beside the fuzz (the form of DIV-0063's in battle_e6_fuzz.cpp).
+// The self-test above compares Capcom's two entry steps with the switch off;
+// this runs once Rest4D_Inject has set it, so ours moves the step on. There is
+// no original that does: what the entry says ours must do is Capcom's step
+// and then 0x939A3F one more - no other byte, no other call, the answer still
+// BareRetZero's. So each of ours is wrapped to take that one step back and
+// fuzzed against Capcom's as the group's own rows are (the same seed, moves,
+// stand-ins and regions): a wrapper that matched with the switch on would
+// mean ours does not move the step, or moves more.
+void __cdecl SlotEntryAbandoned() {
+    ::CommuName_SlotEntry();
+    B(at::kStep2) = static_cast<unsigned char>(B(at::kStep2) - 1);
+}
+void __cdecl MemberEntryAbandoned() {
+    ::CommuName_MemberEntry();
+    B(at::kStep2) = static_cast<unsigned char>(B(at::kStep2) - 1);
+}
+
 }  // namespace
+
+void EntryAbandonTest() {
+    struct Row { U base; const void* wrapper; };
+    static const Row kRows[] = {
+        {0x45D730, reinterpret_cast<const void*>(&SlotEntryAbandoned)},     // CommuName_SlotEntry
+        {0x45E2C0, reinterpret_cast<const void*>(&MemberEntryAbandoned)},   // CommuName_MemberEntry
+    };
+    static sh::Clone chosen[2];
+    static unsigned index[2];
+    const char* const only = std::getenv("BOF3X_R4D_ONLY");
+    unsigned n = 0;
+    for (const Row& r : kRows)
+        for (unsigned k = 0; k < kCount; ++k)
+            if (kAll[k].base == r.base && (!only || !*only || std::strstr(kAll[k].name, only))) {
+                index[n] = k;
+                chosen[n] = kAll[k];
+                chosen[n++].ours = r.wrapper;
+            }
+    if (n == 0) return;
+    static unsigned* s_index = index;
+    sh::Group g = {"rest_4d DIV-0075", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
+                   sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
+                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 4000};
+    g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
+    g.field = true;
+    sh::Run(g);
+    bof3::Log("shadow      rest_4d DIV-0075: %u entry steps, ours with the switch on, the step one more than Capcom's and "
+              "nothing else, 0 MISMATCHES", n);
+}
 
 void SelfTest() {
     // BOF3X_R4D_ONLY: the clones whose name contains it (a control's run)

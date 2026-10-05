@@ -266,6 +266,27 @@ was reached (the coverage line's `phase` rows), every listed callee called.
   branch (message 0xF7, state 4) ends the entry without a name; the switch is
   set after the self-test, which compares Capcom's steps. The entry itself
   waits for the localisation rework.
+
+  **DIV-0075's row** (2026-10-05, round fourteen's end, debt 24; the form of
+  DIV-0063's in `battle_e6_fuzz.cpp`). With the switch off in the fuzz, the
+  moved step was built and seen armed but never run. `Rest4D_Inject` now
+  calls `rest_4d::EntryAbandonTest()` once it has set the switch (under the
+  same `BOF3X_SHADOW=rest_4d`, before the inject): ours'
+  `CommuName_SlotEntry` and `CommuName_MemberEntry`, the switch on, each
+  wrapped to take `0x939A3F` back by one after it returns, fuzzed against
+  Capcom's two steps with the group's seed, moves, stand-ins and regions,
+  4,000 rounds each. What the entry says ours must do is Capcom's step and
+  the step one more, nothing else (no name changed, the answer still
+  `BareRetZero`'s): a wrapper that matches means exactly that, and one that
+  mismatches means ours does not move the step, moves it otherwise, or
+  changes something more. Its lines in the shadow's log are the harness's
+  `rest_4d DIV-0075 self-test: 8000 rounds over 2 functions ... 0 MISMATCHES`
+  and `rest_4d DIV-0075: 2 entry steps, ours with the switch on, ...`. The
+  next step's unanswered branch (message 0xF7, state 4) is Capcom's
+  `_SlotEntryOut` / `_MemberEntryOut` unchanged, compared by the group's own
+  rows. Controls on the row: the switch's step left out of
+  `CommuName_SlotEntry`, and moved by two in `CommuName_MemberEntry`, each
+  refused (section 6).
 - **L4. Unbounded indexes**, one policy: a jump past a state table aborts
   (section 3); a dereference of `CommuName_RecordNames` past 7 aborts (R4E's
   `0x45F020` answers 0xFF when the cursor passes the records, and the original
