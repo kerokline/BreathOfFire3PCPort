@@ -304,6 +304,7 @@
 #include "game/rest_4e.h"
 #include "game/rest_4d.h"
 #include "game/rest_4c.h"
+#include "game/rest_4b.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1369,6 +1370,11 @@ void InjectAll() {
                                 // harness's recorders, its nine tables swapped for the fuzz only; after every
                                 // harness's inject; before FishingText_Arm; no module patches bytes inside its 60
                                 // (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp)
+    Rest4B_Inject();            // round 14 wave-four group R4B (0x456D50..0x459EDA: Field_ModeTailKinds 14, 21..26,
+                                // 60, their states and the community board's states and draws): its clones' calls
+                                // re-aimed at the scenario harness's recorders, twelve .data tables swapped for the
+                                // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
+                                // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
