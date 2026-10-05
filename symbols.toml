@@ -5119,8 +5119,9 @@ name = "Field_RunSlot"
 psx = 0x80197D84
 ret = "void"
 params = "unsigned char index"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (its head): masks its argument to a byte, record Field_Slots + index * 0x10, compares byte +0x4B of the pointer at +0xC with byte +2. Field_RunSlots calls it for each record with bit 0. Not reached by the attract cycle (hidden_b). Unread past its head."
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455300..0x45537A (0x7B bytes), cdecl: record Field_Slots + 16 * (index & 0xFF); when its object's (+0xC) byte +0x4B differs from +2, +8 = the dword table +4's entry by it, +1 = that script's byte 3, +2 = +0x4B read again; when +1 is 0, +8 steps 4 (back 4 * byte 1 at an 0xFF) and +1 = its byte 3; Field_SlotClutCopy(record); +1 less 1. Field_RunSlots calls it for each record with bit 0. psx (0x80197D84) from the 2026-09-22 read of Field_RunSlots' twin, not read again. docs/rest_4a.md."
 
 [[data]]
 pc = 0x655350
@@ -110925,3 +110926,428 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R3B): BattleItem_SideBegin, BattleItem_SidePick, BattleItem_Confirm 0x447CC0, BattleItem_TargetCancel; jumped through by BattleItem_SideDispatch 0x447D70 by the dword 0x904AA4 & 0xFF, unchecked; the entries set 1..3 (SideBegin 1, SidePick 2 / 3) and TargetCancel 1 with the step moved; BattleAttackCmd_States starts at 0x64E44C. The twin of BattleItemCmd_SideSteps. docs/rest_3b.md."
+
+# --- Round fourteen group R4A: the battle's targeting helpers, Field_RunSlot's copy, the community's simulation, twelve object triggers (src/game/rest_4a.cpp, docs/rest_4a.md) ---
+
+[[func]]
+pc = 0x452DD0
+name = "Battle_AutoTargetCheck"
+ret = "unsigned char"
+params = "unsigned actor"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x452DD0..0x452EA6 (0xD7 bytes), cdecl, al: 1 when the battle flags 0x904AA8 lack bit 14, when Battle_ActorIsOut(0x904B8B) (pushed in the flags dword), or when 0x904B8B is the argument byte; a party argument stores 0x904B8B to the target 0x904B44 and answers 0; an enemy (record 0x93B960 + 0x128 (a - 3), unchecked) with +0xBA above 1, +0x92 bit 5 and +0x114 bit 14 clear answers 1; else with 0x904B35 4 its ability (+0x106) flags byte in NameTable_Abilities (24 bytes) picks the target 0xC0 / 0x80 / 0x40 (bit 4) or the argument (bits 4, 6 clear), 1; otherwise the target 0x904B8B and 0. Called by BattleEnemy_PickAction and Battle_MemberAutoTarget. PSX twin 0x800A626C (call-anchored, analysis/pairs_propagated.json), no sibling name; not read. docs/rest_4a.md."
+
+[[func]]
+pc = 0x452EB0
+name = "Battle_RandomLiveMember"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x452EB0..0x452F0C (0x5D bytes), cdecl, al: of members 0..2 not Battle_ActorIsOut, the one at Rand() % their count (idiv, the count unchecked: 0 divides by zero, ours aborts). Called by BattleAction_PickRandomAbility. PSX twin 0x800A64BC (call-anchored), not read. docs/rest_4a.md."
+
+[[func]]
+pc = 0x452F10
+name = "Battle_RandomLiveEnemy"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x452F10..0x452F6D (0x5E bytes), cdecl, al: of enemies 3..10 not Battle_ActorIsOut, the one at Rand() % the count, in a four-byte stack list: a fifth standing enemy overwrites the count byte with its number and later ones the frame bytes after it, so the pick can read frame bytes the function never wrote (ours: those 0; docs/rest_4a.md section 7, L1, wants a ledger entry). Called by BattleAction_PickRandomAbility. PSX twin 0x800A6408 (call-anchored), not read. docs/rest_4a.md."
+
+[[func]]
+pc = 0x454260
+name = "Battle_MemberActionIs0E"
+ret = "unsigned char"
+params = "unsigned member"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x454260..0x45428A (0x2B bytes), cdecl, al: 1 when ObjTrio + 0x14C * (member & 0xFF) + 0x126 (u16) is 0xE or 0x128. Called by Battle_MemberAutoTarget (battle_sprites.cpp action_is_e). No PSX twin paired. docs/rest_4a.md."
+
+[[func]]
+pc = 0x454290
+name = "Battle_MemberAutoFixed"
+ret = "void"
+params = "unsigned member"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x454290..0x454303 (0x74 bytes), cdecl: the member's +0x142 (s8, at most 5) against Rand() % 20: below it with 0x904AB1 not 1, Battle_RandomOtherMember(member), else Battle_DefaultTarget((Rand() & 7) + 3); +0x125 = 1, 0x904B35 = 1, 0x904B44 the answer. Called by Battle_MemberAutoTarget (auto_fixed). No PSX twin paired. docs/rest_4a.md."
+
+[[func]]
+pc = 0x454310
+name = "Battle_RandomOtherMember"
+ret = "unsigned char"
+params = "unsigned exclude"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x454310..0x454372 (0x63 bytes), cdecl, al: of members 0..2 not Battle_ActorIsOut and not the argument byte, the one at Rand() % their count (0 divides by zero, ours aborts). Called by Battle_MemberAutoTarget (three sites) and Battle_MemberAutoFixed. No PSX twin paired. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455380
+name = "Field_SlotClutCopy"
+ret = "void"
+params = "unsigned char *slot"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455380..0x455444 (0xC5 bytes), cdecl: the slot's frame +3 by the object's (+0xC) +0x28 divisor 0x6528E4 (idiv; 0 faults: ours aborts): the quotient a CLUT row (+0x10 with object +0x24 bit 2), the remainder x 0x6528EC[kind] added to the script's (+8) bytes 0 and 1; script byte 2 words (re-read each turn) of Gfx_ClutStrip copied along the row from byte 1 + offset to byte 0 + offset (bytes, wrapping); Gfx_ClutStripDirty = 1. Field_RunSlot's only callee. No PSX twin paired. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455450
+name = "CommuSim_AreaEnter"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455450..0x45553B (0xEC bytes), cdecl: the community's entry (Area179_Init, shared by areas 175..185): in the area of the word 0x802290 only CommuSim_PlaceObjects; else R4D's 0x45E6B0 (records in use), CommuSim_RollOffers, the counts 0x9039A0 / 0x904A90 / 0x937F80 cleared; none in use: three CommuSim_AddRecord, 0x9046B0 0, the stamps 0x9046B4..C4 the clock 0x904134, 0x9046CA 10, CB 1, CC..CE 0, C8 the area; some: _QueueAreas, _Mood(n), _LevelLit, _LevelDark, _Population(n), _TickKind9, _TickKindD, _TickKind5, _TickKindB, _SumKindsAB; then _PlaceObjects. PSX twin 0x801EECA4 (call, analysis/pairs_propagated.json), not read; no sibling name. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455540
+name = "CommuSim_QueueAreas"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455540..0x4555CC (0x8D bytes), cdecl: when Game_AreaNumber is above the u16 0x9046C8, each n from it + 1 to the area whose byte 0x652850[n] is 4 or 5 queues that kind (the event byte +0 only, each kind once); then 0x9046C8 = the area. docs/rest_4a.md."
+
+[[func]]
+pc = 0x4555D0
+name = "CommuSim_Population"
+ret = "void"
+params = "unsigned count"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4555D0..0x4556F8 (0x129 bytes), cdecl: by the mood s8 0x9046CA against 4 x count (byte): above - the shrink stamp 0x9046B8 kept within 20 of the clock, then below 20 records (clock - 0x9046B4) / 10 spawns capped at (mood - 4n) / 4 + 1 and 20 records, 0x9046B4 the clock; else 0x9046B4 kept within 10 and, mood not 0, 0x9046B8 within 20; mood 0 and above one record: (clock - 0x9046B8) / 20 CommuSim_RemoveRecord down to one, 0x9046B8 the clock. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455700
+name = "CommuSim_Mood"
+ret = "void"
+params = "unsigned count"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455700..0x45579B (0x9C bytes), cdecl: t = (clock - 0x9046BC) / 5 (16 bits); not 0: (the kind-9 records' trait +0x10 + 3, summed in 16 bits, less 2 x count) x t + the mood, below 0 to 0, above 99 to 99; 0x9046BC the clock. docs/rest_4a.md."
+
+[[func]]
+pc = 0x4557A0
+name = "CommuSim_LevelLit"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4557A0..0x45586F (0xD0 bytes), cdecl: the byte 0x9046CC below 7: the residents of kind-4 buildings with +1 set; with any, v = 0x65290C[level] - their trait +0x13 sum (16-bit, at least 1); clock - 0x9046C0 at least v: 0x9046C0 += v, the level up, event 7 queued (+0 only). docs/rest_4a.md."
+
+[[func]]
+pc = 0x455870
+name = "CommuSim_LevelDark"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455870..0x455943 (0xD4 bytes), cdecl: the byte 0x9046CB below 10: as CommuSim_LevelLit over kind-4 buildings with +1 clear, v = 20 - the sum (at least 1) from 0x9046C4, and only with 0x9046CC at least 0x65291B[0x9046CB]; event 6. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455950
+name = "CommuSim_TickKind5"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455950..0x455A9A (0x14B bytes), cdecl: buildings of kind 5: level +3 0 -> 1 and the stamp +4 the clock; below 11 with residents: (clock - stamp) / max(5, s16((+2 + 2) x 6 - their trait +0x12 sum)) added (from below 0x9046CC + 4, capped there), the stamp the clock, event 0 with the first resident. R4B's 0x456E20 jumps to it. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455AA0
+name = "CommuSim_TickKind9"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455AA0..0x455BDA (0x13B bytes), cdecl: buildings of kind 9, each resident: (clock - its stamp) below (level +1 + 1) x 6 sets +2 = 1; else with +2 at most 1 a roll (Rand() & 0x7F, above 100 less 100) against (2 level + 1) x (10 - trait +0x10) (a byte): under, with R4D's 0x45E6B0 above 1 the record removed (+0 = 0, listed to 0x9039C0 with bit 7), else +2 = 3; over, a second roll against the stack bytes {0x41, 0x37, 0xF}[level] (unbounded: ours aborts above 2) sets +2 = 3 or 2; each but the removal queues event 2 with the record. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455BE0
+name = "CommuSim_TickKindD"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455BE0..0x455DE3 (0x204 bytes), cdecl: buildings of kind 0xD, each resident with +3 high nibble 1: its item +2 of category +3 & 0xF in the consumables / weapons / armour / accessories names tables has a price and a flags byte; the first tier of 0x652928 (8 x 6 bytes) not below the price gives a clock span; past it +3 keeps the category and then | 0x30 (flag bit 3), | 0x20 (the tier's odds + trait +0x13 x odds / 20, within 0..100, over a roll), = 0x40 with +2 = 0x37 ((15 - trait) x 2 over a second roll) or | 0x30; event 3 with the record. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455DF0
+name = "CommuSim_TickKindB"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455DF0..0x455F32 (0x143 bytes), cdecl: buildings of kind 0xB: level +3 0 -> 5 and the stamp the clock; below 0x652958[0x9046CC] with residents: (clock - stamp) / (6 - their count) (unsigned div; 6 residents divide by zero: ours aborts) added when its low word is not 0, capped, the stamp the clock, event 1 with the first resident. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455F40
+name = "CommuSim_AddRecord"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455F40..0x455FE3 (0xA4 bytes), cdecl: from Rand() & 0x3F (60..63 less 60) the first free record of 0x9046D0 on, wrapping at 60 (none free: the original walks forever, ours aborts first): +0 1, +1 0, +4 the clock, +2 0; 0x9048F0 + 5r the five bytes of the trait record 0x653200 + 0x14 r; r appended to 0x904F00 by the count 0x904A90. docs/rest_4a.md."
+
+[[func]]
+pc = 0x455FF0
+name = "CommuSim_RemoveRecord"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x455FF0..0x456078 (0x89 bytes), cdecl: from Rand() & 0x3F (60..63 less 60) the first record in use on, wrapping, passing kind 9 until the walk is back at its start (none in use: forever, ours aborts first): +0 = 0, r appended to 0x9039C0 by the count 0x9039A0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456080
+name = "CommuSim_SumKindsAB"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456080..0x4560CD (0x4E bytes), cdecl: 0x9046CD / 0x9046CE the byte sums of trait +0x11 over the records in use of kind 0xA / 0xB. R4B's 0x456E20 calls it. docs/rest_4a.md."
+
+[[func]]
+pc = 0x4560D0
+name = "CommuSim_RollOffers"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4560D0..0x456192 (0xC3 bytes), cdecl: the nine words 0x675F60 cleared; three groups of three distinct 0x9B + n, n = Rand() & 0x1F less Rand() & 0xF until at most {15, 20, 25}[group] (a stack table), never 0x9F or 0xA0. Called by CommuSim_AreaEnter, GameMode_Field and Shop_Close. docs/rest_4a.md."
+
+[[func]]
+pc = 0x4561A0
+name = "CommuSim_PlaceObjects"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4561A0..0x4562AF (0x110 bytes), cdecl: 0x675F58 (8 bytes) cleared; each record in use takes the next Sprite_Objects record: kind 0 CommuPose_Kind0 + CommuSim_PlaceLoose, 1..8 CommuSim_PlaceResident, 0xA pose +0x88 0xCD (area 0xB6 on) or 0xB6 + a roll 0..5 and PlaceLoose, 0xB 0xCE (areas 0xAF, 0xB2, 0xB5, 0xB9) or 0xBC + a roll and PlaceLoose; other kinds none; the objects after the last to 20 get +0 = 0. The object count is unbounded. docs/rest_4a.md."
+
+[[func]]
+pc = 0x4562B0
+name = "CommuSim_PlaceLoose"
+ret = "void"
+params = "unsigned record, unsigned object"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4562B0..0x4563A5 (0xF6 bytes), cdecl: Sprite_Current = the object; +6 1; by 0x652960[3 object] +2: +1 0, +0x84 2, +2 1 or +1 6, +0x84 0, +2 0; x, z the high words of +0x34 / +0x38; +0x3E AreaMap_Elevation; +5 the record; Sprite_SetAnimationBank(0x6528F4[+5 % 6]), Sprite_FaceDirection(+8). docs/rest_4a.md."
+
+[[func]]
+pc = 0x4563B0
+name = "CommuSim_PlaceResident"
+ret = "void"
+params = "unsigned record, unsigned object"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4563B0..0x456638 and its 14-entry jump table 0x45663C..0x456673 (0x2C4 bytes; the cut's 713 run on into padding), cdecl: building = record +1 - 1; Sprite_Current the object, +5 the record, +1 6, +0x84 0, +2 0; 0x65299C[(count + 3 building) x 3]: x, z, elevation, facing +8; +0x48 0; bank and facing; then by the building's kind 0 / 4..0xD the CommuPose_Kind* (1..3 and above 0xD none); the count 0x675F58[building] up. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456680
+name = "CommuPose_Kind0"
+ret = "void"
+params = "unsigned object"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456680..0x4566B7 (0x38 bytes), cdecl: Sprite_Objects[object] +6 1, +0x88 0xC2 + (Rand() & 7, above 4 less 4). docs/rest_4a.md."
+
+[[func]]
+pc = 0x4566C0
+name = "CommuPose_Kind4"
+ret = "void"
+params = "unsigned object, unsigned building"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4566C0..0x45674A (0x8B bytes), cdecl: Sprite_Current +6 1; the object's +0x88 0xCC with 0x9046CC 7 and the building's +1 set or 0x9046CB 10 and it clear, else 0xC8 + its +1. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456750
+name = "CommuPose_Kind5"
+ret = "void"
+params = "unsigned object, unsigned building"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456750..0x4567E2 (0x93 bytes), cdecl: count 0x675F58[building] set: +6 1, pose 0xD1 + count; else +6 5, pose 0xC008, Sprite_Current +0x18 0, +0x1C +2 + 2 (+1) + 0x11 of the building. docs/rest_4a.md."
+
+[[func]]
+pc = 0x4567F0
+name = "CommuPose_Kind6"
+ret = "void"
+params = "unsigned object, unsigned building"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4567F0..0x456869 (0x7A bytes), cdecl: count 0: +6 5, +0x18 1, +0x1C 1, pose 0xCA; else +6 1, pose 0xC000 + count. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456870
+name = "CommuPose_Kind7"
+ret = "void"
+params = "unsigned object"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456870..0x456892 (0x23 bytes), cdecl: +6 1, pose 0xC003. docs/rest_4a.md."
+
+[[func]]
+pc = 0x4568A0
+name = "CommuPose_Kind8"
+ret = "void"
+params = "unsigned record, unsigned object, unsigned building"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4568A0..0x456915 (0x76 bytes), cdecl: +6 1; pose the word 0x675F60[count + 3 age], age 0 / 1 / 2 by (clock - the record's stamp) below 20 / 40 / else (kept in the first argument's slot). docs/rest_4a.md."
+
+[[func]]
+pc = 0x456920
+name = "CommuPose_Kind9"
+ret = "void"
+params = "unsigned record, unsigned object"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456920..0x456989 (0x6A bytes), cdecl: by the record's +2: 0 +6 1 and pose 0x51; 1 Sprite_Current +0 = 0; else +6 1 and pose 0xC004. (CommuSim_PlaceResident pushes the building third; not read.) docs/rest_4a.md."
+
+[[func]]
+pc = 0x456990
+name = "CommuPose_KindA"
+ret = "void"
+params = "unsigned object, unsigned building"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456990..0x456A0B (0x7C bytes), cdecl: count set: +6 1, pose 0xCF + count; else +6 5, +0x18 6, +0x1C 0, pose 0xCB. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456A10
+name = "CommuPose_KindB"
+ret = "void"
+params = "unsigned object, unsigned building"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456A10..0x456AAA (0x9B bytes), cdecl: +6 1; count 0 pose 0xC009, 1 0xC00B with Flags_Test(0x904030, 0x92) else 0xD4, more 0xD5. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456AB0
+name = "CommuPose_KindC"
+ret = "void"
+params = "unsigned object, unsigned building"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456AB0..0x456AE8 (0x39 bytes), cdecl: +6 1, pose 0xC005 + count. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456AF0
+name = "CommuPose_KindD"
+ret = "void"
+params = "unsigned object"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456AF0..0x456B12 (0x23 bytes; the cut's 48 runs into padding), cdecl: +6 1, pose 0xC00A. The cut's host of the twelve trigger entries after it: they are functions of their own, reached through Field_ObjectTriggers. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456B20
+name = "FieldTrigger01"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456B20..0x456B37 (0x18 bytes), cdecl: Field_ObjectTriggers id 1 (0x662E24): tail kind 0x9039F3 = 0xE, 0x939A38 the object, ScriptFlags_Set40, al 0 (the upper bytes ScriptFlags_Set40's). docs/rest_4a.md."
+
+[[func]]
+pc = 0x456B40
+name = "FieldTrigger09"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456B40..0x456B6C (0x2D bytes), cdecl: Field_ObjectTriggers id 9 (0x662E44): Shop_Records[object dword +0x1C] (23 bytes, unchecked) +0 = +3 of the building (1-based) of the community record object +5 names; al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456B70
+name = "FieldTrigger02"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456B70..0x456BE0 (0x71 bytes), cdecl: Field_ObjectTriggers id 2 (0x662E28): Crt_sprintf into Text_Records rows 0..3 by Area08_MessageFormat of the bytes 0x9040C8, 0x9040C9 and the dwords 0x904134, 0x904138; Msg_OpenScript(0x55); Field_Request 2; al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456BF0
+name = "FieldTrigger03"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456BF0..0x456C44 (0x55 bytes), cdecl: Field_ObjectTriggers id 3 (0x662E2C): rows 0..2 the dwords 0x90413C, 0x904140, 0x904144; Msg_OpenScript(0x56); Field_Request 2; al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456C50
+name = "FieldTrigger04"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456C50..0x456C6F (0x20 bytes), cdecl: Field_ObjectTriggers id 4 (0x662E30): tail kind 0x15, 0x939A38 the object, sub-kind 0x9039F5 its +5, ScriptFlags_Set40, al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456C70
+name = "FieldTrigger05"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456C70..0x456C8F (0x20 bytes), cdecl: Field_ObjectTriggers id 5 (0x662E34): tail kind 0x16, sub-kind the object's +5, al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456C90
+name = "FieldTrigger06"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456C90..0x456CA7 (0x18 bytes), cdecl: Field_ObjectTriggers id 6 (0x662E38): tail kind 0x17 (sub-kind left), al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456CB0
+name = "FieldTrigger07"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456CB0..0x456CCE (0x1F bytes), cdecl: Field_ObjectTriggers id 7 (0x662E3C): tail kind 0x17, sub-kind 2, al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456CD0
+name = "FieldTrigger08"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456CD0..0x456CEE (0x1F bytes), cdecl: Field_ObjectTriggers id 8 (0x662E40): tail kind 0x17, sub-kind 3, al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456CF0
+name = "FieldTrigger10"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456CF0..0x456D0F (0x20 bytes), cdecl: Field_ObjectTriggers id 10 (0x662E48): tail kind 0x18, sub-kind the object's +5, al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456D10
+name = "FieldTrigger61"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456D10..0x456D2F (0x20 bytes), cdecl: Field_ObjectTriggers id 61 (0x662F14): tail kind 0x3C, sub-kind the object's +5, al 0. docs/rest_4a.md."
+
+[[func]]
+pc = 0x456D30
+name = "FieldTrigger11"
+ret = "unsigned char"
+params = "unsigned char *object, unsigned char *flags"
+impl = "src/game/rest_4a.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x456D30..0x456D4F (0x20 bytes), cdecl: Field_ObjectTriggers id 11 (0x662E4C): tail kind 0x19, sub-kind the object's +5, al 0. docs/rest_4a.md."
