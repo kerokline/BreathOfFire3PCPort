@@ -305,6 +305,7 @@
 #include "game/rest_4d.h"
 #include "game/rest_4c.h"
 #include "game/rest_4b.h"
+#include "game/shell.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1375,6 +1376,10 @@ void InjectAll() {
                                 // re-aimed at the scenario harness's recorders, twelve .data tables swapped for the
                                 // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
                                 // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Shell_Inject();             // the platform round's group PW (the seven "Windows shell" starts: Input_Latch,
+                                // Cfg_Load, Game_Init, Gfx_InitBufferBlock, Gfx_LinkOTags, Disc_Probe,
+                                // Cfg_SetDefaultKeys): its clones' calls re-aimed at its own recorders; no module
+                                // clones them; before FishingText_Arm (docs/shell.md)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
