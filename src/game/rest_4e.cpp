@@ -638,13 +638,13 @@ extern "C" void __cdecl CommuMusic_Open(void) {
 }
 
 // original 0x45F7D0: CommuMusic_OpenSteps[1] - the slide down one, the list
-// drawn at (0x32, 0x28 - 10 slide); at 0 the step 0 and the mode + 1. The
+// drawn at (0x32, 0x28 - 50 slide); at 0 the step 0 and the mode + 1. The
 // original's y carries leftovers above its low word, which the list reads
 // alone.
 extern "C" void __cdecl CommuMusic_SlideIn(void) {
     const auto slide = static_cast<unsigned char>(B(kSlide) - 1);
     B(kSlide) = slide;
-    SH_CALL(CommuMusic_DrawList)(0x32, 0x28 - 10 * slide);
+    SH_CALL(CommuMusic_DrawList)(0x32, 0x28 - 50 * slide);
     if (B(kSlide) == 0) {
         const unsigned char mode = B(kMode);
         B(kStep) = 0;
@@ -755,12 +755,12 @@ extern "C" void __cdecl CommuMusic_CloseRestore(void) {
 }
 
 // original 0x45FA20: CommuMusic_CloseSteps[2] - the slide up one, the list
-// drawn at (0x32, 0x28 - 10 slide); at 4 message 0x5A, the step + 1,
+// drawn at (0x32, 0x28 - 50 slide); at 4 message 0x5A, the step + 1,
 // Field_Request 2 (CommuMusic_CloseSteps[3] is R4D's 0x45E6A0).
 extern "C" void __cdecl CommuMusic_SlideOut(void) {
     const auto slide = static_cast<unsigned char>(B(kSlide) + 1);
     B(kSlide) = slide;
-    SH_CALL(CommuMusic_DrawList)(0x32, 0x28 - 10 * slide);
+    SH_CALL(CommuMusic_DrawList)(0x32, 0x28 - 50 * slide);
     if (B(kSlide) == 4) {
         OpenMessage(0x5A);
         const unsigned char step = B(kStep);
@@ -1214,13 +1214,13 @@ extern "C" void __cdecl CommuRank_Close(void) { ++B(kFacility); }
 // A list's heading: script message 0x37 at (x + 0x58, y); the icon (0 or 1) at
 // (x + 8, y + 0x14); a message at (x + 0x18, y + 0x14); the count ("%2d"-like,
 // Boss26Fx_CountFormat) in the 12-point font at (x + 0x6C, y + 0x14) and the
-// glyph 0x669F08 after it.
-void ListHeading(int x, int y, unsigned icon, unsigned title, unsigned count) {
+// glyph 0x669F08 after it. The count is read after the second message.
+void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
     SH_CALL(Text_DrawAt)(x + 0x58, y, 0, 0xFF, Message(0x37));
     SH_CALL(CommuRank_DrawIcon)(x + 8, y + 0x14, icon);
     SH_CALL(Text_DrawAt)(x + 0x18, y + 0x14, 0, 0xFF, Message(title));
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(kTextBuffer)),
-                         reinterpret_cast<const char*>(At(Key(Boss26Fx_CountFormat))), count);
+                         reinterpret_cast<const char*>(At(Key(Boss26Fx_CountFormat))), B(count));
     SH_CALL(Text_DrawFont12)(x + 0x6C, y + 0x14, 0, At(kTextBuffer));
     SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(kOneGlyph));
 }
@@ -1231,7 +1231,7 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, unsigned count) {
 // at (x + 0x14, y + 0x2C + 16 i) and message 0x3A (bit 7 set) or 0x39 at (x +
 // 0x70, ...); the count read again each row.
 extern "C" void __cdecl CommuRank_DrawListA(int x, int y, unsigned page) {
-    ListHeading(x, y, 1, 0x38, B(kListA));
+    ListHeading(x, y, 1, 0x38, kListA);
     const unsigned base = 7 * (page & 0xFF);
     for (unsigned i = 0; i < 7; ++i) {
         if (static_cast<int>(base + i) >= static_cast<int>(B(kListA))) break;
@@ -1267,7 +1267,7 @@ extern "C" void __cdecl CommuRank_DrawIcon(int x, int y, unsigned icon) {
 // name the entry the byte 0x904F00 + 15 page + i names: 15, where the count
 // steps by 20 (docs/rest_4e.md section 7, L4).
 extern "C" void __cdecl CommuRank_DrawListB(int x, int y, unsigned page) {
-    ListHeading(x, y, 0, 0x3B, B(kListB));
+    ListHeading(x, y, 0, 0x3B, kListB);
     const unsigned p = page & 0xFF;
     for (unsigned i = 0; i < 20; ++i) {
         if (static_cast<int>(20 * p + i) >= static_cast<int>(B(kListB))) break;

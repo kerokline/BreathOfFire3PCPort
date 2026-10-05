@@ -417,7 +417,7 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 24);
     const U v = h >> 8;
-    switch (sh::DisturbCase(h, 18)) {
+    switch (sh::DisturbCase(h, 19)) {
     case 0: B(kStep) = b; break;
     case 1: B(kMode) = b; break;
     case 2: B(kSlide) = static_cast<unsigned char>(b % 6); break;
@@ -436,6 +436,7 @@ void Disturb(U h) {
     case 15: SetWord(Mem(kTrack), (v % 44) - 2); break;
     case 16: B(kEntries + 8 * B(kEntry) + 2 + (b & 1)) = static_cast<unsigned char>(v); break;
     case 17: if (b & 1) B(kSavedTrack) = static_cast<unsigned char>(v); else B(kPage) = static_cast<unsigned char>(v); break;
+    case 18: B(kCursor) = b; break;
     default: break;
     }
 }
