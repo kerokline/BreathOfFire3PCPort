@@ -345,16 +345,18 @@ U FxSlope(const U*, U answer) {
 U FxGround(const U*, U answer) {
     // a height within 0xC0 of the seeded one two times in three (the callers
     // compare it with a sprite's height, and Field_WayBlockedWide with 0xC0);
-    // a quarter of those the seeded one or one either side, so a ground equal
-    // to the height the seed put it at is met (control D1, docs/field_e2.md
-    // section 10). Louder, a quarter of the time: Field_State's actor +0x89
+    // a quarter of those at an edge: the seeded one or one either side, so a
+    // ground equal to the height the seed put it at is met (control D1,
+    // docs/field_e2.md section 10), or 0xC0 / 0xC1 either way, Field_WayBlockedWide's
+    // bound (W2). Louder, a quarter of the time: Field_State's actor +0x89
     // moved below 12 - the step helpers read it again after this call, which
     // the group's case 0 alone reached once in 6,000 rounds (DS5)
     const U m = sh::Noise();
     if (m % 4 == 0 && sh::InRegions(Field_State + 0x89, 1)) Field_State[0x89] = static_cast<unsigned char>((m >> 8) % 12);
     const U n = sh::Noise();
     if (n % 3 == 0) return answer;
-    if (((n >> 2) & 3) == 0) return (answer & 0xFFFF0000u) | ((move_script::Word(g_ground) + (n >> 8) % 3u - 1u) & 0xFFFFu);
+    static const U kEdges[] = {0xFFFF, 0, 1, 0xFFFF, 0, 1, 0xC0, 0xC1, 0xFF40, 0xFF3F};
+    if (((n >> 2) & 3) == 0) return (answer & 0xFFFF0000u) | ((move_script::Word(g_ground) + kEdges[(n >> 8) % 10]) & 0xFFFFu);
     return (answer & 0xFFFF0000u) | ((move_script::Word(g_ground) + (n >> 8) % 0x182u - 0xC1u) & 0xFFFFu);
 }
 // 0x594700 (an ingredient short), louder a quarter of the time: the trade's
@@ -818,7 +820,8 @@ void Args(unsigned k, U* a) {
     case kWayBlocked:
         a[0] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
         a[1] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
-        a[2] = (a[2] & 0xFFFF0000u) | ((move_script::Word(g_ground) + sh::Next() % 0x40u - 0x20u) & 0xFFFFu);
+        // the seeded ground itself half the time (FxGround's edges are about it)
+        a[2] = (a[2] & 0xFFFF0000u) | ((move_script::Word(g_ground) + (sh::Half() ? 0u : sh::Next() % 0x40u - 0x20u)) & 0xFFFFu);
         break;
     case kCellHook: break;   // x, z any words
     case kDrawFrames:

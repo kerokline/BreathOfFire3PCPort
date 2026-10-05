@@ -155,9 +155,13 @@ unsigned char* RecordB() { return reinterpret_cast<unsigned char*>(static_cast<s
 
 // AreaMap_Elevation: two answers in three at Sprite_Current's height word, give
 // or take one (the fish compare the two as s16).
+// Louder (debt 18), a quarter of the time first: the height moved as the
+// group's case 3 moves it (D07, D08 read it again after this call).
 U ElevationEffect(const U*, U answer) {
-    const U h = sh::Noise();
+    const U m = sh::Noise();
     unsigned char* const s = Sc();
+    if (m % 4 == 0 && sh::InRegions(s + 0x3E, 2)) SetWord(s + 0x3E, (m >> 8) & 1 ? 0u : (m >> 12) & 0x3FF);
+    const U h = sh::Noise();
     if (h % 3 == 0 || !sh::InRegions(s + 0x3E, 2)) return answer;
     return (answer & 0xFFFF0000u) | ((Word(s + 0x3E) + (h >> 4) % 3 - 1) & 0xFFFFu);
 }
@@ -211,6 +215,22 @@ U LureInReachEffect(const U*, U answer) {
     if (sh::Noise() % 4 == 0) FlipStage();
     return answer;
 }
+// The same for the other re-reads the 6,000 rounds left in single figures:
+// Sprite_Current's +9 (0..2, the group's case 0) by FieldPanel_DrawBox3 and
+// FieldPanel_DrawShade (D05, D06), its kind +6 (below 23, case 15) by
+// Sprite_ScriptTick and Fish_LureClose (D15, D16), a quarter of the time.
+U NineEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    unsigned char* const s = Sc();
+    if (n % 4 == 0 && sh::InRegions(s + 9, 1)) s[9] = static_cast<unsigned char>((n >> 8) % 3);
+    return answer;
+}
+U KindEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    unsigned char* const s = Sc();
+    if (n % 4 == 0 && sh::InRegions(s + 6, 1)) s[6] = static_cast<unsigned char>((n >> 8) % 23);
+    return answer;
+}
 // Gfx_CommitPrim: the packet cursor on by the primitive's 0x20, as the real one
 // moves it (so each line is drawn into a packet of its own).
 U CommitEffect(const U*, U answer) {
@@ -229,16 +249,16 @@ const sh::Callee kCallees[] = {
     {G_OURS(LeaderPanel_Effect3Mode), 1, {0xFF}, kG, 0, 0},                       // mov al, [esp + 4]
     {G_OURS(LeaderPanel_PressLatch), 0, {}, kG, 0, 0, {}, &PressLatchEffect},
     {G_OURS(Fish_LureInReach), 0, {}, kF, 0, 0, {}, &LureInReachEffect},
-    {G_OURS(Fish_LureClose), 0, {}, kF, 0, 0},
+    {G_OURS(Fish_LureClose), 0, {}, kF, 0, 0, {}, &KindEffect},
     {G_OURS(Fish_Step), 0, {}, kG, 0, 0},
     {G_OURS(Fish_Heading), 0, {}, kG, 0, 0, {}, &HeadingEffect},
     {G_OURS(Fish_AdjustStrength), 1, {0xFF}, kG, 0, 0},                           // movsx cx, byte [esp + 4]
     {G_OURS(Fish_Chance), 2, {0xFF, 0xFF}, kF, 0, 0},                              // and ecx, 0xFF; imul byte [esp + 8]
     // ours, with the width each reads
     {G_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0},
-    {G_OURS(Sprite_ScriptTick), 0, {}, kF, 0, 0},                                  // two callers test al
-    {G_OURS(FieldPanel_DrawShade), 0, {}, kG, 0, 0},
-    {G_OURS(FieldPanel_DrawBox3), 2, {kAll, kAll}, kG, 0, 0},
+    {G_OURS(Sprite_ScriptTick), 0, {}, kF, 0, 0, {}, &KindEffect},                 // two callers test al
+    {G_OURS(FieldPanel_DrawShade), 0, {}, kG, 0, 0, {}, &NineEffect},
+    {G_OURS(FieldPanel_DrawBox3), 2, {kAll, kAll}, kG, 0, 0, {}, &NineEffect},
     {G_OURS(Panel_DrawWindow), 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // 0x469790 / 0x469960 read & 0xFFFF (E1E)
     {G_OURS(Text_DrawAt), 5, {0xFFFF, 0xFFFF, 0xFF, kAll, kAll}, kG, 0, 0},      // x, y words, colour & 0xFF (E1E)
     {G_OURS(Sprite_SetAnimationBank), 1, {0xFFFF}, kG, 0, 0},                      // unsigned short: the callers push cx / ax over leftovers
@@ -376,7 +396,14 @@ void SeedFor(unsigned k, unsigned char* s) {
     switch (k) {
     case kSwim:
         s[9] = 0;
-        if (sh::Half()) SetWord(s + 0x3E, 0);
+        if (sh::Half()) {
+            SetWord(s + 0x3E, 0);
+        } else if (sh::Half()) {
+            // the rise's and the dive's bounds for this kind's level (C56: the
+            // general seed's edges are for a level drawn apart from the kind)
+            const U level = KindByte(s[6] < 23 ? s[6] : 0, 0x1A);
+            SetWord(s + 0x3E, sh::Half() ? (0u - level) * 0x100 - 0x20 : (0xFFFFFFFFu - level) * 0x100 + 0x20);
+        }
         Mem(kBiteHeld)[0] = 0;
         break;
     case kApproach:

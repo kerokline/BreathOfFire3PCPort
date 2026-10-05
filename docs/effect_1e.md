@@ -323,6 +323,17 @@ The fuzz is unchanged (no stand-in of the original moves record 4's state or
 the y step, so none was made to); the group's shadow on `451edeb`: 144,000
 rounds, 0 mismatches.
 
+**2026-10-05, the round's end (debt 17): two louder stand-ins.** For C59 and
+C62 the stand-ins of the calls just before the re-read now move the cell, a
+quarter of the time each, from the noise: `LeaderPanel_Effect3Mode`
+(`0x52B2A0`) record 4's state (0 half of those, else 0..4), and
+`LeaderPanel_PoseSound` (`0x52B1B0`) record 0's y step (0 half of those, else
+a value from the noise). The same script, in this worktree, 3,000 rounds: the
+group's shadow 144,000 rounds, 0 mismatches; **62 of 62 refused by a count**.
+C59 1 -> **19**, C62 7 -> **449**; C60 992, C61 2 (the harness's case 4, as
+above), the weakest of the rest C58 3, C12 18, C42 28 as before; the other
+counts moved by a few rounds at most (C2 549, C15 80, C19 62, C31 71).
+
 ## 7. What nothing reached, and the limits
 
 - The dispatchers' Fatal (a step past the table) and `Picked`'s (a sprite
