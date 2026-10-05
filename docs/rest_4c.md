@@ -9,7 +9,7 @@ the image tables read in place and the callees nobody owns in
 (`analysis/round14_cut.tsv`), none added, none dropped. Each read to its last
 instruction with capstone and fuzzed through the scenario harness's field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7), used unchanged:
-360,000 rounds, 0 mismatches. CONTROLS_SUMMARY **Fuzz only**: no recorded route
+360,000 rounds, 0 mismatches. **146 controls planted** one at a time: 144 refused by a count, the other two equivalent mutants whose near variants are refused (section 6). **Fuzz only**: no recorded route
 enters the faerie village (section 9). No divergence; no full-frame fill.
 
 The band is two of the four games R4B's game table `0x652A84` holds (the field
@@ -196,14 +196,17 @@ eax / ecx over leftovers) answering into the text buffer. The rest are the
 standard and field-standard rows. **Louder stand-ins**: every draw the states
 call (the group's boxes, cards, rows, choices and R4D's three) moves one of the
 group's cells one call in four (the disturbance below, from `Noise()`), so a
-re-read missed after a draw is seen; `CommuHiLo_Shuffle`'s recorder writes nine
-values.
+re-read missed after a draw is seen; so does `Sound_PlayEffect`'s (re-listed,
+`0xFFFF`), since the stake and the money are read after sounds;
+`CommuHiLo_Shuffle`'s recorder writes nine values.
 
 **Seeds** (per function, after the harness's fill): the phase, state and step
 at their compares (0..12), each dispatcher's byte below its table; the counter
 at 0..6, 0x1E, 0x3C, 0xFF; the count inside the function's room (section 7:
-0..2 for `_BetInput`, 0..7 for the second game, 0..8 for `_Pick` and
-`_Payout`, 0..9 otherwise) and its ends; the cursor 0..2 for the second game,
+0..2 for `_BetInput`, 0..7 for the second game but 0..8 for its `_Lost` and
+`_End`, 0..8 for `_Pick` and `_Payout`, 0..9 otherwise) and its ends; half the
+time `_DealCards` at the ninth card (count 8, counter 1) and `_End` at step 1
+with the counter 3; the cursor 0..2 for the second game,
 0..3, 0x80, 0xFF otherwise; the turn 1..8, half the time at the picks' end; the
 lost flag, the again choice 0 / 1 / any; the stake at 0, 1, 9..11, 99..101,
 127, 128, 999..1001, 9999..10001, -1, INT_MIN; Party_Zenny at 0, 9, 50, 99..101,
@@ -220,8 +223,8 @@ phase / step / state, the stake, Party_Zenny, a byte of `0x675F98..0x675FC2`,
 a digit (-1..10), the lost flag or the again choice, the tail state.
 
 **Result** (in this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_4c`,
-exit 0): 360,000 rounds over 60 functions, 1,578,568 calls to the stand-ins,
-**0 mismatches** (the first run); 23,796 bytes of state in 42 regions; 305
+exit 0): 360,000 rounds over 60 functions, 1,601,285 calls to the stand-ins,
+**0 mismatches** (0 on the first run too, before the fuzz was made louder); 23,796 bytes of state in 42 regions; 305
 stand-ins. Every entry of the nine tables reached (each handler recorder 414..
 3,036 calls); `CommuHiLo_Quit` 471, `Item_NamePtr` 1,037, `Zenny_Add` 4,008,
 `Inventory_Add` 4,003, `Rand` 28,795, `Commu_RandDigit` 173,045.
@@ -257,7 +260,181 @@ STAR_RESULT
 
 ## 6. Controls
 
-CONTROLS_TABLE
+Planted one at a time by a scratch script (`controls.py` in the session's
+`r4c/` scratch directory): each plant anchored on a unique string of
+`rest_4c.cpp` (a two-part plant adds the earlier read it then uses), rebuilt,
+run under `BOF3X_R4C_ONLY=<filter>`, the file restored and rebuilt at the end;
+the committed file has no switch. The harness stops at the first differing
+round, so the column is the round that refused it (0-based) in this worktree;
+every refused run exited 3 on a `MISMATCH` line. **146 planted, 144 refused.**
+Not refused: **62** and **63**, equivalent mutants - 62 caps the stake at 99
+where the original caps above 100, and at exactly 100 the stake already stored
+is 100; 63 drops the low word's sign extension of Party_Zenny, which is below
+100 wherever it is taken (section 7). Their near variants **148** (the cap
+stores 99) and **64** (Party_Zenny + 1) are refused. Controls 43..60 are one
+per case of the group's disturbance, each missing a re-read after a call (the
+case named in the column): all eleven cases are proved live.
+
+**The first pass** (the fuzz as first committed) left five not refused that
+are refused now, each the fuzz's: 52 (the stake re-read after the confirm
+sound) and 59 (the again choice re-read after the end's draws) - made louder by
+`Sound_PlayEffect`'s stand-in moving a cell one call in four and the end seeded
+at step 1 with the counter at 3 half the time; 75 (the ninth card's hint
+count) - the ninth card seeded half the time; 130 and 134 (a row of 8 at the
+second game's loss and end) - the count's room was 0..7 for every second-game
+function, now 0..8 for those two, which index no record by it. Control 35's
+first plant made ours' shuffle loop for ever (the harness's run hung; the game
+process this worktree's launcher started was killed by its pid); it was
+replaced by the plant below, refused.
+
+| # | Run (`_ONLY`) | Plant (ours changed to) | Refused at |
+|--:|---|---|---|
+| 1 | `CommuHiLo_Run` | `(0x459F20)", CommuHitBlow_Phases,` for `(0x459F20)", CommuHiLo_Phases,` | round 0 |
+| 2 | `CommuHiLo_OpenDispatch` | `(0x459F30)", CommuHitBlow_StartSteps,` for `(0x459F30)", CommuHiLo_OpenStates,` | round 0 |
+| 3 | `CommuHiLo_PlayDispatch` | `(0x459FB0)", CommuHiLo_PlayStates + 1,` for `(0x459FB0)", CommuHiLo_PlayStates,` | round 0 |
+| 4 | `CommuHiLo_BetDispatch` | `(0x45A0A0)", CommuHiLo_Phases,` for `(0x45A0A0)", CommuHiLo_BetSteps,` | round 0 |
+| 5 | `CommuHiLo_DealDispatch` | `(0x45A3E0)", CommuHitBlow_PlayStates,` for `(0x45A3E0)", CommuHiLo_DealSteps,` | round 0 |
+| 6 | `CommuHitBlow_Run` | `(0x45B770)", CommuHiLo_BetSteps,` for `(0x45B770)", CommuHitBlow_Phases,` | round 0 |
+| 7 | `CommuHitBlow_OpenDispatch` | `(0x45B780)", CommuHitBlow_OpenStates + 1,` for `(0x45B780)", CommuHitBlow_OpenStates,` | round 0 |
+| 8 | `CommuHitBlow_PlayDispatch` | `(0x45B8F0)", CommuHitBlow_PlayStates + 1,` for `(0x45B8F0)", CommuHitBlow_PlayStates,` | round 0 |
+| 9 | `CommuHitBlow_StartDispatch` | `(0x45B900)", CommuHiLo_OpenStates,` for `(0x45B900)", CommuHitBlow_StartSteps,` | round 0 |
+| 10 | `Commu_PushSubscreen` | `B(at::kState) = 4;` for `B(at::kState) = 5;` | round 0 |
+| 11 | `Commu_PushSubscreen` | `SetWord(At(at::kSub), 0x3E);` for `SetWord(At(at::kSub), 0x3D);` | round 0 |
+| 12 | `Commu_RandDigit` | `static_cast<int>(v) <= limit` for `static_cast<int>(v) < limit` | round 4 |
+| 13 | `Commu_RandDigit` | `if (static_cast` for `if (v != 0 && static_cast` | round 4 |
+| 14 | `Commu_DrawCard` | `PutWord(p, 0x16, 0x7BC8);` for `PutWord(p, 0x16, 0x7BC9);` | round 0 |
+| 15 | `Commu_DrawCard` | `((d >> 3) * 0x29)` for `((d >> 3) * 0x28)` | round 0 |
+| 16 | `Commu_DrawCard` | `PutWord(p, 0x1A, 0x20);` for `PutWord(p, 0x1A, 0x28);` | round 0 |
+| 17 | `Commu_DrawCard` | `SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x1D, 0);` for `SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x1E, 0);` | round 0 |
+| 18 | `Commu_DrawUnderline` | `PutFloat(p, 0x14, x0 + 0xB);` for `PutFloat(p, 0x14, x0 + 0xC);` | round 0 |
+| 19 | `Commu_DrawPiece` | `PutWord(p, 0x18, e[3]);` for `PutWord(p, 0x18, e[2]);` | round 0 |
+| 20 | `Commu_DrawPiece` | `PutWord(p, 0x16, 0x7888);` for `PutWord(p, 0x16, 0x7887);` | round 0 |
+| 21 | `Commu_DrawFrame` | `for (int i = 0; i < 5; ++i) Piece(x + 8 * i + 0x20, y, 1);` for `for (int i = 0; i < 6; ++i) Piece(x + 8 * i + 0x20, y, 1);` | round 0 |
+| 22 | `Commu_DrawFrame` | `const int bottom = y + 0x22;` for `const int bottom = y + 0x23;` | round 0 |
+| 23 | `Commu_DrawFrame` | `Piece(x + 8 * i + 8, bottom, 6)` for `Piece(x + 8 * i + 8, bottom, 7)` | round 0 |
+| 24 | `Commu_DrawZennyBox` | `Text(at::kBetTitle)` for `Text(at::kZennyTitle)` | round 0 |
+| 25 | `Commu_DrawZennyBox` | `(At(at::kFmtWide)), L(at::kBet))` for `(At(at::kFmtWide)), L(bof3::addr::Party_Zenny))` | round 0 |
+| 26 | `Commu_DrawStakeBox` | `if (amount <= 10) format` for `if (amount < 10) format` | round 425 |
+| 27 | `Commu_DrawStakeBox` | `left = x + 0x37` for `left = x + 0x36` | round 6 |
+| 28 | `Commu_DrawStakeBox` | `if (amount < 999)` for `if (amount < 1000)` | round 291 |
+| 29 | `CommuHiLo_DrawMarker` | `PutFloat(p, 0x24, y0 - 5);` for `PutFloat(p, 0x24, y0 - 6);` | round 0 |
+| 30 | `CommuHiLo_DrawMarker` | `if ((frame & 4) == 0)` for `if ((frame & 8) == 0)` | round 1 |
+| 31 | `CommuHiLo_DrawMarker` | `SH_CALL(Gfx_CommitPrim)(1, 0x28);` for `SH_CALL(Gfx_CommitPrim)(1, 0x2C);` | round 0 |
+| 32 | `CommuHiLo_DrawRow` | `y = B(at::kPicks + i) != 0 ? 0x64 : 0x74;` for `y = B(at::kPicks + i) != 0 ? 0x74 : 0x64;` | round 0 |
+| 33 | `CommuHiLo_DrawRow` | `if (i < k && k != 0 && i != 0)` for `if (i <= k && k != 0 && i != 0)` | round 0 |
+| 34 | `CommuHiLo_DrawRow` | `Card(0x10 + 32 * i, y, 0xFE);` for `Card(0x10 + 32 * i, y, 0xFF);` | round 1 |
+| 35 | `CommuHiLo_Shuffle` | `for (j = 0; j < i && B(at::kCards + j) != v + 1; ++j) {}` for `for (j = 0; j < i && B(at::kCards + j) != v; ++j) {}` | round 0 |
+| 36 | `CommuHiLo_DrawChoice` | `Piece(x, y, m == 2 ? 9 : 0xA);` for `Piece(x, y, m == 1 ? 9 : 0xA);` | round 13 |
+| 37 | `CommuHiLo_DrawChoice` | `m == 2 ? 6 : 0, 2, text` for `m == 2 ? 7 : 0, 2, text` | round 13 |
+| 38 | `CommuHiLo_DrawChoice` | `if (m > 3) return;` for `if (m > 2) return;` | round 3 |
+| 39 | `CommuHiLo_DrawChoices` | `case 1: a = 2, b = 2, c = 0; break;` for `case 1: a = 2, b = 1, c = 0; break;` | round 2 |
+| 40 | `CommuHiLo_DrawChoices` | `case 0xFE: a = 0` for `case 0xFF: a = 0` | round 17 |
+| 41 | `CommuHiLo_OpenFade` | `SetWord(At(at::kCards + 8), 0xFF00);` for `SetWord(At(at::kCards + 8), 0xFFFF);` | round 0 |
+| 43 | `CommuHiLo_Intro` | `StakeBox(0x6E - 0x28 * n, 0x74, 1); if (B(at::kSlide) != 0) return;...` for `StakeBox(0x6E - 0x28 * B(at::kSlide), 0x74, 1); if (B(at::kSlide) !...` | round 0 (case 0: the counter) |
+| 44 | `CommuHiLo_DealCards` | `++i;` for `count = B(at::kCount); ++i;` | round 0 (case 1: the count) |
+| 45 | `CommuHiLo_Payout` | `} while (i <= static_cast<signed char>(count));` for `} while (i <= S8(at::kCount));` | round 0 (case 1: the count) |
+| 46 | `CommuHiLo_DealHints` | `static void ShownValues() { const int bits = S8(at::kCursor); for (...` for `static void ShownValues() { for (int i = 0; i < 8; ++i) if (static_...` | round 17 (case 2: the cursor) |
+| 47 | `CommuHiLo_Reveal` | `const auto turn = static_cast<unsigned char>(t + 1);` for `const auto turn = static_cast<unsigned char>(B(at::kTurn) + 1);` | round 208 (case 3: the turn) |
+| 48 | `CommuHiLo_Payout` | `const int t = t0; Room("CommuHiLo_Payout` for `const int t = S8(at::kTurn); Room("CommuHiLo_Payout` (and the earlier read added) | round 500 (case 3: the turn) |
+| 49 | `CommuHiLo_OpenMusic` | `const auto phase = static_cast<unsigned char>(B(at::kPhase) + 1); i...` for `if (SH_CALL(File_LoadDone)() == 0) return; SH_CALL(Music_Play)(0x94...` | round 297 (case 4: the phase) |
+| 50 | `CommuHiLo_Intro` | `B(at::kStep) = 1; return; } const auto n = static_cast<unsigned cha...` for `B(at::kStep) = static_cast<unsigned char>(B(at::kStep) + 1); return...` | round 81 (case 4: the step) |
+| 51 | `CommuHiLo_WaitIntro` | `if (Request() != 2) B(at::kState) = static_cast<unsigned char>(s0 +...` for `if (Request() != 2) B(at::kState) = static_cast<unsigned char>(B(at...` (and the earlier read added) | round 31 (case 4: the state) |
+| 52 | `CommuHiLo_BetInput` | `if (bet0 == 0) {` for `if (L(at::kBet) == 0) {` (and the earlier read added) | round 2451 (case 5: the stake) |
+| 53 | `Commu_DrawStakeBox` | `const unsigned style = B(at::kStyle); const auto amount = static_ca...` for `const unsigned style = B(at::kStyle); SH_CALL(Menu_DrawBox)(x + 1, ...` | round 193 (case 5: the stake) |
+| 54 | `Commu_DrawZennyBox` | `const U z0 = L(bof3::addr::Party_Zenny); SH_CALL(Text_DrawAt)(x + 0...` for `SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, 3, Text(at::kZennyTitle));...` | round 747 (case 6: Party_Zenny) |
+| 56 | `CommuHitBlow_End` | `Card(8 * (0x11 - m), 0x78 - 0xE * m, d1);` for `Card(8 * (0x11 - m), 0x78 - 0xE * m, B(rec + 1));` (and the earlier read added) | round 4654 (case 7: a block byte) |
+| 57 | `CommuHiLo_BetInput` | `S8(at::kDigits + 1) * 10 + ((pressed & 0x5000) ? S8(at::kDigits) : ...` for `S8(at::kDigits + 1) * 10 + S8(at::kDigits);` | round 587 (case 8: a digit) |
+| 58 | `CommuHiLo_Payout` | `if (lost0 != 0) {` for `if (B(at::kLost) != 0) {` (and the earlier read added) | round 992 (case 9: the lost flag) |
+| 59 | `CommuHitBlow_End` | `if (again0 == 0) {` for `if (B(at::kAgain) == 0) {` (and the earlier read added) | round 72 (case 9: the again choice) |
+| 60 | `CommuHiLo_Close` | `const unsigned char t0 = B(at::kTailState); SH_CALL(Music_Play)(L(a...` for `SH_CALL(Music_Play)(L(at::kMusic) & 0xFF, 8); B(at::kTailState) = s...` | round 1243 (case 10: the tail state) |
+| 61 | `CommuHiLo_BetInput` | `if (static_cast<signed char>(c) >= 4) B(at::kCount) = 0;` for `if (static_cast<signed char>(c) >= 3) B(at::kCount) = 0;` | round 3 |
+| 62 | `CommuHiLo_BetInput` | `if (v > 99) {` for `if (v > 100) {` | **not refused** (equivalent: at 100 the stake is already 100) |
+| 63 | `CommuHiLo_BetInput` | `SetL(at::kBet, zenny);` for `SetL(at::kBet, static_cast<U>(static_cast<int>(static_cast<std::int...` | **not refused** (equivalent: zenny < 100 there) |
+| 64 | `CommuHiLo_BetInput` | `SetL(at::kBet, static_cast<U>(static_cast<int>(static_cast<std::int...` for `SetL(at::kBet, static_cast<U>(static_cast<int>(static_cast<std::int...` | round 0 (near variant of 63) |
+| 65 | `CommuHiLo_BetInput` | `const auto step = static_cast<unsigned char>(B(at::kStep) + 1);` for `const auto step = static_cast<unsigned char>(B(at::kStep) + 2);` | round 10 |
+| 66 | `CommuHiLo_BetInput` | `SetL(bof3::addr::Party_Zenny, zenny + stake);` for `SetL(bof3::addr::Party_Zenny, zenny - stake);` | round 24 |
+| 67 | `CommuHiLo_BetInput` | `if (B(at::kPhase) != 1 \|\| B(at::kState) != 3) return;` for `if (B(at::kPhase) != 1 \|\| B(at::kState) != 2) return;` | round 2 |
+| 68 | `CommuHiLo_BetInput` | `SH_CALL(Commu_DrawUnderline)(0xBA - 12 * S8(at::kCount), 0x98);` for `SH_CALL(Commu_DrawUnderline)(0xBA - 12 * S8(at::kCount), 0x99);` | round 2 |
+| 69 | `CommuHiLo_BetInput` | `if (static_cast<signed char>(d) > 8) B(at::kDigits + i) = 0;` for `if (static_cast<signed char>(d) > 9) B(at::kDigits + i) = 0;` | round 1165 |
+| 70 | `CommuHiLo_BetSlide` | `ZennyBox(0x12 * n + 0x26, 0xD * n + 0x10);` for `ZennyBox(0x12 * n + 0x26, 0xE * n + 0x10);` | round 0 |
+| 71 | `CommuHiLo_BetBack` | `if (B(at::kSlide) == 3) SH_CALL(CommuHiLo_Quit)();` for `if (B(at::kSlide) == 4) SH_CALL(CommuHiLo_Quit)();` | round 1 |
+| 72 | `CommuHiLo_Quit` | `Sound(0x105); Message(0x72);` for `Sound(0x106); Message(0x72);` | round 0 |
+| 73 | `CommuHiLo_DealStart` | `SetWord(At(at::kPicks + 10), 0);` for `SetWord(At(at::kPicks + 9), 0);` | round 2 |
+| 74 | `CommuHiLo_DealStart` | `B(at::kSlide) = 2;` for `B(at::kSlide) = 3;` | round 2 |
+| 75 | `CommuHiLo_DealCards` | `unsigned char left = r < 8 ? 1 : (r < 0xD ? 2 : 3);` for `unsigned char left = r < 8 ? 1 : (r < 0xE ? 2 : 3);` | round 12 |
+| 76 | `CommuHiLo_DealCards` | `if ((Rnd() & 1) == 0) {` for `if ((Rnd() & 3) == 0) {` | round 13 |
+| 77 | `CommuHiLo_DealCards` | `Card((2 * c - B(at::kSlide)) * 16, 0x6C, 0xFF);` for `Card((2 * c - B(at::kSlide) + 1) * 16, 0x6C, 0xFF);` | round 0 |
+| 78 | `CommuHiLo_DealCards` | `if (dealt != 8) {` for `if (dealt != 9) {` | round 4 |
+| 79 | `CommuHiLo_DealHints` | `Message(0x74);` for `Message(0x73);` | round 0 |
+| 80 | `CommuHiLo_DealWait` | `ShownValues(); HiLoBoxes(); if (Request() == 1) return;` for `ShownValues(); HiLoBoxes(); if (Request() == 2) return;` | round 0 |
+| 81 | `CommuHiLo_DealChoices` | `Choice(0xB8, 0x44 - 0x1E * B(at::kSlide), 2, 1);` for `Choice(0xB8, 0x44 - 0x1E * B(at::kSlide), 2, 0);` | round 0 |
+| 82 | `CommuHiLo_Pick` | `selected = n < 1 ? 2 : (n >= 7 ? 3 : 0xFF);` for `selected = n < 1 ? 2 : (n >= 8 ? 3 : 0xFF);` | round 16 |
+| 83 | `CommuHiLo_Pick` | `B(at::kPicks + i) = cursor;` for `B(at::kPicks + 1 + i) = cursor;` | round 62 |
+| 84 | `CommuHiLo_Pick` | `if (n < 8) SH_CALL(CommuHiLo_DrawMarker)((n + 1) * 32, 0x6E);` for `if (n < 8) SH_CALL(CommuHiLo_DrawMarker)((n + 2) * 32, 0x6E);` | round 0 |
+| 85 | `CommuHiLo_Pick` | `if (B(at::kCursor) == 2) B(at::kCursor) = 1;` for `if (B(at::kCursor) == 2) B(at::kCursor) = 0;` | round 586 |
+| 86 | `CommuHiLo_Pick` | `B(at::kCursor) = static_cast<unsigned char>(B(at::kCursor) ^ 3);` for `B(at::kCursor) = static_cast<unsigned char>(B(at::kCursor) ^ 1);` | round 34 |
+| 87 | `CommuHiLo_PickClose` | `B(at::kTurn) = 2;` for `B(at::kTurn) = 1;` | round 1 |
+| 88 | `CommuHiLo_PickClose` | `for (++i; i < 8; ++i)` for `for (++i; i < 9; ++i)` | round 0 |
+| 89 | `CommuHiLo_Reveal` | `B(at::kCards + t - 1) > B(at::kCards + t) ? 1 : 0;` for `B(at::kCards + t - 1) >= B(at::kCards + t) ? 1 : 0;` | round 614 |
+| 90 | `CommuHiLo_Reveal` | `if (static_cast<signed char>(turn) == static_cast<signed char>(coun...` for `if (static_cast<signed char>(turn) == static_cast<signed char>(coun...` | round 172 |
+| 91 | `CommuHiLo_Reveal` | `Sound(0x108);` for `Sound(0x107);` | round 2 |
+| 92 | `CommuHiLo_Reveal` | `B(at::kLost) = 2;` for `B(at::kLost) = 1;` | round 2 |
+| 93 | `CommuHiLo_RevealPause` | `Row(all, count, count);` for `Row(all, all, count);` | round 0 |
+| 94 | `CommuHiLo_Payout` | `factor * L(at::kBet) + 0x31u` for `factor * L(at::kBet) + 0x32u` | round 332 |
+| 95 | `CommuHiLo_Payout` | `SetL(at::kBet, static_cast<U>(product / 99));` for `SetL(at::kBet, static_cast<U>(product / 100));` | round 1 |
+| 96 | `CommuHiLo_Payout` | `At(at::kPayouts + 2 * t + 2)` for `At(at::kPayouts + 2 * t)` | round 1 |
+| 97 | `CommuHiLo_Payout` | `message = 0x75;` for `message = 0x74;` | round 11 |
+| 98 | `CommuHiLo_CheckWinnings` | `> 10000` for `>= 10000` | round 6 |
+| 99 | `CommuHiLo_CheckWinnings` | `B(at::kState) = 4;` for `B(at::kState) = 3;` | round 2 |
+| 100 | `CommuHiLo_CashOut` | `SH_CALL(Zenny_Add)(L(at::kBet), 1);` for `SH_CALL(Zenny_Add)(L(at::kBet), 0);` | round 2 |
+| 101 | `CommuHiLo_Restart` | `StakeBox(0xF * m + 0x6E, 0x74 - 0x18 * m, 0);` for `StakeBox(0xF * m + 0x6E, 0x74 - 0x19 * m, 0);` | round 2 |
+| 102 | `CommuHiLo_Restart` | `B(at::kState) = 2; B(at::kStep) = 0;` for `B(at::kState) = 1; B(at::kStep) = 0;` | round 40 |
+| 103 | `CommuHiLo_Leave` | `ZennyBox(0x26, 0x10 - 0x13 * n);` for `ZennyBox(0x26, 0x10 - 0x14 * n);` | round 2 |
+| 104 | `CommuHiLo_Leave` | `B(at::kPhase) = 1; B(at::kState) = 0;` for `B(at::kPhase) = 2; B(at::kState) = 0;` | round 11 |
+| 105 | `CommuHiLo_Close` | `SH_CALL(Music_Play)(L(at::kMusic) & 0x7F, 8);` for `SH_CALL(Music_Play)(L(at::kMusic) & 0xFF, 8);` | round 3 |
+| 106 | `CommuHiLo_Close` | `if (Request() == 1) return; SH_CALL(Music_FadeOutStop)(10);` for `if (Request() == 2) return; SH_CALL(Music_FadeOutStop)(10);` | round 17 |
+| 107 | `CommuHitBlow_OpenMusic` | `Message(0x7E);` for `Message(0x7F);` | round 0 |
+| 108 | `CommuHitBlow_OpenWait` | `SetL(at::kBet, 1); B(at::kState) = state;` for `SetL(at::kBet, 0); B(at::kState) = state;` | round 2 |
+| 109 | `CommuHitBlow_OpenSlide` | `GuessPanel(0x10 - 0x1D * n, 0x18, 0); ZennyBox(0x1E * B(at::kSlide)...` for `GuessPanel(0x10 - 0x1E * n, 0x18, 0); ZennyBox(0x1E * B(at::kSlide)...` | round 0 |
+| 110 | `CommuHitBlow_Start` | `SetL(bof3::addr::Party_Zenny, zenny - 499u);` for `SetL(bof3::addr::Party_Zenny, zenny - 500u);` | round 1 |
+| 111 | `CommuHitBlow_Start` | `std::memset(At(at::kRecords), 1, 39);` for `std::memset(At(at::kRecords), 1, 40);` | round 1 |
+| 112 | `CommuHitBlow_Start` | `if (j < i - 1) continue;` for `if (j != i) continue;` | round 10 |
+| 113 | `CommuHitBlow_StartSlide` | `Card(8 * (0x11 - n), 0x78 - 0xE * n, 2);` for `Card(8 * (0x11 - n), 0x78 - 0xE * n, 1);` | round 0 |
+| 114 | `CommuHitBlow_Prompt` | `Message(0x81);` for `Message(0x80);` | round 0 |
+| 115 | `CommuHitBlow_WaitPrompt` | `B(at::kCursor) = 1; B(at::kState) = state;` for `B(at::kCursor) = 0; B(at::kState) = state;` | round 2 |
+| 116 | `CommuHitBlow_Input` | `if (static_cast<signed char>(d) < 0) B(at::kCards + index) = 9;` for `if (static_cast<signed char>(d) < 1) B(at::kCards + index) = 9;` | round 41 |
+| 117 | `CommuHitBlow_Input` | `if (d > 8) B(at::kCards + index) = 1;` for `if (d > 9) B(at::kCards + index) = 1;` | round 38 |
+| 118 | `CommuHitBlow_Input` | `const auto index = static_cast<unsigned char>(row * 5 + cursor + 4);` for `const auto index = static_cast<unsigned char>(row * 5 + cursor + 3);` | round 0 |
+| 119 | `CommuHitBlow_Input` | `HitBlowPanels(0, 0, 0);` for `HitBlowPanels(0, 0, 1);` | round 0 |
+| 120 | `CommuHitBlow_Score` | `if (rec[i] == B(at::kCards + j)) ++blows;` for `if (i != j && rec[i] == B(at::kCards + j)) ++blows;` | round 1 |
+| 121 | `CommuHitBlow_Score` | `rec[3] = blows;` for `rec[3] = hits;` | round 0 |
+| 122 | `CommuHitBlow_Score` | `else if (static_cast<signed char>(v) > 2) v = 1;` for `else if (static_cast<signed char>(v) > 2) v = 2;` | round 39 |
+| 123 | `CommuHitBlow_Score` | `std::memcpy(At(at::kTextB), name, 15);` for `std::memcpy(At(at::kTextB), name, 16);` | round 10 |
+| 124 | `CommuHitBlow_Score` | `SH_CALL(Crt_sprintf)(text_a, format, r);` for `SH_CALL(Crt_sprintf)(text_a, format, r + 1);` | round 10 |
+| 125 | `CommuHitBlow_Score` | `SH_CALL(Item_NamePtr)(item, category)` for `SH_CALL(Item_NamePtr)(category, item)` | round 10 |
+| 126 | `CommuHitBlow_Score` | `B(at::kState) = 6;` for `B(at::kState) = 7;` | round 10 |
+| 127 | `CommuHitBlow_NextGuess` | `for (int j = 0; j < 2; ++j) rec[j] = rec[j - 5];` for `for (int j = 0; j < 3; ++j) rec[j] = rec[j - 5];` | round 2 |
+| 128 | `CommuHitBlow_NextGuess` | `static_cast<unsigned char>(B(at::kCount) - 0), 0);` for `static_cast<unsigned char>(B(at::kCount) - 1), 0);` | round 2 |
+| 129 | `CommuHitBlow_NextGuess` | `GuessPanel(0x10, 0x18, 0); GuessRow(0x68, 0x78, B(at::kCount), 0); ...` for `GuessPanel(0x10, 0x18, 1); GuessRow(0x68, 0x78, B(at::kCount), 0); ...` | round 0 |
+| 130 | `CommuHitBlow_Lost` | `GuessRow(0x68, 0x78, row == 8 ? 8 : row, 0);` for `GuessRow(0x68, 0x78, row == 8 ? 7 : row, 0);` | round 0 |
+| 131 | `CommuHitBlow_Lost` | `B(at::kState) = 9;` for `B(at::kState) = 8;` | round 2 |
+| 132 | `CommuHitBlow_Prize` | `SH_CALL(Inventory_Add)(category, item, 2);` for `SH_CALL(Inventory_Add)(category, item, 1);` | round 2 |
+| 133 | `CommuHitBlow_Prize` | `if (added != 0) {` for `if (added == 0) {` | round 2 |
+| 134 | `CommuHitBlow_End` | `const unsigned char r = count == 8 ? 6 : count;` for `const unsigned char r = count == 8 ? 7 : count;` | round 0 |
+| 135 | `CommuHitBlow_End` | `if (B(at::kSlide) != 4) return;` for `if (B(at::kSlide) != 5) return;` | round 30 |
+| 136 | `CommuHitBlow_End` | `Card(0xA8 - 16 * B(at::kSlide), 0x40, B(at::kCards + 1));` for `Card(0xA8 - 16 * B(at::kSlide), 0x40, B(at::kCards + 2));` | round 0 |
+| 137 | `CommuHitBlow_End` | `B(at::kSlide) = 0; B(at::kStep) = 3;` for `B(at::kSlide) = 0; B(at::kStep) = 2;` | round 6 |
+| 138 | `CommuHitBlow_Close` | `B(at::kTailState) = static_cast<unsigned char>(B(at::kTailState) + 2);` for `B(at::kTailState) = static_cast<unsigned char>(B(at::kTailState) + 1);` | round 0 |
+| 139 | `Commu_PushSubscreen` | `B(at::kSavedState) = state + 1;` for `B(at::kSavedState) = state;` | round 0 |
+| 140 | `CommuHiLo_OpenFade` | `SetL(at::kCards + 4, 0xFFFFFF00u);` for `SetL(at::kCards + 4, 0xFFFFFFFFu);` | round 0 |
+| 141 | `CommuHitBlow_OpenMusic` | `SH_CALL(Music_Play)(0x94, 9); Message(0x7F);` for `SH_CALL(Music_Play)(0x94, 8); Message(0x7F);` | round 0 |
+| 142 | `CommuHiLo_Intro` | `B(at::kCount) = 0; B(at::kState) = state; B(at::kStep) = 1;` for `B(at::kCount) = 0; B(at::kState) = state; B(at::kStep) = 0;` | round 0 |
+| 143 | `CommuHiLo_DrawChoice` | `L(at::kChoiceLabels + 4 * (2 - i))` for `L(at::kChoiceLabels + 4 * i)` | round 13 |
+| 144 | `CommuHiLo_DrawMarker` | `((frame & 6) << 5) + 0x3E` for `((frame & 6) << 5) + 0x3F` | round 0 |
+| 145 | `CommuHitBlow_OpenFade` | `B(at::kMusic) = static_cast<unsigned char>(Music_Track + 1);` for `B(at::kMusic) = Music_Track;` | round 0 |
+| 146 | `CommuHitBlow_Score` | `if (B(at::kCards + j) == rec[2 - j]) ++hits;` for `if (B(at::kCards + j) == rec[j]) ++hits;` | round 0 |
+| 147 | `CommuHitBlow_Prize` | `const int prize = S8(at::kCount) * 3 + (2 - S8(at::kCursor));` for `const int prize = S8(at::kCount) * 3 + S8(at::kCursor);` | round 2 |
+| 148 | `CommuHiLo_BetInput` | `SetL(at::kBet, 99);` for `SetL(at::kBet, 100);` | round 12 (near variant of 62) |
 
 ## 7. Latent defects and the one policy (Capcom's, described, not fixed)
 
