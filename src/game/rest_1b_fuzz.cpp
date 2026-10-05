@@ -214,6 +214,31 @@ U FxGround(const U*, U answer) {
     return WithAx(answer, n % 5 == 0 ? n >> 8 : h + kDelta[(n >> 3) % (sizeof kDelta / sizeof kDelta[0])]);
 }
 
+// Three cells the group re-reads after a call on paths too narrow for the
+// harness's disturbance alone (its group case is about one call in 288, and
+// these paths run in a few hundred rounds of 4,000): moved a quarter of the
+// time from the noise (both passes the same) by the call just before the
+// re-read - Field_State +0x89 by Sprite_FlashClut (CellHit's damage reads it
+// after), +0x138 by PartyAction_Kind30Ahead (Form1Begin's none-ahead half),
+// Field_InputFlags by Effect_SpawnAtCell (CellPickup's tenfold). Seen blind
+// without them by controls C93..C95 (docs/rest_1b.md section 11).
+void NoiseByte(unsigned char* p) {
+    const U n = sh::Noise();
+    if (n % 4 == 0 && sh::InRegions(p, 1)) p[0] = static_cast<unsigned char>(n >> 8);
+}
+U FxFlash(const U*, U answer) {
+    NoiseByte(Field_State + 0x89);
+    return answer;
+}
+U FxKind30(const U*, U answer) {
+    NoiseByte(Field_State + 0x138);
+    return answer;
+}
+U FxSpawn(const U*, U answer) {
+    NoiseByte(&Field_InputFlags);
+    return answer;
+}
+
 // Masks by what each callee reads (symbols.toml's types, its evidence): the map
 // cells as 16-bit words (AreaMap_ByteAt and AreaMap_ClearCell read the low
 // words, Effect_SpawnAtCell and Effect_SpawnAtCellHigh movsx them, the group's
@@ -228,7 +253,7 @@ const sh::Callee kCallees[] = {
     // R0A's helpers (rest_0a.h): al 0 / 1, an index 0..19 or 0xFF, or nothing read
     {R1B_OURS(PartyAction_TargetAhead), 0, {}, kF, 0, 0, {}},
     {R1B_OURS(PartyAction_BlockedAhead), 0, {}, kF, 0, 0, {}},
-    {R1B_OURS(PartyAction_Kind30Ahead), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}},
+    {R1B_OURS(PartyAction_Kind30Ahead), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxKind30},
     {R1B_OURS(PartyAction_MemberOnEffect), 1, {kU8}, kF, 0, 0, {}},
     {R1B_OURS(PartyAction_MemberBeyondEffect), 1, {kU8}, kF, 0, 0, {}},
     {R1B_OURS(PartyAction_SideProbes), 0, {}, kG, 0, 0, {}},
@@ -244,13 +269,13 @@ const sh::Callee kCallees[] = {
     // long (long x, long z)
     {R1B_OURS(MapView_GroundAt), 2, {kW, kW}, kG, 0, 0, {}, &FxGround},
     // void (unsigned state, unsigned x, unsigned z): the state's byte, the words
-    {R1B_OURS(Effect_SpawnAtCell), 3, {kU8, kU16, kU16}, kG, 0, 0, {}},
+    {R1B_OURS(Effect_SpawnAtCell), 3, {kU8, kU16, kU16}, kG, 0, 0, {}, &FxSpawn},
     // void (unsigned amount): pushed `and edx, 0xFF`, whole
     {R1B_OURS(Field_GiveZenny), 1, {kW}, kG, 0, 0, {}},
     // void (unsigned x, unsigned z)
     {R1B_OURS(AreaMap_ClearCell), 2, {kU16, kU16}, kG, 0, 0, {}},
     // void (unsigned colour): an immediate 0
-    {R1B_OURS(Sprite_FlashClut), 1, {kW}, kG, 0, 0, {}},
+    {R1B_OURS(Sprite_FlashClut), 1, {kW}, kG, 0, 0, {}, &FxFlash},
     // the group's own cell handlers where the states call them (E8, 12 sites):
     // al 0 a third of the time, the cells as words
     {R1B_OURS(PartyAction3_CellPickup), 2, {kU16, kU16}, kF, 0, 0, {}},
