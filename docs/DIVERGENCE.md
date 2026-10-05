@@ -2029,7 +2029,10 @@ designed in rather than bolted on.
 - **Date:** 2026-09-23
 - **Subsystem:** display (`src/game/widescreen.{h,cpp}`, `src/render/render_d3d11.cpp`,
   `src/game/display_setup.cpp`, `MapView_Build` `0x56EC00` ours in
-  `src/game/map_layers.cpp`, `AreaMap_FrameAreaBD` `0x510780` Capcom's;
+  `src/game/map_layers.cpp`, `AreaMapBD_BuildView` `0x510780` - Capcom's when
+  this was written and called `AreaMap_FrameAreaBD` below, which is the name of
+  `0x510630`; ours since round fourteen's R3G, `src/game/rest_3g.cpp`, which
+  reads the four cull operands back from the code;
   [`widescreen.md`](widescreen.md))
 - **Tier:** Sensible
 - **Original behaviour:** the picture is the game's 320 x 240 view (at
@@ -2223,7 +2226,14 @@ designed in rather than bolted on.
   `src/game/effect_4f.cpp`). Both groups inject before
   `Widescreen_ArmFills`, so their fuzzes still compare the original's
   `(0, 0)` 320 x 240 and narrow play is Capcom's to the bit. **All nine of
-  the scan's sites and E6C's `0x510E6C` are now widened.** Still not
+  the scan's sites and E6C's `0x510E6C` are now widened.** **Round fourteen,
+  2026-10-04**: R3F's `EffectKindAA_DrawFill` (`0x492400`, the float at
+  `0x492450`: kind 0xAA's two shaded quads over the whole frame) is drawn
+  from `Widescreen_FillX()` over `Widescreen_FillWidth()`, as
+  `EffectKind18Sub36_Pulse` is (`src/game/rest_3f.cpp`; its inject is before
+  `Widescreen_ArmFills`, so its fuzz compares the original's 320). Not
+  widened, the owner's call: `EffectKindA8_DrawBar` (`0x4920F0`), bars the
+  frame's width but not its height. Still not
   widened, the owner's call: `EffectKind96_Pulse`, the spiral `0x505E60`,
   the culls (`0x4FF6A3`, `0x5054E3`, `Encounter_OnScreen`, the battle
   field's two), the strips and full-width draws listed above.
