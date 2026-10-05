@@ -21,6 +21,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"   // kAfterShop names its function since round 14 (R4A): the same value
+
 namespace mode_states {
 
 namespace at {
@@ -52,7 +54,7 @@ constexpr std::uint32_t kSmallUV = 0x65F5A8;        // u8 pairs by colour >> 4: 
 // and one unread function, called by address.
 constexpr std::uint32_t kMenuStates = 0x589970;   // group DH's: jmp [0x6672B4 + 4 * u8 0x929F00], the field menu
 constexpr std::uint32_t kShopStates = 0x57F500;   // group DF's: the shop overlay's first table
-constexpr std::uint32_t kAfterShop = 0x4560D0;    // unread: called by Shop_Close after DAT 0x12A is loaded
+constexpr std::uint32_t kAfterShop = bof3::addr::CommuSim_RollOffers;    // R4A's (round 14), ours: called by Shop_Close after DAT 0x12A is loaded
 
 using Handler = void (__cdecl*)();
 

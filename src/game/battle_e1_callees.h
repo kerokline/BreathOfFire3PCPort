@@ -11,8 +11,8 @@
 //             frame of the list.
 //   0x5B9450  (dst, src, n): the CRT's memcpy, Capcom's (kThrough).
 //   0x494E70  (): BattleEnemy_ClearStates, the eight enemies' +0..+4 zeroed, ours since R3G (kThrough).
-//   0x452EB0, 0x452F10  () -> al: the default targets of a side, Capcom's
-//             (no group); the engine set answers a flag.
+//   0x452EB0, 0x452F10  () -> al: a random live member / enemy, R4A's
+//             Battle_RandomLiveMember / _RandomLiveEnemy, ours; the engine set answers a flag.
 //   0x444660  (): group BE4's (the round's cut) - a draw BE1's 0x42EE00 makes.
 //   0x446D90  (slot byte, item word) -> al: group BE4's - an item command
 //             given back to the inventory (battle_phases.md section 3).
@@ -144,8 +144,8 @@ constexpr U kEquipConfirmHelper = bof3::addr::BattleExtra_EquipCommit;   // 0x42
 constexpr U kEquipFrameHelper = bof3::addr::BattleExtra_EquipRefresh;   // 0x42E2F0, R3A's
 constexpr U kMemcpy = 0x5B9450;
 constexpr U kEnemiesClear = bof3::addr::BattleEnemy_ClearStates;
-constexpr U kSideTargetA = 0x452EB0;
-constexpr U kSideTargetB = 0x452F10;
+constexpr U kSideTargetA = bof3::addr::Battle_RandomLiveMember;   // R4A's (round 14)
+constexpr U kSideTargetB = bof3::addr::Battle_RandomLiveEnemy;    // R4A's (round 14)
 constexpr U kBe4Draw444660 = bof3::addr::BattleWin_DimScreen;   // BE4's
 constexpr U kBe4ReturnItem = bof3::addr::Battle_ReturnItem;   // BE4's
 constexpr U kBe4MemberName = bof3::addr::Battle_MemberNameToText;   // BE4's

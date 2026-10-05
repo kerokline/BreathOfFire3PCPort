@@ -111116,7 +111116,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_4a.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4560D0..0x456192 (0xC3 bytes), cdecl: the nine words 0x675F60 cleared; three groups of three distinct 0x9B + n, n = Rand() & 0x1F less Rand() & 0xF until at most {15, 20, 25}[group] (a stack table), never 0x9F or 0xA0. Called by CommuSim_AreaEnter, GameMode_Field and Shop_Close. docs/rest_4a.md."
+evidence = "disasm 2026-10-05 (round fourteen group R4A, capstone to the last instruction), 0x4560D0..0x456192 (0xC3 bytes), cdecl: the nine words 0x675F60 cleared; three groups of three distinct 0x9B + n, n = Rand() & 0x1F less Rand() & 0xF until at most {15, 20, 25}[group] (a stack table), never 0x9F or 0xA0. Called by CommuSim_AreaEnter, Shop_Close and the code at 0x495D06 (in GameMode_Field's catalog extent). docs/rest_4a.md."
 
 [[func]]
 pc = 0x4561A0
