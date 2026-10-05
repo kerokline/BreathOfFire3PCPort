@@ -439,6 +439,11 @@ switch). Counts are rounds refused of 6,000 (a filter naming two functions refus
 | 124 | `EffectKind51_Grow2` | reload 0x2E | 470 |
 | 125 | `EffectKind51_Wait2` | the timer high byte cleared after | 741 |
 | 126 | `EffectKind51_DrawColumn` | x - w rounded to a float before + dx (60's near variant) | 2069 |
+| 127 | `EffectKind50_Emit` | `+9` read before the spawn and the move (the count down from the value before) | 350 |
+| 128 | `EffectKind53_Beam` | the record's `+9` read before `Gpu_GetClut` / `Gpu_GetTPage` (the top v) | 442 |
+| 129 | `EffectKind51_Wait` | the counter 0x903848 read before the frame draw and the sway | 274, 290 |
+| 130 | `EffectKind50_Emit` | 127 with the record re-read: the value from before kept only while `Sprite_Current` is the same record | 49 |
+| 131 | `EffectKind53_Beam` | 128 with the record re-read, the same way | 59 |
 
 **125 of 126 refused by a count.** Control 60 is an equivalent mutant: `(x - w) + dx` against `x - (w - dx)`
 with w and dx whole numbers the column can hold and x a float - every intermediate is exact at the x87's 53 (or
@@ -449,6 +454,18 @@ trails at the record's point (with `EffectGte_ProjectPoint`'s stand-in projectin
 the sprite's `+0x14` at its sign's boundary; both refused on the second run. Every other control was refused on
 the first run. Control 11 shows the `fld` / `fstp` copies are observable (a signalling NaN in the depth is
 quietened by the original), control 98 the `fcomp` unordered case, control 104 the `test ah, 1` NaN case.
+
+**2026-10-05, under the repaired disturbance (round fourteen's review, item 1).** The group's case was `h % 6`
+until `b9dfe34`, so its cases 0 (`+9`) and 3 (the counter 0x903848) never ran; it is now `sh::DisturbCase(h, 6)`.
+The 126 controls above re-run on `451edeb` (the same plants; every anchor still unique): 125 refused by a count,
+60 not refused (the equivalent mutant, as before). 32 counts moved, none to 0; the largest falls are
+`EffectKind52_TrailUpdate`'s 88 and 90 (6000 to 4031), 91 (4259 to 2924) and 92 (1211 to 802) - the screen-float
+case runs a third less often than before -; the rest moved by 1 to 26 rounds (35..43 above give the two
+functions' counts, the re-run their sum). Controls 127..131 are new, each run also with the old `h % 6` planted in
+the fuzz for attribution (counts under it in brackets): 127 [301], 128 [383], 129 [232, 249], 130 [0], 131 [0].
+127 and 128 are refused by the record moves of the harness's case 4 too; 130 and 131 keep `Sprite_Current`'s
+re-read and miss only the byte's, and are refused only with case 0 live. The counter is moved by the harness's
+own case 6 as well, so 129 is refused without case 3, which adds about 40 rounds a function. The fuzz is unchanged.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
