@@ -448,6 +448,39 @@ exactly 0x1D. Every function has at least one control refused in hundreds of rou
 | C03b | `PartyAction6_ByForm` | the form index ^ 1 | 4000 |
 | C85b | `PartyAction_TurnToSide` | the side 7 for 5 (C85 near variant) | 337 |
 
+**2026-10-05, under the repaired disturbance (round fourteen's review item
+1).** The group case is now `sh::DisturbCase(h, 12)` (`b9dfe34`), so the cases
+0 (`+8`), 3 (`+0xA`), 6 (`+6` / `+7`) and 9 (the in-use byte of the effect
+record `+0xB` names), dead under `h % 12`, run. **C01..C99 and C01b..C85b
+re-run at `451edeb`, the fuzz unchanged: 101 + 4 planted; 97 refused by a
+count, C01..C03 by the same crash (C01b..C03b refused in all 4,000 rounds), C85
+not refused (the same equivalent mutant), C85b refused.** No count went to 0.
+Moved against the table: C06 1911, C14 678, C15 94, C20 3272, C23 154, C25
+3994, C42 269, C55 131, C74 286, C81 728, C89 560, C93 2518, C98 903. New
+controls C100..C106, at least one per formerly dead case, all refused. Each
+was also run with only its own case switched off (`if (sh::DisturbCase(h, 12)
+== N) return;` planted at the top of `Disturb`), to show what the case itself
+adds; a value read before a call is refused by the harness's own moves too
+(`Sprite_Current` moved, among others), so the rest of each count is theirs.
+Case 0: three re-reads of `+8`, C100..C102. Case 3: no function re-reads `+0xA`
+after a call (the count-downs decrement and test it with no call between), so
+the case tests only where a store sits against a call: C103, a store-order
+control. Case 6: likewise no re-read of `+6` or `+7` after a call (`+7` is read
+at `PartyAction_WaitEffectEnd`'s entry only): C104 and C105 are store-order
+controls. Case 9: `PartyAction_WaitEffectEnd` reads the record's byte after
+`Sprite_ScriptTickOnce`: C106. The fuzz was not changed: every formerly dead
+case adds rounds of its own to its controls.
+
+| # | Clones run | Plant | Refused (rounds of 4,000) |
+|---|---|---|--:|
+| C100 | `PartyAction6_Form0Begin` | case 0, `+8`: `FirstTurn`'s second turn from the direction read before the probe | 42 (37 with case 0 off) |
+| C101 | `PartyAction6_Form2Resolve` | case 0, `+8`: the effect record's +8 from the direction read before the 0x10B sound | 12 (9 with case 0 off) |
+| C102 | `PartyAction_TickThenFace` | case 0, `+8`: the animation from the direction read before `Sprite_ScriptTickOnce` | 120 (103 with case 0 off) |
+| C103 | `PartyAction6_Form0Begin` | case 3, `+0xA`: `BeginLevel`'s +0xA = 5 stored before the animation call, not after (store order) | 112 (101 with case 3 off) |
+| C104 | `PartyAction_WaitEffectEnd` | case 6, `+7`: +7 = 0 stored before the animation call, not after (store order) | 48 (45 with case 6 off) |
+| C105 | `PartyAction6_Form2Resolve` | case 6, `+6`: +6 = the index stored before the 0x10B sound, not after (store order) | 11 (10 with case 6 off) |
+| C106 | `PartyAction_WaitEffectEnd` | case 9, the effect record's +0: read before `Sprite_ScriptTickOnce` | 26 (23 with case 9 off) |
+
 ## 7. Calls across groups
 
 **Out of R1C**: every call is to a function already ours - R0A's seven
