@@ -2608,7 +2608,11 @@ designed in rather than bolted on.
   identical (746 s to 114 s). A route with another wall-clock wait would show
   as a `randlog` or shot difference against its x1 run: check each new route
   once. `attract_run.py` does not take it (`attract_watch.py` counts frames
-  by polling and would undercount).
+  by polling and would undercount). **The stream hold is `BOF3X_SPEED`'s
+  alone** (2026-10-05, round thirteen's review item 1): it was gated on the
+  speed itself, which F1 also sets, so a player's x2 was held at x1 for up
+  to two minutes whenever a track started. Now a flag only `BOF3X_SPEED`
+  sets and F1 clears (`g_speed_scripted`, `win_main.cpp`).
 - **Verification:** 2026-09-24. An attract run with F1 posted to the window
   at 75 s (`analysis/attract/f1_speed.log`): 31.0 drawn / 31.0 logic a
   second before, then `DIV-0048 speed x2 (F1) at Frame_Counter 1857` and
@@ -3984,7 +3988,7 @@ designed in rather than bolted on.
   known.
 - **Reversible?** `BOF3X_ORIGINAL=Battle_RandomLiveEnemy` runs Capcom's
   function, its stale bytes included.
-- **The owner's word:** owed.
+- **The owner's word, 2026-10-05:** fine as written.
 
 ### The community's name entry ends unanswered, where the original never leaves its step
 

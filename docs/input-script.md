@@ -77,7 +77,15 @@ named by a header line the game's parser reads as a comment:
 when the checksum passes, the runner sees the line, removes the copy and
 puts the owner's file back while the game runs on. A loaded game reads the
 file no more (the owner's point): the block is in memory, and the file is
-only opened again by a save menu's listing. If the line never comes - a
+only opened again by a save menu's listing - **and a route that opens one
+reads the owner's slot 0 there, not the recipe save** (found 2026-10-05 by
+the state hash on `shop.txt`: the inn's save prompt at recipe frame 2957
+re-reads the summaries, so ours showed the owner's `BISLPS00.DAT` where
+Capcom's side, which never logs the load and so keeps the recipe save to the
+end, showed the recipe's - the one route of ten that "differed" for a week,
+[`state-hash.md`](state-hash.md) section 5). `--slot0-hold` keeps the recipe
+save in place until the run ends; an A/B of any route that lists the saves
+wants it on both sides. If the line never comes - a
 failed load, a crash - the hand-back happens when the game has exited,
 whatever the run's end (`with`). Either way **the recipe save itself is
 never changed by a run**, and anything the recipe saved over slot 0 before

@@ -118,6 +118,11 @@ double g_frame_ms = kFrameMs;
 // (tooling, 1..64) starts a run at that speed - for scripted runs nobody
 // watches (input_run.py --speed); F1 then toggles between 1 and 2 as ever.
 int g_speed = 1;
+// True while the speed is the one BOF3X_SPEED started the run at: only then
+// does the loop hold x1 for a playing stream (run_speed.h - tooling, for runs
+// nobody hears). F1 clears it, so a player's x2 is never held (round
+// thirteen's review, item 1).
+bool g_speed_scripted = false;
 bool g_fps_log = false;   // BOF3X_FPS_LOG=1 (tooling): drawn and logic frames a second, to the log
 constexpr const char* kStrSpeed2 = "Speed x2";
 constexpr const char* kStrSpeed1 = "Speed x1";
@@ -443,6 +448,7 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
         if (wparam == VK_F1) {
             if ((lparam & (1 << 30)) == 0) {
                 g_speed = g_speed == 1 ? 2 : 1;
+                g_speed_scripted = false;
                 Overlay_Frames = kOverlayFrames;
                 Overlay_Text = g_speed == 2 ? kStrSpeed2 : kStrSpeed1;
                 bof3::Log("DIV-0048    speed x%d (F1) at Frame_Counter %lu", g_speed, static_cast<unsigned long>(Frame_Counter));
@@ -488,6 +494,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             const long v = sn < sizeof text ? std::strtol(text, &end, 10) : 0;
             if (end == nullptr || *end != '\0' || v < 1 || v > 64) bof3::Fatal("BOF3X_SPEED must be 1..64");
             g_speed = static_cast<int>(v);
+            g_speed_scripted = g_speed != 1;
             if (g_speed != 1) bof3::Log("DIV-0048    speed x%d from the start (BOF3X_SPEED)", g_speed);
         }
     }
@@ -607,7 +614,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                 // While a stream plays the loop runs at the ordinary period (run_speed.h).
                 // A hold of two minutes is no jingle - looping music has the
                 // buffer the stream had - and is dropped.
-                bool stream_hold = g_speed != 1 && bof3::RunSpeed_StreamPlaying();
+                bool stream_hold = g_speed_scripted && bof3::RunSpeed_StreamPlaying();
                 stream_hold_frames = stream_hold ? stream_hold_frames + 1 : 0;
                 if (stream_hold_frames > 3600) {
                     bof3::Log("DIV-0048    BOF3X_SPEED: a stream still playing after 3600 frames at Frame_Counter %lu; held no longer",
