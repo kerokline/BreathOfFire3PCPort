@@ -230,6 +230,17 @@ U FxApplyLV(const U* a, U answer) {
     sh::FillBytes(reinterpret_cast<void*>(static_cast<std::uintptr_t>(a[2])), 12);
     return answer;
 }
+// Sound_PlayEffect (the standard row re-listed): a quarter of the time one of
+// the two sound flags moved to 0 or 2..0xFF. EffectGlowSparks_Glow and _Rise
+// set their flag after the sound; the group's case 3 alone moved it under that
+// call in 0 and 3 rounds of 4000, too rarely to refuse the flag set before the
+// sound (2026-10-05, round fourteen's review item 1).
+U FxSoundFlags(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0)
+        Mem((n & 4) ? at::kGlowSounded : at::kRiseSounded)[0] = static_cast<unsigned char>((n & 8) ? 0 : 2 + (n >> 8) % 0xFE);
+    return answer;
+}
 
 // --- EffectGlowSparks_States' typed stand-ins -------------------------------------------
 //
@@ -299,6 +310,8 @@ const sh::Callee kCallees[] = {
     {R3E_OURS(Inventory_Count), 3, {k8, k8, k8}, kG, 0, 0, {}, &FxCount, nullptr, true},
     {R3E_OURS(Inventory_Remove), 3, {k8, k8, k8}, kF, 0, 0},
     {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kW, kW, kW}, kG, 0, 0, {0, 16}, &FxSprintf, nullptr, true},
+    // the standard row, louder: the two sound flags moved under it (FxSoundFlags)
+    {R3E_OURS(Sound_PlayEffect), 1, {k16}, kG, 0, 0, {}, &FxSoundFlags},
 };
 #undef R3E_OURS
 
