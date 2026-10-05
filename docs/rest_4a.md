@@ -9,7 +9,10 @@ none dropped (no start is a case, a shared tail or data; the band tool found
 no code no list has). Each read to its last instruction with capstone and
 fuzzed through the scenario harness in field mode
 ([`scenario_harness.md`](scenario_harness.md) section 7) without edits to it:
-194,000 rounds, 0 mismatches; controls in section 6. **Fuzz only**: no
+194,000 rounds, 0 mismatches; 74 controls planted, 72 refused (two by
+ours' abort, their in-range variants refused), one equivalent and one not
+refused whose near variant is (section 6). `'*'` exit 0 narrow and with
+`BOF3X_WIDE=1`; `ledger_check` 0 errors. **Fuzz only**: no
 recorded route enters the faerie village or reaches a row of this wave
 (section 9). The 26 `hypothesis` rows are all functions. No full-frame fill
 is built by any of the 48. No byte of the 48 is patched (DIVERGENCE.md,
@@ -152,7 +155,10 @@ values from `h` only): a slot's +1, the clock, `Game_AreaNumber`, a record's
 +2 / +3, a building's level (0..2), the event or removed count, `0x904B8B`
 and `0x904AB1`, a resident count, an offer word, a record out of use. Each
 case's cell is re-read after a call by some function of the group, and a
-control misses each re-read (section 6).
+control misses each re-read (section 6). Five stand-ins are louder than the
+standard rows for it (`Rand`, `Battle_ActorIsOut`, `Field_SlotClutCopy`,
+`0x45E6B0`, `AreaMap_Elevation` and the poses: section 6), each moving its
+cell from its own answer.
 
 What the harness lacks, for the coordinator's fold: nothing that blocked; the
 custom stand-in's frame write is this group's own (it knows the clone's frame
@@ -178,7 +184,86 @@ layout).
 
 ## 6. Controls
 
-(filled below)
+The script (`controls.py` in the session scratchpad's `r4a/`) plants each
+mutant in `rest_4a.cpp` on a unique anchor, rebuilds, runs `rest_4a` on the
+named clones (`BOF3X_R4A_ONLY`), restores and, at the end, rebuilds clean.
+Counts are in this worktree, at the committed fuzz (the second-to-last
+column is the clones run). **74 planted: 70 refused by a count, 2 by ours'
+abort (their in-range variants refused), 1 equivalent, 1 not refused (its
+near variant refused).**
+
+| # | Mutant | Clones | Mismatched rounds |
+|---|---|---|--:|
+| C1 | flag bit 14 -> 15 | `Battle_AutoTargetCheck` | 1,980 / 4,000 |
+| C2 | `0x904B8B` read before `Battle_ActorIsOut` (case 6) | same | 467 |
+| C3 | `forced >= 3` -> `> 3` | same | 3 (thin: the boundary) |
+| C4 | members 0..1 only | `Battle_RandomLiveMember` | ours' abort (count 0) |
+| C4b | member 1 never listed | same | 747 |
+| C5 | the list's overflow not written (`f[c]` only below 4) | `Battle_RandomLiveEnemy` | 4,358 / 6,000 |
+| C6 | one never-written frame byte 1, not 0 (L1's levelling matters) | same | 600 / 6,000 |
+| C7 | 0x128 -> 0x129 | `Battle_MemberActionIs0E` | 694 |
+| C8 | odds cap 5 -> 6 | `Battle_MemberAutoFixed` | 23 |
+| C9 | `0x904AB1` read before `Rand` (case 6) | same | 23 |
+| C10 | exclusion of `m + 1` | `Battle_RandomOtherMember` | ours' abort |
+| C10b | member 0 never listed | same | 505 |
+| C11 | the slot's +1 read before the copy (case 0) | `Field_RunSlot` | 1,978 |
+| C12 | the 0xFF step back one entry short | same | 118 |
+| C13 | +0x24 bit 2 -> 3 | `Field_SlotClutCopy` | 1,630 |
+| C14 | the destination column + 1 | same | 3,331 |
+| C15 | the mood stamp + 1 | `CommuSim_AreaEnter` | 619 |
+| C16 | the area read before the spawns (case 2) | same | 9 |
+| C17 | the clock read before the spawns (case 1) | same | 7 |
+| C18 | area kind 5 -> 6 | `CommuSim_QueueAreas` | 1,740 |
+| C19 | the spawn cap + 1 | `CommuSim_Population` | 95 |
+| C20 | the grow stamp the clock before the calls (case 1) | same | 13 |
+| C21 | the shrink stamp likewise | same | 4 (thin) |
+| C22 | the mood cap 99 -> 100 | `CommuSim_Mood` | 497 |
+| C23 | trait + 3 -> + 2 | same | 878 |
+| C24 | event 7 -> 8 | `CommuSim_LevelLit` | 763 |
+| C25 | `<` -> `<=` on the lit level needed | `CommuSim_LevelDark` | 95 |
+| C26 | the divisor floor 5 -> 4 | `CommuSim_TickKind5` | 12 |
+| C27 | event 0 -> 1 | same | 554 |
+| C28 | the age x 6 -> x 5 | `CommuSim_TickKind9` | 390 |
+| C29 | the level read before the roll (case 4) | same | 4 (thin) |
+| C30 | the removed count read before 0x45E6B0 (case 5) | same | 73 |
+| C31 | +3 not read again after the roll (case 3) | `CommuSim_TickKindD` | 29 |
+| C32 | the roll's fold 0x1C -> 0x1B | same | 4 (thin) |
+| C32b | the fold 0x1C -> 0x10 | same | 6 |
+| C33 | the tier walk's end `>=` -> `>` | same | 0: **equivalent** (the eighth bound is 0xFFFF, no u16 price is above it) |
+| C33b | the walk stopped a tier early | same | 0: no seeded item prices above the seventh bound (30,000) |
+| C33c | the walk stopped three tiers early | same | 40 |
+| C34 | `6 - count` -> `7 - count` | `CommuSim_TickKindB` | 1,077 |
+| C35 | the cap + 1 | same | 67 |
+| C36 | a spawn's +2 = 1 | `CommuSim_AddRecord` | 4,000 |
+| C37 | kind 9 -> 8 passed over | `CommuSim_RemoveRecord` | 636 |
+| C38 | kind 0xB -> 0xC | `CommuSim_SumKindsAB` | 2,960 |
+| C39 | 0xA0 -> 0xA1 excluded | `CommuSim_RollOffers` | 1,908 |
+| C40 | only the words written compared (case 8) | same | 233 |
+| C41 | area 0xB9 -> 0xBA | `CommuSim_PlaceObjects` | 671 |
+| C42 | the area read once before the loop (case 2) | same | 241 |
+| C43 | the clear to 19, not 20 | same | 1,918 |
+| C67 | the records' +0 read once before the loop (case 9) | same | 142 |
+| C44 | +0x84 2 -> 3 | `CommuSim_PlaceLoose` | 3,572 |
+| C45 | +5 the record + 1 | same | 4,000 |
+| C46 | the facing read before the bank call (Sprite_Current moved) | `PlaceLoose`, `PlaceResident` | 312 / 12,000 |
+| C47 | the count read before the elevation call (case 7) | `CommuSim_PlaceResident` | 14 |
+| C48 | the count read before the pose call (case 7) | same | 175 |
+| C49 | kind 0xC's pose `KindA`'s | same | 232 |
+| C50..C60 | each pose's constant or cell one off | `CommuPose_*` (one each) | 547 .. 4,000 each |
+| C61..C66 | the tail kind, a row's number, the message, the sub-kind's byte, the shop's building, kind 0x3C | the triggers | 3,983 .. 4,000 each |
+| C68 | tail kind 0x18 -> 0x19 in the shared helper | all twelve triggers | 4,000 (`FieldTrigger10`) |
+| C69 | the event count read before the rolls (case 5) | `CommuSim_TickKindD` | 164 |
+
+Every case of the group's disturbance moves a cell some function re-reads
+after a call, and a control misses each: case 0 C11, 1 C17 / C20 / C21, 2 C16
+/ C42, 3 C31, 4 C29, 5 C30 / C69, 6 C2 / C9, 7 C47 / C48, 8 C40, 9 C67.
+**The fuzz was made louder for them** (C11, C30, C31, C47, C48 were 0 at
+first, C2 / C9 at 4 and 1): `Rand`'s stand-in runs the group's disturbance one
+call in four, `Battle_ActorIsOut`'s moves `0x904B8B`, `Field_SlotClutCopy`'s
+the slot's +1, R4D's `0x45E6B0`'s the removed count, `AreaMap_Elevation`'s and
+every pose stand-in's a resident count; case 3 hits the record `TickKindD` is
+on half the time. Thin (under 10): C3, C21, C29, C32 - each a boundary or a
+re-read under one call; named for the debt list.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 

@@ -163,10 +163,37 @@ constexpr unsigned kLiveEnemy = kCount;   // the second group's one clone, its o
 // excluded, so the pickers' count is never 0 (ours aborts there, the original
 // faults - neither can be compared). 0x100: none.
 U g_standing = 0x100;
-U IsOutEffect(const U* a, U answer) { return (a[0] & 0xFF) == g_standing ? answer & 0xFFFFFF00u : answer; }
+void Disturb(U h);
+// The louder stand-ins (the group's case runs after one call in some hundreds
+// otherwise; the controls of section 6 that miss a re-read were 0 without
+// these): each moves the cell its callers read again, from its answer only.
+U IsOutEffect(const U* a, U answer) {
+    if ((answer >> 9) % 4 == 0) Mem(at::kForcedActor)[0] = static_cast<unsigned char>((answer >> 12) % 11);   // read again after it
+    return (a[0] & 0xFF) == g_standing ? answer & 0xFFFFFF00u : answer;
+}
 // Rand: the CRT's is 0..0x7FFF; the harness's garbage answers would take the
-// pickers' idiv below their list (ours aborts there).
-U RandEffect(const U*, U answer) { return answer & 0x7FFF; }
+// pickers' idiv below their list (ours aborts there). One time in four the
+// group's own disturbance.
+U RandEffect(const U*, U answer) {
+    if ((answer >> 16) % 4 == 0) Disturb(answer * 0x2545F491u);
+    return answer & 0x7FFF;
+}
+// Field_SlotClutCopy: the slot's +1 (Field_RunSlot reads it after) half the time.
+U SlotCopyEffect(const U* a, U answer) {
+    unsigned char* const slot = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    if ((answer >> 9) & 1 && sh::InRegions(slot, 2)) slot[1] = static_cast<unsigned char>(answer >> 12);
+    return answer;
+}
+// R4D's 0x45E6B0: the removed count (CommuSim_TickKind9 reads it after) half the time.
+U CountEffect(const U*, U answer) {
+    if ((answer >> 10) & 1) Mem(at::kRemovedCount)[0] = static_cast<unsigned char>((answer >> 12) % 0x20);
+    return answer;
+}
+// AreaMap_Elevation: a resident count (CommuSim_PlaceResident reads it after) half the time.
+U ElevationEffect(const U*, U answer) {
+    if ((answer >> 9) & 1) Mem(at::kResidentCounts + (answer >> 12) % 8)[0] = static_cast<unsigned char>((answer >> 16) % 4);
+    return answer;
+}
 
 // Battle_RandomLiveEnemy's Battle_ActorIsOut. On the original's side (the
 // clone runs with the harness inactive) it first writes 0 to the six bytes of
@@ -196,7 +223,7 @@ constexpr U kAll = 0xFFFFFFFFu;
 const sh::Callee kCallees[] = {
     // the group's own, called directly by the group's
     {R4A_OURS(Battle_RandomOtherMember), 1, {0xFF}, kG, 0, 0},
-    {R4A_OURS(Field_SlotClutCopy), 1, {kAll}, kG, 0, 0},
+    {R4A_OURS(Field_SlotClutCopy), 1, {kAll}, kG, 0, 0, {}, &SlotCopyEffect},
     {R4A_OURS(CommuSim_QueueAreas), 0, {}, kG, 0, 0},
     {R4A_OURS(CommuSim_Population), 1, {0xFF}, kG, 0, 0},
     {R4A_OURS(CommuSim_Mood), 1, {0xFF}, kG, 0, 0},
@@ -213,22 +240,23 @@ const sh::Callee kCallees[] = {
     {R4A_OURS(CommuSim_PlaceObjects), 0, {}, kG, 0, 0},
     {R4A_OURS(CommuSim_PlaceLoose), 2, {0xFF, 0xFF}, kG, 0, 0},
     {R4A_OURS(CommuSim_PlaceResident), 2, {0xFF, 0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_Kind0), 1, {0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_Kind4), 2, {0xFF, 0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_Kind5), 2, {0xFF, 0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_Kind6), 2, {0xFF, 0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_Kind7), 1, {0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_Kind8), 3, {0xFF, 0xFF, 0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_Kind9), 2, {0xFF, 0xFF}, kG, 0, 0},   // CommuSim_PlaceResident pushes a third, unread
-    {R4A_OURS(CommuPose_KindA), 2, {0xFF, 0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_KindB), 2, {0xFF, 0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_KindC), 2, {0xFF, 0xFF}, kG, 0, 0},
-    {R4A_OURS(CommuPose_KindD), 1, {0xFF}, kG, 0, 0},
+    {R4A_OURS(CommuPose_Kind0), 1, {0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_Kind4), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_Kind5), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_Kind6), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_Kind7), 1, {0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_Kind8), 3, {0xFF, 0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_Kind9), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},   // CommuSim_PlaceResident pushes a third, unread
+    {R4A_OURS(CommuPose_KindA), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_KindB), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_KindC), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
+    {R4A_OURS(CommuPose_KindD), 1, {0xFF}, kG, 0, 0, {}, &ElevationEffect},
     // R4D's, ours by address until the round's rebinding: the records in use, al
-    {"0x45E6B0 (R4D)", at::kCommuCount, at::kCommuCount, 0, {}, sh::Answer::kByte, 0, 2},
+    {"0x45E6B0 (R4D)", at::kCommuCount, at::kCommuCount, 0, {}, sh::Answer::kByte, 0, 2, {}, &CountEffect},
     // ours, no standard set lists them (or not as these callers need)
     {R4A_OURS(Battle_ActorIsOut), 1, {0xFF}, kFl, 0, 0, {}, &IsOutEffect},   // reads the low byte (its evidence)
-    {R4A_OURS(Battle_DefaultTarget), 1, {0xFF}, kG, 0, 0},                   // reads the low byte (its evidence)
+    {R4A_OURS(Battle_DefaultTarget), 1, {0xFF}, kG, 0, 0},
+    {R4A_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},   // the standard row, louder                   // reads the low byte (its evidence)
     {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
 };
 const sh::Callee kEnemyCallees[] = {
@@ -275,7 +303,7 @@ void SeedCommunity() {
         r[0] = in ? static_cast<unsigned char>(PickOf(1, 1, 1, sh::Next() | 1)) : 0;
         if (in) ++used;
         r[1] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xA, 0xB, 1 + sh::Next() % 8, 1 + sh::Next() % 8));
-        r[2] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 0x40));
+        r[2] = static_cast<unsigned char>(PickOf(0, 1, 2, 3, sh::Next() % 0x40, sh::Next() % 0x100));
         r[3] = static_cast<unsigned char>(sh::Half() ? 0x10 | (sh::Next() % 4) : sh::Next());
         SetUL(r + 4, nearClock());
     }
@@ -437,7 +465,17 @@ void Disturb(U h) {
     case 0: Field_Slots[16 * (v % 8) + 1] = static_cast<unsigned char>(v >> 3); break;   // Field_RunSlot's +1 after its copy
     case 1: SetUL(Mem(at::kClock), UL(Mem(at::kClock)) + (v % 64)); break;                // the clock
     case 2: Game_AreaNumber = static_cast<unsigned short>((v & 1) ? 0xAF + (v >> 1) % 12 : v >> 1); break;
-    case 3: Rec((v >> 2) % at::kRecordCount)[2 + (v & 1)] = static_cast<unsigned char>(v >> 8); break;   // a record's +2 / +3
+    case 3:   // a record's +2 / +3; half the time the +3 of the first in use with a clear high nibble (TickKindD's current)
+        if (v & 0x100) {
+            for (U i = 0; i < at::kRecordCount; ++i)
+                if (Rec(i)[0] != 0 && (Rec(i)[3] & 0xF0) == 0) {
+                    Rec(i)[3] = static_cast<unsigned char>(v >> 9);
+                    break;
+                }
+        } else {
+            Rec((v >> 2) % at::kRecordCount)[2 + (v & 1)] = static_cast<unsigned char>(v >> 8);
+        }
+        break;
     case 4: Bld((v >> 2) % 8)[1] = static_cast<unsigned char>((v >> 5) % 3); break;      // a building's level (0..2: kind 9's odds)
     case 5: Mem((v & 1) ? at::kEventCount : at::kRemovedCount)[0] = static_cast<unsigned char>((v >> 1) % 0x20); break;
     case 6:
