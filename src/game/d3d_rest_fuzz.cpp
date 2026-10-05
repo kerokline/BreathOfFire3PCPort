@@ -583,8 +583,13 @@ U Id(const void* p) {
     return Addr(p) ? 0xBAD : 0;
 }
 
-const U kTestScales[] = {0x3F000000, 0x3F800000, 0x3FC00000, 0x40000000, 0x40000001, 0x40400000, 0x3FA00000,
-                         0x3F400000};   // .5 1 1.5 2 2+ulp 3 1.25 .75
+// .5 1 1.5 2 2+ulp 3 1.25 .75, then steps just below a whole 16.16 boundary -
+// 1 - ulp (0xFFFF), 2 - ulp (0x1FFFF), 1.5 - ulp (0x17FFF), 4/3 (0x15555) -
+// where a step one off moves a sample a whole pixel (control 8 was blind
+// without them: every step above was a multiple of 0x4000)
+const U kTestScales[] = {0x3F000000, 0x3F800000, 0x3FC00000, 0x40000000, 0x40000001, 0x40400000,
+                         0x3FA00000, 0x3F400000, 0x3F7FFFFF, 0x3FFFFFFF, 0x3FBFFFFF, 0x3FAAAAAB};
+constexpr U kTestScaleCount = sizeof kTestScales / sizeof kTestScales[0];
 const U kPitches[] = {0x280, 0x500, 0xA00, 0xA04, 0x780, 0x284};
 
 // A quarter of the time, something the capture reads after the call: the used
@@ -596,7 +601,7 @@ void DisturbAfter(U salt) {
     switch ((h >> 2) % 6) {
     case 0: PutWord(At(kCaptureW + 2 * ((h >> 8) % 2)), (h >> 9) % 3 ? h >> 16 : 0x140); break;
     case 1: At(kScreenBpp)[0] = static_cast<unsigned char>((h >> 8) % 2 ? 2 : 4); break;
-    case 2: PutLong(At((h >> 8) % 2 ? kScaleX : kScaleY), kTestScales[(h >> 9) % 8]); break;
+    case 2: PutLong(At((h >> 8) % 2 ? kScaleX : kScaleY), kTestScales[(h >> 9) % kTestScaleCount]); break;
     case 3:
         if (GetLong(At(kCaptureSurface)) != 0)
             PutLong(At(kCaptureSurface), Addr((h >> 8) % 2 ? kPlainA : kPlainB));
@@ -698,8 +703,8 @@ unsigned FuzzAfterDraw(AfterFn theirs, unsigned rounds, AfterCover& cover) {
     for (unsigned r = 0; r < rounds; ++r) {
         g_round = 0x700000u + r;
         At(kRenderFlags)[0] = static_cast<unsigned char>(Next() % 6 == 0 ? (Next() | 1) : (Next() & ~1u));
-        PutLong(At(kScaleX), kTestScales[Next() % 8]);
-        PutLong(At(kScaleY), kTestScales[Next() % 8]);
+        PutLong(At(kScaleX), kTestScales[Next() % kTestScaleCount]);
+        PutLong(At(kScaleY), kTestScales[Next() % kTestScaleCount]);
         for (U i = 0; i < 0x1C; ++i) At(kCaptureReady)[i] = static_cast<unsigned char>(Next());
         const bool first = Next() % 2;
         PutLong(At(kCaptureSurface), first ? 0 : Addr(Next() % 2 ? kPlainA : kPlainB));
