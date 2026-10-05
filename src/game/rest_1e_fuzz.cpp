@@ -351,7 +351,7 @@ void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
     if (!sh::InRegions(s, 0x40)) return;
-    switch (h % 12) {
+    switch (sh::DisturbCase(h, 12)) {
     case 0: s[8] = static_cast<unsigned char>(v & 1 ? v >> 1 : (v >> 1) & 7); break;
     case 1: SetLong(s + (v & 1 ? 0x34 : 0x38), static_cast<std::int32_t>(v << 7)); break;
     case 2: SetWord(s + 0x3E, v >> 2); break;

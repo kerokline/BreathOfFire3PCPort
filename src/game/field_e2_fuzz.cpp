@@ -497,7 +497,7 @@ const sh::Region kRegions[] = {
 // state, the trade screen's bytes, the object's state, a CLUT slot byte.
 void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF, w = (h >> 16) & 0xFF;
-    switch (h % 9) {
+    switch (sh::DisturbCase(h, 9)) {
     case 0: Field_State = sh::ObjectOf(v); break;
     case 1: B(field_e2::at::kEffectSlot) = static_cast<unsigned char>(v & 1 ? 0 : w); break;
     case 2: B(field_e2::at::kTailState) = static_cast<unsigned char>(v % 24); break;

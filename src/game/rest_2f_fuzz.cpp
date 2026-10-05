@@ -432,7 +432,7 @@ void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const cur = sh::Pointer(kCurrent);
     const bool rec = sh::InRegions(cur, 0x24);
-    switch (h % 15) {
+    switch (sh::DisturbCase(h, 15)) {
     case 0: B(kStep) = static_cast<unsigned char>(b % 7); break;
     case 1: B(kSub) = static_cast<unsigned char>(b % 3); break;
     case 2: B(kTopChoice) = static_cast<unsigned char>(b & 1); break;

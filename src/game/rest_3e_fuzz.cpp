@@ -468,7 +468,7 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
-    switch (h % 6) {
+    switch (sh::DisturbCase(h, 6)) {
     case 0: if (sh::InRegions(s, 0x80)) s[9] = static_cast<unsigned char>((v & 1) ? 1 : v >> 1); break;
     case 1: if (sh::InRegions(s, 0x80)) s[0xA] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;
     case 2: if (sh::InRegions(s, 0x80)) s[6] = static_cast<unsigned char>((v & 1) ? 0 : v >> 1); break;

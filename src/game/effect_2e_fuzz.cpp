@@ -413,7 +413,7 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
-    switch (h % 6) {
+    switch (sh::DisturbCase(h, 6)) {
     case 0: {
         static const unsigned char kNine[] = {1, 0x3C, 0xD7, 0x80};
         s[9] = static_cast<unsigned char>((v & 1) ? kNine[(v >> 1) % 4] : v >> 1);

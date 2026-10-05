@@ -320,8 +320,13 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const r = R6();
-    switch (h % 12) {
-    case 0: r[PickOf(1, 7, 8, 0xA, 6)] = static_cast<unsigned char>(v >> 4); break;
+    switch (sh::DisturbCase(h, 11)) {
+    case 0: {
+        // from the hash, not the seeds' stream: a draw here would put the two passes apart
+        static const unsigned char kAt[] = {1, 7, 8, 0xA, 6};
+        r[kAt[(v & 0xF) % 5]] = static_cast<unsigned char>(v >> 4);
+        break;
+    }
     case 1: Put32(at::kRecord6 + 0xC + 4 * (v % 5), v >> 12); break;           // +0xC, +0x10, +0x14, +0x18, +0x1C
     case 2: Put16(at::kRecord6 + ((v & 1) ? 0x36 : 0x3A), (v >> 4) % 0x180); break;
     case 3: Put16(at::kRecord6 + 0x38, v >> 3); break;

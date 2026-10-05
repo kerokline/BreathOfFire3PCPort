@@ -453,6 +453,12 @@ bool InRegions(const void* p, unsigned n);
 void Record(std::uint32_t address, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32_t d = 0);
 void Stir();
 std::uint32_t Noise();
+// The case of a group's disturb(h), 0..n-1. The harness hands over a hash that
+// is not a multiple of 3 and whose bits 4..7 are 14, so `h % n` with n a
+// multiple of 3 never reaches a third of the cases (found by R3G, 2026-10-04;
+// round fourteen's review, item 1). The case is drawn from a remix of the
+// whole hash instead, which leaves every bit of h free for the case's value.
+inline unsigned DisturbCase(std::uint32_t h, unsigned n) { return ((h * 0x9E3779B1u) >> 16) % n; }
 void Note(std::uint32_t a, std::uint32_t b = 0, std::uint32_t c = 0, std::uint32_t d = 0);
 void NoteBytes(const void* p, unsigned n);
 void FillBytes(void* p, unsigned n);

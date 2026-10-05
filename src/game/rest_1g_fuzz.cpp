@@ -481,7 +481,7 @@ void Disturb(U h) {
     unsigned char* const s = Sc();
     const bool sc = sh::InRegions(s, 0xA4);
     unsigned char* const am = Active();
-    switch (h % 18) {
+    switch (sh::DisturbCase(h, 18)) {
     case 0: if (sc) s[9] = static_cast<unsigned char>(b % 3); break;
     case 1: if (sc) s[0xA] = static_cast<unsigned char>(b & 1 ? b : (b >> 1) % 0x62 - 0x31); break;
     case 2: if (sc) s[8] = static_cast<unsigned char>(b & 1 ? (b >> 1) & 7 : b); break;

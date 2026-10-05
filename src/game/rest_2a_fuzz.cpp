@@ -294,7 +294,7 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
-    switch (h % 12) {
+    switch (sh::DisturbCase(h, 11)) {
     case 0: s[7] = static_cast<unsigned char>(v & 1 ? 8 : v >> 1); break;
     case 1: s[8] = static_cast<unsigned char>(v >> 1); break;
     case 2: s[0xB] = static_cast<unsigned char>((v >> 1) % 20); break;
