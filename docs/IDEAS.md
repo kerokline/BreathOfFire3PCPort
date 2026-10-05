@@ -75,6 +75,7 @@ rule ([`README.md`](README.md)) here too.
 | I28 | Round thirteen: the effect-object engine (1,697 functions: the 627 the catalog labels area overlays, which are effect-kind code, and the 1,070 the labelling pass found beside them) | engine | HIGH | planned; [`takeover-queue-round13.md`](takeover-queue-round13.md) section 9 - the owner's scope of 2026-09-29, to be cut with `tools/band_rows.py` at round twelve's tip |
 | I29 | Button prompts drawn from the bindings in force, not from each release's defaults | game behaviour | LOW | open 2026-10-03 (the owner, on the fishing banner; DIV-0069) |
 | I30 | Machine-readable docs: Open Knowledge Format frontmatter and a generated wiki | docs / tooling | HIGH | open; parked until the spec hardens or is validated outside Google (owner, 2026-10-04) |
+| I31 | The platform layers: the C runtime, the MP3 decoder, the renderer's remainder, the small glue layers, and the cutover to our own executable | engine / platform | MIXED | **planned 2026-10-04**, not scheduled - [`platform-layers-plan.md`](platform-layers-plan.md); its first step (a read pass and a reach trace) needs no decision |
 
 ---
 
@@ -1176,3 +1177,31 @@ first.
 ### Outcome
 _(2026-10-04) open; parked by the owner until the spec is hardened or
 validated outside Google. Revisit then._
+
+## I31 — The platform layers and the cutover
+
+**Ask (2026-10-04, the owner, during round fourteen):** is there a plan to
+take over the executable, runtime, decoder and renderer layers once the
+game's own code is ours? There was not; make one.
+**Kind:** engine / platform
+**Feasibility:** MIXED - the read pass, the small layers and the runtime
+boundary HIGH; the decoder and our own executable MEDIUM, each on a decision.
+**Gated on:** round fourteen's end; the owner for the decoder and for whether
+our own executable is a goal now.
+
+### What already exists
+The presentation layer, WinMain, the input path and `Fmv_Play` are ours; the
+catalog counts 533 starts left in those layers; the tracer can prove that no
+code of Capcom's runs.
+
+### What is missing
+A read of the 86 starts that are neither runtime nor decoder (some are game
+code filed by address range), the list of runtime entry points the game
+calls, a decoder behind the music seam, a loader that maps the player's data
+sections into a process of ours.
+
+### First concrete step
+[`platform-layers-plan.md`](platform-layers-plan.md) section 4, step 1.
+
+### Outcome
+_(2026-10-04) planned, not scheduled._
