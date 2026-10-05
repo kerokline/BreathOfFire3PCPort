@@ -344,10 +344,28 @@ U FxSlope(const U*, U answer) {
 }
 U FxGround(const U*, U answer) {
     // a height within 0xC0 of the seeded one two times in three (the callers
-    // compare it with a sprite's height, and Field_WayBlockedWide with 0xC0)
+    // compare it with a sprite's height, and Field_WayBlockedWide with 0xC0);
+    // a quarter of those the seeded one or one either side, so a ground equal
+    // to the height the seed put it at is met (control D1, docs/field_e2.md
+    // section 10). Louder, a quarter of the time: Field_State's actor +0x89
+    // moved below 12 - the step helpers read it again after this call, which
+    // the group's case 0 alone reached once in 6,000 rounds (DS5)
+    const U m = sh::Noise();
+    if (m % 4 == 0 && sh::InRegions(Field_State + 0x89, 1)) Field_State[0x89] = static_cast<unsigned char>((m >> 8) % 12);
     const U n = sh::Noise();
     if (n % 3 == 0) return answer;
+    if (((n >> 2) & 3) == 0) return (answer & 0xFFFF0000u) | ((move_script::Word(g_ground) + (n >> 8) % 3u - 1u) & 0xFFFFu);
     return (answer & 0xFFFF0000u) | ((move_script::Word(g_ground) + (n >> 8) % 0x182u - 0xC1u) & 0xFFFFu);
+}
+// 0x594700 (an ingredient short), louder a quarter of the time: the trade's
+// pick moved inside the rows - ItemTrade_PickItem reads it again after this
+// call, which the group's case 3 alone reached once in 6,000 rounds (DS8)
+U FxLacks(const U*, U answer) {
+    const U n = sh::Noise();
+    unsigned char* const pick = Mem(field_e2::at::kTradePick);
+    const unsigned rows = Mem(field_e2::at::kTradeRowCount)[0];
+    if (n % 4 == 0) pick[0] = static_cast<unsigned char>((n >> 8) % (rows != 0 ? rows : 1u));
+    return answer;
 }
 U FxRepeat(const U*, U answer) {
     static const U kMoves[] = {0, 0x1000, 0x2000, 0x4000, 0x8000, 0xA000, 0x5000, 0xF000};
@@ -391,7 +409,7 @@ const sh::Callee kFixed[] = {
     {FE2_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, kF, 0, 0},
     {FE2_OURS(Item_HelpMessage), 2, {kU8, kU8}, kG, 0, 0},
     // 0x594711 and ebp, 0xFF; 0x594767 and ecx, 0xFF
-    {FE2_AT(594700), 2, {kU8, kU8}, kF, 0, 0},
+    {FE2_AT(594700), 2, {kU8, kU8}, kF, 0, 0, {}, &FxLacks},
     // louder: the cells from a seeded grid, the pad's moves, a record index below 12
     {FE2_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, kG, 0, 0, {}, &FxGrid},
     {FE2_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &FxRepeat},

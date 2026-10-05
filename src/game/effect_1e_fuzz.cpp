@@ -172,6 +172,21 @@ U EffectsStepEffect(const U*, U answer) {
     if (h & 4) Mem(at::kPose)[0] = static_cast<unsigned char>((h >> 16) % 3);
     return answer;
 }
+// Louder, a quarter of the time each, for the re-reads the group's cases 0 and
+// 9 alone reached in 1 and 7 rounds of 3,000 (controls C59, C62, section 6):
+// LeaderPanel_Effect3Mode (0x52B2A0) moves record 4's state, which S3Run
+// tests again after the hand-over; LeaderPanel_PoseSound (0x52B1B0) moves
+// record 0's y step, which S3Run reads after it.
+U Effect3ModeEffect(const U*, U answer) {
+    const U h = sh::Noise();
+    if (h % 4 == 0) Mem(at::kEff4State)[0] = static_cast<unsigned char>((h >> 8) & 1 ? 0 : (h >> 9) % 5);
+    return answer;
+}
+U PoseSoundEffect(const U*, U answer) {
+    const U h = sh::Noise();
+    if (h % 4 == 0) SetLong(Mem(at::kEff0StepY), static_cast<std::int32_t>((h >> 8) & 1 ? 0u : h >> 12));
+    return answer;
+}
 
 const sh::Callee kCallees[] = {
     // this group's own, called directly (E8) by LeaderPanel_S4Run
@@ -198,8 +213,8 @@ const sh::Callee kCallees[] = {
     {"0x469750", at::kBoxPrims, at::kBoxPrims, 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // 0x469790 / 0x469960 read x, y, w, h & 0xFFFF
     {"0x52CE20", at::kClearEffects, at::kClearEffects, 0, {}, kG, 0, 0},
     // nobody's, by address
-    {E_RAW(0x52B2A0), 1, {0xFF}, kG, 0, 0},
-    {E_RAW(0x52B1B0), 0, {}, kG, 0, 0},
+    {E_RAW(0x52B2A0), 1, {0xFF}, kG, 0, 0, {}, &Effect3ModeEffect},
+    {E_RAW(0x52B1B0), 0, {}, kG, 0, 0, {}, &PoseSoundEffect},
     {E_RAW(0x52B200), 0, {}, kG, 0, 0},
     {E_RAW(0x52B2E0), 0, {}, kG, 0, 0, {}, &HoldTestEffect},
     {E_RAW(0x52B370), 0, {}, kG, 0, 0, {}, &EffectsStepEffect},

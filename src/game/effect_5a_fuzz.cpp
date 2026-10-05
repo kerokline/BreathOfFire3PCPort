@@ -187,6 +187,17 @@ U FxLink(const U* a, U answer) {
     }
     return answer;
 }
+// Gfx_ClutStripCopy16, louder under sub-kind 5's states: a quarter of the time
+// the current record's nibble word +0x3A moved (from the noise), which _Idle
+// and _Pulse test again after their copies (the "on" test) - the group's case 3
+// alone reached _Pulse's re-read 72 times in 40,000 rounds (section 6).
+bool In(U lo, U hi);
+U FxCopy(const U*, U answer) {
+    const U n = sh::Noise();
+    unsigned char* const s = Sprite_Current;
+    if (n % 4 == 0 && In(0x4FD7E0, 0x4FDAA0) && sh::InRegions(s + 0x3A, 2)) SetWord(s + 0x3A, n >> 8);
+    return answer;
+}
 #define E5A_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage, kPh = sh::Answer::kPhase;
 constexpr U kW = 0xFFFFFFFFu;
@@ -198,7 +209,7 @@ const sh::Callee kCallees[] = {
     // the point hashed (6 bytes: the pad is the caller's stale stack), the
     // angle's word (0x4FD570 pushes 0x800 - +0xC in ax over a stale eax)
     {E5A_OURS(EffectKind18_04_DrawPanel), 3, {kW, 0xFFFF, kW}, kG, 0, 0, {6, 0, 0}},
-    {E5A_OURS(Gfx_ClutStripCopy16), 4, {kW, kW, kW, kW}, kG, 0, 0},
+    {E5A_OURS(Gfx_ClutStripCopy16), 4, {kW, kW, kW, kW}, kG, 0, 0, {}, &FxCopy},
     {E5A_OURS(EffectKind18_1A_Draw), 0, {}, kPh, 0, 0},
     {E5A_OURS(EffectKind18_06_SetMap), 0, {}, kPh, 0, 0},
     {E5A_OURS(EffectKind18_06_Draw), 0, {}, kPh, 0, 0},

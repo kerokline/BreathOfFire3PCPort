@@ -177,6 +177,34 @@ U PressLatchEffect(const U*, U answer) {
     Mem(kPressNow)[0] = static_cast<unsigned char>(sh::Noise() % 3);
     return answer;
 }
+// Louder on Fish_Hooked's and Fish_Swim's paths (2026-10-05, debt 18): their
+// re-reads after a Rand or Fish_LureInReach follow one to four calls, and the
+// group's case alone (about one call in 430) needed 60,000 rounds a function
+// to refuse D09..D11 and D13 (docs/rest_1g.md section 6). Rand, the harness's
+// kRand row re-listed, a quarter of the time moves one of the three cells
+// read again after it - the member's strength word +0x98 / +0x9A, record 5's
+// frame, the leader's stage (3 and 4, Fish_Swim's test) - as the group's cases
+// 6, 12 and 9 do; Fish_LureInReach a quarter of the time the leader's stage.
+void FlipStage() { Mem(kLeaderStage)[0] = static_cast<unsigned char>(Mem(kLeaderStage)[0] == 4 ? 3 : 4); }
+U RandEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 != 0) return answer;
+    const auto b = static_cast<unsigned char>(n >> 24);
+    switch ((n >> 2) % 3) {
+    case 0: {
+        unsigned char* const am = Active();
+        if (sh::InRegions(am + 0x98, 4)) SetWord(am + (b & 1 ? 0x98 : 0x9A), (n >> 8) & 0x1FF);
+        break;
+    }
+    case 1: SetLong(Mem(kEff5Frame), b & 1 ? -7 : static_cast<std::int32_t>(b >> 1)); break;
+    default: FlipStage(); break;
+    }
+    return answer;
+}
+U LureInReachEffect(const U*, U answer) {
+    if (sh::Noise() % 4 == 0) FlipStage();
+    return answer;
+}
 // Gfx_CommitPrim: the packet cursor on by the primitive's 0x20, as the real one
 // moves it (so each line is drawn into a packet of its own).
 U CommitEffect(const U*, U answer) {
@@ -194,7 +222,7 @@ const sh::Callee kCallees[] = {
     {G_OURS(LeaderPanel_SetRecords), 0, {}, kG, 0, 0},
     {G_OURS(LeaderPanel_Effect3Mode), 1, {0xFF}, kG, 0, 0},                       // mov al, [esp + 4]
     {G_OURS(LeaderPanel_PressLatch), 0, {}, kG, 0, 0, {}, &PressLatchEffect},
-    {G_OURS(Fish_LureInReach), 0, {}, kF, 0, 0},
+    {G_OURS(Fish_LureInReach), 0, {}, kF, 0, 0, {}, &LureInReachEffect},
     {G_OURS(Fish_LureClose), 0, {}, kF, 0, 0},
     {G_OURS(Fish_Step), 0, {}, kG, 0, 0},
     {G_OURS(Fish_Heading), 0, {}, kG, 0, 0, {}, &HeadingEffect},
@@ -219,6 +247,8 @@ const sh::Callee kCallees[] = {
     {G_OURS(Gte_RotTransPers), 3, {0, kAll, 0}, kG, 0, 0, {6, 0, 0}},             // the vertex (three shorts, on the stack: hashed), the packet's sxy; p a stack cell never read
     {G_OURS(Gte_StoreDepthF), 1, {kAll}, kG, 0, 0},
     {G_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, kG, 0, 0, {}, &CommitEffect},
+    // Capcom's, the standard kRand row with an effect (above)
+    {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
 };
 #undef G_OURS
 
@@ -523,14 +553,14 @@ void SelfTest() {
         }
     if (n == 0) bof3::Fatal("rest_1g: BOF3X_R1G_ONLY=%s names no clone", only);
     static unsigned* s_index = index;
-    // 60,000 rounds a function (6,000 until 2026-10-05): the group's case runs
-    // after about one call in 430, and Fish_Hooked's run reads the strength
-    // words and record 5's frame again after one or two Rands only, Fish_Swim
-    // the leader's stage after two calls; at 6,000 no round refused the
-    // mutants that skip those re-reads (docs/rest_1g.md section 6, D05..D16)
+    // 6,000 rounds a function (BOF3X_R1G_ROUNDS for a control's run): 60,000 on
+    // 2026-10-05 for D09..D11 and D13, back to 6,000 with the louder Rand and
+    // Fish_LureInReach above (docs/rest_1g.md section 6)
+    const char* const rounds = std::getenv("BOF3X_R1G_ROUNDS");
     sh::Group g = {"rest_1g", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
                    sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
-                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 60000};
+                   [](unsigned k) { Seed(s_index[k]); }, &Disturb,
+                   rounds && *rounds ? static_cast<unsigned>(std::strtoul(rounds, nullptr, 10)) : 6000u};
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
     g.sprite_span = 7;   // +1..+4 below Fish_States' 7, which Fish_RunAll reads after a call
