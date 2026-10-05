@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-05: round thirteen is `main`, PR #40; round fourteen's takeovers are complete on `phase-3/capture-round-fourteen` - stage A and four waves, 10,009 ours, validated Chinese against Chinese on ten routes the same day; the round's debts are next, then the platform layers)
+**Status:** IN PROGRESS (2026-10-05 evening: round fourteen is `main`, PR #41, 10,009 ours; the round's end is under way on `phase-3/round14-end` - the state hash's references re-recorded, the shop route's difference settled, the platform read pass measured; the debts and the platform round next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,16 +14,17 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**10,009 functions are ours on `phase-3/capture-round-fourteen`** (`inject: 10009 ours, 0 left original`
-at `1bf5964`, `'*'` narrow and wide) **and 8,648 on `main`**, which is round thirteen (PR #40, `5a94224`).
-Round fourteen was the remainder of the game's own code: 1,361 functions in stage A and four waves
+**10,009 functions are ours on `main`** (round fourteen, PR #41, `2df90d9`; `inject: 10009 ours, 0 left original`,
+`'*'` narrow and wide at `1bf5964`). Round fourteen was the remainder of the game's own code: 1,361 functions in stage A and four waves
 ([`takeover-queue-round14.md`](takeover-queue-round14.md)), all merged; what is not ours in `BOF3.exe` now is
 the platform and library layer and the jump-table cases. Waves one to three were reviewed on 2026-10-05
 ([`round-14-review.md`](round-14-review.md)) and the high and medium items fixed; wave four ran the same day
 with the review's lessons in its briefs (the round doc's section 13). The round's one validation, Chinese
-against Chinese, is done: the attract sequence and nine of ten routes identical to two runs of Capcom's code
-on the state hash ([`state-hash.md`](state-hash.md)), the tenth, `shop`, differing as it has since before wave
-two. The rest is [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
+against Chinese, is done twice: at `1bf5964`, and again at `main` on 2026-10-05 evening with every reference
+pair re-recorded under the current skip list - the attract sequence and all ten routes identical to two runs of
+Capcom's code on the state hash ([`state-hash.md`](state-hash.md) section 6). The tenth route's difference,
+`shop`'s since before wave two, was the runner's early hand-back of slot 0, not the game's (section 5 there;
+`input_run.py --slot0-hold`). The rest is [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
 **The frame hash reference is `analysis/calltrace/r13_origb` (twin `r13_origc`,
 identical on all 10,308 frames)**, recorded 2026-10-03 night at 8,648 ours
@@ -37,29 +38,34 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
-00000000000. **Round fourteen's end is the next thing to do** (2026-10-05: wave four merged at `4aebe55`, the
-   tip `1bf5964` verified and validated; the round doc's section 13 is the record). In the order they bite:
-   1. **The owner's words owed:** DIV-0074 (`Battle_RandomLiveEnemy`'s six stale bytes held at 0); whether play
-      can open `CommuRank_Show` with all three lists empty, and reach `Battle_RandomOtherMember` with one member
-      standing (ours aborts at both, Capcom's reads or divides on); a route into the community once the owner
-      has a save there - the whole of wave four is fuzz only, and DIV-0075 (the name entry ends unanswered) has
-      been built and seen armed, never played.
-   2. **The shop route's difference** (the round doc's section 10 item 2: twelve bytes at `0x905BC6` and one
-      more primitive a frame from tick 2975, older than wave two): the one route not identical. A dump at tick
-      2975 on both sides, then the writer.
-   3. **The state hash's references want recording again**: the skip list has 168 ranges since section 13
-      (three pool pointers the battle routes showed) and `attract_r14_*` and `combat_*` were hashed under 165.
-      The ten Chinese pairs `analysis/statehash/cn_<route>_orig.sh` / `_origb.sh` are today's and current for
-      seven routes; `dragonTransform`, `cutsceneAndNue` and `whelpBoss` were re-recorded under 168.
-   4. **The debts** of the round doc's sections 9 to 13 (the rebinding between groups, host-extent lines,
+00000000000. **Round fourteen's end, under way on `phase-3/round14-end`** (cut from `main` `2df90d9` on
+   2026-10-05 evening, the owner away; nothing pushed). Done that evening: ~~the shop route's difference~~ (the
+   runner's, [`state-hash.md`](state-hash.md) section 5), ~~the state hash's references~~ (every pair re-recorded
+   under 168, ours at `main` identical to each, section 6 there), ~~round thirteen's review item 1~~ (F1's x2 no
+   longer held while a stream plays; DIV-0048's note), the platform plan's first step
+   ([`platform-read-pass.md`](platform-read-pass.md)), and the owner's words: DIV-0074 kept as written; the two
+   abort sites (`CommuRank_Show` with three empty lists, `Battle_RandomOtherMember` with one member standing) the
+   owner will watch for in play; the faerie village is the next save target - DIV-0075 and all of wave four stay
+   fuzz-only until then. In the order they bite:
+   1. **The debts** of the round doc's sections 9 to 13 (the rebinding between groups, host-extent lines,
       harness rows to `_OURS`, thin controls, the merge scripts to judge a self-test by the log's
       `self-test only: done` and not its exit code alone) and the review's remaining low items (7, 8, 12 to 17,
       19 and the nits).
-   5. Then [`platform-layers-plan.md`](platform-layers-plan.md). The name entry's return is IDEAS I34, deferred
-      by the owner to the localisation rework ([`name-entry-restoration.md`](name-entry-restoration.md)).
+   2. **The platform round**, [`platform-layers-plan.md`](platform-layers-plan.md) section 4 in its new order
+      (the audio investigation before state 2's proof - the owner, 2026-10-05): step 2 is the 40 live starts
+      [`platform-read-pass.md`](platform-read-pass.md) section 5 names, the six Direct3D handlers first (TILE_1
+      `0x5A2220` already runs in `whelpBoss`); two questions open there (whether ours can run with the software
+      render flag; `0x59E930`). Step 3 is the runtime's seventeen entry points, `rand` first. Then I23's
+      listening set for the owner's ear.
+   The name entry's return is IDEAS I34, deferred by the owner to the localisation rework
+   ([`name-entry-restoration.md`](name-entry-restoration.md)).
    **Mechanics that held:** the scripts are in the session-`309e3952` scratchpad (`.../scratchpad/round14/`),
-   `final_live.sh` and `sh_route_cn.sh` in the session-`7bf3959f` one, this session's `drill.sh` (a route's two
-   sides with a raw dump at a tick, then the bytes) in the session-`53a62c27` one. **Windows Defender killed the
+   `final_live.sh` and `sh_route_cn.sh` in the session-`7bf3959f` one (its `launcher/` copy, the 10,009 build,
+   recorded the pairs), the session-`53a62c27` `drill.sh` (a route's two sides with a raw dump at a tick, then
+   the bytes), and this session's (`a2558536`) `refs168.sh` (the pairs), `after_refs.sh` (the shop re-check and
+   the reach trace), `entries_platform.txt` (the 432 armed starts). **A full `'*'` self-test from `build/` with
+   the owner's ini (`language=en`) fails at `Config_DrawRowLabel` - "the site is re-aimed already"**: run it from
+   a launcher copy whose ini says `language=original`, as the verify worktree always did. **Windows Defender killed the
    verification launcher mid-run and the shell reported exit 0** (2026-10-05 10:30): a pass is the log's
    `self-test only: done` and `inject:` lines. An exclusion for the build directories is the owner's to add.
 
@@ -75,9 +81,9 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 000000000. **2026-10-05: round thirteen has had a code review, read-only, nothing changed:
    [`round-13-review.md`](round-13-review.md).** Seven reviewers read `c567ca3..0a2257d` (PR #40) without the game.
-   Fix first, still open on this branch: **F1's double speed is held at x1 for up to two minutes whenever a
-   streamed track starts** (`win_main.cpp:610` gates `BOF3X_SPEED`'s stream hold on `g_speed`, which F1 also sets;
-   DIV-0048 says the hold changes no play), and ~~the Rand counter bypassed on reference sides~~ (fixed 2026-10-05, `8706e62`: the counter is an
+   Fix first: ~~**F1's double speed is held at x1 for up to two minutes whenever a
+   streamed track starts**~~ (fixed 2026-10-05 on `phase-3/round14-end`: the hold gated on a flag only `BOF3X_SPEED`
+   sets; DIV-0048's note), and ~~the Rand counter bypassed on reference sides~~ (fixed 2026-10-05, `8706e62`: the counter is an
    instrument and counts under `--original "*"`; wave one's `caughFish.txt` comparison was ours against the
    owner's recording and stands). Then E2E's 19
    `EffectKind48_State7..12_*` names, which E2D's three-state table makes unreachable (kind 0x49's cells by E2D's

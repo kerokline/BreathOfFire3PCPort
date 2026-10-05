@@ -1,6 +1,6 @@
 # The platform layers: what is left after the game's own code, and how to take it
 
-**Status:** PROPOSED (2026-10-04, the owner's ask during round fourteen; counts from the catalog at `aed35f8`, nothing here read function by function, nothing scheduled)
+**Status:** PROPOSED (2026-10-04, the owner's ask during round fourteen; counts from the catalog at `aed35f8`, nothing here read function by function; 2026-10-05 the owner agreed the order of section 4, with the audio before state 2's proof)
 
 Round fourteen ([`takeover-queue-round14.md`](takeover-queue-round14.md))
 takes the remainder of the game's own code. What it leaves in `BOF3.exe` is
@@ -184,13 +184,19 @@ state hash's doc) - a small piece of work to do before it is needed.
    existing pattern (section 2.1, 2.2).
 3. **The runtime boundary** (section 2.3) - `rand` first, because the
    recipes hang on it.
-4. **State 2 proved** by the tracer.
-5. **The music investigation** (I23; section 5), which decides what section
-   2.4 becomes, and then **state 3** - our own executable, which the owner
-   has named the first goal of the phase 4 / 5 work.
+4. **The music investigation** (I23; section 5), which decides what section
+   2.4 becomes, and the decoder's replacement or removal that follows from
+   it.
+5. **State 2 proved** by the tracer - after the audio, since state 2 is
+   defined with section 2.4 done and a proof that exempts the decoder's
+   range is not the measurement (the owner, 2026-10-05: the order of these
+   two reversed from this plan's first writing). Then **state 3** - our own
+   executable, which the owner has named the first goal of the phase 4 / 5
+   work.
 
-Steps 1 to 4 need no decision the project has not already made. They can
-follow round fourteen directly.
+Steps 1 to 3 need no decision the project has not already made. They can
+follow round fourteen directly. Step 4 opens with the listening set for the
+owner's ear (section 5).
 
 ## 5. For the owner
 
@@ -201,7 +207,7 @@ follow round fourteen directly.
   builds, and the like. So it is planned as the route to those, and its
   design choices (how the data sections are mapped, what the loader takes
   from which source) are judged by what they do for them. Not scheduled:
-  round fourteen and section 4's steps 1 to 4 come first.
+  round fourteen and section 4's steps 1 to 4 come first (state 2's proof, step 5, with them).
 - **The decoder: an investigation first (the owner, 2026-10-04).** Before
   any replacement is chosen the owner wants to hear how the PC's MP3s differ
   from the disc's sequenced music, to judge whether two music paths are
