@@ -1,9 +1,10 @@
 // Internal to rest_3c.cpp and rest_3c_fuzz.cpp: the cells group R3C's
 // Effect_Handlers slots touch that symbols.toml has no name for, and the
-// callees nobody owns yet, by raw address. docs/rest_3c.md.
+// callees of other groups, by address. docs/rest_3c.md.
 //
-// Raw-address callees (the round's rebinding pass names them; each read to
-// its arguments and its answer, capstone 2026-10-04):
+// Callees by address (ours since R3B and R3D merged, named by symbol below,
+// the values unchanged: round fourteen's rebinding, docs/round-14-cleanup.md;
+// each read to its arguments and its answer, capstone 2026-10-04):
 //   R3B's (this wave, 0x4468B0..0x44CFE0; none in the cut, all four between
 //   its starts - its "not listed"):
 //   0x44C040  (): kind-4 damage: result +4 = Effect_SkillDamage(actor, target,
@@ -79,19 +80,19 @@ constexpr U kEnemyDataStride = 0x8C;
 constexpr U kAbilityStride = 0x18;        // NameTable_Abilities: +3 the power byte
 constexpr U kHitScale = 0x64E944;         // .data s8[7], Capcom's: slot 103's per-hit factor in tenths (3 past the seventh)
 
-// --- the callees nobody owns yet ---
-constexpr U kSkillByAbility = 0x44C040;   // R3B's
-constexpr U kHealByAbility = 0x44C120;    // R3B's
-constexpr U kHealMaxHp = 0x44C170;        // R3B's
-constexpr U kFlag200 = 0x44CF60;          // R3B's
-constexpr U kInflict = 0x44F1D0;          // R3D's
-constexpr U kRaiseStat = 0x44F650;        // R3D's
-constexpr U kResisted = 0x44F6A0;         // R3D's
-constexpr U kMissTail = 0x44FB30;         // R3D's
-constexpr U kRaiseByAbility = 0x44FBB0;   // R3D's
-constexpr U kMissInflict = 0x44FC60;      // R3D's
-constexpr U kInflictUnlessResisted = 0x44FCA0;   // R3D's
-constexpr U kHpDamage = 0x44FCE0;         // R3D's
+// --- the callees of R3B and R3D, ours ---
+constexpr U kSkillByAbility = bof3::addr::EffectSlot04_SkillPower;   // R3B's
+constexpr U kHealByAbility = bof3::addr::EffectSlot07_Heal;    // R3B's
+constexpr U kHealMaxHp = bof3::addr::EffectSlot11_HealFull;        // R3B's
+constexpr U kFlag200 = bof3::addr::EffectSlot47_MissMark200;          // R3B's
+constexpr U kInflict = bof3::addr::Battle_InflictStatus;          // R3D's
+constexpr U kRaiseStat = bof3::addr::Effect_StepStatByte;        // R3D's
+constexpr U kResisted = bof3::addr::Battle_StatusResisted;         // R3D's
+constexpr U kMissTail = bof3::addr::Effect_NoHitReaction;         // R3D's
+constexpr U kRaiseByAbility = bof3::addr::Effect_RollStatStepQuiet;   // R3D's
+constexpr U kMissInflict = bof3::addr::Effect_RollInflictQuiet;      // R3D's
+constexpr U kInflictUnlessResisted = bof3::addr::Effect_RollInflict;   // R3D's
+constexpr U kHpDamage = bof3::addr::Effect_HpBasedDamage;         // R3D's
 
 }  // namespace at
 }  // namespace rest_3c

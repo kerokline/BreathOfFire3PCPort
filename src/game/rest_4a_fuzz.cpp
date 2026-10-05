@@ -251,7 +251,7 @@ const sh::Callee kCallees[] = {
     {R4A_OURS(CommuPose_KindB), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
     {R4A_OURS(CommuPose_KindC), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &ElevationEffect},
     {R4A_OURS(CommuPose_KindD), 1, {0xFF}, kG, 0, 0, {}, &ElevationEffect},
-    // R4D's, ours by address until the round's rebinding: the records in use, al
+    // R4D's, ours, keyed by address: the records in use, al
     {"0x45E6B0 (R4D)", at::kCommuCount, at::kCommuCount, 0, {}, sh::Answer::kByte, 0, 2, {}, &CountEffect},
     // ours, no standard set lists them (or not as these callers need)
     {R4A_OURS(Battle_ActorIsOut), 1, {0xFF}, kFl, 0, 0, {}, &IsOutEffect},   // reads the low byte (its evidence)

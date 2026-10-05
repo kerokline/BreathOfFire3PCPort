@@ -1,9 +1,10 @@
 // Internal to rest_3b.cpp and rest_3b_fuzz.cpp: the cells group R3B's battle
-// code touches that symbols.toml has no name for, and the callees nobody owns
-// yet, by raw address. docs/rest_3b.md.
+// code touches that symbols.toml has no name for, and the callees of another
+// group, by address. docs/rest_3b.md.
 //
-// Raw-address callees (round fourteen's rebinding pass names them; all R3D's,
-// this wave, merged before R3B by the round's order):
+// Callees by address (all R3D's, this wave; ours since R3D merged, named by
+// symbol below, the values unchanged: round fourteen's rebinding,
+// docs/round-14-cleanup.md):
 //   0x44FB30  (): the effect's miss tail - 0x904AA9 |= 0x20, the target's
 //             second flags (+0x134 / +0x114) |= 0x200 and its +0x130 / +0x110
 //             byte's bit 0 cleared. Called, and tail-jumped to by six slots.
@@ -17,11 +18,13 @@
 //   0x44FCE0  (divisor): ax, a share of the actor's HP (its HP / divisor by
 //             the element affinity and a Rand roll; 0 for a target with flag
 //             0x10000). Read to its last instruction for its signature only.
-//   0x44F6A0  (actor, target): nobody's; al: the target resisted (the
-//             engine's standard row).
+//   0x44F6A0  (actor, target): al: the target resisted (the engine's
+//             standard row).
 #pragma once
 
 #include <cstdint>
+
+#include "bof3/symbols.gen.h"
 
 namespace rest_3b {
 namespace at {
@@ -84,13 +87,13 @@ constexpr U kItemCmdSideSteps = 0x64E4A0; // 4: BattleItemCmd_SideSteps (BE4's n
 constexpr U kItemCmdEquipSteps = 0x64E4B0;   // 4: BattleItemCmd_EquipSteps (BE4's name)
 constexpr U kEscapeStates = 0x64E4FC;     // 3: Escape_States (BE4's name)
 
-// --- the callees nobody owns yet (R3D's) ---
-constexpr U kMissTail = 0x44FB30;
-constexpr U kStatMod = 0x44FBB0;
-constexpr U kInflictMiss = 0x44FC60;
-constexpr U kInflict = 0x44FCA0;
-constexpr U kHpShare = 0x44FCE0;
-constexpr U kResisted = 0x44F6A0;
+// --- the callees of R3D, ours ---
+constexpr U kMissTail = bof3::addr::Effect_NoHitReaction;
+constexpr U kStatMod = bof3::addr::Effect_RollStatStepQuiet;
+constexpr U kInflictMiss = bof3::addr::Effect_RollInflictQuiet;
+constexpr U kInflict = bof3::addr::Effect_RollInflict;
+constexpr U kHpShare = bof3::addr::Effect_HpBasedDamage;
+constexpr U kResisted = bof3::addr::Battle_StatusResisted;
 
 }  // namespace at
 }  // namespace rest_3b

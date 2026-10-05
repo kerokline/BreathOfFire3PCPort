@@ -1,8 +1,9 @@
 // The raw addresses rest_3g.cpp and its fuzz read that symbols.toml does not
 // name - each a load-bearing constant (CLAUDE.md rule 3). docs/rest_3g.md.
 //
-// Raw-address callees (owned by a group of this round's wave three, called
-// raw until the round's rebinding):
+// Callees by address (owned by a group of this round's wave three; ours, named
+// by symbol below, the value unchanged: round fourteen's rebinding,
+// docs/round-14-cleanup.md):
 //   0x492400  R3F's EffectKindAA_DrawFill, ours: (shade byte) - two opaque
 //             shaded quads over the whole frame, 320.0 x 240.0 narrow and the
 //             frame's width under the wide picture (DIV-0041); kind 0xAC's
@@ -13,12 +14,14 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace rest_3g::at {
 
 using U = std::uint32_t;
 
-// --- callees ours, by address until the round's rebinding -------------------------
-constexpr U kFadeDraw = 0x492400;          // R3F's EffectKindAA_DrawFill: void(unsigned shade) - reads the argument's low byte
+// --- callees ours, by address (through the harness) -------------------------------
+constexpr U kFadeDraw = bof3::addr::EffectKindAA_DrawFill;        // R3F's EffectKindAA_DrawFill: void(unsigned shade) - reads the argument's low byte
 
 // --- kinds 0xAC, 0xAD, 0xBA ------------------------------------------------------
 constexpr U kMember2X = 0x80300C;          // ObjTrio record 2 +0x34: the third member's x, 16.16
