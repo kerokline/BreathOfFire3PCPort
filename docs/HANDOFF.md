@@ -44,6 +44,17 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
+000000000. **2026-10-05: round thirteen has had a code review, read-only, nothing changed:
+   [`round-13-review.md`](round-13-review.md).** Seven reviewers read `c567ca3..0a2257d` (PR #40) without the game.
+   Fix first, both still open on this branch: **F1's double speed is held at x1 for up to two minutes whenever a
+   streamed track starts** (`win_main.cpp:610` gates `BOF3X_SPEED`'s stream hold on `g_speed`, which F1 also sets;
+   DIV-0048 says the hold changes no play), and **the Rand counter is bypassed on reference sides under
+   `--original "*"`** (`input_script.cpp:642` installs it with `Inject`, which obeys `BOF3X_ORIGINAL`, so `randlog`
+   reads 0 on Capcom's side; check round fourteen's `caughFish.txt` Rand comparison against it). Then E2E's 19
+   `EffectKind48_State7..12_*` names, which E2D's three-state table makes unreachable (kind 0x49's cells by E2D's
+   reading), and `STATUS.md`, still at 6,891 ours and 2026-10-01. Eighteen low items and nits after that, each with
+   where and a fix. The six commits signed off by Claude rather than the owner (rule 7) are the owner's call.
+
 00000000. **Round fourteen, the remainder of the game's code, is under way** ([`takeover-queue-round14.md`](takeover-queue-round14.md);
    1,341 functions, stage A and four waves). On `phase-3/capture-round-fourteen`, cut from `main` at `5a94224` (PR #40,
    round thirteen) with the plan's four commits cherry-picked - `phase-3/round14-plan` sits on the history from before the
