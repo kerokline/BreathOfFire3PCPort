@@ -224,7 +224,7 @@ rebuild, run `BOF3X_R2A_ONLY=<clone>`, restore, rebuild), all in
 | C63, C64, C69 | `LinkedObject_SpawnEffect32` | kind 0x31; the sub-kind >> 1; `+0` 3 | refused (4543, 4524, 4543) |
 
 C31 and C46 (a pointer read moved before a call) are refused by 2 rounds
-each: the disturbance moves the member pointer in one case of twelve after a
+each: the disturbance moves the member pointer in one case of eleven after a
 third of the calls. Refused; a heavier weighting would make them louder.
 
 **Under the repaired disturbance** (2026-10-05, round fourteen's review

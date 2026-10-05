@@ -50,6 +50,19 @@ the object kept `+0xF`. "The title box" is
 | `MasterFigure_Hold` | `0x57F4E0` | 0x5 | entry 4: the faded draw alone |
 | `MasterFigure_TurnOn` | `0x57F4F0` | 0xC | entry 5: the angle + 0x20 (entry 1, R2B's `0x57F330`, takes 0x20 off); the faded draw |
 
+**The record, settled (2026-10-05, `round-14-review.md` item 17).** R2C
+read `0x9398E0` as one record past `0x110` bytes; R2B reads two model records
+of `0x80` and the screen's own cells after them, and **R2B's reading is the
+right one**. `0x9398E0` is model A, `0x939960` model B (each laid out as a
+sprite record), `0x9399E0..0x9399FF` the screen's cells. The bytes agree
+(capstone from `BOF3.exe`): `0x57F340` reads `0x9399E7` and `0x9399EB`,
+`0x57F450` reads `0x9399A0`, and every other cell they touch is below
+`0x939960`. So what R2C called the record's `+0xC0` "lift" is **model B's
+scale** (`0x939960 + 0x40`; model A stands on B at B's scale x `0xA00` plus
+B's y, as R2B's `StackModels` writes it); the `+0x107` "fade step" is **the
+fourth "given" count** (`0x9399E4 + 3`); the `+0x10B` "scale index" is
+**R2B's level** (`0x9399EB`, `Shisu_ScaleIndex`'s answer).
+
 ### 1.2 The inn, the save point, the rest
 
 | Function | Entry | Bytes | What |

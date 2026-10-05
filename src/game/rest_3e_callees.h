@@ -8,9 +8,11 @@
 namespace rest_3e::at {
 
 // --- callees nobody owns yet (called through the harness by address) -------------------
-// R3F's (round fourteen wave three; PSX twin 0x801F9F8C): (const long *point, size
-// s16, dy byte, a fourth word) - a draw mode linked at the point, then a ring of
-// lines round it at the projected size; kind 0x5F's moving states call it.
+// R3F's EffectKind5F_DrawLineDisc (PSX twin 0x801F9F8C): (const long *point,
+// unused, wobble, dy) - the second word is never read, the size is a constant
+// 0x50 projected, the third the rows' wobble, the fourth the link's dy (capstone
+// 2026-10-05: [esp+0x48] / +0x54 / +0x40 at 0x480333 / 0x48039F); a draw mode
+// linked at the point, then a disc of lines round it; kind 0x5F's moving states.
 constexpr std::uint32_t kR3FRing = 0x480300;
 // The library layer's integer square root (eax read, through _ftol): the spiral's
 // shade (an FX_RAW row of scenario_harness.cpp's kEffectStd).

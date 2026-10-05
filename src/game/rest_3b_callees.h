@@ -5,8 +5,9 @@
 // Raw-address callees (round fourteen's rebinding pass names them; all R3D's,
 // this wave, merged before R3B by the round's order):
 //   0x44FB30  (): the effect's miss tail - 0x904AA9 |= 0x20, the target's
-//             second flags (+0x134 / +0x114) |= 0x200 and its +0x130 / +0x110
-//             byte's bit 0 cleared. Called, and tail-jumped to by six slots.
+//             flags +0x130 / +0x110 |= 0x200 and its +0x12C / +0x10C byte's
+//             bit 0 cleared (capstone 2026-10-05: 0x802E70 / 0x802E6C, as
+//             R3D's Effect_NoHitReaction has it). Called, and tail-jumped to by six slots.
 //   0x44FBB0  (which): 0x44FB30, then 0x44F6A0(actor, target) resisting: al 1;
 //             else 0x44F650(the ability's s8 at NameTable_Abilities +3, which)
 //             - the result record's byte +0x14 + which moved and clamped to

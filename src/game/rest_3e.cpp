@@ -129,7 +129,8 @@ extern "C" void __cdecl EffectKind1B_Run(void) { Dispatch("EffectKind1B_Run", Ef
 // character less '0' written back and an 8 x 8 SPRT at (x + 8 i, y) - x and y
 // the low words, signed - its u (char - '0' + 0x16) * 8, v 0xD0, the colour
 // 0x80, CLUT (clut byte * 16, 0x1E0), committed to the slot +0x29 (0x1C). The
-// index is a byte, so the loop stops at a NUL or after 256.
+// index is a byte: past 255 it wraps to the text's start (already rewritten),
+// so the loop stops only at a NUL.
 extern "C" void __cdecl EffectKind41_DrawNumber(int x, int y, int /*unused*/, unsigned clut) {
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kText)), reinterpret_cast<const char*>(At(at::kNumberFormat)),
                          static_cast<unsigned>(S()[6]));
@@ -1186,7 +1187,8 @@ extern "C" void __cdecl EffectKind5E_DrawPanel(void) {
 // ===========================================================================
 
 namespace {
-// The moving states' draw: R3F's 0x480300(the point, 0x20, 8, last).
+// The moving states' draw: R3F's 0x480300(the point, 0x20 unread, the wobble 8,
+// the dy `last`).
 void Ring(U last) {
     SH_AT(void (__cdecl*)(const long*, unsigned, unsigned, unsigned), at::kR3FRing)(Point(S() + 0x34), 0x20, 8, last);
 }

@@ -139,7 +139,7 @@ calls are. From the DLL's `.text` immediates and the traces' first callers:
 |---|---|---|---|
 | `0x5B9380` `Crt_sprintf` | `sprintf` | 286 sites | every run, from ours |
 | `0x5B93D2` `Rand` | `rand` | 1,227 sites | every run |
-| `0x5B9450` | `strncpy` | 12 | no route (the save block's name copy) |
+| `0x5B9450` `Crt_strncpy` | `strncpy` (capstone 2026-10-05: the NUL test and the zero fill) | 12 | no route (the save block's name copy) |
 | `0x5B9550` | `_ftol` | 12 sites of ours, 44 bodies of ours | every run |
 | `0x5B9577` `Crt_free` / `0x5B9660` `Crt_malloc` | | 7 / 9 | every run |
 | `0x5B979A` / `0x5B9867` | `_findfirst` / `_findnext` (from `Save_ListFiles`) | 1 / 2 | ten routes |

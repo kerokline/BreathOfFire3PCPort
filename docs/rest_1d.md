@@ -307,10 +307,13 @@ callee reached (`Field_GiveZenny` 188, `Sprite_FlashClut` and `Char_LoseHp`
   all 20 effect records in use.
 - **L2 - `PartyAction12_Form0EffectSet` writes effect record `+0xB`
   unchecked** (`+8` and `+0xA` of it). What sets `+0xB` on the way into
-  `PartyAction12_Form0State1` was not traced (the state before it,
-  `0x51F0E0`, does not write it). **Ours aborts at 20 and above** with a
-  message (the project's rule for an index past a table whose reach is not
-  established).
+  `PartyAction12_Form0State1` is in this group's and R1B's code (traced
+  2026-10-05, the review's nit): state 0's `PartyAction12_Form0Begin` sets
+  it to 0 and the Resolve's `PartyAction12_CellHit` to 1 or 2; state 1's
+  step 0 (`0x51F0E0`, R1B's `PartyAction5_Form1Again`) does not write it. So
+  on set 12's path it is 0..2. **Ours aborts at 20 and above** with a message
+  (the project's rule for an index past a table; the table's other readers,
+  set 5's through `0x65FBF8`, are R1B's).
 - **L3 - the dispatchers do not bound their index**: past its count each
   jumps through the next table's cells (always code here: the tables are
   contiguous). **Ours aborts** past the count; no handler writes such an index

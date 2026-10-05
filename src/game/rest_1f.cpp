@@ -246,41 +246,41 @@ void ProbeStartShape() {
 // The dispatchers (docs/rest_1f.md section 3: each table's entries)
 // ===========================================================================
 
-// original 0x5243D0 (0x13 bytes): Field_FormActions[16] - PartyAction16_FormActionForms by the word +0x2C.
-extern "C" void __cdecl PartyAction16_FormAction(void) {
-    ByForm("PartyAction16_FormAction (0x5243D0)", PartyAction16_FormActionForms, PartyAction16_FormActionForms_count);
+// original 0x5243D0 (0x13 bytes): Field_FormActions[16] - PartyFormAction16_Forms by the word +0x2C.
+extern "C" void __cdecl PartyFormAction16_ByForm(void) {
+    ByForm("PartyFormAction16_ByForm (0x5243D0)", PartyFormAction16_Forms, PartyFormAction16_Forms_count);
 }
 // original 0x5243F0 (0x13 bytes): Field_ActionBySet[16] - PartyAction16_Forms by the word +0x2C.
 extern "C" void __cdecl PartyAction16_ByForm(void) {
     ByForm("PartyAction16_ByForm (0x5243F0)", PartyAction16_Forms, PartyAction16_Forms_count);
 }
-// original 0x523FB0 (0x12 bytes): PartyAction16_FormActionForms[2] - PartyAction16_FormAction2States by +2.
-extern "C" void __cdecl PartyAction16_FormAction2(void) {
-    ByState("PartyAction16_FormAction2 (0x523FB0)", PartyAction16_FormAction2States, PartyAction16_FormAction2States_count);
+// original 0x523FB0 (0x12 bytes): PartyFormAction16_Forms[2] - PartyFormAction16_Form2States by +2.
+extern "C" void __cdecl PartyFormAction16_Form2(void) {
+    ByState("PartyFormAction16_Form2 (0x523FB0)", PartyFormAction16_Form2States, PartyFormAction16_Form2States_count);
 }
 // original 0x523FD0 (0x12 bytes): PartyAction16_Forms[2] - PartyAction16_Form2States by +2.
 extern "C" void __cdecl PartyAction16_Form2(void) {
     ByState("PartyAction16_Form2 (0x523FD0)", PartyAction16_Form2States, PartyAction16_Form2States_count);
 }
-// original 0x524930 (0x13 bytes): Field_FormActions[17] - PartyAction17_FormActionForms by the word +0x2C.
-extern "C" void __cdecl PartyAction17_FormAction(void) {
-    ByForm("PartyAction17_FormAction (0x524930)", PartyAction17_FormActionForms, PartyAction17_FormActionForms_count);
+// original 0x524930 (0x13 bytes): Field_FormActions[17] - PartyFormAction17_Forms by the word +0x2C.
+extern "C" void __cdecl PartyFormAction17_ByForm(void) {
+    ByForm("PartyFormAction17_ByForm (0x524930)", PartyFormAction17_Forms, PartyFormAction17_Forms_count);
 }
 // original 0x524950 (0x13 bytes): Field_ActionBySet[17] - PartyAction17_Forms by the word +0x2C.
 extern "C" void __cdecl PartyAction17_ByForm(void) {
     ByForm("PartyAction17_ByForm (0x524950)", PartyAction17_Forms, PartyAction17_Forms_count);
 }
-// original 0x524410 (0x12 bytes): PartyAction17_FormActionForms[0] - PartyAction17_FormAction0States by +2.
-extern "C" void __cdecl PartyAction17_FormAction0(void) {
-    ByState("PartyAction17_FormAction0 (0x524410)", PartyAction17_FormAction0States, PartyAction17_FormAction0States_count);
+// original 0x524410 (0x12 bytes): PartyFormAction17_Forms[0] - PartyFormAction17_Form0States by +2.
+extern "C" void __cdecl PartyFormAction17_Form0(void) {
+    ByState("PartyFormAction17_Form0 (0x524410)", PartyFormAction17_Form0States, PartyFormAction17_Form0States_count);
 }
-// original 0x524450 (0x12 bytes): PartyAction17_FormActionForms[1] - PartyAction17_FormAction1States by +2.
-extern "C" void __cdecl PartyAction17_FormAction1(void) {
-    ByState("PartyAction17_FormAction1 (0x524450)", PartyAction17_FormAction1States, PartyAction17_FormAction1States_count);
+// original 0x524450 (0x12 bytes): PartyFormAction17_Forms[1] - PartyFormAction17_Form1States by +2.
+extern "C" void __cdecl PartyFormAction17_Form1(void) {
+    ByState("PartyFormAction17_Form1 (0x524450)", PartyFormAction17_Form1States, PartyFormAction17_Form1States_count);
 }
-// original 0x5248F0 (0x12 bytes): PartyAction17_FormActionForms[2] - PartyAction17_FormAction2States by +2.
-extern "C" void __cdecl PartyAction17_FormAction2(void) {
-    ByState("PartyAction17_FormAction2 (0x5248F0)", PartyAction17_FormAction2States, PartyAction17_FormAction2States_count);
+// original 0x5248F0 (0x12 bytes): PartyFormAction17_Forms[2] - PartyFormAction17_Form2States by +2.
+extern "C" void __cdecl PartyFormAction17_Form2(void) {
+    ByState("PartyFormAction17_Form2 (0x5248F0)", PartyFormAction17_Form2States, PartyFormAction17_Form2States_count);
 }
 // original 0x524430 (0x12 bytes): PartyAction17_Forms[0] - PartyAction17_Form0States by +2.
 extern "C" void __cdecl PartyAction17_Form0(void) {
@@ -294,25 +294,25 @@ extern "C" void __cdecl PartyAction17_Form1(void) {
 extern "C" void __cdecl PartyAction17_Form2(void) {
     ByState("PartyAction17_Form2 (0x524910)", PartyAction17_Form2States, PartyAction17_Form2States_count);
 }
-// original 0x525330 (0x13 bytes): Field_FormActions[18] - PartyAction18_FormActionForms by the word +0x2C.
-extern "C" void __cdecl PartyAction18_FormAction(void) {
-    ByForm("PartyAction18_FormAction (0x525330)", PartyAction18_FormActionForms, PartyAction18_FormActionForms_count);
+// original 0x525330 (0x13 bytes): Field_FormActions[18] - PartyFormAction18_Forms by the word +0x2C.
+extern "C" void __cdecl PartyFormAction18_ByForm(void) {
+    ByForm("PartyFormAction18_ByForm (0x525330)", PartyFormAction18_Forms, PartyFormAction18_Forms_count);
 }
 // original 0x525350 (0x13 bytes): Field_ActionBySet[18] - PartyAction18_Forms by the word +0x2C.
 extern "C" void __cdecl PartyAction18_ByForm(void) {
     ByForm("PartyAction18_ByForm (0x525350)", PartyAction18_Forms, PartyAction18_Forms_count);
 }
-// original 0x524970 (0x12 bytes): PartyAction18_FormActionForms[0] - PartyAction18_FormAction0States by +2.
-extern "C" void __cdecl PartyAction18_FormAction0(void) {
-    ByState("PartyAction18_FormAction0 (0x524970)", PartyAction18_FormAction0States, PartyAction18_FormAction0States_count);
+// original 0x524970 (0x12 bytes): PartyFormAction18_Forms[0] - PartyFormAction18_Form0States by +2.
+extern "C" void __cdecl PartyFormAction18_Form0(void) {
+    ByState("PartyFormAction18_Form0 (0x524970)", PartyFormAction18_Form0States, PartyFormAction18_Form0States_count);
 }
-// original 0x524E50 (0x12 bytes): PartyAction18_FormActionForms[1] - PartyAction18_FormAction1States by +2.
-extern "C" void __cdecl PartyAction18_FormAction1(void) {
-    ByState("PartyAction18_FormAction1 (0x524E50)", PartyAction18_FormAction1States, PartyAction18_FormAction1States_count);
+// original 0x524E50 (0x12 bytes): PartyFormAction18_Forms[1] - PartyFormAction18_Form1States by +2.
+extern "C" void __cdecl PartyFormAction18_Form1(void) {
+    ByState("PartyFormAction18_Form1 (0x524E50)", PartyFormAction18_Form1States, PartyFormAction18_Form1States_count);
 }
-// original 0x525270 (0x12 bytes): PartyAction18_FormActionForms[2] - PartyAction18_FormAction2States by +2.
-extern "C" void __cdecl PartyAction18_FormAction2(void) {
-    ByState("PartyAction18_FormAction2 (0x525270)", PartyAction18_FormAction2States, PartyAction18_FormAction2States_count);
+// original 0x525270 (0x12 bytes): PartyFormAction18_Forms[2] - PartyFormAction18_Form2States by +2.
+extern "C" void __cdecl PartyFormAction18_Form2(void) {
+    ByState("PartyFormAction18_Form2 (0x525270)", PartyFormAction18_Form2States, PartyFormAction18_Form2States_count);
 }
 // original 0x524990 (0x12 bytes): PartyAction18_Forms[0] - PartyAction18_Form0Subs by +2.
 extern "C" void __cdecl PartyAction18_Form0(void) {
@@ -978,29 +978,29 @@ extern "C" void __cdecl LeaderPanel_S0End(void) {
 
 void Rest1F_Inject() {
     if (bof3::WantsShadow("rest_1f")) rest_1f::SelfTest();
-    BOF3_INJECT(PartyAction16_FormAction);
+    BOF3_INJECT(PartyFormAction16_ByForm);
     BOF3_INJECT(PartyAction16_ByForm);
-    BOF3_INJECT(PartyAction16_FormAction2);
+    BOF3_INJECT(PartyFormAction16_Form2);
     BOF3_INJECT(PartyAction16_Form2);
     BOF3_INJECT(PartyAction16_Form2Begin);
     BOF3_INJECT(PartyAction16_Form2Resolve);
     BOF3_INJECT(PartyAction16_CellPickup);
-    BOF3_INJECT(PartyAction17_FormAction);
+    BOF3_INJECT(PartyFormAction17_ByForm);
     BOF3_INJECT(PartyAction17_ByForm);
-    BOF3_INJECT(PartyAction17_FormAction0);
-    BOF3_INJECT(PartyAction17_FormAction1);
-    BOF3_INJECT(PartyAction17_FormAction2);
+    BOF3_INJECT(PartyFormAction17_Form0);
+    BOF3_INJECT(PartyFormAction17_Form1);
+    BOF3_INJECT(PartyFormAction17_Form2);
     BOF3_INJECT(PartyAction17_Form0);
     BOF3_INJECT(PartyAction17_Form1);
     BOF3_INJECT(PartyAction17_Form2);
     BOF3_INJECT(PartyAction17_Form1Begin);
     BOF3_INJECT(PartyAction17_Form1Resolve);
     BOF3_INJECT(PartyAction17_CellPickup);
-    BOF3_INJECT(PartyAction18_FormAction);
+    BOF3_INJECT(PartyFormAction18_ByForm);
     BOF3_INJECT(PartyAction18_ByForm);
-    BOF3_INJECT(PartyAction18_FormAction0);
-    BOF3_INJECT(PartyAction18_FormAction1);
-    BOF3_INJECT(PartyAction18_FormAction2);
+    BOF3_INJECT(PartyFormAction18_Form0);
+    BOF3_INJECT(PartyFormAction18_Form1);
+    BOF3_INJECT(PartyFormAction18_Form2);
     BOF3_INJECT(PartyAction18_Form0);
     BOF3_INJECT(PartyAction18_Form0Sub0);
     BOF3_INJECT(PartyAction18_Form0Sub1);

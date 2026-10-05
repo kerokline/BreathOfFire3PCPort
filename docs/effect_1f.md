@@ -217,7 +217,10 @@ clones whose name contains it.
   moved - a field written after the commit shows); `Sprite_UpdateScreen`
   (notes `Sprite_Current` and its `+0x3C` at the call); `Input_AutoRepeat`
   (a quarter garbage, else none, all or some of the bits handed - the "no
-  repeat" paths run).
+  repeat" paths run); `Sound_PlayEffect` and `Menu_DrawHand` at the
+  standard rows' widths with `FxMenu`, which runs the group's `Disturb` and
+  `KeepDivisor` from the noise one time in two; and `Inventory_Remove` /
+  `_Add`'s `FxInventory` does the same (section 6a, `fe32391`).
 - **Region**: the id list `0x9042D4` (0x80). Effect mode's standard set
   holds the rest (records, sprites, input and buttons, `MessagePools`, the
   save block with `0x9040EC` and the slots).

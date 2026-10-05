@@ -115,7 +115,16 @@ tail jump or in `call; pop ecx; ret` leaves its callee's eax, and ours
 answers it (23: the eleven tail jumps to R3B, `0x44D420`, `0x44D6A0`,
 `0x44D9D0` and the three `0x44FCE0` calls whole - `ret_mask 0xFFFFFFFF`; the
 seven status-helper calls `ret_mask 0xFF`, the helpers answer al); the other
-38 are `void`.
+38 are `void`. **What the eleven tails to R3B leave is not an answer**
+(2026-10-05, `round-14-review.md` item 16): R3B's `EffectSlot04_SkillPower`
+(`0x44C040`), `EffectSlot07_Heal` (`0x44C120`) and `EffectSlot11_HealFull`
+(`0x44C170`) are ours and `void`. Capcom's leave the callee's whole answer
+(`0x44C040`: `Effect_SkillDamage`'s, `0x44C120`: `Effect_HealAmount`'s) or a
+record offset (`0x44C170`, capstone from `BOF3.exe`), so these slots forward
+whatever eax R3B's bodies leave. Nothing reads it: `Effect_ApplyResult`
+(`battle_damage.cpp`) calls every slot through `Effect_Handlers` as `void`.
+The signatures stay `void`; the fuzz compares the slot's eax only against a
+stand-in at the tail's address, which both passes share.
 
 ## 2. Starts, extents, the cut
 
@@ -151,7 +160,8 @@ function where the original **writes** through an index past its records
 (`Effect_FlushTurnOrder`, the actor writers), an enemy index past 7
 (`EnemyWrite`: the actor or target byte above 10, or below 3 in the two
 enemy-only slots 87 and 95), the party count `0x904AB0` above 3 (slots 75
-and 106's loops), the turn-order slot past 11 (slot 97). Reads by an actor,
+and 106's loops; R3D's slots 117 and 118, the same restat, abort past 3 too
+since 2026-10-05 - one policy), the turn-order slot past 11 (slot 97). Reads by an actor,
 target, character or ability byte stay unchecked, as in the rest of our
 battle code.
 

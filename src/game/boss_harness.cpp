@@ -712,7 +712,7 @@ const Callee kStandard[] = {
 // is at a different address in the copy and in ours), everything else whole.
 // kThrough for the pure ones (both sides run the real code: 0x446F20 /
 // 0x446F50 / 0x446F80 are (a * b) / 100 clamped to 999 / 9999 / 100,
-// Battle_WrapIndex, 0x5B9450 is the CRT's memcpy) and the GTE family BE6's
+// Battle_WrapIndex, 0x5B9450 is the CRT's strncpy) and the GTE family BE6's
 // BMAGIC slots read results of through pointers (Gte_* below; the five GTE
 // matrix calls kStandard records stay recorders). Round twelve's folds
 // (2026-10-01, section 10.10): the masks at what ours reads where a group
@@ -818,7 +818,7 @@ const Callee kEngineStandard[] = {
     {"0x590E80", 0x590E80, 0x590E80, 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},   // (u16 *stat, cap, delta): a stat add
     {"0x591810", 0x591810, 0x591810, 2, {kU8, kU8}, Answer::kFlag, 0, 0},         // no start list has it (after 0x5917D0's)
     {"0x59DB70", 0x59DB70, 0x59DB70, 6, {kAll, kAll, kU8, kU8, kU16, kU8}, Answer::kGarbage, 0, 0},
-    {"0x5B9450", 0x5B9450, 0x5B9450, 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},   // the CRT's memcpy
+    {"0x5B9450", 0x5B9450, 0x5B9450, 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},   // the CRT's strncpy (Crt_strncpy)
     // items, stats, the party
     {BH_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0},   // char_stats.cpp, scena_sx.cpp: low bytes only
     {BH_OURS(Inventory_Remove), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0},

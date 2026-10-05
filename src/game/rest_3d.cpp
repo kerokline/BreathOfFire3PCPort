@@ -60,6 +60,18 @@ U EnemyAt(U actor) { return at::kEnemies + ((actor & 0xFF) - 3u) * at::kEnemyStr
 unsigned char* Party(U actor) { return At(PartyAt(actor)); }
 unsigned char* Enemy(U actor) { return At(EnemyAt(actor)); }
 
+// The party size 0x904AB0 as slots 117's and 118's write loops read it: past
+// ObjTrio's three the original writes on into WindowRecords; ours aborts, as
+// R3C's restat loops do (docs/rest_3d.md section 7).
+unsigned PartySizeForWrite(const char* who) {
+    const unsigned n = B(at::kPartySize);
+    if (n > 3)
+        bof3::Fatal("%s: the party size 0x904AB0 is %u, past ObjTrio's three members - the original writes on into "
+                    "WindowRecords (docs/rest_3d.md section 7)",
+                    who, n);
+    return n;
+}
+
 // The cells by side: HP (party +0x98, enemy +0xA4); the flag words +0x130 /
 // +0x110 (0x10000: no damage; 0x200: no hit pose) and +0x134 / +0x114.
 unsigned char* Hp(U actor) { return IsMember(actor) ? Party(actor) + 0x98 : Enemy(actor) + 0xA4; }
@@ -120,7 +132,7 @@ using Void0 = void (__cdecl*)();
 // The status rolls and their rate lookups
 // ===========================================================================
 
-// original 0x44F030 (PSX 0x8009FD08): Effect_SkillDamage's affinity when its
+// original 0x44F030 (PSX 0x8009FE88, section 2): Effect_SkillDamage's affinity when its
 // psi word's low byte is set - the s16 of 0x64E97C by the target's class byte
 // for the last of the mask's bits 0x40 / 0x80 / 0x100 set (+0xB5..+0xB7 of a
 // member, +0xC5..+0xC7 of an enemy), 0 when none is.
@@ -379,7 +391,7 @@ extern "C" unsigned char __cdecl Effect_RollInflict(unsigned status) { return Ro
 // Battle_ElementAffinity(the target, the mask)'s ax), / 10000 signed; ax
 // zeroed (the upper half kept) when the target (read again) has flag 0x10000.
 // A divisor of 0 faults in the original (idiv): ours aborts. Its callers pass
-// 1 and 2.
+// 1, 2 and 3 (R3C's slots 64..66 pass 3, 1, 2).
 extern "C" int __cdecl Effect_HpBasedDamage(int divisor) {
     const U hp = Word(Hp(Actor()));
     const U mask = AbilityMask();
@@ -458,7 +470,7 @@ extern "C" void __cdecl Effect117_PartyFlag400Others(void) {
     BH_CALL(Effect_NoHitReaction)();
     const unsigned t = Target();
     if (!IsMember(t)) return;
-    const unsigned n = B(at::kPartySize);
+    const unsigned n = PartySizeForWrite("Effect117_PartyFlag400Others");
     for (unsigned m = 0; m < n; ++m) OrLong(Party(m) + 0x134, 0x400);
     AndLong(Party(t) + 0x134, 0xFFFFFBFFu);
 }
@@ -483,7 +495,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
         }
         BH_CALL(Char_RecalcStats)(At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride));
     }
-    unsigned n = B(at::kPartySize);
+    unsigned n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
         unsigned char* const p = Party(m);
         const unsigned char* const c = At(bof3::addr::CharacterRecords + p[0x148] * at::kCharacterStride);
@@ -491,7 +503,7 @@ extern "C" void __cdecl Effect118_RaiseCharByte1E(void) {
         for (unsigned i = 0; i < 0x20; ++i) p[0xC0 + i] = c[0x20 + i];
     }
     BH_CALL(Formation_ApplyStatMods)();
-    n = B(at::kPartySize);
+    n = PartySizeForWrite("Effect118_RaiseCharByte1E");
     for (unsigned m = 0; m < n; ++m) {
         unsigned char* const p = Party(m);
         for (unsigned i = 0; i < 0x20; ++i) p[0xA0 + i] = p[0xC0 + i];

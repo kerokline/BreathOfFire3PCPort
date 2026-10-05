@@ -10,7 +10,7 @@ namespace field_e2::at {
 
 // --- callees nobody owns, called through the harness by address (SH_AT) ------
 constexpr std::uint32_t kHpLoss2 = bof3::addr::Char_LoseAp;   // R2A: (amount word, member byte): record +0x1A down, never below 1 (Char_LoseHp's AP twin)
-constexpr std::uint32_t kMemcpy = 0x5B9450;          // the CRT's copy (dst, src, n) - Capcom's, called for real (kThrough)
+constexpr std::uint32_t kMemcpy = 0x5B9450;          // the CRT's strncpy (dst, src, n), Crt_strncpy - Capcom's, called for real (kThrough)
 constexpr std::uint32_t kFtol = 0x5B9550;            // the CRT's _ftol - st(0) truncated to edx:eax (inlined here, x87 as the CRT)
 constexpr std::uint32_t kLoadWait = bof3::addr::MasterTalk_Reset;        // no arguments, no calls (FieldTail_LoadBank's step 1)
 constexpr std::uint32_t kLoadStep = bof3::addr::MasterTalk_Dispatch;        // jmp through 0x66450C by the byte 0x9398CF (FieldTail_LoadBank's step 2, a tail jump)

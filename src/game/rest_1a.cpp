@@ -507,7 +507,7 @@ extern "C" void __cdecl PartyAction2_Form0Resolve(void) {
 // when a member stands on it (PartyAction_MemberOnEffect) or beyond it
 // (PartyAction_MemberBeyondEffect), Field_State +0x137 = 0 and nothing more;
 // else its +0xB = 1, Sound_PlayEffect(u16 +0x2C + 0x100), the pose +8 + 8,
-// Field_State +0x128 = 2, Field_ScriptFlags' byte 3 |= 0x10, Field_JumpStart,
+// Field_State +0x128 = 2, Field_ScriptFlags' high byte (+1) |= 0x10, Field_JumpStart,
 // +9 one down, Field_LeaderStepTick, Field_State +0x137 = 1, +2 one on. With
 // none: the point two steps ahead (computed first); unless Field_State +0x138
 // bit 0, the object Sprite_ObjectAt(point, margin 1) finds is marked (the

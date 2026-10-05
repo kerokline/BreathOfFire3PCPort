@@ -382,7 +382,9 @@ void Args(unsigned k, U* a) {
 
 // What the handlers read again after a call, moved by the group's case of the
 // harness's disturbance (from its hash only): Sprite_Current's direction,
-// position, height, form word and the bytes +6, +7, +9, +0xA, +0xB, +0x2B;
+// position, height, form word and the bytes +9, +0xB, +0x2B (+6, +7 and +0xA
+// are moved too, but the handlers store them after a call, not read them
+// again: those cases test the store's order);
 // Field_State's bytes; an effect record's in-use byte (the one +0xB names, for
 // PartyAction_WaitEffectEnd); the sloped flag; a row of Field_DirectionSteps.
 void Disturb(U h) {

@@ -104,16 +104,18 @@ constexpr std::uint32_t kBoxAdd = 0x5C41C0;      // the panel box's three float 
 constexpr std::uint32_t kBoxSub = 0x5C41BC;
 constexpr std::uint32_t kBoxSubBottom = 0x5C41B8;
 
-// --- the figure record (0x9398E0, dispatched by R2B's 0x57F320 on +1) ---------------
+// --- model A (0x9398E0, dispatched by R2B's 0x57F320 on +1), and what follows it ----
+// R2B's layout (docs/rest_2c.md 1.1): model A 0x80 bytes, model B 0x939960, then
+// the screen's cells 0x9399E0.. - the cells past +0x80 below are not A's.
 constexpr std::uint32_t kFigure = 0x9398E0;
 constexpr std::uint32_t kFigureDone = 0x9398E6;  // +6: 1 when a move reached its end
 constexpr std::uint32_t kFigureY = 0x93991C;     // +0x3C: the height, 16.16
 constexpr std::uint32_t kFigureScale = 0x939920; // +0x40
 constexpr std::uint32_t kFigureRgb = 0x93993D;   // +0x5D..+0x5F: the colour
 constexpr std::uint32_t kFigureAngle = 0x93994C; // +0x6C
-constexpr std::uint32_t kFigureLift = 0x9399A0;  // +0xC0: the height above the ground, in 0xA00ths
-constexpr std::uint32_t kFigureFade = 0x9399E7;  // +0x107: the fade's step
-constexpr std::uint32_t kFigureScaleIndex = 0x9399EB;  // +0x10B
+constexpr std::uint32_t kFigureLift = 0x9399A0;  // model B's scale (+0x40): A stands on B, in 0xA00ths
+constexpr std::uint32_t kFigureFade = 0x9399E7;  // the fourth "given" count (R2B's 0x9399E4 + 3): the fade's step
+constexpr std::uint32_t kFigureScaleIndex = 0x9399EB;  // R2B's level (Shisu_ScaleIndex's answer)
 constexpr std::uint32_t kScaleTable = 0x663D7C;  // the scales the index reads (in place)
 constexpr std::uint32_t kKind2X = 0x905E64;      // Field_Kind2X
 constexpr std::uint32_t kKind2Z = 0x905E60;      // Field_Kind2Z
