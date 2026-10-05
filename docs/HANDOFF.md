@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-04: round thirteen is `main`, PR #40; round fourteen on `phase-3/capture-round-fourteen` - the state hash built, stage A and waves one and two merged, `f348fc1`, 9,343 ours, live-checked; wave three R3A..R3G running)
+**Status:** IN PROGRESS (2026-10-04: round thirteen is `main`, PR #40; round fourteen on `phase-3/capture-round-fourteen` - the state hash built, stage A and waves one to three merged, `ade9f98`, 9,681 ours, verified narrow and wide; PAUSED before wave four at the owner's word)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -52,10 +52,14 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    attract sequence and `combat.txt` identical on the state hash, `caughFish.txt`'s `Rand` count the recording's (the round
    doc's section 9 has the record and the debts). **Wave two, R2A..R2H, merged at `f348fc1`**: 354 functions, 9,343 ours,
    four routes identical on the state hash and the shop route differing in a way older than the wave (section 10: the record,
-   DIV-0073 owing the owner's word, the debts). **Running:** wave three, R3A..R3G, seven Opus agents. **Next:** merge in the
-   order R3F R3E R3G R3D R3B R3C (R3A any time) through `runner14.sh` and `pending14.txt` - `collide.py` over the reported
-   branches first, the runner in two parts (the harness kills it at two hours and its shell lives on: `tasklist` before a
-   second) - then the state-hash checks at the wave's tip with the machine quiet. Wave four is the owner's to launch. The owner's decisions: three launch sessions (R0A + waves one and two; wave three; wave
+   DIV-0073 owing the owner's word, the debts). **Wave three, R3A..R3G, merged at `ade9f98`**: 338 functions, 9,681 ours, verified narrow and wide (section 11:
+   the record and the debts; round thirteen's mop-up is done with it). **Paused here at the owner's word.** **Next, when the
+   owner says:** wave four, R4A..R4F (326, the community band; merge order R4F R4E R4D R4A R4C R4B; `make_briefs14.py` then
+   `post_brief2.py` with wave 4 and the tip; `collide.py` before each merge; the runner in two parts, each with its `END`,
+   `tasklist` between). **Then one large validation, Chinese against Chinese** (the owner's decisions of 2026-10-04: no
+   live batch per wave, no language overlay on either side, English a smoke test of ours only): `final_live.sh` in the
+   session-`7bf3959f` scratchpad, about two hours with the machine quiet. Then the debts, and
+   [`platform-layers-plan.md`](platform-layers-plan.md) (IDEAS I31) for what `BOF3.exe` still holds. The owner's decisions: three launch sessions (R0A + waves one and two; wave three; wave
    four); round thirteen's unplaced rows stay in wave three as R3E..R3G. The scripts and briefs are in the
    session-`309e3952` scratchpad (`.../309e3952-1e51-4cd8-8b59-6c0e2b38bc89/scratchpad/round14/`): `make_briefs14.py`
    then `post_brief.py <scratch> <wave> <tip>` (the `git commit -s` rule and stage A's addendum).
@@ -628,7 +632,7 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Round fourteen's wave three is running (item 00000000 above); nothing is pushed on `phase-3/capture-round-fourteen`.
+Round fourteen is paused before wave four (item 00000000 above); nothing is pushed on `phase-3/capture-round-fourteen`.
 Before it: nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
 half is pushed on `claude/round-10-cleanup-handoff-qtwcrk` (item 0) and
 wants the `'*'` run and the other game-side checks before its PR. The wave
