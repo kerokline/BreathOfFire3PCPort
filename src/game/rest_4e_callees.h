@@ -5,6 +5,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace rest_4e::at {
 
 // R4D (wave four): the index of the n-th in-use entry of the 60-entry table
@@ -15,6 +17,6 @@ constexpr std::uint32_t kEntryNth = 0x45E6D0;
 // Nobody's (the library layer; the effect harness's FX_RAW row): a 0x2C-byte
 // primitive's header written at the pointer it is handed (the triangle
 // CommuCursor_DrawArrow fills). void(unsigned char *prim).
-constexpr std::uint32_t kSetPolyF3 = 0x5A7570;
+constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
 
 }  // namespace rest_4e::at

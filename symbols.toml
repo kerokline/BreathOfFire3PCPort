@@ -11193,32 +11193,166 @@ pc = 0x5A66B0
 name = "Display_TextOut"
 ret = "void"
 params = "int x, int y, const char *text"
+impl = "src/game/psx_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x5A66B0..: GetDC (+0x44) on DDraw_BackBuffer, SetTextColor(white), SetBkMode(TRANSPARENT), TextOutA(dc, x, y, text, strlen), ReleaseDC. WinMain draws the F7 device name, the F12 Save OK and the F11 frame rate with it (docs/display-setup.md section 5.2). With the backend the back buffer's GetDC ends the process (render_shim.cpp: no slot for it), so ours draws these three with Text_DrawAt instead (DIV-0032)."
+evidence = "disasm 2026-10-05, 0x5A66B0..0x5A671C (0x6D bytes), cdecl, every jump internal, no relative call: push ecx makes the hdc slot; GetDC (+0x44) on DDraw_BackBuffer as read at entry with that slot, and a non-zero HRESULT returns at once; else SetTextColor(hdc, 0xFFFFFF) through the import slot 0x5C4020, SetBkMode(hdc, TRANSPARENT 1) through 0x5C4024, the text's length by repne scasb after them, TextOutA(hdc, x, y, text, length) through 0x5C4028, and ReleaseDC (+0x68) on DDraw_BackBuffer read again. eax is the last HRESULT; nothing reads it. WinMain draws the F7 device name, the F12 Save OK and the F11 frame rate with it (docs/display-setup.md section 5.2). With the backend the back buffer's GetDC ends the process (render_shim.cpp: no slot for it), so our WinMain draws these three with Text_DrawAt instead and calls this only when the back buffer is Capcom's (DIV-0032). docs/psx-rest.md."
 
 [[func]]
 pc = 0x5A6720
 name = "Display_ErrorBox"
 ret = "void"
 params = "int code"
+impl = "src/game/psx_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23: MessageBoxA of the error-string table 0x66B6A8 entry for Display_Setup's non-zero return. Sole caller WinMain 0x4FCD6C. Our Display_Setup returns 0 or ends the process, so ours never reaches it."
+evidence = "disasm 2026-10-05, 0x5A6720..0x5A6758 (0x39 bytes), cdecl, two ret, no relative call: code below 100 (signed, jge) indexes the table 0x66B6A8 (entry 0 null, 1..19 strings), any other indexes 0x66B568 by the code itself - so 100..103 are the four dwords 0x66B6F8..0x66B704 after the first table, the sound set-up 0x5A6830's codes 0x64..0x67; MessageBoxA(0, text, the caption 0x66BC1C, MB_ICONHAND 0x10) through the import slot 0x5C4174. Nothing bounds the code; eax is the box's answer and nothing reads it. Sole caller WinMain 0x4FCD6C. Our Display_Setup returns 0 or ends the process, so ours never reaches it. docs/psx-rest.md."
 
 [[func]]
 pc = 0x5A6380
 name = "Display_Teardown"
 ret = "void"
 params = "void *hwnd"
+impl = "src/game/psx_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x5A6380..0x5A64A2 (0x122 bytes), cdecl: 0x5A64B0, 0x5A64E0, 0x5A6540, 0x5A6590, 0x5A65F0, 0x5A6760, 0x5A6650 (the texture caches' releases, by role), then Release and zero of D3d_BackMaterial, D3d_Viewport, D3d_Device, the IDirect3D3 0x7CC34C, the clipper 0x7CC348, the Z-buffer 0x7CC340, Dd_StageSurface, DDraw_BackBuffer, DDraw_Primary, and Dd_DirectDraw - after RestoreDisplayMode and SetCooperativeLevel(hwnd, DDSCL_NORMAL) when Gfx_RenderFlags bit 0x100 (fullscreen) is set. Callers WinMain's exit and set-up failure, WndProc F8 and F7."
+evidence = "disasm 2026-10-05, 0x5A6380..0x5A64A1 (0x122 bytes), cdecl, every jump internal: Gfx_FreeClutRows, Gfx_ReleaseTexCache, Font_ReleaseTexCache, Display_ReleaseOrphans, Display_ReleaseBackdrop, D3d_FreeCellTextures, D3d_ReleaseAfterDraw (relative calls at +1, +6, +0xB, +0x10, +0x15, +0x1A, +0x1F); then each read once, Released (+8) and zeroed when not null: D3d_BackMaterial, D3d_Viewport, D3d_Device, the IDirect3D3 0x7CC34C, the clipper 0x7CC348, the Z-buffer 0x7CC340, Dd_StageSurface, DDraw_BackBuffer, DDraw_Primary; then Dd_DirectDraw read, nothing more if null; Gfx_RenderFlags read as a dword, bit 0x100 (test ch, 1: fullscreen): SetCooperativeLevel (+0x50)(the object as read, hwnd, DDSCL_NORMAL 8), RestoreDisplayMode (+0x4C) on the slot read again, Release on it read again; else Release; zero. Callers WinMain's exit and set-up failure, WndProc F8 and F7, the set-up's HAL retry (all ours). docs/psx-rest.md."
 
 [[func]]
 pc = 0x5A6980
 name = "Sound_Shutdown"
 ret = "void"
 params = "void"
+impl = "src/game/psx_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x5A6980..0x5A69BD: 0x5A71C0, 0x5A70A0 (the music's stop and release, by role), then Release and zero of the two DirectSound objects at 0x7DE3C0 and 0x7DE3BC. Sole caller WinMain's exit 0x4FD00E."
+evidence = "disasm 2026-10-05, 0x5A6980..0x5A69BC (0x3D bytes), cdecl: SndStream_Stop (a relative call at +0, the entry itself), Music_Release (+5), then Snd_PrimaryBuffer 0x7DE3C0 and Snd_Device 0x7DE3BC each read once, Released (+8) and zeroed when not null. Both are DirectSound's own objects, made by the sound set-up 0x5A6830 (Capcom's). Sole caller WinMain's exit 0x4FD00E. docs/psx-rest.md."
+
+# ---------------------------------------------------------------------------
+# 2026-10-05, the platform round's group PL: the PSX library layer's last
+# seventeen (src/game/psx_rest.cpp, docs/psx-rest.md). Display_Teardown,
+# Display_TextOut, Display_ErrorBox and Sound_Shutdown are above, with WinMain.
+# ---------------------------------------------------------------------------
+
+[[func]]
+pc = 0x5A7570
+name = "Gpu_SetPolyF3"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A7570..0x5A7586 (0x17 bytes), cdecl, no calls or jumps: byte +7 = 0x20, the PSX GPU code of POLY_F3, and the float 0.01 (0x3C23D70A) to +0x10, +0x1C, +0x28 - three vertex depths at a 0xC stride. eax is prim; no caller reads it (all fourteen callers are ours). libgpu SetPolyF3 by its code (the sibling's SetPolyF3 0x8017B2CC, Psy-Q signature). Not entered by any route of the platform read pass (analysis/platform_reach_1005.tsv)."
+
+[[func]]
+pc = 0x5A7590
+name = "Gpu_SetPolyFT3"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A7590..0x5A75A6 (0x17 bytes), cdecl, no calls or jumps: byte +7 = 0x24 (POLY_FT3) and 0.01 to +0x10, +0x20, +0x30. eax is prim, unread. libgpu SetPolyFT3 by its code (the sibling's SetPolyFT3 0x8017B2E0). Sole caller ours (magic_s22.cpp); no route entered it."
+
+[[func]]
+pc = 0x5A76F0
+name = "Gpu_SetLineG4"
+ret = "void"
+params = "unsigned char *prim"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A76F0..0x5A7709 (0x1A bytes), cdecl, no calls or jumps: byte +7 = 0x5C (LINE_G4) and 0.01 to +0x10, +0x20, +0x30, +0x40. eax is prim, unread. libgpu SetLineG4 by its code (the sibling's SetLineG4 0x8017B480). Callers ours (magic_s21.cpp, magic_s25.cpp); no route entered it."
+
+[[func]]
+pc = 0x5A7840
+name = "Gpu_SetTexWindow"
+ret = "void"
+params = "unsigned char *prim, const unsigned char *rect"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A7840..0x5A7852 (0x13 bytes), cdecl, no calls or jumps: the dword +4 = 0xF0000000 (code 0xF0 in byte +7, bytes +4..+6 zero) and the dword +8 = rect - its address, not its contents. Gfx_DrawOTag's case 0xF0 copies Gfx_TexCacheKey from the pointer at +8 (docs/d3d-draw.md section 3): libgpu SetTexWindow(DR_TWIN *, RECT *) as the port has it (the sibling's SetTexWindow 0x8017CB20 builds an 0xE2 word instead). eax is prim, unread. Callers ours (effect_1a, effect_2f, effect_2g). The one of the seventeen a route entered: whelpBoss, from EffectKind10_Run."
+
+[[func]]
+pc = 0x5A7A90
+name = "Gte_SquareRoot0"
+ret = "long"
+params = "long n"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A7A90..0x5A7A9A (0xB bytes), cdecl: fild dword n, fsqrt, a tail jmp at +6 to the C runtime's _ftol 0x5B9550 - the root truncated toward zero, eax the low dword (edx the high, unread by every caller). Rounds at the control word's precision: under the game's 0x027F the truncation is the integer square root; a negative n is the NaN and gives 0. libgte SquareRoot0 by shape (the sibling's SquareRoot0 0x80179060, Psy-Q signature). Callers ours (eight bodies); no route entered it."
+
+[[func]]
+pc = 0x5A7C70
+name = "Gte_ApplyMatrixSV"
+ret = "void"
+params = "const short *matrix, const short *vector, short *out"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A7C70..0x5A7CED (0x7E bytes), cdecl, no calls or jumps: with x, y, z the three s16 of vector and m the nine s16 of matrix, out[r] = (m[3r] * x + m[3r + 1] * y + m[3r + 2] * z) >> 12 arithmetic, products and sums in 32 bits, stored as s16 - every read before the first store, the stores z, x, y. Gte_ApplyMatrix 0x5A7BF0 with an SVECTOR out: libgte ApplyMatrixSV (the sibling's ApplyMatrixSV 0x80179790). eax is out, unread. Callers ours (six bodies); no route entered it."
+
+[[func]]
+pc = 0x5A64B0
+name = "Gfx_FreeClutRows"
+ret = "void"
+params = "void"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A64B0..0x5A64DB (0x2C bytes), cdecl, one relative call (+0xD, Crt_free 0x5B9577): for each of Gfx_ClutRows' 512 pairs, pointer 0x6C2A44 + 8i read, and when not null Crt_free of it and both dwords of the pair zeroed. Sole caller Display_Teardown."
+
+[[func]]
+pc = 0x5A64E0
+name = "Gfx_ReleaseTexCache"
+ret = "void"
+params = "void"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A64E0..0x5A6534 (0x55 bytes), cdecl, no calls but COM: for each of Gfx_TexCache's 32 pages of 0x300, entries from the first while the state byte +0 is non-zero (up to 32): Release (+8) of +0x14 when not null, then of +0x10 read after that Release, then the entry's six dwords zeroed (rep stosd). Sole caller Display_Teardown."
+
+[[func]]
+pc = 0x5A6540
+name = "Font_ReleaseTexCache"
+ret = "void"
+params = "void"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A6540..0x5A6585 (0x46 bytes), cdecl, no calls but COM: all 128 entries of Font_TexCache: Release (+8) of the texture +0xC when not null, then of the surface +8 read after, the five dwords zeroed, the glyph word +0 = 0xFFFF (the set-up's empty value). Sole caller Display_Teardown."
+
+[[func]]
+pc = 0x5A6590
+name = "Display_ReleaseOrphans"
+ret = "void"
+params = "void"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A6590..0x5A65EE (0x5F bytes), cdecl, no calls but COM: Release (+8) and zero, each when not null, of 0x7CAE30, 0x7CAE28, 0x7CAE34, 0x7CAE2C, 0x7CAE24, 0x7CAE20 in that order. A raw dword scan of the image finds those six addresses only in this function: nothing of Capcom's makes the objects it releases, and the set-up does not zero them (docs/psx-rest.md section 2). Named for that (hypothesis). Sole caller Display_Teardown."
+
+[[func]]
+pc = 0x5A65F0
+name = "Display_ReleaseBackdrop"
+ret = "void"
+params = "void"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A65F0..0x5A6644 (0x55 bytes), cdecl, no calls but COM: Release (+8), each when not null and none zeroed by itself, of 0x6BEA0C, 0x6BEA04, 0x6BEA10, 0x6BEA08, then Dd_CellBackdrop 0x6BEA00; then the seven dwords 0x6BE9F8..0x6BEA13 zeroed (rep stosd) and 0x6BE9FC = 0x12345678, an address no other instruction names. Sole caller Display_Teardown."
+
+[[func]]
+pc = 0x5A6650
+name = "D3d_ReleaseAfterDraw"
+ret = "void"
+params = "void"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A6650..0x5A668D (0x3E bytes), cdecl, no calls but COM: Release (+8), each when not null, of D3d_AfterDraw's texture 0x7CAE00, texture surface 0x7CADFC and capture surface 0x7CADF8 (docs/display-setup.md section 7), then its seven dwords 0x7CADE8..0x7CAE03 zeroed. Sole caller Display_Teardown."
+
+[[func]]
+pc = 0x5A6760
+name = "D3d_FreeCellTextures"
+ret = "void"
+params = "void"
+impl = "src/game/psx_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A6760..0x5A6776 (0x17 bytes), cdecl, one relative call (+4, D3d_FreeCellTexture 0x5A3790): D3d_FreeCellTexture(slot) for slot 0..127, the whole D3d_CellTexCache. Sole caller Display_Teardown."
+
+[[data]]
+pc = 0x7DE3C0
+name = "Snd_PrimaryBuffer"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-10-05: the sound set-up 0x5A6830 fills the DSBUFFERDESC at 0x7DE378 (size 0x24, flags 1 = DSBCAPS_PRIMARYBUFFER) and calls Snd_Device's CreateSoundBuffer (+0xC) with this as the out (0x5A68CB), then its SetFormat (+0x38) with the WAVEFORMATEX at 0x7DE3A0 (2 channels, 22050 Hz, 8 bits). Sound_Shutdown releases and zeroes it. Six instructions name it (a raw scan), all in those two functions."
 
 [[func]]
 pc = 0x5A9690

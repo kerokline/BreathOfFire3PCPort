@@ -30,7 +30,7 @@ constexpr std::uint32_t kDebrisInit = bof3::addr::EffectDebris_InitOne;   // 0x4
 constexpr std::uint32_t kCone = bof3::addr::Effect_DrawEllipse;         // 0x493090, E4F's (const long *point, w, h, angle - three s16 -, shade byte,
                                                   // flag byte): G3 triangles round the point's screen position, sized
                                                   // by EffectGte_ProjectSize (w, h) and turned by the angle
-constexpr std::uint32_t kMatrixVector = 0x5A7C70; // library layer (nobody's): (matrix, in, out) - an SVECTOR turned by
+constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV; // library layer (ours, psx_rest.cpp): (matrix, in, out) - an SVECTOR turned by
                                                   // the 3 x 3 (18 bytes read), 6 bytes written; in and out may be one
 
 // Data.

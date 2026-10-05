@@ -7,11 +7,13 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace effect_2a::at {
 
 // Library-layer callees nobody owns (catalog part 2), called through the
 // harness by address (SH_AT).
-constexpr std::uint32_t kRootWord = 0x5A7A90;       // (long n): fild, fsqrt, a tail jmp to _ftol - the square root of n
+constexpr std::uint32_t kRootWord = bof3::addr::Gte_SquareRoot0;       // (long n): fild, fsqrt, a tail jmp to _ftol - the square root of n
                                                     // truncated, in eax; the kind-0x2D disc takes its low word as a row's
                                                     // half width (the effect-standard row stands in for it)
 constexpr std::uint32_t kFtol = 0x5B9550;           // the CRT's _ftol: pops st(0), answers edx:eax (the harness calls it

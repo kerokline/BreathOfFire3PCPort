@@ -5,6 +5,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace rest_3e::at {
 
 // --- callees nobody owns yet (called through the harness by address) -------------------
@@ -14,7 +16,7 @@ namespace rest_3e::at {
 constexpr std::uint32_t kR3FRing = 0x480300;
 // The library layer's integer square root (eax read, through _ftol): the spiral's
 // shade (an FX_RAW row of scenario_harness.cpp's kEffectStd).
-constexpr std::uint32_t kSqrt = 0x5A7A90;
+constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;
 
 // --- the leader (ObjTrio record 0) ---------------------------------------------------
 constexpr std::uint32_t kLeaderX = 0x802D74;        // ObjTrio +0x34, 16.16
