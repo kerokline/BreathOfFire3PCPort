@@ -82,7 +82,7 @@ const Callees kOriginals = {
     ClutMap_Mark,
     ClutMap_FindFree,
     ClutMap_FindOwner,
-    Battle_PlaceBossActors,
+    Raw<void (__cdecl*)()>(bof3::addr::Battle_PlaceBossActors),   // R3G's: by address, as the other groups' above
     Battle_InitBossEncounter,
     Battle_InitEnemies,
     Battle_SetupEnemy,
