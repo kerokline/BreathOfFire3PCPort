@@ -209,12 +209,15 @@ unsigned g_clone;   // the round's clone's index in kAll
 // --- the moves (from a hash: Disturb's) ------------------------------------------
 //
 // What the functions read again after a call: the three state bytes, the
-// cursor, the yes / no byte, the slide, the header word, the entry's answer,
-// column and three bytes, the draw's counts and picks, Input_Pressed, the
-// kept track, a slot's name bytes, a record's flags and name bytes. The
-// draw's cursor stays 0..7 and its counts below 10 while CommuDraw_Pick runs
-// (it indexes and writes by them; the game never moves them there).
-constexpr unsigned kMoves = 16;
+// cursor, the yes / no byte, the slide, the header word, the entry's answer
+// and column, the draw's counts and picks (the first name byte half the
+// time), Input_Pressed, the kept track, a slot's name bytes, a record's flags
+// and name bytes. The draw's cursor stays 0..7 and its counts below 10 while
+// CommuDraw_Pick runs (it indexes and writes by them; the game never moves
+// them there). Not moved: the entry's three bytes 0x675FCA..CC, read again
+// after calls but handed only to BareRet, which reads none (docs/rest_4d.md
+// section 4).
+constexpr unsigned kMoves = 15;
 void Move(U h) {
     const unsigned v = (h >> 8) & 0xFF;
     const bool pick = kAll[g_clone].base == 0x45C960;
@@ -227,14 +230,13 @@ void Move(U h) {
     case 5: B(at::kCount) = static_cast<unsigned char>(v & 0x10 ? v : v % 6); break;
     case 6: SetW(at::kHeader, v % 4 == 0 ? 0xFFFFu : v % 4 == 1 ? 0xF1u : v % 4 == 2 ? 0xF0u : (h >> 16) & 0x1FF); break;
     case 7: B(at::kEntryDone) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
-    case 8: B(at::kEntryA + (h >> 16) % 3) = static_cast<unsigned char>(v); break;
-    case 9: B(at::kPicked + (h >> 16) % 4) = static_cast<unsigned char>(v % 10); break;
-    case 10: B(at::kName + (h >> 16) % 0x28) = static_cast<unsigned char>(v % 4); break;
-    case 11: SetW(at::kPressed, h >> 16); break;
-    case 12: B(at::kEntryColumn) = static_cast<unsigned char>(v); break;
-    case 13: B(at::kKeptTrack) = static_cast<unsigned char>(v); break;
-    case 14: B(at::kSlotNames + (h >> 16) % 300) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
-    case 15: B(at::kRecords + at::kRecordStride * ((h >> 16) % 7) + (v & 1 ? 0xB : (h >> 20) % 5)) ^= static_cast<unsigned char>(v | 1); break;
+    case 8: B(at::kPicked + (h >> 16) % 4) = static_cast<unsigned char>(v % 10); break;
+    case 9: B(at::kName + ((h >> 16) & 1 ? 0 : (h >> 17) % 0x28)) = static_cast<unsigned char>(v % 4); break;
+    case 10: SetW(at::kPressed, h >> 16); break;
+    case 11: B(at::kEntryColumn) = static_cast<unsigned char>(v); break;
+    case 12: B(at::kKeptTrack) = static_cast<unsigned char>(v); break;
+    case 13: B(at::kSlotNames + (h >> 16) % 300) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
+    case 14: B(at::kRecords + at::kRecordStride * ((h >> 16) % 7) + (v & 1 ? 0xB : (h >> 20) % 5)) ^= static_cast<unsigned char>(v | 1); break;
     default: break;
     }
 }
