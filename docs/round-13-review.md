@@ -106,8 +106,13 @@ answers.
    - **Fix:** a rename (rule 3: the values stay), after a trace of who sets
      `+1`.
 
-4. **STATUS.md was never brought forward for round thirteen.** *Verified;
-   still open at f3d5e99.*
+4. **STATUS.md was never brought forward for round thirteen.** *Verified.*
+   **Fixed 2026-10-05** for STATUS: dated, its head at 8,648 on `main` and
+   9,681 on round fourteen's branch, rows for round thirteen's stage A, six
+   waves, fix wave and end, and round fourteen's three waves; the 09-30 and
+   10-01 rows' 7,571 corrected to 7,570 (round thirteen's branch after wave
+   two: 7,568 and the two sky draws). HANDOFF's "Where things stand" is
+   still to do.
    - **Stale:** `docs/STATUS.md` is dated 2026-10-01 and still heads "6,891
      functions are ours". No row covers round thirteen's groups or
      DIV-0068..0072. CLAUDE.md calls STATUS authoritative.

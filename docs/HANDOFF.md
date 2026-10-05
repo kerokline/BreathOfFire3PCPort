@@ -52,7 +52,7 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    `--original "*"`** (`input_script.cpp:642` installs it with `Inject`, which obeys `BOF3X_ORIGINAL`, so `randlog`
    reads 0 on Capcom's side; check round fourteen's `caughFish.txt` Rand comparison against it). Then E2E's 19
    `EffectKind48_State7..12_*` names, which E2D's three-state table makes unreachable (kind 0x49's cells by E2D's
-   reading), and `STATUS.md`, still at 6,891 ours and 2026-10-01. Eighteen low items and nits after that, each with
+   reading); `STATUS.md` brought forward 2026-10-05 (HANDOFF's own "Where things stand" not yet). Eighteen low items and nits after that, each with
    where and a fix. The six commits signed off by Claude rather than the owner (rule 7) are the owner's call.
 
 00000000. **Round fourteen, the remainder of the game's code, is under way** ([`takeover-queue-round14.md`](takeover-queue-round14.md);
