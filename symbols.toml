@@ -110925,3 +110925,631 @@ ctype = "unsigned long"
 count = 4
 status = "evidence"
 evidence = "read 2026-10-04 (round fourteen group R3B): BattleItem_SideBegin, BattleItem_SidePick, BattleItem_Confirm 0x447CC0, BattleItem_TargetCancel; jumped through by BattleItem_SideDispatch 0x447D70 by the dword 0x904AA4 & 0xFF, unchecked; the entries set 1..3 (SideBegin 1, SidePick 2 / 3) and TargetCancel 1 with the step moved; BattleAttackCmd_States starts at 0x64E44C. The twin of BattleItemCmd_SideSteps. docs/rest_3b.md."
+
+[[data]]
+pc = 0x652DC4
+name = "CommuDraw_States"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuDraw_Dispatch by 0x939A3E, unchecked: CommuDraw_OpenStep, CommuDraw_ShowStep, Commu_LeaveWhenClosed; the states write 0..2 (CommuDraw_MusicIn 0 to 1, CommuDraw_Close 1 to 2); CommuDraw_OpenSteps follows. docs/rest_4d.md."
+
+[[data]]
+pc = 0x652DD0
+name = "CommuDraw_OpenSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuDraw_OpenStep by 0x939A40, unchecked: CommuDraw_FadeOut, CommuDraw_MusicIn (which sets state 1, step 0); CommuDraw_ShowSteps follows, so the reader's index 2..6 would run into it. docs/rest_4d.md."
+
+[[data]]
+pc = 0x652DD8
+name = "CommuDraw_ShowSteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuDraw_ShowStep by 0x939A40, unchecked: CommuDraw_Pick, _Reveal, _WaitKey, _MusicBack, _Close (which sets state 2, step 0); byte data follows (0x652DEC). docs/rest_4d.md."
+
+[[data]]
+pc = 0x652E48
+name = "CommuName_States"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuName_Dispatch by 0x939A3E, unchecked: CommuName_Begin, _SlotStep, _MemberStep, _End, Commu_LeaveWhenClosed; the states write 1 (Begin), 3 (R4E's 0x45F5A0 / 0x45F650), 4; 2 is written by no function of this group. CommuName_SlotSteps follows. docs/rest_4d.md."
+
+[[data]]
+pc = 0x652E5C
+name = "CommuName_SlotSteps"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuName_SlotStep by 0x939A40, unchecked: PanelReset, SlotPanelIn, SlotChoose, SlotConfirm, SlotPanelOut, SlotHow, SlotRandomStep, SlotEntryStep, SlotClose; the steps write 0..8 (SlotChoose's cancel 8, SlotHow 6 / 7). CommuName_SlotRandomSteps follows. docs/rest_4d.md."
+
+[[data]]
+pc = 0x652E80
+name = "CommuName_SlotRandomSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuName_SlotRandomStep by 0x939A3F, unchecked: SlotRandomPick, SlotRandomAsk, SlotRandomOut; written 0..2. CommuName_SlotEntrySteps follows. docs/rest_4d.md."
+
+[[data]]
+pc = 0x652E8C
+name = "CommuName_SlotEntrySteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuName_SlotEntryStep by 0x939A3F, unchecked: SlotEntryIn, SlotEntry, SlotEntryOut, SlotEntryAsk, SlotEntryDone; written 0..4. CommuName_MemberSteps follows. docs/rest_4d.md."
+
+[[data]]
+pc = 0x652EA0
+name = "CommuName_MemberSteps"
+ctype = "unsigned long"
+count = 9
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuName_MemberStep by 0x939A40, unchecked: PanelReset, MemberPanelIn, MemberChoose, MemberConfirm, MemberPanelOut, MemberHow, MemberRandomStep, MemberEntryStep, MemberClose; written 0..8. CommuName_MemberRandomSteps follows. docs/rest_4d.md."
+
+[[data]]
+pc = 0x652EC4
+name = "CommuName_MemberRandomSteps"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuName_MemberRandomStep by 0x939A3F, unchecked: MemberRandomPick, MemberRandomAsk, MemberRandomOut. CommuName_MemberEntrySteps follows. docs/rest_4d.md."
+
+[[data]]
+pc = 0x652ED0
+name = "CommuName_MemberEntrySteps"
+ctype = "unsigned long"
+count = 5
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): jumped through by CommuName_MemberEntryStep by 0x939A3F, unchecked: MemberEntryIn, MemberEntry, MemberEntryOut, MemberEntryAsk, MemberEntryDone; byte data follows (0x652EE4). docs/rest_4d.md."
+
+[[data]]
+pc = 0x669FA4
+name = "CommuName_RecordNames"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4D): read by CommuName_MemberEntryOut by R4E's 0x45F020 answer (a character record 0..6, 0xFF none), unchecked: seven pointers to five-byte names, 0x669F70..0x669F9C; text bytes follow. Ours aborts past 7. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C400
+name = "CommuBoard_DrawRows"
+ret = "void"
+params = "int x, int y, unsigned shown"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C400..0x45C6F5 (0x2F6 bytes): cdecl: Menu_DrawBox (x, y) 0x52 x 0x7A, CommuBoard_DrawFrame, then eight rows 14 apart of the five bytes at 0x675F98 + (5k + 3): below the cursor 0x675F8C (s8, read each row), and at it when shown is not 0, three as one number line (Crt_sprintf 0x653088) and two numbers (0x5E10C0) in Font12 colours 0 / 2 / 1; at it with shown 0 the blank formats 0x653094 / 0x653090; past it the blanks in colour 7; Font8 0x653084 at x + 0x3B each row. Called by R4C's states (15 sites). No PSX name: twin 0x801D4A98 in COMMU02 (call-anchored, pairs_propagated). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C700
+name = "CommuBoard_DrawFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C700..0x45C7C5 (0xC6 bytes): cdecl: one draw-mode packet (tpage 0x1D), then the frame in R4C's 0x45B400 pieces 0xB..0x11: nine across the top at y - 1 and the bottom at y + 0x78, fourteen down each side at x and x + 0x50. Called by CommuBoard_DrawRows only. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C7D0
+name = "CommuBoard_DrawRowCells"
+ret = "void"
+params = "int x, int y, unsigned row, unsigned lift"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C7D0..0x45C843 (0x74 bytes): cdecl: the first three bytes of row (0x675F98 + (5 row + 3) & 0xFF) as R4C's 0x45B2C0 cells 32 apart; cell i 8 higher when s8 0x675F8D equals i and lift's byte is not 0. Called by R4C's states (9 sites). Twin 0x801D4E5C in COMMU02 (call-anchored). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C850
+name = "CommuBoard_DrawCells"
+ret = "void"
+params = "int x, int y, unsigned shown"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C850..0x45C8B0 (0x61 bytes): cdecl: the three bytes 0x675F98.. as R4C's 0x45B2C0 cells 32 apart when shown's byte is not 0, else three cells of 0xFF. Called by R4C's states (9 sites). Twin 0x801D4F40 in COMMU02 (call-anchored). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C8C0
+name = "CommuDraw_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C8C0..0x45C8CD (0xE bytes): 0x652A70[7] (R4B's 0x4572F0 jumps through it by s8 0x9039F4): jmp [CommuDraw_States + 4 * 0x939A3E], unchecked (ours aborts past 3). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C8D0
+name = "CommuDraw_OpenStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C8D0..0x45C8DD (0xE bytes): CommuDraw_States[0]: jmp [CommuDraw_OpenSteps + 4 * 0x939A40], unchecked (ours aborts past 2). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C8E0
+name = "CommuDraw_FadeOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C8E0..0x45C8F6 (0x17 bytes): CommuDraw_OpenSteps[0]: Transition_Start(0), 0x939A40 one on. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C900
+name = "CommuDraw_MusicIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C900..0x45C941 (0x42 bytes): CommuDraw_OpenSteps[1]: once MoveScript_WaitWordDA is 0, Music_Track kept at 0x675F90, Draw_PassFlags 0, Music_FadeOutStop(10), Music_Play(0x67, 8), 0x939A3E one on, 0x939A40 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C950
+name = "CommuDraw_ShowStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C950..0x45C95D (0xE bytes): CommuDraw_States[1]: jmp [CommuDraw_ShowSteps + 4 * 0x939A40], unchecked (ours aborts past 5). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45C960
+name = "CommuDraw_Pick"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45C960..0x45CC44 (0x2E5 bytes): CommuDraw_ShowSteps[0]: Rand & 7 a row into 0x675F8C, the four counts 0x675FC0 cleared; for each of the nine Text_Records the row's next category of the 8 x 9 bytes 0x652DEC (9 ends): CommuDraw_RandBelow of the category's count (0x652E34 pairs), moved on while every earlier pick equals it, kept at 0x675F98 + 10c, the message copied out of MessagePools (words 0x803780); then the title's two messages 0x675FC5 / 0x675FC6 by Rand and the threshold rows 0x652E3C; 0x939A40 on, 0x675F95 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45CC50
+name = "CommuDraw_Reveal"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CC50..0x45CDBA (0x16B bytes): CommuDraw_ShowSteps[1]: CommuDraw_DrawTitle, a semi-transparent POLY_G4 black to white at y = 0x675F95 and a black TILE below it, both 320 wide; 0x675F95 + 1 (+ 3 while Input_Held), 0x939A40 on at 0xC8. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45CDC0
+name = "CommuDraw_WaitKey"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CDC0..0x45CDE5 (0x26 bytes): CommuDraw_ShowSteps[2]: CommuDraw_DrawTitle; on any Input_Pressed Transition_Start(0) and 0x939A40 on. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45CDF0
+name = "CommuDraw_MusicBack"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CDF0..0x45CE35 (0x46 bytes): CommuDraw_ShowSteps[3]: while MoveScript_WaitWordDA is not 0 CommuDraw_DrawTitle (tail jmp); else Music_FadeOutStop(10), Music_Play(0x675F90, 8), Draw_PassFlags 0x1F, Transition_Start(1), 0x939A40 on. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45CE40
+name = "CommuDraw_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CE40..0x45CE71 (0x32 bytes): CommuDraw_ShowSteps[4]: once MoveScript_WaitWordDA is 0, Msg_OpenScript(0xE2), Field_Request 2, 0x939A3E on, 0x939A40 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45CE80
+name = "CommuDraw_RandBelow"
+ret = "unsigned char"
+params = "unsigned limit"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CE80..0x45CE9F (0x20 bytes): cdecl, answers al: Rand & 0x7F less Rand & 0xF (bytes) while not below limit's byte; never returns for 0 (ours aborts). Called by CommuDraw_Pick (3 sites). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45CEA0
+name = "CommuDraw_DrawTitle"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45CEA0..0x45D039 (0x19A bytes): builds at the text scratch 0x904BA0 '*', messages 0x675FC5 and 0x675FC6 (unless 0xFF) of the words 0x803780, '+', ' ', the five name bytes at 0x9048F0 + 5 * (the byte +5 of the record 0x939A38 points at), 0; Text_DrawAt at (0x32, 0x1E); then MessagePools word 0x803746 + 2 * s8 0x675F8C at (0x32, 0x42). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D040
+name = "CommuName_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D040..0x45D04D (0xE bytes): 0x652A70[8]: jmp [CommuName_States + 4 * 0x939A3E], unchecked (ours aborts past 5). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D050
+name = "CommuName_Begin"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D050..0x45D079 (0x2A bytes): CommuName_States[0]: unless Field_Request is 2, Msg_OpenScript(0xEE), Field_Request 2, 0x939A3E on. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D080
+name = "CommuName_SlotStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D080..0x45D08D (0xE bytes): CommuName_States[1]: jmp [CommuName_SlotSteps + 4 * 0x939A40], unchecked (ours aborts past 9). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D090
+name = "CommuName_PanelReset"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D090..0x45D0C9 (0x3A bytes): CommuName_SlotSteps[0] and CommuName_MemberSteps[0]: unless Field_Request is 2, Sound_PlayEffect(0x102), 0x939A40 on, 0x675F8C 0, 0x675F95 4, the header word 0x675F92 0xF0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D0D0
+name = "CommuName_SlotPanelIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D0D0..0x45D166 (0x97 bytes): CommuName_SlotSteps[1]: 0x675F95 one less; Menu_DrawPanelBox at its slide; R4E's 0x45E870 with CommuName_NthSlot(0x675F8C) at 0x44 - 30 * slide; CommuName_DrawSlotBar (0x4A, 0x64 - 30 * slide); 0x939A40 on at 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D170
+name = "CommuName_SlotChoose"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D170..0x45D283 (0x114 bytes): CommuName_SlotSteps[2]: confirm (header 0xF1, sound 0x104, step on, 0x675F8D 0), cancel (sound 0x106, step 8), else Input_AutoRepeat up / down through the CommuName_CountSlots slots, wrapping; the header, the slot's panel, the slot bar, R4E's 0x45ECC0 hand. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D290
+name = "CommuName_SlotConfirm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D290..0x45D3DD (0x14E bytes): CommuName_SlotSteps[3]: the yes / no ask on 0x675F8D (confirm on 1 back, on 0 header 0xFFFF and step on; cancel back; repeat flips); while the header shows, it, Menu_DrawHand, the slot bar and the hand; the slot's panel. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D3E0
+name = "CommuName_SlotPanelOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D3E0..0x45D474 (0x95 bytes): CommuName_SlotSteps[4]: 0x675F95 one more; the box, the slot bar at 0x64 + 40 * slide, the slot's panel; at 4 Msg_OpenScript(0xF2), step on, Field_Request 2. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D480
+name = "CommuName_SlotHow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D480..0x45D4C6 (0x47 bytes): CommuName_SlotSteps[5]: once Field_Request is not 2, step 6 when 0x939A3C is 0, else 0x675F95 5 and step 7; the slot's panel. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D4D0
+name = "CommuName_SlotRandomStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D4D0..0x45D4DD (0xE bytes): CommuName_SlotSteps[6]: jmp [CommuName_SlotRandomSteps + 4 * 0x939A3F], unchecked (ours aborts past 3). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D4E0
+name = "CommuName_SlotRandomPick"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D4E0..0x45D541 (0x62 bytes): CommuName_SlotRandomSteps[0]: R4E's 0x45ED70 (a name at 0x675F98, its length + 1) copied (rep movs) into Text_Records, Msg_OpenScript(0xF3), 0x939A3F on, Field_Request 2; the slot's panel. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D550
+name = "CommuName_SlotRandomAsk"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D550..0x45D5A8 (0x59 bytes): CommuName_SlotRandomSteps[1]: once Field_Request is not 2, 0x939A3D not 0 - sound 0x102, 0x939A3F on, 0x675F95 0; else 0x939A3F 0; the slot's panel. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D5B0
+name = "CommuName_SlotRandomOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D5B0..0x45D5FD (0x4E bytes): CommuName_SlotRandomSteps[2]: 0x675F95 one more, the slot's panel at 0x44 - 30 * slide; at 4 a tail jmp to R4E's 0x45F650. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D600
+name = "CommuName_SlotEntryStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D600..0x45D60D (0xE bytes): CommuName_SlotSteps[7]: jmp [CommuName_SlotEntrySteps + 4 * 0x939A3F], unchecked (ours aborts past 5). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D610
+name = "CommuName_SlotEntryIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D610..0x45D728 (0x119 bytes): CommuName_SlotEntrySteps[0]: the slot's panel; BareRet with the PSX entry's arguments, R4E's 0x45F1A0, BareRet again at 30 * slide; 0x675F95 one less; at 0 the slot's five name bytes 0x9048F0 (0 as a space) into 0x675F98, 0x939A3F on, 0x675F94 / CA / CB / CC 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D730
+name = "CommuName_SlotEntry"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D730..0x45D7B1 (0x82 bytes): CommuName_SlotEntrySteps[1]: the slot's panel (flag 1), Menu_DrawGreyHLine at 0x4A + 12 * 0x675F94, BareRet, R4E's 0x45F1A0, BareRet, 0x675F96 = BareRetZero (always 0). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D7C0
+name = "CommuName_SlotEntryOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D7C0..0x45D922 (0x163 bytes): CommuName_SlotEntrySteps[2]: 0x675F95 one more; the panel; the entry draws; at 4 with 0x675F96 an empty name takes the slot default 0x653200 + 20 * slot (read in place), Msg_OpenScript(0xF4), 0x939A3F on; without, Msg_OpenScript(0xF7), state 4, step 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D930
+name = "CommuName_SlotEntryAsk"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D930..0x45D980 (0x51 bytes): CommuName_SlotEntrySteps[3]: the slot's panel (flag 1); once Field_Request is not 2, 0x939A3D 0 - 0x675F95 0, 0x939A3F on; else 0x675F95 4, 0x939A3F 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D990
+name = "CommuName_SlotEntryDone"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D990..0x45D9DD (0x4E bytes): CommuName_SlotEntrySteps[4]: as CommuName_SlotRandomOut with flag 1; at 4 a tail jmp to R4E's 0x45F650. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45D9E0
+name = "CommuName_SlotClose"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45D9E0..0x45DA92 (0xB3 bytes): CommuName_SlotSteps[8]: 0x675F95 one more; the box, the slot's panel at 0x20 - 30 * slide, the slot bar; at 4 Msg_OpenScript(0xF7), Field_Request 2, state 4, step 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45DAA0
+name = "CommuName_MemberStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45DAA0..0x45DAAD (0xE bytes): CommuName_States[2]: jmp [CommuName_MemberSteps + 4 * 0x939A40], unchecked (ours aborts past 9). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45DAB0
+name = "CommuName_MemberPanelIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45DAB0..0x45DB8A (0xDB bytes): CommuName_MemberSteps[1]: 0x675F95 one less; the box; R4E's 0x45EE10 for each of the 7 character records with +0xB bit 0, two columns 56 apart, sliding in; step on at 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45DB90
+name = "CommuName_MemberChoose"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45DB90..0x45DD01 (0x172 bytes): CommuName_MemberSteps[2]: confirm / cancel as the slot's; else Input_AutoRepeat (0xF000) moves 0x675F8C over the R4E 0x45F000 records in two columns; R4E's 0x45EF90 and 0x45F050 hand, the header. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45DD10
+name = "CommuName_MemberConfirm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45DD10..0x45DE5E (0x14F bytes): CommuName_MemberSteps[3]: the yes / no ask as CommuName_SlotConfirm's; R4E's 0x45EF90 and 0x45F050 hand (flag 0). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45DE60
+name = "CommuName_MemberPanelOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45DE60..0x45DFF5 (0x196 bytes): CommuName_MemberSteps[4]: 0x675F95 one more; the box; the records' panels sliding out, the cursor's moving toward (0x20, 0x2B); at 4 Msg_OpenScript(0xF2), step on, Field_Request 2. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E000
+name = "CommuName_MemberHow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E000..0x45E046 (0x47 bytes): CommuName_MemberSteps[5]: as CommuName_SlotHow (0x675F95 4 for step 7); R4E's 0x45EE10 at (0x20, 0x2B) with R4E's 0x45F020(0x675F8C). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E050
+name = "CommuName_MemberRandomStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E050..0x45E05D (0xE bytes): CommuName_MemberSteps[6]: jmp [CommuName_MemberRandomSteps + 4 * 0x939A3F], unchecked (ours aborts past 3). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E060
+name = "CommuName_MemberRandomPick"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E060..0x45E0C1 (0x62 bytes): CommuName_MemberRandomSteps[0]: as CommuName_SlotRandomPick with the member's panel. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E0D0
+name = "CommuName_MemberRandomAsk"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E0D0..0x45E128 (0x59 bytes): CommuName_MemberRandomSteps[1]: as CommuName_SlotRandomAsk with the member's panel. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E130
+name = "CommuName_MemberRandomOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E130..0x45E17B (0x4C bytes): CommuName_MemberRandomSteps[2]: 0x675F95 one more, the member's panel at 0x20 - 40 * slide; at 4 a tail jmp to R4E's 0x45F5A0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E180
+name = "CommuName_MemberEntryStep"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E180..0x45E18D (0xE bytes): CommuName_MemberSteps[7]: jmp [CommuName_MemberEntrySteps + 4 * 0x939A3F], unchecked (ours aborts past 5). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E190
+name = "CommuName_MemberEntryIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E190..0x45E2BA (0x12B bytes): CommuName_MemberEntrySteps[0]: 0x675F95 one less; the member's panel; the entry draws; at 0 the record's first five bytes (0 as a space) into 0x675F98, 0x939A3F on, the four entry bytes 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E2C0
+name = "CommuName_MemberEntry"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E2C0..0x45E341 (0x82 bytes): CommuName_MemberEntrySteps[1]: the member's panel (flag 1), Menu_DrawGreyHLine at 0x5B + 12 * 0x675F94, the entry draws, 0x675F96 = BareRetZero. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E350
+name = "CommuName_MemberEntryOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E350..0x45E4B3 (0x164 bytes): CommuName_MemberEntrySteps[2]: as CommuName_SlotEntryOut, an empty name taking the five bytes CommuName_RecordNames[record] points at (ours aborts past 7). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E4C0
+name = "CommuName_MemberEntryAsk"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E4C0..0x45E510 (0x51 bytes): CommuName_MemberEntrySteps[3]: as CommuName_SlotEntryAsk with the member's panel. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E520
+name = "CommuName_MemberEntryDone"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E520..0x45E56D (0x4E bytes): CommuName_MemberEntrySteps[4]: 0x675F95 one more, the member's panel at 0x20 - 30 * slide (flag 1); at 4 a tail jmp to R4E's 0x45F5A0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E570
+name = "CommuName_MemberClose"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E570..0x45E667 (0xF8 bytes): CommuName_MemberSteps[8]: 0x675F95 one more; the box; the records' panels sliding out at y 0x30; at 4 Msg_OpenScript(0xF7), Field_Request 2, state 4, step 0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E670
+name = "CommuName_End"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E670..0x45E696 (0x27 bytes): CommuName_States[3]: once Field_Request is not 2 and 0x939A40 is 0, Msg_OpenScript(0xF6), Field_Request 2. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E6A0
+name = "Commu_LeaveWhenClosed"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E6A0..0x45E6AF (0x10 bytes): once Field_Request is not 2, 0x9039F4 one on. The last state of CommuDraw_States and CommuName_States, and an entry of the tables 0x6530C0 (index 10) and 0x653150 (index 1), other groups'. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E6B0
+name = "CommuName_CountSlots"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E6B0..0x45E6C9 (0x1A bytes): answers al: the 8-byte cells 0x9046D0..0x9048AF whose first byte is not 0 (the original clears al alone). Called by CommuName_SlotChoose, CommuName_DrawSlotBar and R4A's 0x455450 / 0x455AA0. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E6D0
+name = "CommuName_NthSlot"
+ret = "unsigned"
+params = "unsigned n"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E6D0..0x45E6F8 (0x29 bytes): cdecl, answers eax: the index (0..59) of the cell in use with n's byte cells in use before it, 0xFF when none. Called by the slot states (22 sites) and R4E's 0x45F650 (4). docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E700
+name = "CommuName_DrawSlotBar"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E700..0x45E762 (0x63 bytes): cdecl: Menu_DrawBox (x, y) 0xAC x 0x1A flags 0x80, CommuName_DrawSlotFrame, R4E's 0x45EC00 piece 1 at (x + 8i + 7, y + 9) for each CommuName_CountSlots. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E770
+name = "CommuName_DrawSlotFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E770..0x45E813 (0xA4 bytes): cdecl: the bar's frame in R4E's 0x45EC00 pieces 6..0xD (twenty across, two rows down the sides). Called by CommuName_DrawSlotBar only. docs/rest_4d.md."
+
+[[func]]
+pc = 0x45E820
+name = "CommuName_DrawHeader"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4d.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4D, capstone to the last instruction), 0x45E820..0x45E86E (0x4F bytes): Menu_DrawPanelBox (0x14, 0x10) 0x118 x 0x13; unless the word 0x675F92 is 0xFFFF the MessagePools message it names by Text_DrawAt at (0x1B, 0x13). docs/rest_4d.md."
