@@ -486,6 +486,33 @@ entry. **116 of 117 refused**; the one not refused is an equivalent mutant.
 | 115 | `Sub22_Draw` | dy << 6 | 3653 of 4000 |
 | 116 | `Sub22_Draw` | slot 4 | 145 of 4000 |
 | 117 | `Sub22_Draw` | x - 0x3F80 | 4000 of 4000 |
+| 118 | `Sub18_Grow` | +9 kept across the column (ring's radius) | 32 of 4000 |
+| 119 | `Sub17_Close` | +9 kept across the frame copy (the step) | 8 of 4000 |
+| 120 | `Sub14_Dim` | +9 kept across the CLUT scale (the release test) | 9 of 4000 |
+| 121 | `Sub1D_Start` | +0x3E kept across the second elevation (the slope test) | 6 of 4000 |
+| 122 | `Sub22_SetMap` | +0x3E kept across the heights' elevations | 233 of 4000 |
+| 123 | `Sub22_Draw` | +0x3E kept across the pieces | 570 of 4000 |
+
+**Under the repaired disturbance** (2026-10-05, round fourteen's review item
+1: the group's `Disturb` switched on `h % 6`, which never reached cases 0 and
+3 - the safe `+9` and `+0x3E` - until `b9dfe34` drew the case from
+`sh::DisturbCase`). Controls 1..117 re-run from the same plants (every anchor
+still unique, none repaired), on `451edeb`: **116 of 117 refused**, control 10
+not (the equivalent mutant, below). No count moved to 0; the ones that moved
+moved by 1..43 rounds (2, 102: 2662 to 2620; 105: 2564 to 2607; 111: 2834 to
+2868; 46, 48, 107 by 8..17; 16, 17, 41, 51, 52, 68, 76, 77 by 1..4). Control
+50 counted 985 + 976 in the two `_Wait` clones the filter now names, 1,961 in
+all as before; control 108 2,644 + 1,319. **Controls 118..123 are new**, one a
+function that reads `+9` (case 0) or `+0x3E` (case 3) again after a call:
+each keeps the value read before the call whenever `Sprite_Current` is still
+the same record after it (the pointer re-read kept), so the harness's own
+move of `Sprite_Current` cannot refuse it - only a move of the cell itself.
+All six refused; with the group's case 0 or 3 knocked out of the fuzz (the
+same plants, the case's line made a bare `break`) all six ran 4,000 rounds
+without a mismatch, so each refusal is the formerly dead case's. The low
+counts (6..32) are the case's rate - the harness disturbs at two calls in
+three, picks its case 14 one time in sixteen, and the group's case one time in
+six - not a blind spot. The fuzz is unchanged.
 
 **Control 10 is equivalent**: rounding the patch corner's `fx + SX` to a float
 before subtracting 64.0 cannot change it, because `_DrawPatch` itself stores
