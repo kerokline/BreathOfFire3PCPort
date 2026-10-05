@@ -554,7 +554,12 @@ never moved the cell in the calls between. **Fuzz change:** the stand-ins of
 `Field_State` +0x89, +0x138 and `Field_InputFlags` (respectively) a quarter of
 the time from the noise (`FxFlash`, `FxKind30`, `FxSpawn` in
 `rest_1b_fuzz.cpp`); the shadow passes, 188,000 rounds, 0 mismatches; C93..C95
-are then refused (counts below), and C01..C88 above were run on it.
+are then refused (counts below), and C01..C88 above were run on it. A
+second attribution, each control run with only its own case switched off
+(`if (sh::DisturbCase(h, 12) == N) return;` planted at the top of `Disturb`):
+C89..C92 give 27, 62, 26, 180, so cases 0 and 3 add 3, 7, 7 and 26 rounds;
+C93..C95 give 28, 23, 8 - the same as with the case on, so cases 6 and 9 add
+nothing to these controls and the stand-ins' moves are what refuses them.
 
 | # | Run (`_ONLY`) | Plant | Refused |
 |---|---|---|---|
