@@ -313,6 +313,17 @@ U NthMemberAnswer(const U*, U answer) {
     return n % 3 == 0 ? 0xFF : answer;
 }
 
+// R4E's 0x45EE10 (a member's panel): one call in four the cursor moved to 0..7
+// after it (CommuName_MemberPanelOut compares each record's place with the
+// cursor again after every panel; the group's case 3 alone reached that 3
+// times in 4,000 rounds: N70). Never while CommuDraw_Pick runs (it indexes by
+// the cursor; it calls no panel either).
+U MemberPanelMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0 && kAll[g_clone].base != 0x45C960) B(at::kCursor) = static_cast<unsigned char>((n >> 8) % 8);
+    return answer;
+}
+
 #define R4D_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr U kW = 0xFFFFFFFFu;
@@ -333,7 +344,7 @@ const sh::Callee kCallees[] = {
     {"0x45EC00", at::kListPiece, at::kListPiece, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},     // R4E: movsx words, and 0xFF
     {"0x45ECC0", at::kSlotHand, at::kSlotHand, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},       // R4E: movsx words, mov al
     {"0x45ED70", at::kRandomName, at::kRandomName, 0, {}, kG, 0, 0, {}, &RandomNameAnswer},
-    {"0x45EE10", at::kMemberPanel, at::kMemberPanel, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},   // R4E: as 0x45E870
+    {"0x45EE10", at::kMemberPanel, at::kMemberPanel, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &MemberPanelMove},   // R4E: as 0x45E870
     {"0x45EF90", at::kMemberPanels, at::kMemberPanels, 0, {}, kG, 0, 0},
     {"0x45F000", at::kMemberCount, at::kMemberCount, 0, {}, kG, 0, 0, {}, &NearCursor},
     {"0x45F020", at::kNthMember, at::kNthMember, 1, {0xFF}, kG, 0, 0, {}, &NthMemberAnswer},   // R4E: mov bl, [esp + 8]

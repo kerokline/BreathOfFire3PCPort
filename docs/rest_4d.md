@@ -310,7 +310,7 @@ of ours). Rounds 4,000 a clone; counts from the final run (`controls_run5.out`).
 | N04..N35 | the slot states to the random name | 31 | 31 | N07 the step read before the sound (case 0), 7; N14, N30 7 |
 | N36..N56 | the slot's entry, `SlotClose` | 21 | 19 | N47 the answer read once (case 7), 5 |
 | N57..N69 | the member states to the confirm | 13 | 13 | N59 the flags read before the loop (case 14), 9 |
-| N70..N95 | the member states from the slide out | 26 | 25 | N70 the cursor read once (case 3), 3 |
+| N70..N95 | the member states from the slide out | 26 | 25 | N70 the cursor read once (case 3), 3; 618 with the panel's stand-in (2026-10-05, below), N84 then the weakest, 26 |
 | N96..N99 | `CommuName_End`, `Commu_LeaveWhenClosed` | 4 | 4 | N97 (303) |
 | N100..N113 | the counts, the bar, the header | 14 | 14 | N112 the header read before the box (case 6), 10 |
 | | | **173** | **170** | |
@@ -324,6 +324,8 @@ refused: case 0 D05 (12), N07 (7); 1 N30 (7); 2 D08 (9); 3 B02 (319), D16
 N45 (25 of 24,000: the filter runs six clones); 12 D33 (4); 13 N41 (17); 14
 N59 (9). The thin ones (3..7 of 4,000) are the round's usual: the group's
 case runs after about one stand-in call in a few hundred.
+
+**N70 made cheap (2026-10-05, round fourteen's end, debt 23).** R4E's `0x45EE10` (a member's panel) has a stand-in in the fuzz (`MemberPanelMove`) that one call in four moves the cursor to 0..7 after it, never while `CommuDraw_Pick` runs: `CommuName_MemberPanelOut` compares each record's place with the cursor again after every panel. N70 in this worktree: **618 of 4,000 rounds** (3 before). N57..N95, the controls of every function that calls the panel, re-run on that fuzz: every count as before or higher (N59 9, N84 26, N63 28 the weakest), N71 still the equivalent. The group's rounds stay 4,000, its shadow 0 mismatches.
 
 **Not refused, equivalent:**
 - **N36** (the entry's first `BareRet` at 0xB1) and **N38** (its last
