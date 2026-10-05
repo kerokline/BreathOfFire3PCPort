@@ -7,8 +7,10 @@ round branch's tip `35ec19ef`. **48 functions ours** (`src/game/rest_4e.cpp`,
 R4E (`analysis/round14_cut.tsv`), every one a function - none a jump-table
 case or a shared tail, none missing (section 5). Each read to its last
 instruction with capstone and fuzzed through the scenario harness's **field**
-mode: 192,000 rounds, **0 mismatches**; **@CONTROLS@** (section 6).
-`BOF3X_SHADOW='*'` @STAR@ (section 4). Seven `.data` tables named. **Fuzz
+mode: 288,000 rounds, **0 mismatches**; **153 controls: 145 refused by a
+count, one an equivalent mutant with a refused near variant, seven stopped by
+ours' own abort, each with a refused near variant** (section 6).
+`BOF3X_SHADOW='*'` exit 0, narrow and with `BOF3X_WIDE=1` (section 4). Seven `.data` tables named. **Fuzz
 only**: no recorded route enters the faerie village (section 9). No harness
 row edited, no raw reference rebound (section 10). No divergence and nothing
 for the ledger; one abort the coordinator should weigh (section 7, L5).
@@ -174,7 +176,7 @@ ledger entry.
 
 ## 4. The fuzz (`rest_4e_fuzz.cpp`)
 
-`scenario_harness::Run` in field mode, 4,000 rounds a function, the
+`scenario_harness::Run` in field mode, 6,000 rounds a function, the
 facility's modes and steps `kState` (the seven dispatchers' bytes seeded below
 their own tables), the draws and helpers `kCall` (`CommuMusic_DrawLabel`'s
 text a pointer into the harness's scratch, `Arg::kScratch`).
@@ -235,12 +237,16 @@ page, the name cursor - each a cell a function reads again after a call, and
 each case proved live by a control (section 6).
 
 **Result** (this worktree, the committed fuzz): `BOF3X_SHADOW=rest_4e`, exit
-0: 192,000 rounds over 48 functions, @CALLS@ calls to the stand-ins, **0
-mismatches**; every callee listed was reached and every entry of the seven
+0: 288,000 rounds over 48 functions (6,000 each), 2,227,838 calls to the
+stand-ins, **0 mismatches**; every callee listed was reached and every entry of the seven
 tables (the handler recorders' phase counts 550..3,050 each). The harness
 names each clone "outside the field runs" (it does not refuse them).
 
-**`BOF3X_SHADOW='*'`** @STARDETAIL@
+**`BOF3X_SHADOW='*'`** (this worktree): exit 0, 742 self-test lines, none with
+a mismatch (`rest_4e`'s line 192,000 rounds, 0 mismatches, at the 4,000-round
+fuzz); with `BOF3X_WIDE=1`: exit 0, 742 lines, none with a mismatch; again at
+the committed fuzz (6,000 rounds): see the report. No run died silently.
+`tools/ledger_check.py`: 73 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
@@ -261,7 +267,188 @@ names each clone "outside the field runs" (it does not refuse them).
 
 ## 6. Controls
 
-@CONTROLTEXT@
+153 plants, each in `rest_4e.cpp` by a unique anchor: the scratch script
+`controls.py` (session `309e3952` scratchpad, `r4e/`, with `controls_list.py`)
+plants, rebuilds, runs `BOF3X_SHADOW=rest_4e` with `BOF3X_R4E_ONLY` naming the
+function, restores and rebuilds at the end (the tree clean after). **145
+refused by a count** (exit 3, the harness's mismatch Fatal). **C91 is an
+equivalent mutant**: it reuses the entry pointer for the second write where
+the original reads `0x9039F5` again with no call between the two reads, so no
+input can tell them apart; its near variant C153 (the entry read before the
+sound `0x105`) is refused. **Seven were stopped by ours' own abort**, not by a
+count (a crash is not a refusal): C40, C41, C46, C54, C73, C113 dispatch by
+the other facility byte, which the seeds leave unbounded, and C15 points the
+second name half at unseeded messages whose strings run past the 32 bytes;
+their near variants C146..C152 (the next entry, in range; the first set of
+halves) are refused in every round.
+
+**What the controls fixed in the fuzz** (first not refused at 4,000 rounds,
+refused after): C87, C90 (disturbance cases 7 and 5, cells `CommuItem_Choose`
+reads after its sounds: the function is seeded open, not scrolling and
+confirmed two times in three, the scroll case writes a non-zero word) and
+C125 (case 12: it now flips every row of the first list, so the row being
+drawn moves). Rounds went to 6,000. **Each of the 19 disturbance cases has a
+control refused** (the "case n" plants). C1..C145 ran at the 4,000-round
+fuzz and their counts are from that run (bar C87, C90, C91, C125, re-run at
+the committed fuzz with C146..C153); the fuzz's change only added rounds and
+paths.
+
+| Control | Run on | Plant | Rounds refused |
+|---|---|---|--:|
+| C1 | `CommuEntry_DrawPanel` | box h 0x27 | 4000 |
+| C2 | `CommuEntry_DrawPanel` | bar length 11 x | 3951 |
+| C3 | `CommuEntry_DrawPanel` | editing inverted | 4000 |
+| C4 | `CommuEntry_DrawPanel` | tile y + 0x13 | 4000 |
+| C5 | `CommuEntry_DrawPanelFrame` | piece 9 for 8 | 4000 |
+| C6 | `CommuEntry_DrawPanelFrame` | left column y + 9 | 4000 |
+| C7 | `CommuEntry_DrawBar` | colour 3 red + blue | 1021 |
+| C8 | `CommuEntry_DrawBar` | bottom y + 5 | 4000 |
+| C9 | `CommuEntry_DrawBar` | dim a half | 1007 |
+| C10 | `Commu_DrawPiece6` | clut x >> 3 | 3763 |
+| C11 | `Commu_DrawPiece6` | next piece | 3988 |
+| C12 | `CommuCursor_DrawArrow` | x + 5 | 4000 |
+| C13 | `CommuCursor_DrawArrow` | pulse + 0x3E | 1999 |
+| C14 | `CommuCursor_DrawArrow` | steady bit 0 | 376 |
+| C15 | `CommuName_MakeRandom` | second half 0x231 | ours aborts (not a refusal) |
+| C16 | `CommuName_MakeRandom` | eax the length | 4000 |
+| C17 | `CommuName_MakeRandom` | two bytes on bit 6 | 2739 |
+| C18 | `CommuMember_DrawPanel` | portrait +8 | 3132 |
+| C19 | `CommuMember_DrawPanel` | name count 6 | 4000 |
+| C20 | `CommuMember_DrawPortrait` | shade 2 green 0x41 | 1312 |
+| C21 | `CommuMember_DrawPortrait` | x signed | 1968 |
+| C22 | `CommuMember_DrawAll` | row y 0x2C | 3170 |
+| C23 | `CommuMember_DrawAll` | present bit 1 | 3964 |
+| C24 | `CommuMember_Count` | flags +0xA | 3517 |
+| C25 | `CommuMember_Nth` | none 0xFE | 2561 |
+| C26 | `CommuMember_Nth` | index + 1 | 1439 |
+| C27 | `CommuMember_DrawFrame` | F3 red and blue swapped | 2006 |
+| C28 | `CommuMember_DrawFrame` | right 0x7F | 4000 |
+| C29 | `CommuMember_DrawFrame` | x signed | 2050 |
+| C30 | `Commu_DrawTiledFrame` | window 2 x 0x99 | 4000 |
+| C31 | `Commu_DrawTiledFrame` | middle h - 0x11 | 4000 |
+| C32 | `Commu_DrawTiledFrame` | corner 0x28 | 4000 |
+| C33 | `Commu_DrawTiledFrame` | clut row 0x1E0 | 4000 |
+| C34 | `CommuName_CommitMember` | old byte 7 | 3981 |
+| C35 | `CommuName_CommitMember` | member asked once | 4000 |
+| C36 | `CommuName_CommitMember` | mode 2 | 4000 |
+| C37 | `CommuName_CommitEntry` | every space a NUL | 71 |
+| C38 | `CommuName_CommitEntry` | NUL as 0x21 | 82 |
+| C39 | `CommuName_CommitMember` | cursor read once (case 18) | 66 |
+| C40 | `CommuMusic_Dispatch` | by the step | ours aborts (not a refusal) |
+| C41 | `CommuMusic_OpenDispatch` | by the mode | ours aborts (not a refusal) |
+| C42 | `CommuMusic_Open` | slide 5 | 4000 |
+| C43 | `CommuMusic_Open` | name byte 9 | 4000 |
+| C44 | `CommuMusic_SlideIn` | slide not read again (case 2) | 3 |
+| C45 | `CommuMusic_SlideIn` | y 0x29 | 4000 |
+| C46 | `CommuMusic_BrowseDispatch` | by the mode | ours aborts (not a refusal) |
+| C47 | `CommuMusic_Browse` | wrap at the count | 157 |
+| C48 | `CommuMusic_Browse` | up wraps to count - 1 | 290 |
+| C49 | `CommuMusic_Browse` | pad read once | 16 |
+| C50 | `CommuMusic_Browse` | track read before the fade (case 9) | 1 |
+| C51 | `CommuMusic_Browse` | count by +2 | 498 |
+| C52 | `CommuMusic_Play` | frames 9 | 2701 |
+| C53 | `CommuMusic_Play` | step 1 | 2694 |
+| C54 | `CommuMusic_CloseDispatch` | by the mode | ours aborts (not a refusal) |
+| C55 | `CommuMusic_CloseFade` | none 0xFE | 374 |
+| C56 | `CommuMusic_CloseFade` | step + 2 | 4000 |
+| C57 | `CommuMusic_CloseRestore` | kept read before the load (case 17) | 4 |
+| C58 | `CommuMusic_CloseRestore` | slide 1 | 2694 |
+| C59 | `CommuMusic_SlideOut` | slide not read again (case 2) | 3 |
+| C60 | `CommuMusic_SlideOut` | message 0x5B | 501 |
+| C61 | `CommuMusic_DrawList` | colour 1 | 2051 |
+| C62 | `CommuMusic_DrawList` | style read once (case 13) | 39 |
+| C63 | `CommuMusic_DrawList` | labels swapped | 4000 |
+| C64 | `CommuMusic_DrawList` | second quad 1 wide | 4000 |
+| C65 | `CommuMusic_DrawList` | v3 0xE1 | 4000 |
+| C66 | `CommuMusic_DrawList` | title 0x270 + row | 3975 |
+| C67 | `CommuMusic_DrawLabel` | v by shift | 3234 |
+| C68 | `CommuMusic_DrawLabel` | slant 8 | 3898 |
+| C69 | `CommuMusic_DrawLabel` | skip 0x21 | 3646 |
+| C70 | `CommuMusic_DrawLabel` | clut & 0x7F | 1928 |
+| C71 | `CommuMusic_DrawLabel` | byte read before the call (case 14) | 5 |
+| C72 | `CommuItem_Frame` | tasks unless 2 | 1561 |
+| C73 | `CommuItem_StepDispatch` | by the mode | ours aborts (not a refusal) |
+| C74 | `CommuItem_Prompt` | message 0x62 | 2477 |
+| C75 | `CommuItem_Prompt` | open unless 1 | 2325 |
+| C76 | `CommuItem_OpenWindow` | slide 3 | 2477 |
+| C77 | `CommuItem_OpenWindow` | no window set up | 2477 |
+| C78 | `CommuItem_Choose` | cursor x + 8 | 2373 |
+| C79 | `CommuItem_Choose` | cursor rows of 12 | 2370 |
+| C80 | `CommuItem_Choose` | left wraps to 2 | 180 |
+| C81 | `CommuItem_Choose` | right past 4 | 162 |
+| C82 | `CommuItem_Choose` | scroll up at the top | 17 |
+| C83 | `CommuItem_Choose` | scroll down at 8 | 17 |
+| C84 | `CommuItem_Choose` | page up below 8 | 46 |
+| C85 | `CommuItem_Choose` | page down past 0x6F | 13 |
+| C86 | `CommuItem_Choose` | sound when still | 2373 |
+| C87 | `CommuItem_Choose` | scroll read before the sound (case 7) | 3 |
+| C88 | `CommuItem_Choose` | cancel step + 2 | 240 |
+| C89 | `CommuItem_Choose` | item + 1 | 214 |
+| C90 | `CommuItem_Choose` | tab read before the sound (case 5) | 1 |
+| C91 | `CommuItem_Choose` | entry read once (case 8) | 0 (equivalent: section 6) |
+| C92 | `CommuItem_Choose` | help row not read again (case 6) | 3 |
+| C93 | `CommuItem_Choose` | help x 0x1E | 1017 |
+| C94 | `CommuItem_Choose` | step 5 | 213 |
+| C95 | `CommuItem_Choose` | slide stops at 1 | 662 |
+| C96 | `CommuItem_Choose` | tab move 0x33 | 608 |
+| C97 | `CommuItem_Choose` | outline slide not read again (case 3) | 5 |
+| C98 | `CommuItem_Cancel` | window read before the frame (case 4) | 8 |
+| C99 | `CommuItem_Cancel` | message 0x5E | 2373 |
+| C100 | `CommuItem_Cancel` | mode read before the message (case 1) | 6 |
+| C101 | `CommuItem_Confirm` | bit 2 | 293 |
+| C102 | `CommuItem_Confirm` | armour +0x10 | 168 |
+| C103 | `CommuItem_Confirm` | name 15 bytes | 2117 |
+| C104 | `CommuItem_Confirm` | refused step 7 | 244 |
+| C105 | `CommuItem_Confirm` | entry read before the reset (case 8) | 3 |
+| C106 | `CommuItem_Give` | bit 5 | 2428 |
+| C107 | `CommuItem_Give` | dword + 1 | 2477 |
+| C108 | `CommuItem_Give` | entry read once (case 8) | 8 |
+| C109 | `CommuItem_Give` | mode + 2 | 2477 |
+| C110 | `CommuItem_Refused` | message 0x64 | 2477 |
+| C111 | `CommuItem_SetupWindow` | x -0xA9 | 4000 |
+| C112 | `CommuItem_SetupWindow` | window 1 +2 2 | 4000 |
+| C113 | `CommuRank_Dispatch` | by the step | ours aborts (not a refusal) |
+| C114 | `CommuRank_Pages` | 19 a page | 1919 |
+| C115 | `CommuRank_Pages` | n / per + 1 | 3107 |
+| C116 | `CommuRank_Show` | backdrop y 0x19 | 4000 |
+| C117 | `CommuRank_Show` | wrap past the total | 197 |
+| C118 | `CommuRank_Show` | back wraps to the total | 395 |
+| C119 | `CommuRank_Show` | page read once (case 17) | 3 |
+| C120 | `CommuRank_Show` | confirm only | 489 |
+| C121 | `CommuRank_Show` | number + 2 | 4000 |
+| C122 | `CommuRank_Show` | list A for 1 | 2845 |
+| C123 | `CommuRank_Close` | + 2 | 4000 |
+| C124 | `CommuRank_DrawListA` | message 0x38 for 0x39 | 1892 |
+| C125 | `CommuRank_DrawListA` | entry read once (case 12) | 28 |
+| C126 | `CommuRank_DrawListA` | count read once (case 11) | 11 |
+| C127 | `CommuRank_DrawListA` | icon + 1 | 4000 |
+| C128 | `CommuRank_DrawIcon` | u - 0x37 | 4000 |
+| C129 | `CommuRank_DrawIcon` | clut 0x784A | 4000 |
+| C130 | `CommuRank_DrawListB` | 20 a page | 930 |
+| C131 | `CommuRank_DrawListB` | x + 0x13 | 1754 |
+| C132 | `CommuRank_DrawListB` | count read once (case 11) | 16 |
+| C133 | `CommuRank_DrawListC` | row y + 0x1D | 1738 |
+| C134 | `CommuRank_DrawListC` | name when 0 | 1712 |
+| C135 | `CommuRank_DrawListC` | name byte 3 | 1585 |
+| C136 | `CommuRank_DrawListC` | count read once (case 11) | 4 |
+| C137 | `CommuRank_DrawBackdrop` | columns 63 apart | 4000 |
+| C138 | `CommuRank_DrawBackdrop` | bottom y + 0xB1 | 4000 |
+| C139 | `CommuRank_DrawBackdrop` | v & 0xFF | 4000 |
+| C140 | `CommuRank_DrawTile` | wide bit 0 | 1011 |
+| C141 | `CommuRank_DrawTile` | clut 0x7884 | 4000 |
+| C142 | `CommuName_CommitMember` | edited bytes read once (case 10) | 39 |
+| C143 | `CommuMusic_Play` | row read before the load (case 15) | 13 |
+| C144 | `CommuItem_Give` | tab read before the removal (case 16) | 14 |
+| C145 | `CommuItem_Prompt` | step read before the message (case 0) | 5 |
+| C146 | `CommuMusic_Dispatch` | the next mode | 6000 |
+| C147 | `CommuMusic_OpenDispatch` | the next step | 6000 |
+| C148 | `CommuMusic_BrowseDispatch` | the next step | 6000 |
+| C149 | `CommuMusic_CloseDispatch` | the next step | 6000 |
+| C150 | `CommuItem_StepDispatch` | the next step | 6000 |
+| C151 | `CommuRank_Dispatch` | the next mode | 6000 |
+| C152 | `CommuName_MakeRandom` | second half from the first set | 5922 |
+| C153 | `CommuItem_Choose` | entry read before the sound (case 8) | 10 |
+
 
 ## 7. Latent defects and ranges (Capcom's, described, not fixed)
 
