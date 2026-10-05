@@ -220,6 +220,7 @@ bool IsHitBlow(unsigned k) { return k >= kBRun && k <= kBClose; }
 void CountRoom(unsigned k, int* lo, int* hi) {
     *lo = 0, *hi = 9;
     if (k == kHBetInput) *hi = 2;
+    else if (k == kBLost || k == kBEnd) *hi = 8;   // they test 8 (the eighth miss) and index no record by it
     else if (IsHitBlow(k)) *hi = 7;
     else if (k == kHPayout || k == kHPick) *hi = 8;
 }
@@ -293,6 +294,7 @@ const sh::Callee kCallees[] = {
     {"0x5A7570", at::kSetPolyF3, at::kSetPolyF3, 1, {kAll}, kG, 0, 0, {}, &PolyF3Effect, nullptr, true},
     // ours, re-listed with what this group needs
     {G_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &RepeatEffect},
+    {G_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &DrawEffect},   // louder: the stake and the money are read after sounds
     {G_OURS(Gpu_SetSprt), 1, {kAll}, kG, 0, 0, {16}, &SprtEffect, nullptr, true},
     // the two names' bytes (Item_NamePtr reads each argument's low byte, its
     // evidence; CommuHitBlow_Score pushes eax / ecx over leftovers)
@@ -405,6 +407,10 @@ void Seed(unsigned k) {
         const int t = static_cast<signed char>(B(at::kTurn));
         B(at::kPicks + t) = B(at::kCards + t - 1) >= B(at::kCards + t) ? 1 : 0;
     }
+    // the paths that wait on one value: the ninth card dealt, the second
+    // game's end at its step 1 with the counter one short of 4
+    if (k == kHDealCards && sh::Half()) B(at::kCount) = 8, B(at::kSlide) = 1;
+    if (k == kBEnd && sh::Half()) B(at::kStep) = 1, B(at::kSlide) = 3;
     // the message and the music
     Field_Request = static_cast<unsigned char>(PickOf(2, 0, 2, 1, 5, sh::Next()));
     // the pad
