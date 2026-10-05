@@ -148,7 +148,7 @@ long __stdcall FakeCreate(void* self, void* desc, void** out, void* outer) {
     Record(0x103, Id(self), Bytes(desc, 0x24), Address(desc) ^ (Address(out) << 1), Address(outer));
     const std::uint32_t h = Hash();
     const long r = Answer(h);
-    if (r == 0 || h % 5 == 0) *out = AnyBuffer(h >> 8);   // a failing create may write it too
+    if (r == 0 || r == 1 || h % 5 == 0) *out = AnyBuffer(h >> 8);   // S_FALSE writes it; a failure may too
     Disturb();
     return r;
 }
@@ -212,7 +212,7 @@ long __stdcall StubCreate(const void* guid, void** out, void* outer) {
     Record(3, Address(guid), Address(out), Address(outer));
     const std::uint32_t h = Hash();
     const long r = Answer(h);
-    if (r == 0 || h % 4 == 0) *out = AnyDevice(h >> 8);   // a failing create may write it too
+    if (r == 0 || r == 1 || h % 4 == 0) *out = AnyDevice(h >> 8);   // S_FALSE writes it; a failure may too
     Disturb();
     return r;
 }
