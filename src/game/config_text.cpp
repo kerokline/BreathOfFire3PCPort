@@ -100,7 +100,7 @@ const char* TakeString(const std::uint8_t*& p, const std::uint8_t* end) {
 // DIVERGENCE DIV-0017: the selected row, in the dialogue font at its own
 // advance.
 //
-// The row under the cursor is drawn large: 0x461800 and 0x461970 each have a
+// The row under the cursor is drawn large: 0x461800 and Config_DrawRowOptions each have a
 // branch that goes through Text_DrawAt and its 12-unit quad instead of the
 // 8-unit draw. In Chinese that is the same glyph at full size. On the
 // PlayStation it is a different FONT - the 8 x 12 dialogue cells, still on an
@@ -140,7 +140,7 @@ constexpr int kIconX = -0x0C;   // the owner, 2026-09-24: half a glyph right of 
 
 constexpr std::uint32_t kTextDrawAt = 0x516B30;   // its name is a macro here
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
-constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // 0x461AF0's one draw (DIV-0026)
+constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // Config_DrawControllerRow's one draw (DIV-0026)
 
 // The controller panel's cell, original 0x461C00 (docs/controls.md section 2).
 // The original tests the word's bits in the order circle, cross, triangle,
@@ -320,7 +320,7 @@ void ConfigText_Inject() {
     bof3::PatchBytes("ConfigText", 0x4619E1, option_was, option_is, 3);
 
     // --- the controller panel (DIV-0026) ------------------------------------
-    // 0x461AF0 draws each of the six names through the large Text_DrawAt at
+    // Config_DrawControllerRow draws each of the six names through the large Text_DrawAt at
     // x = row x + 0x20 - width, the width reckoned `len * 6` - 12 units a
     // Chinese character of two bytes:
     //   0x461B36  lea eax,[ecx+ecx*2]   (then mov ecx,ebp / shl eax,1)
@@ -382,8 +382,8 @@ void ConfigText_Inject() {
     }
 
     // The rows' y is the original's. An earlier build lowered every string on
-    // this screen by two (five displacements in 0x461800, 0x461970 and
-    // 0x461AF0), tuned against cells that sat in the top of their 24 x 24 slot.
+    // this screen by two (five displacements in 0x461800, Config_DrawRowOptions and
+    // Config_DrawControllerRow), tuned against cells that sat in the top of their 24 x 24 slot.
     // A tripled 8 x 8 cell fills the slot, and with it the owner saw the text
     // two pixels low - sitting on the row's floor - so the drop is gone
     // (2026-09-20).
