@@ -453,6 +453,28 @@ behaviour and seeds, and the full self-test after it is 0 mismatches.
 | 147 | `Sub4F_Open` | cell 0x51 | 2459 |
 | 148 | `Sub4F_Open` | +2 5 | 2471 |
 | 149 | `Sub4F_Open` | +0xB | 530 |
+| 150 | `Sub0D_Open` | +9 not read again after the move (case 0) | 120 |
+| 151 | `Sub13_Fall` | +9 not read again after the bare panel (case 0) | 172 |
+| 152 | `Sub13_Rise` | +9 not read again after the draws (case 0) | 929 |
+
+**2026-10-05, under the repaired disturbance (round fourteen's review item 1).**
+The group's `Disturb` switched on `h % 6` behind the harness's `h % 3 != 0`,
+so its cases 0 (`+9`) and 3 (`Cond_ByteFE`) never ran; `b9dfe34` draws the
+case through `sh::DisturbCase`. Re-run at `451edeb`, the round's script
+unchanged but for this checkout's CRLF line ends: **149 planted, 149
+refused**. 102 counts are equal to the table's; 47 moved, most by a few
+rounds. The larger moves: `_DrawGlow`'s 22..33 up (22: 88 to 271), `Sub4F_Start`'s
+140..142 (3,800, 214, 200 against 3,997, 7, 3), 126 (119 against 86), and
+`Sub0E_Start`'s 66..68 down (16, 78, 120 against 37, 104, 150) - the
+lowest count now 16. The table's counts for all but five rows came from the
+round's first fuzz (the note above), so not every move is the disturbance's;
+none went to 0. New controls 150..152, each also run with the group's switch
+put back to `h % 6`: 120 (94 under the old switch), 172 (148), 929 (808) -
+the harness's own `Sprite_Current` move refuses most, case 0 adds the rest.
+Case 3 has no control: every function of the group reads `Cond_ByteFE` before
+its first call (`Sub0E_Wait`, `Sub0E_Open` after `Sub0ENear`, which calls
+nothing, `Sub0F_Wait`, `Sub0F_Open`, `Sub4F_Wait`, `Sub4F_Open`), so for this
+group the case is noise. The fuzz is unchanged.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
