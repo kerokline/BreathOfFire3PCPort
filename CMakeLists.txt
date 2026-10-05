@@ -169,6 +169,8 @@ add_library(bof3x SHARED
   src/game/item_use_fuzz.cpp
   src/game/sound.cpp
   src/game/sound_fuzz.cpp
+  src/game/sound_rest.cpp
+  src/game/sound_rest_fuzz.cpp
   src/game/d3d_draw.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp

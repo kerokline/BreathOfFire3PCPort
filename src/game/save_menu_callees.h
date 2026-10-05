@@ -138,7 +138,7 @@ constexpr U kFindFirst = 0x5B979A;      // the CRT's _findfirst
 constexpr U kFindNext = 0x5B9867;       // the CRT's _findnext
 constexpr U kTaskRestart = 0x5A9976;    // restarts the current task at an entry; never returns
 constexpr U kVoicePlay = 0x5A7140;      // a stream of kind 1 or more: plays the WAV file image
-constexpr U kVoiceIsPlaying = 0x5A7200;
+constexpr U kVoiceIsPlaying = bof3::addr::SndStream_IsPlaying;
 
 struct Callees {
     // Files and the C runtime

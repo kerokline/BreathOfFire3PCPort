@@ -63,7 +63,7 @@ namespace callee {
 constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;    // void (int x, int z, unsigned kind): the party placed for an event battle
 constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;  // void (void): the members' records rebuilt (Char_RecalcStats)
 constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;   // void (void): Field_StatusBits |= 0x80
-constexpr std::uint32_t kMusicStop = 0x587B80;     // void (void): a jmp to 0x5A6FF0, the sound layer
+constexpr std::uint32_t kMusicStop = bof3::addr::Sound_StopMusic;     // void (void): a jmp to 0x5A6FF0, the sound layer
 constexpr std::uint32_t kItemPut = bof3::addr::AbilityList_Add;       // (u8 item, x, u8, y): an item handed back to the inventory
 constexpr std::uint32_t kInventoryTake = bof3::addr::Inventory_Remove; // (category, item, count): the item's count lowered
 constexpr std::uint32_t kMoneyTake = bof3::addr::Zenny_Sub;     // unsigned char (amount, flag): al 0 when the party has too little

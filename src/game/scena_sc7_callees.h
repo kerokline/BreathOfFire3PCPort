@@ -127,7 +127,7 @@ constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;     // ():
 constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;      // (): Field_StatusBits |= 0x80
 constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;         // (records, n, x, z): the cell record matched, negative none
 constexpr std::uint32_t kSpriteFindFree = bof3::addr::Sprite_FindFree;   // (): a free Sprite_Objects index 0..0x1D, 0xFF none
-constexpr std::uint32_t kMusicStop = 0x587B80;        // (): the music buffer stopped
+constexpr std::uint32_t kMusicStop = bof3::addr::Sound_StopMusic;        // (): the music buffer stopped
 constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;       // (u8): into the first free of 32 bytes at 0x904554
 constexpr std::uint32_t kCall591BE0 = bof3::addr::Zenny_Add;       // (0xBB8, 0): chapter 8 run 4 calls it once (not read here)
 constexpr std::uint32_t kCall498DE0 = bof3::addr::Char_LevelUp;       // (4): chapter 8's join calls it before the record's stats (not read here)

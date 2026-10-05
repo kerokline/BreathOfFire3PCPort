@@ -409,7 +409,7 @@ const Callee kStandard[] = {
     {SH_OURS(Sound_PlayById), 1, {kU16}, Answer::kGarbage, 0, 0},
     {SH_OURS(Sound_LoadStream), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(Sound_StreamDone), 0, {}, Answer::kBool, 0, 0},
-    {SH_THEIRS(Sound_ResumeAll), 0, {}, Answer::kGarbage, 0, 0},
+    {SH_OURS(Sound_ResumeAll), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(Music_LoadFile), 1, {kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(Music_Play), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(Music_FadeOutStop), 1, {kAll}, Answer::kGarbage, 0, 0},

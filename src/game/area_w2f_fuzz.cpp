@@ -94,8 +94,8 @@ constexpr ah::CallSite kCalls418880[] = {{0x22, 0x4220D0}};
 constexpr ah::CallSite kCalls4188F0[] = {{0x0, 0x57C7C0}};
 constexpr ah::CallSite kCalls418910[] = {{0x0, 0x57C7C0}};
 constexpr ah::CallSite kCalls418930[] = {{0x0, 0x57C7C0}};
-constexpr ah::CallSite kCalls418960[] = {{0x1F, 0x418A40}, {0x47, 0x587740}, {0x4F, 0x57C7A0}, {0x6A, 0x587B80},
-                                         {0x71, 0x587910}, {0x81, 0x587A00}, {0x93, 0x587B90}, {0x98, 0x57C7A0}};
+constexpr ah::CallSite kCalls418960[] = {{0x1F, 0x418A40}, {0x47, 0x587740}, {0x4F, 0x57C7A0}, {0x6A, bof3::addr::Sound_StopMusic},
+                                         {0x71, 0x587910}, {0x81, 0x587A00}, {0x93, bof3::addr::Sound_ResumeAll}, {0x98, 0x57C7A0}};
 constexpr ah::JumpTable kTables418960[] = {{0x1B, 0xBC, 6}};
 constexpr ah::CallSite kCalls418A40[] = {{0x2B, 0x5918E0}, {0x3D, 0x591900}, {0x51, 0x57C140}, {0x65, 0x590BB0}, {0x74, 0x57C0F0}, {0x88, 0x57C140},
                                          {0x9C, 0x590BB0}, {0xAB, 0x57C0F0}, {0xC9, 0x57C140}, {0xE1, 0x590BB0}, {0xF0, 0x57C0F0}, {0x106, 0x57C140},
@@ -296,7 +296,7 @@ const ah::Callee kCallees[] = {
     {W2F_OURS(KeyItem_Add), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     {W2F_OURS(Sound_LoadStream), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     {W2F_OURS(Sound_StreamDone), 0, {}, ah::Answer::kFlag, 0, 0},
-    {W2F_THEIRS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
+    {W2F_OURS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
     // the group's own, called directly: arguments by what each reads (the
     // grid cell's low words; area 111's handler 1 passes dwords whose upper
     // halves are the original's registers)
