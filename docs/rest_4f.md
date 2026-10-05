@@ -13,7 +13,7 @@ jump-table case. Each read to its last instruction with capstone and fuzzed
 through the scenario harness in effect mode
 ([`scenario_harness.md`](scenario_harness.md) sections 7 and 8), used
 unchanged: **208,000 rounds, 0 mismatches**; `BOF3X_SHADOW='*'` exit 0, narrow
-and with `BOF3X_WIDE=1` (section 5). Controls: CONTROLS_SUMMARY (section 8).
+and with `BOF3X_WIDE=1` (section 5). Controls: **133 planted, 133 refused** (section 8).
 **Five `.data` tables named** (section 3). **Fuzz only**: no recorded route
 enters any of the 52 (section 10).
 
@@ -282,7 +282,11 @@ listed callee called.
 ## 5. Self-tests
 
 Headless, this worktree, 2026-10-05: `BOF3X_SHADOW=rest_4f` exit 0 (as above).
-STAR_RESULTS
+`BOF3X_SHADOW='*'` exit 0: 742 self-test lines, every one 0 mismatches,
+`inject: 9733 ours, 0 left original` (9,681 at the base plus these 52).
+With `BOF3X_WIDE=1`: `'*'` exit 0, the same 742 lines, 0 mismatches (no
+widescreen operand lands in this band). Neither run died silently.
+`tools/ledger_check.py`: 73 entries, 0 errors. Controls: section 8.
 
 ## 6. The divergences inside these functions
 
@@ -342,7 +346,145 @@ of this group aborts before the read.
 
 ## 8. Controls
 
-CONTROLS_SECTION
+133 planted one at a time by scratch `r4f/controls.py` with `control_list.py` (plant, rebuild, run the function alone with `BOF3X_R4F_ONLY`, restore; a rebuild at the end; each anchored on a unique string of `rest_4f.cpp`); results in scratch `controls.tsv`. **133 refused by a count, none not refused, no equivalent mutant.** Every one of the 52 functions has at least one refused control.
+
+**The disturbance's cases, each shown live** (a mutant that keeps a value over a call, while the record is the same where the cell is a record's, so that only the group's own case can refuse it): case 0 (`+9`) C58, C90; case 1 (the record's bytes) C56, C115; case 2 (its dwords) C91, C96; case 3 (the counter, the cursor) C06, C22, C38; case 4 (the settings) C21; case 5 (`0x90384A`) C75; case 6 (`Input_Pressed`) C13. **Thin** (the group's case runs after about one stand-in call in a few hundred): C21 3 of 60,000 rounds (0 at 4,000 - the setting is re-read after one sound only, and the case picks one of five cells), C22 and C91 1 of 4,000, C38, C56 and C58 2, C81 5, C13 10. A louder stand-in on `Sound_PlayEffect` would make C21 cheap; left as is (the review's debt 17 form).
+
+| Id | Function | Plant | Verdict |
+|---|---|---|---|
+| C01 | `ConfigScreen_Run` | state + 1 mod 5 | refused, 4000 of 4000 rounds |
+| C02 | `ConfigScreen_OpenRun` | opening + 1 mod 3 | refused, 4000 of 4000 rounds |
+| C03 | `ConfigScreen_OpenFade` | 0x929F03 + 2 | refused, 4000 of 4000 rounds |
+| C04 | `ConfigScreen_OpenWait` | wait word != 1 | refused, 2008 of 4000 rounds |
+| C05 | `ConfigScreen_SlideIn` | sound at counter 4 | refused, 1159 of 4000 rounds |
+| C06 | `ConfigScreen_SlideIn` | the counter kept from the entry (case 3's counter) | refused, 63 of 4000 rounds |
+| C07 | `ConfigScreen_TopBar` | flip by == 1 | refused, 224 of 4000 rounds |
+| C08 | `ConfigScreen_TopBar` | rows entered at 6 | refused, 2037 of 4000 rounds |
+| C09 | `ConfigScreen_TopBar` | Game_Step != 5 | refused, 161 of 4000 rounds |
+| C10 | `ConfigScreen_TopBar` | default word 3 is 9 | refused, 293 of 4000 rounds |
+| C11 | `ConfigScreen_TopBar` | default row 0 is 2 | refused, 293 of 4000 rounds |
+| C12 | `ConfigScreen_TopBar` | bit 0x400 at Game_Step 4 | refused, 26 of 4000 rounds |
+| C13 | `ConfigScreen_TopBar` | Input_Pressed read before the calls (case 6) | refused, 10 of 4000 rounds |
+| C14 | `ConfigScreen_Rows` | row 0 tops at 3 | refused, 69 of 4000 rounds |
+| C15 | `ConfigScreen_Rows` | row 2 tests up first | refused, 48 of 4000 rounds |
+| C16 | `ConfigScreen_Rows` | row 3 xor 3 | refused, 174 of 4000 rounds |
+| C17 | `ConfigScreen_Rows` | row 5 with 0x2000 | refused, 34 of 4000 rounds |
+| C18 | `ConfigScreen_Rows` | below 3 to the top bar | refused, 164 of 4000 rounds |
+| C19 | `ConfigScreen_Rows` | counter up to 4 | refused, 100 of 4000 rounds |
+| C20 | `ConfigScreen_Rows` | cancel with 0x400 | refused, 81 of 4000 rounds |
+| C21 | `ConfigScreen_Rows` | the setting read before the sound (case 4) | refused, 3 of 60000 rounds |
+| C22 | `ConfigScreen_Rows` | the cursor read before the buttons (case 3's cursor) | refused, 1 of 4000 rounds |
+| C23 | `ConfigScreen_Controller` | cursor 8 names 0xC5 | refused, 1260 of 4000 rounds |
+| C24 | `ConfigScreen_Controller` | panel y 0x63 | refused, 4000 of 4000 rounds |
+| C25 | `ConfigScreen_Controller` | bits & 0xFE | refused, 1631 of 4000 rounds |
+| C26 | `ConfigScreen_Controller` | no swap | refused, 2873 of 4000 rounds |
+| C27 | `ConfigScreen_Controller` | bits | 1 | refused, 2777 of 4000 rounds |
+| C28 | `ConfigScreen_Controller` | wrap below 9 | refused, 346 of 4000 rounds |
+| C29 | `ConfigScreen_Controller` | state + 0xFF | refused, 116 of 4000 rounds |
+| C30 | `ConfigScreen_Controller` | every bit kept | refused, 2961 of 4000 rounds |
+| C31 | `ConfigScreen_SlideOut` | step on at 4 | refused, 849 of 4000 rounds |
+| C32 | `ConfigScreen_SlideOut` | Game_Step 6 | refused, 965 of 4000 rounds |
+| C33 | `ConfigScreen_SlideOut` | buttons y 0x27 | refused, 3035 of 4000 rounds |
+| C34 | `ConfigScreen_DrawButtons` | set 5 | refused, 4000 of 4000 rounds |
+| C35 | `Config_DrawPanel` | frame w 0x22 | refused, 4000 of 4000 rounds |
+| C36 | `Config_DrawPanel` | rows 3 / 4 swapped | refused, 3713 of 4000 rounds |
+| C37 | `Config_DrawPanel` | rows from y + 8 | refused, 4000 of 4000 rounds |
+| C38 | `Config_DrawPanel` | the state kept over the label (case 3) | refused, 2 of 4000 rounds |
+| C39 | `Config_DrawRowOptions` | large at state 2 | refused, 651 of 4000 rounds |
+| C40 | `Config_DrawRowOptions` | colour 1 | refused, 1530 of 4000 rounds |
+| C41 | `Config_DrawRowOptions` | large width x 11 | refused, 442 of 4000 rounds |
+| C42 | `Config_DrawRowOptions` | small x + 0x75 | refused, 3031 of 4000 rounds |
+| C43 | `Config_DrawRowOptions` | large y - 1 | refused, 442 of 4000 rounds |
+| C44 | `Config_DrawRowOptions` | the count read once | refused, 3031 of 4000 rounds |
+| C45 | `Config_DrawControllerPanel` | frame w + 1 | refused, 4000 of 4000 rounds |
+| C46 | `Config_DrawControllerPanel` | words 2 / 6 swapped | refused, 3988 of 4000 rounds |
+| C47 | `Config_DrawControllerPanel` | rows 17 apart | refused, 4000 of 4000 rounds |
+| C48 | `Config_DrawControllerPanel` | cell x + 0x57 | refused, 4000 of 4000 rounds |
+| C49 | `Config_DrawControllerRow` | box h 0x11 | refused, 4000 of 4000 rounds |
+| C50 | `Config_DrawControllerRow` | width x 5 | refused, 4000 of 4000 rounds |
+| C51 | `Config_DrawControllerRow` | line to y + 0xF | refused, 4000 of 4000 rounds |
+| C52 | `Config_DrawControllerRow` | second line x + 0x52 | refused, 4000 of 4000 rounds |
+| C53 | `WorldMap_ExitRecords` | the record's +0x18 | refused, 4000 of 4000 rounds |
+| C54 | `EffectKind07_DrawSprite` | h 0x6E9 | refused, 4000 of 4000 rounds |
+| C55 | `EffectKind07_DrawSprite` | semi & 0x7F | refused, 380 of 4000 rounds |
+| C56 | `EffectKind07_DrawSprite` | +0x5D kept over SetSprt while the record is the same (case 1) | refused, 2 of 4000 rounds |
+| C57 | `EffectKind07_Hold` | +9 0xFE | refused, 974 of 4000 rounds |
+| C58 | `EffectKind07_Hold` | +9 kept over the draw while the record is the same (case 0) | refused, 2 of 4000 rounds |
+| C59 | `EffectKind07_FadeOut` | +0x5D down 3 | refused, 4000 of 4000 rounds |
+| C60 | `EffectKind07_FadeOut` | +9 1 | refused, 238 of 4000 rounds |
+| C61 | `EffectKind08_Start` | z 0xF8001 | refused, 4000 of 4000 rounds |
+| C62 | `EffectKind08_Start` | slot 6 | refused, 4000 of 4000 rounds |
+| C63 | `EffectKind08_DrawLine` | x - 0x4001 | refused, 4000 of 4000 rounds |
+| C64 | `EffectKind08_DrawLine` | A projected first | refused, 4000 of 4000 rounds |
+| C65 | `EffectKind08_DrawLine` | colour byte 2 from byte 1 | refused, 1344 of 4000 rounds |
+| C66 | `EffectKind08_DrawLine` | height / 2 without the sign | refused, 3029 of 4000 rounds |
+| C67 | `EffectKind08_TraceLine` | colour 0xC0C0C1 | refused, 4000 of 4000 rounds |
+| C68 | `EffectKind08_TraceLine` | 0x33 | refused, 1014 of 4000 rounds |
+| C69 | `EffectKind08_TraceLine` | ground height << 15 | refused, 1443 of 4000 rounds |
+| C70 | `EffectKind08_TraceLine` | steps of 0x7FFF | refused, 1785 of 4000 rounds |
+| C71 | `EffectKind08_TraceTwo` | the end at >= | refused, 878 of 4000 rounds |
+| C72 | `EffectKind08_TraceTwo` | start 0x138001 | refused, 4000 of 4000 rounds |
+| C73 | `EffectKind08_TraceTwo` | dark line drawn forward | refused, 4000 of 4000 rounds |
+| C74 | `EffectKind08_TraceTwo` | start height not the ground's | refused, 4000 of 4000 rounds |
+| C75 | `EffectKind08_TraceTwo` | 0x90384A read before the lines (case 5) | refused, 127 of 4000 rounds |
+| C76 | `EffectKind09_Start` | +9 0x77 | refused, 3967 of 4000 rounds |
+| C77 | `EffectKind09_Start` | +0x6C left | refused, 3999 of 4000 rounds |
+| C78 | `EffectKind09_Open1` | at 0x58 | refused, 1956 of 4000 rounds |
+| C79 | `EffectKind09_Open2` | sound at 0x30 | refused, 1461 of 4000 rounds |
+| C80 | `EffectKind09_Open3` | +1 = 5 | refused, 1240 of 4000 rounds |
+| C81 | `EffectKind09_Open4` | a sound at 0x10 | refused, 5 of 4000 rounds |
+| C82 | `EffectKind09_Open5` | sound at 0x18 | refused, 1594 of 4000 rounds |
+| C83 | `EffectKind09_Open6` | step 7 | refused, 4000 of 4000 rounds |
+| C84 | `EffectKind09_Open7` | +1 = 9 | refused, 1039 of 4000 rounds |
+| C85 | `EffectKind09_Open8` | sound 0x20E at the end | refused, 690 of 4000 rounds |
+| C86 | `EffectKind09_Open8` | fan 4's angle 0xE37 | refused, 4000 of 4000 rounds |
+| C87 | `EffectKind09_Open7` | fan 7 by +6 | refused, 3992 of 4000 rounds |
+| C88 | `EffectKind09_Spin` | +0xC to 0x80 inclusive | refused, 479 of 4000 rounds |
+| C89 | `EffectKind09_Spin` | hold at 0xB5 | refused, 1291 of 4000 rounds |
+| C90 | `EffectKind09_Spin` | +9 kept over the blades while the record is the same (case 0) | refused, 12 of 4000 rounds |
+| C91 | `EffectKind09_Spin` | +0xC kept over the blades while the record is the same (case 2) | refused, 1 of 4000 rounds |
+| C92 | `EffectKind09_DrawBlades` | +0x6C up 0xAB | refused, 4000 of 4000 rounds |
+| C93 | `EffectKind09_DrawBlades` | angle >> 9 | refused, 2905 of 4000 rounds |
+| C94 | `EffectKind09_DrawBlades` | tips -(+9) | refused, 4000 of 4000 rounds |
+| C95 | `EffectKind09_DrawBlades` | odd and even swapped | refused, 3317 of 4000 rounds |
+| C96 | `EffectKind09_DrawBlades` | +0x6C kept while the record is the same (case 2) | refused, 1188 of 4000 rounds |
+| C97 | `EffectKind09_DrawFan` | middle colour 0x6F | refused, 4000 of 4000 rounds |
+| C98 | `EffectKind09_DrawFan` | +0x70 not put back | refused, 1394 of 4000 rounds |
+| C99 | `EffectKind09_DrawFan` | cos(0x50) | refused, 4000 of 4000 rounds |
+| C100 | `EffectKind09_DrawFan` | put back into the first record | refused, 1394 of 4000 rounds |
+| C101 | `EffectKind0B_Start` | +0x7C off by one | refused, 4000 of 4000 rounds |
+| C102 | `EffectKind0B_Start` | +1 = +6 | refused, 3984 of 4000 rounds |
+| C103 | `EffectKind0B_Start` | y by the x offset | refused, 4000 of 4000 rounds |
+| C104 | `EffectKind0B_Rise` | x by 2.0 | refused, 3506 of 4000 rounds |
+| C105 | `EffectKind0B_Rise` | +6 each other | refused, 230 of 4000 rounds |
+| C106 | `EffectKind0B_Rise` | rise by +9 >> 3 | refused, 1812 of 4000 rounds |
+| C107 | `EffectKind0B_Drop` | +6 each fourth | refused, 584 of 4000 rounds |
+| C108 | `EffectKind0B_Attach` | +0x6C from +0x68 | refused, 3999 of 4000 rounds |
+| C109 | `EffectKind0B_Attach` | height by out[1] | refused, 4000 of 4000 rounds |
+| C110 | `EffectKind0B_Follow` | height up 0x21 | refused, 4000 of 4000 rounds |
+| C111 | `EffectKind0B_Follow` | fade by 2 | refused, 3213 of 4000 rounds |
+| C112 | `EffectKind0B_DrawQuad` | right edge - side | refused, 3332 of 4000 rounds |
+| C113 | `EffectKind0B_DrawQuad` | commit 0x47 | refused, 2627 of 4000 rounds |
+| C114 | `EffectKind0B_DrawQuad` | CLUT y 0x1E2 | refused, 4000 of 4000 rounds |
+| C115 | `EffectKind0B_DrawQuad` | half read after the call (case 1's +6) | refused, 124 of 4000 rounds |
+| C116 | `EffectKind02_Start` | +0x30 0xC9 | refused, 4000 of 4000 rounds |
+| C117 | `EffectKind02_Start` | slot 3 | refused, 4000 of 4000 rounds |
+| C118 | `EffectKind02_SlideIn` | held at <= 0xAE | refused, 468 of 4000 rounds |
+| C119 | `EffectKind02_Body` | +2 xor 1 | refused, 4000 of 4000 rounds |
+| C120 | `EffectKind02_SlideOut` | +1 = 2 | refused, 1232 of 4000 rounds |
+| C121 | `EffectKind02_SlideOut` | held at >= 0xF0 | refused, 497 of 4000 rounds |
+| C122 | `EffectKind02_RunMode1` | +3 xor 1 | refused, 4000 of 4000 rounds |
+| C123 | `EffectKind02_RunMode3` | +3 + 1 mod 3 | refused, 4000 of 4000 rounds |
+| C124 | `EffectKind02_Mode1Tint` | +3 = 1 | refused, 1699 of 4000 rounds |
+| C125 | `EffectKind02_Mode1Tint` | bit 14 | refused, 4000 of 4000 rounds |
+| C126 | `EffectKind02_Mode1Tint` | strip dirty 2 | refused, 4000 of 4000 rounds |
+| C127 | `EffectKind02_Mode1Tint` | above 0x38 inclusive | refused, 661 of 4000 rounds |
+| C128 | `EffectKind02_Mode1Brighten` | unsigned compare | refused, 1222 of 4000 rounds |
+| C129 | `EffectKind02_CopyLeader` | +0x5A from +0x58 | refused, 3049 of 4000 rounds |
+| C130 | `EffectKind02_CopyLeader` | +2 = 2 | refused, 1247 of 4000 rounds |
+| C131 | `EffectKind02_Mode3Tint` | colour 0xC1 | refused, 4000 of 4000 rounds |
+| C132 | `EffectKind02_Mode3Darken` | at 0x90 | refused, 2060 of 4000 rounds |
+| C133 | `EffectKind02_Mode3Wait` | > 0x38 | refused, 484 of 4000 rounds |
 
 ## 9. The rebinding, and calls across groups
 
