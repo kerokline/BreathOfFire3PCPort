@@ -8,7 +8,7 @@ declarations in `src/game/rest_4d.h`, the tables' and cells' addresses in
 (`analysis/round14_cut.tsv`), no start dropped or added (section 2); each read
 to its last instruction with capstone and fuzzed through the scenario harness
 in field mode ([`scenario_harness.md`](scenario_harness.md) section 7), used
-unchanged: 240,000 rounds, 0 mismatches. **CONTROLS_SUMMARY** No recorded
+unchanged: 240,000 rounds, 0 mismatches. **173 controls planted** one at a time: 170 refused by a count, 3 equivalent mutants not refused, each with a near variant refused (section 6). No recorded
 route enters the community (section 9): **fuzz only**.
 
 The band is three things. **The board** (`0x45C400..0x45C8B0`): four draw
@@ -188,7 +188,12 @@ answers 0..0x24 (the caller copies that many); `0x45F020` answers a record
 `Menu_DrawPanelBox` (as R2C lists it) and `Menu_DrawGreyHLine` (16-bit, 16,
 16, a byte: `rest_2b.cpp`) listed; `BareRet` and `BareRetZero` with no
 argument logged - they read none, so the PlayStation's arguments ours hands
-`BareRet` are unobservable by construction (N38 below). `Crt_sprintf` is
+`BareRet` are unobservable by construction (N38 below). Louder stand-ins (from the controls, section 6): `CommuName_NthSlot` answers a
+slot 0..3 three times in four and moves a name byte of that slot one call in
+four; `CommuDraw_RandBelow` answers 0, limit - 2 or limit - 1;
+`CommuName_CountSlots` and R4E's `0x45F000` answer the cursor + 0..2 two times
+in three; `CommuName_DrawHeader` moves the header word and `BareRet` the first
+name byte one call in four. `Crt_sprintf` is
 re-listed with five words, logging the numbers each of the group's formats
 takes (three, one or none): the calls push two, three or five words, so the
 standard row's third word is the caller's stack in two of them.
@@ -232,7 +237,7 @@ the re-read (section 6). **Not moved**: the entry's three bytes
 reads none, so no control could see a stale one.
 
 **In this worktree**: `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_4d`, exit 0:
-240,000 rounds over 60 functions, RUN_CALLS calls to the stand-ins, **0
+240,000 rounds over 60 functions, 1,734,968 calls to the stand-ins, **0
 mismatches**; 317 stand-ins (174 field-standard). Every entry of the ten tables
 was reached (the coverage line's `phase` rows), every listed callee called.
 
@@ -284,7 +289,46 @@ strings that occur once in `rest_4d.cpp`, rebuilds, runs `BOF3X_R4D_ONLY` on
 the clone named, restores (the next plant's build is the restore's; one
 rebuild of the restored file at the end); results in `controls.tsv`.
 
-CONTROLS_TABLE
+Every refusal is by a count of mismatching rounds (none by a crash or a Fatal
+of ours). Rounds 4,000 a clone; counts from the final run (`controls_run5.out`).
+
+| Ids | Function(s) | Plants | Refused | Weakest refusal |
+|---|---|--:|--:|---|
+| B01..B15 | the board | 15 | 15 | B12 the column read once (case 4), 7 |
+| D01..D09 | CommuDraw's dispatchers, `FadeOut`, `MusicIn` | 9 | 9 | D08 the state read before the calls (case 2), 9 |
+| D10..D23 | `CommuDraw_Pick` | 14 | 14 | D11 the count read before `RandBelow` (case 8), 10 |
+| D24..D35 | `Reveal`, `WaitKey`, `MusicBack` | 12 | 12 | D33 the track read before the fade (case 12), 4 |
+| D36..D40 | `Close`, `RandBelow` | 5 | 5 | D40 (509) |
+| D41..D46 | `CommuDraw_DrawTitle` | 6 | 6 | D44 the cursor read before the first draw (case 3), 15 |
+| N01..N03 | `CommuName_Dispatch`, `_Begin` | 3 | 3 | N02 (2,385) |
+| N04..N35 | the slot states to the random name | 31 | 31 | N07 the step read before the sound (case 0), 7; N14, N30 7 |
+| N36..N56 | the slot's entry, `SlotClose` | 21 | 19 | N47 the answer read once (case 7), 5 |
+| N57..N69 | the member states to the confirm | 13 | 13 | N59 the flags read before the loop (case 14), 9 |
+| N70..N95 | the member states from the slide out | 26 | 25 | N70 the cursor read once (case 3), 3 |
+| N96..N99 | `CommuName_End`, `Commu_LeaveWhenClosed` | 4 | 4 | N97 (303) |
+| N100..N113 | the counts, the bar, the header | 14 | 14 | N112 the header read before the box (case 6), 10 |
+| | | **173** | **170** | |
+
+(N15 was not planted: its anchor would have been N10's.)
+
+**Every case of the disturbance has a control that misses its re-read**, each
+refused: case 0 D05 (12), N07 (7); 1 N30 (7); 2 D08 (9); 3 B02 (319), D16
+(68), D44 (15), N70 (3); 4 B12 (7); 5 D30 (18), N08 (13), N39 (13), N43 (36);
+6 N19 (244), N112 (10); 7 N47 (5); 8 D11 (10); 9 N48 (38); 10 N61 (36); 11
+N45 (25 of 24,000: the filter runs six clones); 12 D33 (4); 13 N41 (17); 14
+N59 (9). The thin ones (3..7 of 4,000) are the round's usual: the group's
+case runs after about one stand-in call in a few hundred.
+
+**Not refused, equivalent:**
+- **N36** (the entry's first `BareRet` at 0xB1) and **N38** (its last
+  `BareRet`'s two bytes swapped): `BareRet` is a bare `ret` and reads no
+  argument, so no input tells them apart. Near variant **N37** (the entry
+  box, R4E's `0x45F1A0`, at 0x62) refused.
+- **N71** (`CommuName_MemberPanelOut`'s moving row offset not cut to a byte):
+  `14 * (n >> 1)` with n the records shown (at most 7) is below 0x100. Near
+  variant **N72** (the moving one at 0x2C) refused.
+
+**Strengthened by the controls** (section 4): N41 (a slot name byte kept across `NthSlot`) was 0 until `NthSlot`'s stand-in answered slots 0..3 and moved a name byte of the slot it answers; D13 (the wrap one early) was 1 of 4,000 until `RandBelow`'s stand-in answered 0, limit - 2 or limit - 1; N12, N19, N48, N64, N67 were 1 or 2 until the count stand-ins answered near the cursor, `CommuName_DrawHeader`'s moved the header and `BareRet`'s the first name byte; the whole batch was re-run on the final fuzz.
 
 ## 7. Calls across groups
 
