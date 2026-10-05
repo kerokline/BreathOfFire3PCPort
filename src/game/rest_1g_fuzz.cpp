@@ -398,11 +398,13 @@ void SeedFor(unsigned k, unsigned char* s) {
         s[9] = 0;
         if (sh::Half()) {
             SetWord(s + 0x3E, 0);
-        } else if (sh::Half()) {
+        } else {
             // the rise's and the dive's bounds for this kind's level (C56: the
-            // general seed's edges are for a level drawn apart from the kind)
+            // general seed's edges are for a level drawn apart from the kind),
+            // and Rand's hint on the bits 0x10 / 0x20 that choose them
             const U level = KindByte(s[6] < 23 ? s[6] : 0, 0x1A);
             SetWord(s + 0x3E, sh::Half() ? (0u - level) * 0x100 - 0x20 : (0xFFFFFFFFu - level) * 0x100 + 0x20);
+            sh::SetRandHint(PickOf(0x31, 0x35, 0x11, 0x15));
         }
         Mem(kBiteHeld)[0] = 0;
         break;
