@@ -229,7 +229,11 @@ stand-ins. Every entry of the nine tables reached (each handler recorder 414..
 3,036 calls); `CommuHiLo_Quit` 471, `Item_NamePtr` 1,037, `Zenny_Add` 4,008,
 `Inventory_Add` 4,003, `Rand` 28,795, `Commu_RandDigit` 173,045.
 
-STAR_RESULT
+**Every shadow** (this worktree, no `bof3x.ini`): `BOF3X_SHADOW='*'` exit 0, no
+`MISMATCH` line but `0 MISMATCHES`, `inject: 9741 ours, 0 left original`;
+`rest_4c` there 360,000 rounds, 1,599,797 calls, 0 mismatches. **With
+`BOF3X_WIDE=1`**: `'*'` exit 0, the same counts, no mismatch. Neither run died
+silently. `ledger_check`: 73 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
 
