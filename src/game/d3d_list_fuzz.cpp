@@ -158,10 +158,10 @@ const Site kSites[] = {
     {0x117, 12, kRetOnly}, {0x125, 13, kRetOnly}, {0x133, 14, 0x5A4400}, {0x141, 16, 0x5A4500},
     {0x14F, 15, 0x5A45B0}, {0x15D, 18, 0x5A46E0}, {0x16B, 19, 0x5A47F0}, {0x179, 17, 0x5A4900},
     {0x184, 20, 0x5A4C40},
-    {0x25A, 32, 0x59FA50}, {0x268, 33, 0x59FDB0}, {0x276, 34, 0x5A0AB0}, {0x284, 35, 0x5A0C40},
-    {0x292, 36, 0x5A0E80}, {0x2A0, 37, 0x5A1050}, {0x2AE, 38, 0x5A1290}, {0x2BC, 39, 0x5A14C0},
+    {0x25A, 32, bof3::addr::D3d_DrawPolyF3}, {0x268, 33, bof3::addr::D3d_DrawPolyFT3}, {0x276, 34, 0x5A0AB0}, {0x284, 35, 0x5A0C40},
+    {0x292, 36, 0x5A0E80}, {0x2A0, 37, bof3::addr::D3d_DrawPolyGT3}, {0x2AE, 38, 0x5A1290}, {0x2BC, 39, 0x5A14C0},
     {0x2CA, 40, 0x5A17A0}, {0x2D8, 41, 0x5A1A00}, {0x2E6, 42, 0x5A1D10}, {0x2F4, 43, 0x5A18B0},
-    {0x302, 44, 0x5A1B50}, {0x310, 45, 0x5A1EA0}, {0x31E, 46, 0x5A20D0}, {0x32C, 48, 0x5A2220},
+    {0x302, 44, 0x5A1B50}, {0x310, 45, bof3::addr::D3d_DrawLineG4}, {0x31E, 46, 0x5A20D0}, {0x32C, 48, bof3::addr::D3d_DrawTile1},
     {0x33A, 47, 0x5A2300}, {0x348, 50, 0x5A2520}, {0x356, 51, 0x5A2710}, {0x364, 49, 0x5A2900},
     {0x372, 52, 0x5A2EB0},
 };
@@ -202,8 +202,8 @@ DrawFn CloneDraw() {
     }
     calls[n++] = {0x1D6, reinterpret_cast<const void*>(&StubMove), 0x59E9A0};
     calls[n++] = {0x3C7, reinterpret_cast<const void*>(&StubMove), 0x59E9A0};
-    calls[n++] = {0x3EF, reinterpret_cast<const void*>(&StubAlpha), 0x59F520};
-    calls[n++] = {0x44A, reinterpret_cast<const void*>(&StubAfter), 0x59F580};   // the tail jmp
+    calls[n++] = {0x3EF, reinterpret_cast<const void*>(&StubAlpha), bof3::addr::D3d_SetAlphaModulate};
+    calls[n++] = {0x44A, reinterpret_cast<const void*>(&StubAfter), bof3::addr::D3d_AfterDraw};   // the tail jmp
     auto* code = static_cast<unsigned char*>(bof3::CloneOriginal("Gfx_DrawOTag", kBody, kCloneBytes, calls, n));
     if (!code) bof3::Fatal("Gfx_DrawOTag: CloneOriginal returned null");
     Relocate(code, 0x6A, 0x450, 25);    // jmp [ecx*4 + 0x59F2A0] at +0x67

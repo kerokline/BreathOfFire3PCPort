@@ -1121,7 +1121,7 @@ const Callee kEffectStd[] = {
     {FX_RAW(0x479EE0), 1, {0}, Answer::kGarbage, 0, 0, {18}, nullptr, nullptr, true},   // 3: a record read to +0x12; G4 quads
     {FX_RAW(0x479B70), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 3: a record read to +0xD20 (the first 16 hashed)
     {FX_RAW(0x586160), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 3: five words; Menu_DrawOutline, FT4 quads
-    {FX_RAW(0x59E930), 2, {0, 0}, Answer::kGarbage, 0, 0, {8}, FxOut1_4, nullptr, true},   // 2, renderer: 8 read at the first, 4 written at the second
+    {"Gfx_StoreImage", bof3::addr::Gfx_StoreImage, bof3::addr::Gfx_StoreImage, 2, {0, 0}, Answer::kGarbage, 0, 0, {8}, FxOut1_4, nullptr, true},   // 2, renderer: 8 read at the first, 4 written at the second
     {FX_RAW(0x4790C0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: no arguments, no calls
     {FX_OURS(EffectSpark_FindFree), 0, {}, Answer::kGarbage, 0, 0, {}, FxSparkFindFree, nullptr, true},   // 2: the first free record or null, as the real one (wave two's fold)
     {FX_RAW(0x47A200), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; draws

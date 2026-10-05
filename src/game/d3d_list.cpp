@@ -29,13 +29,15 @@ const Callees kOriginals = {
     },
     {
         // Direct3D, second table 0x59F3D8
-        H(0x59FA50), H(0x59FDB0), H(0x5A0AB0), H(0x5A0C40), H(0x5A0E80), H(0x5A1050), H(0x5A1290),
-        H(0x5A14C0), H(0x5A17A0), H(0x5A1A00), H(0x5A1D10), H(0x5A18B0), H(0x5A1B50), H(0x5A1EA0),
-        H(0x5A20D0), H(0x5A2300), H(0x5A2220), H(0x5A2900), H(0x5A2520), H(0x5A2710), H(0x5A2EB0),
+        H(bof3::addr::D3d_DrawPolyF3), H(bof3::addr::D3d_DrawPolyFT3), H(0x5A0AB0), H(0x5A0C40), H(0x5A0E80),
+        H(bof3::addr::D3d_DrawPolyGT3), H(0x5A1290),
+        H(0x5A14C0), H(0x5A17A0), H(0x5A1A00), H(0x5A1D10), H(0x5A18B0), H(0x5A1B50), H(bof3::addr::D3d_DrawLineG4),
+        H(0x5A20D0), H(0x5A2300), H(bof3::addr::D3d_DrawTile1), H(0x5A2900), H(0x5A2520), H(0x5A2710), H(0x5A2EB0),
     },
     Gfx_MoveImage,
-    D3d_SetAlphaModulate,
-    D3d_AfterDraw,
+    // by the original's address (group PH, docs/d3d-rest.md): BOF3X_ORIGINAL=<name> restores Capcom's for the walk
+    bof3::orig::D3d_SetAlphaModulate,
+    bof3::orig::D3d_AfterDraw,
 };
 Callees g = kOriginals;
 

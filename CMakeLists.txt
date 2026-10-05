@@ -173,6 +173,8 @@ add_library(bof3x SHARED
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
   src/game/d3d_list_fuzz.cpp
+  src/game/d3d_rest.cpp
+  src/game/d3d_rest_fuzz.cpp
   src/game/display_env.cpp
   src/game/display_env_fuzz.cpp
   src/game/ddraw_fuzz.cpp
