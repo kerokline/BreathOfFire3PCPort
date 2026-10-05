@@ -235,14 +235,13 @@ void Move(U h) {
     case 10: SetW(at::kPressed, h >> 16); break;
     case 11: B(at::kEntryColumn) = static_cast<unsigned char>(v); break;
     case 12: B(at::kKeptTrack) = static_cast<unsigned char>(v); break;
-    case 13: B(at::kSlotNames + (h >> 16) % 300) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
+    case 13: B(at::kSlotNames + ((h >> 16) & 1 ? (h >> 17) % 20 : (h >> 17) % 300)) = static_cast<unsigned char>(v & 1 ? 0 : v); break;
     case 14: B(at::kRecords + at::kRecordStride * ((h >> 16) % 7) + (v & 1 ? 0xB : (h >> 20) % 5)) ^= static_cast<unsigned char>(v | 1); break;
     default: break;
     }
 }
 void Disturb(U h) { Move(h); }
 
-U Stir(const U*, U answer) { return answer; }
 
 // Crt_sprintf as the standard set's FxSprintf (up to seven letters and a NUL at
 // the destination), but logging the numbers each of the group's formats takes:
@@ -265,6 +264,46 @@ U RandomNameAnswer(const U*, U) {
     sh::FillBytes(sh::Mem(at::kName), 0x20);
     return sh::Noise() % 0x25;
 }
+// CommuName_NthSlot's stand-in: a slot 0..3 three times in four, so that two
+// calls in one state often answer the same slot (CommuName_SlotEntryIn reads
+// the slot's name byte again after its second call: control N41), and one
+// call in four a name byte of the slot it answers moved (the group's own case
+// 13 is too rare to reach that re-read).
+U NthSlotAnswer(const U*, U answer) {
+    const U n = sh::Noise();
+    const U slot = n % 4 == 0 ? answer & 0xFF : (n >> 8) % 4;
+    if ((n >> 4) % 4 == 0 && slot < 60) B(at::kSlotNames + 5 * slot + (n >> 12) % 5) = static_cast<unsigned char>(n >> 16);
+    return (answer & 0xFFFFFF00u) | slot;
+}
+// CommuDraw_RandBelow's stand-in: 0, the limit less two or less one, so that a
+// category's draws all equal one another and wrap at the count (D13).
+U RandBelowAnswer(const U* a, U answer) {
+    const U n = sh::Noise();
+    const U limit = a[0] & 0xFF;
+    const U pick = n % 4 == 0 ? 0 : n % 4 == 1 ? limit - 2 : limit - 1;
+    return n % 5 == 0 ? answer : (answer & 0xFFFFFF00u) | (pick & 0xFF);
+}
+// CommuName_CountSlots' and R4E's 0x45F000's stand-ins: the cursor plus 0, 1
+// or 2 two times in three (the choose steps' bounds compare the cursor with the
+// count: N12, N64, N67).
+U NearCursor(const U*, U answer) {
+    const U n = sh::Noise();
+    return n % 3 == 0 ? answer : (answer & 0xFFFFFF00u) | ((B(at::kCursor) + (n >> 8) % 3) & 0xFF);
+}
+// The header's stand-in: one call in four the header word moved after it
+// (CommuName_SlotConfirm reads it again: N19).
+U HeaderMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0) SetW(at::kHeader, (n >> 8) % 3 == 0 ? 0xF1u : (n >> 8) % 3 == 1 ? 0xFFFFu : 0xF0u);
+    return answer;
+}
+// BareRet's stand-in: reads nothing; one call in four the first name byte moved
+// (0 half the time; the entry's last step reads it again after the draws: N48).
+U BareRetMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0) B(at::kName) = static_cast<unsigned char>((n >> 8) & 1 ? 0 : n >> 16);
+    return answer;
+}
 // R4E's 0x45F020: a record 0..6 (eax), or 0xFF (none) - never 0xFF while
 // CommuName_MemberEntryOut runs, which indexes CommuName_RecordNames by it
 // (ours aborts there past 7, section 5).
@@ -280,13 +319,13 @@ constexpr U kW = 0xFFFFFFFFu;
 const sh::Callee kCallees[] = {
     // the group's own, called directly (E8 / E9), with what each reads
     {R4D_OURS(CommuBoard_DrawFrame), 2, {0xFFFF, 0xFFFF}, kG, 0, 0},       // its pieces read the low words
-    {R4D_OURS(CommuDraw_RandBelow), 1, {0xFF}, kG, 0, 0},                  // cmp bl, [esp + 8]
+    {R4D_OURS(CommuDraw_RandBelow), 1, {0xFF}, kG, 0, 0, {}, &RandBelowAnswer},                  // cmp bl, [esp + 8]
     {R4D_OURS(CommuDraw_DrawTitle), 0, {}, kG, 0, 0},
-    {R4D_OURS(CommuName_CountSlots), 0, {}, kG, 0, 0},
-    {R4D_OURS(CommuName_NthSlot), 1, {0xFF}, kG, 0, 0},                    // mov bl, [esp + 8]
+    {R4D_OURS(CommuName_CountSlots), 0, {}, kG, 0, 0, {}, &NearCursor},
+    {R4D_OURS(CommuName_NthSlot), 1, {0xFF}, kG, 0, 0, {}, &NthSlotAnswer},   // mov bl, [esp + 8]
     {R4D_OURS(CommuName_DrawSlotBar), 2, {0xFFFF, 0xFFFF}, kG, 0, 0},      // Menu_DrawBox's and the pieces' low words
     {R4D_OURS(CommuName_DrawSlotFrame), 2, {0xFFFF, 0xFFFF}, kG, 0, 0},
-    {R4D_OURS(CommuName_DrawHeader), 0, {}, kG, 0, 0},
+    {R4D_OURS(CommuName_DrawHeader), 0, {}, kG, 0, 0, {}, &HeaderMove},
     // other groups' of this wave, by address (docs/rest_4d.md section 6), with what each reads
     {"0x45B2C0", at::kBoardCell, at::kBoardCell, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},     // R4C: movsx words, mov al
     {"0x45B400", at::kBoardPiece, at::kBoardPiece, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // R4C: movsx words, and 0xFF
@@ -296,7 +335,7 @@ const sh::Callee kCallees[] = {
     {"0x45ED70", at::kRandomName, at::kRandomName, 0, {}, kG, 0, 0, {}, &RandomNameAnswer},
     {"0x45EE10", at::kMemberPanel, at::kMemberPanel, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},   // R4E: as 0x45E870
     {"0x45EF90", at::kMemberPanels, at::kMemberPanels, 0, {}, kG, 0, 0},
-    {"0x45F000", at::kMemberCount, at::kMemberCount, 0, {}, kG, 0, 0},
+    {"0x45F000", at::kMemberCount, at::kMemberCount, 0, {}, kG, 0, 0, {}, &NearCursor},
     {"0x45F020", at::kNthMember, at::kNthMember, 1, {0xFF}, kG, 0, 0, {}, &NthMemberAnswer},   // R4E: mov bl, [esp + 8]
     {"0x45F050", at::kMemberHand, at::kMemberHand, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},  // R4E: and 0xFFFF; al; and 0xFF
     {"0x45F1A0", at::kEntryBox, at::kEntryBox, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},     // R4E: movsx bp / word; movzx byte
@@ -305,7 +344,7 @@ const sh::Callee kCallees[] = {
     // ours, outside the standard set or typed otherwise, with what each reads
     {R4D_OURS(Menu_DrawPanelBox), 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // as R2C lists it
     {R4D_OURS(Menu_DrawGreyHLine), 4, {0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},           // rest_2b.cpp: shorts, a word, a byte
-    {R4D_OURS(BareRet), 0, {}, kG, 0, 0, {}, &Stir},                                        // a bare ret: reads none
+    {R4D_OURS(BareRet), 0, {}, kG, 0, 0, {}, &BareRetMove},                                        // a bare ret: reads none
     {R4D_OURS(BareRetZero), 0, {}, kG, 0, 0},                                               // xor al, al: reads none
     {"Crt_sprintf", 0x5B9380, 0x5B9380, 5, {kW, kW, 0, 0, 0}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
 };
