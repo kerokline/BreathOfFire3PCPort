@@ -245,7 +245,8 @@ names each clone "outside the field runs" (it does not refuse them).
 **`BOF3X_SHADOW='*'`** (this worktree): exit 0, 742 self-test lines, none with
 a mismatch (`rest_4e`'s line 192,000 rounds, 0 mismatches, at the 4,000-round
 fuzz); with `BOF3X_WIDE=1`: exit 0, 742 lines, none with a mismatch; again at
-the committed fuzz (6,000 rounds): see the report. No run died silently.
+the committed fuzz (6,000 rounds), narrow: exit 0, none with a mismatch
+(`rest_4e` 288,000 rounds, 0). No run died silently.
 `tools/ledger_check.py`: 73 entries, 0 errors.
 
 ## 5. What the cut and the tool said, settled
