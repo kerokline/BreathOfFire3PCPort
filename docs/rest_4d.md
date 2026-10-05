@@ -346,7 +346,14 @@ N45 (25 of 24,000: the filter runs six clones); 12 D33 (4); 13 N41 (17); 14
 N59 (9). The thin ones (3..7 of 4,000) are the round's usual: the group's
 case runs after about one stand-in call in a few hundred.
 
-**N70 made cheap (2026-10-05, round fourteen's end, debt 23).** R4E's `0x45EE10` (a member's panel) has a stand-in in the fuzz (`MemberPanelMove`) that one call in four moves the cursor to 0..7 after it, never while `CommuDraw_Pick` runs: `CommuName_MemberPanelOut` compares each record's place with the cursor again after every panel. N70 in this worktree: **618 of 4,000 rounds** (3 before). N57..N95, the controls of every function that calls the panel, re-run on that fuzz: all refused but N71, the equivalent (N59 9, N84 26 and N63 28 the weakest). The group's rounds stay 4,000, its shadow 0 mismatches.
+**N70 made cheap (2026-10-05, round fourteen's end, debt 23).** R4E's `0x45EE10` (a member's panel) has a stand-in in the fuzz (`MemberPanelMove`) that one call in four moves the cursor to 0..7 after it, never while `CommuDraw_Pick` runs: `CommuName_MemberPanelOut` compares each record's place with the cursor again after every panel. N70 in this worktree: **618 of 4,000 rounds** (3 before). N57..N95, the controls of every function that calls the panel, re-run on that fuzz: all refused but N71, the equivalent (N59 9, N84 26 and N63 28 the weakest).
+
+**DIV-0075's row's controls (2026-10-05)**, planted in `rest_4d.cpp`, run by
+`BOF3X_SHADOW=rest_4d` with the filter on the step: V1, the switch's step
+left out of `CommuName_SlotEntry` - 4,000 of 4,000; V2, the step moved by two
+in `CommuName_MemberEntry` - 4,000 of 4,000; V3, the switch also zeroing the
+entry column in `CommuName_SlotEntry` - 3,989 of 4,000. Each refused by the
+row; the group's own rows, the switch off, pass all three. The group's rounds stay 4,000, its shadow 0 mismatches.
 
 **Not refused, equivalent:**
 - **N36** (the entry's first `BareRet` at 0xB1) and **N38** (its last
