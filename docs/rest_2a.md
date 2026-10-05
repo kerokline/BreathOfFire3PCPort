@@ -227,6 +227,31 @@ C31 and C46 (a pointer read moved before a call) are refused by 2 rounds
 each: the disturbance moves the member pointer in one case of twelve after a
 third of the calls. Refused; a heavier weighting would make them louder.
 
+**Under the repaired disturbance** (2026-10-05, round fourteen's review
+item 1: the group's case drawn by `sh::DisturbCase(h, 11)`, so the cases 0,
+3, 6 and 9 - `+7`, the position, the member's mark, `Draw_OtSlot` - run for
+the first time). The 71 controls re-run on `451edeb`, same script: 69
+refused, C15 not refused (the equivalent mutant, as before), C20 stopped by
+the harness's Fatal (as before). Counts moved by at most 39 rounds; C46 went
+2 -> 4, C31 stayed at 2 (the member pointer's case is now one of eleven,
+where before it was one of the eight values `h % 12` could take there). Eight new controls, one or more on each cell
+a formerly dead case moves, each a re-read after a call replaced by the
+value read before it *only while the pointer is unchanged* (so the
+harness's own move of `Sprite_Current` or the member cannot refuse it: only
+the group's case can). All eight refused (rounds of 6,000; "Roll" runs the
+four rolls, 24,000):
+
+| Id | Function | Plant | Result |
+|---|---|---|---|
+| C72 | the rolls (`RollBody`) | case 0: the turn guard's `+7` read before `Rand` | refused (31 of 24,000) |
+| C73 | `LinkedObjectB_Roll` | case 0: the turn guard's `+7` read before `Rand` | refused (6) |
+| C74..C76 | `LinkedObject_SpawnEffect19` | case 3: the position's `+0x34`, `+0x38`, `+0x3C` read before `LinkedObject_EffectRise` | refused (9, 6, 2) |
+| C77 | the rolls (`RollBody`) | case 6: the member's mark `+0xA0` read before `Rand` and the turn | refused (93 of 24,000) |
+| C78, C79 | `Mode11_ListedSpriteScreens` | case 9: `Draw_OtSlot` read once before the loop, for the draw slot; for type 9's test at 4 | refused (140, 31) |
+
+The fuzz is unchanged. C76 (2 rounds) is the thinnest: case 3 picks one of
+the three dwords, and the spawn's position copy is the only re-read of it.
+
 ## 7. Calls across groups
 
 - **Out**: none to another group of this round. Every callee is ours or
