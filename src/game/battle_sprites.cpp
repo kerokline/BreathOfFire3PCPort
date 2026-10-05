@@ -71,18 +71,18 @@ const Callees kOriginals = {
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_ActionBitSet),
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberListFull),
     Battle_MemberCoinFlip,
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x452DD0),
-    Raw<void (__cdecl*)(unsigned)>(0x454290),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_AutoTargetCheck),   // R4A's (round 14): by address, the value unchanged
+    Raw<void (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberAutoFixed),            // R4A's
     Raw<void (__cdecl*)()>(bof3::addr::Battle_PickEnemyTarget),
     Battle_MemberOutAction,
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x454260),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x454310),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberActionIs0E),   // R4A's
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomOtherMember),  // R4A's
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomEnemy),
     Raw<unsigned char (__cdecl*)(unsigned)>(0x445730),
     ClutMap_Mark,
     ClutMap_FindFree,
     ClutMap_FindOwner,
-    Raw<void (__cdecl*)()>(0x494500),
+    Raw<void (__cdecl*)()>(bof3::addr::Battle_PlaceBossActors),   // R3G's: by address, as the other groups' above
     Battle_InitBossEncounter,
     Battle_InitEnemies,
     Battle_SetupEnemy,

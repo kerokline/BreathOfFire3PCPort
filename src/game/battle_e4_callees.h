@@ -10,7 +10,7 @@
 //             0x453560, which masks it to a byte (read 2026-09-29).
 //   0x591810  (category, item) -> al: the item's flag byte; no start list
 //             has it (boss_harness's standard row by address).
-//   0x494E70  (): the eight enemies' +0..+3 zeroed; engine code nobody owns
+//   0x494E70  (): BattleEnemy_ClearStates, the eight enemies' +0..+4 zeroed; ours since R3G
 //             (boss_harness's standard row, kThrough).
 #pragma once
 
@@ -121,7 +121,7 @@ constexpr U kTextRecord0 = 0x904CE0;      // Text_Records[0]
 constexpr U kAfterEquip = bof3::addr::BattleForm_ApplyStats;       // () BE5's
 constexpr U kMemberRefresh = bof3::addr::Battle_RecalcStats;    // (actor) BE6's
 constexpr U kItemFlags = 0x591810;        // (category, item) -> al
-constexpr U kEnemiesClear = 0x494E70;     // ()
+constexpr U kEnemiesClear = bof3::addr::BattleEnemy_ClearStates;     // ()
 
 }  // namespace at
 }  // namespace battle_e4

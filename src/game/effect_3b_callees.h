@@ -14,7 +14,7 @@ namespace effect_3b::at {
 constexpr std::uint32_t kScreenTint = bof3::addr::Effect_DrawScreenTint;    // E4D's (wave four): void(void), a 320 x 240 semi-transparent
                                                    // TILE in Sprite_Current's +0x5D / +0x5E / +0x5F, committed to
                                                    // slot 5 after its draw mode (0xC + 0x1C of packet)
-constexpr std::uint32_t kKind69Lines = 0x4837B0;   // in no group (catalog part 6, "Scenario effects"; PSX
+constexpr std::uint32_t kKind69Lines = bof3::addr::EffectKind69_DrawLines;   // in no group (catalog part 6, "Scenario effects"; PSX
                                                    // 0x801D218C call-disputed): void(void), Sprite_Current's
                                                    // +0xA - 1 LINE_G2s, writes 0x903850..0x90385F and 0x9037A0..
 

@@ -262,8 +262,13 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
-    switch (h % 6) {
-    case 0: s[9] = static_cast<unsigned char>((v & 1) ? PickOf(1, 0x2D, 0xD7, 0x80) : v >> 1); break;
+    switch (sh::DisturbCase(h, 6)) {
+    case 0: {
+        // from the hash, not the seeds' stream: a draw here would put the two passes apart
+        static const unsigned char kFrames[] = {1, 0x2D, 0xD7, 0x80};
+        s[9] = static_cast<unsigned char>((v & 1) ? kFrames[(v >> 1) & 3] : v >> 1);
+        break;
+    }
     case 1: SetWord(s + 0x58, (v & 1) ? 8u : v >> 1); break;
     case 2: SetWord(s + 0x5E, v); break;
     case 3: SetWord(s + 0x12, (v & 1) ? 0x10u : v >> 1); break;

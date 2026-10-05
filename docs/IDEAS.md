@@ -67,7 +67,7 @@ rule ([`README.md`](README.md)) here too.
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
 | I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
-| I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | open; method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26) |
+| I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | open; method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26). **Asked for first, 2026-10-04**: the owner wants to hear the MP3s against the sequences before the MP3 decoder's fate is decided ([`platform-layers-plan.md`](platform-layers-plan.md) section 5) |
 | I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | **built 2026-09-27..28** in round ten's first three waves - every chapter bank ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) |
 | I25 | The area round: the area overlays enumerated from their tables | engine | HIGH | **built 2026-09-27..28** in round ten's six waves - every area overlay of worlds 0..4 ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-areas.md`](takeover-queue-areas.md) |
 | I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | **done** 2026-09-28: round eleven, 531 functions, [`takeover-queue-round11.md`](takeover-queue-round11.md); the live check per fight and the debts remain |
@@ -75,6 +75,10 @@ rule ([`README.md`](README.md)) here too.
 | I28 | Round thirteen: the effect-object engine (1,697 functions: the 627 the catalog labels area overlays, which are effect-kind code, and the 1,070 the labelling pass found beside them) | engine | HIGH | planned; [`takeover-queue-round13.md`](takeover-queue-round13.md) section 9 - the owner's scope of 2026-09-29, to be cut with `tools/band_rows.py` at round twelve's tip |
 | I29 | Button prompts drawn from the bindings in force, not from each release's defaults | game behaviour | LOW | open 2026-10-03 (the owner, on the fishing banner; DIV-0069) |
 | I30 | Machine-readable docs: Open Knowledge Format frontmatter and a generated wiki | docs / tooling | HIGH | open; parked until the spec hardens or is validated outside Google (owner, 2026-10-04) |
+| I31 | The platform layers: the C runtime, the MP3 decoder, the renderer's remainder, the small glue layers, and the cutover to our own executable | engine / platform | MIXED | **planned 2026-10-04**, not scheduled - [`platform-layers-plan.md`](platform-layers-plan.md); its first step (a read pass and a reach trace) needs no decision |
+| I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | open 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
+| I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31) |
+| I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
 
 ---
 
@@ -1176,3 +1180,242 @@ first.
 ### Outcome
 _(2026-10-04) open; parked by the owner until the spec is hardened or
 validated outside Google. Revisit then._
+
+## I31 — The platform layers and the cutover
+
+**Ask (2026-10-04, the owner, during round fourteen):** is there a plan to
+take over the executable, runtime, decoder and renderer layers once the
+game's own code is ours? There was not; make one.
+**Kind:** engine / platform
+**Feasibility:** MIXED - the read pass, the small layers and the runtime
+boundary HIGH; the decoder and our own executable MEDIUM, each on a decision.
+**Gated on:** round fourteen's end; the owner for the decoder and for whether
+our own executable is a goal now.
+
+### What already exists
+The presentation layer, WinMain, the input path and `Fmv_Play` are ours; the
+catalog counts 533 starts left in those layers; the tracer can prove that no
+code of Capcom's runs.
+
+### What is missing
+A read of the 86 starts that are neither runtime nor decoder (some are game
+code filed by address range), the list of runtime entry points the game
+calls, a decoder behind the music seam, a loader that maps the player's data
+sections into a process of ours.
+
+### First concrete step
+[`platform-layers-plan.md`](platform-layers-plan.md) section 4, step 1.
+
+### Outcome
+_(2026-10-04) planned, not scheduled._
+
+## I32 — The PSP release's game-logic changes, as a config toggle
+
+**Ask (2026-10-04, the owner, while shaping the asset cache):** "I do think
+there were some game logic changes in the PSP version of the game" -
+investigate, and offer them as a toggleable config option.
+**Kind:** game behaviour
+**Feasibility:** UNKNOWN - the premise is the owner's recollection and is not
+measured. Nothing in `docs/` records a PSP logic change yet.
+**Gated on:** nobody for the measurement; the toggle on what it finds.
+
+### What already exists
+- Both PSP discs are held and catalogued: `psp-jp` and `psp-eu`
+  ([`fixtures.toml`](../fixtures.toml)).
+- The PSP's code is readable: `PSP_GAME/SYSDIR/BOOT.BIN` is a plain MIPS ELF,
+  a native port and not a PS1 image under an emulator
+  ([`display-overhaul.md`](display-overhaul.md)). It has been read once
+  already, for the widened view ([`psp-widescreen.md`](psp-widescreen.md)).
+- Its data is PSX-format EMIs, and one section is known byte-identical to
+  `psx-jp`'s (`fixtures.toml`, `psp-jp`). So the section-by-section diff that
+  [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8 schedules for phase 4
+  takes PSP pairs as well as PSX ones, with the same tool.
+- The sibling's PSX name corpus, to pair PSP functions with their PSX
+  originals.
+
+### Leads: what players report (none of it measured here)
+
+The owner, 2026-10-04: the PSP release is remembered as a graphical step down
+from the PSX - compromises made for copyright reasons (the Balio and Sunder
+fight) and the widescreen crop - with a few quality-of-life changes and bug
+fixes that people liked. The owner wants to know how extensive the changes
+were, catalogued as our own investigation meets them.
+
+The list below is a fan wiki's, paraphrased, read 2026-10-04:
+<https://bof.fandom.com/wiki/Breath_of_Fire_III#PS1/PSP_version_differences>.
+The wiki cites no sources for it. Every row is a **lead**: a claim to confirm
+or refute against the discs, not a fact about either release. "Where" is a
+guess at where the difference would live, to be corrected by the measurement.
+
+**Behaviour - the candidates for a toggle:**
+
+| # | Claim | Where it would live | Status |
+|---|---|---|---|
+| P1 | Angel Tower's block-puzzle room: one passage is narrower, and random battles can no longer be used there to skip the puzzle | the area's map and encounter data | unmeasured |
+| P2 | The Desert: a random encounter no longer turns Ryu to a random heading | field code, or the area's script | unmeasured |
+| P3 | The item duplication glitch no longer works | menu / inventory code | unmeasured; whether the PC port has the glitch is also unmeasured |
+| P4 | The Holy Mantle suppresses encounters better while walking straight, and a turn after a long walk brings one on | the encounter-step code | unmeasured; the wiki's own wording is tentative |
+| P5 | The Factory's electric room runs slow throughout, which makes its lever sequence easier | unknown: a performance effect or a deliberate change, the wiki does not know either | unmeasured |
+
+**Content - data changes, the "copyright" set:**
+
+| # | Claim | Where it would live | Status |
+|---|---|---|---|
+| P6 | Stallion (Balio and Sunder fused) is recoloured, brown and blue | the boss's palette, an image section | unmeasured |
+| P7 | Stallion's signature attack is renamed | the ability name table | unmeasured |
+| P8 | One frame of Ryu's ascension animation, which showed another publisher's character, is removed | an effect's image or frame table | unmeasured |
+| P9 | One character's name is respelled (Hachio) | text | unmeasured |
+| P10 | Some music tracks differ slightly in instrumentation | the sequence or sound-bank data, or the PSP's player | unmeasured; bears on I23 |
+
+**Presentation and platform - recorded for the count, not for a toggle:**
+
+| # | Claim | Status |
+|---|---|---|
+| P11 | 16:9 display | **measured**: [`psp-widescreen.md`](psp-widescreen.md) |
+| P12 | A light bilinear filter over the sprites | unmeasured; ours is already a choice (`BOF3X_FILTER`) |
+| P13 | A new title logo | unmeasured |
+| P14 | The fishing minigame offered from the title screen, and shareable to a second PSP | unmeasured |
+| P15 | Memory-card wording changed to the PSP's storage | unmeasured |
+| P16 | Longer loads before battles from UMD; slowdown before attacks early in a session | platform behaviour, not ours to reproduce |
+
+Rows are added here as the investigation finds changes nobody listed, and a
+row's status changes only with the measurement cited. The count of rows that
+end "confirmed" is the answer to "how extensive".
+
+Some leads may have a head start, each to be checked before it is relied on.
+P6 and P7 concern a fight this project has a recorded route into (the
+`balioAndSunder_2` recipe), if that route reaches the fused form. P2, P3 and
+P4 are in field, menu and encounter code, much of which is taken over on the
+PC side; where the function is ours, the PSP's has a named counterpart to be
+read against.
+
+### What is missing
+- The measurement itself, in two halves. **Data:** `psp-jp` against `psx-jp`
+  and `psp-eu` against the Western PSX discs, every difference sorted into
+  text, layout or logic (tables, scripts, enemy stats). **Code:** the PSP ELF
+  against the PSX code, function by function; widescreen and platform changes
+  set aside, what is left is the list.
+- For each change found: what it does, and whether it reads as a fix, a
+  rebalance or a platform accommodation. The owner decides which are offered.
+- The toggle. A data change is a layer in the asset cache, chosen like a
+  language layer (`ASSET_SOURCES.md` section 3). A code change is a branch in
+  our code under one option, in the launcher and as a `BOF3X_` variable.
+
+### The rules it touches
+- Rule 6: the PSP release is a third answer to "what it was", beside the PSX
+  disc and the PC port. The finding records it as such; it does not replace
+  either.
+- Rule 2: an option the player turns on is not a divergence, but the ledger
+  records that the option exists. A PSP behaviour made the *default* is a
+  [`DIVERGENCE.md`](DIVERGENCE.md) entry.
+- Rule 1: a data change must come from the player's own PSP disc through the
+  importer. A patch that carries the changed bytes is shipping data.
+
+### First concrete step
+Add the two PSP pairs to the phase 4 region diff. If the data shows nothing,
+the code diff is the second step and the larger one.
+
+### Outcome
+_(2026-10-04) open; sixteen leads listed, one measured (P11), none of the
+behaviour or content rows confirmed._
+
+## I33 — Productisation: from our own executable to a finished product
+
+**Ask (2026-10-04, the owner):** is there anything else to consider once we
+have our own exe, and what steps lead to a more finished product? The list
+below is the answer given, recorded at the owner's word.
+**Kind:** engine / product
+**Feasibility:** MIXED - each piece is ordinary work; none is measured or
+planned in detail yet. The three under "Early" are decisions, not builds.
+**Gated on:** the cutover ([`platform-layers-plan.md`](platform-layers-plan.md),
+I31) for most of it; the owner for the three early decisions.
+
+This entry is an index of pieces, each of which becomes its own entry or
+plan when it is taken up. It leaves out what already has an entry: the crash
+reporter (I11), save states (I13), fast-forward (I17), frame pacing (I16),
+button prompts (I29), the video decoder (I7) and the music question (I23).
+
+### What our own executable makes possible
+- **A portable platform layer.** Once no code of Capcom's runs, window, input,
+  audio output and timing can sit on a portable library in place of Win32.
+  SDL is the usual choice and is zlib-licensed, so [`LICENSING.md`](LICENSING.md)
+  section 4 is not touched. It brings Linux, macOS and handhelds, and
+  controller hotplug and rumble. The platform plan already names 64 bits;
+  this is the same step taken further.
+- **Mods as cache layers.** [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 3
+  lays the cache out as a base and language layers. A mod is one more layer
+  over the base, with a load order: art, retranslation, rebalance. Nothing is
+  built for it; the cache format must only not rule it out.
+- **Hardened loaders.** The original loaders trusted their own files. Ours
+  read what a player or a mod supplies, so the asset and save parsers want
+  bounds checks and a fuzzing pass.
+
+### What makes it a product
+- **Presets from the ledger.** Each [`DIVERGENCE.md`](DIVERGENCE.md) entry is
+  a described behaviour change. Tagged by kind (fix, enhancement, option),
+  the entries become presets a player picks in one choice: the PC port as it
+  was, the PSX behaviour, the PSP's changes (I32), ours as recommended.
+- **Settings in the game.** One config file and an in-game options screen;
+  the launcher optional; the `BOF3X_` variables kept as developer overrides.
+  I20 is one row of this.
+- **First-run import.** The importer's face: point at a folder or an image,
+  see which build was recognised and what is missing, and a plain refusal
+  for an unknown build (`ASSET_SOURCES.md` section 1).
+- **Saves.** In the user's profile, not beside the executable; a versioned
+  format a later release can migrate; the original PC and PSX saves still
+  imported (I1).
+- **Accessibility.** Text speed, full remapping, hold or toggle. Each is a
+  ledgered option.
+
+### What makes it releasable
+- **A release gate.** The state-hash references and the recorded routes
+  become the test a build passes before release. They need game data, so
+  they run on the owner's machine or a private runner, never in public CI
+  (rule 1).
+- **Release engineering.** Version numbers, signed Windows binaries, symbols
+  kept for the crash reporter, a changelog generated from the ledger.
+- **A commercial-readiness audit.** The tracer's proof that no code of
+  Capcom's executes, [`exe-table-audit.md`](exe-table-audit.md) closed, an
+  inventory of third-party licences, and the provenance record
+  (`LICENSING.md` section 6) in a form that can be handed over.
+
+### Early: three decisions of shape, cheap now
+1. **Tag the ledger's entries by kind.** A column or a field, checked by
+   `tools/ledger_check.py`. Retrofitting it after a hundred more entries is
+   the expensive way.
+2. **Note mod layers in the cache design**, before the cache format is fixed.
+3. **Choose the portable platform library**, before more platform code is
+   written against Win32 in the platform plan's steps.
+
+### First concrete step
+The owner's word on the three early decisions. The first needs only a
+vocabulary for the kinds.
+
+### Outcome
+_(2026-10-04) open; recorded, nothing decided or scheduled._
+
+## I34 — The name entry back: the community's renamer, and naming at New Game
+
+**Ask (2026-10-05, the owner):** take the name screen from the PlayStation
+game so it is at least available; the port removed it.
+**Kind:** gameplay / localisation
+**Feasibility:** HIGH for the community's renamer (the port kept every caller
+and both commit paths; only the grid's draw, its legend and its input step are
+gone), MEDIUM for New Game (the port left no call to re-arm).
+**Gated on:** the localisation rework of phases 4 and 5 - the owner's word,
+2026-10-05: it may change the structure of the font files, and the grid's
+glyphs, the encoding per language and the font all follow from it.
+
+[`name-entry-restoration.md`](name-entry-restoration.md) is the research: the
+PlayStation routine's two copies (COMMU02 and START.EMI), each function's
+arguments, state cells and control flow, what survives in `BOF3.exe`, and what
+the sibling has. Two pieces, in the owner's order:
+
+- **The community's renamer.** Until it is built the entry ends unanswered
+  (DIV-0075, 2026-10-05), where the port's never left its step.
+- **Naming at New Game, as an uplift** with the same work: the PlayStation asks
+  for the hero's name before the game starts and the port goes straight in
+  (DIV-0020's "Original behaviour").
+
+### Outcome
+_(2026-10-05) open; researched, deferred to the localisation rework._

@@ -13,6 +13,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace window_task {
 
 namespace at {
@@ -60,16 +62,16 @@ constexpr std::uint32_t kClutRow = 0x903A5A;        // s8: the window colour Win
 // it, and only through this address (as title_states.cpp calls
 // Field_ModeDispatch).
 constexpr std::uint32_t kMsgBoxFrameTask = 0x4977F0;   // PSX 0x80150508
-constexpr std::uint32_t kListSetUp = 0x596330;         // kind 1's state 0 calls it; unread
-constexpr std::uint32_t kListDraw = 0x596090;          // kind 1's frame; unread
-constexpr std::uint32_t kListCursorDraw = 0x596120;    // kind 1's frame, a tail jump; unread
+constexpr std::uint32_t kListSetUp = bof3::addr::Window_Kind1Layout;         // kind 1's state 0 calls it; R2F's (round fourteen)
+constexpr std::uint32_t kListDraw = bof3::addr::Window_Kind1List;          // kind 1's frame; R2F's
+constexpr std::uint32_t kListCursorDraw = bof3::addr::Window_Kind1Cursor;    // kind 1's frame, a tail jump; R2F's
 constexpr std::uint32_t kSetDraw = 0x596020;           // kind 2's frame; unread
 constexpr std::uint32_t kSetCursorDraw = 0x5960D0;     // kind 2's frame, a tail jump; unread
 
 // The eight handlers of Field_RunTaskRecords' local table that are not ours:
 // entry 0 is Window_Run, entries 1..8 are the other record kinds, unread.
 constexpr std::uint32_t kRecordHandlers[9] = {
-    0x5954B0, 0x596530, 0x5968E0, 0x596FA0, 0x597F60, 0x598890, 0x599B50, 0x59B220, 0x59CB00,
+    0x5954B0, 0x596530, 0x5968E0, 0x596FA0, 0x597F60, bof3::addr::Window_Handler5Kinds, 0x599B50, 0x59B220, 0x59CB00,
 };
 
 using Handler = void (__cdecl*)();

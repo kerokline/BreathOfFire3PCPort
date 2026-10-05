@@ -29,13 +29,13 @@ constexpr std::uint32_t kMemberRows = bof3::addr::EffectKind0F_DrawEquipped;
 constexpr std::uint32_t kItemListA = bof3::addr::EffectKind0F_DrawItemsB;
 constexpr std::uint32_t kItemListB = bof3::addr::EffectKind0F_DrawItemsA;
 constexpr std::uint32_t kPanelTitle = bof3::addr::EffectKind0F_DrawCountHeader;
-// Capcom's, in no group of this round (catalog part 6, kEffectStd's row): a
+// Ours since round fourteen (R4F), by address until the round's rebinding: a
 // sprite primitive by the word it is handed.
-constexpr std::uint32_t kKind07Sprite = 0x462F10;
+constexpr std::uint32_t kKind07Sprite = bof3::addr::EffectKind07_DrawSprite;
 // Capcom's, unnamed (kEffectStd's rows): a string's characters counted (a byte
 // above 0x7F takes two); the library layer's primitive from a RECT (prim, rect),
 // 12 bytes written.
-constexpr std::uint32_t kStringCount = 0x5171E0;
+constexpr std::uint32_t kStringCount = bof3::addr::EffectKind0F_CharCount;
 constexpr std::uint32_t kPrimFromRect = 0x5A7840;
 
 // --- the image's tables, read in place (never copied) ------------------------------

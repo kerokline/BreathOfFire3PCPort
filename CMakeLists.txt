@@ -72,6 +72,7 @@ add_library(bof3x SHARED
   src/hook/detour.cpp
   src/hook/calltrace.cpp
   src/hook/input_script.cpp
+  src/hook/statehash.cpp
   src/hook/draw_order.cpp
   src/hook/crash.cpp
   src/hook/log.cpp
@@ -586,7 +587,65 @@ add_library(bof3x SHARED
   src/game/effect_6c.cpp
   src/game/effect_6c_fuzz.cpp
   src/game/effect_6b.cpp
-  src/game/effect_6b_fuzz.cpp)
+  src/game/effect_6b_fuzz.cpp
+  src/game/rest_0a.cpp
+  src/game/rest_0a_fuzz.cpp
+  src/game/rest_1b.cpp
+  src/game/rest_1b_fuzz.cpp
+  src/game/rest_1e.cpp
+  src/game/rest_1e_fuzz.cpp
+  src/game/rest_1a.cpp
+  src/game/rest_1a_fuzz.cpp
+  src/game/rest_1c.cpp
+  src/game/rest_1c_fuzz.cpp
+  src/game/rest_1g.cpp
+  src/game/rest_1g_fuzz.cpp
+  src/game/rest_1f.cpp
+  src/game/rest_1f_fuzz.cpp
+  src/game/rest_1d.cpp
+  src/game/rest_1d_fuzz.cpp
+  src/game/rest_2a.cpp
+  src/game/rest_2a_fuzz.cpp
+  src/game/rest_2g.cpp
+  src/game/rest_2g_fuzz.cpp
+  src/game/rest_2d.cpp
+  src/game/rest_2d_fuzz.cpp
+  src/game/rest_2e.cpp
+  src/game/rest_2e_fuzz.cpp
+  src/game/rest_2h.cpp
+  src/game/rest_2h_fuzz.cpp
+  src/game/rest_2f.cpp
+  src/game/rest_2f_fuzz.cpp
+  src/game/rest_2c.cpp
+  src/game/rest_2c_fuzz.cpp
+  src/game/rest_2b.cpp
+  src/game/rest_2b_fuzz.cpp
+  src/game/rest_3a.cpp
+  src/game/rest_3a_fuzz.cpp
+  src/game/rest_3c.cpp
+  src/game/rest_3c_fuzz.cpp
+  src/game/rest_3e.cpp
+  src/game/rest_3e_fuzz.cpp
+  src/game/rest_3g.cpp
+  src/game/rest_3g_fuzz.cpp
+  src/game/rest_3d.cpp
+  src/game/rest_3d_fuzz.cpp
+  src/game/rest_3f.cpp
+  src/game/rest_3f_fuzz.cpp
+  src/game/rest_3b.cpp
+  src/game/rest_3b_fuzz.cpp
+  src/game/rest_4f.cpp
+  src/game/rest_4f_fuzz.cpp
+  src/game/rest_4e.cpp
+  src/game/rest_4e_fuzz.cpp
+  src/game/rest_4d.cpp
+  src/game/rest_4d_fuzz.cpp
+  src/game/rest_4a.cpp
+  src/game/rest_4a_fuzz.cpp
+  src/game/rest_4c.cpp
+  src/game/rest_4c_fuzz.cpp
+  src/game/rest_4b.cpp
+  src/game/rest_4b_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

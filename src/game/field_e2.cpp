@@ -675,7 +675,7 @@ extern "C" void __cdecl PartySet_ErrorLoop(void) {
 // the object 0x905DA0, Field_State = ObjTrio's first record, then a jump
 // through Mode11_ObjectStates 0x660C2C by its state +1 (4 entries,
 // unchecked: past them ours aborts where the original jumps into data).
-// Called by mode 11's step 0x496790. PSX twin 0x80167CBC (call, a
+// Called by mode 11's step GameMode11_Frame 0x496790. PSX twin 0x80167CBC (call, a
 // hypothesis).
 extern "C" void __cdecl Mode11_ObjectFrame(void) {
     const std::uint16_t held = W(0x7E1BE8);

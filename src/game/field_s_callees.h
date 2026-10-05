@@ -12,13 +12,13 @@ namespace field_s::at {
 // harness by address (SH_AT).
 constexpr std::uint32_t kDrawTag = bof3::addr::Menu_DrawTile16;          // (x, y, kind, dim): a 16 x 8 SPRT on page 0x2F at (x, y), u = kind << 4,
                                                       // v 0xD8, shade 0x80 or 0x10 by dim, 16-bit x and y; round twelve group FO's
-constexpr std::uint32_t kSwapBytes = 0x58BD50;        // (a, b): swaps the bytes a and b point at; nobody's
-constexpr std::uint32_t kAbilityListCount = 0x591AC0; // (member, which, current) -> al: one of a record's four
+constexpr std::uint32_t kSwapBytes = bof3::addr::FieldMenu_SwapBytes;  // (a, b): swaps the bytes a and b point at; R2E's
+constexpr std::uint32_t kAbilityListCount = bof3::addr::AbilityList_CountSet; // (member, which, current) -> al: one of a record's four
                                                       // ability lists (or the current name's); nobody's
-constexpr std::uint32_t kEquipPreview = 0x58D640;     // (): the equip screen's preview bytes 0x6BDFA8.. and 0x803341
-                                                      // from the member and the chosen item; nobody's
-constexpr std::uint32_t kEquipApply = 0x58D570;       // (): the previewed items swapped into the member's six slots
-                                                      // through the inventory, then Char_RecalcStats; nobody's
+constexpr std::uint32_t kEquipPreview = bof3::addr::FieldEquip_PreviewItem;  // (): the equip screen's preview bytes 0x6BDFA8.. and 0x803341
+                                                      // from the member and the chosen item; R2E's
+constexpr std::uint32_t kEquipApply = bof3::addr::FieldEquip_ApplyPreview;  // (): the previewed items swapped into the member's six slots
+                                                      // through the inventory, then Char_RecalcStats; R2E's
 
 // DIV-0011's site inside PartyForm_DrawReserve (menu_frame.cpp kReserveListSite):
 // E8 rel32, re-aimed at Menu_DrawFrame; the original's callee the empty 0x4DF820.

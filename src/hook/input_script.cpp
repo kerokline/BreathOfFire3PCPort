@@ -15,6 +15,7 @@
 #include "game/win_main.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/statehash.h"
 #include "render/render_d3d11.h"
 
 // The recipe language (docs/input-script.md has it with examples). One step a
@@ -507,6 +508,7 @@ void __cdecl ScriptedLatch() {
 // (src/game/win_main.cpp). The recipe's words are put in after this, so an
 // unattended recipe run is not affected.
 void DeviceLatch() {
+    StateHash_Tick();
     Input_Latch();
     if (WinMain_InputAllowed()) return;
     Input_Held = Input_Previous = Input_Pressed = 0;
@@ -618,7 +620,9 @@ void RecordStart(const char* path) {
 // differs between the two logs is where a consumer the frame count does not
 // fix ran (2026-09-30, the fish that would not replay). Rand is replaced by
 // a counter that calls a byte-copy of the original; the copy's one call, the
-// per-thread-data getter at its entry, is kept.
+// per-thread-data getter at its entry, is kept. The counter is an instrument:
+// it is installed whatever BOF3X_ORIGINAL says, so a reference side under `*`
+// logs its count too (until 2026-10-05 it read 0 there on every frame).
 std::uint32_t g_rand_calls = 0;
 int (__cdecl* g_rand_copy)() = nullptr;
 
@@ -639,12 +643,19 @@ void RandCountStart() {
     constexpr std::uint32_t kRand = 0x5B93D2, kRandSize = 0x22, kGetPtd = 0x5BAD64;
     const bof3::CloneCall calls[] = {{0, nullptr, kGetPtd}};
     g_rand_copy = reinterpret_cast<int (__cdecl*)()>(bof3::CloneOriginal("Rand", kRand, kRandSize, calls, 1));
-    bof3::Inject("Rand", kRand, reinterpret_cast<void*>(&CountingRand));
+    bof3::Inject("Rand", kRand, reinterpret_cast<void*>(&CountingRand), true);
     Log("input       randlog: Rand counted, one line a frame");
 }
 
 void RandCountFrame() {
     if (g_rand_copy) Log("randlog     frame %u rand %u", g_frame, g_rand_calls);
+}
+
+// BOF3X_STATEHASH without a recipe, under Capcom's WinMain: the tick, then
+// the latch as Capcom called it.
+void __cdecl HashedLatch() {
+    StateHash_Tick();
+    Input_Latch();
 }
 
 void InputScript_Stop() {
@@ -660,6 +671,9 @@ void InputScript_Start() {
     const DWORD r = GetEnvironmentVariableA("BOF3X_RECORD", rec, sizeof rec);
     const DWORD n = GetEnvironmentVariableA("BOF3X_INPUT", path, sizeof path);
     if (r && n) Fatal("BOF3X_RECORD and BOF3X_INPUT are both set; one latch, one of them");
+    const bool hashing = StateHash_Start();
+    constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
+    constexpr std::uint32_t kInputLatch = 0x4FC6A0;  // Input_Latch; symbols.gen.h binds the name as a macro
     if (r >= sizeof rec) Fatal("BOF3X_RECORD: the path is %lu characters, over MAX_PATH", (unsigned long)r);
     if (n >= sizeof path) Fatal("BOF3X_INPUT: the path is %lu characters, over MAX_PATH", (unsigned long)n);
     if (r > 0) {
@@ -667,7 +681,14 @@ void InputScript_Start() {
         RandCountStart();
         return;
     }
-    if (n == 0) return;
+    if (n == 0) {
+        // No recipe and no recording: Capcom's WinMain calls Input_Latch
+        // itself, so the state hash takes the site for its tick and then
+        // runs the latch untouched. Our WinMain reaches the tick through
+        // DeviceLatch.
+        if (hashing) RetargetCall("StateHash", kLatchCall, kInputLatch, reinterpret_cast<void*>(&HashedLatch), true);
+        return;
+    }
     RandCountStart();
     Load(path);
     Log("input       %u steps from %s", (unsigned)g_steps.size(), path);
@@ -688,8 +709,6 @@ void InputScript_Start() {
     }
     // Not an Inject: nothing of Capcom's is replaced, and BOF3X_ORIGINAL has
     // no say - the variable being set is the switch.
-    constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
-    constexpr std::uint32_t kInputLatch = 0x4FC6A0;  // Input_Latch; symbols.gen.h binds the name as a macro
     RetargetCall("InputScript", kLatchCall, kInputLatch, reinterpret_cast<void*>(&ScriptedLatch), true);
     g_scripted = true;
     g_active = true;

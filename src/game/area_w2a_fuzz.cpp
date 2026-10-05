@@ -193,7 +193,7 @@ const ah::Callee kCallees[] = {
     {W2A_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &MovesPose},
     // slots inside the group's four effect records, or none
     {W2A_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03, {}, &MovesCurrent},
-    {W2A_THEIRS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
+    {W2A_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
     {W2A_OURS(Inventory_Remove), 3, {kAll, kAll, kAll}, ah::Answer::kFlag, 0, 0},
     {W2A_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W2A_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent},

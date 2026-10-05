@@ -75,7 +75,7 @@ struct Callees {
     // Member_Idle
     int (__cdecl* rand)();
     // Field_CellAhead
-    unsigned char (__cdecl* cell_ahead_raised)();     // 0x527640, nobody's
+    unsigned char (__cdecl* cell_ahead_raised)();     // 0x527640, Field_CellAheadRaised (R1F's)
     unsigned char (__cdecl* cell_ahead_flat)();       // Field_CellAheadFlat
     // Field_CellAheadFlat
     void (__cdecl* read_cells)(unsigned, unsigned);   // Field_ReadCells

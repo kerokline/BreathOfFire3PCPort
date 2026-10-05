@@ -65,7 +65,7 @@ screen-x intervals, from psp-widescreen §3a / §3b and `bof3ext`'s list:
 | Cull | PC | Now | Needs to reach | Note |
 |---|---|---|---|---|
 | Terrain | `MapView_Build` `0x56EC00` (`0x56EDFA` / `0x56EE14`), **ours** | `[-50, 370]` | about `[-117, 437]` | PSP widened by 46 for 32; ours - patch our source |
-| Area-map frame pass, wide | `AreaMap_FrameAreaBD` `0x510780` (`0x51097E` / `0x510991`) | `[-200, 520]` | `[-252, 572]` | PSP +31 for 32 |
+| Area-map frame pass, wide | `AreaMapBD_BuildView` `0x510780` (`0x51097E` / `0x510991`) | `[-200, 520]` | `[-252, 572]` | PSP +31 for 32 |
 | Area-map frame pass, narrow | same (`0x5109BB` / `0x5109D2`) | `[-50, 370]` | `[-102, 422]` | PSP +31 for 32 |
 | Sprite | `0x4CF319`, `0x4FF6A3`, `0x571366` | `[-60, 380]` | beyond `[-53, 373]` + sprite width | 7 px of margin left: pops. `0x571366` is `MapCell_DrawAnimated`, ours: **`[-113, 433]` since 2026-09-30** (`Widescreen_Fill`); `0x4CF319` is the battle field's, reading `.rdata`, left |
 | `[-40, 360]` | PSX `80161ef4`; PC twin unread | `[-40, 360]` | wider | inside the new view: pops |
@@ -85,7 +85,7 @@ operands of `fcomp dword ptr [mem]` instructions, and the floats sit in
 (with `0x5C4238` 121 and `0x5C4244` 120, the y tests that choose the wide or
 narrow range, untouched). An image scan finds six references to the four
 range floats, all in `MapView_Build` (`0x56EDFA`, `0x56EE14`, `0x56EE2B`
-for the y bound) and `AreaMap_FrameAreaBD` (`0x51097E`, `0x510991`,
+for the y bound) and `AreaMapBD_BuildView` (`0x510780`: `0x51097E`, `0x510991`,
 `0x5109BB`, `0x5109D2`). `MapView_Build` is ours and compares against its
 own constants (`Widescreen_TerrainLo/Hi`), so the `.rdata` floats stay as
 they are and the frame pass's four operands are re-aimed at floats in the

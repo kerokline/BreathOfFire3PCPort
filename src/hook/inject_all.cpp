@@ -276,6 +276,35 @@
 #include "game/effect_5d.h"
 #include "game/effect_6d.h"
 #include "game/effect_6b.h"
+#include "game/rest_0a.h"
+#include "game/rest_1b.h"
+#include "game/rest_1e.h"
+#include "game/rest_1a.h"
+#include "game/rest_1c.h"
+#include "game/rest_1g.h"
+#include "game/rest_1f.h"
+#include "game/rest_1d.h"
+#include "game/rest_2a.h"
+#include "game/rest_2g.h"
+#include "game/rest_2d.h"
+#include "game/rest_2e.h"
+#include "game/rest_2h.h"
+#include "game/rest_2f.h"
+#include "game/rest_3f.h"
+#include "game/rest_2c.h"
+#include "game/rest_3g.h"
+#include "game/rest_4a.h"
+#include "game/rest_2b.h"
+#include "game/rest_3a.h"
+#include "game/rest_3c.h"
+#include "game/rest_3e.h"
+#include "game/rest_3d.h"
+#include "game/rest_3b.h"
+#include "game/rest_4f.h"
+#include "game/rest_4e.h"
+#include "game/rest_4d.h"
+#include "game/rest_4c.h"
+#include "game/rest_4b.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1148,7 +1177,205 @@ void InjectAll() {
                                 // its eight rows is E6B's) and before Widescreen_ArmFills (sub-kind 0x54's fill,
                                 // DIV-0041's 0x50F7B5, compares the original's 320 x 240); no module patches bytes
                                 // inside its 50 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
-    FishingText_Arm();          // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
+    Rest0A_Inject();            // round 14 stage-A group R0A (0x51C390..0x524E4E: the party sets' field actions' seven
+                                // shared helpers - the probes two steps ahead, the kind-0x30 effect object ahead and
+                                // the members in reach of it, an effect object of kind 0x34 on a cell, the side
+                                // probes): its clones' calls re-aimed at the scenario harness's recorders; after
+                                // every harness's inject; every caller that is ours (PartyAction5_Form0Begin) calls
+                                // it by the address it had, so order does not matter; no module patches bytes inside
+                                // its seven (DIVERGENCE.md, cheats.cpp)
+    Rest1B_Inject();            // round 14 wave-one group R1B (0x51D710..0x51F202: party sets 2..6's field actions -
+                                // the form, state and step dispatchers, the states of sets 3..5, four cell
+                                // handlers): its clones' calls re-aimed at the scenario harness's recorders, its 29
+                                // tables swapped for the fuzz only; after every harness's inject and R0A's (it calls
+                                // R0A's helpers by name); no module patches bytes inside its 47 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
+    Rest1C_Inject();            // round 14 wave-one group R1C (0x51F210..0x520E08: party sets 6..9's field actions -
+                                // the dispatchers by form, state and step, their probe / resolve states, three cell
+                                // pickups, two cell hits, the shared turn, tick and wait states): its clones' calls
+                                // re-aimed at the scenario harness's recorders, its 28 dispatch tables swapped for the
+                                // fuzz only; after Rest0A_Inject (it calls R0A's helpers by name) and every harness's
+                                // inject; no module patches bytes inside its 51 (DIVERGENCE.md, cheats.cpp,
+                                // widescreen.cpp)
+    Rest1G_Inject();            // round 14 wave-one group R1G (0x5289A0..0x52CD46: the fishing spot - the leader's
+                                // state 9 stages 1, 10, 11 and their steps, the menu's data and rule pages, the
+                                // stages' helpers; game mode 8's fish): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its six tables swapped for the fuzz only; after every
+                                // harness's inject; ours that call it (E1E, E1F) call it by the address it had;
+                                // before FishingText_Arm, which patches no byte inside its 45 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
+    Rest1F_Inject();            // round 14 group R1F (0x523ED0..0x52899B: party sets 16..18's field actions, a
+                                // raised sprite's cell ahead, the leader's state 9's stage 0): its clones' calls
+                                // re-aimed at the scenario harness's recorders, its 24 tables swapped for the fuzz
+                                // only; after every harness's inject and Rest0A_Inject (its callers reach R0A by the
+                                // address); no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp,
+                                // widescreen.cpp)
+    Rest1D_Inject();            // round 14 wave-one group R1D (0x520E10..0x5226C1: party sets 9..12's field actions -
+                                // their 27 dispatchers and 19 state handlers and cell probes): its clones' calls
+                                // re-aimed at the scenario harness's recorders, its 27 state tables swapped for the
+                                // fuzz only; after Rest0A_Inject (it calls R0A's helpers by name); reached only
+                                // through .data tables and its own E8 calls, so order among wave one does not matter;
+                                // no module patches bytes inside its 46 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest2B_Inject();            // round 14 wave-two group R2B (0x56E040..0x57F33C: Effect_Spawn / _SpawnAt, two menu
+                                // primitives the community band calls, Field_ObjectTriggers[1], game mode 8 step 8's
+                                // screen Shisu_* and its two models): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its seven tables swapped for the fuzz only; after every
+                                // harness's inject; ours that call Effect_Spawn / _SpawnAt call them by name; no
+                                // module patches bytes inside its 38 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest1E_Inject();            // round 14 group R1E (0x5226D0..0x523EC2: the field actions of party sets 13, 14,
+                                // 15 and set 16's forms 0 and 1 - the dispatchers by the form word and the state
+                                // bytes, the turn-and-probe, resolve, cell-pickup and strike states): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its 28 state tables swapped for
+                                // the fuzz only; after Rest0A_Inject (it calls R0A's helpers by name) and every
+                                // harness's inject; no module patches bytes inside its 47 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
+    Rest1A_Inject();            // round 14 wave-one group R1A (0x51BA80..0x51D70C: party-member states 4, 6, 8 and
+                                // party sets 0..2's field actions - their dispatchers by form, state and step, the
+                                // form actions' turns, the cell pickups and set 2's cell strike): its clones' calls
+                                // re-aimed at the scenario harness's recorders, its 26 tables swapped for the fuzz
+                                // only; after Rest0A_Inject (it calls R0A's helpers by name) and every harness's
+                                // inject; no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp,
+                                // widescreen.cpp)
+    Rest2A_Inject();            // round 14 wave-two group R2A (0x5372E0..0x537F1B: the field frame's listed-bank
+                                // screen pass, Char_GainHp / Char_LoseAp, Area_ObjectHandler and the four object
+                                // handlers of its fallback table Area_ObjectFallbacks with their states and spawns):
+                                // its clones' calls and stack-table immediates re-aimed at the scenario harness's
+                                // recorders, Area_ObjectFallbacks and Area74_Handlers swapped for the fuzz only; after
+                                // every harness's inject and wave one's; no module patches bytes inside its 22
+                                // (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp)
+    Rest2G_Inject();            // round 14 wave-two group R2G (0x597FA0..0x59AA77: record handler 4's kind 0 and the
+                                // EXP to the next level, handler 5's kind dispatch and the gene grid's states,
+                                // MenuList_Run's kinds 5..13 and 15..19 and 26 slide states): its clones' calls
+                                // re-aimed at the scenario harness's recorders, its 12 state tables swapped for the
+                                // fuzz only; after every harness's inject and Widescreen_Inject (it reads DIV-0041's
+                                // six bounds from the operands); no other module patches a byte inside its 48
+                                // (DIVERGENCE.md, cheats.cpp, labels.cpp)
+    Rest2D_Inject();            // round 14 wave-two group R2D (0x5869A0..0x58B1CD: the masters' screen's pick, yes /
+                                // no prompt and states 3..6, the field menu's Status and Items screens, the top bar's
+                                // countdown and camp check, the field abilities' effects): its clones' calls re-aimed
+                                // at the scenario harness's recorders, its five state tables swapped for the fuzz only
+                                // and FieldAbility_Effects for typed stand-ins; after every harness's inject and after
+                                // YesNoLayout_Inject, whose DIV-0027 re-aims two call sites inside MasterScreen_AskYesNo
+                                // (ours reads where they reach; the fuzz runs that one only with them unpatched)
+    Rest2E_Inject();            // round 14 wave-two group R2E (0x58B1D0..0x58ED3F: the field menu's Items arrange
+                                // steps, discard and use states and sorts, the Equipment and Ability screens): its
+                                // clones' calls re-aimed at the scenario harness's recorders, its five tables swapped
+                                // for the fuzz only; after every harness's inject; ours that call it (FS's
+                                // Equip_ChooseItem, PartyForm_Swap, the SharedList sorts) call it by the address it
+                                // had; no module patches bytes inside its 49 (DIVERGENCE.md, cheats.cpp,
+                                // widescreen.cpp, labels.cpp)
+    Rest2H_Inject();            // round 14 wave-two group R2H (0x59AA80..0x5A9874: window kinds - handler 7's 11..18,
+                                // handler 8's 3..5, MenuList_Kinds[20] - the masters' windows, the battle equipment
+                                // window's items and bar, the joystick enumeration, Cfg_Load's key table): its clones'
+                                // calls re-aimed at the scenario harness's recorders, its ten step tables swapped for
+                                // the fuzz only; after every harness's inject; after MenuFrame_Inject (DIV-0011) and
+                                // BattleDraw_Inject (DIV-0059), whose call sites inside 0x59AA80 / 0x59DBF0 ours reads,
+                                // and Widescreen_Inject (DIV-0041), whose bound inside 0x59C130 ours reads back
+    Rest2F_Inject();            // round 14 wave-two group R2F (0x58ED40..0x596F98: the field menu's Tactics and
+                                // Config steps, the Ability screen's helpers, window-record handlers 1 and 2 and
+                                // window kind 1): its clones' calls re-aimed at the scenario harness's recorders, its
+                                // 15 state tables swapped for the fuzz only; after Widescreen_Inject (DIV-0041's
+                                // bound inside MenuSlide_LeftOff170, read back) and BattleDraw_Inject (DIV-0059's
+                                // title call inside Win2_DrawItemList, read back) and every harness's inject
+    Rest2C_Inject();            // round 14 wave-two group R2C (0x57F340..0x58699F: the inn's, save point's and rest's
+                                // last states, the save block's builder and Save_QuickWrite, the shop's browse and
+                                // sell modes and four ShopMode dispatchers, the master's talk and its panels, the
+                                // figure record's moves): its clones' calls re-aimed at the scenario harness's
+                                // recorders, its 14 state tables swapped for the fuzz only; after every harness's
+                                // inject; ours that call it (Game_WndProc, FieldTail_LoadBank, effect_2g, effect_3d)
+                                // call it by the address it had; before FishingText_Arm; no module patches bytes
+                                // inside its 61 (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp,
+                                // yes_no_layout.cpp)
+    Rest3A_Inject();            // round 14 wave-three group R3A (0x404180..0x4378AA: area 33's world-map frame
+                                // states, BATE's root and three equipment helpers, BattleEnd_Steps[2] / [3] and
+                                // ExitSteps[3], kind-0 battle-task slots 2, 4, 5, 11, 12 and the actor watch's
+                                // states 1 / 4, BattleBossFx_Dispatch, the enemy animation helpers, New Game's
+                                // records): its clones' calls re-aimed at the boss harness's recorders, its five
+                                // step tables swapped for the fuzz only; after every harness's inject and every
+                                // module whose functions it calls; DIV-0020's check of 0x437834 / 0x437891 reads
+                                // bytes the inject's jmp at 0x437820 leaves in place; no module patches bytes
+                                // inside its 45 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest3C_Inject();            // round 14 wave-three group R3C (0x44D000..0x44E4AA: Effect_Handlers slots 50..85 and
+                                // 87..111): its clones' calls re-aimed at the boss harness's recorders; reached only
+                                // through Effect_Handlers (Effect_ApplyResult reads the cell) and R3D's 0x44EA70 tail
+                                // jump; after every harness's inject; no module patches bytes inside its 61
+                                // (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest3E_Inject();            // round 14 wave-three group R3E (0x46A320..0x4801ED: three kinds' dispatchers, the
+                                // helpers of kinds 0x1D / 0x21 / 0x24 / 0x30 / 0x41, the glow sparks, trail, spiral,
+                                // ring and dust of kinds 0x48 / 0x49, kinds 0x5D / 0x5E / 0x5F's states): its clones'
+                                // calls re-aimed at the scenario harness's recorders, three state tables swapped and
+                                // EffectGlowSparks_States patched for the fuzz only; after every harness's inject and
+                                // every effect group's (they call its functions by the addresses they had); before
+                                // FishingText_Arm; no module patches bytes inside its 50 (DIVERGENCE.md, cheats.cpp,
+                                // widescreen.cpp)
+    Rest3G_Inject();            // round 14 wave-three group R3G (0x4925C0..0x5171FB: effect kinds 0xAC, 0xAD, 0xAE,
+                                // 0xBA's leftover states, a screen triangle's winding, the boss actors' placement,
+                                // game modes 8..11's dispatchers and steps, Quake's vertex lift, area 109's switch,
+                                // sub-kind 0x41's two draws, area 0xBD's view, kind 0xF's character count): its
+                                // clones' calls re-aimed at the scenario harness's recorders, its four mode step
+                                // tables swapped for the fuzz only; after every harness's inject and after
+                                // Widescreen_Inject (DIV-0041), whose four bounds inside AreaMapBD_BuildView ours
+                                // reads back, and before DrawPool_Grow (DIV-0062), whose item array and bound there
+                                // ours reads back too; ours that call it (E1A, E5A, E6B, BE6, the battle steps)
+                                // call it by the address it had
+    Rest3D_Inject();            // round 14 wave-three group R3D (0x44E4B0..0x44FF0E: Effect_Handlers slots 112..129,
+                                // the rolls, the inflict, the stat step and the no-hit mark the effect slots share,
+                                // the Dragon command's part dispatcher): its clones' calls re-aimed at the boss
+                                // harness's recorders, DragonCmd_Parts swapped for the fuzz only; after BattleE5_Inject
+                                // (the parts and Effect_DrainAp it reaches are BE5's) and every harness's inject;
+                                // ours that call it (battle_damage, battle_e5, magic_lib) call it by the address it
+                                // had; no module patches bytes inside its 36 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest3F_Inject();            // round 14 wave-three group R3F (0x480210..0x49259C: the states of effect kinds 0x60,
+                                // 0x9E, 0xA1..0xA3, 0xA7..0xAA and 0xAB's state 1, and the draws they and their
+                                // neighbours call): its clones' calls re-aimed at the scenario harness's recorders;
+                                // after every harness's inject; before Widescreen_ArmFills, so its self-test compares
+                                // EffectKindAA_DrawFill's original 320 x 240 (DIV-0041); no module patches bytes inside
+                                // its 50 (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp, yes_no_layout.cpp)
+    Rest3B_Inject();            // round 14 wave-three group R3B (0x4468B0..0x44CFF4: the result screen's EXP
+                                // helpers, three percent clamps, the command menus' last steps and four
+                                // dispatchers, 45 Effect_Handlers slots): its clones' calls re-aimed at the boss
+                                // harness's recorders, four .data tables swapped for the fuzz only; after every
+                                // harness's inject; ours that call it (battle_result, battle_e6, rest_2g) call it by
+                                // the address it had; before FishingText_Arm; no module patches bytes inside its 64
+                                // (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest4F_Inject();            // round 14 wave-four group R4F (0x460CB0..0x464B9E: the Config screen's machine and
+                                // draws, WorldMap_ExitRecords, the states of effect kinds 2, 7, 8, 9 and 0xB and
+                                // their draws): its clones' calls re-aimed at the scenario harness's recorders, five
+                                // state tables swapped for the fuzz only; after every harness's inject and after
+                                // ConfigText_Inject and MenuFrame_Inject, whose call sites and operands inside its
+                                // Config draws ours reads in place (DIV-0011, DIV-0017, DIV-0026, DIV-0051); ours
+                                // that call it (effect_1a, event_leader, rest_2f) call it by the address it had;
+                                // before FishingText_Arm
+    Rest4E_Inject();            // round 14 wave-four group R4E (0x45E870..0x460CAD: the community band's panels,
+                                // name commits, track list, item screen and ranked lists): its clones' calls
+                                // re-aimed at the scenario harness's recorders, seven .data tables swapped for the
+                                // fuzz only; after every harness's inject; R4B and R4D call it by the address it
+                                // had; before FishingText_Arm; no module patches bytes inside its 48 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
+    Rest4D_Inject();            // round 14 wave-four group R4D (0x45C400..0x45E86E: the community's games 7
+                                // and 8 - CommuDraw, CommuName - and the board R4C draws with): its clones' calls
+                                // re-aimed at the scenario harness's recorders, eleven .data tables swapped for the
+                                // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
+                                // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest4A_Inject();            // round 14 wave-four group R4A (0x452DD0..0x456D4F: six battle targeting helpers,
+                                // Field_RunSlot and its CLUT copy, the community's simulation and its objects'
+                                // poses, twelve Field_ObjectTriggers entries): its clones' calls re-aimed at the
+                                // scenario harness's recorders; after every harness's inject; ours that call it
+                                // (battle_sprites, battle_e1, battle_e2, frame_callees, area_w4d, mode_states) call
+                                // it by the address it had; before FishingText_Arm; no module patches bytes inside
+                                // its 48 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    Rest4C_Inject();            // round 14 wave-four group R4C (0x459EE0..0x45C3F3: the community band's two games
+                                // with a stake, entries 0 and 1 of R4B's game table 0x652A84, their nine state tables
+                                // and draw helpers, Commu_PushSubscreen): its clones' calls re-aimed at the scenario
+                                // harness's recorders, its nine tables swapped for the fuzz only; after every
+                                // harness's inject; before FishingText_Arm; no module patches bytes inside its 60
+                                // (DIVERGENCE.md, cheats.cpp, widescreen.cpp, labels.cpp)
+    Rest4B_Inject();            // round 14 wave-four group R4B (0x456D50..0x459EDA: Field_ModeTailKinds 14, 21..26,
+                                // 60, their states and the community board's states and draws): its clones' calls
+                                // re-aimed at the scenario harness's recorders, twelve .data tables swapped for the
+                                // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
+                                // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
                                 // module's self-test, which all compared the original's order (layering.h)

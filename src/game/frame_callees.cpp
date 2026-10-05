@@ -51,7 +51,8 @@ struct Callees {
     void (__cdecl* update_screen)();           // 0x588F20
     void (__cdecl* release)();                 // 0x589840
 };
-const Callees kOriginals = {Field_RunSlot, Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
+const Callees kOriginals = {reinterpret_cast<void (__cdecl*)(unsigned char)>(static_cast<std::uintptr_t>(bof3::addr::Field_RunSlot)),   // R4A's (round 14): by address, the value unchanged
+                            Sprite_UpdateScreenSlot, Sprite_UpdateScreen, Effect_Release};
 Callees g = kOriginals;
 
 // A colour component plus a tint byte, in 8 bits as the original adds them:

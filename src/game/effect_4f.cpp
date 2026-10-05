@@ -182,8 +182,8 @@ void SparkTick() {
 // ===========================================================================
 
 // original 0x491D70 (hidden in 0x4918B0): jmp [EffectKindAA_States + +1 * 4],
-// unbounded. Its three states are catalog part 6 rows (0x491D90, 0x491DB0,
-// 0x491DF0).
+// unbounded. Its three states are catalog part 6 rows (EffectKindAA_Start, _FadeIn,
+// _FadeOut).
 extern "C" void __cdecl EffectKindAA_Run(void) {
     Dispatch("EffectKindAA_Run", AddressOf(EffectKindAA_States), EffectKindAA_States_count);
 }
@@ -201,7 +201,7 @@ extern "C" void __cdecl EffectKindAC_Run(void) {
 // ===========================================================================
 
 // original 0x492510 (hidden in 0x492400): jmp [EffectKindAB_States + +1 * 4],
-// unbounded. States: EffectKindAB_Start, 0x492580 (part 6: Draw_PassFlags 0 -
+// unbounded. States: EffectKindAB_Start, EffectKindAB_Drops (part 6: Draw_PassFlags 0 -
 // +1 up; else EffectKindAB_Emit and a tail jmp to EffectKindAB_MoveDrops),
 // Effect_StateRelease.
 extern "C" void __cdecl EffectKindAB_Run(void) {
@@ -222,7 +222,7 @@ extern "C" void __cdecl EffectKindAB_Start(void) {
 }
 
 // original 0x492AF0 (inside the cut's 0x492AA0 extent, no list's; reached by a
-// tail jmp from kind 0xAB's state 1 0x492580): EffectKind81_MoveDrops without its
+// tail jmp from kind 0xAB's state 1 EffectKindAB_Drops): EffectKind81_MoveDrops without its
 // moving count - the map camera; each drop in use: its speed +0x14 0x20000 more,
 // its height +0xC moved by the new speed, its blink bit +3 flipped, drawn
 // (EffectKindAB_DrawDrop), its life +2 down - at 0 its +0 and +1 cleared. al 1
@@ -711,7 +711,7 @@ extern "C" void __cdecl EffectKindB0_NewBar(void) {
 // original 0x493370 (cdecl): a draw mode (Gpu_GetTPage(0, 1, 0x380, 0x100),
 // dtd 1, committed to slot 7); the map camera; each bar in use by its state +2:
 // 0 - +1 = 4, +3 = 4, the word +4 = `length`'s low word, +2 = 1; 1 - +2 = 2; 2
-// - the word +4 down 8, below 0 the bar out of use (+0 = 0); then drawn (0x4920F0,
+// - the word +4 down 8, below 0 the bar out of use (+0 = 0); then drawn (EffectKindA8_DrawBar,
 // catalog part 6) unless its state is 0. al 1 when any was in use, else 0.
 extern "C" unsigned char __cdecl EffectKindB0_StepBars(unsigned length) {
     DrawMode(1, 0x380, 0x100, 1, 7);

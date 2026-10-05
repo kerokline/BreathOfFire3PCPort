@@ -253,7 +253,7 @@ void ArgsTrigger(std::uint32_t* a) {
 // The spawns' callees: Effect_Spawn (the byte and the words pushed with stale
 // high bits; slots 0..2 or none) moving Sprite_Current; Effect_FindFree.
 #define W3C_SPAWN \
-    {W3C_THEIRS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent}, \
+    {W3C_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent}, \
     {W3C_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03, {}, &FindFreeEffect}
 
 // Every effect record a slot byte can name (the stand-in answers 0..3 or none;

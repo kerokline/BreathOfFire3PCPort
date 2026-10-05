@@ -485,7 +485,7 @@ void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
     if (!sh::InRegions(s, 0x80)) return;
-    switch (h % 6) {
+    switch (sh::DisturbCase(h, 6)) {
     case 0: s[9] = SafeCount((v & 1) ? 7u : v >> 1); break;
     case 1: Field_Request = static_cast<unsigned char>((v & 1) ? 0u : v >> 1); break;
     case 2: Mem(at::kCounter)[0] = static_cast<unsigned char>((v & 1) ? 0xEu : v >> 1); break;

@@ -256,7 +256,7 @@ U FxScreenTint(const U*, U answer) {
     Advance(0x28);
     return answer;
 }
-// 0x4837B0 (no group's): lines from Sprite_Current's +0xA / +0xB, writing the
+// EffectKind69_DrawLines (R3F's): lines from Sprite_Current's +0xA / +0xB, writing the
 // scratch cells 0x903850..0x90385F and the first vertex - the record and the
 // two bytes logged, the cells filled.
 U FxLines(const U*, U answer) {
@@ -290,7 +290,7 @@ const sh::Callee kCallees[] = {
     {E3B_OURS(EffectKind6C_DrawSpark), 1, {kW}, kG, 0, 0, {0x28}, nullptr, nullptr, true},
     // raw: E4D's tint and the lines no group owns
     {"0x48CA90", at::kScreenTint, at::kScreenTint, 0, {}, kG, 0, 0, {}, &FxScreenTint, nullptr, true},   // at::kScreenTint
-    {E3B_RAW(0x4837B0), 0, {}, kG, 0, 0, {}, &FxLines, nullptr, true},        // at::kKind69Lines
+    {"EffectKind69_DrawLines", at::kKind69Lines, at::kKind69Lines, 0, {}, kG, 0, 0, {}, &FxLines, nullptr, true},        // at::kKind69Lines
     // standard rows re-listed: kind 0x69's spawner never answered none
     {E3B_OURS(Effect_FindFree), 0, {}, sh::Answer::kByte, 0xFF, 0x13, {}, &FxFindFree, nullptr, true},
     // the vertex on the stack hashed by its six bytes (its pad, the callers'

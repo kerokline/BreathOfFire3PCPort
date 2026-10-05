@@ -222,7 +222,7 @@ extern "C" void __cdecl GameMode_LookEnd(void) {
 // original 0x496290 (no PSX twin paired): Game_Mode 7 (GameMode_Handlers
 // entry 7) - a tail jump through GameMode_ShopSteps 0x656AAC on Game_Step:
 // 0 Shop_Open, 1 Shop_Frame, 2 Shop_Close. Unchecked: step 3 would run mode
-// 8's first step, 0x496440, the word after the table.
+// 8's first step, GameMode8_Enter 0x496440, the word after the table.
 extern "C" void __cdecl GameMode_Shop(void) { Entry(at::kShopSteps, Game_Step)(); }
 
 // original 0x4962A0 (no PSX twin paired): the shop's step 0. The object the
@@ -286,7 +286,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Frame(void) {
 // combination byte 0x90412C gets bit 7, and the sound bank 0x2C2 + its low
 // seven bits is loaded (the area's own, which the shop's file replaced) with
 // the framed wait; with Field_InputFlags bit 4, DAT 0x12A too, with its wait,
-// and the unread 0x4560D0; then mode 2 with Game_Step and Field_Request 0
+// and CommuSim_RollOffers 0x4560D0 (R4A's); then mode 2 with Game_Step and Field_Request 0
 // and a tail jump to Field_Frame.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl Shop_Close(void) {
     const unsigned char combo = static_cast<unsigned char>(At(at::kPartyCombo)[0] | 0x80);

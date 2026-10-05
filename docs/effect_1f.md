@@ -336,6 +336,46 @@ and count of 0 the mutant divides by 0 (exit 0xC0000005), which proves less;
 final seeds (the list's kind count and the cursors' boundaries seeded, 6,000
 rounds) C29 and C51 were not refused; the seeds are the fix, not the plant.
 
+**2026-10-05, under the repaired disturbance (round fourteen's review, item
+1).** Before `b9dfe34` the group's `Disturb` switched on `h % 12` (eleven
+cases), which never reached cases 0 (record 6's `+1`, `+7`, `+8`, `+0xA`,
+`+6`), 3 (the scroll word `+0x38`), 6 (the slots `0x90412E` / `0x904130`) and
+9 (`Sprite_Current +3` / `+4`); it now draws `sh::DisturbCase(h, 11)`. The 92
+controls re-run on `451edeb` with the fuzz as it was (the same script, every
+anchor still found once): 90 refused by a count, C35 0 (equivalent), C68 the
+fault, as before; 39 counts moved by at most 15 rounds, none to 0. New
+controls, each a re-read after a call missed (the value read before the call
+used); with the fuzz unchanged C91, C93, C95 and C98 passed and C97, C99 were
+refused in 1 round each. Neither `+8` nor `+6` is read again after a call by
+any of the fifteen (`+8` is only written, `+6` read once by the dispatcher),
+so those two cells of case 0 are noise for this group. **The fuzz changed**
+(`fe32391`): the harness hands its hash to the group's disturb in one case of
+its sixteen, and the menu's paths that re-read after a call are a few hundred
+rounds of the 8,000, so `Sound_PlayEffect` and `Menu_DrawHand` are re-listed
+at the standard widths with an effect (`FxMenu`) that runs the group's
+`Disturb` and `KeepDivisor` from the noise one time in two, `FxInventory`
+does the same, and the item cursor `+0x10` is seeded 0 about one time in
+three (C95's branch: C30, in it, went from 38 rounds to 75). Shadow after it:
+120,000 rounds, 0 mismatches. All 103 controls re-run on that fuzz: **101
+refused by a count**, C35 0 and C68 the fault as before; against the table
+above 47 counts moved, none to 0 (the largest C48 252 to 209, C31 36 to 79,
+C30 36 to 75).
+
+| Function | Controls | Refused (rounds of 8,000; with the fuzz unchanged) |
+|---|---|---|
+| `ExtraSlots_Enter` | C91 `+7` not re-read after the hand (case 0) | 11 (0) |
+| `ExtraSlots_PickSlot` | C92 `+7` read before the label (case 0), C93 `+1` read before the sound (case 0), C96 the item slot read before the label (case 6), C97 the accessory slot read before the label (case 6), C100 `Sprite_Current +3` read before the cancel's sound (case 9), C101 `+4` read before the confirm's sound (case 9) | 6 (6); 17 (0); 5 (5); 1 (1); 181 (129); 104 (74) |
+| `ExtraSlots_PickItem` | C94 `+0xA` read before the label (case 0), C95 the scroll word read before the scroll-up's sound (case 3), C98 the accessory slot read before `Inventory_Remove` (case 6), C99 the item slot read before `Inventory_Remove` (case 6) | 2 (2); 3 (0); 3 (0); 3 (1) |
+
+All eleven refused. C92, C94, C96 and C97 re-read after `Text_DrawAt`, which
+the change does not touch: their counts are the harness's disturbance alone,
+C97 thin at 1. C100 and C101 were refused with the fuzz unchanged as well
+(the harness's own case 4 also moves `Sprite_Current`, which `PickSlot` reads
+afresh after the sound). C95 is not equivalent: in scratch builds whose
+`FxMenu` wrote the scroll word itself, it passed (0) when every call wrote it
+- the hand's write after the sound overwrites the stale value on both sides -
+and was refused in 9 rounds when one call in two did.
+
 ## 7. Calls across groups
 
 **Out**: none to another group of this round (`band_rows.py --edges`: E1F

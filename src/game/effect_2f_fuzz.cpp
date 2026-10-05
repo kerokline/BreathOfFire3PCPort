@@ -506,7 +506,7 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
-    switch (h % 6) {
+    switch (sh::DisturbCase(h, 6)) {
     case 0: s[9] = static_cast<unsigned char>((v & 1) ? 1u : v >> 1); break;
     case 1: SetWord(s + 0x5A, (v & 1) ? 1u + ((v >> 1) & 3) : v >> 1); break;
     case 2: SetWord(s + 0x32, (v >> 1) % 0x21); break;

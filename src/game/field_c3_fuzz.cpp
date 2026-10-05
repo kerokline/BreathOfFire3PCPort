@@ -446,7 +446,7 @@ void Args(unsigned k, U* a) {
 void Disturb(U h) {
     unsigned char* const s = Sc();
     const auto b = static_cast<unsigned char>(h >> 24);
-    switch (h % 12) {
+    switch (sh::DisturbCase(h, 12)) {
     case 0: s[9] = static_cast<unsigned char>(b & 3); break;
     case 1: s[0xA] = static_cast<unsigned char>(b % 5); break;
     case 2: s[8] = b; break;

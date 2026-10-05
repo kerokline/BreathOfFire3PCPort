@@ -135,7 +135,7 @@ unsigned StatusColourHp(unsigned flags) { return (flags & 0x4000) ? 2u : ((flags
 }  // namespace
 
 // ===========================================================================
-// The battle party's per-frame state step (the battle frame 0x42E2F0 calls
+// The battle party's per-frame state step (the battle frame Battle_Frame 0x42E370 calls
 // the first two; the state handlers of 0x64DFE0 the rest).
 
 // original 0x4411E0 (PSX 0x801DEE70): the current object's state handler -

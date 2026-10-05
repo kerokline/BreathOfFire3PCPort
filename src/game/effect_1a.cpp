@@ -9,8 +9,8 @@
 //   kinds 0xE, 0x16  a world map's record handler (WorldMap_Records +4 / +8)
 //   kind 0x5C        area 104's or area 121's own handler
 //   kind 1           a textured quad under an extra sprite (+0x18), flickering
-//   kind 7           a colour ramp (+0x5D..+0x5F up to 0x80) with 0x462F10's sprite
-//   kinds 2, 8, 9, 0xB  dispatchers only (their states are scenario-bank code)
+//   kind 7           a colour ramp (+0x5D..+0x5F up to 0x80) with EffectKind07_DrawSprite
+//   kinds 2, 8, 9, 0xB  dispatchers only (their states are R4F's, rest_4f.cpp)
 //   kind 0x10        a textured quad between two extra sprites (+0xC, +0x18)
 //   kind 3           a fading bar panel and an accessory's name with a count
 //   kind 5           a sprite that rises to a height scaled by a parameter,
@@ -460,8 +460,8 @@ extern "C" void __cdecl EffectKind10_Run(void) {
 }
 
 // ===========================================================================
-// Kind 7 (EffectKind07_States: _Start, _FadeIn, then 0x462FC0 / 0x462FF0,
-// scenario-bank code)
+// Kind 7 (EffectKind07_States: _Start, _FadeIn, then EffectKind07_Hold / _FadeOut,
+// R4F's)
 // ===========================================================================
 
 // original 0x462E70 (EffectKind07_States[0]): +0x5F, +0x5E, +0x5D = 0, +9 =
@@ -474,7 +474,7 @@ extern "C" void __cdecl EffectKind07_Start(void) {
     S()[1] = 1;
 }
 
-// original 0x462EB0 (EffectKind07_States[1]): 0x462F10(1) (a sprite
+// original 0x462EB0 (EffectKind07_States[1]): EffectKind07_DrawSprite(1) (a sprite
 // primitive); +0x5D, +0x5E, +0x5F up by 2; at +0x5D 0x80 the counter byte
 // 0x903848 = 0x14, +1 = 2, +9 = 0xFF.
 extern "C" void __cdecl EffectKind07_FadeIn(void) {
@@ -494,7 +494,7 @@ extern "C" void __cdecl EffectKind07_FadeIn(void) {
 // E1B's kinds (docs/effect_1a.md section 2.4)
 // ===========================================================================
 
-// original 0x464BA0 (called by kind 2's states 0x464730, 0x464780, 0x4647B0):
+// original 0x464BA0 (called by kind 2's states EffectKind02_SlideIn, _Body, _SlideOut):
 // the draw mode (5, 3), panel sprite 0xD at (x + 0x18, y + 8); the draw mode
 // (0, 3), sprites 0xE at (x, y) and 0xF at (x + 0x100, y); the count 0x3E -
 // record 0's +0x3A (0 when negative or when record 0's +1 is 0) printed

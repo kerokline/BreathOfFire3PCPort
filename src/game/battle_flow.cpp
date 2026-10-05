@@ -113,7 +113,7 @@ using HookFn = void (__cdecl*)(int);
 // ===========================================================================
 
 // original 0x42E400 (no PSX twin paired): once a frame from the battle's frame
-// 0x42E2F0. While the byte 0x904AAA is set and the phase is not 0, the
+// Battle_Frame 0x42E370. While the byte 0x904AAA is set and the phase is not 0, the
 // pointer at 0x904B6C is called with 3 first; then entry (0x904AA0 & 0xFF) of
 // a six-entry table the original builds on its own stack - 0x42E470,
 // 0x42E990, 0x42F070, 0x42F220, 0x4302B0, 0x4311E0, the battle's phases

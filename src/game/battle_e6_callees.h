@@ -8,7 +8,7 @@
 //             pure (the engine set's kThrough).
 //   0x446F50  (value, percent): the same clamped to 0..9999.
 //   0x446F80  (value, percent): the same clamped to 0..100.
-//   0x4CF4B0  (x, z): a height for a BMAGIC cell's vertex (reads 0x6959CC,
+//   0x4CF4B0  (x, z): Quake_VertexLift (R3G), a BMAGIC cell vertex's height (reads 0x6959CC,
 //             0x695C2C / 0x695C2E; not read further); ax the answer.
 // BE6 calls no function another group of this wave owns (tools/band_rows.py
 // --edges, 2026-09-29).
@@ -121,10 +121,10 @@ constexpr U kCameraMatrix = 0x905E40;     // Camera_Matrix
 constexpr U kOtSlot = 0x92BF19;           // Draw_OtSlot
 
 // --- the callees nobody owns -----------------------------------------------
-constexpr U kPercent999 = 0x446F20;       // (value, percent)
-constexpr U kPercent9999 = 0x446F50;      // (value, percent)
-constexpr U kPercent100 = 0x446F80;       // (value, percent)
-constexpr U kCellHeight = 0x4CF4B0;       // (x, z): ax
+constexpr U kPercent999 = bof3::addr::Stat_PercentCap999;   // 0x446F20, R3B's (round fourteen; the same value): (value, percent)
+constexpr U kPercent9999 = bof3::addr::Stat_PercentCap9999;   // 0x446F50, R3B's (round fourteen; the same value): (value, percent)
+constexpr U kPercent100 = bof3::addr::Stat_PercentCap100;   // 0x446F80, R3B's (round fourteen; the same value): (value, percent)
+constexpr U kCellHeight = bof3::addr::Quake_VertexLift;       // (x, z): ax
 
 }  // namespace at
 }  // namespace battle_e6

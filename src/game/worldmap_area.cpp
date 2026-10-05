@@ -594,7 +594,7 @@ namespace {
 // A world-map record's code pointer at `slot`, by WorldMap_RecordIndex's low
 // byte, read in place. Index 11 (no world map) reads the dwords after the
 // eleventh record - EffectKind01_States 0x653A44 of EffectKind01_Run 0x462BA0 (0x462BC0, 0x462BF0,
-// 0x462E70, 0x462EB0, 0x462FC0, ...) - as the original does; record 6 (area
+// 0x462E70, 0x462EB0, EffectKind07_Hold, ...) - as the original does; record 6 (area
 // 104) holds nulls at +4, +8 and +0x14.
 Handler RecordEntry(U slot) {
     const U index = g.record_index() & 0xFF;

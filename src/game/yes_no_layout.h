@@ -5,7 +5,7 @@
 
 // DIV-0027, and DIV-0029's save-slot name inset with it. Only with BOF3X_LANG
 // set, not "original", and not a full-width language (DIV-0056). Also the
-// master's "Is this OK?" prompt (Capcom's 0x586D20, two calls re-aimed,
+// master's "Is this OK?" prompt (MasterScreen_AskYesNo 0x586D20, two calls re-aimed,
 // BOF3X_ORIGINAL=MasterAskLayout).
 void YesNoLayout_Inject();
 

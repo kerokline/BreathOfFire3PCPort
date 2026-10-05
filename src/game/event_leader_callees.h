@@ -80,7 +80,7 @@ constexpr std::uint32_t kFlags2Hi = 0x905BA5;
 namespace fn {
 constexpr std::uint32_t kPathClear = bof3::addr::Field_PathClear;       // u8(x, z, raised): the way from the leader to (x, z) (unread whole)
 constexpr std::uint32_t kGiveZenny = bof3::addr::Field_GiveZenny;       // void(n): sound 0x106, "%d" of n, Msg_OpenSystem(5), request 2, 0x591BE0(n, 0)
-constexpr std::uint32_t kAreaExits = 0x462AC0;       // const u8*(): the area's 4-byte exit records (x, z, area, kind)
+constexpr std::uint32_t kAreaExits = bof3::addr::WorldMap_ExitRecords;       // const u8*(): the area's 4-byte exit records (x, z, area, kind)
 constexpr std::uint32_t kWayBlockedWide = bof3::addr::Field_WayBlockedWide;  // u8(x, z, ground): Field_WayBlocked for a raised sprite
 }  // namespace fn
 

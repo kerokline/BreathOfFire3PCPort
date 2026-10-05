@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 72 entries, DIV-0001..0072, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 75 entries, DIV-0001..0075, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2029,7 +2029,10 @@ designed in rather than bolted on.
 - **Date:** 2026-09-23
 - **Subsystem:** display (`src/game/widescreen.{h,cpp}`, `src/render/render_d3d11.cpp`,
   `src/game/display_setup.cpp`, `MapView_Build` `0x56EC00` ours in
-  `src/game/map_layers.cpp`, `AreaMap_FrameAreaBD` `0x510780` Capcom's;
+  `src/game/map_layers.cpp`, `AreaMapBD_BuildView` `0x510780` - Capcom's when
+  this was written and called `AreaMap_FrameAreaBD` below, which is the name of
+  `0x510630`; ours since round fourteen's R3G, `src/game/rest_3g.cpp`, which
+  reads the four cull operands back from the code;
   [`widescreen.md`](widescreen.md))
 - **Tier:** Sensible
 - **Original behaviour:** the picture is the game's 320 x 240 view (at
@@ -2223,7 +2226,25 @@ designed in rather than bolted on.
   `src/game/effect_4f.cpp`). Both groups inject before
   `Widescreen_ArmFills`, so their fuzzes still compare the original's
   `(0, 0)` 320 x 240 and narrow play is Capcom's to the bit. **All nine of
-  the scan's sites and E6C's `0x510E6C` are now widened.** Still not
+  the scan's sites and E6C's `0x510E6C` are now widened.** **Round fourteen,
+  2026-10-04**: R3F's `EffectKindAA_DrawFill` (`0x492400`, the float at
+  `0x492450`: kind 0xAA's two shaded quads over the whole frame) is drawn
+  from `Widescreen_FillX()` over `Widescreen_FillWidth()`, as
+  `EffectKind18Sub36_Pulse` is (`src/game/rest_3f.cpp`; its inject is before
+  `Widescreen_ArmFills`, so its fuzz compares the original's 320). **Kind
+  0xAC's two fades widen with it**: R3G's `EffectKindAC_FadeIn` and
+  `_FadeOut` (`0x4925E0`, `0x492620`, `src/game/rest_3g.cpp`) draw through
+  the same `EffectKindAA_DrawFill` (round fourteen's review, item 11). Not
+  widened: `EffectKindA8_DrawBar` (`0x4920F0`), sixteen red bars the frame's
+  width but not its height - **left as it is by the owner, 2026-10-04, to be
+  looked at in game under the wide picture.** Where it shows is not
+  established: no code of ours or Capcom's stores or pushes kind `0xA8` (a
+  scan of the image for `mov byte [reg + 5], 0xA8` and for `push 0xA8`
+  before a spawn found nothing), so the kind is asked for from data - a
+  script or a table. The neighbouring kind `0xA7` is spawned by area 198
+  (`Area198_SpawnEffectA7`; the sibling's `names/places.toml` gives that
+  area as `AREA198` of `WORLD04`), and kind `0xB0` (E4F) draws the same
+  bars: those two are where to look first. Still not
   widened, the owner's call: `EffectKind96_Pulse`, the spiral `0x505E60`,
   the culls (`0x4FF6A3`, `0x5054E3`, `Encounter_OnScreen`, the battle
   field's two), the strips and full-width draws listed above.
@@ -3297,7 +3318,9 @@ designed in rather than bolted on.
   `0x513BAC`, `0x513C41` - a raw scan of `.text` for the array's address and
   its two interior offsets, then for every immediate inside item 0, each
   confirmed by disassembly) are re-aimed at inject, the one bound
-  `AreaMap_FrameAreaBD` compares its bump index with (`0x400` at `0x510878`)
+  `AreaMapBD_BuildView` (`0x510780`; called `AreaMap_FrameAreaBD` here until
+  2026-10-05, which is the name of `0x510630` - ours since round fourteen's
+  R3G) compares its bump index with (`0x400` at `0x510878`)
   is raised to `0x800`, and ours read the pool through `draw_pool::Items()`
   / `Free()` / `Count()` - including the two resets that prime every item's
   halves (`Field_ViewReset`, `Weretiger_ResetMapView`), which the original
@@ -3884,3 +3907,119 @@ designed in rather than bolted on.
   function, its stale word included.
 - **The owner's word, 2026-10-03:** kept as written (entered by the
   coordinator from E5F's report).
+
+### The masters' model's light matrix zeroed past its first row, where the original copies stale stack
+
+- **ID:** DIV-0073
+- **Date:** 2026-10-04
+- **Subsystem:** the masters' screen (`Shisu_DrawModel` `0x57EEF0`, ours in
+  `src/game/rest_2b.cpp`; game mode 8 step 8)
+- **Tier:** Forced
+- **Original behaviour:** the function's light matrix is a local at
+  `[esp + 0x7C]`, of which `Light_ObjectDirection` writes the first three
+  shorts - the light's row. `Gte_SetMatrix2` `0x5A8DA0` then copies all 32
+  bytes into `Gte_Matrix2` `0x7DE4E0`: the other two rows and the
+  translation, 26 bytes, are whatever the caller's stack held.
+- **New behaviour:** ours hands `Gte_SetMatrix2` the same first row and
+  zeros in the other 26 bytes. Every primitive the function draws is the
+  original's.
+- **Rationale:** stack the function never writes cannot be reproduced, only
+  replaced (DIV-0021's and DIV-0023's class). `Gte_Matrix2` is read only by
+  `Gte_NormalColor`, whose result the port throws away (the colour in is
+  copied over it, `src/game/psx_gte_transform.cpp`), so nothing drawn or
+  decided depends on the bytes; zero is the value that says so.
+- **Also in the PSX version?** Not read; the cut pairs the screen's rows
+  with the SHISU overlay.
+- **Verification:** `BOF3X_SHADOW=rest_2b` headless: the fuzz compares the
+  matrix's first row and levels the rest, 0 mismatches
+  ([`rest_2b.md`](rest_2b.md) section 7, L1). Not seen live: no recorded
+  route opens the masters' model. On a route that does, the state hash
+  ([`state-hash.md`](state-hash.md)) reports `0x7DE4E6..0x7DE4FF` from the
+  frame the model first draws - this entry, and not in the skip list, since
+  the field's own draws load the whole matrix there and are compared.
+- **Reversible?** `BOF3X_ORIGINAL=Shisu_DrawModel` runs Capcom's function,
+  its stale bytes included.
+- **The owner's word, 2026-10-04:** kept as written, zeros in the unused
+  bytes as the other stale-byte entries have it - after a look at the
+  sibling for anything it knew of the function: `../BreathOfFire3Recomp`
+  has the SHISU overlay unnamed (`names/overlays.toml`, id `0x015`, no role,
+  no evidence), no name or note at the twin `0x801D2308`, and nothing on its
+  light matrix; the code there is the recompiler's output only. So the
+  PlayStation side has not been read either, and "Also in the PSX
+  version?" stays unanswered.
+
+### A random enemy from the bytes the function wrote, where the original's four-byte list overflows into stale stack
+
+- **ID:** DIV-0074
+- **Date:** 2026-10-05
+- **Subsystem:** battle (`Battle_RandomLiveEnemy` `0x452F10`, ours in
+  `src/game/rest_4a.cpp`; its caller is `BattleAction_PickRandomAbility`
+  `0x42F9D0`)
+- **Tier:** Forced
+- **Original behaviour:** the function lists the enemies 3..10 that are not
+  out in four bytes of a 12-byte stack frame and answers the one at
+  `Rand() % count`. Eight enemies can stand. From the fifth on, the writes
+  run over the count byte (the count becomes that enemy's number) and into
+  the two dwords after the list, so the pick is any of frame bytes 0..9 -
+  among them six bytes no instruction of the function writes (the upper
+  bytes of the count's dword and of the loop's): whatever the caller's
+  stack held.
+- **New behaviour:** ours keeps the same twelve bytes and makes the same
+  writes, the overflow included, so every pick the original makes from a
+  byte it wrote is ours too. The six never-written bytes are 0. With four
+  or fewer enemies standing nothing differs.
+- **Rationale:** stack the function never writes cannot be reproduced, only
+  replaced (DIV-0023's, DIV-0068's and DIV-0072's class); 0 is what the
+  function itself puts in those dwords' neighbours. The overflow itself is
+  Capcom's defect and is kept: a bound on the list would change which enemy
+  is picked in fights the original plays deterministically, and that is the
+  owner's to ask for, not this entry's.
+- **Also in the PSX version?** Not read.
+- **Verification:** `BOF3X_SHADOW=rest_4a` headless: the fuzz's
+  `Battle_ActorIsOut` stand-in zeroes those bytes on the original's side
+  and every answer is compared, 0 mismatches; control C6 (one of the bytes
+  not 0) is refused in 600 of 6,000 rounds
+  ([`rest_4a.md`](rest_4a.md) sections 6 and 7, L1). Not seen live: whether
+  a recorded battle calls it with five or more enemies standing is not
+  known.
+- **Reversible?** `BOF3X_ORIGINAL=Battle_RandomLiveEnemy` runs Capcom's
+  function, its stale bytes included.
+- **The owner's word:** owed.
+
+### The community's name entry ends unanswered, where the original never leaves its step
+
+- **ID:** DIV-0075
+- **Date:** 2026-10-05
+- **Subsystem:** the community's name screen (`CommuName_SlotEntry`
+  `0x45D730` and `CommuName_MemberEntry` `0x45E2C0`, ours in
+  `src/game/rest_4d.cpp`)
+- **Tier:** Intent - the port removed the PlayStation's name entry (its
+  grid's draws are calls of a bare `ret`, its input step a function that
+  answers 0) but left the step that waited on it.
+- **Original behaviour:** on the PlayStation the input step itself moves
+  the entry's step on, when a name is finished or the entry abandoned
+  ([`name-entry-restoration.md`](name-entry-restoration.md) section 4).
+  The port's replacement only answers 0 and nothing else writes the step
+  byte `0x939A3F`, so once play chooses to enter a name the screen stays
+  on this step for good: the panel, an underline, no grid and no input
+  that leaves it.
+- **New behaviour:** after the answer (still 0) ours moves the step on,
+  which is what the PlayStation's input does when the player abandons the
+  entry. The next step, unchanged, slides the panel out and takes its
+  unanswered branch: message 0xF7 and back to the screen's state 4. No
+  name is changed. Drawing a name at random, the screen's other choice,
+  is untouched.
+- **Rationale:** the owner's decision, 2026-10-05: fix the hang now;
+  bringing the entry itself back waits for the localisation rework, which
+  may change the font files the grid would draw from. Abandoning is the
+  one exit the PlayStation's routine has that needs no grid, no glyphs and
+  no input, and it leaves the save as it was.
+- **Also in the PSX version?** No: the PlayStation has the entry
+  (`COMMU02`, input step `0x801DA1D8`).
+- **Verification:** `BOF3X_SHADOW=rest_4d` headless compares Capcom's two
+  steps with the switch off (the switch is set after the self-test, as
+  DIV-0070's), 0 mismatches. Not seen live: no recorded route enters the
+  community, and whether the port's play can reach the entry at all is not
+  established.
+- **Reversible?** `BOF3X_ORIGINAL=CommuName_SlotEntry,CommuName_MemberEntry`
+  runs Capcom's steps, which do not return from the entry.

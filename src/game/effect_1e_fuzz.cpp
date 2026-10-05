@@ -320,7 +320,7 @@ void Seed(unsigned k) {
 // --- the disturbance: a cell these read again after a call ------------------------------
 void Disturb(U h) {
     const auto b = static_cast<unsigned char>(h >> 24);
-    switch (h % 12) {
+    switch (sh::DisturbCase(h, 12)) {
     case 0: Mem(at::kEff4State)[0] = static_cast<unsigned char>(b % 5); break;
     case 1: Mem(0x903850)[0] = static_cast<unsigned char>(b & 1); break;
     case 2: Mem(at::kEff0Hold)[0] = static_cast<unsigned char>(b & 1 ? 0 : b); break;

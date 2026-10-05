@@ -130,7 +130,7 @@ void MarkObject(unsigned char found, const char* who) {
 // The Config screen's row label (START.EMI's resident draw)
 // ============================================================================
 
-// original 0x461800 (called by the panel draw 0x461710 for each of the six
+// original 0x461800 (called by the panel draw Config_DrawPanel for each of the six
 // rows; docs/config-screen.md): the row's box Menu_DrawBox(x, y - s, 0xF9,
 // 2 s + 0xB, 0, the style byte 0x903A5A), s the fourth argument's byte. Its
 // label is one of six strings the original puts on its stack as immediates,

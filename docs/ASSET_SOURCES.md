@@ -1,7 +1,10 @@
 # Asset sources: building the game from whatever copies the player owns
 
 **Status:** DRAFT (2026-09-26; a plan, not a finding. The facts it rests on are
-cited and were verified where they are cited, not re-measured here)
+cited and were verified where they are cited, not re-measured here. Amended
+2026-10-04, the owner's ask: the cache splits into a language-neutral base and
+per-language layers, §3 and §6; the measurement that split rests on is phase 4
+work, §8)
 
 The delivery goal: someone builds this project on their own machine, points it
 at the copies of *Breath of Fire III* they own — the 2001 PC port, one or more
@@ -119,6 +122,43 @@ all of them in one tool.
   hashes what it made. The general importer is that tool, widened from
   language assets to every asset.
 
+### The cache has a base and language layers (added 2026-10-04)
+
+The cache is not one flat set of assets per build. It is laid out as a
+re-release would be:
+
+```
+cache/
+  base/          language-neutral: script bytecode, enemy stats, art, sound
+  loc/<lang>/    per-language: text blocks, names, labels, the font
+```
+
+- **The importer splits; the engine composes.** Where an original file mixes
+  the two (an area's script block holds bytecode and its text, an enemy table
+  holds stats and names), the importer writes the neutral part to `base/` and
+  the language part to `loc/<lang>/`. The engine loads the base and one
+  language layer over it. A runtime language switch ([`IDEAS.md`](IDEAS.md)
+  I2) is then a change of layer, and the base is stored once, not once per
+  language.
+- **A language layer comes from whichever source has that language.** Chinese
+  from the PC install, English from a US disc, and so on. With the split, the
+  engine never needs to know which original a layer came from, so there is no
+  either/or between the disc and the PC game at runtime.
+- **Fonts are canonical too.** Today the Latin font is built by `loc_build.py`
+  and the Chinese font is the port's own kind 3. The cache holds one font
+  format of ours, with one importer path per source. That format is neither
+  original's, so it is ledgered (§9).
+- **The split rests on a fact not yet measured:** that the non-language bytes
+  of a section are the same in every regional build. If a Western build
+  changed script logic and not only text, that section has no single base. It
+  then needs a per-language base, never a shipped patch (§2's line on
+  `xform`). The measurement is §8's phase 4 item.
+- **The cache is self-describing.** It carries a format version and per-asset
+  provenance (§6), and the engine assumes nothing about where the importer
+  ran. A player's importer and a licensed release that ships a prebuilt cache
+  ([`LICENSING.md`](LICENSING.md) §3) are then the same engine reading the
+  same format.
+
 ## 4. The inventory: what a PSX disc can supply
 
 Built from measurements already on record. "Work" is what the importer or the
@@ -198,6 +238,11 @@ cache, **per asset, which build and recipe produced it** — otherwise
 "AREA012 crashes" cannot be reproduced. That record is the per-install
 counterpart of `fixtures.toml`, and is what a bug report attaches.
 
+Language is not one of these per-asset choices. "US text" in the example
+above means the `loc/en/` layer was imported from the US disc (§3), and the
+player picks a language at runtime from the layers their sources supplied.
+The ordered source list decides where the *base* assets come from.
+
 Choosing a source is a behavioural choice. A default that differs from the PC
 port's (disc-sequenced music in place of the MP3s, say) is a
 [`DIVERGENCE.md`](DIVERGENCE.md) entry, like any other. An option the player
@@ -232,6 +277,18 @@ turns on is not, but the ledger records that the option exists.
 6. The music comparison in [`bgm-comparison.md`](bgm-comparison.md) (I23),
    which decides whether sequenced music is worth its cost.
 
+**Phase 4, in parallel with other work (the owner, 2026-10-04):**
+
+- **Measure the region differences** (§9's last item, and what §3's
+  base-and-language split rests on). Diff each held Western disc against the
+  JP disc section by section, the way `tools/dat_census.py` pairs PC against
+  JP, and sort every difference into text, layout or logic. It needs no code
+  of ours taken over and blocks nothing, so it runs beside the phase 4 work.
+  Its result is a finding in `docs/`, and it decides whether `base/` is one
+  tree or has per-language exceptions. The two PSP discs go through the same
+  diff, for [`IDEAS.md`](IDEAS.md) I32 (the PSP release's logic changes as a
+  toggle).
+
 **Phase 5:**
 
 7. The general importer, recipes generated from the census, one build at a
@@ -251,3 +308,6 @@ turns on is not, but the ledger records that the option exists.
   *code* behaves differently from the JP build, a disc-only build from a
   Western disc still runs our code, which descends from the PC port, which
   descends from JP. Whether any such difference matters to play is unmeasured.
+  The same question for *data* (do the regional builds differ beyond their
+  text?) decides §3's split. Both are §8's phase 4 measurement.
+- **The canonical font format** (§3). Ours, so ledgered when it is built.

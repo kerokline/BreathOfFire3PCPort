@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-01, round twelve's cleanup on `phase-3/capture-round-thirteen`: PRs #37, #38, #39 merged, the `'*'` run at the tip owed; round thirteen's waves one and two merged there, 7,568 ours, merged, 8,648 ours; its end done but the rows in no group)
+**Status:** IN PROGRESS (2026-10-05: round thirteen is `main`, PR #40; round fourteen's takeovers are complete on `phase-3/capture-round-fourteen` - stage A and four waves, 10,009 ours, validated Chinese against Chinese on ten routes the same day; the round's debts are next, then the platform layers)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,23 +14,16 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**8,648 functions are ours** (`inject: 8648 ours, 0 left original`, on `phase-3/capture-round-thirteen`; 6,891 on `main`);
-`main` is round eleven (PR #30, `c4b0d32`, on round ten and its cleanup,
-PR #28 and #29), and **round eleven's cleanup, the part a session without
-the game can do, is on `claude/round-10-cleanup-handoff-qtwcrk`**
-([`round-11-cleanup.md`](round-11-cleanup.md), item 0). **Round eleven, the
-boss round, is complete** ([`takeover-queue-round11.md`](takeover-queue-round11.md)):
-two waves, 531 functions in 11 groups, 5,706 -> 6,237, every BOSS
-overlay's code ours through [`boss_harness.md`](boss_harness.md). Round
-ten before it took every chapter bank and every area overlay
-([`takeover-queue-round10.md`](takeover-queue-round10.md)); round nine
-every spell. Every group 0 mismatches, every control refused or an
-equivalent with a refused near variant; everything fuzz-only - the live
-check per chapter, per area and per fight is the owner's. Merges are
-verified in a detached worktree with its own build. Round eleven's debts
-are [`round-11-cleanup.md`](round-11-cleanup.md) (item 0); round ten's are
-[`round-10-cleanup.md`](round-10-cleanup.md) (item 0a). The rest is
-[`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
+**10,009 functions are ours on `phase-3/capture-round-fourteen`** (`inject: 10009 ours, 0 left original`
+at `1bf5964`, `'*'` narrow and wide) **and 8,648 on `main`**, which is round thirteen (PR #40, `5a94224`).
+Round fourteen was the remainder of the game's own code: 1,361 functions in stage A and four waves
+([`takeover-queue-round14.md`](takeover-queue-round14.md)), all merged; what is not ours in `BOF3.exe` now is
+the platform and library layer and the jump-table cases. Waves one to three were reviewed on 2026-10-05
+([`round-14-review.md`](round-14-review.md)) and the high and medium items fixed; wave four ran the same day
+with the review's lessons in its briefs (the round doc's section 13). The round's one validation, Chinese
+against Chinese, is done: the attract sequence and nine of ten routes identical to two runs of Capcom's code
+on the state hash ([`state-hash.md`](state-hash.md)), the tenth, `shop`, differing as it has since before wave
+two. The rest is [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
 **The frame hash reference is `analysis/calltrace/r13_origb` (twin `r13_origc`,
 identical on all 10,308 frames)**, recorded 2026-10-03 night at 8,648 ours
@@ -43,6 +36,77 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 [`takeover-queue-round13.md`](takeover-queue-round13.md) section 18 item 6.
 
 ## Pick up here
+
+00000000000. **Round fourteen's end is the next thing to do** (2026-10-05: wave four merged at `4aebe55`, the
+   tip `1bf5964` verified and validated; the round doc's section 13 is the record). In the order they bite:
+   1. **The owner's words owed:** DIV-0074 (`Battle_RandomLiveEnemy`'s six stale bytes held at 0); whether play
+      can open `CommuRank_Show` with all three lists empty, and reach `Battle_RandomOtherMember` with one member
+      standing (ours aborts at both, Capcom's reads or divides on); a route into the community once the owner
+      has a save there - the whole of wave four is fuzz only, and DIV-0075 (the name entry ends unanswered) has
+      been built and seen armed, never played.
+   2. **The shop route's difference** (the round doc's section 10 item 2: twelve bytes at `0x905BC6` and one
+      more primitive a frame from tick 2975, older than wave two): the one route not identical. A dump at tick
+      2975 on both sides, then the writer.
+   3. **The state hash's references want recording again**: the skip list has 168 ranges since section 13
+      (three pool pointers the battle routes showed) and `attract_r14_*` and `combat_*` were hashed under 165.
+      The ten Chinese pairs `analysis/statehash/cn_<route>_orig.sh` / `_origb.sh` are today's and current for
+      seven routes; `dragonTransform`, `cutsceneAndNue` and `whelpBoss` were re-recorded under 168.
+   4. **The debts** of the round doc's sections 9 to 13 (the rebinding between groups, host-extent lines,
+      harness rows to `_OURS`, thin controls, the merge scripts to judge a self-test by the log's
+      `self-test only: done` and not its exit code alone) and the review's remaining low items (7, 8, 12 to 17,
+      19 and the nits).
+   5. Then [`platform-layers-plan.md`](platform-layers-plan.md). The name entry's return is IDEAS I34, deferred
+      by the owner to the localisation rework ([`name-entry-restoration.md`](name-entry-restoration.md)).
+   **Mechanics that held:** the scripts are in the session-`309e3952` scratchpad (`.../scratchpad/round14/`),
+   `final_live.sh` and `sh_route_cn.sh` in the session-`7bf3959f` one, this session's `drill.sh` (a route's two
+   sides with a raw dump at a tick, then the bytes) in the session-`53a62c27` one. **Windows Defender killed the
+   verification launcher mid-run and the shell reported exit 0** (2026-10-05 10:30): a pass is the log's
+   `self-test only: done` and `inject:` lines. An exclusion for the build directories is the owner's to add.
+
+000000000a. **2026-10-05: round fourteen's review, and what was done about it the same day** -
+   [`round-14-review.md`](round-14-review.md) is the review, the round doc's section 12 the record of the fixes.
+   Fixed: item 1 (a third of the group disturbance never ran: `sh::DisturbCase` in 22 fuzzes, every group's
+   controls re-run by nine agents and 176 new ones planted on the formerly dead cases - every shadow 0 mismatches,
+   no control lost, no defect of ours found), items 2 and 3 (the Rand counter on reference sides; `statehash.py`'s
+   header check), item 4 (`battle_sprites.cpp`'s table by address again), item 5 (this file), and of the lows 6, 9,
+   10, 11 and 18. **Open from it:** the other lows and the nits (the round's end); `field_c3`'s three new controls
+   not refused at 30,000 rounds and the thin ones section 12.2 lists; `rest_1g`'s fuzz at 60,000 rounds a function
+   (a minute and a half on every `'*'`).
+
+000000000. **2026-10-05: round thirteen has had a code review, read-only, nothing changed:
+   [`round-13-review.md`](round-13-review.md).** Seven reviewers read `c567ca3..0a2257d` (PR #40) without the game.
+   Fix first, still open on this branch: **F1's double speed is held at x1 for up to two minutes whenever a
+   streamed track starts** (`win_main.cpp:610` gates `BOF3X_SPEED`'s stream hold on `g_speed`, which F1 also sets;
+   DIV-0048 says the hold changes no play), and ~~the Rand counter bypassed on reference sides~~ (fixed 2026-10-05, `8706e62`: the counter is an
+   instrument and counts under `--original "*"`; wave one's `caughFish.txt` comparison was ours against the
+   owner's recording and stands). Then E2E's 19
+   `EffectKind48_State7..12_*` names, which E2D's three-state table makes unreachable (kind 0x49's cells by E2D's
+   reading); `STATUS.md` and HANDOFF's "Where things stand" brought forward 2026-10-05. Eighteen low items and nits after that, each with
+   where and a fix. The six commits signed off by Claude rather than the owner (rule 7) are the owner's call.
+
+00000000. **Round fourteen, the remainder of the game's code, is under way** ([`takeover-queue-round14.md`](takeover-queue-round14.md);
+   1,341 functions, stage A and four waves). On `phase-3/capture-round-fourteen`, cut from `main` at `5a94224` (PR #40,
+   round thirteen) with the plan's four commits cherry-picked - `phase-3/round14-plan` sits on the history from before the
+   sign-off rewrite and must not be merged. **Done 2026-10-04:** R0A, the seven shared helpers
+   ([`rest_0a.md`](rest_0a.md)), merged at `ba2c3c3` and verified narrow and wide, 8,655 ours. **Wave one, R1A..R1G, merged at `4962b89`**: 341 functions, 8,989 ours, the
+   attract sequence and `combat.txt` identical on the state hash, `caughFish.txt`'s `Rand` count the recording's (the round
+   doc's section 9 has the record and the debts). **Wave two, R2A..R2H, merged at `f348fc1`**: 354 functions, 9,343 ours,
+   four routes identical on the state hash and the shop route differing in a way older than the wave (section 10: the record,
+   DIV-0073, kept by the owner 2026-10-04, the debts). **Wave three, R3A..R3G, merged at `ade9f98`**: 338 functions, 9,681 ours, verified narrow and wide (section 11:
+   the record and the debts; round thirteen's mop-up is done with it). Paused there on 2026-10-04, reviewed and repaired on 2026-10-05 (items 0000000000 and 000000000a above). **Next:** wave four, R4A..R4F (326, the community band; merge order R4F R4E R4D R4A R4C R4B; `make_briefs14.py` then
+   `post_brief2.py` with wave 4 and the tip; `collide.py` before each merge; the runner in two parts, each with its `END`,
+   `tasklist` between). **Then one large validation, Chinese against Chinese** (the owner's decisions of 2026-10-04: no
+   live batch per wave, no language overlay on either side, English a smoke test of ours only): `final_live.sh` in the
+   session-`7bf3959f` scratchpad, about two hours with the machine quiet. Then the debts, and
+   [`platform-layers-plan.md`](platform-layers-plan.md) (IDEAS I31) for what `BOF3.exe` still holds. The owner's decisions: three launch sessions (R0A + waves one and two; wave three; wave
+   four); round thirteen's unplaced rows stay in wave three as R3E..R3G. The scripts and briefs are in the
+   session-`309e3952` scratchpad (`.../309e3952-1e51-4cd8-8b59-6c0e2b38bc89/scratchpad/round14/`): `make_briefs14.py`
+   then `post_brief.py <scratch> <wave> <tip>` (the `git commit -s` rule and stage A's addendum).
+   **The live check from this round on is the state hash** ([`state-hash.md`](state-hash.md)): `BOF3X_STATEHASH`,
+   `tools/statehash.py check REF REFB NEW`. The references are `analysis/statehash/attract_r14_orig.sh` / `_origb.sh` and
+   `combat_orig.sh` / `_origb.sh` (ours identical on all 10,305 attract ticks at `dafd4a3`); the other routes want a
+   pair each, and all of it wants the machine quiet. The call trace's hash (the paragraph above) still runs and sees
+   what is left to it.
 
 0000000. **The layering fix (DIV-0071) is merged into the round branch and on by default since 2026-10-03
    (`5f8b831`); what follows was written on `fix/tile-layering`, where it was off by default - the owner's
@@ -607,7 +671,8 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
+Round fourteen's takeovers are done and the branch is pushed with its pull request (2026-10-05). Six wave-four agent worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*` are merged and can go.
+Before it: nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
 half is pushed on `claude/round-10-cleanup-handoff-qtwcrk` (item 0) and
 wants the `'*'` run and the other game-side checks before its PR. The wave
 briefs are in `analysis/` (the template) and the session-`08306a9f`

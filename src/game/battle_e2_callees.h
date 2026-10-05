@@ -19,7 +19,7 @@
 //   0x4376A0  (): BE3's - the enemy op's end: +1 = 2, +2 = 0,
 //             Battle_ClearActorBit(+5), the enemy's +0x110 bit 9 cleared, its
 //             +0x105 = 0 unless 0x904AA8 bit 6.
-//   0x452DD0  (actor): in no group (catalogue part 7, a standard recorder by
+//   0x452DD0  (actor): Battle_AutoTargetCheck, R4A's, ours (a standard recorder by
 //             address) - reads the argument's low byte; al 1 unless the round
 //             flags' bit 14 and the actor tests say otherwise.
 #pragma once
@@ -40,7 +40,7 @@ constexpr U kTurnVelocity = bof3::addr::Battle_TurnVectorC;     // BE4
 constexpr U kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;          // BE3
 constexpr U kEnemyTaskChance = bof3::addr::EnemyOp_RollBit80Task;  // BE3
 constexpr U kEnemyOpEnd = bof3::addr::EnemyOp_EndAction;       // BE3
-constexpr U kActorMayAct = 0x452DD0;      // nobody's
+constexpr U kActorMayAct = bof3::addr::Battle_AutoTargetCheck;      // R4A's (round 14), ours
 
 // --- the battle bytes (the harness's 0x904AA0..0x904BA0) ----------------------
 constexpr U kRoundFlags = 0x904AA8;       // u16 / u32: the round flags (0x400, 0x4000, 0x8000 read here)

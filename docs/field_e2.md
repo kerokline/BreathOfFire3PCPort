@@ -566,6 +566,47 @@ route returns from a battle; the dragon route's chapter is 8 or more).
 | I3b | `Scenario_CellHook` | CellHook: the hook answer 2 | refused in 1,147 of 3,000 rounds |
 | FR1b | `MapCell_DrawFrames` | DrawFrames: the next texture word | refused in 1,678 of 3,000 rounds |
 
+**2026-10-05, under the repaired disturbance (round fourteen's review item
+1).** `Move` switched on `h % 9` and is reached only with `h % 3 != 0`, so its
+cases 0 (`Field_State` to another ObjTrio record), 3 (the trade pick
+`0x6BE08C`) and 6 (the object's state `0x905DA1`) never ran; `b9dfe34` draws
+the case through `sh::DisturbCase`. The same script re-run on `451edeb`, all
+148 anchors still found once (none repaired): **135 planted, 131 refused by a
+count**, I3 and FR1 refused by a crash / an abort of ours as before (exit
+`0xC0000005`; `MapCell_DrawFrames: a frame period of 0`), N1 not refused
+(the equivalent mutant, as before). 16 counts are the table's, 115 moved
+(the generator's stream changed). **D1 was refused in 4 and is refused in 0
+of 3,000 now**; it is not blind, only thin - an equal height and ground is a
+boundary the ground stand-in hits about once in 1,000 rounds, which the
+disturbance does not touch: 4 of 6,000 (the committed run's rounds) and 30
+of 30,000 (`BOF3X_FE2_ROUNDS`). The fuzz was not changed. W2 1 (was 2), R2 1
+(was 3) and IT7 3 (was 1) are the other counts below 5.
+
+New controls for the formerly dead cases, each also run against the old
+switch (a temporary `BOF3X_DISTURB_OLD=1` toggle in the fuzz, `h % 9`, not
+committed). Nothing else moves `Field_State` or the pick (the harness's cases
+do not), and **every one is 0 under the old switch**: these re-reads were
+untested before. DS5 and DS8 are refused in 1 of 6,000 and 6 of 30,000, not
+at 3,000. **Case 6 is noise for this group**: the object's state `+1` is read
+only by `Mode11_ObjectFrame` (before any call) and `Mode11_ObjectStart`
+(which calls nothing); after a call the group only writes it. No control was
+planted for it.
+
+| Id | Function | Planted | Result |
+|---|---|---|---|
+| DS1 | `Field_FloorHurt` | case 0: the second HP call's actor +0x89 not re-read after Char_LoseHp | refused in 12 of 3,000 rounds (old switch 0) |
+| DS2 | `Field_FloorHurt` | case 0: Field_State not re-read after Actor_EquipCount | refused in 7 of 3,000 rounds (old switch 0) |
+| DS3 | `Leader_StepUp` | case 0: the actor +0x89 not re-read after the second MapView_GroundAt | refused in 4 of 3,000 rounds (old switch 0) |
+| DS4 | `Leader_StepDown` | case 0: the actor +0x89 read before MapView_GroundAt | refused in 4 of 3,000 rounds (old switch 0) |
+| DS5 | `Leader_Rise` | case 0: the actor +0x89 read before MapView_GroundAt | not refused in 3,000; 1 of 6,000, 6 of 30,000 (old switch 0) |
+| DS6 | `Mode11_ObjectControl` | case 0: the pace stored through the Field_State read on entry | refused in 2 of 3,000 rounds (old switch 0) |
+| DS7 | `ItemTrade_Run` | case 3: the pick read before the frame and the cursor | refused in 18 of 3,000 rounds (old switch 0) |
+| DS8 | `ItemTrade_PickItem` | case 3: the record by the pick read before 0x594700 | not refused in 3,000; 1 of 6,000, 6 of 30,000 (old switch 0) |
+| DS9 | `ItemTrade_PickItem` | case 3: bit 6 set on the pick read before the two Inventory_Count | refused in 1 of 3,000 rounds (old switch 0) |
+| DS10 | `ItemTrade_PickItem` | case 3: the help line's pick read before the box | refused in 5 of 3,000 rounds (old switch 0) |
+| DS11 | `ItemTrade_PickCount` | case 3: bit 6 cleared on the pick read before the checks and counts | refused in 12 of 3,000 rounds (old switch 0) |
+| DS12 | `ItemTrade_PickCount` | case 3: the entry k from the pick read before Input_AutoRepeat | refused in 8 of 3,000 rounds (old switch 0) |
+
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
 Appended to the main checkout's file (append only, 8,163 -> 8,187 lines): the

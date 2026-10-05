@@ -273,7 +273,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
 // ===========================================================================
 
 // original 0x4311E0: phase 5's dispatch - entry 0x904AA1 of BattleEnd_Steps
-// (0x64AF44: BattleEnd_TaskStep, BattleEnd_WinStep, 0x431540 and 0x4315B0
+// (0x64AF44: BattleEnd_TaskStep, BattleEnd_WinStep, BattleEnd_LossDispatch 0x431540 and BattleEnd_RestoreDispatch 0x4315B0
 // (the other way out, Capcom's), BattleEnd_ExitStep).
 extern "C" void __cdecl BattleEnd_Step() {
     [[clang::musttail]] return Entry(at::kEndSteps, B(at::kState1))();
@@ -428,7 +428,7 @@ extern "C" void __cdecl BattleEnd_ResultPage() {
 
 // original 0x431760: the exit's dispatch - entry 0x904AA2 of
 // BattleEnd_ExitSteps (0x64AF90: Battle_WriteBackParty, BattleEnd_ExitHook,
-// BattleEnd_Finish, 0x4318F0 (Capcom's)).
+// BattleEnd_Finish, BattleEnd_ExitAwaitFade 0x4318F0 (R3A's)).
 extern "C" void __cdecl BattleEnd_ExitStep() {
     [[clang::musttail]] return Entry(at::kEndExitSteps, B(at::kState2))();
 }

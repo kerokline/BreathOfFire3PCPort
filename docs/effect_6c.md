@@ -227,7 +227,7 @@ earlier users). No new entry: DIV-0062 already lists the sites.
 
 Otherwise no divergence: each function is a faithful replacement.
 `widescreen.cpp`, `cheats.cpp` and `DIVERGENCE.md` patch no other byte inside
-the band (a grep of every address; `AreaMap_FrameAreaBD`'s patched operands at
+the band (a grep of every address; `AreaMapBD_BuildView`'s patched operands at
 `0x51097E..0x5109D2` lie below it).
 
 ## 3. The tables

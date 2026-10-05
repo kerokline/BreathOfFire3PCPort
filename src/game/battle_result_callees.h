@@ -81,13 +81,13 @@ constexpr std::uint32_t kRewardSteps = 0x64AFC8;  // 4 entries, by 0x904AA4, Bat
 // Callees with no name in symbols.gen.h, called by address.
 constexpr std::uint32_t kCountMembers = bof3::addr::BattleResult_CountExpShares;   // 0x4319B0 (round twelve BE1's; the value unchanged, so the fuzz's keys stand), u8: party slots not out (Battle_ActorIsOut) whose dword ObjTrio +0x134 lacks 0x400
 constexpr std::uint32_t kZennyBonus = bof3::addr::BattleResult_ZennyBonus;       // 0x431FE0 (BE1's), u8: 1 when a slot not out holds 7 in byte +0x16 or +0x17 of its 0x802DC0 record
-constexpr std::uint32_t kAddExp = 0x4468B0;         // PSX BattleResult_AddExp 0x801DD564 (the sibling's)
-constexpr std::uint32_t kRosterIndex = 0x4469D0;    // PSX CharId_ToRosterIndex 0x801DD774 (the sibling's): the byte at 0x66972C + id, 7 is 0
+constexpr std::uint32_t kAddExp = bof3::addr::BattleResult_AddExp;         // 0x4468B0, group R3B's (round fourteen; the same value): PSX BattleResult_AddExp 0x801DD564 (the sibling's)
+constexpr std::uint32_t kRosterIndex = bof3::addr::CharId_ToRosterIndex;    // 0x4469D0, R3B's (the same value): PSX CharId_ToRosterIndex 0x801DD774 (the sibling's): the byte at 0x66972C + id, 7 is 0
 constexpr std::uint32_t kLevelUpPending = bof3::addr::Char_LevelUpGain;          // 0x432170 (BE1's; what 0), u16: non-zero when the roster index has a level to gain (PSX 0x801EF92C)
 constexpr std::uint32_t kLevelUp = 0x498DE0;        // the PSX Char_LevelUp's place in BattleResult_Setup (the sibling's)
 constexpr std::uint32_t kAddZenny = 0x591BE0;       // Zenny_Add: 0x904058 += n (0x904138 too when the flag is 0), capped 9,999,999
 constexpr std::uint32_t kDrawFrame = bof3::addr::BattleResultWin_DrawFrame;   // 0x5982D0, group BE7's (round twelve; the same value): the result windows' frame (x, y, w, h), each read as a word
-constexpr std::uint32_t kExpToNext = 0x598810;      // by its reads, the EXP a party slot still needs for its next level, 0 at none (hypothesis)
+constexpr std::uint32_t kExpToNext = bof3::addr::BattleResultWin_ExpToNext;   // 0x598810, group R2G's (round fourteen; the same value): by its reads, the EXP a party slot still needs for its next level, 0 at none (hypothesis)
 
 using Handler = void (__cdecl*)();
 

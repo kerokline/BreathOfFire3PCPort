@@ -71,7 +71,7 @@ using Percent = U (__cdecl*)(U value, std::int32_t percent);
 U Percent999(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent999)(value, percent); }
 U Percent9999(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent9999)(value, percent); }
 U Percent100(U value, std::int32_t percent) { return BH_AT(Percent, at::kPercent100)(value, percent); }
-// A BMAGIC vertex's height (0x4CF4B0, nobody's): ax is read.
+// A BMAGIC vertex's height (Quake_VertexLift 0x4CF4B0, R3G's): ax is read.
 U CellHeight(std::int32_t x, std::int32_t z) { return BH_AT(U (__cdecl*)(std::int32_t, std::int32_t), at::kCellHeight)(x, z); }
 
 // The party records copied to 0x939AE0 before a transformation changes them:

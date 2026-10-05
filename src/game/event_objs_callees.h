@@ -42,7 +42,7 @@ constexpr std::uint32_t kTurnProbe = 0x535610;      // (x, z, 0, height word): a
 constexpr std::uint32_t kFloorHurt = bof3::addr::Field_FloorHurt;      // (kind byte): the floor's damage by kind 0..8
 constexpr std::uint32_t kFlash = 0x534DB0;          // (n byte): the leader's CLUT flash, sound 0x108
 constexpr std::uint32_t kHpLose = 0x537480;         // (amount, member byte): ax, the HP taken
-constexpr std::uint32_t kHpGain = 0x5373F0;         // (amount, member byte)
+constexpr std::uint32_t kHpGain = bof3::addr::Char_GainHp;   // R2A: (amount, member byte)
 
 struct Callees {
     void (__cdecl* jump_setup)();                                              // Field_JumpSetUp (ours)

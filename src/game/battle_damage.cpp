@@ -42,6 +42,7 @@
 
 // Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
 // bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
+// Rebound 2026-10-04 (round fourteen group R3D, docs/rest_3d.md section 8): 0x44FA70, 0x44F1D0 and 0x44F030 likewise.
 
 namespace battle_damage {
 
@@ -60,13 +61,13 @@ const Callees kOriginals = {
     EnemyAI_RowDone,
     Fn<unsigned char (__cdecl*)(unsigned)>(0x4456C0),
     Fn<void (__cdecl*)(unsigned, unsigned, unsigned, unsigned, unsigned)>(0x44A650),
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(0x44FA70),
-    Fn<void (__cdecl*)(unsigned, unsigned)>(0x44F1D0),
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::Battle_StatusResisted80),
+    Fn<void (__cdecl*)(unsigned, unsigned)>(bof3::addr::Battle_InflictStatus),
     Fn<void (__cdecl*)(unsigned, unsigned)>(0x44F4B0),
     Fn<int (__cdecl*)(int, unsigned, unsigned)>(bof3::addr::Battle_HitOrMissParty),
     Fn<int (__cdecl*)(int, unsigned, unsigned)>(bof3::addr::Battle_HitOrMissEnemy),
     Fn<int (__cdecl*)()>(bof3::addr::Battle_PartyDefenceMean),
-    Fn<int (__cdecl*)(unsigned, unsigned)>(0x44F030),
+    Fn<int (__cdecl*)(unsigned, unsigned)>(bof3::addr::Battle_PsiStatusDeathAffinity),
     Rand,
     Fn<void (__cdecl*)(unsigned char*, const unsigned char*)>(bof3::addr::EnemyAI_ApplyAction),
     Fn<void (__cdecl*)(unsigned char*, unsigned, unsigned)>(bof3::addr::EnemyAI_SetRowDone),

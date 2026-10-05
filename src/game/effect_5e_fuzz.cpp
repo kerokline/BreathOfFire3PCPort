@@ -323,7 +323,7 @@ void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sprite_Current;
     if (!sh::InRegions(s, 0x80)) return;
-    switch (h % 9) {
+    switch (sh::DisturbCase(h, 9)) {
     case 0: {
         static const unsigned char kNine[] = {0, 2, 3, 7, 8, 0xF, 0x10, 0x11, 0x5A, 0x5B, 0x78, 0x79};
         s[9] = static_cast<unsigned char>((v & 1) ? kNine[(v >> 1) % sizeof kNine] : v >> 1);

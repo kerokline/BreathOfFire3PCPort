@@ -8,8 +8,8 @@
 
 // DIV-0011: draw the panel frame the PC build left out.
 //
-// The Config screen's panel (0x461710) and its controller sub-panel
-// (0x461A50) each open with a call of (x, y, w, h) - (.., 0x21, 0x0D) and
+// The Config screen's panel (Config_DrawPanel) and its controller sub-panel
+// (Config_DrawControllerPanel) each open with a call of (x, y, w, h) - (.., 0x21, 0x0D) and
 // (.., 0x0C, 0x0F) - to 0x4DF820, which is a bare `ret` shared by 25 call
 // sites of 0, 1 and 4 arguments: several empty functions folded into one. On
 // the PlayStation the same call, from the same function (STATUS.EMI
@@ -50,8 +50,8 @@
 namespace {
 
 constexpr std::uint32_t kEmptyFunction = 0x4DF820;
-constexpr std::uint32_t kConfigPanelSite = 0x461778;       // in 0x461710: push 0xD, push 0x21, y, x
-constexpr std::uint32_t kControllerPanelSite = 0x461A84;   // in 0x461A50: push 0xF, push 0xC, y, x
+constexpr std::uint32_t kConfigPanelSite = 0x461778;       // in Config_DrawPanel: push 0xD, push 0x21, y, x
+constexpr std::uint32_t kControllerPanelSite = 0x461A84;   // in Config_DrawControllerPanel: push 0xF, push 0xC, y, x
 // The reserve list of "change party members", 0x12 by 0x15 cells. The
 // PlayStation's is 0x801EA99C(obj): the frame at obj's s16 +4 / +6, then an
 // entry a member through 0x801AF3F0(x + 7, y + 6, 0x7D, 0x30, ..). The PC has

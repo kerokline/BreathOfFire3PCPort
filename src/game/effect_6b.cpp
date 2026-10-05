@@ -884,7 +884,7 @@ extern "C" void __cdecl EffectKind18Sub41_Draw(unsigned variant, int angle) {
 // (two) by +2
 // ===========================================================================
 
-// original 0x510C20 (hidden in Capcom's 0x510BB0, a helper in no group).
+// original 0x510C20 (hidden in 0x510BB0's catalog extent, AreaMapBD_CellTexture, R3G's).
 extern "C" void __cdecl EffectKind18Sub44_Run(void) {
     Dispatch("EffectKind18Sub44_Run", AddressOf(EffectKind18Sub44_States), EffectKind18Sub44_States_count);
 }
