@@ -111425,3 +111425,493 @@ ctype = "unsigned long"
 count = 3
 status = "evidence"
 evidence = "read 2026-10-05 (round fourteen group R4F): EffectKind02_RunMode3 0x464A20 by +3, unbounded: EffectKind02_Mode3Tint, _Mode3Darken, _Mode3Wait; data from 0x653AF8 (EffectHud_Marker's bytes). The dispatcher does not bound its index; the count is the run of code pointers to the next table a dispatcher indexes, checked by hand (a raw scan of .text for each cell address). docs/rest_4f.md section 3."
+
+# --- round fourteen group R4E (rest_4e.cpp, docs/rest_4e.md): 0x45E870..0x460CAD, the community band ---
+
+[[func]]
+pc = 0x45E870
+name = "CommuEntry_DrawPanel"
+ret = "void"
+params = "int x, int y, unsigned entry, unsigned editing"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45E870..0x45E9AF (0x140 bytes): an entry's panel: Menu_DrawBox 0x48 x 0x26, CommuEntry_DrawPanelFrame, the entry's name (0x9048F0 + 5 entry) or, editing, 0x675F98 by Text_DrawAt at (x + 6, y + 4), a black 60 x 16 TILE (floats 60.0 / 16.0) at (x + 6, y + 0x12), the four bars (12 x the bytes 0x653210 + 20 entry) by CommuEntry_DrawBar. Called by R4D's 0x45D0D0..0x45D9E0 (14 sites). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45E9B0
+name = "CommuEntry_DrawPanelFrame"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45E9B0..0x45EA50 (0xA1 bytes): Commu_DrawPiece6 pieces 6, 7 x 7, 0xC x 7, 8, 9 x 4, 0xA x 4, 0xB, 0xD round a 0x48 x 0x28 frame. Called by CommuEntry_DrawPanel. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45EA60
+name = "CommuEntry_DrawBar"
+ret = "void"
+params = "int x, int y, int length, unsigned colour"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45EA60..0x45EBFD (0x19E bytes): two POLY_G4s (Gpu_SetPolyG4, 0x44 each), rows y..y+2 dim to bright and y+2..y+4 back, x..x+length (low words signed); the colour 0x80 in the channels of a 12-byte stack table by colour 0..3 (red, green, blue, green+blue), the dim a quarter; past 3 the original reads its own frame (ours aborts). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45EC00
+name = "Commu_DrawPiece6"
+ret = "void"
+params = "int x, int y, unsigned piece"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45EC00..0x45ECBE (0xBF bytes): Gpu_SetDrawMode(page 0x1E), a SPRT of the image table 0x652EE4 (6 bytes a piece: u, v, w, h, clut x >> 4, clut row + 0x1E0; 14 to 0x652F38, unbounded) at (x, y) low words signed, grey. Called by CommuEntry_DrawPanelFrame and R4D's 0x45E700 / 0x45E770. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45ECC0
+name = "CommuCursor_DrawArrow"
+ret = "void"
+params = "int x, int y, unsigned steady"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45ECC0..0x45ED60 (0xA1 bytes): a 0x2C-byte triangle (0x5A7570's header) (x, y), (x - 4, y - 4), (x + 4, y - 4), green 0xFF when steady else pulsing with Frame_Counter (bit 3: ((n & 6) << 5) + 0x3F, else of ~n). Called by R4B's 0x4577A0..0x458410 (11 sites) and R4D's 0x45D170, 0x45D290. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45ED70
+name = "CommuName_MakeRandom"
+ret = "unsigned"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45ED70..0x45EE0E (0x9F bytes): 0x675F98's 32 bytes cleared, script messages 0x1F0 + (Rand & 0x3F) and 0x230 + (Rand & 0x3F) copied after each other (bit 7: two bytes), a NUL; eax the length + 1, which R4D's 0x45D4E0 and 0x45E060 copy into Text_Records. The copy is unbounded (ours aborts past the 32). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45EE10
+name = "CommuMember_DrawPanel"
+ret = "void"
+params = "int x, int y, unsigned member, unsigned editing"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45EE10..0x45EEA9 (0x9A bytes): a member's panel: Menu_DrawBox 0x7D x 0x2D at (x + 3, y + 3), CommuMember_DrawPortrait of the record's +9 at (x + 6, y + 2), the record's name (CharacterRecords + 0xA4 member) or 0x675F98 at (x + 0x3B, y + 0x19), Menu_DrawPieces 0x652F5C. Called by CommuMember_DrawAll and R4D's 0x45DAB0..0x45E570 (15 sites). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45EEB0
+name = "CommuMember_DrawPortrait"
+ret = "void"
+params = "int x, int y, unsigned kind, unsigned shade"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45EEB0..0x45EF8D (0xDE bytes): Gpu_SetDrawMode(dither, page 0x1E), a 0x28 x 0x30 SPRT of the image table 0x652F38 (4 bytes: u, v, clut x, clut row; 9 to 0x652F5C) at x, y as UNSIGNED words; shade 0 grey 0x80, 1 0x30, else (0x40, 0x40, 0x80). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45EF90
+name = "CommuMember_DrawAll"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45EF90..0x45EFF0 (0x61 bytes): every present member's panel (CharacterRecords' seven, bit 0 of +0xB), the n-th at (0x20 + 0x88 (n & 1), 0x2B + 0x38 (n >> 1)). Called by R4D's 0x45DB90, 0x45DD10. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F000
+name = "CommuMember_Count"
+ret = "unsigned char"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F000..0x45F01C (0x1D bytes): al = how many of CharacterRecords' seven have bit 0 of +0xB. Called by R4D's 0x45DB90. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F020
+name = "CommuMember_Nth"
+ret = "unsigned char"
+params = "unsigned n"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F020..0x45F04B (0x2C bytes): al = the index of the n-th (byte, from 0) present member, 0xFF when fewer. Called by CommuName_CommitMember (9 calls) and R4D's 0x45E000..0x45E520 (15 sites). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F050
+name = "CommuMember_DrawFrame"
+ret = "void"
+params = "int x, int y, unsigned pulse, unsigned channels"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F050..0x45F19C (0x14D bytes): a LINE_F3 (0x2C) and a LINE_F4 (0x38) round (x + 2, y) .. (x + 0x80, y + 0x34) (x + 2 and y unsigned words), each channel bit 0..2 of channels at 0xFF or (pulse set) Frame_Counter's pulse - bit 0 the blue byte +6, bit 2 the red +4. Called by R4D's 0x45DB90, 0x45DD10. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F1A0
+name = "Commu_DrawTiledFrame"
+ret = "void"
+params = "int x, int y, unsigned w, unsigned h"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F1A0..0x45F596 (0x3F7 bytes): a frame of w x h cells of 8: five SPRTs of page 0x1D each through a stack RECT texture window ((0x70, 0x98), (0x98, 0xA0), (0xB0, 0x98), (0xB0, 0xA0), (0x70, 0xA0), 8 x 8), clut Gpu_GetClut(0xB0, 0x1E1); the window put back (0, 0, 0x100, 0x100); Menu_DrawPiece 0x23, 0x26, 0x27, 0x29 at the corners. Twin PSX 0x801D9C44 (COMMU02, unnamed in the sibling). Called by R4D's 0x45D610..0x45E350 (6 sites). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F5A0
+name = "CommuName_CommitMember"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F5A0..0x45F64F (0xB0 bytes): hidden in the catalogue's 0x45F1A0; R4D's 0x45E130 and 0x45E520 jmp to it. CommuMember_Nth(0x675F8C) asked nine times: the member's old nine bytes and the eight edited into Text_Records 0 (+0..+8, +0x20, +0x24), the eight bytes 0x675F98.. into its name; message 0xF5, Field_Request 2, 0x939A3E 3, 0x939A40 and 0x939A3F 0 (docs/save-interchange.md section 2a). No member: ours aborts. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F650
+name = "CommuName_CommitEntry"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F650..0x45F746 (0xF7 bytes): hidden in 0x45F1A0; R4D's 0x45D5B0 and 0x45D990 jmp to it. R4D's 0x45E6D0(0x675F8C) asked for each byte: the entry's name into Text_Records 0 with trailing spaces as NULs, a NUL at +5, the edited eight at +0x20; the five bytes 0x675F98.. into the name, NUL as space; message 0xF5, Field_Request 2, 0x939A3E 3, 0x939A40 and 0x939A3F 0. No entry: ours aborts. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F750
+name = "CommuMusic_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F750..0x45F75D (0xE bytes): 0x652A70[11]: jmp [CommuMusic_Modes + 4 * byte 0x939A3E], unchecked. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F760
+name = "CommuMusic_OpenDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F760..0x45F76D (0xE bytes): CommuMusic_Modes[0]: jmp [CommuMusic_OpenSteps + 4 * byte 0x939A40], unchecked. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F770
+name = "CommuMusic_Open"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F770..0x45F7C7 (0x58 bytes): CommuMusic_OpenSteps[0]: the seven CharacterRecords' nine name bytes into Text_Records 0..6, Music_Track kept at 0x675FD0, the row word 0x675FD2 0, the slide 0x675FD1 4, 0x939A40 + 1. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F7D0
+name = "CommuMusic_SlideIn"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F7D0..0x45F816 (0x47 bytes): CommuMusic_OpenSteps[1]: the slide - 1, CommuMusic_DrawList(0x32, 0x28 - 10 slide); slide 0: 0x939A40 0, 0x939A3E + 1. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F820
+name = "CommuMusic_BrowseDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F820..0x45F82D (0xE bytes): CommuMusic_Modes[1]: jmp [CommuMusic_BrowseSteps + 4 * byte 0x939A40], unchecked. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F830
+name = "CommuMusic_Browse"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F830..0x45F94E (0x11F bytes): CommuMusic_BrowseSteps[0]: Input_AutoRepeat(pressed & 0xA000) moves the row 0x675FD2 (s16) over 0..the count byte 0x9048AB + 8 x (the entry 0x9039F5's +1), wrapping; else 0x20: Music_FadeOutStop(10) if a track plays, the row's track (0x653098) playing: Music_Track 0xFF, else 0x939A40 + 1; 0x40: 0x939A40 0, 0x939A3E + 1; CommuMusic_DrawList(0x32, 0x28). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F950
+name = "CommuMusic_Play"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F950..0x45F986 (0x37 bytes): CommuMusic_BrowseSteps[1]: once File_LoadDone, Music_Play(0x653098[row], 8) and 0x939A40 0; CommuMusic_DrawList(0x32, 0x28). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F990
+name = "CommuMusic_CloseDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F990..0x45F99D (0xE bytes): CommuMusic_Modes[2]: jmp [CommuMusic_CloseSteps + 4 * byte 0x939A40], unchecked. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F9A0
+name = "CommuMusic_CloseFade"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F9A0..0x45F9D3 (0x34 bytes): CommuMusic_CloseSteps[0]: Music_Track neither 0xFF nor the kept 0x675FD0: Music_FadeOutStop(10); CommuMusic_DrawList(0x32, 0x28); 0x939A40 + 1. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45F9E0
+name = "CommuMusic_CloseRestore"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45F9E0..0x45FA1D (0x3E bytes): CommuMusic_CloseSteps[1]: once File_LoadDone, Music_Play(kept, 8), 0x939A40 + 1, the slide 0; CommuMusic_DrawList(0x32, 0x28). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45FA20
+name = "CommuMusic_SlideOut"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45FA20..0x45FA70 (0x51 bytes): CommuMusic_CloseSteps[2]: the slide + 1, CommuMusic_DrawList(0x32, 0x28 - 10 slide); slide 4: message 0x5A, 0x939A40 + 1, Field_Request 2. Twin PSX 0x801D1190 (COMMU03, unnamed in the sibling). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45FA80
+name = "CommuMusic_DrawList"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45FA80..0x45FCD4 (0x255 bytes): Menu_DrawBox 0xDC x 0x6E, three Menu_DrawOutlineNotched, the row's title (script message 0x271 + row) colour 2 if its track plays, a box and outline 0x7C x 0xE, two CommuMusic_DrawLabel (0x6530F0 / 0x6530F4 by 0x903A59, 0x6530F8), four Text_DrawFont8, two POLY_FT4s whose width comes from two zeroed stack ints. Twin PSX 0x801D125C (COMMU03). docs/rest_4e.md."
+
+[[func]]
+pc = 0x45FCE0
+name = "CommuMusic_DrawLabel"
+ret = "void"
+params = "int x, int y, unsigned colour, const unsigned char *text"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45FCE0..0x45FDFF (0x120 bytes): each byte of text to its NUL (a space skipped) a POLY_FT4 8 x 8 slanted 4 left at the bottom (floats 0x5C41C8 4.0, 0x5C41CC 8.0), u ((c - 0x20) % 32) 8, v ((c - 0x20) / 32) 8, clut 0x7800 | colour & 0x3F, page 0xF; x + 8 a byte. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45FE00
+name = "CommuItem_Frame"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45FE00..0x45FE1C (0x1D bytes): 0x652A70[18]: call [CommuItem_Modes + 4 * byte 0x939A3E], unchecked; Field_Request 0: jmp Field_RunTaskRecords. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45FE20
+name = "CommuItem_StepDispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45FE20..0x45FE2D (0xE bytes): CommuItem_Modes[0]: jmp [CommuItem_Steps + 4 * byte 0x939A40], unchecked. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45FE30
+name = "CommuItem_Prompt"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45FE30..0x45FE56 (0x27 bytes): CommuItem_Steps[0]: Field_Request not 2: message 0x60, 0x939A40 + 1, Field_Request 2. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45FE60
+name = "CommuItem_OpenWindow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45FE60..0x45FE86 (0x27 bytes): CommuItem_Steps[1]: Field_Request not 2: Window_ResetAll, CommuItem_SetupWindow, the slide 0x675FD4 4, 0x939A40 + 1. docs/rest_4e.md."
+
+[[func]]
+pc = 0x45FE90
+name = "CommuItem_Choose"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x45FE90..0x4601C7 (0x338 bytes): CommuItem_Steps[2]: the window frame (the slide down), window 1 placed at window 0's row, Input_AutoRepeat(pressed & 0xF00C) moves the tab 0x80316A (0..3) and the row 0x80316C / top 0x80316B (pages of nine, scroll words +0x12), sounds 0x100 / 0x101; cancel: 0x106, windows shut, 0x939A40 + 1; confirm: an empty row 0x107, an item 0x105 and the item and tab into the entry 0x9039F5's +2 / +3, 0x939A40 4; the row's help line (Item_HelpMessage, Msg_SystemPtr) at (0x1D, 0x15). Twin PSX 0x801D0D4C (COMMU04, unnamed in the sibling). docs/rest_4e.md."
+
+[[func]]
+pc = 0x4601D0
+name = "CommuItem_Cancel"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x4601D0..0x460260 (0x91 bytes): CommuItem_Steps[3]: the slide up to 4, the frame; window 0 shut: Window_ResetAll, message 0x5F, 0x939A3E + 1, Field_Request 2. Twin PSX 0x801D11DC (COMMU04). docs/rest_4e.md."
+
+[[func]]
+pc = 0x460270
+name = "CommuItem_Confirm"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460270..0x4603E1 (0x172 bytes): CommuItem_Steps[4]: the slide, the frame; shut: Window_ResetAll, the item's byte (NameTable_Consumables +0x10 / Weapons, Armour, Accessories +0x11 by the entry's +3 & 0xF) bit 3: message 0xEB, 0x939A40 6; else Item_NamePtr's 16 bytes into Text_Records 0, message 0x61, 0x939A40 + 1, the slide 0; Field_Request 2. Twin PSX 0x801D12C8 (COMMU04). docs/rest_4e.md."
+
+[[func]]
+pc = 0x4603F0
+name = "CommuItem_Give"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x4603F0..0x460455 (0x66 bytes): CommuItem_Steps[5]: Field_Request not 2: Inventory_Remove(entry +3, +2, 1, 0), +3 |= 0x10, the dword 0x904134 into +4, 0x939A3E + 1. docs/rest_4e.md."
+
+[[func]]
+pc = 0x460460
+name = "CommuItem_Refused"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460460..0x46047A (0x1B bytes): CommuItem_Steps[6]: Field_Request not 2: message 0x63, Field_Request 2. docs/rest_4e.md."
+
+[[func]]
+pc = 0x460480
+name = "CommuItem_SetupWindow"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460480..0x4604F1 (0x72 bytes): WindowRecords 0 (in use, kind 2, +3 2, at (-0xAA, 0x3E), tab / top / row 0, +0xD 0xFF, +0x10 / +0x12 0) and 1 (off, kind 2, +2 1). Called by CommuItem_OpenWindow. docs/rest_4e.md."
+
+[[func]]
+pc = 0x460500
+name = "CommuRank_Dispatch"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460500..0x46050D (0xE bytes): 0x652AE4[2] (R4B's 0x457510 by 0x9039F4): jmp [CommuRank_Modes + 4 * byte 0x939A3E], unchecked. docs/rest_4e.md."
+
+[[func]]
+pc = 0x460510
+name = "CommuRank_Pages"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460510..0x4605C0 (0xB1 bytes): CommuRank_Modes[0]: page counts 0x675FD8..DA = (n - 1) / per + 1 (0 if n 0) of 0x9039A0 (7), 0x904A90 (20), 0x937F80 (8); the page 0x675FDB 0; 0x939A3E + 1. docs/rest_4e.md."
+
+[[func]]
+pc = 0x4605D0
+name = "CommuRank_Show"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x4605D0..0x46071B (0x14C bytes): CommuRank_Modes[1]: the page found in the three counts, CommuRank_DrawBackdrop(0x20, 0x18), the list's page (CommuRank_DrawListA / B / C at (0x28, 0x28)); 0x2000 / 0x8000 the page on / back, wrapping over the total; Crt_sprintf(0x904BA0, 0x6531F4, page + 1, total), Text_DrawFont8 at (0xEE, 0x2C); confirm or cancel: 0x939A3E + 1. The walk is unbounded (ours aborts past the three). docs/rest_4e.md."
+
+[[func]]
+pc = 0x460720
+name = "CommuRank_Close"
+ret = "void"
+params = "void"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460720..0x460726 (0x7 bytes): CommuRank_Modes[2]: the byte 0x9039F4 + 1. docs/rest_4e.md."
+
+[[func]]
+pc = 0x460730
+name = "CommuRank_DrawListA"
+ret = "void"
+params = "int x, int y, unsigned page"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460730..0x460884 (0x155 bytes): message 0x37, CommuRank_DrawIcon 1, message 0x38, the count 0x9039A0 (Crt_sprintf Boss26Fx_CountFormat, Text_DrawFont12), the glyph 0x669F08; up to seven rows of 0x9039C0 + 7 page: the name 0x9048F0 + 5 (b & 0x7F), message 0x3A (bit 7) or 0x39. docs/rest_4e.md."
+
+[[func]]
+pc = 0x460890
+name = "CommuRank_DrawIcon"
+ret = "void"
+params = "int x, int y, unsigned icon"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460890..0x460914 (0x85 bytes): Gpu_SetDrawMode(page 0x1E), a 12 x 12 SPRT at (x, y), u = 12 icon - 0x38 (byte), v 0xF0, clut 0x7849, grey. docs/rest_4e.md."
+
+[[func]]
+pc = 0x460920
+name = "CommuRank_DrawListB"
+ret = "void"
+params = "int x, int y, unsigned page"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460920..0x460A38 (0x119 bytes): the heading (icon 0, message 0x3B, the count 0x904A90); up to 20 names three to a row while 20 page + i < count, the name the byte 0x904F00 + 15 page + i (15, not 20: docs/rest_4e.md L4). docs/rest_4e.md."
+
+[[func]]
+pc = 0x460A40
+name = "CommuRank_DrawListC"
+ret = "void"
+params = "int x, int y, unsigned page"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460A40..0x460B1F (0xE0 bytes): message 0xEC; up to eight rows of the pairs 0x904CA0 + 16 page (kind, entry) while 8 page + i < 0x937F80: a kind whose word +2 of 0x653180 is set puts the entry's name into Text_Records 0, then the kind's message (word +0 of 0x653180) at (x + 0x14, y + 0x1C + 16 i). docs/rest_4e.md."
+
+[[func]]
+pc = 0x460B20
+name = "CommuRank_DrawBackdrop"
+ret = "void"
+params = "int x, int y"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460B20..0x460C38 (0x119 bytes): Gpu_SetDrawMode(page 0x1D), CommuRank_DrawTile: 16 top tiles (0x6531A0), four columns of ten rows of two wide tiles (0x6531E0), 16 bottom tiles (0x6531C0) at y + 0xB0. docs/rest_4e.md."
+
+[[func]]
+pc = 0x460C40
+name = "CommuRank_DrawTile"
+ret = "void"
+params = "int x, int y, unsigned u, unsigned v, unsigned wide"
+impl = "src/game/rest_4e.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (round fourteen group R4E, capstone to the last instruction), 0x460C40..0x460CAD (0x6E bytes): a SPRT (wide + 1) 16 x 16 at (x, y), u, v bytes, clut 0x7883, grey. Called by CommuRank_DrawBackdrop. docs/rest_4e.md."
+
+[[data]]
+pc = 0x6530C0
+name = "CommuMusic_Modes"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4E): CommuMusic_OpenDispatch, CommuMusic_BrowseDispatch, CommuMusic_CloseDispatch; jumped through by CommuMusic_Dispatch 0x45F750 by 0x939A3E, unchecked; CommuMusic_SlideIn and CommuMusic_Browse move it 0 -> 1 -> 2; CommuMusic_OpenSteps starts at 0x6530CC. docs/rest_4e.md."
+
+[[data]]
+pc = 0x6530CC
+name = "CommuMusic_OpenSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4E): CommuMusic_Open, CommuMusic_SlideIn; jumped through by CommuMusic_OpenDispatch 0x45F760 by 0x939A40, unchecked; CommuMusic_BrowseSteps starts at 0x6530D4. docs/rest_4e.md."
+
+[[data]]
+pc = 0x6530D4
+name = "CommuMusic_BrowseSteps"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4E): CommuMusic_Browse, CommuMusic_Play; jumped through by CommuMusic_BrowseDispatch 0x45F820 by 0x939A40, unchecked; CommuMusic_CloseSteps starts at 0x6530DC. docs/rest_4e.md."
+
+[[data]]
+pc = 0x6530DC
+name = "CommuMusic_CloseSteps"
+ctype = "unsigned long"
+count = 4
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4E): CommuMusic_CloseFade, CommuMusic_CloseRestore, CommuMusic_SlideOut, R4D's 0x45E6A0; jumped through by CommuMusic_CloseDispatch 0x45F990 by 0x939A40, unchecked; a pointer to text follows at 0x6530EC. docs/rest_4e.md."
+
+[[data]]
+pc = 0x653150
+name = "CommuItem_Modes"
+ctype = "unsigned long"
+count = 2
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4E): CommuItem_StepDispatch, R4D's 0x45E6A0; called through by CommuItem_Frame 0x45FE00 by 0x939A3E, unchecked; CommuItem_Steps starts at 0x653158. docs/rest_4e.md."
+
+[[data]]
+pc = 0x653158
+name = "CommuItem_Steps"
+ctype = "unsigned long"
+count = 7
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4E): CommuItem_Prompt, CommuItem_OpenWindow, CommuItem_Choose, CommuItem_Cancel, CommuItem_Confirm, CommuItem_Give, CommuItem_Refused; jumped through by CommuItem_StepDispatch 0x45FE20 by 0x939A40, unchecked; CommuRank_Modes starts at 0x653174. docs/rest_4e.md."
+
+[[data]]
+pc = 0x653174
+name = "CommuRank_Modes"
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-05 (round fourteen group R4E): CommuRank_Pages, CommuRank_Show, CommuRank_Close; jumped through by CommuRank_Dispatch 0x460500 by 0x939A3E, unchecked; the words of 0x653180 follow (data). docs/rest_4e.md."
