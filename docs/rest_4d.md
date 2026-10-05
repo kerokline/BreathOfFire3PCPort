@@ -377,7 +377,18 @@ route once the code is ours.
 
 ## 10. Self-tests and the entry list
 
-SELFTESTS
+All in this worktree, headless (`BOF3X_SELFTEST_ONLY=1`), on the final build
+(`e1898b35`'s code):
+
+- `BOF3X_SHADOW=rest_4d`: exit 0, 240,000 rounds, 1,734,968 calls to the
+  stand-ins, 0 mismatches.
+- `BOF3X_SHADOW='*'`, narrow: ran to `self-test only: done`, 742 self-test
+  lines, no mismatch, no Fatal; `rest_4d`'s line 240,000 rounds, 1,736,565
+  calls (another stream than its own run), 0 mismatches.
+- `BOF3X_SHADOW='*'` with `BOF3X_WIDE=1`: the same, 742 lines, no mismatch, no
+  Fatal. No function of the group has an operand `widescreen.cpp` patches
+  (nor `DIVERGENCE.md` or `cheats.cpp` a byte inside the 60). No run died
+  silently.
 
 `analysis/calltrace/entries_logic.txt` (the main checkout's): 49 lines
 appended (2026-10-05), the 49 hidden starts with the extents read here. The
@@ -388,4 +399,4 @@ runs over the ten hidden starts `0x45C8C0..0x45CE40`) and `0045CEA0 1810` (the
 function is `0x19A`; the line runs over the 39 from `0x45D040`). Each hidden
 start has its own line now, so the tracer's lookup by entry finds them.
 
-`tools/ledger_check.py`: LEDGER.
+`tools/ledger_check.py`: 73 ledger entries, 0 errors (2 notes, not this group's).
