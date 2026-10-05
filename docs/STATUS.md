@@ -16,10 +16,10 @@ four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
 **8,648 functions are ours on `main`** (round thirteen, PR #40, `5a94224`;
-`'*'` at the round's end, 2026-10-03) **and 9,681 on
-`phase-3/capture-round-fourteen`**, paused after round fourteen's third wave
-(2026-10-04; the batch's count, [`takeover-queue-round14.md`](takeover-queue-round14.md)
-section 11). The catalogue has 10,246 starts; at round fourteen's cut 1,341
+`'*'` at the round's end, 2026-10-03) **and 10,009 on
+`phase-3/capture-round-fourteen`**, round fourteen's four waves merged
+(2026-10-05; [`takeover-queue-round14.md`](takeover-queue-round14.md)
+section 13). The catalogue has 10,246 starts; at round fourteen's cut 1,341
 of the game's own functions were left, the rest of what is not ours being
 the platform and library layer (533) and jump-table cases (210) -
 round fourteen's section 0. The spell round counts pointer-reached starts
@@ -83,6 +83,7 @@ re-derived:
 | 10-04 | Round 14 wave 2 (eight groups): the menus, windows, shop and master screens; the masters' model's light matrix zeroed past its first row (DIV-0073, kept) | 354 | 9,343 | `'*'` 0 mismatches narrow and wide | [`takeover-queue-round14.md`](takeover-queue-round14.md) section 10 |
 | 10-04 | Round 14 wave 3 (seven groups) - **paused** at the owner's word; the live checks held for one validation after wave four (R4A..R4F, 326 functions), Chinese against Chinese | 338 | 9,681 | `'*'` 0 mismatches narrow and wide; live checks held | [`takeover-queue-round14.md`](takeover-queue-round14.md) section 11 |
 | 10-05 | Round 14's review and its fixes: the group disturbance's dead third made live in 22 fuzzes, every one of those groups' controls re-run and 176 planted on the formerly dead cases; the Rand counter on reference sides; `statehash.py`'s header check; wave four still to launch | 0 | 9,681 | `'*'` 0 mismatches narrow and wide at `dd528ff`; `combat.txt` Chinese against Chinese identical on the state hash | [`round-14-review.md`](round-14-review.md), [`takeover-queue-round14.md`](takeover-queue-round14.md) section 12 |
+| 10-05 | Round 14 wave 4 (six groups): the community band, the Config screen's machine, effect kinds 2, 7, 8, 9 and 0xB - **round fourteen's takeovers complete**, the game's own code all ours; DIV-0074 (a stale-stack pick levelled), DIV-0075 (the name entry ends where the port's never left its step) | 328 | 10,009 | `'*'` 0 mismatches narrow and wide at `1bf5964`; the round's validation, Chinese against Chinese: the attract sequence and nine of ten routes identical on the state hash, `shop` as before wave two | [`takeover-queue-round14.md`](takeover-queue-round14.md) section 13 |
 | 10-05 | Round 13's code review, read-only ([`round-13-review.md`](round-13-review.md)): F1's double speed held at x1 while a stream plays, the `Rand` counter bypassed on reference sides, E2E's kind-0x48 names, this file brought forward, eighteen low items | 0 | 9,681 | none: a read of the source, nothing changed | [`round-13-review.md`](round-13-review.md) |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT

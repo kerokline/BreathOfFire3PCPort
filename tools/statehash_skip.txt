@@ -175,8 +175,11 @@
 0x7E09E0 2048    # ours   DrawItemPool_Free
 0x7E1C00 131072  # ours   Gfx_PacketPools: the packets name their draw items by address (0x90.... against ours' pool, DIV-0062); what they draw is the picture A/B's to see
 0x8022A0 2720    # ours   DrawLayers and Gfx_FrameNodes (pointers into the pool)
+0x9037D0 4       # ours   Gfx_OtHeads+0x10: a pointer into the pool, in battle (0x90.... against ours' 0xF0...., DIV-0062; dumps of whelpBoss and dragonTransform at tick 700, cutsceneAndNue at 4300, 2026-10-05)
+0x9037F0 4       # ours   Gfx_OtHeads+0x30: the other buffer's
 0x9039D4 2       # ours   DrawItemPool_Top
 0x905E80 147456  # ours   DrawItems
+0x929EB0 4       # ours   Gfx_OtPointers+0x10: a pointer into the pool, in battle (the same three dumps)
 0x929EB8 4       # ours   Gfx_OtPointers+0x18: a pointer into the pool
 
 # the C runtime's own, at the end of .data

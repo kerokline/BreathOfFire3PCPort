@@ -680,3 +680,164 @@ result**: the references disagreed on 117 pages and ours "differed" on 15
 (the VRAM shadow in ticks 2..9, `0x7DE000`, `0x937000`;
 `cn_rt_combat_*`). The state hash wants the machine quiet, as
 `state-hash.md` says - a wave's agents and a live check do not share it.
+
+## 13. Wave four, as it ran (2026-10-05), and the round's validation
+
+From `35ec19e`, six Opus agents in two batches of three, launched in a new
+session at the owner's word. The briefs carried the earlier waves' addenda
+and the review's (`post_brief4.py`). Three agents were cut by a server
+overload (R4E twice, R4B, R4D) and resumed where they stood.
+
+| Group | Functions | Rounds | Controls planted / refused | Merge | Ours after |
+|---|--:|--:|---|---|--:|
+| R4F ([`rest_4f.md`](rest_4f.md)) | 52 | 208,000 | 133 / 133 | `f160557` | 9,733 |
+| R4E ([`rest_4e.md`](rest_4e.md)) | 48 | 288,000 | 153 / 145, seven more by the abort of ours | `0263af1` | 9,781 |
+| R4D ([`rest_4d.md`](rest_4d.md)) | 60 | 240,000 | 173 / 170 | `f43b0fc` | 9,841 |
+| R4A ([`rest_4a.md`](rest_4a.md)) | 48 | 194,000 | 74 / 70, two more by the abort of ours | `4b05a46` | 9,889 |
+| R4C ([`rest_4c.md`](rest_4c.md)) | 60 | 360,000 | 146 / 144 | `07fcb24` | 9,949 |
+| R4B ([`rest_4b.md`](rest_4b.md)) | 60 | 360,000 | 162 / 160 | `4aebe55` | 10,009 |
+
+328 functions (the cut's 326 plus two no list had, both in R4F: `0x4613B0`,
+the Config screen's controller-panel step, and `0x464970`, a cell of
+`EffectKind02_Modes` that two neighbours tail-jump to), every group 0
+mismatches. Every control not refused by a count is an equivalent mutant
+with a refused near variant, or was stopped by the abort of ours with its
+in-range variant refused - but one: **R4A's C33b** (the price tier walk
+stopped a tier early) passes because no seeded price is above the seventh
+bound, 30,000; C33c, three tiers early, is refused. A seed, not a mutant.
+Every disturbance case of every group has a refused control that misses
+its re-read (the review's item 1, in the briefs from the start). The tip of
+the merges `4aebe55` verified alone: `'*'` narrow and with `BOF3X_WIDE=1`,
+10,009 ours, 0 mismatches, the log ending `self-test only: done`.
+
+**The band is not all the village.** R4F is the Config screen's own machine
+and draws (the field menu's state 7; DIV-0011, DIV-0017, DIV-0026 and
+DIV-0051 patch operands inside them, read in place at every call, the Latin
+forms not fuzzed) and the states of effect kinds 2, 7, 8, 9 and 0xB. R4A
+holds six battle targeting helpers, `Field_RunSlot`, the community's
+simulation (`CommuSim_*`, `CommuPose_*`) and twelve `Field_ObjectTriggers`
+functions. R4B is `Field_ModeTailKinds` 14, 21..26 and 60 and the board;
+R4C the two games of R4B's table `0x652A84`; R4D the board's draws, the
+draw of names and the name screen; R4E the music, item and rank screens.
+What each screen is in play is the owner's to say: no group names one from
+memory.
+
+**What the wave found out.**
+
+- **DIV-0074** (entered, the owner's word owed): `Battle_RandomLiveEnemy`
+  `0x452F10` lists up to eight standing enemies in four stack bytes; from
+  the fifth the original can answer a byte it never wrote. Ours makes the
+  same writes and holds the six never-written bytes at 0.
+- **The PC's name entry does not end, it stays** - a correction of R4D's
+  report, from the research the owner asked for the same day
+  ([`name-entry-restoration.md`](name-entry-restoration.md)): the
+  PlayStation's input step moved the entry's step on and the port's
+  replacement only answers 0. **DIV-0075** (the owner's word, 2026-10-05:
+  fix the hang now): ours moves the step on and the out step's unanswered
+  branch ends the entry. The entry itself, and naming at New Game, wait for
+  the localisation rework (IDEAS I34, the owner's word the same day).
+- **For the owner, each Capcom's and reproduced:**
+  `CommuRank_Show` `0x4605D0` reads past its page counts when all three
+  ranked lists are empty, where ours aborts (R4E's L5 - can play open that
+  screen so?); `Battle_RandomOtherMember` divides by zero with one member
+  standing, where ours aborts (R4A's L2 - `Battle_MemberAutoTarget` calls it
+  on a roll of 3 or more); the draw of names can repeat a name (R4D's L1);
+  `CommuHitBlow_Start` takes 500 zenny unchecked (R4C).
+- **`pairs_propagated.json` pairs PSX `0x801D9810` with PC `0x585DC0`
+  wrongly** (the name-entry research, by reading both), beside the errors
+  HANDOFF's "Then" list already names.
+- **Live reach:** none. No recorded route enters the community, and the
+  wave is fuzz only.
+
+**The merge runner was deceived once.** Windows Defender killed the
+verification worktree's launcher at 10:30 while it waited on R4C's `'*'`
+run (the fourth detection on that file); the shell reported exit 0 for the
+killed launcher, the runner logged a pass and started R4B, whose link then
+failed on the DLL the still-running game held. R4C's run did finish (9,949
+ours, 0 mismatches, `self-test only: done`), and R4B was verified by
+`verify_tip.sh` after it. **Exit 0 alone is not a pass**: the log's
+`self-test only: done` and `inject:` lines are (debt 22).
+
+### 13.1 The validation, Chinese against Chinese
+
+`final_live.sh`'s batch on the build `1bf5964` (the merges, DIV-0074's
+comment and DIV-0075), the machine quiet, 11:10 to 13:00: the attract
+sequence against `attract_r14_*`, then ten routes, each as two runs of
+Capcom's code (`*,-Game_Clock`) and ours under `--lang original`, and an
+English run of ours beside it. **Every route replays under Chinese on every
+side**, and the `Rand` count of ours at the end is the originals' on all ten.
+
+| Route | Ticks | Ours against the reference |
+|---|--:|---|
+| `combat` | 2,561 | identical |
+| `menu_screens` | 1,729 | identical |
+| `field_menu` | 1,409 | identical |
+| `worldMapAndAreaTransition` | 2,113 | identical |
+| `caughFish` | 3,841 | identical |
+| `masterAndManillo` | 5,505 | identical |
+| `dragonTransform` | 4,289 | identical, after the skip list's three new ranges |
+| `cutsceneAndNue` | 7,361 | identical, after them |
+| `whelpBoss` | 13,185 | identical, after them |
+| `shop` | 3,137 | three pages from tick 2975: section 10's difference, older than wave two, still not diagnosed |
+
+The three battle routes had never been hashed. Their first run reported
+pages `0x903000` and `0x929000`; raw dumps on both sides (ticks 700, 700 and
+4300) left, under the skip list, three cells and nothing else:
+`Gfx_OtHeads+0x10` and `+0x30` (`0x9037D0`, `0x9037F0`) and
+`Gfx_OtPointers+0x10` (`0x929EB0`), each a pointer into the draw-item pool -
+Capcom's at `0x90....`, ours at `0xF0....` (DIV-0062), the class of the
+neighbour `0x929EB8` already listed. They are in `tools/statehash_skip.txt`
+with the dumps named, and the three routes run again, two originals and
+ours under the new list, are identical on every tick. The original side
+does not crash on `caughFish` or `masterAndManillo` here (sections 9 and 10
+met `0x5A9E45` there under English; under Chinese both run to `done`).
+
+**The attract sequence** (10,305 ticks against `attract_r14_*`): the batch's
+run, its first, reported seven pages at tick 3 and no other tick - the VRAM
+shadow's five, `0x7DE000` and `0x937000`, the pages section 12.3 saw move in
+the first ticks of a run under load. Raw dumps of both sides at ticks 3 and
+4 differ in no byte the hash sees, and the run repeated (`attract_w4c_ours`)
+is identical on all 10,305 ticks. A start-up timing of that one run, not a
+difference of ours. The oracle agrees on both runs (`Rand` count, message
+index, area word at every logged frame). **The attract references were
+hashed under the list of 165 ranges**: a run under today's 168 is refused
+against them, so the repeat used the old list; the pair wants recording
+again (debt 25).
+
+The English runs all reach `done`; `shop` ends on a `Rand` count of 2,077
+against the Chinese 2,075 and `whelpBoss` on 20,709 against 22,315 - text
+timing, not compared with their recordings here.
+
+**Debts added:**
+
+20. The call sites between the wave's groups by raw address (R4B into R4A,
+    R4C and R4E; R4C into R4D; R4D into R4C and R4E; R4A into R4D; R4E into
+    R4D) and R2F's `kConfigMachine` into R4F's `ConfigScreen_Run`: the
+    round's rebinding.
+21. Host-extent lines in `entries_logic.txt` to split: R4F six, R4B two,
+    R4C three, R4D two, R4E four, R4A one. `boss_harness.cpp`'s three rows
+    for `0x452DD0`, `0x452EB0`, `0x452F10` and `FX_RAW(0x462F10)` could be
+    the `_OURS` form; `Gpu_SetLineF3` and `Gpu_SetSprt16` have standard rows
+    in effect mode only (R4B).
+22. `merge_group14.sh` and `verify_tip.sh` judge a self-test by its exit
+    code: add the log's `self-test only: done` (the Defender kill above).
+23. Thin controls: R4F's C21 (3 of 60,000), R4B's C36, B36, D20, D44, R4A's
+    C3, C21, C29, C32, R4D's weakest (3 of 4,000); R4A's C33b wants a price
+    seeded above 30,000.
+24. DIV-0075's switch is off in the fuzz, as DIV-0070's: the moved step is
+    built and seen armed, not compared. A row beside the fuzz, ours alone
+    (DIV-0063's form), would cover it.
+25. `attract_r14_orig` / `_origb` and `combat_orig` / `_origb` were hashed
+    under the skip list of 165 ranges; the list has 168 since this section.
+    Record the pairs again (two all-original runs each, the machine quiet)
+    before the next check against them.
+
+**The tip `1bf5964`** (the merges, DIV-0074 and DIV-0075): `'*'` narrow and
+with `BOF3X_WIDE=1` after the validation, 10,009 ours, 0 mismatches, the
+log ending `self-test only: done`; `ledger_check` 75 entries, 0 errors.
+**Round fourteen's takeovers are complete: 1,361 functions** (stage A and wave one 341,
+then 354, 338 and 328 - twenty more than the cut's 1,341, each named in its
+wave's section), 8,648 to 10,009. What is not ours in `BOF3.exe` is the
+platform and library layer and the jump-table cases. Left of the round: the
+debts of sections 9 to 13, the review's low items, the shop route's
+difference.
