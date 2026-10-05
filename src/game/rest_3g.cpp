@@ -128,7 +128,8 @@ extern "C" void __cdecl EffectKindAC_Start(void) {
     S()[1] = static_cast<unsigned char>(S()[1] + 1);
 }
 
-// original 0x4925E0 (state 1): R3F's gradient 0x492400 with the shade
+// original 0x4925E0 (state 1): R3F's fill 0x492400 (EffectKindAA_DrawFill,
+// ours, widened under DIV-0041 - so this fade is too) with the shade
 // s8(+9) * -0x20 (imul cl: ax; the push carries Sprite_Current's upper half
 // above it), +9 down; at 0 +9 = 8 and +1 up. +9 runs 8..1, so the shade 0x00,
 // 0x20, .., 0xE0.

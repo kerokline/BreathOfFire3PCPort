@@ -2231,7 +2231,10 @@ designed in rather than bolted on.
   `0x492450`: kind 0xAA's two shaded quads over the whole frame) is drawn
   from `Widescreen_FillX()` over `Widescreen_FillWidth()`, as
   `EffectKind18Sub36_Pulse` is (`src/game/rest_3f.cpp`; its inject is before
-  `Widescreen_ArmFills`, so its fuzz compares the original's 320). Not
+  `Widescreen_ArmFills`, so its fuzz compares the original's 320). **Kind
+  0xAC's two fades widen with it**: R3G's `EffectKindAC_FadeIn` and
+  `_FadeOut` (`0x4925E0`, `0x492620`, `src/game/rest_3g.cpp`) draw through
+  the same `EffectKindAA_DrawFill` (round fourteen's review, item 11). Not
   widened: `EffectKindA8_DrawBar` (`0x4920F0`), sixteen red bars the frame's
   width but not its height - **left as it is by the owner, 2026-10-04, to be
   looked at in game under the wide picture.** Where it shows is not
@@ -3315,7 +3318,9 @@ designed in rather than bolted on.
   `0x513BAC`, `0x513C41` - a raw scan of `.text` for the array's address and
   its two interior offsets, then for every immediate inside item 0, each
   confirmed by disassembly) are re-aimed at inject, the one bound
-  `AreaMap_FrameAreaBD` compares its bump index with (`0x400` at `0x510878`)
+  `AreaMapBD_BuildView` (`0x510780`; called `AreaMap_FrameAreaBD` here until
+  2026-10-05, which is the name of `0x510630` - ours since round fourteen's
+  R3G) compares its bump index with (`0x400` at `0x510878`)
   is raised to `0x800`, and ours read the pool through `draw_pool::Items()`
   / `Free()` / `Count()` - including the two resets that prime every item's
   halves (`Field_ViewReset`, `Weretiger_ResetMapView`), which the original

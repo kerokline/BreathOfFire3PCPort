@@ -16,11 +16,11 @@
 // the chapter its step. Each model has its own state table (Shisu_ModelBStates
 // here; MasterFigure_States' draws past its entry 1 are R2C's).
 //
-// Every one is a faithful replacement. Where the original indexes a .data
-// table by a byte it never bounds (every dispatcher here) ours aborts with a
-// message (round9 doc section 6); where it reads memory it never wrote (a
-// light matrix half filled, Shisu_DrawModel) ours writes zeros and the doc
-// says so (section 7). Every call goes through the harness (SH_CALL / SH_AT),
+// Every one is a faithful replacement but Shisu_DrawModel (DIV-0073). Where
+// the original indexes a .data table by a byte it never bounds (every
+// dispatcher here) ours aborts with a message (round9 doc section 6); where
+// it reads memory it never wrote (a light matrix half filled,
+// Shisu_DrawModel) ours writes zeros: DIV-0073, and the doc's section 7. Every call goes through the harness (SH_CALL / SH_AT),
 // so the start-up fuzz can stand recorders in for the callees; Sprite_Current
 // and the menu cells are re-read after every call, as the originals re-read
 // them.
@@ -858,7 +858,7 @@ extern "C" void __cdecl Shisu_ModelBDraw(void) {
 //
 // The light matrix's other 26 bytes are the stack's (no instruction writes
 // them) and go into Gte_Matrix2 through Gte_SetMatrix2; ours zeroes them
-// (docs/rest_2b.md section 7, L1). A negative count draws some 65,000 quads,
+// (DIV-0073; docs/rest_2b.md section 7, L1). A negative count draws some 65,000 quads,
 // as the original would.
 extern "C" void __cdecl Shisu_DrawModel(unsigned char* record) {
     unsigned char* const old = Sprite_Current;

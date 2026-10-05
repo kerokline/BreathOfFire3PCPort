@@ -14,8 +14,8 @@ refused near variant (section 6). `BOF3X_SHADOW='*'` exit 0, narrow and with
 recorded route or trace enters the band (section 9). **Two harness rows
 were edited** (one token each, section 10): taking `Effect_Spawn` /
 `Effect_SpawnAt` makes `Register` refuse their `THEIRS` rows, and no other
-change lets `'*'` pass. **One latent defect wants a ledger entry** (section
-7, L1).
+change lets `'*'` pass. **One latent defect is a ledger entry, DIV-0073**
+(section 7, L1; entered 2026-10-04 and kept by the owner the same day).
 
 **What the band is.** By the code, four things:
 
@@ -113,7 +113,7 @@ tools read them as one run of code pointers (`0x663DD0`, "39 code entries").
 
 None in behaviour: every function is Capcom's to the byte it writes, with
 two places where the original's bytes cannot be reproduced (section 7, L1
-and L2) - **L1 wants the coordinator's word on a ledger entry**.
+and L2) - **L1 is DIV-0073** (entered 2026-10-04, kept by the owner).
 
 ## 3. Arguments and answers
 
@@ -353,7 +353,7 @@ model B's y seeded on whole units).
 
 ## 7. Latent defects and ranges (Capcom's, described, not fixed)
 
-- **L1 - needs a ledger entry (the coordinator's and the owner's):
+- **L1 - DIV-0073 (entered 2026-10-04; the owner kept it the same day):
   `Shisu_DrawModel` loads 26 bytes of stale stack into `Gte_Matrix2`.** Its
   light matrix is a local (`[esp + 0x7C]`) of which `Light_ObjectDirection`
   writes the first three shorts; `Gte_SetMatrix2` then copies all 32 bytes

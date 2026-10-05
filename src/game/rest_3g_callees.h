@@ -3,8 +3,10 @@
 //
 // Raw-address callees (owned by a group of this round's wave three, called
 // raw until the round's rebinding):
-//   0x492400  R3F: (shade byte) - a full-screen semi-transparent gradient
-//             (two POLY_G4 at 320.0 x 240.0); kind 0xAC's fade states call it.
+//   0x492400  R3F's EffectKindAA_DrawFill, ours: (shade byte) - two opaque
+//             shaded quads over the whole frame, 320.0 x 240.0 narrow and the
+//             frame's width under the wide picture (DIV-0041); kind 0xAC's
+//             fade states call it.
 // Everything else the group calls is ours, by name. The constants below are
 // cells and the image's read-only tables, read in place (never copied).
 #pragma once
@@ -15,8 +17,8 @@ namespace rest_3g::at {
 
 using U = std::uint32_t;
 
-// --- callees not ours ------------------------------------------------------------
-constexpr U kFadeDraw = 0x492400;          // R3F (wave three): void(unsigned shade) - reads the argument's low byte
+// --- callees ours, by address until the round's rebinding -------------------------
+constexpr U kFadeDraw = 0x492400;          // R3F's EffectKindAA_DrawFill: void(unsigned shade) - reads the argument's low byte
 
 // --- kinds 0xAC, 0xAD, 0xBA ------------------------------------------------------
 constexpr U kMember2X = 0x80300C;          // ObjTrio record 2 +0x34: the third member's x, 16.16
