@@ -386,10 +386,31 @@ batches of their own. **55 of 55 refused by a count** (exit 3):
 | `_0A_Slide` | 0x858 -> 0x857 | 2,000 |
 | `_0A_Open` | x + 1 | 2,000 |
 | `_0A_DrawDoor` | z * -320 -> * -319 | 2,000 |
+| `_0A_Swing` | `+9` not read again for the second door (case 0) | 88 |
+| `_1F_Brighten` | `+9` not read again for the second copy (case 0) | 84 |
+| `_05_Idle` | the on-test's `+0x3A` read before the two copies (case 3) | 11 |
+| `_05_Pulse` | the on-test's `+0x3A` read before the copies (case 3) | 0; 72 of 40,000 |
 
 The low counts (`_08_Shake` 6, `_0A_Hold` 3) are single-value boundaries
 (`+9` exactly 7 or 4 after its increment) the seed reaches rarely; each is
 refused.
+
+**2026-10-05, under the repaired disturbance (round fourteen's review item 1).**
+The group's `Disturb` switched on `h % 6` behind the harness's `h % 3 != 0`,
+so its cases 0 (`+9`) and 3 (the word `+0x3A`) never ran; `b9dfe34` draws
+the case through `sh::DisturbCase`. Re-run at `451edeb` with the round's
+script and batches (this checkout's CRLF line ends aside), 2,000 rounds a
+clone: **55 planted, 55 refused by a count**; nine counts moved by a few
+rounds (`_04_Shut` 1,291, `_05_Idle` 90, `_05_Pulse` 1,131, `_05_FadeOut`
+466, `_1A_Start` 1,984, `_1F_Brighten` 138, `_07_Wait` 1,313, `_08_Topple`
+127, `_08_Crash` 1,962), the rest equal. The last four rows are new, one
+plant a build, each also run with the group's switch put back to `h % 6`:
+`_0A_Swing` 88 (69 under the old switch), `_1F_Brighten` 84 (66), `_05_Idle`
+11 (8) - the harness's own `Sprite_Current` move refuses most of each, the
+formerly dead case adds the rest. `_05_Pulse` was not refused at 2,000 rounds
+under either switch: its on-test only decides anything when `(+9 >> 2) % 6`
+is also 0, so a moved word rarely shows; at 40,000 rounds it is refused 72
+times (63 under the old switch). Not equivalent, rare; the fuzz is unchanged.
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 
