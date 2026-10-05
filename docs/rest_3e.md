@@ -294,12 +294,36 @@ in `rest_3e.cpp`; the count is the rounds refused of 4,000:
 | C80, C81 | `EffectKind5E_DrawList` | colour 6; the count's line + 2 | refused (3837, 4000) |
 | C82 | `EffectKind5E_DrawPanel` | u - 0x40 | refused (4000) |
 | C83..C94 | kind 0x5F's states | `_Launch`'s height + 1; `_Hop`'s rise + 1 and its compare at 0x4A0000; `_Fly`'s `+9` 0x3B; `_Bounce`'s rise + 1; `_FlyAway`'s fall 0x200000 and its release as `+0 = 0`; `_PlaceHigh`'s sounds swapped; `_Slide`'s compare 0xF0001; `_PlaceLow`'s sound 0x20B; `_SlideOut`'s fourth word 0 and its compare `>` | refused (1997; 1909, 1909; 1917; 1997; 4000, 1932; 4000; 1923; 4000; 4000, 468) |
+| C95 | `EffectKind5D_Open` | the outlines' size (`+9 * 16`) read once, before the three outlines | refused (88) |
+| C96, C97 | `EffectKind5D_Open`, `EffectKind5D_Close` | `+9` read before the outlines, not again after | refused (274, 274) |
+| C98, C99 | `EffectGlowSparks_Glow`, `EffectGlowSparks_Rise` | the sound flag set before the sound, not after | refused (50, 136) |
 
 C64 is refused by 5 rounds: the width test `<=` against `<` differs only where
 a window's width is exactly `+9 * 16`, and the layout's widths are not all
 multiples of 16; refused, a seed on each width's own value would make it
 louder. C70 (34) and C73 (118) are the pick's 100 edge and the pad re-read
 through the disturbance: refused.
+
+**Under the repaired disturbance (2026-10-05, round fourteen's review item
+1).** Before `b9dfe34` the group's cases 0 (`+9`) and 3 (the two sound
+flags) never ran; C01..C94 were refused by the other cases. The 94 were
+re-run on the repaired fuzz (a copy of the driver, `controls/rest_3e/` in
+session 8cb2a236's scratchpad, anchors converted for a CRLF checkout, none
+repaired): **93 refused, C28 not (the equivalent, as before)**; 10 counts
+moved by at most 17 (C72), C64 still 5, C70 34 to 36, C73 118 to 106.
+C95..C99 are new. Case 0: `Outlines` reads `+9` again after each
+`Window_DrawOutline`, `_Open` and `_Close` after `Outlines`. Case 3: no
+function re-reads a sound flag after a call - `_Glow` and `_Rise` read their
+flag before their one call (the sound) and write it after - so the test the
+case allows is the write's order, C98 and C99. With the formerly dead cases
+skipped (a scratch gate, not committed) C95..C97 keep 76, 233 and 233 of 88,
+274 and 274: `+9` is also moved by the other cases. C98 and C99 were refused
+in 0 and 3 rounds by case 3 alone: the fuzz now re-lists `Sound_PlayEffect`
+(`FxSoundFlags`: a quarter of the time one sound flag moved to 0 or
+2..0xFF). On that fuzz the shadow is `200000 rounds over 50 functions (4000
+each), 9265089 calls to the stand-ins, 0 MISMATCHES`, and all 99 were run
+again: C01..C94 as above (93 refused, C28 not, C70 37), and the counts of
+C95..C99 in the table are that run.
 
 ## 7. Calls across groups
 

@@ -204,6 +204,23 @@ U FormBuildEffect(const U*, U answer) {
     B(kPickRow) = 0x7F;
     return answer;
 }
+// The swap helper 0x58BD50 (re-listed): the two bytes exchanged, as the
+// standard row's FxSwap; and a quarter of the time the members row or the held
+// row moved to 0..4. TacticsMembers_Swap reads both again after its party swap;
+// the group's case 12 alone moved them there in 2 rounds of 6000 at most, too
+// rarely to refuse a missed re-read (2026-10-05, round fourteen's review item 1).
+U SwapEffect(const U* a, U answer) {
+    auto* const x = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    auto* const y = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[1]));
+    if (sh::InRegions(x, 1) && sh::InRegions(y, 1)) {
+        const unsigned char t = *x;
+        *x = *y;
+        *y = t;
+    }
+    const U n = sh::Noise();
+    if (n % 4 == 0) B(n & 4 ? kRow : kHeldRow) = static_cast<unsigned char>((n >> 8) % 5);
+    return answer;
+}
 
 #define G_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
@@ -225,6 +242,8 @@ const sh::Callee kCallees[] = {
     {G_OURS(Inventory_CountUsed), 1, {0xFF}, kG, 0, 0},                                       // char_stats.cpp: category & 0xFF
     // Capcom's, re-listed: the room (the fourth word) logged
     {"Crt_sprintf", 0x5B9380, 0x5B9380, 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {0, 16, 0, 0}, &SprintfEffect},
+    // the field-standard row's swap, louder: the members rows moved too (SwapEffect)
+    {"0x58BD50", kSwapBytes, kSwapBytes, 2, {kAll, kAll}, kG, 0, 0, {}, &SwapEffect, nullptr, true},
     // nobody's yet (R4F): the Config screen's machine
     {"0x460CB0", kConfigMachine, kConfigMachine, 0, {}, kG, 0, 0},
 };
