@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 76 entries, DIV-0001..0076, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 77 entries, DIV-0001..0077, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4061,3 +4061,38 @@ designed in rather than bolted on.
   self-test, as DIV-0075's), 0 mismatches. Not yet seen live: a save with a
   non-record-0 leader, then the load screen - the owner's eye.
 - **Reversible?** `BOF3X_ORIGINAL=Save_BuildBlock` runs Capcom's.
+
+### A TILE_1 covers the PlayStation pixel's footprint, not one screen pixel
+
+- **ID:** DIV-0077
+- **Date:** 2026-10-06
+- **Subsystem:** the renderer (`D3d_DrawTile1` `0x5A2220`, ours in
+  `src/game/d3d_rest.cpp`; `Gfx_DrawOTag`'s handler for code `0x68`,
+  `Gpu_SetTile1`'s primitive)
+- **Tier:** Intent - the owner's decision, 2026-10-06, off a capture: the
+  dream scene's drifting specks were a quarter of their size.
+- **Original behaviour:** the port draws a TILE_1 (a one-pixel tile of the
+  PlayStation's 320 x 240) as a `D3DPT_POINTLIST` of one vertex at the
+  scaled corner. At `D3d_ScaleX` / `D3d_ScaleY` = 2 the frame has four pixels
+  where the PlayStation had one and the point lights one of them, the
+  top-left; at larger scales the gap grows ([`d3d-rest.md`](d3d-rest.md)
+  D-a). Seen in the `whelpBoss` route's dream scene (frame 11880: the specks
+  in Deis's light pillar) and built for the Kaiser and shadow-mote battle
+  effects no route casts.
+- **New behaviour:** with the switch `g_tile1_quad` on (set by
+  `D3dRest_Inject` after the self-test), the tile is a quad from the scaled
+  corner to the scaled (x + 1, y + 1) - a triangle strip of four, as
+  `D3d_DrawTile` draws a TILE of w = h = 1 - with the point's colour, blend
+  and shade. The primitive, its builders and the rest of the walk are
+  unchanged.
+- **Rationale:** the owner, 2026-10-06, shown a four-times zoom of frame
+  11880 beside a paint mock of the 2x2: "go ahead and make it larger".
+  The PlayStation's pixel is the unit the effect was authored in.
+- **Also in the PSX version?** No: the PlayStation's GPU drew the TILE_1 as
+  its one pixel. This is the port's renderer, which has no PSX twin.
+- **Verification:** `BOF3X_SHADOW=d3d_rest` headless compares Capcom's
+  handler with the switch off (set after the self-test, as DIV-0075's and
+  DIV-0076's), 0 mismatches. Live: the `whelpBoss` route's frames around
+  11880, ours against `BOF3X_TILE1=0`.
+- **Reversible?** `BOF3X_TILE1=0` leaves the switch off (the point);
+  `BOF3X_ORIGINAL=D3d_DrawTile1` runs Capcom's.

@@ -154,7 +154,9 @@ would be a ledger entry, proposed in the report.
   drawn as a `D3d_ScaleX` x `D3d_ScaleY` quad (a strip of four at (x, y),
   (x + 1, y), (x, y + 1), (x + 1, y + 1) scaled, as `D3d_DrawTile` draws a
   TILE of w = h = 1) - the owner's eye decides, as for D17 and D1; at the
-  backend's other scales the gap grows with k.
+  backend's other scales the gap grows with k. **Built 2026-10-06 as DIV-0077**
+  at the owner's word, off a zoom of the `whelpBoss` route's frame 11880 (the
+  dream scene's specks): on by default, `BOF3X_TILE1=0` the point.
 - **D-b - a one-texel POLY_FT3 takes its colour from the wrong place, twice
   over.** `D3d_FlattenFT3` passes the words `+0xE` and `+0x16` as the CLUT and
   the tpage: the PSX's POLY_FT3 offsets (u0 v0 clut at `+0xC`, u1 v1 tpage at

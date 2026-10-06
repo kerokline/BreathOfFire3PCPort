@@ -22,6 +22,8 @@
 // Ftol). The fuzz checks three control words.
 #include "game/d3d_rest.h"
 
+#include <windows.h>
+
 #include <cstdint>
 #include <cstring>
 
@@ -392,9 +394,40 @@ long D3d_DrawLineG4(const unsigned char* prim) {
 // (null specular, Gfx_DrawTpage); SetTexture(0, NULL); 0x437CC0(1) twice; the
 // blend; flat; a point list of 1. At a scale of 2 that is one pixel of the four
 // the PlayStation's pixel covers (docs/d3d-rest.md section 4).
+//
+// DIVERGENCE DIV-0077 (the owner, 2026-10-06): with g_tile1_quad on, the tile
+// is the PlayStation pixel's whole footprint - a D3d_ScaleX by D3d_ScaleY quad
+// from the scaled corner, as D3d_DrawTile draws a TILE of w = h = 1 (a
+// triangle strip of four); the colour, blend and shade as the point's. The
+// switch is set by D3dRest_Inject after the self-test, which compares the
+// point; BOF3X_TILE1=0 leaves it off (the original's point).
+unsigned char g_tile1_quad = 0;
 long D3d_DrawTile1(const unsigned char* prim) {
     unsigned long diffuse;
     g.prim_color(prim[4], prim[5], prim[6], prim[7], DrawMode(), &diffuse, nullptr);
+    if (g_tile1_quad != 0) {
+        const float x = Float(prim + 8), y = Float(prim + 0xC), z = Float(prim + 0x10);
+        const float left = X87Mul(FloatAt(kScaleX), x);
+        const float top = X87Mul(FloatAt(kScaleY), y);
+        const float right = X87Mul(FloatAt(kScaleX), x + 1.0f);
+        const float bottom = X87Mul(FloatAt(kScaleY), y + 1.0f);
+        const float rhw = X87Div(FloatAt(kRhwNumerator), z);
+        const float xs[4] = {left, right, left, right}, ys[4] = {top, top, bottom, bottom};
+        for (U i = 0; i < 4; ++i) {
+            unsigned char* out = Vertex(i);
+            PutFloat(out + 0x00, xs[i]);
+            PutFloat(out + 0x04, ys[i]);
+            PutLong(out + 0x08, Long(prim + 0x10));
+            PutFloat(out + 0x0C, rhw);
+            PutLong(out + 0x10, static_cast<U>(diffuse));
+        }
+        SetTexture(0, 0);
+        g.ret_only(1);
+        g.ret_only(1);
+        g.set_blend(prim[7], DrawMode());
+        g.set_shade(1);
+        return DrawVertices(5, 4);   // TRIANGLESTRIP
+    }
     unsigned char* out = Vertex(0);
     PutPosition(out, prim + 8);
     PutLong(out + 0x10, static_cast<U>(diffuse));
@@ -547,6 +580,19 @@ int Gfx_StoreImage(const short* rect, void* to) {
 
 void D3dRest_Inject() {
     if (bof3::WantsShadow("d3d_rest")) d3d_rest::SelfTest();
+    // DIVERGENCE DIV-0077: after the self-test, which compares Capcom's point.
+    {
+        char text[16];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_TILE1", text, sizeof text);
+        const bool off = n == 1 && text[0] == '0';
+        if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_TILE1 must be 0 or 1");
+        if (!off) {
+            static const std::uint8_t was = 0, is = 1;
+            bof3::PatchBytes("Tile1Quad", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_tile1_quad)),
+                             &was, &is, 1);
+            bof3::Log("DIV-0077    TILE_1 drawn as a scale-sized quad, the PlayStation pixel's footprint (BOF3X_TILE1=0 for the point)");
+        }
+    }
     BOF3_INJECT(Gfx_StoreImage);
     BOF3_INJECT(D3d_SetAlphaModulate);
     BOF3_INJECT(D3d_AfterDraw);
