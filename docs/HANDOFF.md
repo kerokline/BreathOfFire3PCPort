@@ -62,8 +62,11 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       [`platform-next.md`](platform-next.md): A the music investigation and the decoder's fate (I23, step 4), B the
       single-source game data (the region measurement, then the importer), C the PSP logic changes (I32), D the cutover
       (state 2 proved, then our own executable); their dependencies and three ways to order them, with a recommendation.
-      What is still Capcom's: the runtime's start-up, allocator and per-thread data, the decoder, the software renderer's
-      converters.
+      **A and B ran 2026-10-06** (`phase-3/next-music`, `phase-3/next-region`, `-read`, all merged): A waits on the
+      owner's ear (`owner-review.md`, the listening set in `analysis/bgm/listen/`); B found the regional builds differ
+      beyond text in one collision fix (Dauna Mine's minecart map) the owner wants as the default - its form is the
+      owner's call. What is still Capcom's: the runtime's start-up, allocator and per-thread data, the decoder, the
+      software renderer's converters.
    **Mechanics that held:** briefs and scripts in the session-`7d0c9683` scratchpad (`plat2/common.md` + `brief_*.md`,
    `live_plat3.sh`, `chain_final.sh`, `launcher/` the 10,081 build). The agents' branches `phase-3/plat2-scan/-debts/
    -crt/-two` and their `.claude/worktrees/agent-*` are merged and can go.
