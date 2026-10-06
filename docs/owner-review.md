@@ -71,6 +71,25 @@ where the reading behind it is. Nothing here is a divergence until it is in
    in play: the fishing gauge and the grey lines, a magic trail if one is
    cast.
 
+## Reported by the owner, for a cleanup session
+
+- **Unrendered squares at the wide view's outer edges** (the owner, 2026-10-06
+  night, playing with the wide picture and the CRT look; the screenshot is
+  `analysis/shots/owner_reports/bridge_left_edge_unrendered_1006.webp`: a
+  field bridge, the party on it, and at the top-left corner a stair-stepped
+  black notch where terrain cells are missing). The owner's reading: "a few
+  calls we could update to increase that render distance". The candidates
+  are [`widescreen.md`](widescreen.md) section 3b's cull table - the culls
+  widened on 2026-09-30 after the trees popped (`MapCell_DrawUprights`
+  `[-133, 453]`, `MapCell_DrawAnimated`, the quads, the sprites) and the ones
+  the table still lists inside the new view (`[-40, 360]` at the PSX twin
+  `80161ef4`'s PC counterpart, unread; `0x5054E3` / `0x5054FA` `[-20, 340]`),
+  plus the terrain cull's own range at the top-left where rows begin. A
+  cleanup session: find which cull leaves the notch (a capture of this
+  spot under `BOF3X_WIDE=1` with each cull widened in turn, or a trace of
+  what the cell loop skips), widen it by the columns like the others
+  (DIV-0041's section 3c amendment), capture before and after for the owner.
+
 ## Decisions the measurements raised
 
 - **The base tree's version of the Western data rows** ([`region-diff.md`](region-diff.md),
