@@ -721,6 +721,12 @@ Local only, gitignored, worth keeping:
 
 ## Traps already paid for
 
+- **`BOF3X_SHADOW='*'` in the main checkout's `build/` fails under the owner's settings** (2026-10-06): `build/bof3x.ini`
+  is the owner's (`language=en`), the launcher exports it as `BOF3X_LANG`, and under English the `ConfigText` patch
+  re-aims the call at `Config_DrawRowLabel + 0x9F` - which `field_c1`'s clone check reads (`FATAL: ... the site is
+  re-aimed already, cannot clone`, exit 3, 978 of the 1,056 `MISMATCHES` lines reached). An environment variable wins
+  over the ini: run every self-test with `BOF3X_LANG=original` (the agents' worktrees never saw it - their inis are
+  defaults). Do not edit the owner's ini.
 - **A `shot` line is a frame of the route** (2026-09-30). `shot NAME 1 [BUTTONS]` holds its buttons for one frame; a
   shot inserted without taking that frame out of the run it splits puts every later input a frame late. An ad-hoc
   splitter did that to copies of the owner's recordings - menus and dialogue tolerated it, a fishing cast did not, and
