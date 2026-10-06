@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-05)
+**Status:** IN PROGRESS (2026-10-06)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -15,11 +15,13 @@ detour hands one original function at a time to a reimplementation; and
 four-line change with no edits to its callers
 ([`SCAFFOLDING.md`](SCAFFOLDING.md)). The exit test passed 2026-09-19 with
 `File_Read` `0x5A7470`, under llvm-mingw, in both directions of the A/B switch.
-**10,009 functions are ours on `main`** (round fourteen, PR #41, `2df90d9`,
-2026-10-05; [`takeover-queue-round14.md`](takeover-queue-round14.md)
-section 13) **and 10,065 on `phase-3/platform-round`** (the platform round's
-step 2 and round fourteen's end, 2026-10-05 night, unpushed:
-[`platform-round.md`](platform-round.md), [`round-14-cleanup.md`](round-14-cleanup.md)). The catalogue has 10,246 starts; at round fourteen's cut 1,341
+**10,065 functions are ours on `main`** (the platform round's step 2 and
+round fourteen's end, PR #42, `e047ee9b`, 2026-10-06;
+[`platform-round.md`](platform-round.md), [`round-14-cleanup.md`](round-14-cleanup.md))
+**and 10,081 on `phase-3/platform-round-2`** (the platform round's step 3,
+2026-10-06, unpushed: [`platform-round-2.md`](platform-round-2.md) - the C
+runtime's fourteen entries and the two game functions no catalogue held;
+the complete hidden-start scan says the game's own code is now all ours). The catalogue has 10,246 starts; at round fourteen's cut 1,341
 of the game's own functions were left, the rest of what is not ours being
 the platform and library layer (533) and jump-table cases (210) -
 round fourteen's section 0. The spell round counts pointer-reached starts
@@ -87,6 +89,7 @@ re-derived:
 | 10-05 | Round fourteen's end, begun the evening `main` took it (`phase-3/round14-end`): the state hash's reference pairs recorded again under the 168-range skip list, the attract sequence and all ten routes, ours identical to each; the shop route's week-old difference traced to the runner's early hand-back of slot 0 (`input_run.py --slot0-hold`), not the game; F1's x2 no longer held at x1 while a stream plays (round 13 review item 1, DIV-0048's note); the platform plan's first step measured - a reach trace with every remaining Capcom start armed, joined to a static caller scan: 40 of the 86 non-runtime, non-decoder starts alive under ours, 35 original-only ([`platform-read-pass.md`](platform-read-pass.md)); the owner's words on DIV-0074 (kept) and the plan's order (audio before the no-Capcom-code proof) | 0 | 10,009 | the state hash, eleven pairs; `'*'` narrow and wide on the F1 build | [`state-hash.md`](state-hash.md) section 6, [`platform-read-pass.md`](platform-read-pass.md) |
 | 10-05 night | Round fourteen's end, five agents side by side ([`round-14-cleanup.md`](round-14-cleanup.md)): 101 cross-group constants rebound (values unchanged), 67 harness rows to the `_OURS` form and three masks narrowed, 75 host-extent lines split in `entries_logic.txt`, the review's lows 7, 8, 12..17, 19 and the nits, every thin control of sections 12.2 and 13 refused in the hundreds (`rest_1g` back to 6,000 rounds), DIV-0075's ours-alone row; and the owner's decisions: **DIV-0076** (the save slot's summary names record 0, whose level it shows), debt 12a measured (91 `0x91` cells on nine world maps - bridges and a harbour - where the camp opens against the written compare; **the PlayStation's `0x801D21C4` has the same bug**) | 0 | 10,009 | `'*'` narrow at `969c8ed`, 0 mismatches; then with the platform groups below | [`round-14-cleanup.md`](round-14-cleanup.md) |
 | 10-05 night | The platform round's step 2 ([`platform-round.md`](platform-round.md)): sound's nine with `Snd_Init` (PS), the shell's seven (PW), the PSX library's seventeen (PL), the Direct3D handlers' ten with `Gfx_StoreImage` (PH), and **game modes 3..6 and their steps, thirteen functions no catalogue ever held** (PM: `GameMode_Field`'s over-long `pc_funcs.json` extent hid them from fourteen rounds); the software render path settled original-only | 56 | 10,065 | `'*'` 0 mismatches narrow and wide at `cdcadb9`, twice over; **live**: the state hash - the attract sequence and all ten routes identical to Capcom's on every tick | [`platform-round.md`](platform-round.md) |
+| 10-06 | The platform round's step 3 ([`platform-round-2.md`](platform-round-2.md)), four groups in a day: the hidden-start scan (`tools/pe_jumptables.py`, its control finds PM's thirteen; **two Capcom functions left in game code**, `Item_UseFlags` and `ItemTrade_Dispatch`, taken the same day as `game_last`), the C runtime's entries (`crt_rest`: `Rand` exact with the randlog folded in, `sprintf` over the game's 44 formats, strings / `_findfirst` / the file layer over the toolchain's; `malloc` / `free`, `GetPtd`, `atoi`, `sscanf`, `_ftol` left for the cutover), round fourteen's debts (369 raw constants rebound, `kInflict` split, a mask, seven hosts, nine thin controls); three divergences decided off captures the same morning - DIV-0077 (TILE_1 a scale-sized quad), DIV-0078 (`Cfg_Load`'s key table ours, no overrun), DIV-0079 (the six LINE kinds as quads of the scale's width); `docs/owner-review.md` opened | 16 | 10,081 | `'*'` narrow and wide at every merge (`BOF3X_LANG=original`); **live**: the attract sequence and all ten routes identical on the state hash, `Rand` counts the references'; the save write (slot 6, ours against Capcom's) in the round doc's section 6 | [`platform-round-2.md`](platform-round-2.md) |
 | 10-05 | Round 13's code review, read-only ([`round-13-review.md`](round-13-review.md)): F1's double speed held at x1 while a stream plays, the `Rand` counter bypassed on reference sides, E2E's kind-0x48 names, this file brought forward, eighteen low items | 0 | 9,681 | none: a read of the source, nothing changed | [`round-13-review.md`](round-13-review.md) |
 
 The first takeovers, 2026-09-19..21, in order: `LoadDatFile` `0x454590`, the DAT

@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-05 night: round fourteen's end and the platform round's step 2 ran side by side - `phase-3/round14-end` done and merged into `phase-3/platform-round`, 10,065 ours, `'*'` narrow and wide; the state hash live check passed - the attract sequence and all ten routes identical; nothing pushed, the PR next)
+**Status:** IN PROGRESS (2026-10-06: the platform round's step 3 on `phase-3/platform-round-2` - four groups merged, three divergences, 10,081 ours, `'*'` narrow and wide, the state hash live check identical on the attract sequence and all ten routes; the save-write comparison in the round doc; nothing pushed, the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,8 +14,8 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**10,009 functions are ours on `main`** (round fourteen, PR #41, `2df90d9`; `inject: 10009 ours, 0 left original`,
-`'*'` narrow and wide at `1bf5964`). Round fourteen was the remainder of the game's own code: 1,361 functions in stage A and four waves
+**10,065 functions are ours on `main`** (PR #42, `e047ee9b`, 2026-10-06) **and 10,081 on `phase-3/platform-round-2`**
+([`platform-round-2.md`](platform-round-2.md), 2026-10-06, unpushed). Round fourteen (PR #41) was the remainder of the game's own code. Round fourteen was the remainder of the game's own code: 1,361 functions in stage A and four waves
 ([`takeover-queue-round14.md`](takeover-queue-round14.md)), all merged; what is not ours in `BOF3.exe` now is
 the platform and library layer and the jump-table cases. Waves one to three were reviewed on 2026-10-05
 ([`round-14-review.md`](round-14-review.md)) and the high and medium items fixed; wave four ran the same day
@@ -39,6 +39,31 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 [`takeover-queue-round13.md`](takeover-queue-round13.md) section 18 item 6.
 
 ## Pick up here
+
+000000000000. **The platform round's step 3 is done and live-checked (2026-10-06), on `phase-3/platform-round-2`** (cut
+   from `main` `e047ee9b`; the record [`platform-round-2.md`](platform-round-2.md)). Four groups in a day - SCAN (the
+   hidden-start scan: the game's own code was two functions short; `tools/pe_jumptables.py`), DEBTS (round fourteen's
+   leftovers), CRT (`crt_rest`: fourteen runtime entries ours or the toolchain's), TWO (`game_last`: the two functions)
+   - and three divergences the owner decided off captures the same morning: DIV-0077 (TILE_1 a quad, `BOF3X_TILE1`),
+   DIV-0078 (`Cfg_Load`'s key table ours), DIV-0079 (the six LINE kinds as quads, `BOF3X_LINES`). `'*'` narrow and wide
+   at every merge under `BOF3X_LANG=original` (the ini trap below); the state hash: the attract sequence and all ten
+   routes identical at `inject: 10081 ours`. **Not pushed, no PR yet.** In the order they bite:
+   1. **The PR**: `git log --format=%B e047ee9b..HEAD` for the sign-offs first (every commit has one; the merge
+      commits carry none).
+   2. **The owner's eye**: [`owner-review.md`](owner-review.md) is the one list - the three divergences in play (the
+      dream scene's specks, the fishing gauge and any line, a hand-edited `BOF3.CFG`), the sound resume by ear,
+      DIV-0076's load screen, the layering fix. The owner strikes what they have seen.
+   3. **Left by the groups, small:** the five thin controls DEBTS listed; the 61 run-time raw calls (round thirteen's
+      1.3, a decision); `pe_hidden.py` and `pe_funcs.py` still stop silently at an undecodable byte (SCAN's finding;
+      fixing them regenerates the entry lists); two doc attributions SCAN corrected in its doc but not at their source
+      (`mode-rest.md` section 0's "pc_funcs.json" is `pc_hidden.json`'s size; `Mp3_Create`'s evidence puts the decoder
+      start at `0x5AB000`, it is `0x5ADF00`).
+   4. **The platform plan's step 4**: the cutover's design ([`platform-layers-plan.md`](platform-layers-plan.md) section
+      3) and the decoder question (section 2.4, I23); what is still Capcom's is the runtime's start-up, allocator and
+      per-thread data, the decoder, and the software renderer's converters.
+   **Mechanics that held:** briefs and scripts in the session-`7d0c9683` scratchpad (`plat2/common.md` + `brief_*.md`,
+   `live_plat3.sh`, `chain_final.sh`, `launcher/` the 10,081 build). The agents' branches `phase-3/plat2-scan/-debts/
+   -crt/-two` and their `.claude/worktrees/agent-*` are merged and can go.
 
 00000000000. **Round fourteen's end is done and the platform round's step 2 with it (2026-10-05 night); both sit on
    `phase-3/platform-round`** (cut from `main` `2df90d9`; `phase-3/round14-end` merged into it at `cdcadb9`; the docs
@@ -686,7 +711,7 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-`phase-3/platform-round` holds the night's work, unpushed (item 0). The ten agent branches `phase-3/r14end-ea` .. `-ed2` and `phase-3/platform-ph/pl/pm/ps/pw` and their `.claude/worktrees/agent-*` are merged and can go, with the older ones: the six wave-four worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*`.
+`phase-3/platform-round-2` holds 2026-10-06's work, unpushed (item 0); `phase-3/platform-round` is merged (PR #42). The ten agent branches `phase-3/r14end-ea` .. `-ed2` and `phase-3/platform-ph/pl/pm/ps/pw` and their `.claude/worktrees/agent-*` are merged and can go, with the older ones: the six wave-four worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*`.
 Before it: nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
 half is pushed on `claude/round-10-cleanup-handoff-qtwcrk` (item 0) and
 wants the `'*'` run and the other game-side checks before its PR. The wave
