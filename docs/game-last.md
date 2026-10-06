@@ -131,6 +131,15 @@ Result (2026-10-06, final build):
 
 Every state reached as a handler by the original (about 1,330 each).
 
+Under `BOF3X_SHADOW='*'` (every module's fuzz, one process), narrow and with
+`BOF3X_WIDE=1`, 2026-10-06 at this group's build: both exit 0, `self-test
+only: done`, `inject: 10067 ours, 0 left original by BOF3X_ORIGINAL`, 1,058
+`MISMATCHES` lines each and every one `0 MISMATCHES`; `game_last` the same
+8,000 rounds and 4,000 calls in each. (`battle_e3`, `battle_e4` and
+`effect_1f` differ in their call counts from the module run of section 5 by
+where the shared random stream stands when each starts, as every round has
+seen.)
+
 **What the fuzz cannot see**: anything a state handler does (each function
 is tested alone against its copy); a caller's reading of the answer (each
 reads `al`: ours returns the whole `eax` anyway).
