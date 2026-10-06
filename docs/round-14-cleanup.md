@@ -274,8 +274,12 @@ C16 (9); `field_e2` DS9 (1), DS6 (2), IT7 (3); `field_c3` C172 (0 at 3,000);
   the pool gets in play is unmeasured. Not decided; a log line on
   `Effect_FindFree` answering `0xFF` would tell.
 - **Debt 12's other half** (`FieldMenu_CampAllowedCell`'s three dead
-  compares): whether any area's collision map holds `0xA1`, `0xAF` or `0x9x`
-  cells is unmeasured; a static scan would settle it. Not decided.
+  compares), measured the same night at the owner's word
+  ([`rest_2d.md`](rest_2d.md) L1): `0xA1` and `0xAF` cells exist and are
+  refused anyway through the mask; **`0x91` cells exist, 91 of them on nine
+  world maps**, and the camp opens on them where the compare says refuse. The
+  owner confirmed every ordinarily refused spot refuses. A fix is a one-line
+  divergence; not decided.
 
 ## 6. The merged tip
 
