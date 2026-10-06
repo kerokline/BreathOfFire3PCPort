@@ -499,7 +499,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
         }
     }
 
-    if (!Disc_Probe(Str(kStrCapcomAvi), Str(kStrBof3Exe))) {
+    if (!bof3::orig::Disc_Probe(Str(kStrCapcomAvi), Str(kStrBof3Exe))) {
         MessageBoxA(nullptr, kInsertDisc, kError, MB_ICONHAND);   // DIV-0039
         return 1;
     }
@@ -520,7 +520,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     wc.lpszClassName = Str(kStrClass);
     if (!RegisterClassA(&wc)) return -1;
 
-    Cfg_Load();
+    bof3::orig::Cfg_Load();
     {
         HDC dc = GetDC(nullptr);
         Desktop_Width = GetDeviceCaps(dc, HORZRES);
@@ -558,7 +558,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
             return 1;
         }
         Cursor_Sync();
-        Game_Init();   // ends in Task_SetStackBase: the task stacks hang from this frame
+        bof3::orig::Game_Init();   // ends in Task_SetStackBase: the task stacks hang from this frame
         bof3::Log("WinMain: display up, Game_Init done, entering the loop");
 
         // The loop. Small locals on purpose (see the header comment).
@@ -706,7 +706,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     Text_DrawAt(PauseText_X(lines[0], 100), 100, 0, 100, lines[0]);
                     Text_DrawAt(PauseText_X(lines[1], 0x70), 0x80, 0, 100, lines[1]);
                 }
-                Gfx_LinkOTags();
+                bof3::orig::Gfx_LinkOTags();
                 if (g_fps_log) {
                     QueryPerformanceCounter(&q1);
                     logic_ticks += q1.QuadPart - q2.QuadPart;

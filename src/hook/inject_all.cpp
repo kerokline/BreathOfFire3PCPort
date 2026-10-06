@@ -306,6 +306,7 @@
 #include "game/rest_4d.h"
 #include "game/rest_4c.h"
 #include "game/rest_4b.h"
+#include "game/shell.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1381,6 +1382,10 @@ void InjectAll() {
                                 // Snd_Init): every call and jump of its clones re-aimed at a recorder, DirectSound
                                 // faked; after every module that calls them (by name, or by the address they had);
                                 // before FishingText_Arm; no module patches bytes inside its nine
+    Shell_Inject();             // the platform round's group PW (the seven "Windows shell" starts: Input_Latch,
+                                // Cfg_Load, Game_Init, Gfx_InitBufferBlock, Gfx_LinkOTags, Disc_Probe,
+                                // Cfg_SetDefaultKeys): its clones' calls re-aimed at its own recorders; no module
+                                // clones them; before FishingText_Arm (docs/shell.md)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

@@ -673,8 +673,9 @@ pc = 0x4FD030
 name = "Cfg_Load"
 ret = "void"
 params = "void"
+impl = "src/game/shell.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: fopen of the BOF3.CFG literal at 0x65DAD8 in text mode; fgets 0x14 bytes per line; line 0 -> atoi -> 0x65DA44, line 1 -> atoi -> 0x65DA48, each later line sscanf'd with a two-integer format into consecutive byte pairs of a stack array; with more than two lines read the array goes to 0x5A9860, otherwise 0x5A9880 runs instead. If the file is missing both globals are set to 1. Sole reference to the filename string (pe_xref.py)."
+evidence = "disasm 2026-09-19: fopen of the BOF3.CFG literal at 0x65DAD8 in text mode; fgets 0x14 bytes per line; line 0 -> atoi -> 0x65DA44, line 1 -> atoi -> 0x65DA48, each later line sscanf'd with a two-integer format into consecutive byte pairs of a stack array; with more than two lines read the array goes to 0x5A9860, otherwise 0x5A9880 runs instead. If the file is missing both globals are set to 1. Sole reference to the filename string (pe_xref.py). Read whole 2026-10-05 (0x4FD030..0x4FD103, 0xD4 bytes, docs/shell.md section 2): frame 0x3C bytes, the line buffer its first 0x14, line n's pair sscanf'd as two ints to frame +0x10 + 2n and +0x11 + 2n (each later store overlapping the one before), the 0x80 bytes from frame +0x14 handed to Cfg_SetKeyTable - 0x28 of frame, the return address, 0x54 of the caller's - so lines not read leave stack bytes in Key_Table, and a 21st line reaches the return address. Ours keeps the frame in naked asm."
 
 [[data]]
 pc = 0x65DA44
@@ -821,6 +822,30 @@ ret = "void *"
 params = "const char *path, const char *mode"
 status = "evidence"
 evidence = "disasm 2026-09-19, 6 instructions: pushes 0x40 (_SH_DENYNO) and its own two arguments and calls 0x5B9B3C - MSVC6 fopen as a wrapper over _fsopen. Used by File_Open 0x5A7380 (mode rb), File_OpenWrite 0x5A7420 (wb) and Cfg_Load 0x4FD030 (rt), each storing the result where fread / fwrite / fgets later take a stream."
+
+[[func]]
+pc = 0x5B9ADA
+name = "Crt_fgets"
+ret = "char *"
+params = "char *buf, int n, void *stream"
+status = "evidence"
+evidence = "disasm 2026-10-05: cdecl, ebp frame; n at [ebp+0xC] tested jg 0 first (else returns 0), buf in ebx and edi - MSVC6 fgets by shape. Callers Cfg_Load 0x4FD05B and 0x4FD0BE with (frame, 0x14, the BOF3.CFG stream) (docs/shell.md)."
+
+[[func]]
+pc = 0x5B9A9B
+name = "Crt_atoi"
+ret = "int"
+params = "const char *s"
+status = "evidence"
+evidence = "disasm 2026-10-05, 4 instructions: pushes its argument, calls 0x5B9A10, pops - MSVC6 atoi as a wrapper over atol. Callers Cfg_Load 0x4FD094 (line 1) and 0x4FD0A8 (line 0) (docs/shell.md)."
+
+[[func]]
+pc = 0x5B9AA6
+name = "Crt_sscanf"
+ret = "int"
+params = "const char *s, const char *fmt, ..."
+status = "evidence"
+evidence = "disasm 2026-10-05: cdecl, ebp frame with a 0x20-byte string FILE on the stack (_flag 0x49 at ebp - 0x14, the base and pointer the string, the count from 0x5BDA20 strlen), then the input engine 0x5BCF64 over the arguments from ebp + 0x10 - MSVC6 sscanf. Callers Cfg_Load 0x4FD085 (the %d %d literal 0x65DAD0) and Mp3_MemoryIo (HANDOFF Traps, the engine counted by characters)."
 
 [[func]]
 pc = 0x5B9E65
@@ -1622,6 +1647,7 @@ pc = 0x4FC6A0
 name = "Input_Latch"
 ret = "void"
 params = "void"
+impl = "src/game/shell.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-21, 78 bytes: calls Pad_Read; for pad 1 Input_Previous = Input_Held, Input_Held = low word, Input_Pressed = (old ^ new) & new; the same for pad 2 at 0x7E1BF0.. from the high word. Sole caller WinMain at 0x4FCDDE, once per pass of the message loop unless the F9 pause byte 0x6BC63A is set - so once a frame while the window is active, and repeatedly while it is not (the loop spins there without running a frame)."
 
@@ -11142,24 +11168,42 @@ pc = 0x5A72C0
 name = "Disc_Probe"
 ret = "int"
 params = "const char *local_file, const char *disc_file"
+impl = "src/game/shell.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x5A72C0..0x5A7360, cdecl (WinMain adds 8): Crt_fopen(local_file, rb) succeeds: 1. Else for the drive letters C..L: the File_CdRoot buffer 0x66BC2C gets the letter, GetDriveTypeA(it) == DRIVE_CDROM (5): Crt_sprintf(buf, 0x66BC30, root, disc_file) and Crt_fopen: found: 1 with the root left in the buffer. Neither: 0. WinMain calls it (CAPCOM.AVI 0x65DAB8, BOF3.EXE 0x65DAC4) and refuses to start on 0."
+evidence = "disasm 2026-09-23, 0x5A72C0..0x5A7360, cdecl (WinMain adds 8): Crt_fopen(local_file, rb) succeeds: 1. Else for the drive letters C..L: the File_CdRoot buffer 0x66BC2C gets the letter, GetDriveTypeA(it) == DRIVE_CDROM (5): Crt_sprintf(buf, 0x66BC30, root, disc_file) and Crt_fopen: found: 1 with the root left in the buffer. Neither: 0. WinMain calls it (CAPCOM.AVI 0x65DAB8, BOF3.EXE 0x65DAC4) and refuses to start on 0. Read whole 2026-10-05 (0x5A72C0..0x5A736F, 0xB0 bytes, docs/shell.md section 2): every stream it opens it closes again (Crt_fclose); the local file found stores 0 in File_CdRootBuf byte 0 (the root is then empty); GetDriveTypeA is the import slot 0x5C4088, read once before the loop; the sprintf target is a 0x50-byte stack buffer; ten letters tried and none found leaves L in byte 0."
 
 [[func]]
 pc = 0x4FD110
 name = "Game_Init"
 ret = "void"
 params = "void"
+impl = "src/game/shell.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x4FD110..0x4FD1F2 (0xE2 bytes, ends in a tail jmp to Task_SetStackBase): 0x5A7AA0, 0x5A7AE0(0xA0, 0x78), 0x5A7B00(1000) (sound set-up, unread), DInput_Init(Game_Hwnd, Game_HInstance), 0x5A6830(Game_Hwnd), 0x4DF820(0), the two display-environment pairs at 0x903880 / 0x903910 through 0x5A7910 and 0x5A78E0 (SetDefDispEnv / SetDefDrawEnv by shape: 0, 0, 320, 240 and 0, 240), 0x4FD200 on each (Gpu_ClearOTagR(env + 0x70, 8), bytes +0x2C..0x2F = 1, 0, 0, 0), Gfx_BufferIndex = 0, Gfx_CurrentEnv = 0x903880, Gfx_BeginFrame, Game_QuitFlag = 0. Sole caller WinMain 0x4FCD8B."
+evidence = "disasm 2026-09-23, 0x4FD110..0x4FD1F2 (0xE2 bytes, ends in a tail jmp to Task_SetStackBase): 0x5A7AA0, 0x5A7AE0(0xA0, 0x78), 0x5A7B00(1000) (sound set-up, unread), DInput_Init(Game_Hwnd, Game_HInstance), 0x5A6830(Game_Hwnd), 0x4DF820(0), the two display-environment pairs at 0x903880 / 0x903910 through 0x5A7910 and 0x5A78E0 (SetDefDispEnv / SetDefDrawEnv by shape: 0, 0, 320, 240 and 0, 240), 0x4FD200 on each (Gpu_ClearOTagR(env + 0x70, 8), bytes +0x2C..0x2F = 1, 0, 0, 0), Gfx_BufferIndex = 0, Gfx_CurrentEnv = 0x903880, Gfx_BeginFrame, Game_QuitFlag = 0. Sole caller WinMain 0x4FCD8B. Corrected 2026-10-05 (read whole, docs/shell.md section 2): the first three are Gte_InitGeom, Gte_SetGeomOffset(0xA0, 0x78), Gte_SetGeomScreen(1000) (not sound); DInput_Init(Game_HInstance, Game_Hwnd) in argument order, Game_Hwnd read again for 0x5A6830 after it; Gpu_SetDefDrawEnv(0x903894, 0, 0, 320, 240), Gpu_SetDefDispEnv(0x903880, 0, 240, 320, 240), Gpu_SetDefDrawEnv(0x903924, 0, 240, 320, 240), Gpu_SetDefDispEnv(0x903910, 0, 0, 320, 240); then Gfx_InitBufferBlock on each block. The tail jmp makes Task_StackTop this function's entry esp - 0x4000; ours keeps it with a naked jmp."
 
 [[func]]
 pc = 0x4FD290
 name = "Gfx_LinkOTags"
 ret = "void"
 params = "void"
+impl = "src/game/shell.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x4FD290..0x4FD2DA (0x4A bytes, pc_funcs' 0xC0 runs on): for i in 0..7: 0x5A7540(Gfx_CurrentEnv + 0x70 + 4i, &Gfx_OtPointers[Gfx_BufferIndex * 8 + i], the count dword at 0x929E30 + 4i). Sole caller WinMain 0x4FCFE0, after the frame's logic."
+evidence = "disasm 2026-09-23, 0x4FD290..0x4FD2DA (0x4A bytes, pc_funcs' 0xC0 runs on): for i in 0..7: Gpu_AddPrim 0x5A7540 on slot i. Sole caller WinMain 0x4FCFE0, after the frame's logic. Corrected 2026-10-05 (docs/shell.md section 2): the arguments are (Gfx_CurrentEnv + 0x70 + 4i, &Gfx_OtHeads[Gfx_BufferIndex * 8 + i], Gfx_OtPointers[i]) - the third is the dword at 0x929E30 + esi with esi from 0x70, so 0x929EA0 + 4i - and all three globals are read again in each pass."
+
+[[func]]
+pc = 0x4FD200
+name = "Gfx_InitBufferBlock"
+ret = "void"
+params = "unsigned char *block"
+impl = "src/game/shell.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x4FD200..0x4FD223 (0x24 bytes, whole), cdecl: Gpu_ClearOTagR(block + 0x70, 8), then bytes +0x2C = 1, +0x2D, +0x2E, +0x2F = 0 - the DRAWENV at block +0x14 gets isbg 1 and a black clear colour (+0x18..+0x1B of it). eax left Gpu_ClearOTagR's with al 0; callers ignore it. Sole caller Game_Init (0x4FD1BE, 0x4FD1C8) on the two blocks of Gfx_BufferBlocks. docs/shell.md."
+
+[[data]]
+pc = 0x903880
+name = "Gfx_BufferBlocks"
+status = "evidence"
+evidence = "disasm 2026-10-05 (docs/shell.md): two 0x90-byte double-buffer blocks, 0x903880 and 0x903910 - a DISPENV at +0 (0x14), a DRAWENV at +0x14 (0x5C), the eight-slot ordering table at +0x70 (0x20). Game_Init sets both up (Gpu_SetDefDispEnv on +0, Gpu_SetDefDrawEnv on +0x14, Gfx_InitBufferBlock); Gfx_CurrentEnv points at one; WinMain puts +0 and +0x14 each frame (Gpu_PutDispEnv, Gpu_PutDrawEnv); Gfx_LinkOTags links +0x70."
 
 [[func]]
 pc = 0x4FD350
@@ -106189,6 +106233,15 @@ params = "const void *table"
 impl = "src/game/rest_2h.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-04 (round fourteen group R2H, capstone to the last instruction), 0x5A9860..0x5A9874 (0x15 bytes): rep movsd of 0x20 dwords from the argument into Key_Table. Cfg_Load's (0x4FD0DE) with more than two lines of BOF3.CFG. docs/rest_2h.md."
+
+[[func]]
+pc = 0x5A9880
+name = "Cfg_SetDefaultKeys"
+ret = "void"
+params = "void"
+impl = "src/game/shell.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A9880..0x5A9895 (0x16 bytes, whole), no calls: push esi edi, rep movsd of 0x20 dwords from Key_TableDefault 0x66C648 to Key_Table 0x7DE7A8, pop, ret. Sole caller Cfg_Load (0x4FD0FA): BOF3.CFG missing or two lines or fewer. Every traced route reaches it (analysis/platform_reach_1005.tsv, caller 0x4FD0FF). docs/shell.md."
 
 [[data]]
 pc = 0x66B1CC
