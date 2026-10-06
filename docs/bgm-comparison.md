@@ -1,7 +1,9 @@
 # Music: the PC's MP3s against the disc's sequences
 
 **Status:** MEASURED (2026-10-06: the method's steps 1 to 4 in sections 6 to 8,
-`tools/bgm/`; the listening, step 5, is the owner's - section 9. Sections 1 to 5
+the owner's listening and the loop fix it asked for in sections 11 and 12 - the
+loop table PAUSED at 16 of 156 songs, resume command at the head of 11;
+`tools/bgm/`; step 5, the listening (section 9), the owner did on 2026-10-06 (section 11). Sections 1 to 5
 are the 2026-09-26 method, kept as written; section 5's first open item is
 answered in 6.2, the second only in part, in 8.3. [`IDEAS.md`](IDEAS.md) I23)
 
@@ -102,7 +104,7 @@ match. That makes step 4's recording the test fixture for the synth.
 
 Scripts: `tools/bgm/inventory.py` (both sides and the song table; writes
 `analysis/bgm/inventory.json`), `tools/bgm/loops.py` (every MP3 decoded:
-edges, levels, in-file repeats; `analysis/bgm/loops.json`). Paths:
+edges, levels, in-file repeats; `analysis/bgm/mp3_scan.json`, first written as `loops.json`). Paths:
 `tools/bgm/bgm_paths.py`. The disc side is `psx-jp` (the sibling's
 `isos/Breath of Fire III (Japan).cue` and the extracted `D:\BoFIII\BIN`;
 `SLPS_009.90` there and in the sibling's `disc/` have the same md5,
@@ -210,7 +212,7 @@ onto the same timeline (`tools/bgm/compare.py`, `analysis/bgm/compare_NNN.json`,
 **H1 holds:** the PC replays intros, and its loops are a few tenths of a
 second short. Across the set the MP3s show it where they repeat inside
 themselves: 14 files repeat their loop body with a period within 5% of the
-sequence's (`loops.json`, `loop`). 3 end on a whole number of passes after
+sequence's (`mp3_scan.json`, `loop`). 3 end on a whole number of passes after
 their loop start (`003` 2.015, `014` 1.998, `036` 1.985); **11 end part-way
 through a pass** (`013` 2.21, `051` 1.33, `060` 1.33, `063` 1.34, `064` 1.80,
 `079` 2.12, `082` 1.34, `085` 1.93, `090` 1.18, `130` 1.74, `144` 1.32), so
@@ -392,3 +394,227 @@ disc's music worth having as a choice?
 
 Left open: song 21's use, file `166`'s source, per-scene reverb, H5, the
 PSP's player for P10, and the original decoder's own PCM.
+
+## 11. The loop table: the measurement and the irregulars (2026-10-06)
+
+> **Paused (2026-10-06 evening, the owner's machine going off for the
+> night).** 16 of the 156 looping songs have a row in `loops.json` (3
+> measured from renders, 13 in their files alone); 13 rows are in the engine's
+> table. To resume, from a checkout of `phase-3/music-loops` (or
+> its successor), with nothing else using Mednafen:
+>
+>     cd tools/bgm
+>     BGM_SCRATCH=<a scratch directory, ~1.5 GB free> python measure_loops.py run --workers 3
+>     python gen_loop_table.py          # rewrites src/game/music_loops_table.inc
+>     python prove_loops.py             # the seam numbers for every row
+>
+> then rebuild, the `sound` and `'*'` self-tests, and commit. `run` skips
+> every song with a render-measured row in `analysis/bgm/loops.json`,
+> re-measures the in-file rows from a render, reuses any render already in
+> `analysis/bgm/renders/`, and logs each song to `analysis/bgm/measure.log`;
+> stopping it loses at most the songs in flight. Estimated: 153 songs, 5.2
+> hours of emulator time, about 1 h 45 min with three workers (each a
+> Mednafen window, sound at volume 0, its own base directory under
+> `BGM_SCRATCH`). The command was smoke-tested on song 36 (80 s, the row
+> below).
+
+The owner listened on 2026-10-06: "the quality between the mp3 / disc isn't
+that bad, but the seams are *very* noticeable - I noticed the combat one in
+game, but the town music is also really noticeable side by side." So the
+cheap fix of section 10 was built: a measured loop per track, played inside
+the PC's own file.
+
+### 11.1 The method (`tools/bgm/measure_loops.py`)
+
+Per song, a Mednafen render as in 8.1 (`patch_disc.py` makes the title play
+it; 165, the battle fanfare, is played as sub 1 of `BGMBAT00.EMI`), then:
+
+1. **Alignment**: the MP3's first sound against the render's, refined on the
+   waveform in 2 s windows, a straight line fitted through the window
+   offsets (the clock drift, about -170 ppm: 7.3).
+2. **The render's loop**: its period P (the render against itself one body
+   later, around the sequence's nominal body), and its loop start S, the
+   first point from which 0.25 s windows repeat at P with correlation
+   >= 0.97 for 3 s. Both mapped into the MP3's samples through the line.
+3. **One of three cases**, by how much of a body the file holds after S:
+   - *full*: the file holds S + P. Row: start S, end S + P, P refined inside
+     the file. Correct by construction: the music repeats across the seam.
+   - *shifted*: the file ends before S + P but holds a whole period from its
+     start. Row: end as late as the file allows, start = end - P - still
+     exactly one period, so in time and in phase; the first moments after
+     the jump are intro material standing in for the body's missing tail
+     (its likeness to that tail is reported, `stand_in_ncc`), and the seam
+     is crossfaded over 256 samples (5.8 ms).
+   - *shortened*: the file is shorter than one period from its start. No
+     loop of the right length exists in the file; the row is **excluded**
+     and the track rewinds as the original does.
+4. A *full* row is moved forward by under one frame so that a 128-sample
+   (2.9 ms) crossfade fits inside the frames holding its end and start
+   (`fit_fade`): two passes of an MP3 carry different coding noise, and a
+   hard cut left a sample step up to 8 times the file's own at that point
+   (track 003: 2.04 against 0.27; with the fade 0.27).
+
+Rows under 0.8 confidence (the loop correlation), or with an alignment of
+fewer than 10 windows or a residual over 50 samples, are excluded.
+
+**In-file rows.** 14 files repeat their body inside themselves (7.2); their
+loop can be measured in the file alone, the same repeat test (0.95 for
+two MP3 passes). `python measure_loops.py infile <tracks>` writes those rows
+with `"method": "in-file"`; a later `run` replaces each with a render's. The
+one cross-check made: song 36, in-file period 658,379 samples, render-
+measured 658,372 - 7 samples (0.16 ms) apart.
+
+### 11.2 The table as it stands
+
+`analysis/bgm/loops.json`, 16 rows; the engine's
+`src/game/music_loops_table.inc`, 13. Positions are samples of the decoded
+MP3 from its first frame (`ffmpeg`'s decode, which hands out every frame's
+1,152 samples like the game's). Confidence: the loop correlation.
+
+| Track | Method, case | Start | End | Body | Fade | Conf. | Passes after start | Short by |
+|---|---|---|---|---|---|---|---|---|
+| 003 | in-file, full | 605,048 | 2,418,722 | 41.126 s | 128 | 0.991 | 2.01 | - |
+| 014 | in-file, full | 1,206,604 | 2,427,516 | 27.685 s | 128 | 0.995 | 2.00 | - |
+| 036 | render, full | 15,266 | 673,646 | 14.929 s | 128 | 0.998 | 1.98 | - |
+| 051 | in-file, full | 780,586 | 3,965,573 | 72.222 s | 128 | 0.983 | 1.36 | - |
+| 060 | in-file, full | 189,895 | 2,313,217 | 48.148 s | 128 | 0.997 | 1.33 | - |
+| 063 | in-file, full | 162,787 | 1,672,705 | 34.239 s | 128 | 0.990 | 1.46 | - |
+| 064 | in-file, full | 25,651 | 1,441,199 | 32.099 s | 128 | 0.991 | 1.98 | - |
+| 079 | in-file, full | 397,738 | 1,813,286 | 32.099 s | 128 | 0.999 | 2.12 | - |
+| 082 | in-file, full | 604,409 | 2,418,080 | 41.126 s | 128 | 0.991 | 1.34 | - |
+| 085 | in-file, full | 387,157 | 1,802,705 | 32.099 s | 128 | 0.997 | 1.97 | - |
+| 090 | in-file, full | 290,304 | 2,932,660 | 59.917 s | 128 | 0.982 | 1.18 | - |
+| 144 | in-file, full | 28,615 | 2,151,937 | 48.148 s | 128 | 0.993 | 1.32 | - |
+| 153 | render, shifted | 313,821 | 2,201,216 | 42.798 s | 256 | 0.999 | 0.99 | 15,191 samples (0.34 s) |
+
+### 11.3 The irregulars
+
+| Track | What | So |
+|---|---|---|
+| **000** | *shortened*: the file (98.53 s) is 0.44 s shorter than one loop period (98.97 s in the MP3's clock), so no stretch of it is a whole loop; measured from the loop start it lacks 517,829 samples (11.74 s) of body, whose music the intro nearly repeats (7.2). The best splice into the file's material scores 0.50 against the render's true continuation (2 s windows) | excluded: rewinds as the original. Not fixable from the PC's file alone - the missing 0.44 s is not in it. Ways on, for the owner: accept it; take the missing samples from somewhere (a render - but that is audio derived from the game's data, which ships nowhere, rule 1; or a re-encode the player makes); or a stretched loop. Undecided |
+| 153 | *shifted*: 0.34 s short; the stand-in (0.35 s of intro run-in) resembles the body's tail at 0.21 | in the table with a 256-sample crossfade (section 12.3 measures it) |
+| 013, 130 | in-file repeats too short to hold a whole period after their start | not in the table; the render run measures them |
+| 165 | the battle fanfare (6.3): no table song, rendered as `BGMBAT00.EMI` sub 1 | not yet measured |
+| 166 | unpaired (6.3) | never measured: no sequence to render; rewinds as the original |
+| the 9 `N` files | play once | no loop, nothing to measure |
+
+## 12. The loop as built, the proof, the switch
+
+### 12.1 What the original does, and what this does
+
+**Original** (`Music_Decode` `0x5A6F30`, 7.1): every looping track is played
+from its file's first sample to its last and again, the decoder rewound with
+`Mp3_Seek(decoder, 0)`. The intro is replayed at every loop (7.2: 153's 7.4
+s), files that end part-way through a pass jump from mid-phrase, and every
+join is a cut while sounding, then the file's lead-in of near-silence (831..2,205
+samples under -60 dBFS in the 50 ms after it, 12.3).
+
+**This** (`src/game/sound.cpp` `LoopDecode`, `src/game/music_loops.{h,cpp}`):
+a track with a row in the table plays its file to the row's `end`, then on
+from the row's `start` - sample-accurate - with the row's short crossfade;
+every other track does exactly what the original does.
+
+- **How a sample-accurate jump is made with a frame-granular decoder.** The
+  decoder's seek is used only as the original uses it, to position 0 (the
+  one position whose meaning is measured; `Mp3_Seek`'s other positions are
+  not). At `end` the decoder is rewound and the file decoded again from its
+  first frame, every frame before the one holding `start` thrown away, that
+  frame's samples from `start` on handed out. Decoding from the start
+  leaves the decoder in exactly its first-pass state (bit reservoir, IMDCT
+  overlap), so what follows is the first pass's samples, bit for bit - no
+  priming question. Cost: decoding the intro once per loop, a few hundred
+  frames inside one buffer-half refill (153: 273 frames). Not timed on the
+  game's decoder (the game was not run).
+- **Every frame goes through a frame buffer of ours** (`g_loop.frame`) and
+  is copied out, with what does not fit carried to the next call: the
+  original writes whole frames straight into `Music_Staging`, which is safe
+  only because `0x12000` bytes is a whole number of frames; a stream cut at
+  a sample is not.
+- **The crossfade**: the `fade` samples after `end` (in the frame holding
+  `end`) blended linearly into the `fade` samples from `start` (weight
+  (2j+1)/(2 fade), 16-bit, truncated); the generator puts both stretches
+  inside their frames.
+- **Which track**: `Music_Start` looks the row up only for a start from
+  `Music_Play` (the file is `Music_File`, its size `Music_FileSize`, the
+  track `Music_LoadedTrack`) with `loops` set; the row also names the file's
+  size in bytes, so a different file under the same number is never looped
+  by it. `Sound_LoadStream`'s streams and the once-only tracks have none.
+- **No stubs**: a stream that ends before its row's end, a frame larger than
+  the buffer, a crossfade that runs past its frame - each is `Fatal`, not a
+  fallback. The generator checks every row against its file first.
+
+**The table is ours.** Its rows are sample positions we measured in the PC's
+files (11.1); no byte of Capcom's is in it. `tools/bgm/gen_loop_table.py`
+regenerates `music_loops_table.inc` from `analysis/bgm/loops.json`.
+
+### 12.2 The switch
+
+`BOF3X_MUSIC_LOOPS`: unset or `1` on, `0` the original's rewind, anything
+else fatal. Armed by `music_loops::Arm()` in `InjectAll`'s tail, after every
+module's self-test (which all compared the original's rewind). Log: one line
+when armed (`music_loops 13 tracks loop at their measured points; ...`, or
+the `off` line), and one per track the first time it loops through the table
+(`music_loops track 153 looped at its measured points: sample 2201216 back
+to 313821`). Reversible at any start.
+
+### 12.3 The proof without the game (`tools/bgm/prove_loops.py`)
+
+Each row's file decoded with `ffmpeg` and spliced exactly as `LoopDecode`
+does (same points, same 16-bit crossfade); the seam measured
+(`analysis/bgm/loop_proof.json`, plots `analysis/bgm/plots/trackNNN_seam.png`):
+*continuity* - correlation of the first second after the seam, in 0.25 s
+windows, against what the music really does there (the render's
+continuation for render rows; the file's own continuation past `end` for
+in-file rows, whose music repeats); *step* - the largest sample-to-sample
+jump within 2 ms of the seam over the 99th percentile of the surrounding
+second; *gap* - samples under -60 dBFS in the 50 ms after it.
+
+| Track | Before (the rewind): continuity, gap | After (the row): continuity, step, gap |
+|---|---|---|
+| 153 | -0.10, 809 | 0.63 (first 0.25 s 0.14 - the stand-in; then 0.77..0.87, the MP3's usual likeness to the render, median 0.79), step 0.43, gap 0 |
+| 036 (render) | -0.13, 1,512 | 0.85 (MP3 against render; median likeness 0.91), step 0.38, gap 9 |
+| 003, 014, 051, 060, 063, 064, 079, 082, 085, 090, 144 (in-file) | -0.14..0.22, 831..2,205 | 0.977..0.989, step 0.13..2.14 (each at or under the file's own step at that point), gap 0..9 (085: 398, a rest in the music itself) |
+| 000 | -0.03, 2,009 | excluded: unchanged |
+
+The render's own loop, the yardstick (153): continuity 0.99, step 1.28, gap
+0. The engine's splice is checked by its self-test (12.4), the splice's
+musical result by this table; the game's own decoder was not run, so the
+residual assumption is that it hands out the same samples per frame as
+`ffmpeg` - a constant offset between the two would move `end` and `start`
+together and leave the loop correct.
+
+**For the owner's ear**: `analysis/bgm/listen/153_loop_fixed.wav`, section
+9's window spliced the engine's way (the seam at 23.63 s), beside
+`153_mp3.wav` and `153_disc.wav`. No `000_loop_fixed.wav`: 000 has no row
+(11.3).
+
+### 12.4 Self-tests
+
+- `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`: exit 0.
+  The sound module's fuzz as before, DIV-0028's check, and the new check: a
+  stand-in decoder whose every sample carries its own index, looped
+  3,956..23,117 for 138,240 samples in `0x12000`-byte calls, in 4,000-byte
+  calls (the end landing across two calls), on frame boundaries, and with a
+  256-sample crossfade (each blended sample against the formula) - no
+  sample lost or repeated; then every table row against its bounds. With
+  `BOF3X_MUSIC_LOOPS=0`: exit 0 and the `off` line.
+- `BOF3X_SHADOW='*'` (narrow, once, on the committed table): exit 0, every
+  module's self-test passed, then `music_loops 13 tracks loop at their
+  measured points` armed after them. It takes about fifteen minutes.
+
+### 12.5 For the ledger entry (the coordinator writes it)
+
+- **Original**: a looping BGM track rewinds its decoder to the file's start
+  at the file's end (`Music_Decode`, `0x5A6F30`): the intro is replayed, a
+  file cut mid-pass jumps mid-phrase, and the join is a cut plus the file's
+  lead-in.
+- **New**: a track with a measured row loops from the row's end to its start
+  inside the file, sample-accurate, with a 2.9 ms (full rows) or 5.8 ms
+  (shifted rows) crossfade; the rest rewind as before. Today 13 tracks.
+- **Rationale**: the owner, 2026-10-06, quoted at the head of section 11;
+  and section 7's measurement that the PSX loops to a point inside the song.
+- **Verification**: 12.3's seam numbers per row against the disc's render or
+  the file's own continuation; 12.4's self-tests; not yet heard in the game.
+- **Reversibility**: `BOF3X_MUSIC_LOOPS=0`; a track with no row is untouched.
+- **The data**: our measurements (11.1), regenerable; `analysis/bgm/loops.json`
+  is the source, `tools/bgm/` the method.

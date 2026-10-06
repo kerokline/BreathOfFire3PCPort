@@ -3,7 +3,7 @@
 For each PC track: decode with ffmpeg (every frame's 1152 samples, no trim,
 as the game's decoder hands them out), measure the leading and trailing
 silence, then find the loop body by self-correlation guided by the paired
-sub-song's loop markers. Writes analysis/bgm/loops.json.
+sub-song's loop markers. Writes analysis/bgm/mp3_scan.json (named loops.json until 2026-10-06).
 """
 import json, subprocess, sys
 import numpy as np
@@ -140,7 +140,7 @@ def main():
         print(n, info["file"], round(r["seconds"], 2), "lead", lead80, "trail", trail80,
               "loop", {k: (round(v, 3) if isinstance(v, float) else v) for k, v in (r.get("loop") or {}).items()},
               "intro", r.get("intro_reappears"), flush=True)
-    name = OUT + ("/loops.json" if not only else "/loops_part.json")
+    name = OUT + ("/mp3_scan.json" if not only else "/mp3_scan_part.json")
     json.dump(res, open(name, "w"), indent=1)
 
 
