@@ -7,8 +7,9 @@ round branch's tip `ba2c3c3`. **45 functions ours** (`src/game/rest_1g.cpp`,
 (`analysis/round14_cut.tsv`) and the two starts in their spans no list had
 (`0x528BE0`, `0x52BF90`, band_rows' "code no list has"). Each read to its last
 instruction with capstone and fuzzed through the scenario harness's **field**
-mode (used unchanged): 2,700,000 rounds (60,000 a function since the
-review's controls; 270,000 at the first 6,000), **0 mismatches**; 103 of 103
+mode (used unchanged): 270,000 rounds (6,000 a function - raised to 60,000
+on 2026-10-05 morning for the review's controls and back to 6,000 that
+evening once louder stand-ins held them, debt 18), **0 mismatches**; 115 of 115
 controls refused (section 6).
 Six `.data` tables named. Fuzz only here; two recorded routes reach the fish
 (section 9).
@@ -185,9 +186,10 @@ the press latch; record 5's frame and level; record 4's state;
 
 **Result** (this worktree, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=rest_1g`, exit
 0): 270,000 rounds, 608,028 calls to the stand-ins, **0 mismatches** (the first
-run, 4,000 rounds before `SeedFor`, passed too). That was at 6,000 rounds a
-function; since 2026-10-05 it is 60,000 - 2,700,000 rounds, 6,070,612 calls,
-0 mismatches (section 6). Every table entry reached
+run, 4,000 rounds before `SeedFor`, passed too). On 2026-10-05 the count went
+to 60,000 a function for the review's controls (2,700,000 rounds, 6,070,612
+calls, 0 mismatches) and back to 6,000 the same evening with louder stand-ins
+(section 6; `BOF3X_R1G_ROUNDS` overrides it for a control run). Every table entry reached
 (handler recorders 493..18,387 calls each); the thinnest callees
 `Fish_AdjustStrength` 360, `Inventory_Holds38To4DAt99` 516, `Fish_Chance`
 1,337 calls. **`SeedFor`** adds, two times in three, each function's joint
