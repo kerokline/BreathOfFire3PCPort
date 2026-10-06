@@ -5,6 +5,7 @@
 // locals here.
 #include "game/dat_load.h"
 
+#include "game/area4_walls.h"
 #include "game/battle_text.h"
 #include "game/char_names.h"
 #include "game/config_text.h"
@@ -122,6 +123,7 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
         Crt_sprintf(overlay, "DAT\\%s.%s", g_lang, name);
         if (GetFileAttributesA(overlay) != INVALID_FILE_ATTRIBUTES) WalkDatFile(overlay);
     }
+    area4_walls::Apply(name);  // the later discs' walls in area 4 (BOF3X_AREA4_WALLS; area4_walls.h)
 }
 
 namespace {

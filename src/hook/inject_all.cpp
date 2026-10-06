@@ -45,6 +45,7 @@
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
 #include "game/d3d_lines.h"
+#include "game/area4_walls.h"
 #include "game/battle_actions.h"
 #include "game/battle_flow.h"
 #include "game/enemy_ai_ops.h"
@@ -1418,6 +1419,8 @@ void InjectAll() {
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     d3d_lines::Arm();           // DIV-0079: the six LINE handlers draw quads of the scale's width (BOF3X_LINES) - after
                                 // every module's self-test, which all compared the original's line strip (d3d_lines.h)
+    area4_walls::Arm();         // area 4's walls as the later discs have them (BOF3X_AREA4_WALLS; docs/region-diff.md
+                                // section 10) - after every module's self-test, which all compared the shipped map
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

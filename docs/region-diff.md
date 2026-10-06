@@ -6,7 +6,9 @@ data rows that were not rendered, so they stay candidates (section 5).
 Section 8 (added the same day) reads the four Western data changes through
 the code that consumes them: two are one collision fix, one is a sound
 priority made consistent, one is a PAL-only sample swap of unknown purpose.
-None has been seen in play.
+None has been seen in play. Section 10 (the same day) is the collision fix
+as our own code, `src/game/area4_walls.cpp`, `BOF3X_AREA4_WALLS`: checked
+offline against the US and German discs, live check owed to the owner.
 
 The phase 4 measurement of [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8
 ("do the regional builds differ beyond their text?"), with the two PSP discs
@@ -490,6 +492,118 @@ in 200 of 200**), 1 art (`FIRST` section 6, the 47th image), and 4 logic-data: `
 one byte at `+0x7ACE`, still unexplained. The PC has JP's `AREA004` section 8, not the later version; the cue byte is
 in a bank the port converted to WAV, so it is not compared. Audio banks are not in the census's pairing
 (`DAT_CONTAINER.md`: every bank pairs exactly).
+
+## 10. The fix as code
+
+The owner, 2026-10-06: "make the code change so that it works the same
+regardless of source". Section 8.1's walls and 8.2's placement cells, applied
+by coordinate from a table in our code, so the PC install (which carries JP's
+map) and any later source give the same area 4.
+
+### 10.1 Where and when
+
+- **The buffers.** `AREA004.DAT`'s kind-0 chunks land in `LoadDatFile`'s
+  arena (`MessagePools` + tag; ours, `src/game/dat_load.cpp`). Tag
+  `0xC8000` is the area block at `AreaMap_Header` `0x8CB580`; its cell bytes
+  are at 4 x the block's dword `+0x14` (`+0x7BF0` in area 4), at
+  `90 * z + x`. Tag `0xC0800` is the placement nibble map at `0x8C3D80`
+  (section 8.2). The census pairs both chunks with JP's sections, byte
+  identical, so the PC's data is exactly what the table was checked against.
+- **The moment.** At the end of `LoadDatFile`, after the file and any
+  `BOF3X_LANG` overlay have been walked, `area4_walls::Apply(name)` runs for
+  every file and acts only on `AREA004.DAT`. Nothing reads the map between
+  the walk and that call. It acts on every load: the attract cycle loads the
+  file twice, and the field reloads it on each entry.
+- **Guarded.** It writes only when the block is 90 x 88 and **all** 72 cells
+  hold `0x00` and all 8 nibbles hold JP's values. A map that already has the
+  walls (a later disc's data, should an importer supply one) is left alone
+  with one log line. Any other map is left alone with a warning line. Off,
+  nothing is read or written.
+
+### 10.2 The table (`src/game/area4_walls.cpp`)
+
+| run | cells | which edge |
+|---|---|---|
+| x 28, z 9..30 | 22 | the raised strip's east edge (the strip is x 26..27), north of the doorway kept at z 32..33 |
+| x 28, z 35..65 | 31 | the same edge, south of the doorway |
+| x 25, z 9..11 | 3 | the strip's west side at its north end, continuing JP's stubs at z 7, 8 |
+| z 71, x 7..22 | 16 | the row three below JP's wall row z 68: the corridor z 69..70's bottom edge |
+
+Each goes from `0x00` to **`0x10`**. That is the value the later discs use,
+and the value JP's own wall stubs on the same lines already carry.
+`AreaMap_CellBlocked` blocks a high nibble of 1. The 8 placement nibbles go
+to **0** (no one placed): (28, 10) from 6, (28, 11) from 2, (28, 64) from 1,
+(14, 71) 2, (15, 71) 1, (18, 71) 2, (19, 71) 2, (20, 71) 1.
+
+**Not taken: the 30-cell re-texture** (x 26 at z 10, 11 and 45..63; x 52 at
+z 59..67). The later discs insert texture record 524 (shifting 464 tile
+words by one), replace record 508 and drop record 770. The records' contents
+are Capcom's bytes, so it is not expressible by coordinate without shipping
+them (ASSET_SOURCES section 2). With the fix on, those cells keep JP's look
+and gain the later collision.
+
+### 10.3 Proof without the game
+
+`tools/region_read.py fix` parses the two tables **out of
+`area4_walls.cpp`** (so it checks the code's table, not a copy), applies them
+to the JP disc's `AREA004` sections 8 and 10, and compares with a later disc:
+
+| against | cell bytes after the fix | placement map after the fix | section 8 bytes still different |
+|---|---|---|---|
+| `psx-us` | identical | identical | 920, every one in the tile words and texture records (the re-texture not taken) |
+| `psx-de` | identical | identical | 920, the same |
+
+Before writing, the tool asserts that each of the 72 cells is `0x00` on JP and
+each nibble has the value the table records, which is the same check the
+code makes at run time.
+
+Self-tests: `area4_walls` and the `LoadDatFile` change have no shadow
+self-test of their own (the loader is injected, not fuzzed). The switch is
+armed after every module's self-test, so those compare the shipped map.
+`'*'` narrow, `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1` on this branch's build, 2026-10-06: **passed** - exit 0, `self-test only: done`, `inject: 10081 ours, 0 left original`, 1,063 shadow lines all 0 mismatches, and the arming line after `DIV-0079`'s.
+
+### 10.4 The switch, the attract, the live check
+
+- **`BOF3X_AREA4_WALLS`**: unset or `1` on (the default), `0` off. Any other
+  value is a `Fatal`. It is read once, by `area4_walls::Arm()` in
+  `inject_all.cpp` after `d3d_lines::Arm()` and before `DrawPool_Grow()`,
+  after every module's self-test. Log lines: `area4_walls Dauna Mine's
+  minecart area gets the later discs' walls` at arming, and
+  `area4_walls: AREA004's 72 open edge cells walled ...` the first time it
+  applies.
+- **The attract demo shows area 4 twice a cycle** (`attract-mode.md`), so
+  the area block's bytes in memory differ with the fix on. A state-hash or
+  attract reference run wants `BOF3X_AREA4_WALLS=0`, as it wants
+  `BOF3X_LAYERING=0`. Whether the demo's moves ever touch the 72 cells is
+  **unknown**: no doc records the demo's path in area 4. Scripted moves test
+  `Field_ObjectBlocked`, which skips the map, but `Field_ObjectBlockedAhead`
+  (the idle and turning objects' test, `field-blocked.md`) reads it. An
+  attract A/B with the switch on against off would settle it.
+- **Live check (the owner's, not run).** In Dauna Mine's minecart area, walk
+  along the raised strip's east edge and along the bottom edge below the
+  wall row. With the fix they should block. With `BOF3X_AREA4_WALLS=0` they
+  should be open, as on JP and the shipped PC. If the area has random battles, one
+  started beside those edges should place no one on the new walls.
+
+### 10.5 For the ledger entry (the coordinator writes it)
+
+- **Original behaviour:** the JP disc and the PC port leave 72 cells of area
+  4 (Dauna Mine, minecart) open - section 10.2's runs - between wall stubs
+  Capcom placed on the same lines. The battle placement map lets a fight
+  place someone on 8 of them.
+- **New behaviour:** those cells block a step (`0x10`) and the 8 placement
+  nibbles are 0, exactly as the US, French and German PSX discs ship
+  (byte-identical, 10.3). The PSP discs ship the walls but not the placement
+  change. The textures stay JP's.
+- **Rationale:** a Capcom fix adopted in every build after JP (section 8.1's
+  evidence: walls completing Capcom's own lines, a doorway kept, heights
+  untouched; section 8.2's: the placement map follows collision in 99.98% of
+  JP's cells). The owner asked for later fixes as the default and for the
+  same result from any source.
+- **Verification:** the offline table proof (10.3); `'*'` narrow (10.3); the
+  live walk owed (10.4).
+- **Reversibility:** `BOF3X_AREA4_WALLS=0`; nothing is written to disk, and
+  the change is re-applied in memory on each load of `AREA004.DAT`.
 
 ## Tools used
 
