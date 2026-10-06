@@ -246,8 +246,9 @@ Result (2026-10-05, headless): **the six leaves 0 mismatches; the chain
 24,000 rounds, 0 mismatches**; the originals made 3,447,559 calls, 1,722,932
 disturbances; COM calls on both sides `Release` 3,049,992, `GetDC` 4,000,
 `RestoreDisplayMode` 3,486, `SetCooperativeLevel` 3,486, `ReleaseDC` 2,548;
-631 rounds with a code of 100 or more. With every module's self-test:
-SHADOW_ALL.
+631 rounds with a code of 100 or more. With every module's self-test
+(`BOF3X_SHADOW='*'`, 2026-10-05): exit 0, `self-test only: done`, `inject:
+10026 ours`, narrow and again with `BOF3X_WIDE=1`.
 
 ## 5. Negative controls
 
