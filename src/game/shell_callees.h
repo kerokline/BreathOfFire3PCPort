@@ -52,7 +52,7 @@ constexpr U kDriveCdrom = 5;          // DRIVE_CDROM
 
 // The sound set-up Game_Init calls (0x4FD144), not ours and not named
 // tonight: the platform round's sound group reads it (docs/shell.md section 6).
-constexpr U kSoundSetup = 0x5A6830;
+constexpr U kSoundSetup = bof3::addr::Snd_Init;   // ours since group PS (the same night), the value unchanged
 
 using DriveTypeFn = unsigned (__stdcall*)(const char* root);   // GetDriveTypeA
 
@@ -75,7 +75,7 @@ struct Callees {
     void (__cdecl* set_geom_offset)(long x, long y);                           // Gte_SetGeomOffset
     void (__cdecl* set_geom_screen)(long h);                                   // Gte_SetGeomScreen
     void (__cdecl* dinput_init)(void* hinstance, void* hwnd);                  // DInput_Init
-    void (__cdecl* sound_setup)(void* hwnd);                                   // 0x5A6830, raw
+    void (__cdecl* sound_setup)(void* hwnd);                                   // 0x5A6830 Snd_Init, ours (PS)
     void (__cdecl* dropped_call)(unsigned char b);                             // Port_DroppedCall
     unsigned char* (__cdecl* set_def_draw_env)(unsigned char* env, int x, int y, int w, int h);   // Gpu_SetDefDrawEnv
     unsigned char* (__cdecl* set_def_disp_env)(unsigned char* env, int x, int y, int w, int h);   // Gpu_SetDefDispEnv
