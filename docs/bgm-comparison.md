@@ -598,7 +598,9 @@ together and leave the loop correct.
   256-sample crossfade (each blended sample against the formula) - no
   sample lost or repeated; then every table row against its bounds. With
   `BOF3X_MUSIC_LOOPS=0`: exit 0 and the `off` line.
-- `BOF3X_SHADOW='*'`: see the commit's report (it takes about ten minutes).
+- `BOF3X_SHADOW='*'` (narrow, once, on the committed table): exit 0, every
+  module's self-test passed, then `music_loops 13 tracks loop at their
+  measured points` armed after them. It takes about fifteen minutes.
 
 ### 12.5 For the ledger entry (the coordinator writes it)
 
