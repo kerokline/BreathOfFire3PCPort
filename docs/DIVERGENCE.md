@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 78 entries, DIV-0001..0078, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 79 entries, DIV-0001..0079, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4134,3 +4134,44 @@ designed in rather than bolted on.
   before), 0 mismatches. The switch-on path is not compared against the
   original (it exists to differ); not yet seen live.
 - **Reversible?** `BOF3X_ORIGINAL=Cfg_Load` runs Capcom's.
+
+### LINE primitives are the PlayStation pixel's width, not one screen pixel
+
+- **ID:** DIV-0079
+- **Date:** 2026-10-06
+- **Subsystem:** the renderer's six LINE handlers - `D3d_DrawLineF2` `0x5A17A0`,
+  `D3d_DrawLineF4` `0x5A1D10` (`src/game/d3d_draw.cpp`), `D3d_DrawLineF3`
+  `0x5A1A00` (`field_misc.cpp`), `D3d_DrawLineG2` `0x5A18B0`, `D3d_DrawLineG3`
+  `0x5A1B50` (`battle_draw.cpp`), `D3d_DrawLineG4` `0x5A1EA0` (`d3d_rest.cpp`);
+  the shared drawer `src/game/d3d_lines.cpp`
+- **Tier:** Intent - the owner's decision, 2026-10-06, off a capture of the
+  fishing gauge: "all elements should scale".
+- **Original behaviour:** each handler scales its corners to screen
+  coordinates and hands Direct3D a `LINESTRIP`, which rasterises one screen
+  pixel wide at any window scale. A PlayStation line was one pixel of 320 x
+  240, so at the owner's window (a scale of about 3.3) every line in the game
+  is a third of its width: the fishing gauge's bar and centre mark, the
+  fishing grey lines (LINE_F2, 8,662 calls in the recorded routes; LINE_F4
+  1,894), and whatever builds LINE_F3 and the G kinds (no route). Measured on
+  the `caughFish` route's frame 1680 ([`owner-review.md`](owner-review.md)).
+- **New behaviour:** with `d3d_lines::g_wide` on (armed after every module's
+  self-test, as DIV-0041's fills are), each segment is a quad: the ends moved
+  to their pixel's centre, extended half a pixel along the line (a square cap)
+  and half a pixel to each side, each axis at its own scale, drawn as a
+  `TRIANGLESTRIP` of four with the ends' own colour, depth and blend. An
+  axis-aligned line covers exactly the pixels the PlayStation's covered; a
+  diagonal is a smooth band of that width (the PlayStation's stepped in
+  pixel stairs); a polyline is one quad per pair of corners, with a notch at
+  the joints a one-pixel line never showed. A zero-length line is one pixel.
+  The primitive, its builders and the handlers' state calls are unchanged.
+- **Rationale:** the owner, 2026-10-06: "all elements should scale, right?",
+  then the recommendation accepted: one segment per pair, square ends, smooth
+  diagonals, on by default. The TILE_1 class (DIV-0077) for lines.
+- **Also in the PSX version?** No: the PlayStation's GPU drew lines in its
+  own pixels. This is the port's renderer, which has no PSX twin.
+- **Verification:** the four modules' shadows (`d3d_draw`, `d3d_rest`,
+  `battle_draw`, `field_misc`) compare Capcom's handlers with the switch
+  off, 0 mismatches. Live: the `caughFish` route's frames 1500..1700 ours
+  against `BOF3X_LINES=0`.
+- **Reversible?** `BOF3X_LINES=0` leaves the switch off (the strip);
+  `BOF3X_ORIGINAL=D3d_DrawLineF2,...` runs Capcom's handler.

@@ -44,6 +44,7 @@
 #include "game/sprite_clut.h"
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
+#include "game/d3d_lines.h"
 #include "game/battle_actions.h"
 #include "game/battle_flow.h"
 #include "game/enemy_ai_ops.h"
@@ -1408,6 +1409,8 @@ void InjectAll() {
                                 // module's self-test, which all compared the original's order (layering.h)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
+    d3d_lines::Arm();           // DIV-0079: the six LINE handlers draw quads of the scale's width (BOF3X_LINES) - after
+                                // every module's self-test, which all compared the original's line strip (d3d_lines.h)
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

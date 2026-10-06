@@ -21,6 +21,8 @@
 //   Gpu_SetDrawMove        0x5A7810..0x5A7838 (0x29)                         PSX 0x8017B554
 #include "game/field_misc.h"
 
+#include "game/d3d_lines.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -541,7 +543,7 @@ extern "C" long __cdecl D3d_DrawLineF3(const unsigned char* prim) {
     g.ret_only(1);
     g.set_blend(prim[7], DrawMode());
     g.set_shade(1);
-    return DrawVertices(3, 3);   // LINESTRIP
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(3) : DrawVertices(3, 3);   // LINESTRIP; DIV-0079 the quads
 }
 
 // --- the libgpu setters ------------------------------------------------------------

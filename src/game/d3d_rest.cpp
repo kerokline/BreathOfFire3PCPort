@@ -22,6 +22,8 @@
 // Ftol). The fuzz checks three control words.
 #include "game/d3d_rest.h"
 
+#include "game/d3d_lines.h"
+
 #include <windows.h>
 
 #include <cstdint>
@@ -386,7 +388,7 @@ long D3d_DrawLineG4(const unsigned char* prim) {
     g.ret_only(1);
     g.set_blend(prim[7], DrawMode());
     g.set_shade(2);   // Gouraud
-    return DrawVertices(3, 4);   // LINESTRIP
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(4) : DrawVertices(3, 4);   // LINESTRIP; DIV-0079 the quads
 }
 
 // 0x5A2220, table entry 16 (code 0x68, called at 0x59F17C): a one-pixel tile,

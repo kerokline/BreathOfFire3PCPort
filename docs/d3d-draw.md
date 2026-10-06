@@ -457,3 +457,13 @@ still passes). `symbols.toml`: one block at its end - the twelve, the six
 stand-ins, `D3d_TexCoords`, `Gfx_DrawTpage`, `Gfx_DrawEnable`,
 `D3d_AfterDrawRequest`, `D3d_CellTexCache`; N's three provisional helper
 entries moved into it with `impl`.
+
+## DIV-0079 (2026-10-06): the lines' width
+
+Every LINE handler - F2 and F4 here, F3 (`field_misc.cpp`), G2 and G3
+(`battle_draw.cpp`), G4 (`d3d_rest.cpp`) - hands Direct3D a `LINESTRIP`, one
+screen pixel wide at any scale. Since 2026-10-06 the shared drawer
+`src/game/d3d_lines.cpp` draws each segment as a quad of the scale's width
+once `d3d_lines::Arm` has run (after every module's self-test, so every fuzz
+here still compares the strip); `BOF3X_LINES=0` keeps the strip. The entry
+has the geometry and what was measured.

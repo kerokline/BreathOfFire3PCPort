@@ -24,6 +24,8 @@
 // measured one, 0x007F and 0x037F).
 #include "game/d3d_draw.h"
 
+#include "game/d3d_lines.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -350,7 +352,7 @@ long DrawLines(const unsigned char* prim, U corners) {
     g.ret_only(1);
     g.set_blend(prim[7], Long(At(kDrawTpage)) & 0xFFFF);
     g.set_shade(1);
-    return DrawVertices(3, corners);   // LINESTRIP
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(corners) : DrawVertices(3, corners);   // LINESTRIP; DIV-0079 the quads
 }
 }  // namespace
 

@@ -55,7 +55,11 @@ where the reading behind it is. Nothing here is a divergence until it is in
    rasterises one pixel wide at any scale) - **the TILE_1 class again
    (DIV-0077), for lines**. A fix is each segment as a quad of the scale's
    width (every line in the game: the fishing gauge, the fishing grey lines,
-   magic trails). **The owner's call**; nothing built.
+   magic trails). The owner (2026-10-06): "all elements should scale" - **built
+   the same day as DIV-0079** (one quad per segment, square ends, smooth
+   diagonals; on by default, `BOF3X_LINES=0` the strip). Owed the owner's eye
+   in play: the fishing gauge and the grey lines, a magic trail if one is
+   cast.
 
 ## Debt 3: measured by a log line, review the log
 
