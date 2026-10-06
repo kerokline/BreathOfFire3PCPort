@@ -18,7 +18,7 @@
 //   0x453300  (actor byte): BE6's (for a member, 0x453560 over its record).
 //   0x453EB0  (word, actor byte): a second damage popup task - the sibling of
 //             Battle_SetDamagePopup (BE6's).
-//   0x591810  (byte, byte): al, an item class (nobody's; the harness's
+//   0x591810  (byte, byte): al, an item class (Item_UseFlags, ours since group TWO 2026-10-06; the harness's
 //             standard set lists it).
 #pragma once
 

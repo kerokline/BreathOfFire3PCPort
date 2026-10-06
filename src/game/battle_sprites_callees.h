@@ -66,7 +66,7 @@ struct Callees {
     int (__cdecl* rand)();                                    // Rand 0x5B93D2
     void (__cdecl* mark_actor)(unsigned);                     // 0x446FB0 (BF): a bit per actor in the word 0x904B82
     unsigned char (__cdecl* inventory_put)(unsigned, unsigned, unsigned, unsigned);   // 0x590C90, nobody's
-    unsigned char (__cdecl* item_class)(unsigned, unsigned);  // 0x591810, nobody's
+    unsigned char (__cdecl* item_class)(unsigned, unsigned);  // 0x591810 Item_UseFlags, ours since group TWO (2026-10-06)
     unsigned char (__cdecl* popup_slot)(unsigned, unsigned);  // 0x435180 (BB): a free 0x93A000 record
     short (__cdecl* add_clamped)(unsigned short*, unsigned);  // Stat_AddClamped
     unsigned char (__cdecl* add_cap100)(unsigned char*, unsigned);   // Stat_AddCap100
