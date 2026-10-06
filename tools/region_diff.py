@@ -67,6 +67,19 @@ LANG_ART = {0x1C080200: "the glyph atlas", 0x1E000200: "the ending / kanji font 
 # density test - 0x80104000 is NOT one, it is a data band in the area files.
 CODE_DESTS = {0x801F2C00, 0x801EEC00, 0x801D0C00, 0x800C1800, 0x801F6C00, 0x801CE400, 0x800F5000,
               0x80117000, 0x80093800, 0x80096800, 0x80196800, 0x80195800}
+# CLUT sections: the palettes uploaded beside each page (the sibling's
+# TEXT_TABLES.md: 0x8002BE00, 12 x 256 entries on the world maps; loc_build.py:
+# 0x8002D800, Western 0x80035800). A data section in this band whose size is
+# whole 32-byte rows is read as palettes.
+CLUT_BAND = (0x8002B000, 0x80036000)
+# The world maps whose plates loc_build.py transplants (DIV-0055): there the
+# plate sprite frames, the moved-block list and the palettes are language.
+PLATE_AREAS = ("AREA016", "AREA033", "AREA045", "AREA065", "AREA087",
+               "AREA088", "AREA115", "AREA121", "AREA151", "AREA152")
+PLATE_DATA_DESTS = (0x800D3800, 0x800E3800, 0x8002D800, 0x80035800)
+# Each build's language, for `classify`'s cross_lang.
+LANG = {"psx-jp": "ja", "psp-jp": "ja", "psx-us": "en", "psx-eu-en": "en", "psp-eu": "en",
+        "psx-fr": "fr", "psx-de": "de", "pc-zh": "zh"}
 JR_RA = 0x03E00008
 TILE = 2048                                 # a 32 x 32 halfword tile (DAT_CONTAINER.md section 2)
 
@@ -280,32 +293,74 @@ def enemy_diff(x, y):
     return ("text" if sa == sb else "layout+text"), detail
 
 
-def classify(sa, sb, file_key):
-    """(class, what, detail) for two differing sections of the same type."""
+def nd(t, d):
+    """A destination with the PSP's header changes undone: the PSP clears bit 31
+    of every RAM destination and sets bit 0 of some image words."""
+    if t in (0, 1) and d and d < 0x80000000:
+        return d | 0x80000000
+    if t == 3:
+        return d & ~1
+    return d
+
+
+def is_clut(t, d, b):
+    return t == 0 and CLUT_BAND[0] <= d < CLUT_BAND[1] and len(b) % 32 == 0
+
+
+def classify(sa, sb, file_key, cross_lang=True):
+    """(class, what, detail) for two differing sections of the same type.
+    `cross_lang`: the builds are in different languages, so a difference where
+    a language lives is text; within one language it is an edit (text blocks)
+    or art (images, palettes)."""
     _, t, da, x = sa
     _, _, db, y = sb
+    da, db = nd(t, da), nd(t, db)
+    area = re.search(r"(AREA\d{3})\.EMI$", file_key)
+    plate = cross_lang and area and area.group(1) in PLATE_AREAS
     if t == 3:
         ndiff = sum(x[i:i + TILE] != y[i:i + TILE] for i in range(0, max(len(x), len(y)), TILE))
         what = LANG_ART.get(da) or LANG_ART.get(db)
         det = {"tiles_differ": ndiff, "tiles": (max(len(x), len(y)) + TILE - 1) // TILE}
         if len(x) != len(y):
             det["size_change"] = True
-        return ("text", what, det) if what else ("art", "an image page", det)
+        if what and cross_lang:
+            return "text", what, det
+        return "art", (what or "an image page"), det
     if t in AUDIO:
-        what = {6: "a sound bank header (VH)", 7: "sound samples (VB)", 8: "a sound bank table",
+        what = {6: "a sound bank header (VH)", 7: "sound samples (VB)", 8: "a sound bank's cue entries",
                 10: "a sequence (SEQ)"}[t]
+        magic = {6: b"PPHD", 7: b"pBVC", 10: b"pPMS"}.get(t)
+        if magic and (x[:4] == magic) != (y[:4] == magic):
+            psx, psp = (y, x) if x[:4] == magic else (x, y)
+            det = {"psp_format": magic.decode(), "size": [len(x), len(y)]}
+            if t == 7:
+                at = psp.find(psx[:4096]) if any(psx[:4096]) else -1
+                det["psx_body_verbatim_at"] = at if at >= 0 and psp[at:at + len(psx)] == psx else None
+                if det["psx_body_verbatim_at"] is not None:
+                    return "converted", "sound samples, the PSX body verbatim in the PSP's container", det
+            return "converted", what + ", re-authored in the PSP's format (not compared)", det
         return "logic-data", what, {"bytes_differ": sum(p != q for p, q in zip(x, y)),
-                                    "size": [len(x), len(y)]}
+                                    "size": [len(x), len(y)],
+                                    "offsets": [i for i, (p, q) in enumerate(zip(x, y)) if p != q][:16]}
+    if t == 1 and len(x) >= 4 and len(y) >= 4:
+        if struct.unpack_from("<I", x, 0)[0] == len(y) or struct.unpack_from("<I", y, 0)[0] == len(x):
+            return "converted", "compressed on one side, shipped decompressed on the other", {"size": [len(x), len(y)]}
+        return "layout", "compressed data", {"size": [len(x), len(y)]}
+    edit = "" if cross_lang else " (an edit within one language)"
     if da == SCRIPT_DEST and db == SCRIPT_DEST:
-        return "text", "the area message block", text_block_detail(x, y)
+        return "text", "the area message block" + edit, text_block_detail(x, y)
     if da in POOL_DESTS and db in POOL_DESTS:
-        return "text", "the system message pool", {}
+        return "text", "the system message pool" + edit, {"size": [len(x), len(y)]}
     if da == ENEMY_DEST and db == ENEMY_DEST:
         r = enemy_diff(x, y)
         if r:
             return r[0], "the enemy / formation table", r[1]
-    if t == 1:
-        return "layout", "compressed data", {"size": [len(x), len(y)]}
+    if plate and da in PLATE_DATA_DESTS and db in PLATE_DATA_DESTS:
+        return "text", "the world map's plate data (loc_build.py's PLATE_DATA)", {"size": [len(x), len(y)]}
+    if is_clut(t, da, x) and is_clut(t, db, y):
+        n = sum(p != q for p, q in zip(x, y))
+        return "art", "a CLUT section (palettes)", {"bytes_differ": n, "size": [len(x), len(y)],
+                                                     "rows_differ": sum(x[i:i + 32] != y[i:i + 32] for i in range(0, len(x), 32))}
     if (da in CODE_DESTS and db in CODE_DESTS) or (is_code(x) and is_code(y)):
         cls, det = code_diff(x, y)
         what = "overlay code"
@@ -325,6 +380,7 @@ def classify(sa, sb, file_key):
     if len(x) == len(y):
         offs = [i for i, (p, q) in enumerate(zip(x, y)) if p != q]
         det["first"], det["last"] = (offs[0], offs[-1]) if offs else (None, None)
+        det["offsets"] = offs[:24]
     return "logic-data", "data", det
 
 
@@ -379,7 +435,7 @@ def diff_pair(A, B):
             else:
                 row["b_hash"] = h16(y[3])
                 row["verdict"] = "differs"
-                row["class"], row["what"], row["detail"] = classify(x, y, key)
+                row["class"], row["what"], row["detail"] = classify(x, y, key, LANG.get(A.id) != LANG.get(B.id))
                 hand("%s_vs_%s" % (A.id, B.id), key, row)
             rows.append(row)
         res["files"][key] = rows
