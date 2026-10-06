@@ -61,6 +61,16 @@ where the reading behind it is. Nothing here is a divergence until it is in
    in play: the fishing gauge and the grey lines, a magic trail if one is
    cast.
 
+## Decisions the measurements raised
+
+- **The base tree's version of the Western data rows** ([`region-diff.md`](region-diff.md),
+  2026-10-06): every build after JP - US, FR, DE and both PSP discs - changes
+  `AREA004` section 8 (992 bytes) and one cue byte in 65 dragon and Ryu sound
+  banks; only the PC, built from JP, lacks them (two more kinds are Western-
+  or FR/DE-only). Should the cache's `base/` keep JP's rows, or take the later
+  version as a ledgered divergence? What the rows do in game is not yet read -
+  the owner may want that first.
+
 ## Debt 3: measured by a log line, review the log
 
 - `PartyAction_SpawnKind1B` `0x5252B0` now logs `debt3` when

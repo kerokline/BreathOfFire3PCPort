@@ -1262,7 +1262,7 @@ guess at where the difference would live, to be corrected by the measurement.
 
 | # | Claim | Where it would live | Status |
 |---|---|---|---|
-| P1 | Angel Tower's block-puzzle room: one passage is narrower, and random battles can no longer be used there to skip the puzzle | the area's map and encounter data | unmeasured |
+| P1 | Angel Tower's block-puzzle room: one passage is narrower, and random battles can no longer be used there to skip the puzzle | the area's map and encounter data | **data changes in 11 areas** (2026-10-06, [`region-diff.md`](region-diff.md)), none identifiable as Angel Tower by name; the code half unread |
 | P2 | The Desert: a random encounter no longer turns Ryu to a random heading | field code, or the area's script | unmeasured |
 | P3 | The item duplication glitch no longer works | menu / inventory code | unmeasured; whether the PC port has the glitch is also unmeasured |
 | P4 | The Holy Mantle suppresses encounters better while walking straight, and a turn after a long walk brings one on | the encounter-step code | unmeasured; the wiki's own wording is tentative |
@@ -1272,11 +1272,11 @@ guess at where the difference would live, to be corrected by the measurement.
 
 | # | Claim | Where it would live | Status |
 |---|---|---|---|
-| P6 | Stallion (Balio and Sunder fused) is recoloured, brown and blue | the boss's palette, an image section | unmeasured |
-| P7 | Stallion's signature attack is renamed | the ability name table | unmeasured |
-| P8 | One frame of Ryu's ascension animation, which showed another publisher's character, is removed | an effect's image or frame table | unmeasured |
-| P9 | One character's name is respelled (Hachio) | text | unmeasured |
-| P10 | Some music tracks differ slightly in instrumentation | the sequence or sound-bank data, or the PSP's player | unmeasured; bears on I23 |
+| P6 | Stallion (Balio and Sunder fused) is recoloured, brown and blue | the boss's palette, an image section | **data consistent** (2026-10-06, [`region-diff.md`](region-diff.md)): area 67's palettes and page change; colours not rendered |
+| P7 | Stallion's signature attack is renamed | the ability name table | **not reachable in data** (2026-10-06, [`region-diff.md`](region-diff.md)): the PSP's names live in its executable; the code half |
+| P8 | One frame of Ryu's ascension animation, which showed another publisher's character, is removed | an effect's image or frame table | candidate rows found, not rendered (2026-10-06, [`region-diff.md`](region-diff.md)) |
+| P9 | One character's name is respelled (Hachio) | text | **confirmed** (2026-10-06, [`region-diff.md`](region-diff.md)) |
+| P10 | Some music tracks differ slightly in instrumentation | the sequence or sound-bank data, or the PSP's player | half settled (2026-10-06, [`region-diff.md`](region-diff.md)): every sample body is the PSX's, re-encoded; instrument and sequence data not compared (A's music investigation reads them) |
 
 **Presentation and platform - recorded for the count, not for a toggle:**
 
@@ -1284,9 +1284,9 @@ guess at where the difference would live, to be corrected by the measurement.
 |---|---|---|
 | P11 | 16:9 display | **measured**: [`psp-widescreen.md`](psp-widescreen.md) |
 | P12 | A light bilinear filter over the sprites | unmeasured; ours is already a choice (`BOF3X_FILTER`) |
-| P13 | A new title logo | unmeasured |
-| P14 | The fishing minigame offered from the title screen, and shareable to a second PSP | unmeasured |
-| P15 | Memory-card wording changed to the PSP's storage | unmeasured |
+| P13 | A new title logo | candidate rows found, not rendered (2026-10-06, [`region-diff.md`](region-diff.md)) |
+| P14 | The fishing minigame offered from the title screen, and shareable to a second PSP | candidate rows found, not rendered (2026-10-06, [`region-diff.md`](region-diff.md)) |
+| P15 | Memory-card wording changed to the PSP's storage | candidate rows found, not rendered (2026-10-06, [`region-diff.md`](region-diff.md)) |
 | P16 | Longer loads before battles from UMD; slowdown before attacks early in a session | platform behaviour, not ours to reproduce |
 
 Rows are added here as the investigation finds changes nobody listed, and a
@@ -1329,6 +1329,14 @@ the code diff is the second step and the larger one.
 ### Outcome
 _(2026-10-04) open; sixteen leads listed, one measured (P11), none of the
 behaviour or content rows confirmed._
+_(2026-10-06) the data half measured ([`region-diff.md`](region-diff.md)):
+P9 confirmed, P6 consistent, P8 / P13 / P14 / P15 candidates found, P1 data
+in 11 areas, P7 only in the PSP's executable, P10 half (samples identical).
+The PSP's data carries JP's code byte for byte and PSP-EU is PSP-JP plus a
+language layer; changes nobody listed: 653 texture tiles blanked and 301
+redrawn, 53 palette changes, the shoulder-button labels, an empty battle
+message filled, 11 map-data changes. The code half (P1..P5) is the next
+step, and the renders that would settle P6 / P8 / P13._
 
 ## I33 — Productisation: from our own executable to a finished product
 
