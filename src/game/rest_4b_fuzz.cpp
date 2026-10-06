@@ -284,6 +284,34 @@ U XYAnswer(const U* a, U answer) {
     Move(n >> 3);
     return answer;
 }
+// Three stand-ins louder on one path each (round fourteen's end, debt 23: the
+// group's moves are fifteen, so a cell read again after one call was seen a
+// handful of times in 6,000 rounds), one call in four from the noise:
+// Rand moves the tail's argument (CommuTail_RandomGift reads it again after
+// its roll: control C36), CommuBoard_DrawListBox the second list
+// (CommuBoard_PickListB reads it after the first box: B36), CommuBoard_DrawSprite
+// the eight slots' kinds (CommuBoard_DrawPanel reads a slot's after its sprite:
+// D20). The values are the moves' own (cases 1, 7 and 9).
+U RandMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0) B(at::kTailArg) = static_cast<unsigned char>((n >> 8) % 8 + 1);
+    return answer;
+}
+U ListBoxMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0) B(at::kPickD) = static_cast<unsigned char>(n & 4 ? 0xFF : (n >> 8) % 6);
+    return answer;
+}
+U SpriteMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0)
+        for (unsigned s = 1; s <= 8; ++s) {
+            const U bits = n >> (3 * s);
+            B(SlotAt(s)) = static_cast<unsigned char>(bits & 1 ? 0 : 4 + (bits >> 1) % 10);
+        }
+    return answer;
+}
+
 // Crt_sprintf as the standard set's FxSprintf: up to seven letters and a NUL at
 // the destination, the count answered.
 U Sprintf(const U* a, U) {
@@ -311,8 +339,8 @@ const sh::Callee kCallees[] = {
     {R4B_OURS(Commu_NthInSlot), 2, {0xFF, 0xFF}, sh::Answer::kByte, 0, 0x3B, {}, &Stir},
     {R4B_OURS(CommuBoard_MoveGridCursor), 1, {kW}, kG, 0, 0, {}, &Stir},
     {R4B_OURS(CommuBoard_DrawDigits), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
-    {R4B_OURS(CommuBoard_DrawSprite), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
-    {R4B_OURS(CommuBoard_DrawListBox), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
+    {R4B_OURS(CommuBoard_DrawSprite), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &SpriteMove},
+    {R4B_OURS(CommuBoard_DrawListBox), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &ListBoxMove},
     {R4B_OURS(CommuBoard_DrawListFrame), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
     {R4B_OURS(CommuBoard_ListY), 0, {}, kG, 0, 0, {}, &Stir},
     {R4B_OURS(CommuBoard_DrawListBoxB), 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &Stir},
@@ -353,6 +381,8 @@ const sh::Callee kCallees[] = {
     {R4B_OURS(Music_FadeOutStop), 1, {kW}, kG, 0, 0, {}, &Stir},
     {R4B_OURS(Sound_LoadStream), 1, {kW}, kG, 0, 0, {}, &Stir},
     {R4B_OURS(Sound_StreamDone), 0, {}, sh::Answer::kBool, 0, 0, {}, &Stir},
+    // the standard row, louder (RandMove)
+    {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandMove},
     // every format here takes one number: three words
     {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kW, kW, kW}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
 };
@@ -548,12 +578,14 @@ void Args(unsigned k, U* a) {
         a[1] = coordinate(a[1]);
         a[2] = byte(a[2], PickOf(0, 1, 7, 8, 9, 0x10, 0x40, sh::Next() & 0xFF));
         break;
-    case 0x459A80:   // DrawListBoxB(x, y, list, steady)
+    case 0x459A80: {   // DrawListBoxB(x, y, list, steady): y half the time at the move's bound for the list's height
         a[0] = coordinate(a[0]);
-        a[1] = coordinate(a[1]);
         a[2] = byte(a[2], PickOf(0, 1, 2, 3, 4, 5, sh::Next() & 0xFF));
+        const U h = 16u * B(at::kLists + 2 * (a[2] & 0xFF) + 1);
+        a[1] = sh::Half() ? coordinate(a[1]) : (a[1] & 0xFFFF0000u) | ((PickOf(0xD5, 0xD4, 0xD6) - h) & 0xFFFF);
         a[3] = byte(a[3], PickOf(0, 1, sh::Next() & 0xFF));
         break;
+    }
     case 0x459B70:   // SlotRecordXY(px, py, slot, k)
         a[2] = byte(a[2], PickOf(0, 1, 4, 5, 8, sh::Next() % 12, sh::Next() & 0xFF));
         a[3] = byte(a[3], PickOf(0, 1, 2, 3, sh::Next() & 0xFF));

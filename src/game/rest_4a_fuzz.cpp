@@ -164,6 +164,9 @@ constexpr unsigned kLiveEnemy = kCount;   // the second group's one clone, its o
 // faults - neither can be compared). 0x100: none.
 U g_standing = 0x100;
 void Disturb(U h);
+// The clone being fuzzed (Seed sets it; the stand-ins below read it).
+unsigned g_k = 0;
+unsigned char* Bld(U b);
 // The louder stand-ins (the group's case runs after one call in some hundreds
 // otherwise; the controls of section 6 that miss a re-read were 0 without
 // these): each moves the cell its callers read again, from its answer only.
@@ -174,9 +177,23 @@ U IsOutEffect(const U* a, U answer) {
 // Rand: the CRT's is 0..0x7FFF; the harness's garbage answers would take the
 // pickers' idiv below their list (ours aborts there). One time in four the
 // group's own disturbance.
+// While CommuSim_TickKind9 runs, one time in four every building's level is
+// moved (0..2) as well: it reads the level again after its second roll, and
+// the group's case 4 (one building of eight) reached that 4 times in 4,000
+// rounds (control C29).
 U RandEffect(const U*, U answer) {
     if ((answer >> 16) % 4 == 0) Disturb(answer * 0x2545F491u);
+    if (g_k == kTick9 && (answer >> 18) % 4 == 0)
+        for (U b = 0; b < at::kBuildingCount; ++b) Bld(b)[1] = static_cast<unsigned char>((answer >> (2 * (b % 8) + 1)) % 3);
     return answer & 0x7FFF;
+}
+// CommuSim_RemoveRecord / _AddRecord: one call in four the clock moved on
+// (CommuSim_Population stamps the clock read again after its calls; the
+// group's case 1 reached the shrink's 4 times in 4,000 rounds: control C21).
+U ClockEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0) SetUL(Mem(at::kClock), UL(Mem(at::kClock)) + 1 + (n >> 8) % 64);
+    return answer;
 }
 // Field_SlotClutCopy: the slot's +1 (Field_RunSlot reads it after) half the time.
 U SlotCopyEffect(const U* a, U answer) {
@@ -233,8 +250,8 @@ const sh::Callee kCallees[] = {
     {R4A_OURS(CommuSim_TickKind9), 0, {}, kG, 0, 0},
     {R4A_OURS(CommuSim_TickKindD), 0, {}, kG, 0, 0},
     {R4A_OURS(CommuSim_TickKindB), 0, {}, kG, 0, 0},
-    {R4A_OURS(CommuSim_AddRecord), 0, {}, kG, 0, 0},
-    {R4A_OURS(CommuSim_RemoveRecord), 0, {}, kG, 0, 0},
+    {R4A_OURS(CommuSim_AddRecord), 0, {}, kG, 0, 0, {}, &ClockEffect},
+    {R4A_OURS(CommuSim_RemoveRecord), 0, {}, kG, 0, 0, {}, &ClockEffect},
     {R4A_OURS(CommuSim_SumKindsAB), 0, {}, kG, 0, 0},
     {R4A_OURS(CommuSim_RollOffers), 0, {}, kG, 0, 0},
     {R4A_OURS(CommuSim_PlaceObjects), 0, {}, kG, 0, 0},
@@ -394,11 +411,91 @@ void SeedBattle() {
 // the record CommuSim_PlaceResident places.
 U g_slot, g_resident;
 
+// Battle_AutoTargetCheck's enemy argument, chosen in Seed (0x100: Args draws
+// one). Half its rounds reach the store of 0x80 / 0x40 by forced >= 3: the
+// forced actor 3 or a neighbour, standing; auto mode 4; the enemy down; its
+// ability one whose flags byte (NameTable_Abilities, read in place) has bit 4
+// and not bit 7. Control C3 (the boundary as > 3) was refused 3 times in 4,000
+// rounds without it.
+U g_actor = 0x100;
+U AbilityBit4(U r) {
+    U found[0x100];
+    unsigned n = 0;
+    for (U i = 0; i < 0x100; ++i)
+        if ((Mem(at::kAbilityFlags + at::kAbilityStride * i)[0] & 0x90) == 0x10) found[n++] = i;
+    return n != 0 ? found[r % n] : r % 0x100;
+}
+void SeedAutoTarget() {
+    SetUL(Mem(at::kBattleFlags), UL(Mem(at::kBattleFlags)) | 0x4000u);
+    Mem(at::kForcedActor)[0] = static_cast<unsigned char>(PickOf(3, 3, 2, 4));
+    Mem(at::kAutoMode)[0] = 4;
+    g_actor = 5 + sh::Next() % 6;   // an enemy 5..10, never the forced actor
+    unsigned char* const rec = Mem(0x93B960 + at::kEnemyStride * (g_actor - 3));
+    SetWord(rec + 0xBA, PickOf(0, 1));
+    SetWord(rec + 0x106, AbilityBit4(sh::Next()));
+}
+
+// CommuSim_TickKindD's boundaries, half its rounds: building 0 of kind 0xD
+// and every record in use in it (and in use, while fewer than 24 are, each
+// whose trait +0x13 is 5 - the one chance of 74..100 the image's tiers and
+// traits make, 75), its status 0x1c, its stamp at or past the tiers' spans,
+// its item one whose price (each category's table, read in place) is at most
+// 100 (tier 0), above 30,000 (the walk's last tiers) or any. Controls C32 and
+// C33d were refused 6 and 2 times in 4,000 rounds without it.
+U PriceOf(U category, U item) {
+    switch (category) {
+    case 0: return move_script::Word(Mem(at::kConsumables + 22u * item + 4));
+    case 1: return move_script::Word(Mem(at::kWeapons + 28u * item + 9));
+    case 2: return move_script::Word(Mem(at::kArmour + 26u * item + 7));
+    default: return move_script::Word(Mem(at::kAccessories + 24u * item + 5));
+    }
+}
+U ItemPriced(U category, U kind, U r) {
+    U found[0x100];
+    unsigned n = 0;
+    for (U i = 0; i < 0x100; ++i) {
+        const U price = PriceOf(category, i);
+        if (kind == 0 ? price <= 100 : price > 30000) found[n++] = i;
+    }
+    return n != 0 ? found[r % n] : r % 0x100;
+}
+void SeedTickD() {
+    Bld(0)[0] = 0xD;
+    unsigned used = 0;
+    for (U i = 0; i < at::kRecordCount; ++i) used += Rec(i)[0] != 0;
+    const U clock = UL(Mem(at::kClock));
+    for (U i = 0; i < at::kRecordCount; ++i) {
+        unsigned char* const r = Rec(i);
+        if (r[0] == 0) {
+            if (used >= 24 || Mem(at::kRecordTraits + at::kTraitStride * i + 0x13)[0] != 5) continue;
+            r[0] = 1;
+            ++used;
+        }
+        if (!sh::Often()) continue;
+        r[1] = 1;
+        const U category = sh::Next() % 4;
+        r[3] = static_cast<unsigned char>(0x10 | category);
+        const U kind = PickOf(0, 0, 1, 1, 2);
+        r[2] = static_cast<unsigned char>(kind == 2 ? sh::Next() % 0x100 : ItemPriced(category, kind, sh::Next()));
+        SetUL(r + 4, clock - PickOf(10, 22, 24, 0x40, sh::Next() % 0x100));
+    }
+}
+
 void Seed(unsigned k) {
+    g_k = k;
+    g_actor = 0x100;
     if (k <= kOtherMember || k == kLiveEnemy) SeedBattle();
+    if (k == kAutoCheck && sh::Half()) SeedAutoTarget();
     g_slot = sh::Next() % 8;
     if (k == kRunSlot || k == kClutCopy) SeedSlot(Field_Slots + 16 * g_slot);
     if (k >= kAreaEnter && k <= kTrig11) SeedCommunity();
+    // after the community: CommuSim_TickKindD's fold of a roll above 100 (less 0x1C): its first
+    // roll 0x66 (less 0x1C, 74) against the one chance of 74..100 the image's
+    // tiers and traits make, 75 (tier 0, a trait of 5) - control C32.
+    if (k == kTickD && sh::Half()) {
+        SeedTickD();
+        sh::SetRandHint(0x66);
+    }
     g_resident = sh::Next() % at::kRecordCount;
     // the resident's building one of the eight (the counts are the group's region; past them the original writes .data)
     if (k == kPlaceResident) Rec(g_resident)[1] = static_cast<unsigned char>(1 + sh::Next() % 8);
@@ -420,7 +517,14 @@ void Args(unsigned k, U* a) {
     const auto byte = [a](unsigned i, U v) { a[i] = (a[i] & 0xFFFFFF00u) | (v & 0xFF); };
     g_standing = 0x100;
     switch (k) {
-    case kAutoCheck: byte(0, PickOf(0, 1, 2, 3, 4, 7, 10, Mem(at::kForcedActor)[0], sh::Next() % 11)); break;
+    case kAutoCheck:
+        if (g_actor != 0x100) {
+            byte(0, g_actor);
+            g_standing = Mem(at::kForcedActor)[0];
+        } else {
+            byte(0, PickOf(0, 1, 2, 3, 4, 7, 10, Mem(at::kForcedActor)[0], sh::Next() % 11));
+        }
+        break;
     case kLiveMember: g_standing = 2; break;
     case kActionIs0E: byte(0, sh::Next() % 3); break;
     case kAutoFixed: {

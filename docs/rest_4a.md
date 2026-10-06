@@ -196,7 +196,7 @@ near variant refused).**
 |---|---|---|--:|
 | C1 | flag bit 14 -> 15 | `Battle_AutoTargetCheck` | 1,980 / 4,000 |
 | C2 | `0x904B8B` read before `Battle_ActorIsOut` (case 6) | same | 467 |
-| C3 | `forced >= 3` -> `> 3` | same | 3 (thin: the boundary) |
+| C3 | `forced >= 3` -> `> 3` | same | 3 (thin: the boundary); 697 with the boundary seeded (2026-10-05, below) |
 | C4 | members 0..1 only | `Battle_RandomLiveMember` | ours' abort (count 0) |
 | C4b | member 1 never listed | same | 747 |
 | C5 | the list's overflow not written (`f[c]` only below 4) | `Battle_RandomLiveEnemy` | 4,358 / 6,000 |
@@ -216,7 +216,7 @@ near variant refused).**
 | C18 | area kind 5 -> 6 | `CommuSim_QueueAreas` | 1,740 |
 | C19 | the spawn cap + 1 | `CommuSim_Population` | 95 |
 | C20 | the grow stamp the clock before the calls (case 1) | same | 13 |
-| C21 | the shrink stamp likewise | same | 4 (thin) |
+| C21 | the shrink stamp likewise | same | 4 (thin); 125 with the clock moved under the calls (2026-10-05) |
 | C22 | the mood cap 99 -> 100 | `CommuSim_Mood` | 497 |
 | C23 | trait + 3 -> + 2 | same | 878 |
 | C24 | event 7 -> 8 | `CommuSim_LevelLit` | 763 |
@@ -224,13 +224,14 @@ near variant refused).**
 | C26 | the divisor floor 5 -> 4 | `CommuSim_TickKind5` | 12 |
 | C27 | event 0 -> 1 | same | 554 |
 | C28 | the age x 6 -> x 5 | `CommuSim_TickKind9` | 390 |
-| C29 | the level read before the roll (case 4) | same | 4 (thin) |
+| C29 | the level read before the roll (case 4) | same | 4 (thin); 189 with the levels moved under `Rand` (2026-10-05) |
 | C30 | the removed count read before 0x45E6B0 (case 5) | same | 73 |
 | C31 | +3 not read again after the roll (case 3) | `CommuSim_TickKindD` | 29 |
-| C32 | the roll's fold 0x1C -> 0x1B | same | 4 (thin) |
+| C32 | the roll's fold 0x1C -> 0x1B | same | 4 (thin); 265 with the boundary seeded (2026-10-05) |
 | C32b | the fold 0x1C -> 0x10 | same | 6 |
 | C33 | the tier walk's end `>=` -> `>` | same | 0: **equivalent** (the eighth bound is 0xFFFF, no u16 price is above it) |
-| C33b | the walk stopped a tier early | same | 0: no seeded item prices above the seventh bound (30,000) |
+| C33b | the walk stopped a tier early | same | 0: **equivalent** (2026-10-05, below: not the seed - with prices above 30,000 seeded it stays 0) |
+| C33d | the walk stopped two tiers early (C33b's near variant, 2026-10-05) | same | 1,153 |
 | C33c | the walk stopped three tiers early | same | 40 |
 | C34 | `6 - count` -> `7 - count` | `CommuSim_TickKindB` | 1,077 |
 | C35 | the cap + 1 | same | 67 |
@@ -264,6 +265,41 @@ the slot's +1, R4D's `0x45E6B0`'s the removed count, `AreaMap_Elevation`'s and
 every pose stand-in's a resident count; case 3 hits the record `TickKindD` is
 on half the time. Thin (under 10): C3, C21, C29, C32 - each a boundary or a
 re-read under one call; named for the debt list.
+
+**The thin ones made cheap (2026-10-05, round fourteen's end, debt 23).**
+Four changes to the fuzz, the group's rounds still 4,000 (6,000 the enemy's):
+
+- `Battle_AutoTargetCheck`'s boundary seeded: half its rounds an enemy
+  argument 5..10, down, auto mode 4, the forced actor 3 (or 2, 4) and
+  standing, the enemy's ability one whose flags byte (read in place) has bit
+  4 and not bit 7. C3: **697**.
+- `CommuSim_AddRecord`'s and `_RemoveRecord`'s stand-ins move the clock on one
+  call in four (`ClockEffect`). C21: **125** (C20 13 to 407, C17 7 to 359).
+- `Rand`'s stand-in, while `CommuSim_TickKind9` runs, moves every building's
+  level (0..2) one call in four. C29: **189**.
+- `CommuSim_TickKindD`'s boundaries seeded (after the community): half its
+  rounds building 0 of kind 0xD with every record in use in it and, while
+  fewer than 24 are in use, each record whose trait +0x13 is 5; status 0x1c;
+  a stamp at or past the tiers' spans; an item priced at most 100 or above
+  30,000 (each category's table read in place), and the first roll near 0x66.
+  The fold matters only for a chance of 74..100 (the roll above 100 less
+  0x1C), and the image's tiers and traits make one such chance, 75 (tier 0,
+  odds 60, trait 5): roll 0x66 is where 0x1C and 0x1B part. C32: **265**.
+- **C33b is an equivalent mutant**, not a seed's want: the seventh bound is
+  30,000 and the eighth 0xFFFF (`0x652928`, read from the exe: 100, 300,
+  500, 1,000, 3,000, 10,000, 30,000, 65,535). A price above 30,000 moves the
+  walk to the eighth tier, and no u16 price is above 65,535, so the original
+  ends at tier 7 there exactly as the mutant does. The image has prices above
+  30,000 (weapon 22 65,000, armour 30 42,000, ...) and the seed now reaches
+  them: **C33d**, two tiers early, which parts at 30,000, is refused 1,153
+  times; C33b stays 0.
+
+All 74 controls re-run on that fuzz in this worktree: the same 70 refused by
+a count, C4 and C10 by ours' abort, C33 and C33b not refused (both
+equivalent). Counts that moved: C2 467 to 697, C17 7 to 359, C20 13 to 407,
+C31 29 to 206, C33c 40 to 1,267, C69 164 to 825, C46 312 to 149 of 12,000;
+the weakest now C16 (9, the area read before the spawns, case 2), C26 (12)
+and C47 (14).
 
 ## 7. Latent defects (Capcom's, described, not fixed)
 

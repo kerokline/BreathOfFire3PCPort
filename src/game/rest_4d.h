@@ -82,6 +82,7 @@ void __cdecl CommuName_DrawHeader(void);                // 0x45E820
 }  // extern "C"
 
 namespace rest_4d {
-void SelfTest();   // rest_4d_fuzz.cpp
+void SelfTest();           // rest_4d_fuzz.cpp
+void EntryAbandonTest();   // rest_4d_fuzz.cpp: DIV-0075's row, run once the switch is set
 }
 void Rest4D_Inject();
