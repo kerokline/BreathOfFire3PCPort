@@ -71,7 +71,7 @@ CODE_DESTS = {0x801F2C00, 0x801EEC00, 0x801D0C00, 0x800C1800, 0x801F6C00, 0x801C
 # TEXT_TABLES.md: 0x8002BE00, 12 x 256 entries on the world maps; loc_build.py:
 # 0x8002D800, Western 0x80035800). A data section in this band whose size is
 # whole 32-byte rows is read as palettes.
-CLUT_BAND = (0x8002B000, 0x80036000)
+CLUT_BAND = (0x8002B000, 0x80037000)
 # The world maps whose plates loc_build.py transplants (DIV-0055): there the
 # plate sprite frames, the moved-block list and the palettes are language.
 PLATE_AREAS = ("AREA016", "AREA033", "AREA045", "AREA065", "AREA087",
@@ -395,6 +395,12 @@ HAND = [
      "the memory-card module: the save file name's product code"),
     (None, r"ETC/[MR]TEST\.EMI$", 0x801D0C00, "text",
      "a test module's labels, re-encoded byte for byte"),
+    (("psx-jp_vs_pc-zh",), r"ETC/FIRST\.EMI$", 0x8002B800, "text",
+     "the text CLUT strip, row 0 brightened for the port's glyphs (loc_build.py, DIV-0013)"),
+    (("psx-jp_vs_psp-jp", "psx-us_vs_psp-eu"), r"ETC/FIRST\.EMI$", (0x8002EC00, 0x80036C00), "converted",
+     "FIRST's PSP-only sections (PSP RAM destinations), paired by position with a PSX one"),
+    (("psp-jp_vs_psp-eu",), r"ETC/FIRST\.EMI$", 0x00596000, "text",
+     "FIRST's PSP-only section, sized per language"),
 ]
 
 
@@ -402,7 +408,8 @@ def hand(pair, key, row):
     for ids, rx, dest, cls, what in HAND:
         if ids and pair not in ids:
             continue
-        if re.search(rx, key) and (dest is None or int(row["a_dest"], 16) == dest):
+        dests = dest if isinstance(dest, tuple) else (dest,)
+        if re.search(rx, key) and (dest is None or int(row["a_dest"], 16) in dests):
             row["auto_class"], row["class"], row["what"] = row["class"], cls, what
             return
 
@@ -475,7 +482,7 @@ def cmd_pc(a):
            "b": {"id": "pc-zh", "path": "DAT/"}, "files": {}, "census": os.path.basename(a.census)}
     for stem, rec in sorted(census.items()):
         keys = [k for k in J.emis if k.rsplit("/", 1)[-1] == stem + ".EMI"]
-        if not rec["pairs"] or len(keys) != 1:
+        if len(keys) != 1 or not (rec["pairs"] or rec["dropped"]):
             continue
         sec = {s[0]: s for s in J.sections(keys[0])}
         blob, chunks = dat.load(os.path.join(a.dat, stem + ".DAT"))
@@ -495,6 +502,7 @@ def cmd_pc(a):
                     row["class"], row["what"], row["detail"] = "layout", "compressed on the disc, decompressed on the PC", {}
                 else:
                     row["class"], row["what"], row["detail"] = classify(x, (y[0], x[1], x[2], yb), keys[0])
+                    hand("psx-jp_vs_pc-zh", keys[0], row)
             rows.append(row)
         for d in rec["dropped"]:
             rows.append({"a": d["emi"], "b": None, "type": d["type"], "a_dest": d["dest"], "a_size": d["size"],
