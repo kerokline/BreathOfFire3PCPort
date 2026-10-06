@@ -4058,8 +4058,9 @@ designed in rather than bolted on.
   its block builder mixes the two is not established.
 - **Verification:** `BOF3X_SHADOW=rest_2c` headless compares Capcom's
   `Save_BuildBlock` with the switch off (the switch is set after the
-  self-test, as DIV-0075's), 0 mismatches. Not yet seen live: a save with a
-  non-record-0 leader, then the load screen - the owner's eye.
+  self-test, as DIV-0075's), 0 mismatches. **Seen live by the owner,
+  2026-10-06:** a save with another member leading loads showing Ryu's level
+  and name together.
 - **Reversible?** `BOF3X_ORIGINAL=Save_BuildBlock` runs Capcom's.
 
 ### A TILE_1 covers the PlayStation pixel's footprint, not one screen pixel

@@ -43,13 +43,9 @@ where the reading behind it is. Nothing here is a divergence until it is in
    area 113's reward, area 135's box, chapter 11 step 47, areas 57 / 108 /
    145's shared handler) stop the music themselves first and are not the
    case.
-2. **DIV-0076, the save slot's summary** ([`round-14-cleanup.md`](round-14-cleanup.md)
-   section 5): save with someone other than record 0 leading, then read the
-   slot on the load screen - name and level should now be the same
-   character's.
-3. **The layering fix in play** (DIV-0071, HANDOFF item 0000000): a town,
+2. **The layering fix in play** (DIV-0071, HANDOFF item 0000000): a town,
    stairs, a bridge, followers close behind, with the default on.
-4. **TILE_1 drawn as one point** ([`d3d-rest.md`](d3d-rest.md) D-a). Shown to
+3. **TILE_1 drawn as one point** ([`d3d-rest.md`](d3d-rest.md) D-a). Shown to
    the owner 2026-10-06 from the `whelpBoss` route's frame 11880 (the dream
    scene, Deis in the light pillar: the drifting specks are TILE_1s, each one
    screen pixel where the PlayStation's covered four at this scale). A paint
@@ -58,7 +54,7 @@ where the reading behind it is. Nothing here is a divergence until it is in
    point). Owed the owner's eye in play: the dream scene after the whelp
    fight, or any Kaiser cast.
 
-5. **Lines drawn one screen pixel wide** (the owner's note, 2026-10-06: the
+4. **Lines drawn one screen pixel wide** (the owner's note, 2026-10-06: the
    fishing gauge's thin orange bar "looks like it's supposed to be a bit
    thicker"). Measured the same day on the `caughFish` route's frame 1680
    (`analysis/shots/fish_1006_every60/f01680.png`, the PLAYER vs FISH gauge
@@ -111,6 +107,12 @@ where the reading behind it is. Nothing here is a divergence until it is in
   neither recipe reaches the fight (fights 13 and 16; Stallion is 24), so a
   route is the owner's to record. **The Holy Mantle lead is refuted**: nothing
   to toggle.
+
+## Seen by the owner (struck)
+
+- **DIV-0076, the save slot's summary** - confirmed 2026-10-06: a save with
+  another member leading shows Ryu's level and name together on the load
+  screen.
 
 ## Debt 3: measured by a log line, review the log
 
