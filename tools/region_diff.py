@@ -62,6 +62,11 @@ ENEMY_NAMES = {0x88: 8, 0x8C: 12}
 LANG_ART = {0x1C080200: "the glyph atlas", 0x1E000200: "the ending / kanji font sheet",
             0x0E001000: "an area page (words painted on)", 0x0A081000: "an area page (words painted on)",
             0x1A080400: "DEMO's language page", 0x1C000200: "the title menu page"}
+# Overlay bands (the sibling's OVERLAYS.md; DAT_CONTAINER.md section 2's dropped
+# sections): a section bound for one is code even when it is too small for the
+# density test - 0x80104000 is NOT one, it is a data band in the area files.
+CODE_DESTS = {0x801F2C00, 0x801EEC00, 0x801D0C00, 0x800C1800, 0x801F6C00, 0x801CE400, 0x800F5000,
+              0x80117000, 0x80093800, 0x80096800, 0x80196800, 0x80195800}
 JR_RA = 0x03E00008
 TILE = 2048                                 # a 32 x 32 halfword tile (DAT_CONTAINER.md section 2)
 
@@ -190,32 +195,51 @@ def word_kind(x, y):
     return "value"                                   # andi, slti, sltiu, xori, ...
 
 
+_CODE_MEMO = {}
+
+
 def code_diff(x, y):
-    """Classify two code sections. Returns (class, detail)."""
+    """Classify two code sections. Returns (class, detail). Memoised on content:
+    the battle engine and its neighbours ship in forty-odd files each."""
+    k = (hashlib.sha256(x).digest(), hashlib.sha256(y).digest())
+    if k not in _CODE_MEMO:
+        _CODE_MEMO[k] = _code_diff(x, y)
+    return _CODE_MEMO[k]
+
+
+def _code_diff(x, y):
     wa = [w for (w,) in struct.iter_unpack("<I", x[:len(x) // 4 * 4])]
     wb = [w for (w,) in struct.iter_unpack("<I", y[:len(y) // 4 * 4])]
     na, nb = [norm(w) for w in wa], [norm(w) for w in wb]
     kinds = collections.Counter()
     changed = 0
-    blocks = []
+    blocks, values = [], []
+
+    def note(p, q, off):
+        k = word_kind(p, q)
+        kinds[k] += 1
+        if k in ("value", "branch") and len(values) < 40:
+            values.append((off, p >> 26, p & 0xFFFF, q & 0xFFFF))
+
     if na == nb:
-        for p, q in zip(wa, wb):
+        for i, (p, q) in enumerate(zip(wa, wb)):
             if p != q:
-                kinds[word_kind(p, q)] += 1
+                note(p, q, i * 4)
     else:
         sm = difflib.SequenceMatcher(None, na, nb, autojunk=False)
         for tag, i1, i2, j1, j2 in sm.get_opcodes():
             if tag == "equal":
-                for p, q in zip(wa[i1:i2], wb[j1:j2]):
+                for i, (p, q) in enumerate(zip(wa[i1:i2], wb[j1:j2])):
                     if p != q:
-                        kinds[word_kind(p, q)] += 1
+                        note(p, q, (i1 + i) * 4)
             else:
                 changed += max(i2 - i1, j2 - j1)
                 blocks.append((tag, i1 * 4, (i2 - i1) * 4, j1 * 4, (j2 - j1) * 4))
     real = kinds["value"] + kinds["branch"]
     detail = {"reloc_words": {k: v for k, v in kinds.items() if k not in ("value", "branch")},
               "value_words": kinds["value"], "branch_words": kinds["branch"],
-              "changed_words": changed, "blocks": blocks[:40], "n_blocks": len(blocks)}
+              "changed_words": changed, "blocks": blocks[:40], "n_blocks": len(blocks),
+              "values": values}
     if not changed and not real:
         return "layout", detail
     return "logic-code", detail
@@ -282,7 +306,7 @@ def classify(sa, sb, file_key):
             return r[0], "the enemy / formation table", r[1]
     if t == 1:
         return "layout", "compressed data", {"size": [len(x), len(y)]}
-    if is_code(x) and is_code(y):
+    if (da in CODE_DESTS and db in CODE_DESTS) or (is_code(x) and is_code(y)):
         cls, det = code_diff(x, y)
         what = "overlay code"
         if file_key.endswith("GAME.EMI"):
@@ -302,6 +326,29 @@ def classify(sa, sb, file_key):
         offs = [i for i, (p, q) in enumerate(zip(x, y)) if p != q]
         det["first"], det["last"] = (offs[0], offs[-1]) if offs else (None, None)
     return "logic-data", "data", det
+
+
+# ---------------------------------------------------------------- read by hand
+
+# Rows the automatic classifier cannot settle, read by hand (docs/region-diff.md
+# section 4 has what was read and how). (pair ids or None for any, file regex,
+# a-side dest, class, what). Applied after `classify`; the row keeps its
+# automatic class as `auto_class`.
+HAND = [
+    (None, r"ETC/(START|SHOP)\.EMI$", 0x801EEC00, "identity",
+     "the memory-card module: the save file name's product code"),
+    (None, r"ETC/[MR]TEST\.EMI$", 0x801D0C00, "text",
+     "a test module's labels, re-encoded byte for byte"),
+]
+
+
+def hand(pair, key, row):
+    for ids, rx, dest, cls, what in HAND:
+        if ids and pair not in ids:
+            continue
+        if re.search(rx, key) and (dest is None or int(row["a_dest"], 16) == dest):
+            row["auto_class"], row["class"], row["what"] = row["class"], cls, what
+            return
 
 
 # ---------------------------------------------------------------- the pair
@@ -333,6 +380,7 @@ def diff_pair(A, B):
                 row["b_hash"] = h16(y[3])
                 row["verdict"] = "differs"
                 row["class"], row["what"], row["detail"] = classify(x, y, key)
+                hand("%s_vs_%s" % (A.id, B.id), key, row)
             rows.append(row)
         res["files"][key] = rows
     return res
@@ -402,18 +450,40 @@ def cmd_pc(a):
     print("pc-zh vs psx-jp:", res["summary"])
 
 
-def cmd_files(a):
-    d = psx_disc.Disc(a.disc)
-    n = tot = 0
-    lines = []
-    for p in sorted(d.files):
-        b = d.read(p)
-        lines.append("%s\t%d\t%s" % (p, len(b), hashlib.sha256(b).hexdigest()))
-        n += 1; tot += len(b)
+def tree_files(path):
+    """(name, bytes) for every file of a disc image, or of a directory (a PC
+    install's DAT/), names relative and upper-case with forward slashes."""
+    if os.path.isdir(path):
+        names = sorted(os.path.relpath(os.path.join(r, f), path).replace("\\", "/").upper()
+                       for r, _, fs in os.walk(path) for f in fs)
+        for n in names:
+            with open(os.path.join(path, n), "rb") as f:
+                yield n, f.read()
+    else:
+        d = psx_disc.Disc(path)
+        for n in sorted(d.files):
+            yield n, d.read(n)
+
+
+def manifest(path, match=None):
+    """The per-file manifest: one `name<TAB>size<TAB>sha256` line per file, and
+    its own sha256 - the identity fixtures.toml records for a tree."""
+    lines = ["%s\t%d\t%s" % (n, len(b), hashlib.sha256(b).hexdigest()) for n, b in tree_files(path)
+             if not match or re.fullmatch(match, n)]
     body = "\n".join(lines) + "\n"
+    return body, len(lines), sum(int(l.split("\t")[1]) for l in lines), hashlib.sha256(body.encode()).hexdigest()
+
+
+# A PC install's DAT/ as shipped: our language overlays (<lang>.<NAME>.DAT,
+# tools/loc_build.py) sit beside the 742 originals and are not the build's.
+SHIPPED_DAT = r"[A-Z0-9_]+\.DAT"
+
+
+def cmd_files(a):
+    body, n, tot, h = manifest(a.disc, a.match)
     with open(a.out, "w", newline="\n") as f:
         f.write(body)
-    print("%d files, %d bytes; manifest sha256 %s" % (n, tot, hashlib.sha256(body.encode()).hexdigest()))
+    print("%d files, %d bytes; manifest sha256 %s" % (n, tot, h))
 
 
 def main():
@@ -423,7 +493,8 @@ def main():
     p.set_defaults(fn=cmd_pair)
     p = sub.add_parser("pc"); p.add_argument("--census", required=True); p.add_argument("--dat", required=True)
     p.add_argument("--disc", required=True); p.add_argument("--out", required=True); p.set_defaults(fn=cmd_pc)
-    p = sub.add_parser("files"); p.add_argument("disc"); p.add_argument("--out", required=True)
+    p = sub.add_parser("files"); p.add_argument("disc", help="a disc image, or a directory such as DAT/")
+    p.add_argument("--match", help="keep names matching this regex (DAT/: %r, the shipped files)" % SHIPPED_DAT); p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_files)
     a = ap.parse_args()
     return a.fn(a) or 0
