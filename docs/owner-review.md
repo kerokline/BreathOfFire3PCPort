@@ -25,7 +25,17 @@ where the reading behind it is. Nothing here is a divergence until it is in
   the plan waits on** (section 10 there): the disc's music as an option, a
   measured loop-point table for the MP3s as the cheap fix, or both; and the
   decoder swap's target is now known (MPEG-1 Layer III, 44.1 kHz, 128 kbit/s
-  CBR, plain stereo, no tags).
+  CBR, plain stereo, no tags). **The owner heard it (2026-10-06 night):**
+  quality close, the seams very noticeable - **the loop fix is built as
+  DIV-0081** (13 tracks today; the rest measured tomorrow). Next for the ear:
+  `analysis/bgm/listen/153_loop_fixed.wav`, the battle theme spliced the
+  engine's way (the join at 23.6 s), and then the game itself with
+  `BOF3X_MUSIC_LOOPS` on against `=0`. **One decision:** the town theme
+  `000`'s file is 0.44 s shorter than one loop, so no correct loop exists in
+  it; the ways on are to accept the rewind for that song, a stretched loop,
+  or samples from outside the file (a render is audio derived from the
+  game's data and ships nowhere, rule 1; a re-encode the player makes would
+  be their own). Undecided.
 
 ## To review in play
 

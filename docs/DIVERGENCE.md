@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 80 entries, DIV-0001..0080, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 81 entries, DIV-0001..0081, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4232,3 +4232,51 @@ designed in rather than bolted on.
   poll on an area-load boundary (area `0x0002` against the `0xffff` marker),
   not game state.
 - **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded.
+
+### The music loops inside its file, at the points the disc's sequence loops
+
+- **ID:** DIV-0081
+- **Date:** 2026-10-06
+- **Subsystem:** the music pump (`Music_Decode` `0x5A6F30`'s end-of-stream
+  path, ours in `src/game/sound.cpp`; the new `src/game/music_loops.cpp` with
+  its generated table `music_loops_table.inc`)
+- **Tier:** Intent - the owner, 2026-10-06, after the listening set: "the
+  quality between the mp3 / disc isn't that bad, but the seams are *very*
+  noticeable - I noticed the combat one in game, but the town music is also
+  really noticeable side by side."
+- **Original behaviour:** a looping track's decoder is rewound to the file's
+  start when the stream ends: the intro replays on every pass (7.4 s on the
+  battle theme), a file cut mid-pass jumps from mid-phrase to the intro, and
+  the join is a cut plus the file's lead-in (6..23 ms of near-silence). The
+  PlayStation's sequences loop to a point inside the song
+  ([`bgm-comparison.md`](bgm-comparison.md) sections 7 and 12.1).
+- **New behaviour:** with `BOF3X_MUSIC_LOOPS` on (the default; armed after
+  every module's self-test), a track with a measured row loops from the row's
+  end back to its start inside the file, sample-accurate - the decoder is
+  rewound and the frames before the loop start discarded, so the samples
+  after the jump are the first pass's bit for bit - with a 2.9 ms crossfade
+  at the join (5.8 ms on a row shifted to fit a file cut short of one body,
+  the battle theme today). A track without a row rewinds as before. Thirteen
+  tracks have rows today (`003 014 036 051 060 063 064 079 082 085 090 144
+  153`); the full measurement of the 156 looping songs is paused for a
+  machine left on (section 11's resume command). The town theme `000` is
+  **excluded**: its file is 0.44 s shorter than one loop period, so no
+  correct loop exists inside it - the owner's decision (section 11.3).
+- **Rationale:** the owner's words above; the measurement that the disc
+  loops inside the song. The table is our own measurement, regenerable from
+  `analysis/bgm/loops.json` by `tools/bgm/gen_loop_table.py`; it holds
+  sample positions, not game data.
+- **Also in the PSX version?** The PlayStation plays the sequence, which
+  loops at these points by its own markers; the PC's rewind is the port's.
+  This restores the disc's loop structure on the PC's recordings.
+- **Verification:** `tools/bgm/prove_loops.py` splices each row the engine's
+  way and scores the first second after the join against the disc's render
+  or the file's own continuation: the battle theme from -0.10 with 809
+  near-silent samples to 0.63 with no gap; the eleven in-file rows from
+  -0.14..0.22 to 0.977..0.989. `BOF3X_SHADOW=sound` loops a stand-in decoder
+  sample-exactly in four call patterns and checks every row; `'*'` narrow
+  passed on the agent's tip and the `sound` module at the merged tip.
+  **Not yet heard in the game**: `analysis/bgm/listen/153_loop_fixed.wav` is
+  the offline splice for the owner's ear; whether replaying the intro's
+  frames at each loop causes a hitch in play is unmeasured.
+- **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
