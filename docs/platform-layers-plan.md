@@ -181,7 +181,10 @@ state hash's doc) - a small piece of work to do before it is needed.
    with real numbers, and round fourteen's debt about the unread "renderer"
    rows closed.
 2. **The small layers and the renderer's live remainder** - one round on the
-   existing pattern (section 2.1, 2.2).
+   existing pattern (section 2.1, 2.2). **Done 2026-10-05 night**
+   ([`platform-round.md`](platform-round.md)): the 40 and thirteen more the
+   catalogue never held (game modes 3..6), 10,065 ours; the software path
+   settled original-only. The state hash is its live check.
 3. **The runtime boundary** (section 2.3) - `rand` first, because the
    recipes hang on it.
 4. **The music investigation** (I23; section 5), which decides what section

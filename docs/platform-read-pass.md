@@ -1,6 +1,6 @@
 # The platform layers' read pass: what of Capcom's code still runs under ours
 
-**Status:** WORKING (2026-10-05: step 1 of [`platform-layers-plan.md`](platform-layers-plan.md) section 4 measured at `main` `2df90d9`, 10,009 ours; the per-function reading of the live rows is still to do)
+**Status:** MEASURED (2026-10-05: step 1 of [`platform-layers-plan.md`](platform-layers-plan.md) section 4 measured at `main` `2df90d9`, 10,009 ours; step 2 ran the same night on this table - [`platform-round.md`](platform-round.md) - and corrected it in three places, section 7)
 
 [`platform-layers-plan.md`](platform-layers-plan.md) section 1 counted what
 round fourteen leaves in `BOF3.exe` by address range and said what the
@@ -190,3 +190,18 @@ runs in a recorded fight.
 - Whether ours can run with the software render flag set (section 2).
 - `0x5B281C`'s identity as the decoder thread is from its caller being 0
   and its range; not read.
+
+## 7. Corrected by step 2 (2026-10-05 night, [`platform-round.md`](platform-round.md))
+
+- **Section 2's `0x587C20` was not original but held**: its callers
+  `0x495C27` / `0x495D26` sit in game-mode 3's steps, which had no symbol
+  because `pc_funcs.json`'s extent for `GameMode_Field` `0x4959F0` (2,139
+  bytes) swallowed modes 3..6 and their nine steps. **Thirteen functions
+  outside every catalogue**, taken as group PM; the 432 armed entries never
+  included them, so no trace here saw them.
+- **Section 2's open question on the software surfaces is answered**: the
+  flag's only setter is inside Capcom's `Display_Setup` (ours since
+  DIV-0031), so the 32 are original-only.
+- **`0x59E930` is `Gfx_StoreImage`** (PSX library by nature); **`0x5A6830`
+  is `Snd_Init`**, sound alone; of the shell's seven only `Disc_Probe` calls
+  Windows.
