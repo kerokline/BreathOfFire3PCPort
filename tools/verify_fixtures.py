@@ -8,6 +8,13 @@ against (docs/STATUS.md, open decisions).
     python tools/verify_fixtures.py                     # check the defaults
     python tools/verify_fixtures.py --exe bof3/BOF3.exe
     python tools/verify_fixtures.py --list              # what is catalogued
+    python tools/verify_fixtures.py --tree "CDImage/Breath of Fire III (USA).cue"
+    python tools/verify_fixtures.py --tree bof3/DAT
+
+`--tree` hashes every file of a disc image (.cue / .bin / .iso) or a directory
+and names the build whose per-file manifest (fixtures/*.files.tsv) it matches,
+file by file - the identity layer of docs/ASSET_SOURCES.md section 1. A disc's
+.STR files are hashed as tools/psx_disc.py reads them (2,048 bytes a sector).
 
 An unrecognised hash is reported as unrecognised, not wrong. It may be a build
 nobody has catalogued; that is an issue to open, not a row to edit.
@@ -32,8 +39,48 @@ def digests(path, want):
     return n, {k: d.hexdigest() for k, d in h.items()}
 
 
+def check_tree(fx, path):
+    """Match a tree against every catalogued manifest; 0 if one matches whole."""
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    import region_diff
+    best, trees = None, {}
+    for b in fx["build"]:
+        for name, art in b.get("artifacts", {}).items():
+            if "manifest" not in art:
+                continue
+            want = {}
+            with open(os.path.join(ROOT, art["manifest"]), newline="") as fh:
+                for line in fh.read().replace("\r\n", "\n").splitlines():
+                    n, size, h = line.split("\t")
+                    want[n] = (int(size), h)
+            m = art.get("match")
+            if m not in trees:
+                body = region_diff.manifest(path, m)[0]
+                trees[m] = {n: (int(s), h) for n, s, h in (l.split("\t") for l in body.splitlines() if l)}
+            got = trees[m]
+            same = sum(1 for n in want if got.get(n) == want[n])
+            if best is None or same > best[0]:
+                best = (same, b["id"], name, art, want, got)
+    if best is None:
+        print("?  no manifest in fixtures.toml")
+        return 1
+    same, bid, name, art, want, got = best
+    missing = [n for n in want if n not in got]
+    differ = [n for n in want if n in got and got[n] != want[n]]
+    extra = [n for n in got if n not in want]
+    if not missing and not differ and not extra:
+        print("OK %s: all %d files match %s:%s" % (path, len(want), bid, name))
+        return 0
+    print("?  %s: closest is %s:%s - %d of %d files match, %d differ, %d missing, %d not catalogued"
+          % (path, bid, name, same, len(want), len(differ), len(missing), len(extra)))
+    for n in (differ + missing + extra)[:20]:
+        print("   ", n)
+    return 1
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--tree", help="a disc image or a directory to identify by its per-file manifest")
     ap.add_argument("--fixtures", default=os.path.join(ROOT, "fixtures.toml"))
     ap.add_argument("--exe", help="path to check as the PC port executable")
     ap.add_argument("--psx-exe", help="path to check as the PSX boot EXE")
@@ -42,6 +89,9 @@ def main():
 
     fx = tomllib.load(open(a.fixtures, "rb"))
     builds = {b["id"]: b for b in fx["build"]}
+
+    if a.tree:
+        return check_tree(fx, a.tree)
 
     if a.list:
         for b in fx["build"]:

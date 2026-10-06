@@ -1,0 +1,2 @@
+# The per-file manifests' own sha256 in fixtures.toml is over LF line ends.
+fixtures/*.tsv text eol=lf
