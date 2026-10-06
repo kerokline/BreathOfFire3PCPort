@@ -139,13 +139,47 @@ word and the ledger's count were corrected (`0158931`'s successor).
 PH's nine and PM's thirteen lines appended 2026-10-05 night (10,662 ->
 10,686); PW's and PL's were present already.
 
-## 6. Next
+## 6. The live check: the state hash (2026-10-05 night, `live_plat.sh`)
 
-1. **The state hash, the machine quiet**: the attract sequence and the ten
-   routes against the 168-range references (`state-hash.md` section 6),
-   `BOF3X_LAYERING=0`, Chinese. The shell seven, `Snd_Init` and modes 3 and
-   5 run on every route, so this is their first live check; TILE_1 in
-   `whelpBoss`; `Gpu_SetTexWindow` there too.
+Ours at `cdcadb9`'s build (this session's `launcher/`), Chinese, narrow,
+`BOF3X_LAYERING=0`, against the 168-range reference pairs of
+[`state-hash.md`](state-hash.md) section 6; the shop with `--slot0-hold`
+(section 5 there). **Every one of the ten routes replays to `done` with the
+references' `Rand` count** (combat 2,017, worldMap 11,040, caughFish 4,436,
+masterAndManillo 3,009, dragonTransform 72,754, cutsceneAndNue 204,
+whelpBoss 22,315, shop 2,075, the two menus 112) and is **identical on every
+page but one**: `0x7DE000` - `Snd_BufferDesc`, `Snd_WaveFormat`,
+`Music_Events`, `Snd_Device` - differs intermittently from the first ticks on
+every route (combat 348 of 2,561 ticks from tick 28; whelpBoss 5,438 of
+13,121). Last night's 10,009 was identical there, so it is tonight's
+`Snd_Init` or its neighbours; the bytes are being read (a drill with raw
+dumps at ticks 28 and 300, both sides) - section 6.1 when known. The first
+ticks' VRAM-shadow and `0x937000` pages (menu_screens, field_menu,
+whelpBoss, tick 3 only) are the start-up timing noise round fourteen's 13.1
+describes.
+
+**The attract sequence: identical on all 10,305 ticks, and the oracle
+identical at every logged frame** - on the second run. The first run, with
+the window not in front (`--no-front`) and the owner at the keyboard, left
+the title at frame 1506 for area `0x1B` with 110 `Rand`s at once (a press at
+the title); a control run of last night's 10,009 build, also unfocused,
+reached area 4 at frame 1228 against the focused references' 1311 - **the
+attract sequence's frame alignment depends on the window being in front**
+(the intro videos' frames, DIV-0049's path), and both reference pairs were
+recorded in front. **A trap:** the attract side of a state-hash check runs
+with the window in front and nobody at the keyboard; the routes do not care
+(the recipe owns the pad). The three tsvs are `attract_plat_ours` (the first
+run), `attract_ctl10009_ours` (the control), `attract_plat_oursf` (the pass).
+
+So, live: the shell seven, `Snd_Init`, game modes 3 and 5 and 4 and 6 run on
+every route and the attract sequence and match Capcom's frame for frame on
+every page but the sound page under investigation; TILE_1 and
+`Gpu_SetTexWindow` in `whelpBoss` likewise.
+
+## 7. Next
+
+1. Section 6.1: the sound page's bytes, then whatever they say (a fix of
+   ours, a skip-list line with its reason, or a ledger entry).
 2. The plan's step 3: the runtime's seventeen entry points, `rand` first.
 3. The owner's calls in section 4; the mode-rest scan for other hidden
    starts (section 2).
