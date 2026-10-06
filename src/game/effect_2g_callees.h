@@ -11,7 +11,7 @@ namespace effect_2g::at {
 // --- callees nobody names, called by address (SH_AT); the effect-standard set
 // lists both (scenario_harness.cpp kEffectStd) ------------------------------
 constexpr std::uint32_t kBox = bof3::addr::Menu_DrawPanelBox;   // (x, y, w, h, style) five words: a menu box (kind 0x55's two)
-constexpr std::uint32_t kPrimFromRect = 0x5A7840;  // (unsigned char *prim, const short *rect): a 12-byte texture-window
+constexpr std::uint32_t kPrimFromRect = bof3::addr::Gpu_SetTexWindow;  // (unsigned char *prim, const short *rect): a 12-byte texture-window
                                                    // primitive of the rectangle (effect_1a_callees.h kPrimFromRect)
 
 // --- kind 0x66 (area 135's): the window's rectangle and the pieces' .data --

@@ -36,7 +36,7 @@ constexpr std::uint32_t kKind07Sprite = bof3::addr::EffectKind07_DrawSprite;
 // above 0x7F takes two); the library layer's primitive from a RECT (prim, rect),
 // 12 bytes written.
 constexpr std::uint32_t kStringCount = bof3::addr::EffectKind0F_CharCount;
-constexpr std::uint32_t kPrimFromRect = 0x5A7840;
+constexpr std::uint32_t kPrimFromRect = bof3::addr::Gpu_SetTexWindow;
 
 // --- the image's tables, read in place (never copied) ------------------------------
 constexpr std::uint32_t kRecordSlot4 = 0x653914;    // WorldMap_Records' +4 (kind 0xE's handler)

@@ -82,8 +82,8 @@ constexpr std::uint32_t kClutEnd = 0x812B80;
 // MagicFx_FreeCurrentRecord, a pool slot's free, is ours now and by name):
 //   0x5A76F0  a POLY_G4-shaped setter, code 0x5C, the four z at +0x10 ..;
 //   0x5A7570  POLY_F3's setter, code 0x20, the three z at +0x10, +0x1C, +0x28.
-constexpr std::uint32_t kSetPoly5C = 0x5A76F0;
-constexpr std::uint32_t kSetPolyF3 = 0x5A7570;
+constexpr std::uint32_t kSetPoly5C = bof3::addr::Gpu_SetLineG4;
+constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
 using VoidFn = void (__cdecl*)();
 using PrimFn = void (__cdecl*)(unsigned char*);
 

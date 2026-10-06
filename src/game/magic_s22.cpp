@@ -131,7 +131,7 @@ void DrawMode(unsigned tpage) { MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, t
 
 // The PSX's SetPolyFT3 (POLY_FT3's code 0x24 at +7, the float 0.01 to +0x10,
 // +0x20, +0x30) - Capcom's, unnamed, in no group.
-constexpr std::uint32_t kSetPolyFT3 = 0x5A7590;
+constexpr std::uint32_t kSetPolyFT3 = bof3::addr::Gpu_SetPolyFT3;
 // Rotates the dx / dz pair +0xC / +0x10 of the task it is given by its
 // direction byte +8 - Capcom's, unnamed, in no group (docs/magic_s22.md).
 constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;

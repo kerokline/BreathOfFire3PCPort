@@ -161,6 +161,6 @@ constexpr std::uint32_t kHoldButton121 = bof3::addr::Area121_Request4Button;
 constexpr std::uint32_t kTurnKeys121 = bof3::addr::Area121_TurnInput;
 constexpr std::uint32_t kGaugeFrame121 = bof3::addr::Area121_GaugeSprite;
 constexpr std::uint32_t kKind5CState4 = bof3::addr::Area121_RingRise;
-constexpr std::uint32_t kSetPolyF3 = 0x5A7570;
+constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
 
 }  // namespace area_w2e

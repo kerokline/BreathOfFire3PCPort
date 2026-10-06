@@ -17,11 +17,11 @@ constexpr std::uint32_t kSparkInit = bof3::addr::EffectGlowSparks_StartRise;    
 constexpr std::uint32_t kSparkDraw = bof3::addr::EffectGlowSparks_Draw;     // 0x4792E0, R3E's (round fourteen): (unsigned char *spark): sixteen Gouraud
                                                    // triangles round the spark's point +0xC (EffectGte_ProjectSize of a
                                                    // size 0x20, EffectGte_ProjectPoint), shaded +3 at the centre
-constexpr std::uint32_t kSqrt = 0x5A7A90;          // library layer: (long v): fild, fsqrt, _ftol - eax the root
+constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;          // library layer: (long v): fild, fsqrt, _ftol - eax the root
 
 // Library layer (no name): (unsigned char *prim, const unsigned char *rect):
 // prim +4 = 0xF0000000, prim +8 = rect's address.
-constexpr std::uint32_t kPrimRect = 0x5A7840;
+constexpr std::uint32_t kPrimRect = bof3::addr::Gpu_SetTexWindow;
 
 // Data.
 constexpr std::uint32_t kCounter0 = 0x903848;      // the chapters' counter byte (scenario_harness at::kCounter)

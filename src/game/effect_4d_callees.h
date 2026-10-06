@@ -6,10 +6,12 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace effect_4d::at {
 
 // --- library layer (nobody's), the effect-standard set lists it ------------------
-constexpr std::uint32_t kMatrixVector = 0x5A7C70;   // (matrix, in, out): an SVECTOR turned by the 3 x 3 (18 bytes read),
+constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;   // (matrix, in, out): an SVECTOR turned by the 3 x 3 (18 bytes read),
                                                     // 6 bytes written; in and out may be one (effect_1c_callees.h)
 
 // --- cells ------------------------------------------------------------------------

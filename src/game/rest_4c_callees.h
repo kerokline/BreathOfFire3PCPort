@@ -5,6 +5,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace rest_4c::at {
 
 // --- callees of other groups (wave four, called raw) ---------------------------
@@ -29,7 +31,7 @@ constexpr std::uint32_t kSecret = 0x45C850;
 // 0x5A7570: a POLY_F3's set-up - code byte +7 = 0x20 and the three vertices'
 // z floats (+0x10, +0x1C, +0x28) set; (unsigned char *prim). The effect
 // standard set lists it (FxPrim0_44); this group lists it itself (field mode).
-constexpr std::uint32_t kSetPolyF3 = 0x5A7570;
+constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
 
 // --- the cells -------------------------------------------------------------------
 //

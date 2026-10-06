@@ -307,6 +307,7 @@
 #include "game/rest_4c.h"
 #include "game/rest_4b.h"
 #include "game/shell.h"
+#include "game/psx_rest.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1386,6 +1387,10 @@ void InjectAll() {
                                 // Cfg_Load, Game_Init, Gfx_InitBufferBlock, Gfx_LinkOTags, Disc_Probe,
                                 // Cfg_SetDefaultKeys): its clones' calls re-aimed at its own recorders; no module
                                 // clones them; before FishingText_Arm (docs/shell.md)
+    PsxRest_Inject();           // the platform round's group PL (docs/psx-rest.md: three libgpu setters, the texture
+                                // window, SquareRoot0, ApplyMatrixSV and the teardown chain): every caller of the
+                                // seventeen is ours and calls them by address, so after every module whose fuzz
+                                // stands them in or runs Capcom's
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

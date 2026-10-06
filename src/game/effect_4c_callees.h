@@ -16,7 +16,7 @@ constexpr std::uint32_t kScreenTile = bof3::addr::Effect_DrawScreenTint;     // 
                                                     // states 1 and 2 jump to it
 
 // --- library layer (nobody's) ---------------------------------------------------
-constexpr std::uint32_t kPolyF3 = 0x5A7570;         // (unsigned char *prim): a flat triangle's code byte +7 0x20 and its
+constexpr std::uint32_t kPolyF3 = bof3::addr::Gpu_SetPolyF3;         // (unsigned char *prim): a flat triangle's code byte +7 0x20 and its
                                                     // three depth floats set (effect_3c_callees.h)
 
 // --- cells ------------------------------------------------------------------------
