@@ -68,8 +68,21 @@ where the reading behind it is. Nothing here is a divergence until it is in
   `AREA004` section 8 (992 bytes) and one cue byte in 65 dragon and Ryu sound
   banks; only the PC, built from JP, lacks them (two more kinds are Western-
   or FR/DE-only). Should the cache's `base/` keep JP's rows, or take the later
-  version as a ledgered divergence? What the rows do in game is not yet read -
-  the owner may want that first.
+  version as a ledgered divergence? **Read 2026-10-06** (section 8 there):
+  `AREA004` is Dauna Mine's minecart area; its section 8 walls 72 cells that
+  fill gaps between wall stubs JP already placed (column x28 at z 9..30 and
+  35..65 with the doorway at z 32..33 kept, column x25 at z 9..11, row z71 at
+  x 7..22) plus a 30-cell texture fix, and section 10 closes the same cells
+  to battle placement - **a collision bug fix**, taken by every later build
+  (the PSP took the walls but not the placement half). The cue byte is a PSX
+  sound-priority fix the PC's sound code never reads; the PAL sample swap is
+  regional with no clear purpose (keep JP/US). The owner's rule: a bug fix is
+  worth keeping as the default. Two ways to build it: an overlay chunk from
+  the player's own later disc (needs that disc), or our own fix in code - the
+  72 cells blocked and the 8 placement cells closed by coordinate, a
+  divergence with the later discs as precedent, for every player. Area 4 is
+  in the attract demo, so the state hash's reference runs want the switch off.
+  **Waiting on the owner's choice of form.**
 
 ## Debt 3: measured by a log line, review the log
 
