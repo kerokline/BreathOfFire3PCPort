@@ -676,6 +676,9 @@ _Verified 2026-09-24._
   the build's output; resolve `symbols.toml` by entry, keyed on `pc`, then
   a `tomllib` check; `CMakeLists.txt` and `inject_all.cpp` want both sides.
   One live batch after the merge.
+- **A suspected bug against the PlayStation:** read the twin ([`psx-twin-check.md`](psx-twin-check.md)) - the sibling's
+  `tools/disc_ls.py --extract` and `tools/emi.py list`, capstone MIPS32 LE; find it by the caller's constants, not the
+  function's (GCC folds small compares). Same on the PSX = Capcom's, a DIV; different = the port's, a restoration.
 - **Other:** `save_convert.py` (docstring; `cygpath -m` paths in Git Bash);
   `crash_report.py` after `CRASH` lines; `loc_build.py all --disc
   "CDImage/Breath of Fire III (USA).cue" --game bof3` (a minute, 244
