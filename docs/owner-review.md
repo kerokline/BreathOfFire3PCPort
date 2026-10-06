@@ -44,6 +44,19 @@ where the reading behind it is. Nothing here is a divergence until it is in
    point). Owed the owner's eye in play: the dream scene after the whelp
    fight, or any Kaiser cast.
 
+5. **Lines drawn one screen pixel wide** (the owner's note, 2026-10-06: the
+   fishing gauge's thin orange bar "looks like it's supposed to be a bit
+   thicker"). Measured the same day on the `caughFish` route's frame 1680
+   (`analysis/shots/fish_1006_every60/f01680.png`, the PLAYER vs FISH gauge
+   at 4x): the dark red line under the green bar and the gauge's grey centre
+   mark are each one screen pixel, at a window scale of about 3.3. They are
+   PlayStation LINE primitives (`LINE_F2` here; `D3d_DrawLineF2` / `_F4` in
+   `d3d_draw.cpp`, `_G4` in `d3d_rest.cpp` draw a `LINESTRIP`, which Direct3D
+   rasterises one pixel wide at any scale) - **the TILE_1 class again
+   (DIV-0077), for lines**. A fix is each segment as a quad of the scale's
+   width (every line in the game: the fishing gauge, the fishing grey lines,
+   magic trails). **The owner's call**; nothing built.
+
 ## Debt 3: measured by a log line, review the log
 
 - `PartyAction_SpawnKind1B` `0x5252B0` now logs `debt3` when
