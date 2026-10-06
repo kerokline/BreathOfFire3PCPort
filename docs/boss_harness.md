@@ -677,7 +677,7 @@ reads: a byte or short where its first read of the word is one, capstone):
 | items, stats | `Inventory_Add`, `_Remove`, `Item_CanUse`, `Stat_AddCap999` (`kFlag`); `Item_EquipMask`, `Item_IconKind`, `Stat_AddClamped`, `PartySet_Select`, `Equip_PreviewSet` (its two out-pointers mask 0: **the group's** - the recorder does not fill them) | garbage |
 | sprites, sound, tasks | `Sprite_ReleaseTint`, `_AnimFromSet`, `_LoadPalette`, `_SetClutStp`, `Sprite_SetTint` (`kFlag`), `Sound_StopChannels`, `Task_Restart` | garbage |
 | the GTE (BE6's BMAGIC) | `Gte_LoadVertex`, `_LoadVertices3`, `_Rtps`, `_Rtpt`, `_StoreScreenXY`, `_StoreScreenXY3`, `_StoreDepthF4`, `_PrimDepths4_10`, `_PrimDepthFlat4_10`, `_RotMatrix`, `_MulMatrix0`, `_RotTransPers`, `_RotTransPers4` | **`kThrough`**: the callers read results back through pointers into their own frames. The five matrix calls of `kStandard` (`Gte_PushMatrix` ... `Gte_SetTransMatrix`) stay recorders, so the matrix the real ones use is whatever it was - the same on both passes; BE6 lists the family itself if it wants them all one way |
-| Capcom's, by address | `0x446F20` / `0x446F50` / `0x446F80` ((a x b) / 100 clamped to 999 / 9999 / 100), `0x5B9450` (the CRT's `memcpy`), `0x494E70` (the eight enemies' `+0..+3` zeroed, compared) | **`kThrough`** |
+| Capcom's, by address | `0x446F20` / `0x446F50` / `0x446F80` ((a x b) / 100 clamped to 999 / 9999 / 100), `0x5B9450` (the CRT's `strncpy`, `Crt_strncpy`), `0x494E70` (the eight enemies' `+0..+3` zeroed, compared) | **`kThrough`** |
 | | `0x42E0E0`, `0x42E250`, `0x437230`, `0x441510`, `0x44FB30` (none); `0x42E2F0`, `0x452EB0`, `0x452F10` (`al`, `kFlag`); `0x452DD0` (1, `kFlag`); `0x44F1D0`, `0x4CF4B0` (2); `0x44F6A0` (2, the first unread, `kFlag`); `0x590E80` (3: a stat add with a cap); `0x591810` (two bytes, `kFlag`); `0x59DB70` (6) | garbage unless said |
 
 Of `kStandard`, the engine groups reach `Sound_PlayEffect` (83 sites),
@@ -887,3 +887,40 @@ verified by the i686 build; the `'*'` run at the tip is the owner's):
   moving the gene count: one caller, reach not correctness) and the groups'
   answer-range effects (`Battle_ActorIsOut`'s ruled-in actor, the target
   helpers' ranges) stay the groups' own.
+
+### 10.11 Round fourteen's fold (2026-10-05)
+
+The harness items of [`takeover-queue-round14.md`](takeover-queue-round14.md)
+(debts 14 and 21) in `kEngineStandard`, on `phase-3/round14-end` at
+`e3b98087`; [`scenario_harness.md`](scenario_harness.md) section 8.11 has the
+other harness's half and the proof.
+
+- **Sixteen raw rows as `BH_OURS`**, the address kept in each comment: R3A's
+  three `BattleExtra_EquipSetupWindows` `0x42E0E0`, `_EquipCommit`
+  `0x42E250`, `_EquipRefresh` `0x42E2F0`; R3B's three `kThrough` clamps
+  `Stat_PercentCap999` / `9999` / `100` (`0x446F20`, `0x446F50`,
+  `0x446F80`: both sides still run the real code - ours by the key, the copy
+  by the address, which Inject points at ours); R3D's three
+  `Battle_InflictStatus` `0x44F1D0`, `Battle_StatusResisted` `0x44F6A0`,
+  `Effect_NoHitReaction` `0x44FB30`; R3G's two `BattleEnemy_ClearStates`
+  `0x494E70` (`kThrough`) and `Quake_VertexLift` `0x4CF4B0`; R4A's three
+  `Battle_AutoTargetCheck` `0x452DD0`, `Battle_RandomLiveMember` `0x452EB0`,
+  `Battle_RandomLiveEnemy` `0x452F10`; and two of wave two's,
+  `Stat_AddClampedTo` `0x590E80` (R2F) and `BattleEquipWin_DrawBar`
+  `0x59DB70` (R2H). Masks and answers as they were but one (below). The
+  boss files' and BE groups' `BH_AT` calls by address resolve through the
+  row's address (`StandIn`'s second pass), a call by name through the key,
+  as 10.10's five. Left keyed by address, Capcom's: `0x591810` and the CRT's
+  `memcpy` `0x5B9450` (`kThrough`).
+- **`Battle_InflictStatus`' mask** `{kAll, kAll}` to `{kU8, kU16}` (R3D's
+  reading, `rest_3d.md` section 9): the target is read as its byte (`cmp bl,
+  2` at `0x44F1D6`, `and esi, 0xFF` for the record's offset) and handed on
+  whole only to callees that read its byte (`Battle_LacksAccessory`,
+  `_LacksArmour`, `Battle_ClearStatus`, `_ReturnQueuedItem`,
+  `_RemoveFromTurnOrder`); of the status, the byte (`mov al, byte [esp +
+  0x10]` at `0x44F211`) and bit 0x800 of the word.
+
+The proof is the same `'*'` runs: 8.11's proof; the
+engine groups' counts are unchanged, only the stand-ins' log names
+(`battle_e1`, `battle_e5`, `rest_3b`, `rest_3c` coverage), every line 0
+mismatches narrow and wide.

@@ -41,8 +41,8 @@ constexpr ah::CallSite kCallsGather[] = {{0x8, 0x57C0F0}, {0x1B, 0x57C140}, {0x3
 // ---- area 57 ----
 constexpr ah::CallSite kCalls40B230[] = {{0x2C, 0x57CE10}};
 constexpr ah::CallSite kCalls40B280[] = {{0x2C, 0x57CE10}};
-constexpr ah::CallSite kCalls40B2D0[] = {{0x0, 0x587B80}};
-constexpr ah::CallSite kCalls40B2E0[] = {{0x0, 0x587B90}};
+constexpr ah::CallSite kCalls40B2D0[] = {{0x0, bof3::addr::Sound_StopMusic}};
+constexpr ah::CallSite kCalls40B2E0[] = {{0x0, bof3::addr::Sound_ResumeAll}};
 // ---- area 59 ----
 constexpr ah::CallSite kCalls40B360[] = {{0x6, 0x579F00}, {0x11, 0x579F00}, {0x1C, 0x579F00}, {0x27, 0x579F00}, {0x32, 0x579F00}, {0x3D, 0x579F00}};
 constexpr ah::CallSite kCalls40B3B0[] = {{0x9, 0x579F00}, {0x17, 0x579F00}, {0x25, 0x579F00}, {0x33, 0x579F00}, {0x41, 0x579F00}, {0x4F, 0x579F00}};
@@ -259,7 +259,7 @@ const ah::Callee kCallees[] = {
     {W1D_OURS(AreaMap_Elevation), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     // a slot 0..2, or none (0xFF)
     {W1D_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02, {}, &MovesCurrent},
-    {W1D_THEIRS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
+    {W1D_OURS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W1D_OURS(Inventory_Count), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountAnswer},
     {W1D_OURS(Inventory_Remove), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W1D_OURS(Item_NamePtr), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &NameEffect},

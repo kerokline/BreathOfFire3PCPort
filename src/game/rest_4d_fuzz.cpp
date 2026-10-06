@@ -313,6 +313,17 @@ U NthMemberAnswer(const U*, U answer) {
     return n % 3 == 0 ? 0xFF : answer;
 }
 
+// R4E's 0x45EE10 (a member's panel): one call in four the cursor moved to 0..7
+// after it (CommuName_MemberPanelOut compares each record's place with the
+// cursor again after every panel; the group's case 3 alone reached that 3
+// times in 4,000 rounds: N70). Never while CommuDraw_Pick runs (it indexes by
+// the cursor; it calls no panel either).
+U MemberPanelMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 4 == 0 && kAll[g_clone].base != 0x45C960) B(at::kCursor) = static_cast<unsigned char>((n >> 8) % 8);
+    return answer;
+}
+
 #define R4D_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr U kW = 0xFFFFFFFFu;
@@ -333,7 +344,7 @@ const sh::Callee kCallees[] = {
     {"0x45EC00", at::kListPiece, at::kListPiece, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},     // R4E: movsx words, and 0xFF
     {"0x45ECC0", at::kSlotHand, at::kSlotHand, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},       // R4E: movsx words, mov al
     {"0x45ED70", at::kRandomName, at::kRandomName, 0, {}, kG, 0, 0, {}, &RandomNameAnswer},
-    {"0x45EE10", at::kMemberPanel, at::kMemberPanel, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},   // R4E: as 0x45E870
+    {"0x45EE10", at::kMemberPanel, at::kMemberPanel, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &MemberPanelMove},   // R4E: as 0x45E870
     {"0x45EF90", at::kMemberPanels, at::kMemberPanels, 0, {}, kG, 0, 0},
     {"0x45F000", at::kMemberCount, at::kMemberCount, 0, {}, kG, 0, 0, {}, &NearCursor},
     {"0x45F020", at::kNthMember, at::kNthMember, 1, {0xFF}, kG, 0, 0, {}, &NthMemberAnswer},   // R4E: mov bl, [esp + 8]
@@ -467,7 +478,54 @@ void Args(unsigned k, U* a) {
     }
 }
 
+// DIV-0075's row, beside the fuzz (the form of DIV-0063's in battle_e6_fuzz.cpp).
+// The self-test above compares Capcom's two entry steps with the switch off;
+// this runs once Rest4D_Inject has set it, so ours moves the step on. There is
+// no original that does: what the entry says ours must do is Capcom's step
+// and then 0x939A3F one more - no other byte, no other call, the answer still
+// BareRetZero's. So each of ours is wrapped to take that one step back and
+// fuzzed against Capcom's as the group's own rows are (the same seed, moves,
+// stand-ins and regions): a wrapper that matched with the switch on would
+// mean ours does not move the step, or moves more.
+void __cdecl SlotEntryAbandoned() {
+    ::CommuName_SlotEntry();
+    B(at::kStep2) = static_cast<unsigned char>(B(at::kStep2) - 1);
+}
+void __cdecl MemberEntryAbandoned() {
+    ::CommuName_MemberEntry();
+    B(at::kStep2) = static_cast<unsigned char>(B(at::kStep2) - 1);
+}
+
 }  // namespace
+
+void EntryAbandonTest() {
+    struct Row { U base; const void* wrapper; };
+    static const Row kRows[] = {
+        {0x45D730, reinterpret_cast<const void*>(&SlotEntryAbandoned)},     // CommuName_SlotEntry
+        {0x45E2C0, reinterpret_cast<const void*>(&MemberEntryAbandoned)},   // CommuName_MemberEntry
+    };
+    static sh::Clone chosen[2];
+    static unsigned index[2];
+    const char* const only = std::getenv("BOF3X_R4D_ONLY");
+    unsigned n = 0;
+    for (const Row& r : kRows)
+        for (unsigned k = 0; k < kCount; ++k)
+            if (kAll[k].base == r.base && (!only || !*only || std::strstr(kAll[k].name, only))) {
+                index[n] = k;
+                chosen[n] = kAll[k];
+                chosen[n++].ours = r.wrapper;
+            }
+    if (n == 0) return;
+    static unsigned* s_index = index;
+    sh::Group g = {"rest_4d DIV-0075", chosen, n, kCallees, sizeof kCallees / sizeof kCallees[0], kTables,
+                   sizeof kTables / sizeof kTables[0], kRegions, sizeof kRegions / sizeof kRegions[0],
+                   [](unsigned k) { Seed(s_index[k]); }, &Disturb, 4000};
+    g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
+    g.field = true;
+    sh::Run(g);
+    bof3::Log("shadow      rest_4d DIV-0075: %u entry steps, ours with the switch on, the step one more than Capcom's and "
+              "nothing else, 0 MISMATCHES", n);
+}
 
 void SelfTest() {
     // BOF3X_R4D_ONLY: the clones whose name contains it (a control's run)

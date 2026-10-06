@@ -145,6 +145,11 @@ def main():
     ap.add_argument('--slot0-shared', action='store_true',
                     help='swap slot 0 although a game that is not a scripted run is up (one that never opens a '
                          'save or load menu)')
+    ap.add_argument('--slot0-hold', action='store_true',
+                    help='keep the recipe save in slot 0 until the run ends, not only until the game logs its '
+                         'load: a route that opens a save or load menu again reads the file again, and an '
+                         'all-original side never logs the load (so it holds to the end anyway) - an A/B of '
+                         'such a route wants this on both sides')
     ap.add_argument('--slot0-wait', type=float, default=300, metavar='S',
                     help='seconds to wait for another run to hand slot 0 back (it does on its load)')
     a = ap.parse_args()
@@ -233,7 +238,7 @@ def run(a, env, slot0):
                     print(line.strip())
                 elif m := LOADED.search(line):
                     print(f'save loaded: slot {m[1]}')
-                    if slot0:
+                    if slot0 and not a.slot0_hold:
                         slot0.release('the game has loaded it')
         if status is None:
             status = 'timed out'

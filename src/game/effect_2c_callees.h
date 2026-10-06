@@ -12,12 +12,12 @@ namespace effect_2c::at {
 
 // Callees nobody owns this round (read 2026-09-29), called through the harness
 // by address (SH_AT).
-constexpr std::uint32_t kStoreImage = 0x59E930;    // (const short *rect, void *to): the rectangle (x, y, w, h, s16)
+constexpr std::uint32_t kStoreImage = bof3::addr::Gfx_StoreImage;   // ours since group PH (d3d_rest.cpp); the rectangle (x, y, w, h, s16)
                                                    // of Gfx_VramShadow copied row by row to `to`, w * 2 bytes a row
 constexpr std::uint32_t kWinding = bof3::addr::Screen_TriangleWinding;       // (const float *a, const float *b, const float *c): the cross
                                                    // product's z of a->b, b->c of three screen points, through _ftol
                                                    // (a tail jmp); the callers test ax (docs/effect_gte.md section 7)
-constexpr std::uint32_t kSetPolyF3 = 0x5A7570;     // (unsigned char *prim): a POLY_F3's code (0x20) and its three
+constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;     // (unsigned char *prim): a POLY_F3's code (0x20) and its three
                                                    // depth floats (libgpu SetPolyF3 by shape; docs/magic_s21.md)
 
 // Data of the image, read in place.

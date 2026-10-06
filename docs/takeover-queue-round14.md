@@ -10,7 +10,14 @@ starts from if anything on the round branch takes a function first
 
 ## 0. The answer in one paragraph
 
-At `aed35f8` 8,649 of 10,246 catalogued starts are ours and 2,084 are not.
+At `aed35f8` 2,084 of 10,246 catalogued starts are not ours (8,162 are).
+`symbols.toml` then had 8,649 functions with an `impl` - the catalog's
+"8,649 are" counts every `impl`, among them functions no start list had - and
+the inject log 8,648: `Config_DrawControllerCell` (`0x461C00`,
+`config_text.cpp`) is injected only under a Latin language overlay
+(`ConfigText_Inject` returns first without one), so a self-test or a Chinese
+run never counts it (2026-10-05, the round-fourteen review's nit "the
+count").
 Of those, 533 are the platform and the library layer (the C runtime, the
 MP3 decoder, the shell, the renderer and sound shims), 210 are jump-table
 cases and not functions, and **1,341 are functions of the game's own code -
@@ -396,9 +403,10 @@ pair recorded with this build):
    **it is older than this wave** - a difference the call hash of rounds
    nine to thirteen could not see. `0x905BC0` is a table of 4-byte records
    that `0x57F340`, `Save_BuildBlock` `0x5806F0`, `0x5809C0`, `0x587CD0` and
-   `0x588DC0` reference. Not diagnosed: which function of ours writes it
-   differently is the next read (a dump at tick 2975 on both sides, then
-   `BOF3X_ORIGINAL` by module over the callers of those five).
+   `0x588DC0` reference. **Diagnosed 2026-10-05: the runner's, not the
+   game's** - the save summaries re-read at the inn's prompt, ours reading
+   the owner's slot 0 after the early hand-back, Capcom's the recipe save
+   ([`state-hash.md`](state-hash.md) section 5; `input_run.py --slot0-hold`).
 
 **Debts added to section 9's list:**
 
@@ -827,10 +835,10 @@ timing, not compared with their recordings here.
 24. DIV-0075's switch is off in the fuzz, as DIV-0070's: the moved step is
     built and seen armed, not compared. A row beside the fuzz, ours alone
     (DIV-0063's form), would cover it.
-25. `attract_r14_orig` / `_origb` and `combat_orig` / `_origb` were hashed
-    under the skip list of 165 ranges; the list has 168 since this section.
-    Record the pairs again (two all-original runs each, the machine quiet)
-    before the next check against them.
+25. ~~`attract_r14_orig` / `_origb` and `combat_orig` / `_origb` were hashed
+    under the skip list of 165 ranges; the list has 168 since this section.~~
+    Every pair recorded again under 168 on 2026-10-05 at `main`, ours
+    identical to each ([`state-hash.md`](state-hash.md) section 6).
 
 **The tip `1bf5964`** (the merges, DIV-0074 and DIV-0075): `'*'` narrow and
 with `BOF3X_WIDE=1` after the validation, 10,009 ours, 0 mismatches, the

@@ -155,15 +155,15 @@ constexpr sh::JumpTable kTables56D930[] = {{0x13, 0xC0, 6}};
 constexpr sh::CallSite kCalls56DA10[] = {{0x24, 0x57C7C0}, {0x3F, 0x531F90}, {0x9E, 0x594E00},  {0xBF, 0x594E00},
                                          {0xE0, 0x594E00}, {0x102, 0x57C7A0}, {0x10E, 0x57C110}, {0x11A, 0x57C110}};
 constexpr sh::JumpTable kTables56DA10[] = {{0x13, 0x138, 5}, {0x89, 0x14C, 6}};
-constexpr sh::CallSite kCalls56DB80[] = {{0x20, 0x57C7C0},  {0x27, 0x495040},  {0x4D, 0x533E50},  {0x52, 0x587B80},  {0x58, 0x587910},
-                                         {0x69, 0x587A00},  {0x76, 0x587B90},  {0x7D, 0x495040},  {0xB9, 0x57C7C0},  {0x11B, 0x4976D0},
-                                         {0x140, 0x57C7A0}, {0x15B, 0x57C7C0}, {0x162, 0x495040}, {0x184, 0x533E50}, {0x189, 0x587B80},
-                                         {0x18F, 0x587910}, {0x1A0, 0x587A00}, {0x1A9, 0x587B90}, {0x1B0, 0x495040}};
+constexpr sh::CallSite kCalls56DB80[] = {{0x20, 0x57C7C0},  {0x27, 0x495040},  {0x4D, 0x533E50},  {0x52, bof3::addr::Sound_StopMusic},  {0x58, 0x587910},
+                                         {0x69, 0x587A00},  {0x76, bof3::addr::Sound_ResumeAll},  {0x7D, 0x495040},  {0xB9, 0x57C7C0},  {0x11B, 0x4976D0},
+                                         {0x140, 0x57C7A0}, {0x15B, 0x57C7C0}, {0x162, 0x495040}, {0x184, 0x533E50}, {0x189, bof3::addr::Sound_StopMusic},
+                                         {0x18F, 0x587910}, {0x1A0, 0x587A00}, {0x1A9, bof3::addr::Sound_ResumeAll}, {0x1B0, 0x495040}};
 constexpr sh::JumpTable kTables56DB80[] = {{0x1C, 0x200, 14}};
 constexpr sh::CallSite kCalls56DDD0[] = {{0x18, 0x57C7A0}, {0x33, 0x57C7C0}, {0x3D, 0x4976D0}};
 constexpr sh::CallSite kCalls56DE30[] = {{0x0, 0x462A90}};
-constexpr sh::CallSite kCalls56DE50[] = {{0x15, 0x587A00}, {0x2F, 0x587B90}, {0x3B, 0x57C7A0}, {0x6B, 0x57C0F0}, {0x84, 0x497740},
-                                         {0x92, 0x5B9450}, {0x9C, 0x497710}, {0xA7, 0x587B80}, {0xAE, 0x587910}};
+constexpr sh::CallSite kCalls56DE50[] = {{0x15, 0x587A00}, {0x2F, bof3::addr::Sound_ResumeAll}, {0x3B, 0x57C7A0}, {0x6B, 0x57C0F0}, {0x84, 0x497740},
+                                         {0x92, 0x5B9450}, {0x9C, 0x497710}, {0xA7, bof3::addr::Sound_StopMusic}, {0xAE, 0x587910}};
 constexpr sh::CallSite kCalls56DF10[] = {{0x3F, 0x57C140}, {0x8B, 0x594E00}, {0x9A, 0x57C7A0}, {0xB8, 0x57C7A0},
                                          {0xCB, 0x57C7C0}, {0xD4, 0x5919B0}, {0xE7, 0x4976D0}};
 constexpr sh::CallSite kCalls570870[] = {{0xE, 0x56FF00}, {0x5B, 0x5A75D0}, {0x63, 0x5A77A0}, {0xEE, 0x5A85F0},
@@ -344,10 +344,30 @@ U FxSlope(const U*, U answer) {
 }
 U FxGround(const U*, U answer) {
     // a height within 0xC0 of the seeded one two times in three (the callers
-    // compare it with a sprite's height, and Field_WayBlockedWide with 0xC0)
+    // compare it with a sprite's height, and Field_WayBlockedWide with 0xC0);
+    // a quarter of those at an edge: the seeded one or one either side, so a
+    // ground equal to the height the seed put it at is met (control D1,
+    // docs/field_e2.md section 10), or 0xC0 / 0xC1 either way, Field_WayBlockedWide's
+    // bound (W2). Louder, a quarter of the time: Field_State's actor +0x89
+    // moved below 12 - the step helpers read it again after this call, which
+    // the group's case 0 alone reached once in 6,000 rounds (DS5)
+    const U m = sh::Noise();
+    if (m % 4 == 0 && sh::InRegions(Field_State + 0x89, 1)) Field_State[0x89] = static_cast<unsigned char>((m >> 8) % 12);
     const U n = sh::Noise();
     if (n % 3 == 0) return answer;
+    static const U kEdges[] = {0xFFFF, 0, 1, 0xFFFF, 0, 1, 0xC0, 0xC1, 0xFF40, 0xFF3F};
+    if (((n >> 2) & 3) == 0) return (answer & 0xFFFF0000u) | ((move_script::Word(g_ground) + kEdges[(n >> 8) % 10]) & 0xFFFFu);
     return (answer & 0xFFFF0000u) | ((move_script::Word(g_ground) + (n >> 8) % 0x182u - 0xC1u) & 0xFFFFu);
+}
+// 0x594700 (an ingredient short), louder a quarter of the time: the trade's
+// pick moved inside the rows - ItemTrade_PickItem reads it again after this
+// call, which the group's case 3 alone reached once in 6,000 rounds (DS8)
+U FxLacks(const U*, U answer) {
+    const U n = sh::Noise();
+    unsigned char* const pick = Mem(field_e2::at::kTradePick);
+    const unsigned rows = Mem(field_e2::at::kTradeRowCount)[0];
+    if (n % 4 == 0) pick[0] = static_cast<unsigned char>((n >> 8) % (rows != 0 ? rows : 1u));
+    return answer;
 }
 U FxRepeat(const U*, U answer) {
     static const U kMoves[] = {0, 0x1000, 0x2000, 0x4000, 0x8000, 0xA000, 0x5000, 0xF000};
@@ -391,7 +411,7 @@ const sh::Callee kFixed[] = {
     {FE2_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, kF, 0, 0},
     {FE2_OURS(Item_HelpMessage), 2, {kU8, kU8}, kG, 0, 0},
     // 0x594711 and ebp, 0xFF; 0x594767 and ecx, 0xFF
-    {FE2_AT(594700), 2, {kU8, kU8}, kF, 0, 0},
+    {FE2_AT(594700), 2, {kU8, kU8}, kF, 0, 0, {}, &FxLacks},
     // louder: the cells from a seeded grid, the pad's moves, a record index below 12
     {FE2_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, kG, 0, 0, {}, &FxGrid},
     {FE2_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &FxRepeat},
@@ -401,7 +421,7 @@ const sh::Callee kFixed[] = {
     // not in either standard set
     {FE2_AT(537500), 2, {kU16, kU8}, kG, 0, 0},
     {FE2_OURS(Party_HealJoined), 0, {}, kG, 0, 0},
-    {"Sound_StopMusic", 0x587B80, 0x587B80, 0, {}, kG, 0, 0},
+    {FE2_OURS(Sound_StopMusic), 0, {}, kG, 0, 0},
     {FE2_OURS(Field_LeaderDirection), 0, {}, kF, 0, 0},
     {FE2_OURS(Field_LeaderStepTarget), 0, {}, kF, 0, 0},
     {FE2_OURS(Field_JumpCheckHeight), 0, {}, kG, 0, 0},
@@ -800,7 +820,8 @@ void Args(unsigned k, U* a) {
     case kWayBlocked:
         a[0] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
         a[1] = (sh::Next() % 0x40) << 16 | (sh::Half() ? 0 : sh::Next() & 0xFFFF);
-        a[2] = (a[2] & 0xFFFF0000u) | ((move_script::Word(g_ground) + sh::Next() % 0x40u - 0x20u) & 0xFFFFu);
+        // the seeded ground itself half the time (FxGround's edges are about it)
+        a[2] = (a[2] & 0xFFFF0000u) | ((move_script::Word(g_ground) + (sh::Half() ? 0u : sh::Next() % 0x40u - 0x20u)) & 0xFFFFu);
         break;
     case kCellHook: break;   // x, z any words
     case kDrawFrames:

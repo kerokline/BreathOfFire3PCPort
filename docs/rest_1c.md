@@ -311,8 +311,9 @@ original` (8,655 + 51). `BOF3X_SHADOW='*'` (this worktree, 2026-10-04): exit 0, 
   byte, `0x51FAF0` unsigned): `Sprite_ObjectAt` answers 0..0x21 or 0xFF only.
   **Ours aborts** on any other byte.
 - **The dispatchers' indexes are not bounded** (section 3): past a table the
-  original jumps through the next table's words; ours does the same and aborts
-  only where the word is not code.
+  original jumps through the next table's words; ours aborts past the table's
+  own count (until 2026-10-05 it read on and aborted only where the word was
+  not code; [`rest_1b.md`](rest_1b.md) section 6 has the shared rule).
 - **The direction is not masked** where a step is read (all the Begin and
   Resolve shapes): a direction above 7 reads the `.data` after
   `Field_DirectionSteps`. Reproduced, as R0A and `field_hidden` do.

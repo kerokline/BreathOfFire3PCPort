@@ -82,7 +82,7 @@ constexpr ah::CallSite kCalls42B4E0[] = {{0x14, 0x590660}};
 constexpr ah::CallSite kCalls42B5D0[] = {{0x12, 0x57C7C0}, {0x2A, 0x57C7C0}};
 constexpr ah::CallSite kCalls42B610[] = {{0x0, 0x57C7C0}};
 constexpr ah::CallSite kCalls42B640[] = {{0x0, 0x57C7C0}};
-constexpr ah::CallSite kCalls42B7F0[] = {{0x22, 0x4976D0}, {0x49, 0x495040}, {0x6F, 0x587B80}, {0x74, 0x42C2D0}, {0x7A, 0x587910},
+constexpr ah::CallSite kCalls42B7F0[] = {{0x22, 0x4976D0}, {0x49, 0x495040}, {0x6F, bof3::addr::Sound_StopMusic}, {0x74, 0x42C2D0}, {0x7A, 0x587910},
                                          {0x8B, 0x587A00}, {0xA2, 0x57C0F0}, {0xEF, 0x57C7A0}, {0x10B, 0x594E00}, {0x126, 0x57C110},
                                          {0x145, 0x57C7A0}, {0x163, 0x57C7A0}, {0x179, 0x594E00}, {0x194, 0x57C110}};
 constexpr ah::JumpTable kTables42B7F0[] = {{0x1C, 0x1B8, 8}};
@@ -370,7 +370,7 @@ const ah::Callee kCallees[] = {
     {W4E_OURS(Scena14_LeaveToC4), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W4E_OURS(Char_RecalcStats), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &RecalcEffect},
     {W4E_OURS(Transition_Start), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
-    {W4E_THEIRS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
+    {W4E_OURS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W4E_OURS(Sound_LoadStream), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     {W4E_OURS(Sound_StreamDone), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &StreamAnswer},
     {W4E_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, ah::Answer::kGarbage, 0, 0, {}, &CellA6Answer},

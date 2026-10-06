@@ -1,8 +1,9 @@
 // The raw addresses rest_4a.cpp and its fuzz read that symbols.toml does not
 // name - each a load-bearing constant (CLAUDE.md rule 3). docs/rest_4a.md.
 //
-// Raw-address callees (owned by a group of this round's wave four, called raw
-// until the round's rebinding):
+// Callees by address (owned by a group of this round's wave four; ours, named
+// by symbol below, the value unchanged: round fourteen's rebinding,
+// docs/round-14-cleanup.md):
 //   0x45E6B0  R4D's: () -> al, the count of the 60 community records whose
 //             byte +0 is not 0 (read 2026-10-05 for its answer only: al from
 //             0, one per record; the rest of eax is the caller's).
@@ -13,12 +14,14 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace rest_4a::at {
 
 using U = std::uint32_t;
 
-// --- callees ours, by address until the round's rebinding ----------------------
-constexpr U kCommuCount = 0x45E6B0;        // R4D's: unsigned char(void), the records in use
+// --- callees ours, by address (through the harness) ----------------------------
+constexpr U kCommuCount = bof3::addr::CommuName_CountSlots;      // R4D's: unsigned char(void), the records in use
 
 // --- the battle (Battle_* of this group) ----------------------------------------
 constexpr U kBattleFlags = 0x904AA8;       // dword: bit 14 the auto-target check's switch

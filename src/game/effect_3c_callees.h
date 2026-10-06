@@ -23,9 +23,9 @@ constexpr std::uint32_t kScreenTile = bof3::addr::Effect_DrawScreenTint;     // 
                                                     // semi-transparent, committed (Gfx_CommitPrim(5, ..))
 
 // --- library layer (nobody's), the effect-standard set lists both --------------
-constexpr std::uint32_t kMatrixVector = 0x5A7C70;   // (matrix, in, out): an SVECTOR turned by the 3 x 3 (18 bytes read),
+constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;   // (matrix, in, out): an SVECTOR turned by the 3 x 3 (18 bytes read),
                                                     // 6 bytes written; in and out may be one (effect_1c_callees.h)
-constexpr std::uint32_t kPolyF3 = 0x5A7570;         // (unsigned char *prim): a flat triangle's 0x2C bytes set up
+constexpr std::uint32_t kPolyF3 = bof3::addr::Gpu_SetPolyF3;         // (unsigned char *prim): a flat triangle's 0x2C bytes set up
 
 // --- cells ------------------------------------------------------------------------
 constexpr std::uint32_t kShardCursor = 0x67626C;    // unsigned char *: the 0x28-byte shard kinds 0x6C (E3B's) and 0x6E

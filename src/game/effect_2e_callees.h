@@ -31,8 +31,8 @@ constexpr std::uint32_t kSparksRun = bof3::addr::EffectGlowSparks_Run;    // 0x4
 constexpr std::uint32_t kBurstStep = bof3::addr::EffectGlowTrail_Update;    // 0x4794D0, R3E's: (unsigned char *burst): the record at 0x92C060 (read to +0x440,
                                                   // written to +0x402) stepped; calls EffectAngle_Mean
 constexpr std::uint32_t kBurstDraw = bof3::addr::EffectGlowTrail_Draw;    // 0x4796B0, R3E's: (unsigned char *burst): that record drawn as G4 quads (read to +0x400)
-constexpr std::uint32_t kSqrt = 0x5A7A90;         // library layer: (long v) the square root through fsqrt and _ftol; eax
-constexpr std::uint32_t kMatrixVector = 0x5A7C70; // library layer: (matrix, in, out) - an SVECTOR turned by the 3 x 3
+constexpr std::uint32_t kSqrt = bof3::addr::Gte_SquareRoot0;         // library layer: (long v) the square root through fsqrt and _ftol; eax
+constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV; // library layer: (matrix, in, out) - an SVECTOR turned by the 3 x 3
                                                   // (18 bytes read), 6 bytes written; in and out may be one
 // Callees another group of round thirteen owns (analysis/round13_cut.tsv),
 // called by address until the coordinator rebinds them.

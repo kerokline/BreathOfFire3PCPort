@@ -330,7 +330,11 @@ C95..C99 in the table are that run.
 - **Out**: R3F's `0x480300` (kind 0x5F's five moving states, 5 sites), by
   address through `rest_3e_callees.h` `kR3FRing` until R3F merges (R3F merges
   before this group by the round's order, section 4 of the plan: the
-  rebinding pass turns it into R3F's name). Every other callee is ours or
+  rebinding pass turns it into R3F's name). It is R3F's
+  `EffectKind5F_DrawLineDisc(point, unused, wobble, dy)`: this doc's callee
+  header read it as `(point, size, dy, word)` until 2026-10-05; the bytes
+  (capstone, `round-14-review.md` item 16) agree with R3F - the second word is
+  never read, the size is a constant. Every other callee is ours or
   Capcom's library (`Rand`, `Crt_sprintf`, `0x5A7A90`, `_ftol`), by name;
   `EffectKind52_TrailUpdate` (E2F) is called directly.
 - **In** (from outside the group, all ours, all by address until this

@@ -78,7 +78,9 @@
 #include "game/yes_no_layout.h"
 #include "game/item_use.h"
 #include "game/sound.h"
+#include "game/sound_rest.h"
 #include "game/d3d_draw.h"
+#include "game/d3d_rest.h"
 #include "game/display_env.h"
 #include "game/tex_page.h"
 #include "game/tex_cells.h"
@@ -305,6 +307,9 @@
 #include "game/rest_4d.h"
 #include "game/rest_4c.h"
 #include "game/rest_4b.h"
+#include "game/shell.h"
+#include "game/psx_rest.h"
+#include "game/mode_rest.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1375,6 +1380,28 @@ void InjectAll() {
                                 // re-aimed at the scenario harness's recorders, twelve .data tables swapped for the
                                 // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
                                 // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    SoundRest_Inject();         // the platform round's group PS (Sound_StopMusic, Sound_ResumeAll, Sound_MusicPlaying,
+                                // Sound_PauseAll, SndBuf_SetVolume, Music_Halt, Music_Resume, SndStream_IsPlaying,
+                                // Snd_Init): every call and jump of its clones re-aimed at a recorder, DirectSound
+                                // faked; after every module that calls them (by name, or by the address they had);
+                                // before FishingText_Arm; no module patches bytes inside its nine
+    Shell_Inject();             // the platform round's group PW (the seven "Windows shell" starts: Input_Latch,
+                                // Cfg_Load, Game_Init, Gfx_InitBufferBlock, Gfx_LinkOTags, Disc_Probe,
+                                // Cfg_SetDefaultKeys): its clones' calls re-aimed at its own recorders; no module
+                                // clones them; before FishingText_Arm (docs/shell.md)
+    PsxRest_Inject();           // the platform round's group PL (docs/psx-rest.md: three libgpu setters, the texture
+                                // window, SquareRoot0, ApplyMatrixSV and the teardown chain): every caller of the
+                                // seventeen is ours and calls them by address, so after every module whose fuzz
+                                // stands them in or runs Capcom's
+    D3dRest_Inject();           // the platform round's group PH (docs/d3d-rest.md): the renderer's live remainder - five
+                                // Direct3D handlers, POLY_FT3's two helpers, D3d_SetAlphaModulate, D3d_AfterDraw,
+                                // Gfx_StoreImage; Gfx_DrawOTag reaches them by the addresses they had; its clones' calls
+                                // re-aimed at its own recorders; before FishingText_Arm
+    ModeRest_Inject();          // platform round step 2, group PM (GameMode_Handlers 3..6 and the steps of modes 3 and
+                                // 5, 0x495BB0..0x496226, and Sound_MusicPlaying 0x587C20): its clones' calls re-aimed
+                                // at the scenario harness's recorders, two .data tables swapped for the fuzz only;
+                                // before FishingText_Arm; no module patches bytes inside its 14 (DIVERGENCE.md,
+                                // cheats.cpp, widescreen.cpp)
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

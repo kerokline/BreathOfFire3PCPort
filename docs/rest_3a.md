@@ -64,7 +64,7 @@ passes the word sign-extended and the fuzz compares the low word.
 | `0x42D760` | `BattleExtra_TallyDispatch` | state 3: `jmp [BattleExtra_TallySteps + 4 * 0x929F01]`, 3 |
 | `0x42D770` | `BattleExtra_TallyOpenDispatch` | `jmp [BattleExtra_TallyOpenSteps + 4 * 0x929F02]`, 2 |
 | `0x42D780` | `BattleExtra_OpenTransition` | `Transition_Start(3)`, `0x929F02` + 1 (the first step of both the tally's and the equipment screen's opening) |
-| `0x42E0E0` | `BattleExtra_EquipSetupWindows` | window records 0..4 set up as the screen's (in use, kind / state bytes, positions, cursors 0, counts; records 1 and 2's `+0x20` = `0x675EB8`); record 0's `+0xC` = the first of the party list's three entries `0x904062` that is 0 or 7 (left when none is) |
+| `0x42E0E0` | `BattleExtra_EquipSetupWindows` | window records 0..4 set up as the screen's (in use, kind / state bytes, positions, cursors 0, counts; records 0 and 1's `+0x20` = `0x675EB8`); record 0's `+0xC` = the first of the party list's three entries `0x904062` that is 0 or 7 (left when none is) |
 | `0x42E250` | `BattleExtra_EquipCommit` | for each equipment byte `+0x12..+0x17` of character record 7, a chosen byte `0x675EB8[i]` not 0 and not the one held: `Inventory_Remove(0x64AE20[i], chosen, 1)`, `Inventory_Add(0x64AE20[i], held, 1)`, the chosen byte into the record; `Char_RecalcStats(record 7)` |
 | `0x42E2F0` | `BattleExtra_EquipRefresh` | window 13's `+0xD` = `Item_EquipMask(window 0's +8, +0xD)` bit 0 clear; record 7's `+0x14, +0x12, +0x13, +0x15, +0x17` into `0x675EBA, B8, B9, BB, BC`; `0x675EB8[window 1's +0xA]` = window 0's `+0xD`; al `+0x17` (unread) |
 

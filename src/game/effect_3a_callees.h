@@ -10,9 +10,9 @@ namespace effect_3a::at {
 
 // --- callees nobody of ours names, called by address (SH_AT) ------------------
 // Capcom's library layer and renderer (the effect-standard set lists both):
-constexpr std::uint32_t kStoreImage = 0x59E930;    // (const short *rect, void *to): the VRAM rectangle (x, y, w, h,
+constexpr std::uint32_t kStoreImage = bof3::addr::Gfx_StoreImage;   // (const short *rect, void *to): the VRAM rectangle (x, y, w, h,
                                                    // s16) read back into `to` (effect_2c_callees.h kStoreImage)
-constexpr std::uint32_t kMatrixVector = 0x5A7C70;  // (matrix, in, out): an SVECTOR turned by the 3 x 3
+constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;  // (matrix, in, out): an SVECTOR turned by the 3 x 3
                                                    // (effect_2e_callees.h kMatrixVector)
 // Group E4F's (wave four), rebound to its names (the values unchanged):
 constexpr std::uint32_t kSparkSpawn = bof3::addr::EffectKindB9_SpawnSpark;    // 0x493B50, (void): the first free of the eight sparks at 0x92BF80 in use at

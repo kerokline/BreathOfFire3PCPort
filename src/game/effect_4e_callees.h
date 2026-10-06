@@ -18,7 +18,7 @@ constexpr std::uint32_t kGlowA7 = bof3::addr::EffectKindA7_DrawGlow;      // (co
 constexpr std::uint32_t kDiscA9 = bof3::addr::EffectKindA9_DrawDisc;      // (short x, short y, unsigned char shade): a disc of POLY_G3 on
                                                  // screen (two words read, the third pushed 0x80)
 // Capcom's library layer (the effect-standard set lists it):
-constexpr std::uint32_t kMatrixVector = 0x5A7C70;  // (matrix, in, out): an SVECTOR turned by the 3 x 3
+constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;  // (matrix, in, out): an SVECTOR turned by the 3 x 3
                                                    // (effect_3a_callees.h kMatrixVector)
 
 // --- the image's cells ---------------------------------------------------------

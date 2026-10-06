@@ -24,4 +24,10 @@ bool StateHash_Start();
 // at the same point of the loop under Capcom's WinMain and ours.
 void StateHash_Tick();
 
+// Hands what the file holds so far to the OS: called by Fatal and by the
+// crash reporter, whose ends (TerminateProcess, the fault) run no exit
+// handlers, so the frames up to the end are kept (round fourteen's review,
+// item 15). Does nothing while the hash is off.
+void StateHash_Flush();
+
 }  // namespace bof3

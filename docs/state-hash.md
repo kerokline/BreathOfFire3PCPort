@@ -1,6 +1,6 @@
 # The state hash
 
-**Status:** WORKING (2026-10-04; the attract sequence and the combat route measured, section 4)
+**Status:** WORKING (2026-10-05; every reference pair recorded under the 168-range skip list at `main` `2df90d9`, section 6; the shop route's difference was the runner's, section 5)
 
 A regression check that compares two runs by **what the game's memory held,
 frame for frame**, whoever's code wrote it. Built before round fourteen
@@ -34,7 +34,11 @@ so a recipe's pad words are the previous frame's on both sides.
 
 A **tick** is one logic frame seen by the latch, counted from the first; the
 record also carries `Frame_Counter` and the recipe frame. The file is flushed
-every 64 ticks, since the runners end the game with `taskkill`. A six-minute
+every 64 ticks, since the runners end the game with `taskkill`, and on the
+way out of `Fatal` and of the crash reporter (2026-10-05, the round-fourteen
+review's item 15), so the frames before an abort or a fault - the ones a
+crash wants - are in the file; not every tick, which would cost the live
+check. A six-minute
 attract run writes about 1 MB.
 
 What it costs: 3.5 MB hashed a frame. Its time was not measured; the hashed
@@ -91,7 +95,7 @@ kinds:
 A range is added only with the dump that showed it and the reason it is not a
 defect: a platform object, or a `DIVERGENCE.md` entry by number.
 
-**What the list costs.** About 426 KiB of 3.5 MiB (3,472 KiB) is not seen. Most of that is
+**What the list costs.** About 426 KiB of 3.39 MiB (3,472 KiB) is not seen. Most of that is
 draw output: the packet pools (128 KiB) and the draw items (144 KiB) are what
 the frame draws, and the picture A/B (`input_run.py`'s shots, the attract
 captures) is what checks them. The sound banks and the stream are not seen at
@@ -159,6 +163,21 @@ from its effect on memory alone, with its first tick:
 by a tick: it is set from the stream's own timing, and is in the list as
 noise.
 
+**The shop route's difference was the test rig's, not the game's**
+(2026-10-05). Twelve bytes at `0x905BC6` from tick 2975 and one more
+primitive a frame, since before round fourteen's wave two: slot 0's save
+summary, re-read when the inn's save prompt opens (`Save_ReadSummaries`
+opens `BISLPS00..09`). `input_run.py` hands the owner's slot 0 back as soon
+as ours logs `save loaded slot 0`; Capcom's side never logs it and keeps the
+recipe save to the end, so the two sides read different files there - the
+bytes ours showed are the owner's `BISLPS00.DAT`'s, byte for byte
+([`input-script.md`](input-script.md) section 1a). With `--slot0-hold` on
+the ours side the route is identical but three platform pages at one tick
+(2981: the Direct3D caches and the sound page, the start-up class of
+section 4's third row). The Chinese pairs are recorded with the hold on
+neither side, which is right for them (they never see the line); every
+ours run of a route that lists the saves wants it.
+
 **Open:**
 
 1. **The sound page's noise under load** (`0x7DE000`, section 4's third row):
@@ -173,6 +192,14 @@ noise.
 
 ## 6. Use in a round
 
+- **The references at `main` `2df90d9` (2026-10-05, 168 ranges, the machine
+  quiet):** `attract_r14_orig` / `_origb` (10,305 ticks) and
+  `cn_<route>_orig` / `_origb` for all ten routes. Ours at the same tip is
+  identical to every pair on every compared tick (`attract_m14_ours`,
+  `cn_<route>_ours`), the shop with `--slot0-hold` as above, the world map
+  on its second run (the first reported the sound page `0x7DE000` at one
+  tick, 1651, and the repeat did not). The pairs hashed under 165 are kept
+  in `analysis/statehash/pre168/`.
 - **The reference** is a pair of original runs and is recorded per route once
   per skip list: `analysis/statehash/<route>_orig.sh`, `_origb.sh`. A change of
   the skip list, the recipe, the save or the launcher's settings wants a new

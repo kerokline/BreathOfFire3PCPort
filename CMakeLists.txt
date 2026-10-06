@@ -169,10 +169,14 @@ add_library(bof3x SHARED
   src/game/item_use_fuzz.cpp
   src/game/sound.cpp
   src/game/sound_fuzz.cpp
+  src/game/sound_rest.cpp
+  src/game/sound_rest_fuzz.cpp
   src/game/d3d_draw.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
   src/game/d3d_list_fuzz.cpp
+  src/game/d3d_rest.cpp
+  src/game/d3d_rest_fuzz.cpp
   src/game/display_env.cpp
   src/game/display_env_fuzz.cpp
   src/game/ddraw_fuzz.cpp
@@ -645,7 +649,13 @@ add_library(bof3x SHARED
   src/game/rest_4c.cpp
   src/game/rest_4c_fuzz.cpp
   src/game/rest_4b.cpp
-  src/game/rest_4b_fuzz.cpp)
+  src/game/rest_4b_fuzz.cpp
+  src/game/shell.cpp
+  src/game/shell_fuzz.cpp
+  src/game/psx_rest.cpp
+  src/game/psx_rest_fuzz.cpp
+  src/game/mode_rest.cpp
+  src/game/mode_rest_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
 target_include_directories(bof3x PRIVATE src "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")

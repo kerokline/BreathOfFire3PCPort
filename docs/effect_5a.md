@@ -412,6 +412,18 @@ under either switch: its on-test only decides anything when `(+9 >> 2) % 6`
 is also 0, so a moved word rarely shows; at 40,000 rounds it is refused 72
 times (63 under the old switch). Not equivalent, rare; the fuzz is unchanged.
 
+**2026-10-05, the round's end (debt 17): a louder copy and a seed.**
+`Gfx_ClutStripCopy16`'s stand-in, while a sub-kind 5 state is fuzzed, moves
+the current record's word `+0x3A` a quarter of the time (from the noise), and
+`_05_Pulse`'s seed puts `+9` at its end test, `(+9 >> 2) % 6 == 0` (0..3,
+0x18..0x1B), half the time. The same script, in this worktree: the group's
+shadow 220,000 rounds (4,000 a function), 0 mismatches; **55 of 55 refused by
+a count** at 2,000 rounds, every count the table's above but `_05_Idle` 102
+(was 90) and `_05_Pulse` 1,483 (was 1,131); the four new ones: `_0A_Swing` 88,
+`_1F_Brighten` 84, `_05_Idle` 93 (was 11), **`_05_Pulse` 45 of 2,000 and 76
+of 4,000 (the committed count; was 0)**. Without the seed (the louder copy
+alone) `_05_Pulse` was 7 and 19.
+
 ## 7. Latent defects (Capcom's, described, not fixed)
 
 - **Unbounded dispatchers** (D200): the eight `_Run`s jump through `+2` with no

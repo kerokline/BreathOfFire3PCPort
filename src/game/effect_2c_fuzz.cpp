@@ -69,7 +69,7 @@ constexpr sh::CallSite kCalls475D40[] = {{0x0, 0x476290}, {0x5, 0x476290}, {0xA,
 constexpr sh::CallSite kCalls475D90[] = {{0x0, 0x4762D0}, {0x13, 0x587740}, {0x1D, 0x587740}};
 constexpr sh::CallSite kCalls475DD0[] = {{0x0, 0x4762D0}, {0x9, 0x589840}};
 constexpr sh::CallSite kCalls475E00[] = {{0x1, 0x589810}, {0x42, 0x461E10}, {0x9F, 0x588F20}, {0xA4, 0x589840}};
-constexpr sh::CallSite kCalls475EC0[] = {{0x4C, 0x59E930}};
+constexpr sh::CallSite kCalls475EC0[] = {{0x4C, bof3::addr::Gfx_StoreImage}};
 constexpr sh::CallSite kCalls475F20[] = {{0x14, 0x494060}, {0x40, 0x494110}, {0x116, 0x5B9550}, {0x123, 0x5B93D2}, {0x13B, 0x5B93D2}};
 constexpr sh::CallSite kCalls4760E0[] = {{0x24, 0x587740}};
 constexpr sh::CallSite kCalls476120[] = {{0x96, 0x5A7750}, {0xDF, 0x461E50}, {0x100, 0x589840}};
@@ -322,7 +322,7 @@ const sh::Callee kCallees[] = {
     // ring's projections, which the real one only reads); the read-back's
     // rectangle hashed and its target logged and filled
     {"0x4941B0", at::kWinding, at::kWinding, 3, {0, 0, 0}, kG, 0, 0, {8, 8, 8}, nullptr, nullptr, true},
-    {"0x59E930", at::kStoreImage, at::kStoreImage, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
+    {"Gfx_StoreImage", at::kStoreImage, at::kStoreImage, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
 };
 #undef E2C_OURS
 

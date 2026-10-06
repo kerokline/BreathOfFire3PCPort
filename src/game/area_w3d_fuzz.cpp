@@ -57,7 +57,7 @@ constexpr ah::CallSite kCalls41E530[] = {{0x2C, 0x57CE10}};
 constexpr ah::CallSite kCalls41E580[] = {{0x3F, 0x57C7C0}};
 constexpr ah::CallSite kCalls41E5E0[] = {{0x18, 0x57C140}, {0x2E, 0x41EE70}, {0x3C, 0x531F90}};
 constexpr ah::CallSite kCalls41E630[] = {
-    {0x34, 0x591900}, {0x3E, 0x4976D0}, {0x49, 0x587B80}, {0x4F, 0x587910}, {0x60, 0x587A00}, {0x7A, 0x587B90},
+    {0x34, 0x591900}, {0x3E, 0x4976D0}, {0x49, bof3::addr::Sound_StopMusic}, {0x4F, 0x587910}, {0x60, 0x587A00}, {0x7A, bof3::addr::Sound_ResumeAll},
     {0x7F, 0x57C7A0}, {0x94, 0x41EEF0}, {0xA2, 0x4976D0}, {0xC1, 0x57C160}, {0xCB, 0x587740}, {0xF0, 0x57C7A0},
     {0x113, 0x57C140}, {0x132, 0x5B9380}, {0x13C, 0x4976D0}, {0x159, 0x4976D0}, {0x165, 0x57C0F0}, {0x1A8, 0x41EF60},
     {0x1D4, 0x41EFA0}, {0x21F, 0x41EFA0}, {0x23D, 0x587740}, {0x257, 0x41EF60}, {0x271, 0x41EFA0}, {0x2C0, 0x41EFA0},
@@ -262,7 +262,7 @@ const ah::Callee kCallees[] = {
     {W3D_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     {W3D_THEIRS(Crt_sprintf), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &SprintfEffect},
     {W3D_OURS(KeyItem_Add), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
-    {W3D_THEIRS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
+    {W3D_OURS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W3D_OURS(Sound_LoadStream), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     {W3D_OURS(Sound_StreamDone), 0, {}, ah::Answer::kFlag, 0, 0, {}, &StreamEffect},
     {W3D_OURS(Flags_Toggle), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},

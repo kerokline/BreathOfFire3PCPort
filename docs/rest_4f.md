@@ -350,6 +350,8 @@ of this group aborts before the read.
 
 **The disturbance's cases, each shown live** (a mutant that keeps a value over a call, while the record is the same where the cell is a record's, so that only the group's own case can refuse it): case 0 (`+9`) C58, C90; case 1 (the record's bytes) C56, C115; case 2 (its dwords) C91, C96; case 3 (the counter, the cursor) C06, C22, C38; case 4 (the settings) C21; case 5 (`0x90384A`) C75; case 6 (`Input_Pressed`) C13. **Thin** (the group's case runs after about one stand-in call in a few hundred): C21 3 of 60,000 rounds (0 at 4,000 - the setting is re-read after one sound only, and the case picks one of five cells), C22 and C91 1 of 4,000, C38, C56 and C58 2, C81 5, C13 10. A louder stand-in on `Sound_PlayEffect` would make C21 cheap; left as is (the review's debt 17 form).
 
+**C21 made cheap (2026-10-05, round fourteen's end, debt 23).** `Sound_PlayEffect` is re-listed in the fuzz with a stand-in (`FxSound`) that half the time sets the five settings case 4 moves to 0..3 from the noise, so a setting kept over the sound is seen at the call. C21 in this worktree: **99 of 4,000 rounds** (14 when one setting a quarter of the time); the group's rounds stay 4,000, its shadow 0 mismatches.
+
 | Id | Function | Plant | Verdict |
 |---|---|---|---|
 | C01 | `ConfigScreen_Run` | state + 1 mod 5 | refused, 4000 of 4000 rounds |
@@ -372,7 +374,7 @@ of this group aborts before the read.
 | C18 | `ConfigScreen_Rows` | below 3 to the top bar | refused, 164 of 4000 rounds |
 | C19 | `ConfigScreen_Rows` | counter up to 4 | refused, 100 of 4000 rounds |
 | C20 | `ConfigScreen_Rows` | cancel with 0x400 | refused, 81 of 4000 rounds |
-| C21 | `ConfigScreen_Rows` | the setting read before the sound (case 4) | refused, 3 of 60000 rounds |
+| C21 | `ConfigScreen_Rows` | the setting read before the sound (case 4) | refused, 3 of 60000 rounds; 99 of 4000 with `FxSound` (2026-10-05) |
 | C22 | `ConfigScreen_Rows` | the cursor read before the buttons (case 3's cursor) | refused, 1 of 4000 rounds |
 | C23 | `ConfigScreen_Controller` | cursor 8 names 0xC5 | refused, 1260 of 4000 rounds |
 | C24 | `ConfigScreen_Controller` | panel y 0x63 | refused, 4000 of 4000 rounds |

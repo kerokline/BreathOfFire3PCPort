@@ -282,7 +282,7 @@ const bh::Callee kCallees[] = {
     // the low byte of the member and the type (al / cl loaded over leftovers), the 1 whole
     {"Char_AbilityList", bof3::addr::Char_AbilityList, KeyOf(&::Char_AbilityList), 3, {kU8, kU8, kAll}, bh::Answer::kGarbage, 0, 0,
      {}, &AbilityListEffect},
-    // R3D's (this wave, raw until it merges): each takes one pushed immediate
+    // R3D's (this wave, ours; rows keyed by address): each takes one pushed immediate
     {"0x44FBB0", at::kStatMod, at::kStatMod, 1, {kAll}, bh::Answer::kFlag, 0, 0},
     {"0x44FC60", at::kInflictMiss, at::kInflictMiss, 1, {kAll}, bh::Answer::kFlag, 0, 0},
     {"0x44FCA0", at::kInflict, at::kInflict, 1, {kAll}, bh::Answer::kFlag, 0, 0},

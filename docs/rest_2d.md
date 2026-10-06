@@ -216,8 +216,25 @@ entries take arguments - the typed-stand-in table here is this file's own.
   masked `& 0xF0` and then compared with `0xA0`, `0xA1`, `0xAF` and `0x91`;
   only `0xA0` can match, so cells `0xA1`, `0xAF` and the `0x9x` codes do not
   refuse the camp as the compares read. Ours keeps the mask and the four
-  compares (the three cannot match). Whether play has such cells is not
-  measured.
+  compares (the three cannot match). **Measured 2026-10-05 night** (a scan of
+  every `AREA*.DAT`'s cell plane - arena tag `0xC8000`, width / height bytes,
+  the plane at the dword offset `+0x14`; the script is in the session
+  `9b1166d3` scratchpad, `cell_scan.py`): `0xA1` (3,332 cells) and `0xAF`
+  (61) exist but are refused anyway, the mask folding them into `0xA0`;
+  **`0x91` exists - 91 cells, in nine world maps** (areas 16, 33, 45, 65, 87,
+  88, 115, 121, 151; the largest patch area 151's x57..67 z43..55, 37 cells;
+  the rest clusters of 1..7 beside `0xC0` link cells) - and on those the camp
+  opens where the compare says it should not. The owner confirmed in game the
+  same night that every ordinarily refused spot does refuse (the camp flag
+  `0x904152` and the `0xA?` cells carry the rule as shipped), and that the
+  `0x91` cells are map 2's bridges and Lost Shore's harbour. **The PlayStation
+  has the same defect** (read 2026-10-05 from the JP disc's `START.EMI` /
+  `STATUS.EMI`, whose code sections are identical: the twin `0x801D21C4`,
+  called from the top bar's twin `0x801D1B94` beside the camp flag
+  `0x80145046` - `andi 0xF0` first, then `(v1 + 0x60) & 0xFF < 2` for `0xA0` /
+  `0xA1`, `beq 0xAF`, `xori 0x91` on the masked byte). Capcom's bug, shared by
+  both compilations. Whether to honour the `0x91` compare is the owner's: a
+  one-line divergence (the raw cell against the four codes).
 - **L2 `FieldMenuStatus_Choose`'s sound** compares the cursor read before
   (zero-extended) with the new one (sign-extended): a negative cursor sounds
   `0x100` every frame. The cursor is negative only with `Party_Count(0)` 0,

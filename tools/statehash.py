@@ -254,7 +254,7 @@ def main():
     p = sub.add_parser('check'); p.add_argument('ref'); p.add_argument('refb'); p.add_argument('new'); window(p)
     p.add_argument('--noise', action='store_true', help='list the noise pages too'); p.set_defaults(fn=cmd_check)
     p = sub.add_parser('bytes'); p.add_argument('a'); p.add_argument('b'); p.add_argument('--skip-out')
-    p.add_argument('--gap', type=int, default=3, help='equal bytes a range may span (default 3)')
+    p.add_argument('--gap', type=int, default=3, help='a range spans runs of equal bytes shorter than this (default 3: up to 2)')
     p.set_defaults(fn=cmd_bytes)
     a = ap.parse_args()
     sys.exit(a.fn(a) or 0)

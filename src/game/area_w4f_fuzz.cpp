@@ -40,7 +40,7 @@ using move_script::Word;
 
 // ---- area 192 ----
 constexpr ah::CallSite kCalls42BDD0[] = {{0x12, 0x57C7C0}, {0x2A, 0x57C7C0}};
-constexpr ah::CallSite kCalls42BE10[] = {{0x22, 0x4976D0}, {0x49, 0x495040}, {0x6F, 0x587B80}, {0x74, 0x42C2D0}, {0x7A, 0x587910},
+constexpr ah::CallSite kCalls42BE10[] = {{0x22, 0x4976D0}, {0x49, 0x495040}, {0x6F, bof3::addr::Sound_StopMusic}, {0x74, 0x42C2D0}, {0x7A, 0x587910},
                                          {0x8B, 0x587A00}, {0xA2, 0x57C0F0}, {0xE3, 0x57C7A0}, {0xFF, 0x594E00}, {0x11A, 0x57C110},
                                          {0x139, 0x57C7A0}, {0x157, 0x57C7A0}, {0x16D, 0x594E00}, {0x188, 0x57C110}};
 constexpr ah::JumpTable kTables42BE10[] = {{0x1C, 0x1AC, 8}};
@@ -255,7 +255,7 @@ const ah::Callee kCallees[] = {
     {W4F_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &Set40Effect},
     {W4F_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W4F_OURS(Transition_Start), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
-    {W4F_THEIRS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
+    {W4F_OURS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W4F_OURS(Sound_LoadStream), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     // tested as a whole eax: a flag's garbage above a 0 in al tells an al test
     {W4F_OURS(Sound_StreamDone), 0, {}, ah::Answer::kFlag, 0, 0},

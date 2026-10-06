@@ -194,7 +194,7 @@ void W16(U address, unsigned v) { SetWord(At(address), v); }
 
 // original 0x42E0E0 (BattleExtra_EquipOpen's call): window records 0..4 set
 // up as the screen's - their in-use, kind and state bytes, positions,
-// cursors, counts, the list pointer 0x675EB8 in records 1 and 2 - and record
+// cursors, counts, the list pointer 0x675EB8 in records 0 and 1 - and record
 // 0's +0xC the first of the party list's three entries (0x904062) that is 0
 // or 7 (left as it was when none is). Each store as the original orders it.
 extern "C" void __cdecl BattleExtra_EquipSetupWindows(void) {

@@ -50,6 +50,19 @@ the object kept `+0xF`. "The title box" is
 | `MasterFigure_Hold` | `0x57F4E0` | 0x5 | entry 4: the faded draw alone |
 | `MasterFigure_TurnOn` | `0x57F4F0` | 0xC | entry 5: the angle + 0x20 (entry 1, R2B's `0x57F330`, takes 0x20 off); the faded draw |
 
+**The record, settled (2026-10-05, `round-14-review.md` item 17).** R2C
+read `0x9398E0` as one record past `0x110` bytes; R2B reads two model records
+of `0x80` and the screen's own cells after them, and **R2B's reading is the
+right one**. `0x9398E0` is model A, `0x939960` model B (each laid out as a
+sprite record), `0x9399E0..0x9399FF` the screen's cells. The bytes agree
+(capstone from `BOF3.exe`): `0x57F340` reads `0x9399E7` and `0x9399EB`,
+`0x57F450` reads `0x9399A0`, and every other cell they touch is below
+`0x939960`. So what R2C called the record's `+0xC0` "lift" is **model B's
+scale** (`0x939960 + 0x40`; model A stands on B at B's scale x `0xA00` plus
+B's y, as R2B's `StackModels` writes it); the `+0x107` "fade step" is **the
+fourth "given" count** (`0x9399E4 + 3`); the `+0x10B` "scale index" is
+**R2B's level** (`0x9399EB`, `Shisu_ScaleIndex`'s answer).
+
 ### 1.2 The inn, the save point, the rest
 
 | Function | Entry | Bytes | What |
@@ -182,9 +195,9 @@ Already named and read by this group's dispatchers: `Rest_States` (7),
 `PartyForm_States` (4), `ShopSell_States` (4), `ShopSell_SellSteps` (5),
 `ShopResist_States` (8), `SharedList_States` (5). The tables this group's
 states sit in and others read (`ShopMode_States`, `Inn_Steps`,
-`InnPrompt_States`, `FieldSave_States`) are named already. **Not named, for
-R2D**: `0x66456C` (R2D's `0x587120` reads it; it holds three of this group's
-functions, `MasterTalk_PanelsOpen`, `_PanelsIn`, `_PanelsOut`).
+`InnPrompt_States`, `FieldSave_States`) are named already. **Named by R2D**:
+`0x66456C` is `MasterQuit_Steps` (R2D's `0x587120` reads it; it holds three of
+this group's functions, `MasterTalk_PanelsOpen`, `_PanelsIn`, `_PanelsOut`).
 `MasterFigure_States` is named here although its reader is R2B's: four of its
 six entries are this group's and the brief's hint gave it to R2C - **if R2B
 names `0x663E28` too, the coordinator keeps one**.
@@ -273,8 +286,10 @@ called.
   into `MoveScript_EffectState` (24). No play value goes past them that the
   code shows.
 - **`Save_BuildBlock` takes the name from the leader's record but the level
-  and `+0xC` from record 0** (`0x903A7A`, `0x903A7C`), whatever the party;
-  described, not judged: what the summary should show is the owner's.
+  and `+0xC` from record 0** (`0x903A7A`, `0x903A7C`), whatever the party.
+  Confirmed in game by the owner and decided 2026-10-05: **DIV-0076** - with
+  the switch `g_summary_record0` on (set after the self-test) ours takes the
+  name from record 0 too; the fuzz compares Capcom's mix with it off.
 - **`Menu_DrawPanelBox` writes into its own argument slots** (h - 2's byte,
   then x + w - 1 and its float over the colour's): the caller's frame, which
   no caller reads after the call.

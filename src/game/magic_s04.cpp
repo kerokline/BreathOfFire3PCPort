@@ -117,7 +117,7 @@ void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
 // phase handlers (S35's LastResort_WaitChildren, S05's Magic018Row53_Wait,
 // S11's MagicFx_UncountAndFree) are ours now and named in the tables.
 constexpr std::uint32_t kTurnOffset = bof3::addr::Battle_TurnVectorC;       // engine: +0xC / +0x10 of a task turned by its +8
-constexpr std::uint32_t kPolyF3 = 0x5A7570;           // libgpu SetPolyF3 by shape (code 0x20), unnamed
+constexpr std::uint32_t kPolyF3 = bof3::addr::Gpu_SetPolyF3;           // libgpu SetPolyF3 by shape (code 0x20), unnamed
 using TaskFn = void (__cdecl*)(unsigned char*);
 using PrimFn = void (__cdecl*)(unsigned char*);
 void Turn(unsigned char* task) { MH_AT(TaskFn, kTurnOffset)(task); }

@@ -305,7 +305,7 @@ const Callee kStandard[] = {
     {AH_OURS(Sound_PlayById), 1, {kU16}, Answer::kGarbage, 0, 0},
     {AH_OURS(Music_Play), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
     {AH_OURS(Music_FadeOutStop), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {AH_THEIRS(Sound_ResumeAll), 0, {}, Answer::kGarbage, 0, 0},
+    {AH_OURS(Sound_ResumeAll), 0, {}, Answer::kGarbage, 0, 0},
     {AH_OURS(Sprite_UpdateScreenSlot), 0, {}, Answer::kGarbage, 0, 0},
     {AH_OURS(Sprite_UpdateScreen), 0, {}, Answer::kGarbage, 0, 0},
     {AH_OURS(Sprite_QueueOverlay), 0, {}, Answer::kGarbage, 0, 0},

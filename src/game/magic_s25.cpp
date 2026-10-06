@@ -102,8 +102,8 @@ using PrimFn = void (__cdecl*)(unsigned char*);
 
 // libgpu's SetPolyF3 (code 0x20) and SetLineG4 (code 0x5C), unnamed, in no
 // group (psx_gpu's neighbours; docs/magic_s25.md section 7).
-constexpr std::uint32_t kSetPolyF3 = 0x5A7570;
-constexpr std::uint32_t kSetLineG4 = 0x5A76F0;
+constexpr std::uint32_t kSetPolyF3 = bof3::addr::Gpu_SetPolyF3;
+constexpr std::uint32_t kSetLineG4 = bof3::addr::Gpu_SetLineG4;
 // The effect library (group L), by name: MagicFx_CenterOnSide (the effect's
 // sprite to the middle of the target side), MagicFx_StepTowardPoint (one step
 // towards a point), MagicFx_NearPoint3D ("is the sprite within a box of the

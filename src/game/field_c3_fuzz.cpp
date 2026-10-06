@@ -198,8 +198,22 @@ unsigned char* Sc() { return Sprite_Current; }
 // here reads straight after (docs/field_c3.md section 3).
 // Its answer at the steepness boundary 0x40 half the time (the callers test
 // > 0x40 as a signed word).
-U SlopeEffect(const U*, U answer) {
+// Louder, a third of the time: Sprite_Current's low coordinate word along the
+// direction pushed (5 the x word, 3 the z word) turned to 0 or from 0, the word
+// FieldCore_TileD0Slope reads again after its slopes, and the answer steep
+// (0x41 with the sloped byte set) so the raised paths' second slope is reached
+// - a re-read the group's case 9 alone reached about once in 30,000 rounds
+// (controls C178..C181, docs/field_c3.md section 6).
+U SlopeEffect(const U* a, U answer) {
     const U h = sh::Noise();
+    const U m = sh::Noise();
+    const unsigned direction = a[2] & 0xFF;
+    if (m % 3 == 0 && (direction == 3 || direction == 5)) {
+        unsigned char* const w = Sc() + (direction == 5 ? 0x34 : 0x38);
+        if (sh::InRegions(w, 2)) SetWord(w, Word(w) != 0 ? 0u : ((m >> 8) | 1u) & 0xFFFFu);
+        Mem(at::kSloped)[0] = 1;
+        return (answer & 0xFFFF0000u) | 0x41;
+    }
     Mem(at::kSloped)[0] = static_cast<unsigned char>(h % 3 ? 1 : 0);
     if ((h >> 4) & 1) return (answer & 0xFFFF0000u) | (0x3F + (h >> 8) % 3);
     return answer;

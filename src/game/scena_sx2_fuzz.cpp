@@ -48,7 +48,7 @@ constexpr sh::CallSite kCalls469FE0[] = {{0x0, 0x589810}, {0x33, 0x57C0F0}};
 constexpr sh::CallSite kCalls532FD0[] = {{0x12B, 0x572570}};
 constexpr sh::CallSite kCalls57C600[] = {{0x3E, 0x57C650}};
 constexpr sh::CallSite kCalls587860[] = {{0xD, 0x5A6C30}};
-constexpr sh::CallSite kCalls587890[] = {{0x50, 0x5A6C60}};
+constexpr sh::CallSite kCalls587890[] = {{0x50, bof3::addr::SndBuf_SetVolume}};
 #define SH_N(a) static_cast<int>(sizeof a / sizeof a[0])
 #define SX2_FN(name) reinterpret_cast<const void*>(&::name)
 constexpr sh::Shape kE = sh::Shape::kEntry;

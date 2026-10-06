@@ -100,7 +100,7 @@ constexpr sh::JumpTable kTables540D50[] = {{0x1C, 0x120, 7}};
 constexpr sh::CallSite kCalls540EA0[] = {{0x25, 0x587740}, {0x41, 0x5734F0}, {0x48, 0x531F90}, {0xA3, 0x531F90}, {0xB6, 0x531F90}, {0xC9, 0x531F90}, {0xEC, 0x541B90}, {0x121, 0x4976D0}, {0x146, 0x57C7A0}, {0x160, 0x541C50}, {0x167, 0x587B40}, {0x175, 0x531F90}, {0x17C, 0x5734F0}, {0x1A6, 0x532ED0}, {0x1AD, 0x4410B0}, {0x1F4, 0x531F90}, {0x207, 0x531F90}, {0x21A, 0x531F90}, {0x22D, 0x531F90}, {0x240, 0x531F90}, {0x263, 0x57C0F0}, {0x27F, 0x57C7A0}};
 constexpr sh::JumpTable kTables540EA0[] = {{0x1C, 0x2B8, 15}, {0x1EE, 0x314, 8}};
 // 0x5411E0 Scena02_Scene1B: 0x1EE bytes
-constexpr sh::CallSite kCalls5411E0[] = {{0x26, 0x4976D0}, {0x84, 0x495040}, {0xA3, 0x533E50}, {0xAF, 0x587B80}, {0xB8, 0x587910}, {0xC9, 0x587A00}, {0xD6, 0x587B90}, {0x103, 0x594E00}, {0x195, 0x57C7A0}};
+constexpr sh::CallSite kCalls5411E0[] = {{0x26, 0x4976D0}, {0x84, 0x495040}, {0xA3, 0x533E50}, {0xAF, bof3::addr::Sound_StopMusic}, {0xB8, 0x587910}, {0xC9, 0x587A00}, {0xD6, bof3::addr::Sound_ResumeAll}, {0x103, 0x594E00}, {0x195, 0x57C7A0}};
 constexpr sh::JumpTable kTables5411E0[] = {{0x20, 0x1A8, 11}};
 // 0x5413D0 Scena02_Scene08Next: 0x2E bytes; not in the tool's table: it dropped this start as a byte table's (docs/scena_sc2.md section 1.2)
 constexpr sh::CallSite kCalls5413D0[] = {{0x9, 0x57C7C0}, {0xE, 0x57C7A0}};
@@ -328,7 +328,7 @@ const sh::Callee kCallees[] = {
     {SC2_NAMED(Field_StartEventBattle), 1, {kU8}, sh::Answer::kGarbage, 0, 0, {}, &Move},
     // engine callees nobody owns (group SX's this wave; 0x57C600 nobody's)
     {SC2_RAW(0x533E50), 0, {}, sh::Answer::kGarbage, 0, 0, {}, &Move},
-    {SC2_RAW(0x587B80), 0, {}, sh::Answer::kGarbage, 0, 0},
+    {SC2_RAW(bof3::addr::Sound_StopMusic), 0, {}, sh::Answer::kGarbage, 0, 0},
     // louder than a plain recorder: it notes the member records, so a clear
     // moved across the call (Scena02_StripMember) shows
     {SC2_RAW(0x590C90), 4, {kU8, kAll, kU8, kAll}, sh::Answer::kGarbage, 0, 0, {}, &NoteMembers},

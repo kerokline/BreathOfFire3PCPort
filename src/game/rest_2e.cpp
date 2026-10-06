@@ -128,12 +128,18 @@ unsigned char* IdList(U category, const char* who) {
     if (category > 4) bof3::Fatal("%s: category %u reads past Inventory_IdLists (the original reads on)", who, (unsigned)category);
     return At(L(kIdLists + 4 * category));
 }
-unsigned char* CountList(U category, const char* who) {
+// The count list's address as the original reads it (0 for category 4).
+U CountListAt(U category, const char* who) {
     if (category > 4) bof3::Fatal("%s: category %u reads past Inventory_CountLists (the original reads on)", who, (unsigned)category);
-    const U list = L(kCountLists + 4 * category);
-    if (list == 0) bof3::Fatal("%s: category %u's count list is a null pointer (the original faults)", who, (unsigned)category);
-    return At(list);
+    return L(kCountLists + 4 * category);
 }
+// Entry `index` of a count list at its access: category 4's null list aborts
+// here, where the original faults - not where the list is taken.
+unsigned char* CountAt(U list, U index, U category, const char* who) {
+    if (list == 0) bof3::Fatal("%s: category %u's count list is a null pointer (the original faults)", who, (unsigned)category);
+    return At(list + index);
+}
+unsigned char* CountList(U category, const char* who) { return CountAt(CountListAt(category, who), 0, category, who); }
 
 // A .data table's entry: past its count the original jumps through whatever
 // follows; ours aborts.
@@ -525,7 +531,7 @@ extern "C" void __cdecl FieldItems_UseOnMember(void) {
     const U category = B(0x80333E);
     const U index = B(0x803340);
     unsigned char* const id = IdList(category, "FieldItems_UseOnMember") + index;
-    unsigned char* const count = CountList(category, "FieldItems_UseOnMember") + index;
+    const U counts = CountListAt(category, "FieldItems_UseOnMember");
     SH_CALL(TextRecord_Set)(0, 0x10, At(kConsumables + 22u * *id));
     const int member = S8(B(kMember));
     SetW(0x8032FC, 0x19);
@@ -551,6 +557,7 @@ extern "C" void __cdecl FieldItems_UseOnMember(void) {
             return;
         }
         Sound(0x104);
+        unsigned char* const count = CountAt(counts, index, category, "FieldItems_UseOnMember");
         const auto left = static_cast<UC>(*count - 1);
         *count = left;
         if (left != 0) return;
@@ -728,7 +735,7 @@ extern "C" void __cdecl FieldItemSort_ByIconKind(void) {
     const UC category = B(0x80333E);
     for (U bound = 0x7F; bound != 0; --bound) {
         unsigned char* const ids = IdList(category, "FieldItemSort_ByIconKind");
-        unsigned char* const counts = CountList(category, "FieldItemSort_ByIconKind");
+        const U counts = CountListAt(category, "FieldItemSort_ByIconKind");
         for (U i = 0; i < bound; ++i) {
             if (ids[i] == 0) continue;
             const UC y = ids[i + 1];
@@ -738,7 +745,7 @@ extern "C" void __cdecl FieldItemSort_ByIconKind(void) {
             const auto first = static_cast<UC>(SH_CALL(Item_IconKind)(category, x));
             if (first <= second) continue;
             Swap(ids + i, ids + i + 1);
-            Swap(counts + i, counts + i + 1);
+            Swap(CountAt(counts, i, category, "FieldItemSort_ByIconKind"), At(counts + i + 1));
         }
     }
 }
@@ -752,7 +759,7 @@ extern "C" void __cdecl FieldItemSort_EquipableFirst(void) {
     const UC bit = Bit8(record);
     for (U bound = 0x7F; bound != 0; --bound) {
         unsigned char* const ids = IdList(category, "FieldItemSort_EquipableFirst");
-        unsigned char* const counts = CountList(category, "FieldItemSort_EquipableFirst");
+        const U counts = CountListAt(category, "FieldItemSort_EquipableFirst");
         for (U i = 0; i < bound; ++i) {
             const UC x = ids[i];
             if (x == 0) continue;
@@ -763,7 +770,7 @@ extern "C" void __cdecl FieldItemSort_EquipableFirst(void) {
             const U second = SH_CALL(Item_EquipMask)(category, y);
             if ((bit & second) == 0) continue;
             Swap(ids + i, ids + i + 1);
-            Swap(counts + i, counts + i + 1);
+            Swap(CountAt(counts, i, category, "FieldItemSort_EquipableFirst"), At(counts + i + 1));
         }
     }
 }

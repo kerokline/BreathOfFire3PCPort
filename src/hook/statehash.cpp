@@ -65,6 +65,8 @@ std::uint32_t HashPage(const unsigned char* p) {
 
 void Put(std::uint32_t v) { std::fwrite(&v, 4, 1, g_out); }
 
+constexpr const char* kSpace = " \t\r\n";
+
 void LoadSkips(const char* path) {
     FILE* f = std::fopen(path, "r");
     if (!f) Fatal("BOF3X_STATEHASH_SKIP: cannot open %s", path);
@@ -73,13 +75,14 @@ void LoadSkips(const char* path) {
     while (std::fgets(line, sizeof line, f)) {
         ++n;
         if (char* hash = std::strchr(line, '#')) *hash = 0;
+        if (line[std::strspn(line, kSpace)] == 0) continue;   // blank or comment
         char* end = nullptr;
         const unsigned long at = std::strtoul(line, &end, 0);
-        if (end == line) continue;   // blank or comment
         char* end2 = nullptr;
-        const unsigned long len = std::strtoul(end, &end2, 0);
-        if (end2 == end || len == 0) Fatal("BOF3X_STATEHASH_SKIP: %s line %d wants ADDRESS LENGTH", path, n);
-        if (at < kBase || at + len > kEnd)
+        const unsigned long len = end == line ? 0 : std::strtoul(end, &end2, 0);
+        if (end == line || end2 == end || len == 0 || end2[std::strspn(end2, kSpace)] != 0)
+            Fatal("BOF3X_STATEHASH_SKIP: %s line %d wants ADDRESS LENGTH", path, n);
+        if (at < kBase || at >= kEnd || len > kEnd - at)   // the difference: a huge length cannot wrap
             Fatal("BOF3X_STATEHASH_SKIP: %s line %d: 0x%lX + 0x%lX is outside .data", path, n, at, len);
         g_skips.push_back({static_cast<std::uint32_t>(at), static_cast<std::uint32_t>(len)});
     }
@@ -193,6 +196,10 @@ void StateHash_Tick() {
     // The runners end the game with taskkill: nothing flushes at exit.
     if ((g_tick & 0x3F) == 0) std::fflush(g_out);
     ++g_tick;
+}
+
+void StateHash_Flush() {
+    if (g_out) std::fflush(g_out);
 }
 
 }  // namespace bof3

@@ -153,6 +153,9 @@ enum : unsigned {
     kHandler2, kItemList, kLeftOff, kRight80, kItemPanel, kEquip, kTitleBox, kDown40, kDrawItemList, kCount
 };
 static_assert(kCount == sizeof kClones / sizeof kClones[0], "one enum entry a clone, in order");
+// The clone being fuzzed (Seed sets it), for SoundEffect below.
+unsigned g_k = ~0u;
+bool PickRunning() { return g_k == kMemPick; }
 
 U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)); }
 template <typename F> U KeyOf(F f) { return Key(reinterpret_cast<const void*>(f)); }
@@ -222,6 +225,19 @@ U SwapEffect(const U* a, U answer) {
     return answer;
 }
 
+// Sound_PlayEffect (the standard row re-listed), while TacticsMembers_Pick
+// runs: after its confirm's sound 0x103, half the time the members row moved
+// to 0..4 (case 12's values) from the noise. Pick keeps the row it confirmed
+// as the held row, read again after that sound; case 12 alone reached that 2
+// times in 6,000 rounds (control 150, round fourteen's end, debt 23). Not
+// after the cursor's sound 0x100: the row moved there would hide the wraps'
+// stores (controls 49, 50).
+U SoundEffect(const U* a, U answer) {
+    const U n = sh::Noise();
+    if (PickRunning() && (a[0] & 0xFFFF) == 0x103 && n % 2 == 0) B(kRow) = static_cast<unsigned char>((n >> 8) % 5);
+    return answer;
+}
+
 #define G_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr U kAll = 0xFFFFFFFFu;
@@ -244,6 +260,8 @@ const sh::Callee kCallees[] = {
     {"Crt_sprintf", 0x5B9380, 0x5B9380, 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {0, 16, 0, 0}, &SprintfEffect},
     // the field-standard row's swap, louder: the members rows moved too (SwapEffect)
     {"0x58BD50", kSwapBytes, kSwapBytes, 2, {kAll, kAll}, kG, 0, 0, {}, &SwapEffect, nullptr, true},
+    // the standard row, louder while TacticsMembers_Pick runs (SoundEffect)
+    {G_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &SoundEffect},
     // nobody's yet (R4F): the Config screen's machine
     {"0x460CB0", kConfigMachine, kConfigMachine, 0, {}, kG, 0, 0},
 };
@@ -366,6 +384,7 @@ U g_cap, g_delta;
 unsigned g_arg_rec;
 
 void Seed(unsigned k) {
+    g_k = k;
     // the window records, the current one, the message cells
     for (unsigned n = 0; n < 22; ++n) SeedRecord(Mem(Rec(n, 0)));
     const unsigned current = sh::Next() % 22;

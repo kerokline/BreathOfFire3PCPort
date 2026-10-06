@@ -509,7 +509,7 @@ void __cdecl ScriptedLatch() {
 // unattended recipe run is not affected.
 void DeviceLatch() {
     StateHash_Tick();
-    Input_Latch();
+    bof3::orig::Input_Latch();
     if (WinMain_InputAllowed()) return;
     Input_Held = Input_Previous = Input_Pressed = 0;
     Input2_Held = Input2_Previous = Input2_Pressed = 0;
@@ -605,7 +605,7 @@ void RecordStart(const char* path) {
     std::fflush(g_rec);
     Log("input       recording the pad to %s (F12 = shot)", path);
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
-    constexpr std::uint32_t kInputLatch = 0x4FC6A0;
+    constexpr std::uint32_t kInputLatch = bof3::addr::Input_Latch;
     RetargetCall("InputRecord", kLatchCall, kInputLatch, reinterpret_cast<void*>(&RecordingLatch), true);
 }
 
@@ -655,7 +655,7 @@ void RandCountFrame() {
 // the latch as Capcom called it.
 void __cdecl HashedLatch() {
     StateHash_Tick();
-    Input_Latch();
+    bof3::orig::Input_Latch();
 }
 
 void InputScript_Stop() {
@@ -673,7 +673,7 @@ void InputScript_Start() {
     if (r && n) Fatal("BOF3X_RECORD and BOF3X_INPUT are both set; one latch, one of them");
     const bool hashing = StateHash_Start();
     constexpr std::uint32_t kLatchCall = 0x4FCDDE;   // WinMain: call Input_Latch
-    constexpr std::uint32_t kInputLatch = 0x4FC6A0;  // Input_Latch; symbols.gen.h binds the name as a macro
+    constexpr std::uint32_t kInputLatch = bof3::addr::Input_Latch;  // 0x4FC6A0
     if (r >= sizeof rec) Fatal("BOF3X_RECORD: the path is %lu characters, over MAX_PATH", (unsigned long)r);
     if (n >= sizeof path) Fatal("BOF3X_INPUT: the path is %lu characters, over MAX_PATH", (unsigned long)n);
     if (r > 0) {

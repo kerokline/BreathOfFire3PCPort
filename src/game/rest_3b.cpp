@@ -67,7 +67,7 @@ unsigned char* Enemy(unsigned n) { return At(at::kEnemies + static_cast<U>(stati
 unsigned char* CharRecord(unsigned roster) { return At(at::kCharRecords + (roster & 0xFF) * at::kCharStride); }
 unsigned char* AbilityRow(unsigned id) { return At(at::kAbilityRows + (id & 0xFFFF) * at::kAbilityStride); }
 
-// The callees nobody owns yet, by address (rest_3b_callees.h).
+// R3D's callees, ours, by address (named in rest_3b_callees.h).
 using Void0 = void (__cdecl*)();
 using U1 = U (__cdecl*)(U);
 using U2 = U (__cdecl*)(U, U);
@@ -320,7 +320,7 @@ extern "C" void __cdecl BattleItemCmd_EquipDispatch(void) {
     Dispatch("BattleItemCmd_EquipDispatch", at::kStep4, at::kItemCmdEquipSteps, 4);
 }
 
-// original 0x44A000 (Battle_MenuSteps entry 7; PSX 0x8009823C, paired): jmp
+// original 0x44A000 (Battle_MenuSteps[6]; PSX 0x8009823C, paired): jmp
 // [0x64E4FC + 4 * byte 0x904AA3] - Escape_States' three.
 extern "C" void __cdecl Escape_Dispatch(void) { Dispatch("Escape_Dispatch", at::kStep3, at::kEscapeStates, 3); }
 

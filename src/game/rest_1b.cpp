@@ -44,22 +44,22 @@ unsigned char* S() { return Sprite_Current; }
 // A .data table's address (its symbols.toml name is a pointer).
 U TableAt(const unsigned long* table) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(table)); }
 
-// A .data dispatch table read in place: the index unchecked, as the original's;
-// where the entry is not code (past the run of code-pointer tables) the
-// original jumps into data - ours aborts. While the fuzz runs, the entries are
-// its recorders (outside .text).
+// A .data dispatch table read in place. The original's index is unchecked:
+// past the table it jumps through the next table's cell, or into data. Ours
+// aborts at the table's own count (its symbols.toml count), before the read
+// (docs/rest_1b.md section 6). While the fuzz runs, the entries are its
+// recorders.
 using Handler = void (__cdecl*)();
-Handler CodeAt(U table, unsigned index, const char* who) {
+Handler CodeAt(U table, unsigned count, unsigned index, const char* who) {
     const U cell = table + 4u * index;
-    const auto entry = static_cast<U>(Long(At(cell)));
-    if (!scenario_harness::g_active && (entry < 0x401000 || entry >= 0x5C3000))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    static_cast<unsigned>(entry), static_cast<unsigned>(cell));
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry));
+    if (index >= count)
+        bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
+                    count, static_cast<unsigned>(table), static_cast<unsigned>(cell));
+    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(cell)))));
 }
-void ByForm(U table, const char* who) { CodeAt(table, Word(S() + 0x2C), who)(); }
-void ByState(U table, const char* who) { CodeAt(table, S()[2], who)(); }
-void ByStep(U table, const char* who) { CodeAt(table, S()[3], who)(); }
+void ByForm(U table, unsigned count, const char* who) { CodeAt(table, count, Word(S() + 0x2C), who)(); }
+void ByState(U table, unsigned count, const char* who) { CodeAt(table, count, S()[2], who)(); }
+void ByStep(U table, unsigned count, const char* who) { CodeAt(table, count, S()[3], who)(); }
 
 // Field_DirectionSteps' row for a direction, read in place with the direction
 // unmasked (`shl eax, 3` on the zero-extended byte): a byte above 7 reads the
@@ -337,7 +337,7 @@ unsigned char CellHit(unsigned x, unsigned z) {
 // mov ax / al, ...; jmp [eax * 4 + table]`, the index unchecked.
 // ===========================================================================
 
-#define R1B_TABLE(t) TableAt(t)
+#define R1B_TABLE(t) TableAt(t), t##_count   // the table and its count: ours aborts past it (section 6)
 extern "C" void __cdecl PartyFormAction2_ByForm(void) { ByForm(R1B_TABLE(PartyFormAction2_Forms), "PartyFormAction2_ByForm (0x51D710)"); }
 extern "C" void __cdecl PartyAction2_ByForm(void) { ByForm(R1B_TABLE(PartyAction2_Forms), "PartyAction2_ByForm (0x51D730)"); }
 extern "C" void __cdecl PartyFormAction3_ByForm(void) { ByForm(R1B_TABLE(PartyFormAction3_Forms), "PartyFormAction3_ByForm (0x51DE90)"); }

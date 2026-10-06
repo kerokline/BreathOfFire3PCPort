@@ -59,7 +59,7 @@ the originals do (the harness's disturbance moves it).
 
 Each is `mov ecx, [Sprite_Current]; xor eax, eax; mov ax / al, [ecx + k];
 jmp [eax * 4 + table]`, the index unchecked. Ours reads the table in place and
-calls the entry (aborting where the entry is not code).
+calls the entry, aborting past the table's own count (section 6).
 
 | Function | Entry | By | Table (count) | Reached through |
 |---|---|---|---|---|
@@ -342,10 +342,15 @@ None. `DIVERGENCE.md`, `cheats.cpp` and `widescreen.cpp` name no byte in
 - **Every dispatcher's index is unchecked** (29): the byte `+2` / `+3` or the
   word `+0x2C` times 4 from its table. Past a 2- or 3-entry table the original
   jumps through the next table's code pointers (another state's handler), and
-  past the run into data. Ours reproduces the first (the entry read in place
-  is code) and **aborts** on the second with a message. Every writer this
+  past the run into data. Ours **aborts at the table's own count** (its
+  `symbols.toml` count), before the read, with a message. Every writer this
   group reads keeps the indexes inside (section 2); whether another writes the
-  form word above 2 is not established here.
+  form word above 2 is not established here. **One rule for wave one's seven
+  groups** (2026-10-05, the round's end, `round-14-review.md` item 7): R1A,
+  R1B and R1C read on into the next table until then, R1D..R1G aborted at the
+  count; all seven abort at the count now, as the round's rule since round
+  nine has it - loudly, before the fault or the read it guards, never by
+  running another table's handler.
 - **An object index past the 34** (the Resolve, Form1Begin and Hit states):
   `Sprite_ObjectAt`'s answer marks `Sprite_Objects` below 0x1E and
   `Sprite_ObjectsExtra` from it - signed in the Resolve and Hit states (0x80..
