@@ -3,6 +3,10 @@
 **Status:** MEASURED (2026-10-06). The data side is settled to the row; the
 code side is counted, not read (section 6); four PSP leads are matched to
 data rows that were not rendered, so they stay candidates (section 5).
+Section 8 (added the same day) reads the four Western data changes through
+the code that consumes them: two are one collision fix, one is a sound
+priority made consistent, one is a PAL-only sample swap of unknown purpose.
+None has been seen in play.
 
 The phase 4 measurement of [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8
 ("do the regional builds differ beyond their text?"), with the two PSP discs
@@ -239,10 +243,9 @@ English text edits of 5.3.
   reading is per function against the PSX twin (`psx-twin-check.md`), the
   code half of I32 and of ASSET_SOURCES section 9; nothing here enters the
   cache.
-- **What the data rows do.** `AREA004`'s 992 bytes, the cue byte, the PAL
-  banks' lost sample and the eleven PSP map bands are located and sized, not
-  understood. Each wants its reader found (who reads `0x80104000` in an area
-  that is not a world map) or the owner's eye in play.
+- **What the data rows do.** The four Western kinds are read in section 8.
+  The eleven PSP map bands of 5.2 are located and sized only; `tools/region_read.py`
+  `area4` is the method that would read them (each is an area block, 8.1).
 - **Anything rendered.** No palette or tile was rendered in colour; P6, P8
   and P13 stay candidates until one is.
 - **`psx-eu-en`**: not held.
@@ -267,7 +270,7 @@ own post-release changes, and that raises **the decision**: whether the base
 takes JP's version of these rows (what the PC has, and the archival record),
 or the later one, as a ledgered divergence, the way
 [`psx-twin-check.md`](psx-twin-check.md) settles a bug's origin. The owner's
-call, row by row, once each row's reader is known.
+call, row by row; section 8 reads each row and gives a verdict.
 
 ### (2) The PSP's data changes
 
@@ -301,7 +304,179 @@ art, text and format.
 - **pc-zh**: as the census (DAT_CONTAINER section 2); its own art (`FIRST`
   section 6) and its CLUT strip row stay PC-only.
 
-## 8. The PC in the same table
+## 8. What the rows do
+
+The owner, 2026-10-06: "let's figure out what those rewrites changed. If it
+looks like a bug fix, it's probably worth keeping the change as the default
+option." Each of section 4.1's four kinds, read through the structure the
+game's code reads it with. Measured with
+[`tools/region_read.py`](../tools/region_read.py) (new) against the JP, US
+and French discs; its printout is `analysis/region/read_us.txt`. The text
+below gives fields, cells and values only.
+
+### 8.1 `AREA004` section 8: the area block, 72 cells walled
+
+**What the section is.** `0x80104000` is the PC's kind-0 tag `0xC8000`
+(`DAT_CONTAINER.md` section 2), so it loads at `AreaMap_Header` `0x8CB580`
+(`sprite-draw-order.md`, `MapView_CellToMap`). It is not a world-map node
+table: it is the field area's own map. The layout below is what our code
+reads (`map-layers.md`, `map-scroll.md`, `effect_6c.md` 1.4, `rest_2d.md`
+L1), and in `AREA004` the regions butt end to end exactly:
+
+| region | where | read by |
+|---|---|---|
+| header | `+0x00`: width 90, depth 88, the tile base, the list indices | everything below |
+| corner heights | `+0x30`, four s8 per cell (`AreaMap_Corners`) | `MapView_Build`, `AreaMap_Slope` |
+| cell bytes | header dword `+0x14` x 4 = `+0x7BF0`, one byte per cell (`AreaMap_Bytes`) | `AreaMap_ByteAt`, so `AreaMap_CellBlocked` `0x518620` (ours, `field_blocked.cpp`; PSX `FUN_801A3100`): high nibble 1-5, A, B or F blocks a step |
+| tile words | 4 x the header's word `+2` = `+0x9AE0`, a u16 per cell | `MapView_CellTextures` |
+| texture records | from `+0xD8C0`, 1,035 dwords | the same |
+
+**What changed** (JP against US; FR, DE and both PSP discs carry the same
+section):
+
+- **Header and corner heights: identical.** The ground is the same shape.
+- **72 cell bytes, every one `0x00` to `0x10`** - open floor to a blocking
+  cell (high nibble 1):
+  - column x 28, z 9..30 and 35..65 (53 cells);
+  - column x 25, z 9..11 (3 cells);
+  - row z 71, x 7..22 (16 cells).
+- On JP those lines already have wall cells at their ends and in their
+  middle: x 28 at z 7, 8, 31, 34 and 66..68; x 25 at z 7, 8; and a full wall
+  row at z 68 over x 7..21, three rows above the new one. The new cells fill
+  the gaps between Capcom's own wall stubs. The one gap left open in column
+  28 is z 32..33, where z 32 is a `0xC0` cell (the link-cell code of
+  `rest_2d.md` L1): a doorway kept.
+- By the corner heights, columns x 26..27 are a raised strip two cells wide
+  (about 25 units at z 13 and z 29, against 0..3 either side; it rises with
+  the ground towards z 65). Column x 28 is its east edge, a half-height cell
+  (about 5 units) between the strip and the floor east of it. The area is
+  "Dauna Mine - Minecart" in the sibling's `names/areas.toml`. That the strip
+  is the track bed is a guess from the name.
+- **Tile words: 494 changed.** 464 of them are +1, because one texture
+  record is inserted at index 524 and every later index shifts. 30 cells are
+  re-pointed to other textures: x 26 at z 10, 11 and 45..63, and x 52 at
+  z 59..67. One record is replaced (508) and one dropped (770). The visible
+  change is those 30 cells' texture, mostly along the strip's west edge.
+
+**In play, as far as the reading reaches.** On JP's data the party can step
+onto the 53-cell edge column and the gaps beside the bottom wall row. On the
+later data `AreaMap_CellBlocked` refuses those cells, which applies to the
+party and to every object asking `Field_ObjectBlockedAhead`
+(`field-blocked.md`). Whether JP's open edge lets the party climb onto the
+strip, or walk down off the row at z 71, also depends on `AreaMap_TooSteep`
+(slope above `0x40`), which was not computed for these cells. So "a walkway
+edge that could be walked on, now walled" is read; "a way out of bounds" is
+not proven.
+
+**Live check (not run).** No recorded route walks area 4 under control. The
+attract cycle shows area 4 twice (`attract-mode.md`), but its moves are
+scripted, and `Field_ObjectBlocked`, the scripted move's test, skips the map
+(`field-blocked.md`). The check is the owner's: in the Dauna mine's minecart
+area, try to walk along the raised strip's east edge, and the bottom edge
+below the wall row. JP data (today's PC) should allow it; US data should
+not.
+
+### 8.2 `AREA004` section 10: the battle placement map follows the walls (Western PSX only)
+
+**What the section is.** `0x8002A000` is PC tag `0xC0800`, loaded at
+`0x8C3D80`: the cell nibble map that `AreaMap_CellNibble` `0x592890` reads
+(ours, `inventory_ops.cpp`; PSX `801C7FCC`). A nibble per cell (7,920 cells
+in the first 3,960 bytes; the other 1,040 are zero on JP and US). Its
+callers place the party and the enemies when a fight starts:
+`Encounter_CellFits` wants a size class of at least `4 x size + 1`, and
+`Encounter_StepOpen` a passage class (`inventory_ops.md` section 3). 0 means
+no one is placed there.
+
+**What changed.** 6 bytes, 8 nibbles. Each is one of section 8.1's new wall
+cells, set to 0: (28, 10) 6, (28, 11) 2, (28, 64) 1, and (14, 71) 2,
+(15, 71) 1, (18, 71) 2, (19, 71) 2, (20, 71) 1. The other 64 new wall cells
+were already 0.
+
+**Why, by measurement.** Across all 200 JP area files, a cell whose byte
+blocks has nibble 0 in 980,813 of 981,024 cells (211 exceptions). The
+placement map follows the collision. Section 10's change is that map
+brought back in line after 8.1's walls. The PSP took 8.1 but **not** this
+(its section 10 is JP's), so on the PSP these 8 cells are walls a fight can
+still place someone on.
+
+**In play.** On the PC today neither change is present, so the pair is
+consistent. Applying 8.1 without 8.2 (the PSP's state) could put a member or
+an enemy on a wall cell in a random battle at those spots.
+
+### 8.3 The cue byte: one sound's priority in 65 transformed-form voice banks
+
+**What the section is.** A type-8 section is the bank's cue-table entries,
+4 bytes per cue: flags; pan and program; tone and priority; chord and voice.
+The sibling's `docs/SOUND_CUES.md` ("The cue tables") reads them, from
+`SE_Play` `0x8015E908` and the bank set-up. Priority is byte 2's low nibble.
+In `SE_Play`, a new cue on the same primary voice as the last one is
+**dropped** when its priority is lower and that voice is still sounding.
+
+**What changed.** In every `BPLCHAR` party-voice bank, the six cues are
+program 0 tones 0, 2, 4, 6 and programs 1 and 2 tone 0, on voices 20 and
+18. On JP:
+
+| banks | files | cue 1's priority | the other five |
+|---|---|---:|---:|
+| the party's own sets | `BPLD*`, `BPLU*` (54 each), `BRTD*`, `BRTU*` (12 each), `PAPYD*`, `PAPYU*` (5 each): 142 | **11** | 10 |
+| the transformed forms' sets | `DRG*` (37), `RYUD*`, `RYUU*` (8 each), `CRYUD*`, `CRYUU*`, `REID*`, `REIU*`, `RTD*`, `RTU*` (2 each) | **10** | 10 |
+
+The later builds set cue 1 to 11 in the second group, which makes it match
+the first. Nothing else in the 24 bytes changes.
+
+**In play (on the PSX).** In the party's normal sets, cue 1 (program 0,
+tone 2) outranks its siblings: while it sounds, a later cue of the same set
+on voice 20 cannot cut it. In the transformed sets on JP it could be cut. The
+later builds make the forms behave as the normal sets do. What cue 1's
+sample is (a cry, an attack voice) was not identified. The sibling's
+`names/se_cues.toml` has no label for it.
+
+**On the PC: nothing.** The port's `Sound_PlayEffect` `0x587740` (ours,
+`sound.cpp`; `sound.md`) plays a cue as four voice words on DirectSound
+channels, with no priority field and no drop rule. The byte has nowhere to
+go until an engine plays the PSX's banks on an SPU model (I23's sequencer
+path).
+
+### 8.4 The PAL area banks: one sound replaced in 8 of 14 areas
+
+**What changed** (US against FR; FR and DE identical, US identical to JP).
+In the bank-2 (field sounds) VAB of eight areas - `AREA100` (Relay Point B),
+`AREA112` (Relay Point A), `AREA135`, `AREA138`, `AREA147` (Caer Xhan),
+`AREA168` (Station Myria), `AREA170`, `AREA188`; names from the sibling's
+`areas.toml` where it has them:
+
+- six of them drop one pair of samples (23,248 and 31,824 bytes; md5
+  `f481d147612e`, `f235f1cd48c0`) and add one 10,992-byte sample
+  (`4908872c1f70`). That sample is not new: it is `AREA173`'s sample 12 on
+  the US disc. The four tones that played the pair (program 1 or 2, tones
+  0..3; program 0, tones 10..13 in `AREA170`) now all play the one sample.
+  2 to 4 cue entries reach those tones in each area;
+- `AREA135` and `AREA188` drop two and four samples of another set
+  (`2081d9761925`, `d67a52ce6de6`, plus `6d5032b64fd8` and `f15f21140320`
+  in `AREA188`) for the same 10,992-byte sample. Two tones, one cue entry.
+  Some of the dropped samples have no tone pointing at them on the US disc;
+- the cue tables are unchanged.
+
+**Not consistent across the game.** The same pair of samples is in six more
+areas (`AREA139`, `140`, `148`, `149`, `167`, `197`), and the second set in
+`AREA121` and `AREA136`. The PAL discs keep them there unchanged. So the
+same sound plays in some areas and the substitute in others.
+
+**In play.** On the PAL discs, whatever sound those cues make in these eight
+areas is replaced by `AREA173`'s sound, shorter. What either sound is was not
+identified (no label in `se_cues.toml`). The PC's banks are JP's, as are the
+US's.
+
+### 8.5 Verdicts
+
+| kind | verdict | evidence | making it the default |
+|---|---|---|---|
+| 8.1 `AREA004` walls | **bug fix** (collision gaps closed); a small texture fix with it | 72 open cells along lines Capcom had already started walling, the doorway kept, the heights untouched; adopted by every later build including the PSP | possible today without new engine work, as a kind-0 overlay chunk of tag `0xC8000` for `AREA004` built from the player's US, FR, DE or PSP disc. The overlay mechanism exists (`loc_build.py`'s `<lang>.<NAME>.DAT`, walked after the original), but a non-language overlay needs its own switch and a DIV entry. Without a later disc: nothing, because the bytes are Capcom's and a patch carrying them would be shipping data (ASSET_SOURCES section 2). Area 4 is in the attract cycle, so the attract and state-hash references change wherever the layer is on |
+| 8.2 placement nibbles | **bug fix, the companion of 8.1** - not separable from it | the placement map follows collision in 99.98% of JP's cells | goes with 8.1 in the same overlay (tag `0xC0800`) from a Western PSX disc. From a PSP disc it is missing. Since the rule is measured, it can be derived instead: zero the nibble under every newly blocking cell. That is an algorithm, not shipped bytes |
+| 8.3 cue priority | **bug fix** (consistency) on the PSX's sound engine | 65 form banks made to match the 142 party banks' cue 1 | **nothing on the PC**, which has no cue priority. It matters only if the PSX banks are ever played through an SPU model (I23). Then it is one byte per bank, the importer's to take from a later disc or to derive ("cue 1 of a form bank takes the party banks' priority") |
+| 8.4 PAL sample swap | **regional, purpose unknown**: not a fix | JP and US agree; the PAL discs change 8 of the 14 areas that use the sounds, leaving the rest | keep JP/US. Offering PAL's would be a per-build option no one has asked for |
+
+## 9. The PC in the same table
 
 | pair | sections | identical | text | layout | layout+text | logic-data | art | dropped |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -318,7 +493,7 @@ in a bank the port converted to WAV, so it is not compared. Audio banks are not 
 
 ## Tools used
 
-All ours: `tools/region_diff.py` (new), `tools/psx_disc.py`, `tools/dat.py`,
+All ours: `tools/region_diff.py` and `tools/region_read.py` (new), `tools/psx_disc.py`, `tools/dat.py`,
 `analysis/dat_census.json`. Python 3.13 with capstone (BSD-3) for reading
 sample instructions and Pillow (MIT-CMU) for one grey render of tiles; nothing
 of theirs is in the repo. The sibling's `names/areas.toml`,
