@@ -393,7 +393,7 @@ const sh::Callee kCallees[] = {
     // the standard set's, louder here (the thin controls, section 7 of round-14-cleanup.md)
     {R4D_OURS(Music_FadeOutStop), 1, {kW}, kG, 0, 0, {}, &KeptTrackMove},
     {R4D_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &StepMove},
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 5, {kW, kW, 0, 0, 0}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 5, {kW, kW, 0, 0, 0}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
 };
 #undef R4D_OURS
 

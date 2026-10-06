@@ -658,7 +658,7 @@ const Callee kStandard[] = {
     {BH_OURS(Flags_Test), 2, {kAll, kU8}, Answer::kBool, 0, 0},
     {BH_OURS(AbilityList_Add), 4, {kAll, kAll, kAll, kAll}, Answer::kFlag, 0, 0},
     {BH_OURS(MoveCmd_OpE9), 7, {kAll, kU8, kU8, kU16, kU16, kU8, kU8}, Answer::kFlag, 0, 0},
-    {BH_THEIRS(Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
+    {BH_OURS(Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0},
     // sound and music
     {BH_OURS(Sound_PlayEffect), 1, {kU16}, Answer::kGarbage, 0, 0},
     {BH_OURS(Sound_PlayById), 1, {kU16}, Answer::kGarbage, 0, 0},
@@ -695,7 +695,7 @@ const Callee kStandard[] = {
     {BH_OURS(Gte_SetTransMatrix), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Math_Sin), 1, {kAll}, Answer::kGarbage, 0, 0},
     {BH_OURS(Math_Cos), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {BH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
+    {BH_OURS(Rand), 0, {}, Answer::kRand, 0, 0},
 };
 
 // The battle engine's standard callees (round twelve, group EH;
@@ -726,7 +726,7 @@ const Callee kEngineStandard[] = {
     {BH_OURS(Item_NamePtr), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {}, &TextPtrEffect},
     // the destination, the format and one value: a word past what the caller pushed is its own
     // frame, different in the copy and in ours (self-test); a group formatting more lists its own
-    {BH_THEIRS(Crt_sprintf), 3, {0, kAll, kAll}, Answer::kGarbage, 0, 0, {}, &SprintfEffect},
+    {BH_OURS(Crt_sprintf), 3, {0, kAll, kAll}, Answer::kGarbage, 0, 0, {}, &SprintfEffect},
     {BH_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},   // msgbox.cpp: shorts; Text_DrawString bytes
     {BH_OURS(Text_DrawSmall), 5, {kU16, kU16, kU8, kU8, 0}, Answer::kGarbage, 0, 0, {}, &TextArg4Effect},
     {BH_OURS(Text_DrawFont12), 4, {kU16, kU16, 0x3Fu, 0}, Answer::kGarbage, 0, 0, {}, &TextArg3Effect},   // S16 pen, colour & 0x3F
@@ -818,7 +818,7 @@ const Callee kEngineStandard[] = {
     {BH_OURS(Stat_AddClampedTo), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},   // 0x590E80, (u16 *stat, cap, delta): a stat add
     {"0x591810", 0x591810, 0x591810, 2, {kU8, kU8}, Answer::kFlag, 0, 0},         // no start list has it (after 0x5917D0's)
     {BH_OURS(BattleEquipWin_DrawBar), 6, {kAll, kAll, kU8, kU8, kU16, kU8}, Answer::kGarbage, 0, 0},   // 0x59DB70
-    {"0x5B9450", 0x5B9450, 0x5B9450, 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},   // the CRT's strncpy (Crt_strncpy)
+    {BH_OURS(Crt_strncpy), 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},   // the CRT's strncpy, ours since crt_rest: the copy calls Capcom's
     // items, stats, the party
     {BH_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0},   // char_stats.cpp, scena_sx.cpp: low bytes only
     {BH_OURS(Inventory_Remove), 3, {kU8, kU8, kU8}, Answer::kFlag, 0, 0},
@@ -838,7 +838,7 @@ const Callee kEngineStandard[] = {
     {BH_OURS(Sound_StopChannels), 0, {}, Answer::kGarbage, 0, 0},
     {BH_OURS(Task_Restart), 1, {kAll}, Answer::kGarbage, 0, 0},
     // round twelve's folds, the louder forms (section 10.10): before kStandard, so these stand
-    {BH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0, {}, &RandRangeEffect},                       // 15 bits, as the CRT's (BE2)
+    {BH_OURS(Rand), 0, {}, Answer::kRand, 0, 0, {}, &RandRangeEffect},                       // 15 bits, as the CRT's (BE2)
     {BH_OURS(Sound_PlayEffect), 1, {kU16}, Answer::kGarbage, 0, 0, {}, &SoundInputEffect},       // Input_Pressed moved half the time (BE5)
     {BH_OURS(Battle_TurnVectorC), 1, {kAll}, Answer::kGarbage, 0, 0, {}, &TurnEffect},            // the velocity pair turned (BE2; BE4's function)
     {BH_OURS(Battle_SetApPopup), 2, {kU16, kU8}, Answer::kGarbage, 0, 0, {}, &PopupEffect},        // the AP pop-up as the damage one (BE5; BE6's function)

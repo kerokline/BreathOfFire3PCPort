@@ -57,7 +57,7 @@ const Callees kOriginals = {
     Fn<std::uint32_t (__cdecl*)(unsigned, unsigned)>(bof3::addr::Field_CellPickup),
     Fn<std::uint32_t (__cdecl*)(unsigned, unsigned)>(bof3::addr::AreaMap_ByteAt),
     Fn<void (__cdecl*)(unsigned, unsigned, unsigned)>(kSpawnAtCell),
-    Fn<int (__cdecl*)()>(0x5B93D2),   // Rand (Capcom's CRT, not ours)
+    Rand,   // the CRT's rand, ours since crt_rest
     Fn<void (__cdecl*)(unsigned)>(kFoundZenny),
     Fn<unsigned char* (__cdecl*)(unsigned, unsigned)>(bof3::addr::Item_NamePtr),
     Fn<std::uint32_t (__cdecl*)(unsigned, unsigned, unsigned)>(bof3::addr::Inventory_Add),

@@ -497,8 +497,9 @@ psx = 0x8017ED4C
 name = "Rand"
 ret = "int"
 params = "void"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-18: called by Battle_ScaleDamage 0x446430 with the result masked & 7 to index the damage-variance table, which is the PSX Rand 0x8017ED4C call site term for term. On the PC this is the MSVC6 CRT rand(), not a BIOS thunk — same role, different implementation, so RNG sequences will NOT match between the two binaries."
+evidence = "disasm 2026-09-18: called by Battle_ScaleDamage 0x446430 with the result masked & 7 to index the damage-variance table, which is the PSX Rand 0x8017ED4C call site term for term. On the PC this is the MSVC6 CRT rand(), not a BIOS thunk — same role, different implementation, so RNG sequences will NOT match between the two binaries. Ours since 2026-10-06 (crt_rest.cpp, docs/crt-rest.md section 2.1): the same generator, its seed a static of ours from 1 - _initptd 0x5BAD51 stores 1 at ptd + 0x14 (called by _mtinit 0x5BACFD and _getptd's new-thread path). Only the main thread calls it: 745 E8 sites in BOF3.exe, all game code; no thread-creating import; every traced run entered it on its main thread. Fuzzed 100,000 rounds and a run of 20,000 from 1 against a copy whose Crt_GetPtd answers a block of ours, two planted bugs refused."
 
 [[data]]
 pc = 0x64E38C
@@ -648,8 +649,9 @@ pc = 0x5B9D4E
 name = "Crt_fread"
 ret = "unsigned"
 params = "void *dst, unsigned size, unsigned count, void *stream"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: lock(stream) 0x5BCBD3 / inner 0x5B9D7D / unlock 0x5BCC25 — the MSVC6 multithread-CRT wrapper shape; the inner routine computes size*count, returns 0 when that is zero, and tests FILE+0x0C (_flag) against 0x10C (_IOMYBUF|_IONBF|_IOYOURBUF) to choose the buffer size from FILE+0x18 (_bufsiz) or 0x1000. That is MSVC6 fread.c."
+evidence = "disasm 2026-09-19: lock(stream) 0x5BCBD3 / inner 0x5B9D7D / unlock 0x5BCC25 — the MSVC6 multithread-CRT wrapper shape; the inner routine computes size*count, returns 0 when that is zero, and tests FILE+0x0C (_flag) against 0x10C (_IOMYBUF|_IONBF|_IOYOURBUF) to choose the buffer size from FILE+0x18 (_bufsiz) or 0x1000. That is MSVC6 fread.c. Ours since 2026-10-06 with the file layer (crt_rest.cpp)."
 
 [[func]]
 pc = 0x454590
@@ -820,16 +822,18 @@ pc = 0x5B9B6D
 name = "Crt_fopen"
 ret = "void *"
 params = "const char *path, const char *mode"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19, 6 instructions: pushes 0x40 (_SH_DENYNO) and its own two arguments and calls 0x5B9B3C - MSVC6 fopen as a wrapper over _fsopen. Used by File_Open 0x5A7380 (mode rb), File_OpenWrite 0x5A7420 (wb) and Cfg_Load 0x4FD030 (rt), each storing the result where fread / fwrite / fgets later take a stream."
+evidence = "disasm 2026-09-19, 6 instructions: pushes 0x40 (_SH_DENYNO) and its own two arguments and calls 0x5B9B3C - MSVC6 fopen as a wrapper over _fsopen. Used by File_Open 0x5A7380 (mode rb), File_OpenWrite 0x5A7420 (wb) and Cfg_Load 0x4FD030 (rt), each storing the result where fread / fwrite / fgets later take a stream. Ours since 2026-10-06 with the rest of the file layer (crt_rest.cpp, docs/crt-rest.md section 2.4): every stream is opened, used and closed by ours (file_io.cpp, Cfg_Load), so the FILE is the toolchain's."
 
 [[func]]
 pc = 0x5B9ADA
 name = "Crt_fgets"
 ret = "char *"
 params = "char *buf, int n, void *stream"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05: cdecl, ebp frame; n at [ebp+0xC] tested jg 0 first (else returns 0), buf in ebx and edi - MSVC6 fgets by shape. Callers Cfg_Load 0x4FD05B and 0x4FD0BE with (frame, 0x14, the BOF3.CFG stream) (docs/shell.md)."
+evidence = "disasm 2026-10-05: cdecl, ebp frame; n at [ebp+0xC] tested jg 0 first (else returns 0), buf in ebx and edi - MSVC6 fgets by shape. Callers Cfg_Load 0x4FD05B and 0x4FD0BE with (frame, 0x14, the BOF3.CFG stream) (docs/shell.md). Ours since 2026-10-06 with the file layer (crt_rest.cpp): Cfg_Load's stream is the toolchain's, so its fgets is too."
 
 [[func]]
 pc = 0x5B9A9B
@@ -852,40 +856,45 @@ pc = 0x5B9E65
 name = "Crt_fwrite"
 ret = "unsigned"
 params = "const void *src, unsigned size, unsigned count, void *stream"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: lock(stream) 0x5BCBD3 / inner 0x5B9E94 / unlock 0x5BCC25, the same wrapper as Crt_fread. The inner routine tests FILE+0x0C (_flag) against 0x10C like fread's, copies into the stream buffer with the block-copy routine 0x5BDFF0, flushes through 0x5BCDB0 (the same flush Crt_fseek and Crt_fclose call) and writes directly through 0x5BE325. That is MSVC6 fwrite.c. Observed effect agrees: two saves of exactly the requested 0x12B0 bytes (2026-09-19)."
+evidence = "disasm 2026-09-19: lock(stream) 0x5BCBD3 / inner 0x5B9E94 / unlock 0x5BCC25, the same wrapper as Crt_fread. The inner routine tests FILE+0x0C (_flag) against 0x10C like fread's, copies into the stream buffer with the block-copy routine 0x5BDFF0, flushes through 0x5BCDB0 (the same flush Crt_fseek and Crt_fclose call) and writes directly through 0x5BE325. That is MSVC6 fwrite.c. Observed effect agrees: two saves of exactly the requested 0x12B0 bytes (2026-09-19). Ours since 2026-10-06 with the file layer (crt_rest.cpp)."
 
 [[func]]
 pc = 0x5B9F9E
 name = "Crt_fseek"
 ret = "int"
 params = "void *stream, int offset, int whence"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: lock 0x5BCBD3 / inner 0x5B9FCA / unlock 0x5BCC25. The inner routine rejects a stream whose _flag has none of 0x83 (_IOREAD|_IOWRT|_IORW) and a whence outside 0..2 by storing 0x16 (EINVAL) through the errno accessor 0x5BCA43 and returning -1; clears 0x10 (_IOEOF); for whence 1 adds the result of 0x5BE5ED (ftell) to the offset and switches to whence 0; flushes (0x5BCDB0); for an _IORW stream clears the low two flag bits, else for a read stream with _IOMYBUF and without _IOSETVBUF sets _bufsiz to 0x200; then calls 0x5BE515 as (FILE+0x10, offset, whence) and returns 0, or -1 if that returned -1. Step for step MSVC6 fseek.c."
+evidence = "disasm 2026-09-19: lock 0x5BCBD3 / inner 0x5B9FCA / unlock 0x5BCC25. The inner routine rejects a stream whose _flag has none of 0x83 (_IOREAD|_IOWRT|_IORW) and a whence outside 0..2 by storing 0x16 (EINVAL) through the errno accessor 0x5BCA43 and returning -1; clears 0x10 (_IOEOF); for whence 1 adds the result of 0x5BE5ED (ftell) to the offset and switches to whence 0; flushes (0x5BCDB0); for an _IORW stream clears the low two flag bits, else for a read stream with _IOMYBUF and without _IOSETVBUF sets _bufsiz to 0x200; then calls 0x5BE515 as (FILE+0x10, offset, whence) and returns 0, or -1 if that returned -1. Step for step MSVC6 fseek.c. Ours since 2026-10-06 with the file layer (crt_rest.cpp)."
 
 [[func]]
 pc = 0x5B9993
 name = "Crt_fclose"
 ret = "int"
 params = "void *stream"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: result preset to -1; a stream with 0x40 (_IOSTRG) just has _flag zeroed; otherwise lock 0x5BCBD3 / inner 0x5B99C4 / unlock 0x5BCC25, where the inner routine, for a stream in use (_flag and 0x83), flushes (0x5BCDB0), frees the buffer (0x5BCD57), closes the descriptor at FILE+0x10 (0x5BCC77) and frees and clears FILE+0x1C (_tmpfname). MSVC6 fclose.c."
+evidence = "disasm 2026-09-19: result preset to -1; a stream with 0x40 (_IOSTRG) just has _flag zeroed; otherwise lock 0x5BCBD3 / inner 0x5B99C4 / unlock 0x5BCC25, where the inner routine, for a stream in use (_flag and 0x83), flushes (0x5BCDB0), frees the buffer (0x5BCD57), closes the descriptor at FILE+0x10 (0x5BCC77) and frees and clears FILE+0x1C (_tmpfname). MSVC6 fclose.c. Ours since 2026-10-06 with the file layer (crt_rest.cpp). Its one CRT caller, _fcloseall 0x5C09A1 at exit, walks the CRT's own stream table from slot 3, which holds no stream once fopen is ours."
 
 [[func]]
 pc = 0x5C3660
 name = "Crt_fileno"
 ret = "int"
 params = "void *stream"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19, 3 instructions: returns the dword at stream+0x10, MSVC6 FILE._file."
+evidence = "disasm 2026-09-19, 3 instructions: returns the dword at stream+0x10, MSVC6 FILE._file. Ours since 2026-10-06 with the file layer (crt_rest.cpp): the toolchain's _fileno."
 
 [[func]]
 pc = 0x5C35D6
 name = "Crt_filelength"
 ret = "int"
 params = "int fd"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: validates fd against the handle count at 0x93C6A0 and the open bit of its ioinfo entry (table at 0x93C5A0), then lseek(fd,0,CUR) / lseek(fd,0,END) / restore - MSVC6 _filelength."
+evidence = "disasm 2026-09-19: validates fd against the handle count at 0x93C6A0 and the open bit of its ioinfo entry (table at 0x93C5A0), then lseek(fd,0,CUR) / lseek(fd,0,END) / restore - MSVC6 _filelength. Ours since 2026-10-06 with the file layer (crt_rest.cpp): the toolchain's _filelength of the toolchain's descriptor."
 
 [[data]]
 pc = 0x66BC2C
@@ -909,7 +918,7 @@ name = "Crt_malloc"
 ret = "void *"
 params = "unsigned size"
 status = "evidence"
-evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode)."
+evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode). Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): the MP3 decoder calls it 19 times and the runtime 19, and an inject would move them all; ours call it by name, one heap with them."
 
 [[func]]
 pc = 0x5B9577
@@ -917,7 +926,7 @@ name = "Crt_free"
 ret = "void"
 params = "void *ptr"
 status = "evidence"
-evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc."
+evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc. Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): Mp3_Destroy 0x5B0630 frees through it (0x5B071D, 0x5B072D) the blocks Mp3_Create took from the runtime's calloc 0x5BA221, so the toolchain's free cannot stand at this entry while the decoder runs."
 
 [[func]]
 pc = 0x59EA70
@@ -1233,17 +1242,52 @@ pc = 0x5B9380
 name = "Crt_sprintf"
 ret = "int"
 params = "char *dst, const char *fmt, ..."
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: builds a FILE on the stack with _ptr = _base = dst, _flag = 0x42 (_IOWRT|_IOSTRG), _cnt = 0x7FFFFFFF, and hands it with fmt and the address of the variadic arguments to the formatter - MSVC6 sprintf.c. Call sites pass printf-style format strings (the DAT-directory format in LoadDatFile 0x454590, the two-string format in File_Open 0x5A7380)."
+evidence = "disasm 2026-09-19: builds a FILE on the stack with _ptr = _base = dst, _flag = 0x42 (_IOWRT|_IOSTRG), _cnt = 0x7FFFFFFF, and hands it with fmt and the address of the variadic arguments to the formatter - MSVC6 sprintf.c. Call sites pass printf-style format strings (the DAT-directory format in LoadDatFile 0x454590, the two-string format in File_Open 0x5A7380). Ours since 2026-10-06 (crt_rest.cpp, docs/crt-rest.md section 2.2): the formats of all 188 BOF3.exe sites (the push imm32 of a .rdata/.data string before each call, a capstone scan) and ours' three literals use %d and %X with an optional 0 flag and widths 2..8, and a bare %s - nothing else; ours takes exactly those and Fatals on any other conversion. Fuzzed over the 44 image formats and 3 of ours against Capcom's, five planted bugs refused."
 
 [[func]]
 pc = 0x5B9450
 name = "Crt_strncpy"
 ret = "char *"
 params = "char *dst, const char *src, unsigned n"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "capstone 2026-10-05 (round fourteen's end, round-14-review.md item 17), 0x5B9450..0x5B954D (0xFE bytes): MSVC's strncpy.asm - n 0 returns at once; byte copies until src is dword-aligned, each byte tested for NUL (test al, al) and n counted down; then dwords with the 0x7EFEFEFF NUL test, the dword holding the NUL stored masked (and edx, 0xFF / 0xFFFF); the rest of n filled with zeros (dwords, then bytes); eax = dst. A length-limited copy that stops at the NUL and pads, not memcpy: field_e2, battle_e1 and boss_harness had called it the CRT's memcpy. The C runtime's, not ours (no impl). docs/platform-read-pass.md section 3."
+evidence = "capstone 2026-10-05 (round fourteen's end, round-14-review.md item 17), 0x5B9450..0x5B954D (0xFE bytes): MSVC's strncpy.asm - n 0 returns at once; byte copies until src is dword-aligned, each byte tested for NUL (test al, al) and n counted down; then dwords with the 0x7EFEFEFF NUL test, the dword holding the NUL stored masked (and edx, 0xFF / 0xFFFF); the rest of n filled with zeros (dwords, then bytes); eax = dst. A length-limited copy that stops at the NUL and pads, not memcpy: field_e2, battle_e1 and boss_harness had called it the CRT's memcpy. The C runtime's, not ours (no impl). docs/platform-read-pass.md section 3. Ours since 2026-10-06: a thin function over the toolchain's strncpy (crt_rest.cpp), fuzzed 60,000 rounds at every alignment against Capcom's, the zero fill included; two planted bugs refused. Callers: 11 game sites (ours) and three of the CRT's own (0x5BF130, 0x5C05AC, 0x5C066B), which the inject moves with them."
 
+
+[[func]]
+pc = 0x5B979A
+name = "Crt_findfirst"
+ret = "long"
+params = "const char *pattern, void *found"
+impl = "src/game/crt_rest.cpp"
+status = "evidence"
+evidence = "capstone 2026-10-06: cdecl, two arguments; FindFirstFileA through its import slot, -1 and errno on failure, else the WIN32_FIND_DATA's attributes, three times and low size stored into the caller's block at +0, +4, +8, +0xC, +0x10 and the name at +0x14 - MSVC 6's _findfirst into its _finddata_t (0x118 bytes, the size Save_ListFiles 0x4548B0 reserves). Sole caller Save_ListFiles 0x4548D8 with the pattern 0x65289C BISLPS??.DAT. Ours since 2026-10-06: a thin function over the toolchain's _findfirst32, whose _finddata32_t is that layout (static_asserts in crt_rest.cpp; the toolchain's _finddata_t has 64-bit times and is not); checked against FindFirstFileA / FindNextFileA at start-up (docs/crt-rest.md section 2.3)."
+
+[[func]]
+pc = 0x5B9867
+name = "Crt_findnext"
+ret = "int"
+params = "long handle, void *found"
+impl = "src/game/crt_rest.cpp"
+status = "evidence"
+evidence = "capstone 2026-10-06: cdecl; FindNextFileA on the handle _findfirst answered, 0 with the block refilled as _findfirst fills it, -1 at the end. Sole caller Save_ListFiles 0x454936, which never calls _findclose (the original's handle leak, kept). Ours since 2026-10-06 over the toolchain's _findnext32 (crt_rest.cpp): the handle goes only between the two."
+
+[[func]]
+pc = 0x5C2B40
+name = "Crt_stricmp"
+ret = "int"
+params = "const char *a, const char *b"
+impl = "src/game/crt_rest.cpp"
+status = "evidence"
+evidence = "capstone 2026-10-06: MSVC 6 _stricmp - when __lc_handle[LC_CTYPE] (0x7DEC10 + 8) is 0, the C locale, both bytes folded A..Z to a..z and compared unsigned, the answer -1, 0 or 1 (sbb al, al; sbb al, 0xFF; movsx); else a locked locale path. The game never sets a locale. Sole caller DInput_EnumJoystick 0x5A9620 at 0x5A9668 (ours, rest_2h), the device's name against 0x66C7B0, the answer tested for 0 only. Ours since 2026-10-06: the toolchain's _stricmp, its sign (crt_rest.cpp), fuzzed 60,000 rounds against Capcom's, three planted bugs refused."
+
+[[func]]
+pc = 0x5B9550
+name = "Crt_ftol"
+status = "evidence"
+evidence = "capstone 2026-10-06: MSVC 6 _ftol - register convention, not callable from C: st(0) popped, truncated toward zero through a copy of the control word with RC = 11 (fnstcw, or 0x0C00, fldcw, fistp qword, fldcw back), the 64-bit result in edx:eax. 268 E8 sites in BOF3.exe (253 game code, 15 the MP3 decoder's). Ours never calls it on a game path: the 44 bodies of ours that convert inline its sequence (docs/crt-rest.md section 2.5); the remaining references in src are clones' callees in the start-up fuzzes, Capcom's own calls run where the original called. Left for the cutover with the decoder."
 [[data]]
 pc = 0x904EFC
 psx = 0x80143F00
@@ -3065,7 +3109,7 @@ name = "Crt_GetPtd"
 ret = "unsigned char *"
 params = "void"
 status = "evidence"
-evidence = "disasm 2026-09-21: Rand 0x5B93D2 calls it and keeps its seed at +0x14 of the result (imul 0x343FD, add 0x269EC3) - the MSVC CRT's _getptd and per-thread holdrand. Used only by the map_cells live check, in game: at start-up the exe's C runtime has not run and calling it ends the process."
+evidence = "disasm 2026-09-21: Rand 0x5B93D2 calls it and keeps its seed at +0x14 of the result (imul 0x343FD, add 0x269EC3) - the MSVC CRT's _getptd and per-thread holdrand. Used only by the map_cells live check, in game: at start-up the exe's C runtime has not run and calling it ends the process. Since 2026-10-06 (Rand ours, crt_rest.cpp) that check reaches it through crt_rest::RandSeedCell, and only when BOF3X_ORIGINAL leaves Rand to Capcom; left the executable's until the cutover (docs/crt-rest.md section 2.7)."
 
 [[data]]
 pc = 0x929F22

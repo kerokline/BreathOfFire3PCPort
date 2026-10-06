@@ -274,7 +274,7 @@ const sh::Callee kCallees[] = {
     {G_OURS(Gte_StoreDepthF), 1, {kAll}, kG, 0, 0},
     {G_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, kG, 0, 0, {}, &CommitEffect},
     // Capcom's, the standard kRand row with an effect (above)
-    {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
 };
 #undef G_OURS
 

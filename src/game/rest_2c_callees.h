@@ -132,7 +132,6 @@ constexpr std::uint32_t kWindowStride = 0x24;
 constexpr std::uint32_t kFigureDraw = bof3::addr::Shisu_DrawModel;   // R2B: the figure record drawn (one word: the record)
 constexpr std::uint32_t kPickAsk = bof3::addr::MasterScreen_PickMember;      // R2D: the master's pick, (message u16, a byte)
 constexpr std::uint32_t kGlyph = bof3::addr::BattleEquipWin_DrawBar;        // R2H: an 8 x 8 cell (x, y, u / 8, v / 8, clut, shade)
-constexpr std::uint32_t kStrncpy = 0x5B9450;      // the C runtime's strncpy (dst, src, n)
 
 }  // namespace at
 }  // namespace rest_2c

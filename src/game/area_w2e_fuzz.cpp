@@ -294,7 +294,7 @@ const ah::Callee kCallees[] = {
     // the colour byte pushed with stale bits above it
     {W2E_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     {W2E_OURS(Menu_DrawOutline), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {W2E_THEIRS(Crt_sprintf), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {W2E_OURS(Crt_sprintf), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     // the area word and the flag byte pushed with stale bits above them (it
     // reads a u16 and a byte, window_task.cpp)
     {W2E_OURS(Field_ChangeArea), 4, {kU16, kAll, kAll, kU8}, ah::Answer::kGarbage, 0, 0},

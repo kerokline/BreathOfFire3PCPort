@@ -225,7 +225,7 @@ U TurnEffect(const U* a, U answer) {
 }
 
 const bh::Callee kCallees[] = {
-    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, A::kRand, 0, 0, {}, &RandRange},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, A::kRand, 0, 0, {}, &RandRange},
     {"Battle_ActorIsOut", bof3::addr::Battle_ActorIsOut, KeyOf(&::Battle_ActorIsOut), 1, {kU8}, A::kFlag, 0, 0, {},
      &ActorInEffect},
     // the standard lists it whole; every caller here pushes a register whose

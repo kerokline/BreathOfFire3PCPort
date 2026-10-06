@@ -255,7 +255,7 @@ const sh::Callee kCallees[] = {
     {E2G_OURS(Window_DrawFrame), 4, {k16, k16, k8, k8}, kG, 0, 0},
     {E2G_OURS(Window_DrawOutline), 4, {kW, kW, k8, k8}, kG, 0, 0},
     {E2G_OURS(Sprite_SetAnimation), 1, {k8}, kG, 0, 0, {}, &FxOnCurrent, nullptr, true},
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kW, kW, kW}, kG, 0, 0, {0, 16, 0}, &FxSprintf, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kW, kW, kW}, kG, 0, 0, {0, 16, 0}, &FxSprintf, nullptr, true},
     // the point is a stack local (its address differs between the copy and
     // ours): hashed, not logged; out (the packet) logged and filled
     {E2G_OURS(EffectGte_ProjectPoint), 2, {0, kW}, kG, 0, 0, {12, 0}, &FxProjectPoint, nullptr, true},

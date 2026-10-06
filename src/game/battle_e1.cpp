@@ -80,9 +80,9 @@ unsigned long Dispatch(const char* who, U table, unsigned index, unsigned entrie
     return reinterpret_cast<Entry>(static_cast<std::uintptr_t>(L(table + 4 * index)))(through);
 }
 
-// The CRT's memcpy (Capcom's, by address).
+// The CRT's strncpy (Crt_strncpy, ours since crt_rest: a NUL-stopping, zero-padding copy).
 void Memcpy(U dst, U src, unsigned n) {
-    BH_AT(void* (__cdecl*)(void*, const void*, unsigned), at::kMemcpy)(At(dst), At(src), n);
+    BH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(dst)), reinterpret_cast<const char*>(At(src)), n);
 }
 void Backdrop() { BH_CALL(Menu_DrawBackdrop)(B(at::kMenuShade)); }
 

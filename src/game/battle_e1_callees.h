@@ -142,7 +142,6 @@ constexpr U kLossSteps = 0x64AFD8;    // by 0x904AA3: 5 (0x432440 .. 0x432750)
 constexpr U kEquipOpenHelper = bof3::addr::BattleExtra_EquipSetupWindows;   // 0x42E0E0, R3A's (round 14)
 constexpr U kEquipConfirmHelper = bof3::addr::BattleExtra_EquipCommit;   // 0x42E250, R3A's
 constexpr U kEquipFrameHelper = bof3::addr::BattleExtra_EquipRefresh;   // 0x42E2F0, R3A's
-constexpr U kMemcpy = 0x5B9450;   // Crt_strncpy (a NUL-stopping, zero-padding copy; the name predates the read)
 constexpr U kEnemiesClear = bof3::addr::BattleEnemy_ClearStates;
 constexpr U kSideTargetA = bof3::addr::Battle_RandomLiveMember;   // R4A's (round 14)
 constexpr U kSideTargetB = bof3::addr::Battle_RandomLiveEnemy;    // R4A's (round 14)

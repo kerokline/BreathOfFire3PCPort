@@ -309,7 +309,7 @@ const sh::Callee kCallees[] = {
     {R3E_OURS(Item_NamePtr), 2, {k8, k8}, kG, 0, 0, {}, &FxName, nullptr, true},
     {R3E_OURS(Inventory_Count), 3, {k8, k8, k8}, kG, 0, 0, {}, &FxCount, nullptr, true},
     {R3E_OURS(Inventory_Remove), 3, {k8, k8, k8}, kF, 0, 0},
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kW, kW, kW}, kG, 0, 0, {0, 16}, &FxSprintf, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kW, kW, kW}, kG, 0, 0, {0, 16}, &FxSprintf, nullptr, true},
     // the standard row, louder: the two sound flags moved under it (FxSoundFlags)
     {R3E_OURS(Sound_PlayEffect), 1, {k16}, kG, 0, 0, {}, &FxSoundFlags},
 };

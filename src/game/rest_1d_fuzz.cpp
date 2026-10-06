@@ -256,7 +256,7 @@ const sh::Callee kCallees[] = {
     {R1D_OURS(Msg_OpenSystem), 1, {kU16}, kG, 0, 0},
     {R1D_OURS(Sprite_FlashClut), 1, {kU8}, kG, 0, 0},                     // the colour's low byte
     {R1D_OURS(Char_LoseHp), 2, {kW, kU8}, kG, 0, 0},                      // the amount whole, the member byte
-    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, sh::Answer::kRand, 0, 0, {}, &FxRandFlags},   // Capcom's CRT rand, not ours
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &FxRandFlags},   // Capcom's CRT rand, not ours
     // the group's own, called by E8
     {R1D_OURS(PartyAction9_CellPickup), 2, {kU16, kU16}, kF, 0, 0},
     {R1D_OURS(PartyAction10_CellPickup), 2, {kU16, kU16}, kF, 0, 0},

@@ -280,7 +280,7 @@ const Callee kStandard[] = {
     {MH_OURS(Inventory_Add), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0},
     {MH_OURS(Msg_SystemPtr), 1, {kU16}, Answer::kGarbage, 0, 0},
     {MH_OURS(BattleQueue_Push), 3, {kU8, kU8, kAll}, Answer::kGarbage, 0, 0},
-    {MH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
+    {MH_OURS(Rand), 0, {}, Answer::kRand, 0, 0},
     // an item's name into Text_Records by (index, category) - unnamed, in no
     // group (docs/magic_fx_reached.md section 10)
     {"0x4B58F0", 0x4B58F0, 0x4B58F0, 2, {kU8, kU8}, Answer::kGarbage, 0, 0},

@@ -422,7 +422,7 @@ const Callee kStandard[] = {
     {SH_OURS(Task_Create), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},
     {SH_OURS(Task_Exit), 0, {}, Answer::kGarbage, 0, 0},
     {SH_OURS(Task_Restart), 1, {kAll}, Answer::kGarbage, 0, 0},
-    {SH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
+    {SH_OURS(Rand), 0, {}, Answer::kRand, 0, 0},
     // unnamed, by address (docs/scena_sc0.md section 6)
     // SE's (round ten): the event battle's set-up by index - 0x904AAA, 0x802D41 = 5
     {SH_OURS(Field_StartEventBattle), 1, {kU8}, Answer::kGarbage, 0, 0},
@@ -618,7 +618,7 @@ const Callee kFieldOverrides[] = {
 const Callee kField[] = {
     {FIELD_OURS(Menu_DrawPiece), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:31 FS:17: void(int x, int y, unsigned id, unsigned flags)
     {FIELD_OURS(Sprite_ScriptTick), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:12 FC2:4 FC3:10 FE1:2 FE2:5: unsigned char(void)
-    {FIELD_THEIRS(Crt_sprintf, 0x5B9380), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16}, FxSprintf, nullptr, true},   // FE1:4 FE2:1 FO:12 FS:10: int(char *dst, const char *fmt, ...)
+    {FIELD_OURS(Crt_sprintf), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {0, 16}, FxSprintf, nullptr, true},   // FE1:4 FE2:1 FO:12 FS:10: int(char *dst, const char *fmt, ...)
     {FIELD_OURS(UiSprite_Draw), 4, {kU8, kAll, kU16, kU16}, Answer::kGarbage, 0, 0, {}, FxPacket, nullptr, true},   // FE1:25: a sprite primitive at Gfx_PacketNext, committed; eax the primitive (callers write through it)
     {FIELD_OURS(Sprite_UpdateScreenSlot), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:15 FC2:9: void(void)
     {FIELD_OURS(MapView_SlopeAt), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0}, FxSloped, nullptr, true},   // FC3:10 FE2:14: long(long x, long y, unsigned long direction)

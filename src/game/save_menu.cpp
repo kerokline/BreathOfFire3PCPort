@@ -43,7 +43,7 @@ template <typename T> T Fn(U address) { return reinterpret_cast<T>(static_cast<s
 const Callees kOriginals = {
     File_Open, File_Size, File_Seek, File_Read, File_Close,
     Crt_malloc, Crt_free, Crt_sprintf,
-    Fn<long (__cdecl*)(const char*, void*)>(kFindFirst), Fn<int (__cdecl*)(long, void*)>(kFindNext),
+    Crt_findfirst, Crt_findnext,
     Rand,
     Snd_LoadBank, Sound_PlayEffect, Music_Stop, Music_Start, Music_SetVolume, Music_IsPlaying,
     Fn<void (__cdecl*)(const void*)>(kVoicePlay), Fn<int (__cdecl*)()>(kVoiceIsPlaying),

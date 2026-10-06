@@ -149,7 +149,7 @@ U LoadEffect(const U*, U answer) {
 constexpr sh::Answer kG = sh::Answer::kGarbage, kPh = sh::Answer::kPhase, kFl = sh::Answer::kFlag;
 const sh::Callee kCallees[] = {
     // standard rows re-listed with an effect (the masks the standard set's)
-    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
     {PM_OURS(Flags_Clear), 2, {kAll, 0xFF}, kG, 0, 0, {}, &TripEffect},
     {PM_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},
     {PM_OURS(LoadDatFile), 1, {kAll}, kG, 0, 0, {}, &LoadEffect},

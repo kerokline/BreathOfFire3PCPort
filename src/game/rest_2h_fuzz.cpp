@@ -268,8 +268,8 @@ sh::Callee g_callees[] = {
     {G_OURS(Menu_DrawTile16), 4, {kU16, kU16, kU8, kU8}, kG, 0, 0},                    // field_o.cpp: x, y & 0xFFFF, u << 4 a byte, dim a byte
     {G_OURS(Gpu_SetSprt8), 1, {kAll}, kG, 0, 0, {16}, nullptr, nullptr, true},
     {G_OURS(Port_DroppedCall), 4, {kU16, kU16, kU8, kU8}, kG, 0, 0},                   // reads none; the frame's arguments logged
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kAll, kAll, kAll}, kG, 0, 0, {0, sh::kDerefString}, &SprintfEffect, nullptr, true},
-    {"_stricmp", at::kStricmp, at::kStricmp, 2, {kAll, kAll}, kF, 0, 0, {sh::kDerefString, sh::kDerefString}, nullptr, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, kAll, kAll}, kG, 0, 0, {0, sh::kDerefString}, &SprintfEffect, nullptr, true},
+    {G_OURS(Crt_stricmp), 2, {kAll, kAll}, kF, 0, 0, {sh::kDerefString, sh::kDerefString}, nullptr, nullptr, true},
     {"IDirectInput::CreateDevice", kCreateSite, kCreateSite, 4, {kAll, kAll, kAll, kAll}, kG, 0, 0},
     {"IUnknown::QueryInterface", kQuerySite, kQuerySite, 3, {kAll, kAll, kAll}, kG, 0, 0},
     // DIV-0011's Menu_DrawFrame and DIV-0059's ListTitle_DrawAt: keyed at start-up

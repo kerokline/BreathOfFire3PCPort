@@ -384,9 +384,8 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     PutW(0x9046AC, Word(At(0x903590)));
     PutW(0x903A50, 0);
     const U name = at::kRecords + (g_summary_record0 ? 0u : record) * at::kRecordStride;   // DIV-0076
-    using Strncpy = char* (__cdecl*)(char*, const char*, unsigned);
-    SH_AT(Strncpy, at::kStrncpy)(reinterpret_cast<char*>(At(at::kSummary)), reinterpret_cast<const char*>(At(name)), 5);
-    SH_AT(Strncpy, at::kStrncpy)(reinterpret_cast<char*>(At(0x904696)), reinterpret_cast<const char*>(At(name + 5)), 4);
+    SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(at::kSummary)), reinterpret_cast<const char*>(At(name)), 5);
+    SH_CALL(Crt_strncpy)(reinterpret_cast<char*>(At(0x904696)), reinterpret_cast<const char*>(At(name + 5)), 4);
     for (unsigned i = 0; i < 3; ++i) B(at::kPartyList + 0x623 + i) = FormOf(B(at::kPartyList + i));
     B(0x904688) = B(0x903A7A);
     PutL(0x90468C, L(0x9040C8));

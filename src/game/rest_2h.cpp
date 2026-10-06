@@ -822,7 +822,7 @@ extern "C" int __stdcall DInput_EnumJoystick(const void* instance, void* context
     if (created != 0) return 1;
     auto* const joy = static_cast<IUnknown*>(DInput_Joystick);
     joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(at::kJoystickIid)), &DInput_Joystick2);
-    const int differs = SH_AT(int (__cdecl*)(const char*, const char*), at::kStricmp)(
+    const int differs = SH_CALL(Crt_stricmp)(
         reinterpret_cast<const char*>(inst + 0x12C), reinterpret_cast<const char*>(At(at::kProductName)));
     if (differs == 0) DInput_JoystickFound = 1;
     return 0;
