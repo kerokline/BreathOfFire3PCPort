@@ -10,6 +10,7 @@ Project-owned notes. Agents and humans both put findings here.
 | [`STATUS.md`](STATUS.md) | Where the project is right now: order of work, open decisions, outstanding obligations. Start here. |
 | [`HANDOFF.md`](HANDOFF.md) | What the next session picks up, how, and the traps already paid for. Rewritten, not appended to. |
 | [`IDEAS.md`](IDEAS.md) | Intake for unscheduled proposals, each with a feasibility rating and a first step. |
+| [`owner-review.md`](owner-review.md) | The one list of things that want the owner's eye or ear in play: what to do at the machine, what to look or listen for, where the reading is. Agents add, the owner strikes; answers move to the ledger or the defect list. |
 | [`DIVERGENCE.md`](DIVERGENCE.md) | The ledger of intentional behavioural changes. Read before changing game behaviour; append when you do. |
 | [`THIRD_PARTY.md`](THIRD_PARTY.md) | The permissive third-party code the repo carries, with each notice in full: today the SatPixie CRT shader (MIT / public domain) behind the `satpixie` look, DIV-0043. |
 | [`LICENSING.md`](LICENSING.md) | Why the repo is licensed the way it is, and the constraints that follow from wanting a commercial handoff to be possible. Read before vendoring anything or relaxing rule 1. |

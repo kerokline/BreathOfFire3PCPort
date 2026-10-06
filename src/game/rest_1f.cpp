@@ -441,6 +441,13 @@ extern "C" void __cdecl PartyAction_SpawnKind1B(void) {
     const unsigned char slot = SH_CALL(Effect_FindFree)();
     Sc()[0xB] = slot;
     unsigned char* const c = Sc();
+    // Debt 3 (docs/rest_1d.md L1): with all 20 records in use the 0xFF is
+    // stored as it stands and PartyAction_WaitEffectDone then polls a byte of
+    // Gfx_PacketPools as the effect's in-use byte. Logged (not changed) so the
+    // owner can see how often play reaches it (2026-10-06).
+    if (slot == 0xFF)
+        bof3::Log("debt3       PartyAction_SpawnKind1B: no effect record free (set %u, action %u) - the wait reads the packet pool",
+                  static_cast<unsigned>(c[0]), static_cast<unsigned>(c[1]));
     if (c[0xB] != 0xFF) {
         EffectAt(c[0xB], who)[0] = 1;
         EffectAt(c[0xB], who)[5] = 0x1B;

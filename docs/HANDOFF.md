@@ -935,5 +935,5 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 ## Waiting on someone else
 
-- The owner: items 2 and 14; the choices in item 1.
+- The owner: [`owner-review.md`](owner-review.md) (started 2026-10-06: the sound resume by ear, DIV-0076's load screen, the layering fix in play, the TILE_1 quad's go-ahead; the camp cells and the FT3 colour parked; `Cfg_Load`'s overrun decided and unbuilt); items 2 and 14; the choices in item 1.
 - TheRealBiggs - not yet contacted ([`STATUS.md`](STATUS.md) obligations).

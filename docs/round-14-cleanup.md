@@ -272,7 +272,9 @@ C16 (9); `field_e2` DS9 (1), DS6 (2), IT7 (3); `field_c3` C172 (0 at 3,000);
 - **Debt 3** (`PartyAction_WaitEffectDone` reading inside `Gfx_PacketPools`
   with all 20 effect records in use): a field action, not a battle; how full
   the pool gets in play is unmeasured. Not decided; a log line on
-  `Effect_FindFree` answering `0xFF` would tell.
+  `Effect_FindFree` answering `0xFF` would tell. **Added 2026-10-06** at the
+  owner's word: `PartyAction_SpawnKind1B` logs `debt3` when it stores the
+  0xFF ([`owner-review.md`](owner-review.md)).
 - **Debt 12's other half** (`FieldMenu_CampAllowedCell`'s three dead
   compares), measured the same night at the owner's word
   ([`rest_2d.md`](rest_2d.md) L1): `0xA1` and `0xAF` cells exist and are
