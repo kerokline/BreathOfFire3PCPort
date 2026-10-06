@@ -918,7 +918,7 @@ name = "Crt_malloc"
 ret = "void *"
 params = "unsigned size"
 status = "evidence"
-evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode)."
+evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode). Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): the MP3 decoder calls it 19 times and the runtime 19, and an inject would move them all; ours call it by name, one heap with them."
 
 [[func]]
 pc = 0x5B9577
@@ -926,7 +926,7 @@ name = "Crt_free"
 ret = "void"
 params = "void *ptr"
 status = "evidence"
-evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc."
+evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc. Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): Mp3_Destroy 0x5B0630 frees through it (0x5B071D, 0x5B072D) the blocks Mp3_Create took from the runtime's calloc 0x5BA221, so the toolchain's free cannot stand at this entry while the decoder runs."
 
 [[func]]
 pc = 0x59EA70
@@ -3109,7 +3109,7 @@ name = "Crt_GetPtd"
 ret = "unsigned char *"
 params = "void"
 status = "evidence"
-evidence = "disasm 2026-09-21: Rand 0x5B93D2 calls it and keeps its seed at +0x14 of the result (imul 0x343FD, add 0x269EC3) - the MSVC CRT's _getptd and per-thread holdrand. Used only by the map_cells live check, in game: at start-up the exe's C runtime has not run and calling it ends the process."
+evidence = "disasm 2026-09-21: Rand 0x5B93D2 calls it and keeps its seed at +0x14 of the result (imul 0x343FD, add 0x269EC3) - the MSVC CRT's _getptd and per-thread holdrand. Used only by the map_cells live check, in game: at start-up the exe's C runtime has not run and calling it ends the process. Since 2026-10-06 (Rand ours, crt_rest.cpp) that check reaches it through crt_rest::RandSeedCell, and only when BOF3X_ORIGINAL leaves Rand to Capcom; left the executable's until the cutover (docs/crt-rest.md section 2.7)."
 
 [[data]]
 pc = 0x929F22

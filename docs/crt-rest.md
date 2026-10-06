@@ -9,7 +9,7 @@ over exactly the conversions the game's formats use, and `Crt_strncpy`,
 `Crt_stricmp`, `Crt_findfirst`, `Crt_findnext` and the eight entries of the
 file layer bound to our toolchain's runtime through thin named functions.
 Fuzzed against Capcom's where Capcom's can run before its runtime starts,
-against Windows' or the bytes written where it cannot; 0 mismatches, 14
+against Windows' or the bytes written where it cannot; 0 mismatches, 12
 planted bugs all refused (section 4). Six entries left for the cutover, each
 with its reason (section 3). Headless only: not yet live-checked (section 6).
 
@@ -72,9 +72,9 @@ thread does:
 
 - all 745 E8 sites of `Rand` in `BOF3.exe` are game code - ours; none is in
   the decoder or the runtime;
-- `BOF3.exe` imports no thread-creating function (its import table has
-  `GetCurrentThreadId` and nothing of `CreateThread`, `_beginthread`,
-  `timeSetEvent`, timer queues); our DLL creates two threads, the crash
+- `BOF3.exe` imports no thread-creating function (of the thread
+  imports only `GetCurrentThreadId`: no `CreateThread` - so no working
+  `_beginthread` either - no `timeSetEvent`, no timer queue); our DLL creates two threads, the crash
   reporter's and its self-test watchdog (`hook/crash.cpp`), neither of which
   calls game code;
 - in every trace of `analysis/calltrace/platform_1005/*.tsv` (the attract
@@ -82,8 +82,7 @@ thread does:
   entry - `Rand`'s, the decoder's `0x5B281C` included - is on the run's one
   thread: 182..199 entries a run, one thread id each. So `0x5B281C`, which
   the read pass took for "the decoder's own thread" (its section 6 marked it
-  unread), runs on the main thread: it is entered with caller 0 because it
-  is reached through a pointer.
+  unread), runs on the main thread (why its caller reads 0 is not read here).
 
 So only the main thread draws, and one static is its seed. Taken.
 
@@ -283,7 +282,7 @@ bind to the toolchain's at once.
 | `Crt_findfirst` `0x5B979A`, `Crt_findnext` `0x5B9867` | toolchain `_findfirst32` / `_findnext32` | layout `static_assert`s; 1,776 matches over 5 patterns against `FindFirstFileA` / `FindNextFileA` |
 | `Crt_fopen` `0x5B9B6D`, `Crt_fclose` `0x5B9993`, `Crt_fread` `0x5B9D4E`, `Crt_fwrite` `0x5B9E65`, `Crt_fseek` `0x5B9F9E`, `Crt_fileno` `0x5C3660`, `Crt_filelength` `0x5C35D6`, `Crt_fgets` `0x5B9ADA` | the toolchain's | a written file read back at 400 random offsets, its length, a failed open, `fgets` on CRLF lines (Capcom's cannot run before its runtime) |
 
-**Left for the cutover (6 entries ours still reach):**
+**Left for the cutover (six; ours still reach all but `_ftol`):**
 
 | Entry | Ours' callers | Why |
 |---|---|---|

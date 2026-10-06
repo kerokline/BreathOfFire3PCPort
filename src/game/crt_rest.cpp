@@ -85,9 +85,13 @@ char* PutPadded(char* out, const char* prefix, const char* text, std::size_t len
 
 std::uint32_t& RandSeed() { return g_seed; }
 
+// Asked once, in game (the per-thread data is there by then): IsEnabled walks
+// every inject, and the map_cells live check asks on every call it shadows.
 std::uint32_t* RandSeedCell() {
-    if (bof3::IsEnabled(bof3::addr::Rand)) return &g_seed;
-    return reinterpret_cast<std::uint32_t*>(Crt_GetPtd() + 0x14);
+    static std::uint32_t* const cell = bof3::IsEnabled(bof3::addr::Rand)
+                                           ? &g_seed
+                                           : reinterpret_cast<std::uint32_t*>(Crt_GetPtd() + 0x14);
+    return cell;
 }
 
 void RandCount_Start() {
