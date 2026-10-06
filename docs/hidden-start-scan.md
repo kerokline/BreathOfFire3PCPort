@@ -86,8 +86,8 @@ flow, a tail `jmp`, a `.data` pointer, a dispatch, a `.text` immediate - and
 whether a catalogue (`pc_funcs.json`, `pc_hidden.json`) lists it.
 
 **Cross-checks that came out clean.** All 1,861 dispatch sites but three
-(inside the C runtime's `memcpy` family) lie on some flow, so no dispatcher
-hides in unread code. **All 210 `NOTFN` rows of the round-fourteen cut lie
+(inside the C runtime's `memcpy` family) lie on the flow of a start or of a
+candidate, so no dispatcher hides in unread code. **All 210 `NOTFN` rows of the round-fourteen cut lie
 inside a known start's own flow** - reached through their host's `.text`
 switch table - which is what the cut said they are: cases, not functions.
 

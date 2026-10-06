@@ -521,8 +521,8 @@ def run(a):
                dispatch_sites_off_flow=off_flow,
                # The round-fourteen cut's NOTFN rows: how many a known start's
                # flow reaches as its own code (a case), and which it does not.
-               notfn_in_flow=sum(1 for c in sc.notfn if c in owner_of),
-               notfn_not_in_flow=[f'{c:#x}' for c in sorted(sc.notfn) if c not in owner_of],
+               notfn_in_flow=sum(1 for c in sc.notfn if owner_of.get(c) in starts),
+               notfn_not_in_flow=[f'{c:#x}' for c in sorted(sc.notfn) if owner_of.get(c) not in starts],
                # start, bytes, the largest byte (a switch's byte index stays small)
                inline_tables=[[f'{t:#x}', n, max(sc.img.data[sc.img.off(t):sc.img.off(t) + n] or b'\0')]
                               for t, n in sorted(inline.items())],
