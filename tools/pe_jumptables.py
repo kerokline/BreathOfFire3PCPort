@@ -39,8 +39,8 @@ not hidden), `function?` (only an immediate or a .text table names it), `none`
 
     python tools/pe_jumptables.py [--symbols symbols.toml] [--out analysis/pc_jumptables.json]
 
-Run with `--symbols` of a scratch copy with entries removed to show the scan
-finds them (the control, docs/hidden-start-scan.md section 3).
+`--drop A,B,...` leaves those names out of symbols.toml first, to show the
+scan finds them (the control, docs/hidden-start-scan.md section 3).
 
 Output is derived from copyrighted game code: it lives under analysis/ and is
 never committed (CLAUDE.md rule 1).
@@ -90,8 +90,10 @@ class Scan:
         self.tails = collections.defaultdict(set)  # tail-jump target -> sites
         self.dataref = set()  # .text addresses some flow reads as data (inline tables)
         sym = tomllib.load(open(a.symbols, 'rb'))
-        self.funcs = {f['pc']: f for f in sym.get('func', [])}
-        self.data = {d['pc']: d for d in sym.get('data', [])}
+        drop = set(a.drop.split(',')) if a.drop else set()
+        self.funcs = {f['pc']: f for f in sym.get('func', []) if f['name'] not in drop}
+        self.data = {d['pc']: d for d in sym.get('data', []) if d['name'] not in drop}
+        self.dropped = sorted(drop & {e['name'] for e in sym.get('func', []) + sym.get('data', [])})
         self.starts = sorted(self.funcs)
         self.named = sorted(set(self.funcs) | set(self.data))
         pf = json.load(open(a.funcs))['functions']
@@ -513,7 +515,7 @@ def run(a):
                         host_name=sc.funcs[host]['name'] if host in sc.funcs else None,
                         refs=refs, via=r['via']))
 
-    res = dict(symbols=a.symbols, starts=len(sc.starts), dispatch_sites=len(sites),
+    res = dict(symbols=a.symbols, dropped=sc.dropped, starts=len(sc.starts), dispatch_sites=len(sites),
                dispatch_targets=n_targets, named_tables=named_tables,
                evidence_size_padding_only=padding_only,
                dispatch_sites_off_flow=off_flow,
@@ -545,6 +547,8 @@ def main():
     ap.add_argument('--hidden', default='analysis/pc_hidden.json')
     ap.add_argument('--cut', default='analysis/round14_cut.tsv')
     ap.add_argument('--out', default='analysis/pc_jumptables.json')
+    ap.add_argument('--drop', default='',
+                    help='comma-separated [[func]] / [[data]] names to leave out (the control)')
     run(ap.parse_args())
 
 
