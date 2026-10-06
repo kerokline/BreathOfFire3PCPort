@@ -66,10 +66,11 @@ where the reading behind it is. Nothing here is a divergence until it is in
   (2026-10-06): leave it documented; review if a miscoloured speck is ever
   spotted.
 
-## Decided, waiting to be built
+## Decided and built, not yet seen live
 
 - **`Cfg_Load`'s key-line overrun** ([`shell.md`](shell.md) section 5): the
-  owner (2026-10-06) wants overrun protection. The fix the group proposed:
-  read the pairs into a zero-filled 32-entry array of our own, two lines an
-  entry as the original packs them, ignore lines past the 32nd. Wants a
-  ledger entry (visible only to a hand-edited `BOF3.CFG`).
+  owner (2026-10-06) wanted overrun protection; **built the same day as
+  DIV-0078** (a zero-filled 32-entry table of our own, lines past it ignored;
+  `shell` self-test 0 mismatches with the switch off). Visible only with a
+  hand-edited `BOF3.CFG`; a check is to add 25 key lines and see the game
+  still start.

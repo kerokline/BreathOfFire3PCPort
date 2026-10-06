@@ -23,6 +23,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/shell_callees.h"
 #include "hook/detour.h"
+#include "hook/log.h"
 
 // A C symbol as the assembler sees it (i686 mingw prefixes an underscore).
 #define SHELL_STR2(x) #x
@@ -80,6 +81,16 @@ using namespace shell;
 // Cfg_SetKeyTable(frame + 0x14), 0x80 bytes of which this frame holds 0x28.
 // No file: both settings 1. Otherwise, two lines or fewer: the default keys.
 // fgets 0x14 at a time, so a longer line counts as several.
+//
+// DIVERGENCE DIV-0078 (the owner, 2026-10-06): with g_cfg_own_table on, the
+// key lines scan into a zero-filled 0x80-byte table of our own (plus the 8
+// bytes the last pair's ints spill into), through the same byte pointers and
+// the same packing - two lines an entry, the spill as the original leaves it -
+// and lines past the 32nd entry (the 66th line on) are read and ignored; the
+// table copied is ours, never the frame's run past its end. The switch is set
+// by Shell_Inject after the self-test, which compares Capcom's frame.
+unsigned char g_cfg_own_table = 0;
+alignas(4) unsigned char g_cfg_table[0x80 + 8];
 extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
     void* const file = g.open(Str(kCfgName), Str(kModeRt));
     if (file == nullptr) {
@@ -88,6 +99,8 @@ extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
         g.default_keys();
         return;
     }
+    const bool own = g_cfg_own_table != 0;
+    if (own) std::memset(g_cfg_table, 0, sizeof g_cfg_table);
     char* const line = reinterpret_cast<char*>(frame);
     int n = 0;
     while (g.gets(line, kCfgLineBytes, file) != nullptr) {
@@ -95,13 +108,15 @@ extern "C" void __cdecl Shell_CfgLoadFrame(unsigned char* frame) {
             Cfg_Fullscreen = g.to_int(line);
         else if (n == 1)
             Cfg_RenderMode = g.to_int(line);
-        else
+        else if (!own)
             g.scan_pair(line, Str(kPairFormat), frame + kCfgPairs + 2 * n, frame + kCfgPairs + 1 + 2 * n);
+        else if (n - 2 < 0x40)   // DIV-0078: entry (n - 2) / 2 of 32; later lines ignored
+            g.scan_pair(line, Str(kPairFormat), g_cfg_table + 2 * (n - 2), g_cfg_table + 1 + 2 * (n - 2));
         ++n;
     }
     g.close(file);
     if (n > 2)
-        g.set_key_table(frame + kCfgTable);
+        g.set_key_table(own ? g_cfg_table : frame + kCfgTable);
     else
         g.default_keys();
 }
@@ -243,6 +258,13 @@ extern "C" void __cdecl Gfx_LinkOTags(void) {
 
 void Shell_Inject() {
     if (bof3::WantsShadow("shell")) shell::SelfTest();
+    // DIVERGENCE DIV-0078: after the self-test, which compares Capcom's frame.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("CfgOwnKeyTable", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_cfg_own_table)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0078    BOF3.CFG's key lines scan into a 32-entry table of our own; lines past it are ignored");
+    }
     BOF3_INJECT(Input_Latch);
     BOF3_INJECT(Cfg_Load);
     BOF3_INJECT(Game_Init);

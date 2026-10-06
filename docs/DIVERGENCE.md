@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 77 entries, DIV-0001..0077, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 78 entries, DIV-0001..0078, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4096,3 +4096,41 @@ designed in rather than bolted on.
   11880, ours against `BOF3X_TILE1=0`.
 - **Reversible?** `BOF3X_TILE1=0` leaves the switch off (the point);
   `BOF3X_ORIGINAL=D3d_DrawTile1` runs Capcom's.
+
+### BOF3.CFG's key lines cannot run off the end of Cfg_Load's frame
+
+- **ID:** DIV-0078
+- **Date:** 2026-10-06
+- **Subsystem:** the shell (`Cfg_Load` `0x4FD030`, ours in `src/game/shell.cpp`
+  as `Shell_CfgLoadFrame`; `Cfg_SetKeyTable` `0x5A9860` copies the result)
+- **Tier:** Sensible - a stack overrun from a configuration file; the owner's
+  decision, 2026-10-06: "cfg_load probably needs overrun protection".
+- **Original behaviour:** each key line of `BOF3.CFG` (line 3 on) is scanned
+  with `sscanf("%d %d")` into two **byte** pointers of the function's own
+  0x3C-byte frame, two lines an entry, and `Cfg_SetKeyTable` then copies 0x80
+  bytes from the frame's `+0x14` into `Key_Table`. The frame holds 0x28 bytes
+  of that table, so entries 10..31 are the return address into WinMain and
+  0x54 bytes of WinMain's frame; from the 21st key line the scan overwrites
+  the return address itself ([`shell.md`](shell.md) sections 2 and 5). Only a
+  hand-edited file reaches it: the launcher writes two lines and passes the
+  rest through unchanged.
+- **New behaviour:** with the switch `g_cfg_own_table` on (set by `Shell_Inject`
+  after the self-test), the key lines scan into a zero-filled 0x80-byte table
+  of our own (plus the 8 bytes the last pair's ints spill into), through the
+  same byte pointers and the same packing - two lines an entry, the spill as
+  the original leaves it - and lines past the 32nd entry (the 66th line on) are
+  read and ignored. `Cfg_SetKeyTable` copies our table. The first two lines,
+  the no-file and the two-lines-or-fewer cases are unchanged. What a player
+  with key lines sees: entries 10..31 are zero instead of stack bytes, so
+  `Pad_Read`'s walk stops where the lines end, and 21 or more lines no longer
+  return into garbage.
+- **Rationale:** a stack overrun from a configuration file is a defect of the
+  port with no gameplay content; the owner asked for protection. The fix is the
+  one group PW proposed ([`platform-round.md`](platform-round.md) section 4).
+- **Also in the PSX version?** No: the PlayStation has no `BOF3.CFG`; the file
+  and its reader are the port's.
+- **Verification:** `BOF3X_SHADOW=shell` headless compares Capcom's `Cfg_Load`
+  with the switch off (the frame and the bytes above it byte for byte, as
+  before), 0 mismatches. The switch-on path is not compared against the
+  original (it exists to differ); not yet seen live.
+- **Reversible?** `BOF3X_ORIGINAL=Cfg_Load` runs Capcom's.
