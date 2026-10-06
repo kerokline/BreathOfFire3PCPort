@@ -281,6 +281,13 @@ Result (2026-10-05, final build):
 
     shadow      mode_rest self-test: 56000 rounds over 14 functions (4000 each), 237566 calls to the stand-ins, 0 MISMATCHES; 23702 bytes of state (48 regions) and the stand-ins' log compared
 
+Under `BOF3X_SHADOW='*'` (every module's fuzz, one process), narrow and with
+`BOF3X_WIDE=1`, 2026-10-05: both `self-test only: done`, `inject: 10023 ours,
+0 left original by BOF3X_ORIGINAL`, no `MISMATCH` line in either log;
+`mode_rest` 56,000 rounds, 237,495 calls, 0 mismatches in each (the call
+count differs from the module run alone by where the shared random stream
+stands when it starts).
+
 Every callee of the fourteen was called by the originals (the coverage line:
 `Music_FadeOut` 222 and `Music_FadeIn` 336 the rarest, `AreaMap_Elevation` 855,
 `Rand` 703), every table entry as a handler (each of the eight battle steps
