@@ -1245,7 +1245,9 @@ the handlers, so no group that lists them sees a difference):
   they stand over in effect mode with no difference.
 
 **Not folded**: R1C's `Sprite_FlashClut` mask (`kU8`; the `kEffectStd` row
-has the word, which only an effect group calling it would see); the rows
+had the word, which only an effect group calling it would see - narrowed to
+`kU8` on 2026-10-06, `0x534DBE and ecx, 0xFF`, [`round-14-cleanup.md`](round-14-cleanup.md)
+section 7; E5D is the effect group that reaches it); the rows
 groups listed in their own `_fuzz.cpp` (left alone: each group's listing is
 registered first and stands; `effect_1e_fuzz.cpp`'s `E_RAW` rows key on the
 address and keep working).

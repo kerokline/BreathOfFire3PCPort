@@ -633,6 +633,15 @@ The rest within a few rounds of the table's, or above (M5 92, M6 48, I2 61);
 the thinnest now DS9 1, DS6 2, IT7 3, DS10 5, DS2 7, I1 8, T3 9, W4 10 (was
 16), N2 10 - none of these is on a path the louder stand-ins reach.
 
+**IT7 and DS9 made cheap (2026-10-06, [`round-14-cleanup.md`](round-14-cleanup.md)
+section 7):** `Inventory_Count`'s stand-in (`FxCount`) answers the worn count
+(where 0, asked after the bag's) half the time as 99 or 98 less the bag's,
+so the two meet `ItemTrade_PickItem`'s 99, and a quarter of the time moves
+the trade's pick inside the rows, which `ItemTrade_PickItem` reads again
+after its two counts. `BOF3X_FE2_ONLY=48,1`, 3,000 rounds: **IT7 3 -> 67,
+DS9 1 -> 44**; DS8 23. DS6 (2) is left: its re-read is of `Field_State`
+itself after the two leader calls.
+
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
 Appended to the main checkout's file (append only, 8,163 -> 8,187 lines): the

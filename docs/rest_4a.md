@@ -301,6 +301,12 @@ C31 29 to 206, C33c 40 to 1,267, C69 164 to 825, C46 312 to 149 of 12,000;
 the weakest now C16 (9, the area read before the spawns, case 2), C26 (12)
 and C47 (14).
 
+**C16 made cheap (2026-10-06, [`round-14-cleanup.md`](round-14-cleanup.md)
+section 7):** `ClockEffect` (the stand-in of `CommuSim_AddRecord` /
+`_RemoveRecord`) also moves `Game_AreaNumber` one call in four, as case 2
+does; `CommuSim_AreaEnter` reads it again after its three adds. C16 **9 ->
+348** of 4,000; C3 697, C21 125, C29 189, C32 265 as before.
+
 ## 7. Latent defects (Capcom's, described, not fixed)
 
 - **L1 - `Battle_RandomLiveEnemy` `0x452F10`: a four-byte list for eight

@@ -348,6 +348,8 @@ case runs after about one stand-in call in a few hundred.
 
 **N70 made cheap (2026-10-05, round fourteen's end, debt 23).** R4E's `0x45EE10` (a member's panel) has a stand-in in the fuzz (`MemberPanelMove`) that one call in four moves the cursor to 0..7 after it, never while `CommuDraw_Pick` runs: `CommuName_MemberPanelOut` compares each record's place with the cursor again after every panel. N70 in this worktree: **618 of 4,000 rounds** (3 before). N57..N95, the controls of every function that calls the panel, re-run on that fuzz: all refused but N71, the equivalent (N59 9, N84 26 and N63 28 the weakest).
 
+**D33, B12, N47, N07 made cheap (2026-10-06, [`round-14-cleanup.md`](round-14-cleanup.md) section 7).** Four more stand-ins, each moving after the call the byte its caller reads again, only under that caller's clone and half the time: `Music_FadeOutStop` the kept track (`KeptTrackMove`, under `CommuDraw_MusicBack`), `Sound_PlayEffect` the step (`StepMove`, under `CommuName_PanelReset`), R4C's `0x45B2C0` the column byte (`ColumnMove`, under `CommuBoard_DrawRowCells`), R4E's `0x45F1A0` the answer byte (`EntryDoneMove`, under `CommuName_SlotEntryOut`, whose count is seeded to 3 half the time: the answer is read again only at the slide's end). Of 4,000 rounds: **D33 4 -> 1,353, B12 7 -> 733, N47 5 -> 557, N07 7 -> 1,215**; N70 618 as before.
+
 **DIV-0075's row's controls (2026-10-05)**, planted in `rest_4d.cpp`, run by
 `BOF3X_SHADOW=rest_4d` with the filter on the step: V1, the switch's step
 left out of `CommuName_SlotEntry` - 4,000 of 4,000; V2, the step moved by two
