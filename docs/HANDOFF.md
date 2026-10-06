@@ -65,7 +65,8 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       **A and B ran 2026-10-06** (`phase-3/next-music`, `phase-3/next-region`, `-read`, all merged): A waits on the
       owner's ear (`owner-review.md`, the listening set in `analysis/bgm/listen/`); B found the regional builds differ
       beyond text in one collision fix (Dauna Mine's minecart map) the owner wants as the default - its form is the
-      owner's call. What is still Capcom's: the runtime's start-up, allocator and per-thread data, the decoder, the
+      owner's call - built as DIV-0080 the same evening. **The unified-data plan is written**
+      ([`unified-data-plan.md`](unified-data-plan.md)): ten steps, 1, 2 and 5 need nothing from the owner. What is still Capcom's: the runtime's start-up, allocator and per-thread data, the decoder, the
       software renderer's converters.
    **Mechanics that held:** briefs and scripts in the session-`7d0c9683` scratchpad (`plat2/common.md` + `brief_*.md`,
    `live_plat3.sh`, `chain_final.sh`, `launcher/` the 10,081 build). The agents' branches `phase-3/plat2-scan/-debts/

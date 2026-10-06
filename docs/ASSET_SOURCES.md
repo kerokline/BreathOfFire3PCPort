@@ -1,6 +1,8 @@
 # Asset sources: building the game from whatever copies the player owns
 
-**Status:** DRAFT (2026-09-26; a plan, not a finding. The facts it rests on are
+**Status:** DRAFT (2026-09-26; a plan, not a finding. **The detailed plan is
+[`unified-data-plan.md`](unified-data-plan.md)**, 2026-10-06, once §8's phase 4
+measurement had run - [`region-diff.md`](region-diff.md). The facts it rests on are
 cited and were verified where they are cited, not re-measured here. Amended
 2026-10-04, the owner's ask: the cache splits into a language-neutral base and
 per-language layers, §3 and §6; the measurement that split rests on is phase 4
