@@ -7,7 +7,7 @@
 // The clone rows: capstone 2026-10-05, each extent read to its last
 // instruction (the dispatchers' and mode 4's and 6's tail jumps included);
 // every E8 / E9 leaving a copy is listed. Shapes: the dispatchers and the
-// steps kState (void, no arguments), Sound_MusicPlaying kCall answering in eax
+// steps kState (void, no arguments); Sound_MusicPlaying is group PS's clone
 // (its callers test the whole of it). The two step tables are DataTables,
 // swapped for recorders while the fuzz runs. Every callee no standard set
 // lists is listed here.
@@ -91,7 +91,7 @@ const sh::Clone kAll14[] = {
 
 enum : unsigned {
     kRun3, kEnter3, kLeave3, kRun4, kRun5, kTurnSense, kTurn, kToPlaces, kLoad, kScript, kPlace, kLeave5, kRun6,
-    kMusicPlaying, kCount
+    kCount   // Sound_MusicPlaying is group PS's clone (sound_rest_fuzz.cpp)
 };
 static_assert(kCount == sizeof kAll14 / sizeof kAll14[0], "one enum entry a clone, in order");
 
