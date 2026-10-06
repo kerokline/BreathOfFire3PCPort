@@ -96,9 +96,64 @@ enum : unsigned {
 };
 static_assert(kCount == sizeof kAll14 / sizeof kAll14[0], "one enum entry a clone, in order");
 
+// --- the stand-ins' effects: what a caller reads again after the call, moved ---------
+// (the harness's own disturbance reaches the group's case on about one call in
+// 24, too seldom for a read that follows one call of one branch)
+
+// Rand (GameMode3_Leave's trip out): the leader's facing and the pending area's
+// cells, read after it.
+U RandEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    switch (n % 5) {
+    case 0: Mem(at::kLeaderFacing)[0] = static_cast<unsigned char>(n >> 8); break;
+    case 1: Mem(at::kPendingFlags)[0] = static_cast<unsigned char>(n >> 8); break;
+    case 2: SetWord(Mem(at::kPendingPlace), n >> 8); break;
+    case 3: SetLong(Mem(at::kPendingX), static_cast<std::int32_t>(n)); break;
+    default: SetLong(Mem(at::kPendingZ), static_cast<std::int32_t>(n)); break;
+    }
+    return answer;
+}
+// Flags_Clear (the trip home): the saved area, x and z, read after it.
+U TripEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    switch (n % 3) {
+    case 0: SetWord(Mem(at::kTripArea), n >> 8); break;
+    case 1: SetLong(Mem(at::kTripX), static_cast<std::int32_t>(n)); break;
+    default: SetLong(Mem(at::kTripZ), static_cast<std::int32_t>(n)); break;
+    }
+    return answer;
+}
+// AreaMap_Elevation (GameMode5_Leave): 0x904AE5 bit 6, 0x904AE8 bit 3 and the
+// track, read after it.
+U ElevationEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n & 1) Mem(at::kBattleFlags)[0] ^= 0x40;
+    if (n & 2) Mem(at::kBattleFlags2)[0] ^= 8;
+    if ((n & 0xC) == 0) Music_Track = 0xFF;
+    return answer;
+}
+// PartySet_Select (GameMode5_Turn): the formation, read again after it.
+U FormationEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 3 != 0) Mem(at::kFormation)[0] = static_cast<unsigned char>(n >> 8);
+    return answer;
+}
+// LoadDatFile (GameMode5_Load's event battle): the event battle, read again
+// after it.
+U LoadEffect(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 3 == 0) Mem(at::kEventBattle)[0] = static_cast<unsigned char>((n >> 8) % 56);
+    return answer;
+}
+
 #define PM_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage, kPh = sh::Answer::kPhase, kFl = sh::Answer::kFlag;
 const sh::Callee kCallees[] = {
+    // standard rows re-listed with an effect (the masks the standard set's)
+    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
+    {PM_OURS(Flags_Clear), 2, {kAll, 0xFF}, kG, 0, 0, {}, &TripEffect},
+    {PM_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},
+    {PM_OURS(LoadDatFile), 1, {kAll}, kG, 0, 0, {}, &LoadEffect},
     // the group's own, called directly by the group's
     {PM_OURS(Sound_MusicPlaying), 0, {}, kFl, 0, 0},
     // Music_IsPlaying by its address (Sound_MusicPlaying's jump, read through
@@ -118,7 +173,7 @@ const sh::Callee kCallees[] = {
     {PM_OURS(Encounter_PartyToPlaces), 0, {}, kFl, 0, 0},
     {PM_OURS(Encounter_PartyAtPlaces), 0, {}, kPh, 0, 0},
     {PM_OURS(Encounter_PartyScriptOnce), 0, {}, kFl, 0, 0},
-    {PM_OURS(PartySet_Select), 2, {0xFF, 0xFF}, kG, 0, 0},   // field_event.cpp: both read as bytes
+    {PM_OURS(PartySet_Select), 2, {0xFF, 0xFF}, kG, 0, 0, {}, &FormationEffect},   // field_event.cpp: both read as bytes
     {PM_OURS(Party_PlaceAtSlots), 0, {}, kPh, 0, 0},
     {PM_OURS(Party_ScriptTicks), 0, {}, kPh, 0, 0},
     {PM_OURS(Party_PlacesByList), 0, {}, kPh, 0, 0},
