@@ -1175,3 +1175,79 @@ The last two are the widened fills of DIV-0041's round's-end amendment
 section 5): unarmed during every self-test, so the fuzz compares the
 original's 320 x 240 and a wrong width is refused. `tools/ledger_check.py`:
 72 entries, 0 errors.
+
+### 8.11 Round fourteen's fold
+
+2026-10-05, on `phase-3/round14-end` at `e3b98087` (10,009 ours), the
+harness items of [`takeover-queue-round14.md`](takeover-queue-round14.md)
+sections 9 to 13 (debts 2, 14 and 21). (Numbered 8.11, not 8.7 as the brief
+had it: 8.7 to 8.10 were taken.) Each row was read against the code - ours,
+and Capcom's with `tools/pe_disasm.py` - before it changed.
+
+**Rows keyed by an address that is ours now, to the `_OURS` form** (the key
+our function, the address the row's `address`; masks, answers, `deref` and
+effects unchanged unless the next table says otherwise). A raw row served
+only callers that call the address (a clone's re-aimed `E8`, ours' `SH_AT`);
+ours calling the function by name found nothing and every group re-listed
+it. In the `_OURS` form `StandIn` resolves both: by the key first, by the
+address through the table (its second pass). The address stays in each
+comment.
+
+| Table | Rows | Whose |
+|---|---|---|
+| `kStandard` | `Field_StartEventBattle`, `Party_PlaceForBattle`, `Camera_EaseAngleFB`, `MapView_FillCells`, `Field_SetStatus80` (keyed by `bof3::addr::`, the address, since round ten; ours since then) | SE, SX |
+| `kField` | `BattleExtra_Dispatch` `0x42D710` | R3A |
+| `kField` | `EffectKind41_DrawNumber` `0x46D5F0` | R3E |
+| `kField` | `Mode11_ListedSpriteScreens` `0x5372E0`, `Char_LoseAp` `0x537500` | R2A |
+| `kField` | `Shisu_ModeDispatch` `0x57DFF0` | R2B |
+| `kField` | `MasterTalk_Reset` `0x585A00`, `MasterTalk_Dispatch` `0x586670` | R2C |
+| `kField` | `FieldMenu_SwapBytes` `0x58BD50`, `ItemTrade_TakeNeeds` `0x594D90`, `AbilityList_CountSet` `0x591AC0` | R2E, R2F |
+| `kEffectStd` | the seventeen of R3E (`0x46E190`, `0x46F570`, `0x46F690`, `0x46FAE0`, `0x4790C0`, `0x4790F0`, `0x479160`, `0x479260`, `0x4794D0`, `0x4796B0`, `0x4799C0`, `0x479B70`, `0x479EE0`, `0x47A110`, `0x47A130`, `0x47A150`, `0x47A200`) - with `0x46D5F0` above, R3E's eighteen | R3E |
+| `kEffectStd` | `0x4837B0`, `0x48ED80`, `0x491E30`, `0x492260`, `0x4920F0` | R3F |
+| `kEffectStd` | `0x4941B0`, `0x4FEE70`, `0x5100B0`, `0x5101C0`, `0x5171E0` (R3G's other two are `boss_harness`'s, its 10.11) | R3G |
+| `kEffectStd` | `0x52B1B0`, `0x52B200`, `0x52B2A0`, `0x52B2E0`, `0x52B330`, `0x52B370`, `0x52B6C0` (debt 2's seven) | R1G |
+| `kEffectStd` | `EffectKind07_DrawSprite` `0x462F10` | R4F |
+| `kEffectStd` | `Menu_DrawPanelBox` `0x586160` | R2C |
+
+51 rows. What stays keyed by address is Capcom's: `0x5B9550` (`_ftol`,
+`kThrough`), `0x5A7C70`, `0x5A7570`, `0x5A7840`, `0x5A7A90`, `0x59E930`,
+`0x593950` (a script over every raw row against `symbols.toml`'s `impl`).
+
+**Masks and answers, at what the function reads:**
+
+| Row | Was | Now | What the code shows |
+|---|---|---|---|
+| `EffectKindA7_DrawGlow` `0x491E30` | `{kAll, kAll, kU8}` | `{kAll, kU16, kU8}` | the size is the low word: `short sz[2] = {size, size}` (`rest_3f.cpp`), `mov ax, word [esp + 0x60]` at `0x491E81` (R3F) |
+| `EffectKind18Sub41_DrawPanels` `0x5100B0` | `{kAll, kAll}` | `{kU16, kU16}` | the lift multiplies a vertex byte into a word (`imul ecx, ebx` at `0x510123`, the product stored as a word), the texture is shifted up 16 (`(texture << 16) \| 0xBB009120`, `rest_3g.cpp`): neither upper half reaches anything (R3G) |
+| `LeaderPanel_LeaveOnPress` `0x52B330` | `{kAll}`, garbage | `{kU16}`, `kByte` 0..1 | `and eax, edx; test ax, ax` (`0x52B33A`); `mov al, 1` (`0x52B351`) or `xor al, al` (`0x52B362`), the rest of eax what it was (R1G; E1E's own row has the same mask) |
+| `Sprite_LoadPalette` (`kField`) | `{kAll, kAll}`, `deref {8, 0}` | `{kAll, kAll}`, no `deref`, `FxPalette` | the callee writes 32 words at `dst` and reads nothing there; the 8-byte hash of what `dst` held before the call passed R1A's C74 (a stride 0x20 for 0x40) wherever the palettes were alike. The pointer is logged by value, as R1A's own listing does, and `FxPalette` writes the 0x40 bytes with noise where they lie in the regions, so a group that keeps them compares the destination after the call. In field mode the palettes `0x80D380..` are in no standard region: there the value log is what compares |
+
+**New `kField` rows** (registered for every group, after its own listing and
+the handlers, so no group that lists them sees a difference):
+
+- R1C's six field callees no standard row had - `Effect_SpawnAtCellHigh`,
+  `Effect_SpawnAtCell` (the state's byte, x and z `movsx` words),
+  `Field_GiveZenny` (whole: a byte product pushed whole), `AreaMap_ClearCell`
+  (16 bits each), `Field_EffectAhead` (`kByte` `0xFF..0x13`: a record or
+  none, all it answers - R1C's `FxEffectAhead` in the harness's own form) and
+  `Sprite_TurnSense` (the target's byte, `static_cast<unsigned char>` in
+  `inventory_ops.cpp`; R1A's and R1D's mask, where R1C's listing has the
+  whole word). Each is listed by R1A..R1F with these masks. R0A's six party
+  helpers (`PartyAction_TargetAhead` .. `_SideProbes`) are left to the
+  groups that call them: only wave one's party-action groups do, and their
+  answers differ by group (R1A's `FxRecord`, R1B's `FxKind30`, R1D's
+  `FxMostlyNo`).
+- `Gpu_SetLineF3`, `Gpu_SetSprt16` (debt 21's last clause): R4B found them
+  in effect mode only. Field runs reach them - `rest_2d.cpp`,
+  `rest_4b.cpp` and `rest_4e.cpp` call them in field-mode groups, each
+  listing them itself - so `kField` has them now, the same rows as
+  `kEffectStd`'s (the primitive hashed, `Gpu_SetLineF3` answering it), which
+  they stand over in effect mode with no difference.
+
+**Not folded**: R1C's `Sprite_FlashClut` mask (`kU8`; the `kEffectStd` row
+has the word, which only an effect group calling it would see); the rows
+groups listed in their own `_fuzz.cpp` (left alone: each group's listing is
+registered first and stands; `effect_1e_fuzz.cpp`'s `E_RAW` rows key on the
+address and keep working).
+
+**The proof** (this worktree's i686 build): COUNTS-PLACEHOLDER
