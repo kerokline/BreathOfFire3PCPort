@@ -13,6 +13,20 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## To listen to (the music investigation, 2026-10-06)
+
+- **The listening set is ready**: `analysis/bgm/listen/README.txt` says the order
+  ([`bgm-comparison.md`](bgm-comparison.md) section 9). Play each pair disc,
+  then MP3, then disc: `141_*` the title music (brightness and room), `153_*`
+  the battle theme (the replayed 7.4 s intro and the cut at 23.6 s), `000_*`
+  the town theme (a rhythm hiccup at 17.3 s), then `000_seam.wav` and
+  `153_seam.wav` (the PC's loop join on its own, at 8 s). For each: same,
+  slightly different or clearly different, and in what. **Then the decision
+  the plan waits on** (section 10 there): the disc's music as an option, a
+  measured loop-point table for the MP3s as the cheap fix, or both; and the
+  decoder swap's target is now known (MPEG-1 Layer III, 44.1 kHz, 128 kbit/s
+  CBR, plain stereo, no tags).
+
 ## To review in play
 
 1. **Music coming back after a pause** (`Sound_ResumeAll`,
