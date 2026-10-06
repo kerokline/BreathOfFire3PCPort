@@ -277,8 +277,9 @@ C16 (9); `field_e2` DS9 (1), DS6 (2), IT7 (3); `field_c3` C172 (0 at 3,000);
   compares), measured the same night at the owner's word
   ([`rest_2d.md`](rest_2d.md) L1): `0xA1` and `0xAF` cells exist and are
   refused anyway through the mask; **`0x91` cells exist, 91 of them on nine
-  world maps**, and the camp opens on them where the compare says refuse. The
-  owner confirmed every ordinarily refused spot refuses. A fix is a one-line
+  world maps** (the owner: map 2's bridges, Lost Shore's harbour), and the camp
+  opens on them where the compare says refuse. The PlayStation's twin
+  `0x801D21C4` masks first too - Capcom's bug on both. A fix is a one-line
   divergence; not decided.
 
 ## 6. The merged tip

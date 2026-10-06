@@ -226,9 +226,15 @@ entries take arguments - the typed-stand-in table here is this file's own.
   the rest clusters of 1..7 beside `0xC0` link cells) - and on those the camp
   opens where the compare says it should not. The owner confirmed in game the
   same night that every ordinarily refused spot does refuse (the camp flag
-  `0x904152` and the `0xA?` cells carry the rule as shipped). Whether to honour
-  the `0x91` compare is the owner's: a one-line divergence (the raw cell
-  against the four codes).
+  `0x904152` and the `0xA?` cells carry the rule as shipped), and that the
+  `0x91` cells are map 2's bridges and Lost Shore's harbour. **The PlayStation
+  has the same defect** (read 2026-10-05 from the JP disc's `START.EMI` /
+  `STATUS.EMI`, whose code sections are identical: the twin `0x801D21C4`,
+  called from the top bar's twin `0x801D1B94` beside the camp flag
+  `0x80145046` - `andi 0xF0` first, then `(v1 + 0x60) & 0xFF < 2` for `0xA0` /
+  `0xA1`, `beq 0xAF`, `xori 0x91` on the masked byte). Capcom's bug, shared by
+  both compilations. Whether to honour the `0x91` compare is the owner's: a
+  one-line divergence (the raw cell against the four codes).
 - **L2 `FieldMenuStatus_Choose`'s sound** compares the cursor read before
   (zero-extended) with the new one (sign-extended): a negative cursor sounds
   `0x100` every frame. The cursor is negative only with `Party_Count(0)` 0,
