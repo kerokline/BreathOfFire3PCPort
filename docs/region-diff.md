@@ -560,7 +560,7 @@ code makes at run time.
 Self-tests: `area4_walls` and the `LoadDatFile` change have no shadow
 self-test of their own (the loader is injected, not fuzzed). The switch is
 armed after every module's self-test, so those compare the shipped map.
-`'*'` narrow, `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1`: SELFTEST_RESULT
+`'*'` narrow, `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1` on this branch's build, 2026-10-06: **passed** - exit 0, `self-test only: done`, `inject: 10081 ours, 0 left original`, 1,063 shadow lines all 0 mismatches, and the arming line after `DIV-0079`'s.
 
 ### 10.4 The switch, the attract, the live check
 
