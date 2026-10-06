@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-06: the platform round's step 3 on `phase-3/platform-round-2` - four groups merged, three divergences, 10,081 ours, `'*'` narrow and wide, the state hash live check identical on the attract sequence and all ten routes; the save-write comparison in the round doc; nothing pushed, the PR next)
+**Status:** IN PROGRESS (2026-10-06: the platform round's step 3 on `phase-3/platform-round-2` - four groups merged, three divergences, 10,081 ours, `'*'` narrow and wide, the state hash live check identical on the attract sequence and all ten routes, the save write byte-identical to Capcom's; nothing pushed, the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather

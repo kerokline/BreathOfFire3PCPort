@@ -1,14 +1,15 @@
 # The platform round, step 3: the C runtime's entries, the hidden-start scan, the last two game functions, and three scaling fixes
 
-**Status:** IN PROGRESS (2026-10-06) - step 3 of
+**Status:** MEASURED (2026-10-06) - step 3 of
 [`platform-layers-plan.md`](platform-layers-plan.md) section 4, run in one
 day from `main` `e047ee9b` (PR #42) on `phase-3/platform-round-2`: four agent
 groups merged one at a time (sections 1 and 5), three divergences the owner
 decided the same morning (section 3), round fourteen's leftover debts
 (section 4). **10,065 -> 10,081 ours** (the CRT's 14 entries and the two
 game functions no catalogue held). Headless-verified per group and at each
-merge; **the live check on the state hash is running** (section 6 - the
-result goes there when it lands). Nothing pushed.
+merge; **live-checked on the state hash: the attract sequence and all ten
+routes identical on every tick, the save write byte-identical to Capcom's**
+(section 6). Nothing pushed.
 
 ## 1. The groups
 
@@ -118,11 +119,27 @@ minutes with the save not yet written (the original's run reached frame
 21,834 at the limit), so the slot comparison was trivially "identical". Also
 seen: `open FAILED BGMa.DAT` from ours' file layer - the track is not
 shipped (165 files in `BGM/`), the same line is in every combat log before
-this round, and Capcom's runtime logs nothing. **The second run, on the
-rebuilt tip (`inject: 10081 ours`, the save route at 16 minutes): pending.**
+this round, and Capcom's runtime logs nothing.
+
+**The second run, on the rebuilt tip (`inject: 10081 ours`, 10:30..11:33):
+identical on all 10,305 ticks of the attract sequence and on every tick of
+all ten routes** (combat 2,561, menu_screens 1,729, field_menu 1,409,
+worldMapAndAreaTransition 2,113, caughFish 3,841, masterAndManillo 5,505,
+dragonTransform 4,289, cutsceneAndNue 7,361, whelpBoss 13,121, shop 3,137),
+the `Rand` counts the references' (`analysis/statehash/cn_*_plat3.*`,
+`attract_plat3_ours.*`). **The save write:** ours ran `balioAndSunder_2` to
+its end (frame 21,834, `Rand` 233; the log shows the file layer opening
+`BISLPS06.DAT`); Capcom's side under `--original '*'` runs at about half the
+pace and wanted a 40-minute limit (two shorter runs stopped at frames 14,751
+and 20,375) - its third run reached the same frame with the same count, and
+**the two slot-6 files are byte-identical** (`<scratchpad>/save6/written_ours.DAT`,
+`written_orig3.DAT`; both also equal the owner's slot 6 of 2026-10-03, which
+the same route wrote through Capcom's runtime - the route's save is
+deterministic). The owner's slot 6 was put back after every run and
+compared against its backup.
 
 ## 7. Next
 
-- The live check's result into section 6; HANDOFF and STATUS forward; the PR.
+- The PR (`git log --format=%B e047ee9b..HEAD` for the sign-offs first).
 - The owner's eye on [`owner-review.md`](owner-review.md)'s items.
 - The platform plan's step 4 (the cutover's design) and the decoder question.
