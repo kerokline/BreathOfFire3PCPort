@@ -310,6 +310,7 @@
 #include "game/shell.h"
 #include "game/psx_rest.h"
 #include "game/mode_rest.h"
+#include "game/game_last.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1402,6 +1403,7 @@ void InjectAll() {
                                 // at the scenario harness's recorders, two .data tables swapped for the fuzz only;
                                 // before FishingText_Arm; no module patches bytes inside its 14 (DIVERGENCE.md,
                                 // cheats.cpp, widescreen.cpp)
+    GameLast_Inject();          // platform round step 3, group TWO (Item_UseFlags 0x591810, ItemTrade_Dispatch 0x593950; docs/game-last.md): no calls, one .data table swapped for the fuzz only; last of the takeovers
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

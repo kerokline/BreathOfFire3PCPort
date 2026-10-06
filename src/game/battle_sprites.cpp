@@ -57,7 +57,7 @@ const Callees kOriginals = {
     Rand,
     Raw<void (__cdecl*)(unsigned)>(0x446FB0),
     Raw<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(0x590C90),
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(0x591810),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::Item_UseFlags),   // group TWO's (2026-10-06): by address, the value unchanged
     Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(0x435180),
     Stat_AddClamped,
     Stat_AddCap100,

@@ -816,7 +816,7 @@ const Callee kEngineStandard[] = {
     {BH_OURS(Battle_RandomLiveEnemy), 0, {}, Answer::kFlag, 0, 0},   // 0x452F10
     {BH_OURS(Quake_VertexLift), 2, {kAll, kAll}, Answer::kGarbage, 0, 0},   // 0x4CF4B0
     {BH_OURS(Stat_AddClampedTo), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0},   // 0x590E80, (u16 *stat, cap, delta): a stat add
-    {"0x591810", 0x591810, 0x591810, 2, {kU8, kU8}, Answer::kFlag, 0, 0},         // no start list has it (after 0x5917D0's)
+    {BH_OURS(Item_UseFlags), 2, {kU8, kU8}, Answer::kFlag, 0, 0},         // 0x591810, group TWO's (2026-10-06; no start list had it: after Item_EquipMask's table)
     {BH_OURS(BattleEquipWin_DrawBar), 6, {kAll, kAll, kU8, kU8, kU16, kU8}, Answer::kGarbage, 0, 0},   // 0x59DB70
     {"0x5B9450", 0x5B9450, 0x5B9450, 3, {kAll, kAll, kAll}, Answer::kThrough, 0, 0},   // the CRT's strncpy (Crt_strncpy)
     // items, stats, the party

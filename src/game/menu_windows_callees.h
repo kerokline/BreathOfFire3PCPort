@@ -15,6 +15,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace menu_windows {
 
 namespace at {
@@ -87,7 +89,7 @@ constexpr std::uint32_t kEquipCompare = 0x590960;  // (member, slot, item, u8 ou
 constexpr std::uint32_t kItemName = 0x591680;      // (category, id) -> name, W
 constexpr std::uint32_t kItemKind = 0x591720;      // (category, id) -> 0..15, W
 constexpr std::uint32_t kEquipMask = 0x5917A0;     // (category, id) -> the members who can equip it, W
-constexpr std::uint32_t kItemFlagsOf = 0x591810;   // (category, id) -> flags, W
+constexpr std::uint32_t kItemFlagsOf = bof3::addr::Item_UseFlags;   // (category, id) -> flags, W; group TWO's (2026-10-06), the value unchanged
 constexpr std::uint32_t kHasKeyItem = 0x5918E0;    // (id) -> 1 when held, W
 constexpr std::uint32_t kCountOwned = 0x5919B0;    // (category, id, where) -> u16, W
 constexpr std::uint32_t kCountCategory = 0x591A80; // (category) -> u8, W

@@ -11,7 +11,7 @@ namespace effect_1f::at {
 // --- callees nobody owns (no group of round thirteen lists them), by address ---
 constexpr std::uint32_t kMode8Panel = bof3::addr::Fish_RunAll;    // (): R1G's (round fourteen); game mode 8's frame work, a call through 0x660324 by a
                                                    // byte (catalogue part 7, in no cut)
-constexpr std::uint32_t kTradeDispatch = 0x593950; // (): jmp [0x66A470 + 4 * byte 0x93985C] - ItemTrade_Open,
+constexpr std::uint32_t kTradeDispatch = bof3::addr::ItemTrade_Dispatch; // group TWO's (2026-10-06), the value unchanged: (): jmp [0x66A470 + 4 * byte 0x93985C] - ItemTrade_Open,
                                                    // ItemTrade_Run, ... (FE2's table; the dispatcher is in no cut)
 
 // --- the cells ---

@@ -120,7 +120,7 @@ constexpr U kTextRecord0 = 0x904CE0;      // Text_Records[0]
 // --- callees nobody owns yet ----------------------------------------------------
 constexpr U kAfterEquip = bof3::addr::BattleForm_ApplyStats;       // () BE5's
 constexpr U kMemberRefresh = bof3::addr::Battle_RecalcStats;    // (actor) BE6's
-constexpr U kItemFlags = 0x591810;        // (category, item) -> al
+constexpr U kItemFlags = bof3::addr::Item_UseFlags;        // (category, item) -> al; group TWO's (2026-10-06), the value unchanged
 constexpr U kEnemiesClear = bof3::addr::BattleEnemy_ClearStates;     // ()
 
 }  // namespace at
