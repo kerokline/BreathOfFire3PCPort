@@ -4221,6 +4221,13 @@ designed in rather than bolted on.
   the self-tests). **Not seen live:** the owner's walk of the strip's east
   and bottom edges, blocked with the fix and open with `BOF3X_AREA4_WALLS=0`.
   Area 4 plays twice in the attract cycle, so state-hash reference runs want
-  the switch off; whether the demo's scripted moves touch the cells is
-  checked by an attract run on against off.
+  the switch off. **Attract on against off (2026-10-06,
+  `analysis/statehash/attract_walls_on` / `_off`):** the off run identical to
+  the references on all 10,305 ticks; the on run differs from them in
+  exactly four pages, the cell plane's two (`0x8D3000`, `0x8D4000`) and the
+  placement map's two (`0x8C3000`, `0x8C4000`), from the first load at tick
+  1,312 - the fix's own footprint and nothing else, so the demo's scripted
+  moves never meet the walls. The oracle's one differing row is a sampler
+  poll on an area-load boundary (area `0x0002` against the `0xffff` marker),
+  not game state.
 - **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded.
