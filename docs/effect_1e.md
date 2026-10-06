@@ -334,6 +334,14 @@ C59 1 -> **19**, C62 7 -> **449**; C60 992, C61 2 (the harness's case 4, as
 above), the weakest of the rest C58 3, C12 18, C42 28 as before; the other
 counts moved by a few rounds at most (C2 549, C15 80, C19 62, C31 71).
 
+**C58 and C61 made cheap (2026-10-06, [`round-14-cleanup.md`](round-14-cleanup.md)
+section 7):** the seed puts `LeaderPanel_S9Menu`'s record 6 on choice 2 and
+state 0xE half the time (the one pair whose confirm the original leaves be),
+and `LeaderPanel_S1Out`'s slide at 4 (one short of its end) half the time;
+`FieldPanel_DrawBox3`'s stand-in (`Box3Effect`) turns the record's `+6` over
+half the time under `S1Out`, which reads it again after the box. Of 3,000:
+**C58 3 -> 62, C61 2 -> 791**; C12 23, C42 40.
+
 ## 7. What nothing reached, and the limits
 
 - The dispatchers' Fatal (a step past the table) and `Picked`'s (a sprite

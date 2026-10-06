@@ -26,10 +26,10 @@ using U = std::uint32_t;
 // Entries 4..7 at 0x5EF608 are the HUD state machine 0x404230's table, read
 // by 0x404230 alone.
 constexpr U kStateTable = 0x5EF5F8;
-constexpr U kState0 = 0x411310;   // state 0: y = -0x30 and state 1 unless the mode byte is 2 or Field_ScriptFlags bit 8
+constexpr U kState0 = bof3::addr::WorldMap_FrameWait;   // state 0: y = -0x30 and state 1 unless the mode byte is 2 or Field_ScriptFlags bit 8
 // The frame's event test: 0x531920(x, y), one of Field_LeaderCellEvent's
 // exits (docs/event-ops.md section 11); al non-zero shows the third legend.
-constexpr U kCellEvent = 0x531920;
+constexpr U kCellEvent = bof3::addr::Field_CellHasEvent;
 // The dial page's sprite table: 22 entries of (w, h, u, v) bytes, tpage 0x9C,
 // CLUT 0x7B80 - the dial (0), three legend labels (1..3), the region box and
 // its cap (4, 5), sixteen 8 x 8 key glyphs (6..21). Read by index & 0xFF,

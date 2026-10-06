@@ -369,6 +369,25 @@ U FxLacks(const U*, U answer) {
     if (n % 4 == 0) pick[0] = static_cast<unsigned char>((n >> 8) % (rows != 0 ? rows : 1u));
     return answer;
 }
+// Inventory_Count, louder (round-14-cleanup.md section 7): the worn count
+// (where 0, asked after the bag's) half the time 99 or 98 less the bag's, so
+// that the two meet ItemTrade_PickItem's 99 (control IT7); and a quarter of
+// the time the trade's pick moved inside the rows, which ItemTrade_PickItem
+// reads again after its two counts (DS9).
+U FxCount(const U* a, U answer) {
+    static U s_bag;
+    const U n = sh::Noise();
+    if (n % 4 == 0) {
+        const unsigned rows = Mem(field_e2::at::kTradeRowCount)[0];
+        Mem(field_e2::at::kTradePick)[0] = static_cast<unsigned char>((n >> 8) % (rows != 0 ? rows : 1u));
+    }
+    if ((a[2] & 0xFF) != 0) {
+        s_bag = answer & 0xFF;
+        return answer;
+    }
+    if ((n >> 2) % 2 == 0) return answer;
+    return (answer & 0xFFFFFF00u) | ((((n >> 3) & 1) ? 0x63u : 0x62u) - (s_bag > 0x62 ? 0x62 : s_bag));
+}
 U FxRepeat(const U*, U answer) {
     static const U kMoves[] = {0, 0x1000, 0x2000, 0x4000, 0x8000, 0xA000, 0x5000, 0xF000};
     const U n = sh::Noise();
@@ -407,7 +426,7 @@ const sh::Callee kFixed[] = {
     // char_stats.cpp: the category's, the item's and the flag's low bytes; the
     // answer a count byte of 99 at most (a stack's count, or how many of the
     // eight records wear it) - ItemTrade_PickCount's loop never ends past 227
-    {FE2_OURS(Inventory_Count), 3, {kU8, kU8, kU8}, sh::Answer::kByte, 0, 99},
+    {FE2_OURS(Inventory_Count), 3, {kU8, kU8, kU8}, sh::Answer::kByte, 0, 99, {}, &FxCount},
     {FE2_OURS(Inventory_Add), 3, {kU8, kU8, kU8}, kF, 0, 0},
     {FE2_OURS(Item_HelpMessage), 2, {kU8, kU8}, kG, 0, 0},
     // 0x594711 and ebp, 0xFF; 0x594767 and ecx, 0xFF

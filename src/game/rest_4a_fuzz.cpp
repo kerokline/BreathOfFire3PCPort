@@ -193,6 +193,13 @@ U RandEffect(const U*, U answer) {
 U ClockEffect(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 4 == 0) SetUL(Mem(at::kClock), UL(Mem(at::kClock)) + 1 + (n >> 8) % 64);
+    // and one in four the area moved (CommuSim_AreaEnter reads it again after its
+    // three adds; the group's case 2 reached that 9 times: C16, round-14-cleanup.md
+    // section 7)
+    if ((n >> 2) % 4 == 0) {
+        const U v = n >> 16;
+        Game_AreaNumber = static_cast<unsigned short>((v & 1) ? 0xAF + (v >> 1) % 12 : v >> 1);
+    }
     return answer;
 }
 // Field_SlotClutCopy: the slot's +1 (Field_RunSlot reads it after) half the time.

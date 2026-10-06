@@ -295,3 +295,137 @@ DIV-0076 in) `'*'` narrow, `inject: 10009 ours`, 0 mismatches; then, merged
 into `phase-3/platform-round` with the platform groups (`cdcadb9`), `'*'`
 narrow and wide twice over, 10,065 ours, 0 mismatches
 ([`platform-round.md`](platform-round.md) section 5).
+
+## 7. The debts sections 1 to 4 left (2026-10-06)
+
+One agent of the platform round's step 3 batch (branch `phase-3/plat2-debts`
+from `f18b9d9c`), on HANDOFF item 0's sub-item 5. Nothing here changes game
+behaviour: values unchanged, renames, one fuzz mask, louder fuzz stand-ins,
+and the main checkout's gitignored trace list.
+
+### 7.1 The earlier rounds' raw constants
+
+**Method** (scratch scripts, not committed): every `0x4xxxxx` / `0x5xxxxx`
+literal in `src/game` and `src/hook`, outside strings and comments, whose
+value is the `pc` of a `[[func]]` with an `impl`, then the round-fourteen
+files (`rest_*`, `window_task_callees.h`), the fuzz files and the harnesses
+set aside (section 1.2's classes): **971 literals** in 67 files, each classed
+by its line, the doubtful ones read. Section 1.2's "120 in 35 files" counted
+the single constants; the scan also met the `kOriginals` callee tables, which
+are the same thing written inline.
+
+**Rebound: 369 literals on 184 lines in 36 files**, the round-ten form -
+`bof3::addr::<Name>`, the value unchanged (a scratch check: every changed
+line, its names put back as their `pc`, equals the old line; 0 differing):
+
+| Kind | Literals | Files |
+|---|--:|---|
+| `_callees.h` constants (the class 1.2 counted) | 111 | `save_menu` 15, `battle_windows` 15 (with `kKindHandlers`' three), `event_ops` 12, `menu_windows` 12, `field_modes` 7, `magic_fx_reached` 7, `battle_setup` 6, `battle_items` 5, `event_objs` 4, `mode_flow` 4, `magic_s23` 3, `menu_lists` 3, and twelve files with one or two |
+| `.cpp` entry constants | 3 | `title_states.cpp`: `Field_Task`, `TitleTask_Run` (task 0's entries), `Field_ModeDispatch` |
+| callee tables (`Fn<>` / `Raw<>` / `H()`) | 187 | `battle_fx_tasks` 122 (round eight's form, left raw then because the targets were Capcom's), `d3d_list` 16, `member_sprites` 14, `field_event` 13, `battle_misc` 7, `battle_sprites` 6, `battle_result` 5, `battle_damage` 3, `battle_turn_steps` 1 |
+| handler tables called through | 46 + 22 | `event_ops.cpp`'s `kStepHandlers` / `kArriveHandlers` (round ten's 1 left them; ours call through them and the fuzz keys on them - the value unchanged, both stand); `magic_s16.cpp`'s pools' stack tables and the two actor phase tables |
+
+Stale "Capcom's" / "not ours" / "raw address" notes on those lines or their
+section headings were brought forward (`battle_windows`, `event_objs`,
+`event_ops`, `item_use`, `map_field_objects`, `msgbox` callees headers,
+`battle_turn_steps.cpp`).
+
+**Left raw, read and why** (602 literals): the clone byte-check rows
+`{offset, target}` and clone bases with their sizes (`field_frame`,
+`title_states`, `move_groups`, `object_kinds`, `field_blocked`, `mode_tasks`,
+`field_objects`, `kind2_object`, `frame_callees`, `move_script`,
+`sprite_anim`, `sprite_screen`, `text_draw`, `text_immediate`,
+`task_sched_callees.h`'s `kUnit`, ...) and the older fuzzes' `case 0x...:`
+stand-in selectors (163) - section 1.2's classes; the coordinates equal to a
+`pc` (19: `0x4D8000`, `0x558000`, `0x518000`, `0x438000`, `0x508000`); and
+**eight patch-site constants**: the expected targets of `RetargetCall` (the
+`disp32` Capcom's instruction holds, checked before the re-aim - a fact about
+the bytes): `kTextDrawAt` in `battle_draw.cpp`, `config_text.cpp`,
+`menu_verbs.cpp`, `yes_no_layout.cpp`, `text_advance.cpp`'s `kCallee`,
+`yes_no_layout.cpp`'s `kMsgSystemPtr` and `kMenuDrawHand`, `menu_frame.cpp`'s
+`kEmptyFunction` (`Port_DroppedCall`); each comment now names the function
+and says why. The fuzz files were not scanned for rebinding (their constants
+are keys, section 1.2).
+
+### 7.2 `kInflict`
+
+R3B's `kInflict` (`Effect_RollInflict`) is **`kRollInflict`**; R3C's and
+BE5's (`Battle_InflictStatus`) are **`kInflictStatus`** - `rest_3b.cpp`,
+`rest_3b_callees.h`, `rest_3b_fuzz.cpp`, `rest_3c*`, `battle_e5*`, and
+`rest_3d.md`'s mention. Section 1.1's table keeps the old names (the record
+of that night).
+
+### 7.3 `Sprite_FlashClut`'s `kEffectStd` row
+
+`{kAll}` -> `{kU8}`: `0x534DB3 mov ecx, [esp + 0xC]; 0x534DBE and ecx, 0xFF`
+(capstone, 2026-10-06) - the colour index is the argument's low byte. R1C
+lists its own `{kU8}` row (it stands); of the effect-mode groups only E5D
+reaches the standard row (`0x505480`'s `Sprite_FlashClut(2)`), so `effect_5d`
+and `rest_1c` are the modules it can move.
+
+### 7.4 The seven older hosts in `entries_logic.txt`
+
+The main checkout's `analysis/calltrace/entries_logic.txt` (backup in the
+session scratchpad, `plat2/debts/entries_logic_backup_1006.txt`), each host
+cut to its own extent from its `symbols.toml` evidence (and the clone sizes
+`move_groups.cpp` / `move_script.cpp` use) and a line added for each start it
+covered:
+
+| Host | Was | Now | Lines added |
+|---|---|---|---|
+| `Battle_MemberAutoTarget` `0x453FA0` | 2BD | 27C | `Battle_MemberOutAction` `00454220 3D` |
+| `ClutMap_Mark` `0x454DF0` | 3AF | 140 | `ClutMap_FindFree` `00454F30 210`, `ClutMap_FindOwner` `00455140 5F` |
+| `Battle_InitEncounterKind` `0x494280` | 9A | 14 | `Battle_InitBossEncounter` `004942A0 13`, `Battle_InitEnemies` `004942C0 5A` |
+| `Sparkle_Alloc` `0x4B98B0` | 80 | 4A | `Sparkle_Free` `004B9900 2F` |
+| `Gfx_DrawSkyGradient` `0x4FD350` | 120 | 8E | `Gfx_DrawSunsetGlow` `004FD3E0 81` |
+| `MoveScript_GroupF` `0x577760` | 8AD | 470 | `MoveScript_GroupD` `00577BD0 438` |
+| `MoveScript_Group8` `0x5786C0` | 43D | 33C | `MoveScript_Group9` `00578A00 F8` |
+
+The file stays sorted (the lines went in place; `consolidate_entries.py` not
+needed). `entries_audit.py`: 18 owned starts without a line before (9
+covered, 9 uncovered), **9 after (0 covered, 9 uncovered)** - the nine left
+are the platform layer's `Gfx_*` starts (`0x454960`, `0x461F00`, `0x461FC0`,
+`0x59E700`, `0x59EA70`, `0x59EB00`, `0x59EBB0`, `0x5A04C0`, `0x5A0830`), the
+same nine as at round fourteen's end, outside this debt. The frame-hash
+references were recorded with the old hosts; a reference re-recorded after
+this sees the nine starts as their own ranges.
+
+### 7.5 The thin controls
+
+Section 4's last list, as many as fitted; each a louder stand-in on the path
+the control changes or a seed at its boundary, in the `_fuzz.cpp` only (the
+groups' docs carry the detail):
+
+| Group | Control | Before | After | What reached it |
+|---|---|--:|--:|---|
+| `rest_4d` | D33 / B12 / N47 / N07 | 4 / 7 / 5 / 7 of 4,000 | 1,353 / 733 / 557 / 1,215 | `Music_FadeOutStop`, `Sound_PlayEffect`, R4C's cell, R4E's entry box each move the byte their caller reads again, under that caller's clone; `SlotEntryOut`'s count seeded to 3 |
+| `rest_4a` | C16 | 9 | 348 | `ClockEffect` moves the area too |
+| `effect_1e` | C58 / C61 | 3 / 2 of 3,000 | 62 / 791 | the seed at choice 2 on state 0xE, and the slide at 4; `FieldPanel_DrawBox3` turns `+6` over under `S1Out` |
+| `field_e2` | IT7 / DS9 | 3 / 1 of 3,000 | 67 / 44 | `Inventory_Count` answers the worn count to meet 99, and moves the trade's pick |
+
+Re-run beside them and still refused: rest_4d N70 (618), rest_4a C3 / C21 /
+C29 / C32 (697 / 125 / 189 / 265), effect_1e C12 / C42 (23 / 40), field_e2
+DS8 (23). **Left** (not reached this session): `field_e2` DS6 (its re-read is
+`Field_State` itself, after the two leader calls), `field_c3` C172,
+`rest_1g` C76 / C77, C15, C71, D10 (single-value boundaries inside
+`Fish_Hooked` and `ChoiceMenu_RulePage`, seeded already; they want a reading
+of why the path is rare). The driver is the batch's
+`plat2/debts/ctl/` (ED2's `ctl.py` with this worktree's path).
+
+### 7.6 Verification
+
+The i686 build clean (the one warning, `battle_e5.cpp`'s unused
+`MarkMember`, was there before); `ledger_check.py` 77 entries, 0 errors;
+`gen_symbols: 10066 ours`; `symbols.toml` unchanged, no duplicate `pc`.
+`BOF3X_SHADOW='*'` headless at `f18b9d9c` (the base, built in this worktree)
+and at the code tip: both `inject: 10065 ours`, `self-test only: done`,
+1,056 `MISMATCHES` lines each, every one 0. Counts that moved: `rest_4a`,
+`rest_4d`, `effect_1e`, `field_e2` (their fuzzes changed, 7.5); `effect_1a`,
+`_1c`, `_2b`, `_2c`, `_2d`, `_2g`, `mode_rest`, `rest_4b`, `rest_4c`,
+`sound` by a few calls in a million - **the same build run twice moves them
+as much** (`rest_4b` 3,432,836 then 3,423,140; `effect_1a` 563,083 then
+563,293), so it is the run, not the change (round fourteen's EB read the same
+as build layout). `rest_1c`, `effect_5d` and every module whose file the
+rebinding touched kept their counts. With `BOF3X_WIDE=1` at the
+tip: exit 0, `inject: 10065 ours`, `self-test only: done`, 1,056 lines, all
+0 mismatches. The control runs are in 7.5.

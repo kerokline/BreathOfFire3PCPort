@@ -7,10 +7,13 @@
 // (docs/takeover-queue-round7.md, "The rule for calls across groups"): group
 // BD's draw helpers (0x444340, 0x4447B0, 0x444900, 0x4449E0, 0x444A90,
 // 0x444C40, 0x444CE0, 0x444D50, 0x444E00, 0x444EB0), and two that no group
-// owns yet: the small 8 px UI font 0x516E70 and 0x589110 (the next round's).
+// owned then: the small 8 px UI font 0x516E70 and 0x589110. All ours since,
+// named by symbol, the values unchanged (docs/round-14-cleanup.md section 7).
 #pragma once
 
 #include <cstdint>
+
+#include "bof3/symbols.gen.h"
 
 namespace battle_windows {
 
@@ -47,24 +50,24 @@ constexpr std::uint32_t kTickGate = 0x904B8E;      // u8: 0x441180 / 0x4411B0 ti
 constexpr std::uint32_t kSkillFlags = 0x65C4DD;    // 24 bytes a skill: bit 3 of this byte
 constexpr std::uint32_t kPoseSet = 0x8C5D80;       // the pose set 0x589110 is handed (0x1800 bytes)
 // The three handlers of window kind 0x597A30 dispatches on (+0 of its eighth
-// argument). Unnamed pointer-reached neighbours, not in this group.
-constexpr std::uint32_t kKindHandlers[3] = {0x597A80, 0x597BD0, 0x597C10};
+// argument). Pointer-reached neighbours, not in this group (ours, by symbol).
+constexpr std::uint32_t kKindHandlers[3] = {bof3::addr::Window_HpGaugeTrack, bof3::addr::Window_HpGaugeDrain, bof3::addr::Window_HpGaugeFill};
 
 }  // namespace at
 
 // Other groups' functions, by address (the round's rule).
-constexpr std::uint32_t kDrawValue = 0x444340;     // (x, y, colour, u16 value): "%4d", or ":" (its glyph 10) for 0xFFFF, BD
-constexpr std::uint32_t kDrawEdge = 0x4447B0;      // (x, y, piece, semi): a flat POLY_F4 of the piece table 0x64E148, BD
-constexpr std::uint32_t kDrawTile = 0x444900;      // (x, y, size, semi): a TILE in the window colour, BD
-constexpr std::uint32_t kDrawTileRgb = 0x4449E0;   // (x, y, size, colour15, semi): a TILE, BD
-constexpr std::uint32_t kDrawBar = 0x444A90;       // (x, y, width, fill, flag): a gauge, BD
-constexpr std::uint32_t kDrawDigit = 0x444C40;     // (x, y, n): a 16 x 8 SPRT, u = n << 4, BD
-constexpr std::uint32_t kLinePlain = 0x444CE0;     // (x0, y0, x1, y1, r, g, b): a LINE_F2, BD
-constexpr std::uint32_t kLineSemi0 = 0x444D50;     // the same under abr 0, BD
-constexpr std::uint32_t kLineSemi1 = 0x444E00;     // the same under abr 1, BD
-constexpr std::uint32_t kEnemyNameShown = 0x444EB0;// (enemy) -> al: 0 when a later battle slot holds an enemy with its +0xC byte, BD
-constexpr std::uint32_t kTinyFont = 0x516E70;      // (x, y, colour, count, text) -> text end: the 8 px UI font
-constexpr std::uint32_t kPoseFrom = 0x589110;      // (pose, set, size): a pose from a set (the next round's)
+constexpr std::uint32_t kDrawValue = bof3::addr::BattleWin_DrawNumber;     // (x, y, colour, u16 value): "%4d", or ":" (its glyph 10) for 0xFFFF, BD
+constexpr std::uint32_t kDrawEdge = bof3::addr::BattleWin_DrawQuadF4;      // (x, y, piece, semi): a flat POLY_F4 of the piece table 0x64E148, BD
+constexpr std::uint32_t kDrawTile = bof3::addr::BattleWin_DrawTile;      // (x, y, size, semi): a TILE in the window colour, BD
+constexpr std::uint32_t kDrawTileRgb = bof3::addr::BattleWin_DrawTileRgb;   // (x, y, size, colour15, semi): a TILE, BD
+constexpr std::uint32_t kDrawBar = bof3::addr::BattleWin_DrawBar;       // (x, y, width, fill, flag): a gauge, BD
+constexpr std::uint32_t kDrawDigit = bof3::addr::BattleWin_DrawCell16;     // (x, y, n): a 16 x 8 SPRT, u = n << 4, BD
+constexpr std::uint32_t kLinePlain = bof3::addr::BattleWin_DrawLine;     // (x0, y0, x1, y1, r, g, b): a LINE_F2, BD
+constexpr std::uint32_t kLineSemi0 = bof3::addr::BattleWin_DrawLineHalf;     // the same under abr 0, BD
+constexpr std::uint32_t kLineSemi1 = bof3::addr::BattleWin_DrawLineAdd;     // the same under abr 1, BD
+constexpr std::uint32_t kEnemyNameShown = bof3::addr::BattleWin_FirstOfKind;// (enemy) -> al: 0 when a later battle slot holds an enemy with its +0xC byte, BD
+constexpr std::uint32_t kTinyFont = bof3::addr::Text_DrawSmall;      // (x, y, colour, count, text) -> text end: the 8 px UI font
+constexpr std::uint32_t kPoseFrom = bof3::addr::Sprite_PoseFromSet;      // (pose, set, size): a pose from a set
 
 struct Callees {
     // ours already, and Capcom's by name

@@ -187,7 +187,7 @@ extern "C" void __cdecl EnemyAI_ApplyAction(unsigned char* enemy, const unsigned
         const U status = enemy[0x92];
         const unsigned char* const current = Sprite_Current;
         const U word = (cleared & 0xFFFF0000u) | status | row[2];
-        BH_AT(U2, at::kInflict)((word & 0xFFFFFF00u) | current[5], word);
+        BH_AT(U2, at::kInflictStatus)((word & 0xFFFFFF00u) | current[5], word);
         Sprite_Current = saved;
         break;
     }

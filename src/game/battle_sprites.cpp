@@ -53,15 +53,15 @@ using move_script::Word;
 template <class F> F Raw(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
 
 const Callees kOriginals = {
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x4456C0),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_ActorIsOut),
     Rand,
-    Raw<void (__cdecl*)(unsigned)>(0x446FB0),
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(0x590C90),
+    Raw<void (__cdecl*)(unsigned)>(bof3::addr::Battle_SetActorBit),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(bof3::addr::AbilityList_Add),
     Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(0x591810),
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(0x435180),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::BattleTask_Create),
     Stat_AddClamped,
     Stat_AddCap100,
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(0x59E2D0),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::Window_Alloc),
     Sound_PlayEffect,
     AreaMap_Elevation,
     Sprite_SetAnimationBank,
@@ -78,7 +78,7 @@ const Callees kOriginals = {
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberActionIs0E),   // R4A's
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomOtherMember),  // R4A's
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomEnemy),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x445730),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_DefaultTarget),
     ClutMap_Mark,
     ClutMap_FindFree,
     ClutMap_FindOwner,

@@ -26,6 +26,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace magic_fx_reached {
 
 namespace at {
@@ -79,13 +81,13 @@ constexpr std::uint32_t kTints = 0x7E0700;
 }  // namespace at
 
 // Raw addresses of callees this group does not own (see the top).
-constexpr std::uint32_t kCloneSize = 0x4ED5C0;
-constexpr std::uint32_t kCloneFree = 0x4AEE90;
-constexpr std::uint32_t kSparkleTint = 0x4B1E70;
-constexpr std::uint32_t kSparkleBrighten = 0x4B1ED0;
-constexpr std::uint32_t kSparkleThin = 0x4EE8A0;
-constexpr std::uint32_t kSparkleDone = 0x4F7350;
-constexpr std::uint32_t kItemName = 0x4B58F0;
+constexpr std::uint32_t kCloneSize = bof3::addr::BattleFx_SetSize;
+constexpr std::uint32_t kCloneFree = bof3::addr::BattleFx_FreeTask;
+constexpr std::uint32_t kSparkleTint = bof3::addr::BattleFx_TintActor;
+constexpr std::uint32_t kSparkleBrighten = bof3::addr::BattleFx_Brighten;
+constexpr std::uint32_t kSparkleThin = bof3::addr::BattleFx_WaitStep4;
+constexpr std::uint32_t kSparkleDone = bof3::addr::BattleFx_Finish;
+constexpr std::uint32_t kItemName = bof3::addr::Item_CopyName;
 
 using Handler = void (__cdecl*)();
 

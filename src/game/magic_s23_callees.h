@@ -103,9 +103,9 @@ constexpr std::uint32_t kFanPhases = 0x65B818;       // SimoonFan_Phases, 4
 // Raw addresses of callees in other units (see the top): the engine's, called
 // by it; group L's, the fuzz's keys for the stand-ins ours reaches by name.
 constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
-constexpr std::uint32_t kOrbitRecord = 0x4FBB40;    // MagicFx_StepAround
-constexpr std::uint32_t kNearRecord = 0x4FBC30;     // MagicFx_NearSprite
-constexpr std::uint32_t kSideCentre = 0x4FC0E0;     // MagicFx_CenterOnSide
+constexpr std::uint32_t kOrbitRecord = bof3::addr::MagicFx_StepAround;    // MagicFx_StepAround
+constexpr std::uint32_t kNearRecord = bof3::addr::MagicFx_NearSprite;     // MagicFx_NearSprite
+constexpr std::uint32_t kSideCentre = bof3::addr::MagicFx_CenterOnSide;     // MagicFx_CenterOnSide
 
 using TurnFn = void (__cdecl*)(unsigned char*);
 

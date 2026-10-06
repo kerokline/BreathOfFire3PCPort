@@ -1123,7 +1123,7 @@ const Callee kEffectStd[] = {
     {FX_OURS(Gte_LoadVertex), 1, {0}, Answer::kGarbage, 0, 0, {8}, nullptr, nullptr, true},   // 1: void(const unsigned long *vertex)
     {FX_OURS(Gte_Rtps), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(void)
     {FX_OURS(Gte_StoreScreenXY), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_8, nullptr, true},   // 1: void(unsigned long *out)
-    {FX_OURS(Sprite_FlashClut), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(unsigned colour)
+    {FX_OURS(Sprite_FlashClut), 1, {kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(unsigned colour); reads the low byte (0x534DBE and ecx, 0xFF)
     {FX_OURS(Field_FloorHurt), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: void(unsigned kind)
     {FX_OURS(DrawItemPool_Alloc), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: unsigned short(void)
     {FX_OURS(Gfx_ClutAdjust), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: long(int columns, int rows, int red, int green, int blue)

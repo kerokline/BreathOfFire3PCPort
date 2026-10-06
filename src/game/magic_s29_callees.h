@@ -89,6 +89,6 @@ constexpr std::uint32_t kShadeSteps = 0x65BC20;     // ShadowMote_Steps, 4
 
 // Other units' functions (above): the fuzz's keys for their stand-ins.
 constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
-constexpr std::uint32_t kFreeRecord = 0x4F6290;
+constexpr std::uint32_t kFreeRecord = bof3::addr::MagicFx_FreeCurrentRecord;
 
 }  // namespace magic_s29
