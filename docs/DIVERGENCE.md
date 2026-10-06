@@ -4171,7 +4171,10 @@ designed in rather than bolted on.
   own pixels. This is the port's renderer, which has no PSX twin.
 - **Verification:** the four modules' shadows (`d3d_draw`, `d3d_rest`,
   `battle_draw`, `field_misc`) compare Capcom's handlers with the switch
-  off, 0 mismatches. Live: the `caughFish` route's frames 1500..1700 ours
-  against `BOF3X_LINES=0`.
+  off, 0 mismatches. Live (2026-10-06): the `caughFish` route's frames
+  1500..1700 ours against `BOF3X_LINES=0` (`analysis/shots/lines_1006_quad`,
+  `_strip`): frame 1680 differs in 11,949 pixels, all in the gauge (the red
+  bar and the centre mark, now the scale's width) and the instruction
+  banner's outline - the only lines on the frame; nothing else moved.
 - **Reversible?** `BOF3X_LINES=0` leaves the switch off (the strip);
   `BOF3X_ORIGINAL=D3d_DrawLineF2,...` runs Capcom's handler.
