@@ -63,7 +63,7 @@ is a hypothesis (section 2).
 
 ### The data
 
-`Snd_PrimaryBuffer` `0x7DE3C0` is named (`[[data]]`): the sound set-up
+`Snd_Primary` `0x7DE3C0` is named (`[[data]]`): the sound set-up
 `0x5A6830` creates it with a `DSBUFFERDESC` whose flags are 1
 (`DSBCAPS_PRIMARYBUFFER`) and sets its format (2 channels, 22,050 Hz, 8 bits).
 The other blocks stay addresses in `psx_rest_callees.h`: `0x7CAE20..0x7CAE37`
@@ -148,7 +148,7 @@ The other blocks stay addresses in `psx_rest_callees.h`: `0x7CAE20..0x7CAE37`
   (`0x4FD144`), so no code of 100 or more ever reaches the box. Nothing
   bounds the code.
 - **`Sound_Shutdown`**: `SndStream_Stop`, `Music_Release`, then
-  `Snd_PrimaryBuffer` and `Snd_Device`, each released and zeroed when not
+  `Snd_Primary` and `Snd_Device`, each released and zeroed when not
   null.
 
 What none of the void ones leaves in `eax` is read: every caller of the

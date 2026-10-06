@@ -177,7 +177,7 @@ constexpr Region kRegions[] = {
     {0x7CADE0, 0x60},                       // the after-draw block and the orphans, to D3d_CellTexCache
     {kBackdropBlock - 8, 0x28},             // the backdrop block
     {0x7CC330, 0x30},                       // the DirectX 6 slots
-    {0x7DE3B8, 0x10},                       // Snd_Device, Snd_PrimaryBuffer
+    {0x7DE3B8, 0x10},                       // Snd_Device, Snd_Primary
 };
 constexpr unsigned SumRegions() {
     unsigned n = 0;

@@ -30,7 +30,7 @@ constexpr U kRenderFlags = 0x6C3A4C;                          // Gfx_RenderFlags
 constexpr U kBackMaterial = 0x7CC358, kViewport = 0x7CC354, kDevice = 0x7CC350, kDirect3D = 0x7CC34C;
 constexpr U kClipper = 0x7CC348, kZBuffer = 0x7CC340, kStage = 0x7CC344, kBackBuffer = 0x7CC33C;
 constexpr U kPrimary = 0x7CC338, kDirectDraw = 0x7CC334;
-constexpr U kSndDevice = 0x7DE3BC, kSndPrimary = 0x7DE3C0;    // Snd_Device, Snd_PrimaryBuffer
+constexpr U kSndDevice = 0x7DE3BC, kSndPrimary = 0x7DE3C0;    // Snd_Device, Snd_Primary
 constexpr U kErrorText = 0x66B6A8;                            // Display_ErrorBox's table: codes below 100
 constexpr U kErrorTextHigh = 0x66B568;                        // ... and 100 on, indexed by the code itself
 constexpr U kErrorCaption = 0x66BC1C;                         // the box's caption, a string in the image

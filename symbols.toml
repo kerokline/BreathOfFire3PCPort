@@ -11266,7 +11266,7 @@ ret = "void"
 params = "void"
 impl = "src/game/psx_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05, 0x5A6980..0x5A69BC (0x3D bytes), cdecl: SndStream_Stop (a relative call at +0, the entry itself), Music_Release (+5), then Snd_PrimaryBuffer 0x7DE3C0 and Snd_Device 0x7DE3BC each read once, Released (+8) and zeroed when not null. Both are DirectSound's own objects, made by the sound set-up 0x5A6830 (Capcom's). Sole caller WinMain's exit 0x4FD00E. docs/psx-rest.md."
+evidence = "disasm 2026-10-05, 0x5A6980..0x5A69BC (0x3D bytes), cdecl: SndStream_Stop (a relative call at +0, the entry itself), Music_Release (+5), then Snd_Primary 0x7DE3C0 and Snd_Device 0x7DE3BC each read once, Released (+8) and zeroed when not null. Both are DirectSound's own objects, made by the sound set-up 0x5A6830 (Capcom's). Sole caller WinMain's exit 0x4FD00E. docs/psx-rest.md."
 
 # ---------------------------------------------------------------------------
 # 2026-10-05, the platform round's group PL: the PSX library layer's last
@@ -11390,13 +11390,6 @@ params = "void"
 impl = "src/game/psx_rest.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-05, 0x5A6760..0x5A6776 (0x17 bytes), cdecl, one relative call (+4, D3d_FreeCellTexture 0x5A3790): D3d_FreeCellTexture(slot) for slot 0..127, the whole D3d_CellTexCache. Sole caller Display_Teardown."
-
-[[data]]
-pc = 0x7DE3C0
-name = "Snd_PrimaryBuffer"
-ctype = "void *"
-status = "evidence"
-evidence = "disasm 2026-10-05: the sound set-up 0x5A6830 fills the DSBUFFERDESC at 0x7DE378 (size 0x24, flags 1 = DSBCAPS_PRIMARYBUFFER) and calls Snd_Device's CreateSoundBuffer (+0xC) with this as the out (0x5A68CB), then its SetFormat (+0x38) with the WAVEFORMATEX at 0x7DE3A0 (2 channels, 22050 Hz, 8 bits). Sound_Shutdown releases and zeroes it. Six instructions name it (a raw scan), all in those two functions."
 
 [[func]]
 pc = 0x5A9690
