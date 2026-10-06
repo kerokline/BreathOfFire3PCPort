@@ -58,9 +58,12 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       fixing them regenerates the entry lists); two doc attributions SCAN corrected in its doc but not at their source
       (`mode-rest.md` section 0's "pc_funcs.json" is `pc_hidden.json`'s size; `Mp3_Create`'s evidence puts the decoder
       start at `0x5AB000`, it is `0x5ADF00`).
-   4. **The platform plan's step 4**: the cutover's design ([`platform-layers-plan.md`](platform-layers-plan.md) section
-      3) and the decoder question (section 2.4, I23); what is still Capcom's is the runtime's start-up, allocator and
-      per-thread data, the decoder, and the software renderer's converters.
+   4. **What is next for the platform round is staged for the owner's pick** in
+      [`platform-next.md`](platform-next.md): A the music investigation and the decoder's fate (I23, step 4), B the
+      single-source game data (the region measurement, then the importer), C the PSP logic changes (I32), D the cutover
+      (state 2 proved, then our own executable); their dependencies and three ways to order them, with a recommendation.
+      What is still Capcom's: the runtime's start-up, allocator and per-thread data, the decoder, the software renderer's
+      converters.
    **Mechanics that held:** briefs and scripts in the session-`7d0c9683` scratchpad (`plat2/common.md` + `brief_*.md`,
    `live_plat3.sh`, `chain_final.sh`, `launcher/` the 10,081 build). The agents' branches `phase-3/plat2-scan/-debts/
    -crt/-two` and their `.claude/worktrees/agent-*` are merged and can go.
