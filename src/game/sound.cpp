@@ -18,6 +18,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/music_loops.h"
 #include "game/sound_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -431,6 +432,135 @@ extern "C" void __cdecl SndBuf_Release(void* buffer) {
     Method<ComCall>(buffer, kRelease)(buffer);
 }
 
+// DIV-pending (music_loops.h, docs/bgm-comparison.md section 12): the loop of
+// a track with a measured row. Every frame is decoded into a frame buffer of
+// ours and copied out, so the stream can be cut at any sample: at the row's
+// end the decoder is rewound (Mp3_Seek(decoder, 0), the one position whose
+// meaning is measured) and decoded again from the file's start, every frame
+// before the one holding the row's start thrown away, and that frame's
+// samples from the start on carried into the output. Decoding from the start
+// leaves the decoder exactly as on the first pass (bit reservoir, overlap), so
+// the samples after the jump are the first pass's, bit for bit. What does not
+// fit the caller's `size` is carried to the next call - the original writes
+// whole frames, and 0x12000 bytes is a whole number of them; a cut stream is
+// not.
+namespace {
+
+struct Loop {
+    const music_loops::Row* row;  // nullptr: the original's rewind
+    std::uint32_t pos;            // samples decoded from the file's first frame
+    unsigned char frame[0x4000];
+    std::uint32_t carry_at, carry_len;  // bytes of `frame` still to hand out
+    unsigned logged[8];                 // tracks whose first loop was logged (a bitmap of 256)
+};
+Loop g_loop;
+
+void LoopBegin(int track, unsigned size) {
+    g_loop.row = music_loops::g_on ? music_loops::Find(track, size) : nullptr;
+    g_loop.pos = 0;
+    g_loop.carry_at = g_loop.carry_len = 0;
+}
+
+// One frame into g_loop.frame; its byte count. End of stream before the row's
+// end cannot happen for a row the generator checked against its file, so it
+// is fatal rather than papered over.
+std::uint32_t LoopFrame(std::uint32_t& decoder) {
+    const int result = g.mp3_decode(At(decoder), g_loop.frame);
+    decoder = Address(Music_Decoder);
+    const std::uint32_t bytes = Dword(Dword(decoder + 0x14) + 8);
+    if (result == kEndOfStream)
+        bof3::Fatal("music_loops: track %u's stream ended at sample %u, before its loop end %u", g_loop.row->track,
+                    g_loop.pos, g_loop.row->end);
+    if (bytes > sizeof g_loop.frame || (bytes & 3))
+        bof3::Fatal("music_loops: a frame of %u bytes (track %u)", bytes, g_loop.row->track);
+    return bytes;
+}
+
+void LoopDecode(unsigned char* dst, std::uint32_t size) {
+    std::uint32_t decoder = Address(Music_Decoder);
+    std::uint32_t filled = 0;
+    while (filled < size) {
+        if (g_loop.carry_len) {
+            std::uint32_t n = size - filled;
+            if (n > g_loop.carry_len) n = g_loop.carry_len;
+            std::memcpy(dst + filled, g_loop.frame + g_loop.carry_at, n);
+            filled += n;
+            g_loop.carry_at += n;
+            g_loop.carry_len -= n;
+            continue;
+        }
+        const music_loops::Row& row = *g_loop.row;
+        std::uint32_t bytes = LoopFrame(decoder);
+        const std::uint32_t samples = bytes / 4;
+        if (g_loop.pos + samples < row.end) {
+            g_loop.pos += samples;
+            g_loop.carry_at = 0;
+            g_loop.carry_len = bytes;
+            continue;
+        }
+        // this frame holds the end: hand out the samples before it, then jump
+        const std::uint32_t keep = (row.end - g_loop.pos) * 4;
+        std::uint32_t n = size - filled;
+        if (n > keep) n = keep;
+        std::memcpy(dst + filled, g_loop.frame, n);
+        filled += n;
+        // what of `keep` did not fit goes out before the jump's samples: hold it
+        // at the end of the frame buffer's free part
+        const std::uint32_t pending = keep - n;
+        unsigned char tail[0x4000];
+        std::memcpy(tail, g_loop.frame + n, pending);
+        // the row's crossfade: the samples after the end, faded out over the start's
+        const std::uint32_t fade_bytes = row.fade * 4;
+        if (keep + fade_bytes > bytes)
+            bof3::Fatal("music_loops: track %u's crossfade runs past the frame holding its end", row.track);
+        std::int16_t fade_from[2 * 1152];
+        if (fade_bytes > sizeof fade_from) bof3::Fatal("music_loops: track %u's crossfade of %u samples", row.track, row.fade);
+        std::memcpy(fade_from, g_loop.frame + keep, fade_bytes);
+        g.mp3_seek(At(decoder), 0);
+        decoder = Address(Music_Decoder);
+        g_loop.pos = 0;
+        for (;;) {
+            bytes = LoopFrame(decoder);
+            if (g_loop.pos + bytes / 4 > row.start) break;
+            g_loop.pos += bytes / 4;
+        }
+        const std::uint32_t skip = (row.start - g_loop.pos) * 4;
+        g_loop.pos += bytes / 4;
+        if (skip + fade_bytes > bytes)
+            bof3::Fatal("music_loops: track %u's crossfade runs past the frame holding its start", row.track);
+        for (std::uint32_t j = 0; j < row.fade; ++j) {
+            std::int16_t s[2];
+            std::memcpy(s, g_loop.frame + skip + j * 4, 4);
+            for (int c = 0; c < 2; ++c) {
+                const std::int32_t a = fade_from[2 * j + c], b = s[c];
+                const std::int32_t w = static_cast<std::int32_t>(2 * j + 1), f2 = static_cast<std::int32_t>(2 * row.fade);
+                s[c] = static_cast<std::int16_t>((a * (f2 - w) + b * w) / f2);
+            }
+            std::memcpy(g_loop.frame + skip + j * 4, s, 4);
+        }
+        // carry: the end's pending samples, then the start frame from the start
+        if (pending + bytes - skip > sizeof g_loop.frame)
+            bof3::Fatal("music_loops: %u bytes to carry across track %u's loop", pending + bytes - skip, row.track);
+        if (pending) {
+            std::memmove(g_loop.frame + pending, g_loop.frame + skip, bytes - skip);
+            std::memcpy(g_loop.frame, tail, pending);
+            g_loop.carry_at = 0;
+            g_loop.carry_len = pending + bytes - skip;
+        } else {
+            g_loop.carry_at = skip;
+            g_loop.carry_len = bytes - skip;
+        }
+        const unsigned t = row.track & 0xFF;
+        if (!(g_loop.logged[t >> 5] & (1u << (t & 31)))) {
+            g_loop.logged[t >> 5] |= 1u << (t & 31);
+            bof3::Log("music_loops track %03u looped at its measured points: sample %u back to %u", row.track, row.end,
+                      row.start);
+        }
+    }
+}
+
+}  // namespace
+
 // original 0x5A6CC0: starts the music stream from a BGM file in memory:
 // whatever was streaming released, the file copied (the decoder reads it from
 // the copy), the decoder opened, the streaming buffer made with its first
@@ -447,6 +577,11 @@ extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) 
     Music_Data = copy;
     std::memcpy(copy, file, size);
     Music_Decoder = g.music_open_decoder(Music_Data, size);
+    // DIV-pending (music_loops.h): the measured loop of a BGM track Music_Play
+    // started, looked up before the first half is decoded; Sound_LoadStream's
+    // streams (not Music_File) and once-only tracks have none.
+    LoopBegin(loops && file == Music_File && size == static_cast<unsigned>(Music_FileSize) ? Music_LoadedTrack : -1,
+              size);
     void* const buffer = g.music_create_buffer();
     Music_Buffer = buffer;
     if (buffer) {
@@ -530,6 +665,10 @@ extern "C" void __cdecl Music_Decode(unsigned char* dst, int size) {
     std::uint32_t decoder = Address(Music_Decoder);
     std::uint32_t filled = 0;
     if (!decoder) return;
+    if (g_loop.row) {  // a measured loop (music_loops.h); everything else as the original
+        LoopDecode(dst, static_cast<std::uint32_t>(size));
+        return;
+    }
     for (;;) {
         const int result = g.mp3_decode(At(decoder), At(filled + Address(dst)));
         decoder = Address(Music_Decoder);
@@ -730,8 +869,117 @@ void FadePerFrame_SelfTest() {
               "Music_Play of its track ignored in the asking frame, restarted after the first tick");
 }
 
+// The measured loops' check (music_loops.h), under BOF3X_SHADOW=sound: a
+// stand-in decoder whose every sample carries its own index (left the low 16
+// bits, right the high), a row whose start and end fall inside frames, and
+// Music_Decode asked for 0x12000 bytes and for 4,000 (not a whole number of
+// frames, so the end lands across two calls): the stream must run 0..end-1,
+// then start..end-1 for ever, no sample lost or repeated. Then every row of
+// the table against its own bounds. Everything it touches is put back.
+namespace {
+
+struct FakeFrame { unsigned char pad[8]; std::uint32_t bytes; };
+struct FakeDecoder { unsigned char pad[0x14]; FakeFrame* frame; };
+FakeFrame g_lt_frame;
+FakeDecoder g_lt_decoder;
+std::uint32_t g_lt_next, g_lt_frames, g_lt_seeks;
+
+int __stdcall LtDecode(void*, void* out) {
+    if (g_lt_next >= g_lt_frames) return kEndOfStream;
+    auto* p = static_cast<std::uint16_t*>(out);
+    for (std::uint32_t i = 0; i < 1152; ++i) {
+        const std::uint32_t idx = g_lt_next * 1152 + i;
+        p[2 * i] = static_cast<std::uint16_t>(idx);
+        p[2 * i + 1] = static_cast<std::uint16_t>(idx >> 16);
+    }
+    ++g_lt_next;
+    g_lt_frame.bytes = 4608;
+    return 0;
+}
+int __stdcall LtSeek(void*, int position) {
+    if (position != 0) bof3::Fatal("music_loops self-test: a seek to %d", position);
+    g_lt_next = 0;
+    ++g_lt_seeks;
+    return 0;
+}
+
+// What a run should hand out inside a crossfade: the engine's blend of the
+// index-coded lanes of end + j and start + j.
+std::uint32_t LtBlend(std::uint32_t a, std::uint32_t b, std::uint32_t j, std::uint32_t fade) {
+    std::uint32_t out = 0;
+    for (int c = 0; c < 2; ++c) {
+        const std::int32_t x = static_cast<std::int16_t>(a >> (16 * c)), y = static_cast<std::int16_t>(b >> (16 * c));
+        const std::int32_t w = static_cast<std::int32_t>(2 * j + 1), f2 = static_cast<std::int32_t>(2 * fade);
+        out |= static_cast<std::uint32_t>(static_cast<std::uint16_t>((x * (f2 - w) + y * w) / f2)) << (16 * c);
+    }
+    return out;
+}
+
+bool LtRun(std::uint32_t chunk, std::uint32_t start, std::uint32_t end, std::uint32_t total, unsigned* seeks,
+           std::uint32_t fade = 0) {
+    static unsigned char buf[0x12000];
+    const music_loops::Row row = {200, 0, start, end, fade};
+    g_loop.row = &row;
+    g_loop.pos = g_loop.carry_at = g_loop.carry_len = 0;
+    g_lt_next = 0;
+    g_lt_seeks = 0;
+    std::uint32_t expect = 0, out = 0;
+    bool ok = true;
+    while (out < total && ok) {
+        Music_Decode(buf, static_cast<int>(chunk));
+        for (std::uint32_t i = 0; i < chunk / 4 && ok; ++i, ++out) {
+            const std::uint16_t* s = reinterpret_cast<const std::uint16_t*>(buf) + 2 * i;
+            const std::uint32_t idx = s[0] | static_cast<std::uint32_t>(s[1]) << 16;
+            // after the first pass the first `fade` samples from the start are blends of end + j and start + j
+            const std::uint32_t j = expect - start;
+            const bool faded = out >= end && expect >= start && j < fade;
+            ok = idx == (faded ? LtBlend(end + j, start + j, j, fade) : expect);
+            expect = expect + 1 == end ? start : expect + 1;
+        }
+    }
+    g_loop.row = nullptr;
+    *seeks = g_lt_seeks;
+    return ok;
+}
+
+void LoopTable_SelfTest() {
+    const Callees saved_g = g;
+    void* const decoder = Music_Decoder;
+    g.mp3_decode = LtDecode;
+    g.mp3_seek = LtSeek;
+    g_lt_decoder.frame = &g_lt_frame;
+    Music_Decoder = &g_lt_decoder;
+    g_lt_frames = 40;
+    const std::uint32_t start = 1152 * 3 + 500, end = 1152 * 20 + 77, total = 1152 * 120;
+    unsigned seeks_a = 0, seeks_b = 0, seeks_c = 0;
+    const bool a = LtRun(0x12000, start, end, total, &seeks_a);
+    const bool b = LtRun(4000, start, end, total, &seeks_b);
+    const bool c = LtRun(4000, 1152 * 5, 1152 * 9, total, &seeks_c);  // both on frame boundaries
+    unsigned seeks_d = 0;
+    const bool d = LtRun(4000, 1152 * 4 + 300, 1152 * 15 + 600, total, &seeks_d, 256);  // with a crossfade
+    g = saved_g;
+    Music_Decoder = decoder;
+    g_loop.pos = g_loop.carry_at = g_loop.carry_len = 0;
+    std::memset(g_loop.logged, 0, sizeof g_loop.logged);  // the test's track 200 logged its loop; the game's start unlogged
+    if (!a || !b || !c || !d)
+        bof3::Fatal("music_loops self-test: the looped stream went wrong (0x12000-byte calls %s, 4,000-byte calls %s, "
+                    "frame-aligned points %s, a 256-sample crossfade %s)", a ? "ok" : "WRONG", b ? "ok" : "WRONG",
+                    c ? "ok" : "WRONG", d ? "ok" : "WRONG");
+    unsigned count = 0;
+    const music_loops::Row* rows = music_loops::Rows(&count);
+    for (unsigned i = 0; i < count; ++i)
+        if (rows[i].start >= rows[i].end || rows[i].end - rows[i].start < 44100)
+            bof3::Fatal("music_loops self-test: track %u's row %u..%u", rows[i].track, rows[i].start, rows[i].end);
+    bof3::Log("shadow      music_loops self-test: %u samples through a stand-in decoder looped %u..%u exactly, in "
+              "0x12000- and 4,000-byte calls, on frame boundaries and with a 256-sample crossfade (%u, %u, %u, %u rewinds); "
+              "%u table rows in bounds", total, start, end, seeks_a, seeks_b, seeks_c, seeks_d, count);
+}
+
+}  // namespace
+
 void FadePerFrame_Inject() {
     if (bof3::WantsShadow("sound")) FadePerFrame_SelfTest();
+    if (bof3::WantsShadow("sound")) LoopTable_SelfTest();
     const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
     bof3::PatchBytes("MusicFadePerFrame", Address(&sound::g_fade_per_frame), was, is, 4);
     bof3::Log("DIV-0028    music fades step once per logic frame (on unless the line above says OFF)");
