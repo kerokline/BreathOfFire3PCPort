@@ -26,6 +26,7 @@ byte-level difference; the residue is read by hand and recorded in the doc.
     python tools/region_diff.py pair  psx-jp=DISC psx-us=DISC --out analysis/region/psx-jp_vs_psx-us.json
     python tools/region_diff.py pc    --census analysis/dat_census.json --dat bof3/DAT --disc JPDISC --out ...
     python tools/region_diff.py files DISC --out <manifest.tsv>     # per-file hashes, for fixtures.toml
+    python tools/region_diff.py table analysis/region/*_vs_*.json  # the doc's summary rows
 
 DISC is a .cue, a raw .bin or a cooked .iso (tools/psx_disc.py); a PSP disc's
 data root is PSP_GAME/USRDIR/<region>/, a PSX disc's BIN/. Output holds
@@ -550,6 +551,20 @@ def cmd_files(a):
     print("%d files, %d bytes; manifest sha256 %s" % (n, tot, h))
 
 
+COLUMNS = ("sections", "identical", "text", "layout", "layout+text", "logic-data", "logic-code", "art",
+           "converted", "identity", "only_a", "only_b")
+
+
+def cmd_table(a):
+    """The summary rows docs/region-diff.md carries, one per pair JSON."""
+    print("| pair | " + " | ".join(COLUMNS) + " |")
+    print("|---|" + "---:|" * len(COLUMNS))
+    for p in a.json:
+        r = json.load(open(p))
+        s = r["summary"]
+        print("| %s vs %s | " % (r["a"]["id"], r["b"]["id"]) + " | ".join(str(s.get(c, 0)) for c in COLUMNS) + " |")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -560,6 +575,7 @@ def main():
     p = sub.add_parser("files"); p.add_argument("disc", help="a disc image, or a directory such as DAT/")
     p.add_argument("--match", help="keep names matching this regex (DAT/: %r, the shipped files)" % SHIPPED_DAT); p.add_argument("--out", required=True)
     p.set_defaults(fn=cmd_files)
+    p = sub.add_parser("table"); p.add_argument("json", nargs="+"); p.set_defaults(fn=cmd_table)
     a = ap.parse_args()
     return a.fn(a) or 0
 

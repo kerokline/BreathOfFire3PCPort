@@ -56,7 +56,7 @@ def check_tree(fx, path):
             m = art.get("match")
             if m not in trees:
                 body = region_diff.manifest(path, m)[0]
-                trees[m] = {n: (int(s), h) for n, s, h in (l.split("\t") for l in body.splitlines())}
+                trees[m] = {n: (int(s), h) for n, s, h in (l.split("\t") for l in body.splitlines() if l)}
             got = trees[m]
             same = sum(1 for n in want if got.get(n) == want[n])
             if best is None or same > best[0]:
