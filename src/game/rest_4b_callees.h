@@ -2,10 +2,14 @@
 // .data tables its dispatchers jump through (each a [[data]] entry in
 // symbols.toml with the count its own reader reaches, section 3 of the doc),
 // the cells and constant tables its code names by address, and the callees of
-// other groups of this wave, called by address until the round's rebinding.
+// other groups of this wave, called by address (ours since their owners
+// merged, named by symbol, the values unchanged: round fourteen's rebinding,
+// docs/round-14-cleanup.md).
 #pragma once
 
 #include <cstdint>
+
+#include "bof3/symbols.gen.h"
 
 namespace rest_4b {
 namespace at {
@@ -110,11 +114,11 @@ constexpr std::uint32_t kListTexts = 0x669EE0;      // pointers: the lists' line
 constexpr std::uint32_t kCountFormat = 0x64D3EC;    // Boss26Fx_CountFormat
 constexpr std::uint32_t kNumberFormat = 0x5E10C0;   // Area08_MessageFormat
 
-// --- other groups' functions of this wave, by address until the round's rebinding ----
-constexpr std::uint32_t kR4ACountSlots = 0x456080;  // R4A: void(void)
-constexpr std::uint32_t kR4ASettle = 0x455950;      // R4A: void(void)
-constexpr std::uint32_t kR4CAsk = 0x459EE0;         // R4C: void(void) - the yes / no row armed
-constexpr std::uint32_t kR4EHand = 0x45ECC0;        // R4E: void(short x, short y, byte flash) - a cursor tile
+// --- other groups' functions of this wave, by address --------------------------------
+constexpr std::uint32_t kR4ACountSlots = bof3::addr::CommuSim_SumKindsAB;  // R4A: void(void)
+constexpr std::uint32_t kR4ASettle = bof3::addr::CommuSim_TickKind5;      // R4A: void(void)
+constexpr std::uint32_t kR4CAsk = bof3::addr::Commu_PushSubscreen;         // R4C: void(void) - the yes / no row armed
+constexpr std::uint32_t kR4EHand = bof3::addr::CommuCursor_DrawArrow;        // R4E: void(short x, short y, byte flash) - a cursor tile
 
 }  // namespace at
 }  // namespace rest_4b

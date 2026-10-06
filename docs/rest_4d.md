@@ -266,6 +266,27 @@ was reached (the coverage line's `phase` rows), every listed callee called.
   branch (message 0xF7, state 4) ends the entry without a name; the switch is
   set after the self-test, which compares Capcom's steps. The entry itself
   waits for the localisation rework.
+
+  **DIV-0075's row** (2026-10-05, round fourteen's end, debt 24; the form of
+  DIV-0063's in `battle_e6_fuzz.cpp`). With the switch off in the fuzz, the
+  moved step was built and seen armed but never run. `Rest4D_Inject` now
+  calls `rest_4d::EntryAbandonTest()` once it has set the switch (under the
+  same `BOF3X_SHADOW=rest_4d`, before the inject): ours'
+  `CommuName_SlotEntry` and `CommuName_MemberEntry`, the switch on, each
+  wrapped to take `0x939A3F` back by one after it returns, fuzzed against
+  Capcom's two steps with the group's seed, moves, stand-ins and regions,
+  4,000 rounds each. What the entry says ours must do is Capcom's step and
+  the step one more, nothing else (no name changed, the answer still
+  `BareRetZero`'s): a wrapper that matches means exactly that, and one that
+  mismatches means ours does not move the step, moves it otherwise, or
+  changes something more. Its lines in the shadow's log are the harness's
+  `rest_4d DIV-0075 self-test: 8000 rounds over 2 functions ... 0 MISMATCHES`
+  and `rest_4d DIV-0075: 2 entry steps, ours with the switch on, ...`. The
+  next step's unanswered branch (message 0xF7, state 4) is Capcom's
+  `_SlotEntryOut` / `_MemberEntryOut` unchanged, compared by the group's own
+  rows. Controls on the row: the switch's step left out of
+  `CommuName_SlotEntry`, and moved by two in `CommuName_MemberEntry`, each
+  refused (section 6).
 - **L4. Unbounded indexes**, one policy: a jump past a state table aborts
   (section 3); a dereference of `CommuName_RecordNames` past 7 aborts (R4E's
   `0x45F020` answers 0xFF when the cursor passes the records, and the original
@@ -310,7 +331,7 @@ of ours). Rounds 4,000 a clone; counts from the final run (`controls_run5.out`).
 | N04..N35 | the slot states to the random name | 31 | 31 | N07 the step read before the sound (case 0), 7; N14, N30 7 |
 | N36..N56 | the slot's entry, `SlotClose` | 21 | 19 | N47 the answer read once (case 7), 5 |
 | N57..N69 | the member states to the confirm | 13 | 13 | N59 the flags read before the loop (case 14), 9 |
-| N70..N95 | the member states from the slide out | 26 | 25 | N70 the cursor read once (case 3), 3 |
+| N70..N95 | the member states from the slide out | 26 | 25 | N70 the cursor read once (case 3), 3; 618 with the panel's stand-in (2026-10-05, below), N84 then the weakest, 26 |
 | N96..N99 | `CommuName_End`, `Commu_LeaveWhenClosed` | 4 | 4 | N97 (303) |
 | N100..N113 | the counts, the bar, the header | 14 | 14 | N112 the header read before the box (case 6), 10 |
 | | | **173** | **170** | |
@@ -324,6 +345,15 @@ refused: case 0 D05 (12), N07 (7); 1 N30 (7); 2 D08 (9); 3 B02 (319), D16
 N45 (25 of 24,000: the filter runs six clones); 12 D33 (4); 13 N41 (17); 14
 N59 (9). The thin ones (3..7 of 4,000) are the round's usual: the group's
 case runs after about one stand-in call in a few hundred.
+
+**N70 made cheap (2026-10-05, round fourteen's end, debt 23).** R4E's `0x45EE10` (a member's panel) has a stand-in in the fuzz (`MemberPanelMove`) that one call in four moves the cursor to 0..7 after it, never while `CommuDraw_Pick` runs: `CommuName_MemberPanelOut` compares each record's place with the cursor again after every panel. N70 in this worktree: **618 of 4,000 rounds** (3 before). N57..N95, the controls of every function that calls the panel, re-run on that fuzz: all refused but N71, the equivalent (N59 9, N84 26 and N63 28 the weakest).
+
+**DIV-0075's row's controls (2026-10-05)**, planted in `rest_4d.cpp`, run by
+`BOF3X_SHADOW=rest_4d` with the filter on the step: V1, the switch's step
+left out of `CommuName_SlotEntry` - 4,000 of 4,000; V2, the step moved by two
+in `CommuName_MemberEntry` - 4,000 of 4,000; V3, the switch also zeroing the
+entry column in `CommuName_SlotEntry` - 3,989 of 4,000. Each refused by the
+row; the group's own rows, the switch off, pass all three. The group's rounds stay 4,000, its shadow 0 mismatches.
 
 **Not refused, equivalent:**
 - **N36** (the entry's first `BareRet` at 0xB1) and **N38** (its last

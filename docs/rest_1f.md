@@ -48,17 +48,17 @@ cells for recorders) and aborts past the table's own entries (section 7).
 
 | Function | Entry | By | Table | Reached from |
 |---|---|---|---|---|
-| `PartyAction16_FormAction` | `0x5243D0` | `+0x2C` | `PartyAction16_FormActionForms` | `Field_FormActions[16]` |
+| `PartyFormAction16_ByForm` | `0x5243D0` | `+0x2C` | `PartyFormAction16_Forms` | `Field_FormActions[16]` |
 | `PartyAction16_ByForm` | `0x5243F0` | `+0x2C` | `PartyAction16_Forms` | `Field_ActionBySet[16]` |
-| `PartyAction16_FormAction2` | `0x523FB0` | `+2` | `PartyAction16_FormAction2States` | `PartyAction16_FormActionForms[2]` |
+| `PartyFormAction16_Form2` | `0x523FB0` | `+2` | `PartyFormAction16_Form2States` | `PartyFormAction16_Forms[2]` |
 | `PartyAction16_Form2` | `0x523FD0` | `+2` | `PartyAction16_Form2States` | `PartyAction16_Forms[2]` |
-| `PartyAction17_FormAction` | `0x524930` | `+0x2C` | `PartyAction17_FormActionForms` | `Field_FormActions[17]` |
+| `PartyFormAction17_ByForm` | `0x524930` | `+0x2C` | `PartyFormAction17_Forms` | `Field_FormActions[17]` |
 | `PartyAction17_ByForm` | `0x524950` | `+0x2C` | `PartyAction17_Forms` | `Field_ActionBySet[17]` |
-| `PartyAction17_FormAction0` / `1` / `2` | `0x524410` / `0x524450` / `0x5248F0` | `+2` | `PartyAction17_FormAction0States` / `1` / `2` | `PartyAction17_FormActionForms[0..2]` |
+| `PartyFormAction17_Form0` / `1` / `2` | `0x524410` / `0x524450` / `0x5248F0` | `+2` | `PartyFormAction17_Form0States` / `1` / `2` | `PartyFormAction17_Forms[0..2]` |
 | `PartyAction17_Form0` / `1` / `2` | `0x524430` / `0x524470` / `0x524910` | `+2` | `PartyAction17_Form0States` / `1` / `2` | `PartyAction17_Forms[0..2]` |
-| `PartyAction18_FormAction` | `0x525330` | `+0x2C` | `PartyAction18_FormActionForms` | `Field_FormActions[18]` |
+| `PartyFormAction18_ByForm` | `0x525330` | `+0x2C` | `PartyFormAction18_Forms` | `Field_FormActions[18]` |
 | `PartyAction18_ByForm` | `0x525350` | `+0x2C` | `PartyAction18_Forms` | `Field_ActionBySet[18]` |
-| `PartyAction18_FormAction0` / `1` / `2` | `0x524970` / `0x524E50` / `0x525270` | `+2` | `PartyAction18_FormAction0States` / `1` / `2` | `PartyAction18_FormActionForms[0..2]` |
+| `PartyFormAction18_Form0` / `1` / `2` | `0x524970` / `0x524E50` / `0x525270` | `+2` | `PartyFormAction18_Form0States` / `1` / `2` | `PartyFormAction18_Forms[0..2]` |
 | `PartyAction18_Form0` | `0x524990` | `+2` | `PartyAction18_Form0Subs` | `PartyAction18_Forms[0]` |
 | `PartyAction18_Form0Sub0` | `0x5249B0` | `+3` | `PartyAction18_Form0Sub0Steps` | `PartyAction18_Form0Subs[0]` |
 | `PartyAction18_Form0Sub1` | `0x524D40` | `+3` | `PartyAction18_Form0Sub1Steps` | `PartyAction18_Form0Subs[1]` |
@@ -289,27 +289,27 @@ bounds its index):
 
 | Table | At | Entries | Read by |
 |---|---|--:|---|
-| `PartyAction16_FormAction2States` | `0x660018` | 3 | `PartyAction16_FormAction2` by `+2` |
+| `PartyFormAction16_Form2States` | `0x660018` | 3 | `PartyFormAction16_Form2` by `+2` |
 | `PartyAction16_Form2States` | `0x660024` | 3 | `PartyAction16_Form2` |
-| `PartyAction16_FormActionForms` | `0x660030` | 3 | `PartyAction16_FormAction` by `+0x2C` |
+| `PartyFormAction16_Forms` | `0x660030` | 3 | `PartyFormAction16_ByForm` by `+0x2C` |
 | `PartyAction16_Forms` | `0x66003C` | 3 | `PartyAction16_ByForm` by `+0x2C` |
-| `PartyAction17_FormAction0States` | `0x660048` | 3 | `PartyAction17_FormAction0` |
+| `PartyFormAction17_Form0States` | `0x660048` | 3 | `PartyFormAction17_Form0` |
 | `PartyAction17_Form0States` | `0x660054` | 3 | `PartyAction17_Form0` |
-| `PartyAction17_FormAction1States` | `0x660060` | 3 | `PartyAction17_FormAction1` |
+| `PartyFormAction17_Form1States` | `0x660060` | 3 | `PartyFormAction17_Form1` |
 | `PartyAction17_Form1States` | `0x66006C` | 3 | `PartyAction17_Form1` |
-| `PartyAction17_FormAction2States` | `0x660078` | 3 | `PartyAction17_FormAction2` |
+| `PartyFormAction17_Form2States` | `0x660078` | 3 | `PartyFormAction17_Form2` |
 | `PartyAction17_Form2States` | `0x660084` | 2 | `PartyAction17_Form2` |
-| `PartyAction17_FormActionForms` | `0x66008C` | 3 | `PartyAction17_FormAction` |
+| `PartyFormAction17_Forms` | `0x66008C` | 3 | `PartyFormAction17_ByForm` |
 | `PartyAction17_Forms` | `0x660098` | 3 | `PartyAction17_ByForm` |
-| `PartyAction18_FormAction0States` | `0x6600A4` | 3 | `PartyAction18_FormAction0` |
+| `PartyFormAction18_Form0States` | `0x6600A4` | 3 | `PartyFormAction18_Form0` |
 | `PartyAction18_Form0Subs` | `0x6600B0` | 2 | `PartyAction18_Form0` |
 | `PartyAction18_Form0Sub0Steps` | `0x6600B8` | **5** | `PartyAction18_Form0Sub0` by `+3` |
 | `PartyAction18_Form0Sub1Steps` | `0x6600CC` | 3 | `PartyAction18_Form0Sub1` by `+3` |
-| `PartyAction18_FormAction1States` | `0x6600D8` | 3 | `PartyAction18_FormAction1` |
+| `PartyFormAction18_Form1States` | `0x6600D8` | 3 | `PartyFormAction18_Form1` |
 | `PartyAction18_Form1States` | `0x6600E4` | 3 | `PartyAction18_Form1` |
-| `PartyAction18_FormAction2States` | `0x6600F0` | 3 | `PartyAction18_FormAction2` |
+| `PartyFormAction18_Form2States` | `0x6600F0` | 3 | `PartyFormAction18_Form2` |
 | `PartyAction18_Form2States` | `0x6600FC` | 2 | `PartyAction18_Form2` |
-| `PartyAction18_FormActionForms` | `0x660104` | 3 | `PartyAction18_FormAction` |
+| `PartyFormAction18_Forms` | `0x660104` | 3 | `PartyFormAction18_ByForm` |
 | `PartyAction18_Forms` | `0x660110` | 3 | `PartyAction18_ByForm` |
 | `LeaderPanel_Stage0Steps` | `0x660220` | 3 | `LeaderPanel_S0` by `+3` |
 
@@ -419,12 +419,12 @@ file and rebuilds. **108 planted: 105 refused, 3 not refused - three equivalent 
 
 | # | Function | Plant | Refused (rounds, of those run) |
 |---|---|---|---|
-| C01 | `PartyAction16_FormAction` | FormActions[16] through the ActionBySet forms table | 8000 of 16000 |
+| C01 | `PartyFormAction16_ByForm` | FormActions[16] through the ActionBySet forms table | 8000 of 16000 |
 | C02 | `PartyAction17_ByForm` | the form word read as a byte | **not refused**: equivalent - every form word below a table's three entries has a high byte of 0, and one past them aborts. Near variant C03 refused |
 | C03 | `PartyAction17_ByForm` | the form word at +0x2E (C02's near variant) | 5242 of 8000 |
 | C04 | `PartyAction18_Form1` | a state dispatcher by +3 | 5261 of 24000 |
 | C05 | `LeaderPanel_S0` | a step dispatcher by +2 | 5366 of 32000 |
-| C06 | `PartyAction17_FormAction0` | through FormAction1's states (same length) | 2682 of 8000 |
+| C06 | `PartyFormAction17_Form0` | through FormAction1's states (same length) | 2682 of 8000 |
 | C07 | `LeaderPanel_Run` | the stage table's entry one on, wrapping | 8000 of 8000 |
 | C08 | `PartyAction16_Form2Begin` | the first turn & 0xF | 797 of 8000 |
 | C09 | `PartyAction17_Form1Begin` | the second turn +3 | 1245 of 8000 |
@@ -593,6 +593,17 @@ message (the project's rule, not a choice of behaviour).
   `+0x2C + 0x100` wraps at 16; the zenny `amount * 20` is a byte (100 at
   most); the pickups' and the strike's arguments are 16-bit cells whose
   upper halves the callers leave as stack garbage, read by no callee.
+
+**Renamed 2026-10-05** (the round's end, `round-14-review.md`'s nit "wave
+one's names"): sets 16..18's form-action dispatchers and tables to the pattern
+R1A..R1E use - `Field_FormActions[N]`'s by-form dispatcher
+`PartyFormActionN_ByForm` (was `PartyActionN_FormAction`), its form K's
+`PartyFormActionN_FormK` (was `PartyActionN_FormActionK`), their tables
+`PartyFormActionN_Forms` and `PartyFormActionN_FormKStates` (were
+`PartyActionN_FormActionForms`, `PartyActionN_FormActionKStates`); ten
+functions and ten tables, the addresses unchanged. Set 16's forms 0 and 1 are
+R1E's `PartyFormAction16_Form0` / `_Form1`, which these now match. Older docs,
+logs and control scripts carry the old names.
 
 ## 8. Calls across groups
 

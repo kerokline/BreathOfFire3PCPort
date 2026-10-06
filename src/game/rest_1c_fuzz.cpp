@@ -244,9 +244,10 @@ U FxGround(const U*, U answer) {
 // movsx words, AreaMap_ClearCell as field_hidden.md section 3 has it); the
 // effect index of PartyAction_MemberOnEffect / BeyondEffect its low byte (the
 // originals pass a dword whose upper bytes are their caller's ecx); the
-// slope's direction its low byte (AreaMap_Slope reads only that byte: the
-// originals push a whole register, 0x51FD40 one holding Sprite_Current's upper
-// bytes); every other argument whole.
+// slope's direction its low byte (AreaMap_Slope reads the upper bytes too, but
+// only for a direction of 10 or more, unreachable while directions stay 0..7 -
+// docs/rest_1e.md section 5: the originals push a whole register, 0x51FD40 one
+// holding Sprite_Current's upper bytes); every other argument whole.
 #define R1C_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr sh::Answer kF = sh::Answer::kFlag;
@@ -381,7 +382,9 @@ void Args(unsigned k, U* a) {
 
 // What the handlers read again after a call, moved by the group's case of the
 // harness's disturbance (from its hash only): Sprite_Current's direction,
-// position, height, form word and the bytes +6, +7, +9, +0xA, +0xB, +0x2B;
+// position, height, form word and the bytes +9, +0xB, +0x2B (+6, +7 and +0xA
+// are moved too, but the handlers store them after a call, not read them
+// again: those cases test the store's order);
 // Field_State's bytes; an effect record's in-use byte (the one +0xB names, for
 // PartyAction_WaitEffectEnd); the sloped flag; a row of Field_DirectionSteps.
 void Disturb(U h) {

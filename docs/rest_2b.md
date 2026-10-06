@@ -37,7 +37,9 @@ change lets `'*'` pass. **One latent defect is a ledger entry, DIV-0073**
   `0x929F00` (mode, state `+1`, step `+2`, timer `+4`) it counts four items
   of the inventory (`0x4D`, `0x23`, `0x24`, `0x56`), sets two model records up
   (`0x9398E0` "A", `0x939960` "B", laid out as the sprite records
-  `Sprite_ObjectMatrix` reads, their models from the file the pointer
+  `Sprite_ObjectMatrix` reads - [`rest_2c.md`](rest_2c.md) section 1.1 has
+  the layout both groups now share, settled 2026-10-05; R2C had read one
+  record of `0x110` bytes, their models from the file the pointer
   `0x628C88` holds), lets the player pick a side and then put up to one of the
   first item and up to 20 of each of the others into four "given" counts, runs
   a show (both models square their turn, drop to the ground, flash and fade),

@@ -961,6 +961,11 @@ difference (intros replayed or lost on loop) in an afternoon.
 
 ### Outcome
 _(2026-09-26) open; method written._
+_(2026-10-04) **asked for first**: the owner wants to hear the MP3s against
+the sequences before the MP3 decoder's fate is decided
+([`platform-layers-plan.md`](platform-layers-plan.md) section 5); the first
+step there is a listening set, a few tracks rendered both ways, side by
+side. Still unrun._
 ## I24 — The scenario round: the chapter banks wave by wave
 
 **Ask (2026-09-26):** the owner, after the chapter tables were walked
@@ -1188,9 +1193,15 @@ take over the executable, runtime, decoder and renderer layers once the
 game's own code is ours? There was not; make one.
 **Kind:** engine / platform
 **Feasibility:** MIXED - the read pass, the small layers and the runtime
-boundary HIGH; the decoder and our own executable MEDIUM, each on a decision.
-**Gated on:** round fourteen's end; the owner for the decoder and for whether
-our own executable is a goal now.
+boundary HIGH; the decoder MEDIUM, its shape waiting on I23; our own
+executable MEDIUM, and a goal: the first of the phase 4 / 5 work (the owner,
+2026-10-04).
+**Gated on:** round fourteen's end; the decoder on I23 - the owner wants to
+hear the MP3s against the disc's sequences before any replacement is chosen
+(2026-10-04). Our own executable is not gated on a decision: the owner made
+it the first goal, as the route to builds from the player's disc or PC game
+and 64-bit builds ([`platform-layers-plan.md`](platform-layers-plan.md)
+section 5).
 
 ### What already exists
 The presentation layer, WinMain, the input path and `Fmv_Play` are ours; the

@@ -236,12 +236,12 @@ const bh::Callee kCallees[] = {
      &RecordEffect},
     {"Formation_ApplyStatMods", bof3::addr::Formation_ApplyStatMods, KeyOf(&::Formation_ApplyStatMods), 0, {}, bh::Answer::kGarbage,
      0, 0, {}, &StatModsEffect},
-    // R3B's (raw until it merges): tail jumps, nothing pushed; their eax forwarded
+    // R3B's (ours; rows keyed by address): tail jumps, nothing pushed; their eax forwarded
     {"0x44C040", at::kSkillByAbility, at::kSkillByAbility, 0, {}, bh::Answer::kGarbage, 0, 0},
     {"0x44C120", at::kHealByAbility, at::kHealByAbility, 0, {}, bh::Answer::kGarbage, 0, 0},
     {"0x44C170", at::kHealMaxHp, at::kHealMaxHp, 0, {}, bh::Answer::kGarbage, 0, 0},
     {"0x44CF60", at::kFlag200, at::kFlag200, 0, {}, bh::Answer::kGarbage, 0, 0},
-    // R3D's (raw until it merges)
+    // R3D's (ours; rows keyed by address)
     // 0x44F1D0 (target, status): cmp bl, 2 and and esi, 0xFF on the target, handed on whole to callees that read
     // its byte; Effect_Inflict40Heal20Ap4 pushes eax with the caller's upper bytes
     {"0x44F1D0", at::kInflict, at::kInflict, 2, {kU8, kAll}, bh::Answer::kGarbage, 0, 0},

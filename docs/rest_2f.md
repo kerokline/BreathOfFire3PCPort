@@ -305,7 +305,7 @@ count list (section 7). Both bound in the seed / disturbance.
 | 34 | `TacticsFormation_Pick` | records of kind 0xC sent out | 270 of 6000 |
 | 35 | `TacticsFormation_Pick` | up on 0x2000 | 1415 of 6000 |
 | 36 | `TacticsFormation_Pick` | the sound only on a column move | 1438 of 6000 |
-| 37 | `TacticsFormation_Pick` | the columns move with a pick in column 1 | 1489 of 6000 |
+| 37 | `TacticsFormation_Pick` | the column held while 0x6BDFC6 is 1, not 0 (it moves while not 0: with no pick) | 1489 of 6000 |
 | 38 | `TacticsFormation_Pick` | left on 0x4000 | 1163 of 6000 |
 | 39 | `TacticsFormation_Pick` | the formation at the end without - 1 | 6000 of 6000 |
 | 40 | `TacticsFormation_Leave` | the step back by 2 | 2001 of 6000 |
@@ -418,11 +418,13 @@ count list (section 7). Both bound in the seed / disturbance.
 | 147 | `TacticsFormation_Enter` | the countdown read before the backdrop | 89 of 6000 |
 | 148 | `Win1_ButtonRow` | the selection +0xB read before the state call | 31 of 6000 |
 | 149 | `Window_Kind1List` | the last index read once, before the draws | 30 of 6000 |
-| 150 | `TacticsMembers_Pick` | the held row from the row read before the sound | 2 of 6000 |
+| 150 | `TacticsMembers_Pick` | the held row from the row read before the sound | 2 of 6000; 436 with `SoundEffect` (2026-10-05) |
 | 151 | `TacticsMembers_Swap` | the held row not re-read after the party swap | 135 of 6000 |
 | 152 | `TacticsMembers_Swap` | the row not re-read after the party swap | 108 of 6000 |
 
 **Under the repaired disturbance (2026-10-05, round fourteen's review item 1).** Before `b9dfe34` the group's cases 0, 3, 6, 9 and 12 never ran (the step, the countdown, the current record's +0xB, the kind-1 last index, the members rows); rows 1..144 were refused by the other cases. The 144 were re-run on the repaired fuzz (a copy of the driver, `controls/rest_2f/` in session 8cb2a236's scratchpad, anchors converted for a CRLF checkout, none repaired): **139 refused, the same five equivalents not refused**; 38 counts moved, none to 0. The four weakest fell - C111 28 to 21, C129 23 to 12, C137 5 to 3, C144 63 to 45, each a record re-read that the live cases 8 and 14 now move a third less often. Rows 145..152 are new, on cells only the formerly dead cases moved (case 0: 145, 146; case 3: 147; case 6: 148; case 9: 149; case 12: 150..152). With those cases skipped (a scratch gate, not committed) 149 and 150 fall to 0 and 148 from 31 to 8; 145..147 keep 22, 69 and 73 (the harness's own case 11 moves the step and countdown bytes too). 151 and 152 were refused in 2 and 0 rounds by case 12 alone: the stand-in in the way is 0x58BD50, and the fuzz now re-lists it (`SwapEffect`: the swap as the field-standard row's `FxSwap`, and a quarter of the time the members row or held row moved to 0..4), since `TacticsMembers_Swap` reads both again after its party swap. On that fuzz the shadow is `294000 rounds over 49 functions (6000 each), 1842536 calls to the stand-ins, 0 MISMATCHES`, and all 152 were run again: 139 of 1..144 refused, the same five not, 43 counts moved by at most 51 (C96), none to 0; rows 145..152 above are that run. 150 stays at 2 rounds: its re-read is under a sound, which only case 12 reaches.
+
+**Control 150 made cheap (2026-10-05, round fourteen's end, debt 23).** `Sound_PlayEffect` is re-listed with a stand-in (`SoundEffect`) that, while `TacticsMembers_Pick` is the clone being fuzzed and only after its confirm's sound 0x103, half the time moves the members row to 0..4 (case 12's values) from the noise. 150 in this worktree: **436 of 6,000 rounds**. Pick's other controls re-run on it: 44..47 and 51..53 as before, 48 the same equivalent, 49 574 and 50 111 (with the row moved after every sound as well, the first try, they fell to 264 and 51: the move hid the wraps' stores, so it waits for 0x103). The group's rounds stay 6,000, its shadow 0 mismatches.
 
 ## 6. Cross-group calls, inbound calls, the rebinding
 
@@ -471,7 +473,9 @@ call is ours by name.
    (`TacticsFormation_Pick`): the row loop adds the step (0 without a press)
    and wraps until an open cell; with the cursor's own cell closed and no
    press, or the cursor's column all closed, it spins forever. Ours spins the
-   same. Play keeps the cursor on open cells (`TacticsFormation_Build` opens
+   same: the loops read the grid through a `volatile` (2026-10-05,
+   `round-14-review.md` item 13), since a loop that only reads plain memory
+   and writes locals may be assumed by the compiler to end. Play keeps the cursor on open cells (`TacticsFormation_Build` opens
    column 0's party rows and the cursor starts at 0, 0) - not shown reachable.
 2. **The reserve flags overlap the reserve list** (`TacticsMembers_Build`):
    the flags `0x6BDFCD + 2 j` for j below the reserve's count are written after
@@ -494,7 +498,8 @@ call is ours by name.
    state-8 step of 0..3 does nothing.
 6. **`Stat_AddClampedTo`'s answer** has only its low word defined: in the
    clamped cases its upper half is the caller's `ecx`'s. Its callers read a
-   s16 amount, so nothing depends on it; ours puts 0 there.
+   s16 amount, so nothing depends on it; ours leaves `cap`'s upper half there
+   (a rise, `cap - old`) or 0xFFFF (a fall, `-old`).
 
 Nothing here needs a ledger entry: no read of memory never written reaches a
 draw or a decision that ours does differently.

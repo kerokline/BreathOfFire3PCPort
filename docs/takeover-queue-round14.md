@@ -10,7 +10,14 @@ starts from if anything on the round branch takes a function first
 
 ## 0. The answer in one paragraph
 
-At `aed35f8` 8,649 of 10,246 catalogued starts are ours and 2,084 are not.
+At `aed35f8` 2,084 of 10,246 catalogued starts are not ours (8,162 are).
+`symbols.toml` then had 8,649 functions with an `impl` - the catalog's
+"8,649 are" counts every `impl`, among them functions no start list had - and
+the inject log 8,648: `Config_DrawControllerCell` (`0x461C00`,
+`config_text.cpp`) is injected only under a Latin language overlay
+(`ConfigText_Inject` returns first without one), so a self-test or a Chinese
+run never counts it (2026-10-05, the round-fourteen review's nit "the
+count").
 Of those, 533 are the platform and the library layer (the C runtime, the
 MP3 decoder, the shell, the renderer and sound shims), 210 are jump-table
 cases and not functions, and **1,341 are functions of the game's own code -

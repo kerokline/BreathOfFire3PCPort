@@ -1501,9 +1501,11 @@ designed in rather than bolted on.
   ([`yes-no-prompts.md`](yes-no-prompts.md) section 6 has the recipes and
   frames). Not touched, same fault likely: Manillo's per-item "Is ... OK?
   Yes No" (`ItemTrade_Confirm`, the hand `0xDC + 36 * answer` over "Yes No"
-  at `0xDE`), and the two other help-line choosers that draw message `0xF`
-  (`MenuList_TitleBox` for help `0x1A` / `0x31`, Capcom's `0x59AE00`) -
-  not marked by the owner.
+  at `0xDE`), and the help-line chooser that draws message `0xF`
+  (`MenuList_WideTitleBox` `0x59A2E0`, ours since round fourteen's R2G, for
+  help `0x1A` / `0x31`; the note once also named `0x59AE00`, which is
+  `MenuList_GeneWinDraw` and draws no message `0xF` - corrected 2026-10-05
+  from a read of both) - not marked by the owner.
 
 ### Music fades step once per logic frame
 
@@ -4022,8 +4024,40 @@ designed in rather than bolted on.
   (`COMMU02`, input step `0x801DA1D8`).
 - **Verification:** `BOF3X_SHADOW=rest_4d` headless compares Capcom's two
   steps with the switch off (the switch is set after the self-test, as
-  DIV-0070's), 0 mismatches. Not seen live: no recorded route enters the
-  community, and whether the port's play can reach the entry at all is not
+  DIV-0070's), 0 mismatches; then, with the switch on, a row of ours alone
+  (DIV-0063's form, `rest_4d::EntryAbandonTest`, 2026-10-05): the two steps
+  fuzzed against Capcom's with the step byte taken back by one, 8,000 rounds,
+  0 mismatches, three plants refused. Not seen live: no recorded route enters
+  the community, and whether the port's play can reach the entry at all is not
   established.
 - **Reversible?** `BOF3X_ORIGINAL=CommuName_SlotEntry,CommuName_MemberEntry`
   runs Capcom's steps, which do not return from the entry.
+
+### The save slot's summary names the character whose level it shows
+
+- **ID:** DIV-0076
+- **Date:** 2026-10-05
+- **Subsystem:** the save block (`Save_BuildBlock` `0x5806F0`, ours in
+  `src/game/rest_2c.cpp`; reached by `FieldSave_Write` and `Save_QuickWrite`)
+- **Tier:** Fix - the summary a save slot shows mixed two characters.
+- **Original behaviour:** the slot's summary takes its name from the
+  party leader's record (the record of party id 0, `strncpy` 5 and 4 bytes)
+  but its level (`0x903A7A`) and the dword at `+0xC` (`0x903A7C`) from
+  record 0, whatever the party. With another member leading, the save and
+  load screens show the leader's name beside record 0's level. Confirmed in
+  game by the owner, 2026-10-05.
+- **New behaviour:** with the switch `g_summary_record0` on (set by
+  `Rest2C_Inject` after the self-test), the name is record 0's too: the
+  summary names and levels one character. The rest of the summary and the
+  block are unchanged.
+- **Rationale:** the owner's decision, 2026-10-05: "always pull the name and
+  level of Ryu's character" - record 0 is the character the game's level
+  field already describes, so the name follows it rather than the other way.
+- **Also in the PSX version?** Not read: the PlayStation's save summary is a
+  different structure ([`save-interchange.md`](save-interchange.md)); whether
+  its block builder mixes the two is not established.
+- **Verification:** `BOF3X_SHADOW=rest_2c` headless compares Capcom's
+  `Save_BuildBlock` with the switch off (the switch is set after the
+  self-test, as DIV-0075's), 0 mismatches. Not yet seen live: a save with a
+  non-record-0 leader, then the load screen - the owner's eye.
+- **Reversible?** `BOF3X_ORIGINAL=Save_BuildBlock` runs Capcom's.

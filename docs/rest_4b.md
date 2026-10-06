@@ -291,7 +291,7 @@ after the first run.
 | C21..C26 | `CommuTail_TimedGift` | bound + 1; row 14's category; message 0x97; one state; **case 12**: the clock read early; item / category swapped | 2,977; 180; 5,798; 2,004; 763; 5,798 |
 | C27, C28 | `_EndAfterMessage`, `_Open97` | waits on 2; the next state | 2,433; 1,215 |
 | **C30** | `CommuTail_RandomGift` | at most 99 for 100 | **0: equivalent** (99 and 100 fall in the same tier on all three rows); near variant **N01** at most 95: 230 |
-| C29, C31..C36 | `CommuTail_RandomGift` | Rand & 0xFF; a step reached; 8 pairs a tier; word 0x50; message 0x51; row 1's first; **case 1**: the argument read before Rand | 778; 397; 948; 2,430; 799; 176; 4 (thin) |
+| C29, C31..C36 | `CommuTail_RandomGift` | Rand & 0xFF; a step reached; 8 pairs a tier; word 0x50; message 0x51; row 1's first; **case 1**: the argument read before Rand | 778; 397; 948; 2,430; 799; 176; 4 (thin), 133 with `RandMove` (2026-10-05) |
 | C37, C38 | `CommuTail23_LoadDat` | 0x12D for 2; flags `|= 3` | 979; 3,010 |
 | **C39** | `CommuTail_EndAfterLoad` | `&= 0xF8` on the low byte | **0: equivalent** (`& 0xFFF8` only touches the low byte); near variant **N02** `& 0xFFF0`: 2,046 |
 | C40, C46 | `CommuTail24_LoadDat`, `25_LoadDat` | the next file | 6,000; 3,648 |
@@ -306,19 +306,19 @@ after the first run.
 | B22..B26 | `CommuBoard_PickRecordB` | kind - 5; step 3; wrap at count; **case 4**: the cursor captured early; card y | 202; 274; 35; 106; 4,824 |
 | B27, B28 | `CommuBoard_MoveRecordB` | hand x + 5; the record at the cursor | 4,874 each |
 | B29..B33 | `CommuBoard_PickList` | help + 1 row; +2 for +1; **case 7**: help from `next`; hand x; the column by slot % 4 | 1,588; 25; 24; 6,000; 18,000 (all three lists) |
-| B34..B37 | `CommuBoard_PickListB` | help 0x47; the count byte; **case 7**: the list read early; **case 6**: the row read early | 646; 287; 8 (thin); 87 |
+| B34..B37 | `CommuBoard_PickListB` | help 0x47; the count byte; **case 7**: the list read early; **case 6**: the row read early | 646; 287; 8 (thin), 1,057 with `ListBoxMove` (2026-10-05); 87 |
 | B38..B40 | `CommuBoard_PickListC` | help 0x44; 0x1000 only; **case 13**: the toggle read early | 1,558; 483; 165 |
 | B41..B48 | `CommuBoard_Confirm` | no +2 test; +3 kept; used only; kind + 5; +1 from the toggle; 0x2000 only; step kept; no clock | 151..867 |
 | D01..D06 | `CommuBoard_DrawRecordCard` | 4 bytes; 64 wide; by 11; pick 9; row 1 never lit; records by 19 | 330..6,000 |
 | D07, D08, D22 | the two frames | six along; sides by 8; 32 along | 6,000 each |
 | D09..D13 | `CommuBoard_DrawBar` | 0x7F; >> 1; row 3; y + 5; width unsigned | 1,489..6,000 |
-| D14..D21 | `CommuBoard_DrawPanel` | tile x; **case 8**: help not read again; sprite r + 4; limit i + 1; kind 5; signed counter; **case 9**: the kind read before its sprite; sprites from k 0 | 2,736; 191; 6,000; 4,303; 1,715; 2,986; 4 (thin); 4,648 |
+| D14..D21 | `CommuBoard_DrawPanel` | tile x; **case 8**: help not read again; sprite r + 4; limit i + 1; kind 5; signed counter; **case 9**: the kind read before its sprite; sprites from k 0 | 2,736; 191; 6,000; 4,303; 1,715; 2,986; 4 (thin), 2,384 of 12,000 with `SpriteMove` (2026-10-05); 4,648 |
 | D23..D25 | `CommuBoard_DrawSlotLines` | a4 for a5; locked from 8; 0xFE | 5,787; 594; 4,015 |
 | D26..D28 | `Commu_CountInSlot`, `_NthInSlot` | unused counted; 0x3C; 1-based | 3,455; 3,075; 3,307 |
 | D29..D33 | `CommuBoard_MoveGridCursor` | 0xA wrap; column 3; no sound for 0x1000; **case 14**: the mode read before the keys; right past 5 | 332; 260; 581; 127; 24 |
 | D34..D37 | `_DrawDigits`, `_DrawSprite` | v; CLUT nibble; CLUT row; rows by 5 | 5,233..6,000 |
 | D38..D40 | `_DrawListBox`, `_DrawListFrame` | shadow y; **case 11**: the count held; rows h >> 4 | 773; 902; 3,719 |
-| D42..D46 | `_ListY`, `_DrawListBoxB` | past 5; 0xAD; bound 0xD9; first + 1; y before the move | 378; 3,987; 2 (thin); 3,991; 1,975 |
+| D42..D46 | `_ListY`, `_DrawListBoxB` | past 5; 0xAD; bound 0xD9; first + 1; y before the move | 378; 3,987; 2 (thin), 979 with y seeded at the bound (2026-10-05); 3,991; 1,975 |
 | D47..D49 | `_SlotRecordXY` | x + 0xB; t swapped; unsigned remainder | 1,209; 1,945; 949 |
 | D50..D55 | `_CancelStep`, `_PlaceRecord` | step up; four; own slot; +3 kept; cursor not less back; limit unsigned | 6,000; 189; 1,957; 1,643; 1,120; 111 |
 | D56..D60 | `_SlotHelp`, `_PickHelp` | +0x4B; table + 1; 0x2B; >=; kind + 1 | 97..1,975 |
@@ -330,6 +330,22 @@ D32. **Thin** (refused in under 10 of 6,000): C36 (4), B36 (8), D20 (4), D44
 (2) - a louder stand-in on those paths is a debt, as round fourteen's review
 lists for other groups. (D41 was dropped before the run: its plant did not
 express a mutant.)
+
+**The four made cheap (2026-10-05, round fourteen's end, debt 23).** Three
+stand-ins louder, one call in four from the noise, each with its move's own
+values: `Rand` (the standard row re-listed, `RandMove`) moves the tail's
+argument to 1..8, `CommuBoard_DrawListBox` (`ListBoxMove`) the second list
+0x675F83 to 0xFF or 0..5, `CommuBoard_DrawSprite` (`SpriteMove`) the eight
+slots' kinds to 0 or 4..13; and `CommuBoard_DrawListBoxB`'s y is seeded half
+the time at the move's bound for its list's height (0xD5, 0xD4 or 0xD6 less
+16 x the count, read in place). In this worktree: **C36 133, B36 1,057, D20
+2,384 of 12,000 (the filter runs `DrawPanel` and `DrawPanelFrame`), D44 979**
+of 6,000. All 162 controls re-run on that fuzz: the same 160 refused, C30 and
+C39 the same equivalents; the counts that moved by more than a few: C31 397
+to 401, C35 176 to 186, B36, D18 1,715 to 645 of 12,000, D35 to 5,854, D45
+3,991 to 3,911, D46 1,975 to 2,972, D56 to 675; the weakest now B04 (19),
+D33 (24), B31 (24 of 18,000) and B30 (25). The group's rounds stay 6,000,
+its shadow 0 mismatches.
 
 ## 7. Calls across groups
 

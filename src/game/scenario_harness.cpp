@@ -425,15 +425,15 @@ const Callee kStandard[] = {
     {SH_THEIRS(Rand), 0, {}, Answer::kRand, 0, 0},
     // unnamed, by address (docs/scena_sc0.md section 6)
     // SE's (round ten): the event battle's set-up by index - 0x904AAA, 0x802D41 = 5
-    {"Field_StartEventBattle", bof3::addr::Field_StartEventBattle, bof3::addr::Field_StartEventBattle, 1, {kU8}, Answer::kGarbage, 0, 0},
+    {SH_OURS(Field_StartEventBattle), 1, {kU8}, Answer::kGarbage, 0, 0},
     // x, z (dwords to 0x903780 / 84) and an index: an event battle's party placement
-    {"Party_PlaceForBattle", bof3::addr::Party_PlaceForBattle, bof3::addr::Party_PlaceForBattle, 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0},
+    {SH_OURS(Party_PlaceForBattle), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0},
     // the camera turned toward an angle (s16) at a speed (s8), al 1 while turning
-    {"Camera_EaseAngleFB", bof3::addr::Camera_EaseAngleFB, bof3::addr::Camera_EaseAngleFB, 2, {kU16, kU8}, Answer::kFlag, 0, 0},
+    {SH_OURS(Camera_EaseAngleFB), 2, {kU16, kU8}, Answer::kFlag, 0, 0},
     // the view shift after a focus test (PSX 0x80155154, docs/field-modes.md)
-    {"MapView_FillCells", bof3::addr::MapView_FillCells, bof3::addr::MapView_FillCells, 0, {}, Answer::kGarbage, 0, 0},
+    {SH_OURS(MapView_FillCells), 0, {}, Answer::kGarbage, 0, 0},
     // Field_StatusBits |= 0x80
-    {"Field_SetStatus80", bof3::addr::Field_SetStatus80, bof3::addr::Field_SetStatus80, 0, {}, Answer::kGarbage, 0, 0},
+    {SH_OURS(Field_SetStatus80), 0, {}, Answer::kGarbage, 0, 0},
 };
 #undef SH_OURS
 #undef SH_THEIRS
@@ -595,6 +595,18 @@ std::uint32_t FxPreviewSet(const std::uint32_t* a, std::uint32_t answer) {
     }
     return answer;
 }
+// Round fourteen's fold (docs/scenario_harness.md section 8.11).
+// Sprite_LoadPalette writes 32 words at dst (and the same place of
+// Gfx_ClutStrip) and reads nothing there: the row logs dst by value - R1A's
+// listing (rest_1a_fuzz.cpp): the old 8-byte hash of what dst held before the
+// call passed a wrong stride wherever the palettes were alike (C74) - and
+// writes the 0x40 bytes with noise where they are in the regions, so the
+// destination is compared after the call when a group keeps it.
+std::uint32_t FxPalette(const std::uint32_t* a, std::uint32_t answer) {
+    unsigned char* const dst = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a[0]));
+    if (InRegions(dst, 0x40)) FillBytes(dst, 0x40);
+    return answer;
+}
 
 // Field mode's re-listing of a kStandard entry (registered before kStandard,
 // so it stands, in field mode only): answers the field code dereferences.
@@ -633,14 +645,14 @@ const Callee kField[] = {
     {FIELD_OURS(Math_Sin), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:2 FO:4: int(int angle)
     {FIELD_OURS(Menu_DrawHand), 3, {kU16, kU16, 0}, Answer::kGarbage, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:1 FE2:3 FS:1: void(int x, int y, int unused)
     {FIELD_OURS(Sprite_ObjectAt), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:2 FC2:2 FE2:1: unsigned char(long x, long y, unsigned margin)
-    {FIELD_OURS(Sprite_LoadPalette), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {8, 0}, nullptr, nullptr, true},   // FC1:1 FC3:1 FE2:3: void(unsigned short *dst, unsigned index)
+    {FIELD_OURS(Sprite_LoadPalette), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, FxPalette, nullptr, true},   // FC1:1 FC3:1 FE2:3: void(unsigned short *dst, unsigned index); dst logged by value and written (FxPalette), not hashed - the callee only writes there (R1A's C74; round fourteen's fold)
     {FIELD_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FC2:1 FE1:1 FE2:2 FO:1: void(unsigned char *prim, unsigned abe)
     {FIELD_OURS(Sprite_ShadeFadeBegin), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:5: void(void)
     {FIELD_OURS(Field_JumpStart), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:5: void(void)
     {FIELD_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {16, 0, 0, 0, 0}, nullptr, nullptr, true},   // FE2:3 FO:2: void(unsigned char *prim, int dfe, int dtd, unsigned tpage, unsigned long tw)
     {FIELD_OURS(Menu_DrawIcon8), 4, {kU16, kU16, kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FO:5: void(int x, int y, int icon, int dim)
     {FIELD_OURS(KeyItem_Has), 1, {kU8}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FO:1 FS:4: unsigned char(unsigned item)
-    {"0x58BD50", 0x58BD50, 0x58BD50, 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxSwap, nullptr, true},   // FS:5: swaps the bytes its two pointers name
+    {FIELD_OURS(FieldMenu_SwapBytes), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxSwap, nullptr, true},   // 0x58BD50, FS:5: swaps the bytes its two pointers name
     {FIELD_OURS(Sprite_UpdateScreen), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:4: void(void)
     {FIELD_OURS(Sprite_FindFree), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FC1:4: unsigned char(void)
     {FIELD_OURS(Sprite_UpdateScreenA), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1 FC2:3: void(void)
@@ -661,7 +673,7 @@ const Callee kField[] = {
     {FIELD_OURS(Gte_RotTrans), 2, {kAll, 0}, Answer::kGarbage, 0, 0, {6, 0}, FxOut1_12, nullptr, true},   // FC2:1 FE2:2: void(const short *vector, long *out)
     {FIELD_OURS(Gte_PopMatrix), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:1 FE2:2: void(void)
     {FIELD_OURS(Gpu_GetClut), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FC2:1 FO:2: unsigned(int x, int y)
-    {"0x46D5F0", 0x46D5F0, 0x46D5F0, 4, {kU16, kU16, 0, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC2:3: a number drawn (sprintf, sprites)
+    {FIELD_OURS(EffectKind41_DrawNumber), 4, {kU16, kU16, 0, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x46D5F0, FC2:3: a number drawn (sprintf, sprites)
     {FIELD_OURS(Sprite_ShadeFadeStep), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FC3:3: unsigned char(unsigned step)
     {FIELD_OURS(Field_CellAhead), 0, {}, Answer::kByte, 0, 4, {}, nullptr, nullptr, true},   // FC3:3: unsigned char(void)
     {FIELD_OURS(Field_WayBlocked), 4, {kAll, kAll, kU8, kU16}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FC3:1 FE1:2: unsigned char(long x, long z, unsigned raised, long ground)
@@ -718,12 +730,12 @@ const Callee kField[] = {
     {FIELD_OURS(AreaMap_Frame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void()
     {FIELD_OURS(Party_ExtraScreens), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
     {FIELD_OURS(Party_UpdateScreens), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
-    {"0x5372E0", 0x5372E0, 0x5372E0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: the party screens updated
+    {FIELD_OURS(Mode11_ListedSpriteScreens), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x5372E0, FC3:1: the party screens updated
     {FIELD_OURS(Effect_RunObjects), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
     {FIELD_OURS(MoveScript_TintFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
     {FIELD_OURS(Field_DrawFrame), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: void(void)
-    {"0x42D710", 0x42D710, 0x42D710, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: jmp through 0x64ADAC by the menu byte 0x929F00
-    {"0x57DFF0", 0x57DFF0, 0x57DFF0, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC3:1: jmp through 0x663DD0 by the menu byte 0x929F00
+    {FIELD_OURS(BattleExtra_Dispatch), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x42D710, FC3:1: jmp through 0x64ADAC by the menu byte 0x929F00
+    {FIELD_OURS(Shisu_ModeDispatch), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x57DFF0, FC3:1: jmp through 0x663DD0 by the menu byte 0x929F00
     {FIELD_OURS(Field_ObjectBlockedAhead), 1, {kAll}, Answer::kFlag, 0, 0, {16}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned char *object)
     {FIELD_OURS(MoveScript_Step), 2, {kAll, kAll}, Answer::kByte, 0xFF, 0x0F, {16, 16}, FxStepFlag, nullptr, true},   // FC3:1: unsigned char(unsigned char *object, const unsigned char *script)
     {FIELD_OURS(Sprite_ShadeLower), 1, {kAll}, Answer::kFlag, 0, 0, {0}, nullptr, nullptr, true},   // FC3:1: unsigned char(unsigned step)
@@ -741,7 +753,7 @@ const Callee kField[] = {
     {FIELD_OURS(Zenny_Add), 2, {kAll, kAll}, Answer::kFlag, 0, 0, {0, 0}, FxZennyAdd, nullptr, true},   // FE1:1: unsigned char(unsigned amount, unsigned tally)
     {FIELD_OURS(Field_CellHasEvent), 2, {kAll, kAll}, Answer::kFlag, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE1:1: unsigned char(long x, long z)
     {FIELD_OURS(Char_LoseHp), 2, {kU16, kU8}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1: unsigned(unsigned amount, unsigned member)
-    {"0x537500", 0x537500, 0x537500, 2, {kU16, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: two words, no calls
+    {FIELD_OURS(Char_LoseAp), 2, {kU16, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x537500, FE2:1: two words, no calls
     {FIELD_OURS(Actor_EquipCount), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FE2:1: unsigned char(unsigned member, unsigned kind, unsigned value)
     {FIELD_OURS(Field_CellsBlock), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FE2:1: unsigned char(long x, long z, unsigned wide)
     {FIELD_OURS(Gte_RotTransPers), 3, {kAll, 0, 0}, Answer::kGarbage, 0, 0, {6, 0, 0}, FxRotTransPers, nullptr, true},   // FE2:1: long(const short *vertex, unsigned long *sxy, long *p)
@@ -751,12 +763,12 @@ const Callee kField[] = {
     {FIELD_OURS(Scena17_DrawLogo), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1: void(int x, int y)
     {FIELD_OURS(Area_CellHook), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FE2:1: int(unsigned x, unsigned z)
     {FIELD_OURS(Snd_LoadBankFile), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:1: void(unsigned index)
-    {"0x586670", 0x586670, 0x586670, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: jmp through 0x66450C by the byte 0x9398CF
+    {FIELD_OURS(MasterTalk_Dispatch), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x586670, FE2:1: jmp through 0x66450C by the byte 0x9398CF
     {FIELD_OURS(Gfx_ClutStripCopyRow), 1, {kAll}, Answer::kGarbage, 0, 0, {0}, nullptr, nullptr, true},   // FE2:1: void(unsigned row)
-    {"0x585A00", 0x585A00, 0x585A00, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: no arguments, no calls
+    {FIELD_OURS(MasterTalk_Reset), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x585A00, FE2:1: no arguments, no calls
     {FIELD_OURS(Gpu_SetPolyG4), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, FxArg0, nullptr, true},   // FE2:1: unsigned char *(unsigned char *prim)
     {FIELD_OURS(ItemTrade_RowCount), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: al (the caller stores it at 0x6BE08D)
-    {"0x594D90", 0x594D90, 0x594D90, 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FE2:1: Inventory_Remove behind a test
+    {FIELD_OURS(ItemTrade_TakeNeeds), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x594D90, FE2:1: Inventory_Remove behind a test
     {FIELD_OURS(Char_ExpForLevel), 2, {kU8, kU8}, Answer::kGarbage, 0, 0, {0, 0}, nullptr, nullptr, true},   // FO:1: int(unsigned member, unsigned level)
     {FIELD_OURS(Gpu_SetSprt), 1, {kAll}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // FO:1: void(unsigned char *prim)
     {FIELD_OURS(Equip_PreviewSet), 4, {kU8, kAll, 0, 0}, Answer::kGarbage, 0, 0, {0, 6, 0, 0}, FxPreviewSet, nullptr, true},   // FO:1: void(unsigned id, const unsigned char *set, unsigned char *marks, unsigned short *values)
@@ -777,7 +789,21 @@ const Callee kField[] = {
     {FIELD_OURS(Menu_DrawMoneyBox), 4, {kU16, kU16, 0, kAll}, Answer::kGarbage, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: void(int x, int y, int unused, unsigned value)
     {FIELD_OURS(Inventory_Remove), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FS:1: unsigned char(unsigned category, unsigned item, unsigned count)
     {FIELD_OURS(AbilityList_Add), 4, {kU8, kU8, kU8, kU8}, Answer::kFlag, 0, 0, {0, 0, 0, 0}, nullptr, nullptr, true},   // FS:1: unsigned char(unsigned id, unsigned member, unsigned shared, unsigned which)
-    {"0x591AC0", 0x591AC0, 0x591AC0, 3, {kU8, kU8, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FS:1: a record's list pointer by member and page (the caller keeps a byte)
+    {FIELD_OURS(AbilityList_CountSet), 3, {kU8, kU8, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x591AC0, FS:1: a record's list pointer by member and page (the caller keeps a byte)
+    // Round fourteen's fold (docs/scenario_harness.md section 8.11): R1C's six
+    // field callees no standard row had (rest_1c_fuzz.cpp's listing, the masks
+    // R1A, R1B, R1D, R1E and R1F agree on), so later groups need not re-list them
+    {FIELD_OURS(Effect_SpawnAtCellHigh), 3, {kU8, kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // void(unsigned state, unsigned x, unsigned z): the state's byte, x and z movsx words
+    {FIELD_OURS(Effect_SpawnAtCell), 3, {kU8, kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // the same
+    {FIELD_OURS(Field_GiveZenny), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // void(unsigned amount): a byte product pushed whole
+    {FIELD_OURS(AreaMap_ClearCell), 2, {kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // void(unsigned x, unsigned z): 16 bits each (docs/field_hidden.md section 3)
+    {FIELD_OURS(Field_EffectAhead), 0, {}, Answer::kByte, 0xFF, 0x13, {}, nullptr, nullptr, true},   // unsigned char(void): a record 0..19 or none 0xFF (all it answers; event_ops.cpp)
+    {FIELD_OURS(Sprite_TurnSense), 1, {kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // unsigned char(unsigned target): the target's byte (static_cast<unsigned char> in inventory_ops.cpp; R1A, R1D); the callers store al, whatever it is
+    // ... and the two effect-standard draws the field runs reach (R4B: rest_2d.cpp,
+    // rest_4b.cpp, rest_4e.cpp call them in field mode, each group listing them
+    // itself): the same rows as kEffectStd's, which they stand over in effect mode
+    {FIELD_OURS(Gpu_SetLineF3), 1, {0}, Answer::kGarbage, 0, 0, {16}, FxArg0, nullptr, true},   // unsigned char *(unsigned char *prim)
+    {FIELD_OURS(Gpu_SetSprt16), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // void(unsigned char *prim)
 };
 #undef FIELD_OURS
 #undef FIELD_THEIRS
@@ -1104,52 +1130,52 @@ const Callee kEffectStd[] = {
     {FX_OURS(Effect_ReleaseAt), 1, {kU8}, Answer::kGarbage, 0, 0, {}, FxReleaseAt, nullptr, true},   // 1: void(unsigned char index)
     // Capcom's, unnamed, read to the last instruction (EKH, 2026-09-29)
     {FX_RAW(0x5A7C70), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {18, 6}, FxOut2_6, nullptr, true},   // 12, library layer: a matrix (18 read), a vector (6 read) -> an out vector (6 written)
-    {FX_RAW(0x4794D0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 9: a record read to +0x440 and written to +0x402 (the first 16 hashed); calls 0x479970, the projection helpers
-    {FX_RAW(0x4796B0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 8: a record read to +0x400; draws G4 quads
+    {FX_OURS(EffectGlowTrail_Update), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 0x4794D0, 9: a record read to +0x440 and written to +0x402 (the first 16 hashed); calls 0x479970, the projection helpers
+    {FX_OURS(EffectGlowTrail_Draw), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 0x4796B0, 8: a record read to +0x400; draws G4 quads
     {FX_RAW(0x5A7570), 1, {kAll}, Answer::kGarbage, 0, 0, {}, FxPrim0_44, nullptr, true},   // 7, library layer: 0x2C bytes of a primitive written (the packet pointer logged)
     {FX_RAW(0x5A7840), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, FxPrim0_12, nullptr, true},   // 6, library layer: 12 bytes of a primitive written
     {FX_OURS(EffectKind87_Midpoint), 3, {kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 6: three words, no calls
-    {FX_RAW(0x48ED80), 3, {0, 0, kU8}, Answer::kGarbage, 0, 0, {12, 12}, nullptr, nullptr, true},   // 6: two points (12 read each) and a byte; draws
+    {FX_OURS(EffectKind9C_DrawTrail), 3, {0, 0, kU8}, Answer::kGarbage, 0, 0, {12, 12}, nullptr, nullptr, true},   // 0x48ED80, 6: two points (12 read each) and a byte; draws
     {FX_OURS(EffectKind18Sub42_Draw), 2, {kAll, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 6: (variant, height) - not a pointer: the variant a whole word indexing the piece lists (lea eax, [ebp + ebp*2] at 0x509A83) and the lift words, the height's low word alone reaching the vertex word it is subtracted into (sub edx, ebp; mov [eax - 6], dx at 0x509B62); E5F's reading, effect_5f.cpp (round thirteen's end fold)
-    {FX_RAW(0x46F570), 1, {0}, Answer::kGarbage, 0, 0, {84}, nullptr, nullptr, true},   // 5: a record read to +0x54; the GTE rotations
-    {FX_RAW(0x46F690), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: a word; a draw mode, 0x46F6F0
-    {FX_RAW(0x52B2A0), 1, {kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: a byte, no calls
-    {FX_RAW(0x52B1B0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 5: Sound_PlayEffect behind a test
-    {FX_RAW(0x5171E0), 1, {0}, Answer::kGarbage, 0, 0, {kDerefString}, nullptr, nullptr, true},   // 4: a string's characters counted (a byte above 0x7F takes two), eax the count
+    {FX_OURS(EffectKind21_ArmPoints), 1, {0}, Answer::kGarbage, 0, 0, {84}, nullptr, nullptr, true},   // 0x46F570, 5: a record read to +0x54; the GTE rotations
+    {FX_OURS(EffectKind21_DrawArm), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x46F690, 5: a word; a draw mode, 0x46F6F0
+    {FX_OURS(LeaderPanel_Effect3Mode), 1, {kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x52B2A0, 5: a byte, no calls
+    {FX_OURS(LeaderPanel_PoseSound), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x52B1B0, 5: Sound_PlayEffect behind a test
+    {FX_OURS(EffectKind0F_CharCount), 1, {0}, Answer::kGarbage, 0, 0, {kDerefString}, nullptr, nullptr, true},   // 0x5171E0, 4: a string's characters counted (a byte above 0x7F takes two), eax the count
     {FX_RAW(0x5A7A90), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 4, library layer: a word through _ftol, eax read
-    {FX_RAW(0x479260), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 4: al; calls through 0x654660 by a byte
-    {FX_RAW(0x479EE0), 1, {0}, Answer::kGarbage, 0, 0, {18}, nullptr, nullptr, true},   // 3: a record read to +0x12; G4 quads
-    {FX_RAW(0x479B70), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 3: a record read to +0xD20 (the first 16 hashed)
-    {FX_RAW(0x586160), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 3: five words; Menu_DrawOutline, FT4 quads
+    {FX_OURS(EffectGlowSparks_Run), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 0x479260, 4: al; calls through 0x654660 by a byte
+    {FX_OURS(EffectRing_Draw), 1, {0}, Answer::kGarbage, 0, 0, {18}, nullptr, nullptr, true},   // 0x479EE0, 3: a record read to +0x12; G4 quads
+    {FX_OURS(EffectSpiral_StepDraw), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 0x479B70, 3: a record read to +0xD20 (the first 16 hashed)
+    {FX_OURS(Menu_DrawPanelBox), 5, {kAll, kAll, kAll, kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x586160, 3: five words; Menu_DrawOutline, FT4 quads
     {"Gfx_StoreImage", bof3::addr::Gfx_StoreImage, bof3::addr::Gfx_StoreImage, 2, {0, 0}, Answer::kGarbage, 0, 0, {8}, FxOut1_4, nullptr, true},   // 2, renderer: 8 read at the first, 4 written at the second
-    {FX_RAW(0x4790C0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: no arguments, no calls
+    {FX_OURS(EffectGlowSparks_Clear), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x4790C0, 2: no arguments, no calls
     {FX_OURS(EffectSpark_FindFree), 0, {}, Answer::kGarbage, 0, 0, {}, FxSparkFindFree, nullptr, true},   // 2: the first free record or null, as the real one (wave two's fold)
-    {FX_RAW(0x47A200), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 2: al; draws
-    {FX_RAW(0x4799C0), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 2: a record read and written to +0xD20 (the first 16 hashed)
+    {FX_OURS(EffectDust_Run), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 0x47A200, 2: al; draws
+    {FX_OURS(EffectSpiral_Init), 1, {0}, Answer::kGarbage, 0, 0, {16}, nullptr, nullptr, true},   // 0x4799C0, 2: a record read and written to +0xD20 (the first 16 hashed)
     {FX_OURS(EffectKind53_TexWindow), 4, {kU16, kU16, kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 2: four s16
-    {FX_RAW(0x4FEE70), 0, {}, Answer::kByte, 1, 8, {}, FxPattern, nullptr, true},   // 2: the three story flags 0x65DE60 as bits, plus 1 (lea eax, [edi + 1] at 0x4FEE9F): a whole eax 1..8, which EffectKind18_09 (0x4FEDE3) compares whole with +2 (round thirteen's end fold; E5A's reading)
-    {FX_RAW(0x462F10), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; a sprite primitive
-    {FX_RAW(0x46E190), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; tiles, Rand
-    {FX_RAW(0x46FAE0), 1, {0}, Answer::kGarbage, 0, 0, {13}, nullptr, nullptr, true},   // 1: a record read to +0xD; lines
+    {FX_OURS(Area109_SwitchPattern), 0, {}, Answer::kByte, 1, 8, {}, FxPattern, nullptr, true},   // 0x4FEE70, 2: the three story flags 0x65DE60 as bits, plus 1 (lea eax, [edi + 1] at 0x4FEE9F): a whole eax 1..8, which EffectKind18_09 (0x4FEDE3) compares whole with +2 (round thirteen's end fold; E5A's reading)
+    {FX_OURS(EffectKind07_DrawSprite), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x462F10, 1: a word; a sprite primitive
+    {FX_OURS(EffectKind1D_DrawSpeck), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x46E190, 1: a word; tiles, Rand
+    {FX_OURS(EffectKind24_DrawRay), 1, {0}, Answer::kGarbage, 0, 0, {13}, nullptr, nullptr, true},   // 0x46FAE0, 1: a record read to +0xD; lines
     {FX_OURS(EffectGte_SetDiagonalOne), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_18, nullptr, true},   // EGT (round thirteen): short*(short *matrix), 18 bytes written (docs/effect_gte.md section 7)
-    {FX_RAW(0x4941B0), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {8, 8, 8}, nullptr, nullptr, true},   // 1: three points of 8 read, nothing written (E2C's reading; EKH had them written); eax read (beside EGT's 0x494180, not EGT's)
-    {FX_RAW(0x4790F0), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 1: 24 bytes written; Rand
-    {FX_RAW(0x47A110), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: no arguments, no calls
-    {FX_RAW(0x47A130), 0, {}, Answer::kGarbage, 0, 0, {}, FxDustFindFree, nullptr, true},   // 1: the first free dust record or null (wave two's fold)
-    {FX_RAW(0x47A150), 1, {0}, Answer::kGarbage, 0, 0, {8}, FxOut0_32, nullptr, true},   // 1: 8 read then 32 written; AreaMap_Elevation, Rand
-    {FX_RAW(0x479160), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 1: 24 bytes written; Rand
+    {FX_OURS(Screen_TriangleWinding), 3, {0, 0, 0}, Answer::kGarbage, 0, 0, {8, 8, 8}, nullptr, nullptr, true},   // 0x4941B0, 1: three points of 8 read, nothing written (E2C's reading; EKH had them written); eax read (beside EGT's 0x494180, not EGT's)
+    {FX_OURS(EffectGlowSparks_StartRise), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 0x4790F0, 1: 24 bytes written; Rand
+    {FX_OURS(EffectDust_Clear), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x47A110, 1: no arguments, no calls
+    {FX_OURS(EffectDust_FindFree), 0, {}, Answer::kGarbage, 0, 0, {}, FxDustFindFree, nullptr, true},   // 0x47A130, 1: the first free dust record or null (wave two's fold)
+    {FX_OURS(EffectDust_Start), 1, {0}, Answer::kGarbage, 0, 0, {8}, FxOut0_32, nullptr, true},   // 0x47A150, 1: 8 read then 32 written; AreaMap_Elevation, Rand
+    {FX_OURS(EffectGlowSparks_StartBurst), 1, {0}, Answer::kGarbage, 0, 0, {}, FxOut0_24, nullptr, true},   // 0x479160, 1: 24 bytes written; Rand
     {FX_OURS(EffectKind52_MoveSparks), 0, {}, Answer::kFlag, 0, 0, {}, nullptr, nullptr, true},   // 1: al; calls through 0x65472C by a byte
-    {FX_RAW(0x4837B0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: lines; Rand
-    {FX_RAW(0x491E30), 3, {kAll, kAll, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: two words and a byte; G3
-    {FX_RAW(0x492260), 3, {kU16, kU16, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: two s16 and a byte; G3
-    {FX_RAW(0x4920F0), 1, {0}, Answer::kGarbage, 0, 0, {6}, nullptr, nullptr, true},   // 1: a record read to +6; G4
-    {FX_RAW(0x5100B0), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: two words; eax read
-    {FX_RAW(0x5101C0), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; lines
-    {FX_RAW(0x52B2E0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: no arguments, no calls
-    {FX_RAW(0x52B370), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: calls 0x52B460
-    {FX_RAW(0x52B200), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1 (a tail jump; a hidden start): sound, animation
-    {FX_RAW(0x52B330), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: a word; Transition_Start
-    {FX_RAW(0x52B6C0), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1: calls through 0x660324 by a byte
+    {FX_OURS(EffectKind69_DrawLines), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x4837B0, 1: lines; Rand
+    {FX_OURS(EffectKindA7_DrawGlow), 3, {kAll, kU16, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x491E30, 1: the point, the size's low word (short sz[2] = {size, size} in rest_3f.cpp; mov ax, word [esp + 0x60] at 0x491E81) and the colour's byte; G3 (round fourteen's fold)
+    {FX_OURS(EffectKindA9_DrawDisc), 3, {kU16, kU16, kU8}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x492260, 1: two s16 and a byte; G3
+    {FX_OURS(EffectKindA8_DrawBar), 1, {0}, Answer::kGarbage, 0, 0, {6}, nullptr, nullptr, true},   // 0x4920F0, 1: a record read to +6; G4
+    {FX_OURS(EffectKind18Sub41_DrawPanels), 2, {kU16, kU16}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x5100B0, 1: the lift's low word (imul ecx, ebx at 0x510123, the product stored as a word) and the texture's ((texture << 16) | 0xBB009120 in rest_3g.cpp); eax read (round fourteen's fold)
+    {FX_OURS(EffectKind18Sub41_DrawRings), 1, {kAll}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x5101C0, 1: a word; lines
+    {FX_OURS(LeaderPanel_HoldTest), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x52B2E0, 1: no arguments, no calls
+    {FX_OURS(LeaderPanel_EffectsStep), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x52B370, 1: calls 0x52B460
+    {FX_OURS(LeaderPanel_UseItemEnd), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x52B200, 1 (a tail jump; a hidden start): sound, animation
+    {FX_OURS(LeaderPanel_LeaveOnPress), 1, {kU16}, Answer::kByte, 0, 1, {}, nullptr, nullptr, true},   // 0x52B330, 1: the buttons' low word (and eax, edx; test ax, ax at 0x52B33A); al 1 (mov al, 1 at 0x52B351) or 0 (xor al, al at 0x52B362), the rest of eax what it was; Transition_Start (R1G's reading; round fourteen's fold)
+    {FX_OURS(Fish_RunAll), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x52B6C0, 1: calls through 0x660324 by a byte
     {FX_RAW(0x593950), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1 (a tail jump): jmp [0x66A470 + byte 0x93985C * 4] - the dispatcher of EKP's run
 };
 #undef FX_OURS

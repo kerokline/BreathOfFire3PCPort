@@ -252,7 +252,9 @@ U FxSideProbes(const U*, U answer) {
 // with their own stack's upper halves), the state bytes and member indices as
 // bytes (Member_ClearState: and eax, 0xFF; the effect index of R0A's two:
 // its low byte), MapView_SlopeAt's direction as a byte (pushed in bl over the
-// caller's ebx), every other argument whole.
+// caller's ebx; AreaMap_Slope reads the upper bytes only for a direction of 10
+// or more, unreachable while directions stay 0..7 - rest_1e.md section 5),
+// every other argument whole.
 #define R1A_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr sh::Answer kF = sh::Answer::kFlag;

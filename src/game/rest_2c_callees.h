@@ -2,10 +2,14 @@
 // .data tables its dispatchers jump through (each a [[data]] entry in
 // symbols.toml with the count its own reader reaches, section 3 of the doc),
 // the cells its code names by address, and the three callees of other groups
-// of this wave, called by address until the round's rebinding.
+// of this wave, called by address (ours since their owners merged, named by
+// symbol, the values unchanged: round fourteen's rebinding,
+// docs/round-14-cleanup.md).
 #pragma once
 
 #include <cstdint>
+
+#include "bof3/symbols.gen.h"
 
 namespace rest_2c {
 namespace at {
@@ -104,16 +108,18 @@ constexpr std::uint32_t kBoxAdd = 0x5C41C0;      // the panel box's three float 
 constexpr std::uint32_t kBoxSub = 0x5C41BC;
 constexpr std::uint32_t kBoxSubBottom = 0x5C41B8;
 
-// --- the figure record (0x9398E0, dispatched by R2B's 0x57F320 on +1) ---------------
+// --- model A (0x9398E0, dispatched by R2B's 0x57F320 on +1), and what follows it ----
+// R2B's layout (docs/rest_2c.md 1.1): model A 0x80 bytes, model B 0x939960, then
+// the screen's cells 0x9399E0.. - the cells past +0x80 below are not A's.
 constexpr std::uint32_t kFigure = 0x9398E0;
 constexpr std::uint32_t kFigureDone = 0x9398E6;  // +6: 1 when a move reached its end
 constexpr std::uint32_t kFigureY = 0x93991C;     // +0x3C: the height, 16.16
 constexpr std::uint32_t kFigureScale = 0x939920; // +0x40
 constexpr std::uint32_t kFigureRgb = 0x93993D;   // +0x5D..+0x5F: the colour
 constexpr std::uint32_t kFigureAngle = 0x93994C; // +0x6C
-constexpr std::uint32_t kFigureLift = 0x9399A0;  // +0xC0: the height above the ground, in 0xA00ths
-constexpr std::uint32_t kFigureFade = 0x9399E7;  // +0x107: the fade's step
-constexpr std::uint32_t kFigureScaleIndex = 0x9399EB;  // +0x10B
+constexpr std::uint32_t kFigureLift = 0x9399A0;  // model B's scale (+0x40): A stands on B, in 0xA00ths
+constexpr std::uint32_t kFigureFade = 0x9399E7;  // the fourth "given" count (R2B's 0x9399E4 + 3): the fade's step
+constexpr std::uint32_t kFigureScaleIndex = 0x9399EB;  // R2B's level (Shisu_ScaleIndex's answer)
 constexpr std::uint32_t kScaleTable = 0x663D7C;  // the scales the index reads (in place)
 constexpr std::uint32_t kKind2X = 0x905E64;      // Field_Kind2X
 constexpr std::uint32_t kKind2Z = 0x905E60;      // Field_Kind2Z
@@ -122,10 +128,10 @@ constexpr std::uint32_t kKind2Z = 0x905E60;      // Field_Kind2Z
 constexpr std::uint32_t kWindows = 0x803160;
 constexpr std::uint32_t kWindowStride = 0x24;
 
-// --- callees nobody owns yet, or another group of this wave owns ---------------------
-constexpr std::uint32_t kFigureDraw = 0x57EEF0;   // R2B: the figure record drawn (one word: the record)
-constexpr std::uint32_t kPickAsk = 0x5869A0;      // R2D: the master's pick, (message u16, a byte)
-constexpr std::uint32_t kGlyph = 0x59DB70;        // R2H: an 8 x 8 cell (x, y, u / 8, v / 8, clut, shade)
+// --- callees another group of this wave owns, and the C runtime's ------------------
+constexpr std::uint32_t kFigureDraw = bof3::addr::Shisu_DrawModel;   // R2B: the figure record drawn (one word: the record)
+constexpr std::uint32_t kPickAsk = bof3::addr::MasterScreen_PickMember;      // R2D: the master's pick, (message u16, a byte)
+constexpr std::uint32_t kGlyph = bof3::addr::BattleEquipWin_DrawBar;        // R2H: an 8 x 8 cell (x, y, u / 8, v / 8, clut, shade)
 constexpr std::uint32_t kStrncpy = 0x5B9450;      // the C runtime's strncpy (dst, src, n)
 
 }  // namespace at

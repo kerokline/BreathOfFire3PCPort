@@ -237,7 +237,7 @@ const sh::Callee kCallees[] = {
     {R1D_OURS(Effect_SpawnAtCellHigh), 3, {kU8, kU16, kU16}, kG, 0, 0},   // the state's byte, x and z movsx words
     // the field engine's
     {R1D_OURS(MapView_GroundAt), 2, {kW, kW}, kG, 0, 0, {}, &FxGround},
-    {R1D_OURS(MapView_SlopeAt), 3, {kW, kW, kU8}, kG, 0, 0, {}, &FxSlope},   // AreaMap_Slope reads the direction byte
+    {R1D_OURS(MapView_SlopeAt), 3, {kW, kW, kU8}, kG, 0, 0, {}, &FxSlope},   // the direction byte: AreaMap_Slope reads more only from 10 (rest_1e.md section 5)
     {R1D_OURS(Sprite_EnsureAnimation), 1, {kU8}, kF, 0, 0},                  // compares the low byte; Sprite_SetAnimation's byte
     {R1D_OURS(Sound_PlayEffect), 1, {kU16}, kG, 0, 0},                      // id & 0xFFFF
     {R1D_OURS(Sprite_TurnSense), 1, {kU8}, kG, 0, 0},                       // the target byte

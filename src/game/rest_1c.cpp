@@ -48,7 +48,6 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 
-constexpr U kTextLo = 0x401000, kTextHi = 0x5C3000;   // .text: what a dispatch table may hold
 constexpr U kSteps = 0x6697B0;                         // Field_DirectionSteps: 8 rows of two longs
 constexpr U kStep3 = 0x6697C8, kStep5 = 0x6697D8;      // rows 3 and 5, read by address
 constexpr U kSloped = 0x903850;                        // DamageScratch's first byte: AreaMap_Slope's "sloped" flag
@@ -59,17 +58,40 @@ constexpr U kScriptFlagsHigh = 0x9039A3;               // Field_ScriptFlags' hig
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
 
-// A dispatch table's entry, read in place with the index unchecked as the
-// original reads it; where the word is not code (an index past the table and
-// past the runs of handlers after it) ours aborts, where the original jumps
-// there. While the fuzz runs the table holds the harness's recorders.
+// The count of each of the 28 dispatch tables, by its symbols.toml entry.
+struct TableCount { const unsigned long* table; unsigned count; };
+unsigned CountOf(U table, const char* who) {
+#define R1C_T(t) {t, t##_count}
+    static const TableCount kCounts[] = {
+        R1C_T(PartyFormAction6_Form1States), R1C_T(PartyAction6_Form1States), R1C_T(PartyFormAction6_Form2States),
+        R1C_T(PartyAction6_Form2States), R1C_T(PartyAction6_Form2State0Steps), R1C_T(PartyAction6_Form2State1Steps),
+        R1C_T(PartyFormAction6_Forms), R1C_T(PartyAction6_Forms), R1C_T(PartyFormAction7_Form0States),
+        R1C_T(PartyAction7_Form0States), R1C_T(PartyFormAction7_Form1States), R1C_T(PartyFormAction7_Form2States),
+        R1C_T(PartyAction7_Form2States), R1C_T(PartyFormAction7_Forms), R1C_T(PartyAction7_Forms),
+        R1C_T(PartyFormAction8_Form0States), R1C_T(PartyAction8_Form0States), R1C_T(PartyFormAction8_Form1States),
+        R1C_T(PartyAction8_Form1States), R1C_T(PartyFormAction8_Form2States), R1C_T(PartyAction8_Form2States),
+        R1C_T(PartyFormAction8_Forms), R1C_T(PartyAction8_Forms), R1C_T(PartyFormAction9_Form0States),
+        R1C_T(PartyAction9_Form0States), R1C_T(PartyFormAction9_Form1States), R1C_T(PartyAction9_Form1States),
+        R1C_T(PartyAction9_Form1State0Steps),
+    };
+#undef R1C_T
+    for (const TableCount& t : kCounts)
+        if (static_cast<U>(reinterpret_cast<std::uintptr_t>(t.table)) == table) return t.count;
+    bof3::Fatal("%s: 0x%X is not one of the group's 28 dispatch tables", who, static_cast<unsigned>(table));
+}
+
+// A dispatch table's entry, read in place. The original's index is unchecked:
+// past the table it jumps through the next table's cell, or into data. Ours
+// aborts at the table's own count, before the read - the rule all seven of
+// wave one's groups share (docs/rest_1b.md section 6). While the fuzz runs the
+// table holds the harness's recorders.
 Handler Entry(U table, unsigned index, const char* who) {
     const U at = table + 4u * index;
-    const U entry = static_cast<U>(Long(At(at)));
-    if (!scenario_harness::g_active && (entry < kTextLo || entry >= kTextHi))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)at);
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry));
+    const unsigned count = CountOf(table, who);
+    if (index >= count)
+        bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
+                    count, (unsigned)table, (unsigned)at);
+    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(at)))));
 }
 void ByForm(U table, const char* who) { Entry(table, Word(Sprite_Current + 0x2C), who)(); }
 void ByState(U table, const char* who) { Entry(table, Sprite_Current[2], who)(); }
@@ -431,62 +453,62 @@ void Kind30Begin(const char* who) {
 // ===========================================================================
 
 // original 0x51FA70: Field_FormActions[6] - PartyFormAction6_Forms 0x65FC88 by u16 +0x2C.
-R1C_EXPORT void __cdecl PartyFormAction6_ByForm(void) { ByForm(0x65FC88, "PartyFormAction6_ByForm (0x51FA70)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_ByForm(void) { ByForm(reinterpret_cast<U>(PartyFormAction6_Forms), "PartyFormAction6_ByForm (0x51FA70)"); }
 // original 0x51FA90: Field_ActionBySet[6] - PartyAction6_Forms 0x65FC94 by u16 +0x2C.
-R1C_EXPORT void __cdecl PartyAction6_ByForm(void) { ByForm(0x65FC94, "PartyAction6_ByForm (0x51FA90)"); }
+R1C_EXPORT void __cdecl PartyAction6_ByForm(void) { ByForm(reinterpret_cast<U>(PartyAction6_Forms), "PartyAction6_ByForm (0x51FA90)"); }
 // original 0x520120: Field_FormActions[7] - PartyFormAction7_Forms 0x65FCD8.
-R1C_EXPORT void __cdecl PartyFormAction7_ByForm(void) { ByForm(0x65FCD8, "PartyFormAction7_ByForm (0x520120)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_ByForm(void) { ByForm(reinterpret_cast<U>(PartyFormAction7_Forms), "PartyFormAction7_ByForm (0x520120)"); }
 // original 0x520140: Field_ActionBySet[7] - PartyAction7_Forms 0x65FCE4.
-R1C_EXPORT void __cdecl PartyAction7_ByForm(void) { ByForm(0x65FCE4, "PartyAction7_ByForm (0x520140)"); }
+R1C_EXPORT void __cdecl PartyAction7_ByForm(void) { ByForm(reinterpret_cast<U>(PartyAction7_Forms), "PartyAction7_ByForm (0x520140)"); }
 // original 0x5207E0: Field_FormActions[8] - PartyFormAction8_Forms 0x65FD34.
-R1C_EXPORT void __cdecl PartyFormAction8_ByForm(void) { ByForm(0x65FD34, "PartyFormAction8_ByForm (0x5207E0)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_ByForm(void) { ByForm(reinterpret_cast<U>(PartyFormAction8_Forms), "PartyFormAction8_ByForm (0x5207E0)"); }
 // original 0x520800: Field_ActionBySet[8] - PartyAction8_Forms 0x65FD40.
-R1C_EXPORT void __cdecl PartyAction8_ByForm(void) { ByForm(0x65FD40, "PartyAction8_ByForm (0x520800)"); }
+R1C_EXPORT void __cdecl PartyAction8_ByForm(void) { ByForm(reinterpret_cast<U>(PartyAction8_Forms), "PartyAction8_ByForm (0x520800)"); }
 
 // original 0x51F5D0: set 6's form action, form 1 - PartyFormAction6_Form1States 0x65FC3C by +2.
-R1C_EXPORT void __cdecl PartyFormAction6_Form1(void) { ByState(0x65FC3C, "PartyFormAction6_Form1 (0x51F5D0)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_Form1(void) { ByState(reinterpret_cast<U>(PartyFormAction6_Form1States), "PartyFormAction6_Form1 (0x51F5D0)"); }
 // original 0x51F5F0: set 6's action, form 1 - PartyAction6_Form1States 0x65FC48 by +2.
-R1C_EXPORT void __cdecl PartyAction6_Form1(void) { ByState(0x65FC48, "PartyAction6_Form1 (0x51F5F0)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form1(void) { ByState(reinterpret_cast<U>(PartyAction6_Form1States), "PartyAction6_Form1 (0x51F5F0)"); }
 // original 0x51F610: set 6's form action, form 2 - PartyFormAction6_Form2States 0x65FC54 by +2.
-R1C_EXPORT void __cdecl PartyFormAction6_Form2(void) { ByState(0x65FC54, "PartyFormAction6_Form2 (0x51F610)"); }
+R1C_EXPORT void __cdecl PartyFormAction6_Form2(void) { ByState(reinterpret_cast<U>(PartyFormAction6_Form2States), "PartyFormAction6_Form2 (0x51F610)"); }
 // original 0x51F630: set 6's action, form 2 - PartyAction6_Form2States 0x65FC60 by +2.
-R1C_EXPORT void __cdecl PartyAction6_Form2(void) { ByState(0x65FC60, "PartyAction6_Form2 (0x51F630)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2(void) { ByState(reinterpret_cast<U>(PartyAction6_Form2States), "PartyAction6_Form2 (0x51F630)"); }
 // original 0x51F650: its state 0 - PartyAction6_Form2State0Steps 0x65FC68 by +3.
-R1C_EXPORT void __cdecl PartyAction6_Form2State0(void) { ByStep(0x65FC68, "PartyAction6_Form2State0 (0x51F650)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2State0(void) { ByStep(reinterpret_cast<U>(PartyAction6_Form2State0Steps), "PartyAction6_Form2State0 (0x51F650)"); }
 // original 0x51FA10: its state 1 - PartyAction6_Form2State1Steps 0x65FC7C by +3.
-R1C_EXPORT void __cdecl PartyAction6_Form2State1(void) { ByStep(0x65FC7C, "PartyAction6_Form2State1 (0x51FA10)"); }
+R1C_EXPORT void __cdecl PartyAction6_Form2State1(void) { ByStep(reinterpret_cast<U>(PartyAction6_Form2State1Steps), "PartyAction6_Form2State1 (0x51FA10)"); }
 // original 0x51FAB0: set 7's form action, form 0 - 0x65FCA0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form0(void) { ByState(0x65FCA0, "PartyFormAction7_Form0 (0x51FAB0)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form0(void) { ByState(reinterpret_cast<U>(PartyFormAction7_Form0States), "PartyFormAction7_Form0 (0x51FAB0)"); }
 // original 0x51FAD0: set 7's action, form 0 - 0x65FCAC by +2.
-R1C_EXPORT void __cdecl PartyAction7_Form0(void) { ByState(0x65FCAC, "PartyAction7_Form0 (0x51FAD0)"); }
+R1C_EXPORT void __cdecl PartyAction7_Form0(void) { ByState(reinterpret_cast<U>(PartyAction7_Form0States), "PartyAction7_Form0 (0x51FAD0)"); }
 // original 0x51FC60: set 7's form action, form 1 - 0x65FCB4 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form1(void) { ByState(0x65FCB4, "PartyFormAction7_Form1 (0x51FC60)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form1(void) { ByState(reinterpret_cast<U>(PartyFormAction7_Form1States), "PartyFormAction7_Form1 (0x51FC60)"); }
 // original 0x51FD00: set 7's form action, form 2 - 0x65FCC0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction7_Form2(void) { ByState(0x65FCC0, "PartyFormAction7_Form2 (0x51FD00)"); }
+R1C_EXPORT void __cdecl PartyFormAction7_Form2(void) { ByState(reinterpret_cast<U>(PartyFormAction7_Form2States), "PartyFormAction7_Form2 (0x51FD00)"); }
 // original 0x51FD20: set 7's action, form 2 - 0x65FCCC by +2.
-R1C_EXPORT void __cdecl PartyAction7_Form2(void) { ByState(0x65FCCC, "PartyAction7_Form2 (0x51FD20)"); }
+R1C_EXPORT void __cdecl PartyAction7_Form2(void) { ByState(reinterpret_cast<U>(PartyAction7_Form2States), "PartyAction7_Form2 (0x51FD20)"); }
 // original 0x520160: set 8's form action, form 0 - 0x65FCF0 by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form0(void) { ByState(0x65FCF0, "PartyFormAction8_Form0 (0x520160)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form0(void) { ByState(reinterpret_cast<U>(PartyFormAction8_Form0States), "PartyFormAction8_Form0 (0x520160)"); }
 // original 0x520180: set 8's action, form 0 - 0x65FCFC by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form0(void) { ByState(0x65FCFC, "PartyAction8_Form0 (0x520180)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form0(void) { ByState(reinterpret_cast<U>(PartyAction8_Form0States), "PartyAction8_Form0 (0x520180)"); }
 // original 0x520310: set 8's form action, form 1 - 0x65FD04 by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form1(void) { ByState(0x65FD04, "PartyFormAction8_Form1 (0x520310)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form1(void) { ByState(reinterpret_cast<U>(PartyFormAction8_Form1States), "PartyFormAction8_Form1 (0x520310)"); }
 // original 0x520330: set 8's action, form 1 - 0x65FD10 by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form1(void) { ByState(0x65FD10, "PartyAction8_Form1 (0x520330)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form1(void) { ByState(reinterpret_cast<U>(PartyAction8_Form1States), "PartyAction8_Form1 (0x520330)"); }
 // original 0x5203C0: set 8's form action, form 2 - 0x65FD1C by +2.
-R1C_EXPORT void __cdecl PartyFormAction8_Form2(void) { ByState(0x65FD1C, "PartyFormAction8_Form2 (0x5203C0)"); }
+R1C_EXPORT void __cdecl PartyFormAction8_Form2(void) { ByState(reinterpret_cast<U>(PartyFormAction8_Form2States), "PartyFormAction8_Form2 (0x5203C0)"); }
 // original 0x5203E0: set 8's action, form 2 - 0x65FD28 by +2.
-R1C_EXPORT void __cdecl PartyAction8_Form2(void) { ByState(0x65FD28, "PartyAction8_Form2 (0x5203E0)"); }
+R1C_EXPORT void __cdecl PartyAction8_Form2(void) { ByState(reinterpret_cast<U>(PartyAction8_Form2States), "PartyAction8_Form2 (0x5203E0)"); }
 // original 0x520820: set 9's form action, form 0 (R1D's 0x521320 by +0x2C) - 0x65FD4C by +2.
-R1C_EXPORT void __cdecl PartyFormAction9_Form0(void) { ByState(0x65FD4C, "PartyFormAction9_Form0 (0x520820)"); }
+R1C_EXPORT void __cdecl PartyFormAction9_Form0(void) { ByState(reinterpret_cast<U>(PartyFormAction9_Form0States), "PartyFormAction9_Form0 (0x520820)"); }
 // original 0x5208B0: set 9's action, form 0 (R1D's 0x521340) - 0x65FD58 by +2.
-R1C_EXPORT void __cdecl PartyAction9_Form0(void) { ByState(0x65FD58, "PartyAction9_Form0 (0x5208B0)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form0(void) { ByState(reinterpret_cast<U>(PartyAction9_Form0States), "PartyAction9_Form0 (0x5208B0)"); }
 // original 0x520A40: set 9's form action, form 1 - 0x65FD60 by +2.
-R1C_EXPORT void __cdecl PartyFormAction9_Form1(void) { ByState(0x65FD60, "PartyFormAction9_Form1 (0x520A40)"); }
+R1C_EXPORT void __cdecl PartyFormAction9_Form1(void) { ByState(reinterpret_cast<U>(PartyFormAction9_Form1States), "PartyFormAction9_Form1 (0x520A40)"); }
 // original 0x520A60: set 9's action, form 1 - 0x65FD6C by +2.
-R1C_EXPORT void __cdecl PartyAction9_Form1(void) { ByState(0x65FD6C, "PartyAction9_Form1 (0x520A60)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form1(void) { ByState(reinterpret_cast<U>(PartyAction9_Form1States), "PartyAction9_Form1 (0x520A60)"); }
 // original 0x520A80: its state 0 - PartyAction9_Form1State0Steps 0x65FD74 by +3.
-R1C_EXPORT void __cdecl PartyAction9_Form1State0(void) { ByStep(0x65FD74, "PartyAction9_Form1State0 (0x520A80)"); }
+R1C_EXPORT void __cdecl PartyAction9_Form1State0(void) { ByStep(reinterpret_cast<U>(PartyAction9_Form1State0Steps), "PartyAction9_Form1State0 (0x520A80)"); }
 
 // ===========================================================================
 // The state handlers

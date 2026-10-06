@@ -1236,6 +1236,14 @@ params = "char *dst, const char *fmt, ..."
 status = "evidence"
 evidence = "disasm 2026-09-19: builds a FILE on the stack with _ptr = _base = dst, _flag = 0x42 (_IOWRT|_IOSTRG), _cnt = 0x7FFFFFFF, and hands it with fmt and the address of the variadic arguments to the formatter - MSVC6 sprintf.c. Call sites pass printf-style format strings (the DAT-directory format in LoadDatFile 0x454590, the two-string format in File_Open 0x5A7380)."
 
+[[func]]
+pc = 0x5B9450
+name = "Crt_strncpy"
+ret = "char *"
+params = "char *dst, const char *src, unsigned n"
+status = "evidence"
+evidence = "capstone 2026-10-05 (round fourteen's end, round-14-review.md item 17), 0x5B9450..0x5B954D (0xFE bytes): MSVC's strncpy.asm - n 0 returns at once; byte copies until src is dword-aligned, each byte tested for NUL (test al, al) and n counted down; then dwords with the 0x7EFEFEFF NUL test, the dword holding the NUL stored masked (and edx, 0xFF / 0xFFFF); the rest of n filled with zeros (dwords, then bytes); eax = dst. A length-limited copy that stops at the NUL and pads, not memcpy: field_e2, battle_e1 and boss_harness had called it the CRT's memcpy. The C runtime's, not ours (no impl). docs/platform-read-pass.md section 3."
+
 [[data]]
 pc = 0x904EFC
 psx = 0x80143F00
@@ -103089,12 +103097,12 @@ evidence = "read 2026-10-04 (round fourteen group R1G): 23 rows of 36 bytes (Fis
 
 [[func]]
 pc = 0x5243D0
-name = "PartyAction16_FormAction"
+name = "PartyFormAction16_ByForm"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X5243D0..0X5243E2 (0x13 bytes): jmp [PartyAction16_FormActionForms 0x660030 + u16 Sprite_Current +0x2C * 4], unchecked by the original (ours aborts past the table's entries). Reached through Field_FormActions[16] (0x660A84), Field_FormActionState's call by the party set. Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X5243D0..0X5243E2 (0x13 bytes): jmp [PartyFormAction16_Forms 0x660030 + u16 Sprite_Current +0x2C * 4], unchecked by the original (ours aborts past the table's entries). Reached through Field_FormActions[16] (0x660A84), Field_FormActionState's call by the party set. Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x5243F0
@@ -103107,12 +103115,12 @@ evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last in
 
 [[func]]
 pc = 0x523FB0
-name = "PartyAction16_FormAction2"
+name = "PartyFormAction16_Form2"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X523FB0..0X523FC1 (0x12 bytes): jmp [PartyAction16_FormAction2States 0x660018 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyAction16_FormActionForms[2]. Hidden after R1E's 0x523D20. Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X523FB0..0X523FC1 (0x12 bytes): jmp [PartyFormAction16_Form2States 0x660018 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyFormAction16_Forms[2]. Hidden after R1E's 0x523D20. Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x523FD0
@@ -103206,12 +103214,12 @@ evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last in
 
 [[func]]
 pc = 0x524930
-name = "PartyAction17_FormAction"
+name = "PartyFormAction17_ByForm"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524930..0X524942 (0x13 bytes): jmp [PartyAction17_FormActionForms 0x66008C + u16 Sprite_Current +0x2C * 4], unchecked by the original (ours aborts past the table's entries). Reached through Field_FormActions[17] (0x660A88). Hidden after Effect_SpawnAtCell (no overlap). Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524930..0X524942 (0x13 bytes): jmp [PartyFormAction17_Forms 0x66008C + u16 Sprite_Current +0x2C * 4], unchecked by the original (ours aborts past the table's entries). Reached through Field_FormActions[17] (0x660A88). Hidden after Effect_SpawnAtCell (no overlap). Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x524950
@@ -103224,30 +103232,30 @@ evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last in
 
 [[func]]
 pc = 0x524410
-name = "PartyAction17_FormAction0"
+name = "PartyFormAction17_Form0"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524410..0X524421 (0x12 bytes): jmp [PartyAction17_FormAction0States 0x660048 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyAction17_FormActionForms[0]. Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524410..0X524421 (0x12 bytes): jmp [PartyFormAction17_Form0States 0x660048 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyFormAction17_Forms[0]. Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x524450
-name = "PartyAction17_FormAction1"
+name = "PartyFormAction17_Form1"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524450..0X524461 (0x12 bytes): jmp [PartyAction17_FormAction1States 0x660060 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyAction17_FormActionForms[1]. Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524450..0X524461 (0x12 bytes): jmp [PartyFormAction17_Form1States 0x660060 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyFormAction17_Forms[1]. Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x5248F0
-name = "PartyAction17_FormAction2"
+name = "PartyFormAction17_Form2"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X5248F0..0X524901 (0x12 bytes): jmp [PartyAction17_FormAction2States 0x660078 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyAction17_FormActionForms[2]. Hidden after Effect_SpawnAtCell (no overlap). Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X5248F0..0X524901 (0x12 bytes): jmp [PartyFormAction17_Form2States 0x660078 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyFormAction17_Forms[2]. Hidden after Effect_SpawnAtCell (no overlap). Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x524430
@@ -103278,12 +103286,12 @@ evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last in
 
 [[func]]
 pc = 0x525330
-name = "PartyAction18_FormAction"
+name = "PartyFormAction18_ByForm"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X525330..0X525342 (0x13 bytes): jmp [PartyAction18_FormActionForms 0x660104 + u16 Sprite_Current +0x2C * 4], unchecked by the original (ours aborts past the table's entries). Reached through Field_FormActions[18] (0x660A8C). Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X525330..0X525342 (0x13 bytes): jmp [PartyFormAction18_Forms 0x660104 + u16 Sprite_Current +0x2C * 4], unchecked by the original (ours aborts past the table's entries). Reached through Field_FormActions[18] (0x660A8C). Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x525350
@@ -103296,30 +103304,30 @@ evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last in
 
 [[func]]
 pc = 0x524970
-name = "PartyAction18_FormAction0"
+name = "PartyFormAction18_Form0"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524970..0X524981 (0x12 bytes): jmp [PartyAction18_FormAction0States 0x6600A4 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyAction18_FormActionForms[0]. Hidden after Effect_SpawnAtCell (no overlap). Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524970..0X524981 (0x12 bytes): jmp [PartyFormAction18_Form0States 0x6600A4 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyFormAction18_Forms[0]. Hidden after Effect_SpawnAtCell (no overlap). Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x524E50
-name = "PartyAction18_FormAction1"
+name = "PartyFormAction18_Form1"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524E50..0X524E61 (0x12 bytes): jmp [PartyAction18_FormAction1States 0x6600D8 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyAction18_FormActionForms[1]. Hidden after PartyAction_SideProbes (no overlap). Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X524E50..0X524E61 (0x12 bytes): jmp [PartyFormAction18_Form1States 0x6600D8 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyFormAction18_Forms[1]. Hidden after PartyAction_SideProbes (no overlap). Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x525270
-name = "PartyAction18_FormAction2"
+name = "PartyFormAction18_Form2"
 ret = "void"
 params = "void"
 impl = "src/game/rest_1f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X525270..0X525281 (0x12 bytes): jmp [PartyAction18_FormAction2States 0x6600F0 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyAction18_FormActionForms[2]. Fuzz only. docs/rest_1f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last instruction), 0X525270..0X525281 (0x12 bytes): jmp [PartyFormAction18_Form2States 0x6600F0 + Sprite_Current +2 * 4], unchecked by the original (ours aborts past the table's entries). PartyFormAction18_Forms[2]. Fuzz only. docs/rest_1f.md."
 
 [[func]]
 pc = 0x524990
@@ -103530,11 +103538,11 @@ evidence = "disasm 2026-10-04 (round fourteen group R1F, capstone to the last in
 
 [[data]]
 pc = 0x660018
-name = "PartyAction16_FormAction2States"
+name = "PartyFormAction16_Form2States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction16_FormAction2 0x523FB0 by +2 jmp, unchecked: 0x520E90, 0x51FC80, PartyAction_ScriptEnd; PartyAction16_Form2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction16_Form2 0x523FB0 by +2 jmp, unchecked: 0x520E90, 0x51FC80, PartyAction_ScriptEnd; PartyAction16_Form2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660024
@@ -103542,15 +103550,15 @@ name = "PartyAction16_Form2States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction16_Form2 0x523FD0 by +2 jmp, unchecked: PartyAction16_Form2Begin, PartyAction16_Form2Resolve, PartyAction_Finish; PartyAction16_FormActionForms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction16_Form2 0x523FD0 by +2 jmp, unchecked: PartyAction16_Form2Begin, PartyAction16_Form2Resolve, PartyAction_Finish; PartyFormAction16_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660030
-name = "PartyAction16_FormActionForms"
+name = "PartyFormAction16_Forms"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction16_FormAction 0x5243D0 by u16 +0x2C jmp, unchecked: 0x5239B0, 0x523AE0, PartyAction16_FormAction2; PartyAction16_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction16_ByForm 0x5243D0 by u16 +0x2C jmp, unchecked: 0x5239B0, 0x523AE0, PartyFormAction16_Form2; PartyAction16_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x66003C
@@ -103558,15 +103566,15 @@ name = "PartyAction16_Forms"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction16_ByForm 0x5243F0 by u16 +0x2C jmp, unchecked: 0x5239D0, 0x523B00, PartyAction16_Form2; PartyAction17_FormAction0States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction16_ByForm 0x5243F0 by u16 +0x2C jmp, unchecked: 0x5239D0, 0x523B00, PartyAction16_Form2; PartyFormAction17_Form0States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660048
-name = "PartyAction17_FormAction0States"
+name = "PartyFormAction17_Form0States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_FormAction0 0x524410 by +2 jmp, unchecked: 0x520840, 0x51FC80, PartyAction_ScriptEnd; PartyAction17_Form0States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction17_Form0 0x524410 by +2 jmp, unchecked: 0x520840, 0x51FC80, PartyAction_ScriptEnd; PartyAction17_Form0States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660054
@@ -103574,15 +103582,15 @@ name = "PartyAction17_Form0States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_Form0 0x524430 by +2 jmp, unchecked: 0x5239F0, 0x51DE20, 0x520350; PartyAction17_FormAction1States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_Form0 0x524430 by +2 jmp, unchecked: 0x5239F0, 0x51DE20, 0x520350; PartyFormAction17_Form1States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660060
-name = "PartyAction17_FormAction1States"
+name = "PartyFormAction17_Form1States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_FormAction1 0x524450 by +2 jmp, unchecked: 0x520E90, 0x51FC80, PartyAction_ScriptEnd; PartyAction17_Form1States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction17_Form1 0x524450 by +2 jmp, unchecked: 0x520E90, 0x51FC80, PartyAction_ScriptEnd; PartyAction17_Form1States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x66006C
@@ -103590,15 +103598,15 @@ name = "PartyAction17_Form1States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_Form1 0x524470 by +2 jmp, unchecked: PartyAction17_Form1Begin, PartyAction17_Form1Resolve, PartyAction_Finish; PartyAction17_FormAction2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_Form1 0x524470 by +2 jmp, unchecked: PartyAction17_Form1Begin, PartyAction17_Form1Resolve, PartyAction_Finish; PartyFormAction17_Form2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660078
-name = "PartyAction17_FormAction2States"
+name = "PartyFormAction17_Form2States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_FormAction2 0x5248F0 by +2 jmp, unchecked: 0x520840, 0x51C490, PartyAction_ScriptEnd; PartyAction17_Form2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction17_Form2 0x5248F0 by +2 jmp, unchecked: 0x520840, 0x51C490, PartyAction_ScriptEnd; PartyAction17_Form2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660084
@@ -103606,15 +103614,15 @@ name = "PartyAction17_Form2States"
 ctype = "unsigned long"
 count = 2
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_Form2 0x524910 by +2 jmp, unchecked: PartyAction_SpawnKind1B, 0x521A20; PartyAction17_FormActionForms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_Form2 0x524910 by +2 jmp, unchecked: PartyAction_SpawnKind1B, 0x521A20; PartyFormAction17_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x66008C
-name = "PartyAction17_FormActionForms"
+name = "PartyFormAction17_Forms"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_FormAction 0x524930 by u16 +0x2C jmp, unchecked: PartyAction17_FormAction0, PartyAction17_FormAction1, PartyAction17_FormAction2; PartyAction17_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction17_ByForm 0x524930 by u16 +0x2C jmp, unchecked: PartyFormAction17_Form0, PartyFormAction17_Form1, PartyFormAction17_Form2; PartyAction17_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660098
@@ -103622,15 +103630,15 @@ name = "PartyAction17_Forms"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_ByForm 0x524950 by u16 +0x2C jmp, unchecked: PartyAction17_Form0, PartyAction17_Form1, PartyAction17_Form2; PartyAction18_FormAction0States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction17_ByForm 0x524950 by u16 +0x2C jmp, unchecked: PartyAction17_Form0, PartyAction17_Form1, PartyAction17_Form2; PartyFormAction18_Form0States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x6600A4
-name = "PartyAction18_FormAction0States"
+name = "PartyFormAction18_Form0States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_FormAction0 0x524970 by +2 jmp, unchecked: 0x520840, 0x51FC80, BossOp_ScriptTick (a jmp to Sprite_ScriptTick); PartyAction18_Form0Subs follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction18_Form0 0x524970 by +2 jmp, unchecked: 0x520840, 0x51FC80, BossOp_ScriptTick (a jmp to Sprite_ScriptTick); PartyAction18_Form0Subs follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x6600B0
@@ -103654,15 +103662,15 @@ name = "PartyAction18_Form0Sub1Steps"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_Form0Sub1 0x524D40 by +3 jmp, unchecked: PartyAction18_ProbeStart, PartyAction_EffectCountdown, 0x51D6D0; PartyAction18_FormAction1States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_Form0Sub1 0x524D40 by +3 jmp, unchecked: PartyAction18_ProbeStart, PartyAction_EffectCountdown, 0x51D6D0; PartyFormAction18_Form1States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x6600D8
-name = "PartyAction18_FormAction1States"
+name = "PartyFormAction18_Form1States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_FormAction1 0x524E50 by +2 jmp, unchecked: 0x520E90, 0x51FC80, PartyAction_ScriptEnd; PartyAction18_Form1States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction18_Form1 0x524E50 by +2 jmp, unchecked: 0x520E90, 0x51FC80, PartyAction_ScriptEnd; PartyAction18_Form1States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x6600E4
@@ -103670,15 +103678,15 @@ name = "PartyAction18_Form1States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_Form1 0x524E70 by +2 jmp, unchecked: PartyAction18_Form1Begin, PartyAction18_Form1Resolve, PartyAction_Finish; PartyAction18_FormAction2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_Form1 0x524E70 by +2 jmp, unchecked: PartyAction18_Form1Begin, PartyAction18_Form1Resolve, PartyAction_Finish; PartyFormAction18_Form2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x6600F0
-name = "PartyAction18_FormAction2States"
+name = "PartyFormAction18_Form2States"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_FormAction2 0x525270 by +2 jmp, unchecked: 0x520840, 0x51C490, PartyAction_ScriptEnd; PartyAction18_Form2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction18_Form2 0x525270 by +2 jmp, unchecked: 0x520840, 0x51C490, PartyAction_ScriptEnd; PartyAction18_Form2States follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x6600FC
@@ -103686,15 +103694,15 @@ name = "PartyAction18_Form2States"
 ctype = "unsigned long"
 count = 2
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_Form2 0x525290 by +2 jmp, unchecked: PartyAction_SpawnKind1B, 0x521A20; PartyAction18_FormActionForms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_Form2 0x525290 by +2 jmp, unchecked: PartyAction_SpawnKind1B, 0x521A20; PartyFormAction18_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660104
-name = "PartyAction18_FormActionForms"
+name = "PartyFormAction18_Forms"
 ctype = "unsigned long"
 count = 3
 status = "evidence"
-evidence = "read 2026-10-04 (round fourteen group R1F): PartyAction18_FormAction 0x525330 by u16 +0x2C jmp, unchecked: PartyAction18_FormAction0, PartyAction18_FormAction1, PartyAction18_FormAction2; PartyAction18_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
+evidence = "read 2026-10-04 (round fourteen group R1F): PartyFormAction18_ByForm 0x525330 by u16 +0x2C jmp, unchecked: PartyFormAction18_Form0, PartyFormAction18_Form1, PartyFormAction18_Form2; PartyAction18_Forms follows - the count is the run of code pointers to the next table a dispatcher reads, checked by hand. docs/rest_1f.md."
 
 [[data]]
 pc = 0x660110
@@ -105639,7 +105647,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2e.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B750..0x58B893 (0x144 bytes): FieldItemsStates 6 (0x667340): the item's name (Item_NamePtr) to text record 0; the yes / no hand by s8 0x929F0B, help 0x1A; 0x2000 or 0x8000 pressed flips the answer (sound 0x101); confirm with yes: sound 0x104, the item's id and count cleared, 0x803341 = 0xFF, the state down 3; confirm with no or cancel: sound 0x106, the same without clearing. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2E, capstone to the last instruction), 0x58B750..0x58B893 (0x144 bytes): FieldMenuItems_States 6 (0x667340): the item's name (Item_NamePtr) to text record 0; the yes / no hand by s8 0x929F0B, help 0x1A; 0x2000 or 0x8000 pressed flips the answer (sound 0x101); confirm with yes: sound 0x104, the item's id and count cleared, 0x803341 = 0xFF, the state down 3; confirm with no or cancel: sound 0x106, the same without clearing. No PSX twin in analysis/pairs_propagated.json. docs/rest_2e.md."
 
 [[func]]
 pc = 0x58B8A0
@@ -106691,7 +106699,7 @@ ret = "void"
 params = "void"
 impl = "src/game/rest_2f.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F370..0x58F75E (0x3EF bytes): TacticsFormation_Steps[1], the formation grid: records 19 (the cell picked, 0x6BDFC6 / C8, 0x7F none) and 20 (the cursor 0x6BDFC9 / CA) placed from the 8-byte cells 0x667450 [3 row + col]; records 12..17 +0xC cleared and the set cell's (11 + col + 2 row of 0x6BDFC5 / C7) +0xC = 1 shl row on column 0, else 7; confirm sets the formation (column 1..2), picks a cell or swaps the two party bytes 0x904065 + row through 0x58BD50; cancel drops the pick, leaves the menu (0x929F10 1: Game_Step + 1, step 6) or writes 0x904060 and sends records 12..17 of kind 0xB out; the cursor by Input_AutoRepeat (0x5000 rows, 0xA000 columns while a cell is picked) wrapping over 0x6BDFBC's open cells; sound 0x101 when it moved. docs/rest_2f.md."
+evidence = "disasm 2026-10-04 (round fourteen group R2F), 0x58F370..0x58F75E (0x3EF bytes): TacticsFormation_Steps[1], the formation grid: records 19 (the cell picked, 0x6BDFC6 / C8, 0x7F none) and 20 (the cursor 0x6BDFC9 / CA) placed from the 8-byte cells 0x667450 [3 row + col]; records 12..17 +0xC cleared and the set cell's (11 + col + 2 row of 0x6BDFC5 / C7) +0xC = 1 shl row on column 0, else 7; confirm sets the formation (column 1..2), picks a cell or swaps the two party bytes 0x904065 + row through 0x58BD50; cancel drops the pick, leaves the menu (0x929F10 1: Game_Step + 1, step 6) or writes 0x904060 and sends records 12..17 of kind 0xB out; the cursor by Input_AutoRepeat (0x5000 rows, 0xA000 columns while 0x6BDFC6 is not 0: with no pick, since a pick is taken only on column 0; corrected 2026-10-05, round-14-review.md item 12) wrapping over 0x6BDFBC's open cells; sound 0x101 when it moved. docs/rest_2f.md."
 
 [[func]]
 pc = 0x58F760
