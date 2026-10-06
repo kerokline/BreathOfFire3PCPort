@@ -9647,6 +9647,15 @@ status = "hypothesis"
 evidence = "disasm 2026-09-23, 0x5917A0..0x5917FD plus its 4-entry jump table to 0x59180F (0x70 bytes): the equipment record's byte + 0x10 (categories 1..3; for armour loaded into al over the id * 13 of the address arithmetic, so eax's upper bytes are that); otherwise eax = (category's low byte - 1) or 0xFF. The caller 0x5754A3 tests a bit 1 shl n of it - who may equip, by that use. 12 call sites."
 
 [[func]]
+pc = 0x591810
+name = "Item_UseFlags"
+psx = 0x80166918
+ret = "unsigned"
+params = "unsigned category, unsigned item"
+status = "hypothesis"
+evidence = "disasm 2026-10-06 (the hidden-start scan, tools/pe_jumptables.py: a direct call target no catalogue held, reached by its 18 call sites 0x436857 .. 0x57DA27 from the flows of known starts), 0x591810..0x591884 and its 4-entry jump table 0x591888..0x591897 (0x88 bytes), cdecl, no calls: Item_EquipMask's shape one byte further on - by the category's low byte, 1: the byte at 0x657461 + 28 * the item's low byte, 2: 0x657D79 + 26 * id, 3: 0x658461 + 24 * id, 4: 0, else (0 and above 4): 0x656B38 + 22 * id, the consumable's flag byte. Only al is the answer (eax's upper bytes are left from the address arithmetic for 2 and the default). Read by its callers as the item's flag byte (bits 0x10 / 0x20 / 0x40 / 0x80 choose the target side and the state, docs/battle_menu_states.md). Hidden because Item_EquipMask's table 0x591800..0x59180F comes before it with no padding: pe_funcs.py's linear sweep falls out of step in the table and decodes an instruction across 0x591810, so the call target was dropped, and pe_hidden.py wants a ret / jmp before padding. PSX twin by docs/battle_sprites.md section 4 (0x80166918; the sibling's names/functions.toml calls it for the item flags). Capcom's: keyed by address in the scenario and boss harnesses. docs/hidden-start-scan.md."
+
+[[func]]
 pc = 0x5918E0
 name = "KeyItem_Has"
 psx = 0x80166AD0
@@ -79587,6 +79596,14 @@ params = "unsigned x, unsigned z"
 impl = "src/game/field_e2.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-29 (round twelve group FE2, capstone to the last instruction), 0x5728D0..0x5729F7 (0x128 bytes) cdecl: AreaMap_Bytes[x + z * width] = 0; the view cell (x + 1 - MapView_Origin x, z - its z) through MapView_Row / MapView_Column into MapView_Cells, its records (AreaMap_CellBase) of kind 3, 9 or 0x27 retyped 0x30. 22 callers (FC2 0x46D180 four times, Field_CellPickup, 17 area functions). PSX twin 0x80155E74 gap4, a hypothesis. docs/field_e2.md."
+
+[[func]]
+pc = 0x593950
+name = "ItemTrade_Dispatch"
+ret = "void"
+params = "void"
+status = "hypothesis"
+evidence = "disasm 2026-10-06 (the hidden-start scan, tools/pe_jumptables.py: reached only by GameMode8_TradeStep's tail jmp at 0x52CF30), 0x593950..0x59395D (0xE bytes): xor eax, eax; mov al, byte 0x93985C; jmp [ItemTrade_States + eax * 4], unchecked. The trade screen's state dispatcher (docs/field_e2.md, docs/effect_1g.md: 'nobody's'). Hidden in Sprite_ClutWord's catalogue extent after that function's jump table 0x593938..0x593947 and eight nop: the linear sweep falls out of step in the table (a five-byte call decoded across the padding), so pe_hidden.py saw no ret before it (docs/sprite-draw-order.md section 14 described the miss). Capcom's: keyed by address in the scenario harness's kEffectStd. docs/hidden-start-scan.md."
 
 [[func]]
 pc = 0x593960
