@@ -90,6 +90,20 @@ where the reading behind it is. Nothing here is a divergence until it is in
   what the cell loop skips), widen it by the columns like the others
   (DIV-0041's section 3c amendment), capture before and after for the owner.
 
+- **The Volt's EXP bonus did not appear** (the owner, 2026-10-06 night;
+  screenshots `analysis/shots/owner_reports/volt_fight_menu_1006.webp` and
+  `volt_fight_result_78exp_1006.webp`): a field fight against three Volts and
+  one Thunder, Nina died, the result screen "You gain 78 EXP!" with 78 on each
+  of the three rows. The owner's reading - their recollection of the game's
+  rules, to be verified against the code: a Volt hit by an electric attack
+  should change mode and give extra EXP; a Thunder gives about 16; expected
+  about 84 x 3 + 16 = 308 with the bonus, 156 without, and 78 x 2 = 156. The
+  first report (2026-10-02, HANDOFF item 00000) was held for a route; this is
+  its substitute. **Staged for tomorrow** as a read of the reward path and
+  the mode-change op against the PSX twin, then a route for the owner to
+  record (brief `plat2/brief_volt.md` in the session-7d0c9683 scratchpad);
+  not launched tonight (the PC goes off).
+
 ## Decisions the measurements raised
 
 - **The base tree's version of the Western data rows** ([`region-diff.md`](region-diff.md),
