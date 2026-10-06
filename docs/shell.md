@@ -126,9 +126,9 @@ the esp is the original's.
 
 **`Gfx_InitBufferBlock`** (`0x4FD200`): `Gpu_ClearOTagR(block + 0x70, 8)`,
 then the bytes `+0x2C` = 1 and `+0x2D..+0x2F` = 0 - the DRAWENV's `isbg` and
-its clear colour. So both blocks clear to black every frame
+its clear colour. So both blocks start out clearing to black
 ([`display-env.md`](display-env.md): `Gfx_Present` clears when `isbg` is
-set).
+set); whether later code changes either was not read here.
 
 **`Gfx_LinkOTags`.** For slot i of 8: `Gpu_AddPrim(Gfx_CurrentEnv + 0x70 +
 4i, &Gfx_OtHeads[Gfx_BufferIndex * 8 + i], Gfx_OtPointers[i])` - the frame's
