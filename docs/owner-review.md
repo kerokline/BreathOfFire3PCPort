@@ -96,7 +96,21 @@ where the reading behind it is. Nothing here is a divergence until it is in
   72 cells blocked and the 8 placement cells closed by coordinate, a
   divergence with the later discs as precedent, for every player. Area 4 is
   in the attract demo, so the state hash's reference runs want the switch off.
-  **Waiting on the owner's choice of form.**
+  The owner chose code; **built as DIV-0080** (`BOF3X_AREA4_WALLS`, the table
+  proven against the US and German discs offline). **Owed the owner's eye:**
+  in the minecart area, walk the raised strip's east edge and the corridor's
+  bottom edge - blocked with the fix, open with `BOF3X_AREA4_WALLS=0`.
+- **Stallion's PSP recolour as an option** ([`psp-stallion.md`](psp-stallion.md)):
+  palettes only (two rows in areas 67 and 166, plus the three variants), the
+  fight's code identical. A toggle is a palette layer from the player's own
+  PSP disc (about a day, plus a second overlay prefix in `LoadDatFile`) and
+  the renamed attack hours on top through the name table. The agent
+  recommends an option, not a default. **The renders are in
+  `analysis/stallion/`** (`AREA067_stallion_cells_jp_left_psp_right.png`,
+  `AREA166_palettes0to3_jp_left_psp_right.png`) for the owner to look at;
+  neither recipe reaches the fight (fights 13 and 16; Stallion is 24), so a
+  route is the owner's to record. **The Holy Mantle lead is refuted**: nothing
+  to toggle.
 
 ## Debt 3: measured by a log line, review the log
 

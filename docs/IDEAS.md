@@ -1265,15 +1265,15 @@ guess at where the difference would live, to be corrected by the measurement.
 | P1 | Angel Tower's block-puzzle room: one passage is narrower, and random battles can no longer be used there to skip the puzzle | the area's map and encounter data | **data changes in 11 areas** (2026-10-06, [`region-diff.md`](region-diff.md)), none identifiable as Angel Tower by name; the code half unread |
 | P2 | The Desert: a random encounter no longer turns Ryu to a random heading | field code, or the area's script | unmeasured |
 | P3 | The item duplication glitch no longer works | menu / inventory code | unmeasured; whether the PC port has the glitch is also unmeasured |
-| P4 | The Holy Mantle suppresses encounters better while walking straight, and a turn after a long walk brings one on | the encounter-step code | unmeasured; the wiki's own wording is tentative |
+| P4 | The Holy Mantle suppresses encounters better while walking straight, and a turn after a long walk brings one on | the encounter-step code | **refuted** (2026-10-06, [`psp-stallion.md`](psp-stallion.md)): the Mantle's record and every code path that reads it identical on PSX and both PSPs; the PSP's one encounter-path change (the render-load guard removed) applies to every encounter and the PC never trips it |
 | P5 | The Factory's electric room runs slow throughout, which makes its lever sequence easier | unknown: a performance effect or a deliberate change, the wiki does not know either | unmeasured |
 
 **Content - data changes, the "copyright" set:**
 
 | # | Claim | Where it would live | Status |
 |---|---|---|---|
-| P6 | Stallion (Balio and Sunder fused) is recoloured, brown and blue | the boss's palette, an image section | **data consistent** (2026-10-06, [`region-diff.md`](region-diff.md)): area 67's palettes and page change; colours not rendered |
-| P7 | Stallion's signature attack is renamed | the ability name table | **not reachable in data** (2026-10-06, [`region-diff.md`](region-diff.md)): the PSP's names live in its executable; the code half |
+| P6 | Stallion (Balio and Sunder fused) is recoloured, brown and blue | the boss's palette, an image section | **confirmed, palettes only** (2026-10-06, [`psp-stallion.md`](psp-stallion.md)): two 16-entry rows in areas 67 and 166 (a pale ramp with red accents to a brown ramp with blue-grey), plus the three palette-swapped variants in 166; sprite pixels, the enemy table, the AI rows and the BOSS024 module identical. A toggle: a palette layer from the player's PSP disc, about a day; an option, not a default |
+| P7 | Stallion's signature attack is renamed | the ability name table | **confirmed for the English PSP** (2026-10-06, [`psp-stallion.md`](psp-stallion.md)): ability 115's name in the EU executable's table, numbers unchanged; the PC's name lives in the table the English overlay already rewrites (DIV-0008) - hours on P6's layer |
 | P8 | One frame of Ryu's ascension animation, which showed another publisher's character, is removed | an effect's image or frame table | candidate rows found, not rendered (2026-10-06, [`region-diff.md`](region-diff.md)) |
 | P9 | One character's name is respelled (Hachio) | text | **confirmed** (2026-10-06, [`region-diff.md`](region-diff.md)) |
 | P10 | Some music tracks differ slightly in instrumentation | the sequence or sound-bank data, or the PSP's player | half settled (2026-10-06, [`region-diff.md`](region-diff.md)): every sample body is the PSX's, re-encoded; instrument and sequence data not compared (A's music investigation reads them) |
@@ -1337,6 +1337,12 @@ language layer; changes nobody listed: 653 texture tiles blanked and 301
 redrawn, 53 palette changes, the shoulder-button labels, an empty battle
 message filled, 11 map-data changes. The code half (P1..P5) is the next
 step, and the renders that would settle P6 / P8 / P13._
+_(2026-10-06, evening) P6 and P7 confirmed and P4 refuted by reading the
+PSP executables ([`psp-stallion.md`](psp-stallion.md)); the boss module
+and the encounter paths are identical compiles of the PSX's. Unlisted:
+three other ability renames, four item renames, one consumable flag bit
+(consumable 87) in the EU executable. The region diff's one collision fix
+is DIV-0080._
 
 ## I33 — Productisation: from our own executable to a finished product
 

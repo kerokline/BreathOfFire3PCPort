@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 79 entries, DIV-0001..0079, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 80 entries, DIV-0001..0080, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4178,3 +4178,49 @@ designed in rather than bolted on.
   banner's outline - the only lines on the frame; nothing else moved.
 - **Reversible?** `BOF3X_LINES=0` leaves the switch off (the strip);
   `BOF3X_ORIGINAL=D3d_DrawLineF2,...` runs Capcom's handler.
+
+### Dauna Mine's minecart map is walled as every later release walled it
+
+- **ID:** DIV-0080
+- **Date:** 2026-10-06
+- **Subsystem:** the area data as loaded (`src/game/area4_walls.cpp`, run at
+  the end of `LoadDatFile` in `src/game/dat_load.cpp` for `AREA004.DAT`; the
+  cell plane at `AreaMap_Header` `0x8CB580`'s block, the battle placement
+  nibble map at `0x8C3D80`)
+- **Tier:** Intent - the owner's decision, 2026-10-06: "if it looks like a bug
+  fix, it's probably worth keeping the change as the default option", and
+  "make the code change so that it works the same regardless of source".
+- **Original behaviour:** the PC port carries the Japanese disc's map of area
+  4 (Dauna Mine's minecart area), in which 72 cells along the raised strip's
+  east edge (x 28, z 9..30 and 35..65, the doorway at z 32..33 open), its
+  west side's north end (x 25, z 9..11) and the corridor's bottom edge (z 71,
+  x 7..22) are open floor between wall stubs, and 8 of those cells are open
+  to battle placement. Every later release - the US, French and German PSX
+  discs and both PSP discs - walls those cells (`0x10`, the value the
+  neighbouring stubs already carry) and the PSX discs close the 8 placement
+  cells; the PSP took the walls but not the placement half
+  ([`region-diff.md`](region-diff.md) sections 8 and 10).
+- **New behaviour:** with `BOF3X_AREA4_WALLS` on (the default; armed after
+  every module's self-test), each load of `AREA004.DAT` sets the 72 cells to
+  `0x10` and the 8 placement nibbles to 0, from a coordinate table in our
+  code, guarded: only when the block is 90 x 88 and every cell still holds
+  JP's value; a map that already has the walls is left alone with a log
+  line. The later discs' 30-cell re-texture of the same strip is **not**
+  taken: it is Capcom's texture records, not expressible by coordinate.
+- **Rationale:** a collision fix every later build made; applied by
+  coordinate so the PC install, the JP disc and any later disc give the same
+  area - the engine / data split keeps the bytes the player's
+  ([`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 5).
+- **Also in the PSX version?** The JP disc has the open cells; every later
+  disc has the walls. This follows the later discs.
+- **Verification:** `tools/region_read.py fix` parses the table out of the
+  C++ source, applies it to the JP disc's sections 8 and 10 and compares with
+  the US and German discs: the cell bytes and the placement map identical,
+  the 920 remaining differences all in the re-texture not taken.
+  `'*'` narrow at the agent's tip, 0 mismatches (the switch is armed after
+  the self-tests). **Not seen live:** the owner's walk of the strip's east
+  and bottom edges, blocked with the fix and open with `BOF3X_AREA4_WALLS=0`.
+  Area 4 plays twice in the attract cycle, so state-hash reference runs want
+  the switch off; whether the demo's scripted moves touch the cells is
+  checked by an attract run on against off.
+- **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded.
