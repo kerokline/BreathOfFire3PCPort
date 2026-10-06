@@ -11,4 +11,3 @@ void SoundRest_Inject();
 extern "C" void __cdecl Sound_StopMusic(void);
 extern "C" void __cdecl Sound_ResumeAll(void);
 extern "C" int __cdecl Sound_MusicPlaying(void);
-extern "C" void __cdecl Sound_PauseAll(void);
