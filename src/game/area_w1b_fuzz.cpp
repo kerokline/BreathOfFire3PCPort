@@ -128,7 +128,7 @@ const ah::Callee kCallees42[] = {
     {"Area42_CheckAll", 0x4068D0, 0x4068D0, 0, {}, ah::Answer::kPhase, 0, 0},
     {"window 0x40E750", kDrawWindow, kDrawWindow, 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {"free object 0x57CD90", kFreeObject, kFreeObject, 0, {}, ah::Answer::kByte, 0xFF, 0x1D},
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     // its 13-byte operand logged
     {"EventOp_9x", bof3::addr::EventOp_9x, KeyOf(&::EventOp_9x), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {13}},
     kFindFree, kSet40, kClear40,

@@ -260,7 +260,7 @@ const ah::Callee kCallees[] = {
     {W3D_OURS(EventOp_Bx), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &ZoneEffect},
     {W3D_OURS(MoveCmd_OpF7), 4, {kAll, kAll, kU8, kAll}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     {W3D_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
-    {W3D_THEIRS(Crt_sprintf), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &SprintfEffect},
+    {W3D_OURS(Crt_sprintf), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &SprintfEffect},
     {W3D_OURS(KeyItem_Add), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     {W3D_OURS(Sound_StopMusic), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W3D_OURS(Sound_LoadStream), 1, {kAll}, ah::Answer::kGarbage, 0, 0},

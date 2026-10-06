@@ -259,7 +259,7 @@ const sh::Callee kCallees[] = {
     {G_OURS(Input_AutoRepeat), 1, {kAll}, kG, 0, 0, {}, &RepeatEffect},
     {G_OURS(Item_NamePtr), 2, {kB, kB}, kG, 0, 0, {}, &NameEffect},   // the bytes of dwords with leftovers above
     {G_OURS(Inventory_Remove), 3, {kB, kB, kB}, kF, 0, 0},           // each argument's byte; a fourth 0 pushed
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kAll, kAll, kAll}, kG, 0, 0, {0, sh::kDerefString, 0}, &SprintfEffect,
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, kAll, kAll}, kG, 0, 0, {0, sh::kDerefString, 0}, &SprintfEffect,
      nullptr, true},
 };
 #undef G_OURS

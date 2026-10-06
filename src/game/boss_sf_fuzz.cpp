@@ -120,7 +120,7 @@ const bh::Callee kCallees[] = {
      &ClearBitEffect},
     {"Battle_RemoveFromTurnOrder", ::bof3::addr::Battle_RemoveFromTurnOrder, KeyOf(&::Battle_RemoveFromTurnOrder), 1, {kU8},
      bh::Answer::kGarbage, 0, 0, {}, &bh::TurnOrderEffect},
-    {"Crt_sprintf", KeyOf(Crt_sprintf), KeyOf(Crt_sprintf), 3, {kAll, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"AreaMap_Elevation", ::bof3::addr::AreaMap_Elevation, KeyOf(&::AreaMap_Elevation), 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0, {},
      &GroundEffect},
     {"Battle_LoadSoundByKey", ::bof3::addr::Battle_LoadSoundByKey, KeyOf(&::Battle_LoadSoundByKey), 2, {kU8, kU8}, bh::Answer::kFlag, 0, 0},

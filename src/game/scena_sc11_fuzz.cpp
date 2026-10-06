@@ -191,7 +191,7 @@ const sh::Callee kCallees[] = {
     {SC11_OURS(Sprite_SetAnimationBank), 1, {kU16}, sh::Answer::kGarbage, 0, 0},   // answer unread
     {SC11_OURS(Sprite_SetAnimation), 1, {kU8}, sh::Answer::kGarbage, 0, 0},
     {SC11_OURS(Scena11_EffectAnimate), 1, {kU8}, sh::Answer::kGarbage, 0, 0},     // ours, called by its E8
-    {SC11_THEIRS(Rand), 0, {}, sh::Answer::kRand, 0, 0},
+    {SC11_OURS(Rand), 0, {}, sh::Answer::kRand, 0, 0},
     // messages
     {SC11_OURS(Msg_OpenScript), 1, {kU16}, sh::Answer::kGarbage, 0, 0},
     {SC11_OURS(Msg_OpenSystem), 1, {kAll}, sh::Answer::kGarbage, 0, 0},

@@ -163,7 +163,7 @@ const sh::Callee kCallees[] = {
     // Sprite_FaceDirection reads its argument's byte; the rolls push eax with
     // Rand's upper bytes, the ends edx / eax with whatever was there
     {R2A_OURS(Sprite_FaceDirection), 1, {kU8}, kG, 0, 0, {}, &FxOnCurrent},
-    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, sh::Answer::kRand, 0, 0},   // Capcom's CRT rand, not ours
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0},   // Capcom's CRT rand, not ours
     // the group's own, called by E8: the spawns read the argument's byte (the
     // rolls push the member's index as a whole dword, `mov cl, [esp + 4]`)
     {R2A_OURS(LinkedObject_SpawnEffect19), 1, {kU8}, kG, 0, 0, {}, &FxOnCurrent},

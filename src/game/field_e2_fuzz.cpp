@@ -425,7 +425,7 @@ const sh::Callee kFixed[] = {
     {FE2_OURS(Field_LeaderDirection), 0, {}, kF, 0, 0},
     {FE2_OURS(Field_LeaderStepTarget), 0, {}, kF, 0, 0},
     {FE2_OURS(Field_JumpCheckHeight), 0, {}, kG, 0, 0},
-    {"Crt_copy_5B9450", 0x5B9450, 0x5B9450, 3, {kAll, kAll, kAll}, sh::Answer::kThrough, 0, 0},
+    {FE2_OURS(Crt_strncpy), 3, {kAll, kAll, kAll}, sh::Answer::kThrough, 0, 0},
     {FE2_OURS(Task_Sleep), 1, {kU16}, kG, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&SleepEscape)},
     // the GTE: a pointer into the caller's frame not compared by value, an
     // SVECTOR hashed without its fourth word, the outputs written

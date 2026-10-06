@@ -374,7 +374,7 @@ extern "C" void __cdecl Area130_TailGiveItem(void) {
         if (pick <= 5) {
             const unsigned category = kItems[pick][0], item = kItems[pick][1];
             unsigned char* const name = AH_CALL(Item_NamePtr)(category, item);
-            AH_AT(char* (__cdecl*)(char*, const char*, unsigned), at::kStrncpy)(
+            AH_CALL(Crt_strncpy)(
                 reinterpret_cast<char*>(Mem(at::kTextRecords)), reinterpret_cast<const char*>(name), 0x10);
             AH_CALL(Inventory_Add)(category, item, 1);
         }

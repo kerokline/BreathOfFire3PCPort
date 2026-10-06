@@ -320,7 +320,7 @@ const mh::Callee kCallees[] = {
     {S38_OURS(BattleActor_UpdateScreenXY), 0, {}, kG, 0, 0, {}, &NoteSprite},
     {S38_OURS(MagicFx_CenterOnSide), 0, {}, kG, 0, 0, {}, &NoteSprite},
     {S38_OURS(MagicFx_PushActorMatrix), 0, {}, kG, 0, 0, {}, &NoteSprite},
-    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, mh::Answer::kRand, 0, 0, {}, &StirScratch},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, mh::Answer::kRand, 0, 0, {}, &StirScratch},
     // the sprite and battle calls
     {S38_OURS(Sprite_ScriptTick), 0, {}, mh::Answer::kFlag, 0, 0, {}, &NoteSprite},
     {S38_OURS(Sprite_SetAnimation), 1, {kU8}, kG, 0, 0, {}, &NoteSprite},

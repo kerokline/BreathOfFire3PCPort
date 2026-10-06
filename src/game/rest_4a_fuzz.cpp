@@ -274,11 +274,11 @@ const sh::Callee kCallees[] = {
     {R4A_OURS(Battle_ActorIsOut), 1, {0xFF}, kFl, 0, 0, {}, &IsOutEffect},   // reads the low byte (its evidence)
     {R4A_OURS(Battle_DefaultTarget), 1, {0xFF}, kG, 0, 0},
     {R4A_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},   // the standard row, louder                   // reads the low byte (its evidence)
-    {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
 };
 const sh::Callee kEnemyCallees[] = {
     {R4A_OURS(Battle_ActorIsOut), 1, {0xFF}, kG, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&LevelledIsOut)},
-    {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
 };
 #undef R4A_OURS
 

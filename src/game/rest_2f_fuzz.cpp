@@ -257,7 +257,7 @@ const sh::Callee kCallees[] = {
     {G_OURS(Menu_DrawEquipCompare), 6, {0xFF, 0xFFFF, 0xFFFF, kAll, 0xFF, kAll}, kG, 0, 0},   // field_o.cpp: no_preview a byte
     {G_OURS(Inventory_CountUsed), 1, {0xFF}, kG, 0, 0},                                       // char_stats.cpp: category & 0xFF
     // Capcom's, re-listed: the room (the fourth word) logged
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {0, 16, 0, 0}, &SprintfEffect},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {0, 16, 0, 0}, &SprintfEffect},
     // the field-standard row's swap, louder: the members rows moved too (SwapEffect)
     {"0x58BD50", kSwapBytes, kSwapBytes, 2, {kAll, kAll}, kG, 0, 0, {}, &SwapEffect, nullptr, true},
     // the standard row, louder while TacticsMembers_Pick runs (SoundEffect)

@@ -357,7 +357,7 @@ const sh::Callee kCallees[] = {
     {R4D_OURS(Menu_DrawGreyHLine), 4, {0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},           // rest_2b.cpp: shorts, a word, a byte
     {R4D_OURS(BareRet), 0, {}, kG, 0, 0, {}, &BareRetMove},                                        // a bare ret: reads none
     {R4D_OURS(BareRetZero), 0, {}, kG, 0, 0},                                               // xor al, al: reads none
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 5, {kW, kW, 0, 0, 0}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 5, {kW, kW, 0, 0, 0}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
 };
 #undef R4D_OURS
 
