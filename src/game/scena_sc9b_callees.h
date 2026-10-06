@@ -118,7 +118,7 @@ constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;
 constexpr std::uint32_t kPartyPlace = bof3::addr::Party_PlaceForBattle;
 constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
 constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;
-constexpr std::uint32_t kMusicStop = 0x587B80;
+constexpr std::uint32_t kMusicStop = bof3::addr::Sound_StopMusic;
 constexpr std::uint32_t kSpriteFindFree = bof3::addr::Sprite_FindFree;
 
 }  // namespace at

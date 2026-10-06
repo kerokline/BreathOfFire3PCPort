@@ -11243,16 +11243,20 @@ pc = 0x587B90
 name = "Sound_ResumeAll"
 ret = "void"
 params = "void"
+impl = "src/game/sound_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23: a jmp to 0x5A7080 (unread, the sound module). Called by WndProc on WM_ACTIVATEAPP activation after a deactivation and on the key that ends the F9 pause; paired with Sound_PauseAll."
+evidence = "disasm 2026-09-23: a jmp to 0x5A7080 (unread, the sound module). Called by WndProc on WM_ACTIVATEAPP activation after a deactivation and on the key that ends the F9 pause; paired with Sound_PauseAll. Read whole 2026-10-05 (the platform round's group PS): 0x587B90..0x587B94, 5 bytes then 11 of padding, jmp Music_Resume 0x5A7080; ecx and the stack handed on. Seventeen bodies of ours call it; no route enters it. Taken by PS; docs/sound-rest.md."
+note = "Ours is a naked jmp through SoundRest_g, so the fuzz can stand a recorder in for Music_Resume."
 
 [[func]]
 pc = 0x587C30
 name = "Sound_PauseAll"
 ret = "void"
 params = "void"
+impl = "src/game/sound_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-23, 0x587C30..0x587C63: 0x5A6C30 on each non-zero entry of the 23 dwords 0x6BC8C8..0x6BC924 (the sound buffers, by role), 0x5A71C0 when 0x6BDE40 is set, then a jmp to 0x5A6FF0. Called by WndProc on WM_ACTIVATEAPP deactivation and on F9."
+evidence = "disasm 2026-09-23, 0x587C30..0x587C63: 0x5A6C30 on each non-zero entry of the 23 dwords 0x6BC8C8..0x6BC924 (the sound buffers, by role), 0x5A71C0 when 0x6BDE40 is set, then a jmp to 0x5A6FF0. Called by WndProc on WM_ACTIVATEAPP deactivation and on F9. Read whole 2026-10-05 (the platform round's group PS): 0x34 bytes; each channel dword read afresh, the kind after the walk, the channels kept (Sound_StopChannels clears them); the tail jmp hands Music_Halt's eax back. Callers 0x4FC76C and 0x4FC7E8, Game_WndProc (ours). No route enters it. Taken by PS; docs/sound-rest.md."
+note = "Ours returns Music_Halt's eax under the assembler name of the void declaration, as sound.cpp's five do."
 
 [[func]]
 pc = 0x5809C0
@@ -14299,6 +14303,81 @@ params = "void"
 impl = "src/game/battle_items.cpp"
 status = "evidence"
 evidence = "disasm 2026-09-23, 0x5A71C0..0x5A71FD (0x3E bytes), cdecl. With a buffer at 0x7DE3C8: GetStatus (vtable +0x24) into an uninitialised local, Stop (+0x48) when bit 0 (DSBSTATUS_PLAYING), Release (+8), the cell cleared; the pointer read again before each call. Callers SndStream_Play, 0x587C5A and 0x5A6980 (shut-down). Combat route 3 calls."
+
+# --- The platform round, group PS: the sound layer's last seven and its
+# set-up (src/game/sound_rest.cpp, docs/sound-rest.md). Every extent by
+# capstone, 2026-10-05. Sound_StopMusic, Sound_ResumeAll and Sound_PauseAll
+# are named above (round six); 0x587C20 is Sound_MusicPlaying below.
+
+[[func]]
+pc = 0x5A6830
+name = "Snd_Init"
+ret = "int"
+params = "void *hwnd"
+impl = "src/game/sound_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A6830..0x5A6974 (0x145 bytes, whole), cdecl. Snd_Device already set: 0. DirectSoundCreate(0, &Snd_Device, 0) through its thunk 0x5ACBBC (jmp [0x5C4014], DSOUND ordinal 1), failing: Snd_Device = 0, 100. IDirectSound SetCooperativeLevel(hwnd, 3 = DSSCL_EXCLUSIVE) (vtable +0x18), failing: Release (+8), Snd_Device = 0, 101. Snd_BufferDesc's 9 dwords zeroed, dwSize 0x24, flags 1 (DSBCAPS_PRIMARYBUFFER); CreateSoundBuffer(&Snd_BufferDesc, &Snd_Primary, 0) (+0xC), failing: the device released and cleared, 102. Snd_WaveFormat = PCM, 2 channels, 22,050 Hz, 44,100 bytes a second, block 2, 8 bits, cbSize 0; the primary's SetFormat(&Snd_WaveFormat) (+0x38), failing: the device released, the primary read, Snd_Device = 0, the primary released and cleared, 103. Else 0. Snd_Device and Snd_Primary are read again after every call. Nothing else: the voices, the music stream and the decoder are made later, on use. Sole caller Game_Init 0x4FD144 (eax not read). Every route enters it once (analysis/platform_reach_1005.tsv)."
+
+[[func]]
+pc = 0x5A6C60
+name = "SndBuf_SetVolume"
+ret = "void"
+params = "void *buffer, int level"
+impl = "src/game/sound_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A6C60..0x5A6C8E (0x2F bytes, whole), cdecl. Nothing for a null buffer (eax as the caller left it). Else IDirectSoundBuffer SetVolume (+0x3C) of fild(level) * (1 / 127.0f) * 10000.0f - 10000.0f truncated by the CRT's _ftol 0x5B9550, the low dword - the floats 0x5C464C and 0x5C4648 Music_SetVolume reads; eax SetVolume's. Sole caller Sound_SetCueVolume 0x587890 (ours, scena_sx2.cpp, eax not read). No route enters it."
+
+[[func]]
+pc = 0x5A6FF0
+name = "Music_Halt"
+ret = "int"
+params = "void"
+impl = "src/game/sound_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A6FF0..0x5A7018 (0x29 bytes, whole), cdecl: Music_Stop 0x5A7050 byte for byte. 0 without Music_Buffer; else GetStatus (+0x24) into the slot of the entry's push ecx (the caller's ecx where GetStatus does not write it), and when its bit 0 (DSBSTATUS_PLAYING) is set Music_Buffer read again and Stop (+0x48). eax 0, GetStatus's or Stop's. Reached only by the jmps of Sound_StopMusic 0x587B80 and Sound_PauseAll 0x587C5F. No route enters it."
+note = "Ours enters naked to pass the caller's ecx on, as Music_IsPlaying does."
+
+[[func]]
+pc = 0x5A7080
+name = "Music_Resume"
+ret = "int"
+params = "void"
+impl = "src/game/sound_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A7080..0x5A7095 (0x16 bytes, whole), cdecl: with Music_Buffer, IDirectSoundBuffer Play(0, 0, 1 = DSBPLAY_LOOPING) (+0x30) - from where it stopped, no rewind; eax Play's, or 0 (the null pointer) without a buffer. Reached only by Sound_ResumeAll's jmp 0x587B90. No route enters it."
+
+[[func]]
+pc = 0x5A7200
+name = "SndStream_IsPlaying"
+ret = "int"
+params = "void"
+impl = "src/game/sound_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x5A7200..0x5A7229 (0x2A bytes, whole), cdecl: Music_IsPlaying 0x5A7020 on SndStream_Buffer 0x7DE3C8. 0 without the buffer; else GetStatus (+0x24) into the slot of the entry's push ecx (the caller's ecx where GetStatus does not write it), and 1 if bit 0 of its low byte is set, else 0. Sole caller Sound_StreamDone 0x587A09 (ours, save_menu.cpp). No route enters it: the routes' streams are kind 0, the music's."
+note = "Ours enters naked to pass the caller's ecx on, as Music_IsPlaying does."
+
+[[func]]
+pc = 0x587C20
+name = "Sound_MusicPlaying"
+ret = "int"
+params = "void"
+impl = "src/game/sound_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05, 0x587C20..0x587C24 (5 bytes, then 11 of padding): jmp Music_IsPlaying 0x5A7020, ecx and the stack handed on. Callers 0x495C27 and 0x495D26 - Game_Mode 3's steps 0x495BC0 and 0x495C50, Capcom's (no symbol, inside pc_funcs.json's 2,139-byte extent of GameMode_Field), each when the word 0x7E0678 is 0x6E. The read pass binned both calls to GameMode_Field (ours) and classed it original; it is held. No route enters it."
+
+[[data]]
+pc = 0x7DE3C0
+name = "Snd_Primary"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-10-05: the primary IDirectSoundBuffer Snd_Init 0x5A6830 creates (DSBCAPS_PRIMARYBUFFER) and sets to 22,050 Hz 8-bit stereo; Sound_Shutdown 0x5A6980 releases it. Nothing else reads it."
+
+[[data]]
+pc = 0x7DE3C8
+name = "SndStream_Buffer"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-10-05: the SND stream's IDirectSoundBuffer for a stream kind above 0 - SndStream_Play 0x5A7140 makes it with SndBuf_CreateFromWave, SndStream_Stop 0x5A71C0 stops and releases it, SndStream_IsPlaying 0x5A7200 asks it. battle_items_callees.h's kStreamBuffer."
 
 # --- Round seven, group BG: battle sprites, tints and the enemy banner
 # (src/game/battle_sprites.cpp, docs/battle_sprites.md). Every extent by
@@ -49030,7 +49109,9 @@ pc = 0x587B80
 name = "Sound_StopMusic"
 ret = "void"
 params = "void"
+impl = "src/game/sound_rest.cpp"
 status = "evidence"
+note = "Taken 2026-10-05 by the platform round's group PS (docs/sound-rest.md): a naked jmp through SoundRest_g to Music_Halt, so the caller's ecx reaches it as the original's jmp hands it on."
 evidence = "disasm 2026-09-28, group SX (read, not taken): a 5-byte jmp to 0x5A6FF0, which is byte for byte Music_Stop 0x5A7050 (Music_Buffer's GetStatus into a local, then Stop when playing; the local is the caller's ecx when GetStatus fails). Sound_PauseAll tail-jumps to 0x5A6FF0 too. Left to the sound module with Sound_ResumeAll's thunk 0x587B90: a C replacement of the thunk would lose the ecx the jmp hands on. 21 E8 / E9 sites (docs/scena_sx.md section 3)."
 
 [[func]]

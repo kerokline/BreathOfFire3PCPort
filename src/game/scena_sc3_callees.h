@@ -106,7 +106,7 @@ constexpr std::uint32_t kPartyRestore = bof3::addr::Party_HealJoined;     // ():
 constexpr std::uint32_t kStatusBit80 = bof3::addr::Field_SetStatus80;      // (): Field_StatusBits |= 0x80
 constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;         // (records, n, x, z): the cell record matched, 0xFF none
 constexpr std::uint32_t kSpriteFindFree = bof3::addr::Sprite_FindFree;   // (): a free Sprite_Objects index 0..0x1D, 0xFF none
-constexpr std::uint32_t kMusicStop = 0x587B80;        // (): the music buffer stopped (jmp 0x5A6FF0)
+constexpr std::uint32_t kMusicStop = bof3::addr::Sound_StopMusic;        // (): the music buffer stopped (jmp 0x5A6FF0)
 constexpr std::uint32_t kItemEvent = bof3::addr::AbilityList_Add;        // (u8 id, x, u8, y): 0x97 with the effect state's byte
 constexpr std::uint32_t kKeyItemAdd = bof3::addr::KeyItem_Add;       // (u8): into the first free of 32 bytes at 0x904554
 

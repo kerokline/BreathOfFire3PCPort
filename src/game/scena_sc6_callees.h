@@ -121,7 +121,7 @@ constexpr std::uint32_t kSetBit80 = bof3::addr::Field_SetStatus80;
 constexpr std::uint32_t kCellFind = bof3::addr::Field_CellTriggerAt;
 constexpr std::uint32_t kKeyItemPut = bof3::addr::KeyItem_Add;
 constexpr std::uint32_t kZennyAdd = bof3::addr::Zenny_Add;
-constexpr std::uint32_t kSoundJmp = 0x587B80;
+constexpr std::uint32_t kSoundJmp = bof3::addr::Sound_StopMusic;
 
 }  // namespace at
 

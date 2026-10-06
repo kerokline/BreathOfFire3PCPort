@@ -78,6 +78,7 @@
 #include "game/yes_no_layout.h"
 #include "game/item_use.h"
 #include "game/sound.h"
+#include "game/sound_rest.h"
 #include "game/d3d_draw.h"
 #include "game/display_env.h"
 #include "game/tex_page.h"
@@ -1375,6 +1376,11 @@ void InjectAll() {
                                 // re-aimed at the scenario harness's recorders, twelve .data tables swapped for the
                                 // fuzz only; after every harness's inject; before FishingText_Arm; no module patches
                                 // bytes inside its 60 (DIVERGENCE.md, cheats.cpp, widescreen.cpp)
+    SoundRest_Inject();         // the platform round's group PS (Sound_StopMusic, Sound_ResumeAll, Sound_MusicPlaying,
+                                // Sound_PauseAll, SndBuf_SetVolume, Music_Halt, Music_Resume, SndStream_IsPlaying,
+                                // Snd_Init): every call and jump of its clones re-aimed at a recorder, DirectSound
+                                // faked; after every module that calls them (by name, or by the address they had);
+                                // before FishingText_Arm; no module patches bytes inside its nine
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
