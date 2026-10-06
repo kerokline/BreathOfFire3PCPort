@@ -390,4 +390,10 @@ does: the harness refuses a `THEIRS` row whose key is not Capcom's code.
 
 ## 7. The `'*'` runs
 
-Recorded below when they finish.
+At `9a910463` (this worktree's build): `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`,
+narrow and then `BOF3X_WIDE=1`, each exit 0 with `self-test only: done` and
+`inject: 10079 ours, 0 left original by BOF3X_ORIGINAL`, no mismatch line but
+zeros. The first two narrow runs stopped at a harness `Fatal` (a `THEIRS` row,
+then a row keyed on Capcom's address, for a callee now ours) and were the
+reason for section 5's row changes; the third passed before the last
+commit.
