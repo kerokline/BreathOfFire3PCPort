@@ -310,6 +310,7 @@
 #include "game/shell.h"
 #include "game/psx_rest.h"
 #include "game/mode_rest.h"
+#include "game/crt_rest.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1402,6 +1403,10 @@ void InjectAll() {
                                 // at the scenario harness's recorders, two .data tables swapped for the fuzz only;
                                 // before FishingText_Arm; no module patches bytes inside its 14 (DIVERGENCE.md,
                                 // cheats.cpp, widescreen.cpp)
+    CrtRest_Inject();           // platform round step 3 (docs/crt-rest.md): the C runtime's entries the game calls -
+                                // Rand, sprintf, strncpy, _stricmp, _findfirst / _findnext, the file layer - LAST of
+                                // the takeovers: every module's fuzz before it ran Capcom's entries or its own stand-ins
+                                // for them; it resets Rand's seed to the CRT's 1 after them all
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/crt_rest.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -618,8 +619,9 @@ namespace {
 // puts back everything it wrote and runs ours, and compares the two: the GTE's
 // globals, the vertex scratch, the packet pointer and a window of the pool
 // after it, the ordering-table pointers and the tail words they pointed at, and
-// Rand's seed (the C runtime's, at Crt_GetPtd() + 0x14 - there by the time the
-// game draws). Ours is what the game keeps. DIV-0023's pad words are taken as
+// Rand's seed (crt_rest::RandSeedCell: ours, or with Rand left original the C
+// runtime's at Crt_GetPtd() + 0x14 - there by the time the game draws). Ours
+// is what the game keeps. DIV-0023's pad words are taken as
 // the fuzz takes them.
 
 HandlerFn g_quads_live = nullptr, g_rising_live = nullptr;
@@ -676,7 +678,7 @@ void Live(unsigned which, HandlerFn theirs, void (*ours)(const unsigned char*, u
     unsigned char* const window_at = Gfx_PacketNext;
     const auto room = static_cast<unsigned>(Gfx_PacketPools + 0x20000 - window_at);
     const unsigned window = room < kLiveWindow ? room : kLiveWindow;
-    auto* seed = reinterpret_cast<std::uint32_t*>(Crt_GetPtd() + 0x14);
+    auto* seed = crt_rest::RandSeedCell();
     unsigned long* tails_at[8];
     for (unsigned k = 0; k < 8; ++k) tails_at[k] = Gfx_OtPointers[k];
 
