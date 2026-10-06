@@ -607,6 +607,32 @@ planted for it.
 | DS11 | `ItemTrade_PickCount` | case 3: bit 6 cleared on the pick read before the checks and counts | refused in 12 of 3,000 rounds (old switch 0) |
 | DS12 | `ItemTrade_PickCount` | case 3: the entry k from the pick read before Input_AutoRepeat | refused in 8 of 3,000 rounds (old switch 0) |
 
+**2026-10-05, the round's end (debt 17): louder ground and trade stand-ins.**
+`MapView_GroundAt`'s stand-in moves `Field_State`'s actor `+0x89` (below 12)
+a quarter of the time (DS5: the step helpers read it again after the call),
+and a quarter of its near answers are at an edge of the seeded ground: equal
+or one either side (D1), or 0xC0 / 0xC1 either way (W2, which the edges
+alone took from 1 to 0 until the 0xC0 ones were added); `Field_WayBlockedWide`'s
+ground argument is the seeded ground itself half the time. `0x594700`'s
+stand-in moves the trade's pick inside the rows a quarter of the time (DS8).
+The same script, in this worktree: the shadow 306,000 rounds (6,000 a
+function), 0 mismatches; **135 planted, 131 refused by a count**, I3 and FR1
+by a crash / an abort of ours, N1 the equivalent, as before; the twelve new
+refused. At 3,000 rounds (6,000, the committed count, in brackets):
+
+| Id | Before | Now |
+|---|--:|--:|
+| D1 | 0 (4) | **23 (49)** |
+| DS5 | 0 (1) | **77 (151)** |
+| DS8 | 0 (1) | **23 (48)** |
+| W2 | 1 | 11 |
+| DS3 / DS4 | 4 / 4 | 399 / 273 |
+| R2 | 1 | 27 |
+
+The rest within a few rounds of the table's, or above (M5 92, M6 48, I2 61);
+the thinnest now DS9 1, DS6 2, IT7 3, DS10 5, DS2 7, I1 8, T3 9, W4 10 (was
+16), N2 10 - none of these is on a path the louder stand-ins reach.
+
 ## 11. For `analysis/calltrace/entries_logic.txt`
 
 Appended to the main checkout's file (append only, 8,163 -> 8,187 lines): the

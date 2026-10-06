@@ -391,6 +391,42 @@ the 103 controls again, **103 refused**, the thinnest C56 10, C77 83, C15
 D11 (2 rounds) is the thinnest control of the group; section 4's result
 line and the table above it (to D04) are the 6,000-round measurements.
 
+**2026-10-05, the round's end (debt 18): back to 6,000 rounds.** The fuzz
+is 6,000 rounds a function again (`BOF3X_R1G_ROUNDS` overrides it for a
+control's run), with louder stand-ins on the re-reads' paths, each moving
+the cell a quarter of the time from the noise: **`Rand`** (the harness's
+`kRand` row re-listed with an effect, as R4A's) one of the member's strength
+words - half of those at the run's test, `+0x9A` one either side of
+`+0x98 >> 4` or `+0x98` at `+0x9A`'s 16 times one either side - record 5's
+frame (-7 or not negative), or the leader's stage (3 <-> 4, `Fish_Swim`'s
+test); `Fish_LureInReach` the stage; `AreaMap_Elevation` the height before
+it answers (case 3's values); `FieldPanel_DrawBox3` and
+`FieldPanel_DrawShade` `+9` (0..2); `Sprite_ScriptTick` and `Fish_LureClose`
+the kind `+6` (below 23). And one seed: `Fish_Swim`'s height at the rise's
+and the dive's bounds for its own kind's level (the general seed's edges
+are for a level drawn apart from the kind), with `Rand`'s hint on the bits
+0x10 / 0x20 that choose them - C56 1 -> 39. Section 6's tries had seeded
+values in the cases; the cells needed moving at the call before the re-read.
+In this worktree: the shadow 270,000 rounds, 0 mismatches, about two seconds
+(the 60,000-round run took 96); **103 of 103 and the twelve new refused**, at
+6,000 rounds:
+
+| # | Refused (of 6,000): before (6,000), at 60,000 -> now |
+|---|--:|
+| D05 / D06 | 7 / 14, 50 / 115 -> **552 / 1,204** |
+| D07 / D08 | 4 / 11, 71 / 82 -> **900 / 385** |
+| D09 / D10 | 0 / 0, 6 / 5 -> **24 / 14** |
+| D11 | 0, 2 -> **50** |
+| D12 / D13 | 3 / 0, 56 / 15 -> **180 / 50** |
+| D14 | 238, 2,402 -> 238 |
+| D15 / D16 | 5 / 6, 57 / 23 -> **752 / 174** |
+| C55 / C56 / C57 | 89 / 1 / 503 -> 46 / **39** / 563 |
+
+The other 100 are the table's 6,000-round counts or within a few rounds of
+them (C09 622, was 821; C59 600; C60 725; C71 13, was 17); the thinnest now
+C76 and C77 9, C15 11, C71 13, D10 14, C74 17 - single-value boundaries, as
+the first paragraph of this section says.
+
 ## 7. Latent defects and ranges (Capcom's, described, not fixed)
 
 - **The dispatchers are unbounded**: `LeaderPanel_S1` / `_S10` / `_S11` by

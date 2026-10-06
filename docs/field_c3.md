@@ -513,6 +513,34 @@ word moved between the slope reads changes the answer), so they mark where the
 fuzz's reach ends. The fuzz was not changed: raising the group's rounds would
 move every count above, and the committed run already refuses C167, C168 and
 C170 on the same function.
+
+**2026-10-05, the round's end (debt 17): a louder slope.** The reach ended
+because a second slope read needs a steep answer and a moved low word in the
+same call, and the group's case 9 is one call in some hundreds.
+`MapView_SlopeAt`'s stand-in (`SlopeEffect`) now, a third of the time and only
+for the directions 3 and 5, turns `Sprite_Current`'s low coordinate word along
+the direction pushed (5 the x word, 3 the z word) to 0 or from 0 and answers
+0x41 with the sloped byte set - the cell `FieldCore_TileD0Slope` reads again
+after its slopes, seen at the call. The other two thirds are as before. The
+same script, in this worktree, 3,000 rounds (the committed count): the
+baseline 0 mismatches (189,000 rounds); **160 of 160 refused**, the smallest
+C46 2, C123 6, C126 14, C133 24 (each as thin as before or less so); and the
+22 of the table above:
+
+| # | Rounds refused (of 3,000), before -> with the louder slope |
+|---|--:|
+| C167 / C178 | 4 / 0 -> 119 / 116 |
+| C168 / C179 | 1 / 0 -> 107 / 105 |
+| C169 / C180 | 0 / 0 -> 46 / 43 |
+| C170 / C181 | 1 / 0 -> 20 / 18 |
+| C171 / C182 | 68 / 11 -> 124 / 68 |
+| C161..C166 | unchanged (7, 5, 130, 51, 35, 93) |
+| C172..C177 | 0, 1, 15, 6, 1, 9 (C172 still refused only at 30,000) |
+
+C179..C181 are refused: not equivalent, as section 6 said, and the slope's
+re-read is now a live test. A first try that moved the word without the steep
+answer refused the raised paths only 7..11 times (the second slope needs two
+steep answers in a row).
 **Case 6 is noise for this group**: the sloped byte `0x903850` is read only
 straight after `MapView_SlopeAt` (`FieldCore_TileD0Probe`, `Steep`), and that
 stand-in's effect (`SlopeEffect`) writes the byte after the harness's
