@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 75 entries, DIV-0001..0075, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 76 entries, DIV-0001..0076, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4039,7 +4039,7 @@ designed in rather than bolted on.
 - **Date:** 2026-10-05
 - **Subsystem:** the save block (`Save_BuildBlock` `0x5806F0`, ours in
   `src/game/rest_2c.cpp`; reached by `FieldSave_Write` and `Save_QuickWrite`)
-- **Tier:** Fix - the summary a save slot shows mixed two characters.
+- **Tier:** Intent - the owner's decision, 2026-10-05: the summary a save slot shows named one character and levelled another.
 - **Original behaviour:** the slot's summary takes its name from the
   party leader's record (the record of party id 0, `strncpy` 5 and 4 bytes)
   but its level (`0x903A7A`) and the dword at `+0xC` (`0x903A7C`) from

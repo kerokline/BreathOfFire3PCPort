@@ -288,5 +288,8 @@ Merged in the order the reports arrived: EA `1dbba0b`, EC `4386a35` (one
 hand-resolved conflict, `rest_3e_callees.h`: EA's binding under EC's
 comment), ED2 `f32ae5e`, EB `615e04f` (one, `boss_harness.cpp`: EB's row,
 EC's comment), DIV-0076 `19f5de5`, ED1 `12cd36a`. Each agent's own `'*'`
-narrow and wide passed at its branch; the merged tip's verification is below
-(filled in when it ran).
+narrow and wide passed at its branch. **The merged tip:** `969c8ed` (ED1 in,
+DIV-0076 in) `'*'` narrow, `inject: 10009 ours`, 0 mismatches; then, merged
+into `phase-3/platform-round` with the platform groups (`cdcadb9`), `'*'`
+narrow and wide twice over, 10,065 ours, 0 mismatches
+([`platform-round.md`](platform-round.md) section 5).

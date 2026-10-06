@@ -130,7 +130,10 @@ Each group's own `'*'` narrow and wide passed at its branch (every report:
 `self-test only: done`, `inject: 10,0xx ours`, no mismatch). At `67e1598`
 (the five groups): `mode_rest` 52,000 rounds and `sound_rest` 27,000, 0
 mismatches, `inject: 10065 ours`. **The merged tip `cdcadb9`:** `'*'` narrow
-and wide - recorded below when the run ends.
+and wide, run twice in two build directories (PW's and EA's worktrees): each
+`self-test only: done`, `inject: 10065 ours, 0 left original`, no mismatch
+line other than 0; `ledger_check` 76 entries, 0 errors once DIV-0076's tier
+word and the ledger's count were corrected (`0158931`'s successor).
 
 **`analysis/calltrace/entries_logic.txt`** (the main checkout's): PS's two,
 PH's nine and PM's thirteen lines appended 2026-10-05 night (10,662 ->
