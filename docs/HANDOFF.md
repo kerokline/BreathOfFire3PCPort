@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-05 evening: round fourteen is `main`, PR #41, 10,009 ours; the round's end is under way on `phase-3/round14-end` - the state hash's references re-recorded, the shop route's difference settled, the platform read pass measured; the debts and the platform round next)
+**Status:** IN PROGRESS (2026-10-05 night: round fourteen's end and the platform round's step 2 ran side by side - `phase-3/round14-end` done and merged into `phase-3/platform-round`, 10,065 ours, `'*'` narrow and wide; the state hash live check running; nothing pushed)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -26,6 +26,8 @@ Capcom's code on the state hash ([`state-hash.md`](state-hash.md) section 6). Th
 `shop`'s since before wave two, was the runner's early hand-back of slot 0, not the game's (section 5 there;
 `input_run.py --slot0-hold`). The rest is [`STATUS.md`](STATUS.md)'s wave table; do not copy it here.
 
+**The night of 2026-10-05, ten agents in two streams:** the round's end ([`round-14-cleanup.md`](round-14-cleanup.md): the rebinding, the harness fold and the host-extent lines, the review's lows and nits, every thin control, DIV-0076 at the owner's word) and the platform plan's step 2 ([`platform-round.md`](platform-round.md): the 40 live starts in four groups and **thirteen functions no catalogue ever held - game modes 3..6 and their steps**, hidden by `GameMode_Field`'s over-long `pc_funcs.json` extent; 10,009 -> 10,065). Both are on `phase-3/platform-round` (`round14-end` merged in), `'*'` narrow and wide twice over at `cdcadb9`. Two readings the owner asked for the same night: the camp-cell test's dead `0x91` compare has 91 real cells behind it (bridges, a harbour) and **the PlayStation has the same bug** (`0x801D21C4`); the save summary's mixed name and level is DIV-0076. The method that settled the first is worth keeping: for a defect left "for the owner", read the PSX twin first.
+
 **The frame hash reference is `analysis/calltrace/r13_origb` (twin `r13_origc`,
 identical on all 10,308 frames)**, recorded 2026-10-03 night at 8,648 ours
 (the build `9d01ae9`; reference sides `--original "*,-Game_Clock"`,
@@ -38,36 +40,39 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
-00000000000. **Round fourteen's end, under way on `phase-3/round14-end`** (cut from `main` `2df90d9` on
-   2026-10-05 evening, the owner away; nothing pushed). Done that evening: ~~the shop route's difference~~ (the
-   runner's, [`state-hash.md`](state-hash.md) section 5), ~~the state hash's references~~ (every pair re-recorded
-   under 168, ours at `main` identical to each, section 6 there), ~~round thirteen's review item 1~~ (F1's x2 no
-   longer held while a stream plays; DIV-0048's note), the platform plan's first step
-   ([`platform-read-pass.md`](platform-read-pass.md)), and the owner's words: DIV-0074 kept as written; the two
-   abort sites (`CommuRank_Show` with three empty lists, `Battle_RandomOtherMember` with one member standing) the
-   owner will watch for in play; the faerie village is the next save target - DIV-0075 and all of wave four stay
-   fuzz-only until then. In the order they bite:
-   1. **The debts** of the round doc's sections 9 to 13 (the rebinding between groups, host-extent lines,
-      harness rows to `_OURS`, thin controls, the merge scripts to judge a self-test by the log's
-      `self-test only: done` and not its exit code alone) and the review's remaining low items (7, 8, 12 to 17,
-      19 and the nits).
-   2. **The platform round**, [`platform-layers-plan.md`](platform-layers-plan.md) section 4 in its new order
-      (the audio investigation before state 2's proof - the owner, 2026-10-05): step 2 is the 40 live starts
-      [`platform-read-pass.md`](platform-read-pass.md) section 5 names, the six Direct3D handlers first (TILE_1
-      `0x5A2220` already runs in `whelpBoss`); two questions open there (whether ours can run with the software
-      render flag; `0x59E930`). Step 3 is the runtime's seventeen entry points, `rand` first. Then I23's
-      listening set for the owner's ear.
-   The name entry's return is IDEAS I34, deferred by the owner to the localisation rework
-   ([`name-entry-restoration.md`](name-entry-restoration.md)).
-   **Mechanics that held:** the scripts are in the session-`309e3952` scratchpad (`.../scratchpad/round14/`),
-   `final_live.sh` and `sh_route_cn.sh` in the session-`7bf3959f` one (its `launcher/` copy, the 10,009 build,
-   recorded the pairs), the session-`53a62c27` `drill.sh` (a route's two sides with a raw dump at a tick, then
-   the bytes), and this session's (`a2558536`) `refs168.sh` (the pairs), `after_refs.sh` (the shop re-check and
-   the reach trace), `entries_platform.txt` (the 432 armed starts). **A full `'*'` self-test from `build/` with
-   the owner's ini (`language=en`) fails at `Config_DrawRowLabel` - "the site is re-aimed already"**: run it from
-   a launcher copy whose ini says `language=original`, as the verify worktree always did. **Windows Defender killed the
-   verification launcher mid-run and the shell reported exit 0** (2026-10-05 10:30): a pass is the log's
-   `self-test only: done` and `inject:` lines. An exclusion for the build directories is the owner's to add.
+00000000000. **Round fourteen's end is done and the platform round's step 2 with it (2026-10-05 night); both sit on
+   `phase-3/platform-round`** (cut from `main` `2df90d9`; `phase-3/round14-end` merged into it at `cdcadb9`; the docs
+   after). **Not pushed, no PR yet.** The records: [`round-14-cleanup.md`](round-14-cleanup.md) (sections 1 to 6: what
+   each of the five agents did, the owner's decisions, the verification) and [`platform-round.md`](platform-round.md)
+   (the five groups, the thirteen hidden functions, the read pass's questions answered, four proposed ledger entries,
+   the merges). `'*'` narrow and wide at `cdcadb9` in two build directories: 10,065 ours, 0 mismatches; `ledger_check`
+   76 entries, 0 errors. In the order they bite:
+   1. **The state hash live check** - running as this was written (`live_plat.sh` in this session's scratchpad: ours
+      against the 168-range pairs, the attract sequence and ten routes, shop with `--slot0-hold`); its result goes in
+      [`platform-round.md`](platform-round.md) section 5 and [`state-hash.md`](state-hash.md). The shell seven, `Snd_Init`
+      and game modes 3 and 5 run on every route, so this is their first live check; TILE_1 and `Gpu_SetTexWindow` in
+      `whelpBoss`.
+   2. **The owner's calls**, gathered in `platform-round.md` section 4 and `round-14-cleanup.md` section 5: TILE_1 drawn
+      as one point (visible: `whelpBoss`'s motes), the one-texel FT3 colour, `Cfg_Load`'s key-line overrun,
+      `Sound_ResumeAll` after a fade, the `0x91` camp cells (Capcom's bug on both machines; a one-line DIV), debt 3's
+      packet-pool read. DIV-0076 owes the owner's eye: save with someone other than record 0 leading, read the slot.
+   3. **The PR**: one branch, `phase-3/platform-round`, after the live check; `git log --format=%B 2df90d9..HEAD` for the
+      sign-offs first (every commit tonight has one; the merge commits carry none, as merges may).
+   4. **The platform round's step 3**: the runtime's seventeen entry points, `rand` first
+      ([`platform-read-pass.md`](platform-read-pass.md) section 3). And the hidden-start scan `mode-rest.md` section 0
+      describes (every `jmp [reg*4 + imm]` in `.text`, the tables walked; each catalogue extent against where its code
+      ends) - the class that hid thirteen functions from fourteen rounds.
+   5. Left by the agents, small: 120 raw constants in 35 earlier-round files (`round-14-cleanup.md` 1.2); `kInflict`
+      naming two targets; `Sprite_FlashClut`'s row mask; seven older hosts still covering an owned start in
+      `entries_logic.txt` (section 2 there); the thin controls outside the night's lists (section 4); the 61 run-time raw
+      calls (round thirteen's 1.3, still a decision).
+   **Mechanics that held:** the briefs and scripts are in this session's scratchpad (`.../9b1166d3-19a7-43dc-87c1-42bff5c16eb4/scratchpad/`:
+   `common.md` + `end14/brief_*.md` + `plat/brief_*.md`, `merge_one.sh` (debt 22 closed: a pass is the log's
+   `self-test only: done` and `inject:` lines), `verify_tip2.sh`, `cell_scan.py` / `cell_render.py` (the area cell planes),
+   `psx/` (the extracted EMIs and the twin reading), `live_plat.sh`, `launcher/` (the 10,065 build)). **Do not edit a
+   script while bash is running it** (the merge script lost its place mid-run when `NOVERIFY` was added). **The classifier
+   refused to stop a game process tonight, even the verify worktree's own**: a superseded run is left to finish, and the
+   next verification goes to another finished agent worktree's `build/` (two were used: EA's and PW's).
 
 000000000a. **2026-10-05: round fourteen's review, and what was done about it the same day** -
    [`round-14-review.md`](round-14-review.md) is the review, the round doc's section 12 the record of the fixes.
@@ -677,7 +682,7 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-Round fourteen's takeovers are done and the branch is pushed with its pull request (2026-10-05). Six wave-four agent worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*` are merged and can go.
+`phase-3/platform-round` holds the night's work, unpushed (item 0). The ten agent branches `phase-3/r14end-ea` .. `-ed2` and `phase-3/platform-ph/pl/pm/ps/pw` and their `.claude/worktrees/agent-*` are merged and can go, with the older ones: the six wave-four worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*`.
 Before it: nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
 half is pushed on `claude/round-10-cleanup-handoff-qtwcrk` (item 0) and
 wants the `'*'` run and the other game-side checks before its PR. The wave
