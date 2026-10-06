@@ -146,9 +146,11 @@ where the reading behind it is. Nothing here is a divergence until it is in
   the renamed attack hours on top through the name table. The agent
   recommends an option, not a default. **The renders are in
   `analysis/stallion/`** (`AREA067_stallion_cells_jp_left_psp_right.png`,
-  `AREA166_palettes0to3_jp_left_psp_right.png`) for the owner to look at;
-  neither recipe reaches the fight (fights 13 and 16; Stallion is 24), so a
-  route is the owner's to record. **The Holy Mantle lead is refuted**: nothing
+  `AREA166_palettes0to3_jp_left_psp_right.png`) for the owner to look at.
+  **The owner recorded the route the same night**: `tools/recipes/stallion.txt`
+  (956 lines, the pre-fight, the transform scene and the fight; `# save
+  stallion`, imported from their slot 0), so the live check exists once the
+  option is built. **The Holy Mantle lead is refuted**: nothing
   to toggle.
 
 ## Seen by the owner (struck)
