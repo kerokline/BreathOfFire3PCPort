@@ -189,7 +189,7 @@ bit 6 (read again after the elevation), `0x904AE8` bit 3 or the track 0xFF;
 `Field_AfterBattleTally`. Either way `Party_ScriptTicks` and the two frames;
 after the first branch `Game_Mode` 2, `Game_Step` 0, `Field_Request` 0.
 
-### 1.4 `Sound_MusicPlaying` `0x587C20`
+### 1.4 `Sound_MusicPlaying` `0x587C20` (taken by group PS the same night; read here for its callers)
 
 Five bytes: `jmp Music_IsPlaying` (`0x5A7020`, ours since round six,
 [`save-menu.md`](save-menu.md)). Every register is handed on, and that

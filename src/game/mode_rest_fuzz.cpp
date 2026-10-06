@@ -18,6 +18,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/mode_rest.h"
 #include "game/mode_rest_callees.h"
+#include "game/sound_rest.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -62,7 +63,6 @@ constexpr sh::CallSite kCalls496150[] = {{0x10, 0x454810}, {0x26, 0x533CE0}, {0x
                                          {0x58, 0x5725F0}, {0x82, 0x587AE0}, {0x9A, 0x52FEB0}, {0xA2, 0x5341E0},
                                          {0xA9, 0x532D10}, {0xAE, 0x517490}, {0xB3, 0x517290}};
 constexpr sh::CallSite kCalls496230[] = {{0xA, 0x496A00}, {0x11, 0x496250}, {0x16, 0x517290}};
-constexpr sh::CallSite kCalls587C20[] = {{0x0, 0x5A7020}};
 
 #define PM_N(a) static_cast<int>(sizeof a / sizeof a[0])
 #define PM_CALLS(a) a, PM_N(a)
@@ -84,7 +84,6 @@ const sh::Clone kAll14[] = {
     {"GameMode5_Place", 0x496130, 0x1C, PM_CALLS(kCalls496130), nullptr, 0, nullptr, 0, PM_FN(GameMode5_Place), 0, false, kSt},
     {"GameMode5_Leave", 0x496150, 0xD7, PM_CALLS(kCalls496150), nullptr, 0, nullptr, 0, PM_FN(GameMode5_Leave), 0, false, kSt},
     {"GameMode6_Run", 0x496230, 0x1B, PM_CALLS(kCalls496230), nullptr, 0, nullptr, 0, PM_FN(GameMode6_Run), 0, false, kSt},
-    {"Sound_MusicPlaying", 0x587C20, 0x5, PM_CALLS(kCalls587C20), nullptr, 0, nullptr, 0, PM_FN(Sound_MusicPlaying), kAll, false, kCa},
 };
 #undef PM_FN
 #undef PM_CALLS
@@ -154,7 +153,7 @@ const sh::Callee kCallees[] = {
     {PM_OURS(Flags_Clear), 2, {kAll, 0xFF}, kG, 0, 0, {}, &TripEffect},
     {PM_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},
     {PM_OURS(LoadDatFile), 1, {kAll}, kG, 0, 0, {}, &LoadEffect},
-    // the group's own, called directly by the group's
+    // group PS's (sound_rest.cpp), called directly by the mode-3 steps
     {PM_OURS(Sound_MusicPlaying), 0, {}, kFl, 0, 0},
     // Music_IsPlaying by its address (Sound_MusicPlaying's jump, read through
     // SH_AT so that it is the address in the game)

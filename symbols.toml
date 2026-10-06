@@ -114723,15 +114723,6 @@ impl = "src/game/mode_rest.cpp"
 status = "evidence"
 evidence = "disasm 2026-10-05 (group PM), 0x496230..0x49624A (0x1B bytes): Look_PadControl at Game_Step 0, GameMode_LookEnd otherwise; tail jmp Field_LoadingFrame. GameMode_Handlers[6] (Field_Request 4). PSX 0x80199170 term for term. docs/mode-rest.md."
 
-[[func]]
-pc = 0x587C20
-name = "Sound_MusicPlaying"
-ret = "int"
-params = "void"
-impl = "src/game/mode_rest.cpp"
-status = "evidence"
-evidence = "disasm 2026-10-05 (group PM), 0x587C20..0x587C24 (5 bytes): jmp Music_IsPlaying 0x5A7020, every register handed on (Music_IsPlaying reads its entry's push ecx slot when GetStatus writes nothing). Two callers, both this group's: GameMode3_Enter 0x495C27 and GameMode3_Leave 0x495D26 (the read pass classed it original: they were filed inside GameMode_Field). No PSX twin (the PSX asks the CD player, 0x8015E050). docs/mode-rest.md."
-
 [[data]]
 pc = 0x656A74
 name = "GameMode3_Steps"

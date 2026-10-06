@@ -16,7 +16,7 @@
 //     and the way back to the field;
 //   - mode 6 (Field_Request 4): Look_PadControl at step 0, GameMode_LookEnd
 //     after (both ours already), and a loading frame;
-//   - Sound_MusicPlaying 0x587C20: a jump to Music_IsPlaying.
+//   (Sound_MusicPlaying 0x587C20, the jump to Music_IsPlaying the mode-3 steps call, is group PS's: sound_rest.h.)
 //
 // Every prototype is symbols.gen.h's (symbols.toml); this header declares the
 // group's inject and its fuzz.

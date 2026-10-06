@@ -5,3 +5,10 @@
 #pragma once
 
 void SoundRest_Inject();
+
+// The nine, for callers by name (the game-mode steps of mode_rest call
+// Sound_MusicPlaying): naked thunks and cdecl bodies in sound_rest.cpp.
+extern "C" void __cdecl Sound_StopMusic(void);
+extern "C" void __cdecl Sound_ResumeAll(void);
+extern "C" int __cdecl Sound_MusicPlaying(void);
+extern "C" void __cdecl Sound_PauseAll(void);

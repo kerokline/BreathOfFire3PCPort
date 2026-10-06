@@ -11,7 +11,7 @@
 //   GameMode5_TurnSense .. GameMode5_Leave  0x495EA0 .. 0x496150  its steps 0..4, 6, 7
 //                              (step 5 is Battle_Frame, ours)
 //   GameMode6_Run    0x496230  mode 6: Look_PadControl or GameMode_LookEnd, a loading frame
-//   Sound_MusicPlaying 0x587C20  jmp Music_IsPlaying
+//   (Sound_MusicPlaying 0x587C20, a jmp to Music_IsPlaying, is group PS's - sound_rest.cpp)
 //
 // Every call goes through the harness (SH_CALL / SH_AT), so the start-up fuzz
 // can stand recorders in for ours as for the originals' copies; a memory cell
@@ -24,6 +24,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/mode_rest_callees.h"
+#include "game/sound_rest.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -397,23 +398,9 @@ extern "C" void __cdecl GameMode6_Run(void) {
 
 // Where the jump goes: Music_IsPlaying's address (Capcom's 0x5A7020, or the
 // jump Inject put there to ours), or its recorder while the fuzz runs ours.
-// External only for the naked entry's call below.
-extern "C" void* __cdecl ModeRest_MusicPlayingTarget(void) {
-    return reinterpret_cast<void*>(SH_AT(int (__cdecl*)(void), bof3::addr::Music_IsPlaying));
-}
-
-// original 0x587C20 (no PSX twin: the PSX asks the CD player): a five-byte jmp
-// to Music_IsPlaying, every register as the caller left it - Music_IsPlaying
-// tests the slot its `push ecx` made when GetStatus writes nothing, so ecx is
-// carried through: saved around the lookup of the target, then a jump.
-extern "C" __attribute__((naked)) int __cdecl Sound_MusicPlaying(void) {
-    asm("pushl %ecx\n\t"
-        "pushl %edx\n\t"
-        "call _ModeRest_MusicPlayingTarget\n\t"
-        "popl %edx\n\t"
-        "popl %ecx\n\t"
-        "jmp *%eax");
-}
+// Sound_MusicPlaying 0x587C20 (a five-byte jmp to Music_IsPlaying) is group PS's,
+// src/game/sound_rest.cpp, taken the same night; GameMode3_Enter / _Leave call it
+// through SH_CALL by name.
 
 void ModeRest_Inject() {
     if (bof3::WantsShadow("mode_rest")) mode_rest::SelfTest();
@@ -430,5 +417,4 @@ void ModeRest_Inject() {
     BOF3_INJECT(GameMode5_Place);
     BOF3_INJECT(GameMode5_Leave);
     BOF3_INJECT(GameMode6_Run);
-    BOF3_INJECT(Sound_MusicPlaying);
 }
