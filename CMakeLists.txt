@@ -174,6 +174,7 @@ add_library(bof3x SHARED
   src/game/game_last.cpp src/game/game_last_fuzz.cpp
   src/game/d3d_draw.cpp
   src/game/d3d_lines.cpp
+  src/game/area4_walls.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
   src/game/d3d_list_fuzz.cpp

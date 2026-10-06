@@ -15,6 +15,7 @@ reads them with, and prints what changed as fields, cells and values:
           AreaMap_CellNibble 0x592890 reads for the battle placement)
   cues    every BPLCHAR type-8 record: the cue entries' fields (the sibling's
           SOUND_CUES.md: flags, pan|program, tone|priority, chord|voice)
+  fix     src/game/area4_walls.cpp's tables applied to JP's sections 8 and 10, against --later's
   pal     the eight area banks where --pal differs from --later: samples
           dropped and added (by md5), and the tones that point at them
 
@@ -167,6 +168,43 @@ def cmd_pal(L, P):
               % (key, vl, vp, gone, new, ts, sorted({tp.get(k) for k in ts}), cues, sl[1][3] == sp[1][3]))
 
 
+def cmd_fix(J, L):
+    """Apply src/game/area4_walls.cpp's own tables (parsed from the source, so the
+    check is of the code's table, not a copy) to the JP disc's AREA004 sections 8
+    and 10, and compare with the later disc's."""
+    import re
+    src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "src", "game", "area4_walls.cpp"), encoding="utf-8").read()
+    walls = src[src.index("kWalls[]"):src.index("};", src.index("kWalls[]"))]
+    place = src[src.index("kPlacement[]"):src.index("};", src.index("kPlacement[]"))]
+    runs_ = [tuple(map(int, m)) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", walls)]
+    nibs = [tuple(map(int, m)) for m in re.findall(r"\{(\d+), (\d+), (\d+)\}", place)]
+    wall = int(re.search(r"kWall = 0x([0-9A-Fa-f]+)", src).group(1), 16)
+    m = bytearray(J.sections(AREA4)[8][3])
+    n = bytearray(J.sections(AREA4)[10][3])
+    ml, nl = L.sections(AREA4)[8][3], L.sections(AREA4)[10][3]
+    w = m[0]
+    p = area_layout(m)["plane"]
+    cells = 0
+    for x0, z0, x1, z1 in runs_:
+        for z in range(z0, z1 + 1):
+            for x in range(x0, x1 + 1):
+                assert m[p + w * z + x] == 0, (x, z)
+                m[p + w * z + x] = wall
+                cells += 1
+    for x, z, jp in nibs:
+        i = w * z + x
+        assert nib(n, i) == jp, (x, z)
+        n[i >> 1] = (n[i >> 1] & 0xF0) if i & 1 else (n[i >> 1] & 0x0F)
+    plane_same = m[p:p + w * m[1]] == ml[p:p + w * m[1]]
+    rest = [i for i in range(len(m)) if m[i] != ml[i]]
+    print("table: %d runs, %d wall cells (0x%02X), %d placement cells" % (len(runs_), cells, wall, len(nibs)))
+    print("section 8 cell bytes after the fix == later disc's: %s" % plane_same)
+    print("section 8 bytes still differing: %d, all in the tile words and texture records: %s"
+          % (len(rest), all(area_layout(m)["tiles"] <= i < area_layout(m)["tex_end"] for i in rest)))
+    print("section 10 after the fix == later disc's: %s" % (bytes(n) == nl))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--jp", required=True)
@@ -181,7 +219,7 @@ def main():
             if a.pal:
                 cmd_pal(L, region_diff.Build("pal", a.pal))
         else:
-            {"area4": cmd_area4, "area4n": cmd_area4n, "cues": cmd_cues}[w](J, L)
+            {"area4": cmd_area4, "area4n": cmd_area4n, "cues": cmd_cues, "fix": cmd_fix}[w](J, L)
 
 
 if __name__ == "__main__":
