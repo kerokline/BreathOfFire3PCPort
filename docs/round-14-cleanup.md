@@ -1,13 +1,15 @@
 # Round fourteen's cleanup: the debts the remainder round left
 
-**Status:** IN PROGRESS (2026-10-05) - the round's end, after round fourteen's
-last wave. The debts are those of
+**Status:** MEASURED (2026-10-05 night) - the round's end, after round
+fourteen's last wave. The debts are those of
 [`takeover-queue-round14.md`](takeover-queue-round14.md) sections 9 to 13 and
-the low items and nits of [`round-14-review.md`](round-14-review.md). Section
-1 landed on branch `phase-3/r14end-ea` from the round's tip `e3b98087`; the
-other sections are other sessions' and are folded in here by the
-coordinator. Nothing in section 1 changes game behaviour, so it wants no
-DIVERGENCE entry.
+the low items and nits of [`round-14-review.md`](round-14-review.md). Five
+agents ran side by side from the round's tip `e3b98087` (branches
+`phase-3/r14end-ea` .. `-ed2`), each with its own `'*'` narrow and wide, and
+were merged one at a time into `phase-3/round14-end` (sections 1 to 4 are
+their records, folded in by the coordinator from their reports); section 5 is
+what the owner decided the same night (DIV-0076); section 6 is the merged
+tip's verification. Nothing in sections 1 to 4 changes game behaviour.
 
 Round fourteen took 1,361 functions in 28 groups (R0A and four waves; 8,648
 -> 10,009 ours). The groups of a wave ran side by side, so each called its
@@ -143,3 +145,143 @@ the log ending `self-test only: done`, `inject: 10009 ours, 0 left original
 by BOF3X_ORIGINAL`, 1,049 `MISMATCHES` lines each and every one `0
 MISMATCHES`. No stand-in's keying changed (every key is the same address),
 so no fuzz count should move.
+
+## 2. The harness fold and the host-extent lines (EB)
+
+**Rows to the `_OURS` form: 67** in `src/game/scenario_harness.cpp` and
+`src/game/boss_harness.cpp` - all of debt 14 (R3A 4, R3B 3, R3D 3, R3E 18,
+R3F 5, R3G 7), debt 21's four (`0x452DD0`, `0x452EB0`, `0x452F10`,
+`FX_RAW(0x462F10)`), debt 2's seven `0x52B...` rows, eleven address-keyed
+rows from wave two, and the five `kStandard` rows keyed by `bof3::addr::`
+(`Field_StartEventBattle` and four more). What stays keyed by address is
+Capcom's: `0x5B9550`, `0x5A7...`, `0x59E930` (the platform round's, the same
+night), `0x593950`, `0x591810`, `0x5B9450`. **Masks narrowed** to what the
+function reads, the read cited: `0x491E30`'s size argument its low word,
+`0x5100B0` `{kU16, kU16}`, `0x44F1D0` `{kU8, kU16}`. **Debt 2:**
+`Sprite_LoadPalette`'s row logs its destination by value with no hash, a new
+`FxPalette` filling the 0x40 bytes where they lie; `0x52B330` `{kU16}`
+answering `kByte` 0..1; R1C's six field callees the standard set lacked
+(`Effect_SpawnAtCell` / `High`, `Field_GiveZenny`, `AreaMap_ClearCell`,
+`Field_EffectAhead` `kByte 0xFF..0x13`, `Sprite_TurnSense`) are `kField` rows
+now (R0A's six party helpers stay with their groups: their answers differ by
+group). `Gpu_SetLineF3` and `Gpu_SetSprt16` are in `kField` too (R2D, R4B,
+R4E reach them). The write-up is
+[`scenario_harness.md`](scenario_harness.md) 8.11 and
+[`boss_harness.md`](boss_harness.md) 10.11. Counts that moved under the fold,
+all still 0 mismatches: `rest_2d`, `rest_2f`, `rest_2g`, `magic_s16/17/34/35`,
+`area_w0b/w1e/w3a` - none reaches a changed row through the standard set, so
+EB read it as build-layout drift, not proved. Left: `Sprite_FlashClut`'s
+`kEffectStd` row masks the whole word where R1C reads the byte.
+
+**`analysis/calltrace/entries_logic.txt`** (gitignored, the main checkout's;
+backup `<this session's scratchpad>/end14/eb/entries_logic_backup_1005.txt`):
+**75 host lines split** - 55 cut to the function's own extent, 20 dropped
+where a smaller line already existed - debts 1, 10, 15 and 21 and R0A's other
+five of the same class, the sizes from the group docs, agreeing with
+`symbols.toml`; then `consolidate_entries.py` (10,294 entries, six more
+extents cut; the file is LF only now - some 570 appended lines were CRLF).
+`entries_audit.py` without `--reach`: 9 covered, 9 uncovered, identical
+before and after; seven older hosts still cover an owned start with no line
+of its own (`0x453FA0`, `0x454DF0`, `0x494280`, `0x4B98B0`, `0x4FD350`,
+`0x577760`, `0x5786C0`) - outside the debts, left. The platform round's
+groups listed their own lines in their docs; the new ones (PS's `005A6FF0 29`,
+`005A7080 16`; PH's nine) are appended by the coordinator with the platform
+round's record.
+
+## 3. The review's low items and nits (EC)
+
+Items 7, 8, 12 to 17, 19 and every nit but the raw constants (section 1),
+plus debts 16 and 19. The policies, chosen so the groups agree:
+
+- **Item 7:** R1A, R1B and R1C abort at the table's `symbols.toml` count,
+  before the read, as R1D..R1G do (the round-nine rule: a loud abort before
+  the fault, never a read on into the next table); one sentence in
+  `rest_1a.md`, `rest_1b.md` section 6, `rest_1c.md`, `rest_1d.md` L3. No fuzz
+  re-seeded.
+- **Item 16:** R3D's slots 117 / 118 abort past a party size of 3 as R3C
+  does (R3D's fuzz re-seeded to 0..3 in seed and disturbance); R3B's three
+  effect slots stay `void` - `Effect_ApplyResult` calls them as void and
+  nothing reads the eax R3C forwards (`rest_3c.md` corrected); `0x480300`
+  is `(point, unused, wobble, dy)` by capstone - R3F was right, R3E's header
+  fixed.
+- **Item 17:** R2B's reading of `0x9398E0` (two 0x80-byte models, then the
+  screen's cells) is right, by capstone; both docs carry it. `0x5B9450` is
+  MSVC's `strncpy`: `Crt_strncpy` in `symbols.toml`, the `memcpy` comments
+  corrected, [`platform-read-pass.md`](platform-read-pass.md) section 3
+  confirmed.
+- **Item 13:** R2F's grid loops read through a `volatile`. **Item 14:** R2E's
+  three count-list takers abort at the access, not at entry. **Item 15:**
+  `StateHash_Flush()` from `Fatal` and the crash reporter (a deliberate
+  `Fatal` at tick 100 under `DUMP=50` left all 100 records where 65 would
+  have survived; [`state-hash.md`](state-hash.md)). **Item 12:** the texts.
+  **Item 8:** the fuzz comments; `rest_1e.md` gives the bound as 10 and the
+  reason it is unreachable (directions stay 0..7); EC's view, no ledger
+  entry - no state of play reaches it. **Item 19:** I31, I23 and the plan's
+  2.4 heading match the owner's answers.
+- **Nits:** sets 16..18 renamed to the R1A..R1E pattern (10 functions, 10
+  tables); the `TurnToSide` pair kept (a rename would reuse names);
+  `cmd_info` was already fixed; **the count**: the one `impl` the inject log
+  does not count is `Config_DrawControllerCell`, injected only under a Latin
+  overlay (`takeover-queue-round14.md:13` corrected).
+- **Debt 16:** DIV-0027's note names `MenuList_WideTitleBox` `0x59A2E0` (its
+  `rest_2g.cpp:297-298` is the only code that tests help `0x1A` / `0x31` and
+  draws message `0xF`); `0x59AE00` is `MenuList_GeneWinDraw` and draws no
+  message `0xF` - the note corrected by the coordinator (section 5).
+- **Debt 19:** done; `rest_1g.md`'s round-count lines told once more by the
+  coordinator after section 4 moved the count again.
+
+## 4. The thin and unrefused controls (ED1, ED2)
+
+Each fix is a louder stand-in on the path the control changes, with a seed at
+the boundary where one was missing; only `_fuzz.cpp` files and the docs'
+controls tables changed (and debt 24's three lines in `rest_4d`). Figures are
+refusals in the group's normal round count, before -> after.
+
+| Group | Control | Before | After | What reached it |
+|---|---|--:|--:|---|
+| `field_c3` | C179 / C180 / C181 (and C178) | 0 / 0 / 0 (0) of 30,000 | 105 / 43 / 18 (116) of 3,000 | not equivalent: the fuzz never reached them. `MapView_SlopeAt`'s stand-in flips `Sprite_Current`'s low x / z word to or from 0 for directions 3 and 5 and answers steep; C167..C170 rose to 119 / 107 / 46 / 20 too |
+| `effect_1e` | C59 / C62 | 1 / 7 | 19 / 449 | `Effect3Mode` moves record 4's state; `PoseSound` the y step |
+| `effect_5a` | `_05_Pulse` | 0 of 2,000 | 45 of 2,000 (76 of 4,000) | `ClutStripCopy16` moves `+0x3A` in sub-kind 5's states; `+9` seeded at the end test |
+| `field_e2` | D1 / DS5 / DS8 | 4 / 1 / 1 of 6,000 | 49 / 151 / 48 | `GroundAt` moves the actor's `+0x89` and answers at the seeded ground's edges (0, +-1, +-0xC0 / 0xC1 - W2 fell to 0 without the last); `0x594700` moves the trade pick |
+| `rest_1g` | D11 (debt 18) | 2 of 60,000 | 50 of 6,000 | **back to 6,000 rounds a function** (96 s -> 2 s a `'*'`): `Rand` re-listed with an effect (R4A's pattern), louder `LureInReach`, `Elevation`, `DrawBox3` / `DrawShade`, `ScriptTick`, `LureClose`; `Fish_Swim`'s height seeded at its kind's bounds; D09 / D10 24 / 14, D13 50, C56 1 -> 39; `BOF3X_R1G_ROUNDS` overrides the count for a control run |
+| `rest_4f` | C21 | 3 of 60,000 | 99 | `Sound_PlayEffect` stand-in moves the five settings half the time |
+| `rest_4d` | N70 | 3 | 618 | a stand-in on `0x45EE10` moves the cursor to 0..7; N71 the equivalent |
+| `rest_4a` | C3 / C21 / C29 / C32 | 3 / 4 / 4 / 4 | 697 / 125 / 189 / 265 | boundary seeds; `ClockEffect`, `Rand` moving building levels in `TickKind9` |
+| `rest_4a` | C33b | - | equivalent | the tier table at `0x652928` (100, 300, 500, 1,000, 3,000, 10,000, 30,000, 65,535): a u16 price can never pass the eighth bound, so the original stops at tier 7 too; near variant C33d (two tiers early) refused 1,153 |
+| `rest_4b` | C36 / B36 / D20 / D44 | 4 / 8 / 4 / 2 | 133 / 1,057 / 2,384 of 12,000 / 979 | `RandMove`, `ListBoxMove`, `SpriteMove`, y at the bound; C30 and C39 the same equivalents as before |
+| `rest_2f` | C150 | 2 of 6,000 | 436 | `SoundEffect` moves the members row while `TacticsMembers_Pick` runs, after sound 0x103 |
+
+Every older control of each group re-run and still refused. **Debt 24:**
+`Rest4D_Inject` runs `rest_4d::EntryAbandonTest()` once DIV-0075's switch is
+set - ours with the switch on against Capcom's two steps with the step byte
+taken back by one, 8,000 rounds, 0 mismatches, three plants refused
+3,989..4,000 times (DIV-0075's verification line names it). **Still thin,
+outside the night's lists:** `rest_4d` D33 (4), B12, N47, N07 (5..7); `rest_4a`
+C16 (9); `field_e2` DS9 (1), DS6 (2), IT7 (3); `field_c3` C172 (0 at 3,000);
+`effect_1e` C58 (3), C61 (2); `rest_1g` C76 / C77 (9), C15 (11), C71 (13), D10
+(14). The controls drivers are in this session's scratchpad (`end14/ed1/`,
+`end14/ed2/ctl.py`), not in git.
+
+## 5. The owner's decisions the same night
+
+- **DIV-0076** (`Save_BuildBlock`, R2C's debt 12): the owner confirmed in
+  game that a save's summary shows the leader's name beside record 0's level,
+  and chose record 0 for both. Built on `phase-3/round14-end` behind a switch
+  set after the self-test (DIV-0075's form); `rest_2c` 244,000 rounds, 0
+  mismatches with it off. Owed the owner's eye on the load screen.
+- **Debt 3** (`PartyAction_WaitEffectDone` reading inside `Gfx_PacketPools`
+  with all 20 effect records in use): a field action, not a battle; how full
+  the pool gets in play is unmeasured. Not decided; a log line on
+  `Effect_FindFree` answering `0xFF` would tell.
+- **Debt 12's other half** (`FieldMenu_CampAllowedCell`'s three dead
+  compares): whether any area's collision map holds `0xA1`, `0xAF` or `0x9x`
+  cells is unmeasured; a static scan would settle it. Not decided.
+
+## 6. The merged tip
+
+Merged in the order the reports arrived: EA `1dbba0b`, EC `4386a35` (one
+hand-resolved conflict, `rest_3e_callees.h`: EA's binding under EC's
+comment), ED2 `f32ae5e`, EB `615e04f` (one, `boss_harness.cpp`: EB's row,
+EC's comment), DIV-0076 `19f5de5`, ED1 `12cd36a`. Each agent's own `'*'`
+narrow and wide passed at its branch; the merged tip's verification is below
+(filled in when it ran).
