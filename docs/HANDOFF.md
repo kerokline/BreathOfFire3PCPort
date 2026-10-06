@@ -721,6 +721,14 @@ Local only, gitignored, worth keeping:
 
 ## Traps already paid for
 
+- **A stopped background chain kept running** (2026-10-06): a `bash chain.sh` launched in the background and then
+  stopped through the harness left its child shell alive; a second launch of the same chain ran beside it. Both
+  waited on `tasklist` for the previous launcher, both slipped through the one-second gap between its narrow and
+  wide runs, the second's `cmake --build` failed (`ninja: error: opening deps log: Permission denied`, the launcher
+  exe unwritable) and left the **previous tip's DLL** in `build/` - so a live check that read `inject: 10079 ours`
+  had validated the tip before. Read the `inject:` count against what the tip should report before trusting a
+  chain's result, and give one chain the machine: check `tasklist` for a stray `bash` or launcher before starting
+  another.
 - **`BOF3X_SHADOW='*'` in the main checkout's `build/` fails under the owner's settings** (2026-10-06): `build/bof3x.ini`
   is the owner's (`language=en`), the launcher exports it as `BOF3X_LANG`, and under English the `ConfigText` patch
   re-aims the call at `Config_DrawRowLabel + 0x9F` - which `field_c1`'s clone check reads (`FATAL: ... the site is

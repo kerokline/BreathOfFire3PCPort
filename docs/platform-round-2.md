@@ -107,7 +107,19 @@ pairs of 2026-10-05 - the attract sequence and the ten routes, shop with
 the toolchain's now, so `balioAndSunder_2` (saves to slot 6 on purpose) runs
 on ours and on Capcom's with the owner's slot 6 backed up and put back, and
 the two written slots are compared byte for byte. The owner was away for
-the run (2026-10-06 afternoon). **Result: pending.**
+the run (2026-10-06).
+
+**The first run (08:56..10:28) does not count:** two copies of the chain ran
+at once (HANDOFF's trap of the day) and the build between them failed, so
+the live check ran on the CRT tip's DLL (`inject: 10079 ours`): identical on
+every tick of the attract sequence and all ten routes, which stands as a
+check of `3fab9a2e`, not of the tip; the save route on ours timed out at 12
+minutes with the save not yet written (the original's run reached frame
+21,834 at the limit), so the slot comparison was trivially "identical". Also
+seen: `open FAILED BGMa.DAT` from ours' file layer - the track is not
+shipped (165 files in `BGM/`), the same line is in every combat log before
+this round, and Capcom's runtime logs nothing. **The second run, on the
+rebuilt tip (`inject: 10081 ours`, the save route at 16 minutes): pending.**
 
 ## 7. Next
 
