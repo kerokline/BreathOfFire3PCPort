@@ -357,6 +357,11 @@ extern "C" void __cdecl Rest_EndAfterMessage(void) {
 // stored at 0x92A150 - the copy of the block's +0x70, which was 0 while
 // summed), the next 0xD50 bytes cleared, and the summary copied to the
 // slot's (0x9036D4).
+// DIVERGENCE DIV-0076 (the owner, 2026-10-05): the summary's name is the
+// leader's where its level and +0xC are record 0's; with the switch on, ours
+// takes the name from record 0 too. The switch is set by Rest2C_Inject after
+// the self-test, which compares Capcom's mix.
+unsigned char g_summary_record0 = 0;
 extern "C" void __cdecl Save_BuildBlock(void) {
     PutL(at::kBlock, L(0x8034E0));
     PutL(at::kBlock + 4, L(0x8034E4));
@@ -378,7 +383,7 @@ extern "C" void __cdecl Save_BuildBlock(void) {
     const unsigned record = B(at::kMemberRecord + B(at::kPartyList));
     PutW(0x9046AC, Word(At(0x903590)));
     PutW(0x903A50, 0);
-    const U name = at::kRecords + record * at::kRecordStride;
+    const U name = at::kRecords + (g_summary_record0 ? 0u : record) * at::kRecordStride;   // DIV-0076
     using Strncpy = char* (__cdecl*)(char*, const char*, unsigned);
     SH_AT(Strncpy, at::kStrncpy)(reinterpret_cast<char*>(At(at::kSummary)), reinterpret_cast<const char*>(At(name)), 5);
     SH_AT(Strncpy, at::kStrncpy)(reinterpret_cast<char*>(At(0x904696)), reinterpret_cast<const char*>(At(name + 5)), 4);
@@ -1171,6 +1176,13 @@ extern "C" void __cdecl MasterPanel_DrawFace(int x, int y, unsigned id, unsigned
 
 void Rest2C_Inject() {
     if (bof3::WantsShadow("rest_2c")) rest_2c::SelfTest();
+    // DIVERGENCE DIV-0076: after the self-test, which compares Capcom's summary.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("SaveSummaryRecord0",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_summary_record0)), &was, &is, 1);
+        bof3::Log("DIV-0076    the save slot's summary names record 0, whose level it already shows");
+    }
     BOF3_INJECT(MasterFigure_DrawFaded);
     BOF3_INJECT(MasterFigure_TurnHome);
     BOF3_INJECT(MasterFigure_Settle);

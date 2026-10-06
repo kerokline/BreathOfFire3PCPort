@@ -286,8 +286,10 @@ called.
   into `MoveScript_EffectState` (24). No play value goes past them that the
   code shows.
 - **`Save_BuildBlock` takes the name from the leader's record but the level
-  and `+0xC` from record 0** (`0x903A7A`, `0x903A7C`), whatever the party;
-  described, not judged: what the summary should show is the owner's.
+  and `+0xC` from record 0** (`0x903A7A`, `0x903A7C`), whatever the party.
+  Confirmed in game by the owner and decided 2026-10-05: **DIV-0076** - with
+  the switch `g_summary_record0` on (set after the self-test) ours takes the
+  name from record 0 too; the fuzz compares Capcom's mix with it off.
 - **`Menu_DrawPanelBox` writes into its own argument slots** (h - 2's byte,
   then x + w - 1 and its float over the colour's): the caller's frame, which
   no caller reads after the call.
