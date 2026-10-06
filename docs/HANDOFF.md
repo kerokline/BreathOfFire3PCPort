@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-06: the platform round's step 3 on `phase-3/platform-round-2` - four groups merged, three divergences, 10,081 ours, `'*'` narrow and wide, the state hash live check identical on the attract sequence and all ten routes, the save write byte-identical to Capcom's; nothing pushed, the PR next)
+**Status:** IN PROGRESS (2026-10-06 night: the platform round's step 3 on `phase-3/platform-round-2` - four groups merged, the live check identical and the save write byte-identical; then the day's investigations: the region diff, the music, the PSP's Stallion and the Holy Mantle, with DIV-0077..0081 and the unified-data plan; 10,081 ours; nothing pushed, the PR next; three launches staged for tomorrow)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -40,37 +40,49 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
-000000000000. **The platform round's step 3 is done and live-checked (2026-10-06), on `phase-3/platform-round-2`** (cut
-   from `main` `e047ee9b`; the record [`platform-round-2.md`](platform-round-2.md)). Four groups in a day - SCAN (the
-   hidden-start scan: the game's own code was two functions short; `tools/pe_jumptables.py`), DEBTS (round fourteen's
-   leftovers), CRT (`crt_rest`: fourteen runtime entries ours or the toolchain's), TWO (`game_last`: the two functions)
-   - and three divergences the owner decided off captures the same morning: DIV-0077 (TILE_1 a quad, `BOF3X_TILE1`),
-   DIV-0078 (`Cfg_Load`'s key table ours), DIV-0079 (the six LINE kinds as quads, `BOF3X_LINES`). `'*'` narrow and wide
-   at every merge under `BOF3X_LANG=original` (the ini trap below); the state hash: the attract sequence and all ten
-   routes identical at `inject: 10081 ours`. **Not pushed, no PR yet.** In the order they bite:
-   1. **The PR**: `git log --format=%B e047ee9b..HEAD` for the sign-offs first (every commit has one; the merge
-      commits carry none).
-   2. **The owner's eye**: [`owner-review.md`](owner-review.md) is the one list - the three divergences in play (the
-      dream scene's specks, the fishing gauge and any line, a hand-edited `BOF3.CFG`), the sound resume by ear,
-      DIV-0076's load screen, the layering fix. The owner strikes what they have seen.
-   3. **Left by the groups, small:** the five thin controls DEBTS listed; the 61 run-time raw calls (round thirteen's
+000000000000. **The platform round's step 3 and a day of investigations (2026-10-06), on `phase-3/platform-round-2`** (cut
+   from `main` `e047ee9b`; the round's record [`platform-round-2.md`](platform-round-2.md), 10,081 ours). The morning:
+   four groups - SCAN (`tools/pe_jumptables.py`: the game's own code was two functions short), DEBTS (round fourteen's
+   leftovers), CRT (`crt_rest`: fourteen runtime entries ours or the toolchain's), TWO (`game_last`: the two functions) -
+   and DIV-0077 (TILE_1 a quad, `BOF3X_TILE1`), DIV-0078 (`Cfg_Load`'s key table ours), DIV-0079 (the six LINE kinds as
+   quads, `BOF3X_LINES`); `'*'` narrow and wide at every merge under `BOF3X_LANG=original` (the ini trap below); the state
+   hash identical on the attract sequence and all ten routes, the slot-6 save write byte-identical to Capcom's. The
+   afternoon and evening, from [`platform-next.md`](platform-next.md)'s A and B: the region diff
+   ([`region-diff.md`](region-diff.md): US, FR, DE PSX verified and held after all; the regional builds differ beyond text
+   in 83 rows of four kinds, one of them a collision fix - **DIV-0080**, Dauna Mine's minecart map walled by coordinate,
+   `BOF3X_AREA4_WALLS`, the attract never meets it), the music ([`bgm-comparison.md`](bgm-comparison.md): file N is song N,
+   the MP3s MPEG-1 Layer III 128 kbit/s CBR, the PC replays every intro - the owner heard the seams, so **DIV-0081**, the
+   loop-point table, 13 tracks measured, `BOF3X_MUSIC_LOOPS`), the PSP's Stallion ([`psp-stallion.md`](psp-stallion.md):
+   P6 palettes only and P7 a name, confirmed; the Holy Mantle P4 **refuted**), and
+   [`unified-data-plan.md`](unified-data-plan.md), the detailed importer plan in ten steps. **Not pushed, no PR yet.** In
+   the order they bite:
+   1. **Tomorrow's launches, staged** (the PC was off overnight): the loop measurement of the remaining songs
+      (`bgm-comparison.md` section 11's Paused note: `BGM_SCRATCH=<dir> python tools/bgm/measure_loops.py run --workers 3`,
+      then `gen_loop_table.py`, `prove_loops.py`, rebuild; about 1 h 45 min with three workers), the Volt EXP / trigger-mode
+      read (brief `plat2/brief_volt.md`; the owner's 78-EXP fight on `owner-review.md`), the wide-edge cull cleanup
+      (`owner-review.md` "Reported by the owner": the culls still inside the new view).
+   2. **The owner's calls**, all on [`owner-review.md`](owner-review.md): the town theme `000` (its file is shorter than
+      one loop: accept, stretch, or samples from outside the file); the Stallion option (a palette layer from the PSP disc,
+      about a day; the owner recorded `tools/recipes/stallion.txt`, untracked, `# save stallion`); the minecart walk
+      (DIV-0080's live check); which unified-data step to start (1, 2 and 5 need nothing from the owner); the PR.
+   3. **The owner's eye and ear**, same list: `analysis/bgm/listen/153_loop_fixed.wav` then the game with
+      `BOF3X_MUSIC_LOOPS` on against `=0`; the dream scene's specks (DIV-0077), the fishing gauge and any line (DIV-0079),
+      the sound resume by ear, the layering fix. DIV-0076 is seen and struck.
+   4. **The PR**: `git log --format=%B e047ee9b..HEAD` for the sign-offs first (every non-merge commit has the owner's;
+      the merge commits carry none).
+   5. **Left by the groups, small:** the five thin controls DEBTS listed; the 61 run-time raw calls (round thirteen's
       1.3, a decision); `pe_hidden.py` and `pe_funcs.py` still stop silently at an undecodable byte (SCAN's finding;
       fixing them regenerates the entry lists); two doc attributions SCAN corrected in its doc but not at their source
       (`mode-rest.md` section 0's "pc_funcs.json" is `pc_hidden.json`'s size; `Mp3_Create`'s evidence puts the decoder
-      start at `0x5AB000`, it is `0x5ADF00`).
-   4. **What is next for the platform round is staged for the owner's pick** in
-      [`platform-next.md`](platform-next.md): A the music investigation and the decoder's fate (I23, step 4), B the
-      single-source game data (the region measurement, then the importer), C the PSP logic changes (I32), D the cutover
-      (state 2 proved, then our own executable); their dependencies and three ways to order them, with a recommendation.
-      **A and B ran 2026-10-06** (`phase-3/next-music`, `phase-3/next-region`, `-read`, all merged): A waits on the
-      owner's ear (`owner-review.md`, the listening set in `analysis/bgm/listen/`); B found the regional builds differ
-      beyond text in one collision fix (Dauna Mine's minecart map) the owner wants as the default - its form is the
-      owner's call - built as DIV-0080 the same evening. **The unified-data plan is written**
-      ([`unified-data-plan.md`](unified-data-plan.md)): ten steps, 1, 2 and 5 need nothing from the owner. What is still Capcom's: the runtime's start-up, allocator and per-thread data, the decoder, the
-      software renderer's converters.
-   **Mechanics that held:** briefs and scripts in the session-`7d0c9683` scratchpad (`plat2/common.md` + `brief_*.md`,
-   `live_plat3.sh`, `chain_final.sh`, `launcher/` the 10,081 build). The agents' branches `phase-3/plat2-scan/-debts/
-   -crt/-two` and their `.claude/worktrees/agent-*` are merged and can go.
+      start at `0x5AB000`, it is `0x5ADF00`); the PSP's eleven map-band changes unread (region-diff 6); `psx-eu-en` not
+      held. What is still Capcom's: the runtime's start-up, allocator and per-thread data, the decoder, the software
+      renderer's converters.
+   **Mechanics that held:** briefs and scripts in the session-`7d0c9683` scratchpad (`plat2/common.md`, `common_next.md`
+   + `brief_*.md`, `live_plat3.sh`, `chain_final.sh`, `launcher/` the 10,081 build). The agents' branches
+   `phase-3/plat2-scan/-debts/-crt/-two`, `phase-3/next-music/-region/-region-read/-stallion`, `phase-3/area4-walls`,
+   `phase-3/music-loops` and their `.claude/worktrees/agent-*` are merged and can go. **Resuming an agent by message
+   keeps its context** (the region agent did four tasks in a row); **a stopped background chain may keep running** (the
+   trap below).
 
 00000000000. **Round fourteen's end is done and the platform round's step 2 with it (2026-10-05 night); both sit on
    `phase-3/platform-round`** (cut from `main` `2df90d9`; `phase-3/round14-end` merged into it at `cdcadb9`; the docs
@@ -718,7 +730,7 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-`phase-3/platform-round-2` holds 2026-10-06's work, unpushed (item 0); `phase-3/platform-round` is merged (PR #42). The ten agent branches `phase-3/r14end-ea` .. `-ed2` and `phase-3/platform-ph/pl/pm/ps/pw` and their `.claude/worktrees/agent-*` are merged and can go, with the older ones: the six wave-four worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*`.
+`phase-3/platform-round-2` holds 2026-10-06's work, unpushed (item 0; the owner's `tools/recipes/stallion.txt` is untracked and theirs); `phase-3/platform-round` is merged (PR #42). The ten agent branches `phase-3/r14end-ea` .. `-ed2` and `phase-3/platform-ph/pl/pm/ps/pw` and their `.claude/worktrees/agent-*` are merged and can go, with the older ones: the six wave-four worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*`.
 Before it: nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
 half is pushed on `claude/round-10-cleanup-handoff-qtwcrk` (item 0) and
 wants the `'*'` run and the other game-side checks before its PR. The wave
