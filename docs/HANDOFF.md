@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-05 night: round fourteen's end and the platform round's step 2 ran side by side - `phase-3/round14-end` done and merged into `phase-3/platform-round`, 10,065 ours, `'*'` narrow and wide; the state hash live check running; nothing pushed)
+**Status:** IN PROGRESS (2026-10-05 night: round fourteen's end and the platform round's step 2 ran side by side - `phase-3/round14-end` done and merged into `phase-3/platform-round`, 10,065 ours, `'*'` narrow and wide; the state hash live check passed - the attract sequence and all ten routes identical; nothing pushed, the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -47,11 +47,12 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    (the five groups, the thirteen hidden functions, the read pass's questions answered, four proposed ledger entries,
    the merges). `'*'` narrow and wide at `cdcadb9` in two build directories: 10,065 ours, 0 mismatches; `ledger_check`
    76 entries, 0 errors. In the order they bite:
-   1. **The state hash live check** - running as this was written (`live_plat.sh` in this session's scratchpad: ours
-      against the 168-range pairs, the attract sequence and ten routes, shop with `--slot0-hold`); its result goes in
-      [`platform-round.md`](platform-round.md) section 5 and [`state-hash.md`](state-hash.md). The shell seven, `Snd_Init`
-      and game modes 3 and 5 run on every route, so this is their first live check; TILE_1 and `Gpu_SetTexWindow` in
-      `whelpBoss`.
+   1. ~~**The state hash live check**~~ - passed 2026-10-05 night ([`platform-round.md`](platform-round.md) section 6):
+      the attract sequence identical on 10,305 ticks and the oracle at every frame, the ten routes identical on every
+      tick, `Rand` counts the references'. **Two traps found on the way:** the attract side wants the window in front
+      (the intro videos' frame alignment differs unfocused - a 10,009 control run diverged the same way), and any
+      state-hash run wants nobody at the machine (a focus change reaches `Sound_PauseAll` / `Sound_ResumeAll`, ours now,
+      and moves the sound page). The scripts: `live_plat.sh`, `live_plat_routes2.sh`.
    2. **The owner's calls**, gathered in `platform-round.md` section 4 and `round-14-cleanup.md` section 5: TILE_1 drawn
       as one point (visible: `whelpBoss`'s motes), the one-texel FT3 colour, `Cfg_Load`'s key-line overrun,
       `Sound_ResumeAll` after a fade, the `0x91` camp cells (Capcom's bug on both machines; a one-line DIV), debt 3's

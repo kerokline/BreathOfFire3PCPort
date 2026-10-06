@@ -7,8 +7,9 @@ one night alongside round fourteen's end: five groups from
 `phase-3/platform-round` with the round's end merged after them
 (`cdcadb9`). **56 functions ours, 10,009 -> 10,065.** Headless-verified
 per group (each group's own shadow and `'*'` narrow and wide) and at the
-merged tip (section 5); the state hash live check is the next thing
-(section 6). Nothing pushed.
+merged tip (section 5); **live-checked on the state hash: the attract
+sequence and all ten routes identical to Capcom's on every tick** (section
+6). Nothing pushed.
 
 [`platform-read-pass.md`](platform-read-pass.md) measured which of Capcom's
 remaining starts still run under ours and named 40 for a takeover round.
@@ -151,9 +152,19 @@ whelpBoss 22,315, shop 2,075, the two menus 112) and is **identical on every
 page but one**: `0x7DE000` - `Snd_BufferDesc`, `Snd_WaveFormat`,
 `Music_Events`, `Snd_Device` - differs intermittently from the first ticks on
 every route (combat 348 of 2,561 ticks from tick 28; whelpBoss 5,438 of
-13,121). Last night's 10,009 was identical there, so it is tonight's
-`Snd_Init` or its neighbours; the bytes are being read (a drill with raw
-dumps at ticks 28 and 300, both sides) - section 6.1 when known. The first
+13,121). Last night's 10,009 was identical there, so the suspicion fell on
+tonight's `Snd_Init` - **and it was the environment, not the code**: the
+first series ran while the owner was using the machine, and the window's
+focus changes drive `Sound_PauseAll` / `Sound_ResumeAll` (ours since tonight),
+which write that page; the references were recorded with no focus changes.
+A drill of combat with raw dumps at ticks 28 and 300 (`drill_combat_*`,
+the owner away) found every differing byte of the page inside the skip
+list's own ranges (`Music_Events`, `Snd_Device`, `Key_Table`, `DInput_*`) and
+its hash identical to the references on all 2,561 ticks; **the ten routes
+run again with the machine quiet (`live_plat_routes2.sh`, `cn_*_plat2`) are
+identical to the references on every tick, the sound page included.** A
+second trap, the same as the attract's: a state-hash run wants nobody at the
+machine, not only no other load - a focus change reaches the sound layer. The first
 ticks' VRAM-shadow and `0x937000` pages (menu_screens, field_menu,
 whelpBoss, tick 3 only) are the start-up timing noise round fourteen's 13.1
 describes.
@@ -178,8 +189,7 @@ every page but the sound page under investigation; TILE_1 and
 
 ## 7. Next
 
-1. Section 6.1: the sound page's bytes, then whatever they say (a fix of
-   ours, a skip-list line with its reason, or a ledger entry).
+1. The PR: `phase-3/platform-round`, the sign-offs checked first.
 2. The plan's step 3: the runtime's seventeen entry points, `rand` first.
 3. The owner's calls in section 4; the mode-rest scan for other hidden
    starts (section 2).
