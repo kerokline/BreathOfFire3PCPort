@@ -16,15 +16,26 @@ This is the scan that report proposed, in two halves:
    first cell points into .text, walked the same way. A target that is neither
    a [[func]] start nor inside the dispatching function's own reachable code is
    a candidate.
-2. Every [[func]]'s catalogue extent (pc_hidden.json's size, else
-   pc_funcs.json's, clipped at the next [[func]] start) against its reachable
-   code: the flow from the start (branches inside the extent, its own jump
-   tables' cases; ret, tail jumps and indirect jumps end a path). Bytes of the
-   extent that the flow never reaches and that are not padding or a table the
-   flow read hold a start the catalogue missed: a candidate, host named. The
-   candidate's own flow is walked in turn, so one gap may give several.
-   Sizes the groups measured by hand (`0x.. bytes` in a [[func]]'s evidence)
-   are compared with the catalogue's.
+2. Every [[func]]'s bytes, to the next [[func]] start, against its reachable
+   code: the flow from the start (branches inside, the cases of its own switch
+   tables - a table in .text; a table in .data is a pointer table whose cells
+   are functions, not cases; ret, tail jumps to a start or out of the range,
+   and other indirect jumps end a path). Bytes the flow never reaches that are
+   not padding, a switch table, or an inline table the code reads as data hold
+   a start no flow explains: a candidate, host named. The candidate's own flow
+   is walked in turn, so one gap may give several. The catalogue's extent
+   (pc_hidden.json's size, else pc_funcs.json's) is compared with where the
+   code ends, and the sizes the groups measured by hand (the first `0x..
+   bytes` in a [[func]]'s evidence) with the catalogue's.
+
+Each candidate is classed by what reaches it: `function` (called directly,
+through a table in .data or a call table, by a tail jump from another
+function, or a pointer to it in data), `chunk` (only a nearby tail jump of one
+known function reaches it: that function's second piece), `case` (a .text
+switch table's target, or a NOTFN row of the round-fourteen cut),
+`catalogued` (a pc_funcs.json / pc_hidden.json start with no [[func]]: known,
+not hidden), `function?` (only an immediate or a .text table names it), `none`
+(nothing reaches it, or not code).
 
     python tools/pe_jumptables.py [--symbols symbols.toml] [--out analysis/pc_jumptables.json]
 
@@ -52,7 +63,6 @@ PAD_SEQS = [bytes.fromhex(h) for h in (
 TABLE_MEM = re.compile(r'^dword ptr \[(\w+)\*4 \+ (0x[0-9a-f]+)\]$')
 DISP_RE = re.compile(r'\[[^\]]*?(0x[0-9a-f]{6,})\]')
 BYTES_RE = re.compile(r'\b(0x[0-9A-Fa-f]+) bytes\b')
-PROLOGUES = ('push ebp', 'push ebx', 'push esi', 'push edi', 'push ecx', 'sub esp')
 
 
 def pad_len(data, off, limit):
@@ -255,7 +265,7 @@ class Scan:
 def run(a):
     sc = Scan(a)
     starts = set(sc.starts)
-    flows, gaps_of = {}, {}
+    flows = {}
     disagree = []
     padding_only = 0
     short, long_ = [], []  # catalogue extents ending before / after the code
@@ -336,7 +346,7 @@ def run(a):
                     while q + 4 <= s + j and sc.in_text(sc.img.dword(q)):
                         q += 4
                 else:
-                    while q < s + j and sc.img.data[sc.img.off(q)] not in (0x90, 0xCC):
+                    while q < s + j and not pad_len(sc.img.data, sc.img.off(q), s + j - q):
                         q += 1
                 inline[s + i + k] = q - (s + i + k)
                 covered[i + k:q - s] = b'' * (q - s - i - k)
@@ -429,7 +439,7 @@ def run(a):
         for c in cells:
             if c in starts:
                 continue
-            if c in owner_of:
+            if owner_of.get(c) in starts:  # inside a known start's own code
                 if not sc.in_text(d['pc']):
                     inside.append(dict(pc=f'{c:#x}', table=d['name'],
                                        inside=sc.funcs.get(owner_of[c], {}).get('name', hex(owner_of[c]))))
@@ -507,7 +517,13 @@ def run(a):
                dispatch_targets=n_targets, named_tables=named_tables,
                evidence_size_padding_only=padding_only,
                dispatch_sites_off_flow=off_flow,
-               inline_tables=len(inline),
+               # The round-fourteen cut's NOTFN rows: how many a known start's
+               # flow reaches as its own code (a case), and which it does not.
+               notfn_in_flow=sum(1 for c in sc.notfn if c in owner_of),
+               notfn_not_in_flow=[f'{c:#x}' for c in sorted(sc.notfn) if c not in owner_of],
+               # start, bytes, the largest byte (a switch's byte index stays small)
+               inline_tables=[[f'{t:#x}', n, max(sc.img.data[sc.img.off(t):sc.img.off(t) + n] or b'\0')]
+                              for t, n in sorted(inline.items())],
                data_cells_inside_code=inside,
                catalogue_short=[[f'{x:#x}' for x in r] for r in short],
                catalogue_long=[[f'{x:#x}' for x in r] for r in long_],
@@ -517,7 +533,7 @@ def run(a):
     print(f'{len(sc.starts)} starts; {len(sites)} table dispatches in .text '
           f'({n_targets} cells), {named_tables} named tables; '
           f'{len(out)} candidates {dict(cc)}; hand sizes: {len(disagree)} disagree, '
-          f'{padding_only} by padding only; catalogue extents {len(short)} short of the code, '
+          f'{padding_only} by padding only; {len(inline)} inline tables; catalogue extents {len(short)} short of the code, '
           f'{len(long_)} past it -> {a.out}')
 
 
