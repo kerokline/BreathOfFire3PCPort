@@ -84,7 +84,7 @@ takeovers (its fuzz wants every earlier module's done; TWO).
 
 `'*'` with `BOF3X_LANG=original` (the trap below): at `bea149d6` narrow
 1,056 `MISMATCHES` lines all 0, `inject: 10065 ours`; at `3fab9a2e` narrow
-1,062 lines all 0, `inject: 10079 ours` (wide running as this was written);
+and wide 1,062 lines all 0, `inject: 10079 ours`;
 at the final tip narrow and wide in the chain of section 6. Each group ran
 `'*'` narrow and wide at its own tip (their docs). `ledger_check` 79
 entries, 0 errors at every merge.
