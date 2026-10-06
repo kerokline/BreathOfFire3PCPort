@@ -252,7 +252,7 @@ int ListTitleX(const unsigned char* label, int n) {
     return 78 - static_cast<int>(TextAdvance_Width(label) / 2);
 }
 
-constexpr U kTextDrawAt = 0x516B30;    // its name is a macro here
+constexpr U kTextDrawAt = 0x516B30;    // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 // The title draws of the two list windows that are still Capcom's: the
 // Text_DrawAt call after `6 * (13 - Text_CharCount) + x` in each.
 constexpr U kTitleCallA = 0x596D13;    // titles 0x66AF10

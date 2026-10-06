@@ -79,8 +79,8 @@ constexpr std::uint32_t kKind18States = 0x65406C;    // EffectKind18_States
 }  // namespace at
 
 // Callees with no name in symbols.gen.h: other groups' functions this round.
-constexpr std::uint32_t kSetCell = 0x579F00;      // group DD's
-constexpr std::uint32_t kFlagsClear40 = 0x57C7A0; // group DD's; ScriptFlags_Clear40
+constexpr std::uint32_t kSetCell = bof3::addr::AreaMap_SetByte;      // group DD's
+constexpr std::uint32_t kFlagsClear40 = bof3::addr::ScriptFlags_Clear40; // group DD's; ScriptFlags_Clear40
 
 using Handler = void (__cdecl*)();
 

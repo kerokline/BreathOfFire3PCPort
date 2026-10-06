@@ -65,8 +65,8 @@ constexpr std::uint32_t kAbilityFlags8 = 0x65C4D8;
 constexpr std::uint32_t kAbilityFlagsD = 0x65C4DD;
 // Constants the ops store.
 constexpr std::uint32_t kAnimTable = 0x64B078;     // the enemy's animation bytes 0..7
-constexpr std::uint32_t kHookAValue = 0x437720;    // group CE's
-constexpr std::uint32_t kHookBValue = 0x437750;    // group CE's
+constexpr std::uint32_t kHookAValue = bof3::addr::BattleHook_Area189Script;    // group CE's
+constexpr std::uint32_t kHookBValue = bof3::addr::BattleHook_Area189Transition;    // group CE's
 
 // The op tables in .data (symbols.toml [[data]] EnemyOp_*): each a run of
 // code pointers indexed by one of Sprite_Current's step bytes.

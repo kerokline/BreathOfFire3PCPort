@@ -48,8 +48,8 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 }  // namespace
 
 const Callees kOriginals = {
-    {Fn<Handler>(0x5986F0), Fn<Handler>(0x5985A0)},
-    {Fn<Handler>(0x5986F0), Fn<Handler>(0x598700)},
+    {Fn<Handler>(bof3::addr::BattleResultWin_NextStep), Fn<Handler>(bof3::addr::BattleResultWin_DrawExp)},
+    {Fn<Handler>(bof3::addr::BattleResultWin_NextStep), Fn<Handler>(bof3::addr::BattleResultWin_DrawZenny)},
     Fn<unsigned char (__cdecl*)()>(kCountMembers),
     Fn<unsigned char (__cdecl*)()>(kZennyBonus),
     Fn<void (__cdecl*)(unsigned)>(kAddExp),
@@ -60,7 +60,7 @@ const Callees kOriginals = {
     Fn<void (__cdecl*)(int, int, int, int)>(kDrawFrame),
     Fn<unsigned (__cdecl*)(unsigned)>(kExpToNext),
     Crt_sprintf, Msg_SystemPtr, PartySet_Select, Window_Alloc, File_LoadDone, Snd_LoadBankFile,
-    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(0x590BB0),   // Inventory_Add, ours
+    Fn<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(bof3::addr::Inventory_Add),   // Inventory_Add, ours
     Text_DrawAt, Text_DrawFont12, BattleWin_DrawMediumBox,
 };
 Callees g = kOriginals;

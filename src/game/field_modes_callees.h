@@ -10,6 +10,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace field_modes {
 
 // Unnamed addresses, each read in docs/field-modes.md. The PSX twin of each
@@ -35,13 +37,13 @@ constexpr std::uint32_t kMusicTrack = 0x904131;       // the track last started,
 
 // The callees without a name in symbols.toml (docs/field-modes.md section 6
 // has what each is): called by address.
-constexpr std::uint32_t kChangeArea = 0x594E00;       // PSX Field_ChangeArea 0x801A0A30
-constexpr std::uint32_t kStartMusic = 0x587A20;       // PSX 0x801625AC
-constexpr std::uint32_t kTaskEnd = 0x5A99AD;          // ends the current task; never returns
-constexpr std::uint32_t kEffectAlloc = 0x589810;      // PSX 0x8019701C
-constexpr std::uint32_t kPlaceParty = 0x531F90;       // PSX 0x801BF1A8
-constexpr std::uint32_t kOpenScript = 0x4976D0;       // Msg_OpenScript
-constexpr std::uint32_t kViewShift = 0x56FCA0;        // PSX 0x80155154
+constexpr std::uint32_t kChangeArea = bof3::addr::Field_ChangeArea;       // PSX Field_ChangeArea 0x801A0A30
+constexpr std::uint32_t kStartMusic = bof3::addr::Music_LoadFile;       // PSX 0x801625AC
+constexpr std::uint32_t kTaskEnd = bof3::addr::Task_Exit;          // ends the current task; never returns
+constexpr std::uint32_t kEffectAlloc = bof3::addr::Effect_FindFree;      // PSX 0x8019701C
+constexpr std::uint32_t kPlaceParty = bof3::addr::Party_DropIn;       // PSX 0x801BF1A8
+constexpr std::uint32_t kOpenScript = bof3::addr::Msg_OpenScript;       // Msg_OpenScript
+constexpr std::uint32_t kViewShift = bof3::addr::MapView_FillCells;        // PSX 0x80155154
 
 struct Callees {
     void (__cdecl* call_a)(unsigned);                                             // Scenario_CallA (ours)

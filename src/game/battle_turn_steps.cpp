@@ -52,7 +52,7 @@ const Callees kOriginals = {
     Fn<unsigned (__cdecl*)(unsigned, unsigned)>(bof3::addr::Battle_ClearStatus),
     Fn<void (__cdecl*)(unsigned char*)>(bof3::addr::Sprite_ReleaseTint),
     Fn<void (__cdecl*)(unsigned)>(bof3::addr::Battle_ReturnQueuedItem),
-    Fn<void (__cdecl*)(unsigned)>(0x4DF820),  // Port_DroppedCall (a macro in symbols.gen.h: not ours)
+    Fn<void (__cdecl*)(unsigned)>(bof3::addr::Port_DroppedCall),  // Port_DroppedCall (ours; called by its address)
     Fn<void (__cdecl*)(int)>(bof3::addr::Music_FadeOutStop),
     Fn<void (__cdecl*)(unsigned, int)>(bof3::addr::Music_Play),
     Fn<void (__cdecl*)()>(bof3::addr::Battle_OpenMsgWindow),

@@ -29,19 +29,19 @@ constexpr std::uint32_t kPartyList = 0x904062;
 // Field_ActorStates is +0x10 of the first, the equipment bytes +0x12..+0x17.
 constexpr unsigned kRecordSize = 0xA4;
 
-// --- Callees owned elsewhere or still Capcom's (raw addresses) ------------
+// --- Callees owned elsewhere (by address; ours, named by symbol) ----------
 // 0x5725C0 is group M's (field_misc.cpp, round 6): MapView_CheckHeightScale,
 // AreaMap_Slope(x, z, direction), MapView_HeightScale = 0; the slope's long
 // back and DamageScratch's first byte 1 on a slope, else 0. The direction is
 // read as its low byte.
-constexpr std::uint32_t kSlopeAt = 0x5725C0;
-// Capcom's, unread beyond their use here (none reached by the shop route):
+constexpr std::uint32_t kSlopeAt = bof3::addr::MapView_SlopeAt;
+// Unread beyond their use here (none reached by the shop route):
 constexpr std::uint32_t kCellsAllWide = bof3::addr::AreaMap_CellsAllWide;   // AreaMap_CellsAll's other footprint (3 x 3)
 constexpr std::uint32_t kCellsNoneWide = bof3::addr::AreaMap_CellsNoneWide;  // AreaMap_CellsNone's
-constexpr std::uint32_t kTurnProbe = 0x535610;      // (x, z, 0, height word): al, the way is blocked
+constexpr std::uint32_t kTurnProbe = bof3::addr::Field_WayBlocked;      // (x, z, 0, height word): al, the way is blocked
 constexpr std::uint32_t kFloorHurt = bof3::addr::Field_FloorHurt;      // (kind byte): the floor's damage by kind 0..8
-constexpr std::uint32_t kFlash = 0x534DB0;          // (n byte): the leader's CLUT flash, sound 0x108
-constexpr std::uint32_t kHpLose = 0x537480;         // (amount, member byte): ax, the HP taken
+constexpr std::uint32_t kFlash = bof3::addr::Sprite_FlashClut;          // (n byte): the leader's CLUT flash, sound 0x108
+constexpr std::uint32_t kHpLose = bof3::addr::Char_LoseHp;         // (amount, member byte): ax, the HP taken
 constexpr std::uint32_t kHpGain = bof3::addr::Char_GainHp;   // R2A: (amount, member byte)
 
 struct Callees {

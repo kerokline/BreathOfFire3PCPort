@@ -62,8 +62,8 @@ constexpr U kObjFlag84 = 0x7DEF04, kObjWord88 = 0x7DEF08, kObjX8C = 0x7DEF0C, kO
 constexpr U kActiveMember = 0x9035A4;
 constexpr U kSpriteCurrent = 0x937F88;
 // The 8 px UI font (x, y, colour, count, text) -> text end - group DB's
-// (round eight), not ours: called through its raw address.
-constexpr U kTinyFont = 0x516E70;
+// (round eight), called through its address (ours, named by symbol).
+constexpr U kTinyFont = bof3::addr::Text_DrawSmall;
 
 // The named tables, by the address their symbols.gen.h macros name.
 namespace at {

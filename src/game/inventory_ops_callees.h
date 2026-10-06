@@ -9,6 +9,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace inventory_ops {
 
 namespace at {
@@ -62,7 +64,7 @@ constexpr unsigned kObjStride = 0x14C;            // ObjTrio's stride
 // never a name (the round's rule): 0x5891C0 (anim, 0, buffer, size) - calls
 // 0x589160 (which copies from the sprite's +0x50 into the buffer), sets the
 // sprite's byte +0x4B to the animation and calls 0x589350.
-constexpr std::uint32_t kSetAnimFrom = 0x5891C0;
+constexpr std::uint32_t kSetAnimFrom = bof3::addr::Sprite_AnimFromSet;
 
 struct Callees {
     int (__cdecl* party_count)(unsigned);                                         // Party_Count (field_event.cpp)

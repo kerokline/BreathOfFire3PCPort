@@ -81,7 +81,7 @@ constexpr U kCharStride = 0xA4;
 constexpr U kGrowthTable = 0x667248;    // 8 x {lo, hi, n}
 constexpr U kGrowthValues = 0x667260;   // u8 per roll sum
 constexpr U kGrowth = 0x903640;         // 8 x 5 bytes, written then cleared
-constexpr U kGameTask = 0x495800;       // task 0's body for a game
+constexpr U kGameTask = bof3::addr::Field_Task;       // task 0's body for a game
 constexpr U kMenuStates = 0x929F02;     // 0x929F02, 0x929F03, 0x929F05 cleared
 // The title menu's pieces.
 constexpr U kPacketNext = 0x7E0670;     // Gfx_PacketNext
@@ -121,23 +121,23 @@ constexpr U kChoiceCursor = 0x6BC881;   // u8: the save menu's three-way cursor
 }  // namespace at
 
 // --- Other groups' functions and Capcom's own, by address ---------------------
-constexpr U kWindowFrame = 0x57CF60;    // group Y: (x, y, w, h, 0, colour)
-constexpr U kWindowBox = 0x5762D0;      // group Y: (x, y, w, h)
-constexpr U kWindowBack = 0x575690;     // group Y: (style byte)
-constexpr U kWindowFrame5 = 0x574AB0;   // group Y: (x, y, w, h, colour byte)
+constexpr U kWindowFrame = bof3::addr::Menu_DrawBox;    // group Y: (x, y, w, h, 0, colour)
+constexpr U kWindowBox = bof3::addr::Menu_DrawBorder;      // group Y: (x, y, w, h)
+constexpr U kWindowBack = bof3::addr::Menu_DrawBackdrop;     // group Y: (style byte)
+constexpr U kWindowFrame5 = bof3::addr::Menu_DrawTitleBox;   // group Y: (x, y, w, h, colour byte)
 constexpr U kSlotDraw = bof3::addr::Menu_DrawSaveSlot;   // 0x576960, FO: (slot, x, y, summary or 0)
-constexpr U kSlotCursor = 0x573CE0;     // group Y: (x, y, w, h, flag, n)
-constexpr U kItemPrice = 0x5749F0;      // group Y: (kind, item) -> price in ax
-constexpr U kMenuYesNo = 0x5747D0;      // Menu_YesNo, group Y
-constexpr U kDrawHand = 0x5905D0;       // Menu_DrawHand, group W
-constexpr U kRecalcStats = 0x590660;    // Char_RecalcStats, group W
-constexpr U kShopFlag = 0x5918E0;       // group W: (1) -> al
-constexpr U kInventoryRemove = 0x591B60;   // (kind, item, count, 0)
-constexpr U kInventoryAdd = 0x590BB0;   // Inventory_Add, group W; a fourth dword it does not read
+constexpr U kSlotCursor = bof3::addr::Menu_DrawCursorBox;     // group Y: (x, y, w, h, flag, n)
+constexpr U kItemPrice = bof3::addr::Item_BasePrice;      // group Y: (kind, item) -> price in ax
+constexpr U kMenuYesNo = bof3::addr::Menu_YesNo;      // Menu_YesNo, group Y
+constexpr U kDrawHand = bof3::addr::Menu_DrawHand;       // Menu_DrawHand, group W
+constexpr U kRecalcStats = bof3::addr::Char_RecalcStats;    // Char_RecalcStats, group W
+constexpr U kShopFlag = bof3::addr::KeyItem_Has;       // group W: (1) -> al
+constexpr U kInventoryRemove = bof3::addr::Inventory_Remove;   // (kind, item, count, 0)
+constexpr U kInventoryAdd = bof3::addr::Inventory_Add;   // Inventory_Add, group W; a fourth dword it does not read
 constexpr U kFindFirst = 0x5B979A;      // the CRT's _findfirst
 constexpr U kFindNext = 0x5B9867;       // the CRT's _findnext
-constexpr U kTaskRestart = 0x5A9976;    // restarts the current task at an entry; never returns
-constexpr U kVoicePlay = 0x5A7140;      // a stream of kind 1 or more: plays the WAV file image
+constexpr U kTaskRestart = bof3::addr::Task_Restart;    // restarts the current task at an entry; never returns
+constexpr U kVoicePlay = bof3::addr::SndStream_Play;      // a stream of kind 1 or more: plays the WAV file image
 constexpr U kVoiceIsPlaying = bof3::addr::SndStream_IsPlaying;
 
 struct Callees {

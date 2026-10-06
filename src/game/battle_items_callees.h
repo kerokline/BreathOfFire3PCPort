@@ -80,13 +80,13 @@ constexpr std::uint32_t kStreamBuffer = 0x7DE3C8;
 }  // namespace at
 
 // Raw addresses of callees this group does not own (see the top).
-constexpr std::uint32_t kCommitSorted = 0x572FA0;
-constexpr std::uint32_t kActorIsOut = 0x4456C0;
+constexpr std::uint32_t kCommitSorted = bof3::addr::MapView_LinkPrimAt;
+constexpr std::uint32_t kActorIsOut = bof3::addr::Battle_ActorIsOut;
 constexpr std::uint32_t kEnemyAnimation = bof3::addr::BattleEnemy_SetAnimationAs;   // 0x435A20, R3A's (round 14)
-constexpr std::uint32_t kActorSound = 0x446A50;
+constexpr std::uint32_t kActorSound = bof3::addr::Battle_PlayActorCue;
 constexpr std::uint32_t kEnemySound = bof3::addr::Sound_PlayEffectUnlessNone;  // BE3's since round twelve (battle_e3.cpp): the same value, so the fuzz keys stand
-constexpr std::uint32_t kSetTint = 0x454CC0;
-constexpr std::uint32_t kPlayById = 0x587900;
+constexpr std::uint32_t kSetTint = bof3::addr::Sprite_SetTint;
+constexpr std::uint32_t kPlayById = bof3::addr::Sound_PlayById;
 
 struct Callees {
     void (__cdecl* set_draw_mode)(unsigned char*, int, int, unsigned, unsigned long);   // Gpu_SetDrawMode (ours)

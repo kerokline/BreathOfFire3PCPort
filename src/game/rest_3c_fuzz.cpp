@@ -244,7 +244,7 @@ const bh::Callee kCallees[] = {
     // R3D's (ours; rows keyed by address)
     // 0x44F1D0 (target, status): cmp bl, 2 and and esi, 0xFF on the target, handed on whole to callees that read
     // its byte; Effect_Inflict40Heal20Ap4 pushes eax with the caller's upper bytes
-    {"0x44F1D0", at::kInflict, at::kInflict, 2, {kU8, kAll}, bh::Answer::kGarbage, 0, 0},
+    {"0x44F1D0", at::kInflictStatus, at::kInflictStatus, 2, {kU8, kAll}, bh::Answer::kGarbage, 0, 0},
     {"0x44F650", at::kRaiseStat, at::kRaiseStat, 2, {kAll, kAll}, bh::Answer::kGarbage, 0, 0},
     {"0x44FBB0", at::kRaiseByAbility, at::kRaiseByAbility, 1, {kAll}, bh::Answer::kFlag, 0, 0},
     {"0x44FC60", at::kMissInflict, at::kMissInflict, 1, {kAll}, bh::Answer::kFlag, 0, 0},

@@ -402,7 +402,7 @@ rebound in the round-ten form (the value unchanged, so the fuzz keys stand):
 - `battle_damage.cpp`'s `kOriginals`: `0x44FA70`, `0x44F1D0`, `0x44F030` ->
   `bof3::addr::Battle_StatusResisted80`, `Battle_InflictStatus`,
   `Battle_PsiStatusDeathAffinity` (a line beside the include says so);
-- `battle_e5_callees.h`: `kInflict`, `kResisted`, `kMissTail` ->
+- `battle_e5_callees.h`: `kInflictStatus` (`kInflict` until 2026-10-06), `kResisted`, `kMissTail` ->
   `bof3::addr::Battle_InflictStatus`, `Battle_StatusResisted`,
   `Effect_NoHitReaction`;
 - `magic_lib.cpp`: `kBuffRoll` -> `bof3::addr::Effect_RollStatStep`.

@@ -55,7 +55,7 @@
 namespace {
 
 constexpr std::uint32_t kLineCall = 0x5747D2;       // call Msg_SystemPtr(0xF)
-constexpr std::uint32_t kMsgSystemPtr = 0x497740;   // its name is our prototype here
+constexpr std::uint32_t kMsgSystemPtr = 0x497740;   // Msg_SystemPtr: the site's target in Capcom's bytes, a patch fact (raw)
 constexpr unsigned kMoved = 3;                      // spaces moved from the lead to the gap
 
 unsigned char g_line[96];
@@ -184,8 +184,8 @@ namespace {
 // reach, so the re-aim below acts on it as it did on the original body.
 constexpr std::uint32_t kMasterLineCall = 0x586E78;
 constexpr std::uint32_t kMasterHandCall = 0x586E97;
-constexpr std::uint32_t kMenuDrawHand = 0x5905D0;
-constexpr std::uint32_t kTextDrawAt = 0x516B30;
+constexpr std::uint32_t kMenuDrawHand = 0x5905D0;   // Menu_DrawHand: the site's target in Capcom's bytes (raw)
+constexpr std::uint32_t kTextDrawAt = 0x516B30;     // Text_DrawAt: the same, a patch fact (raw)
 constexpr unsigned kMasterHandBase = 0xCF, kMasterHandStep = 36;
 
 int g_master_stop[2];

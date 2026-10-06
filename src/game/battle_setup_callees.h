@@ -78,12 +78,12 @@ inline std::uint32_t Enemy(unsigned actor) { return kEnemy + (((actor & 0xFF) - 
 }  // namespace at
 
 // Raw addresses of the callees this group does not own (the rule above).
-constexpr std::uint32_t kActorAbsent = 0x4456C0;     // BB: (actor) -> al, 1 when not present (+0 bit 0) or with status 0x4000
-constexpr std::uint32_t kActorCanAct = 0x445980;     // BE: (actor) -> al
-constexpr std::uint32_t kSetPending = 0x446FB0;      // BF: (actor): kPending |= 1 << actor
-constexpr std::uint32_t kMessage = 0x44A650;         // BF: (a, b, c, d, text) a battle message line, bytes + a pointer
-constexpr std::uint32_t kMessageAt = 0x44A6E0;       // BF: (slot, a, b, c, d, text) the same at a given slot
-constexpr std::uint32_t kStatusTint = 0x446BB0;      // BF: (status): a tint on Sprite_Current when bit 0x80 is set
+constexpr std::uint32_t kActorAbsent = bof3::addr::Battle_ActorIsOut;     // BB: (actor) -> al, 1 when not present (+0 bit 0) or with status 0x4000
+constexpr std::uint32_t kActorCanAct = bof3::addr::Battle_ActorCanAct;     // BE: (actor) -> al
+constexpr std::uint32_t kSetPending = bof3::addr::Battle_SetActorBit;      // BF: (actor): kPending |= 1 << actor
+constexpr std::uint32_t kMessage = bof3::addr::BattleBanner_Add;         // BF: (a, b, c, d, text) a battle message line, bytes + a pointer
+constexpr std::uint32_t kMessageAt = bof3::addr::BattleBanner_Set;       // BF: (slot, a, b, c, d, text) the same at a given slot
+constexpr std::uint32_t kStatusTint = bof3::addr::Battle_StatusTint;      // BF: (status): a tint on Sprite_Current when bit 0x80 is set
 constexpr std::uint32_t kPartyName = bof3::addr::Battle_MemberNameToText;       // (actor): the member's name into Text_Records[0]
 constexpr std::uint32_t kEnemyName = bof3::addr::Battle_EnemyNameToText;       // (actor): the enemy's 12-byte name into Text_Records[0]
 constexpr std::uint32_t kWakeRoll = bof3::addr::Battle_WakeRoll;        // (actor) -> al: the status counter's roll (Rand)

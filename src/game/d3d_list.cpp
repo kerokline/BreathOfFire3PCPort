@@ -29,10 +29,10 @@ const Callees kOriginals = {
     },
     {
         // Direct3D, second table 0x59F3D8
-        H(bof3::addr::D3d_DrawPolyF3), H(bof3::addr::D3d_DrawPolyFT3), H(0x5A0AB0), H(0x5A0C40), H(0x5A0E80),
-        H(bof3::addr::D3d_DrawPolyGT3), H(0x5A1290),
-        H(0x5A14C0), H(0x5A17A0), H(0x5A1A00), H(0x5A1D10), H(0x5A18B0), H(0x5A1B50), H(bof3::addr::D3d_DrawLineG4),
-        H(0x5A20D0), H(0x5A2300), H(bof3::addr::D3d_DrawTile1), H(0x5A2900), H(0x5A2520), H(0x5A2710), H(0x5A2EB0),
+        H(bof3::addr::D3d_DrawPolyF3), H(bof3::addr::D3d_DrawPolyFT3), H(bof3::addr::D3d_DrawPolyF4), H(bof3::addr::D3d_DrawPolyFT4), H(bof3::addr::D3d_DrawPolyG3),
+        H(bof3::addr::D3d_DrawPolyGT3), H(bof3::addr::D3d_DrawPolyG4),
+        H(bof3::addr::D3d_DrawPolyGT4), H(bof3::addr::D3d_DrawLineF2), H(bof3::addr::D3d_DrawLineF3), H(bof3::addr::D3d_DrawLineF4), H(bof3::addr::D3d_DrawLineG2), H(bof3::addr::D3d_DrawLineG3), H(bof3::addr::D3d_DrawLineG4),
+        H(bof3::addr::D3d_DrawTile), H(bof3::addr::D3d_DrawSprt), H(bof3::addr::D3d_DrawTile1), H(bof3::addr::D3d_DrawGlyph), H(bof3::addr::D3d_DrawSprt8), H(bof3::addr::D3d_DrawSprt16), H(bof3::addr::D3d_DrawCellSprite),
     },
     Gfx_MoveImage,
     // by the original's address (group PH, docs/d3d-rest.md): BOF3X_ORIGINAL=<name> restores Capcom's for the walk

@@ -138,7 +138,7 @@ constexpr std::uint32_t kIconCircle = kUiGlyphs + kSetCells + 1, kIconCross = kI
 // ends four past it.
 constexpr int kIconX = -0x0C;   // the owner, 2026-09-24: half a glyph right of -0x14
 
-constexpr std::uint32_t kTextDrawAt = 0x516B30;   // its name is a macro here
+constexpr std::uint32_t kTextDrawAt = 0x516B30;   // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kBigLabelCall = 0x46189F, kBigOptionCall = 0x4619F9;
 constexpr std::uint32_t kCtrlNameCall = 0x461B43;   // Config_DrawControllerRow's one draw (DIV-0026)
 

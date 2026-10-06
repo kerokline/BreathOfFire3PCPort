@@ -312,7 +312,7 @@ extern "C" void __cdecl Effect_TargetRecalcParty(void) {
 // original 0x44D580 (slot 76): 0x44F1D0(target, 0x40); the result's flags
 // |= 2, the HP delta -20, the AP delta -4.
 extern "C" void __cdecl Effect_Inflict40Heal20Ap4(void) {
-    BH_AT(A2, at::kInflict)(B(at::kTarget), 0x40);
+    BH_AT(A2, at::kInflictStatus)(B(at::kTarget), 0x40);
     Result()[8] = static_cast<unsigned char>(Result()[8] | 2);
     SetWord(Result() + 4, 0xFFEC);
     SetWord(Result() + 6, 0xFFFC);

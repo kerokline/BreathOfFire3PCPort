@@ -20,6 +20,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace item_use {
 
 namespace at {
@@ -65,8 +67,8 @@ constexpr std::uint32_t kRepeatLatch = 0x7E01B8;   // u16
 
 }  // namespace at
 
-constexpr std::uint32_t kSystemChoice = 0x498A30;  // MsgBox_SystemChoice, left Capcom's (docs/item-use.md)
-constexpr std::uint32_t kInventoryAdd = 0x590BB0;  // Inventory_Add, Capcom's; called with a fourth dword it does not read
+constexpr std::uint32_t kSystemChoice = bof3::addr::MsgBox_SystemChoice;  // MsgBox_SystemChoice (docs/item-use.md)
+constexpr std::uint32_t kInventoryAdd = bof3::addr::Inventory_Add;  // Inventory_Add; called with a fourth dword it does not read
 
 using Handler = unsigned char (__cdecl*)(unsigned, unsigned);
 using Choice = void (__cdecl*)();
