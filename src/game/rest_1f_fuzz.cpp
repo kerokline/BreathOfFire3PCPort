@@ -61,29 +61,29 @@ constexpr sh::CallSite kCalls5288C0[] = {{0x2B, 0x5720C0}, {0x51, 0x589200}, {0x
 #define R_CALL(name, base, size, calls, ret) {#name, base, size, calls, R_N(calls), nullptr, 0, nullptr, 0, R_FN(name), ret, false, Shape::kCall}
 #define R_CALL0(name, base, size, ret) {#name, base, size, nullptr, 0, nullptr, 0, nullptr, 0, R_FN(name), ret, false, Shape::kCall}
 const sh::Clone kAll[] = {
-    R_LEAF(PartyAction16_FormAction, 0x5243D0, 0x13),
+    R_LEAF(PartyFormAction16_ByForm, 0x5243D0, 0x13),
     R_LEAF(PartyAction16_ByForm, 0x5243F0, 0x13),
-    R_LEAF(PartyAction16_FormAction2, 0x523FB0, 0x12),
+    R_LEAF(PartyFormAction16_Form2, 0x523FB0, 0x12),
     R_LEAF(PartyAction16_Form2, 0x523FD0, 0x12),
     R_STATE(PartyAction16_Form2Begin, 0x523FF0, 0x1D4, kCallsBegin),
     R_STATE(PartyAction16_Form2Resolve, 0x5241D0, 0xDB, kCalls5241D0),
     R_CALL(PartyAction16_CellPickup, 0x5242B0, 0x11F, kCallsPickup, 0xFFu),
-    R_LEAF(PartyAction17_FormAction, 0x524930, 0x13),
+    R_LEAF(PartyFormAction17_ByForm, 0x524930, 0x13),
     R_LEAF(PartyAction17_ByForm, 0x524950, 0x13),
-    R_LEAF(PartyAction17_FormAction0, 0x524410, 0x12),
-    R_LEAF(PartyAction17_FormAction1, 0x524450, 0x12),
-    R_LEAF(PartyAction17_FormAction2, 0x5248F0, 0x12),
+    R_LEAF(PartyFormAction17_Form0, 0x524410, 0x12),
+    R_LEAF(PartyFormAction17_Form1, 0x524450, 0x12),
+    R_LEAF(PartyFormAction17_Form2, 0x5248F0, 0x12),
     R_LEAF(PartyAction17_Form0, 0x524430, 0x12),
     R_LEAF(PartyAction17_Form1, 0x524470, 0x12),
     R_LEAF(PartyAction17_Form2, 0x524910, 0x12),
     R_STATE(PartyAction17_Form1Begin, 0x524490, 0x1D4, kCallsBegin),
     R_STATE(PartyAction17_Form1Resolve, 0x524670, 0xDB, kCalls524670),
     R_CALL(PartyAction17_CellPickup, 0x524750, 0x11F, kCallsPickup, 0xFFu),
-    R_LEAF(PartyAction18_FormAction, 0x525330, 0x13),
+    R_LEAF(PartyFormAction18_ByForm, 0x525330, 0x13),
     R_LEAF(PartyAction18_ByForm, 0x525350, 0x13),
-    R_LEAF(PartyAction18_FormAction0, 0x524970, 0x12),
-    R_LEAF(PartyAction18_FormAction1, 0x524E50, 0x12),
-    R_LEAF(PartyAction18_FormAction2, 0x525270, 0x12),
+    R_LEAF(PartyFormAction18_Form0, 0x524970, 0x12),
+    R_LEAF(PartyFormAction18_Form1, 0x524E50, 0x12),
+    R_LEAF(PartyFormAction18_Form2, 0x525270, 0x12),
     R_LEAF(PartyAction18_Form0, 0x524990, 0x12),
     R_LEAF(PartyAction18_Form0Sub0, 0x5249B0, 0x12),
     R_LEAF(PartyAction18_Form0Sub1, 0x524D40, 0x12),
@@ -284,8 +284,9 @@ const sh::Callee kCallees[] = {
     {R_OURS(Sprite_ObjectAt), 3, {kW, kW, kW}, kG, 0, 0, {}, &FxObjectAt},
     {R_OURS(AreaMap_ByteAt), 2, {kU16, kU16}, kG, 0, 0, {}, &FxMapByte},
     {R_OURS(MapView_GroundAt), 2, {kW, kW}, kG, 0, 0, {}, &FxGround},
-    // the direction a byte: AreaMap_Slope reads one (the Begin states push it
-    // over Sprite_Current's address)
+    // the direction a byte (the Begin states push it over Sprite_Current's
+    // address): AreaMap_Slope reads the upper bytes only for a direction of 10
+    // or more, unreachable while directions stay 0..7 (rest_1e.md section 5)
     {R_OURS(MapView_SlopeAt), 3, {kW, kW, kU8}, kG, 0, 0, {}, &FxSlope},
 };
 #undef R_OURS
@@ -295,17 +296,17 @@ const sh::Callee kCallees[] = {
 // the next table a dispatcher reads).
 #define R_TABLE(name) {Key(name), name##_count}
 const sh::DataTable kTables[] = {
-    R_TABLE(PartyAction16_FormAction2States), R_TABLE(PartyAction16_Form2States),
-    R_TABLE(PartyAction16_FormActionForms), R_TABLE(PartyAction16_Forms),
-    R_TABLE(PartyAction17_FormAction0States), R_TABLE(PartyAction17_Form0States),
-    R_TABLE(PartyAction17_FormAction1States), R_TABLE(PartyAction17_Form1States),
-    R_TABLE(PartyAction17_FormAction2States), R_TABLE(PartyAction17_Form2States),
-    R_TABLE(PartyAction17_FormActionForms), R_TABLE(PartyAction17_Forms),
-    R_TABLE(PartyAction18_FormAction0States), R_TABLE(PartyAction18_Form0Subs),
+    R_TABLE(PartyFormAction16_Form2States), R_TABLE(PartyAction16_Form2States),
+    R_TABLE(PartyFormAction16_Forms), R_TABLE(PartyAction16_Forms),
+    R_TABLE(PartyFormAction17_Form0States), R_TABLE(PartyAction17_Form0States),
+    R_TABLE(PartyFormAction17_Form1States), R_TABLE(PartyAction17_Form1States),
+    R_TABLE(PartyFormAction17_Form2States), R_TABLE(PartyAction17_Form2States),
+    R_TABLE(PartyFormAction17_Forms), R_TABLE(PartyAction17_Forms),
+    R_TABLE(PartyFormAction18_Form0States), R_TABLE(PartyAction18_Form0Subs),
     R_TABLE(PartyAction18_Form0Sub0Steps), R_TABLE(PartyAction18_Form0Sub1Steps),
-    R_TABLE(PartyAction18_FormAction1States), R_TABLE(PartyAction18_Form1States),
-    R_TABLE(PartyAction18_FormAction2States), R_TABLE(PartyAction18_Form2States),
-    R_TABLE(PartyAction18_FormActionForms), R_TABLE(PartyAction18_Forms),
+    R_TABLE(PartyFormAction18_Form1States), R_TABLE(PartyAction18_Form1States),
+    R_TABLE(PartyFormAction18_Form2States), R_TABLE(PartyAction18_Form2States),
+    R_TABLE(PartyFormAction18_Forms), R_TABLE(PartyAction18_Forms),
     R_TABLE(LeaderPanel_Stages), R_TABLE(LeaderPanel_Stage0Steps),
 };
 #undef R_TABLE
@@ -390,23 +391,23 @@ void SeedSprite(unsigned char* s, unsigned k) {
 void SeedIndex(unsigned k) {
     unsigned char* const s = Sc();
     switch (k) {
-    case k16FormAction: SetWord(s + 0x2C, sh::Next() % PartyAction16_FormActionForms_count); break;
+    case k16FormAction: SetWord(s + 0x2C, sh::Next() % PartyFormAction16_Forms_count); break;
     case k16ByForm: SetWord(s + 0x2C, sh::Next() % PartyAction16_Forms_count); break;
-    case k17FormAction: SetWord(s + 0x2C, sh::Next() % PartyAction17_FormActionForms_count); break;
+    case k17FormAction: SetWord(s + 0x2C, sh::Next() % PartyFormAction17_Forms_count); break;
     case k17ByForm: SetWord(s + 0x2C, sh::Next() % PartyAction17_Forms_count); break;
-    case k18FormAction: SetWord(s + 0x2C, sh::Next() % PartyAction18_FormActionForms_count); break;
+    case k18FormAction: SetWord(s + 0x2C, sh::Next() % PartyFormAction18_Forms_count); break;
     case k18ByForm: SetWord(s + 0x2C, sh::Next() % PartyAction18_Forms_count); break;
-    case k16FormAction2: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction16_FormAction2States_count); break;
+    case k16FormAction2: s[2] = static_cast<unsigned char>(sh::Next() % PartyFormAction16_Form2States_count); break;
     case k16Form2: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction16_Form2States_count); break;
-    case k17FormAction0: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction17_FormAction0States_count); break;
-    case k17FormAction1: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction17_FormAction1States_count); break;
-    case k17FormAction2: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction17_FormAction2States_count); break;
+    case k17FormAction0: s[2] = static_cast<unsigned char>(sh::Next() % PartyFormAction17_Form0States_count); break;
+    case k17FormAction1: s[2] = static_cast<unsigned char>(sh::Next() % PartyFormAction17_Form1States_count); break;
+    case k17FormAction2: s[2] = static_cast<unsigned char>(sh::Next() % PartyFormAction17_Form2States_count); break;
     case k17Form0: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction17_Form0States_count); break;
     case k17Form1: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction17_Form1States_count); break;
     case k17Form2: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction17_Form2States_count); break;
-    case k18FormAction0: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction18_FormAction0States_count); break;
-    case k18FormAction1: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction18_FormAction1States_count); break;
-    case k18FormAction2: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction18_FormAction2States_count); break;
+    case k18FormAction0: s[2] = static_cast<unsigned char>(sh::Next() % PartyFormAction18_Form0States_count); break;
+    case k18FormAction1: s[2] = static_cast<unsigned char>(sh::Next() % PartyFormAction18_Form1States_count); break;
+    case k18FormAction2: s[2] = static_cast<unsigned char>(sh::Next() % PartyFormAction18_Form2States_count); break;
     case k18Form0: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction18_Form0Subs_count); break;
     case k18Form1: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction18_Form1States_count); break;
     case k18Form2: s[2] = static_cast<unsigned char>(sh::Next() % PartyAction18_Form2States_count); break;
@@ -447,8 +448,9 @@ void Args(unsigned k, U* a) {
 
 // What these read again after a call, moved by the group's case of the
 // harness's disturbance (from its hash only): Sprite_Current's facing, its
-// counters +0xA / +0xB / +7, its fractions and height; the cells 0 and 8..0xB;
-// the round's effect record; Field_InputFlags; Field_Request; record 4's state.
+// counters +0xA / +7, its fractions and height, its form word; the cells 0 and
+// 8..0xB; the round's effect record; Field_InputFlags; record 4's state. No
+// case moves +0xB or Field_Request.
 void Disturb(U h) {
     const U v = h >> 8;
     unsigned char* const s = Sc();

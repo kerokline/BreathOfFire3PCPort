@@ -183,7 +183,7 @@ the four edges of boss_harness.md 10.6.
 
 **Out, nobody's this round (the engine standard set's recorders):**
 `0x42E0E0`, `0x42E250`, `0x42E2F0` (BATE's, catalogue part 7), `0x452EB0`,
-`0x452F10`, `0x494E70`, `0x5B9450` (the CRT's `memcpy`); and `0x42D780`, an
+`0x452F10`, `0x494E70`, `0x5B9450` (the CRT's `strncpy`, `Crt_strncpy`; called `memcpy` until 2026-10-05); and `0x42D780`, an
 entry of `BattleExtra_EquipOpenSteps` (Capcom's, nobody's).
 
 **Inbound, from outside the group:**

@@ -244,7 +244,9 @@ U FxSpawn(const U*, U answer) {
 // words, Effect_SpawnAtCell and Effect_SpawnAtCellHigh movsx them, the group's
 // cell handlers pass them on), the state bytes and the effect index as bytes,
 // MapView_SlopeAt's direction as a byte (the Begin states push ebx whole, its
-// upper bytes their caller's), every other argument whole.
+// upper bytes their caller's; AreaMap_Slope reads them only for a direction of
+// 10 or more, unreachable while directions stay 0..7 - rest_1e.md section 5),
+// every other argument whole.
 #define R1B_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr sh::Answer kF = sh::Answer::kFlag;

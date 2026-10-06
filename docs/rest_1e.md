@@ -279,7 +279,7 @@ the pointer bits lost. Reading the pointer again as a dword gave the same code.
 Ours now passes the upper bits through an empty `asm volatile` (one line,
 commented): 0 mismatches. Whether the callee could see the difference in play
 is narrow (`AreaMap_Slope` reads the dword's upper bytes only for a direction
-of 8 or more), but the clone compares it and so does ours now. Worth knowing
+of 10 or more; section 5), but the clone compares it and so does ours now. Worth knowing
 for any group that builds a register value from a pointer's bits.
 
 ## 5. Divergence, aborts, latent defects
@@ -313,9 +313,19 @@ Latent defects described, not fixed:
   step): as rest_0a.md section 5 - read in place, reproduced, the seeds cover
   it.
 - **`Form2Begin` hands `MapView_SlopeAt` its own address as the direction's
-  upper bytes** and ignores the slope's answer; for a direction of 8 or more
+  upper bytes** and ignores the slope's answer; for a direction of 10 or more
   `AreaMap_Slope` reads those bytes. The call's only effect the state reads is
   `DamageScratch`'s flag. Reproduced.
+- **`AreaMap_Slope` reads past the direction's low byte** (`area_slope.cpp`,
+  the both-halves path): it takes the height at `args[4 + n / 2]` for the low
+  byte n, so n of 8 or 9 reads that byte itself, n of 10..15 the direction
+  dword's upper bytes, and 16 or more the caller's stack past it. Capcom's
+  callers push a whole register there; wave one's calls of ours pass the byte
+  zero-extended, but for `Form2Begin` above (2026-10-05, `round-14-review.md`
+  item 8; the fuzzes compare the argument's byte). **It cannot be reached while
+  directions stay 0..7**, which every writer of the direction read in this
+  wave keeps; the bound is 10, not 8. Not ledgered: no state of play reaches
+  it.
 - **`CellPickup`'s 0xF2 path with no free effect object** clears the cell and
   answers 1 without setting `+0xB` or giving anything: the pickup is lost.
   `Field_CellPickup` has the same path. Reproduced; whether play reaches it (20

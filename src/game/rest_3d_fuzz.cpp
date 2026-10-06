@@ -277,7 +277,7 @@ U Status() {
 // class bytes inside the rate tables (sometimes past them: the .data after
 // is read on both sides), the flag words with 0x10000 half the time, the
 // status words, Field_State's equipment bytes at the items the inflict
-// tests, the party size 0..4, the members' characters 0..7.
+// tests, the party size 0..3, the members' characters 0..7.
 void Frame() {
     Mem(at::kActor)[0] = static_cast<unsigned char>(ActorByte());
     Mem(at::kTarget)[0] = static_cast<unsigned char>(ActorByte());
@@ -285,7 +285,7 @@ void Frame() {
     SetWord(Mem(at::kAttackerInt), Word16({0, 1, 249, 250, 254, 255, 499, 500, 1000}));
     SetWord(Mem(at::kTargetInt), Word16({0, 1, 374, 375, 379, 380, 500, 1000}));
     SetWord(Mem(at::kNewStatus), Word16({0, 0, 0x80, 0x840}));
-    Mem(at::kPartySize)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 2, 3, 3) : bh::Next() % 5);
+    Mem(at::kPartySize)[0] = static_cast<unsigned char>(bh::Often() ? BH_PICK(1, 2, 3, 3) : bh::Next() % 4);   // past 3 ours aborts
     for (unsigned m = 0; m < 3; ++m) {
         unsigned char* const p = Member(m);
         for (unsigned i = 0; i < 4; ++i) p[0xB4 + i] = static_cast<unsigned char>(bh::Often() ? bh::Next() % 8 : bh::Next());
@@ -372,7 +372,7 @@ void Disturb(U h) {
     switch ((h >> 8) % 8) {
     case 0: Mem(at::kTarget)[0] = static_cast<unsigned char>(b % 11); break;
     case 1: Mem(at::kActor)[0] = static_cast<unsigned char>(b % 11); break;
-    case 2: Mem(at::kPartySize)[0] = static_cast<unsigned char>(b % 5); break;
+    case 2: Mem(at::kPartySize)[0] = static_cast<unsigned char>(b % 4); break;
     case 3: SetWord(Mem(at::kNewStatus), h >> 12); break;
     case 4: SetWord(Member(b) + 0x90, h >> 20); break;
     case 5: SetWord(EnemyN(b) + 0x92, h >> 20); break;

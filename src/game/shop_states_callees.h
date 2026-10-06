@@ -64,7 +64,7 @@ constexpr U kRepeatTimer = 0x7E1BE0;   // u16: Input_AutoRepeat's timer
 constexpr U kSlot = 0x9036D4;          // u32: the save cursor, 0..15
 constexpr U kSlotTop = 0x8034D0;       // u32: the first of the three slots shown
 constexpr U kInnFlag = 0x66C7DA;       // u8: with kSaveBack clear, FieldSave_End opens message 0xD0 (unread)
-constexpr U kSaveBack = 0x6BC880;      // u8: set by the save menu's state 5 (0x5800D0, not ours)
+constexpr U kSaveBack = 0x6BC880;      // u8: set by the save menu's state 5 (0x5800D0, R2C's FieldSave_Written)
 constexpr U kChoice = 0x6BC881;        // u8: the inn's three-way cursor (the save menu's too)
 constexpr U kCancelled = 0x6BC882;     // u8: the inn's prompt was cancelled
 

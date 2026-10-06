@@ -24,20 +24,20 @@
 extern "C" {
 
 // --- party set 16 ---------------------------------------------------------------------
-void __cdecl PartyAction16_FormAction(void);     // 0x5243D0: Field_FormActions[16], by +0x2C
+void __cdecl PartyFormAction16_ByForm(void);     // 0x5243D0: Field_FormActions[16], by +0x2C
 void __cdecl PartyAction16_ByForm(void);         // 0x5243F0: Field_ActionBySet[16], by +0x2C
-void __cdecl PartyAction16_FormAction2(void);    // 0x523FB0: by +2
+void __cdecl PartyFormAction16_Form2(void);    // 0x523FB0: by +2
 void __cdecl PartyAction16_Form2(void);          // 0x523FD0: by +2
 void __cdecl PartyAction16_Form2Begin(void);     // 0x523FF0
 void __cdecl PartyAction16_Form2Resolve(void);   // 0x5241D0
 unsigned char __cdecl PartyAction16_CellPickup(unsigned x, unsigned z);   // 0x5242B0
 
 // --- party set 17 ---------------------------------------------------------------------
-void __cdecl PartyAction17_FormAction(void);     // 0x524930: Field_FormActions[17]
+void __cdecl PartyFormAction17_ByForm(void);     // 0x524930: Field_FormActions[17]
 void __cdecl PartyAction17_ByForm(void);         // 0x524950: Field_ActionBySet[17]
-void __cdecl PartyAction17_FormAction0(void);    // 0x524410
-void __cdecl PartyAction17_FormAction1(void);    // 0x524450
-void __cdecl PartyAction17_FormAction2(void);    // 0x5248F0
+void __cdecl PartyFormAction17_Form0(void);    // 0x524410
+void __cdecl PartyFormAction17_Form1(void);    // 0x524450
+void __cdecl PartyFormAction17_Form2(void);    // 0x5248F0
 void __cdecl PartyAction17_Form0(void);          // 0x524430
 void __cdecl PartyAction17_Form1(void);          // 0x524470
 void __cdecl PartyAction17_Form2(void);          // 0x524910
@@ -46,11 +46,11 @@ void __cdecl PartyAction17_Form1Resolve(void);   // 0x524670
 unsigned char __cdecl PartyAction17_CellPickup(unsigned x, unsigned z);   // 0x524750
 
 // --- party set 18 ---------------------------------------------------------------------
-void __cdecl PartyAction18_FormAction(void);     // 0x525330: Field_FormActions[18]
+void __cdecl PartyFormAction18_ByForm(void);     // 0x525330: Field_FormActions[18]
 void __cdecl PartyAction18_ByForm(void);         // 0x525350: Field_ActionBySet[18]
-void __cdecl PartyAction18_FormAction0(void);    // 0x524970
-void __cdecl PartyAction18_FormAction1(void);    // 0x524E50
-void __cdecl PartyAction18_FormAction2(void);    // 0x525270
+void __cdecl PartyFormAction18_Form0(void);    // 0x524970
+void __cdecl PartyFormAction18_Form1(void);    // 0x524E50
+void __cdecl PartyFormAction18_Form2(void);    // 0x525270
 void __cdecl PartyAction18_Form0(void);          // 0x524990: by +2
 void __cdecl PartyAction18_Form0Sub0(void);      // 0x5249B0: by +3
 void __cdecl PartyAction18_Form0Sub1(void);      // 0x524D40: by +3

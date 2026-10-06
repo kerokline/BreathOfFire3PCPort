@@ -48,7 +48,6 @@ using move_script::Word;
 using Handler = void (__cdecl*)();
 using CellFn = unsigned char (__cdecl*)(unsigned, unsigned);
 
-constexpr U kTextLo = 0x401000, kTextHi = 0x5C3000;   // .text: what a dispatch table may hold
 constexpr U kSteps = 0x6697B0;                         // Field_DirectionSteps: 8 rows of two longs
 constexpr U kStep3 = 0x6697C8, kStep5 = 0x6697D8;      // rows 3 and 5, read by address
 constexpr U kSloped = 0x903850;                        // DamageScratch's first byte: AreaMap_Slope's "sloped" flag
@@ -59,17 +58,40 @@ constexpr U kScriptFlagsHigh = 0x9039A3;               // Field_ScriptFlags' hig
 constexpr U kEffectStride = 0x80;
 constexpr unsigned kEffectCount = 20;
 
-// A dispatch table's entry, read in place with the index unchecked as the
-// original reads it; where the word is not code (an index past the table and
-// past the runs of handlers after it) ours aborts, where the original jumps
-// there. While the fuzz runs the table holds the harness's recorders.
+// The count of each of the 28 dispatch tables, by its symbols.toml entry.
+struct TableCount { const unsigned long* table; unsigned count; };
+unsigned CountOf(U table, const char* who) {
+#define R1C_T(t) {t, t##_count}
+    static const TableCount kCounts[] = {
+        R1C_T(PartyFormAction6_Form1States), R1C_T(PartyAction6_Form1States), R1C_T(PartyFormAction6_Form2States),
+        R1C_T(PartyAction6_Form2States), R1C_T(PartyAction6_Form2State0Steps), R1C_T(PartyAction6_Form2State1Steps),
+        R1C_T(PartyFormAction6_Forms), R1C_T(PartyAction6_Forms), R1C_T(PartyFormAction7_Form0States),
+        R1C_T(PartyAction7_Form0States), R1C_T(PartyFormAction7_Form1States), R1C_T(PartyFormAction7_Form2States),
+        R1C_T(PartyAction7_Form2States), R1C_T(PartyFormAction7_Forms), R1C_T(PartyAction7_Forms),
+        R1C_T(PartyFormAction8_Form0States), R1C_T(PartyAction8_Form0States), R1C_T(PartyFormAction8_Form1States),
+        R1C_T(PartyAction8_Form1States), R1C_T(PartyFormAction8_Form2States), R1C_T(PartyAction8_Form2States),
+        R1C_T(PartyFormAction8_Forms), R1C_T(PartyAction8_Forms), R1C_T(PartyFormAction9_Form0States),
+        R1C_T(PartyAction9_Form0States), R1C_T(PartyFormAction9_Form1States), R1C_T(PartyAction9_Form1States),
+        R1C_T(PartyAction9_Form1State0Steps),
+    };
+#undef R1C_T
+    for (const TableCount& t : kCounts)
+        if (static_cast<U>(reinterpret_cast<std::uintptr_t>(t.table)) == table) return t.count;
+    bof3::Fatal("%s: 0x%X is not one of the group's 28 dispatch tables", who, static_cast<unsigned>(table));
+}
+
+// A dispatch table's entry, read in place. The original's index is unchecked:
+// past the table it jumps through the next table's cell, or into data. Ours
+// aborts at the table's own count, before the read - the rule all seven of
+// wave one's groups share (docs/rest_1b.md section 6). While the fuzz runs the
+// table holds the harness's recorders.
 Handler Entry(U table, unsigned index, const char* who) {
     const U at = table + 4u * index;
-    const U entry = static_cast<U>(Long(At(at)));
-    if (!scenario_harness::g_active && (entry < kTextLo || entry >= kTextHi))
-        bof3::Fatal("%s: index %u reads 0x%X at 0x%X, not code - past its table (the original jumps there)", who, index,
-                    (unsigned)entry, (unsigned)at);
-    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(entry));
+    const unsigned count = CountOf(table, who);
+    if (index >= count)
+        bof3::Fatal("%s: index %u is past its table's %u entries at 0x%X; the original jumps through 0x%X", who, index,
+                    count, (unsigned)table, (unsigned)at);
+    return reinterpret_cast<Handler>(static_cast<std::uintptr_t>(static_cast<U>(Long(At(at)))));
 }
 void ByForm(U table, const char* who) { Entry(table, Word(Sprite_Current + 0x2C), who)(); }
 void ByState(U table, const char* who) { Entry(table, Sprite_Current[2], who)(); }

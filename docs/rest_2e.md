@@ -8,7 +8,7 @@ R2E (`analysis/round14_cut.tsv`) and the start in their span no list had
 (`0x58CFC0`, band_rows' "code no list has"). Each read to its last instruction
 with capstone and fuzzed through the scenario harness's **field** mode (used
 unchanged): 294,000 rounds, **0 mismatches**; 119 of 121 controls refused, the two not refused equivalent mutants with refused near variants (section 6).
-Thirteen `.data` tables named. Fuzz only: no trace enters them (section 9).
+Twelve `.data` tables named (thirteen until `8e652f8` gave `0x667354` to R2D). Fuzz only: no trace enters them (section 9).
 
 **What the band is.** Three of the field menu's screens
 ([`menu-screens.md`](menu-screens.md) section 1: `FieldMenu_Run` jumps through
@@ -361,8 +361,11 @@ the filter, restores and rebuilds. **121 planted, 119 refused** (every one exit 
   unbounded**, and category 4's count list is a null pointer: a sort or a swap
   on category 4 would write through it (a fault). `FieldItems_ArrangeCategory`
   keeps the category to 0..3 and `FieldItems_ViewList32` (the only reader that
-  may see 4) reads the id list alone. Ours aborts on a category above 4 or on
-  the null list.
+  may see 4) reads the id list alone. Ours aborts on a category above 4 (at the
+  table's read) or on the null list at the access through it, where the
+  original faults - not where the list is taken (2026-10-05,
+  `round-14-review.md` item 14: `FieldItems_UseOnMember`, `FieldItemSort_ByIconKind`
+  and `_EquipableFirst` took it at entry until then).
 - **`FieldEquip_BestByOrder`'s armour pass** breaks a full tie by comparing the
   candidate with the *weapon's* preview byte `0x6BDFA8`, not the slot's, and on
   taking a candidate keeps its `+0x13` byte as the best `+0x14` too: from then

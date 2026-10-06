@@ -190,15 +190,17 @@ once in 65,536).
 **Regions** beyond the engine frame: `CharacterRecords` past the engine
 frame's head to `0x903F90` (slot 118's eight records), and `0x803478` for
 0x6F8 bytes (past `WindowRecords` to party index 10's `+0x134` dword: slot
-129's party-indexed writes for an enemy target 5..10; 3 and 4, and slots 117
-/ 118 at a party size of 4, land in `WindowRecords`).
+129's party-indexed writes for an enemy target 5..10; 3 and 4 land in
+`WindowRecords`; slots 117 / 118 at a party size of 4 did until 2026-10-05,
+when they came to abort past 3 and the seeds to stay at 0..3).
 
 **Seeds** (every function, after the harness's fill): the actor and the
 target 0..10 (past 10 the enemy objects run off the image's end
 `0x93F000`); the ability below 0x200 (its mask and step read from
 `NameTable_Abilities`), 0x4E and 0x6A among them; the roll's two words at
 their clamps (`0x939FEA` 249 / 250 / 254 / 255 / 499 / 500, `0x939F8A` 374 /
-375 / 379 / 380); `0x904B98`; the party size 1..3, 0..4 a third of the time;
+375 / 379 / 380); `0x904B98`; the party size 1..3, 0..3 a third of the time (0..4 until
+2026-10-05: ours now aborts past 3);
 each side's class bytes 0..7, any byte a third of the time; the flag words
 with 0x10000 half the time; the status words at each bit the inflict tests;
 an enemy's `+0x8D` 4 half the time; the members' characters 0..7 and their
@@ -346,10 +348,14 @@ is the final pass, every control on the fuzz as committed.
 - **Unbounded indexes, all kept**: the class bytes into the three rate
   tables (eight entries each; a byte past 7 reads the next table); the
   actor / target bytes into the party and enemy records (past 10 off the
-  image); the party size `0x904AB0` in slots 117 and 118 (the members past
-  3 are `WindowRecords` and beyond); the character byte `+0x148` into
+  image); the character byte `+0x148` into
   `CharacterRecords`; `Effect_StepStatByte`'s stat byte past the result's
   eight steps (its callers pass 0..3 and R3C's 0x44DCA0 its own).
+- **The party size `0x904AB0` past 3 in slots 117 and 118** (the members
+  past 3 are `WindowRecords` and beyond): ours aborts before the write loops,
+  as R3C's restat loops (slots 75 and 106) do - one policy for the two groups
+  (2026-10-05, `round-14-review.md` item 16; until then ours wrote on as the
+  original). The battle keeps the size at 1..3.
 - **Ours' two aborts**: `DragonCmd_PartDispatch` past `DragonCmd_Parts`' seven
   (every Dragon step keeps `0x904AA3` below 7, BE5's section 7) and
   `Effect_HpBasedDamage` on a divisor of 0 (an `idiv` fault in the original;

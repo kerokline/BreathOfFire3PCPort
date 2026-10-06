@@ -11,6 +11,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/log.h"
+#include "hook/statehash.h"
 
 namespace bof3 {
 namespace {
@@ -188,6 +189,11 @@ void Report() {
     } else {
         Log("CRASH %ld: no dump - dbghelp.dll did not load", (long)n);
     }
+    // The state hash's buffered frames, up to the one that faulted. On this
+    // thread, while the faulting one waits; a fault inside the hash's own
+    // fwrite would block here, and the handler's 20 s bound still lets the
+    // crash proceed.
+    StateHash_Flush();
     LogFlush();
 }
 

@@ -92,7 +92,7 @@ toolchain's runtime or to a small function of ours:
 (`tools/pe_xref.py` over our own call-by-address constants; the tracer with
 only that range armed over every route).
 
-### 2.4 The MP3 decoder (200 starts, 55.5 KB) - replaced, with a ledger entry
+### 2.4 The MP3 decoder (200 starts, 55.5 KB) - not scheduled; its shape waits on I23 (section 5)
 
 `BGM/*.DAT` are bare MPEG streams and the decoder is a third party's, linked
 in. [`media-stack-survey.md`](media-stack-survey.md) judged replacing it

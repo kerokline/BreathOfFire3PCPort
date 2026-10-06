@@ -34,7 +34,11 @@ so a recipe's pad words are the previous frame's on both sides.
 
 A **tick** is one logic frame seen by the latch, counted from the first; the
 record also carries `Frame_Counter` and the recipe frame. The file is flushed
-every 64 ticks, since the runners end the game with `taskkill`. A six-minute
+every 64 ticks, since the runners end the game with `taskkill`, and on the
+way out of `Fatal` and of the crash reporter (2026-10-05, the round-fourteen
+review's item 15), so the frames before an abort or a fault - the ones a
+crash wants - are in the file; not every tick, which would cost the live
+check. A six-minute
 attract run writes about 1 MB.
 
 What it costs: 3.5 MB hashed a frame. Its time was not measured; the hashed
@@ -91,7 +95,7 @@ kinds:
 A range is added only with the dump that showed it and the reason it is not a
 defect: a platform object, or a `DIVERGENCE.md` entry by number.
 
-**What the list costs.** About 426 KiB of 3.5 MiB (3,472 KiB) is not seen. Most of that is
+**What the list costs.** About 426 KiB of 3.39 MiB (3,472 KiB) is not seen. Most of that is
 draw output: the packet pools (128 KiB) and the draw items (144 KiB) are what
 the frame draws, and the picture A/B (`input_run.py`'s shots, the attract
 captures) is what checks them. The sound banks and the stream are not seen at

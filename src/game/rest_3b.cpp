@@ -320,7 +320,7 @@ extern "C" void __cdecl BattleItemCmd_EquipDispatch(void) {
     Dispatch("BattleItemCmd_EquipDispatch", at::kStep4, at::kItemCmdEquipSteps, 4);
 }
 
-// original 0x44A000 (Battle_MenuSteps entry 7; PSX 0x8009823C, paired): jmp
+// original 0x44A000 (Battle_MenuSteps[6]; PSX 0x8009823C, paired): jmp
 // [0x64E4FC + 4 * byte 0x904AA3] - Escape_States' three.
 extern "C" void __cdecl Escape_Dispatch(void) { Dispatch("Escape_Dispatch", at::kStep3, at::kEscapeStates, 3); }
 
