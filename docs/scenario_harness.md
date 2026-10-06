@@ -1250,4 +1250,28 @@ groups listed in their own `_fuzz.cpp` (left alone: each group's listing is
 registered first and stands; `effect_1e_fuzz.cpp`'s `E_RAW` rows key on the
 address and keep working).
 
-**The proof** (this worktree's i686 build): COUNTS-PLACEHOLDER
+**The proof** (this worktree's i686 build): `BOF3X_SHADOW='*'` headless on the fold
+and, as the base, on `e3b98087`'s two harness files built in the same
+worktree: all three runs (the fold narrow and with `BOF3X_WIDE=1`, the base
+narrow) exit 0 with `self-test only: done` and `inject: 10009 ours, 0 left
+original`, 1,049 `MISMATCHES` lines each, **every one 0**. Of the 517
+self-test and coverage lines, base against fold narrow, 474 are
+byte-identical. Of the other 43, most differ in the coverage text only: a
+stand-in's log name is the symbol now where it was the address (`battle_e1`,
+`battle_e5`, `rest_3b`, `rest_3c`, `effect_1a` .. `effect_6b`, `field_c3`,
+`field_e2`, `field_s`; the same counts). **Counts moved** - calls to the
+stand-ins, all still 0 mismatches - in `rest_2d` (563,368 -> 563,365),
+`rest_2f` (1,843,914 -> 1,844,044), `rest_2g` (469,625 -> 470,273), and in
+`magic_s16`, `_s17`, `_s34`, `_s35`, `area_w0b`, `area_w1e`, `area_w3a`,
+whose harnesses (`magic_harness`, `area_harness`) this fold does not touch.
+None of the three `rest_2*` groups reaches a changed row through the
+standard set (each lists its own `Gpu_SetLineF3`, `0x586160`, `0x58BD50`;
+`rest_2g` calls none of the rows), and their stand-ins answer pointers into
+our DLL (`FxText`), so the moves read as the build-directory trap of 8.8 -
+the DLL's layout moved with `FxPalette` and the new rows - not as the fold;
+not proved further. The rows that change an answer (`0x52B330`'s `kByte`)
+or write (`FxPalette`) moved no count: no merged group reaches them through
+the standard set (E1E lists `0x52B330`; `Sprite_LoadPalette`'s callers'
+palettes lie in no field region). `tools/ledger_check.py`: 75 entries, 0
+errors. No function is taken, no ledger entry needed (the harness changes
+what the fuzz compares, not what the game does).

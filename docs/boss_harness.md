@@ -920,4 +920,7 @@ other harness's half and the proof.
   `_RemoveFromTurnOrder`); of the status, the byte (`mov al, byte [esp +
   0x10]` at `0x44F211`) and bit 0x800 of the word.
 
-The proof is the same `'*'` runs: COUNTS-PLACEHOLDER
+The proof is the same `'*'` runs: 8.11's proof; the
+engine groups' counts are unchanged, only the stand-ins' log names
+(`battle_e1`, `battle_e5`, `rest_3b`, `rest_3c` coverage), every line 0
+mismatches narrow and wide.
