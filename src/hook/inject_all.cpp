@@ -80,6 +80,7 @@
 #include "game/sound.h"
 #include "game/sound_rest.h"
 #include "game/d3d_draw.h"
+#include "game/d3d_rest.h"
 #include "game/display_env.h"
 #include "game/tex_page.h"
 #include "game/tex_cells.h"
@@ -1391,6 +1392,10 @@ void InjectAll() {
                                 // window, SquareRoot0, ApplyMatrixSV and the teardown chain): every caller of the
                                 // seventeen is ours and calls them by address, so after every module whose fuzz
                                 // stands them in or runs Capcom's
+    D3dRest_Inject();           // the platform round's group PH (docs/d3d-rest.md): the renderer's live remainder - five
+                                // Direct3D handlers, POLY_FT3's two helpers, D3d_SetAlphaModulate, D3d_AfterDraw,
+                                // Gfx_StoreImage; Gfx_DrawOTag reaches them by the addresses they had; its clones' calls
+                                // re-aimed at its own recorders; before FishingText_Arm
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every

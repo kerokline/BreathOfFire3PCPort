@@ -36,7 +36,7 @@ using U = std::uint32_t;
 constexpr sh::CallSite kCalls4804C0[] = {{0x14, 0x5A79A0}, {0x2C, 0x5A77C0}, {0x35, 0x461E50}, {0x41, 0x5A76B0}, {0x49, 0x5A7780},
                                          {0x4E, 0x494060}, {0x5D, 0x494110}, {0x81, 0x494110}, {0xB6, 0x461E50}};
 constexpr sh::CallSite kCalls4805B0[] = {{0x1, 0x589810}, {0x67, 0x461E10}, {0x12F, 0x5A79A0}, {0x153, 0x5891F0}, {0x15B, 0x588F20}, {0x160, 0x589840}};
-constexpr sh::CallSite kCalls480730[] = {{0x56, 0x59E930}};
+constexpr sh::CallSite kCalls480730[] = {{0x56, bof3::addr::Gfx_StoreImage}};
 constexpr sh::CallSite kCalls4807A0[] = {{0x5, 0x494060}, {0x65, 0x494110}};
 constexpr sh::CallSite kCalls480910[] = {{0x3F, 0x5B93D2}, {0x4A, 0x5B93D2}, {0x95, 0x5B93D2}, {0xA1, 0x5B93D2},
                                          {0xBA, 0x5B93D2}, {0xF5, 0x5B93D2}, {0x12F, 0x587740}};
@@ -262,7 +262,7 @@ const sh::Callee kCallees[] = {
     {E3A_OURS(Gfx_CommitPrim), 2, {k8, k8}, kG, 0, 0, {0, 0}, &FxCommit, nullptr, true},
     {E3A_OURS(Gpu_SetPolyG3), 1, {kW}, kG, 0, 0, {16}, &FxTriangle, nullptr, true},
     {E3A_OURS(Sprite_SetAnimation), 1, {k8}, kG, 0, 0, {}, &FxOnCurrent, nullptr, true},
-    {"0x59E930", at::kStoreImage, at::kStoreImage, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
+    {"Gfx_StoreImage", at::kStoreImage, at::kStoreImage, 2, {0, kW}, kG, 0, 0, {8, 0}, &FxStoreImage, nullptr, true},
 };
 #undef E3A_OURS
 

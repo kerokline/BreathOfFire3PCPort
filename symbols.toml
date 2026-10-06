@@ -8716,6 +8716,78 @@ status = "evidence"
 evidence = "disasm 2026-09-22, 0x5A20D0..0x5A2219 (0x14A bytes), straight-line: the draw 0x59EE50's second jump table entry 14 (code 0x60, Gpu_SetTile; the call at 0x59F16E). mode = Gfx_DrawTpage & 0xFFFF; D3d_PrimColor(r, g, b, code, mode, &diffuse, NULL); float x +8, y +0xC, z +0x10, w +0x14, h +0x18: corners (x, y), (x + w, y), (x, y + h), (x + w, y + h), the far edges summed then scaled on the x87; sz = z through fld / fst, rhw = 0.1 / z, the diffuse; device SetTexture(0, 0); 0x437CC0(1) twice; D3d_SetBlend(code, Gfx_DrawTpage re-read); D3d_SetShadeMode(1); DrawPrimitive(5, 0x1C4, D3d_Vertices, 4, 0)."
 
 [[func]]
+pc = 0x59FA50
+name = "D3d_DrawPolyF3"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (the platform round's group PH, capstone to the last instruction, docs/d3d-rest.md), 0x59FA50..0x59FB9B (0x14C bytes), straight-line: Gfx_DrawOTag's Direct3D table entry 0 (code 0x20; the call at 0x59F0AA, its only caller). D3d_PrimColor(r, g, b +4..+6, code +7, Gfx_DrawTpage & 0xFFFF, &diffuse, NULL); three corners of 0xC from +8 (sx, sy the scales times x, y on the x87, sz by mov, rhw 0.1 / z, the diffuse); device SetTexture(0, 0); 0x437CC0(0) twice; D3d_SetBlend(code, Gfx_DrawTpage re-read); D3d_SetShadeMode(1); DrawPrimitive(4 TRIANGLELIST, 0x1C4, D3d_Vertices, 3, 0), whose result is returned. No recorded route builds the code (analysis/platform_reach_1005.tsv)."
+
+[[func]]
+pc = 0x59FDB0
+name = "D3d_DrawPolyFT3"
+ret = "long"
+params = "unsigned char *prim"
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md), 0x59FDB0..0x59FFD5 (0x226 bytes): table entry 1 (code 0x24; the call at 0x59F0B8). If the u16 (u, v) words +0x14, +0x24, +0x34 are equal, D3d_FlattenFT3(prim, that word) first. D3d_PrimColor(r, g, b, code, tpage word +0x26, &diffuse, &specular); three corners of 0x10 from +8 (position, diffuse, specular); 0x7CA9C0 (vertex 3's z) = 0; flattened: SetTexture(0, 0); else tu, tv = D3d_TexCoords[u], [v] through fld / fstp per corner and D3d_BindTexture(tpage, CLUT word +0x16). 0x437CC0(tpage & 0x400), (tpage & 0x800); D3d_SetBlend(code, tpage); D3d_SetShadeMode(1); DrawPrimitive(4, 0x1C4, D3d_Vertices, 3, 0). The tpage word re-read after every call. No recorded route builds the code."
+
+[[func]]
+pc = 0x5A0910
+name = "D3d_FlattenFT3"
+ret = "void"
+params = "unsigned char *prim, unsigned uv"
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md section 4), 0x5A0910..0x5A0A30 (0x121 bytes): a helper of D3d_DrawPolyFT3, its only caller (0x59FDCB), not a second entry. pixel = D3d_PageTexel4(word +0xE, word +0x16, uv & 0xFFFF) - the PSX POLY_FT3's CLUT and tpage offsets, not this port's (+0x16 CLUT, +0x26 tpage): latent. Red, green, blue = ((Gfx_PixelFormat mask +0x10 / +0x14 / +0x18 & pixel) << shift +4 / +8 / +0xC) >> 16; each of the primitive's r, g, b times 1/128 (0x5C4614) times its channel on the x87 (red fild qword and fmulp, green and blue fimul), _ftol, clamped at 0xFF unsigned, stored back over the primitive after the next is read; code +7 &= 0xFB. eax at return is not read."
+
+[[func]]
+pc = 0x5A0A40
+name = "D3d_PageTexel4"
+ret = "unsigned"
+params = "unsigned clut, unsigned page, unsigned uv"
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md section 4), 0x5A0A40..0x5A0AA9 (0x6A bytes): one caller, D3d_FlattenFT3 0x5A093A. The byte of Gfx_VramShadow at ((((page & 0x10) << 4) + (uv sar 8)) * 16 + (page & 0xF)) * 128 + ((uv sar 1) & 0x7F); its high nibble for an even u, low for an odd (Tex_Convert4 reads low first: latent); Gfx_ClutPixels(clut) indexed by it, a u16 when byte 0x7DED63 (read after the call) is 2, else a dword. Always 4-bit, whatever the tpage's colour mode."
+
+[[func]]
+pc = 0x5A1050
+name = "D3d_DrawPolyGT3"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md), 0x5A1050..0x5A1288 (0x239 bytes), straight-line: table entry 5 (code 0x34; the call at 0x59F0F0). D3d_DrawPolyGT4 with three corners of 0x14 from +4 (r, g, b, pad, float x, y, z, u, v): three D3d_PrimColor(rgb, code, tpage word +0x2A, &d[i], &s[i]) into locals; per corner position, diffuse, specular, tu / tv; D3d_BindTexture(tpage, CLUT +0x16); 0x437CC0(0) twice; D3d_SetBlend(code, tpage); D3d_SetShadeMode(2); DrawPrimitive(4, 0x1C4, D3d_Vertices, 3, 0). No recorded route builds the code."
+
+[[func]]
+pc = 0x5A1EA0
+name = "D3d_DrawLineG4"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md), 0x5A1EA0..0x5A20CE (0x22F bytes), straight-line: table entry 13 (code 0x5C; the call at 0x59F160). Four D3d_PrimColor (r, g, b at +4 + i * 0x10, code +7, Gfx_DrawTpage & 0xFFFF re-read each, null specular) into locals; four corners of 0x10 from +8 (position, diffuse); SetTexture(0, 0); 0x437CC0(0), (1); D3d_SetBlend(code, Gfx_DrawTpage re-read); D3d_SetShadeMode(2); DrawPrimitive(3 LINESTRIP, 0x1C4, D3d_Vertices, 4, 0). No recorded route builds the code."
+
+[[func]]
+pc = 0x5A2220
+name = "D3d_DrawTile1"
+ret = "long"
+params = "const unsigned char *prim"
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md), 0x5A2220..0x5A22F4 (0xD5 bytes), straight-line: table entry 16 (code 0x68; the call at 0x59F17C). D3d_PrimColor(rgb, code, Gfx_DrawTpage & 0xFFFF, &diffuse, NULL); one vertex from +8 (position, diffuse); SetTexture(0, 0); 0x437CC0(1) twice; D3d_SetBlend(code, Gfx_DrawTpage re-read); D3d_SetShadeMode(1); DrawPrimitive(1 POINTLIST, 0x1C4, D3d_Vertices, 1, 0) - one point, one pixel at any scale. Entered in the whelpBoss route (analysis/calltrace/platform_1005)."
+
+[[func]]
+pc = 0x59E930
+name = "Gfx_StoreImage"
+ret = "int"
+params = "const short *rect, void *to"
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md section 6), 0x59E930..0x59E99B (0x6C bytes), every jump internal: Gfx_LoadImage's inverse, libgpu StoreImage's counterpart. rect s16 x, y, w read once; from Gfx_VramShadow + ((y << 10) + x) * 2, rows 0x800 apart, w * 2 bytes a row (rep movsd, rep movsb) packed to `to`; nothing if s16 h <= 0, else rows while the counter is below h, re-read through the pointer after each. No bounds checked. eax = w * 2 at both returns, read by none of its four callers (E8 scan: 0x475F0C, 0x480786, 0x490C06, 0x491466 - the effect states EffectKind6B_States[1], 0x480730, 0x490BB0, 0x491410, all ours). No recorded route enters it."
+
+[[func]]
 pc = 0x5A2EB0
 name = "D3d_DrawCellSprite"
 ret = "long"
@@ -8770,16 +8842,18 @@ pc = 0x59F520
 name = "D3d_SetAlphaModulate"
 ret = "void"
 params = "unsigned on"
+impl = "src/game/d3d_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-22, 0x59F520..0x59F572, not taken over (group R's stand-in): on non-zero and the cache 0x66B720 zero - device +0xA0 SetTextureStageState(0, 4 ALPHAOP, 4 MODULATE), cache 1; on zero and the cache set - (0, 4, 3 SELECTARG2), cache 0. Called by Gfx_DrawOTag for codes 0xF4..0xF7 with byte +8 ^ 1."
+evidence = "disasm 2026-09-22, 0x59F520..0x59F572 (0x53 bytes), read to the last instruction 2026-10-05 (the platform round's group PH, docs/d3d-rest.md): on non-zero (a dword test) and D3d_AlphaOpCache zero - device +0xA0 SetTextureStageState(0, 4 ALPHAOP, 4 MODULATE), cache 1; on zero and the cache set - (0, 4, 3 SELECTARG2), cache 0; the cache read once before the call, written after. One caller (E8 scan): Gfx_DrawOTag 0x59F23F for codes 0xF4..0xF7 with byte +8 ^ 1, which reads no eax."
 
 [[func]]
 pc = 0x59F580
 name = "D3d_AfterDraw"
 ret = "void"
 params = "void"
-status = "hypothesis"
-evidence = "disasm 2026-09-22, read only as far as its frame, not taken over (group R's stand-in): Gfx_DrawOTag tail-jumps here when D3d_AfterDrawRequest is set. It reads no stack argument (its frame is 0xA8 bytes of locals and four saved registers; nothing at or above its return address is addressed); returns early under Gfx_RenderFlags bit 0; creates a 0x140 x 0x140 surface at 0x7CADF8 on first use. What it draws is unread - the name says only when it runs."
+impl = "src/game/d3d_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (the platform round's group PH, docs/d3d-rest.md section 5), 0x59F580..0x59F83E (0x2BF bytes), every jump internal: a capture of the frame into a texture. Nothing under Gfx_RenderFlags bit 0. First use (D3d_CaptureSurface 0): 0x7CADF4 = 1.0, words 0x7CADEC = 0x140, 0x7CADEE = 0xF0; Dd_CreatePlainSurface(0x140, 0x140, &D3d_CaptureSurface, 2); D3d_FitTextureSize(0x140, 0xF0, 0x7CADF0, 0x7CADF2) (overlapping dwords); Dd_CreateTextureSurface(the two low words, &D3d_CaptureTexSurface, &D3d_CaptureTexture, 2); a texture narrower than 0x140 sets 0x7CADEC to its width, 0x7CADF4 = width * 0.003125 (fild, fmul, fstp) and 0x7CADEE = _ftol(0xF0 * that); either creation failing returns. Then steps _ftol(ScaleX / ScaleY * 65536.0); Dd_InitSurfaceDesc of one local desc; Lock (+0x64, flags 1) of D3d_CaptureSurface, then of DDraw_BackBuffer into the same desc, either failing returns (the second leaves the first locked); 240 x 320 nearest samples of the back buffer (16.16, pitch from the desc) packed into the capture surface (its pitch unread), 16-bit when byte 0x7DEDE3 is 2 else 32; Unlock (+0x80) of both, back buffer first; Blt (+0x14) of the capture surface's (0, 0, 320, 240) onto the texture surface's (0, 0, 0x7CADEC, 0x7CADEE), 0x1000000; D3d_CaptureReady = 1. Callers: the tail jmp of Gfx_DrawOTag 0x59F29A only. A raw scan of .text finds 0x7CADE8 and 0x7CAE00 only here, in Display_Setup and in the teardown: nothing draws the texture."
 
 [[data]]
 pc = 0x7CADEA
@@ -8787,6 +8861,41 @@ name = "D3d_AfterDrawRequest"
 ctype = "unsigned short"
 status = "evidence"
 evidence = "disasm 2026-09-22: Gfx_DrawOTag clears it on entry and tail-jumps to D3d_AfterDraw when it is non-zero after the walk; a raw scan of .text finds its address in no other instruction (0x59EE60, 0x59EE6A, 0x59F293 only), so whatever sets it does so through another base; not found."
+
+[[data]]
+pc = 0x66B720
+name = "D3d_AlphaOpCache"
+ctype = "unsigned long"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md): D3d_SetAlphaModulate's cache of stage 0's ALPHAOP, 1 MODULATE, 0 SELECTARG2; a raw scan of .text finds it in that function only (0x59F527, 0x59F547, 0x59F56A); Display_Setup does not reset it."
+
+[[data]]
+pc = 0x7CADE8
+name = "D3d_CaptureReady"
+ctype = "unsigned short"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH, docs/d3d-rest.md section 5): D3d_AfterDraw sets it to 1 after each capture (0x59F82B); the capture block 0x7CADE8..0x7CAE03 is zeroed by Display_Setup; a raw scan of .text finds 0x7CADE8 only there, in D3d_AfterDraw and in the teardown 0x5A6686 - nothing reads it for a draw."
+
+[[data]]
+pc = 0x7CADF8
+name = "D3d_CaptureSurface"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH): D3d_AfterDraw's 320-wide plain surface (Dd_CreatePlainSurface 0x140 x 0x140, format 2), null until its first capture; locked, filled from the back buffer and blitted to D3d_CaptureTexSurface each capture; released by the teardown (0x5A666F)."
+
+[[data]]
+pc = 0x7CADFC
+name = "D3d_CaptureTexSurface"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH): D3d_AfterDraw's texture surface (Dd_CreateTextureSurface, the size D3d_FitTextureSize gave for 0x140 x 0xF0), the Blt's destination; released by the teardown (0x5A6660)."
+
+[[data]]
+pc = 0x7CAE00
+name = "D3d_CaptureTexture"
+ctype = "void *"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PH): the IDirect3DTexture2 of D3d_CaptureTexSurface; written by Dd_CreateTextureSurface from D3d_AfterDraw, released by the teardown (0x5A6651); a raw scan of .text finds no other reference - no draw sets it."
 
 # --- Group S, fifth round (2026-09-23): the display environments, the present, the bank load. docs/display-env.md ---
 
