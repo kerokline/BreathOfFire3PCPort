@@ -1176,7 +1176,7 @@ const Callee kEffectStd[] = {
     {FX_OURS(LeaderPanel_UseItemEnd), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x52B200, 1 (a tail jump; a hidden start): sound, animation
     {FX_OURS(LeaderPanel_LeaveOnPress), 1, {kU16}, Answer::kByte, 0, 1, {}, nullptr, nullptr, true},   // 0x52B330, 1: the buttons' low word (and eax, edx; test ax, ax at 0x52B33A); al 1 (mov al, 1 at 0x52B351) or 0 (xor al, al at 0x52B362), the rest of eax what it was; Transition_Start (R1G's reading; round fourteen's fold)
     {FX_OURS(Fish_RunAll), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x52B6C0, 1: calls through 0x660324 by a byte
-    {FX_RAW(0x593950), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 1 (a tail jump): jmp [0x66A470 + byte 0x93985C * 4] - the dispatcher of EKP's run
+    {FX_OURS(ItemTrade_Dispatch), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // 0x593950, 1 (a tail jump): jmp [0x66A470 + byte 0x93985C * 4] - the dispatcher of EKP's run; group TWO's (2026-10-06)
 };
 #undef FX_OURS
 #undef FX_RAW

@@ -21,7 +21,7 @@ Fuzz-only except the three the owner's routes enter (section 9).
 | The field tail: `Field_ModeTailKinds` slots 4, 5, 6, 10, 27, 44, 55 | 7 | `Field_ModeTailRun` (ours) by the s8 `0x9039F3` |
 | `PartySet_ErrorLoop`, `AreaMap_ClearCell` | 2 | `PartySet_Find`; 22 callers of the cell clear |
 | Draw layers: `MapCell_Handlers` kinds 16, 33, 34 | 3 | `DrawLayer_Open` (ours) through `MapCell_Handlers` `0x663008` |
-| The trade screen's states | 7 | `ItemTrade_States` `0x66A470` (dispatched by `0x593950`, nobody's), `ItemTrade_OpenSteps` `0x66A47C`, `ItemTrade_RunSteps` `0x66A484` |
+| The trade screen's states | 7 | `ItemTrade_States` `0x66A470` (dispatched by `0x593950` `ItemTrade_Dispatch`, nobody's then; ours since 2026-10-06, [`game-last.md`](game-last.md)), `ItemTrade_OpenSteps` `0x66A47C`, `ItemTrade_RunSteps` `0x66A484` |
 
 Every name is from what the code does (`symbols.toml` status `evidence`
 where the reading settles it, `hypothesis` where a name says more than the
@@ -317,7 +317,8 @@ before it); `Mode11_ObjectHalt` from `_Move` in half the rounds of `_Move`;
   `0x5940F0` (with its own table `0x66A494`) lie past the band's end: in no
   group, called through the tables in place. The dispatcher `0x593950`
   (`ItemTrade_States` by `0x93985C`, reached from the thunk `0x52CF30`) is in
-  no cut row either.
+  no cut row either (taken 2026-10-06 as `ItemTrade_Dispatch`,
+  [`game-last.md`](game-last.md)).
 - **Three `kStandard` / `kField` entries became ours**: `Scenario_CallB`
   (the harness's entry keys on the name and registers either way, as FH
   wrote it), and none other. `scena_sc11_fuzz.cpp` listed `Scenario_CallB` as

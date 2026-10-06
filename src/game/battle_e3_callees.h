@@ -40,7 +40,7 @@ constexpr U kBannerByPair = bof3::addr::BattleBanner_AddLine;     // (byte, byte
 constexpr U kPass44FDE0 = bof3::addr::BattleForm_ApplyStats;       // () BE5
 constexpr U kPass453300 = bof3::addr::Battle_RecalcStats;       // (actor) BE6
 constexpr U kSecondPopup = bof3::addr::Battle_SetApPopup;      // (word, actor) BE6
-constexpr U kItemClass = 0x591810;        // (byte, byte) -> al, nobody's
+constexpr U kItemClass = bof3::addr::Item_UseFlags;        // (byte, byte) -> al; group TWO's (2026-10-06), the value unchanged
 
 // --- the battle bytes (0x904AA0..0x904BA0, the harness's battle frame) ---
 constexpr U kRoundFlags = 0x904AA8;       // u16: bit 2 an action's end, 6, 7 (a roll), 11 (a cast's end), 13, 14

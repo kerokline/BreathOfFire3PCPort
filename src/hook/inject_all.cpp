@@ -312,6 +312,7 @@
 #include "game/psx_rest.h"
 #include "game/mode_rest.h"
 #include "game/crt_rest.h"
+#include "game/game_last.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1404,6 +1405,7 @@ void InjectAll() {
                                 // at the scenario harness's recorders, two .data tables swapped for the fuzz only;
                                 // before FishingText_Arm; no module patches bytes inside its 14 (DIVERGENCE.md,
                                 // cheats.cpp, widescreen.cpp)
+    GameLast_Inject();          // platform round step 3, group TWO (Item_UseFlags 0x591810, ItemTrade_Dispatch 0x593950; docs/game-last.md): no calls, one .data table swapped for the fuzz only; last of the takeovers
     CrtRest_Inject();           // platform round step 3 (docs/crt-rest.md): the C runtime's entries the game calls -
                                 // Rand, sprintf, strncpy, _stricmp, _findfirst / _findnext, the file layer - LAST of
                                 // the takeovers: every module's fuzz before it ran Capcom's entries or its own stand-ins
