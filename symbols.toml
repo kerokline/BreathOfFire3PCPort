@@ -114219,3 +114219,163 @@ ctype = "unsigned long"
 count = 6
 status = "evidence"
 evidence = "read 2026-10-05 (round fourteen group R4B): jumped through by CommuBoard_StepDispatchB 0x457AD0 by the u8 0x939A40, unchecked: CommuBoard_States[8..13], the run's end. docs/rest_4b.md."
+
+
+# --- 2026-10-05 platform round step 2, group PM: game modes 3..6 and their steps, the catalogue's gap (docs/mode-rest.md) ---
+
+[[func]]
+pc = 0x495BB0
+name = "GameMode3_Run"
+psx = 0x801985E4
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (platform round group PM, capstone to the last instruction), 0x495BB0..0x495BBE (0xF bytes): xor eax, eax; mov ax, Game_Step; jmp [GameMode3_Steps + eax * 4], unchecked. GameMode_Handlers[3] (.data 0x656A50); GameMode_Field sets mode 3 on Field_Request 1. Hidden in GameMode_Field's pc_funcs.json extent (2,139 bytes; the code is 0x1BC). PSX GAME.EMI section 0 0x801985E4 (GameMode_Handlers' PSX twin 0x801C8B0C entry 3), read. docs/mode-rest.md."
+
+[[func]]
+pc = 0x495BC0
+name = "GameMode3_Enter"
+psx = 0x80198620
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x495BC0..0x495C41 (0x82 bytes), 10 calls: LoadDatFile(0x31E) waited on (Task_Sleep(1) a try); Gfx_ClutStripCopyRow(1), (2); Gfx_ClutStripDirty 1, 0x929F00 = 0, 0x929F04 = 3; Transition_Start(3); Menu_WaitTransition(1); with the word 0x7E0678 0x6E and Sound_MusicPlaying answering 0, Music_FadeOut(0x10); Game_Step + 1. GameMode3_Steps[0]. PSX 0x80198620 call for call (DAT 0x269; a CD query and fade for the music). pairs_propagated.json pairs 0x80198620 with 0x4964E0 (callers tier): wrong, by the table read. docs/mode-rest.md."
+
+[[func]]
+pc = 0x495C50
+name = "GameMode3_Leave"
+psx = 0x801986EC
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x495C50..0x495E51 (0x202 bytes), 24 calls: Menu_Frame; Transition_Start(2); Menu_WaitTransition(0); Task_Sleep(1); 0x929F11 set: PartySet_Load(0x904062, 63, 64, 0) waited on, 0x929F11 = 0; 0x90412C |= 0x80 and Snd_LoadBankFile((it & 0x7F) + 0x2C2); Field_InputFlags bit 4: LoadDatFile(0x12A) waited on, CommuSim_RollOffers; Transition_Start(3); Field_WaitTransition(1); word 0x7E0678 0x6E and Sound_MusicPlaying 0: Music_FadeIn(0x10); then 0x905B60 (cleared): the trip out (0x904152 0 and Field_InputFlags bit 0 or area 0xBD: leader x, z, area saved to 0x904148 / 4C / 50, 0x904152 = 1, 0x904153 = (0x656A80[Rand & 3] + 0x802D48) & 0xF, Field_ChangeArea(0x937F82, 0x903860, 0x90384C, 0x905B88)) or home (0x904152 = 0, Flags_Clear(0x904030, 0x77), Field_ChangeArea(saved area, x, z, 4)); else 0x905B61: Field_ChangeArea(it, 0x430000, 0x160000, 4), cleared; else Field_Request 0; Window_ResetAll; Game_Mode 2, Game_Step 0. GameMode3_Steps[2]. PSX 0x801986EC branch for branch. docs/mode-rest.md."
+
+[[func]]
+pc = 0x495E60
+name = "GameMode4_Run"
+psx = 0x801989D4
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x495E60..0x495E87 (0x28 bytes): with byte 0x7DEE44 bit 1, 0x905B82 = 0x10, Field_Request 0, Game_Mode 2; tail jmp Field_FrameScripted. GameMode_Handlers[4] (Field_Request 2, a message open). PSX 0x801989D4 term for term (0x801490A0 bit 1, tail jal 0x8019A230). docs/mode-rest.md."
+
+[[func]]
+pc = 0x495E90
+name = "GameMode5_Run"
+psx = 0x80198A24
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x495E90..0x495E9E (0xF bytes): jmp [GameMode5_Steps + word Game_Step * 4], unchecked. GameMode_Handlers[5] (Field_Request 3, the battle). PSX 0x80198A24. docs/mode-rest.md."
+
+[[func]]
+pc = 0x495EA0
+name = "GameMode5_TurnSense"
+psx = 0x80198A60
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x495EA0..0x495EB6 (0x17 bytes): Encounter_PartyTurnSense, Field_ObjectsFrame, Field_LoadingFrame, Game_Step + 1. GameMode5_Steps[0]. PSX 0x80198A60. docs/mode-rest.md."
+
+[[func]]
+pc = 0x495EC0
+name = "GameMode5_Turn"
+psx = 0x80198AA4
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x495EC0..0x495F8E (0xCF bytes), 5 calls: bl = Encounter_PartyTurn, Field_ObjectsFrame, Field_LoadingFrame; bl set: Port_DroppedCall(1); byte 0x904AE5 and dword 0x904AAC read once; bit 0 clear: MoveScript_F3Divisor 0x40, words 0x905E62 += s8 0x656AA5[2 * formation byte], 0x905E66 += s8 0x656AA4[..], MoveScript_FAWord = (0x939860 - MapView_Elevation) sar 4; bit 4 clear: PartySet_Select(0x90412C & 0x7F, formation bit 1 ? 2 : 1), the formation re-read; Game_Step + 1, Draw_OtSlot 4, Draw_SortOnX = formation & 1, MapView_Redraw 2. GameMode5_Steps[1]. PSX 0x80198AA4. docs/mode-rest.md."
+
+[[func]]
+pc = 0x495F90
+name = "GameMode5_ToPlaces"
+psx = 0x80198C1C
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x495F90..0x495FC0 (0x31 bytes): bl = Encounter_PartyToPlaces, Field_ObjectsFrame, Field_LoadingFrame; Game_Step + 1 when File_LoadDone, bl and Field_Kind2Hold 0 (in that order). GameMode5_Steps[2]. PSX 0x80198C1C. docs/mode-rest.md."
+
+[[func]]
+pc = 0x495FD0
+name = "GameMode5_Load"
+psx = 0x80198C94
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x495FD0..0x4960C0 (0xF1 bytes), 10 calls: Field_PartyLoad(1), Encounter_PartyAtPlaces, Field_ObjectsFrame, Field_LoadingFrame; Music_FadeOutStop(0xA) unless 0x904AE5 bit 6 or Music_Track 0xFF; event battle 0x904AAA set: LoadDatFile(word 0x64DECC[4 * EventBattle_Records[4 * id + 3]]) and the track word +2 (the id re-read after the load); else s8 Cond_ByteFA < 8: DAT 0xD2 / track 0x97, else 0xD3 / 0x99; Music_Play(track, 0xA); Window_ResetAll; Game_Step + 1; 0x904AE9, word 0x904AA8, bytes 0x904AA0..A4 = 0. GameMode5_Steps[3]. PSX 0x80198C94. docs/mode-rest.md."
+
+[[func]]
+pc = 0x4960D0
+name = "GameMode5_Script"
+psx = 0x80198E54
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x4960D0..0x49612C (0x5D bytes): bl = Encounter_PartyScriptOnce, Field_ObjectsFrame, Field_LoadingFrame; with File_LoadDone and bl: MoveScript_F3Divisor 0, 0x904AE9 and 0x904AA0..A4 = 0, Party_Count(1), Game_Step + 1, its al to 0x904AB0. GameMode5_Steps[4]. PSX 0x80198E54 (pairs_propagated.json pairs it with 0x5885D0, callers tier: wrong, by the table read). docs/mode-rest.md."
+
+[[func]]
+pc = 0x496130
+name = "GameMode5_Place"
+psx = 0x80198EFC
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x496130..0x49614B (0x1C bytes): Party_PlaceAtSlots, Party_ScriptTicks, Field_ObjectsFrame, Field_LoadingFrame, Game_Step + 1. GameMode5_Steps[6] (step 5 is Battle_Frame). PSX 0x80198EFC. docs/mode-rest.md."
+
+[[func]]
+pc = 0x496150
+name = "GameMode5_Leave"
+psx = 0x80198F48
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x496150..0x496226 (0xD7 bytes), 11 calls: with Field_Kind2Hold 0 and File_LoadDone: Draw_OtSlot 6, Field_PartyLoad(0), Party_PlacesByList, Field_EdgeBits 0; 0x904AE5 bit 1 clear: MapView_SetElevation(AreaMap_Elevation(Field_Kind2X, Field_Kind2Z)); Music_Play(Music_Track, 0xA) unless 0x904AE5 bit 6 (re-read), 0x904AE8 bit 3 or the track 0xFF; 0x904AE5 = 0, 0x904AAA = 0; Field_ZoneCounterRoll(0); Field_AfterBattleTally. Either way Party_ScriptTicks, Field_ObjectsFrame, Field_LoadingFrame; after the first, Game_Mode 2, Game_Step 0, Field_Request 0. GameMode5_Steps[7]. PSX 0x80198F48. docs/mode-rest.md."
+
+[[func]]
+pc = 0x496230
+name = "GameMode6_Run"
+psx = 0x80199170
+ret = "void"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x496230..0x49624A (0x1B bytes): Look_PadControl at Game_Step 0, GameMode_LookEnd otherwise; tail jmp Field_LoadingFrame. GameMode_Handlers[6] (Field_Request 4). PSX 0x80199170 term for term. docs/mode-rest.md."
+
+[[func]]
+pc = 0x587C20
+name = "Sound_MusicPlaying"
+ret = "int"
+params = "void"
+impl = "src/game/mode_rest.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-05 (group PM), 0x587C20..0x587C24 (5 bytes): jmp Music_IsPlaying 0x5A7020, every register handed on (Music_IsPlaying reads its entry's push ecx slot when GetStatus writes nothing). Two callers, both this group's: GameMode3_Enter 0x495C27 and GameMode3_Leave 0x495D26 (the read pass classed it original: they were filed inside GameMode_Field). No PSX twin (the PSX asks the CD player, 0x8015E050). docs/mode-rest.md."
+
+[[data]]
+pc = 0x656A74
+name = "GameMode3_Steps"
+psx = 0x801C8B3C
+ctype = "unsigned long"
+count = 3
+status = "evidence"
+evidence = "read 2026-10-05 (platform round group PM): GameMode3_Enter 0x495BC0, Menu_Frame 0x5172F0, GameMode3_Leave 0x495C50; GameMode3_Run 0x495BB0 jumps through it by the word Game_Step, unchecked. Three by the step word's writers: step 0 + 1, the field menu's + 1 (0x589C92 / 0x589CCA), step 2 back to 0. The next four bytes 0x656A80 are the facing jitter GameMode3_Leave reads (Rand & 3), not a pointer; GameMode5_Steps starts at 0x656A84. The PSX table 0x801C8B3C the same shape. docs/mode-rest.md."
+
+[[data]]
+pc = 0x656A84
+name = "GameMode5_Steps"
+psx = 0x801C8B4C
+ctype = "unsigned long"
+count = 8
+status = "evidence"
+evidence = "read 2026-10-05 (platform round group PM): GameMode5_TurnSense, _Turn, _ToPlaces, _Load, _Script, Battle_Frame 0x42E370, GameMode5_Place, GameMode5_Leave; GameMode5_Run 0x495E90 jumps through it by the word Game_Step, unchecked. Eight by the step word's writers: steps 0..4 and 6 + 1, the battle's + 1 at 0x42D755 / 0x4318B4 (step 5), step 7 back to 0. The next eight bytes 0x656AA4 are GameMode5_Turn's s8 approach pairs; GameMode_ShopSteps starts at 0x656AAC. The PSX table 0x801C8B4C the same shape. docs/mode-rest.md."
