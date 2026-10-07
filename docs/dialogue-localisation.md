@@ -380,7 +380,7 @@ All of them load with `FIRST.DAT`.
 | 9 | the battle's command labels (Atk ... Esc) | 7 x 8 at `0x669D28` via `0x669D60` | the box table `0x64E2C8` (`BATTLE.EMI`) | DIV-0019 |
 | 10 | New Game's default names (Ryu ... Whelp) | name fields of 8 records at `0x64B390` | the records past the name, 4 bytes earlier (`START.EMI`) | DIV-0020 |
 | 11 | Manillo, the fish merchant | 8 bytes at `0x669CD8` | twelve bytes at `0x6608CC` (the fishing areas) | DIV-0020 |
-| 15 | the status words, the stats (menu and battle), the item and skill types (the last two repointed into the DLL's buffers), the master list's title and star mark | `0x66A0E8`, `0x66A0F8`, `0x66A120`, `0x66A200`, `0x669CF0`, `0x66A1F0` + `0x66A2D8` | the bytes at `0x663648` / `0x663660`, `0x663960`, `0x66B5B4` (`START.EMI`, `BATTLE.EMI`); `0x66B3B8` and the requirement lists `0x66B3D0` (`SHOP.EMI`) | DIV-0064 |
+| 15 | the status words, the stats (menu and battle), the item and skill types (the last two repointed into the DLL's buffers), the master list's title and star mark, the sort menus, the Skill Notes sort, the Skill Ink label, the formation names, the zenny unit | `0x66A0E8`, `0x66A0F8`, `0x66A120`, `0x66A200`, `0x669CF0`, `0x66A1F0` + `0x66A2D8`, `0x66A170..` (11), `0x66A1DC` + `0x66A1E4`, `0x66A118`, `0x6636B0` (10 records), `0x66A31C` | the bytes at `0x663648` / `0x663660`, `0x663960`, `0x66B5B4` (`START.EMI`, `BATTLE.EMI`); `0x66B3B8` and the requirement lists `0x66B3D0`, the 28 bytes at `0x66B110`, the `SKILL` slot `0x664290` (`SHOP.EMI`); the same 28 bytes, the formation pairs, the wheel triangle `0x6637C8` (`START.EMI`) | DIV-0064 |
 | 16 | the fishing spot's banner lines and tabs (both repointed into the DLL's buffers; [`fishing-text.md`](fishing-text.md)) | 13 records at `0x653B98`, the table `0x66A088` | the row table `0x653C04` and the edge-quad records `0x653E6C` (the fishing areas) | DIV-0069 |
 
 What makes this cheap: the US abbreviations were made to fit the PlayStation's
@@ -394,19 +394,24 @@ and the port's own font renders the Chinese glyphs so the table can be read
 (`tools/font_pc.py`'s `glyph_pixels`). The stat labels, the status words and
 the list headers are kind 15 since 2026-09-29 (DIV-0064). Found and not
 converted: the turn counter's 残留 / 回合 at `0x669D10` / `0x669D18` (read
-only by `0x43C780`, a boss effect; no US text found beside it), the Skill Ink
-count's 墨水 at `0x66A118` (`SharedList_DrawItemCount`; not found on the US
-disc as text - likely an icon there), the pupils box's 弟子 at `0x66A1F8`
+only by `0x43C780`, a boss effect; no US text found beside it), the pupils box's 弟子 at `0x66A1F8`
 (`MasterWin_DrawPupils` - not drawn under a Latin overlay since DIV-0083,
 the PlayStation having no such box; its neighbour 师匠 at `0x66A1F0` is kind 15 since
 2026-10-07, with the master list's star mark `0x66A2D8` - DIV-0064's sixth
 group, from `SHOP.EMI`), and the battle's 巴比 / 贝特 at
 `0x669CE0` / `0x669CE8` (`BattleExtra_EquipOpen` / `_EquipLeave`,
-`FieldPanel_DrawKindRow`). Beyond those, `0x669E10..0x66A0B0` and
-`0x66A14C..0x66A1E0` hold some fifty more short Chinese strings
-(`analysis/` render of 2026-09-29: 整理, 装备, 最强, 特能, 购买, 卖出, 交换,
+`FieldPanel_DrawKindRow`). Converted 2026-10-07 from the owner's
+`sortScreens.txt` (DIV-0064's groups 7..11): the sort menus
+`0x66A170..0x66A1DC` behind `0x66B12C`, the Skill Notes sort `0x66A1DC` /
+`0x66A1E4`, the Skill Ink label `0x66A118` (`SHOP.EMI` has `Ink` after all),
+the formation names in the records at `0x6636B0`, and the zenny unit
+`0x66A31C` (a glyph behind the letter `s`, not Chinese - the overlay's font
+repaint had turned it into an `s`). Beyond those, `0x669E10..0x66A0B0` and
+`0x66A14C..0x66A16C` hold some forty more short Chinese strings
+(`analysis/` render of 2026-09-29: 装备, 最强, 特能, 购买, 卖出, 交换,
 阅读 ... - the shop and tactics vocabulary), each wanting its reader found
-before a US string can be paired with it.
+before a US string can be paired with it; `BOF3X_TEXTLOG=1` on a route that
+shows one names its slot.
 
 **Names in saves** are the save's: a save keeps the names it was begun with,
 and shows gibberish across a language switch. The owner accepted that on

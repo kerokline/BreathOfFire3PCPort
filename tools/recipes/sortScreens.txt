@@ -1,0 +1,192 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+wait 41
+hold start 5
+wait 78
+hold start 6
+wait 40
+hold circle 4
+wait 29
+hold circle 5
+wait 19
+hold circle 4
+wait 17
+hold circle 6
+wait 61
+hold triangle 4
+wait 30
+hold circle 4
+wait 28
+hold right 4
+wait 6
+hold circle 7
+wait 14
+hold circle 5
+wait 19
+hold down 3
+wait 15
+hold down 3
+wait 20
+hold up 3
+wait 17
+hold up 4
+wait 18
+hold cross 4
+wait 29
+hold cross 4
+wait 16
+hold cross 5
+wait 15
+hold right 3
+wait 9
+hold circle 5
+wait 35
+hold right 4
+wait 12
+hold circle 6
+wait 24
+hold circle 6
+wait 20
+hold down 5
+wait 14
+hold down 5
+wait 15
+hold up 4
+wait 13
+hold up 4
+wait 12
+hold cross 6
+wait 11
+hold right 3
+wait 5
+hold cross 5
+wait 10
+hold right 4
+wait 24
+hold right 5
+wait 23
+hold circle 6
+wait 33
+hold circle 5
+wait 14
+hold down 4
+wait 15
+hold down 4
+wait 15
+hold cross 5
+wait 10
+hold cross 4
+wait 31
+hold right 4
+wait 8
+hold circle 4
+wait 19
+hold circle 5
+wait 18
+hold cross 5
+wait 11
+hold right 4
+wait 18
+hold right 4
+wait 37
+hold left 5
+wait 63
+hold circle 5
+wait 33
+hold cross 6
+wait 8
+hold right 4
+wait 16
+hold circle 5
+wait 9
+hold cross 6
+wait 10
+hold right 5
+wait 15
+hold cross 6
+wait 13
+hold right 3
+wait 14
+hold circle 6
+wait 29
+hold circle 4
+wait 53
+hold cross 5
+wait 36
+hold cross 6
+wait 24
+hold right 4
+wait 22
+hold circle 6
+wait 36
+hold cross 7
+wait 14
+hold right 4
+wait 16
+hold circle 5
+wait 38
+hold cross 5
+wait 22
+hold right 4
+wait 17
+hold cross 6
+wait 29
+hold circle 6
+wait 22
+hold circle 6
+wait 11
+hold circle 5
+wait 27
+hold down 4
+wait 7
+hold down 4
+wait 11
+hold down 4
+wait 13
+hold circle 8
+wait 57
+hold circle 5
+wait 26
+hold down 4
+wait 9
+hold down 4
+wait 6
+hold cross 7
+wait 11
+hold right 4
+wait 19
+hold cross 8
+wait 26
+hold circle 5
+wait 15
+hold circle 6
+wait 15
+hold circle 4
+wait 14
+hold down 3
+wait 5
+hold down 4
+wait 6
+hold down 5
+wait 8
+hold circle 5
+wait 25
+hold right 3
+wait 5
+hold circle 8
+wait 21
+hold circle 5
+wait 45
+hold circle 7
+wait 49
+hold circle 5
+wait 42
+hold cross 5
+wait 6
+hold cross 5
+wait 11
+hold cross 6
+wait 9
+hold cross 5
+wait 115

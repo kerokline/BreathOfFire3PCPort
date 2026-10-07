@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 83 entries, DIV-0001..0083, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 84 entries, DIV-0001..0084, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3578,6 +3578,65 @@ designed in rather than bolted on.
   Mygas with the unfinished dot as before. **Owed the owner's eye:** the
   star itself, on a save with a completed master (no committed route has
   one), and the French `ME`.
+  **Extended 2026-10-07 again - five more groups, from the owner's
+  `tools/recipes/sortScreens.txt`** (their route through the item and
+  ability sort menus, the formation screen and the camp's Skill Notes;
+  `BOF3X_TEXTLOG=1` named every string drawn from `.data`, and the one
+  the log could not see was found by its bytes):
+  7. **the sort menus** - eleven slots from `0x66A170` of 8 or 12 bytes
+     (整理 / 自己整理 / 通常道具 / 战斗道具, the equipment sort's three,
+     AP大 / AP小, 通常技能 / 战斗技能) behind the pointer table `0x66B12C`.
+     `START.EMI` has `SORT`, `ManualSort`, `NormalItem`, `CombatItem`,
+     `Power`, `Defence`, `Kind`, `High AP`, `Low AP`, `NormalAbil`,
+     `CombatAbil` right after the 28 bytes the PC has at `0x66B110`, the
+     US disc packed in the same rooms, the French and German padded to
+     four and placed by their eleven pointers (`loc_build.py`'s
+     `label_run`). Nothing but the two tables (`0x66B12C`, and `0x66B374`
+     for the AP pair) reaches the slots, so the group is repointed into
+     16-byte buffers of the DLL's as the item and skill types are: the
+     French `PC élevé` and `Défense` (an accent is two bytes) and the
+     German `AP niedr` are over their 8-byte slots.
+  8. **the camp's Skill Notes sort** - its title 选单 `0x66A1DC` and first
+     choice 察看技能 `0x66A1E4` behind `0x66B36C` (the other two are
+     group 7's AP pair again): `SHOP.EMI`'s `SORT` and `LOOK` after the
+     same 28 bytes.
+  9. **the Skill Ink count's label** 墨水 `0x66A118` (`push` at `0x585964`,
+     `SharedList_DrawItemCount`), which section 8 of
+     [`dialogue-localisation.md`](dialogue-localisation.md) had down as
+     "not found on the US disc as text": `SHOP.EMI`'s `Ink` (`Encre`,
+     `Tinte`) after the `SKILL` slot the PC has at `0x664290` and its
+     three pointers.
+  10. **the formation names** - ten records of 28 at `0x6636B0` (a name of
+     16, then the three s16 pairs of the icon wheel), read by
+     `Menu_DrawIconWheel` `0x573F70` through the base at `0x573FC6` and
+     drawn by the 8 px draw, so `Labels_SmallGlyph` now serves their
+     slots as it serves the status words'. `START.EMI` has the ten as
+     records of 20 (US: a name of 7 and its length) or 22 (German: 8, the
+     length, a pad) with the same pairs, found by the pairs at either
+     stride: `Normal` x3, `Attack` x2, `Defense` x2, `Chain`, `Magic`,
+     `Refuge` - all ten PC records match the disc's pair for pair. Their x
+     is DIV-0084's.
+  11. **the zenny unit** - `0x66A31C`, 4 bytes, the one byte `s`: the
+     shipped font's `s` slot is the port's coin glyph, and the overlay's
+     repaint made it a letter (`11957s` on the owner's Items screen) - the
+     master list's star again. Four pushes (`Menu_DrawMoneyBox`'s
+     `0x57465C` is the witness; `Commu_DrawZennyBox`, the enemy target
+     panel's three and the battle result's zenny window share the slot).
+     `START.EMI` has the US code `0x60`, the dialogue set's stylised Z, in
+     the slot right after the icon wheel's triangle (24 bytes the PC has
+     at `0x6637C8`), before the full stop and the verbs' pointers; the US
+     money box itself (`0x801dc9xx`, found by its `%7d`) draws no unit,
+     the shop's zenny box does.
+  *Verification:* `loc_build.py all` on the US, French and German discs
+  reports `sort menus 11, formations 10, zenny unit 1, note sort 2, ink
+  label 1`; the `field_o`, `field_s` and `menu_windows` self-tests 0
+  mismatches; the owner's route replayed with a shot every 30 frames
+  (`analysis/shots/sortScreens2`): frame 420 `SORT` / `ManualSort` /
+  `NormalItem` / `CombatItem`, 720 `SORT` / `ManualSort` / `High AP` /
+  `Low AP`, 1440 `Normal` / `Attack` / `Defense` centred in their boxes,
+  1980 `Ink  2`, 330 `11957` with the Z. **Owed the owner's eye:** the
+  equipment sort's `Power` / `Defence` / `Kind` (the route does not open
+  it) and the French and German words in play.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 
@@ -4462,3 +4521,33 @@ designed in rather than bolted on.
   portraits - the owner's US capture beside it, the same.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=MasterPupilLabel` keeps the overlay and the box.
+
+### The formation screen's names centred in their boxes
+
+- **ID:** DIV-0084
+- **Date:** 2026-10-07
+- **Subsystem:** menu, the formation screen's icon wheels
+  (`Menu_DrawIconWheel` `0x573F70`, ours in `src/game/field_o.cpp`)
+- **Tier:** Sensible
+- **Original behaviour:** each wheel's box is 0x45 wide and its name is
+  drawn by the 8 px draw from x + 0x16: the port's four-glyph names
+  (传统阵形, 32 px) sit on the box's middle. The US release draws the name
+  from its `START.EMI` twin at x + 0x27 (`0x801dcf30`, `addiu $a0, $fp,
+  0x27` before the small-text call `0x8014fc90`), the box's middle, so its
+  routine centres - `Defense` at 8 px a letter is 56 px, which from x +
+  0x16 would run six past the box.
+- **New behaviour:** once DIV-0064's group 10 has written the names one
+  byte a letter (`Labels_SmallWritten(10)`), the name starts at x + 0x27 -
+  4 x its letters, under a Latin overlay: `g_wheel_name_centre`, patched
+  to 1 by `FieldO_Inject` after the fuzz under the name
+  `FormationNameCentre`. Otherwise the port's x + 0x16.
+- **Rationale:** as DIV-0059: the US words in the US place.
+- **Also in the PSX version?** Not applicable - the PlayStation's own
+  placement brought back.
+- **Verification:** the `field_o` self-test (before the patch): 82,000
+  rounds over 41 functions, 0 mismatches. Live: the owner's
+  `sortScreens.txt`, frame 1440 (`analysis/shots/sortScreens2/f01440.png`):
+  `Normal`, `Attack`, `Defense` each on its box's middle.
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=FormationNameCentre` keeps the overlay's words at the
+  port's x.

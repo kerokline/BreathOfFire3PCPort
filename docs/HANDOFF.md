@@ -90,7 +90,9 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       web reference - half of `yes-no-prompts.md` section 5's question answered) and a `†` beside completed masters
       where the US draws `★` - `0x66A1F0` and `0x66A2D8`, DIV-0064's way (same list; **done 2026-10-07**, both from
       `SHOP.EMI`, the star owed the owner's eye; the pupils box's 弟子 `0x66A1F8` left out under a Latin overlay, DIV-0083,
-      the US screen having no label box there - the owner's capture). And two routes the owner recorded and committed (`d1c5dcf1`): `ninaWalkBehindBlock`
+      the US screen having no label box there - the owner's capture). And the owner's `sortScreens.txt` the same morning:
+      the sort menus, the Skill Notes sort, `Ink`, the formation names and the zenny unit - DIV-0064's groups 7..11 and
+      DIV-0084, done; the equipment sort's words and the French / German builds owed their eye. And two routes the owner recorded and committed (`d1c5dcf1`): `ninaWalkBehindBlock`
       (a sprite through a cell - DIV-0071's first sighting in play, A/B it under `BOF3X_LAYERING=0`) and `bridgeWalk` (a
       backdrop short of the wide view's edge, the cull notch, a sprite cut by its row's deck - same list).
    2. **The owner's calls**, all on [`owner-review.md`](owner-review.md): the town theme `000` (its file is shorter than

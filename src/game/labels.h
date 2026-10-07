@@ -19,3 +19,8 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
 // has written them and the byte is a letter or a digit; 0 otherwise, and the
 // draw keeps the original's glyph.
 unsigned Labels_SmallGlyph(const unsigned char* text);
+
+// Whether every slot of the 8 px group `tag` (1 the status words, 10 the
+// formation names) has been written by the overlay: its text is then one
+// byte a letter.
+bool Labels_SmallWritten(std::uint32_t tag);
