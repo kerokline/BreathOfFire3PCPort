@@ -3634,9 +3634,10 @@ designed in rather than bolted on.
   (`analysis/shots/sortScreens2`): frame 420 `SORT` / `ManualSort` /
   `NormalItem` / `CombatItem`, 720 `SORT` / `ManualSort` / `High AP` /
   `Low AP`, 1440 `Normal` / `Attack` / `Defense` centred in their boxes,
-  1980 `Ink  2`, 330 `11957` with the Z. **Owed the owner's eye:** the
-  equipment sort's `Power` / `Defence` / `Kind` (the route does not open
-  it) and the French and German words in play.
+  1980 `Ink  2`, 330 `11957` with the Z. **The owner, the same morning:**
+  the armour and weapon screens' sorts (`Power` / `Defence` / `Kind`) look
+  correct too. **Owed the owner's eye:** the French and German words in
+  play.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 
