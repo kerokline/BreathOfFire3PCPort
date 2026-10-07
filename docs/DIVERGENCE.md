@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 81 entries, DIV-0001..0081, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 82 entries, DIV-0001..0082, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4280,3 +4280,52 @@ designed in rather than bolted on.
   the offline splice for the owner's ear; whether replaying the intro's
   frames at each loop causes a hitch in play is unmeasured.
 - **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
+
+### The enemy AI rows' done bits cleared at spawn (the Volt's EXP bonus)
+
+- **ID:** DIV-0082
+- **Date:** 2026-10-07
+- **Subsystem:** battle setup (`Battle_CopyEnemyData` `0x4946C0`, ours in
+  `src/game/battle_sprites.cpp`; read by `EnemyAI_TurnCheck` `0x44AAD0`,
+  `EnemyAI_RowDone` `0x44AC80`, `EnemyAI_SetRowDone` `0x44B2E0`)
+- **Tier:** Intent - a port bug; the PlayStation shows what was meant.
+- **Original behaviour:** an enemy's four AI rows each carry a "fired" bit in
+  the enemy object's byte `+0xF1` (`EnemyAI_SetRowDone` sets it after a hit
+  row fires; `EnemyAI_RowDone` refuses a row whose bit is set). Nothing in the
+  PC port clears the byte: `Battle_CopyEnemyData` clears `+0x10D`, `+0x110..`,
+  `+0x114..`, `+0x118..`, `+0x11C..` and `+0x122..+0x125` and sets `+0xF0`,
+  `Battle_PlaceBossActor` clears the first 0x80 bytes and the same list,
+  `BattleEnemy_ClearStates` zeroes bytes `+0..+4` at a fight's end. The
+  objects (`0x93B960`, eight of 0x128) are `.bss`, zeroed once at process
+  start. So a once-only row fires in the first fight that meets its condition
+  in that slot and never again for the session: the Volt's row 1 ("hit by
+  element mask 4: EXP x3, message 0x82", `tools/enemy_ai.py --name Volt`),
+  the Tar Man's frost row, every other once-only hit row.
+  The owner's fight of 2026-10-06 (three Volts, one Thunder, the Thunder's
+  own whole-side lightning as the trigger): one Volt tripled, 84 + 28 + 28 +
+  16 = 156, halved over the two living members = the 78 on screen
+  ([`trigger-mode-enemies.md`](trigger-mode-enemies.md)).
+- **New behaviour:** `Battle_CopyEnemyData` also writes `+0xF1 = 0`
+  (working record `+0x71`), so every spawned enemy starts with its rows
+  unfired, as on the PlayStation.
+- **Rationale:** the PSX twin (`0x800A9148`) clears the same list and not
+  `+0xE1` either - but there the enemy objects (`0x801EB5A0`, stride 0x118)
+  lie inside the BATTLE.EMI#3 game-mode image (`0x801D0C00..0x801ED93F`,
+  118,080 bytes, md5 `8a80230e...` as the sibling's catalogue has it), which
+  is loaded from disc over the field overlay at every battle entry; the
+  image's bytes at every object are zero (read off the sibling's disc image
+  2026-10-07). The PC keeps the objects in static memory and so keeps what
+  the PlayStation threw away. The logic (`EnemyAI_TurnCheck`,
+  `EnemyAI_CondElement`, `EnemyAI_ApplyAction` kind 6, `EnemyOp_ReceiveAction`
+  running the check after the damage and before the kill) matches the PSX
+  twins (`0x80098BB0`, `0x80099874`, `0x80099954`, `0x801E3B8C`) line for
+  line; the state did not.
+- **Also in the PSX version?** No: the reload resets it. This restores the
+  PlayStation's effective behaviour.
+- **Verification:** `BOF3X_SHADOW=battle_sprites`: the clone comparison seeds
+  `+0xF1` 0 for `Battle_CopyEnemyData`'s rounds (3,000, 0 mismatches), and a
+  dedicated check hands both the original's clone and ours a record with
+  `+0xF1 = 0xFF` on each of the eight slots - the original keeps 0xFF, ours
+  leaves 0. Owed: the owner's live fight (a Volt group with a thunder hit,
+  twice in one session; every Volt should yield 84 both times).
+- **Reversible?** No switch: a static byte the PlayStation never carried over.

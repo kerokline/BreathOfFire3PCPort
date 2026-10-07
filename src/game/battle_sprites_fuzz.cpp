@@ -621,6 +621,11 @@ Result RunOne(unsigned f, void* theirs, unsigned rounds) {
     const Clone& c = kClones[f];
     for (unsigned round = 0; round < rounds; ++round) {
         SeedRound(c.regions);
+        // DIV-0082: ours clears the AI row-done byte +0xF1 of the record it fills and the original
+        // does not; seeded 0 in every record so the comparison sees the rest (CheckRowDoneReset
+        // below measures the difference itself).
+        if (f == fCopyEnemy)
+            for (unsigned k = 0; k < 8; ++k) At(at::kEnemies + k * at::kEnemyStride)[0xF1] = 0;
         g_seed = Next();
         std::uint32_t a[4];
         Arguments(f, a);
@@ -658,6 +663,36 @@ Result RunOne(unsigned f, void* theirs, unsigned rounds) {
     }
     r.paths = n_seen;
     return r;
+}
+
+// DIV-0082: Battle_CopyEnemyData and the AI row-done byte +0xF1. The original's
+// clone, handed a record whose byte is 0xFF, leaves it 0xFF (the port never
+// clears it); ours leaves 0. Each is checked on every slot.
+void CheckRowDoneReset(void* theirs) {
+    static State input;
+    unsigned checked = 0;
+    for (unsigned slot = 0; slot < 8; ++slot) {
+        SeedRound(kClones[fCopyEnemy].regions);
+        for (unsigned k = 0; k < 8; ++k) At(at::kEnemies + k * at::kEnemyStride)[0xF1] = 0xFF;
+        std::memset(g_log, 0, sizeof g_log);
+        g_log_n = 0;
+        Capture(input, kClones[fCopyEnemy].regions);
+        const std::uint32_t id = Next() % 0x40;
+        Apply(input, kClones[fCopyEnemy].regions);
+        reinterpret_cast<FnPtr>(theirs)(slot, id, 0, 0);
+        const unsigned theirs_byte = At(at::kEnemies + slot * at::kEnemyStride)[0xF1];
+        Apply(input, kClones[fCopyEnemy].regions);
+        reinterpret_cast<FnPtr>(const_cast<void*>(kOurs[fCopyEnemy]))(slot, id, 0, 0);
+        const unsigned ours_byte = At(at::kEnemies + slot * at::kEnemyStride)[0xF1];
+        if (theirs_byte != 0xFF)
+            bof3::Fatal("battle_sprites Battle_CopyEnemyData (DIV-0082): the original cleared +0xF1 of slot %u to 0x%02X - the "
+                        "entry's premise is wrong", slot, theirs_byte);
+        if (ours_byte != 0)
+            bof3::Fatal("battle_sprites Battle_CopyEnemyData (DIV-0082): ours left +0xF1 of slot %u at 0x%02X", slot, ours_byte);
+        ++checked;
+    }
+    bof3::Log("shadow      battle_sprites Battle_CopyEnemyData +0xF1 (DIV-0082): %u slots, the original keeps 0xFF, ours clears, 0 MISMATCHES",
+              checked);
 }
 
 }  // namespace
@@ -705,6 +740,7 @@ void SelfTest() {
                   rounds, r.calls, r.paths, r.bad);
         if (used < 800) used += std::snprintf(line + used, sizeof line - used, "%s%u", f ? "," : "", r.bad);
     }
+    CheckRowDoneReset(theirs[fCopyEnemy]);
     g = kOriginals;
 
     std::memcpy(At(at::kBossHandlers), saved_bosses, sizeof saved_bosses);
