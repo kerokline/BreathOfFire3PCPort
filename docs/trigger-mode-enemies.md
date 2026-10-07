@@ -93,5 +93,42 @@ bug - a fresh launch is.
 ## 4. Other state of the same shape
 
 Anything the PlayStation resets by reloading an overlay image and the port
-keeps in static memory is a candidate for the same defect; a survey is in
-hand (2026-10-07) and its findings go in this doc's next section.
+keeps in static memory is a candidate for the same defect. A read-only
+survey (2026-10-07, an agent over the sibling's decomps and our spawn code)
+found no second confirmed case. What it established:
+
+- **The game-mode images.** BATTLE.EMI#3 `0x801D0C00..0x801ED93F`, START
+  to `0x801ED861`, SHOP to `0x801E619F`, all at the one base; BATL_END apart
+  at `0x801EEC00..0x801F0BA8`. BATL_END's decomp stores nothing into its own
+  image (its state is the `0x801462xx` globals, PC `0x904Axx`, which
+  `Battle_Init` resets, `battle_phases.cpp`); the party's persistent copies
+  (`0x80145E8C`) are boot RAM, not an image, and the two `Battle_Init`s clear
+  the same fields.
+- **Mutable data inside BATTLE's image** besides the enemy objects: the
+  current-enemy and menu-actor pointers, the banner pool, the turn-order
+  scratch, the message ring, the task slots and the stat copies - each
+  reset by `Battle_Init` on both platforms or rewritten before it is read
+  (`battle_phases.cpp:167`, `:201`).
+- **The enemy object's bytes**, by writer at spawn: `Battle_SetupEnemy`
+  writes `+0..+8`, `+0xC..+0x3B` (less `+0x9..+0xB`, `+0x2A`), `+0x3E`,
+  `+0x48`, `+0x4B`, `+0x5C..+0x5F`, `+0x70`, `+0x8F`, `+0x9A`;
+  `Battle_CopyEnemyData` the working record `+0x80..+0xDB`, `+0xDF..+0xE7`,
+  `+0xF0`, `+0xF1` (DIV-0082), `+0x100`, `+0x10D`, `+0x110..+0x11F`,
+  `+0x122..+0x125`; `Battle_SetEnemyOffset` `+0xF2..+0xF3`. Read but not
+  written at spawn: `+0xF4` / `+0xF8` (the event-battle hook and cue
+  pointers, written by the boss Enter states, `boss_sa.md`; read by
+  `EnemyOp_CastCue` only in an event battle - a leftover pointer in a
+  non-boss event fight would be a wrong cue, a null one a fault; not seen),
+  and `+0xDC..+0xDE`, `+0xE8..+0xEF` (base attribute bytes with no writer
+  anywhere; the image holds zero there too - the whole eight objects are
+  zero in the file - so the port's zero `.bss` matches).
+- **The enemy message list** `0x939FC0` (count `0x93C2A2`,
+  `EnemyAI_ApplyAction` writes, `BattleAction_EnemyMessages` reads): neither
+  `Battle_Init` nor the round reset touches the count; its PSX home was not
+  resolved. A fight ending between a queue and its commit would show an old
+  message under a new enemy's name once. Not seen; left as a note.
+- **Every way out of a battle** should pass `BattleEnemy_ClearStates`
+  (`BattleEnd_Finish`, `BattleLoss_ResetParty`, `BattleLoss_Restart`,
+  `Escape_Leave` are the four callers); not every exit path was walked.
+- SHOP writes globals inside its own image (`0x801E5F84..0x801E6198`); not
+  mapped to the PC.
