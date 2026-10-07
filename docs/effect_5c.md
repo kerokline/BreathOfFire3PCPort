@@ -161,10 +161,12 @@ x87 sequences of the ray fans' centre quad and the column's squares are
 inline assembly of the original's own instructions (`fild` / `fld` / `fsub` /
 `fadd` / `fst` / `fstp` in its order), so rounding and NaN quieting are the
 original's. `DIVERGENCE.md`, `cheats.cpp` and `widescreen.cpp` name no address
-of the band. **Not a DIV-0041 site**: sub-kind 0x15's strip and gradients are
-320 wide (x 0..320) but not full-frame fills (y 56..88, 0..64 and the
-gradients' rows); they are left as the original draws them and named here for
-the widescreen survey (section 7).
+of the band. **A DIV-0041 site after all (2026-10-07)**: sub-kind 0x15's strip, cloud
+strips and gradients are 320 wide (x 0..320), and under the wide picture the
+bands beside them were black and a strip starting past 320 was drawn
+backwards into the right band (the owner's bridge, area 41). Widened under
+`Widescreen_Fill()` - DIV-0041's entry, "The sea bridge's sky"; off, the
+packets are the original's bit for bit, which the fuzz compares.
 
 ## 3. The tables
 

@@ -128,15 +128,25 @@ bool IsFloor(std::uint32_t prim, int feet) {
 
 enum Need { kNothing, kFloorOnly };
 
+// What stops the sprite at the layer before: a primitive that reaches the
+// feet and is not floor allowed there, or one that is not floor and reaches
+// the sprite anywhere (`whole_box`, the feet and the body) - a raised cell
+// of a later layer stands in front of the sprite even where it covers only
+// the body (the owner's Nina behind a crate, 2026-10-06: the crate's top
+// reached her head, not her feet, and she was drawn through it).
+bool Stops(std::uint32_t prim, const Box& feet_box, const Box& whole_box, int feet, Need need) {
+    if (Reaches(prim, feet_box) && !(need == kFloorOnly && IsFloor(prim, feet))) return true;
+    return Reaches(prim, whole_box) && !IsFloor(prim, feet);
+}
+
 // One of a layer's three lists (0, 1, 2: the first, the second, the frame
-// nodes): false when a primitive of it reaches into `feet_box` and is not
-// allowed there.
-bool ListClear(unsigned layer, unsigned which, const Box& feet_box, int feet, Need need) {
+// nodes): false when a primitive of it stops the sprite (Stops).
+bool ListClear(unsigned layer, unsigned which, const Box& feet_box, const Box& whole_box, int feet, Need need) {
     const unsigned long* const list = DrawLayers + which * 4u + (Gfx_BufferIndex + layer * 6u) * 2u;   // first, last
     std::uint32_t at = list[0];
     for (unsigned steps = 0; at != 0; ++steps) {
         if (steps == 256) return false;
-        if (Reaches(at, feet_box) && !(need == kFloorOnly && IsFloor(at, feet))) {
+        if (Stops(at, feet_box, whole_box, feet, need)) {
             if (g_log && draw_order::Tagging() && InPool(at)) {
                 const unsigned index = (at - Address(draw_pool::Items())) / 0x90u;
                 const unsigned char* const cell = MapView_CellItems + (g_cell_of[index] ? g_cell_of[index] - 1u : 0u) * 4u;
@@ -183,6 +193,7 @@ unsigned LayerFor(unsigned index, unsigned layer) {
     const float sx = Get<float>(sprite + 0x74), sy = Get<float>(sprite + 0x78);
     if (!(sx > -64.0f && sx < 1024.0f && sy > -64.0f && sy < 512.0f)) return layer;   // NaN included
     const Box feet_box = BoxRound(sprite, kFeetHalfWidth, kFeetAbove, kFeetBelow);
+    const Box whole_box = BoxRound(sprite, kBodyHalfWidth, kBodyAbove, kFeetBelow);   // the body and the feet
     // The feet in corner units, as the sprite's own key has them.
     const int feet = static_cast<signed char>(Get<std::uint16_t>(sprite + 0x3E) >> 5);
     const int cell_x = Get<std::uint16_t>(sprite + 0x36), cell_z = Get<std::uint16_t>(sprite + 0x3A);
@@ -192,24 +203,24 @@ unsigned LayerFor(unsigned index, unsigned layer) {
         // What the sprite would newly be drawn over: the second list and the
         // later sprites and table items of the layer before, then this
         // layer's first list, cell records and frame nodes.
-        if (!ListClear(next - 1, 1, feet_box, feet, kNothing)) { g_why = "the layer before's second list"; break; }
+        if (!ListClear(next - 1, 1, feet_box, whole_box, feet, kNothing)) { g_why = "the layer before's second list"; break; }
         bool clear = true;
         for (unsigned other = index + 1; other < Sprite_DrawListCount && clear; ++other) {
             const unsigned char* const o = Sprite_DrawList[other];
             if (static_cast<unsigned>(Get<std::uint16_t>(o + 0x32) >> 8) > next - 1) break;
-            if (Overlap(BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow), feet_box)) clear = false;
+            if (Overlap(BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow), whole_box)) clear = false;
         }
         for (unsigned item = 0; item < DrawTable_Count && clear; ++item) {
             const unsigned long entry = DrawTable[item];
             if ((entry >> 24) != next - 1) continue;
             const std::uint32_t prim =
                 Address(draw_pool::Items() + (Gfx_BufferIndex + (entry & 0xFFFu) * 2u) * 0x48u);
-            if (Reaches(prim, feet_box) && !IsFloor(prim, feet)) clear = false;
+            if (Stops(prim, feet_box, whole_box, feet, kFloorOnly)) clear = false;
         }
         if (!clear) { g_why = "a sprite or a table item of the layer before"; break; }
-        if (!ListClear(next, 0, feet_box, feet, kFloorOnly)) { g_why = "the first list: not floor"; break; }
+        if (!ListClear(next, 0, feet_box, whole_box, feet, kFloorOnly)) { g_why = "the first list: not floor"; break; }
         if (!RecordsClear(next, cell_x, cell_z)) { g_why = "a cell record nearby"; break; }
-        if (!ListClear(next, 2, feet_box, feet, kNothing)) { g_why = "a frame node"; break; }
+        if (!ListClear(next, 2, feet_box, whole_box, feet, kNothing)) { g_why = "a frame node"; break; }
         drawn_in = next;
     }
     if (g_log && draw_order::Tagging())

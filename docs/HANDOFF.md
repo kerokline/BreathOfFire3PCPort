@@ -40,6 +40,29 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
+0000000000000. **The visual glitches of 2026-10-06, worked through on 2026-10-07 morning on `phase-3/platform-round-2`
+   (uncommitted; the owner at the machine).** Read from the owner's two routes (`bridgeWalk`, `ninaWalkBehindBlock`,
+   their saves in `tools/recipe_saves/`), a capture every 60 frames, A/B against `BOF3X_LAYERING=0`, `BOF3X_WIDE=0`
+   and `--original '*'`; the record is [`owner-review.md`](owner-review.md) "Reported by the owner". Done:
+   **the sea's stair-stepped edges** (the view's cell inset, not a cull - lowered three columns a side under the
+   wide view, `BOF3X_WIDE_INSET`, DIV-0041's entry amended, `widescreen.md` section 3b's table) and **Nina drawn
+   through a crate** (DIV-0071's rule guarded the feet only; now nothing but floor is crossed where it reaches the
+   sprite at all - the entry's "Refined 2026-10-07"; the fix's own two routes re-run, the foot and shadow repairs
+   kept, forest and town unchanged). Settled: **Garr behind the railing is Capcom's order** (the owner: fine).
+   Then, the same morning, the two wide-only ones: **the sky** (the area's own effect `EffectKind18Sub15_Draw`,
+   widened to the picture's edges - DIV-0041's "The sea bridge's sky"; the owner: "Sky looks perfect") and **the
+   "waterfall"** has its cause (D239: a cell's side texture words are read by which sides exist, the sides are
+   chosen at creation from heights the sky effect moves every frame, and the wider cull creates the deck cells at
+   another moment - the east face then reads the sea tile meant for the south step). Not fixed: the fix depends on
+   which order the map authors its side words in, a data survey (D239 says how); a first fix by a texture-word test
+   was backed out as wrong. **Owed:** the owner's eye in play on the three fixes; the self-tests `'*'` narrow and wide passed from a clean launcher directory (`vis/selftest2.txt`; from
+   `build/` beside the play ini they fail in `battle_flow` because `cheat.exp=10` is on - run them from a copy with no ini). `MapView_LinkPrimAt` logs its
+   caller under `BOF3X_DRAWORDER` now, and `map_layers.cpp` logs each cell's sides, their texture words and page 0's
+   hash in the window (tooling, no behaviour). The scripts
+   and captures: that scratchpad's `vis/` (`run1.sh`..`run10.sh`; `build_merge/` is a second build of the same
+   tree, used while `build/` was running captures). The two builds carry the three source changes
+   (`widescreen.{h,cpp}`, `map_layers.cpp`, `layering.cpp`, `world_map.cpp`); `'*'` narrow and wide not yet re-run.
+
 000000000000. **The platform round's step 3 and a day of investigations (2026-10-06), on `phase-3/platform-round-2`** (cut
    from `main` `e047ee9b`; the round's record [`platform-round-2.md`](platform-round-2.md), 10,081 ours). The morning:
    four groups - SCAN (`tools/pe_jumptables.py`: the game's own code was two functions short), DEBTS (round fourteen's

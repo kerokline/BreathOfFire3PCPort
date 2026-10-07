@@ -83,22 +83,15 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Reported by the owner, for a cleanup session
 
-- **Unrendered squares at the wide view's outer edges** (the owner, 2026-10-06
-  night, playing with the wide picture and the CRT look; the screenshot is
-  `analysis/shots/owner_reports/bridge_left_edge_unrendered_1006.webp`: a
-  field bridge, the party on it, and at the top-left corner a stair-stepped
-  black notch where terrain cells are missing). The owner's reading: "a few
-  calls we could update to increase that render distance". The candidates
-  are [`widescreen.md`](widescreen.md) section 3b's cull table - the culls
-  widened on 2026-09-30 after the trees popped (`MapCell_DrawUprights`
-  `[-133, 453]`, `MapCell_DrawAnimated`, the quads, the sprites) and the ones
-  the table still lists inside the new view (`[-40, 360]` at the PSX twin
-  `80161ef4`'s PC counterpart, unread; `0x5054E3` / `0x5054FA` `[-20, 340]`),
-  plus the terrain cull's own range at the top-left where rows begin. A
-  cleanup session: find which cull leaves the notch (a capture of this
-  spot under `BOF3X_WIDE=1` with each cull widened in turn, or a trace of
-  what the cell loop skips), widen it by the columns like the others
-  (DIV-0041's section 3c amendment), capture before and after for the owner.
+- **Unrendered squares at the wide view's outer edges** - **fixed 2026-10-07**
+  (the owner, 2026-10-06 night; `analysis/shots/owner_reports/bridge_left_edge_unrendered_1006.webp`).
+  Not a cull: the view's cell *inset* (`map_layers.cpp` `Inset()`) trims
+  each ring row to what 320 columns need, and the wide picture's extra
+  columns were never walked. Lowered by three columns a side under the wide
+  view (DIV-0041's entry, `BOF3X_WIDE_INSET`); the `bridgeWalk` route wide
+  shows the sea at both edges on every frame. The owner (2026-10-07): "the
+  sea tiles stepping is probably correct now". Owed the owner's eye on the
+  canyon bridge of the first screenshot, and on the attract sequence's map.
 
 - **The Volt's EXP bonus did not appear** (the owner, 2026-10-06 night;
   screenshots `analysis/shots/owner_reports/volt_fight_menu_1006.webp` and
@@ -162,37 +155,44 @@ where the reading behind it is. Nothing here is a divergence until it is in
      icon" is the dot. Amend DIV-0064 with both.
 
 - **Two routes with visual glitches, recorded by the owner** (2026-10-06
-  night, commit `d1c5dcf1` "Two Additional Recipes": `tools/recipes/ninaWalkBehindBlock.txt`
-  (32 lines) and `tools/recipes/bridgeWalk.txt` (66 lines), both `BOF3X_LANG=en`,
-  `BOF3X_FILTER=point`, no shot lines - the F12 shots were the owner's own).
-  The owner's words: "one of Nina walking 'behind' a block but rendering
-  through it, and one of several glitches on a bridge scene". Which save
-  each starts from is not in the file; ask, or try the slots the owner's
-  other routes of the night use (`stallion.txt` saves to slot 6).
-  1. **Nina through a block** - a sprite drawn over a cell that should hide
-     her: DIV-0071's domain (`layering.cpp`'s rule, on by default since
-     2026-10-03 and **not yet played with by the owner** - this may be its
-     first live sighting, so play the route under `BOF3X_LAYERING=0` too
-     and say which side shows it; if the original's order hides her and
-     ours does not, the rule's "up to three layers later" is wrong for that
-     cell; if both show her, it is the port's, and the PSX twin decides
-     whose). No screenshot of this one is on hand.
-  2. **The bridge scene** - two of the owner's screen captures from 21:44,
-     seven minutes before the recipes' commit, show a long wooden bridge
-     over the sea with Garr and Ryu, under the wide view and the CRT look
-     (`analysis/shots/owner_reports/bridge_garr_wide_1006_a.png`, `_b.png`;
-     the match to the recipe is by time, not stated). What is visible, each
-     a separate cause: a black rectangle at the top-left where the sky
-     backdrop stops short of the wide view's left edge; stair-stepped
-     sea-cell edges down the left (the same cull notch as the entry above,
-     from the other side); and Garr's lower body cut by the deck and the
-     near railing, a sprite behind cells of its own row (DIV-0071 again, or
-     the original's painter's order - `BOF3X_LAYERING=0` says which).
-     Playback with `BOF3X_SHOT_DIR` gives captures without the CRT so each
-     can be read; `BOF3X_WIDE=0` separates the first two from the third.
-  A third capture from 21:35 (`sprite_crop_2135_1006.png`, a small crop of
-  one sprite over planks) is on hand and unexplained; it may be the
-  owner's close-up of one of these.
+  night, `d1c5dcf1`: `tools/recipes/ninaWalkBehindBlock.txt` and
+  `tools/recipes/bridgeWalk.txt`, their saves imported by the owner as
+  `tools/recipe_saves/ninaWalkBehindBlock.DAT` and `bridgeWalk.DAT`; replay
+  with `--save NAME`). Read 2026-10-07 with a capture every 60 frames
+  (`tools/recipe_shots.py --every 60`), A/B against `BOF3X_LAYERING=0`,
+  `BOF3X_WIDE=0` and `--original '*'`:
+  1. **Nina through a crate - DIV-0071's rule, fixed.** Identical with the
+     layering off, wrong with it on (frames 360 and 540): the rule guarded
+     the feet only, and the crate's raised top covered her body, not her
+     feet, so it was crossed. Now nothing but floor is crossed where it
+     reaches the sprite at all (the entry's "Refined 2026-10-07"); the
+     route's captures identical to the switch off, the fix's own routes
+     re-run. **Owed the owner's eye in play** with the default on.
+  2. **The bridge scene** (area 41, `DAT\AREA041.DAT`), each cause apart:
+     - the sea's stair-stepped edges: the cell inset, **fixed** (above);
+     - **Garr behind the deck and the near railing: Capcom's order**, the
+       same under `--original '*'` and with the layering off (the rule is
+       held off there by the railing's cell records, as the entry says).
+       The owner (2026-10-07): fine as it is, the railing has holes;
+     - **the sky stopping short at the left, and the stretched sliver at
+       the right: fixed.** The sky is `EffectKind18Sub15_Draw`'s (the area's
+       own effect, `effect_5c.cpp`): a 320-wide haze band, three scrolling
+       cloud strips clipped to 0..320 and four gradients; a strip starting
+       past 320 was drawn backwards into the band. Widened to the picture's
+       edges under DIV-0041 (its entry, "The sea bridge's sky"). The owner
+       on the capture (2026-10-07): "Sky looks perfect";
+     - **the "waterfall": cause found, not yet fixed** (D239 in
+       `known-defects.md`): the deck's east side faces read their texture
+       word from the map by *which sides the cell has*, the sides are chosen
+       once at the cell's creation from corner heights the sky effect
+       rewrites every frame, and the wider cull creates the deck cells at a
+       moment that gives them a south side too - so the east face reads the
+       next word, a 16 x 16 sea tile stretched over 125 px. **The owner's
+       call:** a data survey (which order the map authors its side words
+       in) decides whether the fix is to the reader or to the allocation;
+       about half a day.
+  The third capture (`sprite_crop_2135_1006.png`) is a close-up of one
+  of these and needs no separate reading.
 
 ## Decisions the measurements raised
 

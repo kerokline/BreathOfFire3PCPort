@@ -24,6 +24,7 @@
 #include <windows.h>
 
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 
 #include "hook/detour.h"
@@ -33,8 +34,10 @@ using U = std::uint32_t;
 
 float Widescreen_TerrainLo = -50.0f, Widescreen_TerrainHi = 370.0f;
 unsigned g_live;
+unsigned g_inset_columns;
 
 unsigned Widescreen_Live() { return g_live; }
+unsigned Widescreen_InsetColumns() { return g_inset_columns; }
 
 bool g_fills_armed;
 unsigned Widescreen_Fill() { return g_fills_armed ? g_live : 0; }
@@ -54,6 +57,11 @@ constexpr U kColumns = 53;   // 426 = 240 x 16 / 9 rounded down to even, less 32
 // while the attract sequence rotates the map (the owner, 2026-09-23); 100 is
 // the next try.
 constexpr U kTerrainMargin = 100;
+// Columns taken off the view's cell inset each side (Widescreen_InsetColumns):
+// a ring column is two map cells across, about 20 screen px at the field
+// camera's usual distance, so 53 extra px want three (the owner's bridge,
+// 2026-10-06: the cells outside the inset were a stair-stepped notch).
+constexpr U kInsetColumns = 3;
 
 float g_wide_lo = -200.0f - (kColumns - 1), g_wide_hi = 520.0f + (kColumns - 1);
 float g_narrow_lo = -50.0f - (kColumns - 1), g_narrow_hi = 370.0f + (kColumns - 1);
@@ -138,9 +146,36 @@ void Widescreen_Inject() {
         bof3::PatchBytes("Widescreen", s.at, expected, replacement, s.size);
     }
     g_live = kColumns;
-    Widescreen_TerrainLo = -50.0f - kTerrainMargin;
-    Widescreen_TerrainHi = 370.0f + kTerrainMargin;
+    U terrain_margin = kTerrainMargin;
+    {
+        // BOF3X_WIDE_TERRAIN=N: the terrain cull's margin past [-50, 370], for
+        // experiments (2026-10-07, the owner's waterfall); 100 unless set.
+        char text[16];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE_TERRAIN", text, sizeof text);
+        if (n != 0) {
+            char* end = nullptr;
+            const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
+            if (end == nullptr || end == text || *end != 0 || v < 0 || v > 400)
+                bof3::Fatal("BOF3X_WIDE_TERRAIN=%s: 0..400", n < sizeof text ? text : "...");
+            terrain_margin = static_cast<U>(v);
+        }
+    }
+    Widescreen_TerrainLo = -50.0f - static_cast<float>(terrain_margin);
+    Widescreen_TerrainHi = 370.0f + static_cast<float>(terrain_margin);
+    g_inset_columns = kInsetColumns;
+    {
+        char text[16];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE_INSET", text, sizeof text);
+        if (n != 0) {
+            char* end = nullptr;
+            const long v = n < sizeof text ? std::strtol(text, &end, 10) : -1;
+            if (end == nullptr || end == text || *end != 0 || v < 0 || v > 14)
+                bof3::Fatal("BOF3X_WIDE_INSET=%s: 0..14", n < sizeof text ? text : "...");
+            g_inset_columns = static_cast<U>(v);
+        }
+    }
     bof3::Log("DIV-0041    widescreen: %u columns a side; terrain cull [%.0f, %.0f]; area-map frame ranges [%.0f, %.0f] "
-              "and [%.0f, %.0f] (BOF3X_WIDE)",
-              kColumns, Widescreen_TerrainLo, Widescreen_TerrainHi, g_wide_lo, g_wide_hi, g_narrow_lo, g_narrow_hi);
+              "and [%.0f, %.0f]; cell inset %u columns lower a side (BOF3X_WIDE, BOF3X_WIDE_INSET)",
+              kColumns, Widescreen_TerrainLo, Widescreen_TerrainHi, g_wide_lo, g_wide_hi, g_narrow_lo, g_narrow_hi,
+              g_inset_columns);
 }

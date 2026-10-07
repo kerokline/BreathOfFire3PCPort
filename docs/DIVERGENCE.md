@@ -2270,10 +2270,49 @@ designed in rather than bolted on.
   brings back the 320-wide pattern. [`widescreen.md`](widescreen.md) §5
   has the check owed and the nine sites above as the owner's routes
   reach them (none seen).
+  **The view's cell inset, 2026-10-07** (the owner's bridge, 2026-10-06:
+  stair-stepped black notches at the wide picture's left and right edges
+  where terrain cells were missing, `analysis/shots/owner_reports/bridge_left_edge_unrendered_1006.webp`,
+  `bridge_garr_wide_1006_a.png`; reproduced on the owner's `bridgeWalk`
+  route). Not a cull: `MapView_Build` and `DrawLayer_Open` walk each row
+  of the 28-column view ring from `MapView_Column + inset` for
+  `(14 - inset) * 2` columns, the inset being columns trimmed off each
+  side by the camera's angle and distance (`map_layers.cpp` `Inset()`,
+  `MapView_Inset` `0x905D80`; two references in the image, both ours).
+  The inset was sized for 320 columns of picture, and the 53 extra columns
+  a side fell outside it - cells the terrain cull would have kept were
+  never visited. Under `Widescreen_Live()` the inset is lowered by
+  `Widescreen_InsetColumns()`, 3 columns a side (a ring column is two map
+  cells across, about 20 screen px at the field camera's usual distance;
+  `BOF3X_WIDE_INSET=0..14` moves it), not below 0; the fuzz and every
+  narrow run see 0. Verified on the `bridgeWalk` route wide, a capture
+  every 60 frames: the sea reaches both edges on every frame where it
+  stepped before (`inset3_660.png` in the session-`a8d0ee80` scratchpad,
+  `vis/`); no `no draw item` line in the log (the pool, DIV-0062, has
+  room).
+  **The sea bridge's sky, 2026-10-07** (the owner's screenshots of area 41:
+  the sky black for the band's 53 columns on one side as the camera pans,
+  and a sliver of stretched cloud growing in the other band). The sky there
+  is `EffectKind18Sub15_Draw` `0x502E60` (ours, `src/game/effect_5c.cpp`;
+  `effect_5c.md` section 1 had marked it "not a DIV-0041 site"): a haze
+  band 0..320 x 56..88, three 256-wide cloud strips scrolled by
+  `Frame_Counter / 8` and clipped to 0..320, and four gradient quads over
+  the columns 0, 60, 160, 260, 320, all linked into layer 15's third list.
+  A strip starting past 320 was drawn from its start back to 320 - off the
+  original's picture, inside our band - which was the sliver. Under
+  `Widescreen_Fill()`: the haze and the outer gradients run from -53 to 373
+  (two more gradient quads, flat at the table's outer rows), the strips are
+  clipped to those bounds with the original's u rule (u from the clipped-off
+  width on the left, to the visible width less one on the right), a fourth
+  strip at phase - 512 covers the left band at every phase, and a strip
+  starting past the right bound is skipped. Off, every packet is the
+  original's bit for bit (the fuzz compares them). The owner on the
+  capture: "Sky looks perfect".
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
-  `BOF3X_ORIGINAL=AreaMap_DrawBackdrop` the 320-wide sky.
+  `BOF3X_ORIGINAL=AreaMap_DrawBackdrop` the 320-wide sky;
+  `BOF3X_WIDE_INSET=0` the original's cell inset under a wide picture.
 
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
@@ -3877,6 +3916,19 @@ designed in rather than bolted on.
   draw them before the sprite - the lists outlive a frame while the view is
   still, and a cell moved before the rows behind it is painted over by
   them on a hillside.
+- **Refined 2026-10-07, the owner's first sighting in play** (Nina walking
+  behind a crate and drawn through its top; the owner's `ninaWalkBehindBlock`
+  route, frames 360 and 540, identical with the switch off and wrong with
+  it on): the rule tested only the feet's box, and a raised cell of a
+  later layer that covered the body but not the feet (the crate's top,
+  corners 28 against feet 16, in layer 27's second list) was crossed. Now
+  anything that is not floor stops the sprite where it reaches the sprite
+  at all (the feet's box widened upward to the body's 44 px, `whole_box`
+  in `layering.cpp` `Stops()`); floor is still crossed, and still only
+  where it reaches the feet. The same box is used against later sprites'
+  bodies and the table items. Verified: the route's eleven captures
+  identical to the switch off; `field_view.txt` and
+  `worldMapAndAreaTransition_ab.txt` re-run on the refined rule (below).
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each

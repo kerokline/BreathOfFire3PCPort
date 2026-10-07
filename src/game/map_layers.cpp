@@ -1,5 +1,7 @@
 #include "game/map_layers.h"
 
+#include <windows.h>
+
 #include "game/draw_pool.h"
 
 #include <cstdint>
@@ -9,6 +11,7 @@
 #include "game/map_layers_callees.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 // The view's frame, its rebuild and the area header's pass - see
@@ -34,6 +37,8 @@ Callees g = kOriginals;
 namespace {
 
 using map_layers::g;
+
+bool g_side_zero_release;   // BOF3X_SIDE_ZERO=1 (MapLayers_Inject)
 
 std::uint32_t Dword(const unsigned char* p) {
     std::uint32_t v;
@@ -192,8 +197,8 @@ std::uint32_t Inset() {
     if (off_axis < 0) off_axis = -off_axis;
     int inset = (0x160 - off_axis) / 50;
     inset = inset >= 1 ? inset - 1 : 0;
-    const int far = static_cast<int>(Camera_Distance) / 650;
-    inset = inset >= far ? inset - far : 0;
+    const int by_distance = static_cast<int>(Camera_Distance) / 650;   // `far` is a windows.h macro
+    inset = inset >= by_distance ? inset - by_distance : 0;
     Scratch_Swap = static_cast<unsigned long>(inset);
     if (Field_InputFlags & 1) {
         inset = inset >= 2 ? inset - 2 : 0;
@@ -202,6 +207,13 @@ std::uint32_t Inset() {
     if (Cond_ByteFE == 0x23) {
         inset = 0;
         Scratch_Swap = 0;
+    }
+    // DIV-0041: the wide picture reaches past the columns the inset keeps
+    // (widescreen.h); 0 unless the view is wide, so the fuzz and every
+    // narrow run see the original's inset.
+    if (const int wide = static_cast<int>(Widescreen_InsetColumns()); wide != 0) {
+        inset = inset >= wide ? inset - wide : 0;
+        Scratch_Swap = static_cast<unsigned long>(inset);
     }
     MapView_Inset = static_cast<unsigned char>(Scratch_Swap);
     return static_cast<std::uint32_t>(inset);
@@ -253,6 +265,16 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
         const unsigned short got = g.alloc();
         SetWord(cell + 2, got);
         index = got;
+        if (got != 0 && (Word(Item(got) + 0x7E) != 0 || Word(Item(got) + 0x8E) != 0)) {
+            // Diagnostic (2026-10-07): a fresh item still carrying side words.
+            static unsigned logged = 0;
+            if (logged < 40) {
+                ++logged;
+                bof3::Log("map_layers: frame %u: cell %u,%u given item %u with stale side words next %u below %u",
+                          (unsigned)Frame_Counter, (unsigned)cell[0], (unsigned)cell[1], got, Word(Item(got) + 0x7E),
+                          Word(Item(got) + 0x8E));
+            }
+        }
         if (index == 0) {
             // Diagnostic only, no behaviour: the pool had no item for this cell,
             // so it is not drawn this frame - the owner's coast glitch of
@@ -354,6 +376,12 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
     // vertex 2, left in the scratch.
     float unused;
     const unsigned next_item = Word(item + 0x7E);
+    if (draw_order::Tagging() && (next_item != 0 || Word(item + 0x8E) != 0)) {
+        const signed char* const c = reinterpret_cast<const signed char*>(MapView_CornerPtr);
+        bof3::Log("map_layers: cell %u,%u layer %u item %u: next side %u, below side %u; corners %d %d %d %d; screen (%g, %g)",
+                  (unsigned)cell[0], (unsigned)cell[1], layer, index, next_item, Word(item + 0x8E), c[0], c[1], c[2], c[3],
+                  MapView_ScreenXY[0], MapView_ScreenXY[1]);
+    }
     if (next_item != 0) {
         unsigned char* const side = Quad(next_item, Gfx_BufferIndex);
         std::memcpy(side + 8, quad + 0x38, 12);
@@ -470,12 +498,29 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
     texture += 4;
     const unsigned below = Word(item + 0x8E);
     if (below != 0) {
-        g.set_texture(Dword(texture), Quad(below, buffer), 1);
-        flags |= (static_cast<std::int32_t>(Dword(texture)) >> 18) & 0x1000;
-        texture += 4;
+        if (Dword(texture) == 0 && g_side_zero_release) {
+            // BOF3X_SIDE_ZERO=1, an experiment (2026-10-07, off by default): a
+            // below side the map gives word 0 is released like the +0x7E one;
+            // the original draws it with that word. Not the owner's streaks
+            // (known-defects.md D239) - kept for the next reading of them.
+            if (draw_order::Tagging())
+                bof3::Log("map_layers: cell %u,%u: the below side's texture word is 0, released", x, y);
+            g.release(static_cast<unsigned short>(below));
+            SetWord(item + 0x8E, 0);
+            texture += 4;
+        } else {
+            if (draw_order::Tagging())
+                bof3::Log("map_layers: cell %u,%u: below side item %u texture word %08X (cell's %08X)", x, y, below,
+                          Dword(texture), Dword(texture - 4));
+            g.set_texture(Dword(texture), Quad(below, buffer), 1);
+            flags |= (static_cast<std::int32_t>(Dword(texture)) >> 18) & 0x1000;
+            texture += 4;
+        }
     }
     const unsigned next = Word(item + 0x7E);
     if (next != 0) {
+        if (draw_order::Tagging())
+            bof3::Log("map_layers: cell %u,%u: next side item %u texture word %08X", x, y, next, Dword(texture));
         if (Dword(texture) == 0) {
             g.release(static_cast<unsigned short>(next));
             SetWord(item + 0x7E, 0);
@@ -600,6 +645,17 @@ extern "C" void __cdecl AreaMap_HeaderPass(void) {
 
 void MapLayers_Inject() {
     if (bof3::WantsShadow("map_layers")) map_layers::SelfTest();
+    {
+        char text[8];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_SIDE_ZERO", text, sizeof text);
+        // An experiment's switch (2026-10-07, the owner's "waterfall"), off
+        // unless BOF3X_SIDE_ZERO=1; no ledger entry while it is off.
+        if (n >= sizeof text || (n != 0 && !((text[0] == '0' || text[0] == '1') && text[1] == 0)))
+            bof3::Fatal("BOF3X_SIDE_ZERO must be 0 or 1");
+        g_side_zero_release = n == 1 && text[0] == '1';
+        if (g_side_zero_release)
+            bof3::Log("map_layers: a side face with texture word 0 is not drawn (BOF3X_SIDE_ZERO=1, an experiment)");
+    }
     BOF3_INJECT(AreaMap_Frame);
     BOF3_INJECT(MapView_Build);
     BOF3_INJECT(MapView_CellTextures);

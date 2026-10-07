@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-06)
+**Status:** IN PROGRESS (2026-10-07)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -21,7 +21,13 @@ round fourteen's end, PR #42, `e047ee9b`, 2026-10-06;
 **and 10,081 on `phase-3/platform-round-2`** (the platform round's step 3,
 2026-10-06, unpushed: [`platform-round-2.md`](platform-round-2.md) - the C
 runtime's fourteen entries and the two game functions no catalogue held;
-the complete hidden-start scan says the game's own code is now all ours). The catalogue has 10,246 starts; at round fourteen's cut 1,341
+the complete hidden-start scan says the game's own code is now all ours). **2026-10-07 morning, on the same branch, uncommitted:** the
+owner's visual glitches of the night before worked through from their two
+routes - the wide view's cell inset (DIV-0041), DIV-0071's rule refined for a
+raised cell over the body, the sea bridge's sky widened (DIV-0041), Garr
+behind the railing Capcom's and kept; the "waterfall" has its cause (D239)
+and waits on a data survey; the self-tests `'*'` pass narrow and wide
+([`owner-review.md`](owner-review.md), HANDOFF's first item). The catalogue has 10,246 starts; at round fourteen's cut 1,341
 of the game's own functions were left, the rest of what is not ours being
 the platform and library layer (533) and jump-table cases (210) -
 round fourteen's section 0. The spell round counts pointer-reached starts

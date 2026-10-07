@@ -74,6 +74,7 @@ screen-x intervals, from psp-widescreen §3a / §3b and `bof3ext`'s list:
 | Object 2 | `0x570319` / `0x570333` | `[-80, 400]` | - | 27 px: **the trees popped** (the owner, 2026-09-30). `MapCell_DrawUprights`, ours: **`[-133, 453]`** |
 | `Sprite_Draw` | `0x59360B` / `0x593615` (int16), **ours** | `[-64, 384]` | - | 11 px: **`[-117, 437]` since 2026-09-30** |
 | `0x59293A` | in `bof3ext`'s list | ? | ? | unread |
+| The cell inset | `MapView_Build` / `DrawLayer_Open`, **ours** (`map_layers.cpp` `Inset()`, `draw_emit.cpp`) | `(14 - inset) * 2` columns of the 28-column ring | 3 more columns a side | not a cull: the columns of each view row that are walked at all. The wide picture's extra 53 columns lay outside them - the owner's stair-stepped notch (2026-10-06). **Lowered by 3 under the wide view since 2026-10-07** (`Widescreen_InsetColumns`, `BOF3X_WIDE_INSET`); DIV-0041's entry |
 
 Every one is read before it is changed: many sit in functions that are ours
 now, where the change is to our source, not to bytes.

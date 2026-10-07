@@ -6435,3 +6435,49 @@ abort).
 
 **Status:** latent, harmless by reading or the owner's to judge where a doc
 says so.
+
+## D239 — A map cell's side faces read their texture words by which sides exist, so a cell created at another moment is textured differently (open; the sea bridge's "waterfall")
+
+**Found:** the owner, 2026-10-06, playing area 41's sea bridge under the wide
+picture (DIV-0041): tall columns of sea-like texels hanging from the deck's
+east edge to the bottom of the screen, "the waterfall". **Read 2026-10-07**
+(the session-`a8d0ee80` scratchpad, `vis/`, with `BOF3X_DRAWORDER`, the
+draw-order log's new byte dump of tall quads, and item traces in
+`map_layers.cpp`). **Capcom's, PC and PSX by the code; shown only by the
+wide picture here.**
+
+**The mechanism.** `MapView_CellTextures` `0x56F9B0` reads a cell's
+texture words from the map in a fixed walk: the cell's own, then the `+0x8E`
+(south) side's **if that side item exists**, then the `+0x7E` (east)
+side's. So the east side's word is the map's third dword when the cell has a
+south side and the *second* when it has not. The sides are allocated once,
+when the cell's draw item is created (`MapView_Build`), by comparing corner
+heights at that moment; and the bridge's sky effect
+(`EffectKind18Sub15_Draw`) rewrites the deck columns' corner heights every
+frame, a hump that follows the party. So whether a deck cell gets a south
+side depends on the frame it is created, which depends on the terrain cull:
+with the original's `[-50, 370]` the deck cells of column 48 were created
+without a south side and their 125-px east faces (down to the sea) read
+`0x12800100`, a 64-texel-tall rectangle; with the wide cull they were
+created earlier, got a south side, and the east faces read `0x0180001E`, a
+16 x 16 sea tile stretched over 125 px - the streaks. The bytes of the
+faces in the two runs differ only in u, v, CLUT and page; the positions are
+identical (`wide_bytes100.bof3x.log`, `wide_bytes0.bof3x.log`).
+
+**Ruled out on the way:** the draw-item pool and the draw table (no
+diagnostic fires), the renderer's two texture caches (no miss or fallback
+at the frame), the packet pool (a quarter full), DIV-0077 / DIV-0079, the
+VRAM shadow's page 0, a double allocation (a live bitmap on the pool found
+none in the scene), a stale side word at allocation (none).
+
+**What a fix needs.** Which order the map's words are authored in: own,
+south, east (then the data is as the code reads it when both sides exist,
+and the designers simply never saw a deck cell with both) or own, east,
+south (then the code's walk is wrong whenever both sides exist, on both
+machines). A survey of the area blocks - tiles with three words, which of
+the second and third is a rectangle (bit 8) and which a grid cell, against
+which side is tall under the areas' fixed cameras - settles it; the PSX
+twin's allocation on this bridge (whether its deck cells ever get a south
+side) is the other half. Until then nothing is changed: `BOF3X_SIDE_ZERO=1`
+(an experiment, off by default) releases a side whose word is 0 and does
+not touch this.
