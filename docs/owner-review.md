@@ -83,6 +83,22 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Reported by the owner, for a cleanup session
 
+- **Garr drawn over the campfire in a campfire cutscene** (the owner,
+  2026-10-07 midday, catalogued for later: "in a campfire cutscene (not
+  regular camp), garr's sprite was rendered over the fire instead of
+  behind/under it"; their capture
+  `analysis/shots/owner_reports/campfire_cutscene_garr_over_fire_1007.webp`:
+  the party round the fire at night by the tent, Momo's line "You mean
+  after we came all this", Garr's sprite in front of the flames). Not
+  looked at. Where to start: this is a scripted scene, not the camp menu's
+  screen, so the fire is likely an effect object or a sprite of the scene
+  rather than a map cell - first tell whether it is DIV-0071's layering
+  rule (A/B under `BOF3X_LAYERING=0`), the sprite sort order of the scene
+  (compare `--original '*'`), or Capcom's order on the PlayStation twin
+  (read the PSX scene first, per the twin rule). Needs a route: the owner
+  to record one with `BOF3X_RECORD` from a save before the scene, or name
+  the scene so a save can be found.
+
 - **The sort screens, the formation screen and the camp's Skill Notes**
   (the owner, 2026-10-07 morning, `tools/recipes/sortScreens.txt`: "a few
   other localization needed spots"). **Done the same morning**, DIV-0064's
