@@ -39,6 +39,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/field_o_callees.h"
+#include "game/labels.h"
+#include "game/lang_layout.h"
 #include "game/list_title.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
@@ -202,6 +204,15 @@ void Turn(int angle, std::int32_t px, std::int32_t pz, std::int32_t& ox, std::in
 
 }  // namespace
 
+namespace {
+// DIVERGENCE DIV-0084: the icon wheel's formation name centred on x + 0x27,
+// as the US release draws it (its small-text draw takes the middle), where
+// the port starts its four-glyph names at x + 0x16. 0 until FieldO_Inject
+// patches it to 1 under a Latin overlay, after the fuzz, under the name
+// FormationNameCentre.
+unsigned char g_wheel_name_centre = 0;
+}  // namespace
+
 // original 0x573F70: a kind's name, a turned triangle and up to three icons
 // (the field menu's panel list, 0x59A46E: the panel's +0xA kind, +0xC the lit
 // bits, +0x10 the angle). Box (x + 3, y + 3) 0x45 x 0x30; the name, 28-byte
@@ -222,7 +233,13 @@ extern "C" void __cdecl Menu_DrawIconWheel(int x, int y, unsigned kind, unsigned
     SH_CALL(Menu_DrawBox)(x + 3, y + 3, 0x45, 0x30, 0, Style());
     unsigned char order[3] = {0, 1, 2};
     const unsigned k = kind & 0xFF;
-    SH_CALL(Text_DrawSmall)(x + 0x16, y + 0x28, 0, 0xFF, Text(at::kWheelNames + k * 28));
+    // DIVERGENCE DIV-0084: a one-byte-a-letter name (DIV-0064's group 10)
+    // centred on x + 0x27, 8 a letter; the port's x + 0x16 otherwise.
+    const unsigned char* const name = Text(at::kWheelNames + k * 28);
+    int name_x = x + 0x16;
+    if (g_wheel_name_centre && Labels_SmallWritten(10))
+        name_x = x + 0x27 - 4 * static_cast<int>(std::strlen(reinterpret_cast<const char*>(name)));
+    SH_CALL(Text_DrawSmall)(name_x, y + 0x28, 0, 0xFF, name);
     const unsigned char kb = static_cast<unsigned char>(kind);
     const unsigned char count = kb == 0 ? 1 : kb <= 3 ? 2 : 3;
     for (unsigned i = 0; i < 3; ++i) {
@@ -1293,6 +1310,14 @@ extern "C" void __cdecl ObjTrio_ClearBit40(void) {
 void FieldO_Inject() {
     if (bof3::WantsShadow("field_o")) field_o::SelfTest();
     g_title_live = true;   // DIV-0059, from here on
+    // DIVERGENCE DIV-0084: a Latin language overlay only, as DIV-0059's switch.
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("FormationNameCentre",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_wheel_name_centre)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0084    formation names centred: %s", g_wheel_name_centre ? "on" : "off");
+    }
     BOF3_INJECT(Menu_DrawStatsPanel);
     BOF3_INJECT(Menu_DrawExpPanel);
     BOF3_INJECT(Menu_DrawIconWheel);

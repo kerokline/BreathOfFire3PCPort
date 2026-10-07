@@ -1111,6 +1111,32 @@ def convert_battle_commands(game, donor):
 #      between the 24 bytes the PC has at LABEL_MASTER_HEAD and the masters'
 #      requirement lists it has at LABEL_MASTER_LISTS; the disc's mark is
 #      its code 0x84, the filled star of the dialogue set.
+#   7  the sort menus (the owner's sortScreens route, 2026-10-07): eleven
+#      slots from 0x66A170 of 8 or 12 bytes - the item sort's title and
+#      three choices, the equipment sort's three, the ability sort's two and
+#      the two more - behind the pointer table 0x66B12C (and 0x66B374 for
+#      the AP pair), so repointed into the DLL's buffers like groups 3 and
+#      4: the French PC elevé and Défense and the German AP niedr are over
+#      8. START.EMI has the eleven right after the 28 bytes the PC has at
+#      LABEL_SORT_HEAD, then their eleven pointers.
+#   8  the camp's Skill Notes sort: its title 0x66A1DC (8) and first choice
+#      0x66A1E4 (12), behind 0x66B36C. SHOP.EMI has them after the same 28
+#      bytes, with the ability sort's two again and four pointers.
+#   9  the Skill Ink count's label, 8 bytes at 0x66A118 (a push in the
+#      code). SHOP.EMI has it after the SKILL slot the PC has at 0x664290
+#      (every disc's; the NOTE before it is LISTE on the French and German)
+#      and its three pointers.
+#  10  the formation names: ten records of 28 at 0x6636B0 (a name of 16,
+#      then three s16 pairs), drawn by the 8 px draw. START.EMI has the ten
+#      as records of 20 (US: a name of 7, its length, the same three pairs)
+#      or 22 (German: a name of 8, the length and a pad), so the run is
+#      found by the pairs at either stride.
+#  11  the zenny unit, 4 bytes at 0x66A31C: the one byte `s`, whose
+#      single-byte slot of the shipped font is the port's coin, repainted
+#      by the overlay into a letter. START.EMI has the US code 0x60 (the
+#      dialogue set's Z) in the slot right after the icon wheel's triangle
+#      (the 20 bytes the PC has at LABEL_WHEEL_TRIANGLE), before the full
+#      stop and the verbs' pointer table.
 #
 # Groups 3 and 4 are repointed by the DLL into 16-byte buffers of its own
 # (their readers all go through pointer tables), so their room is 16; the
@@ -1120,9 +1146,15 @@ KIND_LABELS = 15
 LABEL_HEAD, LABEL_HEAD_LEN, LABEL_TAIL, LABEL_TAIL_LEN = 0x663648, 24, 0x663660, 8
 LABEL_TYPES_HEAD, LABEL_BATTLE_TAIL = 0x663960, 0x66B5B4
 LABEL_MASTER_HEAD, LABEL_MASTER_HEAD_LEN, LABEL_MASTER_LISTS, LABEL_MASTER_LISTS_LEN = 0x66B3B8, 24, 0x66B3D0, 16
-LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8), 6: (8, 4)}
+LABEL_SORT_HEAD, LABEL_SORT_HEAD_LEN = 0x66B110, 28
+LABEL_NOTE_HEAD = b"SKILL\0\0\0"
+LABEL_FORMATIONS, LABEL_FORMATION_COUNT = 0x6636B0, 10
+LABEL_WHEEL_TRIANGLE, LABEL_WHEEL_TRIANGLE_LEN = 0x6637C8, 24
+LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8), 6: (8, 4),
+               7: (16,) * 11, 8: (8, 12), 9: (8,), 10: (16,) * 10, 11: (4,)}
 LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats",
-               6: "master list"}
+               6: "master list", 7: "sort menus", 8: "note sort", 9: "ink label", 10: "formations",
+               11: "zenny unit"}
 
 
 def label_pointers(donor, at, count):
@@ -1148,6 +1180,22 @@ def label_chunk(tag, raws, report):
         payload += out + b"\0"
     report.append("%s %d%s" % (LABEL_NAMES[tag], len(raws), " (%d kept)" % kept if kept else ""))
     return (KIND_LABELS, tag, bytes(payload))
+
+
+def label_run(blob, at, count):
+    """`count` NUL-ended strings from `at`, named by the table of as many
+    ascending PSX pointers that follows them (the first pointing at `at`), or
+    None. The US disc pads each to its PC room, the French and German discs
+    to four bytes, so the pointers place them."""
+    for table in range(at + 4 * count, at + 0x100, 4):
+        ptrs = label_pointers(blob, table, count)
+        if not ptrs:
+            continue
+        starts = [at + p - ptrs[0] for p in ptrs]
+        if starts[-1] >= table or any(blob[s] == 0 for s in starts):
+            return None
+        return [blob[s:table].split(b"\0")[0] for s in starts]
+    return None
 
 
 def convert_labels(game, start, battle, shop=None):
@@ -1208,6 +1256,58 @@ def convert_labels(game, start, battle, shop=None):
             at = shop.find(head, at + 1)
         else:
             raise SystemExit("labels: SHOP.EMI has the PC's bytes around the master list's strings nowhere")
+    sort_head = exe_bytes(game, LABEL_SORT_HEAD, LABEL_SORT_HEAD_LEN)
+    if start:
+        at, found = start.find(sort_head), None
+        while at >= 0 and not found:
+            found = label_run(start, at + LABEL_SORT_HEAD_LEN, 11)
+            at = start.find(sort_head, at + 1)
+        if not found:
+            raise SystemExit("labels: START.EMI has no eleven sort strings after the PC's bytes at 0x%X" % LABEL_SORT_HEAD)
+        chunks.append(label_chunk(7, found, report))
+        # The formations: the PC's ten records of 28 (name 16, pairs 12), the
+        # disc's of 20 (name 7, its length, the same pairs), found by the pairs.
+        pc = exe_bytes(game, LABEL_FORMATIONS, 28 * LABEL_FORMATION_COUNT)
+        pairs = [pc[28 * i + 16:28 * i + 28] for i in range(LABEL_FORMATION_COUNT)]
+        at, found = start.find(pairs[0]), None
+        while at >= 0 and not found:
+            for stride in (20, 22):
+                base = at - (stride - 12)
+                if base >= 0 and all(start[base + stride * i + stride - 12:base + stride * (i + 1)] == pairs[i]
+                                     for i in range(LABEL_FORMATION_COUNT)):
+                    found = (base, stride)
+                    break
+            at = start.find(pairs[0], at + 1)
+        if not found:
+            raise SystemExit("labels: START.EMI has no run of the PC's ten formation records")
+        base, stride = found
+        names = [cut(start, base + stride * i, stride - 13) for i in range(LABEL_FORMATION_COUNT)]
+        chunks.append(label_chunk(10, names, report))
+        at = start.find(exe_bytes(game, LABEL_WHEEL_TRIANGLE, LABEL_WHEEL_TRIANGLE_LEN))
+        unit = at + LABEL_WHEEL_TRIANGLE_LEN
+        if at < 0 or start[unit + 4:unit + 8] != b"\x3e\0\0\0":
+            raise SystemExit("labels: START.EMI's icon wheel triangle is not followed by the unit and the full stop")
+        chunks.append(label_chunk(11, [cut(start, unit, 4)], report))
+    if shop:
+        at, found = shop.find(sort_head), None
+        while at >= 0 and not found:
+            found = label_run(shop, at + LABEL_SORT_HEAD_LEN, 4)
+            at = shop.find(sort_head, at + 1)
+        if not found:
+            raise SystemExit("labels: SHOP.EMI has no four note-sort strings after the PC's bytes at 0x%X" % LABEL_SORT_HEAD)
+        chunks.append(label_chunk(8, found[:2], report))
+        # The SKILL slot, three pointers, then a short word (the skill types'
+        # own SKILL is followed by pointers only).
+        at = shop.find(LABEL_NOTE_HEAD)
+        while at >= 0:
+            ink = at + len(LABEL_NOTE_HEAD) + 12
+            word = cut(shop, ink, 8)
+            if label_pointers(shop, at + len(LABEL_NOTE_HEAD), 3) and 0 < len(word) < 8 and max(word) < 0x80:
+                break
+            at = shop.find(LABEL_NOTE_HEAD, at + 1)
+        if at < 0:
+            raise SystemExit("labels: SHOP.EMI has no SKILL slot with three pointers and a word after it")
+        chunks.append(label_chunk(9, [word], report))
     return chunks, report
 
 

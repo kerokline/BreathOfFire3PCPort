@@ -83,6 +83,20 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Reported by the owner, for a cleanup session
 
+- **The sort screens, the formation screen and the camp's Skill Notes**
+  (the owner, 2026-10-07 morning, `tools/recipes/sortScreens.txt`: "a few
+  other localization needed spots"). **Done the same morning**, DIV-0064's
+  groups 7..11 and DIV-0084: the item and ability sort menus (`SORT`,
+  `ManualSort`, `NormalItem`, `CombatItem`, `High AP`, `Low AP`, and the
+  equipment sort's `Power` / `Defence` / `Kind`, which the route does not
+  open), the camp's `SORT` / `LOOK`, `Ink`, the formation names `Normal` /
+  `Attack` / `Defense` centred as the US draws them, and the zenny unit's
+  Z (the letter `s` on the owner's Items screen was the overlay's repaint
+  of the port's coin glyph). Replayed from the route,
+  `analysis/shots/sortScreens2` frames 330, 420, 720, 1440, 1980. **Owed
+  the owner's eye in play:** the equipment sort's three words, and the
+  French and German builds' (`Tri=man`, `ManSort`, `Encre`, `Tinte`...).
+
 - **Unrendered squares at the wide view's outer edges** - **fixed 2026-10-07**
   (the owner, 2026-10-06 night; `analysis/shots/owner_reports/bridge_left_edge_unrendered_1006.webp`).
   Not a cull: the view's cell *inset* (`map_layers.cpp` `Inset()`) trims
