@@ -4427,3 +4427,38 @@ designed in rather than bolted on.
   leaves 0. Owed: the owner's live fight (a Volt group with a thunder hit,
   twice in one session; every Volt should yield 84 both times).
 - **Reversible?** No switch: a static byte the PlayStation never carried over.
+
+### The master list's pupils box without the port's label
+
+- **ID:** DIV-0083
+- **Date:** 2026-10-07
+- **Subsystem:** menu, the camp's master list (`MasterWin_DrawPupils`
+  `0x59C8F0`, ours in `src/game/rest_2h.cpp`, kind 17 of
+  `Window_Handler7KindTable`'s camp set)
+- **Tier:** Sensible
+- **Original behaviour:** beside the pupils' portrait box (x + 3, y + 3,
+  0x72 x 0x58) the 2001 port draws a second, smaller box to its left (x -
+  0x25, y + 3, 0x22 x 0x10, its border at x - 0x28) with the label 弟子
+  (`0x66A1F8`), which no overlay translated: a Chinese box on an English
+  screen (the camp route's frame 2400,
+  `analysis/shots/master_labels/masters.png`). The PlayStation's screen has
+  the portrait box alone - the owner's capture of the US release,
+  2026-10-07, after the question of [`yes-no-prompts.md`](yes-no-prompts.md)
+  section 5 - and the US disc carries no string for such a label beside
+  its `MSTR` (DIV-0064's sixth group found `MSTR` and the star mark alone
+  in `SHOP.EMI`).
+- **New behaviour:** under a Latin language overlay the label box, its
+  border and the label are not drawn; the portrait box and its border are
+  as before. `g_pupil_label_off`, patched to 1 by `Rest2H_Inject` after the
+  group's fuzz under the name `MasterPupilLabel`.
+- **Rationale:** the PlayStation's screen as the reference, as DIV-0051; a
+  box whose only content no overlay has a word for.
+- **Also in the PSX version?** Not applicable - this is the PlayStation's
+  layout brought back.
+- **Verification:** the `rest_2h` self-test (the fuzz runs before the
+  patch): 144,000 rounds over 36 functions, 0 mismatches. Live: the camp
+  route with a shot at frame 2400 (`analysis/shots/master_labels2/masters.png`):
+  `MSTR`, Mygas, the stat box and the portrait box, nothing left of the
+  portraits - the owner's US capture beside it, the same.
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=MasterPupilLabel` keeps the overlay and the box.

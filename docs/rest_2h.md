@@ -58,7 +58,7 @@ bits of `0x904650` other docs already call so ([`field_o.md`](field_o.md)'s
 | `MasterWin_Available` | `0x59C780` | 0x8C | E8 (DrawList) | al: entries 0xB..0xE by a jump table (bits 3, 4, 5 of `0x904061`, story flag 0x6C); others: every skill of `MasterWin_Requirements[index]` known |
 | `MasterWin_SkillKnown` | `0x59C810` | 0x58 | E8 (Available) | al: the byte in records 0..6's ten ability slots (`+0x7E`) or the shared list `0x904574` |
 | `MasterWin_DrawCaption` | `0x59C870` | 0x73 | E8 (the run) | box, border, system message `0x100 + +0xA` |
-| `MasterWin_DrawPupils` | `0x59C8F0` | 0x10D | E8 (the run) | portraits of records 0..7 with `+0xB` bit 0 whose `+0x1F` is window 1's `+0xD` (three to a row), the label box `0x66A1F8` |
+| `MasterWin_DrawPupils` | `0x59C8F0` | 0x10D | E8 (the run) | portraits of records 0..7 with `+0xB` bit 0 whose `+0x1F` is window 1's `+0xD` (three to a row), the label box `0x66A1F8` (not under a Latin overlay: DIV-0083) |
 | `MasterWin_DrawPortrait` | `0x59CA00` | 0xF8 | E8 (Pupils) | a 0x24 x 0x28 sprite from the cell `0x66B470[index]` (index 4 is 0xB from chapter 8 on), grey by the shade |
 | `BattleMenuWin_ItemListSlideLeft` | `0x59CB90` | 0x26 | `BattleMenuWin_ItemListSteps[3]` | x - 0x20; below 0x53: **0x52** (D88's pair) |
 | `BattleMenuWin_EquipRun` | `0x59CC10` | 0x47 | handler 8 kind 3 | step (`BattleMenuWin_EquipSteps`, 4), `BattleEquipWin_Draw` (BE7's) of the member `0x66972C[0x904065[+0xC]]` |

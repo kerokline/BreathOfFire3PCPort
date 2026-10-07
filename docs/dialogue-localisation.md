@@ -397,7 +397,8 @@ converted: the turn counter's 残留 / 回合 at `0x669D10` / `0x669D18` (read
 only by `0x43C780`, a boss effect; no US text found beside it), the Skill Ink
 count's 墨水 at `0x66A118` (`SharedList_DrawItemCount`; not found on the US
 disc as text - likely an icon there), the pupils box's 弟子 at `0x66A1F8`
-(`MasterWin_DrawPupils`; its neighbour 师匠 at `0x66A1F0` is kind 15 since
+(`MasterWin_DrawPupils` - not drawn under a Latin overlay since DIV-0083,
+the PlayStation having no such box; its neighbour 师匠 at `0x66A1F0` is kind 15 since
 2026-10-07, with the master list's star mark `0x66A2D8` - DIV-0064's sixth
 group, from `SHOP.EMI`), and the battle's 巴比 / 贝特 at
 `0x669CE0` / `0x669CE8` (`BattleExtra_EquipOpen` / `_EquipLeave`,
