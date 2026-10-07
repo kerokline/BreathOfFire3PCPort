@@ -170,9 +170,10 @@ the case-blind search above looked for whole words. `SHOP.EMI` holds it (and
 the German disc; the French `ME`) with the list's star mark right after it,
 between the bytes the PC has at `0x66B3B8` and its requirement lists at
 `0x66B3D0`; DIV-0064's sixth group writes both. The `†` was DIV-0006's font
-repaint over the shipped star behind the byte `t`. **Still open: the
-portrait box's 弟子** - no string for it beside `MSTR`, and no capture of the
-US box; the question to the owner stands for that one label.
+repaint over the shipped star behind the byte `t`. **The portrait box's 弟子,
+answered the same day by the owner's US capture: the PlayStation draws no
+label box at all** - the portrait box alone. DIV-0083 leaves the port's box
+out under a Latin overlay. Nothing of section 5 is open.
 
 ## 6. For the coordinator's live check
 

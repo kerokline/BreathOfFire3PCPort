@@ -161,8 +161,9 @@ where the reading behind it is. Nothing here is a divergence until it is in
   a t over it. `MSTR` is centred on its box in
   `analysis/shots/master_labels/masters.png` (the camp route); **the star
   is owed the owner's eye** - no committed save has a completed master.
-  The pupils box's 弟子 stays as shipped: not on the disc beside `MSTR`, and
-  the US box is not in the owner's capture.
+  The pupils box's 弟子: the owner's US capture (the same morning) shows the
+  PlayStation draws no label box there, so DIV-0083 leaves the port's out
+  under a Latin overlay (`analysis/shots/master_labels2/masters.png`).
 
 - **Two routes with visual glitches, recorded by the owner** (2026-10-06
   night, `d1c5dcf1`: `tools/recipes/ninaWalkBehindBlock.txt` and

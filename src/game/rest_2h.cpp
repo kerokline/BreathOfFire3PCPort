@@ -40,6 +40,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
 #include "game/list_title.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_2h_callees.h"
@@ -54,6 +55,12 @@ std::uint32_t g_master_bound = at::kMasterBound;
 // covers, under a Latin overlay (ListTitle_Centring). Set by Rest2H_Inject
 // after the fuzz, which compares with the original's 6 * count arithmetic.
 bool g_master_title_live = false;
+// DIVERGENCE DIV-0083: the pupils box's label (弟子, 0x66A1F8) and its own
+// box are the 2001 port's addition - the PlayStation's screen has the
+// portrait box alone (the owner's US capture, 2026-10-07). 0 until
+// Rest2H_Inject patches it to 1 under a Latin overlay, after the fuzz, under
+// the name MasterPupilLabel; BOF3X_ORIGINAL=MasterPupilLabel keeps the box.
+unsigned char g_pupil_label_off = 0;
 }  // namespace rest_2h
 
 namespace {
@@ -601,6 +608,8 @@ extern "C" void __cdecl MasterWin_DrawPupils(unsigned char* w) {
         }
     }
     SH_CALL(Menu_DrawBorder)(X(w), Y(w), 0xD, 0xA);
+    // DIVERGENCE DIV-0083: no label box under a Latin overlay.
+    if (rest_2h::g_pupil_label_off) return;
     const unsigned char style2 = Style();
     SH_CALL(Menu_DrawBox)(X(w) - 0x25, Y(w) + 3, 0x22, 0x10, 0, style2);
     SH_CALL(Menu_DrawBorder)(X(w) - 0x28, Y(w), 3, 1);
@@ -864,6 +873,14 @@ void Rest2H_Inject() {
               static_cast<int>(static_cast<short>(Word(At(at::kMasterBound)))));
     if (bof3::WantsShadow("rest_2h")) rest_2h::SelfTest();
     rest_2h::g_master_title_live = true;   // DIV-0059, from here on
+    // DIVERGENCE DIV-0083: a Latin language overlay only, as DIV-0059's switch.
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("MasterPupilLabel",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&rest_2h::g_pupil_label_off)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0083    the pupils box's label left out: %s", rest_2h::g_pupil_label_off ? "on" : "off");
+    }
     BOF3_INJECT(MenuList_ReserveWinDraw);
     BOF3_INJECT(MenuList_GeneWinRun);
     BOF3_INJECT(MenuList_GeneWinDraw);
