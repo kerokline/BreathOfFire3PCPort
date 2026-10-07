@@ -93,9 +93,10 @@ where the reading behind it is. Nothing here is a divergence until it is in
   `Attack` / `Defense` centred as the US draws them, and the zenny unit's
   Z (the letter `s` on the owner's Items screen was the overlay's repaint
   of the port's coin glyph). Replayed from the route,
-  `analysis/shots/sortScreens2` frames 330, 420, 720, 1440, 1980. **Owed
-  the owner's eye in play:** the equipment sort's three words, and the
-  French and German builds' (`Tri=man`, `ManSort`, `Encre`, `Tinte`...).
+  `analysis/shots/sortScreens2` frames 330, 420, 720, 1440, 1980. The
+  owner confirmed the armour and weapon screens' sorts the same morning.
+  **Owed the owner's eye in play:** the French and German builds' words
+  (`Tri=man`, `ManSort`, `Encre`, `Tinte`...).
 
 - **Unrendered squares at the wide view's outer edges** - **fixed 2026-10-07**
   (the owner, 2026-10-06 night; `analysis/shots/owner_reports/bridge_left_edge_unrendered_1006.webp`).
