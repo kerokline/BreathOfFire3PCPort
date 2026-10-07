@@ -160,6 +160,11 @@ that screen (a capture from the sibling, or memory)? With the words and
 their place on the disc, the group is a few lines of `loc_build.py` and
 `labels.cpp`. Nothing changed for this item.
 
+**Half answered 2026-10-06:** the owner's web capture of the US screen
+shows the list's title as `MSTR` (`analysis/shots/owner_reports/master_list_web_reference_1006.png`);
+the portrait box's label is not in frame. Staged on `owner-review.md`
+"Reported by the owner", with the list's `†`-for-`★` mark.
+
 ## 6. For the coordinator's live check
 
 Shot copies with `tools/recipe_shots.py` (never by hand); English, the

@@ -60,7 +60,14 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       (`bgm-comparison.md` section 11's Paused note: `BGM_SCRATCH=<dir> python tools/bgm/measure_loops.py run --workers 3`,
       then `gen_loop_table.py`, `prove_loops.py`, rebuild; about 1 h 45 min with three workers), the Volt EXP / trigger-mode
       read (brief `plat2/brief_volt.md`; the owner's 78-EXP fight on `owner-review.md`), the wide-edge cull cleanup
-      (`owner-review.md` "Reported by the owner": the culls still inside the new view).
+      (`owner-review.md` "Reported by the owner": the culls still inside the new view). And one more
+      report, the same night: the Skill Notes "Record in Skill Notes?  Yes No" prompt's hand a word short of `Yes` - a
+      fifth chooser outside `Menu_YesNo`, by [`yes-no-prompts.md`](yes-no-prompts.md)'s method (`owner-review.md`
+      "Reported by the owner"). And the camp's master list: its title still 师匠 (the US word is `MSTR`, the owner's
+      web reference - half of `yes-no-prompts.md` section 5's question answered) and a `†` beside completed masters
+      where the US draws `★` - `0x66A1F0` and `0x66A2D8`, DIV-0064's way (same list). And two routes the owner recorded and committed (`d1c5dcf1`): `ninaWalkBehindBlock`
+      (a sprite through a cell - DIV-0071's first sighting in play, A/B it under `BOF3X_LAYERING=0`) and `bridgeWalk` (a
+      backdrop short of the wide view's edge, the cull notch, a sprite cut by its row's deck - same list).
    2. **The owner's calls**, all on [`owner-review.md`](owner-review.md): the town theme `000` (its file is shorter than
       one loop: accept, stretch, or samples from outside the file); the Stallion option (a palette layer from the PSP disc,
       about a day; the owner recorded `tools/recipes/stallion.txt`, untracked, `# save stallion`); the minecart walk

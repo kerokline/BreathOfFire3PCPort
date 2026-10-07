@@ -114,6 +114,86 @@ where the reading behind it is. Nothing here is a divergence until it is in
   record (brief `plat2/brief_volt.md` in the session-7d0c9683 scratchpad);
   not launched tonight (the PC goes off).
 
+- **The Skill Notes prompt's hand a word short of `Yes`** (the owner,
+  2026-10-06 night; screenshot
+  `analysis/shots/owner_reports/skill_notes_record_yes_no_1006.webp`: the
+  skill menu's Note tab, "Record in Skill Notes?  Yes No" on the top line,
+  the hand pointing at the gap after the question mark, a word's width left
+  of `Yes`). The owner's reading: the same yes / no issue as the other
+  screens - another chooser `Menu_YesNo` does not reach, the fifth after
+  [`yes-no-prompts.md`](yes-no-prompts.md) section 2's four. A cleanup
+  session, by that doc's method: find the prompt's `Menu_DrawHand` site
+  (the E8 scan's 44 sites; the skill menu's Note tab, so `0x9398D2`-style
+  answer byte and stops to read), measure the English `Yes` / `No` from the
+  line as section 3 does, give it DIV-0027's gap under a Latin overlay only,
+  amend DIV-0027's list, capture before and after for the owner. Check the
+  other skill-menu prompts (the Note tab's forget / overwrite, if any) while
+  there, since they will share the site.
+
+- **The master list's Chinese header and its marks** (the owner, 2026-10-06
+  night; our screenshot
+  `analysis/shots/owner_reports/master_list_header_marks_1006.webp`, a web
+  capture of the US PlayStation screen beside it,
+  `master_list_web_reference_1006.png`). Two things on one screen, the camp's
+  "View master's profile" list:
+  1. **The list's title is still 师匠** under the English overlay. The US
+     screen's word is **`MSTR`** - this answers half of
+     [`yes-no-prompts.md`](yes-no-prompts.md) section 5's question to the
+     owner (the portrait box's 弟子 label, `0x66A1F8`, is still unanswered:
+     the web capture does not show that box). The slot is `0x66A1F0`, 8
+     bytes, drawn by `MasterWin_DrawList` `0x59C2C0` (ours, `rest_2h.cpp`)
+     through `0x57D800`. Section 5 found no `MSTR` on the US disc as text, so
+     the four letters would be ours to write - DIV-0064's way, a kind-15
+     group into the slot, the word recorded as authored from the owner's
+     reference, not read from a disc.
+  2. **The mark beside a completed master is a cross (`†`), where the US
+     screen shows a star (`★`), and a dot for the others.** The owner's
+     reading: crosses where stars should be. `MasterWin_DrawList` draws the
+     mark from `0x66A2D8` (`rest_2h.md`'s row: "the mark `0x66A2D8`
+     (available) or an icon"), a `.data` string whose Chinese glyph the
+     Latin font maps to `†`. The fix is the same shape as the header's: find
+     what glyph the US overlay's font has for the star (the web capture shows
+     the US font draws one), and write the code into the slot under a Latin
+     overlay only; or, if the mark is an icon on the US side, draw it as one.
+     **The dot is already right:** a second capture
+     (`master_list_unfinished_dot_1006.webp`, Fahl unfinished) shows the
+     unfinished mark as a small dot under our overlay, as on the US screen -
+     so only the completed mark's glyph is wrong, and `rest_2h.md`'s "or an
+     icon" is the dot. Amend DIV-0064 with both.
+
+- **Two routes with visual glitches, recorded by the owner** (2026-10-06
+  night, commit `d1c5dcf1` "Two Additional Recipes": `tools/recipes/ninaWalkBehindBlock.txt`
+  (32 lines) and `tools/recipes/bridgeWalk.txt` (66 lines), both `BOF3X_LANG=en`,
+  `BOF3X_FILTER=point`, no shot lines - the F12 shots were the owner's own).
+  The owner's words: "one of Nina walking 'behind' a block but rendering
+  through it, and one of several glitches on a bridge scene". Which save
+  each starts from is not in the file; ask, or try the slots the owner's
+  other routes of the night use (`stallion.txt` saves to slot 6).
+  1. **Nina through a block** - a sprite drawn over a cell that should hide
+     her: DIV-0071's domain (`layering.cpp`'s rule, on by default since
+     2026-10-03 and **not yet played with by the owner** - this may be its
+     first live sighting, so play the route under `BOF3X_LAYERING=0` too
+     and say which side shows it; if the original's order hides her and
+     ours does not, the rule's "up to three layers later" is wrong for that
+     cell; if both show her, it is the port's, and the PSX twin decides
+     whose). No screenshot of this one is on hand.
+  2. **The bridge scene** - two of the owner's screen captures from 21:44,
+     seven minutes before the recipes' commit, show a long wooden bridge
+     over the sea with Garr and Ryu, under the wide view and the CRT look
+     (`analysis/shots/owner_reports/bridge_garr_wide_1006_a.png`, `_b.png`;
+     the match to the recipe is by time, not stated). What is visible, each
+     a separate cause: a black rectangle at the top-left where the sky
+     backdrop stops short of the wide view's left edge; stair-stepped
+     sea-cell edges down the left (the same cull notch as the entry above,
+     from the other side); and Garr's lower body cut by the deck and the
+     near railing, a sprite behind cells of its own row (DIV-0071 again, or
+     the original's painter's order - `BOF3X_LAYERING=0` says which).
+     Playback with `BOF3X_SHOT_DIR` gives captures without the CRT so each
+     can be read; `BOF3X_WIDE=0` separates the first two from the third.
+  A third capture from 21:35 (`sprite_crop_2135_1006.png`, a small crop of
+  one sprite over planks) is on hand and unexplained; it may be the
+  owner's close-up of one of these.
+
 ## Decisions the measurements raised
 
 - **The base tree's version of the Western data rows** ([`region-diff.md`](region-diff.md),
