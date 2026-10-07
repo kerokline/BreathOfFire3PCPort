@@ -13,9 +13,16 @@
 //      0x66B5C4 - the item lists' titles;
 //   4  the skill types, 5 x 8 at 0x66A200 behind 0x663984 and its copy
 //      0x66B5A0, the fifth behind 0x66B5B0 alone - the skill lists' titles;
-//   5  the battle's stats, 4 x 8 at 0x669CF0 behind 0x64AE08.
+//   5  the battle's stats, 4 x 8 at 0x669CF0 behind 0x64AE08;
+//   6  the camp's master list (2026-10-07; src/game/rest_2h.cpp's
+//      MasterWin_DrawList): its title, 8 bytes at 0x66A1F0, and the mark
+//      beside a completed master, 4 bytes at 0x66A2D8 - shipped as the one
+//      byte `t`, whose single-byte slot of the shipped font holds a star,
+//      which the overlay's repaint of that slot made a lowercase t (the
+//      owner's cross, 2026-10-06); the disc's own strings (MSTR and its
+//      star, SHOP.EMI), both immediates in the code.
 //
-// Groups 1, 2 and 5 are written in place, one byte a letter in the
+// Groups 1, 2, 5 and 6 are written in place, one byte a letter in the
 // single-byte slots the overlay paints with the dialogue font, so a draw
 // through Text_DrawAt shows them as it shows every other overlay string.
 // Groups 3 and 4 are reached by nothing but their pointer tables (a scan of
@@ -78,6 +85,7 @@ constexpr Table kTables[] = {
      {{0x663984, 0, 4}, {0x66B5A0, 0, 4}, {0x66B5B0, 4, 1}}, g_skill_types},
     {5, "battle stats", 4, {{0x669CF0, 8, 0x64AE08}, {0x669CF8, 8, 0x64AE0C}, {0x669D00, 8, 0x64AE10},
                             {0x669D08, 8, 0x64AE14}}, {}, nullptr},
+    {6, "master list", 2, {{0x66A1F0, 8, 0x59C5B6}, {0x66A2D8, 4, 0x59C465}}, {}, nullptr},
 };
 
 // The overlay's 8 x 8 set: the US disc's code - 0x30 from here, and a letter

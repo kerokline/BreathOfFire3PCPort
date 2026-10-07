@@ -3253,7 +3253,12 @@ designed in rather than bolted on.
   switch is set after their fuzz, which runs later than the patch) and the
   two title draws still Capcom's (the `Text_DrawAt` calls at `0x596D13`
   and `0x59DEFA`, re-aimed under the same name at `ListTitle_DrawAt`) -
-  all through `ListTitle_X` (`src/game/list_title.h`).
+  all through `ListTitle_X` (`src/game/list_title.h`). **Extended
+  2026-10-07** to the camp's master list (`MasterWin_DrawList` `0x59C2C0`,
+  `src/game/rest_2h.cpp`), whose title DIV-0064 made `MSTR` the same day:
+  its box is `0x71` wide and the original centres on `x + 0x3A` (`6` a
+  character back), so it asks `ListTitle_Centring` and centres on its own
+  middle; armed after the group's fuzz, as `field_o`'s lists are.
 - **Rationale:** as DIV-0018 and DIV-0058.
 - **Also in the PSX version?** The US disc's own draw centres its own font;
   not checked how.
@@ -3532,6 +3537,47 @@ designed in rather than bolted on.
   confirmed (their capture). **Owed the owner's eye:** `Conf`, the
   battle's stats, the `WEAPON`..`VITAL` and `ASSIST`..`SKILL` titles, the
   German build and the French weapon and skill pages.
+  **Extended 2026-10-07 - a sixth group, the camp's master list** (the
+  owner's report of 2026-10-06 night: the list's title still 师匠 under the
+  English overlay, and a cross beside every completed master where the US
+  screen draws a star, their web capture
+  `analysis/shots/owner_reports/master_list_web_reference_1006.png`). Two
+  slots, drawn by `MasterWin_DrawList` `0x59C2C0` (ours, `rest_2h.cpp`):
+  the title, 8 bytes at `0x66A1F0` (`push` at `0x59C5B5`), and the mark
+  beside a completed master, 4 bytes at `0x66A2D8` (`push` at `0x59C464`).
+  **The cross was the overlay's own doing:** the mark is the one byte `t`,
+  and the shipped font's single-byte slot for `t` (glyph `0x4E`) holds a
+  star - rendered from `FIRST.DAT` with `font_pc.py`'s `glyph_pixels`,
+  2026-10-07 - so the 2001 port drew a star as the PlayStation does, and
+  DIV-0006's repaint of the 75 single-byte slots with the US letters turned
+  it into a lowercase t (the same fault DIV-0051 fixed for the controller
+  panel's button icons). Both strings are on the US disc: `SHOP.EMI` has
+  `MSTR` and then the one code `0x84` - the dialogue set's filled star,
+  the cell rendered from each disc's atlas - as two NUL-ended strings
+  padded to four bytes between the 24 bytes the PC has at `0x66B3B8` and
+  the masters' requirement lists it has byte for byte at `0x66B3D0`; the
+  German disc the same, the French `ME` and the same star. `loc_build.py`
+  finds them by those two anchors (`LABEL_MASTER_HEAD` / `_LISTS`) and
+  writes the group as tag 6; `Labels_Apply` writes both slots in place
+  after checking the two push operands. The star goes in as the two-byte
+  code of the appended cell (`0x9E7`), so the mark no longer depends on
+  which glyph a single-byte slot holds. The title is centred on its real
+  width under a Latin overlay (DIV-0059, extended to this list the same
+  day: its centre is `x + 0x3A`, not the `0x99` box's `x + 78`). A
+  Japanese overlay leaves both as shipped: it repaints no letter slots, so
+  the port's star stands there. **The portrait box's label 弟子 at
+  `0x66A1F8` (`MasterWin_DrawPupils`) is still as shipped:** `SHOP.EMI` has
+  no string beside `MSTR` for it, and the owner's capture does not show
+  that box; what the US screen draws there is still the question to the
+  owner ([`yes-no-prompts.md`](yes-no-prompts.md) section 5).
+  *Verification:* `loc_build.py all` on the US and French discs reports
+  `master list 2`; the `rest_2h`, `battle_draw` and `field_o` self-tests
+  0 mismatches (the centring is armed after the fuzz, as `field_o`'s is);
+  the owner's `campingFishing.txt` with a shot every 30 frames around 2400
+  (`analysis/shots/master_labels/masters.png`): `MSTR` on the box's middle,
+  Mygas with the unfinished dot as before. **Owed the owner's eye:** the
+  star itself, on a save with a completed master (no committed route has
+  one), and the French `ME`.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 

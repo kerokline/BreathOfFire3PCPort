@@ -165,6 +165,15 @@ shows the list's title as `MSTR` (`analysis/shots/owner_reports/master_list_web_
 the portrait box's label is not in frame. Staged on `owner-review.md`
 "Reported by the owner", with the list's `†`-for-`★` mark.
 
+**Done 2026-10-07, the title and the mark:** `MSTR` *is* on the US disc -
+the case-blind search above looked for whole words. `SHOP.EMI` holds it (and
+the German disc; the French `ME`) with the list's star mark right after it,
+between the bytes the PC has at `0x66B3B8` and its requirement lists at
+`0x66B3D0`; DIV-0064's sixth group writes both. The `†` was DIV-0006's font
+repaint over the shipped star behind the byte `t`. **Still open: the
+portrait box's 弟子** - no string for it beside `MSTR`, and no capture of the
+US box; the question to the owner stands for that one label.
+
 ## 6. For the coordinator's live check
 
 Shot copies with `tools/recipe_shots.py` (never by hand); English, the
