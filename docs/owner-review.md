@@ -154,6 +154,16 @@ where the reading behind it is. Nothing here is a divergence until it is in
      so only the completed mark's glyph is wrong, and `rest_2h.md`'s "or an
      icon" is the dot. Amend DIV-0064 with both.
 
+  **Done 2026-10-07 (DIV-0064 amended, DIV-0059 extended):** both are the
+  US disc's own - `SHOP.EMI` has `MSTR` and the star beside each other, so
+  nothing was authored. The cross was ours: the mark is the byte `t`, the
+  shipped font's `t` slot is a star, and the overlay's letter repaint wrote
+  a t over it. `MSTR` is centred on its box in
+  `analysis/shots/master_labels/masters.png` (the camp route); **the star
+  is owed the owner's eye** - no committed save has a completed master.
+  The pupils box's 弟子 stays as shipped: not on the disc beside `MSTR`, and
+  the US box is not in the owner's capture.
+
 - **Two routes with visual glitches, recorded by the owner** (2026-10-06
   night, `d1c5dcf1`: `tools/recipes/ninaWalkBehindBlock.txt` and
   `tools/recipes/bridgeWalk.txt`, their saves imported by the owner as

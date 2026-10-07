@@ -54,7 +54,7 @@ bits of `0x904650` other docs already call so ([`field_o.md`](field_o.md)'s
 | `MasterWin_PupilsSlideUp` | `0x59C230` | 0x28 | PupilsSteps[2] | y - 0x10 to 0x80 |
 | `ShopWin_ItemCountRun` | `0x59C260` | 0x2A | kind 18 | step (3), `SharedList_DrawItemCount(+4, +6)` |
 | `ShopWin_ItemCountSlideToD2` | `0x59C290` | 0x28 | ItemCountSteps[2] | x - 0x20 to 0xD2 |
-| `MasterWin_DrawList` | `0x59C2C0` | 0x4BE | E8 (the run) | a 17-byte stack list from the bits of `0x904657..`; `+0xD` = the bit of the `+0xB` entry (0xFF none); rows: `MasterWin_Available(entry - 1)`, system message `0x110 + entry`, beside it the mark `0x66A2D8` (available) or an icon; `+0xB` lit, `+0xC` in colour 2; title, frame, scroll bar over the stack list |
+| `MasterWin_DrawList` | `0x59C2C0` | 0x4BE | E8 (the run) | a 17-byte stack list from the bits of `0x904657..`; `+0xD` = the bit of the `+0xB` entry (0xFF none); rows: `MasterWin_Available(entry - 1)`, system message `0x110 + entry`, beside it the mark `0x66A2D8` (available; the byte `t`, a star in the shipped font - DIV-0064's sixth group since 2026-10-07) or the dot icon; `+0xB` lit, `+0xC` in colour 2; title, frame, scroll bar over the stack list |
 | `MasterWin_Available` | `0x59C780` | 0x8C | E8 (DrawList) | al: entries 0xB..0xE by a jump table (bits 3, 4, 5 of `0x904061`, story flag 0x6C); others: every skill of `MasterWin_Requirements[index]` known |
 | `MasterWin_SkillKnown` | `0x59C810` | 0x58 | E8 (Available) | al: the byte in records 0..6's ten ability slots (`+0x7E`) or the shared list `0x904574` |
 | `MasterWin_DrawCaption` | `0x59C870` | 0x73 | E8 (the run) | box, border, system message `0x100 + +0xA` |

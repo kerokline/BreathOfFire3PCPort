@@ -40,14 +40,20 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/list_title.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_2h_callees.h"
 #include "game/scenario_harness.h"
+#include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace rest_2h {
 std::uint32_t g_master_bound = at::kMasterBound;
+// DIVERGENCE DIV-0059: the master list's title centred on the width its pen
+// covers, under a Latin overlay (ListTitle_Centring). Set by Rest2H_Inject
+// after the fuzz, which compares with the original's 6 * count arithmetic.
+bool g_master_title_live = false;
 }  // namespace rest_2h
 
 namespace {
@@ -496,9 +502,15 @@ extern "C" void __cdecl MasterWin_DrawList(unsigned char* w) {
     }
     SH_CALL(Menu_DrawBox)(X(w) + 3, Y(w) + 3, 0x71, 0x14, 0, Style());
     SH_CALL(Menu_DrawBox)(X(w) + 3, Y(w) + 0x92, 0x71, 8, 0, Style());
+    // The title is centred on x + 0x3A for 12-unit glyphs: 6 a character
+    // back from there. Under DIV-0059 (a Latin overlay; DIV-0064's MSTR is
+    // four 8-unit letters) the same centre, less half the real width.
     const int title_y = Y(w) + 7;
     const unsigned char length = SH_CALL(Text_CharCount)(Text(at::kMasterTitle));
-    SH_CALL(Text_DrawAt)(X(w) - 6 * static_cast<int>(length) + 0x3A, title_y, 0, 0x10, Text(at::kMasterTitle));
+    const int title_x = rest_2h::g_master_title_live && ListTitle_Centring()
+                            ? X(w) + 0x3A - static_cast<int>(TextAdvance_Width(Text(at::kMasterTitle)) / 2)
+                            : X(w) - 6 * static_cast<int>(length) + 0x3A;
+    SH_CALL(Text_DrawAt)(title_x, title_y, 0, 0x10, Text(at::kMasterTitle));
     Pieces(X(w), Y(w), at::kMasterPiecesA);
     Pieces(X(w), Y(w), at::kMasterPiecesB);
     for (int i = 0; i < 5; ++i) Piece(8 * i + 0x28 + X(w), Y(w), 1);
@@ -851,6 +863,7 @@ void Rest2H_Inject() {
     bof3::Log("rest_2h: MasterWin_SlideOut's bound %d (0x59C136; -120 unless DIV-0041 widened it)",
               static_cast<int>(static_cast<short>(Word(At(at::kMasterBound)))));
     if (bof3::WantsShadow("rest_2h")) rest_2h::SelfTest();
+    rest_2h::g_master_title_live = true;   // DIV-0059, from here on
     BOF3_INJECT(MenuList_ReserveWinDraw);
     BOF3_INJECT(MenuList_GeneWinRun);
     BOF3_INJECT(MenuList_GeneWinDraw);

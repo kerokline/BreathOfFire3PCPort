@@ -270,6 +270,7 @@ extern "C" const unsigned char* __cdecl ListTitle_DrawAt(int x, int y, int colou
 }  // namespace
 
 int ListTitle_X(const unsigned char* label, int n) { return ListTitleX(label, n); }
+bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x82, w[9], Byte(kColour));

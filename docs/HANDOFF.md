@@ -88,7 +88,8 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       fifth chooser outside `Menu_YesNo`, by [`yes-no-prompts.md`](yes-no-prompts.md)'s method (`owner-review.md`
       "Reported by the owner"). And the camp's master list: its title still 师匠 (the US word is `MSTR`, the owner's
       web reference - half of `yes-no-prompts.md` section 5's question answered) and a `†` beside completed masters
-      where the US draws `★` - `0x66A1F0` and `0x66A2D8`, DIV-0064's way (same list). And two routes the owner recorded and committed (`d1c5dcf1`): `ninaWalkBehindBlock`
+      where the US draws `★` - `0x66A1F0` and `0x66A2D8`, DIV-0064's way (same list; **done 2026-10-07**, both from
+      `SHOP.EMI`, the star owed the owner's eye; the pupils box's 弟子 `0x66A1F8` still open). And two routes the owner recorded and committed (`d1c5dcf1`): `ninaWalkBehindBlock`
       (a sprite through a cell - DIV-0071's first sighting in play, A/B it under `BOF3X_LAYERING=0`) and `bridgeWalk` (a
       backdrop short of the wide view's edge, the cull notch, a sprite cut by its row's deck - same list).
    2. **The owner's calls**, all on [`owner-review.md`](owner-review.md): the town theme `000` (its file is shorter than

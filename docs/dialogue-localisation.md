@@ -380,7 +380,7 @@ All of them load with `FIRST.DAT`.
 | 9 | the battle's command labels (Atk ... Esc) | 7 x 8 at `0x669D28` via `0x669D60` | the box table `0x64E2C8` (`BATTLE.EMI`) | DIV-0019 |
 | 10 | New Game's default names (Ryu ... Whelp) | name fields of 8 records at `0x64B390` | the records past the name, 4 bytes earlier (`START.EMI`) | DIV-0020 |
 | 11 | Manillo, the fish merchant | 8 bytes at `0x669CD8` | twelve bytes at `0x6608CC` (the fishing areas) | DIV-0020 |
-| 15 | the status words, the stats (menu and battle), the item and skill types (the last two repointed into the DLL's buffers) | `0x66A0E8`, `0x66A0F8`, `0x66A120`, `0x66A200`, `0x669CF0` | the bytes at `0x663648` / `0x663660`, `0x663960`, `0x66B5B4` (`START.EMI`, `BATTLE.EMI`) | DIV-0064 |
+| 15 | the status words, the stats (menu and battle), the item and skill types (the last two repointed into the DLL's buffers), the master list's title and star mark | `0x66A0E8`, `0x66A0F8`, `0x66A120`, `0x66A200`, `0x669CF0`, `0x66A1F0` + `0x66A2D8` | the bytes at `0x663648` / `0x663660`, `0x663960`, `0x66B5B4` (`START.EMI`, `BATTLE.EMI`); `0x66B3B8` and the requirement lists `0x66B3D0` (`SHOP.EMI`) | DIV-0064 |
 | 16 | the fishing spot's banner lines and tabs (both repointed into the DLL's buffers; [`fishing-text.md`](fishing-text.md)) | 13 records at `0x653B98`, the table `0x66A088` | the row table `0x653C04` and the edge-quad records `0x653E6C` (the fishing areas) | DIV-0069 |
 
 What makes this cheap: the US abbreviations were made to fit the PlayStation's
@@ -396,8 +396,10 @@ the list headers are kind 15 since 2026-09-29 (DIV-0064). Found and not
 converted: the turn counter's 残留 / 回合 at `0x669D10` / `0x669D18` (read
 only by `0x43C780`, a boss effect; no US text found beside it), the Skill Ink
 count's 墨水 at `0x66A118` (`SharedList_DrawItemCount`; not found on the US
-disc as text - likely an icon there), the shop's 师匠 / 弟子 at `0x66A1F0` /
-`0x66A1F8` (`Shop_DrawSellDetail`), and the battle's 巴比 / 贝特 at
+disc as text - likely an icon there), the pupils box's 弟子 at `0x66A1F8`
+(`MasterWin_DrawPupils`; its neighbour 师匠 at `0x66A1F0` is kind 15 since
+2026-10-07, with the master list's star mark `0x66A2D8` - DIV-0064's sixth
+group, from `SHOP.EMI`), and the battle's 巴比 / 贝特 at
 `0x669CE0` / `0x669CE8` (`BattleExtra_EquipOpen` / `_EquipLeave`,
 `FieldPanel_DrawKindRow`). Beyond those, `0x669E10..0x66A0B0` and
 `0x66A14C..0x66A1E0` hold some fifty more short Chinese strings

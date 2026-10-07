@@ -1102,6 +1102,16 @@ def convert_battle_commands(game, donor):
 #      (the fifth the PC's 0x66A220), their five pointers, four 6-byte stat
 #      slots and then the sixteen bytes the PC has at LABEL_BATTLE_TAIL.
 #
+#   6  the camp's master list (2026-10-07): its title, 8 bytes at 0x66A1F0
+#      (the US and German discs MSTR, the French ME), and the mark beside a
+#      completed master, 4 bytes at 0x66A2D8 - the one byte `t`, whose
+#      single-byte slot of the shipped font is a star, which the overlay's
+#      repaint of that slot turns into a lowercase t (the owner's cross,
+#      2026-10-06). SHOP.EMI has both as NUL-terminated strings padded to 4
+#      between the 24 bytes the PC has at LABEL_MASTER_HEAD and the masters'
+#      requirement lists it has at LABEL_MASTER_LISTS; the disc's mark is
+#      its code 0x84, the filled star of the dialogue set.
+#
 # Groups 3 and 4 are repointed by the DLL into 16-byte buffers of its own
 # (their readers all go through pointer tables), so their room is 16; the
 # others are written into their slots. A string that does not fit goes out
@@ -1109,8 +1119,10 @@ def convert_battle_commands(game, donor):
 KIND_LABELS = 15
 LABEL_HEAD, LABEL_HEAD_LEN, LABEL_TAIL, LABEL_TAIL_LEN = 0x663648, 24, 0x663660, 8
 LABEL_TYPES_HEAD, LABEL_BATTLE_TAIL = 0x663960, 0x66B5B4
-LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8)}
-LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats"}
+LABEL_MASTER_HEAD, LABEL_MASTER_HEAD_LEN, LABEL_MASTER_LISTS, LABEL_MASTER_LISTS_LEN = 0x66B3B8, 24, 0x66B3D0, 16
+LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8), 6: (8, 4)}
+LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats",
+               6: "master list"}
 
 
 def label_pointers(donor, at, count):
@@ -1138,8 +1150,8 @@ def label_chunk(tag, raws, report):
     return (KIND_LABELS, tag, bytes(payload))
 
 
-def convert_labels(game, start, battle):
-    """[(kind, tag, payload)] and a report, from the whole START.EMI and BATTLE.EMI (either may be None)."""
+def convert_labels(game, start, battle, shop=None):
+    """[(kind, tag, payload)] and a report, from the whole START.EMI, BATTLE.EMI and SHOP.EMI (each may be None)."""
     chunks, report = [], []
     cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
     if start:
@@ -1178,6 +1190,24 @@ def convert_labels(game, start, battle):
                 raise SystemExit("labels: no placement of the skill types fits their pointer table")
             chunks.append(label_chunk(4, [cut(battle, s, 16) for s in starts], report))
             chunks.append(label_chunk(5, [cut(battle, at - 24 + 6 * i, 6) for i in range(4)], report))
+    if shop:
+        head = exe_bytes(game, LABEL_MASTER_HEAD, LABEL_MASTER_HEAD_LEN)
+        lists = exe_bytes(game, LABEL_MASTER_LISTS, LABEL_MASTER_LISTS_LEN)
+        at = shop.find(head)
+        while at >= 0:
+            # Two strings between the head and the lists, each NUL-ended and
+            # padded to four bytes: the title, then the mark.
+            p, raws = at + LABEL_MASTER_HEAD_LEN, []
+            while len(raws) < 2 and p < len(shop) and shop[p] != 0:
+                end = shop.find(b"\0", p)
+                raws.append(shop[p:end])
+                p = (end + 1 + 3) & ~3
+            if len(raws) == 2 and shop[p:p + LABEL_MASTER_LISTS_LEN] == lists:
+                chunks.append(label_chunk(6, raws, report))
+                break
+            at = shop.find(head, at + 1)
+        else:
+            raise SystemExit("labels: SHOP.EMI has the PC's bytes around the master list's strings nowhere")
     return chunks, report
 
 
@@ -1873,9 +1903,11 @@ def cmd_all(args):
         msgs = convert_battle_messages(args.game, disc.read(battle_emi[0]))
         overlays["FIRST.DAT"] += msgs
         print("battle messages: " + ("%d" % MESSAGE_COUNT if msgs else "not found on this disc"))
-    if (start_emi or battle_emi) and not args.only:
+    shop_emi = None if donor_ja else disc.find("SHOP.EMI")
+    if (start_emi or battle_emi or shop_emi) and not args.only:
         labels, report = convert_labels(args.game, disc.read(start_emi[0]) if start_emi else None,
-                                        disc.read(battle_emi[0]) if battle_emi else None)
+                                        disc.read(battle_emi[0]) if battle_emi else None,
+                                        disc.read(shop_emi[0]) if shop_emi else None)
         overlays["FIRST.DAT"] += labels
         print("labels: " + (", ".join(report) if report else "not found on this disc"))
 
