@@ -143,6 +143,11 @@ heads), so `Battle_InitBossEncounter`'s tail jump becomes a call.
   **`0x93B9E0 + slot * 0x128`** (`EnemyWorkingRecords` +0 - the 16-byte name
   field the port prepended), with the id's LOW BYTE indexing the data here
   where `Battle_SetupEnemy` uses 16 bits.
+- **DIV-0082 (2026-10-07):** `Battle_CopyEnemyData` also clears the AI
+  row-done byte `+0xF1`, which the original never clears and the PlayStation
+  reloads from disc ([`trigger-mode-enemies.md`](trigger-mode-enemies.md)).
+  The clone comparison seeds the byte 0; a dedicated check in the self-test
+  shows the original keeping 0xFF and ours clearing it on every slot.
 - **Who shows it:** `Battle_OpenEnemyNames` opens one kind-3 window per living
   enemy (`0x59E2D0(0xC - n, 3)`), record `0x803160 + (0xC - n) * 0x24`, with
   +0xA = the actor; the window-task handler for kind 3 (group BC's side)

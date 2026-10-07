@@ -821,6 +821,14 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
 // fields (docs/battle_sprites.md section 3), +0xF0 = the id's low byte, and
 // the battle state cleared. The stat block copied to +0xB0.. is copied again
 // to +0x90.. (the original's rep movsd), which includes the resistance bytes.
+//
+// DIV-0082: the AI row-done byte +0xF1 (record +0x71) is cleared here too.
+// The original never clears it: on the PlayStation the enemy objects sit
+// inside BATTLE.EMI#3's image and come back zeroed from disc at every battle
+// entry, so a once-only AI row (the Volt's EXP x3 on a thunder hit) can fire
+// in every fight; the port keeps the objects in static memory, and a row
+// marked done in an earlier fight stays done for whoever spawns into the
+// slot next (docs/trigger-mode-enemies.md).
 extern "C" void __cdecl Battle_CopyEnemyData(unsigned slot, unsigned id) {
     const unsigned char* const src = EnemyData(id & 0xFF);
     unsigned char* const dst = Enemy(slot & 0xFF) + 0x80;
@@ -852,6 +860,7 @@ extern "C" void __cdecl Battle_CopyEnemyData(unsigned slot, unsigned id) {
     dst[0x80] = src[0x88];
     dst[0x81] = src[0x89];
     dst[0x70] = static_cast<unsigned char>(id);
+    dst[0x71] = 0;  // DIV-0082: the AI rows' done bits, which the original leaves from the last fight
     dst[0x8D] = 0;
     SetLong(dst + 0x94, 0);
     SetLong(dst + 0x90, 0);
