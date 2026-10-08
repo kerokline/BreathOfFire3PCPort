@@ -48,6 +48,8 @@ sys.path.insert(0, TOOLS)
 import dat          # noqa: E402
 import exe_tables   # noqa: E402
 import type1        # noqa: E402
+import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
+import xa           # noqa: E402  (wave-from-xa)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 TARGET = "pc-zh"
@@ -574,6 +576,9 @@ def get_chunk(f, slot, ch, chunked):
                         raise SystemExit("%s chunk %d from %s: hash differs from the recipe" % (f["name"], slot, pc.id))
                     names = split_enemies(full)[1]
             return s.id, src[1:], body, names
+        bank = vag.importer_source(s, f, slot, ch)      # wave-from-vag (docs/sound-import.md), hashed inside
+        if bank:
+            return bank[0], bank[1][1:], bank[2], None
     for s in chunked:
         for b, key, sec, h in owns_of(ch):
             if b != s.id:
@@ -632,6 +637,7 @@ def cmd_build(a):
             with open(os.path.join(d, f["name"]), "wb") as fh:
                 fh.write(b"".join(parts))
             written[layer] += 1
+    snd = xa.importer_snd(sources, a.out)
     loc_assets = build_languages(a.lang, sources, a.out)
     # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc
     exe_src = next((s for s in sources if isinstance(s, ExeSource)), None) or \
@@ -644,6 +650,8 @@ def cmd_build(a):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
         print("  %-9s %d containers written" % (layer, n))
+    if snd:
+        print("  base/snd  from %s: %d files (wave-from-xa)" % snd)
     if missing:
         print("  missing (no source given carries them):")
         for (layer, k), n in sorted(missing.items()):
