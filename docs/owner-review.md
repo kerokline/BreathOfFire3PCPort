@@ -223,16 +223,14 @@ where the reading behind it is. Nothing here is a divergence until it is in
        past 320 was drawn backwards into the band. Widened to the picture's
        edges under DIV-0041 (its entry, "The sea bridge's sky"). The owner
        on the capture (2026-10-07): "Sky looks perfect";
-     - **the "waterfall": cause found, not yet fixed** (D239 in
-       `known-defects.md`): the deck's east side faces read their texture
-       word from the map by *which sides the cell has*, the sides are chosen
-       once at the cell's creation from corner heights the sky effect
-       rewrites every frame, and the wider cull creates the deck cells at a
-       moment that gives them a south side too - so the east face reads the
-       next word, a 16 x 16 sea tile stretched over 125 px. **The owner's
-       call:** a data survey (which order the map authors its side words
-       in) decides whether the fix is to the reader or to the allocation;
-       about half a day.
+     - **the "waterfall": fixed 2026-10-08, owed the owner's eye**
+       (DIV-0085, D239 in `known-defects.md`): the bridge is `AREA060.DAT`;
+       its deck's east edge carries a word for the east cliff only, and the
+       sky effect leaves steps that give those cells a south face too, so
+       the cliff read the next tile's sea texture. Both faces now take the
+       cliff word (`BOF3X_SIDE_DUP=0` for the original). **To look at:**
+       `bridgeWalk` wide - no streaks; the deck's edge steps should not be
+       noticeable. The log names the first 20 cells changed (`DIV-0085`).
   The third capture (`sprite_crop_2135_1006.png`) is a close-up of one
   of these and needs no separate reading.
 

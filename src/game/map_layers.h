@@ -7,3 +7,20 @@
 #pragma once
 
 void MapLayers_Inject();
+
+namespace map_layers {
+
+// DIV-0085 (docs/known-defects.md D239): a cell whose file heights give it one
+// side face, and which is created with both because something moved the
+// heights since (the sea bridge's sky effect), draws both with the one side
+// word its tile carries - not the next tile's word for the second.
+//
+// Called by LoadDatFile after a file that carried the area block (kind 0, tag
+// 0xC8000): which sides each cell's heights give it, as loaded - MapView_Build's
+// two tests on the file's corners.
+void SnapshotSides();
+
+// After every module's self-test: reads BOF3X_SIDE_DUP (on unless 0).
+void ArmSideDup();
+
+}  // namespace map_layers

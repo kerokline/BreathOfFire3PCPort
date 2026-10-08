@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 84 entries, DIV-0001..0084, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 85 entries, DIV-0001..0085, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4552,3 +4552,56 @@ designed in rather than bolted on.
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=FormationNameCentre` keeps the overlay's words at the
   port's x.
+
+### A side face gained at run time drawn with the cell's one side word (the sea bridge's "waterfall")
+
+- **ID:** DIV-0085
+- **Date:** 2026-10-08
+- **Subsystem:** the field view's cell textures (`MapView_CellTextures`
+  `0x56F9B0`, ours in `src/game/map_layers.cpp`; the snapshot
+  `map_layers::SnapshotSides`, run at the end of `LoadDatFile` in
+  `src/game/dat_load.cpp` when a file carried the area block, tag `0xC8000`)
+- **Tier:** Intent - the owner's request, 2026-10-08: the bridge's camera is
+  fixed, so a duplicate texture on the south face "won't be noticeable".
+- **Original behaviour:** a cell's side faces are chosen once, when its draw
+  item is created, by comparing corner heights at that frame; its texture
+  words are read own, south (if it has one), east (if it has one) from its
+  tile's run. The map authors a word for each side the *file's* heights
+  give a cell and no more (`known-defects.md` D239: the survey of all 200
+  area blocks, PC and JP disc). Where code moves heights during play, a cell
+  can be created with a side its file heights do not give it, and then reads
+  a dword past its run - the next tile's own word. On `AREA060`'s sea bridge
+  the sky effect (`EffectKind18Sub15_Draw`) leaves one-unit steps along the
+  deck behind a party walking north: the deck's east edge (column 48, its
+  run own + the east cliff's 64-texel rectangle) gets a south step, the step
+  takes the cliff word and the 32-unit cliff takes the sea's 16 x 16 tile,
+  stretched - the streaks. The PlayStation is the same code
+  (`FUN_80153B8C`, `FUN_80154D50`) and the same data.
+- **New behaviour:** with `BOF3X_SIDE_DUP` on (the default; armed after
+  every module's self-test), when a cell is textured with both side faces
+  and the file's heights give it exactly one, both faces take that one side
+  word. Every other cell is read as the original reads it: a cell the file
+  gives both sides, or none, is untouched, so shipped geometry - including
+  any tile whose run shares words with the next by design - draws as before.
+  The first 20 cells it changes are logged (`DIV-0085    map cell x,z`).
+- **Rationale:** the extra face exists only because heights moved; the
+  word the original gives it is another tile's, and on the bridge a tall
+  cliff stretched from a sea tile. The cell's own side word is the closest
+  texture the data has, and under the bridge's fixed camera the south step
+  it lands on is a few texels high.
+- **Also in the PSX version?** Yes, the defect: identical code and data.
+  Whether it shows there depends on when the cull creates the deck's edge
+  cells; in this port, D239's two logs tie it to DIV-0041's
+  terrain margin; that the margin puts the creation line on the steps is
+  inferred, not measured.
+- **Verification:** compiled (mingw GCC, `map_layers.cpp`, `dat_load.cpp`,
+  `inject_all.cpp`; a cloud session). Offline on `AREA060`'s block: the sky
+  effect's height writes applied for a walk north from row 70 to 50 leave
+  column 48's rows 63..83 with both faces, each a file east-only cell whose
+  original east word would be `0x0180001E` (the sea tile) and is now its own
+  `0x12800100`. **Owed:** the build, `'*'` narrow and wide (the switch is
+  armed after the self-tests, so they compare Capcom's read), and the
+  owner's `bridgeWalk` wide: the streaks gone, the edge steps unremarkable.
+  Not handled: `AreaMap_ApplyPatch`'s height patches (area 94's init) after
+  the snapshot - a patched cell keeps the file's side set.
+- **Reversible?** `BOF3X_SIDE_DUP=0`.

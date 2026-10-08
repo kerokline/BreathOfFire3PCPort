@@ -11,6 +11,7 @@
 #include "game/config_text.h"
 #include "game/fishing_text.h"
 #include "game/labels.h"
+#include "game/map_layers.h"
 #include "game/menu_verbs.h"
 
 #include <windows.h>
@@ -86,6 +87,10 @@ char g_lang[8];
 
 void WalkDatFile(const char* path);
 
+// Set by the walk when a kind-0 chunk lands on the area block (tag 0xC8000,
+// AreaMap_Header); LoadDatFile then snapshots its side faces (DIV-0085).
+bool g_area_block_loaded;
+
 }  // namespace
 
 // original 0x454590. Reads DAT\<name> whole and walks its chunks.
@@ -124,6 +129,10 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
         if (GetFileAttributesA(overlay) != INVALID_FILE_ATTRIBUTES) WalkDatFile(overlay);
     }
     area4_walls::Apply(name);  // the later discs' walls in area 4 (BOF3X_AREA4_WALLS; area4_walls.h)
+    if (g_area_block_loaded) {
+        g_area_block_loaded = false;
+        map_layers::SnapshotSides();  // DIV-0085: the side faces the file's heights give (map_layers.h)
+    }
 }
 
 namespace {
@@ -147,6 +156,7 @@ void WalkDatFile(const char* path) {
             if (Gfx_UploadQueueCount && h.tag == 0x10000) Gfx_UploadQueueCount = 0;
             if (MsgPool_TakeChunk(h.tag, payload, static_cast<std::uint32_t>(h.size))) break;  // DIV-0007
             std::memcpy(Arena() + h.tag, payload, static_cast<std::uint32_t>(h.size));
+            if (h.tag == 0xC8000) g_area_block_loaded = true;
             break;
         case 1:
             LoadImageChunk(h.tag, payload, h.size);

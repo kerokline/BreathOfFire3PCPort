@@ -40,6 +40,12 @@ using map_layers::g;
 
 bool g_side_zero_release;   // BOF3X_SIDE_ZERO=1 (MapLayers_Inject)
 
+// DIV-0085: 0 until ArmSideDup (and with BOF3X_SIDE_DUP=0), so every self-test
+// compares Capcom's walk. g_file_sides: per map cell (z * width + x), bit 0 a
+// south side and bit 1 an east one, by the heights as the area file loaded them.
+bool g_side_dup;
+unsigned char g_file_sides[256 * 256];
+
 std::uint32_t Dword(const unsigned char* p) {
     std::uint32_t v;
     std::memcpy(&v, p, sizeof v);
@@ -518,6 +524,24 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
         }
     }
     const unsigned next = Word(item + 0x7E);
+    if (g_side_dup && below != 0 && next != 0 && x < width && y < static_cast<std::uint32_t>(height)) {
+        // DIV-0085 (D239): the tile carries a word for the one side the file's
+        // heights give this cell; the second side exists only because the
+        // heights moved since (AREA060's sky effect), and the dword the
+        // original would give it is the next tile's own. Both sides take the
+        // one side word.
+        const unsigned file = g_file_sides[y * width + x];
+        if (file == 1 || file == 2) {
+            texture -= 4;
+            static unsigned logged = 0;
+            if (logged < 20) {
+                ++logged;
+                bof3::Log("DIV-0085    map cell %u,%u (file sides: %s only) created with both side faces: both drawn "
+                          "with %08X, not %08X", x, y, file == 1 ? "south" : "east", Dword(texture),
+                          Dword(texture + 4));
+            }
+        }
+    }
     if (next != 0) {
         if (draw_order::Tagging())
             bof3::Log("map_layers: cell %u,%u: next side item %u texture word %08X", x, y, next, Dword(texture));
@@ -663,3 +687,39 @@ void MapLayers_Inject() {
     BOF3_INJECT(AreaMap_ClutCycle);
     BOF3_INJECT(AreaMap_HeaderPass);
 }
+
+namespace map_layers {
+
+// MapView_Build's two side tests, cell by cell, on the corners as loaded - the
+// row's last cell reading the next row's first and the last row reading past
+// the corner plane into the block, as the build does.
+void SnapshotSides() {
+    if (!g_side_dup) return;  // not armed: no self-test's map is read
+    const unsigned width = Width(), depth = AreaMap_Header[1];
+    const unsigned char* const corners = Corners();
+    for (unsigned z = 0; z < depth; ++z) {
+        for (unsigned x = 0; x < width; ++x) {
+            const unsigned char* const c = corners + (z * width + x) * 4u;
+            const unsigned char* const below = c + width * 4u;
+            const bool east = S8(c[6]) < S8(c[3]) || S8(c[4]) < S8(c[1]);
+            const bool south = S8(below[1]) < S8(c[3]) || S8(below[0]) < S8(c[2]);
+            g_file_sides[z * width + x] = static_cast<unsigned char>((south ? 1 : 0) | (east ? 2 : 0));
+        }
+    }
+}
+
+void ArmSideDup() {
+    char text[8];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_SIDE_DUP", text, sizeof text);
+    if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_SIDE_DUP must be 0 or 1");
+    if (n == 1 && text[0] == '0') {
+        bof3::Log("DIV-0085 off (BOF3X_SIDE_DUP=0): a cell given a second side face at run time reads the next "
+                  "tile's word for it, as the original does");
+        return;
+    }
+    g_side_dup = true;
+    bof3::Log("DIV-0085    a cell given a second side face at run time draws it with its one side word "
+              "(BOF3X_SIDE_DUP=0 for the original's read)");
+}
+
+}  // namespace map_layers

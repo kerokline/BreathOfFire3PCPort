@@ -1422,6 +1422,8 @@ void InjectAll() {
                                 // every module's self-test, which all compared the original's line strip (d3d_lines.h)
     area4_walls::Arm();         // area 4's walls as the later discs have them (BOF3X_AREA4_WALLS; docs/region-diff.md
                                 // section 10) - after every module's self-test, which all compared the shipped map
+    map_layers::ArmSideDup();   // DIV-0085: a side face gained at run time takes the cell's one side word (BOF3X_SIDE_DUP;
+                                // known-defects.md D239) - after every module's self-test, which all compared Capcom's read
     music_loops::Arm();         // the measured music loops (BOF3X_MUSIC_LOOPS; docs/bgm-comparison.md section 12) -
                                 // after every module's self-test, which all compared the original's rewind
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,

@@ -6436,7 +6436,7 @@ abort).
 **Status:** latent, harmless by reading or the owner's to judge where a doc
 says so.
 
-## D239 — A map cell's side faces read their texture words by which sides exist, so a cell created at another moment is textured differently (open, cause settled; the sea bridge's "waterfall")
+## D239 — A map cell's side faces read their texture words by which sides exist, so a cell created at another moment is textured differently (fixed by DIV-0085, owed the owner's eye; the sea bridge's "waterfall")
 
 **Found:** the owner, 2026-10-06, playing area 41's sea bridge under the wide
 picture (DIV-0041): tall columns of sea-like texels hanging from the deck's
@@ -6515,12 +6515,20 @@ any cell uses); each word decoded as `Prim_SetTexture` decodes it.
   both machines; when it shows depends on when the cull creates a deck
   cell under the hump.
 
-**The fix, the owner's call (a DIV):** the code cannot see a run's length,
-so a fix needs one: at the area's load, each used tile's run (to the next
-used index, as the survey takes it) and each cell's sides by the file's
-heights. Then in `MapView_CellTextures`, a cell that has both sides with a
-run of two gives word 2 to the side the file's heights make and treats the
-other as the deck's middle cells author theirs - word 0 (or releases it;
-which looks right is the owner's eye). Until then nothing is changed:
-`BOF3X_SIDE_ZERO=1` (an experiment, off by default) releases a side whose
-word is 0 and does not touch this.
+**Why the wide view (2026-10-08, offline on `AREA060`'s block):** the sky
+effect writes rows `r - 17 .. r + 13` of the deck round the party's row `r`
+and restores nothing outside them, so a party walking north leaves every
+row from `r + 13` back to where it started as a one-unit step (the slope's
+last row, 36 / 37, written again one row on each frame). A walk from row 70
+to 50 leaves column 48's rows 63..83 with a south side under the build's
+test. The cell keeps whatever it was created with: the original's cull
+creates the edge's cells elsewhere and the wide margin (DIV-0041,
+`BOF3X_WIDE_TERRAIN` 100 against 0, the two logs above) on the steps -
+inferred from the geometry, not yet measured: a creation line against the
+party's row in one `BOF3X_DRAWORDER` log would show it.
+
+**Fixed by DIV-0085** (2026-10-08, the owner's request; `BOF3X_SIDE_DUP`, on
+by default): a cell textured with both sides whose file heights give it one
+draws both with its one side word. Owed: the build, `'*'`, and the
+owner's `bridgeWalk` wide. `BOF3X_SIDE_ZERO=1` (an experiment, off by
+default) releases a side whose word is 0 and does not touch this.
