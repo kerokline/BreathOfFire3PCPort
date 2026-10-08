@@ -165,10 +165,10 @@ table at two addresses, both real; the map takes the ELF's.
 
 **The maps** (`exe_twins.py map`; `agree` summed):
 
-| Build | segments | `.data` bytes placed | of which by `run` | raw `src/` constants inside a segment |
+| Build | segments | `.data` bytes placed | segments by `run` | raw `src/` constants inside a segment |
 |---|---:|---:|---:|---:|
 | `psx-jp` | 613 | 519,286 | 529 | 586 |
-| `psx-us` | 649 | 518,452 | 568 segments | 576 of 1,067 |
+| `psx-us` | 649 | 518,452 | 568 | 576 of 1,067 |
 | `psx-fr` | 642 | 518,246 | 560 | 573 |
 | `psx-de` | 646 | 518,299 | 563 | 572 |
 | `psx-eu-en` | 648 | 518,532 | 567 | 580 |
