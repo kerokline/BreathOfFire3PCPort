@@ -1,13 +1,13 @@
 # The importer: recipes, identity, plan, cache, verify
 
-**Status:** IN PROGRESS (2026-10-08, a cloud session: the recipe generator, the importer skeleton and the language layers, proved on every catalogued build; presets and the engine's reading of the cache are not done)
+**Status:** IN PROGRESS (2026-10-08, a cloud session: the recipe generator, the importer skeleton and the language layers by BCP 47 tag, proved on every catalogued build; presets, the engine's tags and its reading of the cache are not done)
 
 [`unified-data-plan.md`](unified-data-plan.md) step 2. `tools/importer.py` is
 the importer's skeleton, and `recipes/pc-zh.toml` is its first recipe file,
 generated. From any ordered list of the player's sources, the importer writes a
-cache of `base/` and `loc/zh/` that **reassembles the PC port's 742 `DAT/`
+cache of `base/` and `loc/zh-CN/` that **reassembles the PC port's 742 `DAT/`
 containers byte for byte**, with every chunk a disc carries taken from the disc.
-It also writes `loc/en`, `loc/fr`, `loc/de` and `loc/ja` from the player's
+It also writes `loc/en-US`, `loc/en-150`, `loc/fr-FR`, `loc/de-DE` and `loc/ja-JP` from the player's
 discs, and each **equals the overlays `tools/loc_build.py` writes today**, 245
 of 245 per language (section 5).
 
@@ -22,7 +22,7 @@ line per chunk, in file order:
 
 - `sha256` is the payload's hash: the asset's identity and the check every
   import applies.
-- `layer` is `base` or `loc/zh`.
+- `layer` is `base` or `loc/zh-CN`.
 - `class` is why the chunk sits where it does (section 3).
 - `emi` / `on` name **every held build that carries the chunk byte for byte**
   and how to get it out: `copy` (the section as it is) or `type1` (decoded,
@@ -56,7 +56,7 @@ python tools/importer.py check
 `check` needs no game data and runs in CI. It checks that the recipe's files
 are the manifest's 742, that every container's chunks add up to the manifest's
 size, that every source names a build `fixtures.toml` holds, and that every
-layer is `base` or `loc/<lang>`.
+layer is `base` or the target's own language layer.
 
 ## 2. The pipeline
 
@@ -72,12 +72,12 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
    the recipe lists for it. The recipe's order of builds is not a preference.
 3. **Transforms.** `copy` and `type1` today. Every result is hashed against
    the recipe before it is written; a mismatch stops the import.
-4. **Cache.** `base/dat/NAME.DAT` and `loc/zh/dat/NAME.DAT`, ordinary DAT
+4. **Cache.** `base/dat/NAME.DAT` and `loc/zh-CN/dat/NAME.DAT`, ordinary DAT
    containers, each holding its layer's chunks in file order. **A container is
    written whole or not at all.** `manifest.toml` records, for every chunk, its
    container, slot, layer, the source (`build:how:EMI#section`) and its hash.
    Each source is recorded by its file name only, never the player's path.
-5. **Verify.** Interleave `base/` and `loc/zh/` back into the PC's containers
+5. **Verify.** Interleave `base/` and `loc/zh-CN/` back into the PC's containers
    in the recipe's slot order, and hash each against
    `fixtures/pc-zh.DAT.files.tsv`. No PC install is needed: the hash list is
    the oracle.
@@ -92,9 +92,9 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
 | base | `pc-edit` | 14 | PC | the port's edits to type-1 arenas ([`type1-compression.md`](type1-compression.md) 3) |
 | base | `logic-data` | 4 | PC | the `RYUD00..03` byte (`region-diff.md` 9) |
 | base | `art` | 1 | PC | an image page the port redrew |
-| loc/zh | `text` | 290 | PC | area message blocks (199), system pools (44), language images (glyph atlases, painted area pages, the title page, the ending sheet), the text CLUT strip (DIV-0013) |
-| loc/zh | `layout+text` | 200 | PC | the enemy tables: Chinese names in fields widened 8 to 12, stats as JP's; step 3's `widen-enemy-names` will split them |
-| loc/zh | `font` | 1 | PC | the port's Chinese font, the kind-3 chunk |
+| loc/zh-CN | `text` | 290 | PC | area message blocks (199), system pools (44), language images (glyph atlases, painted area pages, the title page, the ending sheet), the text CLUT strip (DIV-0013) |
+| loc/zh-CN | `layout+text` | 200 | PC | the enemy tables: Chinese names in fields widened 8 to 12, stats as JP's; step 3's `widen-enemy-names` will split them |
+| loc/zh-CN | `font` | 1 | PC | the port's Chinese font, the kind-3 chunk |
 | | | **3,582** | | |
 
 Each disc's share of the 2,171 with a disc source:
@@ -115,11 +115,11 @@ layer and from DIV-0080, not from `base/`.
 
 | Sources, in the player's order | From discs | Containers written | Verify |
 |---|---|---|---|
-| PC `DAT/` | 0 | base 741, loc/zh 254 | **742 of 742** byte-identical |
-| JP disc, PC | **2,171** from psx-jp | base 741, loc/zh 254 | **742 of 742** |
-| US disc, PSP-EU, PC | 2,146 psx-us + 1 psp-eu | base 741, loc/zh 254 | **742 of 742** |
-| EU-English disc, PC | 2,147 from psx-eu-en | base 741, loc/zh 254 | **742 of 742** |
-| US disc alone | 2,146 | 13 | 12 complete; the rest named as missing: banks 901, `loc/zh` 491, PC edits 14, logic-data 4, art 1, and the 25 above |
+| PC `DAT/` | 0 | base 741, loc/zh-CN 254 | **742 of 742** byte-identical |
+| JP disc, PC | **2,171** from psx-jp | base 741, loc/zh-CN 254 | **742 of 742** |
+| US disc, PSP-EU, PC | 2,146 psx-us + 1 psp-eu | base 741, loc/zh-CN 254 | **742 of 742** |
+| EU-English disc, PC | 2,147 from psx-eu-en | base 741, loc/zh-CN 254 | **742 of 742** |
+| US disc alone | 2,146 | 13 | 12 complete; the rest named as missing: banks 901, `loc/zh-CN` 491, PC edits 14, logic-data 4, art 1, and the 25 above |
 
 The fourth row is the importer telling a disc-only player what it cannot build
 yet, and why. That list is steps 3 and 6's work. `AFLDKWA.DAT` is the one
@@ -129,25 +129,61 @@ text.
 ## 5. The language layers
 
 ```
-python tools/importer.py build --source JP --source US --source FR --source DE --source DAT --source BOF3.exe \
-    --lang en --lang fr --lang de --lang ja --out CACHE
+python tools/importer.py build --source JP --source US --source EU --source FR --source DE --source DAT --source BOF3.exe \
+    --lang en-US --lang en-150 --lang fr-FR --lang de-DE --lang ja --out CACHE
 python tools/importer.py verify --cache CACHE --overlays <an install's DAT/>
 ```
 
-`--lang L` writes `loc/L/dat/NAME.DAT` from the first disc in the player's
-order that can give L. English comes from `psx-us` or `psx-eu-en`, French from
-`psx-fr`, German from `psx-de`, Japanese from `psx-jp`. **It is
-`tools/loc_build.py all`, run unchanged** on a scratch game directory: links to
-the PC's 742 shipped containers and `BOF3.exe`, both identified sources, and
-none of the install's own overlays, so nothing stale is read. Its
-`<lang>.NAME.DAT` files are taken as they are. They are the plan's
-`split-language`: what the player's disc says in that language, as overlays the
-engine already reads (DIV-0005). The importer reimplements none of it.
+**Language tags.** A layer is named by its text's BCP 47 tag, `fixtures.toml`'s
+`tag` per build:
+
+| Build | Tag |
+|---|---|
+| pc-zh | `zh-CN` |
+| psx-us | `en-US` |
+| psx-eu-en | `en-150` |
+| psx-fr | `fr-FR` |
+| psx-de | `de-DE` |
+| psx-jp | `ja-JP` |
+| psp-jp | `ja-JP` |
+| psp-eu | `en-150` |
+
+The region subtag is the release's, never a dialect claim. Why the Chinese is
+`zh-CN`:
+- the exe's strings are GBK, the mainland encoding;
+- they use Simplified forms (the game's name 龙战士Ⅲ, the error 错误, the
+  master list's 师匠);
+- the installer's language picker is LCID `0804`.
+
+Why the European English is `en-150` ("English, Europe") and not `en-GB` (the
+owner's decision, 2026-10-08): ten British / American spelling pairs counted
+over both English discs' text give identical counts, all American. Its edits
+are Sony Europe's terminology (`Memory Card`) and two renamed items. The
+PSP-EU text has the European renames too (`Hourglass` in 55 places and no
+`Quicksilver`, as the European PSX disc).
+
+`--lang` takes a tag, or a bare language (`en`), which is the first PSX disc in
+the player's order whose tag has that primary subtag. **Which English is the
+player's call; the order of the sources says it.** `--lang T` writes
+`loc/T/dat/NAME.DAT`. **It is `tools/loc_build.py all --lang T`, run
+unchanged** on a scratch game directory: links to the PC's 742 shipped
+containers and `BOF3.exe`, both identified sources, and none of the install's
+own overlays, so nothing stale is read. Its `T.NAME.DAT` files are taken as
+they are. They are the plan's `split-language`: what the player's disc says in
+that language, as overlays the engine reads (DIV-0005). The importer
+reimplements none of it. `loc_build.py --lang` itself accepts a tag now; what
+it does by language goes by the primary subtag. Its default stays the bare
+`en`, because **the engine and the launcher still read `DAT\en.*` and offer
+`en` / `fr` / `de` / `ja`**: taking tags there is the next item in
+`HANDOFF.md`. Until then an install's overlays are built with the bare codes,
+and `verify --overlays` compares a layer with them when the install has none
+under the full tag.
 `BOF3.exe` is a source because `loc_build` reads the exe's name, verb and
 config tables. Without it, `--lang` is refused with that reason.
 
 **English goes first.** The French and German title menus borrow the CONFIG
-row from `en.START.DAT` (`loc_build.build_title`). Built alone, they leave the
+row from an English `START.DAT` (`loc_build.build_title`). The US and EU-English
+pages are byte-identical; two English pages that differed would be refused. Built alone, they leave the
 title as shipped, which is 244 of 245. The importer orders the layers so this
 cannot happen.
 
@@ -156,11 +192,11 @@ Measured 2026-10-08 against the owner's install, whose overlays were built on
 
 | Layer | From | Against the install's overlays |
 |---|---|---|
-| `loc/en` | psx-us | **245 of 245** byte-identical |
-| `loc/fr` | psx-fr | **245 of 245** |
-| `loc/de` | psx-de | **245 of 245** |
-| `loc/ja` | psx-jp | **245 of 245** |
-| `loc/en` | psx-eu-en | 179 of 245: **the EU-English release is not the US text** |
+| `loc/en-US` | psx-us | **245 of 245** byte-identical |
+| `loc/fr-FR` | psx-fr | **245 of 245** |
+| `loc/de-DE` | psx-de | **245 of 245** |
+| `loc/ja-JP` | psx-jp | **245 of 245** |
+| `loc/en-150` | psx-eu-en | 179 of 245 against the install's US-built `en.*`: **the EU-English release is not the US text** |
 
 **`psx-eu-en` (held from 2026-10-08) differs from `psx-us`.** By
 `region_diff.py pair` US / EU-English, besides relocated code:
