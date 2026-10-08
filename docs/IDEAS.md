@@ -935,6 +935,11 @@ engine-side rows 123 and 128 first, which TCRF says crash and freeze.
 ---
 ## I23 — Music: the PC's MP3s against the disc's sequences
 
+**Decided 2026-10-08 (the owner): the disc's music is the default wherever a
+disc is a source** - [`unified-data-plan.md`](unified-data-plan.md) section 6
+has the numbers behind it. This idea's measurement is done; its engine work
+is the plan's step 9.
+
 **Ask (2026-09-26):** how different are the PC port's MP3s from the
 PlayStation's own music data played back properly - would disc music feel
 like restoring the original sound, or be much the same?

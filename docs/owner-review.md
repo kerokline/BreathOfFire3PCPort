@@ -278,6 +278,15 @@ where the reading behind it is. Nothing here is a divergence until it is in
   or the PC; (4) the data pointers from a disc - held by the engine, or a
   rebuild transform (93 % exact; recommended).
 
+- **Decided 2026-10-08: the disc's music by default** ("default to disc-delivered
+  music if available; there doesn't seem to be a compelling reason to use the
+  PC-delivered music unless you absolutely have to"). Recorded in
+  [`unified-data-plan.md`](unified-data-plan.md) section 6; step 9 moves up,
+  the loop table stays as the PC-only fallback. What it asks next: the
+  listening session that gates step 9 (`bgm-comparison.md` 10), and whether
+  the 11 jingles (step 6's call 3) follow the same rule - from `S_XA00.STR`
+  on the disc, by the engine playing a kind-0 stream from PCM.
+
 - **Step 6's three calls** ([`sound-import.md`](sound-import.md) section 6,
   2026-10-08): (1) the PAL discs' 8 swapped area banks - refused by hash
   today, so a PAL-only player lacks 8 containers' banks; accept as that

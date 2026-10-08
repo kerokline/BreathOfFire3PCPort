@@ -4451,6 +4451,18 @@ designed in rather than bolted on.
   the offline splice for the owner's ear; whether replaying the intro's
   frames at each loop causes a hitch in play is unmeasured.
 - **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
+- **The full measurement, 2026-10-08** ([`bgm-comparison.md`](bgm-comparison.md)
+  section 11): all 153 songs rendered and measured, the method rewritten
+  the same day (the SPU's noise voices and free-running modulations defeat
+  a waveform-only measure). Of 156 looping tracks 48 have a loop in their
+  file, 80 hold less than a period (20 by a frame or two, `near_full` - the
+  owner's call whether a slip of that size a pass beats the rewind), 28
+  none that can be measured. The table in `music_loops_table.inc` is
+  regenerated from `loops.json` by `gen_loop_table.py` (not yet re-run at
+  this writing). **The owner's stance the numbers led to:** the disc's
+  music by default wherever a disc is a source
+  ([`unified-data-plan.md`](unified-data-plan.md) section 6); this entry
+  is what a PC-only install gets.
 
 ### The enemy AI rows' done bits cleared at spawn (the Volt's EXP bonus)
 

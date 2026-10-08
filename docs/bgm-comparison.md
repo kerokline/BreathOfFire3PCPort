@@ -398,26 +398,24 @@ PSP's player for P10, and the original decoder's own PCM.
 
 ## 11. The loop table: the measurement and the irregulars (2026-10-06)
 
-> **Paused (2026-10-06 evening, the owner's machine going off for the
-> night).** 16 of the 156 looping songs have a row in `loops.json` (3
-> measured from renders, 13 in their files alone); 13 rows are in the engine's
-> table. To resume, from a checkout of `phase-3/music-loops` (or
-> its successor), with nothing else using Mednafen:
+> **The full run was made 2026-10-08** (153 songs rendered with three
+> workers, 1 h 46 min; the renders are `analysis/bgm/renders/`) **and the
+> measurement rewritten the same day** against seven of its renders in a
+> cloud session (section 11.4): the first measurement refused 140 of 153.
+> The fifth measurement (`run --redo`, minutes, no new render) stands: of
+> 156 looping tracks, **48 have a loop in their file** (`full` or `shifted`),
+> **80 hold less than one loop period** (60 by seconds, 20 by a frame or two
+> - `NEAR-FULL` in the log), and 28 are refused, every one for a cause the
+> row names. To resume from here:
 >
->     cd tools/bgm
->     BGM_SCRATCH=<a scratch directory, ~1.5 GB free> python measure_loops.py run --workers 3
->     python gen_loop_table.py          # rewrites src/game/music_loops_table.inc
->     python prove_loops.py             # the seam numbers for every row
+>     python tools/bgm/measure_loops.py run --workers 3 --redo   # every row again from the renders, after a change to measure()
+>     python tools/bgm/gen_loop_table.py          # rewrites src/game/music_loops_table.inc
+>     python tools/bgm/prove_loops.py             # the seam numbers for every row
 >
-> then rebuild, the `sound` and `'*'` self-tests, and commit. `run` skips
-> every song with a render-measured row in `analysis/bgm/loops.json`,
-> re-measures the in-file rows from a render, reuses any render already in
-> `analysis/bgm/renders/`, and logs each song to `analysis/bgm/measure.log`;
-> stopping it loses at most the songs in flight. Estimated: 153 songs, 5.2
-> hours of emulator time, about 1 h 45 min with three workers (each a
-> Mednafen window, sound at volume 0, its own base directory under
-> `BGM_SCRATCH`). The command was smoke-tested on song 36 (80 s, the row
-> below).
+> then rebuild, the `sound` and `'*'` self-tests, and commit. **The owner's
+> stance the numbers led to (2026-10-08): the disc's music by default
+> wherever a disc is a source** ([`unified-data-plan.md`](unified-data-plan.md)
+> section 6); this table is what a PC-only install gets.
 
 The owner listened on 2026-10-06: "the quality between the mp3 / disc isn't
 that bad, but the seams are *very* noticeable - I noticed the combat one in
@@ -425,47 +423,106 @@ game, but the town music is also really noticeable side by side." So the
 cheap fix of section 10 was built: a measured loop per track, played inside
 the PC's own file.
 
-### 11.1 The method (`tools/bgm/measure_loops.py`)
+### 11.1 The method (`tools/bgm/measure_loops.py`, as of 2026-10-08)
 
 Per song, a Mednafen render as in 8.1 (`patch_disc.py` makes the title play
-it; 165, the battle fanfare, is played as sub 1 of `BGMBAT00.EMI`), then:
+it; 165, the battle fanfare, is played as sub 1 of `BGMBAT00.EMI`; the song's
+first note sits at 43.1-44.1 s of every render, the boot and the intros
+before it, which the measurement skips by its `t0` of 40 s and logs as
+`first`), then:
 
 1. **Alignment**: the MP3's first sound against the render's, refined on the
    waveform in 2 s windows, a straight line fitted through the window
-   offsets (the clock drift, about -170 ppm: 7.3).
-2. **The render's loop**: its period P (the render against itself one body
-   later, around the sequence's nominal body), and its loop start S, the
-   first point from which 0.25 s windows repeat at P with correlation
-   >= 0.97 for 3 s. Both mapped into the MP3's samples through the line.
+   offsets (the clock drift, -173..-177 ppm on every song: 7.3); a window
+   that locked a bar away in self-similar music is an outlier and leaves the
+   fit. A song whose waveform will not correlate in 2 s windows (the voices'
+   phases differ between the PC's render and Mednafen's: 034, 089) aligns
+   on its **onset envelope** instead (log-RMS per 256 samples, differenced,
+   rectified), the drift pinned at -175 ppm.
+2. **The render's loop**, by envelope and waveform together, because each
+   alone is fooled:
+   - the SPU's noise voices are a fresh LFSR realisation every pass, so a
+     window holding a noise hit does not match the first pass at all - as
+     isolated hits on the beat (011: 0.99 between them, ~0 on them) or a
+     voice sounding throughout (007: 0.3..0.7 wherever it plays, 1.000 where
+     it rests);
+   - a single window's best lag can be a phrase repeat (017: 48.14 s at
+     1.000 against the loop's 53.49 s at 0.999);
+   - the onset envelope repeats exactly every pass whatever the voices do,
+     so it rejects an intro and a phrase - but a drum pattern makes it
+     repeat at every whole bar too (011: 149.77 s scored above 142.63 s),
+     and an intro with the body's pattern repeats on it (007).
+
+   So: the envelope's local peaks and the waveform's (0.5 and up) within
+   0.9..1.1 of the sequence's nominal body are the candidates, each scored
+   on the envelope over 12 s at the best of its three nearest hops; those
+   within 0.1 of the best are the shortlist; the **fraction of 0.25 s
+   windows matching at the lag +-3 samples** (>= 0.97) chooses among them,
+   or, where no window matches at any candidate, the one nearest the
+   nominal body; the matching windows vote the lag to the sample. The loop
+   start is the first window that matches and is followed by 3 s matching
+   at half the song's own rate (a chance match in the intro is not), the
+   envelope's first span only when no window matches. Both mapped into the
+   MP3 through the line.
 3. **One of three cases**, by how much of a body the file holds after S:
    - *full*: the file holds S + P. Row: start S, end S + P, P refined inside
-     the file. Correct by construction: the music repeats across the seam.
+     the file (+-300 samples, +-2,500 after an envelope alignment).
+     Confidence: the MP3's own second pass against its first, in waveform
+     or in onset envelope, whichever is higher, both kept - a noise voice
+     lowers the first and not the second, and the loop is right either
+     way; where the render's waveform never confirmed the period, the
+     envelope alone speaks (a bar multiple scores 0.9 in 1 s of repetitive
+     music, 047).
    - *shifted*: the file ends before S + P but holds a whole period from its
      start. Row: end as late as the file allows, start = end - P - still
      exactly one period, so in time and in phase; the first moments after
      the jump are intro material standing in for the body's missing tail
      (its likeness to that tail is reported, `stand_in_ncc`), and the seam
-     is crossfaded over 256 samples (5.8 ms).
+     is crossfaded over 256 samples (5.8 ms). Confidence: the render's
+     envelope score or its match fraction, the higher.
    - *shortened*: the file is shorter than one period from its start. No
      loop of the right length exists in the file; the row is **excluded**
-     and the track rewinds as the original does.
+     and the track rewinds as the original does. `near_full` marks a file
+     short by two frames or less: intro + exactly one body, trimmed (017:
+     18 ms in 53.5 s; 034: 31 ms in 21.9 s) - whether such a slip a pass
+     beats a rewind is the owner's call, on the count (20).
 4. A *full* row is moved forward by under one frame so that a 128-sample
    (2.9 ms) crossfade fits inside the frames holding its end and start
    (`fit_fade`): two passes of an MP3 carry different coding noise, and a
    hard cut left a sample step up to 8 times the file's own at that point
    (track 003: 2.04 against 0.27; with the fade 0.27).
 
-Rows under 0.8 confidence (the loop correlation), or with an alignment of
-fewer than 10 windows or a residual over 50 samples, are excluded.
+Rows under 0.8 confidence, or with an alignment of fewer than 10 windows or
+a residual over 50 samples (512 after an envelope alignment), are excluded.
+Every row keeps its candidates with their scores, its alignment's method
+and residual, the windows that voted, and the first sound's time.
 
-**In-file rows.** 14 files repeat their body inside themselves (7.2); their
-loop can be measured in the file alone, the same repeat test (0.95 for
-two MP3 passes). `python measure_loops.py infile <tracks>` writes those rows
-with `"method": "in-file"`; a later `run` replaces each with a render's. The
-one cross-check made: song 36, in-file period 658,379 samples, render-
-measured 658,372 - 7 samples (0.16 ms) apart.
+**What the fifth run's 28 refusals are** (every one read): 23 are songs
+whose second pass never matches the first **in waveform anywhere** - the
+render's or the MP3's own - with periods at the sequence's nominal body and
+a waveform match fraction of 0.00. Read on 083 (a 4 s loop, 25 s of file):
+its left and right channels are uncorrelated (0.016) in render and MP3
+alike, nothing sounds above 4 kHz, and neither repeats itself at any lag
+above 0.6; its envelope correlates 0.69..0.70 at *every* lag. A pad whose
+voices carry a slow modulation running free across the loop: the notes
+repeat, the waveform never does, and with few onsets the envelope cannot
+say where. No sample-exact loop exists in such a file; a loop at the
+sequence's period with a longer crossfade would be musically right and is
+not built. 5 are alignment gates a hair over (055, 102, 117: residuals
+50.6-58.9; 049, 111: 5-6 windows). **In-file rows** (the 2026-10-06 method,
+14 files repeating their body inside themselves) are superseded by the
+renders' rows.
 
-### 11.2 The table as it stands
+**Earlier measurements the same day, for the record:** the first run's 140
+refusals (89 "no exact repeat", 19 "fewer than 3 windows", 8 residuals in
+the thousands) were the strict per-window rule against the noise voices,
+the single-window period search, and the phase-differing songs; three
+rewrites between 13 and 48 passes, each tested against the seven renders
+003, 007, 011, 017, 025, 034, 089 and then the owner's `--redo`. The
+renders themselves were right throughout (full length to 0.3..9 s of
+launch latency, the song at 43-44 s).
+
+### 11.2 The table as it stood on 2026-10-06 (16 rows; the fifth run's 48 supersede it once `gen_loop_table.py` runs)
 
 `analysis/bgm/loops.json`, 16 rows; the engine's
 `src/game/music_loops_table.inc`, 13. Positions are samples of the decoded
