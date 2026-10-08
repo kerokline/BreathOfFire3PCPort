@@ -320,6 +320,16 @@ the lead's "walking straight", and it is the same on all three.
 
 ## 6. What could not be settled
 
+> **2026-10-08, unified-data step 5** ([`exe-tables-by-build.md`](exe-tables-by-build.md) 4.2): this doc's ELF
+> addresses are **file offsets**, 0x80 more than the catalogue's link-time
+> offsets (the accessories' `0x2E6ED8` is `0x2E6E58` there); its ability ids
+> frame a record parameters-first, so its ids 45, 46, 115, 217 are
+> `Ability_Records` 46, 47, 116, 218. The PSP-JP items below are **closed**:
+> the PSP-JP ELF's accessory records equal the PC's numbers in all 52 (the
+> Holy Mantle's, 21, included), and it renames one ability, id 116 - the
+> record the English PSP renames - and key items 2, 5, 7 and 9. Consumable 87
+> differs on both PSP ELFs, a PSP change, not an English one.
+
 - **Which frames use palette 3's cells.** The render shows the recolour on
   the cells drawn with that palette; the frame tables that assemble Stallion
   (and whether Balio or Sunder share palette 3 in area 67) were not read.

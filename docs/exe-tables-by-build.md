@@ -57,7 +57,9 @@ or in a commit message (rule 1). The outputs of `exe_twins.py survey` and
 
 The `psx-eu-en` row of `fixtures.toml` can now become `verified`:
 `region_diff.py files <cue> --out fixtures/psx-eu-en.files.tsv` and the hashes
-above (not done here: `fixtures.toml` is outside this step's files).
+above (not done here: `fixtures.toml` is outside this step's files). **Done on
+the importer's branch the same day**, with the same track hashes, and merged:
+`psx-eu-en` is verified, `fixtures/psx-eu-en.files.tsv` its manifest.
 
 ## 2. Method
 
@@ -384,7 +386,7 @@ Still owed:
   section 6's two items are closed (section 4.2).
 - `docs/region-diff.md` / I32: the PSP ELF's level-table rebalance and the
   PSP-JP renames (section 4.4).
-- `fixtures.toml`: `psx-eu-en` can be verified (section 1).
+- ~~`fixtures.toml`: `psx-eu-en` can be verified (section 1).~~ Done at the merge.
 - **`symbols.toml` quotes table values** in the evidence strings of about 25
   `[[data]]` entries (a regex for six or more numbers in a row, function
   address lists excluded): `Battle_DamageVarianceTable`,

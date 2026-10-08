@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-08, the unified-data round on `claude/unified-data-01GhKEhTeYTG4ZUfpX1vBdx2`: steps 1 and 2 done - the type-1 decompressor, the importer and its generated recipe, the language layers by BCP 47 tag; **up next: the engine and launcher take the tags**. Earlier 2026-10-08: the sea bridge's "waterfall" (D239) surveyed, explained and fixed - DIV-0085, seen by the owner; its third-word guard owes a rebuild, `'*'` and one bridge walk; area 47 the place to watch. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
+**Status:** IN PROGRESS (2026-10-08, the unified-data round on `platform/unified-data-round`: steps 1, 2 and 5 done and merged - the type-1 decompressor, the importer and its generated recipe, the language layers by BCP 47 tag, the exe-resident tables in every build; **up next: the engine and launcher take the tags**. Earlier 2026-10-08: the sea bridge's "waterfall" (D239) surveyed, explained and fixed - DIV-0085, seen by the owner; its third-word guard owes a rebuild, `'*'` and one bridge walk; area 47 the place to watch. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -40,8 +40,10 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
-00000000000000. **The unified-data round, steps 1 and 2 (2026-10-08, a cloud session, branch
-   `claude/unified-data-01GhKEhTeYTG4ZUfpX1vBdx2` off `platform/unified-data-round`, pushed, no PR yet).** The record:
+00000000000000. **The unified-data round, steps 1, 2 and 5 (2026-10-08, two cloud sessions, merged into
+   `platform/unified-data-round`; no PR to `main` yet).** Step 5 ran in its own session
+   ([`exe-tables-by-build.md`](exe-tables-by-build.md): `tools/exe_twins.py`, `exe_maps/<build>.tsv`, 29 tables located in
+   all seven held builds; its section 7's notes for other files folded in at the merge). The record of steps 1 and 2:
    [`type1-compression.md`](type1-compression.md) (step 1: `tools/type1.py`, all 65 compressed arenas proved against the
    PSP's and the PC's copies; the port's 14 own edits to them), [`importer.md`](importer.md) (step 2: `tools/importer.py`
    and the generated `recipes/pc-zh.toml` - every PC chunk with every disc carrying it, found by content hash; 742 of 742
@@ -68,11 +70,14 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       - Docs that say `--lang en` or `BOF3X_LANG=en`: `dialogue-localisation.md`, `launcher-settings.md`,
         `tools/attract_run.py`'s help, `tools/close_probe.py`.
    2. **The owner's calls:** which English is the default (`en-US` or `en-150`; the importer takes whichever English
-      disc is first in the source order); the PR.
+      disc is first in the source order); **`symbols.toml`'s quoted table values** (step 5 found about 25 `[[data]]`
+      evidence strings quoting six or more values in a row - rule 1 says they go; `owner-review.md`); the French and
+      German gauge words (`owner-review.md`); the PR to `main`.
    3. **Steps that can start:** 3 (the transforms for a disc-only install: `widen-enemy-names`, `remap-dest`, and the 25
-      chunks the US disc lacks - place-name plates, painted pages, the minecart rows; `importer.md` section 3); 5, in
-      its own session (the brief is `/mnt/session/outputs/brief_step5.md` of this session: lanes, branch, uploads); 6
-      once the PC's `SND/` is uploaded (the 901 banks, `wave-from-vag`).
+      chunks the US disc lacks - place-name plates, painted pages, the minecart rows; `importer.md` section 3); 6 once
+      the PC's `SND/` is uploaded (the 901 banks, `wave-from-vag`); 8 (`base/exe/` and the engine reading it) has its
+      inputs now that 5 is done. Two sessions side by side worked: a brief with lanes (files each may touch), the second
+      branched off the first's fix it needed, and a section of "for the other files" folded in at the merge.
    4. **Not done in step 2:** presets (source orders on the command line only), and the engine reading the cache (step 4's
       second prefix). Capcom's type-1 routine is not located (`type1-compression.md` section 1; nothing waits on it).
    **Mechanics of the cloud session:** the owner uploaded every disc, the PC's `DAT/` (with its overlays) and `BOF3.exe`

@@ -164,6 +164,11 @@ nothing else** (379 text, one image tile each in `DEMO` and `TURISHAR`). Capcom'
 English PSP release is one base with a language layer over it - the shape
 ASSET_SOURCES section 3 proposes, already practised.
 
+**Not in these rows** (they compare EMI sections; the PSP's ELF carries more,
+[`exe-tables-by-build.md`](exe-tables-by-build.md) 4.4): both PSP ELFs rebalance roster index 6's level
+table (249 bytes of EXP and stat gains in its 99 rows, learnt abilities
+untouched), and PSP-JP renames key items 2, 5, 7 and 9 and ability 116.
+
 Five files are PSP-only: `ETC/CAPLOGO.EMI`, `TMBGM000.EMI`, `TMBGM001.EMI`,
 `TURIMODE.EMI`, `TURISHAR.EMI`.
 

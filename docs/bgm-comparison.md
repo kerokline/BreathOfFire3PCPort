@@ -131,8 +131,9 @@ Names: `000`..`166` with `021` absent; `N` on `004 009 028 042 058 096 105
 
 ### 6.2 The disc's sequences
 
-- **The song table** is at `0x80182830` in `SLPS_009.90` (file offset
-  `0xEF030`; found by the sibling, `docs/loader_records/AREA.md`): 165
+- **The song table** is at `0x80182830` in `SLPS_009.90` (`0xEF030` past the
+  EXE's 0x800-byte header, file offset `0xEF830` - [`exe-tables-by-build.md`](exe-tables-by-build.md) 4.3, which also
+  finds it in every build, the 660 bytes identical; found by the sibling, `docs/loader_records/AREA.md`): 165
   entries of `{u16 file id, u8 seq, u8 sub}`. `seq` is 0 in all 165, `sub`
   0..3, and every file id is a `BIN/BGM/*.EMI` (the sibling's
   `tools/file_ids.py`). The PSX `Music_Play` at `0x80162610` (capstone on

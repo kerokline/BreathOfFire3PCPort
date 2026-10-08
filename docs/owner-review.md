@@ -233,6 +233,16 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Decisions the measurements raised
 
+- **`symbols.toml` quotes table values** ([`exe-tables-by-build.md`](exe-tables-by-build.md)
+  section 7, 2026-10-08): about 25 `[[data]]` evidence strings carry six or
+  more of a table's numbers in a row (`Battle_DamageVarianceTable`,
+  `Steal_RateTable`, `Field_MoveSpeeds`, `WorldMap_Records`, the CLUT tables
+  and others listed there), older than the step that found them. Rule 1 says
+  values from the game stay out of the repository; the fix is to replace the
+  quoted numbers with what they mean and how they were read. **The owner's
+  call**: how, and whether a history rewrite is wanted (the CLAUDE.md rule 7
+  note on rewrites applies).
+
 - **The world map's gauge words in French and German** ([`importer.md`](importer.md)
   section 3, 2026-10-08): the port's dial page (the keyboard legend, kept for
   every language) restyled the ENGINE / OVER HEAT gauge frames with the words
