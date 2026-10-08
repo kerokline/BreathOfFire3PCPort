@@ -1,12 +1,11 @@
 # The exe-resident tables by build: the catalogue and the per-build address maps
 
-**Status:** IN PROGRESS (2026-10-08, cloud session; unified-data step 5,
-[`unified-data-plan.md`](unified-data-plan.md) sections 5 and 8. Measured
-against `BOF3.exe` and the US, FR, DE and Europe-English PSX discs and both PSP
-discs. **The JP PSX disc was not uploaded this session**, so the `psx-jp`
-rows are the addresses already recorded in `symbols.toml` plus ones read from
-the PSP-JP disc's copies of the EMIs, tiered `hypothesis`: section 6 has the
-one command that settles them.)
+**Status:** STABLE (2026-10-08, cloud session; unified-data step 5,
+[`unified-data-plan.md`](unified-data-plan.md) sections 5 and 8, steps 1-2
+done. Measured against `BOF3.exe` and all seven held disc builds: the JP, US,
+FR, DE and Europe-English PSX discs and both PSP discs. The JP disc arrived
+mid-session; section 6 records what it settled and the one correction it
+forced, the song table's start.)
 
 The evidence rule ([`README.md`](README.md)) holds throughout: every count
 below is followed by the command that produced it, and every address in
@@ -18,12 +17,12 @@ or in a commit message (rule 1). The outputs of `exe_twins.py survey` and
 ## 0. What came out
 
 1. **A per-build address map of the PC's whole `.data`**:
-   [`exe_maps/<build>.tsv`](../exe_maps), one per held build but JP. Each line
+   [`exe_maps/<build>.tsv`](../exe_maps), one per held disc build. Each line
    says a range of `BOF3.exe`'s initialised data is the bytes of a file in that
    build (the boot EXE, an EMI section, or the PSP ELF), from an address on.
-   The PSX maps place **518,246 to 518,532 bytes of the PC's 638,976 bytes of
-   initialised `.data`** (81 %), the PSP maps 521,204 and 521,217 (section
-   3). Any PC address, a symbol or one of the 1,067 raw constants `src/` uses,
+   The PSX maps place **518,246 to 519,286 bytes of the PC's 638,976 bytes of
+   initialised `.data`** (81 %; JP the most), the PSP maps 521,204 and 521,217
+   (section 3). Any PC address, a symbol or one of the 1,067 raw constants `src/` uses,
    is looked up there by address; nothing has to be named first. This is what
    step 8 (the importer writing `base/exe/`) reads.
 2. **The catalogue**: [`tables.toml`](../tables.toml) has 29 tables (was 6):
@@ -31,8 +30,8 @@ or in a commit message (rule 1). The outputs of `exe_twins.py survey` and
    the level table, event battles, encounters, the battle rates, the field
    scripts' op lengths, directions and speeds, the sine table, the PC-only key
    defaults, and the PSX song table, which has no PC twin), with 121 fields,
-   every one with a tier and a citation. **202 `[[table.psx]]` rows** across
-   seven builds. The other 570-odd of the survey's 603 candidates - area-,
+   every one with a tier and a citation. **204 `[[table.psx]]` rows** across
+   seven builds, 192 of them `evidence`. The other 570-odd of the survey's 603 candidates - area-,
    spell- and scene-local tables `src/` also reads by address - are located
    through the maps, not catalogued one by one (section 2.3 says why).
 3. **Tools**: [`tools/exe_twins.py`](../tools/exe_twins.py) (new: the survey
@@ -54,7 +53,7 @@ or in a commit message (rule 1). The outputs of `exe_twins.py survey` and
 | `psx-de` | two-track `.bin` + `.cue` | `--tree`: all 889 files match |
 | `psp-jp`, `psp-eu` | `.iso` | `--tree`: all 1,846 / 1,837 files match |
 | `psx-eu-en` | two-track `.bin` + `.cue` | **no manifest yet** (fixtures.toml has it as `known`, not held): `--tree` names `psx-de` the closest, 607 of 889 files equal. Track 1's sha256 `1072fb1f…cf3469`, track 2's `ce5509fa…c77` (byte-identical to the FR and DE audio tracks). Identified by its boot line, `SLES_013.04`. |
-| `psx-jp` | **not uploaded** | - |
+| `psx-jp` | `.bin` + `.cue` (uploaded mid-session) | `--tree`: all 887 files match |
 
 The `psx-eu-en` row of `fixtures.toml` can now become `verified`:
 `region_diff.py files <cue> --out fixtures/psx-eu-en.files.tsv` and the hashes
@@ -153,6 +152,7 @@ differs):
 
 | Build | whole | part | whole-multi | part-multi | inside | none |
 |---|---:|---:|---:|---:|---:|---:|
+| `psx-jp` | 470 | 17 | 54 | 1 | 25 | 36 |
 | `psx-us` | 469 | 18 | 53 | 1 | 25 | 37 |
 | `psx-fr` | 470 | 18 | 53 | 1 | 25 | 36 |
 | `psx-de` | 468 | 17 | 56 | 1 | 25 | 36 |
@@ -167,6 +167,7 @@ table at two addresses, both real; the map takes the ELF's.
 
 | Build | segments | `.data` bytes placed | of which by `run` | raw `src/` constants inside a segment |
 |---|---:|---:|---:|---:|
+| `psx-jp` | 613 | 519,286 | 529 | 586 |
 | `psx-us` | 649 | 518,452 | 568 segments | 576 of 1,067 |
 | `psx-fr` | 642 | 518,246 | 560 | 573 |
 | `psx-de` | 646 | 518,299 | 563 | 572 |
@@ -200,27 +201,29 @@ row, every other row is `evidence`. `GAME.EMI#0` is `ETC/GAME.EMI` section 0;
 | table | `psx-jp` | `psx-us` | `psx-fr` | `psx-de` / `psx-eu-en` | `psp-jp` | `psp-eu` |
 |---|---|---|---|---|---|---|
 | `consumables` .. `abilities` (6) | GAME.EMI#0 | GAME.EMI#0 | GAME.EMI#0 | GAME.EMI#0 | BOOT.BIN, and GAME.EMI#0 at the JP address | BOOT.BIN |
-| `shop_records`, `exp_table`, `event_battles`, `encounter_slot_chance`, `encounter_areas` | GAME.EMI#0 (h) | GAME.EMI#0 | GAME.EMI#0 | GAME.EMI#0 | BOOT.BIN | BOOT.BIN |
+| `shop_records`, `exp_table`, `event_battles`, `encounter_slot_chance`, `encounter_areas` | GAME.EMI#0 | GAME.EMI#0 | GAME.EMI#0 | GAME.EMI#0 | BOOT.BIN | BOOT.BIN |
 | `damage_variance`, `holy_affinity` | BATTLE.EMI#3 | BATTLE.EMI#3 | BATTLE.EMI#3 | BATTLE.EMI#3 | BOOT.BIN | BOOT.BIN |
-| `status_resist`, `psi_affinity`, `status_resist_20`, `hp_damage_variance` | BATTLE.EMI#15 (two (h)) | BATTLE.EMI#15 | BATTLE.EMI#15 | BATTLE.EMI#15 | BOOT.BIN (`hp_damage_variance`: BATTLE.EMI#15) | the same |
+| `status_resist`, `psi_affinity`, `status_resist_20`, `hp_damage_variance` | BATTLE.EMI#15 | BATTLE.EMI#15 | BATTLE.EMI#15 | BATTLE.EMI#15 | BOOT.BIN (`hp_damage_variance`: BATTLE.EMI#15) | the same |
 | `steal_rates`, `skill_steal_rates` | MAGIC065 / MAGIC216 #0 (h) | the same (h) | (h) | (h) | the EMIs and two ELF copies (h) | (h) |
 | `area_descriptors`, `move_speeds`, `sprite_key_adjust` | BOOT | BOOT | BOOT | BOOT | BOOT.BIN | BOOT.BIN |
-| `direction_steps`, `sin_table` | - (not recorded) | BOOT | BOOT | BOOT | BOOT.BIN / not found | BOOT.BIN / not found |
+| `direction_steps`, `sin_table` | BOOT | BOOT | BOOT | BOOT | BOOT.BIN / not found | BOOT.BIN / not found |
 | `move_op_lengths`, `event_op_lengths`, `direction_angles` | GAME.EMI#0 | GAME.EMI#0 | GAME.EMI#0 | GAME.EMI#0 | BOOT.BIN | BOOT.BIN |
-| `songs` (no PC twin) | BOOT | BOOT (h) | BOOT (h) | BOOT (h) | BOOT.BIN (h) | BOOT.BIN (h) |
+| `songs` (no PC twin) | BOOT | BOOT | BOOT | BOOT | BOOT.BIN | BOOT.BIN |
 | `key_defaults` (PC only) | - | - | - | - | - | - |
 
-Counts by build and tier (`tables.py list`, counted): `psx-jp` 17 evidence
-and 9 hypothesis; `psx-us`, `-fr`, `-de`, `-eu-en` 25 and 3 each; `psp-jp`
-30 and 5; `psp-eu` 24 and 5.
+Counts by build and tier (`tables.toml` loaded and counted): `psx-jp` 26
+evidence and 2 hypothesis; `psx-us`, `-fr`, `-de`, `-eu-en` 26 and 2 each;
+`psp-jp` 31 and 4; `psp-eu` 25 and 4. The hypotheses are the steal tables
+(which of two equal spell-file copies is the PC's) and, on the PSP, their
+two ELF copies.
 
 - **`psx-de` and `psx-eu-en` share every address** in the catalogue; `psx-fr`
   is 4 bytes later in `GAME.EMI` and at the same places in the boot EXE and
   `BATTLE.EMI`. The PAL builds' layouts are one build's, the text aside.
 - **The JP item tables' file is settled**: `GAME.EMI` section 0, not the boot
-  EXE. The PSP-JP disc's `GAME.EMI` holds all six at exactly the JP addresses
-  `symbols.toml` records, and the PSP keeps the PSX's EMI data sections
-  (`region-diff.md` 5). The JP disc itself was not re-read.
+  EXE (`tables.py locate` on the JP disc: numbers equal in every record at
+  the addresses `symbols.toml` records). The PSP-JP disc's `GAME.EMI` holds
+  the same bytes there: the item band is equal byte for byte.
 - **Every numeric byte of the six item and ability tables is equal** on US,
   FR, DE, Europe-English and the PSP-EU ELF (`numbers equal in all N records`,
   the rows' cites), but consumable 87 on both PSP ELFs (section 4.4).
@@ -247,25 +250,30 @@ and 9 hypothesis; `psx-us`, `-fr`, `-de`, `-eu-en` 25 and 3 each; `psp-jp`
   accessory records equal the PC's numbers in all 52 (so the Holy Mantle's,
   21, is the PSX's on PSP-JP too); and **the PSP-JP ELF renames one ability**,
   `Ability_Records` id 116 - the same record the English PSP renames - and no
-  other (its names against its own `GAME.EMI` copy, which is the JP disc's).
+  other (its names against the JP disc's `GAME.EMI`).
 
 ### 4.3 The song table in every build
 
-`bgm-comparison.md` 6.2 has the JP table at `0x80182830` in `SLPS_009.90`:
-165 entries of `{u16 file id, u8 seq, u8 sub}`, `seq` 0 throughout, `sub`
-0..3. With no JP disc and no PC twin to search by, it was found **by shape**:
-runs of words whose third byte is 0, fourth at most 3 and first half-word
-below 0x1000, in each boot EXE and ELF (a scratch script over
-`exe_twins.sources`). Each build has two runs of 165 or more: one of 215
-words whose fourth byte is always 0 (another table), and one whose fourth
-byte takes all of 0..3 - 167 words on the four PSX discs, 166 on the PSP
-ELFs. On the US disc that run's word 165 is a file id far outside the others'
-range, so the table is its first 165, as the JP description has it. **Those
-165 entries hash the same in all six builds** (sha256 of the 660 bytes,
-truncated `2460cab356d5`). US
-`0x80181EB4`, FR / DE / Europe-English `0x80182380`, PSP-JP `0x2E5808`,
-PSP-EU `0x2E5020`. Tiered `hypothesis` until the JP twin is compared byte for
-byte.
+`bgm-comparison.md` 6.2 has the JP table at `0x80182830` in `SLPS_009.90`
+(0xEF030 past its 0x800-byte header): 165 entries of `{u16 file id, u8 seq,
+u8 sub}`, `seq` 0 throughout, `sub` 0..3. It has no PC twin to search by, so
+it was found **by shape**: runs of words whose third byte is 0, fourth at most
+3 and first half-word below 0x1000, in each boot EXE and ELF (a scratch
+script over `exe_twins.sources`). Each build has two runs of 165 or more: one
+of 215 words whose fourth byte is always 0 (another table), and one whose
+fourth byte takes all of 0..3 - 167 words on the PSX discs, 166 on the PSP
+ELFs.
+
+**The JP disc set the start.** Its run begins at `0x8018282C`, one word
+before the recorded table: the word before the table fits the shape by
+chance, on every build. The first pass, made before the JP disc arrived, took
+each run's first word as the table's and was one entry early everywhere;
+shifted by one, the US table equals JP's in all 165 file ids and all 165
+`sub` bytes. **The 660 bytes hash the same in all seven builds** (sha256,
+truncated `214b1ad0ddb8`): JP `0x80182830`, US `0x80181EB8`, FR / DE /
+Europe-English `0x80182384`, PSP-JP `0x2E580C`, PSP-EU `0x2E5024`. The
+Western discs' file ids equal the JP disc's, so the BGM files keep their ids
+across builds.
 
 ### 4.4 Content differences the survey turned up
 
@@ -280,19 +288,21 @@ diff compares EMI sections and the PSP's changes here are in its ELF.
   all 5,544 bytes. A lead for I32's list.
 - **Consumable 87** differs on the PSP-JP ELF as on the PSP-EU ELF
   (`psp-stallion.md` 3.2 had it for EU only): a PSP change, not an English
-  one.
-- **PSP-JP renames key items 2, 5, 7 and 9** and ability 116 against its own
-  `GAME.EMI` copy (section 4.2); weapons, armour and accessories keep their
+  one. Against the JP disc it is the only numeric difference in the six
+  item and ability tables.
+- **PSP-JP renames key items 2, 5, 7 and 9** and ability 116 against the JP
+  disc (section 4.2); weapons, armour, accessories and consumables keep their
   names.
 - **`EventBattle_Records` is 56 records**, not the 97 to the next symbol:
-  records 0..55 are equal on every PSX build and none after them is. The
+  records 0..55 are equal on every PSX build, JP included, and none after
+  them is. The
   catalogue's count is 56 (`count_status` hypothesis).
-- **`EventScript_OpLengths` entry 15** (never used) is the JP disc's value
-  only on the JP disc: US, both PSP ELFs and the PC agree with each other
-  there (via PSP-JP's `GAME.EMI` copy; `symbols.toml` had JP's).
+- **`EventScript_OpLengths` entry 15** (never used) differs on the JP disc
+  only: entries 0..14 equal the PC's there, and US, both PSP ELFs and the PC
+  agree with each other in entry 15 too.
 - **`Battle_DamageVarianceTable` is not "u16 on the PSX"** (its
-  `symbols.toml` note): the US `BATTLE.EMI` and PSP-JP's copy hold the same 32
-  bytes as the PC's eight u32s.
+  `symbols.toml` note): the JP and US `BATTLE.EMI` hold the same 32 bytes as
+  the PC's eight u32s.
 - `Sprite_KeyAdjust` is 16 bytes to the next named data, not `0x300`; the
   `0x300` is the reach of an unbounded byte index times 3. All 16 equal on
   every build.
@@ -326,32 +336,49 @@ From the survey's `none` and `inside` rows on `psx-us` (62):
 - `sin_table` on the PSP: the PSP's native code does not use the PSX
   library's table (not found in its ELF or EMIs).
 
-## 6. Owed
+## 6. What the JP disc settled, and what is still owed
 
-1. **The JP disc.** One command settles every `psx-jp` row and writes the
-   JP map:
-   ```
-   python tools/verify_fixtures.py --tree <JP cue>
-   python tools/exe_twins.py survey --game <dir> --disc <JP cue> --out analysis/exe_twins
-   python tools/exe_twins.py map analysis/exe_twins/psx-jp.json
-   python tools/tables.py locate --game <dir> --disc <JP cue>
-   ```
-   then the nine `hypothesis` rows replaced, `direction_steps` and
-   `sin_table` given theirs, the song table compared byte for byte.
-2. **Names for the raw constants.** 1,067 `.data` addresses in `src/` start
+The JP disc (uploaded mid-session, `verify_fixtures.py --tree`: all 887
+files match) was run as below; `exe_maps/psx-jp.tsv` is its map.
+
+```
+python tools/exe_twins.py survey --game <dir> --disc <JP cue> --out analysis/exe_twins
+python tools/exe_twins.py map analysis/exe_twins/psx-jp.json
+python tools/tables.py locate --game <dir> --disc <JP cue>
+```
+
+- **Every `psx-jp` address the first pass took from the PSP-JP disc's EMI
+  copies was right**: the nine `hypothesis` rows (`shop_records`,
+  `exp_table`, `event_battles`, the two encounter tables,
+  `status_resist_20`, `hp_damage_variance`, the steal tables) are at exactly
+  those addresses on the JP disc, the bytes equal. The seven became
+  `evidence`; the steal tables stay `hypothesis` for their copy choice
+  alone. `direction_steps` and `sin_table` have JP rows now.
+- **One correction**: the song table's start on the Western and PSP builds
+  (section 4.3), now `evidence` in all seven.
+- The findings that used PSP-JP's `GAME.EMI` as a stand-in for the JP disc
+  (section 4.4) were re-run against the JP disc and hold.
+
+Still owed:
+
+1. **Names for the raw constants.** 1,067 `.data` addresses in `src/` start
    no symbol; 576 of them are inside a US map segment already. They need
    `symbols.toml` names only where a reader wants one; the importer does not.
-3. **The pointer tables** (`Area_Descriptors`, `Magic_Rows`, the area handler
+2. **The pointer tables** (`Area_Descriptors`, `Magic_Rows`, the area handler
    arrays): their places are known, their contents are the disc build's own
    addresses. Step 8 rebuilds them from the PC's layout, never copies them.
-4. `Char_DefaultRecords` by a five-byte name; the twenty small tables by the
-   owning function's PSX twin (the catalogue's labels) rather than by bytes.
+3. `Char_DefaultRecords` by a five-byte name; the twenty small tables by the
+   owning function's PSX twin (the catalogue's labels) rather than by bytes;
+   which of the two steal-spell copies each PC table came from.
 
 ## 7. For the other files (not changed here)
 
-- `docs/unified-data-plan.md` section 5 steps 1-2 and section 8 step 5: done
-  but the JP run (section 6 above); section 1's "every exe-resident table's
-  address on each SKU" open item: answered for all held builds but JP.
+- `docs/unified-data-plan.md` section 5 steps 1-2 and section 8 step 5: done;
+  section 1's "every exe-resident table's address on each SKU" open item:
+  answered for all seven held builds.
+- `docs/bgm-comparison.md` 6.2: the song table is in every build, identical
+  (section 4.3); its "file offset 0xEF030" is past the 0x800-byte header
+  (0xEF830 in the file).
 - `docs/psp-stallion.md`: its ELF addresses are file offsets (+0x80 on this
   catalogue's), its ability ids are this catalogue's minus one, and its
   section 6's two items are closed (section 4.2).

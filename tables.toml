@@ -78,7 +78,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801C995C
 status = "evidence"
-cite = "symbols.toml NameTable_Consumables psx, found by the JP disc's price sequence 2026-09-20; the file: PSP-JP's copy of GAME.EMI holds the table at this address in its section 0 (tables.py locate 2026-10-08) - the PSP keeps the PSX's EMI data sections (region-diff.md 5) - so GAME.EMI section 0, not the boot EXE; the JP disc itself not re-read"
+cite = "tables.py locate 2026-10-08: numbers equal in all 92 records, names narrowed to 8 bytes"
 
 [[table.psx]]
 build = "psx-us"
@@ -255,7 +255,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801C9E64
 status = "evidence"
-cite = "symbols.toml NameTable_KeyItems psx (the address); the file: PSP-JP's copy of GAME.EMI holds the table at this address in its section 0 (tables.py locate 2026-10-08) - the PSP keeps the PSX's EMI data sections (region-diff.md 5) - so GAME.EMI section 0, not the boot EXE; the JP disc itself not re-read"
+cite = "tables.py locate 2026-10-08: numbers equal in all 16 records, names narrowed to 8 bytes"
 
 [[table.psx]]
 build = "psx-us"
@@ -342,7 +342,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801C9F24
 status = "evidence"
-cite = "symbols.toml NameTable_Weapons psx (the address); the file: PSP-JP's copy of GAME.EMI holds the table at this address in its section 0 (tables.py locate 2026-10-08) - the PSP keeps the PSX's EMI data sections (region-diff.md 5) - so GAME.EMI section 0, not the boot EXE; the JP disc itself not re-read"
+cite = "tables.py locate 2026-10-08: numbers equal in all 83 records, names narrowed to 8 bytes"
 
 [[table.psx]]
 build = "psx-us"
@@ -566,7 +566,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CA5A0
 status = "evidence"
-cite = "symbols.toml NameTable_Armour psx (the address); the file: PSP-JP's copy of GAME.EMI holds the table at this address in its section 0 (tables.py locate 2026-10-08) - the PSP keeps the PSX's EMI data sections (region-diff.md 5) - so GAME.EMI section 0, not the boot EXE; the JP disc itself not re-read"
+cite = "tables.py locate 2026-10-08: numbers equal in all 68 records, names narrowed to 8 bytes"
 
 [[table.psx]]
 build = "psx-us"
@@ -774,7 +774,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CAA68
 status = "evidence"
-cite = "symbols.toml NameTable_Accessories psx (the address); the file: PSP-JP's copy of GAME.EMI holds the table at this address in its section 0 (tables.py locate 2026-10-08) - the PSP keeps the PSX's EMI data sections (region-diff.md 5) - so GAME.EMI section 0, not the boot EXE; the JP disc itself not re-read"
+cite = "tables.py locate 2026-10-08: numbers equal in all 52 records, names narrowed to 8 bytes"
 
 [[table.psx]]
 build = "psx-us"
@@ -972,7 +972,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CB228
 status = "evidence"
-cite = "symbols.toml Ability_Records psx: Skill_FlagIndex's boot twin reads 0x801CB234 + 16 id for the +0x14 word; the file: PSP-JP's copy of GAME.EMI holds the table at this address in its section 0 (tables.py locate 2026-10-08) - the PSP keeps the PSX's EMI data sections (region-diff.md 5) - so GAME.EMI section 0, not the boot EXE; the JP disc itself not re-read"
+cite = "tables.py locate 2026-10-08: numbers equal in all 227 records, names narrowed to 8 bytes"
 
 [[table.psx]]
 build = "psx-us"
@@ -1215,8 +1215,8 @@ build = "psx-jp"
 file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CADA8
-status = "hypothesis"
-cite = "PSP-JP's copy of GAME.EMI section 0 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session"
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 1150 of 1150 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1306,8 +1306,8 @@ build = "psx-jp"
 file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CC068
-status = "hypothesis"
-cite = "PSP-JP's copy of GAME.EMI section 0 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session"
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 5544 of 5544 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1447,8 +1447,8 @@ build = "psx-jp"
 file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CDF18
-status = "hypothesis"
-cite = "PSP-JP's copy of GAME.EMI section 0 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session"
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 224 of 224 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1542,8 +1542,8 @@ build = "psx-jp"
 file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CDEFC
-status = "hypothesis"
-cite = "PSP-JP's copy of GAME.EMI section 0 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session"
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 8 of 8 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1613,8 +1613,8 @@ build = "psx-jp"
 file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801CD9B0
-status = "hypothesis"
-cite = "PSP-JP's copy of GAME.EMI section 0 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session"
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 40 of 40 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1693,7 +1693,7 @@ file = "BATTLE/BATTLE.EMI"
 section = 3
 addr = 0x801EAF50
 status = "evidence"
-cite = "symbols.toml Battle_DamageVarianceTable psx; PSP-JP's BATTLE.EMI section 3 holds the same 32 bytes there (tables.py locate 2026-10-08)"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 32 of 32 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1764,7 +1764,7 @@ file = "BATTLE/BATTLE.EMI"
 section = 3
 addr = 0x801EAF70
 status = "evidence"
-cite = "symbols.toml Battle_HolyAffinityTable psx; PSP-JP's BATTLE.EMI section 3 the same there"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 16 of 16 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1837,7 +1837,7 @@ file = "BATTLE/BATTLE.EMI"
 section = 15
 addr = 0x800B188C
 status = "evidence"
-cite = "symbols.toml Battle_StatusResistRates (the sibling's BATTLE_RAM.md 0x800B188C); PSP-JP's BATTLE.EMI section 15 holds the same 16 bytes there"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 16 of 16 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1910,7 +1910,7 @@ file = "BATTLE/BATTLE.EMI"
 section = 15
 addr = 0x800B189C
 status = "evidence"
-cite = "symbols.toml Battle_PsiAffinityRates (BATTLE_RAM.md 0x800B189C); PSP-JP's BATTLE.EMI section 15 the same there"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 16 of 16 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -1982,8 +1982,8 @@ build = "psx-jp"
 file = "BATTLE/BATTLE.EMI"
 section = 15
 addr = 0x800B18AC
-status = "hypothesis"
-cite = "PSP-JP's copy of BATTLE.EMI section 15 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session"
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 16 of 16 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -2053,8 +2053,8 @@ build = "psx-jp"
 file = "BATTLE/BATTLE.EMI"
 section = 15
 addr = 0x800B18CC
-status = "hypothesis"
-cite = "PSP-JP's copy of BATTLE.EMI section 15 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session"
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 16 of 16 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -2127,7 +2127,7 @@ file = "BMAGIC/MAGIC065.EMI"
 section = 0
 addr = 0x801EF4FC
 status = "hypothesis"
-cite = "PSP-JP's copy of MAGIC065.EMI section 0 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session; the MAGIC065 copy of two by its place among the PC's MAGIC06x data"
+cite = "read on the JP disc 2026-10-08: all 8 bytes equal the PC's here, and in the other steal spell's file too; this copy by its place among the PC's MAGIC06x data"
 
 [[table.psx]]
 build = "psx-us"
@@ -2214,7 +2214,7 @@ file = "BMAGIC/MAGIC216.EMI"
 section = 0
 addr = 0x801EF06C
 status = "hypothesis"
-cite = "PSP-JP's copy of MAGIC216.EMI section 0 at the same destination: the PSP keeps the PSX's EMI data sections (region-diff.md 5) and its GAME.EMI section 0 holds the six item tables at the JP addresses symbols.toml records (tables.py locate 2026-10-08); the JP disc not re-read this session; the MAGIC216 copy of two by its place among the PC's MAGIC21x data"
+cite = "read on the JP disc 2026-10-08: all 8 bytes equal the PC's here, and in the other steal spell's file too; this copy by its place among the PC's MAGIC21x data"
 
 [[table.psx]]
 build = "psx-us"
@@ -2300,7 +2300,7 @@ build = "psx-jp"
 file = "BOOT"
 addr = 0x801802EC
 status = "evidence"
-cite = "symbols.toml Area_Descriptors psx (docs/attract-remaining.md section 5)"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 2 of 800 bytes equal, 798 more in words that point into the PC image"
 
 [[table.psx]]
 build = "psx-us"
@@ -2367,7 +2367,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801C97F4
 status = "evidence"
-cite = "symbols.toml MoveScript_OpLengths psx (compared 2026-09-22); PSP-JP's GAME.EMI section 0 the same 256 bytes there"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 256 of 256 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -2438,7 +2438,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801C943C
 status = "evidence"
-cite = "symbols.toml EventScript_OpLengths psx: entries 0..14 equal, entry 15 differs (never used); PSP-JP's GAME.EMI copy holds the same 15 bytes there and differs in entry 15 too, where the US disc, both PSP ELFs and the PC agree (tools/exe_twins.py, 2026-10-08)"
+cite = "symbols.toml EventScript_OpLengths psx; read on the JP disc 2026-10-08: entries 0..14 equal the PC's, entry 15 (never used) differs - where the US disc, both PSP ELFs and the PC agree; so no exe_maps segment holds it whole"
 
 [[table.psx]]
 build = "psx-us"
@@ -2509,7 +2509,7 @@ file = "ETC/GAME.EMI"
 section = 0
 addr = 0x801C941C
 status = "evidence"
-cite = "symbols.toml Sprite_DirectionAngles psx; PSP-JP's GAME.EMI section 0 the same 16 bytes there"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 16 of 16 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -2579,7 +2579,7 @@ build = "psx-jp"
 file = "BOOT"
 addr = 0x8018254C
 status = "evidence"
-cite = "symbols.toml Field_MoveSpeeds psx (disasm 2026-09-22)"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 6 of 6 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -2639,6 +2639,13 @@ what = "half a cell's step for a direction, x then z, 16.16"
 index = "direction & 7"
 count = 8
 stride = 8
+
+[[table.psx]]
+build = "psx-jp"
+file = "BOOT"
+addr = 0x8018250C
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 64 of 64 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -2714,7 +2721,7 @@ build = "psx-jp"
 file = "BOOT"
 addr = 0x8017FED4
 status = "evidence"
-cite = "symbols.toml Sprite_KeyAdjust psx (disasm 2026-09-22)"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 16 of 16 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -2774,6 +2781,13 @@ what = "a quarter-wave sine, 4096 the unit"
 index = "angle 0..0x400 (Math_Sin folds 0x400..0x7FF onto it)"
 count = 1025
 stride = 2
+
+[[table.psx]]
+build = "psx-jp"
+file = "BOOT"
+addr = 0x8018643C
+status = "evidence"
+cite = "tables.py locate 2026-10-08: exe_maps/psx-jp.tsv; 2050 of 2050 bytes equal"
 
 [[table.psx]]
 build = "psx-us"
@@ -2852,49 +2866,49 @@ build = "psx-jp"
 file = "BOOT"
 addr = 0x80182830
 status = "evidence"
-cite = "docs/bgm-comparison.md 6.2 (the sibling's docs/loader_records/AREA.md; file offset 0xEF030 in SLPS_009.90)"
+cite = "docs/bgm-comparison.md 6.2 (the sibling's docs/loader_records/AREA.md; 0xEF030 past SLPS_009.90's 0x800-byte header); read on the JP disc 2026-10-08: 165 words of the shape, the word before it fits the shape too and the one after does not"
 
 [[table.psx]]
 build = "psx-us"
 file = "BOOT"
-addr = 0x80181EB4
-status = "hypothesis"
-cite = "found by shape 2026-10-08 (docs/exe-tables-by-build.md 4.3): the one run of 165+ words {u16 id, u8 0, u8 0..3} in the boot EXE; its first 165 entries hash the same in all six builds held; the JP twin not compared (no JP disc this session)"
+addr = 0x80181EB8
+status = "evidence"
+cite = "the 660 bytes equal the JP disc's table at 0x80182830 (sha256 compared, 2026-10-08; docs/exe-tables-by-build.md 4.3)"
 
 [[table.psx]]
 build = "psx-fr"
 file = "BOOT"
-addr = 0x80182380
-status = "hypothesis"
-cite = "found by shape 2026-10-08 (docs/exe-tables-by-build.md 4.3): the one run of 165+ words {u16 id, u8 0, u8 0..3} in the boot EXE; its first 165 entries hash the same in all six builds held; the JP twin not compared (no JP disc this session)"
+addr = 0x80182384
+status = "evidence"
+cite = "the 660 bytes equal the JP disc's table at 0x80182830 (sha256 compared, 2026-10-08; docs/exe-tables-by-build.md 4.3)"
 
 [[table.psx]]
 build = "psx-de"
 file = "BOOT"
-addr = 0x80182380
-status = "hypothesis"
-cite = "found by shape 2026-10-08 (docs/exe-tables-by-build.md 4.3): the one run of 165+ words {u16 id, u8 0, u8 0..3} in the boot EXE; its first 165 entries hash the same in all six builds held; the JP twin not compared (no JP disc this session)"
+addr = 0x80182384
+status = "evidence"
+cite = "the 660 bytes equal the JP disc's table at 0x80182830 (sha256 compared, 2026-10-08; docs/exe-tables-by-build.md 4.3)"
 
 [[table.psx]]
 build = "psx-eu-en"
 file = "BOOT"
-addr = 0x80182380
-status = "hypothesis"
-cite = "found by shape 2026-10-08 (docs/exe-tables-by-build.md 4.3): the one run of 165+ words {u16 id, u8 0, u8 0..3} in the boot EXE; its first 165 entries hash the same in all six builds held; the JP twin not compared (no JP disc this session)"
+addr = 0x80182384
+status = "evidence"
+cite = "the 660 bytes equal the JP disc's table at 0x80182830 (sha256 compared, 2026-10-08; docs/exe-tables-by-build.md 4.3)"
 
 [[table.psx]]
 build = "psp-jp"
 file = "BOOT.BIN"
-addr = 0x002E5808
-status = "hypothesis"
-cite = "found by shape 2026-10-08 (docs/exe-tables-by-build.md 4.3): the one run of 165+ words {u16 id, u8 0, u8 0..3} in the ELF; its first 165 entries hash the same in all six builds held; the JP twin not compared (no JP disc this session)"
+addr = 0x002E580C
+status = "evidence"
+cite = "the 660 bytes equal the JP disc's table at 0x80182830 (sha256 compared, 2026-10-08; docs/exe-tables-by-build.md 4.3)"
 
 [[table.psx]]
 build = "psp-eu"
 file = "BOOT.BIN"
-addr = 0x002E5020
-status = "hypothesis"
-cite = "found by shape 2026-10-08 (docs/exe-tables-by-build.md 4.3): the one run of 165+ words {u16 id, u8 0, u8 0..3} in the ELF; its first 165 entries hash the same in all six builds held; the JP twin not compared (no JP disc this session)"
+addr = 0x002E5024
+status = "evidence"
+cite = "the 660 bytes equal the JP disc's table at 0x80182830 (sha256 compared, 2026-10-08; docs/exe-tables-by-build.md 4.3)"
 
 [[table.field]]
 at = 0x0
