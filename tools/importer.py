@@ -1284,13 +1284,19 @@ def resolve_preset(name, sources):
     if missing:
         raise SystemExit("--preset %s wants %s; not given: %s" % (
             name, ", ".join("%s %s" % w for w in order), ", ".join("%s %s" % w for w in missing)))
-    extra = [w for w in have if w not in order]
+    # A PSP disc beyond the preset's own is the --opt layers' source: it goes
+    # last, where it can only fill what the preset's sources leave. Any other
+    # extra would change what the preset means, and is refused.
+    extra = [w for w in have if w not in order and w[0] not in PSP]
     if extra:
-        raise SystemExit("--preset %s takes %s; also given: %s (drop them, or build without the preset)" % (
-            name, ", ".join("%s %s" % w for w in order), ", ".join("%s %s" % w for w in extra)))
-    print("preset %s: %s%s%s" % (name, " then ".join("%s %s" % w for w in order),
-                                "; --lang " + " ".join(lang) if lang else "", "; --opt " + " ".join(opt) if opt else ""))
-    return [have[w] for w in order], lang, opt
+        raise SystemExit("--preset %s takes %s (and a PSP disc for --opt); also given: %s (drop them, or build "
+                         "without the preset)" % (name, ", ".join("%s %s" % w for w in order),
+                                                  ", ".join("%s %s" % w for w in extra)))
+    psp = [w for w in have if w not in order]
+    print("preset %s: %s%s%s%s" % (name, " then ".join("%s %s" % w for w in order),
+                                  ", then %s for the optional layers" % " and ".join(w[0] for w in psp) if psp else "",
+                                  "; --lang " + " ".join(lang) if lang else "", "; --opt " + " ".join(opt) if opt else ""))
+    return [have[w] for w in order + psp], lang, opt
 
 
 # ---------------------------------------------------------------- verify
