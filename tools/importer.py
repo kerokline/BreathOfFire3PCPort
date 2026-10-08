@@ -24,7 +24,10 @@ A chunk no disc carries keeps the PC install as its only source; its class
 `type1`, three transforms make a disc a source of what the port changed
 (`widen` the enemy tables, whose names go to the language layer; `icons`;
 `ryud`), and a PSX disc's own section can stand in (`own`) where the PC kept
-Japan's language or drew its own art - docs/importer-transforms.md (step 3). The recipe holds names,
+Japan's language or drew its own art - docs/importer-transforms.md (step 3).
+`build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
+PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
+step 8). The recipe holds names,
 indices, sizes and hashes - never bytes - so it is committed. The cache is game
 data: it lives outside the repo or under analysis/ (CLAUDE.md rule 1).
 """
@@ -43,6 +46,7 @@ TOOLS = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import dat          # noqa: E402
+import exe_tables   # noqa: E402
 import type1        # noqa: E402
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
@@ -629,7 +633,13 @@ def cmd_build(a):
                 fh.write(b"".join(parts))
             written[layer] += 1
     loc_assets = build_languages(a.lang, sources, a.out)
-    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets)
+    # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc
+    exe_src = next((s for s in sources if isinstance(s, ExeSource)), None) or \
+        next((s for s in sources if isinstance(s, DiscSource)), None)
+    exe = exe_tables.build_from(exe_src.path, exe_src.id, a.out) if exe_src else None
+    if exe:
+        print("  base/exe  from %-9s data.bin %s" % exe)
+    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, exe)
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
@@ -713,7 +723,7 @@ def build_languages(asked, sources, out):
     return assets
 
 
-def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=()):
+def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), exe=None):
     with open(recipe_path, "rb") as f:
         rsha = sha(f.read())
     lines = ["# The cache's provenance, written by tools/importer.py build. Every chunk: its",
@@ -736,6 +746,9 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=()):
         for name, layer, where, h in loc_assets:
             lines.append("  [%s, %s, %s, %s]," % (toml_str(name), toml_str(layer), toml_str(where), toml_str(h)))
         lines.append("]")
+    if exe:
+        lines += ["", "# base/exe/data.bin: BOF3.exe's .data in the PC's layout (tools/exe_tables.py).", "[exe]",
+                  "build = %s" % toml_str(exe[0]), 'file = "base/exe/data.bin"', "sha256 = %s" % toml_str(exe[1])]
     os.makedirs(out, exist_ok=True)
     with open(os.path.join(out, "manifest.toml"), "w", newline="\n", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -812,6 +825,16 @@ def cmd_verify(a):
           "sections, %d incomplete" % (ok, len(want), owned, len(absent)))
     for n in bad[:20]:
         print("   ", n)
+    with open(os.path.join(a.cache, "manifest.toml"), "rb") as fh:
+        exe = tomllib.load(fh).get("exe")
+    if exe:
+        errs = exe_tables.verify_cache(a.cache)
+        with open(os.path.join(a.cache, exe["file"]), "rb") as fh:
+            if sha(fh.read()) != exe["sha256"]:
+                errs.append("%s: not the image the manifest recorded" % exe["file"])
+        print("  base/exe/ (%s): %s" % (exe["build"], "; ".join(errs) if errs else
+                                         "the image recipes/exe.toml records for it"))
+        bad += errs
     rc = 1 if bad else 0
     if a.overlays:
         rc |= verify_overlays(a.cache, a.overlays)
@@ -897,7 +920,7 @@ def cmd_check(a):
     for e in errs[:30]:
         print("ERROR", e)
     print("importer check: %d files, %d chunks, %d error(s)" % (len(names), n, len(errs)))
-    return 1 if errs else 0
+    return exe_tables.cmd_check(a) | (1 if errs else 0)
 
 
 def main():
