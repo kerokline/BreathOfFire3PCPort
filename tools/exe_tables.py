@@ -585,12 +585,12 @@ GROUPS = (       # what an address no disc carries is, by its symbol's name
     ("platform: graphics", r"^(D3d|Gfx_|Gpu_|DDraw|Cursor_|Screen|Display|Window|Win_|Crt|Fmv|Video)"),
     ("platform: sound and music", r"^(Snd_|Sound|Music|Mp3|DSound|Bgm|Wave|Cd_)"),
     ("platform: C runtime and imports", r"^(Imp_|Crt_|_|Rt_|Heap|File_|Dat_|Task_Stack)"),
-    ("language: text, names, formats", r"(Message|Messages|Text|Names?$|Name_|Format|Lines|Verbs|Choice|Roll|Glyph|Font)"),
+    ("language: text, names, formats", r"(Messages?|Text|Names?$|Name_|NameTable|Formats?$|Format_|Lines|Verbs|Choice|Roll|Glyph|Font)"),
     ("re-laid by the port: plate drift, UV", r"(DriftUV|PlateAnims|Plate|UV)"),
 )
 
 
-def group_of(name, ext):
+def group_of(name, ext, near_ptr):
     for g, rx in GROUPS:
         if re.search(rx, name.split("+")[0]):
             return g
@@ -598,6 +598,8 @@ def group_of(name, ext):
         return "widened: the new-game characters' 5-byte names, 9 on the PC"
     if "+" not in name and ext <= 16:
         return "small: 16 bytes or less, too common to place by bytes"
+    if near_ptr:
+        return "mixed: within 16 bytes of a pointer word (no 16-byte key the survey can seed)"
     return "other"
 
 
@@ -613,6 +615,7 @@ def cmd_xref(a):
         for i in range(p - DATA_LO, p - DATA_LO + 4 * n):
             ptr[i] = cls
     addrs = src_addresses()
+    near = {v: any(i in ptr for i in range(v - DATA_LO - 16, v - DATA_LO + ext + 16)) for v, (_, _, ext) in addrs.items()}
     per = {}
     for bid, disc in discs(a.disc):
         img, owner, ranges = disc_image(disc, bid)
@@ -623,7 +626,7 @@ def cmd_xref(a):
         f.write("addr\tkind\tname\textent\tgroup\t%s\n" % "\t".join(bids))
         for v in sorted(addrs):
             k, n, ext = addrs[v]
-            f.write("0x%06X\t%s\t%s\t%d\t%s\t%s\n" % (v, k, n, ext, group_of(n, ext), "\t".join(per[b][v] for b in bids)))
+            f.write("0x%06X\t%s\t%s\t%d\t%s\t%s\n" % (v, k, n, ext, group_of(n, ext, near[v]), "\t".join(per[b][v] for b in bids)))
     for kind in ("symbol", "raw"):
         print("== %s addresses (%d)" % (kind, sum(1 for x in addrs.values() if x[0] == kind)))
         cls = sorted({per[b][v] for b in bids for v in addrs if addrs[v][0] == kind})
@@ -633,7 +636,7 @@ def cmd_xref(a):
                                                 for b in bids)))
     first = bids[0]
     for want in ("none", "none+pointer", "partly", "differs", "differs+pointer"):
-        g = collections.Counter(group_of(addrs[v][1], addrs[v][2]) for v in addrs if per[first][v] == want)
+        g = collections.Counter(group_of(addrs[v][1], addrs[v][2], near[v]) for v in addrs if per[first][v] == want)
         print("== %s on %s, by group: %s" % (want, first, dict(g.most_common())))
     print("-> %s" % os.path.join(out, "src_addresses.tsv"))
 
