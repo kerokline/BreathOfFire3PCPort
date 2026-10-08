@@ -232,14 +232,21 @@ def measure(track, recpath, t0=40.0):
         e_W = max(3 * eq, e_hi - e_lo - 1)
     ce = ncc_search(env[e_t:e_t + e_W], env[e_lo:e_hi])
     cw = ncc_search(rm[tref:tref + W], rm[lo:hi])
-    cands = {int(i) * HOP for i in np.argsort(ce)[-8:]}
-    cands |= {int(i) for i in range(1, len(cw) - 1) if cw[i] > 0.6 and cw[i] >= cw[i - 1] and cw[i] >= cw[i + 1]}
+    # candidates: the envelope search's local peaks (hop-exact) and the waveform search's (sample-
+    # exact, 0.5 and up); each scored on the envelope at the best of its three nearest hops - the
+    # envelope is spiky and a sample-exact lag between hops scores low on it (005: the loop at
+    # 56.898 s dropped from the shortlist for a bar multiple at 56.882)
+    peaks_e = [i for i in range(1, len(ce) - 1) if ce[i] >= ce[i - 1] and ce[i] >= ce[i + 1] and ce[i] > 0.3]
+    cands = {int(i) * HOP for i in sorted(peaks_e, key=lambda i: -ce[i])[:8]}
+    cands |= {int(i) for i in range(1, len(cw) - 1) if cw[i] > 0.5 and cw[i] >= cw[i - 1] and cw[i] >= cw[i + 1]}
 
     def env_score(Pc):     # mean envelope correlation of four 3 s spans from tref, at lag Pc
-        a = tref // HOP; b = (tref + Pc) // HOP; n3 = 3 * eq
-        vals = [nccv(env[a + j * n3:a + (j + 1) * n3], env[b + j * n3:b + (j + 1) * n3]) for j in range(4)
-                if b + (j + 1) * n3 <= len(env)]
-        return float(np.mean(vals)) if vals else 0.0
+        a = tref // HOP; n3 = 3 * eq; best = 0.0
+        for b in ((tref + Pc) // HOP - 1, (tref + Pc) // HOP, (tref + Pc) // HOP + 1):
+            vals = [nccv(env[a + j * n3:a + (j + 1) * n3], env[b + j * n3:b + (j + 1) * n3]) for j in range(4)
+                    if b + (j + 1) * n3 <= len(env)]
+            best = max(best, float(np.mean(vals)) if vals else 0.0)
+        return best
     scored = sorted(((env_score(lo + i - tref), i) for i in cands), reverse=True)
     if scored[0][0] < 0.6:
         row.update(excluded=True, why="no repeat found in the render (best 12 s envelope correlation %.2f)"
@@ -249,8 +256,15 @@ def measure(track, recpath, t0=40.0):
     # loop's 142.63 s at 0.74 - the drum pattern repeats every bar); the waveform's matching windows
     # can. Among the candidates within 0.1 of the best envelope score, the one the most windows match
     short = [(e, i) for e, i in scored if e >= scored[0][0] - 0.1][:4]
-    short = sorted(((match_fraction(match_windows(rm, tref, tref + 12 * SR, lo + i - tref, SR // 8)), e, i)
-                    for e, i in short), reverse=True)
+    short = [(match_fraction(match_windows(rm, tref, tref + 12 * SR, lo + i - tref, SR // 8)), e, i)
+             for e, i in short]
+    if max(f for f, _, _ in short) >= 0.05:
+        short.sort(reverse=True)
+    else:
+        # no waveform window matches at any candidate (a noise-dominated song): the envelope's bar
+        # ambiguity is broken by the sequence's own body length, good to +-3 % on every song the
+        # waveform settled (the timing_ratio of the rows)
+        short.sort(key=lambda x: abs((lo + x[2] - tref) / SR - body))
     f0, ep, k = short[0]
     P_env = lo + k - tref
     row["period_candidates"] = [dict(period_s=(lo + i - tref) / SR, env=float(e), fraction=float(f))
@@ -332,8 +346,12 @@ def measure(track, recpath, t0=40.0):
         # and the loop is right either way - the engine crossfades FADE samples at it
         em = envelope(mm, HOP); a, b = Li // HOP, (Li + Pi) // HOP; n12 = min(12 * eq, len(em) - b - 1)
         c2e = nccv(em[a:a + n12], em[b:b + n12]) if n12 > eq else 0.0
+        # the confidence: the MP3's own repeat in waveform or envelope - but where the render's
+        # waveform never confirmed the period (no window matched: a bar multiple can still score
+        # 0.9 in a 1 s window of repetitive music, 047), the envelope alone speaks
+        conf = max(c2, c2e) if exact else c2e
         row.update(case="full", start=Li, end=Li + Pi, short_by=0, holds_whole_body=True,
-                   confidence=max(c2, c2e), waveform_ncc=c2, envelope_ncc=c2e, passes_after_start=(n - Li) / Pi)
+                   confidence=conf, waveform_ncc=c2, envelope_ncc=c2e, passes_after_start=(n - Li) / Pi)
     elif last - Pm >= lead:
         # the end as late as the file allows with FADE samples after it inside the same frame (the
         # engine crossfades the body's last FADE samples into the stand-in), and the start with
