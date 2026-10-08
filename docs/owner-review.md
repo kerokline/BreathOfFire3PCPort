@@ -233,6 +233,19 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Decisions the measurements raised
 
+- **The world map's gauge words in French and German** ([`importer.md`](importer.md)
+  section 3, 2026-10-08): the port's dial page (the keyboard legend, kept for
+  every language) restyled the ENGINE / OVER HEAT gauge frames with the words
+  in English, as JP and US have them. The French and German discs translate
+  them (MOTEUR / SURCHAUFFE) in 7-row strips inside the frames, where the
+  port's swirl overlaps the first letters. Splicing the disc's word rows into
+  the port's page is possible with a rectangle diff (no tool yet), as a
+  ledgered divergence under the French and German overlays only. **Wants the
+  owner's eye on a render first**, then a yes or no. Seen on the way: four
+  world maps (`AREA104`, `127`, `134`, `164`) whose place plates the US disc
+  left in Japanese; under English the PC shows its Chinese plates there, if
+  those maps are reached.
+
 - **The base tree's version of the Western data rows** ([`region-diff.md`](region-diff.md),
   2026-10-06): every build after JP - US, FR, DE and both PSP discs - changes
   `AREA004` section 8 (992 bytes) and one cue byte in 65 dragon and Ryu sound

@@ -195,8 +195,21 @@ TYPE1_EDITS = ("BPLD012", "BPLD015", "BPLD016", "BPLD27A", "BPLU27A", "START",
                "PL012", "PL025", "PL026", "PL247", "PL257", "PL267", "PL278", "PL27A")
 
 
+# The world map's dial page (kind 1, tag 0x0A081000) in the 16 world-map
+# areas: region_diff.py calls it "words painted on" by its destination, but
+# the port's change is one 14-tile block, byte-identical in all 16, and it holds
+# no Chinese - the keyboard controls legend (SPACE / X / ENTER keys with
+# pictograms, for the PlayStation's buttons and words), the button glyphs
+# removed, the gauge bar and the ENGINE / OVER HEAT frames restyled, their
+# words English as on the JP disc (rendered and read, 2026-10-08,
+# docs/importer.md section 3). Port art every language on the PC wants: base.
+DIAL_PAGE = 0x0A081000
+
+
 def why_pc_only(stem, c, cls):
     """The reason a chunk has no disc source, in a few words."""
+    if c.kind == 1 and c.tag == DIAL_PAGE and cls and cls[1] == "an area page (words painted on)":
+        return "art", "the world map's dial page: the port's keyboard legend and gauge frames, no text"
     if c.kind == 2:
         return "bank", "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)"
     if c.kind == 3:

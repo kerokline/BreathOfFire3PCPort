@@ -91,8 +91,8 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
 | base | `bank` | 901 | PC | audio banks: the disc's VAG samples as WAV, step 6 |
 | base | `pc-edit` | 14 | PC | the port's edits to type-1 arenas ([`type1-compression.md`](type1-compression.md) 3) |
 | base | `logic-data` | 4 | PC | the `RYUD00..03` byte (`region-diff.md` 9) |
-| base | `art` | 1 | PC | an image page the port redrew |
-| loc/zh-CN | `text` | 290 | PC | area message blocks (199), system pools (44), language images (glyph atlases, painted area pages, the title page, the ending sheet), the text CLUT strip (DIV-0013) |
+| base | `art` | 17 | PC | an image page the port redrew (`FIRST`), and the world map's dial page in 16 areas (below) |
+| loc/zh-CN | `text` | 274 | PC | area message blocks (199), system pools (44), language images (glyph atlases, the 14 place-plate pages, the title page, the ending sheet), the text CLUT strip (DIV-0013) |
 | loc/zh-CN | `layout+text` | 200 | PC | the enemy tables: Chinese names in fields widened 8 to 12, stats as JP's; step 3's `widen-enemy-names` will split them |
 | loc/zh-CN | `font` | 1 | PC | the port's Chinese font, the kind-3 chunk |
 | | | **3,582** | | |
@@ -102,6 +102,31 @@ Each disc's share of the 2,171 with a disc source:
 | psx-jp | psx-us | psx-eu-en | psx-fr | psx-de | psp-jp | psp-eu |
 |---:|---:|---:|---:|---:|---:|---:|
 | 2,171 | 2,146 | 2,147 | 2,127 | 2,125 | 1,951 | 1,929 |
+
+**The dial page is port art, not text** (2026-10-08). `region_diff.py` calls
+the PC's change to the world map's dial page (kind 1, `0x0A081000`) "words
+painted on", by its destination. The facts:
+- the change is one 14-tile block, byte-identical in all 16 world-map areas;
+- rendered and read against the JP, US and FR pages, it holds no Chinese;
+- it is the port's keyboard controls legend: SPACE, X and ENTER keys with
+  pictograms, where the PlayStation draws ○ / × / START with words (JP
+  Japanese, US `Enter` / `Guide` / `Camp`);
+- the button-glyph sheet is removed;
+- the gauge bar and the ENGINE / OVER HEAT frames are restyled, their words
+  still English, as on the JP disc.
+
+Every language on the PC wants it, so the generator classes it `art` in
+`base/` (`importer.DIAL_PAGE`), not `loc/zh-CN`. That is why a language layer
+need not and should not replace the page: a disc's page would bring the
+PlayStation's buttons back. The one thing on it that is a language's is the
+gauge words, which the French and German discs translate (MOTEUR /
+SURCHAUFFE). Splicing those rows into the port's frames is a proposal on
+`owner-review.md`, not done.
+
+The other 14 "painted" pages are text, as classed: the place-name plates at
+`0x0E001000`, Chinese over Japanese, rendered. Ten are DIV-0055's world maps.
+In the other four (`AREA104`, `127`, `134`, `164`) **the US disc keeps
+Japan's plates**, and `loc_build.py`'s plate list does not include them.
 
 **The 25 the US disc lacks** (measured against `region_diff.py pair` JP / US):
 21 world-map place-name plates (`loc_build.py`'s `PLATE_DATA`), one painted
