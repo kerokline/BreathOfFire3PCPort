@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 85 entries, DIV-0001..0085, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 86 entries, DIV-0001..0086, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4624,3 +4624,73 @@ designed in rather than bolted on.
   compiled and mirrored offline (the bridge's 97 edge cells still qualify);
   the owner's look was before it.
 - **Reversible?** `BOF3X_SIDE_DUP=0`.
+
+### Optional layers from the player's PSP disc, walked after the language overlay
+
+- **ID:** DIV-0086
+- **Date:** 2026-10-08
+- **Subsystem:** assets (`LoadDatFile` `0x454590`, ours in
+  `src/game/dat_load.cpp`; the kind-5 name chunks of
+  `src/game/name_tables.cpp`; the launcher's `opt=` key,
+  `src/launcher/config.cpp`)
+- **Tier:** Sensible - a later release's palettes, textures, texture
+  coordinates and names, off by default; nothing that happens in play
+  changes (no cell byte, height, number or line of code is in a layer).
+- **Original behaviour:** `LoadDatFile` walks `DAT\<name>` and nothing else
+  (DIV-0005 added the language overlay `DAT\<tag>.<name>`). The PC port
+  carries the JP disc's art, maps and names; the PSP releases (2005, from JP's
+  data) recoloured Stallion (P6), renamed an ability and some items (P7 and
+  more), redrew or blanked 954 area texture tiles, changed 515 palette rows in
+  52 areas and edited 11 areas' map bands ([`region-diff.md`](region-diff.md)
+  5, [`psp-stallion.md`](psp-stallion.md) 2-4,
+  [`exe-tables-by-build.md`](exe-tables-by-build.md) 4.4).
+- **New behaviour:** with `BOF3X_OPT=<layer>[,<layer>...]` set, after the
+  file and its language overlay, `DAT\<layer>.<name>` is walked for each
+  layer in that order when it exists, so each lands on top of the last.
+  The layers ([`opt-layers.md`](opt-layers.md)) are built by
+  `tools/importer.py build --opt` from the player's own PSP disc and copied
+  in by `importer.py install`; none is shipped or committed: `psp-art`
+  (Stallion's two palette rows in area 67 and eight in area 166),
+  `psp-tiles` (840 page tiles and 515 palette rows of the areas; the port's
+  dial-page tiles kept), `psp-maps` (11 map bands' texture coordinates, tile
+  words and cell-run records), `psp-names-en-150` (8 names, ability 116
+  among them) and `psp-names-ja-JP` (5). A layer chunk is a sub-range of the
+  chunk it changes: kind 0 at the base tag plus the offset, kind 1 at the
+  replaced tiles' rectangle, and kind 5 - **widened here** - on any run of
+  records of a name table (`NameTables_Apply` took only whole tables; a
+  whole-table chunk is handled as before). Refused at start-up, not skipped:
+  a layer name over 23 characters or with a character other than a letter,
+  digit or `-`, one named twice, more than 8, a layer with no
+  `DAT\<layer>.*.DAT`, a text layer (a name ending in `-<tag>`) under another
+  language than `BOF3X_LANG`'s; and in the walk, a path that would not fit
+  its 0x40-byte buffer. The launcher's `opt=` key sets the variable with
+  the layers installed and of the language played (no dialog box yet).
+- **Rationale:** the plan's divergence policy for data
+  ([`unified-data-plan.md`](unified-data-plan.md) 7): a later build's
+  content change is an optional layer from the player's own disc, off by
+  default, recorded here as existing. The owner asked for the PSP's
+  Stallion colours as a toggle ([`psp-stallion.md`](psp-stallion.md)).
+- **Known and accepted:** what the PSP's blanked tiles and map-band edits
+  are for is read only as far as their structures (texture coordinates
+  inset by a texel or two, textures given to 152 empty cells at the edge of
+  one map, [`opt-layers.md`](opt-layers.md) section 4); a render-filter
+  and wide-view accommodation is the reading, not seen. A text layer's names
+  are the PSP's spelling under the PSX layer's font; in a save they are
+  stored by id, not by text.
+- **Verification:** offline (2026-10-08, [`opt-layers.md`](opt-layers.md)
+  section 6): `LoadDatFile`'s walk simulated over the PC's `DAT/` and the
+  layers - every chunk a layer lands on equals the PSP disc's section (130
+  of 133; the other 3 differ in exactly the port's 14 dial-page tiles, kept),
+  every other chunk the PC's own (920 of 920); the layers byte-identical
+  built from either PSP disc; `importer.py verify` composes each landing
+  chunk against `recipes/opt.toml` (133 of 133). Compiled
+  (`i686-w64-mingw32-g++ -fsyntax-only -Wall -Wextra`: `dat_load.cpp`,
+  `name_tables.cpp`, `launcher/config.cpp`). **Not run:** the owner's
+  llvm-mingw build, the `'*'` self-tests, and any live look (Stallion is
+  fight 24 in area 67; no recorded route reaches it).
+- **Also in the PSX version?** No: the PSX discs have JP's palettes, tiles,
+  maps and names (the Western discs their own names); these are the PSP
+  releases' changes, laid over the PC's data.
+- **Reversible?** Unset `BOF3X_OPT` (or `BOF3X_OPT=original`), or empty the
+  ini's `opt=`; `BOF3X_ORIGINAL=LoadDatFile` runs Capcom's loader, which
+  walks neither overlay.

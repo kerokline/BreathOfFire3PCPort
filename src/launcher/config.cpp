@@ -92,6 +92,10 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
 
         if (key == "language") {
             if (ConfigLanguageKnown(value)) cfg.language = value;
+        } else if (key == "opt") {
+            if (value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-,") ==
+                std::string::npos)
+                cfg.opt = value;
         } else if (key == "filter") {
             if (value == "point") cfg.filter = Filter::kPoint;
             else if (value == "linear") cfg.filter = Filter::kLinear;
@@ -180,6 +184,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "\r\n[bof3x]\r\n";
     out += "# original | en | fr | de | ja   (a code needs tools/loc_build.py to have built it)\r\n";
     out += std::string("language=") + cfg.language + "\r\n";
+    out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
+    out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP; tools/importer.py install puts them in the game's DAT folder\r\n";
+    out += "opt=" + cfg.opt + "\r\n";
     out += "# linear (the port's own) | point (DIV-0012)\r\n";
     out += std::string("filter=") + (cfg.filter == Filter::kPoint ? "point" : "linear") + "\r\n";
     out += "# clean | satpixie (the SatPixie CRT, DIV-0043)\r\n";
@@ -256,6 +263,12 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
         else
             std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for language %s, but DAT\\%s.* is not there; "
                          "playing the original text\n", cfg.language.c_str(), cfg.language.c_str());
+    }
+
+    // DIV-0086: the layers installed and, for a text layer, of the language played.
+    if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0 && !cfg.opt.empty()) {
+        const std::string playable = ConfigOptPlayable(game_dir, cfg.opt, cfg.language);
+        if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
     }
 
     if (GetEnvironmentVariableW(L"BOF3X_FILTER", existing, 64) == 0 &&
@@ -375,6 +388,44 @@ std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir) 
         if (h == INVALID_HANDLE_VALUE) continue;
         FindClose(h);
         out.push_back(lang.code);
+    }
+    return out;
+}
+
+std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language) {
+    std::string out;
+    size_t at = 0;
+    while (at <= opt.size()) {
+        size_t end = opt.find(',', at);
+        if (end == std::string::npos) end = opt.size();
+        const std::string layer = opt.substr(at, end - at);
+        at = end + 1;
+        if (layer.empty()) continue;
+        std::wstring pattern = game_dir + L"\\DAT\\";
+        for (char c : layer) pattern += static_cast<wchar_t>(c);
+        pattern += L".*";
+        WIN32_FIND_DATAW fd;
+        HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
+        if (h == INVALID_HANDLE_VALUE) {
+            std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for layer %s, but DAT\\%s.* is not there\n",
+                         layer.c_str(), layer.c_str());
+            continue;
+        }
+        FindClose(h);
+        bool other_language = false;
+        for (const LanguageInfo& lang : kLanguages) {
+            const std::string tail = std::string("-") + lang.code;
+            if (layer.size() > tail.size() && layer.compare(layer.size() - tail.size(), tail.size(), tail) == 0 &&
+                language.compare(0, 2, lang.code, 2) != 0)
+                other_language = true;
+        }
+        if (other_language) {
+            std::fprintf(stderr, "bof3x-launcher: layer %s is not the language played (%s); left off\n",
+                         layer.c_str(), language.c_str());
+            continue;
+        }
+        if (!out.empty()) out += ',';
+        out += layer;
     }
     return out;
 }

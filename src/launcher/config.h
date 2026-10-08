@@ -51,6 +51,12 @@ enum class Display { kFullscreen, kWindowed };
 
 struct Config {
     std::string language = kLanguageOriginal;
+    // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
+    // comma-separated list, in the order they land: psp-art, psp-tiles,
+    // psp-maps, psp-names-en-150, psp-names-ja-JP. Built and installed by
+    // tools/importer.py from the player's PSP disc. Empty, none (the default).
+    // The ini's `opt=` only; no dialog box yet.
+    std::string opt;
     Filter filter = Filter::kLinear;
     Display display = Display::kFullscreen;
     // BOF3.CFG line 2, Cfg_RenderMode: Capcom's set-up's device index. 0 is
@@ -148,6 +154,12 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
 // in kLanguages' order - i.e. which languages tools/loc_build.py has built.
 // The dialog offers only these.
 std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir);
+
+// The layers of `opt` (comma-separated) that can be played: those whose
+// DAT\<layer>.* files exist in `game_dir`, and of the text layers (a name
+// ending in -<tag> of kLanguages) only those of `language`'s language. Each
+// layer dropped is said on stderr; the DLL refuses either case at start-up.
+std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language);
 
 // True for "original" or a tag in kLanguages.
 bool ConfigLanguageKnown(const std::string& code);
