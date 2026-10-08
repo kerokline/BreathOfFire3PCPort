@@ -169,6 +169,25 @@ def banks_of(sections, cache=None):
     return [(g[6][2], bank(g[6][3], g[8][3] if 8 in g else b"", g[7][3], cache)) for g in groups(sections)]
 
 
+_CACHE = {}
+
+
+def bank_from_disc(build, dat_name, ordinal):
+    """The `ordinal`-th kind-2 chunk of the PC container `dat_name`, built
+    from the same-named EMI of a disc (region_diff.Build): (EMI key, the VAB
+    header's section index, payload), or None if the disc has no such bank.
+    The PC's banks pair with the EMI's groups in order (sound-import.md 2)."""
+    stem = dat_name[:-4]
+    key = next((k for k in build.emis if k.rsplit("/", 1)[-1][:-4] == stem), None)
+    if key is None:
+        return None
+    gs = groups(build.sections(key))
+    if ordinal >= len(gs):
+        return None
+    g = gs[ordinal]
+    return key, g[6][0], bank(g[6][3], g[8][3] if 8 in g else b"", g[7][3], _CACHE)
+
+
 def cmd_compare(a):
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import dat
