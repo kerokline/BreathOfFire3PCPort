@@ -1,6 +1,6 @@
 # Audit: does taken-over code transcribe the exe's game tables?
 
-**Status:** IN PROGRESS (2026-09-26, `src/` at `f2444e9`; the audit is done and §7 records what was fixed; the rule's wording is open)
+**Status:** IN PROGRESS (2026-09-26, `src/` at `f2444e9`; the audit is done and §7 records what was fixed; the rule's wording is open. §8, 2026-10-08: §5's inventory carried into the catalogue and the per-build maps, [`exe-tables-by-build.md`](exe-tables-by-build.md))
 
 The rule under test, proposed in [`ASSET_SOURCES.md`](ASSET_SOURCES.md) §5:
 
@@ -230,3 +230,24 @@ native test on made-up tables. What the owner should check: the launcher
 starts, and the Controls dialog's Defaults button shows the 24 original keys.
 Both fuzzes (`field_blocked`, `magic_fx_reached`) should still report 0
 mismatches under `BOF3X_SHADOW`.
+
+## 8. Carried forward (2026-10-08)
+
+§5's inventory is now measured rather than listed, in
+[`exe-tables-by-build.md`](exe-tables-by-build.md):
+
+- `symbols.toml` has grown to 2,691 `[[data]]` entries (458 when this audit
+  ran); 2,058 of those in initialised data are named in `src/`, and 603 of
+  them are neither zero nor pointers only - the candidates for a disc source.
+- §5's "second list invisible to tooling" no longer needs names to be
+  sourced: `exe_maps/<build>.tsv` places 81 % of the PC's initialised `.data`
+  in each PSX build by bytes, so a raw `at::k...` address is looked up by
+  address (576 of the 1,067 raw `.data` constants in `src/` fall inside a US
+  segment). §6 action 5 (a `[[data]]` entry for each) is wanted only where a
+  reader needs the name.
+- The content tables every part of the game reads are catalogued with fields
+  in [`tables.toml`](../tables.toml) (29 tables).
+- §5's "no PSX source" group is confirmed by the survey: `Key_TableDefault`,
+  `Dat_FileNames`, the pause lines and the DirectX / CRT data have no twin on
+  any disc; `Math_SinTable` is in each PSX boot EXE (PSX library data) and in
+  neither PSP ELF.
