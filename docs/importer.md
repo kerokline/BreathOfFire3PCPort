@@ -1,12 +1,15 @@
 # The importer: recipes, identity, plan, cache, verify
 
-**Status:** IN PROGRESS (2026-10-08, a cloud session: the recipe generator and the importer skeleton, proved on every held build; `loc/en` waits on `BOF3.exe`)
+**Status:** IN PROGRESS (2026-10-08, a cloud session: the recipe generator, the importer skeleton and the language layers, proved on every catalogued build; presets and the engine's reading of the cache are not done)
 
 [`unified-data-plan.md`](unified-data-plan.md) step 2. `tools/importer.py` is
 the importer's skeleton, and `recipes/pc-zh.toml` is its first recipe file,
 generated. From any ordered list of the player's sources, the importer writes a
 cache of `base/` and `loc/zh/` that **reassembles the PC port's 742 `DAT/`
 containers byte for byte**, with every chunk a disc carries taken from the disc.
+It also writes `loc/en`, `loc/fr`, `loc/de` and `loc/ja` from the player's
+discs, and each **equals the overlays `tools/loc_build.py` writes today**, 245
+of 245 per language (section 5).
 
 ## 1. What a recipe is
 
@@ -46,7 +49,7 @@ To regenerate, from the owner's files:
 ```
 python tools/dat_census.py DAT <the JP disc's EMIs, flat> --out analysis/dat_census.json
 python tools/region_diff.py pc --census analysis/dat_census.json --dat DAT --disc JP --out analysis/region/psx-jp_vs_pc-zh.json
-python tools/importer.py recipes --dat DAT --disc JP --disc US --disc FR --disc DE --disc PSPJP --disc PSPEU
+python tools/importer.py recipes --dat DAT --disc JP --disc US --disc EU --disc FR --disc DE --disc PSPJP --disc PSPEU
 python tools/importer.py check
 ```
 
@@ -96,9 +99,9 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
 
 Each disc's share of the 2,171 with a disc source:
 
-| psx-jp | psx-us | psx-fr | psx-de | psp-jp | psp-eu |
-|---:|---:|---:|---:|---:|---:|
-| 2,171 | 2,146 | 2,127 | 2,125 | 1,951 | 1,929 |
+| psx-jp | psx-us | psx-eu-en | psx-fr | psx-de | psp-jp | psp-eu |
+|---:|---:|---:|---:|---:|---:|---:|
+| 2,171 | 2,146 | 2,147 | 2,127 | 2,125 | 1,951 | 1,929 |
 
 **The 25 the US disc lacks** (measured against `region_diff.py pair` JP / US):
 21 world-map place-name plates (`loc_build.py`'s `PLATE_DATA`), one painted
@@ -115,6 +118,7 @@ layer and from DIV-0080, not from `base/`.
 | PC `DAT/` | 0 | base 741, loc/zh 254 | **742 of 742** byte-identical |
 | JP disc, PC | **2,171** from psx-jp | base 741, loc/zh 254 | **742 of 742** |
 | US disc, PSP-EU, PC | 2,146 psx-us + 1 psp-eu | base 741, loc/zh 254 | **742 of 742** |
+| EU-English disc, PC | 2,147 from psx-eu-en | base 741, loc/zh 254 | **742 of 742** |
 | US disc alone | 2,146 | 13 | 12 complete; the rest named as missing: banks 901, `loc/zh` 491, PC edits 14, logic-data 4, art 1, and the 25 above |
 
 The fourth row is the importer telling a disc-only player what it cannot build
@@ -122,14 +126,56 @@ yet, and why. That list is steps 3 and 6's work. `AFLDKWA.DAT` is the one
 container with no `base/` file: its only chunk is the system pool, which is
 text.
 
-## 5. Not done in step 2
+## 5. The language layers
 
-- **`loc/en` from the US disc** (the plan's `split-language`, "as
-  `loc_build.py` does"). `loc_build.py all` reads `BOF3.exe` for its name,
-  verb and config tables, and this session has the PC's `DAT/` without the
-  exe. The importer step is a wrapper over `loc_build`'s builders that writes
-  into `loc/en/dat/`. The check is the owner's uploaded `en.*.DAT` overlays,
-  then a fresh `loc_build.py all`.
+```
+python tools/importer.py build --source JP --source US --source FR --source DE --source DAT --source BOF3.exe \
+    --lang en --lang fr --lang de --lang ja --out CACHE
+python tools/importer.py verify --cache CACHE --overlays <an install's DAT/>
+```
+
+`--lang L` writes `loc/L/dat/NAME.DAT` from the first disc in the player's
+order that can give L. English comes from `psx-us` or `psx-eu-en`, French from
+`psx-fr`, German from `psx-de`, Japanese from `psx-jp`. **It is
+`tools/loc_build.py all`, run unchanged** on a scratch game directory: links to
+the PC's 742 shipped containers and `BOF3.exe`, both identified sources, and
+none of the install's own overlays, so nothing stale is read. Its
+`<lang>.NAME.DAT` files are taken as they are. They are the plan's
+`split-language`: what the player's disc says in that language, as overlays the
+engine already reads (DIV-0005). The importer reimplements none of it.
+`BOF3.exe` is a source because `loc_build` reads the exe's name, verb and
+config tables. Without it, `--lang` is refused with that reason.
+
+**English goes first.** The French and German title menus borrow the CONFIG
+row from `en.START.DAT` (`loc_build.build_title`). Built alone, they leave the
+title as shipped, which is 244 of 245. The importer orders the layers so this
+cannot happen.
+
+Measured 2026-10-08 against the owner's install, whose overlays were built on
+2026-10-07 and 2026-09-25:
+
+| Layer | From | Against the install's overlays |
+|---|---|---|
+| `loc/en` | psx-us | **245 of 245** byte-identical |
+| `loc/fr` | psx-fr | **245 of 245** |
+| `loc/de` | psx-de | **245 of 245** |
+| `loc/ja` | psx-jp | **245 of 245** |
+| `loc/en` | psx-eu-en | 179 of 245: **the EU-English release is not the US text** |
+
+**`psx-eu-en` (held from 2026-10-08) differs from `psx-us`.** By
+`region_diff.py pair` US / EU-English, besides relocated code:
+- 44 system message pools and 22 area message blocks, all edited within
+  English;
+- `DEMO`'s language page, where this release ships the Japanese asset (the
+  sibling's note); that is the one more base chunk it carries;
+- 8 sound-bank pairs, the PAL sample swap (`region-diff.md` 8.4).
+
+Its English layer differs from the US one in 66 containers: the edited pools
+and blocks. Which English is "the" English is the owner's call. The importer
+uses whichever English disc comes first in the player's order.
+
+## 6. Not done in step 2
+
 - **Presets** ("PC install", "US disc only", "PC + US text"). These are only
   source orders today, given on the command line.
 - **The engine reading the cache.** `LoadDatFile` reads `DAT/` as before. The

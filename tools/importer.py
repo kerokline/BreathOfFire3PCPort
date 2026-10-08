@@ -44,7 +44,7 @@ RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 TARGET = "pc-zh"
 # The order a recipe lists a chunk's disc sources in; the player's source
 # order, not this, decides which one is used.
-DISC_ORDER = ("psx-jp", "psx-us", "psx-fr", "psx-de", "psp-jp", "psp-eu")
+DISC_ORDER = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de", "psp-jp", "psp-eu")
 LANG_OF = {"pc-zh": "zh"}
 TEXT_CLASSES = ("text", "layout+text")
 
@@ -67,8 +67,17 @@ def _manifest_rows(rel):
 
 def identify(path):
     """(build id, artifact name) when a path matches a catalogued per-file
-    manifest whole; None otherwise. Unknown builds import nothing."""
+    manifest whole, or (a single file) a catalogued artifact's sha256; None
+    otherwise. Unknown builds import nothing."""
     import region_diff
+    if os.path.isfile(path) and not re.search(r"\.(cue|bin|iso)$", path, re.I):
+        with open(path, "rb") as f:
+            h = sha(f.read())
+        for b in _fixtures()["build"]:
+            for name, art in b.get("artifacts", {}).items():
+                if art.get("sha256") == h:
+                    return b["id"], name
+        return None
     trees = {}
     for b in _fixtures()["build"]:
         for name, art in b.get("artifacts", {}).items():
@@ -118,11 +127,18 @@ class DiscSource:
         return type1.decode(b) if how[0] == "type1" else b
 
 
+class ExeSource:
+    def __init__(self, bid, path):
+        self.id, self.path = bid, path
+
+
 def open_source(path):
     ident = identify(path)
     if not ident:
         raise SystemExit("%s: not a build fixtures.toml catalogues whole - nothing is imported from it" % path)
-    bid = ident[0]
+    bid, art = ident
+    if art == "exe":
+        return ExeSource(bid, path)
     return (PcSource if os.path.isdir(path) else DiscSource)(bid, path)
 
 
@@ -293,17 +309,17 @@ def chunk_bytes(kind, tag, body):
 def cmd_build(a):
     rec = load_recipe(a.recipe)
     sources = [open_source(p) for p in a.source]
-    order = {s.id: s for s in sources}
-    if len(order) != len(sources):
+    if len({(s.id, type(s)) for s in sources}) != len(sources):
         raise SystemExit("two sources are the same build")
     print("sources, in order: %s" % ", ".join("%s (%s)" % (s.id, s.path) for s in sources))
+    chunked = [s for s in sources if not isinstance(s, ExeSource)]
     assets, missing, used = [], collections.Counter(), collections.Counter()
     written = collections.Counter()
     for f in rec["file"]:
         layers = collections.OrderedDict()
         for slot, ch in enumerate(f["chunks"]):
             got = None
-            for s in sources:          # the player's order decides
+            for s in chunked:          # the player's order decides
                 for src in sources_of(ch):
                     if src[0] != s.id:
                         continue
@@ -331,7 +347,8 @@ def cmd_build(a):
             with open(os.path.join(d, f["name"]), "wb") as fh:
                 fh.write(b"".join(parts))
             written[layer] += 1
-    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets)
+    loc_assets = build_languages(a.lang, sources, a.out)
+    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets)
     for (bid, layer), n in sorted(used.items()):
         print("  %-7s from %-7s %5d chunks" % (layer, bid, n))
     for layer, n in sorted(written.items()):
@@ -343,7 +360,52 @@ def cmd_build(a):
     print("manifest: %s" % os.path.join(a.out, "manifest.toml"))
 
 
-def write_manifest(out, recipe_path, rec, sources, assets):
+# The language a disc can give loc/<lang> (tools/loc_build.py's donors).
+LANG_DONORS = {"en": ("psx-us", "psx-eu-en"), "fr": ("psx-fr",), "de": ("psx-de",), "ja": ("psx-jp",)}
+
+
+def build_languages(langs, sources, out):
+    """loc/<lang>/ for each language asked for, built by tools/loc_build.py
+    from the first donor disc in the player's order, against the PC's own
+    containers and BOF3.exe - exactly the overlays it writes into a game's
+    DAT/ today, so the engine reads them unchanged. English goes first: the
+    French and German title menus borrow its CONFIG row (loc_build.build_title)."""
+    import shutil
+    import subprocess
+    import tempfile
+    pc = next((s for s in sources if isinstance(s, PcSource)), None)
+    exe = next((s for s in sources if isinstance(s, ExeSource)), None)
+    if langs and not (pc and exe):
+        raise SystemExit("a language layer is built against the PC's DAT/ and BOF3.exe: give both as sources")
+    assets = []
+    langs = sorted(langs, key=lambda l: (l != "en", l))
+    with tempfile.TemporaryDirectory(prefix="bof3_loc_") as game:
+        os.makedirs(os.path.join(game, "DAT"))
+        os.symlink(os.path.abspath(exe.path), os.path.join(game, "BOF3.exe"))
+        for name in _manifest_rows("fixtures/pc-zh.DAT.files.tsv"):
+            os.symlink(os.path.abspath(os.path.join(pc.path, name)), os.path.join(game, "DAT", name))
+        for lang in langs:
+            donor = next((s for s in sources if isinstance(s, DiscSource) and s.id in LANG_DONORS.get(lang, ())), None)
+            if not donor:
+                raise SystemExit("loc/%s: no source carries it (a %s disc)" % (lang, " or ".join(LANG_DONORS.get(lang, ("?",)))))
+            r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
+                                "--game", game, "--lang", lang], capture_output=True, text=True)
+            if r.returncode:
+                raise SystemExit("loc_build.py --lang %s failed:\n%s%s" % (lang, r.stdout, r.stderr))
+            d = os.path.join(out, "loc", lang, "dat")
+            os.makedirs(d, exist_ok=True)
+            n = 0
+            for f in sorted(os.listdir(os.path.join(game, "DAT"))):
+                if f.startswith(lang + "."):
+                    shutil.copyfile(os.path.join(game, "DAT", f), os.path.join(d, f[len(lang) + 1:]))
+                    with open(os.path.join(d, f[len(lang) + 1:]), "rb") as fh:
+                        assets.append((f[len(lang) + 1:], "loc/" + lang, "%s:loc_build" % donor.id, sha(fh.read())))
+                    n += 1
+            print("  loc/%-4s from %-9s %d containers (tools/loc_build.py)" % (lang, donor.id, n))
+    return assets
+
+
+def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=()):
     with open(recipe_path, "rb") as f:
         rsha = sha(f.read())
     lines = ["# The cache's provenance, written by tools/importer.py build. Every chunk: its",
@@ -361,6 +423,11 @@ def write_manifest(out, recipe_path, rec, sources, assets):
         lines.append("  [%s, %d, %s, %s, %s]," % (toml_str(name), slot, toml_str(ch["layer"]),
                      toml_str(where), toml_str(ch["sha256"])))
     lines.append("]")
+    if loc_assets:
+        lines += ["", "# Language layers: whole overlay containers, as tools/loc_build.py writes them.", "overlays = ["]
+        for name, layer, where, h in loc_assets:
+            lines.append("  [%s, %s, %s, %s]," % (toml_str(name), toml_str(layer), toml_str(where), toml_str(h)))
+        lines.append("]")
     os.makedirs(out, exist_ok=True)
     with open(os.path.join(out, "manifest.toml"), "w", newline="\n", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -398,7 +465,32 @@ def cmd_verify(a):
           % (a.cache, ok, len(want), len(bad), len(absent)))
     for n in bad[:20]:
         print("   differs:", n)
-    return 1 if bad else 0
+    rc = 1 if bad else 0
+    if a.overlays:
+        rc |= verify_overlays(a.cache, a.overlays)
+    return rc
+
+
+def verify_overlays(cache, theirs):
+    """Each loc/<lang>/ layer (but zh, which the recipe checks) against the
+    <lang>.<NAME>.DAT overlays of an install, byte for byte, both ways."""
+    rc = 0
+    loc = os.path.join(cache, "loc")
+    for lang in sorted(os.listdir(loc)) if os.path.isdir(loc) else []:
+        if lang == LANG_OF[TARGET]:
+            continue
+        d = os.path.join(loc, lang, "dat")
+        ours = set(os.listdir(d))
+        inst = {f[len(lang) + 1:] for f in os.listdir(theirs) if f.startswith(lang + ".")}
+        same = [n for n in sorted(ours & inst)
+                if open(os.path.join(d, n), "rb").read() == open(os.path.join(theirs, lang + "." + n), "rb").read()]
+        differ = sorted((ours & inst) - set(same))
+        print("verify loc/%s against %s/%s.*.DAT: %d identical, %d differ, %d only in the cache, %d only in the install"
+              % (lang, theirs, lang, len(same), len(differ), len(ours - inst), len(inst - ours)))
+        for n in (differ + sorted(ours ^ inst))[:10]:
+            print("   ", n)
+        rc |= bool(differ or ours ^ inst)
+    return rc
 
 
 # ---------------------------------------------------------------- identify, check
@@ -455,11 +547,14 @@ def main():
     p = s.add_parser("identify")
     p.add_argument("path", nargs="+")
     p = s.add_parser("build")
-    p.add_argument("--source", action="append", required=True, help="a PC DAT/ or a disc; order is preference")
+    p.add_argument("--source", action="append", required=True, help="a PC DAT/, BOF3.exe or a disc; order is preference")
     p.add_argument("--out", required=True)
+    p.add_argument("--lang", action="append", default=[], choices=sorted(LANG_DONORS),
+                   help="a language layer to build (repeat); needs the PC's DAT/, BOF3.exe and that language's disc")
     p.add_argument("--recipe")
     p = s.add_parser("verify")
     p.add_argument("--cache", required=True)
+    p.add_argument("--overlays", help="an install's DAT/ whose <lang>.*.DAT overlays the cache's loc/ layers must equal")
     p.add_argument("--recipe")
     p = s.add_parser("check")
     p.add_argument("--recipe")
