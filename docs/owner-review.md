@@ -241,10 +241,10 @@ where the reading behind it is. Nothing here is a divergence until it is in
   port's swirl overlaps the first letters. Splicing the disc's word rows into
   the port's page is possible with a rectangle diff (no tool yet), as a
   ledgered divergence under the French and German overlays only. **Wants the
-  owner's eye on a render first**, then a yes or no. Seen on the way: four
-  world maps (`AREA104`, `127`, `134`, `164`) whose place plates the US disc
-  left in Japanese; under English the PC shows its Chinese plates there, if
-  those maps are reached.
+  owner's eye on a render first**, then a yes or no. Seen on the way, and settled
+  the same day: four areas (`AREA104`, `127`, `134`, `164`) whose plate pages
+  the US disc left in Japanese are **not a gap** ([`importer.md`](importer.md)
+  section 3).
 
 - **The base tree's version of the Western data rows** ([`region-diff.md`](region-diff.md),
   2026-10-06): every build after JP - US, FR, DE and both PSP discs - changes

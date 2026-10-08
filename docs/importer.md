@@ -125,8 +125,23 @@ SURCHAUFFE). Splicing those rows into the port's frames is a proposal on
 
 The other 14 "painted" pages are text, as classed: the place-name plates at
 `0x0E001000`, Chinese over Japanese, rendered. Ten are DIV-0055's world maps.
-In the other four (`AREA104`, `127`, `134`, `164`) **the US disc keeps
-Japan's plates**, and `loc_build.py`'s plate list does not include them.
+In the other four (`AREA104`, `127`, `134`, `164`) the US disc keeps Japan's
+plate page, and `loc_build.py`'s plate list does not include them. **That is
+not a gap** (rendered JP / US / PC and measured, 2026-10-08):
+- `127`, `134` and `164` are not world maps. `WorldMap_Records` holds eleven
+  (16, 33, 45, 65, 87, 88, 104, 115, 121, 151, 152), and their sprite-frame
+  sections are 30-37 KB of other data. Their pages carry a leftover copy of
+  world 0's strip (`AREA016`'s names) that nothing draws.
+- `104` is a world map whose whole strip is byte-identical to one in
+  `AREA121`'s page, and its plate-start routine is in `121`'s code. Its
+  plate-sizing section is unchanged on the US disc, where every localised
+  map's grew or shrank with the English names. The owner's reading: its
+  places are among those the game labels with the shared `?` plate, which
+  needs no translation.
+- The `?` plate itself is the one plate the port never repainted: the first
+  84 texels of every strip (the `?!` icons and `?`) are JP's on the PC. The
+  US redrew it only as part of restyling a whole strip, on the maps it
+  localised.
 
 **The 25 the US disc lacks** (measured against `region_diff.py pair` JP / US):
 21 world-map place-name plates (`loc_build.py`'s `PLATE_DATA`), one painted
