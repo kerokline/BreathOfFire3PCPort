@@ -2,10 +2,11 @@
 track, (loop start, loop end) in samples of the PC's own MP3, measured against
 a Mednafen render of the disc's sequence.
 
-    python measure_loops.py run [--workers N] [--songs 0,153,...]
+    python measure_loops.py run [--workers N] [--songs 0,153,...] [--redo]
         renders every looping song not yet in analysis/bgm/loops.json (or
         whose render is missing), measures it, adds its row; resumable - a
         song with a row is skipped, a render already on disk is reused.
+        --redo measures the excluded rows again from their renders.
         Progress: analysis/bgm/measure.log. Needs BGM_SCRATCH (disc copies,
         about 480 MB a worker, and Mednafen's base directories).
     python measure_loops.py measure TRACK RENDER.wav [T0]
@@ -92,7 +93,7 @@ def measure(track, recpath, t0=40.0):
     fm = first_sound(mp3)
     fr = first_sound(rec, int(t0 * SR))
     off = fr - fm  # rec = mp3 + off (+ drift)
-    pts = []
+    pts, best_c = [], 0.0
     for t in range(fm + SR // 2, n - 3 * SR, SR):
         w = mm[t:t + 2 * SR]
         if np.sqrt(np.mean(w ** 2)) < 1e-3:
@@ -101,17 +102,30 @@ def measure(track, recpath, t0=40.0):
         if lo < 0 or lo + 2 * SR + SR // 5 > len(rm):
             break
         k, c = best_lag(w, rm[lo:lo + 2 * SR + SR // 5])
+        best_c = max(best_c, c)
         if c > 0.5:
             pts.append((t, lo + k - t - off, c))
     if len(pts) < 3:
-        row.update(excluded=True, why="alignment: fewer than 3 confident windows", confidence=0.0)
+        row.update(excluded=True, why="alignment: fewer than 3 confident windows (best window %.3f)" % best_c,
+                   confidence=0.0)
         return row
     p = np.array(pts, np.float64)
     sl = [(p[j, 1] - p[i, 1]) / (p[j, 0] - p[i, 0]) for i in range(len(p)) for j in range(i + 1, len(p))]
     slope = float(np.median(sl))  # rec samples of offset per mp3 sample
     icpt = float(np.median(p[:, 1] - slope * p[:, 0]))
     resid = p[:, 1] - (icpt + slope * p[:, 0])
-    row["align"] = dict(offset=int(off), intercept=icpt, ppm=slope * 1e6, windows=len(p),
+    # A window can lock a bar away in self-similar music (the lag search spans +-SR/10): those are
+    # outliers of thousands of samples against a fit whose residuals are otherwise under ten. Drop
+    # them, refit, and gate on the inliers; the count of outliers is reported.
+    inl = np.abs(resid) <= 50
+    outliers = int((~inl).sum())
+    if inl.sum() >= 3 and outliers:
+        p = p[inl]
+        sl = [(p[j, 1] - p[i, 1]) / (p[j, 0] - p[i, 0]) for i in range(len(p)) for j in range(i + 1, len(p))]
+        slope = float(np.median(sl))
+        icpt = float(np.median(p[:, 1] - slope * p[:, 0]))
+        resid = p[:, 1] - (icpt + slope * p[:, 0])
+    row["align"] = dict(offset=int(off), intercept=icpt, ppm=slope * 1e6, windows=len(p), outliers=outliers,
                         median_ncc=float(np.median(p[:, 2])), max_residual=float(np.abs(resid).max()))
     to_rec = lambda m: m + off + icpt + slope * m
     to_mp3 = lambda r: (r - off - icpt) / (1 + slope)
@@ -138,20 +152,29 @@ def measure(track, recpath, t0=40.0):
         return row
     k, cp = best_lag(rm[tref:tref + W], rm[lo:hi])
     P = lo + k - tref
-    # loop start: first t from which 0.25 s windows repeat at P (>= 0.97) for 3 s
+    # loop start: first t from which 0.25 s windows repeat at P (>= 0.97) for 3 s. The sequencer's
+    # loop is not an integer number of SPU samples and P is one integer lag from one 3 s window, so
+    # each window takes the best of P-3..P+3: a fraction of a sample off drops a bright window's
+    # 0.25 s correlation under 0.97 by itself (2026-10-08: 89 of 153 songs refused at exactly P,
+    # their period correlation 0.9-0.998).
     q = SR // 4
     sims = []
     for t in range(int(s0) - SR // 2, tref + W, q // 4):
-        u, v = rm[t:t + q], rm[t + P:t + P + q]
-        sims.append((t, nccv(u, v), np.sqrt(np.mean(u ** 2))))
+        u = rm[t:t + q]
+        best = max(nccv(u, rm[t + P + d:t + P + d + q]) for d in range(-3, 4))
+        sims.append((t, best, np.sqrt(np.mean(u ** 2))))
     S = None
     span = 3 * SR // (q // 4)
+    sustained = 0.0
     for i in range(len(sims) - span):
-        if all(s >= 0.97 or e < 1e-3 for _, s, e in sims[i:i + span]):
+        floor = min((s if e >= 1e-3 else 1.0) for _, s, e in sims[i:i + span])
+        sustained = max(sustained, floor)
+        if floor >= 0.97:
             S = sims[i][0]
             break
     if S is None:
-        row.update(excluded=True, why="no exact repeat found in the render", confidence=cp)
+        row.update(excluded=True, why="no exact repeat found in the render (best 3 s floor %.3f)" % sustained,
+                   confidence=cp)
         return row
     row["render_loop"] = dict(period=int(P), period_s=P / SR, ncc=cp, start_rec=int(S),
                               intro_s=(S - s0) / SR, nominal_intro_s=a_nom, nominal_body_s=body,
@@ -327,12 +350,14 @@ def render_plan(track, inv):
     return fid, song, int(secs)
 
 
-def run(workers, songs):
+def run(workers, songs, redo=False):
     import concurrent.futures as cf
     inv = json.load(open(OUT + "/inventory.json"))
     done = load_table()
-    # a render-measured row is final; an in-file row is replaced by the render's measurement
-    todo = [s for s in songs if str(s) not in done or done[str(s)].get("method") == "in-file"]
+    # a render-measured row is final; an in-file row is replaced by the render's measurement; with
+    # --redo an excluded row is measured again (from its render on disk, no new render)
+    todo = [s for s in songs if str(s) not in done or done[str(s)].get("method") == "in-file"
+            or (redo and done[str(s)].get("excluded"))]
     log("run: %d songs to measure (%d already in loops.json), %d workers" % (len(todo), len(songs) - len(todo), workers))
     here = os.path.dirname(os.path.abspath(__file__))
     os.makedirs(RENDERS, exist_ok=True)
@@ -390,7 +415,7 @@ def main():
         args = sys.argv[2:]
         workers = int(args[args.index("--workers") + 1]) if "--workers" in args else 3
         songs = [int(s) for s in args[args.index("--songs") + 1].split(",")] if "--songs" in args else looping_songs()
-        run(workers, songs)
+        run(workers, songs, redo="--redo" in args)
 
 
 if __name__ == "__main__":
