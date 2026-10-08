@@ -178,6 +178,22 @@ is optional - which is already more than today.
 
 ## 6. Music and sound in the cache
 
+**The owner's stance, 2026-10-08: the disc's music is the default wherever a
+disc is a source; the PC's MP3s only when nothing else is there.** Decided on
+the loop measurement's numbers (`bgm-comparison.md` section 11, the fourth
+run): of 156 looping tracks the PC's files hold less than one loop body in
+80 (60 shortened, 20 by a frame or two), so no phase-correct loop exists in
+them; they are 128 kbit/s MP3s of renders whose converter wraps where the SPU
+clamps (`sound-import.md` 1); and the disc holds the sequences and samples
+themselves. So step 9 (the SEQ / VAB player and the SPU synth) is the music
+path, not a phase-5 luxury, and the MP3 loop table (step 7, DIV-0081) is the
+fallback for a PC-only install - still worth finishing, since the measurement
+is what proved the stance, and since the table is what a player without a
+disc gets. The synth's oracle is the Mednafen renders; note for its tests
+that the SPU's noise voices are a fresh realisation every pass, so a render
+compares by onset envelope and clean windows, never sample for sample
+(`tools/bgm/measure_loops.py`, 2026-10-08).
+
 - `base/snd/` holds the 880 effects, `wave-from-xa` from any PSX disc
   (step 6); the 11 jingles the PC ships as MP3s of `S_XA00.STR`'s clips stay
   the install's (the owner's call, [`sound-import.md`](sound-import.md) 6).
@@ -221,7 +237,7 @@ is optional - which is already more than today.
 | 6 | ~~VAG and the banks; the `SND/` cut table found and XA~~ **done 2026-10-08**, [`sound-import.md`](sound-import.md): byte-identical, 901 / 901 banks and 880 / 880 `SND/` from a disc; the engine reading `base/snd/` open; three calls (the PAL banks, the port's wrap clicks, the 11 jingles) | a group | step 2 | no |
 | 7 | The MP3 loop table, if H1 is heard | a day + 10 h unattended | the owner's ear | yes: the listening session |
 | 8 | `base/exe/` produced ~~and the engine reading it~~ (section 5 step 3). **Importer half done 2026-10-08** ([`exe-import.md`](exe-import.md)); the engine half waits on the owner's machine and the state hash | a round, with the biggest live check | steps 2, 5; the cutover's state 3 design | no |
-| 9 | The SEQ / VAB player and the SPU synth | phase 5 | the owner's ear; the disc-only goal | yes |
+| 9 | The SEQ / VAB player and the SPU synth - **the music path by the owner's stance of 2026-10-08** (section 6), the MP3s the fallback | a round or more | the owner's ear; the disc-only goal | the listening session |
 | 10 | MDEC / STR for FMV from a disc | phase 5 | I7 | no |
 
 Steps 1, 2 and 5 need nothing from the owner and can start together; 3, 4
