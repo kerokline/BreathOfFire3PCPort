@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-08, the unified-data round on `platform/unified-data-round`: steps 1, 2 and 5 done and merged - the type-1 decompressor, the importer and its generated recipe, the language layers by BCP 47 tag, the exe-resident tables in every build; **up next: the engine and launcher take the tags**. Earlier 2026-10-08: the sea bridge's "waterfall" (D239) surveyed, explained and fixed - DIV-0085, seen by the owner; its third-word guard owes a rebuild, `'*'` and one bridge walk; area 47 the place to watch. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
+**Status:** IN PROGRESS (2026-10-08, the unified-data round on `platform/unified-data-round`: steps 1, 2, 3, 4, 5, 6 and 8's importer half done, and the engine takes the language tags - a US disc alone imports to 727 of 742 containers, `base/snd/` and `base/exe/`; **up next, at the owner's machine: the build and `'*'` of the tags and DIV-0086, the overlay rebuild, step 7's loop table landing, then the PR**; in a cloud session: the engine half of step 8, a disc-only `loc_build`, the engine reading the cache. Earlier 2026-10-08: the sea bridge's "waterfall" (D239) fixed - DIV-0085, seen by the owner. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -40,6 +40,62 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
+000000000000000. **The unified-data round, steps 3, 4, 6, 8's importer half and the engine's tags (2026-10-08, the
+   third cloud session of the day, `claude/unified-data-steps3-6-sesn_01Ug395mHAVMJbiFgrCVV43C`, to merge into
+   `platform/unified-data-round`).** Three agents in lanes, each merged `--no-ff` with its notes folded in at the
+   merge; the records: [`importer-transforms.md`](importer-transforms.md) (step 3: `widen` as a split, `remap-dest`
+   unnecessary, the icons and the RYUD byte by rule, the stand-ins; any PSX disc alone gives all of `base/` but the
+   banks and 14 port-edited arenas), [`sound-import.md`](sound-import.md) (step 6: 901 / 901 banks and 880 / 880
+   `SND/` **byte-identical** from a disc - the port's VAG converter and XA resampler pinned to the sample; the cut
+   table is in the PSX boot EXE; `recipes/pc-zh.snd.toml`), [`opt-layers.md`](opt-layers.md) (step 4: five `opt/`
+   layers from either PSP disc, `BOF3X_OPT` and the loader's second prefix **DIV-0086**, 11 presets, `install`),
+   [`exe-import.md`](exe-import.md) (step 8's importer half: `base/exe/data.bin` + `data.toml` from the PC's exe or
+   any disc, 87 % of `.data` byte-equal, every catalogued table identical but three regional rows; **state 3 must
+   handle 9,142 code pointers in `.data`** - `platform-layers-plan.md` section 3 corrected). The engine and launcher
+   take the tags (`5253cea`: `Lang_FullWidth` by the primary subtag, `kLanguages` the five tags, `loc_build.py --lang`
+   defaulting to the disc's tag; **`en-US` is the default English**, the owner's word). `symbols.toml`'s 25 quoted
+   value runs reworded (`9a9f2cf`; no history rewrite, the owner's call on `owner-review.md`). In the order they bite:
+   1. **At the machine, first:** `cmake --build build`, then `'*'` narrow and wide from a launcher copy with no ini
+      with `BOF3X_OPT` unset (the self-tests are unchanged by it) and once with `BOF3X_LANG=en-US`, once `ja-JP`
+      (the tags), once `BOF3X_OPT=psp-art` after an `install`. Rebuild the install's overlays as `en-US.*`
+      (`python tools/loc_build.py all --disc <US cue> --game bof3` - no `--lang` needed now), delete the old `en.*`
+      / `fr.*` / `de.*` / `ja.*`, re-pick the language in the launcher (an old `language=en` reads as the original).
+      Then `importer.py build --preset pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe --source <US cue>
+      --source <PSP iso> --opt psp-art --out <cache>` and `importer.py install --cache <cache> --game bof3 --opt
+      psp-art` for a look at Stallion when a route reaches fight 24 (`owner-review.md`, step 4's items).
+   2. **Step 7's loop table** (the owner was running it the same day): lands on `platform/unified-data-round`
+      beside this; DIV-0081's text and `bgm-comparison.md` section 11 take the count.
+   3. **The owner's calls**, all on [`owner-review.md`](owner-review.md) "Decisions the measurements raised": step
+      3's four (the dial page, the 40 / 54 long FR / DE enemy names, the 14 arena edits, a Western-only `AREA004`),
+      step 6's three (the PAL banks, the wrap clicks - a listen to `AREA000`'s bank first -, the 11 jingles), step
+      4's six (one art layer or two, the map bands, the launcher's boxes, the `en-150` names layer, the PSP content
+      left out, a preset with layers), step 8's four (`recipes/exe-pointers.tsv` in the repo, blank names in the
+      PC-source image, a PSP-only `base/exe/`, the data-pointer rebuild transform - recommended), the gauge words,
+      the history rewrite (recommended against). None blocks the PR.
+   4. **The PR** of `platform/unified-data-round` to `main`: `git log --format=%B <base>..HEAD` first - every
+      non-merge commit of this session carries the owner's sign-off, written by hand; the merge commits none.
+   5. **Next cloud sessions, in order of value** (nothing needs the owner beyond the uploads this session had):
+      - **the engine half of step 8** ([`exe-import.md`](exe-import.md) section 6, the worklist: map `data.bin` at
+        `0x5DA000`, the code pointers, the data pointers - the rebuild transform first -, `.rdata`'s 65 reads, the
+        321 addresses no disc carries, the state hash with `data.toml`'s ranges as the skip list) - the live check
+        is the owner's, so the session builds and the owner runs;
+      - **a disc-only `loc_build`** ([`importer-transforms.md`](importer-transforms.md) section 8 item 3: a font from
+        the disc's glyph sheets, `loc_build.py` reading `base/` and the disc instead of `DAT/` and the exe, the name
+        / verb / config tables from `base/exe/`) - the last gap between a US disc and a playable game;
+      - **the engine reading the cache** (`LoadDatFile` on `base/dat/` + `loc/<tag>/dat/` + `opt/`, `Sound_LoadStream`
+        on `base/snd/`, `BGM\%03d` the same seam; `sound-import.md` section 7; `install` is the bridge until then);
+      - the 14 port-edited arenas read; `Char_DefaultRecords` catalogued; the launcher's "PSP extras" boxes and a
+        Sources page; CI running `importer.py check` (it already needs no game data).
+   **Mechanics of this session:** the owner uploaded every disc (zips of the five PSX cues, the two PSP isos), the
+   PC's `DAT/`, `BGM/`, `SND/` and `BOF3.exe`; extracted under `/workspace/scratch/game/` (scratch only, rule 1),
+   every tree verified by `verify_fixtures.py --tree` before use. Three agents in worktrees (`/workspace/wt/step3`,
+   `step6`, then `step4` and `step8` cut from the merged tip), a common brief with **lanes** (which files each may
+   touch; a shared `importer.py` is one lane's, the others add a hook in a last commit of its own) and a "For the
+   other files" section in each doc, folded in by the coordinator at the merge - two `importer.py` conflicts
+   resolved by hand, each merge re-verified with a full `build` + `verify` run (JP + PC 742 of 742). `apt-get
+   install g++-mingw-w64-i686` (after `apt-get update`) gave `-fsyntax-only` checks of the touched sources with
+   `gen_symbols.py`'s header; not the project's llvm-mingw. Trailers written by hand as before.
+
 00000000000000. **The unified-data round, steps 1, 2 and 5 (2026-10-08, two cloud sessions, merged into
    `platform/unified-data-round`; no PR to `main` yet).** Step 5 ran in its own session
    ([`exe-tables-by-build.md`](exe-tables-by-build.md): `tools/exe_twins.py`, `exe_maps/<build>.tsv`, 29 tables located in
@@ -50,36 +106,10 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    containers rebuilt byte-identical from JP + PC; `loc/en-US`, `fr-FR`, `de-DE`, `ja-JP` by `loc_build.py` equal to the
    owner's overlays, 245 of 245 each). `psx-eu-en` is held and verified, and **it is not the US English** (Sony Europe's
    `Memory Card`, two item renames, US spelling): tagged `en-150`, the owner's choice. Languages are BCP 47 tags now,
-   `fixtures.toml`'s `tag` per build (`zh-CN` for the port: GBK, Simplified forms, LCID `0804`). In the order they bite:
-   1. **Up next, for the owner at the machine: the engine and the launcher take the tags.** The importer and
-      `loc_build.py` name layers `loc/en-US/` and overlays `en-US.<NAME>.DAT` (`--lang en-US`), but the engine and the
-      launcher still read the bare codes, so **an install's overlays stay built with `--lang en` / `fr` / `de` / `ja`
-      until this lands** (`loc_build.py`'s default is still `en` for that reason). The work, all small:
-      - `src/game/dat_load.cpp` (DIV-0005): `DAT\<tag>.<name>` already fits (`g_lang[8]` holds `en-150`; the overlay
-        path buffer is `0x30`). Only the ledger entry's wording changes.
-      - `src/game/lang_layout.cpp`: `Lang_FullWidth` compares the whole string with `ja` / `zh`; compare the primary
-        subtag (before the `-`), or `ja-JP` lays out as Latin.
-      - `src/launcher/config.h` `kLanguages`: `en-US` "English (US PlayStation script)", `en-150` "English (European
-        PlayStation script)", `fr-FR`, `de-DE`, `ja-JP`; `ConfigLanguagesAvailable` already finds them by file. The
-        owner's saved `language=en` stops matching and falls back to the original; no old-code mapping (CLAUDE.md, no
-        shims).
-      - Then flip `loc_build.py --lang`'s default to the donor disc's `fixtures.toml` tag, rebuild the install's overlays
-        (`importer.py build ... --lang en-US ...`, or `loc_build.py` per disc, English first), and delete the old `en.*`,
-        `fr.*`, `de.*`, `ja.*` files. Check: `'*'` narrow and wide with `BOF3X_LANG=en-US` and `ja-JP`, and a look at the
-        title menu in French (its CONFIG row is borrowed from the English page).
-      - Docs that say `--lang en` or `BOF3X_LANG=en`: `dialogue-localisation.md`, `launcher-settings.md`,
-        `tools/attract_run.py`'s help, `tools/close_probe.py`.
-   2. **The owner's calls:** which English is the default (`en-US` or `en-150`; the importer takes whichever English
-      disc is first in the source order); **`symbols.toml`'s quoted table values** (step 5 found about 25 `[[data]]`
-      evidence strings quoting six or more values in a row - rule 1 says they go; `owner-review.md`); the French and
-      German gauge words (`owner-review.md`); the PR to `main`.
-   3. **Steps that can start:** 3 (the transforms for a disc-only install: `widen-enemy-names`, `remap-dest`, and the 25
-      chunks the US disc lacks - place-name plates, painted pages, the minecart rows; `importer.md` section 3); 6 once
-      the PC's `SND/` is uploaded (the 901 banks, `wave-from-vag`); 8 (`base/exe/` and the engine reading it) has its
-      inputs now that 5 is done. Two sessions side by side worked: a brief with lanes (files each may touch), the second
-      branched off the first's fix it needed, and a section of "for the other files" folded in at the merge.
-   4. **Not done in step 2:** presets (source orders on the command line only), and the engine reading the cache (step 4's
-      second prefix). Capcom's type-1 routine is not located (`type1-compression.md` section 1; nothing waits on it).
+   `fixtures.toml`'s `tag` per build (`zh-CN` for the port: GBK, Simplified forms, LCID `0804`). What it left - the
+   engine's tags, steps 3, 6 and 8 - the item above did; still from it: the engine reading the cache (step 4's second
+   prefix exists now, DIV-0086; the cache's `base/` is not yet walked), and Capcom's type-1 routine is not located
+   (`type1-compression.md` section 1; nothing waits on it).
    **Mechanics of the cloud session:** the owner uploaded every disc, the PC's `DAT/` (with its overlays) and `BOF3.exe`
    to `/mnt/session/uploads`, scratch only (rule 1). `tools/region_diff.tree_files` opened files under upper-cased names
    and failed on Linux; fixed (`fa29a53`). **`git commit -s` in a cloud session signs as the environment's identity
@@ -789,7 +819,7 @@ _Verified 2026-09-24._
   wallclock --static 59E000-5A6000,5A9600-5AB000 --also 5BC8E0,5BDA20`);
   `BOF3X_CALLTRACE_DETAIL=lo-hi` on both sides to see a differing frame.
 - **Routes and captures:** `python tools/input_run.py tools/recipes/X.txt
-  --out analysis/shots/X [--lang en] [--no-front]` - the game writes its own
+  --out analysis/shots/X [--lang en-US] [--no-front]` - the game writes its own
   frames (`BOF3X_SHOT_DIR`, [`input-script.md`](input-script.md) §3); the
   owner records with `BOF3X_RECORD`. `--speed 8` runs a recipe fast (`BOF3X_SPEED`,
   DIV-0048's tooling note: same frames, same shots; compare the `randlog` against an x1 run once per route). Route A/Bs: `analysis/validate_combat.sh`,
@@ -826,6 +856,7 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
+`claude/unified-data-steps3-6-sesn_01Ug395mHAVMJbiFgrCVV43C` holds 2026-10-08's third session (item 000000000000000), pushed, to merge into `platform/unified-data-round`; the agent branches `wip/step3`, `wip/step4`, `wip/step6`, `wip/step8` and their worktrees under `/workspace/wt/` were the cloud session's and are merged.
 `phase-3/platform-round-2` holds 2026-10-06's work, unpushed (item 0; the owner's `tools/recipes/stallion.txt` is untracked and theirs); `phase-3/platform-round` is merged (PR #42). The ten agent branches `phase-3/r14end-ea` .. `-ed2` and `phase-3/platform-ph/pl/pm/ps/pw` and their `.claude/worktrees/agent-*` are merged and can go, with the older ones: the six wave-four worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*`.
 Before it: nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
 half is pushed on `claude/round-10-cleanup-handoff-qtwcrk` (item 0) and
@@ -875,6 +906,10 @@ Local only, gitignored, worth keeping:
   re-aimed already, cannot clone`, exit 3, 978 of the 1,056 `MISMATCHES` lines reached). An environment variable wins
   over the ini: run every self-test with `BOF3X_LANG=original` (the agents' worktrees never saw it - their inis are
   defaults). Do not edit the owner's ini.
+- **`BOF3X_OPT` changes the arena and VRAM** (2026-10-08, DIV-0086): a state-hash or attract reference run, and
+  any `'*'` meant to match the record, want it unset; the launcher exports the ini's `opt=` as the language's
+  `language=` is - a copy with no ini, as for `cheat.exp`. And **a recipe recorded under `BOF3X_LANG=en` plays under
+  `en-US`** since the tags (29 headers say `en`; `input-script.md`).
 - **`git am` of a cloud session's patches** (2026-10-08): it refuses a file that already exists untracked (a
   copy downloaded earlier) and a tracked file with uncommitted changes ("does not match index"), and a failed run
   leaves `.git/rebase-apply`, which blocks the next ("previous rebase directory still exists"). `git am --abort`,
