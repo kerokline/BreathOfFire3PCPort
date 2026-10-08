@@ -38,7 +38,7 @@ mapped into the MP3's samples. Then one of three cases:
 Rows under 0.8 confidence are kept in loops.json with "excluded": true and
 are not written into the engine's table (tools/bgm/gen_loop_table.py).
 """
-import json, os, subprocess, sys, time
+import collections, json, os, subprocess, sys, time
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bgm_paths import PC, SCRATCH
@@ -125,6 +125,10 @@ def measure(track, recpath, t0=40.0):
     n = len(mm)
     row = dict(track=track, file=info["file"], bytes=info["bytes"], frames=info["frames"], samples=n,
                render=os.path.basename(recpath))
+    # the song's first note sits at 43.6-43.8 s in every render of 2026-10-08 (Mednafen's boot, the
+    # Sony and Capcom intros, the title); a render whose first sound after t0 is far from that has
+    # the guard inside the intros or a silent title - the log line shows it
+    row["first_sound_s"] = m_first = (first_sound(rec, int(t0 * SR)) or 0) / SR
 
     # 1. alignment: first sounds, refined on the waveform, then the drift line
     fm = first_sound(mp3)
@@ -212,39 +216,94 @@ def measure(track, recpath, t0=40.0):
     if hi > len(rm):
         row.update(excluded=True, why="render too short for one period", confidence=0.0)
         return row
-    c = ncc_search(rm[tref:tref + W], rm[lo:hi])
-    # every local peak of the 3 s window's search is a candidate; the loop is the one at which the
-    # render keeps matching itself for 12 s on, not the one whose single window scores highest
-    # (song 017: a phrase repeat at 1.000 against the loop at 0.999; the fractions 0.69 and 1.00)
-    peaks = [i for i in range(1, len(c) - 1) if c[i] > 0.4 and c[i] >= c[i - 1] and c[i] >= c[i + 1]]
-    peaks = sorted(peaks, key=lambda i: -c[i])[:12] or [int(np.argmax(c))]
-    scored = sorted(((match_fraction(match_windows(rm, tref, tref + 12 * SR, lo + i - tref, SR // 8)), c[i], i)
-                     for i in peaks), reverse=True)
-    frac, cp, k = scored[0]
-    P = lo + k - tref
-    row["period_candidates"] = [dict(period_s=(lo + i - tref) / SR, ncc=float(cc), fraction=float(f))
-                                for f, cc, i in scored[:4]]
-    # loop start: first t from which 0.25 s windows repeat at P (>= 0.97) for 3 s. The sequencer's
-    # loop is not an integer number of SPU samples and P is one integer lag from one 3 s window, so
-    # each window takes the best of P-3..P+3: a fraction of a sample off drops a bright window's
-    # 0.25 s correlation under 0.97 by itself (2026-10-08: 89 of 153 songs refused at exactly P,
-    # their period correlation 0.9-0.998).
+    # The period and the loop start are found on the ONSET ENVELOPE, which the sequencer repeats
+    # exactly every pass, and only then made sample-exact on the waveform. The waveform alone
+    # cannot be trusted for it: the SPU's noise voices are a fresh LFSR realisation each pass -
+    # as isolated hits (011: 0.99 between the beats, ~0 on them) or as a voice sounding throughout
+    # (007: 0.3..0.7 wherever it plays, 1.000 where it rests; 089 everywhere) - and a phrase repeat
+    # can outscore the loop in a single window (017: 48.14 s at 1.000 against the loop's 53.49 s).
+    # An intro against the body, or a phrase against what follows it, has a different envelope.
+    HOP = 256
+    env = envelope(rm, HOP)
+    eq = SR // HOP                     # envelope samples per second
+    e_t, e_W = tref // HOP, 12 * eq    # 12 s of envelope from tref
+    e_lo, e_hi = int(lo // HOP), min(int(hi // HOP) + e_W, len(env))
+    if e_hi - e_lo <= e_W:              # the render ends inside the search: a shorter reference
+        e_W = max(3 * eq, e_hi - e_lo - 1)
+    ce = ncc_search(env[e_t:e_t + e_W], env[e_lo:e_hi])
+    cw = ncc_search(rm[tref:tref + W], rm[lo:hi])
+    cands = {int(i) * HOP for i in np.argsort(ce)[-8:]}
+    cands |= {int(i) for i in range(1, len(cw) - 1) if cw[i] > 0.6 and cw[i] >= cw[i - 1] and cw[i] >= cw[i + 1]}
+
+    def env_score(Pc):     # mean envelope correlation of four 3 s spans from tref, at lag Pc
+        a = tref // HOP; b = (tref + Pc) // HOP; n3 = 3 * eq
+        vals = [nccv(env[a + j * n3:a + (j + 1) * n3], env[b + j * n3:b + (j + 1) * n3]) for j in range(4)
+                if b + (j + 1) * n3 <= len(env)]
+        return float(np.mean(vals)) if vals else 0.0
+    scored = sorted(((env_score(lo + i - tref), i) for i in cands), reverse=True)
+    if scored[0][0] < 0.6:
+        row.update(excluded=True, why="no repeat found in the render (best 12 s envelope correlation %.2f)"
+                   % scored[0][0], confidence=scored[0][0])
+        return row
+    # the envelope cannot tell a lag of whole bars from the loop (011: 149.77 s at 0.79 against the
+    # loop's 142.63 s at 0.74 - the drum pattern repeats every bar); the waveform's matching windows
+    # can. Among the candidates within 0.1 of the best envelope score, the one the most windows match
+    short = [(e, i) for e, i in scored if e >= scored[0][0] - 0.1][:4]
+    short = sorted(((match_fraction(match_windows(rm, tref, tref + 12 * SR, lo + i - tref, SR // 8)), e, i)
+                    for e, i in short), reverse=True)
+    f0, ep, k = short[0]
+    P_env = lo + k - tref
+    row["period_candidates"] = [dict(period_s=(lo + i - tref) / SR, env=float(e), fraction=float(f))
+                                for f, e, i in short]
+    # sample-exact: the lag the matching waveform windows vote for, within the envelope's +-HOP
+    votes = collections.Counter()
     q = SR // 4
-    sims = match_windows(rm, int(s0) - SR // 2, tref + W, P, q // 4)
-    span = 3 * SR // (q // 4)
-    fr3 = [match_fraction(sims[i:i + span]) for i in range(len(sims) - span)]
-    best3 = max(fr3) if fr3 else 0.0
-    # before the loop start the intro faces the body and nothing matches; from it on the song's own
-    # share of clean windows matches (1.0 without noise voices, a third with many): the first span
-    # reaching half the best span's fraction, and at least a quarter
-    S = next((sims[i][0] for i, f in enumerate(fr3) if f >= max(0.25, 0.5 * best3)), None)
-    if S is not None:   # the first window inside that span that matches: the start itself
-        S = next((t for t, s_, e in sims if t >= S and s_ >= 0.97), S)
-    if S is None or best3 < 0.25:
-        row.update(excluded=True, why="no exact repeat found in the render (best 3 s match fraction %.2f)" % best3,
-                   confidence=cp)
+    for t in range(tref, min(tref + 12 * SR, len(rm) - P_env - 2 * HOP - q), q):
+        u = rm[t:t + q]
+        if np.sqrt(np.mean(u ** 2)) < 1e-3:
+            continue
+        c = ncc_search(u, rm[t + P_env - HOP:t + P_env + HOP + q])
+        j = int(np.argmax(c))
+        if c[j] >= 0.9:
+            votes[j - HOP] += 1
+    if votes:
+        d = votes.most_common(1)[0][0]
+        P, exact = P_env + d, int(sum(votes.values()))
+    else:                              # no window matches in waveform (089): the envelope's lag
+        P, exact = P_env, 0
+    sims = match_windows(rm, tref, tref + 12 * SR, P, SR // 8)
+    frac = match_fraction(sims)
+    # the render's own confidence in the loop: its envelope over 12 s, or the share of waveform
+    # windows matching, whichever says more (a clean song 1.0 by the windows; a noisy one by the
+    # envelope, 0.8-0.9)
+    cp = max(ep, frac)
+    row["period_exactness"] = dict(windows_voting=exact, env=ep)
+    # the loop start: the first 3 s span from the song's start whose envelope repeats at P (half the
+    # best span's, and 0.5 at least); then the first waveform window in it that matches, if any
+    # The loop start. An intro with the body's drum pattern repeats on the envelope too (007), so the
+    # waveform decides where it can: the first 0.25 s window that matches at P and is followed by
+    # 3 s matching at half the song's own rate or better (a chance match in the intro is not
+    # followed). Only a song no window of which matches (089 nearly) takes the envelope's first span.
+    early = match_windows(rm, int(s0) - SR // 2, tref + W, P, SR // 16)
+    sp = 3 * SR // (SR // 16)
+    S = None
+    for i, (t, s_, e) in enumerate(early):
+        if s_ >= 0.97 and match_fraction(early[i:i + sp]) >= max(0.1, 0.5 * frac):
+            S = t
+            break
+    best3 = 0.0
+    if S is None:
+        a0 = max(0, (int(s0) - SR // 2) // HOP); n3 = 3 * eq; pe = P // HOP
+        spans = [(a, nccv(env[a:a + n3], env[a + pe:a + pe + n3]))
+                 for a in range(a0, tref // HOP + W // HOP, eq // 4) if a + pe + n3 <= len(env)]
+        best3 = max((v for _, v in spans), default=0.0)
+        S = next((a * HOP for a, v in spans if v >= max(0.5, 0.5 * best3)), None)
+    if S is None:
+        row.update(excluded=True, why="no loop start found in the render (best 3 s envelope %.2f)" % best3,
+                   confidence=ep)
         return row
     row["match_fraction"] = frac
+    row["start_by"] = "waveform" if best3 == 0.0 else "envelope"
     row["render_loop"] = dict(period=int(P), period_s=P / SR, ncc=cp, start_rec=int(S),
                               intro_s=(S - s0) / SR, nominal_intro_s=a_nom, nominal_body_s=body,
                               timing_ratio=(P / SR) / body)
@@ -265,8 +324,13 @@ def measure(track, recpath, t0=40.0):
             Pi = lo2 + k2 - Li
         else:   # no room to refine inside the file: the render's own measure stands
             Pi, c2 = int(round(Pm)), cp
+        # the MP3's own second pass against its first, in waveform (c2) and in onset envelope
+        # (c2e): a noise voice that differs between passes lowers the first and not the second,
+        # and the loop is right either way - the engine crossfades FADE samples at it
+        em = envelope(mm, HOP); a, b = Li // HOP, (Li + Pi) // HOP; n12 = min(12 * eq, len(em) - b - 1)
+        c2e = nccv(em[a:a + n12], em[b:b + n12]) if n12 > eq else 0.0
         row.update(case="full", start=Li, end=Li + Pi, short_by=0, holds_whole_body=True,
-                   confidence=c2, passes_after_start=(n - Li) / Pi)
+                   confidence=max(c2, c2e), waveform_ncc=c2, envelope_ncc=c2e, passes_after_start=(n - Li) / Pi)
     elif last - Pm >= lead:
         # the end as late as the file allows with FADE samples after it inside the same frame (the
         # engine crossfades the body's last FADE samples into the stand-in), and the start with
@@ -460,10 +524,10 @@ def run(workers, songs, redo=False):
                     row = f.result()
                     save_row(row)
                     rl = row.get("render_loop", {})
-                    log("song %03d: %s conf %.3f P %.3f s intro %.2f s match %.2f align %s%s"
+                    log("song %03d: %s conf %.3f P %.3f s intro %.2f s match %.2f align %s first %.1f s%s"
                         % (s, row.get("case", "-"), row.get("confidence", 0), rl.get("period_s", 0),
                            rl.get("intro_s", 0), row.get("match_fraction", 0),
-                           row.get("align", {}).get("method", "-"),
+                           row.get("align", {}).get("method", "-"), row.get("first_sound_s", 0),
                            " EXCLUDED (%s)" % row.get("why") if row.get("excluded") else ""))
                 except Exception as e:
                     log("song %03d: FAILED %r" % (s, e))
