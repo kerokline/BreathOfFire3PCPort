@@ -307,10 +307,13 @@ def measure(track, recpath, t0=40.0):
     row["render_loop"] = dict(period=int(P), period_s=P / SR, ncc=cp, start_rec=int(S),
                               intro_s=(S - s0) / SR, nominal_intro_s=a_nom, nominal_body_s=body,
                               timing_ratio=(P / SR) / body)
-    L = to_mp3(S)
+    lead = fm
+    # a start found in the window straddling the song's first note (up to 0.25 s before it) maps
+    # before the MP3's first sample; the loop starts at the note - any start inside the matching
+    # region loops the same audio (song 020: Li negative sliced an empty refinement reference)
+    L = max(to_mp3(S), float(lead))
     Pm = P / (1 + slope)
     E = L + Pm
-    lead = fm
     row["body"] = int(round(Pm))
     row["body_s"] = Pm / SR
     last = (n // FRAME) * FRAME - FRAME  # keep off the file's last frame
