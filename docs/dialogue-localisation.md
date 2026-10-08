@@ -20,9 +20,13 @@ only the chunks that differ; with `BOF3X_LANG=<lang>` set, `LoadDatFile` walks
 it after the shipped file, so its chunks land on top
 ([`DIVERGENCE.md`](DIVERGENCE.md) DIV-0005).
 
-- **Text.** `en.AREA000.DAT`: one kind-0 chunk, tag 0 - the donor disc's
+The overlays are named by the donor's BCP 47 tag (`en-US`, `en-150`, `fr-FR`,
+`de-DE`, `ja-JP`; `fixtures.toml`'s `tag`, since 2026-10-08 - the bare codes
+`en.*` before). The examples below say `en-US`.
+
+- **Text.** `en-US.AREA000.DAT`: one kind-0 chunk, tag 0 - the donor disc's
   message block re-encoded for the PC engine (§4).
-- **Font.** `en.FIRST.DAT`: a kind-3 chunk - the shipped glyph table, whole,
+- **Font.** `en-US.FIRST.DAT`: a kind-3 chunk - the shipped glyph table, whole,
   with the donor's glyphs added (§3) - and a **kind-4** chunk, which is ours: a
   pen advance for every glyph (DIV-0006, §5).
 - Known and accepted: switching language between loads scrambles anything that
@@ -30,10 +34,10 @@ it after the shipped file, so its chunks land on top
 
 ```
 python tools/loc_build.py all --disc "CDImage/Breath of Fire III (USA).cue" --game bof3
-BOF3X_LANG=en build/bof3x-launcher.exe --game bof3
+BOF3X_LANG=en-US build/bof3x-launcher.exe --game bof3
 ```
 
-One pass, 244 overlay files: 200 area texts, 44 system pools, and `en.FIRST.DAT`
+One pass, 244 overlay files: 200 area texts, 44 system pools, and `en-US.FIRST.DAT`
 with the font, the advances, its pool and the six name tables.
 
 `tools/psx_disc.py` reads the ISO9660 tree of a `.cue`, a raw `.bin` or a

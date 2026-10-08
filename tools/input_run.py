@@ -2,7 +2,7 @@
 """Launch the game with an input recipe and capture the window at its `shot`s.
 
     python tools/input_run.py recipes/config_screen.txt --out analysis/shots/config
-    python tools/input_run.py recipes/config_screen.txt --out X --lang en --original "*"
+    python tools/input_run.py recipes/config_screen.txt --out X --lang en-US --original "*"
 
 The recipe is played inside the game by bof3x.dll (BOF3X_INPUT,
 src/hook/input_script.cpp; the language is in docs/input-script.md), counted
@@ -126,7 +126,7 @@ def main():
                     help='seconds between a shot line and the grab, for the frame to reach the screen; '
                          'the game is frozen meanwhile, so this only has to outlast the compositor')
     ap.add_argument('--game', default=os.path.join(ROOT, 'bof3'))
-    ap.add_argument('--lang', default=None, help='BOF3X_LANG, e.g. en')
+    ap.add_argument('--lang', default=None, help='BOF3X_LANG, an overlay tag, e.g. en-US (a recipe recorded under the bare `en` plays under en-US)')
     ap.add_argument('--original', default=None, metavar='LIST', help='BOF3X_ORIGINAL')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
     ap.add_argument('--speed', type=int, default=1, metavar='N',

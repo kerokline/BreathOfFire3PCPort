@@ -22,20 +22,28 @@
 namespace bof3x {
 
 // A language overlay the game can load (DIV-0005; French and German
-// DIV-0054, Japanese DIV-0056): BOF3X_LANG's code, and the dialog's label.
-// Built locally by tools/loc_build.py, never shipped, so the dialog offers
-// only those whose DAT\<code>.* files exist (ConfigLanguagesAvailable).
+// DIV-0054, Japanese DIV-0056): BOF3X_LANG's tag, and the dialog's label.
+// The tag is the BCP 47 tag of the PlayStation release the text came from
+// (fixtures.toml's `tag` per build; docs/importer.md section 5): the two
+// English discs differ (Sony Europe's terms and two renamed items), so each
+// is its own entry. Built locally by tools/loc_build.py or the importer,
+// never shipped, so the dialog offers only those whose DAT\<tag>.* files
+// exist (ConfigLanguagesAvailable).
 struct LanguageInfo {
     const char* code;
     const wchar_t* label;
 };
 inline constexpr LanguageInfo kLanguages[] = {
-    {"en", L"English (PlayStation script)"},
-    {"fr", L"French (PlayStation script)"},
-    {"de", L"German (PlayStation script)"},
-    {"ja", L"Japanese (PlayStation script)"},
+    {"en-US", L"English (US PlayStation script)"},
+    {"en-150", L"English (European PlayStation script)"},
+    {"fr-FR", L"French (PlayStation script)"},
+    {"de-DE", L"German (PlayStation script)"},
+    {"ja-JP", L"Japanese (PlayStation script)"},
 };
-// "original" (no overlay, the port's Chinese) or one of kLanguages' codes.
+// "original" (no overlay, the port's Chinese) or one of kLanguages' tags. A
+// bof3x.ini that still says `language=en` (the bare codes before 2026-10-08)
+// is not known and falls back to the original; the dialog re-offers what is
+// built.
 constexpr const char* kLanguageOriginal = "original";
 
 enum class Filter { kLinear, kPoint };   // the original's, and DIV-0012's
@@ -43,6 +51,12 @@ enum class Display { kFullscreen, kWindowed };
 
 struct Config {
     std::string language = kLanguageOriginal;
+    // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
+    // comma-separated list, in the order they land: psp-art, psp-tiles,
+    // psp-maps, psp-names-en-150, psp-names-ja-JP. Built and installed by
+    // tools/importer.py from the player's PSP disc. Empty, none (the default).
+    // The ini's `opt=` only; no dialog box yet.
+    std::string opt;
     Filter filter = Filter::kLinear;
     Display display = Display::kFullscreen;
     // BOF3.CFG line 2, Cfg_RenderMode: Capcom's set-up's device index. 0 is
@@ -116,7 +130,7 @@ bool ConfigSave(const std::wstring& path, const Config& cfg);
 // Sets the BOF3X_* variables for every non-default setting in THIS process,
 // which the game inherits; a default leaves its variable unset.
 // A variable already present in the environment wins: the documented developer
-// invocations (`BOF3X_LANG=en build/bof3x-launcher.exe`, docs/HANDOFF.md) must
+// invocations (`BOF3X_LANG=en-US build/bof3x-launcher.exe`, docs/HANDOFF.md) must
 // keep overriding whatever the file says.
 // The language is exported only when its overlay is in <game_dir>\DAT
 // (ConfigLanguagesAvailable), as the dialog offers it.
@@ -136,12 +150,18 @@ void ConfigSeedFromGameCfg(const std::wstring& game_dir, Config& cfg);
 // on failure.
 bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::wstring& error);
 
-// The codes of kLanguages whose DAT\<code>.* overlays exist in `game_dir`,
+// The tags of kLanguages whose DAT\<tag>.* overlays exist in `game_dir`,
 // in kLanguages' order - i.e. which languages tools/loc_build.py has built.
 // The dialog offers only these.
 std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir);
 
-// True for "original" or a code in kLanguages.
+// The layers of `opt` (comma-separated) that can be played: those whose
+// DAT\<layer>.* files exist in `game_dir`, and of the text layers (a name
+// ending in -<tag> of kLanguages) only those of `language`'s language. Each
+// layer dropped is said on stderr; the DLL refuses either case at start-up.
+std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language);
+
+// True for "original" or a tag in kLanguages.
 bool ConfigLanguageKnown(const std::string& code);
 
 }  // namespace bof3x

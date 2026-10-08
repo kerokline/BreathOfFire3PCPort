@@ -164,6 +164,11 @@ nothing else** (379 text, one image tile each in `DEMO` and `TURISHAR`). Capcom'
 English PSP release is one base with a language layer over it - the shape
 ASSET_SOURCES section 3 proposes, already practised.
 
+**Not in these rows** (they compare EMI sections; the PSP's ELF carries more,
+[`exe-tables-by-build.md`](exe-tables-by-build.md) 4.4): both PSP ELFs rebalance roster index 6's level
+table (249 bytes of EXP and stat gains in its 99 rows, learnt abilities
+untouched), and PSP-JP renames key items 2, 5, 7 and 9 and ability 116.
+
 Five files are PSP-only: `ETC/CAPLOGO.EMI`, `TMBGM000.EMI`, `TMBGM001.EMI`,
 `TURIMODE.EMI`, `TURISHAR.EMI`.
 
@@ -246,8 +251,11 @@ English text edits of 5.3.
   code half of I32 and of ASSET_SOURCES section 9; nothing here enters the
   cache.
 - **What the data rows do.** The four Western kinds are read in section 8.
-  The eleven PSP map bands of 5.2 are located and sized only; `tools/region_read.py`
-  `area4` is the method that would read them (each is an area block, 8.1).
+  ~~The eleven PSP map bands of 5.2 are located and sized only~~ - read
+  2026-10-08 ([`opt-layers.md`](opt-layers.md) section 4): no cell byte,
+  height or header changes; texture-coordinate records, a texture given to
+  152 edge cells in `AREA128`, one byte lowered in `AREA142`'s runs; a
+  layer, `psp-maps`.
 - **Anything rendered.** No palette or tile was rendered in colour; P6, P8
   and P13 stay candidates until one is.
 - **`psx-eu-en`**: not held.

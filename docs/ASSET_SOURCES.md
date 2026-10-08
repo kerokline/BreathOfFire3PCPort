@@ -170,7 +170,7 @@ engine still needs.
 |---|---|---|---|
 | Images (kind 1) | yes; the tag is the PSX VRAM word | none: 546 of 593 identical, the 47 others are the port's replacement art | `DAT_CONTAINER.md` §2 |
 | Data (kind 0) | yes | `copy` for 1,574; transforms for the six causes of the 513 others | same |
-| — compressed arenas (65) | yes | **a type-1 decompressor, not written** | `DAT_CONTAINER.md` §2, §4 |
+| — compressed arenas (65) | yes | `tools/type1.py` (2026-10-08): all 65 proved, plus 14 PC edits to carry | [`type1-compression.md`](type1-compression.md) |
 | — enemy tables (200) | yes | widen names 8→12, stride `0x88`→`0x8C` | same |
 | — script and text blocks (199) | yes: script bytecode + the disc's language | each disc's text encoding (US done) | same; [`dialogue-localisation.md`](dialogue-localisation.md) |
 | Sound banks (kind 2) | yes, as VAG ADPCM | a VAG decoder (small) | `DAT_CONTAINER.md` §2: every bank pairs exactly |

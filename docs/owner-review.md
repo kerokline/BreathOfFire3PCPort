@@ -233,6 +233,94 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Decisions the measurements raised
 
+- **`symbols.toml` quotes table values** ([`exe-tables-by-build.md`](exe-tables-by-build.md)
+  section 7, 2026-10-08): about 25 `[[data]]` evidence strings carry six or
+  more of a table's numbers in a row (`Battle_DamageVarianceTable`,
+  `Steal_RateTable`, `Field_MoveSpeeds`, `WorldMap_Records`, the CLUT tables
+  and others listed there), older than the step that found them. Rule 1 says
+  values from the game stay out of the repository; the fix is to replace the
+  quoted numbers with what they mean and how they were read. **Done
+  2026-10-08** (the owner: the values are public knowledge, recreated in
+  FAQs, taken from the sibling before the discs verified them - sunset them):
+  25 entries reworded in the tree, the addresses, counts, strides, readers
+  and PSX cross-references kept, the value runs replaced by their shape
+  (eleven are tables of game numbers, the rest engine constants - CLUT
+  strides, op lengths, direction angles, cell codes). The seven address
+  lists the regex also caught (`Gte_Vertices`, `BattleObj_StateTable`,
+  `MenuList_Kinds`, `Scena00_Runs` and three more) are function and data
+  addresses, not values, and stay. **Not done, the owner's call:** a history
+  rewrite - the strings stay in `git log`. Recommended against: the figures
+  are public, the last rewrite cost every cited hash (CLAUDE.md rule 7), and
+  the licensing path rests on the tree's engine / data split, not the
+  history's. Also open: the same kind of value runs in `docs/` (known-defects,
+  the group docs, `importer.md`'s list of the eleven world-map areas) were
+  not scanned.
+
+- **Step 3's four calls** ([`importer-transforms.md`](importer-transforms.md)
+  "The owner's calls", 2026-10-08): (1) a disc-only player's dial page - the
+  PlayStation's buttons as built, or a keyboard-legend layer independent of
+  the PC's art; (2) the 40 French and 54 German enemy names over 8 bytes -
+  Chinese on the PC today, blank over the cache: abbreviate in `loc_build.py`
+  or widen DIV-0053's draw; (3) the 14 port-edited arenas - read what the
+  edits fix, or accept the disc's decode with a ledger entry; (4) `AREA004`
+  from a Western disc alone brings the re-texture (DIV-0080's note) - accept
+  as a by-source difference, or refuse. Nothing to look at until the engine
+  reads the cache.
+
+- **Step 8's four calls** ([`exe-import.md`](exe-import.md) "The owner's
+  calls", 2026-10-08): (1) `recipes/exe-pointers.tsv` in the repo - 3,134
+  lines of addresses and counts from the executable, no values; kept under
+  rule 1's reading, say if it should be generated on the player's machine
+  instead; (2) blank the PC-source image's six name tables and move the
+  Chinese names to `loc/zh-CN/`, so `base/exe/` is one thing from every
+  source; (3) a PSP-only `base/exe/` carries the PSP's level table and
+  consumable 87 and no `sin_table` - accept and ledger, or require a PSX disc
+  or the PC; (4) the data pointers from a disc - held by the engine, or a
+  rebuild transform (93 % exact; recommended).
+
+- **Decided 2026-10-08: the disc's music by default** ("default to disc-delivered
+  music if available; there doesn't seem to be a compelling reason to use the
+  PC-delivered music unless you absolutely have to"). Recorded in
+  [`unified-data-plan.md`](unified-data-plan.md) section 6; step 9 moves up,
+  the loop table stays as the PC-only fallback. What it asks next: the
+  listening session that gates step 9 (`bgm-comparison.md` 10), and whether
+  the 11 jingles (step 6's call 3) follow the same rule - from `S_XA00.STR`
+  on the disc, by the engine playing a kind-0 stream from PCM.
+
+- **Step 6's three calls** ([`sound-import.md`](sound-import.md) section 6,
+  2026-10-08): (1) the PAL discs' 8 swapped area banks - refused by hash
+  today, so a PAL-only player lacks 8 containers' banks; accept as that
+  build's? (2) the port's converter wraps where the SPU clamps - 9 sample
+  values in 5 sounds, a full-scale click on the PC (`AREA000`'s bank holds
+  one: a listen first); clamping is a DIV and those banks stop being the
+  PC's bytes; (3) the 11 jingles for a disc-only player - an MP3 encoder in
+  the import (licensing), the engine playing kind-0 streams from WAV (`PURE`
+  / `KARA` 47 MB each, streamed), or PC-only.
+
+- **Step 4's six calls** ([`opt-layers.md`](opt-layers.md) "The owner's
+  calls", 2026-10-08): `psp-art` one layer or two (two chosen: P6's ten rows,
+  `psp-tiles` the rest); the PSP map bands a layer (chosen) or a rule; what
+  the launcher offers (recommended: a "PSP extras" group of boxes); the
+  `en-150` names layer the 8 renames only (chosen) or PSP-EU's whole tables;
+  the PSP content left out (logo, title page, button labels, `SCENA17`, P8,
+  the level table, consumable 87); a preset with layers on. **To look at once
+  built:** Stallion with `psp-art` on and off (fight 24, area 67; area 166's
+  fight 48), ability 116's banner under `psp-names-en-150`, `AREA128`'s dock
+  wide with `psp-maps`, a few `psp-tiles` areas.
+
+- **The world map's gauge words in French and German** ([`importer.md`](importer.md)
+  section 3, 2026-10-08): the port's dial page (the keyboard legend, kept for
+  every language) restyled the ENGINE / OVER HEAT gauge frames with the words
+  in English, as JP and US have them. The French and German discs translate
+  them (MOTEUR / SURCHAUFFE) in 7-row strips inside the frames, where the
+  port's swirl overlaps the first letters. Splicing the disc's word rows into
+  the port's page is possible with a rectangle diff (no tool yet), as a
+  ledgered divergence under the French and German overlays only. **Wants the
+  owner's eye on a render first**, then a yes or no. Seen on the way, and settled
+  the same day: four areas (`AREA104`, `127`, `134`, `164`) whose plate pages
+  the US disc left in Japanese are **not a gap** ([`importer.md`](importer.md)
+  section 3).
+
 - **The base tree's version of the Western data rows** ([`region-diff.md`](region-diff.md),
   2026-10-06): every build after JP - US, FR, DE and both PSP discs - changes
   `AREA004` section 8 (992 bytes) and one cue byte in 65 dragon and Ryu sound

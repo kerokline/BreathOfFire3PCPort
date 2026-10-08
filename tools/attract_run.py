@@ -139,7 +139,7 @@ def main():
     ap.add_argument('--original', default=None, metavar='LIST',
                     help='value for BOF3X_ORIGINAL, e.g. "*" or "File_Read"')
     ap.add_argument('--lang', default='original',
-                    help='value for BOF3X_LANG: "original" (default) or "en"')
+                    help='value for BOF3X_LANG: "original" (default) or an overlay tag, e.g. "en-US"')
     ap.add_argument('--filter', default='linear',
                     help="value for BOF3X_FILTER: \"linear\" (default, the port's own) or \"point\"")
     ap.add_argument('--no-kill', action='store_true')

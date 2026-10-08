@@ -77,13 +77,30 @@ void LoadImageChunk(std::uint32_t tag, const std::uint8_t* payload, std::int32_t
     }
 }
 
-// DIV-0005. The language whose overlays are wanted: BOF3X_LANG, read once at
+// DIV-0005. The language whose overlays are wanted: BOF3X_LANG, a BCP 47 tag
+// (en-US, en-150, fr-FR, de-DE, ja-JP - fixtures.toml's `tag` per build; the
+// longest is six characters, so 8 holds it), read once at
 // injection because LoadDatFile runs on a coroutine stack. Empty = none, and
 // then LoadDatFile does exactly what the original does. "original" is also
 // none: the launcher only fills in an EMPTY variable from its settings file,
 // so a harness that must not inherit the owner's language sets this
 // (docs/launcher-settings.md section 4).
 char g_lang[8];
+
+// DIV-0086. The optional layers wanted: BOF3X_OPT, a comma-separated list of
+// layer names (docs/opt-layers.md: psp-art, psp-tiles, psp-maps,
+// psp-names-en-150, psp-names-ja-JP), in the order they land, read and
+// checked once at injection. Each is a letter-or-digit-or-hyphen name of at
+// most kOptName - 1 characters; the longest today is 16. Empty = none, and
+// "original" is also none (as BOF3X_LANG's).
+constexpr int kOptMax = 8;
+constexpr int kOptName = 24;
+// "DAT\" + a layer + "." + a file name + NUL: 4 + 23 + 1 + 35 + 1. The
+// longest shipped name is 12 characters (Dat_FileNames, 742 entries, read
+// 2026-10-08); a longer one is refused in LoadDatFile, not skipped.
+constexpr int kOptPath = 0x40;
+char g_opt[kOptMax][kOptName];
+int g_opt_count;
 
 void WalkDatFile(const char* path);
 
@@ -95,8 +112,14 @@ bool g_area_block_loaded;
 
 // original 0x454590. Reads DAT\<name> whole and walks its chunks.
 //
-// DIVERGENCE DIV-0005: with BOF3X_LANG=xx set, DAT\xx.<name> is walked after
-// DAT\<name> when it exists, so its chunks land on top of the shipped ones - a
+// DIVERGENCE DIV-0086: then, with BOF3X_OPT=<layer>[,<layer>...] set,
+// DAT\<layer>.<name> for each layer in that order, when it exists - after the
+// language overlay, so a layer lands on top of both. The layers are built by
+// tools/importer.py from the player's PSP disc and copied in by its
+// `install`; none ships (docs/opt-layers.md).
+//
+// DIVERGENCE DIV-0005: with BOF3X_LANG=<tag> set, DAT\<tag>.<name> is walked
+// after DAT\<name> when it exists, so its chunks land on top of the shipped ones - a
 // kind-0 chunk over the same arena bytes, a kind-3 chunk replacing the glyph
 // table (Font_SetGlyphData frees the shipped one, a branch no shipped data
 // runs). The overlays are built locally by tools/loc_build.py; none ships
@@ -127,6 +150,14 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
         char overlay[0x30];
         Crt_sprintf(overlay, "DAT\\%s.%s", g_lang, name);
         if (GetFileAttributesA(overlay) != INVALID_FILE_ATTRIBUTES) WalkDatFile(overlay);
+    }
+    for (int i = 0; i < g_opt_count; ++i) {  // DIV-0086
+        char layer[kOptPath];
+        if (4 + std::strlen(g_opt[i]) + 1 + std::strlen(name) + 1 > sizeof layer)
+            bof3::Fatal("DIV-0086: DAT\\%s.%s does not fit the 0x%X-byte path buffer", g_opt[i], name,
+                        static_cast<unsigned>(sizeof layer));
+        Crt_sprintf(layer, "DAT\\%s.%s", g_opt[i], name);
+        if (GetFileAttributesA(layer) != INVALID_FILE_ATTRIBUTES) WalkDatFile(layer);
     }
     area4_walls::Apply(name);  // the later discs' walls in area 4 (BOF3X_AREA4_WALLS; area4_walls.h)
     if (g_area_block_loaded) {
@@ -225,10 +256,77 @@ void WalkDatFile(const char* path) {
 
 }  // namespace
 
+namespace {
+
+// The language a text layer's name ends in - "-<tag>" with the tag two
+// lowercase letters, then optionally "-" and two capitals or three digits
+// (en-150, ja-JP; fixtures.toml's tags) - or null for a layer that is not text.
+const char* LayerLanguage(const char* layer) {
+    for (const char* p = std::strchr(layer, '-'); p; p = std::strchr(p + 1, '-')) {
+        const char* t = p + 1;
+        auto lower = [](char c) { return c >= 'a' && c <= 'z'; };
+        auto upper = [](char c) { return c >= 'A' && c <= 'Z'; };
+        auto digit = [](char c) { return c >= '0' && c <= '9'; };
+        if (!lower(t[0]) || !lower(t[1])) continue;
+        if (t[2] == 0) return t;
+        if (t[2] != '-') continue;
+        if (upper(t[3]) && upper(t[4]) && t[5] == 0) return t;
+        if (digit(t[3]) && digit(t[4]) && digit(t[5]) && t[6] == 0) return t;
+    }
+    return nullptr;
+}
+
+// BOF3X_OPT into g_opt, refusing - loudly, at start-up - what the walk could
+// only skip: a name too long or with a character a file name must not carry,
+// one named twice, more than kOptMax, a layer with no file installed, and a
+// text layer under another language than BOF3X_LANG's (its names are glyph
+// codes of that language's font, DIV-0008).
+void ReadOptLayers() {
+    char list[kOptMax * kOptName];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", list, sizeof list);
+    if (n >= sizeof list) bof3::Fatal("DIV-0086: BOF3X_OPT is %lu characters; at most %u", n, (unsigned)sizeof list - 1);
+    if (n == 0 || std::strcmp(list, "original") == 0) return;
+    for (char* p = list;;) {
+        char* end = std::strchr(p, ',');
+        const std::size_t len = end ? static_cast<std::size_t>(end - p) : std::strlen(p);
+        if (g_opt_count == kOptMax) bof3::Fatal("DIV-0086: BOF3X_OPT names more than %d layers", kOptMax);
+        if (len == 0 || len >= kOptName) bof3::Fatal("DIV-0086: BOF3X_OPT: a layer name of %u characters (1..%d)",
+                                                     (unsigned)len, kOptName - 1);
+        char* name = g_opt[g_opt_count];
+        std::memcpy(name, p, len);
+        name[len] = 0;
+        for (const char* c = name; *c; ++c)
+            if (!((*c >= 'a' && *c <= 'z') || (*c >= 'A' && *c <= 'Z') || (*c >= '0' && *c <= '9') || *c == '-'))
+                bof3::Fatal("DIV-0086: BOF3X_OPT: layer \"%s\" has a character other than a letter, digit or -", name);
+        for (int i = 0; i < g_opt_count; ++i)
+            if (std::strcmp(g_opt[i], name) == 0) bof3::Fatal("DIV-0086: BOF3X_OPT names %s twice", name);
+        char pattern[kOptPath];
+        Crt_sprintf(pattern, "DAT\\%s.*.DAT", name);
+        WIN32_FIND_DATAA fd;
+        const HANDLE h = FindFirstFileA(pattern, &fd);
+        if (h == INVALID_HANDLE_VALUE)
+            bof3::Fatal("DIV-0086: BOF3X_OPT names %s, but there is no %s (tools/importer.py install --opt %s)", name,
+                        pattern, name);
+        FindClose(h);
+        if (const char* tag = LayerLanguage(name)) {
+            const std::size_t primary = std::strcspn(g_lang, "-");
+            if (primary != 2 || std::strncmp(g_lang, tag, 2) != 0)
+                bof3::Fatal("DIV-0086: layer %s is %s text; BOF3X_LANG is \"%s\"", name, tag, g_lang);
+        }
+        ++g_opt_count;
+        if (!end) break;
+        p = end + 1;
+    }
+}
+
+}  // namespace
+
 void DatLoad_Inject() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", g_lang, sizeof g_lang);
     if (n == 0 || n >= sizeof g_lang || std::strcmp(g_lang, "original") == 0) g_lang[0] = 0;
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
+    ReadOptLayers();
+    for (int i = 0; i < g_opt_count; ++i) bof3::Log("DIV-0086: optional layer %d, DAT\\%s.*.DAT", i + 1, g_opt[i]);
     BOF3_INJECT(LoadDatFile);
 }

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 85 entries, DIV-0001..0085, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 86 entries, DIV-0001..0086, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -353,9 +353,12 @@ designed in rather than bolted on.
 - **Original behaviour:** `LoadDatFile` `0x454590` reads `DAT\<name>` and walks
   its chunks; that is all. There is one language, compiled in with the data
   ([`dialogue-localisation.md`](dialogue-localisation.md) §2).
-- **New behaviour:** with the environment variable `BOF3X_LANG=xx` set, our
-  `LoadDatFile` (`src/game/dat_load.cpp`) walks `DAT\xx.<name>` after
-  `DAT\<name>` when that file exists, with the same chunk walker. An overlay
+- **New behaviour:** with the environment variable `BOF3X_LANG=<tag>` set, our
+  `LoadDatFile` (`src/game/dat_load.cpp`) walks `DAT\<tag>.<name>` after
+  `DAT\<name>` when that file exists, with the same chunk walker. The tag
+  is the BCP 47 tag of the release the text came from (`fixtures.toml`'s
+  `tag` per build: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`; since
+  2026-10-08 - a bare code `en` before, and the overlays named `en.<name>`). An overlay
   holds only the chunks that differ, and they land on top: a kind-0 chunk over
   the same arena bytes, a kind-3 chunk through `Font_SetGlyphData`, which frees
   the shipped table - the branch no shipped data had ever run. Without the
@@ -555,6 +558,10 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Each language is its own build with its own
   tables.
 - **Reversible?** Yes: unset `BOF3X_LANG`. The write is to process memory.
+- **Amended 2026-10-08 (DIV-0086):** `NameTables_Apply` accepts a run of
+  records too (a kind-5 chunk whose tag is any record's name field and whose
+  size is a whole number of records), for the `opt/` name layers; whole-table
+  chunks behave as before.
 
 ### Tighten the apostrophe and the comma in the English font
 
@@ -3082,7 +3089,7 @@ designed in rather than bolted on.
      8-unit text and were keyed on "a language is set". `Lang_FullWidth()`
      now names the full-width languages, `ja` and `zh` (owner, 2026-09-24:
      the five official languages are a closed set, en/fr/de at 8 and zh/ja
-     at 12). For those the three injectors leave the original layout, which
+     at 12) - by the tag's primary subtag since 2026-10-08 (`ja-JP`, `zh-CN`). For those the three injectors leave the original layout, which
      was made for full-width text. Every other value, `original` and unset
      included, takes the same path as before.
 - **Rationale:** the owner's request, 2026-09-24: Japanese as an option,
@@ -4389,7 +4396,13 @@ designed in rather than bolted on.
   moves never meet the walls. The oracle's one differing row is a sampler
   poll on an area-load boundary (area `0x0002` against the `0xffff` marker),
   not game state.
-- **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded.
+- **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded. **From a
+  Western disc alone** (the importer's cache, unified-data step 3,
+  [`importer-transforms.md`](importer-transforms.md) section 5): the cache
+  holds that disc's own `AREA004` rows, walls and the 30-cell re-texture
+  with them; the guard's "already walled" branch leaves them, and the switch
+  cannot restore the open map from such a cache. A by-source difference
+  until the owner says otherwise (the owner's call 4 there).
 
 ### The music loops inside its file, at the points the disc's sequence loops
 
@@ -4438,6 +4451,18 @@ designed in rather than bolted on.
   the offline splice for the owner's ear; whether replaying the intro's
   frames at each loop causes a hitch in play is unmeasured.
 - **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
+- **The full measurement, 2026-10-08** ([`bgm-comparison.md`](bgm-comparison.md)
+  section 11): all 153 songs rendered and measured, the method rewritten
+  the same day (the SPU's noise voices and free-running modulations defeat
+  a waveform-only measure). Of 156 looping tracks 48 have a loop in their
+  file, 80 hold less than a period (20 by a frame or two, `near_full` - the
+  owner's call whether a slip of that size a pass beats the rewind), 28
+  none that can be measured. The table in `music_loops_table.inc` is
+  regenerated from `loops.json` by `gen_loop_table.py` (not yet re-run at
+  this writing). **The owner's stance the numbers led to:** the disc's
+  music by default wherever a disc is a source
+  ([`unified-data-plan.md`](unified-data-plan.md) section 6); this entry
+  is what a PC-only install gets.
 
 ### The enemy AI rows' done bits cleared at spawn (the Volt's EXP bonus)
 
@@ -4615,3 +4640,73 @@ designed in rather than bolted on.
   compiled and mirrored offline (the bridge's 97 edge cells still qualify);
   the owner's look was before it.
 - **Reversible?** `BOF3X_SIDE_DUP=0`.
+
+### Optional layers from the player's PSP disc, walked after the language overlay
+
+- **ID:** DIV-0086
+- **Date:** 2026-10-08
+- **Subsystem:** assets (`LoadDatFile` `0x454590`, ours in
+  `src/game/dat_load.cpp`; the kind-5 name chunks of
+  `src/game/name_tables.cpp`; the launcher's `opt=` key,
+  `src/launcher/config.cpp`)
+- **Tier:** Sensible - a later release's palettes, textures, texture
+  coordinates and names, off by default; nothing that happens in play
+  changes (no cell byte, height, number or line of code is in a layer).
+- **Original behaviour:** `LoadDatFile` walks `DAT\<name>` and nothing else
+  (DIV-0005 added the language overlay `DAT\<tag>.<name>`). The PC port
+  carries the JP disc's art, maps and names; the PSP releases (2005, from JP's
+  data) recoloured Stallion (P6), renamed an ability and some items (P7 and
+  more), redrew or blanked 954 area texture tiles, changed 515 palette rows in
+  52 areas and edited 11 areas' map bands ([`region-diff.md`](region-diff.md)
+  5, [`psp-stallion.md`](psp-stallion.md) 2-4,
+  [`exe-tables-by-build.md`](exe-tables-by-build.md) 4.4).
+- **New behaviour:** with `BOF3X_OPT=<layer>[,<layer>...]` set, after the
+  file and its language overlay, `DAT\<layer>.<name>` is walked for each
+  layer in that order when it exists, so each lands on top of the last.
+  The layers ([`opt-layers.md`](opt-layers.md)) are built by
+  `tools/importer.py build --opt` from the player's own PSP disc and copied
+  in by `importer.py install`; none is shipped or committed: `psp-art`
+  (Stallion's two palette rows in area 67 and eight in area 166),
+  `psp-tiles` (840 page tiles and 515 palette rows of the areas; the port's
+  dial-page tiles kept), `psp-maps` (11 map bands' texture coordinates, tile
+  words and cell-run records), `psp-names-en-150` (8 names, ability 116
+  among them) and `psp-names-ja-JP` (5). A layer chunk is a sub-range of the
+  chunk it changes: kind 0 at the base tag plus the offset, kind 1 at the
+  replaced tiles' rectangle, and kind 5 - **widened here** - on any run of
+  records of a name table (`NameTables_Apply` took only whole tables; a
+  whole-table chunk is handled as before). Refused at start-up, not skipped:
+  a layer name over 23 characters or with a character other than a letter,
+  digit or `-`, one named twice, more than 8, a layer with no
+  `DAT\<layer>.*.DAT`, a text layer (a name ending in `-<tag>`) under another
+  language than `BOF3X_LANG`'s; and in the walk, a path that would not fit
+  its 0x40-byte buffer. The launcher's `opt=` key sets the variable with
+  the layers installed and of the language played (no dialog box yet).
+- **Rationale:** the plan's divergence policy for data
+  ([`unified-data-plan.md`](unified-data-plan.md) 7): a later build's
+  content change is an optional layer from the player's own disc, off by
+  default, recorded here as existing. The owner asked for the PSP's
+  Stallion colours as a toggle ([`psp-stallion.md`](psp-stallion.md)).
+- **Known and accepted:** what the PSP's blanked tiles and map-band edits
+  are for is read only as far as their structures (texture coordinates
+  inset by a texel or two, textures given to 152 empty cells at the edge of
+  one map, [`opt-layers.md`](opt-layers.md) section 4); a render-filter
+  and wide-view accommodation is the reading, not seen. A text layer's names
+  are the PSP's spelling under the PSX layer's font; in a save they are
+  stored by id, not by text.
+- **Verification:** offline (2026-10-08, [`opt-layers.md`](opt-layers.md)
+  section 6): `LoadDatFile`'s walk simulated over the PC's `DAT/` and the
+  layers - every chunk a layer lands on equals the PSP disc's section (130
+  of 133; the other 3 differ in exactly the port's 14 dial-page tiles, kept),
+  every other chunk the PC's own (920 of 920); the layers byte-identical
+  built from either PSP disc; `importer.py verify` composes each landing
+  chunk against `recipes/opt.toml` (133 of 133). Compiled
+  (`i686-w64-mingw32-g++ -fsyntax-only -Wall -Wextra`: `dat_load.cpp`,
+  `name_tables.cpp`, `launcher/config.cpp`). **Not run:** the owner's
+  llvm-mingw build, the `'*'` self-tests, and any live look (Stallion is
+  fight 24 in area 67; no recorded route reaches it).
+- **Also in the PSX version?** No: the PSX discs have JP's palettes, tiles,
+  maps and names (the Western discs their own names); these are the PSP
+  releases' changes, laid over the PC's data.
+- **Reversible?** Unset `BOF3X_OPT` (or `BOF3X_OPT=original`), or empty the
+  ini's `opt=`; `BOF3X_ORIGINAL=LoadDatFile` runs Capcom's loader, which
+  walks neither overlay.
