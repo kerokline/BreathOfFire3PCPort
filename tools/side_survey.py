@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Survey the area blocks' side-face texture words (docs/known-defects.md D239).
 
-    python tools/side_survey.py --dat bof3/DAT [--only AREA041] [--cells AREA041:X0,Z0,X1,Z1]
+    python tools/side_survey.py --dat bof3/DAT [--only AREA060] [--cells AREA060:44,0,49,99]
     python tools/side_survey.py --disc "CDImage/Breath of Fire III (USA).cue" [...]
 
 The question D239 leaves: `MapView_CellTextures` `0x56F9B0` reads a cell's
@@ -354,7 +354,7 @@ def main():
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--dat", help="the PC install's DAT directory")
     src.add_argument("--disc", help="a PSX disc (.cue, .bin or .iso)")
-    ap.add_argument("--only", nargs="*", help="file name prefixes (AREA041 ...)")
+    ap.add_argument("--only", nargs="*", help="file name prefixes (AREA060 ...)")
     ap.add_argument("--edges", action="store_true", help="keep the map's last row and column")
     ap.add_argument("--cells", action="append", default=[], metavar="AREA:X0,Z0,X1,Z1",
                     help="print a rectangle of one area cell by cell (repeatable)")

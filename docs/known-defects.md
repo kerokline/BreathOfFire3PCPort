@@ -6436,7 +6436,7 @@ abort).
 **Status:** latent, harmless by reading or the owner's to judge where a doc
 says so.
 
-## D239 — A map cell's side faces read their texture words by which sides exist, so a cell created at another moment is textured differently (open; the sea bridge's "waterfall")
+## D239 — A map cell's side faces read their texture words by which sides exist, so a cell created at another moment is textured differently (open, cause settled; the sea bridge's "waterfall")
 
 **Found:** the owner, 2026-10-06, playing area 41's sea bridge under the wide
 picture (DIV-0041): tall columns of sea-like texels hanging from the deck's
@@ -6470,21 +6470,57 @@ at the frame), the packet pool (a quarter full), DIV-0077 / DIV-0079, the
 VRAM shadow's page 0, a double allocation (a live bitmap on the pool found
 none in the scene), a stale side word at allocation (none).
 
-**What a fix needs.** Which order the map's words are authored in: own,
-south, east (then the data is as the code reads it when both sides exist,
-and the designers simply never saw a deck cell with both) or own, east,
-south (then the code's walk is wrong whenever both sides exist, on both
-machines). A survey of the area blocks - tiles with three words, which of
-the second and third is a rectangle (bit 8) and which a grid cell, against
-which side is tall under the areas' fixed cameras - settles it; the PSX
-twin's allocation on this bridge (whether its deck cells ever get a south
-side) is the other half. The survey is `tools/side_survey.py` (2026-10-07,
-written in a cloud session without the data, checked on synthetic blocks
-authored both ways only): `--dat bof3/DAT` or `--disc DISC`, every block's
-side sets against its tiles' run lengths, then two votes on the two-sided
-cells - word shape against the drop, and word signature (source, shade,
-turn) - each scored against the single-sided cells, whose one side word is
-unambiguous; `--cells AREA041:X0,Z0,X1,Z1` for the deck. Not yet run. Until
-then nothing is changed: `BOF3X_SIDE_ZERO=1`
-(an experiment, off by default) releases a side whose word is 0 and does
-not touch this.
+**The survey, 2026-10-08: authored own, south, east - the code's walk is
+right; the deck's edge has no word for a south side.** `tools/side_survey.py`
+(`--dat` or `--disc`) on the PC's 200 area blocks (`AREA*.DAT`, the kind-0
+chunk of tag `0xC8000`), and the same on the Japanese disc's 200 (the
+section for `0x80104000`): every total identical, and `AREA060` byte for
+byte. The method: each cell's sides from the corner heights as loaded, by
+`MapView_Build`'s two tests; its tile's run of dwords (to the next index
+any cell uses); each word decoded as `Prim_SetTexture` decodes it.
+
+- **Side sets against runs** (the map's last row and column left out):
+  single-sided S 32,791 cells (run 2 or more: 32,408), E 32,091 (31,714),
+  two-sided 7,911 (run 3: 7,832; run 2: 7; run 1: 72). Runs longer than
+  the static sides are common (cells with no static side: 156,589 of run 2,
+  108,640 of run 3) - words for sides the static heights do not make.
+- **Faces are shaded by their facing.** A single-sided cell's word 2 is
+  unambiguous: south faces carry shade `0x78` / `0x70` / `0x80`, east faces
+  `0x50` / `0x60`. On the two-sided cells, word 2 looks like a south word
+  and word 3 like an east word: 7,144 cells for own, S, E against 259 for
+  own, E, S (429 ties), each word scored by how often single-sided S and E
+  words carry its signature (source, shade, turn).
+- **Shape against drop agrees.** A side word's vertical texels are twice
+  its drop in corner units on 90 % of single-sided cells. Under own, S, E
+  the two-sided cells' words fit as well (92 %), under own, E, S worse
+  (75 %); per cell with unequal drops, 2,408 to 13.
+- **The bridge is `AREA060.DAT`** (70 x 100; the docs' "area 41" names
+  it otherwise - which numbering is unresolved here). The deck is columns
+  45..48, rows 1..98, flat at corner height 32 in the file over sea at 0.
+  Columns 45..47 have tiles of two words, the second **0**: a south face
+  authored as word 0, for the steps the sky effect's hump makes between
+  deck rows. Column 48, the deck's east edge, has two words too: its own
+  `0x1286000C` and the **east** face's `0x12800100` (the 64-texel
+  rectangle). It has no word for a south face. The dword after its run is
+  the next tile's own word, `0x0180001E`, a 16 x 16 sea grid cell. So a
+  column-48 cell that the hump gives a south side at creation hands its east
+  word to the south step and draws the 32-unit east cliff with the sea tile:
+  the streaks, exactly as measured live.
+- **The PSX twin is the same code** (`SLPS_009.90`, capstone):
+  `FUN_80153B8C` allocates `+0x46` (the PC's `+0x7E`) when `next[0] <
+  own[1]` or `next[2] < own[3]` and `+0x4E` (`+0x8E`) when `below[0] <
+  own[2]` or `below[1] < own[3]`, only for a new item (`0x80153F3C..
+  0x80153FFC`); `FUN_80154D50` reads `+0x4E`'s word first, then `+0x46`'s,
+  a zero one releasing `+0x46` (`0x80154E1C..0x80154EC8`). Capcom's on
+  both machines; when it shows depends on when the cull creates a deck
+  cell under the hump.
+
+**The fix, the owner's call (a DIV):** the code cannot see a run's length,
+so a fix needs one: at the area's load, each used tile's run (to the next
+used index, as the survey takes it) and each cell's sides by the file's
+heights. Then in `MapView_CellTextures`, a cell that has both sides with a
+run of two gives word 2 to the side the file's heights make and treats the
+other as the deck's middle cells author theirs - word 0 (or releases it;
+which looks right is the owner's eye). Until then nothing is changed:
+`BOF3X_SIDE_ZERO=1` (an experiment, off by default) releases a side whose
+word is 0 and does not touch this.
