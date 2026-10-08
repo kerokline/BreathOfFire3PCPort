@@ -435,6 +435,36 @@ def table_identity(t, syms, pc, img, owner):
                                                     "" if not holes else "; %d bytes unfilled" % len(holes))
 
 
+def translatable(bid, pc, owner_before, img_before, pointers):
+    """How the PC's pointer words fare on a disc, before the mask: a word into
+    .data whose target the build's map places, and whose disc word is the
+    target's address in that build, could be rebuilt from the disc by the
+    map run backwards (not done: the words stay unfilled)."""
+    segs = tables.read_map(os.path.join(tables.MAPS, bid + ".tsv"))
+    st = [r["pc"] for r in segs]
+    c = collections.Counter()
+    for p, n, cls in pointers:
+        for a in range(p, p + 4 * n, 4):
+            o = a - DATA_LO
+            if cls not in ("text", "data"):
+                continue
+            if any(owner_before[o + j] is None for j in range(4)):
+                c[cls + " word unplaced"] += 1
+                continue
+            if cls == "text":
+                c["text placed"] += 1
+                continue
+            t = struct.unpack_from("<I", pc, o)[0]
+            i = bisect.bisect_right(st, t) - 1
+            if i < 0 or not segs[i]["pc"] <= t < segs[i]["pc_end"]:
+                c["data target unplaced"] += 1
+            elif segs[i]["addr"] + t - segs[i]["pc"] == struct.unpack_from("<I", img_before, o)[0]:
+                c["data translates"] += 1
+            else:
+                c["data differs"] += 1
+    return dict(c)
+
+
 def cmd_measure(a):
     """Per build: the image against BOF3.exe's .data, every byte classed, the
     differing and the unfilled bytes by symbol, and the catalogued tables'
@@ -451,6 +481,7 @@ def cmd_measure(a):
     summary = {}
     for bid, disc in discs(a.disc):
         img, owner, ranges = disc_image(disc, bid)
+        xl = translatable(bid, pc, list(owner), bytes(img), pointers)
         mask(img, owner, pointers)
         if sha(img) != load_recipe()["build"][bid]["sha256"]:
             fail("%s: the image is not the one recipes/exe.toml records; rerun `recipe`" % bid)
@@ -474,12 +505,13 @@ def cmd_measure(a):
         for t in cat["table"]:
             if "symbol" in t:
                 idt[t["key"]] = table_identity(t, tsyms, pc, img, owner)
-        summary[bid] = {"counts": {"%s/%s" % k: v for k, v in c.items()},
+        summary[bid] = {"counts": {"%s/%s" % k: v for k, v in c.items()}, "pointers": xl,
                         "identical": sum(x == y for x, y in zip(img, pc)), "tables": idt,
                         "differ_by_how": dict(collections.Counter(ranges[owner[i]][2] for i in range(len(pc))
                                                                   if owner[i] is not None and img[i] != pc[i]))}
         print("== %s: %d of %d bytes identical; %s" % (bid, summary[bid]["identical"], len(pc), dict(c)))
         print("   differing placed bytes by how: %s" % summary[bid]["differ_by_how"])
+        print("   pointer words: %s" % xl)
         for k, (v, d) in idt.items():
             print("   %-22s %-24s %s" % (k, v, d))
     with open(os.path.join(out, "summary.json"), "w") as f:
