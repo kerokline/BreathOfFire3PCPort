@@ -6478,6 +6478,13 @@ machines). A survey of the area blocks - tiles with three words, which of
 the second and third is a rectangle (bit 8) and which a grid cell, against
 which side is tall under the areas' fixed cameras - settles it; the PSX
 twin's allocation on this bridge (whether its deck cells ever get a south
-side) is the other half. Until then nothing is changed: `BOF3X_SIDE_ZERO=1`
+side) is the other half. The survey is `tools/side_survey.py` (2026-10-07,
+written in a cloud session without the data, checked on synthetic blocks
+authored both ways only): `--dat bof3/DAT` or `--disc DISC`, every block's
+side sets against its tiles' run lengths, then two votes on the two-sided
+cells - word shape against the drop, and word signature (source, shade,
+turn) - each scored against the single-sided cells, whose one side word is
+unambiguous; `--cells AREA041:X0,Z0,X1,Z1` for the deck. Not yet run. Until
+then nothing is changed: `BOF3X_SIDE_ZERO=1`
 (an experiment, off by default) releases a side whose word is 0 and does
 not touch this.
