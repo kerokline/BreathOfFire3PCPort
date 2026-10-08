@@ -223,14 +223,11 @@ where the reading behind it is. Nothing here is a divergence until it is in
        past 320 was drawn backwards into the band. Widened to the picture's
        edges under DIV-0041 (its entry, "The sea bridge's sky"). The owner
        on the capture (2026-10-07): "Sky looks perfect";
-     - **the "waterfall": fixed 2026-10-08, owed the owner's eye**
-       (DIV-0085, D239 in `known-defects.md`): the bridge is `AREA060.DAT`;
-       its deck's east edge carries a word for the east cliff only, and the
-       sky effect leaves steps that give those cells a south face too, so
-       the cliff read the next tile's sea texture. Both faces now take the
-       cliff word (`BOF3X_SIDE_DUP=0` for the original). **To look at:**
-       `bridgeWalk` wide - no streaks; the deck's edge steps should not be
-       noticeable. The log names the first 20 cells changed (`DIV-0085`).
+     - **the "waterfall": fixed and seen, 2026-10-08** (DIV-0085, D239):
+       the deck's edge cells gained a south step from the sky effect and
+       their cliff read the next tile's sea texture; both faces now take the
+       cliff word. The owner, the bridge wide, walked several times: "I
+       can't notice anything off about the deck edges", the streaks gone.
   The third capture (`sprite_crop_2135_1006.png`) is a close-up of one
   of these and needs no separate reading.
 

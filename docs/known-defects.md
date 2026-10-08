@@ -6436,7 +6436,7 @@ abort).
 **Status:** latent, harmless by reading or the owner's to judge where a doc
 says so.
 
-## D239 — A map cell's side faces read their texture words by which sides exist, so a cell created at another moment is textured differently (fixed by DIV-0085, owed the owner's eye; the sea bridge's "waterfall")
+## D239 — A map cell's side faces read their texture words by which sides exist, so a cell created at another moment is textured differently (fixed by DIV-0085, seen by the owner; the sea bridge's "waterfall")
 
 **Found:** the owner, 2026-10-06, playing area 41's sea bridge under the wide
 picture (DIV-0041): tall columns of sea-like texels hanging from the deck's
@@ -6529,6 +6529,6 @@ party's row in one `BOF3X_DRAWORDER` log would show it.
 
 **Fixed by DIV-0085** (2026-10-08, the owner's request; `BOF3X_SIDE_DUP`, on
 by default): a cell textured with both sides whose file heights give it one
-draws both with its one side word. Owed: the build, `'*'`, and the
-owner's `bridgeWalk` wide. `BOF3X_SIDE_ZERO=1` (an experiment, off by
+draws both with its one side word. The owner, 2026-10-08, the bridge wide,
+walked several times: no streaks, the edges unremarkable. `BOF3X_SIDE_ZERO=1` (an experiment, off by
 default) releases a side whose word is 0 and does not touch this.

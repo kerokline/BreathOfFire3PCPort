@@ -4599,9 +4599,10 @@ designed in rather than bolted on.
   effect's height writes applied for a walk north from row 70 to 50 leave
   column 48's rows 63..83 with both faces, each a file east-only cell whose
   original east word would be `0x0180001E` (the sea tile) and is now its own
-  `0x12800100`. **Owed:** the build, `'*'` narrow and wide (the switch is
-  armed after the self-tests, so they compare Capcom's read), and the
-  owner's `bridgeWalk` wide: the streaks gone, the edge steps unremarkable.
+  `0x12800100`. **Seen by the owner, 2026-10-08**, on their machine's
+  build, wide, the bridge walked several times: the streaks do not come
+  back and nothing is off at the deck's edges ("I can't notice anything
+  off about the deck edges").
   Not handled: `AreaMap_ApplyPatch`'s height patches (area 94's init) after
   the snapshot - a patched cell keeps the file's side set.
 - **Reversible?** `BOF3X_SIDE_DUP=0`.
