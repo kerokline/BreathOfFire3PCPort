@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 76 entries, DIV-0001..0076, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 85 entries, DIV-0001..0085, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2270,10 +2270,49 @@ designed in rather than bolted on.
   brings back the 320-wide pattern. [`widescreen.md`](widescreen.md) §5
   has the check owed and the nine sites above as the owner's routes
   reach them (none seen).
+  **The view's cell inset, 2026-10-07** (the owner's bridge, 2026-10-06:
+  stair-stepped black notches at the wide picture's left and right edges
+  where terrain cells were missing, `analysis/shots/owner_reports/bridge_left_edge_unrendered_1006.webp`,
+  `bridge_garr_wide_1006_a.png`; reproduced on the owner's `bridgeWalk`
+  route). Not a cull: `MapView_Build` and `DrawLayer_Open` walk each row
+  of the 28-column view ring from `MapView_Column + inset` for
+  `(14 - inset) * 2` columns, the inset being columns trimmed off each
+  side by the camera's angle and distance (`map_layers.cpp` `Inset()`,
+  `MapView_Inset` `0x905D80`; two references in the image, both ours).
+  The inset was sized for 320 columns of picture, and the 53 extra columns
+  a side fell outside it - cells the terrain cull would have kept were
+  never visited. Under `Widescreen_Live()` the inset is lowered by
+  `Widescreen_InsetColumns()`, 3 columns a side (a ring column is two map
+  cells across, about 20 screen px at the field camera's usual distance;
+  `BOF3X_WIDE_INSET=0..14` moves it), not below 0; the fuzz and every
+  narrow run see 0. Verified on the `bridgeWalk` route wide, a capture
+  every 60 frames: the sea reaches both edges on every frame where it
+  stepped before (`inset3_660.png` in the session-`a8d0ee80` scratchpad,
+  `vis/`); no `no draw item` line in the log (the pool, DIV-0062, has
+  room).
+  **The sea bridge's sky, 2026-10-07** (the owner's screenshots of area 41:
+  the sky black for the band's 53 columns on one side as the camera pans,
+  and a sliver of stretched cloud growing in the other band). The sky there
+  is `EffectKind18Sub15_Draw` `0x502E60` (ours, `src/game/effect_5c.cpp`;
+  `effect_5c.md` section 1 had marked it "not a DIV-0041 site"): a haze
+  band 0..320 x 56..88, three 256-wide cloud strips scrolled by
+  `Frame_Counter / 8` and clipped to 0..320, and four gradient quads over
+  the columns 0, 60, 160, 260, 320, all linked into layer 15's third list.
+  A strip starting past 320 was drawn from its start back to 320 - off the
+  original's picture, inside our band - which was the sliver. Under
+  `Widescreen_Fill()`: the haze and the outer gradients run from -53 to 373
+  (two more gradient quads, flat at the table's outer rows), the strips are
+  clipped to those bounds with the original's u rule (u from the clipped-off
+  width on the left, to the visible width less one on the right), a fourth
+  strip at phase - 512 covers the left band at every phase, and a strip
+  starting past the right bound is skipped. Off, every packet is the
+  original's bit for bit (the fuzz compares them). The owner on the
+  capture: "Sky looks perfect".
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
-  `BOF3X_ORIGINAL=AreaMap_DrawBackdrop` the 320-wide sky.
+  `BOF3X_ORIGINAL=AreaMap_DrawBackdrop` the 320-wide sky;
+  `BOF3X_WIDE_INSET=0` the original's cell inset under a wide picture.
 
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
@@ -3214,7 +3253,12 @@ designed in rather than bolted on.
   switch is set after their fuzz, which runs later than the patch) and the
   two title draws still Capcom's (the `Text_DrawAt` calls at `0x596D13`
   and `0x59DEFA`, re-aimed under the same name at `ListTitle_DrawAt`) -
-  all through `ListTitle_X` (`src/game/list_title.h`).
+  all through `ListTitle_X` (`src/game/list_title.h`). **Extended
+  2026-10-07** to the camp's master list (`MasterWin_DrawList` `0x59C2C0`,
+  `src/game/rest_2h.cpp`), whose title DIV-0064 made `MSTR` the same day:
+  its box is `0x71` wide and the original centres on `x + 0x3A` (`6` a
+  character back), so it asks `ListTitle_Centring` and centres on its own
+  middle; armed after the group's fuzz, as `field_o`'s lists are.
 - **Rationale:** as DIV-0018 and DIV-0058.
 - **Also in the PSX version?** The US disc's own draw centres its own font;
   not checked how.
@@ -3493,6 +3537,107 @@ designed in rather than bolted on.
   confirmed (their capture). **Owed the owner's eye:** `Conf`, the
   battle's stats, the `WEAPON`..`VITAL` and `ASSIST`..`SKILL` titles, the
   German build and the French weapon and skill pages.
+  **Extended 2026-10-07 - a sixth group, the camp's master list** (the
+  owner's report of 2026-10-06 night: the list's title still 师匠 under the
+  English overlay, and a cross beside every completed master where the US
+  screen draws a star, their web capture
+  `analysis/shots/owner_reports/master_list_web_reference_1006.png`). Two
+  slots, drawn by `MasterWin_DrawList` `0x59C2C0` (ours, `rest_2h.cpp`):
+  the title, 8 bytes at `0x66A1F0` (`push` at `0x59C5B5`), and the mark
+  beside a completed master, 4 bytes at `0x66A2D8` (`push` at `0x59C464`).
+  **The cross was the overlay's own doing:** the mark is the one byte `t`,
+  and the shipped font's single-byte slot for `t` (glyph `0x4E`) holds a
+  star - rendered from `FIRST.DAT` with `font_pc.py`'s `glyph_pixels`,
+  2026-10-07 - so the 2001 port drew a star as the PlayStation does, and
+  DIV-0006's repaint of the 75 single-byte slots with the US letters turned
+  it into a lowercase t (the same fault DIV-0051 fixed for the controller
+  panel's button icons). Both strings are on the US disc: `SHOP.EMI` has
+  `MSTR` and then the one code `0x84` - the dialogue set's filled star,
+  the cell rendered from each disc's atlas - as two NUL-ended strings
+  padded to four bytes between the 24 bytes the PC has at `0x66B3B8` and
+  the masters' requirement lists it has byte for byte at `0x66B3D0`; the
+  German disc the same, the French `ME` and the same star. `loc_build.py`
+  finds them by those two anchors (`LABEL_MASTER_HEAD` / `_LISTS`) and
+  writes the group as tag 6; `Labels_Apply` writes both slots in place
+  after checking the two push operands. The star goes in as the two-byte
+  code of the appended cell (`0x9E7`), so the mark no longer depends on
+  which glyph a single-byte slot holds. The title is centred on its real
+  width under a Latin overlay (DIV-0059, extended to this list the same
+  day: its centre is `x + 0x3A`, not the `0x99` box's `x + 78`). A
+  Japanese overlay leaves both as shipped: it repaints no letter slots, so
+  the port's star stands there. **The portrait box's label 弟子 at
+  `0x66A1F8` (`MasterWin_DrawPupils`) is still as shipped:** `SHOP.EMI` has
+  no string beside `MSTR` for it, and the owner's capture does not show
+  that box; what the US screen draws there is still the question to the
+  owner ([`yes-no-prompts.md`](yes-no-prompts.md) section 5).
+  *Verification:* `loc_build.py all` on the US and French discs reports
+  `master list 2`; the `rest_2h`, `battle_draw` and `field_o` self-tests
+  0 mismatches (the centring is armed after the fuzz, as `field_o`'s is);
+  the owner's `campingFishing.txt` with a shot every 30 frames around 2400
+  (`analysis/shots/master_labels/masters.png`): `MSTR` on the box's middle,
+  Mygas with the unfinished dot as before. **Owed the owner's eye:** the
+  star itself, on a save with a completed master (no committed route has
+  one), and the French `ME`.
+  **Extended 2026-10-07 again - five more groups, from the owner's
+  `tools/recipes/sortScreens.txt`** (their route through the item and
+  ability sort menus, the formation screen and the camp's Skill Notes;
+  `BOF3X_TEXTLOG=1` named every string drawn from `.data`, and the one
+  the log could not see was found by its bytes):
+  7. **the sort menus** - eleven slots from `0x66A170` of 8 or 12 bytes
+     (整理 / 自己整理 / 通常道具 / 战斗道具, the equipment sort's three,
+     AP大 / AP小, 通常技能 / 战斗技能) behind the pointer table `0x66B12C`.
+     `START.EMI` has `SORT`, `ManualSort`, `NormalItem`, `CombatItem`,
+     `Power`, `Defence`, `Kind`, `High AP`, `Low AP`, `NormalAbil`,
+     `CombatAbil` right after the 28 bytes the PC has at `0x66B110`, the
+     US disc packed in the same rooms, the French and German padded to
+     four and placed by their eleven pointers (`loc_build.py`'s
+     `label_run`). Nothing but the two tables (`0x66B12C`, and `0x66B374`
+     for the AP pair) reaches the slots, so the group is repointed into
+     16-byte buffers of the DLL's as the item and skill types are: the
+     French `PC élevé` and `Défense` (an accent is two bytes) and the
+     German `AP niedr` are over their 8-byte slots.
+  8. **the camp's Skill Notes sort** - its title 选单 `0x66A1DC` and first
+     choice 察看技能 `0x66A1E4` behind `0x66B36C` (the other two are
+     group 7's AP pair again): `SHOP.EMI`'s `SORT` and `LOOK` after the
+     same 28 bytes.
+  9. **the Skill Ink count's label** 墨水 `0x66A118` (`push` at `0x585964`,
+     `SharedList_DrawItemCount`), which section 8 of
+     [`dialogue-localisation.md`](dialogue-localisation.md) had down as
+     "not found on the US disc as text": `SHOP.EMI`'s `Ink` (`Encre`,
+     `Tinte`) after the `SKILL` slot the PC has at `0x664290` and its
+     three pointers.
+  10. **the formation names** - ten records of 28 at `0x6636B0` (a name of
+     16, then the three s16 pairs of the icon wheel), read by
+     `Menu_DrawIconWheel` `0x573F70` through the base at `0x573FC6` and
+     drawn by the 8 px draw, so `Labels_SmallGlyph` now serves their
+     slots as it serves the status words'. `START.EMI` has the ten as
+     records of 20 (US: a name of 7 and its length) or 22 (German: 8, the
+     length, a pad) with the same pairs, found by the pairs at either
+     stride: `Normal` x3, `Attack` x2, `Defense` x2, `Chain`, `Magic`,
+     `Refuge` - all ten PC records match the disc's pair for pair. Their x
+     is DIV-0084's.
+  11. **the zenny unit** - `0x66A31C`, 4 bytes, the one byte `s`: the
+     shipped font's `s` slot is the port's coin glyph, and the overlay's
+     repaint made it a letter (`11957s` on the owner's Items screen) - the
+     master list's star again. Four pushes (`Menu_DrawMoneyBox`'s
+     `0x57465C` is the witness; `Commu_DrawZennyBox`, the enemy target
+     panel's three and the battle result's zenny window share the slot).
+     `START.EMI` has the US code `0x60`, the dialogue set's stylised Z, in
+     the slot right after the icon wheel's triangle (24 bytes the PC has
+     at `0x6637C8`), before the full stop and the verbs' pointers; the US
+     money box itself (`0x801dc9xx`, found by its `%7d`) draws no unit,
+     the shop's zenny box does.
+  *Verification:* `loc_build.py all` on the US, French and German discs
+  reports `sort menus 11, formations 10, zenny unit 1, note sort 2, ink
+  label 1`; the `field_o`, `field_s` and `menu_windows` self-tests 0
+  mismatches; the owner's route replayed with a shot every 30 frames
+  (`analysis/shots/sortScreens2`): frame 420 `SORT` / `ManualSort` /
+  `NormalItem` / `CombatItem`, 720 `SORT` / `ManualSort` / `High AP` /
+  `Low AP`, 1440 `Normal` / `Attack` / `Defense` centred in their boxes,
+  1980 `Ink  2`, 330 `11957` with the Z. **The owner, the same morning:**
+  the armour and weapon screens' sorts (`Power` / `Defence` / `Kind`) look
+  correct too. **Owed the owner's eye:** the French and German words in
+  play.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 
@@ -3877,6 +4022,19 @@ designed in rather than bolted on.
   draw them before the sprite - the lists outlive a frame while the view is
   still, and a cell moved before the rows behind it is painted over by
   them on a hillside.
+- **Refined 2026-10-07, the owner's first sighting in play** (Nina walking
+  behind a crate and drawn through its top; the owner's `ninaWalkBehindBlock`
+  route, frames 360 and 540, identical with the switch off and wrong with
+  it on): the rule tested only the feet's box, and a raised cell of a
+  later layer that covered the body but not the feet (the crate's top,
+  corners 28 against feet 16, in layer 27's second list) was crossed. Now
+  anything that is not floor stops the sprite where it reaches the sprite
+  at all (the feet's box widened upward to the body's 44 px, `whole_box`
+  in `layering.cpp` `Stops()`); floor is still crossed, and still only
+  where it reaches the feet. The same box is used against later sprites'
+  bodies and the table items. Verified: the route's eleven captures
+  identical to the switch off; `field_view.txt` and
+  `worldMapAndAreaTransition_ab.txt` re-run on the refined rule (below).
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
@@ -4058,6 +4216,402 @@ designed in rather than bolted on.
   its block builder mixes the two is not established.
 - **Verification:** `BOF3X_SHADOW=rest_2c` headless compares Capcom's
   `Save_BuildBlock` with the switch off (the switch is set after the
-  self-test, as DIV-0075's), 0 mismatches. Not yet seen live: a save with a
-  non-record-0 leader, then the load screen - the owner's eye.
+  self-test, as DIV-0075's), 0 mismatches. **Seen live by the owner,
+  2026-10-06:** a save with another member leading loads showing Ryu's level
+  and name together.
 - **Reversible?** `BOF3X_ORIGINAL=Save_BuildBlock` runs Capcom's.
+
+### A TILE_1 covers the PlayStation pixel's footprint, not one screen pixel
+
+- **ID:** DIV-0077
+- **Date:** 2026-10-06
+- **Subsystem:** the renderer (`D3d_DrawTile1` `0x5A2220`, ours in
+  `src/game/d3d_rest.cpp`; `Gfx_DrawOTag`'s handler for code `0x68`,
+  `Gpu_SetTile1`'s primitive)
+- **Tier:** Intent - the owner's decision, 2026-10-06, off a capture: the
+  dream scene's drifting specks were a quarter of their size.
+- **Original behaviour:** the port draws a TILE_1 (a one-pixel tile of the
+  PlayStation's 320 x 240) as a `D3DPT_POINTLIST` of one vertex at the
+  scaled corner. At `D3d_ScaleX` / `D3d_ScaleY` = 2 the frame has four pixels
+  where the PlayStation had one and the point lights one of them, the
+  top-left; at larger scales the gap grows ([`d3d-rest.md`](d3d-rest.md)
+  D-a). Seen in the `whelpBoss` route's dream scene (frame 11880: the specks
+  in Deis's light pillar) and built for the Kaiser and shadow-mote battle
+  effects no route casts.
+- **New behaviour:** with the switch `g_tile1_quad` on (set by
+  `D3dRest_Inject` after the self-test), the tile is a quad from the scaled
+  corner to the scaled (x + 1, y + 1) - a triangle strip of four, as
+  `D3d_DrawTile` draws a TILE of w = h = 1 - with the point's colour, blend
+  and shade. The primitive, its builders and the rest of the walk are
+  unchanged.
+- **Rationale:** the owner, 2026-10-06, shown a four-times zoom of frame
+  11880 beside a paint mock of the 2x2: "go ahead and make it larger".
+  The PlayStation's pixel is the unit the effect was authored in.
+- **Also in the PSX version?** No: the PlayStation's GPU drew the TILE_1 as
+  its one pixel. This is the port's renderer, which has no PSX twin.
+- **Verification:** `BOF3X_SHADOW=d3d_rest` headless compares Capcom's
+  handler with the switch off (set after the self-test, as DIV-0075's and
+  DIV-0076's), 0 mismatches. Live: the `whelpBoss` route's frames around
+  11880, ours against `BOF3X_TILE1=0`.
+- **Reversible?** `BOF3X_TILE1=0` leaves the switch off (the point);
+  `BOF3X_ORIGINAL=D3d_DrawTile1` runs Capcom's.
+
+### BOF3.CFG's key lines cannot run off the end of Cfg_Load's frame
+
+- **ID:** DIV-0078
+- **Date:** 2026-10-06
+- **Subsystem:** the shell (`Cfg_Load` `0x4FD030`, ours in `src/game/shell.cpp`
+  as `Shell_CfgLoadFrame`; `Cfg_SetKeyTable` `0x5A9860` copies the result)
+- **Tier:** Sensible - a stack overrun from a configuration file; the owner's
+  decision, 2026-10-06: "cfg_load probably needs overrun protection".
+- **Original behaviour:** each key line of `BOF3.CFG` (line 3 on) is scanned
+  with `sscanf("%d %d")` into two **byte** pointers of the function's own
+  0x3C-byte frame, two lines an entry, and `Cfg_SetKeyTable` then copies 0x80
+  bytes from the frame's `+0x14` into `Key_Table`. The frame holds 0x28 bytes
+  of that table, so entries 10..31 are the return address into WinMain and
+  0x54 bytes of WinMain's frame; from the 21st key line the scan overwrites
+  the return address itself ([`shell.md`](shell.md) sections 2 and 5). Only a
+  hand-edited file reaches it: the launcher writes two lines and passes the
+  rest through unchanged.
+- **New behaviour:** with the switch `g_cfg_own_table` on (set by `Shell_Inject`
+  after the self-test), the key lines scan into a zero-filled 0x80-byte table
+  of our own (plus the 8 bytes the last pair's ints spill into), through the
+  same byte pointers and the same packing - two lines an entry, the spill as
+  the original leaves it - and lines past the 32nd entry (the 66th line on) are
+  read and ignored. `Cfg_SetKeyTable` copies our table. The first two lines,
+  the no-file and the two-lines-or-fewer cases are unchanged. What a player
+  with key lines sees: entries 10..31 are zero instead of stack bytes, so
+  `Pad_Read`'s walk stops where the lines end, and 21 or more lines no longer
+  return into garbage.
+- **Rationale:** a stack overrun from a configuration file is a defect of the
+  port with no gameplay content; the owner asked for protection. The fix is the
+  one group PW proposed ([`platform-round.md`](platform-round.md) section 4).
+- **Also in the PSX version?** No: the PlayStation has no `BOF3.CFG`; the file
+  and its reader are the port's.
+- **Verification:** `BOF3X_SHADOW=shell` headless compares Capcom's `Cfg_Load`
+  with the switch off (the frame and the bytes above it byte for byte, as
+  before), 0 mismatches. The switch-on path is not compared against the
+  original (it exists to differ); not yet seen live.
+- **Reversible?** `BOF3X_ORIGINAL=Cfg_Load` runs Capcom's.
+
+### LINE primitives are the PlayStation pixel's width, not one screen pixel
+
+- **ID:** DIV-0079
+- **Date:** 2026-10-06
+- **Subsystem:** the renderer's six LINE handlers - `D3d_DrawLineF2` `0x5A17A0`,
+  `D3d_DrawLineF4` `0x5A1D10` (`src/game/d3d_draw.cpp`), `D3d_DrawLineF3`
+  `0x5A1A00` (`field_misc.cpp`), `D3d_DrawLineG2` `0x5A18B0`, `D3d_DrawLineG3`
+  `0x5A1B50` (`battle_draw.cpp`), `D3d_DrawLineG4` `0x5A1EA0` (`d3d_rest.cpp`);
+  the shared drawer `src/game/d3d_lines.cpp`
+- **Tier:** Intent - the owner's decision, 2026-10-06, off a capture of the
+  fishing gauge: "all elements should scale".
+- **Original behaviour:** each handler scales its corners to screen
+  coordinates and hands Direct3D a `LINESTRIP`, which rasterises one screen
+  pixel wide at any window scale. A PlayStation line was one pixel of 320 x
+  240, so at the owner's window (a scale of about 3.3) every line in the game
+  is a third of its width: the fishing gauge's bar and centre mark, the
+  fishing grey lines (LINE_F2, 8,662 calls in the recorded routes; LINE_F4
+  1,894), and whatever builds LINE_F3 and the G kinds (no route). Measured on
+  the `caughFish` route's frame 1680 ([`owner-review.md`](owner-review.md)).
+- **New behaviour:** with `d3d_lines::g_wide` on (armed after every module's
+  self-test, as DIV-0041's fills are), each segment is a quad: the ends moved
+  to their pixel's centre, extended half a pixel along the line (a square cap)
+  and half a pixel to each side, each axis at its own scale, drawn as a
+  `TRIANGLESTRIP` of four with the ends' own colour, depth and blend. An
+  axis-aligned line covers exactly the pixels the PlayStation's covered; a
+  diagonal is a smooth band of that width (the PlayStation's stepped in
+  pixel stairs); a polyline is one quad per pair of corners, with a notch at
+  the joints a one-pixel line never showed. A zero-length line is one pixel.
+  The primitive, its builders and the handlers' state calls are unchanged.
+- **Rationale:** the owner, 2026-10-06: "all elements should scale, right?",
+  then the recommendation accepted: one segment per pair, square ends, smooth
+  diagonals, on by default. The TILE_1 class (DIV-0077) for lines.
+- **Also in the PSX version?** No: the PlayStation's GPU drew lines in its
+  own pixels. This is the port's renderer, which has no PSX twin.
+- **Verification:** the four modules' shadows (`d3d_draw`, `d3d_rest`,
+  `battle_draw`, `field_misc`) compare Capcom's handlers with the switch
+  off, 0 mismatches. Live (2026-10-06): the `caughFish` route's frames
+  1500..1700 ours against `BOF3X_LINES=0` (`analysis/shots/lines_1006_quad`,
+  `_strip`): frame 1680 differs in 11,949 pixels, all in the gauge (the red
+  bar and the centre mark, now the scale's width) and the instruction
+  banner's outline - the only lines on the frame; nothing else moved.
+- **Reversible?** `BOF3X_LINES=0` leaves the switch off (the strip);
+  `BOF3X_ORIGINAL=D3d_DrawLineF2,...` runs Capcom's handler.
+
+### Dauna Mine's minecart map is walled as every later release walled it
+
+- **ID:** DIV-0080
+- **Date:** 2026-10-06
+- **Subsystem:** the area data as loaded (`src/game/area4_walls.cpp`, run at
+  the end of `LoadDatFile` in `src/game/dat_load.cpp` for `AREA004.DAT`; the
+  cell plane at `AreaMap_Header` `0x8CB580`'s block, the battle placement
+  nibble map at `0x8C3D80`)
+- **Tier:** Intent - the owner's decision, 2026-10-06: "if it looks like a bug
+  fix, it's probably worth keeping the change as the default option", and
+  "make the code change so that it works the same regardless of source".
+- **Original behaviour:** the PC port carries the Japanese disc's map of area
+  4 (Dauna Mine's minecart area), in which 72 cells along the raised strip's
+  east edge (x 28, z 9..30 and 35..65, the doorway at z 32..33 open), its
+  west side's north end (x 25, z 9..11) and the corridor's bottom edge (z 71,
+  x 7..22) are open floor between wall stubs, and 8 of those cells are open
+  to battle placement. Every later release - the US, French and German PSX
+  discs and both PSP discs - walls those cells (`0x10`, the value the
+  neighbouring stubs already carry) and the PSX discs close the 8 placement
+  cells; the PSP took the walls but not the placement half
+  ([`region-diff.md`](region-diff.md) sections 8 and 10).
+- **New behaviour:** with `BOF3X_AREA4_WALLS` on (the default; armed after
+  every module's self-test), each load of `AREA004.DAT` sets the 72 cells to
+  `0x10` and the 8 placement nibbles to 0, from a coordinate table in our
+  code, guarded: only when the block is 90 x 88 and every cell still holds
+  JP's value; a map that already has the walls is left alone with a log
+  line. The later discs' 30-cell re-texture of the same strip is **not**
+  taken: it is Capcom's texture records, not expressible by coordinate.
+- **Rationale:** a collision fix every later build made; applied by
+  coordinate so the PC install, the JP disc and any later disc give the same
+  area - the engine / data split keeps the bytes the player's
+  ([`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 5).
+- **Also in the PSX version?** The JP disc has the open cells; every later
+  disc has the walls. This follows the later discs.
+- **Verification:** `tools/region_read.py fix` parses the table out of the
+  C++ source, applies it to the JP disc's sections 8 and 10 and compares with
+  the US and German discs: the cell bytes and the placement map identical,
+  the 920 remaining differences all in the re-texture not taken.
+  `'*'` narrow at the agent's tip, 0 mismatches (the switch is armed after
+  the self-tests). **Not seen live:** the owner's walk of the strip's east
+  and bottom edges, blocked with the fix and open with `BOF3X_AREA4_WALLS=0`.
+  Area 4 plays twice in the attract cycle, so state-hash reference runs want
+  the switch off. **Attract on against off (2026-10-06,
+  `analysis/statehash/attract_walls_on` / `_off`):** the off run identical to
+  the references on all 10,305 ticks; the on run differs from them in
+  exactly four pages, the cell plane's two (`0x8D3000`, `0x8D4000`) and the
+  placement map's two (`0x8C3000`, `0x8C4000`), from the first load at tick
+  1,312 - the fix's own footprint and nothing else, so the demo's scripted
+  moves never meet the walls. The oracle's one differing row is a sampler
+  poll on an area-load boundary (area `0x0002` against the `0xffff` marker),
+  not game state.
+- **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded.
+
+### The music loops inside its file, at the points the disc's sequence loops
+
+- **ID:** DIV-0081
+- **Date:** 2026-10-06
+- **Subsystem:** the music pump (`Music_Decode` `0x5A6F30`'s end-of-stream
+  path, ours in `src/game/sound.cpp`; the new `src/game/music_loops.cpp` with
+  its generated table `music_loops_table.inc`)
+- **Tier:** Intent - the owner, 2026-10-06, after the listening set: "the
+  quality between the mp3 / disc isn't that bad, but the seams are *very*
+  noticeable - I noticed the combat one in game, but the town music is also
+  really noticeable side by side."
+- **Original behaviour:** a looping track's decoder is rewound to the file's
+  start when the stream ends: the intro replays on every pass (7.4 s on the
+  battle theme), a file cut mid-pass jumps from mid-phrase to the intro, and
+  the join is a cut plus the file's lead-in (6..23 ms of near-silence). The
+  PlayStation's sequences loop to a point inside the song
+  ([`bgm-comparison.md`](bgm-comparison.md) sections 7 and 12.1).
+- **New behaviour:** with `BOF3X_MUSIC_LOOPS` on (the default; armed after
+  every module's self-test), a track with a measured row loops from the row's
+  end back to its start inside the file, sample-accurate - the decoder is
+  rewound and the frames before the loop start discarded, so the samples
+  after the jump are the first pass's bit for bit - with a 2.9 ms crossfade
+  at the join (5.8 ms on a row shifted to fit a file cut short of one body,
+  the battle theme today). A track without a row rewinds as before. Thirteen
+  tracks have rows today (`003 014 036 051 060 063 064 079 082 085 090 144
+  153`); the full measurement of the 156 looping songs is paused for a
+  machine left on (section 11's resume command). The town theme `000` is
+  **excluded**: its file is 0.44 s shorter than one loop period, so no
+  correct loop exists inside it - the owner's decision (section 11.3).
+- **Rationale:** the owner's words above; the measurement that the disc
+  loops inside the song. The table is our own measurement, regenerable from
+  `analysis/bgm/loops.json` by `tools/bgm/gen_loop_table.py`; it holds
+  sample positions, not game data.
+- **Also in the PSX version?** The PlayStation plays the sequence, which
+  loops at these points by its own markers; the PC's rewind is the port's.
+  This restores the disc's loop structure on the PC's recordings.
+- **Verification:** `tools/bgm/prove_loops.py` splices each row the engine's
+  way and scores the first second after the join against the disc's render
+  or the file's own continuation: the battle theme from -0.10 with 809
+  near-silent samples to 0.63 with no gap; the eleven in-file rows from
+  -0.14..0.22 to 0.977..0.989. `BOF3X_SHADOW=sound` loops a stand-in decoder
+  sample-exactly in four call patterns and checks every row; `'*'` narrow
+  passed on the agent's tip and the `sound` module at the merged tip.
+  **Not yet heard in the game**: `analysis/bgm/listen/153_loop_fixed.wav` is
+  the offline splice for the owner's ear; whether replaying the intro's
+  frames at each loop causes a hitch in play is unmeasured.
+- **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
+
+### The enemy AI rows' done bits cleared at spawn (the Volt's EXP bonus)
+
+- **ID:** DIV-0082
+- **Date:** 2026-10-07
+- **Subsystem:** battle setup (`Battle_CopyEnemyData` `0x4946C0`, ours in
+  `src/game/battle_sprites.cpp`; read by `EnemyAI_TurnCheck` `0x44AAD0`,
+  `EnemyAI_RowDone` `0x44AC80`, `EnemyAI_SetRowDone` `0x44B2E0`)
+- **Tier:** Intent - a port bug; the PlayStation shows what was meant.
+- **Original behaviour:** an enemy's four AI rows each carry a "fired" bit in
+  the enemy object's byte `+0xF1` (`EnemyAI_SetRowDone` sets it after a hit
+  row fires; `EnemyAI_RowDone` refuses a row whose bit is set). Nothing in the
+  PC port clears the byte: `Battle_CopyEnemyData` clears `+0x10D`, `+0x110..`,
+  `+0x114..`, `+0x118..`, `+0x11C..` and `+0x122..+0x125` and sets `+0xF0`,
+  `Battle_PlaceBossActor` clears the first 0x80 bytes and the same list,
+  `BattleEnemy_ClearStates` zeroes bytes `+0..+4` at a fight's end. The
+  objects (`0x93B960`, eight of 0x128) are `.bss`, zeroed once at process
+  start. So a once-only row fires in the first fight that meets its condition
+  in that slot and never again for the session: the Volt's row 1 ("hit by
+  element mask 4: EXP x3, message 0x82", `tools/enemy_ai.py --name Volt`),
+  the Tar Man's frost row, every other once-only hit row.
+  The owner's fight of 2026-10-06 (three Volts, one Thunder, the Thunder's
+  own whole-side lightning as the trigger): one Volt tripled, 84 + 28 + 28 +
+  16 = 156, halved over the two living members = the 78 on screen
+  ([`trigger-mode-enemies.md`](trigger-mode-enemies.md)).
+- **New behaviour:** `Battle_CopyEnemyData` also writes `+0xF1 = 0`
+  (working record `+0x71`), so every spawned enemy starts with its rows
+  unfired, as on the PlayStation.
+- **Rationale:** the PSX twin (`0x800A9148`) clears the same list and not
+  `+0xE1` either - but there the enemy objects (`0x801EB5A0`, stride 0x118)
+  lie inside the BATTLE.EMI#3 game-mode image (`0x801D0C00..0x801ED93F`,
+  118,080 bytes, md5 `8a80230e...` as the sibling's catalogue has it), which
+  is loaded from disc over the field overlay at every battle entry; the
+  image's bytes at every object are zero (read off the sibling's disc image
+  2026-10-07). The PC keeps the objects in static memory and so keeps what
+  the PlayStation threw away. The logic (`EnemyAI_TurnCheck`,
+  `EnemyAI_CondElement`, `EnemyAI_ApplyAction` kind 6, `EnemyOp_ReceiveAction`
+  running the check after the damage and before the kill) matches the PSX
+  twins (`0x80098BB0`, `0x80099874`, `0x80099954`, `0x801E3B8C`) line for
+  line; the state did not.
+- **Also in the PSX version?** No: the reload resets it. This restores the
+  PlayStation's effective behaviour.
+- **Verification:** `BOF3X_SHADOW=battle_sprites`: the clone comparison seeds
+  `+0xF1` 0 for `Battle_CopyEnemyData`'s rounds (3,000, 0 mismatches), and a
+  dedicated check hands both the original's clone and ours a record with
+  `+0xF1 = 0xFF` on each of the eight slots - the original keeps 0xFF, ours
+  leaves 0. Owed: the owner's live fight (a Volt group with a thunder hit,
+  twice in one session; every Volt should yield 84 both times).
+- **Reversible?** No switch: a static byte the PlayStation never carried over.
+
+### The master list's pupils box without the port's label
+
+- **ID:** DIV-0083
+- **Date:** 2026-10-07
+- **Subsystem:** menu, the camp's master list (`MasterWin_DrawPupils`
+  `0x59C8F0`, ours in `src/game/rest_2h.cpp`, kind 17 of
+  `Window_Handler7KindTable`'s camp set)
+- **Tier:** Sensible
+- **Original behaviour:** beside the pupils' portrait box (x + 3, y + 3,
+  0x72 x 0x58) the 2001 port draws a second, smaller box to its left (x -
+  0x25, y + 3, 0x22 x 0x10, its border at x - 0x28) with the label 弟子
+  (`0x66A1F8`), which no overlay translated: a Chinese box on an English
+  screen (the camp route's frame 2400,
+  `analysis/shots/master_labels/masters.png`). The PlayStation's screen has
+  the portrait box alone - the owner's capture of the US release,
+  2026-10-07, after the question of [`yes-no-prompts.md`](yes-no-prompts.md)
+  section 5 - and the US disc carries no string for such a label beside
+  its `MSTR` (DIV-0064's sixth group found `MSTR` and the star mark alone
+  in `SHOP.EMI`).
+- **New behaviour:** under a Latin language overlay the label box, its
+  border and the label are not drawn; the portrait box and its border are
+  as before. `g_pupil_label_off`, patched to 1 by `Rest2H_Inject` after the
+  group's fuzz under the name `MasterPupilLabel`.
+- **Rationale:** the PlayStation's screen as the reference, as DIV-0051; a
+  box whose only content no overlay has a word for.
+- **Also in the PSX version?** Not applicable - this is the PlayStation's
+  layout brought back.
+- **Verification:** the `rest_2h` self-test (the fuzz runs before the
+  patch): 144,000 rounds over 36 functions, 0 mismatches. Live: the camp
+  route with a shot at frame 2400 (`analysis/shots/master_labels2/masters.png`):
+  `MSTR`, Mygas, the stat box and the portrait box, nothing left of the
+  portraits - the owner's US capture beside it, the same.
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=MasterPupilLabel` keeps the overlay and the box.
+
+### The formation screen's names centred in their boxes
+
+- **ID:** DIV-0084
+- **Date:** 2026-10-07
+- **Subsystem:** menu, the formation screen's icon wheels
+  (`Menu_DrawIconWheel` `0x573F70`, ours in `src/game/field_o.cpp`)
+- **Tier:** Sensible
+- **Original behaviour:** each wheel's box is 0x45 wide and its name is
+  drawn by the 8 px draw from x + 0x16: the port's four-glyph names
+  (传统阵形, 32 px) sit on the box's middle. The US release draws the name
+  from its `START.EMI` twin at x + 0x27 (`0x801dcf30`, `addiu $a0, $fp,
+  0x27` before the small-text call `0x8014fc90`), the box's middle, so its
+  routine centres - `Defense` at 8 px a letter is 56 px, which from x +
+  0x16 would run six past the box.
+- **New behaviour:** once DIV-0064's group 10 has written the names one
+  byte a letter (`Labels_SmallWritten(10)`), the name starts at x + 0x27 -
+  4 x its letters, under a Latin overlay: `g_wheel_name_centre`, patched
+  to 1 by `FieldO_Inject` after the fuzz under the name
+  `FormationNameCentre`. Otherwise the port's x + 0x16.
+- **Rationale:** as DIV-0059: the US words in the US place.
+- **Also in the PSX version?** Not applicable - the PlayStation's own
+  placement brought back.
+- **Verification:** the `field_o` self-test (before the patch): 82,000
+  rounds over 41 functions, 0 mismatches. Live: the owner's
+  `sortScreens.txt`, frame 1440 (`analysis/shots/sortScreens2/f01440.png`):
+  `Normal`, `Attack`, `Defense` each on its box's middle.
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=FormationNameCentre` keeps the overlay's words at the
+  port's x.
+
+### A side face gained at run time drawn with the cell's one side word (the sea bridge's "waterfall")
+
+- **ID:** DIV-0085
+- **Date:** 2026-10-08
+- **Subsystem:** the field view's cell textures (`MapView_CellTextures`
+  `0x56F9B0`, ours in `src/game/map_layers.cpp`; the snapshot
+  `map_layers::SnapshotSides`, run at the end of `LoadDatFile` in
+  `src/game/dat_load.cpp` when a file carried the area block, tag `0xC8000`)
+- **Tier:** Intent - the owner's request, 2026-10-08: the bridge's camera is
+  fixed, so a duplicate texture on the south face "won't be noticeable".
+- **Original behaviour:** a cell's side faces are chosen once, when its draw
+  item is created, by comparing corner heights at that frame; its texture
+  words are read own, south (if it has one), east (if it has one) from its
+  tile's run. The map authors a word for each side the *file's* heights
+  give a cell and no more (`known-defects.md` D239: the survey of all 200
+  area blocks, PC and JP disc). Where code moves heights during play, a cell
+  can be created with a side its file heights do not give it, and then reads
+  a dword past its run - the next tile's own word. On `AREA060`'s sea bridge
+  the sky effect (`EffectKind18Sub15_Draw`) leaves one-unit steps along the
+  deck behind a party walking north: the deck's east edge (column 48, its
+  run own + the east cliff's 64-texel rectangle) gets a south step, the step
+  takes the cliff word and the 32-unit cliff takes the sea's 16 x 16 tile,
+  stretched - the streaks. The PlayStation is the same code
+  (`FUN_80153B8C`, `FUN_80154D50`) and the same data.
+- **New behaviour:** with `BOF3X_SIDE_DUP` on (the default; armed after
+  every module's self-test), when a cell is textured with both side faces
+  and the file's heights give it exactly one, both faces take that one side
+  word - when its tile's run carries no third word of its own (the run
+  ends at the next tile index any cell uses; a one-sided cell whose tile has
+  a third word, 10,309 across the game, has one authored for the other side
+  and keeps the original's read, added 2026-10-08 after the owner's check).
+  Every other cell is read as the original reads it: a cell the file gives
+  both sides, or none, is untouched, so shipped geometry draws as before.
+  The first 20 cells it changes are logged (`DIV-0085    map cell x,z`).
+- **Rationale:** the extra face exists only because heights moved; the
+  word the original gives it is another tile's, and on the bridge a tall
+  cliff stretched from a sea tile. The cell's own side word is the closest
+  texture the data has, and under the bridge's fixed camera the south step
+  it lands on is a few texels high.
+- **Also in the PSX version?** Yes, the defect: identical code and data.
+  Whether it shows there depends on when the cull creates the deck's edge
+  cells; in this port, D239's two logs tie it to DIV-0041's
+  terrain margin; that the margin puts the creation line on the steps is
+  inferred, not measured.
+- **Verification:** compiled (mingw GCC, `map_layers.cpp`, `dat_load.cpp`,
+  `inject_all.cpp`; a cloud session). Offline on `AREA060`'s block: the sky
+  effect's height writes applied for a walk north from row 70 to 50 leave
+  column 48's rows 63..83 with both faces, each a file east-only cell whose
+  original east word would be `0x0180001E` (the sea tile) and is now its own
+  `0x12800100`. **Seen by the owner, 2026-10-08**, on their machine's
+  build, wide, the bridge walked several times: the streaks do not come
+  back and nothing is off at the deck's edges ("I can't notice anything
+  off about the deck edges").
+  `AreaMap_ApplyPatch`'s height patches come after the snapshot, so a
+  patched cell keeps the file's side set; checked offline, it never matters:
+  the four areas with height patches (`AREA094`, `103`, `128`, `140`; every
+  combination of their entries' two values) change the sides of up to 42
+  cells and never give a one-sided cell both. Where else the rule can act:
+  `known-defects.md` D239, "Where DIV-0085 can act". The run guard was
+  compiled and mirrored offline (the bridge's 97 edge cells still qualify);
+  the owner's look was before it.
+- **Reversible?** `BOF3X_SIDE_DUP=0`.

@@ -348,7 +348,7 @@ const ah::Callee kCallees[] = {
     {W1F_OURS(Sound_StreamDone), 0, {}, ah::Answer::kFlag, 0, 0},
     {W1F_OURS(Menu_DrawOutline), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W1F_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CommitEffect},
-    {W1F_THEIRS(Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {W1F_OURS(Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W1F_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     // standard ones listed again: what the callee reads, or what the caller reads after
     {W1F_OURS(Text_DrawAt), 5, {kAll, kAll, kU8, kAll, kAll}, ah::Answer::kGarbage, 0, 0},   // the colour's upper bytes are the original's stack
@@ -359,7 +359,7 @@ const ah::Callee kCallees[] = {
     {W1F_OURS(Msg_OpenScript), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &MsgEffect},
     {W1F_OURS(Sound_PlayEffect), 1, {kU16}, ah::Answer::kGarbage, 0, 0, {}, &MovesCells},
     {W1F_OURS(Flags_Set), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCells},
-    {W1F_THEIRS(Rand), 0, {}, ah::Answer::kRand, 0, 0, {}, &MovesCells},
+    {W1F_OURS(Rand), 0, {}, ah::Answer::kRand, 0, 0, {}, &MovesCells},
     {W1F_OURS(Effect_Spawn), 5, {kU8, kU8, kU8, kU16, kU16}, ah::Answer::kByte, 0xFE, 0x02},
     {W1F_OURS(Gpu_SetPolyFT4), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &PolyEffect},
     {W1F_OURS(Gpu_SetSemiTrans), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &SemiEffect},

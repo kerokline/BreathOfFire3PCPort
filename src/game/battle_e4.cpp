@@ -79,7 +79,7 @@ using ItemFlagsFn = unsigned char (__cdecl*)(unsigned, unsigned);
 using VoidFn = void (__cdecl*)();
 using ActorFn = void (__cdecl*)(unsigned);
 
-// The item's flag byte (0x591810, nobody's).
+// The item's flag byte (0x591810, Item_UseFlags - ours since group TWO, 2026-10-06).
 unsigned char ItemFlags(unsigned category, unsigned item) { return BH_AT(ItemFlagsFn, at::kItemFlags)(category, item); }
 
 // jmp [table + 4 * (dword 0x904AA4 & 0xFF)]: the table's `entries`

@@ -40,14 +40,27 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/lang_layout.h"
+#include "game/list_title.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_2h_callees.h"
 #include "game/scenario_harness.h"
+#include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
 namespace rest_2h {
 std::uint32_t g_master_bound = at::kMasterBound;
+// DIVERGENCE DIV-0059: the master list's title centred on the width its pen
+// covers, under a Latin overlay (ListTitle_Centring). Set by Rest2H_Inject
+// after the fuzz, which compares with the original's 6 * count arithmetic.
+bool g_master_title_live = false;
+// DIVERGENCE DIV-0083: the pupils box's label (弟子, 0x66A1F8) and its own
+// box are the 2001 port's addition - the PlayStation's screen has the
+// portrait box alone (the owner's US capture, 2026-10-07). 0 until
+// Rest2H_Inject patches it to 1 under a Latin overlay, after the fuzz, under
+// the name MasterPupilLabel; BOF3X_ORIGINAL=MasterPupilLabel keeps the box.
+unsigned char g_pupil_label_off = 0;
 }  // namespace rest_2h
 
 namespace {
@@ -496,9 +509,15 @@ extern "C" void __cdecl MasterWin_DrawList(unsigned char* w) {
     }
     SH_CALL(Menu_DrawBox)(X(w) + 3, Y(w) + 3, 0x71, 0x14, 0, Style());
     SH_CALL(Menu_DrawBox)(X(w) + 3, Y(w) + 0x92, 0x71, 8, 0, Style());
+    // The title is centred on x + 0x3A for 12-unit glyphs: 6 a character
+    // back from there. Under DIV-0059 (a Latin overlay; DIV-0064's MSTR is
+    // four 8-unit letters) the same centre, less half the real width.
     const int title_y = Y(w) + 7;
     const unsigned char length = SH_CALL(Text_CharCount)(Text(at::kMasterTitle));
-    SH_CALL(Text_DrawAt)(X(w) - 6 * static_cast<int>(length) + 0x3A, title_y, 0, 0x10, Text(at::kMasterTitle));
+    const int title_x = rest_2h::g_master_title_live && ListTitle_Centring()
+                            ? X(w) + 0x3A - static_cast<int>(TextAdvance_Width(Text(at::kMasterTitle)) / 2)
+                            : X(w) - 6 * static_cast<int>(length) + 0x3A;
+    SH_CALL(Text_DrawAt)(title_x, title_y, 0, 0x10, Text(at::kMasterTitle));
     Pieces(X(w), Y(w), at::kMasterPiecesA);
     Pieces(X(w), Y(w), at::kMasterPiecesB);
     for (int i = 0; i < 5; ++i) Piece(8 * i + 0x28 + X(w), Y(w), 1);
@@ -589,6 +608,8 @@ extern "C" void __cdecl MasterWin_DrawPupils(unsigned char* w) {
         }
     }
     SH_CALL(Menu_DrawBorder)(X(w), Y(w), 0xD, 0xA);
+    // DIVERGENCE DIV-0083: no label box under a Latin overlay.
+    if (rest_2h::g_pupil_label_off) return;
     const unsigned char style2 = Style();
     SH_CALL(Menu_DrawBox)(X(w) - 0x25, Y(w) + 3, 0x22, 0x10, 0, style2);
     SH_CALL(Menu_DrawBorder)(X(w) - 0x28, Y(w), 3, 1);
@@ -822,7 +843,7 @@ extern "C" int __stdcall DInput_EnumJoystick(const void* instance, void* context
     if (created != 0) return 1;
     auto* const joy = static_cast<IUnknown*>(DInput_Joystick);
     joy->QueryInterface(*reinterpret_cast<const IID*>(static_cast<std::uintptr_t>(at::kJoystickIid)), &DInput_Joystick2);
-    const int differs = SH_AT(int (__cdecl*)(const char*, const char*), at::kStricmp)(
+    const int differs = SH_CALL(Crt_stricmp)(
         reinterpret_cast<const char*>(inst + 0x12C), reinterpret_cast<const char*>(At(at::kProductName)));
     if (differs == 0) DInput_JoystickFound = 1;
     return 0;
@@ -851,6 +872,15 @@ void Rest2H_Inject() {
     bof3::Log("rest_2h: MasterWin_SlideOut's bound %d (0x59C136; -120 unless DIV-0041 widened it)",
               static_cast<int>(static_cast<short>(Word(At(at::kMasterBound)))));
     if (bof3::WantsShadow("rest_2h")) rest_2h::SelfTest();
+    rest_2h::g_master_title_live = true;   // DIV-0059, from here on
+    // DIVERGENCE DIV-0083: a Latin language overlay only, as DIV-0059's switch.
+    if (Lang_Latin()) {
+        static const std::uint8_t was = 0, is = 1;
+        bof3::PatchBytes("MasterPupilLabel",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&rest_2h::g_pupil_label_off)),
+                         &was, &is, 1);
+        bof3::Log("DIV-0083    the pupils box's label left out: %s", rest_2h::g_pupil_label_off ? "on" : "off");
+    }
     BOF3_INJECT(MenuList_ReserveWinDraw);
     BOF3_INJECT(MenuList_GeneWinRun);
     BOF3_INJECT(MenuList_GeneWinDraw);

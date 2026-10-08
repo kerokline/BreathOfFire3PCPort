@@ -107,10 +107,5 @@ constexpr std::uint32_t kArea134EffectArgsB = 0x62B61C;      // Area134_EffectAr
 
 // --- the callee nobody owns (raw address) ---
 
-// 0x5B9450: the C runtime's strncpy (dst, src, n) - copies up to n bytes, a
-// NUL ending the copy and the rest of the n zeroed. Tail kind 63 copies an
-// item's name into Text_Records with it (n 0x10).
-constexpr std::uint32_t kStrncpy = 0x5B9450;
-
 }  // namespace at
 }  // namespace area_w3c

@@ -84,8 +84,8 @@ constexpr std::uint32_t kZennyBonus = bof3::addr::BattleResult_ZennyBonus;      
 constexpr std::uint32_t kAddExp = bof3::addr::BattleResult_AddExp;         // 0x4468B0, group R3B's (round fourteen; the same value): PSX BattleResult_AddExp 0x801DD564 (the sibling's)
 constexpr std::uint32_t kRosterIndex = bof3::addr::CharId_ToRosterIndex;    // 0x4469D0, R3B's (the same value): PSX CharId_ToRosterIndex 0x801DD774 (the sibling's): the byte at 0x66972C + id, 7 is 0
 constexpr std::uint32_t kLevelUpPending = bof3::addr::Char_LevelUpGain;          // 0x432170 (BE1's; what 0), u16: non-zero when the roster index has a level to gain (PSX 0x801EF92C)
-constexpr std::uint32_t kLevelUp = 0x498DE0;        // the PSX Char_LevelUp's place in BattleResult_Setup (the sibling's)
-constexpr std::uint32_t kAddZenny = 0x591BE0;       // Zenny_Add: 0x904058 += n (0x904138 too when the flag is 0), capped 9,999,999
+constexpr std::uint32_t kLevelUp = bof3::addr::Char_LevelUp;        // the PSX Char_LevelUp's place in BattleResult_Setup (the sibling's)
+constexpr std::uint32_t kAddZenny = bof3::addr::Zenny_Add;       // Zenny_Add: 0x904058 += n (0x904138 too when the flag is 0), capped 9,999,999
 constexpr std::uint32_t kDrawFrame = bof3::addr::BattleResultWin_DrawFrame;   // 0x5982D0, group BE7's (round twelve; the same value): the result windows' frame (x, y, w, h), each read as a word
 constexpr std::uint32_t kExpToNext = bof3::addr::BattleResultWin_ExpToNext;   // 0x598810, group R2G's (round fourteen; the same value): by its reads, the EXP a party slot still needs for its next level, 0 at none (hypothesis)
 

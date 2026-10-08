@@ -71,7 +71,7 @@ constexpr unsigned kKindStride = 0x8C;
 
 // Nobody's (see above).
 constexpr std::uint32_t kTargetAhead = bof3::addr::PartyAction_TargetAhead;   // 0x51C390, round fourteen R0A
-constexpr std::uint32_t kSpawnAtCell = 0x524870;
+constexpr std::uint32_t kSpawnAtCell = bof3::addr::Effect_SpawnAtCell;
 constexpr std::uint32_t kFoundZenny = bof3::addr::Field_GiveZenny;   // 0x5307C0, round twelve FE1
 constexpr std::uint32_t kClearCell = bof3::addr::AreaMap_ClearCell;
 

@@ -377,7 +377,7 @@ sh::Callee g_callees[] = {
     {FS_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &Stir},
     // every format here takes one number: three words (the standard row logs a
     // fourth, the caller's stack)
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kAll32, kAll32, kAll32}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll32, kAll32, kAll32}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
     // DIV-0011's Menu_DrawFrame at PartyForm_DrawReserve's first site (x, y, w, h;
     // menu_frame.cpp reads x, y as s16, w, h as bytes): keyed at start-up by where
     // the site reaches; without the divergence a second Port_DroppedCall row

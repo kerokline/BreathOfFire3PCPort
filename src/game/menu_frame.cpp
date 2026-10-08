@@ -49,7 +49,7 @@
 
 namespace {
 
-constexpr std::uint32_t kEmptyFunction = 0x4DF820;
+constexpr std::uint32_t kEmptyFunction = 0x4DF820;   // Port_DroppedCall: the sites' target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kConfigPanelSite = 0x461778;       // in Config_DrawPanel: push 0xD, push 0x21, y, x
 constexpr std::uint32_t kControllerPanelSite = 0x461A84;   // in Config_DrawControllerPanel: push 0xF, push 0xC, y, x
 // The reserve list of "change party members", 0x12 by 0x15 cells. The

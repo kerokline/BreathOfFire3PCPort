@@ -148,6 +148,10 @@ void SelfTestReleaseCell(ReleaseCellFn theirs) {
 //
 // As the original has it: top wraps from 0x3FF to 0, and 0 reads as "none
 // left" from then until something is released.
+namespace {
+unsigned g_pool_logged;   // the diagnostic below, the first fifty
+}  // namespace
+
 extern "C" unsigned short __cdecl DrawItemPool_Alloc(void) {
     const unsigned short top = DrawItemPool_Top;
     if (top == 0) return 0;
@@ -189,6 +193,19 @@ extern "C" void __cdecl DrawItemPool_ReleaseCell(unsigned char* cell) {
         std::uint16_t owned;
         std::memcpy(&owned, item + at, sizeof owned);
         if (owned == 0) continue;
+        if (owned < draw_pool::Count()) {
+            // Diagnostic (2026-10-07): a side that is itself an item with sides
+            // (the fuzz hands this function random side words: bounded).
+            const unsigned char* const side = draw_pool::Items() + owned * 0x90;
+            std::uint16_t sn, sb;
+            std::memcpy(&sn, side + 0x7E, 2);
+            std::memcpy(&sb, side + 0x8E, 2);
+            if ((sn != 0 || sb != 0) && g_pool_logged < 50) {
+                ++g_pool_logged;
+                bof3::Log("draw_pool: frame %u: cell %u,%u (item %u) releases its side %u, which carries side words %u %u",
+                          (unsigned)Frame_Counter, (unsigned)cell[0], (unsigned)cell[1], index, owned, sn, sb);
+            }
+        }
         DrawItemPool_Release(owned);
         std::memset(item + at, 0, 2);
     }

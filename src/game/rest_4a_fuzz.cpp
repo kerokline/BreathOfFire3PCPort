@@ -193,6 +193,13 @@ U RandEffect(const U*, U answer) {
 U ClockEffect(const U*, U answer) {
     const U n = sh::Noise();
     if (n % 4 == 0) SetUL(Mem(at::kClock), UL(Mem(at::kClock)) + 1 + (n >> 8) % 64);
+    // and one in four the area moved (CommuSim_AreaEnter reads it again after its
+    // three adds; the group's case 2 reached that 9 times: C16, round-14-cleanup.md
+    // section 7)
+    if ((n >> 2) % 4 == 0) {
+        const U v = n >> 16;
+        Game_AreaNumber = static_cast<unsigned short>((v & 1) ? 0xAF + (v >> 1) % 12 : v >> 1);
+    }
     return answer;
 }
 // Field_SlotClutCopy: the slot's +1 (Field_RunSlot reads it after) half the time.
@@ -274,11 +281,11 @@ const sh::Callee kCallees[] = {
     {R4A_OURS(Battle_ActorIsOut), 1, {0xFF}, kFl, 0, 0, {}, &IsOutEffect},   // reads the low byte (its evidence)
     {R4A_OURS(Battle_DefaultTarget), 1, {0xFF}, kG, 0, 0},
     {R4A_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &ElevationEffect},   // the standard row, louder                   // reads the low byte (its evidence)
-    {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
 };
 const sh::Callee kEnemyCallees[] = {
     {R4A_OURS(Battle_ActorIsOut), 1, {0xFF}, kG, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&LevelledIsOut)},
-    {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandEffect},
 };
 #undef R4A_OURS
 

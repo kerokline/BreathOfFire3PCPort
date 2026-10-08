@@ -72,23 +72,24 @@ constexpr std::uint32_t kTargetZ = 0x90385C;         // Scratch_Swap
 
 }  // namespace at
 
-// Functions nobody owns, and other groups' of this round - raw addresses.
+// Functions nobody owned, and other groups' of this round - by address (ours
+// since, named by symbol, the values unchanged: docs/round-14-cleanup.md section 7).
 namespace fn {
-constexpr std::uint32_t kEncounterArea = 0x5317F0;   // void(): 0x937F82 from the area table 0x660A90
+constexpr std::uint32_t kEncounterArea = bof3::addr::Field_EncounterArea;   // void(): 0x937F82 from the area table 0x660A90
 constexpr std::uint32_t kExitGateway = bof3::addr::Field_GatewayExit;     // u8(): an exit from 0x660AB8 / 0x660B08
-constexpr std::uint32_t kExitFromCell = 0x531AF0;    // void(): an exit from the cell's list
+constexpr std::uint32_t kExitFromCell = bof3::addr::Field_ExitFromCell;    // void(): an exit from the cell's list
 constexpr std::uint32_t kCellAroundLarge = bof3::addr::Field_CellAroundLarge; // u8(u8): Field_CellAround for a sprite with +0x70
 constexpr std::uint32_t kCellHook = bof3::addr::Scenario_CellHook;        // int(x, z): the chapter's +0x10, then 0x56E670
-constexpr std::uint32_t kSetCell = 0x579F00;         // void(short x, short z, u8): AreaMap byte store
-constexpr std::uint32_t kPartyVisible = 0x591F30;    // u8(u8, u8): moves Sprite_Current
-constexpr std::uint32_t kMemberFits = 0x535C50;      // u8(x, z, slot, 0x10, 1) (group V2)
-constexpr std::uint32_t kLeaderMove = 0x536670;      // void(): +0x34 / +0x38 / +0x3E by the step (group V2)
-constexpr std::uint32_t kLeaderFollow = 0x5345E0;    // void() (group V2)
-constexpr std::uint32_t kLeaderGround = 0x535F50;    // void() (group V2)
-constexpr std::uint32_t kStepCode = 0x526DB0;        // u8(): what lies ahead (group Z)
-constexpr std::uint32_t kSlopeAt = 0x5725C0;         // long(x, z, direction dword): AreaMap_Slope (group M)
-constexpr std::uint32_t kTestFB = 0x572650;          // MoveCmd_TestFB, u8(short, short) (group M)
-constexpr std::uint32_t kFaceObject = 0x579D70;      // EventObj_Face, Capcom's
+constexpr std::uint32_t kSetCell = bof3::addr::AreaMap_SetByte;         // void(short x, short z, u8): AreaMap byte store
+constexpr std::uint32_t kPartyVisible = bof3::addr::Encounter_Place;    // u8(u8, u8): moves Sprite_Current
+constexpr std::uint32_t kMemberFits = bof3::addr::AreaMap_CellsNone;      // u8(x, z, slot, 0x10, 1) (group V2)
+constexpr std::uint32_t kLeaderMove = bof3::addr::Sprite_ApplyVelocity;      // void(): +0x34 / +0x38 / +0x3E by the step (group V2)
+constexpr std::uint32_t kLeaderFollow = bof3::addr::Field_JumpStart;    // void() (group V2)
+constexpr std::uint32_t kLeaderGround = bof3::addr::Field_JumpCheckHeight;    // void() (group V2)
+constexpr std::uint32_t kStepCode = bof3::addr::Field_CellAhead;        // u8(): what lies ahead (group Z)
+constexpr std::uint32_t kSlopeAt = bof3::addr::MapView_SlopeAt;         // long(x, z, direction dword): AreaMap_Slope (group M)
+constexpr std::uint32_t kTestFB = bof3::addr::MoveCmd_TestFB;          // MoveCmd_TestFB, u8(short, short) (group M)
+constexpr std::uint32_t kFaceObject = bof3::addr::EventObj_Face;      // EventObj_Face
 }  // namespace fn
 
 // The per-area handlers, by case (docs/event-ops.md section 6).

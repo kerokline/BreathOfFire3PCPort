@@ -36,7 +36,7 @@ constexpr std::uint32_t kPointers = 0x6637E4;
 constexpr std::uint32_t kSlots = 0x66A228;
 constexpr std::uint32_t kSlotRoom = 8;
 
-constexpr std::uint32_t kTextDrawAt = 0x516B30;   // its name is a macro here
+constexpr std::uint32_t kTextDrawAt = 0x516B30;   // Text_DrawAt: the site's target in Capcom's bytes, a patch fact (raw)
 constexpr std::uint32_t kRowLabelCall = 0x57499B; // 0x574890: the label draw
 
 // The number of characters 0x57D800 counts - a byte below 0x80 is one, a byte

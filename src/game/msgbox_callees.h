@@ -71,9 +71,9 @@ constexpr std::uint32_t kEffectTable = 0x658E98;   // 4-byte records: kind, s8 o
 constexpr std::uint32_t kTextSpeed = 0x903A58;     // s8, the player's message-speed option
 constexpr std::uint32_t kClipTable = 0x658F00;     // u8[], by 0x7DEE58: the rows MsgBox_EffectDraw cuts off a glyph
 
-// --- Callees that are not ours and have no name in symbols.toml -----------
+// --- Callees by address (ours since, named by symbol) ---------------------
 constexpr std::uint32_t kRetOnly = bof3::addr::BareRet;       // a bare ret: effect kind 0, the only one the attract reaches
-constexpr std::uint32_t kEffectDraw = 0x4987E0;    // MsgBox_EffectDraw, ours since 2026-10-03 (the fuzz's stand-in key)
+constexpr std::uint32_t kEffectDraw = bof3::addr::MsgBox_EffectDraw;    // MsgBox_EffectDraw, ours since 2026-10-03 (the fuzz's stand-in key)
 constexpr std::uint32_t kPageArrow = bof3::addr::MsgBox_DrawArrow;     // draws the "more" arrow every other 32 frames
 constexpr std::uint32_t kChoiceCommit = bof3::addr::MsgBox_ChoiceCommit;  // state 4 sub 5: an indirect call through Area_Descriptors +0x34
 constexpr std::uint32_t kMenuCommit = bof3::addr::MsgBox_MenuCommit;    // state 5 sub 3: the same, for a menu

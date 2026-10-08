@@ -158,7 +158,8 @@ Neither is reached by any recorded route; neither is fixed.
   reaches this. **Wants a ledger entry if fixed**: proposed - read the pairs
   into an array of 32 entries of our own, zero-filled, two lines an entry as
   the original packs them, and ignore lines past the 32nd entry; the
-  difference is visible only to a player with key lines.
+  difference is visible only to a player with key lines. **Built 2026-10-06 as
+  DIV-0078** at the owner's word (the switch set after the self-test).
 - **The disc probe takes any CD-ROM with a `BOF3.EXE` at its root** and stops
   at `L:`. Only when `CAPCOM.AVI` is missing from the current directory,
   which a full install never is. Not a defect worth a fix; noted.

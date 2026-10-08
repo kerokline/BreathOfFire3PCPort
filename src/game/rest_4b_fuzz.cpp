@@ -382,9 +382,9 @@ const sh::Callee kCallees[] = {
     {R4B_OURS(Sound_LoadStream), 1, {kW}, kG, 0, 0, {}, &Stir},
     {R4B_OURS(Sound_StreamDone), 0, {}, sh::Answer::kBool, 0, 0, {}, &Stir},
     // the standard row, louder (RandMove)
-    {"Rand", KeyOf(Rand), KeyOf(Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandMove},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, sh::Answer::kRand, 0, 0, {}, &RandMove},
     // every format here takes one number: three words
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kW, kW, kW}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kW, kW, kW}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
 };
 #undef R4B_OURS
 

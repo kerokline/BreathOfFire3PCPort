@@ -6435,3 +6435,132 @@ abort).
 
 **Status:** latent, harmless by reading or the owner's to judge where a doc
 says so.
+
+## D239 — A map cell's side faces read their texture words by which sides exist, so a cell created at another moment is textured differently (fixed by DIV-0085, seen by the owner; the sea bridge's "waterfall")
+
+**Found:** the owner, 2026-10-06, playing area 41's sea bridge under the wide
+picture (DIV-0041): tall columns of sea-like texels hanging from the deck's
+east edge to the bottom of the screen, "the waterfall". **Read 2026-10-07**
+(the session-`a8d0ee80` scratchpad, `vis/`, with `BOF3X_DRAWORDER`, the
+draw-order log's new byte dump of tall quads, and item traces in
+`map_layers.cpp`). **Capcom's, PC and PSX by the code; shown only by the
+wide picture here.**
+
+**The mechanism.** `MapView_CellTextures` `0x56F9B0` reads a cell's
+texture words from the map in a fixed walk: the cell's own, then the `+0x8E`
+(south) side's **if that side item exists**, then the `+0x7E` (east)
+side's. So the east side's word is the map's third dword when the cell has a
+south side and the *second* when it has not. The sides are allocated once,
+when the cell's draw item is created (`MapView_Build`), by comparing corner
+heights at that moment; and the bridge's sky effect
+(`EffectKind18Sub15_Draw`) rewrites the deck columns' corner heights every
+frame, a hump that follows the party. So whether a deck cell gets a south
+side depends on the frame it is created, which depends on the terrain cull:
+with the original's `[-50, 370]` the deck cells of column 48 were created
+without a south side and their 125-px east faces (down to the sea) read
+`0x12800100`, a 64-texel-tall rectangle; with the wide cull they were
+created earlier, got a south side, and the east faces read `0x0180001E`, a
+16 x 16 sea tile stretched over 125 px - the streaks. The bytes of the
+faces in the two runs differ only in u, v, CLUT and page; the positions are
+identical (`wide_bytes100.bof3x.log`, `wide_bytes0.bof3x.log`).
+
+**Ruled out on the way:** the draw-item pool and the draw table (no
+diagnostic fires), the renderer's two texture caches (no miss or fallback
+at the frame), the packet pool (a quarter full), DIV-0077 / DIV-0079, the
+VRAM shadow's page 0, a double allocation (a live bitmap on the pool found
+none in the scene), a stale side word at allocation (none).
+
+**The survey, 2026-10-08: authored own, south, east - the code's walk is
+right; the deck's edge has no word for a south side.** `tools/side_survey.py`
+(`--dat` or `--disc`) on the PC's 200 area blocks (`AREA*.DAT`, the kind-0
+chunk of tag `0xC8000`), and the same on the Japanese disc's 200 (the
+section for `0x80104000`): every total identical, and `AREA060` byte for
+byte. The method: each cell's sides from the corner heights as loaded, by
+`MapView_Build`'s two tests; its tile's run of dwords (to the next index
+any cell uses); each word decoded as `Prim_SetTexture` decodes it.
+
+- **Side sets against runs** (the map's last row and column left out):
+  single-sided S 32,791 cells (run 2 or more: 32,408), E 32,091 (31,714),
+  two-sided 7,911 (run 3: 7,832; run 2: 7; run 1: 72). Runs longer than
+  the static sides are common (cells with no static side: 156,589 of run 2,
+  108,640 of run 3) - words for sides the static heights do not make.
+- **Faces are shaded by their facing.** A single-sided cell's word 2 is
+  unambiguous: south faces carry shade `0x78` / `0x70` / `0x80`, east faces
+  `0x50` / `0x60`. On the two-sided cells, word 2 looks like a south word
+  and word 3 like an east word: 7,144 cells for own, S, E against 259 for
+  own, E, S (429 ties), each word scored by how often single-sided S and E
+  words carry its signature (source, shade, turn).
+- **Shape against drop agrees.** A side word's vertical texels are twice
+  its drop in corner units on 90 % of single-sided cells. Under own, S, E
+  the two-sided cells' words fit as well (92 %), under own, E, S worse
+  (75 %); per cell with unequal drops, 2,408 to 13.
+- **The bridge is `AREA060.DAT`** (70 x 100; the docs' "area 41" names
+  it otherwise - which numbering is unresolved here). The deck is columns
+  45..48, rows 1..98, flat at corner height 32 in the file over sea at 0.
+  Columns 45..47 have tiles of two words, the second **0**: a south face
+  authored as word 0, for the steps the sky effect's hump makes between
+  deck rows. Column 48, the deck's east edge, has two words too: its own
+  `0x1286000C` and the **east** face's `0x12800100` (the 64-texel
+  rectangle). It has no word for a south face. The dword after its run is
+  the next tile's own word, `0x0180001E`, a 16 x 16 sea grid cell. So a
+  column-48 cell that the hump gives a south side at creation hands its east
+  word to the south step and draws the 32-unit east cliff with the sea tile:
+  the streaks, exactly as measured live.
+- **The PSX twin is the same code** (`SLPS_009.90`, capstone):
+  `FUN_80153B8C` allocates `+0x46` (the PC's `+0x7E`) when `next[0] <
+  own[1]` or `next[2] < own[3]` and `+0x4E` (`+0x8E`) when `below[0] <
+  own[2]` or `below[1] < own[3]`, only for a new item (`0x80153F3C..
+  0x80153FFC`); `FUN_80154D50` reads `+0x4E`'s word first, then `+0x46`'s,
+  a zero one releasing `+0x46` (`0x80154E1C..0x80154EC8`). Capcom's on
+  both machines; when it shows depends on when the cull creates a deck
+  cell under the hump.
+
+**Why the wide view (2026-10-08, offline on `AREA060`'s block):** the sky
+effect writes rows `r - 17 .. r + 13` of the deck round the party's row `r`
+and restores nothing outside them, so a party walking north leaves every
+row from `r + 13` back to where it started as a one-unit step (the slope's
+last row, 36 / 37, written again one row on each frame). A walk from row 70
+to 50 leaves column 48's rows 63..83 with a south side under the build's
+test. The cell keeps whatever it was created with: the original's cull
+creates the edge's cells elsewhere and the wide margin (DIV-0041,
+`BOF3X_WIDE_TERRAIN` 100 against 0, the two logs above) on the steps -
+inferred from the geometry, not yet measured: a creation line against the
+party's row in one `BOF3X_DRAWORDER` log would show it.
+
+**Fixed by DIV-0085** (2026-10-08, the owner's request; `BOF3X_SIDE_DUP`, on
+by default): a cell textured with both sides whose file heights give it one
+draws both with its one side word. The owner, 2026-10-08, the bridge wide,
+walked several times: no streaks, the edges unremarkable.
+
+**Where DIV-0085 can act (2026-10-08, offline, all 200 blocks).** It needs a
+cell the file gives one side, whose tile has no third word (54,842 cells in
+198 areas), *and* code that moves heights during play so the cell is
+created with both. The writers of `AreaMap_Corners` in ours and where they
+run:
+
+- `EffectKind18Sub15_Draw` (the sky effect): `AREA060`'s deck, columns
+  45..48. Column 48's 97 edge cells are the only ones it can reach. Seen.
+- `EffectKind18Sub3D_Ripple`: area 47 (`Area47_SpawnEffect3D`, handler 1),
+  35 x 35 cells about the leader while `Cond_ByteFE` is set; the party
+  starts at (18, 36). `AREA047` has 221 qualifying cells (136 east-only, 85
+  south-only), 206 of them faces with a drop of 8 or more. The two long
+  cliffs are x 40, z 1..28 and x 47, z 29..57 (east faces, drops up to 80);
+  the rest are short runs at x 12..36 near the start and a row at z 13, x
+  89..106. The sibling's docs name area 47 ウィンじろ がいへき (Wyndia
+  castle's outer wall); the owner (2026-10-08): likely the jump off the
+  wall and the float down, one way only. The two long cliffs would be the
+  wall. One way does not protect it as it largely does the bridge: the
+  ripple moves every cell of its block every frame (each row its own
+  phase, a cell's two edges by different amounts), so cells entering the
+  view on a single pass are created mid-ripple; the faces it adds are a
+  few units high against the wall's 80. Not yet seen.
+- `AreaMap_ApplyPatch`'s height records: `AREA094`, `103`, `128`, `140` -
+  never give a one-sided cell both (every combination of entries checked).
+- `EffectKind18Sub62_Ripple`, `EffectKind18Sub22_SetMap` (four raised or
+  lowered places), `BossMap_SetCorners` (one boss's map), MAGIC102 Quake (a
+  16 x 14 block heaved in a battle): where they run is not read here.
+
+What the change looks like where it acts: a short face carrying the same
+texture as the cell's tall one beside it; what the original showed there
+was the next tile's texture stretched over the face. `BOF3X_SIDE_ZERO=1` (an experiment, off by
+default) releases a side whose word is 0 and does not touch this.

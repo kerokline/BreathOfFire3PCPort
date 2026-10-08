@@ -83,13 +83,13 @@ struct Pool {
 };
 
 const Pool kPools[4] = {
-    {0x685D98, 0x80, 0x687398, 0x65AE2C, 0x65AECC, 0x65AF18, 0x65AF08, 0x65AF10, 0x65AF20, 0x4B9BC0, 0x4B9D30, 0x4B9DA0,
+    {0x685D98, 0x80, 0x687398, 0x65AE2C, 0x65AECC, 0x65AF18, 0x65AF08, 0x65AF10, 0x65AF20, bof3::addr::Magic071_SparkleLaunch, bof3::addr::Magic071_SparkleRise, bof3::addr::Magic071_SparkleFade,
      Magic071_SparkleDisc, Magic071_SparkleRaysG2, Magic071_SparkleRaysG3, Magic071_SparkleAlloc, Magic071_SparkleFree},
-    {0x6873A0, 0x80, 0x6889A0, 0x65AF24, 0x65AFC4, 0x65B010, 0x65B000, 0x65B008, 0x65B018, 0x4BA6F0, 0x4BA860, 0x4BA8D0,
+    {0x6873A0, 0x80, 0x6889A0, 0x65AF24, 0x65AFC4, 0x65B010, 0x65B000, 0x65B008, 0x65B018, bof3::addr::Magic072_SparkleLaunch, bof3::addr::Magic072_SparkleRise, bof3::addr::Magic072_SparkleFade,
      Magic072_SparkleDisc, Magic072_SparkleRaysG2, Magic072_SparkleRaysG3, Magic072_SparkleAlloc, Magic072_SparkleFree},
-    {0x6889A8, 0xA0, 0x68A528, 0x65B01C, 0x65B0BC, 0x65B0DC, 0x65B0D4, 0x65B0D8, 0x65B0E4, 0x4BB440, 0x4BB5B0, 0x4BB620,
+    {0x6889A8, 0xA0, 0x68A528, 0x65B01C, 0x65B0BC, 0x65B0DC, 0x65B0D4, 0x65B0D8, 0x65B0E4, bof3::addr::Magic073_SparkleLaunch, bof3::addr::Magic073_SparkleRise, bof3::addr::Magic073_SparkleFade,
      Magic073_SparkleDisc, Magic073_SparkleRaysG2, Magic073_SparkleRaysG3, Magic073_SparkleAlloc, Magic073_SparkleFree},
-    {0x68A530, 0xA0, 0x68C0B0, 0x65B0E8, 0x65B188, 0x65B1A8, 0x65B1A0, 0x65B1A4, 0x65B1B0, 0x4BC350, 0x4BC4C0, 0x4BC530,
+    {0x68A530, 0xA0, 0x68C0B0, 0x65B0E8, 0x65B188, 0x65B1A8, 0x65B1A0, 0x65B1A4, 0x65B1B0, bof3::addr::Magic074_SparkleLaunch, bof3::addr::Magic074_SparkleRise, bof3::addr::Magic074_SparkleFade,
      Magic074_SparkleDisc, Magic074_SparkleRaysG2, Magic074_SparkleRaysG3, Magic074_SparkleAlloc, Magic074_SparkleFree},
 };
 const Pool& k071 = kPools[0];
@@ -585,8 +585,8 @@ constexpr std::uint32_t kTask074[2] = {0x4BBDD0, bof3::addr::MagicFx_EndWhenChil
 // The child's six phases: its start, the actor's tint, MAGIC213's brighten
 // (group C1's ActorFx_TintUp, 0x4F4DA0), the wait for four sparkles, the fade,
 // the end.
-constexpr std::uint32_t kActor073[6] = {0x4BB210, 0x4BC110, bof3::addr::ActorFx_TintUp, 0x4BB370, 0x4BC1A0, 0x4BC260};
-constexpr std::uint32_t kActor074[6] = {0x4BBFB0, 0x4BC110, bof3::addr::ActorFx_TintUp, 0x4BB370, 0x4BC1A0, 0x4BC260};
+constexpr std::uint32_t kActor073[6] = {bof3::addr::Magic073_ActorStart, bof3::addr::ActorFx_Tint, bof3::addr::ActorFx_TintUp, bof3::addr::ActorFx_WaitStep4, bof3::addr::ActorFx_Untint, bof3::addr::ActorFx_End};
+constexpr std::uint32_t kActor074[6] = {bof3::addr::Magic074_ActorStart, bof3::addr::ActorFx_Tint, bof3::addr::ActorFx_TintUp, bof3::addr::ActorFx_WaitStep4, bof3::addr::ActorFx_Untint, bof3::addr::ActorFx_End};
 constexpr std::uint32_t kActorPhases073 = 0x65B0E0;   // the child's dispatch table, read in place by +1
 constexpr std::uint32_t kActorPhases074 = 0x65B1AC;
 

@@ -260,7 +260,7 @@ const mh::Callee kCallees[] = {
     // the text: x and y are stored as words; the text by its bytes
     {S12_OURS(Text_DrawAt), 5, {kU16, kU16, kAll, kAll, 0}, kG, 0, 0, {}, &DrawAtEffect},
     {S12_OURS(Text_CharCount), 1, {0}, mh::Answer::kByte, 0, 0x14, {}, &CharCountEffect},
-    {S12_THEIRS(Crt_sprintf), 3, {kAll, kAll, kAll}, mh::Answer::kThrough, 0, 0},
+    {S12_OURS(Crt_sprintf), 3, {kAll, kAll, kAll}, mh::Answer::kThrough, 0, 0},
     // the draw library (psx_gpu, psx_gte*, draw_emit, world_map, field_misc,
     // battle_items, magic_lib: all ours)
     {S12_OURS(Math_Sin), 1, {kAll}, kG, 0, 0},

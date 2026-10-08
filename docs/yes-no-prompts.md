@@ -160,6 +160,21 @@ that screen (a capture from the sibling, or memory)? With the words and
 their place on the disc, the group is a few lines of `loc_build.py` and
 `labels.cpp`. Nothing changed for this item.
 
+**Half answered 2026-10-06:** the owner's web capture of the US screen
+shows the list's title as `MSTR` (`analysis/shots/owner_reports/master_list_web_reference_1006.png`);
+the portrait box's label is not in frame. Staged on `owner-review.md`
+"Reported by the owner", with the list's `†`-for-`★` mark.
+
+**Done 2026-10-07, the title and the mark:** `MSTR` *is* on the US disc -
+the case-blind search above looked for whole words. `SHOP.EMI` holds it (and
+the German disc; the French `ME`) with the list's star mark right after it,
+between the bytes the PC has at `0x66B3B8` and its requirement lists at
+`0x66B3D0`; DIV-0064's sixth group writes both. The `†` was DIV-0006's font
+repaint over the shipped star behind the byte `t`. **The portrait box's 弟子,
+answered the same day by the owner's US capture: the PlayStation draws no
+label box at all** - the portrait box alone. DIV-0083 leaves the port's box
+out under a Latin overlay. Nothing of section 5 is open.
+
 ## 6. For the coordinator's live check
 
 Shot copies with `tools/recipe_shots.py` (never by hand); English, the

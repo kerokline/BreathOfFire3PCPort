@@ -382,7 +382,7 @@ const ah::Callee kCallees130[] = {
     {W3C_OURS(Port_DroppedCall), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {W3C_OURS(KeyItem_Add), 1, {kAll}, ah::Answer::kGarbage, 0, 0},
     {W3C_OURS(Item_NamePtr), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {"strncpy", at::kStrncpy, at::kStrncpy, 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {W3C_OURS(Crt_strncpy), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W3C_OURS(Inventory_Add), 3, {kAll, kAll, kAll}, ah::Answer::kFlag, 0, 0},
     {W3C_OURS(Msg_OpenScript), 1, {kU16}, ah::Answer::kGarbage, 0, 0},
     {W3C_OURS(Sound_PlayEffect), 1, {kU16}, ah::Answer::kGarbage, 0, 0},

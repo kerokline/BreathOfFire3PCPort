@@ -324,6 +324,39 @@ U MemberPanelMove(const U*, U answer) {
     return answer;
 }
 
+// The thin controls outside round fourteen's end lists (docs/round-14-cleanup.md
+// section 7): each a stand-in that moves, after the call, the byte its caller
+// reads again - only under the clone that reads it, half the time.
+// Music_FadeOutStop: the kept track (CommuDraw_MusicBack plays it after the
+// fade: D33).
+U KeptTrackMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 2 == 0 && kAll[g_clone].base == 0x45CDF0) B(at::kKeptTrack) = static_cast<unsigned char>(n >> 8);
+    return answer;
+}
+// Sound_PlayEffect: the step (CommuName_PanelReset counts it on after sound
+// 0x102: N07).
+U StepMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 2 == 0 && kAll[g_clone].base == 0x45D090) B(at::kStep) = static_cast<unsigned char>(n >> 8);
+    return answer;
+}
+// R4C's 0x45B2C0 (a cell): the column byte to 0..2 or any byte
+// (CommuBoard_DrawRowCells compares it with each cell again: B12).
+U ColumnMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 2 == 0 && kAll[g_clone].base == 0x45C7D0)
+        B(at::kYes) = static_cast<unsigned char>((n >> 8) & 0x10 ? n >> 16 : (n >> 16) % 3);
+    return answer;
+}
+// R4E's 0x45F1A0 (the entry's box): the answer byte to 0 or not
+// (CommuName_SlotEntryOut reads it again at the slide's end: N47).
+U EntryDoneMove(const U*, U answer) {
+    const U n = sh::Noise();
+    if (n % 2 == 0 && kAll[g_clone].base == 0x45D7C0) B(at::kEntryDone) = static_cast<unsigned char>((n >> 8) & 1 ? 0 : n >> 16);
+    return answer;
+}
+
 #define R4D_OURS(name) #name, ::bof3::addr::name, KeyOf(&::name)
 constexpr sh::Answer kG = sh::Answer::kGarbage;
 constexpr U kW = 0xFFFFFFFFu;
@@ -338,7 +371,7 @@ const sh::Callee kCallees[] = {
     {R4D_OURS(CommuName_DrawSlotFrame), 2, {0xFFFF, 0xFFFF}, kG, 0, 0},
     {R4D_OURS(CommuName_DrawHeader), 0, {}, kG, 0, 0, {}, &HeaderMove},
     // other groups' of this wave, by address (docs/rest_4d.md section 6), with what each reads
-    {"0x45B2C0", at::kBoardCell, at::kBoardCell, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},     // R4C: movsx words, mov al
+    {"0x45B2C0", at::kBoardCell, at::kBoardCell, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0, {}, &ColumnMove},     // R4C: movsx words, mov al
     {"0x45B400", at::kBoardPiece, at::kBoardPiece, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},   // R4C: movsx words, and 0xFF
     {"0x45E870", at::kSlotPanel, at::kSlotPanel, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},   // R4E: words to Menu_DrawBox / movsx; and 0xFF; al
     {"0x45EC00", at::kListPiece, at::kListPiece, 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},     // R4E: movsx words, and 0xFF
@@ -349,7 +382,7 @@ const sh::Callee kCallees[] = {
     {"0x45F000", at::kMemberCount, at::kMemberCount, 0, {}, kG, 0, 0, {}, &NearCursor},
     {"0x45F020", at::kNthMember, at::kNthMember, 1, {0xFF}, kG, 0, 0, {}, &NthMemberAnswer},   // R4E: mov bl, [esp + 8]
     {"0x45F050", at::kMemberHand, at::kMemberHand, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},  // R4E: and 0xFFFF; al; and 0xFF
-    {"0x45F1A0", at::kEntryBox, at::kEntryBox, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0},     // R4E: movsx bp / word; movzx byte
+    {"0x45F1A0", at::kEntryBox, at::kEntryBox, 4, {0xFFFF, 0xFFFF, 0xFF, 0xFF}, kG, 0, 0, {}, &EntryDoneMove},     // R4E: movsx bp / word; movzx byte
     {"0x45F5A0", at::kMemberRename, at::kMemberRename, 0, {}, kG, 0, 0},
     {"0x45F650", at::kSlotRename, at::kSlotRename, 0, {}, kG, 0, 0},
     // ours, outside the standard set or typed otherwise, with what each reads
@@ -357,7 +390,10 @@ const sh::Callee kCallees[] = {
     {R4D_OURS(Menu_DrawGreyHLine), 4, {0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},           // rest_2b.cpp: shorts, a word, a byte
     {R4D_OURS(BareRet), 0, {}, kG, 0, 0, {}, &BareRetMove},                                        // a bare ret: reads none
     {R4D_OURS(BareRetZero), 0, {}, kG, 0, 0},                                               // xor al, al: reads none
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 5, {kW, kW, 0, 0, 0}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
+    // the standard set's, louder here (the thin controls, section 7 of round-14-cleanup.md)
+    {R4D_OURS(Music_FadeOutStop), 1, {kW}, kG, 0, 0, {}, &KeptTrackMove},
+    {R4D_OURS(Sound_PlayEffect), 1, {0xFFFF}, kG, 0, 0, {}, &StepMove},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 5, {kW, kW, 0, 0, 0}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
 };
 #undef R4D_OURS
 
@@ -447,6 +483,8 @@ void Seed(unsigned k) {
     SeedSlots();
     SeedMessages();
     if (const Dispatch* d = DispatchOf(kAll[k].base)) B(d->by) = static_cast<unsigned char>(sh::Next() % d->count);
+    // CommuName_SlotEntryOut reads the answer again only at the slide's end (+1 to 4): N47
+    if (kAll[k].base == 0x45D7C0 && sh::Half()) B(at::kCount) = 3;
 }
 
 // The helpers' arguments: coordinates at boundaries or random words; bytes at

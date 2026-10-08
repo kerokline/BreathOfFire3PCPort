@@ -76,7 +76,7 @@ using Handler = void (__cdecl*)();
 void MissTail() { BH_AT(Void0, at::kMissTail)(); }
 void StatMod(U which) { BH_AT(U1, at::kStatMod)(which); }
 void InflictMiss(U status) { BH_AT(U1, at::kInflictMiss)(status); }
-void Inflict(U status) { BH_AT(U1, at::kInflict)(status); }
+void Inflict(U status) { BH_AT(U1, at::kRollInflict)(status); }
 
 // jmp [table + 4 * byte]: the byte below `entries`, else a Fatal where the
 // original jumps through the dword after its table.

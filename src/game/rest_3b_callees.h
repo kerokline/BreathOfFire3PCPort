@@ -92,7 +92,7 @@ constexpr U kEscapeStates = 0x64E4FC;     // 3: Escape_States (BE4's name)
 constexpr U kMissTail = bof3::addr::Effect_NoHitReaction;
 constexpr U kStatMod = bof3::addr::Effect_RollStatStepQuiet;
 constexpr U kInflictMiss = bof3::addr::Effect_RollInflictQuiet;
-constexpr U kInflict = bof3::addr::Effect_RollInflict;
+constexpr U kRollInflict = bof3::addr::Effect_RollInflict;
 constexpr U kHpShare = bof3::addr::Effect_HpBasedDamage;
 constexpr U kResisted = bof3::addr::Battle_StatusResisted;
 

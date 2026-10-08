@@ -33,9 +33,9 @@ constexpr std::uint32_t kScenarioFlags = 0x929ED0;  // the address of the chapte
 constexpr std::uint32_t kSubState = 0x9039F0;       // the dispatcher 0x56D8B0's bytes (PSX 0x801448E4)
 constexpr std::uint32_t kSubInitTable = 0x662CD8;   // 16 bytes Scenario_SubInit copies (PSX 0x801C94A4)
 constexpr std::uint32_t kStoryFlags = 0x904030;     // Cond_Flags + 0xA0, where they go (PSX 0x80144F24)
-constexpr std::uint32_t kDemoEntry = 0x495800;      // task 0's entry for the demo (the field task)
-constexpr std::uint32_t kMenuEntry = 0x588E70;      // task 0's entry for the title menu
-constexpr std::uint32_t kModeDispatch = 0x56D690;   // Field_ModeDispatch, another file's: called by address
+constexpr std::uint32_t kDemoEntry = bof3::addr::Field_Task;      // task 0's entry for the demo (the field task)
+constexpr std::uint32_t kMenuEntry = bof3::addr::TitleTask_Run;      // task 0's entry for the title menu
+constexpr std::uint32_t kModeDispatch = bof3::addr::Field_ModeDispatch;   // Field_ModeDispatch, another file's: called by address
 const std::uint32_t kCondFlags = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Cond_Flags));
 
 // Every callee, through pointers so that the start-up fuzz can stand

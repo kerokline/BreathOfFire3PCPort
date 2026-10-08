@@ -24,6 +24,8 @@
 // measured one, 0x007F and 0x037F).
 #include "game/d3d_draw.h"
 
+#include "game/d3d_lines.h"
+
 #include <cstdint>
 #include <cstring>
 
@@ -31,6 +33,7 @@
 #include "game/d3d_draw_callees.h"
 #include "game/d3d_list_callees.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 namespace d3d_draw {
@@ -262,6 +265,8 @@ long D3d_BindTexture(unsigned tpage, unsigned clut) {
     const int slot = g.tex_find(page, static_cast<int>(clut), mode);
     U texture;
     if (slot == 0x20) {
+        if (draw_order::Tagging())
+            bof3::Log("d3d_draw: page cache miss - page %d clut %04X mode %d built", page, clut, mode);
         Scene(0x28);   // EndScene
         texture = static_cast<U>(g.tex_build(page, static_cast<int>(clut), mode));
         Scene(0x24);   // BeginScene
@@ -350,7 +355,7 @@ long DrawLines(const unsigned char* prim, U corners) {
     g.ret_only(1);
     g.set_blend(prim[7], Long(At(kDrawTpage)) & 0xFFFF);
     g.set_shade(1);
-    return DrawVertices(3, corners);   // LINESTRIP
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(corners) : DrawVertices(3, corners);   // LINESTRIP; DIV-0079 the quads
 }
 }  // namespace
 
@@ -485,6 +490,16 @@ int D3d_CellTexture(unsigned first, unsigned count, unsigned clut, unsigned flag
         }
     }
     i = victim;
+    if (victim == count) {
+        // D27 (docs/known-defects.md): no entry qualified - all 128 used this
+        // frame - and the original builds into entry `count`. Diagnostic only.
+        static unsigned logged = 0;
+        if (logged < 50) {
+            ++logged;
+            bof3::Log("d3d_draw: D27 - the cell-texture cache has no victim (all %u used this frame); entry %u (= count) rebuilt",
+                      kCellEntries, count);
+        }
+    }
     g.cell_build(static_cast<int>(i), first, count, clut, flags & 0x800);
 used:
     const unsigned char render_flags = At(kRenderFlags)[0];

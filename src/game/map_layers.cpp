@@ -1,5 +1,7 @@
 #include "game/map_layers.h"
 
+#include <windows.h>
+
 #include "game/draw_pool.h"
 
 #include <cstdint>
@@ -9,6 +11,7 @@
 #include "game/map_layers_callees.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 // The view's frame, its rebuild and the area header's pass - see
@@ -34,6 +37,15 @@ Callees g = kOriginals;
 namespace {
 
 using map_layers::g;
+
+bool g_side_zero_release;   // BOF3X_SIDE_ZERO=1 (MapLayers_Inject)
+
+// DIV-0085: 0 until ArmSideDup (and with BOF3X_SIDE_DUP=0), so every self-test
+// compares Capcom's walk. g_file_sides: per map cell (z * width + x), 1 when the
+// heights as the area file loaded them give it a south side only, 2 an east
+// side only - and its tile carries no third word - else 0 (SnapshotSides).
+bool g_side_dup;
+unsigned char g_file_sides[256 * 256];
 
 std::uint32_t Dword(const unsigned char* p) {
     std::uint32_t v;
@@ -192,8 +204,8 @@ std::uint32_t Inset() {
     if (off_axis < 0) off_axis = -off_axis;
     int inset = (0x160 - off_axis) / 50;
     inset = inset >= 1 ? inset - 1 : 0;
-    const int far = static_cast<int>(Camera_Distance) / 650;
-    inset = inset >= far ? inset - far : 0;
+    const int by_distance = static_cast<int>(Camera_Distance) / 650;   // `far` is a windows.h macro
+    inset = inset >= by_distance ? inset - by_distance : 0;
     Scratch_Swap = static_cast<unsigned long>(inset);
     if (Field_InputFlags & 1) {
         inset = inset >= 2 ? inset - 2 : 0;
@@ -202,6 +214,13 @@ std::uint32_t Inset() {
     if (Cond_ByteFE == 0x23) {
         inset = 0;
         Scratch_Swap = 0;
+    }
+    // DIV-0041: the wide picture reaches past the columns the inset keeps
+    // (widescreen.h); 0 unless the view is wide, so the fuzz and every
+    // narrow run see the original's inset.
+    if (const int wide = static_cast<int>(Widescreen_InsetColumns()); wide != 0) {
+        inset = inset >= wide ? inset - wide : 0;
+        Scratch_Swap = static_cast<unsigned long>(inset);
     }
     MapView_Inset = static_cast<unsigned char>(Scratch_Swap);
     return static_cast<std::uint32_t>(inset);
@@ -253,6 +272,16 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
         const unsigned short got = g.alloc();
         SetWord(cell + 2, got);
         index = got;
+        if (got != 0 && (Word(Item(got) + 0x7E) != 0 || Word(Item(got) + 0x8E) != 0)) {
+            // Diagnostic (2026-10-07): a fresh item still carrying side words.
+            static unsigned logged = 0;
+            if (logged < 40) {
+                ++logged;
+                bof3::Log("map_layers: frame %u: cell %u,%u given item %u with stale side words next %u below %u",
+                          (unsigned)Frame_Counter, (unsigned)cell[0], (unsigned)cell[1], got, Word(Item(got) + 0x7E),
+                          Word(Item(got) + 0x8E));
+            }
+        }
         if (index == 0) {
             // Diagnostic only, no behaviour: the pool had no item for this cell,
             // so it is not drawn this frame - the owner's coast glitch of
@@ -354,6 +383,12 @@ void BuildCell(unsigned char* cell, unsigned layer, int threshold) {
     // vertex 2, left in the scratch.
     float unused;
     const unsigned next_item = Word(item + 0x7E);
+    if (draw_order::Tagging() && (next_item != 0 || Word(item + 0x8E) != 0)) {
+        const signed char* const c = reinterpret_cast<const signed char*>(MapView_CornerPtr);
+        bof3::Log("map_layers: cell %u,%u layer %u item %u: next side %u, below side %u; corners %d %d %d %d; screen (%g, %g)",
+                  (unsigned)cell[0], (unsigned)cell[1], layer, index, next_item, Word(item + 0x8E), c[0], c[1], c[2], c[3],
+                  MapView_ScreenXY[0], MapView_ScreenXY[1]);
+    }
     if (next_item != 0) {
         unsigned char* const side = Quad(next_item, Gfx_BufferIndex);
         std::memcpy(side + 8, quad + 0x38, 12);
@@ -470,12 +505,47 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
     texture += 4;
     const unsigned below = Word(item + 0x8E);
     if (below != 0) {
-        g.set_texture(Dword(texture), Quad(below, buffer), 1);
-        flags |= (static_cast<std::int32_t>(Dword(texture)) >> 18) & 0x1000;
-        texture += 4;
+        if (Dword(texture) == 0 && g_side_zero_release) {
+            // BOF3X_SIDE_ZERO=1, an experiment (2026-10-07, off by default): a
+            // below side the map gives word 0 is released like the +0x7E one;
+            // the original draws it with that word. Not the owner's streaks
+            // (known-defects.md D239) - kept for the next reading of them.
+            if (draw_order::Tagging())
+                bof3::Log("map_layers: cell %u,%u: the below side's texture word is 0, released", x, y);
+            g.release(static_cast<unsigned short>(below));
+            SetWord(item + 0x8E, 0);
+            texture += 4;
+        } else {
+            if (draw_order::Tagging())
+                bof3::Log("map_layers: cell %u,%u: below side item %u texture word %08X (cell's %08X)", x, y, below,
+                          Dword(texture), Dword(texture - 4));
+            g.set_texture(Dword(texture), Quad(below, buffer), 1);
+            flags |= (static_cast<std::int32_t>(Dword(texture)) >> 18) & 0x1000;
+            texture += 4;
+        }
     }
     const unsigned next = Word(item + 0x7E);
+    if (g_side_dup && below != 0 && next != 0 && x < width && y < static_cast<std::uint32_t>(height)) {
+        // DIV-0085 (D239): the tile carries a word for the one side the file's
+        // heights give this cell and no third; the second side exists only
+        // because the heights moved since (AREA060's sky effect), and the
+        // dword the original would give it is the next tile's own. Both
+        // sides take the one side word.
+        const unsigned file = g_file_sides[y * width + x];
+        if (file == 1 || file == 2) {
+            texture -= 4;
+            static unsigned logged = 0;
+            if (logged < 20) {
+                ++logged;
+                bof3::Log("DIV-0085    map cell %u,%u (file sides: %s only) created with both side faces: both drawn "
+                          "with %08X, not %08X", x, y, file == 1 ? "south" : "east", Dword(texture),
+                          Dword(texture + 4));
+            }
+        }
+    }
     if (next != 0) {
+        if (draw_order::Tagging())
+            bof3::Log("map_layers: cell %u,%u: next side item %u texture word %08X", x, y, next, Dword(texture));
         if (Dword(texture) == 0) {
             g.release(static_cast<unsigned short>(next));
             SetWord(item + 0x7E, 0);
@@ -600,6 +670,17 @@ extern "C" void __cdecl AreaMap_HeaderPass(void) {
 
 void MapLayers_Inject() {
     if (bof3::WantsShadow("map_layers")) map_layers::SelfTest();
+    {
+        char text[8];
+        const DWORD n = GetEnvironmentVariableA("BOF3X_SIDE_ZERO", text, sizeof text);
+        // An experiment's switch (2026-10-07, the owner's "waterfall"), off
+        // unless BOF3X_SIDE_ZERO=1; no ledger entry while it is off.
+        if (n >= sizeof text || (n != 0 && !((text[0] == '0' || text[0] == '1') && text[1] == 0)))
+            bof3::Fatal("BOF3X_SIDE_ZERO must be 0 or 1");
+        g_side_zero_release = n == 1 && text[0] == '1';
+        if (g_side_zero_release)
+            bof3::Log("map_layers: a side face with texture word 0 is not drawn (BOF3X_SIDE_ZERO=1, an experiment)");
+    }
     BOF3_INJECT(AreaMap_Frame);
     BOF3_INJECT(MapView_Build);
     BOF3_INJECT(MapView_CellTextures);
@@ -607,3 +688,60 @@ void MapLayers_Inject() {
     BOF3_INJECT(AreaMap_ClutCycle);
     BOF3_INJECT(AreaMap_HeaderPass);
 }
+
+namespace map_layers {
+
+// MapView_Build's two side tests, cell by cell, on the corners as loaded - the
+// row's last cell reading the next row's first and the last row reading past
+// the corner plane into the block, as the build does. A cell is marked only
+// when the file gives it one side and its tile's run has no third dword of
+// its own: the run ends at the next tile index any cell of the map uses (the
+// last one at the texture run's end, the header's word +4); a tile with a
+// third word carries one for the other side, and the original's read of it
+// stands.
+void SnapshotSides() {
+    if (!g_side_dup) return;  // not armed: no self-test's map is read
+    const unsigned width = Width(), depth = AreaMap_Header[1];
+    const unsigned offset = Word(AreaMap_Header + 2);
+    const unsigned half = (depth * width + 1) / 2;
+    const unsigned char* const tiles = AreaMap_Header + offset * 4u;
+    static std::uint8_t used[0x10000];
+    static std::uint32_t next_used[0x10000];
+    std::memset(used, 0, sizeof used);
+    for (unsigned i = 0; i < width * depth; ++i) used[Word(tiles + i * 2u)] = 1;
+    const unsigned end = Word(AreaMap_Header + 4);
+    std::uint32_t after = end > offset + half ? end - offset - half : 0x10000u;
+    for (unsigned t = 0x10000; t-- > 0;) {
+        next_used[t] = after;
+        if (used[t]) after = t;
+    }
+    const unsigned char* const corners = Corners();
+    for (unsigned z = 0; z < depth; ++z) {
+        for (unsigned x = 0; x < width; ++x) {
+            const unsigned char* const c = corners + (z * width + x) * 4u;
+            const unsigned char* const below = c + width * 4u;
+            const bool east = S8(c[6]) < S8(c[3]) || S8(c[4]) < S8(c[1]);
+            const bool south = S8(below[1]) < S8(c[3]) || S8(below[0]) < S8(c[2]);
+            const unsigned tile = Word(tiles + (z * width + x) * 2u);
+            const bool short_run = tile != 0 && next_used[tile] > tile && next_used[tile] - tile <= 2;
+            g_file_sides[z * width + x] =
+                static_cast<unsigned char>(south != east && short_run ? (south ? 1 : 2) : 0);
+        }
+    }
+}
+
+void ArmSideDup() {
+    char text[8];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_SIDE_DUP", text, sizeof text);
+    if (n > 1 || (n == 1 && text[0] != '0' && text[0] != '1')) bof3::Fatal("BOF3X_SIDE_DUP must be 0 or 1");
+    if (n == 1 && text[0] == '0') {
+        bof3::Log("DIV-0085 off (BOF3X_SIDE_DUP=0): a cell given a second side face at run time reads the next "
+                  "tile's word for it, as the original does");
+        return;
+    }
+    g_side_dup = true;
+    bof3::Log("DIV-0085    a cell given a second side face at run time draws it with its one side word "
+              "(BOF3X_SIDE_DUP=0 for the original's read)");
+}
+
+}  // namespace map_layers

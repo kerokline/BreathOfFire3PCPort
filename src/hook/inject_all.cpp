@@ -44,6 +44,9 @@
 #include "game/sprite_clut.h"
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
+#include "game/d3d_lines.h"
+#include "game/area4_walls.h"
+#include "game/music_loops.h"
 #include "game/battle_actions.h"
 #include "game/battle_flow.h"
 #include "game/enemy_ai_ops.h"
@@ -310,6 +313,8 @@
 #include "game/shell.h"
 #include "game/psx_rest.h"
 #include "game/mode_rest.h"
+#include "game/crt_rest.h"
+#include "game/game_last.h"
 #include "hook/detour.h"
 
 namespace bof3 {
@@ -1402,12 +1407,25 @@ void InjectAll() {
                                 // at the scenario harness's recorders, two .data tables swapped for the fuzz only;
                                 // before FishingText_Arm; no module patches bytes inside its 14 (DIVERGENCE.md,
                                 // cheats.cpp, widescreen.cpp)
+    GameLast_Inject();          // platform round step 3, group TWO (Item_UseFlags 0x591810, ItemTrade_Dispatch 0x593950; docs/game-last.md): no calls, one .data table swapped for the fuzz only; last of the takeovers
+    CrtRest_Inject();           // platform round step 3 (docs/crt-rest.md): the C runtime's entries the game calls -
+                                // Rand, sprintf, strncpy, _stricmp, _findfirst / _findnext, the file layer - LAST of
+                                // the takeovers: every module's fuzz before it ran Capcom's entries or its own stand-ins
+                                // for them; it resets Rand's seed to the CRT's 1 after them all
     FishingText_Arm();        // DIV-0069: the fishing text's Latin layout - after every module's self-test, which
                                 // all compared Capcom's (effect_1a's and effect_1b's draws read it)
     layering::Arm();            // DIV-0071: the floor under a sprite drawn before it (BOF3X_LAYERING) - after every
                                 // module's self-test, which all compared the original's order (layering.h)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
+    d3d_lines::Arm();           // DIV-0079: the six LINE handlers draw quads of the scale's width (BOF3X_LINES) - after
+                                // every module's self-test, which all compared the original's line strip (d3d_lines.h)
+    area4_walls::Arm();         // area 4's walls as the later discs have them (BOF3X_AREA4_WALLS; docs/region-diff.md
+                                // section 10) - after every module's self-test, which all compared the shipped map
+    map_layers::ArmSideDup();   // DIV-0085: a side face gained at run time takes the cell's one side word (BOF3X_SIDE_DUP;
+                                // known-defects.md D239) - after every module's self-test, which all compared Capcom's read
+    music_loops::Arm();         // the measured music loops (BOF3X_MUSIC_LOOPS; docs/bgm-comparison.md section 12) -
+                                // after every module's self-test, which all compared the original's rewind
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

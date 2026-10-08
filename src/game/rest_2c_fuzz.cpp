@@ -291,7 +291,7 @@ const sh::Callee kCallees[] = {
     {"0x5869A0", at::kPickAsk, at::kPickAsk, 2, {0xFFFF, 0xFF}, kG, 0, 0, {}, &Stir},                 // R2D: and ecx, 0xFFFF; dl
     {"0x59DB70", at::kGlyph, at::kGlyph, 6, {0xFFFF, 0xFFFF, 0xFF, 0xFF, 0xFFFF, 0xFF}, kG, 0, 0},    // R2H
     // the C runtime's strncpy: both sides call it for real
-    {"strncpy", at::kStrncpy, at::kStrncpy, 3, {kW, kW, kW}, sh::Answer::kThrough, 0, 0},
+    {R2C_OURS(Crt_strncpy), 3, {kW, kW, kW}, sh::Answer::kThrough, 0, 0},
     // ours, outside the standard set or typed otherwise, with what each reads
     {R2C_OURS(Menu_DrawTitleBox), 5, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
     {R2C_OURS(Menu_DrawMoneyBox), 4, {0xFFFF, 0xFFFF, 0, kW}, kG, 0, 0},
@@ -313,7 +313,7 @@ const sh::Callee kCallees[] = {
     {R2C_OURS(AreaMap_Elevation), 2, {kW, kW}, kG, 0, 0, {}, &ElevationAnswer},
     // every format here takes one number: three words (the standard row logs a
     // fourth, the caller's stack)
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kW, kW, kW}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kW, kW, kW}, kG, 0, 0, {0, 16}, &Sprintf, nullptr, true},
 };
 #undef R2C_OURS
 

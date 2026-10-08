@@ -24,6 +24,8 @@
 // its upper bits as C++ computes them.
 #include "game/battle_draw.h"
 
+#include "game/d3d_lines.h"
+
 #include <windows.h>
 
 #include <cstdint>
@@ -194,7 +196,7 @@ extern "C" long __cdecl D3d_DrawLineG2(const unsigned char* prim) {
     g.ret_only(1);
     g.set_blend(prim[7], DrawMode());
     g.set_shade(2);
-    return DrawVertices(3, 2);   // LINESTRIP
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(2) : DrawVertices(3, 2);   // LINESTRIP; DIV-0079 the quads
 }
 
 // original 0x5A1B50, table entry 12 (code 0x58, called at 0x59F152): a Gouraud
@@ -206,7 +208,7 @@ extern "C" long __cdecl D3d_DrawLineG3(const unsigned char* prim) {
     g.ret_only(1);
     g.set_blend(prim[7], DrawMode());
     g.set_shade(2);
-    return DrawVertices(3, 3);   // LINESTRIP
+    return d3d_lines::g_wide ? d3d_lines::DrawWide(3) : DrawVertices(3, 3);   // LINESTRIP; DIV-0079 the quads
 }
 
 // --- the battle menu's lists -------------------------------------------------------
@@ -252,7 +254,7 @@ int ListTitleX(const unsigned char* label, int n) {
     return 78 - static_cast<int>(TextAdvance_Width(label) / 2);
 }
 
-constexpr U kTextDrawAt = 0x516B30;    // its name is a macro here
+constexpr U kTextDrawAt = 0x516B30;    // Text_DrawAt: the sites' target in Capcom's bytes, a patch fact (raw)
 // The title draws of the two list windows that are still Capcom's: the
 // Text_DrawAt call after `6 * (13 - Text_CharCount) + x` in each.
 constexpr U kTitleCallA = 0x596D13;    // titles 0x66AF10
@@ -268,6 +270,7 @@ extern "C" const unsigned char* __cdecl ListTitle_DrawAt(int x, int y, int colou
 }  // namespace
 
 int ListTitle_X(const unsigned char* label, int n) { return ListTitleX(label, n); }
+bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
     g.box(Word(w + 4) + 3, Word(w + 6) + 3, 0x99, 0x82, w[9], Byte(kColour));

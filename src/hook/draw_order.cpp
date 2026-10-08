@@ -253,6 +253,14 @@ void LogWalk(const unsigned long* ot) {
     if (!g_on) return;
     const unsigned f = Now();
     if (f < g_f0 || f > g_f1) return;
+    {
+        // The packet pool's fill at the walk: Gfx_PacketNext against this
+        // buffer's 64 KB (Gfx_PacketPools + (buffer << 16), draw_emit.cpp's limit).
+        const std::uint32_t base = 0x7E1C00u + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16);
+        const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
+        bof3::Log("draworder   frame %u: packet pool at %u of 65536 bytes (buffer %u)", f, next - base,
+                  static_cast<unsigned>(Gfx_BufferIndex));
+    }
     // The walk starts at entry 7 of the environment's eight heads (Gfx_DrawOTag
     // is handed +0x8C, the heads were cleared in reverse) and passes each head
     // on its way down to entry 0: a node inside them says which slot the
@@ -293,6 +301,12 @@ void LogWalk(const unsigned long* ot) {
                 Describe(p, who, sizeof who);
                 bof3::Log("draworder   #%u slot %d code %02X box (%.1f, %.1f)-(%.1f, %.1f) at %08X: %s", index, slot,
                           code, b.x0, b.y0, b.x1, b.y1, p, who);
+                if (b.y1 - b.y0 > 100.0f && (code == 0x2C || code == 0x2D || code == 0x2E || code == 0x2F)) {
+                    // A tall textured quad's 0x48 bytes, for comparing runs (2026-10-07).
+                    char hex[0x48 * 3 + 1];
+                    for (unsigned k = 0; k < 0x48; ++k) std::snprintf(hex + k * 3, 4, "%02X ", Get<std::uint8_t>(p + k));
+                    bof3::Log("draworder     bytes %s", hex);
+                }
             }
         }
         node = p;

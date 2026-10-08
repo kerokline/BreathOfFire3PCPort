@@ -162,7 +162,8 @@ controls' speed-up).
 - **`0x594D90`** (FE2's `kTradeTake`, the ingredients taken) is not in the cut
   and lies past this band (`0x594D8A`): nobody's, left original and called
   raw. **`0x593950`**, `ItemTrade_States`' dispatcher (reached from E1F's thunk
-  `0x52CF30`), is in no cut row either.
+  `0x52CF30`), is in no cut row either (taken 2026-10-06 as
+  `ItemTrade_Dispatch`, [`game-last.md`](game-last.md)).
 
 ## 6. Latent defects (Capcom's, described, not fixed)
 
@@ -200,7 +201,7 @@ to E1F 23. Everything else is ours or Capcom's by name (`Crt_sprintf`
 six `field_e2_callees.h` constants (section 8); E1B's `0x469210` calls
 `Item_DrawIcon` at `0x46925F`, `0x46929A`, `0x4692E2`, `0x46931A`,
 `0x46935D`, `0x469390`, `0x4693CA`, `0x4693FF` (for E1B's merge: by name);
-`0x593950` (nobody's) jumps to `ItemTrade_Leave` through `ItemTrade_States`.
+`0x593950` (nobody's then; `ItemTrade_Dispatch`, ours since 2026-10-06, [`game-last.md`](game-last.md)) jumps to `ItemTrade_Leave` through `ItemTrade_States`.
 `scenario_harness.cpp`'s `kField` rows `"0x594410"`, `"0x5947D0"`,
 `"0x5942C0"`, `"0x594700"`, `"0x594AD0"`, `"0x594790"` (FE2's, keyed by
 address) still serve FE2's raw calls; they are the harness's, not edited.

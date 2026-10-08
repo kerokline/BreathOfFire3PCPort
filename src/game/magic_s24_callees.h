@@ -22,7 +22,7 @@
 
 namespace magic_s24 {
 
-constexpr std::uint32_t kCentreOnTargets = 0x4FC0E0;   // MagicFx_CenterOnSide (the fuzz's key)
+constexpr std::uint32_t kCentreOnTargets = bof3::addr::MagicFx_CenterOnSide;   // MagicFx_CenterOnSide (the fuzz's key)
 constexpr std::uint32_t kTurnByFacing = bof3::addr::Battle_TurnVectorC;
 
 namespace cell {

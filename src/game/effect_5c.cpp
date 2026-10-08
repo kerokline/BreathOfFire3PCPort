@@ -49,6 +49,7 @@
 // aborts with a message (docs/effect_5c.md section 6).
 #include "game/effect_5c.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -56,7 +57,9 @@
 #include "game/effect_5c_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 namespace {
@@ -1028,7 +1031,18 @@ void WindowMode(U x, U w) {
 // mode (page 0xB5); then AreaMap_Corners of columns 0x2D..0x30 rebuilt round
 // Field_Kind2Z's row: rows row + 3 and row - 3 flat (0x20 each corner), rows
 // row + 4 .. row + 13 and row - 4 .. row - 17 a slope from 0x20 up.
+//
+// DIV-0041 (2026-10-07, the owner's bridge of area 41): under the wide picture
+// the haze band and the gradients run from -53 to 373, the strips are clipped
+// to those bounds instead of 0..320 with one more strip on the left so the
+// scroll never leaves a gap, and a strip that starts past the right bound is
+// skipped (the original's x0 > x1 quad, off its picture, was the growing
+// sliver in the band). Widescreen_Fill() is 0 until the self-tests have run,
+// so the fuzz and every narrow run get the original's packets bit for bit.
 extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
+    const U wide = Widescreen_Fill();
+    const U left_bits = std::bit_cast<U>(Widescreen_FillX());                           // 0.0f narrow
+    const U right_bits = std::bit_cast<U>(320.0f + static_cast<float>(wide));           // 0x43A00000 narrow
     WindowMode(0xE0, 0x20);
     unsigned char* prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyFT4)(prim);
@@ -1037,10 +1051,10 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
     SetUL(prim + 0x1C, 0x42600000u);
     SetUL(prim + 0x2C, 0x42B00000u);   // 88.0f
     SetUL(prim + 0x3C, 0x42B00000u);
-    SetUL(prim + 8, 0);
-    SetUL(prim + 0x18, 0x43A00000u);   // 320.0f
-    SetUL(prim + 0x28, 0);
-    SetUL(prim + 0x38, 0x43A00000u);
+    SetUL(prim + 8, left_bits);
+    SetUL(prim + 0x18, right_bits);   // 320.0f
+    SetUL(prim + 0x28, left_bits);
+    SetUL(prim + 0x38, right_bits);
     prim[0x14] = 0;
     prim[0x15] = 0;
     prim[0x24] = 0xFF;
@@ -1053,7 +1067,37 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
     SetWord(prim + 0x16, 0x7900);
     SH_CALL(Gfx_CommitPrim)(7, 0x48);
     WindowMode(0, 0x100);
-    for (U col = 0; col < 0x300; col += 0x100) {
+    // The wide picture: strips of 256 at phase - 512, - 256, 0 and + 256,
+    // each clipped to [-wide, 320 + wide] with the u range the clip leaves
+    // (the original's rule: u runs from the clipped-off width on the left,
+    // and to the visible width less one on the right).
+    for (U col = wide ? 0u : 0x100u; wide && col < 0x400; col += 0x100) {
+        const std::int32_t left = static_cast<std::int32_t>((Frame_Counter >> 3) & 0xFFu) + static_cast<std::int32_t>(col) - 0x200;
+        const std::int32_t lo = -static_cast<std::int32_t>(wide), hi = 320 + static_cast<std::int32_t>(wide);
+        const std::int32_t x0 = left > lo ? left : lo, x1 = left + 0x100 < hi ? left + 0x100 : hi;
+        if (x1 <= x0) continue;
+        prim = Gfx_PacketNext;
+        SH_CALL(Gpu_SetPolyFT4)(prim);
+        SH_CALL(Gpu_SetShadeTex)(prim, 1);
+        Float(prim + 8, x0);
+        Float(prim + 0x28, x0);
+        Float(prim + 0x18, x1);
+        Float(prim + 0x38, x1);
+        prim[0x14] = prim[0x34] = static_cast<unsigned char>(x0 - left);
+        prim[0x24] = prim[0x44] = static_cast<unsigned char>(x1 - left - 1);
+        SetUL(prim + 0x1C, 0);
+        SetUL(prim + 0xC, 0);
+        SetUL(prim + 0x3C, 0x42800000u);   // 64.0f
+        SetUL(prim + 0x2C, 0x42800000u);
+        prim[0x25] = 0;
+        prim[0x15] = 0;
+        prim[0x45] = 0x3F;
+        prim[0x35] = 0x3F;
+        SetWord(prim + 0x26, 0x99);
+        SetWord(prim + 0x16, 0x7980);
+        SH_CALL(EffectKind18Sub15_LinkLayer)(0x48);
+    }
+    for (U col = 0; !wide && col < 0x300; col += 0x100) {
         prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(prim);
         SH_CALL(Gpu_SetShadeTex)(prim, 1);
@@ -1134,6 +1178,28 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
         quad[0x36] = 0;
         SH_CALL(EffectKind18Sub15_LinkLayer)(0x44);
     }
+    // The wide picture's bands: a gradient each side, flat at the outer
+    // rows' height (the table's 90), from -wide to 0 and from 320 to 320 + wide.
+    for (U k = 0; wide && k < 2; ++k, quad += 0x44) {
+        SH_CALL(Gpu_SetPolyG4)(quad);
+        SH_CALL(Gpu_SetSemiTrans)(quad, 1);
+        const std::int32_t x0 = k == 0 ? -static_cast<std::int32_t>(wide) : 320;
+        const std::int32_t x1 = k == 0 ? 0 : 320 + static_cast<std::int32_t>(wide);
+        const std::int32_t row = At(AddressOf(EffectKind18Sub15_Rows) + (k == 0 ? 0u : 4u))[0] + static_cast<std::int32_t>(shift);
+        Float(quad + 8, x0);
+        SetUL(quad + 0xC, 0x42800000u);
+        Float(quad + 0x18, x1);
+        SetUL(quad + 0x1C, 0x42800000u);
+        Float(quad + 0x28, x0);
+        Float(quad + 0x2C, row);
+        Float(quad + 0x38, x1);
+        Float(quad + 0x3C, row);
+        quad[4] = quad[5] = quad[6] = 0xFF;
+        quad[0x14] = quad[0x15] = quad[0x16] = 0xFF;
+        quad[0x24] = quad[0x25] = quad[0x26] = 0;
+        quad[0x34] = quad[0x35] = quad[0x36] = 0;
+        SH_CALL(EffectKind18Sub15_LinkLayer)(0x44);
+    }
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0xB5, 0);
     SH_CALL(EffectKind18Sub15_LinkLayer)(0xC);
     for (U i = 0; i < 0xA; ++i) {
@@ -1172,7 +1238,11 @@ extern "C" void __cdecl EffectKind18Sub15_LinkLayer(unsigned size) {
     const unsigned buffer = Gfx_BufferIndex;
     const U bytes = size & 0xFFu;
     const U limit = (static_cast<U>(buffer) << 16) + at::kPoolLimit;
-    if (limit <= AddressOf(next) + bytes) return;
+    if (limit <= AddressOf(next) + bytes) {
+        if (draw_order::Tagging())
+            bof3::Log("draworder   packet pool full: the sky's %u-byte primitive skipped (EffectKind18Sub15_LinkLayer)", bytes);
+        return;
+    }
     SH_CALL(Gpu_LinkPrim)(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(UL(At(at::kLayer15Tails + 8 * buffer)))),
                           AddressOf(next));
     unsigned char* const now = Gfx_PacketNext;

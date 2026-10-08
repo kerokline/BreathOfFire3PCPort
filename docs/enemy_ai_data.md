@@ -74,4 +74,7 @@ agree with the guide's entries.
   its hook read as well as its rows.
 - What the data says is not what a fight does until it is watched: a live
   check of one "hit" row (the owner's Tar Man and Frost) would close the
-  loop from record to behaviour.
+  loop from record to behaviour. 2026-10-07: the Volt's row explained the
+  owner's 78-EXP fight to the number, and the once-only rows were found to
+  fire once per *session* on the port, not once per fight - DIV-0082,
+  [`trigger-mode-enemies.md`](trigger-mode-enemies.md).

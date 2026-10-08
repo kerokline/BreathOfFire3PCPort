@@ -41,13 +41,13 @@ template <typename T> T Fn(std::uint32_t address) { return reinterpret_cast<T>(s
 }  // namespace
 
 const std::uint32_t kStepHandlers[kStepCases] = {
-    0x404F80, 0x406DE0, 0x408EB0, 0x409440, 0x40B410, 0x40E120, 0x40EB90, 0x413980, 0x414330, 0x4163B0,
-    0x416770, 0x418620, 0x419DA0, 0x41E5E0, 0x41F960, 0x420A10, 0x4215B0, 0x422000, 0x423910, 0x427270,
-    0x427A80, 0x4281A0, 0x539AC0, 0x429DC0, 0x429DC0, 0x429DC0, 0x429DC0, 0x429DC0, 0x429DC0, 0x429DC0,
-    0x429DC0, 0x429DC0, 0x429DC0, 0x429DC0, 0x42B9F0, 0x42C000, 0x42C700, 0x42CE30,
+    bof3::addr::Area36_StepHook, bof3::addr::Area42_StepHook, bof3::addr::Area46_StepHook, bof3::addr::Area49_StepHook, bof3::addr::Area59_StepHook, bof3::addr::Area75_StepHook, bof3::addr::Area76_StepDisarmTail5, bof3::addr::Area97_StepHook, bof3::addr::Area100_StepHook, bof3::addr::Area105_StepHook,
+    bof3::addr::Area106_StepHook, bof3::addr::Area112_StepHook, bof3::addr::Area116_StepHook, bof3::addr::Area135_StepHook, bof3::addr::Area140_StepHook, bof3::addr::Area143_StepHook, bof3::addr::Area145_StepHook, bof3::addr::Area146_StepHook, bof3::addr::Area150_StepHook, bof3::addr::Area170_StepHook,
+    bof3::addr::Area171_StepHook, bof3::addr::Area172_StepHook, bof3::addr::Scenario_NoHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook,
+    bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area185_StepHook, bof3::addr::Area191_StepHook, bof3::addr::Area192_StepHook, bof3::addr::Area193_StepHook, bof3::addr::Area197_StepHook,
 };
 const std::uint32_t kArriveHandlers[kArriveCases] = {
-    0x405B00, 0x409340, 0x417ED0, 0x422790, 0x426470, 0x426B20, 0x427B50, 0x4287E0,
+    bof3::addr::Area40_ArriveHook, bof3::addr::Area48_ArriveHook, bof3::addr::Area111_ArriveHook, bof3::addr::Area148_ArriveHook, bof3::addr::Area167_ArriveHook, bof3::addr::Area169_ArriveHook, bof3::addr::Area171_ArriveHook, bof3::addr::Area173_ArriveHook,
 };
 
 const Callees kOriginals = {

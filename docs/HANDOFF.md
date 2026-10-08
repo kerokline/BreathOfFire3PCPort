@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-05 night: round fourteen's end and the platform round's step 2 ran side by side - `phase-3/round14-end` done and merged into `phase-3/platform-round`, 10,065 ours, `'*'` narrow and wide; the state hash live check passed - the attract sequence and all ten routes identical; nothing pushed, the PR next)
+**Status:** IN PROGRESS (2026-10-08: the sea bridge's "waterfall" (D239) surveyed, explained and fixed - DIV-0085, seen by the owner; its third-word guard owes a rebuild, `'*'` and one bridge walk; area 47 the place to watch. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,8 +14,8 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**10,009 functions are ours on `main`** (round fourteen, PR #41, `2df90d9`; `inject: 10009 ours, 0 left original`,
-`'*'` narrow and wide at `1bf5964`). Round fourteen was the remainder of the game's own code: 1,361 functions in stage A and four waves
+**10,065 functions are ours on `main`** (PR #42, `e047ee9b`, 2026-10-06) **and 10,081 on `phase-3/platform-round-2`**
+([`platform-round-2.md`](platform-round-2.md), 2026-10-06, unpushed). Round fourteen (PR #41) was the remainder of the game's own code. Round fourteen was the remainder of the game's own code: 1,361 functions in stage A and four waves
 ([`takeover-queue-round14.md`](takeover-queue-round14.md)), all merged; what is not ours in `BOF3.exe` now is
 the platform and library layer and the jump-table cases. Waves one to three were reviewed on 2026-10-05
 ([`round-14-review.md`](round-14-review.md)) and the high and medium items fixed; wave four ran the same day
@@ -39,6 +39,100 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 [`takeover-queue-round13.md`](takeover-queue-round13.md) section 18 item 6.
 
 ## Pick up here
+
+0000000000000. **The sea bridge's "waterfall" is fixed: DIV-0085 (2026-10-08, a cloud session; the owner applied its
+   commits with `git am`).** The record is [`known-defects.md`](known-defects.md) D239, the entry DIVERGENCE's DIV-0085.
+   In short: `tools/side_survey.py` (new; `--dat DIR` or `--disc DISC`, `--cells AREA:X0,Z0,X1,Z1`) read every area
+   block, the PC's 200 and the Japanese disc's 200, identical - **the maps author their side words own, south, east,
+   as the code reads them** (by shade, 7,144 to 259), and **each one-sided cell carries a word for its one side and no
+   more**. The bridge is **`AREA060.DAT`**, not area 41 (the sky effect's columns 45..48 are its deck, and D239's two
+   live words sit on its column 48; every doc that says "area 41" for the bridge - D239's first paragraph, DIV-0041's
+   "The sea bridge's sky", `owner-review.md` - means `AREA060`; the code's area numbers otherwise match the files, area
+   4 being `AREA004`). The sky effect rewrites the deck's rows about the party and restores none, so a walk north
+   leaves one-unit steps behind; an edge cell created on one gets a south face, and its 32-unit cliff reads the next
+   tile's sea word. The PSX twin (`SLPS_009.90`, `FUN_80153B8C` / `FUN_80154D50`) is the same code on the same data.
+   **DIV-0085** (`BOF3X_SIDE_DUP`, on by default, armed after every self-test; `map_layers.cpp`, the snapshot taken at
+   the end of `LoadDatFile` when the area block loaded): a cell textured with both faces whose file heights give it
+   one, and whose tile has no third word, draws both with its one side word. **The owner saw it, 2026-10-08:** the
+   bridge wide, walked several times, no streaks, the edges unremarkable - on the build **before** the third-word guard
+   (`512b9de`'s; a one-sided cell with a third word, 10,309 in the game, keeps the original's read). In the order they
+   bite:
+   1. **Owed:** rebuild, `'*'` narrow and wide from a launcher copy with no ini (the `cheat.exp` trap), one more
+      `bridgeWalk` wide; the log's `DIV-0085    map cell 48,..` lines say it acted. Then the DIV's Verification line.
+   2. **Where else it can act** (D239, "Where DIV-0085 can act"): **area 47**, Wyndia castle's outer wall (the
+      sibling's ウィンじろ がいへき; the owner: the one-way float down) - its ripple moves every cell about the leader
+      every frame, 221 cells qualify, the wall's two cliffs among them; glance at it when passing, `BOF3X_SIDE_DUP=0`
+      for the original. The four areas with height patches never trigger it. Four writers' areas are unread (a second
+      ripple `0x62`, the platforms `0x22`, one boss map, Quake).
+   3. **Small, from the reading:** a one-line log of each file `LoadDatFile` opens would settle area names like
+      "41"; the inference that DIV-0041's wider terrain margin creates the edge cells on the steps is unmeasured (a
+      `BOF3X_DRAWORDER` log, the creation row against the party's).
+   **The 2026-10-07 morning's visual glitches** (committed since, `a55fae1` "Bridge Bug Work"; the record is
+   [`owner-review.md`](owner-review.md) "Reported by the owner"): the sea's stair-stepped edges (the wide view's cell
+   inset, `BOF3X_WIDE_INSET`, DIV-0041), Nina drawn through a crate (DIV-0071 refined), the bridge's sky widened
+   (DIV-0041; the owner: "Sky looks perfect"), Garr behind the railing Capcom's and kept. **Owed** from them: the
+   owner's eye on the crate fix in play. The self-tests `'*'` fail from `build/` beside the play ini (`cheat.exp=10`
+   trips `battle_flow`): run them from a copy with no ini. Tooling left in: `MapView_LinkPrimAt`'s caller and each
+   cell's sides and texture words under `BOF3X_DRAWORDER`; `BOF3X_SIDE_ZERO=1` (an experiment, off) releases a south
+   face whose word is 0. **Mechanics of the cloud session:** the owner uploaded the JP disc and `AREA*.DAT` to
+   `/mnt/session/uploads` (scratch only, rule 1); `apt-get install g++-mingw-w64-i686` gave a compile check of single
+   files (`gen_symbols.py --toml symbols.toml --out <dir>/bof3/symbols.gen.h`, then `-Isrc -I<dir>`) - not the
+   project's llvm-mingw, so the owner's build is the check; commits reached the owner as `git format-patch` files.
+
+000000000000. **The platform round's step 3 and a day of investigations (2026-10-06), on `phase-3/platform-round-2`** (cut
+   from `main` `e047ee9b`; the round's record [`platform-round-2.md`](platform-round-2.md), 10,081 ours). The morning:
+   four groups - SCAN (`tools/pe_jumptables.py`: the game's own code was two functions short), DEBTS (round fourteen's
+   leftovers), CRT (`crt_rest`: fourteen runtime entries ours or the toolchain's), TWO (`game_last`: the two functions) -
+   and DIV-0077 (TILE_1 a quad, `BOF3X_TILE1`), DIV-0078 (`Cfg_Load`'s key table ours), DIV-0079 (the six LINE kinds as
+   quads, `BOF3X_LINES`); `'*'` narrow and wide at every merge under `BOF3X_LANG=original` (the ini trap below); the state
+   hash identical on the attract sequence and all ten routes, the slot-6 save write byte-identical to Capcom's. The
+   afternoon and evening, from [`platform-next.md`](platform-next.md)'s A and B: the region diff
+   ([`region-diff.md`](region-diff.md): US, FR, DE PSX verified and held after all; the regional builds differ beyond text
+   in 83 rows of four kinds, one of them a collision fix - **DIV-0080**, Dauna Mine's minecart map walled by coordinate,
+   `BOF3X_AREA4_WALLS`, the attract never meets it), the music ([`bgm-comparison.md`](bgm-comparison.md): file N is song N,
+   the MP3s MPEG-1 Layer III 128 kbit/s CBR, the PC replays every intro - the owner heard the seams, so **DIV-0081**, the
+   loop-point table, 13 tracks measured, `BOF3X_MUSIC_LOOPS`), the PSP's Stallion ([`psp-stallion.md`](psp-stallion.md):
+   P6 palettes only and P7 a name, confirmed; the Holy Mantle P4 **refuted**), and
+   [`unified-data-plan.md`](unified-data-plan.md), the detailed importer plan in ten steps. **Not pushed, no PR yet.** In
+   the order they bite:
+   1. **Tomorrow's launches, staged** (the PC was off overnight): the loop measurement of the remaining songs
+      (`bgm-comparison.md` section 11's Paused note: `BGM_SCRATCH=<dir> python tools/bgm/measure_loops.py run --workers 3`,
+      then `gen_loop_table.py`, `prove_loops.py`, rebuild; about 1 h 45 min with three workers), the Volt EXP / trigger-mode
+      read (brief `plat2/brief_volt.md`; the owner's 78-EXP fight on `owner-review.md`), the wide-edge cull cleanup
+      (`owner-review.md` "Reported by the owner": the culls still inside the new view). And one more
+      report, the same night: the Skill Notes "Record in Skill Notes?  Yes No" prompt's hand a word short of `Yes` - a
+      fifth chooser outside `Menu_YesNo`, by [`yes-no-prompts.md`](yes-no-prompts.md)'s method (`owner-review.md`
+      "Reported by the owner"). And the camp's master list: its title still 师匠 (the US word is `MSTR`, the owner's
+      web reference - half of `yes-no-prompts.md` section 5's question answered) and a `†` beside completed masters
+      where the US draws `★` - `0x66A1F0` and `0x66A2D8`, DIV-0064's way (same list; **done 2026-10-07**, both from
+      `SHOP.EMI`, the star owed the owner's eye; the pupils box's 弟子 `0x66A1F8` left out under a Latin overlay, DIV-0083,
+      the US screen having no label box there - the owner's capture). And the owner's `sortScreens.txt` the same morning:
+      the sort menus, the Skill Notes sort, `Ink`, the formation names and the zenny unit - DIV-0064's groups 7..11 and
+      DIV-0084, done and confirmed in play by the owner (the equipment sorts too); the French / German builds owed their eye. And two routes the owner recorded and committed (`d1c5dcf1`): `ninaWalkBehindBlock`
+      (a sprite through a cell - DIV-0071's first sighting in play, A/B it under `BOF3X_LAYERING=0`) and `bridgeWalk` (a
+      backdrop short of the wide view's edge, the cull notch, a sprite cut by its row's deck - same list).
+   2. **The owner's calls**, all on [`owner-review.md`](owner-review.md): the town theme `000` (its file is shorter than
+      one loop: accept, stretch, or samples from outside the file); the Stallion option (a palette layer from the PSP disc,
+      about a day; the owner recorded `tools/recipes/stallion.txt`, untracked, `# save stallion`); the minecart walk
+      (DIV-0080's live check); which unified-data step to start (1, 2 and 5 need nothing from the owner); the PR.
+   3. **The owner's eye and ear**, same list: `analysis/bgm/listen/153_loop_fixed.wav` then the game with
+      `BOF3X_MUSIC_LOOPS` on against `=0`; the dream scene's specks (DIV-0077), the fishing gauge and any line (DIV-0079),
+      the sound resume by ear, the layering fix. DIV-0076 is seen and struck.
+   4. **The PR**: `git log --format=%B e047ee9b..HEAD` for the sign-offs first (every non-merge commit has the owner's;
+      the merge commits carry none).
+   5. **Left by the groups, small:** the five thin controls DEBTS listed; the 61 run-time raw calls (round thirteen's
+      1.3, a decision); `pe_hidden.py` and `pe_funcs.py` still stop silently at an undecodable byte (SCAN's finding;
+      fixing them regenerates the entry lists); two doc attributions SCAN corrected in its doc but not at their source
+      (`mode-rest.md` section 0's "pc_funcs.json" is `pc_hidden.json`'s size; `Mp3_Create`'s evidence puts the decoder
+      start at `0x5AB000`, it is `0x5ADF00`); the PSP's eleven map-band changes unread (region-diff 6); `psx-eu-en` not
+      held. What is still Capcom's: the runtime's start-up, allocator and per-thread data, the decoder, the software
+      renderer's converters.
+   **Mechanics that held:** briefs and scripts in the session-`7d0c9683` scratchpad (`plat2/common.md`, `common_next.md`
+   + `brief_*.md`, `live_plat3.sh`, `chain_final.sh`, `launcher/` the 10,081 build). The agents' branches
+   `phase-3/plat2-scan/-debts/-crt/-two`, `phase-3/next-music/-region/-region-read/-stallion`, `phase-3/area4-walls`,
+   `phase-3/music-loops` and their `.claude/worktrees/agent-*` are merged and can go. **Resuming an agent by message
+   keeps its context** (the region agent did four tasks in a row); **a stopped background chain may keep running** (the
+   trap below).
 
 00000000000. **Round fourteen's end is done and the platform round's step 2 with it (2026-10-05 night); both sit on
    `phase-3/platform-round`** (cut from `main` `2df90d9`; `phase-3/round14-end` merged into it at `cdcadb9`; the docs
@@ -686,7 +780,7 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-`phase-3/platform-round` holds the night's work, unpushed (item 0). The ten agent branches `phase-3/r14end-ea` .. `-ed2` and `phase-3/platform-ph/pl/pm/ps/pw` and their `.claude/worktrees/agent-*` are merged and can go, with the older ones: the six wave-four worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*`.
+`phase-3/platform-round-2` holds 2026-10-06's work, unpushed (item 0; the owner's `tools/recipes/stallion.txt` is untracked and theirs); `phase-3/platform-round` is merged (PR #42). The ten agent branches `phase-3/r14end-ea` .. `-ed2` and `phase-3/platform-ph/pl/pm/ps/pw` and their `.claude/worktrees/agent-*` are merged and can go, with the older ones: the six wave-four worktrees (`phase-3/round14-r4a` .. `r4f`), `feature/name-entry-scoping` and the nine `fix/r14-review-controls-*`.
 Before it: nothing uncommitted. Round eleven is merged (PR #30); its cleanup's cloud
 half is pushed on `claude/round-10-cleanup-handoff-qtwcrk` (item 0) and
 wants the `'*'` run and the other game-side checks before its PR. The wave
@@ -720,6 +814,25 @@ Local only, gitignored, worth keeping:
   PSP images. Never commit; extract to scratch.
 
 ## Traps already paid for
+
+- **A stopped background chain kept running** (2026-10-06): a `bash chain.sh` launched in the background and then
+  stopped through the harness left its child shell alive; a second launch of the same chain ran beside it. Both
+  waited on `tasklist` for the previous launcher, both slipped through the one-second gap between its narrow and
+  wide runs, the second's `cmake --build` failed (`ninja: error: opening deps log: Permission denied`, the launcher
+  exe unwritable) and left the **previous tip's DLL** in `build/` - so a live check that read `inject: 10079 ours`
+  had validated the tip before. Read the `inject:` count against what the tip should report before trusting a
+  chain's result, and give one chain the machine: check `tasklist` for a stray `bash` or launcher before starting
+  another.
+- **`BOF3X_SHADOW='*'` in the main checkout's `build/` fails under the owner's settings** (2026-10-06): `build/bof3x.ini`
+  is the owner's (`language=en`), the launcher exports it as `BOF3X_LANG`, and under English the `ConfigText` patch
+  re-aims the call at `Config_DrawRowLabel + 0x9F` - which `field_c1`'s clone check reads (`FATAL: ... the site is
+  re-aimed already, cannot clone`, exit 3, 978 of the 1,056 `MISMATCHES` lines reached). An environment variable wins
+  over the ini: run every self-test with `BOF3X_LANG=original` (the agents' worktrees never saw it - their inis are
+  defaults). Do not edit the owner's ini.
+- **`git am` of a cloud session's patches** (2026-10-08): it refuses a file that already exists untracked (a
+  copy downloaded earlier) and a tracked file with uncommitted changes ("does not match index"), and a failed run
+  leaves `.git/rebase-apply`, which blocks the next ("previous rebase directory still exists"). `git am --abort`,
+  move the copy aside, `git stash`, apply, `git stash pop`. Never `git am -s`: the patches carry the sign-off.
 
 - **A `shot` line is a frame of the route** (2026-09-30). `shot NAME 1 [BUTTONS]` holds its buttons for one frame; a
   shot inserted without taking that frame out of the run it splits puts every later input a frame late. An ad-hoc
@@ -935,5 +1048,5 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 ## Waiting on someone else
 
-- The owner: items 2 and 14; the choices in item 1.
+- The owner: [`owner-review.md`](owner-review.md) (started 2026-10-06: the sound resume by ear, DIV-0076's load screen, the layering fix in play, the TILE_1 quad's go-ahead; the camp cells and the FT3 colour parked; `Cfg_Load`'s overrun decided and unbuilt); items 2 and 14; the choices in item 1.
 - TheRealBiggs - not yet contacted ([`STATUS.md`](STATUS.md) obligations).

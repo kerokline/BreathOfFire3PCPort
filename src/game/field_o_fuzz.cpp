@@ -212,7 +212,7 @@ const sh::Callee kCallees[] = {
     {"MoveCmd_OpE9States[3]", 0x57CCE0, 0x57CCE0, 7, {kAll, kU8, kU8, kU16, kU16, kU8, kU8}, kG, 0, 0, {}, nullptr,
      reinterpret_cast<const void*>(&E9State<0x57CCE0>)},
     // Capcom's, the format's conversions logged (FoSprintf above)
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 5, {kAll, kAll, kAll, kAll, kAll}, kG, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&Sprintf)},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 5, {kAll, kAll, kAll, kAll, kAll}, kG, 0, 0, {}, nullptr, reinterpret_cast<const void*>(&Sprintf)},
     // Re-listed from the field-standard set at the widths the callee reads
     // (where Capcom pushes a whole register for a word or a byte; the reading
     // cited; battle_e7_fuzz.cpp re-lists the draw ones the same way):

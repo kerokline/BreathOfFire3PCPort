@@ -266,7 +266,7 @@ const sh::Callee kCallees[] = {
     // void (unsigned colour): its low byte (symbols.toml)
     {R1E_OURS(Sprite_FlashClut), 1, {kU8}, kG, 0, 0, {}, &FxFlash},
     // int (void): Capcom's C runtime (its name is its address)
-    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, kG, 0, 0, {}, &FxRand},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, kG, 0, 0, {}, &FxRand},
 };
 #undef R1E_OURS
 

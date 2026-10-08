@@ -187,6 +187,16 @@ U PoseSoundEffect(const U*, U answer) {
     if (h % 4 == 0) SetLong(Mem(at::kEff0StepY), static_cast<std::int32_t>((h >> 8) & 1 ? 0u : h >> 12));
     return answer;
 }
+// The round's clone (Seed's k). FieldPanel_DrawBox3 under LeaderPanel_S1Out:
+// half the time record +6 turned over (S1Out reads it again after the box at
+// the slide's end; the harness's case 4 reached that twice in 3,000 rounds:
+// control C61, docs/round-14-cleanup.md section 7).
+unsigned g_k;
+U Box3Effect(const U*, U answer) {
+    const U h = sh::Noise();
+    if (h % 2 == 0 && g_k == kS1Out) Sc()[6] = static_cast<unsigned char>(Sc()[6] == 0 ? (h >> 8) | 1 : 0);
+    return answer;
+}
 
 const sh::Callee kCallees[] = {
     // this group's own, called directly (E8) by LeaderPanel_S4Run
@@ -196,7 +206,7 @@ const sh::Callee kCallees[] = {
     // does not register), with the width each reads (docs/effect_1e.md
     // section 3): x and y reach 0x52CFE0's movsx and Text_DrawAt's words, the
     // kind, count and row are bytes, the message id a word
-    {E_OURS(FieldPanel_DrawBox3), 2, {kAll, kAll}, kG, 0, 0},
+    {E_OURS(FieldPanel_DrawBox3), 2, {kAll, kAll}, kG, 0, 0, {}, &Box3Effect},
     {E_OURS(FieldPanel_DrawBox2), 2, {kAll, kAll}, kG, 0, 0},
     {E_OURS(FieldPanel_DrawHeader), 2, {0xFFFF, 0xFFFF}, kG, 0, 0},
     {E_OURS(FieldPanel_DrawKindIcon), 3, {0xFFFF, 0xFFFF, 0xFF}, kG, 0, 0},
@@ -330,6 +340,15 @@ void Seed(unsigned k) {
     Field_Kind2Hold = static_cast<unsigned char>(PickOf(0, 0, sh::Next()));
     Field_State[0x89] = static_cast<unsigned char>(PickOf(0, sh::Next()));
     sh::SetRandHint(PickOf(0, 1, 8, 0xF, sh::Next()));
+    // the boundaries two thin controls change (round-14-cleanup.md section 7):
+    // S1Out's slide one short of its end (C61); S9Menu's choice 2 on state 0xE,
+    // the one pair whose confirm leaves the state (C58)
+    g_k = k;
+    if (k == kS1Out && sh::Half()) Sc()[9] = 4;
+    if (k == kS9Menu && sh::Half()) {
+        Mem(at::kEff6Choice)[0] = 2;
+        Mem(at::kEff6State)[0] = 0xE;
+    }
 }
 
 // --- the disturbance: a cell these read again after a call ------------------------------

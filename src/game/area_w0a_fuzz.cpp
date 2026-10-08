@@ -167,7 +167,7 @@ const ah::Callee kCallees[] = {
     {"Effect_FindFree", bof3::addr::Effect_FindFree, KeyOf(&::Effect_FindFree), 0, {}, ah::Answer::kByte, 0, 0x13, {}, &FindFree},
     {"Kind2_Place", bof3::addr::Kind2_Place, KeyOf(&::Kind2_Place), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {"ScriptFlags_Set40", bof3::addr::ScriptFlags_Set40, KeyOf(&::ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
 };
 
 // ---- the state -------------------------------------------------------------------

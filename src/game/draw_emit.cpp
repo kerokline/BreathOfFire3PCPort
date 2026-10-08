@@ -310,7 +310,13 @@ extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     size &= 0xFF;
     const std::uint32_t limit = (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16) + kPoolLimit;
     const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
-    if (limit <= next + size) return;
+    if (limit <= next + size) {
+        // Diagnostic only (BOF3X_DRAWORDER): the original's silent skip.
+        if (draw_order::Tagging())
+            bof3::Log("draworder   packet pool full: a %u-byte primitive for slot %u skipped (next %08X, limit %08X) from %08X",
+                      size, slot & 0xFF, next, limit, static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
+        return;
+    }
     slot &= 0xFF;
     if (draw_order::g_on)   // BOF3X_DRAWORDER, diagnostic only
         draw_order::TagCommit(next, slot, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));

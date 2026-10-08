@@ -238,7 +238,7 @@ const sh::Callee kCallees[] = {
     {"0x52CED0", at::kKindTotal, at::kKindTotal, 0, {}, kG, 0, 0, {}, &FxTotal, nullptr, true},
     // standard entries re-listed with the width the callee reads
     {FE1_OURS(Text_DrawAt), 5, {kU16, kU16, kU8, kU8, kAll}, kG, 0, 0, {}, &FxText, nullptr, true},
-    {"Crt_sprintf", 0x5B9380, 0x5B9380, 3, {kAll, 0, kAll}, kG, 0, 0, {0, 16, 0}, &FxSprintf, nullptr, true},
+    {"Crt_sprintf", 0x5B9380, KeyOf(&::Crt_sprintf), 3, {kAll, 0, kAll}, kG, 0, 0, {0, 16, 0}, &FxSprintf, nullptr, true},
     {FE1_OURS(Menu_DrawBox), 6, {kAll, kAll, kAll, kAll, kAll, kU8}, kG, 0, 0, {}, nullptr, nullptr, true},
     {FE1_OURS(Sprite_EnsureAnimation), 1, {kU8}, kF, 0, 0, {}, nullptr, nullptr, true},
     {FE1_OURS(Item_NamePtr), 2, {kU8, kU8}, kG, 0, 0, {}, &FxName, nullptr, true},

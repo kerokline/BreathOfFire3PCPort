@@ -342,7 +342,7 @@ const mh::Callee kCallees[] = {
     // the draw library (all ours)
     {S10_OURS(Math_Sin), 1, {kAll}, kG, 0, 0, {}, &StirScratch},
     {S10_OURS(Math_Cos), 1, {kAll}, kG, 0, 0, {}, &StirScratch},
-    {"Rand", 0x5B93D2, 0x5B93D2, 0, {}, mh::Answer::kRand, 0, 0, {}, &StirScratch},
+    {"Rand", 0x5B93D2, KeyOf(&::Rand), 0, {}, mh::Answer::kRand, 0, 0, {}, &StirScratch},
     {S10_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, kG, 0, 0, {}, &CommitEffect},
     {S10_OURS(MapView_LinkPrimAt), 4, {kAll, kAll, kAll, kAll}, kG, 0, 0, {}, &LinkEffect},
     {S10_OURS(Gpu_SetDrawMode), 5, {kAll, kAll, kAll, kAll, kAll}, kG, 0, 0},

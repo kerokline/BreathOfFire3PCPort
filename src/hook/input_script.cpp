@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "game/crt_rest.h"
 #include "game/game_clock.h"
 #include "game/win_main.h"
 #include "hook/detour.h"
@@ -618,37 +619,27 @@ void RecordStart(const char* path) {
 // For a recording and its replay to be compared, each frame's running total
 // goes to the log: `randlog     frame F rand K`. The first frame whose K
 // differs between the two logs is where a consumer the frame count does not
-// fix ran (2026-09-30, the fish that would not replay). Rand is replaced by
-// a counter that calls a byte-copy of the original; the copy's one call, the
-// per-thread-data getter at its entry, is kept. The counter is an instrument:
-// it is installed whatever BOF3X_ORIGINAL says, so a reference side under `*`
-// logs its count too (until 2026-10-05 it read 0 there on every frame).
-std::uint32_t g_rand_calls = 0;
-int (__cdecl* g_rand_copy)() = nullptr;
-
-int __cdecl CountingRand() {
-    ++g_rand_calls;
-    return g_rand_copy();
-}
-
+// fix ran (2026-09-30, the fish that would not replay). Since 2026-10-06 Rand
+// is ours (crt_rest.cpp) and counts itself; with Rand left original by
+// BOF3X_ORIGINAL, crt_rest puts a counting copy of Capcom's at its entry
+// instead. Either way the count is an instrument: it runs whatever
+// BOF3X_ORIGINAL says, so a reference side under `*` logs its count too
+// (until 2026-10-05 it read 0 there on every frame).
 void RandCountStart() {
-    // The call trace arms every unowned entry - Rand's among them - before
-    // this runs (dllmain.cpp: CallTrace_Start first), and a copy of an armed
-    // entry is refused. A traced run goes without the count.
+    // A traced run goes without the count, as it always has: the tracer
+    // arms every unowned entry (dllmain.cpp: CallTrace_Start first), Rand's
+    // among them when BOF3X_ORIGINAL leaves it Capcom's, and crt_rest makes
+    // no copy of Rand under BOF3X_CALLTRACE.
     char trace[4];
     if (GetEnvironmentVariableA("BOF3X_CALLTRACE", trace, sizeof trace)) {
         Log("input       randlog: off under BOF3X_CALLTRACE (Rand's entry is the trace's)");
         return;
     }
-    constexpr std::uint32_t kRand = 0x5B93D2, kRandSize = 0x22, kGetPtd = 0x5BAD64;
-    const bof3::CloneCall calls[] = {{0, nullptr, kGetPtd}};
-    g_rand_copy = reinterpret_cast<int (__cdecl*)()>(bof3::CloneOriginal("Rand", kRand, kRandSize, calls, 1));
-    bof3::Inject("Rand", kRand, reinterpret_cast<void*>(&CountingRand), true);
-    Log("input       randlog: Rand counted, one line a frame");
+    crt_rest::RandCount_Start();
 }
 
 void RandCountFrame() {
-    if (g_rand_copy) Log("randlog     frame %u rand %u", g_frame, g_rand_calls);
+    if (crt_rest::RandCounting()) Log("randlog     frame %u rand %u", g_frame, crt_rest::RandCount());
 }
 
 // BOF3X_STATEHASH without a recipe, under Capcom's WinMain: the tick, then

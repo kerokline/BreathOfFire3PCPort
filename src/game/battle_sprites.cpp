@@ -53,15 +53,15 @@ using move_script::Word;
 template <class F> F Raw(std::uint32_t address) { return reinterpret_cast<F>(static_cast<std::uintptr_t>(address)); }
 
 const Callees kOriginals = {
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x4456C0),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_ActorIsOut),
     Rand,
-    Raw<void (__cdecl*)(unsigned)>(0x446FB0),
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(0x590C90),
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(0x591810),
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(0x435180),
+    Raw<void (__cdecl*)(unsigned)>(bof3::addr::Battle_SetActorBit),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned, unsigned, unsigned)>(bof3::addr::AbilityList_Add),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::Item_UseFlags),   // group TWO's (2026-10-06): by address, the value unchanged
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::BattleTask_Create),
     Stat_AddClamped,
     Stat_AddCap100,
-    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(0x59E2D0),
+    Raw<unsigned char (__cdecl*)(unsigned, unsigned)>(bof3::addr::Window_Alloc),
     Sound_PlayEffect,
     AreaMap_Elevation,
     Sprite_SetAnimationBank,
@@ -78,7 +78,7 @@ const Callees kOriginals = {
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_MemberActionIs0E),   // R4A's
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomOtherMember),  // R4A's
     Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_RandomEnemy),
-    Raw<unsigned char (__cdecl*)(unsigned)>(0x445730),
+    Raw<unsigned char (__cdecl*)(unsigned)>(bof3::addr::Battle_DefaultTarget),
     ClutMap_Mark,
     ClutMap_FindFree,
     ClutMap_FindOwner,
@@ -821,6 +821,14 @@ extern "C" void __cdecl Battle_SetupEnemy(unsigned slot, unsigned id, long x, lo
 // fields (docs/battle_sprites.md section 3), +0xF0 = the id's low byte, and
 // the battle state cleared. The stat block copied to +0xB0.. is copied again
 // to +0x90.. (the original's rep movsd), which includes the resistance bytes.
+//
+// DIV-0082: the AI row-done byte +0xF1 (record +0x71) is cleared here too.
+// The original never clears it: on the PlayStation the enemy objects sit
+// inside BATTLE.EMI#3's image and come back zeroed from disc at every battle
+// entry, so a once-only AI row (the Volt's EXP x3 on a thunder hit) can fire
+// in every fight; the port keeps the objects in static memory, and a row
+// marked done in an earlier fight stays done for whoever spawns into the
+// slot next (docs/trigger-mode-enemies.md).
 extern "C" void __cdecl Battle_CopyEnemyData(unsigned slot, unsigned id) {
     const unsigned char* const src = EnemyData(id & 0xFF);
     unsigned char* const dst = Enemy(slot & 0xFF) + 0x80;
@@ -852,6 +860,7 @@ extern "C" void __cdecl Battle_CopyEnemyData(unsigned slot, unsigned id) {
     dst[0x80] = src[0x88];
     dst[0x81] = src[0x89];
     dst[0x70] = static_cast<unsigned char>(id);
+    dst[0x71] = 0;  // DIV-0082: the AI rows' done bits, which the original leaves from the last fight
     dst[0x8D] = 0;
     SetLong(dst + 0x94, 0);
     SetLong(dst + 0x90, 0);

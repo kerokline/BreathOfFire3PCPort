@@ -19,6 +19,15 @@ unsigned Widescreen_Live();
 // Widescreen_Inject to -150..470 when the view is wide.
 extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 
+// Columns the view's cell inset (map_layers.cpp Inset(), MapView_Inset
+// 0x905D80, read by MapView_Build and DrawLayer_Open only - image scan
+// 2026-10-07, two references) is lowered by each side when the view is wide:
+// the inset trims the 28-column ring to what the 320-wide picture needs, and
+// the 53 extra columns a side fell outside it as a stair-stepped notch (the
+// owner's bridge, 2026-10-06). 0 before Widescreen_Inject and when the view
+// is not wide; BOF3X_WIDE_INSET=N moves it for tuning.
+unsigned Widescreen_InsetColumns();
+
 // Re-aims the four x-range constants of AreaMapBD_BuildView 0x510780 (ours,
 // R3G's; it reads them back) at wider copies, moves the menu boxes' fourteen slide-off bounds
 // outward by the columns added, and widens the terrain cull above. Placed

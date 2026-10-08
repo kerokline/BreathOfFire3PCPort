@@ -27,6 +27,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/world_map_callees.h"
 #include "hook/detour.h"
+#include "hook/draw_order.h"
 #include "hook/log.h"
 
 namespace world_map {
@@ -365,8 +366,18 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl MapView_LinkPrimAt(u
     if (row < 0 || row >= 0x38) return;
     const U bytes = size & 0xFF;
     const U prim = Long(At(at::Gfx_PacketNextAt()));
+    // Tooling only (BOF3X_DRAWORDER): the walk's log names a frame node by its
+    // row alone; this says who linked it.
+    if (draw_order::Tagging())
+        bof3::Log("draworder   linked %08X (%u bytes) into row %d from %08X", prim, bytes, row,
+                  static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
     const U bound = (static_cast<U>(At(at::Gfx_BufferIndexAt())[0]) << 16) + kPoolBound;
-    if (bound <= prim + bytes) return;
+    if (bound <= prim + bytes) {
+        if (draw_order::Tagging())
+            bof3::Log("draworder   packet pool full: a %u-byte primitive for row %d skipped (MapView_LinkPrimAt) from %08X", bytes, row,
+                      static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
+        return;
+    }
     const U slot_index = static_cast<U>(row) * 6u;
     unsigned char* const slot = At(kRowTails + (slot_index + At(at::Gfx_BufferIndexAt())[0]) * 8u);
     g.link_prim(reinterpret_cast<unsigned long*>(static_cast<std::uintptr_t>(Long(slot))), prim);

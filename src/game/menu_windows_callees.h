@@ -15,6 +15,8 @@
 
 #include <cstdint>
 
+#include "bof3/symbols.gen.h"
+
 namespace menu_windows {
 
 namespace at {
@@ -81,19 +83,19 @@ constexpr std::uint32_t kStatLabels[3] = {0x66A0F8, 0x66A100, 0x66A110};
 }  // namespace at
 
 // Other groups' functions, by address (the round's rule).
-constexpr std::uint32_t kStatIcon = 0x5903F0;      // (kind, x, y, w, h, shade), W
-constexpr std::uint32_t kDrawHand = 0x5905D0;      // Menu_DrawHand (x, y, unused), W
-constexpr std::uint32_t kEquipCompare = 0x590960;  // (member, slot, item, u8 out[4], u16 out[4]), W
-constexpr std::uint32_t kItemName = 0x591680;      // (category, id) -> name, W
-constexpr std::uint32_t kItemKind = 0x591720;      // (category, id) -> 0..15, W
-constexpr std::uint32_t kEquipMask = 0x5917A0;     // (category, id) -> the members who can equip it, W
-constexpr std::uint32_t kItemFlagsOf = 0x591810;   // (category, id) -> flags, W
-constexpr std::uint32_t kHasKeyItem = 0x5918E0;    // (id) -> 1 when held, W
-constexpr std::uint32_t kCountOwned = 0x5919B0;    // (category, id, where) -> u16, W
-constexpr std::uint32_t kCountCategory = 0x591A80; // (category) -> u8, W
-constexpr std::uint32_t kPriceScale = 0x5830D0;    // (price, percent) -> price * percent / 100, at least 1, X
-constexpr std::uint32_t kSellPrice = 0x583100;     // (category, id, flag) -> the price a shop pays, X
-constexpr std::uint32_t kSetLineF3 = 0x5A7670;     // the PSX setter (prim), M
+constexpr std::uint32_t kStatIcon = bof3::addr::Menu_DrawIcon;      // (kind, x, y, w, h, shade), W
+constexpr std::uint32_t kDrawHand = bof3::addr::Menu_DrawHand;      // Menu_DrawHand (x, y, unused), W
+constexpr std::uint32_t kEquipCompare = bof3::addr::Equip_PreviewSlot;  // (member, slot, item, u8 out[4], u16 out[4]), W
+constexpr std::uint32_t kItemName = bof3::addr::Item_NamePtr;      // (category, id) -> name, W
+constexpr std::uint32_t kItemKind = bof3::addr::Item_IconKind;      // (category, id) -> 0..15, W
+constexpr std::uint32_t kEquipMask = bof3::addr::Item_EquipMask;     // (category, id) -> the members who can equip it, W
+constexpr std::uint32_t kItemFlagsOf = bof3::addr::Item_UseFlags;   // (category, id) -> flags, W (group TWO's, 2026-10-06)
+constexpr std::uint32_t kHasKeyItem = bof3::addr::KeyItem_Has;    // (id) -> 1 when held, W
+constexpr std::uint32_t kCountOwned = bof3::addr::Inventory_Count;    // (category, id, where) -> u16, W
+constexpr std::uint32_t kCountCategory = bof3::addr::Inventory_CountUsed; // (category) -> u8, W
+constexpr std::uint32_t kPriceScale = bof3::addr::Shop_ScalePrice;    // (price, percent) -> price * percent / 100, at least 1, X
+constexpr std::uint32_t kSellPrice = bof3::addr::Shop_SellPrice;     // (category, id, flag) -> the price a shop pays, X
+constexpr std::uint32_t kSetLineF3 = bof3::addr::Gpu_SetLineF3;     // the PSX setter (prim), M
 
 struct Callees {
     // other modules' (ours) and Capcom's

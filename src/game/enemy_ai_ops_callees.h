@@ -65,8 +65,8 @@ constexpr std::uint32_t kAbilityFlags8 = 0x65C4D8;
 constexpr std::uint32_t kAbilityFlagsD = 0x65C4DD;
 // Constants the ops store.
 constexpr std::uint32_t kAnimTable = 0x64B078;     // the enemy's animation bytes 0..7
-constexpr std::uint32_t kHookAValue = 0x437720;    // group CE's
-constexpr std::uint32_t kHookBValue = 0x437750;    // group CE's
+constexpr std::uint32_t kHookAValue = bof3::addr::BattleHook_Area189Script;    // group CE's
+constexpr std::uint32_t kHookBValue = bof3::addr::BattleHook_Area189Transition;    // group CE's
 
 // The op tables in .data (symbols.toml [[data]] EnemyOp_*): each a run of
 // code pointers indexed by one of Sprite_Current's step bytes.
@@ -81,7 +81,7 @@ constexpr std::uint32_t kDeathSubs = 0x64B234;     // by +3, 4
 }  // namespace at
 
 // Callees with no name in symbols.gen.h, or another group's: by address.
-constexpr std::uint32_t kItemClass = 0x591810;     // nobody's; (category, id) -> a class byte (docs/battle_sprites.md)
+constexpr std::uint32_t kItemClass = bof3::addr::Item_UseFlags;     // group TWO's (2026-10-06), the value unchanged; (category, id) -> a class byte (docs/battle_sprites.md)
 constexpr std::uint32_t kApPopup = bof3::addr::Battle_SetApPopup;   // 0x453EB0 (BE6, rebound 2026-09-29; the value unchanged): Battle_SetDamagePopup's AP twin
 constexpr std::uint32_t kPlayCue = bof3::addr::Sound_PlayEffectUnlessNone;       // Sound_PlayEffect(id) unless id is 0xFFFF (BE3's since round twelve: the same value)
 

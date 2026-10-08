@@ -13,12 +13,36 @@
 //      0x66B5C4 - the item lists' titles;
 //   4  the skill types, 5 x 8 at 0x66A200 behind 0x663984 and its copy
 //      0x66B5A0, the fifth behind 0x66B5B0 alone - the skill lists' titles;
-//   5  the battle's stats, 4 x 8 at 0x669CF0 behind 0x64AE08.
+//   5  the battle's stats, 4 x 8 at 0x669CF0 behind 0x64AE08;
+//   6  the camp's master list (2026-10-07; src/game/rest_2h.cpp's
+//      MasterWin_DrawList): its title, 8 bytes at 0x66A1F0, and the mark
+//      beside a completed master, 4 bytes at 0x66A2D8 - shipped as the one
+//      byte `t`, whose single-byte slot of the shipped font holds a star,
+//      which the overlay's repaint of that slot made a lowercase t (the
+//      owner's cross, 2026-10-06); the disc's own strings (MSTR and its
+//      star, SHOP.EMI), both immediates in the code;
+//   7  the sort menus (the owner's sortScreens route, 2026-10-07): eleven
+//      slots of 8 or 12 from 0x66A170 behind the pointer table 0x66B12C,
+//      the AP pair behind 0x66B374 too - the item sort's title and choices,
+//      the equipment sort's, the ability sort's (START.EMI); nothing but
+//      the tables reaches them, so repointed as groups 3 and 4 are: the
+//      French PC elevé and Défense and the German AP niedr are over 8;
+//   8  the camp's Skill Notes sort: its title 0x66A1DC and first choice
+//      0x66A1E4 behind 0x66B36C (SHOP.EMI);
+//   9  the Skill Ink count's label, 8 bytes at 0x66A118, an immediate in
+//      SharedList_DrawItemCount (SHOP.EMI's "Ink");
+//  10  the formation names: the first 16 bytes of each of the ten 28-byte
+//      records at 0x6636B0 that Menu_DrawIconWheel reads through the base
+//      at 0x573FC6, drawn by the 8 px draw as the status words are;
+//  11  the zenny unit, 4 bytes at 0x66A31C - the one byte `s`, the port's
+//      coin glyph in the shipped font, a letter after the overlay's repaint
+//      (the same fault as the master list's star), four pushes in the code
+//      (Menu_DrawMoneyBox's at 0x57465C checked); the US code 0x60, its Z.
 //
-// Groups 1, 2 and 5 are written in place, one byte a letter in the
+// Groups 1, 2, 5, 6 and 8..11 are written in place, one byte a letter in the
 // single-byte slots the overlay paints with the dialogue font, so a draw
 // through Text_DrawAt shows them as it shows every other overlay string.
-// Groups 3 and 4 are reached by nothing but their pointer tables (a scan of
+// Groups 3, 4 and 7 are reached by nothing but their pointer tables (a scan of
 // the image for each slot's address, 2026-09-29), so their strings go into
 // buffers of ours, 16 bytes each, and every table is re-aimed: the French
 // disc's ARMEMENT and CAPACITE and the German RUESTUNG are eight letters, one
@@ -41,6 +65,7 @@ namespace {
 // file.
 struct Slot {
     std::uint32_t va, room, named_at;
+    std::uint32_t expect;   // what named_at holds: the slot (0), or a table base the slot is read from
 };
 
 // A group whose strings are repointed: the pointer tables that name its
@@ -52,32 +77,53 @@ struct PointerTable {
 
 constexpr std::uint32_t kRoom = 16;   // our buffers: a title of 15 letters, which the 0x99-wide box holds
 
+constexpr std::uint32_t kMaxSlots = 11;
+
 struct Table {
     std::uint32_t tag;
     const char* what;
     std::uint32_t count;
-    Slot slots[5];
+    Slot slots[kMaxSlots];
     PointerTable tables[5];   // none for a group written in place
     char (*buffers)[kRoom];   // ours, for a repointed group
+    bool small;               // drawn by the 8 px draw: Labels_SmallGlyph serves its slots
 };
 
-char g_item_types[5][kRoom], g_skill_types[5][kRoom];
+char g_item_types[5][kRoom], g_skill_types[5][kRoom], g_sort_menus[11][kRoom];
 
-constexpr std::uint32_t kStatusSlots = 0x66A0E8, kStatusEnd = 0x66A0F8;
-constexpr std::uint32_t kStatusTag = 1;
+constexpr std::uint32_t kFormations = 0x6636B0, kFormationBase = 0x573FC6;
 
 constexpr Table kTables[] = {
-    {kStatusTag, "status words", 2, {{0x66A0E8, 8, 0x573661}, {0x66A0F0, 8, 0x57368F}}, {}, nullptr},
+    {1, "status words", 2, {{0x66A0E8, 8, 0x573661}, {0x66A0F0, 8, 0x57368F}}, {}, nullptr, true},
     {2, "menu stats", 4, {{0x66A0F8, 8, 0x5738CD}, {0x66A100, 8, 0x573928}, {0x66A108, 8, 0x573965},
-                          {0x66A110, 8, 0x5739AB}}, {}, nullptr},
+                          {0x66A110, 8, 0x5739AB}}, {}, nullptr, false},
     {3, "item types", 5, {{0x66A120, 8, 0x663970}, {0x66A128, 8, 0x663974}, {0x66A130, 8, 0x663978},
                           {0x66A138, 8, 0x66397C}, {0x66A140, 12, 0x663980}},
-     {{0x663970, 0, 5}, {0x663994, 0, 5}, {0x66AF10, 0, 5}, {0x66B58C, 0, 5}, {0x66B5C4, 0, 5}}, g_item_types},
+     {{0x663970, 0, 5}, {0x663994, 0, 5}, {0x66AF10, 0, 5}, {0x66B58C, 0, 5}, {0x66B5C4, 0, 5}}, g_item_types, false},
     {4, "skill types", 5, {{0x66A200, 8, 0x663984}, {0x66A208, 8, 0x663988}, {0x66A210, 8, 0x66398C},
                            {0x66A218, 8, 0x663990}, {0x66A220, 8, 0x66B5B0}},
-     {{0x663984, 0, 4}, {0x66B5A0, 0, 4}, {0x66B5B0, 4, 1}}, g_skill_types},
+     {{0x663984, 0, 4}, {0x66B5A0, 0, 4}, {0x66B5B0, 4, 1}}, g_skill_types, false},
     {5, "battle stats", 4, {{0x669CF0, 8, 0x64AE08}, {0x669CF8, 8, 0x64AE0C}, {0x669D00, 8, 0x64AE10},
-                            {0x669D08, 8, 0x64AE14}}, {}, nullptr},
+                            {0x669D08, 8, 0x64AE14}}, {}, nullptr, false},
+    {6, "master list", 2, {{0x66A1F0, 8, 0x59C5B6}, {0x66A2D8, 4, 0x59C465}}, {}, nullptr, false},
+    {7, "sort menus", 11, {{0x66A170, 8, 0x66B12C}, {0x66A178, 12, 0x66B130}, {0x66A184, 12, 0x66B134},
+                           {0x66A190, 12, 0x66B138}, {0x66A19C, 8, 0x66B13C}, {0x66A1A4, 8, 0x66B140},
+                           {0x66A1AC, 8, 0x66B144}, {0x66A1B4, 8, 0x66B148}, {0x66A1BC, 8, 0x66B14C},
+                           {0x66A1C4, 12, 0x66B150}, {0x66A1D0, 12, 0x66B154}},
+     {{0x66B12C, 0, 11}, {0x66B374, 7, 2}}, g_sort_menus, false},
+    {8, "note sort", 2, {{0x66A1DC, 8, 0x66B36C}, {0x66A1E4, 12, 0x66B370}}, {}, nullptr, false},
+    {9, "ink label", 1, {{0x66A118, 8, 0x585965}}, {}, nullptr, false},
+    {10, "formations", 10, {{kFormations, 16, kFormationBase, kFormations},
+                            {kFormations + 28, 16, kFormationBase, kFormations},
+                            {kFormations + 56, 16, kFormationBase, kFormations},
+                            {kFormations + 84, 16, kFormationBase, kFormations},
+                            {kFormations + 112, 16, kFormationBase, kFormations},
+                            {kFormations + 140, 16, kFormationBase, kFormations},
+                            {kFormations + 168, 16, kFormationBase, kFormations},
+                            {kFormations + 196, 16, kFormationBase, kFormations},
+                            {kFormations + 224, 16, kFormationBase, kFormations},
+                            {kFormations + 252, 16, kFormationBase, kFormations}}, {}, nullptr, true},
+    {11, "zenny unit", 1, {{0x66A31C, 4, 0x57465D}}, {}, nullptr, false},
 };
 
 // The overlay's 8 x 8 set: the US disc's code - 0x30 from here, and a letter
@@ -85,7 +131,8 @@ constexpr Table kTables[] = {
 // SMALL_APPEND_AT).
 constexpr unsigned kSmallSet = 0xA00;
 
-bool g_status_written = false;
+// The tags whose every slot a chunk has written, for the 8 px draw.
+bool g_small_written[16] = {};
 
 }  // namespace
 
@@ -119,9 +166,10 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         std::uint32_t named;
         std::memcpy(&named, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(slot.named_at)), sizeof named);
         const auto ours = t->buffers ? static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i])) : slot.va;
-        if (named != slot.va && named != ours)
+        const std::uint32_t expect = slot.expect ? slot.expect : slot.va;
+        if (named != expect && named != ours)
             bof3::Fatal("%s: 0x%08X holds 0x%08X, expected 0x%08X", t->what, (unsigned)slot.named_at,
-                        (unsigned)named, (unsigned)slot.va);
+                        (unsigned)named, (unsigned)expect);
         if (len == 0) continue;   // the overlay's builder had no string that fits: as shipped
         auto* dest = t->buffers ? t->buffers[i] : reinterpret_cast<char*>(static_cast<std::uintptr_t>(slot.va));
         std::memset(dest, 0, room);
@@ -145,15 +193,26 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
             }
         }
     }
-    if (tag == kStatusTag && written == t->count) g_status_written = true;
+    if (t->small && written == t->count && tag < sizeof g_small_written / sizeof g_small_written[0])
+        g_small_written[tag] = true;
     bof3::Log("DIV-0064: %u of %u %s", (unsigned)written, (unsigned)t->count, t->what);
 }
 
 unsigned Labels_SmallGlyph(const unsigned char* text) {
-    if (!g_status_written) return 0;
     const auto at = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(text));
-    if (at < kStatusSlots || at >= kStatusEnd) return 0;
-    const unsigned c = text[0];
-    const bool plain = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-    return plain ? kSmallSet + c - 0x30 : 0;
+    for (const Table& t : kTables) {
+        if (!t.small || !g_small_written[t.tag]) continue;
+        for (std::uint32_t i = 0; i < t.count; ++i) {
+            const Slot& s = t.slots[i];
+            if (at < s.va || at >= s.va + s.room) continue;
+            const unsigned c = text[0];
+            const bool plain = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
+            return plain ? kSmallSet + c - 0x30 : 0;
+        }
+    }
+    return 0;
+}
+
+bool Labels_SmallWritten(std::uint32_t tag) {
+    return tag < sizeof g_small_written / sizeof g_small_written[0] && g_small_written[tag];
 }
