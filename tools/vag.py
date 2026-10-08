@@ -188,6 +188,19 @@ def bank_from_disc(build, dat_name, ordinal):
     return key, g[6][0], bank(g[6][3], g[8][3] if 8 in g else b"", g[7][3], _CACHE)
 
 
+def importer_source(src, f, slot, ch):
+    """tools/importer.py build's wave-from-vag: a recipe `bank` chunk from a
+    PSX disc source, as importer's (build, (build, how, EMI, section),
+    payload), or None - no such bank, or one that is not the recipe's (the
+    PAL discs' eight swapped area banks, region-diff.md 8.4)."""
+    if ch["class"] != "bank" or not src.id.startswith("psx-") or not hasattr(src, "build"):
+        return None
+    got = bank_from_disc(src.build, f["name"], sum(1 for c in f["chunks"][:slot] if c["kind"] == 2))
+    if got is None or hashlib.sha256(got[2]).hexdigest() != ch["sha256"]:
+        return None
+    return src.id, (src.id, "wave-from-vag", got[0], got[1]), got[2]
+
+
 def cmd_compare(a):
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import dat

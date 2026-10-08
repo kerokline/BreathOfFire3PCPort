@@ -318,6 +318,16 @@ def build(disc_path, out, recipe=None):
     return len(done)
 
 
+def importer_snd(sources, out):
+    """tools/importer.py build's wave-from-xa: `base/snd/` from the first PSX
+    disc among the player's sources, or nothing without one. Returns
+    (build id, files written) or None."""
+    disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
+    if disc is None:
+        return None
+    return disc.id, build(disc.path, os.path.join(out, "base", "snd"))
+
+
 def cmd_build(a):
     print("%d files written to %s" % (build(a.disc, a.out, a.recipe), a.out))
 
