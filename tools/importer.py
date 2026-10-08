@@ -12,9 +12,12 @@ from.
 
     python tools/importer.py recipes  --dat DAT --disc JP --disc US ... [--out recipes/pc-zh.toml]
     python tools/importer.py identify PATH ...
-    python tools/importer.py build    --source PATH [--source PATH ...] --out CACHE
+    python tools/importer.py build    --source PATH [--source PATH ...] [--preset NAME] [--lang TAG ...]
+                                      [--opt LAYER ...] --out CACHE
     python tools/importer.py verify   --cache CACHE
-    python tools/importer.py check    (CI: the recipe against fixtures/, no game data)
+    python tools/importer.py check    (CI: the recipes against fixtures/, no game data)
+    python tools/importer.py opt-recipes --dat DAT --disc JP --disc US --disc PSPJP --disc PSPEU
+    python tools/importer.py install  --cache CACHE --game DIR [--lang TAG ...] [--opt LAYER ...]
 
 `recipes` is the generator: it hashes every section of every disc given
 (type-1 sections also decoded, tools/type1.py), and every PC chunk is looked up
@@ -24,7 +27,11 @@ A chunk no disc carries keeps the PC install as its only source; its class
 `type1`, three transforms make a disc a source of what the port changed
 (`widen` the enemy tables, whose names go to the language layer; `icons`;
 `ryud`), and a PSX disc's own section can stand in (`own`) where the PC kept
-Japan's language or drew its own art - docs/importer-transforms.md (step 3). The recipe holds names,
+Japan's language or drew its own art - docs/importer-transforms.md (step 3).
+`opt/<name>/` layers carry a PSP disc's content changes the player may turn on
+(recipes/opt.toml, docs/opt-layers.md, step 4); `--preset` is a named source
+order plus layers; `install` copies a cache's layers into a game's DAT/ under
+the overlay names the engine walks. The recipe holds names,
 indices, sizes and hashes - never bytes - so it is committed. The cache is game
 data: it lives outside the repo or under analysis/ (CLAUDE.md rule 1).
 """
@@ -586,6 +593,9 @@ def cmd_build(a):
     sources = [open_source(p) for p in a.source]
     if len({(s.id, type(s)) for s in sources}) != len(sources):
         raise SystemExit("two sources are the same build")
+    if a.preset:
+        sources, lang, opt = resolve_preset(a.preset, sources)
+        a.lang, a.opt = a.lang + [x for x in lang if x not in a.lang], a.opt + [x for x in opt if x not in a.opt]
     print("sources, in order: %s" % ", ".join("%s (%s)" % (s.id, s.path) for s in sources))
     chunked = [s for s in sources if not isinstance(s, ExeSource)]
     assets, missing, used = [], collections.Counter(), collections.Counter()
@@ -629,7 +639,8 @@ def cmd_build(a):
                 fh.write(b"".join(parts))
             written[layer] += 1
     loc_assets = build_languages(a.lang, sources, a.out)
-    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets)
+    opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
+    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe)
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
@@ -713,7 +724,7 @@ def build_languages(asked, sources, out):
     return assets
 
 
-def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=()):
+def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_assets=(), opt_recipe=None):
     with open(recipe_path, "rb") as f:
         rsha = sha(f.read())
     lines = ["# The cache's provenance, written by tools/importer.py build. Every chunk: its",
@@ -736,9 +747,550 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=()):
         for name, layer, where, h in loc_assets:
             lines.append("  [%s, %s, %s, %s]," % (toml_str(name), toml_str(layer), toml_str(where), toml_str(h)))
         lines.append("]")
+    if opt_assets:
+        with open(opt_recipe or OPT_RECIPE, "rb") as f:
+            osha = sha(f.read())
+        lines += ["", "# Optional layers (opt/<name>/, docs/opt-layers.md): every chunk, its layer, its",
+                  "# index in that layer's container, the build and what it was cut from, its hash.",
+                  "opt_recipe_sha256 = %s" % toml_str(osha), "opt = ["]
+        for name, layer, i, where, h in opt_assets:
+            lines.append("  [%s, %s, %d, %s, %s]," % (toml_str(name), toml_str(layer), i, toml_str(where), toml_str(h)))
+        lines.append("]")
     os.makedirs(out, exist_ok=True)
     with open(os.path.join(out, "manifest.toml"), "w", newline="\n", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
+
+
+# ---------------------------------------------------------------- opt/ layers
+#
+# docs/opt-layers.md (unified-data step 4). A later build's content change the
+# player may turn on (docs/unified-data-plan.md section 7): opt/<name>/dat/
+# NAME.DAT, ordinary containers the engine walks after the language overlay
+# (DIV-0086, BOF3X_OPT). A layer carries exactly the measured change, as
+# sub-range chunks landing inside the base chunk they change: a kind-0 chunk at
+# the base chunk's tag + the offset (LoadDatFile copies to the arena + tag), a
+# kind-1 chunk at the tile rectangle of the tiles it replaces (the tag is a
+# rectangle, asset-loading-path.md section 2), a kind-5 chunk on one name
+# record (DIV-0008, record-granular since DIV-0086). recipes/opt.toml is
+# generated (`opt-recipes`) from the player's discs: every chunk's hash, what
+# it is cut from, and the hash of each base chunk it lands on with the layer
+# laid over it (`composed`), so `verify` proves the composition with no disc.
+
+OPT_RECIPE = os.path.join(ROOT, "recipes", "opt.toml")
+PSP = ("psp-jp", "psp-eu")
+CLUT_ROW, PAGE_TILE, BAND_GAP = 32, 0x800, 16
+P6_DEST, CLUT_DEST, PAGE_DEST, BAND_DEST = 0x8002D800, 0x8002BE00, 0x0A081000, 0x80104000
+# Stallion's palette rows (psp-stallion.md section 2): area 67 rows 6-7, area 166
+# rows 0-7 of the 0x8002D800 section (PC tag 0xA000). The generator asserts the
+# counts.
+P6_ROWS = {"AREA067": [6, 7], "AREA166": list(range(8))}
+OPT_LAYERS = {
+    "psp-art": "P6: Stallion's palettes, AREA067 rows 6-7 and AREA166 rows 0-7 of the 0x8002D800 "
+               "section, as the PSP discs ship them (psp-stallion.md 2)",
+    "psp-tiles": "the PSP's other art in the areas: the 0x0A081000 page tiles it redrew or blanked "
+                 "(the port's own dial-page tiles kept) and the rows of the 0x8002BE00 palettes it changed",
+    "psp-maps": "the PSP's edits to ten areas' map bands (0x80104000, PC tag 0xC8000): texture "
+                "coordinates, tile words and cell-run records; no cell byte, no height (AREA004 is DIV-0080's)",
+    "psp-names-en-150": "the PSP-EU's item and ability names where they differ from the US disc's "
+                        "tables (P7: ability 116; three more abilities, four items)",
+    "psp-names-ja-JP": "the PSP-JP's renamed ability 116 and key items 2, 5, 7, 9",
+}
+# A names layer: the PSP build it reads, the PSX build its records differ from,
+# and its text's encoding (Japanese or not, loc_build.py's).
+NAME_LAYERS = {"psp-names-en-150": ("psp-eu", "psx-us", False), "psp-names-ja-JP": ("psp-jp", "psx-jp", True)}
+NAME_FILE, NAME_FIELD, NAME_ROOM = "FIRST.DAT", 16, 15
+
+
+def _runs(idx, gap=0):
+    """Sorted ints -> [(first, last)] runs, merging gaps of at most `gap`."""
+    out = []
+    for i in idx:
+        if out and i - out[-1][1] <= gap + 1:
+            out[-1][1] = i
+        else:
+            out.append([i, i])
+    return [tuple(r) for r in out]
+
+
+def opt_units(layer, kind, tag, jp, psp, pc):
+    """The chunks a layer carries for one section: [(kind, tag, at, size)], `at`
+    a byte offset into the section. Where the PC's chunk is not the JP section
+    (the port's dial page), a unit the port changed is not taken."""
+    if kind == 1:
+        cols, x0, y0 = (tag >> 8) & 0xFF, tag >> 24, (tag >> 16) & 0xFF
+        diff = [i for i in range(len(jp) // PAGE_TILE)
+                if jp[i * PAGE_TILE:(i + 1) * PAGE_TILE] != psp[i * PAGE_TILE:(i + 1) * PAGE_TILE]
+                and pc[i * PAGE_TILE:(i + 1) * PAGE_TILE] == jp[i * PAGE_TILE:(i + 1) * PAGE_TILE]]
+        out = []
+        for a, b in _runs(diff):
+            while a <= b:            # one chunk per run within a page row
+                e = min(b, a - a % cols + cols - 1)
+                x, y, n = x0 + a % cols, y0 + a // cols, e - a + 1
+                out.append((1, (x << 24) | (y << 16) | (n << 8) | (tag & 0xFF), a * PAGE_TILE, n * PAGE_TILE))
+                a = e + 1
+        return out
+    if layer == "psp-maps":
+        diff = [i for i in range(len(jp)) if jp[i] != psp[i] and pc[i] == jp[i]]
+        return [(0, tag + a, a, b - a + 1) for a, b in _runs(diff, BAND_GAP)]
+    diff = [r for r in range(len(jp) // CLUT_ROW)
+            if jp[r * CLUT_ROW:(r + 1) * CLUT_ROW] != psp[r * CLUT_ROW:(r + 1) * CLUT_ROW]]
+    return [(0, tag + a * CLUT_ROW, a * CLUT_ROW, (b - a + 1) * CLUT_ROW) for a, b in _runs(diff)]
+
+
+def opt_layer_of(stem, t, dest):
+    if t == 0 and dest == P6_DEST and stem in P6_ROWS:
+        return "psp-art"
+    if (t == 0 and dest == CLUT_DEST and stem.startswith("AREA")) or (t == 3 and dest == PAGE_DEST):
+        return "psp-tiles"
+    if t == 0 and dest == BAND_DEST and stem != "AREA004":
+        return "psp-maps"
+    return None
+
+
+# What the PSP changed that no layer carries, by (region_diff class, what):
+# the reason, for the generator's report and docs/opt-layers.md section 3.
+OPT_EXCLUDED = {
+    ("art", "an image page"): "the PSP's shoulder-button labels on the battle UI page, DEMO's logo "
+                              "pages, SCENA17's page: the PSP's buttons, its title, an unassigned scene",
+    ("art", "the glyph atlas"): "the PSX font's tiles; the PC draws with its own font",
+    ("art", "the ending / kanji font sheet"): "the PSX kanji sheet; the PC draws with its own font",
+    ("art", "the title menu page"): "P14, the PSP's title menu (its fishing entry); the PC's own page",
+    ("art", "DEMO's language page"): "language pages (they differ PSP-JP to PSP-EU)",
+    ("art", "a CLUT section (palettes)"): "beside a page not taken (DEMO's logo, SCENA17) or START's",
+    ("logic-data", "data"): "AREA004's band (DIV-0080 by rule) and Ryu's form data (P8, unread)",
+    ("logic-data", "a sound bank's cue entries"): "the cue byte (region-diff.md 8.3): nothing on the PC",
+    ("text", "the area message block (an edit within one language)"): "text, not names: a language layer's",
+    ("text", "the system message pool (an edit within one language)"): "text, not names: a language layer's "
+                                                                       "(the battle pool's filled slot among them)",
+}
+# The PSP's own formats (region-diff.md 5.1) are not content changes: what
+# psp-unwrap undoes, the base's business, not a layer's.
+OPT_CONVERTED = "the PSP's format, not a content change (psp-unwrap; the base's, not a layer's)"
+
+
+def name_records(src, t, n_len):
+    """A disc's (PSX GAME.EMI or PSP BOOT.BIN) records of one name table, by
+    tables.toml's recorded address for that build."""
+    import tables
+    where = next((w for w in t.get("psx", []) if w["build"] == src.id), None)
+    if where is None:
+        raise SystemExit("tables.toml records no %s table for %s" % (t["key"], src.id))
+    st = t["stride"] - NAME_FIELD + n_len
+    raw = tables.psx_bytes(src.build.disc, where, st * t["count"])
+    return [raw[i * st:(i + 1) * st] for i in range(t["count"])]
+
+
+def encode_name(raw, ja):
+    """A disc name -> the PC's 16-byte field in a language layer's encoding
+    (loc_build.py's, as its convert_names writes them); None when it cannot be
+    encoded, or would need a pair code (DIV-0057), which belongs to the ja-JP
+    layer's own pair table."""
+    import loc_build
+    loc_build.donor_ja = ja
+    loc_build.ja_pairs.clear()
+    enc = loc_build.ja_name(raw, NAME_ROOM) if ja else loc_build.encode_text(raw)
+    if enc is None or len(enc) > NAME_ROOM or loc_build.ja_pairs:
+        return None
+    return enc.ljust(NAME_FIELD, b"\0")
+
+
+def name_tables():
+    """[(table, PC address of its record 0)] of the item and ability tables
+    (tables.toml, symbols.toml)."""
+    import tables
+    cat, syms, _ = tables.load()
+    return [(t, syms[t["symbol"]]) for t in cat["table"] if t.get("group") == "items" and "name" in t]
+
+
+def name_len(bid):
+    return 8 if tag_of(bid).startswith("ja") else 12
+
+
+def cmd_opt_recipes(a):
+    discs = {s.id: s for s in (open_source(p) for p in a.disc)}
+    need = {"psx-jp", "psx-us"} | set(PSP)
+    if need - set(discs):
+        raise SystemExit("opt-recipes wants the discs %s; missing %s" % (", ".join(sorted(need)),
+                                                                        ", ".join(sorted(need - set(discs)))))
+    pc = open_source(a.dat)
+    if pc.id != TARGET or not isinstance(pc, PcSource):
+        raise SystemExit("%s is not the %s DAT tree" % (a.dat, TARGET))
+    rec = load_recipe(a.recipe)
+    files = {f["name"]: f for f in rec["file"]}
+    where = {}
+    for f in rec["file"]:
+        for slot, ch in enumerate(f["chunks"]):
+            for b, how, key, sec in sources_of(ch):
+                if b == "psx-jp" and how == "copy":
+                    where[(key, sec)] = (f["name"], slot)
+    p = os.path.join(a.pairs, "psx-jp_vs_psp-jp.json")
+    if not os.path.exists(p):
+        raise SystemExit("%s missing: python tools/region_diff.py pair psx-jp=JP psp-jp=PSPJP --out %s" % (p, p))
+    jp, pj, pe = discs["psx-jp"], discs["psp-jp"], discs["psp-eu"]
+    layers = collections.defaultdict(lambda: collections.OrderedDict())
+    excluded, stats = collections.Counter(), collections.Counter()
+    for key, rows in sorted(json.load(open(p))["files"].items()):
+        stem = key.rsplit("/", 1)[-1][:-4]
+        for r in rows:
+            if r["verdict"] == "identical" or r.get("a") is None or r.get("b") is None:
+                continue
+            _, t, dest, jb = jp.sections(key)[r["a"]]
+            layer = opt_layer_of(stem, t, dest)
+            if layer is None:
+                excluded[(r.get("class"), r.get("what"))] += 1
+                continue
+            _, tb, db, pb = pj.sections(key)[r["b"]]
+            # PSP-EU: the same section index (its kind-0 bands sit 0x8000 higher, the
+            # Western layout, region-diff.md 7 (3)), of the same type and size
+            eu = [s for s in [pe.sections(key).get(r["b"])] if s and s[1] == tb and len(s[3]) == len(pb)]
+            if tb != t or region_nd(tb, db) != dest or len(pb) != len(jb) or len(eu) != 1:
+                raise SystemExit("%s section %d: the PSP's twin is not the same shape" % (key, r["a"]))
+            name = stem + ".DAT"
+            got = where.get((key, r["a"]))
+            if got is None:          # the port's own art over the JP section: the PC chunk by its tag
+                got = next(((name, i) for i, c in enumerate(files[name]["chunks"])
+                            if t == 3 and c["kind"] == 1 and c["tag"] == dest and c["layer"] == "base"), None)
+            if got is None:
+                raise SystemExit("%s section %d: no PC base chunk it lands on" % (key, r["a"]))
+            slot = got[1]
+            ch = files[name]["chunks"][slot]
+            blob, chunks = pc.chunks(name)
+            c = chunks[slot]
+            pcb = blob[c.offset:c.offset + c.size]
+            units = opt_units(layer, ch["kind"], ch["tag"], jb, pb, pcb)
+            if not units:            # every tile the PSP changed is one the port redrew too
+                stats[(layer, "sections wholly under the port's dial page")] += 1
+                continue
+            if layer == "psp-art" and [u[2] // CLUT_ROW + k for u in units for k in range(u[3] // CLUT_ROW)] != P6_ROWS[stem]:
+                raise SystemExit("%s: the PSP's palette rows are not psp-stallion.md's" % name)
+            composed = bytearray(pcb)
+            out = []
+            for kind, tag, at, size in units:
+                body = pb[at:at + size]
+                on = ["psp-jp"] + (["psp-eu"] if eu[0][3][at:at + size] == body else [])
+                composed[at:at + size] = body
+                out.append((kind, tag, at, size, sha(body), on))
+                stats[(layer, "chunks")] += 1
+                stats[(layer, "tiles" if kind == 1 else "bytes")] += size // PAGE_TILE if kind == 1 else size
+                stats[(layer, "on both PSP discs")] += len(on) == 2
+            if pcb == jb and bytes(composed) != pb:
+                raise SystemExit("%s slot %d: the layer over the PC's chunk is not the PSP's section" % (name, slot))
+            if pcb != jb:
+                stats[(layer, "port-art sections (the port's tiles kept)")] += 1
+            stats[(layer, "sections")] += 1
+            layers[layer].setdefault(name, []).append((slot, key, r["b"], sha(bytes(composed)), out))
+    for lname, (psp_id, base_id, ja) in NAME_LAYERS.items():
+        src, base = discs[psp_id], discs[base_id]
+        for t, pc_at in name_tables():
+            n = name_len(psp_id)
+            a_ = name_records(base, t, name_len(base_id))
+            b_ = name_records(src, t, n)
+            for i in range(t["count"]):
+                if a_[i][:n] == b_[i][:n]:
+                    continue
+                field = encode_name(b_[i][:n].split(b"\0")[0], ja)
+                if field is None:
+                    raise SystemExit("%s: %s record %d cannot be encoded for the layer" % (lname, t["key"], i))
+                tag = pc_at + t["name"]["at"] + i * t["stride"]
+                layers[lname].setdefault(NAME_FILE, []).append((None, t["key"], i, None, [(5, tag, 0, NAME_FIELD, sha(field), [psp_id])]))
+                stats[(lname, "records")] += 1
+    head = [
+        "# recipes/opt.toml - GENERATED by `tools/importer.py opt-recipes`; do not edit by hand.",
+        "# The optional layers (docs/opt-layers.md): for each, every container it overlays and",
+        "# every chunk - kind, tag, size, the sha256 of its payload, what it is cut from (`emi`",
+        "# the PSP EMI and section, `at` the byte offset in it; or `table` / `record` for a name",
+        "# from the PSP's BOOT.BIN), the PSP builds that carry it byte for byte (`on`) - and,",
+        "# for each PC base chunk it lands on (`over`, its slot in recipes/pc-zh.toml), the",
+        "# sha256 of that chunk with the layer laid over it (`composed`). Hashes and offsets",
+        "# only, no game data (CLAUDE.md rule 1).",
+        "",
+        "[meta]",
+        "target = %s" % toml_str(TARGET),
+        "generated = %s" % datetime.date.today().isoformat(),
+        "recipe_sha256 = %s" % toml_str(sha(open(a.recipe or RECIPE, "rb").read())),
+        "pairs = [\"psx-jp_vs_psp-jp.json\"]",
+    ]
+    lines = []
+    for lname in OPT_LAYERS:
+        lines += ["", "[[layer]]", "name = %s" % toml_str(lname), "what = %s" % toml_str(OPT_LAYERS[lname])]
+        for name, parts in sorted(layers[lname].items()):
+            lines += ["[[layer.file]]", "name = %s" % toml_str(name)]
+            if parts[0][0] is not None:
+                lines.append("composed = [%s]" % ", ".join("{ over = %d, sha256 = %s }" % (s, toml_str(h)) for s, _, _, h, _ in parts))
+            lines.append("chunks = [")
+            for slot, key, sec, _, out in parts:
+                for kind, tag, at, size, h, on in out:
+                    src = ("over = %d, emi = %s, at = %d" % (slot, toml_str("%s#%d" % (key, sec)), at)) if slot is not None \
+                        else "table = %s, record = %d" % (toml_str(key), sec)
+                    lines.append("  { kind = %d, tag = 0x%08X, size = %d, sha256 = %s, %s, on = [%s] },"
+                                 % (kind, tag, size, toml_str(h), src, ", ".join(toml_str(x) for x in on)))
+            lines.append("]")
+    out = a.out or OPT_RECIPE
+    with open(out, "w", newline="\n", encoding="utf-8") as f:
+        f.write("\n".join(head + lines) + "\n")
+    print("%s:" % out)
+    for (layer, k), n in sorted(stats.items()):
+        print("  %-17s %-42s %6d" % (layer, k, n))
+    print("  not carried (region_diff class, what: sections):")
+    for (k, what), n in sorted(excluded.items(), key=str):
+        print("    %-10s %-34s %4d  %s" % (k, what, n, OPT_CONVERTED if k == "converted" else OPT_EXCLUDED[(k, what)]))
+
+
+def region_nd(t, d):
+    import region_diff
+    return region_diff.nd(t, d)
+
+
+def load_opt_recipe(path=None):
+    with open(path or OPT_RECIPE, "rb") as f:
+        r = tomllib.load(f)
+    return {l["name"]: l for l in r.get("layer", [])}
+
+
+def opt_payload(s, ch, cache):
+    """One layer chunk's payload from a PSP source, before its hash check."""
+    if ch["kind"] == 5:
+        t = next(t for t, _ in name_tables() if t["key"] == ch["table"])
+        rec = cache.setdefault((s.id, t["key"]), name_records(s, t, name_len(s.id)))[ch["record"]]
+        return encode_name(rec[:name_len(s.id)].split(b"\0")[0], tag_of(s.id).startswith("ja"))
+    key, sec = ch["emi"].rsplit("#", 1)
+    body = s.sections(key)[int(sec)][3]
+    return body[ch["at"]:ch["at"] + ch["size"]]
+
+
+def build_opt(asked, sources, out, path=None):
+    """opt/<name>/dat/NAME.DAT for each layer asked for, from the first PSP disc
+    in the player's order that carries each chunk; every payload hashed against
+    recipes/opt.toml. A layer is written whole or not at all."""
+    if not asked:
+        return []
+    layers = load_opt_recipe(path)
+    assets = []
+    for name in asked:
+        if name not in layers:
+            raise SystemExit("--opt %s: no such layer; recipes/opt.toml has %s" % (name, ", ".join(layers)))
+        psp = [s for s in sources if s.id in PSP and isinstance(s, DiscSource)]
+        files, cache, used = [], {}, collections.Counter()
+        for f in layers[name].get("file", []):
+            parts = []
+            for i, ch in enumerate(f["chunks"]):
+                s = next((s for s in psp if s.id in ch["on"]), None)
+                if s is None:
+                    raise SystemExit("--opt %s: %s chunk %d is on %s; the sources given carry none of them"
+                                     % (name, f["name"], i, " / ".join(ch["on"])))
+                body = opt_payload(s, ch, cache)
+                if body is None or sha(body) != ch["sha256"] or len(body) != ch["size"]:
+                    raise SystemExit("--opt %s: %s chunk %d from %s: hash differs from recipes/opt.toml"
+                                     % (name, f["name"], i, s.id))
+                parts.append(chunk_bytes(ch["kind"], ch["tag"], body))
+                src = ("%s:name:%s#%d" % (s.id, ch["table"], ch["record"]) if ch["kind"] == 5
+                       else "%s:copy:%s@%d" % (s.id, ch["emi"], ch["at"]))
+                assets.append((f["name"], "opt/" + name, i, src, ch["sha256"]))
+                used[s.id] += 1
+            files.append((f["name"], b"".join(parts)))
+        d = os.path.join(out, "opt", name, "dat")
+        os.makedirs(d, exist_ok=True)
+        for fname, body in files:
+            with open(os.path.join(d, fname), "wb") as fh:
+                fh.write(body)
+        print("  opt/%-16s %d containers, %s" % (name, len(files), ", ".join("%d chunks from %s" % (n, b) for b, n in used.items())))
+    return assets
+
+
+def verify_opt(cache, path=None):
+    """Each opt/<name>/ layer of the cache: every chunk against the manifest and
+    the recipe (kind, tag, hash), and every base chunk it lands on composed with
+    it - the cache's base/ chunk with the layer laid over it, as LoadDatFile
+    lays it (arena + tag, VRAM by the tag's rectangle) - against `composed`."""
+    d = os.path.join(cache, "opt")
+    if not os.path.isdir(d):
+        return 0
+    layers = load_opt_recipe(path)
+    rec = {f["name"]: f for f in load_recipe()["file"]}
+    with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
+        man = {(n, l, i): h for n, l, i, w, h in tomllib.load(fh)["cache"].get("opt", [])}
+    rc = 0
+    for name in sorted(os.listdir(d)):
+        bad, chunks_ok, comp_ok, comp_absent = [], 0, 0, 0
+        if name not in layers:
+            print("verify opt/%s: not a layer recipes/opt.toml knows" % name)
+            rc = 1
+            continue
+        want = {f["name"]: f for f in layers[name].get("file", [])}
+        have = set(os.listdir(os.path.join(d, name, "dat")))
+        if have != set(want):
+            bad.append("containers: %d in the cache, %d in the recipe" % (len(have), len(want)))
+        for fname in sorted(have & set(want)):
+            blob, chunks = dat.load(os.path.join(d, name, "dat", fname))
+            f = want[fname]
+            if len(chunks) != len(f["chunks"]):
+                bad.append("%s: %d chunks, the recipe has %d" % (fname, len(chunks), len(f["chunks"])))
+                continue
+            bodies = []
+            for i, (c, ch) in enumerate(zip(chunks, f["chunks"])):
+                body = blob[c.offset:c.offset + c.size]
+                if (c.kind, c.tag) != (ch["kind"], ch["tag"]) or sha(body) != ch["sha256"] \
+                        or man.get((fname, "opt/" + name, i)) != ch["sha256"]:
+                    bad.append("%s chunk %d: not the chunk the recipe and manifest record" % (fname, i))
+                else:
+                    chunks_ok += 1
+                bodies.append(body)
+            for comp in f.get("composed", []):
+                base = os.path.join(cache, "base", "dat", fname)
+                if not os.path.exists(base):
+                    comp_absent += 1
+                    continue
+                bblob, bchunks = dat.load(base)
+                slots = [i for i, ch in enumerate(rec[fname]["chunks"]) if ch["layer"] == "base"]
+                bc = bchunks[slots.index(comp["over"])]
+                img = bytearray(bblob[bc.offset:bc.offset + bc.size])
+                for ch, body in zip(f["chunks"], bodies):
+                    if ch.get("over") != comp["over"]:
+                        continue
+                    if ch["kind"] == 0:
+                        at = ch["tag"] - bc.tag
+                    else:                        # the tile rectangle inside the page's
+                        cols = (bc.tag >> 8) & 0xFF
+                        at = (((ch["tag"] >> 16) & 0xFF) - ((bc.tag >> 16) & 0xFF)) * cols + (ch["tag"] >> 24) - (bc.tag >> 24)
+                        at *= PAGE_TILE
+                    if at < 0 or at + len(body) > len(img):
+                        bad.append("%s: a chunk lands outside the chunk it overlays" % fname)
+                        continue
+                    img[at:at + len(body)] = body
+                if sha(bytes(img)) == comp["sha256"]:
+                    comp_ok += 1
+                else:
+                    bad.append("%s slot %d: composed with the layer, not the recipe's" % (fname, comp["over"]))
+        ncomp = sum(len(f.get("composed", [])) for f in want.values())
+        print("verify opt/%s: %d containers, %d of %d chunks as recorded, %d of %d base chunks composed as recorded%s, "
+              "%d problem(s)" % (name, len(have), chunks_ok, sum(len(f["chunks"]) for f in want.values()), comp_ok,
+                                 ncomp, " (%d not in this cache's base/)" % comp_absent if comp_absent else "", len(bad)))
+        for b in bad[:10]:
+            print("   ", b)
+        rc |= bool(bad)
+    return rc
+
+
+def check_opt(path=None):
+    """recipes/opt.toml against recipes/pc-zh.toml and fixtures.toml alone (CI):
+    every layer known, every chunk a known kind landing inside a base chunk of
+    its own kind (kind 0 inside the bytes, kind 1 inside the page's rectangle),
+    every name chunk on one record of a name table, every source a PSP build."""
+    if not os.path.exists(path or OPT_RECIPE):
+        return ["recipes/opt.toml missing"]
+    layers = load_opt_recipe(path)
+    rec = {f["name"]: f for f in load_recipe()["file"]}
+    import loc_build          # the tables NameTables_Apply accepts (src/game/name_tables.cpp's kTables)
+    tabs = [(va + at, st, n) for _, va, st, n, at in loc_build.NAME_TABLES]
+    errs = []
+    if set(layers) != set(OPT_LAYERS):
+        errs.append("layers: %s" % ", ".join(sorted(set(layers) ^ set(OPT_LAYERS))))
+    for lname, l in layers.items():
+        for f in l.get("file", []):
+            if f["name"] not in rec:
+                errs.append("%s: %s not a PC container" % (lname, f["name"]))
+                continue
+            pcs = rec[f["name"]]["chunks"]
+            for ch in f["chunks"]:
+                if any(b not in PSP for b in ch["on"]) or len(ch["sha256"]) != 64:
+                    errs.append("%s %s: source or hash" % (lname, f["name"]))
+                if ch["kind"] == 5:
+                    if lname not in NAME_LAYERS or ch["size"] != NAME_FIELD or not any(
+                            ch["tag"] >= b and (ch["tag"] - b) % st == 0 and (ch["tag"] - b) // st < n for b, st, n in tabs):
+                        errs.append("%s %s: name chunk 0x%X" % (lname, f["name"], ch["tag"]))
+                    continue
+                o = pcs[ch["over"]] if 0 <= ch.get("over", -1) < len(pcs) else None
+                if o is None or o["layer"] != "base" or o["kind"] != ch["kind"]:
+                    errs.append("%s %s: lands on no base chunk of its kind" % (lname, f["name"]))
+                elif ch["kind"] == 0 and not (o["tag"] <= ch["tag"] and ch["tag"] + ch["size"] <= o["tag"] + o["size"]):
+                    errs.append("%s %s: kind-0 chunk 0x%X outside 0x%X" % (lname, f["name"], ch["tag"], o["tag"]))
+                elif ch["kind"] == 1:
+                    cols, n = (o["tag"] >> 8) & 0xFF, (ch["tag"] >> 8) & 0xFF
+                    x, y = (ch["tag"] >> 24) - (o["tag"] >> 24), ((ch["tag"] >> 16) & 0xFF) - ((o["tag"] >> 16) & 0xFF)
+                    if not (0 <= x and x + n <= cols and 0 <= y and (y * cols + x + n) * PAGE_TILE <= o["size"]
+                            and ch["size"] == n * PAGE_TILE):
+                        errs.append("%s %s: kind-1 chunk 0x%08X outside 0x%08X" % (lname, f["name"], ch["tag"], o["tag"]))
+            for comp in f.get("composed", []):
+                if not any(ch.get("over") == comp["over"] for ch in f["chunks"]):
+                    errs.append("%s %s: composed slot %d has no chunk" % (lname, f["name"], comp["over"]))
+    return errs
+
+
+# ---------------------------------------------------------------- install
+
+def cmd_install(a):
+    """Copy a cache's layers into a game's DAT/ under the overlay names the
+    engine walks: loc/<tag>/dat/NAME.DAT as DAT/<tag>.NAME.DAT (DIV-0005),
+    opt/<name>/dat/NAME.DAT as DAT/<name>.NAME.DAT (DIV-0086). A layer's old
+    files in DAT/ (<name>.*.DAT) are removed first, so none is left stale. The
+    engine reads DAT/ in the game directory until it reads the cache."""
+    import shutil
+    dat_dir = os.path.join(a.game, "DAT")
+    if not os.path.isfile(os.path.join(dat_dir, "FIRST.DAT")):
+        raise SystemExit("%s: no DAT/FIRST.DAT - not a game directory" % a.game)
+    for kind, names in (("loc", a.lang), ("opt", a.opt)):
+        for name in names:
+            src = os.path.join(a.cache, kind, name, "dat")
+            if not os.path.isdir(src):
+                raise SystemExit("%s/%s is not in %s: build it first (importer.py build --%s %s)"
+                                 % (kind, name, a.cache, "lang" if kind == "loc" else "opt", name))
+            files = sorted(os.listdir(src))
+            missing = [f for f in files if not os.path.isfile(os.path.join(dat_dir, f))]
+            if missing:
+                raise SystemExit("%s/%s overlays %s, which %s lacks" % (kind, name, ", ".join(missing[:5]), dat_dir))
+            stale = [f for f in os.listdir(dat_dir) if f.startswith(name + ".") and f[len(name) + 1:] not in files]
+            for f in stale:
+                os.remove(os.path.join(dat_dir, f))
+            for f in files:
+                shutil.copyfile(os.path.join(src, f), os.path.join(dat_dir, "%s.%s" % (name, f)))
+            print("%s/%s: %d files as DAT/%s.*.DAT%s" % (kind, name, len(files), name,
+                                                          ", %d stale removed" % len(stale) if stale else ""))
+            if kind == "opt":
+                print("  play with BOF3X_OPT=%s (comma-separated, in order, for several)" % name)
+
+
+# ---------------------------------------------------------------- presets
+#
+# A preset is a named source order plus layers (docs/unified-data-plan.md
+# section 3 item 2). The player gives the files in any order; the preset puts
+# them in its own, and refuses when one it names is missing or one given is not
+# its. (build, what): `dat` a PC DAT/ tree, `exe` BOF3.exe, `disc` a disc.
+PRESETS = {
+    "pc-install": ([("pc-zh", "dat"), ("pc-zh", "exe")], [], []),
+    "us-disc": ([("psx-us", "disc")], [], []),
+    "jp-disc": ([("psx-jp", "disc")], [], []),
+    "eu-en-disc": ([("psx-eu-en", "disc")], [], []),
+    "fr-disc": ([("psx-fr", "disc")], [], []),
+    "de-disc": ([("psx-de", "disc")], [], []),
+    "pc-plus-us-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-us", "disc")], ["en-US"], []),
+    "pc-plus-eu-en-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-eu-en", "disc")], ["en-150"], []),
+    "pc-plus-fr-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-fr", "disc")], ["fr-FR"], []),
+    "pc-plus-de-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-de", "disc")], ["de-DE"], []),
+    "pc-plus-jp-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-jp", "disc")], ["ja-JP"], []),
+}
+
+
+def source_kind(s):
+    return "exe" if isinstance(s, ExeSource) else "dat" if isinstance(s, PcSource) else "disc"
+
+
+def resolve_preset(name, sources):
+    """(sources in the preset's order, its --lang, its --opt)."""
+    if name not in PRESETS:
+        raise SystemExit("--preset %s: no such preset; there are %s" % (name, ", ".join(PRESETS)))
+    order, lang, opt = PRESETS[name]
+    have = {(s.id, source_kind(s)): s for s in sources}
+    missing = [w for w in order if w not in have]
+    if missing:
+        raise SystemExit("--preset %s wants %s; not given: %s" % (
+            name, ", ".join("%s %s" % w for w in order), ", ".join("%s %s" % w for w in missing)))
+    extra = [w for w in have if w not in order]
+    if extra:
+        raise SystemExit("--preset %s takes %s; also given: %s (drop them, or build without the preset)" % (
+            name, ", ".join("%s %s" % w for w in order), ", ".join("%s %s" % w for w in extra)))
+    print("preset %s: %s%s%s" % (name, " then ".join("%s %s" % w for w in order),
+                                "; --lang " + " ".join(lang) if lang else "", "; --opt " + " ".join(opt) if opt else ""))
+    return [have[w] for w in order], lang, opt
 
 
 # ---------------------------------------------------------------- verify
@@ -813,6 +1365,7 @@ def cmd_verify(a):
     for n in bad[:20]:
         print("   ", n)
     rc = 1 if bad else 0
+    rc |= verify_opt(a.cache, a.opt_recipe)
     if a.overlays:
         rc |= verify_overlays(a.cache, a.overlays)
     return rc
@@ -894,9 +1447,13 @@ def cmd_check(a):
             for b, key, sec, h in owns_of(c):
                 if b not in OWN_FROM or c["layer"] != "base" or c.get("own_why") not in OWN_WHY or len(h) != 64:
                     errs.append("%s: stand-in %s" % (f["name"], b))
-    for e in errs[:30]:
+    oerrs = check_opt(a.opt_recipe)
+    for e in (errs + oerrs)[:30]:
         print("ERROR", e)
-    print("importer check: %d files, %d chunks, %d error(s)" % (len(names), n, len(errs)))
+    print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
+          % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
+             len(oerrs)))
+    errs += oerrs
     return 1 if errs else 0
 
 
@@ -920,16 +1477,35 @@ def main():
                    help="a language layer to build (repeat): a tag (en-US, en-150, fr-FR, de-DE, ja-JP) or a bare "
                         "language (en: en-US when the US disc is given, else the first English disc in the "
                         "source order); needs the PC's DAT/, BOF3.exe and that disc")
+    p.add_argument("--opt", action="append", default=[],
+                   help="an optional layer to build (repeat): %s; needs a PSP disc (docs/opt-layers.md)" % ", ".join(OPT_LAYERS))
+    p.add_argument("--preset", help="a named source order plus layers: %s; the sources are still given "
+                                    "with --source, in any order" % ", ".join(PRESETS))
     p.add_argument("--recipe")
+    p.add_argument("--opt-recipe")
+    p = s.add_parser("opt-recipes")
+    p.add_argument("--dat", required=True, help="the PC port's DAT/ directory")
+    p.add_argument("--disc", action="append", default=[], help="the JP, US and both PSP discs; repeat")
+    p.add_argument("--pairs", default=os.path.join(ROOT, "analysis", "region"),
+                   help="where region_diff.py pair's psx-jp_vs_psp-jp.json is")
+    p.add_argument("--recipe")
+    p.add_argument("--out")
+    p = s.add_parser("install")
+    p.add_argument("--cache", required=True)
+    p.add_argument("--game", required=True, help="a game directory: its DAT/ receives the overlays")
+    p.add_argument("--lang", action="append", default=[], help="a loc/<tag>/ layer to install (repeat)")
+    p.add_argument("--opt", action="append", default=[], help="an opt/<name>/ layer to install (repeat)")
     p = s.add_parser("verify")
     p.add_argument("--cache", required=True)
     p.add_argument("--overlays", help="an install's DAT/ whose <lang>.*.DAT overlays the cache's loc/ layers must equal")
     p.add_argument("--recipe")
+    p.add_argument("--opt-recipe")
     p = s.add_parser("check")
     p.add_argument("--recipe")
+    p.add_argument("--opt-recipe")
     a = ap.parse_args()
     fn = {"recipes": cmd_recipes, "identify": cmd_identify, "build": cmd_build, "verify": cmd_verify,
-          "check": cmd_check}[a.cmd]
+          "check": cmd_check, "opt-recipes": cmd_opt_recipes, "install": cmd_install}[a.cmd]
     sys.exit(fn(a) or 0)
 
 
