@@ -506,7 +506,7 @@ pc = 0x64E38C
 psx = 0x801EAF50
 name = "Battle_DamageVarianceTable"
 status = "evidence"
-evidence = "Read from .data 2026-09-18: u32 x8 = 218, 230, 243, 256, 269, 282, 294, 307 — the PSX table's values exactly (0xDA, 0xE6, 0xF3, 0x100, 0x10D, 0x11A, 0x126, 0x133, /256 = 0.85..1.20). Sole reference is Battle_ScaleDamage 0x446430."
+evidence = "Read from .data 2026-09-18: u32 x8, a multiplier in 256ths rising across the index from below 1 to above it — the PSX table's values exactly. Sole reference is Battle_ScaleDamage 0x446430, which indexes it by Rand & 7."
 note = "u32 on the PC, u16 on the PSX. Same values, different element width — a width-agnostic value search is required or the table reads as absent, which is what a u16-only first attempt reported."
 
 [[data]]
@@ -514,7 +514,7 @@ pc = 0x64E3AC
 psx = 0x801EAF70
 name = "Battle_HolyAffinityTable"
 status = "evidence"
-evidence = "Read from .data 2026-09-18: s16 x8 = 300, 200, 200, 150, 125, 100, 50, 0 — byte-identical to the PSX table. Sole reference is Battle_ScaleDamage 0x446430, matching the PSX side where the holy lookup is inlined into that function. Adjacent to Battle_DamageVarianceTable in both binaries, in the same order."
+evidence = "Read from .data 2026-09-18: s16 x8, a percentage falling across the index to 0 — byte-identical to the PSX table. Sole reference is Battle_ScaleDamage 0x446430, matching the PSX side where the holy lookup is inlined into that function. Adjacent to Battle_DamageVarianceTable in both binaries, in the same order."
 
 # ---------------------------------------------------------------------------
 # FMV playback
@@ -2722,7 +2722,7 @@ name = "Gte_IdentityRotation"
 ctype = "unsigned short"
 count = 10
 status = "evidence"
-evidence = "bytes 2026-09-21: 1000 0 0 0 1000 0 0 0 1000 and a zero padding word, in read-only data just below Math_SinTable. Gte_RotMatrix and Gte_RotMatrixYXZ copy its five dwords."
+evidence = "bytes 2026-09-21: the 3 x 3 identity in the GTE's one-scale (ONE on the diagonal, 0 elsewhere) and a zero padding word, in read-only data just below Math_SinTable. Gte_RotMatrix and Gte_RotMatrixYXZ copy its five dwords."
 
 [[data]]
 pc = 0x905E40
@@ -3812,7 +3812,7 @@ psx = 0x8018254C
 ctype = "unsigned char"
 count = 6
 status = "evidence"
-evidence = "disasm 2026-09-22: Field_ObjectUpdate divides 16 by entry [object +0x84] for Sprite_Current[0xA], and MoveCmd_Move divides Sprite_Current[9] by entry [context +4]. Read 2026-09-22: 0, 1, 2, 4, 8, 16, then other data. Entry 0 is a speed of none: an object with it and steps left would divide by zero, on both platforms (the PSX's trap(0x1C00) is the compiler's divide check)."
+evidence = "disasm 2026-09-22: Field_ObjectUpdate divides 16 by entry [object +0x84] for Sprite_Current[0xA], and MoveCmd_Move divides Sprite_Current[9] by entry [context +4]. Read 2026-09-22: six bytes, 0 then powers of two rising, then other data. Entry 0 is a speed of none: an object with it and steps left would divide by zero, on both platforms (the PSX's trap(0x1C00) is the compiler's divide check)."
 
 [[func]]
 pc = 0x588F20
@@ -5262,7 +5262,7 @@ psx = 0x801C8AB8
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "bytes and disasm 2026-09-22: 1, 16, 2, 4, 8, 0, 0, 0 - MoveScript_TintFrame copies this times 16 colours for a CLUT depth (tint record byte +5): 16, 256, 32, 64, 128. The PSX DAT_801C8AB8."
+evidence = "bytes and disasm 2026-09-22: eight bytes, five of them set - MoveScript_TintFrame copies this times 16 colours for a CLUT depth (tint record byte +5): the colour counts of the five depths, 16 to 256. The PSX DAT_801C8AB8."
 
 [[data]]
 pc = 0x6528B4
@@ -5271,7 +5271,7 @@ psx = 0x801C8AC0
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "bytes and disasm 2026-09-22: 16, 1, 8, 4, 2, 0, 0, 0 - how many CLUTs of a depth share a 256-colour row of Gfx_ClutStrip; MoveScript_TintFrame divides a CLUT number by it (row) and keeps the remainder (column). Depths 5..7 divide by zero. The PSX DAT_801C8AC0."
+evidence = "bytes and disasm 2026-09-22: eight bytes, five set (256 divided by each depth's colour count) - how many CLUTs of a depth share a 256-colour row of Gfx_ClutStrip; MoveScript_TintFrame divides a CLUT number by it (row) and keeps the remainder (column). Depths 5..7 divide by zero. The PSX DAT_801C8AC0."
 
 [[data]]
 pc = 0x6528BC
@@ -5280,7 +5280,7 @@ psx = 0x801C8AC8
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "bytes and disasm 2026-09-22: 16, 0, 32, 64, 128, 0, 0, 0 - a CLUT's width in colours; MoveScript_TintFrame multiplies the column by it, in 8 bits. The PSX DAT_801C8AC8."
+evidence = "bytes and disasm 2026-09-22: eight bytes, four set (each depth's colour count, the 256 depth's 0 in 8 bits) - a CLUT's width in colours; MoveScript_TintFrame multiplies the column by it, in 8 bits. The PSX DAT_801C8AC8."
 
 
 # --- 2026-09-22 (second round), group A: the field's mode handlers - the tail
@@ -6204,7 +6204,7 @@ psx = 0x801C943C
 ctype = "unsigned char"
 count = 16
 status = "evidence"
-evidence = "disasm 2026-09-22: EventScript_Op, IfSkipStep, CaseSkip and the two skips step an op below F0 by entry [op >> 4]. 11 10 13 12 11 12 10 11 0C 0D 0E 0E 02 04 07 00: entries 0..14 byte for byte the PSX GAME.EMI 0x801C943C; entry 15 (never used: F0 and above are not ops) is 0x2E on the PSX."
+evidence = "disasm 2026-09-22: EventScript_Op, IfSkipStep, CaseSkip and the two skips step an op below F0 by entry [op >> 4]. sixteen bytes, the length of each op class: entries 0..14 byte for byte the PSX GAME.EMI 0x801C943C; entry 15 (never used: F0 and above are not ops) is 0 here and differs on the PSX."
 
 [[data]]
 pc = 0x663B30
@@ -6222,7 +6222,7 @@ psx = 0x801C941C
 ctype = "unsigned short"
 count = 8
 status = "evidence"
-evidence = "disasm 2026-09-22: Sprite_InitFromEntry sets Sprite_Current +0x6C to entry [+8]; 0x600 0x800 0xA00 0xC00 0xE00 0 0x200 0x400, a direction as a 4096ths angle. The same 16 bytes on the PSX (GAME.EMI 0x801C941C); what follows differs (code pointers). Also read at 0x51922E..0x519286, inside 0x5190A0."
+evidence = "disasm 2026-09-22: Sprite_InitFromEntry sets Sprite_Current +0x6C to entry [+8]; eight u16, a direction as a 4096ths angle, 0x200 apart in direction order. The same 16 bytes on the PSX (GAME.EMI 0x801C941C); what follows differs (code pointers). Also read at 0x51922E..0x519286, inside 0x5190A0."
 
 
 # ---------------------------------------------------------------------------
@@ -16944,7 +16944,7 @@ name = "Steal_RateTable"
 ctype = "signed char"
 count = 8
 status = "evidence"
-evidence = "read 2026-09-25: 0 1 3 6 12 16 32 32, read by Steal_Start 0x4B54F0 as movsx byte [0x65AC20 + the enemy's +0xAA], the index unbounded; times the speed multiplier 4..12 against Rand & 0xFF."
+evidence = "read 2026-09-25: eight signed bytes, a rate rising with the enemy's tier, read by Steal_Start 0x4B54F0 as movsx byte [0x65AC20 + the enemy's +0xAA], the index unbounded; times the speed multiplier 4..12 against Rand & 0xFF."
 
 [[data]]
 pc = 0x65AE10
@@ -16952,7 +16952,7 @@ name = "Sparkle_CountByKind"
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "read 2026-09-25: 0x1E 0x3C 0x3C 0x3C 0x3C 0 0 0 - the sparkles Sparkle_Spawn 0x4B8E00 makes for the task's kind +4 (0 as it sets it)."
+evidence = "read 2026-09-25: eight bytes, five set (the first half the others') - the sparkles Sparkle_Spawn 0x4B8E00 makes for the task's kind +4 (0 as it sets it)."
 
 [[data]]
 pc = 0x65AE18
@@ -16960,7 +16960,7 @@ name = "Sparkle_DelayByKind"
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "read 2026-09-25: 5 4 5 4 4 0 0 0 - Sparkle_Spawn's launch delay step: a sparkle's +5 = this * (n >> 2) + 1."
+evidence = "read 2026-09-25: eight bytes, five set - Sparkle_Spawn's launch delay step: a sparkle's +5 = this * (n >> 2) + 1."
 
 # --- group DI (round 8, 2026-09-25): the shop and menu draw helpers, docs/menu_draw_helpers.md ---
 
@@ -17488,7 +17488,7 @@ name = "FieldMenu_TitleIds"
 ctype = "unsigned char"
 count = 7
 status = "evidence"
-evidence = "read 2026-09-25: 9 0xB 0xA 0xC 8 0xD 0xE - the system text (Msg_SystemPtr) of each top-bar entry's title; FieldMenu_TopBarInput stores 0x6672E4[s8 cursor] to the title record's word +0x10."
+evidence = "read 2026-09-25: seven bytes, a system message id each - the system text (Msg_SystemPtr) of each top-bar entry's title; FieldMenu_TopBarInput stores 0x6672E4[s8 cursor] to the title record's word +0x10."
 
 [[data]]
 pc = 0x6672AC
@@ -17496,7 +17496,7 @@ name = "FieldMenu_IconIds"
 ctype = "unsigned char"
 count = 7
 status = "evidence"
-evidence = "read 2026-09-25: 2 1 0 0xA 8 0x13 9 - the Menu_DrawIcon icon of each top-bar entry; read by MenuList_TopBarIcons by the entry, the cursor's unchecked. FieldMenu_States follows at 0x6672B4."
+evidence = "read 2026-09-25: seven bytes, an icon index each - the Menu_DrawIcon icon of each top-bar entry; read by MenuList_TopBarIcons by the entry, the cursor's unchecked. FieldMenu_States follows at 0x6672B4."
 
 [[data]]
 pc = 0x66AF94
@@ -18101,7 +18101,7 @@ name = "WorldMap_Records"
 ctype = "unsigned long"
 count = 77
 status = "evidence"
-evidence = "read 2026-09-25: eleven 0x1C-byte records (77 dwords), one per world map - five code pointers (+0: effect kind 0, +4: kind 0xE via 0x462B00, +8: kind 0x16 via 0x462B20, +0xC: kind 0x58, +0x10: 0x462B80's), a data pointer +0x14 (0x462AC0 answers it) and the area byte +0x18: areas 16, 33, 45, 65, 87, 88, 104, 115, 121, 151, 152. Record 1 (area 33) is 0x403E00, 0x404800, 0x404680, 0x404130, 0x4048E0, 0x5EF338. Record 6 (area 104) has nulls at +4, +8, +0x14. The 'none' index 11 reads 0x653A44, 0x462BA0's table. Found by WorldMap_RecordIndex 0x462A90."
+evidence = "read 2026-09-25: eleven 0x1C-byte records (77 dwords), one per world map - five code pointers (+0: effect kind 0, +4: kind 0xE via 0x462B00, +8: kind 0x16 via 0x462B20, +0xC: kind 0x58, +0x10: 0x462B80's), a data pointer +0x14 (0x462AC0 answers it) and the area byte +0x18 (the eleven world-map areas, docs/world-map.md). Record 1 (the second world map) is 0x403E00, 0x404800, 0x404680, 0x404130, 0x4048E0, 0x5EF338. Record 6 has nulls at +4, +8, +0x14. The 'none' index 11 reads 0x653A44, 0x462BA0's table. Found by WorldMap_RecordIndex 0x462A90."
 
 [[data]]
 pc = 0x662DF0
@@ -18149,7 +18149,7 @@ name = "WorldMap33_PlateAnims"
 ctype = "unsigned long"
 count = 6
 status = "evidence"
-evidence = "read 2026-09-25: six (u16 place, u8 animation, u8 0) entries - places 0x17, 8, 7, 0xE, 0x13, 0x60 with animations 8, 6, 4, 5, 0xA, 2. Searched by WorldMap33_PlateShow 0x403EE0 for the place word 0x937F82 with no bound. WorldMap_Records record 1's data 0x5EF338 follows."
+evidence = "read 2026-09-25: six (u16 place, u8 animation, u8 0) entries, a place word and its animation each. Searched by WorldMap33_PlateShow 0x403EE0 for the place word 0x937F82 with no bound. WorldMap_Records record 1's data 0x5EF338 follows."
 
 [[data]]
 pc = 0x5EF51C
@@ -18157,7 +18157,7 @@ name = "WorldMap33_PlaceMessages"
 ctype = "unsigned short"
 count = 96
 status = "evidence"
-evidence = "read 2026-09-25: six 0x20-byte rows, each a place word (8, 0xD, 0x60, 0x17, 0xE, 0x13) then fifteen message ids (5 .. 0xA, one per row); WorldMap33_PlaceMessage 0x403D70 opens the word (row * 16 + (s8) Cond_ByteFA)."
+evidence = "read 2026-09-25: six 0x20-byte rows, each a place word then fifteen message ids (one per row); WorldMap33_PlaceMessage 0x403D70 opens the word (row * 16 + (s8) Cond_ByteFA)."
 
 [[data]]
 pc = 0x5EF6B4
@@ -18181,7 +18181,7 @@ name = "Area29_Weights"
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "read 2026-09-25: 16 12 12 8 8 4 2 2 (sum 64): the chance of each of the eight field objects Area29_PickFieldObject 0x4037B0 keeps, against Rand() & 0x3F."
+evidence = "read 2026-09-25: eight bytes summing to 64, falling: the chance of each of the eight field objects Area29_PickFieldObject 0x4037B0 keeps, against Rand() & 0x3F."
 
 [[data]]
 pc = 0x653EC8
@@ -18197,7 +18197,7 @@ name = "EffectKind06_Anims"
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "read 2026-09-25: 0 0 2 1 3 4 0 0 - EffectKind06_Start's animation by the variant +6 (six variants, EffectKind06_Ticks' count)."
+evidence = "read 2026-09-25: eight bytes, an animation index each - EffectKind06_Start's animation by the variant +6 (six variants, EffectKind06_Ticks' count)."
 
 [[data]]
 pc = 0x653EDC
@@ -18396,7 +18396,7 @@ name = "Encounter_SlotChance"
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "read 2026-09-25: 16 16 16 10 8 6 4 2 - Encounter_FillSlots' bound for (Rand & 0xF) + 1 per enemy slot, so slots 0..2 are always filled when their kind is not 0xFF and slot 7 two times in sixteen."
+evidence = "read 2026-09-25: eight bytes, 16 for the first three slots then falling - Encounter_FillSlots' bound for (Rand & 0xF) + 1 per enemy slot, so slots 0..2 are always filled when their kind is not 0xFF and the last slot rarely."
 
 [[data]]
 pc = 0x8C5580
@@ -18718,7 +18718,7 @@ name = "Field_EncounterAreas"
 ctype = "unsigned short"
 count = 20
 status = "evidence"
-evidence = "read 2026-09-25: ten (area, encounter area) word pairs - (0x10, 0x14) (0x21, 0x1D) (0x2D, 0x3F) (0x41, 0x40) (0x57, 0x48) (0x58, 0x49) (0x73, 0x6E) (0x79, 0x14) (0x97, 0x7C) (0x98, 0x7D); Field_EncounterArea's search, to 0x660AB8."
+evidence = "read 2026-09-25: ten (area, encounter area) word pairs, the world maps' and their encounter areas'; Field_EncounterArea's search, to 0x660AB8."
 
 [[data]]
 pc = 0x660B10
@@ -18726,7 +18726,7 @@ name = "Field_EventCells"
 ctype = "unsigned char"
 count = 12
 status = "evidence"
-evidence = "read 2026-09-25: 0xC0 0xA0 0xA1 0xAE 0xAF 0x91 0x26 0x27 0x28 0x29 0x2C, then the 0xFF end - the cell codes Field_CellHasEvent answers 1 for."
+evidence = "read 2026-09-25: eleven cell codes, then the 0xFF end - the cell codes Field_CellHasEvent answers 1 for."
 
 [[data]]
 pc = 0x660C24
@@ -18734,7 +18734,7 @@ name = "Field_BlockingCells"
 ctype = "unsigned char"
 count = 8
 status = "evidence"
-evidence = "read 2026-09-25: 0x30 0x40 0x50 0x80 0x90 0xE0 0xF0, then the 0xFF end - the codes Field_CellsBlock tests first, the cells' low nibble dropped (mask 1)."
+evidence = "read 2026-09-25: seven cell codes (high nibbles), then the 0xFF end - the codes Field_CellsBlock tests first, the cells' low nibble dropped (mask 1)."
 # ---------------------------------------------------------------------------
 # --- 2026-09-25 (round eight, wave B), group DB: top-level modes, the system
 # choice and the field core. src/game/mode_states.cpp, docs/mode_states.md.
@@ -19371,7 +19371,7 @@ name = "MapCell_UprightCounts"
 ctype = "unsigned char"
 count = 12
 status = "evidence"
-evidence = "read 2026-09-25: 3 2 3 3 3 3 3 3 3 0 0 0 - MapCell_DrawUprights' pairs of quads for e = (kind & 0xF) - 1, as byte [0x66313C + e], read again after each pair. e reaches 14 (kinds 0xD..0xF, 0x3D, 0x3E), past this table into MapCell_UprightOffsetsX's bytes (9, 0xFF, 0xBE); 12 is the gap to it."
+evidence = "read 2026-09-25: twelve bytes, nine set (2 or 3) - MapCell_DrawUprights' pairs of quads for e = (kind & 0xF) - 1, as byte [0x66313C + e], read again after each pair. e reaches 14 (kinds 0xD..0xF, 0x3D, 0x3E), past this table into MapCell_UprightOffsetsX's bytes (9, 0xFF, 0xBE); 12 is the gap to it."
 
 [[data]]
 pc = 0x663148
@@ -19395,7 +19395,7 @@ name = "MapCell_UprightHeights"
 ctype = "short"
 count = 10
 status = "evidence"
-evidence = "read 2026-09-25: 0x200 0x200 0x100 0x80 0x280 0x100 0x200 0x200 0x100 0 - taken from the base height for the uprights' top (word [0x663220 + e * 2])."
+evidence = "read 2026-09-25: ten u16, nine set, in units of 0x80 - taken from the base height for the uprights' top (word [0x663220 + e * 2])."
 
 [[data]]
 pc = 0x663234

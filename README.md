@@ -105,8 +105,10 @@ the game's log is `bof3x.log`, in the same place. Details:
 [`docs/launcher-settings.md`](docs/launcher-settings.md).
 
 **English** needs one more step, run once, reading your own US PlayStation disc
-image and writing overlay files into the game's `DAT\` folder (for French,
-German or Japanese, add `--lang fr`, `de` or `ja` and give that disc):
+image and writing overlay files into the game's `DAT\` folder (for the
+European English, French, German or Japanese, give that disc instead; the
+overlays are named by the disc's language tag - `en-US`, `en-150`, `fr-FR`,
+`de-DE`, `ja-JP` - and `--lang` overrides it):
 
 ```bash
 python tools/loc_build.py all --disc "path/to/your US disc.cue" --game "C:/Games/BOF3"

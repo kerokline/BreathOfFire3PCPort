@@ -210,6 +210,8 @@ overwrites the names from the player's US disc through a kind-5 overlay chunk
 | the other three ability and five item renames | text layer | the PSP-EU disc | free once P7's builder exists; whether to take them is the owner's call | menus |
 | Stallion's code | - | - | **nothing to take**: identical | - |
 
+**Built 2026-10-08** as `opt/psp-art` (P6, the ten rows exactly) and `opt/psp-names-en-150` (P7 as one record), with the loader's second prefix DIV-0086: [`opt-layers.md`](opt-layers.md). The text below is the plan as written.
+
 **P6, how.** The PC loads `AREA067.DAT`'s palette chunk at tag `0xA000`
 (`0x8002D800 - 0x80023800`, [`DAT_CONTAINER.md`](DAT_CONTAINER.md) section 2;
 region-diff's PC pair shows the chunk is JP's byte for byte in both areas).

@@ -5,11 +5,14 @@
 // 8 units a character; Japanese, like the shipped Chinese, is full-width at
 // 12, which is what the original layout was made for. The five official
 // languages are a closed set (owner, 2026-09-24): en, fr, de are Latin;
-// ja and zh are full-width.
+// ja and zh are full-width. BOF3X_LANG is a BCP 47 tag since 2026-10-08
+// (fixtures.toml's `tag` per build: en-US, en-150, fr-FR, de-DE, ja-JP,
+// zh-CN); what goes by language goes by the tag's primary subtag.
 
-// True when BOF3X_LANG names a full-width language (ja, zh). Everything else,
-// "original" and unset included, answers false - so the Latin paths behave
-// exactly as they did before this existed.
+// True when BOF3X_LANG's primary subtag names a full-width language (ja, zh:
+// `ja-JP`, `zh-CN`, or the bare code). Everything else, "original" and unset
+// included, answers false - so the Latin paths behave exactly as they did
+// before this existed.
 bool Lang_FullWidth();
 
 // True when BOF3X_LANG names an overlay to lay out as Latin text: set, not

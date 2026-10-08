@@ -29,6 +29,7 @@ so a recipe's pad words are the previous frame's on both sides.
 | Variable | |
 |---|---|
 | `BOF3X_STATEHASH` | the output file; the switch |
+| `BOF3X_OPT` | **leave unset** on a reference run: an `opt/` layer (DIV-0086) changes the arena and VRAM |
 | `BOF3X_STATEHASH_SKIP` | a list of `ADDRESS LENGTH # why` ranges hashed as zero - [`tools/statehash_skip.txt`](../tools/statehash_skip.txt) |
 | `BOF3X_STATEHASH_DUMP` | ticks, comma-separated, at which all of `.data` is also written raw to `<file>.<tick>.bin` (3.5 MB each; game-derived, `analysis/` only) |
 

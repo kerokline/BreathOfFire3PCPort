@@ -28,6 +28,8 @@ sound functions by call only, several PSX functions to one PC function
 (`Music_FadeOutStop` has three), which is the rewrite showing. What the port
 kept is the *cue* layout: a cue is four voice words, as on the PSX.
 
+**Measured 2026-10-08** ([`sound-import.md`](sound-import.md) section 1): the shipped banks' cue words always name channels 16..23 (the PSX voices 16 + n), so the `>= 23` wrap below is reached only by channel 23.
+
 ## 1. The functions
 
 Sizes are the bodies' true extents by capstone; `pe_funcs.py` was right for

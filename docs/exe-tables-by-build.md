@@ -282,6 +282,10 @@ across builds.
 None of these is in [`region-diff.md`](region-diff.md)'s rows, because that
 diff compares EMI sections and the PSP's changes here are in its ELF.
 
+- **(Step 8, 2026-10-08.)** The JP disc's `AREA026` section 13 differs from
+  the PC, the US disc and PSP-JP in 21 bytes (PC `0x5EB38D..0x5EB3B4`), a
+  shift; [`exe-import.md`](exe-import.md) section 3.
+
 - **The PSP rebalanced one character's level table.** `exp_table` is equal
   in all 5,544 bytes on every PSX build held (and in PSP-JP's `GAME.EMI`
   copy); both PSP ELFs differ from it in 249 bytes, all in roster index 6's
@@ -366,10 +370,13 @@ Still owed:
 1. **Names for the raw constants.** 1,067 `.data` addresses in `src/` start
    no symbol; 576 of them are inside a US map segment already. They need
    `symbols.toml` names only where a reader wants one; the importer does not.
-2. **The pointer tables** (`Area_Descriptors`, `Magic_Rows`, the area handler
-   arrays): their places are known, their contents are the disc build's own
-   addresses. Step 8 rebuilds them from the PC's layout, never copies them.
-3. `Char_DefaultRecords` by a five-byte name; the twenty small tables by the
+2. ~~**The pointer tables**~~ - answered by step 8 ([`exe-import.md`](exe-import.md)
+   section 5): not copied, left unfilled, listed in `recipes/exe-pointers.tsv`
+   (19,311 words in 3,134 runs; 6,071 pointer-shaped words every disc holds
+   equal are numbers); the data pointers are 93 % rebuildable from a PSX disc
+   by the map run backwards, the code pointers are the engine's.
+3. `Char_DefaultRecords` by a five-byte name (seen again in step 8's
+   differing bytes: copied at the disc's width, 51-56 bytes off per build); the twenty small tables by the
    owning function's PSX twin (the catalogue's labels) rather than by bytes;
    which of the two steal-spell copies each PC table came from.
 
@@ -399,4 +406,5 @@ Still owed:
   `Field_BlockingCells`, `MapCell_UprightCounts` / `_UprightHeights`,
   `BattleObj_StateTable`; and `Field_EncounterAreas`' pairs, which the regex
   misses. Rule 1 says these go; the owner's call, since the strings are
-  older than this step.
+  older than this step. **Reworded 2026-10-08** at the owner's word, the
+  tree only (`owner-review.md`, "Decisions the measurements raised").
