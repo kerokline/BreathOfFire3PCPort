@@ -46,6 +46,9 @@ jobs:
       - name: tables.toml against symbols.toml and fixtures.toml
         run: python tools/tables.py check
 
+      - name: The type-1 decompressor's self-test (no game data)
+        run: python tools/type1.py selftest
+
   lifter:
     # The x86 -> C lifter prototype (docs/lifter-feasibility.md): lift the
     # synthetic corpus, fuzz it against the original bytes in Unicorn, and

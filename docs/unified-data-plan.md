@@ -32,8 +32,8 @@ cache records which build and recipe produced it.
 | How does the PC's music map to the disc's? | **File N is song N** (164 pair; song 21 has no MP3; `165` the victory sub-song; `166` unpaired). The MP3s are MPEG-1 Layer III 44.1 kHz 128 kbit/s CBR plain stereo, no tags. Loop points are in the sequences; the PC replays every intro. | `bgm-comparison.md` 6, 7, 10 |
 | What is held? | JP, US, FR, DE PSX and both PSPs, verified with per-file manifests (`fixtures/*.files.tsv`); the PC's 742 `DAT/` files too. Only `psx-eu-en` is missing. | `fixtures.toml`, `region-diff.md` 1 |
 
-Still open, and carried into the steps below: the type-1 decompressor (now
-with 37 oracles), the `SND/` cut table, the recipe file format, the canonical
+Still open, and carried into the steps below (the type-1 decompressor is
+written: step 1, [`type1-compression.md`](type1-compression.md)), the `SND/` cut table, the recipe file format, the canonical
 font format, the PSP's instrument (`PPHD`) and sequence (`pPMS`) readers, and
 every exe-resident table's address on each SKU beyond the item and ability
 tables already in [`tables.toml`](../tables.toml).
@@ -117,7 +117,7 @@ one-line export. (ASSET_SOURCES section 9's open item, proposed closed.)
 
 | Item | Needed for | Size | Oracle |
 |---|---|---|---|
-| Type-1 decompressor | every disc source (65 arenas) | small: the PSP ships all 65 decompressed and 37 are byte-identical to the PC's chunks | those 37, then the PC's 65 |
+| Type-1 decompressor | every disc source (65 arenas) | **done 2026-10-08** (`tools/type1.py`): 50 of 65 equal the PSP's, 51 the PC's, the 65th confirmed byte by byte; 14 PC edits found | [`type1-compression.md`](type1-compression.md) |
 | VAG (ADPCM) decoder | the banks from a disc | small, well known | the PC's converted WAVs pair every bank |
 | XA decoder + the `SND/` cut table | the effects from a disc | medium; the cut table is still unlocated (beside the `SND` name strings in the exe, presumably) | the PC's `SND/` files |
 | MDEC + STR | FMV from a disc | large; out of this plan (I7 for the player; the disc path waits) | the AVIs |
@@ -190,7 +190,7 @@ is optional - which is already more than today.
 
 | Step | What | Size | Gate | Needs the owner |
 |---|---|---|---|---|
-| 1 | The type-1 decompressor, from the 37 PSP oracles, then all 65 against the PC | a group | none | no |
+| 1 | ~~The type-1 decompressor, from the 37 PSP oracles, then all 65 against the PC~~ **done 2026-10-08**, [`type1-compression.md`](type1-compression.md); the port's 14 arena edits go to step 2's recipes | a group | none | no |
 | 2 | The recipe generator: `dat_census.py` + `region_diff.py` output to `recipes/*.toml`; the importer skeleton with identity, plan, `copy`, `split-language` (US, as `loc_build.py` does), verify against the PC install and the US overlays | a round of 2-3 agents | none | the recipe format (proposed TOML) |
 | 3 | The transforms for every PSX disc: `widen-enemy-names`, `remap-dest`, the FR / DE / JP text encodings, the four per-build exceptions handled as section 7 says; `loc/fr`, `loc/de`, `loc/ja` land | a round | step 2 | which languages first |
 | 4 | `opt/` layers and the loader's second prefix: `psp-art` (P6) and `psp-names` (P7 + the other renames) from the player's PSP disc; the PSP unwrap transforms | a group (a day for P6 by `psp-stallion.md`'s estimate) | step 2 | option or default (recommended: option) |

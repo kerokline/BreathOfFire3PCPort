@@ -92,7 +92,7 @@ re-checked directly against the files, not taken from the agent reports alone.
 |---|---|---|---|
 | `0x800E4000` | 200 (every AREA) | Enemy/formation table. 8 records; the port widens the name field at `+0x48` from 8 to 12 bytes, stride `0x88`→`0x8C`, size 1160→1192. Everything outside the name fields is byte-equal in **200/200**. | evidence |
 | `0x80010000` | 199 (AREA083 identical, unexplained) | Per-area script/text block, replaced slot-for-slot: `u16[0]` equal in 199/199. PC text decodes (PLAN §4a inverse) to 2,264 distinct codes, all ≤ `0x0FFF` — a dense glyph index, not GBK. | evidence (structure) / hypothesis (encoding) |
-| `0x80033800` | 65 (PL, BPL*, BRT*, START) | EMI **type 1 is compressed**; the PC ships the decompressed arena. `u32[0]` of the PSX payload equals the PC chunk size in 56/65; 8 PL files are short by exactly `0x160`; START is the outlier (its PC arena is byte-identical to `PL012`'s). Control: `BPLU349` ships uncompressed on PSX and is byte-identical on PC. No decompressor written. | evidence |
+| `0x80033800` | 65 (PL, BPL*, BRT*, START) | EMI **type 1 is compressed**; the PC ships the decompressed arena. `u32[0]` of the PSX payload equals the PC chunk size in 56/65; 8 PL files are short by exactly `0x160`; START is the outlier (its PC arena is byte-identical to `PL012`'s). Control: `BPLU349` ships uncompressed on PSX and is byte-identical on PC. Decompressed (2026-10-08, `tools/type1.py`): 51 of 65 byte-identical to the PC's chunk; the 8 short `PL` arenas, `START` and five more are the port's edits ([`type1-compression.md`](type1-compression.md) 3). | evidence |
 | `0x80014000` | 44 (BOSS×40, BATTLE×2, FIRST, AFLDKWA) | System message pool, retranslated. 2 distinct blobs per side. `AFLDKWA.DAT` ≡ `FIRST.DAT` chunk 9, byte for byte. | evidence |
 | `0x8007280C` &c. | 4 (RYUD00–03) | **One byte**, offset `0x7ACE`, `0xF7`→`0xFF`, same in all four. Fix, flag, or corruption — unknown. | evidence (the byte) |
 | `0x8002B800` | 1 (FIRST) | 15 bytes in a u16 table. | unexamined |
@@ -166,7 +166,9 @@ tag and size as `FIRST.DAT` chunk 9.
 ## 4. Open
 
 - **The non-code dropped sections** (§2) — search `BOF3.exe` for their values.
-- **A type-1 decompressor**, to turn 65 "differ" into identical-or-not.
+- ~~**A type-1 decompressor**~~ — **written 2026-10-08:** `tools/type1.py`; all 65
+  decode, 51 byte-identical to the PC's chunks, the other 14 the port's own
+  edits ([`type1-compression.md`](type1-compression.md)).
 - **The dropped SEQ groups** in 38 files, and the RYUD byte.
 - ~~**Kind-0 tag semantics**~~ — **answered 2026-09-19:** one arena, payload
   copied to `0x803580 + tag` ([`asset-loading-path.md`](asset-loading-path.md)

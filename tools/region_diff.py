@@ -519,11 +519,13 @@ def tree_files(path):
     """(name, bytes) for every file of a disc image, or of a directory (a PC
     install's DAT/), names relative and upper-case with forward slashes."""
     if os.path.isdir(path):
-        names = sorted(os.path.relpath(os.path.join(r, f), path).replace("\\", "/").upper()
-                       for r, _, fs in os.walk(path) for f in fs)
-        for n in names:
-            with open(os.path.join(path, n), "rb") as f:
-                yield n, f.read()
+        # Upper-case the reported name only: on a case-sensitive file system
+        # the file must be opened under its own spelling (`de.AREA000.DAT`).
+        rels = sorted((os.path.relpath(os.path.join(r, f), path).replace("\\", "/")
+                       for r, _, fs in os.walk(path) for f in fs), key=str.upper)
+        for rel in rels:
+            with open(os.path.join(path, rel), "rb") as f:
+                yield rel.upper(), f.read()
     else:
         d = psx_disc.Disc(path)
         for n in sorted(d.files):
