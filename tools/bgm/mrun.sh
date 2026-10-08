@@ -5,8 +5,9 @@
 # Mednafen settings are never touched), recording its sound output (-soundrecord)
 # at 44.1 kHz through DirectSound with the volume at 0 (the recording is taken
 # before the volume). The timeout is wall-clock from the process's launch and
-# Mednafen spends about 0.3 s starting up before the recorder opens, so a WAV
-# holds SECONDS - 0.3 of audio (measured over 153 renders, 2026-10-08);
+# Mednafen starts up before the recorder opens - 0.3 s on a quiet machine, up
+# to 9 s with three workers copying discs at once (measured over 153 renders,
+# 2026-10-08) - so a WAV holds that much less than SECONDS of audio;
 # measure_loops.render_plan pads 15 s. A killed run leaves the WAV header's sizes unset; wavread.py
 # reads it anyway. The BIOS (SCPH5500.BIN for psx-jp) is copied from the sibling's
 # mednafen/firmware into the base directory once. Mednafen writes stdout.txt and

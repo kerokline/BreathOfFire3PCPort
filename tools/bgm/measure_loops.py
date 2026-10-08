@@ -6,7 +6,8 @@ a Mednafen render of the disc's sequence.
         renders every looping song not yet in analysis/bgm/loops.json (or
         whose render is missing), measures it, adds its row; resumable - a
         song with a row is skipped, a render already on disk is reused.
-        --redo measures the excluded rows again from their renders.
+        --redo measures every song with a render on disk again, excluded
+        or not; the log line carries the period, to diff against the last run.
         Progress: analysis/bgm/measure.log. Needs BGM_SCRATCH (disc copies,
         about 480 MB a worker, and Mednafen's base directories).
     python measure_loops.py measure TRACK RENDER.wav [T0]
@@ -50,6 +51,11 @@ LOG = OUT + "/measure.log"
 RENDERS = OUT + "/renders"
 FRAME = 1152
 MIN_CONFIDENCE = 0.8
+# The PC renders' clock against Mednafen's, in rec samples per mp3 sample: -173..-177 ppm on every
+# song the waveform aligns (003, 011, 017, 025 on 2026-10-08; 000 and 153 on 10-06). The envelope
+# fallback fits its intercept with the slope pinned here - its few hop-resolution points cannot
+# fit a slope (song 034: five points gave -1542).
+DRIFT_PPM = -175.0
 FADE = 256  # samples (5.8 ms): the crossfade of a shifted row, whose stand-in is not the body's own tail
 
 
@@ -70,6 +76,37 @@ def first_sound(x, after=0, thr=1e-3):
     a = np.abs(x).max(axis=1) if x.ndim == 2 else np.abs(x)
     i = np.nonzero(a[after:] > thr)[0]
     return after + int(i[0]) if len(i) else None
+
+
+def match_windows(x, t0, t1, P, step):
+    """[(t, best ncc of x[t:t+q] against x[t+P+d:...] for d in -3..3, rms)] for t in t0..t1 by step:
+    the render's second pass against its first. A sequencer loop is not an integer number of SPU
+    samples, hence the +-3; the SPU's noise voices are a fresh LFSR realisation every pass, so
+    a window holding a noise hit does not match at all - the callers judge spans by the fraction
+    of windows that match (>= 0.97), never by their minimum (2026-10-08: 89 of 153 songs refused
+    on the minimum; song 011 matches in a third of its windows at its true period)."""
+    q = SR // 4
+    out = []
+    for t in range(int(t0), int(min(t1, len(x) - P - q - 4)), step):
+        u = x[t:t + q]
+        best = max(nccv(u, x[t + P + d:t + P + d + q]) for d in range(-3, 4))
+        out.append((t, best, float(np.sqrt(np.mean(u ** 2)))))
+    return out
+
+
+def match_fraction(sims):
+    act = [s >= 0.97 for _, s, e in sims if e >= 1e-3]
+    return float(np.mean(act)) if act else 0.0
+
+
+def envelope(x, hop=256):
+    """log-RMS per hop, first-differenced and half-wave rectified: an onset envelope, the same for
+    two renders of one sequence whose voices differ in phase (song 034: spectrogram frames 0.94
+    alike, 2 s waveform windows under 0.5)."""
+    n = len(x) // hop
+    e = np.log1p(np.sqrt(np.mean(x[:n * hop].reshape(n, hop) ** 2, axis=1)) * 1000)
+    d = np.maximum(np.diff(e, prepend=e[0]), 0)
+    return np.convolve(d, np.ones(3) / 3, mode="same")
 
 
 def best_lag(ref, sig):
@@ -105,28 +142,53 @@ def measure(track, recpath, t0=40.0):
         best_c = max(best_c, c)
         if c > 0.5:
             pts.append((t, lo + k - t - off, c))
+    align_method = "waveform"
+    if len(pts) < 10:
+        # the envelope fallback, at hop resolution: 4 s windows of the MP3's onset envelope
+        # against the render's, +-0.25 s about the first-sound offset
+        hop = 256
+        em, er = envelope(mm, hop), envelope(rm, hop)
+        pts2 = []
+        for t in range(fm + SR // 2, n - 5 * SR, SR):
+            a, b = t // hop, (t + 4 * SR) // hop
+            if em[a:b].max() < 1e-3:
+                continue
+            lo = (t + off) // hop - SR // 4 // hop
+            if lo < 0 or lo + (b - a) + SR // 2 // hop > len(er):
+                break
+            k, c = best_lag(em[a:b], er[lo:lo + (b - a) + SR // 2 // hop])
+            if c > 0.3:     # onset envelopes are spiky and correlate low even when right (song 034:
+                pts2.append((t, (lo + k) * hop - t - off, c))   # 0.44 with lags agreeing to a hop); the line fit guards
+        if len(pts2) > len(pts):
+            pts, align_method = pts2, "envelope"
     if len(pts) < 3:
         row.update(excluded=True, why="alignment: fewer than 3 confident windows (best window %.3f)" % best_c,
                    confidence=0.0)
         return row
     p = np.array(pts, np.float64)
-    sl = [(p[j, 1] - p[i, 1]) / (p[j, 0] - p[i, 0]) for i in range(len(p)) for j in range(i + 1, len(p))]
-    slope = float(np.median(sl))  # rec samples of offset per mp3 sample
-    icpt = float(np.median(p[:, 1] - slope * p[:, 0]))
-    resid = p[:, 1] - (icpt + slope * p[:, 0])
+
+    def fit(p):
+        if align_method == "envelope":
+            slope = DRIFT_PPM * 1e-6
+        else:
+            sl = [(p[j, 1] - p[i, 1]) / (p[j, 0] - p[i, 0]) for i in range(len(p)) for j in range(i + 1, len(p))]
+            slope = float(np.median(sl))  # rec samples of offset per mp3 sample
+        icpt = float(np.median(p[:, 1] - slope * p[:, 0]))
+        return slope, icpt, p[:, 1] - (icpt + slope * p[:, 0])
+    slope, icpt, resid = fit(p)
     # A window can lock a bar away in self-similar music (the lag search spans +-SR/10): those are
     # outliers of thousands of samples against a fit whose residuals are otherwise under ten. Drop
     # them, refit, and gate on the inliers; the count of outliers is reported.
-    inl = np.abs(resid) <= 50
+    tol = 50 if align_method == "waveform" else 2 * 256
+    inl = np.abs(resid) <= tol
     outliers = int((~inl).sum())
     if inl.sum() >= 3 and outliers:
         p = p[inl]
-        sl = [(p[j, 1] - p[i, 1]) / (p[j, 0] - p[i, 0]) for i in range(len(p)) for j in range(i + 1, len(p))]
-        slope = float(np.median(sl))
-        icpt = float(np.median(p[:, 1] - slope * p[:, 0]))
-        resid = p[:, 1] - (icpt + slope * p[:, 0])
+        slope, icpt, resid = fit(p)
     row["align"] = dict(offset=int(off), intercept=icpt, ppm=slope * 1e6, windows=len(p), outliers=outliers,
-                        median_ncc=float(np.median(p[:, 2])), max_residual=float(np.abs(resid).max()))
+                        median_ncc=float(np.median(p[:, 2])), max_residual=float(np.abs(resid).max()),
+                        method=align_method)
+    align = row["align"]
     to_rec = lambda m: m + off + icpt + slope * m
     to_mp3 = lambda r: (r - off - icpt) / (1 + slope)
 
@@ -150,32 +212,39 @@ def measure(track, recpath, t0=40.0):
     if hi > len(rm):
         row.update(excluded=True, why="render too short for one period", confidence=0.0)
         return row
-    k, cp = best_lag(rm[tref:tref + W], rm[lo:hi])
+    c = ncc_search(rm[tref:tref + W], rm[lo:hi])
+    # every local peak of the 3 s window's search is a candidate; the loop is the one at which the
+    # render keeps matching itself for 12 s on, not the one whose single window scores highest
+    # (song 017: a phrase repeat at 1.000 against the loop at 0.999; the fractions 0.69 and 1.00)
+    peaks = [i for i in range(1, len(c) - 1) if c[i] > 0.4 and c[i] >= c[i - 1] and c[i] >= c[i + 1]]
+    peaks = sorted(peaks, key=lambda i: -c[i])[:12] or [int(np.argmax(c))]
+    scored = sorted(((match_fraction(match_windows(rm, tref, tref + 12 * SR, lo + i - tref, SR // 8)), c[i], i)
+                     for i in peaks), reverse=True)
+    frac, cp, k = scored[0]
     P = lo + k - tref
+    row["period_candidates"] = [dict(period_s=(lo + i - tref) / SR, ncc=float(cc), fraction=float(f))
+                                for f, cc, i in scored[:4]]
     # loop start: first t from which 0.25 s windows repeat at P (>= 0.97) for 3 s. The sequencer's
     # loop is not an integer number of SPU samples and P is one integer lag from one 3 s window, so
     # each window takes the best of P-3..P+3: a fraction of a sample off drops a bright window's
     # 0.25 s correlation under 0.97 by itself (2026-10-08: 89 of 153 songs refused at exactly P,
     # their period correlation 0.9-0.998).
     q = SR // 4
-    sims = []
-    for t in range(int(s0) - SR // 2, tref + W, q // 4):
-        u = rm[t:t + q]
-        best = max(nccv(u, rm[t + P + d:t + P + d + q]) for d in range(-3, 4))
-        sims.append((t, best, np.sqrt(np.mean(u ** 2))))
-    S = None
+    sims = match_windows(rm, int(s0) - SR // 2, tref + W, P, q // 4)
     span = 3 * SR // (q // 4)
-    sustained = 0.0
-    for i in range(len(sims) - span):
-        floor = min((s if e >= 1e-3 else 1.0) for _, s, e in sims[i:i + span])
-        sustained = max(sustained, floor)
-        if floor >= 0.97:
-            S = sims[i][0]
-            break
-    if S is None:
-        row.update(excluded=True, why="no exact repeat found in the render (best 3 s floor %.3f)" % sustained,
+    fr3 = [match_fraction(sims[i:i + span]) for i in range(len(sims) - span)]
+    best3 = max(fr3) if fr3 else 0.0
+    # before the loop start the intro faces the body and nothing matches; from it on the song's own
+    # share of clean windows matches (1.0 without noise voices, a third with many): the first span
+    # reaching half the best span's fraction, and at least a quarter
+    S = next((sims[i][0] for i, f in enumerate(fr3) if f >= max(0.25, 0.5 * best3)), None)
+    if S is not None:   # the first window inside that span that matches: the start itself
+        S = next((t for t, s_, e in sims if t >= S and s_ >= 0.97), S)
+    if S is None or best3 < 0.25:
+        row.update(excluded=True, why="no exact repeat found in the render (best 3 s match fraction %.2f)" % best3,
                    confidence=cp)
         return row
+    row["match_fraction"] = frac
     row["render_loop"] = dict(period=int(P), period_s=P / SR, ncc=cp, start_rec=int(S),
                               intro_s=(S - s0) / SR, nominal_intro_s=a_nom, nominal_body_s=body,
                               timing_ratio=(P / SR) / body)
@@ -189,12 +258,13 @@ def measure(track, recpath, t0=40.0):
     if E <= last:
         # full: refine P inside the file, around the clock-derived value
         Li = int(round(L)); Wn = SR
-        lo2 = Li + int(round(Pm)) - 300
-        if lo2 + Wn + 600 <= n:
-            k2, c2 = best_lag(mm[Li:Li + Wn], mm[lo2:lo2 + Wn + 600])
+        r = 300 if align["method"] == "waveform" else 2500      # the envelope's resolution
+        lo2 = Li + int(round(Pm)) - r
+        if lo2 + Wn + 2 * r <= n:
+            k2, c2 = best_lag(mm[Li:Li + Wn], mm[lo2:lo2 + Wn + 2 * r])
             Pi = lo2 + k2 - Li
-        else:
-            Pi, c2 = int(round(Pm)), 0.0
+        else:   # no room to refine inside the file: the render's own measure stands
+            Pi, c2 = int(round(Pm)), cp
         row.update(case="full", start=Li, end=Li + Pi, short_by=0, holds_whole_body=True,
                    confidence=c2, passes_after_start=(n - Li) / Pi)
     elif last - Pm >= lead:
@@ -237,7 +307,7 @@ def measure(track, recpath, t0=40.0):
     bad = []
     if row["confidence"] < MIN_CONFIDENCE:
         bad.append("loop correlation %.3f under %.2f" % (row["confidence"], MIN_CONFIDENCE))
-    if a["windows"] < 10 or a["max_residual"] > 50:
+    if a["windows"] < 10 or a["max_residual"] > (50 if a["method"] == "waveform" else 512):
         bad.append("alignment: %d windows, residual %.1f samples" % (a["windows"], a["max_residual"]))
     row["excluded"] = bool(bad)
     if bad:
@@ -355,9 +425,10 @@ def run(workers, songs, redo=False):
     inv = json.load(open(OUT + "/inventory.json"))
     done = load_table()
     # a render-measured row is final; an in-file row is replaced by the render's measurement; with
-    # --redo an excluded row is measured again (from its render on disk, no new render)
+    # --redo every song whose render is on disk is measured again (no new render) - after a change
+    # to measure(), every row, since a row that passed may have passed at a wrong period (017)
     todo = [s for s in songs if str(s) not in done or done[str(s)].get("method") == "in-file"
-            or (redo and done[str(s)].get("excluded"))]
+            or (redo and os.path.exists(RENDERS + "/song%03d_mednafen.wav" % s))]
     log("run: %d songs to measure (%d already in loops.json), %d workers" % (len(todo), len(songs) - len(todo), workers))
     here = os.path.dirname(os.path.abspath(__file__))
     os.makedirs(RENDERS, exist_ok=True)
@@ -388,8 +459,12 @@ def run(workers, songs, redo=False):
                 try:
                     row = f.result()
                     save_row(row)
-                    log("song %03d: %s conf %.3f%s" % (s, row.get("case", "-"), row.get("confidence", 0),
-                                                      " EXCLUDED (%s)" % row.get("why") if row.get("excluded") else ""))
+                    rl = row.get("render_loop", {})
+                    log("song %03d: %s conf %.3f P %.3f s intro %.2f s match %.2f align %s%s"
+                        % (s, row.get("case", "-"), row.get("confidence", 0), rl.get("period_s", 0),
+                           rl.get("intro_s", 0), row.get("match_fraction", 0),
+                           row.get("align", {}).get("method", "-"),
+                           " EXCLUDED (%s)" % row.get("why") if row.get("excluded") else ""))
                 except Exception as e:
                     log("song %03d: FAILED %r" % (s, e))
     log("run: done")
