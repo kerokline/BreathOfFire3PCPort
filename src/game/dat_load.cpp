@@ -77,7 +77,9 @@ void LoadImageChunk(std::uint32_t tag, const std::uint8_t* payload, std::int32_t
     }
 }
 
-// DIV-0005. The language whose overlays are wanted: BOF3X_LANG, read once at
+// DIV-0005. The language whose overlays are wanted: BOF3X_LANG, a BCP 47 tag
+// (en-US, en-150, fr-FR, de-DE, ja-JP - fixtures.toml's `tag` per build; the
+// longest is six characters, so 8 holds it), read once at
 // injection because LoadDatFile runs on a coroutine stack. Empty = none, and
 // then LoadDatFile does exactly what the original does. "original" is also
 // none: the launcher only fills in an EMPTY variable from its settings file,
@@ -95,8 +97,8 @@ bool g_area_block_loaded;
 
 // original 0x454590. Reads DAT\<name> whole and walks its chunks.
 //
-// DIVERGENCE DIV-0005: with BOF3X_LANG=xx set, DAT\xx.<name> is walked after
-// DAT\<name> when it exists, so its chunks land on top of the shipped ones - a
+// DIVERGENCE DIV-0005: with BOF3X_LANG=<tag> set, DAT\<tag>.<name> is walked
+// after DAT\<name> when it exists, so its chunks land on top of the shipped ones - a
 // kind-0 chunk over the same arena bytes, a kind-3 chunk replacing the glyph
 // table (Font_SetGlyphData frees the shipped one, a branch no shipped data
 // runs). The overlays are built locally by tools/loc_build.py; none ships

@@ -353,9 +353,12 @@ designed in rather than bolted on.
 - **Original behaviour:** `LoadDatFile` `0x454590` reads `DAT\<name>` and walks
   its chunks; that is all. There is one language, compiled in with the data
   ([`dialogue-localisation.md`](dialogue-localisation.md) §2).
-- **New behaviour:** with the environment variable `BOF3X_LANG=xx` set, our
-  `LoadDatFile` (`src/game/dat_load.cpp`) walks `DAT\xx.<name>` after
-  `DAT\<name>` when that file exists, with the same chunk walker. An overlay
+- **New behaviour:** with the environment variable `BOF3X_LANG=<tag>` set, our
+  `LoadDatFile` (`src/game/dat_load.cpp`) walks `DAT\<tag>.<name>` after
+  `DAT\<name>` when that file exists, with the same chunk walker. The tag
+  is the BCP 47 tag of the release the text came from (`fixtures.toml`'s
+  `tag` per build: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`; since
+  2026-10-08 - a bare code `en` before, and the overlays named `en.<name>`). An overlay
   holds only the chunks that differ, and they land on top: a kind-0 chunk over
   the same arena bytes, a kind-3 chunk through `Font_SetGlyphData`, which frees
   the shipped table - the branch no shipped data had ever run. Without the
@@ -3082,7 +3085,7 @@ designed in rather than bolted on.
      8-unit text and were keyed on "a language is set". `Lang_FullWidth()`
      now names the full-width languages, `ja` and `zh` (owner, 2026-09-24:
      the five official languages are a closed set, en/fr/de at 8 and zh/ja
-     at 12). For those the three injectors leave the original layout, which
+     at 12) - by the tag's primary subtag since 2026-10-08 (`ja-JP`, `zh-CN`). For those the three injectors leave the original layout, which
      was made for full-width text. Every other value, `original` and unset
      included, takes the same path as before.
 - **Rationale:** the owner's request, 2026-09-24: Japanese as an option,

@@ -100,7 +100,7 @@ when a key takes the logo to the menu, so no unattended run reaches it; what
 existed was an offline preview (since 2026-09-21 an input recipe reaches it,
 [`input-script.md`](input-script.md)).
 
-Launch with `BOF3X_LANG=en` after `python tools/loc_build.py all ...`
+Launch with `BOF3X_LANG=en-US` after `python tools/loc_build.py all ...`
 ([`HANDOFF.md`](HANDOFF.md) "How to run things").
 
 The three rows and the selected row's glow were confirmed by the owner,

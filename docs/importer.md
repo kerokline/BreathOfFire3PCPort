@@ -212,12 +212,13 @@ own overlays, so nothing stale is read. Its `T.NAME.DAT` files are taken as
 they are. They are the plan's `split-language`: what the player's disc says in
 that language, as overlays the engine reads (DIV-0005). The importer
 reimplements none of it. `loc_build.py --lang` itself accepts a tag now; what
-it does by language goes by the primary subtag. Its default stays the bare
-`en`, because **the engine and the launcher still read `DAT\en.*` and offer
-`en` / `fr` / `de` / `ja`**: taking tags there is the next item in
-`HANDOFF.md`. Until then an install's overlays are built with the bare codes,
-and `verify --overlays` compares a layer with them when the install has none
-under the full tag.
+it does by language goes by the primary subtag. Its default is the disc's own
+tag (`loc_build.disc_tag`, by the importer's identity check; an unheld disc
+wants `--lang`), since **the engine and the launcher read the tag** (2026-10-08:
+`DAT\<tag>.*`, `Lang_FullWidth` by the primary subtag, `kLanguages` the five
+tags; an install's old `en.*` files are not read and go). `verify --overlays`
+still compares a layer with an install's bare-coded overlays when the install
+has none under the full tag.
 `BOF3.exe` is a source because `loc_build` reads the exe's name, verb and
 config tables. Without it, `--lang` is refused with that reason.
 

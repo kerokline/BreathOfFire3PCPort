@@ -13,7 +13,7 @@ import attract_run as ar, task_stacks as ts
 u = ctypes.WinDLL('user32')
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 bdir = sys.argv[2] if len(sys.argv) > 2 else root + r'\build'
-env = dict(os.environ, BOF3X_LANG='en', BOF3X_PRESENT='clean')
+env = dict(os.environ, BOF3X_LANG='en-US', BOF3X_PRESENT='clean')
 ar.kill_stale(bdir + r'\bof3x-launcher.exe')
 pid = ar.launch(bdir + r'\bof3x-launcher.exe', root + r'\bof3', env)
 stop = threading.Event(); threading.Thread(target=ar.keep_in_front, args=(stop,), daemon=True).start()

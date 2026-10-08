@@ -1656,6 +1656,19 @@ def language_tag(tag):
     return tag
 
 
+def disc_tag(path):
+    """The tag the disc's text carries, fixtures.toml's `tag` for the build the
+    disc identifies as (the importer's identity check: every file's hash). The
+    engine and launcher read the tag since 2026-10-08 (DAT\<tag>.*,
+    kLanguages); an overlay under any other name is not offered. An unheld
+    disc has no tag: give --lang."""
+    import importer
+    found = importer.identify(path)
+    if not found:
+        raise SystemExit("%s is not a build fixtures.toml holds; give --lang <tag>" % path)
+    return importer.tag_of(found[0])
+
+
 def build_pause(args, font_chunks):
     lines = PAUSE_LINES.get(primary(args.lang))
     if lines is None:
@@ -2084,11 +2097,9 @@ def main():
     for name, fn in (("all", cmd_all), ("sheet", cmd_sheet), ("export", cmd_export)):
         s = sub.add_parser(name)
         s.add_argument("--disc", required=True)
-        # The default stays the bare `en` the engine and launcher read today
-        # (DAT\en.*); it becomes the donor disc's fixtures.toml tag when they
-        # take tags (docs/HANDOFF.md, the unified-data round's up-next item).
-        s.add_argument("--lang", default="en", type=language_tag,
-                       help="the overlays' language tag, BCP 47 (en-US, en-150, fr-FR, de-DE, ja-JP; default en)")
+        s.add_argument("--lang", type=language_tag,
+                       help="the overlays' language tag, BCP 47 (en-US, en-150, fr-FR, de-DE, ja-JP); "
+                            "default: the disc's own tag from fixtures.toml, which needs the disc to be a held build")
         if name == "all":
             s.add_argument("--glyphs", help="an upscaled sheet to use instead of doubling the donor's cells")
             s.add_argument("--upscaler", help="a command that upscales {in} by {scale} (to {out}, or to one new PNG)")
@@ -2102,6 +2113,9 @@ def main():
             s.add_argument("--only")
         s.set_defaults(fn=fn)
     args = ap.parse_args()
+    if args.lang is None:
+        args.lang = disc_tag(args.disc)
+        print("--lang not given: the disc's own tag, %s" % args.lang)
     return args.fn(args)
 
 

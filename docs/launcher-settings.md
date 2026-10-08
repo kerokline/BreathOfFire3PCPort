@@ -73,7 +73,7 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 
 | Setting | Where it goes | Mechanism |
 |---|---|---|
-| Language: "Chinese (PC script)", then every overlay language whose `DAT\<code>.*` files exist - `en`, `fr`, `de`, `ja` in that order (2026-09-27; English only before) | `BOF3X_LANG=<code>` in the child's environment; `language=<code>` in the ini | ours — DIV-0005, DIV-0054, DIV-0056, [`dialogue-localisation.md`](dialogue-localisation.md) |
+| Language: "Chinese (PC script)", then every overlay language whose `DAT\<tag>.*` files exist - `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP` in that order (BCP 47 tags since 2026-10-08, `fixtures.toml`'s per build; the bare `en`, `fr`, `de`, `ja` from 2026-09-27 before, English only before that) | `BOF3X_LANG=<tag>` in the child's environment; `language=<tag>` in the ini | ours — DIV-0005, DIV-0054, DIV-0056, [`dialogue-localisation.md`](dialogue-localisation.md) |
 | Look (was "Texture filter"): Smooth, Sharp, SatPixie - three entries (`config_dialog.cpp`; four until 2026-09-27, when our own CRT look, DIV-0037, was withdrawn) | `BOF3X_FILTER=point` for Sharp and SatPixie; `screen=` in the ini (`screen=crt` from an older ini reads as `satpixie`) | ours — DIV-0012 |
 | Display (fullscreen/windowed) | line 1 of `<game>\BOF3.CFG` | **the original's own input**, `Cfg_Load` `0x4FD030` |
 | Renderer | line 2 of `BOF3.CFG` | the original's, same reader |
@@ -109,7 +109,7 @@ Rules the writer follows:
   hard way: the first build silently turned the owner's hand-written windowed
   `0` back to `1` on its first launch.
 - **An environment variable already set wins** over the settings file, so the
-  developer invocations in [`HANDOFF.md`](HANDOFF.md) (`BOF3X_LANG=en
+  developer invocations in [`HANDOFF.md`](HANDOFF.md) (`BOF3X_LANG=en-US
   build/bof3x-launcher.exe`) keep overriding it.
 - A setting at its default sets **no** variable, so a default run is identical
   to one launched with no settings file at all.
@@ -200,9 +200,12 @@ played the attract sequence in English, and the longer messages made the
 message index lag the Chinese reference by up to 52 frames. The bisection
 blamed `LoadDatFile`, because that is where the overlay walk lives.
 
-The English entry is offered only when `DAT\en.*` exists; otherwise the dialog
+An entry is offered only when its `DAT\<tag>.*` exists; otherwise the dialog
 says to build the overlays with `tools/loc_build.py` rather than offering an
-option that cannot work.
+option that cannot work. An ini carried over from before 2026-10-08 says
+`language=en`: no entry has that tag, so it reads as the original until the
+dialog is used again (no mapping of the old codes, CLAUDE.md's no-shims
+rule).
 
 ## 5. What is not offered, and why
 
