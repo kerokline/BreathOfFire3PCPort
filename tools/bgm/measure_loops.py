@@ -365,8 +365,13 @@ def measure(track, recpath, t0=40.0):
         # one FFT search over the MP3 for the continuation
         k3, c3 = best_lag(ref, mm[lead:Ei])
         Li = lead + k3
+        # near-full: intro + exactly one body, trimmed to a frame - a loop over the whole file from
+        # the loop start would slip by short_by samples a pass (017: 18 ms in 53.5 s; 034: 31 ms in
+        # 21.9 s). Flagged, still excluded: whether such a slip beats a rewind is the owner's call
+        # (DIV-0081), to be taken on the count
         row.update(case="shortened", start=Li, end=Ei, short_by=int(round(E - n)), holds_whole_body=False,
                    confidence=cp, best_continuation_ncc=c3, loop_shorter_by_s=(Pm - (Ei - Li)) / SR,
+                   near_full=bool(E - n <= 2 * FRAME + FADE), near_full_start=int(round(L)),
                    excluded=True, why="the file is shorter than one loop period from its start: no phase-correct "
                    "loop exists in it; it rewinds as the original does")
         return row
@@ -527,10 +532,11 @@ def run(workers, songs, redo=False):
                     row = f.result()
                     save_row(row)
                     rl = row.get("render_loop", {})
-                    log("song %03d: %s conf %.3f P %.3f s intro %.2f s match %.2f align %s first %.1f s%s"
+                    log("song %03d: %s conf %.3f P %.3f s intro %.2f s match %.2f align %s first %.1f s%s%s"
                         % (s, row.get("case", "-"), row.get("confidence", 0), rl.get("period_s", 0),
                            rl.get("intro_s", 0), row.get("match_fraction", 0),
                            row.get("align", {}).get("method", "-"), row.get("first_sound_s", 0),
+                           " NEAR-FULL (short by %d samples)" % row["short_by"] if row.get("near_full") else "",
                            " EXCLUDED (%s)" % row.get("why") if row.get("excluded") else ""))
                 except Exception as e:
                     log("song %03d: FAILED %r" % (s, e))
