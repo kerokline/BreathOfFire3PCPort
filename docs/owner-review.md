@@ -256,6 +256,17 @@ where the reading behind it is. Nothing here is a divergence until it is in
   the group docs, `importer.md`'s list of the eleven world-map areas) were
   not scanned.
 
+- **Step 3's four calls** ([`importer-transforms.md`](importer-transforms.md)
+  "The owner's calls", 2026-10-08): (1) a disc-only player's dial page - the
+  PlayStation's buttons as built, or a keyboard-legend layer independent of
+  the PC's art; (2) the 40 French and 54 German enemy names over 8 bytes -
+  Chinese on the PC today, blank over the cache: abbreviate in `loc_build.py`
+  or widen DIV-0053's draw; (3) the 14 port-edited arenas - read what the
+  edits fix, or accept the disc's decode with a ledger entry; (4) `AREA004`
+  from a Western disc alone brings the re-texture (DIV-0080's note) - accept
+  as a by-source difference, or refuse. Nothing to look at until the engine
+  reads the cache.
+
 - **The world map's gauge words in French and German** ([`importer.md`](importer.md)
   section 3, 2026-10-08): the port's dial page (the keyboard legend, kept for
   every language) restyled the ENGINE / OVER HEAT gauge frames with the words

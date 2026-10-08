@@ -1,6 +1,6 @@
 # The importer: recipes, identity, plan, cache, verify
 
-**Status:** IN PROGRESS (2026-10-08, a cloud session: the recipe generator, the importer skeleton and the language layers by BCP 47 tag, proved on every catalogued build; presets, the engine's tags and its reading of the cache are not done)
+**Status:** IN PROGRESS (2026-10-08, two cloud sessions: the recipe generator, the importer skeleton and the language layers by BCP 47 tag, proved on every catalogued build; the engine's tags done the same day; step 3's transforms and stand-ins in [`importer-transforms.md`](importer-transforms.md) - the per-disc counts and the class table below are superseded by its sections 1, 5 and 6; presets and the engine's reading of the cache are not done)
 
 [`unified-data-plan.md`](unified-data-plan.md) step 2. `tools/importer.py` is
 the importer's skeleton, and `recipes/pc-zh.toml` is its first recipe file,
@@ -25,8 +25,12 @@ line per chunk, in file order:
 - `layer` is `base` or `loc/zh-CN`.
 - `class` is why the chunk sits where it does (section 3).
 - `emi` / `on` name **every held build that carries the chunk byte for byte**
-  and how to get it out: `copy` (the section as it is) or `type1` (decoded,
-  [`type1-compression.md`](type1-compression.md)).
+  and how to get it out: `copy` (the section as it is), `type1` (decoded,
+  [`type1-compression.md`](type1-compression.md)), or since step 3 `widen`,
+  `icons`, `ryud` (a transform, [`importer-transforms.md`](importer-transforms.md)
+  sections 2 and 4). A chunk may also carry `base` / `names` (an enemy table
+  split between layers) and `own` / `own_why` (a disc's own section as a
+  stand-in where no source carries the exact chunk, section 5 there).
 - `alt` is for a build that carries the chunk in a different place. Of the
   2,171 chunks with a disc source, 12 have one: the PSP's `FIRST.EMI` has one
   more section than the PSX's, so its copies sit one index later.
@@ -44,7 +48,9 @@ identical candidates. The recipe holds names, indices, sizes and hashes - never
 bytes - so it is committed (rule 1; `LICENSING.md` section 3). The recipe
 format is TOML, as the plan proposed.
 
-To regenerate, from the owner's files:
+To regenerate, from the owner's files (step 3 adds one `region_diff.py pair`
+run per PSX disc; [`importer-transforms.md`](importer-transforms.md) section 9
+has the full list):
 
 ```
 python tools/dat_census.py DAT <the JP disc's EMIs, flat> --out analysis/dat_census.json
@@ -90,10 +96,10 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
 | base | `type1` | 51 | a disc | a PSX type-1 section decoded, or the PSP's decompressed copy |
 | base | `bank` | 901 | PC | audio banks: the disc's VAG samples as WAV, step 6 |
 | base | `pc-edit` | 14 | PC | the port's edits to type-1 arenas ([`type1-compression.md`](type1-compression.md) 3) |
-| base | `logic-data` | 4 | PC | the `RYUD00..03` byte (`region-diff.md` 9) |
-| base | `art` | 17 | PC | an image page the port redrew (`FIRST`), and the world map's dial page in 16 areas (below) |
+| base | `logic-data` | 4 | PC | the `RYUD00..03` byte (`region-diff.md` 9). **Step 3: `pc-byte`**, the disc's section with the byte set by rule (`ryud`) |
+| base | `art` | 17 | PC | an image page the port redrew (`FIRST`), and the world map's dial page in 16 areas (below). **Step 3: `art` 16 + `pc-icons` 1** - `FIRST`'s page is the item-type icons respaced 24 to 32 px, rebuilt from any disc (`icons`); the dial page a stand-in from the disc's own page when the PC is absent |
 | loc/zh-CN | `text` | 274 | PC | area message blocks (199), system pools (44), language images (glyph atlases, the 14 place-plate pages, the title page, the ending sheet), the text CLUT strip (DIV-0013) |
-| loc/zh-CN | `layout+text` | 200 | PC | the enemy tables: Chinese names in fields widened 8 to 12, stats as JP's; step 3's `widen-enemy-names` will split them |
+| loc/zh-CN | `layout+text` | 200 | PC | the enemy tables: Chinese names in fields widened 8 to 12, stats as JP's. **Split by step 3**: `enemy-table` 200 in `base/` (the PC layout, names blank, from any disc by `widen`), the names 12-byte chunks in each language layer ([`importer-transforms.md`](importer-transforms.md) section 2) |
 | loc/zh-CN | `font` | 1 | PC | the port's Chinese font, the kind-3 chunk |
 | | | **3,582** | | |
 
@@ -162,7 +168,10 @@ layer and from DIV-0080, not from `base/`.
 | US disc alone | 2,146 | 13 | 12 complete; the rest named as missing: banks 901, `loc/zh-CN` 491, PC edits 14, logic-data 4, art 1, and the 25 above |
 
 The fourth row is the importer telling a disc-only player what it cannot build
-yet, and why. That list is steps 3 and 6's work. `AFLDKWA.DAT` is the one
+yet, and why. **After step 3** ([`importer-transforms.md`](importer-transforms.md)
+section 6): any PSX disc alone gives 2,392 of `base/`'s 3,307 chunks - 714
+containers lack only their bank (step 6), 14 a bank and a port-edited arena;
+the 25 are stand-ins from the disc's own sections. `AFLDKWA.DAT` is the one
 container with no `base/` file: its only chunk is the system pool, which is
 text.
 
@@ -202,9 +211,11 @@ are Sony Europe's terminology (`Memory Card`) and two renamed items. The
 PSP-EU text has the European renames too (`Hourglass` in 55 places and no
 `Quicksilver`, as the European PSX disc).
 
-`--lang` takes a tag, or a bare language (`en`), which is the first PSX disc in
-the player's order whose tag has that primary subtag. **Which English is the
-player's call; the order of the sources says it.** `--lang T` writes
+`--lang` takes a tag, or a bare language (`en`). **A bare `en` is `en-US`
+when the US disc is given, in any source order, else the first English disc**
+(the owner's decision, 2026-10-08: `en-US` is the default English;
+[`importer-transforms.md`](importer-transforms.md) section 7); any other bare
+language is the first PSX disc in the player's order with that primary subtag. `--lang T` writes
 `loc/T/dat/NAME.DAT`. **It is `tools/loc_build.py all --lang T`, run
 unchanged** on a scratch game directory: links to the PC's 742 shipped
 containers and `BOF3.exe`, both identified sources, and none of the install's
@@ -248,8 +259,8 @@ Measured 2026-10-08 against the owner's install, whose overlays were built on
 - 8 sound-bank pairs, the PAL sample swap (`region-diff.md` 8.4).
 
 Its English layer differs from the US one in 66 containers: the edited pools
-and blocks. Which English is "the" English is the owner's call. The importer
-uses whichever English disc comes first in the player's order.
+and blocks. The default English is `en-US` (the owner, 2026-10-08); `en-150`
+by its full tag.
 
 ## 6. Not done in step 2
 

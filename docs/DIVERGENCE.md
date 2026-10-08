@@ -4392,7 +4392,13 @@ designed in rather than bolted on.
   moves never meet the walls. The oracle's one differing row is a sampler
   poll on an area-load boundary (area `0x0002` against the `0xffff` marker),
   not game state.
-- **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded.
+- **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded. **From a
+  Western disc alone** (the importer's cache, unified-data step 3,
+  [`importer-transforms.md`](importer-transforms.md) section 5): the cache
+  holds that disc's own `AREA004` rows, walls and the 30-cell re-texture
+  with them; the guard's "already walled" branch leaves them, and the switch
+  cannot restore the open map from such a cache. A by-source difference
+  until the owner says otherwise (the owner's call 4 there).
 
 ### The music loops inside its file, at the points the disc's sequence loops
 
