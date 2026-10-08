@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-06 night: the platform round's step 3 on `phase-3/platform-round-2` - four groups merged, the live check identical and the save write byte-identical; then the day's investigations: the region diff, the music, the PSP's Stallion and the Holy Mantle, with DIV-0077..0081 and the unified-data plan; 10,081 ours; nothing pushed, the PR next; three launches staged for tomorrow)
+**Status:** IN PROGRESS (2026-10-08: the sea bridge's "waterfall" (D239) surveyed, explained and fixed - DIV-0085, seen by the owner; its third-word guard owes a rebuild, `'*'` and one bridge walk; area 47 the place to watch. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -40,28 +40,44 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
-0000000000000. **The visual glitches of 2026-10-06, worked through on 2026-10-07 morning on `phase-3/platform-round-2`
-   (uncommitted; the owner at the machine).** Read from the owner's two routes (`bridgeWalk`, `ninaWalkBehindBlock`,
-   their saves in `tools/recipe_saves/`), a capture every 60 frames, A/B against `BOF3X_LAYERING=0`, `BOF3X_WIDE=0`
-   and `--original '*'`; the record is [`owner-review.md`](owner-review.md) "Reported by the owner". Done:
-   **the sea's stair-stepped edges** (the view's cell inset, not a cull - lowered three columns a side under the
-   wide view, `BOF3X_WIDE_INSET`, DIV-0041's entry amended, `widescreen.md` section 3b's table) and **Nina drawn
-   through a crate** (DIV-0071's rule guarded the feet only; now nothing but floor is crossed where it reaches the
-   sprite at all - the entry's "Refined 2026-10-07"; the fix's own two routes re-run, the foot and shadow repairs
-   kept, forest and town unchanged). Settled: **Garr behind the railing is Capcom's order** (the owner: fine).
-   Then, the same morning, the two wide-only ones: **the sky** (the area's own effect `EffectKind18Sub15_Draw`,
-   widened to the picture's edges - DIV-0041's "The sea bridge's sky"; the owner: "Sky looks perfect") and **the
-   "waterfall"** has its cause (D239: a cell's side texture words are read by which sides exist, the sides are
-   chosen at creation from heights the sky effect moves every frame, and the wider cull creates the deck cells at
-   another moment - the east face then reads the sea tile meant for the south step). Not fixed: the fix depends on
-   which order the map authors its side words in, a data survey (D239 says how); a first fix by a texture-word test
-   was backed out as wrong. **Owed:** the owner's eye in play on the three fixes; the self-tests `'*'` narrow and wide passed from a clean launcher directory (`vis/selftest2.txt`; from
-   `build/` beside the play ini they fail in `battle_flow` because `cheat.exp=10` is on - run them from a copy with no ini). `MapView_LinkPrimAt` logs its
-   caller under `BOF3X_DRAWORDER` now, and `map_layers.cpp` logs each cell's sides, their texture words and page 0's
-   hash in the window (tooling, no behaviour). The scripts
-   and captures: that scratchpad's `vis/` (`run1.sh`..`run10.sh`; `build_merge/` is a second build of the same
-   tree, used while `build/` was running captures). The two builds carry the three source changes
-   (`widescreen.{h,cpp}`, `map_layers.cpp`, `layering.cpp`, `world_map.cpp`); `'*'` narrow and wide not yet re-run.
+0000000000000. **The sea bridge's "waterfall" is fixed: DIV-0085 (2026-10-08, a cloud session; the owner applied its
+   commits with `git am`).** The record is [`known-defects.md`](known-defects.md) D239, the entry DIVERGENCE's DIV-0085.
+   In short: `tools/side_survey.py` (new; `--dat DIR` or `--disc DISC`, `--cells AREA:X0,Z0,X1,Z1`) read every area
+   block, the PC's 200 and the Japanese disc's 200, identical - **the maps author their side words own, south, east,
+   as the code reads them** (by shade, 7,144 to 259), and **each one-sided cell carries a word for its one side and no
+   more**. The bridge is **`AREA060.DAT`**, not area 41 (the sky effect's columns 45..48 are its deck, and D239's two
+   live words sit on its column 48; every doc that says "area 41" for the bridge - D239's first paragraph, DIV-0041's
+   "The sea bridge's sky", `owner-review.md` - means `AREA060`; the code's area numbers otherwise match the files, area
+   4 being `AREA004`). The sky effect rewrites the deck's rows about the party and restores none, so a walk north
+   leaves one-unit steps behind; an edge cell created on one gets a south face, and its 32-unit cliff reads the next
+   tile's sea word. The PSX twin (`SLPS_009.90`, `FUN_80153B8C` / `FUN_80154D50`) is the same code on the same data.
+   **DIV-0085** (`BOF3X_SIDE_DUP`, on by default, armed after every self-test; `map_layers.cpp`, the snapshot taken at
+   the end of `LoadDatFile` when the area block loaded): a cell textured with both faces whose file heights give it
+   one, and whose tile has no third word, draws both with its one side word. **The owner saw it, 2026-10-08:** the
+   bridge wide, walked several times, no streaks, the edges unremarkable - on the build **before** the third-word guard
+   (`512b9de`'s; a one-sided cell with a third word, 10,309 in the game, keeps the original's read). In the order they
+   bite:
+   1. **Owed:** rebuild, `'*'` narrow and wide from a launcher copy with no ini (the `cheat.exp` trap), one more
+      `bridgeWalk` wide; the log's `DIV-0085    map cell 48,..` lines say it acted. Then the DIV's Verification line.
+   2. **Where else it can act** (D239, "Where DIV-0085 can act"): **area 47**, Wyndia castle's outer wall (the
+      sibling's ウィンじろ がいへき; the owner: the one-way float down) - its ripple moves every cell about the leader
+      every frame, 221 cells qualify, the wall's two cliffs among them; glance at it when passing, `BOF3X_SIDE_DUP=0`
+      for the original. The four areas with height patches never trigger it. Four writers' areas are unread (a second
+      ripple `0x62`, the platforms `0x22`, one boss map, Quake).
+   3. **Small, from the reading:** a one-line log of each file `LoadDatFile` opens would settle area names like
+      "41"; the inference that DIV-0041's wider terrain margin creates the edge cells on the steps is unmeasured (a
+      `BOF3X_DRAWORDER` log, the creation row against the party's).
+   **The 2026-10-07 morning's visual glitches** (committed since, `a55fae1` "Bridge Bug Work"; the record is
+   [`owner-review.md`](owner-review.md) "Reported by the owner"): the sea's stair-stepped edges (the wide view's cell
+   inset, `BOF3X_WIDE_INSET`, DIV-0041), Nina drawn through a crate (DIV-0071 refined), the bridge's sky widened
+   (DIV-0041; the owner: "Sky looks perfect"), Garr behind the railing Capcom's and kept. **Owed** from them: the
+   owner's eye on the crate fix in play. The self-tests `'*'` fail from `build/` beside the play ini (`cheat.exp=10`
+   trips `battle_flow`): run them from a copy with no ini. Tooling left in: `MapView_LinkPrimAt`'s caller and each
+   cell's sides and texture words under `BOF3X_DRAWORDER`; `BOF3X_SIDE_ZERO=1` (an experiment, off) releases a south
+   face whose word is 0. **Mechanics of the cloud session:** the owner uploaded the JP disc and `AREA*.DAT` to
+   `/mnt/session/uploads` (scratch only, rule 1); `apt-get install g++-mingw-w64-i686` gave a compile check of single
+   files (`gen_symbols.py --toml symbols.toml --out <dir>/bof3/symbols.gen.h`, then `-Isrc -I<dir>`) - not the
+   project's llvm-mingw, so the owner's build is the check; commits reached the owner as `git format-patch` files.
 
 000000000000. **The platform round's step 3 and a day of investigations (2026-10-06), on `phase-3/platform-round-2`** (cut
    from `main` `e047ee9b`; the round's record [`platform-round-2.md`](platform-round-2.md), 10,081 ours). The morning:
@@ -813,6 +829,11 @@ Local only, gitignored, worth keeping:
   re-aimed already, cannot clone`, exit 3, 978 of the 1,056 `MISMATCHES` lines reached). An environment variable wins
   over the ini: run every self-test with `BOF3X_LANG=original` (the agents' worktrees never saw it - their inis are
   defaults). Do not edit the owner's ini.
+- **`git am` of a cloud session's patches** (2026-10-08): it refuses a file that already exists untracked (a
+  copy downloaded earlier) and a tracked file with uncommitted changes ("does not match index"), and a failed run
+  leaves `.git/rebase-apply`, which blocks the next ("previous rebase directory still exists"). `git am --abort`,
+  move the copy aside, `git stash`, apply, `git stash pop`. Never `git am -s`: the patches carry the sign-off.
+
 - **A `shot` line is a frame of the route** (2026-09-30). `shot NAME 1 [BUTTONS]` holds its buttons for one frame; a
   shot inserted without taking that frame out of the run it splits puts every later input a frame late. An ad-hoc
   splitter did that to copies of the owner's recordings - menus and dialogue tolerated it, a fishing cast did not, and

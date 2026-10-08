@@ -21,12 +21,14 @@ round fourteen's end, PR #42, `e047ee9b`, 2026-10-06;
 **and 10,081 on `phase-3/platform-round-2`** (the platform round's step 3,
 2026-10-06, unpushed: [`platform-round-2.md`](platform-round-2.md) - the C
 runtime's fourteen entries and the two game functions no catalogue held;
-the complete hidden-start scan says the game's own code is now all ours). **2026-10-07 morning, on the same branch, uncommitted:** the
-owner's visual glitches of the night before worked through from their two
-routes - the wide view's cell inset (DIV-0041), DIV-0071's rule refined for a
-raised cell over the body, the sea bridge's sky widened (DIV-0041), Garr
-behind the railing Capcom's and kept; the "waterfall" has its cause (D239)
-and waits on a data survey; the self-tests `'*'` pass narrow and wide
+the complete hidden-start scan says the game's own code is now all ours). **2026-10-07..08, on the same branch:** the
+owner's visual glitches worked through from their two routes - the wide
+view's cell inset (DIV-0041), DIV-0071's rule refined for a raised cell over
+the body, the sea bridge's sky widened (DIV-0041), Garr behind the railing
+Capcom's and kept - and the "waterfall" surveyed and fixed: the maps author
+a side word for each side their file heights give and no more, and a cell
+given a second face at run time now takes its one side word (DIV-0085, seen
+by the owner on `AREA060`'s bridge; D239, `tools/side_survey.py`)
 ([`owner-review.md`](owner-review.md), HANDOFF's first item). The catalogue has 10,246 starts; at round fourteen's cut 1,341
 of the game's own functions were left, the rest of what is not ours being
 the platform and library layer (533) and jump-table cases (210) -
