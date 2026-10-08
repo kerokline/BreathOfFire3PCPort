@@ -6546,7 +6546,14 @@ run:
   south-only), 206 of them faces with a drop of 8 or more. The two long
   cliffs are x 40, z 1..28 and x 47, z 29..57 (east faces, drops up to 80);
   the rest are short runs at x 12..36 near the start and a row at z 13, x
-  89..106. Not yet seen: whether the ripple reaches them.
+  89..106. The sibling's docs name area 47 ウィンじろ がいへき (Wyndia
+  castle's outer wall); the owner (2026-10-08): likely the jump off the
+  wall and the float down, one way only. The two long cliffs would be the
+  wall. One way does not protect it as it largely does the bridge: the
+  ripple moves every cell of its block every frame (each row its own
+  phase, a cell's two edges by different amounts), so cells entering the
+  view on a single pass are created mid-ripple; the faces it adds are a
+  few units high against the wall's 80. Not yet seen.
 - `AreaMap_ApplyPatch`'s height records: `AREA094`, `103`, `128`, `140` -
   never give a one-sided cell both (every combination of entries checked).
 - `EffectKind18Sub62_Ripple`, `EffectKind18Sub22_SetMap` (four raised or
