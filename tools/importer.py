@@ -40,6 +40,8 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import dat          # noqa: E402
 import type1        # noqa: E402
+import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
+import xa           # noqa: E402  (wave-from-xa)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 TARGET = "pc-zh"
@@ -351,6 +353,7 @@ def cmd_build(a):
                         raise SystemExit("%s chunk %d from %s: hash differs from the recipe" % (f["name"], slot, s.id))
                     got = (s.id, src, body)
                     break
+                got = got or vag.importer_source(s, f, slot, ch)
                 if got:
                     break
             layers.setdefault(ch["layer"], [])
@@ -370,12 +373,15 @@ def cmd_build(a):
             with open(os.path.join(d, f["name"]), "wb") as fh:
                 fh.write(b"".join(parts))
             written[layer] += 1
+    snd = xa.importer_snd(sources, a.out)
     loc_assets = build_languages(a.lang, sources, a.out)
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets)
     for (bid, layer), n in sorted(used.items()):
         print("  %-7s from %-7s %5d chunks" % (layer, bid, n))
     for layer, n in sorted(written.items()):
         print("  %-7s %d containers written" % (layer, n))
+    if snd:
+        print("  base    snd/ from %s: %d files (wave-from-xa)" % snd)
     if missing:
         print("  missing (no source given carries them):")
         for (layer, k), n in sorted(missing.items()):
