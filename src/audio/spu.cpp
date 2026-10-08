@@ -232,7 +232,9 @@ void Spu::Reset() {
     std::memset(ram_, 0, sizeof ram_);
     for (Voice& voice : voices_) voice = Voice();
     pending_key_on_ = pending_key_off_ = 0;
+    std::memset(key_on_wait_, 0, sizeof key_on_wait_);
     pmon_ = non_ = eon_ = endx_ = 0;
+    mix_mask_ = 0xFFFFFF;
     main_vol_[0] = main_vol_[1] = Volume();
     evol_[0] = evol_[1] = 0;
     esa_ = 0;
@@ -445,6 +447,21 @@ void Spu::LoadBlock(Voice& voice) {
     }
     voice.flags = block[1];
     if (voice.flags & 0x04) voice.lsa = static_cast<std::uint16_t>(voice.address);
+    if (((block[0] >> 4) & 0x0F) > 4) {
+        // R20: a voice that is silent for good (released or never keyed on,
+        // envelope at zero) goes on reading SPU RAM wherever its address has
+        // walked - the capture buffers, the reverb area - and meets headers
+        // that are not ADPCM.
+        // Unheard (its OUTX is zero, and key on resets the decoder, R3): the
+        // block decodes to silence. Heard, it is the abort below.
+        if (voice.phase >= kRelease && voice.adsr.level == 0) {
+            for (int i = 0; i < 28; ++i) voice.buf[3 + i] = 0;
+            voice.hist[0] = voice.hist[1] = 0;
+            return;
+        }
+        Fatal("voice %d: ADPCM block at 0x%05X, header 0x%02X: filter %d (only 0..4 are described); start 0x%05X, loop 0x%05X",
+              static_cast<int>(&voice - voices_), base, block[0], (block[0] >> 4) & 0x0F, voice.ssa * 8u, voice.lsa * 8u);
+    }
     DecodeBlock(block, voice.buf + 3, voice.hist);
 }
 
@@ -475,7 +492,11 @@ void Spu::FinishBlock(Voice& voice, int v) {
 // start from zero (R3).
 void Spu::KeyOnVoice(Voice& voice) {
     voice.address = voice.ssa;
-    voice.counter = 0;
+    // R18: the voice starts with the pitch counter at sample 3 of the block,
+    // so that the interpolation's newest sample is three source samples
+    // ahead of where R11 alone puts it (measured against the renders,
+    // docs/spu-model.md R18).
+    voice.counter = 3u << 12;
     voice.phase = kAttack;
     voice.adsr.level = 0;
     voice.adsr.counter = 0;
@@ -640,7 +661,13 @@ void Spu::StepReverb(int ch, std::int32_t input) {
 void Spu::Render(std::int16_t* stereo, int frames) {
     if ((attr_ & 0x8000) == 0) Fatal("Render with the SPU disabled (ATTR bit 15 clear) is not modelled");
     for (int f = 0; f < frames; ++f) {
-        // Key off, then key on (R9), latched from the writes since the last sample.
+        // Key off, then key on (R9), latched from the writes since the last
+        // sample; a key on acts kKeyOnLatency samples after its write (R19).
+        if (pending_key_on_) {
+            for (int v = 0; v < kVoices; ++v)
+                if ((pending_key_on_ >> v) & 1) key_on_wait_[v] = kKeyOnLatency + 1;
+            pending_key_on_ = 0;
+        }
         if (pending_key_off_) {
             for (int v = 0; v < kVoices; ++v) {
                 if ((pending_key_off_ >> v) & 1) {
@@ -653,11 +680,10 @@ void Spu::Render(std::int16_t* stereo, int frames) {
             }
             pending_key_off_ = 0;
         }
-        if (pending_key_on_) {
-            for (int v = 0; v < kVoices; ++v)
-                if ((pending_key_on_ >> v) & 1) KeyOnVoice(voices_[v]);
-            endx_ &= ~pending_key_on_;
-            pending_key_on_ = 0;
+        for (int v = 0; v < kVoices; ++v) {
+            if (key_on_wait_[v] == 0 || --key_on_wait_[v] != 0) continue;
+            KeyOnVoice(voices_[v]);
+            endx_ &= ~(1u << v);
         }
 
         StepNoise(); // R13: once per sample, before the voices read it
@@ -688,11 +714,13 @@ void Spu::Render(std::int16_t* stereo, int frames) {
             const std::int32_t right = (out * voice.vol[1].env.level) >> 15;
             StepVolume(voice.vol[0]);
             StepVolume(voice.vol[1]);
-            dry[0] += left;
-            dry[1] += right;
-            if ((eon_ >> v) & 1) {
-                wet[0] += left;
-                wet[1] += right;
+            if ((mix_mask_ >> v) & 1) {
+                dry[0] += left;
+                dry[1] += right;
+                if ((eon_ >> v) & 1) {
+                    wet[0] += left;
+                    wet[1] += right;
+                }
             }
 
             // spec: SPU ADPCM Pitch, "Pitch Counter".

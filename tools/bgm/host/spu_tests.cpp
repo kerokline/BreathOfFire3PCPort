@@ -91,6 +91,15 @@ int RefGauss(int oldest, int older, int old, int nw, int i) {
                             FloorShift15(static_cast<long long>(Spu::GaussTable(0x000 + i)) * nw));
 }
 
+// A key on and the kKeyOnLatency samples before it acts (R19), so that it
+// takes effect at the next sample rendered - the timing the tests below count
+// from. TestKeyOnLatency checks the latency itself.
+void KeyOnAndWait(Spu& s, std::uint32_t mask) {
+    s.KeyOn(mask);
+    std::int16_t out[2 * Spu::kKeyOnLatency];
+    s.Render(out, Spu::kKeyOnLatency);
+}
+
 std::unique_ptr<Spu> NewSpu() {
     std::unique_ptr<Spu> s(new Spu());
     s->SetControl(0xC000); // enabled, unmuted
@@ -262,7 +271,7 @@ void TestLoopHistory() {
         s->SetVoiceVolumeRight(0, 0);
         s->SetVoiceAdsr1(0, 0x00FF); // linear attack, shift 0 step 0; decay F; sustain level F
         s->SetVoiceAdsr2(0, 0x0000); // sustain linear increase, shift 0
-        s->KeyOn(1);
+        KeyOnAndWait(*s, 1);
 
         // The reference stream: A B C, then (B C) again and again, history carried;
         // and the same with the history reset at each jump, which must differ.
@@ -291,7 +300,7 @@ void TestLoopHistory() {
         CHECK(second_pass_differs);
 
         auto at = [&](const std::vector<int>& v, long long k) { return k < 0 ? 0 : v[static_cast<size_t>(k)]; };
-        long long g = 0; // the reference pitch counter, never wrapped
+        long long g = 3LL << 12; // the reference pitch counter, never wrapped; key on starts it at sample 3 (R18)
         bool reset_differs = false;
         const int frames = 28 * 60;
         for (int f = 0; f < frames; ++f) {
@@ -319,6 +328,26 @@ void TestLoopHistory() {
     }
 }
 
+// R19: a key on acts kKeyOnLatency samples after the write; until then the
+// voice goes on as it was (here: silent), and a pitch written with it is in
+// place when it acts.
+void TestKeyOnLatency() {
+    auto s = NewSpu();
+    Put(*s, 0x1000, MakeBlockFill(0, 0, 0x07, 7));
+    s->SetVoiceStartAddress(0, 0x1000 / 8);
+    s->SetVoicePitch(0, 0x1000);
+    s->SetVoiceAdsr1(0, 0x00FF);
+    s->SetVoiceVolumeLeft(0, 0x3FFF);
+    s->KeyOn(1);
+    std::int16_t out[2];
+    for (int t = 0; t < Spu::kKeyOnLatency; ++t) {
+        s->Render(out, 1);
+        CHECK_EQ(s->VoiceAdsrPhase(0), 4); // still off
+    }
+    s->Render(out, 1);
+    CHECK_EQ(s->VoiceAdsrPhase(0), 0);     // attack from the sample after
+}
+
 // A one-shot: A then B with flags 1 (end, no repeat): at B's end ENDX is set,
 // the envelope forced to zero and the voice to release; key on clears ENDX.
 void TestOneShotEnd() {
@@ -332,18 +361,18 @@ void TestOneShotEnd() {
     s->SetVoicePitch(5, 0x1000);
     s->SetVoiceAdsr1(5, 0x00FF);
     s->SetVoiceAdsr2(5, 0x0000);
-    s->KeyOn(1u << 5);
+    KeyOnAndWait(*s, 1u << 5);
     std::int16_t out[2];
-    for (int t = 0; t < 55; ++t) {
+    for (int t = 0; t < 52; ++t) {
         s->Render(out, 1);
         CHECK_EQ(s->Endx(), 0u);
     }
-    s->Render(out, 1); // the 56th sample ends block B
+    s->Render(out, 1); // the 53rd sample ends block B (key on starts at sample 3, R18)
     CHECK_EQ(s->Endx(), 1u << 5);
     CHECK_EQ(s->VoiceEnvelope(5), 0);
     CHECK(s->VoiceAdsrPhase(5) >= 3);
     CHECK_EQ(s->VoiceLoopAddress(5), (base + 32) / 8);
-    s->KeyOn(1u << 5);
+    KeyOnAndWait(*s, 1u << 5);
     s->Render(out, 1);
     CHECK_EQ(s->Endx(), 0u);
     CHECK_EQ(s->VoiceAdsrPhase(5), 0);
@@ -357,7 +386,7 @@ int TicksToFull(std::uint16_t adsr1) {
     s->SetVoiceStartAddress(0, 0x1000 / 8);
     s->SetVoiceAdsr1(0, adsr1);
     s->SetVoiceAdsr2(0, 0x1F1F);
-    s->KeyOn(1);
+    KeyOnAndWait(*s, 1);
     std::int16_t out[2];
     for (int t = 1; t < 200000; ++t) {
         s->Render(out, 1);
@@ -374,7 +403,7 @@ void TestAdsr() {
         s->SetVoiceStartAddress(0, 0x1000 / 8);
         s->SetVoiceAdsr1(0, 0x00FF);
         s->SetVoiceAdsr2(0, 0x1F1F);
-        s->KeyOn(1);
+        KeyOnAndWait(*s, 1);
         std::int16_t out[2];
         const int expect[3] = {14336, 28672, 32767};
         for (int e : expect) {
@@ -414,7 +443,7 @@ void TestAdsr() {
             Put(*s, 0x1000, MakeBlockFill(0, 0, 0x07, 0));
             s->SetVoiceStartAddress(0, 0x1000 / 8);
             s->SetVoiceAdsr1(0, static_cast<std::uint16_t>((shift << 10) | (2 << 8) | 0xFF));
-            s->KeyOn(1);
+            KeyOnAndWait(*s, 1);
             std::vector<std::int16_t> buf(2 * 0x8000);
             s->Render(buf.data(), 0x7FFF);
             CHECK_EQ(s->VoiceEnvelope(0), 0);
@@ -431,7 +460,7 @@ void TestAdsr() {
         s->SetVoiceStartAddress(0, 0x1000 / 8);
         s->SetVoiceAdsr1(0, 0x0003);              // attack shift 0, decay shift 0, sustain level 3
         s->SetVoiceAdsr2(0, (0x1F << 8) | (3 << 6) | 11); // sustain rate 7Fh (never steps), linear release shift 11
-        s->KeyOn(1);
+        KeyOnAndWait(*s, 1);
         std::int16_t out[2];
         s->Render(out, 3);
         CHECK_EQ(s->VoiceEnvelope(0), 32767);
@@ -456,7 +485,7 @@ void TestAdsr() {
         s2->SetVoiceStartAddress(0, 0x1000 / 8);
         s2->SetVoiceAdsr1(0, 0x00FF);
         s2->SetVoiceAdsr2(0, 11);
-        s2->KeyOn(1);
+        KeyOnAndWait(*s2, 1);
         s2->Render(out, 3);
         s2->KeyOff(1);
         t = 0;
@@ -473,7 +502,7 @@ void TestAdsr() {
         s->SetVoiceStartAddress(0, 0x1000 / 8);
         s->SetVoiceAdsr1(0, 0x00FF);
         s->SetVoiceAdsr2(0, 0x001F);
-        s->KeyOn(1);
+        KeyOnAndWait(*s, 1);
         std::int16_t out[2];
         s->Render(out, 3);
         s->KeyOff(1);
@@ -574,13 +603,13 @@ void TestPitchModulation() {
     s->SetVoiceAdsr1(2, 0x00FF);
     s->SetVoicePitch(2, 0x1000);
     s->SetPitchModulation(1u << 2);
-    s->KeyOn((1u << 1) | (1u << 2));
-    long long counter = 0;
+    KeyOnAndWait(*s, (1u << 1) | (1u << 2));
+    long long counter = 3LL << 12; // R18
     int predicted = -1, actual = -1;
     std::int16_t out[2];
     for (int t = 0; t < 400 && (predicted < 0 || actual < 0); ++t) {
         s->Render(out, 1);
-        const int amp = Capture(*s, 0x800, static_cast<std::uint32_t>(t));
+        const int amp = Capture(*s, 0x800, static_cast<std::uint32_t>(t + Spu::kKeyOnLatency)); // the capture ran through the wait too
         long long step = static_cast<std::int16_t>(0x1000);
         step = FloorShift15(step * (amp + 0x8000)) & 0xFFFF;
         if (step > 0x3FFF) step = 0x4000;
@@ -601,7 +630,7 @@ void TestReverbStructure() {
     auto s = NewSpu();
     s->SetControl(0xC080);
     // A short impulse: one nonzero sample (range 0, nibble 7) then silence.
-    int imp[28] = {7};
+    int imp[28] = {0, 0, 0, 7}; // at sample 3, where key on starts (R18)
     Put(*s, 0x1000, MakeBlock(0, 0, 0x00, imp));
     Put(*s, 0x1010, MakeBlockFill(0, 0, 0x07, 0));
     s->SetVoiceStartAddress(0, 0x1000 / 8);
@@ -636,7 +665,7 @@ void TestReverbStructure() {
     r[31] = 0;           // vRIN: the right side hears nothing
     for (int i = 0; i < 32; ++i) s->SetReverbRegister(i, r[i]);
     s->SetReverbOutputVolume(0x7FFF, 0x7FFF);
-    s->KeyOn(1);
+    KeyOnAndWait(*s, 1);
     const int frames = 3000;
     std::vector<std::int16_t> out(2 * frames);
     s->Render(out.data(), frames);
@@ -686,7 +715,7 @@ void TestReverbPresetsStable() {
         s->SetReverbMode(1);
         s->ApplyReverbPreset(preset);
         s->SetReverbOutputVolume(0x3FFF, 0x3FFF);
-        s->KeyOn(1);
+        KeyOnAndWait(*s, 1);
         const int frames = 44100 * 6;
         std::vector<std::int16_t> out(2 * static_cast<size_t>(frames));
         s->Render(out.data(), frames);
@@ -723,7 +752,7 @@ void TestReverbWriteDisable() {
     s->SetVoiceVolumeLeft(0, 0x3FFF);
     s->SetReverbMode(1);
     s->ApplyReverbPreset(psx::kSpuReverbPresets[0]);
-    s->KeyOn(1);
+    KeyOnAndWait(*s, 1);
     std::vector<std::int16_t> out(2 * 20000);
     s->Render(out.data(), 20000);
     std::vector<std::uint8_t> area(psx::kSpuReverbPresets[0].size);
@@ -780,6 +809,7 @@ int main() {
         {"adpcm decode", TestDecodeByHand},
         {"gaussian interpolation", TestGaussianByHand},
         {"loop history", TestLoopHistory},
+        {"key-on latency", TestKeyOnLatency},
         {"one-shot end", TestOneShotEnd},
         {"adsr", TestAdsr},
         {"volume sweep", TestVolumeSweep},

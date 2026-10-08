@@ -1,10 +1,12 @@
 # The SPU model: what it implements, from where, and the readings it takes
 
-**Status:** BUILT, UNIT-TESTED (2026-10-08, a cloud session on
-`audio/sequence-from-disc`) - the "SPU" group of
-[`sequenced-music-plan.md`](sequenced-music-plan.md) section 9. Not yet
-compared against a render: that is the HOST group's work, and the readings
-in section 3 are where a mismatch is most likely to be found.
+**Status:** BUILT, UNIT-TESTED, MEASURED AGAINST RENDERS (2026-10-08, a
+cloud session on `audio/sequence-from-disc`) - the "SPU" group of
+[`sequenced-music-plan.md`](sequenced-music-plan.md) section 9. Driven by the
+sequencer of [`libsnd-reading.md`](libsnd-reading.md) and compared with nine
+Mednafen renders there (section 9): equal to one LSB once the game's
+interrupt timing is put back. Three readings came from that comparison
+(R18..R20, amendments below); R3, R9 and R11 are qualified by them.
 
 `src/audio/spu.h`, `src/audio/spu.cpp`: `psx::Spu`, 24 voices, 512 KiB of SPU
 RAM, the register set, the reverb unit and the mix, one sample at a time at
@@ -13,9 +15,9 @@ RAM, the register set, the reverb unit and the mix, one sample at a time at
 2026-10-08), plus the XA-ADPCM decode formula of its CDROM Format chapter,
 which the SPU chapter points to for the block header. No emulator code was
 read or used. The code names the spec section above each block ("spec:
-...") and the readings below as `R1`..`R17`.
+...") and the readings below as `R1`..`R20`.
 
-Tests: `tools/bgm/host/` (`README.md` there), 431,704 checks, all passing
+Tests: `tools/bgm/host/` (`README.md` there), 431,706 checks, all passing
 on 2026-10-08 with g++ 13.3. The model compiles without warnings under
 `g++ -std=c++17 -Wall -Wextra -Wpedantic -Wshadow -Wconversion` and
 `clang++ -Wall -Wextra`. Speed: 60 s of audio with all 24 voices playing and
@@ -87,7 +89,8 @@ first.
   = Reserved/Same as 9"), which the SPU chapter refers to ("reportedly same
   as for CD-XA"). `vag.py` shifts by the raw value (giving 0 or -1). Real
   sample data rarely uses them.
-- **R3. Key on resets** the ADPCM decoder's two-sample history, the three
+- **R3. Key on resets** (kept: the renders confirm the pitch counter's
+  fraction is reset, libsnd-reading.md 9.2; the counter starts at 3, R18) the ADPCM decoder's two-sample history, the three
   previous samples the interpolation reads, and the pitch counter (fraction
   included), and reads the block at SSA. The spec says only that SSA is
   copied and the envelope starts at zero; its state-machine notes hint that
@@ -122,7 +125,7 @@ first.
   takes at least one step, even with sustain level 15 (`8000h`). The
   alternative, testing before the step, would differ by one envelope step at
   each change.
-- **R9. Key on and key off** are latched and acted on at the start of the
+- **R9. Key on and key off** (key on: superseded by R19) are latched and acted on at the start of the
   next sample, key off first, then key on (so a voice keyed off and on
   between two samples restarts). KON clears ENDX for its voices. The
   hardware's 2-sample service grid and its 6-7 sample delay to a non-zero
@@ -133,7 +136,8 @@ first.
   once (from the next sample); a sweep-mode write starts from the current
   level. The sweep uses the envelope operation as written, phase bit
   included (the spec marks the negative-phase behaviour as partly untested).
-- **R11. Interpolation index and counter wrap.** The four samples are the
+- **R11. Interpolation index and counter wrap.** (Qualified by R18: in
+  effect the four samples sit three further on.) The four samples are the
   block's sample at `counter >> 12` ("new") and the three before it, reaching
   into the previous block's last three. The counter advances after the
   sample is produced; when it reaches `28 << 12` it loses `28 << 12` (the
@@ -180,18 +184,52 @@ first.
   modelled. A sample stored below `1000h` would be overwritten, as on the
   hardware.
 
+- **R18. Key on starts the pitch counter at sample 3** of the block
+  (`counter = 3 << 12`), not 0 - equivalently the interpolation's newest
+  sample is three source samples ahead of where R11 alone puts it. Not in
+  the spec; measured: against the renders each note's best lag grew with its
+  pitch (a constant offset in source samples), and a sweep of the start in
+  1/16-sample steps peaked at 2.875..3.0 (song 0: windows at >= 0.99 from
+  0.028 to 0.984). The unit tests count from it.
+- **R19. A key on acts `kKeyOnLatency` = 6 samples after the KON write**;
+  the other registers (pitch, volume, ADSR, SSA) at the next sample as
+  before, and key off too. Measured on a held note bent while other notes
+  are keyed (song 153): residual against the render at latencies 3..8:
+  -27.5, -30.7, -35.6, **-40.8**, -35.5, -30.7 dB; a key-off latency of 0..8
+  changes nothing measurable. psx-spx's own observation (ENVX non-zero 6..7
+  samples after KON, quoted under R9) agrees. Until it acts, the voice goes
+  on as it was. A second KON write for a voice within the 6 samples restarts
+  its wait (not observed either way). `TestKeyOnLatency` pins it; the other
+  tests key on through `KeyOnAndWait`.
+- **R20. A silent voice reading non-ADPCM memory.** Every voice reads SPU
+  RAM continuously (psx-spx); one never keyed on, or released to zero,
+  walks on through RAM and meets the capture buffers (`0x800..0xFFF`, voices
+  1 and 3's output) and other non-sample bytes, with filter values 5..7
+  (eight of the 166 songs reach it within 300 s, all on voices `_SsInit`
+  left at SSA `0x3000`). Unheard (OUTX 0; key on resets the decoder), so such
+  a block decodes to silence instead of aborting; an audible voice meeting
+  one still aborts, now naming the voice, the address, its start and loop.
+- **The level of the renders.** Mednafen's `-soundrecord` output is 3/4
+  of this model's (song 0: the RMS ratio 1.33 +- 0.01 in every 50 ms
+  window, dry and reverb tail alike; song 153: least-squares gain
+  1.3320..1.3334). Not a reading of the hardware:
+  nothing here changes for it (`synth_check.py`'s correlations do not see
+  it; it reports both levels).
+- **Not hardware: `SetDiagnosticMixMask`.** Voices outside the mask run but
+  are left out of the dry and reverb sums - per-voice stems for the host
+  tools (`synth_render --solo`). `Reset` sets all ones.
+
 ## 4. For the groups that come next
 
-- **libspu's reverb modes.** The spec's preset table is by name; it does not
-  say which `SPU_REV_MODE_*` number `SpuSetReverbModeParam` maps to which
-  set, nor whether libspu 3.7 writes exactly these values (the spec's values
-  are what software writes, not necessarily libspu's). The SEQ group's
-  reading of `SLPS_009.90` should take the table libspu carries in the boot
-  EXE and compare it with `kSpuReverbPresets`; `SetReverbRegister` takes any
-  set.
+- **libspu's reverb modes** (settled, `libsnd-reading.md` 6.2): libspu 3.7's
+  table at `0x80184954` equals `kSpuReverbPresets` register for register and
+  work area for work area: mode 1 Room, 2..4 Studio Small / Medium / Large,
+  5 Hall, 6 Space Echo, 7 Chaos Echo, 8 Delay, 9 Half Echo (mode 0 is all
+  zero, not the spec's "Off"). The game uses mode 1 everywhere, depth 10,320.
 - **Reverb depth.** `SsUtSetReverbDepth` and `SpuSetReverbDepth` write EVOL;
   `SetReverbOutputVolume` is that register.
 - **Voice allocation reads**: `Endx()` (ENDX) and `VoiceEnvelope(v)` (ENVX)
   are the hardware's; `VoiceAdsrPhase(v)` is not a register (tests, traces).
 - **The R1 disagreement with `vag.py`** needs one decision before
-  `vag.decode` is used as an oracle.
+  `vag.decode` is used as an oracle. (The renders do not single it out: with
+  R1 as built the residual is one LSB, libsnd-reading.md 9.1, so R1 stands.)

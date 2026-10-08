@@ -34,6 +34,9 @@ class Spu {
 public:
     static constexpr int kVoices = 24;
     static constexpr std::uint32_t kRamBytes = 0x80000;
+    // Samples from a KON write to the key on taking effect (R19, measured
+    // against the renders): the voice goes on sounding as it was until then.
+    static constexpr int kKeyOnLatency = 6;
 
     Spu();
     // Power-on state: RAM zero, every register zero, every voice idle.
@@ -64,7 +67,7 @@ public:
 
     // Flag registers, bit n = voice n (the hardware splits each into two
     // halfwords: voices 0..15 and 16..23).
-    void KeyOn(std::uint32_t mask);               // KON, acted on at the next sample
+    void KeyOn(std::uint32_t mask);               // KON, acted on kKeyOnLatency samples later (R19)
     void KeyOff(std::uint32_t mask);              // KOFF, acted on at the next sample
     void SetPitchModulation(std::uint32_t mask);  // PMON (bit 0 ignored)
     void SetNoiseMode(std::uint32_t mask);        // NON
@@ -93,6 +96,11 @@ public:
     // Advances the SPU `frames` samples at 44,100 Hz, writing interleaved
     // left/right 16-bit samples.
     void Render(std::int16_t* stereo, int frames);
+
+    // Not hardware: voices outside the mask still run but are left out of the
+    // mix (dry and reverb input) - for a host tool's per-voice stems. Reset
+    // sets all ones.
+    void SetDiagnosticMixMask(std::uint32_t mask) { mix_mask_ = mask; }
 
     // The noise generator's current output level (not a hardware register).
     std::int16_t NoiseLevel() const { return static_cast<std::int16_t>(noise_level_); }
@@ -149,11 +157,13 @@ private:
     std::uint16_t ram_[kRamBytes / 2];
     Voice voices_[kVoices];
     std::uint32_t pending_key_on_ = 0;
+    std::uint8_t key_on_wait_[kVoices] = {};      // samples left (+1) before a written key on acts
     std::uint32_t pending_key_off_ = 0;
     std::uint32_t pmon_ = 0;
     std::uint32_t non_ = 0;
     std::uint32_t eon_ = 0;
     std::uint32_t endx_ = 0;
+    std::uint32_t mix_mask_ = 0xFFFFFF;
     Volume main_vol_[2];
     std::int16_t evol_[2] = {0, 0};
     std::uint16_t esa_ = 0;
