@@ -63,8 +63,19 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       Then `importer.py build --preset pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe --source <US cue>
       --source <PSP iso> --opt psp-art --out <cache>` and `importer.py install --cache <cache> --game bof3 --opt
       psp-art` for a look at Stallion when a route reaches fight 24 (`owner-review.md`, step 4's items).
-   2. **Step 7's loop table** (the owner was running it the same day): lands on `platform/unified-data-round`
-      beside this; DIV-0081's text and `bgm-comparison.md` section 11 take the count.
+   2. **Step 7's loop table - measured, not yet generated.** The owner rendered all 153 songs (three workers,
+      1 h 46 min) and the first measurement refused 140; five rewrites of `measure_loops.py` the same afternoon,
+      each read against renders the owner uploaded (003, 007, 011, 017, 025, 034, 083, 089) and re-run by the
+      owner's `run --redo` (minutes, no new render): **48 pass, 20 near-full, 60 shortened, 28 refused with
+      their cause** ([`bgm-comparison.md`](bgm-comparison.md) 11.1, the method as it is now; DIV-0081's note).
+      Next at the machine: `python tools/bgm/gen_loop_table.py`, `prove_loops.py`, rebuild, the `sound` and `'*'`
+      self-tests, commit `loops.json`'s rows into `music_loops_table.inc`. **Two calls on the way:** the 20
+      near-full files (a slip of 15-50 ms a pass over the whole file, or the rewind - `near_full` in the rows);
+      and the 23 refused for a waveform that never repeats (pads with free-running modulation, 083 read) - a
+      loop at the sequence's period with a longer crossfade would be right and is not built. **The owner's stance
+      of 2026-10-08, on these numbers: the disc's music by default** (`unified-data-plan.md` 6; step 9 the music
+      path, this table the PC-only fallback). Trap: `mrun.sh`'s `timeout` is wall-clock from the launch, and
+      three workers copying discs cost up to 9 s of a render; the 15 s pad covered it.
    3. **The owner's calls**, all on [`owner-review.md`](owner-review.md) "Decisions the measurements raised": step
       3's four (the dial page, the 40 / 54 long FR / DE enemy names, the 14 arena edits, a Western-only `AREA004`),
       step 6's three (the PAL banks, the wrap clicks - a listen to `AREA000`'s bank first -, the 11 jingles), step
