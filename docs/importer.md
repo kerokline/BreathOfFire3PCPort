@@ -86,7 +86,10 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
 5. **Verify.** Interleave `base/` and `loc/zh-CN/` back into the PC's containers
    in the recipe's slot order, and hash each against
    `fixtures/pc-zh.DAT.files.tsv`. No PC install is needed: the hash list is
-   the oracle.
+   the oracle. Since step 8 ([`exe-import.md`](exe-import.md)) `build` also
+   writes `base/exe/` from the first source that can (the PC's exe, else a
+   disc) with `[exe]` in the manifest, `verify` checks it against
+   `recipes/exe.toml`'s per-build hash, and `check` runs `exe_tables.py check`.
 
 ## 3. What the chunks are (the recipe's classes)
 

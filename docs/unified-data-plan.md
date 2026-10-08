@@ -45,7 +45,7 @@ cache/
   manifest.toml            what was imported from which build, per asset (provenance; the bug report's attachment)
   base/                    language-neutral, JP's layout as the PC port reads it (ASSET_SOURCES 3)
     dat/<NAME>.DAT         one container per original file, the port's kinds (0 data, 1 image, 2 bank, 4/5 overlays)
-    exe/                   the exe-resident tables, laid out as BOF3.exe's .data has them (section 5)
+    exe/                   data.bin + data.toml: BOF3.exe's initialised .data in its own layout, from the PC or a disc (section 5; exe-import.md)
     bgm/NNN.DAT            the music, as the engine's player wants it (section 6)
     snd/                   the effect waves
   loc/<lang>/              per-language layers: text blocks, pools, names, labels, the font, language images
@@ -154,7 +154,17 @@ tables so far). For a disc-only install the importer must produce the PC's
    into `analysis/`, never into the repo.
 3. **The transform**: read each table from the source, widen or re-stride
    where the port did (names 8 to 12 is the known case), write `base/exe/`
-   in the PC layout; the engine maps `base/exe/` where `.data` was. This is
+   in the PC layout; the engine maps `base/exe/` where `.data` was.
+   **The importer half is done 2026-10-08** ([`exe-import.md`](exe-import.md):
+   `tools/exe_tables.py`; `base/exe/data.bin` + `data.toml` from the PC's
+   exe or any disc alone by the `exe_maps/` run forward, the catalogued
+   tables widened, the pointer words left unfilled and listed in
+   `recipes/exe-pointers.tsv`; a JP-built image equal to the PC's in 87.0 %
+   of `.data`, every catalogued table a disc carries identical but the three
+   regional rows). **The engine half is open**, its worklist section 6
+   there: the code pointers (9,142 words into `.text`), the data pointers
+   (93 % rebuildable by the map run backwards), `.rdata`, and ~22.7 KiB no
+   disc carries. This is
    the step that makes state 3 of the cutover
    ([`platform-layers-plan.md`](platform-layers-plan.md) section 3) possible
    without the PC's executable: the engine's data comes from the cache
@@ -202,13 +212,15 @@ is optional - which is already more than today.
 | 5 | ~~The exe-table catalogue completed and the per-SKU maps (section 5, steps 1-2)~~ **done 2026-10-08**, [`exe-tables-by-build.md`](exe-tables-by-build.md): `tools/exe_twins.py`, `exe_maps/<build>.tsv`, 29 tables and their rows per build in `tables.toml` | a reading round | none | no |
 | 6 | VAG and the banks; the `SND/` cut table found and XA | a group | step 2 | no |
 | 7 | The MP3 loop table, if H1 is heard | a day + 10 h unattended | the owner's ear | yes: the listening session |
-| 8 | `base/exe/` produced and the engine reading it (section 5 step 3) | a round, with the biggest live check | steps 2, 5; the cutover's state 3 design | no |
+| 8 | `base/exe/` produced ~~and the engine reading it~~ (section 5 step 3). **Importer half done 2026-10-08** ([`exe-import.md`](exe-import.md)); the engine half waits on the owner's machine and the state hash | a round, with the biggest live check | steps 2, 5; the cutover's state 3 design | no |
 | 9 | The SEQ / VAB player and the SPU synth | phase 5 | the owner's ear; the disc-only goal | yes |
 | 10 | MDEC / STR for FMV from a disc | phase 5 | I7 | no |
 
 Steps 1, 2 and 5 need nothing from the owner and can start together; 3, 4
 and 6 follow 2. After 8, a player with a US disc and no PC install has
-everything but music and video; after 9 and 10, everything.
+everything but music and video - once the engine holds the code pointers and
+the data no disc carries ([`exe-import.md`](exe-import.md) section 6; the
+importer half alone does not get there); after 9 and 10, everything.
 
 ## 9. What it changes elsewhere
 

@@ -267,6 +267,17 @@ where the reading behind it is. Nothing here is a divergence until it is in
   as a by-source difference, or refuse. Nothing to look at until the engine
   reads the cache.
 
+- **Step 8's four calls** ([`exe-import.md`](exe-import.md) "The owner's
+  calls", 2026-10-08): (1) `recipes/exe-pointers.tsv` in the repo - 3,134
+  lines of addresses and counts from the executable, no values; kept under
+  rule 1's reading, say if it should be generated on the player's machine
+  instead; (2) blank the PC-source image's six name tables and move the
+  Chinese names to `loc/zh-CN/`, so `base/exe/` is one thing from every
+  source; (3) a PSP-only `base/exe/` carries the PSP's level table and
+  consumable 87 and no `sin_table` - accept and ledger, or require a PSX disc
+  or the PC; (4) the data pointers from a disc - held by the engine, or a
+  rebuild transform (93 % exact; recommended).
+
 - **The world map's gauge words in French and German** ([`importer.md`](importer.md)
   section 3, 2026-10-08): the port's dial page (the keyboard legend, kept for
   every language) restyled the ENGINE / OVER HEAT gauge frames with the words
