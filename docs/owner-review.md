@@ -278,6 +278,27 @@ where the reading behind it is. Nothing here is a divergence until it is in
   or the PC; (4) the data pointers from a disc - held by the engine, or a
   rebuild transform (93 % exact; recommended).
 
+- **Step 6's three calls** ([`sound-import.md`](sound-import.md) section 6,
+  2026-10-08): (1) the PAL discs' 8 swapped area banks - refused by hash
+  today, so a PAL-only player lacks 8 containers' banks; accept as that
+  build's? (2) the port's converter wraps where the SPU clamps - 9 sample
+  values in 5 sounds, a full-scale click on the PC (`AREA000`'s bank holds
+  one: a listen first); clamping is a DIV and those banks stop being the
+  PC's bytes; (3) the 11 jingles for a disc-only player - an MP3 encoder in
+  the import (licensing), the engine playing kind-0 streams from WAV (`PURE`
+  / `KARA` 47 MB each, streamed), or PC-only.
+
+- **Step 4's six calls** ([`opt-layers.md`](opt-layers.md) "The owner's
+  calls", 2026-10-08): `psp-art` one layer or two (two chosen: P6's ten rows,
+  `psp-tiles` the rest); the PSP map bands a layer (chosen) or a rule; what
+  the launcher offers (recommended: a "PSP extras" group of boxes); the
+  `en-150` names layer the 8 renames only (chosen) or PSP-EU's whole tables;
+  the PSP content left out (logo, title page, button labels, `SCENA17`, P8,
+  the level table, consumable 87); a preset with layers on. **To look at once
+  built:** Stallion with `psp-art` on and off (fight 24, area 67; area 166's
+  fight 48), ability 116's banner under `psp-names-en-150`, `AREA128`'s dock
+  wide with `psp-maps`, a few `psp-tiles` areas.
+
 - **The world map's gauge words in French and German** ([`importer.md`](importer.md)
   section 3, 2026-10-08): the port's dial page (the keyboard legend, kept for
   every language) restyled the ENGINE / OVER HEAT gauge frames with the words

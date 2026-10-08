@@ -1,6 +1,6 @@
 # The importer: recipes, identity, plan, cache, verify
 
-**Status:** IN PROGRESS (2026-10-08, two cloud sessions: the recipe generator, the importer skeleton and the language layers by BCP 47 tag, proved on every catalogued build; the engine's tags done the same day; step 3's transforms and stand-ins in [`importer-transforms.md`](importer-transforms.md) - the per-disc counts and the class table below are superseded by its sections 1, 5 and 6; presets and the engine's reading of the cache are not done)
+**Status:** IN PROGRESS (2026-10-08, two cloud sessions: the recipe generator, the importer skeleton and the language layers by BCP 47 tag, proved on every catalogued build; the engine's tags done the same day; step 3's transforms and stand-ins in [`importer-transforms.md`](importer-transforms.md) - the per-disc counts and the class table below are superseded by its sections 1, 5 and 6; step 4's `opt/` layers, presets and `install` in [`opt-layers.md`](opt-layers.md), step 6's banks and `base/snd/` in [`sound-import.md`](sound-import.md), step 8's `base/exe/` in [`exe-import.md`](exe-import.md); the engine's reading of the cache is not done - `install` copies layers into `DAT/` meanwhile)
 
 [`unified-data-plan.md`](unified-data-plan.md) step 2. `tools/importer.py` is
 the importer's skeleton, and `recipes/pc-zh.toml` is its first recipe file,
@@ -97,7 +97,7 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
 |---|---|---:|---|---|
 | base | `disc` | 2,120 | a disc | byte-identical to a disc section |
 | base | `type1` | 51 | a disc | a PSX type-1 section decoded, or the PSP's decompressed copy |
-| base | `bank` | 901 | PC | audio banks: the disc's VAG samples as WAV, step 6 |
+| base | `bank` | 901 | PC | audio banks: the disc's VAG samples as WAV. **Step 6: from any PSX disc by `wave-from-vag`**, 901 of 901 byte-identical from JP or US, 893 from a PAL disc ([`sound-import.md`](sound-import.md)); the PC's `SND/` likewise, `recipes/pc-zh.snd.toml` |
 | base | `pc-edit` | 14 | PC | the port's edits to type-1 arenas ([`type1-compression.md`](type1-compression.md) 3) |
 | base | `logic-data` | 4 | PC | the `RYUD00..03` byte (`region-diff.md` 9). **Step 3: `pc-byte`**, the disc's section with the byte set by rule (`ryud`) |
 | base | `art` | 17 | PC | an image page the port redrew (`FIRST`), and the world map's dial page in 16 areas (below). **Step 3: `art` 16 + `pc-icons` 1** - `FIRST`'s page is the item-type icons respaced 24 to 32 px, rebuilt from any disc (`icons`); the dial page a stand-in from the disc's own page when the PC is absent |
@@ -267,8 +267,8 @@ by its full tag.
 
 ## 6. Not done in step 2
 
-- **Presets** ("PC install", "US disc only", "PC + US text"). These are only
-  source orders today, given on the command line.
+- ~~**Presets**~~ - done in step 4 (`--preset`, [`opt-layers.md`](opt-layers.md)
+  section 7).
 - **The engine reading the cache.** `LoadDatFile` reads `DAT/` as before. The
   cache is shaped so that `base/` plus a `loc/` layer can be read with the
   overlay mechanism unchanged; the second prefix is step 4.

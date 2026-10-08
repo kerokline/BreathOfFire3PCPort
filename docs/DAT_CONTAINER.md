@@ -173,7 +173,10 @@ tag and size as `FIRST.DAT` chunk 9.
 - ~~**Kind-0 tag semantics**~~ — **answered 2026-09-19:** one arena, payload
   copied to `0x803580 + tag` ([`asset-loading-path.md`](asset-loading-path.md)
   §2). Follow-on: generate the PSX-region → tag table from the census.
-- **Bank descriptor area** (`0x000–0x188`). First bytes look like
+- ~~**Bank descriptor area**~~ - **answered 2026-10-08** ([`sound-import.md`](sound-import.md)
+  section 1): 24 cues of four voice words at `0x000`, 64 (offset, size) voice
+  entries at `0x180`, then the WAVs; a voice word is voice, channel 16+n,
+  loop bit and rate. First bytes look like
   `{u8, u8, u16 sample rate}` records (`0xAC44`, `0x5622` appear in FIRST);
   unverified.
 - ~~**The kind-3 chunk** in `FIRST.DAT`~~ — **answered 2026-09-19:** the port's
@@ -189,7 +192,14 @@ Both directories use the `.DAT` extension but are **not** chunk containers:
 bare MP3s. The exe builds the names itself: `SND\%s.DAT`, `BGM\%03d.DAT`,
 `BGM\%03dN.DAT` (strings at file offsets `0x266F9C`–`0x266FB8`).
 
-**`SND/` is the PSX disc's XA audio, not EMI audio** (measured 2026-09-19):
+**`SND/` is the PSX disc's XA audio, not EMI audio** (measured 2026-09-19;
+**the cut table found 2026-10-08**, [`sound-import.md`](sound-import.md)
+section 3: three clip lists in the PSX boot EXE, found by shape on all five
+discs, the 880 lengths regenerated 880 of 880; the port's resampler matched
+and every WAV byte-identical from a disc. The 11 named files are MP3s of
+`S_XA00.STR`'s clips - `PURE`, `DRAGON`, `KARA` its channels 1-3 - which
+answers the "presumably recorded jingles" and the unpaired `S_XA00.STR`
+below; `019_02` is referenced by no stream id, `dir1` a name list):
 
 - An XA sector of 37.8 kHz mono ADPCM holds 4,032 samples = 0.10667 s = exactly
   2,352 samples = **4,704 bytes** at 22,050 Hz/16-bit. All **876 of 876**

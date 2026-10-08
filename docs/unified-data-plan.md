@@ -49,7 +49,8 @@ cache/
     bgm/NNN.DAT            the music, as the engine's player wants it (section 6)
     snd/                   the effect waves
   loc/<lang>/              per-language layers: text blocks, pools, names, labels, the font, language images
-  opt/<name>/              optional layers the player turns on: psp-art (P6's palettes, the tiles), psp-names (P7 and the other renames), ...
+  opt/<name>/              optional layers the player turns on (step 4, opt-layers.md): psp-art (P6), psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP
+  snd/NAME.DAT             the 880 SND/ effects, wave-from-xa from a disc (step 6, sound-import.md)
 ```
 
 - **One container per original file** keeps `LoadDatFile` and every loader
@@ -97,6 +98,8 @@ sources  ─▶ identity ─▶ plan ─▶ transforms ─▶ cache + manifest �
    - `split-language` - message blocks, pools, enemy-name fields, language
      images and plate CLUTs into `loc/<lang>/`; the text encoding per disc
      (US done, FR / DE / JP to add as `loc_build.py` grows).
+   - presets - **done, step 4** (`--preset`, eleven: `pc-install`, one per
+     PSX disc, PC plus each disc's text; [`opt-layers.md`](opt-layers.md) 7).
    - `psp-unwrap` - the header bits, the `pBVC` strip to the PSX sample
      body; `PPHD` / `pPMS` only once readers exist, else the instrument and
      sequence data come from a PSX source in the same install.
@@ -123,12 +126,12 @@ one-line export. (ASSET_SOURCES section 9's open item, proposed closed.)
 | Item | Needed for | Size | Oracle |
 |---|---|---|---|
 | Type-1 decompressor | every disc source (65 arenas) | **done 2026-10-08** (`tools/type1.py`): 50 of 65 equal the PSP's, 51 the PC's, the 65th confirmed byte by byte; 14 PC edits found | [`type1-compression.md`](type1-compression.md) |
-| VAG (ADPCM) decoder | the banks from a disc | small, well known | the PC's converted WAVs pair every bank |
-| XA decoder + the `SND/` cut table | the effects from a disc | medium; the cut table is still unlocated (beside the `SND` name strings in the exe, presumably) | the PC's `SND/` files |
+| VAG (ADPCM) decoder | the banks from a disc | **done 2026-10-08** (`tools/vag.py`, [`sound-import.md`](sound-import.md)): 901 of 901 banks byte-identical from JP or US, 893 from a PAL disc - the port's converter pinned down (double-precision recurrence, wrap not clamp) | the PC's converted WAVs pair every bank |
+| XA decoder + the `SND/` cut table | the effects from a disc | **done 2026-10-08** (`tools/xa.py`): the cut table is in the PSX boot EXE (JP `0x80183BB4`'s three lists), found by shape on all five discs; 880 of 880 WAVs byte-identical once the port's resampler was matched (float32 positions) | the PC's `SND/` files |
 | MDEC + STR | FMV from a disc | large; out of this plan (I7 for the player; the disc path waits) | the AVIs |
 | SEQ / VAB player on an SPU synth | sequenced music | large; **gated on the owner's ear** (`bgm-comparison.md` 10) | the three Mednafen renders, and the method for more |
 | MP3 loop-point table | correct loops on the PC's music without a synth | a day of tooling plus ~10 h of unattended measuring (156 songs at ~4 min); a DIV | the sequences' loop markers |
-| `LoadDatFile`'s second prefix | `opt/` layers | hours | the language overlays' tests |
+| `LoadDatFile`'s second prefix | `opt/` layers | **done 2026-10-08**, DIV-0086 (`BOF3X_OPT`; [`opt-layers.md`](opt-layers.md) section 5); the owner's build and self-tests owed | the language overlays' tests |
 | State hash address-independence | testing after the cutover and with layers in play | small | `state-hash.md` section 6 |
 
 ## 5. The exe-resident tables
@@ -175,6 +178,11 @@ is optional - which is already more than today.
 
 ## 6. Music and sound in the cache
 
+- `base/snd/` holds the 880 effects, `wave-from-xa` from any PSX disc
+  (step 6); the 11 jingles the PC ships as MP3s of `S_XA00.STR`'s clips stay
+  the install's (the owner's call, [`sound-import.md`](sound-import.md) 6).
+  The engine still formats `SND\%s.DAT` itself: its reading of the cache is
+  the same seam as the loader's second prefix (section 7 there).
 - `base/bgm/` holds the PC's MP3s as they are (file N = song N), with a
   **loop table** if the owner hears the replayed intros (H1) and wants them
   fixed - the cheap divergence `bgm-comparison.md` 10 describes.
@@ -208,9 +216,9 @@ is optional - which is already more than today.
 | 1 | ~~The type-1 decompressor, from the 37 PSP oracles, then all 65 against the PC~~ **done 2026-10-08**, [`type1-compression.md`](type1-compression.md); the port's 14 arena edits go to step 2's recipes | a group | none | no |
 | 2 | The recipe generator: `dat_census.py` + `region_diff.py` output to `recipes/*.toml`; the importer skeleton with identity, plan, `copy`, `split-language` (US, as `loc_build.py` does), verify against the PC install and the US overlays. **In progress 2026-10-08** ([`importer.md`](importer.md)): `tools/importer.py`, `recipes/pc-zh.toml` generated by content hash; identity, plan, `copy`, `type1`, verify - 742 of 742 containers rebuilt byte-identical from JP + PC (2,171 chunks from the disc) and from US + PSP-EU + PC; `loc/en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP` (BCP 47 tags, `fixtures.toml`) from the discs, the four the owner had equal to his overlays, 245 of 245 each; presets left, the engine's tags next (`HANDOFF.md`) | a round of 2-3 agents | none | the recipe format: TOML, taken |
 | 3 | ~~The transforms for every PSX disc~~ **done 2026-10-08 for the PSX discs**, [`importer-transforms.md`](importer-transforms.md): `widen` as a split, `remap-dest` unnecessary, the icons and the RYUD byte by rule, the stand-ins; any PSX disc alone gives all of `base/` but the 901 banks (step 6) and 14 port-edited arenas; the text encodings were `loc_build.py`'s already. **A disc-only install still has no language layer** (section 8 there: a font from the disc, `loc_build.py` reading `base/`, step 8) | a round | step 2 | the four calls in its doc |
-| 4 | `opt/` layers and the loader's second prefix: `psp-art` (P6) and `psp-names` (P7 + the other renames) from the player's PSP disc; the PSP unwrap transforms | a group (a day for P6 by `psp-stallion.md`'s estimate) | step 2 | option or default (recommended: option) |
+| 4 | ~~`opt/` layers and the loader's second prefix~~ **done 2026-10-08**, [`opt-layers.md`](opt-layers.md): five layers from either PSP disc (`psp-art` P6, `psp-tiles`, `psp-maps` - the 11 bands read, a layer -, `psp-names-en-150` P7 and the renames, `psp-names-ja-JP`), `BOF3X_OPT` (DIV-0086), 11 presets, `install`; **not built with llvm-mingw, not self-tested, not seen** - the owner's; six calls in its doc | a group | step 2 | option, as recommended |
 | 5 | ~~The exe-table catalogue completed and the per-SKU maps (section 5, steps 1-2)~~ **done 2026-10-08**, [`exe-tables-by-build.md`](exe-tables-by-build.md): `tools/exe_twins.py`, `exe_maps/<build>.tsv`, 29 tables and their rows per build in `tables.toml` | a reading round | none | no |
-| 6 | VAG and the banks; the `SND/` cut table found and XA | a group | step 2 | no |
+| 6 | ~~VAG and the banks; the `SND/` cut table found and XA~~ **done 2026-10-08**, [`sound-import.md`](sound-import.md): byte-identical, 901 / 901 banks and 880 / 880 `SND/` from a disc; the engine reading `base/snd/` open; three calls (the PAL banks, the port's wrap clicks, the 11 jingles) | a group | step 2 | no |
 | 7 | The MP3 loop table, if H1 is heard | a day + 10 h unattended | the owner's ear | yes: the listening session |
 | 8 | `base/exe/` produced ~~and the engine reading it~~ (section 5 step 3). **Importer half done 2026-10-08** ([`exe-import.md`](exe-import.md)); the engine half waits on the owner's machine and the state hash | a round, with the biggest live check | steps 2, 5; the cutover's state 3 design | no |
 | 9 | The SEQ / VAB player and the SPU synth | phase 5 | the owner's ear; the disc-only goal | yes |
@@ -241,6 +249,9 @@ importer half alone does not get there); after 9 and 10, everything.
 - Whether the PSP's `PPHD` / `pPMS` want readers at all, or PSP installs
   simply take sequences from a PSX source (recommended until a PSP-only
   install is a goal).
+- ~~Whether `base/` should carry the PSP's 11 map-band changes as a rule or a
+  layer~~ - read in step 4 ([`opt-layers.md`](opt-layers.md) 4): no cell,
+  height or header changes, texture records only; a layer, `psp-maps`.
 - Whether `base/` should carry the PSP's 11 map-band changes as a rule or a
   layer: unread (region-diff 6); read them before deciding, as section 8 did
   for the Western rows.

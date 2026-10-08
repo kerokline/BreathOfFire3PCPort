@@ -558,6 +558,10 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Each language is its own build with its own
   tables.
 - **Reversible?** Yes: unset `BOF3X_LANG`. The write is to process memory.
+- **Amended 2026-10-08 (DIV-0086):** `NameTables_Apply` accepts a run of
+  records too (a kind-5 chunk whose tag is any record's name field and whose
+  size is a whole number of records), for the `opt/` name layers; whole-table
+  chunks behave as before.
 
 ### Tighten the apostrophe and the comma in the English font
 
