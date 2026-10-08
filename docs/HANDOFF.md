@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-08: the sea bridge's "waterfall" (D239) surveyed, explained and fixed - DIV-0085, seen by the owner; its third-word guard owes a rebuild, `'*'` and one bridge walk; area 47 the place to watch. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
+**Status:** IN PROGRESS (2026-10-08, the unified-data round on `claude/unified-data-01GhKEhTeYTG4ZUfpX1vBdx2`: steps 1 and 2 done - the type-1 decompressor, the importer and its generated recipe, the language layers by BCP 47 tag; **up next: the engine and launcher take the tags**. Earlier 2026-10-08: the sea bridge's "waterfall" (D239) surveyed, explained and fixed - DIV-0085, seen by the owner; its third-word guard owes a rebuild, `'*'` and one bridge walk; area 47 the place to watch. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -39,6 +39,47 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 [`takeover-queue-round13.md`](takeover-queue-round13.md) section 18 item 6.
 
 ## Pick up here
+
+00000000000000. **The unified-data round, steps 1 and 2 (2026-10-08, a cloud session, branch
+   `claude/unified-data-01GhKEhTeYTG4ZUfpX1vBdx2` off `platform/unified-data-round`, pushed, no PR yet).** The record:
+   [`type1-compression.md`](type1-compression.md) (step 1: `tools/type1.py`, all 65 compressed arenas proved against the
+   PSP's and the PC's copies; the port's 14 own edits to them), [`importer.md`](importer.md) (step 2: `tools/importer.py`
+   and the generated `recipes/pc-zh.toml` - every PC chunk with every disc carrying it, found by content hash; 742 of 742
+   containers rebuilt byte-identical from JP + PC; `loc/en-US`, `fr-FR`, `de-DE`, `ja-JP` by `loc_build.py` equal to the
+   owner's overlays, 245 of 245 each). `psx-eu-en` is held and verified, and **it is not the US English** (Sony Europe's
+   `Memory Card`, two item renames, US spelling): tagged `en-150`, the owner's choice. Languages are BCP 47 tags now,
+   `fixtures.toml`'s `tag` per build (`zh-CN` for the port: GBK, Simplified forms, LCID `0804`). In the order they bite:
+   1. **Up next, for the owner at the machine: the engine and the launcher take the tags.** The importer and
+      `loc_build.py` name layers `loc/en-US/` and overlays `en-US.<NAME>.DAT` (`--lang en-US`), but the engine and the
+      launcher still read the bare codes, so **an install's overlays stay built with `--lang en` / `fr` / `de` / `ja`
+      until this lands** (`loc_build.py`'s default is still `en` for that reason). The work, all small:
+      - `src/game/dat_load.cpp` (DIV-0005): `DAT\<tag>.<name>` already fits (`g_lang[8]` holds `en-150`; the overlay
+        path buffer is `0x30`). Only the ledger entry's wording changes.
+      - `src/game/lang_layout.cpp`: `Lang_FullWidth` compares the whole string with `ja` / `zh`; compare the primary
+        subtag (before the `-`), or `ja-JP` lays out as Latin.
+      - `src/launcher/config.h` `kLanguages`: `en-US` "English (US PlayStation script)", `en-150` "English (European
+        PlayStation script)", `fr-FR`, `de-DE`, `ja-JP`; `ConfigLanguagesAvailable` already finds them by file. The
+        owner's saved `language=en` stops matching and falls back to the original; no old-code mapping (CLAUDE.md, no
+        shims).
+      - Then flip `loc_build.py --lang`'s default to the donor disc's `fixtures.toml` tag, rebuild the install's overlays
+        (`importer.py build ... --lang en-US ...`, or `loc_build.py` per disc, English first), and delete the old `en.*`,
+        `fr.*`, `de.*`, `ja.*` files. Check: `'*'` narrow and wide with `BOF3X_LANG=en-US` and `ja-JP`, and a look at the
+        title menu in French (its CONFIG row is borrowed from the English page).
+      - Docs that say `--lang en` or `BOF3X_LANG=en`: `dialogue-localisation.md`, `launcher-settings.md`,
+        `tools/attract_run.py`'s help, `tools/close_probe.py`.
+   2. **The owner's calls:** which English is the default (`en-US` or `en-150`; the importer takes whichever English
+      disc is first in the source order); the PR.
+   3. **Steps that can start:** 3 (the transforms for a disc-only install: `widen-enemy-names`, `remap-dest`, and the 25
+      chunks the US disc lacks - place-name plates, painted pages, the minecart rows; `importer.md` section 3); 5, in
+      its own session (the brief is `/mnt/session/outputs/brief_step5.md` of this session: lanes, branch, uploads); 6
+      once the PC's `SND/` is uploaded (the 901 banks, `wave-from-vag`).
+   4. **Not done in step 2:** presets (source orders on the command line only), and the engine reading the cache (step 4's
+      second prefix). Capcom's type-1 routine is not located (`type1-compression.md` section 1; nothing waits on it).
+   **Mechanics of the cloud session:** the owner uploaded every disc, the PC's `DAT/` (with its overlays) and `BOF3.exe`
+   to `/mnt/session/uploads`, scratch only (rule 1). `tools/region_diff.tree_files` opened files under upper-cased names
+   and failed on Linux; fixed (`fa29a53`). **`git commit -s` in a cloud session signs as the environment's identity
+   (Claude), not the owner**: write the trailers by hand (both `Co-authored-by` lines and the owner's `Signed-off-by`);
+   the first commit was amended before it was pushed.
 
 0000000000000. **The sea bridge's "waterfall" is fixed: DIV-0085 (2026-10-08, a cloud session; the owner applied its
    commits with `git am`).** The record is [`known-defects.md`](known-defects.md) D239, the entry DIVERGENCE's DIV-0085.

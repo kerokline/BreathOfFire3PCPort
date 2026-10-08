@@ -18,13 +18,20 @@
 #
 #   tools/verify_fixtures.py checks a local install against this table.
 #
+#   tag      the build's text as a BCP 47 language tag - the name of its
+#            language layer (`loc/<tag>/`, `<tag>.<NAME>.DAT`; docs/importer.md
+#            section 5). The region subtag is the release's, not a dialect
+#            claim: psx-eu-en is US-spelled English with Sony Europe's terms
+#            and two renamed items, so en-150 ("English, Europe"), not en-GB
+#            (the owner's decision, 2026-10-08).
+#
 # Adding a row for an artifact you have: measure it, cite how, set verified.
 # An unrecognised hash is not necessarily wrong — it may be a build nobody has
 # catalogued. Open an issue rather than editing a row to match what you have.
 
 [meta]
-updated = 2026-10-06
-note = "JP disc + Chinese PC port are the working pair. Held and verified 2026-10-06: the JP, US, FR and DE PSX discs and both PSP discs (docs/region-diff.md); psx-eu-en is the one release not held."
+updated = 2026-10-08
+note = "JP disc + Chinese PC port are the working pair. Held and verified: the JP, US, FR and DE PSX discs and both PSP discs (2026-10-06, docs/region-diff.md), and psx-eu-en (2026-10-08) - every catalogued release."
 # Per-file manifests (2026-10-06): an artifact with `manifest` names a file in
 # fixtures/ holding one `path<TAB>size<TAB>sha256` line per file of the tree,
 # LF line ends; `manifest_sha256` is that file's own hash. A ripped disc hashes
@@ -41,6 +48,7 @@ note = "JP disc + Chinese PC port are the working pair. Held and verified 2026-1
 id = "pc-zh"
 role = "pc-port"
 language = "Chinese"
+tag = "zh-CN"
 description = "Chinese PC port, 2001-04-18"
 status = "verified"
 [build.artifacts.exe]
@@ -107,6 +115,7 @@ note = "Encoder-version dependent — a different ffmpeg gives a different, equa
 id = "psx-jp"
 role = "psx-disc"
 language = "Japanese"
+tag = "ja-JP"
 serial = "SLPS-00990"
 built = 1997-07-16
 description = "Japanese release. The archival sibling's baseline, and therefore the default comparison target for differential work here."
@@ -139,6 +148,7 @@ measured = "2026-10-06, tools/region_diff.py and hashlib on this machine (CDImag
 id = "psx-us"
 role = "psx-disc"
 language = "English"
+tag = "en-US"
 serial = "SLUS-00422"
 built = 1998-03-26
 description = "USA release. Localisation donor for English glyphs and language-bearing artwork."
@@ -168,6 +178,7 @@ measured = "2026-10-06, tools/region_diff.py and hashlib on this machine (CDImag
 id = "psx-fr"
 role = "psx-disc"
 language = "French"
+tag = "fr-FR"
 serial = "SLES-01319"
 description = "France release. Localisation donor for French glyphs and artwork."
 status = "verified"
@@ -203,6 +214,7 @@ measured = "2026-10-06, tools/region_diff.py and hashlib on this machine (CDImag
 id = "psx-de"
 role = "psx-disc"
 language = "German"
+tag = "de-DE"
 serial = "SLES-01320"
 description = "Germany release. Localisation donor for German glyphs and artwork."
 status = "verified"
@@ -238,12 +250,38 @@ measured = "2026-10-06, tools/region_diff.py and hashlib on this machine (CDImag
 id = "psx-eu-en"
 role = "psx-disc"
 language = "English"
+tag = "en-150"
 serial = "SLES-01304"
 built = 1998-07-23
-description = "Europe (English), Infogrames Europe. Catalogued for identification only."
-status = "known"
-redundant_with = "psx-us"
-note = "Not held (2026-10-06: CDImage/ holds JP, US, FR, DE and the two PSP discs). 36 of 37 language-bearing image sections are identical to psx-us (regional-builds.md). The exception is DEMO.EMI section 5, where this release ships the *Japanese* asset — unexplained, flagged there, not diagnosed. Not a localisation donor; kept so an unrecognised disc can be named rather than guessed at."
+description = "Europe (English), Infogrames Europe."
+status = "verified"
+note = "Held and verified 2026-10-08 (the owner's upload; two .bin tracks; the boot EXE is SLES_013.04, as SYSTEM.CNF names it). The audio track is byte-identical to psx-fr's and psx-de's. The sibling's regional-builds.md: 36 of 37 language-bearing image sections identical to psx-us, the exception DEMO.EMI section 5, where this release ships the Japanese asset. Not redundant with psx-us (region_diff.py pair, 2026-10-08): 44 system pools and 22 area message blocks are edited within English, and 8 sound-bank pairs carry the PAL sample swap - its loc_build.py English differs from the US disc's in 66 overlays (docs/importer.md section 5)."
+[build.artifacts.data_track]
+name = "Breath of Fire III (Europe) (Track 1).bin"
+size = 442806336
+sha256 = "1072fb1fc5c856f6f31602dc701146dc438526782976788f5d377d05cfdf3469"
+sha1 = "9ce923228ddb90fbc16310a7f1a49c5e4f2dc6ec"
+md5 = "382a17c57b6c9c2fab40893628528861"
+measured = "2026-10-08, tools/region_diff.py and hashlib in a cloud session (the owner's upload, scratch only)"
+[build.artifacts.audio_track]
+name = "Breath of Fire III (Europe) (Track 2).bin"
+size = 37396800
+sha256 = "ce5509fad13f6210656c9d29fb536b47abe5f824467177652c91b5c500470c77"
+sha1 = "d9f92af296360772e62caa4cb276de3fa74f5538"
+md5 = "2d7b5e8e94a91bf5423b2356f6a34863"
+measured = "2026-10-08, tools/region_diff.py and hashlib in a cloud session (the owner's upload, scratch only)"
+[build.artifacts.boot_exe]
+name = "SLES_013.04"
+size = 1445888
+sha256 = "40c00a7324488dca665a81f85d0c14de25e3579aba7e7d20c1f821c5a3046cba"
+measured = "2026-10-08, tools/region_diff.py and hashlib in a cloud session (the owner's upload, scratch only)"
+[build.artifacts.files]
+name = "the ISO9660 tree, file by file"
+files = 889
+bytes = 385134662
+manifest = "fixtures/psx-eu-en.files.tsv"
+manifest_sha256 = "13f9b79691fccbb885a75bf065cae0e41f9b2d515c7c0e2e0ecaf1eb72edcb63"
+measured = "2026-10-08, tools/region_diff.py and hashlib in a cloud session (the owner's upload, scratch only)"
 
 # ---------------------------------------------------------------------------
 # PSP re-releases (2026-09-20). PSX-format EMIs under PSP_GAME/USRDIR/<region>/,
@@ -257,6 +295,7 @@ note = "Not held (2026-10-06: CDImage/ holds JP, US, FR, DE and the two PSP disc
 id = "psp-jp"
 role = "psp-disc"
 language = "Japanese"
+tag = "ja-JP"
 serial = "ULJM-05029"
 description = "Japanese PSP release, disc version 1.02. AREA000's text section is byte-identical to psx-jp's."
 status = "verified"
@@ -277,6 +316,7 @@ measured = "2026-10-06, tools/region_diff.py and hashlib on this machine (CDImag
 id = "psp-eu"
 role = "psp-disc"
 language = "English"
+tag = "en-150"
 serial = "ULES-00193"
 description = "European PSP release, disc version 1.00; data under USRDIR/USA. The English dialogue donor on hand."
 status = "verified"

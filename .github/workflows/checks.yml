@@ -49,6 +49,9 @@ jobs:
       - name: The type-1 decompressor's self-test (no game data)
         run: python tools/type1.py selftest
 
+      - name: The importer's recipe against fixtures/ (no game data)
+        run: python tools/importer.py check
+
   lifter:
     # The x86 -> C lifter prototype (docs/lifter-feasibility.md): lift the
     # synthetic corpus, fuzz it against the original bytes in Unicorn, and

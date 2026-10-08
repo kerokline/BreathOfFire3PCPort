@@ -5,7 +5,7 @@ docs/dialogue-localisation.md. An overlay `<lang>.<NAME>.DAT` is an ordinary
 DAT container (tools/dat.py) holding only the chunks that differ; the engine
 walks it after the original file, so its chunks land on top.
 
-    python tools/loc_build.py all   --disc DISC --game bof3 [--lang en] [--upscaler CMD | --glyphs PNG] [--only AREA000]
+    python tools/loc_build.py all   --disc DISC --game bof3 [--lang en-US] [--upscaler CMD | --glyphs PNG] [--only AREA000]
     python tools/loc_build.py sheet --disc DISC --out analysis/font/en_cells.png
     python tools/loc_build.py export --disc DISC --out analysis/font/en_8x12.png
 
@@ -74,6 +74,7 @@ and 2..7 the ramp away from it.
 import argparse
 import hashlib
 import os
+import re
 import shlex
 import struct
 import subprocess
@@ -1640,12 +1641,27 @@ def pause_width(line, advances, space):
     return w
 
 
+def primary(tag):
+    """A language tag's primary subtag: `en` of `en-US`, `ja` of `ja-JP` or `ja`."""
+    return tag.split("-", 1)[0].lower()
+
+
+def language_tag(tag):
+    """--lang: a BCP 47 language tag (`en-US`, `en-150`, `fr-FR`; a bare `en`
+    is one too). It names the overlays, `<tag>.<NAME>.DAT`; what the code does
+    by language goes by its primary subtag. fixtures.toml's `tag` per build is
+    the one each disc's text carries (docs/importer.md section 5)."""
+    if not re.fullmatch(r"[a-z]{2,3}(-[A-Za-z]{4})?(-(?:[A-Z]{2}|[0-9]{3}))?", tag):
+        raise argparse.ArgumentTypeError("%r is not a language tag of the form ll[-Ssss][-RR|-999]" % tag)
+    return tag
+
+
 def build_pause(args, font_chunks):
-    lines = PAUSE_LINES.get(args.lang)
+    lines = PAUSE_LINES.get(primary(args.lang))
     if lines is None:
         print("pause lines: none written for '%s'; the exe's own stay" % args.lang)
         return []
-    if (args.lang == "ja") != donor_ja:
+    if (primary(args.lang) == "ja") != donor_ja:
         raise SystemExit("pause lines: --lang %s with a %s disc" % (args.lang, "Japanese" if donor_ja else "Latin"))
     space, advances = [(tag, payload) for kind, tag, payload in font_chunks if kind == 4][0]
     body = bytearray()
@@ -1821,23 +1837,31 @@ def build_title(args, disc):
         # The third row is the port's, and no disc's letters were measured
         # but the US sheet's (the French and German sheets lack the letters
         # for CONFIG anyway): take it from the English page already built
-        # from the US disc, `en.START.DAT` beside the shipped file - the
-        # owner's choice, 2026-09-29: each disc's own two rows, our CONFIG.
-        en_path = os.path.join(dat_dir(args.game), "en.START.DAT")
-        if not os.path.exists(en_path):
+        # from the US disc, an English overlay's START.DAT beside the shipped
+        # file (`en.`, `en-US.`, `en-150.`: the US and EU-English pages are
+        # byte-identical, 2026-10-08) - the owner's choice, 2026-09-29: each
+        # disc's own two rows, our CONFIG.
+        d = dat_dir(args.game)
+        en_names = sorted(f for f in os.listdir(d) if f.endswith(".START.DAT") and primary(f[:-len(".START.DAT")]) == "en")
+        if not en_names:
             print("title menu: this disc's sheet is not the one the letters were measured on, and no "
-                  "en.START.DAT holds a CONFIG row to borrow (build the English overlay first); left as shipped")
+                  "English START.DAT holds a CONFIG row to borrow (build the English overlay first); left as shipped")
             return []
+        pages = {open(os.path.join(d, f), "rb").read() for f in en_names}
+        if len(pages) != 1:
+            raise SystemExit("title menu: the English overlays %s differ; which CONFIG row to borrow is not settled"
+                             % ", ".join(en_names))
+        en_path = os.path.join(d, en_names[0])
         en_blob, en_chunks = dat.load(en_path)
         en_sheet = [c for c in en_chunks if c.kind == 1 and c.tag == TITLE_TAG]
         en_widths = [c for c in en_chunks if c.kind == TITLE_KIND]
         if len(en_sheet) != 1 or len(en_widths) != 1 or en_widths[0].size != 3:
-            raise SystemExit("title menu: en.START.DAT has no title page and widths to borrow from")
+            raise SystemExit("title menu: %s has no title page and widths to borrow from" % en_names[0])
         en_rows = tiles_to_rows(en_blob[en_sheet[0].offset:en_sheet[0].offset + en_sheet[0].size], 2)
         for y in range(TITLE_BAND):
             page[TITLE_BAND * 2 + y] = list(en_rows[TITLE_BAND * 2 + y])
         widths.append(en_blob[en_widths[0].offset + 2])
-        print("title menu: this disc's two rows (%d and %d wide), CONFIG from en.START.DAT (%d)" % tuple(widths))
+        print("title menu: this disc's two rows (%d and %d wide), CONFIG from %s (%d)" % (widths[0], widths[1], en_names[0], widths[2]))
         return [(1, TITLE_TAG, rows_to_tiles(page, 2)), (TITLE_KIND, 0, bytes(widths))]
     # CONFIG. Gaps in columns, by eye against NEW GAME's own spacing.
     word = ((title_c(sheet), 1), (title_letter(sheet, "O"), 1), (title_letter(sheet, "N"), 2),
@@ -2060,7 +2084,11 @@ def main():
     for name, fn in (("all", cmd_all), ("sheet", cmd_sheet), ("export", cmd_export)):
         s = sub.add_parser(name)
         s.add_argument("--disc", required=True)
-        s.add_argument("--lang", default="en")
+        # The default stays the bare `en` the engine and launcher read today
+        # (DAT\en.*); it becomes the donor disc's fixtures.toml tag when they
+        # take tags (docs/HANDOFF.md, the unified-data round's up-next item).
+        s.add_argument("--lang", default="en", type=language_tag,
+                       help="the overlays' language tag, BCP 47 (en-US, en-150, fr-FR, de-DE, ja-JP; default en)")
         if name == "all":
             s.add_argument("--glyphs", help="an upscaled sheet to use instead of doubling the donor's cells")
             s.add_argument("--upscaler", help="a command that upscales {in} by {scale} (to {out}, or to one new PNG)")
