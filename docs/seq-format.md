@@ -27,7 +27,7 @@ one thing carried as they are, because the SPU is what reads them.
 | 34 | `u16` | rhythm, the two bytes of the header as they are (for the record) |
 | 36 | `u32` | the initial tempo, microseconds per quarter note (the header's 24-bit value) |
 | 40 | `u32` | event count E |
-| 44 | `u32` | the tick of the loop start marker (controller 99 = 20), or `0xFFFFFFFF` |
+| 44 | `u32` | the tick of the (first) loop start marker (controller 99 = 20), or `0xFFFFFFFF` |
 | 48 | `u32` | the tick of the loop end marker (controller 99 = 30), or `0xFFFFFFFF` |
 | 52 | `u32` | the tick of the end-of-track meta event |
 | 56 | `Event[E]` | the events, 12 bytes each, in the order the SEP has them |
@@ -51,14 +51,30 @@ Rules the importer keeps:
 - a note-on with velocity 0 is written as it is (status `0x9n`, velocity 0),
   not turned into a note-off: the player decides as libsnd does;
 - the SEP's only meta events are `0x51` (tempo) and `0x2F` (end); anything
-  else is an error in the import, not a silent skip.
+  else is an error in the import, not a silent skip;
+- two songs carry a **second loop start** before their one loop end: 37
+  (`BGM028` sub 1, starts at ticks 18 and 402, end 1170) and 80 (`BGM082`
+  sub 0, 24 and 1560, end 6936). The header's loop start is the first; both
+  markers are in the events, and the player treats the second as libsnd
+  does (the reading of `_SsContNrpn2` decides which start the end jumps to).
+  More than one end, or an end without a start before it, is refused by the
+  import (none on the disc).
 
 ## 2. `base/bgm/bank/NAME.DAT` - one VAB
+
+**Version 2** (2026-10-08, group IMP): version 1 indexed the tone table by
+program number, which is wrong for 27 of the 81 banks. The VAB header holds
+one 16-slot tone block per program *that has tones*, in program order, not
+one per program number: `BGM053`'s one program is program 10 and its tones
+are block 0; `BGM032`'s six are programs 2..7 in blocks 0..5. Measured on all
+81 `BGM*.EMI` VABs: block k's tones all carry `prog` = the k-th program with
+`tones > 0`, and `ps` is the count of such programs. Version 2 puts that
+block index in the `Program` record's byte 5 (below); nothing else changed.
 
 | Offset | Type | Field |
 |---|---|---|
 | 0 | `char[4]` | `BF3B` |
-| 4 | `u32` | version, 1 |
+| 4 | `u32` | version, 2 |
 | 8 | `char[16]` | the EMI's name, e.g. `BGM019` |
 | 24 | `u16` | the VAB header's `ps`, the program count the header declares |
 | 26 | `u16` | the VAB header's `ts`, the tone count |
@@ -69,9 +85,9 @@ Rules the importer keeps:
 | 33 | `u8` | the VAB header's `attr2` |
 | 34 | `u16` | 0 |
 | 36 | `Program[128]` | the program table, 8 bytes each |
-| 1060 | `Tone[ps * 16]` | the tone table, 24 bytes each, tone `p * 16 + t` for the first `ps` programs' 16 slots, as the VAB header lays them out (libsnd indexes it so; the header holds `ps * 16` tone records, not 128 * 16) |
-| 1060 + 384 ps | `Sample[S]` | the sample table, 8 bytes each |
-| 1060 + 384 ps + 8 S | bytes | the ADPCM bodies, back to back, sample i at its table offset, each a whole number of 16-byte blocks |
+| 1060 | `Tone[ps * 16]` | the tone table, 24 bytes each, as the VAB header lays it out: `ps` blocks of 16 slots, block k the k-th program with tones (`Program.block`), so program p's tone t is `Program[p].block * 16 + t`; slots past the program's `tones` are carried as they are |
+| 1060 + 384 ps | `Sample[S]` | the sample table, 8 bytes each: `Sample[i - 1]` is the VAB's sample i (a tone's 1-based `vag`) |
+| 1060 + 384 ps + 8 S | bytes | the ADPCM bodies, back to back in sample order, sample i at its table offset, each a whole number of 16-byte blocks |
 
 `Program` (the VAB `ProgAtr`'s fields, re-laid; the two reserved bytes dropped):
 
@@ -82,7 +98,7 @@ Rules the importer keeps:
 | 2 | `u8` | `prior` |
 | 3 | `u8` | `mode` |
 | 4 | `u8` | `mpan` |
-| 5 | `u8` | 0 |
+| 5 | `u8` | `block`: the program's tone block, its rank among the programs with `tones > 0` (0 for the first), `0xFF` for a program with no tones (version 2) |
 | 6 | `u16` | `attr` |
 
 `Tone` (the VAB `VagAtr`'s fields, re-laid; the four reserved halfwords dropped):
