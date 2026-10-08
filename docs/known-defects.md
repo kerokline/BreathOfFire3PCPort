@@ -6530,5 +6530,30 @@ party's row in one `BOF3X_DRAWORDER` log would show it.
 **Fixed by DIV-0085** (2026-10-08, the owner's request; `BOF3X_SIDE_DUP`, on
 by default): a cell textured with both sides whose file heights give it one
 draws both with its one side word. The owner, 2026-10-08, the bridge wide,
-walked several times: no streaks, the edges unremarkable. `BOF3X_SIDE_ZERO=1` (an experiment, off by
+walked several times: no streaks, the edges unremarkable.
+
+**Where DIV-0085 can act (2026-10-08, offline, all 200 blocks).** It needs a
+cell the file gives one side, whose tile has no third word (54,842 cells in
+198 areas), *and* code that moves heights during play so the cell is
+created with both. The writers of `AreaMap_Corners` in ours and where they
+run:
+
+- `EffectKind18Sub15_Draw` (the sky effect): `AREA060`'s deck, columns
+  45..48. Column 48's 97 edge cells are the only ones it can reach. Seen.
+- `EffectKind18Sub3D_Ripple`: area 47 (`Area47_SpawnEffect3D`, handler 1),
+  35 x 35 cells about the leader while `Cond_ByteFE` is set; the party
+  starts at (18, 36). `AREA047` has 221 qualifying cells (136 east-only, 85
+  south-only), 206 of them faces with a drop of 8 or more. The two long
+  cliffs are x 40, z 1..28 and x 47, z 29..57 (east faces, drops up to 80);
+  the rest are short runs at x 12..36 near the start and a row at z 13, x
+  89..106. Not yet seen: whether the ripple reaches them.
+- `AreaMap_ApplyPatch`'s height records: `AREA094`, `103`, `128`, `140` -
+  never give a one-sided cell both (every combination of entries checked).
+- `EffectKind18Sub62_Ripple`, `EffectKind18Sub22_SetMap` (four raised or
+  lowered places), `BossMap_SetCorners` (one boss's map), MAGIC102 Quake (a
+  16 x 14 block heaved in a battle): where they run is not read here.
+
+What the change looks like where it acts: a short face carrying the same
+texture as the cell's tall one beside it; what the original showed there
+was the next tile's texture stretched over the face. `BOF3X_SIDE_ZERO=1` (an experiment, off by
 default) releases a side whose word is 0 and does not touch this.

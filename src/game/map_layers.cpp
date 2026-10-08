@@ -41,8 +41,9 @@ using map_layers::g;
 bool g_side_zero_release;   // BOF3X_SIDE_ZERO=1 (MapLayers_Inject)
 
 // DIV-0085: 0 until ArmSideDup (and with BOF3X_SIDE_DUP=0), so every self-test
-// compares Capcom's walk. g_file_sides: per map cell (z * width + x), bit 0 a
-// south side and bit 1 an east one, by the heights as the area file loaded them.
+// compares Capcom's walk. g_file_sides: per map cell (z * width + x), 1 when the
+// heights as the area file loaded them give it a south side only, 2 an east
+// side only - and its tile carries no third word - else 0 (SnapshotSides).
 bool g_side_dup;
 unsigned char g_file_sides[256 * 256];
 
@@ -526,10 +527,10 @@ extern "C" unsigned __cdecl MapView_CellTextures(unsigned x, unsigned y, unsigne
     const unsigned next = Word(item + 0x7E);
     if (g_side_dup && below != 0 && next != 0 && x < width && y < static_cast<std::uint32_t>(height)) {
         // DIV-0085 (D239): the tile carries a word for the one side the file's
-        // heights give this cell; the second side exists only because the
-        // heights moved since (AREA060's sky effect), and the dword the
-        // original would give it is the next tile's own. Both sides take the
-        // one side word.
+        // heights give this cell and no third; the second side exists only
+        // because the heights moved since (AREA060's sky effect), and the
+        // dword the original would give it is the next tile's own. Both
+        // sides take the one side word.
         const unsigned file = g_file_sides[y * width + x];
         if (file == 1 || file == 2) {
             texture -= 4;
@@ -692,10 +693,28 @@ namespace map_layers {
 
 // MapView_Build's two side tests, cell by cell, on the corners as loaded - the
 // row's last cell reading the next row's first and the last row reading past
-// the corner plane into the block, as the build does.
+// the corner plane into the block, as the build does. A cell is marked only
+// when the file gives it one side and its tile's run has no third dword of
+// its own: the run ends at the next tile index any cell of the map uses (the
+// last one at the texture run's end, the header's word +4); a tile with a
+// third word carries one for the other side, and the original's read of it
+// stands.
 void SnapshotSides() {
     if (!g_side_dup) return;  // not armed: no self-test's map is read
     const unsigned width = Width(), depth = AreaMap_Header[1];
+    const unsigned offset = Word(AreaMap_Header + 2);
+    const unsigned half = (depth * width + 1) / 2;
+    const unsigned char* const tiles = AreaMap_Header + offset * 4u;
+    static std::uint8_t used[0x10000];
+    static std::uint32_t next_used[0x10000];
+    std::memset(used, 0, sizeof used);
+    for (unsigned i = 0; i < width * depth; ++i) used[Word(tiles + i * 2u)] = 1;
+    const unsigned end = Word(AreaMap_Header + 4);
+    std::uint32_t after = end > offset + half ? end - offset - half : 0x10000u;
+    for (unsigned t = 0x10000; t-- > 0;) {
+        next_used[t] = after;
+        if (used[t]) after = t;
+    }
     const unsigned char* const corners = Corners();
     for (unsigned z = 0; z < depth; ++z) {
         for (unsigned x = 0; x < width; ++x) {
@@ -703,7 +722,10 @@ void SnapshotSides() {
             const unsigned char* const below = c + width * 4u;
             const bool east = S8(c[6]) < S8(c[3]) || S8(c[4]) < S8(c[1]);
             const bool south = S8(below[1]) < S8(c[3]) || S8(below[0]) < S8(c[2]);
-            g_file_sides[z * width + x] = static_cast<unsigned char>((south ? 1 : 0) | (east ? 2 : 0));
+            const unsigned tile = Word(tiles + (z * width + x) * 2u);
+            const bool short_run = tile != 0 && next_used[tile] > tile && next_used[tile] - tile <= 2;
+            g_file_sides[z * width + x] =
+                static_cast<unsigned char>(south != east && short_run ? (south ? 1 : 2) : 0);
         }
     }
 }

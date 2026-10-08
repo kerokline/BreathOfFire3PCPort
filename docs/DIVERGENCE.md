@@ -4580,9 +4580,12 @@ designed in rather than bolted on.
 - **New behaviour:** with `BOF3X_SIDE_DUP` on (the default; armed after
   every module's self-test), when a cell is textured with both side faces
   and the file's heights give it exactly one, both faces take that one side
-  word. Every other cell is read as the original reads it: a cell the file
-  gives both sides, or none, is untouched, so shipped geometry - including
-  any tile whose run shares words with the next by design - draws as before.
+  word - when its tile's run carries no third word of its own (the run
+  ends at the next tile index any cell uses; a one-sided cell whose tile has
+  a third word, 10,309 across the game, has one authored for the other side
+  and keeps the original's read, added 2026-10-08 after the owner's check).
+  Every other cell is read as the original reads it: a cell the file gives
+  both sides, or none, is untouched, so shipped geometry draws as before.
   The first 20 cells it changes are logged (`DIV-0085    map cell x,z`).
 - **Rationale:** the extra face exists only because heights moved; the
   word the original gives it is another tile's, and on the bridge a tall
@@ -4603,6 +4606,12 @@ designed in rather than bolted on.
   build, wide, the bridge walked several times: the streaks do not come
   back and nothing is off at the deck's edges ("I can't notice anything
   off about the deck edges").
-  Not handled: `AreaMap_ApplyPatch`'s height patches (area 94's init) after
-  the snapshot - a patched cell keeps the file's side set.
+  `AreaMap_ApplyPatch`'s height patches come after the snapshot, so a
+  patched cell keeps the file's side set; checked offline, it never matters:
+  the four areas with height patches (`AREA094`, `103`, `128`, `140`; every
+  combination of their entries' two values) change the sides of up to 42
+  cells and never give a one-sided cell both. Where else the rule can act:
+  `known-defects.md` D239, "Where DIV-0085 can act". The run guard was
+  compiled and mirrored offline (the bridge's 97 edge cells still qualify);
+  the owner's look was before it.
 - **Reversible?** `BOF3X_SIDE_DUP=0`.
