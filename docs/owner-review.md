@@ -239,9 +239,22 @@ where the reading behind it is. Nothing here is a divergence until it is in
   `Steal_RateTable`, `Field_MoveSpeeds`, `WorldMap_Records`, the CLUT tables
   and others listed there), older than the step that found them. Rule 1 says
   values from the game stay out of the repository; the fix is to replace the
-  quoted numbers with what they mean and how they were read. **The owner's
-  call**: how, and whether a history rewrite is wanted (the CLAUDE.md rule 7
-  note on rewrites applies).
+  quoted numbers with what they mean and how they were read. **Done
+  2026-10-08** (the owner: the values are public knowledge, recreated in
+  FAQs, taken from the sibling before the discs verified them - sunset them):
+  25 entries reworded in the tree, the addresses, counts, strides, readers
+  and PSX cross-references kept, the value runs replaced by their shape
+  (eleven are tables of game numbers, the rest engine constants - CLUT
+  strides, op lengths, direction angles, cell codes). The seven address
+  lists the regex also caught (`Gte_Vertices`, `BattleObj_StateTable`,
+  `MenuList_Kinds`, `Scena00_Runs` and three more) are function and data
+  addresses, not values, and stay. **Not done, the owner's call:** a history
+  rewrite - the strings stay in `git log`. Recommended against: the figures
+  are public, the last rewrite cost every cited hash (CLAUDE.md rule 7), and
+  the licensing path rests on the tree's engine / data split, not the
+  history's. Also open: the same kind of value runs in `docs/` (known-defects,
+  the group docs, `importer.md`'s list of the eleven world-map areas) were
+  not scanned.
 
 - **The world map's gauge words in French and German** ([`importer.md`](importer.md)
   section 3, 2026-10-08): the port's dial page (the keyboard legend, kept for

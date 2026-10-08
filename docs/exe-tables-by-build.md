@@ -399,4 +399,5 @@ Still owed:
   `Field_BlockingCells`, `MapCell_UprightCounts` / `_UprightHeights`,
   `BattleObj_StateTable`; and `Field_EncounterAreas`' pairs, which the regex
   misses. Rule 1 says these go; the owner's call, since the strings are
-  older than this step.
+  older than this step. **Reworded 2026-10-08** at the owner's word, the
+  tree only (`owner-review.md`, "Decisions the measurements raised").
