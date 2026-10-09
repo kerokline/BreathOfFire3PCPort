@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 86 entries, DIV-0001..0086, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 87 entries, DIV-0001..0087, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4710,3 +4710,107 @@ designed in rather than bolted on.
 - **Reversible?** Unset `BOF3X_OPT` (or `BOF3X_OPT=original`), or empty the
   ini's `opt=`; `BOF3X_ORIGINAL=LoadDatFile` runs Capcom's loader, which
   walks neither overlay.
+
+### The cache's songs synthesised from the disc's sequence, the MP3 the fallback
+
+- **ID:** DIV-0087
+- **Date:** 2026-10-08
+- **Subsystem:** music (`Music_LoadFile` `0x587A20`, `Music_Start`
+  `0x5A6CC0`, `Music_Decode` `0x5A6F30`, `Music_SetVolume` `0x5A6FB0`,
+  `Music_Stop` `0x5A7050`, `Music_Release` `0x5A70A0`, `Music_Pump`
+  `0x5A7230`, ours in `src/game/sound.cpp`; the seam's state in
+  `src/game/music_seq.cpp`; the player in `src/audio/`; the launcher's
+  `cache=` / `music=`, `src/launcher/config.cpp`)
+- **Tier:** Sensible - the PlayStation's own music where the player's cache
+  holds it, the MP3 everywhere else; nothing changes without a cache.
+- **Original behaviour:** the port plays a 128 kbit/s MP3 of a 2001 render of
+  each song (`BGM\NNN.DAT` looping, `BGM\NNNN.DAT` once), looped file end to
+  file start (the measured loops moved that inside the file for 48 tracks,
+  `music_loops.h`), streamed through a two-half DirectSound ring; the fades
+  set the buffer's volume, `volume / 127 * 10000 - 10000` hundredths of a
+  decibel, linear in decibels. The MP3s roll off above about 11 kHz
+  ([`bgm-comparison.md`](bgm-comparison.md) 8.2) and 80 of the 156 looping
+  ones hold less than one loop body.
+- **New behaviour:** with `BOF3X_CACHE=<dir>` (or the ini's `cache=`)
+  naming the importer's cache, `Music_LoadFile(N)` reads
+  `<dir>\base\bgm\NNN.DAT` when it is there ([`seq-format.md`](seq-format.md))
+  in place of the MP3. `Music_FileLoops` is then the song's loop flag, and the
+  bank `base\bgm\bank\NAME.DAT` is read once and kept while the songs that
+  follow share it, as the PSX keeps the SEP's VAB resident. `Music_Start`
+  opens no MP3 decoder for it and starts `psx::MusicSynth`, a model of the
+  SPU and of Sony's libsnd 3.7 sequencer as the PSX boot EXE runs them
+  ([`libsnd-reading.md`](libsnd-reading.md)). `Music_Decode` renders the
+  synth into the ring, with the loop the sequence's own markers and the
+  reverb the game's. When a once-only song has ended (its end of track has
+  keyed off and every voice has released) the rest of the call is zeros and
+  `Music_Finished` is set, as at an MP3's end. The ring, its notifications,
+  the pump, the fades' state machine and DIV-0028 are the MP3 path's,
+  unchanged. A track the cache lacks plays its MP3 whatever the switch, so a
+  PC-only install is unchanged.
+  **The volume:** the synth plays at sequence volume 127 (`Play(song, 1, 1)`,
+  whose one-frame ramp to 1 does nothing, then `SsSepSetVol(127, 127)`).
+  The game's 0..127 sets the DirectSound buffer's volume instead, by libsnd's
+  sequence-volume law rather than the PC's. The volume is truncated toward
+  zero, below 1 taken as 1 as `_SsVmSetSeqVol` does, and gives amplitude
+  `(v / 127)^2`, the square law of [`libsnd-reading.md`](libsnd-reading.md)
+  3.6: `round(4000 * log10(v / 127))` hundredths of a decibel (1 -> -84.15 dB,
+  63 -> -12.18 dB, 127 -> 0). So a fade is linear in libsnd volume units and
+  quadratic in amplitude, the PSX crescendo's and decrescendo's shape
+  (section 5.1), where the MP3's is linear in decibels. The synth's own
+  volume is not what the fades move: the ring renders 0.4 to 0.8 s ahead of
+  the play cursor, so a volume given to the synth would be heard that much
+  late and in 0.42 s steps. A song would start with about 0.84 s at
+  volume 1, and a stopping fade's `Music_Stop` would cut the ring before the
+  quieter halves it had rendered were played. The one thing the law loses is
+  libsnd's integer rounding of each voice's volume register at each step.
+  **Mono:** the options screen's Sound row (`0x903A59`, Stereo 0 / Mono 1;
+  `ConfigScreen_Rows` `0x461070` flips it), which the PC's driver never
+  reads, is passed to the synth's `SsSetMono` before each render, as the
+  PSX's options screen calls `SsSetMono` / `SsSetStereo`.
+  The switch: `BOF3X_MUSIC` (or the ini's `music=`) unset or `seq`, the
+  cache's song where it has one; `mp3`, the PC's file always; anything else
+  is fatal. `BOF3X_CACHE` naming something that is not a directory, or a root
+  longer than 42 characters, is fatal at start-up. The 42 comes from
+  `File_Open`'s retry: it builds `File_CdRoot` plus the path in a 0x50-byte
+  buffer with no length check, kept from the original, and every cache file
+  is read through it. A directory without `base\bgm` gives one log line and
+  no cache. Armed after every module's self-test; one log line when armed,
+  one per cache song started.
+- **Rationale:** the owner's stance of 2026-10-08: the disc's music is the
+  default wherever a disc is a source, the PC's MP3s only when nothing else
+  is there ([`sequenced-music-plan.md`](sequenced-music-plan.md), head and
+  section 5). The fade curve is the plan's recommended "authentic" (section
+  6), carried by the buffer for the timing reason above.
+- **Known and accepted:** **the level.** The PSX starts a song with
+  `SsSepSetCrescendo` to the caller's volume, and the title passes 100 over
+  8 frames, which libsnd's step arithmetic ends at **97**
+  ([`libsnd-reading.md`](libsnd-reading.md) 5.1). The PC's `Music_Play`
+  fades to its own 127 whatever the song. So a cache song plays at sequence
+  volume 127 at the end of a fade-in, about 2.3 dB above the PSX title's 97
+  by the square law. Which level is the owner's call. A once-only song's
+  reverb tail is cut where its voices end, and the ring's last half is lost
+  to the pump's stop as for an MP3. `Music_Loops` does not rewind a sequence
+  (the loop is the data's). The synth's tick phase is arbitrary (0).
+- **Verification:** the self-test under `BOF3X_SHADOW=sound`
+  (`music_seq::SelfTest`, after DIV-0028's and the measured loops'), on a
+  bank and two songs built in memory by the format, no game data. A looping
+  song goes through `Music_LoadFile`, `Music_Start` (no decoder opened) and
+  `Music_CreateBuffer`'s first half plus five 0x12000-byte `Music_Decode`
+  calls, and is checked sample for sample against one `MusicSynth::Render`
+  of the same length. `Music_SetVolume` with a stand-in buffer is checked at
+  0, 63.9, 127 and 300 (-8415, -1218, 0, 0). A once-only song on the same
+  bank (not read again) must give the same samples up to the piece its end
+  falls in, then zeros and `Music_Finished`. A missing track and
+  `BOF3X_MUSIC=mp3` must reach the MP3's two names. Host-checked: the two
+  synthetic songs load and play (the looping one never ends, the once-only
+  one ends at sample 44,032). Compiled
+  (`i686-w64-mingw32-g++ -std=c++20 -fsyntax-only -Wall -Wextra`:
+  `sound.cpp`, `music_seq.cpp`, `sound_fuzz.cpp`, `inject_all.cpp`,
+  `src/audio/*.cpp`, `launcher/config.cpp`). **Not run:** the owner's
+  llvm-mingw build, the `sound` and `'*'` self-tests, and a listen;
+  against the renders, the synth's fidelity is
+  [`sequenced-music-plan.md`](sequenced-music-plan.md) section 2's table.
+- **Also in the PSX version?** Yes in substance: this *is* the PSX's player
+  on the PSX's data, at the PC's fade level and timing.
+- **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
+  (or empty `cache=`); no cache, no change.

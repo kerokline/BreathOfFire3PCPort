@@ -187,6 +187,36 @@ void TestLoopAndPitch() {
     }
 }
 
+// A song without loop markers, played with the game's loop count 1, stops at
+// its end of track and keys its voices off; Ended() turns true once they have
+// released (ADSR2 0x1FC0 here: linear release shift 0, a few samples).
+void TestEnded() {
+    psx::Song s = MakeSong();
+    std::vector<psx::SongEvent> ev;
+    for (const auto& e : s.events)
+        if (!(e.status == 0xB0 && (e.d1 == 99 || e.d1 == 6))) ev.push_back(e);
+    s.events = ev;
+    s.flags = 0;
+    auto m = std::make_unique<psx::MusicSynth>();
+    m->LoadBank(MakeBank());
+    m->Play(s, 100, 8);
+    std::vector<std::int16_t> out(2 * 44100);
+    m->Render(out.data(), 737 * 40);
+    CHECK(m->Playing());
+    CHECK(!m->Ended());
+    m->Render(out.data(), 737 * 30);  // past VSync 61: the end at tick 96
+    CHECK(!m->Playing());
+    CHECK(m->Ended());
+    CHECK_EQ(m->LoopJumps(), 0);
+    m->SetMasterVolume(0, 0);
+    m->Play(s, 100, 8);
+    CHECK(!m->Ended());
+    m->Render(out.data(), 44100);
+    bool silent = true;
+    for (std::int16_t v : out) silent &= v == 0;
+    CHECK(silent);  // main volume 0
+}
+
 bool Aborts(void (*fn)()) {
     std::fflush(stdout);
     pid_t pid = fork();
@@ -268,6 +298,7 @@ int main() {
     } tests[] = {
         {"render in pieces", TestPieces},
         {"loop period and pitch", TestLoopAndPitch},
+        {"once-only song ends", TestEnded},
         {"aborts", TestAborts},
         {"loaders", TestLoaders},
     };
