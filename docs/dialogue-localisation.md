@@ -40,6 +40,22 @@ BOF3X_LANG=en-US build/bof3x-launcher.exe --game bof3
 One pass, 244 overlay files: 200 area texts, 44 system pools, and `en-US.FIRST.DAT`
 with the font, the advances, its pool and the six name tables.
 
+**Every held disc at once (2026-10-08):** `--discs DIR` identifies each image
+in a directory the importer's way - every file hashed against `fixtures.toml`'s
+per-file manifests - and builds one overlay set per verified PlayStation
+release under its own tag; the rest are listed with a reason (not catalogued,
+a PSP disc, a second copy). `BOF3.exe` must hash as the port first, and
+`DAT/` is named if it is the shipped tree. `--dry-run` identifies only.
+
+```
+python tools/loc_build.py all --discs CDImage --game bof3
+```
+
+Measured on the owner's `CDImage/`: the five PSX releases built (245 files
+each, `en-US` byte-identical to the single-disc build's, `ja-JP` and `fr-FR`
+checked the same way), the Japan demo and both PSP discs skipped; 90 s of
+hashing cold, 15 s warm.
+
 `tools/psx_disc.py` reads the ISO9660 tree of a `.cue`, a raw `.bin` or a
 cooked `.iso`, so the PSX and the PSP discs are the same kind of donor.
 
