@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-08, the unified-data round on `platform/unified-data-round`: steps 1, 2, 3, 4, 5, 6 and 8's importer half done, and the engine takes the language tags - a US disc alone imports to 727 of 742 containers, `base/snd/` and `base/exe/`; **up next, at the owner's machine: the build and `'*'` of the tags and DIV-0086, the overlay rebuild, step 7's loop table landing, then the PR**; in a cloud session: the engine half of step 8, a disc-only `loc_build`, the engine reading the cache. Earlier 2026-10-08: the sea bridge's "waterfall" (D239) fixed - DIV-0085, seen by the owner. Before it, 2026-10-07: the owner's visual glitches and the localisation spots, DIV-0082..0084. On `phase-3/platform-round-2`, 10,081 ours, nothing pushed, the PR next)
+**Status:** IN PROGRESS (2026-10-08 night, step 9 - music from the disc - built end to end on `claude/audio-sequence-from-disc-sesn_01Bdfo1SaCEo9UfA2TwW8nJr` off `audio/sequence-from-disc`: the SPU model, libsnd's sequencer, `base/bgm/` from the importer, DIV-0087's seam; measured against renders of every song; **up next, at the owner's machine: the llvm-mingw build, `sound` and `'*'`, a listen with `BOF3X_CACHE` set, then the merge**. Before it, the same day: the unified-data round's steps 3, 4, 6, 8's importer half and the tags on `platform/unified-data-round` (merged as PR #44), whose owed items below still stand)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -39,6 +39,46 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 [`takeover-queue-round13.md`](takeover-queue-round13.md) section 18 item 6.
 
 ## Pick up here
+
+0000000000000000. **Step 9, music from the disc (2026-10-08 night, `claude/audio-sequence-from-disc-sesn_01Bdfo1SaCEo9UfA2TwW8nJr`,
+   off `audio/sequence-from-disc`; merge it back there, then to `main` with the round).** The record:
+   [`sequenced-music-plan.md`](sequenced-music-plan.md) (the design and the five owner's calls),
+   [`spu-model.md`](spu-model.md) (the SPU, R1..R20), [`libsnd-reading.md`](libsnd-reading.md) (the driver read by
+   address; section 9 the table of all 165 songs against their renders), [`seq-format.md`](seq-format.md) and
+   [`seq-import.md`](seq-import.md) (`tools/seq.py`, `base/bgm/`), [`music-seq-engine.md`](music-seq-engine.md)
+   (DIV-0087, the seam). In the order they bite:
+   1. **At the machine, first:** `cmake --build build` (new sources: `src/audio/{spu,seq,song}.cpp`,
+      `src/game/music_seq.cpp` - syntax-checked with mingw GCC 13 only), then from a launcher copy with no ini:
+      `BOF3X_SHADOW=sound` (the new `music_seq::SelfTest` runs after `LoopTable_SelfTest`), then `'*'` narrow.
+      Then `python tools/importer.py build --preset pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe
+      --source <JP or US cue> --out <cache>` (any PSX disc gives `base/bgm/`; the music bytes are JP's on every
+      disc), and play with `BOF3X_CACHE=<cache>` (**42 characters at most** - `File_Open`'s 0x50-byte retry buffer;
+      a longer root is fatal at start-up): the title, a town, a fight and its fanfare (`165`), a once-only `N` song
+      (the title's 141 is one), a fade-out, an inn jingle between two cache songs (`Sound_LoadStream`'s MP3s must
+      still play), and `BOF3X_MUSIC=mp3` as the A/B. The log says `music_seq` armed and one line per song started.
+   2. **The owner's calls** (`sequenced-music-plan.md` section 8, amended by what was read): the level - the engine
+      fades to 127 where the PSX's title plays at sequence volume 97 (about -2.3 dB; DIV-0087 says so); the 42-character
+      limit (lift it by reading the cache through Win32 instead of the game's file layer); song 21 (it has a
+      sequence; the PSX's title plays it silent, cause untraced - the cache plays it); `165` under one bank
+      (`BGMBAT00`'s) where the PSX plays the fanfare through the fight's own, one of four; `BOF3X_CACHE` as the one
+      root for `base/`, `loc/` and `opt/` later (today it serves `base/bgm/` only; `base/snd/` wants the same seam,
+      `sound-import.md` 7).
+   3. **Open in the measurement** (`libsnd-reading.md` 9.6): five songs at 0.943..0.984 oracle-timed (43, 77, 94,
+      145, 146), the residual in quiet windows after a note re-keyed on a releasing voice - `_SsVmKeyOn`'s
+      allocation or the release rate's rounding; a per-voice stem of 146 at 17.9 s is the next step. And the one
+      thing the player cannot reproduce, the game's VBlank-interrupt jitter (9.4) - heard as nothing.
+   4. **Then:** `importer.py verify` hashing `base/bgm/` (five lines); the effects through the same model (plan
+      section 7: the port's banks flatten each tone, 9 wrap clicks); `base/snd/` read from the cache; the launcher's
+      boxes for `cache=` / `music=`.
+   **Mechanics of this session:** the owner uploaded the JP disc, `SCPH5500.BIN`, ten Mednafen renders and
+   `analysis/bgm/*.json`; scratch under `/workspace/scratch/` (rule 1). **Mednafen 1.29 from Ubuntu's archive runs
+   headless here** (`xvfb-run -a /usr/games/mednafen -sound.driver dummy -soundrecord`, `MEDNAFEN_HOME` with the
+   BIOS in `firmware/`; `patch_disc.py` as on the owner's machine with the sibling cloned beside the repo for its
+   `file_ids.py` / `cdsector.py`) and its output is bit-identical to the owner's 1.32.1 - 157 renders in about
+   three hours with three workers, a keepalive script restarting the run after the VM's restarts (background
+   jobs die with it). Three agents in lanes (SPU, then SEQ + IMP, then ENG), each committed by the coordinator
+   with the trailers written by hand; one agent ran out of API credit mid-table and the coordinator finished the
+   run. `apt-get install g++-mingw-w64-i686` gave the syntax checks, as before.
 
 000000000000000. **The unified-data round, steps 3, 4, 6, 8's importer half and the engine's tags (2026-10-08, the
    third cloud session of the day, `claude/unified-data-steps3-6-sesn_01Ug395mHAVMJbiFgrCVV43C`, to merge into

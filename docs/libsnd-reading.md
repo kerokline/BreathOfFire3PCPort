@@ -5,10 +5,11 @@
 [`sequenced-music-plan.md`](sequenced-music-plan.md) section 9). Every rule
 below was read from `SLPS_009.90` with capstone and is cited by address; the
 player in `src/audio/seq.{h,cpp}` reproduces them. Against the Mednafen
-renders of 22 songs the player's output equals the render to within one
-LSB wherever the game's interrupt timing is reproduced (section 9: 0.996 to
-1.000 of the 0.25 s windows at >= 0.99), and the loop period is the
-render's to the VSync - to the sample but for the jitter below. What is not reproduced is the game's own VBlank
+renders of all 165 songs the player's output equals the render to within one
+LSB wherever the game's interrupt timing is reproduced (section 9.1: 160 of
+165 at >= 0.99 of the 0.25 s windows, the five below read in 9.6), and the
+loop period is the render's to the VSync on all 156 - to the sample on 112,
+by one on 44, the jitter below. What is not reproduced is the game's own VBlank
 interrupt latency, a jitter of about half a sample (sd) on each tick, which
 costs the percussion-heavy songs up to a third of their windows (section 9.4).
 
@@ -557,55 +558,199 @@ reverb tail alike; song 153: least-squares gain 1.3320..1.3334): Mednafen's
 `-soundrecord` level, not a reading - ours is the SPU's full scale. The NCC
 columns do not see it.
 
-### 9.1 The table (2026-10-08)
+### 9.1 The table: every song against its render (2026-10-08, the full run)
 
-Windows: 0.25 s, both channels, those above -50 dBFS. "Oracle": the same
-after each key-on VSync of ours is moved by the whole number of samples
-(-4..+4) that best matches the render (9.4). Loop: the period of each render
-measured the same way (the waveform's repeat near the sequencer's period),
-ours / the render's, in samples.
+All 166 songs (0..165, 21 included; 157 rendered in the cloud with Mednafen
+1.29 under xvfb, bit-identical to the owner's 1.32.1 on the unmodified boot,
+plus the owner's nine) scored by `synth_check.py --oracle`; the rows are
+`analysis/bgm/synth_check.json` on the owner's machine once copied there
+(scratch only here). Windows: 0.25 s, both channels, above -50 dBFS. Columns:
+the fraction of windows at NCC >= 0.99 on the plain VSync grid; the median;
+the same fraction with the oracle timing of 9.4; the loop period of our
+render less the render's, in samples (`once` for the nine `N` songs).
 
-| Song | Windows | >= 0.99 | Median | Env | Oracle >= 0.99 | Oracle median | Loop ours / render | Delta |
-|---|---|---|---|---|---|---|---|---|
-| 000 | 1142 | 0.984 | 0.9989 | 1.000 | 1.000 | 1.0000 | 4,363,852 / 4,363,852 | 0 |
-| 001 | 219 | 0.744 | 0.9984 | 1.000 | 1.000 | 1.0000 | 450,391 / 450,391 | 0 |
-| 002 | 241 | 1.000 | 1.0000 | 1.000 | 0.996 | 1.0000 | 874,244 / 874,245 | -1 |
-| 003 | 357 | 0.983 | 0.9996 | 1.000 | 1.000 | 1.0000 | 1,813,358 / 1,813,358 | 0 |
-| 004 | 168 | 0.940 | 0.9987 | 0.991 | 1.000 | 1.0000 | (plays once) | - |
-| 005 | 584 | 0.740 | 0.9977 | 0.999 | 1.000 | 1.0000 | 2,505,901 / 2,505,901 | 0 |
-| 006 | 225 | 0.991 | 1.0000 | 1.000 | 1.000 | 1.0000 | 796,108 / 796,108 | 0 |
-| 007 | 419 | 0.862 | 0.9979 | 0.999 | 1.000 | 1.0000 | 2,664,017 / 2,664,017 | 0 |
-| 008 | 1066 | 0.637 | 0.9922 | 0.998 | 1.000 | 1.0000 | 2,889,577 / 2,889,577 | 0 |
-| 009 | 121 | 0.711 | 0.9979 | 0.994 | 1.000 | 1.0000 | (plays once) | - |
-| 010 | 582 | 0.692 | 0.9951 | 1.000 | 1.000 | 1.0000 | 2,505,901 / 2,505,901 | 0 |
-| 011 | 819 | 0.631 | 0.9963 | 0.999 | 1.000 | 1.0000 | 6,289,991 / 6,289,990 | 1 |
-| 012 | 191 | 1.000 | 1.0000 | 1.000 | 1.000 | 1.0000 | 666,372 / 666,372 | 0 |
-| 013 | 308 | 0.968 | 0.9993 | 1.000 | 1.000 | 1.0000 | 1,292,202 / 1,292,202 | 0 |
-| 014 | 511 | 0.984 | 0.9997 | 0.999 | 1.000 | 1.0000 | 1,220,699 / 1,220,699 | 0 |
-| 015 | 476 | 0.937 | 0.9964 | 0.998 | 1.000 | 1.0000 | 2,122,955 / 2,122,955 | 0 |
-| 017 | 334 | 0.701 | 0.9964 | 1.000 | 1.000 | 1.0000 | 2,358,839 / 2,358,839 | 0 |
-| 018 | 397 | 0.773 | 1.0000 | 0.996 | 1.000 | 1.0000 | 1,769,129 / 1,769,129 | 0 |
-| 025 | 144 | 0.931 | 0.9991 | 1.000 | 1.000 | 1.0000 | 707,652 / 707,652 | 0 |
-| 034 | 172 | 0.919 | 1.0000 | 1.000 | 1.000 | 1.0000 | 964,913 / 964,913 | 0 |
-| 089 | 193 | 0.953 | 0.9992 | 0.999 | 1.000 | 0.9999 | 1,023,146 / 1,023,147 | -1 |
-| 153 | 622 | 0.897 | 0.9977 | 1.000 | 1.000 | 1.0000 | 1,887,071 / 1,887,071 | 0 |
-| 141 (the unmodified boot) | 134 | 0.933 | 0.9993 | 0.901 | - | - | (plays once) | - |
+**Summary, 165 songs with a render** (song 21 has a sequence and a render
+of silence - the title's `Music_Play(21)` plays nothing on the PSX either,
+the game-side reason untraced; D24 stands):
 
-22 songs have a render (the owner's ten, the cloud run's first thirteen
-less one overlap; the cloud run had stalled at song 020 when this was
-written - rerun `synth_check.py --songs all --oracle` as it completes) and
-the unmodified boot's title (song 141 from `DEMO.EMI`'s own copy; its
-envelope score is lower because the render goes on into the title's next
-state after the song ends). Every song renders 300 s with no abort (all
-166, 2026-10-08).
+- **oracle-timed, >= 0.99 of windows: 160 of 165**; the five below are 43
+  (0.960), 77 (0.979), 94 (0.984), 145 (0.972), 146 (0.943) - 9.6;
+- plain grid: 24 of 165 at >= 0.99; quartiles 0.74 / 0.90 / 0.96; the median
+  NCC's median 0.9988, lowest 0.9459 (song 130, a hi-hat on every beat:
+  oracle-timed 1.000);
+- **loop periods: 156 of 156 equal in VSyncs; 112 to the sample, 44 by one**
+  (the jitter at the measuring window), none by more;
+- level: ours above the render by 2.24..2.51 dB in every song (Mednafen's
+  recording at 3/4, 9's head).
 
-The onset-envelope correlation is 0.991..1.000; drift 0.00 / min except 004
-(1.2), 011, 017 (0.07..0.09) and 089 (0.6): the jitter's mean moving, or a
-loose fit on a quiet song. The loop periods are equal in VSyncs on
-every song; the two one-sample deltas are the jitter of 9.4 at the measuring
-windows (the sequencer's period is an exact number of VSyncs).
-With the oracle timing the residual is 1 LSB in the windows inspected
-(song 11 at 1.62 s: 0.8 LSB RMS against a signal of 50..200).
+| Song | >= 0.99 | Median | Oracle >= 0.99 | Loop delta |
+|---|---|---|---|---|
+| 000 | 0.984 | 0.9989 | 1.000 | +0 |
+| 001 | 0.744 | 0.9984 | 1.000 | +0 |
+| 002 | 1.000 | 1.0000 | 0.996 | -1 |
+| 003 | 0.983 | 0.9996 | 1.000 | +0 |
+| 004 | 0.940 | 0.9987 | 1.000 | once |
+| 005 | 0.740 | 0.9977 | 1.000 | +0 |
+| 006 | 0.991 | 1.0000 | 1.000 | +0 |
+| 007 | 0.862 | 0.9979 | 1.000 | +0 |
+| 008 | 0.637 | 0.9922 | 1.000 | +0 |
+| 009 | 0.711 | 0.9979 | 1.000 | once |
+| 010 | 0.692 | 0.9951 | 1.000 | +0 |
+| 011 | 0.631 | 0.9963 | 1.000 | +1 |
+| 012 | 1.000 | 1.0000 | 1.000 | +0 |
+| 013 | 0.968 | 0.9993 | 1.000 | +0 |
+| 014 | 0.984 | 0.9997 | 1.000 | +0 |
+| 015 | 0.937 | 0.9964 | 1.000 | +0 |
+| 016 | 0.933 | 0.9970 | 1.000 | -1 |
+| 017 | 0.701 | 0.9964 | 1.000 | +0 |
+| 018 | 0.773 | 1.0000 | 1.000 | +0 |
+| 019 | 0.935 | 0.9977 | 1.000 | +0 |
+| 020 | 0.719 | 0.9930 | 1.000 | -1 |
+| 021 | - | - | - | (silent on the PSX, 9.1) |
+| 022 | 0.494 | 0.9899 | 1.000 | +1 |
+| 023 | 0.636 | 0.9937 | 0.999 | +0 |
+| 024 | 0.784 | 0.9974 | 1.000 | +0 |
+| 025 | 0.931 | 0.9991 | 1.000 | +0 |
+| 026 | 0.956 | 0.9992 | 1.000 | +0 |
+| 027 | 0.707 | 0.9962 | 0.997 | +0 |
+| 028 | 0.636 | 0.9950 | 1.000 | once |
+| 029 | 0.873 | 0.9989 | 1.000 | -1 |
+| 030 | 0.713 | 0.9983 | 1.000 | +0 |
+| 031 | 0.746 | 0.9966 | 1.000 | +0 |
+| 032 | 0.964 | 0.9990 | 1.000 | +1 |
+| 033 | 0.804 | 0.9989 | 1.000 | +0 |
+| 034 | 0.919 | 1.0000 | 1.000 | +0 |
+| 035 | 0.746 | 0.9978 | 1.000 | +0 |
+| 036 | 1.000 | 1.0000 | 1.000 | -1 |
+| 037 | 0.627 | 0.9951 | 1.000 | -1 |
+| 038 | 0.746 | 1.0000 | 1.000 | +0 |
+| 039 | 1.000 | 0.9993 | 1.000 | -1 |
+| 040 | 0.775 | 0.9995 | 1.000 | -1 |
+| 041 | 0.552 | 0.9919 | 1.000 | +0 |
+| 042 | 1.000 | 0.9989 | 1.000 | once |
+| 043 | 0.494 | 0.9891 | 0.960 | -1 |
+| 044 | 0.994 | 0.9998 | 1.000 | +0 |
+| 045 | 0.924 | 0.9985 | 1.000 | +1 |
+| 046 | 0.859 | 0.9988 | 1.000 | +0 |
+| 047 | 0.887 | 0.9989 | 1.000 | +0 |
+| 048 | 0.667 | 0.9951 | 1.000 | +0 |
+| 049 | 1.000 | 1.0000 | 1.000 | +0 |
+| 050 | 0.696 | 0.9932 | 1.000 | +0 |
+| 051 | 0.529 | 0.9906 | 1.000 | +0 |
+| 052 | 0.636 | 0.9937 | 0.999 | +0 |
+| 053 | 0.620 | 0.9925 | 1.000 | +0 |
+| 054 | 0.848 | 0.9968 | 1.000 | +1 |
+| 055 | 0.926 | 0.9992 | 1.000 | -1 |
+| 056 | 0.998 | 0.9996 | 1.000 | +0 |
+| 057 | 0.811 | 0.9994 | 1.000 | +0 |
+| 058 | 0.818 | 0.9924 | 1.000 | once |
+| 059 | 1.000 | 0.9994 | 1.000 | +0 |
+| 060 | 0.828 | 0.9978 | 1.000 | +0 |
+| 061 | 0.955 | 0.9998 | 1.000 | +0 |
+| 062 | 1.000 | 0.9991 | 1.000 | -1 |
+| 063 | 0.399 | 0.9828 | 1.000 | +0 |
+| 064 | 0.864 | 0.9992 | 0.998 | +0 |
+| 065 | 0.611 | 0.9922 | 1.000 | +0 |
+| 066 | 0.655 | 0.9961 | 0.994 | +0 |
+| 067 | 1.000 | 1.0000 | 1.000 | +0 |
+| 068 | 0.745 | 0.9963 | 0.998 | +0 |
+| 069 | 0.870 | 0.9964 | 1.000 | +0 |
+| 070 | 0.682 | 0.9948 | 0.992 | +0 |
+| 071 | 0.948 | 0.9991 | 1.000 | +1 |
+| 072 | 0.873 | 0.9989 | 1.000 | -1 |
+| 073 | 0.690 | 0.9931 | 0.996 | +0 |
+| 074 | 0.780 | 0.9977 | 1.000 | +1 |
+| 075 | 0.835 | 0.9985 | 1.000 | +0 |
+| 076 | 0.837 | 0.9995 | 0.998 | +0 |
+| 077 | 0.667 | 0.9991 | 0.979 | -1 |
+| 078 | 0.955 | 0.9993 | 1.000 | +0 |
+| 079 | 0.922 | 0.9989 | 1.000 | +0 |
+| 080 | 0.959 | 0.9981 | 1.000 | +0 |
+| 081 | 0.707 | 0.9962 | 0.997 | +0 |
+| 082 | 0.938 | 0.9995 | 1.000 | +1 |
+| 083 | 1.000 | 1.0000 | 1.000 | +0 |
+| 084 | 0.598 | 0.9937 | 1.000 | +0 |
+| 085 | 0.914 | 0.9989 | 1.000 | +0 |
+| 086 | 0.840 | 0.9994 | 1.000 | -1 |
+| 087 | 0.983 | 0.9999 | 1.000 | +0 |
+| 088 | 0.771 | 0.9990 | 1.000 | +0 |
+| 089 | 0.953 | 0.9992 | 1.000 | -1 |
+| 090 | 0.998 | 0.9997 | 1.000 | +0 |
+| 091 | 0.979 | 0.9997 | 1.000 | -1 |
+| 092 | 0.740 | 0.9983 | 1.000 | +0 |
+| 093 | 0.939 | 0.9986 | 1.000 | +0 |
+| 094 | 0.870 | 0.9995 | 0.984 | +0 |
+| 095 | 1.000 | 1.0000 | 1.000 | +0 |
+| 096 | 1.000 | 1.0000 | 1.000 | once |
+| 097 | 0.928 | 0.9986 | 1.000 | -1 |
+| 098 | 0.870 | 0.9993 | 1.000 | +0 |
+| 099 | 0.916 | 0.9999 | 1.000 | +0 |
+| 100 | 0.912 | 0.9981 | 0.996 | +0 |
+| 101 | 0.650 | 0.9938 | 1.000 | +0 |
+| 102 | 0.929 | 0.9995 | 1.000 | +1 |
+| 103 | 0.951 | 0.9997 | 1.000 | -1 |
+| 104 | 0.982 | 1.0000 | 1.000 | +0 |
+| 105 | 0.636 | 0.9953 | 1.000 | once |
+| 106 | 0.964 | 0.9995 | 1.000 | +0 |
+| 107 | 0.813 | 0.9986 | 0.998 | -1 |
+| 108 | 0.924 | 0.9995 | 1.000 | +0 |
+| 109 | 1.000 | 0.9997 | 1.000 | +0 |
+| 110 | 0.938 | 0.9998 | 1.000 | +0 |
+| 111 | 0.978 | 0.9995 | 0.999 | +0 |
+| 112 | 0.921 | 0.9987 | 1.000 | +0 |
+| 113 | 1.000 | 0.9991 | 1.000 | +0 |
+| 114 | 0.532 | 0.9907 | 1.000 | +1 |
+| 115 | 0.998 | 0.9998 | 1.000 | +0 |
+| 116 | 0.989 | 0.9989 | 1.000 | +0 |
+| 117 | 0.933 | 0.9999 | 1.000 | +0 |
+| 118 | 0.955 | 0.9976 | 1.000 | +0 |
+| 119 | 0.936 | 0.9989 | 1.000 | +0 |
+| 120 | 0.963 | 0.9958 | 1.000 | -1 |
+| 121 | 0.989 | 0.9997 | 1.000 | -1 |
+| 122 | 0.726 | 0.9963 | 1.000 | +0 |
+| 123 | 0.996 | 0.9998 | 1.000 | +0 |
+| 124 | 0.731 | 0.9972 | 1.000 | -1 |
+| 125 | 0.735 | 0.9986 | 1.000 | +0 |
+| 126 | 0.893 | 0.9994 | 1.000 | +0 |
+| 127 | 0.849 | 0.9980 | 1.000 | +1 |
+| 128 | 0.900 | 0.9975 | 1.000 | +0 |
+| 129 | 0.997 | 0.9997 | 1.000 | +0 |
+| 130 | 0.051 | 0.9459 | 1.000 | +1 |
+| 131 | 0.725 | 0.9963 | 1.000 | +0 |
+| 132 | 0.867 | 0.9981 | 1.000 | +0 |
+| 133 | 0.916 | 0.9958 | 1.000 | -1 |
+| 134 | 0.757 | 0.9974 | 1.000 | +0 |
+| 135 | 0.933 | 0.9984 | 1.000 | +0 |
+| 136 | 0.954 | 0.9989 | 1.000 | -1 |
+| 137 | 1.000 | 1.0000 | 1.000 | +0 |
+| 138 | 0.954 | 0.9989 | 1.000 | -1 |
+| 139 | 0.843 | 0.9957 | 1.000 | +0 |
+| 140 | 0.807 | 0.9966 | 1.000 | +0 |
+| 141 | 0.962 | 0.9993 | 1.000 | once |
+| 142 | 0.903 | 0.9981 | 1.000 | +0 |
+| 143 | 0.935 | 0.9994 | 1.000 | +0 |
+| 144 | 0.924 | 0.9997 | 1.000 | +0 |
+| 145 | 0.988 | 0.9994 | 0.972 | +0 |
+| 146 | 0.902 | 0.9999 | 0.943 | +1 |
+| 147 | 0.935 | 0.9995 | 1.000 | +0 |
+| 148 | 0.778 | 0.9989 | 1.000 | +0 |
+| 149 | 1.000 | 0.9988 | 1.000 | -1 |
+| 150 | 0.707 | 0.9946 | 1.000 | once |
+| 151 | 0.893 | 0.9975 | 1.000 | +0 |
+| 152 | 0.734 | 0.9948 | 1.000 | -1 |
+| 153 | 0.897 | 0.9977 | 1.000 | +0 |
+| 154 | 0.813 | 0.9993 | 1.000 | +0 |
+| 155 | 0.832 | 0.9969 | 1.000 | -1 |
+| 156 | 0.969 | 0.9992 | 1.000 | +0 |
+| 157 | 0.895 | 0.9968 | 0.998 | +1 |
+| 158 | 1.000 | 0.9963 | 1.000 | +0 |
+| 159 | 0.966 | 0.9983 | 1.000 | +0 |
+| 160 | 0.789 | 0.9981 | 1.000 | +0 |
+| 161 | 0.620 | 0.9906 | 1.000 | +0 |
+| 162 | 0.973 | 0.9990 | 1.000 | -1 |
+| 163 | 0.734 | 0.9983 | 1.000 | +0 |
+| 164 | 0.920 | 0.9996 | 1.000 | +1 |
+| 165 | 0.869 | 0.9990 | 1.000 | +0 |
 
 ### 9.2 Readings the renders settled (SPU model; `spu-model.md` R18, R19)
 
@@ -670,3 +815,20 @@ timing" for the comparison**, as `synth_check.py --oracle` reports it.
   by silent voices -> R20; two banks (`BGMOPN`, `BGMEND`) are bigger than
   layouts 0 / 1's music slot -> the check moved to layout 2's. Clean.
 - 22 renders + the boot: the table above.
+
+### 9.6 The five below 0.99 oracle-timed (read, not fixed)
+
+All five are quiet, sparse songs (43, 77, 146: pads of 43..151 key ons in
+300 s; 94, 145 fuller) whose failing windows sit at -35..-40 dBFS; the
+residual there is about 13 dB under the signal (146 at 18.4..20.4 s after
+the first note: signal -36.6 dBFS, residual -49.7 dBFS, 81 LSB mean), where
+a loud window of the same song is at -62 dBFS residual (8 LSB). In 146 the
+two failing spans follow a note keyed off and keyed on again on the same
+channel within 12 ticks (ticks 215 / 227 and 1158, 1238 - the latter two
+off and on at the same tick). The suspects, in order: the voice manager's
+choice when a note is re-keyed while its last instance releases
+(`_SsVmKeyOn`'s allocation, 3.3 - a different voice carries a different
+history of ENVX and the ADPCM filter), then the release phase's rate
+rounding (`spu-model.md` R5, R8). Not SPU noise and not the jitter (the
+oracle moved them). Worth a per-voice stem of 146 against the render at
+17.9 s; left for the next session.
