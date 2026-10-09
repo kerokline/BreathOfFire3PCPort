@@ -199,12 +199,14 @@ compares by onset envelope and clean windows, never sample for sample
   the install's (the owner's call, [`sound-import.md`](sound-import.md) 6).
   The engine still formats `SND\%s.DAT` itself: its reading of the cache is
   the same seam as the loader's second prefix (section 7 there).
-- `base/bgm/` holds the PC's MP3s as they are (file N = song N), with a
-  **loop table** if the owner hears the replayed intros (H1) and wants them
-  fixed - the cheap divergence `bgm-comparison.md` 10 describes.
-- The disc's sequences and instrument banks are imported into `base/seq/`
-  regardless (small, and they are the synth's input and test fixture); the
-  synth itself waits on the owner's ear and is phase-5 sized.
+- `base/bgm/` holds the disc's songs and banks in the cache's containers
+  ([`seq-format.md`](seq-format.md); 166 songs, 81 banks from any PSX disc)
+  and the engine plays them through the sequencer (DIV-0087); the PC's MP3s
+  stay in the install's `BGM/` as the fallback for a PC-only install and for
+  `166`, with the **loop table** of DIV-0081.
+- The 38 battle / boss / demo bundles are whole copies of seven `BGM` files;
+  the fanfare (`165`) is imported from `BGMBAT00`, one bank (the PSX plays it
+  through the fight's own, one of four - `seq-import.md`).
 - Song 21 (no MP3) and `166` (no sequence) are recorded as the two
   irregulars; whether the game plays song 21 is a trace question for a route.
 - The cue byte (`region-diff.md` 8.3) becomes a by-rule fix the day the PSX
@@ -237,7 +239,7 @@ compares by onset envelope and clean windows, never sample for sample
 | 6 | ~~VAG and the banks; the `SND/` cut table found and XA~~ **done 2026-10-08**, [`sound-import.md`](sound-import.md): byte-identical, 901 / 901 banks and 880 / 880 `SND/` from a disc; the engine reading `base/snd/` open; three calls (the PAL banks, the port's wrap clicks, the 11 jingles) | a group | step 2 | no |
 | 7 | The MP3 loop table, if H1 is heard | a day + 10 h unattended | the owner's ear | yes: the listening session |
 | 8 | `base/exe/` produced ~~and the engine reading it~~ (section 5 step 3). **Importer half done 2026-10-08** ([`exe-import.md`](exe-import.md)); the engine half waits on the owner's machine and the state hash | a round, with the biggest live check | steps 2, 5; the cutover's state 3 design | no |
-| 9 | The SEQ / VAB player and the SPU synth - **the music path by the owner's stance of 2026-10-08** (section 6), the MP3s the fallback | a round or more | the owner's ear; the disc-only goal | the listening session |
+| 9 | ~~The SEQ / VAB player and the SPU synth~~ **built 2026-10-08** ([`sequenced-music-plan.md`](sequenced-music-plan.md), [`seq-import.md`](seq-import.md), [`spu-model.md`](spu-model.md), [`libsnd-reading.md`](libsnd-reading.md), [`music-seq-engine.md`](music-seq-engine.md)): `tools/seq.py` writes `base/bgm/` from any PSX disc; `src/audio/` the SPU model and libsnd 3.7's sequencer, within one LSB of the Mednafen renders where the game's interrupt jitter is reproduced; DIV-0087 the engine seam, the MP3s the fallback. **Owed:** the owner's build, self-tests and ear | a round | - | the listening session |
 | 10 | MDEC / STR for FMV from a disc | phase 5 | I7 | no |
 
 Steps 1, 2 and 5 need nothing from the owner and can start together; 3, 4

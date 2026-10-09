@@ -154,7 +154,7 @@ Names: `000`..`166` with `021` absent; `N` on `004 009 028 042 058 096 105
 - **The 38 groups the port dropped are copies.** Each `BOSS` / `BATTLE` /
   `DEMO` SEP is a `BGM` file's: sub 0 a table song's (`BGMBAT00`..`06`;
   `BGMOPN` for `DEMO`), sub 2 song 86's, and sub 1 (25.3 s, 680 notes,
-  looping) in no table entry - the battle bundles' own. One more non-empty
+  looping) in no table entry - the battle bundles' own. **Corrected 2026-10-08** ([`seq-import.md`](seq-import.md)): the 38 are whole byte copies of seven `BGM` files (`BGMBAT04` x22, `02` x6, `01` x5, `03` x2, `05`, `06`, `BGMOPN` x1; `BGMBAT02` = `BGMBAT00`); the fanfare at sub 1 holds for the copies of `BGMBAT00`..`04` only, under four distinct banks - `BGMBAT05` / `06` have sub 1 empty (`05`'s sub 3 is song 159) and `DEMO` has only sub 0. One more non-empty
   sub-song is in no table entry: `BGM039A` sub 3 (12.9 s, 546 notes).
 - The 165 songs are 165 distinct (file, sub) pairs but 136 distinct
   sequences: 25 groups share identical sequence bytes (151 and 153; 23 and
@@ -442,7 +442,12 @@ before it, which the measurement skips by its `t0` of 40 s and logs as
 2. **The render's loop**, by envelope and waveform together, because each
    alone is fooled:
    - the SPU's noise voices are a fresh LFSR realisation every pass, so a
-     window holding a noise hit does not match the first pass at all - as
+     window holding a noise hit does not match the first pass at all
+     (**corrected 2026-10-08**, [`libsnd-reading.md`](libsnd-reading.md) 9: no
+     song uses SPU noise; the hits that fail to match are cymbal and hi-hat
+     samples keyed under the game's VBlank-interrupt jitter, +-1 sample a
+     tick, which the sequencer's own player reproduces only with the
+     render's timing - the method's windows stand as they are) - as
      isolated hits on the beat (011: 0.99 between them, ~0 on them) or a
      voice sounding throughout (007: 0.3..0.7 wherever it plays, 1.000 where
      it rests);
