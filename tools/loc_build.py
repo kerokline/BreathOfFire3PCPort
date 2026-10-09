@@ -6,6 +6,7 @@ DAT container (tools/dat.py) holding only the chunks that differ; the engine
 walks it after the original file, so its chunks land on top.
 
     python tools/loc_build.py all   --disc DISC --game bof3 [--lang en-US] [--upscaler CMD | --glyphs PNG] [--only AREA000]
+    python tools/loc_build.py all   --discs CDImage --game bof3 [--dry-run]     # every held disc in the directory
     python tools/loc_build.py sheet --disc DISC --out analysis/font/en_cells.png
     python tools/loc_build.py export --disc DISC --out analysis/font/en_8x12.png
 
@@ -21,6 +22,21 @@ outline colour, which the donor never uses.
 Everything written is derived from game data: it goes into the player's game
 directory or analysis/ (both gitignored) and is never committed (CLAUDE.md
 rule 1).
+
+## Every valid disc at once: `--discs DIR`
+
+`all --discs DIR` is the "all valid game discs" mode. Every disc image in
+DIR (`.cue`, `.iso`, and a `.bin` no cue there names) is identified the way
+the importer identifies a source: every file of its ISO9660 tree hashed
+against fixtures.toml's per-file manifests (`importer.identify`). A disc
+that matches a held PlayStation release gets one overlay set under that
+release's own tag (`en-US.*`, `en-150.*`, `fr-FR.*`, `de-DE.*`, `ja-JP.*`);
+anything else is reported and skipped - an image fixtures.toml does not hold,
+a second copy of a build already built, the PC port's own files, and the
+PSP discs, which `all` has not been validated against. `--lang` is refused
+here: a tag only ever comes from identity. The game directory is checked
+first: `BOF3.exe` must hash as the catalogued port, and its `DAT/` is named
+if it is the shipped tree. `--dry-run` identifies and writes nothing.
 
 ## Replicating a build: `--upscaler`
 
@@ -1659,7 +1675,7 @@ def language_tag(tag):
 def disc_tag(path):
     """The tag the disc's text carries, fixtures.toml's `tag` for the build the
     disc identifies as (the importer's identity check: every file's hash). The
-    engine and launcher read the tag since 2026-10-08 (DAT\<tag>.*,
+    engine and launcher read the tag since 2026-10-08 (DAT/<tag>.*,
     kLanguages); an overlay under any other name is not offered. An unheld
     disc has no tag: give --lang."""
     import importer
@@ -1957,9 +1973,126 @@ def build_plates(game, disc):
     return out
 
 
+def reset_donor():
+    """The module state one donor leaves for the next (`--discs` builds several
+    in one process): the Latin atlas's extension, the Japanese flag, the pair
+    table and the Japanese sheets."""
+    global ext_last, donor_ja, ja_sheets
+    ext_last, donor_ja, ja_sheets = EXT_FIRST - 1, False, None
+    ja_pairs.clear()
+
+
+DISC_EXT = (".cue", ".iso", ".bin")
+
+
+def scan_discs(directory):
+    """The disc images in a directory, sorted: every .cue and .iso, and a .bin
+    that no .cue there names (a cue's tracks are read through the cue)."""
+    names = sorted(n for n in os.listdir(directory) if n.lower().endswith(DISC_EXT))
+    named = set()
+    for n in names:
+        if n.lower().endswith(".cue"):
+            with open(os.path.join(directory, n), "r", errors="replace") as f:
+                named.update(m.lower() for m in re.findall(r'FILE\s+"([^"]+)"', f.read(), re.I))
+    return [os.path.join(directory, n) for n in names if not (n.lower().endswith(".bin") and n.lower() in named)]
+
+
+def identify_discs(paths):
+    """[(path, build id or None, tag or None, why)] for each image: the build
+    fixtures.toml holds it as (every file hashed, `importer.identify`), and
+    whether `all` builds from it. Only a verified PlayStation release is built
+    from, once per build: the PSP discs have not been run through `all`
+    (docs/dialogue-localisation.md section 1), and a second image of a build
+    already listed would overwrite the first's overlays with the same bytes."""
+    import importer
+    builds = {b["id"]: b for b in importer._fixtures()["build"]}
+    out, seen = [], {}
+    for p in paths:
+        print("identifying %s (every file hashed against fixtures.toml)..." % p, flush=True)
+        found = importer.identify(p)
+        if not found:
+            out.append((p, None, None, "not a build fixtures.toml holds"))
+            continue
+        bid, b = found[0], builds[found[0]]
+        if b["role"] != "psx-disc":
+            out.append((p, bid, b["tag"], "%s is %s, not a PlayStation disc" % (bid, b["role"])))
+        elif b.get("status") != "verified":
+            out.append((p, bid, b["tag"], "%s is catalogued but not verified" % bid))
+        elif bid in seen:
+            out.append((p, bid, b["tag"], "a second image of %s; %s is built" % (bid, seen[bid])))
+        else:
+            seen[bid] = p
+            out.append((p, bid, b["tag"], ""))
+    return out
+
+
+def check_game(game):
+    """The install against fixtures.toml: BOF3.exe must be the catalogued
+    port (every exe address below is only meaningful in that image, CLAUDE.md
+    rule 3); DAT/ is named when it is the shipped tree and reported otherwise -
+    overlays beside the originals are excluded from the match, an edited
+    original is not, and the overlays are still built over whatever is there."""
+    import importer
+    exe = os.path.join(game, "BOF3.exe")
+    if not os.path.isfile(exe):
+        raise SystemExit("%s: no BOF3.exe" % game)
+    found = importer.identify(exe)
+    if found != ("pc-zh", "exe"):
+        raise SystemExit("%s does not hash as the catalogued BOF3.exe (fixtures.toml pc-zh); refusing to build over it" % exe)
+    print("game: BOF3.exe is pc-zh's (fixtures.toml); hashing DAT/...", flush=True)
+    tree = importer.identify(dat_dir(game))
+    print("game: DAT/ is %s" % ("the shipped tree (%s, %s)" % tree if tree else
+                                "NOT the shipped tree - an original differs from fixtures/pc-zh.DAT.files.tsv; building over it anyway"))
+
+
+def cmd_all_discs(args):
+    """`--discs DIR` (and a repeated `--disc`): identify every image, build one
+    overlay set per held PlayStation release under its own tag, report the rest."""
+    paths = list(args.disc or [])
+    if args.discs:
+        if not os.path.isdir(args.discs):
+            raise SystemExit("%s: not a directory" % args.discs)
+        paths += scan_discs(args.discs)
+    if not paths:
+        raise SystemExit("no disc images: --discs %s holds none of %s" % (args.discs, ", ".join(DISC_EXT)))
+    check_game(args.game)
+    found = identify_discs(paths)
+    rows = []
+    for p, bid, tag, why in found:
+        if why:
+            rows.append((p, bid or "-", tag or "-", "skipped: " + why))
+            continue
+        if args.dry_run:
+            rows.append((p, bid, tag, "would build %s.*.DAT" % tag))
+            continue
+        print("\n== %s: %s, overlays %s.*.DAT ==" % (p, bid, tag))
+        args.lang = tag
+        n = build_all(args, p)
+        rows.append((p, bid, tag, "built %d overlay files" % n))
+    w = max(len(r[0]) for r in rows)
+    print("\n" + "\n".join("%-*s  %-10s %-7s %s" % (w, *r) for r in rows))
+    if not any(r[3].startswith(("built", "would build")) for r in rows):
+        raise SystemExit("no held PlayStation disc among them: nothing built")
+    return 0
+
+
 def cmd_all(args):
-    """Every overlay, in one pass, one file written per shipped DAT that needs one."""
-    disc, d = psx_disc.Disc(args.disc), dat_dir(args.game)
+    """One disc: every overlay in one pass, one file written per shipped DAT that needs one."""
+    if args.discs or len(args.disc) != 1:
+        if args.lang_given:
+            raise SystemExit("--lang names one disc's overlays; with --discs or several --disc the tag is each disc's own")
+        return cmd_all_discs(args)
+    if args.lang is None:
+        args.lang = disc_tag(args.disc[0])
+        print("--lang not given: the disc's own tag, %s" % args.lang)
+    build_all(args, args.disc[0])
+    return 0
+
+
+def build_all(args, disc_path):
+    """Every overlay from one disc under args.lang; the count of files written."""
+    reset_donor()
+    disc, d = psx_disc.Disc(disc_path), dat_dir(args.game)
     overlays = {"FIRST.DAT": build_font(args, disc)}
     overlays["FIRST.DAT"] += build_pause(args, overlays["FIRST.DAT"])   # after the glyphs it names
     if not args.pc_white:
@@ -2066,6 +2199,7 @@ def cmd_all(args):
         write_overlay(os.path.join(d, "%s.%s" % (args.lang, name)), chunks)
     print("%d overlay files in %s: %d area texts (%d slots kept as shipped), %d system pools (%d kept)"
           % (len(overlays), d, texts, kept_text, pools, kept_pool))
+    return len(overlays)
 
 
 def cmd_export(args):
@@ -2096,7 +2230,12 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name, fn in (("all", cmd_all), ("sheet", cmd_sheet), ("export", cmd_export)):
         s = sub.add_parser(name)
-        s.add_argument("--disc", required=True)
+        if name == "all":
+            s.add_argument("--disc", action="append", default=[], help="a disc image (.cue, .bin, .iso); repeat for several")
+            s.add_argument("--discs", help="a directory: every held PlayStation disc in it is built, each under its own tag")
+            s.add_argument("--dry-run", action="store_true", help="with --discs: identify each image and write nothing")
+        else:
+            s.add_argument("--disc", required=True)
         s.add_argument("--lang", type=language_tag,
                        help="the overlays' language tag, BCP 47 (en-US, en-150, fr-FR, de-DE, ja-JP); "
                             "default: the disc's own tag from fixtures.toml, which needs the disc to be a held build")
@@ -2113,7 +2252,10 @@ def main():
             s.add_argument("--only")
         s.set_defaults(fn=fn)
     args = ap.parse_args()
-    if args.lang is None:
+    args.lang_given = args.lang is not None
+    if args.cmd == "all" and not args.disc and not args.discs:
+        ap.error("all needs --disc DISC or --discs DIR")
+    if args.cmd != "all" and args.lang is None:
         args.lang = disc_tag(args.disc)
         print("--lang not given: the disc's own tag, %s" % args.lang)
     return args.fn(args)

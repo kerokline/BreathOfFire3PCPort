@@ -58,7 +58,8 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    1. **At the machine, first:** `cmake --build build`, then `'*'` narrow and wide from a launcher copy with no ini
       with `BOF3X_OPT` unset (the self-tests are unchanged by it) and once with `BOF3X_LANG=en-US`, once `ja-JP`
       (the tags), once `BOF3X_OPT=psp-art` after an `install`. Rebuild the install's overlays as `en-US.*`
-      (`python tools/loc_build.py all --disc <US cue> --game bof3` - no `--lang` needed now), delete the old `en.*`
+      (`python tools/loc_build.py all --discs CDImage --game bof3` builds every held disc under its tag in one
+      run, 2026-10-08 afternoon, done on the owner's install: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`), delete the old `en.*`
       / `fr.*` / `de.*` / `ja.*`, re-pick the language in the launcher (an old `language=en` reads as the original).
       Then `importer.py build --preset pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe --source <US cue>
       --source <PSP iso> --opt psp-art --out <cache>` and `importer.py install --cache <cache> --game bof3 --opt
