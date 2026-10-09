@@ -19,6 +19,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/music_loops.h"
+#include "game/music_seq.h"
 #include "game/sound_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -146,7 +147,12 @@ int Sound_PlayEffectEax(unsigned short id) {
 // the old file is freed only once a new one has opened; File_Read is asked
 // for Music_FileSize as read back after the allocation, into the pointer the
 // allocation returned. The original's success eax is File_Close's; ours is 0.
+//
+// DIVERGENCE DIV-0087: first, when armed (BOF3X_CACHE, BOF3X_MUSIC), the
+// cache's base\bgm\NNN.DAT in the MP3's place (music_seq.h); not formatted,
+// opened or read otherwise.
 extern "C" int __cdecl Music_LoadFile(unsigned track) {
+    if (music_seq::LoadFile(track)) return 0;  // DIV-0087
     char looping[0x28], once[0x28];
     g.sprintf(looping, reinterpret_cast<const char*>(kLoopingName), track);
     g.sprintf(once, reinterpret_cast<const char*>(kOnceName), track);
@@ -157,6 +163,7 @@ extern "C" int __cdecl Music_LoadFile(unsigned track) {
         if (handle == -1) return -1;
         Music_FileLoops = 0;
     }
+    music_seq::Forget(Music_File);  // DIV-0087: a cache song in it is gone
     if (Music_File) g.free(Music_File);
     const int size = g.file_size(handle);
     Music_FileSize = size;
@@ -576,12 +583,18 @@ extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) 
     void* const copy = g.malloc(size);
     Music_Data = copy;
     std::memcpy(copy, file, size);
-    Music_Decoder = g.music_open_decoder(Music_Data, size);
-    // DIV-pending (music_loops.h): the measured loop of a BGM track Music_Play
-    // started, looked up before the first half is decoded; Sound_LoadStream's
-    // streams (not Music_File) and once-only tracks have none.
-    LoopBegin(loops && file == Music_File && size == static_cast<unsigned>(Music_FileSize) ? Music_LoadedTrack : -1,
-              size);
+    if (music_seq::IsSong(file, size)) {  // DIV-0087: the cache's song - the synth, no decoder, no measured loop
+        Music_Decoder = nullptr;
+        LoopBegin(-1, size);
+        music_seq::Begin();
+    } else {
+        Music_Decoder = g.music_open_decoder(Music_Data, size);
+        // DIV-pending (music_loops.h): the measured loop of a BGM track Music_Play
+        // started, looked up before the first half is decoded; Sound_LoadStream's
+        // streams (not Music_File) and once-only tracks have none.
+        LoopBegin(loops && file == Music_File && size == static_cast<unsigned>(Music_FileSize) ? Music_LoadedTrack : -1,
+                  size);
+    }
     void* const buffer = g.music_create_buffer();
     Music_Buffer = buffer;
     if (buffer) {
@@ -661,7 +674,13 @@ extern "C" void* __cdecl Music_CreateBuffer(void) {
 // the end of stream included; the last frame may run past `size` (the
 // callers' 0x12000 is a whole number of frames); the comparison is signed;
 // a decoder that makes no progress and never ends loops for ever.
+// DIV-0087: the synth's stream renders instead (music_seq.h), ending as this
+// does: zeros after a once-only song's end, and Music_Finished.
 extern "C" void __cdecl Music_Decode(unsigned char* dst, int size) {
+    if (music_seq::Active()) {  // DIV-0087
+        music_seq::Decode(dst, size);
+        return;
+    }
     std::uint32_t decoder = Address(Music_Decoder);
     std::uint32_t filled = 0;
     if (!decoder) return;
@@ -693,9 +712,16 @@ extern "C" void __cdecl Music_Decode(unsigned char* dst, int size) {
 // image's own floats, so it rounds as the original under any control word.
 // As the original has it: linear in the level, so a fade is not linear in
 // loudness; a volume past 127 asks for more than 0, which DirectSound refuses.
+// DIV-0087: for the synth's stream the level follows libsnd's sequence volume
+// instead - amplitude (v / 127)^2 (music_seq::Level); the synth itself plays
+// at 127, since it renders 0.4 to 0.8 s ahead of what is heard.
 extern "C" void __cdecl Music_SetVolume(float volume) {
     void* const buffer = Music_Buffer;
     if (!buffer) return;
+    if (music_seq::Active()) {  // DIV-0087
+        Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(music_seq::Level(volume)));
+        return;
+    }
     std::int64_t level;
     unsigned short saved, truncating;
     __asm__ volatile(
@@ -720,7 +746,9 @@ extern "C" void __cdecl Music_SetVolume(float volume) {
 // original 0x5A7050: stops the music buffer if it is playing.
 // The original's status slot is its caller's ecx for a GetStatus that did not
 // write it; ours is 0 (DirectSound writes it).
+// DIV-0087: the synth's song stopped with it.
 extern "C" void __cdecl Music_Stop(void) {
+    music_seq::Stop();  // DIV-0087
     void* const buffer = Music_Buffer;
     if (!buffer) return;
     if (!Playing(buffer, 0)) return;
@@ -764,6 +792,7 @@ extern "C" void __cdecl Music_Release(void) {
         g.mp3_destroy(decoder);
         Music_Decoder = nullptr;
     }
+    music_seq::Release();  // DIV-0087: the synth stopped, its bank kept
 }
 
 // original 0x5A7230: keeps the stream fed - on every spin of WinMain's frame
@@ -773,8 +802,9 @@ extern "C" void __cdecl Music_Release(void) {
 // at the next notification, once the zeros after it have played.
 // As the original has it: any other wait result (nothing signalled, a
 // message, a failure) does nothing; the buffer is read again after decoding.
+// DIV-0087: the synth's stream has no decoder and is fed all the same.
 extern "C" void __cdecl Music_Pump(void) {
-    if (!Music_Decoder || !Music_Buffer) return;
+    if ((!Music_Decoder && !music_seq::Active()) || !Music_Buffer) return;
     const unsigned signalled = g.msg_wait(2, Music_Events, 0, 0, 0xFF);
     if (signalled >= 2) return;
     if (Music_Finished) {
@@ -980,6 +1010,7 @@ void LoopTable_SelfTest() {
 void FadePerFrame_Inject() {
     if (bof3::WantsShadow("sound")) FadePerFrame_SelfTest();
     if (bof3::WantsShadow("sound")) LoopTable_SelfTest();
+    if (bof3::WantsShadow("sound")) music_seq::SelfTest();  // DIV-0087's seam on a synthetic song
     const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
     bof3::PatchBytes("MusicFadePerFrame", Address(&sound::g_fade_per_frame), was, is, 4);
     bof3::Log("DIV-0028    music fades step once per logic frame (on unless the line above says OFF)");

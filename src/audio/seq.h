@@ -71,6 +71,18 @@ public:
     void Render(std::int16_t* stereo, int frames);
 
     bool Playing() const { return (score_.flags & kPlay) != 0; }
+    // A song that plays once (no loop markers) has reached its end of track
+    // (_SsSeqGetEof stopped it and keyed its voices off) and every sequencer
+    // voice's envelope has released to zero: nothing more will sound.
+    // False while playing, paused, or after Stop() of a song that had not
+    // ended.
+    bool Ended() const;
+
+    // SsSetMVol(left, right) (0x8016CA38): the SPU's main volume, fixed mode,
+    // value * 129 (127 -> 0x3FFF, the start-up level). Effects and music
+    // alike; the game calls it from two scenario scripts' fades (SCENA00,
+    // SCENA16; libsnd-reading.md 6.1). 0..127.
+    void SetMasterVolume(int left, int right);
     std::uint64_t Ticks() const { return ticks_; }
     // The tick (VSync count since Play, 1-based) of each loop-end jump so far.
     int LoopJumps() const { return loop_jumps_; }
@@ -207,6 +219,7 @@ private:
     std::uint32_t envx_index_ = 0;                // 0x8018F470
     std::uint16_t damper_ = 0;                    // 0x8018EB58
     bool mono_ = false;                           // 0x8018EBBE
+    bool reached_end_ = false;                    // _SsSeqGetEof stopped the song
     std::int16_t seqid_ = 0;
     std::uint64_t phase_ = 0;                     // samples x kTickDen before VSync 0
     std::uint64_t next_tick_sample_ = 0;

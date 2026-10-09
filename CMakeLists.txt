@@ -176,6 +176,10 @@ add_library(bof3x SHARED
   src/game/d3d_lines.cpp
   src/game/area4_walls.cpp
   src/game/music_loops.cpp
+  src/game/music_seq.cpp
+  src/audio/spu.cpp
+  src/audio/seq.cpp
+  src/audio/song.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
   src/game/d3d_list_fuzz.cpp

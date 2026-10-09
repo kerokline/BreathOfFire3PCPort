@@ -47,6 +47,7 @@
 #include "game/d3d_lines.h"
 #include "game/area4_walls.h"
 #include "game/music_loops.h"
+#include "game/music_seq.h"
 #include "game/battle_actions.h"
 #include "game/battle_flow.h"
 #include "game/enemy_ai_ops.h"
@@ -1426,6 +1427,8 @@ void InjectAll() {
                                 // known-defects.md D239) - after every module's self-test, which all compared Capcom's read
     music_loops::Arm();         // the measured music loops (BOF3X_MUSIC_LOOPS; docs/bgm-comparison.md section 12) -
                                 // after every module's self-test, which all compared the original's rewind
+    music_seq::Arm();           // DIV-0087: the cache's songs through the sequencer (BOF3X_CACHE, BOF3X_MUSIC) - after
+                                // every module's self-test, which all compared the MP3 path
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,
                                 // which all compared the original's arrays (draw_pool.h)
     InjectReport();

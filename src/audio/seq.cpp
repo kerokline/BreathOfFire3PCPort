@@ -96,6 +96,7 @@ void MusicSynth::Reset() {
     envx_index_ = 0;
     damper_ = 0;
     mono_ = false;
+    reached_end_ = false;
     seqid_ = 0;
     phase_ = 0;
     next_tick_valid_ = false;
@@ -404,6 +405,7 @@ void MusicSynth::Eof() {
     }
     s.flags &= ~(kPlay | kReplay | kPause);
     s.flags |= kEnded | kStop;
+    reached_end_ = true;
     s.f2b = 0;
     s.loop_pos = s.start_pos;
     VmSeqKeyOff();
@@ -547,6 +549,7 @@ void MusicSynth::Play(const Song& song, int volume, int frames, int loop_count) 
     ticks_since_play_ = 0;
     loop_jumps_ = 0;
     last_loop_jump_tick_ = 0;
+    reached_end_ = false;
 }
 
 void MusicSynth::SetVolume(int left, int right) {
@@ -567,6 +570,19 @@ void MusicSynth::Decrescendo(int amount, int frames) {
 }
 
 void MusicSynth::SetMono(bool mono) { mono_ = mono; }
+
+bool MusicSynth::Ended() const {
+    if (!reached_end_) return false;
+    for (int v = 0; v < kSeqVoices; ++v)
+        if (spu_.VoiceEnvelope(v) != 0) return false;
+    return true;
+}
+
+void MusicSynth::SetMasterVolume(int left, int right) {
+    if (left < 0 || left > 127 || right < 0 || right > 127) MusicFatal("SetMasterVolume(%d, %d): 0..127", left, right);
+    spu_.SetMainVolumeLeft(static_cast<std::uint16_t>((left * 129) & 0x7FFF));
+    spu_.SetMainVolumeRight(static_cast<std::uint16_t>((right * 129) & 0x7FFF));
+}
 
 void MusicSynth::Pause() {
     // SsSepPause -> _SsSndSetPauseMode (0x8016C1E0); the voices are keyed off
