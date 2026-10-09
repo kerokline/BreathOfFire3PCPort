@@ -56,6 +56,7 @@ import exe_tables   # noqa: E402
 import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
+import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 TARGET = "pc-zh"
@@ -647,6 +648,7 @@ def cmd_build(a):
                 fh.write(b"".join(parts))
             written[layer] += 1
     snd = xa.importer_snd(sources, a.out)
+    bgm = seq.importer_bgm(sources, a.out)
     loc_assets = build_languages(a.lang, sources, a.out)
     # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc
     exe_src = next((s for s in sources if isinstance(s, ExeSource)), None) or \
@@ -655,13 +657,15 @@ def cmd_build(a):
     if exe:
         print("  base/exe  from %-9s data.bin %s" % exe)
     opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
-    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe)
+    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm)
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
         print("  %-9s %d containers written" % (layer, n))
     if snd:
         print("  base/snd  from %s: %d files (wave-from-xa)" % snd)
+    if bgm:
+        print("  base/bgm  from %s: %d files (seq.py)" % (bgm[0], len(bgm[1])))
     if missing:
         print("  missing (no source given carries them):")
         for (layer, k), n in sorted(missing.items()):
@@ -741,7 +745,8 @@ def build_languages(asked, sources, out):
     return assets
 
 
-def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_assets=(), opt_recipe=None, exe=None):
+def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_assets=(), opt_recipe=None, exe=None,
+                   bgm=None):
     with open(recipe_path, "rb") as f:
         rsha = sha(f.read())
     lines = ["# The cache's provenance, written by tools/importer.py build. Every chunk: its",
@@ -772,6 +777,12 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
                   "opt_recipe_sha256 = %s" % toml_str(osha), "opt = ["]
         for name, layer, i, where, h in opt_assets:
             lines.append("  [%s, %s, %d, %s, %s]," % (toml_str(name), toml_str(layer), i, toml_str(where), toml_str(h)))
+        lines.append("]")
+    if bgm:
+        lines += ["", "# base/bgm/: the disc's songs and banks (tools/seq.py, docs/seq-format.md): file, source, hash.",
+                  "bgm = ["]
+        for rel, where, h in bgm[1]:
+            lines.append("  [%s, %s, %s]," % (toml_str(rel), toml_str(where), toml_str(h)))
         lines.append("]")
     if exe:
         lines += ["", "# base/exe/data.bin: BOF3.exe's .data in the PC's layout (tools/exe_tables.py).", "[exe]",
@@ -1484,12 +1495,14 @@ def cmd_check(a):
                 if b not in OWN_FROM or c["layer"] != "base" or c.get("own_why") not in OWN_WHY or len(h) != 64:
                     errs.append("%s: stand-in %s" % (f["name"], b))
     oerrs = check_opt(a.opt_recipe)
-    for e in (errs + oerrs)[:30]:
+    serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
+    for e in (errs + oerrs + serrs)[:30]:
         print("ERROR", e)
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
           % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
              len(oerrs)))
-    errs += oerrs
+    print("seq check: synthetic SEP and VAB round trip, %d error(s)" % len(serrs))
+    errs += oerrs + serrs
     return exe_tables.cmd_check(a) | (1 if errs else 0)
 
 

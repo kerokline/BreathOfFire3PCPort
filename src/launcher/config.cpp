@@ -96,6 +96,10 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
             if (value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-,") ==
                 std::string::npos)
                 cfg.opt = value;
+        } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
+            cfg.cache = value;
+        } else if (key == "music") {  // DIV-0087
+            if (value == "seq" || value == "mp3" || value.empty()) cfg.music = value;
         } else if (key == "filter") {
             if (value == "point") cfg.filter = Filter::kPoint;
             else if (value == "linear") cfg.filter = Filter::kLinear;
@@ -187,6 +191,10 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP; tools/importer.py install puts them in the game's DAT folder\r\n";
     out += "opt=" + cfg.opt + "\r\n";
+    out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
+    out += "cache=" + cfg.cache + "\r\n";
+    out += "# seq (the cache's song where it has one, the default) | mp3 (the PC's files always)\r\n";
+    out += "music=" + cfg.music + "\r\n";
     out += "# linear (the port's own) | point (DIV-0012)\r\n";
     out += std::string("filter=") + (cfg.filter == Filter::kPoint ? "point" : "linear") + "\r\n";
     out += "# clean | satpixie (the SatPixie CRT, DIV-0043)\r\n";
@@ -270,6 +278,13 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
         const std::string playable = ConfigOptPlayable(game_dir, cfg.opt, cfg.language);
         if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
     }
+
+    // DIV-0087: the cache root and the music source, as the ini has them; the
+    // dll checks both.
+    if (GetEnvironmentVariableW(L"BOF3X_CACHE", existing, 64) == 0 && !cfg.cache.empty())
+        SetEnvironmentVariableA("BOF3X_CACHE", cfg.cache.c_str());
+    if (GetEnvironmentVariableW(L"BOF3X_MUSIC", existing, 64) == 0 && !cfg.music.empty())
+        SetEnvironmentVariableA("BOF3X_MUSIC", cfg.music.c_str());
 
     if (GetEnvironmentVariableW(L"BOF3X_FILTER", existing, 64) == 0 &&
         cfg.filter == Filter::kPoint)

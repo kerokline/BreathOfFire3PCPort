@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-04; 30 entries, I1..I30 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-09; 35 entries, I1..I35 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -79,6 +79,7 @@ rule ([`README.md`](README.md)) here too.
 | I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | open 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
 | I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31) |
 | I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
+| I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | open 2026-10-09 (the owner); not for PR #46 |
 
 ---
 
@@ -1449,3 +1450,25 @@ the sibling has. Two pieces, in the owner's order:
 
 ### Outcome
 _(2026-10-05) open; researched, deferred to the localisation rework._
+
+## I35 — The music host suite on the owner's machine
+
+**Ask (2026-10-09, the owner):** make `tools/bgm/host` (`spu_tests`,
+`seq_tests`, `synth_render`) build and run locally, so the SPU model and the
+sequencer can be checked here without a cloud session - after PR #46, not in it.
+**Kind:** tooling
+**Feasibility:** HIGH. The code is plain C++17 and CMake; what stops it on
+Windows is that both test programs check the model's aborts by `fork`ing a
+child and reading its exit, and the render check (`synth_check.py`) looks for
+the Mednafen renders under `/workspace/scratch`. The step-9 session ran the
+suite on a POSIX host only ([`music-seq-engine.md`](music-seq-engine.md)
+section 6).
+**First step:** replace the `fork` in the abort checks with a re-exec of the
+test binary itself with an argument naming the one case to run (`CreateProcess`
+on Windows, `posix_spawn` elsewhere, or CTest's `WILL_FAIL`), build with the
+`cmake-clang-v1` toolchain's `clang++` under `~/.local/share/retcomm`, and give
+`synth_check.py` a `--renders` argument for the owner's render directory.
+**Gated on:** nothing.
+
+### Outcome
+_(2026-10-09) open._

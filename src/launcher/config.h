@@ -57,6 +57,12 @@ struct Config {
     // tools/importer.py from the player's PSP disc. Empty, none (the default).
     // The ini's `opt=` only; no dialog box yet.
     std::string opt;
+    // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
+    // play through the sequencer, and the music source (BOF3X_MUSIC: "seq",
+    // the cache's song where it has one, or "mp3"). Empty: unset, the default
+    // (no cache; seq). The ini's `cache=` and `music=` only; no dialog box.
+    std::string cache;
+    std::string music;
     Filter filter = Filter::kLinear;
     Display display = Display::kFullscreen;
     // BOF3.CFG line 2, Cfg_RenderMode: Capcom's set-up's device index. 0 is
