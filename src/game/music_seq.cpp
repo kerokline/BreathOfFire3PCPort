@@ -389,14 +389,15 @@ long __stdcall TestUnexpected(void*) { bof3::Fatal("DIV-0087 self-test: a Direct
 const void* g_vtable[0x54 / 4];
 struct FakeBuffer { const void* const* vtable; } g_buffer = {g_vtable};
 
-// One synth started as Begin starts it, rendered in Decode's pieces; `ended`
-// (when given) the first piece boundary after which Ended() held, or -1.
-std::vector<std::int16_t> Reference(const std::vector<std::uint8_t>& song_bytes, const psx::Bank& bank, int frames,
+// `m` started as Begin starts it, rendered in Decode's pieces; `ended` (when
+// given) the first piece boundary after which Ended() held, or -1. The synth
+// is the caller's and lives across songs, as the game's does: a song that
+// follows another starts over the first's release tails and reverb, as on the
+// PlayStation's SPU, and its end waits for every voice's envelope.
+std::vector<std::int16_t> Reference(psx::MusicSynth* m, const std::vector<std::uint8_t>& song_bytes, int frames,
                                     int* ended = nullptr) {
     psx::Song song;
     psx::LoadSong(song_bytes.data(), song_bytes.size(), &song);
-    psx::MusicSynth* m = new psx::MusicSynth;
-    m->LoadBank(bank);
     m->SetMono(Mono());
     m->Play(song, 1, 1);
     m->SetVolume(127, 127);
@@ -411,7 +412,6 @@ std::vector<std::int16_t> Reference(const std::vector<std::uint8_t>& song_bytes,
     } else {
         m->Render(out.data(), frames);
     }
-    delete m;
     return out;
 }
 
@@ -439,6 +439,8 @@ void SelfTest() {
     const std::vector<std::uint8_t> bank_bytes = TestBank(), looping = TestSong(7, true), once = TestSong(8, false);
     psx::Bank bank;
     psx::LoadBank(bank_bytes.data(), bank_bytes.size(), &bank);
+    psx::MusicSynth* const ref = new psx::MusicSynth;  // the oracle, one synth across both songs as g_s.synth is
+    ref->LoadBank(bank);
     std::vector<TestFile> files = {{std::string(kTestRoot) + "\\base\\bgm\\007.DAT", &looping, 0},
                                    {std::string(kTestRoot) + "\\base\\bgm\\008.DAT", &once, 0},
                                    {std::string(kTestRoot) + "\\base\\bgm\\bank\\SELFTEST.DAT", &bank_bytes, 0}};
@@ -492,7 +494,7 @@ void SelfTest() {
         Music_Decode(capture.data() + at, static_cast<int>(kHalf));
     }
     const int frames7 = static_cast<int>(capture.size() / 4);
-    const std::vector<std::int16_t> ref7 = Reference(looping, bank, frames7);
+    const std::vector<std::int16_t> ref7 = Reference(ref, looping, frames7);
     long long energy = 0;
     for (std::int16_t v : ref7) energy += static_cast<long long>(v) * v;
     const bool same7 = std::memcmp(capture.data(), ref7.data(), capture.size()) == 0 && energy > 0 && Music_Finished == 0;
@@ -506,7 +508,8 @@ void SelfTest() {
     Music_Buffer = nullptr;
     const bool volume = levels.size() == 4 && levels[0] == -8415 && levels[1] == -1218 && levels[2] == 0 && levels[3] == 0;
 
-    // 3. A once-only song on the same bank (not read again): its end makes
+    // 3. A once-only song on the same bank (not read again), started over the
+    // looping song's release tails as the game starts one: its end makes
     // Music_Finished with zeros after it, the samples before it the Render's.
     capture.clear();
     const int r8 = Music_LoadFile(8);
@@ -519,7 +522,7 @@ void SelfTest() {
     }
     const int frames8 = static_cast<int>(capture.size() / 4);
     int cut = -1;
-    const std::vector<std::int16_t> ref8 = Reference(once, bank, frames8, &cut);
+    const std::vector<std::int16_t> ref8 = Reference(ref, once, frames8, &cut);
     const std::int16_t* got8 = reinterpret_cast<const std::int16_t*>(capture.data());
     bool match = cut > 0 && std::memcmp(got8, ref8.data(), static_cast<std::size_t>(cut) * 4) == 0;
     for (std::size_t i = 2 * static_cast<std::size_t>(cut > 0 ? cut : 0); i < 2 * static_cast<std::size_t>(frames8); ++i)
@@ -538,6 +541,7 @@ void SelfTest() {
 
     Music_Release();
     const bool released = !Active() && !Music_Data;
+    delete ref;
     std::free(Music_File);
 
     g = saved_g;

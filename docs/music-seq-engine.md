@@ -105,10 +105,19 @@ under the project's C++20.
 
 ## 6. Owed on the owner's machine
 
-- `cmake --preset i686 && cmake --build build` with llvm-mingw. Only GCC 13
-  syntax checks were made here.
-- `BOF3X_SHADOW=sound` and `BOF3X_SHADOW='*'`: the new self-test's log line,
-  and the sound fuzz unchanged.
+- ~~`cmake --preset i686 && cmake --build build` with llvm-mingw~~ - done
+  2026-10-09, no warnings.
+- ~~`BOF3X_SHADOW=sound` and `BOF3X_SHADOW='*'`~~ - done 2026-10-09, narrow and
+  wide, 0 mismatches. The first `sound` run failed the once-only case: the
+  self-test's oracle rendered song 8 on a fresh `MusicSynth`, while the game's
+  synth plays it over song 7's release tails and reverb (the design: the SPU's
+  state carries across songs as on the PlayStation), so the samples differed
+  from frame 0 and `Ended()` held 1,024 frames later (45,056 against 44,032).
+  The oracle is now one synth across both songs, as `g_s.synth` is; the engine
+  did not change.
+- The host suite (`tools/bgm/host`) ran in the cloud only: `spu_tests` and
+  `seq_tests` check the aborts with `fork`, so they do not build on Windows
+  (IDEAS I35).
 - A listen: `importer.py` to build the cache, `BOF3X_CACHE=<cache>`, then the
   title and a field, a fight, a once-only track (one of the nine `N` songs),
   a fade-out, and a `Sound_LoadStream` jingle (the inn) between two cache

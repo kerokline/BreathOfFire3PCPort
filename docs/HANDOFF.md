@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-08 night, step 9 - music from the disc - built end to end on `claude/audio-sequence-from-disc-sesn_01Bdfo1SaCEo9UfA2TwW8nJr` off `audio/sequence-from-disc`: the SPU model, libsnd's sequencer, `base/bgm/` from the importer, DIV-0087's seam; measured against renders of every song; **up next, at the owner's machine: the llvm-mingw build, `sound` and `'*'`, a listen with `BOF3X_CACHE` set, then the merge**. Before it, the same day: the unified-data round's steps 3, 4, 6, 8's importer half and the tags on `platform/unified-data-round` (merged as PR #44), whose owed items below still stand)
+**Status:** IN PROGRESS (2026-10-08 night, step 9 - music from the disc - built end to end on `claude/audio-sequence-from-disc-sesn_01Bdfo1SaCEo9UfA2TwW8nJr` off `audio/sequence-from-disc`: the SPU model, libsnd's sequencer, `base/bgm/` from the importer, DIV-0087's seam; measured against renders of every song; built with llvm-mingw and self-tested on the owner's machine 2026-10-09 (`sound`, `'*'` narrow and wide, 0 mismatches; PR #46); **up next: a listen with `BOF3X_CACHE` set, then the merge**. Before it, the same day: the unified-data round's steps 3, 4, 6, 8's importer half and the tags on `platform/unified-data-round` (merged as PR #44), whose owed items below still stand)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -47,10 +47,12 @@ each round**: the tracer arms only what is not ours (635 entries now) -
    address; section 9 the table of all 165 songs against their renders), [`seq-format.md`](seq-format.md) and
    [`seq-import.md`](seq-import.md) (`tools/seq.py`, `base/bgm/`), [`music-seq-engine.md`](music-seq-engine.md)
    (DIV-0087, the seam). In the order they bite:
-   1. **At the machine, first:** `cmake --build build` (new sources: `src/audio/{spu,seq,song}.cpp`,
-      `src/game/music_seq.cpp` - syntax-checked with mingw GCC 13 only), then from a launcher copy with no ini:
-      `BOF3X_SHADOW=sound` (the new `music_seq::SelfTest` runs after `LoopTable_SelfTest`), then `'*'` narrow.
-      Then `python tools/importer.py build --preset pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe
+   1. **Done 2026-10-09 at the machine (PR #46):** the llvm-mingw build, `BOF3X_SHADOW=sound` and `'*'` narrow and
+      wide from an ini-less launcher copy, 0 mismatches. The one catch: `music_seq::SelfTest`'s once-only case
+      compared `Music_Decode` against a *fresh* synth, and the game's synth starts a song over the previous song's
+      release tails and reverb, as the PlayStation's SPU does, so its end came 1,024 frames later - the oracle now
+      plays both songs on one synth. The host suite (`tools/bgm/host`) ran in the cloud only: its tests `fork`,
+      so it wants a POSIX host (I35). **Still owed, the listen:** `python tools/importer.py build --preset pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe
       --source <JP or US cue> --out <cache>` (any PSX disc gives `base/bgm/`; the music bytes are JP's on every
       disc), and play with `BOF3X_CACHE=<cache>` (**42 characters at most** - `File_Open`'s 0x50-byte retry buffer;
       a longer root is fatal at start-up): the title, a town, a fight and its fanfare (`165`), a once-only `N` song
