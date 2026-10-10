@@ -99,9 +99,10 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
                 cfg.language = tag;
             }
         } else if (key == "opt") {
-            if (value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-,") ==
-                std::string::npos)
-                cfg.opt = value;
+            // Kept as written, valid or not: dropping a bad value would play
+            // the default layers instead, so the launcher refuses it
+            // (ConfigOptValid) rather than this file guessing.
+            cfg.opt = value;
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
             cfg.cache = value;
         } else if (key == "music") {  // DIV-0087
@@ -196,7 +197,8 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += std::string("language=") + cfg.language + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
-    out += "# tools/importer.py install puts them in the game's DAT folder\r\n";
+    out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
+    out += "# none: no layer\r\n";
     out += "opt=" + cfg.opt + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
@@ -284,13 +286,17 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
     // played - the one the game is given now, not the ini's: the step above
     // can leave BOF3X_LANG unset, and the environment may already say
     // `original` or another tag, and the DLL refuses a text layer of any
-    // other language at start-up.
-    if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0 && !cfg.opt.empty()) {
-        char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
-        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
-        const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
-        const std::string playable = ConfigOptPlayable(game_dir, cfg.opt, language);
-        if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
+    // other language at start-up. An empty opt= means the default layers
+    // installed (kOptDefault, DIV-0080's walls), opt=none none.
+    if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0) {
+        const std::string wanted = ConfigOptWanted(game_dir, cfg.opt);
+        if (!wanted.empty()) {
+            char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
+            const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
+            const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
+            const std::string playable = ConfigOptPlayable(game_dir, wanted, language);
+            if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
+        }
     }
 
     // DIV-0087: the cache root and the music source, as the ini has them; the
@@ -453,6 +459,65 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
         out += layer;
     }
     return out;
+}
+
+std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt) {
+    if (opt == "none") return std::string();
+    if (!opt.empty()) return opt;
+    std::string out;
+    for (const char* layer : kOptDefault) {
+        std::wstring pattern = game_dir + L"\\DAT\\";
+        for (const char* c = layer; *c; ++c) pattern += static_cast<wchar_t>(*c);
+        pattern += L".*.DAT";   // the DLL's own pattern (dat_load.cpp ReadOptLayers)
+        WIN32_FIND_DATAW fd;
+        HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
+        if (h == INVALID_HANDLE_VALUE) continue;
+        FindClose(h);
+        std::fprintf(stderr, "bof3x-launcher: layer %s is installed and on by default; opt=none in bof3x.ini "
+                     "turns it off\n", layer);
+        if (!out.empty()) out += ',';
+        out += layer;
+    }
+    return out;
+}
+
+bool ConfigOptValid(const std::string& opt, std::string& why) {
+    if (opt.empty() || opt == "none") return true;
+    std::vector<std::string> names;
+    size_t at = 0;
+    for (;;) {
+        const size_t end = std::min(opt.find(',', at), opt.size());
+        const std::string name = opt.substr(at, end - at);
+        if (name.empty()) {
+            why = "an empty layer name (two commas, or one at an end)";
+            return false;
+        }
+        if (name.size() > 23) {   // dat_load.cpp kOptName - 1
+            why = "layer \"" + name + "\" is longer than 23 characters";
+            return false;
+        }
+        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-") !=
+            std::string::npos) {
+            why = "layer \"" + name + "\" has a character other than a letter, digit or -";
+            return false;
+        }
+        if (name == "none" || name == "original") {
+            why = "\"" + name + "\" in a list; opt=none alone turns every layer off";
+            return false;
+        }
+        if (std::find(names.begin(), names.end(), name) != names.end()) {
+            why = "layer " + name + " named twice";
+            return false;
+        }
+        names.push_back(name);
+        if (end == opt.size()) break;
+        at = end + 1;
+    }
+    if (names.size() > 8) {   // dat_load.cpp kOptMax
+        why = "more than 8 layers";
+        return false;
+    }
+    return true;
 }
 
 bool ConfigLanguageKnown(const std::string& code) {

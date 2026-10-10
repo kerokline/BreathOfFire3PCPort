@@ -92,7 +92,9 @@ char g_lang[8];
 // psp-names-en-150, psp-names-ja-JP, area4-walls), in the order they land, read and
 // checked once at injection. Each is a letter-or-digit-or-hyphen name of at
 // most kOptName - 1 characters; the longest today is 16. Empty = none, and
-// "original" is also none (as BOF3X_LANG's).
+// "original" and "none" are also none (as BOF3X_LANG's; "none" as the ini's opt=).
+// The default of DIV-0080's layer is the launcher's (config.h kOptDefault): it
+// names area4-walls here when that layer is installed and opt= is empty.
 constexpr int kOptMax = 8;
 constexpr int kOptName = 24;
 // "DAT\" + a layer + "." + a file name + NUL: 4 + 23 + 1 + 35 + 1. The
@@ -270,7 +272,7 @@ void ReadOptLayers() {
     char list[kOptMax * kOptName];
     const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", list, sizeof list);
     if (n >= sizeof list) bof3::Fatal("DIV-0086: BOF3X_OPT is %lu characters; at most %u", n, (unsigned)sizeof list - 1);
-    if (n == 0 || std::strcmp(list, "original") == 0) return;
+    if (n == 0 || std::strcmp(list, "original") == 0 || std::strcmp(list, "none") == 0) return;
     for (char* p = list;;) {
         char* end = std::strchr(p, ',');
         const std::size_t len = end ? static_cast<std::size_t>(end - p) : std::strlen(p);
@@ -306,20 +308,28 @@ void ReadOptLayers() {
 // DIV-0080's old switch. Area 4's walls were written by coordinate from a table
 // in our code, on unless BOF3X_AREA4_WALLS=0; they are now the area4-walls
 // layer, built from the player's Western PSX disc and named in BOF3X_OPT
-// (docs/opt-layers.md section 1). A script still asking for the shipped map
-// (0) gets it, the default now, with a line; anything else asked for walls
-// this switch no longer gives, and is refused rather than ignored.
+// (docs/opt-layers.md section 1), which the launcher names by default when it
+// is installed. A script still asking for the shipped map (0) gets it when
+// the layer is not named, with a line, and is refused when it is (the
+// launcher's default, or BOF3X_OPT): it would get walls it asked to be
+// without. Anything else asked for walls this switch no longer gives, and is
+// refused rather than ignored.
 void RetiredAreaWallsSwitch() {
     char text[16];
     const DWORD n = GetEnvironmentVariableA("BOF3X_AREA4_WALLS", text, sizeof text);
     if (n == 0) return;
     if (n == 1 && text[0] == '0') {
-        bof3::Log("DIV-0080: BOF3X_AREA4_WALLS is retired; area 4's map is the one loaded unless BOF3X_OPT names "
+        for (int i = 0; i < g_opt_count; ++i)
+            if (std::strcmp(g_opt[i], "area4-walls") == 0)
+                bof3::Fatal("DIV-0080: BOF3X_AREA4_WALLS=0 is retired, and BOF3X_OPT names area4-walls (the "
+                            "launcher's default when it is installed); BOF3X_OPT=none, or an ini opt=none, "
+                            "plays the shipped map");
+        bof3::Log("DIV-0080: BOF3X_AREA4_WALLS is retired; area 4's map is the one loaded, BOF3X_OPT not naming "
                   "area4-walls");
         return;
     }
     bof3::Fatal("DIV-0080: BOF3X_AREA4_WALLS is retired - area 4's walls are the area4-walls layer from a Western "
-                "PSX disc (tools/importer.py build --opt area4-walls, install --opt area4-walls, BOF3X_OPT=area4-walls)");
+                "PSX disc (tools/importer.py build and install, on by default with such a disc; BOF3X_OPT=area4-walls)");
 }
 
 }  // namespace

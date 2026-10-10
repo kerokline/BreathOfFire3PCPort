@@ -250,6 +250,16 @@ int wmain(int argc, wchar_t** argv) {
     const std::wstring ini = OwnDirectory() + L"\\bof3x.ini";
     bof3x::Config cfg;
     if (!bof3x::ConfigLoad(ini, cfg)) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
+    // DIV-0086 / DIV-0080: a bad opt= is refused, not dropped - dropped, it
+    // would read as empty and play the default layers the player may have
+    // meant to turn off.
+    {
+        std::string why;
+        if (!bof3x::ConfigOptValid(cfg.opt, why))
+            Die(L"%ls says opt=%hs: %hs.\n\nopt= is empty (the default layers installed), none, or a "
+                L"comma-separated list of layer names (docs/launcher-settings.md).",
+                ini.c_str(), cfg.opt.c_str(), why.c_str());
+    }
 
     if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {
         // The pad, for the dialogs' navigation and the Controls capture; stopped

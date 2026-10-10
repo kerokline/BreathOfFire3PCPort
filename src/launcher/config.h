@@ -66,9 +66,12 @@ struct Config {
     std::string language = kLanguageOriginal;
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
-    // psp-maps, psp-names-en-150, psp-names-ja-JP. Built and installed by
-    // tools/importer.py from the player's PSP disc. Empty, none (the default).
-    // The ini's `opt=` only; no dialog box yet.
+    // psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls. Built and
+    // installed by tools/importer.py from the player's PSP disc (area4-walls:
+    // a Western PSX disc). Empty (the default): the default layers that are
+    // installed (kOptDefault); "none": no layer; a list: exactly that list.
+    // The ini's `opt=` only, kept as written (ConfigOptValid); no dialog box
+    // yet, so a save writes back what was read and never pins the default.
     std::string opt;
     // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
     // play through the sequencer, and the music source (BOF3X_MUSIC: "seq",
@@ -181,6 +184,24 @@ std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir);
 // empty or "original" for none, under which no text layer plays. Each layer
 // dropped is said on stderr; the DLL refuses either case at start-up.
 std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language);
+
+// The layers played when the ini's `opt=` is empty and BOF3X_OPT is unset,
+// each only when its DAT\<layer>.*.DAT is installed: DIV-0080's walls, on by
+// default since 2026-10-10 (the owner's word). `opt=none` turns them off, as
+// does an `opt=` list that does not name them.
+inline constexpr const char* kOptDefault[] = {"area4-walls"};
+
+// The list the game is offered for an ini's `opt=` value (before
+// ConfigOptPlayable): "none" -> empty; empty -> the kOptDefault layers
+// installed in `game_dir`; anything else -> itself.
+std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt);
+
+// Whether an ini's `opt=` value can be honoured: empty, "none", or a
+// comma-separated list of distinct names of letters, digits and '-' (at most
+// 8, each 1..23 characters, as the DLL's ReadOptLayers takes them), none of
+// them "none" or "original". On false `why` says what is wrong; the launcher
+// refuses to start rather than fall back to the default layers.
+bool ConfigOptValid(const std::string& opt, std::string& why);
 
 // True for "original" or a tag in kLanguages.
 bool ConfigLanguageKnown(const std::string& code);
