@@ -9,9 +9,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
-#include <sys/wait.h>
-#include <unistd.h>
 #include <vector>
+
+#include "abort_check.h"
 
 namespace {
 
@@ -764,16 +764,7 @@ void TestReverbWriteDisable() {
 
 // The model aborts on what it does not implement.
 bool Aborts(void (*fn)()) {
-    std::fflush(stdout);
-    pid_t pid = fork();
-    if (pid == 0) {
-        psx::SetSpuAbortHook([](const char*) {});
-        fn();
-        _exit(0);
-    }
-    int status = 0;
-    waitpid(pid, &status, 0);
-    return WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT;
+    return abort_check::Aborts(fn, [] { psx::SetSpuAbortHook([](const char*) {}); });
 }
 
 void TestAborts() {
@@ -800,7 +791,8 @@ void TestAborts() {
 
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    abort_check::ChildMode(argc, argv);
     struct {
         const char* name;
         void (*fn)();
