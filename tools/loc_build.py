@@ -7,6 +7,7 @@ walks it after the original file, so its chunks land on top.
 
     python tools/loc_build.py all   --disc DISC --game bof3 [--lang en-US] [--upscaler CMD | --glyphs PNG] [--only AREA000]
     python tools/loc_build.py all   --discs CDImage --game bof3 [--dry-run]     # every held disc in the directory
+    python tools/loc_build.py all   --disc DISC --cache CACHE [--lang en-US]    # disc-only: no PC install
     python tools/loc_build.py sheet --disc DISC --out analysis/font/en_cells.png
     python tools/loc_build.py export --disc DISC --out analysis/font/en_8x12.png
 
@@ -39,6 +40,18 @@ first: `BOF3.exe` must hash as the catalogued port, and its `DAT/` is named
 if it is the shipped tree. `--dry-run` identifies and writes nothing (with one
 `--disc` too). English discs are built first: the French and German title
 menus borrow their CONFIG row from an English overlay already built.
+
+## Without the PC install: `--cache CACHE`
+
+`--cache` replaces `--game` with an importer cache built from a PlayStation
+disc alone (`importer.py build --source DISC`, which writes base/dat/ and
+base/exe/; `importer.py build --lang` runs this itself when no PC source is
+given). The text blocks are converted on the donor's own slot table, the font
+is appended to a blank table where the PC build keeps the port's Chinese one,
+the exe anchors come from base/exe/data.bin or, where the disc's image does
+not carry them, from PC_SHA. Overlays go to CACHE/loc/<tag>/dat/<NAME>.DAT.
+What this gives up against a build over the PC install, measured container by
+container, is docs/loc-build-disc-only.md.
 
 ## Replicating a build: `--upscaler`
 
@@ -146,6 +159,13 @@ SUFFIX_OF = {0x151B: 0x50, 0x151C: 0x51, 0x151F: 0x52, 0x1520: 0x53}
 # is the disc's (DIV-0013). The second suffix's cells were not identified in
 # the atlas, so it keeps the port's glyphs.
 EX_CELLS = ((156, 60), (168, 60))
+# A disc-only build (DiscCache) has no shipped table to keep the second
+# suffix's two glyphs from, so it takes the cells the disc's own mapper gives
+# its codes: on the 21-wide 12 px grid a 0x15 nn code is cell nn + 0x5B (the
+# sibling's docs/TEXT_ENGINE.md, 0x80151F4C) - which puts EX's 0x151B / 0x151C
+# at EX_CELLS above, and 0x151F / 0x1520 at these two. Their shapes are not
+# identified (docs/loc-build-disc-only.md section 4).
+SECOND_CELLS = ((204, 60), (216, 60))
 # The French and German discs carry more of the same grid: accented letters
 # in the cells after 0x93, in both sets (FR 0x94..0xAA, DE 0x94..0xA7; the US
 # disc's cells there are empty - measured 2026-09-24 off the three atlases,
@@ -292,7 +312,15 @@ def cell_advance(cell, mono):
     return max(ink) + 2
 
 
-def build_table(base_table, rows, redrawn=None, mono=False):
+def blank_table():
+    """The disc-only build's stand-in for the port's Chinese table (DiscCache):
+    as many glyphs, every one blank. The Latin repaint and everything appended
+    are the same as over the shipped table; what differs is only what the PC
+    build keeps of the port's glyphs (docs/loc-build-disc-only.md section 4)."""
+    return bytes(font_pc.GLYPH_BYTES * APPEND_AT)
+
+
+def build_table(base_table, rows, redrawn=None, mono=False, disc_only=False):
     count = len(base_table) // font_pc.GLYPH_BYTES
     if count != APPEND_AT:
         raise SystemExit("base table has %d glyphs, expected %d" % (count, APPEND_AT))
@@ -360,8 +388,8 @@ def build_table(base_table, rows, redrawn=None, mono=False):
     # The suffixes' glyphs (SUFFIX_AT ..): EX from the disc, the second
     # suffix as shipped, before any painting.
     for i, g in enumerate(SUFFIX_GLYPHS):
-        if i < len(EX_CELLS):
-            x0, y0 = EX_CELLS[i]
+        if i < len(EX_CELLS) or disc_only:
+            x0, y0 = (EX_CELLS + SECOND_CELLS)[i]
             big = [[rows[y0 + y // 2][x0 + x // 2] for x in range(font_pc.GLYPH)] for y in range(font_pc.GLYPH)]
             table += pc_glyph_from_rows(big)
         else:
@@ -646,7 +674,39 @@ def message_end(buf, i):
 
 def convert_block(donor, base, room):
     """A donor text block -> a PC one. Slots whose donor message is not
-    English keep the PC file's own message."""
+    English keep the PC file's own message.
+
+    `base` None is the disc-only build (DiscCache): no PC block to keep a
+    message from. The slot count is then the donor's own - the same as the
+    PC's in every block of the US disc (288 of 288, 2026-10-10,
+    docs/loc-build-disc-only.md) - and a slot whose donor message does not
+    convert is an empty message, where the PC build keeps the port's Chinese
+    one (on the US disc: the sixteen Japanese template messages of 31 areas,
+    496 slots)."""
+    if base is None:
+        n = struct.unpack_from("<H", donor, 0)[0] // 2 if len(donor) >= 2 else 0
+        if not n or 2 * n > len(donor):
+            raise ValueError("disc-only: the donor block's slot table (%d slots) does not fit its %d bytes, "
+                             "and there is no PC block to take the count from" % (n, len(donor)))
+        d_offs = struct.unpack_from("<%dH" % n, donor, 0)
+        body, placed, table, kept = bytearray(), {}, [], 0
+        for slot in range(n):
+            off = d_offs[slot]
+            if off not in placed:
+                # A slot pointing outside its block (15 French and 11 German
+                # areas, where the PC's slot is empty or unused) is empty too.
+                msg = convert_run(donor, off)[0] if 2 * n <= off <= len(donor) else None
+                if msg is None:
+                    msg = b"\0"
+                placed[off] = 2 * n + len(body)
+                body += msg
+            if not (2 * n <= off <= len(donor)) or convert_run(donor, off)[0] is None:
+                kept += 1
+            table.append(placed[off])
+        block = struct.pack("<%dH" % n, *table) + bytes(body)
+        if len(block) > room:
+            raise ValueError("block is 0x%X bytes, room is 0x%X" % (len(block), room))
+        return block, kept
     # The slot count is the PC file's: its event script is what names the
     # slots. The US tables agree with it everywhere; the French and German
     # ones do not always (2026-09-24: 15 FR and 11 DE areas) - some entries
@@ -696,6 +756,301 @@ def dat_dir(game):
     if not os.path.isdir(d):
         raise SystemExit("%s: no DAT directory" % game)
     return d
+
+
+# ---------------------------------------------------------------- what the overlays are built against
+
+# Two answers to "the PC side" (docs/loc-build-disc-only.md). `--game` is the
+# PC install: its DAT/ containers and BOF3.exe, as every build before
+# 2026-10-10. `--cache` is an importer cache built from a PlayStation disc
+# alone: its base/dat/ (the language-neutral containers) and base/exe/data.bin
+# (BOF3.exe's .data in the PC's layout, from the disc, tools/exe_tables.py),
+# with recipes/pc-zh.toml naming the containers and the chunks the PC's
+# loc/zh-CN layer holds - which a disc-only cache has no bytes of.
+
+class PcInstall:
+    """The PC install: DAT/ and BOF3.exe. Overlays go beside the originals as <tag>.<NAME>.DAT."""
+    disc_only = False
+
+    def __init__(self, game):
+        self.game, self.dat = game, os.path.join(game, "DAT")   # dat_dir's check is the build's (build_all)
+        self._exe = None
+
+    def __str__(self):
+        return self.dat
+
+    def exe(self, va, size):
+        if self._exe is None:
+            with open(os.path.join(self.game, "BOF3.exe"), "rb") as f:
+                self._exe = f.read()
+        exe = self._exe
+        pe = struct.unpack_from("<I", exe, 0x3C)[0]
+        nsec, optsz = struct.unpack_from("<H", exe, pe + 6)[0], struct.unpack_from("<H", exe, pe + 20)[0]
+        image_base = struct.unpack_from("<I", exe, pe + 24 + 28)[0]
+        for i in range(nsec):
+            vsz, rva, rsz, raw = struct.unpack_from("<IIII", exe, pe + 24 + optsz + i * 40 + 8)
+            if image_base + rva <= va < image_base + rva + rsz:
+                return exe[raw + va - image_base - rva:][:size]
+        raise SystemExit("0x%X is not in BOF3.exe" % va)
+
+    def carried(self, va, size):
+        return True
+
+    def names(self):
+        """The shipped containers: every NAME.DAT, no overlay (a dot in the stem)."""
+        return [n for n in sorted(os.listdir(self.dat))
+                if os.path.splitext(n)[1].upper() == ".DAT" and "." not in os.path.splitext(n)[0]]
+
+    def chunks(self, name):
+        """[(kind, tag, bytes or None, size)] of a container in order, or None if there is none."""
+        path = os.path.join(self.dat, name)
+        if not os.path.exists(path):
+            return None
+        blob, chunks = dat.load(path)
+        return [(c.kind, c.tag, blob[c.offset:c.offset + c.size], c.size) for c in chunks]
+
+    def out_path(self, tag, name):
+        return os.path.join(self.dat, "%s.%s" % (tag, name))
+
+    def english_title_pages(self):
+        """[(label, path)] of the English START.DAT overlays already built beside the originals."""
+        language_tags.note_retired_overlays(self.dat)
+        return [(f, os.path.join(self.dat, f)) for f in sorted(os.listdir(self.dat)) if f.endswith(".START.DAT")
+                and f[:-len(".START.DAT")] in language_tags.TAGS and primary(f[:-len(".START.DAT")]) == "en"]
+
+
+class DiscCache:
+    """An importer cache from a PlayStation disc: base/dat/, base/exe/, and the recipe.
+
+    A chunk of the PC's loc/zh-CN layer (the area text, the pools, the font,
+    the text CLUT, the title page, ...) has no bytes here: `chunks` gives it as
+    (kind, tag, None, size), the size the recipe records. A read of the exe
+    image is the disc's: `carried` says whether every byte of a range was
+    filled from the disc (`map`, `table`, `widen` - whose 16-byte name fields
+    are blank -, or `exe`); a `pointer` or `none` byte is zero. Overlays go to
+    <cache>/loc/<tag>/dat/<NAME>.DAT, the layout importer.py writes."""
+    disc_only = True
+    CARRIED = ("exe", "map", "table", "widen")
+
+    def __init__(self, cache):
+        import tomllib
+        self.cache = cache
+        self.dat = os.path.join(cache, "base", "dat")
+        meta_path = os.path.join(cache, "base", "exe", "data.toml")
+        if not os.path.isdir(self.dat) or not os.path.exists(meta_path):
+            raise SystemExit("%s: not an importer cache with base/dat/ and base/exe/ (importer.py build writes both)" % cache)
+        with open(meta_path, "rb") as f:
+            meta = tomllib.load(f)
+        with open(os.path.join(cache, "base", "exe", meta["image"]["file"]), "rb") as f:
+            self.image = f.read()
+        if hashlib.sha256(self.image).hexdigest() != meta["image"]["sha256"]:
+            raise SystemExit("%s: base/exe/data.bin does not hash as data.toml says" % cache)
+        self.va, self.build = meta["image"]["va"], meta["image"]["build"]
+        self.ranges = sorted((lo, hi, how) for lo, hi, how, _ in meta["image"]["ranges"])
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "recipes", "pc-zh.toml"), "rb") as f:
+            self.recipe = {r["name"]: r["chunks"] for r in tomllib.load(f)["file"]}
+
+    def __str__(self):
+        return self.cache
+
+    def exe(self, va, size):
+        if not (self.va <= va and va + size <= self.va + len(self.image)):
+            raise SystemExit("0x%X: not in the cache's .data image (base/exe/data.bin)" % va)
+        return self.image[va - self.va:va - self.va + size]
+
+    def carried(self, va, size):
+        at = va
+        for lo, hi, how in self.ranges:
+            if hi <= at or lo > at:
+                continue
+            if how not in self.CARRIED:
+                return False
+            at = hi
+            if at >= va + size:
+                return True
+        return at >= va + size
+
+    def names(self):
+        return sorted(self.recipe)
+
+    def chunks(self, name):
+        if name not in self.recipe:
+            return None
+        path = os.path.join(self.dat, name)
+        have = {}
+        if os.path.exists(path):
+            blob, chunks = dat.load(path)
+            have = {(c.kind, c.tag): blob[c.offset:c.offset + c.size] for c in chunks}
+        return [(c["kind"], c["tag"], have.get((c["kind"], c["tag"])) if c["layer"] == "base" else None, c["size"])
+                for c in self.recipe[name]]
+
+    def out_path(self, tag, name):
+        d = os.path.join(self.cache, "loc", tag, "dat")
+        os.makedirs(d, exist_ok=True)
+        return os.path.join(d, name)
+
+    def english_title_pages(self):
+        d = os.path.join(self.cache, "loc")
+        tags = sorted(t for t in os.listdir(d) if t in language_tags.TAGS and primary(t) == "en") if os.path.isdir(d) else []
+        return [("loc/%s/dat/START.DAT" % t, os.path.join(d, t, "dat", "START.DAT")) for t in tags
+                if os.path.exists(os.path.join(d, t, "dat", "START.DAT"))]
+
+
+def chunk_of(game, name, kind, tag):
+    """(bytes or None, size) of one chunk of a container, or None if it has no such chunk."""
+    for k, t, b, size in game.chunks(name) or ():
+        if (k, t) == (kind, tag):
+            return b, size
+    return None
+
+
+# The anchors (docs/loc-build-disc-only.md section 3). Every converter of the
+# exe's tables finds its donor's copy on the disc by bytes the PC's .data and
+# the disc share - a table's numbers, the bytes around a run of strings. Over
+# the PC install they are read out of BOF3.exe. A disc-only cache has them in
+# base/exe/data.bin only where the disc's image carries them (DiscCache.carried):
+# the US image lacks five of them (measured 2026-10-10), each other build its
+# own few. So each is also held as the SHA-256 of the PC's bytes - never the
+# bytes (CLAUDE.md rule 1; the owner's stance on Capcom's tables in code,
+# 2026-10-10) - and where the image lacks one the disc is searched for the
+# window that hashes to it. A build over the PC install checks every hash
+# (check_anchors); `loc_build.py anchors --game DIR` prints them anew.
+
+def anchor_pieces(name):
+    """The PC ranges [(va, size)] whose bytes, end to end, are the anchor `name`."""
+    pieces = {
+        "verb sets": [(VERB_SETS, VERB_SHARED_SETS * 5)],
+        "char tail 0": [(CHAR_RECORDS + CHAR_NAME_PC, CHAR_STRIDE - CHAR_NAME_PC)],
+        "char tails": [(CHAR_RECORDS + k * CHAR_STRIDE + CHAR_NAME_PC, CHAR_STRIDE - CHAR_NAME_PC)
+                       for k in range(CHAR_COUNT)],
+        "merchant": [(MERCHANT_ANCHOR, 12)],
+        "battle boxes": [(BATTLE_BOXES, BATTLE_COUNT * 8)],
+        "label head": [(LABEL_HEAD, LABEL_HEAD_LEN)],
+        "label tail": [(LABEL_TAIL, LABEL_TAIL_LEN)],
+        "item types head": [(LABEL_TYPES_HEAD, 16)],
+        "battle tail": [(LABEL_BATTLE_TAIL, 16)],
+        "master head": [(LABEL_MASTER_HEAD, LABEL_MASTER_HEAD_LEN)],
+        "master lists": [(LABEL_MASTER_LISTS, LABEL_MASTER_LISTS_LEN)],
+        "sort head": [(LABEL_SORT_HEAD, LABEL_SORT_HEAD_LEN)],
+        "formation pair 0": [(LABEL_FORMATIONS + 16, 12)],
+        "formation pairs": [(LABEL_FORMATIONS + 28 * i + 16, 12) for i in range(LABEL_FORMATION_COUNT)],
+        "wheel triangle": [(LABEL_WHEEL_TRIANGLE, LABEL_WHEEL_TRIANGLE_LEN)],
+        "gene head": [(LABEL_GENE_HEAD, LABEL_GENE_HEAD_LEN)],
+        "gene tail": [(LABEL_GENE_TAIL, LABEL_GENE_TAIL_LEN)],
+        "village rows": [(LABEL_VILLAGE_ROWS, LABEL_VILLAGE_ROWS_LEN)],
+        "village rects": [(LABEL_VILLAGE_RECTS, LABEL_VILLAGE_RECTS_LEN)],
+        "village kinds": [(LABEL_VILLAGE_KINDS, LABEL_VILLAGE_KINDS_LEN)],
+        "faerie stat 0": [(FAERIE_TRAITS, 4)],
+        "faerie stats": [(FAERIE_TRAITS + FAERIE_STRIDE * r, 4) for r in range(FAERIE_COUNT)],
+        "fish rows": [(FISH_ROWS, FISH_ROWS_LEN)],
+        "fish quads": [(FISH_QUADS, FISH_QUADS_LEN)],
+        "fish label/pause": [(FISH_LINES + 8 * i + 4, 2) for i in range(FISH_LINE_COUNT)],
+    }
+    for what, va, stride, count, name_at in NAME_TABLES:
+        # A record's numbers: the bytes before its name and after it.
+        nums = lambda i: [(va + i * stride + o, n) for o, n in
+                          ((0, name_at), (name_at + NAME_LEN, stride - name_at - NAME_LEN)) if n]
+        pieces["names %s 1" % what] = nums(1)
+        pieces["names %s" % what] = [r for i in range(count) for r in nums(i)]
+    return pieces if name is None else pieces[name]
+
+
+PC_SHA = {   # measured 2026-10-10 from the catalogued BOF3.exe (pc-zh); `loc_build.py anchors`
+    "verb sets": "72d024369e7e143add3077c29177169b4749452a4d424f857155ec4534e5b3dd",
+    "char tail 0": "3d87375533e043f9434d744b922e9a57b4f96c6732df8d2ead55a574a76dde31",
+    "char tails": "fbd633004285ecca106244557620f4d706104d34c80cb7d0109bf5658befaac8",
+    "merchant": "26d1f260ec3e0fa54fbc894d1fccf7111db0129cfa169165fef87e6597572f60",
+    "battle boxes": "52fc175de9440d1ea1a495528710f2869d23154267a87e89ccd8e0b8754ab104",
+    "label head": "cfff8c35c1cb007ec4105f58fbc99e146cccf729715050b25f8c64ecff6590ed",
+    "label tail": "1c26f21c8646343815ec3b3541c445a31220b10ee68d2b4f6b8245fa53a5d1da",
+    "item types head": "72ac7c1f9bba1118d9b55836b835730a5af01dee452b4b4e3bc3b28375692e39",
+    "battle tail": "8787ddb8581a74257063551bf9817d376dd90d9473ed54ed76f87d8093031139",
+    "master head": "e402f65d5ec079e5f6243d5ece75757f76dd438ee28353683a64e147c371ac71",
+    "master lists": "54beb205640729fdfc3ced948578d31a73fa12a56c252c8a3ee91afe32c89b3b",
+    "sort head": "40f0388a0e776618e2ab16570edaa576ca06d8d57e2d4af0e5ea6c3eea4fddc9",
+    "formation pair 0": "15ec7bf0b50732b49f8228e07d24365338f9e3ab994b00af08e5a3bffe55fd8b",
+    "formation pairs": "f8314c458ab4cfd90fcf9a9caaf3f12e7838bc487d8e0a2b5eb3e1d8dead7289",
+    "wheel triangle": "9edcafb2b4be187893d796687492a3c6b2e2e9f24313e88282bbab2b034ea462",
+    "gene head": "d88f9d085672f99d2e4a3f0c857923b955f12558e54082090d0310f31eabbccb",
+    "gene tail": "f7e59947f1ac782643c0f49b41afdc2bf5507f670c31959b0df5f63a22cd0902",
+    "village rows": "2f7dbbfd3c47aca0262b45b79b984c1f4c09e8b8a08d3bb30b72b07d9d2001ea",
+    "village rects": "2a876d9960a822d13d0ff20bc03f51ab82a5c9e99dafdfa27176be74c8cba4f5",
+    "village kinds": "86edc365dbd7e4f155187a6a953e3d4a3c53209e5caf65dd9699b5cf2ae14bd6",
+    "faerie stat 0": "f4a1f368908311763fa2bb8141c0615019783aa727e077441117c83d0c3c6816",
+    "faerie stats": "253445f72876405c1d232e8634ead180729f7c18ab4cdeacdde0b75532f0b3f6",
+    "fish rows": "da3afd1fdbe1a1867fa5a0f146518d5975ac37d3bee2ccff3ae10f32d5b54a9b",
+    "fish quads": "f3a51dbade9224428cd300dba79198a6ccfa34071a87a32f9a1e49e1f5f243e7",
+    "fish label/pause": "1f30c4f31acbf1c081ae6abf092a99b230fec618b1977c86cd6dfd495fe0a631",
+    "names consumables 1": "d840ea7a397ea0f4467d0dee3fe3a27515542be311f33897d047545fe76fd935",
+    "names consumables": "f11bfab8b494d5f44eb63d3b8da267eacb01a09b943b6031de9b444d9d768d12",
+    "names key items 1": "29eeb6ae650e1e06294bc5e31567365f8cbe5b25740d3cb741087ef06bb26466",
+    "names key items": "a6c1d879dc56fdfa619b9aa1500d97c4824288211cdc0f8eec8237e89480e103",
+    "names weapons 1": "95bb725c3dbcc5932084822d92e5a3a4c788f5c6aaab25234d5aed1f55aeb099",
+    "names weapons": "f99aeb401bf431705f0efa686510d04075d3a12a2761d9c2431545b7a08c60aa",
+    "names armour 1": "9bbd8e2da3903e90a46ee981c38a6a92308e3b1595663f1d85aab44d29dbd49b",
+    "names armour": "cf9f143239a5fc88734371491d3a7db3cde424d013980a4d4c9682cd37893d36",
+    "names accessories 1": "0c7fe77cef07ccb76b9685cd689b0fcdfede919af3428b2f4e0a6d2efe0406cc",
+    "names accessories": "13b23beb564c835e69b6553f562d26d26e1effdcde3927c8a081587929d5d370",
+    "names abilities 1": "6b1fdb7eb1c2b10b2782cd384058fe52407161babd406bc0afec9573c2924791",
+    "names abilities": "ef65c5f3e9060baa836fa9d69a58831e588e479e00efba2daf796d72e80aaf7e",
+}
+# The trait records whose PC name field holds no glyph string, kept empty
+# (convert_labels group 16): the sixtieth, record 59. Checked like PC_SHA.
+FAERIE_UNNAMED = (59,)
+
+
+def sha_hex(b):
+    return hashlib.sha256(b).hexdigest()
+
+
+def anchor(game, name):
+    """The anchor's bytes, or None where a disc-only image does not carry every piece of them."""
+    pieces = anchor_pieces(name)
+    if not all(game.carried(va, n) for va, n in pieces):
+        return None
+    return b"".join(game.exe(va, n) for va, n in pieces)
+
+
+def find_anchor(game, blob, name, start=0, end=None):
+    """blob.find(the anchor, start, end): by its bytes, or else by PC_SHA."""
+    a = anchor(game, name)
+    if a is not None:
+        return blob.find(a, start) if end is None else blob.find(a, start, end)
+    size = sum(n for _, n in anchor_pieces(name))
+    return find_hashed(blob, size, PC_SHA[name], start, None if end is None else end - size)
+
+
+def same_anchor(game, name, got):
+    """Whether `got` is the anchor: its bytes, or else its hash."""
+    a = anchor(game, name)
+    return got == a if a is not None else sha_hex(got) == PC_SHA[name]
+
+
+def anchor_table(game):
+    """{name: sha256} of every anchor, from the PC install."""
+    return {name: sha_hex(b"".join(game.exe(va, n) for va, n in pieces))
+            for name, pieces in anchor_pieces(None).items()}
+
+
+def check_anchors(game):
+    """Against the PC install: PC_SHA and FAERIE_UNNAMED are what its BOF3.exe holds."""
+    bad = sorted(n for n, h in anchor_table(game).items() if PC_SHA.get(n) != h)
+    traits = game.exe(FAERIE_TRAITS, FAERIE_STRIDE * FAERIE_COUNT)
+    if tuple(r for r in range(FAERIE_COUNT) if traits[FAERIE_STRIDE * r + 4] < 0x80) != FAERIE_UNNAMED:
+        bad.append("FAERIE_UNNAMED")
+    if bad:
+        raise SystemExit("loc_build: the anchors %s are not this BOF3.exe's (PC_SHA; `loc_build.py anchors`)"
+                         % ", ".join(bad))
+
+
+def find_hashed(blob, size, digest, start=0, end=None):
+    """The first offset >= start (and <= end) whose `size` bytes hash to `digest`, or -1."""
+    end = len(blob) - size if end is None else min(end, len(blob) - size)
+    sha = hashlib.sha256
+    for at in range(start, end + 1):
+        if sha(blob[at:at + size]).hexdigest() == digest:
+            return at
+    return -1
 
 
 def export_image(rows):
@@ -758,11 +1113,11 @@ KIND_NAMES = 5      # ours (DIV-0008): tag = PC VA of record 0's name field, pay
 
 def convert_pool(donor, base):
     d0, d1 = struct.unpack_from("<II", donor, 0)
-    b0, b1 = struct.unpack_from("<II", base, 0)
+    b0, b1 = struct.unpack_from("<II", base, 0) if base is not None else (8, None)   # None: disc-only
     if d0 != 8 or b0 != 8:
         raise ValueError("pool header is not (8, n)")
-    first, kept0 = convert_block(donor[d0:d1], base[b0:b1], POOL_ROOM)
-    second, kept1 = convert_block(donor[d1:], base[b1:], POOL_ROOM)
+    first, kept0 = convert_block(donor[d0:d1], base[b0:b1] if base is not None else None, POOL_ROOM)
+    second, kept1 = convert_block(donor[d1:], base[b1:] if base is not None else None, POOL_ROOM)
     pool = struct.pack("<II", 8, 8 + len(first)) + first + second
     if len(pool) > POOL_ROOM:
         raise ValueError("pool is 0x%X bytes, room is 0x%X" % (len(pool), POOL_ROOM))
@@ -770,16 +1125,10 @@ def convert_pool(donor, base):
 
 
 def exe_bytes(game, va, size):
-    with open(os.path.join(game, "BOF3.exe"), "rb") as f:
-        exe = f.read()
-    pe = struct.unpack_from("<I", exe, 0x3C)[0]
-    nsec, optsz = struct.unpack_from("<H", exe, pe + 6)[0], struct.unpack_from("<H", exe, pe + 20)[0]
-    image_base = struct.unpack_from("<I", exe, pe + 24 + 28)[0]
-    for i in range(nsec):
-        vsz, rva, rsz, raw = struct.unpack_from("<IIII", exe, pe + 24 + optsz + i * 40 + 8)
-        if image_base + rva <= va < image_base + rva + rsz:
-            return exe[raw + va - image_base - rva:][:size]
-    raise SystemExit("0x%X is not in BOF3.exe" % va)
+    """The PC's .data bytes at va: BOF3.exe's (PcInstall) or the cache's image of it (DiscCache)."""
+    if isinstance(game, str):
+        game = PcInstall(game)
+    return game.exe(va, size)
 
 
 def convert_names(game, donor):
@@ -793,14 +1142,14 @@ def convert_names(game, donor):
         def numbers(buf, i, n_len, st, origin=0):
             rec = buf[origin + i * st:origin + (i + 1) * st]
             return rec[:name_at] + rec[name_at + n_len:]
-        want = [numbers(pc, i, NAME_LEN, stride) for i in range(count)]
-        probe = want[1]
-        at, found = donor.find(probe), None
+        # Record 1's numbers locate the table, every record's confirm it (the anchors).
+        at, found = find_anchor(game, donor, "names %s 1" % what), None
         while at >= 0 and found is None:
             start = at - d_stride - (0 if name_at else donor_len)
-            if start >= 0 and all(numbers(donor, i, donor_len, d_stride, start) == want[i] for i in range(count)):
+            if start >= 0 and same_anchor(game, "names %s" % what, b"".join(
+                    numbers(donor, i, donor_len, d_stride, start) for i in range(count))):
                 found = start
-            at = donor.find(probe, at + 1)
+            at = find_anchor(game, donor, "names %s 1" % what, at + 1)
         if found is None:
             raise SystemExit("%s: no table in the donor with the PC table's numbers at stride %d" % (what, d_stride))
         payload, kept = bytearray(), 0
@@ -975,8 +1324,7 @@ def convert_verbs(game, donor):
     pointer table ends where they begin, and the strings are placed by
     requiring every one of them to start just after a NUL.
     """
-    anchor = exe_bytes(game, VERB_SETS, VERB_SHARED_SETS * 5)
-    table_end = donor.find(anchor)
+    table_end = find_anchor(game, donor, "verb sets")
     if table_end < 0:
         return []
     ptrs = []
@@ -1027,17 +1375,17 @@ CHAR_RECORDS, CHAR_STRIDE, CHAR_COUNT, CHAR_NAME_PC, CHAR_NAME_US = 0x64B390, 0x
 
 def convert_char_names(game, donor):
     """[(kind, tag, payload)] for the default names, or [] if `donor` (START.EMI) has none."""
-    pc = exe_bytes(game, CHAR_RECORDS, CHAR_COUNT * CHAR_STRIDE)
     tail_len = CHAR_STRIDE - CHAR_NAME_PC
-    at = donor.find(pc[CHAR_NAME_PC:CHAR_STRIDE])
+    at = find_anchor(game, donor, "char tail 0")
     if at < CHAR_NAME_US:
         return []
     base = at - CHAR_NAME_US
     payload = bytearray([CHAR_COUNT])
+    records = [donor[base + k * CHAR_STRIDE:base + k * CHAR_STRIDE + CHAR_NAME_US + tail_len] for k in range(CHAR_COUNT)]
+    if not same_anchor(game, "char tails", b"".join(us[CHAR_NAME_US:] for us in records)):
+        raise SystemExit("names: the character records differ from the PC's past their names")
     for k in range(CHAR_COUNT):
-        us = donor[base + k * CHAR_STRIDE:base + k * CHAR_STRIDE + CHAR_NAME_US + tail_len]
-        if us[CHAR_NAME_US:] != pc[k * CHAR_STRIDE + CHAR_NAME_PC:(k + 1) * CHAR_STRIDE]:
-            raise SystemExit("names: character record %d differs from the PC's past its name" % k)
+        us = records[k]
         raw = us[:CHAR_NAME_US].split(b"\x00")[0]
         enc = [encode_char(c) for c in raw]
         if not raw and tag == 16:        # a faerie record kept as shipped
@@ -1064,12 +1412,11 @@ MERCHANT_NAME, MERCHANT_ROOM, MERCHANT_ANCHOR, MERCHANT_US_SLOT = 0x669CD8, 8, 0
 
 def convert_merchant(game, disc):
     """[(kind, tag, payload)] for the merchant's name, or [] if no area on `disc` has it."""
-    anchor = exe_bytes(game, MERCHANT_ANCHOR, 12)
     for name in sorted(disc.files):
         if "/WORLD" not in name or not name.endswith(".EMI"):
             continue
         blob = disc.read(name)
-        at = blob.find(anchor)
+        at = find_anchor(game, blob, "merchant")
         if at < 0:
             continue
         raw = blob[at + 12:at + 12 + MERCHANT_US_SLOT].split(b"\x00")[0]
@@ -1098,8 +1445,7 @@ BATTLE_SLOTS, BATTLE_BOXES, BATTLE_COUNT, BATTLE_ROOM = 0x669D28, 0x64E2C8, 7, 8
 
 def convert_battle_commands(game, donor):
     """[(kind, tag, payload)] for the command labels, or [] if `donor` (BATTLE.EMI) has none."""
-    boxes = exe_bytes(game, BATTLE_BOXES, BATTLE_COUNT * 8)
-    at = donor.find(boxes)
+    at = find_anchor(game, donor, "battle boxes")
     if at < BATTLE_COUNT * BATTLE_ROOM:
         return []
     payload = bytearray([BATTLE_COUNT])
@@ -1282,15 +1628,15 @@ def convert_labels(game, start, battle, shop=None, commu=()):
     chunks, report = [], []
     cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
     if start:
-        head, tail = exe_bytes(game, LABEL_HEAD, LABEL_HEAD_LEN), exe_bytes(game, LABEL_TAIL, LABEL_TAIL_LEN)
-        at = start.find(head)
-        while at >= 0 and start[at + LABEL_HEAD_LEN + 32:at + LABEL_HEAD_LEN + 32 + LABEL_TAIL_LEN] != tail:
-            at = start.find(head, at + 1)
+        at = find_anchor(game, start, "label head")
+        while at >= 0 and not same_anchor(game, "label tail",
+                                          start[at + LABEL_HEAD_LEN + 32:at + LABEL_HEAD_LEN + 32 + LABEL_TAIL_LEN]):
+            at = find_anchor(game, start, "label head", at + 1)
         if at >= 0:
             first = at + LABEL_HEAD_LEN
             chunks.append(label_chunk(1, [cut(start, first + 8 * i, 8) for i in range(2)], report))
             chunks.append(label_chunk(2, [cut(start, first + 16 + 4 * i, 4) for i in range(4)], report))
-        at = start.find(exe_bytes(game, LABEL_TYPES_HEAD, 16))
+        at = find_anchor(game, start, "item types head")
         if at >= 0:
             first = at + 16
             table = next((t for t in range(first + 4, first + 0x80, 4) if label_pointers(start, t, 5)), None)
@@ -1302,7 +1648,7 @@ def convert_labels(game, start, battle, shop=None, commu=()):
                 raise SystemExit("labels: the item types' pointers do not fit their strings")
             chunks.append(label_chunk(3, [cut(start, s, 16) for s in starts], report))
     if battle:
-        at = battle.find(exe_bytes(game, LABEL_BATTLE_TAIL, 16))
+        at = find_anchor(game, battle, "battle tail")
         table = at - 24 - 20
         ptrs = label_pointers(battle, table, 5) if at >= 0 else None
         if ptrs:
@@ -1318,9 +1664,7 @@ def convert_labels(game, start, battle, shop=None, commu=()):
             chunks.append(label_chunk(4, [cut(battle, s, 16) for s in starts], report))
             chunks.append(label_chunk(5, [cut(battle, at - 24 + 6 * i, 6) for i in range(4)], report))
     if shop:
-        head = exe_bytes(game, LABEL_MASTER_HEAD, LABEL_MASTER_HEAD_LEN)
-        lists = exe_bytes(game, LABEL_MASTER_LISTS, LABEL_MASTER_LISTS_LEN)
-        at = shop.find(head)
+        at = find_anchor(game, shop, "master head")
         while at >= 0:
             # Two strings between the head and the lists, each NUL-ended and
             # padded to four bytes: the title, then the mark.
@@ -1329,18 +1673,17 @@ def convert_labels(game, start, battle, shop=None, commu=()):
                 end = shop.find(b"\0", p)
                 raws.append(shop[p:end])
                 p = (end + 1 + 3) & ~3
-            if len(raws) == 2 and shop[p:p + LABEL_MASTER_LISTS_LEN] == lists:
+            if len(raws) == 2 and same_anchor(game, "master lists", shop[p:p + LABEL_MASTER_LISTS_LEN]):
                 chunks.append(label_chunk(6, raws, report))
                 break
-            at = shop.find(head, at + 1)
+            at = find_anchor(game, shop, "master head", at + 1)
         else:
             raise SystemExit("labels: SHOP.EMI has the PC's bytes around the master list's strings nowhere")
-    sort_head = exe_bytes(game, LABEL_SORT_HEAD, LABEL_SORT_HEAD_LEN)
     if start:
-        at, found = start.find(sort_head), None
+        at, found = find_anchor(game, start, "sort head"), None
         while at >= 0 and not found:
             found = label_run(start, at + LABEL_SORT_HEAD_LEN, 11)
-            at = start.find(sort_head, at + 1)
+            at = find_anchor(game, start, "sort head", at + 1)
         if not found:
             raise SystemExit("labels: START.EMI has no eleven sort strings after the PC's bytes at 0x%X" % LABEL_SORT_HEAD)
         chunks.append(label_chunk(7, found, report))
@@ -1350,45 +1693,42 @@ def convert_labels(game, start, battle, shop=None, commu=()):
         # at its own width: at 22, stride - 13 would take the length byte too,
         # and an eight-letter name has no NUL to stop at.
         name_len = {20: 7, 22: 8}
-        pc = exe_bytes(game, LABEL_FORMATIONS, 28 * LABEL_FORMATION_COUNT)
-        pairs = [pc[28 * i + 16:28 * i + 28] for i in range(LABEL_FORMATION_COUNT)]
-        at, found = start.find(pairs[0]), None
+        disc_pairs = lambda base, stride: [start[base + stride * i + stride - 12:base + stride * (i + 1)]
+                                           for i in range(LABEL_FORMATION_COUNT)]
+        first = lambda at: find_anchor(game, start, "formation pair 0", at)
+        same = lambda got: same_anchor(game, "formation pairs", b"".join(got))
+        at, found = first(0), None
         while at >= 0 and not found:
             for stride in name_len:
                 base = at - (stride - 12)
-                if base >= 0 and all(start[base + stride * i + stride - 12:base + stride * (i + 1)] == pairs[i]
-                                     for i in range(LABEL_FORMATION_COUNT)):
+                if base >= 0 and same(disc_pairs(base, stride)):
                     found = (base, stride)
                     break
-            at = start.find(pairs[0], at + 1)
+            at = first(at + 1)
         if not found:
             raise SystemExit("labels: START.EMI has no run of the PC's ten formation records")
         base, stride = found
         names = [cut(start, base + stride * i, name_len[stride]) for i in range(LABEL_FORMATION_COUNT)]
         chunks.append(label_chunk(10, names, report))
-        at = start.find(exe_bytes(game, LABEL_WHEEL_TRIANGLE, LABEL_WHEEL_TRIANGLE_LEN))
+        at = find_anchor(game, start, "wheel triangle")
         unit = at + LABEL_WHEEL_TRIANGLE_LEN
         if at < 0 or start[unit + 4:unit + 8] != b"\x3e\0\0\0":
             raise SystemExit("labels: START.EMI's icon wheel triangle is not followed by the unit and the full stop")
         chunks.append(label_chunk(11, [cut(start, unit, 4)], report))
     if battle:
         # The gene window's tabs: three strings between the two anchors.
-        head, tail = exe_bytes(game, LABEL_GENE_HEAD, LABEL_GENE_HEAD_LEN), exe_bytes(game, LABEL_GENE_TAIL, LABEL_GENE_TAIL_LEN)
-        at = battle.find(head)
+        at = find_anchor(game, battle, "gene head")
         while at >= 0:
-            end = battle.find(tail, at + LABEL_GENE_HEAD_LEN, at + LABEL_GENE_HEAD_LEN + 64)
+            end = find_anchor(game, battle, "gene tail", at + LABEL_GENE_HEAD_LEN, at + LABEL_GENE_HEAD_LEN + 64)
             words = [w for w in battle[at + LABEL_GENE_HEAD_LEN:end].split(b"\0") if w] if end >= 0 else []
             if len(words) == 3:
                 chunks.append(label_chunk(12, words, report))
                 break
-            at = battle.find(head, at + 1)
+            at = find_anchor(game, battle, "gene head", at + 1)
         else:
             report.append("gene tabs: not found")
     # The village: the twenty list slots before the rows, the money and stake
     # titles after the rectangles, in whichever community overlay holds them.
-    rows = exe_bytes(game, LABEL_VILLAGE_ROWS, LABEL_VILLAGE_ROWS_LEN)
-    rects = exe_bytes(game, LABEL_VILLAGE_RECTS, LABEL_VILLAGE_RECTS_LEN)
-    kinds = exe_bytes(game, LABEL_VILLAGE_KINDS, LABEL_VILLAGE_KINDS_LEN)
     lists = titles = pair = None
     def slot_run(blob, end, stride, count):
         """`count` slots of `stride` ending at `end`, each a string from its first
@@ -1406,14 +1746,14 @@ def convert_labels(game, start, battle, shop=None, commu=()):
         return out
 
     for blob in commu:
-        at = blob.find(kinds)
+        at = find_anchor(game, blob, "village kinds")
         if pair is None and at >= 32:
             # Two (plural, singular) pairs of 8-byte slots end right at the
             # kind table; the first pair is the headings' word.
             found = [cut(blob, at - 32 + 8 * i, 8) for i in range(2)]
             if all(found) and found == [cut(blob, at - 16 + 8 * i, 8) for i in range(2)]:
                 pair = found
-        at = blob.find(rows)
+        at = find_anchor(game, blob, "village rows")
         if lists is None and at > 0:
             # Two lists of ten slots end at the rows (a pad of up to three
             # NULs between): each list's stride is its longest word, plus a
@@ -1433,7 +1773,7 @@ def convert_labels(game, start, battle, shop=None, commu=()):
                         break
                 if lists:
                     break
-        at = blob.find(rects)
+        at = find_anchor(game, blob, "village rects")
         if titles is None and at >= 0:
             found = [cut(blob, at + LABEL_VILLAGE_RECTS_LEN + 8 * i, 8) for i in range(2)]
             if all(found):
@@ -1450,20 +1790,26 @@ def convert_labels(game, start, battle, shop=None, commu=()):
         chunks.append(label_chunk(15, list(IDENTIFY_WORDS), report))
     # The faeries: sixty 9-byte records whose stat bytes are the PC's, in
     # whichever community overlay holds them.
-    traits = exe_bytes(game, FAERIE_TRAITS, FAERIE_STRIDE * FAERIE_COUNT)
-    stats = [traits[FAERIE_STRIDE * r:FAERIE_STRIDE * r + 4] for r in range(FAERIE_COUNT)]
+    disc_stats = lambda blob, base: [blob[base + FAERIE_DISC_STRIDE * r + 5:base + FAERIE_DISC_STRIDE * (r + 1)]
+                                     for r in range(FAERIE_COUNT)]
+    if game.carried(FAERIE_TRAITS, FAERIE_STRIDE * FAERIE_COUNT):
+        traits = exe_bytes(game, FAERIE_TRAITS, FAERIE_STRIDE * FAERIE_COUNT)
+        unnamed = {r for r in range(FAERIE_COUNT) if traits[FAERIE_STRIDE * r + 4] < 0x80}
+    else:           # disc-only: the name fields are not in the image; the PC's nameless record as measured
+        unnamed = set(FAERIE_UNNAMED)
+    first = lambda blob, at: find_anchor(game, blob, "faerie stat 0", at)
+    same = lambda got: same_anchor(game, "faerie stats", b"".join(got))
     faeries = None
     for blob in commu:
-        at = blob.find(stats[0])
+        at = first(blob, 0)
         while at >= 5 and faeries is None:
             base = at - 5
-            if all(blob[base + FAERIE_DISC_STRIDE * r + 5:base + FAERIE_DISC_STRIDE * (r + 1)] == stats[r] for r in range(FAERIE_COUNT)):
+            if same(disc_stats(blob, base)):
                 faeries = []
                 for r in range(FAERIE_COUNT):
                     name = blob[base + FAERIE_DISC_STRIDE * r:base + FAERIE_DISC_STRIDE * r + 5].rstrip(b"\xff\0")
-                    pc_name = traits[FAERIE_STRIDE * r + 4]
-                    faeries.append(name if pc_name >= 0x80 else b"")
-            at = blob.find(stats[0], at + 1)
+                    faeries.append(b"" if r in unnamed else name)
+            at = first(blob, at + 1)
         if faeries:
             break
     if faeries:
@@ -1471,10 +1817,10 @@ def convert_labels(game, start, battle, shop=None, commu=()):
     else:
         report.append("faerie names: not found")
     if shop:
-        at, found = shop.find(sort_head), None
+        at, found = find_anchor(game, shop, "sort head"), None
         while at >= 0 and not found:
             found = label_run(shop, at + LABEL_SORT_HEAD_LEN, 4)
-            at = shop.find(sort_head, at + 1)
+            at = find_anchor(game, shop, "sort head", at + 1)
         if not found:
             raise SystemExit("labels: SHOP.EMI has no four note-sort strings after the PC's bytes at 0x%X" % LABEL_SORT_HEAD)
         chunks.append(label_chunk(8, found[:2], report))
@@ -1541,14 +1887,11 @@ def fishing_tab_width(sec, dest, base):
 
 def convert_fishing(game, disc):
     """[(kind, tag, payload)] and a report, from the first fishing module on `disc`."""
-    rows = exe_bytes(game, FISH_ROWS, FISH_ROWS_LEN)
-    quads = exe_bytes(game, FISH_QUADS, FISH_QUADS_LEN)
-    tails = exe_bytes(game, FISH_LINES, 8 * FISH_LINE_COUNT)
     for name in sorted(disc.files):
         if "/WORLD" not in name or not name.endswith(".EMI"):
             continue
         for dest, sec in emi_sections(disc.read(name)):
-            r = sec.find(rows)
+            r = find_anchor(game, sec, "fish rows")
             if r < 0 or not dest & 0x80000000:
                 continue
             chunks, report = [], []
@@ -1556,10 +1899,11 @@ def convert_fishing(game, disc):
             if first < 0:
                 raise SystemExit("fishing: %s's row table has no line records before it" % name)
             payload = bytearray([FISH_LINE_COUNT])
+            marks = b"".join(sec[first + 12 * i + 8:first + 12 * i + 10] for i in range(FISH_LINE_COUNT))
+            if not same_anchor(game, "fish label/pause", marks):
+                raise SystemExit("fishing: %s's lines' label and pause bytes are not the PC's" % name)
             for i in range(FISH_LINE_COUNT):
                 count, ptr = struct.unpack_from("<II", sec, first + 12 * i)
-                if sec[first + 12 * i + 8:first + 12 * i + 10] != tails[8 * i + 4:8 * i + 6]:
-                    raise SystemExit("fishing: %s line %d's label and pause bytes are not the PC's" % (name, i))
                 at = ptr - dest
                 if not 0 <= at < len(sec) or not 0 < count < FISH_LINE_ROOM:
                     raise SystemExit("fishing: %s line %d points at 0x%08X, %d bytes" % (name, i, ptr, count))
@@ -1571,7 +1915,7 @@ def convert_fishing(game, disc):
                 payload += out + b"\0"
             chunks.append((KIND_FISHING, 1, bytes(payload)))
             report.append("%d lines" % FISH_LINE_COUNT)
-            q = sec.find(quads)
+            q = find_anchor(game, sec, "fish quads")
             base = None if q < 0 else (q + FISH_QUADS_LEN + 3) & ~3
             width = None if base is None else fishing_tab_width(sec, dest, dest + base)
             if width:
@@ -1623,8 +1967,11 @@ def encode_message(raw):
 
 def convert_battle_messages(game, donor):
     """[(kind, tag, payload)] for the banner messages, or [] if `donor` (BATTLE.EMI) has none."""
+    # The table's twelve words are pointers, which no disc carries (a disc-only
+    # image leaves them zero): there the check is BOF3.exe's to make, and the
+    # DLL's patch (src/game/battle_text.cpp) is what reads MESSAGE_SHIPPED.
     table = struct.unpack("<%dI" % MESSAGE_COUNT, exe_bytes(game, MESSAGE_TABLE, 4 * MESSAGE_COUNT))
-    if table != MESSAGE_SHIPPED:
+    if not game.disc_only and table != MESSAGE_SHIPPED:
         raise SystemExit("battle messages: the table at 0x%X is not the one this build expects" % MESSAGE_TABLE)
     ex, second = b"\xff\x15\x1b\x15\x1c\x00", b"\xff\x15\x1f\x15\x20\x00"
     at = donor.find(ex)
@@ -1703,7 +2050,17 @@ def ja_glyph(rows, cell):
     return pc_glyph_from_rows(big)
 
 
-def build_table_ja(base_table, disc):
+# The single-byte slots a disc-only Japanese table paints from the disc's own
+# sheet (build_table_ja): the codes the JP script and ASCII share - the
+# brackets, comma, stop, slash, equals, digits and capitals (the sibling's
+# docs/TEXT_ENGINE.md code table; 0x2D is the long-vowel bar there, not a
+# hyphen). Over the PC install those slots keep the port's own half-width
+# glyphs, which the exe's own strings (its numbers among them) draw with; a
+# blank table would leave those strings blank.
+JA_SHARED = (0x28, 0x29, 0x2C, 0x2E, 0x2F) + tuple(range(0x30, 0x3A)) + (0x3D,) + tuple(range(0x41, 0x5B))
+
+
+def build_table_ja(base_table, disc, disc_only=False):
     count = len(base_table) // font_pc.GLYPH_BYTES
     if count != JA_AT:
         raise SystemExit("base table has %d glyphs, expected %d" % (count, JA_AT))
@@ -1717,6 +2074,10 @@ def build_table_ja(base_table, disc):
     for code, byte in JA_HANG.items():
         slot = byte - 0x26
         table[slot * font_pc.GLYPH_BYTES:(slot + 1) * font_pc.GLYPH_BYTES] = ja_glyph(single, code)
+    if disc_only:
+        for code in JA_SHARED:
+            slot = code - 0x26
+            table[slot * font_pc.GLYPH_BYTES:(slot + 1) * font_pc.GLYPH_BYTES] = ja_glyph(single, code)
     glyphs = len(table) // font_pc.GLYPH_BYTES
     if glyphs - 1 > GLYPH_LIMIT:
         raise SystemExit("table would hold %d glyphs, the limit is 0x%X" % (glyphs, GLYPH_LIMIT))
@@ -1729,15 +2090,15 @@ def build_font(args, disc):
     if donor_ja:
         if args.glyphs or args.upscaler:
             raise SystemExit("--glyphs / --upscaler are for the Latin set; this is a Japanese disc")
-        base = font_pc.font_chunk(os.path.join(dat_dir(args.game), "FIRST.DAT"))
-        table, advances = build_table_ja(base, disc)
+        base = blank_table() if args.src.disc_only else font_pc.font_chunk(os.path.join(args.src.dat, "FIRST.DAT"))
+        table, advances = build_table_ja(base, disc, args.src.disc_only)
         print("font: %d glyphs (Japanese: %d single-byte and symbol cells at 0x%X, %d kanji at 0x%X), sha256 %s"
               % (len(table) // font_pc.GLYPH_BYTES, JA_CELLS, JA_AT, JA_CELLS, JA_KANJI_AT,
                  hashlib.sha256(table).hexdigest()))
         return [(3, 0, table), (4, PC_ADVANCE, advances)]
     rows = donor_sheet(disc)
     ext_last = latin_extension(rows)
-    base = font_pc.font_chunk(os.path.join(dat_dir(args.game), "FIRST.DAT"))
+    base = blank_table() if args.src.disc_only else font_pc.font_chunk(os.path.join(args.src.dat, "FIRST.DAT"))
     if args.glyphs and args.upscaler:
         raise SystemExit("--glyphs and --upscaler are two answers to one question")
     redrawn = None
@@ -1748,7 +2109,7 @@ def build_font(args, disc):
     if redrawn and ext_last >= EXT_FIRST:
         raise SystemExit("--glyphs / --upscaler cover codes 0x%X..0x%X; this disc also has 0x%X..0x%X, "
                          "which the sheet does not carry yet" % (FIRST_CODE, LAST_CODE, EXT_FIRST, ext_last))
-    table, advances = build_table(base, rows, redrawn, args.mono)
+    table, advances = build_table(base, rows, redrawn, args.mono, args.src.disc_only)
     n_cells = LAST_CODE - FIRST_CODE + 1
     print("font: %d glyphs (%d dialogue cells at 0x%X, %d UI cells at 0x%X, "
           "%d single-byte slots repainted), sha256 %s"
@@ -1897,12 +2258,18 @@ def build_white_clut(args, disc):
     anti-aliased Chinese glyphs. The donor's cells put their drop shadow at
     index 7, which the port's row draws mid-grey. Every other row is the
     port's own, untouched."""
-    blob, chunks = dat.load(os.path.join(dat_dir(args.game), "FIRST.DAT"))
-    base = [c for c in chunks if c.kind == 0 and c.tag == CLUT_TAG]
+    base = chunk_of(args.src, "FIRST.DAT", 0, CLUT_TAG)
     donor = [s for dest, s in emi_sections(disc.read(disc.find("FIRST.EMI")[0])) if dest & 0x7FFFFFFF in CLUT_DESTS]
-    if len(base) != 1 or len(donor) != 1 or len(donor[0]) < CLUT_ROW:
+    if base is None or len(donor) != 1 or len(donor[0]) < CLUT_ROW:
         raise SystemExit("FIRST: no CLUT strip to take the white row from")
-    strip = bytearray(blob[base[0].offset:base[0].offset + base[0].size])
+    if base[0] is None:
+        # Disc-only: the strip is the PC's loc/zh-CN chunk. The disc's whole
+        # strip is the PC's with the donor's row 0 - the strips differ in that
+        # row alone (US: rows 1..15 equal, 2026-10-10) - so it is the same bytes.
+        if len(donor[0]) != base[1]:
+            raise SystemExit("FIRST: the disc's CLUT strip is %d bytes, the PC's %d" % (len(donor[0]), base[1]))
+        return [(0, CLUT_TAG, bytes(donor[0]))]
+    strip = bytearray(base[0])
     strip[:CLUT_ROW] = donor[0][:CLUT_ROW]
     return [(0, CLUT_TAG, bytes(strip))]
 
@@ -2009,10 +2376,9 @@ def title_c(sheet):
 def build_title(args, disc):
     """NEW GAME and LOAD GAME as the disc has them, and CONFIG cut from their letters."""
     found = disc.find("START.EMI")
-    base_blob, base_chunks = dat.load(os.path.join(dat_dir(args.game), "START.DAT"))
-    base = [c for c in base_chunks if c.kind == 1 and c.tag == TITLE_TAG]
+    base = chunk_of(args.src, "START.DAT", 1, TITLE_TAG)     # only its size is used
     donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == TITLE_TAG] if found else []
-    if len(base) != 1 or len(donor) != 1 or len(donor[0]) != base[0].size:
+    if base is None or len(donor) != 1 or len(donor[0]) != base[1]:
         raise SystemExit("START: no title menu sheet to rebuild")
     sheet = tiles_to_rows(donor[0], 2)
     page = [[0] * 256 for _ in range(256)]
@@ -2040,19 +2406,17 @@ def build_title(args, disc):
         # byte-identical, 2026-10-08) - the owner's choice, 2026-09-29: each
         # disc's own two rows, our CONFIG. Only the engine's tags: an `en.`
         # page of before 2026-10-08 is a retired code's (DIV-0005), noted.
-        d = dat_dir(args.game)
-        language_tags.note_retired_overlays(d)
-        en_names = sorted(f for f in os.listdir(d) if f.endswith(".START.DAT")
-                          and f[:-len(".START.DAT")] in language_tags.TAGS and primary(f[:-len(".START.DAT")]) == "en")
+        en_pages = args.src.english_title_pages()
+        en_names = [label for label, _ in en_pages]
         if not en_names:
             print("title menu: this disc's sheet is not the one the letters were measured on, and no "
                   "English START.DAT holds a CONFIG row to borrow (build the English overlay first); left as shipped")
             return []
-        pages = {open(os.path.join(d, f), "rb").read() for f in en_names}
+        pages = {open(path, "rb").read() for _, path in en_pages}
         if len(pages) != 1:
             raise SystemExit("title menu: the English overlays %s differ; which CONFIG row to borrow is not settled"
                              % ", ".join(en_names))
-        en_path = os.path.join(d, en_names[0])
+        en_path = en_pages[0][1]
         en_blob, en_chunks = dat.load(en_path)
         en_sheet = [c for c in en_chunks if c.kind == 1 and c.tag == TITLE_TAG]
         en_widths = [c for c in en_chunks if c.kind == TITLE_KIND]
@@ -2097,15 +2461,22 @@ VILLAGE_LABEL_ROWS = range(224, 256)
 
 
 def build_village_sheet(game, disc):
-    """{name: [(kind, tag, payload)]} for the community files whose sheet the disc repaints."""
-    out = {}
+    """{name: [(kind, tag, payload)]} for the community files whose sheet the disc repaints,
+    and the names a disc-only build (DiscCache) leaves out."""
+    out, skipped = {}, []
     for name in ("COMMU01", "COMMU05"):
         found = disc.find(name + ".EMI")
-        path = os.path.join(dat_dir(game), name + ".DAT")
-        if not found or not os.path.exists(path):
+        base = chunk_of(game, name + ".DAT", 1, VILLAGE_SHEET_TAG)
+        if not found or base is None:
             continue
-        blob, chunks = dat.load(path)
-        pc = [blob[c.offset:c.offset + c.size] for c in chunks if c.kind == 1 and c.tag == VILLAGE_SHEET_TAG]
+        if base[0] is None:
+            # Disc-only: the sheet is the PC's loc/zh-CN chunk, and the disc's
+            # differs from it outside the label rows too (rows 96..175, the
+            # board's frame pieces the PC's draws place: 2,136 bytes in both
+            # files on the US disc) - so no sheet is built from the disc alone.
+            skipped.append(name)
+            continue
+        pc = [base[0]]
         donor = [sec for dest, sec in emi_sections(disc.read(found[0])) if dest == VILLAGE_SHEET_TAG]
         if not pc or not donor or len(pc[0]) != VILLAGE_SHEET_SIZE or len(donor[0]) != VILLAGE_SHEET_SIZE:
             continue
@@ -2117,7 +2488,7 @@ def build_village_sheet(game, disc):
                     changed += 1
         if changed:
             out[name + ".DAT"] = [(1, VILLAGE_SHEET_TAG, bytes(sheet))]
-    return out
+    return out, skipped
 
 
 # ---------------------------------------------------------------- the world-map place plates
@@ -2153,8 +2524,11 @@ def build_plates(game, disc):
         found = disc.find(area + ".EMI")
         if not found:
             raise SystemExit("plates: %s.EMI is not on this disc" % area)
-        blob, chunks = dat.load(os.path.join(dat_dir(game), area + ".DAT"))
-        pc = {(c.kind, c.tag): blob[c.offset:c.offset + c.size] for c in chunks}
+        # The PC's chunks are only checked against (sizes, the frame header).
+        # A disc-only build has the sizes from the recipe, and its base/ holds
+        # the disc's own frame section (a stand-in, the donor itself), so there
+        # the header check is the shape's alone.
+        pc = {(k, t): (b, size) for k, t, b, size in game.chunks(area + ".DAT") or ()}
         donor = {}
         for dest, s in emi_sections(disc.read(found[0])):
             if dest == PLATE_PAGE:
@@ -2173,14 +2547,14 @@ def build_plates(game, disc):
                 # rearranged the page it reordered the blocks too (AREA065:
                 # the third at 0x69C on the PC, 0x4B8 on the US disc). So the
                 # check is the shape: the same header, every offset inside.
-                head = struct.unpack_from("<I", pc[key])[0]
+                head = struct.unpack_from("<I", pc[key][0] if pc[key][0] is not None else s)[0]
                 if struct.unpack_from("<I", s)[0] != head or head % 4 or head > len(s):
                     raise SystemExit("plates: %s's frame section header is not the PC's" % area)
                 if any(not head <= o < len(s) for o in struct.unpack_from("<%dI" % (head // 4), s)[1:]):
                     raise SystemExit("plates: %s's frame section points outside itself" % area)
-            elif len(s) != len(pc[key]):
+            elif len(s) != pc[key][1]:
                 raise SystemExit("plates: %s chunk 0x%X is %d bytes, the PC's %d"
-                                 % (area, key[1], len(s), len(pc[key])))
+                                 % (area, key[1], len(s), pc[key][1]))
         out[area + ".DAT"] = [(k, t, s) for (k, t), s in sorted(donor.items())]
     return out
 
@@ -2238,6 +2612,21 @@ def identify_discs(paths):
     return out
 
 
+def source_of(args):
+    """args.src: the PC install (`--game`) or a disc-only importer cache (`--cache`)."""
+    if (args.game is None) == (args.cache is None):
+        raise SystemExit("all: give --game DIR (the PC install) or --cache CACHE (a disc-only importer cache), not both")
+    return PcInstall(args.game) if args.game else DiscCache(args.cache)
+
+
+def check_source(src):
+    if src.disc_only:
+        print("cache: base/exe/data.bin from %s, %d containers in base/dat/; the PC's loc/zh-CN chunks not there"
+              % (src.build, len(os.listdir(src.dat))))
+    else:
+        check_game(src.game)
+
+
 def check_game(game):
     """The install against fixtures.toml: BOF3.exe must be the catalogued
     port (every exe address below is only meaningful in that image, CLAUDE.md
@@ -2267,7 +2656,8 @@ def cmd_all_discs(args):
         paths += scan_discs(args.discs)
     if not paths:
         raise SystemExit("no disc images: --discs %s holds none of %s" % (args.discs, ", ".join(DISC_EXT)))
-    check_game(args.game)
+    args.src = source_of(args)
+    check_source(args.src)
     # English first, then the rest in filename order: the French and German
     # title menus borrow their CONFIG row from an English START.DAT already
     # built (build_title), as importer.build_languages orders them.
@@ -2297,14 +2687,15 @@ def cmd_all(args):
         if args.lang_given:
             raise SystemExit("--lang names one disc's overlays; with --discs or several --disc the tag is each disc's own")
         return cmd_all_discs(args)
+    args.src = source_of(args)
     if args.dry_run:
-        check_game(args.game)
+        check_source(args.src)
     if args.lang is None:
         args.lang = disc_tag(args.disc[0])
         print("--lang not given: the disc's own tag, %s" % args.lang)
     if args.dry_run:
-        print("--dry-run: would build %s.*.DAT from %s into %s; nothing written" % (args.lang, args.disc[0],
-                                                                                    dat_dir(args.game)))
+        print("--dry-run: would build %s overlays from %s into %s; nothing written"
+              % (args.lang, args.disc[0], os.path.dirname(args.src.out_path(args.lang, "FIRST.DAT"))))
         return 0
     build_all(args, args.disc[0])
     return 0
@@ -2313,7 +2704,14 @@ def cmd_all(args):
 def build_all(args, disc_path):
     """Every overlay from one disc under args.lang; the count of files written."""
     reset_donor()
-    disc, d = psx_disc.Disc(disc_path), dat_dir(args.game)
+    src = args.src
+    if src.disc_only:
+        if args.pc_white:
+            raise SystemExit("--pc-white keeps the port's text CLUT row, which a disc-only cache does not have")
+    else:
+        dat_dir(src.game)
+        check_anchors(src)      # the disc-only build's hashes are this exe's (PC_SHA)
+    disc = psx_disc.Disc(disc_path)
     overlays = {"FIRST.DAT": build_font(args, disc)}
     overlays["FIRST.DAT"] += build_pause(args, overlays["FIRST.DAT"])   # after the glyphs it names
     if not args.pc_white:
@@ -2322,23 +2720,33 @@ def build_all(args, disc_path):
     if title:
         overlays["START.DAT"] = title
     texts = pools = kept_text = kept_pool = enemies = kept_enemy = 0
-    for name in sorted(os.listdir(d)):
-        stem, ext = os.path.splitext(name)
-        if ext.upper() != ".DAT" or "." in stem or (args.only and stem.upper() not in (args.only.upper(), "FIRST")):
+    for name in src.names():
+        stem = os.path.splitext(name)[0]
+        if args.only and stem.upper() not in (args.only.upper(), "FIRST"):
             continue
-        blob, chunks = dat.load(os.path.join(d, name))
         found = disc.find(stem + ".EMI")
         if not found:
             continue
         sections = None
-        for c in chunks:
-            if c.kind != 0 or c.tag not in (0, POOL_TAG, ENEMY_TAG):
+        for kind, tag, base, size in src.chunks(name):
+            if kind != 0 or tag not in (0, POOL_TAG, ENEMY_TAG):
                 continue
             if sections is None:
                 sections = emi_sections(disc.read(found[0]))
-            base = blob[c.offset:c.offset + c.size]
+            if base is None and tag == ENEMY_TAG:
+                # Disc-only, the container not in base/ (the EU, French and
+                # German discs alone leave eight areas out for their banks):
+                # the stats are the donor's own, widened as the importer
+                # widens them into base/ (importer.widen_enemies), so the
+                # names are built all the same.
+                import importer
+                donor = [s for dest, s in sections if dest & 0x7FFFFFFF == ENEMY_DEST & 0x7FFFFFFF]
+                base = importer.widen_enemies(donor[0]) if donor else None
+                if base is None:
+                    print("  SKIP %s tag %X: no enemy table in the cache's base/ or on the disc" % (name, tag))
+                    continue
             try:
-                if c.tag == ENEMY_TAG:
+                if tag == ENEMY_TAG:
                     donor = [s for dest, s in sections if dest & 0x7FFFFFFF == ENEMY_DEST & 0x7FFFFFFF]
                     if not donor:
                         continue
@@ -2346,7 +2754,7 @@ def build_all(args, disc_path):
                     enemies, kept_enemy = enemies + len(names), kept_enemy + kept
                     overlays.setdefault(name, []).extend(names)
                     continue
-                if c.tag == 0:
+                if tag == 0:
                     donor = [s for dest, s in sections if dest & 0x7FFFFFFF == 0x10000]
                     if not donor:
                         continue
@@ -2359,9 +2767,9 @@ def build_all(args, disc_path):
                     block, kept = convert_pool(donor[0], base)
                     pools, kept_pool = pools + 1, kept_pool + kept
             except ValueError as e:
-                print("  SKIP %s tag %X: %s" % (name, c.tag, e))
+                print("  SKIP %s tag %X: %s" % (name, tag, e))
                 continue
-            overlays.setdefault(name, []).append((0, c.tag, block))
+            overlays.setdefault(name, []).append((0, tag, block))
     start_emi = disc.find("START.EMI")
     if donor_ja:
         # The exe's own strings (kinds 7..12) are found with the US layouts and
@@ -2374,30 +2782,30 @@ def build_all(args, disc_path):
         cfg = convert_config(disc.read(start_emi[0]))
         overlays["FIRST.DAT"] += cfg
         print("config screen: " + ("6 labels, 17 options, 6 controller names" if cfg else "not found on this disc"))
-        verbs = convert_verbs(args.game, disc.read(start_emi[0]))
+        verbs = convert_verbs(src, disc.read(start_emi[0]))
         overlays["FIRST.DAT"] += verbs
         print("menu verbs: " + ("%d" % VERB_COUNT if verbs else "not found on this disc"))
-        chars = convert_char_names(args.game, disc.read(start_emi[0]))
+        chars = convert_char_names(src, disc.read(start_emi[0]))
         overlays["FIRST.DAT"] += chars
         print("character names: " + ("%d" % CHAR_COUNT if chars else "not found on this disc"))
-        merchant = convert_merchant(args.game, disc)
+        merchant = convert_merchant(src, disc)
         overlays["FIRST.DAT"] += merchant
         print("merchant name: " + ("found" if merchant else "not found on this disc"))
-        fishing, report = convert_fishing(args.game, disc)
+        fishing, report = convert_fishing(src, disc)
         overlays["FIRST.DAT"] += fishing
         print("fishing: " + (", ".join(report) if report else "not found on this disc"))
     battle_emi = None if donor_ja else disc.find("BATTLE.EMI")
     if battle_emi and not args.only:
-        cmds = convert_battle_commands(args.game, disc.read(battle_emi[0]))
+        cmds = convert_battle_commands(src, disc.read(battle_emi[0]))
         overlays["FIRST.DAT"] += cmds
         print("battle commands: " + ("%d" % BATTLE_COUNT if cmds else "not found on this disc"))
-        msgs = convert_battle_messages(args.game, disc.read(battle_emi[0]))
+        msgs = convert_battle_messages(src, disc.read(battle_emi[0]))
         overlays["FIRST.DAT"] += msgs
         print("battle messages: " + ("%d" % MESSAGE_COUNT if msgs else "not found on this disc"))
     shop_emi = None if donor_ja else disc.find("SHOP.EMI")
     if (start_emi or battle_emi or shop_emi) and not args.only:
         commu = [disc.read(p) for p in sorted(disc.files) if re.match(r"(.*/)?COMMU[0-9A-Z]*\.EMI$", p)]
-        labels, report = convert_labels(args.game, disc.read(start_emi[0]) if start_emi else None,
+        labels, report = convert_labels(src, disc.read(start_emi[0]) if start_emi else None,
                                         disc.read(battle_emi[0]) if battle_emi else None,
                                         disc.read(shop_emi[0]) if shop_emi else None, commu)
         overlays["FIRST.DAT"] += labels
@@ -2405,16 +2813,17 @@ def build_all(args, disc_path):
 
     game_emi = disc.find("GAME.EMI")
     if game_emi and not args.only:
-        names, report = convert_names(args.game, emi_sections(disc.read(game_emi[0]))[0][1])
+        names, report = convert_names(src, emi_sections(disc.read(game_emi[0]))[0][1])
         overlays["FIRST.DAT"] += names
         print("names: " + ", ".join(report))
     print("enemy names: %d (%d kept)" % (enemies, kept_enemy))
     if not args.only:
-        sheets = build_village_sheet(args.game, disc)
+        sheets, left = build_village_sheet(src, disc)
         for name, chunks in sheets.items():
             overlays.setdefault(name, []).extend(chunks)
-        print("village board sheet: " + (", ".join(sorted(sheets)) if sheets else "not repainted on this disc"))
-        plates = build_plates(args.game, disc)
+        print("village board sheet: " + (", ".join(sorted(sheets)) if sheets else "not repainted on this disc")
+              + ("; not built disc-only (the PC's sheet is not in the cache): %s" % ", ".join(left) if left else ""))
+        plates = build_plates(src, disc)
         for name, chunks in plates.items():
             overlays.setdefault(name, []).extend(chunks)
         print("place plates: %d world maps" % len(plates))
@@ -2422,10 +2831,23 @@ def build_all(args, disc_path):
         overlays["FIRST.DAT"] = ja_pair_chunks(overlays["FIRST.DAT"])
         print("pair codes: %d from glyph 0x%X (DIV-0057)" % (len(ja_pairs), PAIR_AT))
     for name, chunks in overlays.items():
-        write_overlay(os.path.join(d, "%s.%s" % (args.lang, name)), chunks)
-    print("%d overlay files in %s: %d area texts (%d slots kept as shipped), %d system pools (%d kept)"
-          % (len(overlays), d, texts, kept_text, pools, kept_pool))
+        write_overlay(src.out_path(args.lang, name), chunks)
+    how = "left empty, disc-only" if src.disc_only else "kept as shipped"
+    print("%d overlay files in %s: %d area texts (%d slots %s), %d system pools (%d %s)"
+          % (len(overlays), os.path.dirname(src.out_path(args.lang, "FIRST.DAT")), texts, kept_text, how,
+             pools, kept_pool, how if src.disc_only else "kept"))
     return len(overlays)
+
+
+def cmd_anchors(args):
+    """PC_SHA as the PC install's BOF3.exe has it, to paste; and whether the table in this file agrees."""
+    check_game(args.game)
+    game = PcInstall(args.game)
+    for name, digest in anchor_table(game).items():
+        print('    "%s": "%s",%s' % (name, digest, "" if PC_SHA.get(name) == digest else "   # differs from PC_SHA"))
+    check_anchors(game)
+    print("PC_SHA and FAERIE_UNNAMED: this BOF3.exe's")
+    return 0
 
 
 def cmd_export(args):
@@ -2473,11 +2895,18 @@ def main():
         if name in ("sheet", "export"):
             s.add_argument("--out", required=True)
         else:
-            s.add_argument("--game", required=True)
+            s.add_argument("--game", help="the PC install (BOF3.exe and DAT/): overlays go into its DAT/ as <tag>.<NAME>.DAT")
+            s.add_argument("--cache", help="instead of --game: an importer cache built from a disc alone (base/dat/, "
+                                           "base/exe/); overlays go to its loc/<tag>/dat/ (docs/loc-build-disc-only.md)")
         if name == "all":
             s.add_argument("--only")
         s.set_defaults(fn=fn)
+    s = sub.add_parser("anchors", help="print PC_SHA's entries anew from a PC install's BOF3.exe")
+    s.add_argument("--game", required=True)
+    s.set_defaults(fn=cmd_anchors)
     args = ap.parse_args()
+    if args.cmd == "anchors":
+        return args.fn(args)
     args.lang_given = args.lang is not None
     if args.cmd == "all" and not args.disc and not args.discs:
         ap.error("all needs --disc DISC or --discs DIR")
