@@ -5,7 +5,10 @@ importer half - [`unified-data-plan.md`](unified-data-plan.md) section 5
 step 3 and section 8 row 8. The importer writes `base/exe/` from `BOF3.exe`
 or from any held disc alone and verifies it; the engine half - mapping
 `base/exe/` where `.data` was - waits on the owner's machine and the state
-hash, and section 6 is its worklist.)
+hash, and section 6 is its worklist. Its first part landed 2026-10-10 in
+[`exe-import-engine.md`](exe-import-engine.md): the data-pointer rebuild, the
+places by pointer, `.rdata`'s constants, state 3's design and `BOF3X_EXEIMAGE`;
+a disc-built image's numbers below are now that doc's section 1.2.)
 
 The engine reads the game's tables from `BOF3.exe`'s initialised `.data` at
 their linked addresses. A cache built without the PC's executable needs that
@@ -223,7 +226,8 @@ N for song N). A PSP-only install also lacks `sin_table`.
 2. **The JP disc's `AREA026` differs from the PC where the later builds do
    not** (section 3, 21 bytes): the PC took this area's data from a later
    build than the JP disc, or the JP disc predates a fix. Not read further.
-3. **The data pointers can be rebuilt from a disc** (measured, not done):
+3. **The data pointers can be rebuilt from a disc** (measured here; built
+   2026-10-10, [`exe-import-engine.md`](exe-import-engine.md) section 1):
    `measure`'s `pointer words` line. On the JP disc 6,667 placed words point
    into `.data` at a byte some segment places; for **6,229 of them the disc's
    word is exactly the target's address in that build** (the map run
@@ -235,7 +239,20 @@ N for song N). A PSP-only install also lacks `sin_table`.
 4. **`Char_DefaultRecords` needs the catalogue** (step 5's owed item 3): 51 to
    56 of the differing bytes are its names, copied at the disc's width.
 
-## 6. What the engine will need (read and listed, not built)
+## 6. What the engine will need (read and listed here; the engine half started in [`exe-import-engine.md`](exe-import-engine.md))
+
+**Since 2026-10-10** ([`exe-import-engine.md`](exe-import-engine.md)): item 2's
+rebuild transform is built (JP 7,138 of the 9,959 data pointers, every one the
+PC's; the words it would get wrong per build in `recipes/exe-rebuild.tsv`);
+item 3's `.rdata` reads are settled (44 the engine's own constants in
+`src/game/rdata_consts.h`, verified against the exe at every start; 13 import
+slots, `c_dfDIKeyboard`, four floats only Capcom's code reads and three
+non-reads stay); item 4's unplaced data is placed further by the twin method
+keyed by pointers (`recipes/exe-places.tsv`; JP image 90.4 % the PC's); item
+1's design is chosen (an entry-stub page at Capcom's addresses) and its first
+step, `BOF3X_EXEIMAGE`, built. The tables below are this section's 2026-10-08
+measurement, kept as the record; the engine doc's section 3.2 re-measures
+them on today's `src/`.
 
 `exe_tables.py xref` reads every address `src/` uses in `.rdata`, `.data` or
 `.bss`: the 2,554 `symbols.toml` `[[data]]` entries `src/` names (a word
