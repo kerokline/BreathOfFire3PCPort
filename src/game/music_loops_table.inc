@@ -7,6 +7,7 @@
     { 13,  1092964,     1272,  1293697, 128},  // 013.DAT: render, full, body 29.307 s, confidence 0.988
     { 14,  1322423,  1206820,  2427732, 128},  // 014.DAT: render, full, body 27.685 s, confidence 0.994
     { 36,   479400,    15266,   673646, 128},  // 036.DAT: render, full, body 14.929 s, confidence 0.998
+    { 37,   718472,      734,   566960, 128},  // 037.DAT: render, full, body 12.840 s, confidence 0.833
     { 39,   285885,    43300,   423729, 128},  // 039.DAT: render, full, body 8.627 s, confidence 0.996
     { 47,   718890,   139077,  1554626, 128},  // 047.DAT: render, full, body 32.099 s, confidence 0.967
     { 51,  1858247,   436901,  3621889, 128},  // 051.DAT: render, full, body 72.222 s, confidence 0.963
@@ -15,26 +16,27 @@
     { 61,  1129744,   101134,  1645705, 128},  // 061.DAT: render, full, body 35.024 s, confidence 0.949
     { 62,   285049,    42200,   422629, 128},  // 062.DAT: render, full, body 8.627 s, confidence 0.996
     { 63,   858071,   124816,  1634733, 128},  // 063.DAT: render, full, body 34.238 s, confidence 0.968
-    { 64,  1026926,   111606,  1438683, 128},  // 064.DAT: render, full, body 30.092 s, confidence 0.966
+    { 64,  1026926,    23399,  1438947, 128},  // 064.DAT: render, full, body 32.099 s, confidence 0.968
     { 65,   530391,   318373,   914084, 128},  // 065.DAT: render, full, body 13.508 s, confidence 0.957
     { 68,   641568,    23304,  1438852, 128},  // 068.DAT: render, full, body 32.099 s, confidence 0.981
-    { 70,  2162521,  1469677,  5960192, 256},  // 070.DAT: render, shifted (stand-in 0.738 over 0.84 s), body 101.826 s, confidence 0.910, short of a whole body by 36748 samples
-    { 76,   641568,   111387,  1438464, 128},  // 076.DAT: render, full, body 30.092 s, confidence 0.975
+    { 76,   641568,    23301,  1438849, 128},  // 076.DAT: render, full, body 32.099 s, confidence 0.978
     { 78,  1449901,   602496,  2320801, 128},  // 078.DAT: render, full, body 38.964 s, confidence 0.934
     { 79,  1232562,   139212,  1554761, 128},  // 079.DAT: render, full, body 32.099 s, confidence 0.967
     { 82,  1101323,   605050,  2418722, 128},  // 082.DAT: render, full, body 41.126 s, confidence 0.988
+    { 84,   412944,   111476,   683593, 128},  // 084.DAT: render, full, body 12.973 s, confidence 0.931
     { 85,  1153568,   387811,  1803359, 128},  // 085.DAT: render, full, body 32.099 s, confidence 0.979
     { 88,  1456588,   304845,  2427429, 128},  // 088.DAT: render, full, body 48.131 s, confidence 0.947
     { 90,  1232562,   285260,  2927616, 128},  // 090.DAT: render, full, body 59.917 s, confidence 0.978
     { 92,   326427,    56448,   506917, 128},  // 092.DAT: render, full, body 10.215 s, confidence 0.977
     { 99,   789943,   439603,  1311050, 128},  // 099.DAT: render, full, body 19.761 s, confidence 0.977
     {104,  1765460,  1206545,  2427456, 128},  // 104.DAT: render, full, body 27.685 s, confidence 0.992
+    {109,   746894,     4281,  1033496, 128},  // 109.DAT: render, full, body 23.338 s, confidence 0.929
     {113,   418378,    99968,  1152781, 256},  // 113.DAT: render, shifted (stand-in 0.769 over 1.38 s), body 23.873 s, confidence 0.918, short of a whole body by 60662 samples
     {120,   428409,   157957,  1180544, 256},  // 120.DAT: render, shifted (stand-in 0.771 over 0.69 s), body 23.188 s, confidence 0.812, short of a whole body by 30144 samples
     {123,   751491,    11116,  2071040, 256},  // 123.DAT: render, shifted (stand-in 1.000 over -0.01 s), body 46.710 s, confidence 0.836, short of a whole body by -538 samples
-    {131,  1073738,    42968,  2874066, 128},  // 131.DAT: render, full, body 64.197 s, confidence 0.928
+    {130,   560484,     1212,   773864, 128},  // 130.DAT: render, full, body 17.520 s, confidence 0.983
     {133,   881058,  1207040,  2427949, 256},  // 133.DAT: render, shifted (stand-in 0.951 over 0.08 s), body 27.685 s, confidence 1.000, short of a whole body by 3202 samples
     {142,  1444467,   353716,  3981056, 256},  // 142.DAT: render, shifted (stand-in 0.955 over 6.45 s), body 82.253 s, confidence 1.000, short of a whole body by 284245 samples
     {144,  1026926,    29237,  2152560, 128},  // 144.DAT: render, full, body 48.148 s, confidence 0.992
     {157,  1645506,   803126,  4535168, 256},  // 157.DAT: render, shifted (stand-in 0.933 over 0.07 s), body 84.627 s, confidence 0.882, short of a whole body by 2833 samples
-    {164,   789943,   651849,  1522559, 128},  // 164.DAT: render, full, body 19.744 s, confidence 0.982
+    {164,   789943,   439599,  1311046, 128},  // 164.DAT: render, full, body 19.761 s, confidence 0.977

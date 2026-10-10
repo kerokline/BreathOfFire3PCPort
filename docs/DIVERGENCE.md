@@ -4632,13 +4632,14 @@ designed in rather than bolted on.
   rewound and the frames before the loop start discarded, so the samples
   after the jump are the first pass's bit for bit - with a crossfade at the
   join. A track without a row rewinds as before. **The table as it ships
-  (2026-10-10): 37 rows** of the 156 looping tracks
-  ([`bgm-comparison.md`](bgm-comparison.md) section 11.2):
-  - **28 full** (`001 003 013 014 036 039 047 051 060 061 062 063 064 065
-    068 076 078 079 082 085 088 090 092 099 104 131 144 164`): the file
-    holds a whole body after the loop start; the row is the disc's loop,
+  (2026-10-10, second cut: 39 rows)** of the 156 looping tracks
+  ([`bgm-comparison.md`](bgm-comparison.md) section 11.2;
+  [`music-open-ends.md`](music-open-ends.md) 3 for the second cut):
+  - **31 full** (`001 003 013 014 036 037 039 047 051 060 061 062 063 064
+    065 068 076 078 079 082 084 085 088 090 092 099 104 109 130 144 164`): the
+    file holds a whole body after the loop start; the row is the disc's loop,
     start and period, in the file's samples, with a 2.9 ms crossfade.
-  - **9 shifted** (`008 056 070 113 120 123 133 142 157`): the file
+  - **8 shifted** (`008 056 113 120 123 133 142 157`): the file
     ends before one whole body after the loop start but holds a whole period
     from its start; the row keeps the disc's period, ends as late as the file
     allows, and so starts that period earlier - its first moments are intro
@@ -4648,24 +4649,40 @@ designed in rather than bolted on.
   - **The gates** (`tools/bgm/measure_loops.py` `gate()`): every row's period
     correlation >= 0.8 and an alignment of 10+ windows within 50 samples (512
     on the onset envelope); a shifted row's stand-in must also correlate
-    with the body's tail it replaces at >= 0.5, however short. The number
+    with the body's tail it replaces at >= 0.5, however short; and **since
+    the second cut, the period within one VSync and four samples of one of
+    the sequence's own pass lengths** (`tools/bgm/seq_periods.py`: our
+    sequencer, whose periods equal the renders' to the VSync on all 156,
+    `libsnd-reading.md` 9.1) - the measurement's candidates pinned to those
+    lengths, the vote within +-8 samples. The first cut shipped four rows the
+    envelope had measured at a wrong period: `064` and `076` at 30.09 s of a
+    32.10 s body (15 of its 16 bars: the last bar never played after the
+    first pass), `131` at 64.19 s of 67.10 s, `070` 1.22 VSyncs (20 ms) short.
+    Measured again with the pin, `064` and `076` are full rows at 32.099 s
+    (their files repeat there at a median 0.99, against 0.52 at the old
+    period), `131` is *shortened* (its file holds no whole body at the true
+    period) and `070` falls under the correlation gate (0.638); `037`, `084`,
+    `109` and `130` - refused before on correlation at wrong periods (`037`
+    at 1.5 times its body) - pass every gate; `164` moved by one VSync and
+    4.8 s of start. 31 rows are byte for byte the first cut's. The number
     sits in a gap of the measured distribution (29 shifted rows: 15 at
     -0.10..0.34, none to 0.62, 14 at 0.62..1.00). The first cut of the gate
     kept 151 and 153 (the battle theme and its twin) on their 0.35..0.37 s
     stand-ins, a crossfaded run-in; **the owner's call of 2026-10-10 refuses
     them with the rest**, so the battle theme rewinds as the original does
     until the disc's music (DIV-0087) plays it.
-  - **Refused, rewinding as the original: 119.** 14 shifted rows on the
+  - **Refused, rewinding as the original: 117** (second cut;
+    `loops.json`'s `why` names each one's cause): shifted rows on the
     stand-in gate (`007 089 093 119 125 128 136 138 143 145 147 151 153
-    159`: about 4 s of other material a pass, 17.3 s on 145, 0.35 s on
-    151 and 153; twelve of them in the table until 2026-10-10 - the gate
-    had been documented and not applied); 76
-    *shortened* - the file shorter than one loop period from its start, so
-    no correct loop exists inside it (the town theme `000`: 0.44 s short;
-    20 of them by a frame or two, `near_full`, the owner's call whether a
-    slip that size a pass beats the rewind); 29 others under the
-    correlation or alignment gates (23 full, 6 shifted), every one with its
-    cause in `loops.json`'s `why`.
+    159` among them: about 4 s of other material a pass, 17.3 s on 145,
+    0.35 s on 151 and 153; twelve of them in the table until 2026-10-10 -
+    the gate had been documented and not applied); 81 *shortened* - the
+    file shorter than one loop period from its start, so no correct loop
+    exists inside it (the town theme `000`: 0.44 s short; 23 of them by a
+    frame or two, `near_full`, the owner's call whether a slip that size a
+    pass beats the rewind - [`music-open-ends.md`](music-open-ends.md) 5
+    measures it: the rewind is within -41..+7 ms of the period on all 23);
+    the rest under the correlation or alignment gates.
 - **Rationale:** the owner's words above; the measurement that the disc
   loops inside the song. The table is our own measurement, regenerable from
   `analysis/bgm/loops.json` by `tools/bgm/gen_loop_table.py` (which refuses
@@ -4677,7 +4694,19 @@ designed in rather than bolted on.
   A full row restores the disc's loop exactly; a shifted row restores its
   period and phase, not the stand-in's notes; a refused track keeps the
   port's rewind.
-- **Verification (2026-10-10, the 39-row cut; the 37 that ship are among them):** `prove_loops.py`'s splice and
+- **Verification of the second cut (2026-10-10, [`music-open-ends.md`](music-open-ends.md) 3):**
+  `seq_periods.py` - 128 of the 156 rows' periods agreed with the sequence,
+  4 of the 37 shipped did not; after the pinned re-measurement every one of
+  the 39 does, by construction and by the gate. The seven rows new or moved,
+  `prove_loops.py`'s seam numbers (the render's continuation, the MP3's own
+  continuation past the end as the yardstick): `037` 0.58 (0.81), `064` 0.78
+  (0.81), `076` 0.73 (0.75), `084` 0.69 (0.72), `109` 0.81 (0.85), `130` 0.76
+  (0.77), `164` 0.65 (0.70); steps at or under the file's own; gaps 0..31.
+  The 2 s continuity cannot see a wrong period - the first cut's `064` scored
+  0.78 too, since bar 16 and bar 1 sound alike - which is why the sequence
+  check is a gate and not a score. Built; `BOF3X_LANG=original
+  BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`: exit 0, "39 table rows in bounds".
+- **Verification of the first cut (2026-10-10, the 39-row cut; the 37 that shipped are among them):** `prove_loops.py`'s splice and
   scores, re-run offline over the regated table (the renders on disk; the
   first second after the join against the render's continuation, before =
   the original's rewind): full rows from -0.18..0.25 (8 unmeasured: the
@@ -5090,6 +5119,14 @@ designed in rather than bolted on.
   on a synthetic cache under a 200-character root: intact, 2 songs and 1
   bank checked, armed; a truncated bank, a missing bank and a song of the
   wrong version each fatal at start-up naming the file.
+  **Amended 2026-10-10 (`catchup/music-tooling`, [`music-open-ends.md`](music-open-ends.md)):**
+  the SPU model's ADPCM prediction loses its `+32` (`spu-model.md` R1), which
+  the renders preferred on all nine songs measured - a closer copy of the
+  hardware, not a change of what the entry does; the player against the
+  renders, oracle-timed with the fit run to each voice's next key on: 155 of
+  the 156 renders on the owner's machine at >= 0.99 of the windows (94 at
+  0.986, an allocation tie the interrupt latency decides). The host suite
+  runs on Windows now; `BOF3X_SHADOW=sound` exits 0 with it.
 - **Also in the PSX version?** Yes in substance: this *is* the PSX's player
   on the PSX's data, at the PC's fade level and timing.
 - **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
