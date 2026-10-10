@@ -63,9 +63,10 @@ refuses 151 and 153 too. The shortfall (short_by, the stand-in's length) is
 not gated apart beyond that: stand_in_ncc is measured over the whole
 stand-in, however long (008: 8.1 s at 0.87; 142: 6.4 s at 0.96).
 
-The stand-in is judged on the waveform, which the SPU's noise voices lower
-(see match_windows): a noise-dominated song (the 23.19 s family, 089 and
-its variants) may be refused for its noise rather than for wrong material.
+The stand-in is judged on the waveform, which the cymbal and hi-hat hits'
+jitter between passes lowers (match_windows; bgm-comparison.md 11.1 2): a
+song no waveform window of which matches (the 23.19 s family, 089 and its
+variants) may be refused for that rather than for wrong material.
 That refusal is the safe one - the track keeps the original's rewind.
 
 Refused rows are kept in loops.json with "excluded": true and are not
