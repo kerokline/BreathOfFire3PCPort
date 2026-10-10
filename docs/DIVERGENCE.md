@@ -4367,9 +4367,9 @@ designed in rather than bolted on.
 ### Dauna Mine's minecart map is walled as every later release walled it, from the player's Western disc
 
 - **ID:** DIV-0080
-- **Date:** 2026-10-06; **rewritten 2026-10-10** (the walls moved from a
-  coordinate table in our code to an optional layer built from the player's
-  own disc)
+- **Date:** 2026-10-06
+- **Rewritten:** 2026-10-10 (the walls moved from a coordinate table in our
+  code to an optional layer built from the player's own disc)
 - **Subsystem:** the area data as loaded: the `area4-walls` layer
   (`tools/importer.py`, `recipes/opt.toml`, [`opt-layers.md`](opt-layers.md)
   section 1), walked by DIV-0086's `BOF3X_OPT` prefix in `LoadDatFile`
