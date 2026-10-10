@@ -244,6 +244,8 @@ that already exist.
 
 ## 6. The launcher's options page (the owner's design, 2026-10-10)
 
+- **Three toggles: audio, graphics, data** (the owner's call, section 7),
+  each choosing between the PSP's version and the PlayStation's.
 - **Every option is listed**, whether or not its source is present. An option
   whose source the install lacks is **greyed out and not selectable**, with
   the discs that would enable it named. The player sees both the defaults in
@@ -262,14 +264,28 @@ that already exist.
   version would need graphics work to look right). A launcher choice takes
   effect at the next start, which fits layers that load with each area.
 
-## 7. Calls for the owner
+## 7. The owner's calls (2026-10-10)
 
-1. For a PSP-only install, should the PSP's own content be the base (section
-   2.2, a DIV), or should the importer refuse until a PSX disc or the PC is
-   given?
-2. For PSP-only music, take the PSP's music as it is (a PSP-native bank), or
-   wait for a PSX disc?
-3. For PSP-only sound effects, voice and jingles: route (a), the player's
-   own ffmpeg at import time, or (b), a clean-room ATRAC3plus decoder (section 2.1.1)?
-4. Should step 3 (the PSP code diff) run before the launcher page, so the page
-   is designed with the code toggles known?
+1. **A PSP-only install uses the PSP's art and data** as its base: the
+   section 2.2 stand-ins, the PSP's `exp_table` and consumable 87. This is a
+   ledger entry when the importer does it.
+2. **A PSP-only install uses the PSP's audio as it is** when no PSX disc is
+   present: the 885 banks, the PSP's music, and the ATRAC3plus effects. Where
+   both are present the PSX's stays the default, and the PSP's audio
+   eventually becomes a toggle.
+3. **Three toggles, not one per difference:** **audio**, **graphics** and
+   **data**. Each picks the PSP's version or the PSX's, and is greyed when
+   its source is missing (section 6). Finer grain only if testing the install
+   route shows a need. The same path may later carry **mods**, if side-loading
+   a layer is easy enough. The `opt/` layer mechanism (DIV-0086) is already
+   that shape: a named layer of whole chunks over the base, from a manifested
+   source.
+
+Still open:
+
+- **The decoder for the effects:** the player's own ffmpeg at import time (a),
+  or a clean-room ATRAC3plus decoder (b) (section 2.1.1). (a) is recommended
+  to start: nothing vendored, and (b) can replace it later.
+- **Whether the PSP code diff (step 3) runs before the launcher page.** With
+  three toggles decided, the page no longer waits on it: battle-code
+  differences, if any are found, fall under **data** or get a fourth toggle.
