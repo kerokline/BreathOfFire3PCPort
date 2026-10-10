@@ -385,6 +385,36 @@ channel of the last event read, not the voice's. During Music_Play's
 crescendo (5.1) this is the volume every note keyed in the first eight
 VSyncs keeps.
 
+### 3.11 A new VAB: `SsVabClose` (`0x80174190`) leaves the voice records
+
+Read 2026-10-10 (the 132 bytes, capstone over `SLPS_009.90`): with `vabid <
+16` and the used byte `0x8018F170[vabid]` = 1, `SpuFree(0x80191550[vabid])`,
+the used byte to 0, the open count `0x80191548` - 1. Nothing else: the
+voice records `_SsVmInit` set up (1.1.1) keep their `seqid`, tone block,
+tone and velocity across the close and the next `SsVabOpenHeadSticky`. So on
+the PSX a voice keyed from the old VAB, released or not, still belongs to
+its sequence id; the next `_SsVmSetSeqVol` (3.10), `_SsVmSetVol` or
+`_SsVmPBVoice` of a sequence with that id re-volumes or re-pitches it with
+the tone attributes at the old index of the **new** VAB's tone table - past
+the table's end when the new bank has fewer programs (whatever the header
+buffer holds there). Its sample bytes in SPU RAM are the new bank's by
+then, since the new body goes to the same address (6.3).
+
+The player cannot reproduce a read past the table, and must not index past
+its own (the review finding of 2026-10-10: song A from a bank of two
+programs, then song B from a bank of one, aborted in `Play`'s
+`SsSepSetVol(0, 0)` on tone 16 of 16). `MusicSynth::LoadBank` therefore,
+when the bank's name changes, keys every sequencer voice off
+(`_SsVmKeyOffNow`) and puts each record's references into the bank back to
+`_SsVmInit`'s values - `seqid` -1, tone `0xFF`, velocity 0, block, program
+and note 0 - keeping ENVX, age and priority, which the allocator (3.3)
+reads as the SPU's state. The release tails go on over the new bank's
+samples, as on the PSX; what differs is that no later volume or bend
+reaches them (on the PSX one can, with the new table's attributes, or past
+it). Not measured against a render: no render crosses a bank change.
+`_SsVmPBVoice` now reads its tone through the checked lookup (`ToneAt`),
+aborting rather than indexing past the bank.
+
 ## 4. What the songs use (the census)
 
 All 166 songs (the 165 table entries + `BGMBAT00` sub 1), read with
@@ -547,7 +577,12 @@ What aborts (`MusicFatal`): controllers 0, 98, 100, 101 and the zero slots
 events other than `0x2F` / `0x51`; a tempo into slow mode; noise tones;
 accelerando / ritardando flags; a note more than 60 below its centre; a ramp
 of 0 frames; a VAB other than 0; a bank past layout 2's music slot
-(`0x6C6D0`). Every one of the 166 songs renders 300 s without an abort
+(`0x6C6D0`); a tone index outside the bank (`ToneAt`, 3.11). The loaders
+also refuse header values whose arithmetic would wrap (2026-10-10): an
+event count above what the file holds (checked before `count * 12`), a
+resolution above `0x7FFF` (libsnd's signed halfword), an end tick above
+`0x7FFFFFFF / 10` (deltas are ticks x 10 in a word), sample sizes summing
+past the file; and `StepFor` a step above `0x7FFF` (a halfword). Every one of the 166 songs renders 300 s without an abort
 (2026-10-08).
 
 ## 9. Against the renders (running log)

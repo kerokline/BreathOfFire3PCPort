@@ -401,7 +401,7 @@ void Spu::WriteRegister(std::uint32_t offset, std::uint16_t value) {
 
 // spec: SPU ADPCM Samples, "Sample Data", and CDROM Format,
 // "decode_28_nibbles": shift = 12 - (header & 0x0F) with 13..15 acting as 9
-// (R2), the filter in bits 4..6, s = (t << shift) + ((old * f0 + older * f1
+// (R2), the filter in bits 4..6 and bit 7 ignored (R21), s = (t << shift) + ((old * f0 + older * f1
 // + 32) >> 6), clamped to 16 bits (R1).
 void Spu::DecodeBlock(const std::uint8_t block[16], std::int16_t out[28], std::int32_t hist[2]) {
     int range = block[0] & 0x0F;
@@ -447,7 +447,9 @@ void Spu::LoadBlock(Voice& voice) {
     }
     voice.flags = block[1];
     if (voice.flags & 0x04) voice.lsa = static_cast<std::uint16_t>(voice.address);
-    if (((block[0] >> 4) & 0x0F) > 4) {
+    // The filter as DecodeBlock reads it, bits 4..6; bit 7 is not part of it
+    // (R21).
+    if (((block[0] >> 4) & 0x07) > 4) {
         // R20: a voice that is silent for good (released or never keyed on,
         // envelope at zero) goes on reading SPU RAM wherever its address has
         // walked - the capture buffers, the reverb area - and meets headers
@@ -460,7 +462,7 @@ void Spu::LoadBlock(Voice& voice) {
             return;
         }
         Fatal("voice %d: ADPCM block at 0x%05X, header 0x%02X: filter %d (only 0..4 are described); start 0x%05X, loop 0x%05X",
-              static_cast<int>(&voice - voices_), base, block[0], (block[0] >> 4) & 0x0F, voice.ssa * 8u, voice.lsa * 8u);
+              static_cast<int>(&voice - voices_), base, block[0], (block[0] >> 4) & 0x07, voice.ssa * 8u, voice.lsa * 8u);
     }
     DecodeBlock(block, voice.buf + 3, voice.hist);
 }
