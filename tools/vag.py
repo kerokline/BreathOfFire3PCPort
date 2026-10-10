@@ -172,7 +172,80 @@ def bank(vh, cues, vb, cache=None):
 
 def banks_of(sections, cache=None):
     """[(dest, payload)] for every sound bank of an EMI, in order."""
-    return [(g[6][2], bank(g[6][3], g[8][3] if 8 in g else b"", g[7][3], cache)) for g in groups(sections)]
+    return [(g[6][2], bank(*_vab_cues(g), cache)) for g in groups(sections)]
+
+
+def _vab_cues(g):
+    vh, vb = _vab(g)
+    return vh, g[8][3] if 8 in g else b"", vb
+
+
+# psp-unwrap for banks (docs/psp-only-build.md section 2.1). The PSP keeps the
+# EMI's sound bank as three sections of the same types, the VAB re-containered:
+# type 6 a `PPHD` header, type 7 a `pBVC` body, type 8 the cue table unchanged.
+# `PPHD` +0x10, +0x14, +0x18 are the offsets of its `PPPG`, `PPTN` and `PPVA`
+# blocks. `PPPG` +0x20: 128 program offsets (-1, none), a program a tone count,
+# three -1 words, then that many indices into `PPTN`. `PPTN`: the record size at
+# +8, the count less one at +0x14, records from +0x18; a record's words 2 (the VAG
+# less one), 6 and 7 (lowest and highest note), 14 and 15 (centre note, fine tune).
+# `PPVA` +0x14 the count less one, from +0x20 one (offset in `pBVC`, rate, size, -1)
+# per sample. Read against the PSX-JP VH of every bank; what `bank` needs of a VH
+# rebuilds 885 of the PC's 901 chunks. The other 16 are one bank whose program 1
+# a chord plays two tones of: the PSP declares one and dropped the second slot.
+PSP_HEAD, PSP_BODY = b"PPHD", b"pBVC"
+
+
+def psp_vab(ph, pbvc):
+    """A VAB header and body, as far as `bank` reads them, from the PSP's
+    `PPHD` and `pBVC` sections."""
+    if ph[:4] != PSP_HEAD or pbvc[:4] != PSP_BODY:
+        raise ValueError("not a PSP sound bank")
+    pg, tn, va = struct.unpack_from("<3I", ph, 0x10)
+    if (ph[pg:pg + 4], ph[tn:tn + 4], ph[va:va + 4]) != (b"PPPG", b"PPTN", b"PPVA"):
+        raise ValueError("PPHD: block tags not where its header says")
+    programs = {}
+    for p in range(VAB_PROGRAMS):
+        o, = struct.unpack_from("<i", ph, pg + 0x20 + 4 * p)
+        if o != -1:
+            n, = struct.unpack_from("<I", ph, o)
+            programs[p] = struct.unpack_from("<%dI" % n, ph, o + 16)
+    size, = struct.unpack_from("<I", ph, tn + 8)
+    ntones = struct.unpack_from("<i", ph, tn + 0x14)[0] + 1
+    nvag = struct.unpack_from("<i", ph, va + 0x14)[0] + 1
+    count = max(programs) + 1 if programs else 0
+    tones = 32 + VAB_PROGRAMS * 16
+    vh = bytearray(tones + count * 16 * TONE + 512)
+    vh[:4] = b"pBAV"
+    struct.pack_into("<HH", vh, 0x12, count, 0)
+    struct.pack_into("<H", vh, 0x16, nvag)
+    for p, ts in programs.items():
+        if len(ts) > 16:
+            raise ValueError("PPHD: program %d has %d tones, a VAB program holds 16" % (p, len(ts)))
+        for j, t in enumerate(ts):
+            if t >= ntones:
+                raise ValueError("PPHD: program %d tone %d past the tone table" % (p, t))
+            r = tn + 0x18 + size * t
+            vag, = struct.unpack_from("<i", ph, r + 8)
+            low, high = struct.unpack_from("<ii", ph, r + 0x18)
+            centre, fine = struct.unpack_from("<ii", ph, r + 0x38)
+            o = tones + (p * 16 + j) * TONE
+            vh[o + 4:o + 8] = bytes((centre & 0xFF, fine & 0xFF, low & 0xFF, high & 0xFF))
+            struct.pack_into("<H", vh, o + 22, vag + 1)
+    sizes, vb = tones + count * 16 * TONE, []
+    for i in range(nvag):
+        off, _, n = struct.unpack_from("<3I", ph, va + 0x20 + 16 * i)
+        if n % 8 or off + n > len(pbvc):
+            raise ValueError("PPVA: sample %d (offset 0x%X, size %d) not in pBVC" % (i, off, n))
+        struct.pack_into("<H", vh, sizes + 2 * (i + 1), n // 8)
+        vb.append(pbvc[off:off + n])
+    return bytes(vh), b"".join(vb)
+
+
+def _vab(g):
+    """(header, body) of a sound-bank group, unwrapping a PSP disc's."""
+    if g[6][3][:4] == PSP_HEAD:
+        return psp_vab(g[6][3], g[7][3])
+    return g[6][3], g[7][3]
 
 
 _CACHE = {}
@@ -191,15 +264,17 @@ def bank_from_disc(build, dat_name, ordinal):
     if ordinal >= len(gs):
         return None
     g = gs[ordinal]
-    return key, g[6][0], bank(g[6][3], g[8][3] if 8 in g else b"", g[7][3], _CACHE)
+    vh, vb = _vab(g)
+    return key, g[6][0], bank(vh, g[8][3] if 8 in g else b"", vb, _CACHE)
 
 
 def importer_source(src, f, slot, ch):
     """tools/importer.py build's wave-from-vag: a recipe `bank` chunk from a
-    PSX disc source, as importer's (build, (build, how, EMI, section),
+    PSX or PSP disc source, as importer's (build, (build, how, EMI, section),
     payload), or None - no such bank, or one that is not the recipe's (the
-    PAL discs' eight swapped area banks, region-diff.md 8.4)."""
-    if ch["class"] != "bank" or not src.id.startswith("psx-") or not hasattr(src, "build"):
+    PAL discs' eight swapped area banks, region-diff.md 8.4; the PSP's one
+    bank with a dropped tone, 16 chunks, psp-only-build.md 2.1)."""
+    if ch["class"] != "bank" or not src.id.startswith(("psx-", "psp-")) or not hasattr(src, "build"):
         return None
     got = bank_from_disc(src.build, f["name"], sum(1 for c in f["chunks"][:slot] if c["kind"] == 2))
     if got is None or hashlib.sha256(got[2]).hexdigest() != ch["sha256"]:

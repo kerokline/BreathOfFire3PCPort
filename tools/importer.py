@@ -62,6 +62,7 @@ import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
+import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
@@ -555,7 +556,7 @@ def chunk_bytes(kind, tag, body):
 
 # Why a chunk is still missing, by (layer, class): the build's report.
 MISSING_WHY = {
-    "bank": "audio banks, the disc's VAG samples as WAV: step 6 (wave-from-vag)",
+    "bank": "audio banks, the disc's VAG samples as WAV: step 6 (wave-from-vag); from a PSP disc all but one bank in 16 containers, whose dropped tone only a PSX disc or the PC carries (psp-only-build.md 2.1)",
     "pc-edit": "the port's edits to type-1 arenas, unread (type1-compression.md 3): the PC install only",
     "art": "the port's dial page: the PC install, or a PSX disc whose own page stands in",
     "enemy-names": "the enemy tables' Chinese names",
@@ -656,6 +657,7 @@ def cmd_build(a):
                 fh.write(b"".join(parts))
             written[layer] += 1
     snd = xa.importer_snd(sources, a.out)
+    psp_snd = None if snd else at3.importer_snd(sources, a.out)     # no PSX disc: the PSP's, by the player's ffmpeg
     bgm = seq.importer_bgm(sources, a.out)
     # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc.
     # Before the languages: a disc-only language layer is built against it.
@@ -666,13 +668,18 @@ def cmd_build(a):
         print("  base/exe  from %-9s data.bin %s" % exe)
     loc_assets = build_languages(a.lang, sources, a.out)
     opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
-    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm)
+    write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
+                   psp_snd)
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
         print("  %-9s %d containers written" % (layer, n))
     if snd:
         print("  base/snd  from %s: %d files (wave-from-xa)" % snd)
+    if psp_snd and psp_snd[1]:
+        print("  base/snd  from %s: %d files (psp-at3, %s)" % (psp_snd[0], len(psp_snd[2]), psp_snd[1]))
+    for why in (psp_snd[3] if psp_snd else []):
+        print("  base/snd  not written: %s" % why)
     if bgm:
         print("  base/bgm  from %s: %d files (seq.py)" % (bgm[0], len(bgm[1])))
     if missing:
@@ -796,7 +803,7 @@ def build_languages_disc_only(asked, sources, out):
 
 
 def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_assets=(), opt_recipe=None, exe=None,
-                   bgm=None):
+                   bgm=None, psp_snd=None):
     with open(recipe_path, "rb") as f:
         rsha = sha(f.read())
     lines = ["# The cache's provenance, written by tools/importer.py build. Every chunk: its",
@@ -833,6 +840,14 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
                   "bgm = ["]
         for rel, where, h in bgm[1]:
             lines.append("  [%s, %s, %s]," % (toml_str(rel), toml_str(where), toml_str(h)))
+        lines.append("]")
+    if psp_snd and psp_snd[1]:
+        lines += ["", "# base/snd/: the PSP's ATRAC3plus clips decoded by the player's ffmpeg (tools/at3.py,",
+                  "# docs/psp-only-build.md 2.1.1); not the PC's bytes, so each file's own hash.", "[snd]",
+                  "build = %s" % toml_str(psp_snd[0]), 'how = "psp-at3"', "ffmpeg = %s" % toml_str(psp_snd[1]),
+                  "files = ["]
+        for name, h in sorted(psp_snd[2].items()):
+            lines.append("  [%s, %s]," % (toml_str(name), toml_str(h)))
         lines.append("]")
     if exe:
         lines += ["", "# base/exe/data.bin: BOF3.exe's .data in the PC's layout (tools/exe_tables.py).", "[exe]",
@@ -1732,6 +1747,7 @@ def cmd_check(a):
     oerrs = check_opt(a.opt_recipe)
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
     serrs += ["seq.py: " + e for e in seq.check_fixture(builds)]   # fixtures/bgm.tsv's shape and format versions
+    serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
     werrs = cache_walk.check()
     for e in (errs + oerrs + serrs + werrs)[:30]:
@@ -1739,7 +1755,7 @@ def cmd_check(a):
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
           % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
              len(oerrs)))
-    print("seq check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, %d error(s)" % len(serrs))
+    print("seq / at3 check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, recipes/psp.snd.toml, %d error(s)" % len(serrs))
     print("cache_walk check: the engine's cache walk against install on a synthetic cache, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
     return exe_tables.cmd_check(a) | (1 if errs else 0)
