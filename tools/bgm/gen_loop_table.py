@@ -3,29 +3,41 @@
 Every row of loops.json that is not "excluded" becomes one engine row
 {track, file bytes, start, end, fade}. The positions are our measurements of the PC's
 MP3s (tools/bgm/measure_loops.py), not Capcom's data. Checks each row against
-its file before writing: start < end <= the last whole frame's end.
+its file before writing: start < end <= the last whole frame's end, the file's
+size, and that the measured decode is exactly frames * 1152 samples. The
+positions count samples of ffmpeg's decode; the engine counts its own decoder's,
+from the first frame, untrimmed. The two agree only while ffmpeg trims nothing
+(no Xing/Info/LAME tag giving it an encoder delay or padding) - true of every
+file today (tools/bgm/loops.py) - so a row whose decode is any other length
+stops the table, never silently shifts it.
 
-    python gen_loop_table.py
+    python gen_loop_table.py            (BGM_LOOPS_JSON overrides the table read, bgm_paths.py)
 """
-import json, os
-from bgm_paths import PC
+import json, os, sys
+from bgm_paths import PC, LOOPS_JSON
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(os.path.dirname(os.path.dirname(HERE)), "src", "game", "music_loops_table.inc")
 
 
 def main():
-    table = json.load(open(PC + "/analysis/bgm/loops.json"))
+    table = json.load(open(LOOPS_JSON))
     rows = []
     for k, r in sorted(table.items(), key=lambda kv: int(kv[0])):
         if r.get("excluded"):
             continue
         fade = int(r.get("fade", 0))
+        if r["samples"] != r["frames"] * 1152:
+            sys.exit("track %s: the decode is %d samples, %d frames * 1152 = %d - ffmpeg trimmed an encoder "
+                     "delay or padding, and the table's positions would not be the engine's" % (
+                         k, r["samples"], r["frames"], r["frames"] * 1152))
         assert 0 <= r["start"] < r["end"] and r["end"] + fade <= r["samples"], (k, r["start"], r["end"], r["samples"])
         if fade:  # the engine takes the faded samples from the frames holding the end and the start
             assert 0 < r["end"] % 1152 <= 1152 - fade and r["start"] % 1152 <= 1152 - fade, k
         assert os.path.getsize(PC + "/bof3/BGM/" + r["file"]) == r["bytes"], k
         how = r.get("method", "render") + ", " + r["case"]
+        if r["case"] == "shifted":
+            how += " (stand-in %.3f over %.2f s)" % (r["stand_in_ncc"], r["stand_in_s"])
         rows.append("    {%3d, %8d, %8d, %8d, %3d},  // %s: %s, body %.3f s, confidence %.3f%s" % (
             int(k), r["bytes"], r["start"], r["end"], fade, r["file"], how, (r["end"] - r["start"]) / 44100.0,
             r["confidence"], ", short of a whole body by %d samples" % r["short_by"] if r.get("short_by") else ""))
