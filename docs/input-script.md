@@ -20,7 +20,7 @@ python tools/input_run.py tools/recipes/config_screen.txt --out analysis/shots/c
 python tools/input_run.py tools/recipes/field_menu.txt --out analysis/shots/menu --lang en --original "D3d_DrawSprt"
 ```
 
-`--lang` sets `BOF3X_LANG` (an overlay tag, `en-US`; the 29 recipes whose header says `BOF3X_LANG=en` were recorded under the US text before the tags, 2026-10-08, and play under `en-US`), `--original` sets `BOF3X_ORIGINAL`, `--env K=V`
+`--lang` sets `BOF3X_LANG` (an overlay tag, `en-US`; the 29 recipes recorded under the bare `BOF3X_LANG=en`, the US text before the tags of 2026-10-08, play under `en-US` and their header comment says so since 2026-10-10), `--original` sets `BOF3X_ORIGINAL`, `--env K=V`
 sets anything else. Output: `OUT/NAME.png` for every `shot NAME`; `mark`,
 `peek` and `until` lines echoed; exit 0 when the recipe says `done`. Since
 2026-09-24 **the game writes each shot itself** (`BOF3X_SHOT_DIR`, set to

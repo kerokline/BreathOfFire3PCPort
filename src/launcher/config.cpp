@@ -91,7 +91,13 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         const std::string value = Trim(line.substr(eq + 1));
 
         if (key == "language") {
-            if (ConfigLanguageKnown(value)) cfg.language = value;
+            if (ConfigLanguageKnown(value)) {
+                cfg.language = value;
+            } else if (const char* tag = ConfigLegacyLanguage(value)) {
+                std::fprintf(stderr, "bof3x-launcher: bof3x.ini's language=%s is a code from before 2026-10-08; "
+                             "reading it as %s (DIV-0005)\n", value.c_str(), tag);
+                cfg.language = tag;
+            }
         } else if (key == "opt") {
             if (value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-,") ==
                 std::string::npos)
@@ -186,7 +192,7 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# Rewritten whenever the launcher's dialog is used; hand-editing works too.\r\n";
     out += "# Run bof3x-launcher --config to reopen the dialog after hiding it.\r\n";
     out += "\r\n[bof3x]\r\n";
-    out += "# original | en | fr | de | ja   (a code needs tools/loc_build.py to have built it)\r\n";
+    out += "# original | en-US | en-150 | fr-FR | de-DE | ja-JP   (a tag needs tools/loc_build.py to have built it)\r\n";
     out += std::string("language=") + cfg.language + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP; tools/importer.py install puts them in the game's DAT folder\r\n";
@@ -273,9 +279,16 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
                          "playing the original text\n", cfg.language.c_str(), cfg.language.c_str());
     }
 
-    // DIV-0086: the layers installed and, for a text layer, of the language played.
+    // DIV-0086: the layers installed and, for a text layer, of the language
+    // played - the one the game is given now, not the ini's: the step above
+    // can leave BOF3X_LANG unset, and the environment may already say
+    // `original` or another tag, and the DLL refuses a text layer of any
+    // other language at start-up.
     if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0 && !cfg.opt.empty()) {
-        const std::string playable = ConfigOptPlayable(game_dir, cfg.opt, cfg.language);
+        char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
+        const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
+        const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
+        const std::string playable = ConfigOptPlayable(game_dir, cfg.opt, language);
         if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
     }
 
@@ -427,16 +440,12 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
             continue;
         }
         FindClose(h);
-        bool other_language = false;
-        for (const LanguageInfo& lang : kLanguages) {
-            const std::string tail = std::string("-") + lang.code;
-            if (layer.size() > tail.size() && layer.compare(layer.size() - tail.size(), tail.size(), tail) == 0 &&
-                language.compare(0, 2, lang.code, 2) != 0)
-                other_language = true;
-        }
-        if (other_language) {
-            std::fprintf(stderr, "bof3x-launcher: layer %s is not the language played (%s); left off\n",
-                         layer.c_str(), language.c_str());
+        // The DLL's own test (dat_load.cpp ReadOptLayers), so what passes
+        // here never stops the game at start-up.
+        const char* tag = LayerLanguage(layer.c_str());
+        if (tag && !SamePrimaryLanguage(language.c_str(), tag)) {
+            std::fprintf(stderr, "bof3x-launcher: layer %s is %s text, not the language played (%s); left off\n",
+                         layer.c_str(), tag, language.empty() ? kLanguageOriginal : language.c_str());
             continue;
         }
         if (!out.empty()) out += ',';
@@ -450,6 +459,17 @@ bool ConfigLanguageKnown(const std::string& code) {
     for (const LanguageInfo& lang : kLanguages)
         if (code == lang.code) return true;
     return false;
+}
+
+const char* ConfigLegacyLanguage(const std::string& code) {
+    // The bare codes of 2026-09-27..2026-10-08; en is en-US, the default
+    // English (docs/HANDOFF.md, the owner's word of 2026-10-08).
+    static constexpr struct { const char* bare; const char* tag; } kLegacy[] = {
+        {"en", "en-US"}, {"fr", "fr-FR"}, {"de", "de-DE"}, {"ja", "ja-JP"},
+    };
+    for (const auto& l : kLegacy)
+        if (code == l.bare) return l.tag;
+    return nullptr;
 }
 
 }  // namespace bof3x

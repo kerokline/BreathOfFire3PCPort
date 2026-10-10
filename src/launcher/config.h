@@ -14,9 +14,12 @@
 //    it is the port's own documented input, so this is not a divergence.
 #pragma once
 
+#include <iterator>
 #include <string>
+#include <string_view>
 #include <vector>
 
+#include "game/language_tags.h"
 #include "input/bindings.h"
 
 namespace bof3x {
@@ -40,10 +43,20 @@ inline constexpr LanguageInfo kLanguages[] = {
     {"de-DE", L"German (PlayStation script)"},
     {"ja-JP", L"Japanese (PlayStation script)"},
 };
+// The DLL knows the same tags (game/language_tags.h, which also says which
+// optional layer is text of which language); the two lists must agree.
+constexpr bool LanguagesAgree() {
+    if (std::size(kLanguages) != std::size(kLanguageTags)) return false;
+    for (std::size_t i = 0; i < std::size(kLanguages); ++i)
+        if (std::string_view(kLanguages[i].code) != kLanguageTags[i]) return false;
+    return true;
+}
+static_assert(LanguagesAgree(), "kLanguages and game/language_tags.h kLanguageTags differ");
 // "original" (no overlay, the port's Chinese) or one of kLanguages' tags. A
-// bof3x.ini that still says `language=en` (the bare codes before 2026-10-08)
-// is not known and falls back to the original; the dialog re-offers what is
-// built.
+// bof3x.ini that still says a bare code from before 2026-10-08 (`language=en`,
+// fr, de, ja) reads as that language's tag - en-US, the default English (the
+// owner's word, 2026-10-08), fr-FR, de-DE, ja-JP - with a note on stderr
+// (ConfigLegacyLanguage, DIV-0005); the next save writes the tag.
 constexpr const char* kLanguageOriginal = "original";
 
 enum class Filter { kLinear, kPoint };   // the original's, and DIV-0012's
@@ -162,12 +175,19 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
 std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir);
 
 // The layers of `opt` (comma-separated) that can be played: those whose
-// DAT\<layer>.* files exist in `game_dir`, and of the text layers (a name
-// ending in -<tag> of kLanguages) only those of `language`'s language. Each
-// layer dropped is said on stderr; the DLL refuses either case at start-up.
+// DAT\<layer>.* files exist in `game_dir`, and of the text layers
+// (LayerLanguage, game/language_tags.h) only those of `language`'s primary
+// language - `language` being what the game is actually given as BOF3X_LANG,
+// empty or "original" for none, under which no text layer plays. Each layer
+// dropped is said on stderr; the DLL refuses either case at start-up.
 std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language);
 
 // True for "original" or a tag in kLanguages.
 bool ConfigLanguageKnown(const std::string& code);
+
+// The tag a bare language code of a bof3x.ini from before 2026-10-08 stands
+// for (en -> en-US, fr -> fr-FR, de -> de-DE, ja -> ja-JP; DIV-0005), or null
+// for any other value.
+const char* ConfigLegacyLanguage(const std::string& code);
 
 }  // namespace bof3x

@@ -358,7 +358,14 @@ designed in rather than bolted on.
   `DAT\<name>` when that file exists, with the same chunk walker. The tag
   is the BCP 47 tag of the release the text came from (`fixtures.toml`'s
   `tag` per build: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`; since
-  2026-10-08 - a bare code `en` before, and the overlays named `en.<name>`). An overlay
+  2026-10-08 - a bare code `en` before, and the overlays named `en.<name>`).
+  **Amended 2026-10-10:** a `bof3x.ini` still saying a bare code reads as
+  its tag - `en` as `en-US` (the default English, the owner's word of
+  2026-10-08), `fr` as `fr-FR`, `de` as `de-DE`, `ja` as `ja-JP` - with a
+  note on the launcher's stderr, and the next save writes the tag
+  (`ConfigLegacyLanguage`, `src/launcher/config.cpp`); until then such an
+  ini fell silently to the original. Only the ini is mapped: `BOF3X_LANG`
+  in the environment is taken as given. An overlay
   holds only the chunks that differ, and they land on top: a kind-0 chunk over
   the same arena bytes, a kind-3 chunk through `Font_SetGlyphData`, which frees
   the shipped table - the branch no shipped data had ever run. Without the

@@ -102,7 +102,7 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       (the tags), once `BOF3X_OPT=psp-art` after an `install`. Rebuild the install's overlays as `en-US.*`
       (`python tools/loc_build.py all --discs CDImage --game bof3` builds every held disc under its tag in one
       run, 2026-10-08 afternoon, done on the owner's install: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`), delete the old `en.*`
-      / `fr.*` / `de.*` / `ja.*`, re-pick the language in the launcher (an old `language=en` reads as the original).
+      / `fr.*` / `de.*` / `ja.*`, re-pick the language in the launcher (an old `language=en` reads as `en-US` since 2026-10-10, DIV-0005).
       Then `importer.py build --preset pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe --source <US cue>
       --source <PSP iso> --opt psp-art --out <cache>` and `importer.py install --cache <cache> --game bof3 --opt
       psp-art` for a look at Stallion when a route reaches fight 24 (`owner-review.md`, step 4's items).
@@ -963,7 +963,7 @@ Local only, gitignored, worth keeping:
 - **`BOF3X_OPT` changes the arena and VRAM** (2026-10-08, DIV-0086): a state-hash or attract reference run, and
   any `'*'` meant to match the record, want it unset; the launcher exports the ini's `opt=` as the language's
   `language=` is - a copy with no ini, as for `cheat.exp`. And **a recipe recorded under `BOF3X_LANG=en` plays under
-  `en-US`** since the tags (29 headers say `en`; `input-script.md`).
+  `en-US`** since the tags (the 29 headers said `en`; they say `en-US` since 2026-10-10, comment lines only; `input-script.md`).
 - **`git am` of a cloud session's patches** (2026-10-08): it refuses a file that already exists untracked (a
   copy downloaded earlier) and a tracked file with uncommitted changes ("does not match index"), and a failed run
   leaves `.git/rebase-apply`, which blocks the next ("previous rebase directory still exists"). `git am --abort`,

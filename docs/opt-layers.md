@@ -200,16 +200,20 @@ DIV-0085's snapshot, as before, so both see the layers.
   name of 0 or over 23 characters or with a character other than a letter,
   digit or `-`, a name twice, more than 8, a layer with no
   `DAT\<layer>.*.DAT` installed, and a **text layer** - a name ending in
-  `-<tag>`, the tag two lowercase letters with an optional `-XX` or `-NNN`
-  region - whose language is not `BOF3X_LANG`'s primary subtag (no
-  language: refused too). `BOF3X_OPT=original` is none, as `BOF3X_LANG`'s.
+  `-<tag>`, the tag one of the five overlay tags (`src/game/language_tags.h`,
+  the launcher's list too since 2026-10-10) - whose language is not
+  `BOF3X_LANG`'s primary subtag (no language: refused too). `BOF3X_OPT=original` is none, as `BOF3X_LANG`'s.
 - **Logs** `DIV-0086: optional layer N, DAT\<layer>.*.DAT` per layer at
   injection; `NameTables_Apply` logs `DIV-0086: n <table> name(s) replaced
   from record k` per names chunk.
 - **The launcher**: `bof3x.ini` gains `opt=` (the list); the launcher sets
   `BOF3X_OPT` from it, when the variable is empty, with the layers whose
   `DAT\<layer>.*` exist and, of the text layers, those of the language
-  played - each one dropped said on stderr, as `language=` does. **No dialog
+  played - each one dropped said on stderr, as `language=` does. The
+  language played is the `BOF3X_LANG` the game is actually given, not the
+  ini's `language=` (since 2026-10-10: an overlay not built, or a
+  `BOF3X_LANG=original` already in the environment, left the ini's text
+  layer in and the DLL refused it at start-up). **No dialog
   box**: the pattern for one (`kLanguages`' combo box) is a list of fixed
   entries, and a set of checkboxes found by what is installed is new dialog
   work; the variable is the must, the box the owner's call (section 9).
