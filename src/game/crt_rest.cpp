@@ -1,5 +1,5 @@
-// The C runtime's entry points the game calls: rand reimplemented exactly,
-// sprintf over the conversions the game's formats use, and the string, search
+// The C runtime's entry points the game calls: rand and atoi reimplemented
+// exactly, sprintf over the conversions the game's formats use, and the string, search
 // and file entries bound to our toolchain's runtime through thin named
 // functions (docs/crt-rest.md; docs/platform-layers-plan.md section 2.3).
 //
@@ -190,6 +190,33 @@ extern "C" char* __cdecl Crt_strncpy(char* dst, const char* src, unsigned n) {
     return std::strncpy(dst, src, n);
 }
 
+// original 0x5B9A9B: atoi, MSVC 6's wrapper over atol 0x5B9A10 (push the
+// argument, call, pop). atol's body, read to its ret 0x5B9A9A:
+//   - skip every byte whose _pctype entry has _SPACE (8): __mb_cur_max
+//     0x675064 is 1 and _pctype 0x674E58 points at the "C" table 0x674E62,
+//     and nothing in the executable writes either word or the table (the
+//     _isctype path 0x5BCEB9 is never taken) - so 0x09..0x0D and 0x20, and no
+//     byte at or above 0x80;
+//   - one optional '-' or '+';
+//   - while the byte is a digit by _pctype's _DIGIT (4) - '0'..'9' only -
+//     `ebx = ebx * 10 + c - '0'` (two lea), a 32-bit register: the total
+//     wraps modulo 2^32, with no overflow test;
+//   - the total negated (neg) if the sign was '-'.
+// So the answer is the digits' value modulo 2^32, negated for '-', read as
+// an int. The toolchain's atoi saturates or is undefined past INT_MAX; ours
+// keeps the wrap (docs/crt-rest.md section 2.7). Callers Cfg_Load 0x4FD094 /
+// 0x4FD0A8 (BOF3.CFG's two lines).
+extern "C" int __cdecl Crt_atoi(const char* s) {
+    const auto* p = reinterpret_cast<const unsigned char*>(s);
+    while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) ++p;
+    const unsigned char sign = *p;
+    if (sign == '-' || sign == '+') ++p;
+    std::uint32_t total = 0;
+    while (*p >= '0' && *p <= '9') total = total * 10u + static_cast<std::uint32_t>(*p++ - '0');
+    if (sign == '-') total = 0u - total;
+    return static_cast<int>(total);
+}
+
 // original 0x5C2B40: _stricmp. Under the "C" locale (the game never sets one:
 // __lc_handle[LC_CTYPE] 0x7DEC18 stays 0) both bytes are folded A..Z to a..z
 // and compared unsigned; the answer is -1, 0 or 1 (`sbb al, al; sbb al,
@@ -291,6 +318,7 @@ void CrtRest_Inject() {
     BOF3_INJECT(Rand);
     BOF3_INJECT(Crt_sprintf);
     BOF3_INJECT(Crt_strncpy);
+    BOF3_INJECT(Crt_atoi);
     BOF3_INJECT(Crt_stricmp);
     BOF3_INJECT(Crt_findfirst);
     BOF3_INJECT(Crt_findnext);

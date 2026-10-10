@@ -1,6 +1,6 @@
 # The C runtime's entry points (platform round, step 3)
 
-**Status:** IN PROGRESS (2026-10-06) - step 3 of
+**Status:** IN PROGRESS (2026-10-06; `Crt_atoi` 2026-10-10) - step 3 of
 [`platform-layers-plan.md`](platform-layers-plan.md) section 4, on
 `phase-3/plat2-crt` from `f18b9d9c`. **14 entries ours**
 ([`src/game/crt_rest.cpp`](../src/game/crt_rest.cpp), shadow name
@@ -12,6 +12,11 @@ Fuzzed against Capcom's where Capcom's can run before its runtime starts,
 against Windows' or the bytes written where it cannot; 0 mismatches, 12
 planted bugs all refused (section 4). Six entries left for the cutover, each
 with its reason (section 3). Headless only: not yet live-checked (section 6).
+
+**2026-10-10, on `crt/atoi-and-startup` from `432bada8`:** `Crt_atoi` taken,
+reimplemented exactly (section 2.7) - **15 entries ours**, 10,081 -> 10,082;
+five left. The runtime's start-up, which the cutover replaces, is read in
+[`crt-startup.md`](crt-startup.md).
 
 The plan's rule (section 2.3 there): the unit of work is the entry the game
 calls, not Microsoft's runtime behind it, which is neither decompiled nor
@@ -44,7 +49,8 @@ round fourteen and the platform round), the MP3 decoder `0x5AB7E0..0x5B8DA0`
 | `0x5B9550` `Crt_ftol` (named here) | `_ftol` | 253 | 15 | - | left: ours never calls it (2.5) |
 | `0x5B9660` `Crt_malloc` / `0x5B9577` `Crt_free` | | 8 / 8 | 19 / 41 | 19 / 10 | left (2.6) |
 | `0x5BAD64` `Crt_GetPtd` | `_getptd` | - | - | 4 | left (2.7) |
-| `0x5B9A9B` `Crt_atoi`, `0x5B9AA6` `Crt_sscanf` | | 2, 1 | -, 2 | - | left (2.7) |
+| `0x5B9A9B` `Crt_atoi` | `atoi` (MSVC 6's `atol`) | 2 | - | - | ours, exact (2.7) |
+| `0x5B9AA6` `Crt_sscanf` | `sscanf` | 1 | 2 | - | left (2.7) |
 | `0x5BA057` | the entry point | - | - | - | the executable's until the cutover |
 
 `Crt_atoi`, `Crt_sscanf` and `Crt_fgets` are not in the read pass's
@@ -253,7 +259,7 @@ ours allocates is freed by ours or never; the decoder only reads
 `Music_Data` - so at the cutover, when the decoder is replaced, the pair can
 bind to the toolchain's at once.
 
-### 2.7 `Crt_GetPtd`, `Crt_atoi`, `Crt_sscanf` - left
+### 2.7 `Crt_GetPtd`, `Crt_sscanf` - left; `Crt_atoi` - reimplemented exactly
 
 - **`Crt_GetPtd`** `0x5BAD64`: the per-thread data stays the executable's
   until the cutover (the plan). Ours reaches it only from
@@ -264,32 +270,61 @@ bind to the toolchain's at once.
   `Mp3_MemoryIo` (twice). The entry is the decoder's too, and the frame
   hash counts its engine by characters (HANDOFF, Traps); left with the
   decoder.
-- **`Crt_atoi`** `0x5B9A9B` (`Cfg_Load`, two sites): pure, but MSVC 6's
-  `atol` wraps on overflow where the toolchain's `atoi` need not - a
-  hand-edited `BOF3.CFG` would tell them apart. Not in the seventeen; an
-  exact one of ours is the cutover's (or the next round's) to write.
+- **`Crt_atoi`** `0x5B9A9B` (`Cfg_Load`, two sites `0x4FD094`, `0x4FD0A8`):
+  **ours since 2026-10-10, exact.** The entry is `push [esp + 4]; call
+  0x5B9A10; pop ecx; ret` - MSVC 6's `atoi` over `atol`. `atol`
+  `0x5B9A10..0x5B9A9A`, read to its `ret`:
+  - **Spaces:** while the byte's `_pctype` entry has `_SPACE` (8), skip it.
+    The test has two paths: `__mb_cur_max` `0x675064` above 1 calls
+    `_isctype` `0x5BCEB9`, else it indexes `_pctype` `0x674E58` directly
+    (`mov al, [ecx + eax * 2]; and eax, 8`). `__mb_cur_max` is 1 in the
+    image and `_pctype` points at the "C" table `0x674E62`; **nothing in
+    the executable writes either word or the table** (`tools/pe_xref.py`:
+    every reference to `0x675064` is a `cmp` or `push`, every one to
+    `0x674E58` a load, the table's one other reader `0x5C13B5` a load), so
+    the second path always runs, over the "C" table: the spaces are
+    `0x09..0x0D` and `0x20`, and no byte at or above `0x80` is anything.
+  - **Sign:** the first byte after the spaces is kept (`ebp`); if it is `-`
+    or `+` the next is read. One sign only: `--1`, `+-1` are 0.
+  - **Digits:** while the byte has `_DIGIT` (4) - `0..9` in the "C" table -
+    `lea eax, [ebx + ebx * 4]; lea ebx, [esi + eax * 2 - 0x30]`: the total
+    times ten plus the digit, in a 32-bit register, with no overflow test.
+    **The total wraps modulo 2^32.**
+  - **Result:** `neg` if the kept byte was `-`.
+
+  So `atoi` answers the digits' value modulo 2^32, negated for `-`, read as
+  an `int`: `"4294967297"` is 1, `"2147483648"` is `INT_MIN`. **The
+  toolchain's `atoi` saturates** (its own control in the fuzz, refused in
+  76,388 of 200,000 rounds - exactly the rounds a saturating plant fails),
+  so ours is ours, not a binding: `crt_rest.cpp`, the same four steps on
+  the same character sets. A hand-edited `BOF3.CFG` past `INT_MAX` reads as
+  the original read it. `atol` stays Capcom's - its other callers
+  `0x5C05CE`, `0x5C05FC`, `0x5C0627` are the runtime's own `_tzset`
+  `0x5C040D`, reached only from `_findfirst`'s time conversion
+  ([`crt-startup.md`](crt-startup.md) section 7) - and the inject patches
+  only `0x5B9A9B`.
 
 ## 3. The two tables
 
-**Taken (14):**
+**Taken (15):**
 
 | Entry | Ours | Verified |
 |---|---|---|
 | `Rand` `0x5B93D2` | the generator, a static seed from 1 | 100,000 rounds + 20,000 from 1 against a copy, 2 controls |
 | `Crt_sprintf` `0x5B9380` | `%d` / `%X` with `0` and width <= 8, `%s`; `Fatal` else | 47 formats x 3,000 against Capcom's, 5 controls |
+| `Crt_atoi` `0x5B9A9B` | MSVC 6's `atol`: "C" spaces, one sign, a total wrapping modulo 2^32 | 200,000 rounds against Capcom's (34 edge strings first), 5 controls |
 | `Crt_strncpy` `0x5B9450` | toolchain `strncpy` | 60,000 rounds at every alignment, 2 controls |
 | `Crt_stricmp` `0x5C2B40` | the sign of toolchain `_stricmp` | 60,000 rounds, 3 controls |
 | `Crt_findfirst` `0x5B979A`, `Crt_findnext` `0x5B9867` | toolchain `_findfirst32` / `_findnext32` | layout `static_assert`s; 1,776 matches over 5 patterns against `FindFirstFileA` / `FindNextFileA` |
 | `Crt_fopen` `0x5B9B6D`, `Crt_fclose` `0x5B9993`, `Crt_fread` `0x5B9D4E`, `Crt_fwrite` `0x5B9E65`, `Crt_fseek` `0x5B9F9E`, `Crt_fileno` `0x5C3660`, `Crt_filelength` `0x5C35D6`, `Crt_fgets` `0x5B9ADA` | the toolchain's | a written file read back at 400 random offsets, its length, a failed open, `fgets` on CRLF lines (Capcom's cannot run before its runtime) |
 
-**Left for the cutover (six; ours still reach all but `_ftol`):**
+**Left for the cutover (five; ours still reach all but `_ftol`):**
 
 | Entry | Ours' callers | Why |
 |---|---|---|
 | `Crt_malloc` `0x5B9660`, `Crt_free` `0x5B9577` | section 2.6 | the decoder pairs `calloc` with `free`; one heap while it runs |
 | `Crt_GetPtd` `0x5BAD64` | `crt_rest::RandSeedCell`, with `Rand` left original | the per-thread data is the executable's until the cutover |
 | `Crt_sscanf` `0x5B9AA6` | `Cfg_Load` | the decoder's `Mp3_MemoryIo` uses the same entry |
-| `Crt_atoi` `0x5B9A9B` | `Cfg_Load` | MSVC 6 wraps where the toolchain's need not; wants one of ours |
 | `Crt_ftol` `0x5B9550` | none on a game path (2.5) | the decoder's; ours inline it |
 
 ## 4. Verification
@@ -317,6 +352,21 @@ ours, 0 left original by BOF3X_ORIGINAL`:
   path), `n` small or up to 0x50, the 0x80-byte destination and the return
   compared: 60,000 rounds, 0. Controls: no zero fill (46,468), one byte
   short (56,753).
+- **`atoi`**: Capcom's own, called at `0x5B9A9B` before the inject (with
+  `__mb_cur_max` at the image's 1 `atol` reads only the image's "C" table:
+  no per-thread data, lock or heap), against ours: 34 edge strings (empty,
+  a bare sign, sign runs, a space after the sign, every space byte, the
+  near misses `0x1C`, `0x85`, `0xA0`, `INT_MAX`, `2^31`, `-2^31 - 1`,
+  `2^32 - 1`, `2^32`, `2^32 + 1`, twenty nines, a GBK lead byte, CRLF),
+  then random strings built from parts - zero to three leading bytes (the
+  six spaces, or `0x08`, `0x0E`, `0x1C..0x1F`, `0x85`, `0xA0`), a sign run,
+  sometimes a space, 0..24 digits (9..12 a third of the time: around 2^31
+  and 2^32), a terminator (NUL, a letter, `.`, a space, a sign, `0x80`,
+  `0xFF`, `/`, `:`) and a digit after it that must not be read: 200,000
+  rounds, 0. Controls: saturating (refused 76,388), only space and tab as
+  spaces (51,505), no `+` (17,100), spaces after the sign (5,820), and
+  **the toolchain's `atoi`** (76,388 - the same rounds as the saturating
+  plant: it saturates).
 - **`_stricmp`**: Capcom's against ours over an alphabet with both cases,
   the bytes around `A..Z` / `a..z` (`@ [ \` {`) and four above 0x7F, often a
   case-changed copy: 60,000 rounds, 0. Controls: case-sensitive (20,305),
