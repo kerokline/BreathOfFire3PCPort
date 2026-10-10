@@ -257,8 +257,13 @@ def find_places(pc, disc, bid, pointers, rounds=8):
     pointer the target's address in the build, a code pointer a code address
     of the build, other pointer words wild - and the longest stretch with no
     disagreement holding two keys (or one key and 16 equal bytes) is placed.
-    New places give new targets, so it runs again until nothing moves.
-    Returns rows for recipes/exe-places.tsv."""
+    A code pointer is a key too once the image has paired it: every placed
+    code-pointer word gives (its file, the PC's function) -> the build's
+    function, kept where all such words of that file agree; a paired code
+    pointer in an unplaced region is searched for in its file like a data
+    pointer's target, and checked like one. New places give new targets and
+    new pairs, so it runs again until nothing moves. Returns rows for
+    recipes/exe-places.tsv."""
     psp = "SYSTEM.CNF" not in disc.files
     srcs = {}
     for f, sec, base, blob in exe_twins.sources(disc):
@@ -281,6 +286,22 @@ def find_places(pc, disc, bid, pointers, rounds=8):
             if i >= 0 and pieces[i][0] <= t < pieces[i][1]:
                 return pieces[i][2].split("#")[0], pieces[i][3] + t - pieces[i][0]
             return None
+        pairs, bad = {}, set()                 # (file, PC function) -> the build's, from placed words
+        for a, c in cls.items():
+            if c != "text":
+                continue
+            ks = {owner[a - DATA_LO + j] for j in range(4)}
+            if None in ks or len(ks) != 1:
+                continue
+            key = (ranges[ks.pop()][3].split("#")[0], struct.unpack_from("<I", pc, a - DATA_LO)[0])
+            w = struct.unpack_from("<I", img, a - DATA_LO)[0]
+            if pairs.setdefault(key, w) != w:
+                bad.add(key)
+        for key in bad:
+            del pairs[key]
+        twins = collections.defaultdict(list)
+        for (f, t), w in pairs.items():
+            twins[t].append((f, w))
         regions, i, n = [], 0, len(owner)
         while i < n:
             if owner[i] is None:
@@ -291,15 +312,19 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                 i = j
             else:
                 i += 1
-        keys, need = {}, collections.defaultdict(set)
+        keys, need = {}, collections.defaultdict(set)    # word -> [(file, the build's word)]
         for lo, hi in regions:
             for a in range(lo + (-lo % 4), hi - 3, 4):
+                t = struct.unpack_from("<I", pc, a - DATA_LO)[0]
                 if cls.get(a) == "data":
-                    f = fwd(struct.unpack_from("<I", pc, a - DATA_LO)[0])
+                    f = fwd(t)
                     if f:
-                        keys[a] = f
-                        for k in byfile[f[0]]:
-                            need[k].add(f[1])
+                        keys[a] = [f]
+                elif cls.get(a) == "text" and t in twins:
+                    keys[a] = twins[t]
+                for f in keys.get(a, ()):
+                    for k in byfile[f[0]]:
+                        need[k].add(f[1])
         hits = collections.defaultdict(list)
         for k, ws in need.items():
             base, blob = srcs[k]
@@ -312,13 +337,15 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     o = blob.find(pat, o + 1)
         new = []
         for lo, hi in regions:
-            votes = collections.Counter()
+            votes = {"data": collections.Counter(), "text": collections.Counter()}
             for a in range(lo + (-lo % 4), hi - 3, 4):
-                if a in keys:
-                    for k in byfile[keys[a][0]]:
-                        for h in hits.get((k, keys[a][1]), ()):
-                            votes[k, h - a] += 1
-            top = votes.most_common(2)
+                for f in keys.get(a, ()):
+                    for k in byfile[f[0]]:
+                        for h in hits.get((k, f[1]), ()):
+                            votes[cls[a]][k, h - a] += 1
+            # the data pointers' place when they have one: a code pointer of a
+            # resident or much-shared function votes for many places
+            top = (votes["data"] or votes["text"]).most_common(2)
             if not top or (len(top) > 1 and top[1][1] == top[0][1]):
                 continue
             (k, delta), _ = top[0]
@@ -338,7 +365,8 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                         f = fwd(struct.unpack_from("<I", pc, w0 - DATA_LO)[0])
                         res.append(None if f is None else w == f[1])
                     elif c == "text":
-                        res.append(None if code_word(w, psp) else False)
+                        tw = pairs.get((k[0], struct.unpack_from("<I", pc, w0 - DATA_LO)[0]))
+                        res.append((w == tw) if tw is not None else None if code_word(w, psp) else False)
                     else:
                         res.append(None)
             s0 = 0
