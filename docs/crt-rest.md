@@ -447,3 +447,8 @@ zeros. The first two narrow runs stopped at a harness `Fatal` (a `THEIRS` row,
 then a row keyed on Capcom's address, for a callee now ours) and were the
 reason for section 5's row changes; the third passed before the last
 commit.
+
+At `b31536d5` (`Crt_atoi` ours): `BOF3X_SHADOW=crt_rest` and then `'*'`
+narrow and `BOF3X_WIDE=1`, each from an ini-less launcher copy, exit 0,
+`inject: 10082 ours, 0 left original by BOF3X_ORIGINAL`, 1,066 mismatch
+lines in each `'*'` log, every one a zero.
