@@ -30,7 +30,9 @@ A chunk no disc carries keeps the PC install as its only source; its class
 Japan's language or drew its own art - docs/importer-transforms.md (step 3).
 `build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
 PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
-step 8). `opt/<name>/` layers carry a PSP disc's content changes the player may
+step 8). `--lang` builds loc/<tag>/ with tools/loc_build.py: against the PC's
+DAT/ and BOF3.exe when both are sources, else disc-only against the cache's own
+base/ (docs/loc-build-disc-only.md). `opt/<name>/` layers carry a PSP disc's content changes the player may
 turn on, and `area4-walls` a Western PSX disc's walls in area 4 (DIV-0080),
 built and installed by default when such a disc is given (`--no-opt` leaves it
 out) (recipes/opt.toml, docs/opt-layers.md, step 4); `--preset` is a named
@@ -654,13 +656,14 @@ def cmd_build(a):
             written[layer] += 1
     snd = xa.importer_snd(sources, a.out)
     bgm = seq.importer_bgm(sources, a.out)
-    loc_assets = build_languages(a.lang, sources, a.out)
-    # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc
+    # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc.
+    # Before the languages: a disc-only language layer is built against it.
     exe_src = next((s for s in sources if isinstance(s, ExeSource)), None) or \
         next((s for s in sources if isinstance(s, DiscSource)), None)
     exe = exe_tables.build_from(exe_src.path, exe_src.id, a.out) if exe_src else None
     if exe:
         print("  base/exe  from %-9s data.bin %s" % exe)
+    loc_assets = build_languages(a.lang, sources, a.out)
     opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm)
     for (bid, layer, own), n in sorted(used.items()):
@@ -727,7 +730,12 @@ def build_languages(asked, sources, out):
     from its donor disc (resolve_languages) against the PC's own containers
     and BOF3.exe - exactly the overlays it writes into a game's DAT/, so the
     engine reads them unchanged. English goes first: the French and German
-    title menus borrow its CONFIG row (loc_build.build_title)."""
+    title menus borrow its CONFIG row (loc_build.build_title).
+
+    With neither the PC's DAT/ nor its BOF3.exe among the sources, the layer is
+    built disc-only: `loc_build.py all --cache` against this cache's base/dat/
+    and base/exe/, which the build has already written
+    (docs/loc-build-disc-only.md: what differs from the PC build, and why)."""
     import shutil
     import subprocess
     import tempfile
@@ -735,8 +743,11 @@ def build_languages(asked, sources, out):
     exe = next((s for s in sources if isinstance(s, ExeSource)), None)
     if not asked:
         return []
+    if not pc and not exe:
+        return build_languages_disc_only(asked, sources, out)
     if not (pc and exe):
-        raise SystemExit("a language layer is built against the PC's DAT/ and BOF3.exe: give both as sources")
+        raise SystemExit("a language layer is built against the PC's DAT/ and BOF3.exe (give both as sources), "
+                         "or against the disc alone (give neither)")
     assets = []
     with tempfile.TemporaryDirectory(prefix="bof3_loc_") as game:
         os.makedirs(os.path.join(game, "DAT"))
@@ -759,6 +770,27 @@ def build_languages(asked, sources, out):
                         assets.append((name, "loc/" + tag, "%s:loc_build" % donor.id, sha(fh.read())))
                     n += 1
             print("  loc/%-7s from %-9s %d containers (tools/loc_build.py)" % (tag, donor.id, n))
+    return assets
+
+
+def build_languages_disc_only(asked, sources, out):
+    """loc/<tag>/ from the donor disc against the cache's own base/ (DiscCache)."""
+    import subprocess
+    assets = []
+    for tag, donor in resolve_languages(asked, sources):
+        d = os.path.join(out, "loc", tag, "dat")
+        if os.path.isdir(d):            # a rebuild: no container of an earlier layer left behind
+            for f in os.listdir(d):
+                os.remove(os.path.join(d, f))
+        r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
+                            "--cache", out, "--lang", tag], capture_output=True, text=True)
+        if r.returncode:
+            raise SystemExit("loc_build.py --cache --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
+        names = sorted(os.listdir(d))
+        for name in names:
+            with open(os.path.join(d, name), "rb") as fh:
+                assets.append((name, "loc/" + tag, "%s:loc_build-disc-only" % donor.id, sha(fh.read())))
+        print("  loc/%-7s from %-9s %d containers (tools/loc_build.py, disc-only)" % (tag, donor.id, len(names)))
     return assets
 
 
