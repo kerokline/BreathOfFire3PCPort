@@ -77,7 +77,14 @@ void LoadSong(const std::uint8_t* data, std::size_t size, Song* out) {
     s.end_tick = r.U32(52);
     if (s.resolution == 0 || s.tempo == 0) MusicFatal("song %u: resolution %u, tempo %u", s.number, s.resolution, s.tempo);
     if (count == 0) MusicFatal("song %u: no events", s.number);
-    r.Need(56, static_cast<std::size_t>(count) * 12);
+    // libsnd keeps the resolution in a halfword it reads signed (+4A), and
+    // every delta as ticks x 10 in a word (+88): bounds the multiplications
+    // in seq.cpp. The count is checked against the size before it is
+    // multiplied (32-bit size_t).
+    if (s.resolution > 0x7FFF) MusicFatal("song %u: resolution %u above 0x7FFF", s.number, s.resolution);
+    if (s.end_tick > 0x7FFFFFFFu / 10) MusicFatal("song %u: end tick %u, above 0x7FFFFFFF / 10", s.number, s.end_tick);
+    if (count > (size - 56) / 12)
+        MusicFatal("song %u: 0x%zX bytes hold %zu events, the header says %u", s.number, size, (size - 56) / 12, count);
     if (size != 56 + static_cast<std::size_t>(count) * 12)
         MusicFatal("song %u: 0x%zX bytes, the header's %u events make 0x%zX", s.number, size, count,
                    56 + static_cast<std::size_t>(count) * 12);
@@ -166,6 +173,9 @@ void LoadBank(const std::uint8_t* data, std::size_t size, Bank* out) {
             MusicFatal("bank %s sample %zu: offset 0x%X, the sizes before it sum to 0x%X", b.name.c_str(), i + 1,
                        b.samples[i].offset, next);
         if (b.samples[i].size % 16) MusicFatal("bank %s sample %zu: size 0x%X is not whole blocks", b.name.c_str(), i + 1, b.samples[i].size);
+        if (b.samples[i].size > size - body_at - next)  // the sum must not wrap past the file
+            MusicFatal("bank %s sample %zu: size 0x%X, the file has 0x%zX bytes of bodies from its offset", b.name.c_str(),
+                       i + 1, b.samples[i].size, size - body_at - next);
         next += b.samples[i].size;
     }
     if (size - body_at != next)

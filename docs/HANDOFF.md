@@ -54,13 +54,13 @@ each round**: the tracer arms only what is not ours (635 entries now) -
       plays both songs on one synth. The host suite (`tools/bgm/host`) ran in the cloud only: its tests `fork`,
       so it wants a POSIX host (I35). **Still owed, the listen:** `python tools/importer.py build --preset pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe
       --source <JP or US cue> --out <cache>` (any PSX disc gives `base/bgm/`; the music bytes are JP's on every
-      disc), and play with `BOF3X_CACHE=<cache>` (**42 characters at most** - `File_Open`'s 0x50-byte retry buffer;
-      a longer root is fatal at start-up): the title, a town, a fight and its fanfare (`165`), a once-only `N` song
+      disc), and play with `BOF3X_CACHE=<cache>` (226 characters at most since the 2026-10-10 review fixes,
+      `music-seq-engine.md` 3; the whole cache is checked at start-up and a damaged one is fatal there): the title, a town, a fight and its fanfare (`165`), a once-only `N` song
       (the title's 141 is one), a fade-out, an inn jingle between two cache songs (`Sound_LoadStream`'s MP3s must
       still play), and `BOF3X_MUSIC=mp3` as the A/B. The log says `music_seq` armed and one line per song started.
    2. **The owner's calls** (`sequenced-music-plan.md` section 8, amended by what was read): the level - the engine
-      fades to 127 where the PSX's title plays at sequence volume 97 (about -2.3 dB; DIV-0087 says so); the 42-character
-      limit (lift it by reading the cache through Win32 instead of the game's file layer); song 21 (it has a
+      fades to 127 where the PSX's title plays at sequence volume 97 (about -2.3 dB; DIV-0087 says so); (the 42-character
+      limit is lifted, 2026-10-10); song 21 (it has a
       sequence; the PSX's title plays it silent, cause untraced - the cache plays it); `165` under one bank
       (`BGMBAT00`'s) where the PSX plays the fanfare through the fight's own, one of four; `BOF3X_CACHE` as the one
       root for `base/`, `loc/` and `opt/` later (today it serves `base/bgm/` only; `base/snd/` wants the same seam,
