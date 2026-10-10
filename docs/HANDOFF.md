@@ -100,7 +100,11 @@ the route pairs now `cn_<route>_orig2` / `_orig2b`).
      stage the save list. **The pairs are re-recorded** as `cn_<route>_orig2` / `_orig2b` (`BOF3X_OPT=none`,
      `--original "*,-Game_Clock"` as state-hash.md 4 says - a first cut with `'*'` alone let Capcom's wall-clock
      play time run and the field menu's minute digits and the music's timers differed from ours) and
-     ours checked against them - PAIRS_RESULT.
+     ours checked against them - **identical on every tick of nine routes** (combat 2,561, menu_screens 1,729, field_menu 1,409,
+     worldMapAndAreaTransition 2,113, caughFish 3,841, masterAndManillo 5,505, dragonTransform 4,289, cutsceneAndNue
+     7,361, shop 3,137) **and on all but one tick of whelpBoss** (13,121; the sound page `0x7DE000` at tick 3,227 only,
+     the page state-hash.md 6 already names as one-tick noise - a second run of ours was identical throughout). The tip
+     is clean; the references are `cn_<route>_orig2` / `_orig2b` from here on.
 3. **Work that needs no owner, what is left** (each doc's own list is the authority): step 8's
    [`exe-import-engine.md`](exe-import-engine.md) section 5 (the stub page wants state 2's 17 functions without
    `impl`; the 183 language addresses; the effect state tables' twins); the disc-only build's gaps

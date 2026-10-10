@@ -216,7 +216,10 @@ ours run of a route that lists the saves wants it.
   and the new `0A..0C`), and the pairs stage the save list. **So the pairs
   depend on the owner's saves as well as the skip list, the recipe and the
   launcher's settings**, and the first move on a differing page is a run of
-  Capcom's side against the pair. PAIRS_RESULT_SH
+  Capcom's side against the pair. Against the new pairs, ours at `main`'s tip of 2026-10-10
+  (`cn_<route>_cu1010n`, `BOF3X_OPT=none`) is identical on every tick of nine
+  routes and on all but one tick of whelpBoss (the sound page, tick 3,227;
+  a second run identical throughout).
 - **The reference** is a pair of original runs and is recorded per route once
   per skip list: `analysis/statehash/<route>_orig.sh`, `_origb.sh`. A change of
   the skip list, the recipe, the save or the launcher's settings wants a new
