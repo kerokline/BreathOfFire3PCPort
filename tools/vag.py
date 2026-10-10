@@ -145,7 +145,10 @@ def bank(vh, cues, vb, cache=None):
     head = bytearray(DATA)
     for i in range(len(cues) // 4):
         flags, prog, tone, chord = cues[4 * i:4 * i + 4]
-        for j in range(((chord >> 4) >> 1) + 1 if chord >> 4 else 0):
+        voices = ((chord >> 4) >> 1) + 1 if chord >> 4 else 0
+        if voices > 4:      # a cue's slot is 16 bytes, four words; more would write into the next cue's
+            raise ValueError("cue %d: chord 0x%02X asks for %d voices, a cue holds 4" % (i, chord, voices))
+        for j in range(voices):
             t = vh[tones + (prog & 0x7F) * 16 * TONE + ((tone >> 4) + j) * TONE:][:TONE]
             v, = struct.unpack_from("<H", t, 22)
             channel = (SE_VOICE + (chord & 0x0F) + j) << 8
