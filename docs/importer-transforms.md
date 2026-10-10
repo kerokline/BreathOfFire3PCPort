@@ -2,7 +2,8 @@
 
 **Status:** IN PROGRESS (verified 2026-10-08, a cloud session: the transforms
 and the stand-ins proved on every held build; a disc-only player still lacks the
-banks, 14 arenas and every language layer - section 8)
+banks, 14 arenas and every language layer - section 8; the language layers
+built disc-only since 2026-10-10, section 8 item 3)
 
 [`unified-data-plan.md`](unified-data-plan.md) step 3, on top of step 2
 ([`importer.md`](importer.md)). Step 2's importer rebuilt the PC's 742 `DAT/`
@@ -326,18 +327,29 @@ given to it.
    offsets are self-describing. Whether the PC's code wants the edited form is
    unknown, so the importer stops: "the PC install only". This is the reading
    `type1-compression.md` 3 already names.
-3. **Every language layer.** This is the larger gap.
-   - `loc_build.py` builds `loc/<tag>/` against the PC's own containers and
-     `BOF3.exe`: the font it appends Latin glyphs to is the port's Chinese
-     table (the kind-3 chunk, `loc/zh-CN`), the text blocks are converted
-     against the PC's blocks, and the name, verb and config tables are read out
-     of the exe. `importer.py build --lang` refuses without the PC's `DAT/` and
-     `BOF3.exe`.
-   - So **a disc-only cache has no font and no text**, though its `base/`
-     becomes complete with step 6.
-   - Closing that is its own piece of work: a font built from the disc's glyph
-     sheets alone, `loc_build.py` reading `base/` and the disc instead of
-     `DAT/`, and step 8's `base/exe/`. It is not a transform of this step.
+3. **Every language layer.** This was the larger gap; **since 2026-10-10 a
+   disc-only cache has one** ([`loc-build-disc-only.md`](loc-build-disc-only.md)).
+   - Until then `loc_build.py` built `loc/<tag>/` against the PC's own
+     containers and `BOF3.exe` only: the font it appends Latin glyphs to is the
+     port's Chinese table (the kind-3 chunk, `loc/zh-CN`), the text blocks are
+     converted against the PC's blocks, and the name, verb and config tables
+     are found by bytes read out of the exe. `importer.py build --lang`
+     refused without the PC's `DAT/` and `BOF3.exe`.
+   - Now `loc_build.py all --cache` builds it against the cache's `base/dat/`,
+     `base/exe/data.bin` (step 8's image from the disc; the anchors it does not
+     carry by their SHA-256) and the recipe, over a blank glyph table, and
+     `importer.py build --lang` runs it when no PC source is given. From the US
+     disc alone `loc/en-US/` is 245 containers, 213 byte-identical to the
+     PC-built layer; the rest differ only where the PC build keeps the port's
+     own bytes (its 2,376 Chinese glyphs, its Chinese for sixteen Japanese
+     template messages in 31 areas) or needs them (the village board sheet,
+     DIV-0088, not built). The other tags, every difference counted, are that
+     doc's section 5; the divergence is DIV-0089.
+   - Still missing from a disc-only cache: the `loc/zh-CN` chunks no language
+     layer replaces - 11 glyph atlases, the two kanji sheets, four area pages
+     and the two village sheets, which the PC build leaves Chinese too - and
+     French `AREA004`'s text (that disc's block has no slot table). That doc's
+     section 7.
 4. **The Chinese layer**, which a disc-only player does not need.
 
 ## For the other files

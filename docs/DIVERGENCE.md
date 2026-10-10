@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 88 entries, DIV-0001..0088, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 89 entries, DIV-0001..0089, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5131,3 +5131,47 @@ designed in rather than bolted on.
   beside their icons, the frame pieces as before. **Owed the owner's eye:**
   the French and German sheets.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
+
+### A language layer built from the disc alone keeps nothing of the port's
+
+- **ID:** DIV-0089
+- **Date:** 2026-10-10
+- **Subsystem:** text (`tools/loc_build.py all --cache`, run by `importer.py
+  build --lang` when no PC source is given; the `loc/<tag>/` layer of an
+  importer cache; [`loc-build-disc-only.md`](loc-build-disc-only.md))
+- **Tier:** Sensible - the layer's bytes come from the player's disc; where
+  the PC-built layer keeps the port's own, there is nothing of the port's to
+  keep.
+- **Original behaviour:** every language overlay is built over the port's
+  own files and lets them show through: the font appends to the port's 2,451
+  Chinese glyphs (and keeps its half-width single-byte glyphs and the second
+  battle suffix's two), an area message the disc has no glyph for keeps the
+  port's Chinese one, the village board sheet is the port's with the disc's
+  labels (DIV-0088). Measured against the PC-built layers, 2026-10-10
+  (`loc-build-disc-only.md` section 5).
+- **New behaviour:** a layer built from a disc alone has the same chunks with
+  the port's bytes left out: those 2,376 glyphs blank (a Japanese table: 42
+  single-byte slots painted from the disc's sheet, `JA_SHARED`, the rest
+  blank); the second suffix's two glyphs the disc's own cells by its mapper
+  (`SECOND_CELLS`); such a message empty (en-US / en-150: slots 0..15 of 31
+  areas, 496; fr-FR 497, de-DE 496; ja-JP 42 pool slots); a French or German
+  block on that disc's own slot table, with 34 / 11 messages in the disc's
+  language that the PC build keeps Chinese; no village sheet, no text for
+  French `AREA004`, no title page from a French or German disc without an
+  English one. Over the PC install nothing changes (byte-identical, all five
+  tags).
+- **Rationale:** the unified-data plan's disc-only install: a player with a
+  disc and no PC port has none of the port's glyphs, messages or art, and the
+  layer must not need them.
+- **Also in the PSX version?** The messages: the Western discs carry the 496
+  as Japanese bytes their fonts cannot draw, and the 42 Japanese pool slots
+  point outside their blocks; the French and German slot tables are those
+  releases' own. The glyphs and the sheet are the port's, so no.
+- **Verification:** built and diffed container by container for en-US,
+  en-150, fr-FR, de-DE and ja-JP (`loc-build-disc-only.md` sections 5..6).
+  Not played: the engine does not read a cache yet. **Owed the owner's eye**
+  then: the second suffix (banner message 3) and the blank single-byte
+  slots.
+- **Reversible?** build the layer with the PC install among the sources
+  (`importer.py build --source bof3/DAT --source bof3/BOF3.exe ...`, or
+  `loc_build.py all --game`).
