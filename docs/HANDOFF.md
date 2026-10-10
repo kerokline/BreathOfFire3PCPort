@@ -65,10 +65,8 @@ or seen in play** - the testing catch-up below is next. The regression check is 
       (`ninaWalkBehindBlock`, A/B under `BOF3X_LAYERING=0`), DIV-0077's specks (the dream scene), DIV-0079's lines
       and the fishing gauge, DIV-0064's master-list star, the French and German builds of DIV-0064's groups 7..11,
       the sound resume by ear.
-2. **The owner's calls** - [`owner-review.md`](owner-review.md) is the one list. New on 2026-10-10: the legacy ini
-   codes are mapped (`launcher-settings.md` 4 had said no mapping; reversed by the review, the owner's word wanted);
-   DIV-0081's `STAND_IN_BOUND_S` keeps the battle theme `153` and its twin `151` whose 0.35 s stand-ins correlate
-   low (0 drops them); and from before, still open: the town theme `000` (shorter than one loop), DIV-0087's level
+2. **The owner's calls** - [`owner-review.md`](owner-review.md) is the one list. The review's five were decided on
+   2026-10-10 ([`review-2026-10-10.md`](review-2026-10-10.md), last section). Still open, the town theme `000` (shorter than one loop), DIV-0087's level
    (127 against the PSX title's 97), song 21, `165`'s bank, `BOF3X_CACHE` as the one root, and the importer steps'
    calls (3: four, 6: three, 4: six, 8: four).
 3. **Then, work that needs no owner** (a cloud session can do each; the live check stays the owner's):
@@ -769,7 +767,9 @@ Local only, gitignored, worth keeping:
   defaults). Do not edit the owner's ini.
 - **`BOF3X_OPT` changes the arena and VRAM** (2026-10-08, DIV-0086): a state-hash or attract reference run, and
   any `'*'` meant to match the record, want it unset; the launcher exports the ini's `opt=` as the language's
-  `language=` is - a copy with no ini, as for `cheat.exp`. And **a recipe recorded under `BOF3X_LANG=en` plays under
+  `language=` is - a copy with no ini, as for `cheat.exp`. **Since 2026-10-10 an empty `opt=` (or no ini) plays
+  the default `area4-walls` when it is installed** (DIV-0080), and area 4 is in the attract demo: a reference run
+  from an install that has the layer wants `BOF3X_OPT=none`. And **a recipe recorded under `BOF3X_LANG=en` plays under
   `en-US`** since the tags (the 29 headers said `en`; they say `en-US` since 2026-10-10, comment lines only; `input-script.md`).
 - **The bare language codes are retired** (2026-10-10, DIV-0005): `BOF3X_LANG=en` (`fr`, `de`, `ja`), an ini
   `language=en` or `--lang en` to any tool stops it with the tag to use - the launcher by a message box (which a
