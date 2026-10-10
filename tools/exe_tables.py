@@ -18,8 +18,12 @@ instead, a 16-byte name field widened from the disc's 8 or 12 bytes with the
 name left blank (the names are a language layer's, as the enemy tables' are,
 docs/importer-transforms.md 2); and every pointer word of the PC's
 (recipes/exe-pointers.tsv) is left unfilled - a disc's pointer is its own
-build's address, never the PC's. What no disc carries stays zero and is
-listed.
+build's address, never the PC's - but the pointers into .data the map run
+backwards gives exactly (the disc's word, an address in that build, through
+the segment that places it to the PC address), which are written back; the
+words the rule would get wrong on a build are listed in recipes/exe-rebuild.tsv
+and stay unfilled (docs/exe-import-engine.md section 1). What no disc carries
+stays zero and is listed.
 
     python tools/exe_tables.py build   --source PATH --out CACHE        # BOF3.exe or a disc
     python tools/exe_tables.py recipe  --game DIR --disc DISC [...]     # recipes/exe.toml + exe-pointers.tsv
@@ -57,6 +61,7 @@ RDATA_LO = 0x5C4000
 IMAGE = exe_twins.IMAGE                    # a word in here is a pointer into the PC image
 RECIPE = os.path.join(ROOT, "recipes", "exe.toml")
 POINTERS = os.path.join(ROOT, "recipes", "exe-pointers.tsv")
+REBUILD = os.path.join(ROOT, "recipes", "exe-rebuild.tsv")
 PC = "pc-zh"
 ORDER = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de", "psp-jp", "psp-eu")
 
@@ -206,6 +211,160 @@ def mask(img, owner, pointers):
     return n
 
 
+# ------------------------------------------------------------------ the data-pointer rebuild
+
+def linear_pieces(owner, ranges):
+    """The image's placed bytes as linear pieces (disc address, disc end, PC
+    address, where): every `map` or `table` span, as the bytes ended up after
+    the tables overrode the maps. `widen` spans are not linear (the disc's
+    stride is not the PC's) and are left out: no pointer into them is rebuilt."""
+    out = []
+    for lo, hi, k in spans(owner, ranges):
+        if k is None:
+            continue
+        rlo, _, how, where, addr = ranges[k]
+        if how in ("map", "table"):
+            out.append((addr + lo - rlo, addr + hi - rlo, lo, where))
+    return out
+
+
+def rebuild_candidates(img, owner, ranges, pointers):
+    """The data-pointer rebuild (docs/exe-import-engine.md section 1): the map
+    run backwards. For every PC pointer word into .data (recipes/exe-pointers.tsv
+    class `data`) whose four bytes one range placed, the disc's word is an
+    address in that build; the pieces of the same file and section that hold
+    that address - else of the same file, another section - give the PC
+    address it means. Exactly one PC value or none: two pieces at the same disc
+    address that mean different PC places (the PC duplicated data) are
+    `ambiguous`. Three wider rules were measured and are not tried (section
+    1.2): another file's pieces (an overlay slot several files load into: 0 of
+    283 JP words the PC's value), the resident EXE's pieces from an overlay
+    (no word reached them), a one-past-the-end pointer (0 of 1 JP, 32 of 301
+    PSP-JP).
+
+    Returns ({pc address: (value, where, disc word)}, Counter of outcomes,
+    {pc address: outcome} for the words of class `data` not rebuilt).
+    Takes the image before the pointer mask (it needs the disc's words)."""
+    pieces = linear_pieces(owner, ranges)
+    by_where = collections.defaultdict(list)
+    for p in pieces:
+        by_where[p[3]].append(p)
+        by_where[p[3].split("#")[0] + "#*"].append(p)
+    for v in by_where.values():
+        v.sort()
+    out, c = {}, collections.Counter()
+    why = {}
+    for pc, n, cls in pointers:
+        if cls != "data":
+            continue
+        for a in range(pc, pc + 4 * n, 4):
+            o = a - DATA_LO
+            ks = {owner[o + j] for j in range(4)}
+            if None in ks or len(ks) != 1:
+                why[a] = "word unplaced" if None in ks else "word split"
+                c[why[a]] += 1
+                continue
+            where = ranges[ks.pop()][3]
+            w = struct.unpack_from("<I", img, o)[0]
+            got = None
+            for key in (where, where.split("#")[0] + "#*"):
+                vals = {q[2] + w - q[0] for q in by_where.get(key, ()) if q[0] <= w < q[1]}
+                if vals:
+                    got = vals.pop() if len(vals) == 1 else "ambiguous"
+                    break
+            if got is None or got == "ambiguous":
+                why[a] = "target unplaced" if got is None else "ambiguous"
+                c[why[a]] += 1
+            else:
+                out[a] = (got, where, w)
+                c["rebuilt"] += 1
+    return out, c, why
+
+
+def load_rebuild_refused(path=REBUILD):
+    """{build: set of PC word addresses} the rule rebuilds to a value that is
+    not the PC's (recipes/exe-rebuild.tsv): left unfilled."""
+    out = collections.defaultdict(set)
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("#") or line.startswith("build\t"):
+                continue
+            bid, pc, n, _ = line.rstrip("\n").split("\t")
+            out[bid].update(range(int(pc, 16), int(pc, 16) + 4 * int(n), 4))
+    return out
+
+
+def apply_rebuild(img, owner, ranges, rebuilt, refused):
+    """Write the rebuilt words into the masked image (each its own `rebuilt`
+    range, `from` the disc word's file and the word). Returns the words written."""
+    n = 0
+    for a in sorted(rebuilt):
+        if a in refused:
+            continue
+        v, where, w = rebuilt[a]
+        o = a - DATA_LO
+        k = len(ranges)
+        ranges.append([a, a + 4, "rebuilt", where, w])
+        struct.pack_into("<I", img, o, v)
+        owner[o:o + 4] = [k] * 4
+        n += 1
+    return n
+
+
+def disc_built(disc, bid, pointers, refused):
+    """The disc's image as base/exe/ holds it: placed, the pointer words
+    masked, the data pointers the rule rebuilds written back but those the
+    recipe refuses for this build. (image, owner, ranges, rebuilt, outcomes)."""
+    img, owner, ranges = disc_image(disc, bid)
+    rebuilt, c, _ = rebuild_candidates(img, owner, ranges, pointers)
+    mask(img, owner, pointers)
+    c["refused"] = sum(1 for a in rebuilt if a in refused)
+    c["written"] = apply_rebuild(img, owner, ranges, rebuilt, refused)
+    return img, owner, ranges, rebuilt, c
+
+
+def selftest_rebuild():
+    """A synthetic round trip of the rule (no game data): two overlay sections
+    and a boot EXE, a duplicated piece, an unplaced word, a target in another
+    file. Returns a list of problems."""
+    errs = []
+    img = bytearray(DATA_HI - DATA_LO)
+    owner = [None] * len(img)
+    ranges = [[0x5DA000, 0x5DA100, "map", "A.EMI#1", 0x801F0000],    # words 0x5DA000.., data at 0x801F0000
+              [0x5DA100, 0x5DA200, "map", "A.EMI#2", 0x80100000],    # A's other section
+              [0x5DA200, 0x5DA240, "map", "B.EMI#1", 0x801F0000],    # another overlay at the same address
+              [0x5DA300, 0x5DA340, "map", "A.EMI#1", 0x801F0040],    # A#1's bytes placed twice by the PC
+              [0x5DA400, 0x5DA440, "map", "A.EMI#1", 0x801F0040]]
+    for k, (lo, hi, _, _, _) in enumerate(ranges):
+        owner[lo - DATA_LO:hi - DATA_LO] = [k] * (hi - lo)
+    words = {0x5DA010: (0x801F0020, 0x5DA020),     # same section
+             0x5DA014: (0x80100010, 0x5DA110),     # same file, other section
+             0x5DA018: (0x801F0050, "ambiguous"),  # the duplicated piece
+             0x5DA01C: (0x80300000, None),         # nowhere: target unplaced
+             0x5DA210: (0x80100010, None)}         # B's word into A's section: another file, not tried
+    for a, (w, _) in words.items():
+        struct.pack_into("<I", img, a - DATA_LO, w)
+    owner[0x5DA0F0 - DATA_LO] = None                # a word one byte of which is unplaced
+    pointers = [(0x5DA010, 4, "data"), (0x5DA0F0, 1, "data"), (0x5DA210, 1, "data"), (0x5DA220, 1, "text")]
+    got, c, _ = rebuild_candidates(img, owner, ranges, pointers)
+    for a, (w, want) in words.items():
+        have = got.get(a, (None,))[0]
+        if want == "ambiguous":
+            if a in got:
+                errs.append("0x%X: a duplicated piece rebuilt" % a)
+        elif have != want:
+            errs.append("0x%X: rebuilt %s, want %s" % (a, have, want))
+    if dict(c) != {"rebuilt": 2, "ambiguous": 1, "target unplaced": 2, "word unplaced": 1}:
+        errs.append("outcomes %s" % dict(c))
+    mask(img, owner, pointers)
+    n = apply_rebuild(img, owner, ranges, got, {0x5DA014})
+    if n != 1 or struct.unpack_from("<I", img, 0x10)[0] != 0x5DA020 or struct.unpack_from("<I", img, 0x14)[0]:
+        errs.append("apply: %d written" % n)
+    return errs
+
+
 def spans(owner, ranges):
     """The image as [(lo, hi, range index or None)] runs."""
     out, start = [], 0
@@ -231,7 +390,9 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
              "# how `exe` (BOF3.exe's own section), `map` (exe_maps/<build>.tsv's segment),",
              "# `table` (a tables.toml table at its recorded place), `widen` (a name table, the",
              "# disc's numbers at the PC's offsets, the 16-byte name blank), `pointer` (a pointer",
-             "# word of the PC's: unfilled, never copied), `none` (no disc carries it: unfilled).",
+             "# word of the PC's: unfilled, never copied), `rebuilt` (a pointer word into .data the",
+             "# disc's own word gives by the map run backwards; `from` is that word), `none` (no",
+             "# disc carries it: unfilled).",
              "", "[image]", 'file = "data.bin"', "va = 0x%06X" % DATA_LO, "size = %d" % len(img),
              "bss_end = 0x%06X" % bss_end, 'sha256 = "%s"' % sha(img), 'build = "%s"' % bid,
              'source = %s' % json.dumps(os.path.basename(os.path.normpath(source))),
@@ -273,8 +434,7 @@ def build_from(path, bid, out):
     if bid not in rec.get("build", {}):
         fail("recipes/exe.toml has no image for %s" % bid)
     pointers = load_pointers()
-    img, owner, ranges = disc_image(psx_disc.Disc(path), bid)
-    mask(img, owner, pointers)
+    img, owner, ranges, _, _ = disc_built(psx_disc.Disc(path), bid, pointers, load_rebuild_refused()[bid])
     h = write_exe(out, bid, path, img, rec["build"][PC]["bss_end"], ranges, owner, pointers)
     if h != rec["build"][bid]["sha256"]:
         fail("the %s image hashes %s, recipes/exe.toml says %s" % (bid, h, rec["build"][bid]["sha256"]))
@@ -347,7 +507,8 @@ def counts(pc, img, owner, ranges, pointers):
         if owner[i] is None:
             c["pointer" if i in ptr else "none", "pc-zero" if pc[i] == 0 else "pc-nonzero"] += 1
         else:
-            c["placed", "equal" if img[i] == pc[i] else "differ"] += 1
+            c["rebuilt" if ranges[owner[i]][2] == "rebuilt" else "placed",
+              "equal" if img[i] == pc[i] else "differ"] += 1
     return c
 
 
@@ -360,6 +521,26 @@ def cmd_recipe(a):
         print("%s: %d ranges, %d bytes placed before the pointer mask" % (bid, len(ranges), sum(o is not None for o in owner)))
     pointers = decide_pointers(pc, images)
     cand = len(pointer_words(pc))
+    refused, outcomes = {}, {}
+    for (bid, _), (img, owner, ranges) in zip(discs(a.disc), images):
+        rebuilt, outcomes[bid], _ = rebuild_candidates(img, owner, ranges, pointers)
+        refused[bid] = sorted(x for x, (v, _, _) in rebuilt.items() if v != struct.unpack_from("<I", pc, x - DATA_LO)[0])
+    with open(REBUILD, "w", newline="\n") as f:
+        f.write("# recipes/exe-rebuild.tsv - GENERATED by `tools/exe_tables.py recipe`; do not edit.\n"
+                "# The data pointers the rebuild rule (the map run backwards, docs/exe-import-engine.md\n"
+                "# section 1) gives a value that is not the PC's, per build: runs of `words` pointer\n"
+                "# words from `pc` that base/exe/ leaves unfilled from that build. `why` is the\n"
+                "# section the PC's own word points at. Addresses and counts only (CLAUDE.md rule 1).\n"
+                "build\tpc\twords\twhy\n")
+        for bid in refused:
+            runs = []
+            for x in refused[bid]:
+                if runs and runs[-1][0] + 4 * runs[-1][1] == x:
+                    runs[-1][1] += 1
+                else:
+                    runs.append([x, 1])
+            for x, n in runs:
+                f.write("%s\t0x%06X\t%d\tdata\n" % (bid, x, n))
     os.makedirs(os.path.dirname(POINTERS), exist_ok=True)
     with open(POINTERS, "w", newline="\n") as f:
         f.write("# recipes/exe-pointers.tsv - GENERATED by `tools/exe_tables.py recipe`; do not edit.\n"
@@ -381,16 +562,25 @@ def cmd_recipe(a):
              'pointers = "exe-pointers.tsv"',
              'pointers_sha256 = "%s"' % sha(open(POINTERS, "rb").read()),
              "pointer_candidates = %d" % cand,
-             "pointer_words = %d" % sum(n for _, n, _ in pointers), "",
+             "pointer_words = %d" % sum(n for _, n, _ in pointers),
+             'rebuild = "exe-rebuild.tsv"',
+             'rebuild_sha256 = "%s"' % sha(open(REBUILD, "rb").read()), "",
              "[build.%s]" % PC, 'sha256 = "%s"' % sha(pc), "bss_end = 0x%06X" % bss_end, ""]
     for (bid, _), (img, owner, ranges) in zip(discs(a.disc), images):
+        rebuilt, _, _ = rebuild_candidates(img, owner, ranges, pointers)
         mask(img, owner, pointers)
+        apply_rebuild(img, owner, ranges, rebuilt, set(refused[bid]))
         c = counts(pc, img, owner, ranges, pointers)
+        o = outcomes[bid]
         lines += ["[build.%s]" % bid, 'sha256 = "%s"' % sha(img),
                   "ranges = %d" % len(ranges),
                   "placed_equal = %d" % c["placed", "equal"], "placed_differ = %d" % c["placed", "differ"],
                   "pointer_pc_zero = %d" % c["pointer", "pc-zero"], "pointer_pc_nonzero = %d" % c["pointer", "pc-nonzero"],
                   "none_pc_zero = %d" % c["none", "pc-zero"], "none_pc_nonzero = %d" % c["none", "pc-nonzero"],
+                  "rebuilt_equal = %d" % c["rebuilt", "equal"],
+                  "rebuild_words = %d" % o["rebuilt"], "rebuild_refused = %d" % len(refused[bid]),
+                  "rebuild_ambiguous = %d" % o["ambiguous"], "rebuild_target_unplaced = %d" % o["target unplaced"],
+                  "rebuild_word_unplaced = %d" % (o["word unplaced"] + o["word split"]),
                   "identical = %d" % sum(x == y for x, y in zip(img, pc)), ""]
         print("%s: %s" % (bid, dict(c)))
     with open(RECIPE, "w", newline="\n") as f:
@@ -465,6 +655,56 @@ def translatable(bid, pc, owner_before, img_before, pointers):
     return dict(c)
 
 
+def family(name):
+    """A symbol's family for the rebuild's by-group counts: its first word,
+    digits dropped (`Area25_Handlers` -> `Area`, `Scena06_CallA` -> `Scena`)."""
+    return re.sub(r"\d+$", "", name.split("+")[0].split("_")[0]) or "?"
+
+
+def rebuild_report(bid, pc, img, owner, ranges, pointers, refused, syms, out):
+    """The rebuild rule against the PC's words, before the mask: every .data /
+    .bss / .rdata pointer word's outcome, counted, and by the word's symbol
+    family for those not rebuilt; per word in analysis/exe_import/<build>.rebuild.tsv."""
+    rebuilt, c, notrebuilt = rebuild_candidates(img, owner, ranges, pointers)
+    res = collections.Counter()
+    fam = collections.defaultdict(collections.Counter)
+    tgt = collections.defaultdict(collections.Counter)
+    rows = []
+    for p, n, cls in pointers:
+        if cls == "text":
+            continue
+        for x in range(p, p + 4 * n, 4):
+            o = x - DATA_LO
+            want = struct.unpack_from("<I", pc, o)[0]
+            if cls != "data":
+                why = cls + ": not tried"
+            elif x in rebuilt:
+                v = rebuilt[x][0]
+                why = "exact" if v == want else "refused (not the PC's)"
+                if (v != want) != (x in refused):
+                    fail("%s: 0x%06X: exe-rebuild.tsv is stale; rerun `recipe`" % (bid, x))
+            else:
+                why = notrebuilt[x]
+            res[why] += 1
+            name = symbol_at(syms, x)[0]
+            if why != "exact":
+                fam[why][family(name)] += 1
+                tgt[why][family(symbol_at(syms, want)[0])] += 1
+            rows.append((x, cls, name, symbol_at(syms, want)[0], why))
+    with open(os.path.join(out, bid + ".rebuild.tsv"), "w", newline="\n") as f:
+        f.write("pc\tto\tword_symbol\ttarget_symbol\toutcome\n")
+        for x, cls, name, tname, why in rows:
+            f.write("0x%06X\t%s\t%s\t%s\t%s\n" % (x, cls, name, tname, why))
+    d = dict(res)
+    for why in fam:
+        d["by word family, " + why] = dict(fam[why].most_common(8))
+    for why in ("refused (not the PC's)",):
+        if why in tgt:
+            d["by target family, " + why] = dict(tgt[why].most_common(8))
+    d["_rebuilt"] = rebuilt
+    return d
+
+
 def cmd_measure(a):
     """Per build: the image against BOF3.exe's .data, every byte classed, the
     differing and the unfilled bytes by symbol, and the catalogued tables'
@@ -479,10 +719,13 @@ def cmd_measure(a):
     cat, tsyms, _ = tables.load()
     syms = data_symbols()
     summary = {}
+    refused = load_rebuild_refused()
     for bid, disc in discs(a.disc):
         img, owner, ranges = disc_image(disc, bid)
         xl = translatable(bid, pc, list(owner), bytes(img), pointers)
+        rb = rebuild_report(bid, pc, img, owner, ranges, pointers, refused[bid], syms, out)
         mask(img, owner, pointers)
+        apply_rebuild(img, owner, ranges, rb.pop("_rebuilt"), refused[bid])
         if sha(img) != load_recipe()["build"][bid]["sha256"]:
             fail("%s: the image is not the one recipes/exe.toml records; rerun `recipe`" % bid)
         c = counts(pc, img, owner, ranges, pointers)
@@ -505,13 +748,16 @@ def cmd_measure(a):
         for t in cat["table"]:
             if "symbol" in t:
                 idt[t["key"]] = table_identity(t, tsyms, pc, img, owner)
-        summary[bid] = {"counts": {"%s/%s" % k: v for k, v in c.items()}, "pointers": xl,
+        summary[bid] = {"counts": {"%s/%s" % k: v for k, v in c.items()}, "pointers": xl, "rebuild": rb,
                         "identical": sum(x == y for x, y in zip(img, pc)), "tables": idt,
                         "differ_by_how": dict(collections.Counter(ranges[owner[i]][2] for i in range(len(pc))
                                                                   if owner[i] is not None and img[i] != pc[i]))}
         print("== %s: %d of %d bytes identical; %s" % (bid, summary[bid]["identical"], len(pc), dict(c)))
         print("   differing placed bytes by how: %s" % summary[bid]["differ_by_how"])
         print("   pointer words: %s" % xl)
+        print("   data-pointer rebuild: %s" % {k: v for k, v in rb.items() if not k.startswith("by ")})
+        for k in sorted(x for x in rb if x.startswith("by ")):
+            print("     %s: %s" % (k, rb[k]))
         for k, (v, d) in idt.items():
             print("   %-22s %-24s %s" % (k, v, d))
     with open(os.path.join(out, "summary.json"), "w") as f:
@@ -617,9 +863,9 @@ def cmd_xref(a):
     addrs = src_addresses()
     near = {v: any(i in ptr for i in range(v - DATA_LO - 16, v - DATA_LO + ext + 16)) for v, (_, _, ext) in addrs.items()}
     per = {}
+    refused = load_rebuild_refused()
     for bid, disc in discs(a.disc):
-        img, owner, ranges = disc_image(disc, bid)
-        mask(img, owner, pointers)
+        img, owner, ranges, _, _ = disc_built(disc, bid, pointers, refused[bid])
         per[bid] = {v: classify(v, ext, pc, owner, img, ptr) for v, (_, _, ext) in addrs.items()}
     bids = list(per)
     with open(os.path.join(out, "src_addresses.tsv"), "w", newline="\n") as f:
@@ -657,8 +903,26 @@ def cmd_check(a):
         last, n = p + 4 * w, n + w
     if n != rec["meta"]["pointer_words"]:
         errs.append("exe-pointers.tsv: %d words, the recipe says %d" % (n, rec["meta"]["pointer_words"]))
+    with open(REBUILD, "rb") as f:
+        if sha(f.read()) != rec["meta"].get("rebuild_sha256"):
+            errs.append("exe-rebuild.tsv: not the file recipes/exe.toml was generated with")
+    data_words = set()
+    for p, w, cls in load_pointers():
+        if cls == "data":
+            data_words.update(range(p, p + 4 * w, 4))
+    refused = load_rebuild_refused()
+    for bid, xs in refused.items():
+        if bid not in rec["build"] or bid == PC:
+            errs.append("exe-rebuild.tsv: build %s" % bid)
+        elif len(xs) != rec["build"][bid].get("rebuild_refused"):
+            errs.append("exe-rebuild.tsv: %s refuses %d words, the recipe says %d"
+                        % (bid, len(xs), rec["build"][bid].get("rebuild_refused")))
+        if xs - data_words:
+            errs.append("exe-rebuild.tsv: %s refuses %d words that are no data pointer" % (bid, len(xs - data_words)))
+    errs += ["the rebuild rule's synthetic round trip: " + e for e in selftest_rebuild()]
     _, _, builds = tables.load()
-    keys = ("placed_equal", "placed_differ", "pointer_pc_zero", "pointer_pc_nonzero", "none_pc_zero", "none_pc_nonzero")
+    keys = ("placed_equal", "placed_differ", "pointer_pc_zero", "pointer_pc_nonzero", "none_pc_zero", "none_pc_nonzero",
+            "rebuilt_equal")
     for bid, b in rec["build"].items():
         if bid not in builds:
             errs.append("build %s: not in fixtures.toml" % bid)
@@ -666,10 +930,12 @@ def cmd_check(a):
             errs.append("build %s: sha256" % bid)
         if bid != PC and sum(b.get(k, 0) for k in keys) != rec["meta"]["size"]:
             errs.append("build %s: the counts add to %d, not %d" % (bid, sum(b.get(k, 0) for k in keys), rec["meta"]["size"]))
+        if bid != PC and b.get("rebuilt_equal", 0) != 4 * (b.get("rebuild_words", 0) - b.get("rebuild_refused", 0)):
+            errs.append("build %s: %d rebuilt bytes, not 4 x (rebuilt - refused) words" % (bid, b.get("rebuilt_equal", 0)))
     for e in errs:
         print("error: " + e)
-    print("exe_tables check: %d builds, %d pointer words in %d runs, %d error(s)"
-          % (len(rec["build"]), n, len(load_pointers()), len(errs)))
+    print("exe_tables check: %d builds, %d pointer words in %d runs, %d refused rebuilds, the rule's round trip, "
+          "%d error(s)" % (len(rec["build"]), n, len(load_pointers()), sum(len(x) for x in refused.values()), len(errs)))
     return 1 if errs else 0
 
 
