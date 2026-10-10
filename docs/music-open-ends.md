@@ -242,7 +242,10 @@ the lowest of the shipped full rows (the first cut's were 0.60..0.90).
 
 Rebuilt with the new `music_loops_table.inc`; `BOF3X_LANG=original
 BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`: exit 0, "39 table rows in bounds".
-DIV-0081 carries the second cut. **Not heard.**
+`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from a launcher copy with no ini, at
+the branch's tip: exit 0 after 1,168 s, no mismatch line, "music_loops 39
+tracks loop at their measured points". DIV-0081 carries the second cut.
+**Not heard.**
 
 ## 4. The 23 refused for a waveform that never repeats
 

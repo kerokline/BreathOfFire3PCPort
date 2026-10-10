@@ -5126,7 +5126,7 @@ designed in rather than bolted on.
   renders, oracle-timed with the fit run to each voice's next key on: 155 of
   the 156 renders on the owner's machine at >= 0.99 of the windows (94 at
   0.986, an allocation tie the interrupt latency decides). The host suite
-  runs on Windows now; `BOF3X_SHADOW=sound` exits 0 with it.
+  runs on Windows now; `BOF3X_SHADOW=sound` and `'*'` (19.5 min) exit 0 with it.
 - **Also in the PSX version?** Yes in substance: this *is* the PSX's player
   on the PSX's data, at the PC's fade level and timing.
 - **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
