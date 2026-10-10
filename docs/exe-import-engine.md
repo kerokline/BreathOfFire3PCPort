@@ -420,7 +420,9 @@ the image the importer wrote.
    the engine's own layout, held.
 3. **The code pointers** (9,142 words): section 4.2 (b) - the 17 functions
    without `impl` (state 2), the 7 placed mid-function words read, then the
-   stub page in our own executable. Not started.
+   stub page in our own executable. Not started. The decoder's eight are
+   to be minimp3 behind the music seam ([`mp3-decoder-choice.md`](mp3-decoder-choice.md),
+   the owner 2026-10-10).
 4. **`c_dfDIKeyboard`** from the SDK in state 3 (one more `.rdata` read
    that the engine can own: `libdinput`'s object, verified against the
    exe's like 2.1); the import slots go with the executable.

@@ -257,6 +257,14 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Decisions the measurements raised
 
+- **Decided 2026-10-10: minimp3 replaces Capcom's MP3 decoder** ("I agree
+  with using minimp3 unless there is a known decoding bug that has been
+  resolved" - none: [`mp3-decoder-choice.md`](mp3-decoder-choice.md), 42 of
+  the decoders' 57 items token-identical, the 15 others casts and naming but
+  for dr_mp3 keeping the bit reservoir on a `pcm == NULL` call). Recorded in
+  [`platform-layers-plan.md`](platform-layers-plan.md) 2.4; nothing to hear
+  until it is built, then the ledger entry's PCM bound and the loop seams.
+
 - **`symbols.toml` quotes table values** ([`exe-tables-by-build.md`](exe-tables-by-build.md)
   section 7, 2026-10-08): about 25 `[[data]]` evidence strings carry six or
   more of a table's numbers in a row (`Battle_DamageVarianceTable`,

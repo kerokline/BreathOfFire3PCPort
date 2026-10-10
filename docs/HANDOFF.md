@@ -88,6 +88,10 @@ or seen in play** - the testing catch-up below is next. The regression check is 
    (127 against the PSX title's 97), song 21, `165`'s bank, `BOF3X_CACHE` as the one root, and the importer steps'
    calls (3: four, 6: three, 4: six, 8: four).
 3. **Then, work that needs no owner** (a cloud session can do each; the live check stays the owner's):
+   - **the decoder swap** - minimp3 chosen 2026-10-10 ([`mp3-decoder-choice.md`](mp3-decoder-choice.md) 4):
+     vendor `minimp3.h` at `ea99364f` with its notice in `THIRD_PARTY.md`, the music seam on it (seek and
+     DIV-0081's loop jump never skip frames with `pcm == NULL`), the ledger entry with the per-track PCM
+     bound and the seams; then the CRT's last six and state 2's proof;
    - the engine half of step 8 ([`exe-import.md`](exe-import.md) 6: map `data.bin` at `0x5DA000`, the 9,142 code
      pointers, the data-pointer rebuild transform first, `.rdata`'s 65 reads, the 321 addresses no disc carries);
    - a disc-only `loc_build` ([`importer-transforms.md`](importer-transforms.md) 8 item 3) - the last gap between a
