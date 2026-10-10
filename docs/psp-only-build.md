@@ -1,8 +1,10 @@
 # A build from a PSP disc alone: how close we are, and the PSP toggles
 
-**Status:** MEASURED (2026-10-10). Read-only: the importer run on each disc
-alone, plus two measurement agents (banks and music, sound effects), with
-scripts in the session scratchpad. Nothing in `src/` or `tools/` changed.
+**Status:** IN PROGRESS (2026-10-10). Measured first: the importer run on each
+disc alone, plus two measurement agents (banks and music, sound effects), with
+scripts in the session scratchpad. Then the two audio steps were built the same
+day in `tools/` (section 8): the PSP's banks and its effects, voice and jingles.
+Nothing in `src/` changed.
 
 The owner asked, 2026-10-10: how close are we to producing our build from a
 PSP disc analysis alone? Two goals:
@@ -230,12 +232,12 @@ could be small.
 
 | Step | What | Size | Gives |
 |---|---|---|---|
-| 1 | `psp-unwrap` for banks: the PPHD reader into `vag.bank` | half a day | 885 / 901 banks from a PSP disc |
+| 1 | ~~`psp-unwrap` for banks: the PPHD reader into `vag.bank`~~ **done 2026-10-10** (section 8) | half a day | 885 / 901 banks from a PSP disc |
 | 2 | The `icons` and dial rules reading the PSP's sections; the PSP's `own` stand-ins behind a PSP-only flag (a DIV) | a day | `base/` complete from a PSP disc except the 16 + 14 |
 | 3 | The PSP ELF code diff (I32's code half) | a reading round | the list of code toggles, or proof there are few |
 | 4 | The launcher's options page: every layer and option listed from a catalogue, each with its source builds; greyed when the manifest has none | 1-2 days | goal 2's UI for the data layers that exist |
 | 5 | The PSP music: a PSP-native bank and `pPMS` reader, then `psp-music` | 4-6 days | PSP-only music, and the music toggle |
-| 6 | Effects by the player's ffmpeg at import (decided), with the onset shift (section 2.1.1; a DIV); `sin_table` by rule; the PSP data pointers | 2-3 days | PSP-only sound and `base/exe/` |
+| 6 | ~~Effects by the player's ffmpeg at import, with the onset shift~~ **done 2026-10-10** (section 8; a DIV when the engine reads `base/snd/`); `sin_table` by rule; the PSP data pointers | 1-2 days left | PSP-only sound and `base/exe/` |
 | 7 | The shared items in section 3: `pc-edit` read, a disc-only language layer, state 3 | rounds | **any** disc-only build, the PSP's included |
 
 Steps 1, 2 and 4 are useful now even with a PC install present. Step 4
@@ -293,3 +295,64 @@ Still open:
 - **Whether the PSP code diff (step 3) runs before the launcher page.** With
   three toggles decided, the page no longer waits on it: battle-code
   differences, if any are found, fall under **data** or get a fourth toggle.
+
+## 8. Built (2026-10-10): the PSP's audio in the importer
+
+Both are importer-side. **The engine does not read `base/snd/` yet**
+(`sound-import.md` section 7: the engine still opens `SND\NAME.DAT` itself, and
+`install` does not copy `base/snd/`), so nothing changes in play. The ledger
+entry for the PSP's effects is owed when the engine first reads them, as
+[`exe-import.md`](exe-import.md) does for `base/exe/`. The banks need none: they
+are byte-identical to the PC's.
+
+**Banks: `tools/vag.py`'s `psp_vab`.** The `PPHD` layout in section 2.1, read
+into a VAB header and body for `bank`, which is unchanged. `bank_from_disc`
+unwraps a PSP group and `importer_source` takes `psp-*` sources; every output
+is still hashed against the recipe. Measured:
+
+| Source alone | Banks | `base/` containers written | `verify` |
+|---|---:|---:|---|
+| PSP-JP | 885 of 901 | **519** of 741 (was 11) | 0 problems; 436 of 742 containers byte-identical to the PC's |
+| PSP-EU | 885 of 901 | 519 | the same |
+| US PSX | 901 | 727 | unchanged; the cache identical but for the manifest's build time |
+
+The 16 missing banks are the one bank with the dropped tone (section 2.1).
+
+**Effects, voice and jingles: `tools/at3.py`.** `recipe` measures, once and
+against a PSX disc, where each clip sits in its AT3 (`onset`, past the encoder
+delay, at the output rate), and writes `recipes/psp.snd.toml`: 891 rows with
+names, paths under `SCE_XA/`, the AT3's hash, the onset, the PC file's length,
+and the correlation and SNR measured. No bytes. `build`, and the importer when
+no PSX disc is given, decode each AT3 with the player's ffmpeg (`BOF3X_FFMPEG`,
+else the `PATH`'s):
+- the 875 effects and 5 voices go to mono 22.05 kHz, cut at the onset, and
+  padded to the PC file's length as the port's WAV;
+- the 11 jingles go to 44.1 kHz stereo, cut at the onset, padded to the XA
+  clip's length, and are encoded by that ffmpeg as 128 kbit/s MP3, the PC's
+  own form. If the ffmpeg has no MP3 encoder, they are skipped with the reason.
+
+The manifest's `[snd]` records the build, `psp-at3`, the ffmpeg's version
+line and each file's own hash. With no ffmpeg, `base/snd/` is not written and
+the build says why. Measured with ffmpeg 9.0.1:
+
+- **Onsets:** 880 of 880 effects and voices agree with the agent's independent
+  measurement to 2 samples at 44.1 kHz. Restated in delay-trimmed terms: 785 at
+  the start sector's time mod 0.25 s plus 368, 94 a grid step earlier, one
+  292 later. The jingles' onsets run from -73 to 10,070.
+- **The output against the PC's WAVs, at zero lag:** 880 of 880 the PC's
+  length, rate and channels; correlation median 0.995, minimum 0.854 (17
+  below 0.9, the effects where the port's resampler aliases most).
+- **Jingles:** 44.1 kHz stereo 128 kbit/s. `PURE` runs 269.11 s against the
+  XA's 269.07 s; the difference is the MP3's frame padding.
+- **Deterministic:** the PSP-JP and PSP-EU builds are byte-identical, 891 of 891.
+- **This ffmpeg leaves the encoder delay in** (whole 2048-sample frames).
+  `at3.delay_trimmed` tells the two behaviours apart by the decode's length,
+  so an ffmpeg that trims it lands on the same samples. This is untested on
+  such a build.
+- `importer.py check` (CI) runs `at3.check`: the recipe against
+  `pc-zh.snd.toml`, every clip once, each in its folder at the right rate and
+  length. 0 errors.
+
+Still to do for PSP-only audio: the engine reading `base/snd/` (and `install`
+copying it), the 16 banks, and the PSP's music (step 5). `OTHER/WHISTLE.AT3`
+is PSP-only and not imported.
