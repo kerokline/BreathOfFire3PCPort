@@ -271,6 +271,10 @@ by its full tag.
 
 - ~~**Presets**~~ - done in step 4 (`--preset`, [`opt-layers.md`](opt-layers.md)
   section 7).
-- **The engine reading the cache.** `LoadDatFile` reads `DAT/` as before. The
+- ~~**The engine reading the cache.**~~ Done 2026-10-10, DIV-0089
+  ([`cache-read.md`](cache-read.md)): with `BOF3X_CACHE` set the loader reads
+  `base/` + `loc/zh-CN/` in the manifest's slot order, then the cache's
+  `loc/<tag>` and `opt/` layers, the install's `DAT/` for what the cache
+  lacks. Until then: `LoadDatFile` read `DAT/` as before. The
   cache is shaped so that `base/` plus a `loc/` layer can be read with the
   overlay mechanism unchanged; the second prefix is step 4.

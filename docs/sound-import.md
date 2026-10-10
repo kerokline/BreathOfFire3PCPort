@@ -332,7 +332,7 @@ check stand in for it until then.
    kHz PCM. A WAV path for them would have to stream, not load whole as
    `SndStream_Play` does.
 
-## 7. The engine change `base/snd/` needs (not made)
+## 7. The engine change `base/snd/` needs (made 2026-10-10, DIV-0089)
 
 The exe builds `SND\%s.DAT` itself (format string at `0x666F9C`,
 `Sound_LoadStream` `0x587910`), relative to the working directory. For the
@@ -340,6 +340,16 @@ cache to be read, `Sound_LoadStream` must open `base/snd/NAME.DAT` from the
 cache root. A plain cache-or-install fallback is enough for the 11 kind-0 MP3s
 while they stay PC-only. That is the same seam as `LoadDatFile`'s second prefix
 (step 4), and `BGM\%03d.DAT` will want it too.
+
+**Made** ([`cache-read.md`](cache-read.md), DIV-0089): with `BOF3X_CACHE`
+set, `Sound_LoadStream` opens `<cache>\base\snd\NAME.DAT` when it exists and
+`SND\NAME.DAT` otherwise; the cache's 880 files are byte-identical to the
+install's (2026-10-10), and the 11 MP3s, `019_02` and `DIR1` are always the
+install's. `Snd_LoadBankFile` and `LoadDatFile` read `base/dat/` (with
+`loc/zh-CN/dat/`, in the manifest's slot order) the same way. `BGM\%03d.DAT`
+needed nothing new: DIV-0087's seam is already the cache's song or the
+install's MP3, and the cache holds no MP3s. Self-tested and proved offline;
+not yet played.
 
 ## 8. For the other files
 

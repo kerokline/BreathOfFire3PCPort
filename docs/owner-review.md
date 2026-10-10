@@ -39,6 +39,19 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## To review in play
 
+0. **The game from the cache** (DIV-0089, 2026-10-10,
+   [`cache-read.md`](cache-read.md) section 9). **At the machine:** with
+   `BOF3X_CACHE=<a cache built with the PC's DAT>` (or the ini's `cache=`)
+   and nothing installed in `DAT\`, then with `BOF3X_CACHE_DATA=0` for
+   comparison: the title, a town, a fight, the menus (whatever draws from
+   `FIRST.DAT`'s images - the one container whose order matters; which
+   screen shows the overlapped tiles is not read), an inn (an `SND\`
+   wave), English from the cache's `loc/en-US`, and `psp-art` on Stallion if
+   a save reaches area 67. **Look for** any difference at all; the log's
+   `DIV-0089` lines say what was read from where. Also the one-root call
+   (section 6 there): keep `BOF3X_CACHE` as the one root, or the cache for
+   the music only.
+
 1. **Music coming back after a pause** (`Sound_ResumeAll`,
    [`sound-rest.md`](sound-rest.md) section 3 item 2). Read from the code,
    never heard: `Sound_ResumeAll` plays whatever music buffer is loaded,
