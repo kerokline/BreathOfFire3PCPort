@@ -4345,64 +4345,95 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_LINES=0` leaves the switch off (the strip);
   `BOF3X_ORIGINAL=D3d_DrawLineF2,...` runs Capcom's handler.
 
-### Dauna Mine's minecart map is walled as every later release walled it
+### Dauna Mine's minecart map is walled as every later release walled it, from the player's Western disc
 
 - **ID:** DIV-0080
-- **Date:** 2026-10-06
-- **Subsystem:** the area data as loaded (`src/game/area4_walls.cpp`, run at
-  the end of `LoadDatFile` in `src/game/dat_load.cpp` for `AREA004.DAT`; the
-  cell plane at `AreaMap_Header` `0x8CB580`'s block, the battle placement
-  nibble map at `0x8C3D80`)
-- **Tier:** Intent - the owner's decision, 2026-10-06: "if it looks like a bug
-  fix, it's probably worth keeping the change as the default option", and
-  "make the code change so that it works the same regardless of source".
+- **Date:** 2026-10-06; **rewritten 2026-10-10** (the walls moved from a
+  coordinate table in our code to an optional layer built from the player's
+  own disc)
+- **Subsystem:** the area data as loaded: the `area4-walls` layer
+  (`tools/importer.py`, `recipes/opt.toml`, [`opt-layers.md`](opt-layers.md)
+  section 1), walked by DIV-0086's `BOF3X_OPT` prefix in `LoadDatFile`
+  (`src/game/dat_load.cpp`); the cell plane of the area block at
+  `AreaMap_Header` `0x8CB580` (PC tag `0xC8000`) and the battle placement
+  nibble map at `0x8C3D80` (PC tag `0xC0800`)
+- **Tier:** Intent - the owner, 2026-10-06: "if it looks like a bug fix, it's
+  probably worth keeping the change as the default option"; and 2026-10-10:
+  do it without carrying Capcom's table in our code, if we can
+  ([`LICENSING.md`](LICENSING.md) section 3).
 - **Original behaviour:** the PC port carries the Japanese disc's map of area
-  4 (Dauna Mine's minecart area), in which 72 cells along the raised strip's
-  east edge (x 28, z 9..30 and 35..65, the doorway at z 32..33 open), its
-  west side's north end (x 25, z 9..11) and the corridor's bottom edge (z 71,
-  x 7..22) are open floor between wall stubs, and 8 of those cells are open
-  to battle placement. Every later release - the US, French and German PSX
-  discs and both PSP discs - walls those cells (`0x10`, the value the
-  neighbouring stubs already carry) and the PSX discs close the 8 placement
-  cells; the PSP took the walls but not the placement half
-  ([`region-diff.md`](region-diff.md) sections 8 and 10).
-- **New behaviour:** with `BOF3X_AREA4_WALLS` on (the default; armed after
-  every module's self-test), each load of `AREA004.DAT` sets the 72 cells to
-  `0x10` and the 8 placement nibbles to 0, from a coordinate table in our
-  code, guarded: only when the block is 90 x 88 and every cell still holds
-  JP's value; a map that already has the walls is left alone with a log
-  line. The later discs' 30-cell re-texture of the same strip is **not**
-  taken: it is Capcom's texture records, not expressible by coordinate.
-- **Rationale:** a collision fix every later build made; applied by
-  coordinate so the PC install, the JP disc and any later disc give the same
-  area - the engine / data split keeps the bytes the player's
-  ([`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 5).
+  4 (Dauna Mine's minecart area), in which 72 cells along three lines - the
+  raised strip's east edge (its doorway open), the north end of its west
+  side, and the corridor's bottom edge - are open floor between wall stubs
+  Capcom had already placed on the same lines, and 8 of them are open to
+  battle placement ([`region-diff.md`](region-diff.md) 8.1, 8.2 for the
+  cells). Every later release - the US, European, French and German PSX discs
+  and both PSP discs - walls those cells and the PSX discs close the 8
+  placement cells; the PSP took the walls but not the placement half.
+- **New behaviour:** with the `area4-walls` layer installed and named in
+  `BOF3X_OPT` (or the launcher ini's `opt=`), each load of `AREA004.DAT`
+  walks `DAT\area4-walls.AREA004.DAT` after the file: two kind-0 chunks, the
+  Western disc's **whole** cell-byte plane (7,920 bytes) and its **whole**
+  placement map (5,000 bytes), each landing exactly on JP's. On JP's map that
+  changes the 72 cells to the wall value and the 8 nibbles to 0 and nothing
+  else (verification). The layer is built by `tools/importer.py build --opt
+  area4-walls` from the player's US, European, French or German PSX disc -
+  the `pc-plus-us-text`, `-eu-en-`, `-fr-` and `-de-` presets build it - and
+  copied in by `install --opt area4-walls`; it is never shipped or committed.
+  `recipes/opt.toml` records the two chunks' tags, sizes and hashes and the
+  hashes of the composed chunks, and no cell's place or value. **No disc, no
+  walls:** a player with only the PC install, or only the JP disc, plays the
+  shipped open map. The code that wrote the walls from a table
+  (`src/game/area4_walls.cpp`, `BOF3X_AREA4_WALLS`) is gone; that variable
+  is now refused at start-up (`=0`, the old "shipped map", is accepted with
+  a log line, since the shipped map is now what it gets anyway). The later
+  discs' 30-cell re-texture of the strip is still **not** taken: the layer
+  carries the cell plane, not the tile words or texture records, so the
+  textures stay JP's.
+- **Rationale:** a collision fix every later build made. The owner wanted it
+  without our code carrying Capcom's coordinates. A rule derived at load time
+  from the JP map's own data was looked for first and does not exist
+  ([`region-diff.md`](region-diff.md) 10.1): the 72 cells are not
+  distinguishable from other open cells by the map's heights or cell bytes.
+  So the walls come from the player's own disc, as the unified-data plan
+  takes every later build's content change ([`unified-data-plan.md`](unified-data-plan.md)
+  7): the engine / data split keeps the bytes the player's.
 - **Also in the PSX version?** The JP disc has the open cells; every later
-  disc has the walls. This follows the later discs.
-- **Verification:** `tools/region_read.py fix` parses the table out of the
-  C++ source, applies it to the JP disc's sections 8 and 10 and compares with
-  the US and German discs: the cell bytes and the placement map identical,
-  the 920 remaining differences all in the re-texture not taken.
-  `'*'` narrow at the agent's tip, 0 mismatches (the switch is armed after
-  the self-tests). **Not seen live:** the owner's walk of the strip's east
-  and bottom edges, blocked with the fix and open with `BOF3X_AREA4_WALLS=0`.
-  Area 4 plays twice in the attract cycle, so state-hash reference runs want
-  the switch off. **Attract on against off (2026-10-06,
-  `analysis/statehash/attract_walls_on` / `_off`):** the off run identical to
-  the references on all 10,305 ticks; the on run differs from them in
-  exactly four pages, the cell plane's two (`0x8D3000`, `0x8D4000`) and the
-  placement map's two (`0x8C3000`, `0x8C4000`), from the first load at tick
-  1,312 - the fix's own footprint and nothing else, so the demo's scripted
-  moves never meet the walls. The oracle's one differing row is a sampler
-  poll on an area-load boundary (area `0x0002` against the `0xffff` marker),
-  not game state.
-- **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded. **From a
-  Western disc alone** (the importer's cache, unified-data step 3,
-  [`importer-transforms.md`](importer-transforms.md) section 5): the cache
-  holds that disc's own `AREA004` rows, walls and the 30-cell re-texture
-  with them; the guard's "already walled" branch leaves them, and the switch
-  cannot restore the open map from such a cache. A by-source difference
-  until the owner says otherwise (the owner's call 4 there).
+  disc has the walls. This follows the later discs where the player has one.
+- **Verification (2026-10-10):** `tools/importer.py opt-recipes` with the JP,
+  US, European, French, German and both PSP discs: the layer's two chunks are
+  byte-identical on all four Western PSX discs, the PC's chunks are JP's
+  sections exactly, and the planes differ from JP's in 78 bytes (the 72 cells,
+  and 6 bytes holding the 8 nibbles). `build --opt area4-walls` from the US
+  disc and, separately, the German disc: the same layer file (md5 equal);
+  `verify`: 2 of 2 chunks and 2 of 2 composed base chunks as recorded.
+  `tools/region_read.py fix --layer` lays the built layer over the JP disc's
+  sections as `LoadDatFile` lays a kind-0 chunk and compares with each later
+  disc: against US, German, French and European, the cell plane and the
+  placement map identical; exactly 72 cells changed, every one `0x00` to
+  `0x10`, at the coordinates the old table had; 8 nibbles, every one to 0 and
+  on a walled cell; the section outside the cell plane untouched (the 920
+  bytes still different are the re-texture not taken). `importer.py check`:
+  6 layers, 0 errors. Built (llvm-mingw); `BOF3X_SELFTEST_ONLY=1
+  BOF3X_SHADOW=field_blocked` from an ini-less copy: exit 0, `inject: 10081
+  ours`, the `BOF3X_AREA4_WALLS=0` line logged; with `BOF3X_AREA4_WALLS=1`,
+  the refusal (exit 3). **Not run:** a game with the layer installed (the
+  loader walk is DIV-0086's, already verified; this layer adds no chunk kind),
+  and the owner's walk of the strip's east and bottom edges. The 2026-10-06
+  attract A/B (`analysis/statehash/attract_walls_on` / `_off`) still
+  describes the layer's effect - the same bytes in memory: four pages
+  differ (the cell plane's two, `0x8D3000`, `0x8D4000`; the placement map's
+  two, `0x8C3000`, `0x8C4000`) from the first load at tick 1,312, and the
+  demo's moves never meet the walls. The default is now the old "off" run,
+  identical to the state-hash references.
+- **Reversible?** Leave `area4-walls` out of `BOF3X_OPT` / `opt=`; the layer
+  is a separate file (`DAT\area4-walls.AREA004.DAT`), and the shipped
+  `AREA004.DAT` is never changed. **From a Western disc alone** (the
+  importer's cache, unified-data step 3,
+  [`importer-transforms.md`](importer-transforms.md) section 5): `base/`
+  holds that disc's own `AREA004` rows, walls and the 30-cell re-texture with
+  them, and the open map cannot be had from such a cache. A by-source
+  difference until the owner says otherwise (the owner's call 4 there).
 
 ### The music loops inside its file, at the points the disc's sequence loops
 

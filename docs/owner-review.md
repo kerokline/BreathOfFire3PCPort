@@ -341,9 +341,18 @@ where the reading behind it is. Nothing here is a divergence until it is in
   divergence with the later discs as precedent, for every player. Area 4 is
   in the attract demo, so the state hash's reference runs want the switch off.
   The owner chose code; **built as DIV-0080** (`BOF3X_AREA4_WALLS`, the table
-  proven against the US and German discs offline). **Owed the owner's eye:**
-  in the minecart area, walk the raised strip's east edge and the corridor's
-  bottom edge - blocked with the fix, open with `BOF3X_AREA4_WALLS=0`.
+  proven against the US and German discs offline). **Changed 2026-10-10** at
+  the owner's asking (no Capcom table in our code, if we can): a rule from the
+  JP map's own data was looked for and **does not exist** - 58 other open
+  cells in area 4 have the same local heights and neighbours as the 72
+  ([`region-diff.md`](region-diff.md) 10.1) - so the table is gone and the
+  walls are the **`area4-walls` layer** from the player's own US, European,
+  French or German disc (`importer.py build --opt area4-walls`, `install`,
+  `opt=area4-walls`). **Without a Western disc, area 4 is the shipped open
+  map** - the owner's to accept, or to ask for something else. **Owed the
+  owner's eye:** with the layer on, in the minecart area, walk the raised
+  strip's east edge and the corridor's bottom edge - blocked with the layer,
+  open without it.
 - **Stallion's PSP recolour as an option** ([`psp-stallion.md`](psp-stallion.md)):
   palettes only (two rows in areas 67 and 166, plus the three variants), the
   fight's code identical. A toggle is a palette layer from the player's own

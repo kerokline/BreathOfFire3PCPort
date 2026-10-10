@@ -24,6 +24,7 @@ hashes and offsets, never bytes.
 | `psp-maps` | the PSP's edits to 11 areas' map bands (`0x80104000`, PC tag `0xC8000`): texture coordinates, tile words, cell-run records (section 4) | 260 (1,608 bytes) | either PSP disc |
 | `psp-names-en-150` | **P7** and the other English renames: the 8 name records where the PSP-EU's tables differ from the US disc's - abilities 46, 47, **116** and 218, weapon 14, armour 9, accessories 29 and 45 (`Ability_Records` ids, [`exe-tables-by-build.md`](exe-tables-by-build.md) 4.2) | 8 | the PSP-EU disc |
 | `psp-names-ja-JP` | the PSP-JP's renames: ability 116 and key items 2, 5, 7, 9 | 5 | the PSP-JP disc |
+| `area4-walls` | **DIV-0080** (added 2026-10-10): `AREA004`'s collision as the Western PSX discs ship it - the area block's whole cell-byte plane (7,920 bytes, inside PC tag `0xC8000`) and the whole battle placement map (5,000 bytes, PC tag `0xC0800`). On JP's map: 72 cells walled, 8 placement nibbles to 0, nothing else; not the 30-cell re-texture | 2 (12,920 bytes) | the US, European, French or German PSX disc (all four carry both chunks byte for byte); not a PSP disc, which lacks the placement half |
 
 **The choices, recorded:**
 
@@ -50,6 +51,15 @@ hashes and offsets, never bytes.
   tables exactly (section 6); under `en-150` the European disc's 12 other
   ability names stay.
 - **The map bands are a layer, not a rule** (section 4).
+- **`area4-walls` is the one layer from a PSX disc** and the one that is a
+  fix, not a content change. It was a coordinate table in our code until
+  2026-10-10; the owner asked for it without Capcom's table, no rule from the
+  map's own data gives the 72 cells ([`region-diff.md`](region-diff.md)
+  10.1), so it is a layer: whole planes, so that the recipe records no cell.
+  The `pc-plus-*-text` presets of the four Western discs build it; turning
+  it on is still `opt=` / `BOF3X_OPT`. A whole plane is a sub-range of the
+  area block, as section 2 requires, landing at its tag plus the plane's
+  offset.
 
 ## 2. How a layer is made
 
@@ -132,7 +142,7 @@ type and size. The `pBVC` strip is not needed by any layer (audio, step 6).
 | art, `DEMO`'s language page | 3 | `DEMO`, `AREA004`, `AREA024` at `0x1A080400`: language (they differ PSP-JP to PSP-EU) |
 | art, the glyph atlas / kanji sheet | 14 + 2 | the PSX font; the PC draws with its own |
 | art, the title menu page | 1 | P14, the PSP's title menu; the PC's own page |
-| logic-data, data | 9 | `AREA004`'s band (DIV-0080's walls by rule; its PSP form also lacks the placement half, region-diff.md 8.2) and Ryu's form data in 8 `RYUD` files (P8, unread, not art) |
+| logic-data, data | 9 | `AREA004`'s band (DIV-0080's walls are the `area4-walls` layer, from a Western PSX disc; the PSP's form lacks the placement half, region-diff.md 8.2) and Ryu's form data in 8 `RYUD` files (P8, unread, not art) |
 | logic-data, cue entries | 65 | the cue byte, nothing on the PC (region-diff.md 8.3) |
 | text, edits within Japanese | 9 + 44 | message blocks and system pools - text, a language layer's business (the battle pool's filled slot among them) |
 | converted | 2,225 | the PSP's own formats (audio, decompressed arenas, `FIRST`'s PSP-only section): not content changes |
@@ -187,8 +197,9 @@ for `AREA004`'s re-texture. A look in play could promote one to a rule.
 `src/game/dat_load.cpp`: after `DAT\<name>` and the language overlay
 `DAT\<tag>.<name>` (DIV-0005), `LoadDatFile` walks `DAT\<layer>.<name>` for
 each layer of **`BOF3X_OPT`** - a comma-separated list, in order, each
-landing on top of the last - when the file exists; then `area4_walls` and
-DIV-0085's snapshot, as before, so both see the layers.
+landing on top of the last - when the file exists; then DIV-0085's
+snapshot, as before, so it sees the layers. (Until 2026-10-10 `area4_walls`
+ran there too; DIV-0080's walls are now the `area4-walls` layer.)
 
 - **The path buffer** is `0x40` bytes: `DAT\` + a layer of at most 23
   characters + `.` + the file name + NUL fits any name up to 35 characters;
