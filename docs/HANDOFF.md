@@ -56,9 +56,11 @@ or seen in play** - the testing catch-up below is next. The regression check is 
       Verification line; glance at area 47 (Wyndia's outer wall) when passing, `BOF3X_SIDE_DUP=0` for the original.
    5. **DIV-0080:** the minecart area - the raised strip's east edge and the corridor's bottom edge blocked, open
       without the layer.
-      **Since 2026-10-10 the walls are an `opt/` layer** cut from the player's Western disc, not code: `importer.py
-      install ... --opt area4-walls`, then `opt=area4-walls` in the ini (or `BOF3X_OPT`); without it the map is the
-      shipped one. `BOF3X_AREA4_WALLS` is retired (`=0` accepted and logged).
+      **Since 2026-10-10 the walls are an `opt/` layer** cut from the player's Western disc, not code, and **on by
+      default**: a `build` with a Western disc builds it, `install` installs it, and the launcher plays it whenever
+      `DAT\area4-walls.*.DAT` is there and the ini's `opt=` is empty; `opt=none` for the open map (or `install
+      --no-opt area4-walls` to remove it). Without a Western disc the map is the shipped one. `BOF3X_AREA4_WALLS` is
+      retired (`=0` accepted and logged when the layer is not named, refused when it is).
    6. **The owner's eye**, the list in [`owner-review.md`](owner-review.md): DIV-0071's crate
       (`ninaWalkBehindBlock`, A/B under `BOF3X_LAYERING=0`), DIV-0077's specks (the dream scene), DIV-0079's lines
       and the fishing gauge, DIV-0064's master-list star, the French and German builds of DIV-0064's groups 7..11,

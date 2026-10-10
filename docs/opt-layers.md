@@ -7,7 +7,8 @@ llvm-mingw build, the `'*'` self-tests and any look in play - section 8)
 
 [`unified-data-plan.md`](unified-data-plan.md) step 4. A later build's
 content change is an `opt/` layer from the player's own disc, off by default
-(the plan's section 7). This is those layers for the PSP releases: what they
+(the plan's section 7) - except `area4-walls`, a fix, on by default since
+2026-10-10 (section 1). This is those layers for the PSP releases: what they
 carry and why, how the engine walks them (DIV-0086, `BOF3X_OPT`), how a layer
 gets from the cache into a game's `DAT/`, and the importer's presets.
 
@@ -56,8 +57,13 @@ hashes and offsets, never bytes.
   2026-10-10; the owner asked for it without Capcom's table, no rule from the
   map's own data gives the 72 cells ([`region-diff.md`](region-diff.md)
   10.1), so it is a layer: whole planes, so that the recipe records no cell.
-  The `pc-plus-*-text` presets of the four Western discs build it; turning
-  it on is still `opt=` / `BOF3X_OPT`. A whole plane is a sub-range of the
+  **It is the one layer on by default** (2026-10-10, the owner's word):
+  `build` builds it whenever one of the four Western discs is among its
+  sources, `install` installs it whenever the cache holds it, and the
+  launcher names it whenever it is installed and the ini's `opt=` is empty
+  (section 5). `--no-opt area4-walls` leaves it out of a build or an install
+  (the install also removing a copy already in `DAT/`); `opt=none` keeps it
+  installed but unplayed. A whole plane is a sub-range of the
   area block, as section 2 requires, landing at its tag plus the plane's
   offset.
 
@@ -213,7 +219,7 @@ ran there too; DIV-0080's walls are now the `area4-walls` layer.)
   `DAT\<layer>.*.DAT` installed, and a **text layer** - a name ending in
   `-<tag>`, the tag one of the five overlay tags (`src/game/language_tags.h`,
   the launcher's list too since 2026-10-10) - whose language is not
-  `BOF3X_LANG`'s primary subtag (no language: refused too). `BOF3X_OPT=original` is none, as `BOF3X_LANG`'s.
+  `BOF3X_LANG`'s primary subtag (no language: refused too). `BOF3X_OPT=original` is none, as `BOF3X_LANG`'s; so is `BOF3X_OPT=none` (2026-10-10).
   A `BOF3X_LANG` that is a retired bare code (`en`, `fr`, `de`, `ja`) stops
   the game before any of this, and the launcher before it starts (DIV-0005,
   2026-10-10): a text layer is only ever matched against a tag.
@@ -231,6 +237,18 @@ ran there too; DIV-0080's walls are now the `area4-walls` layer.)
   box**: the pattern for one (`kLanguages`' combo box) is a list of fixed
   entries, and a set of checkboxes found by what is installed is new dialog
   work; the variable is the must, the box the owner's call (section 9).
+- **The default (2026-10-10, DIV-0080).** An empty `opt=` - the default,
+  and what a launcher with no `bof3x.ini` has - names the default layers
+  that are installed (`kOptDefault` in `src/launcher/config.h`: today only
+  `area4-walls`, when a `DAT\area4-walls.*.DAT` exists), with a line on
+  stderr. `opt=none` names none; a list is exactly that list, so one
+  without `area4-walls` turns the walls off. A set `BOF3X_OPT` still wins.
+  `opt=` is kept as written and checked at start (`ConfigOptValid`): a
+  value the DLL would refuse, or `none` inside a list, stops the launcher
+  with a message rather than being dropped into the default. The dialog has
+  no box for it, so a save writes it back unchanged and never pins the
+  default off. The DLL has no default of its own: `BOF3X_OPT` unset is
+  none, as before.
 
 **How a layer reaches the engine today.** The engine reads `DAT\` in the game
 directory, not the cache. `importer.py install --cache CACHE --game DIR --opt
@@ -238,13 +256,17 @@ NAME` copies `opt/<name>/dat/X.DAT` to `DIR/DAT/<name>.X.DAT` (and `--lang
 TAG` `loc/<tag>/dat/X.DAT` to `DIR/DAT/<tag>.X.DAT`, what `loc_build.py`
 writes), after removing that layer's old `<name>.*.DAT` files, and refuses a
 directory without `DAT/FIRST.DAT` or a layer naming a file the install lacks.
-Then `BOF3X_OPT=<name>` (or the ini's `opt=`).
+Then `BOF3X_OPT=<name>` (or the ini's `opt=`). A default layer
+(`DEFAULT_OPT` in `importer.py`: `area4-walls`) is installed without
+`--opt` whenever the cache holds it, and then played without `opt=`;
+`--no-opt NAME` leaves it out and removes its `<name>.*.DAT` from `DAT/`.
 
 **Not done by this session and the owner's:** the build with llvm-mingw
 (`cmake --preset i686 && cmake --build build`), the `'*'` self-tests (the
 loader is injected, not fuzzed; `NameTables_Apply` has no shadow test), and
 the live look. The state hash: a layer changes the arena and VRAM, so
-reference runs want `BOF3X_OPT` unset.
+reference runs want no layer: `BOF3X_OPT` unset with none installed, or
+`BOF3X_OPT=none` where `area4-walls` is installed (the launcher would name it).
 
 ## 6. Measured (2026-10-08)
 
@@ -273,21 +295,23 @@ order; the preset puts them in its own, refuses when one it names is not
 given (with the preset's name and what is missing), and refuses an extra
 source - except a PSP disc, which goes last, where it can only fill what the
 preset's sources leave, for `--opt`. `--lang` / `--opt` on the command line
-add to the preset's.
+add to the preset's. Any build, preset or not, with a US, European, French
+or German PSX disc among its sources also builds `area4-walls` (DIV-0080,
+`DEFAULT_OPT`, since 2026-10-10); `--no-opt area4-walls` leaves it out.
 
 | Preset | Sources, in order | Layers |
 |---|---|---|
 | `pc-install` | the PC's `DAT/`, `BOF3.exe` | - |
 | `us-disc`, `jp-disc`, `eu-en-disc`, `fr-disc`, `de-disc` | that PSX disc alone | - |
-| `pc-plus-us-text` | `DAT/`, `BOF3.exe`, the US disc | `--lang en-US` |
-| `pc-plus-eu-en-text`, `pc-plus-fr-text`, `pc-plus-de-text`, `pc-plus-jp-text` | `DAT/`, `BOF3.exe`, that disc | its tag |
+| `pc-plus-us-text` | `DAT/`, `BOF3.exe`, the US disc | `--lang en-US` (and `area4-walls` by default) |
+| `pc-plus-eu-en-text`, `pc-plus-fr-text`, `pc-plus-de-text`, `pc-plus-jp-text` | `DAT/`, `BOF3.exe`, that disc | its tag (and, but for JP, `area4-walls` by default) |
 
 Measured: `pc-install` 742 of 742; `pc-plus-us-text` and `pc-plus-jp-text`
 (with a PSP disc and a names layer) 742 of 742 with their language layers
 (245 containers each); a preset missing a source, given an extra, or
-unknown, refused with the message. No preset turns an `opt/` layer on: the
+unknown, refused with the message. No preset turns a PSP `opt/` layer on: the
 plan's three are the PC and PSX sources; a "PC + PSP extras" preset is the
-owner's call.
+owner's call. `area4-walls` comes from the default above, not a preset.
 
 ## 8. Not done
 

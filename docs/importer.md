@@ -156,7 +156,8 @@ not a gap** (rendered JP / US / PC and measured, 2026-10-08):
 21 world-map place-name plates (`loc_build.py`'s `PLATE_DATA`), one painted
 area page, `DEMO`'s language page, and the two `AREA004` minecart rows
 (`region-diff.md` 4.1, the collision fix DIV-0080; since 2026-10-10 the
-`area4-walls` layer cut from a Western disc, not code). The PC kept
+`area4-walls` layer cut from a Western disc, not code, built and installed by
+default when one is given). The PC kept
 the Japanese bytes in each, so only JP (and for most of them PSP-JP) carry
 them. For step 3: from a Western disc, these come from that disc's `loc/`
 layer and from DIV-0080's layer, not from `base/`.

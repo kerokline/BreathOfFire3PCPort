@@ -348,34 +348,37 @@ section):
 
 - **Header and corner heights: identical.** The ground is the same shape.
 - **72 cell bytes, every one `0x00` to `0x10`** - open floor to a blocking
-  cell (high nibble 1):
-  - column x 28, z 9..30 and 35..65 (53 cells);
-  - column x 25, z 9..11 (3 cells);
-  - row z 71, x 7..22 (16 cells).
+  cell (high nibble 1), in three straight runs: 53 cells along the raised
+  strip's east edge, 3 at the north end of a column on its west side, and 16
+  along the corridor's bottom edge.
 - On JP those lines already have wall cells at their ends and in their
-  middle: x 28 at z 7, 8, 31, 34 and 66..68; x 25 at z 7, 8; and a full wall
-  row at z 68 over x 7..21, three rows above the new one. The new cells fill
-  the gaps between Capcom's own wall stubs. The one gap left open in column
-  28 is z 32..33, where z 32 is a `0xC0` cell (the link-cell code of
-  `rest_2d.md` L1): a doorway kept.
-- By the corner heights, columns x 26..27 are a raised strip two cells wide
-  (about 25 units at z 13 and z 29, against 0..3 either side; it rises with
-  the ground towards z 65). Column x 28 is its east edge, a half-height cell
-  (about 5 units) between the strip and the floor east of it. The area is
-  "Dauna Mine - Minecart" in the sibling's `names/areas.toml`. That the strip
-  is the track bed is a guess from the name.
+  middle: stubs at both ends of the two columns, and a full wall row three
+  rows above the bottom-edge run. The new cells fill the gaps between
+  Capcom's own wall stubs. The one gap left open in the east-edge column is
+  two cells, one of them a `0xC0` cell (the link-cell code of `rest_2d.md`
+  L1): a doorway kept.
+- By the corner heights, the area has a raised strip two cells wide (about 25
+  units, against 0..3 either side; it rises with the ground towards the
+  south). The east-edge column is a half-height cell (about 5 units) between
+  the strip and the floor east of it. The area is "Dauna Mine - Minecart" in
+  the sibling's `names/areas.toml`. That the strip is the track bed is a
+  guess from the name.
 - **Tile words: 494 changed.** 464 of them are +1, because one texture
-  record is inserted at index 524 and every later index shifts. 30 cells are
-  re-pointed to other textures: x 26 at z 10, 11 and 45..63, and x 52 at
-  z 59..67. One record is replaced (508) and one dropped (770). The visible
-  change is those 30 cells' texture, mostly along the strip's west edge.
+  record is inserted and every later index shifts. 30 cells are re-pointed
+  to other textures, in two short runs: one along the strip's west edge, one
+  further east. One record is replaced and one dropped. The visible change
+  is those 30 cells' texture, mostly along the strip's west edge.
+
+Positions are deliberately not given (2026-10-10): a list of where Capcom
+put the walls is Capcom's data in another form (section 10). The measurement
+is repeatable with `tools/region_read.py` against the discs.
 
 **In play, as far as the reading reaches.** On JP's data the party can step
 onto the 53-cell edge column and the gaps beside the bottom wall row. On the
 later data `AreaMap_CellBlocked` refuses those cells, which applies to the
 party and to every object asking `Field_ObjectBlockedAhead`
 (`field-blocked.md`). Whether JP's open edge lets the party climb onto the
-strip, or walk down off the row at z 71, also depends on `AreaMap_TooSteep`
+strip, or walk down off the bottom-edge run, also depends on `AreaMap_TooSteep`
 (slope above `0x40`), which was not computed for these cells. So "a walkway
 edge that could be walked on, now walled" is read; "a way out of bounds" is
 not proven.
@@ -400,9 +403,8 @@ callers place the party and the enemies when a fight starts:
 no one is placed there.
 
 **What changed.** 6 bytes, 8 nibbles. Each is one of section 8.1's new wall
-cells, set to 0: (28, 10) 6, (28, 11) 2, (28, 64) 1, and (14, 71) 2,
-(15, 71) 1, (18, 71) 2, (19, 71) 2, (20, 71) 1. The other 64 new wall cells
-were already 0.
+cells, set to 0: three on the east-edge column, five on the bottom-edge run.
+The other 64 new wall cells were already 0.
 
 **Why, by measurement.** Across all 200 JP area files, a cell whose byte
 blocks has nibble 0 in 980,813 of 981,024 cells (211 exceptions). The
@@ -521,22 +523,24 @@ are removed.
 Measured 2026-10-10 on the JP disc's `AREA004` section 8 against the US
 disc's, then over all 200 areas' area blocks (`0x80104000`) on the JP disc.
 The scripts read the discs and print counts and coordinates; nothing they
-read is in the repo.
+read is in the repo, and the coordinates are not given here either (section
+8.1's note).
 
 **The map's own data.** The corner heights (`+0x30`, four s8 per cell, in the
 order x0z0, x1z0, x0z1, x1z1) give each cell's four corners, so a step
 between two neighbouring cells is the difference of their corners on the
-shared edge. Along the strip's east edge, column x 28 is 16 units below the
-strip on the shared edge, a vertical step: a plausible "cliff" cue. The other
-two lines are not like that:
+shared edge. Along the strip's east edge, the walled column is 16 units below
+the strip on the shared edge, a vertical step: a plausible "cliff" cue. The
+other two lines are not like that:
 
-- x 25 at z 9 has **no** step to any open neighbour (its only one is to the
-  wall stub above it), z 10 a step of 7 at one corner, z 11 of 7 and 13. Yet
-  x 25 at z 12 and below, left open by every later disc, steps 13 and 25 to
-  the strip beside it.
-- Row z 71 sits 8 units below row z 70 along the whole run, a step; but a
-  step of 8 is common ground in this map (the table below), and z 71's
-  step is smaller than many left open.
+- Of the three cells on the west side's column, the first has **no** step to
+  any open neighbour (its only one is to the wall stub above it), the other
+  two a step of 7 at one corner, and of 7 and 13. Yet the same column's
+  cells south of them, left open by every later disc, step 13 and 25 to the
+  strip beside them.
+- The bottom-edge run sits 8 units below the row above it along its whole
+  length, a step; but a step of 8 is common ground in this map (the table
+  below), and that run's step is smaller than many left open.
 
 **Candidate rules, scored.** An open cell is "hit" by:
 
@@ -576,11 +580,16 @@ had started, not a property of the terrain.
   not taken.
 - **Where it comes from.** `tools/importer.py build --opt area4-walls` from
   the player's US, European, French or German PSX disc (the four carry both
-  chunks byte for byte); the `pc-plus-*-text` presets of those discs build it.
-  Not from a PSP disc: the PSP lacks the placement half. `install --opt
-  area4-walls` copies it to `DAT\area4-walls.AREA004.DAT`; the game walks it
-  when `BOF3X_OPT` (or the launcher ini's `opt=`) names `area4-walls`
-  (DIV-0086's loader prefix, [`opt-layers.md`](opt-layers.md)).
+  chunks byte for byte). Since 2026-10-10 it is **on by default**: any
+  `build` with one of those discs among its sources builds it, `install`
+  installs it whenever the cache holds it (to `DAT\area4-walls.AREA004.DAT`),
+  and the launcher names it in `BOF3X_OPT` whenever it is installed and the
+  ini's `opt=` is empty. `--no-opt area4-walls` leaves it out of a build or an
+  install (an install also removes a copy already in `DAT\`); the ini's
+  `opt=none`, or an `opt=` list without it, turns it off in play
+  ([`launcher-settings.md`](launcher-settings.md)). Not from a PSP disc: the
+  PSP lacks the placement half. The game walks it as DIV-0086's loader prefix
+  walks any layer ([`opt-layers.md`](opt-layers.md)).
 - **No Western disc, no walls.** With only the PC install or the JP disc, area
   4 is the shipped open map. That is the price of keeping Capcom's data out
   of our code.
@@ -597,7 +606,7 @@ later disc (2026-10-10, the layer built from the US disc):
 
 | against | cells changed on JP's map | placement nibbles changed | cell plane after | placement map after | section 8 outside the plane |
 |---|---|---|---|---|---|
-| `psx-us` | 72, every one `0x00` to `0x10`, the runs of 8.1 | 8, every one to 0, every one on a walled cell | identical | identical | JP's, untouched (the 920 bytes still different are the re-texture) |
+| `psx-us` | 72, every one `0x00` to `0x10`, the three runs of 8.1 | 8, every one to 0, every one on a walled cell | identical | identical | JP's, untouched (the 920 bytes still different are the re-texture) |
 | `psx-de`, `psx-fr`, `psx-eu-en` | the same | the same | identical | identical | the same |
 
 The layer built from the German disc is the same file as the one built from
@@ -617,8 +626,11 @@ exit 0, `inject: 10081 ours`; with `BOF3X_AREA4_WALLS=1`, the refusal.
   memory, four pages differing from the first load at tick 1,312 (the cell
   plane's `0x8D3000`, `0x8D4000`, the placement map's `0x8C3000`,
   `0x8C4000`) and nothing else, so the demo's scripted moves never meet the
-  walls. With the layer not named, the default, the references are unchanged.
-- **Live check (the owner's, not run).** With the layer installed and named:
+  walls. The references are recorded in a game directory without the layer
+  installed, so they are unchanged; where it is installed it now plays by
+  default, and an attract hash there differs at those four pages.
+- **Live check (the owner's, not run).** With the layer installed (on by
+  default since 2026-10-10):
   in Dauna Mine's minecart area, walk along the raised strip's east edge and
   along the bottom edge below the wall row. They should block. Without it
   they should be open, as on JP and the shipped PC. If the area has random

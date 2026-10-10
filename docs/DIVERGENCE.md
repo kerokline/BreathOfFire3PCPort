@@ -4384,11 +4384,14 @@ designed in rather than bolted on.
 - **ID:** DIV-0080
 - **Date:** 2026-10-06
 - **Rewritten:** 2026-10-10 (the walls moved from a coordinate table in our
-  code to an optional layer built from the player's own disc)
+  code to an optional layer built from the player's own disc); **changed**
+  the same day: on by default wherever the layer is installed (the owner's
+  word)
 - **Subsystem:** the area data as loaded: the `area4-walls` layer
   (`tools/importer.py`, `recipes/opt.toml`, [`opt-layers.md`](opt-layers.md)
   section 1), walked by DIV-0086's `BOF3X_OPT` prefix in `LoadDatFile`
-  (`src/game/dat_load.cpp`); the cell plane of the area block at
+  (`src/game/dat_load.cpp`), named by default by the launcher
+  (`src/launcher/config.h` `kOptDefault`); the cell plane of the area block at
   `AreaMap_Header` `0x8CB580` (PC tag `0xC8000`) and the battle placement
   nibble map at `0x8C3D80` (PC tag `0xC0800`)
 - **Tier:** Intent - the owner, 2026-10-06: "if it looks like a bug fix, it's
@@ -4405,22 +4408,31 @@ designed in rather than bolted on.
   and both PSP discs - walls those cells and the PSX discs close the 8
   placement cells; the PSP took the walls but not the placement half.
 - **New behaviour:** with the `area4-walls` layer installed and named in
-  `BOF3X_OPT` (or the launcher ini's `opt=`), each load of `AREA004.DAT`
+  `BOF3X_OPT` - which the launcher does by default, below - each load of `AREA004.DAT`
   walks `DAT\area4-walls.AREA004.DAT` after the file: two kind-0 chunks, the
   Western disc's **whole** cell-byte plane (7,920 bytes) and its **whole**
   placement map (5,000 bytes), each landing exactly on JP's. On JP's map that
   changes the 72 cells to the wall value and the 8 nibbles to 0 and nothing
-  else (verification). The layer is built by `tools/importer.py build --opt
-  area4-walls` from the player's US, European, French or German PSX disc -
-  the `pc-plus-us-text`, `-eu-en-`, `-fr-` and `-de-` presets build it - and
-  copied in by `install --opt area4-walls`; it is never shipped or committed.
-  `recipes/opt.toml` records the two chunks' tags, sizes and hashes and the
-  hashes of the composed chunks, and no cell's place or value. **No disc, no
-  walls:** a player with only the PC install, or only the JP disc, plays the
-  shipped open map. The code that wrote the walls from a table
-  (`src/game/area4_walls.cpp`, `BOF3X_AREA4_WALLS`) is gone; that variable
-  is now refused at start-up (`=0`, the old "shipped map", is accepted with
-  a log line, since the shipped map is now what it gets anyway). The later
+  else (verification). **On by default (2026-10-10):** `tools/importer.py
+  build` builds the layer whenever the player's US, European, French or
+  German PSX disc is among its sources (any preset or source order), and
+  `install` installs it whenever the cache holds it; the launcher names it in
+  `BOF3X_OPT` whenever `DAT\area4-walls.*.DAT` is there and the ini's `opt=`
+  is empty (the default; [`launcher-settings.md`](launcher-settings.md)). It
+  is never shipped or committed. `recipes/opt.toml` records the two chunks'
+  tags, sizes and hashes and the hashes of the composed chunks, and no cell's
+  place or value. **Turning it off:** `opt=none` in `bof3x.ini` (or an `opt=`
+  list that does not name it, or `BOF3X_OPT=none`) plays the shipped map
+  with the layer still installed; `importer.py install --no-opt area4-walls`
+  removes it from `DAT\`; `build --no-opt area4-walls` does not build it. An
+  `opt=` value the launcher cannot honour stops it with a message rather
+  than falling back to the default. **No disc, no walls:** a player with
+  only the PC install, the JP disc or a PSP disc builds no layer and plays
+  the shipped open map, by default and without a choice. The code that wrote
+  the walls from a table (`src/game/area4_walls.cpp`, `BOF3X_AREA4_WALLS`) is
+  gone; that variable is now refused at start-up (`=0`, the old "shipped
+  map", is accepted with a log line when the layer is not named, and refused
+  when it is, since it would get walls it asked to be without). The later
   discs' 30-cell re-texture of the strip is still **not** taken: the layer
   carries the cell plane, not the tile words or texture records, so the
   textures stay JP's.
@@ -4445,7 +4457,7 @@ designed in rather than bolted on.
   sections as `LoadDatFile` lays a kind-0 chunk and compares with each later
   disc: against US, German, French and European, the cell plane and the
   placement map identical; exactly 72 cells changed, every one `0x00` to
-  `0x10`, at the coordinates the old table had; 8 nibbles, every one to 0 and
+  `0x10`, the cells the old table had; 8 nibbles, every one to 0 and
   on a walled cell; the section outside the cell plane untouched (the 920
   bytes still different are the re-texture not taken). `importer.py check`:
   6 layers, 0 errors. Built (llvm-mingw); `BOF3X_SELFTEST_ONLY=1
@@ -4458,11 +4470,25 @@ designed in rather than bolted on.
   describes the layer's effect - the same bytes in memory: four pages
   differ (the cell plane's two, `0x8D3000`, `0x8D4000`; the placement map's
   two, `0x8C3000`, `0x8C4000`) from the first load at tick 1,312, and the
-  demo's moves never meet the walls. The default is now the old "off" run,
-  identical to the state-hash references.
-- **Reversible?** Leave `area4-walls` out of `BOF3X_OPT` / `opt=`; the layer
-  is a separate file (`DAT\area4-walls.AREA004.DAT`), and the shipped
-  `AREA004.DAT` is never changed. **From a Western disc alone** (the
+  demo's moves never meet the walls. The state-hash references are recorded
+  in a game directory without the layer installed, so they are unchanged;
+  in one with it installed, the default run is the old "on" run.
+  **The default (2026-10-10):** a scratch harness over the launcher's
+  `opt=` handling (fake `DAT\` with and without the layer file): empty `opt=`
+  gives `BOF3X_OPT=area4-walls` with it and nothing without; `opt=none`
+  nothing; an explicit list exactly itself; a set `BOF3X_OPT` untouched; bad
+  values (stray characters, `none` in a list, empty names, duplicates, more
+  than 8, too long) refused; an ini saved and reloaded keeps an empty
+  `opt=` empty. The real launcher with `BOF3X_SELFTEST_ONLY=1` on a
+  hard-linked scratch game directory: layer file present and no ini, the
+  DLL logs `optional layer 1, DAT\area4-walls.*.DAT`, exit 0; `opt=none`,
+  no layer; `BOF3X_AREA4_WALLS=0` with the layer named, exit 3. The
+  importer's default (`default_opt`, `install`, `--no-opt`) over a fake cache
+  and game directory. **Not run:** a real `build` with the default (its
+  layer is the one verified above).
+- **Reversible?** `opt=none` (or `BOF3X_OPT=none`); the layer is a separate
+  file (`DAT\area4-walls.AREA004.DAT`), and the shipped `AREA004.DAT` is
+  never changed. **From a Western disc alone** (the
   importer's cache, unified-data step 3,
   [`importer-transforms.md`](importer-transforms.md) section 5): `base/`
   holds that disc's own `AREA004` rows, walls and the 30-cell re-texture with
@@ -4783,7 +4809,9 @@ designed in rather than bolted on.
   `DAT\<layer>.*.DAT`, a text layer (a name ending in `-<tag>`) under another
   language than `BOF3X_LANG`'s; and in the walk, a path that would not fit
   its 0x40-byte buffer. The launcher's `opt=` key sets the variable with
-  the layers installed and of the language played (no dialog box yet).
+  the layers installed and of the language played (no dialog box yet); an
+  empty `opt=` gives the default layers installed (since 2026-10-10 DIV-0080's
+  `area4-walls`), `opt=none` none. `BOF3X_OPT=none` is none, as `original` is.
 - **Rationale:** the plan's divergence policy for data
   ([`unified-data-plan.md`](unified-data-plan.md) 7): a later build's
   content change is an optional layer from the player's own disc, off by
@@ -4810,8 +4838,9 @@ designed in rather than bolted on.
 - **Also in the PSX version?** No: the PSX discs have JP's palettes, tiles,
   maps and names (the Western discs their own names); these are the PSP
   releases' changes, laid over the PC's data.
-- **Reversible?** Unset `BOF3X_OPT` (or `BOF3X_OPT=original`), or empty the
-  ini's `opt=`; `BOF3X_ORIGINAL=LoadDatFile` runs Capcom's loader, which
+- **Reversible?** `BOF3X_OPT=none` (or `original`), or the ini's `opt=none`
+  (an empty `opt=` now plays the default layers installed, DIV-0080);
+  `BOF3X_ORIGINAL=LoadDatFile` runs Capcom's loader, which
   walks neither overlay.
 
 ### The cache's songs synthesised from the disc's sequence, the MP3 the fallback

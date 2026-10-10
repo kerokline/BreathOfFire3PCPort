@@ -257,6 +257,13 @@ int wmain(int argc, wchar_t** argv) {
         if (!why.empty()) Die(L"%hs\n\n%ls", why.c_str(), ini.c_str());
         if (!had_ini) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
         if (!bof3x::ConfigCheckEnvironmentLanguage(why)) Die(L"%hs", why.c_str());
+        // DIV-0086 / DIV-0080: a bad opt= is refused, not dropped - dropped, it
+        // would read as empty and play the default layers the player may have
+        // meant to turn off.
+        if (!bof3x::ConfigOptValid(cfg.opt, why))
+            Die(L"%ls says opt=%hs: %hs.\n\nopt= is empty (the default layers installed), none, or a "
+                L"comma-separated list of layer names (docs/launcher-settings.md).",
+                ini.c_str(), cfg.opt.c_str(), why.c_str());
     }
 
     if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {

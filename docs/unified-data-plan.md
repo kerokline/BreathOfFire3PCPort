@@ -68,7 +68,8 @@ cache/
   DIV-0080's walls were applied by coordinate at load, a table of Capcom's
   data in our code; no rule from the map's own data gives them
   (`region-diff.md` 10.1), so they are now the `area4-walls` layer from a
-  Western disc.
+  Western disc - a fix, so on by default wherever it is built (the owner,
+  2026-10-10).
 
 ## 3. The importer's pipeline
 

@@ -61,9 +61,14 @@ def cmd_area4(J, L):
 
     def h(buf, cx, cz):
         return sum(struct.unpack_from("<4b", buf, 0x30 + 4 * (cz * w + cx))) / 4
-    print("   mean corner height across x 24..31 at z 13, 29, 49:")
-    for cz in (13, 29, 49):
-        print("      z %d: %s" % (cz, [round(h(x, cx, cz)) for cx in range(24, 32)]))
+    # The profile across the longest changed column, at three of its rows: the
+    # place is read off the discs, never written here (region-diff.md 8.1).
+    main = max(cols, key=lambda c: len(cols[c]))
+    zs = sorted(cols[main])
+    xs = range(max(0, main - 4), min(w, main + 4))
+    print("   mean corner height across x %d..%d at three of x %d's changed rows:" % (xs[0], xs[-1], main))
+    for cz in (zs[len(zs) // 8], zs[len(zs) // 2], zs[7 * len(zs) // 8]):
+        print("      z %d: %s" % (cz, [round(h(x, cx, cz)) for cx in xs]))
     t = L_["tiles"]
     dt = collections.Counter()
     moved = []
