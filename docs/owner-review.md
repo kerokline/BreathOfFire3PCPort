@@ -37,6 +37,17 @@ where the reading behind it is. Nothing here is a divergence until it is in
   game's data and ships nowhere, rule 1; a re-encode the player makes would
   be their own). Undecided.
 
+- **DIV-0081's second cut (2026-10-10, `catchup/music-tooling`,
+  [`music-open-ends.md`](music-open-ends.md) 3):** four shipped rows looped
+  at a period the sequence does not have - `064` and `076` dropped the last
+  of their 16 bars each pass, `131` 2.9 s, `070` 20 ms. The table is now 39
+  rows: listen first to `064` or `076` (should now play its whole body before
+  the join) and one new row (`037`, `084`, `109`, `130`) with
+  `BOF3X_MUSIC_LOOPS` on against `=0`; `131` and `070` rewind as the
+  original now. DIV-0081's near-full call (a slip a pass, or the rewind) has numbers now
+  (`music-open-ends.md` 5: the rewind is within -41..+7 ms of the disc's
+  period on all 23; a slip loop scores worse on most).
+
 ## To review in play
 
 1. **Music coming back after a pause** (`Sound_ResumeAll`,
@@ -398,6 +409,12 @@ where the reading behind it is. Nothing here is a divergence until it is in
   spotted.
 
 ## Decided and built, not yet seen live
+
+- **The launcher's Music, Cache folder and PSP extras boxes** (2026-10-10,
+  [`launcher-settings.md`](launcher-settings.md) 3.1; the owner's call 3 of
+  [`opt-layers.md`](opt-layers.md)): driven by a script, never by hand - a
+  look at the dialog's layout at the owner's DPI, Browse... for a cache
+  folder, and the PSP boxes with the PSP layers installed.
 
 - **`Cfg_Load`'s key-line overrun** ([`shell.md`](shell.md) section 5): the
   owner (2026-10-06) wanted overrun protection; **built the same day as
