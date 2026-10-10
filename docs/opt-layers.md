@@ -214,6 +214,9 @@ ran there too; DIV-0080's walls are now the `area4-walls` layer.)
   `-<tag>`, the tag one of the five overlay tags (`src/game/language_tags.h`,
   the launcher's list too since 2026-10-10) - whose language is not
   `BOF3X_LANG`'s primary subtag (no language: refused too). `BOF3X_OPT=original` is none, as `BOF3X_LANG`'s.
+  A `BOF3X_LANG` that is a retired bare code (`en`, `fr`, `de`, `ja`) stops
+  the game before any of this, and the launcher before it starts (DIV-0005,
+  2026-10-10): a text layer is only ever matched against a tag.
 - **Logs** `DIV-0086: optional layer N, DAT\<layer>.*.DAT` per layer at
   injection; `NameTables_Apply` logs `DIV-0086: n <table> name(s) replaced
   from record k` per names chunk.

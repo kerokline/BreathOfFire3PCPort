@@ -249,7 +249,15 @@ int wmain(int argc, wchar_t** argv) {
     // and that one is the original program's own documented input, not a patch.
     const std::wstring ini = OwnDirectory() + L"\\bof3x.ini";
     bof3x::Config cfg;
-    if (!bof3x::ConfigLoad(ini, cfg)) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
+    {
+        // DIV-0005: a retired bare language code (en, fr, de, ja) in the ini
+        // or the environment stops here, before the dialog, naming its tag.
+        std::string why;
+        const bool had_ini = bof3x::ConfigLoad(ini, cfg, why);
+        if (!why.empty()) Die(L"%hs\n\n%ls", why.c_str(), ini.c_str());
+        if (!had_ini) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
+        if (!bof3x::ConfigCheckEnvironmentLanguage(why)) Die(L"%hs", why.c_str());
+    }
 
     if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {
         // The pad, for the dialogs' navigation and the Controls capture; stopped

@@ -102,6 +102,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dat        # noqa: E402
 import font_pc    # noqa: E402
+import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 import psx_disc   # noqa: E402
 
 FONT_EMI = "BIN/ETC/ENDKANJI.EMI"
@@ -1664,15 +1665,19 @@ def pause_width(line, advances, space):
 
 
 def primary(tag):
-    """A language tag's primary subtag: `en` of `en-US`, `ja` of `ja-JP` or `ja`."""
+    """A language tag's primary subtag: `en` of `en-US`, `ja` of `ja-JP`."""
     return tag.split("-", 1)[0].lower()
 
 
 def language_tag(tag):
-    """--lang: a BCP 47 language tag (`en-US`, `en-150`, `fr-FR`; a bare `en`
-    is one too). It names the overlays, `<tag>.<NAME>.DAT`; what the code does
-    by language goes by its primary subtag. fixtures.toml's `tag` per build is
-    the one each disc's text carries (docs/importer.md section 5)."""
+    """--lang: a BCP 47 language tag (`en-US`, `en-150`, `fr-FR`). It names
+    the overlays, `<tag>.<NAME>.DAT`; what the code does by language goes by
+    its primary subtag. fixtures.toml's `tag` per build is the one each disc's
+    text carries (docs/importer.md section 5). The bare en, fr, de, ja of
+    before 2026-10-08 are retired and refused (DIV-0005)."""
+    msg = language_tags.retired(tag, "--lang")
+    if msg:
+        raise argparse.ArgumentTypeError(msg)
     if not re.fullmatch(r"[a-z]{2,3}(-[A-Za-z]{4})?(-(?:[A-Z]{2}|[0-9]{3}))?", tag):
         raise argparse.ArgumentTypeError("%r is not a language tag of the form ll[-Ssss][-RR|-999]" % tag)
     return tag
@@ -1873,11 +1878,14 @@ def build_title(args, disc):
         # but the US sheet's (the French and German sheets lack the letters
         # for CONFIG anyway): take it from the English page already built
         # from the US disc, an English overlay's START.DAT beside the shipped
-        # file (`en.`, `en-US.`, `en-150.`: the US and EU-English pages are
+        # file (`en-US.`, `en-150.`: the US and EU-English pages are
         # byte-identical, 2026-10-08) - the owner's choice, 2026-09-29: each
-        # disc's own two rows, our CONFIG.
+        # disc's own two rows, our CONFIG. Only the engine's tags: an `en.`
+        # page of before 2026-10-08 is a retired code's (DIV-0005), noted.
         d = dat_dir(args.game)
-        en_names = sorted(f for f in os.listdir(d) if f.endswith(".START.DAT") and primary(f[:-len(".START.DAT")]) == "en")
+        language_tags.note_retired_overlays(d)
+        en_names = sorted(f for f in os.listdir(d) if f.endswith(".START.DAT")
+                          and f[:-len(".START.DAT")] in language_tags.TAGS and primary(f[:-len(".START.DAT")]) == "en")
         if not en_names:
             print("title menu: this disc's sheet is not the one the letters were measured on, and no "
                   "English START.DAT holds a CONFIG row to borrow (build the English overlay first); left as shipped")

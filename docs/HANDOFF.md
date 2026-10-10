@@ -40,7 +40,8 @@ or seen in play** - the testing catch-up below is next. The regression check is 
       --out <cache>`, `importer.py install --cache <cache> --game bof3 --opt psp-art`, then `'*'` with
       `BOF3X_OPT=psp-art` and a look at Stallion when a route reaches fight 24 (`owner-review.md`, step 4). The
       install's overlays were rebuilt under the tags on 2026-10-08; delete the old `en.*` / `fr.*` / `de.*` /
-      `ja.*`. An old ini `language=en` now reads as `en-US` (DIV-0005). Then the state-hash A/B of the tip against
+      `ja.*` (nothing reads them; `importer.py install` notes any left). An old ini `language=en` stops the launcher
+      since 2026-10-10 - the bare codes are retired, not mapped (DIV-0005): write `language=en-US`. Then the state-hash A/B of the tip against
       the 2026-10-05 references, `BOF3X_OPT` unset.
    2. **DIV-0087, the listen:** a cache from any PSX disc (the build above writes `base/bgm/`), `BOF3X_CACHE=<cache>`
       (up to 226 characters; the whole cache is checked at start-up and a damaged one is fatal there,
@@ -757,7 +758,8 @@ Local only, gitignored, worth keeping:
   chain's result, and give one chain the machine: check `tasklist` for a stray `bash` or launcher before starting
   another.
 - **`BOF3X_SHADOW='*'` in the main checkout's `build/` fails under the owner's settings** (2026-10-06): `build/bof3x.ini`
-  is the owner's (`language=en`), the launcher exports it as `BOF3X_LANG`, and under English the `ConfigText` patch
+  is the owner's (`language=en` then; a bare code stops the launcher since 2026-10-10, DIV-0005 - the owner's line
+  wants `en-US`), the launcher exports it as `BOF3X_LANG`, and under English the `ConfigText` patch
   re-aims the call at `Config_DrawRowLabel + 0x9F` - which `field_c1`'s clone check reads (`FATAL: ... the site is
   re-aimed already, cannot clone`, exit 3, 978 of the 1,056 `MISMATCHES` lines reached). An environment variable wins
   over the ini: run every self-test with `BOF3X_LANG=original` (the agents' worktrees never saw it - their inis are
@@ -766,6 +768,10 @@ Local only, gitignored, worth keeping:
   any `'*'` meant to match the record, want it unset; the launcher exports the ini's `opt=` as the language's
   `language=` is - a copy with no ini, as for `cheat.exp`. And **a recipe recorded under `BOF3X_LANG=en` plays under
   `en-US`** since the tags (the 29 headers said `en`; they say `en-US` since 2026-10-10, comment lines only; `input-script.md`).
+- **The bare language codes are retired** (2026-10-10, DIV-0005): `BOF3X_LANG=en` (`fr`, `de`, `ja`), an ini
+  `language=en` or `--lang en` to any tool stops it with the tag to use - the launcher by a message box (which a
+  scripted run would wait on; the runners check first), the DLL by a Fatal. Old commands in the round docs that say
+  `--lang en` want `--lang en-US`.
 - **`git am` of a cloud session's patches** (2026-10-08): it refuses a file that already exists untracked (a
   copy downloaded earlier) and a tracked file with uncommitted changes ("does not match index"), and a failed run
   leaves `.git/rebase-apply`, which blocks the next ("previous rebase directory still exists"). `git am --abort`,

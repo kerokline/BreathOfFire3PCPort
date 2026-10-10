@@ -365,7 +365,22 @@ designed in rather than bolted on.
   note on the launcher's stderr, and the next save writes the tag
   (`ConfigLegacyLanguage`, `src/launcher/config.cpp`); until then such an
   ini fell silently to the original. Only the ini is mapped: `BOF3X_LANG`
-  in the environment is taken as given. An overlay
+  in the environment is taken as given. **Amended again 2026-10-10 (the
+  owner's word: sunset, not map):** the bare codes are retired and refused
+  wherever a language is an input. `language=en` in `bof3x.ini` or
+  `BOF3X_LANG=en` in the environment stops the launcher before its dialog
+  (message box and stderr, exit 1: `bof3x.ini's language=en is retired;
+  use en-US (en-150 for the European English) (DIV-0005)`), and the DLL
+  stops at injection on a `BOF3X_LANG` that reaches it (Fatal, `DIV-0005:
+  BOF3X_LANG=en is retired; use en-US (en-150 for the European English)`);
+  `fr`, `de`, `ja` name `fr-FR`, `de-DE`, `ja-JP`. One table,
+  `RetiredLanguageReplacement` in `src/game/language_tags.h`, serves both;
+  `tools/language_tags.py` mirrors it, and `input_run.py`, `attract_run.py`,
+  `importer.py` and `loc_build.py` refuse the codes as `--lang`, and the
+  runners a launcher ini or environment saying one, before they launch.
+  Overlays named `en.*.DAT` (and `fr.`, `de.`, `ja.`) are read by nothing;
+  the importer's `install` and `verify` and `loc_build.py`'s title menu
+  only note them, to delete. `ConfigLegacyLanguage` is gone. An overlay
   holds only the chunks that differ, and they land on top: a kind-0 chunk over
   the same arena bytes, a kind-3 chunk through `Font_SetGlyphData`, which frees
   the shipped table - the branch no shipped data had ever run. Without the

@@ -205,11 +205,18 @@ An entry is offered only when its `DAT\<tag>.*` exists; otherwise the dialog
 says to build the overlays with `tools/loc_build.py` rather than offering an
 option that cannot work. An ini carried over from before 2026-10-08 says
 `language=en`. Until 2026-10-10 no entry had that tag and it read, silently,
-as the original until the dialog was used again; since then the launcher
-reads the four bare codes as their tags - `en` as `en-US`, the default
-English, `fr` `fr-FR`, `de` `de-DE`, `ja` `ja-JP` - says so on stderr, and
-the next save writes the tag (DIV-0005's amendment). An ini is the player's
-file, and an upgrade that quietly drops its choice is the worse surprise.
+as the original until the dialog was used again; for part of 2026-10-10 the
+launcher mapped the four bare codes to their tags. Since the owner's call
+the same day there is **no mapping again, and the codes are retired with an
+error**: an ini saying `language=en` (`fr`, `de`, `ja`), or an environment
+saying `BOF3X_LANG=en`, stops the launcher before the dialog with a message
+box, the same line on stderr and exit 1 - `bof3x.ini's language=en is
+retired; use en-US (en-150 for the European English) (DIV-0005)` - and a
+`BOF3X_LANG=en` that reaches the DLL any other way is a Fatal at injection.
+Edit the line to the tag (`en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`) and
+delete any `DAT\en.*.DAT` (`fr.`, `de.`, `ja.`) overlays: nothing reads them.
+Silently dropping the player's choice was the worse surprise, and guessing
+it (which English?) the next; saying so once, loudly, is neither.
 
 ## 5. What is not offered, and why
 

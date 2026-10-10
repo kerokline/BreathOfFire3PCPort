@@ -16,6 +16,24 @@ namespace bof3x {
 // kLanguages lists these, in this order, with the dialog's labels.
 inline constexpr const char* kLanguageTags[] = {"en-US", "en-150", "fr-FR", "de-DE", "ja-JP"};
 
+// DIV-0005: the bare codes BOF3X_LANG and bof3x.ini's language= took from
+// 2026-09-27 to 2026-10-08 (en, fr, de, ja) are retired, not mapped (the
+// owner's word, 2026-10-10): an input saying one stops the launcher and the
+// DLL with this text, the tag to write instead. Null for any other value.
+// Only for codes as inputs - a primary subtag compared for logic
+// (SamePrimaryLanguage, Lang_FullWidth) is not one.
+inline const char* RetiredLanguageReplacement(const char* code) {
+    static constexpr struct { const char* bare; const char* use; } kRetired[] = {
+        {"en", "en-US (en-150 for the European English)"},
+        {"fr", "fr-FR"},
+        {"de", "de-DE"},
+        {"ja", "ja-JP"},
+    };
+    for (const auto& r : kRetired)
+        if (std::strcmp(code, r.bare) == 0) return r.use;
+    return nullptr;
+}
+
 // The primary subtag: what a text layer has to share with the language played
 // (a layer's names are glyph codes of that language's font, DIV-0008), and
 // what Lang_FullWidth reads. "en" for both English tags.

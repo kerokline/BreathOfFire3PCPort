@@ -74,7 +74,8 @@ std::string Trim(const std::string& s) {
 
 }  // namespace
 
-bool ConfigLoad(const std::wstring& path, Config& cfg) {
+bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
+    error.clear();
     std::string text;
     if (!ReadWhole(path, text)) return false;
 
@@ -93,10 +94,9 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         if (key == "language") {
             if (ConfigLanguageKnown(value)) {
                 cfg.language = value;
-            } else if (const char* tag = ConfigLegacyLanguage(value)) {
-                std::fprintf(stderr, "bof3x-launcher: bof3x.ini's language=%s is a code from before 2026-10-08; "
-                             "reading it as %s (DIV-0005)\n", value.c_str(), tag);
-                cfg.language = tag;
+            } else if (const char* use = RetiredLanguageReplacement(value.c_str())) {
+                // DIV-0005: retired, not mapped; the launcher stops on it.
+                error = "bof3x.ini's language=" + value + " is retired; use " + use + " (DIV-0005)";
             }
         } else if (key == "opt") {
             if (value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-,") ==
@@ -462,15 +462,15 @@ bool ConfigLanguageKnown(const std::string& code) {
     return false;
 }
 
-const char* ConfigLegacyLanguage(const std::string& code) {
-    // The bare codes of 2026-09-27..2026-10-08; en is en-US, the default
-    // English (docs/HANDOFF.md, the owner's word of 2026-10-08).
-    static constexpr struct { const char* bare; const char* tag; } kLegacy[] = {
-        {"en", "en-US"}, {"fr", "fr-FR"}, {"de", "de-DE"}, {"ja", "ja-JP"},
-    };
-    for (const auto& l : kLegacy)
-        if (code == l.bare) return l.tag;
-    return nullptr;
+bool ConfigCheckEnvironmentLanguage(std::string& error) {
+    char lang[16];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    if (n == 0 || n >= sizeof lang) return true;
+    if (const char* use = RetiredLanguageReplacement(lang)) {
+        error = std::string("BOF3X_LANG=") + lang + " is retired; use " + use + " (DIV-0005)";
+        return false;
+    }
+    return true;
 }
 
 }  // namespace bof3x
