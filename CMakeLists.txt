@@ -70,6 +70,7 @@ FetchContent_MakeAvailable(SDL3)
 add_library(bof3x SHARED
   src/hook/dllmain.cpp
   src/hook/detour.cpp
+  src/hook/exe_image.cpp
   src/hook/calltrace.cpp
   src/hook/input_script.cpp
   src/hook/statehash.cpp

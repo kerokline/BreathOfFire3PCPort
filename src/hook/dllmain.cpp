@@ -13,6 +13,7 @@
 #include "hook/calltrace.h"
 #include "hook/crash.h"
 #include "hook/detour.h"
+#include "hook/exe_image.h"
 #include "hook/draw_order.h"
 #include "hook/inject_all.h"
 #include "hook/input_script.h"
@@ -24,6 +25,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::LogOpen(module);
         bof3::Log("bof3x attached to process %lu", GetCurrentProcessId());
         bof3::VerifyImage();
+        bof3::ExeImage_Check();   // BOF3X_EXEIMAGE: before anything of ours writes .data
         bof3::Crash_Start(module);
         if (GetEnvironmentVariableA("BOF3X_INPUT", nullptr, 0) > 0 ||
             GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) {
