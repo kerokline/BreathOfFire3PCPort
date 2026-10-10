@@ -257,6 +257,21 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Decisions the measurements raised
 
+- **34 French and 11 German messages the PC build leaves Chinese** (2026-10-10,
+  [`loc-build-disc-only.md`](loc-build-disc-only.md), the disc-only build's
+  open question 1): where a disc's slot table is shorter than 256 entries,
+  `loc_build.py`'s PC path measures a slot's offset against the PC's table
+  size, so the disc's first messages look out of range and the Chinese stays.
+  The disc-only path reads them right. Fixing the PC path changes today's
+  fr-FR / de-DE output (a ledger entry, the layers rebuilt); the owner says
+  whether, and whether to look at one of them first (the doc names the areas).
+- **What the engine holds as layout for a disc-only build** (2026-10-10,
+  [`exe-import-engine.md`](exe-import-engine.md) section 5, extending step 8's
+  call 4): the 9,142 code pointers, the 117 pooled zero objects past the last
+  named table, and the 147 `.bss` / 63 `.rdata` pointer words can come from no
+  disc. Hold them in the engine (as `exe-pointers.tsv` already holds addresses,
+  never bytes), or stop at "the PC install only" for them? Not blocking: the
+  PC-sourced build is byte-identical either way.
 - **Decided 2026-10-10: minimp3 replaces Capcom's MP3 decoder** ("I agree
   with using minimp3 unless there is a known decoding bug that has been
   resolved" - none: [`mp3-decoder-choice.md`](mp3-decoder-choice.md), 42 of
