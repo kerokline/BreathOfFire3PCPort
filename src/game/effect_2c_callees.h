@@ -7,6 +7,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace effect_2c::at {
 
@@ -27,11 +28,11 @@ constexpr std::uint32_t kFrameY = 0x6544AA;          //   drawn), w, h (the rect
 constexpr std::uint32_t kFrameW = 0x6544AC;          //   from 0x340, 0x100)
 constexpr std::uint32_t kFrameH = 0x6544AE;
 constexpr std::uint32_t kSparkColours = 0x6544EC;    // EffectKind44_SparkColours: eight dwords
-constexpr std::uint32_t kOne = 0x5C41B8;           // float constants: 1.0,
-constexpr std::uint32_t kSixteen = 0x5C41D0;       //   16.0,
-constexpr std::uint32_t kHalf = 0x5C41D8;          //   0.5,
-constexpr std::uint32_t kZero = 0x5C41DC;          //   0.0,
-constexpr std::uint32_t kSixteenth = 0x5C41E0;     //   0.0625
+constexpr rdata::Const kOne{0x5C41B8};           // float constants: 1.0,
+constexpr rdata::Const kSixteen{0x5C41D0};       //   16.0,
+constexpr rdata::Const kHalf{0x5C41D8};          //   0.5,
+constexpr rdata::Const kZero{0x5C41DC};          //   0.0,
+constexpr rdata::Const kSixteenth{0x5C41E0};     //   0.0625
 
 // Cells the kinds keep outside their records.
 constexpr std::uint32_t kShardCursor = 0x67610C;    // EffectKind40_ShardCursor: kind 0x40's shard being stepped

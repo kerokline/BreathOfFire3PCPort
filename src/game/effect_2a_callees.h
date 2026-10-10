@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace effect_2a::at {
 
@@ -33,8 +34,8 @@ constexpr std::uint32_t kPushRows2A = 0x654344;     // kind 0x2A's rows: two byt
                                                     // Member_SetState2_8 is handed
 constexpr std::uint32_t kSparkOffsetX = 0x65436C;   // kind 0x2C's eight x offsets (dwords) round its centre
 constexpr std::uint32_t kSparkOffsetZ = 0x65438C;   // and the eight z offsets
-constexpr std::uint32_t kDropWidth = 0x5C41C0;      // a float: the kind-0x2D drop quad's width
-constexpr std::uint32_t kScreenScale = 0x5C41D8;    // a float: kind 0x2D's start scales its screen point by it
+constexpr rdata::Const kDropWidth{0x5C41C0};      // a float: the kind-0x2D drop quad's width
+constexpr rdata::Const kScreenScale{0x5C41D8};    // a float: kind 0x2D's start scales its screen point by it
 constexpr std::uint32_t kSegments = 0x675FE0;       // kind 0x29's five segments of 0x20: two points (x, z, height) at
                                                     // +0 and +0x10, the dwords +0xC / +0x1C never written
 constexpr std::uint32_t kSegmentStride = 0x20;

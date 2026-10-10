@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
 // every constant here whose target has a name in symbols.toml reads
 // bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
@@ -26,7 +27,7 @@ constexpr std::uint32_t kEntry = 0x14;
 constexpr std::uint32_t kEntries = 0x80;
 constexpr std::uint32_t kClutRows = 0x6C2A40;     // Gfx_ClutRows: u32 generation, u32 pointer, per row
 constexpr std::uint32_t kRenderFlags = 0x6C3A4C;  // Gfx_RenderFlags: bit 0 the software surfaces
-constexpr std::uint32_t kInv32 = 0x5C4618;        // a double, 1/32 - the glyph texture's 32 texels
+constexpr rdata::Const kInv32{0x5C4618};        // a double, 1/32 - the glyph texture's 32 texels
 
 struct Callees {
     void (__cdecl* prim_color)(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode,

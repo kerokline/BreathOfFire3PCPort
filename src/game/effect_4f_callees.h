@@ -3,6 +3,8 @@
 #pragma once
 
 #include <cstdint>
+
+#include "game/rdata_consts.h"
 #include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_4f::at {
@@ -23,7 +25,7 @@ constexpr std::uint32_t kSources = 0x92D780;       // 8 sources of 0x14, after t
 constexpr unsigned kSourceCount = 8;
 constexpr std::uint32_t kSourceStride = 0x14;
 constexpr std::uint32_t kSourceCells = 0x6552AC;   // EffectKindAB_SourceCells: 8 pairs of s8, a source's cell (x, z)
-constexpr std::uint32_t kOne = 0x5C41B8;           // float 1.0 (effect_3d_callees.h kOne; effect_3a's kHalf)
+constexpr rdata::Const kOne{0x5C41B8};           // float 1.0 (effect_3d_callees.h kOne; effect_3a's kHalf)
 constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio + 0x34: the leader's x, z, height (three dwords)
 
 // --- kind 0xB0: sixteen bars of 6 after kind 0xAB's sources --------------------

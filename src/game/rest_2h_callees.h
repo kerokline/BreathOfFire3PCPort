@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace rest_2h {
 namespace at {
 
@@ -103,7 +105,7 @@ constexpr std::uint32_t kFrameSite = 0x59AA98;
 constexpr std::uint32_t kTitleSite = 0x59DEFA;
 
 // --- the joystick enumeration (DInput_EnumJoystick) --------------------------------------
-constexpr std::uint32_t kJoystickIid = 0x5C4718;   // the interface QueryInterface asks for
+constexpr rdata::Const kJoystickIid{0x5C4718};   // the interface QueryInterface asks for
 constexpr std::uint32_t kProductName = 0x66C7B0;   // the product name compared, case-blind
 // The C runtime's _stricmp (catalogue part 0, nobody's): (a, b) -> 0 when equal.
 constexpr std::uint32_t kStricmp = 0x5C2B40;

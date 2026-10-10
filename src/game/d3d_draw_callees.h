@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
 // every constant here whose target has a name in symbols.toml reads
 // bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
@@ -34,8 +35,8 @@ constexpr U kCells = 0x6BEA18;        // SpriteCell_Table: 8-byte records
 constexpr U kCellCache = 0x7CAE38;    // D3d_CellTexCache: 128 entries of 0x28
 constexpr U kCellEntry = 0x28;
 constexpr U kCellEntries = 0x80;
-constexpr U kRhwNumerator = 0x5C4610; // float 0.1: rhw = 0.1 / z
-constexpr U kHalf = 0x5C41D8;         // float 0.5: the cell sprite's texel inset
+constexpr rdata::Const kRhwNumerator{0x5C4610}; // float 0.1: rhw = 0.1 / z
+constexpr rdata::Const kHalf{0x5C41D8};         // float 0.5: the cell sprite's texel inset
 
 struct Callees {
     void (__cdecl* prim_color)(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode,

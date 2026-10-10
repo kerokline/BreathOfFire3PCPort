@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace rest_3f::at {
 
@@ -17,8 +18,8 @@ constexpr std::uint32_t kStoreImage = bof3::addr::Gfx_StoreImage; // ours since 
                                                     // rect copied out (renderer)
 
 // --- read-only floats of .rdata -----------------------------------------------------
-constexpr std::uint32_t kTrailHalfX = 0x5C41B8;     // EffectKind9C_DrawTrail's half-width across x (float)
-constexpr std::uint32_t kTrailHalfY = 0x5C41C0;     // ... and across y (float)
+constexpr rdata::Const kTrailHalfX{0x5C41B8};     // EffectKind9C_DrawTrail's half-width across x (float)
+constexpr rdata::Const kTrailHalfY{0x5C41C0};     // ... and across y (float)
 
 // --- cells -------------------------------------------------------------------------------
 constexpr std::uint32_t kCounter = 0x903848;        // the chapter's count (a byte compared)

@@ -11,6 +11,8 @@
 #include <cstdint>
 #include <cstring>
 
+#include "game/rdata_consts.h"
+
 namespace sound {
 
 // --- Addresses without a symbol --------------------------------------------
@@ -23,12 +25,12 @@ constexpr std::uint32_t kImportMsgWait = 0x5C4164;       // USER32 MsgWaitForMul
 // frame at 0x4FCF0F (known-defects D5, DIV-0022). Read by DIV-0028.
 constexpr std::uint32_t kFrameDeadline = 0x6BC628;
 // IID_IDirectSoundNotify {B0210783-89CD-11D0-AF08-00A0C925CD16}, 16 bytes.
-constexpr std::uint32_t kIidNotify = 0x5C45B8;
+constexpr rdata::Const kIidNotify{0x5C45B8};
 // The floats the music volume is built from: 1 / 127 (0x3C010204), 10000.0
 // (0x461C4000), and the full volume 127.0 (0x42FE0000).
-constexpr std::uint32_t kInverse127At = 0x5C464C;
-constexpr std::uint32_t k10000At = 0x5C4648;
-constexpr std::uint32_t k127At = 0x5C427C;
+constexpr rdata::Const kInverse127At{0x5C464C};
+constexpr rdata::Const k10000At{0x5C4648};
+constexpr rdata::Const k127At{0x5C427C};
 // The format strings: BGM\%03d.DAT (loops), BGM\%03dN.DAT (plays once), and
 // the decoder's memory-stream name %X@%X (size, address).
 constexpr std::uint32_t kLoopingName = 0x666FB8;

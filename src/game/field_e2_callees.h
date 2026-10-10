@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace field_e2::at {
 
@@ -69,8 +70,8 @@ constexpr std::uint32_t kElevation = 0x929F1C;       // MapView_Elevation (u16)
 constexpr std::uint32_t kGameStep = 0x66C7EA;        // Game_Step (u16)
 constexpr std::uint32_t kVertexScratch = 0x9037A0;   // Prim_VertexScratch: three SVECTORs
 constexpr std::uint32_t kCameraMatrix = 0x905E40;    // Camera_Matrix
-constexpr std::uint32_t kQuadLift = 0x5C4254;        // float: the marker quad's height
-constexpr std::uint32_t kQuadWidth = 0x5C41F0;       // float: its width
+constexpr rdata::Const kQuadLift{0x5C4254};        // float: the marker quad's height
+constexpr rdata::Const kQuadWidth{0x5C41F0};       // float: its width
 
 // --- the party-set error screen -------------------------------------------------------
 constexpr std::uint32_t kErrorTitle = 0x660C90;      // the title line it prints

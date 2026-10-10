@@ -8,6 +8,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace rest_4f::at {
 
@@ -78,8 +79,8 @@ constexpr unsigned kObjectCount = 30;                 // Sprite_Objects: kind 8'
 constexpr std::uint32_t kExtra0 = 0x802000;           // Sprite_ObjectsExtra[0]: kind 0xB's point and angles
 constexpr std::uint32_t kKind0BOffset = 0x653AAC;     // two s8: kind 0xB's start x, y offsets from the extra record's word +0x2E / +0x30
 constexpr std::uint32_t kKind0BRise = 0x653AB0;       // s8 by +9 >> 2: kind 0xB's rise per frame
-constexpr std::uint32_t kKind0BStepX = 0x5C41C8;      // 4.0f
-constexpr std::uint32_t kKind0BStepY = 0x5C41C0;      // 2.0f
+constexpr rdata::Const kKind0BStepX{0x5C41C8};      // 4.0f
+constexpr rdata::Const kKind0BStepY{0x5C41C0};      // 2.0f
 // Kind 2: ObjTrio record 0 (0x802D40): its +2 (0x802D42), +0x27 the palette,
 // +0x25.., +0x2A, +0x49.. the sprite fields copied; the word 0x905E62 compared
 // with 0x38; the CLUT shadow 0x80F580 (64 bytes a palette), palette 0x7B

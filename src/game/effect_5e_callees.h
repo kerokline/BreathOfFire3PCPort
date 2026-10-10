@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace effect_5e::at {
 
 // --- cells ------------------------------------------------------------------------
@@ -20,7 +22,7 @@ constexpr std::uint32_t kLeaderShade = 0x802D9D;    // ObjTrio record 0's +0x5D.
 constexpr std::uint32_t kClutRow4 = 0x80BD80;       // Gfx_ClutStripSource + 0x800: CLUT row 4 as loaded (0x100 words)
 constexpr std::uint32_t kClutRow4Live = 0x80FD80;   // Gfx_ClutStrip + 0x800: the row the game uploads
 constexpr unsigned kClutRowWords = 0x100;
-constexpr std::uint32_t kShadeConst = 0x5C41B8;     // a float the trails add to a projected x and y (read in place)
+constexpr rdata::Const kShadeConst{0x5C41B8};     // a float the trails add to a projected x and y (read in place)
 
 // --- the counter's cues -------------------------------------------------------------
 constexpr unsigned kSub24Cue = 5;                   // sub-kind 0x24 starts at it

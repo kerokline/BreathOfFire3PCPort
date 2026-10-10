@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace effect_4b::at {
 
 // --- cells ------------------------------------------------------------------------
@@ -53,10 +55,10 @@ constexpr unsigned kKind8ACellCount = 6;
 constexpr std::uint32_t kKind8ALines = 0x654F10;    // kind 0x8A: three pairs of s32, the z of a line's two ends
 constexpr unsigned kKind8ALineCount = 3;
 constexpr std::uint32_t kKind8CCounts = 0x654F28;   // kind 0x8C: sixteen bytes, the count-downs' start, by Rand & 0xF
-constexpr std::uint32_t kQuadH = 0x5C41EC;          // float constants (.rdata) kind 0x9D's quads add to y,
-constexpr std::uint32_t kQuadW = 0x5C41F0;          // to x,
-constexpr std::uint32_t kCentreY = 0x5C41F4;        // and its projection takes from y,
-constexpr std::uint32_t kCentreX = 0x5C41F8;        // from x
+constexpr rdata::Const kQuadH{0x5C41EC};          // float constants (.rdata) kind 0x9D's quads add to y,
+constexpr rdata::Const kQuadW{0x5C41F0};          // to x,
+constexpr rdata::Const kCentreY{0x5C41F4};        // and its projection takes from y,
+constexpr rdata::Const kCentreX{0x5C41F8};        // from x
 
 // --- ranges -----------------------------------------------------------------------
 constexpr unsigned kObjTrioCount = 3;               // ObjTrio's records of 0x14C

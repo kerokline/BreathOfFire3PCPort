@@ -256,7 +256,7 @@ int Music_FadeInEax(int frames) {
         "fidivl %[n]\n\t"
         "fstps %[step]\n\t"
         : [step] "=m"(Music_FadeStep)
-        : [full] "m"(*reinterpret_cast<const float*>(k127At)), [volume] "m"(Music_Volume), [n] "m"(frames)
+        : [full] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k127At))), [volume] "m"(Music_Volume), [n] "m"(frames)
         : "st");
     Music_FadeStops = 0;
     Music_FadeCount = frames;
@@ -737,8 +737,8 @@ extern "C" void __cdecl Music_SetVolume(float volume) {
         "fistpll %[level]\n\t"
         "fldcw %[saved]\n\t"
         : [level] "=m"(level), [saved] "=m"(saved), [truncating] "=m"(truncating)
-        : [volume] "m"(volume), [inverse] "m"(*reinterpret_cast<const float*>(kInverse127At)),
-          [scale] "m"(*reinterpret_cast<const float*>(k10000At))
+        : [volume] "m"(volume), [inverse] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(kInverse127At))),
+          [scale] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(k10000At)))
         : "eax", "st");
     Method<ComValue>(buffer, kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(level)));
 }

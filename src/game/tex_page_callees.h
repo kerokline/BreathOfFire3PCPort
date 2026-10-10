@@ -8,6 +8,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace tex_page {
 
 using U = std::uint32_t;
@@ -23,7 +25,7 @@ constexpr U kDirectDraw = 0x7CC334;   // Dd_DirectDraw, an IDirectDraw4 *
 constexpr U kStage = 0x7CC344;        // Dd_StageSurface: 320 x 256, made by 0x5A5160 through Dd_CreatePlainSurface
 constexpr U kPixelFormat = 0x7DED60;  // Gfx_PixelFormat: byte +3 bytes per pixel, +4/+8/+0xC shifts, +0x10/+0x14/+0x18 masks
 constexpr U kFormats = 0x7DED80;      // the DDPIXELFORMAT at +0x20 of each 0x40-byte format record from 0x7DED60
-constexpr U kTexture2Iid = 0x5C4488;  // IID_IDirect3DTexture2 in .rdata
+constexpr rdata::Const kTexture2Iid{0x5C4488};  // IID_IDirect3DTexture2 in .rdata
 
 struct Callees {
     void (__cdecl* convert4)(void* dst, const void* src, const void* clut, int w, int h, int pitch);   // Tex_Convert4

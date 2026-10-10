@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 // Rebound 2026-10-03 (round thirteen E4D): 0x48CA90 is ours, Effect_DrawScreenTint - the value
 // unchanged, so the fuzz keys on it as before.
 
@@ -31,7 +32,7 @@ constexpr std::uint32_t kV0 = 0x9037A0;            // Prim_VertexScratch: four S
 constexpr std::uint32_t kV1 = 0x9037A8;
 constexpr std::uint32_t kV2 = 0x9037B0;
 constexpr std::uint32_t kV3 = 0x9037B8;
-constexpr std::uint32_t kCullY = 0x5C41DC;         // a float constant (read in place) the column's quads are
+constexpr rdata::Const kCullY{0x5C41DC};         // a float constant (read in place) the column's quads are
                                                    // culled against: drawn while it is below the third corner's y
 
 // --- kind 0x65 ------------------------------------------------------------------------

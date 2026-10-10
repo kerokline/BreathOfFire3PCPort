@@ -1,6 +1,7 @@
 #include "hook/inject_all.h"
 
 #include "game/config_text.h"
+#include "game/rdata_consts.h"
 #include "game/dat_load.h"
 #include "game/fishing_text.h"
 #include "game/layering.h"
@@ -320,6 +321,7 @@
 namespace bof3 {
 
 void InjectAll() {
+    rdata::Verify();            // first: the engine's copies of .rdata's constants against BOF3.exe's, before any fuzz reads one
     DrawPool_Reserve();         // DIV-0062: the draw-item pool's room below 16 MB, before anything else is placed
     SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
     MapCells_Inject();          // likewise

@@ -9,6 +9,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
 // every constant here whose target has a name in symbols.toml reads
 // bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
@@ -26,9 +27,9 @@ constexpr U kScaleY = 0x7C9F48;        // D3d_ScaleY, float
 constexpr U kVertices = 0x7CA958;      // D3d_Vertices, 4 x D3DTLVERTEX
 constexpr U kTexCoords = 0x7CA9E0;     // D3d_TexCoords, 256 floats, tc[i] = (i + 0.512) / 256 in game
 constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, u16
-constexpr U kRhwNumerator = 0x5C4610;  // float 0.1: rhw = 0.1 / z
-constexpr U kEight = 0x5C41CC;         // float 8.0: D3d_DrawSprt8's size
-constexpr U kSixteen = 0x5C41D0;       // float 16.0: D3d_DrawSprt16's size
+constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1: rhw = 0.1 / z
+constexpr rdata::Const kEight{0x5C41CC};         // float 8.0: D3d_DrawSprt8's size
+constexpr rdata::Const kSixteen{0x5C41D0};       // float 16.0: D3d_DrawSprt16's size
 
 // The far texture edge is read at base + 4 * j, j = u + w (u + 8, u + 16 for
 // the fixed sizes). Capcom's base is one entry before D3d_TexCoords - the

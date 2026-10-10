@@ -9,6 +9,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace d3d_rest {
 
@@ -24,14 +25,14 @@ constexpr U kVertices = 0x7CA958;      // D3d_Vertices, 4 x D3DTLVERTEX
 constexpr U kTexCoords = 0x7CA9E0;     // D3d_TexCoords, 256 floats
 constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, u16 (read as a dword, masked)
 constexpr U kDevice = 0x7CC350;        // D3d_Device, an IDirect3DDevice3 *
-constexpr U kRhwNumerator = 0x5C4610;  // float 0.1: rhw = 0.1 / z
+constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1: rhw = 0.1 / z
 constexpr U kRenderFlags = 0x6C3A4C;   // Gfx_RenderFlags, byte: bit 0 the software surfaces
 
 // D3d_FlattenFT3 / D3d_PageTexel4 (docs/d3d-rest.md section 3).
 constexpr U kVram = 0x6C9F44;          // Gfx_VramShadow (a macro of symbols.gen.h): 1024 x 512 cells of 16 bits
 constexpr U kPixelFormat = 0x7DED60;   // Gfx_PixelFormat: byte +3 bytes per texel; +4 / +8 / +0xC red / green /
                                        // blue shifts; +0x10 / +0x14 / +0x18 their masks
-constexpr U kModulate = 0x5C4614;      // float 1/128: the PSX's texture modulation, 0x80 = 1.0
+constexpr rdata::Const kModulate{0x5C4614};      // float 1/128: the PSX's texture modulation, 0x80 = 1.0
 
 // D3d_SetAlphaModulate.
 constexpr U kAlphaOpCache = 0x66B720;  // D3d_AlphaOpCache, dword: 1 when ALPHAOP is MODULATE
@@ -48,8 +49,8 @@ constexpr U kCaptureTexSurface = 0x7CADFC; // IDirectDrawSurface4 *: the texture
 constexpr U kCaptureTexture = 0x7CAE00;    // IDirect3DTexture2 *
 constexpr U kBackBuffer = 0x7CC33C;    // DDraw_BackBuffer
 constexpr U kScreenBpp = 0x7DEDE3;     // byte +3 of the third pixel-format record (0x7DEDE0): the screen's bytes per pixel
-constexpr U kFixedOne = 0x5C4608;      // float 65536.0
-constexpr U kPerColumn = 0x5C460C;     // float 0.003125 = 1 / 320
+constexpr rdata::Const kFixedOne{0x5C4608};      // float 65536.0
+constexpr rdata::Const kPerColumn{0x5C460C};     // float 0.003125 = 1 / 320
 
 struct Callees {
     void (__cdecl* prim_color)(unsigned r, unsigned g, unsigned b, unsigned code, unsigned mode,

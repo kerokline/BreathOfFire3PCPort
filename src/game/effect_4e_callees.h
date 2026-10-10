@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 #include "bof3/symbols.gen.h"  // R3F's rebinding: the targets that are ours read bof3::addr::<Name>, the values unchanged
 
 namespace effect_4e::at {
@@ -24,7 +26,7 @@ constexpr std::uint32_t kMatrixVector = bof3::addr::Gte_ApplyMatrixSV;  // (matr
 // --- the image's cells ---------------------------------------------------------
 constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio + 0x34: the leader's x, z, height (three dwords)
 constexpr std::uint32_t kCounter = 0x903848;       // u8: the chapter's count (scenario_harness at::kCounter)
-constexpr std::uint32_t kHalf = 0x5C41B8;          // float (.rdata): the trail's half-width (effect_3a_callees.h kHalf)
+constexpr rdata::Const kHalf{0x5C41B8};          // float (.rdata): the trail's half-width (effect_3a_callees.h kHalf)
 
 // --- kind 0xA0's two pools (nothing else in the image reads them) --------------
 constexpr std::uint32_t kSparks = 0x6762B0;        // EffectKindA0_Sparks: 16 sparks of 0x18 (EffectKind64's form)

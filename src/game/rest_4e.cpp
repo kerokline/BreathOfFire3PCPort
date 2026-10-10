@@ -26,6 +26,7 @@
 #include "game/move_script_bytes.h"
 #include "game/labels.h"
 #include "game/rest_4e_callees.h"
+#include "game/rdata_consts.h"
 #include "game/text_advance.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -108,7 +109,7 @@ constexpr U kPairMessages = 0x653180;  // 4 bytes a kind: the message id, a "nam
 constexpr U kTilesTop = 0x6531A0, kTilesBottom = 0x6531C0, kTilesSide = 0x6531E0;
 constexpr U kPageFormat = 0x6531F4;    // "page / pages"
 constexpr U kOneGlyph = 0x669F08;
-constexpr U kFour = 0x5C41C8, kEight = 0x5C41CC;   // the floats 4.0, 8.0
+constexpr rdata::Const kFour{0x5C41C8}, kEight{0x5C41CC};   // the floats 4.0, 8.0 (rdata_consts.h)
 
 unsigned char& B(U address) { return At(address)[0]; }
 U W(U address) { return Word(At(address)); }
