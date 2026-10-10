@@ -195,7 +195,8 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# original | en-US | en-150 | fr-FR | de-DE | ja-JP   (a tag needs tools/loc_build.py to have built it)\r\n";
     out += std::string("language=") + cfg.language + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
-    out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP; tools/importer.py install puts them in the game's DAT folder\r\n";
+    out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
+    out += "# tools/importer.py install puts them in the game's DAT folder\r\n";
     out += "opt=" + cfg.opt + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";

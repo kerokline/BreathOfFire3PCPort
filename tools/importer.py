@@ -31,7 +31,8 @@ Japan's language or drew its own art - docs/importer-transforms.md (step 3).
 `build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
 PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
 step 8). `opt/<name>/` layers carry a PSP disc's content changes the player may
-turn on (recipes/opt.toml, docs/opt-layers.md, step 4); `--preset` is a named
+turn on, and `area4-walls` a Western PSX disc's walls in area 4 (DIV-0080)
+(recipes/opt.toml, docs/opt-layers.md, step 4); `--preset` is a named
 source order plus layers; `install` copies a cache's layers into a game's DAT/
 under the overlay names the engine walks. The recipe holds names,
 indices, sizes and hashes - never bytes - so it is committed. The cache is game
@@ -846,7 +847,21 @@ OPT_LAYERS = {
     "psp-names-en-150": "the PSP-EU's item and ability names where they differ from the US disc's "
                         "tables (P7: ability 116; three more abilities, four items)",
     "psp-names-ja-JP": "the PSP-JP's renamed ability 116 and key items 2, 5, 7, 9",
+    "area4-walls": "DIV-0080: AREA004's collision as the Western PSX discs ship it - the area block's whole "
+                   "cell-byte plane (in PC tag 0xC8000) and the whole battle placement map (PC tag 0xC0800); "
+                   "not the tile words or texture records",
 }
+# area4-walls (DIV-0080, docs/opt-layers.md section 1): from a Western PSX disc,
+# not a PSP one. Two chunks: the area block's whole cell-byte plane
+# (AreaMap_Bytes: 4 x the header's dword +0x14, width x depth bytes), so the
+# later discs' re-texture of 30 cells (tile words, texture records) is not
+# carried, and the whole placement map. Whole planes, not the differing bytes,
+# so that no cell's place or value is in the recipe. JP's section is found by its
+# destination, the Western twin by the same index, type and size (its kind-0
+# sections sit 0x8000 higher).
+WALLS_LAYER, WALLS_EMI, WALLS_DESTS = "area4-walls", "WORLD00/AREA004.EMI", (0x80104000, 0x8002A000)
+WESTERN = ("psx-us", "psx-eu-en", "psx-fr", "psx-de")
+OPT_SOURCES = PSP + WESTERN
 # A names layer: the PSP build it reads, the PSX build its records differ from,
 # and its text's encoding (Japanese or not, loc_build.py's).
 NAME_LAYERS = {"psp-names-en-150": ("psp-eu", "psx-us", False), "psp-names-ja-JP": ("psp-jp", "psx-jp", True)}
@@ -909,7 +924,8 @@ OPT_EXCLUDED = {
     ("art", "the title menu page"): "P14, the PSP's title menu (its fishing entry); the PC's own page",
     ("art", "DEMO's language page"): "language pages (they differ PSP-JP to PSP-EU)",
     ("art", "a CLUT section (palettes)"): "beside a page not taken (DEMO's logo, SCENA17) or START's",
-    ("logic-data", "data"): "AREA004's band (DIV-0080 by rule) and Ryu's form data (P8, unread)",
+    ("logic-data", "data"): "AREA004's band (DIV-0080's walls are area4-walls, from a Western PSX disc; the "
+                            "PSP's form lacks the placement half) and Ryu's form data (P8, unread)",
     ("logic-data", "a sound bank's cue entries"): "the cue byte (region-diff.md 8.3): nothing on the PC",
     ("text", "the area message block (an edit within one language)"): "text, not names: a language layer's",
     ("text", "the system message pool (an edit within one language)"): "text, not names: a language layer's "
@@ -1031,6 +1047,7 @@ def cmd_opt_recipes(a):
                 stats[(layer, "port-art sections (the port's tiles kept)")] += 1
             stats[(layer, "sections")] += 1
             layers[layer].setdefault(name, []).append((slot, key, r["b"], sha(bytes(composed)), out))
+    walls_recipe(discs, jp, where, files, pc, layers, stats)
     for lname, (psp_id, base_id, ja) in NAME_LAYERS.items():
         src, base = discs[psp_id], discs[base_id]
         for t, pc_at in name_tables():
@@ -1088,6 +1105,66 @@ def cmd_opt_recipes(a):
         print("    %-10s %-34s %4d  %s" % (k, what, n, OPT_CONVERTED if k == "converted" else OPT_EXCLUDED[(k, what)]))
 
 
+def walls_recipe(discs, jp, where, files, pc, layers, stats):
+    """The area4-walls layer's two chunks (DIV-0080): AREA004's area block cell
+    plane and its placement map, each whole as the US disc has it - not cut to
+    the bytes that differ, so the recipe records no cell's place or value, only
+    the planes' tags, sizes and hashes - with `on` the Western discs given that
+    carry it byte for byte. The PC's chunks must be JP's sections exactly, the
+    US disc's must differ from them, and the composed chunks must be the US
+    disc's (the cell plane; the placement map whole)."""
+    us = discs["psx-us"]
+    stem = WALLS_EMI.rsplit("/", 1)[-1][:-4]
+    name = stem + ".DAT"
+    js = jp.sections(WALLS_EMI)
+    western = [discs[b] for b in WESTERN if b in discs]
+    for dest in WALLS_DESTS:
+        idx = [i for i, s in js.items() if s[1] == 0 and s[2] == dest]
+        if len(idx) != 1:
+            raise SystemExit("%s: %d JP sections at 0x%08X" % (WALLS_EMI, len(idx), dest))
+        i = idx[0]
+        jb = js[i][3]
+        twins = {}
+        for s in western:
+            t = s.sections(WALLS_EMI).get(i)
+            if not t or t[1] != 0 or len(t[3]) != len(jb):
+                raise SystemExit("%s section %d: %s's twin is not the same shape" % (WALLS_EMI, i, s.id))
+            twins[s.id] = t[3]
+        ub = twins["psx-us"]
+        if dest == 0x80104000:       # the cell-byte plane alone (AreaMap_Bytes)
+            lo = struct.unpack_from("<I", jb, 0x14)[0] * 4
+            hi = lo + jb[0] * jb[1]
+        else:
+            lo, hi = 0, len(jb)
+        got = where.get((WALLS_EMI, i))
+        if got is None:
+            raise SystemExit("%s section %d: no PC base chunk it lands on" % (WALLS_EMI, i))
+        slot = got[1]
+        ch = files[name]["chunks"][slot]
+        blob, chunks = pc.chunks(name)
+        c = chunks[slot]
+        pcb = blob[c.offset:c.offset + c.size]
+        if pcb != jb:
+            raise SystemExit("%s slot %d: the PC's chunk is not JP's section" % (name, slot))
+        changed = sum(jb[k] != ub[k] for k in range(lo, hi))
+        if not changed:
+            raise SystemExit("%s section %d: the US disc's equals JP's" % (WALLS_EMI, i))
+        composed = bytearray(pcb)
+        body = ub[lo:hi]
+        on = [s for s in WESTERN if s in twins and twins[s][lo:hi] == body]
+        composed[lo:hi] = body
+        out = [(0, ch["tag"] + lo, lo, len(body), sha(body), on)]
+        stats[(WALLS_LAYER, "chunks")] += 1
+        stats[(WALLS_LAYER, "bytes")] += len(body)
+        stats[(WALLS_LAYER, "bytes that differ from JP's")] += changed
+        stats[(WALLS_LAYER, "chunks on every Western disc given")] += len(on) == len(twins)
+        if composed[lo:hi] != ub[lo:hi]:
+            raise SystemExit("%s slot %d: the layer over the PC's chunk is not the US disc's" % (name, slot))
+        stats[(WALLS_LAYER, "sections")] += 1
+        stats[(WALLS_LAYER, "Western discs read")] = len(twins)
+        layers[WALLS_LAYER].setdefault(name, []).append((slot, WALLS_EMI, i, sha(bytes(composed)), out))
+
+
 def region_nd(t, d):
     import region_diff
     return region_diff.nd(t, d)
@@ -1111,9 +1188,10 @@ def opt_payload(s, ch, cache):
 
 
 def build_opt(asked, sources, out, path=None):
-    """opt/<name>/dat/NAME.DAT for each layer asked for, from the first PSP disc
-    in the player's order that carries each chunk; every payload hashed against
-    recipes/opt.toml. A layer is written whole or not at all."""
+    """opt/<name>/dat/NAME.DAT for each layer asked for, from the first disc in
+    the player's order that carries each chunk (a PSP disc; for area4-walls a
+    Western PSX one); every payload hashed against recipes/opt.toml. A layer is
+    written whole or not at all."""
     if not asked:
         return []
     layers = load_opt_recipe(path)
@@ -1121,7 +1199,7 @@ def build_opt(asked, sources, out, path=None):
     for name in asked:
         if name not in layers:
             raise SystemExit("--opt %s: no such layer; recipes/opt.toml has %s" % (name, ", ".join(layers)))
-        psp = [s for s in sources if s.id in PSP and isinstance(s, DiscSource)]
+        psp = [s for s in sources if s.id in OPT_SOURCES and isinstance(s, DiscSource)]
         files, cache, used = [], {}, collections.Counter()
         for f in layers[name].get("file", []):
             parts = []
@@ -1227,7 +1305,8 @@ def check_opt(path=None):
     """recipes/opt.toml against recipes/pc-zh.toml and fixtures.toml alone (CI):
     every layer known, every chunk a known kind landing inside a base chunk of
     its own kind (kind 0 inside the bytes, kind 1 inside the page's rectangle),
-    every name chunk on one record of a name table, every source a PSP build."""
+    every name chunk on one record of a name table, every source a PSP build
+    (area4-walls: a Western PSX build)."""
     if not os.path.exists(path or OPT_RECIPE):
         return ["recipes/opt.toml missing"]
     layers = load_opt_recipe(path)
@@ -1244,7 +1323,8 @@ def check_opt(path=None):
                 continue
             pcs = rec[f["name"]]["chunks"]
             for ch in f["chunks"]:
-                if any(b not in PSP for b in ch["on"]) or len(ch["sha256"]) != 64:
+                allowed = WESTERN if lname == WALLS_LAYER else PSP
+                if not ch["on"] or any(b not in allowed for b in ch["on"]) or len(ch["sha256"]) != 64:
                     errs.append("%s %s: source or hash" % (lname, f["name"]))
                 if ch["kind"] == 5:
                     if lname not in NAME_LAYERS or ch["size"] != NAME_FIELD or not any(
@@ -1307,6 +1387,9 @@ def cmd_install(a):
 # section 3 item 2). The player gives the files in any order; the preset puts
 # them in its own, and refuses when one it names is missing or one given is not
 # its. (build, what): `dat` a PC DAT/ tree, `exe` BOF3.exe, `disc` a disc.
+# The PC-plus-Western-text presets also build area4-walls from that same disc
+# (DIV-0080, the walls every later build has); `install --opt area4-walls` and
+# the ini's opt= turn it on.
 PRESETS = {
     "pc-install": ([("pc-zh", "dat"), ("pc-zh", "exe")], [], []),
     "us-disc": ([("psx-us", "disc")], [], []),
@@ -1314,10 +1397,10 @@ PRESETS = {
     "eu-en-disc": ([("psx-eu-en", "disc")], [], []),
     "fr-disc": ([("psx-fr", "disc")], [], []),
     "de-disc": ([("psx-de", "disc")], [], []),
-    "pc-plus-us-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-us", "disc")], ["en-US"], []),
-    "pc-plus-eu-en-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-eu-en", "disc")], ["en-150"], []),
-    "pc-plus-fr-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-fr", "disc")], ["fr-FR"], []),
-    "pc-plus-de-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-de", "disc")], ["de-DE"], []),
+    "pc-plus-us-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-us", "disc")], ["en-US"], ["area4-walls"]),
+    "pc-plus-eu-en-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-eu-en", "disc")], ["en-150"], ["area4-walls"]),
+    "pc-plus-fr-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-fr", "disc")], ["fr-FR"], ["area4-walls"]),
+    "pc-plus-de-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-de", "disc")], ["de-DE"], ["area4-walls"]),
     "pc-plus-jp-text": ([("pc-zh", "dat"), ("pc-zh", "exe"), ("psx-jp", "disc")], ["ja-JP"], []),
 }
 
@@ -1548,14 +1631,16 @@ def main():
                         "language (en: en-US when the US disc is given, else the first English disc in the "
                         "source order); needs the PC's DAT/, BOF3.exe and that disc")
     p.add_argument("--opt", action="append", default=[],
-                   help="an optional layer to build (repeat): %s; needs a PSP disc (docs/opt-layers.md)" % ", ".join(OPT_LAYERS))
+                   help="an optional layer to build (repeat): %s; needs a PSP disc, area4-walls a US, European, "
+                        "French or German PSX disc (docs/opt-layers.md)" % ", ".join(OPT_LAYERS))
     p.add_argument("--preset", help="a named source order plus layers: %s; the sources are still given "
                                     "with --source, in any order" % ", ".join(PRESETS))
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p = s.add_parser("opt-recipes")
     p.add_argument("--dat", required=True, help="the PC port's DAT/ directory")
-    p.add_argument("--disc", action="append", default=[], help="the JP, US and both PSP discs; repeat")
+    p.add_argument("--disc", action="append", default=[], help="the JP, US and both PSP discs, and any other "
+                   "Western PSX disc for area4-walls' `on`; repeat")
     p.add_argument("--pairs", default=os.path.join(ROOT, "analysis", "region"),
                    help="where region_diff.py pair's psx-jp_vs_psp-jp.json is")
     p.add_argument("--recipe")

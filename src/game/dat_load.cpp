@@ -5,7 +5,6 @@
 // locals here.
 #include "game/dat_load.h"
 
-#include "game/area4_walls.h"
 #include "game/battle_text.h"
 #include "game/char_names.h"
 #include "game/config_text.h"
@@ -90,7 +89,7 @@ char g_lang[8];
 
 // DIV-0086. The optional layers wanted: BOF3X_OPT, a comma-separated list of
 // layer names (docs/opt-layers.md: psp-art, psp-tiles, psp-maps,
-// psp-names-en-150, psp-names-ja-JP), in the order they land, read and
+// psp-names-en-150, psp-names-ja-JP, area4-walls), in the order they land, read and
 // checked once at injection. Each is a letter-or-digit-or-hyphen name of at
 // most kOptName - 1 characters; the longest today is 16. Empty = none, and
 // "original" is also none (as BOF3X_LANG's).
@@ -116,7 +115,8 @@ bool g_area_block_loaded;
 // DIVERGENCE DIV-0086: then, with BOF3X_OPT=<layer>[,<layer>...] set,
 // DAT\<layer>.<name> for each layer in that order, when it exists - after the
 // language overlay, so a layer lands on top of both. The layers are built by
-// tools/importer.py from the player's PSP disc and copied in by its
+// tools/importer.py from the player's PSP disc (area4-walls, DIV-0080: a
+// Western PSX disc) and copied in by its
 // `install`; none ships (docs/opt-layers.md).
 //
 // DIVERGENCE DIV-0005: with BOF3X_LANG=<tag> set, DAT\<tag>.<name> is walked
@@ -160,7 +160,6 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
         Crt_sprintf(layer, "DAT\\%s.%s", g_opt[i], name);
         if (GetFileAttributesA(layer) != INVALID_FILE_ATTRIBUTES) WalkDatFile(layer);
     }
-    area4_walls::Apply(name);  // the later discs' walls in area 4 (BOF3X_AREA4_WALLS; area4_walls.h)
     if (g_area_block_loaded) {
         g_area_block_loaded = false;
         map_layers::SnapshotSides();  // DIV-0085: the side faces the file's heights give (map_layers.h)
@@ -304,6 +303,25 @@ void ReadOptLayers() {
     }
 }
 
+// DIV-0080's old switch. Area 4's walls were written by coordinate from a table
+// in our code, on unless BOF3X_AREA4_WALLS=0; they are now the area4-walls
+// layer, built from the player's Western PSX disc and named in BOF3X_OPT
+// (docs/opt-layers.md section 1). A script still asking for the shipped map
+// (0) gets it, the default now, with a line; anything else asked for walls
+// this switch no longer gives, and is refused rather than ignored.
+void RetiredAreaWallsSwitch() {
+    char text[16];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_AREA4_WALLS", text, sizeof text);
+    if (n == 0) return;
+    if (n == 1 && text[0] == '0') {
+        bof3::Log("DIV-0080: BOF3X_AREA4_WALLS is retired; area 4's map is the one loaded unless BOF3X_OPT names "
+                  "area4-walls");
+        return;
+    }
+    bof3::Fatal("DIV-0080: BOF3X_AREA4_WALLS is retired - area 4's walls are the area4-walls layer from a Western "
+                "PSX disc (tools/importer.py build --opt area4-walls, install --opt area4-walls, BOF3X_OPT=area4-walls)");
+}
+
 }  // namespace
 
 void DatLoad_Inject() {
@@ -313,5 +331,6 @@ void DatLoad_Inject() {
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
     ReadOptLayers();
     for (int i = 0; i < g_opt_count; ++i) bof3::Log("DIV-0086: optional layer %d, DAT\\%s.*.DAT", i + 1, g_opt[i]);
+    RetiredAreaWallsSwitch();
     BOF3_INJECT(LoadDatFile);
 }
