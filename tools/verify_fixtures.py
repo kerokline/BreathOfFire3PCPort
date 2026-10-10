@@ -48,11 +48,19 @@ def check_tree(fx, path):
         for name, art in b.get("artifacts", {}).items():
             if "manifest" not in art:
                 continue
+            with open(os.path.join(ROOT, art["manifest"]), "rb") as fh:
+                text = fh.read().replace(b"\r\n", b"\n")
+            # The manifest is only as good as its own hash, which is over LF
+            # line ends (.gitattributes), so a CRLF checkout hashes the same.
+            h = hashlib.sha256(text).hexdigest()
+            if h != art.get("manifest_sha256"):
+                print("!! %s (%s:%s) hashes %s; fixtures.toml's manifest_sha256 is %s"
+                      % (art["manifest"], b["id"], name, h, art.get("manifest_sha256", "not given")))
+                return 1
             want = {}
-            with open(os.path.join(ROOT, art["manifest"]), newline="") as fh:
-                for line in fh.read().replace("\r\n", "\n").splitlines():
-                    n, size, h = line.split("\t")
-                    want[n] = (int(size), h)
+            for line in text.decode("utf-8").splitlines():
+                n, size, h = line.split("\t")
+                want[n] = (int(size), h)
             m = art.get("match")
             if m not in trees:
                 body = region_diff.manifest(path, m)[0]
@@ -145,4 +153,5 @@ def main():
     return rc
 
 
-sys.exit(main())
+if __name__ == "__main__":
+    sys.exit(main())
