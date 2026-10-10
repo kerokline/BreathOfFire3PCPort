@@ -65,8 +65,10 @@ ignores this byte; the PSX calls `SsSetMono` from the same row.
 
 The launcher sets each variable from the ini only when it is not already set
 in the environment, as it does for `opt=` (`ConfigApplyEnvironment`). The
-`Config` struct gained `cache` and `music` (`src/launcher/config.h`). There
-is no dialog box. `Arm()` runs in `InjectAll` after `music_loops::Arm()`,
+`Config` struct gained `cache` and `music` (`src/launcher/config.h`). Since
+2026-10-10 the settings dialog has a Music box and a Cache folder box for them
+([`launcher-settings.md`](launcher-settings.md) 3.1), writing the same lines.
+`Arm()` runs in `InjectAll` after `music_loops::Arm()`,
 after every module's self-test, and logs one line. Each cache song started
 logs one line, and each track the armed seam cannot find in the cache logs
 one line as it falls back.

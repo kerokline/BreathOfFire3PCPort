@@ -461,23 +461,75 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
     return out;
 }
 
+bool ConfigOptInstalled(const std::wstring& game_dir, const char* layer) {
+    std::wstring pattern = game_dir + L"\\DAT\\";
+    for (const char* c = layer; *c; ++c) pattern += static_cast<wchar_t>(*c);
+    pattern += L".*.DAT";   // the DLL's own pattern (dat_load.cpp ReadOptLayers)
+    WIN32_FIND_DATAW fd;
+    HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
+    if (h == INVALID_HANDLE_VALUE) return false;
+    FindClose(h);
+    return true;
+}
+
+std::vector<std::string> ConfigOptDefaultInstalled(const std::wstring& game_dir) {
+    std::vector<std::string> out;
+    for (const char* layer : kOptDefault)
+        if (ConfigOptInstalled(game_dir, layer)) out.push_back(layer);
+    return out;
+}
+
 std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt) {
     if (opt == "none") return std::string();
     if (!opt.empty()) return opt;
     std::string out;
-    for (const char* layer : kOptDefault) {
-        std::wstring pattern = game_dir + L"\\DAT\\";
-        for (const char* c = layer; *c; ++c) pattern += static_cast<wchar_t>(*c);
-        pattern += L".*.DAT";   // the DLL's own pattern (dat_load.cpp ReadOptLayers)
-        WIN32_FIND_DATAW fd;
-        HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
-        if (h == INVALID_HANDLE_VALUE) continue;
-        FindClose(h);
+    for (const std::string& layer : ConfigOptDefaultInstalled(game_dir)) {
         std::fprintf(stderr, "bof3x-launcher: layer %s is installed and on by default; opt=none in bof3x.ini "
-                     "turns it off\n", layer);
+                     "turns it off\n", layer.c_str());
         if (!out.empty()) out += ',';
         out += layer;
     }
+    return out;
+}
+
+std::string ConfigOptEdit(const std::string& opt, const std::vector<std::string>& defaults,
+                          const std::vector<std::pair<std::string, bool>>& boxes) {
+    // What `opt` plays, as ConfigOptWanted reads it.
+    std::vector<std::string> played;
+    if (opt.empty()) {
+        played = defaults;
+    } else if (opt != "none") {
+        size_t at = 0;
+        while (at <= opt.size()) {
+            size_t end = opt.find(',', at);
+            if (end == std::string::npos) end = opt.size();
+            played.push_back(opt.substr(at, end - at));
+            at = end + 1;
+        }
+    }
+    auto has = [&](const std::string& n) { return std::find(played.begin(), played.end(), n) != played.end(); };
+    bool changed = false;
+    for (const auto& [name, on] : boxes) {
+        if (on == has(name)) continue;
+        changed = true;
+        if (on) played.push_back(name);
+        else played.erase(std::find(played.begin(), played.end(), name));
+    }
+    if (!changed) return opt;
+    if (played.empty()) return "none";
+    // kPspLayers' order, then kOptDefault's, then the rest as `opt` had them.
+    std::vector<std::string> order;
+    for (const OptLayerInfo& l : kPspLayers) order.push_back(l.name);
+    for (const char* l : kOptDefault) order.push_back(l);
+    std::string out;
+    auto put = [&](const std::string& n) {
+        if (!out.empty()) out += ',';
+        out += n;
+    };
+    for (const std::string& n : order)
+        if (has(n)) put(n);
+    for (const std::string& n : played)
+        if (std::find(order.begin(), order.end(), n) == order.end()) put(n);
     return out;
 }
 
