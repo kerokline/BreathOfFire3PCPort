@@ -2314,7 +2314,15 @@ designed in rather than bolted on.
   strip at phase - 512 covers the left band at every phase, and a strip
   starting past the right bound is skipped. Off, every packet is the
   original's bit for bit (the fuzz compares them). The owner on the
-  capture: "Sky looks perfect".
+  capture: "Sky looks perfect". **The bands' pool guard, 2026-10-10** (a code
+  review): the two band quads are written at the four gradient
+  quads' cursor, 0x110 past it, which runs on whether or not
+  `EffectKind18Sub15_LinkLayer` refused a link; 0x198 is more than the
+  0x54 of slack under the pool limit, so near a full pool they would have
+  been written past this buffer's 64 KB. Both are now skipped - nothing
+  written, nothing linked, a `draworder` line under `BOF3X_DRAWORDER` -
+  unless they end under the limit `LinkLayer` tests. Narrow, nothing
+  changes (the bands are never drawn).
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
