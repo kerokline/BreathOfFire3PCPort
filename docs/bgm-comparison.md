@@ -406,8 +406,8 @@ PSP's player for P10, and the original decoder's own PCM.
 > 156 looping tracks, **48 have a loop in their file** (`full` or `shifted`),
 > **80 hold less than one loop period** (60 by seconds, 20 by a frame or two
 > - `NEAR-FULL` in the log), and 28 are refused, every one for a cause the
-> row names. **2026-10-10:** the stand-in gate (11.1, below) refused 12 of
-> the 23 shifted rows that had shipped; the engine's table is **39 rows**
+> row names. **2026-10-10:** the stand-in gate (11.1, below) refused 14 of
+> the 23 shifted rows that had shipped; the engine's table is **37 rows**
 > (11.2). To resume from here:
 >
 >     python tools/bgm/measure_loops.py run --workers 3 --redo   # every row again from the renders, after a change to measure()
@@ -506,27 +506,27 @@ final), then:
 
 Rows under 0.8 confidence, or with an alignment of fewer than 10 windows or
 a residual over 50 samples (512 after an envelope alignment), are excluded;
-so is a shifted row whose `stand_in_ncc` is under 0.5 over a stand-in longer
-than 1.0 s (`gate()`, since 2026-10-10 - documented before, not applied, and
-12 rows with about 4 s of other material a pass had shipped). Both numbers
-are gaps in the 29 shifted rows' measurements:
+so is a shifted row whose `stand_in_ncc` is under 0.5, however short its
+stand-in (`gate()`, since 2026-10-10 - documented before, not applied, and
+12 rows with about 4 s of other material a pass had shipped). The number
+is a gap in the 29 shifted rows' measurements:
 
 | `stand_in_ncc` | Rows | Stand-in |
 |---|---|---|
 | -0.10 | 125 | 2.33 s |
 | 0.14..0.16 | 089 093 119 128 136 138 143 147 (the 23.19 s family), 159 | 4.02..4.43 s |
 | 0.18 | 145 | 17.31 s |
-| 0.20, 0.21 | 151, 153 (the battle theme and its twin) | 0.37, 0.35 s - **kept** |
+| 0.20, 0.21 | 151, 153 (the battle theme and its twin) | 0.37, 0.35 s |
 | 0.24, 0.34 | 102 (already out on its alignment), 007 | 3.95, 4.79 s |
 | *none 0.34..0.62* | | |
 | 0.62..1.00 | 046 149 111 165 026 (out on other gates), 070 113 120 008 157 056 133 142 123 | 0.07..8.10 s (008 8.1 s at 0.87, 142 6.4 s at 0.96) |
 
-151 and 153 are kept because a 0.35 s stand-in is the song's run-in to its
-first note under a 256-sample crossfade, and the 0.25 s window the
-correlation is taken over is mostly that: 153's splice scores 0.14 in its
-first 0.25 s and 0.77..0.87 after, against the rewind's -0.10 and 809
-near-silent samples (12.3). `STAND_IN_BOUND_S = 0` refuses them too - the
-owner's call. The shortfall itself is not gated apart: `stand_in_ncc` is
+The first cut of the gate kept 151 and 153 on a 1.0 s bound: a 0.35 s
+stand-in is the song's run-in to its first note under a 256-sample
+crossfade, and 153's splice scored 0.14 in its first 0.25 s and 0.77..0.87
+after, against the rewind's -0.10 and 809 near-silent samples (12.3). **The
+owner's call of 2026-10-10 dropped the bound**: they are refused with the
+rest and rewind as the original. The shortfall itself is not gated apart: `stand_in_ncc` is
 taken over the whole stand-in however long. The correlation is on the
 waveform, which the hi-hat jitter lowers (2 above), so the 23.19 s family
 - no window of which matches in waveform - may be refused for that rather
@@ -560,18 +560,18 @@ rewrites between 13 and 48 passes, each tested against the seven renders
 renders themselves were right throughout (full length to 0.3..9 s of
 launch latency, the song at 43-44 s).
 
-### 11.2 The table as it ships (2026-10-10: 39 rows)
+### 11.2 The table as it ships (2026-10-10: 37 rows)
 
 `analysis/bgm/loops.json` holds 156 rows, one per looping track, all
-render-measured; `src/game/music_loops_table.inc` the 39 that pass every
+render-measured; `src/game/music_loops_table.inc` the 37 that pass every
 gate (each row's comment carries its case, body, confidence, and for a
 shifted row its stand-in correlation and length):
 
 | Case | Rows | Tracks |
 |---|---|---|
 | full | 28 | 001 003 013 014 036 039 047 051 060 061 062 063 064 065 068 076 078 079 082 085 088 090 092 099 104 131 144 164 |
-| shifted | 11 | 008 056 070 113 120 123 133 142 151 153 157 |
-| refused: stand-in | 12 | 007 089 093 119 125 128 136 138 143 145 147 159 (in the table 2026-10-08..10) |
+| shifted | 9 | 008 056 070 113 120 123 133 142 157 |
+| refused: stand-in | 14 | 007 089 093 119 125 128 136 138 143 145 147 151 153 159 (all but 151 and 153 in the table 2026-10-08..10; those two until the owner's call the same day) |
 | refused: shortened | 76 | the file under one period from its start; 20 `near_full` |
 | refused: other gates | 29 | 23 full, 6 shifted under the correlation or alignment gates |
 
@@ -579,7 +579,7 @@ Positions count `ffmpeg`'s decode from the first frame, which trims
 nothing: every row's decode is exactly frames x 1,152 samples, and no file
 carries a Xing/Info/LAME or ID3 tag (2026-10-10, all 156 rows and 166 files).
 `gen_loop_table.py` refuses a row where that fails, since the engine's
-decoder counts untrimmed. The 2026-10-08 table had 51 rows; the 39 kept
+decoder counts untrimmed. The 2026-10-08 table had 51 rows; the 37 kept
 are unchanged in position and fade.
 
 **The table as it stood on 2026-10-06, for the record** (16 rows in
@@ -608,7 +608,7 @@ MP3 from its first frame (`ffmpeg`'s decode, which hands out every frame's
 | Track | What | So |
 |---|---|---|
 | **000** | *shortened*: the file (98.53 s) is 0.44 s shorter than one loop period (98.97 s in the MP3's clock), so no stretch of it is a whole loop; measured from the loop start it lacks 517,829 samples (11.74 s) of body, whose music the intro nearly repeats (7.2). The best splice into the file's material scores 0.50 against the render's true continuation (2 s windows) | excluded: rewinds as the original. Not fixable from the PC's file alone - the missing 0.44 s is not in it. Ways on, for the owner: accept it; take the missing samples from somewhere (a render - but that is audio derived from the game's data, which ships nowhere, rule 1; or a re-encode the player makes); or a stretched loop. Undecided |
-| 153 | *shifted*: 0.34 s short; the stand-in (0.35 s of intro run-in) resembles the body's tail at 0.21 | in the table with a 256-sample crossfade, under the stand-in gate's 1.0 s bound (11.1; section 12.3 measures it) |
+| 153 | *shifted*: 0.34 s short; the stand-in (0.35 s of intro run-in) resembles the body's tail at 0.21 | refused since 2026-10-10 (the owner's call, 11.1): rewinds as the original; the disc's music (DIV-0087) loops it as the PSX does |
 | 013, 130 | in-file repeats too short to hold a whole period after their start | not in the table; the render run measures them |
 | 165 | the battle fanfare (6.3): no table song, rendered as `BGMBAT00.EMI` sub 1 | not yet measured |
 | 166 | unpaired (6.3) | never measured: no sequence to render; rewinds as the original |
@@ -668,10 +668,10 @@ regenerates `music_loops_table.inc` from `analysis/bgm/loops.json`.
 `BOF3X_MUSIC_LOOPS`: unset or `1` on, `0` the original's rewind, anything
 else fatal. Armed by `music_loops::Arm()` in `InjectAll`'s tail, after every
 module's self-test (which all compared the original's rewind). Log: one line
-when armed (`music_loops 39 tracks loop at their measured points; ...`, or
+when armed (`music_loops 37 tracks loop at their measured points; ...`, or
 the `off` line), and one per track the first time it loops through the table
-(`music_loops track 153 looped at its measured points: sample 2201216 back
-to 313821`). Reversible at any start.
+(`music_loops track N looped at its measured points: sample END back to
+START`). Reversible at any start.
 
 ### 12.3 The proof without the game (`tools/bgm/prove_loops.py`)
 
@@ -685,7 +685,7 @@ in-file rows, whose music repeats); *step* - the largest sample-to-sample
 jump within 2 ms of the seam over the 99th percentile of the surrounding
 second; *gap* - samples under -60 dBFS in the 50 ms after it.
 
-**The 39 rows as they ship (2026-10-10)**, `prove_loops.py`'s functions run
+**The 39 rows of the first 2026-10-10 cut** (the 37 that ship are among them; 151 and 153 since refused), `prove_loops.py`'s functions run
 offline over the regated table and the renders on disk, every row
 render-measured:
 
@@ -713,7 +713,8 @@ together and leave the loop correct.
 
 **For the owner's ear**: `analysis/bgm/listen/153_loop_fixed.wav`, section
 9's window spliced the engine's way (the seam at 23.63 s), beside
-`153_mp3.wav` and `153_disc.wav`. No `000_loop_fixed.wav`: 000 has no row
+`153_mp3.wav` and `153_disc.wav` - a record of the 2026-10-06 row; 153 is
+refused since 2026-10-10. No `000_loop_fixed.wav`: 000 has no row
 (11.3).
 
 ### 12.4 Self-tests
@@ -730,7 +731,7 @@ together and leave the loop correct.
   module's self-test passed, then `music_loops 13 tracks loop at their
   measured points` armed after them. It takes about fifteen minutes.
 - 2026-10-10, the 39-row table: `sound` exit 0, "39 table rows in bounds";
-  `'*'` not re-run.
+  the 37-row table: built and `'*'` with the review's tip (`fix/review-1010`).
 
 ### 12.5 For the ledger entry (the coordinator writes it)
 
@@ -741,7 +742,7 @@ together and leave the loop correct.
 - **New**: a track with a measured row loops from the row's end to its start
   inside the file, sample-accurate, with a 2.9 ms (full rows) or 5.8 ms
   (shifted rows) crossfade; the rest rewind as before. 13 tracks when
-  first built; 39 since 2026-10-10 (DIV-0081 carries the lists).
+  first built; 37 since 2026-10-10 (DIV-0081 carries the lists).
 - **Rationale**: the owner, 2026-10-06, quoted at the head of section 11;
   and section 7's measurement that the PSX loops to a point inside the song.
 - **Verification**: 12.3's seam numbers per row against the disc's render or

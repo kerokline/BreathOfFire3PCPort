@@ -24,7 +24,7 @@ of 2026-10-06..09 merged four PRs: #43 (step 3, the region / music / bridge inve
 --discs`) and #46 (step 9, the PlayStation's music from the disc, DIV-0087). **On 2026-10-10 the four had a code
 review** ([`review-2026-10-10.md`](review-2026-10-10.md)) and its findings were fixed the same day on
 **`fix/review-1010`** (unpushed): a bank change that aborted the sequencer, the importer's language layers on
-Windows, a start-up Fatal from a plausible ini, DIV-0081's table gated as its docstring says (51 -> 39 rows),
+Windows, a start-up Fatal from a plausible ini, DIV-0081's table gated as its docstring says (51 -> 37 rows),
 DIV-0080 without Capcom's coordinates, and the small items. Built and `'*'` narrow and wide there; **nothing heard
 or seen in play** - the testing catch-up below is next. The regression check is the state hash
 ([`state-hash.md`](state-hash.md); references in `analysis/statehash`); the frame-hash reference
@@ -48,8 +48,9 @@ or seen in play** - the testing catch-up below is next. The regression check is 
       once-only song (the title's 141), a fade-out, an inn jingle between two cache songs, **a song change into a
       smaller bank** (the 2026-10-10 fix: the old tails play on, no later volume reaches them), then
       `BOF3X_MUSIC=mp3` as the A/B. The log says `music_seq` armed and one line per song.
-   3. **DIV-0081, the loops** (39 rows now, 28 full and 11 shifted; [`bgm-comparison.md`](bgm-comparison.md) 11..12):
-      `analysis/bgm/listen/153_loop_fixed.wav`, then the game with `BOF3X_MUSIC_LOOPS` on against `=0`.
+   3. **DIV-0081, the loops** (37 rows now, 28 full and 9 shifted; [`bgm-comparison.md`](bgm-comparison.md) 11..12):
+      the game with `BOF3X_MUSIC_LOOPS` on against `=0` on a looping track of each kind (a full row, e.g. `003`;
+      a shifted one, e.g. `142`). The battle theme `153` is refused since the owner's call and rewinds as the original.
    4. **DIV-0085:** one `bridgeWalk` wide (the log's `DIV-0085    map cell 48,..` lines), then the entry's
       Verification line; glance at area 47 (Wyndia's outer wall) when passing, `BOF3X_SIDE_DUP=0` for the original.
    5. **DIV-0080:** the minecart area - the raised strip's east edge and the corridor's bottom edge blocked, open
@@ -707,7 +708,7 @@ _Verified 2026-09-24._
 five agent branches merged into it (`fix/review-loops`, `-importer`, `-audio`, `-engine`, `fix/area4-no-table`), the
 docs after. Its worktree is in the session-`2003bf95` scratchpad (`fixes/`, with `launcher/` the ini-less build and
 `loops.json.bak-20261010`, the measurement before `regate`). `analysis/bgm/loops.json` in the main checkout is
-regated to the 39-row table; a `gen_loop_table.py` run from it reproduces the committed `.inc`. PRs #43..#46 are
+regated to the 37-row table; a `gen_loop_table.py` run from it reproduces the committed `.inc`. PRs #43..#46 are
 merged; their branches (`phase-3/platform-round-2`, `platform/unified-data-round`, `build/build-all-update`,
 `audio/sequence-from-disc`, the `claude/*` session branches) can go, and so can every `.claude/worktrees/agent-*`
 worktree - all are merged or superseded. The main checkout sits on `localization/fairy-village-dragon-transform` (at

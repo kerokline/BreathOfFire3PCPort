@@ -36,7 +36,5 @@
     {133,   881058,  1207040,  2427949, 256},  // 133.DAT: render, shifted (stand-in 0.951 over 0.08 s), body 27.685 s, confidence 1.000, short of a whole body by 3202 samples
     {142,  1444467,   353716,  3981056, 256},  // 142.DAT: render, shifted (stand-in 0.955 over 6.45 s), body 82.253 s, confidence 1.000, short of a whole body by 284245 samples
     {144,  1026926,    29237,  2152560, 128},  // 144.DAT: render, full, body 48.148 s, confidence 0.992
-    {151,   798302,   312669,  2200064, 256},  // 151.DAT: render, shifted (stand-in 0.199 over 0.37 s), body 42.798 s, confidence 1.000, short of a whole body by 16271 samples
-    {153,   798720,   313821,  2201216, 256},  // 153.DAT: render, shifted (stand-in 0.209 over 0.35 s), body 42.798 s, confidence 1.000, short of a whole body by 15191 samples
     {157,  1645506,   803126,  4535168, 256},  // 157.DAT: render, shifted (stand-in 0.933 over 0.07 s), body 84.627 s, confidence 0.882, short of a whole body by 2833 samples
     {164,   789943,   651849,  1522559, 128},  // 164.DAT: render, full, body 19.744 s, confidence 0.982

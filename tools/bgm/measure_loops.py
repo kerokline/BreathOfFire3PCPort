@@ -47,20 +47,15 @@ mapped into the MP3's samples. Then one of three cases:
 The gates (gate()): a row is refused when its confidence is under
 MIN_CONFIDENCE (0.8), when its alignment has fewer than 10 windows or a residual
 over 50 samples (512 on the envelope), or - a shifted row - when stand_in_ncc
-is under MIN_STAND_IN (0.5) over a stand-in longer than STAND_IN_BOUND_S
-(1.0 s). Under it the stand-in is other material, heard once a pass. Both
-numbers sit in gaps of the measured distribution (2026-10-10, all 29 shifted
-rows): stand_in_ncc has 15 rows at -0.10..0.34, nothing until 0.62, then 14
-at 0.62..1.00; of the 15 low ones, two (151, 153: the battle theme and its
-twin, 42.80 s bodies) stand in for 0.35..0.37 s and the rest for 2.33..17.31
-s. A stand-in of that length is the song's run-in to its first note,
-crossfaded, and the 0.25 s window the correlation is taken over is mostly
-that fade: 153's row measures 0.14 in its first 0.25 s after the join, then
-0.77..0.87, the MP3's own likeness to the render (prove_loops.py, section
-12.3) - against the rewind's -0.10 and 809 near-silent samples. So a short
-stand-in is not refused on its correlation; setting STAND_IN_BOUND_S to 0
-refuses 151 and 153 too. The shortfall (short_by, the stand-in's length) is
-not gated apart beyond that: stand_in_ncc is measured over the whole
+is under MIN_STAND_IN (0.5), however short the stand-in. Under it the
+stand-in is other material, heard once a pass. The number sits in a gap of the
+measured distribution (2026-10-10, all 29 shifted rows): stand_in_ncc has 15
+rows at -0.10..0.34, nothing until 0.62, then 14 at 0.62..1.00. Two of the low
+ones (151, 153: the battle theme and its twin) stand in for only 0.35..0.37 s,
+the song's crossfaded run-in to its first note, and were kept on the first
+cut of the gate for that; the owner's call of 2026-10-10 refuses them with
+the rest, so those two rewind as the original port did. The shortfall (short_by, the stand-in's length) is
+not gated apart: stand_in_ncc is measured over the whole
 stand-in, however long (008: 8.1 s at 0.87; 142: 6.4 s at 0.96).
 
 The stand-in is judged on the waveform, which the cymbal and hi-hat hits'
@@ -87,7 +82,6 @@ RENDERS = OUT + "/renders"
 FRAME = 1152
 MIN_CONFIDENCE = 0.8
 MIN_STAND_IN = 0.5  # a shifted row's stand_in_ncc (the docstring: the gap between 0.34 and 0.62)
-STAND_IN_BOUND_S = 1.0  # ... over a stand-in longer than this (the gap between 0.37 s and 2.33 s)
 # Every render starts with Mednafen's boot, the Sony and Capcom intros and the title: no song before
 # this many seconds of recording (the first note sits at 43.6-43.8 s in every render of 2026-10-08)
 SONG_AFTER_S = 40.0
@@ -454,7 +448,7 @@ def gate(row):
         bad.append("loop correlation %.3f under %.2f" % (row["confidence"], MIN_CONFIDENCE))
     if a["windows"] < 10 or a["max_residual"] > (50 if a["method"] == "waveform" else 512):
         bad.append("alignment: %d windows, residual %.1f samples" % (a["windows"], a["max_residual"]))
-    if row["case"] == "shifted" and row["stand_in_ncc"] < MIN_STAND_IN and row["stand_in_s"] > STAND_IN_BOUND_S:
+    if row["case"] == "shifted" and row["stand_in_ncc"] < MIN_STAND_IN:
         bad.append("stand-in correlation %.3f under %.2f over %.2f s of intro standing in for the body's tail"
                    % (row["stand_in_ncc"], MIN_STAND_IN, row["stand_in_s"]))
     row["excluded"] = bool(bad)
