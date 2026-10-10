@@ -840,8 +840,9 @@ pc = 0x5B9A9B
 name = "Crt_atoi"
 ret = "int"
 params = "const char *s"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05, 4 instructions: pushes its argument, calls 0x5B9A10, pops - MSVC6 atoi as a wrapper over atol. Callers Cfg_Load 0x4FD094 (line 1) and 0x4FD0A8 (line 0) (docs/shell.md)."
+evidence = "disasm 2026-10-05, 4 instructions: pushes its argument, calls 0x5B9A10, pops - MSVC6 atoi as a wrapper over atol. Callers Cfg_Load 0x4FD094 (line 1) and 0x4FD0A8 (line 0) (docs/shell.md). Ours since 2026-10-10 (crt_rest.cpp, docs/crt-rest.md section 2.7): atol 0x5B9A10..0x5B9A9A read to its ret - spaces by _pctype & 8 (__mb_cur_max 0x675064 = 1 and _pctype 0x674E58 -> 0x674E62 never written, so 0x09..0x0D and 0x20), one '-' or '+', digits by _pctype & 4 accumulated `ebx = ebx * 10 + c - 0x30` with no overflow test (wraps modulo 2^32), neg for '-'. Fuzzed 200,000 rounds against Capcom's at its address (34 edge strings first: overflow past 2^31 and 2^32, every space, near-miss bytes, sign runs, terminators, empty), 0 mismatches; five controls refused, the toolchain's atoi among them. atol's other callers 0x5C05CE / 0x5C05FC / 0x5C0627 are the runtime's own and keep Capcom's atol."
 
 [[func]]
 pc = 0x5B9AA6

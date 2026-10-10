@@ -7,9 +7,10 @@
 //   - Rand runs as a byte-copy whose one call, Crt_GetPtd at its entry, is
 //     re-aimed at a stand-in answering a per-thread block of our own, its
 //     seed word (+0x14) set alike with ours;
-//   - sprintf, strncpy and _stricmp are leaves of the runtime that touch none
-//     of that (sprintf's string FILE is on its own stack; _stricmp's locale
-//     word 0x7DEC18 is 0 until a setlocale, and the game has none) and run as
+//   - atoi (over atol), sprintf, strncpy and _stricmp are leaves of the
+//     runtime that touch none of that (sprintf's string FILE is on its own
+//     stack; _stricmp's locale word 0x7DEC18 is 0 until a setlocale, and the
+//     game has none; atol reads only the image's "C" _pctype) and run as
 //     Capcom's own, called at their addresses while the entries are intact;
 //   - _findfirst / _findnext and the file layer reach the runtime's locks and
 //     heap and cannot run here: ours are checked against Windows' own
@@ -22,6 +23,7 @@
 #include <windows.h>
 
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -368,6 +370,119 @@ void FuzzStrings() {
 }
 
 // =============================================================================
+// atoi
+// =============================================================================
+
+// Capcom's atoi (0x5B9A9B over atol 0x5B9A10) runs here: with __mb_cur_max
+// 0x675064 at the image's 1 it reads only the image's "C" _pctype table, no
+// per-thread data, lock or heap (crt_rest.cpp). Strings from parts: leading
+// bytes (the six spaces, and near misses - 0x1C..0x1F, 0x85, 0xA0, 0x08, 0x0E),
+// a sign run (none, '-', '+', or two), more spaces, a digit run of 0..24
+// (leading zeros often; past 10 digits wraps 2^31 and 2^32), then a
+// terminator (NUL, a letter, '.', a space, a sign, a high byte).
+const char* const kAtoiEdges[] = {
+    "", " ", "-", "+", "+-1", "-+1", "--1", "- 1", "+ 1", "0", "-0", "+0", "00000000000000000000001",
+    "2147483647", "2147483648", "-2147483648", "-2147483649", "4294967295", "4294967296", "4294967297",
+    "-4294967295", "-4294967296", "8589934593", "99999999999999999999", "-99999999999999999999",
+    "\t\n\v\f\r 42", "\x1C" "42", "\x85" "42", "\xA0" "42", "42abc", "4 2", "12 34", "1\r\n", "\xB5\xDA" "7",
+};
+
+void AtoiString(unsigned round, char* s) {
+    if (round < sizeof kAtoiEdges / sizeof kAtoiEdges[0]) {
+        std::strcpy(s, kAtoiEdges[round]);
+        return;
+    }
+    static const char kSpace[] = "\t\n\v\f\r     ";
+    static const char kNear[] = "\x08\x0E\x1C\x1D\x1E\x1F\x85\xA0";
+    static const char kTerm[] = "\0a.Z -+\x80\xFF/:";
+    char* p = s;
+    for (unsigned n = Next() % 4; n; --n)
+        *p++ = Next() % 6 ? kSpace[Next() % (sizeof kSpace - 1)] : kNear[Next() % (sizeof kNear - 1)];
+    switch (Next() % 8) {
+    case 0: case 1: *p++ = '-'; break;
+    case 2: *p++ = '+'; break;
+    case 3: *p++ = "+-"[Next() % 2], *p++ = "+-"[Next() % 2]; break;
+    default: break;
+    }
+    if (Next() % 10 == 0) *p++ = kSpace[Next() % (sizeof kSpace - 1)];
+    const unsigned digits = Next() % 3 == 0 ? 9 + Next() % 4 : Next() % 25;   // around 2^31 / 2^32 a third of the time
+    for (unsigned i = 0; i < digits; ++i)
+        *p++ = static_cast<char>(i == 0 && Next() % 3 == 0 ? '0' : '0' + Next() % 10);
+    *p++ = kTerm[Next() % (sizeof kTerm - 1)];
+    *p++ = '7';   // a digit after the terminator, which must not be read
+    *p = 0;
+}
+
+// The planted bugs.
+int __cdecl PlantedSaturate(const char* s) {   // the total clamped, as a strtol would
+    while (*s == ' ' || (*s >= 0x09 && *s <= 0x0D)) ++s;
+    const bool neg = *s == '-';
+    if (*s == '-' || *s == '+') ++s;
+    std::int64_t t = 0;
+    while (*s >= '0' && *s <= '9') {
+        t = t * 10 + (*s++ - '0');
+        if (t > 0x80000000LL) t = 0x80000000LL;
+    }
+    if (neg) t = -t;
+    if (t > 0x7FFFFFFF) t = 0x7FFFFFFF;
+    return static_cast<int>(t);
+}
+int __cdecl PlantedNarrowSpace(const char* s) {   // only ' ' and '\t' skipped
+    while (*s == ' ' || *s == '\t') ++s;
+    if (*s == '\n' || *s == '\v' || *s == '\f' || *s == '\r') return 0;
+    return ::Crt_atoi(s);
+}
+int __cdecl PlantedNoPlus(const char* s) {   // '+' not taken as a sign
+    const char* p = s;
+    while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) ++p;
+    return *p == '+' ? 0 : ::Crt_atoi(s);
+}
+int __cdecl PlantedSpaceAfterSign(const char* s) {   // spaces skipped after the sign too
+    char t[0x40];
+    char* q = t;
+    const char* p = s;
+    while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) *q++ = *p++;
+    if (*p == '-' || *p == '+') {
+        *q++ = *p++;
+        while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) ++p;
+    }
+    std::strcpy(q, p);
+    return ::Crt_atoi(t);
+}
+int __cdecl ToolchainAtoi(const char* s) { return std::atoi(s); }
+
+using AtoiFn = int (__cdecl*)(const char*);
+unsigned CompareAtoi(AtoiFn ours, unsigned rounds, bool log) {
+    const AtoiFn theirs = bof3::orig::Crt_atoi;
+    unsigned differ = 0;
+    const U saved = g_rand;
+    for (unsigned round = 0; round < rounds; ++round) {
+        char s[0x40];
+        AtoiString(round, s);
+        const int a = theirs(s), b = ours(s);
+        if (a != b) {
+            ++differ;
+            if (log) Mismatch("atoi", round, static_cast<U>(a), static_cast<U>(b));
+        }
+    }
+    g_rand = saved;
+    return differ;
+}
+
+void FuzzAtoi() {
+    constexpr unsigned kRounds = 200000;
+    const unsigned before = g_bad;
+    CompareAtoi(&::Crt_atoi, kRounds, true);
+    bof3::Log("shadow      crt_rest self-test: atoi %u rounds (%u edge strings first), %u MISMATCHES", kRounds,
+              static_cast<unsigned>(sizeof kAtoiEdges / sizeof kAtoiEdges[0]), g_bad - before);
+    ControlRefused("atoi, saturating", CompareAtoi(&PlantedSaturate, kRounds, false));
+    ControlRefused("atoi, only ' ' and tab as spaces", CompareAtoi(&PlantedNarrowSpace, kRounds, false));
+    ControlRefused("atoi, no '+'", CompareAtoi(&PlantedNoPlus, kRounds, false));
+    ControlRefused("atoi, spaces after the sign", CompareAtoi(&PlantedSpaceAfterSign, kRounds, false));
+    ControlRefused("atoi, the toolchain's", CompareAtoi(&ToolchainAtoi, kRounds, false));
+}
+
+// =============================================================================
 // _findfirst / _findnext, against Windows'
 // =============================================================================
 
@@ -482,6 +597,7 @@ void SelfTest() {
     FuzzRand();
     FuzzSprintf();
     FuzzStrings();
+    FuzzAtoi();
     FuzzFind();
     FuzzFiles();
     bof3::Log("shadow      crt_rest self-test: %u MISMATCHES in all", g_bad);
