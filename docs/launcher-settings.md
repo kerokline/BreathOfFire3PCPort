@@ -80,7 +80,7 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 | Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
 | Snap (2026-09-23) | `BOF3X_SNAP=0` when off | ours — DIV-0042: whole multiples, or the picture fitted to the window's height; the window is resized instead of sized here |
 | Widescreen (2026-09-23) | `BOF3X_WIDE=1` when on | ours — DIV-0041 |
-| Optional layers (2026-10-08): `opt=` in the ini, a comma-separated list of `opt/` layer names; no dialog box yet | `BOF3X_OPT=<list>`, only the layers whose `DAT\<layer>.*` are installed and whose language (a `-<tag>` suffix) is the one played | ours — DIV-0086, [`opt-layers.md`](opt-layers.md) section 5 |
+| Optional layers (2026-10-08): `opt=` in the ini - empty (the default), `none`, or a comma-separated list of `opt/` layer names; no dialog box yet | `BOF3X_OPT=<list>`, only the layers whose `DAT\<layer>.*` are installed and whose language (a `-<tag>` suffix) is the one played. **Empty** names the default layers that are installed - since 2026-10-10 `area4-walls` (DIV-0080) when `DAT\area4-walls.*.DAT` is there; **`none`** names none; a list is exactly that list (so one without `area4-walls` turns the walls off). A value it cannot honour (a character other than a letter, digit, `-` or `,`, an empty name, `none` in a list, a name twice, more than 8, one over 23 characters) **stops the launcher** with a message rather than falling back to the default | ours — DIV-0086, DIV-0080, [`opt-layers.md`](opt-layers.md) section 5 |
 | Cheats... (2026-09-24): EXP and zenny sliders, steal switch | `BOF3X_EXP` / `BOF3X_ZENNY` when not 1, `BOF3X_STEAL=1` when on | ours — DIV-0045, DIV-0046; [`cheats.md`](cheats.md) |
 | (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini, when not 2 | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
 | Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |
@@ -113,7 +113,12 @@ Rules the writer follows:
   developer invocations in [`HANDOFF.md`](HANDOFF.md) (`BOF3X_LANG=en-US
   build/bof3x-launcher.exe`) keep overriding it.
 - A setting at its default sets **no** variable, so a default run is identical
-  to one launched with no settings file at all.
+  to one launched with no settings file at all. The one default that sets a
+  variable is `opt=`'s: empty, it names the default layers installed in the
+  game's `DAT\` (DIV-0080's `area4-walls`), as it does with no settings file.
+  `opt=` is written back as it was read (there is no dialog box for it), so a
+  save never turns an empty one into a list that pins the default off. A
+  harness that must not get the layer sets `BOF3X_OPT=none`.
 
 ### The pad in the launcher (2026-09-24)
 
@@ -158,7 +163,7 @@ left out here, and the key and pad lists are cut short:
 
 ```ini
 [bof3x]
-language=original          # original | en | fr | de | ja (whichever loc_build.py has built)
+language=original          # original | en-US | en-150 | fr-FR | de-DE | ja-JP (whichever loc_build.py has built)
 filter=linear              # linear | point
 screen=clean               # clean | satpixie (DIV-0043); crt (DIV-0037, withdrawn) reads as satpixie
 satpixie.acc_modulate=0.65 # ... fourteen satpixie.* lines, the preset's names
@@ -204,9 +209,19 @@ blamed `LoadDatFile`, because that is where the overlay walk lives.
 An entry is offered only when its `DAT\<tag>.*` exists; otherwise the dialog
 says to build the overlays with `tools/loc_build.py` rather than offering an
 option that cannot work. An ini carried over from before 2026-10-08 says
-`language=en`: no entry has that tag, so it reads as the original until the
-dialog is used again (no mapping of the old codes, CLAUDE.md's no-shims
-rule).
+`language=en`. Until 2026-10-10 no entry had that tag and it read, silently,
+as the original until the dialog was used again; for part of 2026-10-10 the
+launcher mapped the four bare codes to their tags. Since the owner's call
+the same day there is **no mapping again, and the codes are retired with an
+error**: an ini saying `language=en` (`fr`, `de`, `ja`), or an environment
+saying `BOF3X_LANG=en`, stops the launcher before the dialog with a message
+box, the same line on stderr and exit 1 - `bof3x.ini's language=en is
+retired; use en-US (en-150 for the European English) (DIV-0005)` - and a
+`BOF3X_LANG=en` that reaches the DLL any other way is a Fatal at injection.
+Edit the line to the tag (`en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`) and
+delete any `DAT\en.*.DAT` (`fr.`, `de.`, `ja.`) overlays: nothing reads them.
+Silently dropping the player's choice was the worse surprise, and guessing
+it (which English?) the next; saying so once, loudly, is neither.
 
 ## 5. What is not offered, and why
 

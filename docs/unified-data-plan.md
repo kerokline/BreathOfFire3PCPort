@@ -26,7 +26,7 @@ cache records which build and recipe produced it.
 | Question the old plan left open | Answer | Where |
 |---|---|---|
 | Do the regional PSX builds differ beyond text? | Yes, in **83 rows of four kinds**, none language: one area's map band and its placement map (a collision fix every later build made), one cue byte in 65 voice banks (a PSX sound priority), one sample dropped from 8 PAL area banks. Enemy stats identical in 200 of 200 tables; no non-language image differs except CLUTs. | `region-diff.md` 4.1, 7, 8 |
-| So is `base/` one tree? | **Yes**, JP's (the census's pair), with a short per-build exception list; the two post-release fixes are better taken as our own code than as per-build bases (DIV-0080 is the first). | `region-diff.md` 7 (1), 10 |
+| So is `base/` one tree? | **Yes**, JP's (the census's pair), with a short per-build exception list; the two post-release fixes are better taken as our own code than as per-build bases (DIV-0080 was the first; since 2026-10-10, no rule found, it is an `opt/` layer from a Western disc instead). | `region-diff.md` 7 (1), 10 |
 | Is the PSP a different game's data? | **No.** Its data carries JP's code byte for byte; PSP-EU is PSP-JP plus a language layer; audio is the PSX's samples re-containered; 65 compressed arenas ship decompressed, 37 byte-identical to the PC's. Its content changes are art (653 tiles blanked, 301 redrawn, 53 palettes), text, and 11 map bands. | `region-diff.md` 5 |
 | Does the PSP change game logic? | Not where read: the boss module and the encounter paths are identical compiles of the PSX's; the one difference (a render-load guard removed) the PC never trips. P4 refuted, P6 and P7 confirmed as palettes and a name. | `psp-stallion.md` 3, 5 |
 | How does the PC's music map to the disc's? | **File N is song N** (164 pair; song 21 has no MP3; `165` the victory sub-song; `166` unpaired). The MP3s are MPEG-1 Layer III 44.1 kHz 128 kbit/s CBR plain stereo, no tags. Loop points are in the sequences; the PC replays every intro. | `bgm-comparison.md` 6, 7, 10 |
@@ -62,10 +62,14 @@ cache/
 - **Layers override by chunk**, never by byte: a layer carries whole chunks
   (a palette row's section, a text block), which is how the overlays work
   today and what keeps provenance per asset.
-- **Fixes by rule are code, not layers.** DIV-0080's walls are applied by
-  coordinate at load; the cue byte would be the same shape if the PSX banks
-  were ever played. A layer carries a later build's bytes only when a rule
-  cannot express them (the 30-cell re-texture, `region-diff.md` 10.2).
+- **Fixes by rule are code, not layers** - where there is a rule. The cue
+  byte would be that shape if the PSX banks were ever played. A layer carries
+  a later build's bytes when no rule expresses them. *Revised 2026-10-10:*
+  DIV-0080's walls were applied by coordinate at load, a table of Capcom's
+  data in our code; no rule from the map's own data gives them
+  (`region-diff.md` 10.1), so they are now the `area4-walls` layer from a
+  Western disc - a fix, so on by default wherever it is built (the owner,
+  2026-10-10).
 
 ## 3. The importer's pipeline
 
@@ -215,8 +219,11 @@ compares by onset envelope and clean windows, never sample for sample
 ## 7. Divergence policy for data
 
 - **A later build's fix made the default is a ledger entry applied by rule
-  in code** (DIV-0080's form), so every source gets it. The owner's rule of
-  2026-10-06: a bug fix is worth keeping as the default.
+  in code**, so every source gets it - when a rule exists. The owner's rule
+  of 2026-10-06: a bug fix is worth keeping as the default. When the fix is
+  only expressible as the later build's own bytes, it is a layer from the
+  player's disc and a player without that disc goes without it: DIV-0080
+  since 2026-10-10 (the owner: no Capcom table in our code).
 - **A later build's content change is an `opt/` layer** from the player's own
   disc, off by default, recorded in the ledger as existing (Stallion's
   palettes, the renames). A content change made the default would be a

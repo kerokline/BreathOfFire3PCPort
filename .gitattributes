@@ -1,2 +1,4 @@
 # The per-file manifests' own sha256 in fixtures.toml is over LF line ends.
 fixtures/*.tsv text eol=lf
+# recipes/exe.toml hashes recipes/exe-pointers.tsv over LF line ends too.
+recipes/*.tsv text eol=lf

@@ -32,7 +32,7 @@ try:
     lines += ['key.Z=circle', 'key.Up=down', 'key.Enter=select', 'key.Q=r2', 'key.Numpad9=up+right',
               'pad.layout=nintendo', 'pad.south=triangle', 'pad.ls_up=up']
     open(ini, 'w', encoding='utf-8').write('\r\n'.join(lines) + '\r\n')
-    env = dict(os.environ, BOF3X_LANG='en', BOF3X_PRESENT='clean')
+    env = dict(os.environ, BOF3X_LANG='en-US', BOF3X_PRESENT='clean')
     for k in ('BOF3X_KEYS', 'BOF3X_PAD', 'BOF3X_PAD_LAYOUT'): env.pop(k, None)
     ar.kill_stale(root + r'\build\bof3x-launcher.exe')
     pid = ar.launch(root + r'\build\bof3x-launcher.exe', root + r'\bof3', env)

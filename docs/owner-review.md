@@ -328,9 +328,9 @@ where the reading behind it is. Nothing here is a divergence until it is in
   or FR/DE-only). Should the cache's `base/` keep JP's rows, or take the later
   version as a ledgered divergence? **Read 2026-10-06** (section 8 there):
   `AREA004` is Dauna Mine's minecart area; its section 8 walls 72 cells that
-  fill gaps between wall stubs JP already placed (column x28 at z 9..30 and
-  35..65 with the doorway at z 32..33 kept, column x25 at z 9..11, row z71 at
-  x 7..22) plus a 30-cell texture fix, and section 10 closes the same cells
+  fill gaps between wall stubs JP already placed (along the raised strip's
+  east edge with a doorway kept, the north end of a column on its west side,
+  and the corridor's bottom edge) plus a 30-cell texture fix, and section 10 closes the same cells
   to battle placement - **a collision bug fix**, taken by every later build
   (the PSP took the walls but not the placement half). The cue byte is a PSX
   sound-priority fix the PC's sound code never reads; the PAL sample swap is
@@ -341,9 +341,20 @@ where the reading behind it is. Nothing here is a divergence until it is in
   divergence with the later discs as precedent, for every player. Area 4 is
   in the attract demo, so the state hash's reference runs want the switch off.
   The owner chose code; **built as DIV-0080** (`BOF3X_AREA4_WALLS`, the table
-  proven against the US and German discs offline). **Owed the owner's eye:**
-  in the minecart area, walk the raised strip's east edge and the corridor's
-  bottom edge - blocked with the fix, open with `BOF3X_AREA4_WALLS=0`.
+  proven against the US and German discs offline). **Changed 2026-10-10** at
+  the owner's asking (no Capcom table in our code, if we can): a rule from the
+  JP map's own data was looked for and **does not exist** - 58 other open
+  cells in area 4 have the same local heights and neighbours as the 72
+  ([`region-diff.md`](region-diff.md) 10.1) - so the table is gone and the
+  walls are the **`area4-walls` layer** from the player's own US, European,
+  French or German disc. **On by default since 2026-10-10** (the owner's
+  word): a build with a Western disc builds it, `install` installs it, and
+  the launcher plays it whenever it is installed and the ini's `opt=` is
+  empty; `opt=none` turns it off (DIV-0080). **Without a Western disc, area
+  4 is the shipped open map.** **Owed the
+  owner's eye:** with the layer on, in the minecart area, walk the raised
+  strip's east edge and the corridor's bottom edge - blocked with the layer,
+  open without it.
 - **Stallion's PSP recolour as an option** ([`psp-stallion.md`](psp-stallion.md)):
   palettes only (two rows in areas 67 and 166, plus the three variants), the
   fight's code identical. A toggle is a palette layer from the player's own

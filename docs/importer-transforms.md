@@ -210,24 +210,26 @@ with their palettes, and (German) `SCENA17`'s copy of the `DEMO` page. These
 are the disc's own language where the PC kept Japan's. It is a note, not a
 ledger entry, until the engine reads the cache (for the other files, below).
 
-**`AREA004`'s two rows (DIV-0080).**
-- From the JP disc, or the PC: JP's bytes, and DIV-0080's rule walls them at
-  load.
-- From a Western disc alone: that disc's bytes. These already have the 72
-  walls and the 8 cleared placement cells, so `area4_walls::Apply` finds
-  `walled == 72 && zero_nibbles == 8` and logs "already has the later discs'
-  walls; left as loaded". DIV-0080's own verification found the US and German
-  cells and placement map identical to JP's plus the fix.
+**`AREA004`'s two rows (DIV-0080).** *Revised 2026-10-10: the walls are no
+longer written by our code from a coordinate table; they are the
+`area4-walls` optional layer, cut from a Western disc ([`opt-layers.md`](opt-layers.md)
+section 1, [`region-diff.md`](region-diff.md) 10).*
+- From the JP disc, or the PC: JP's bytes, the open map. With a Western disc
+  among the sources as well, the build makes the layer by default (the
+  Western disc's whole cell plane and placement map over JP's; `--no-opt
+  area4-walls` leaves it out), `install` installs it by default, and the
+  launcher plays it whenever it is installed unless the ini says `opt=none`
+  (2026-10-10). Without one, no walls.
+- From a Western disc alone: that disc's bytes in `base/`, which already
+  have the 72 walls and the 8 cleared placement cells; no layer is needed.
 
-The difference is what DIV-0080 chose not to take: the Western map band's
-**30-cell re-texture** (920 bytes) comes with it. Two consequences for a
-Western-only cache:
-- `BOF3X_AREA4_WALLS=0` can no longer restore the open map, because no JP bytes
-  are held;
+The difference is what the layer does not take: the Western map band's
+**30-cell re-texture** (920 bytes) comes with a Western-only `base/`. Two
+consequences for a Western-only cache:
+- the open map cannot be had from it, because no JP bytes are held;
 - the strip's textures are the later discs'.
 
-That is a difference in game behaviour by source, so it wants a line in
-DIV-0080 (below).
+That is a difference in game behaviour by source, and DIV-0080 records it.
 
 **The dial page (port art, 16 world-map areas).** No disc carries the port's
 keyboard legend. Every PSX disc, JP included, stands in its own page: the
@@ -275,6 +277,12 @@ By container, the `base/` files not written lack:
 - 14 a bank and a port-edited arena.
 
 ## 7. `en-US` is the default English
+
+**Retired 2026-10-10** (the owner's word, DIV-0005): `--lang` takes a tag
+only, and a bare `en` (`fr`, `de`, `ja`) is refused naming the tag;
+`DEFAULT_TAG` is gone, and `verify --overlays` compares only overlays under
+the full tag. `en-US` stays the English the dialog and the docs reach for
+first. What follows is the record of 2026-10-08 to 2026-10-10.
 
 The owner's decision of 2026-10-08. `importer.py`'s `DEFAULT_TAG = {"en":
 "en-US"}`:
@@ -373,9 +381,10 @@ given to it.
   - a disc-only `loc_build` (font, text, exe tables; with step 8).
 - **`docs/DIVERGENCE.md`** (not in this step's lane; proposed text):
   - DIV-0080, a line: from a Western disc alone the cache holds that disc's
-    `AREA004` rows. The walls are already there, the guard leaves them, and the
-    30-cell re-texture comes with them. `BOF3X_AREA4_WALLS=0` cannot restore
-    the open map from such a cache.
+    `AREA004` rows. The walls are already there, and the 30-cell re-texture
+    comes with them; the open map cannot be had from such a cache. (Written
+    into DIV-0080; since 2026-10-10 the walls on JP's map are the
+    `area4-walls` layer, not code.)
   - When the engine reads the cache, one entry for the stand-ins as a whole:
     the dial page's PlayStation legend, the Western pages' own words.
 - **`docs/owner-review.md`**: the dial page stand-in, to look at once the

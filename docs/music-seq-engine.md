@@ -60,7 +60,7 @@ ignores this byte; the PSX calls `SsSetMono` from the same row.
 
 | Key | Values | Read |
 |---|---|---|
-| `BOF3X_CACHE` / ini `cache=` | Unset: no cache. A directory: the cache root (a trailing `\` is dropped). | `music_seq::Arm()`. Fatal if it is not a directory or is longer than 42 characters (the file layer's 0x50-byte retry buffer in `File_Open`, kept from the original). A directory without `base\bgm` gives one log line and no cache. |
+| `BOF3X_CACHE` / ini `cache=` | Unset: no cache. A directory: the cache root (a trailing `\` is dropped). | `music_seq::Arm()`. Fatal if it is not a directory or is longer than 226 characters (its longest path, a bank's, must stay within `MAX_PATH`). A directory without `base\bgm` gives one log line and no cache. Otherwise the whole cache is checked before arming (below). |
 | `BOF3X_MUSIC` / ini `music=` | Unset or `seq`: the cache's song where it has one. `mp3`: the PC's file always. | `Arm()`. Anything else is fatal. |
 
 The launcher sets each variable from the ini only when it is not already set
@@ -70,6 +70,37 @@ is no dialog box. `Arm()` runs in `InjectAll` after `music_loops::Arm()`,
 after every module's self-test, and logs one line. Each cache song started
 logs one line, and each track the armed seam cannot find in the cache logs
 one line as it falls back.
+
+**The start-up check** (2026-10-10, review fix). Before arming, `Arm()`
+lists `base\bgm\*.DAT` and, for every file named as `Music_LoadFile` would
+ask for it (`"%03u.DAT"` of a track), reads it by Win32, parses it
+(`psx::LoadSong`), checks that its number is its name's and that its bank
+name is a file name, and then reads, parses and checks each named bank once
+(`psx::LoadBank`, `MusicSynth::CheckBank`: the music slot's size, master
+volume 127 at most; the name inside equal to the one asked for). A missing
+bank, a truncated file, a bad magic or version, or any other malformed
+field is fatal there, and the message names the file
+(`DIV-0087: <path>: <what>`). A track with no song file is not an error: it
+plays its MP3. One log line reports the count. `LoadFile` runs the same
+checks again as each song loads, for a cache changed while the game runs.
+What the check does not catch is what only playing finds: an event the
+player does not implement (`libsnd-reading.md` 8, "What aborts") still
+aborts when the song reaches it.
+
+**The path limit.** Every cache path is at most `MAX_PATH - 1` characters
+(the CRT's `fopen`), so the root may have 226: `MAX_PATH - 1` less the
+longest tail, `\base\bgm\bank\` plus a 15-character bank name plus `.DAT`.
+It was 42 until 2026-10-10, because `File_Open` (`0x5A7380`, ours in
+`file_io.cpp`) retries a failed open with `File_CdRoot` in front in a
+0x50-byte buffer without a length check, kept from the original. That retry
+is now skipped when the prefixed path would not fit, and the open fails as a
+failed retry does (DIV-0087; the shipped file names are relative and short,
+so nothing changes for them).
+
+**The aborts.** The player's (`psx::MusicFatal`) and the SPU model's
+(`psx::Spu`'s, which until 2026-10-10 printed to a `stderr` the game does not
+have and aborted silently) both end in `bof3::Fatal`, a `FATAL: DIV-0087: ...`
+log line (`SPU model: ...` for the second).
 
 ## 4. The self-test (`BOF3X_SHADOW=sound`)
 
@@ -91,7 +122,15 @@ that has only `SetVolume`. The test checks:
 3. Song 8 on the same bank, which is not read again. Its samples must match
    the Render up to the piece in which `Ended()` first holds, then zeros,
    with `Music_Finished` set. (Host run: the end falls at sample 44,032.)
-4. Track 9 (not in the cache) and `BOF3X_MUSIC=mp3` must try `BGM\NNN.DAT`
+4. A change to a smaller bank on the same synth (added 2026-10-10, the
+   review's finding): song 10 on program 1 of a two-program bank
+   `SELFTST2`, then song 11 on the one-program bank, each read with its bank
+   and each equal, over the first half and three decodes, to the oracle,
+   which changes bank with it. Before `LoadBank` cleared the voice records
+   (`libsnd-reading.md` 3.11), song 11's `Play` aborted on song 10's voice
+   records (`tone 16 of 16`). The oracle now stops rendering a once-only
+   song where `Decode` does, so the synth it leaves is the game's.
+5. Track 9 (not in the cache) and `BOF3X_MUSIC=mp3` must try `BGM\NNN.DAT`
    and `BGM\NNNN.DAT`.
 
 Everything it touches is put back. The synth keeps the test's bank, but the
@@ -122,10 +161,18 @@ under the project's C++20.
   title and a field, a fight, a once-only track (one of the nine `N` songs),
   a fade-out, and a `Sound_LoadStream` jingle (the inn) between two cache
   songs. Then `BOF3X_MUSIC=mp3` for the A/B.
-- The owner's calls: the level (127 against the PSX's 97 at the title),
-  whether 42 characters is enough for the cache root (lifting it means reading
-  the cache through Win32 rather than the game's file layer), and song 21
-  (plan section 6).
+- The owner's calls: the level (127 against the PSX's 97 at the title), and
+  song 21 (plan section 6). (The 42-character cache-root limit is gone,
+  2026-10-10: section 3.)
+- 2026-10-10, the review fixes (branch `fix/review-audio`): built with
+  llvm-mingw, no warnings; `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound` exit 0
+  with the bank-change case; the start-up check on a synthetic cache under
+  a 200-character root passes intact and is fatal, naming the file, for a
+  truncated bank, a missing bank and a song of the wrong version. The host
+  suite's new cases (`seq_tests`: the bank change, the event-count wrap)
+  were not run - no POSIX host here; the same two cases ran as a scratch
+  i686 harness against `src/audio` (and the bank change aborted against the
+  2026-10-08 `seq.cpp`).
 
 ## 7. For the other files
 

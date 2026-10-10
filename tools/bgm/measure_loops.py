@@ -8,11 +8,18 @@ a Mednafen render of the disc's sequence.
         song with a row is skipped, a render already on disk is reused.
         --redo measures every song with a render on disk again, excluded
         or not; the log line carries the period, to diff against the last run.
+        A render on disk shorter than its plan (an emulator that crashed or
+        was starved) is rendered again, and a row measured on a short render
+        is marked "retry" and measured again on the next run, never final.
         Progress: analysis/bgm/measure.log. Needs BGM_SCRATCH (disc copies,
         about 480 MB a worker, and Mednafen's base directories).
-    python measure_loops.py measure TRACK RENDER.wav [T0]
-        measures one song from a render already made (T0: seconds before
-        which the recording holds no song, default 40).
+    python measure_loops.py measure TRACK RENDER.wav [SONG_AFTER_S]
+        measures one song from a render already made (SONG_AFTER_S: seconds
+        before which the recording holds no song, default SONG_AFTER_S = 40).
+    python measure_loops.py regate
+        applies the gates below again to every row of loops.json from the
+        values it recorded - no render, no measurement - and logs each row
+        whose verdict changes.
 
 The method (section 7): align the MP3 to the render on the song's first sound
 and refine on the waveform, fitting the linear clock drift; the render's loop
@@ -27,30 +34,60 @@ mapped into the MP3's samples. Then one of three cases:
            start (n - P >= the first sound): end = the last whole frame
            boundary before the file's end, start = end - P - the loop is
            phase-correct, its first stretch is intro material standing in for
-           the body's missing tail; confidence = the render's own correlation
-           of that intro stretch against the body's tail it replaces.
+           the body's missing tail. Two numbers: confidence = the render's
+           period correlation (as for every row), and stand_in_ncc = the
+           render's own waveform correlation of that intro stretch against the
+           body's tail it replaces, over the whole stretch (stand_in_s).
   shortened the MP3 is shorter than one period: no phase-correct loop exists
            in the file. start is searched for where the MP3's material best
            matches the render's true continuation after the file's end
            (2 s windows); the loop is shorter than the disc's by the reported
            amount; confidence = that correlation.
 
-Rows under 0.8 confidence are kept in loops.json with "excluded": true and
-are not written into the engine's table (tools/bgm/gen_loop_table.py).
+The gates (gate()): a row is refused when its confidence is under
+MIN_CONFIDENCE (0.8), when its alignment has fewer than 10 windows or a residual
+over 50 samples (512 on the envelope), or - a shifted row - when stand_in_ncc
+is under MIN_STAND_IN (0.5), however short the stand-in. Under it the
+stand-in is other material, heard once a pass. The number sits in a gap of the
+measured distribution (2026-10-10, all 29 shifted rows): stand_in_ncc has 15
+rows at -0.10..0.34, nothing until 0.62, then 14 at 0.62..1.00. Two of the low
+ones (151, 153: the battle theme and its twin) stand in for only 0.35..0.37 s,
+the song's crossfaded run-in to its first note, and were kept on the first
+cut of the gate for that; the owner's call of 2026-10-10 refuses them with
+the rest, so those two rewind as the original port did. The shortfall (short_by, the stand-in's length) is
+not gated apart: stand_in_ncc is measured over the whole
+stand-in, however long (008: 8.1 s at 0.87; 142: 6.4 s at 0.96).
+
+The stand-in is judged on the waveform, which the cymbal and hi-hat hits'
+jitter between passes lowers (match_windows; bgm-comparison.md 11.1 2): a
+song no waveform window of which matches (the 23.19 s family, 089 and its
+variants) may be refused for that rather than for wrong material.
+That refusal is the safe one - the track keeps the original's rewind.
+
+Refused rows are kept in loops.json with "excluded": true and are not
+written into the engine's table (tools/bgm/gen_loop_table.py); the track
+plays as the original port did, from the file's start again.
 """
 import collections, json, os, subprocess, sys, time
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from bgm_paths import PC, SCRATCH
-from wavread import read as wavread
+from bgm_paths import PC, SCRATCH, LOOPS_JSON
+from wavread import read as wavread, seconds as wav_seconds
 from loops import decode, ncc_search, SR
 
 OUT = PC + "/analysis/bgm"
-TABLE = OUT + "/loops.json"
-LOG = OUT + "/measure.log"
+TABLE = LOOPS_JSON
+LOG = os.path.join(os.path.dirname(TABLE), "measure.log")   # beside the table it describes
 RENDERS = OUT + "/renders"
 FRAME = 1152
 MIN_CONFIDENCE = 0.8
+MIN_STAND_IN = 0.5  # a shifted row's stand_in_ncc (the docstring: the gap between 0.34 and 0.62)
+# Every render starts with Mednafen's boot, the Sony and Capcom intros and the title: no song before
+# this many seconds of recording (the first note sits at 43.6-43.8 s in every render of 2026-10-08)
+SONG_AFTER_S = 40.0
+# render_plan's pad: a render with less audio than its plan minus this is truncated (Mednafen's
+# start-up eats 0.3..9 s of the wall-clock timeout, measured over 153 renders on 2026-10-08)
+RENDER_SLACK_S = 15
 # The PC renders' clock against Mednafen's, in rec samples per mp3 sample: -173..-177 ppm on every
 # song the waveform aligns (003, 011, 017, 025 on 2026-10-08; 000 and 153 on 10-06). The envelope
 # fallback fits its intercept with the slope pinned here - its few hop-resolution points cannot
@@ -115,7 +152,10 @@ def best_lag(ref, sig):
     return k, float(c[k])
 
 
-def measure(track, recpath, t0=40.0):
+def measure(track, recpath, song_after_s=SONG_AFTER_S):
+    """One song's row from its render. song_after_s: seconds of recording before which no song
+    sounds (the boot and the intros); the song's first sound is the first after it."""
+    t0 = song_after_s
     inv = json.load(open(OUT + "/inventory.json"))
     info = inv["pc"][str(track)]
     mp3 = decode(PC + "/bof3/BGM/" + info["file"])
@@ -213,8 +253,8 @@ def measure(track, recpath, t0=40.0):
     tref = int(s0 + (a_nom + min(2.0, 0.1 * body)) * SR)
     W = int(min(3 * SR, 0.3 * body * SR))
     lo = int(tref + 0.9 * body * SR); hi = int(tref + 1.1 * body * SR) + W
-    if hi > len(rm):
-        row.update(excluded=True, why="render too short for one period", confidence=0.0)
+    if hi > len(rm):   # a truncated render, or a plan too short: measured again next run, never final
+        row.update(excluded=True, retry=True, why="render too short for one period", confidence=0.0)
         return row
     # The period and the loop start are found on the ONSET ENVELOPE, which the sequencer repeats
     # exactly every pass, and only then made sample-exact on the waveform. The waveform alone
@@ -375,7 +415,7 @@ def measure(track, recpath, t0=40.0):
         conf = nccv(rm[rs:rs + seg], rm[rs + P:rs + P + seg]) if re_ > rs else 1.0
         row.update(case="shifted", start=Li, end=Ei, short_by=int(round(E - n)), holds_whole_body=False,
                    confidence=cp, stand_in_ncc=conf, refine_ncc=c2, fade=fade,
-                   stand_in_s=(S - rs) / SR)
+                   stand_in_s=(S - rs) / SR)   # gated in gate() on MIN_STAND_IN
     else:
         Ei = last
         er = int(round(to_rec(Ei)))
@@ -393,13 +433,26 @@ def measure(track, recpath, t0=40.0):
                    excluded=True, why="the file is shorter than one loop period from its start: no phase-correct "
                    "loop exists in it; it rewinds as the original does")
         return row
+    return gate(row)
+
+
+def gate(row):
+    """The verdict on a render-measured full or shifted row, from the values it recorded (the module
+    docstring's gates); any other row is returned as it is - its exclusion was decided where it was
+    measured (no alignment, no repeat, shortened, in-file)."""
+    if row.get("method", "render") != "render" or row.get("case") not in ("full", "shifted"):
+        return row
     a = row["align"]
     bad = []
     if row["confidence"] < MIN_CONFIDENCE:
         bad.append("loop correlation %.3f under %.2f" % (row["confidence"], MIN_CONFIDENCE))
     if a["windows"] < 10 or a["max_residual"] > (50 if a["method"] == "waveform" else 512):
         bad.append("alignment: %d windows, residual %.1f samples" % (a["windows"], a["max_residual"]))
+    if row["case"] == "shifted" and row["stand_in_ncc"] < MIN_STAND_IN:
+        bad.append("stand-in correlation %.3f under %.2f over %.2f s of intro standing in for the body's tail"
+                   % (row["stand_in_ncc"], MIN_STAND_IN, row["stand_in_s"]))
     row["excluded"] = bool(bad)
+    row.pop("why", None)
     if bad:
         row["why"] = "; ".join(bad)
     return row
@@ -518,6 +571,7 @@ def run(workers, songs, redo=False):
     # --redo every song whose render is on disk is measured again (no new render) - after a change
     # to measure(), every row, since a row that passed may have passed at a wrong period (017)
     todo = [s for s in songs if str(s) not in done or done[str(s)].get("method") == "in-file"
+            or done[str(s)].get("retry")
             or (redo and os.path.exists(RENDERS + "/song%03d_mednafen.wav" % s))]
     log("run: %d songs to measure (%d already in loops.json), %d workers" % (len(todo), len(songs) - len(todo), workers))
     here = os.path.dirname(os.path.abspath(__file__))
@@ -526,6 +580,10 @@ def run(workers, songs, redo=False):
     def one(widx, track):
         out = RENDERS + "/song%03d_mednafen.wav" % track
         fid, song, secs = render_plan(track, inv)
+        if os.path.exists(out) and wav_seconds(out) < secs - RENDER_SLACK_S:
+            log("song %03d: render holds %.1f s of %d planned - truncated, rendering again"
+                % (track, wav_seconds(out), secs))
+            os.remove(out)
         if not os.path.exists(out):
             disc = SCRATCH + "/w%d" % widx
             subprocess.run([sys.executable, here + "/patch_disc.py", str(song), disc, hex(fid)], check=True,
@@ -533,6 +591,10 @@ def run(workers, songs, redo=False):
             env = dict(os.environ, BGM_SCRATCH=SCRATCH + "/home%d" % widx)
             subprocess.run(["bash", here + "/mrun.sh", str(secs), out, disc + "/bof3jp.cue"], env=env,
                            capture_output=True)
+        got = wav_seconds(out) if os.path.exists(out) else 0.0
+        if got < secs - RENDER_SLACK_S:   # not persisted as final: "retry" puts it in the next run's todo
+            return dict(track=track, render=os.path.basename(out), excluded=True, retry=True, confidence=0.0,
+                        why="render truncated: %.1f s of audio, %d planned" % (got, secs))
         return measure(track, out)
 
     queue = list(todo)
@@ -561,11 +623,27 @@ def run(workers, songs, redo=False):
     log("run: done")
 
 
+def regate():
+    table = load_table()
+    for k, r in sorted(table.items(), key=lambda kv: int(kv[0])):
+        was = (bool(r.get("excluded")), r.get("why"))
+        r = fit_fade(gate(r))
+        table[k] = r
+        if (bool(r.get("excluded")), r.get("why")) != was:
+            log("song %03d: regate %s -> %s%s" % (int(k), "excluded" if was[0] else "kept",
+                                                  "excluded" if r.get("excluded") else "kept",
+                                                  " (%s)" % r["why"] if r.get("excluded") else ""))
+    json.dump(table, open(TABLE, "w"), indent=1, default=float)
+    log("regate: %d rows kept of %d" % (sum(not r.get("excluded") for r in table.values()), len(table)))
+
+
 def main():
     if sys.argv[1] == "measure":
-        row = measure(int(sys.argv[2]), sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 40.0)
+        row = measure(int(sys.argv[2]), sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else SONG_AFTER_S)
         save_row(row)
         log("song %03d: %s" % (row["track"], json.dumps(row, default=float)))
+    elif sys.argv[1] == "regate":
+        regate()
     elif sys.argv[1] == "infile":
         tracks = [int(t) for t in sys.argv[2].split(",")]
         table = load_table()

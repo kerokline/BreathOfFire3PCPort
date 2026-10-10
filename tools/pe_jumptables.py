@@ -343,8 +343,12 @@ def run(a):
                 # An inline table the code reads as data (a switch's byte
                 # index, a dword table read without a jump): its cells, then
                 # padding.
+                # A dword cell needs four bytes in the gap: a shorter tail
+                # whose dword points into .text is read as the other kind,
+                # which always advances (pad_len at s + i + k is 0), or q
+                # would stay put and this loop would never end.
                 q = s + i + k
-                if sc.in_text(sc.img.dword(q)):
+                if q + 4 <= s + j and sc.in_text(sc.img.dword(q)):
                     while q + 4 <= s + j and sc.in_text(sc.img.dword(q)):
                         q += 4
                 else:

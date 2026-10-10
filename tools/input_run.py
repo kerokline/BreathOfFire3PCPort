@@ -47,6 +47,7 @@ from PIL import ImageGrab
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front, log_run_time  # noqa: E402
 import recipe_saves  # noqa: E402
+import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 
 u = ctypes.WinDLL('user32')
 k32 = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -126,7 +127,9 @@ def main():
                     help='seconds between a shot line and the grab, for the frame to reach the screen; '
                          'the game is frozen meanwhile, so this only has to outlast the compositor')
     ap.add_argument('--game', default=os.path.join(ROOT, 'bof3'))
-    ap.add_argument('--lang', default=None, help='BOF3X_LANG, an overlay tag, e.g. en-US (a recipe recorded under the bare `en` plays under en-US)')
+    ap.add_argument('--lang', default=None, type=lambda v: language_tags.refuse_retired(v, '--lang'),
+                    help='BOF3X_LANG, an overlay tag, e.g. en-US (the bare en/fr/de/ja are retired, DIV-0005; '
+                         'a recipe recorded under the bare `en` plays under en-US)')
     ap.add_argument('--original', default=None, metavar='LIST', help='BOF3X_ORIGINAL')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
     ap.add_argument('--speed', type=int, default=1, metavar='N',

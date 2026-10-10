@@ -1,5 +1,5 @@
 """Read a Mednafen -soundrecord WAV even when the process was killed (header sizes unset)."""
-import struct, sys
+import os, struct, sys
 import numpy as np
 
 
@@ -20,6 +20,24 @@ def read(path):
     n = len(data) // align
     x = np.frombuffer(data[:n * align], dtype="<i2").reshape(-1, ch).astype(np.float32) / 32768.0
     return x, sr
+
+
+def seconds(path):
+    """Seconds of audio in a WAV from its headers and its size on disk - not the data chunk's size
+    field, which a killed Mednafen leaves unset; reads the first 4 KB only."""
+    size = os.path.getsize(path)
+    b = open(path, "rb").read(4096)
+    assert b[:4] == b"RIFF" and b[8:12] == b"WAVE", b[:12]
+    p, fmt = 12, None
+    while p + 8 <= len(b):
+        cid, sz = b[p:p + 4], struct.unpack_from("<I", b, p + 4)[0]
+        if cid == b"fmt ":
+            fmt = struct.unpack_from("<HHIIHH", b, p + 8)
+        if cid == b"data":
+            n = size - (p + 8) if sz == 0 or p + 8 + sz > size else sz
+            return n // fmt[4] / fmt[2]
+        p += 8 + sz + (sz & 1)
+    raise ValueError("no data chunk in the first 4 KB of " + path)
 
 
 if __name__ == "__main__":

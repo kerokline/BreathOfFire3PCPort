@@ -20,7 +20,7 @@ def key(scan, down, ext=False):
     i = INPUT(type=1); i.ki = KI(0, scan, fl, 0, None)
     u.SendInput(1, ctypes.byref(i), ctypes.sizeof(INPUT))
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-env = dict(os.environ, BOF3X_LANG='en', BOF3X_PRESENT='clean')
+env = dict(os.environ, BOF3X_LANG='en-US', BOF3X_PRESENT='clean')
 ar.kill_stale(root + r'\build\bof3x-launcher.exe')
 pid = ar.launch(root + r'\build\bof3x-launcher.exe', root + r'\bof3', env)
 stop = threading.Event(); threading.Thread(target=ar.keep_in_front, args=(stop,), daemon=True).start()

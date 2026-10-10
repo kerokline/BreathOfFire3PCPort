@@ -15,7 +15,8 @@ reads them with, and prints what changed as fields, cells and values:
           AreaMap_CellNibble 0x592890 reads for the battle placement)
   cues    every BPLCHAR type-8 record: the cue entries' fields (the sibling's
           SOUND_CUES.md: flags, pan|program, tone|priority, chord|voice)
-  fix     src/game/area4_walls.cpp's tables applied to JP's sections 8 and 10, against --later's
+  fix     an area4-walls layer (--layer, built by tools/importer.py from a Western
+          disc; DIV-0080) laid over JP's sections 8 and 10 by tag, against --later's
   pal     the eight area banks where --pal differs from --later: samples
           dropped and added (by md5), and the tones that point at them
 
@@ -60,9 +61,14 @@ def cmd_area4(J, L):
 
     def h(buf, cx, cz):
         return sum(struct.unpack_from("<4b", buf, 0x30 + 4 * (cz * w + cx))) / 4
-    print("   mean corner height across x 24..31 at z 13, 29, 49:")
-    for cz in (13, 29, 49):
-        print("      z %d: %s" % (cz, [round(h(x, cx, cz)) for cx in range(24, 32)]))
+    # The profile across the longest changed column, at three of its rows: the
+    # place is read off the discs, never written here (region-diff.md 8.1).
+    main = max(cols, key=lambda c: len(cols[c]))
+    zs = sorted(cols[main])
+    xs = range(max(0, main - 4), min(w, main + 4))
+    print("   mean corner height across x %d..%d at three of x %d's changed rows:" % (xs[0], xs[-1], main))
+    for cz in (zs[len(zs) // 8], zs[len(zs) // 2], zs[7 * len(zs) // 8]):
+        print("      z %d: %s" % (cz, [round(h(x, cx, cz)) for cx in xs]))
     t = L_["tiles"]
     dt = collections.Counter()
     moved = []
@@ -168,41 +174,53 @@ def cmd_pal(L, P):
               % (key, vl, vp, gone, new, ts, sorted({tp.get(k) for k in ts}), cues, sl[1][3] == sp[1][3]))
 
 
-def cmd_fix(J, L):
-    """Apply src/game/area4_walls.cpp's own tables (parsed from the source, so the
-    check is of the code's table, not a copy) to the JP disc's AREA004 sections 8
-    and 10, and compare with the later disc's."""
-    import re
-    src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                            "src", "game", "area4_walls.cpp"), encoding="utf-8").read()
-    walls = src[src.index("kWalls[]"):src.index("};", src.index("kWalls[]"))]
-    place = src[src.index("kPlacement[]"):src.index("};", src.index("kPlacement[]"))]
-    runs_ = [tuple(map(int, m)) for m in re.findall(r"\{(\d+), (\d+), (\d+), (\d+)\}", walls)]
-    nibs = [tuple(map(int, m)) for m in re.findall(r"\{(\d+), (\d+), (\d+)\}", place)]
-    wall = int(re.search(r"kWall = 0x([0-9A-Fa-f]+)", src).group(1), 16)
+MAP_TAG, PLACE_TAG = 0xC8000, 0xC0800   # PC tags of AREA004 sections 8 and 10
+
+
+def cmd_fix(J, L, layer):
+    """Lay an area4-walls layer container (tools/importer.py build --opt
+    area4-walls: opt/area4-walls/dat/AREA004.DAT) over the JP disc's AREA004
+    sections 8 and 10 as LoadDatFile lays a kind-0 chunk - its payload at its
+    tag, the sections sitting at PC tags 0xC8000 and 0xC0800 - and compare with
+    the later disc's. DIV-0080; the layer is built from a Western disc, so this
+    is the check that the loader's walk gives that disc's collision on JP's map,
+    and nothing else of it."""
+    import dat
+    if not layer:
+        raise SystemExit("fix wants --layer opt/area4-walls/dat/AREA004.DAT (tools/importer.py build --opt area4-walls)")
+    blob, chunks = dat.load(layer)
     m = bytearray(J.sections(AREA4)[8][3])
     n = bytearray(J.sections(AREA4)[10][3])
     ml, nl = L.sections(AREA4)[8][3], L.sections(AREA4)[10][3]
+    jm, jn = bytes(m), bytes(n)
+    for c in chunks:
+        if c.kind != 0:
+            raise SystemExit("layer chunk of kind %d" % c.kind)
+        body = blob[c.offset:c.offset + c.size]
+        for base, buf in ((MAP_TAG, m), (PLACE_TAG, n)):
+            at = c.tag - base
+            if 0 <= at and at + c.size <= len(buf):
+                buf[at:at + c.size] = body
+                break
+        else:
+            raise SystemExit("layer chunk at 0x%X lands in neither section" % c.tag)
+    lay = area_layout(m)
+    p, cells = lay["plane"], lay["n"]
     w = m[0]
-    p = area_layout(m)["plane"]
-    cells = 0
-    for x0, z0, x1, z1 in runs_:
-        for z in range(z0, z1 + 1):
-            for x in range(x0, x1 + 1):
-                assert m[p + w * z + x] == 0, (x, z)
-                m[p + w * z + x] = wall
-                cells += 1
-    for x, z, jp in nibs:
-        i = w * z + x
-        assert nib(n, i) == jp, (x, z)
-        n[i >> 1] = (n[i >> 1] & 0xF0) if i & 1 else (n[i >> 1] & 0x0F)
-    plane_same = m[p:p + w * m[1]] == ml[p:p + w * m[1]]
+    changed = [i for i in range(cells) if m[p + i] != jm[p + i]]
+    print("layer: %d chunks; cell bytes changed on JP's map: %d, values %s" % (
+        len(chunks), len(changed), dict(collections.Counter(("0x%02X" % jm[p + i], "0x%02X" % m[p + i]) for i in changed))))
+    print("   by column: %s" % ", ".join("x %d: z %s" % (cx, runs(sorted(i // w for i in changed if i % w == cx)))
+                                         for cx in sorted({i % w for i in changed})))
+    nibs = [i for i in range(cells) if nib(n, i) != nib(jn, i)]
+    print("placement nibbles changed: %d, every one to 0: %s; every one on a cell the layer walled: %s"
+          % (len(nibs), all(nib(n, i) == 0 for i in nibs), all(i in set(changed) for i in nibs)))
     rest = [i for i in range(len(m)) if m[i] != ml[i]]
-    print("table: %d runs, %d wall cells (0x%02X), %d placement cells" % (len(runs_), cells, wall, len(nibs)))
-    print("section 8 cell bytes after the fix == later disc's: %s" % plane_same)
+    print("section 8 cell bytes after the layer == later disc's: %s" % (m[p:p + cells] == ml[p:p + cells]))
     print("section 8 bytes still differing: %d, all in the tile words and texture records: %s"
-          % (len(rest), all(area_layout(m)["tiles"] <= i < area_layout(m)["tex_end"] for i in rest)))
-    print("section 10 after the fix == later disc's: %s" % (bytes(n) == nl))
+          % (len(rest), all(lay["tiles"] <= i < lay["tex_end"] for i in rest)))
+    print("section 8 outside the cell plane unchanged from JP's: %s" % (m[:p] == jm[:p] and m[p + cells:] == jm[p + cells:]))
+    print("section 10 after the layer == later disc's: %s" % (bytes(n) == nl))
 
 
 def main():
@@ -210,6 +228,7 @@ def main():
     ap.add_argument("--jp", required=True)
     ap.add_argument("--later", required=True, help="a Western PSX disc (US)")
     ap.add_argument("--pal", help="a PAL disc (FR or DE)")
+    ap.add_argument("--layer", help="for fix: an area4-walls layer's AREA004.DAT (importer.py build --opt area4-walls)")
     ap.add_argument("what", nargs="*", default=["area4", "area4n", "cues", "pal"])
     a = ap.parse_args()
     J, L = region_diff.Build("jp", a.jp), region_diff.Build("later", a.later)
@@ -218,8 +237,10 @@ def main():
         if w == "pal":
             if a.pal:
                 cmd_pal(L, region_diff.Build("pal", a.pal))
+        elif w == "fix":
+            cmd_fix(J, L, a.layer)
         else:
-            {"area4": cmd_area4, "area4n": cmd_area4n, "cues": cmd_cues, "fix": cmd_fix}[w](J, L)
+            {"area4": cmd_area4, "area4n": cmd_area4n, "cues": cmd_cues}[w](J, L)
 
 
 if __name__ == "__main__":

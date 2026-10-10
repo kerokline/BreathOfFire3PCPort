@@ -5,12 +5,12 @@
 // locals here.
 #include "game/dat_load.h"
 
-#include "game/area4_walls.h"
 #include "game/battle_text.h"
 #include "game/char_names.h"
 #include "game/config_text.h"
 #include "game/fishing_text.h"
 #include "game/labels.h"
+#include "game/language_tags.h"
 #include "game/map_layers.h"
 #include "game/menu_verbs.h"
 
@@ -89,10 +89,12 @@ char g_lang[8];
 
 // DIV-0086. The optional layers wanted: BOF3X_OPT, a comma-separated list of
 // layer names (docs/opt-layers.md: psp-art, psp-tiles, psp-maps,
-// psp-names-en-150, psp-names-ja-JP), in the order they land, read and
+// psp-names-en-150, psp-names-ja-JP, area4-walls), in the order they land, read and
 // checked once at injection. Each is a letter-or-digit-or-hyphen name of at
 // most kOptName - 1 characters; the longest today is 16. Empty = none, and
-// "original" is also none (as BOF3X_LANG's).
+// "original" and "none" are also none (as BOF3X_LANG's; "none" as the ini's opt=).
+// The default of DIV-0080's layer is the launcher's (config.h kOptDefault): it
+// names area4-walls here when that layer is installed and opt= is empty.
 constexpr int kOptMax = 8;
 constexpr int kOptName = 24;
 // "DAT\" + a layer + "." + a file name + NUL: 4 + 23 + 1 + 35 + 1. The
@@ -115,7 +117,8 @@ bool g_area_block_loaded;
 // DIVERGENCE DIV-0086: then, with BOF3X_OPT=<layer>[,<layer>...] set,
 // DAT\<layer>.<name> for each layer in that order, when it exists - after the
 // language overlay, so a layer lands on top of both. The layers are built by
-// tools/importer.py from the player's PSP disc and copied in by its
+// tools/importer.py from the player's PSP disc (area4-walls, DIV-0080: a
+// Western PSX disc) and copied in by its
 // `install`; none ships (docs/opt-layers.md).
 //
 // DIVERGENCE DIV-0005: with BOF3X_LANG=<tag> set, DAT\<tag>.<name> is walked
@@ -159,7 +162,6 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
         Crt_sprintf(layer, "DAT\\%s.%s", g_opt[i], name);
         if (GetFileAttributesA(layer) != INVALID_FILE_ATTRIBUTES) WalkDatFile(layer);
     }
-    area4_walls::Apply(name);  // the later discs' walls in area 4 (BOF3X_AREA4_WALLS; area4_walls.h)
     if (g_area_block_loaded) {
         g_area_block_loaded = false;
         map_layers::SnapshotSides();  // DIV-0085: the side faces the file's heights give (map_layers.h)
@@ -258,34 +260,19 @@ void WalkDatFile(const char* path) {
 
 namespace {
 
-// The language a text layer's name ends in - "-<tag>" with the tag two
-// lowercase letters, then optionally "-" and two capitals or three digits
-// (en-150, ja-JP; fixtures.toml's tags) - or null for a layer that is not text.
-const char* LayerLanguage(const char* layer) {
-    for (const char* p = std::strchr(layer, '-'); p; p = std::strchr(p + 1, '-')) {
-        const char* t = p + 1;
-        auto lower = [](char c) { return c >= 'a' && c <= 'z'; };
-        auto upper = [](char c) { return c >= 'A' && c <= 'Z'; };
-        auto digit = [](char c) { return c >= '0' && c <= '9'; };
-        if (!lower(t[0]) || !lower(t[1])) continue;
-        if (t[2] == 0) return t;
-        if (t[2] != '-') continue;
-        if (upper(t[3]) && upper(t[4]) && t[5] == 0) return t;
-        if (digit(t[3]) && digit(t[4]) && digit(t[5]) && t[6] == 0) return t;
-    }
-    return nullptr;
-}
-
 // BOF3X_OPT into g_opt, refusing - loudly, at start-up - what the walk could
 // only skip: a name too long or with a character a file name must not carry,
 // one named twice, more than kOptMax, a layer with no file installed, and a
 // text layer under another language than BOF3X_LANG's (its names are glyph
-// codes of that language's font, DIV-0008).
+// codes of that language's font, DIV-0008). Which layer is text, and of which
+// language, is game/language_tags.h's rule, the launcher's too: it drops such
+// a layer with a warning before the game starts, so this only fires for a
+// BOF3X_OPT set by hand.
 void ReadOptLayers() {
     char list[kOptMax * kOptName];
     const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", list, sizeof list);
     if (n >= sizeof list) bof3::Fatal("DIV-0086: BOF3X_OPT is %lu characters; at most %u", n, (unsigned)sizeof list - 1);
-    if (n == 0 || std::strcmp(list, "original") == 0) return;
+    if (n == 0 || std::strcmp(list, "original") == 0 || std::strcmp(list, "none") == 0) return;
     for (char* p = list;;) {
         char* end = std::strchr(p, ',');
         const std::size_t len = end ? static_cast<std::size_t>(end - p) : std::strlen(p);
@@ -308,9 +295,8 @@ void ReadOptLayers() {
             bof3::Fatal("DIV-0086: BOF3X_OPT names %s, but there is no %s (tools/importer.py install --opt %s)", name,
                         pattern, name);
         FindClose(h);
-        if (const char* tag = LayerLanguage(name)) {
-            const std::size_t primary = std::strcspn(g_lang, "-");
-            if (primary != 2 || std::strncmp(g_lang, tag, 2) != 0)
+        if (const char* tag = bof3x::LayerLanguage(name)) {
+            if (!bof3x::SamePrimaryLanguage(g_lang, tag))
                 bof3::Fatal("DIV-0086: layer %s is %s text; BOF3X_LANG is \"%s\"", name, tag, g_lang);
         }
         ++g_opt_count;
@@ -319,14 +305,46 @@ void ReadOptLayers() {
     }
 }
 
+// DIV-0080's old switch. Area 4's walls were written by coordinate from a table
+// in our code, on unless BOF3X_AREA4_WALLS=0; they are now the area4-walls
+// layer, built from the player's Western PSX disc and named in BOF3X_OPT
+// (docs/opt-layers.md section 1), which the launcher names by default when it
+// is installed. A script still asking for the shipped map (0) gets it when
+// the layer is not named, with a line, and is refused when it is (the
+// launcher's default, or BOF3X_OPT): it would get walls it asked to be
+// without. Anything else asked for walls this switch no longer gives, and is
+// refused rather than ignored.
+void RetiredAreaWallsSwitch() {
+    char text[16];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_AREA4_WALLS", text, sizeof text);
+    if (n == 0) return;
+    if (n == 1 && text[0] == '0') {
+        for (int i = 0; i < g_opt_count; ++i)
+            if (std::strcmp(g_opt[i], "area4-walls") == 0)
+                bof3::Fatal("DIV-0080: BOF3X_AREA4_WALLS=0 is retired, and BOF3X_OPT names area4-walls (the "
+                            "launcher's default when it is installed); BOF3X_OPT=none, or an ini opt=none, "
+                            "plays the shipped map");
+        bof3::Log("DIV-0080: BOF3X_AREA4_WALLS is retired; area 4's map is the one loaded, BOF3X_OPT not naming "
+                  "area4-walls");
+        return;
+    }
+    bof3::Fatal("DIV-0080: BOF3X_AREA4_WALLS is retired - area 4's walls are the area4-walls layer from a Western "
+                "PSX disc (tools/importer.py build and install, on by default with such a disc; BOF3X_OPT=area4-walls)");
+}
+
 }  // namespace
 
 void DatLoad_Inject() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", g_lang, sizeof g_lang);
     if (n == 0 || n >= sizeof g_lang || std::strcmp(g_lang, "original") == 0) g_lang[0] = 0;
+    // The bare codes of before 2026-10-08 are retired, not read (DIV-0005):
+    // DAT\en.* is no overlay this project builds any more.
+    if (const char* use = bof3x::RetiredLanguageReplacement(g_lang))
+        bof3::Fatal("DIV-0005: BOF3X_LANG=%s is retired; use %s", g_lang, use);
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
     ReadOptLayers();
     for (int i = 0; i < g_opt_count; ++i) bof3::Log("DIV-0086: optional layer %d, DAT\\%s.*.DAT", i + 1, g_opt[i]);
+    RetiredAreaWallsSwitch();
     BOF3_INJECT(LoadDatFile);
 }

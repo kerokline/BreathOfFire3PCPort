@@ -45,7 +45,6 @@
 #include "game/area_backdrop.h"
 #include "game/widescreen.h"
 #include "game/d3d_lines.h"
-#include "game/area4_walls.h"
 #include "game/music_loops.h"
 #include "game/music_seq.h"
 #include "game/battle_actions.h"
@@ -1421,8 +1420,6 @@ void InjectAll() {
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
     d3d_lines::Arm();           // DIV-0079: the six LINE handlers draw quads of the scale's width (BOF3X_LINES) - after
                                 // every module's self-test, which all compared the original's line strip (d3d_lines.h)
-    area4_walls::Arm();         // area 4's walls as the later discs have them (BOF3X_AREA4_WALLS; docs/region-diff.md
-                                // section 10) - after every module's self-test, which all compared the shipped map
     map_layers::ArmSideDup();   // DIV-0085: a side face gained at run time takes the cell's one side word (BOF3X_SIDE_DUP;
                                 // known-defects.md D239) - after every module's self-test, which all compared Capcom's read
     music_loops::Arm();         // the measured music loops (BOF3X_MUSIC_LOOPS; docs/bgm-comparison.md section 12) -

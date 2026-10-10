@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "bof3/symbols.gen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -28,10 +29,25 @@ unsigned char g_wide = 0;
 namespace {
 
 using U = std::uint32_t;
-constexpr U kScaleX = 0x7C9F4C;     // D3d_ScaleX, float
-constexpr U kScaleY = 0x7C9F48;     // D3d_ScaleY, float
-constexpr U kVertices = 0x7CA958;   // D3d_Vertices, 4 x D3DTLVERTEX of 0x20
-constexpr U kDevice = 0x7CC350;     // D3d_Device, an IDirect3DDevice3 *
+// symbols.gen.h also defines each data name as a typed macro, which would
+// expand inside bof3::addr:: - the constants are read with the macros set
+// aside (battle_flow.cpp's way). The values are the names' (rule 3).
+#pragma push_macro("D3d_ScaleX")
+#undef D3d_ScaleX
+#pragma push_macro("D3d_ScaleY")
+#undef D3d_ScaleY
+#pragma push_macro("D3d_Vertices")
+#undef D3d_Vertices
+#pragma push_macro("D3d_Device")
+#undef D3d_Device
+constexpr U kScaleX = bof3::addr::D3d_ScaleX;       // float
+constexpr U kScaleY = bof3::addr::D3d_ScaleY;       // float
+constexpr U kVertices = bof3::addr::D3d_Vertices;   // 4 x D3DTLVERTEX of 0x20
+constexpr U kDevice = bof3::addr::D3d_Device;       // an IDirect3DDevice3 *
+#pragma pop_macro("D3d_Device")
+#pragma pop_macro("D3d_Vertices")
+#pragma pop_macro("D3d_ScaleY")
+#pragma pop_macro("D3d_ScaleX")
 
 unsigned char* At(U a) { return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(a)); }
 float FloatAt(const unsigned char* p) {

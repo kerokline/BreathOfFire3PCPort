@@ -146,7 +146,7 @@ the player's machine out of their own US disc - dialogue, system pools, item
 and ability names, the font, the title menu, the Config screen, menu verbs,
 battle labels, default names (DIV-0005..0009, DIV-0013..0020;
 [`dialogue-localisation.md`](dialogue-localisation.md)) - selected by
-`BOF3X_LANG=en` or the launcher's Language box. The other languages, and a
+`BOF3X_LANG=en` (`en-US` since the tags; the bare code is retired, DIV-0005) or the launcher's Language box. The other languages, and a
 runtime switch, are open.
 
 **Widened into a delivery plan (2026-09-26):** [`ASSET_SOURCES.md`](ASSET_SOURCES.md)
