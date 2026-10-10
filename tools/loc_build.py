@@ -36,7 +36,9 @@ a second copy of a build already built, the PC port's own files, and the
 PSP discs, which `all` has not been validated against. `--lang` is refused
 here: a tag only ever comes from identity. The game directory is checked
 first: `BOF3.exe` must hash as the catalogued port, and its `DAT/` is named
-if it is the shipped tree. `--dry-run` identifies and writes nothing.
+if it is the shipped tree. `--dry-run` identifies and writes nothing (with one
+`--disc` too). English discs are built first: the French and German title
+menus borrow their CONFIG row from an English overlay already built.
 
 ## Replicating a build: `--upscaler`
 
@@ -1283,12 +1285,16 @@ def convert_labels(game, start, battle, shop=None):
             raise SystemExit("labels: START.EMI has no eleven sort strings after the PC's bytes at 0x%X" % LABEL_SORT_HEAD)
         chunks.append(label_chunk(7, found, report))
         # The formations: the PC's ten records of 28 (name 16, pairs 12), the
-        # disc's of 20 (name 7, its length, the same pairs), found by the pairs.
+        # disc's of 20 (name 7, its length, the same pairs) or 22 (German: name
+        # 8, its length, a pad, the pairs), found by the pairs. The name is cut
+        # at its own width: at 22, stride - 13 would take the length byte too,
+        # and an eight-letter name has no NUL to stop at.
+        name_len = {20: 7, 22: 8}
         pc = exe_bytes(game, LABEL_FORMATIONS, 28 * LABEL_FORMATION_COUNT)
         pairs = [pc[28 * i + 16:28 * i + 28] for i in range(LABEL_FORMATION_COUNT)]
         at, found = start.find(pairs[0]), None
         while at >= 0 and not found:
-            for stride in (20, 22):
+            for stride in name_len:
                 base = at - (stride - 12)
                 if base >= 0 and all(start[base + stride * i + stride - 12:base + stride * (i + 1)] == pairs[i]
                                      for i in range(LABEL_FORMATION_COUNT)):
@@ -1298,7 +1304,7 @@ def convert_labels(game, start, battle, shop=None):
         if not found:
             raise SystemExit("labels: START.EMI has no run of the PC's ten formation records")
         base, stride = found
-        names = [cut(start, base + stride * i, stride - 13) for i in range(LABEL_FORMATION_COUNT)]
+        names = [cut(start, base + stride * i, name_len[stride]) for i in range(LABEL_FORMATION_COUNT)]
         chunks.append(label_chunk(10, names, report))
         at = start.find(exe_bytes(game, LABEL_WHEEL_TRIANGLE, LABEL_WHEEL_TRIANGLE_LEN))
         unit = at + LABEL_WHEEL_TRIANGLE_LEN
@@ -2056,7 +2062,10 @@ def cmd_all_discs(args):
     if not paths:
         raise SystemExit("no disc images: --discs %s holds none of %s" % (args.discs, ", ".join(DISC_EXT)))
     check_game(args.game)
-    found = identify_discs(paths)
+    # English first, then the rest in filename order: the French and German
+    # title menus borrow their CONFIG row from an English START.DAT already
+    # built (build_title), as importer.build_languages orders them.
+    found = sorted(identify_discs(paths), key=lambda r: not (r[2] and not r[3] and primary(r[2]) == "en"))
     rows = []
     for p, bid, tag, why in found:
         if why:
@@ -2082,9 +2091,15 @@ def cmd_all(args):
         if args.lang_given:
             raise SystemExit("--lang names one disc's overlays; with --discs or several --disc the tag is each disc's own")
         return cmd_all_discs(args)
+    if args.dry_run:
+        check_game(args.game)
     if args.lang is None:
         args.lang = disc_tag(args.disc[0])
         print("--lang not given: the disc's own tag, %s" % args.lang)
+    if args.dry_run:
+        print("--dry-run: would build %s.*.DAT from %s into %s; nothing written" % (args.lang, args.disc[0],
+                                                                                    dat_dir(args.game)))
+        return 0
     build_all(args, args.disc[0])
     return 0
 
@@ -2233,7 +2248,7 @@ def main():
         if name == "all":
             s.add_argument("--disc", action="append", default=[], help="a disc image (.cue, .bin, .iso); repeat for several")
             s.add_argument("--discs", help="a directory: every held PlayStation disc in it is built, each under its own tag")
-            s.add_argument("--dry-run", action="store_true", help="with --discs: identify each image and write nothing")
+            s.add_argument("--dry-run", action="store_true", help="identify each image (and check the game) and write nothing")
         else:
             s.add_argument("--disc", required=True)
         s.add_argument("--lang", type=language_tag,

@@ -11,6 +11,7 @@
 #include "game/config_text.h"
 #include "game/fishing_text.h"
 #include "game/labels.h"
+#include "game/language_tags.h"
 #include "game/map_layers.h"
 #include "game/menu_verbs.h"
 
@@ -258,29 +259,14 @@ void WalkDatFile(const char* path) {
 
 namespace {
 
-// The language a text layer's name ends in - "-<tag>" with the tag two
-// lowercase letters, then optionally "-" and two capitals or three digits
-// (en-150, ja-JP; fixtures.toml's tags) - or null for a layer that is not text.
-const char* LayerLanguage(const char* layer) {
-    for (const char* p = std::strchr(layer, '-'); p; p = std::strchr(p + 1, '-')) {
-        const char* t = p + 1;
-        auto lower = [](char c) { return c >= 'a' && c <= 'z'; };
-        auto upper = [](char c) { return c >= 'A' && c <= 'Z'; };
-        auto digit = [](char c) { return c >= '0' && c <= '9'; };
-        if (!lower(t[0]) || !lower(t[1])) continue;
-        if (t[2] == 0) return t;
-        if (t[2] != '-') continue;
-        if (upper(t[3]) && upper(t[4]) && t[5] == 0) return t;
-        if (digit(t[3]) && digit(t[4]) && digit(t[5]) && t[6] == 0) return t;
-    }
-    return nullptr;
-}
-
 // BOF3X_OPT into g_opt, refusing - loudly, at start-up - what the walk could
 // only skip: a name too long or with a character a file name must not carry,
 // one named twice, more than kOptMax, a layer with no file installed, and a
 // text layer under another language than BOF3X_LANG's (its names are glyph
-// codes of that language's font, DIV-0008).
+// codes of that language's font, DIV-0008). Which layer is text, and of which
+// language, is game/language_tags.h's rule, the launcher's too: it drops such
+// a layer with a warning before the game starts, so this only fires for a
+// BOF3X_OPT set by hand.
 void ReadOptLayers() {
     char list[kOptMax * kOptName];
     const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", list, sizeof list);
@@ -308,9 +294,8 @@ void ReadOptLayers() {
             bof3::Fatal("DIV-0086: BOF3X_OPT names %s, but there is no %s (tools/importer.py install --opt %s)", name,
                         pattern, name);
         FindClose(h);
-        if (const char* tag = LayerLanguage(name)) {
-            const std::size_t primary = std::strcspn(g_lang, "-");
-            if (primary != 2 || std::strncmp(g_lang, tag, 2) != 0)
+        if (const char* tag = bof3x::LayerLanguage(name)) {
+            if (!bof3x::SamePrimaryLanguage(g_lang, tag))
                 bof3::Fatal("DIV-0086: layer %s is %s text; BOF3X_LANG is \"%s\"", name, tag, g_lang);
         }
         ++g_opt_count;

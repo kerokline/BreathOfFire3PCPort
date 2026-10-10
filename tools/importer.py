@@ -705,6 +705,27 @@ def resolve_languages(asked, sources):
     return sorted(out.items(), key=lambda kv: (primary(kv[0]) != "en", kv[0]))
 
 
+def _place(src, dst):
+    """The player's file at dst in build_languages' scratch game: a symlink,
+    else a hard link, else a copy. Windows refuses a symlink without Developer
+    Mode or the privilege (WinError 1314) and a hard link across volumes; a
+    copy always works. tools/loc_build.py only writes new <tag>.* files beside
+    these, never through them, so a link cannot change the player's tree."""
+    import shutil
+    src = os.path.abspath(src)
+    try:
+        os.symlink(src, dst)
+        return
+    except OSError:
+        pass
+    try:
+        os.link(src, dst)
+        return
+    except OSError:
+        pass
+    shutil.copy2(src, dst)
+
+
 def build_languages(asked, sources, out):
     """loc/<tag>/ for each language asked for, built by tools/loc_build.py
     from its donor disc (resolve_languages) against the PC's own containers
@@ -723,9 +744,9 @@ def build_languages(asked, sources, out):
     assets = []
     with tempfile.TemporaryDirectory(prefix="bof3_loc_") as game:
         os.makedirs(os.path.join(game, "DAT"))
-        os.symlink(os.path.abspath(exe.path), os.path.join(game, "BOF3.exe"))
+        _place(exe.path, os.path.join(game, "BOF3.exe"))
         for name in _manifest_rows("fixtures/pc-zh.DAT.files.tsv"):
-            os.symlink(os.path.abspath(os.path.join(pc.path, name)), os.path.join(game, "DAT", name))
+            _place(os.path.join(pc.path, name), os.path.join(game, "DAT", name))
         for tag, donor in resolve_languages(asked, sources):
             r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
                                 "--game", game, "--lang", tag], capture_output=True, text=True)
