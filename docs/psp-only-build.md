@@ -8,7 +8,7 @@ The owner asked, 2026-10-10: how close are we to producing our build from a
 PSP disc analysis alone? Two goals:
 
 1. **A working build from the player's PSP disc**, with no PC install and no PSX disc.
-2. **A toggle per PSP difference** (items, battle code, effects, maybe audio)
+2. **PSP toggles** (items, battle code, effects, maybe audio), as suites; decided as three, section 7
    in the **launcher's** config dialog. Every option is listed. An option
    whose source disc the install lacks is greyed out, so the player sees both
    the defaults in force and what another disc would add (section 6).
@@ -203,7 +203,7 @@ A PSP-only install can skip the logos or play the PMF; neither blocks a build.
 4. **The engine reading the cache** instead of `DAT/` (`install` copies
    files into `DAT/` meanwhile, [`importer.md`](importer.md) 6).
 
-## 4. Goal 2: what can be toggled, by category
+## 4. Goal 2: the PSP differences, by category (what the three suites gather)
 
 | Category | What is known | Toggle form | State |
 |---|---|---|---|
@@ -275,8 +275,11 @@ that already exist.
    eventually becomes a toggle.
 3. **Three toggles, not one per difference:** **audio**, **graphics** and
    **data**. Each picks the PSP's version or the PSX's, and is greyed when
-   its source is missing (section 6). Finer grain only if testing the install
-   route shows a need. The same path may later carry **mods**, if side-loading
+   its source is missing (section 6). **Each toggle is a suite**: it turns a
+   whole set of divergences on or off together (all of the PSP's graphics
+   changes, say), not one difference at a time. A "deeper choice" screen
+   with a toggle per divergence may come later, but is not wanted now. Finer
+   grain in the suites only if testing the install route shows a need. The same path may later carry **mods**, if side-loading
    a layer is easy enough. The `opt/` layer mechanism (DIV-0086) is already
    that shape: a named layer of whole chunks over the base, from a manifested
    source.
