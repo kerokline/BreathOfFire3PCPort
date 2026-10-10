@@ -2839,6 +2839,17 @@ def build_all(args, disc_path):
     return len(overlays)
 
 
+def cmd_anchors(args):
+    """PC_SHA as the PC install's BOF3.exe has it, to paste; and whether the table in this file agrees."""
+    check_game(args.game)
+    game = PcInstall(args.game)
+    for name, digest in anchor_table(game).items():
+        print('    "%s": "%s",%s' % (name, digest, "" if PC_SHA.get(name) == digest else "   # differs from PC_SHA"))
+    check_anchors(game)
+    print("PC_SHA and FAERIE_UNNAMED: this BOF3.exe's")
+    return 0
+
+
 def cmd_export(args):
     img = export_image(donor_sheet(psx_disc.Disc(args.disc)))
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
@@ -2890,7 +2901,12 @@ def main():
         if name == "all":
             s.add_argument("--only")
         s.set_defaults(fn=fn)
+    s = sub.add_parser("anchors", help="print PC_SHA's entries anew from a PC install's BOF3.exe")
+    s.add_argument("--game", required=True)
+    s.set_defaults(fn=cmd_anchors)
     args = ap.parse_args()
+    if args.cmd == "anchors":
+        return args.fn(args)
     args.lang_given = args.lang is not None
     if args.cmd == "all" and not args.disc and not args.discs:
         ap.error("all needs --disc DISC or --discs DIR")
