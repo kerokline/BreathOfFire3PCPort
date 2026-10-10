@@ -70,6 +70,7 @@ FetchContent_MakeAvailable(SDL3)
 add_library(bof3x SHARED
   src/hook/dllmain.cpp
   src/hook/detour.cpp
+  src/hook/exe_image.cpp
   src/hook/calltrace.cpp
   src/hook/input_script.cpp
   src/hook/statehash.cpp
@@ -78,6 +79,7 @@ add_library(bof3x SHARED
   src/hook/log.cpp
   src/hook/inject_all.cpp
   src/game/file_io.cpp
+  src/game/rdata_consts.cpp
   src/game/game_clock.cpp
   src/game/save_io.cpp
   src/game/dat_load.cpp

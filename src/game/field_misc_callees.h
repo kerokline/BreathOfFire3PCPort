@@ -13,6 +13,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 // Rebound 2026-09-28 (round eleven's cleanup, docs/round-11-cleanup.md item 2):
 // every constant here whose target has a name in symbols.toml reads
 // bof3::addr::<Name>. The values are unchanged - the fuzz keys on them.
@@ -41,7 +42,7 @@ constexpr U kScaleX = 0x7C9F4C;        // D3d_ScaleX, float
 constexpr U kScaleY = 0x7C9F48;        // D3d_ScaleY, float
 constexpr U kVertices = 0x7CA958;      // D3d_Vertices, 4 x D3DTLVERTEX
 constexpr U kDrawTpage = 0x7DED14;     // Gfx_DrawTpage, the low word read
-constexpr U kRhwNumerator = 0x5C4610;  // float 0.1
+constexpr rdata::Const kRhwNumerator{0x5C4610};  // float 0.1
 constexpr U kDevice = 0x7CC350;        // D3d_Device
 constexpr U kRetOnly = bof3::addr::BareRet;       // a bare ret
 

@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace rest_3e::at {
 
@@ -45,7 +46,7 @@ constexpr unsigned kSoundRise = 0x201;
 constexpr std::uint32_t kDust = 0x92D1DC;
 constexpr unsigned kDustCount = 0x40;
 constexpr unsigned kDustStride = 0x20;
-constexpr std::uint32_t kHalfWidth = 0x5C41B8;      // a float constant of the image: the column's half width
+constexpr rdata::Const kHalfWidth{0x5C41B8};      // a float constant of the image: the column's half width
 
 // --- kinds 0x5D / 0x5E: the layout words and the counts --------------------------------
 // Three windows of four words (x, y, w, h) from 0x654858; the board's frame

@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace rest_2c {
 namespace at {
@@ -104,9 +105,9 @@ constexpr std::uint32_t kStatsEnd = 0x6644A0;
 constexpr std::uint32_t kMemberPieces = 0x6643D8; // the member panel's
 constexpr std::uint32_t kFrameCounter = 0x937F94; // Frame_Counter (bit 5: the status words' blink)
 constexpr std::uint32_t kPacketNext = 0x7E0670;  // Gfx_PacketNext
-constexpr std::uint32_t kBoxAdd = 0x5C41C0;      // the panel box's three float constants (read in place)
-constexpr std::uint32_t kBoxSub = 0x5C41BC;
-constexpr std::uint32_t kBoxSubBottom = 0x5C41B8;
+constexpr rdata::Const kBoxAdd{0x5C41C0};      // the panel box's three float constants (read in place)
+constexpr rdata::Const kBoxSub{0x5C41BC};
+constexpr rdata::Const kBoxSubBottom{0x5C41B8};
 
 // --- model A (0x9398E0, dispatched by R2B's 0x57F320 on +1), and what follows it ----
 // R2B's layout (docs/rest_2c.md 1.1): model A 0x80 bytes, model B 0x939960, then

@@ -35,6 +35,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "game/rdata_consts.h"
 
 namespace {
 
@@ -97,8 +98,8 @@ constexpr U kMessage = 0x803194;       // u16: record 1 +0x10, the message the s
 
 // Image floats (.rdata, read in place): the screen-space offsets the model's
 // projected x and y are moved by.
-constexpr U kOffsetX = 0x5C4278;
-constexpr U kOffsetY = 0x5C4274;
+constexpr rdata::Const kOffsetX{0x5C4278};
+constexpr rdata::Const kOffsetY{0x5C4274};
 
 unsigned char& B(U address) { return At(address)[0]; }
 U W(U address) { return Word(At(address)); }

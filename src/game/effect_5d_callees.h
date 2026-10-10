@@ -7,6 +7,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace effect_5d::at {
 
 // --- cells ---------------------------------------------------------------------
@@ -26,10 +28,10 @@ constexpr unsigned kEffectStride = 0x80;            // Effect_Objects' records
 constexpr unsigned kEffectCount = 20;
 
 // --- the image's float constants (.rdata, read in place) ---------------------------
-constexpr std::uint32_t kHalfCell = 0x5C41E4;       // 64.0: half of a 128-unit patch cell
-constexpr std::uint32_t kRingDrop = 0x5C41CC;       // 8.0: the ring's screen-y offset
-constexpr std::uint32_t kScreenHigh = 0x5C4228;     // 340.0: EffectKind18Sub1C_OnScreen's upper bound
-constexpr std::uint32_t kScreenLow = 0x5C422C;      // -20.0: and its lower (DIV-0041's "0x5054E3 [-20, 340]")
+constexpr rdata::Const kHalfCell{0x5C41E4};       // 64.0: half of a 128-unit patch cell
+constexpr rdata::Const kRingDrop{0x5C41CC};       // 8.0: the ring's screen-y offset
+constexpr rdata::Const kScreenHigh{0x5C4228};     // 340.0: EffectKind18Sub1C_OnScreen's upper bound
+constexpr rdata::Const kScreenLow{0x5C422C};      // -20.0: and its lower (DIV-0041's "0x5054E3 [-20, 340]")
 
 // --- sub-kind 0x17 (E5C's dispatcher 0x503660; four of its helpers here) -----------
 constexpr std::uint32_t kPatch = 0x65E1E8;          // 16 records of 8: four corner heights, a flag, three variant texture bytes

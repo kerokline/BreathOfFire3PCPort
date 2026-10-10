@@ -16,6 +16,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace battle_e6 {
 namespace at {
 
@@ -104,12 +106,12 @@ constexpr U kRollOddsB = 0x64F104;        // u8 by nibble: the same when the mem
 constexpr U kDashSides = 0x64E4F4;        // s8 pairs by 0x904AAC: x and z offsets for the dash's rise
 
 // --- the BMAGIC cells' screen bounds (floats in .rdata) ----------------------
-constexpr U kScreenYHi = 0x5C41FC;
-constexpr U kScreenYLo = 0x5C4200;
-constexpr U kScreenXHi = 0x5C4204;
-constexpr U kScreenXLo = 0x5C4208;
-constexpr U kSpriteXHi = 0x5C420C;
-constexpr U kSpriteXLo = 0x5C4210;
+constexpr rdata::Const kScreenYHi{0x5C41FC};
+constexpr rdata::Const kScreenYLo{0x5C4200};
+constexpr rdata::Const kScreenXHi{0x5C4204};
+constexpr rdata::Const kScreenXLo{0x5C4208};
+constexpr rdata::Const kSpriteXHi{0x5C420C};
+constexpr rdata::Const kSpriteXLo{0x5C4210};
 
 // --- named cells whose symbols.gen.h names are object macros (the address
 // constants' names expand): Field_Slots, Prim_VertexScratch,

@@ -30,7 +30,8 @@ A chunk no disc carries keeps the PC install as its only source; its class
 Japan's language or drew its own art - docs/importer-transforms.md (step 3).
 `build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
 PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
-step 8). `--lang` builds loc/<tag>/ with tools/loc_build.py: against the PC's
+step 8; from a disc the data pointers rebuilt by the map run backwards,
+docs/exe-import-engine.md). `--lang` builds loc/<tag>/ with tools/loc_build.py: against the PC's
 DAT/ and BOF3.exe when both are sources, else disc-only against the cache's own
 base/ (docs/loc-build-disc-only.md). `opt/<name>/` layers carry a PSP disc's content changes the player may
 turn on, and `area4-walls` a Western PSX disc's walls in area 4 (DIV-0080),

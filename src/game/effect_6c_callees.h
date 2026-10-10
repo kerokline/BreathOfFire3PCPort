@@ -10,6 +10,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace effect_6c::at {
 
 // --- the leader (ObjTrio record 0) ------------------------------------------------------
@@ -69,10 +71,10 @@ constexpr std::uint32_t kPieces5B = 0x65EF98;         // sub-kind 0x5B: 49 piece
 constexpr unsigned kPieceStride = 0x14;
 constexpr std::uint32_t kParts5B = 0x65F36C;          // three (first, end) piece bytes
 constexpr unsigned kParts5BCount = 3;
-constexpr std::uint32_t kPieceScale = 0x5C4250;       // a float the pieces' depth point scales the x offset by
-constexpr std::uint32_t kZero = 0x5C41DC;             // the float constants sub-kind 0x44's stars compare with: 0.0f,
-constexpr std::uint32_t kEightyNine = 0x5C4248;       // 89.0f
-constexpr std::uint32_t kNinety = 0x5C424C;           // and 90.0f
+constexpr rdata::Const kPieceScale{0x5C4250};       // a float the pieces' depth point scales the x offset by
+constexpr rdata::Const kZero{0x5C41DC};             // the float constants sub-kind 0x44's stars compare with: 0.0f,
+constexpr rdata::Const kEightyNine{0x5C4248};       // 89.0f
+constexpr rdata::Const kNinety{0x5C424C};           // and 90.0f
 
 // --- sound ids ---------------------------------------------------------------------------
 constexpr unsigned kSoundOpen5B = 0x205;
