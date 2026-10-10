@@ -2328,6 +2328,10 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
   `BOF3X_ORIGINAL=AreaMap_DrawBackdrop` the 320-wide sky;
   `BOF3X_WIDE_INSET=0` the original's cell inset under a wide picture.
+  `BOF3X_WIDE_TERRAIN=0..400` (an experiment's switch, 2026-10-07) sets the
+  terrain cull's margin past the original's `[-50, 370]` under a wide
+  picture: unset it is 100, the `[-150, 470]` above; 0 is the original's
+  cull. Narrow it is not read.
 
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
@@ -4519,7 +4523,9 @@ designed in rather than bolted on.
   `+0xF1 = 0xFF` on each of the eight slots - the original keeps 0xFF, ours
   leaves 0. Owed: the owner's live fight (a Volt group with a thunder hit,
   twice in one session; every Volt should yield 84 both times).
-- **Reversible?** No switch: a static byte the PlayStation never carried over.
+- **Reversible?** No switch of its own: a static byte the PlayStation never
+  carried over. `BOF3X_ORIGINAL=Battle_CopyEnemyData` runs Capcom's function,
+  which leaves the byte as it was.
 
 ### The master list's pupils box without the port's label
 
@@ -4647,7 +4653,10 @@ designed in rather than bolted on.
   `known-defects.md` D239, "Where DIV-0085 can act". The run guard was
   compiled and mirrored offline (the bridge's 97 edge cells still qualify);
   the owner's look was before it.
-- **Reversible?** `BOF3X_SIDE_DUP=0`.
+- **Reversible?** `BOF3X_SIDE_DUP=0`. A second switch beside it,
+  `BOF3X_SIDE_ZERO=1` (an experiment from the investigation, 2026-10-07;
+  off unless set, `0` or `1`), leaves undrawn a side face whose texture
+  word is 0; off, side faces are the original's (and this entry's).
 
 ### Optional layers from the player's PSP disc, walked after the language overlay
 

@@ -149,7 +149,7 @@ void Widescreen_Inject() {
     U terrain_margin = kTerrainMargin;
     {
         // BOF3X_WIDE_TERRAIN=N: the terrain cull's margin past [-50, 370], for
-        // experiments (2026-10-07, the owner's waterfall); 100 unless set.
+        // experiments (2026-10-07, the owner's waterfall); 100 unless set (DIV-0041).
         char text[16];
         const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE_TERRAIN", text, sizeof text);
         if (n != 0) {
