@@ -62,6 +62,8 @@ IMAGE = exe_twins.IMAGE                    # a word in here is a pointer into th
 RECIPE = os.path.join(ROOT, "recipes", "exe.toml")
 POINTERS = os.path.join(ROOT, "recipes", "exe-pointers.tsv")
 REBUILD = os.path.join(ROOT, "recipes", "exe-rebuild.tsv")
+PLACES = os.path.join(ROOT, "recipes", "exe-places.tsv")
+PLACE_COLS = ["build", "pc", "pc_end", "file", "section", "addr", "agree", "keys"]
 PC = "pc-zh"
 ORDER = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de", "psp-jp", "psp-eu")
 
@@ -164,10 +166,12 @@ def table_span(t, syms):
     return syms[t["symbol"]], syms[t["symbol"]] + t["stride"] * t["count"]
 
 
-def disc_image(disc, bid):
+def disc_image(disc, bid, places=()):
     """(image, owner, ranges) from a disc alone, before the pointer mask: the
     0x9C000-byte image, a per-byte list of which range wrote it (None:
-    nothing), and the ranges [pc, end, how, file, address of pc]."""
+    nothing), and the ranges [pc, end, how, file, address of pc]. `places`:
+    recipes/exe-places.tsv's rows for the build (`place` ranges, after the
+    map's segments and before the catalogued tables)."""
     cat, syms, builds = tables.load()
     src = {(f, s): (base, blob) for f, s, base, blob in exe_twins.sources(disc)}
     img, owner, ranges = bytearray(DATA_HI - DATA_LO), [None] * (DATA_HI - DATA_LO), []
@@ -181,6 +185,11 @@ def disc_image(disc, bid):
         base, blob = src[(r["file"], r["section"])]
         at = r["addr"] - base
         put(r["pc"], blob[at:at + r["pc_end"] - r["pc"]], "map",
+            r["file"] + ("" if r["section"] is None else "#%d" % r["section"]), r["addr"])
+    for r in places:
+        base, blob = src[(r["file"], r["section"])]
+        at = r["addr"] - base
+        put(r["pc"], blob[at:at + r["pc_end"] - r["pc"]], "place",
             r["file"] + ("" if r["section"] is None else "#%d" % r["section"]), r["addr"])
     name_len = tables.name_len_for(builds[bid], cat["meta"]["name_len"])
     for t, p in table_rows(cat, syms, bid):
@@ -209,6 +218,161 @@ def mask(img, owner, pointers):
                 img[i] = 0
                 n += 1
     return n
+
+
+# ------------------------------------------------------------------ placing by data pointers
+
+def load_places(path=PLACES):
+    """{build: [row]} from recipes/exe-places.tsv, each row as tables.read_map's."""
+    out = collections.defaultdict(list)
+    if not os.path.exists(path):
+        return out
+    with open(path, encoding="utf-8") as f:
+        lines = [l.rstrip("\n") for l in f if not l.startswith("#")]
+    if lines and lines[0].split("\t") != PLACE_COLS:
+        fail("exe-places.tsv: the column line is not %s" % "\t".join(PLACE_COLS))
+    for l in lines[1:]:
+        c = l.split("\t")
+        out[c[0]].append({"pc": int(c[1], 16), "pc_end": int(c[2], 16), "file": c[3],
+                          "section": None if c[4] == "-" else int(c[4]), "addr": int(c[5], 16),
+                          "agree": int(c[6]), "keys": int(c[7])})
+    return out
+
+
+def code_word(w, psp):
+    """A disc word that can be a code pointer of that build: PSX main RAM, or
+    the PSP's user memory (bit 31 clear, as the PSP's EMIs have it)."""
+    return (0x08800000 <= w < 0x0A000000) if psp else (0x80010000 <= w < 0x80200000)
+
+
+def find_places(pc, disc, bid, pointers, rounds=8):
+    """Place what the map left unplaced by the PC's own data pointers - the
+    twin method keyed by pointers instead of bytes (docs/exe-import-engine.md
+    section 3). Needs the PC's .data. Every unplaced region holding a data
+    pointer word whose target the image places is searched for: the target's
+    address in the build (the map run forwards) is a 4-aligned word in some
+    section of the target's file, and each such hit votes for the region's
+    place there. The region's best place, if no other place has as many
+    votes, is checked byte by byte against the PC's - numbers equal, a data
+    pointer the target's address in the build, a code pointer a code address
+    of the build, other pointer words wild - and the longest stretch with no
+    disagreement holding two keys (or one key and 16 equal bytes) is placed.
+    New places give new targets, so it runs again until nothing moves.
+    Returns rows for recipes/exe-places.tsv."""
+    psp = "SYSTEM.CNF" not in disc.files
+    srcs = {}
+    for f, sec, base, blob in exe_twins.sources(disc):
+        srcs[(f, sec)] = (base, blob)
+    byfile = collections.defaultdict(list)
+    for k in srcs:
+        byfile[k[0]].append(k)
+    cls = {}
+    for p, n, c in pointers:
+        for a in range(p, p + 4 * n, 4):
+            cls[a] = c
+    rows = []
+    for _ in range(rounds):
+        img, owner, ranges = disc_image(disc, bid, rows)
+        pieces = sorted((q[2], q[2] + q[1] - q[0], q[3], q[0]) for q in linear_pieces(owner, ranges))
+        plo = [q[0] for q in pieces]
+
+        def fwd(t):
+            i = bisect.bisect_right(plo, t) - 1
+            if i >= 0 and pieces[i][0] <= t < pieces[i][1]:
+                return pieces[i][2].split("#")[0], pieces[i][3] + t - pieces[i][0]
+            return None
+        regions, i, n = [], 0, len(owner)
+        while i < n:
+            if owner[i] is None:
+                j = i
+                while j < n and owner[j] is None:
+                    j += 1
+                regions.append((DATA_LO + i, DATA_LO + j))
+                i = j
+            else:
+                i += 1
+        keys, need = {}, collections.defaultdict(set)
+        for lo, hi in regions:
+            for a in range(lo + (-lo % 4), hi - 3, 4):
+                if cls.get(a) == "data":
+                    f = fwd(struct.unpack_from("<I", pc, a - DATA_LO)[0])
+                    if f:
+                        keys[a] = f
+                        for k in byfile[f[0]]:
+                            need[k].add(f[1])
+        hits = collections.defaultdict(list)
+        for k, ws in need.items():
+            base, blob = srcs[k]
+            for w in ws:
+                pat = struct.pack("<I", w)
+                o = blob.find(pat)
+                while o >= 0:
+                    if o % 4 == 0:
+                        hits[k, w].append(base + o)
+                    o = blob.find(pat, o + 1)
+        new = []
+        for lo, hi in regions:
+            votes = collections.Counter()
+            for a in range(lo + (-lo % 4), hi - 3, 4):
+                if a in keys:
+                    for k in byfile[keys[a][0]]:
+                        for h in hits.get((k, keys[a][1]), ()):
+                            votes[k, h - a] += 1
+            top = votes.most_common(2)
+            if not top or (len(top) > 1 and top[1][1] == top[0][1]):
+                continue
+            (k, delta), _ = top[0]
+            base, blob = srcs[k]
+            res = []
+            for a in range(lo, hi):
+                o = a + delta - base
+                w0 = a - (a - DATA_LO) % 4
+                c = cls.get(w0)
+                if not 0 <= o < len(blob) or not 0 <= w0 + delta - base <= len(blob) - 4:
+                    res.append(False)
+                elif c is None:
+                    res.append(blob[o] == pc[a - DATA_LO])
+                else:
+                    w = struct.unpack_from("<I", blob, w0 + delta - base)[0]
+                    if c == "data":
+                        f = fwd(struct.unpack_from("<I", pc, w0 - DATA_LO)[0])
+                        res.append(None if f is None else w == f[1])
+                    elif c == "text":
+                        res.append(None if code_word(w, psp) else False)
+                    else:
+                        res.append(None)
+            s0 = 0
+            for i2, v in enumerate(res + [False]):
+                if v is not False:
+                    continue
+                if i2 > s0:
+                    a0, a1 = lo + s0, lo + i2
+                    eq = sum(1 for v2 in res[s0:i2] if v2)
+                    nk = sum(1 for a in range(a0 + (-a0 % 4), a1 - 3, 4) if a in keys)
+                    if nk >= 2 or (nk >= 1 and eq >= 16):
+                        new.append({"pc": a0, "pc_end": a1, "file": k[0], "section": k[1],
+                                    "addr": a0 + delta, "agree": eq, "keys": nk})
+                s0 = i2 + 1
+        if not new:
+            break
+        rows = sorted(rows + new, key=lambda r: r["pc"])
+    return rows
+
+
+def write_places(places):
+    with open(PLACES, "w", newline="\n") as f:
+        f.write("# recipes/exe-places.tsv - GENERATED by `tools/exe_tables.py recipe`; do not edit.\n"
+                "# What exe_maps/ left unplaced, placed by the PC's own data pointers (docs/exe-import-engine.md\n"
+                "# section 3): [pc, pc_end) is the build's `file` / `section` from `addr` on, as in\n"
+                "# exe_maps/; `agree` bytes compared equal (numbers equal, data pointers the target's\n"
+                "# address in the build), `keys` data pointers voted for the place. Addresses and\n"
+                "# counts only (CLAUDE.md rule 1).\n")
+        f.write("\t".join(PLACE_COLS) + "\n")
+        for bid in ORDER:
+            for r in places.get(bid, ()):
+                f.write("%s\t0x%06X\t0x%06X\t%s\t%s\t0x%08X\t%d\t%d\n" % (
+                    bid, r["pc"], r["pc_end"], r["file"], "-" if r["section"] is None else r["section"],
+                    r["addr"], r["agree"], r["keys"]))
 
 
 # ------------------------------------------------------------------ the data-pointer rebuild
@@ -317,7 +481,7 @@ def disc_built(disc, bid, pointers, refused):
     """The disc's image as base/exe/ holds it: placed, the pointer words
     masked, the data pointers the rule rebuilds written back but those the
     recipe refuses for this build. (image, owner, ranges, rebuilt, outcomes)."""
-    img, owner, ranges = disc_image(disc, bid)
+    img, owner, ranges = disc_image(disc, bid, load_places().get(bid, ()))
     rebuilt, c, _ = rebuild_candidates(img, owner, ranges, pointers)
     mask(img, owner, pointers)
     c["refused"] = sum(1 for a in rebuilt if a in refused)
@@ -521,6 +685,15 @@ def cmd_recipe(a):
         print("%s: %d ranges, %d bytes placed before the pointer mask" % (bid, len(ranges), sum(o is not None for o in owner)))
     pointers = decide_pointers(pc, images)
     cand = len(pointer_words(pc))
+    # The places by data pointer come after the pointer decision, which stays the
+    # maps' alone, so exe-pointers.tsv does not move with them.
+    places = {}
+    for bid, disc in discs(a.disc):
+        places[bid] = find_places(pc, disc, bid, pointers)
+        print("%s: %d places by data pointer, %d bytes" % (bid, len(places[bid]),
+                                                            sum(r["pc_end"] - r["pc"] for r in places[bid])))
+    write_places(places)
+    images = [disc_image(disc, bid, places[bid]) for bid, disc in discs(a.disc)]
     refused, outcomes = {}, {}
     for (bid, _), (img, owner, ranges) in zip(discs(a.disc), images):
         rebuilt, outcomes[bid], _ = rebuild_candidates(img, owner, ranges, pointers)
@@ -564,7 +737,9 @@ def cmd_recipe(a):
              "pointer_candidates = %d" % cand,
              "pointer_words = %d" % sum(n for _, n, _ in pointers),
              'rebuild = "exe-rebuild.tsv"',
-             'rebuild_sha256 = "%s"' % sha(open(REBUILD, "rb").read()), "",
+             'rebuild_sha256 = "%s"' % sha(open(REBUILD, "rb").read()),
+             'places = "exe-places.tsv"',
+             'places_sha256 = "%s"' % sha(open(PLACES, "rb").read()), "",
              "[build.%s]" % PC, 'sha256 = "%s"' % sha(pc), "bss_end = 0x%06X" % bss_end, ""]
     for (bid, _), (img, owner, ranges) in zip(discs(a.disc), images):
         rebuilt, _, _ = rebuild_candidates(img, owner, ranges, pointers)
@@ -574,6 +749,7 @@ def cmd_recipe(a):
         o = outcomes[bid]
         lines += ["[build.%s]" % bid, 'sha256 = "%s"' % sha(img),
                   "ranges = %d" % len(ranges),
+                  "places = %d" % len(places[bid]), "placed_by_pointer = %d" % sum(r["pc_end"] - r["pc"] for r in places[bid]),
                   "placed_equal = %d" % c["placed", "equal"], "placed_differ = %d" % c["placed", "differ"],
                   "pointer_pc_zero = %d" % c["pointer", "pc-zero"], "pointer_pc_nonzero = %d" % c["pointer", "pc-nonzero"],
                   "none_pc_zero = %d" % c["none", "pc-zero"], "none_pc_nonzero = %d" % c["none", "pc-nonzero"],
@@ -719,9 +895,9 @@ def cmd_measure(a):
     cat, tsyms, _ = tables.load()
     syms = data_symbols()
     summary = {}
-    refused = load_rebuild_refused()
+    refused, places = load_rebuild_refused(), load_places()
     for bid, disc in discs(a.disc):
-        img, owner, ranges = disc_image(disc, bid)
+        img, owner, ranges = disc_image(disc, bid, places.get(bid, ()))
         xl = translatable(bid, pc, list(owner), bytes(img), pointers)
         rb = rebuild_report(bid, pc, img, owner, ranges, pointers, refused[bid], syms, out)
         mask(img, owner, pointers)
@@ -920,6 +1096,24 @@ def cmd_check(a):
         if xs - data_words:
             errs.append("exe-rebuild.tsv: %s refuses %d words that are no data pointer" % (bid, len(xs - data_words)))
     errs += ["the rebuild rule's synthetic round trip: " + e for e in selftest_rebuild()]
+    with open(PLACES, "rb") as f:
+        if sha(f.read()) != rec["meta"].get("places_sha256"):
+            errs.append("exe-places.tsv: not the file recipes/exe.toml was generated with")
+    for bid, rows in load_places().items():
+        segs = tables.read_map(os.path.join(tables.MAPS, bid + ".tsv")) if bid in rec["build"] else []
+        if not segs:
+            errs.append("exe-places.tsv: build %s has no map" % bid)
+        if len(rows) != rec["build"].get(bid, {}).get("places"):
+            errs.append("exe-places.tsv: %s has %d places, the recipe says %s" % (bid, len(rows), rec["build"].get(bid, {}).get("places")))
+        st = [r["pc"] for r in segs]
+        last = DATA_LO
+        for r in rows:
+            i = bisect.bisect_right(st, r["pc_end"] - 1) - 1
+            if (r["pc"] < last or r["pc_end"] <= r["pc"] or r["pc_end"] > DATA_HI or r["keys"] < 1
+                    or (i >= 0 and segs[i]["pc_end"] > r["pc"])):
+                errs.append("exe-places.tsv: %s 0x%06X: out of order, empty, outside .data, keyless or over a map segment"
+                            % (bid, r["pc"]))
+            last = r["pc_end"]
     _, _, builds = tables.load()
     keys = ("placed_equal", "placed_differ", "pointer_pc_zero", "pointer_pc_nonzero", "none_pc_zero", "none_pc_nonzero",
             "rebuilt_equal")
