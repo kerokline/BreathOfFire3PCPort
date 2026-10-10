@@ -29,6 +29,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/dat_cache.h"
 #include "game/save_menu_callees.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -153,9 +154,19 @@ void WaitLoad() {
 // 0x454590 takes every kind. The size is read before the call. The walk runs
 // while the offset is below the file's size, signed; the buffer is freed.
 // Callers: the area and scene loaders (8 sites), for the banks of a scene.
+//
+// DIVERGENCE DIV-0089: when the cache is armed and holds DAT\name whole, its
+// kind-2 chunks come from the cache's container instead, in the PC's order
+// (dat_cache.h); the install's file is then not opened.
+namespace {
+void TakeBank(void*, const dat_cache::Chunk& c, std::uint8_t* payload) {
+    if (c.kind == 2) g.load_bank(c.tag, payload, static_cast<U>(c.size));
+}
+}  // namespace
 extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
     const U name = Long(at::kDatNames + index * 4);
     if (name == 0) return;
+    if (dat_cache::WalkShipped(reinterpret_cast<const char*>(At(name)), TakeBank, nullptr)) return;  // DIV-0089
     char path[0x28];
     g.sprintf(path, reinterpret_cast<const char*>(At(at::kDatFormat)), reinterpret_cast<const char*>(At(name)));
     const int handle = g.file_open(path, 0, 0);
@@ -286,13 +297,19 @@ extern "C" int __cdecl SaveMenu_MusicPlayingBody(U ecx) {
 // (Music_FadeCount) is dropped - count 0, Music_Stop, Music_Track 0xFF - and
 // Music_Start(buffer, size, 0) plays it once at Music_SetVolume(127). The id
 // is a dword: one caller (0x446E8B) pushes ecx & 0xFFFF + 0x1000.
+//
+// DIVERGENCE DIV-0089: when the cache is armed and has base\snd\name.DAT, that
+// file is the one opened (docs/sound-import.md section 7); SND\name.DAT
+// otherwise, formatted as before. The path buffer is MAX_PATH for the
+// cache's absolute path (the original's 0x28 holds every SND\ name).
 extern "C" void __cdecl Sound_LoadStream(unsigned id) {
     const U kind = id >> 12;
     PutLong(at::kStreamKind, kind);
     const U table = Long(at::kStreamTables + kind * 4);
     const U name = Long(table + (id & 0xFFF) * 4);
-    char path[0x28];
-    g.sprintf(path, reinterpret_cast<const char*>(At(at::kStreamFormat)), reinterpret_cast<const char*>(At(name)));
+    char path[260];  // MAX_PATH
+    if (!dat_cache::SoundPath(reinterpret_cast<const char*>(At(name)), path, sizeof path))  // DIV-0089
+        g.sprintf(path, reinterpret_cast<const char*>(At(at::kStreamFormat)), reinterpret_cast<const char*>(At(name)));
     const int handle = g.file_open(path, 0, 0);
     if (handle == -1) return;
     if (Long(at::kStreamData) != 0) g.free(At(Long(at::kStreamData)));
@@ -1160,7 +1177,113 @@ extern "C" void __cdecl TitleFlow_Load(void) {
     [[clang::musttail]] return step();
 }
 
+// --- BOF3X_SHADOW=dat_cache: DIV-0089 through the two sound readers -----------
+//
+// Sound_LoadStream and Snd_LoadBankFile on dat_cache's in-memory cache, with
+// File_Open and Snd_LoadBank stood in by recorders (the open fails, so the
+// stream reader returns before it plays anything): which file each opens,
+// and which banks, in what order. A stream name and a container name from the
+// game's own tables; no file of the game's is read.
+namespace {
+std::vector<std::string>* g_sound_opens;
+std::vector<U>* g_sound_banks;
+int __cdecl RecordOpen(const char* path, int, int) {
+    g_sound_opens->push_back(path);
+    return -1;
+}
+void __cdecl RecordBank(unsigned tag, const void*, unsigned) { g_sound_banks->push_back(tag); }
+
+void CacheSoundSelfTest() {
+    const U table = Long(at::kStreamTables + 1 * 4);  // kind 1: the SND\ waves
+    if (table == 0 || Long(table) == 0) bof3::Fatal("DIV-0089 self-test: no stream name of kind 1");
+    const std::string stream = reinterpret_cast<const char*>(At(Long(table)));
+    unsigned index = 0;
+    while (index < Dat_FileNames_count && !Dat_FileNames[index]) ++index;
+    if (index == Dat_FileNames_count) bof3::Fatal("DIV-0089 self-test: Dat_FileNames is empty");
+    const std::string bank = Dat_FileNames[index];
+    const std::string root = "T:\\bof3x-dat-selftest";
+    using dat_cache::TestContainer;
+    std::vector<dat_cache::TestFile> files = {
+        {root + "\\base\\snd\\" + stream + ".DAT", {1, 2, 3, 4}},
+        {root + "\\base\\dat\\" + bank, TestContainer({{2, 2, 16, 1}, {2, 5, 16, 2}})},
+        {root + "\\loc\\zh-CN\\dat\\" + bank, TestContainer({{0, 0x4000, 8, 3}})}};
+    const std::string hash(64, 'a');
+    const std::string manifest = "[meta]\ntarget = \"pc-zh\"\n\n[cache]\nassets = [\n"
+                                 "  [\"" + bank + "\", 0, \"base\", \"pc-zh:chunk\", \"" + hash + "\"],\n"
+                                 "  [\"" + bank + "\", 1, \"loc/zh-CN\", \"pc-zh:chunk\", \"" + hash + "\"],\n"
+                                 "  [\"" + bank + "\", 2, \"base\", \"pc-zh:chunk\", \"" + hash + "\"],\n]\n";
+    std::vector<std::string> cache_opens;
+    char error[512];
+    if (!dat_cache::TestBegin(root.c_str(), manifest.c_str(), dat_cache::TestIo(&files, &cache_opens), error,
+                              sizeof error))
+        bof3::Fatal("DIV-0089 self-test: the sound readers' cache refused: %s", error);
+
+    const Callees saved = g;
+    const U kind = Long(at::kStreamKind);
+    std::vector<std::string> opens;
+    std::vector<U> banks;
+    g_sound_opens = &opens;
+    g_sound_banks = &banks;
+    g.file_open = RecordOpen;
+    g.load_bank = RecordBank;
+    const std::string cache_wave = root + "\\base\\snd\\" + stream + ".DAT", install_wave = "SND\\" + stream + ".DAT";
+
+    using Opens = std::vector<std::string>;
+    using Banks = std::vector<U>;
+    // Each check is a predicate, so that its control - the output a bug of
+    // that kind would give - goes through the very same test.
+    const auto from_cache = [&](const Opens& o) { return o.size() == 1 && o[0] == cache_wave; };
+    const auto from_install = [&](const Opens& o) { return o.size() == 1 && o[0] == install_wave; };
+    const auto banks_from_cache = [&](const Banks& b, const Opens& o) {
+        return b.size() == 2 && b[0] == 2 && b[1] == 5 && o.size() == 1;
+    };
+    const auto as_original = [&](const Opens& o, const Banks& b) {
+        return o.size() == 2 && o[0] == install_wave && o[1] == "DAT\\" + bank && b.empty();
+    };
+
+    Sound_LoadStream(0x1000);  // armed, the cache has the wave
+    const bool wave_cache = from_cache(opens);
+    opens.clear();
+    files[0].path = root + "\\base\\snd\\OTHER.DAT";  // armed, the cache lacks it
+    Sound_LoadStream(0x1000);
+    const bool wave_lacks = from_install(opens);
+    files[0].path = cache_wave;
+    Snd_LoadBankFile(index);  // armed: the cache's banks in slot order, no install file opened
+    const bool banks_cache = banks_from_cache(banks, opens);
+    dat_cache::TestSetArmed(false);
+    opens.clear();
+    banks.clear();
+    Sound_LoadStream(0x1000);  // not armed: SND\, as the original
+    Snd_LoadBankFile(index);   // not armed: DAT\, as the original
+    const bool unarmed = as_original(opens, banks);
+    // The controls: an install-first stream reader (SND\ though the cache has
+    // the wave), a cache-first one that ignores a missing file, a bank reader
+    // that also opens the install's DAT\ file, an unarmed reader that reads
+    // the cache - each refused by its check.
+    unsigned refused = 0;
+    refused += !from_cache({install_wave});
+    refused += !from_install({cache_wave});
+    refused += !banks_from_cache({2, 5}, {install_wave, "DAT\\" + bank});
+    refused += !as_original({cache_wave, "DAT\\" + bank}, {});
+
+    g = saved;
+    PutLong(at::kStreamKind, kind);
+    g_sound_opens = nullptr;
+    g_sound_banks = nullptr;
+    dat_cache::TestEnd();
+    if (!wave_cache || !wave_lacks || !banks_cache || !unarmed || refused != 4)
+        bof3::Fatal("DIV-0089 self-test: Sound_LoadStream from the cache %s, the cache lacking it %s; Snd_LoadBankFile "
+                    "from the cache %s; unarmed %s; controls refused %u of 4",
+                    wave_cache ? "ok" : "WRONG", wave_lacks ? "ok" : "WRONG", banks_cache ? "ok" : "WRONG",
+                    unarmed ? "ok" : "WRONG", refused);
+    bof3::Log("shadow      DIV-0089 self-test: Sound_LoadStream(0x1000) opens %s from the cache, SND\\ without it or "
+              "unarmed; Snd_LoadBankFile(%u) %s's banks from the cache, DAT\\ unarmed; 4 controls refused",
+              stream.c_str(), index, bank.c_str());
+}
+}  // namespace
+
 void SaveMenu_Inject() {
+    if (bof3::WantsShadow("dat_cache")) CacheSoundSelfTest();
     if (bof3::WantsShadow("save_menu")) save_menu::SelfTest();
     BOF3_INJECT(Snd_LoadBankFile);
     BOF3_INJECT(Save_ReadFile);

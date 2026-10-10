@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 89 entries, DIV-0001..0089, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 90 entries, DIV-0001..0090, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5132,9 +5132,101 @@ designed in rather than bolted on.
   the French and German sheets.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
 
+### The importer's cache read before the install's DAT\ and SND\
+
+- **ID:** DIV-0089 (the next free number on 2026-10-10; renumber at the merge
+  if another branch has taken it)
+- **Date:** 2026-10-10
+- **Subsystem:** assets (`LoadDatFile` `0x454590`, ours in
+  `src/game/dat_load.cpp`; `Snd_LoadBankFile` `0x454770` and
+  `Sound_LoadStream` `0x587910`, ours in `src/game/save_menu.cpp`; the state
+  in `src/game/dat_cache.cpp`; the launcher's availability test,
+  `src/launcher/config.cpp`)
+- **Tier:** Sensible - the same bytes from another place; nothing changes
+  without a cache, and with a cache the importer built from the PC's own
+  files nothing that is loaded changes either.
+- **Original behaviour:** the three functions of the exe that build a `DAT\`
+  or `SND\` path (the only references to `"DAT\%s"` `0x652894` and
+  `"SND\%s.DAT"` `0x666F9C`, byte search 2026-10-10) read the game
+  directory's `DAT\NAME` and `SND\NAME.DAT`; DIV-0005 and DIV-0086 walk
+  `DAT\<tag>.NAME` and `DAT\<layer>.NAME` after the first, which
+  `tools/importer.py install` copies in from a cache. Only the music read
+  the cache (DIV-0087).
+- **New behaviour:** with `BOF3X_CACHE=<dir>` (or the ini's `cache=`), and
+  `BOF3X_CACHE_DATA` unset or `1`:
+  - `DAT\NAME` is, when the cache holds it whole, `<dir>\base\dat\NAME` and
+    `<dir>\loc\zh-CN\dat\NAME` walked chunk by chunk in the PC's slot order
+    as the cache's `manifest.toml` records it, then the zh file's enemy
+    names; for `LoadDatFile` every chunk, for `Snd_LoadBankFile` the banks.
+    A container the cache lacks, or holds only in part (a layer unwritten,
+    a row with no source, a disc-made enemy table with no PC to name it), is
+    the install's, whole.
+  - The language overlay and each optional layer are, when the cache has
+    that layer (`<dir>\loc\<tag>\dat\` or `<dir>\opt\<layer>\dat\` holding
+    a `.DAT`), the cache's file for `NAME` or none; otherwise the install's
+    `DAT\<layer>.NAME` as before - what `importer.py install` leaves, since
+    it replaces a layer's files in `DAT\` whole. `BOF3X_OPT` may name a
+    layer only the cache has.
+  - `Sound_LoadStream` opens `<dir>\base\snd\NAME.DAT` when it exists,
+    `SND\NAME.DAT` otherwise (its path buffer `0x28` -> `MAX_PATH`).
+  - **Checked at injection:** the manifest parsed (a malformed row, rows of
+    one container apart, a names row not after its table, a layer other
+    than `base` / `loc/zh-CN`, a `target` other than `pc-zh`: fatal), and
+    every held container's files walked by their headers against it (a
+    chunk count off, a chunk past the end, a zh tail that is not kind 0:
+    fatal, naming the file). `BOF3X_CACHE` not a directory or over 214
+    characters, `BOF3X_CACHE_DATA` other than `0` / `1`: fatal. No manifest:
+    no container from the cache, its layers and `base\snd` still read.
+    Armed after every module's self-test.
+  - The launcher offers a language or a layer the cache has as it does one
+    in `DAT\`.
+- **Rationale:** the unified-data plan's cache as the thing the engine reads
+  ([`unified-data-plan.md`](unified-data-plan.md) 2 and 7,
+  [`sound-import.md`](sound-import.md) 7): a disc-built cache can be played
+  without copying it into the install, and the PC's own files stop being the
+  only source. The slot order is required, not a nicety: walking base then zh
+  changes `FIRST.DAT`'s VRAM (a zh image under a base one's tiles;
+  [`cache-read.md`](cache-read.md) 3).
+- **Known and accepted:** the enemy names land after a container's later
+  slots rather than inside their table's chunk - the same bytes, because no
+  later chunk overlaps a table; the walk allocates two buffers where the
+  original allocated one, so heap addresses handed out later may differ; a
+  root of 215..226 characters that DIV-0087 accepts is refused here unless
+  `BOF3X_CACHE_DATA=0`; a manifest edited by hand must keep
+  `write_manifest`'s exact format. **The stand-ins** (the entry
+  [`importer-transforms.md`](importer-transforms.md) 5 asked for "when the
+  engine reads the cache"): a cache built without the PC's `DAT/` plays a
+  disc's own sections where only the PC carries the chunk - of the 35
+  containers with one, the 14 with no Chinese text (`DEMO`'s language page,
+  11 `MAGIC*` glyph atlases, `SCENA17`'s copy of the page) are read so, the
+  disc's words where the PC kept Japan's; the 21 with text (the dial page
+  among them) stay the install's. A cache built with the PC's `DAT/` has
+  none. The cache holds no MP3s, by the plan:
+  `BGM\` stays DIV-0087's cache song or the install's MP3. `BOF3X_CACHE` as
+  the one root is the owner's open call; `BOF3X_CACHE_DATA=0` is the other
+  answer ([`cache-read.md`](cache-read.md) 6).
+- **Verification:** `BOF3X_SHADOW=dat_cache` (in `'*'`): the parse and the
+  check on synthetic manifests (nine bad caches refused), `LoadDatFile` end
+  to end on in-memory files (the cache, the fallback, unarmed = the
+  install's walk), the two sound readers; 14 controls refused; seven
+  planted bugs each refused, then removed. The full `'*'` self-test exit 0.
+  Headless start-up against `analysis/cache/pc-plus-us`: 742 of 742
+  containers held and checked; four synthetic caches, the three damaged
+  fatal. Offline, `tools/cache_walk.py compare`: 742 of 742 containers the
+  same end state as the install after `importer.py install`, with no
+  language, with `en-US` + `area4-walls` + `psp-art` from the cache, and
+  with the install's `fr-FR`; `cache_walk.py check` (in `importer.py check`)
+  runs `cmd_install` itself on a synthetic cache. The 880 `base\snd` files
+  byte-identical to `SND\`. **Not run:** any play with `BOF3X_CACHE` set
+  (the owner's; [`cache-read.md`](cache-read.md) 9).
+- **Also in the PSX version?** No: the PSX reads its disc; this is where the
+  PC finds its files.
+- **Reversible?** `BOF3X_CACHE_DATA=0` (the cache for the music only), or
+  unset `BOF3X_CACHE`; `BOF3X_ORIGINAL=LoadDatFile` (and the other two) runs
+  Capcom's readers, which read only the install.
 ### A language layer built from the disc alone keeps nothing of the port's
 
-- **ID:** DIV-0089
+- **ID:** DIV-0090
 - **Date:** 2026-10-10
 - **Subsystem:** text (`tools/loc_build.py all --cache`, run by `importer.py
   build --lang` when no PC source is given; the `loc/<tag>/` layer of an

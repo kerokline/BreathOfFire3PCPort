@@ -82,6 +82,7 @@ add_library(bof3x SHARED
   src/game/rdata_consts.cpp
   src/game/game_clock.cpp
   src/game/save_io.cpp
+  src/game/dat_cache.cpp
   src/game/dat_load.cpp
   src/game/text_advance.cpp
   src/game/gfx_filter.cpp

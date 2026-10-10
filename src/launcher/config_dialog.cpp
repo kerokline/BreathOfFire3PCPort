@@ -749,7 +749,7 @@ bool ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     INITCOMMONCONTROLSEX icc{sizeof icc, ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES};
     InitCommonControlsEx(&icc);
 
-    DialogState state{&cfg, ConfigLanguagesAvailable(game_dir)};
+    DialogState state{&cfg, ConfigLanguagesAvailable(game_dir, ConfigCacheDataRoot(cfg))};
     padnav::SetMap(cfg.bindings.pad);
     const INT_PTR result = DialogBoxParamW(GetModuleHandleW(nullptr),
                                            MAKEINTRESOURCEW(IDD_CONFIG), nullptr, Proc,

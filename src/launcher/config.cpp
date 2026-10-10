@@ -11,6 +11,24 @@
 namespace bof3x {
 namespace {
 
+// Whether `pattern` (FindFirstFileW's) matches a file.
+bool AnyMatch(const std::wstring& pattern) {
+    WIN32_FIND_DATAW fd;
+    HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
+    if (h == INVALID_HANDLE_VALUE) return false;
+    FindClose(h);
+    return true;
+}
+
+// DIV-0089: <cache>\<kind>\<name>\dat\ holds a .DAT - the DLL's own test
+// (dat_cache::HasLayer).
+bool CacheHasLayer(const std::wstring& cache, const wchar_t* kind, const char* name) {
+    if (cache.empty()) return false;
+    std::wstring pattern = cache + L"\\" + kind + L"\\";
+    for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
+    return AnyMatch(pattern + L"\\dat\\*.DAT");
+}
+
 // Whole file as bytes, or false if it cannot be opened. Absent is not an error
 // to this function's callers; they all have a defined behaviour for it.
 bool ReadWhole(const std::wstring& path, std::string& out) {
@@ -267,6 +285,9 @@ std::string SatpixieLine(const Config::Satpixie& sp, const char* prefix, const c
 
 void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
     wchar_t existing[64];
+    // DIV-0089: where the DLL will find layers besides DAT\ (before BOF3X_CACHE
+    // is set below; the environment's wins over the ini's, as there).
+    const std::wstring cache = ConfigCacheDataRoot(cfg);
 
     // Only a language whose overlay is in DAT\ - the dialog offers no other,
     // but a hand-edited or carried-over bof3x.ini can name one never built,
@@ -274,7 +295,7 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
     // not there (the Latin layouts of DIV-0058..0061 over the Chinese).
     if (GetEnvironmentVariableW(L"BOF3X_LANG", existing, 64) == 0 &&
         cfg.language != kLanguageOriginal) {
-        const std::vector<std::string> built = ConfigLanguagesAvailable(game_dir);
+        const std::vector<std::string> built = ConfigLanguagesAvailable(game_dir, cache);
         if (std::find(built.begin(), built.end(), cfg.language) != built.end())
             SetEnvironmentVariableA("BOF3X_LANG", cfg.language.c_str());
         else
@@ -289,12 +310,12 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
     // other language at start-up. An empty opt= means the default layers
     // installed (kOptDefault, DIV-0080's walls), opt=none none.
     if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0) {
-        const std::string wanted = ConfigOptWanted(game_dir, cfg.opt);
+        const std::string wanted = ConfigOptWanted(game_dir, cfg.opt, cache);
         if (!wanted.empty()) {
             char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
             const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
             const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
-            const std::string playable = ConfigOptPlayable(game_dir, wanted, language);
+            const std::string playable = ConfigOptPlayable(game_dir, wanted, language, cache);
             if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
         }
     }
@@ -412,22 +433,33 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
     return true;
 }
 
-std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir) {
+std::wstring ConfigCacheDataRoot(const Config& cfg) {
+    wchar_t text[4];
+    const DWORD m = GetEnvironmentVariableW(L"BOF3X_CACHE_DATA", text, 4);
+    if (m == 1 && text[0] == L'0') return std::wstring();  // the cache for the music only
+    wchar_t root[MAX_PATH];
+    const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, MAX_PATH);
+    std::wstring out;
+    if (n > 0 && n < MAX_PATH) out.assign(root, n);
+    else if (n == 0) for (char c : cfg.cache) out += static_cast<wchar_t>(static_cast<unsigned char>(c));
+    while (out.size() > 1 && (out.back() == L'\\' || out.back() == L'/')) out.pop_back();
+    return out;
+}
+
+std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir, const std::wstring& cache) {
     std::vector<std::string> out;
     for (const LanguageInfo& lang : kLanguages) {
         std::wstring pattern = game_dir + L"\\DAT\\";
         for (const char* c = lang.code; *c; ++c) pattern += static_cast<wchar_t>(*c);
         pattern += L".*";
-        WIN32_FIND_DATAW fd;
-        HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
-        if (h == INVALID_HANDLE_VALUE) continue;
-        FindClose(h);
+        if (!AnyMatch(pattern) && !CacheHasLayer(cache, L"loc", lang.code)) continue;  // DIV-0089
         out.push_back(lang.code);
     }
     return out;
 }
 
-std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language) {
+std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language,
+                              const std::wstring& cache) {
     std::string out;
     size_t at = 0;
     while (at <= opt.size()) {
@@ -439,14 +471,11 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
         std::wstring pattern = game_dir + L"\\DAT\\";
         for (char c : layer) pattern += static_cast<wchar_t>(c);
         pattern += L".*";
-        WIN32_FIND_DATAW fd;
-        HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
-        if (h == INVALID_HANDLE_VALUE) {
-            std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for layer %s, but DAT\\%s.* is not there\n",
-                         layer.c_str(), layer.c_str());
+        if (!AnyMatch(pattern) && !CacheHasLayer(cache, L"opt", layer.c_str())) {  // DIV-0089: or the cache's
+            std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for layer %s, but DAT\\%s.* is not there%s\n",
+                         layer.c_str(), layer.c_str(), cache.empty() ? "" : ", nor in the cache's opt\\");
             continue;
         }
-        FindClose(h);
         // The DLL's own test (dat_load.cpp ReadOptLayers), so what passes
         // here never stops the game at start-up.
         const char* tag = LayerLanguage(layer.c_str());
@@ -461,7 +490,7 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
     return out;
 }
 
-std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt) {
+std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt, const std::wstring& cache) {
     if (opt == "none") return std::string();
     if (!opt.empty()) return opt;
     std::string out;
@@ -469,10 +498,7 @@ std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt
         std::wstring pattern = game_dir + L"\\DAT\\";
         for (const char* c = layer; *c; ++c) pattern += static_cast<wchar_t>(*c);
         pattern += L".*.DAT";   // the DLL's own pattern (dat_load.cpp ReadOptLayers)
-        WIN32_FIND_DATAW fd;
-        HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
-        if (h == INVALID_HANDLE_VALUE) continue;
-        FindClose(h);
+        if (!AnyMatch(pattern) && !CacheHasLayer(cache, L"opt", layer)) continue;  // DIV-0089: or the cache's
         std::fprintf(stderr, "bof3x-launcher: layer %s is installed and on by default; opt=none in bof3x.ini "
                      "turns it off\n", layer);
         if (!out.empty()) out += ',';

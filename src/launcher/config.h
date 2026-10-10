@@ -174,21 +174,32 @@ void ConfigSeedFromGameCfg(const std::wstring& game_dir, Config& cfg);
 // on failure.
 bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::wstring& error);
 
-// The tags of kLanguages whose DAT\<tag>.* overlays exist in `game_dir`,
-// in kLanguages' order - i.e. which languages tools/loc_build.py has built.
-// The dialog offers only these.
-std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir);
+// DIV-0089: the cache the DLL reads DAT\ files from - BOF3X_CACHE when the
+// environment has it, else the ini's cache= - or empty when there is none or
+// BOF3X_CACHE_DATA=0 (the cache for the music only). Where a layer can come
+// from, for the three functions below.
+std::wstring ConfigCacheDataRoot(const Config& cfg);
+
+// The tags of kLanguages whose DAT\<tag>.* overlays exist in `game_dir`, or
+// (DIV-0089) whose <cache>\loc\<tag>\dat\ holds a .DAT, in kLanguages' order -
+// i.e. which languages tools/loc_build.py has built. The dialog offers only
+// these.
+std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir,
+                                                  const std::wstring& cache = std::wstring());
 
 // The layers of `opt` (comma-separated) that can be played: those whose
-// DAT\<layer>.* files exist in `game_dir`, and of the text layers
+// DAT\<layer>.* files exist in `game_dir` or (DIV-0089) whose
+// <cache>\opt\<layer>\dat\ holds a .DAT, and of the text layers
 // (LayerLanguage, game/language_tags.h) only those of `language`'s primary
 // language - `language` being what the game is actually given as BOF3X_LANG,
 // empty or "original" for none, under which no text layer plays. Each layer
 // dropped is said on stderr; the DLL refuses either case at start-up.
-std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language);
+std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language,
+                              const std::wstring& cache = std::wstring());
 
 // The layers played when the ini's `opt=` is empty and BOF3X_OPT is unset,
-// each only when its DAT\<layer>.*.DAT is installed: DIV-0080's walls, on by
+// each only when its DAT\<layer>.*.DAT is installed or (DIV-0089) the cache
+// has the layer: DIV-0080's walls, on by
 // default since 2026-10-10 (the owner's word). `opt=none` turns them off, as
 // does an `opt=` list that does not name them.
 inline constexpr const char* kOptDefault[] = {"area4-walls"};
@@ -196,7 +207,8 @@ inline constexpr const char* kOptDefault[] = {"area4-walls"};
 // The list the game is offered for an ini's `opt=` value (before
 // ConfigOptPlayable): "none" -> empty; empty -> the kOptDefault layers
 // installed in `game_dir`; anything else -> itself.
-std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt);
+std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt,
+                            const std::wstring& cache = std::wstring());
 
 // Whether an ini's `opt=` value can be honoured: empty, "none", or a
 // comma-separated list of distinct names of letters, digits and '-' (at most

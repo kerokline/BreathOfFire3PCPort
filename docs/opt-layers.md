@@ -250,8 +250,10 @@ ran there too; DIV-0080's walls are now the `area4-walls` layer.)
   default off. The DLL has no default of its own: `BOF3X_OPT` unset is
   none, as before.
 
-**How a layer reaches the engine today.** The engine reads `DAT\` in the game
-directory, not the cache. `importer.py install --cache CACHE --game DIR --opt
+**How a layer reaches the engine today.** With `BOF3X_CACHE` set, from the
+cache's `opt/<layer>/dat/` (DIV-0089, since 2026-10-10,
+[`cache-read.md`](cache-read.md)); without it, from `DAT\` in the game
+directory, where `importer.py install --cache CACHE --game DIR --opt
 NAME` copies `opt/<name>/dat/X.DAT` to `DIR/DAT/<name>.X.DAT` (and `--lang
 TAG` `loc/<tag>/dat/X.DAT` to `DIR/DAT/<tag>.X.DAT`, what `loc_build.py`
 writes), after removing that layer's old `<name>.*.DAT` files, and refuses a
@@ -321,7 +323,10 @@ owner's call. `area4-walls` comes from the default above, not a preset.
   walk through a few of their areas (`AREA128`'s dock edge under the wide
   picture, the treehouse, a fishing area) with the layer on and off.
 - **No launcher box** (section 5).
-- **The engine still reads `DAT/`**, not the cache; `install` bridges.
+- ~~**The engine still reads `DAT/`**, not the cache; `install` bridges.~~
+  Since 2026-10-10 (DIV-0089, [`cache-read.md`](cache-read.md)) a layer the
+  cache has under `opt/<layer>/dat/` is read from there with `BOF3X_CACHE`
+  set, and `install` gives the same result.
 - **What the blanked tiles and the map-band edits are for** is read only to
   their structures (section 4).
 - **The PSP's other content changes**: the level table and consumable 87

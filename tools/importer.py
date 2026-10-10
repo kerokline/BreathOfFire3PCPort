@@ -1668,13 +1668,16 @@ def cmd_check(a):
                     errs.append("%s: stand-in %s" % (f["name"], b))
     oerrs = check_opt(a.opt_recipe)
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
-    for e in (errs + oerrs + serrs)[:30]:
+    import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
+    werrs = cache_walk.check()
+    for e in (errs + oerrs + serrs + werrs)[:30]:
         print("ERROR", e)
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
           % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
              len(oerrs)))
     print("seq check: synthetic SEP and VAB round trip, %d error(s)" % len(serrs))
-    errs += oerrs + serrs
+    print("cache_walk check: the engine's cache walk against install on a synthetic cache, %d error(s)" % len(werrs))
+    errs += oerrs + serrs + werrs
     return exe_tables.cmd_check(a) | (1 if errs else 0)
 
 
