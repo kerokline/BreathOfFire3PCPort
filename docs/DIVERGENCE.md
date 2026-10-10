@@ -3686,6 +3686,13 @@ designed in rather than bolted on.
      `0xEE`; the shipped heading is four glyphs, so under a written group
      the heading is centred on its middle, `x + 0x70` (`TextAdvance_Width`),
      within a few pixels of the US screen.
+     **The count's column** (the French and German check, 2026-10-10): the
+     count sits at `x + 0x6C`, sized for the five-glyph Chinese row label,
+     and the French `Taux de natalité` ran under it, the German
+     `Geburtenrate` touched it; under a written group the column moves right
+     of the label's pen width by a letter when it would collide (the
+     owner's word), the count's word following. Whether the French
+     PlayStation overlaps the same way was not read.
   *Verification:* `loc_build.py all` on the US disc reports `gene tabs 3,
   village lists 20, village words 5`; `rest_4b`, `rest_4c` and `rest_4e`
   self-tests 0 mismatches (the fuzz runs before any overlay loads, so every

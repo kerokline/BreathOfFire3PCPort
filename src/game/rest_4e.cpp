@@ -1230,12 +1230,22 @@ void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
     const int hx = words ? x + 0x70 - static_cast<int>(TextAdvance_Width(heading)) / 2 : x + 0x58;
     SH_CALL(Text_DrawAt)(hx, y, 0, 0xFF, heading);
     SH_CALL(CommuRank_DrawIcon)(x + 8, y + 0x14, icon);
-    SH_CALL(Text_DrawAt)(x + 0x18, y + 0x14, 0, 0xFF, Message(title));
+    const unsigned char* const row = Message(title);
+    SH_CALL(Text_DrawAt)(x + 0x18, y + 0x14, 0, 0xFF, row);
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(kTextBuffer)),
                          reinterpret_cast<const char*>(At(Key(Boss26Fx_CountFormat))), B(count));
-    SH_CALL(Text_DrawFont12)(x + 0x6C, y + 0x14, 0, At(kTextBuffer));
+    // The count's column is x + 0x6C, sized for the five-glyph Chinese row
+    // label; a disc's longer label (the French `Taux de natalité`, the German
+    // `Geburtenrate`) runs under it, so under a written group the column
+    // moves right of the label by a letter's gap (the owner's word, 2026-10-10).
+    int cx = x + 0x6C;
+    if (words) {
+        const int past = x + 0x18 + static_cast<int>(TextAdvance_Width(row)) + 8;
+        if (past > cx) cx = past;
+    }
+    SH_CALL(Text_DrawFont12)(cx, y + 0x14, 0, At(kTextBuffer));
     if (words)
-        SH_CALL(Text_DrawAt)(x + 0x8C, y + 0x14, 0, 0xFF, Labels_Slot(14, B(count) == 1 ? 2 : 1));   // a letter's gap after the count, as the US screen has
+        SH_CALL(Text_DrawAt)(cx + 0x20, y + 0x14, 0, 0xFF, Labels_Slot(14, B(count) == 1 ? 2 : 1));   // a letter's gap after the count, as the US screen has
     else
         SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(kOneGlyph));
 }

@@ -85,6 +85,19 @@ the US title within a few pixels of where the owner's web reference has it.
   US has it; the target's name is drawn with count 8 instead of the five
   glyphs' 5 (`Fly M` -> `Fly Man`).
 
+- **The French and German check** (an agent, the same day; captures
+  `analysis/shots/{fairy,news,dragonmenu}_{fr,de}`): every group full on
+  both discs, both sheets repainted (`Chasse / Reclam. / Bâtir`, `Jagen /
+  Bauen / Roden` - the German disc paints build on the clear icon and clear
+  on the build icon, its own art), the tabs `Data / Pren / Best` and `Data /
+  Aufn / Best`, the lists fitting their boxes (`Marchand`, `Capacite` with a
+  glyph to spare), `Trvail` / `Objete` / `Capacite` the French disc's own
+  spellings. One defect, fixed the same day: the count column of the ranked
+  lists' heading ran under the French row label `Taux de natalité` and
+  touched the German `Geburtenrate`; it now moves right of the label. The
+  French news route desyncs at the tiara prompt (text timing); the village
+  route reaches the same board.
+
 ## 3. Left as found - each with what it needs
 
 - **The parts menu's title** 选择要交给小桃的零件 (`0x66A098`,
