@@ -491,7 +491,7 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
 }
 
 bool ConfigOptInstalled(const std::wstring& game_dir, const char* layer, const std::wstring& cache) {
-    std::wstring pattern = game_dir + L"\DAT\\";
+    std::wstring pattern = game_dir + L"\\DAT\\";
     for (const char* c = layer; *c; ++c) pattern += static_cast<wchar_t>(*c);
     pattern += L".*.DAT";   // the DLL's own pattern (dat_load.cpp ReadOptLayers)
     return AnyMatch(pattern) || CacheHasLayer(cache, L"opt", layer);  // DIV-0089: or the cache's
