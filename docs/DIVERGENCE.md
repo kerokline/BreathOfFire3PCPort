@@ -4770,12 +4770,33 @@ designed in rather than bolted on.
   The switch: `BOF3X_MUSIC` (or the ini's `music=`) unset or `seq`, the
   cache's song where it has one; `mp3`, the PC's file always; anything else
   is fatal. `BOF3X_CACHE` naming something that is not a directory, or a root
-  longer than 42 characters, is fatal at start-up. The 42 comes from
-  `File_Open`'s retry: it builds `File_CdRoot` plus the path in a 0x50-byte
-  buffer with no length check, kept from the original, and every cache file
-  is read through it. A directory without `base\bgm` gives one log line and
-  no cache. Armed after every module's self-test; one log line when armed,
-  one per cache song started.
+  too long for its longest path (a bank's, `\base\bgm\bank\` plus a
+  15-character name plus `.DAT`) to stay within `MAX_PATH` - 226 characters -
+  is fatal at start-up. (Until 2026-10-10 the limit was 42: `File_Open`'s
+  retry builds `File_CdRoot` plus the path in a 0x50-byte buffer with no
+  length check, and every cache file is read through `File_Open`. That
+  retry is now skipped for a path whose prefixed form would not fit the
+  buffer, and the open fails as when the retry fails; with the shipped,
+  relative file names nothing changes, and `File_CdRoot` in front of an
+  absolute cache path could name no file anyway.) A directory without
+  `base\bgm` gives one log line and no cache. **The cache is checked at
+  start-up:** every `base\bgm\NNN.DAT` (a name `Music_LoadFile` can ask for)
+  is parsed, its number checked against its name, and each bank the songs
+  name is parsed and checked once (format, the music slot's size, master
+  volume, its name). A damaged cache - a song or bank that is truncated, has
+  a bad magic or version, or names a bank that is not there - is fatal then,
+  with the file's path in the message, rather than at the scene change that
+  would first play it; a track with no song file still plays its MP3. The
+  same checks run again as each song loads, for a cache changed while the
+  game runs. Armed after every module's self-test; one log line for the
+  check, one when armed, one per cache song started. **A change of bank**
+  keys off the synth's voices and clears their records' references into the
+  old bank ([`libsnd-reading.md`](libsnd-reading.md) 3.11); libsnd's
+  `SsVabClose` leaves them, so on the PSX a later volume or pitch-bend call
+  can reach the old song's release tails with the new bank's tone table,
+  past its end when the new bank is smaller (the player aborted there until
+  2026-10-10). An abort inside the SPU model is fatal through the same log
+  line as the player's (`DIV-0087: SPU model: ...`).
 - **Rationale:** the owner's stance of 2026-10-08: the disc's music is the
   default wherever a disc is a source, the PC's MP3s only when nothing else
   is there ([`sequenced-music-plan.md`](sequenced-music-plan.md), head and
@@ -4790,7 +4811,11 @@ designed in rather than bolted on.
   by the square law. Which level is the owner's call. A once-only song's
   reverb tail is cut where its voices end, and the ring's last half is lost
   to the pump's stop as for an MP3. `Music_Loops` does not rewind a sequence
-  (the loop is the data's). The synth's tick phase is arbitrary (0).
+  (the loop is the data's). The synth's tick phase is arbitrary (0). After a
+  change of bank, no volume or bend reaches the previous song's release
+  tails, where on the PSX one can (with tone attributes read from the new
+  bank, which the player cannot reproduce past its table). Whether any game
+  path changes bank while a tail is still audible is not measured.
 - **Verification:** the self-test under `BOF3X_SHADOW=sound`
   (`music_seq::SelfTest`, after DIV-0028's and the measured loops'), on a
   bank and two songs built in memory by the format, no game data. A looping
@@ -4810,6 +4835,15 @@ designed in rather than bolted on.
   llvm-mingw build, the `sound` and `'*'` self-tests, and a listen;
   against the renders, the synth's fidelity is
   [`sequenced-music-plan.md`](sequenced-music-plan.md) section 2's table.
+  **Amended 2026-10-10 (review fixes):** the self-test adds a song on the
+  second program of a two-program bank, then one on the one-program bank,
+  on the same synth, each equal to the oracle's; before the fix the second
+  song's `Play` aborted (`tone 16 of 16`; reproduced with the 2026-10-08
+  `seq.cpp` in a scratch harness). Built with llvm-mingw, no warnings;
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound` exit 0; the start-up check run
+  on a synthetic cache under a 200-character root: intact, 2 songs and 1
+  bank checked, armed; a truncated bank, a missing bank and a song of the
+  wrong version each fatal at start-up naming the file.
 - **Also in the PSX version?** Yes in substance: this *is* the PSX's player
   on the PSX's data, at the PC's fade level and timing.
 - **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
