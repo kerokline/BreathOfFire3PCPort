@@ -35,3 +35,9 @@ target_compile_options(synth_render PRIVATE -Wall -Wextra)
 add_executable(seq_tests seq_tests.cpp)
 target_link_libraries(seq_tests PRIVATE psx_music)
 target_compile_options(seq_tests PRIVATE -Wall -Wextra)
+
+# One sound-effect tone through the SPU model, with its ADSR and flat
+# (docs/sound-import.md section 10; tools/bgm/se_census.py drives it).
+add_executable(se_render se_render.cpp)
+target_link_libraries(se_render PRIVATE psx_spu)
+target_compile_options(se_render PRIVATE -Wall -Wextra)
