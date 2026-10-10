@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-09; 35 entries, I1..I35 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-10; 36 entries, I1..I36 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -80,6 +80,7 @@ rule ([`README.md`](README.md)) here too.
 | I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31) |
 | I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
 | I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | open 2026-10-09 (the owner); not for PR #46 |
+| I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
 
 ---
 
@@ -1472,3 +1473,52 @@ on Windows, `posix_spawn` elsewhere, or CTest's `WILL_FAIL`), build with the
 
 ### Outcome
 _(2026-10-09) open._
+
+## I36 — Our own ATRAC3plus decoder for the PSP's sounds
+
+**Ask (2026-10-10):** the owner asked what a decoder for the PSP's sound files
+would entail, then filed it as a low-priority idea for later. Today a PSP-only
+import decodes them with the player's own ffmpeg ([`psp-only-build.md`](psp-only-build.md)
+sections 2.1.1 and 8, `tools/at3.py`).
+**Kind:** platform
+**Feasibility:** MEDIUM. The format is unpublished; the practical source is
+FFmpeg's LGPL decoder, which cannot be vendored ([`LICENSING.md`](LICENSING.md)
+section 4, CLAUDE.md rule 5).   **Gated on:** the owner (priority, and the
+tables question below).
+
+### What already exists
+- The 892 files' format measured: RIFF `WAVE_FORMAT_EXTENSIBLE`, ATRAC3plus,
+  44.1 kHz, 744-byte frames (128 kbit/s), stereo except `WHISTLE`, the `fact`
+  chunk's encoder delay 2048 (`psp-only-build.md` 2.1.1).
+- `recipes/psp.snd.toml`: every clip's onset, so a decoder slots in where
+  ffmpeg is called (`at3.decode`).
+- An oracle for every sample: the player's ffmpeg on the same 892 files, and
+  the PSX disc's XA as a second, independent one.
+
+### What it would take (estimates, not measured)
+- **The parts:** frame and channel-unit parsing; Huffman-coded spectra over
+  many codebooks with noise filling and power compensation; tonal-component
+  synthesis; gain control; per-band inverse MDCT; the 16-band synthesis
+  filter bank. About 3-5 k lines of C++, much of it numeric tables.
+- **Two stages, clean room:** one agent reads FFmpeg's decoder and writes a
+  prose specification with no code (2-3 days); another implements from it
+  alone (3-5 days); verification against ffmpeg within 1 LSB on all 892 files,
+  unattended (1-2 days). Roughly 1.5-2 weeks.
+- **Where:** C++ in `src/audio/` beside the sequencer, so the engine could
+  decode at run time and drop the import step for effects. Pure Python would be
+  slow and might need numpy on the player's machine.
+- **The jingles stay an issue:** the PC plays them as MP3s, so without ffmpeg
+  they would need an MP3 encoder (LAME is LGPL too) or an engine change so that
+  kind 0 plays PCM.
+- **For the owner:** whether the format's tables, numeric facts about Sony's
+  format, may be taken from an LGPL source. The patents (ATRAC3plus about
+  2002) are probably expired, which is unverified.
+
+### First concrete step
+A feature survey of the 892 files: which block types, tonal components and
+codebooks they actually use. They are one bitrate and channel layout, so it
+may drop whole parts of the decoder and firm up the estimate.
+
+### Outcome
+_(2026-10-10) open, low priority (the owner). The player's own ffmpeg stays the
+route until this is picked up._
