@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-10, the week of 2026-10-06..09 reviewed and its findings fixed on `fix/review-1010`, merged with the faerie village's text onto `localization/fairy-village-dragon-transform` and opened as a PR: built, `'*'` narrow and wide; **up next: the testing catch-up at the machine**, item 1 below)
+**Status:** IN PROGRESS (2026-10-10 afternoon: the testing catch-up run at the machine and the four no-owner items built by four agents, all merged on `cleanup/testing-catchup-1010` with `main` merged in - built, `'*'` 1,064 lines 0 mismatches, the state hash identical to Capcom's; **up next: the PR, then the owner's eye and ear**, items 0 and 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -15,92 +15,107 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,081 functions are ours on `main`** (`inject: 10081 ours, 0 left original`; `gen_symbols.py` says 10,082
-because it counts one more `impl` row than `inject` detours - the same off-by-one stood at 10,066 / 10,065 on
-`e047ee9b`, so it is a counting difference, not a function). The game's own code is all ours since the platform
-round's step 3 ([`platform-round-2.md`](platform-round-2.md), PR #43); what is still Capcom's in `BOF3.exe` is the
-runtime's start-up, allocator and per-thread data, the MP3 decoder and the software renderer's converters. The week
-of 2026-10-06..09 merged four PRs: #43 (step 3, the region / music / bridge investigations, DIV-0077..0085), #44
-(the unified-data round: the importer, the exe tables by build, the BCP 47 tags, DIV-0086), #45 (`loc_build all
---discs`) and #46 (step 9, the PlayStation's music from the disc, DIV-0087). **On 2026-10-10 the four had a code
-review** ([`review-2026-10-10.md`](review-2026-10-10.md)) and its findings were fixed the same day on
-**`fix/review-1010`** (unpushed): a bank change that aborted the sequencer, the importer's language layers on
-Windows, a start-up Fatal from a plausible ini, DIV-0081's table gated as its docstring says (51 -> 37 rows),
-DIV-0080 without Capcom's coordinates, and the small items. Built and `'*'` narrow and wide there; **nothing heard
-or seen in play** - the testing catch-up below is next. The regression check is the state hash
-([`state-hash.md`](state-hash.md); references in `analysis/statehash`); the frame-hash reference
-`analysis/calltrace/r13_origb` is history since round fourteen.
+because it counts one more `impl` row than `inject` detours - a counting difference, not a function). The game's own
+code is all ours since the platform round's step 3 ([`platform-round-2.md`](platform-round-2.md), PR #43); what is
+still Capcom's in `BOF3.exe` is the runtime's start-up, allocator and per-thread data, the MP3 decoder and the
+software renderer's converters. The week of 2026-10-06..10 merged six PRs: #43 (step 3, the region / music / bridge
+investigations, DIV-0077..0085), #44 (the unified-data round: the importer, the exe tables by build, the BCP 47 tags,
+DIV-0086), #45 (`loc_build all --discs`), #46 (step 9, the PlayStation's music from the disc, DIV-0087), #47 (the
+faerie village's text, DIV-0088, with the 2026-10-10 review's fixes, [`review-2026-10-10.md`](review-2026-10-10.md))
+and #48 (the PSP-only build read, [`psp-only-build.md`](psp-only-build.md)). **On the afternoon of 2026-10-10 the
+testing catch-up ran** (item 2: the language and layer self-tests, the importer's cache built and installed, the state
+hash - the tip identical to Capcom's code on every tick, the 2026-10-05 reference pairs found stale by the owner's
+saves and re-recorded) **and four agents built the no-owner items** (item 0: the engine reading the cache, DIV-0089;
+step 8's engine half; a disc-only language build, DIV-0090; the music measurement's open ends and the tooling,
+DIV-0081's second cut), merged one at a time on `cleanup/testing-catchup-1010`. Nothing of it has been played or
+heard. The regression check is the state hash ([`state-hash.md`](state-hash.md); references in `analysis/statehash`,
+the route pairs now `cn_<route>_orig2` / `_orig2b`).
 
 ## Pick up here
 
-0. **The faerie village's and the gene window's text (2026-10-10,
-   `localization/fairy-village-dragon-transform`, `0dc3d2ad`):**
-   DIV-0064's groups 12..16 ([`village-text-scan.md`](village-text-scan.md)) -
-   the gene tabs, the board's lists (boxes sized to them), its words, the
-   Identify panel's headings, the sixty faeries' names - and DIV-0088, the
-   board's buttons from the disc's paint: built, self-tested (`magic_s12`,
-   `rest_4a` / `4b` / `4c` / `4e` 0 mismatches) and seen on the owner's four
-   routes (`analysis/shots/dragonmenu_loc2`, `fairy_loc4`, `news_loc4`,
-   `identify_loc3`); the owner's saves renamed with `tools/faerie_names.py`.
-   The French and German sets were built (`--discs CDImage`) and the three
-   routes played under each by an agent: every group full, both sheets
-   painted, the one defect (the count column under a long row label) fixed
-   the same day ([`village-text-scan.md`](village-text-scan.md) section 2).
-   Owed the owner's eye: the hi-lo game's `Cash` / `Pot` (no route), a
-   birth under fr-FR / de-DE for their faerie names, the board in play. Left: section 3's strings there (the
-   parts menu, the empty slot, the renamer's names). `tools/text_scan.py` is
-   the way to find the next one without a route.
-
-1. **The testing catch-up, at the machine** (the owner's next session; everything here was built and self-tested
-   but never played). Run the self-tests from a launcher copy with no `bof3x.ini` (the `cheat.exp` and
-   `language=` traps below), the live runs from the owner's install. In the order they bite:
-   1. **#44's deferred checks:** `'*'` with `BOF3X_LANG=en-US` and once with `ja-JP`; `importer.py build --preset
-      pc-plus-us-text --source bof3/DAT --source bof3/BOF3.exe --source <US cue> --source <PSP iso> --opt psp-art
-      --out <cache>`, `importer.py install --cache <cache> --game bof3 --opt psp-art`, then `'*'` with
-      `BOF3X_OPT=psp-art` and a look at Stallion when a route reaches fight 24 (`owner-review.md`, step 4). The
-      install's overlays were rebuilt under the tags on 2026-10-08; delete the old `en.*` / `fr.*` / `de.*` /
-      `ja.*` (nothing reads them; `importer.py install` notes any left). An old ini `language=en` stops the launcher
-      since 2026-10-10 - the bare codes are retired, not mapped (DIV-0005): write `language=en-US`. Then the state-hash A/B of the tip against
-      the 2026-10-05 references, `BOF3X_OPT` unset.
-   2. **DIV-0087, the listen:** a cache from any PSX disc (the build above writes `base/bgm/`), `BOF3X_CACHE=<cache>`
-      (up to 226 characters; the whole cache is checked at start-up and a damaged one is fatal there,
-      [`music-seq-engine.md`](music-seq-engine.md) 3): the title, a town, a fight and its fanfare (`165`), a
-      once-only song (the title's 141), a fade-out, an inn jingle between two cache songs, **a song change into a
-      smaller bank** (the 2026-10-10 fix: the old tails play on, no later volume reaches them), then
-      `BOF3X_MUSIC=mp3` as the A/B. The log says `music_seq` armed and one line per song.
-   3. **DIV-0081, the loops** (37 rows now, 28 full and 9 shifted; [`bgm-comparison.md`](bgm-comparison.md) 11..12):
-      the game with `BOF3X_MUSIC_LOOPS` on against `=0` on a looping track of each kind (a full row, e.g. `003`;
-      a shifted one, e.g. `142`). The battle theme `153` is refused since the owner's call and rewinds as the original.
-   4. **DIV-0085:** one `bridgeWalk` wide (the log's `DIV-0085    map cell 48,..` lines), then the entry's
-      Verification line; glance at area 47 (Wyndia's outer wall) when passing, `BOF3X_SIDE_DUP=0` for the original.
-   5. **DIV-0080:** the minecart area - the raised strip's east edge and the corridor's bottom edge blocked, open
-      without the layer.
-      **Since 2026-10-10 the walls are an `opt/` layer** cut from the player's Western disc, not code, and **on by
-      default**: a `build` with a Western disc builds it, `install` installs it, and the launcher plays it whenever
-      `DAT\area4-walls.*.DAT` is there and the ini's `opt=` is empty; `opt=none` for the open map (or `install
-      --no-opt area4-walls` to remove it). Without a Western disc the map is the shipped one. `BOF3X_AREA4_WALLS` is
-      retired (`=0` accepted and logged when the layer is not named, refused when it is).
-   6. **The owner's eye**, the list in [`owner-review.md`](owner-review.md): DIV-0071's crate
-      (`ninaWalkBehindBlock`, A/B under `BOF3X_LAYERING=0`), DIV-0077's specks (the dream scene), DIV-0079's lines
-      and the fishing gauge, DIV-0064's master-list star, the French and German builds of DIV-0064's groups 7..11,
-      the sound resume by ear.
-2. **The owner's calls** - [`owner-review.md`](owner-review.md) is the one list. The review's five were decided on
-   2026-10-10 ([`review-2026-10-10.md`](review-2026-10-10.md), last section). Still open, the town theme `000` (shorter than one loop), DIV-0087's level
-   (127 against the PSX title's 97), song 21, `165`'s bank, `BOF3X_CACHE` as the one root, and the importer steps'
-   calls (3: four, 6: three, 4: six, 8: four).
-3. **Then, work that needs no owner** (a cloud session can do each; the live check stays the owner's):
-   - the engine half of step 8 ([`exe-import.md`](exe-import.md) 6: map `data.bin` at `0x5DA000`, the 9,142 code
-     pointers, the data-pointer rebuild transform first, `.rdata`'s 65 reads, the 321 addresses no disc carries);
-   - a disc-only `loc_build` ([`importer-transforms.md`](importer-transforms.md) 8 item 3) - the last gap between a
-     US disc and a playable game;
-   - the engine reading the cache (`LoadDatFile` on `base/dat/` + `loc/<tag>/dat/` + `opt/`, `Sound_LoadStream` on
-     `base/snd/`, `BGM\%03d` through DIV-0087's seam; [`sound-import.md`](sound-import.md) 7);
-   - `importer.py verify` hashing `base/bgm/`; the sound effects through the SPU model (plan section 7); the
-     launcher's boxes for `cache=` / `music=` and the PSP extras; CI running `importer.py check`;
-   - the music measurement's open ends: five songs at 0.943..0.984 (43, 77, 94, 145, 146; a per-voice stem of 146
-     at 17.9 s first, [`libsnd-reading.md`](libsnd-reading.md) 9.6), the 23 refused for a waveform that never
-     repeats (a loop at the sequence's period with a longer crossfade), the 20 near-full files; the host suite on
-     Windows (I35, its tests `fork`); SPU reading R1 (+32 in the ADPCM filter) unsettled - `vag.py`'s `decode()`
-     takes the other reading.
+0. **The catch-up branch, `cleanup/testing-catchup-1010`** (2026-10-10 afternoon; its worktree is the
+   session-`ba6f0f72` scratchpad's `cu/`, because the main checkout was another session's that day). On it, merged one
+   at a time with a build after each and `main` (PR #48) merged last:
+   - **The engine reads the importer's cache** (DIV-0089, [`cache-read.md`](cache-read.md)): with `BOF3X_CACHE` set,
+     `LoadDatFile`, `Snd_LoadBankFile` and `Sound_LoadStream` open the cache's `base/dat` + `loc/zh-CN/dat` (in the
+     manifest's slot order - base-then-zh is wrong in `FIRST.DAT`), `loc/<tag>`, `opt/<layer>` and `base/snd` before
+     the install's; `BOF3X_CACHE_DATA=0` keeps the cache for the music only; `tools/cache_walk.py` restates the walk
+     and `importer.py check` runs it. Proved offline against `install` (742 of 742), not played.
+   - **Step 8's engine half begun** ([`exe-import-engine.md`](exe-import-engine.md)): the data-pointer rebuild (the
+     map run backwards: JP 7,138 of 9,959 words, the image 90.4 % the PC's, `recipes/exe-rebuild.tsv`), the
+     pointer-keyed places (`exe-places.tsv`, 403 more bytes), `.rdata`'s 44 constants the engine's own
+     (`src/game/rdata_consts.*`, verified against the exe at start-up), state 3's design chosen (an entry-stub page),
+     and `BOF3X_EXEIMAGE=<cache>` laying `base/exe/data.bin` over `.data` after a byte check. Left: its section 5.
+   - **A disc-only language build** (DIV-0090, [`loc-build-disc-only.md`](loc-build-disc-only.md)): `loc_build.py all
+     --disc D --cache CACHE` from a cache with no PC install; the PC path byte-identical (verified: 247 of 247 en-US).
+     Disc-only differs in the font (the port's 2,376 glyphs blank), 31 area blocks' Japanese template slots, the
+     village board sheet (not built). **A defect found in the PC build:** 34 French and 11 German messages stay
+     Chinese though the discs translate them (a slot-table size compared against the PC's) - the owner's call.
+   - **The music measurement's open ends** ([`music-open-ends.md`](music-open-ends.md)): the five low songs were the
+     oracle's window (now 1.000 but 94 at 0.986, the allocator's steal timing); R1 settled (no `+32`, `vag.py` agrees);
+     **DIV-0081's second cut: 4 of the 37 shipped loop rows looped at a period the sequence does not have** (064 and
+     076 cut their sixteenth bar; 131 and 070 short) - the table is 39 rows with each period pinned to the
+     sequence's pass length (`tools/bgm/seq_periods.py`), 070 / 131 refused; the 23 that never repeat measured (a
+     long-fade row would be a new kind, not built); the near-full files best left on the rewind, numbers in section 5.
+   - **Tooling:** `importer.py verify` hashes `base/bgm/` against `fixtures/bgm.tsv`; the music host suite runs on
+     Windows and in CI (I35); the launcher dialog has Music, Cache folder and "PSP extras" boxes
+     ([`launcher-settings.md`](launcher-settings.md) 3.1; `dialog_test.py` all ok, the host suite 48 checks - one of
+     them planted for a merge-resolution slip that lost a backslash in the installed-layer pattern); the sound effects
+     measured against the SPU model, not built ([`sound-import.md`](sound-import.md) 10).
+   Verified at the tip: `'*'` narrow 1,064 lines 0 mismatches, `inject: 10081 ours`, `rdata: 44 constants ... equal`;
+   `ledger_check` 90 entries; `importer.py check` 0 errors in five parts. **Next: the PR** (every commit signed off -
+   read `git log --format=%B main..HEAD`), then the four agents' worktrees (`.claude/worktrees/agent-*`) can go.
+1. **The owner's eye and ear** - [`owner-review.md`](owner-review.md) is the one list; new since the morning:
+   - **the listen:** DIV-0087 (a cache: `BOF3X_CACHE=<repo>/analysis/cache/pc-plus-us`, built 2026-10-10 from the PC
+     install, the US disc and both PSP images) - the title, a town, a fight and its fanfare, a once-only song, a
+     fade-out, an inn jingle between two cache songs, a song change into a smaller bank, then `BOF3X_MUSIC=mp3`; and
+     **DIV-0081's second cut** - 064, 076 (the sixteenth bar back), 131 and 070 (refused: the original's rewind),
+     037 084 109 130 (new rows), against `BOF3X_MUSIC_LOOPS=0`;
+   - **in play:** the cache read (`BOF3X_CACHE` set, then `BOF3X_CACHE_DATA=0`; a state-hash route under it), DIV-0085
+     (`bridgeWalk` wide, area 47), DIV-0080's walls (installed and on by default now; `opt=none` for the open map),
+     the launcher dialog's new boxes by eye, PR #47's leftovers (the hi-lo game's `Cash` / `Pot`, a birth under
+     fr-FR / de-DE, the board in play), the older list in `owner-review.md`;
+   - **calls:** the French and German messages the PC build leaves Chinese (item 0, a ledger entry if fixed); whether
+     the engine holds the exe's code pointers, the 117 pooled zero objects and the `.bss` / `.rdata` pointer words as
+     layout for disc-only builds (`exe-import-engine.md` section 5); `BOF3X_CACHE` as the one root (`cache-read.md`
+     section 6 - built to work either way); the near-full files' rewind; and the morning's open ones (the town theme
+     `000`, DIV-0087's level, song 21, `165`'s bank, the importer steps' calls).
+2. **The testing catch-up, done 2026-10-10 afternoon** (item 1.1 of the morning). From an ini-less launcher copy of
+   `main`'s tip:
+   - `'*'` under `BOF3X_LANG=ja-JP`: exit 0, 10,081 ours. Under `en-US` (any Latin overlay) `'*'` stops at
+     `field_c1`'s clone check (Traps), so the run is `'*,-field_c1'`: exit 0, 1,063 lines, 0 mismatches, 10,082 ours
+     - the extra detour is `Config_DrawControllerCell`, Latin-only by design. `BOF3X_OPT=psp-art`: exit 0, 1,064
+     lines, 0 mismatches.
+   - `importer.py build --preset pc-plus-us-text` with the PC install, the US disc and both PSP images, `--opt
+     psp-art`: exit 0, `analysis/cache/pc-plus-us` (419 MB: 741 base containers, en-US, psp-art, area4-walls, 880
+     sounds, 247 songs); `install --opt psp-art` into `bof3/DAT` (no old bare-code overlays were left to delete).
+     Stallion at fight 24 is the owner's (item 1).
+   - **The state hash:** the attract sequence identical to the 2026-10-05 pair on all 10,305 ticks - **only with
+     `BOF3X_OPT=none`** (Traps: the installed walls layer arms at start-up and every route differed at tick 3 in VRAM
+     with it on). The ten routes with it off differed from the 2026-10-05 pairs on two pages from each route's
+     first save-list read (`0x92A000` `Save_Staging`, `0x905000`); **the tip is not the cause:** a combat run of
+     ours and one of Capcom's the same afternoon are identical on all 2,561 ticks, their raw
+     dumps at ticks 179 and 226 show no byte of those pages differing, and Capcom's own run differs from the
+     2026-10-05 pair the same way - the owner's save slots changed since (`BISLPS06`, `09`, `0A..0C`), and the pairs
+     stage the save list. **The pairs are re-recorded** as `cn_<route>_orig2` / `_orig2b` (`BOF3X_OPT=none`,
+     `--original "*,-Game_Clock"` as state-hash.md 4 says - a first cut with `'*'` alone let Capcom's wall-clock
+     play time run and the field menu's minute digits and the music's timers differed from ours) and
+     ours checked against them - **identical on every tick of nine routes** (combat 2,561, menu_screens 1,729, field_menu 1,409,
+     worldMapAndAreaTransition 2,113, caughFish 3,841, masterAndManillo 5,505, dragonTransform 4,289, cutsceneAndNue
+     7,361, shop 3,137) **and on all but one tick of whelpBoss** (13,121; the sound page `0x7DE000` at tick 3,227 only,
+     the page state-hash.md 6 already names as one-tick noise - a second run of ours was identical throughout). The tip
+     is clean; the references are `cn_<route>_orig2` / `_orig2b` from here on.
+3. **Work that needs no owner, what is left** (each doc's own list is the authority): step 8's
+   [`exe-import-engine.md`](exe-import-engine.md) section 5 (the stub page wants state 2's 17 functions without
+   `impl`; the 183 language addresses; the effect state tables' twins); the disc-only build's gaps
+   ([`loc-build-disc-only.md`](loc-build-disc-only.md): the village sheet, French `AREA004`, the Chinese chunks
+   nothing replaces, the PC build's French / German defect once the owner says); the cache read's MP3s and an ini key
+   for `BOF3X_CACHE_DATA` ([`cache-read.md`](cache-read.md) 10); the music's long-fade row as a design
+   ([`music-open-ends.md`](music-open-ends.md) 4) and `SsUtKeyOnV` read before the sound effects move; **the
+   remaining Chinese in the exe:** `tools/text_scan.py --all` finds 424 strings (298 in the table region), 241 of
+   them at addresses `src/` names - the cross-check against DIV-0064's label tables (`labels.cpp` and its siblings)
+   would leave the definite list of unlocalised strings with their referrers; the data side is closed (every
+   Chinese-layer container but seven font sheets is replaced by the en-US layer, no art or text chunk is PC-only).
 4. **Small, left by the week:** the five thin controls DEBTS listed; the 61 run-time raw calls (round thirteen's
    1.3, a decision); `pe_hidden.py` and `pe_funcs.py` stop silently at an undecodable byte (fixing them regenerates
    the entry lists); `mode-rest.md` 0's "pc_funcs.json" is `pc_hidden.json`'s size and `Mp3_Create`'s evidence
@@ -108,7 +123,10 @@ or seen in play** - the testing catch-up below is next. The regression check is 
    Capcom's type-1 routine not located; a one-line log of each file `LoadDatFile` opens (would settle area names);
    DIV-0041's wider terrain margin as the creator of the bridge's edge cells, unmeasured; `Sprite_FlashClut`'s row
    mask; seven older hosts still covering an owned start in `entries_logic.txt`; `field_c3`'s three controls and
-   `rest_1g`'s 60,000-round fuzz (a minute and a half on every `'*'`).
+   `rest_1g`'s 60,000-round fuzz (a minute and a half on every `'*'`); two bugs the agents saw and left:
+   `loc_build.py`'s four converters test `tag == 16` with no `tag` bound (a `NameError` on an empty string), and
+   `importer.py verify` on a US-only cache reports `opt/area4-walls` `AREA004.DAT` slot 6 "composed with the layer,
+   not the recipe's" (the opt-layer code; two agents met it).
 
 **Older items, from before 2026-10-06** (kept until a session works through them; the numbering is theirs):
 
@@ -723,16 +741,13 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-`fix/review-1010` holds the 2026-10-10 review's fixes ([`review-2026-10-10.md`](review-2026-10-10.md)), unpushed:
-five agent branches merged into it (`fix/review-loops`, `-importer`, `-audio`, `-engine`, `fix/area4-no-table`), the
-docs after. Its worktree is in the session-`2003bf95` scratchpad (`fixes/`, with `launcher/` the ini-less build and
-`loops.json.bak-20261010`, the measurement before `regate`). `analysis/bgm/loops.json` in the main checkout is
-regated to the 37-row table; a `gen_loop_table.py` run from it reproduces the committed `.inc`. PRs #43..#46 are
-merged; their branches (`phase-3/platform-round-2`, `platform/unified-data-round`, `build/build-all-update`,
-`audio/sequence-from-disc`, the `claude/*` session branches) can go, and so can every `.claude/worktrees/agent-*`
-worktree - all are merged or superseded. The main checkout sits on `localization/fairy-village-dragon-transform` (at
-`main`) with the owner's untracked `tools/recipes/dragonMenu.txt` and `fairyVillage.txt`: theirs. **Other sessions
-work in the main checkout**: check `git status` before a commit, and never build in `build/` while its game runs.
+`cleanup/testing-catchup-1010` (item 0) is the branch to PR; its worktree is the session-`ba6f0f72` scratchpad's
+`cu/` (with `build/`, the launcher host build `lh_cu/`, the chain scripts and their `.out` files, the launcher copies
+`launcher/` - `main`'s tip, ini-less - and `launcher_cu/` - the branch's). The four agents' branches `catchup/cache-read`,
+`catchup/step8-engine`, `catchup/loc-disc-only`, `catchup/music-tooling` and their `.claude/worktrees/agent-*` are
+merged and can go once the PR does. **Other sessions work in the main checkout** (on 2026-10-10 it was on
+`analysis/psp-only-build`, PR #48, while this ran): check `git status` and the branch before a commit there, and never
+build in `build/` while its game runs.
 
 Local only, gitignored, worth keeping:
 
@@ -760,6 +775,23 @@ Local only, gitignored, worth keeping:
 
 ## Traps already paid for
 
+- **`'*'` under a Latin overlay stops at `field_c1`** (2026-10-10, the morning's trap read right): `BOF3X_LANG=en-US`
+  (en-150, fr-FR, de-DE) re-aims `Config_DrawRowLabel + 0x9F` through the `ConfigText` patch and the clone check
+  refuses it after 979 lines. `ja-JP` passes whole. The language self-test is `BOF3X_SHADOW='*,-field_c1'` (the list
+  takes `-name`), and `field_c1` is covered by the `BOF3X_LANG=original` run beside it.
+- **Every state-hash and attract run wants `BOF3X_OPT=none`** since the walls layer is installed (2026-10-10): the
+  layer arms at start-up and the VRAM shadow and `Gfx_CurrentEnv` pages differ at tick 3 on every route, area 4 or
+  not. The morning's item 1.1 said "`BOF3X_OPT` unset"; the traps' line was the right one.
+- **The route pairs stage the owner's save list** (2026-10-10): a new or rewritten save slot changes `Save_Staging`'s
+  page (`0x92A000`) and one beside it (`0x905000`) from the route's first save-list read, on Capcom's side as much as
+  ours. Before blaming a tip, run Capcom's side once (`--original "*,-Game_Clock"`, never `'*'` alone: Capcom's
+  clock is the wall clock and the play-time digits drift) and `check` it against the pair; if it differs
+  the same way, re-record the pair (state-hash.md 6). The 2026-10-05 pairs went stale this way; `cn_<route>_orig2` /
+  `_orig2b` are the current ones.
+- **Killing a queued chain by a command-line pattern kills its waiters** (2026-10-10): chains that wait on each
+  other's markers name each other in their launch commands when the script text was written and launched in one
+  command. Write the script in one command, launch by path in another, and stop one by the exact PID of its `bash`,
+  its runner and `BOF3.exe`. The owner walking up to the attract window means that run alone restarts.
 - **Cloud sessions** (2026-10-08): `git commit -s` there signs as the environment's identity (Claude), not the owner -
   write the owner's `Signed-off-by` and the `Co-authored-by` lines by hand. Uploads go to scratch only (rule 1).
   `apt-get install g++-mingw-w64-i686` gives `-fsyntax-only` checks with `gen_symbols.py`'s header - not the

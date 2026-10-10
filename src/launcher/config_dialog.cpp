@@ -7,6 +7,8 @@
 #include <windows.h>
 
 #include <commctrl.h>
+#include <objbase.h>
+#include <shlobj.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -25,7 +27,141 @@ struct DialogState {
     // The overlay languages found in DAT\ (ConfigLanguagesAvailable): the
     // Language box holds "Original" and then these, in this order.
     std::vector<std::string> languages;
+    std::wstring game_dir;
+    // kPspLayers[i] installed in DAT\ (ConfigOptInstalled): only those get a box.
+    bool installed[std::size(kPspLayers)] = {};
 };
+
+// ---- DIV-0087: the music source and the cache folder --------------------------
+//
+// The ini's music= and cache= lines as a hand edit has them. The Music box's
+// first entry is the default, which an empty music= and music=seq both mean:
+// it keeps whichever the ini said, and writes nothing new unless the box moved.
+// The cache path is the ini's bytes in the ANSI code page, as the launcher
+// hands them to the game (SetEnvironmentVariableA) and the DLL reads them
+// (GetEnvironmentVariableA, music_seq.cpp Arm).
+
+std::wstring FromAnsi(const std::string& s) {
+    if (s.empty()) return std::wstring();
+    const int n = MultiByteToWideChar(CP_ACP, 0, s.data(), static_cast<int>(s.size()), nullptr, 0);
+    std::wstring w(static_cast<size_t>(n), L'\0');
+    MultiByteToWideChar(CP_ACP, 0, s.data(), static_cast<int>(s.size()), w.data(), n);
+    return w;
+}
+
+// False when the ANSI code page cannot hold `w`.
+bool ToAnsi(const std::wstring& w, std::string& out) {
+    out.clear();
+    if (w.empty()) return true;
+    BOOL lossy = FALSE;
+    const int n = WideCharToMultiByte(CP_ACP, 0, w.data(), static_cast<int>(w.size()), nullptr, 0, nullptr, &lossy);
+    if (n <= 0 || lossy) return false;
+    out.resize(static_cast<size_t>(n));
+    WideCharToMultiByte(CP_ACP, 0, w.data(), static_cast<int>(w.size()), out.data(), n, nullptr, &lossy);
+    return !lossy;
+}
+
+std::wstring DialogText(HWND dlg, int id) {
+    const int n = GetWindowTextLengthW(GetDlgItem(dlg, id));
+    std::wstring w(static_cast<size_t>(n) + 1, L'\0');
+    GetDlgItemTextW(dlg, id, w.data(), n + 1);
+    w.resize(static_cast<size_t>(n));
+    return w;
+}
+
+// What the game will make of the folder, said under the box: the DLL's own
+// tests (music_seq.cpp Arm), so the note never promises what the game refuses.
+// The 226 is its kRootMax: MAX_PATH - 1 less the longest path it builds
+// (\base\bgm\bank\ + a 15-character bank name + .DAT).
+void CacheNote(HWND dlg) {
+    std::wstring w = DialogText(dlg, IDC_CACHE);
+    const size_t b = w.find_first_not_of(L" \t"), e = w.find_last_not_of(L" \t");
+    w = b == std::wstring::npos ? std::wstring() : w.substr(b, e - b + 1);   // ConfigLoad trims
+    std::string a;
+    const wchar_t* note = L"";
+    if (w.empty()) {
+        note = L"No cache: the PC's MP3s play.";
+    } else if (!ToAnsi(w, a)) {
+        note = L"This path has characters the game cannot be given; choose another.";
+    } else {
+        while (a.size() > 1 && (a.back() == '\\' || a.back() == '/')) a.pop_back();
+        const DWORD at = GetFileAttributesA(a.c_str());
+        if (at == INVALID_FILE_ATTRIBUTES || !(at & FILE_ATTRIBUTE_DIRECTORY))
+            note = L"Not a folder: the game will stop at start-up.";
+        else if (a.size() > MAX_PATH - 1 - (sizeof "\\base\\bgm\\bank\\" - 1 + 15 + sizeof ".DAT" - 1))
+            note = L"Over 226 characters: the game will stop at start-up.";
+        else {
+            const DWORD bg = GetFileAttributesA((a + "\\base\\bgm").c_str());
+            note = bg != INVALID_FILE_ATTRIBUTES && (bg & FILE_ATTRIBUTE_DIRECTORY)
+                       ? L"Holds base\\bgm: the disc's songs play where it has them."
+                       : L"No base\\bgm in it: the PC's MP3s play.";
+        }
+    }
+    SetDlgItemTextW(dlg, IDC_CACHENOTE, note);
+}
+
+void BrowseCache(HWND dlg) {
+    const HRESULT co = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    BROWSEINFOW bi{};
+    bi.hwndOwner = dlg;
+    bi.lpszTitle = L"The importer's cache folder (the one holding base and manifest.toml)";
+    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    if (PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi)) {
+        wchar_t path[MAX_PATH];
+        if (SHGetPathFromIDListW(pidl, path)) {
+            SetDlgItemTextW(dlg, IDC_CACHE, path);
+            CacheNote(dlg);
+        }
+        CoTaskMemFree(pidl);
+    }
+    if (SUCCEEDED(co)) CoUninitialize();
+}
+
+// ---- DIV-0086: the PSP extras --------------------------------------------------
+//
+// One box per installed kPspLayers entry, packed from the group's top; a text
+// layer's box only while the Language box holds its language (the DLL refuses
+// it under another, and the launcher leaves it off: ConfigOptPlayable). A
+// hidden box keeps its tick and is read back like the others, so switching the
+// language and back loses nothing; a layer the boxes do not offer stays in
+// opt= as it was (ConfigOptEdit).
+
+int Selected(HWND dlg, int id);  // below, with the combo box helpers
+
+std::string LanguageChosen(HWND dlg, const DialogState& state) {
+    const int lang = Selected(dlg, IDC_LANGUAGE);
+    return lang >= 1 && static_cast<size_t>(lang) <= state.languages.size()
+               ? state.languages[static_cast<size_t>(lang) - 1]
+               : std::string();
+}
+
+void OptLayout(HWND dlg, const DialogState& state) {
+    const std::string language = LanguageChosen(dlg, state);
+    RECT first{14, 245, 266, 10};
+    MapDialogRect(dlg, &first);
+    RECT step{0, 0, 0, 11};
+    MapDialogRect(dlg, &step);
+    int shown = 0, installed = 0;
+    for (size_t i = 0; i < std::size(kPspLayers); ++i) {
+        HWND box = GetDlgItem(dlg, IDC_OPT0 + static_cast<int>(i));
+        const char* tag = LayerLanguage(kPspLayers[i].name);
+        const bool show = state.installed[i] && (!tag || SamePrimaryLanguage(language.c_str(), tag));
+        installed += state.installed[i];
+        if (show) {
+            SetWindowPos(box, nullptr, first.left, first.top + shown * step.bottom, first.right, first.bottom,
+                         SWP_NOZORDER | SWP_NOACTIVATE);
+            ++shown;
+        }
+        ShowWindow(box, show ? SW_SHOW : SW_HIDE);
+    }
+    const wchar_t* note = L"";
+    if (installed == 0)
+        note = L"No PSP layer is installed. tools/importer.py build and install make them from the player's PSP disc.";
+    else if (shown == 0)
+        note = L"The layers installed are another language's text; choose that language to offer them.";
+    SetDlgItemTextW(dlg, IDC_OPTNOTE, note);
+    ShowWindow(GetDlgItem(dlg, IDC_OPTNOTE), shown == 0 ? SW_SHOW : SW_HIDE);
+}
 
 const wchar_t* LanguageLabel(const std::string& code) {
     for (const LanguageInfo& lang : kLanguages)
@@ -156,6 +292,30 @@ void Populate(HWND dlg, const DialogState& state) {
     AddItem(dlg, IDC_RENDERER, L"Software");
     Select(dlg, IDC_RENDERER, cfg.renderer ? 0 : 1);
 
+    AddItem(dlg, IDC_MUSIC, L"The disc's songs where the cache has them (default)");
+    AddItem(dlg, IDC_MUSIC, L"The PC's MP3s always");
+    Select(dlg, IDC_MUSIC, cfg.music == "mp3" ? 1 : 0);
+    SetDlgItemTextW(dlg, IDC_CACHE, FromAnsi(cfg.cache).c_str());
+    CacheNote(dlg);
+
+    // A box is ticked when opt= plays its layer now (an empty opt= the
+    // default layers, none of which is a PSP layer).
+    const std::string wanted = cfg.opt == "none" ? std::string() : cfg.opt;
+    for (size_t i = 0; i < std::size(kPspLayers); ++i) {
+        const int id = IDC_OPT0 + static_cast<int>(i);
+        SetDlgItemTextW(dlg, id, kPspLayers[i].label);
+        bool on = false;
+        size_t at = 0;
+        while (at <= wanted.size()) {
+            size_t end = wanted.find(',', at);
+            if (end == std::string::npos) end = wanted.size();
+            on = on || wanted.compare(at, end - at, kPspLayers[i].name) == 0;
+            at = end + 1;
+        }
+        CheckDlgButton(dlg, id, on ? BST_CHECKED : BST_UNCHECKED);
+    }
+    OptLayout(dlg, state);
+
     CheckDlgButton(dlg, IDC_SHOW, cfg.show_launcher ? BST_CHECKED : BST_UNCHECKED);
 }
 
@@ -177,6 +337,34 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.background = IsDlgButtonChecked(dlg, IDC_BACKGROUND) == BST_CHECKED;
     cfg.wide = IsDlgButtonChecked(dlg, IDC_WIDE) == BST_CHECKED;
     cfg.show_launcher = IsDlgButtonChecked(dlg, IDC_SHOW) == BST_CHECKED;
+
+    // The Music box: its first entry keeps an empty music= or a music=seq as
+    // it was; a move to it from mp3 writes the default, empty.
+    if (Selected(dlg, IDC_MUSIC) == 1) cfg.music = "mp3";
+    else if (cfg.music != "seq") cfg.music.clear();
+
+    std::vector<std::pair<std::string, bool>> boxes;
+    for (size_t i = 0; i < std::size(kPspLayers); ++i)
+        if (state.installed[i])
+            boxes.emplace_back(kPspLayers[i].name, IsDlgButtonChecked(dlg, IDC_OPT0 + static_cast<int>(i)) == BST_CHECKED);
+    cfg.opt = ConfigOptEdit(cfg.opt, ConfigOptDefaultInstalled(state.game_dir, ConfigCacheDataRoot(*state.cfg)), boxes);
+}
+
+// The cache box as the ini's bytes, trimmed as ConfigLoad trims a line; false
+// (and the dialog stays open) when the ANSI code page cannot hold it.
+bool ReadCache(HWND dlg, Config& cfg) {
+    std::wstring w = DialogText(dlg, IDC_CACHE);
+    const size_t b = w.find_first_not_of(L" \t"), e = w.find_last_not_of(L" \t");
+    w = b == std::wstring::npos ? std::wstring() : w.substr(b, e - b + 1);
+    std::string a;
+    if (!ToAnsi(w, a)) {
+        MessageBoxW(dlg, L"The cache folder's path has characters the game cannot be given (the ANSI code page "
+                    L"holds no such character). Choose a folder whose path has none.",
+                    L"bof3x-launcher", MB_OK | MB_ICONWARNING);
+        return false;
+    }
+    cfg.cache = a;
+    return true;
 }
 
 // ---- DIV-0043: the SatPixie options dialog ----------------------------------
@@ -708,12 +896,25 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         switch (LOWORD(wp)) {
         case IDOK: {
             auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            if (!ReadCache(dlg, *state->cfg)) return TRUE;
             ReadBack(dlg, *state);
             EndDialog(dlg, 1);
             return TRUE;
         }
         case IDCANCEL:
             EndDialog(dlg, 0);
+            return TRUE;
+        case IDC_LANGUAGE:
+            if (HIWORD(wp) == CBN_SELCHANGE) {
+                auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+                OptLayout(dlg, *state);
+            }
+            return TRUE;
+        case IDC_CACHE:
+            if (HIWORD(wp) == EN_CHANGE) CacheNote(dlg);
+            return TRUE;
+        case IDC_CACHEBROWSE:
+            BrowseCache(dlg);
             return TRUE;
         case IDC_FILTER:
             if (HIWORD(wp) == CBN_SELCHANGE) EnableWindow(GetDlgItem(dlg, IDC_LOOKOPTIONS), Selected(dlg, IDC_FILTER) == 2);
@@ -749,7 +950,9 @@ bool ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     INITCOMMONCONTROLSEX icc{sizeof icc, ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES};
     InitCommonControlsEx(&icc);
 
-    DialogState state{&cfg, ConfigLanguagesAvailable(game_dir)};
+    DialogState state{&cfg, ConfigLanguagesAvailable(game_dir, ConfigCacheDataRoot(cfg)), game_dir};
+    for (size_t i = 0; i < std::size(kPspLayers); ++i)
+        state.installed[i] = ConfigOptInstalled(game_dir, kPspLayers[i].name, ConfigCacheDataRoot(cfg));  // DIV-0089: or the cache's
     padnav::SetMap(cfg.bindings.pad);
     const INT_PTR result = DialogBoxParamW(GetModuleHandleW(nullptr),
                                            MAKEINTRESOURCEW(IDD_CONFIG), nullptr, Proc,

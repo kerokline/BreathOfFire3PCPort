@@ -90,6 +90,17 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
    writes `base/exe/` from the first source that can (the PC's exe, else a
    disc) with `[exe]` in the manifest, `verify` checks it against
    `recipes/exe.toml`'s per-build hash, and `check` runs `exe_tables.py check`.
+   Since 2026-10-10 `build` also rebuilds a disc's `.data` pointers by the
+   map run backwards and applies the pointer-keyed places
+   (`recipes/exe-rebuild.tsv`, `exe-places.tsv`; [`exe-import-engine.md`](exe-import-engine.md)),
+   and `check` covers both files.
+   Since 2026-10-10 `verify` also checks `base/bgm/`
+   ([`seq-import.md`](seq-import.md) 4.1): every file the manifest's `bgm`
+   rows name against its hash, nothing there the rows do not name, each song
+   and bank read back and each song's bank present, and the rows against
+   `fixtures/bgm.tsv` for the build they came from - so a cache's music is
+   proved to be what `seq.py` makes of that disc with no disc at hand. `check`
+   checks the fixture's shape and its format versions.
 
 ## 3. What the chunks are (the recipe's classes)
 
@@ -271,6 +282,10 @@ by its full tag.
 
 - ~~**Presets**~~ - done in step 4 (`--preset`, [`opt-layers.md`](opt-layers.md)
   section 7).
-- **The engine reading the cache.** `LoadDatFile` reads `DAT/` as before. The
+- ~~**The engine reading the cache.**~~ Done 2026-10-10, DIV-0089
+  ([`cache-read.md`](cache-read.md)): with `BOF3X_CACHE` set the loader reads
+  `base/` + `loc/zh-CN/` in the manifest's slot order, then the cache's
+  `loc/<tag>` and `opt/` layers, the install's `DAT/` for what the cache
+  lacks. Until then: `LoadDatFile` read `DAT/` as before. The
   cache is shaped so that `base/` plus a `loc/` layer can be read with the
   overlay mechanism unchanged; the second prefix is step 4.

@@ -17,6 +17,7 @@
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "game/language_tags.h"
@@ -70,13 +71,17 @@ struct Config {
     // installed by tools/importer.py from the player's PSP disc (area4-walls:
     // a Western PSX disc). Empty (the default): the default layers that are
     // installed (kOptDefault); "none": no layer; a list: exactly that list.
-    // The ini's `opt=` only, kept as written (ConfigOptValid); no dialog box
-    // yet, so a save writes back what was read and never pins the default.
+    // Kept as written (ConfigOptValid). The dialog's "PSP extras" boxes
+    // (kPspLayers) change it only when a box is changed (ConfigOptEdit), so
+    // a save after an untouched dialog writes back what was read and never
+    // pins the default.
     std::string opt;
     // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
     // play through the sequencer, and the music source (BOF3X_MUSIC: "seq",
     // the cache's song where it has one, or "mp3"). Empty: unset, the default
-    // (no cache; seq). The ini's `cache=` and `music=` only; no dialog box.
+    // (no cache; seq). The dialog's Music box and Cache folder box (since
+    // 2026-10-10) write the same `music=` / `cache=` lines a hand edit does:
+    // an untouched box writes back what was read.
     std::string cache;
     std::string music;
     Filter filter = Filter::kLinear;
@@ -174,21 +179,32 @@ void ConfigSeedFromGameCfg(const std::wstring& game_dir, Config& cfg);
 // on failure.
 bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::wstring& error);
 
-// The tags of kLanguages whose DAT\<tag>.* overlays exist in `game_dir`,
-// in kLanguages' order - i.e. which languages tools/loc_build.py has built.
-// The dialog offers only these.
-std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir);
+// DIV-0089: the cache the DLL reads DAT\ files from - BOF3X_CACHE when the
+// environment has it, else the ini's cache= - or empty when there is none or
+// BOF3X_CACHE_DATA=0 (the cache for the music only). Where a layer can come
+// from, for the three functions below.
+std::wstring ConfigCacheDataRoot(const Config& cfg);
+
+// The tags of kLanguages whose DAT\<tag>.* overlays exist in `game_dir`, or
+// (DIV-0089) whose <cache>\loc\<tag>\dat\ holds a .DAT, in kLanguages' order -
+// i.e. which languages tools/loc_build.py has built. The dialog offers only
+// these.
+std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir,
+                                                  const std::wstring& cache = std::wstring());
 
 // The layers of `opt` (comma-separated) that can be played: those whose
-// DAT\<layer>.* files exist in `game_dir`, and of the text layers
+// DAT\<layer>.* files exist in `game_dir` or (DIV-0089) whose
+// <cache>\opt\<layer>\dat\ holds a .DAT, and of the text layers
 // (LayerLanguage, game/language_tags.h) only those of `language`'s primary
 // language - `language` being what the game is actually given as BOF3X_LANG,
 // empty or "original" for none, under which no text layer plays. Each layer
 // dropped is said on stderr; the DLL refuses either case at start-up.
-std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language);
+std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language,
+                              const std::wstring& cache = std::wstring());
 
 // The layers played when the ini's `opt=` is empty and BOF3X_OPT is unset,
-// each only when its DAT\<layer>.*.DAT is installed: DIV-0080's walls, on by
+// each only when its DAT\<layer>.*.DAT is installed or (DIV-0089) the cache
+// has the layer: DIV-0080's walls, on by
 // default since 2026-10-10 (the owner's word). `opt=none` turns them off, as
 // does an `opt=` list that does not name them.
 inline constexpr const char* kOptDefault[] = {"area4-walls"};
@@ -196,7 +212,47 @@ inline constexpr const char* kOptDefault[] = {"area4-walls"};
 // The list the game is offered for an ini's `opt=` value (before
 // ConfigOptPlayable): "none" -> empty; empty -> the kOptDefault layers
 // installed in `game_dir`; anything else -> itself.
-std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt);
+std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt,
+                            const std::wstring& cache = std::wstring());
+
+// Whether DAT\<layer>.*.DAT is in `game_dir` (the DLL's own test,
+// dat_load.cpp ReadOptLayers).
+bool ConfigOptInstalled(const std::wstring& game_dir, const char* layer,
+                        const std::wstring& cache = std::wstring());  // DIV-0089: or the cache holds it
+
+// The kOptDefault layers installed in `game_dir`, in kOptDefault's order -
+// what an empty `opt=` names.
+std::vector<std::string> ConfigOptDefaultInstalled(const std::wstring& game_dir,
+                                                   const std::wstring& cache = std::wstring());
+
+// The settings dialog's "PSP extras" group (docs/opt-layers.md, the owner's
+// call 3: a group of boxes for the installed layers, a names layer shown only
+// when its language is chosen): one box per layer, in the order a list the
+// dialog writes puts them. area4-walls (DIV-0080) is not among them - it is a
+// repair, on by default, and the boxes leave its state as `opt=` had it.
+struct OptLayerInfo {
+    const char* name;
+    const wchar_t* label;
+};
+inline constexpr OptLayerInfo kPspLayers[] = {
+    {"psp-art", L"Stallion's palettes as the PSP has them (psp-art)"},
+    {"psp-tiles", L"The PSP's other area art: tiles and palettes (psp-tiles)"},
+    {"psp-maps", L"The PSP's edits to eleven map bands (psp-maps)"},
+    {"psp-names-en-150", L"The PSP-EU's English renames (psp-names-en-150)"},
+    {"psp-names-ja-JP", L"The PSP-JP's renames (psp-names-ja-JP)"},
+};
+
+// `opt` after the dialog's boxes: `boxes` holds each offered layer and whether
+// its box is ticked; `defaults` is ConfigOptDefaultInstalled. When no box
+// differs from what `opt` already plays, `opt` itself, byte for byte (an
+// untouched dialog never rewrites the line). Otherwise the layers `opt`
+// played (ConfigOptWanted's list, so an empty `opt=` contributes the default
+// layers installed and keeps them on) with each box's change made: "none"
+// when nothing is left, else a list - kPspLayers' order, then the
+// kOptDefault layers, then any other name `opt` had, in its order. A name the
+// boxes do not offer (not installed, another language's) is kept as it was.
+std::string ConfigOptEdit(const std::string& opt, const std::vector<std::string>& defaults,
+                          const std::vector<std::pair<std::string, bool>>& boxes);
 
 // Whether an ini's `opt=` value can be honoured: empty, "none", or a
 // comma-separated list of distinct names of letters, digits and '-' (at most

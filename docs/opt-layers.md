@@ -233,10 +233,11 @@ ran there too; DIV-0080's walls are now the `area4-walls` layer.)
   language played is the `BOF3X_LANG` the game is actually given, not the
   ini's `language=` (since 2026-10-10: an overlay not built, or a
   `BOF3X_LANG=original` already in the environment, left the ini's text
-  layer in and the DLL refused it at start-up). **No dialog
-  box**: the pattern for one (`kLanguages`' combo box) is a list of fixed
-  entries, and a set of checkboxes found by what is installed is new dialog
-  work; the variable is the must, the box the owner's call (section 9).
+  layer in and the DLL refused it at start-up). **The dialog's "PSP
+  extras" group** (2026-10-10, the owner's call 3 below): a box for each
+  installed `psp-*` layer, a names layer's only while its language is
+  chosen; it changes `opt=` only when a box is changed
+  ([`launcher-settings.md`](launcher-settings.md) 3.1).
 - **The default (2026-10-10, DIV-0080).** An empty `opt=` - the default,
   and what a launcher with no `bof3x.ini` has - names the default layers
   that are installed (`kOptDefault` in `src/launcher/config.h`: today only
@@ -245,13 +246,17 @@ ran there too; DIV-0080's walls are now the `area4-walls` layer.)
   without `area4-walls` turns the walls off. A set `BOF3X_OPT` still wins.
   `opt=` is kept as written and checked at start (`ConfigOptValid`): a
   value the DLL would refuse, or `none` inside a list, stops the launcher
-  with a message rather than being dropped into the default. The dialog has
-  no box for it, so a save writes it back unchanged and never pins the
-  default off. The DLL has no default of its own: `BOF3X_OPT` unset is
+  with a message rather than being dropped into the default. An untouched
+  dialog writes it back unchanged, so a save never pins the default off; a
+  changed box writes the layers the line played with that change, so ticking
+  a PSP layer over an empty `opt=` writes `psp-art,area4-walls` and the
+  walls stay on (`ConfigOptEdit`). The DLL has no default of its own: `BOF3X_OPT` unset is
   none, as before.
 
-**How a layer reaches the engine today.** The engine reads `DAT\` in the game
-directory, not the cache. `importer.py install --cache CACHE --game DIR --opt
+**How a layer reaches the engine today.** With `BOF3X_CACHE` set, from the
+cache's `opt/<layer>/dat/` (DIV-0089, since 2026-10-10,
+[`cache-read.md`](cache-read.md)); without it, from `DAT\` in the game
+directory, where `importer.py install --cache CACHE --game DIR --opt
 NAME` copies `opt/<name>/dat/X.DAT` to `DIR/DAT/<name>.X.DAT` (and `--lang
 TAG` `loc/<tag>/dat/X.DAT` to `DIR/DAT/<tag>.X.DAT`, what `loc_build.py`
 writes), after removing that layer's old `<name>.*.DAT` files, and refuses a
@@ -320,8 +325,12 @@ owner's call. `area4-walls` comes from the default above, not a preset.
   ([`psp-stallion.md`](psp-stallion.md) 4); `psp-tiles` and `psp-maps` want a
   walk through a few of their areas (`AREA128`'s dock edge under the wide
   picture, the treehouse, a fishing area) with the layer on and off.
-- **No launcher box** (section 5).
-- **The engine still reads `DAT/`**, not the cache; `install` bridges.
+- ~~**No launcher box** (section 5).~~ Built 2026-10-10: the "PSP extras"
+  group (section 5; [`launcher-settings.md`](launcher-settings.md) 3.1).
+- ~~**The engine still reads `DAT/`**, not the cache; `install` bridges.~~
+  Since 2026-10-10 (DIV-0089, [`cache-read.md`](cache-read.md)) a layer the
+  cache has under `opt/<layer>/dat/` is read from there with `BOF3X_CACHE`
+  set, and `install` gives the same result.
 - **What the blanked tiles and the map-band edits are for** is read only to
   their structures (section 4).
 - **The PSP's other content changes**: the level table and consumable 87
@@ -387,9 +396,11 @@ Edits proposed for the coordinator to fold in (not made here):
 2. **The PSP map bands: rule or layer.** Chosen: a layer (`psp-maps`),
    off by default - presentation, not logic, and its purpose a reading
    (section 4). A look in play could promote any of them to a rule.
-3. **What the launcher should offer.** Today the ini's `opt=` only.
-   Recommended: a "PSP extras" group of checkboxes for the installed
-   layers, the names layer shown only when its language is chosen.
+3. **What the launcher should offer.** Chosen: a "PSP extras" group of
+   checkboxes for the installed layers, the names layer shown only when its
+   language is chosen - built 2026-10-10
+   ([`launcher-settings.md`](launcher-settings.md) 3.1). `area4-walls` has
+   no box (a repair, on by default; `opt=none` turns it off).
 4. **`psp-names-en-150` over `en-150`**: the PSP's 8 renames only (chosen),
    or the PSP-EU's whole tables, which would also undo the European PSX
    disc's 12 other ability names?

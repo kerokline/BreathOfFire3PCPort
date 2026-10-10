@@ -9,9 +9,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
-#include <sys/wait.h>
-#include <unistd.h>
 #include <vector>
+
+#include "abort_check.h"
 
 namespace {
 
@@ -59,7 +59,8 @@ Block MakeBlockFill(int filter, int range, int flags, int nibble) {
 }
 
 // Reference ADPCM decode, written from psx-spx's decode_28_nibbles for this
-// test (not shared with the model).
+// test (not shared with the model) - less its +32, which the renders refuse
+// (spu-model.md R1, music-open-ends.md 2): the prediction floors.
 void RefDecode(const Block& blk, std::vector<int>& out, int& old, int& older) {
     static const int pos[5] = {0, 60, 115, 98, 122};
     static const int neg[5] = {0, 0, -52, -55, -60};
@@ -70,7 +71,7 @@ void RefDecode(const Block& blk, std::vector<int>& out, int& old, int& older) {
     for (int j = 0; j < 28; ++j) {
         int nib = (blk.b[2 + j / 2] >> (4 * (j % 2))) & 15;
         int t = nib >= 8 ? nib - 16 : nib;
-        long long p = static_cast<long long>(old) * pos[filter] + static_cast<long long>(older) * neg[filter] + 32;
+        long long p = static_cast<long long>(old) * pos[filter] + static_cast<long long>(older) * neg[filter];
         long long q = p >= 0 ? p / 64 : -((-p + 63) / 64); // floor division
         long long s = static_cast<long long>(t) * (1 << shift) + q;
         if (s > 32767) s = 32767;
@@ -142,10 +143,10 @@ void TestDecodeByHand() {
         int s0, s1;
     } cases[] = {
         {0, 16, -32},     // no prediction
-        {1, 954, 862},    // 16 + (60000+32)>>6 = 16+938; -32 + (57240+32)>>6 = -32+894
-        {2, 1407, 1684},  // 16 + (115000-26000+32)>>6 = 16+1391; -32 + (161805-52000+32)>>6
-        {3, 1118, 821},   // 16 + (98000-27500+32)>>6 = 16+1102; -32 + (109564-55000+32)>>6
-        {4, 1454, 1802},  // 16 + (122000-30000+32)>>6 = 16+1438; -32 + (177388-60000+32)>>6
+        {1, 953, 861},    // 16 + 60000>>6 = 16+937; -32 + 57180>>6 = -32+893
+        {2, 1406, 1681},  // 16 + (115000-26000)>>6 = 16+1390; -32 + (161690-52000)>>6 = -32+1713
+        {3, 1117, 819},   // 16 + (98000-27500)>>6 = 16+1101; -32 + (109466-55000)>>6 = -32+851
+        {4, 1453, 1800},  // 16 + (122000-30000)>>6 = 16+1437; -32 + (177266-60000)>>6 = -32+1832
     };
     for (const Case& c : cases) {
         Block blk = MakeBlock(c.filter, 8, 0, n);
@@ -158,18 +159,18 @@ void TestDecodeByHand() {
         CHECK_EQ(hist[1], out[26]);
     }
     {
-        // The >> 6 floors: filter 1, old -1001: (-60060+32) >> 6 = -938 (truncation would give -937).
+        // The >> 6 floors: filter 1, old -1001: -60060 >> 6 = -939 (truncation would give -938).
         int z[28] = {0};
         Block blk = MakeBlock(1, 12, 0, z);
         std::int16_t out[28];
         std::int32_t hist[2] = {-1001, 0};
         Spu::DecodeBlock(blk.b, out, hist);
-        CHECK_EQ(out[0], -938);
+        CHECK_EQ(out[0], -939);
     }
     {
         // Clamping high: range 0, t 7 = 28672, filter 4, old 32767:
-        // 28672 + (3997574+32)>>6 = 28672 + 62462 -> 32767. The clamped value
-        // is the history: next (t 0) = (32767*122 - 32767*60 + 32) >> 6 = 31743.
+        // 28672 + 3997574>>6 = 28672 + 62462 -> 32767. The clamped value
+        // is the history: next (t 0) = (32767*122 - 32767*60) >> 6 = 31743.
         int m[28] = {7, 0};
         Block blk = MakeBlock(4, 0, 0, m);
         std::int16_t out[28];
@@ -764,16 +765,7 @@ void TestReverbWriteDisable() {
 
 // The model aborts on what it does not implement.
 bool Aborts(void (*fn)()) {
-    std::fflush(stdout);
-    pid_t pid = fork();
-    if (pid == 0) {
-        psx::SetSpuAbortHook([](const char*) {});
-        fn();
-        _exit(0);
-    }
-    int status = 0;
-    waitpid(pid, &status, 0);
-    return WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT;
+    return abort_check::Aborts(fn, [] { psx::SetSpuAbortHook([](const char*) {}); });
 }
 
 void TestAborts() {
@@ -800,7 +792,8 @@ void TestAborts() {
 
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    abort_check::ChildMode(argc, argv);
     struct {
         const char* name;
         void (*fn)();

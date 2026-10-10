@@ -1,6 +1,6 @@
 # Music from a disc: the songs and banks the cache holds (`base/bgm/`)
 
-**Status:** STABLE (2026-10-08, a cloud session, group IMP of
+**Status:** STABLE (2026-10-08, verified 2026-10-10: `verify` on `base/bgm/`, 4.1; a cloud session, group IMP of
 [`sequenced-music-plan.md`](sequenced-music-plan.md) section 9; the JP disc
 measured)
 
@@ -160,8 +160,41 @@ Nothing else in the importer changed. `importer.py build --source <JP>.cue`
 gives the same containers as before, plus `base/bgm  from psx-jp: 247 files
 (seq.py)`. Its `base/bgm/` is identical to `seq.py build`'s, and all 247
 manifest hashes match the files. `importer.py verify` on that cache is
-unchanged: 727 containers held, 0 problems, `base/exe/` as recorded. `verify`
-does not re-hash `base/bgm/` yet. That is a small addition if wanted.
+unchanged: 727 containers held, 0 problems, `base/exe/` as recorded.
+
+### 4.1 `verify` and `check` on `base/bgm/` (2026-10-10)
+
+`build` already recorded each file's hash in the manifest's `bgm` rows; now
+`importer.py verify` (`verify_bgm`) reads them back:
+
+- every row's file is there and hashes to its row;
+- every file under `base/bgm/` is named by a row (no strays);
+- every song and bank parses with `seq.read_song` / `seq.read_bank`, and
+  every song's bank is in the cache;
+- the rows against **`fixtures/bgm.tsv`**, the files `seq.py build` writes
+  from each PSX disc (build, path, size, the EMI sections, sha256; 247 rows a
+  build, written by `python tools/seq.py fixture --disc <cue> ...`). This
+  catches a file changed together with its manifest row, and a cache written
+  by an older `seq.py`.
+
+The fixture was written from the five PSX discs on 2026-10-10 (`psx-jp`,
+`psx-us`, `psx-eu-en`, `psx-fr`, `psx-de`): **all 247 files are identical in
+all five builds** - every song and every bank. Its header names the song and
+bank format versions (1 and 2); `importer.py check` runs
+`seq.check_fixture` (CI): the versions equal what `seq.py` writes, every build
+is a PSX build of `fixtures.toml`, each holds songs `000..165` and the bank of
+each song's EMI and nothing else, every row well formed. A format bump fails
+`check` until the fixture is regenerated.
+
+Measured on the owner's cache (`analysis/cache/pc-plus-us`, built from the US
+disc): `base/bgm/ (psx-us): 247 files, 166 songs, 81 banks; psx-us: 247 of
+247 as fixtures/bgm.tsv; 0 problem(s)`. Negative controls on scratch copies
+(each exit 1, the line naming the file): one bit of `003.DAT` flipped; a
+stray `999.DAT`; bank `BGM000` deleted (and its two songs' bank reported
+missing); bank `BGM002` truncated by 8 bytes; `010.DAT` changed with its
+manifest row rehashed (caught by the fixture alone). On `check_fixture`: the
+song format set to 2, a song row dropped, a bank row dropped, an unknown
+build - each refused.
 
 ## 5. The checks
 
@@ -172,6 +205,7 @@ does not re-hash `base/bgm/` yet. That is a small addition if wanted.
 | `seq.py verify`: each bank read back, against `vag.py`'s reading of the VAB (programs at `0x12`, samples at `0x16`, `vag._vags`' bodies) and against the header's raw tone records field by field. Also checked: program / tone counts against `ps` / `ts` | **81 of 81 agree** |
 | The song table read against `inventory.json`'s (the owner's run) | 165 of 165 |
 | `importer.py check` | 0 errors, unchanged output plus the `seq check` line |
+| `importer.py verify`'s `base/bgm/` check (4.1, 2026-10-10) | 247 of 247 on the US-disc cache; six negative controls refused |
 
 ## 6. For the other files
 
@@ -191,7 +225,7 @@ does not re-hash `base/bgm/` yet. That is a small addition if wanted.
   - the bank format is at version 2, because of the tone-block finding.
 - **`HANDOFF.md`**:
   - the engine reads nothing from `base/bgm/` yet (ENG);
-  - the importer's `verify` does not yet hash `base/bgm/`;
+  - ~~the importer's `verify` does not yet hash `base/bgm/`~~ (done 2026-10-10, 4.1);
   - SEQ's reading should settle the two-loop-start songs (37, 80) and the
     order of the loop end against the note-offs at the same tick (song 49).
 - **`sequenced-music-plan.md`**:

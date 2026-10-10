@@ -201,6 +201,25 @@ ours run of a route that lists the saves wants it.
   on its second run (the first reported the sound page `0x7DE000` at one
   tick, 1651, and the repeat did not). The pairs hashed under 165 are kept
   in `analysis/statehash/pre168/`.
+- **The route pairs re-recorded 2026-10-10 afternoon** as `cn_<route>_orig2` /
+  `_orig2b` (`BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the ini-less launcher,
+  Capcom's side `--original "*,-Game_Clock"` as section 4 says - a first cut
+  with `'*'` alone differed from ours on `Font_TexCache`'s glyph ids and
+  `Music_Events`' counters from the field menu on: Capcom's clock is the wall
+  clock, the play-time digits drift with the run's pace), because the 2026-10-05 pairs went stale
+  without any change of ours: every route differed from them on two pages from
+  its first save-list read (`0x92A000`, `Save_Staging` and `MapView_CornerPtr`;
+  `0x905000`), and so did a fresh run of Capcom's own code, while ours and
+  Capcom's the same afternoon were identical on all 2,561 ticks of `combat`
+  with no byte of those pages differing in the raw dumps at ticks 179 and
+  226. The owner's save slots had changed since 2026-10-05 (`BISLPS06`, `09`
+  and the new `0A..0C`), and the pairs stage the save list. **So the pairs
+  depend on the owner's saves as well as the skip list, the recipe and the
+  launcher's settings**, and the first move on a differing page is a run of
+  Capcom's side against the pair. Against the new pairs, ours at `main`'s tip of 2026-10-10
+  (`cn_<route>_cu1010n`, `BOF3X_OPT=none`) is identical on every tick of nine
+  routes and on all but one tick of whelpBoss (the sound page, tick 3,227;
+  a second run identical throughout).
 - **The reference** is a pair of original runs and is recorded per route once
   per skip list: `analysis/statehash/<route>_orig.sh`, `_origb.sh`. A change of
   the skip list, the recipe, the save or the launcher's settings wants a new

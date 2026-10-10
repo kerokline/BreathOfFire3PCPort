@@ -45,7 +45,10 @@ def _nibbles(body, p):
 
 
 def decode(body):
-    """The SPU's integer decode: 16-bit PCM samples (a list), clamped."""
+    """The SPU's integer decode: 16-bit PCM samples (a list), clamped. The
+    prediction floors with no +32 - the SPU model's reading R1, which the
+    renders settled on 2026-10-10 (docs/spu-model.md R1, music-open-ends.md 2);
+    shift 13..15 is taken raw (R2 says 9), which no block of this game uses."""
     out, s1, s2 = [], 0, 0
     for p in range(0, len(body) - 15, 16):
         shift = body[p] & 0x0F

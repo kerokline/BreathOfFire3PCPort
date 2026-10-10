@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace effect_5b::at {
 
 // --- the flag rows, cells and the leader --------------------------------------
@@ -17,10 +19,10 @@ constexpr std::uint32_t kLeaderX = 0x802D74;       // ObjTrio + 0x34: the leader
 constexpr std::uint32_t kLeaderZ = 0x802D78;       // ObjTrio + 0x38: the leader's z (16.16)
 
 // --- the screen cull's floats in .rdata (MapCell_Handlers 0x27's too) ----------
-constexpr std::uint32_t kCullLeft = 0x5C4210;      // -60.0
-constexpr std::uint32_t kCullRight = 0x5C420C;     // 380.0
-constexpr std::uint32_t kCullTop = 0x5C4200;       // -150.0
-constexpr std::uint32_t kCullBottom = 0x5C41FC;    // 300.0
+constexpr rdata::Const kCullLeft{0x5C4210};      // -60.0
+constexpr rdata::Const kCullRight{0x5C420C};     // 380.0
+constexpr rdata::Const kCullTop{0x5C4200};       // -150.0
+constexpr rdata::Const kCullBottom{0x5C41FC};    // 300.0
 
 // --- sub-kind 0x0D's byte arrays (back to back; each read by a record byte) -----
 constexpr std::uint32_t kSub0DOpenFrames = 0x65DF64;   // 4: _Open's frame by +9 >> 1

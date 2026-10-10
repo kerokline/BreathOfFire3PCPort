@@ -136,6 +136,7 @@ one-line export. (ASSET_SOURCES section 9's open item, proposed closed.)
 | SEQ / VAB player on an SPU synth | sequenced music | large; **gated on the owner's ear** (`bgm-comparison.md` 10) | the three Mednafen renders, and the method for more |
 | MP3 loop-point table | correct loops on the PC's music without a synth | a day of tooling plus ~10 h of unattended measuring (156 songs at ~4 min); a DIV | the sequences' loop markers |
 | `LoadDatFile`'s second prefix | `opt/` layers | **done 2026-10-08**, DIV-0086 (`BOF3X_OPT`; [`opt-layers.md`](opt-layers.md) section 5); the owner's build and self-tests owed | the language overlays' tests |
+| The engine reading the cache | `base/dat`, `loc/`, `opt/`, `base/snd` without `install` | **done 2026-10-10**, DIV-0089 ([`cache-read.md`](cache-read.md)): `LoadDatFile`, `Snd_LoadBankFile` and `Sound_LoadStream` read the cache before the install, the shipped container in the manifest's slot order; self-tested, the play owed | `importer.py install` (`tools/cache_walk.py`: 742 of 742 the same end state) |
 | State hash address-independence | testing after the cutover and with layers in play | small | `state-hash.md` section 6 |
 
 ## 5. The exe-resident tables
@@ -201,8 +202,10 @@ compares by onset envelope and clean windows, never sample for sample
 - `base/snd/` holds the 880 effects, `wave-from-xa` from any PSX disc
   (step 6); the 11 jingles the PC ships as MP3s of `S_XA00.STR`'s clips stay
   the install's (the owner's call, [`sound-import.md`](sound-import.md) 6).
-  The engine still formats `SND\%s.DAT` itself: its reading of the cache is
-  the same seam as the loader's second prefix (section 7 there).
+  The engine formats `SND\%s.DAT` itself; since 2026-10-10 (DIV-0089,
+  [`cache-read.md`](cache-read.md)) `Sound_LoadStream` opens the cache's
+  `base/snd/NAME.DAT` first and the install's `SND\` second (section 7
+  there).
 - `base/bgm/` holds the disc's songs and banks in the cache's containers
   ([`seq-format.md`](seq-format.md); 166 songs, 81 banks from any PSX disc)
   and the engine plays them through the sequencer (DIV-0087); the PC's MP3s
@@ -243,9 +246,9 @@ compares by onset envelope and clean windows, never sample for sample
 | 3 | ~~The transforms for every PSX disc~~ **done 2026-10-08 for the PSX discs**, [`importer-transforms.md`](importer-transforms.md): `widen` as a split, `remap-dest` unnecessary, the icons and the RYUD byte by rule, the stand-ins; any PSX disc alone gives all of `base/` but the 901 banks (step 6) and 14 port-edited arenas; the text encodings were `loc_build.py`'s already. **A disc-only install still has no language layer** (section 8 there: a font from the disc, `loc_build.py` reading `base/`, step 8) | a round | step 2 | the four calls in its doc |
 | 4 | ~~`opt/` layers and the loader's second prefix~~ **done 2026-10-08**, [`opt-layers.md`](opt-layers.md): five layers from either PSP disc (`psp-art` P6, `psp-tiles`, `psp-maps` - the 11 bands read, a layer -, `psp-names-en-150` P7 and the renames, `psp-names-ja-JP`), `BOF3X_OPT` (DIV-0086), 11 presets, `install`; **not built with llvm-mingw, not self-tested, not seen** - the owner's; six calls in its doc | a group | step 2 | option, as recommended |
 | 5 | ~~The exe-table catalogue completed and the per-SKU maps (section 5, steps 1-2)~~ **done 2026-10-08**, [`exe-tables-by-build.md`](exe-tables-by-build.md): `tools/exe_twins.py`, `exe_maps/<build>.tsv`, 29 tables and their rows per build in `tables.toml` | a reading round | none | no |
-| 6 | ~~VAG and the banks; the `SND/` cut table found and XA~~ **done 2026-10-08**, [`sound-import.md`](sound-import.md): byte-identical, 901 / 901 banks and 880 / 880 `SND/` from a disc; the engine reading `base/snd/` open; three calls (the PAL banks, the port's wrap clicks, the 11 jingles) | a group | step 2 | no |
+| 6 | ~~VAG and the banks; the `SND/` cut table found and XA~~ **done 2026-10-08**, [`sound-import.md`](sound-import.md): byte-identical, 901 / 901 banks and 880 / 880 `SND/` from a disc; the engine reading `base/snd/` done 2026-10-10 (DIV-0089, [`cache-read.md`](cache-read.md)); three calls (the PAL banks, the port's wrap clicks, the 11 jingles) | a group | step 2 | no |
 | 7 | The MP3 loop table, if H1 is heard | a day + 10 h unattended | the owner's ear | yes: the listening session |
-| 8 | `base/exe/` produced ~~and the engine reading it~~ (section 5 step 3). **Importer half done 2026-10-08** ([`exe-import.md`](exe-import.md)); the engine half waits on the owner's machine and the state hash | a round, with the biggest live check | steps 2, 5; the cutover's state 3 design | no |
+| 8 | `base/exe/` produced ~~and the engine reading it~~ (section 5 step 3). **Importer half done 2026-10-08** ([`exe-import.md`](exe-import.md)); **the engine half begun 2026-10-10** ([`exe-import-engine.md`](exe-import-engine.md): the data-pointer rebuild, the pointer-keyed places, `.rdata`'s 44 constants the engine's, `BOF3X_EXEIMAGE`); the stub page and the live check left | a round, with the biggest live check | steps 2, 5; the cutover's state 3 design | no |
 | 9 | ~~The SEQ / VAB player and the SPU synth~~ **built 2026-10-08** ([`sequenced-music-plan.md`](sequenced-music-plan.md), [`seq-import.md`](seq-import.md), [`spu-model.md`](spu-model.md), [`libsnd-reading.md`](libsnd-reading.md), [`music-seq-engine.md`](music-seq-engine.md)): `tools/seq.py` writes `base/bgm/` from any PSX disc; `src/audio/` the SPU model and libsnd 3.7's sequencer, within one LSB of the Mednafen renders where the game's interrupt jitter is reproduced; DIV-0087 the engine seam, the MP3s the fallback. **Owed:** the owner's build, self-tests and ear | a round | - | the listening session |
 | 10 | MDEC / STR for FMV from a disc | phase 5 | I7 | no |
 

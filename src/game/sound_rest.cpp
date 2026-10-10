@@ -116,8 +116,8 @@ extern "C" void __cdecl SndBuf_SetVolume(void* buffer, int level) {
         "fistpll %[value]\n\t"
         "fldcw %[saved]\n\t"
         : [value] "=m"(value), [saved] "=m"(saved), [truncating] "=m"(truncating)
-        : [level] "m"(level), [inverse] "m"(*reinterpret_cast<const float*>(sound::kInverse127At)),
-          [scale] "m"(*reinterpret_cast<const float*>(sound::k10000At))
+        : [level] "m"(level), [inverse] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::kInverse127At))),
+          [scale] "m"(*reinterpret_cast<const float*>(static_cast<std::uintptr_t>(sound::k10000At)))
         : "eax", "st");
     Method<ComValue>(buffer, sound::kSetVolume)(buffer, static_cast<unsigned long>(static_cast<std::uint64_t>(value)));
 }

@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <cstring>
 
+#include "game/rdata_consts.h"
+
 namespace display_env {
 
 using U = std::uint32_t;
@@ -24,7 +26,7 @@ constexpr U kBackMaterial = 0x7CC358;   // D3d_BackMaterial, an IDirect3DMateria
 constexpr U kBackHandle = 0x6C3A40;     // D3d_BackMaterialHandle, what SetBackground takes
 constexpr U kScreenRect = 0x66B708;     // Gfx_ScreenRect, {0, 0, 640, 480} in the image
 constexpr U kWindowRect = 0x6BE1D0;     // Gfx_WindowRect, the client area on the desktop (0x5A5130 sets it)
-constexpr U kInverse255At = 0x5C4620;   // float 1 / 255, 0x3B808081
+constexpr rdata::Const kInverse255At{0x5C4620};   // float 1 / 255, 0x3B808081
 
 // The sound banks (docs/sound.md section 1): bank n's record is
 // Sound_Banks + (n - 1) * 0x384 - cues from +0, 64 voice entries of 8 bytes

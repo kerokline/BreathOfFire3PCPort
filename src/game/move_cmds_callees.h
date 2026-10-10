@@ -10,6 +10,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace move_cmds {
 
 // --- Addresses without a name --------------------------------------------
@@ -31,8 +33,8 @@ constexpr std::uint32_t kFlagsPtr = 0x929ED0;    // the chapter's flag dword's a
 constexpr std::uint32_t kNameIndex = 0x802DC9;   // ObjTrio +0x89 (variable 11)
 constexpr std::uint32_t kStoryFlags = 0x904030;  // Cond_Flags + 0xA0's first dword (variable 12)
 // Math_Ratan2's two doubles.
-constexpr std::uint32_t kScaleAt = 0x5C4658;     // 2048.0
-constexpr std::uint32_t kInversePiAt = 0x5C4650; // 0.3184713375796178, 1 / 3.14
+constexpr rdata::Const kScaleAt{0x5C4658};     // 2048.0
+constexpr rdata::Const kInversePiAt{0x5C4650}; // 0.3184713375796178, 1 / 3.14
 
 // The kind-2 object's fields (Sprite_Kind2 + n).
 constexpr unsigned kK2Rise = 0x14, kK2X = 0x34, kK2Z = 0x38, kK2Height = 0x3E;

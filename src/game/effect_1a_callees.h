@@ -4,6 +4,8 @@
 #pragma once
 
 #include <cstdint>
+
+#include "game/rdata_consts.h"
 #include "bof3/symbols.gen.h"  // round thirteen's rebinding (docs/round-13-cleanup.md): the targets that are ours read bof3::addr::<Name>, the values unchanged, so the fuzz keys stand
 
 namespace effect_1a::at {
@@ -55,10 +57,10 @@ constexpr std::uint32_t kKind0FLabels = 0x653C00;   // bytes by a text's line by
 constexpr std::uint32_t kKind0FRows = 0x653C04;     // nine rows of four bytes by +6: three text indexes and a spawn byte
 constexpr unsigned kKind0FRowBytes = 0x24;
 constexpr std::uint32_t kLabelTexts = 0x66A2FC;     // dwords by a text's line byte: the label strings
-constexpr std::uint32_t kQuadHalf = 0x5C41C8;       // 4.0f
-constexpr std::uint32_t kQuadEight = 0x5C41CC;      // 8.0f
-constexpr std::uint32_t kQuadSixteen = 0x5C41D0;    // 16.0f
-constexpr std::uint32_t kQuadThirtyTwo = 0x5C41D4;  // 32.0f
+constexpr rdata::Const kQuadHalf{0x5C41C8};       // 4.0f
+constexpr rdata::Const kQuadEight{0x5C41CC};      // 8.0f
+constexpr rdata::Const kQuadSixteen{0x5C41D0};    // 16.0f
+constexpr rdata::Const kQuadThirtyTwo{0x5C41D4};  // 32.0f
 constexpr std::uint32_t kCountFormat = 0x64D3EC;    // Boss26Fx_CountFormat
 constexpr std::uint32_t kAccessoryNames = bof3::addr::NameTable_Accessories; // NameTable_Accessories, 0x18 bytes a name
 

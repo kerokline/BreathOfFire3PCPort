@@ -6,6 +6,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 namespace area_w1f {
 namespace at {
 
@@ -164,9 +166,9 @@ constexpr unsigned kArea75CellBytes = 0x14;
 
 // Area 42's window draw (0x40E750, taken here as Area75_DrawWindow): the three
 // float constants it adds and takes away (in .rdata).
-constexpr std::uint32_t kFloatOne = 0x5C41B8;
-constexpr std::uint32_t kFloatThree = 0x5C41BC;
-constexpr std::uint32_t kFloatTwo = 0x5C41C0;
+constexpr rdata::Const kFloatOne{0x5C41B8};
+constexpr rdata::Const kFloatThree{0x5C41BC};
+constexpr rdata::Const kFloatTwo{0x5C41C0};
 
 }  // namespace at
 }  // namespace area_w1f

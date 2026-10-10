@@ -120,6 +120,12 @@ half a second:
 
     BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config
 
+`BOF3X_EXEIMAGE=<cache>` (2026-10-10, [`exe-import-engine.md`](exe-import-engine.md) section 4.3)
+runs before `InjectAll`: the cache's `base/exe/data.bin` is checked against
+the running `.data` byte for byte, laid over it when the image came from the
+PC's exe (a Fatal on any difference), only compared and logged when it came
+from a disc; unset, nothing happens.
+
 Because nothing is shared but the read-only `BOF3.exe`, several checkouts
 (worktrees) can self-test at once, each logging to its own `build/bof3x.log`.
 A self-test that *hangs* still hangs: kill it by the printed pid, never by

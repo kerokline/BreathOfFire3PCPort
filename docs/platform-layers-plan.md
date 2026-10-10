@@ -1,6 +1,6 @@
 # The platform layers: what is left after the game's own code, and how to take it
 
-**Status:** PROPOSED (2026-10-04, the owner's ask during round fourteen; counts from the catalog at `aed35f8`, nothing here read function by function; 2026-10-05 the owner agreed the order of section 4, with the audio before state 2's proof)
+**Status:** PROPOSED (2026-10-04, the owner's ask during round fourteen; counts from the catalog at `aed35f8`, nothing here read function by function; 2026-10-05 the owner agreed the order of section 4, with the audio before state 2's proof; 2026-10-10 the decoder chosen, minimp3, section 2.4)
 
 Round fourteen ([`takeover-queue-round14.md`](takeover-queue-round14.md))
 takes the remainder of the game's own code. What it leaves in `BOF3.exe` is
@@ -107,7 +107,10 @@ may run. Then:
 - A permissively licensed decoder behind that seam
   ([`LICENSING.md`](LICENSING.md) section 4: no copyleft;
   [`THIRD_PARTY.md`](THIRD_PARTY.md) carries its notice). Which one is a
-  decision; none is chosen here.
+  decision; none is chosen here. **Chosen 2026-10-10 (the owner): minimp3**,
+  `minimp3.h` at `ea99364f`, CC0 - dr_mp3 carries the same decoder and
+  fixes no decoding bug it has ([`mp3-decoder-choice.md`](mp3-decoder-choice.md),
+  with the rule for our seek: never skip frames with `pcm == NULL`).
 - **It is a divergence**: two correct decoders differ in the last bits of
   each sample. The entry says so and gives the measure - PCM against the
   original's, per track, as an error bound, and the loop seam of every
@@ -155,9 +158,15 @@ states, each a real milestone:
    ([`exe-import.md`](exe-import.md) sections 5 and 6): 9,142 `.data` words
    point into `.text` (6,346 targets), and state 3 maps no Capcom code, so
    the engine rewrites those words to its own functions or maps entry stubs
-   at Capcom's addresses - with the PC's exe as the source too. The data it
+   at Capcom's addresses - with the PC's exe as the source too. **Chosen
+   2026-10-10** ([`exe-import-engine.md`](exe-import-engine.md) section 4): the entry-stub page,
+   measured - 6,211 of the 6,346 targets are function starts, the smallest
+   gap between starts is 11 bytes, 17 functions have no `impl`;
+   `BOF3X_EXEIMAGE=<cache>` already lays `base/exe/data.bin` over `.data`
+   after a byte check. The data it
    maps is `base/exe/data.bin` from any source, plus `.rdata` (65 addresses
-   `src/` reads: the PC's, or the engine's own). **The game's tables stay the
+   `src/` reads: since 2026-10-10 44 are the engine's own, `rdata_consts`,
+   13 the loader's import slots, 1 the SDK's, 7 nothing to map). **The game's tables stay the
    player's file** - [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 5's rule
    and [`LICENSING.md`](LICENSING.md) section 3's engine / data split are why
    this is the shape and not a copy of the tables into our source.
@@ -225,7 +234,10 @@ owner's ear (section 5).
   reverb, codec, the track map. So section 2.4 is **not scheduled** and its
   shape waits on that answer - one path or two, and which decoder if any.
   The first step is a listening set: a few tracks rendered both ways, side
-  by side, for the owner's ear.
+  by side, for the owner's ear. **Answered:** two paths (2026-10-06: the
+  MP3s kept, their seams fixed as DIV-0081; 2026-10-08: the disc's music
+  by default where a disc is held, DIV-0087), so a PC-only player still
+  needs a decoder - minimp3 (2026-10-10, [`mp3-decoder-choice.md`](mp3-decoder-choice.md)).
 - **`EffectKindA8_DrawBar` and the other owner's calls** are round
   fourteen's, not this plan's.
 

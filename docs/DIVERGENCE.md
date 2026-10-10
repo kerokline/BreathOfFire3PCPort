@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 88 entries, DIV-0001..0088, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 90 entries, DIV-0001..0090, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -4632,13 +4632,14 @@ designed in rather than bolted on.
   rewound and the frames before the loop start discarded, so the samples
   after the jump are the first pass's bit for bit - with a crossfade at the
   join. A track without a row rewinds as before. **The table as it ships
-  (2026-10-10): 37 rows** of the 156 looping tracks
-  ([`bgm-comparison.md`](bgm-comparison.md) section 11.2):
-  - **28 full** (`001 003 013 014 036 039 047 051 060 061 062 063 064 065
-    068 076 078 079 082 085 088 090 092 099 104 131 144 164`): the file
-    holds a whole body after the loop start; the row is the disc's loop,
+  (2026-10-10, second cut: 39 rows)** of the 156 looping tracks
+  ([`bgm-comparison.md`](bgm-comparison.md) section 11.2;
+  [`music-open-ends.md`](music-open-ends.md) 3 for the second cut):
+  - **31 full** (`001 003 013 014 036 037 039 047 051 060 061 062 063 064
+    065 068 076 078 079 082 084 085 088 090 092 099 104 109 130 144 164`): the
+    file holds a whole body after the loop start; the row is the disc's loop,
     start and period, in the file's samples, with a 2.9 ms crossfade.
-  - **9 shifted** (`008 056 070 113 120 123 133 142 157`): the file
+  - **8 shifted** (`008 056 113 120 123 133 142 157`): the file
     ends before one whole body after the loop start but holds a whole period
     from its start; the row keeps the disc's period, ends as late as the file
     allows, and so starts that period earlier - its first moments are intro
@@ -4648,24 +4649,40 @@ designed in rather than bolted on.
   - **The gates** (`tools/bgm/measure_loops.py` `gate()`): every row's period
     correlation >= 0.8 and an alignment of 10+ windows within 50 samples (512
     on the onset envelope); a shifted row's stand-in must also correlate
-    with the body's tail it replaces at >= 0.5, however short. The number
+    with the body's tail it replaces at >= 0.5, however short; and **since
+    the second cut, the period within one VSync and four samples of one of
+    the sequence's own pass lengths** (`tools/bgm/seq_periods.py`: our
+    sequencer, whose periods equal the renders' to the VSync on all 156,
+    `libsnd-reading.md` 9.1) - the measurement's candidates pinned to those
+    lengths, the vote within +-8 samples. The first cut shipped four rows the
+    envelope had measured at a wrong period: `064` and `076` at 30.09 s of a
+    32.10 s body (15 of its 16 bars: the last bar never played after the
+    first pass), `131` at 64.19 s of 67.10 s, `070` 1.22 VSyncs (20 ms) short.
+    Measured again with the pin, `064` and `076` are full rows at 32.099 s
+    (their files repeat there at a median 0.99, against 0.52 at the old
+    period), `131` is *shortened* (its file holds no whole body at the true
+    period) and `070` falls under the correlation gate (0.638); `037`, `084`,
+    `109` and `130` - refused before on correlation at wrong periods (`037`
+    at 1.5 times its body) - pass every gate; `164` moved by one VSync and
+    4.8 s of start. 31 rows are byte for byte the first cut's. The number
     sits in a gap of the measured distribution (29 shifted rows: 15 at
     -0.10..0.34, none to 0.62, 14 at 0.62..1.00). The first cut of the gate
     kept 151 and 153 (the battle theme and its twin) on their 0.35..0.37 s
     stand-ins, a crossfaded run-in; **the owner's call of 2026-10-10 refuses
     them with the rest**, so the battle theme rewinds as the original does
     until the disc's music (DIV-0087) plays it.
-  - **Refused, rewinding as the original: 119.** 14 shifted rows on the
+  - **Refused, rewinding as the original: 117** (second cut;
+    `loops.json`'s `why` names each one's cause): shifted rows on the
     stand-in gate (`007 089 093 119 125 128 136 138 143 145 147 151 153
-    159`: about 4 s of other material a pass, 17.3 s on 145, 0.35 s on
-    151 and 153; twelve of them in the table until 2026-10-10 - the gate
-    had been documented and not applied); 76
-    *shortened* - the file shorter than one loop period from its start, so
-    no correct loop exists inside it (the town theme `000`: 0.44 s short;
-    20 of them by a frame or two, `near_full`, the owner's call whether a
-    slip that size a pass beats the rewind); 29 others under the
-    correlation or alignment gates (23 full, 6 shifted), every one with its
-    cause in `loops.json`'s `why`.
+    159` among them: about 4 s of other material a pass, 17.3 s on 145,
+    0.35 s on 151 and 153; twelve of them in the table until 2026-10-10 -
+    the gate had been documented and not applied); 81 *shortened* - the
+    file shorter than one loop period from its start, so no correct loop
+    exists inside it (the town theme `000`: 0.44 s short; 23 of them by a
+    frame or two, `near_full`, the owner's call whether a slip that size a
+    pass beats the rewind - [`music-open-ends.md`](music-open-ends.md) 5
+    measures it: the rewind is within -41..+7 ms of the period on all 23);
+    the rest under the correlation or alignment gates.
 - **Rationale:** the owner's words above; the measurement that the disc
   loops inside the song. The table is our own measurement, regenerable from
   `analysis/bgm/loops.json` by `tools/bgm/gen_loop_table.py` (which refuses
@@ -4677,7 +4694,19 @@ designed in rather than bolted on.
   A full row restores the disc's loop exactly; a shifted row restores its
   period and phase, not the stand-in's notes; a refused track keeps the
   port's rewind.
-- **Verification (2026-10-10, the 39-row cut; the 37 that ship are among them):** `prove_loops.py`'s splice and
+- **Verification of the second cut (2026-10-10, [`music-open-ends.md`](music-open-ends.md) 3):**
+  `seq_periods.py` - 128 of the 156 rows' periods agreed with the sequence,
+  4 of the 37 shipped did not; after the pinned re-measurement every one of
+  the 39 does, by construction and by the gate. The seven rows new or moved,
+  `prove_loops.py`'s seam numbers (the render's continuation, the MP3's own
+  continuation past the end as the yardstick): `037` 0.58 (0.81), `064` 0.78
+  (0.81), `076` 0.73 (0.75), `084` 0.69 (0.72), `109` 0.81 (0.85), `130` 0.76
+  (0.77), `164` 0.65 (0.70); steps at or under the file's own; gaps 0..31.
+  The 2 s continuity cannot see a wrong period - the first cut's `064` scored
+  0.78 too, since bar 16 and bar 1 sound alike - which is why the sequence
+  check is a gate and not a score. Built; `BOF3X_LANG=original
+  BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`: exit 0, "39 table rows in bounds".
+- **Verification of the first cut (2026-10-10, the 39-row cut; the 37 that shipped are among them):** `prove_loops.py`'s splice and
   scores, re-run offline over the regated table (the renders on disk; the
   first second after the join against the render's continuation, before =
   the original's rewind): full rows from -0.18..0.25 (8 unmeasured: the
@@ -5090,6 +5119,14 @@ designed in rather than bolted on.
   on a synthetic cache under a 200-character root: intact, 2 songs and 1
   bank checked, armed; a truncated bank, a missing bank and a song of the
   wrong version each fatal at start-up naming the file.
+  **Amended 2026-10-10 (`catchup/music-tooling`, [`music-open-ends.md`](music-open-ends.md)):**
+  the SPU model's ADPCM prediction loses its `+32` (`spu-model.md` R1), which
+  the renders preferred on all nine songs measured - a closer copy of the
+  hardware, not a change of what the entry does; the player against the
+  renders, oracle-timed with the fit run to each voice's next key on: 155 of
+  the 156 renders on the owner's machine at >= 0.99 of the windows (94 at
+  0.986, an allocation tie the interrupt latency decides). The host suite
+  runs on Windows now; `BOF3X_SHADOW=sound` and `'*'` (19.5 min) exit 0 with it.
 - **Also in the PSX version?** Yes in substance: this *is* the PSX's player
   on the PSX's data, at the PC's fade level and timing.
 - **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
@@ -5131,3 +5168,139 @@ designed in rather than bolted on.
   beside their icons, the frame pieces as before. **Owed the owner's eye:**
   the French and German sheets.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
+
+### The importer's cache read before the install's DAT\ and SND\
+
+- **ID:** DIV-0089 (the next free number on 2026-10-10; renumber at the merge
+  if another branch has taken it)
+- **Date:** 2026-10-10
+- **Subsystem:** assets (`LoadDatFile` `0x454590`, ours in
+  `src/game/dat_load.cpp`; `Snd_LoadBankFile` `0x454770` and
+  `Sound_LoadStream` `0x587910`, ours in `src/game/save_menu.cpp`; the state
+  in `src/game/dat_cache.cpp`; the launcher's availability test,
+  `src/launcher/config.cpp`)
+- **Tier:** Sensible - the same bytes from another place; nothing changes
+  without a cache, and with a cache the importer built from the PC's own
+  files nothing that is loaded changes either.
+- **Original behaviour:** the three functions of the exe that build a `DAT\`
+  or `SND\` path (the only references to `"DAT\%s"` `0x652894` and
+  `"SND\%s.DAT"` `0x666F9C`, byte search 2026-10-10) read the game
+  directory's `DAT\NAME` and `SND\NAME.DAT`; DIV-0005 and DIV-0086 walk
+  `DAT\<tag>.NAME` and `DAT\<layer>.NAME` after the first, which
+  `tools/importer.py install` copies in from a cache. Only the music read
+  the cache (DIV-0087).
+- **New behaviour:** with `BOF3X_CACHE=<dir>` (or the ini's `cache=`), and
+  `BOF3X_CACHE_DATA` unset or `1`:
+  - `DAT\NAME` is, when the cache holds it whole, `<dir>\base\dat\NAME` and
+    `<dir>\loc\zh-CN\dat\NAME` walked chunk by chunk in the PC's slot order
+    as the cache's `manifest.toml` records it, then the zh file's enemy
+    names; for `LoadDatFile` every chunk, for `Snd_LoadBankFile` the banks.
+    A container the cache lacks, or holds only in part (a layer unwritten,
+    a row with no source, a disc-made enemy table with no PC to name it), is
+    the install's, whole.
+  - The language overlay and each optional layer are, when the cache has
+    that layer (`<dir>\loc\<tag>\dat\` or `<dir>\opt\<layer>\dat\` holding
+    a `.DAT`), the cache's file for `NAME` or none; otherwise the install's
+    `DAT\<layer>.NAME` as before - what `importer.py install` leaves, since
+    it replaces a layer's files in `DAT\` whole. `BOF3X_OPT` may name a
+    layer only the cache has.
+  - `Sound_LoadStream` opens `<dir>\base\snd\NAME.DAT` when it exists,
+    `SND\NAME.DAT` otherwise (its path buffer `0x28` -> `MAX_PATH`).
+  - **Checked at injection:** the manifest parsed (a malformed row, rows of
+    one container apart, a names row not after its table, a layer other
+    than `base` / `loc/zh-CN`, a `target` other than `pc-zh`: fatal), and
+    every held container's files walked by their headers against it (a
+    chunk count off, a chunk past the end, a zh tail that is not kind 0:
+    fatal, naming the file). `BOF3X_CACHE` not a directory or over 214
+    characters, `BOF3X_CACHE_DATA` other than `0` / `1`: fatal. No manifest:
+    no container from the cache, its layers and `base\snd` still read.
+    Armed after every module's self-test.
+  - The launcher offers a language or a layer the cache has as it does one
+    in `DAT\`.
+- **Rationale:** the unified-data plan's cache as the thing the engine reads
+  ([`unified-data-plan.md`](unified-data-plan.md) 2 and 7,
+  [`sound-import.md`](sound-import.md) 7): a disc-built cache can be played
+  without copying it into the install, and the PC's own files stop being the
+  only source. The slot order is required, not a nicety: walking base then zh
+  changes `FIRST.DAT`'s VRAM (a zh image under a base one's tiles;
+  [`cache-read.md`](cache-read.md) 3).
+- **Known and accepted:** the enemy names land after a container's later
+  slots rather than inside their table's chunk - the same bytes, because no
+  later chunk overlaps a table; the walk allocates two buffers where the
+  original allocated one, so heap addresses handed out later may differ; a
+  root of 215..226 characters that DIV-0087 accepts is refused here unless
+  `BOF3X_CACHE_DATA=0`; a manifest edited by hand must keep
+  `write_manifest`'s exact format. **The stand-ins** (the entry
+  [`importer-transforms.md`](importer-transforms.md) 5 asked for "when the
+  engine reads the cache"): a cache built without the PC's `DAT/` plays a
+  disc's own sections where only the PC carries the chunk - of the 35
+  containers with one, the 14 with no Chinese text (`DEMO`'s language page,
+  11 `MAGIC*` glyph atlases, `SCENA17`'s copy of the page) are read so, the
+  disc's words where the PC kept Japan's; the 21 with text (the dial page
+  among them) stay the install's. A cache built with the PC's `DAT/` has
+  none. The cache holds no MP3s, by the plan:
+  `BGM\` stays DIV-0087's cache song or the install's MP3. `BOF3X_CACHE` as
+  the one root is the owner's open call; `BOF3X_CACHE_DATA=0` is the other
+  answer ([`cache-read.md`](cache-read.md) 6).
+- **Verification:** `BOF3X_SHADOW=dat_cache` (in `'*'`): the parse and the
+  check on synthetic manifests (nine bad caches refused), `LoadDatFile` end
+  to end on in-memory files (the cache, the fallback, unarmed = the
+  install's walk), the two sound readers; 14 controls refused; seven
+  planted bugs each refused, then removed. The full `'*'` self-test exit 0.
+  Headless start-up against `analysis/cache/pc-plus-us`: 742 of 742
+  containers held and checked; four synthetic caches, the three damaged
+  fatal. Offline, `tools/cache_walk.py compare`: 742 of 742 containers the
+  same end state as the install after `importer.py install`, with no
+  language, with `en-US` + `area4-walls` + `psp-art` from the cache, and
+  with the install's `fr-FR`; `cache_walk.py check` (in `importer.py check`)
+  runs `cmd_install` itself on a synthetic cache. The 880 `base\snd` files
+  byte-identical to `SND\`. **Not run:** any play with `BOF3X_CACHE` set
+  (the owner's; [`cache-read.md`](cache-read.md) 9).
+- **Also in the PSX version?** No: the PSX reads its disc; this is where the
+  PC finds its files.
+- **Reversible?** `BOF3X_CACHE_DATA=0` (the cache for the music only), or
+  unset `BOF3X_CACHE`; `BOF3X_ORIGINAL=LoadDatFile` (and the other two) runs
+  Capcom's readers, which read only the install.
+### A language layer built from the disc alone keeps nothing of the port's
+
+- **ID:** DIV-0090
+- **Date:** 2026-10-10
+- **Subsystem:** text (`tools/loc_build.py all --cache`, run by `importer.py
+  build --lang` when no PC source is given; the `loc/<tag>/` layer of an
+  importer cache; [`loc-build-disc-only.md`](loc-build-disc-only.md))
+- **Tier:** Sensible - the layer's bytes come from the player's disc; where
+  the PC-built layer keeps the port's own, there is nothing of the port's to
+  keep.
+- **Original behaviour:** every language overlay is built over the port's
+  own files and lets them show through: the font appends to the port's 2,451
+  Chinese glyphs (and keeps its half-width single-byte glyphs and the second
+  battle suffix's two), an area message the disc has no glyph for keeps the
+  port's Chinese one, the village board sheet is the port's with the disc's
+  labels (DIV-0088). Measured against the PC-built layers, 2026-10-10
+  (`loc-build-disc-only.md` section 5).
+- **New behaviour:** a layer built from a disc alone has the same chunks with
+  the port's bytes left out: those 2,376 glyphs blank (a Japanese table: 42
+  single-byte slots painted from the disc's sheet, `JA_SHARED`, the rest
+  blank); the second suffix's two glyphs the disc's own cells by its mapper
+  (`SECOND_CELLS`); such a message empty (en-US / en-150: slots 0..15 of 31
+  areas, 496; fr-FR 497, de-DE 496; ja-JP 42 pool slots); a French or German
+  block on that disc's own slot table, with 34 / 11 messages in the disc's
+  language that the PC build keeps Chinese; no village sheet, no text for
+  French `AREA004`, no title page from a French or German disc without an
+  English one. Over the PC install nothing changes (byte-identical, all five
+  tags).
+- **Rationale:** the unified-data plan's disc-only install: a player with a
+  disc and no PC port has none of the port's glyphs, messages or art, and the
+  layer must not need them.
+- **Also in the PSX version?** The messages: the Western discs carry the 496
+  as Japanese bytes their fonts cannot draw, and the 42 Japanese pool slots
+  point outside their blocks; the French and German slot tables are those
+  releases' own. The glyphs and the sheet are the port's, so no.
+- **Verification:** built and diffed container by container for en-US,
+  en-150, fr-FR, de-DE and ja-JP (`loc-build-disc-only.md` sections 5..6).
+  Not played: the engine does not read a cache yet. **Owed the owner's eye**
+  then: the second suffix (banner message 3) and the blank single-byte
+  slots.
+- **Reversible?** build the layer with the PC install among the sources
+  (`importer.py build --source bof3/DAT --source bof3/BOF3.exe ...`, or
+  `loc_build.py all --game`).

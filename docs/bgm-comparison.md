@@ -560,12 +560,24 @@ rewrites between 13 and 48 passes, each tested against the seven renders
 renders themselves were right throughout (full length to 0.3..9 s of
 launch latency, the song at 43-44 s).
 
-### 11.2 The table as it ships (2026-10-10: 37 rows)
+### 11.2 The table as it ships (2026-10-10, second cut: 39 rows)
 
 `analysis/bgm/loops.json` holds 156 rows, one per looping track, all
-render-measured; `src/game/music_loops_table.inc` the 37 that pass every
+render-measured; `src/game/music_loops_table.inc` the 39 that pass every
 gate (each row's comment carries its case, body, confidence, and for a
-shifted row its stand-in correlation and length):
+shifted row its stand-in correlation and length). **The second cut**
+([`music-open-ends.md`](music-open-ends.md) 3): every period pinned to the
+sequence's own pass lengths (`tools/bgm/seq_periods.py`, our sequencer) and
+gated on them - the first cut's `064` and `076` had shipped at 15/16 of their
+body, `131` 2.9 s short and `070` 20 ms short; the first cut's table is kept as
+`analysis/bgm/loops_2026-10-10_pre-seqpin.json`.
+
+| Case | Rows | Tracks |
+|---|---|---|
+| full | 31 | 001 003 013 014 036 037 039 047 051 060 061 062 063 064 065 068 076 078 079 082 084 085 088 090 092 099 104 109 130 144 164 |
+| shifted | 8 | 008 056 113 120 123 133 142 157 |
+
+The first cut, for the record:
 
 | Case | Rows | Tracks |
 |---|---|---|

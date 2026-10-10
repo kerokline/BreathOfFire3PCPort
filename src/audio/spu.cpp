@@ -401,8 +401,8 @@ void Spu::WriteRegister(std::uint32_t offset, std::uint16_t value) {
 
 // spec: SPU ADPCM Samples, "Sample Data", and CDROM Format,
 // "decode_28_nibbles": shift = 12 - (header & 0x0F) with 13..15 acting as 9
-// (R2), the filter in bits 4..6 and bit 7 ignored (R21), s = (t << shift) + ((old * f0 + older * f1
-// + 32) >> 6), clamped to 16 bits (R1).
+// (R2), the filter in bits 4..6 and bit 7 ignored (R21), s = (t << shift) + ((old * f0 + older * f1)
+// >> 6), clamped to 16 bits (R1: no +32 - the renders settled it, docs/music-open-ends.md 2).
 void Spu::DecodeBlock(const std::uint8_t block[16], std::int16_t out[28], std::int32_t hist[2]) {
     int range = block[0] & 0x0F;
     if (range > 12) range = 9;
@@ -413,7 +413,7 @@ void Spu::DecodeBlock(const std::uint8_t block[16], std::int16_t out[28], std::i
     for (int j = 0; j < 28; ++j) {
         std::int32_t t = (block[2 + (j >> 1)] >> ((j & 1) * 4)) & 0x0F;
         t = static_cast<std::int16_t>(t << 12) >> range;
-        std::int32_t s = Clamp16(t + ((old * f0 + older * f1 + 32) >> 6));
+        std::int32_t s = Clamp16(t + ((old * f0 + older * f1) >> 6));
         out[j] = static_cast<std::int16_t>(s);
         older = old;
         old = s;

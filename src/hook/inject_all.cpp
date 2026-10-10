@@ -1,6 +1,8 @@
 #include "hook/inject_all.h"
 
 #include "game/config_text.h"
+#include "game/rdata_consts.h"
+#include "game/dat_cache.h"
 #include "game/dat_load.h"
 #include "game/fishing_text.h"
 #include "game/layering.h"
@@ -320,6 +322,7 @@
 namespace bof3 {
 
 void InjectAll() {
+    rdata::Verify();            // first: the engine's copies of .rdata's constants against BOF3.exe's, before any fuzz reads one
     DrawPool_Reserve();         // DIV-0062: the draw-item pool's room below 16 MB, before anything else is placed
     SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
     MapCells_Inject();          // likewise
@@ -1424,6 +1427,8 @@ void InjectAll() {
                                 // known-defects.md D239) - after every module's self-test, which all compared Capcom's read
     music_loops::Arm();         // the measured music loops (BOF3X_MUSIC_LOOPS; docs/bgm-comparison.md section 12) -
                                 // after every module's self-test, which all compared the original's rewind
+    dat_cache::Arm();           // DIV-0089: DAT\ and SND\ from the cache where it has them (BOF3X_CACHE,
+                                // BOF3X_CACHE_DATA) - after every module's self-test, which all read the install's
     music_seq::Arm();           // DIV-0087: the cache's songs through the sequencer (BOF3X_CACHE, BOF3X_MUSIC) - after
                                 // every module's self-test, which all compared the MP3 path
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,

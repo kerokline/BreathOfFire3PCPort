@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 
 namespace effect_3d::at {
 
@@ -77,7 +78,7 @@ constexpr unsigned kSourceCount = 16;
 constexpr unsigned kSourceStride = 0x14;
 constexpr std::uint32_t kSourceCells = 0x654C3C;   // 16 pairs of s8: a source's cell (x, z)
 constexpr std::uint32_t kDropsMoving = 0x67627C;   // u16: how many drops moved this frame
-constexpr std::uint32_t kOne = 0x5C41B8;           // float 1.0 (effect_2c_callees.h kOne)
+constexpr rdata::Const kOne{0x5C41B8};           // float 1.0 (effect_2c_callees.h kOne)
 constexpr std::uint32_t kLeaderPoint = 0x802D74;   // ObjTrio + 0x34: the leader's x, z, height
 
 // --- kind 0x82: Sprite_Objects record 0 pushed --------------------------------

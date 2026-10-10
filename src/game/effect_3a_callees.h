@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#include "game/rdata_consts.h"
+
 #include "bof3/symbols.gen.h"   // bof3::addr::<Name> for group E4F's two below
 
 namespace effect_3a::at {
@@ -59,6 +61,6 @@ constexpr std::uint32_t kStep = 0x8034E5;          // u8: the chapter's step (sc
 constexpr std::uint32_t kCounter = 0x903848;       // u8: the chapter's count (scenario_harness at::kCounter)
 
 // --- .rdata -----------------------------------------------------------------------
-constexpr std::uint32_t kHalf = 0x5C41B8;          // float: kind 0x64's trail half-width (the fifteen groups' float)
+constexpr rdata::Const kHalf{0x5C41B8};          // float: kind 0x64's trail half-width (the fifteen groups' float)
 
 }  // namespace effect_3a::at

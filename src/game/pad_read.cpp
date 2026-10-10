@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "game/rdata_consts.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "input/bindings.h"
@@ -250,10 +251,12 @@ extern "C" void __cdecl DInput_Init(void* hinstance, void* hwnd) {
     }
     DInput_Object = di;
     LPDIRECTINPUTDEVICEA kb = nullptr;
-    // The GUID and the data format are the exe's own copies, the ones the
-    // original passes (0x5C4828 = GUID_SysKeyboard, 0x5C4948 = c_dfDIKeyboard:
-    // dwSize 0x18, dwObjSize 0x10, DIDF_RELAXIS, 256 bytes, 256 objects).
-    const GUID& guid = *reinterpret_cast<const GUID*>(DInput_KeyboardGuid);
+    // The data format is the exe's own copy, the one the original passes
+    // (0x5C4948 = c_dfDIKeyboard: dwSize 0x18, dwObjSize 0x10, DIDF_RELAXIS,
+    // 256 bytes, 256 objects); the GUID (0x5C4828 = GUID_SysKeyboard) is the
+    // engine's copy of the same 16 bytes (rdata_consts.h).
+    constexpr rdata::Const kKeyboardGuid{0x5C4828};   // DInput_KeyboardGuid
+    const GUID& guid = *reinterpret_cast<const GUID*>(static_cast<std::uintptr_t>(kKeyboardGuid));
     const DIDATAFORMAT* format = reinterpret_cast<const DIDATAFORMAT*>(DInput_KeyboardFormat);
     if (di->CreateDevice(guid, &kb, nullptr) == DI_OK && kb) {
         // CreateDevice (vtable +0xC), then SetDataFormat (+0x2C),

@@ -10,6 +10,9 @@ the owner's machine. Inputs are game data and are only read; outputs go to
     BGM_SCRATCH     where patched disc copies and the Mednafen base directory go
     BGM_LOOPS_JSON  the loop measurements (default <PC>/analysis/bgm/loops.json); a copy
                     elsewhere lets measure_loops.py regate and gen_loop_table.py run on it
+    BGM_SEQ_PERIODS each song's loop pass lengths in VSyncs from our sequencer
+                    (tools/bgm/seq_periods.py; default <PC>/analysis/bgm/seq_periods.json),
+                    which measure_loops.py pins the period to and gates on
 
 BOF3_BIN_ROOT has no checkout to be derived from (an extraction of the disc
 that lives outside every repository); its default is the sibling's own
@@ -38,6 +41,7 @@ JP_BIN = SIB + "/isos/Breath of Fire III (Japan).bin"
 JP_CUE = SIB + "/isos/Breath of Fire III (Japan).cue"
 SCRATCH = os.environ.get("BGM_SCRATCH", os.path.join(PC, "analysis", "bgm", "scratch")).replace("\\", "/")
 LOOPS_JSON = os.environ.get("BGM_LOOPS_JSON", PC + "/analysis/bgm/loops.json").replace("\\", "/")
+SEQ_PERIODS = os.environ.get("BGM_SEQ_PERIODS", PC + "/analysis/bgm/seq_periods.json").replace("\\", "/")
 
 if __name__ == "__main__":
     print(globals()[sys.argv[1]])

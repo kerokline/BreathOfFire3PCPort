@@ -1,8 +1,10 @@
 # Launcher settings — the dialog, `bof3x.ini`, and what `START.EXE` actually is
 
 **Status:** STABLE (built and verified 2026-09-20; extended through 2026-09-24 -
-the Look box's CRT entries, snap, widescreen, cheats, controls and the pad.
-§6 is the record of 2026-09-20's verification, not re-run since)
+the Look box's CRT entries, snap, widescreen, cheats, controls and the pad;
+2026-10-10 the Music and Cache folder boxes and the PSP extras, verified by
+`tools/launcher_host/`, §3.1. §6 is the record of 2026-09-20's verification,
+not re-run since)
 
 `bof3x-launcher` now opens a settings dialog before it starts the game. This
 document says what the shipped `START.EXE` / `SETUP.EXE` are (neither is a
@@ -80,14 +82,79 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 | Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
 | Snap (2026-09-23) | `BOF3X_SNAP=0` when off | ours — DIV-0042: whole multiples, or the picture fitted to the window's height; the window is resized instead of sized here |
 | Widescreen (2026-09-23) | `BOF3X_WIDE=1` when on | ours — DIV-0041 |
-| Optional layers (2026-10-08): `opt=` in the ini - empty (the default), `none`, or a comma-separated list of `opt/` layer names; no dialog box yet | `BOF3X_OPT=<list>`, only the layers whose `DAT\<layer>.*` are installed and whose language (a `-<tag>` suffix) is the one played. **Empty** names the default layers that are installed - since 2026-10-10 `area4-walls` (DIV-0080) when `DAT\area4-walls.*.DAT` is there; **`none`** names none; a list is exactly that list (so one without `area4-walls` turns the walls off). A value it cannot honour (a character other than a letter, digit, `-` or `,`, an empty name, `none` in a list, a name twice, more than 8, one over 23 characters) **stops the launcher** with a message rather than falling back to the default | ours — DIV-0086, DIV-0080, [`opt-layers.md`](opt-layers.md) section 5 |
+| Optional layers (2026-10-08): `opt=` in the ini - empty (the default), `none`, or a comma-separated list of `opt/` layer names; since 2026-10-10 the dialog's PSP extras group (§3.1) | `BOF3X_OPT=<list>`, only the layers whose `DAT\<layer>.*` are installed and whose language (a `-<tag>` suffix) is the one played. **Empty** names the default layers that are installed - since 2026-10-10 `area4-walls` (DIV-0080) when `DAT\area4-walls.*.DAT` is there; **`none`** names none; a list is exactly that list (so one without `area4-walls` turns the walls off). A value it cannot honour (a character other than a letter, digit, `-` or `,`, an empty name, `none` in a list, a name twice, more than 8, one over 23 characters) **stops the launcher** with a message rather than falling back to the default | ours — DIV-0086, DIV-0080, [`opt-layers.md`](opt-layers.md) section 5 |
 | Cheats... (2026-09-24): EXP and zenny sliders, steal switch | `BOF3X_EXP` / `BOF3X_ZENNY` when not 1, `BOF3X_STEAL=1` when on | ours — DIV-0045, DIV-0046; [`cheats.md`](cheats.md) |
 | (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini, when not 2 | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
 | Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |
 | Controls... (2026-09-24): fourteen rows, two key cells and two pad cells each - click a cell and press the key or pad input, Escape cancels, Clear empties - the face-button layout | `key.NAME=action` and `pad.NAME=action` lines in the ini; `BOF3X_KEYS` / `BOF3X_PAD` when they differ from the default | ours — DIV-0050; [`controls.md`](controls.md) §4.2. Unset, the DLL leaves the game's own key table (`BOF3.CFG` lines 3+ or its default) and uses the default pad map |
 
+| Music and Cache folder (2026-10-10, §3.1): the disc's songs or the PC's MP3s; the importer's cache, typed or Browse... | `BOF3X_MUSIC` / `BOF3X_CACHE` when not empty; `music=` / `cache=` in the ini | ours - DIV-0087, [`music-seq-engine.md`](music-seq-engine.md) 2 |
+
 The game process inherits the launcher's environment, so the first two needed
 no new channel and **no change to the DLL at all**.
+
+### 3.1 The Music, Cache folder and PSP extras boxes (2026-10-10)
+
+The ini's `music=`, `cache=` and `opt=` lines existed before the boxes did
+(DIV-0087, DIV-0086); the boxes write them exactly as a hand edit would, and
+**an untouched dialog writes each line back as it was read**:
+
+- **Music**: "The disc's songs where the cache has them (default)" or "The
+  PC's MP3s always". The first entry is what an empty `music=` and
+  `music=seq` both mean: it keeps whichever the ini said; moving the box from
+  the MP3s back to it writes the default, an empty `music=`. A value that is
+  neither (`music=MP3`) was already dropped to the default by `ConfigLoad`.
+- **Cache folder**: the `cache=` path, typed or picked with Browse...
+  (`SHBrowseForFolderW`; the launcher links `shell32` and `ole32` for it).
+  Trimmed as `ConfigLoad` trims a line; the ini's bytes in the ANSI code page,
+  as the launcher hands them to the game (`SetEnvironmentVariableA`) and the
+  DLL reads them - a path the code page cannot hold keeps the dialog open
+  with a message. A note under the box says what the game will make of it,
+  by the DLL's own tests (`music_seq.cpp` `Arm`): no cache; not a folder (the
+  game stops at start-up); over 226 characters (stops); no `base\bgm` (the
+  MP3s play); or "Holds base\bgm: the disc's songs play where it has them".
+  The dialog refuses nothing the hand edit would not: a bad path still
+  reaches the DLL, which stops as before.
+- **PSP extras** (the owner's call 3, [`opt-layers.md`](opt-layers.md)): a
+  box for each of `psp-art`, `psp-tiles`, `psp-maps`, `psp-names-en-150`,
+  `psp-names-ja-JP` (`kPspLayers`, `config.h`) whose `DAT\<layer>.*.DAT` is
+  installed, packed from the group's top; a names layer's box only while the
+  Language box holds its language (`LayerLanguage` / `SamePrimaryLanguage`,
+  the DLL's test), and a hidden box keeps its tick. With none installed, a
+  note says how to make them. A box is ticked when `opt=` plays its layer.
+  On Play, `ConfigOptEdit`: no box changed - `opt=` byte for byte; else the
+  layers the line played (an empty `opt=` contributing the default layers
+  installed, so `area4-walls` stays on) with each change made, written in
+  `kPspLayers`' order, then `kOptDefault`'s, then any other name the line had;
+  `none` when nothing is left. A layer the boxes do not offer (not installed,
+  another language's) stays in the line. `area4-walls` has no box: a repair
+  on by default (DIV-0080), turned off by `opt=none` as before.
+
+Verified 2026-10-10, no game run:
+
+- `tools/launcher_host/config_tests.cpp` (`cmake -S tools/launcher_host -B
+  <scratch> -G Ninja -DCMAKE_CXX_COMPILER=clang++`, then `config_tests.exe`):
+  **38 checks, 0 failures** - twelve `ConfigOptEdit` cases, each result
+  passing `ConfigOptValid`, and a hand-edited ini (`cache=` with spaces
+  round it and a trailing `\`, `music=seq`, an `opt=` list) through
+  `ConfigLoad` / `ConfigSave` twice, the second save byte-identical.
+- `python tools/launcher_host/dialog_test.py build/bof3x-launcher.exe
+  <install>\BOF3.exe` drives the real dialog: a temporary game directory with
+  a copy of `BOF3.exe` and empty `DAT\` files naming `psp-art`, `psp-maps`,
+  `psp-names-en-150`, `area4-walls` and `en-US`, a dummy `bof3x.dll` so that
+  after Play the suspended game process cannot load it and the launcher ends
+  it before any game code runs. **All 19 checks ok**: an untouched dialog
+  leaves the ini byte-identical (with `music=seq` and a cache path, and with
+  all three lines empty); the installed boxes shown and the `en-150` names
+  hidden under the Chinese; `psp-art` ticked over an empty `opt=` writes
+  `psp-art,area4-walls`, unticked again `area4-walls`; the Music box to the
+  MP3s writes `music=mp3`, back `music=`; a cache typed with spaces is
+  trimmed and noted "Not a folder"; under `en-US` the names box appears and
+  `opt=none` with maps and names ticked writes `psp-maps,psp-names-en-150`;
+  `psp-tiles`, listed but not installed, survives an edit; with no PSP layer
+  installed the note shows and `opt=` is untouched. The owner's cache
+  (`analysis\cache\pc-plus-us\`) is noted "Holds base\bgm" and written back
+  with its trailing `\`.
 
 **Writing `BOF3.CFG` is not a divergence** and has no
 [`DIVERGENCE.md`](DIVERGENCE.md) entry. It is the file the 2001 program already

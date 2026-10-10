@@ -37,7 +37,31 @@ where the reading behind it is. Nothing here is a divergence until it is in
   game's data and ships nowhere, rule 1; a re-encode the player makes would
   be their own). Undecided.
 
+- **DIV-0081's second cut (2026-10-10, `catchup/music-tooling`,
+  [`music-open-ends.md`](music-open-ends.md) 3):** four shipped rows looped
+  at a period the sequence does not have - `064` and `076` dropped the last
+  of their 16 bars each pass, `131` 2.9 s, `070` 20 ms. The table is now 39
+  rows: listen first to `064` or `076` (should now play its whole body before
+  the join) and one new row (`037`, `084`, `109`, `130`) with
+  `BOF3X_MUSIC_LOOPS` on against `=0`; `131` and `070` rewind as the
+  original now. DIV-0081's near-full call (a slip a pass, or the rewind) has numbers now
+  (`music-open-ends.md` 5: the rewind is within -41..+7 ms of the disc's
+  period on all 23; a slip loop scores worse on most).
+
 ## To review in play
+
+0. **The game from the cache** (DIV-0089, 2026-10-10,
+   [`cache-read.md`](cache-read.md) section 9). **At the machine:** with
+   `BOF3X_CACHE=<a cache built with the PC's DAT>` (or the ini's `cache=`)
+   and nothing installed in `DAT\`, then with `BOF3X_CACHE_DATA=0` for
+   comparison: the title, a town, a fight, the menus (whatever draws from
+   `FIRST.DAT`'s images - the one container whose order matters; which
+   screen shows the overlapped tiles is not read), an inn (an `SND\`
+   wave), English from the cache's `loc/en-US`, and `psp-art` on Stallion if
+   a save reaches area 67. **Look for** any difference at all; the log's
+   `DIV-0089` lines say what was read from where. Also the one-root call
+   (section 6 there): keep `BOF3X_CACHE` as the one root, or the cache for
+   the music only.
 
 1. **Music coming back after a pause** (`Sound_ResumeAll`,
    [`sound-rest.md`](sound-rest.md) section 3 item 2). Read from the code,
@@ -233,6 +257,29 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Decisions the measurements raised
 
+- **34 French and 11 German messages the PC build leaves Chinese** (2026-10-10,
+  [`loc-build-disc-only.md`](loc-build-disc-only.md), the disc-only build's
+  open question 1): where a disc's slot table is shorter than 256 entries,
+  `loc_build.py`'s PC path measures a slot's offset against the PC's table
+  size, so the disc's first messages look out of range and the Chinese stays.
+  The disc-only path reads them right. Fixing the PC path changes today's
+  fr-FR / de-DE output (a ledger entry, the layers rebuilt); the owner says
+  whether, and whether to look at one of them first (the doc names the areas).
+- **What the engine holds as layout for a disc-only build** (2026-10-10,
+  [`exe-import-engine.md`](exe-import-engine.md) section 5, extending step 8's
+  call 4): the 9,142 code pointers, the 117 pooled zero objects past the last
+  named table, and the 147 `.bss` / 63 `.rdata` pointer words can come from no
+  disc. Hold them in the engine (as `exe-pointers.tsv` already holds addresses,
+  never bytes), or stop at "the PC install only" for them? Not blocking: the
+  PC-sourced build is byte-identical either way.
+- **Decided 2026-10-10: minimp3 replaces Capcom's MP3 decoder** ("I agree
+  with using minimp3 unless there is a known decoding bug that has been
+  resolved" - none: [`mp3-decoder-choice.md`](mp3-decoder-choice.md), 42 of
+  the decoders' 57 items token-identical, the 15 others casts and naming but
+  for dr_mp3 keeping the bit reservoir on a `pcm == NULL` call). Recorded in
+  [`platform-layers-plan.md`](platform-layers-plan.md) 2.4; nothing to hear
+  until it is built, then the ledger entry's PCM bound and the loop seams.
+
 - **`symbols.toml` quotes table values** ([`exe-tables-by-build.md`](exe-tables-by-build.md)
   section 7, 2026-10-08): about 25 `[[data]]` evidence strings carry six or
   more of a table's numbers in a row (`Battle_DamageVarianceTable`,
@@ -398,6 +445,12 @@ where the reading behind it is. Nothing here is a divergence until it is in
   spotted.
 
 ## Decided and built, not yet seen live
+
+- **The launcher's Music, Cache folder and PSP extras boxes** (2026-10-10,
+  [`launcher-settings.md`](launcher-settings.md) 3.1; the owner's call 3 of
+  [`opt-layers.md`](opt-layers.md)): driven by a script, never by hand - a
+  look at the dialog's layout at the owner's DPI, Browse... for a cache
+  folder, and the PSP boxes with the PSP layers installed.
 
 - **`Cfg_Load`'s key-line overrun** ([`shell.md`](shell.md) section 5): the
   owner (2026-10-06) wanted overrun protection; **built the same day as

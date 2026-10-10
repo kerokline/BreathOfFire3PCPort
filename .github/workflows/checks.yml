@@ -9,6 +9,12 @@
 #   tools/tables.py check   the table catalog: every table's symbol and build
 #                           exist, every field fits its record, nothing overlaps
 #                           unmarked, every claimed field cites its reader
+#   tools/type1.py selftest the type-1 decompressor on synthetic input
+#   tools/importer.py check the importer's recipes against fixtures/ (with
+#                           seq.py's round trip and fixtures/bgm.tsv's shape)
+#                           and exe_tables.py check
+#   tools/bgm/host          the SPU model's and the sequencer's unit tests
+#                           (spu_tests, seq_tests) on synthetic samples and songs
 #   tools/lift/selftest.sh  the x86 -> C lifter prototype against its
 #                           synthetic corpus, with its negative controls
 name: Checks
@@ -51,6 +57,26 @@ jobs:
 
       - name: The importer's recipe against fixtures/ (no game data)
         run: python tools/importer.py check
+
+  music-host:
+    # The SPU model and libsnd's sequencer (src/audio/) built with the system
+    # compiler and unit-tested on synthetic samples and songs - no game data
+    # (tools/bgm/host/README.md, docs/spu-model.md, docs/libsnd-reading.md).
+    name: Music host suite
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          cmake -S tools/bgm/host -B "$RUNNER_TEMP/bgm-host"
+          cmake --build "$RUNNER_TEMP/bgm-host" -j 4
+
+      - name: spu_tests
+        run: '"$RUNNER_TEMP/bgm-host/spu_tests"'
+
+      - name: seq_tests
+        run: '"$RUNNER_TEMP/bgm-host/seq_tests"'
 
   lifter:
     # The x86 -> C lifter prototype (docs/lifter-feasibility.md): lift the

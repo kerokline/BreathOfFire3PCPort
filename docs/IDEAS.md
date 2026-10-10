@@ -79,7 +79,7 @@ rule ([`README.md`](README.md)) here too.
 | I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | open 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
 | I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31) |
 | I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
-| I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | open 2026-10-09 (the owner); not for PR #46 |
+| I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | built 2026-10-10 (`catchup/music-tooling`): `abort_check.h`, the suite in CI |
 | I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
 
 ---
@@ -1472,7 +1472,15 @@ on Windows, `posix_spawn` elsewhere, or CTest's `WILL_FAIL`), build with the
 **Gated on:** nothing.
 
 ### Outcome
-_(2026-10-09) open._
+_(2026-10-10) built on `catchup/music-tooling`:_ the aborts are checked in a
+child by `tools/bgm/host/abort_check.h` - `fork` on POSIX, the test binary
+re-run with `--abort-case N` on Windows (std::abort's exit status 3, the
+runtime's message box and error report off in the child); `spu_tests` and
+`seq_tests` pass under the `cmake-clang-v1` `clang++` (431,706 and 28 checks,
+`tools/bgm/host/README.md`), and `synth_render` and `synth_check.py
+--renders` run against the owner's renders in `analysis/bgm/renders`
+([`music-open-ends.md`](music-open-ends.md)). CI builds and runs the two test
+programs on Linux (`.github/workflows/checks.yml`).
 
 ## I36 — Our own ATRAC3plus decoder for the PSP's sounds
 
