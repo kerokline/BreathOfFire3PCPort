@@ -249,6 +249,14 @@ void TagOne(std::uint32_t prim, Kind kind, unsigned layer, unsigned slot, unsign
     Put(prim, kind, slot, layer, a, b, 0, 0, 0, 0);
 }
 
+// Gfx_PacketPools' address: symbols.gen.h also defines the name as a typed
+// macro, which would expand inside bof3::addr::, so it is read with the macro
+// set aside (battle_flow.cpp's way).
+#pragma push_macro("Gfx_PacketPools")
+#undef Gfx_PacketPools
+constexpr std::uint32_t kPacketPools = bof3::addr::Gfx_PacketPools;
+#pragma pop_macro("Gfx_PacketPools")
+
 void LogWalk(const unsigned long* ot) {
     if (!g_on) return;
     const unsigned f = Now();
@@ -256,7 +264,7 @@ void LogWalk(const unsigned long* ot) {
     {
         // The packet pool's fill at the walk: Gfx_PacketNext against this
         // buffer's 64 KB (Gfx_PacketPools + (buffer << 16), draw_emit.cpp's limit).
-        const std::uint32_t base = 0x7E1C00u + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16);
+        const std::uint32_t base = kPacketPools + (static_cast<std::uint32_t>(Gfx_BufferIndex) << 16);
         const std::uint32_t next = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Gfx_PacketNext));
         bof3::Log("draworder   frame %u: packet pool at %u of 65536 bytes (buffer %u)", f, next - base,
                   static_cast<unsigned>(Gfx_BufferIndex));
