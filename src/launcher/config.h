@@ -54,9 +54,9 @@ constexpr bool LanguagesAgree() {
 static_assert(LanguagesAgree(), "kLanguages and game/language_tags.h kLanguageTags differ");
 // "original" (no overlay, the port's Chinese) or one of kLanguages' tags. A
 // bof3x.ini that still says a bare code from before 2026-10-08 (`language=en`,
-// fr, de, ja) reads as that language's tag - en-US, the default English (the
-// owner's word, 2026-10-08), fr-FR, de-DE, ja-JP - with a note on stderr
-// (ConfigLegacyLanguage, DIV-0005); the next save writes the tag.
+// fr, de, ja) is refused, not mapped: ConfigLoad reports it and the launcher
+// stops, naming the tag to write (RetiredLanguageReplacement,
+// game/language_tags.h; DIV-0005).
 constexpr const char* kLanguageOriginal = "original";
 
 enum class Filter { kLinear, kPoint };   // the original's, and DIV-0012's
@@ -139,8 +139,10 @@ std::string SatpixieLine(const Config::Satpixie& sp, const char* prefix, const c
 
 // Reads `path` if it is there, and returns whether there was one. Missing key
 // and unparsable value both leave the default in place: a settings file is not
-// a thing to fail on.
-bool ConfigLoad(const std::wstring& path, Config& cfg);
+// a thing to fail on - with one exception: a retired bare language code
+// (`language=en`, fr, de, ja; DIV-0005) sets `error`, the tag to write
+// instead, and the launcher stops on it. `error` is empty otherwise.
+bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error);
 
 // Rewrites `path` whole, comments included. Returns false on a write error,
 // which the caller reports without refusing to start the game.
@@ -185,9 +187,9 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
 // True for "original" or a tag in kLanguages.
 bool ConfigLanguageKnown(const std::string& code);
 
-// The tag a bare language code of a bof3x.ini from before 2026-10-08 stands
-// for (en -> en-US, fr -> fr-FR, de -> de-DE, ja -> ja-JP; DIV-0005), or null
-// for any other value.
-const char* ConfigLegacyLanguage(const std::string& code);
+// False, with `error` naming the tag to use, when the environment's
+// BOF3X_LANG is a retired bare code (en, fr, de, ja; DIV-0005): the launcher
+// stops on it before the game starts, as the DLL would at injection.
+bool ConfigCheckEnvironmentLanguage(std::string& error);
 
 }  // namespace bof3x

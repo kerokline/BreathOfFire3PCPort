@@ -54,6 +54,7 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import dat          # noqa: E402
 import exe_tables   # noqa: E402
+import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
@@ -679,26 +680,17 @@ def cmd_build(a):
     print("manifest: %s" % os.path.join(a.out, "manifest.toml"))
 
 
-# The default tag of a bare language: the owner's decision of 2026-10-08, en-US
-# is the default English. A language with one held tag needs no entry.
-DEFAULT_TAG = {"en": "en-US"}
-
-
 def resolve_languages(asked, sources):
-    """Each --lang to (tag, donor): a full tag (`en-150`) is the PSX disc whose
-    fixtures.toml tag it is, exactly; a bare language (`en`) is the disc of its
-    default tag (DEFAULT_TAG) when one is given, else the first PSX disc in the
-    player's order whose tag has it as the primary subtag (docs/importer.md
-    section 5, docs/importer-transforms.md section 7). tools/loc_build.py
-    reads PSX discs only."""
+    """Each --lang to (tag, donor): a tag (`en-150`) is the PSX disc whose
+    fixtures.toml tag it is, exactly (docs/importer.md section 5,
+    docs/importer-transforms.md section 7). The bare codes of before
+    2026-10-08 (`en`, fr, de, ja) are retired and refused (DIV-0005,
+    tools/language_tags.py). tools/loc_build.py reads PSX discs only."""
     donors = [s for s in sources if isinstance(s, DiscSource) and s.id.startswith("psx-")]
     out = {}
     for want in asked:
-        if "-" in want:
-            d = next((s for s in donors if tag_of(s.id) == want), None)
-        else:
-            d = next((s for s in donors if tag_of(s.id) == DEFAULT_TAG.get(want)), None) or \
-                next((s for s in donors if primary(tag_of(s.id)) == want), None)
+        language_tags.refuse_retired(want, "--lang")
+        d = next((s for s in donors if tag_of(s.id) == want), None)
         if not d:
             have = ", ".join("%s (%s)" % (s.id, tag_of(s.id)) for s in donors) or "none"
             raise SystemExit("--lang %s: no PSX disc given carries it; the discs given: %s" % (want, have))
@@ -1357,6 +1349,8 @@ def cmd_install(a):
     files in DAT/ (<name>.*.DAT) are removed first, so none is left stale. The
     engine reads DAT/ in the game directory until it reads the cache."""
     import shutil
+    for tag in a.lang:
+        language_tags.refuse_retired(tag, "--lang")
     dat_dir = os.path.join(a.game, "DAT")
     if not os.path.isfile(os.path.join(dat_dir, "FIRST.DAT")):
         raise SystemExit("%s: no DAT/FIRST.DAT - not a game directory" % a.game)
@@ -1379,6 +1373,9 @@ def cmd_install(a):
                                                           ", %d stale removed" % len(stale) if stale else ""))
             if kind == "opt":
                 print("  play with BOF3X_OPT=%s (comma-separated, in order, for several)" % name)
+    # Overlays under a retired bare code (DAT/en.*.DAT, DIV-0005) are not
+    # this install's to remove; it says they are dead weight.
+    language_tags.note_retired_overlays(dat_dir)
 
 
 # ---------------------------------------------------------------- presets
@@ -1524,11 +1521,12 @@ def cmd_verify(a):
 
 def verify_overlays(cache, theirs):
     """Each loc/<tag>/ layer (but the target's own, which the recipe checks)
-    against an install's <tag>.<NAME>.DAT overlays, byte for byte, both ways;
-    where the install has none under the full tag, against its overlays under
-    the bare language (`en.`, what the engine reads until it takes tags) - for
-    the language's default tag only (DEFAULT_TAG: `en.` is en-US's)."""
+    against an install's <tag>.<NAME>.DAT overlays, byte for byte, both ways.
+    A tag the install has no overlays under is not compared. Overlays under a
+    retired bare code (`en.`, DIV-0005) are never compared: the engine
+    refuses the code, so they are only noted, to delete."""
     rc = 0
+    language_tags.note_retired_overlays(theirs)
     loc = os.path.join(cache, "loc")
     for tag in sorted(os.listdir(loc)) if os.path.isdir(loc) else []:
         if tag == tag_of(TARGET):
@@ -1537,11 +1535,8 @@ def verify_overlays(cache, theirs):
         ours = set(os.listdir(d))
         lang = tag
         if not any(f.startswith(tag + ".") for f in os.listdir(theirs)):
-            if DEFAULT_TAG.get(primary(tag), tag) != tag:
-                print("verify loc/%s: the install has no %s.*.DAT, and its %s.* are %s's - not compared"
-                      % (tag, tag, primary(tag), DEFAULT_TAG[primary(tag)]))
-                continue
-            lang = primary(tag)
+            print("verify loc/%s: the install has no %s.*.DAT - not compared" % (tag, tag))
+            continue
         inst = {f[len(lang) + 1:] for f in os.listdir(theirs) if f.startswith(lang + ".")}
         same = [n for n in sorted(ours & inst)
                 if open(os.path.join(d, n), "rb").read() == open(os.path.join(theirs, lang + "." + n), "rb").read()]
@@ -1627,9 +1622,8 @@ def main():
     p.add_argument("--source", action="append", required=True, help="a PC DAT/, BOF3.exe or a disc; order is preference")
     p.add_argument("--out", required=True)
     p.add_argument("--lang", action="append", default=[],
-                   help="a language layer to build (repeat): a tag (en-US, en-150, fr-FR, de-DE, ja-JP) or a bare "
-                        "language (en: en-US when the US disc is given, else the first English disc in the "
-                        "source order); needs the PC's DAT/, BOF3.exe and that disc")
+                   help="a language layer to build (repeat): a tag (en-US, en-150, fr-FR, de-DE, ja-JP; the "
+                        "bare en/fr/de/ja are retired, DIV-0005); needs the PC's DAT/, BOF3.exe and that disc")
     p.add_argument("--opt", action="append", default=[],
                    help="an optional layer to build (repeat): %s; needs a PSP disc, area4-walls a US, European, "
                         "French or German PSX disc (docs/opt-layers.md)" % ", ".join(OPT_LAYERS))

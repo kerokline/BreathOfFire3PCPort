@@ -183,7 +183,7 @@ text.
 
 ```
 python tools/importer.py build --source JP --source US --source EU --source FR --source DE --source DAT --source BOF3.exe \
-    --lang en-US --lang en-150 --lang fr-FR --lang de-DE --lang ja --out CACHE
+    --lang en-US --lang en-150 --lang fr-FR --lang de-DE --lang ja-JP --out CACHE
 python tools/importer.py verify --cache CACHE --overlays <an install's DAT/>
 ```
 
@@ -215,11 +215,10 @@ are Sony Europe's terminology (`Memory Card`) and two renamed items. The
 PSP-EU text has the European renames too (`Hourglass` in 55 places and no
 `Quicksilver`, as the European PSX disc).
 
-`--lang` takes a tag, or a bare language (`en`). **A bare `en` is `en-US`
-when the US disc is given, in any source order, else the first English disc**
-(the owner's decision, 2026-10-08: `en-US` is the default English;
-[`importer-transforms.md`](importer-transforms.md) section 7); any other bare
-language is the first PSX disc in the player's order with that primary subtag. `--lang T` writes
+`--lang` takes a tag, exactly one a given PSX disc carries. The bare codes
+(`en`, `fr`, `de`, `ja`) are retired and refused, naming the tag (the owner's
+decision, 2026-10-10, DIV-0005; until then a bare `en` chose `en-US` when the US
+disc was given - [`importer-transforms.md`](importer-transforms.md) section 7). `--lang T` writes
 `loc/T/dat/NAME.DAT`. **It is `tools/loc_build.py all --lang T`, run
 unchanged** on a scratch game directory: links to the PC's 742 shipped
 containers and `BOF3.exe`, both identified sources, and none of the install's
@@ -232,8 +231,9 @@ tag (`loc_build.disc_tag`, by the importer's identity check; an unheld disc
 wants `--lang`), since **the engine and the launcher read the tag** (2026-10-08:
 `DAT\<tag>.*`, `Lang_FullWidth` by the primary subtag, `kLanguages` the five
 tags; an install's old `en.*` files are not read and go). `verify --overlays`
-still compares a layer with an install's bare-coded overlays when the install
-has none under the full tag.
+compares a layer only with an install's overlays under its own tag, and says
+"not compared" when there are none; bare-coded overlays (`en.*`) are never
+compared, and `verify` and `install` note them, to delete (2026-10-10).
 `BOF3.exe` is a source because `loc_build` reads the exe's name, verb and
 config tables. Without it, `--lang` is refused with that reason.
 

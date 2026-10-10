@@ -10,7 +10,7 @@
 // zh-CN); what goes by language goes by the tag's primary subtag.
 
 // True when BOF3X_LANG's primary subtag names a full-width language (ja, zh:
-// `ja-JP`, `zh-CN`, or the bare code). Everything else, "original" and unset
+// `ja-JP`, `zh-CN`; the bare codes are retired, DIV-0005). Everything else, "original" and unset
 // included, answers false - so the Latin paths behave exactly as they did
 // before this existed.
 bool Lang_FullWidth();

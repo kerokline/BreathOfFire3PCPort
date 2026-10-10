@@ -27,7 +27,10 @@ looked like a regression in LoadDatFile for an afternoon.
 import argparse, ctypes, ctypes.wintypes as w, os, re, subprocess, sys, threading, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-u = ctypes.WinDLL('user32')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
+
+u =ctypes.WinDLL('user32')
 
 
 OURS = None   # the pid of the game our launcher started (launch()); the helpers below act on it alone
@@ -70,8 +73,11 @@ def kill_stale(launcher):
 
 
 def launch(launcher, game, env):
-    """Start the game through the launcher and remember its pid."""
+    """Start the game through the launcher and remember its pid. A retired
+    language code in `env` or the launcher's bof3x.ini stops here, not at the
+    launcher's message box (DIV-0005)."""
     global OURS
+    language_tags.refuse_retired_run(launcher, env)
     r = subprocess.run([launcher, '--game', game, '--no-config'], env=env, capture_output=True, text=True)
     sys.stdout.write(r.stdout)
     m = re.search(r'\(pid (\d+)\)', r.stdout)
@@ -139,7 +145,9 @@ def main():
     ap.add_argument('--original', default=None, metavar='LIST',
                     help='value for BOF3X_ORIGINAL, e.g. "*" or "File_Read"')
     ap.add_argument('--lang', default='original',
-                    help='value for BOF3X_LANG: "original" (default) or an overlay tag, e.g. "en-US"')
+                    type=lambda v: language_tags.refuse_retired(v, '--lang'),
+                    help='value for BOF3X_LANG: "original" (default) or an overlay tag, e.g. "en-US" '
+                         '(the bare en/fr/de/ja are retired, DIV-0005)')
     ap.add_argument('--filter', default='linear',
                     help="value for BOF3X_FILTER: \"linear\" (default, the port's own) or \"point\"")
     ap.add_argument('--no-kill', action='store_true')

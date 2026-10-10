@@ -327,6 +327,10 @@ void RetiredAreaWallsSwitch() {
 void DatLoad_Inject() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", g_lang, sizeof g_lang);
     if (n == 0 || n >= sizeof g_lang || std::strcmp(g_lang, "original") == 0) g_lang[0] = 0;
+    // The bare codes of before 2026-10-08 are retired, not read (DIV-0005):
+    // DAT\en.* is no overlay this project builds any more.
+    if (const char* use = bof3x::RetiredLanguageReplacement(g_lang))
+        bof3::Fatal("DIV-0005: BOF3X_LANG=%s is retired; use %s", g_lang, use);
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
     ReadOptLayers();

@@ -276,6 +276,12 @@ By container, the `base/` files not written lack:
 
 ## 7. `en-US` is the default English
 
+**Retired 2026-10-10** (the owner's word, DIV-0005): `--lang` takes a tag
+only, and a bare `en` (`fr`, `de`, `ja`) is refused naming the tag;
+`DEFAULT_TAG` is gone, and `verify --overlays` compares only overlays under
+the full tag. `en-US` stays the English the dialog and the docs reach for
+first. What follows is the record of 2026-10-08 to 2026-10-10.
+
 The owner's decision of 2026-10-08. `importer.py`'s `DEFAULT_TAG = {"en":
 "en-US"}`:
 - a bare `--lang en` means the US disc when it is among the sources, whatever

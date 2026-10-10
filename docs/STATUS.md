@@ -453,7 +453,9 @@ What is established:
    (DIV-0052, DIV-0053).
    **Four languages since 2026-09-24:** English, French and German
    (DIV-0054) and Japanese (DIV-0056), each from the player's own disc,
-   `BOF3X_LANG=en|fr|de|ja`. The world-map place plates follow the language
+   `BOF3X_LANG=en|fr|de|ja` then, the tags `en-US|en-150|fr-FR|de-DE|ja-JP`
+   since 2026-10-08 (the bare codes retired with an error 2026-10-10,
+   DIV-0005). The world-map place plates follow the language
    (DIV-0055). Japanese names use pair codes (DIV-0057), and a layout switch
    keeps the original's full-width layout for `ja` / `zh` (DIV-0056).
    Japanese is seen by capture only; French and German are captured on the
