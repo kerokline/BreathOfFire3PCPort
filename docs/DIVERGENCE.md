@@ -4425,44 +4425,75 @@ designed in rather than bolted on.
   every module's self-test), a track with a measured row loops from the row's
   end back to its start inside the file, sample-accurate - the decoder is
   rewound and the frames before the loop start discarded, so the samples
-  after the jump are the first pass's bit for bit - with a 2.9 ms crossfade
-  at the join (5.8 ms on a row shifted to fit a file cut short of one body,
-  the battle theme today). A track without a row rewinds as before. Thirteen
-  tracks have rows today (`003 014 036 051 060 063 064 079 082 085 090 144
-  153`); the full measurement of the 156 looping songs is paused for a
-  machine left on (section 11's resume command). The town theme `000` is
-  **excluded**: its file is 0.44 s shorter than one loop period, so no
-  correct loop exists inside it - the owner's decision (section 11.3).
+  after the jump are the first pass's bit for bit - with a crossfade at the
+  join. A track without a row rewinds as before. **The table as it ships
+  (2026-10-10): 39 rows** of the 156 looping tracks
+  ([`bgm-comparison.md`](bgm-comparison.md) section 11.2):
+  - **28 full** (`001 003 013 014 036 039 047 051 060 061 062 063 064 065
+    068 076 078 079 082 085 088 090 092 099 104 131 144 164`): the file
+    holds a whole body after the loop start; the row is the disc's loop,
+    start and period, in the file's samples, with a 2.9 ms crossfade.
+  - **11 shifted** (`008 056 070 113 120 123 133 142 151 153 157`): the file
+    ends before one whole body after the loop start but holds a whole period
+    from its start; the row keeps the disc's period, ends as late as the file
+    allows, and so starts that period earlier - its first moments are intro
+    material standing in for the body's missing tail (0.07..8.1 s; the
+    battle theme 153 0.35 s), with a 5.8 ms crossfade. In time and in phase
+    with the disc's loop; not the disc's notes for that stretch.
+  - **The gates** (`tools/bgm/measure_loops.py` `gate()`): every row's period
+    correlation >= 0.8 and an alignment of 10+ windows within 50 samples (512
+    on the onset envelope); a shifted row's stand-in must also correlate
+    with the body's tail it replaces at >= 0.5 wherever it is longer than
+    1.0 s. Both stand-in numbers sit in gaps of the measured distribution
+    (29 shifted rows: 15 at -0.10..0.34, none to 0.62, 14 at 0.62..1.00; of
+    the low 15, 151 and 153 stand in for 0.35..0.37 s, the rest 2.33..17.31
+    s). 151 and 153 are kept on their short stand-in - a crossfaded run-in
+    whose proof is below; `STAND_IN_BOUND_S = 0` would refuse them too, the
+    owner's call.
+  - **Refused, rewinding as the original: 117.** 12 shifted rows on the
+    stand-in gate (`007 089 093 119 125 128 136 138 143 145 147 159`: about
+    4 s of other material a pass, 17.3 s on 145; in the table until
+    2026-10-10 - the gate had been documented and not applied); 76
+    *shortened* - the file shorter than one loop period from its start, so
+    no correct loop exists inside it (the town theme `000`: 0.44 s short;
+    20 of them by a frame or two, `near_full`, the owner's call whether a
+    slip that size a pass beats the rewind); 29 others under the
+    correlation or alignment gates (23 full, 6 shifted), every one with its
+    cause in `loops.json`'s `why`.
 - **Rationale:** the owner's words above; the measurement that the disc
   loops inside the song. The table is our own measurement, regenerable from
-  `analysis/bgm/loops.json` by `tools/bgm/gen_loop_table.py`; it holds
-  sample positions, not game data.
+  `analysis/bgm/loops.json` by `tools/bgm/gen_loop_table.py` (which refuses
+  a row whose decode is not exactly frames x 1,152 samples - the positions
+  are the engine's only while ffmpeg trims nothing, true of every file
+  today); it holds sample positions, not game data.
 - **Also in the PSX version?** The PlayStation plays the sequence, which
   loops at these points by its own markers; the PC's rewind is the port's.
-  This restores the disc's loop structure on the PC's recordings.
-- **Verification:** `tools/bgm/prove_loops.py` splices each row the engine's
-  way and scores the first second after the join against the disc's render
-  or the file's own continuation: the battle theme from -0.10 with 809
-  near-silent samples to 0.63 with no gap; the eleven in-file rows from
-  -0.14..0.22 to 0.977..0.989. `BOF3X_SHADOW=sound` loops a stand-in decoder
-  sample-exactly in four call patterns and checks every row; `'*'` narrow
-  passed on the agent's tip and the `sound` module at the merged tip.
-  **Not yet heard in the game**: `analysis/bgm/listen/153_loop_fixed.wav` is
-  the offline splice for the owner's ear; whether replaying the intro's
-  frames at each loop causes a hitch in play is unmeasured.
+  A full row restores the disc's loop exactly; a shifted row restores its
+  period and phase, not the stand-in's notes; a refused track keeps the
+  port's rewind.
+- **Verification (2026-10-10, the 39 rows):** `prove_loops.py`'s splice and
+  scores, re-run offline over the regated table (the renders on disk; the
+  first second after the join against the render's continuation, before =
+  the original's rewind): full rows from -0.18..0.25 (8 unmeasured: the
+  render ends before the file does) to a median 0.79 (0.60..0.90), with
+  steps 0.01..3.15 matching the render's own loop's (013: 3.15 against
+  3.01) - except `061`, 0.01, an envelope-aligned song whose waveform
+  never correlates with the render, so the score cannot speak; its file's
+  own second pass matches its first at 0.949. Shifted rows from
+  -0.10..0.18 to 0.32..0.86 (median 0.62; 153 0.63, its first 0.25 s 0.14,
+  the stand-in, then the MP3's usual likeness), steps 0.09..0.55. The
+  rewind's 336..2,205 near-silent samples after the join fall to 0..97,
+  except where the music rests at that point in the render too (001, 078,
+  092; 085 640 against the render's 58). Built clean;
+  `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`: exit 0,
+  the stand-in decoder looped exactly in four call patterns, "39 table
+  rows in bounds". **Not yet heard in the game** with these 39 rows;
+  whether replaying the intro's frames at each loop causes a hitch in play
+  is unmeasured.
 - **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
-- **The full measurement, 2026-10-08** ([`bgm-comparison.md`](bgm-comparison.md)
-  section 11): all 153 songs rendered and measured, the method rewritten
-  the same day (the SPU's noise voices and free-running modulations defeat
-  a waveform-only measure). Of 156 looping tracks 48 have a loop in their
-  file, 80 hold less than a period (20 by a frame or two, `near_full` - the
-  owner's call whether a slip of that size a pass beats the rewind), 28
-  none that can be measured. The table in `music_loops_table.inc` is
-  regenerated from `loops.json` by `gen_loop_table.py` (not yet re-run at
-  this writing). **The owner's stance the numbers led to:** the disc's
-  music by default wherever a disc is a source
-  ([`unified-data-plan.md`](unified-data-plan.md) section 6); this entry
-  is what a PC-only install gets.
+- **The owner's stance (2026-10-08):** the disc's music by default wherever
+  a disc is a source ([`unified-data-plan.md`](unified-data-plan.md)
+  section 6); this entry is what a PC-only install gets.
 
 ### The enemy AI rows' done bits cleared at spawn (the Volt's EXP bonus)
 
