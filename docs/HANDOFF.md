@@ -94,10 +94,12 @@ the route pairs now `cn_<route>_orig2` / `_orig2b`).
      `BOF3X_OPT=none`** (Traps: the installed walls layer arms at start-up and every route differed at tick 3 in VRAM
      with it on). The ten routes with it off differed from the 2026-10-05 pairs on two pages from each route's
      first save-list read (`0x92A000` `Save_Staging`, `0x905000`); **the tip is not the cause:** a combat run of
-     ours and one of Capcom's (`--original '*'`) the same afternoon are identical on all 2,561 ticks, their raw
+     ours and one of Capcom's the same afternoon are identical on all 2,561 ticks, their raw
      dumps at ticks 179 and 226 show no byte of those pages differing, and Capcom's own run differs from the
      2026-10-05 pair the same way - the owner's save slots changed since (`BISLPS06`, `09`, `0A..0C`), and the pairs
-     stage the save list. **The pairs are re-recorded** as `cn_<route>_orig2` / `_orig2b` (`BOF3X_OPT=none`) and
+     stage the save list. **The pairs are re-recorded** as `cn_<route>_orig2` / `_orig2b` (`BOF3X_OPT=none`,
+     `--original "*,-Game_Clock"` as state-hash.md 4 says - a first cut with `'*'` alone let Capcom's wall-clock
+     play time run and the field menu's minute digits and the music's timers differed from ours) and
      ours checked against them - PAIRS_RESULT.
 3. **Work that needs no owner, what is left** (each doc's own list is the authority): step 8's
    [`exe-import-engine.md`](exe-import-engine.md) section 5 (the stub page wants state 2's 17 functions without
@@ -778,7 +780,8 @@ Local only, gitignored, worth keeping:
   not. The morning's item 1.1 said "`BOF3X_OPT` unset"; the traps' line was the right one.
 - **The route pairs stage the owner's save list** (2026-10-10): a new or rewritten save slot changes `Save_Staging`'s
   page (`0x92A000`) and one beside it (`0x905000`) from the route's first save-list read, on Capcom's side as much as
-  ours. Before blaming a tip, run Capcom's side once (`--original '*'`) and `check` it against the pair; if it differs
+  ours. Before blaming a tip, run Capcom's side once (`--original "*,-Game_Clock"`, never `'*'` alone: Capcom's
+  clock is the wall clock and the play-time digits drift) and `check` it against the pair; if it differs
   the same way, re-record the pair (state-hash.md 6). The 2026-10-05 pairs went stale this way; `cn_<route>_orig2` /
   `_orig2b` are the current ones.
 - **Killing a queued chain by a command-line pattern kills its waiters** (2026-10-10): chains that wait on each
