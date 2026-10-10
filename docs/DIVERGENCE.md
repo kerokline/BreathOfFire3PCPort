@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 87 entries, DIV-0001..0087, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 88 entries, DIV-0001..0088, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3645,6 +3645,113 @@ designed in rather than bolted on.
   the armour and weapon screens' sorts (`Power` / `Defence` / `Kind`) look
   correct too. **Owed the owner's eye:** the French and German words in
   play.
+  **Extended 2026-10-10 - three more groups, from the owner's
+  `fairyVillage.txt`, `dragonMenu.txt` and `fairyVillageNews.txt`**
+  ([`village-text-scan.md`](village-text-scan.md), which also lists every
+  Chinese string the exe still draws and what each needs):
+  12. **the gene splicing window's tabs** 资料 / 选择 / 最佳化 - 3 x 8 at
+     `0x66A14C` behind the pointer table `0x66A164` (`GeneWin_DrawChoices`
+     `0x598E90`, its one reader): `BATTLE.EMI`'s `Data` / `Pick` / `Best`,
+     6-byte slots between the `AP` / `1` / `0` bytes the PC has at
+     `0x66AF38` and the pieces and `DATA` / `BEST` it has at `0x66AF4E`.
+     Written in place; the draw's count is `0x10`.
+  13. **the faerie village's board lists** - the ten facility names
+     `0x669E18..` behind `0x669E68` (`CommuBoard_DrawListBox`) and the ten
+     choices `0x669E90..` behind `0x669EE0` (`CommuBoard_DrawListBoxB`);
+     nothing but the two tables reaches them (`tools/text_scan.py`), so
+     repointed into 16-byte buffers as groups 3, 4 and 7 are: `COMMU01.EMI`
+     has the twenty as 8-byte slots right before the list rows and record
+     offsets the PC has at `0x652C6C`, and `Merchant`, `Explorer`,
+     `Antiques` and `Handyman` fill theirs with no NUL. The two draws pass
+     `Text_DrawAt` the count 3 - the Chinese lines' three glyphs - which
+     would cut `Merchant` to `Mer`: once the group is written they pass
+     `0xFF` (`Labels_Written`), the strings being NUL-ended.
+  14. **the village's words**, five strings the DLL's own draws read through
+     `Labels_Slot` from buffers of ours (the shipped slots untouched): the
+     board panel's label 文化 `0x669E10` (`Culture`, the list's own word;
+     count 2 -> `0xFF`, and the number after it from `0x98`, under the seven
+     letters, to `0xBE`, where the owner's web reference of the US screen
+     has it); the one glyph 名 `0x669F08` that the ranked lists' headings
+     draw after a count - the US disc's pair `faeries` / `faery`
+     (`COMMU05.EMI`, two copies of the pair of 8-byte slots right before the
+     kind table the PC has at `0x653180`), the heading drawing the plural,
+     or the singular for a count of one (inferred from the pair; the US
+     routine was not read), a letter's gap after the number; and the hi-lo
+     game's money and stake titles 所持金 / 赌金 `0x669F60` / `0x669F68`
+     (`Commu_DrawZennyBox` / `_DrawStakeBox`, count 3 -> `0xFF`):
+     `COMMU02.EMI`'s `Cash` and `Pot`, each ending in the disc's zenny code
+     `0x60`, right after the 72 bytes of sprite rectangles the PC has at
+     `0x652D04`. **The headings' place:** `Population change` from the
+     shipped `x + 0x58` ran under the page counter the 8 px draw puts at
+     `0xEE`; the shipped heading is four glyphs, so under a written group
+     the heading is centred on its middle, `x + 0x70` (`TextAdvance_Width`),
+     within a few pixels of the US screen.
+  *Verification:* `loc_build.py all` on the US disc reports `gene tabs 3,
+  village lists 20, village words 5`; `rest_4b`, `rest_4c` and `rest_4e`
+  self-tests 0 mismatches (the fuzz runs before any overlay loads, so every
+  changed draw is the original there); the three routes replayed
+  (`analysis/shots/dragonmenu_loc2`, `fairy_loc3`, `news_loc3`): the tabs,
+  the lists, `Culture 0`, `Population change` with `1/2` clear of it and
+  `Birth 3 faeries`. **Owed the owner's eye:** the hi-lo game's boxes (no
+  route), the French and German words.
+  **Extended 2026-10-10 again, at the owner's word** (the list boxes, the
+  Identify panel, the faeries' names):
+  - **The list boxes' width** (group 13): the shipped box is `0x30` wide,
+    three Chinese glyphs and a margin, its frame four 8-px columns, and
+    `Merchant` / `Handyman` ran past its edge. The discs sized it per
+    language - the US and German `COMMU01.EMI` `0x50`, the French `0x60`
+    (the two `addiu $a2` constants that vary across the four discs; the JP
+    `0x30`): the widest word plus 16. Once the group is written
+    `CommuBoard_DrawListBox` / `_DrawListBoxB` use that (`Labels_MaxWidth`,
+    rounded up to 8, never under `0x30`) and `CommuBoard_DrawListFrame` a
+    column per 8 of it.
+  15. **the Identify panel's headings** 弱点 / 持有物 (`0x66A3E0` /
+     `0x66A3E8`, `Identify_DrawMember` / `_DrawEnemy`, `magic_s12.cpp`; the
+     owner's `identify.txt`): **no disc carries a word for them** - the US
+     `MAGIC059.EMI` (the ability's own overlay) and `BATTLE.EMI` hold no
+     such string, nor the panel's question marks - **because the US panel
+     draws no headings**: the owner's wiki capture of it (2026-10-10) shows
+     the name, the EXP and zenny lines, a small `ITEM` label above the two
+     items, and nothing where the port's 弱点 / 持有物 stand. So the overlay
+     builder sends a space for each (`IDENTIFY_WORDS`), which the two draws
+     read through `Labels_Slot` and draw as nothing, and above the items
+     they draw the `ITEM` the port still holds beside `EXP` at `0x65AAB4`
+     (read by nothing in the port) in the 8 px font, 23 px left of the
+     items' column on the heading's row, as the US does; the target's name,
+     drawn with the count 5 of five Chinese glyphs, is drawn with 8 (`Fly M`
+     -> `Fly Man`). (`Weakness` / `Items`, the builder's own words, stood
+     for an hour before the capture.) `Magic080_DrawText` reads the shipped
+     slot still (one glyph of each string, an effect).
+  16. **the sixty faeries' names.** The port's faeries are the PlayStation's:
+     a table of sixty 20-byte trait records at `0x653210` - four stat bytes,
+     then a name of 16 - and a birth (`CommuSim_AddRecord`) copies the
+     record's four stats and **five bytes of its name** into the save's name
+     table, where the US names (five letters at most) fit whole and a
+     Chinese one loses its third glyph (the owner's question, 2026-10-10:
+     the stats are fixed to the faerie on the PC too; only the renamer's
+     suggestion, `CommuName_MakeRandom`, rolls two random halves, and the
+     port cut that screen - DIV-0075). `COMMU00.EMI` has the sixty as 9-byte
+     records, a 5-byte name padded with the space code and the same four
+     stats, found by the stats (all sixty equal to the PC's; the French and
+     German discs carry the US list unchanged). Written into the sixteen-byte
+     name fields in place; the witness `CommuEntry_DrawPanel`'s read of the
+     bars at `0x45E945`. The sixtieth record's PC name field holds no glyph
+     string (`01 01 02 03 ..`) and is kept as shipped (`59 of 60`).
+     **Saves made before the overlay** keep their Chinese bytes:
+     `tools/faerie_names.py` rewrites each in-use entry's five bytes from
+     the overlay's list - entry r is trait record r, so the name is exact -
+     and recomputes the checksum; run on the owner's `fairyVillage.DAT`,
+     `BISLPS00` and `BISLPS0C` (six faeries each: Candy, Green, Lily, Lemon,
+     Chirp, Wolke), the other slots holding none.
+  *Verification:* `loc_build.py all` on the US disc reports `identify words
+  2, faerie names 60`; the log `59 of 60 faerie names`; `magic_s12`,
+  `rest_4a`, `rest_4b` and `rest_4e` self-tests 0 mismatches (the first
+  caught a changed call order - the heading's character count is taken
+  before the enemy record is read, as the original has it); the owner's
+  routes replayed (`analysis/shots/fairy_loc4`: `Weapons` / `Items` /
+  `Handyman` in a box sized to them; `news_loc4`: `Coo`, `Pan`, `Candy` on
+  the board from the renamed save; `identify_loc4`: no headings, `ITEM`
+  small above the items, `Fly Man`).
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 
@@ -4814,3 +4921,40 @@ designed in rather than bolted on.
   on the PSX's data, at the PC's fade level and timing.
 - **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
   (or empty `cache=`); no cache, no change.
+
+### The faerie village's board buttons from the disc's own paint
+
+- **ID:** DIV-0088
+- **Date:** 2026-10-10
+- **Subsystem:** the community band's sprite sheet (`COMMU01.DAT` and
+  `COMMU05.DAT`, the kind-1 chunk tagged `0x1C080200` - VRAM 896, 256, 256 x
+  256 at 4 bits; `tools/loc_build.py`'s `build_village_sheet`;
+  [`village-text-scan.md`](village-text-scan.md) section 4)
+- **Tier:** Sensible
+- **Original behaviour:** the board's three side buttons - hunt, clear,
+  build - are paint on that sheet (`CommuBoard_DrawSprite` kinds 3..5, 40 x
+  16 at u `0x20` / `0x58` / `0x80`, v `0xE0` / `0xF0` / `0xF0`), 狩り / 開拓 /
+  建築 on the port's, and every overlay left them.
+- **New behaviour:** `loc_build.py` writes `<tag>.COMMU01.DAT` and
+  `<tag>.COMMU05.DAT`, each one kind-1 chunk of the same tag: the port's
+  sheet with, in rows 224..255, every byte that differs from the disc's
+  section of the same dest taken from the disc - `Hunt` / `Clear` / `Build`
+  on the US (the owner's web reference of the US screen shows the same),
+  the French and German discs their own words. The sheets differ elsewhere
+  too (rows 96..175, the board's frame pieces, which the port's draws place
+  and which the disc's art must not replace; the French and German in a few
+  more rows), and those rows stay the port's. The chunk uploads after the
+  shipped one (DIV-0005's walk) and lands on the same VRAM.
+- **Rationale:** the owner's ask, 2026-10-10 ("swap the side buttons for
+  their localized counterparts"); the discs painted them, so there is
+  nothing to draw by hand. The sprite table is the same on the US disc as on
+  the PC (its fourteen 6-byte records at `COMMU01.EMI` `0x270E0`, byte for
+  byte), so the rectangles are the same.
+- **Also in the PSX version?** Each disc's own paint, where the PC's has the
+  Chinese.
+- **Verification:** `loc_build.py all` on the US disc: `village board
+  sheet: COMMU01.DAT, COMMU05.DAT`; the owner's `fairyVillage.txt` replayed
+  (`analysis/shots/fairy_loc4/f01620.png` and on): `Hunt`, `Clear`, `Build`
+  beside their icons, the frame pieces as before. **Owed the owner's eye:**
+  the French and German sheets.
+- **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.

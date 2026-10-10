@@ -37,12 +37,54 @@
 //  11  the zenny unit, 4 bytes at 0x66A31C - the one byte `s`, the port's
 //      coin glyph in the shipped font, a letter after the overlay's repaint
 //      (the same fault as the master list's star), four pushes in the code
-//      (Menu_DrawMoneyBox's at 0x57465C checked); the US code 0x60, its Z.
+//      (Menu_DrawMoneyBox's at 0x57465C checked); the US code 0x60, its Z;
+//  12  the gene splicing window's three tabs (2026-10-10, the owner's
+//      dragonMenu route): 3 x 8 at 0x66A14C behind the pointer table
+//      0x66A164 that GeneWin_DrawChoices 0x598E90 reads (its one reader, a
+//      `mov` at 0x598E9B) - BATTLE.EMI's Data / Pick / Best, 6-byte slots
+//      between the AP / 1 / 0 bytes the PC has at 0x66AF38 and the pieces
+//      and DATA / BEST it has at 0x66AF4E;
+//  13  the faerie village's board lists (the owner's fairyVillage route):
+//      twenty slots of 8 - the ten facility names 0x669E18.. behind
+//      0x669E68 (CommuBoard_DrawListBox) and the ten choices 0x669E90..
+//      behind 0x669EE0 (CommuBoard_DrawListBoxB: weapons / items / any,
+//      speed / ability, job / culture, day trip / near / far) - reached by
+//      nothing but the two tables (a scan of the image, 2026-10-10), so
+//      repointed like groups 3, 4 and 7: COMMU01.EMI's Merchant, Explorer,
+//      Antiques and Handyman are eight letters in 8-byte slots with no NUL;
+//  14  the village's words, five slots read by our own draws through
+//      Labels_Slot (so kept in buffers of ours, the slots untouched): the
+//      panel's culture label 0x669E10 (`push` at 0x459143,
+//      CommuBoard_DrawPanel; the disc's word is list 13's seventh); the
+//      count glyph 名 0x669F08 that the ranked lists' headings draw after a
+//      number (4 bytes; `push` at 0x4607B7, a second at 0x4609A5), which the
+//      US disc has as the pair `faeries` / `faery` (COMMU05.EMI, right before
+//      the kind table the PC has at 0x653180) - slots 1 and 2, the heading
+//      picking the singular for a count of one; and the hi-lo game's money
+//      and stake titles 0x669F60 / 0x669F68 (`push` at 0x45B4BD / 0x45B61D,
+//      Commu_DrawZennyBox / Commu_DrawStakeBox): COMMU02.EMI's Cash and Pot,
+//      each ending in the disc's zenny code 0x60, right after the 72 bytes
+//      of sprite rectangles the PC has at 0x652D04;
+//  15  the Identify panel's two headings 弱点 / 持有物 (0x66A3E0 / 0x66A3E8,
+//      Identify_DrawMember / _DrawEnemy in magic_s12.cpp, `push` 0x4B10E5 /
+//      0x4B1191), read by our draws through Labels_Slot: no disc carries a
+//      word for them (the US MAGIC059.EMI and BATTLE.EMI hold no such
+//      strings), so the overlay builder sends its own English, Weakness and
+//      Items, for every Latin disc (2026-10-10, the owner's identify route);
+//  16  the faerie village's sixty faeries' names: the 16-byte name field of
+//      each 20-byte trait record at 0x653210 (four stat bytes, then the
+//      name), which CommuSim_AddRecord copies five bytes of into the save's
+//      name table at a birth - COMMU00.EMI's table of sixty 9-byte records
+//      (a 5-byte name, the same four stat bytes), found by the stats; the
+//      witness is CommuEntry_DrawPanel's read of the bars at 0x45E945. The
+//      sixtieth record's name field holds no glyph string on the PC and is
+//      kept as shipped.
 //
-// Groups 1, 2, 5, 6 and 8..11 are written in place, one byte a letter in the
+// Groups 1, 2, 5, 6, 8..12 and 16 are written in place, one byte a letter in the
 // single-byte slots the overlay paints with the dialogue font, so a draw
 // through Text_DrawAt shows them as it shows every other overlay string.
-// Groups 3, 4 and 7 are reached by nothing but their pointer tables (a scan of
+// Groups 3, 4, 7 and 13 are reached by nothing but their pointer tables (and
+// groups 14 and 15 by our draws alone) (a scan of
 // the image for each slot's address, 2026-09-29), so their strings go into
 // buffers of ours, 16 bytes each, and every table is re-aimed: the French
 // disc's ARMEMENT and CAPACITE and the German RUESTUNG are eight letters, one
@@ -55,6 +97,7 @@
 
 #include <cstring>
 
+#include "game/text_advance.h"
 #include "hook/log.h"
 
 namespace {
@@ -77,7 +120,7 @@ struct PointerTable {
 
 constexpr std::uint32_t kRoom = 16;   // our buffers: a title of 15 letters, which the 0x99-wide box holds
 
-constexpr std::uint32_t kMaxSlots = 11;
+constexpr std::uint32_t kMaxSlots = 60;
 
 struct Table {
     std::uint32_t tag;
@@ -89,9 +132,11 @@ struct Table {
     bool small;               // drawn by the 8 px draw: Labels_SmallGlyph serves its slots
 };
 
-char g_item_types[5][kRoom], g_skill_types[5][kRoom], g_sort_menus[11][kRoom];
+char g_item_types[5][kRoom], g_skill_types[5][kRoom], g_sort_menus[11][kRoom], g_village_lists[20][kRoom],
+    g_village_words[5][kRoom], g_identify_words[2][kRoom];
 
 constexpr std::uint32_t kFormations = 0x6636B0, kFormationBase = 0x573FC6;
+constexpr std::uint32_t kFaeries = 0x653210;   // the trait records: four stats, a name of 16
 
 constexpr Table kTables[] = {
     {1, "status words", 2, {{0x66A0E8, 8, 0x573661}, {0x66A0F0, 8, 0x57368F}}, {}, nullptr, true},
@@ -124,6 +169,79 @@ constexpr Table kTables[] = {
                             {kFormations + 224, 16, kFormationBase, kFormations},
                             {kFormations + 252, 16, kFormationBase, kFormations}}, {}, nullptr, true},
     {11, "zenny unit", 1, {{0x66A31C, 4, 0x57465D}}, {}, nullptr, false},
+    {12, "gene tabs", 3, {{0x66A14C, 8, 0x66A164}, {0x66A154, 8, 0x66A168}, {0x66A15C, 8, 0x66A16C}}, {}, nullptr, false},
+    {13, "village lists", 20, {{0x669E18, 8, 0x669E68}, {0x669E20, 8, 0x669E6C}, {0x669E28, 8, 0x669E70},
+                               {0x669E30, 8, 0x669E74}, {0x669E38, 8, 0x669E78}, {0x669E40, 8, 0x669E7C},
+                               {0x669E48, 8, 0x669E80}, {0x669E50, 8, 0x669E84}, {0x669E58, 8, 0x669E88},
+                               {0x669E60, 8, 0x669E8C}, {0x669E90, 8, 0x669EE0}, {0x669E98, 8, 0x669EE4},
+                               {0x669EA0, 8, 0x669EE8}, {0x669EA8, 8, 0x669EEC}, {0x669EB0, 8, 0x669EF0},
+                               {0x669EB8, 8, 0x669EF4}, {0x669EC0, 8, 0x669EF8}, {0x669EC8, 8, 0x669EFC},
+                               {0x669ED0, 8, 0x669F00}, {0x669ED8, 8, 0x669F04}},
+     {{0x669E68, 0, 10}, {0x669EE0, 10, 10}}, g_village_lists, false},
+    {14, "village words", 5, {{0x669E10, 8, 0x459144}, {0x669F08, 4, 0x4607B8}, {0x669F08, 4, 0x4609A6},
+                              {0x669F60, 8, 0x45B4BE}, {0x669F68, 8, 0x45B61E}}, {}, g_village_words, false},
+    {15, "identify words", 2, {{0x66A3E0, 8, 0x4B10E6}, {0x66A3E8, 8, 0x4B1192}}, {}, g_identify_words, false},
+    {16, "faerie names", 60, {
+                              {0x653214, 16, 0x45E945, kFaeries},
+                              {0x653228, 16, 0x45E945, kFaeries},
+                              {0x65323C, 16, 0x45E945, kFaeries},
+                              {0x653250, 16, 0x45E945, kFaeries},
+                              {0x653264, 16, 0x45E945, kFaeries},
+                              {0x653278, 16, 0x45E945, kFaeries},
+                              {0x65328C, 16, 0x45E945, kFaeries},
+                              {0x6532A0, 16, 0x45E945, kFaeries},
+                              {0x6532B4, 16, 0x45E945, kFaeries},
+                              {0x6532C8, 16, 0x45E945, kFaeries},
+                              {0x6532DC, 16, 0x45E945, kFaeries},
+                              {0x6532F0, 16, 0x45E945, kFaeries},
+                              {0x653304, 16, 0x45E945, kFaeries},
+                              {0x653318, 16, 0x45E945, kFaeries},
+                              {0x65332C, 16, 0x45E945, kFaeries},
+                              {0x653340, 16, 0x45E945, kFaeries},
+                              {0x653354, 16, 0x45E945, kFaeries},
+                              {0x653368, 16, 0x45E945, kFaeries},
+                              {0x65337C, 16, 0x45E945, kFaeries},
+                              {0x653390, 16, 0x45E945, kFaeries},
+                              {0x6533A4, 16, 0x45E945, kFaeries},
+                              {0x6533B8, 16, 0x45E945, kFaeries},
+                              {0x6533CC, 16, 0x45E945, kFaeries},
+                              {0x6533E0, 16, 0x45E945, kFaeries},
+                              {0x6533F4, 16, 0x45E945, kFaeries},
+                              {0x653408, 16, 0x45E945, kFaeries},
+                              {0x65341C, 16, 0x45E945, kFaeries},
+                              {0x653430, 16, 0x45E945, kFaeries},
+                              {0x653444, 16, 0x45E945, kFaeries},
+                              {0x653458, 16, 0x45E945, kFaeries},
+                              {0x65346C, 16, 0x45E945, kFaeries},
+                              {0x653480, 16, 0x45E945, kFaeries},
+                              {0x653494, 16, 0x45E945, kFaeries},
+                              {0x6534A8, 16, 0x45E945, kFaeries},
+                              {0x6534BC, 16, 0x45E945, kFaeries},
+                              {0x6534D0, 16, 0x45E945, kFaeries},
+                              {0x6534E4, 16, 0x45E945, kFaeries},
+                              {0x6534F8, 16, 0x45E945, kFaeries},
+                              {0x65350C, 16, 0x45E945, kFaeries},
+                              {0x653520, 16, 0x45E945, kFaeries},
+                              {0x653534, 16, 0x45E945, kFaeries},
+                              {0x653548, 16, 0x45E945, kFaeries},
+                              {0x65355C, 16, 0x45E945, kFaeries},
+                              {0x653570, 16, 0x45E945, kFaeries},
+                              {0x653584, 16, 0x45E945, kFaeries},
+                              {0x653598, 16, 0x45E945, kFaeries},
+                              {0x6535AC, 16, 0x45E945, kFaeries},
+                              {0x6535C0, 16, 0x45E945, kFaeries},
+                              {0x6535D4, 16, 0x45E945, kFaeries},
+                              {0x6535E8, 16, 0x45E945, kFaeries},
+                              {0x6535FC, 16, 0x45E945, kFaeries},
+                              {0x653610, 16, 0x45E945, kFaeries},
+                              {0x653624, 16, 0x45E945, kFaeries},
+                              {0x653638, 16, 0x45E945, kFaeries},
+                              {0x65364C, 16, 0x45E945, kFaeries},
+                              {0x653660, 16, 0x45E945, kFaeries},
+                              {0x653674, 16, 0x45E945, kFaeries},
+                              {0x653688, 16, 0x45E945, kFaeries},
+                              {0x65369C, 16, 0x45E945, kFaeries},
+                              {0x6536B0, 16, 0x45E945, kFaeries}}, {}, nullptr, false},
 };
 
 // The overlay's 8 x 8 set: the US disc's code - 0x30 from here, and a letter
@@ -133,6 +251,8 @@ constexpr unsigned kSmallSet = 0xA00;
 
 // The tags whose every slot a chunk has written, for the 8 px draw.
 bool g_small_written[16] = {};
+// The tags whose every slot a chunk has written, any draw (Labels_Written).
+bool g_written[16] = {};
 
 }  // namespace
 
@@ -195,6 +315,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
     }
     if (t->small && written == t->count && tag < sizeof g_small_written / sizeof g_small_written[0])
         g_small_written[tag] = true;
+    if (written == t->count && tag < sizeof g_written / sizeof g_written[0]) g_written[tag] = true;
     bof3::Log("DIV-0064: %u of %u %s", (unsigned)written, (unsigned)t->count, t->what);
 }
 
@@ -215,4 +336,33 @@ unsigned Labels_SmallGlyph(const unsigned char* text) {
 
 bool Labels_SmallWritten(std::uint32_t tag) {
     return tag < sizeof g_small_written / sizeof g_small_written[0] && g_small_written[tag];
+}
+
+bool Labels_Written(std::uint32_t tag) {
+    return tag < sizeof g_written / sizeof g_written[0] && g_written[tag];
+}
+
+const unsigned char* Labels_Slot(std::uint32_t tag, std::uint32_t i) {
+    for (const Table& t : kTables) {
+        if (t.tag != tag) continue;
+        if (i >= t.count) bof3::Fatal("Labels_Slot: %s has no slot %u", t.what, (unsigned)i);
+        if (t.buffers && t.buffers[i][0]) return reinterpret_cast<const unsigned char*>(t.buffers[i]);
+        return reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(t.slots[i].va));
+    }
+    bof3::Fatal("Labels_Slot: no group %u", (unsigned)tag);
+}
+
+unsigned Labels_MaxWidth(std::uint32_t tag) {
+    unsigned widest = 0;
+    for (const Table& t : kTables) {
+        if (t.tag != tag) continue;
+        for (std::uint32_t i = 0; i < t.count; ++i) {
+            const auto* text = t.buffers ? reinterpret_cast<const unsigned char*>(t.buffers[i])
+                                         : reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(t.slots[i].va));
+            if (!text[0]) continue;
+            const unsigned w = TextAdvance_Width(text);
+            if (w > widest) widest = w;
+        }
+    }
+    return widest;
 }

@@ -40,6 +40,24 @@ each round**: the tracer arms only what is not ours (635 entries now) -
 
 ## Pick up here
 
+00. **The faerie village's and the gene window's text (2026-10-10,
+   `localization/fairy-village-dragon-transform`, uncommitted):**
+   DIV-0064's groups 12..16 ([`village-text-scan.md`](village-text-scan.md)) -
+   the gene tabs, the board's lists (boxes sized to them), its words, the
+   Identify panel's headings, the sixty faeries' names - and DIV-0088, the
+   board's buttons from the disc's paint: built, self-tested (`magic_s12`,
+   `rest_4a` / `4b` / `4c` / `4e` 0 mismatches) and seen on the owner's four
+   routes (`analysis/shots/dragonmenu_loc2`, `fairy_loc4`, `news_loc4`,
+   `identify_loc3`); the owner's saves renamed with `tools/faerie_names.py`.
+   The overlays were rebuilt from the US disc only (`loc_build.py all
+   --disc`); **rebuild the French and German ones** (`--discs CDImage`)
+   before a non-English check - their list strides (10 and 9 on the French)
+   and sheets were read but not played. Owed the owner's eye: the hi-lo
+   game's `Cash` / `Pot` (no route), the Identify panel against the wiki's
+   US capture, the board in play. Left: section 3's strings there (the
+   parts menu, the empty slot, the renamer's names). `tools/text_scan.py` is
+   the way to find the next one without a route.
+
 0000000000000000. **Step 9, music from the disc (2026-10-08 night, `claude/audio-sequence-from-disc-sesn_01Bdfo1SaCEo9UfA2TwW8nJr`,
    off `audio/sequence-from-disc`; merge it back there, then to `main` with the round).** The record:
    [`sequenced-music-plan.md`](sequenced-music-plan.md) (the design and the five owner's calls),
