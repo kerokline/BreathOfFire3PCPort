@@ -235,7 +235,7 @@ could be small.
 | 3 | The PSP ELF code diff (I32's code half) | a reading round | the list of code toggles, or proof there are few |
 | 4 | The launcher's options page: every layer and option listed from a catalogue, each with its source builds; greyed when the manifest has none | 1-2 days | goal 2's UI for the data layers that exist |
 | 5 | The PSP music: a PSP-native bank and `pPMS` reader, then `psp-music` | 4-6 days | PSP-only music, and the music toggle |
-| 6 | Effects by route (a), the player's ffmpeg at import, with the onset shift (section 2.1.1; a DIV); `sin_table` by rule; the PSP data pointers | 2-3 days | PSP-only sound and `base/exe/` |
+| 6 | Effects by the player's ffmpeg at import (decided), with the onset shift (section 2.1.1; a DIV); `sin_table` by rule; the PSP data pointers | 2-3 days | PSP-only sound and `base/exe/` |
 | 7 | The shared items in section 3: `pc-edit` read, a disc-only language layer, state 3 | rounds | **any** disc-only build, the PSP's included |
 
 Steps 1, 2 and 4 are useful now even with a PC install present. Step 4
@@ -283,12 +283,13 @@ that already exist.
    a layer is easy enough. The `opt/` layer mechanism (DIV-0086) is already
    that shape: a named layer of whole chunks over the base, from a manifested
    source.
+4. **The effects decoder is the player's own ffmpeg, at import time**
+   (route (a), section 2.1.1). Nothing is vendored. The importer finds an
+   ffmpeg on the player's machine; if there is none, the PSP's effects are
+   reported missing, with the reason. A clean-room decoder stays possible later.
 
 Still open:
 
-- **The decoder for the effects:** the player's own ffmpeg at import time (a),
-  or a clean-room ATRAC3plus decoder (b) (section 2.1.1). (a) is recommended
-  to start: nothing vendored, and (b) can replace it later.
 - **Whether the PSP code diff (step 3) runs before the launcher page.** With
   three toggles decided, the page no longer waits on it: battle-code
   differences, if any are found, fall under **data** or get a fourth toggle.
