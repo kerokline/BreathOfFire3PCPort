@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-10-03 — two hundred and thirty-five entries, D1..D238 with D19, D20 and D29 unused; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
+**Status:** IN PROGRESS (2026-10-10 — two hundred and thirty-eight entries, D1..D241 with D19, D20 and D29 unused; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, a one-line fix for the owner); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -6564,3 +6564,52 @@ What the change looks like where it acts: a short face carrying the same
 texture as the cell's tall one beside it; what the original showed there
 was the next tile's texture stretched over the face. `BOF3X_SIDE_ZERO=1` (an experiment, off by
 default) releases a side whose word is 0 and does not touch this.
+
+## D240 — At the end of an MP3 stream the decoder leaves the last frame's byte count in place, so `Music_Decode` steps over 1,152 samples it never wrote at every rewind (Capcom's; mirrored by DIV-0091; a one-line fix, the owner's call)
+
+**Found:** 2026-10-10, by the comparison of DIV-0091 ([`mp3-decoder.md`](mp3-decoder.md)
+section 2), on every one of the 177 MP3 files: Capcom's `Mp3_Decode`
+`0x5AFC40` returns `0xFFFFFDFE` at the end of the stream, writes nothing to
+the output (a 0xA5 fill is untouched), and leaves 4,608 - the last frame's
+count - at `[[decoder + 0x14] + 8]`. **Configuration: Capcom's decoder
+driven in-process by ours, identically to the game's own calls.**
+
+**The mechanism.** `Music_Decode` `0x5A6F30` (`symbols.toml`'s evidence:
+"the frame's bytes are read from the decoder after each call and counted
+whatever the call returned, the end of stream included"; ours is the same)
+adds the count to `filled` after the end-of-stream call too. On a looping
+track it then seeks to 0 and goes on filling from `filled`: the 4,608 bytes
+before it are whatever `Music_Staging` held from its previous fill - the
+music 0x12000 bytes (0.418 s) earlier - and they play for 26 ms at the seam.
+On a once-only track the zero fill starts after them: 26 ms of stale music
+precede the silence. DIV-0081's measured loops (39 tracks) never reach the
+end of a stream, so they are untouched; every other looping track and every
+once-only one has it.
+
+**The PlayStation twin:** none - the PSX has no MP3 path.
+
+**The fix** is `kEosBytes = 0` in `src/audio/mp3.cpp` (ours stores 4,608
+on purpose, to keep the stream's logic as the original's under the swap)
+and the self-test's expectation; a ledger entry, since it changes what is
+heard. Not done: the owner's call, with DIV-0091's listen.
+
+## D241 — Battle music runs on after a fight ends, and the area's music does not resume (the owner's report; not looked at)
+
+**Found:** the owner, 2026-10-10 evening, in play: "our game doesn't
+'end' songs where I expect (compared to psx). The battle music will
+continue after battle ends, and the area music won't resume." Catalogued
+for a fix; **configuration unknown** - which build, whether the cache's
+music (DIV-0087, `BOF3X_CACHE` / `music=`) or the MP3s was playing, and
+whether `BOF3X_ORIGINAL='*'` shows the same.
+
+**Where to start.** The PlayStation twin first (the twin rule): the PSX
+ends a fight by `Music_Play`ing the area's song (`0x80162610`, the resident
+SEP's sub-song) - read what the PC's `Battle_End` path calls and whether
+`Music_Play` of the area's track is asked for and refused (`Music_LoadFile`
+opening neither name is D24; a `Music_Play` during a stopping fade is
+DIV-0028's ignored call) or never asked. If the cache's music was playing:
+`music_seq::Release` / `Begin` on the track change, and the 2026-10-10
+review's fix for a song change into a smaller bank. A route: the owner to
+record a fight from a save with `BOF3X_RECORD`, or any battle route of
+`tools/recipes/` replayed with the music log (`DIV-0087` lines, and the
+`Music_Play` call trace).

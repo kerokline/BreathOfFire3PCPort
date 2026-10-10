@@ -8457,6 +8457,7 @@ ret = "int"
 params = "void **decoder"
 status = "hypothesis"
 evidence = "call site 0x5A6D68 (Music_OpenDecoder), 2026-09-22: stdcall (ret 4 at 0x5AE142), writes the handle through its argument; non-zero is failure. The MP3 decoder (0x5AB000..0x5B9380, unidentified library) is out of scope; named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AE160
@@ -8466,6 +8467,7 @@ ret = "int"
 params = "void *decoder, void *io"
 status = "hypothesis"
 evidence = "call site 0x5A6D8B, 2026-09-22: stdcall (ret 8); tests entries +8..+0x18 of the table and copies it into a Crt_malloc of 0x38 bytes (0x5AE231), so the caller's local may die. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AE6A0
@@ -8475,6 +8477,7 @@ ret = "int"
 params = "void *decoder, const char *name, int mode"
 status = "hypothesis"
 evidence = "call site 0x5A6DB8, 2026-09-22: stdcall (ret 0xC), (decoder, the name size@address, -1); non-zero is failure. The memory table's open 0x5B0DB0 parses the name back with sscanf. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AE820
@@ -8484,6 +8487,7 @@ ret = "int"
 params = "void *decoder"
 status = "hypothesis"
 evidence = "call site 0x5A6DCC, 2026-09-22: stdcall (ret 4); 0 is success. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AEBA0
@@ -8493,6 +8497,7 @@ ret = "int"
 params = "void *decoder, int position"
 status = "hypothesis"
 evidence = "call site 0x5A6F73 (Music_Decode), 2026-09-22: stdcall (ret 8), (decoder, 0) at the end of a looping track; decoding then carries on from the start (docs/asset-loading-path.md section 1a). Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AFC40
@@ -8502,6 +8507,7 @@ ret = "int"
 params = "void *decoder, void *out"
 status = "hypothesis"
 evidence = "call site 0x5A6F4D (Music_Decode), 2026-09-22: stdcall (ret 8); decodes a frame to out, whose size the caller reads at [[decoder + 0x14] + 8]; 0xFFFFFDFE is end of stream. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5B0630
@@ -8511,6 +8517,7 @@ ret = "int"
 params = "void *decoder"
 status = "hypothesis"
 evidence = "call site 0x5A712B (Music_Release), 2026-09-22: stdcall (ret 4 at 0x5B07F4); the result is not read. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5B0D50
@@ -8520,6 +8527,7 @@ ret = "int"
 params = "void *io"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5B0D50..0x5B0DA2 (whole): stdcall (ret 4), writes ten function pointers 0x5B0DB0..0x5B1160 and a 0 - exactly 0x2C bytes - and returns 0. The first, 0x5B0DB0, sscanfs a name; with Music_OpenDecoder's size@address name, a table that reads the stream from memory."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[data]]
 pc = 0x6BC8C8

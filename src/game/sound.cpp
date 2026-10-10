@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
 #include "game/music_loops.h"
 #include "game/music_seq.h"
@@ -1011,6 +1012,7 @@ void FadePerFrame_Inject() {
     if (bof3::WantsShadow("sound")) FadePerFrame_SelfTest();
     if (bof3::WantsShadow("sound")) LoopTable_SelfTest();
     if (bof3::WantsShadow("sound")) music_seq::SelfTest();  // DIV-0087's seam on a synthetic song
+    if (bof3::WantsShadow("sound")) mp3dec::SelfTest();     // DIV-0091: ours against Capcom's decoder on one track
     const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
     bof3::PatchBytes("MusicFadePerFrame", Address(&sound::g_fade_per_frame), was, is, 4);
     bof3::Log("DIV-0028    music fades step once per logic frame (on unless the line above says OFF)");

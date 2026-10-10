@@ -230,7 +230,12 @@ body's x87 state identical, each group's fuzz at 0) is what they already
 meet. `_ftol` stays the executable's, called by the decoder (15 sites), and
 is named in `symbols.toml` (register convention, no signature).
 
-### 2.6 `Crt_malloc` / `Crt_free` - left for the cutover
+### 2.6 `Crt_malloc` / `Crt_free` - left for the cutover; **unblocked 2026-10-10 by DIV-0091**
+
+**Since DIV-0091 the decoder is ours and allocates from the toolchain's heap**
+([`mp3-decoder.md`](mp3-decoder.md) 1), so the pairing below holds only
+under `BOF3X_MP3=original`; the rebinding of this pair can go ahead with
+that guard (the next C runtime group). The reading below is as it was.
 
 **The decoder pairs the runtime's allocators across entries.**
 `Mp3_Create` `0x5ADF00` takes its object from `malloc` (`0x5ADF04`) and five
@@ -253,7 +258,7 @@ ours allocates is freed by ours or never; the decoder only reads
 `Music_Data` - so at the cutover, when the decoder is replaced, the pair can
 bind to the toolchain's at once.
 
-### 2.7 `Crt_GetPtd`, `Crt_atoi`, `Crt_sscanf` - left
+### 2.7 `Crt_GetPtd`, `Crt_atoi`, `Crt_sscanf` - left (`Crt_sscanf`'s decoder caller gone with DIV-0091; `Crt_atoi` in hand on `crt/atoi-and-startup`, 2026-10-10)
 
 - **`Crt_GetPtd`** `0x5BAD64`: the per-thread data stays the executable's
   until the cutover (the plan). Ours reaches it only from

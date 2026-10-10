@@ -1,8 +1,9 @@
 # The MP3 decoder's replacement: minimp3, and why not dr_mp3
 
 **Status:** DECIDED (2026-10-10, the owner: "minimp3 unless there is a known
-decoding bug that has been resolved" in dr_mp3 - none was found; nothing
-vendored or built yet)
+decoding bug that has been resolved" in dr_mp3 - none was found) and **built the
+same evening as DIV-0091** - [`mp3-decoder.md`](mp3-decoder.md) has the seam and
+the measurement; section 4 below is done except its item 3
 
 [`platform-layers-plan.md`](platform-layers-plan.md) section 2.4 left the
 choice of a permissive decoder open. Since 2026-10-06 the PC's MP3s stay as
