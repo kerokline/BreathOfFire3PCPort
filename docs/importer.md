@@ -90,6 +90,10 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
    writes `base/exe/` from the first source that can (the PC's exe, else a
    disc) with `[exe]` in the manifest, `verify` checks it against
    `recipes/exe.toml`'s per-build hash, and `check` runs `exe_tables.py check`.
+   Since 2026-10-10 `build` also rebuilds a disc's `.data` pointers by the
+   map run backwards and applies the pointer-keyed places
+   (`recipes/exe-rebuild.tsv`, `exe-places.tsv`; [`exe-import-engine.md`](exe-import-engine.md)),
+   and `check` covers both files.
    Since 2026-10-10 `verify` also checks `base/bgm/`
    ([`seq-import.md`](seq-import.md) 4.1): every file the manifest's `bgm`
    rows name against its hash, nothing there the rows do not name, each song

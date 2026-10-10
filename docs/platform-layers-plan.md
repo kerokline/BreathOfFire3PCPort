@@ -158,9 +158,15 @@ states, each a real milestone:
    ([`exe-import.md`](exe-import.md) sections 5 and 6): 9,142 `.data` words
    point into `.text` (6,346 targets), and state 3 maps no Capcom code, so
    the engine rewrites those words to its own functions or maps entry stubs
-   at Capcom's addresses - with the PC's exe as the source too. The data it
+   at Capcom's addresses - with the PC's exe as the source too. **Chosen
+   2026-10-10** ([`exe-import-engine.md`](exe-import-engine.md) section 4): the entry-stub page,
+   measured - 6,211 of the 6,346 targets are function starts, the smallest
+   gap between starts is 11 bytes, 17 functions have no `impl`;
+   `BOF3X_EXEIMAGE=<cache>` already lays `base/exe/data.bin` over `.data`
+   after a byte check. The data it
    maps is `base/exe/data.bin` from any source, plus `.rdata` (65 addresses
-   `src/` reads: the PC's, or the engine's own). **The game's tables stay the
+   `src/` reads: since 2026-10-10 44 are the engine's own, `rdata_consts`,
+   13 the loader's import slots, 1 the SDK's, 7 nothing to map). **The game's tables stay the
    player's file** - [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 5's rule
    and [`LICENSING.md`](LICENSING.md) section 3's engine / data split are why
    this is the shape and not a copy of the tables into our source.
