@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-10, the week of 2026-10-06..09 reviewed and its findings fixed on `fix/review-1010`, unpushed: built, `'*'` narrow and wide; **up next: the testing catch-up at the machine**, item 1 below)
+**Status:** IN PROGRESS (2026-10-10, the week of 2026-10-06..09 reviewed and its findings fixed on `fix/review-1010`, merged with the faerie village's text onto `localization/fairy-village-dragon-transform` and opened as a PR: built, `'*'` narrow and wide; **up next: the testing catch-up at the machine**, item 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -41,12 +41,12 @@ or seen in play** - the testing catch-up below is next. The regression check is 
    `rest_4a` / `4b` / `4c` / `4e` 0 mismatches) and seen on the owner's four
    routes (`analysis/shots/dragonmenu_loc2`, `fairy_loc4`, `news_loc4`,
    `identify_loc3`); the owner's saves renamed with `tools/faerie_names.py`.
-   The overlays were rebuilt from the US disc only (`loc_build.py all
-   --disc`); **rebuild the French and German ones** (`--discs CDImage`)
-   before a non-English check - their list strides (10 and 9 on the French)
-   and sheets were read but not played. Owed the owner's eye: the hi-lo
-   game's `Cash` / `Pot` (no route), the Identify panel against the wiki's
-   US capture, the board in play. Left: section 3's strings there (the
+   The French and German sets were built (`--discs CDImage`) and the three
+   routes played under each by an agent: every group full, both sheets
+   painted, the one defect (the count column under a long row label) fixed
+   the same day ([`village-text-scan.md`](village-text-scan.md) section 2).
+   Owed the owner's eye: the hi-lo game's `Cash` / `Pot` (no route), a
+   birth under fr-FR / de-DE for their faerie names, the board in play. Left: section 3's strings there (the
    parts menu, the empty slot, the renamer's names). `tools/text_scan.py` is
    the way to find the next one without a route.
 
