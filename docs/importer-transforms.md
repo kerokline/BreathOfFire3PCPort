@@ -215,9 +215,11 @@ longer written by our code from a coordinate table; they are the
 `area4-walls` optional layer, cut from a Western disc ([`opt-layers.md`](opt-layers.md)
 section 1, [`region-diff.md`](region-diff.md) 10).*
 - From the JP disc, or the PC: JP's bytes, the open map. With a Western disc
-  among the sources as well, `--opt area4-walls` builds the layer (the
-  Western disc's whole cell plane and placement map over JP's), and the walls
-  are on when `BOF3X_OPT` names it. Without one, no walls.
+  among the sources as well, the build makes the layer by default (the
+  Western disc's whole cell plane and placement map over JP's; `--no-opt
+  area4-walls` leaves it out), `install` installs it by default, and the
+  launcher plays it whenever it is installed unless the ini says `opt=none`
+  (2026-10-10). Without one, no walls.
 - From a Western disc alone: that disc's bytes in `base/`, which already
   have the 72 walls and the 8 cleared placement cells; no layer is needed.
 
