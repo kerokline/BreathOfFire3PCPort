@@ -101,7 +101,7 @@ def window_stats(o, t, f, n):
     return np.array(vals)
 
 
-def oracle_offsets(synth, cache, song, secs, ours, theirs, off, ticks_file, work, base_args):
+def oracle_offsets(synth, cache, song, secs, ours, theirs, off, ticks_file, work, base_args, window_max=2048):
     """Per key-on VSync, the whole-sample delay that best matches the render."""
     kons = []  # (tick, sample, [voices])
     for line in open(ticks_file):
@@ -128,10 +128,14 @@ def oracle_offsets(synth, cache, song, secs, ours, theirs, off, ticks_file, work
         for v in vs:
             nxt[(v, tick)] = last.get(v, n)
             last[v] = S
-    W, M = 2048, 4
+    M = 4
     best_d = {}
     for _ in range(2):
         for tick, S, vs in kons:
+            # the window: from the key on to the voices' next key on, at least
+            # 2048 samples and at most window_max - a pad's slow attack is
+            # silent for the first 2048 (libsnd-reading.md 9.6, song 146)
+            W = max(2048, min(window_max, max(nxt[(v, tick)] for v in vs) - S, n - 2 * M - 1 - S))
             if S + W + 2 * M >= n or S < M:
                 continue
             c = np.zeros((W + 2 * M, 2), np.float32)
@@ -242,6 +246,9 @@ def main():
     ap.add_argument("--frames", type=int, default=8)
     ap.add_argument("--keep", action="store_true", help="keep the oracle-timed render in --work")
     ap.add_argument("--oracle", action="store_true", help="also score with per-VSync key-on delays fitted to the render")
+    ap.add_argument("--oracle-window", type=float, default=2048 / RATE,
+                    help="the longest stretch after a key on the oracle fits its delay over, in seconds (default 2048"
+                         " samples, the 2026-10-08 table; 1.0 for the slow-attack pads of music-open-ends.md 1)")
     a = ap.parse_args()
     os.makedirs(a.work, exist_ok=True)
     songs = [int(s) for s in a.songs.split(",")] if a.songs != "all" else list(range(166))
@@ -275,7 +282,8 @@ def main():
         row = analyse(song, ours, theirs, jumps)
         row["render"] = ref
         if a.oracle:
-            path, dmap = oracle_offsets(a.synth, a.cache, song, secs, ours, theirs, row["offset"], ticks_file, a.work, base_args)
+            path, dmap = oracle_offsets(a.synth, a.cache, song, secs, ours, theirs, row["offset"], ticks_file, a.work, base_args,
+                                        window_max=int(a.oracle_window * RATE))
             out2 = os.path.join(a.work, "song%03d_oracle.wav" % song)
             subprocess.run([a.synth, "--cache", a.cache, "--song", str(song), "--out", out2, "--seconds", "%.2f" % secs,
                             "--offsets", path] + base_args, check=True, capture_output=True)

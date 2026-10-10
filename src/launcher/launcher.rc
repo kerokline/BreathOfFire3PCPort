@@ -5,7 +5,7 @@
 // dialog is neither Windows 95 grey nor bitmap-blurred on a high-DPI desktop.
 1 RT_MANIFEST "launcher/launcher.manifest"
 
-IDD_CONFIG DIALOGEX 0, 0, 290, 230
+IDD_CONFIG DIALOGEX 0, 0, 290, 356
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Breath of Fire III - bof3x"
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -34,14 +34,32 @@ BEGIN
     LTEXT           "Ticked, the window resizes in whole steps; unticked, the picture stretches to the window's height.",
                     -1, 26, 156, 256, 9
 
-    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 178, 200, 10
-    LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
-                    -1, 14, 191, 262, 9
+    // DIV-0087: the music source and the importer's cache (docs/music-seq-engine.md)
+    GROUPBOX        "Music", -1, 7, 172, 276, 56
+    LTEXT           "&Music:", -1, 16, 186, 62, 9
+    COMBOBOX        IDC_MUSIC, 84, 184, 186, 80, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "C&ache folder:", -1, 16, 203, 62, 9
+    EDITTEXT        IDC_CACHE, 84, 201, 132, 13, ES_AUTOHSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Browse...", IDC_CACHEBROWSE, 220, 200, 50, 14
+    LTEXT           "", IDC_CACHENOTE, 84, 216, 196, 9
 
-    PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 209, 52, 14
-    PUSHBUTTON      "C&ontrols...", IDC_CONTROLS, 63, 209, 52, 14
-    DEFPUSHBUTTON   "&Play", IDOK, 172, 209, 52, 14
-    PUSHBUTTON      "E&xit", IDCANCEL, 230, 209, 52, 14
+    // DIV-0086: the optional layers from the player's PSP disc (docs/opt-layers.md)
+    GROUPBOX        "PSP extras", IDC_OPTGROUP, 7, 233, 276, 70
+    AUTOCHECKBOX    "", IDC_OPT0, 14, 245, 266, 10
+    AUTOCHECKBOX    "", 1021, 14, 256, 266, 10
+    AUTOCHECKBOX    "", 1022, 14, 267, 266, 10
+    AUTOCHECKBOX    "", 1023, 14, 278, 266, 10
+    AUTOCHECKBOX    "", 1024, 14, 289, 266, 10
+    LTEXT           "", IDC_OPTNOTE, 14, 245, 266, 18
+
+    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 309, 200, 10
+    LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
+                    -1, 14, 321, 262, 9
+
+    PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 337, 52, 14
+    PUSHBUTTON      "C&ontrols...", IDC_CONTROLS, 63, 337, 52, 14
+    DEFPUSHBUTTON   "&Play", IDOK, 172, 337, 52, 14
+    PUSHBUTTON      "E&xit", IDCANCEL, 230, 337, 52, 14
 END
 
 // DIV-0045 / DIV-0046: the cheats (docs/cheats.md).

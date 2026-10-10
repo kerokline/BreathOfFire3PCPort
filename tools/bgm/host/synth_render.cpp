@@ -2,14 +2,17 @@
 //
 //   synth_render --cache <dir> --song N --out file.wav [--seconds S]
 //                [--volume V] [--frames F] [--loops L] [--pre S] [--trace]
-//                [--ticks FILE] [--phase P] [--offsets FILE] [--solo V]
+//                [--ticks FILE] [--envx] [--phase P] [--offsets FILE] [--solo V]
 //
 // <dir> is the cache root holding base/bgm/NNN.DAT and base/bgm/bank/NAME.DAT.
 // --volume / --frames are Music_Play's crescendo (the title: 100 over 8);
 // --pre renders S seconds of the idle SPU before Play (default 0). --trace
 // prints the VSync tick of every loop-end jump to stderr. --ticks writes one
 // line per VSync with a key on or off: tick, sample, KON mask, KOFF mask,
-// voice register writes, then voice:PITCH:note:sample for each voice keyed on. --phase is
+// voice register writes, then voice:PITCH:note:sample for each voice keyed on;
+// --envx writes every VSync's line and appends, after a '|', voices 0..15's
+// ENVX as that flush read it ('*' when keyed) - the allocator's view for that
+// tick's events, whose key ons are on the next line. --phase is
 // where the first VSync falls in the first sample, in 1/256 sample;
 // --offsets reads "tick delay" lines (delay in 1/256 sample) and delays those
 // VSyncs (an experiment on the interrupt latency, libsnd-reading.md 9);
@@ -51,13 +54,20 @@ void Put16(std::FILE* f, std::uint16_t v) {
     std::fwrite(b, 1, 2, f);
 }
 
+bool g_envx = false;
 void WriteTick(const psx::MusicSynth::TickTrace& t, void* user) {
-    if (!t.key_on && !t.key_off) return;
+    if (!t.key_on && !t.key_off && !g_envx) return;
     std::FILE* f = static_cast<std::FILE*>(user);
     std::fprintf(f, "%llu %llu %06X %06X %d", static_cast<unsigned long long>(t.tick),
                  static_cast<unsigned long long>(t.sample), t.key_on, t.key_off, t.voice_writes);
     for (int v = 0; v < 24; ++v)
         if (t.key_on & (1u << v)) std::fprintf(f, " %d:%04X:n%d:s%d", v, t.pitch[v], t.note[v], t.vag[v]);
+    if (g_envx) {
+        // what the allocator reads for this tick's events (their key ons are
+        // the next line's): ENVX as this flush read it, '*' after a keyed voice
+        std::fprintf(f, " |");
+        for (int v = 0; v < 16; ++v) std::fprintf(f, " %04X%s", t.envx[v], t.keyed[v] ? "*" : "");
+    }
     std::fprintf(f, "\n");
 }
 
@@ -100,6 +110,7 @@ int main(int argc, char** argv) {
         else if (a == "--phase") phase = std::atoi(next());
         else if (a == "--offsets") offsets = next();
         else if (a == "--solo") solo = std::atoi(next());
+        else if (a == "--envx") g_envx = true;
         else Usage();
     }
     if (cache.empty() || out.empty() || song_no < 0 || seconds <= 0) Usage();

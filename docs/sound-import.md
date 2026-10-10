@@ -1,6 +1,6 @@
 # Sound from a disc: the banks (VAG) and `SND/` (XA)
 
-**Status:** STABLE (2026-10-08, a cloud session; the JP, US, EU-English, FR and DE discs and the PC's `DAT/`, `SND/` and `BOF3.exe` measured)
+**Status:** STABLE (2026-10-08, a cloud session; the JP, US, EU-English, FR and DE discs and the PC's `DAT/`, `SND/` and `BOF3.exe` measured; section 10, the effects against the SPU model, measured 2026-10-10)
 
 [`unified-data-plan.md`](unified-data-plan.md) step 6. Two transforms let a
 PlayStation disc stand in for the PC install's audio:
@@ -398,6 +398,7 @@ not yet played.
   - `decode`, `decode_port`, `trim`, `bank`, `groups`, `bank_from_disc`,
     `importer_source`;
   - `compare --disc --dat [--hardware]`.
+- `tools/bgm/se_census.py` and `tools/bgm/host` `se_render` (section 10).
 - `tools/xa.py`:
   - `sectors`, `channels`, `decode` (mono / stereo), `stream_lists`,
     `resample`, `clip`, `pc_names`, `build`, `importer_snd`;
@@ -405,3 +406,63 @@ not yet played.
 - Scratch (deleted or kept under `/workspace/scratch/step6/`, never
   committed): the per-channel decodes, the energy match, the jingle
   correlation (`jingle.py`, `drift.py`) and the resampler grid (`grid.py`).
+
+## 10. The effects through the SPU model: the reading and the measurement (2026-10-10)
+
+[`sequenced-music-plan.md`](sequenced-music-plan.md) section 7 opens it: with
+the SPU model in the engine, `Sound_PlayEffect` could key the disc's tones on
+voices 16..23 with `SsUtKeyOnV`'s semantics and share the music's reverb - "a
+separate DIV; it needs `SE_Play`'s cue set-up read (the sibling's
+`SOUND_CUES.md` has most of it)". **Not built**: the plan names it, does not
+specify it, and the volume path is unread (below). This section is the reading
+and the measurement that come first.
+
+**The reading** (the sibling's `SOUND_CUES.md`, read 2026-10-10; facts about
+`SLPS_009.90`, not re-verified here): `SE_Play(cue)` `0x8015E908` -
+`cue = flags << 12 | bank << 8 | id` - runs the bank's handler
+(`SE_CueSetup_Bank0..6`, table `0x80182CA4`), which fills a voice block from
+the cue's 4-byte entry (VAB override, pan flag | program, tone | priority,
+chord | first voice) and the tone's attributes; a panned cue scales each
+voice's `volL / volR` by the pan (`volL * (0x80 - pan) >> 7`); the voices are
+keyed by `SsUtKeyOnV(voice, vab, prog, tone, note, fine, volL, volR)`; a new
+cue on the same primary voice is dropped when its priority is lower and that
+voice is still keyed (`SE_PollKeyStatus` `0x8015DA34`, once a frame). The
+port's format keeps the cue layout and drops the rest (2.3). What
+`SsUtKeyOnV` does with `volL / volR` against the tone's own volume and pan,
+and where the 0x17FF reset lands, is **not read** - the one thing a build
+would need first, from the boot EXE (libsnd 3.7's `SsUtKeyOnV`, matched in the
+sibling's `symbols.toml`).
+
+**The measurement**: `tools/bgm/se_census.py` over every bank group of the JP
+disc that has a cue table, every cue word that plays a sample by
+`vag.bank`'s own rule, each distinct (sample, ADSR, pitch) rendered through
+`psx::Spu` by `tools/bgm/host` `se_render` twice - with its tone's ADSR and
+with an envelope full at once and held, which is what a flat WAV amounts to -
+at the cue word's rate, one-shots to their end and repeating samples for 2 s:
+
+    cmake --build <host build> --target se_render
+    python tools/bgm/se_census.py --disc "<JP>.cue" --se-render <host build>/se_render --work <scratch>   (1 min 53 s)
+
+| | Result |
+|---|---|
+| banks, cue words that play | **901 banks, 10,536 words** - the counts of 2.3 (every PC bank, every voice played), so the census covers what the PC plays |
+| distinct (sample, ADSR, pitch) | 1,164 |
+| ADSR | **10,359 of 10,536 words (98.3 %) are `80FF / 1FC0`**: an attack at the fastest rate (full in 0.4 ms), no decay below full, a sustain that holds, release at the fastest rate. 15 pairs in all; the next is `9BFF / 5FC0` (124 words: a slower attack). |
+| the envelope's own effect | energy with the ADSR against flat: **10,532 words within 0.1 dB**, 4 between -1 and -3 dB (one tone, `AEFF / 5FC0`, -2.4 dB: an attack of 256 ms). Attack to 0x7F00: 0.4 ms in every quartile, 255.8 ms at most |
+| repeating samples | 558 words: on the PSX they sound until keyed off, then release at the tone's rate (`5FCx`: 15 release rates); the PC stops its buffer dead |
+| the reverb bit (tone mode bit 2) | **4,486 words (42.6 %)**: the PSX sends them into the reverb the music uses (Room, `libsnd-reading.md` 6.2); the PC has no reverb |
+| pan | 4,146 words (39.4 %) have a tone pan other than 64 (centre); the PC plays every effect centred |
+| volumes | tone volume quartiles 50 / 80 / 100 of 127 (minimum 0); program volume 107..127 (median 127); every VAB master volume 127. The PC plays every sample at its full level |
+
+So the envelope, which a flat WAV was assumed to lose (2.3), is almost never
+there to lose: the differences the effects would gain from the model are the
+**volume** (a quarter of the words at 50 / 127 of the tone volume or less -
+how much of it reaches the voice depends on the unread `SsUtKeyOnV` path),
+**the pan** (four in ten), **the reverb** (four in ten), **a looping sound's
+release** at its stop, and the **priority rule** that drops a lower cue on a
+busy voice. Each would be audible and each is a change from the PC's port -
+a DIV of its own, as the plan says - and the volume and the priority need
+their reading first. The renders are no oracle here: they are of the title,
+which plays no effect. Left for the owner and the next session: read
+`SsUtKeyOnV` and the handlers' volume, then decide whether the effects move to
+the model (`owner-review.md` has no call for it yet).

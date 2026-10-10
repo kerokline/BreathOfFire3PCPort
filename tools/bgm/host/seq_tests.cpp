@@ -11,9 +11,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
-#include <sys/wait.h>
-#include <unistd.h>
 #include <vector>
+
+#include "abort_check.h"
 
 namespace {
 
@@ -218,17 +218,10 @@ void TestEnded() {
 }
 
 bool Aborts(void (*fn)()) {
-    std::fflush(stdout);
-    pid_t pid = fork();
-    if (pid == 0) {
+    return abort_check::Aborts(fn, [] {
         psx::SetMusicAbortHook([](const char*) {});
         psx::SetSpuAbortHook([](const char*) {});
-        fn();
-        _exit(0);
-    }
-    int status = 0;
-    waitpid(pid, &status, 0);
-    return WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT;
+    });
 }
 
 void TestAborts() {
@@ -334,7 +327,8 @@ void TestLoaders() {
 
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
+    abort_check::ChildMode(argc, argv);
     struct {
         const char* name;
         void (*fn)();

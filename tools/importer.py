@@ -1586,10 +1586,73 @@ def cmd_verify(a):
                                          "the image recipes/exe.toml records for it"))
         bad += errs
     rc = 1 if bad else 0
+    rc |= verify_bgm(a.cache)
     rc |= verify_opt(a.cache, a.opt_recipe)
     if a.overlays:
         rc |= verify_overlays(a.cache, a.overlays)
     return rc
+
+
+def verify_bgm(cache):
+    """base/bgm/ (docs/seq-import.md): every file the manifest's `bgm` rows name,
+    hashed against its row; no file there that no row names; each song and bank
+    read back by seq.py's reader, and each song's bank present; then the rows
+    against fixtures/bgm.tsv's for the build they came from - what seq.py makes
+    of that build's disc. A cache built with no PSX disc has neither rows nor
+    files, and passes."""
+    with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
+        rows = tomllib.load(fh)["cache"].get("bgm", [])
+    root = os.path.join(cache, "base", "bgm")
+    held = set()
+    for d, _, fs in os.walk(root):
+        held |= {os.path.relpath(os.path.join(d, f), cache).replace(os.sep, "/") for f in fs}
+    if not rows and not held:
+        return 0
+    errs, songs, banks, builds = [], {}, set(), set()
+    for rel, where, h in rows:
+        builds.add(where.split(":", 1)[0])
+        p = os.path.join(cache, rel)
+        if not os.path.exists(p):
+            errs.append("%s: missing" % rel)
+            continue
+        with open(p, "rb") as fh:
+            body = fh.read()
+        if sha(body) != h:
+            errs.append("%s: not the file the manifest recorded" % rel)
+            continue
+        try:
+            if rel.startswith("base/bgm/bank/"):
+                banks.add(seq.read_bank(body)["name"])
+            else:
+                songs[rel] = seq.read_song(body)["bank"]
+        except (ValueError, struct.error) as e:
+            errs.append("%s: %s" % (rel, e))
+    for rel in sorted(held - {r[0] for r in rows}):
+        errs.append("%s: in base/bgm/ but not in the manifest" % rel)
+    for rel, b in sorted(songs.items()):
+        if b not in banks:
+            errs.append("%s: its bank %s is not in the cache" % (rel, b))
+    fix, _ = seq.load_fixture() if os.path.exists(seq.FIXTURE) else ({}, None)
+    against = []
+    for bid in sorted(builds):
+        want = fix.get(bid)
+        if want is None:
+            against.append("%s: no fixture rows" % bid)
+            continue
+        mine = {r[0]: r[2] for r in rows if r[1].startswith(bid + ":")}
+        differ = sorted(r for r in mine if r not in want or want[r][2] != mine[r])
+        absent = sorted(set(want) - set(mine))
+        for r in differ[:10]:
+            errs.append("%s: not what seq.py makes of the %s disc (fixtures/bgm.tsv)" % (r, bid))
+        if absent:
+            errs.append("%d file(s) fixtures/bgm.tsv lists for %s are not in the manifest: %s"
+                        % (len(absent), bid, ", ".join(absent[:3])))
+        against.append("%s: %d of %d as fixtures/bgm.tsv" % (bid, len(mine) - len(differ), len(want)))
+    print("  base/bgm/ (%s): %d files, %d songs, %d banks; %s; %d problem(s)"
+          % (", ".join(sorted(builds)) or "no build", len(held), len(songs), len(banks), "; ".join(against), len(errs)))
+    for e in errs[:20]:
+        print("   ", e)
+    return 1 if errs else 0
 
 
 def verify_overlays(cache, theirs):
@@ -1668,6 +1731,7 @@ def cmd_check(a):
                     errs.append("%s: stand-in %s" % (f["name"], b))
     oerrs = check_opt(a.opt_recipe)
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
+    serrs += ["seq.py: " + e for e in seq.check_fixture(builds)]   # fixtures/bgm.tsv's shape and format versions
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
     werrs = cache_walk.check()
     for e in (errs + oerrs + serrs + werrs)[:30]:
@@ -1675,7 +1739,7 @@ def cmd_check(a):
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
           % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
              len(oerrs)))
-    print("seq check: synthetic SEP and VAB round trip, %d error(s)" % len(serrs))
+    print("seq check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, %d error(s)" % len(serrs))
     print("cache_walk check: the engine's cache walk against install on a synthetic cache, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
     return exe_tables.cmd_check(a) | (1 if errs else 0)

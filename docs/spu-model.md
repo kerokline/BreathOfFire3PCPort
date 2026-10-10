@@ -7,6 +7,8 @@ sequencer of [`libsnd-reading.md`](libsnd-reading.md) and compared with nine
 Mednafen renders there (section 9): equal to one LSB once the game's
 interrupt timing is put back. Three readings came from that comparison
 (R18..R20, amendments below); R3, R9 and R11 are qualified by them.
+**R1 was settled against the renders on 2026-10-10** and changed: the ADPCM
+prediction has no `+32` ([`music-open-ends.md`](music-open-ends.md) 2).
 
 `src/audio/spu.h`, `src/audio/spu.cpp`: `psx::Spu`, 24 voices, 512 KiB of SPU
 RAM, the register set, the reverb unit and the mix, one sample at a time at
@@ -29,7 +31,7 @@ time), so a `0x12000`-byte half (18,432 frames) costs about 9 ms.
 | Piece | Spec section | Notes |
 |---|---|---|
 | SPU RAM, 512 KiB, little-endian halfwords; addresses in 8-byte units in SSA / LSAX / ESA as the registers hold them | SPU Overview, "SPU Memory layout"; SPU ADPCM Samples, SSA, LSAX | `WriteRam` / `ReadRam` stand in for DMA |
-| ADPCM decode: 16-byte blocks, shift and filter in byte 0, five filter pairs (0,0) (60,0) (115,-52) (98,-55) (122,-60), `+32 >> 6`, 16-bit clamp | SPU ADPCM Samples, "Sample Data"; CDROM Format, "decode_28_nibbles", "Pos/neg Tables" | R1, R2 |
+| ADPCM decode: 16-byte blocks, shift and filter in byte 0, five filter pairs (0,0) (60,0) (115,-52) (98,-55) (122,-60), `>> 6` with no `+32` (R1, settled 2026-10-10), 16-bit clamp | SPU ADPCM Samples, "Sample Data"; CDROM Format, "decode_28_nibbles", "Pos/neg Tables" | R1, R2 |
 | Block flags: bit 2 loop start copies the address to LSAX; bit 0 end sets ENDX and jumps to LSAX after the block; bit 0 without bit 1 forces release with the envelope at 0 | SPU ADPCM Samples, LSAX, "Flag Bits" | R4. The decoder's two-sample history runs on across the jump (tested) |
 | Pitch counter: 16-bit pitch, `> 3FFFh` becomes `4000h`, bits 12 and up the sample within the block, bits 4..11 the interpolation index | SPU ADPCM Pitch, "Pitch Counter" | R11 |
 | Pitch modulation (PMON), including the sign-expansion glitch for pitch `> 7FFFh` and the `AND FFFFh` | SPU ADPCM Pitch, "Pitch Counter" | R14 |
@@ -76,19 +78,31 @@ off on a wet-dominated channel), and the 1F801E60h scratch registers.
 These are the places a mismatch against a render is to be looked for
 first.
 
-- **R1. The ADPCM prediction rounds by `+32` and floors.** The XA formula
-  reads `(old*f0 + older*f1+32)/64`; the model does `(... + 32) >> 6`, an
-  arithmetic shift, so `-60028 >> 6 = -938` where C's division would give
-  `-937` (tested). **This disagrees with `tools/vag.py`'s `decode`**, which
-  has no `+32`: `((s1 * k0 + s2 * k1) >> 6)`. The plan's check "the decoder
-  against `vag.decode`'s integer form" will fail by one LSB on most samples
-  of filtered blocks until one of the two is settled; a render settles it
-  (a filter-1..4 sample on a voice at pitch `1000h`, envelope and volumes at
-  full, is a direct read of the decoder).
+- **R1. The ADPCM prediction floors, with no `+32`** (settled 2026-10-10;
+  until then the model read the XA formula's `(old*f0 + older*f1+32)/64` as
+  `(... + 32) >> 6`). The model does `(old*f0 + older*f1) >> 6`, an
+  arithmetic shift, so `-60060 >> 6 = -939` where C's division would give
+  `-938` (tested) - the reading `tools/vag.py`'s `decode` always took, so the
+  two now agree. **The evidence**: the three readings (`+32` and `>> 6`; no
+  `+32`; `+32` and C's truncating `/ 64`) built side by side and rendered
+  against the Mednafen renders with the same oracle timing, nine songs (0,
+  3, 11, 43, 89, 94, 145, 146, 153): the residual in 20..300 Hz falls from
+  1.99..11.06 LSB RMS with `+32` to 1.02..10.61 without, and is worst
+  (3.08..12.82) with the division, on every one; above 20 Hz likewise
+  (2.84 -> 1.85 on 43, 3.11 -> 1.89 on 146, 16.29 -> 15.72 on 153);
+  and the DC moves towards the render's on every song
+  ([`music-open-ends.md`](music-open-ends.md) 2 has the table and the
+  commands). The bias is a filter's: half an LSB a sample through a filter
+  whose DC gain is up to 32 (filter 4) is up to 16 LSB in the decoded
+  sample. The windows' correlation does not see it (155 of 156 rendered here
+  at >= 0.99 either way): it is a level, not a shape.
 - **R2. Shift values 13..15 act as 9**, from the XA header description ("13..15
   = Reserved/Same as 9"), which the SPU chapter refers to ("reportedly same
-  as for CD-XA"). `vag.py` shifts by the raw value (giving 0 or -1). Real
-  sample data rarely uses them.
+  as for CD-XA"). `vag.py` shifts by the raw value (giving 0 or -1). **No
+  block of this game uses them** (2026-10-10: 0 of the 81 music banks'
+  1,133,815 blocks and 0 of the 801 played effect samples' 945,003), so the
+  two readings give the same samples on all of its data and nothing can
+  settle R2 here.
 - **R3. Key on resets** (kept: the renders confirm the pitch counter's
   fraction is reset, libsnd-reading.md 9.2; the counter starts at 3, R18) the ADPCM decoder's two-sample history, the three
   previous samples the interpolation reads, and the pitch counter (fraction
@@ -241,6 +255,5 @@ first.
   `SetReverbOutputVolume` is that register.
 - **Voice allocation reads**: `Endx()` (ENDX) and `VoiceEnvelope(v)` (ENVX)
   are the hardware's; `VoiceAdsrPhase(v)` is not a register (tests, traces).
-- **The R1 disagreement with `vag.py`** needs one decision before
-  `vag.decode` is used as an oracle. (The renders do not single it out: with
-  R1 as built the residual is one LSB, libsnd-reading.md 9.1, so R1 stands.)
+- ~~**The R1 disagreement with `vag.py`**~~ settled 2026-10-10 by the
+  renders: no `+32`, `vag.decode`'s reading (R1).

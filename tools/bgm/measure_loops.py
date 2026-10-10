@@ -64,6 +64,19 @@ song no waveform window of which matches (the 23.19 s family, 089 and its
 variants) may be refused for that rather than for wrong material.
 That refusal is the safe one - the track keeps the original's rewind.
 
+The sequence's period (2026-10-10, docs/music-open-ends.md 3): the envelope's
+candidates can be a bar multiple or a phrase the waveform also matches (064 and
+076 shipped at 30.09 s, 15/16 of their 32.10 s body; 131 at 64.19 s of 67.10).
+Where BGM_SEQ_PERIODS (tools/bgm/seq_periods.py: each song's loop pass lengths
+in VSyncs, from our sequencer, whose periods equal the renders' to the VSync on
+all 156 songs, libsnd-reading.md 9.1) has the song, the period's candidates are
+those pass lengths alone, the waveform's vote refines them by +-8 samples (not
+a hop), the refinement inside the MP3 searches one VSync wider (its own repeat
+may sit on the other pass length), and gate() refuses a full or shifted row whose period is more than one
+VSync and four samples from every pass length - a row measured before the pin,
+or a vote that walked off. Without the file the measurement is the envelope's,
+as before, and the gate has nothing to check.
+
 Refused rows are kept in loops.json with "excluded": true and are not
 written into the engine's table (tools/bgm/gen_loop_table.py); the track
 plays as the original port did, from the file's start again.
@@ -71,7 +84,7 @@ plays as the original port did, from the file's start again.
 import collections, json, os, subprocess, sys, time
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from bgm_paths import PC, SCRATCH, LOOPS_JSON
+from bgm_paths import PC, SCRATCH, LOOPS_JSON, SEQ_PERIODS
 from wavread import read as wavread, seconds as wav_seconds
 from loops import decode, ncc_search, SR
 
@@ -94,6 +107,17 @@ RENDER_SLACK_S = 15
 # fit a slope (song 034: five points gave -1542).
 DRIFT_PPM = -175.0
 FADE = 256  # samples (5.8 ms): the crossfade of a shifted row, whose stand-in is not the body's own tail
+TICK = 263 * 6825 * 65536 / (103896 * 768 * 2)  # samples per VSync (seq.h, synth_check.TICK)
+_SEQ = None
+
+
+def seq_passes(track):
+    """The song's loop pass lengths in VSyncs from BGM_SEQ_PERIODS, or None."""
+    global _SEQ
+    if _SEQ is None:
+        _SEQ = json.load(open(SEQ_PERIODS)) if os.path.exists(SEQ_PERIODS) else {}
+    r = _SEQ.get(str(track))
+    return r["pass_vsyncs"] if r and r.get("pass_vsyncs") else None
 
 
 def log(msg):
@@ -279,6 +303,10 @@ def measure(track, recpath, song_after_s=SONG_AFTER_S):
     peaks_e = [i for i in range(1, len(ce) - 1) if ce[i] >= ce[i - 1] and ce[i] >= ce[i + 1] and ce[i] > 0.3]
     cands = {int(i) * HOP for i in sorted(peaks_e, key=lambda i: -ce[i])[:8]}
     cands |= {int(i) for i in range(1, len(cw) - 1) if cw[i] > 0.5 and cw[i] >= cw[i - 1] and cw[i] >= cw[i + 1]}
+    seqp = seq_passes(track)
+    if seqp:   # the sequence's own pass lengths, and nothing else (the docstring)
+        row["sequence_pass_vsyncs"] = seqp
+        cands = {int(round(v * TICK)) - (lo - tref) for v in seqp}
 
     def env_score(Pc):     # mean envelope correlation of four 3 s spans from tref, at lag Pc
         a = tref // HOP; n3 = 3 * eq; best = 0.0
@@ -305,21 +333,33 @@ def measure(track, recpath, song_after_s=SONG_AFTER_S):
         # ambiguity is broken by the sequence's own body length, good to +-3 % on every song the
         # waveform settled (the timing_ratio of the rows)
         short.sort(key=lambda x: abs((lo + x[2] - tref) / SR - body))
-    f0, ep, k = short[0]
-    P_env = lo + k - tref
     row["period_candidates"] = [dict(period_s=(lo + i - tref) / SR, env=float(e), fraction=float(f))
                                 for f, e, i in short]
-    # sample-exact: the lag the matching waveform windows vote for, within the envelope's +-HOP
-    votes = collections.Counter()
     q = SR // 4
-    for t in range(tref, min(tref + 12 * SR, len(rm) - P_env - 2 * HOP - q), q):
-        u = rm[t:t + q]
-        if np.sqrt(np.mean(u ** 2)) < 1e-3:
-            continue
-        c = ncc_search(u, rm[t + P_env - HOP:t + P_env + HOP + q])
-        j = int(np.argmax(c))
-        if c[j] >= 0.9:
-            votes[j - HOP] += 1
+    R = 8 if seqp else HOP   # a pinned period moves by the VSync's jitter only
+
+    def vote(P_env):
+        # sample-exact: the lag the matching waveform windows vote for, within +-R of P_env
+        votes = collections.Counter()
+        for t in range(tref, min(tref + 12 * SR, len(rm) - P_env - 2 * R - q), q):
+            u = rm[t:t + q]
+            if np.sqrt(np.mean(u ** 2)) < 1e-3:
+                continue
+            c = ncc_search(u, rm[t + P_env - R:t + P_env + R + q])
+            j = int(np.argmax(c))
+            if c[j] >= 0.9:
+                votes[j - R] += 1
+        return votes
+    if seqp:
+        # the pass lengths differ by one VSync, too little for the match fraction to tell apart
+        # (078: 0.134 against 0.124); the one the waveform windows vote for is the render's
+        ballots = [(sum(vote(lo + i - tref).values()), n, i) for n, (f, e, i) in enumerate(short)]
+        k = max(ballots, key=lambda b: (b[0], -b[1]))[2]
+        ep = next(e for f, e, i in short if i == k)
+    else:
+        f0, ep, k = short[0]
+    P_env = lo + k - tref
+    votes = vote(P_env)
     if votes:
         d = votes.most_common(1)[0][0]
         P, exact = P_env + d, int(sum(votes.values()))
@@ -375,6 +415,8 @@ def measure(track, recpath, song_after_s=SONG_AFTER_S):
         # full: refine P inside the file, around the clock-derived value
         Li = int(round(L)); Wn = SR
         r = 300 if align["method"] == "waveform" else 2500      # the envelope's resolution
+        if seqp:   # a pinned period: the file's own repeat may sit on the other pass length (one VSync)
+            r += int(TICK) + 1
         lo2 = Li + int(round(Pm)) - r
         if lo2 + Wn + 2 * r <= n:
             k2, c2 = best_lag(mm[Li:Li + Wn], mm[lo2:lo2 + Wn + 2 * r])
@@ -451,6 +493,13 @@ def gate(row):
     if row["case"] == "shifted" and row["stand_in_ncc"] < MIN_STAND_IN:
         bad.append("stand-in correlation %.3f under %.2f over %.2f s of intro standing in for the body's tail"
                    % (row["stand_in_ncc"], MIN_STAND_IN, row["stand_in_s"]))
+    sp = row.get("sequence_pass_vsyncs")
+    if sp:
+        P = row["render_loop"]["period"]
+        d = min((P - v * TICK for v in sp), key=abs)
+        if abs(d) > TICK + 4:
+            bad.append("period %d samples, %+.2f VSyncs from the sequence's (%s VSyncs)"
+                       % (P, d / TICK, "/".join(map(str, sp))))
     row["excluded"] = bool(bad)
     row.pop("why", None)
     if bad:
@@ -627,6 +676,8 @@ def regate():
     table = load_table()
     for k, r in sorted(table.items(), key=lambda kv: int(kv[0])):
         was = (bool(r.get("excluded")), r.get("why"))
+        if "sequence_pass_vsyncs" not in r and seq_passes(int(k)):   # a row measured before the pin
+            r["sequence_pass_vsyncs"] = seq_passes(int(k))
         r = fit_fade(gate(r))
         table[k] = r
         if (bool(r.get("excluded")), r.get("why")) != was:

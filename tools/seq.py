@@ -30,6 +30,8 @@ channel messages), data; meta `FF 51 tt tt tt` (tempo, no length byte) and
     python tools/seq.py dump   FILE                        (a song or a bank, as text)
     python tools/seq.py verify --disc CUE --cache CACHE    (against tools/bgm/inventory.py and tools/vag.py)
     python tools/seq.py check                              (a synthetic round trip, no game data)
+    python tools/seq.py fixture --disc CUE [--disc CUE ...] [--out fixtures/bgm.tsv]
+                                                           (what build writes from each disc: hashes)
 
 What it writes is game data: the cache lives outside the repo (CLAUDE.md rule 1).
 """
@@ -41,6 +43,7 @@ import struct
 import sys
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import psx_disc     # noqa: E402
 import region_diff  # noqa: E402
@@ -400,6 +403,85 @@ def importer_bgm(sources, out):
     return bid, rows
 
 
+# ---------------------------------------------------------------- the fixture
+
+# fixtures/bgm.tsv: for each PSX build, every file `build` writes from its disc -
+# path under the cache, size, the section it came from, sha256 - so that
+# `importer.py verify` proves a cache's base/bgm/ is what this seq.py makes of
+# that build's disc, with no disc. Hashes and sizes only (CLAUDE.md rule 1).
+# The header names the two format versions: a change to either needs the
+# fixture regenerated (`fixture`), and `check` says so.
+FIXTURE = os.path.join(ROOT, "fixtures", "bgm.tsv")
+FIXTURE_HEAD = "# format song %d bank %d"
+
+
+def cmd_fixture(a):
+    import tempfile
+    rows = []
+    for path in a.disc:
+        with tempfile.TemporaryDirectory() as tmp:
+            bid, got, _ = build(path, tmp)
+            for rel, where, h in got:
+                rows.append((bid, rel, os.path.getsize(os.path.join(tmp, rel)), where.split(":", 2)[2], h))
+        print("%s: %d files" % (bid, len(got)))
+    builds = sorted({r[0] for r in rows})
+    if len(builds) != len(a.disc):
+        raise SystemExit("two discs of one build: %s" % ", ".join(builds))
+    with open(a.out, "w", newline="\n", encoding="utf-8") as f:
+        f.write("# The files tools/seq.py build writes under base/bgm/ from each PSX disc (seq.py fixture):\n"
+                "# build, path, size, the EMI section(s) it is made from, sha256. importer.py verify\n"
+                "# checks a cache's base/bgm/ against its build's rows; check, this file's shape.\n")
+        f.write(FIXTURE_HEAD % (SONG_VERSION, BANK_VERSION) + "\n")
+        for r in sorted(rows):
+            f.write("%s\t%s\t%d\t%s\t%s\n" % r)
+    print("%s: %d rows, %s" % (a.out, len(rows), ", ".join(builds)))
+
+
+def load_fixture(path=None):
+    """{build: {path: (size, source, sha256)}} and the header's (song, bank) versions."""
+    rows, versions = collections.defaultdict(dict), None
+    with open(path or FIXTURE, encoding="utf-8") as f:
+        for line in f:
+            line = line.rstrip("\n")
+            if line.startswith("# format "):
+                x = line.split()
+                versions = (int(x[3]), int(x[5]))
+            elif line and not line.startswith("#"):
+                bid, rel, size, where, h = line.split("\t")
+                rows[bid][rel] = (int(size), where, h)
+    return dict(rows), versions
+
+
+def check_fixture(builds, path=None):
+    """fixtures/bgm.tsv's shape, no game data: the format versions seq.py writes,
+    builds fixtures.toml holds, every build the same 166 songs, each song's EMI
+    with its bank, nothing else. Returns the errors."""
+    path = path or FIXTURE
+    if not os.path.exists(path):
+        return ["%s: missing" % os.path.relpath(path, ROOT)]
+    rows, versions = load_fixture(path)
+    errs = []
+    if versions != (SONG_VERSION, BANK_VERSION):
+        errs.append("bgm.tsv: written for song / bank format %s, seq.py writes %d / %d - regenerate it (seq.py fixture)"
+                    % (versions, SONG_VERSION, BANK_VERSION))
+    songs_want = {"base/bgm/%03d.DAT" % i for i in range(SONGS + 1)}
+    for bid, files in sorted(rows.items()):
+        if bid not in builds or not bid.startswith("psx-"):
+            errs.append("bgm.tsv: build %s is not a PSX build of fixtures.toml" % bid)
+        got = {r for r in files if not r.startswith("base/bgm/bank/")}
+        if got != songs_want:
+            errs.append("bgm.tsv %s: %d song files, not the %d of 000..%03d" % (bid, len(got), len(songs_want), SONGS))
+        banks = {r for r in files if r.startswith("base/bgm/bank/")}
+        named = {"base/bgm/bank/%s.DAT" % files[r][1].split(".EMI")[0] for r in got}
+        if banks != named:
+            errs.append("bgm.tsv %s: banks %s without a song, %s named and missing"
+                        % (bid, sorted(banks - named)[:3], sorted(named - banks)[:3]))
+        for r, (size, where, h) in files.items():
+            if size <= 0 or len(h) != 64 or any(c not in "0123456789abcdef" for c in h) or ".EMI#" not in where:
+                errs.append("bgm.tsv %s %s: a malformed row" % (bid, r))
+    return errs
+
+
 # ---------------------------------------------------------------- dump
 
 STATUS = {0x80: "note-off", 0x90: "note-on", 0xA0: "key-pressure", 0xB0: "control", 0xC0: "program",
@@ -649,8 +731,12 @@ def main():
     p.add_argument("--disc", required=True)
     p.add_argument("--cache", required=True)
     s.add_parser("check", help="the synthetic round trip (no game data)")
+    p = s.add_parser("fixture", help="fixtures/bgm.tsv: the hashes of what build writes from each disc")
+    p.add_argument("--disc", action="append", required=True)
+    p.add_argument("--out", default=FIXTURE)
     a = ap.parse_args()
-    sys.exit({"build": cmd_build, "dump": cmd_dump, "verify": cmd_verify, "check": cmd_check}[a.cmd](a) or 0)
+    sys.exit({"build": cmd_build, "dump": cmd_dump, "verify": cmd_verify, "check": cmd_check,
+              "fixture": cmd_fixture}[a.cmd](a) or 0)
 
 
 if __name__ == "__main__":

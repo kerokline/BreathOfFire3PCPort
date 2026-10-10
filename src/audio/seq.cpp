@@ -984,6 +984,12 @@ void MusicSynth::Flush() {
         if (voices_[v].keyed == 2) MusicFatal("a noise voice (key state 2) is not implemented");
         voices_[v].keyed = 0;
     }
+    if (trace_fn_) {  // the allocator's view before this tick's events, for the trace
+        for (int v = 0; v < kSeqVoices; ++v) {
+            trace_envx_[v] = voices_[v].envx;
+            trace_keyed_[v] = voices_[v].keyed;
+        }
+    }
     kon_ &= ~koff_;
     // (the per-voice auto-volume / auto-pan hooks at +1C / +28 are the
     // effects' SsUtAutoVol / SsUtAutoPan, never set for a sequenced voice)
@@ -1010,11 +1016,13 @@ void MusicSynth::Flush() {
     spu_.KeyOn(kon);
     spu_.SetReverbMode(eon_);
     if (trace_fn_) {
-        TickTrace t{ticks_, samples_, kon, koff, writes_, {}, {}, {}};
+        TickTrace t{ticks_, samples_, kon, koff, writes_, {}, {}, {}, {}, {}};
         for (int v = 0; v < 24; ++v) {
             t.pitch[v] = sreg_[v].pitch;
             t.note[v] = voices_[v].note;
             t.vag[v] = voices_[v].vag;
+            t.envx[v] = trace_envx_[v];
+            t.keyed[v] = trace_keyed_[v];
         }
         trace_fn_(t, trace_user_);
     }

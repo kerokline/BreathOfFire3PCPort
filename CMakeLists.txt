@@ -695,6 +695,7 @@ add_dependencies(bof3x_launcher bof3x_symbols)
 # SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
 # dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
 # and circle as navigation.
-target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 SDL3::SDL3-static)
+# shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW).
+target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 shell32 ole32 SDL3::SDL3-static)
 target_link_options(bof3x_launcher PRIVATE -municode)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")

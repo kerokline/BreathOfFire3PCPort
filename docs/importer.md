@@ -90,6 +90,13 @@ identify ─▶ plan ─▶ copy / type1 ─▶ cache + manifest ─▶ verify
    writes `base/exe/` from the first source that can (the PC's exe, else a
    disc) with `[exe]` in the manifest, `verify` checks it against
    `recipes/exe.toml`'s per-build hash, and `check` runs `exe_tables.py check`.
+   Since 2026-10-10 `verify` also checks `base/bgm/`
+   ([`seq-import.md`](seq-import.md) 4.1): every file the manifest's `bgm`
+   rows name against its hash, nothing there the rows do not name, each song
+   and bank read back and each song's bank present, and the rows against
+   `fixtures/bgm.tsv` for the build they came from - so a cache's music is
+   proved to be what `seq.py` makes of that disc with no disc at hand. `check`
+   checks the fixture's shape and its format versions.
 
 ## 3. What the chunks are (the recipe's classes)
 

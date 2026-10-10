@@ -867,3 +867,15 @@ history of ENVX and the ADPCM filter), then the release phase's rate
 rounding (`spu-model.md` R5, R8). Not SPU noise and not the jitter (the
 oracle moved them). Worth a per-voice stem of 146 against the render at
 17.9 s; left for the next session.
+
+**Settled 2026-10-10** ([`music-open-ends.md`](music-open-ends.md) 1):
+neither suspect. The stems showed the oracle itself short: it fitted each
+key-on VSync's delay over 2,048 samples, where these pads' slow attacks are
+still silent, so their one-sample offsets went unmoved (146's voice 2: -50.7
+dB residual, -82.9 once shifted a sample). With the fit run to the voices'
+next key on (`synth_check.py --oracle-window 1.0`) 43, 77, 145 and 146 are at
+1.000; 94 (0.986) is two voices whose ENVX cross within two samples of the
+allocator's read - which voice is stolen is decided by the interrupt
+latency of 9.4, and moving four such reads two samples earlier takes it to
+1.000. The full table with the window: 155 of 156 rendered here at >= 0.99,
+94 the one below.

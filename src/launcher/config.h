@@ -17,6 +17,7 @@
 #include <iterator>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "game/language_tags.h"
@@ -70,13 +71,17 @@ struct Config {
     // installed by tools/importer.py from the player's PSP disc (area4-walls:
     // a Western PSX disc). Empty (the default): the default layers that are
     // installed (kOptDefault); "none": no layer; a list: exactly that list.
-    // The ini's `opt=` only, kept as written (ConfigOptValid); no dialog box
-    // yet, so a save writes back what was read and never pins the default.
+    // Kept as written (ConfigOptValid). The dialog's "PSP extras" boxes
+    // (kPspLayers) change it only when a box is changed (ConfigOptEdit), so
+    // a save after an untouched dialog writes back what was read and never
+    // pins the default.
     std::string opt;
     // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
     // play through the sequencer, and the music source (BOF3X_MUSIC: "seq",
     // the cache's song where it has one, or "mp3"). Empty: unset, the default
-    // (no cache; seq). The ini's `cache=` and `music=` only; no dialog box.
+    // (no cache; seq). The dialog's Music box and Cache folder box (since
+    // 2026-10-10) write the same `music=` / `cache=` lines a hand edit does:
+    // an untouched box writes back what was read.
     std::string cache;
     std::string music;
     Filter filter = Filter::kLinear;
@@ -209,6 +214,45 @@ inline constexpr const char* kOptDefault[] = {"area4-walls"};
 // installed in `game_dir`; anything else -> itself.
 std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt,
                             const std::wstring& cache = std::wstring());
+
+// Whether DAT\<layer>.*.DAT is in `game_dir` (the DLL's own test,
+// dat_load.cpp ReadOptLayers).
+bool ConfigOptInstalled(const std::wstring& game_dir, const char* layer,
+                        const std::wstring& cache = std::wstring());  // DIV-0089: or the cache holds it
+
+// The kOptDefault layers installed in `game_dir`, in kOptDefault's order -
+// what an empty `opt=` names.
+std::vector<std::string> ConfigOptDefaultInstalled(const std::wstring& game_dir,
+                                                   const std::wstring& cache = std::wstring());
+
+// The settings dialog's "PSP extras" group (docs/opt-layers.md, the owner's
+// call 3: a group of boxes for the installed layers, a names layer shown only
+// when its language is chosen): one box per layer, in the order a list the
+// dialog writes puts them. area4-walls (DIV-0080) is not among them - it is a
+// repair, on by default, and the boxes leave its state as `opt=` had it.
+struct OptLayerInfo {
+    const char* name;
+    const wchar_t* label;
+};
+inline constexpr OptLayerInfo kPspLayers[] = {
+    {"psp-art", L"Stallion's palettes as the PSP has them (psp-art)"},
+    {"psp-tiles", L"The PSP's other area art: tiles and palettes (psp-tiles)"},
+    {"psp-maps", L"The PSP's edits to eleven map bands (psp-maps)"},
+    {"psp-names-en-150", L"The PSP-EU's English renames (psp-names-en-150)"},
+    {"psp-names-ja-JP", L"The PSP-JP's renames (psp-names-ja-JP)"},
+};
+
+// `opt` after the dialog's boxes: `boxes` holds each offered layer and whether
+// its box is ticked; `defaults` is ConfigOptDefaultInstalled. When no box
+// differs from what `opt` already plays, `opt` itself, byte for byte (an
+// untouched dialog never rewrites the line). Otherwise the layers `opt`
+// played (ConfigOptWanted's list, so an empty `opt=` contributes the default
+// layers installed and keeps them on) with each box's change made: "none"
+// when nothing is left, else a list - kPspLayers' order, then the
+// kOptDefault layers, then any other name `opt` had, in its order. A name the
+// boxes do not offer (not installed, another language's) is kept as it was.
+std::string ConfigOptEdit(const std::string& opt, const std::vector<std::string>& defaults,
+                          const std::vector<std::pair<std::string, bool>>& boxes);
 
 // Whether an ini's `opt=` value can be honoured: empty, "none", or a
 // comma-separated list of distinct names of letters, digits and '-' (at most

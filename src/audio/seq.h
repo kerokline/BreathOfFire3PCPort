@@ -104,6 +104,9 @@ public:
         std::uint16_t pitch[24];   // each voice's PITCH as last written
         std::int16_t note[24];     // each voice's note and sample (libsnd's
         std::int16_t vag[24];      // record; vag 0 after a key off)
+        std::uint16_t envx[24];    // the sequencer voices' +06 (ENVX as this
+        std::uint8_t keyed[24];    // flush read it) and +13, before the tick's
+                                   // events: what _SsVmAlloc reads (3.3)
     };
     using TickTraceFn = void (*)(const TickTrace& trace, void* user);
     void SetTickTrace(TickTraceFn fn, void* user) { trace_fn_ = fn; trace_user_ = user; }
@@ -241,6 +244,8 @@ private:
     void* offset_user_ = nullptr;
     TickTraceFn trace_fn_ = nullptr;
     void* trace_user_ = nullptr;
+    std::uint16_t trace_envx_[kSeqVoices] = {};
+    std::uint8_t trace_keyed_[kSeqVoices] = {};
 };
 
 } // namespace psx
