@@ -48,6 +48,37 @@ void WriteAll(const std::wstring& path, const std::string& text) {
     std::fclose(f);
 }
 
+// The installed-layer lookup the dialog's boxes and an empty `opt=` rest on
+// (ConfigOptInstalled, ConfigOptDefaultInstalled, ConfigOptWanted): a game
+// folder with DAT\<layer>.*.DAT, and a cache with opt\<layer>\dat\*.DAT (DIV-0089).
+// A merge on 2026-10-10 lost one of the pattern's backslashes; dialog_test.py
+// caught it and this keeps it caught on the host.
+void TestInstalled() {
+    const std::wstring game = Temp(L"bof3x_cfg_game"), cache = Temp(L"bof3x_cfg_cache");
+    CreateDirectoryW(game.c_str(), nullptr);
+    CreateDirectoryW((game + L"\\DAT").c_str(), nullptr);
+    for (const wchar_t* part : {L"", L"\\opt", L"\\opt\\psp-tiles", L"\\opt\\psp-tiles\\dat"})
+        CreateDirectoryW((cache + part).c_str(), nullptr);
+    const std::wstring art = game + L"\\DAT\\psp-art.AREA067.DAT", walls = game + L"\\DAT\\area4-walls.AREA004.DAT",
+                       tiles = cache + L"\\opt\\psp-tiles\\dat\\AREA000.DAT";
+    DeleteFileW(art.c_str()); DeleteFileW(walls.c_str()); DeleteFileW(tiles.c_str());
+    Check(!bof3x::ConfigOptInstalled(game, "psp-art"), "nothing installed: psp-art absent");
+    Check(bof3x::ConfigOptDefaultInstalled(game).empty(), "nothing installed: no default layer");
+    Check(bof3x::ConfigOptWanted(game, "").empty(), "nothing installed: empty opt= plays nothing");
+    WriteAll(art, "");
+    Check(bof3x::ConfigOptInstalled(game, "psp-art"), "DAT\\psp-art.*.DAT: installed");
+    Check(!bof3x::ConfigOptInstalled(game, "psp-tiles"), "psp-tiles not installed, no cache");
+    WriteAll(tiles, "");
+    Check(!bof3x::ConfigOptInstalled(game, "psp-tiles"), "psp-tiles in a cache not named: not installed");
+    Check(bof3x::ConfigOptInstalled(game, "psp-tiles", cache), "psp-tiles in the cache's opt: installed (DIV-0089)");
+    WriteAll(walls, "");
+    const std::vector<std::string> def = bof3x::ConfigOptDefaultInstalled(game);
+    Check(def.size() == 1 && def[0] == "area4-walls", "area4-walls installed: the default list");
+    Check(bof3x::ConfigOptWanted(game, "") == "area4-walls", "empty opt= plays area4-walls", bof3x::ConfigOptWanted(game, ""));
+    Check(bof3x::ConfigOptWanted(game, "none").empty(), "opt=none plays nothing");
+    DeleteFileW(art.c_str()); DeleteFileW(walls.c_str()); DeleteFileW(tiles.c_str());
+}
+
 void TestOptEdit() {
     using Boxes = std::vector<std::pair<std::string, bool>>;
     const std::vector<std::string> walls{"area4-walls"}, none;
@@ -127,6 +158,8 @@ void TestRoundTrip() {
 int main() {
     std::printf("opt edit\n");
     TestOptEdit();
+    std::printf("installed layers\n");
+    TestInstalled();
     std::printf("ini round trip\n");
     TestRoundTrip();
     std::printf("%d checks, %d failures\n", g_checks, g_failures);
