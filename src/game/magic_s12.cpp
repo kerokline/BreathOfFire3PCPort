@@ -25,6 +25,8 @@
 // precedent), and CeleritySpark_Draw aborts where the original would store a
 // depth outside its four-entry stack array (group S18's BuffSpike_Draw, the
 // same code).
+#include "game/labels.h"
+#include "game/text_advance.h"
 #include "game/magic_s12.h"
 
 #include <bit>
@@ -60,6 +62,7 @@ constexpr std::uint32_t kSeenBits = 0x9040A8;
 // number, one mark, a row of marks, the number format.
 constexpr std::uint32_t kText1 = 0x66A3E0, kText2 = 0x66A3E8, kLabel2 = 0x66A31C;
 constexpr std::uint32_t kLabel1 = 0x65AAB0, kMark = 0x65AAC4, kMarks = 0x65AAC8, kNumberFormat = 0x65AB08;
+constexpr std::uint32_t kItemWord = 0x65AAB4;   // ITEM, beside EXP: read by nothing in the port, the US panel's small label
 // Six pointers to the elements' two-byte glyph codes.
 constexpr std::uint32_t kElementGlyphs = 0x66A398;
 // Celerity_End's byte, and Celerity_ApplyStat's cells: the result record
@@ -136,6 +139,7 @@ void CallPhase(const std::uint32_t* phases, unsigned entries, const char* who) {
 using Fn0 = void (__cdecl*)();
 using FnU = void (__cdecl*)(unsigned);
 using FnXY = void (__cdecl*)(int, int);
+using SmallFn = const unsigned char* (__cdecl*)(int, int, unsigned, unsigned, const unsigned char*);   // Text_DrawSmall
 using BoolFn = unsigned char (__cdecl*)();
 using ItemFn = const unsigned char* (__cdecl*)(unsigned, unsigned, int);
 void Call0(std::uint32_t address) { MH_AT(Fn0, address)(); }
@@ -191,6 +195,39 @@ void DrawCentred(const unsigned char* text, int y, int count) { DrawAt(0xA0 - 6 
 void DrawCentredCounted(const unsigned char* text, int y) {
     const unsigned n = CharCount(text) & 0xFFu;
     DrawAt(0xA0 - 6 * static_cast<int>(n), y, static_cast<int>(n), text);
+}
+// DIV-0064 group 15: heading `i` of the Identify panel (0 the weakness
+// word, 1 the items word) - the overlay's string from Labels_Slot once the
+// group is written, centred on 0xA0 by the pen width it covers and drawn
+// whole, else the shipped word at `address` centred by its character count,
+// the count the draw's limit, as the originals have it. Answers what
+// Text_DrawAt answers (Identify_DrawEnemy passes the upper half on).
+const unsigned char* DrawHeading(unsigned i, std::uint32_t address, int y) {
+    if (Labels_Written(15)) {
+        if (i == 1) MH_AT(SmallFn, bof3::addr::Text_DrawSmall)(0x59, y + 4, 0, 0x10, Text(kItemWord));
+        const unsigned char* const text = Labels_Slot(15, i);
+        return DrawAt(0xA0 - static_cast<int>(TextAdvance_Width(text)) / 2, y, 0xFF, text);
+    }
+    const unsigned n = CharCount(Text(address)) & 0xFFu;
+    return DrawAt(0xA0 - 6 * static_cast<int>(n), y, static_cast<int>(n), Text(address));
+}
+// The same with the character count already taken (Identify_DrawEnemy counts
+// its first heading before reading the record).
+// The names' draw count: the originals' 5 - five Chinese glyphs - or the
+// eight bytes a name field holds once the overlay has written the panel's
+// words (its names are one byte a letter: `Fly Man` was `Fly M`).
+int NameCount() { return Labels_Written(15) ? 8 : 5; }
+const unsigned char* DrawHeadingCounted(unsigned i, std::uint32_t address, int y, unsigned n) {
+    if (Labels_Written(15)) {
+        // The US panel has no headings (the owner's wiki capture, 2026-10-10):
+        // the overlay sends a space for each, and above the items the US
+        // draws the small ITEM label the port still holds at 0x65AAB4 and
+        // never reads - 23 px left of the items' column, on the heading's row.
+        if (i == 1) MH_AT(SmallFn, bof3::addr::Text_DrawSmall)(0x59, y + 4, 0, 0x10, Text(kItemWord));
+        const unsigned char* const text = Labels_Slot(15, i);
+        return DrawAt(0xA0 - static_cast<int>(TextAdvance_Width(text)) / 2, y, 0xFF, text);
+    }
+    return DrawAt(0xA0 - 6 * static_cast<int>(n), y, static_cast<int>(n), Text(address));
 }
 
 }  // namespace
@@ -328,16 +365,16 @@ MS12_EXPORT void __cdecl Identify_DrawMember(void) {
         unsigned char* const rec = PartyRec(TargetByte());
         const unsigned char kept = rec[0x89];
         rec[0x89] = 0;
-        DrawCentred(rec + 0x80, 0x30, 5);
+        DrawCentred(rec + 0x80, 0x30, NameCount());
         PartyRec(TargetByte())[0x89] = kept;
     }
-    DrawCentredCounted(Text(kText1), 0x44);
+    DrawHeading(0, kText1, 0x44);
     DrawAt(0x70, 0x50, 8, Text(kMarks));
     DrawAt(0x9C, 0x64, 1, Text(kMark));
     DrawAt(0xB0, 0x64, 3, Text(kLabel1));
     DrawAt(0x9C, 0x78, 1, Text(kMark));
     DrawAt(0xB0, 0x78, 1, Text(kLabel2));
-    DrawCentredCounted(Text(kText2), 0x8A);
+    DrawHeading(1, kText2, 0x8A);
     DrawAt(0x70, 0x98, 8, Text(kMarks));
     DrawAt(0x70, 0xAC, 8, Text(kMarks));
 }
@@ -351,11 +388,11 @@ MS12_EXPORT void __cdecl Identify_DrawMember(void) {
 // the category.
 MS12_EXPORT void __cdecl Identify_DrawEnemy(void) {
     const unsigned char index = static_cast<unsigned char>(TargetByte() - 3);
-    const unsigned text1 = CharCount(Text(kText1)) & 0xFFu;
+    const unsigned text1 = CharCount(Text(kText1)) & 0xFFu;   // counted here, before the record is read, as the original
     unsigned char* const rec = EnemyRec(index);
     if (rec[0x8F] != 0) {
-        DrawCentred(rec + 0x80, 0x30, 5);
-        DrawAt(0xA0 - 6 * static_cast<int>(text1), 0x44, static_cast<int>(text1), Text(kText1));
+        DrawCentred(rec + 0x80, 0x30, NameCount());
+        DrawHeadingCounted(0, kText1, 0x44, text1);
         MH_AT(FnXY, bof3::addr::Identify_DrawElements)(0x66, 0x54);
         char number[12];
         MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(Word(rec + 0x96)));
@@ -365,16 +402,15 @@ MS12_EXPORT void __cdecl Identify_DrawEnemy(void) {
         DrawAt(0x70, 0x78, 5, reinterpret_cast<const unsigned char*>(number));
         DrawAt(0xB0, 0x78, 1, Text(kLabel2));
     } else {
-        DrawCentred(rec + 0x80, 0x30, 5);
-        DrawAt(0xA0 - 6 * static_cast<int>(text1), 0x44, static_cast<int>(text1), Text(kText1));
+        DrawCentred(rec + 0x80, 0x30, NameCount());
+        DrawHeadingCounted(0, kText1, 0x44, text1);
         DrawAt(0x70, 0x50, 8, Text(kMarks));
         DrawAt(0x9C, 0x64, 1, Text(kMark));
         DrawAt(0xB0, 0x64, 3, Text(kLabel1));
         DrawAt(0x9C, 0x78, 1, Text(kMark));
         DrawAt(0xB0, 0x78, 1, Text(kLabel2));
     }
-    const unsigned text2 = CharCount(Text(kText2)) & 0xFFu;
-    const unsigned char* last = DrawAt(0xA0 - 6 * static_cast<int>(text2), 0x8A, static_cast<int>(text2), Text(kText2));
+    const unsigned char* last = DrawHeading(1, kText2, 0x8A);
     unsigned item = (U32(last) & 0xFFFF0000u) | Word(rec + 0xA8);
     last = MH_AT(ItemFn, bof3::addr::Identify_DrawItem)(item, (item >> 8) & 0xFFu, 0x98);
     item = (U32(last) & 0xFFFF0000u) | Word(rec + 0xAC);

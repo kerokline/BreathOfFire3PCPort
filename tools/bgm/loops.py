@@ -1,7 +1,10 @@
 """Step 3 of docs/bgm-comparison.md for every MP3: edges, loop period, loop start.
 
 For each PC track: decode with ffmpeg (every frame's 1152 samples, no trim,
-as the game's decoder hands them out), measure the leading and trailing
+as the game's decoder hands them out - which holds because the files carry no
+Xing/Info/LAME or ID3 tag for ffmpeg to take an encoder delay or padding
+from: a decode is exactly frames * 1152 samples on every track, and
+gen_loop_table.py refuses to write a row where it is not), measure the leading and trailing
 silence, then find the loop body by self-correlation guided by the paired
 sub-song's loop markers. Writes analysis/bgm/mp3_scan.json (named loops.json until 2026-10-06).
 """

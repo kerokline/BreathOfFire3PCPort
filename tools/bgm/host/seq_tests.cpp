@@ -275,6 +275,38 @@ void TestAborts() {
     }));
 }
 
+// A song on program 1 (tone block 1) of a two-program bank, then a song on
+// the one-program bank, on one synth (the review of 2026-10-10): LoadBank
+// clears the voice records' references into the old bank, so Play's
+// SsSepSetVol(0, 0) does not read block 1 of a bank of 16 tones
+// (libsnd-reading.md 3.11), and the second song plays.
+void TestBankChange() {
+    CHECK(!Aborts([] {
+        psx::Bank big = MakeBank();
+        big.name = "TEST2";
+        big.ps = 2;
+        big.ts = 2;
+        big.programs[1] = big.programs[0];
+        big.programs[1].block = 1;
+        big.tones.resize(32);
+        big.tones[16] = big.tones[0];
+        psx::Song a = MakeSong();
+        a.bank = "TEST2";
+        a.events[0].d1 = 1;  // the program change: program 1
+        auto m = std::make_unique<psx::MusicSynth>();
+        m->LoadBank(big);
+        m->Play(a, 100, 8);
+        std::vector<std::int16_t> out(2 * 44100);
+        m->Render(out.data(), 44100);
+        m->LoadBank(MakeBank());
+        m->Play(MakeSong(), 100, 8);
+        m->Render(out.data(), 44100);
+        long long energy = 0;
+        for (std::int16_t v : out) energy += static_cast<long long>(v) * v;
+        if (energy == 0) std::abort();
+    }));
+}
+
 // The loaders reject what is not the format.
 void TestLoaders() {
     CHECK(Aborts([] {
@@ -286,6 +318,17 @@ void TestLoaders() {
         const std::uint8_t junk[64] = {'B', 'F', '3', 'B', 1};
         psx::Bank b;
         psx::LoadBank(junk, sizeof junk, &b);
+    }));
+    // A song header whose event count times 12 wraps a 32-bit size_t
+    // (0x15555556 x 12 = 0x100000008, 8 on the game's i686): refused as more
+    // events than the file holds, before the multiplication.
+    CHECK(Aborts([] {
+        std::uint8_t h[56 + 12] = {'B', 'F', '3', 'S', 1};
+        h[32] = 48;                                  // resolution
+        h[36] = 0x20; h[37] = 0xA1; h[38] = 0x07;   // tempo 500000
+        h[40] = 0x56; h[41] = 0x55; h[42] = 0x55; h[43] = 0x15;
+        psx::Song s;
+        psx::LoadSong(h, sizeof h, &s);
     }));
 }
 
@@ -300,6 +343,7 @@ int main() {
         {"loop period and pitch", TestLoopAndPitch},
         {"once-only song ends", TestEnded},
         {"aborts", TestAborts},
+        {"bank change to a smaller bank", TestBankChange},
         {"loaders", TestLoaders},
     };
     for (auto& t : tests) {

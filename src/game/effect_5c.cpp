@@ -1180,7 +1180,16 @@ extern "C" void __cdecl EffectKind18Sub15_Draw(void) {
     }
     // The wide picture's bands: a gradient each side, flat at the outer
     // rows' height (the table's 90), from -wide to 0 and from 320 to 320 + wide.
-    for (U k = 0; wide && k < 2; ++k, quad += 0x44) {
+    // They are written at the four quads' cursor, which runs on whether or not
+    // a link was refused, so both are skipped - nothing written, nothing
+    // linked - unless they fit under this buffer's pool limit (the test
+    // EffectKind18Sub15_LinkLayer makes). A refused link above implies the
+    // skip: the cursor is then at least 0x44 past Gfx_PacketNext.
+    const U bands = 2u * 0x44u;
+    const bool bands_fit = wide && (static_cast<U>(Gfx_BufferIndex) << 16) + at::kPoolLimit > AddressOf(quad) + bands;
+    if (wide && !bands_fit && draw_order::Tagging())
+        bof3::Log("draworder   packet pool full: the sky's wide bands (%u bytes) skipped (EffectKind18Sub15_Draw)", bands);
+    for (U k = 0; bands_fit && k < 2; ++k, quad += 0x44) {
         SH_CALL(Gpu_SetPolyG4)(quad);
         SH_CALL(Gpu_SetSemiTrans)(quad, 1);
         const std::int32_t x0 = k == 0 ? -static_cast<std::int32_t>(wide) : 320;

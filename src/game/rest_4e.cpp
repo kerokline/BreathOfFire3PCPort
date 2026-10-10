@@ -24,7 +24,9 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/labels.h"
 #include "game/rest_4e_callees.h"
+#include "game/text_advance.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -1215,14 +1217,37 @@ extern "C" void __cdecl CommuRank_Close(void) { ++B(kFacility); }
 // (x + 8, y + 0x14); a message at (x + 0x18, y + 0x14); the count ("%2d"-like,
 // Boss26Fx_CountFormat) in the 12-point font at (x + 0x6C, y + 0x14) and the
 // glyph 0x669F08 after it. The count is read after the second message.
+//
+// DIV-0064 group 14 (2026-10-10): once the overlay has written the village's
+// words, the heading is centred where the Chinese one sat - the shipped
+// message is four glyphs at x + 0x58, so its middle is x + 0x70, and the US
+// `Population change` drawn from x + 0x58 would run under the page counter
+// at 0xEE - and the word after the count is the overlay's `faeries`, or
+// `faery` for a count of one (the US disc holds the pair), drawn whole.
 void ListHeading(int x, int y, unsigned icon, unsigned title, U count) {
-    SH_CALL(Text_DrawAt)(x + 0x58, y, 0, 0xFF, Message(0x37));
+    const bool words = Labels_Written(14);
+    const unsigned char* const heading = Message(0x37);
+    const int hx = words ? x + 0x70 - static_cast<int>(TextAdvance_Width(heading)) / 2 : x + 0x58;
+    SH_CALL(Text_DrawAt)(hx, y, 0, 0xFF, heading);
     SH_CALL(CommuRank_DrawIcon)(x + 8, y + 0x14, icon);
-    SH_CALL(Text_DrawAt)(x + 0x18, y + 0x14, 0, 0xFF, Message(title));
+    const unsigned char* const row = Message(title);
+    SH_CALL(Text_DrawAt)(x + 0x18, y + 0x14, 0, 0xFF, row);
     SH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(kTextBuffer)),
                          reinterpret_cast<const char*>(At(Key(Boss26Fx_CountFormat))), B(count));
-    SH_CALL(Text_DrawFont12)(x + 0x6C, y + 0x14, 0, At(kTextBuffer));
-    SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(kOneGlyph));
+    // The count's column is x + 0x6C, sized for the five-glyph Chinese row
+    // label; a disc's longer label (the French `Taux de natalité`, the German
+    // `Geburtenrate`) runs under it, so under a written group the column
+    // moves right of the label by a letter's gap (the owner's word, 2026-10-10).
+    int cx = x + 0x6C;
+    if (words) {
+        const int past = x + 0x18 + static_cast<int>(TextAdvance_Width(row)) + 8;
+        if (past > cx) cx = past;
+    }
+    SH_CALL(Text_DrawFont12)(cx, y + 0x14, 0, At(kTextBuffer));
+    if (words)
+        SH_CALL(Text_DrawAt)(cx + 0x20, y + 0x14, 0, 0xFF, Labels_Slot(14, B(count) == 1 ? 2 : 1));   // a letter's gap after the count, as the US screen has
+    else
+        SH_CALL(Text_DrawAt)(x + 0x84, y + 0x14, 0, 1, At(kOneGlyph));
 }
 
 // original 0x460730: the first list's page `page` (its low byte) at (x, y):

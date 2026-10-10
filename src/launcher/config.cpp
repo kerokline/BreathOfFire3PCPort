@@ -74,7 +74,8 @@ std::string Trim(const std::string& s) {
 
 }  // namespace
 
-bool ConfigLoad(const std::wstring& path, Config& cfg) {
+bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
+    error.clear();
     std::string text;
     if (!ReadWhole(path, text)) return false;
 
@@ -91,11 +92,17 @@ bool ConfigLoad(const std::wstring& path, Config& cfg) {
         const std::string value = Trim(line.substr(eq + 1));
 
         if (key == "language") {
-            if (ConfigLanguageKnown(value)) cfg.language = value;
+            if (ConfigLanguageKnown(value)) {
+                cfg.language = value;
+            } else if (const char* use = RetiredLanguageReplacement(value.c_str())) {
+                // DIV-0005: retired, not mapped; the launcher stops on it.
+                error = "bof3x.ini's language=" + value + " is retired; use " + use + " (DIV-0005)";
+            }
         } else if (key == "opt") {
-            if (value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-,") ==
-                std::string::npos)
-                cfg.opt = value;
+            // Kept as written, valid or not: dropping a bad value would play
+            // the default layers instead, so the launcher refuses it
+            // (ConfigOptValid) rather than this file guessing.
+            cfg.opt = value;
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
             cfg.cache = value;
         } else if (key == "music") {  // DIV-0087
@@ -186,10 +193,12 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# Rewritten whenever the launcher's dialog is used; hand-editing works too.\r\n";
     out += "# Run bof3x-launcher --config to reopen the dialog after hiding it.\r\n";
     out += "\r\n[bof3x]\r\n";
-    out += "# original | en | fr | de | ja   (a code needs tools/loc_build.py to have built it)\r\n";
+    out += "# original | en-US | en-150 | fr-FR | de-DE | ja-JP   (a tag needs tools/loc_build.py to have built it)\r\n";
     out += std::string("language=") + cfg.language + "\r\n";
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
-    out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP; tools/importer.py install puts them in the game's DAT folder\r\n";
+    out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
+    out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
+    out += "# none: no layer\r\n";
     out += "opt=" + cfg.opt + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
@@ -273,10 +282,21 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
                          "playing the original text\n", cfg.language.c_str(), cfg.language.c_str());
     }
 
-    // DIV-0086: the layers installed and, for a text layer, of the language played.
-    if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0 && !cfg.opt.empty()) {
-        const std::string playable = ConfigOptPlayable(game_dir, cfg.opt, cfg.language);
-        if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
+    // DIV-0086: the layers installed and, for a text layer, of the language
+    // played - the one the game is given now, not the ini's: the step above
+    // can leave BOF3X_LANG unset, and the environment may already say
+    // `original` or another tag, and the DLL refuses a text layer of any
+    // other language at start-up. An empty opt= means the default layers
+    // installed (kOptDefault, DIV-0080's walls), opt=none none.
+    if (GetEnvironmentVariableW(L"BOF3X_OPT", existing, 64) == 0) {
+        const std::string wanted = ConfigOptWanted(game_dir, cfg.opt);
+        if (!wanted.empty()) {
+            char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
+            const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
+            const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
+            const std::string playable = ConfigOptPlayable(game_dir, wanted, language);
+            if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
+        }
     }
 
     // DIV-0087: the cache root and the music source, as the ini has them; the
@@ -427,16 +447,12 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
             continue;
         }
         FindClose(h);
-        bool other_language = false;
-        for (const LanguageInfo& lang : kLanguages) {
-            const std::string tail = std::string("-") + lang.code;
-            if (layer.size() > tail.size() && layer.compare(layer.size() - tail.size(), tail.size(), tail) == 0 &&
-                language.compare(0, 2, lang.code, 2) != 0)
-                other_language = true;
-        }
-        if (other_language) {
-            std::fprintf(stderr, "bof3x-launcher: layer %s is not the language played (%s); left off\n",
-                         layer.c_str(), language.c_str());
+        // The DLL's own test (dat_load.cpp ReadOptLayers), so what passes
+        // here never stops the game at start-up.
+        const char* tag = LayerLanguage(layer.c_str());
+        if (tag && !SamePrimaryLanguage(language.c_str(), tag)) {
+            std::fprintf(stderr, "bof3x-launcher: layer %s is %s text, not the language played (%s); left off\n",
+                         layer.c_str(), tag, language.empty() ? kLanguageOriginal : language.c_str());
             continue;
         }
         if (!out.empty()) out += ',';
@@ -445,11 +461,81 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
     return out;
 }
 
+std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt) {
+    if (opt == "none") return std::string();
+    if (!opt.empty()) return opt;
+    std::string out;
+    for (const char* layer : kOptDefault) {
+        std::wstring pattern = game_dir + L"\\DAT\\";
+        for (const char* c = layer; *c; ++c) pattern += static_cast<wchar_t>(*c);
+        pattern += L".*.DAT";   // the DLL's own pattern (dat_load.cpp ReadOptLayers)
+        WIN32_FIND_DATAW fd;
+        HANDLE h = FindFirstFileW(pattern.c_str(), &fd);
+        if (h == INVALID_HANDLE_VALUE) continue;
+        FindClose(h);
+        std::fprintf(stderr, "bof3x-launcher: layer %s is installed and on by default; opt=none in bof3x.ini "
+                     "turns it off\n", layer);
+        if (!out.empty()) out += ',';
+        out += layer;
+    }
+    return out;
+}
+
+bool ConfigOptValid(const std::string& opt, std::string& why) {
+    if (opt.empty() || opt == "none") return true;
+    std::vector<std::string> names;
+    size_t at = 0;
+    for (;;) {
+        const size_t end = std::min(opt.find(',', at), opt.size());
+        const std::string name = opt.substr(at, end - at);
+        if (name.empty()) {
+            why = "an empty layer name (two commas, or one at an end)";
+            return false;
+        }
+        if (name.size() > 23) {   // dat_load.cpp kOptName - 1
+            why = "layer \"" + name + "\" is longer than 23 characters";
+            return false;
+        }
+        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-") !=
+            std::string::npos) {
+            why = "layer \"" + name + "\" has a character other than a letter, digit or -";
+            return false;
+        }
+        if (name == "none" || name == "original") {
+            why = "\"" + name + "\" in a list; opt=none alone turns every layer off";
+            return false;
+        }
+        if (std::find(names.begin(), names.end(), name) != names.end()) {
+            why = "layer " + name + " named twice";
+            return false;
+        }
+        names.push_back(name);
+        if (end == opt.size()) break;
+        at = end + 1;
+    }
+    if (names.size() > 8) {   // dat_load.cpp kOptMax
+        why = "more than 8 layers";
+        return false;
+    }
+    return true;
+}
+
 bool ConfigLanguageKnown(const std::string& code) {
     if (code == kLanguageOriginal) return true;
     for (const LanguageInfo& lang : kLanguages)
         if (code == lang.code) return true;
     return false;
+}
+
+bool ConfigCheckEnvironmentLanguage(std::string& error) {
+    char lang[16];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    if (n == 0 || n >= sizeof lang) return true;
+    if (const char* use = RetiredLanguageReplacement(lang)) {
+        error = std::string("BOF3X_LANG=") + lang + " is retired; use " + use + " (DIV-0005)";
+        return false;
+    }
+    return true;
 }
 
 }  // namespace bof3x

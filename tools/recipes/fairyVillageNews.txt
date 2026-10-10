@@ -1,0 +1,53 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+wait 26
+hold start 4
+wait 35
+hold start 5
+wait 11
+hold start 5
+wait 9
+hold start 4
+wait 41
+hold circle 5
+wait 34
+hold circle 5
+wait 18
+hold circle 4
+wait 68
+hold right+down 7
+wait 12
+hold right+down 4
+wait 9
+hold circle 5
+wait 13
+hold circle 4
+wait 14
+hold circle 4
+wait 12
+hold circle 4
+wait 10
+hold circle 4
+wait 9
+hold circle 4
+wait 49
+hold circle 6
+wait 69
+hold down+left 13
+hold left 12
+hold up+left 4
+hold up 11
+hold up+right 37
+hold circle+up+right 3
+hold circle+up 1
+hold circle 2
+wait 23
+hold right 5
+wait 30
+hold right 5
+wait 26
+hold right 7
+wait 22
+hold cross 4
+wait 45

@@ -110,7 +110,7 @@ void MusicSynth::Reset() {
     bank_loaded_ = false;
 }
 
-void MusicSynth::LoadBank(const Bank& bank) {
+void MusicSynth::CheckBank(const Bank& bank) {
     // The game's layouts give the music VAB 0x1010..0x3E0A0 (layouts 0, 1)
     // or 0x1010..0x6C6D0 (layout 2, the opening and ending banks); the
     // reverb work area of mode 1 starts at 0x7D940 (libsnd-reading.md 6.3).
@@ -118,6 +118,32 @@ void MusicSynth::LoadBank(const Bank& bank) {
         MusicFatal("bank %s: 0x%zX bytes of samples, the game's largest music slot holds 0x%X", bank.name.c_str(),
                    bank.body.size(), kBankLimit - kBankAddress);
     if (bank.mvol > 127) MusicFatal("bank %s: master volume %u", bank.name.c_str(), bank.mvol);
+}
+
+void MusicSynth::LoadBank(const Bank& bank) {
+    CheckBank(bank);
+    // A different bank. SsVabClose (0x80174190) frees the VAB's SPU memory
+    // and its slot and leaves libsnd's voice records alone, so on the PSX a
+    // record still names a tone of the closed VAB, and the next SsSepSetVol
+    // or pitch bend of its sequence reads that index in the new VAB's tone
+    // table - past its end when the new bank has fewer programs. Here every
+    // sequencer voice is keyed off and its record's references into the bank
+    // go back to _SsVmInit's values (seqid -1, tone 0xFF, vel 0), so nothing
+    // reaches a voice through the old bank's indices; ENVX, age and priority
+    // (what the allocator reads of the SPU) stay. The release tails go on, as
+    // on the PSX, over the new bank's samples (libsnd-reading.md 3.11).
+    if (bank_loaded_ && bank.name != bank_.name) {
+        for (int v = 0; v < kSeqVoices; ++v) {
+            Voice& vo = voices_[v];
+            if (vo.keyed) KeyOffNow(v);
+            vo.seqid = -1;
+            vo.block = 0;
+            vo.prog = 0;
+            vo.tone = 0xFF;
+            vo.note = 0;
+            vo.vel = 0;
+        }
+    }
     bank_ = bank;
     spu_.WriteRam(kBankAddress, bank_.body.data(), static_cast<std::uint32_t>(bank_.body.size()));
     bank_loaded_ = true;
@@ -131,11 +157,22 @@ std::int16_t MusicSynth::StepFor(std::int32_t bpm) const {
     // per call = resolution * bpm * 10 / (60 * tick), rounded up when the
     // remainder exceeds 30 * tick. Below one (x10) per call libsnd counts calls
     // per tick instead (the "slow" mode, +6E >= 0).
-    const std::uint32_t x = static_cast<std::uint32_t>(score_.resolution) * static_cast<std::uint32_t>(bpm) * 10u;
-    const std::uint32_t den = 60u * kSeqTick;
-    std::uint32_t q = x / den;
+    const std::uint64_t x = SpeedOf(bpm);
+    const std::uint64_t den = 60u * kSeqTick;
+    std::uint64_t q = x / den;
     if (x % den > 30u * kSeqTick) ++q;
+    // the step is a halfword (+70): above it the PSX's would wrap
+    if (q > 0x7FFF) MusicFatal("song %u: resolution %d at %d bpm, %llu tenths of a tick a VSync (above 0x7FFF)",
+                               song_.number, score_.resolution, bpm, static_cast<unsigned long long>(q));
     return static_cast<std::int16_t>(q);
+}
+
+std::uint64_t MusicSynth::SpeedOf(std::int32_t bpm) const {
+    // resolution * bpm * 10, in 64 bits: LoadSong bounds the resolution to
+    // 0x7FFF and the tempo is at least 1 (bpm at most 60,000,000), so this
+    // cannot wrap where libsnd's 32-bit multiply would for such a song.
+    if (score_.resolution <= 0 || bpm <= 0) MusicFatal("song %u: resolution %d, %d bpm", song_.number, score_.resolution, bpm);
+    return static_cast<std::uint64_t>(score_.resolution) * static_cast<std::uint64_t>(bpm) * 10u;
 }
 
 void MusicSynth::InitScore(const Song& song) {
@@ -161,7 +198,7 @@ void MusicSynth::InitScore(const Song& song) {
     s.loop_pos = 0;
     s.first_delta = static_cast<std::int32_t>(song.events[0].tick) * 10;
     s.delta = s.first_delta;
-    const std::uint32_t x = static_cast<std::uint32_t>(s.resolution) * static_cast<std::uint32_t>(s.bpm) * 10u;
+    const std::uint64_t x = SpeedOf(s.bpm);
     if (x < 60u * kSeqTick) {
         s.countdown = static_cast<std::int16_t>(600u * kSeqTick / static_cast<std::uint32_t>(s.resolution * s.bpm));
         s.step = s.countdown;
@@ -278,7 +315,7 @@ void MusicSynth::GetSeqData() {
             // here (unlike the header's), and the step again.
             if (e.meta == 0) MusicFatal("song %u: tempo 0", song_.number);
             s.bpm = static_cast<std::int32_t>(60000000u / e.meta);
-            const std::uint32_t x = static_cast<std::uint32_t>(s.resolution) * static_cast<std::uint32_t>(s.bpm) * 10u;
+            const std::uint64_t x = SpeedOf(s.bpm);
             if (x < 60u * kSeqTick)
                 MusicFatal("song %u: a tempo change into libsnd's slow mode is not implemented", song_.number);
             s.countdown = -1;
@@ -621,11 +658,15 @@ bool MusicSynth::VSetUp(int vab, int prog) {
     return true;
 }
 
-const BankTone& MusicSynth::ToneOf(const Voice& v) const {
-    const std::size_t i = static_cast<std::size_t>(v.block) * 16 + static_cast<std::size_t>(v.tone);
-    if (i >= bank_.tones.size()) MusicFatal("tone %zu of %zu", i, bank_.tones.size());
-    return bank_.tones[i];
+const BankTone& MusicSynth::ToneAt(int block, int tone) const {
+    if (block < 0 || tone < 0 || tone >= 16 ||
+        static_cast<std::size_t>(block) * 16 + static_cast<std::size_t>(tone) >= bank_.tones.size())
+        MusicFatal("bank %s: block %d tone %d, the bank has %zu tones", bank_.name.c_str(), block, tone,
+                   bank_.tones.size());
+    return bank_.tones[static_cast<std::size_t>(block) * 16 + static_cast<std::size_t>(tone)];
 }
+
+const BankTone& MusicSynth::ToneOf(const Voice& v) const { return ToneAt(v.block, v.tone); }
 
 void MusicSynth::PanVolumes(std::uint32_t base, int tpan, int mpan, int cpan, std::uint32_t* l, std::uint32_t* r) const {
     // The pan and square law shared by _SsVmKeyOnNow, _SsVmSetVol and
@@ -854,7 +895,9 @@ void MusicSynth::VmPitchBend(int prog, int msb) {
     for (int v = 0; v < kSeqVoices; ++v) {
         Voice& vo = voices_[v];
         if (vo.seqid != seqid_ || vo.vab != score_.vab || vo.prog != prog) continue;
-        const BankTone& tn = bank_.tones[static_cast<std::size_t>(cur_.block) * 16 + static_cast<std::size_t>(vo.tone)];
+        // the current program's block (_SsVmPBVoice reads _svm_cur's), the
+        // voice's tone; checked - a stale record must not index past the bank
+        const BankTone& tn = ToneAt(cur_.block, vo.tone);
         int note = vo.note, fine = 0;
         if (bend > 0) {
             const int a = bend * tn.pbmax;

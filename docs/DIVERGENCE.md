@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 87 entries, DIV-0001..0087, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 88 entries, DIV-0001..0088, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -358,7 +358,29 @@ designed in rather than bolted on.
   `DAT\<name>` when that file exists, with the same chunk walker. The tag
   is the BCP 47 tag of the release the text came from (`fixtures.toml`'s
   `tag` per build: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`; since
-  2026-10-08 - a bare code `en` before, and the overlays named `en.<name>`). An overlay
+  2026-10-08 - a bare code `en` before, and the overlays named `en.<name>`).
+  **Amended 2026-10-10:** a `bof3x.ini` still saying a bare code reads as
+  its tag - `en` as `en-US` (the default English, the owner's word of
+  2026-10-08), `fr` as `fr-FR`, `de` as `de-DE`, `ja` as `ja-JP` - with a
+  note on the launcher's stderr, and the next save writes the tag
+  (`ConfigLegacyLanguage`, `src/launcher/config.cpp`); until then such an
+  ini fell silently to the original. Only the ini is mapped: `BOF3X_LANG`
+  in the environment is taken as given. **Amended again 2026-10-10 (the
+  owner's word: sunset, not map):** the bare codes are retired and refused
+  wherever a language is an input. `language=en` in `bof3x.ini` or
+  `BOF3X_LANG=en` in the environment stops the launcher before its dialog
+  (message box and stderr, exit 1: `bof3x.ini's language=en is retired;
+  use en-US (en-150 for the European English) (DIV-0005)`), and the DLL
+  stops at injection on a `BOF3X_LANG` that reaches it (Fatal, `DIV-0005:
+  BOF3X_LANG=en is retired; use en-US (en-150 for the European English)`);
+  `fr`, `de`, `ja` name `fr-FR`, `de-DE`, `ja-JP`. One table,
+  `RetiredLanguageReplacement` in `src/game/language_tags.h`, serves both;
+  `tools/language_tags.py` mirrors it, and `input_run.py`, `attract_run.py`,
+  `importer.py` and `loc_build.py` refuse the codes as `--lang`, and the
+  runners a launcher ini or environment saying one, before they launch.
+  Overlays named `en.*.DAT` (and `fr.`, `de.`, `ja.`) are read by nothing;
+  the importer's `install` and `verify` and `loc_build.py`'s title menu
+  only note them, to delete. `ConfigLegacyLanguage` is gone. An overlay
   holds only the chunks that differ, and they land on top: a kind-0 chunk over
   the same arena bytes, a kind-3 chunk through `Font_SetGlyphData`, which frees
   the shipped table - the branch no shipped data had ever run. Without the
@@ -2314,12 +2336,24 @@ designed in rather than bolted on.
   strip at phase - 512 covers the left band at every phase, and a strip
   starting past the right bound is skipped. Off, every packet is the
   original's bit for bit (the fuzz compares them). The owner on the
-  capture: "Sky looks perfect".
+  capture: "Sky looks perfect". **The bands' pool guard, 2026-10-10** (a code
+  review): the two band quads are written at the four gradient
+  quads' cursor, 0x110 past it, which runs on whether or not
+  `EffectKind18Sub15_LinkLayer` refused a link; 0x198 is more than the
+  0x54 of slack under the pool limit, so near a full pool they would have
+  been written past this buffer's 64 KB. Both are now skipped - nothing
+  written, nothing linked, a `draworder` line under `BOF3X_DRAWORDER` -
+  unless they end under the limit `LinkLayer` tests. Narrow, nothing
+  changes (the bands are never drawn).
 - **Reversible?** Unset `BOF3X_WIDE` (the default). `BOF3X_ORIGINAL=Widescreen`
   keeps the frame pass's original ranges under a wide picture;
   `BOF3X_ORIGINAL=MapView_Build` the terrain cull's;
   `BOF3X_ORIGINAL=AreaMap_DrawBackdrop` the 320-wide sky;
   `BOF3X_WIDE_INSET=0` the original's cell inset under a wide picture.
+  `BOF3X_WIDE_TERRAIN=0..400` (an experiment's switch, 2026-10-07) sets the
+  terrain cull's margin past the original's `[-50, 370]` under a wide
+  picture: unset it is 100, the `[-150, 470]` above; 0 is the original's
+  cull. Narrow it is not read.
 
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
@@ -3645,6 +3679,120 @@ designed in rather than bolted on.
   the armour and weapon screens' sorts (`Power` / `Defence` / `Kind`) look
   correct too. **Owed the owner's eye:** the French and German words in
   play.
+  **Extended 2026-10-10 - three more groups, from the owner's
+  `fairyVillage.txt`, `dragonMenu.txt` and `fairyVillageNews.txt`**
+  ([`village-text-scan.md`](village-text-scan.md), which also lists every
+  Chinese string the exe still draws and what each needs):
+  12. **the gene splicing window's tabs** 资料 / 选择 / 最佳化 - 3 x 8 at
+     `0x66A14C` behind the pointer table `0x66A164` (`GeneWin_DrawChoices`
+     `0x598E90`, its one reader): `BATTLE.EMI`'s `Data` / `Pick` / `Best`,
+     6-byte slots between the `AP` / `1` / `0` bytes the PC has at
+     `0x66AF38` and the pieces and `DATA` / `BEST` it has at `0x66AF4E`.
+     Written in place; the draw's count is `0x10`.
+  13. **the faerie village's board lists** - the ten facility names
+     `0x669E18..` behind `0x669E68` (`CommuBoard_DrawListBox`) and the ten
+     choices `0x669E90..` behind `0x669EE0` (`CommuBoard_DrawListBoxB`);
+     nothing but the two tables reaches them (`tools/text_scan.py`), so
+     repointed into 16-byte buffers as groups 3, 4 and 7 are: `COMMU01.EMI`
+     has the twenty as 8-byte slots right before the list rows and record
+     offsets the PC has at `0x652C6C`, and `Merchant`, `Explorer`,
+     `Antiques` and `Handyman` fill theirs with no NUL. The two draws pass
+     `Text_DrawAt` the count 3 - the Chinese lines' three glyphs - which
+     would cut `Merchant` to `Mer`: once the group is written they pass
+     `0xFF` (`Labels_Written`), the strings being NUL-ended.
+  14. **the village's words**, five strings the DLL's own draws read through
+     `Labels_Slot` from buffers of ours (the shipped slots untouched): the
+     board panel's label 文化 `0x669E10` (`Culture`, the list's own word;
+     count 2 -> `0xFF`, and the number after it from `0x98`, under the seven
+     letters, to `0xBE`, where the owner's web reference of the US screen
+     has it); the one glyph 名 `0x669F08` that the ranked lists' headings
+     draw after a count - the US disc's pair `faeries` / `faery`
+     (`COMMU05.EMI`, two copies of the pair of 8-byte slots right before the
+     kind table the PC has at `0x653180`), the heading drawing the plural,
+     or the singular for a count of one (inferred from the pair; the US
+     routine was not read), a letter's gap after the number; and the hi-lo
+     game's money and stake titles 所持金 / 赌金 `0x669F60` / `0x669F68`
+     (`Commu_DrawZennyBox` / `_DrawStakeBox`, count 3 -> `0xFF`):
+     `COMMU02.EMI`'s `Cash` and `Pot`, each ending in the disc's zenny code
+     `0x60`, right after the 72 bytes of sprite rectangles the PC has at
+     `0x652D04`. **The headings' place:** `Population change` from the
+     shipped `x + 0x58` ran under the page counter the 8 px draw puts at
+     `0xEE`; the shipped heading is four glyphs, so under a written group
+     the heading is centred on its middle, `x + 0x70` (`TextAdvance_Width`),
+     within a few pixels of the US screen.
+     **The count's column** (the French and German check, 2026-10-10): the
+     count sits at `x + 0x6C`, sized for the five-glyph Chinese row label,
+     and the French `Taux de natalité` ran under it, the German
+     `Geburtenrate` touched it; under a written group the column moves right
+     of the label's pen width by a letter when it would collide (the
+     owner's word), the count's word following. Whether the French
+     PlayStation overlaps the same way was not read.
+  *Verification:* `loc_build.py all` on the US disc reports `gene tabs 3,
+  village lists 20, village words 5`; `rest_4b`, `rest_4c` and `rest_4e`
+  self-tests 0 mismatches (the fuzz runs before any overlay loads, so every
+  changed draw is the original there); the three routes replayed
+  (`analysis/shots/dragonmenu_loc2`, `fairy_loc3`, `news_loc3`): the tabs,
+  the lists, `Culture 0`, `Population change` with `1/2` clear of it and
+  `Birth 3 faeries`. **Owed the owner's eye:** the hi-lo game's boxes (no
+  route), the French and German words.
+  **Extended 2026-10-10 again, at the owner's word** (the list boxes, the
+  Identify panel, the faeries' names):
+  - **The list boxes' width** (group 13): the shipped box is `0x30` wide,
+    three Chinese glyphs and a margin, its frame four 8-px columns, and
+    `Merchant` / `Handyman` ran past its edge. The discs sized it per
+    language - the US and German `COMMU01.EMI` `0x50`, the French `0x60`
+    (the two `addiu $a2` constants that vary across the four discs; the JP
+    `0x30`): the widest word plus 16. Once the group is written
+    `CommuBoard_DrawListBox` / `_DrawListBoxB` use that (`Labels_MaxWidth`,
+    rounded up to 8, never under `0x30`) and `CommuBoard_DrawListFrame` a
+    column per 8 of it.
+  15. **the Identify panel's headings** 弱点 / 持有物 (`0x66A3E0` /
+     `0x66A3E8`, `Identify_DrawMember` / `_DrawEnemy`, `magic_s12.cpp`; the
+     owner's `identify.txt`): **no disc carries a word for them** - the US
+     `MAGIC059.EMI` (the ability's own overlay) and `BATTLE.EMI` hold no
+     such string, nor the panel's question marks - **because the US panel
+     draws no headings**: the owner's wiki capture of it (2026-10-10) shows
+     the name, the EXP and zenny lines, a small `ITEM` label above the two
+     items, and nothing where the port's 弱点 / 持有物 stand. So the overlay
+     builder sends a space for each (`IDENTIFY_WORDS`), which the two draws
+     read through `Labels_Slot` and draw as nothing, and above the items
+     they draw the `ITEM` the port still holds beside `EXP` at `0x65AAB4`
+     (read by nothing in the port) in the 8 px font, 23 px left of the
+     items' column on the heading's row, as the US does; the target's name,
+     drawn with the count 5 of five Chinese glyphs, is drawn with 8 (`Fly M`
+     -> `Fly Man`). (`Weakness` / `Items`, the builder's own words, stood
+     for an hour before the capture.) `Magic080_DrawText` reads the shipped
+     slot still (one glyph of each string, an effect).
+  16. **the sixty faeries' names.** The port's faeries are the PlayStation's:
+     a table of sixty 20-byte trait records at `0x653210` - four stat bytes,
+     then a name of 16 - and a birth (`CommuSim_AddRecord`) copies the
+     record's four stats and **five bytes of its name** into the save's name
+     table, where the US names (five letters at most) fit whole and a
+     Chinese one loses its third glyph (the owner's question, 2026-10-10:
+     the stats are fixed to the faerie on the PC too; only the renamer's
+     suggestion, `CommuName_MakeRandom`, rolls two random halves, and the
+     port cut that screen - DIV-0075). `COMMU00.EMI` has the sixty as 9-byte
+     records, a 5-byte name padded with the space code and the same four
+     stats, found by the stats (all sixty equal to the PC's; the French and
+     German discs carry the US list unchanged). Written into the sixteen-byte
+     name fields in place; the witness `CommuEntry_DrawPanel`'s read of the
+     bars at `0x45E945`. The sixtieth record's PC name field holds no glyph
+     string (`01 01 02 03 ..`) and is kept as shipped (`59 of 60`).
+     **Saves made before the overlay** keep their Chinese bytes:
+     `tools/faerie_names.py` rewrites each in-use entry's five bytes from
+     the overlay's list - entry r is trait record r, so the name is exact -
+     and recomputes the checksum; run on the owner's `fairyVillage.DAT`,
+     `BISLPS00` and `BISLPS0C` (six faeries each: Candy, Green, Lily, Lemon,
+     Chirp, Wolke), the other slots holding none.
+  *Verification:* `loc_build.py all` on the US disc reports `identify words
+  2, faerie names 60`; the log `59 of 60 faerie names`; `magic_s12`,
+  `rest_4a`, `rest_4b` and `rest_4e` self-tests 0 mismatches (the first
+  caught a changed call order - the heading's character count is taken
+  before the enemy record is read, as the original has it); the owner's
+  routes replayed (`analysis/shots/fairy_loc4`: `Weapons` / `Items` /
+  `Handyman` in a box sized to them; `news_loc4`: `Coo`, `Pan`, `Candy` on
+  the board from the renamed save; `identify_loc4`: no headings, `ITEM`
+  small above the items, `Fly Man`).
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
   Not by a `BOF3X_ORIGINAL` name: the slots are data.
 
@@ -4345,64 +4493,121 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_LINES=0` leaves the switch off (the strip);
   `BOF3X_ORIGINAL=D3d_DrawLineF2,...` runs Capcom's handler.
 
-### Dauna Mine's minecart map is walled as every later release walled it
+### Dauna Mine's minecart map is walled as every later release walled it, from the player's Western disc
 
 - **ID:** DIV-0080
 - **Date:** 2026-10-06
-- **Subsystem:** the area data as loaded (`src/game/area4_walls.cpp`, run at
-  the end of `LoadDatFile` in `src/game/dat_load.cpp` for `AREA004.DAT`; the
-  cell plane at `AreaMap_Header` `0x8CB580`'s block, the battle placement
-  nibble map at `0x8C3D80`)
-- **Tier:** Intent - the owner's decision, 2026-10-06: "if it looks like a bug
-  fix, it's probably worth keeping the change as the default option", and
-  "make the code change so that it works the same regardless of source".
+- **Rewritten:** 2026-10-10 (the walls moved from a coordinate table in our
+  code to an optional layer built from the player's own disc); **changed**
+  the same day: on by default wherever the layer is installed (the owner's
+  word)
+- **Subsystem:** the area data as loaded: the `area4-walls` layer
+  (`tools/importer.py`, `recipes/opt.toml`, [`opt-layers.md`](opt-layers.md)
+  section 1), walked by DIV-0086's `BOF3X_OPT` prefix in `LoadDatFile`
+  (`src/game/dat_load.cpp`), named by default by the launcher
+  (`src/launcher/config.h` `kOptDefault`); the cell plane of the area block at
+  `AreaMap_Header` `0x8CB580` (PC tag `0xC8000`) and the battle placement
+  nibble map at `0x8C3D80` (PC tag `0xC0800`)
+- **Tier:** Intent - the owner, 2026-10-06: "if it looks like a bug fix, it's
+  probably worth keeping the change as the default option"; and 2026-10-10:
+  do it without carrying Capcom's table in our code, if we can
+  ([`LICENSING.md`](LICENSING.md) section 3).
 - **Original behaviour:** the PC port carries the Japanese disc's map of area
-  4 (Dauna Mine's minecart area), in which 72 cells along the raised strip's
-  east edge (x 28, z 9..30 and 35..65, the doorway at z 32..33 open), its
-  west side's north end (x 25, z 9..11) and the corridor's bottom edge (z 71,
-  x 7..22) are open floor between wall stubs, and 8 of those cells are open
-  to battle placement. Every later release - the US, French and German PSX
-  discs and both PSP discs - walls those cells (`0x10`, the value the
-  neighbouring stubs already carry) and the PSX discs close the 8 placement
-  cells; the PSP took the walls but not the placement half
-  ([`region-diff.md`](region-diff.md) sections 8 and 10).
-- **New behaviour:** with `BOF3X_AREA4_WALLS` on (the default; armed after
-  every module's self-test), each load of `AREA004.DAT` sets the 72 cells to
-  `0x10` and the 8 placement nibbles to 0, from a coordinate table in our
-  code, guarded: only when the block is 90 x 88 and every cell still holds
-  JP's value; a map that already has the walls is left alone with a log
-  line. The later discs' 30-cell re-texture of the same strip is **not**
-  taken: it is Capcom's texture records, not expressible by coordinate.
-- **Rationale:** a collision fix every later build made; applied by
-  coordinate so the PC install, the JP disc and any later disc give the same
-  area - the engine / data split keeps the bytes the player's
-  ([`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 5).
+  4 (Dauna Mine's minecart area), in which 72 cells along three lines - the
+  raised strip's east edge (its doorway open), the north end of its west
+  side, and the corridor's bottom edge - are open floor between wall stubs
+  Capcom had already placed on the same lines, and 8 of them are open to
+  battle placement ([`region-diff.md`](region-diff.md) 8.1, 8.2 for the
+  cells). Every later release - the US, European, French and German PSX discs
+  and both PSP discs - walls those cells and the PSX discs close the 8
+  placement cells; the PSP took the walls but not the placement half.
+- **New behaviour:** with the `area4-walls` layer installed and named in
+  `BOF3X_OPT` - which the launcher does by default, below - each load of `AREA004.DAT`
+  walks `DAT\area4-walls.AREA004.DAT` after the file: two kind-0 chunks, the
+  Western disc's **whole** cell-byte plane (7,920 bytes) and its **whole**
+  placement map (5,000 bytes), each landing exactly on JP's. On JP's map that
+  changes the 72 cells to the wall value and the 8 nibbles to 0 and nothing
+  else (verification). **On by default (2026-10-10):** `tools/importer.py
+  build` builds the layer whenever the player's US, European, French or
+  German PSX disc is among its sources (any preset or source order), and
+  `install` installs it whenever the cache holds it; the launcher names it in
+  `BOF3X_OPT` whenever `DAT\area4-walls.*.DAT` is there and the ini's `opt=`
+  is empty (the default; [`launcher-settings.md`](launcher-settings.md)). It
+  is never shipped or committed. `recipes/opt.toml` records the two chunks'
+  tags, sizes and hashes and the hashes of the composed chunks, and no cell's
+  place or value. **Turning it off:** `opt=none` in `bof3x.ini` (or an `opt=`
+  list that does not name it, or `BOF3X_OPT=none`) plays the shipped map
+  with the layer still installed; `importer.py install --no-opt area4-walls`
+  removes it from `DAT\`; `build --no-opt area4-walls` does not build it. An
+  `opt=` value the launcher cannot honour stops it with a message rather
+  than falling back to the default. **No disc, no walls:** a player with
+  only the PC install, the JP disc or a PSP disc builds no layer and plays
+  the shipped open map, by default and without a choice. The code that wrote
+  the walls from a table (`src/game/area4_walls.cpp`, `BOF3X_AREA4_WALLS`) is
+  gone; that variable is now refused at start-up (`=0`, the old "shipped
+  map", is accepted with a log line when the layer is not named, and refused
+  when it is, since it would get walls it asked to be without). The later
+  discs' 30-cell re-texture of the strip is still **not** taken: the layer
+  carries the cell plane, not the tile words or texture records, so the
+  textures stay JP's.
+- **Rationale:** a collision fix every later build made. The owner wanted it
+  without our code carrying Capcom's coordinates. A rule derived at load time
+  from the JP map's own data was looked for first and does not exist
+  ([`region-diff.md`](region-diff.md) 10.1): the 72 cells are not
+  distinguishable from other open cells by the map's heights or cell bytes.
+  So the walls come from the player's own disc, as the unified-data plan
+  takes every later build's content change ([`unified-data-plan.md`](unified-data-plan.md)
+  7): the engine / data split keeps the bytes the player's.
 - **Also in the PSX version?** The JP disc has the open cells; every later
-  disc has the walls. This follows the later discs.
-- **Verification:** `tools/region_read.py fix` parses the table out of the
-  C++ source, applies it to the JP disc's sections 8 and 10 and compares with
-  the US and German discs: the cell bytes and the placement map identical,
-  the 920 remaining differences all in the re-texture not taken.
-  `'*'` narrow at the agent's tip, 0 mismatches (the switch is armed after
-  the self-tests). **Not seen live:** the owner's walk of the strip's east
-  and bottom edges, blocked with the fix and open with `BOF3X_AREA4_WALLS=0`.
-  Area 4 plays twice in the attract cycle, so state-hash reference runs want
-  the switch off. **Attract on against off (2026-10-06,
-  `analysis/statehash/attract_walls_on` / `_off`):** the off run identical to
-  the references on all 10,305 ticks; the on run differs from them in
-  exactly four pages, the cell plane's two (`0x8D3000`, `0x8D4000`) and the
-  placement map's two (`0x8C3000`, `0x8C4000`), from the first load at tick
-  1,312 - the fix's own footprint and nothing else, so the demo's scripted
-  moves never meet the walls. The oracle's one differing row is a sampler
-  poll on an area-load boundary (area `0x0002` against the `0xffff` marker),
-  not game state.
-- **Reversible?** `BOF3X_AREA4_WALLS=0` leaves the map as loaded. **From a
-  Western disc alone** (the importer's cache, unified-data step 3,
-  [`importer-transforms.md`](importer-transforms.md) section 5): the cache
-  holds that disc's own `AREA004` rows, walls and the 30-cell re-texture
-  with them; the guard's "already walled" branch leaves them, and the switch
-  cannot restore the open map from such a cache. A by-source difference
-  until the owner says otherwise (the owner's call 4 there).
+  disc has the walls. This follows the later discs where the player has one.
+- **Verification (2026-10-10):** `tools/importer.py opt-recipes` with the JP,
+  US, European, French, German and both PSP discs: the layer's two chunks are
+  byte-identical on all four Western PSX discs, the PC's chunks are JP's
+  sections exactly, and the planes differ from JP's in 78 bytes (the 72 cells,
+  and 6 bytes holding the 8 nibbles). `build --opt area4-walls` from the US
+  disc and, separately, the German disc: the same layer file (md5 equal);
+  `verify`: 2 of 2 chunks and 2 of 2 composed base chunks as recorded.
+  `tools/region_read.py fix --layer` lays the built layer over the JP disc's
+  sections as `LoadDatFile` lays a kind-0 chunk and compares with each later
+  disc: against US, German, French and European, the cell plane and the
+  placement map identical; exactly 72 cells changed, every one `0x00` to
+  `0x10`, the cells the old table had; 8 nibbles, every one to 0 and
+  on a walled cell; the section outside the cell plane untouched (the 920
+  bytes still different are the re-texture not taken). `importer.py check`:
+  6 layers, 0 errors. Built (llvm-mingw); `BOF3X_SELFTEST_ONLY=1
+  BOF3X_SHADOW=field_blocked` from an ini-less copy: exit 0, `inject: 10081
+  ours`, the `BOF3X_AREA4_WALLS=0` line logged; with `BOF3X_AREA4_WALLS=1`,
+  the refusal (exit 3). **Not run:** a game with the layer installed (the
+  loader walk is DIV-0086's, already verified; this layer adds no chunk kind),
+  and the owner's walk of the strip's east and bottom edges. The 2026-10-06
+  attract A/B (`analysis/statehash/attract_walls_on` / `_off`) still
+  describes the layer's effect - the same bytes in memory: four pages
+  differ (the cell plane's two, `0x8D3000`, `0x8D4000`; the placement map's
+  two, `0x8C3000`, `0x8C4000`) from the first load at tick 1,312, and the
+  demo's moves never meet the walls. The state-hash references are recorded
+  in a game directory without the layer installed, so they are unchanged;
+  in one with it installed, the default run is the old "on" run.
+  **The default (2026-10-10):** a scratch harness over the launcher's
+  `opt=` handling (fake `DAT\` with and without the layer file): empty `opt=`
+  gives `BOF3X_OPT=area4-walls` with it and nothing without; `opt=none`
+  nothing; an explicit list exactly itself; a set `BOF3X_OPT` untouched; bad
+  values (stray characters, `none` in a list, empty names, duplicates, more
+  than 8, too long) refused; an ini saved and reloaded keeps an empty
+  `opt=` empty. The real launcher with `BOF3X_SELFTEST_ONLY=1` on a
+  hard-linked scratch game directory: layer file present and no ini, the
+  DLL logs `optional layer 1, DAT\area4-walls.*.DAT`, exit 0; `opt=none`,
+  no layer; `BOF3X_AREA4_WALLS=0` with the layer named, exit 3. The
+  importer's default (`default_opt`, `install`, `--no-opt`) over a fake cache
+  and game directory. **Not run:** a real `build` with the default (its
+  layer is the one verified above).
+- **Reversible?** `opt=none` (or `BOF3X_OPT=none`); the layer is a separate
+  file (`DAT\area4-walls.AREA004.DAT`), and the shipped `AREA004.DAT` is
+  never changed. **From a Western disc alone** (the
+  importer's cache, unified-data step 3,
+  [`importer-transforms.md`](importer-transforms.md) section 5): `base/`
+  holds that disc's own `AREA004` rows, walls and the 30-cell re-texture with
+  them, and the open map cannot be had from such a cache. A by-source
+  difference until the owner says otherwise (the owner's call 4 there).
 
 ### The music loops inside its file, at the points the disc's sequence loops
 
@@ -4425,44 +4630,77 @@ designed in rather than bolted on.
   every module's self-test), a track with a measured row loops from the row's
   end back to its start inside the file, sample-accurate - the decoder is
   rewound and the frames before the loop start discarded, so the samples
-  after the jump are the first pass's bit for bit - with a 2.9 ms crossfade
-  at the join (5.8 ms on a row shifted to fit a file cut short of one body,
-  the battle theme today). A track without a row rewinds as before. Thirteen
-  tracks have rows today (`003 014 036 051 060 063 064 079 082 085 090 144
-  153`); the full measurement of the 156 looping songs is paused for a
-  machine left on (section 11's resume command). The town theme `000` is
-  **excluded**: its file is 0.44 s shorter than one loop period, so no
-  correct loop exists inside it - the owner's decision (section 11.3).
+  after the jump are the first pass's bit for bit - with a crossfade at the
+  join. A track without a row rewinds as before. **The table as it ships
+  (2026-10-10): 37 rows** of the 156 looping tracks
+  ([`bgm-comparison.md`](bgm-comparison.md) section 11.2):
+  - **28 full** (`001 003 013 014 036 039 047 051 060 061 062 063 064 065
+    068 076 078 079 082 085 088 090 092 099 104 131 144 164`): the file
+    holds a whole body after the loop start; the row is the disc's loop,
+    start and period, in the file's samples, with a 2.9 ms crossfade.
+  - **9 shifted** (`008 056 070 113 120 123 133 142 157`): the file
+    ends before one whole body after the loop start but holds a whole period
+    from its start; the row keeps the disc's period, ends as late as the file
+    allows, and so starts that period earlier - its first moments are intro
+    material standing in for the body's missing tail (0.07..8.1 s), with a
+    5.8 ms crossfade. In time and in phase
+    with the disc's loop; not the disc's notes for that stretch.
+  - **The gates** (`tools/bgm/measure_loops.py` `gate()`): every row's period
+    correlation >= 0.8 and an alignment of 10+ windows within 50 samples (512
+    on the onset envelope); a shifted row's stand-in must also correlate
+    with the body's tail it replaces at >= 0.5, however short. The number
+    sits in a gap of the measured distribution (29 shifted rows: 15 at
+    -0.10..0.34, none to 0.62, 14 at 0.62..1.00). The first cut of the gate
+    kept 151 and 153 (the battle theme and its twin) on their 0.35..0.37 s
+    stand-ins, a crossfaded run-in; **the owner's call of 2026-10-10 refuses
+    them with the rest**, so the battle theme rewinds as the original does
+    until the disc's music (DIV-0087) plays it.
+  - **Refused, rewinding as the original: 119.** 14 shifted rows on the
+    stand-in gate (`007 089 093 119 125 128 136 138 143 145 147 151 153
+    159`: about 4 s of other material a pass, 17.3 s on 145, 0.35 s on
+    151 and 153; twelve of them in the table until 2026-10-10 - the gate
+    had been documented and not applied); 76
+    *shortened* - the file shorter than one loop period from its start, so
+    no correct loop exists inside it (the town theme `000`: 0.44 s short;
+    20 of them by a frame or two, `near_full`, the owner's call whether a
+    slip that size a pass beats the rewind); 29 others under the
+    correlation or alignment gates (23 full, 6 shifted), every one with its
+    cause in `loops.json`'s `why`.
 - **Rationale:** the owner's words above; the measurement that the disc
   loops inside the song. The table is our own measurement, regenerable from
-  `analysis/bgm/loops.json` by `tools/bgm/gen_loop_table.py`; it holds
-  sample positions, not game data.
+  `analysis/bgm/loops.json` by `tools/bgm/gen_loop_table.py` (which refuses
+  a row whose decode is not exactly frames x 1,152 samples - the positions
+  are the engine's only while ffmpeg trims nothing, true of every file
+  today); it holds sample positions, not game data.
 - **Also in the PSX version?** The PlayStation plays the sequence, which
   loops at these points by its own markers; the PC's rewind is the port's.
-  This restores the disc's loop structure on the PC's recordings.
-- **Verification:** `tools/bgm/prove_loops.py` splices each row the engine's
-  way and scores the first second after the join against the disc's render
-  or the file's own continuation: the battle theme from -0.10 with 809
-  near-silent samples to 0.63 with no gap; the eleven in-file rows from
-  -0.14..0.22 to 0.977..0.989. `BOF3X_SHADOW=sound` loops a stand-in decoder
-  sample-exactly in four call patterns and checks every row; `'*'` narrow
-  passed on the agent's tip and the `sound` module at the merged tip.
-  **Not yet heard in the game**: `analysis/bgm/listen/153_loop_fixed.wav` is
-  the offline splice for the owner's ear; whether replaying the intro's
-  frames at each loop causes a hitch in play is unmeasured.
+  A full row restores the disc's loop exactly; a shifted row restores its
+  period and phase, not the stand-in's notes; a refused track keeps the
+  port's rewind.
+- **Verification (2026-10-10, the 39-row cut; the 37 that ship are among them):** `prove_loops.py`'s splice and
+  scores, re-run offline over the regated table (the renders on disk; the
+  first second after the join against the render's continuation, before =
+  the original's rewind): full rows from -0.18..0.25 (8 unmeasured: the
+  render ends before the file does) to a median 0.79 (0.60..0.90), with
+  steps 0.01..3.15 matching the render's own loop's (013: 3.15 against
+  3.01) - except `061`, 0.01, an envelope-aligned song whose waveform
+  never correlates with the render, so the score cannot speak; its file's
+  own second pass matches its first at 0.949. Shifted rows from
+  -0.10..0.18 to 0.32..0.86 (median 0.62; 153 0.63 before it was refused),
+  steps 0.09..0.55. The
+  rewind's 336..2,205 near-silent samples after the join fall to 0..97,
+  except where the music rests at that point in the render too (001, 078,
+  092; 085 640 against the render's 58). Built clean;
+  `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`: exit 0,
+  the stand-in decoder looped exactly in four call patterns, "39 table
+  rows in bounds"; the 37-row table built and `'*'` run with the review's
+  tip. **Not yet heard in the game**;
+  whether replaying the intro's frames at each loop causes a hitch in play
+  is unmeasured.
 - **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
-- **The full measurement, 2026-10-08** ([`bgm-comparison.md`](bgm-comparison.md)
-  section 11): all 153 songs rendered and measured, the method rewritten
-  the same day (the SPU's noise voices and free-running modulations defeat
-  a waveform-only measure). Of 156 looping tracks 48 have a loop in their
-  file, 80 hold less than a period (20 by a frame or two, `near_full` - the
-  owner's call whether a slip of that size a pass beats the rewind), 28
-  none that can be measured. The table in `music_loops_table.inc` is
-  regenerated from `loops.json` by `gen_loop_table.py` (not yet re-run at
-  this writing). **The owner's stance the numbers led to:** the disc's
-  music by default wherever a disc is a source
-  ([`unified-data-plan.md`](unified-data-plan.md) section 6); this entry
-  is what a PC-only install gets.
+- **The owner's stance (2026-10-08):** the disc's music by default wherever
+  a disc is a source ([`unified-data-plan.md`](unified-data-plan.md)
+  section 6); this entry is what a PC-only install gets.
 
 ### The enemy AI rows' done bits cleared at spawn (the Volt's EXP bonus)
 
@@ -4511,7 +4749,9 @@ designed in rather than bolted on.
   `+0xF1 = 0xFF` on each of the eight slots - the original keeps 0xFF, ours
   leaves 0. Owed: the owner's live fight (a Volt group with a thunder hit,
   twice in one session; every Volt should yield 84 both times).
-- **Reversible?** No switch: a static byte the PlayStation never carried over.
+- **Reversible?** No switch of its own: a static byte the PlayStation never
+  carried over. `BOF3X_ORIGINAL=Battle_CopyEnemyData` runs Capcom's function,
+  which leaves the byte as it was.
 
 ### The master list's pupils box without the port's label
 
@@ -4639,7 +4879,10 @@ designed in rather than bolted on.
   `known-defects.md` D239, "Where DIV-0085 can act". The run guard was
   compiled and mirrored offline (the bridge's 97 edge cells still qualify);
   the owner's look was before it.
-- **Reversible?** `BOF3X_SIDE_DUP=0`.
+- **Reversible?** `BOF3X_SIDE_DUP=0`. A second switch beside it,
+  `BOF3X_SIDE_ZERO=1` (an experiment from the investigation, 2026-10-07;
+  off unless set, `0` or `1`), leaves undrawn a side face whose texture
+  word is 0; off, side faces are the original's (and this entry's).
 
 ### Optional layers from the player's PSP disc, walked after the language overlay
 
@@ -4680,7 +4923,9 @@ designed in rather than bolted on.
   `DAT\<layer>.*.DAT`, a text layer (a name ending in `-<tag>`) under another
   language than `BOF3X_LANG`'s; and in the walk, a path that would not fit
   its 0x40-byte buffer. The launcher's `opt=` key sets the variable with
-  the layers installed and of the language played (no dialog box yet).
+  the layers installed and of the language played (no dialog box yet); an
+  empty `opt=` gives the default layers installed (since 2026-10-10 DIV-0080's
+  `area4-walls`), `opt=none` none. `BOF3X_OPT=none` is none, as `original` is.
 - **Rationale:** the plan's divergence policy for data
   ([`unified-data-plan.md`](unified-data-plan.md) 7): a later build's
   content change is an optional layer from the player's own disc, off by
@@ -4707,8 +4952,9 @@ designed in rather than bolted on.
 - **Also in the PSX version?** No: the PSX discs have JP's palettes, tiles,
   maps and names (the Western discs their own names); these are the PSP
   releases' changes, laid over the PC's data.
-- **Reversible?** Unset `BOF3X_OPT` (or `BOF3X_OPT=original`), or empty the
-  ini's `opt=`; `BOF3X_ORIGINAL=LoadDatFile` runs Capcom's loader, which
+- **Reversible?** `BOF3X_OPT=none` (or `original`), or the ini's `opt=none`
+  (an empty `opt=` now plays the default layers installed, DIV-0080);
+  `BOF3X_ORIGINAL=LoadDatFile` runs Capcom's loader, which
   walks neither overlay.
 
 ### The cache's songs synthesised from the disc's sequence, the MP3 the fallback
@@ -4770,12 +5016,33 @@ designed in rather than bolted on.
   The switch: `BOF3X_MUSIC` (or the ini's `music=`) unset or `seq`, the
   cache's song where it has one; `mp3`, the PC's file always; anything else
   is fatal. `BOF3X_CACHE` naming something that is not a directory, or a root
-  longer than 42 characters, is fatal at start-up. The 42 comes from
-  `File_Open`'s retry: it builds `File_CdRoot` plus the path in a 0x50-byte
-  buffer with no length check, kept from the original, and every cache file
-  is read through it. A directory without `base\bgm` gives one log line and
-  no cache. Armed after every module's self-test; one log line when armed,
-  one per cache song started.
+  too long for its longest path (a bank's, `\base\bgm\bank\` plus a
+  15-character name plus `.DAT`) to stay within `MAX_PATH` - 226 characters -
+  is fatal at start-up. (Until 2026-10-10 the limit was 42: `File_Open`'s
+  retry builds `File_CdRoot` plus the path in a 0x50-byte buffer with no
+  length check, and every cache file is read through `File_Open`. That
+  retry is now skipped for a path whose prefixed form would not fit the
+  buffer, and the open fails as when the retry fails; with the shipped,
+  relative file names nothing changes, and `File_CdRoot` in front of an
+  absolute cache path could name no file anyway.) A directory without
+  `base\bgm` gives one log line and no cache. **The cache is checked at
+  start-up:** every `base\bgm\NNN.DAT` (a name `Music_LoadFile` can ask for)
+  is parsed, its number checked against its name, and each bank the songs
+  name is parsed and checked once (format, the music slot's size, master
+  volume, its name). A damaged cache - a song or bank that is truncated, has
+  a bad magic or version, or names a bank that is not there - is fatal then,
+  with the file's path in the message, rather than at the scene change that
+  would first play it; a track with no song file still plays its MP3. The
+  same checks run again as each song loads, for a cache changed while the
+  game runs. Armed after every module's self-test; one log line for the
+  check, one when armed, one per cache song started. **A change of bank**
+  keys off the synth's voices and clears their records' references into the
+  old bank ([`libsnd-reading.md`](libsnd-reading.md) 3.11); libsnd's
+  `SsVabClose` leaves them, so on the PSX a later volume or pitch-bend call
+  can reach the old song's release tails with the new bank's tone table,
+  past its end when the new bank is smaller (the player aborted there until
+  2026-10-10). An abort inside the SPU model is fatal through the same log
+  line as the player's (`DIV-0087: SPU model: ...`).
 - **Rationale:** the owner's stance of 2026-10-08: the disc's music is the
   default wherever a disc is a source, the PC's MP3s only when nothing else
   is there ([`sequenced-music-plan.md`](sequenced-music-plan.md), head and
@@ -4790,7 +5057,11 @@ designed in rather than bolted on.
   by the square law. Which level is the owner's call. A once-only song's
   reverb tail is cut where its voices end, and the ring's last half is lost
   to the pump's stop as for an MP3. `Music_Loops` does not rewind a sequence
-  (the loop is the data's). The synth's tick phase is arbitrary (0).
+  (the loop is the data's). The synth's tick phase is arbitrary (0). After a
+  change of bank, no volume or bend reaches the previous song's release
+  tails, where on the PSX one can (with tone attributes read from the new
+  bank, which the player cannot reproduce past its table). Whether any game
+  path changes bank while a tail is still audible is not measured.
 - **Verification:** the self-test under `BOF3X_SHADOW=sound`
   (`music_seq::SelfTest`, after DIV-0028's and the measured loops'), on a
   bank and two songs built in memory by the format, no game data. A looping
@@ -4810,7 +5081,53 @@ designed in rather than bolted on.
   llvm-mingw build, the `sound` and `'*'` self-tests, and a listen;
   against the renders, the synth's fidelity is
   [`sequenced-music-plan.md`](sequenced-music-plan.md) section 2's table.
+  **Amended 2026-10-10 (review fixes):** the self-test adds a song on the
+  second program of a two-program bank, then one on the one-program bank,
+  on the same synth, each equal to the oracle's; before the fix the second
+  song's `Play` aborted (`tone 16 of 16`; reproduced with the 2026-10-08
+  `seq.cpp` in a scratch harness). Built with llvm-mingw, no warnings;
+  `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound` exit 0; the start-up check run
+  on a synthetic cache under a 200-character root: intact, 2 songs and 1
+  bank checked, armed; a truncated bank, a missing bank and a song of the
+  wrong version each fatal at start-up naming the file.
 - **Also in the PSX version?** Yes in substance: this *is* the PSX's player
   on the PSX's data, at the PC's fade level and timing.
 - **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
   (or empty `cache=`); no cache, no change.
+
+### The faerie village's board buttons from the disc's own paint
+
+- **ID:** DIV-0088
+- **Date:** 2026-10-10
+- **Subsystem:** the community band's sprite sheet (`COMMU01.DAT` and
+  `COMMU05.DAT`, the kind-1 chunk tagged `0x1C080200` - VRAM 896, 256, 256 x
+  256 at 4 bits; `tools/loc_build.py`'s `build_village_sheet`;
+  [`village-text-scan.md`](village-text-scan.md) section 4)
+- **Tier:** Sensible
+- **Original behaviour:** the board's three side buttons - hunt, clear,
+  build - are paint on that sheet (`CommuBoard_DrawSprite` kinds 3..5, 40 x
+  16 at u `0x20` / `0x58` / `0x80`, v `0xE0` / `0xF0` / `0xF0`), 狩り / 開拓 /
+  建築 on the port's, and every overlay left them.
+- **New behaviour:** `loc_build.py` writes `<tag>.COMMU01.DAT` and
+  `<tag>.COMMU05.DAT`, each one kind-1 chunk of the same tag: the port's
+  sheet with, in rows 224..255, every byte that differs from the disc's
+  section of the same dest taken from the disc - `Hunt` / `Clear` / `Build`
+  on the US (the owner's web reference of the US screen shows the same),
+  the French and German discs their own words. The sheets differ elsewhere
+  too (rows 96..175, the board's frame pieces, which the port's draws place
+  and which the disc's art must not replace; the French and German in a few
+  more rows), and those rows stay the port's. The chunk uploads after the
+  shipped one (DIV-0005's walk) and lands on the same VRAM.
+- **Rationale:** the owner's ask, 2026-10-10 ("swap the side buttons for
+  their localized counterparts"); the discs painted them, so there is
+  nothing to draw by hand. The sprite table is the same on the US disc as on
+  the PC (its fourteen 6-byte records at `COMMU01.EMI` `0x270E0`, byte for
+  byte), so the rectangles are the same.
+- **Also in the PSX version?** Each disc's own paint, where the PC's has the
+  Chinese.
+- **Verification:** `loc_build.py all` on the US disc: `village board
+  sheet: COMMU01.DAT, COMMU05.DAT`; the owner's `fairyVillage.txt` replayed
+  (`analysis/shots/fairy_loc4/f01620.png` and on): `Hunt`, `Clear`, `Build`
+  beside their icons, the frame pieces as before. **Owed the owner's eye:**
+  the French and German sheets.
+- **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.

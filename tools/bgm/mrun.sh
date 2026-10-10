@@ -14,8 +14,12 @@
 # stderr.txt beside its exe (the sibling's mednafen/), as it always does.
 #   e.g.  python patch_disc.py 0 "$BGM_SCRATCH/disc000" 0xD1
 #         bash mrun.sh 330 song000.wav "$BGM_SCRATCH/disc000/bof3jp.cue"
-SIB=${BOF3_SIBLING:-/c/Users/kerok/Documents/GitHub/BreathOfFire3Recomp}
-SCR=${BGM_SCRATCH:?set BGM_SCRATCH to a scratch directory}
+# Paths as every music tool finds them (bgm_paths.py: the sibling beside the main checkout, the
+# scratch under its analysis/bgm/); BOF3_SIBLING and BGM_SCRATCH override, as there.
+HERE=$(cd "$(dirname "$0")" && pwd)
+SIB=${BOF3_SIBLING:-$(python "$HERE/bgm_paths.py" SIB)}
+SCR=${BGM_SCRATCH:-$(python "$HERE/bgm_paths.py" SCRATCH)}
+[ -n "$SIB" ] && [ -n "$SCR" ] || { echo "mrun.sh: no paths from bgm_paths.py" >&2; exit 2; }
 mkdir -p "$SCR/mdfn_home/firmware"
 [ -f "$SCR/mdfn_home/firmware/SCPH5500.BIN" ] || cp "$SIB/mednafen/firmware/SCPH5500.BIN" "$SCR/mdfn_home/firmware/"
 export MEDNAFEN_HOME=$(cygpath -w "$SCR/mdfn_home")

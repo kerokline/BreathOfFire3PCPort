@@ -8,8 +8,16 @@ the owner's machine. Inputs are game data and are only read; outputs go to
     BOF3_SIBLING    the archival sibling checkout (isos/, disc/SLPS_009.90, tools/)
     BOF3_BIN_ROOT   the psx-jp disc's BIN/ tree extracted (the sibling's convention)
     BGM_SCRATCH     where patched disc copies and the Mednafen base directory go
+    BGM_LOOPS_JSON  the loop measurements (default <PC>/analysis/bgm/loops.json); a copy
+                    elsewhere lets measure_loops.py regate and gen_loop_table.py run on it
+
+BOF3_BIN_ROOT has no checkout to be derived from (an extraction of the disc
+that lives outside every repository); its default is the sibling's own
+convention (BreathOfFire3Recomp tools/audio_banks.py, the same variable).
+
+    python bgm_paths.py NAME    prints one of the paths below (mrun.sh reads SIB, SCRATCH)
 """
-import os
+import os, sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _REPO = os.path.dirname(os.path.dirname(_HERE))
@@ -29,3 +37,7 @@ SLPS = SIB + "/disc/SLPS_009.90"
 JP_BIN = SIB + "/isos/Breath of Fire III (Japan).bin"
 JP_CUE = SIB + "/isos/Breath of Fire III (Japan).cue"
 SCRATCH = os.environ.get("BGM_SCRATCH", os.path.join(PC, "analysis", "bgm", "scratch")).replace("\\", "/")
+LOOPS_JSON = os.environ.get("BGM_LOOPS_JSON", PC + "/analysis/bgm/loops.json").replace("\\", "/")
+
+if __name__ == "__main__":
+    print(globals()[sys.argv[1]])

@@ -9,7 +9,7 @@
 
 [meta]
 target = "pc-zh"
-generated = 2026-10-08
+generated = 2026-10-10
 recipe_sha256 = "c7b3628fceb4af9e53cff42c2b5f0164a2d7239587d14c12990850bc14b057f3"
 pairs = ["psx-jp_vs_psp-jp.json"]
 
@@ -1321,4 +1321,15 @@ chunks = [
   { kind = 5, tag = 0x0065739C, size = 16, sha256 = "67fb2db4b4d6ab4776c6fa28e8d68852cd1a622722aea85daab24ab04136d1c1", table = "key_items", record = 7, on = ["psp-jp"] },
   { kind = 5, tag = 0x006573C4, size = 16, sha256 = "ead585c78c6c5d365ea35a54588cc43d4491293d6e8d756d97e345ded54f08f9", table = "key_items", record = 9, on = ["psp-jp"] },
   { kind = 5, tag = 0x0065CFA8, size = 16, sha256 = "aac3780c23b5d63cc37a4869325008601bcd10603698766483d9b61d674d4310", table = "abilities", record = 116, on = ["psp-jp"] },
+]
+
+[[layer]]
+name = "area4-walls"
+what = "DIV-0080: AREA004's collision as the Western PSX discs ship it - the area block's whole cell-byte plane (in PC tag 0xC8000) and the whole battle placement map (PC tag 0xC0800); not the tile words or texture records"
+[[layer.file]]
+name = "AREA004.DAT"
+composed = [{ over = 6, sha256 = "7a2a4665c391474cd24de4c3749998cc43234ecce7b651f7c7840a15ca74bd29" }, { over = 7, sha256 = "3601a519cc49cab9beb7d36258e53a4d8a69dc622521fbfa5ecfb2a6da97bb9f" }]
+chunks = [
+  { kind = 0, tag = 0x000CFBF0, size = 7920, sha256 = "21253b68ccacd249098d27009f44e7f7753fbdc807aca4a36c52922306e9a2b7", over = 6, emi = "WORLD00/AREA004.EMI#8", at = 31728, on = ["psx-us", "psx-eu-en", "psx-fr", "psx-de"] },
+  { kind = 0, tag = 0x000C0800, size = 5000, sha256 = "3601a519cc49cab9beb7d36258e53a4d8a69dc622521fbfa5ecfb2a6da97bb9f", over = 7, emi = "WORLD00/AREA004.EMI#10", at = 0, on = ["psx-us", "psx-eu-en", "psx-fr", "psx-de"] },
 ]

@@ -13,11 +13,11 @@ from.
     python tools/importer.py recipes  --dat DAT --disc JP --disc US ... [--out recipes/pc-zh.toml]
     python tools/importer.py identify PATH ...
     python tools/importer.py build    --source PATH [--source PATH ...] [--preset NAME] [--lang TAG ...]
-                                      [--opt LAYER ...] --out CACHE
+                                      [--opt LAYER ...] [--no-opt LAYER ...] --out CACHE
     python tools/importer.py verify   --cache CACHE
     python tools/importer.py check    (CI: the recipes against fixtures/, no game data)
     python tools/importer.py opt-recipes --dat DAT --disc JP --disc US --disc PSPJP --disc PSPEU
-    python tools/importer.py install  --cache CACHE --game DIR [--lang TAG ...] [--opt LAYER ...]
+    python tools/importer.py install  --cache CACHE --game DIR [--lang TAG ...] [--opt LAYER ...] [--no-opt LAYER ...]
 
 `recipes` is the generator: it hashes every section of every disc given
 (type-1 sections also decoded, tools/type1.py), and every PC chunk is looked up
@@ -31,7 +31,9 @@ Japan's language or drew its own art - docs/importer-transforms.md (step 3).
 `build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
 PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
 step 8). `opt/<name>/` layers carry a PSP disc's content changes the player may
-turn on (recipes/opt.toml, docs/opt-layers.md, step 4); `--preset` is a named
+turn on, and `area4-walls` a Western PSX disc's walls in area 4 (DIV-0080),
+built and installed by default when such a disc is given (`--no-opt` leaves it
+out) (recipes/opt.toml, docs/opt-layers.md, step 4); `--preset` is a named
 source order plus layers; `install` copies a cache's layers into a game's DAT/
 under the overlay names the engine walks. The recipe holds names,
 indices, sizes and hashes - never bytes - so it is committed. The cache is game
@@ -53,6 +55,7 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import dat          # noqa: E402
 import exe_tables   # noqa: E402
+import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
@@ -605,6 +608,8 @@ def cmd_build(a):
     if a.preset:
         sources, lang, opt = resolve_preset(a.preset, sources)
         a.lang, a.opt = a.lang + [x for x in lang if x not in a.lang], a.opt + [x for x in opt if x not in a.opt]
+    discs = {s.id for s in sources if isinstance(s, DiscSource)}
+    a.opt = default_opt(a.opt, a.no_opt, lambda name: bool(discs & set(DEFAULT_OPT[name])))
     print("sources, in order: %s" % ", ".join("%s (%s)" % (s.id, s.path) for s in sources))
     chunked = [s for s in sources if not isinstance(s, ExeSource)]
     assets, missing, used = [], collections.Counter(), collections.Counter()
@@ -678,31 +683,43 @@ def cmd_build(a):
     print("manifest: %s" % os.path.join(a.out, "manifest.toml"))
 
 
-# The default tag of a bare language: the owner's decision of 2026-10-08, en-US
-# is the default English. A language with one held tag needs no entry.
-DEFAULT_TAG = {"en": "en-US"}
-
-
 def resolve_languages(asked, sources):
-    """Each --lang to (tag, donor): a full tag (`en-150`) is the PSX disc whose
-    fixtures.toml tag it is, exactly; a bare language (`en`) is the disc of its
-    default tag (DEFAULT_TAG) when one is given, else the first PSX disc in the
-    player's order whose tag has it as the primary subtag (docs/importer.md
-    section 5, docs/importer-transforms.md section 7). tools/loc_build.py
-    reads PSX discs only."""
+    """Each --lang to (tag, donor): a tag (`en-150`) is the PSX disc whose
+    fixtures.toml tag it is, exactly (docs/importer.md section 5,
+    docs/importer-transforms.md section 7). The bare codes of before
+    2026-10-08 (`en`, fr, de, ja) are retired and refused (DIV-0005,
+    tools/language_tags.py). tools/loc_build.py reads PSX discs only."""
     donors = [s for s in sources if isinstance(s, DiscSource) and s.id.startswith("psx-")]
     out = {}
     for want in asked:
-        if "-" in want:
-            d = next((s for s in donors if tag_of(s.id) == want), None)
-        else:
-            d = next((s for s in donors if tag_of(s.id) == DEFAULT_TAG.get(want)), None) or \
-                next((s for s in donors if primary(tag_of(s.id)) == want), None)
+        language_tags.refuse_retired(want, "--lang")
+        d = next((s for s in donors if tag_of(s.id) == want), None)
         if not d:
             have = ", ".join("%s (%s)" % (s.id, tag_of(s.id)) for s in donors) or "none"
             raise SystemExit("--lang %s: no PSX disc given carries it; the discs given: %s" % (want, have))
         out[tag_of(d.id)] = d
     return sorted(out.items(), key=lambda kv: (primary(kv[0]) != "en", kv[0]))
+
+
+def _place(src, dst):
+    """The player's file at dst in build_languages' scratch game: a symlink,
+    else a hard link, else a copy. Windows refuses a symlink without Developer
+    Mode or the privilege (WinError 1314) and a hard link across volumes; a
+    copy always works. tools/loc_build.py only writes new <tag>.* files beside
+    these, never through them, so a link cannot change the player's tree."""
+    import shutil
+    src = os.path.abspath(src)
+    try:
+        os.symlink(src, dst)
+        return
+    except OSError:
+        pass
+    try:
+        os.link(src, dst)
+        return
+    except OSError:
+        pass
+    shutil.copy2(src, dst)
 
 
 def build_languages(asked, sources, out):
@@ -723,9 +740,9 @@ def build_languages(asked, sources, out):
     assets = []
     with tempfile.TemporaryDirectory(prefix="bof3_loc_") as game:
         os.makedirs(os.path.join(game, "DAT"))
-        os.symlink(os.path.abspath(exe.path), os.path.join(game, "BOF3.exe"))
+        _place(exe.path, os.path.join(game, "BOF3.exe"))
         for name in _manifest_rows("fixtures/pc-zh.DAT.files.tsv"):
-            os.symlink(os.path.abspath(os.path.join(pc.path, name)), os.path.join(game, "DAT", name))
+            _place(os.path.join(pc.path, name), os.path.join(game, "DAT", name))
         for tag, donor in resolve_languages(asked, sources):
             r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
                                 "--game", game, "--lang", tag], capture_output=True, text=True)
@@ -825,7 +842,45 @@ OPT_LAYERS = {
     "psp-names-en-150": "the PSP-EU's item and ability names where they differ from the US disc's "
                         "tables (P7: ability 116; three more abilities, four items)",
     "psp-names-ja-JP": "the PSP-JP's renamed ability 116 and key items 2, 5, 7, 9",
+    "area4-walls": "DIV-0080: AREA004's collision as the Western PSX discs ship it - the area block's whole "
+                   "cell-byte plane (in PC tag 0xC8000) and the whole battle placement map (PC tag 0xC0800); "
+                   "not the tile words or texture records",
 }
+# area4-walls (DIV-0080, docs/opt-layers.md section 1): from a Western PSX disc,
+# not a PSP one. Two chunks: the area block's whole cell-byte plane
+# (AreaMap_Bytes: 4 x the header's dword +0x14, width x depth bytes), so the
+# later discs' re-texture of 30 cells (tile words, texture records) is not
+# carried, and the whole placement map. Whole planes, not the differing bytes,
+# so that no cell's place or value is in the recipe. JP's section is found by its
+# destination, the Western twin by the same index, type and size (its kind-0
+# sections sit 0x8000 higher).
+WALLS_LAYER, WALLS_EMI, WALLS_DESTS = "area4-walls", "WORLD00/AREA004.EMI", (0x80104000, 0x8002A000)
+WESTERN = ("psx-us", "psx-eu-en", "psx-fr", "psx-de")
+OPT_SOURCES = PSP + WESTERN
+# The layers on by default, each with the builds that carry it: `build` builds
+# one whenever such a disc is among its sources, `install` installs one
+# whenever the cache holds it, and the launcher plays one whenever it is
+# installed and the ini's opt= is empty (src/launcher/config.h kOptDefault).
+# `--no-opt NAME` leaves it out of a build or an install. DIV-0080's walls,
+# on by default since 2026-10-10 (the owner's word).
+DEFAULT_OPT = {WALLS_LAYER: WESTERN}
+
+
+def default_opt(asked, without, have):
+    """`asked` (--opt) plus each DEFAULT_OPT layer `have(name)` says is
+    available, less `without` (--no-opt). A name in both lists, or one no
+    layer has, is refused."""
+    for name in without:
+        if name not in OPT_LAYERS:
+            raise SystemExit("--no-opt %s: no such layer; there are %s" % (name, ", ".join(OPT_LAYERS)))
+        if name in asked:
+            raise SystemExit("--opt %s and --no-opt %s together" % (name, name))
+    out = list(asked)
+    for name in DEFAULT_OPT:
+        if name not in out and name not in without and have(name):
+            out.append(name)
+            print("  %s: on by default (--no-opt %s leaves it out)" % (name, name))
+    return out
 # A names layer: the PSP build it reads, the PSX build its records differ from,
 # and its text's encoding (Japanese or not, loc_build.py's).
 NAME_LAYERS = {"psp-names-en-150": ("psp-eu", "psx-us", False), "psp-names-ja-JP": ("psp-jp", "psx-jp", True)}
@@ -888,7 +943,8 @@ OPT_EXCLUDED = {
     ("art", "the title menu page"): "P14, the PSP's title menu (its fishing entry); the PC's own page",
     ("art", "DEMO's language page"): "language pages (they differ PSP-JP to PSP-EU)",
     ("art", "a CLUT section (palettes)"): "beside a page not taken (DEMO's logo, SCENA17) or START's",
-    ("logic-data", "data"): "AREA004's band (DIV-0080 by rule) and Ryu's form data (P8, unread)",
+    ("logic-data", "data"): "AREA004's band (DIV-0080's walls are area4-walls, from a Western PSX disc; the "
+                            "PSP's form lacks the placement half) and Ryu's form data (P8, unread)",
     ("logic-data", "a sound bank's cue entries"): "the cue byte (region-diff.md 8.3): nothing on the PC",
     ("text", "the area message block (an edit within one language)"): "text, not names: a language layer's",
     ("text", "the system message pool (an edit within one language)"): "text, not names: a language layer's "
@@ -1010,6 +1066,7 @@ def cmd_opt_recipes(a):
                 stats[(layer, "port-art sections (the port's tiles kept)")] += 1
             stats[(layer, "sections")] += 1
             layers[layer].setdefault(name, []).append((slot, key, r["b"], sha(bytes(composed)), out))
+    walls_recipe(discs, jp, where, files, pc, layers, stats)
     for lname, (psp_id, base_id, ja) in NAME_LAYERS.items():
         src, base = discs[psp_id], discs[base_id]
         for t, pc_at in name_tables():
@@ -1067,6 +1124,66 @@ def cmd_opt_recipes(a):
         print("    %-10s %-34s %4d  %s" % (k, what, n, OPT_CONVERTED if k == "converted" else OPT_EXCLUDED[(k, what)]))
 
 
+def walls_recipe(discs, jp, where, files, pc, layers, stats):
+    """The area4-walls layer's two chunks (DIV-0080): AREA004's area block cell
+    plane and its placement map, each whole as the US disc has it - not cut to
+    the bytes that differ, so the recipe records no cell's place or value, only
+    the planes' tags, sizes and hashes - with `on` the Western discs given that
+    carry it byte for byte. The PC's chunks must be JP's sections exactly, the
+    US disc's must differ from them, and the composed chunks must be the US
+    disc's (the cell plane; the placement map whole)."""
+    us = discs["psx-us"]
+    stem = WALLS_EMI.rsplit("/", 1)[-1][:-4]
+    name = stem + ".DAT"
+    js = jp.sections(WALLS_EMI)
+    western = [discs[b] for b in WESTERN if b in discs]
+    for dest in WALLS_DESTS:
+        idx = [i for i, s in js.items() if s[1] == 0 and s[2] == dest]
+        if len(idx) != 1:
+            raise SystemExit("%s: %d JP sections at 0x%08X" % (WALLS_EMI, len(idx), dest))
+        i = idx[0]
+        jb = js[i][3]
+        twins = {}
+        for s in western:
+            t = s.sections(WALLS_EMI).get(i)
+            if not t or t[1] != 0 or len(t[3]) != len(jb):
+                raise SystemExit("%s section %d: %s's twin is not the same shape" % (WALLS_EMI, i, s.id))
+            twins[s.id] = t[3]
+        ub = twins["psx-us"]
+        if dest == 0x80104000:       # the cell-byte plane alone (AreaMap_Bytes)
+            lo = struct.unpack_from("<I", jb, 0x14)[0] * 4
+            hi = lo + jb[0] * jb[1]
+        else:
+            lo, hi = 0, len(jb)
+        got = where.get((WALLS_EMI, i))
+        if got is None:
+            raise SystemExit("%s section %d: no PC base chunk it lands on" % (WALLS_EMI, i))
+        slot = got[1]
+        ch = files[name]["chunks"][slot]
+        blob, chunks = pc.chunks(name)
+        c = chunks[slot]
+        pcb = blob[c.offset:c.offset + c.size]
+        if pcb != jb:
+            raise SystemExit("%s slot %d: the PC's chunk is not JP's section" % (name, slot))
+        changed = sum(jb[k] != ub[k] for k in range(lo, hi))
+        if not changed:
+            raise SystemExit("%s section %d: the US disc's equals JP's" % (WALLS_EMI, i))
+        composed = bytearray(pcb)
+        body = ub[lo:hi]
+        on = [s for s in WESTERN if s in twins and twins[s][lo:hi] == body]
+        composed[lo:hi] = body
+        out = [(0, ch["tag"] + lo, lo, len(body), sha(body), on)]
+        stats[(WALLS_LAYER, "chunks")] += 1
+        stats[(WALLS_LAYER, "bytes")] += len(body)
+        stats[(WALLS_LAYER, "bytes that differ from JP's")] += changed
+        stats[(WALLS_LAYER, "chunks on every Western disc given")] += len(on) == len(twins)
+        if composed[lo:hi] != ub[lo:hi]:
+            raise SystemExit("%s slot %d: the layer over the PC's chunk is not the US disc's" % (name, slot))
+        stats[(WALLS_LAYER, "sections")] += 1
+        stats[(WALLS_LAYER, "Western discs read")] = len(twins)
+        layers[WALLS_LAYER].setdefault(name, []).append((slot, WALLS_EMI, i, sha(bytes(composed)), out))
+
+
 def region_nd(t, d):
     import region_diff
     return region_diff.nd(t, d)
@@ -1090,9 +1207,10 @@ def opt_payload(s, ch, cache):
 
 
 def build_opt(asked, sources, out, path=None):
-    """opt/<name>/dat/NAME.DAT for each layer asked for, from the first PSP disc
-    in the player's order that carries each chunk; every payload hashed against
-    recipes/opt.toml. A layer is written whole or not at all."""
+    """opt/<name>/dat/NAME.DAT for each layer asked for, from the first disc in
+    the player's order that carries each chunk (a PSP disc; for area4-walls a
+    Western PSX one); every payload hashed against recipes/opt.toml. A layer is
+    written whole or not at all."""
     if not asked:
         return []
     layers = load_opt_recipe(path)
@@ -1100,7 +1218,7 @@ def build_opt(asked, sources, out, path=None):
     for name in asked:
         if name not in layers:
             raise SystemExit("--opt %s: no such layer; recipes/opt.toml has %s" % (name, ", ".join(layers)))
-        psp = [s for s in sources if s.id in PSP and isinstance(s, DiscSource)]
+        psp = [s for s in sources if s.id in OPT_SOURCES and isinstance(s, DiscSource)]
         files, cache, used = [], {}, collections.Counter()
         for f in layers[name].get("file", []):
             parts = []
@@ -1206,7 +1324,8 @@ def check_opt(path=None):
     """recipes/opt.toml against recipes/pc-zh.toml and fixtures.toml alone (CI):
     every layer known, every chunk a known kind landing inside a base chunk of
     its own kind (kind 0 inside the bytes, kind 1 inside the page's rectangle),
-    every name chunk on one record of a name table, every source a PSP build."""
+    every name chunk on one record of a name table, every source a PSP build
+    (area4-walls: a Western PSX build)."""
     if not os.path.exists(path or OPT_RECIPE):
         return ["recipes/opt.toml missing"]
     layers = load_opt_recipe(path)
@@ -1223,7 +1342,8 @@ def check_opt(path=None):
                 continue
             pcs = rec[f["name"]]["chunks"]
             for ch in f["chunks"]:
-                if any(b not in PSP for b in ch["on"]) or len(ch["sha256"]) != 64:
+                allowed = WESTERN if lname == WALLS_LAYER else PSP
+                if not ch["on"] or any(b not in allowed for b in ch["on"]) or len(ch["sha256"]) != 64:
                     errs.append("%s %s: source or hash" % (lname, f["name"]))
                 if ch["kind"] == 5:
                     if lname not in NAME_LAYERS or ch["size"] != NAME_FIELD or not any(
@@ -1254,12 +1374,25 @@ def cmd_install(a):
     engine walks: loc/<tag>/dat/NAME.DAT as DAT/<tag>.NAME.DAT (DIV-0005),
     opt/<name>/dat/NAME.DAT as DAT/<name>.NAME.DAT (DIV-0086). A layer's old
     files in DAT/ (<name>.*.DAT) are removed first, so none is left stale. The
-    engine reads DAT/ in the game directory until it reads the cache."""
+    engine reads DAT/ in the game directory until it reads the cache.
+
+    A DEFAULT_OPT layer (area4-walls) is installed whenever the cache holds it;
+    `--no-opt NAME` leaves it out and removes its files from DAT/, so the
+    launcher's default (it plays an installed default layer) does not
+    keep an old copy on."""
     import shutil
+    for tag in a.lang:
+        language_tags.refuse_retired(tag, "--lang")
     dat_dir = os.path.join(a.game, "DAT")
     if not os.path.isfile(os.path.join(dat_dir, "FIRST.DAT")):
         raise SystemExit("%s: no DAT/FIRST.DAT - not a game directory" % a.game)
-    for kind, names in (("loc", a.lang), ("opt", a.opt)):
+    opt = default_opt(a.opt, a.no_opt, lambda name: os.path.isdir(os.path.join(a.cache, "opt", name, "dat")))
+    for name in a.no_opt:
+        old = [f for f in os.listdir(dat_dir) if f.startswith(name + ".")]
+        for f in old:
+            os.remove(os.path.join(dat_dir, f))
+        print("opt/%s: left out%s" % (name, ", %d installed files removed from DAT/" % len(old) if old else ""))
+    for kind, names in (("loc", a.lang), ("opt", opt)):
         for name in names:
             src = os.path.join(a.cache, kind, name, "dat")
             if not os.path.isdir(src):
@@ -1276,8 +1409,13 @@ def cmd_install(a):
                 shutil.copyfile(os.path.join(src, f), os.path.join(dat_dir, "%s.%s" % (name, f)))
             print("%s/%s: %d files as DAT/%s.*.DAT%s" % (kind, name, len(files), name,
                                                           ", %d stale removed" % len(stale) if stale else ""))
-            if kind == "opt":
-                print("  play with BOF3X_OPT=%s (comma-separated, in order, for several)" % name)
+            if kind == "opt" and name in DEFAULT_OPT:
+                print("  played by default (the launcher's ini opt= empty); opt=none turns it off")
+            elif kind == "opt":
+                print("  play with opt=%s in bof3x.ini or BOF3X_OPT (comma-separated, in order, for several)" % name)
+    # Overlays under a retired bare code (DAT/en.*.DAT, DIV-0005) are not
+    # this install's to remove; it says they are dead weight.
+    language_tags.note_retired_overlays(dat_dir)
 
 
 # ---------------------------------------------------------------- presets
@@ -1286,6 +1424,9 @@ def cmd_install(a):
 # section 3 item 2). The player gives the files in any order; the preset puts
 # them in its own, and refuses when one it names is missing or one given is not
 # its. (build, what): `dat` a PC DAT/ tree, `exe` BOF3.exe, `disc` a disc.
+# A preset with a Western PSX disc builds area4-walls from it as any build
+# with such a disc does (DEFAULT_OPT; DIV-0080, the walls every later build
+# has), so no preset lists it; `--no-opt area4-walls` leaves it out.
 PRESETS = {
     "pc-install": ([("pc-zh", "dat"), ("pc-zh", "exe")], [], []),
     "us-disc": ([("psx-us", "disc")], [], []),
@@ -1420,11 +1561,12 @@ def cmd_verify(a):
 
 def verify_overlays(cache, theirs):
     """Each loc/<tag>/ layer (but the target's own, which the recipe checks)
-    against an install's <tag>.<NAME>.DAT overlays, byte for byte, both ways;
-    where the install has none under the full tag, against its overlays under
-    the bare language (`en.`, what the engine reads until it takes tags) - for
-    the language's default tag only (DEFAULT_TAG: `en.` is en-US's)."""
+    against an install's <tag>.<NAME>.DAT overlays, byte for byte, both ways.
+    A tag the install has no overlays under is not compared. Overlays under a
+    retired bare code (`en.`, DIV-0005) are never compared: the engine
+    refuses the code, so they are only noted, to delete."""
     rc = 0
+    language_tags.note_retired_overlays(theirs)
     loc = os.path.join(cache, "loc")
     for tag in sorted(os.listdir(loc)) if os.path.isdir(loc) else []:
         if tag == tag_of(TARGET):
@@ -1433,11 +1575,8 @@ def verify_overlays(cache, theirs):
         ours = set(os.listdir(d))
         lang = tag
         if not any(f.startswith(tag + ".") for f in os.listdir(theirs)):
-            if DEFAULT_TAG.get(primary(tag), tag) != tag:
-                print("verify loc/%s: the install has no %s.*.DAT, and its %s.* are %s's - not compared"
-                      % (tag, tag, primary(tag), DEFAULT_TAG[primary(tag)]))
-                continue
-            lang = primary(tag)
+            print("verify loc/%s: the install has no %s.*.DAT - not compared" % (tag, tag))
+            continue
         inst = {f[len(lang) + 1:] for f in os.listdir(theirs) if f.startswith(lang + ".")}
         same = [n for n in sorted(ours & inst)
                 if open(os.path.join(d, n), "rb").read() == open(os.path.join(theirs, lang + "." + n), "rb").read()]
@@ -1523,18 +1662,22 @@ def main():
     p.add_argument("--source", action="append", required=True, help="a PC DAT/, BOF3.exe or a disc; order is preference")
     p.add_argument("--out", required=True)
     p.add_argument("--lang", action="append", default=[],
-                   help="a language layer to build (repeat): a tag (en-US, en-150, fr-FR, de-DE, ja-JP) or a bare "
-                        "language (en: en-US when the US disc is given, else the first English disc in the "
-                        "source order); needs the PC's DAT/, BOF3.exe and that disc")
+                   help="a language layer to build (repeat): a tag (en-US, en-150, fr-FR, de-DE, ja-JP; the "
+                        "bare en/fr/de/ja are retired, DIV-0005); needs the PC's DAT/, BOF3.exe and that disc")
     p.add_argument("--opt", action="append", default=[],
-                   help="an optional layer to build (repeat): %s; needs a PSP disc (docs/opt-layers.md)" % ", ".join(OPT_LAYERS))
+                   help="an optional layer to build (repeat): %s; needs a PSP disc, area4-walls a US, European, "
+                        "French or German PSX disc, and is built by default when one is given (docs/opt-layers.md)"
+                        % ", ".join(OPT_LAYERS))
+    p.add_argument("--no-opt", action="append", default=[],
+                   help="a default layer not to build (repeat): %s" % ", ".join(DEFAULT_OPT))
     p.add_argument("--preset", help="a named source order plus layers: %s; the sources are still given "
                                     "with --source, in any order" % ", ".join(PRESETS))
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p = s.add_parser("opt-recipes")
     p.add_argument("--dat", required=True, help="the PC port's DAT/ directory")
-    p.add_argument("--disc", action="append", default=[], help="the JP, US and both PSP discs; repeat")
+    p.add_argument("--disc", action="append", default=[], help="the JP, US and both PSP discs, and any other "
+                   "Western PSX disc for area4-walls' `on`; repeat")
     p.add_argument("--pairs", default=os.path.join(ROOT, "analysis", "region"),
                    help="where region_diff.py pair's psx-jp_vs_psp-jp.json is")
     p.add_argument("--recipe")
@@ -1544,6 +1687,9 @@ def main():
     p.add_argument("--game", required=True, help="a game directory: its DAT/ receives the overlays")
     p.add_argument("--lang", action="append", default=[], help="a loc/<tag>/ layer to install (repeat)")
     p.add_argument("--opt", action="append", default=[], help="an opt/<name>/ layer to install (repeat)")
+    p.add_argument("--no-opt", action="append", default=[],
+                   help="a default layer (%s, installed whenever the cache holds it) to leave out, removing "
+                        "its files from DAT/ (repeat)" % ", ".join(DEFAULT_OPT))
     p = s.add_parser("verify")
     p.add_argument("--cache", required=True)
     p.add_argument("--overlays", help="an install's DAT/ whose <lang>.*.DAT overlays the cache's loc/ layers must equal")

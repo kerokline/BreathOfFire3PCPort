@@ -23,9 +23,13 @@ extern "C" char* __cdecl File_CdRoot(void) {
 // when the open failed or all 16 slots are in use. The second and third
 // arguments are pushed by every caller and read by nobody.
 //
-// Two things the original does that are kept, and one that is not:
-//   - kept: the prefixed path is built with sprintf into a 0x50-byte stack
-//     buffer with no length check. Unreachable with the shipped file names.
+// One thing the original does that is kept, and two that are not:
+//   - DIV-0087: the prefixed path is built with sprintf into a 0x50-byte
+//     stack buffer with no length check. Unreachable with the shipped file
+//     names, but the music cache's paths are absolute and may be long
+//     (music_seq.cpp): a path whose prefixed form would not fit is not
+//     retried, and the open fails. A retry could not succeed for such a path
+//     anyway - File_CdRoot in front of an absolute path names no file.
 //   - kept: no slot is claimed until the open succeeds.
 //   - not reproduced: the original's scan reads one dword past the table
 //     (slot 16) before its bound check notices. The value read never changes
@@ -42,8 +46,10 @@ extern "C" int __cdecl File_Open(const char* path, int, int) {
     void* stream = Crt_fopen(path, "rb");
     if (!stream) {
         char prefixed[0x50];
-        Crt_sprintf(prefixed, "%s%s", File_CdRoot(), path);
-        stream = Crt_fopen(prefixed, "rb");
+        if (lstrlenA(File_CdRoot()) + lstrlenA(path) < static_cast<int>(sizeof prefixed)) {  // DIV-0087
+            Crt_sprintf(prefixed, "%s%s", File_CdRoot(), path);
+            stream = Crt_fopen(prefixed, "rb");
+        }
         if (!stream) {
             bof3::Log("open  t=%lu  FAILED  %s", GetTickCount(), path);
             return -1;

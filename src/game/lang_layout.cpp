@@ -9,7 +9,7 @@ bool Lang_FullWidth() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
     if (n == 0 || n >= sizeof lang) return false;
     // The primary subtag of a BCP 47 tag: `ja` of `ja-JP`, `zh` of `zh-CN`.
-    // A bare `ja` has no `-` and is its own primary subtag.
+    // A bare `ja` is retired (DIV-0005) and stops the game at injection
     const char* dash = std::strchr(lang, '-');
     const size_t primary = dash ? static_cast<size_t>(dash - lang) : std::strlen(lang);
     return primary == 2 && (std::strncmp(lang, "ja", 2) == 0 || std::strncmp(lang, "zh", 2) == 0);

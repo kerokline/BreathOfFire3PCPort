@@ -16,11 +16,11 @@ waiting on for the owner (§5).
 ## 1. How to run one
 
 ```
-python tools/input_run.py tools/recipes/config_screen.txt --out analysis/shots/config --lang en
-python tools/input_run.py tools/recipes/field_menu.txt --out analysis/shots/menu --lang en --original "D3d_DrawSprt"
+python tools/input_run.py tools/recipes/config_screen.txt --out analysis/shots/config --lang en-US
+python tools/input_run.py tools/recipes/field_menu.txt --out analysis/shots/menu --lang en-US --original "D3d_DrawSprt"
 ```
 
-`--lang` sets `BOF3X_LANG` (an overlay tag, `en-US`; the 29 recipes whose header says `BOF3X_LANG=en` were recorded under the US text before the tags, 2026-10-08, and play under `en-US`), `--original` sets `BOF3X_ORIGINAL`, `--env K=V`
+`--lang` sets `BOF3X_LANG` (an overlay tag, `en-US`; the 29 recipes recorded under the bare `BOF3X_LANG=en`, the US text before the tags of 2026-10-08, play under `en-US` and their header comment says so since 2026-10-10). The bare `en`, `fr`, `de`, `ja` are retired (DIV-0005): `--lang en`, `--env BOF3X_LANG=en` or a launcher `bof3x.ini` saying `language=en` stops the runner before it launches, naming the tag. `--original` sets `BOF3X_ORIGINAL`, `--env K=V`
 sets anything else. Output: `OUT/NAME.png` for every `shot NAME`; `mark`,
 `peek` and `until` lines echoed; exit 0 when the recipe says `done`. Since
 2026-09-24 **the game writes each shot itself** (`BOF3X_SHOT_DIR`, set to

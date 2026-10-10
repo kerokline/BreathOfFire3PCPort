@@ -39,7 +39,12 @@ public:
     void Reset();
 
     // SsVabOpenHeadSticky + SsVabTransBody at kBankAddress. The bank is copied.
+    // A bank of another name first keys the sequencer's voices off and clears
+    // their records' references into the old one (libsnd-reading.md 3.11).
     void LoadBank(const Bank& bank);
+    // What LoadBank refuses, without loading: a bank past the game's largest
+    // music slot, a master volume above 127. Aborts through MusicFatal.
+    static void CheckBank(const Bank& bank);
 
     // The game's Music_Play: SsSepStop, SsSepSetVol(0, 0), SsSepPlay(SSPLAY_PLAY,
     // loop_count), SsSepSetCrescendo(volume, frames). The game always passes
@@ -187,6 +192,7 @@ private:
     void SndDecrescendo();
     void InitScore(const Song& song);      // _SsInitSoundSep
     std::int16_t StepFor(std::int32_t bpm) const;
+    std::uint64_t SpeedOf(std::int32_t bpm) const;  // resolution * bpm * 10
 
     bool VSetUp(int vab, int prog);        // _SsVmVSetUp
     void VmKeyOn(int prog, int note, int vel, int pan);
@@ -201,6 +207,7 @@ private:
     std::uint16_t NoteToPitch2(int note, int fine, const BankTone& tone) const;  // note2pitch2
     void KeyOnNow(std::uint16_t pitch);    // _SsVmKeyOnNow
     void KeyOffNow(int v);                 // _SsVmKeyOffNow
+    const BankTone& ToneAt(int block, int tone) const;  // aborts outside the bank
     const BankTone& ToneOf(const Voice& v) const;
     void PanVolumes(std::uint32_t base, int tpan, int mpan, int cpan, std::uint32_t* l, std::uint32_t* r) const;
 

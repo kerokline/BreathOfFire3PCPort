@@ -22,6 +22,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/labels.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_4b_callees.h"
 #include "game/scenario_harness.h"
@@ -1254,9 +1255,14 @@ extern "C" void __cdecl CommuBoard_DrawPanel(void) {
     char* const out = reinterpret_cast<char*>(At(at::kTextBuffer));
     SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(at::kCountFormat)), static_cast<int>(SB(at::kCountA)));
     SH_CALL(Text_DrawFont12)(0x50, 0x4C, 0, At(at::kTextBuffer));
-    SH_CALL(Text_DrawAt)(0x78, 0x4C, 0, 2, At(at::kPanelLabel));
+    // DIV-0064 group 14: the label from the overlay's buffer, its count 2 the
+    // Chinese word's (the overlay's is longer); the number after it then
+    // moves from 0x98 - under the seven letters of `Culture` - to 0xBE, where
+    // the US screen has it (the owner's web reference, 2026-10-10).
+    const bool words = Labels_Written(14);
+    SH_CALL(Text_DrawAt)(0x78, 0x4C, 0, words ? 0xFF : 2, words ? Labels_Slot(14, 0) : At(at::kPanelLabel));
     SH_CALL(Crt_sprintf)(out, reinterpret_cast<const char*>(At(at::kNumberFormat)), static_cast<unsigned>(B(at::kCountC)));
-    SH_CALL(Text_DrawFont12)(0x98, 0x4C, 0, At(at::kTextBuffer));
+    SH_CALL(Text_DrawFont12)(words ? 0xBE : 0x98, 0x4C, 0, At(at::kTextBuffer));
 }
 
 // original 0x4591A0: the panel's frame of sprites: the corners 6, 8, 0xB, 0xD
@@ -1516,6 +1522,18 @@ extern "C" void __cdecl CommuBoard_DrawSprite(int x, int y, unsigned id) {
     SH_CALL(Gfx_CommitPrim)(1, 0x1C);
 }
 
+// DIV-0064 group 13: the list boxes are 0x30 wide, three Chinese glyphs and a
+// margin, and their frames four 8-px columns. Once the overlay has written
+// the lists the box is the widest line plus 16, rounded up to 8 - what the
+// discs did: the US and German overlays size it 0x50 for their eight-letter
+// words, the French 0x60 for its ten (the `addiu $a2` constants of their
+// COMMU01.EMI, 2026-10-10) - and the frame follows, a column per 8.
+int ListBoxWidth() {
+    if (!Labels_Written(13)) return 0x30;
+    const unsigned w = (Labels_MaxWidth(13) + 16 + 7) & ~7u;
+    return w > 0x30 ? static_cast<int>(w) : 0x30;
+}
+
 // original 0x4598A0: the record list's box at (x, y), 0x9046CB rows of 16: its
 // shadow (x + 4, y + 5) 0x81 unless `steady`, the box 0x80 (both in the window
 // style), its frame (CommuBoard_DrawListFrame at y - 1) and the rows' lines
@@ -1523,14 +1541,14 @@ extern "C" void __cdecl CommuBoard_DrawSprite(int x, int y, unsigned id) {
 extern "C" void __cdecl CommuBoard_DrawListBox(int x, int y, unsigned steady) {
     const unsigned char flag = static_cast<unsigned char>(steady);
     const int h = B(at::kListCount) * 16;
-    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 5, 0x30, h, 0x81, B(at::kColour));
-    SH_CALL(Menu_DrawBox)(x, y, 0x30, h + 1, 0x80, B(at::kColour));
+    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 5, ListBoxWidth(), h, 0x81, B(at::kColour));
+    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, B(at::kColour));
     SH_CALL(CommuBoard_DrawListFrame)(x, y - 1, static_cast<unsigned>(h));
     if (B(at::kListCount) == 0) return;
     const unsigned char colour = static_cast<unsigned char>(flag * 7);
     for (unsigned i = 0; i < B(at::kListCount); ++i) {
         const unsigned char* const line = At(L(at::kListTextA + 4 * i));
-        SH_CALL(Text_DrawAt)(x + 6, static_cast<int>(i * 16) + y + 2, colour, 3, line);
+        SH_CALL(Text_DrawAt)(x + 6, static_cast<int>(i * 16) + y + 2, colour, Labels_Written(13) ? 0xFF : 3, line);   // DIV-0064 group 13
     }
 }
 
@@ -1541,11 +1559,12 @@ extern "C" void __cdecl CommuBoard_DrawListBox(int x, int y, unsigned steady) {
 extern "C" void __cdecl CommuBoard_DrawListFrame(int x, int y, unsigned h) {
     SH_CALL(CommuBoard_DrawSprite)(x, y, 6);
     const int yb = y + static_cast<int>(h & 0xFF);
-    for (int i = 0; i < 4; ++i) {
+    const int columns = (ListBoxWidth() - 8) / 8 - 1;   // 4 for the shipped 0x30 (DIV-0064 group 13)
+    for (int i = 0; i < columns; ++i) {
         SH_CALL(CommuBoard_DrawSprite)(x + 8 * i + 8, y, 7);
         SH_CALL(CommuBoard_DrawSprite)(x + 8 * i + 8, yb, 0xC);
     }
-    const int xr = x + 0x28;
+    const int xr = x + ListBoxWidth() - 8;
     SH_CALL(CommuBoard_DrawSprite)(xr, y, 8);
     const unsigned rows = static_cast<unsigned char>(((h & 0xFF) >> 3) - 1);
     for (unsigned i = 0; i < rows; ++i) {
@@ -1576,14 +1595,14 @@ extern "C" unsigned short __cdecl CommuBoard_DrawListBoxB(int x, int y, unsigned
     const int h = B(row + 1) * 16;
     if (h + static_cast<short>(y) + 4 > 0xD8) y = 0xD4 - h;
     const unsigned char flag = static_cast<unsigned char>(steady);
-    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 6, 0x30, h, 0x81, B(at::kColour));
-    SH_CALL(Menu_DrawBox)(x, y, 0x30, h + 1, 0x80, B(at::kColour));
+    if (flag == 0) SH_CALL(Menu_DrawBox)(x + 4, y + 6, ListBoxWidth(), h, 0x81, B(at::kColour));
+    SH_CALL(Menu_DrawBox)(x, y, ListBoxWidth(), h + 1, 0x80, B(at::kColour));
     SH_CALL(CommuBoard_DrawListFrame)(x, y - 1, static_cast<unsigned>(h));
     if (B(row + 1) != 0) {
         const unsigned char colour = static_cast<unsigned char>(flag * 7);
         for (unsigned i = 0; i < B(row + 1); ++i) {
             const unsigned char* const line = At(L(at::kListTexts + 4 * (B(row) + i)));
-            SH_CALL(Text_DrawAt)(x + 6, static_cast<int>(i * 16) + y + 2, colour, 3, line);
+            SH_CALL(Text_DrawAt)(x + 6, static_cast<int>(i * 16) + y + 2, colour, Labels_Written(13) ? 0xFF : 3, line);   // DIV-0064 group 13
         }
     }
     return static_cast<unsigned short>(y);

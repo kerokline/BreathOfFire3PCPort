@@ -36,7 +36,9 @@ a second copy of a build already built, the PC port's own files, and the
 PSP discs, which `all` has not been validated against. `--lang` is refused
 here: a tag only ever comes from identity. The game directory is checked
 first: `BOF3.exe` must hash as the catalogued port, and its `DAT/` is named
-if it is the shipped tree. `--dry-run` identifies and writes nothing.
+if it is the shipped tree. `--dry-run` identifies and writes nothing (with one
+`--disc` too). English discs are built first: the French and German title
+menus borrow their CONFIG row from an English overlay already built.
 
 ## Replicating a build: `--upscaler`
 
@@ -100,6 +102,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dat        # noqa: E402
 import font_pc    # noqa: E402
+import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 import psx_disc   # noqa: E402
 
 FONT_EMI = "BIN/ETC/ENDKANJI.EMI"
@@ -1000,6 +1003,9 @@ def convert_verbs(game, donor):
     for i in range(VERB_COUNT):
         raw = donor[starts[i]:donor.index(b"\0", starts[i])]
         enc = [encode_char(c) for c in raw]
+        if not raw and tag == 16:        # a faerie record kept as shipped
+            payload += b"\0"
+            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("verbs: verb %d holds a code English does not have: %s" % (i, raw.hex(" ")))
         out = b"".join(enc)
@@ -1034,6 +1040,9 @@ def convert_char_names(game, donor):
             raise SystemExit("names: character record %d differs from the PC's past its name" % k)
         raw = us[:CHAR_NAME_US].split(b"\x00")[0]
         enc = [encode_char(c) for c in raw]
+        if not raw and tag == 16:        # a faerie record kept as shipped
+            payload += b"\0"
+            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("names: character %d holds a code English does not have: %s" % (k, raw.hex(" ")))
         out = b"".join(enc)
@@ -1065,6 +1074,9 @@ def convert_merchant(game, disc):
             continue
         raw = blob[at + 12:at + 12 + MERCHANT_US_SLOT].split(b"\x00")[0]
         enc = [encode_char(c) for c in raw]
+        if not raw and tag == 16:        # a faerie record kept as shipped
+            payload += b"\0"
+            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("merchant: %s holds a code English does not have: %s" % (name, raw.hex(" ")))
         out = b"".join(enc)
@@ -1095,6 +1107,9 @@ def convert_battle_commands(game, donor):
         slot = donor[at - (BATTLE_COUNT - i) * BATTLE_ROOM:at - (BATTLE_COUNT - i - 1) * BATTLE_ROOM]
         raw = slot.split(b"\0")[0]
         enc = [encode_char(c) for c in raw]
+        if not raw and tag == 16:        # a faerie record kept as shipped
+            payload += b"\0"
+            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("battle: label %d holds a code English does not have: %s" % (i, slot.hex(" ")))
         out = b"".join(enc)
@@ -1148,6 +1163,41 @@ def convert_battle_commands(game, donor):
 #      as records of 20 (US: a name of 7, its length, the same three pairs)
 #      or 22 (German: a name of 8, the length and a pad), so the run is
 #      found by the pairs at either stride.
+#  12  the gene splicing window's tabs (2026-10-10): 3 x 8 at 0x66A14C behind
+#      the pointer table 0x66A164. BATTLE.EMI has them as 6-byte slots
+#      (Data, Pick, Best) between the AP / 1 / 0 bytes the PC has at
+#      LABEL_GENE_HEAD and the pieces and DATA / BEST it has at
+#      LABEL_GENE_TAIL.
+#  13  the faerie village's board lists (2026-10-10): the ten facility
+#      names 0x669E18.. behind 0x669E68 and the ten choices 0x669E90..
+#      behind 0x669EE0, read through the tables only, so repointed into the
+#      DLL's 16-byte buffers like group 7. A COMMU*.EMI has the twenty as
+#      8-byte slots (Merchant, Explorer, Antiques and Handyman fill theirs
+#      with no NUL) right before the list rows and record offsets the PC has
+#      at LABEL_VILLAGE_ROWS.
+#  14  the village's words (2026-10-10), five slots the DLL's own draws read
+#      from its buffers: the board panel's culture label 0x669E10 (the
+#      disc's word is group 13's seventh choice); the word the ranked lists'
+#      headings draw after a count, 名 at 0x669F08 on the PC, the pair
+#      `faeries` / `faery` on the disc (two copies of the pair of 8-byte
+#      slots end right at the kind table the PC has at LABEL_VILLAGE_KINDS);
+#      and the hi-lo game's money and stake titles 0x669F60 / 0x669F68 - a
+#      COMMU*.EMI's Cash and Pot, 8-byte slots each ending in the disc's
+#      zenny code, right after the 72 bytes of sprite rectangles the PC has
+#      at LABEL_VILLAGE_RECTS.
+#  15  the Identify panel's two headings 弱点 / 持有物 (0x66A3E0 / 0x66A3E8),
+#      which no disc carries a word for because the US panel draws none (the
+#      owner's wiki capture of it, 2026-10-10: the name, the EXP and zenny
+#      lines, a small ITEM label, the items): a space each for every Latin
+#      disc, which the DLL draws through buffers of its own - nothing - and
+#      draws the port's own ITEM label (0x65AAB4) in the 8 px font instead.
+#  16  the faerie village's sixty faeries' names (2026-10-10): the name field
+#      of each 20-byte trait record at FAERIE_TRAITS (four stat bytes, a
+#      name of 16), copied five bytes at a time into the save at a birth.
+#      COMMU00.EMI has the sixty as 9-byte records - a 5-byte name padded
+#      with the space code, the same four stat bytes - found by the stats
+#      (every one of the sixty equal to the PC's). A record whose PC name
+#      field holds no glyph string (the sixtieth) is sent empty and kept.
 #  11  the zenny unit, 4 bytes at 0x66A31C: the one byte `s`, whose
 #      single-byte slot of the shipped font is the port's coin, repainted
 #      by the overlay into a letter. START.EMI has the US code 0x60 (the
@@ -1167,11 +1217,19 @@ LABEL_SORT_HEAD, LABEL_SORT_HEAD_LEN = 0x66B110, 28
 LABEL_NOTE_HEAD = b"SKILL\0\0\0"
 LABEL_FORMATIONS, LABEL_FORMATION_COUNT = 0x6636B0, 10
 LABEL_WHEEL_TRIANGLE, LABEL_WHEEL_TRIANGLE_LEN = 0x6637C8, 24
+LABEL_GENE_HEAD, LABEL_GENE_HEAD_LEN, LABEL_GENE_TAIL, LABEL_GENE_TAIL_LEN = 0x66AF38, 20, 0x66AF4E, 32
+LABEL_VILLAGE_ROWS, LABEL_VILLAGE_ROWS_LEN, LABEL_VILLAGE_LISTS = 0x652C6C, 32, 20
+LABEL_VILLAGE_RECTS, LABEL_VILLAGE_RECTS_LEN = 0x652D04, 72
+LABEL_VILLAGE_KINDS, LABEL_VILLAGE_KINDS_LEN = 0x653180, 12
+IDENTIFY_WORDS = (bytes([SPACE_IN]), bytes([SPACE_IN]))     # a space each: the US panel draws no heading (the wiki capture, 2026-10-10)
+FAERIE_TRAITS, FAERIE_COUNT, FAERIE_STRIDE, FAERIE_DISC_STRIDE = 0x653210, 60, 20, 9
 LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8), 6: (8, 4),
-               7: (16,) * 11, 8: (8, 12), 9: (8,), 10: (16,) * 10, 11: (4,)}
+               7: (16,) * 11, 8: (8, 12), 9: (8,), 10: (16,) * 10, 11: (4,), 12: (8, 8, 8), 13: (16,) * 20,
+               14: (16,) * 5, 15: (16, 16), 16: (16,) * 60}
 LABEL_NAMES = {1: "status words", 2: "menu stats", 3: "item types", 4: "skill types", 5: "battle stats",
                6: "master list", 7: "sort menus", 8: "note sort", 9: "ink label", 10: "formations",
-               11: "zenny unit"}
+               11: "zenny unit", 12: "gene tabs", 13: "village lists", 14: "village words",
+               15: "identify words", 16: "faerie names"}
 
 
 def label_pointers(donor, at, count):
@@ -1188,6 +1246,9 @@ def label_chunk(tag, raws, report):
     payload, kept = bytearray([len(raws)]), 0
     for i, (raw, room) in enumerate(zip(raws, LABEL_ROOMS[tag])):
         enc = [encode_char(c) for c in raw]
+        if not raw and tag == 16:        # a faerie record kept as shipped
+            payload += b"\0"
+            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("labels: %s %d holds a code this language does not have: %s"
                              % (LABEL_NAMES[tag], i, raw.hex(" ")))
@@ -1215,8 +1276,9 @@ def label_run(blob, at, count):
     return None
 
 
-def convert_labels(game, start, battle, shop=None):
-    """[(kind, tag, payload)] and a report, from the whole START.EMI, BATTLE.EMI and SHOP.EMI (each may be None)."""
+def convert_labels(game, start, battle, shop=None, commu=()):
+    """[(kind, tag, payload)] and a report, from the whole START.EMI, BATTLE.EMI and SHOP.EMI (each may
+    be None) and every COMMU*.EMI (the faerie village's overlays)."""
     chunks, report = [], []
     cut = lambda blob, at, size: blob[at:at + size].split(b"\0")[0]
     if start:
@@ -1283,12 +1345,16 @@ def convert_labels(game, start, battle, shop=None):
             raise SystemExit("labels: START.EMI has no eleven sort strings after the PC's bytes at 0x%X" % LABEL_SORT_HEAD)
         chunks.append(label_chunk(7, found, report))
         # The formations: the PC's ten records of 28 (name 16, pairs 12), the
-        # disc's of 20 (name 7, its length, the same pairs), found by the pairs.
+        # disc's of 20 (name 7, its length, the same pairs) or 22 (German: name
+        # 8, its length, a pad, the pairs), found by the pairs. The name is cut
+        # at its own width: at 22, stride - 13 would take the length byte too,
+        # and an eight-letter name has no NUL to stop at.
+        name_len = {20: 7, 22: 8}
         pc = exe_bytes(game, LABEL_FORMATIONS, 28 * LABEL_FORMATION_COUNT)
         pairs = [pc[28 * i + 16:28 * i + 28] for i in range(LABEL_FORMATION_COUNT)]
         at, found = start.find(pairs[0]), None
         while at >= 0 and not found:
-            for stride in (20, 22):
+            for stride in name_len:
                 base = at - (stride - 12)
                 if base >= 0 and all(start[base + stride * i + stride - 12:base + stride * (i + 1)] == pairs[i]
                                      for i in range(LABEL_FORMATION_COUNT)):
@@ -1298,13 +1364,112 @@ def convert_labels(game, start, battle, shop=None):
         if not found:
             raise SystemExit("labels: START.EMI has no run of the PC's ten formation records")
         base, stride = found
-        names = [cut(start, base + stride * i, stride - 13) for i in range(LABEL_FORMATION_COUNT)]
+        names = [cut(start, base + stride * i, name_len[stride]) for i in range(LABEL_FORMATION_COUNT)]
         chunks.append(label_chunk(10, names, report))
         at = start.find(exe_bytes(game, LABEL_WHEEL_TRIANGLE, LABEL_WHEEL_TRIANGLE_LEN))
         unit = at + LABEL_WHEEL_TRIANGLE_LEN
         if at < 0 or start[unit + 4:unit + 8] != b"\x3e\0\0\0":
             raise SystemExit("labels: START.EMI's icon wheel triangle is not followed by the unit and the full stop")
         chunks.append(label_chunk(11, [cut(start, unit, 4)], report))
+    if battle:
+        # The gene window's tabs: three strings between the two anchors.
+        head, tail = exe_bytes(game, LABEL_GENE_HEAD, LABEL_GENE_HEAD_LEN), exe_bytes(game, LABEL_GENE_TAIL, LABEL_GENE_TAIL_LEN)
+        at = battle.find(head)
+        while at >= 0:
+            end = battle.find(tail, at + LABEL_GENE_HEAD_LEN, at + LABEL_GENE_HEAD_LEN + 64)
+            words = [w for w in battle[at + LABEL_GENE_HEAD_LEN:end].split(b"\0") if w] if end >= 0 else []
+            if len(words) == 3:
+                chunks.append(label_chunk(12, words, report))
+                break
+            at = battle.find(head, at + 1)
+        else:
+            report.append("gene tabs: not found")
+    # The village: the twenty list slots before the rows, the money and stake
+    # titles after the rectangles, in whichever community overlay holds them.
+    rows = exe_bytes(game, LABEL_VILLAGE_ROWS, LABEL_VILLAGE_ROWS_LEN)
+    rects = exe_bytes(game, LABEL_VILLAGE_RECTS, LABEL_VILLAGE_RECTS_LEN)
+    kinds = exe_bytes(game, LABEL_VILLAGE_KINDS, LABEL_VILLAGE_KINDS_LEN)
+    lists = titles = pair = None
+    def slot_run(blob, end, stride, count):
+        """`count` slots of `stride` ending at `end`, each a string from its first
+        byte, NUL-padded to the stride (or filling it), or None."""
+        start = end - stride * count
+        if start < 0:
+            return None
+        out = []
+        for i in range(count):
+            slot = blob[start + stride * i:start + stride * (i + 1)]
+            word = slot.split(b"\0")[0]
+            if not word or any(c < 0x30 for c in word) or slot[len(word):].strip(b"\0"):
+                return None
+            out.append(word)
+        return out
+
+    for blob in commu:
+        at = blob.find(kinds)
+        if pair is None and at >= 32:
+            # Two (plural, singular) pairs of 8-byte slots end right at the
+            # kind table; the first pair is the headings' word.
+            found = [cut(blob, at - 32 + 8 * i, 8) for i in range(2)]
+            if all(found) and found == [cut(blob, at - 16 + 8 * i, 8) for i in range(2)]:
+                pair = found
+        at = blob.find(rows)
+        if lists is None and at > 0:
+            # Two lists of ten slots end at the rows (a pad of up to three
+            # NULs between): each list's stride is its longest word, plus a
+            # NUL unless the word fills it - 8 and 8 on the US and German
+            # discs, 10 and 9 on the French.
+            for pad in range(4):
+                for sb in range(8, 13):
+                    second = slot_run(blob, at - pad, sb, LABEL_VILLAGE_LISTS // 2)
+                    if not second or max(len(w) for w in second) < sb - 1:
+                        continue
+                    for sa in range(8, 13):
+                        first = slot_run(blob, at - pad - sb * (LABEL_VILLAGE_LISTS // 2), sa, LABEL_VILLAGE_LISTS // 2)
+                        if first and max(len(w) for w in first) >= sa - 1:
+                            lists = first + second
+                            break
+                    if lists:
+                        break
+                if lists:
+                    break
+        at = blob.find(rects)
+        if titles is None and at >= 0:
+            found = [cut(blob, at + LABEL_VILLAGE_RECTS_LEN + 8 * i, 8) for i in range(2)]
+            if all(found):
+                titles = found
+    if lists:
+        chunks.append(label_chunk(13, lists, report))
+    else:
+        report.append("village lists: not found")
+    if lists and titles and pair:
+        chunks.append(label_chunk(14, [lists[16]] + pair + titles, report))
+    else:
+        report.append("village words: not found")
+    if not donor_ja:
+        chunks.append(label_chunk(15, list(IDENTIFY_WORDS), report))
+    # The faeries: sixty 9-byte records whose stat bytes are the PC's, in
+    # whichever community overlay holds them.
+    traits = exe_bytes(game, FAERIE_TRAITS, FAERIE_STRIDE * FAERIE_COUNT)
+    stats = [traits[FAERIE_STRIDE * r:FAERIE_STRIDE * r + 4] for r in range(FAERIE_COUNT)]
+    faeries = None
+    for blob in commu:
+        at = blob.find(stats[0])
+        while at >= 5 and faeries is None:
+            base = at - 5
+            if all(blob[base + FAERIE_DISC_STRIDE * r + 5:base + FAERIE_DISC_STRIDE * (r + 1)] == stats[r] for r in range(FAERIE_COUNT)):
+                faeries = []
+                for r in range(FAERIE_COUNT):
+                    name = blob[base + FAERIE_DISC_STRIDE * r:base + FAERIE_DISC_STRIDE * r + 5].rstrip(b"\xff\0")
+                    pc_name = traits[FAERIE_STRIDE * r + 4]
+                    faeries.append(name if pc_name >= 0x80 else b"")
+            at = blob.find(stats[0], at + 1)
+        if faeries:
+            break
+    if faeries:
+        chunks.append(label_chunk(16, faeries, report))
+    else:
+        report.append("faerie names: not found")
     if shop:
         at, found = shop.find(sort_head), None
         while at >= 0 and not found:
@@ -1658,15 +1823,19 @@ def pause_width(line, advances, space):
 
 
 def primary(tag):
-    """A language tag's primary subtag: `en` of `en-US`, `ja` of `ja-JP` or `ja`."""
+    """A language tag's primary subtag: `en` of `en-US`, `ja` of `ja-JP`."""
     return tag.split("-", 1)[0].lower()
 
 
 def language_tag(tag):
-    """--lang: a BCP 47 language tag (`en-US`, `en-150`, `fr-FR`; a bare `en`
-    is one too). It names the overlays, `<tag>.<NAME>.DAT`; what the code does
-    by language goes by its primary subtag. fixtures.toml's `tag` per build is
-    the one each disc's text carries (docs/importer.md section 5)."""
+    """--lang: a BCP 47 language tag (`en-US`, `en-150`, `fr-FR`). It names
+    the overlays, `<tag>.<NAME>.DAT`; what the code does by language goes by
+    its primary subtag. fixtures.toml's `tag` per build is the one each disc's
+    text carries (docs/importer.md section 5). The bare en, fr, de, ja of
+    before 2026-10-08 are retired and refused (DIV-0005)."""
+    msg = language_tags.retired(tag, "--lang")
+    if msg:
+        raise argparse.ArgumentTypeError(msg)
     if not re.fullmatch(r"[a-z]{2,3}(-[A-Za-z]{4})?(-(?:[A-Z]{2}|[0-9]{3}))?", tag):
         raise argparse.ArgumentTypeError("%r is not a language tag of the form ll[-Ssss][-RR|-999]" % tag)
     return tag
@@ -1867,11 +2036,14 @@ def build_title(args, disc):
         # but the US sheet's (the French and German sheets lack the letters
         # for CONFIG anyway): take it from the English page already built
         # from the US disc, an English overlay's START.DAT beside the shipped
-        # file (`en.`, `en-US.`, `en-150.`: the US and EU-English pages are
+        # file (`en-US.`, `en-150.`: the US and EU-English pages are
         # byte-identical, 2026-10-08) - the owner's choice, 2026-09-29: each
-        # disc's own two rows, our CONFIG.
+        # disc's own two rows, our CONFIG. Only the engine's tags: an `en.`
+        # page of before 2026-10-08 is a retired code's (DIV-0005), noted.
         d = dat_dir(args.game)
-        en_names = sorted(f for f in os.listdir(d) if f.endswith(".START.DAT") and primary(f[:-len(".START.DAT")]) == "en")
+        language_tags.note_retired_overlays(d)
+        en_names = sorted(f for f in os.listdir(d) if f.endswith(".START.DAT")
+                          and f[:-len(".START.DAT")] in language_tags.TAGS and primary(f[:-len(".START.DAT")]) == "en")
         if not en_names:
             print("title menu: this disc's sheet is not the one the letters were measured on, and no "
                   "English START.DAT holds a CONFIG row to borrow (build the English overlay first); left as shipped")
@@ -1906,6 +2078,46 @@ def build_title(args, disc):
     widths.append(pen + (pen & 1))          # even, so that 160 - w / 2 centres it
     # kind 6 is ours (DIV-0014): the three row widths the draw's code holds.
     return [(1, TITLE_TAG, rows_to_tiles(page, 2)), (TITLE_KIND, 0, bytes(widths))]
+
+
+# ---------------------------------------------------------------- the faerie village's board sheet
+
+# DIV-0088 (docs/village-text-scan.md section 4). The board's three side
+# buttons - hunt, clear, build - are paint on the community's sprite sheet,
+# the kind-1 chunk tagged VILLAGE_SHEET_TAG (VRAM 896, 256; 256 x 256 at 4
+# bits) of COMMU01.DAT and COMMU05.DAT, and every disc repainted the three
+# labels in its own language: against the US, French and German COMMU01.EMI
+# sections of the same dest the PC's sheet differs in rows 224..255 only
+# where the three labels are (and in rows 96..175, the board's own frame
+# pieces, which the PC's draws place and the disc's art must not replace).
+# The overlay is the PC's sheet with the label rows' differing bytes taken
+# from the disc.
+VILLAGE_SHEET_TAG, VILLAGE_SHEET_SIZE, VILLAGE_SHEET_ROW = 0x1C080200, 0x8000, 128
+VILLAGE_LABEL_ROWS = range(224, 256)
+
+
+def build_village_sheet(game, disc):
+    """{name: [(kind, tag, payload)]} for the community files whose sheet the disc repaints."""
+    out = {}
+    for name in ("COMMU01", "COMMU05"):
+        found = disc.find(name + ".EMI")
+        path = os.path.join(dat_dir(game), name + ".DAT")
+        if not found or not os.path.exists(path):
+            continue
+        blob, chunks = dat.load(path)
+        pc = [blob[c.offset:c.offset + c.size] for c in chunks if c.kind == 1 and c.tag == VILLAGE_SHEET_TAG]
+        donor = [sec for dest, sec in emi_sections(disc.read(found[0])) if dest == VILLAGE_SHEET_TAG]
+        if not pc or not donor or len(pc[0]) != VILLAGE_SHEET_SIZE or len(donor[0]) != VILLAGE_SHEET_SIZE:
+            continue
+        sheet, changed = bytearray(pc[0]), 0
+        for y in VILLAGE_LABEL_ROWS:
+            for i in range(y * VILLAGE_SHEET_ROW, (y + 1) * VILLAGE_SHEET_ROW):
+                if sheet[i] != donor[0][i]:
+                    sheet[i] = donor[0][i]
+                    changed += 1
+        if changed:
+            out[name + ".DAT"] = [(1, VILLAGE_SHEET_TAG, bytes(sheet))]
+    return out
 
 
 # ---------------------------------------------------------------- the world-map place plates
@@ -2056,7 +2268,10 @@ def cmd_all_discs(args):
     if not paths:
         raise SystemExit("no disc images: --discs %s holds none of %s" % (args.discs, ", ".join(DISC_EXT)))
     check_game(args.game)
-    found = identify_discs(paths)
+    # English first, then the rest in filename order: the French and German
+    # title menus borrow their CONFIG row from an English START.DAT already
+    # built (build_title), as importer.build_languages orders them.
+    found = sorted(identify_discs(paths), key=lambda r: not (r[2] and not r[3] and primary(r[2]) == "en"))
     rows = []
     for p, bid, tag, why in found:
         if why:
@@ -2082,9 +2297,15 @@ def cmd_all(args):
         if args.lang_given:
             raise SystemExit("--lang names one disc's overlays; with --discs or several --disc the tag is each disc's own")
         return cmd_all_discs(args)
+    if args.dry_run:
+        check_game(args.game)
     if args.lang is None:
         args.lang = disc_tag(args.disc[0])
         print("--lang not given: the disc's own tag, %s" % args.lang)
+    if args.dry_run:
+        print("--dry-run: would build %s.*.DAT from %s into %s; nothing written" % (args.lang, args.disc[0],
+                                                                                    dat_dir(args.game)))
+        return 0
     build_all(args, args.disc[0])
     return 0
 
@@ -2175,9 +2396,10 @@ def build_all(args, disc_path):
         print("battle messages: " + ("%d" % MESSAGE_COUNT if msgs else "not found on this disc"))
     shop_emi = None if donor_ja else disc.find("SHOP.EMI")
     if (start_emi or battle_emi or shop_emi) and not args.only:
+        commu = [disc.read(p) for p in sorted(disc.files) if re.match(r"(.*/)?COMMU[0-9A-Z]*\.EMI$", p)]
         labels, report = convert_labels(args.game, disc.read(start_emi[0]) if start_emi else None,
                                         disc.read(battle_emi[0]) if battle_emi else None,
-                                        disc.read(shop_emi[0]) if shop_emi else None)
+                                        disc.read(shop_emi[0]) if shop_emi else None, commu)
         overlays["FIRST.DAT"] += labels
         print("labels: " + (", ".join(report) if report else "not found on this disc"))
 
@@ -2188,6 +2410,10 @@ def build_all(args, disc_path):
         print("names: " + ", ".join(report))
     print("enemy names: %d (%d kept)" % (enemies, kept_enemy))
     if not args.only:
+        sheets = build_village_sheet(args.game, disc)
+        for name, chunks in sheets.items():
+            overlays.setdefault(name, []).extend(chunks)
+        print("village board sheet: " + (", ".join(sorted(sheets)) if sheets else "not repainted on this disc"))
         plates = build_plates(args.game, disc)
         for name, chunks in plates.items():
             overlays.setdefault(name, []).extend(chunks)
@@ -2233,7 +2459,7 @@ def main():
         if name == "all":
             s.add_argument("--disc", action="append", default=[], help="a disc image (.cue, .bin, .iso); repeat for several")
             s.add_argument("--discs", help="a directory: every held PlayStation disc in it is built, each under its own tag")
-            s.add_argument("--dry-run", action="store_true", help="with --discs: identify each image and write nothing")
+            s.add_argument("--dry-run", action="store_true", help="identify each image (and check the game) and write nothing")
         else:
             s.add_argument("--disc", required=True)
         s.add_argument("--lang", type=language_tag,

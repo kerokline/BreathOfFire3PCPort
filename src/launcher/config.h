@@ -14,9 +14,12 @@
 //    it is the port's own documented input, so this is not a divergence.
 #pragma once
 
+#include <iterator>
 #include <string>
+#include <string_view>
 #include <vector>
 
+#include "game/language_tags.h"
 #include "input/bindings.h"
 
 namespace bof3x {
@@ -40,10 +43,20 @@ inline constexpr LanguageInfo kLanguages[] = {
     {"de-DE", L"German (PlayStation script)"},
     {"ja-JP", L"Japanese (PlayStation script)"},
 };
+// The DLL knows the same tags (game/language_tags.h, which also says which
+// optional layer is text of which language); the two lists must agree.
+constexpr bool LanguagesAgree() {
+    if (std::size(kLanguages) != std::size(kLanguageTags)) return false;
+    for (std::size_t i = 0; i < std::size(kLanguages); ++i)
+        if (std::string_view(kLanguages[i].code) != kLanguageTags[i]) return false;
+    return true;
+}
+static_assert(LanguagesAgree(), "kLanguages and game/language_tags.h kLanguageTags differ");
 // "original" (no overlay, the port's Chinese) or one of kLanguages' tags. A
-// bof3x.ini that still says `language=en` (the bare codes before 2026-10-08)
-// is not known and falls back to the original; the dialog re-offers what is
-// built.
+// bof3x.ini that still says a bare code from before 2026-10-08 (`language=en`,
+// fr, de, ja) is refused, not mapped: ConfigLoad reports it and the launcher
+// stops, naming the tag to write (RetiredLanguageReplacement,
+// game/language_tags.h; DIV-0005).
 constexpr const char* kLanguageOriginal = "original";
 
 enum class Filter { kLinear, kPoint };   // the original's, and DIV-0012's
@@ -53,9 +66,12 @@ struct Config {
     std::string language = kLanguageOriginal;
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
-    // psp-maps, psp-names-en-150, psp-names-ja-JP. Built and installed by
-    // tools/importer.py from the player's PSP disc. Empty, none (the default).
-    // The ini's `opt=` only; no dialog box yet.
+    // psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls. Built and
+    // installed by tools/importer.py from the player's PSP disc (area4-walls:
+    // a Western PSX disc). Empty (the default): the default layers that are
+    // installed (kOptDefault); "none": no layer; a list: exactly that list.
+    // The ini's `opt=` only, kept as written (ConfigOptValid); no dialog box
+    // yet, so a save writes back what was read and never pins the default.
     std::string opt;
     // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
     // play through the sequencer, and the music source (BOF3X_MUSIC: "seq",
@@ -126,8 +142,10 @@ std::string SatpixieLine(const Config::Satpixie& sp, const char* prefix, const c
 
 // Reads `path` if it is there, and returns whether there was one. Missing key
 // and unparsable value both leave the default in place: a settings file is not
-// a thing to fail on.
-bool ConfigLoad(const std::wstring& path, Config& cfg);
+// a thing to fail on - with one exception: a retired bare language code
+// (`language=en`, fr, de, ja; DIV-0005) sets `error`, the tag to write
+// instead, and the launcher stops on it. `error` is empty otherwise.
+bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error);
 
 // Rewrites `path` whole, comments included. Returns false on a write error,
 // which the caller reports without refusing to start the game.
@@ -162,12 +180,37 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
 std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir);
 
 // The layers of `opt` (comma-separated) that can be played: those whose
-// DAT\<layer>.* files exist in `game_dir`, and of the text layers (a name
-// ending in -<tag> of kLanguages) only those of `language`'s language. Each
-// layer dropped is said on stderr; the DLL refuses either case at start-up.
+// DAT\<layer>.* files exist in `game_dir`, and of the text layers
+// (LayerLanguage, game/language_tags.h) only those of `language`'s primary
+// language - `language` being what the game is actually given as BOF3X_LANG,
+// empty or "original" for none, under which no text layer plays. Each layer
+// dropped is said on stderr; the DLL refuses either case at start-up.
 std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language);
+
+// The layers played when the ini's `opt=` is empty and BOF3X_OPT is unset,
+// each only when its DAT\<layer>.*.DAT is installed: DIV-0080's walls, on by
+// default since 2026-10-10 (the owner's word). `opt=none` turns them off, as
+// does an `opt=` list that does not name them.
+inline constexpr const char* kOptDefault[] = {"area4-walls"};
+
+// The list the game is offered for an ini's `opt=` value (before
+// ConfigOptPlayable): "none" -> empty; empty -> the kOptDefault layers
+// installed in `game_dir`; anything else -> itself.
+std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt);
+
+// Whether an ini's `opt=` value can be honoured: empty, "none", or a
+// comma-separated list of distinct names of letters, digits and '-' (at most
+// 8, each 1..23 characters, as the DLL's ReadOptLayers takes them), none of
+// them "none" or "original". On false `why` says what is wrong; the launcher
+// refuses to start rather than fall back to the default layers.
+bool ConfigOptValid(const std::string& opt, std::string& why);
 
 // True for "original" or a tag in kLanguages.
 bool ConfigLanguageKnown(const std::string& code);
+
+// False, with `error` naming the tag to use, when the environment's
+// BOF3X_LANG is a retired bare code (en, fr, de, ja; DIV-0005): the launcher
+// stops on it before the game starts, as the DLL would at injection.
+bool ConfigCheckEnvironmentLanguage(std::string& error);
 
 }  // namespace bof3x

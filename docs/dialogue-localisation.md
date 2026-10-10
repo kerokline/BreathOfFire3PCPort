@@ -408,6 +408,13 @@ boxes, and the PC's boxes were made for two 12-unit Chinese glyphs - which are
 three 8-unit English letters wide. Only the verbs needed a layout change
 (re-centring on the real width, DIV-0018).
 
+**Finding the next one, without a route (2026-10-10):** `tools/text_scan.py`
+lists every pair-code string in `.data` that a pointer word or a code
+immediate reaches and renders it with the port's font; what the overlays
+leave, and what each string needs, is [`village-text-scan.md`](village-text-scan.md)
+section 2 (the gene window's tabs and the faerie village's board are kind
+15's groups 12..14 since that day).
+
 **Finding the next one:** `BOF3X_TEXTLOG=1` logs every string drawn and its
 address; a search of `.data` for a pointer to that address finds its table,
 and the port's own font renders the Chinese glyphs so the table can be read

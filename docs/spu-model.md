@@ -15,7 +15,7 @@ RAM, the register set, the reverb unit and the mix, one sample at a time at
 2026-10-08), plus the XA-ADPCM decode formula of its CDROM Format chapter,
 which the SPU chapter points to for the block header. No emulator code was
 read or used. The code names the spec section above each block ("spec:
-...") and the readings below as `R1`..`R20`.
+...") and the readings below as `R1`..`R21`.
 
 Tests: `tools/bgm/host/` (`README.md` there), 431,706 checks, all passing
 on 2026-10-08 with g++ 13.3. The model compiles without warnings under
@@ -209,6 +209,17 @@ first.
   left at SSA `0x3000`). Unheard (OUTX 0; key on resets the decoder), so such
   a block decodes to silence instead of aborting; an audible voice meeting
   one still aborts, now naming the voice, the address, its start and loop.
+- **R21. The filter is bits 4..6 of the header; bit 7 is ignored.** psx-spx's
+  SPU chapter gives the header byte only as "Shift/Filter (reportedly same as
+  for CD-XA)"; the CDROM Format chapter's XA header has shift in bits 0..3,
+  filter in 4..5 and "6-7 Unused", and says SPU-ADPCM has five filters
+  (0..4) to XA's four (re-read 2026-10-10). Five filters need a third bit,
+  so the reading is bits 4..6 with bit 7 unused, as XA's top bits are.
+  `DecodeBlock` always read it so; `LoadBlock`'s R20 test read bits 4..7,
+  which sent a block with bit 7 set and filter 0..4 down the non-ADPCM path
+  (silence when unheard, an abort when heard) where `DecodeBlock` would have
+  decoded it. Both now read bits 4..6 (review fix, 2026-10-10). Real sample
+  data never sets bit 7; only the non-sample bytes R20 meets could.
 - **The level of the renders.** Mednafen's `-soundrecord` output is 3/4
   of this model's (song 0: the RMS ratio 1.33 +- 0.01 in every 50 ms
   window, dry and reverb tail alike; song 153: least-squares gain

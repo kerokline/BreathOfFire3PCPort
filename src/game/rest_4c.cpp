@@ -26,6 +26,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/labels.h"
 #include "game/rest_4c_callees.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
@@ -264,7 +265,8 @@ extern "C" void __cdecl Commu_DrawZennyBox(int x, int y) {
     const unsigned style = B(at::kStyle);
     SH_CALL(Menu_DrawBox)(x + 1, y + 1, 0x6A, 0x28, 0x80, static_cast<int>(style));
     SH_CALL(Commu_DrawFrame)(x, y);
-    SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, 3, Text(at::kZennyTitle));
+    SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, Labels_Written(14) ? 0xFF : 3,
+                         Labels_Written(14) ? Labels_Slot(14, 3) : Text(at::kZennyTitle));   // DIV-0064 group 14
     SH_CALL(Crt_sprintf)(Buffer(), reinterpret_cast<const char*>(At(at::kFmtWide)), L(bof3::addr::Party_Zenny));
     SH_CALL(Text_DrawFont12)(x + 6, y + 0x18, 0, reinterpret_cast<const unsigned char*>(Buffer()));
     SH_CALL(Text_DrawAt)(x + 0x5A, y + 0x18, 0, 1, Text(at::kZennyUnit));
@@ -280,7 +282,8 @@ extern "C" void __cdecl Commu_DrawStakeBox(int x, int y, unsigned digits) {
     const unsigned style = B(at::kStyle);
     SH_CALL(Menu_DrawBox)(x + 1, y + 1, 0x6A, 0x28, 0x80, static_cast<int>(style));
     SH_CALL(Commu_DrawFrame)(x, y);
-    SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, 3, Text(at::kBetTitle));
+    SH_CALL(Text_DrawAt)(x + 0x24, y + 7, 0, Labels_Written(14) ? 0xFF : 3,
+                         Labels_Written(14) ? Labels_Slot(14, 4) : Text(at::kBetTitle));   // DIV-0064 group 14
     const auto amount = static_cast<std::int32_t>(L(at::kBet));
     U format = at::kFmtWide;
     int left = x + 6;

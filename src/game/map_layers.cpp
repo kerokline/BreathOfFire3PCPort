@@ -674,7 +674,7 @@ void MapLayers_Inject() {
         char text[8];
         const DWORD n = GetEnvironmentVariableA("BOF3X_SIDE_ZERO", text, sizeof text);
         // An experiment's switch (2026-10-07, the owner's "waterfall"), off
-        // unless BOF3X_SIDE_ZERO=1; no ledger entry while it is off.
+        // unless BOF3X_SIDE_ZERO=1; DIV-0085 "Reversible?" names it.
         if (n >= sizeof text || (n != 0 && !((text[0] == '0' || text[0] == '1') && text[1] == 0)))
             bof3::Fatal("BOF3X_SIDE_ZERO must be 0 or 1");
         g_side_zero_release = n == 1 && text[0] == '1';
