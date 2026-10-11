@@ -280,7 +280,8 @@ void SaveFrameBesideDll() {
     const size_t room = MAX_PATH - static_cast<size_t>(slash + 1 - path);
     if (std::swprintf(slash + 1, room, L"bof3x-frame-%lu.bmp", static_cast<unsigned long>(Frame_Counter)) < 0) return;
     const bool ok = render::SaveFrame(path);
-    bof3::Log("F11         frame %lu %s %ls", static_cast<unsigned long>(Frame_Counter), ok ? "saved to" : "NOT saved:", path);
+    bof3::Log("F11         frame %lu %s %s", static_cast<unsigned long>(Frame_Counter), ok ? "saved to" : "NOT saved:",
+              bof3::Utf8Path(path).text);
     Overlay_Frames = kOverlayFrames;
     Overlay_Text = ok ? kStrFrameSaved : kStrFrameNotSaved;
 }

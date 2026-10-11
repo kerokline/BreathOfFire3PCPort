@@ -153,6 +153,57 @@ void TestRoundTrip() {
     DeleteFileW(b.c_str());
 }
 
+// The ini's cache= is bytes in the ANSI code page (the dialog's ToAnsi; the
+// DLL reads BOF3X_CACHE with GetEnvironmentVariableA). The launcher's own
+// lookups must widen it through the same code page - they widened it a byte a
+// character, so a folder named outside Latin-1 was looked for elsewhere and
+// its layers went unseen (docs/code-page-audit.md).
+void TestCacheCodePage() {
+    SetEnvironmentVariableW(L"BOF3X_CACHE", nullptr);
+    SetEnvironmentVariableW(L"BOF3X_CACHE_DATA", nullptr);
+    // A character this code page holds whose bytes are not its Latin-1 widening.
+    std::wstring name;
+    std::string bytes;
+    for (const wchar_t* c : {L"€", L"中", L"Ж", L"あ"}) {
+        const std::wstring w = std::wstring(L"bof3x_cfg_cp_") + c;
+        BOOL lossy = FALSE;
+        char a[64];
+        const int n = WideCharToMultiByte(CP_ACP, 0, w.c_str(), -1, a, sizeof a, nullptr, &lossy);
+        if (n <= 0 || lossy) continue;
+        std::wstring latin1;
+        for (const char* p = a; *p; ++p) latin1 += static_cast<wchar_t>(static_cast<unsigned char>(*p));
+        if (latin1 == w) continue;
+        name = w;
+        bytes = a;
+        break;
+    }
+    if (name.empty()) {
+        std::printf("  (code page %u holds none of the candidates outside Latin-1: not checked)\n", GetACP());
+        return;
+    }
+    wchar_t tmp[MAX_PATH];
+    const DWORD tn = GetTempPathW(MAX_PATH, tmp);
+    char atmp[MAX_PATH * 2];
+    BOOL lossy = FALSE;
+    if (tn == 0 || WideCharToMultiByte(CP_ACP, 0, tmp, -1, atmp, sizeof atmp, nullptr, &lossy) <= 0 || lossy) {
+        std::printf("  (the temporary folder is outside code page %u: not checked)\n", GetACP());
+        return;
+    }
+    const std::wstring game = Temp(L"bof3x_cfg_game"), cache = Temp(name.c_str());
+    CreateDirectoryW(game.c_str(), nullptr);
+    CreateDirectoryW((game + L"\\DAT").c_str(), nullptr);
+    for (const wchar_t* part : {L"", L"\\opt", L"\\opt\\psp-tiles", L"\\opt\\psp-tiles\\dat"})
+        CreateDirectoryW((cache + part).c_str(), nullptr);
+    const std::wstring tiles = cache + L"\\opt\\psp-tiles\\dat\\AREA000.DAT";
+    WriteAll(tiles, "");
+    bof3x::Config cfg;
+    cfg.cache = std::string(atmp) + bytes + "\\";
+    Check(bof3x::ConfigCacheDataRoot(cfg) == cache, "cache= widened through the ANSI code page");
+    Check(bof3x::ConfigOptInstalled(game, "psp-tiles", bof3x::ConfigCacheDataRoot(cfg)),
+          "a layer in a cache named outside Latin-1: installed (DIV-0089)");
+    DeleteFileW(tiles.c_str());
+}
+
 }  // namespace
 
 int main() {
@@ -162,6 +213,8 @@ int main() {
     TestInstalled();
     std::printf("ini round trip\n");
     TestRoundTrip();
+    std::printf("cache path code page\n");
+    TestCacheCodePage();
     std::printf("%d checks, %d failures\n", g_checks, g_failures);
     return g_failures ? 1 : 0;
 }

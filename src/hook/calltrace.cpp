@@ -375,7 +375,7 @@ void CallTrace_Start(void* dll_module) {
     std::memcpy(path + len - 3, kTail, sizeof kTail);
     g_out = CreateFileW(path, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
                         FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (g_out == INVALID_HANDLE_VALUE) Fatal("calltrace: cannot create %ls", path);
+    if (g_out == INVALID_HANDLE_VALUE) Fatal("calltrace: cannot create %s", Utf8Path(path).text);
     char mode[16];
     DWORD mn = GetEnvironmentVariableA("BOF3X_CALLTRACE_MODE", mode, sizeof mode);
     if (mn != 0) {
