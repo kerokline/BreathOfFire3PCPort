@@ -719,7 +719,7 @@ const Callee kField[] = {
     {FIELD_OURS(CameraTurn_Start), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1: void(void)
     {FIELD_OURS(CameraTurn_Step), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1: void(void)
     {FIELD_OURS(CameraTurn_End), 0, {}, Answer::kGarbage, 0, 0, {}, nullptr, nullptr, true},   // FC1:1: void(void)
-    {FIELD_THEIRS(MoveCmd_Move, 0x578C10), 2, {0, kU8}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FC1:1: void(unsigned char *object, unsigned char direction)
+    {FIELD_OURS(MoveCmd_Move), 2, {0, kU8}, Answer::kGarbage, 0, 0, {16, 0}, nullptr, nullptr, true},   // FC1:1: void(unsigned char *object, unsigned char direction)
     {FIELD_OURS(Party_MemberAt), 3, {kAll, kAll, kAll}, Answer::kFlag, 0, 0, {0, 0, 0}, nullptr, nullptr, true},   // FC1:1: unsigned char(long x, long y, unsigned margin)
     {FIELD_OURS(Gte_VectorNormalS), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {12, 0}, FxOut1_6, nullptr, true},   // FC2:1: long(const long *in, short *out)
     {FIELD_OURS(Gte_VectorNormal), 2, {kAll, kAll}, Answer::kGarbage, 0, 0, {12, 0}, FxOut1_12, nullptr, true},   // FC2:1: long(const long *in, long *out)

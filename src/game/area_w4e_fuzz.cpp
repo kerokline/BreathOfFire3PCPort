@@ -359,7 +359,7 @@ const ah::Callee kCallees[] = {
     {W4E_OURS(KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     // the area a word, the flags a byte (the pushes carry stale bits above them)
     {W4E_OURS(Field_ChangeArea), 4, {kU16, kAll, kAll, kU8}, ah::Answer::kGarbage, 0, 0},
-    {W4E_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
+    {W4E_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     // slots inside the group's four effect records, or none
     {W4E_OURS(Effect_FindFree), 0, {}, ah::Answer::kByte, 0xFF, 0x03},
     {W4E_OURS(Party_Count), 1, {kAll}, ah::Answer::kByte, 0x00, 0x03},

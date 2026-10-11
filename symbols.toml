@@ -3241,8 +3241,9 @@ name = "MoveCmd_Move"
 psx = 0x801ACBA8
 ret = "void"
 params = "unsigned char *object, unsigned char direction"
-status = "hypothesis"
-evidence = "disasm 2026-09-22 (prologue): the object and a byte - ebx is the second argument, compared with 2 and 6, and masked 0xFF before use. Sets Sprite_Current[9] to 0x10, or 0x20 for 2 and 6, then divides it by a byte of 0x6697F0[object +4]. Called by MoveScript_Step (ops 0x10-0x4F) and MoveScript_GroupF (F2, F3, FA) when the object is not kind 2. psx_pair call."
+impl = "src/game/move_cmds.cpp"
+status = "evidence"
+evidence = "disasm 2026-10-10 (capstone to the last instruction), 0x578C10..0x578D04 (0xF5 bytes, then nops to 0x578D10), cdecl, two calls: speed = Field_MoveSpeeds[object +4] (any byte); Sprite_Current +9 = 0x20 for direction (low byte) 2 or 6, else 0x10, then idiv by the speed (a speed of 0 faults); +0xC / +0x10 = MoveCmd_F9Steps[direction * 2] / [direction * 2 + 1] times the speed (imul, wrapping); the landing x / z = +0xC / +0x10 times +9 plus +0x34 / +0x38. Unless object +0 bit 7: AreaMap_Slope(x, z, the direction's whole pushed dword) at 0x578CBE, and when it leaves DamageScratch's byte non-zero AreaMap_Elevation(x, z) at 0x578CD2 instead; +0x14 = (s16 answer - s16 +0x3E) idiv +9, both re-read through Sprite_Current. Always +0 |= 0x10. Same shape as Field_JumpSetUp 0x534610 (which asks 0x5725C0 / MapView_GroundAt). Called by MoveScript_Step (ops 0x10-0x4F) and MoveScript_GroupF (F2, F3, FA) when the object is not kind 2, and by the field objects, EffectKind32_Throw and nine area modules. psx_pair call. docs/move-cmds.md section 8."
 
 
 # --- group B: the kind-2 object's script runner (docs/kind2-object.md) ---
@@ -81196,6 +81197,7 @@ ctype = "long"
 count = 16
 status = "evidence"
 evidence = "read 2026-09-29 (round twelve group FO): MoveCmd_OpF9 reads the (x, z) pair by Sprite_Current +8 & 7 as a step per unit of Field_MoveSpeeds; image data, never written. docs/field_o.md."
+note = "Also read unmasked by MoveCmd_Move 0x578C75 / 0x578C81 (by its direction argument, times the speed, into Sprite_Current +0xC / +0x10; 2026-10-10) and MoveCmd_MoveKind2 0x573400 (move_cmds.cpp). The PSX 0x80182438 (FUN_801C6DF4's -0x7FE7DBC8)."
 
 # --- round twelve group FC1 (field_c1, 2026-09-29): docs/field_c1.md ---
 

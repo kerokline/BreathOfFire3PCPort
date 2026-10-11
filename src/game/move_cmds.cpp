@@ -1,4 +1,4 @@
-// The movement commands and the party's moves - fifteen functions the movement
+// The movement commands and the party's moves - sixteen functions the movement
 // script's interpreter (move_script.cpp, move_groups.cpp) and the field object
 // update (field_objects.cpp) call, and the demo's party reset. Each is the PSX
 // twin's where one was read (docs/move-cmds.md section 1 has the pairs). The
@@ -12,12 +12,14 @@
 #include "game/move_cmds_callees.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
+#include "hook/log.h"
 
 namespace move_cmds {
 
 const Callees kOriginals = {
     AreaMap_Elevation, Math_Ratan2, ScriptContext_Reset, MapView_SetElevation, MoveCmd_AttachOffset,
     MoveScript_ObjectKind, MoveCmd_Detach, MoveCmd_AttachMove, MoveCmd_HandlePosition, PartySet_Load, Party_Join,
+    AreaMap_Slope,
 };
 Callees g = kOriginals;
 
@@ -161,7 +163,7 @@ extern "C" void __cdecl Sprite_SetPoseWait(unsigned char* context) {
 
 // original 0x573400: the kind-2 object's move (PSX FUN_801C6DF4), the twin of
 // MoveCmd_Move: the divisor speed * (4 for directions 2 and 6, else 8) to
-// MoveScript_F3Divisor; the position moved by kKind2Steps[direction] * steps *
+// MoveScript_F3Divisor; the position moved by MoveCmd_F9Steps[direction] * steps *
 // (0x80 / divisor) * speed, kept in Field_Kind2X / Z as well; then the rise to
 // the ground there spread over (0x80 / divisor) * steps frames into +0x14, and
 // MoveScript_FAWord cleared.
@@ -179,7 +181,7 @@ extern "C" void __cdecl MoveCmd_MoveKind2(unsigned char direction) {
     const auto divisor = static_cast<short>(static_cast<std::uint16_t>(speed * multiplier));
     MoveScript_F3Divisor = divisor;
     const std::int32_t per_frame = 0x80 / static_cast<std::int32_t>(divisor);
-    const unsigned char* const step = At(kKind2Steps + direction * 8u);
+    const unsigned char* const step = reinterpret_cast<const unsigned char*>(MoveCmd_F9Steps + direction * 2u);
     const std::int32_t steps = k2[kK2Steps];
     const std::int32_t dx = Mul(Mul(Mul(Long(step), steps), per_frame), speed);
     const std::int32_t dz = Mul(Mul(Mul(Long(step + 4), steps), per_frame), speed);
@@ -218,6 +220,55 @@ extern "C" void __cdecl Kind2_Place(unsigned char script) {
     k2[1] = 1;
     k2[2] = 0;
     k2[3] = 0;
+}
+
+// original 0x578C10: a step's move of Sprite_Current toward `direction`
+// (PSX FUN_801ACBA8), the twin of MoveCmd_MoveKind2 for every other object:
+// speed = Field_MoveSpeeds[object +4]; the frame count +9 = 0x20 for
+// directions 2 and 6, else 0x10, divided by the speed; the velocity +0xC /
+// +0x10 = the direction's MoveCmd_F9Steps pair times the speed; then, unless
+// bit 7 of object +0, the ground where the move lands - AreaMap_Slope there,
+// or AreaMap_Elevation when the slope says the ground is sloped (DamageScratch's
+// byte) - and the rise to it spread over +9 frames into +0x14. Flag 0x10.
+//
+// As the original has it: the speed byte indexes the table unmasked; the
+// division of +9 is signed and a speed of 0 faults (Field_MoveSpeeds' entry 0
+// - ours aborts, by name, where the original raises the divide fault); a
+// speed above 0x10 (0x20 on the diagonals) leaves +9 at 0, which only the
+// rise divides by - aborted likewise; the products and the landing wrap in 32
+// bits; the flat answer is AreaMap_Slope's own return, the sloped one
+// AreaMap_Elevation's, each taken as its low 16 bits sign-extended, less the
+// height +0x3E as a short; +9 and +0x3E are read again through Sprite_Current
+// after the calls; object +0 is read after the velocity is stored. The
+// original pushes its whole direction dword to AreaMap_Slope, which reads only
+// its low byte (area_slope.cpp); ours passes the byte. Nothing is returned
+// (eax holds Sprite_Current; every caller discards it).
+extern "C" void __cdecl MoveCmd_Move(unsigned char* object, unsigned char direction) {
+    const unsigned char speed = Field_MoveSpeeds[object[4]];
+    Sprite_Current[9] = (direction == 2 || direction == 6) ? 0x20 : 0x10;
+    if (speed == 0) bof3::Fatal("MoveCmd_Move: speed index %u is a speed of 0, a divide fault in the original", object[4]);
+    unsigned char* sprite = Sprite_Current;
+    sprite[9] = static_cast<unsigned char>(static_cast<std::int32_t>(sprite[9]) / static_cast<std::int32_t>(speed));
+    const long* const unit = MoveCmd_F9Steps + direction * 2u;
+    sprite = Sprite_Current;
+    SetLong(sprite + 0xC, Mul(unit[0], speed));
+    SetLong(Sprite_Current + 0x10, Mul(unit[1], speed));
+    sprite = Sprite_Current;
+    const std::int32_t frames = sprite[9];
+    const std::int32_t x = Add(Mul(Long(sprite + 0xC), frames), Long(sprite + 0x34));
+    const std::int32_t z = Add(Mul(Long(sprite + 0x10), frames), Long(sprite + 0x38));
+    if (!(object[0] & 0x80)) {
+        long ground = g.slope(x, z, direction);
+        if (Scratch()[0] != 0) ground = g.elevation(x, z);
+        sprite = Sprite_Current;
+        const std::int32_t rise = static_cast<short>(static_cast<std::uint16_t>(static_cast<std::uint32_t>(ground))) -
+                                  static_cast<short>(Word(sprite + 0x3E));
+        const std::int32_t count = sprite[9];
+        if (count == 0) bof3::Fatal("MoveCmd_Move: a frame count of 0 (speed %u), a divide fault in the original", speed);
+        SetLong(sprite + 0x14, rise / count);
+        sprite = Sprite_Current;
+    }
+    sprite[0] |= 0x10;
 }
 
 // original 0x578D10: op F7's timed move to (x, z) on the ground (PSX
@@ -452,6 +503,7 @@ void MoveCmds_Inject() {
     BOF3_INJECT(Sprite_SetPoseWait);
     BOF3_INJECT(MoveCmd_MoveKind2);
     BOF3_INJECT(Kind2_Place);
+    BOF3_INJECT(MoveCmd_Move);
     BOF3_INJECT(MoveCmd_OpF7);
     BOF3_INJECT(MoveCmd_HandlePosition);
     BOF3_INJECT(MoveCmd_Attach);

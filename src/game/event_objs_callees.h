@@ -19,8 +19,8 @@ constexpr std::uint32_t kShadeClut = 0x811380;
 // Row 15 of Gfx_ClutStripSource: where Sprite_ShadeFadeStep reloads a
 // palette from (Sprite_LoadPalette's dst; docs/field-event.md section 3).
 constexpr std::uint32_t kShadeSource = 0x80D380;
-// The per-direction step, two dwords (x, z) per direction - move_cmds'
-// kKind2Steps: (-2048, -2048), (0, -2048), (1024, -1024), (2048, 0), ... The
+// The per-direction step, two dwords (x, z) per direction - symbols.toml's
+// MoveCmd_F9Steps: (-2048, -2048), (0, -2048), (1024, -1024), (2048, 0), ... The
 // half steps of directions 2 and 6 are why their jumps take twice the frames.
 constexpr std::uint32_t kJumpSteps = 0x6696DC;
 // The party list Party_Count counts (field_event.cpp; move_cmds' kPartyLists).
