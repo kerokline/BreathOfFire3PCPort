@@ -17,10 +17,13 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
 #include "audio/mp3.h"
 #include "bof3/symbols.gen.h"
+#include "game/mode_flow.h"
 #include "game/music_loops.h"
+#include "game/music_resume.h"
 #include "game/music_seq.h"
 #include "game/sound_callees.h"
 #include "hook/detour.h"
@@ -594,6 +597,68 @@ void LoopDecode(unsigned char* dst, std::uint32_t size) {
 
 }  // namespace
 
+// DIV-0092's resume (music_resume.h): the ring's bookkeeping and the
+// position. All of it the DLL's own state.
+namespace {
+
+struct Ring {
+    std::uint32_t written = 0;        // stream samples written into the ring since Music_Start
+    std::uint32_t half_base[2] = {};  // the stream sample each half starts with
+    bool track_stream = false;        // the stream is the BGM file Music_Play started
+    int track = -1;                   // Music_LoadedTrack then
+};
+Ring g_ring;
+
+struct Resume {
+    bool remembered = false;
+    unsigned track = 0;
+    std::uint32_t sample = 0;
+    bool pending = false;
+    unsigned pending_track = 0;
+    std::uint32_t pending_sample = 0;
+};
+Resume g_resume;
+
+constexpr std::uint32_t kFrameSamples = 1152;  // every frame of the game's MP3s (bgm-comparison.md 6.1)
+constexpr std::uint32_t kHalfSamples = kHalf / 4;
+
+// Music_Start's resume, after the stream is set up and before its first half
+// is decoded: the stream advanced `target` samples. The sequenced song by
+// FastForward; the MP3 by decoding through Music_Decode into a scratch buffer
+// and dropping it (the loop table's own mechanism: decoding from the top
+// leaves the decoder as the first pass left it, bit for bit; the decoders
+// seek to 0 alone). Past a once-only song's end: from the top. The stream
+// sample reached.
+std::uint32_t ResumeSkip(std::uint32_t target, int loops, int loop_track, unsigned size) {
+    if (music_seq::Active()) {
+        if (music_seq::FastForward(target)) return target;
+        music_seq::Begin();
+        return 0;
+    }
+    if (!Music_Decoder) return 0;
+    static unsigned char scratch[kHalf];
+    const int saved_loops = Music_Loops;
+    Music_Loops = loops;  // the original sets it after the first half; the skip runs on the new track's
+    Music_Finished = 0;
+    std::uint32_t left = target;
+    while (left && !Music_Finished) {
+        const std::uint32_t n = left < kHalfSamples ? left : kHalfSamples;
+        Music_Decode(scratch, static_cast<int>(n * 4));
+        left -= n;
+    }
+    std::uint32_t reached = target;
+    if (Music_Finished) {  // a once-only track asked past its end: from the top
+        g.mp3_seek(Music_Decoder, 0);
+        LoopBegin(loop_track, size);
+        Music_Finished = 0;
+        reached = 0;
+    }
+    Music_Loops = saved_loops;
+    return reached;
+}
+
+}  // namespace
+
 // original 0x5A6CC0: starts the music stream from a BGM file in memory:
 // whatever was streaming released, the file copied (the decoder reads it from
 // the copy), the decoder opened, the streaming buffer made with its first
@@ -622,8 +687,24 @@ extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) 
         LoopBegin(loops && file == Music_File && size == static_cast<unsigned>(Music_FileSize) ? Music_LoadedTrack : -1,
                   size);
     }
+    // DIV-0092's resume: the stream's sample count from here, and a pending
+    // position for this track taken before the first half is decoded.
+    g_ring.track_stream = file == Music_File && size == static_cast<unsigned>(Music_FileSize);
+    g_ring.track = Music_LoadedTrack;
+    g_ring.written = 0;
+    if (g_resume.pending) {
+        g_resume.pending = false;
+        if (g_ring.track_stream && Music_LoadedTrack == static_cast<int>(g_resume.pending_track)) {
+            const int loop_track = !music_seq::Active() && loops && g_ring.track_stream ? Music_LoadedTrack : -1;
+            g_ring.written = ResumeSkip(g_resume.pending_sample, loops, loop_track, size);
+            MUSIC_LOG("resume track %u at sample %u%s", Frame_Counter, g_resume.pending_track, g_ring.written,
+                      g_ring.written == g_resume.pending_sample ? "" : " (asked past its end: from the top)");
+        }
+    }
     void* const buffer = g.music_create_buffer();
     Music_Buffer = buffer;
+    g_ring.half_base[0] = g_ring.written;  // Music_CreateBuffer wrote the first half
+    g_ring.written += kHalfSamples;
     if (buffer) {
         g.music_set_notify(buffer);
         void* const playing = Music_Buffer;
@@ -842,7 +923,86 @@ extern "C" void __cdecl Music_Pump(void) {
     }
     g.music_decode(Music_Staging, kHalf);
     g.sndbuf_write(Music_Buffer, Music_Staging, signalled != 0 ? 0 : kHalf, kHalf);
+    g_ring.half_base[signalled != 0 ? 0 : 1] = g_ring.written;  // DIV-0092's resume: the ring's bookkeeping
+    g_ring.written += kHalfSamples;
 }
+
+// DIV-0092's resume (music_resume.h): the position taken and handed on.
+namespace {
+
+// A heard MP3 stream sample as the same point inside the first pass (and, for
+// a measured loop, its first loop), where Music_Start's skip can reach it by
+// decoding from the top. A measured loop repeats start..end after `end`, its
+// first `fade` samples blended with the end's: a point in the blend is taken
+// in the second pass, any other in the first. A track the original rewinds
+// repeats every `pass` samples (its frames and the 1,152 the end-of-stream
+// step counts, known-defects.md D240). Without either (a once-only track) the
+// point stays; Music_Start's skip finds it past the end and starts from the
+// top. The original's path decodes whole frames, so its point is taken down
+// to a frame's start (26 ms at most).
+std::uint32_t FoldMp3(std::uint32_t heard, const music_loops::Row* row, bool loops, std::uint32_t pass) {
+    if (row) {
+        if (heard < row->end) return heard;
+        const std::uint32_t k = (heard - row->end) % (row->end - row->start);
+        return k >= row->fade ? row->start + k : row->end + k;
+    }
+    if (loops && pass) heard %= pass;
+    return heard - heard % kFrameSamples;
+}
+
+}  // namespace
+
+namespace music_resume {
+
+void Remember() {
+    g_resume.remembered = false;
+    if (!mode_flow::g_area_track_fallback) return;  // DIV-0092's switch: Capcom's rule, and the fuzzes
+    const unsigned track = Music_Track;
+    void* const buffer = Music_Buffer;
+    if (track == 0xFF || !buffer || !g_ring.track_stream || g_ring.track != static_cast<int>(track)) return;
+    unsigned long play = 0, cursor_w = 0;
+    if (Method<ComPosition>(buffer, kGetCurrentPosition)(buffer, &play, &cursor_w) != 0 || play >= 2 * kHalf) return;
+    const std::uint32_t heard = g_ring.half_base[play / kHalf] + static_cast<std::uint32_t>(play % kHalf) / 4;
+    if (heard > g_ring.written) return;  // a cursor in a half not yet written: no position to trust
+    std::uint32_t folded;
+    if (music_seq::Active()) {
+        folded = music_seq::Fold(heard);
+    } else {
+        const bool loops = Music_Loops != 0;
+        const std::uint32_t pass =
+            loops && !g_loop.row && Music_Data
+                ? (mp3dec::CountFrames(Music_Data, static_cast<std::uint32_t>(Music_FileSize)) + 1) * kFrameSamples
+                : 0;
+        folded = FoldMp3(heard, g_loop.row, loops, pass);
+    }
+    g_resume.remembered = true;
+    g_resume.track = track;
+    g_resume.sample = folded;
+    MUSIC_LOG("remember track %u at sample %u (heard %u; %u written, the ring %u samples ahead)", Frame_Counter, track,
+              folded, heard, g_ring.written, g_ring.written - heard);
+}
+
+bool Arm(unsigned track) {
+    const bool hit = g_resume.remembered && g_resume.track == track;
+    g_resume.remembered = false;
+    g_resume.pending = hit;
+    g_resume.pending_track = track;
+    g_resume.pending_sample = hit ? g_resume.sample : 0;
+    return hit;
+}
+
+void Forget() {
+    g_resume.remembered = false;
+    g_resume.pending = false;
+}
+
+void Pend(unsigned track, unsigned sample) {
+    g_resume.pending = true;
+    g_resume.pending_track = track;
+    g_resume.pending_sample = sample;
+}
+
+}  // namespace music_resume
 
 // DIV-0028's switch and its check. Under BOF3X_SHADOW=sound (after the fuzz,
 // which ran the per-call path the original has): an 8-frame stopping fade
@@ -1033,11 +1193,163 @@ void LoopTable_SelfTest() {
               "%u table rows in bounds", total, start, end, seeks_a, seeks_b, seeks_c, seeks_d, count);
 }
 
+// DIV-0092's resume on the MP3 path (music_resume.h), with the loop check's
+// stand-in decoder (index-coded samples, 40 frames): the stream from the top
+// against the stream resumed at a folded position, sample for sample - for a
+// track the original rewinds (inside the first pass; three passes on, folded
+// back), for a once-only track asked past its end (from the top), for a
+// measured loop (two loops on, folded; and inside the loop's crossfade).
+// Then the heard position and the switch: the play cursor through a stand-in
+// buffer, nothing remembered with DIV-0092 off, the position remembered with
+// it on, used once and only for its own track. Everything put back.
+std::uint32_t g_rt_cursor;
+long __stdcall RtPosition(void*, unsigned long* play, unsigned long* cursor_w) {
+    *play = g_rt_cursor;
+    *cursor_w = 0;
+    return 0;
+}
+long __stdcall RtUnexpected(void*) { bof3::Fatal("DIV-0092 resume self-test: a DirectSound method other than GetCurrentPosition"); }
+
+// `samples` of the stream as Music_Decode makes it, from the decoder's state
+// now, in 0x12000-byte calls (a whole number of frames, as the game asks).
+std::vector<std::uint32_t> RtStream(std::uint32_t samples) {
+    static unsigned char buf[kHalf];
+    std::vector<std::uint32_t> out;
+    while (out.size() < samples) {
+        std::memset(buf, 0xEE, sizeof buf);  // what a phantom step leaves (D240)
+        Music_Decode(buf, static_cast<int>(kHalf));
+        for (std::uint32_t i = 0; i < kHalfSamples; ++i) {
+            std::uint32_t v;
+            std::memcpy(&v, buf + 4 * i, 4);
+            out.push_back(v);
+        }
+    }
+    out.resize(samples);
+    return out;
+}
+
+void RtFresh(const music_loops::Row* row) {
+    g_lt_next = 0;
+    g_loop.row = row;
+    g_loop.pos = g_loop.carry_at = g_loop.carry_len = 0;
+    Music_Finished = 0;
+}
+
+// The stream resumed at `heard` (folded as Remember folds it) against the
+// stream from the top at the folded point's equivalent: the samples a
+// phantom step leaves are not compared (they are whatever the buffer held).
+bool RtCase(const music_loops::Row* row, bool loops, std::uint32_t heard, std::uint32_t expect_at,
+            std::uint32_t* reached) {
+    const std::uint32_t pass = (g_lt_frames + 1) * 1152;
+    const std::uint32_t folded = FoldMp3(heard, row, loops, pass);
+    const std::uint32_t length = 1152 * 70;
+    RtFresh(row);
+    Music_Loops = loops;
+    const std::vector<std::uint32_t> top = RtStream(expect_at + length);
+    RtFresh(row);
+    *reached = ResumeSkip(folded, loops, -1, 0);
+    Music_Loops = loops;
+    const std::vector<std::uint32_t> resumed = RtStream(length);
+    bool ok = true;
+    for (std::uint32_t k = 0; k < length && ok; ++k) {
+        const std::uint32_t at = expect_at + k;
+        if (!row && loops && at % pass >= g_lt_frames * 1152) continue;  // the phantom step's samples
+        if (!row && !loops && at >= g_lt_frames * 1152) continue;        // the zeros after the end
+        ok = resumed[k] == top[at];
+    }
+    return ok;
+}
+
+void ResumeMp3_SelfTest() {
+    const Callees saved_g = g;
+    void* const decoder = Music_Decoder;
+    const int loops_saved = Music_Loops, finished = Music_Finished;
+    const Ring ring = g_ring;
+    const Resume resume = g_resume;
+    const unsigned char track_saved = Music_Track;
+    void* const buffer_saved = Music_Buffer;
+    const std::uint32_t fallback = mode_flow::g_area_track_fallback;
+    g.mp3_decode = LtDecode;
+    g.mp3_seek = LtSeek;
+    g_lt_decoder.frame = &g_lt_frame;
+    Music_Decoder = &g_lt_decoder;
+    g_lt_frames = 40;
+    const std::uint32_t pass = 41 * 1152;
+    std::uint32_t r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0;
+    // a rewinding track: inside the first pass; three passes on, folded back
+    const bool first = RtCase(nullptr, true, 1152 * 7 + 300, 1152 * 7, &r1) && r1 == 1152 * 7;
+    const bool later = RtCase(nullptr, true, 3 * pass + 1152 * 11 + 5, 3 * pass + 1152 * 11, &r2) && r2 == 1152 * 11;
+    // a once-only track asked past its end: from the top
+    const bool past = RtCase(nullptr, false, 1152 * 50, 0, &r3) && r3 == 0;
+    // a measured loop: two loops on, and inside its crossfade one loop on
+    const music_loops::Row row = {200, 0, 1152 * 4 + 300, 1152 * 15 + 600, 256};
+    const std::uint32_t period = row.end - row.start;
+    const bool looped = RtCase(&row, true, row.end + 2 * period + 1000, row.end + 2 * period + 1000, &r4) &&
+                        r4 == row.start + 1000;
+    const bool blend = RtCase(&row, true, row.end + period + 100, row.end + period + 100, &r5) && r5 == row.end + 100;
+    g_loop.row = nullptr;
+    g_loop.pos = g_loop.carry_at = g_loop.carry_len = 0;
+    std::memset(g_loop.logged, 0, sizeof g_loop.logged);
+
+    // the heard position: half 1 holds samples from 3 halves on, half 0 (the
+    // last written) from 4; the cursor 0x800 bytes into half 1
+    const void* vtable[0x54 / 4];
+    for (auto& v : vtable) v = reinterpret_cast<const void*>(&RtUnexpected);
+    vtable[kGetCurrentPosition / 4] = reinterpret_cast<const void*>(&RtPosition);
+    struct { const void* const* vtable; } fake = {vtable};
+    Music_Buffer = &fake;
+    Music_Track = 200;
+    Music_Loops = 0;
+    g_ring.track_stream = true;
+    g_ring.track = 200;
+    g_ring.half_base[1] = 3 * kHalfSamples;
+    g_ring.half_base[0] = 4 * kHalfSamples;
+    g_ring.written = 5 * kHalfSamples;
+    g_rt_cursor = kHalf + 0x800;
+    const std::uint32_t heard = 3 * kHalfSamples + 0x200, want = heard - heard % 1152;
+    mode_flow::g_area_track_fallback = 0;
+    music_resume::Remember();
+    const bool off = !g_resume.remembered && !music_resume::Arm(200) && !g_resume.pending;
+    mode_flow::g_area_track_fallback = 1;
+    music_resume::Remember();
+    const bool on = g_resume.remembered && g_resume.track == 200 && g_resume.sample == want;
+    const bool other = !music_resume::Arm(201) && !g_resume.remembered && !g_resume.pending;
+    music_resume::Remember();
+    const bool own = music_resume::Arm(200) && !g_resume.remembered && g_resume.pending &&
+                     g_resume.pending_sample == want && !music_resume::Arm(200);
+    Music_Track = 0xFF;  // nothing playing: nothing remembered
+    music_resume::Remember();
+    const bool silent = !g_resume.remembered;
+
+    g = saved_g;
+    Music_Decoder = decoder;
+    Music_Loops = loops_saved;
+    Music_Finished = finished;
+    g_ring = ring;
+    g_resume = resume;
+    Music_Track = track_saved;
+    Music_Buffer = buffer_saved;
+    mode_flow::g_area_track_fallback = fallback;
+    if (!first || !later || !past || !looped || !blend || !off || !on || !other || !own || !silent)
+        bof3::Fatal("DIV-0092 resume self-test: rewinding track first pass %s, three passes on %s (reached %u, %u); "
+                    "once-only past its end %s (reached %u); measured loop two loops on %s, in the crossfade %s "
+                    "(reached %u, %u); switch off %s, on %s, another track %s, its own track once %s, silent %s",
+                    first ? "ok" : "WRONG", later ? "ok" : "WRONG", r1, r2, past ? "ok" : "WRONG", r3,
+                    looped ? "ok" : "WRONG", blend ? "ok" : "WRONG", r4, r5, off ? "ok" : "WRONG", on ? "ok" : "WRONG",
+                    other ? "ok" : "WRONG", own ? "ok" : "WRONG", silent ? "ok" : "WRONG");
+    bof3::Log("shadow      DIV-0092 resume self-test (MP3 path): a stand-in stream resumed equal to the stream from the "
+              "top - a rewinding track at sample %u and three passes on (folded to %u), a once-only track past its end "
+              "(from the top), a measured loop two loops on (folded to %u) and in its crossfade (%u); the heard sample "
+              "%u from the play cursor; nothing remembered with DIV-0092 off, used once and for its own track only",
+              r1, r2, r4, r5, want);
+}
+
 }  // namespace
 
 void FadePerFrame_Inject() {
     if (bof3::WantsShadow("sound")) FadePerFrame_SelfTest();
     if (bof3::WantsShadow("sound")) LoopTable_SelfTest();
+    if (bof3::WantsShadow("sound")) music_resume::SelfTest();  // DIV-0092's resume, the MP3 path
     if (bof3::WantsShadow("sound")) music_seq::SelfTest();  // DIV-0087's seam on a synthetic song
     if (bof3::WantsShadow("sound")) mp3dec::SelfTest();     // DIV-0091: ours against Capcom's decoder on one track
     const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
@@ -1074,3 +1386,5 @@ void Sound_Inject() {
     BOF3_INJECT(Music_Pump);
     FadePerFrame_Inject();
 }
+
+void music_resume::SelfTest() { ResumeMp3_SelfTest(); }

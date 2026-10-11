@@ -105,7 +105,9 @@ void MusicSynth::Reset() {
     ticks_since_play_ = 0;
     loop_jumps_ = 0;
     last_loop_jump_tick_ = 0;
+    first_loop_jump_sample_ = last_loop_jump_sample_ = 0;
     samples_ = 0;
+    play_sample_ = 0;
     song_loaded_ = false;
     bank_loaded_ = false;
 }
@@ -395,8 +397,7 @@ void MusicSynth::Nrpn2(std::uint8_t value) {
             s.delta = ReadDelta();
             if (s.loop_count != 0) {
                 s.pos = s.loop_pos;
-                ++loop_jumps_;
-                last_loop_jump_tick_ = ticks_since_play_;
+                NoteLoopJump();
             } else {
                 s.f10 = 0;
             }
@@ -405,8 +406,7 @@ void MusicSynth::Nrpn2(std::uint8_t value) {
         ReadDelta();  // read and dropped
         s.pos = s.loop_pos;
         s.delta = 0;
-        ++loop_jumps_;
-        last_loop_jump_tick_ = ticks_since_play_;
+        NoteLoopJump();
         return;
     }
     s.nrpn = value;
@@ -586,7 +586,16 @@ void MusicSynth::Play(const Song& song, int volume, int frames, int loop_count) 
     ticks_since_play_ = 0;
     loop_jumps_ = 0;
     last_loop_jump_tick_ = 0;
+    first_loop_jump_sample_ = last_loop_jump_sample_ = 0;
+    play_sample_ = samples_;
     reached_end_ = false;
+}
+
+void MusicSynth::NoteLoopJump() {
+    ++loop_jumps_;
+    last_loop_jump_tick_ = ticks_since_play_;
+    last_loop_jump_sample_ = samples_ - play_sample_;
+    if (loop_jumps_ == 1) first_loop_jump_sample_ = last_loop_jump_sample_;
 }
 
 void MusicSynth::SetVolume(int left, int right) {
@@ -1061,6 +1070,42 @@ void MusicSynth::Render(std::int16_t* stereo, int frames) {
         stereo += 2 * n;
         frames -= static_cast<int>(n);
     }
+}
+
+// Render's loop with the SPU's Skip in place of its Render: the same VSync
+// ticks at the same samples, the sequencer's events and every register write
+// as Render makes them, the SPU's voices stepped without their sound
+// (spu.h). Then the reverb unit cleared, so what it returns afterwards is
+// the music's from here on, not what was in it before. Stops early, false,
+// once Ended() holds (a song that plays once has ended within `frames`).
+bool MusicSynth::FastForward(std::uint64_t frames) {
+    while (frames > 0) {
+        if (!next_tick_valid_) {
+            std::int64_t t = static_cast<std::int64_t>(phase_ + ticks_ * kTickNum);
+            if (offset_fn_) t += static_cast<std::int64_t>(offset_fn_(ticks_ + 1, offset_user_)) * static_cast<std::int64_t>(kTickDen) / 256;
+            if (t < 0) t = 0;
+            const std::uint64_t ut = static_cast<std::uint64_t>(t);
+            next_tick_sample_ = (ut + kTickDen - 1) / kTickDen;
+            if (next_tick_sample_ < samples_) next_tick_sample_ = samples_;
+            next_tick_valid_ = true;
+        }
+        if (next_tick_sample_ <= samples_) {
+            next_tick_valid_ = false;
+            TickOnce();
+            if (Ended()) {
+                spu_.ClearReverb();
+                return false;
+            }
+            continue;
+        }
+        std::uint64_t n = next_tick_sample_ - samples_;
+        if (n > frames) n = frames;
+        spu_.Skip(static_cast<int>(n));
+        samples_ += n;
+        frames -= n;
+    }
+    spu_.ClearReverb();
+    return !Ended();
 }
 
 } // namespace psx

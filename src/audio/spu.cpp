@@ -660,33 +660,38 @@ void Spu::StepReverb(int ch, std::int32_t input) {
 
 // --- the sample loop -------------------------------------------------------
 
+// Key off, then key on (R9), latched from the writes since the last sample;
+// a key on acts kKeyOnLatency samples after its write (R19). Once a sample,
+// first, in Render and in Skip alike.
+void Spu::LatchKeys() {
+    if (pending_key_on_) {
+        for (int v = 0; v < kVoices; ++v)
+            if ((pending_key_on_ >> v) & 1) key_on_wait_[v] = kKeyOnLatency + 1;
+        pending_key_on_ = 0;
+    }
+    if (pending_key_off_) {
+        for (int v = 0; v < kVoices; ++v) {
+            if ((pending_key_off_ >> v) & 1) {
+                Voice& voice = voices_[v];
+                if (voice.phase < kRelease) {
+                    voice.phase = kRelease;
+                    voice.adsr.counter = 0;
+                }
+            }
+        }
+        pending_key_off_ = 0;
+    }
+    for (int v = 0; v < kVoices; ++v) {
+        if (key_on_wait_[v] == 0 || --key_on_wait_[v] != 0) continue;
+        KeyOnVoice(voices_[v]);
+        endx_ &= ~(1u << v);
+    }
+}
+
 void Spu::Render(std::int16_t* stereo, int frames) {
     if ((attr_ & 0x8000) == 0) Fatal("Render with the SPU disabled (ATTR bit 15 clear) is not modelled");
     for (int f = 0; f < frames; ++f) {
-        // Key off, then key on (R9), latched from the writes since the last
-        // sample; a key on acts kKeyOnLatency samples after its write (R19).
-        if (pending_key_on_) {
-            for (int v = 0; v < kVoices; ++v)
-                if ((pending_key_on_ >> v) & 1) key_on_wait_[v] = kKeyOnLatency + 1;
-            pending_key_on_ = 0;
-        }
-        if (pending_key_off_) {
-            for (int v = 0; v < kVoices; ++v) {
-                if ((pending_key_off_ >> v) & 1) {
-                    Voice& voice = voices_[v];
-                    if (voice.phase < kRelease) {
-                        voice.phase = kRelease;
-                        voice.adsr.counter = 0;
-                    }
-                }
-            }
-            pending_key_off_ = 0;
-        }
-        for (int v = 0; v < kVoices; ++v) {
-            if (key_on_wait_[v] == 0 || --key_on_wait_[v] != 0) continue;
-            KeyOnVoice(voices_[v]);
-            endx_ &= ~(1u << v);
-        }
+        LatchKeys();
 
         StepNoise(); // R13: once per sample, before the voices read it
 
@@ -787,6 +792,57 @@ void Spu::Render(std::int16_t* stereo, int frames) {
         }
         ++tick_;
     }
+}
+
+// Not hardware: Render's voice state without its sound (the music's resume,
+// docs/music-seq-engine.md section 8). Per sample, as Render: the keys
+// latched, the noise stepped, and for every voice the envelope, its two
+// volume sweeps and the pitch counter stepped and its blocks walked and
+// decoded (so the loop flags, the forced release at a block end and ENDX are
+// Render's), and the main volume stepped; what is not done is the
+// interpolation, the mix, the capture buffers and the reverb - the reverb
+// unit is instead cleared by ClearReverb when the caller wants it. Pitch
+// modulation needs the previous voice's output, which is not computed here,
+// so a voice with PMON set aborts (the music never sets it: MusicSynth::Reset
+// clears PMON and nothing writes it again).
+void Spu::Skip(int frames) {
+    if ((attr_ & 0x8000) == 0) Fatal("Skip with the SPU disabled (ATTR bit 15 clear) is not modelled");
+    if (pmon_) Fatal("Skip with pitch modulation on (PMON 0x%06X): the step needs the outputs Skip does not compute", pmon_);
+    for (int f = 0; f < frames; ++f) {
+        LatchKeys();
+        StepNoise();
+        for (int v = 0; v < kVoices; ++v) {
+            Voice& voice = voices_[v];
+            voice.out = 0;
+            StepAdsr(voice);
+            StepVolume(voice.vol[0]);
+            StepVolume(voice.vol[1]);
+            std::int32_t step = voice.pitch;
+            if (step > 0x3FFF) step = 0x4000;
+            voice.counter += static_cast<std::uint32_t>(step);
+            if (voice.counter >= (28u << 12)) {
+                voice.counter -= 28u << 12;
+                FinishBlock(voice, v);
+            }
+        }
+        capture_index_ = (capture_index_ + 1) & 0x1FF;
+        if (tick_ & 1) {
+            std::uint32_t next = (reverb_address_ + 2) & 0x7FFFE;
+            const std::uint32_t base = static_cast<std::uint32_t>(esa_) * 8;
+            reverb_address_ = next < base ? base : next;
+        }
+        for (int c = 0; c < 2; ++c) StepVolume(main_vol_[c]);
+        ++tick_;
+    }
+}
+
+// Not hardware: the reverb work area (ESA to the end of RAM) and the
+// resampler histories zeroed - the reverb unit as if it had had no input.
+void Spu::ClearReverb() {
+    const std::uint32_t base = static_cast<std::uint32_t>(esa_) * 8;
+    for (std::uint32_t a = base & 0x7FFFE; a < kRamBytes; a += 2) ram_[a >> 1] = 0;
+    std::memset(rev_in_, 0, sizeof rev_in_);
+    std::memset(rev_out_, 0, sizeof rev_out_);
 }
 
 } // namespace psx

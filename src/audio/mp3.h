@@ -41,6 +41,11 @@ int __stdcall Decode(void* decoder, void* out);
 int __stdcall Seek(void* decoder, int position);
 int __stdcall Destroy(void* decoder);
 
+// The frames of an MP3 file in memory by a walk of its MPEG-1 layer III
+// headers, nothing decoded (the self-test's independent count): the music's
+// resume folds a looping track's position by it (docs/mp3-decoder.md 6).
+std::uint32_t CountFrames(const void* file, std::uint32_t size);
+
 // True once Arm has put ours into the callee table (BOF3X_MP3 not `original`).
 bool Active();
 

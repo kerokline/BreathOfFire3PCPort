@@ -16,6 +16,7 @@
 #include "audio/seq.h"
 #include "audio/song.h"
 #include "bof3/symbols.gen.h"
+#include "game/music_resume.h"
 #include "game/sound_callees.h"
 #include "hook/log.h"
 
@@ -282,6 +283,21 @@ void Decode(unsigned char* dst, int size) {
     std::memset(dst + static_cast<std::size_t>(done) * 4, 0, static_cast<std::size_t>(size - done * 4));
 }
 
+std::uint32_t Fold(std::uint32_t heard) {
+    if (!g_s.synth) return heard;
+    const int jumps = g_s.synth->LoopJumps();
+    const std::uint64_t first = g_s.synth->FirstLoopJumpSample(), last = g_s.synth->LastLoopJumpSample();
+    if (jumps < 2 || heard < first || last <= first) return heard;
+    const std::uint64_t period = (last - first) / static_cast<std::uint64_t>(jumps - 1);
+    if (period == 0) return heard;
+    return static_cast<std::uint32_t>(first + (heard - first) % period);
+}
+
+bool FastForward(std::uint32_t frames) {
+    g_s.synth->SetMono(Mono());
+    return g_s.synth->FastForward(frames);
+}
+
 long Level(float volume) {
     int v;
     if (!(volume >= 1.0f)) v = 1;  // NaN too: the original's _ftol gives 0 for it, which libsnd makes 1
@@ -358,10 +374,11 @@ void PutName(std::vector<std::uint8_t>& b, const char* s) {
 }
 
 // docs/seq-format.md section 2, version 2: `programs` programs (0, 1, ...)
-// of one tone each over the keyboard, centre 60, reverb on, and one looping
+// of one tone each over the keyboard, centre 60, reverb on (off when
+// `reverb` is false), and one looping
 // sample - a zero block, then two blocks of a triangle at shift 0, filter 0
 // (the host tests' bank, tools/bgm/host/seq_tests.cpp MakeBank).
-std::vector<std::uint8_t> TestBank(const char* name = "SELFTEST", int programs = 1) {
+std::vector<std::uint8_t> TestBank(const char* name = "SELFTEST", int programs = 1, bool reverb = true) {
     std::vector<std::uint8_t> b;
     b.insert(b.end(), {'B', 'F', '3', 'B'});
     Put32(b, 2);
@@ -374,7 +391,7 @@ std::vector<std::uint8_t> TestBank(const char* name = "SELFTEST", int programs =
     }
     for (int t = 0; t < 16 * programs; ++t) {
         if (t % 16 == 0) {
-            b.insert(b.end(), {0, 4, 127, 64, 60, 0, 0, 127, 0, 0, 0, 0, 0, 0, 0, 0});
+            b.insert(b.end(), {0, static_cast<std::uint8_t>(reverb ? 4 : 0), 127, 64, 60, 0, 0, 127, 0, 0, 0, 0, 0, 0, 0, 0});
             Put16(b, 0x00FF); Put16(b, 0x1FC0); Put16(b, static_cast<unsigned>(t / 16)); Put16(b, 1);
         } else {
             b.insert(b.end(), 24, 0);
@@ -676,6 +693,83 @@ void SelfTest() {
     const int r7b = Music_LoadFile(7);
     const bool mp3 = r7b == -1 && Opened("BGM\\007.DAT") && Opened("BGM\\007N.DAT") && files[0].opens == 1;
 
+    // 6. DIV-0092's resume on the sequenced path. On a synth of its own (so
+    // the oracle's history is the same: nothing before), a looping song on a
+    // bank without reverb - FastForward clears the reverb unit, the one part
+    // of the SPU it does not step - pending at a sample where two notes sound
+    // (tick 66 of 96): Music_Start fast-forwards to it, and what Music_Decode
+    // renders from there is the oracle's render from the top at that sample,
+    // bit for bit. A once-only song pending past its end is run to its end
+    // and started again from the top (the oracle does the same).
+    // And Fold on a synth after six seconds of the song (a loop a second): a
+    // point past the last jump goes back by whole periods into the first loop.
+    const std::vector<std::uint8_t> dry_bytes = TestBank("SELFTST3", 1, false), dry_song = TestSong(12, true, "SELFTST3"),
+                                    dry_once = TestSong(13, false, "SELFTST3");
+    files.push_back({std::string(kTestRoot) + "\\base\\bgm\\012.DAT", &dry_song, 0});
+    files.push_back({std::string(kTestRoot) + "\\base\\bgm\\013.DAT", &dry_once, 0});
+    files.push_back({std::string(kTestRoot) + "\\base\\bgm\\bank\\SELFTST3.DAT", &dry_bytes, 0});
+    g_s.armed = 1;
+    psx::Bank dry;
+    psx::LoadBank(dry_bytes.data(), dry_bytes.size(), &dry);
+    psx::MusicSynth* const game_synth = g_s.synth;
+    const std::string game_synth_bank = g_s.synth_bank;
+    const auto resumed = [&](unsigned track, const std::vector<std::uint8_t>& song, std::uint32_t at, std::uint32_t expect,
+                             long long* energy_out) {
+        g_s.synth = new psx::MusicSynth;
+        g_s.synth_bank.clear();
+        capture.clear();
+        music_resume::Pend(track, at);
+        bool ok = Music_LoadFile(track) == 0;
+        Music_Start(Music_File, static_cast<unsigned>(Music_FileSize), Music_FileLoops);
+        for (int i = 0; i < 2; ++i) {
+            const std::size_t n = capture.size();
+            capture.resize(n + kHalf);
+            Music_Decode(capture.data() + n, static_cast<int>(kHalf));
+        }
+        psx::MusicSynth* const oracle = new psx::MusicSynth;
+        oracle->LoadBank(dry);
+        if (expect != at) {
+            // asked past the end: the seam's synth ran the song to its end
+            // without a sample, then started it again - so the oracle's does,
+            // and its render from the top follows on the same synth
+            psx::Song parsed;
+            psx::LoadSong(song.data(), song.size(), &parsed);
+            oracle->SetMono(Mono());
+            oracle->Play(parsed, 1, 1);
+            oracle->SetVolume(127, 127);
+            ok = ok && !oracle->FastForward(at);
+        }
+        const int frames = static_cast<int>(expect + capture.size() / 4);
+        const std::vector<std::int16_t> r = Reference(oracle, song, frames);
+        long long e = 0;
+        for (std::size_t i = 2 * static_cast<std::size_t>(expect); i < r.size(); ++i) e += static_cast<long long>(r[i]) * r[i];
+        *energy_out = e;
+        ok = ok && Active() && std::memcmp(capture.data(), r.data() + 2 * static_cast<std::size_t>(expect), capture.size()) == 0;
+        delete oracle;
+        delete g_s.synth;
+        g_s.synth = game_synth;
+        return ok;
+    };
+    const std::uint32_t mid = 44100u * 66 / 96;
+    long long resume_energy = 0, past_energy = 0;
+    const bool resume_mid = resumed(12, dry_song, mid, mid, &resume_energy) && resume_energy > 0;
+    const bool resume_past = resumed(13, dry_once, 44100u * 30, 0, &past_energy) && past_energy > 0;
+    g_s.synth = game_synth;
+    g_s.synth_bank = game_synth_bank;
+    psx::MusicSynth* const looper = new psx::MusicSynth;
+    looper->LoadBank(dry);
+    (void)Reference(looper, dry_song, 44100 * 6);
+    g_s.synth = looper;
+    const std::uint64_t first_jump = looper->FirstLoopJumpSample(), last_jump = looper->LastLoopJumpSample();
+    const int jumps = looper->LoopJumps();
+    const std::uint64_t period = jumps >= 2 ? (last_jump - first_jump) / static_cast<std::uint64_t>(jumps - 1) : 0;
+    const std::uint32_t far_point = static_cast<std::uint32_t>(last_jump + 1234), near_point = static_cast<std::uint32_t>(first_jump / 2);
+    const std::uint32_t folded = Fold(far_point);
+    const bool fold = jumps >= 4 && period > 40000 && period < 48000 && folded >= first_jump &&
+                      folded < first_jump + period && (far_point - folded) % period == 0 && Fold(near_point) == near_point;
+    g_s.synth = game_synth;
+    delete looper;
+
     Music_Release();
     const bool released = !Active() && !Music_Data;
     delete ref;
@@ -708,11 +802,13 @@ void SelfTest() {
     g_levels = nullptr;
 
     if (!load7 || !start7 || !same7 || !volume || !load8 || !end8 || !to_big || !to_small || !fallback || !mp3 ||
-        !released)
-        bof3::Fatal("DIV-0087 self-test: looping song load %s start %s samples %s; volume %s; once-only load %s end %s "
+        !released || !resume_mid || !resume_past || !fold)
+        bof3::Fatal("DIV-0092 resume (sequenced): at sample %u %s, past a once-only end %s, fold %s (%d jumps, period "
+                    "%llu); DIV-0087 self-test: looping song load %s start %s samples %s; volume %s; once-only load %s end %s "
                     "(cut at %d of %d); to a larger bank %s, back to a smaller %s; missing track %s; mp3 switch %s; "
                     "release %s",
-                    load7 ? "ok" : "WRONG", start7 ? "ok" : "WRONG", same7 ? "ok" : "WRONG", volume ? "ok" : "WRONG",
+                    mid, resume_mid ? "ok" : "WRONG", resume_past ? "ok" : "WRONG", fold ? "ok" : "WRONG", jumps,
+                    static_cast<unsigned long long>(period), load7 ? "ok" : "WRONG", start7 ? "ok" : "WRONG", same7 ? "ok" : "WRONG", volume ? "ok" : "WRONG",
                     load8 ? "ok" : "WRONG", end8 ? "ok" : "WRONG", cut, frames8, to_big ? "ok" : "WRONG",
                     to_small ? "ok" : "WRONG", fallback ? "ok" : "WRONG", mp3 ? "ok" : "WRONG", released ? "ok" : "WRONG");
     bof3::Log("shadow      DIV-0087 self-test: a synthetic looping song through Music_LoadFile / Music_Start / "
@@ -721,6 +817,11 @@ void SelfTest() {
               "bank, then one on the one-program bank, each equal to the oracle's; the MP3 names for a missing track "
               "and under BOF3X_MUSIC=mp3",
               frames7, cut);
+    bof3::Log("shadow      DIV-0092 resume self-test (sequenced path): a looping song pending at sample %u fast-forwarded "
+              "by Music_Start, its next %u samples equal to the oracle's render from the top; a once-only song pending "
+              "past its end run to it and started again from the top; a point %llu samples on folded to %u (%d loop jumps, period %llu samples)",
+              mid, 3 * kHalf / 4, static_cast<unsigned long long>(far_point), folded, jumps,
+              static_cast<unsigned long long>(period));
 }
 
 }  // namespace music_seq

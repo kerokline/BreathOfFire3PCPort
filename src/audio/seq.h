@@ -75,6 +75,15 @@ public:
     // fraction carried) and mix: interleaved left/right.
     void Render(std::int16_t* stereo, int frames);
 
+    // Advance `frames` samples as Render would, without mixing a sample: the
+    // sequencer runs every VSync tick and writes the SPU's registers as in
+    // Render, the SPU steps its voices by Skip (spu.h) - so the notes that
+    // should be sounding are keyed on, with their envelopes where Render
+    // would have them - and the reverb unit is then cleared. False, stopped
+    // at that tick, when the song has ended (Ended()) on the way. The music's
+    // resume after a battle (docs/music-seq-engine.md section 8).
+    bool FastForward(std::uint64_t frames);
+
     bool Playing() const { return (score_.flags & kPlay) != 0; }
     // A song that plays once (no loop markers) has reached its end of track
     // (_SsSeqGetEof stopped it and keyed its voices off) and every sequencer
@@ -92,6 +101,12 @@ public:
     // The tick (VSync count since Play, 1-based) of each loop-end jump so far.
     int LoopJumps() const { return loop_jumps_; }
     std::uint64_t LastLoopJumpTick() const { return last_loop_jump_tick_; }
+    // Samples rendered (or fast-forwarded) since Play, and the sample (since
+    // Play) of the first and the last loop-end jump: what the resume uses to
+    // fold a position into the song's first pass.
+    std::uint64_t SamplesSincePlay() const { return samples_ - play_sample_; }
+    std::uint64_t FirstLoopJumpSample() const { return first_loop_jump_sample_; }
+    std::uint64_t LastLoopJumpSample() const { return last_loop_jump_sample_; }
     Spu& spu() { return spu_; }
 
     // Diagnostics (host tools, self-tests): called at every VSync tick after
@@ -194,6 +209,7 @@ private:
     void SndCrescendo();
     void SndDecrescendo();
     void InitScore(const Song& song);      // _SsInitSoundSep
+    void NoteLoopJump();                   // the loop-end jump's diagnostics
     std::int16_t StepFor(std::int32_t bpm) const;
     std::uint64_t SpeedOf(std::int32_t bpm) const;  // resolution * bpm * 10
 
@@ -238,7 +254,9 @@ private:
     std::uint64_t ticks_since_play_ = 0;
     int loop_jumps_ = 0;
     std::uint64_t last_loop_jump_tick_ = 0;
+    std::uint64_t first_loop_jump_sample_ = 0, last_loop_jump_sample_ = 0;  // since Play
     std::uint64_t samples_ = 0;
+    std::uint64_t play_sample_ = 0;               // samples_ at Play
     int writes_ = 0;
     TickOffsetFn offset_fn_ = nullptr;
     void* offset_user_ = nullptr;
