@@ -5441,9 +5441,10 @@ designed in rather than bolted on.
     the measured loop row, the rewind period, or the synth's loop-end jumps.
   - **Used.** In `GameMode5_Leave`'s fallback, `music_resume::Arm(track)`
     makes the position pending when it is for that track. Then
-    `Music_Play(track, music_resume::kResumeFadeFrames)` (10 frames today,
-    one named constant, because the owner is comparing the transition with
-    the PlayStation). Its `Music_Start` advances the new stream to the point
+    `Music_Play(track, music_resume::kResumeFadeFrames)` (30 frames, half
+    a second: the owner heard the 10-frame first cut on 2026-10-11 and asked
+    for the longer fade, so the song does not seem to start so close to the
+    battle music's end). Its `Music_Start` advances the new stream to the point
     before the first half is decoded. The sequenced song is fast-forwarded
     without a sample mixed (`MusicSynth::FastForward` over `Spu::Skip`): the
     sequencer's events, the keys and the envelopes are as a render from the

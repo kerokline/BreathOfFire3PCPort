@@ -21,9 +21,11 @@
 
 namespace music_resume {
 
-// The fade-in of a resumed song, in logic frames (Music_Play's argument): the
-// owner compares the transition against the PlayStation and may change it.
-constexpr int kResumeFadeFrames = 10;
+// The fade-in of a resumed song, in logic frames (Music_Play's argument).
+// 10 at first; the owner heard it on 2026-10-11 ("sounds great") and asked
+// for half a second, so the resumed song does not seem to start so close to
+// the battle music's end: 30.
+constexpr int kResumeFadeFrames = 30;
 
 // GameMode5_Load, before the battle's Music_FadeOutStop / Music_Play: the
 // track playing (Music_Track, when it is the BGM file Music_Play started) and

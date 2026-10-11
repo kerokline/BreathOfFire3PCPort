@@ -70,7 +70,9 @@ code page audited, the seven mid-function pointers read, and two music defects o
       remembers the heard position in DLL state when a battle takes the song over (the ring's lead measured from the play
       cursor) and seeks both paths back to it - the sequenced path by a silent fast-forward of the synth (`Spu::Skip`,
       about 240 ms a minute skipped; the reverb empty for the first half second), the MP3 path by decoding and dropping.
-      The resume's fade is `music_resume::kResumeFadeFrames` (10) for the owner to tune against their PlayStation.
+      The resume's fade is `music_resume::kResumeFadeFrames`: 10 at first; **the owner heard it on the morning of 2026-10-11
+      ("sounds great") and asked for half a second - 30 now, heard: "excellent"**. The fanfare's loop (DIV-0081, `165`)
+      the owner heard on the MP3 path the same morning: "much better".
       The full self-test narrow and wide exit 0, 10,087 ours. **Replayed headless on the final build** (`analysis/shots/musicstop_1010/final_cache`,
       `final_mp3`): both paths log `remember track 91 at sample 479809` at frame 1726 and `resume track 91` at 2838 at
       that sample (the ring 36,287 samples ahead, subtracted), and again at 3189 / 3695. **Owed the owner's ear**, and
@@ -79,13 +81,19 @@ code page audited, the seven mid-function pointers read, and two music defects o
       the ten routes and the attract sequence; 37 entered, every one at logic frame 0 - the C runtime's start-up chain
       (36) and DirectSoundCreate's import thunk from our `Snd_Init` - nothing of Capcom's after the hand-off. The 2026-10-05
       run had 198 running. **The state hash's two-build check passed** ([`state-hash.md`](state-hash.md) 7): ours from
-      two builds identical on every page but the enemy-records page `0x93C000` from tick 514 of combat - **a difference of
-      ours between two builds, unexplained, a dump at tick 514 is the next step.** An all-original pair under `en-US` is
+      two builds identical on every page but the enemy-records page `0x93C000` from tick 514 of combat - **explained on the
+      morning of 2026-10-11** ([`state-hash.md`](state-hash.md) 7, measured point 3): the battle message ring `0x93C2C4` and the
+      result message `0x93B8E4` hold `Msg_SystemPtr`'s pointer into the relocated pool (DIV-0007), the same offset in both
+      builds, a build-dependent address in words that were zero at the census; not a defect. **Fixed the same morning at the
+      owner's word:** the 17 words are run-time slots of the census (flags bit 1; `statehash.py info` says which way a run
+      hashed them), the self-test exit 0 at 10,087 ours, and a build whose pool was moved by a throwaway pad is identical
+      to the unpadded one on all 2,561 ticks of combat under `en-US` while the raw word differs. Every older pair stays
+      valid (the words hold an exe pointer without an overlay). An all-original pair under `en-US` is
       not a reference for ours (the overlay's text pointers); under an overlay the reference is a previous build of ours.
       **Still owed:** the stack's exit line (a run ended by a normal quit; `input_run.py` kills the game).
     - **The fanfare's loop** (DIV-0081 amended): the owner's A/B against the disc found every loop right but `165`, which
       rewound to the file's start; its measured row ships as `gen_loop_table.py`'s `OWNER_APPROVED` (40 rows).
-    - **The owner's calls, open:** D240 (`kEosBytes = 0`), the launcher box for `BOF3X_MP3`, the resume's fade length,
+    - **The owner's calls, open:** D240 (`kEosBytes = 0`), the launcher box for `BOF3X_MP3`, ~~the resume's fade length~~ (30 frames, heard),
       the decoder listen (the title, three minutes of attract, and tonight's route through the cache's music heard; the
       MP3 A/B not yet).
 0. ~~The catch-up branch~~ - merged as PR #49 (2026-10-10 afternoon); its agents' worktrees under `.claude/worktrees/agent-*`

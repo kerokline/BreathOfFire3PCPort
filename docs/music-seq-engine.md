@@ -261,7 +261,9 @@ a synth after six one-second loops takes a point 221,639 samples in back to
 `remember track 91 at sample S` at the fight's start (frame 1726 in
 `analysis/shots/musicstop_1010`) and `resume track 91 at sample S` when
 `GameMode5_Leave` restarts it (frame 2838). It should then sound like the
-PlayStation: the song picks up where it was, with a 10-frame fade in
-(`music_resume::kResumeFadeFrames`, the owner's to tune). Also unheard: the
+PlayStation: the song picks up where it was, with a half-second fade in
+(`music_resume::kResumeFadeFrames`, 30 frames: the owner heard the 10-frame
+first cut on 2026-10-11, "sounds great", and asked for the longer fade so the
+song does not seem to start so close to the battle music's end). Unheard: the
 first half second's reverb (it starts empty), and the hitch, if any, of the
 fast-forward.
