@@ -1580,6 +1580,22 @@ designed in rather than bolted on.
   hash, all ours with the fix on against all original: see
   [`sound.md`](sound.md). **Confirmed in game by the owner,
   2026-09-23**: "the fade sounds great".
+- **Amended 2026-10-10 (the frame clock):** the step keyed on the float
+  frame deadline at `0x6BC628` moving, and DIV-0047's WinMain (2026-09-24)
+  deliberately never writes that float - so from that day every fade took
+  its first step and then none: a fade in stalled at one step and **a
+  stopping fade never stopped the music** (the owner's reports, D241: the
+  title music through the load screen, the battle music after a fight; the
+  owner's route `tools/recipes/musicStopCheck.txt` under `BOF3X_MUSIC_LOG=1`
+  showed `Music_FadeOutStop` at frame 483 and no `Music_Stop` until the next
+  `Music_Play` at frame 913, the same with the MP3s and with the cache's
+  music, while Capcom's code stopped the title music on time to the owner's
+  ear - `analysis/shots/musicstop_1010/`). The step now keys on
+  `Frame_Counter` `0x937F94`, which both WinMains increment once at the end
+  of every pass through the frame path (the original at `0x4FCFE5`), so the
+  behaviour above is what runs again; the self-test drives `Frame_Counter`
+  instead of the float. `BOF3X_MUSIC_LOG=1` stays as a diagnostic (one line
+  per music command with its caller and frame; no behaviour).
 - **Reversible?** Yes: `BOF3X_ORIGINAL=MusicFadePerFrame` (our function,
   Capcom's per-spin steps) or `BOF3X_ORIGINAL=Sound_Tick` (Capcom's
   function).

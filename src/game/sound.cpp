@@ -15,6 +15,7 @@
 #include "game/sound.h"
 
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
 
 #include "audio/mp3.h"
@@ -64,6 +65,23 @@ extern "C" int __cdecl Music_PlayEax(unsigned int track, int frames) __asm__("_M
 extern "C" int __cdecl Music_FadeOutStopEax(int frames) __asm__("_Music_FadeOutStop");
 extern "C" int __cdecl Music_FadeInEax(int frames) __asm__("_Music_FadeIn");
 extern "C" int __cdecl Music_FadeOutEax(int frames) __asm__("_Music_FadeOut");
+
+namespace sound {
+
+// BOF3X_MUSIC_LOG=1: one log line per music command (play, the fades, start,
+// stop) with its caller and the logic frame - a diagnostic for the music-stop
+// reports (known-defects.md D241), off by default; no behaviour.
+bool MusicLogOn() {
+    static const bool on = [] {
+        const char* v = std::getenv("BOF3X_MUSIC_LOG");
+        return v && v[0] && v[0] != '0';
+    }();
+    return on;
+}
+
+}  // namespace sound
+
+#define MUSIC_LOG(...)     do { if (sound::MusicLogOn()) bof3::Log("music_log   f%u " __VA_ARGS__); } while (0)
 
 namespace sound {
 
@@ -193,7 +211,7 @@ extern "C" int __cdecl Music_LoadFile(unsigned track) {
 // track and ours stayed silent (the ab25 frame hash).
 namespace sound {
 std::uint32_t g_fade_per_frame = 0;  // 1 through PatchBytes("MusicFadePerFrame")
-std::uint32_t g_fade_deadline = 0;   // the deadline's bits at the last step
+std::uint32_t g_fade_frame = ~0u;    // Frame_Counter at the last step (DIV-0028)
 std::uint32_t g_stop_unseen = 0;     // a stopping fade no Sound_Tick has seen yet
 
 void FinishStoppingFade() {
@@ -213,6 +231,7 @@ void FinishStoppingFade() {
 // stored truncated; eax is the track when nothing was done, else the fade's
 // (frames).
 int Music_PlayEax(unsigned int track, int frames) {
+    MUSIC_LOG("Music_Play(%u, %d) track %u loaded %d from %p", Frame_Counter, track, frames, (unsigned)Music_Track, Music_LoadedTrack, __builtin_return_address(0));
     sound::FinishStoppingFade();  // DIV-0028
     if (track == Music_Track) return static_cast<int>(track);
     const std::uint32_t loaded = static_cast<std::uint32_t>(Music_LoadedTrack);
@@ -230,6 +249,7 @@ int Music_PlayEax(unsigned int track, int frames) {
 // Music_FadeIn divides by it signed - rounded at the control word's precision,
 // then stored as a float. eax is frames.
 int Music_FadeOutStopEax(int frames) {
+    MUSIC_LOG("Music_FadeOutStop(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
     sound::FinishStoppingFade();  // DIV-0028
     const std::uint32_t wide[2] = {static_cast<std::uint32_t>(frames), 0};
     Music_FadeStops = 1;
@@ -250,6 +270,7 @@ int Music_FadeOutStopEax(int frames) {
 // (127.0 - volume) / frames with frames a signed dword (fidiv), x87 as the
 // original. A fade in never stops the music. eax is frames.
 int Music_FadeInEax(int frames) {
+    MUSIC_LOG("Music_FadeIn(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
     sound::FinishStoppingFade();  // DIV-0028
     __asm__ volatile(
         "flds %[full]\n\t"
@@ -267,6 +288,7 @@ int Music_FadeInEax(int frames) {
 // original 0x587BE0: Music_FadeOutStop without the stop - the music plays on
 // at nothing. eax is frames.
 int Music_FadeOutEax(int frames) {
+    MUSIC_LOG("Music_FadeOut(%d) track %u from %p", Frame_Counter, frames, (unsigned)Music_Track, __builtin_return_address(0));
     sound::FinishStoppingFade();  // DIV-0028
     const std::uint32_t wide[2] = {static_cast<std::uint32_t>(frames), 0};
     __asm__ volatile(
@@ -293,12 +315,15 @@ int Music_FadeOutEax(int frames) {
 // read again after Music_SetVolume.
 //
 // DIV-0028: unless BOF3X_ORIGINAL=MusicFadePerFrame, a step is taken only on
-// the first call after the frame deadline has moved. WinMain's loop advances
-// the float deadline at 0x6BC628 once per logic frame (0x4FCF0F..0x4FCF3A,
-// after the wait), and reaches this at least once in every logic frame -
-// once from 0x4FCEBC when the frame is late, replayed frames included - so a
-// fade lasts `frames` logic frames, as on the PlayStation. The first call of
-// a new fade steps at once (the remembered deadline is an older frame's).
+// the first call after Frame_Counter has moved. WinMain increments it at the
+// end of every pass through the frame path (0x4FCFE5 in the original; ours
+// likewise), and reaches this at least once in every logic frame - once from
+// 0x4FCEBC when the frame is late, replayed frames included - so a fade lasts
+// `frames` logic frames, as on the PlayStation. The first call of a new fade
+// steps at once (the remembered frame is an older one). Until 2026-10-10 the
+// step keyed on the float frame deadline at 0x6BC628 instead, which DIV-0047's
+// WinMain (2026-09-24) never writes: every fade took one step and stalled, so
+// a stopping fade never stopped the music (known-defects.md D241).
 extern "C" void __cdecl Sound_Tick(void) {
     g.music_pump();
     if (Music_FadeCount == 0) return;
@@ -307,9 +332,9 @@ extern "C" void __cdecl Sound_Tick(void) {
             sound::g_stop_unseen = 0;
             if (Music_FadeStops) Music_Track = 0xFF;  // stopped, as far as the game can see
         }
-        const std::uint32_t deadline = Dword(kFrameDeadline);
-        if (deadline == sound::g_fade_deadline) return;
-        sound::g_fade_deadline = deadline;
+        const std::uint32_t frame = Frame_Counter;
+        if (frame == sound::g_fade_frame) return;
+        sound::g_fade_frame = frame;
     }
     __asm__ volatile(
         "flds %[step]\n\t"
@@ -579,6 +604,7 @@ void LoopDecode(unsigned char* dst, std::uint32_t size) {
 // set only after the first half was decoded, so that half ends by the
 // previous track's Music_Loops.
 extern "C" void __cdecl Music_Start(const void* file, unsigned size, int loops) {
+    MUSIC_LOG("Music_Start(%p, %u, %d) track %u from %p", Frame_Counter, file, size, loops, (unsigned)Music_Track, __builtin_return_address(0));
     if (!Snd_Device) return;
     if (Music_Data) g.music_release();
     void* const copy = g.malloc(size);
@@ -749,6 +775,7 @@ extern "C" void __cdecl Music_SetVolume(float volume) {
 // write it; ours is 0 (DirectSound writes it).
 // DIV-0087: the synth's song stopped with it.
 extern "C" void __cdecl Music_Stop(void) {
+    MUSIC_LOG("Music_Stop track %u from %p", Frame_Counter, (unsigned)Music_Track, __builtin_return_address(0));
     music_seq::Stop();  // DIV-0087
     void* const buffer = Music_Buffer;
     if (!buffer) return;
@@ -838,8 +865,8 @@ void FadePerFrame_SelfTest() {
     const auto volume = Music_Volume;
     const auto step = Music_FadeStep;
     const auto track = Music_Track;
-    const std::uint32_t deadline = Dword(kFrameDeadline);
-    const std::uint32_t remembered = sound::g_fade_deadline;
+    const std::uint32_t frame_saved = Frame_Counter;
+    const std::uint32_t remembered = sound::g_fade_frame;
 
     g.music_pump = FpfPump;
     g.music_set_volume = FpfSetVolume;
@@ -849,10 +876,10 @@ void FadePerFrame_SelfTest() {
     Music_Volume = 127.0f;
     Music_FadeOutStopEax(8);
     bool ok = true;
-    std::uint32_t frame = 0x45000000;  // 2048.0f, any bits unlike the remembered ones
-    sound::g_fade_deadline = 0;
+    const std::uint32_t frame = 0x45000000;  // any value unlike the remembered one
+    sound::g_fade_frame = ~0u;
     for (int f = 0; f < 8; ++f) {
-        SetDword(kFrameDeadline, frame + static_cast<std::uint32_t>(f) * 0x100);
+        Frame_Counter = frame + static_cast<std::uint32_t>(f);
         for (int spin = 0; spin < 5; ++spin) Sound_Tick();
         ok = ok && g_fpf_volume_calls == f + 1 && static_cast<int>(Music_FadeCount) == 7 - f;
     }
@@ -873,7 +900,7 @@ void FadePerFrame_SelfTest() {
     Music_FadeOutStopEax(8);
     Music_PlayEax(5, 8);
     ok = ok && Music_Track == 5 && g_fpf_start_calls == 0 && g_fpf_stop_calls == 0;
-    SetDword(kFrameDeadline, frame + 0x1000);
+    Frame_Counter = frame + 0x1000;
     Sound_Tick();
     ok = ok && Music_Track == 0xFF && g_fpf_stop_calls == 0;
     Music_PlayEax(5, 8);
@@ -888,8 +915,8 @@ void FadePerFrame_SelfTest() {
     Music_Volume = volume;
     Music_FadeStep = step;
     Music_Track = track;
-    SetDword(kFrameDeadline, deadline);
-    sound::g_fade_deadline = remembered;
+    Frame_Counter = frame_saved;
+    sound::g_fade_frame = remembered;
     if (!first_ok)
         bof3::Fatal("DIV-0028 self-test: %d volume steps, %d stops for an 8-frame fade over 8 frames of 5 spins",
                     g_fpf_volume_calls, g_fpf_stop_calls);
