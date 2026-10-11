@@ -17,6 +17,10 @@ bytes  two raw dumps (BOF3X_STATEHASH_DUMP) compared byte for byte: the
        differing ranges with their symbols, and with --skip-out a skip list
        (BOF3X_STATEHASH_SKIP) of them to review - never feed it back unread.
 
+A BOF3SH3 file (2026-10-10) hashes our pointers in Capcom's pointer slots by
+what they name; one beside an older or BOF3X_STATEHASH_RAW=1 file is compared
+with a note (docs/state-hash.md section 7).
+
 Runs are aligned by tick (the logic frames the latch saw, from the first) or,
 with --align recipe, by the recipe frame of a scripted run. docs/state-hash.md
 has the method and what the hash does not see.
@@ -30,16 +34,20 @@ BASE, END = 0x5DA000, 0x93E000
 class Run:
     def __init__(self, path, align='tick'):
         d = open(path, 'rb').read()
-        if d[:8] not in (b'BOF3SH1\0', b'BOF3SH2\0'):
+        if d[:8] not in (b'BOF3SH1\0', b'BOF3SH2\0', b'BOF3SH3\0'):
             sys.exit(f'{path}: not a state hash file')
+        self.version = d[6] - ord('0')
         self.base, self.pages, self.page, self.skips = struct.unpack_from('<4I', d, 8)
         # BOF3SH2 adds a hash of the skip list's ranges; a BOF3SH1 file has none
-        self.skip_hash = struct.unpack_from('<I', d, 24)[0] if d[6:7] == b'2' else None
+        self.skip_hash = struct.unpack_from('<I', d, 24)[0] if self.version >= 2 else None
+        # BOF3SH3 adds flags, bit 0: our pointers in Capcom's slots hashed by
+        # what they name (docs/state-hash.md section 7); before it, always raw
+        self.normalised = bool(struct.unpack_from('<I', d, 28)[0] & 1) if self.version >= 3 else False
         self.path = path
         self.keys = []      # per record: the alignment key
         self.fc = []        # per record: Frame_Counter
         self.recs = []      # per record: [(page, hash)...] changed
-        o = 24 if self.skip_hash is None else 28
+        o = {1: 24, 2: 28, 3: 32}[self.version]
         while o + 16 <= len(d):
             tick, fc, rf, n = struct.unpack_from('<4I', d, o)
             if o + 16 + 8 * n > len(d):
@@ -152,6 +160,15 @@ def same_headers(runs):
     known = [r.skip_hash is not None for r in runs]
     if first.skips and any(known) and not all(known):
         print('note: a run here predates the skip list hash (BOF3SH1): the lists are compared by their length only')
+    norm = [r.normalised for r in runs]
+    if any(norm) and not all(norm):
+        # compared, not refused: the two hash alike on every page that holds no
+        # pointer of ours in one of Capcom's slots - all of them without a
+        # language overlay - so a reference of before 2026-10-10 still serves
+        raw = ', '.join(r.path for r in runs if not r.normalised)
+        print(f'note: {raw} hashed our pointers raw (BOF3SH2, or BOF3X_STATEHASH_RAW=1) and the others by what they '
+              'name: identical without a language overlay; under one the overlay\'s tables differ from tick 1 '
+              '(docs/state-hash.md section 7) - record the reference again rather than read those pages')
 
 
 def cmd_info(a):
@@ -159,6 +176,8 @@ def cmd_info(a):
     if not r.recs:
         sys.exit(f'{a.run}: a header and no whole record')
     h = 'no skip list hash (BOF3SH1)' if r.skip_hash is None else f'skip list hash {r.skip_hash:08X}'
+    h += ', our pointers ' + ('hashed by what they name' if r.normalised else
+                              'raw (BOF3X_STATEHASH_RAW=1)' if r.version >= 3 else f'raw (BOF3SH{r.version})')
     print(f'{a.run}: {len(r.recs)} records, ticks {r.keys[0]}..{r.keys[-1]}, Frame_Counter {r.fc[0]}..{r.fc[-1]}, '
           f'{r.pages} pages of 0x{r.page:X} from 0x{r.base:X}, {r.skips} skip ranges, {h}')
     busy = {}
