@@ -58,6 +58,7 @@ BEGIN
 
     PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 337, 52, 14
     PUSHBUTTON      "C&ontrols...", IDC_CONTROLS, 63, 337, 52, 14
+    PUSHBUTTON      "&Jukebox...", IDC_MUSICPLAYER, 119, 337, 48, 14
     DEFPUSHBUTTON   "&Play", IDOK, 172, 337, 52, 14
     PUSHBUTTON      "E&xit", IDCANCEL, 230, 337, 52, 14
 END
@@ -232,4 +233,25 @@ BEGIN
     LTEXT           "Escape cancels. Clear empties the cell.", -1, 14, 38, 222, 9
     PUSHBUTTON      "&Clear", IDC_CP_CLEAR, 138, 53, 48, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 194, 53, 48, 14
+END
+
+// The music player (docs/music-player.md): a source greyed when the install lacks it.
+IDD_MUSIC DIALOGEX 0, 0, 320, 150
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Jukebox"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Source", -1, 7, 7, 306, 64
+    AUTORADIOBUTTON "Play&Station disc", IDC_MP_PSX, 14, 20, 90, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "P&SP disc", IDC_MP_PSP, 110, 20, 90, 10
+    AUTORADIOBUTTON "P&C port", IDC_MP_PC, 206, 20, 90, 10
+    LTEXT           "", IDC_MP_NOTE, 14, 34, 296, 34
+
+    LTEXT           "S&ong:", -1, 7, 80, 30, 9
+    COMBOBOX        IDC_MP_SONG, 40, 78, 273, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | WS_GROUP
+    LTEXT           "", IDC_MP_STATUS, 7, 98, 306, 18
+
+    PUSHBUTTON      "&Play", IDC_MP_PLAY, 7, 129, 52, 14
+    PUSHBUTTON      "S&top", IDC_MP_STOP, 63, 129, 52, 14
+    DEFPUSHBUTTON   "Close", IDCANCEL, 261, 129, 52, 14
 END
