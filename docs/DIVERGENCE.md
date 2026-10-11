@@ -5544,6 +5544,9 @@ designed in rather than bolted on.
   zeros, to match our implementation in other stale-byte decisions." The
   26 ms were never music the composer placed there; they were the staging
   buffer's leftovers.
+- **Also in the PSX version?** Not applicable: the PlayStation release has no
+  MP3 decoder - its music is sequenced (DIV-0087); the decoder and its
+  end-of-stream count are the PC port's alone.
 - **Verification:** the DIV-0091 self-test (`BOF3X_SHADOW=sound`, headless
   on the build of 2026-10-11): `BGM\001.DAT` 782 frames of 4,608 bytes, as
   many as the header walk counts, **0 stored at the end of the stream**, the
