@@ -35,7 +35,15 @@ and per-thread data and the software renderer's converters; the decoder's 200 fu
 C runtime's remainder followed the same evening on `crt/allocator` (over the decoder's branch and
 `crt/atoi-and-startup`): `Crt_atoi` and `Crt_sscanf` exact, `malloc` / `calloc` / `free` the toolchain's as a set,
 19 runtime entries ours and two left for the cutover ([`crt-rest.md`](crt-rest.md); the start-up read in
-[`crt-startup.md`](crt-startup.md)); `inject: 10086 ours`. The catalogue has 10,246 starts; at round fourteen's cut 1,341
+[`crt-startup.md`](crt-startup.md)); `inject: 10086 ours`. **PRs #49 and #50 merged on 2026-10-10 night** (`main` `a30f1916`), and the
+night's branch `platform/state2-prework` holds the prework for states 2 and 3 ([`HANDOFF.md`](HANDOFF.md) item 00): `MoveCmd_Move`
+`0x578C10`, the one game function still Capcom's, taken (`inject: 10087 ours`; `tools/owned_sweep.py`); the seven mid-function
+code pointers read as numbers; the state hash address-independent (`BOF3SH3`); the main thread's stack measured (Windows gives
+256 KB; our toolchain's start-up sets the x87 word to 0x037F - state 3 must set 0x027F); the code page audited. **Two music
+defects of the owner's route fixed the same night:** every fade had stalled after one step since DIV-0047 (DIV-0028 amended:
+the step keys on `Frame_Counter`), and the port never resumed the field's music after a fight nor played it on a load of a
+save without a track (DIV-0092: the area's own track) - the owner: "that sounds correct now"; a true resume at the song's
+position, the PlayStation's behaviour, is in progress. The catalogue has 10,246 starts; at round fourteen's cut 1,341
 of the game's own functions were left, the rest of what is not ours being
 the platform and library layer (533) and jump-table cases (210) -
 round fourteen's section 0. The spell round counts pointer-reached starts
