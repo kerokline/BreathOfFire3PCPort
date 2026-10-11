@@ -428,8 +428,19 @@ void ListPc(State& s) {
     if (s.songs[kPc].empty()) s.why[kPc] = L"The game folder has no BGM\\ songs.";
 }
 
-// <launcher folder>\music-names.tsv: "NNN<tab>name[<tab>note]" lines, UTF-8,
-// # comments. The owner's catalogue; nothing in the repo supplies names.
+// <launcher folder>\music-names.tsv, copied there from data/music-names.tsv
+// by the build: the catalogue of names (docs/music-player.md section 4).
+// UTF-8, tab-separated, # comments; the columns are
+//   song  name  box_disc  box_track  box_title  source  note
+// and a song shows its box title where it has one, else its name. A line
+// whose first field is not a three-digit song number is skipped.
+std::wstring Wide(const std::string& u8) {
+    const int w = MultiByteToWideChar(CP_UTF8, 0, u8.c_str(), static_cast<int>(u8.size()), nullptr, 0);
+    std::wstring wide(static_cast<std::size_t>(w), L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, u8.c_str(), static_cast<int>(u8.size()), wide.data(), w);
+    return wide;
+}
+
 void LoadNames(State& s) {
     wchar_t self[MAX_PATH];
     const DWORD n = GetModuleFileNameW(nullptr, self, MAX_PATH);
@@ -441,6 +452,7 @@ void LoadNames(State& s) {
     CloseHandle(h);
     const std::vector<std::uint8_t> bytes = ReadWhole(path);
     std::string text(bytes.begin(), bytes.end());
+    if (text.size() >= 3 && static_cast<unsigned char>(text[0]) == 0xEF) text.erase(0, 3);  // a BOM
     std::size_t at = 0;
     while (at < text.size()) {
         std::size_t end = text.find('\n', at);
@@ -448,20 +460,22 @@ void LoadNames(State& s) {
         std::string line = text.substr(at, end - at);
         at = end + 1;
         if (!line.empty() && line.back() == '\r') line.pop_back();
-        if (line.size() > 3 && static_cast<unsigned char>(line[0]) == 0xEF) line.erase(0, 3);  // a BOM
-        if (line.empty() || line[0] == '#') continue;
-        const std::size_t tab = line.find('\t');
-        if (tab == std::string::npos) continue;
-        const unsigned number = static_cast<unsigned>(std::strtoul(line.c_str(), nullptr, 10));
-        // the second column; a third (a note) and on are the catalogue's own
-        const std::size_t tab2 = line.find('\t', tab + 1);
-        const std::string name = line.substr(tab + 1, tab2 == std::string::npos ? std::string::npos : tab2 - tab - 1);
+        std::vector<std::string> field;
+        for (std::size_t from = 0;;) {
+            const std::size_t tab = line.find('\t', from);
+            field.push_back(line.substr(from, tab == std::string::npos ? std::string::npos : tab - from));
+            if (tab == std::string::npos) break;
+            from = tab + 1;
+        }
+        const std::string& song = field[0];
+        if (song.size() != 3 || song.find_first_not_of("0123456789") != std::string::npos) continue;
+        std::string name;
+        if (field.size() > 4 && !field[4].empty()) name = field[4];  // the box's title
+        else if (field.size() > 1) name = field[1];
         if (name.empty()) continue;
-        const int w = MultiByteToWideChar(CP_UTF8, 0, name.c_str(), static_cast<int>(name.size()), nullptr, 0);
-        std::wstring wide(static_cast<std::size_t>(w), L'\0');
-        MultiByteToWideChar(CP_UTF8, 0, name.c_str(), static_cast<int>(name.size()), wide.data(), w);
+        const unsigned number = static_cast<unsigned>(std::strtoul(song.c_str(), nullptr, 10));
         if (number >= s.names.size()) s.names.resize(number + 1);
-        s.names[number] = wide;
+        s.names[number] = Wide(name);
     }
 }
 

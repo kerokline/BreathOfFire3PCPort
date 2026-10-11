@@ -705,3 +705,9 @@ add_dependencies(bof3x_launcher bof3x_symbols)
 target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 shell32 ole32 winmm SDL3::SDL3-static)
 target_link_options(bof3x_launcher PRIVATE -municode)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")
+# The Jukebox's names (docs/music-player.md section 4), beside the launcher.
+# Edit data/music-names.tsv, not the copy: every build refreshes it.
+add_custom_command(TARGET bof3x_launcher POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+          "${CMAKE_SOURCE_DIR}/data/music-names.tsv" "$<TARGET_FILE_DIR:bof3x_launcher>/music-names.tsv"
+  VERBATIM)

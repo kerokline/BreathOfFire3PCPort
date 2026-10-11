@@ -1,0 +1,178 @@
+# The music catalogue: the game's song numbers and their names (docs/music-player.md section 4).
+# Song N is the PC's BGM\NNN.DAT and the PSX song table's entry N. The build copies this file
+# beside the launcher, whose Jukebox shows box_title where it is set, else name.
+#
+# name       provisional, from `source`: game = the faerie village's music menu (US disc);
+#            psf = the zophar PSF rip's title (unsourced); same-notes = a titled song's events
+#            under another bank. To be replaced by the collector's box titles.
+# box_disc, box_track, box_title   the collector's box soundtrack discs (the owner's catalogue).
+# note       measurements and clashes.
+#
+# song	name	box_disc	box_track	box_title	source	note
+000	Country Living				game	faerie village music menu row 0
+001	Ghuh?				psf	
+002						
+003	Flight				psf	same events as 117, another bank
+004	Prologue				psf	
+005	Forest				psf	
+006						
+007	These Little Things				game	faerie village music menu row 1
+008	Eden				game	faerie village music menu row 22
+009	30				game	faerie village music menu row 7; PSF: Neverending Game
+010	Forest				same-notes	same notes as 005
+011	Take It And Run				game	faerie village music menu row 2
+012						
+013	War Tiger				psf	
+014	Healing				game	faerie village music menu row 3
+015	Missing				game	faerie village music menu row 32
+016	Farm				psf	
+017	Thief				game	faerie village music menu row 20
+018						
+019	Casually				psf	
+020	Panic				psf	
+021	Angel				same-notes	same notes as 109; silent on the PSX; no PC file
+022	Unused Song 1				psf	
+023	Island				game	faerie village music menu row 25
+024	Heavy Echo				game	faerie village music menu row 30
+025	Ambushed				psf	
+026	Cadaver				game	faerie village music menu row 31
+027	Walking the Road				game	faerie village music menu row 21
+028	Unused Song 2				psf	
+029	Danger				psf	
+030	Take It And Run				same-notes	same notes as 011
+031	Crowing in the Night				game	faerie village music menu row 8
+032	War Tiger				game	faerie village music menu row 11; same notes as 013
+033	That Old House				psf	
+034	Plotting McNeils				psf	
+035	That Old House				game	faerie village music menu row 23; same notes as 033
+036	Wings				psf	
+037	Plenty of Money				game	faerie village music menu row 9
+038						
+039						
+040	Even The Sun's Happy				game	faerie village music menu row 5
+041	Player vs. Fish				psf	
+042	Fish Caught				psf	
+043						
+044	Ogre Road				psf	
+045	Windy City				game	faerie village music menu row 24
+046	Wyndia Castle				psf	
+047	Trading Dragons				psf	
+048	My Favorite Trick				game	faerie village music menu row 10
+049						
+050	Abducted				same-notes	same notes as 135
+051	The Champion				game	faerie village music menu row 26; PSF: The Champion (Variation); same events as 074, another bank
+052	Island				same-notes	same notes as 023
+053	Pursued				same-notes	same notes as 084
+054	Walking Straight				psf	
+055	Awakening				psf	
+056	Dangerous Feeling				game	faerie village music menu row 33
+057	Fried Onions				game	faerie village music menu row 13
+058	Join Party				same-notes	same notes as 105
+059	The Mutant				psf	
+060	The Poor Marcher				game	faerie village music menu row 36
+061	Beyd's Victory				psf	
+062						
+063	Peach Engine				game	faerie village music menu row 14
+064	Maekyss Gorge				same-notes	same notes as 068
+065	Ago				game	faerie village music menu row 18
+066	Life's A Beach				game	faerie village music menu row 4
+067						
+068	Maekyss Gorge				psf	
+069	Lying in Wait				psf	
+070	Dragon Slayer				psf	
+071	Walking Straight				game	faerie village music menu row 6; same notes as 054
+072	Danger				same-notes	same notes as 029
+073	Tears				psf	
+074	The Champion				psf	same events as 051, another bank
+075	Balio and Sunder				psf	
+076	Maekyss Gorge				same-notes	same notes as 068
+077						
+078	Cadaver				same-notes	same notes as 026
+079	Trading Dragons				same-notes	same notes as 047
+080	Of Gods and Dragons				game	faerie village music menu row 34
+081	Walking the Road				same-notes	same notes as 027
+082	Flight				game	faerie village music menu row 35; same notes as 003
+083						
+084	Pursued				psf	
+085	In the Morning				game	faerie village music menu row 15
+086	Game Over				psf	
+087	Ogre Road				same-notes	same notes as 044
+088						088, 125 and 148 share one tune
+089						
+090						guess: 056 with its channels moved
+091	Technology				game	faerie village music menu row 12
+092	Ghuh?				same-notes	same notes as 001
+093						
+094	Ambushed				same-notes	same notes as 025
+095						
+096						
+097	Technology				same-notes	same notes as 091
+098	Sigh of the Fairy				psf	
+099	Sea Monster				psf	
+100	Exploring the World				psf	
+101	Panic				same-notes	same notes as 020
+102	Fighting Man				game	faerie village music menu row 16
+103	Unused Song 3				psf	
+104	Healing				same-notes	same notes as 014
+105	Join Party				psf	
+106	Fighting Man (Variation)				psf	
+107	Dead Dragon Stone				game	faerie village music menu row 37
+108	Avenging Memory				psf	
+109	Angel				psf	
+110	Maekyss Gorge				same-notes	same notes as 068
+111	For the Dragons<01> / -- Main Theme --				game	faerie village music menu row 38; PSF: For the Dragons
+112	Atomic Power				psf	
+113						
+114	Faerie Village				psf	
+115	For Old Friends				psf	
+116	Don't Say It				game	faerie village music menu row 28
+117	Flight (Variation)				psf	same events as 003, another bank
+118	For Old Friends				same-notes	same notes as 115
+119						
+120						
+121	Yggdrasil				psf	
+122	Angry Goddess				psf	
+123	Teleporters				psf	
+124	Forest				same-notes	same notes as 005
+125	Neverending Game				game	faerie village music menu row 19; 088, 125 and 148 share one tune
+126	Field				psf	
+127	Field				same-notes	same notes as 126
+128						
+129	Ogre Road				same-notes	same notes as 044
+130	Unused Song 4				psf	
+131	Guild				game	faerie village music menu row 17
+132	Cooking Master				psf	
+133	Healing				same-notes	same notes as 014
+134	Steam Locomotion				game	faerie village music menu row 29
+135	Abducted				psf	
+136						
+137						
+138						
+139	Turning Point				game	faerie village music menu row 27
+140	Questionable Century				psf	
+141	Opening				psf	
+142	Castle in the Sky				game	faerie village music menu row 39
+143						
+144	Cruise				psf	
+145	Desert of Death				psf	
+146						
+147						
+148						088, 125 and 148 share one tune
+149						
+150	Ending				psf	
+151	Fight!				psf	151 and 153 are one file
+152	Decisive Battle				psf	
+153	Fight!				psf	151 and 153 are one file
+154	Ghost Battle				psf	
+155	Everyday Battle				psf	
+156	Conflict of Dragons				psf	
+157	Final Battle				psf	
+158						
+159	Decision				psf	
+160	The End				psf	
+161						
+162	Myria				psf	
+163	Ghuh?				same-notes	same notes as 001
+164	Sea Monster				same-notes	same notes as 099
+165	Victory!				psf	
+166						PC file only; no PSX song

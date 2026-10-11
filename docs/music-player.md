@@ -60,16 +60,25 @@ call, 2026-10-11). Until then, a PSP `Play` cannot be reached, and it aborts if 
 
 ## 4. Names
 
-**The catalogue file.** The player reads `music-names.tsv` from the launcher's folder.
+**The catalogue is [`data/music-names.tsv`](../data/music-names.tsv).** The build copies it beside the
+launcher, and the player reads that copy. Edit the repo's file: every build refreshes the copy.
 
-- Each line is `NNN<tab>name[<tab>note]`, UTF-8; lines starting with `#` are comments.
-- Only the first two columns are read; the note is for the catalogue.
-- Nothing in the repo supplies names: whether fan or in-game titles may be committed is the
-  owner's call (rule 1, [`LICENSING.md`](LICENSING.md)).
-- A draft was generated for the owner on 2026-10-11 at `analysis/music-names.draft.tsv`
-  (gitignored): 134 of 166 named, with each name's source in the note column.
+- **Format:** UTF-8, tab-separated, `#` lines are comments.
+- **Columns:** `song name box_disc box_track box_title source note`.
+  - The Jukebox shows `box_title` where it is set, else `name`.
+  - A line whose first field is not a three-digit song number is skipped.
+- **Committing it is the owner's call of 2026-10-11.** The box's track titles are public, and the
+  file holds only our mapping of titles to song numbers, no audio.
+- **The box:** the collector's box has three named soundtrack discs. The owner's titles from them
+  go in the `box_*` columns and replace the provisional names.
+- **`name` is provisional**, seeded 2026-10-11 with 134 of 167 rows named. Its `source` says where
+  each came from:
+  - `game`: the faerie village's music menu, US disc (section 4.1).
+  - `psf`: the zophar rip, unsourced (section 4.2).
+  - `same-notes`: a titled song's events under another bank.
+- **`note`** holds the measurements and the clashes. The ripper's own comments are not carried over.
 
-Two sources were measured for it.
+The provisional names come from two measured sources.
 
 ### 4.1 The faerie village's music menu (the game's own titles)
 
@@ -152,7 +161,7 @@ the dialogs, looking windows up by the launcher's own process ID.
   - PC 001: looping at its measured points.
   - PC 004N: once.
 - **Stop and Close:** both work; the launcher exited 0.
-- **Names:** loaded from a copy of the draft.
+- **Names:** loaded from the catalogue, and a `box_title` shown over its row's `name` (song 51, a test row).
 
 **Owed:**
 
