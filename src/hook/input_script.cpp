@@ -51,6 +51,25 @@
 //                           experiment's tool: a recipe with a poke is not a
 //                           player's route, and says so in its log.
 //   mark TEXT               log the text
+//   hold KEY N              a keyboard key (f1..f12, escape, enter, space, or a
+//                           virtual-key number) held N frames: WM_KEYDOWN posted
+//                           to the game window as the step starts, WM_KEYUP as
+//                           it ends - a player's press as Game_WndProc sees it.
+//                           `key KEY` is the same held one frame. The recorder
+//                           (BOF3X_RECORD) writes pad words only, so a played
+//                           route's F9 presses are added by hand: the owner's
+//                           `hold f9 4` / `wait 42`.
+//                           While the game is paused (F9) WinMain skips the
+//                           latch; the recipe still advances a step per frame
+//                           through InputScript_PausedLatch, its pad words
+//                           dropped, so `key f9` / `wait N` / `key f9` is a
+//                           pause of N frames.
+//   quit [timeout N]        the game is expected to exit now (F9 twice on the
+//                           title, say): nothing held; the process ending with
+//                           this step current logs `done` from DllMain's
+//                           detach, and N frames (default 600) without it
+//                           FAILS the recipe. An exit with any other step
+//                           current logs FAILED.
 //   end                     stop here
 //
 // Buttons are the PlayStation pad's, the bit layout Pad_Read builds
@@ -68,7 +87,7 @@ namespace bof3 {
 void RandCountFrame();   // below, outside the anonymous namespace
 namespace {
 
-enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Mark, End };
+enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Mark, Key, Quit, End };
 enum class Op { Eq, Ne, Any, None };
 
 struct Step {
@@ -87,6 +106,7 @@ struct Step {
 
 std::vector<Step> g_steps;
 std::size_t g_index = 0;
+bool g_quit_expected = false;      // a `quit` step is current: the process ending is the recipe's `done`
 unsigned g_t = 0;                  // frames spent in the current step
 bool g_active = false;
 bool g_scripted = false;   // a recipe was loaded: the latch is ScriptedLatch until the process ends
@@ -128,6 +148,29 @@ unsigned Number(int line, const std::string& tok) {
     unsigned long v = std::strtoul(tok.c_str(), &end, 0);
     if (tok.empty() || *end) ParseError(line, "not a number", tok);
     return static_cast<unsigned>(v);
+}
+
+struct Key { const char* name; unsigned vk; };
+constexpr Key kKeys[] = {
+    {"f1", VK_F1}, {"f2", VK_F2}, {"f3", VK_F3}, {"f4", VK_F4}, {"f5", VK_F5}, {"f6", VK_F6},
+    {"f7", VK_F7}, {"f8", VK_F8}, {"f9", VK_F9}, {"f10", VK_F10}, {"f11", VK_F11}, {"f12", VK_F12},
+    {"escape", VK_ESCAPE}, {"enter", VK_RETURN}, {"space", VK_SPACE},
+};
+
+bool IsKeyName(const std::string& tok) {
+    for (const Key& k : kKeys)
+        if (tok == k.name) return true;
+    return false;
+}
+
+unsigned VirtualKey(int line, const std::string& tok) {
+    for (const Key& k : kKeys)
+        if (tok == k.name) return k.vk;
+    if (!tok.empty() && (tok[0] >= '0' && tok[0] <= '9')) {
+        const unsigned v = Number(line, tok);
+        if (v >= 1 && v <= 0xFE) return v;
+    }
+    ParseError(line, "unknown key", tok);
 }
 
 unsigned short Buttons(int line, const std::string& tok) {
@@ -234,9 +277,16 @@ void Load(const char* path) {
             st.gap = gap;
         } else if (w == "hold") {
             need(3, 3);
-            st.kind = Kind::Hold;
-            SetButtons(st, t[1]);
             st.n = Number(line, t[2]);
+            if (IsKeyName(t[1])) {
+                st.kind = Kind::Key;
+                st.value = VirtualKey(line, t[1]);
+                st.text = t[1];
+                if (st.n == 0) ParseError(line, "a key is held one frame or more, not", t[2]);
+            } else {
+                st.kind = Kind::Hold;
+                SetButtons(st, t[1]);
+            }
         } else if (w == "until") {
             if (t.size() != 5 && t.size() != 7) ParseError(line, "until ADDR TYPE OP VALUE [timeout N], got", s);
             st.kind = Kind::Until;
@@ -284,6 +334,21 @@ void Load(const char* path) {
             st.kind = Kind::Mark;
             const std::size_t at = s.find_first_not_of(" \t", s.find("mark") + 4);
             if (at != std::string::npos) st.text = s.substr(at);
+        } else if (w == "key") {
+            need(2, 3);
+            st.kind = Kind::Key;
+            st.value = VirtualKey(line, t[1]);
+            st.text = t[1];
+            st.n = t.size() == 3 ? Number(line, t[2]) : 1;
+            if (st.n == 0) ParseError(line, "a key is held one frame or more, not", t[2]);
+        } else if (w == "quit") {
+            if (t.size() != 1 && t.size() != 3) ParseError(line, "quit [timeout N], got", s);
+            st.kind = Kind::Quit;
+            st.n = 600;
+            if (t.size() == 3) {
+                if (t[1] != "timeout") ParseError(line, "expected timeout, got", t[1]);
+                st.n = Number(line, t[2]);
+            }
         } else if (w == "end") {
             need(1, 1);
             st.kind = Kind::End;
@@ -456,6 +521,38 @@ unsigned short NextWord() {
             Log("input       mark %s recipe frame %u", s.text.c_str(), g_frame);
             Advance();
             continue;
+        case Kind::Key: {
+            // A press as the player's reaches Game_WndProc: WM_KEYDOWN posted
+            // as the step starts (the loop's next PeekMessage dispatches it,
+            // before this frame runs), WM_KEYUP with the transition bits as
+            // the hold ends. The step costs its N frames, like a pad hold.
+            HWND hwnd = static_cast<HWND>(Game_Hwnd);
+            if (!hwnd) Fatal("BOF3X_INPUT line %d: key %s before the game window exists", s.line, s.text.c_str());
+            if (g_t == 0) {
+                PostMessageA(hwnd, WM_KEYDOWN, s.value, 1);
+                Log("input       line %d: key %s (vk 0x%02X) down for %u frames, recipe frame %u (Frame_Counter %u, paused %u)",
+                    s.line, s.text.c_str(), (unsigned)s.value, s.n, g_frame, (unsigned)Frame_Counter, (unsigned)Game_Paused);
+                LogFlush();
+            }
+            if (g_t < s.n) { ++g_t; return 0; }
+            PostMessageA(hwnd, WM_KEYUP, s.value, 0xC0000001u);
+            Advance();
+            continue;
+        }
+        case Kind::Quit:
+            if (g_t == 0) {
+                g_quit_expected = true;
+                Log("input       line %d: quit expected within %u frames, recipe frame %u", s.line, s.n, g_frame);
+                LogFlush();
+            }
+            if (g_t >= s.n) {
+                g_quit_expected = false;
+                Log("input       line %d: the game did not quit within %u frames", s.line, s.n);
+                Finish("FAILED");
+                return 0;
+            }
+            ++g_t;
+            return 0;
         case Kind::End:
             Finish("done");
             return 0;
@@ -650,10 +747,52 @@ void __cdecl HashedLatch() {
 }
 
 void InputScript_Stop() {
+    if (g_scripted && g_active) {
+        // The process is ending with the recipe still playing. A `quit` step
+        // asked for exactly that; any other step did not.
+        g_active = false;
+        // F9's second press quits on its WM_KEYDOWN, inside the key step's
+        // own hold: a key step whose next step, past any wait / peek / mark
+        // (the owner's recorded `wait 42` after the press), is `quit` counts
+        // as the quit step.
+        bool key_then_quit = false;
+        if (g_index < g_steps.size() && g_steps[g_index].kind == Kind::Key) {
+            std::size_t k = g_index + 1;
+            while (k < g_steps.size() && (g_steps[k].kind == Kind::Wait || g_steps[k].kind == Kind::Peek ||
+                                          g_steps[k].kind == Kind::Mark))
+                ++k;
+            key_then_quit = k < g_steps.size() && g_steps[k].kind == Kind::Quit;
+        }
+        if (g_quit_expected || key_then_quit)
+            Log("input       done at recipe frame %u (Frame_Counter %u); the game quit as the recipe's quit step expected",
+                g_frame, g_last_frame);
+        else
+            Log("input       FAILED at recipe frame %u (Frame_Counter %u): the game exited with line %d current",
+                g_frame, g_last_frame, g_index < g_steps.size() ? g_steps[g_index].line : 0);
+        LogFlush();
+    }
     if (!g_rec) return;
     FlushRun();
     std::fclose(g_rec);
     g_rec = nullptr;
+}
+
+// WinMain, while Game_Paused: Capcom's loop skipped Input_Latch, and ours
+// does too - no device is polled, no pad word written, no state-hash tick.
+// A playing recipe still advances one step per frame (Frame_Counter runs
+// through a pause), its words dropped: that is what lets a recipe time the
+// pause between two `key f9`.
+void InputScript_PausedLatch() {
+    if (!g_scripted || !g_active) return;
+    const std::uint32_t frame = Frame_Counter;
+    if (!g_seen_frame || frame != g_last_frame) {
+        g_seen_frame = true;
+        g_last_frame = frame;
+        g_prev = g_cur;
+        g_cur = NextWord();
+        ++g_frame;
+        RandCountFrame();
+    }
 }
 
 void InputScript_Start() {

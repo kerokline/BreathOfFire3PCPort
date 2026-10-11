@@ -1,0 +1,37 @@
+# Recorded by BOF3X_RECORD (src/hook/input_script.cpp): one pad word a frame from
+# recipe frame 0. BOF3X_LANG=en-US BOF3X_FILTER=point - play it back with the same
+# language, since text timing differs between them. F12 wrote the shots.
+# The owner's route, 2026-10-11 morning, for F9's quit mode: from the eldritchGene
+# save, the title to the load screen and slot 0, then F9 four times - the pause and
+# the return to the title, the pause and the program's end. The recorder writes pad
+# words only, so the four presses are the owner's own timing written by hand
+# (`hold f9 4`, `wait 42`, four times) where the recording had `wait 168`; the
+# game's exit is the recipe's `quit`. A normal quit is also what
+# BOF3X_STACKWATCH=1's exit line needs (docs/crt-startup.md 11.4).
+# save eldritchGene
+wait 38
+hold start 6
+wait 40
+hold start 5
+wait 44
+hold start 5
+wait 43
+hold circle 4
+wait 43
+hold circle 5
+wait 28
+hold circle 4
+peek 0x66C7E8 u16 field_task_mode
+peek 0x66C7FA u8 Title_LogoState
+hold f9 4
+wait 42
+peek 0x66C7E8 u16 field_task_mode
+hold f9 4
+wait 42
+peek 0x66C7FA u8 Title_LogoState
+peek 0x66C7F9 u8 Title_Fade
+hold f9 4
+wait 42
+hold f9 4
+wait 42
+quit timeout 600

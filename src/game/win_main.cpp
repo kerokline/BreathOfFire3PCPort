@@ -600,6 +600,7 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                     break;
                 }
                 if (!Game_Paused) bof3::InputScript_Latch();
+                else bof3::InputScript_PausedLatch();   // a recipe keeps its frame count through a pause
                 if (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE)) {
                     if (msg.message == WM_QUIT) {
                         bof3::Log("WinMain: WM_QUIT");

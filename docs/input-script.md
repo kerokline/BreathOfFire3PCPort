@@ -58,6 +58,7 @@ Recipes in `tools/recipes/`:
 | `worldMapAndAreaTransition.txt` / `_ab.txt` | recorded by the owner 2026-09-23: `town`, out of the town to the world map (Yraall Region, two place plates), into an area, the map again, two adjacent areas ([`world-map.md`](world-map.md)); `_ab` has a shot every 60 frames | 2,143 |
 | `combat.txt` / `combat_ab.txt` | recorded by the owner 2026-09-23: the `combat` save (an F12 save in the field), a few steps, a random encounter, the fight - the command cross, a spell, a heal, a steal attempt, the item list - to "You won the battle!"; `_ab` has a shot every 60 frames. **Deterministic**: two playbacks under our build, 43 of 43 captures identical, the encounter at the same frame and the same damage every turn (`analysis/shots/combat_a`, `combat_b`) - the exe imports no `srand` or `time`, so the CRT's `rand` starts from its fixed seed, and the encounter test counts steps ([`event-ops.md`](event-ops.md), `Field_EncounterDue`). The battle start the handoff was waiting for. | 2,620 |
 | `worldmap_sliver.txt` | the route above (`town`) cut at frame 1260 with one shot on the map - a one-minute check of the compass needle (DIV-0044) | 1,260 |
+| `f9ExitMode.txt` | recorded by the owner 2026-10-11 morning: the `eldritchGene` save, the title to the load screen and slot 0, then F9 four times - during the load (the pause, then `Game_RestartFlag` back to the title) and on the title (the pause, then `Game_QuitFlag`: the program ends) - as `hold f9 4` / `wait 42` where the recording had `wait 168`, and `quit`. The one recipe that ends in a normal exit: run it with `--env BOF3X_STACKWATCH=1` for the stack's exit line ([`crt-startup.md`](crt-startup.md) 11.4). Replayed the same morning: `done` at 404, three times | 404 |
 | `eldritchGene.txt` / `_ab.txt` | recorded by the owner 2026-10-10 evening: the `eldritchGene` save (slot 0 as of 2026-10-08 22:02), the scene's dialogue to a gene stone's pedestal - a glowing sphere over a stone altar - and the words that send the party to town; recorded for two defects, D242 (the gene clipped by the floor) and D243 (no light rays before the flash); `_ab` a shot every 300 frames (11). Replayed the same evening: slot 0 loaded, done at 3,547 | 3,547 |
 
 ## 1a. Recipe saves: slot 0 is swapped for the load (2026-09-26)
@@ -200,6 +201,8 @@ One step per line; `#` starts a comment; buttons join with `+`
 | `shot NAME [N [BUTTONS]]` | hold BUTTONS (default nothing) for N frames (default 30) - the battle's command cross shows a command only while its direction is held - then **freeze** the game until the driver has the picture (below). The picture is the frame presented as the hold ends: one exact frame, the same on every run |
 | `peek ADDR TYPE [LABEL]` | log a value |
 | `mark TEXT` | log a line |
+| `hold KEY N` / `key KEY [N]` | a **keyboard** key - `f1`..`f12`, `escape`, `enter`, `space`, or a virtual-key number - held N frames (`key` alone: one): `WM_KEYDOWN` posted to the game window as the step starts, `WM_KEYUP` as it ends, the press as `Game_WndProc` sees a player's (2026-10-11). The recorder writes pad words only, so a route's F9 presses are added by hand in the owner's form, `hold f9 4` / `wait 42`. While the game is paused (F9) WinMain skips the latch; the recipe still advances a step per frame (`InputScript_PausedLatch`, its pad words dropped), so `hold f9 4` / `wait 42` / `hold f9 4` is a pause of 46 frames |
+| `quit [timeout N]` | the game is expected to exit now (F9 twice on the title): the process ending with this step current - or with a key step current whose next step past waits, peeks and marks is `quit`, since F9's second press quits on its key-down - logs `done` from `DllMain`'s detach; N frames (default 600) without an exit FAIL the recipe. An exit with any other step current logs `FAILED` with the line. `input_run.py` reads the log once more after the process is gone, so the detach's line is seen |
 | `end` | stop |
 
 **Frozen shots** (2026-09-21). `input_run.py` sets `BOF3X_SHOT_WAIT`. At the
@@ -320,7 +323,11 @@ at `0x7DE828`, DIK `0x58` - `GetAsyncKeyState` saw nothing on the first
 recording) writes a one-frame `shot` in place of its frame.
 `tools/recipe_shots.py` adds shots every N frames to a recording after the
 fact, again without moving a frame. Record in the language you will play back
-in: text timing differs.
+in: text timing differs. **Keyboard keys are not recorded** - F9 goes to
+`Game_WndProc` as a window message, not through the pad latch - and the
+recorder does not run while the game is paused, so a played route's F9
+presses show as a shorter wait; they go in by hand as `hold f9 4` / `wait 42`
+(section 3; `f9ExitMode.txt` is the first).
 
 The first recording is the owner's `shop.txt`, from save 3: the item shop
 (buy, sell), a found Molotov, the weapon shop with equipping, walking and

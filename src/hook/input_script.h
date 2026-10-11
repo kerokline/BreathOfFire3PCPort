@@ -17,9 +17,15 @@ namespace bof3 {
 void InputScript_Start();
 
 // Writes the recorder's open run - the hold or wait still going when the
-// process ends - and closes the recording. Nothing when not recording.
-// Called from DLL_PROCESS_DETACH.
+// process ends - and closes the recording; and, when a recipe is still
+// playing, logs its `done` (a `quit` step was current) or `FAILED` (any
+// other step was). Called from DLL_PROCESS_DETACH.
 void InputScript_Stop();
+
+// WinMain's loop while Game_Paused (F9), where Capcom's loop called nothing:
+// no device latch, no pad words; a playing recipe advances one step per
+// frame with its words dropped, so a recipe can time a pause.
+void InputScript_PausedLatch();
 
 // The latch our WinMain calls once per pass of its loop where Capcom's called
 // Input_Latch (0x4FCDDE): the recipe's or the recorder's latch when one is

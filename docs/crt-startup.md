@@ -560,11 +560,29 @@ Instrumentation (`src/hook/stackwatch.cpp`), off by default; any value but
   bytes a task (or a `WinMain` callee reaching below `Task_StackTop`) used.
 
 Headless, the switch parses and the start-up lines log (exit 0; `2` gives
-`FATAL: BOF3X_STACKWATCH wants 1, got "2"`, exit 3). **The
-`Task_SetStackBase` and exit numbers are owed to the next route run**, e.g.
-the owner's recorded route with `BOF3X_STACKWATCH=1` added; the exit line
-needs a normal quit (a `Fatal` or the crash reporter ends the process
-without the detach). Not covered: the render fiber (`RunOnFiber`) has its
-own 1 MB stack and is not watched; `BOF3X_ORIGINAL=Task_SetStackBase`
-leaves Capcom's and loses the start line.
+`FATAL: BOF3X_STACKWATCH wants 1, got "2"`, exit 3). Not covered: the render
+fiber (`RunOnFiber`) has its own 1 MB stack and is not watched;
+`BOF3X_ORIGINAL=Task_SetStackBase` leaves Capcom's and loses the start line.
+
+**Measured 2026-10-11** on the owner's `f9ExitMode.txt` (the `eldritchGene`
+save loaded, F9 twice back to the title, F9 twice to a normal quit - the one
+recipe that ends in the detach; `tools/input_run.py ... --env
+BOF3X_STACKWATCH=1`, three identical runs):
+
+- `Task_SetStackBase` on the main thread arrives with `esp` 0x294 below
+  `StackBase` (0xF0000), `Task_StackTop` 0xEBD6C, the four slices down to
+  0xDBD6C (0x14294 below base, inside the 0x40000 reservation whose low end
+  is 0xB0000); committed then down to 0xE0000 (the header's 0x10000). Twice
+  on the route: `WinMain`'s first pass and again after the restart to the
+  title, the same numbers.
+- **Exit:** committed 0xE0000..0xF0000, 0x10000 bytes, unchanged by the run
+  - no page beyond the initial commit was ever touched; the guard 0x2000
+  below it; the **deepest non-zero dword 0xD578 below base**. Slice 0 used
+  0x2B14 of its 0x4000 bytes, slice 1 0x1334, slice 2 0x12E4, slice 3
+  nothing. So this route stays inside the commit by 0x2A88 bytes, and slice
+  3's top (0x10294 below base) lies in the guard page: a task on slice 3
+  would be the first thing to grow the stack. 11.3 stands: state 3 links
+  with commit 0x10000 or more and reserve 0x40000 or more; a deeper route
+  (a battle with the effect engine's recursion) would raise the measured
+  number, not the rule.
 

@@ -210,11 +210,16 @@ def run(a, env, slot0):
         threading.Thread(target=keep_in_front, args=(stop,), daemon=True).start()
     status, pos, deadline = None, 0, time.time() + a.minutes * 60
     try:
+        exited = False
         while status is None and time.time() < deadline:
             time.sleep(0.05)
-            if not game_pid():
+            if exited:
                 status = 'game exited'
                 break
+            # A recipe's `quit` step ends with the game exiting: the DLL logs
+            # `done` from its detach, so the log is read once more after the
+            # process is gone before the exit counts against the recipe.
+            exited = not game_pid()
             try:
                 with open(LOG, 'rb') as f:
                     f.seek(pos)
