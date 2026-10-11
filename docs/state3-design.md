@@ -1,7 +1,7 @@
 # State 3: our own executable - the design brief
 
-**Status:** DRAFT (2026-10-11, written on `platform/state3` from `main`
-`a5946f64` before any code; every number below is from a read of this
+**Status:** STABLE as a design (2026-10-11, written on `platform/state3` from `main`
+`a5946f64` before any code, the owner's five calls answered the same day - section 10; every number below is from a read of this
 morning or from the doc it cites - nothing here has been run)
 
 [`HANDOFF.md`](HANDOFF.md) item 0 asks for one document, answering from the
@@ -453,42 +453,43 @@ first build's.
 [`code-page-audit.md`](code-page-audit.md) 4: the cache folder is ANSI by
 design today; at state 3 the executable's manifest declares
 `<activeCodePage>UTF-8</activeCodePage>` and `longPathAware`, the engine logs
-`GetACP()` once, and the launcher's ini and environment half (its `cache=`
-stored as UTF-8, `ToAnsi`'s refusal removed, a once-only read of an older
-ini's ANSI bytes, the length limits counted in UTF-8 bytes) comes with it.
-**The first build ships the manifest line and the log line** - the PE writer
-emits the manifest anyway for the common-controls and DPI declarations the
-launcher already carries (`src/launcher/launcher.manifest`) - and leaves the
-launcher's half to the following change, since the dialog refuses an
-unholdable path today and nothing breaks in between. Whether to do both at
-once is the owner's call (section 10).
+`GetACP()` once (an older Windows that ignores the manifest is then visible
+in `bof3x.log` and behaves as today), and the launcher's half comes with it:
+its `cache=` stored as UTF-8 (`MultiByteToWideChar(CP_UTF8)` in `FromAnsi` /
+`ConfigCacheDataRoot`, `SetEnvironmentVariableW`), `ToAnsi`'s refusal
+removed, a once-only rule for an existing ini's ANSI bytes (invalid UTF-8
+read as the ACP), and the length limits (`kRootMax`, the dialog's 226)
+counted in UTF-8 bytes or at the `W` boundary in UTF-16 units. **The first
+build ships both halves** (the owner, 2026-10-11). The PE writer emits the
+manifest anyway for the common-controls and DPI declarations the launcher
+already carries (`src/launcher/launcher.manifest`). The check: a cache folder
+whose name the ACP cannot hold, set in the dialog, opened by the engine under
+`BOF3X_CACHE` - a path the hosted build refuses today.
 
-## 10. For the owner
+## 10. For the owner - answered 2026-10-11
 
-Decisions the first build needs, with the brief's recommendation first:
+The five calls, with the owner's answers of the same day:
 
 1. **The executable's file name and window title.** Recommended `bof3x.exe`
-   beside the launcher, the window title unchanged (DIV-0039's). The
-   tooling's process names (6.3) follow the choice.
-2. **The icon.** Ours, not Capcom's (rule 1); a plain placeholder in the
-   first build, the owner's artwork when there is some.
-3. **UTF-8 now or next** (section 9): the manifest line in the first build,
-   the launcher's ini half in the next change - or both together.
+   beside the launcher, the window title unchanged (DIV-0039's). **The
+   owner: the name is fine** - read as `bof3x.exe`; see the note below.
+2. **The icon.** Ours, not Capcom's (rule 1). **The owner will supply the
+   artwork**; the first build ships a plain placeholder until it arrives.
+3. **UTF-8** (section 9): **now, both halves** - the manifest line in the
+   executable and the launcher's ini and environment half in the same
+   build.
 4. **The data source order** (1.4): the player's `BOF3.exe` file first, the
-   cache's `data.bin` when `BOF3X_EXEIMAGE` names one. Later, when the cache
-   is the install's one root (`cache-read.md` 6, the owner's open call),
-   this flips.
-5. **A ledger entry.** The cutover changes no behaviour in play; it changes
-   the platform under it (Capcom's runtime start-up gone, its silent
-   `_exit` on an unhandled exception replaced by ours, its R6xxx dialogs by
-   `Fatal`). The brief recommends one entry, tier Sensible, "the game runs
-   as our own executable", listing exactly those, so the question "why does
-   a crash look different from the shipped game's" has its answer in the
-   ledger.
+   cache's `data.bin` when `BOF3X_EXEIMAGE` names one. **Agreed.**
+5. **A ledger entry**, tier Sensible, "the game runs as our own executable",
+   listing what the platform under the game no longer does. **Agreed**; the
+   build writes it as the next free `DIV-` number at its merge.
 
-Nothing else here waits on the owner: the stub page, the slot binding, the
-x87 word, the stack, the mapping and the testing plan follow from reads
-already made and decisions already taken.
+*Note on the name:* the owner wrote `bof3.exe`. The player's own file is
+`BOF3.exe`, and Windows file and process names are case-insensitive: the two
+would be told apart only by directory, and every tool that lists the game by
+image name (`tasklist IMAGENAME eq BOF3.exe` in `recipe_saves.py`,
+`Get-Process BOF3` in `attract_run.py`) would see both as one. The brief
+keeps `bof3x.exe` unless the owner confirms `bof3.exe` knowing that.
 
 ## 11. What the first build does and does not do
 
@@ -499,7 +500,8 @@ thunk's stub; the `0xCC` fill, `InjectAll` as the stub writer, the page
 read-execute; the x87 word set and asserted; the `.pool` section and
 `DrawPool_Reserve`'s exe-host candidate; the exception filter; section 7's
 inventory worked through with the self-test assertion; the launcher's one
-line and `--host`; the tooling's second process name; CI's allowance. Then
+line and `--host`; the UTF-8 manifest and the launcher's ini half (section 9);
+the placeholder icon; the ledger entry; the tooling's second process name; CI's allowance. Then
 the checks in this order: both hosts' headless self-tests exit 0; the
 attract sequence in the exe host against the hosted build of the same engine
 and against `attract_r14_orig` / `_origb`; the ten routes against
@@ -511,7 +513,7 @@ the sound is what the attract run shows. **Then the owner plays it.**
 **Does not:** fold the engine into the executable; read `.rdata` or the
 code pointers from a disc build; make `BOF3X_CACHE` the install's data
 source; change any call site from an import slot to a direct import; take
-`c_dfDIKeyboard` from the SDK; the launcher's UTF-8 half; retire the hosted
+`c_dfDIKeyboard` from the SDK; retire the hosted
 build - it stays the fuzz harness until a later state replaces the clone
 fuzz with something that needs no Capcom bytes; 64 bits or another system
 (`PLAN.md` phase 4, I33).
