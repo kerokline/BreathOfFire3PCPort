@@ -74,7 +74,7 @@ which the engine reads too and the script parses (`kName = 0x...;` lines).
       .rsrc    0x00989000 +0x001528  raw 0x01600  0x40000040
       import KERNEL32.dll: ExitProcess, GetModuleHandleW, GetCommandLineA, GetStartupInfoA
       import bof3x.dll: Engine_Main
-      resource (3, 1, 0): 4264 bytes            the placeholder icon, 32 x 32, 32 bpp
+      resource (3, 1, 0): 4264 bytes            the placeholder icon, 32 x 32, 32 bpp (until DIV-0095's)
       resource (14, 'BOF3_ICON', 0): 20 bytes   the name Game_WinMain's LoadIconA asks for
       resource (24, 1, 0): 867 bytes            the manifest
 
@@ -346,4 +346,14 @@ The routes and the stack watch above; then the owner plays it. Beyond the
 brief: the two CRT pages in the state hash's skip list (or new references);
 the fifteen software-renderer handlers `d3d_list.cpp` names without a
 `[[func]]` (int3 in the exe host); `attract_watch.py`'s rand count; the
-owner's icon; the owner's call on `dpiAware` (section 2.1).
+owner's icon - since generated, not supplied (below); the owner's call on
+`dpiAware` (section 2.1).
+
+**The icon is generated, not supplied** (DIV-0095, [`exe-icon.md`](exe-icon.md),
+the owner's decision of 2026-10-11, after this build): the placeholder
+`make_exe.py` writes stays in the built `bof3x.exe`, and on the player's
+machine the engine replaces it - the window's icon as soon as the load
+screen or the field menu has uploaded the whelp's sheet and CLUT, the file's
+through `bof3x.exe.new`, which the launcher moves into place at its next
+start. The build's verification above still checks the placeholder's three
+resources; the rewritten file is checked by the engine itself.
