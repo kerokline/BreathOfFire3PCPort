@@ -5550,8 +5550,12 @@ designed in rather than bolted on.
   replay after `Seek(0)` identical over all 782 frames; game process exit 0,
   `inject: 10087 ours`. `BOF3X_MP3_COMPARE`'s shape test now expects the one
   planned difference (Capcom's 4,608 against ours 0) and reports every
-  other difference as before. Not heard: the seam of a looping track that
-  reaches its end (none of the owner's routes so far does; the 26 ms were
-  not reported by ear before either).
+  other difference as before. **Heard 2026-10-11** by the owner in play on
+  the battle theme and the fanfare after it: "neither loop seemed affected
+  by the 0s" - as expected, since both have rows in DIV-0081's measured loop
+  table and jump before the stream's end, so this entry never acts on them;
+  it is the regression check that they are unchanged. Not yet heard: a
+  looping track without a table row reaching its end, and a once-only song's
+  end (the 26 ms were not reported by ear before either).
 - **Reversible?** `BOF3X_MP3=original` (Capcom's decoder, its count with it)
   until the cutover; after it the constant.

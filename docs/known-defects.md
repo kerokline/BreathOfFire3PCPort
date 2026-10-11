@@ -6593,7 +6593,9 @@ expectation; a ledger entry, since it changes what is heard. **Done
 2026-10-11 as DIV-0093** at the owner's word ("zeros, to match our
 implementation in other stale-byte decisions"): 0 stored at the end of the
 stream, the self-test exit 0, the comparison's shape test expecting the one
-planned difference. Recurs only under `BOF3X_MP3=original`.
+planned difference. The owner heard the battle theme and the fanfare loop
+unchanged the same day (both are table loops, which never reach the end).
+Recurs only under `BOF3X_MP3=original`.
 
 ## D241 — Battle music runs on after a fight ends and the area's never resumes; the title music through the load screen: a stalled fade (ours, DIV-0028 amended) and a dead resume (the port's, DIV-0092) - both fixed 2026-10-10 night, the owner's ear owed
 
