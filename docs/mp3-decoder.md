@@ -1,6 +1,6 @@
 # The MP3 decoder replaced: minimp3 behind the music seam (DIV-0091)
 
-**Status:** BUILT (2026-10-10, `platform/mp3-decoder`; every one of the 177 MP3s decoded through both decoders in one process and compared; self-tested headless; **not heard yet** - the owner's listen is owed)
+**Status:** BUILT (2026-10-10, `platform/mp3-decoder`; every one of the 177 MP3s decoded through both decoders in one process and compared; self-tested headless; **heard 2026-10-11**: six songs as WAV pairs, the owner hears no difference, and the pairs' levels agree to 0.0001 dB)
 
 [`mp3-decoder-choice.md`](mp3-decoder-choice.md) chose minimp3. This is
 what was built on it, how the seam is shaped, and what the comparison
@@ -124,7 +124,7 @@ is 1,969 of 32,767 - not clipping). Which decoding case Capcom's library
 mishandles is not read; it is Capcom's library's fault, consistent with a
 limited-precision decoder of its day, and the files the game plays are
 decoded more accurately by ours. Audibility: -68 dBFS RMS at the median
-file, -58 at the worst; the owner's ear is the measure that remains.
+file, -58 at the worst. **Heard 2026-10-11** - the owner, on six songs as WAV pairs from `BOF3X_MP3_DUMP` (the town theme 000, 045, 086, the title 141, the battle theme 153, the fanfare 165; `analysis/bgm/listen2/`): "all sound pretty similar to me ... maybe slight variations in volume, but it could just be placebo". It is: the pairs' RMS levels agree to 0.0001 dB and their peaks to 0.006 dB on every song (the decoders' difference is -68 dBFS at the median file).
 
 ## 3. Self-tests and switches
 
@@ -142,9 +142,10 @@ file, -58 at the worst; the owner's ear is the measure that remains.
 
 ## 4. What follows
 
-1. **The owner's listen** - a town, a fight and its fanfare, a once-only
-   song's end, a looping track of DIV-0081's and one that rewinds, under
-   `BOF3X_MP3=original` as the A/B.
+1. ~~**The owner's listen**~~ - done 2026-10-11 as offline WAV pairs (section 2's
+   dump, six songs): no audible difference, the levels identical. What the
+   in-game A/B under `BOF3X_MP3=original` would add is the seams (DIV-0081's
+   loops, D240's end), which the owner has heard on our path in play.
 2. **D240's fix** - the owner's call: a ledger entry, `kEosBytes = 0` in
    `mp3.cpp`, and the self-test's expectation.
 3. **The C runtime's remainder - done the same evening** on `crt/allocator`

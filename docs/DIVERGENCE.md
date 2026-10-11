@@ -5377,9 +5377,7 @@ designed in rather than bolted on.
   shape (the table in [`mp3-decoder.md`](mp3-decoder.md) 2);
   `BOF3X_SHADOW=sound`'s `DIV-0091 self-test` line; `'*'` narrow and wide
   headless. The state hash is unaffected (`Music_Staging` is skipped).
-  **Not heard: the owner's listen is owed** (a fight and its fanfare, a
-  town, a once-only song's end, a looping track, under `BOF3X_MP3=original`
-  as the A/B).
+  **Heard 2026-10-11** - the owner, on six songs as WAV pairs from `BOF3X_MP3_DUMP` (the town theme 000, 045, 086, the title 141, the battle theme 153, the fanfare 165; `analysis/bgm/listen2/`): "all sound pretty similar to me ... maybe slight variations in volume, but it could just be placebo". It is: the pairs' RMS levels agree to 0.0001 dB and their peaks to 0.006 dB on every song (the decoders' difference is -68 dBFS at the median file).
 - **Reversible?** `BOF3X_MP3=original` (no launcher box yet); the decoder's
   code is untouched in the image.
 
