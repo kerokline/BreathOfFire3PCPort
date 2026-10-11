@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-10 night: PRs #49 and #50 merged; `platform/state2-prework` holds the prework for states 2 and 3 - five agents merged - and the night's music fixes from the owner's route (DIV-0028 amended, DIV-0092); **up next: the battle resume agent's branch, the PR, then the tracer run on 2026-10-11 with the owner away**, items 00 and 1 below)
+**Status:** IN PROGRESS (2026-10-10 night: PRs #49 and #50 merged; `platform/state2-prework` holds the prework for states 2 and 3 - five agents merged - and the night's music fixes from the owner's route (DIV-0028 amended, DIV-0092); **up next: the PR from this branch, then state 3 - our own executable** - items 00 and 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -65,13 +65,23 @@ code page audited, the seven mid-function pointers read, and two music defects o
       command with caller and frame. **DIV-0092** - the port never resumed the field's music after a fight (`GameMode5_Leave`
       plays `Music_Track`, 0xFF by then; the owner heard Capcom's stay silent) and a save with no track (the F12 save) loaded
       silent; both fall back to the area's track `0x904CD0`. The owner on the fixed replay: "that sounds correct now".
-    - **Running:** an agent on `music/battle-resume` - the PSX resumes the field song where it left off (the owner's fact);
-      ours remembers the position in DLL state and seeks both paths; the resume's fade is `kResumeFadeFrames`, 10, for the
-      owner to tune against their PlayStation. Merge it, build, `'*'` narrow and wide, then **one PR from this branch**.
-    - **Held for 2026-10-11 (the owner away): the tracer run** - every start not ours armed (including the runtime's range
-      and the heap), the attract sequence and the ten routes, the machine quiet; `tools/platform_reach.py` over the traces
-      against `analysis/platform_reach_1005.tsv`. Whatever it records after the entry point's hand-off is state 2's real
-      remainder. The same day: `BOF3X_STACKWATCH=1` on one route, and the state hash's two-build check.
+    - **The battle resume, merged** (`music/battle-resume`, DIV-0092 amended; [`music-seq-engine.md`](music-seq-engine.md) 8,
+      [`mp3-decoder.md`](mp3-decoder.md) 6): the PSX resumes the field song where it left off (the owner's fact); ours
+      remembers the heard position in DLL state when a battle takes the song over (the ring's lead measured from the play
+      cursor) and seeks both paths back to it - the sequenced path by a silent fast-forward of the synth (`Spu::Skip`,
+      about 240 ms a minute skipped; the reverb empty for the first half second), the MP3 path by decoding and dropping.
+      The resume's fade is `music_resume::kResumeFadeFrames` (10) for the owner to tune against their PlayStation.
+      The full self-test narrow and wide exit 0, 10,087 ours. **Owed the owner's ear:** `musicStopCheck.txt` under the
+      cache's music and under `BOF3X_MUSIC=mp3` with `BOF3X_MUSIC_LOG=1` (`remember track 91` near frame 1726, `resume`
+      near 2838).
+    - **State 2 proved on the night of 2026-10-11** ([`state2-proof.md`](state2-proof.md)): 550 starts not ours armed over
+      the ten routes and the attract sequence; 37 entered, every one at logic frame 0 - the C runtime's start-up chain
+      (36) and DirectSoundCreate's import thunk from our `Snd_Init` - nothing of Capcom's after the hand-off. The 2026-10-05
+      run had 198 running. **Still owed:** the stack's exit line (a run ended by a normal quit), and the state hash's
+      two-build check under `en-US` (the pair `en_combat_sh3_orig` / `_origb` recorded with `31e52cb5`'s build; ours from
+      the final build is the second half).
+    - **The fanfare's loop** (DIV-0081 amended): the owner's A/B against the disc found every loop right but `165`, which
+      rewound to the file's start; its measured row ships as `gen_loop_table.py`'s `OWNER_APPROVED` (40 rows).
     - **The owner's calls, open:** D240 (`kEosBytes = 0`), the launcher box for `BOF3X_MP3`, the resume's fade length,
       the decoder listen (the title, three minutes of attract, and tonight's route through the cache's music heard; the
       MP3 A/B not yet).
