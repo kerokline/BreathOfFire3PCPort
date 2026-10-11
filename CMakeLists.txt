@@ -71,8 +71,10 @@ add_library(bof3x SHARED
   src/hook/dllmain.cpp
   src/hook/host.cpp
   src/hook/exe_host.cpp
+  src/hook/exe_icon.cpp
   src/hook/code_bytes.cpp
   src/common/sha256.cpp
+  src/common/icon_stamp.cpp
   src/hook/detour.cpp
   src/hook/exe_image.cpp
   src/hook/calltrace.cpp
@@ -679,7 +681,9 @@ target_include_directories(bof3x PRIVATE src third_party "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # The Direct3D 11 render backend (docs/render-backend.md): the OS's own
 # libraries, nothing vendored; the shader compiler is d3dcompiler_47.dll.
-target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt SDL3::SDL3-static)
+# ole32 and windowscodecs: DIV-0095's icon - WIC encodes its 256 px PNG and
+# the self-test decodes the .ico files (src/hook/exe_icon.cpp).
+target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs SDL3::SDL3-static)
 
 # --- bof3x.exe, our own executable (docs/state3-design.md section 1.3) ------
 # Written by tools/make_exe.py, not linked: lld will not place a section
@@ -720,6 +724,7 @@ add_executable(bof3x_launcher
   src/launcher/config_dialog.cpp
   src/launcher/exe_image.cpp
   src/common/sha256.cpp
+  src/common/icon_stamp.cpp
   src/input/bindings.cpp
   src/input/pad_sdl.cpp
   src/launcher/launcher.rc)
