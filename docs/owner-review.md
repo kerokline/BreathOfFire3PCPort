@@ -107,11 +107,14 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Reported by the owner, for a cleanup session
 
-- **A route kept for a visual glitch, not yet described** (the owner, 2026-10-10
+- **The lighthouse's gene scene, two defects** (the owner, 2026-10-10
   evening): `tools/recipes/eldritchGene.txt` with its save `eldritchGene.DAT`
-  - the gene stone's pedestal scene (a glowing sphere over a stone altar)
-  and the words that send the party to town. The owner to say what to look
-  at; the `_ab` copy has a shot every 300 frames.
+  - the gene stone's pedestal (a glowing sphere over a stone altar) and the
+  words that send the party to town. **D242**: the dragon gene's sprite
+  sits clipped by the pedestal's floor, only its top showing under the
+  sphere (the `_ab` copy's `f02700`); **D243**: the lighthouse's light rays
+  before the big screen flash are not drawn. Not looked at; where to start
+  is in [`known-defects.md`](known-defects.md).
 
 - **Battle music runs on after a fight, the area's music does not resume**
   (the owner, 2026-10-10 evening: "our game doesn't 'end' songs where I

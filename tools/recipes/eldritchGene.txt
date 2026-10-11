@@ -3,7 +3,9 @@
 # language, since text timing differs between them. F12 wrote the shots.
 # The owner's route, 2026-10-10 evening: the eldritchGene save (slot 0 as of 2026-10-08 22:02) loaded, through the
 # scene's dialogue to the gene stone's pedestal - a glowing sphere over a stone altar, the party beside it - and the
-# words that send them to town. Recorded for a visual-glitch look later (not yet described). Play under en-US.
+# words that send them to town. Recorded for two visual defects (known-defects.md D242, D243): the dragon gene's
+# sprite sits clipped by the pedestal's floor (only its top shows under the sphere, e.g. the _ab copy's f02700), and
+# the lighthouse's light rays before the big screen flash are not drawn. Play under en-US.
 # save eldritchGene
 wait 50
 hold start 6

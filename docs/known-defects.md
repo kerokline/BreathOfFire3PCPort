@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-10-10 — two hundred and thirty-eight entries, D1..D241 with D19, D20 and D29 unused; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, a one-line fix for the owner); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
+**Status:** IN PROGRESS (2026-10-10 — two hundred and forty entries, D1..D243 with D19, D20 and D29 unused; D242 the dragon gene clipped by the lighthouse pedestal's floor and D243 the lighthouse's light rays before the flash not drawn, the owner's route `eldritchGene.txt`, not looked at; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, a one-line fix for the owner); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -6613,3 +6613,39 @@ review's fix for a song change into a smaller bank. A route: the owner to
 record a fight from a save with `BOF3X_RECORD`, or any battle route of
 `tools/recipes/` replayed with the music log (`DIV-0087` lines, and the
 `Music_Play` call trace).
+
+## D242 — The dragon gene at the lighthouse's pedestal is drawn clipped by the floor (the owner's report; not looked at)
+
+**Found:** the owner, 2026-10-10 evening, on their route
+`tools/recipes/eldritchGene.txt` (the `eldritchGene` save; the `_ab` copy's
+shots): at the gene stone's pedestal - the glowing sphere over the stone
+altar - the dragon gene's sprite sits clipped by the pedestal's floor, only
+its top showing under the sphere (`f02700.png`, `f03300.png` of the
+replay). **Configuration unknown**: not yet run with `BOF3X_ORIGINAL='*'`,
+nor with `BOF3X_LAYERING=0`.
+
+**Where to start.** The PlayStation twin first (the twin rule): the gene
+item is an object sprite on a raised cell, so read how the PSX orders it
+against the altar's top face. Then the two A/Bs: `--original '*'` (Capcom's
+PC order) and DIV-0071's layering switch, since DIV-0071 draws the floor
+under a sprite that was drawn before it and a raised cell's top is exactly
+the case it reasons about ([`layering.md`](layering.md) if present; the
+ledger's DIV-0071 entry otherwise). The route reaches the scene at about
+recipe frame 2,400.
+
+## D243 — The lighthouse's light rays before the big screen flash are not drawn (the owner's report; not looked at)
+
+**Found:** the owner, 2026-10-10 evening, on the same route: before the
+scene's big screen flash the PlayStation draws light rays coming out of the
+lighthouse; here nothing is drawn before the flash. **Configuration
+unknown**: not yet run with `BOF3X_ORIGINAL='*'`.
+
+**Where to start.** `--original '*'` on the route decides whether Capcom's
+PC port drew the rays at all (then the effect is a kind of ours that stops
+short - round thirteen's effect engine, [`effect-engine.md`](effect-engine.md)
+if present, the round's docs otherwise) or never did (a port omission
+against the PlayStation twin, to be read from the PSX's scene script and
+effect kind, and a DIV to restore). The flash is in the `_ab` copy's
+window between `f02400` and `f02700`; `recipe_shots.py --from 2400 --to
+2700 --every 10` gives the close shots.
+
