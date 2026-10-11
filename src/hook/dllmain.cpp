@@ -20,6 +20,7 @@
 #include "hook/inject_all.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
+#include "hook/stackwatch.h"
 #include "hook/statehash.h"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
@@ -42,6 +43,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         bof3::StateHash_BeforeInjects(module);   // BOF3X_STATEHASH: .data as the loader mapped it
         bof3::InjectAll();
         bof3::StateHash_AfterInjects();
+        bof3::StackWatch_Start();   // the main thread's stack and the x87 word; BOF3X_STACKWATCH
         if (GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) {
             // Every inject and start-up self-test has run; the game never starts.
             bof3::Log("self-test only: done, ending the process");
@@ -56,6 +58,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         // Our streams are still open here: ExitProcess detaches this DLL
         // before the C runtime it loaded.
         bof3::InputScript_Stop();
+        bof3::StackWatch_Exit();
         bof3::LogClose();
     }
     return TRUE;

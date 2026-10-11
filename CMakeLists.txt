@@ -74,6 +74,7 @@ add_library(bof3x SHARED
   src/hook/calltrace.cpp
   src/hook/input_script.cpp
   src/hook/statehash.cpp
+  src/hook/stackwatch.cpp
   src/hook/draw_order.cpp
   src/hook/crash.cpp
   src/hook/log.cpp

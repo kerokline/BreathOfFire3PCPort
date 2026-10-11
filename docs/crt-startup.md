@@ -5,7 +5,10 @@ from `432bada8`. No code; nothing of Microsoft's runtime decompiled. Every
 address is `BOF3.exe`'s, read with capstone (`tools/pe_disasm.py`, a
 scratch annotator naming the import slots from the image's import directory,
 `tools/pe_xref.py` over `analysis/pc_xref.json` for who touches a global,
-and an E8 / E9 scan of `.text` for who calls a start).
+and an E8 / E9 scan of `.text` for who calls a start). **Measured
+2026-10-10 night** on `prework/stack-measure`: the main thread's stack
+(section 11) and the start-up control words (section 4.1), with the
+instrument `BOF3X_STACKWATCH` for the depth a live run uses.
 
 State 3 of [`platform-layers-plan.md`](platform-layers-plan.md) section 3 is
 our own executable mapping `BOF3.exe`'s data sections and running none of its
@@ -33,9 +36,11 @@ calls.
 - **What state 3 must reproduce is behaviour, not data:**
   1. **the x87 control word `0x027F`** (53-bit precision, all exceptions
      masked) on the game thread before `WinMain` - section 4. The toolchain
-     will not give it unasked;
+     will not give it unasked: its start-up leaves `0x037F` (measured,
+     section 4.1);
   2. **a main-thread stack** deep enough for the four 16 KB task stacks the
-     game carves below `WinMain`'s frame (section 8);
+     game carves below `WinMain`'s frame (section 8). Windows gives the game
+     0x40000 bytes, not the header's 0x10000 (measured, section 11);
   3. **`WinMain`'s arguments and exit**: `hInstance` the image base, the
      process ending with `WinMain`'s answer through `ExitProcess`
      (section 6) - ours uses only `hInstance` and answers 1;
@@ -164,10 +169,45 @@ masked); this step leaves **`0x027F`**, the word measured on the game thread
 on 11 million live calls ([`STATUS.md`](STATUS.md), the GTE batch) and the
 one every x87 body of ours was fuzzed under. **State 3 must reproduce it**,
 explicitly, on the game thread before `WinMain`: the toolchain's start-up
-does not promise it (mingw-w64's resets the x87 to its own default, which
-is 64-bit precision unless an object like its `CRT_fp8.o` is linked - not
-measured here; the cutover should set the word itself and assert it). The
+does not give it (section 4.1: `0x037F` at `main` unless `CRT_fp8.o` is
+linked; the cutover should set the word itself and assert it). The
 `_cfltcvt` hooks and `_adjust_fdiv`: drop.
+
+### 4.1 The words measured (2026-10-10)
+
+| Where | x87 control word | MXCSR | How |
+|---|---|---|---|
+| `BOF3.exe`'s main thread, suspended at its first instruction | **`0x027F`** | `0x1F80` | its context (`GetThreadContext`, `FloatSave.ControlWord`, MXCSR at `ExtendedRegisters + 24`), logged by the DLL at start-up: `stack: main thread's first context` |
+| The DLL's thread at `InjectAll` (the launcher's `CreateRemoteThread`) | `0x027F` | `0x1FA0`; `0x1FA7` under `BOF3X_SHADOW='*'` | `fnstcw` / `stmxcsr` there: the `fpu:` line. The low bits are sticky exception flags (`0x20` precision), raised by something the DLL ran on that thread before (not traced); the masks are the default |
+| A host program of our toolchain at `main` (llvm-mingw, clang 22.1.8, UCRT) | **`0x037F`** | `0x1F80` | `fnstcw` / `stmxcsr` in `main`; the same linked `-static` |
+| The same, with the toolchain's `CRT_fp8.o` linked | `0x027F` | `0x1F80` | `i686-w64-mingw32-clang++ cw.cpp <toolchain>/i686-w64-mingw32/lib/CRT_fp8.o` |
+
+So **Windows starts a thread at `0x027F`** (both threads measured), and `_fpmath`'s
+`_controlfp(_PC_53, _MCW_PC)` leaves the word as it found it on this OS -
+the word the game ran under is Windows' default, which Capcom's start-up
+also asks for. Our toolchain's start-up then **changes** it: mingw-w64's
+start-up calls `_fpreset`, and the default `CRT_fp10.o` defines that as
+`fninit; ret` (`llvm-objdump -d CRT_fp10.o`: `db e3 c3`), which loads
+`0x037F` - 64-bit precision. `CRT_fp8.o` defines `_fpreset` as a jump
+through the runtime's import (`__imp___fpreset`, `llvm-nm`) instead and `main` sees `0x027F`. State 3:
+link `CRT_fp8.o`, or `fldcw` the word before `WinMain` - and assert
+`0x027F` there either way, since a dependency of the link is not a promise.
+The DLL's `fpu:` and first-context lines are the reference the first
+build compares against.
+
+The probe (scratch, not in the tree):
+
+    // cw.cpp
+    #include <cstdio>
+    int main() {
+        unsigned short cw; unsigned mxcsr;
+        asm volatile("fnstcw %0" : "=m"(cw));
+        asm volatile("stmxcsr %0" : "=m"(mxcsr));
+        std::printf("main: x87 control word 0x%04X, MXCSR 0x%08X\n", cw, mxcsr);
+    }
+
+    i686-w64-mingw32-clang++ -O2 -o cw.exe cw.cpp && ./cw.exe
+    main: x87 control word 0x037F, MXCSR 0x00001F80
 
 ## 5. I/O, the command line, the environment, the code page
 
@@ -303,12 +343,10 @@ From the game's side - Capcom's game code (now all ours) and ours:
   tasks take 0x4000 bytes each below it (`symbols.toml` `Task_StackTop`,
   `Task_Create`); [`HANDOFF.md`](HANDOFF.md)'s traps (`RunOnFiber` for
   DXGI). The image's header asks `SizeOfStackReserve` 0x10000 and
-  `SizeOfStackCommit` 0x10000 (read from the optional header); the stack the
-  game actually gets under those numbers is **not measured here** (Windows
-  enlarges a reservation that its commit fills; the live `esp` and the
-  thread's stack limits in game would settle it). State 3 must give its
-  game thread at least what the game uses today - measure, then link with
-  that reserve or run the game on a thread or fiber of a stated size.
+  `SizeOfStackCommit` 0x10000; Windows gives **0x40000 reserved, 0x10000
+  committed and two guard pages** (measured, section 11). State 3 must give
+  its game thread at least that: a reserve of 0x40000 or more and a commit
+  of 0x10000 or more (section 11.3).
 - **The heap**, through `Crt_malloc` / `Crt_free` by name while the decoder
   runs (section 3). No assumption about addresses: pointers already differ
   run to run.
@@ -356,18 +394,177 @@ toolchain's since 2026-10-06, so under ours this chain does not run.
 
 ## 10. Not measured
 
-- The main thread's effective stack size (section 8). **Measured in effect
-  on 2026-10-10 evening** ([`mp3-decoder.md`](mp3-decoder.md) 1): the game's
-  tasks run on 16 KB slices of it, and a 13 KB frame of ours on one slice
-  overran into the next task's context - so any code of ours called from a
-  task keeps its frames small or brings its own stack, as the decoder now
-  does; state 3's main stack is for WinMain's own depth plus the four
-  slices.
-- The toolchain's own start-up control word in our executable (section 4):
-  a one-line check in the cutover's first build.
+- The main thread's stack: **measured 2026-10-10 night** (section 11):
+  0x40000 bytes reserved (`0x000B0000..0x000F0000`), 0x10000 committed,
+  two guard pages - Windows' 256 KB floor over the header's 64 KB, which
+  cannot hold the arena by itself. **Still owed: the depth a run uses**,
+  from the next route run with `BOF3X_STACKWATCH=1` (section 11.4). The
+  slices are 16 KB each regardless, and a 13 KB frame of ours on one
+  overran into the next task's context on 2026-10-10 evening
+  ([`mp3-decoder.md`](mp3-decoder.md) 1) - so any code of ours called from
+  a task keeps its frames small or brings its own stack, as the decoder now
+  does.
+- The toolchain's own start-up control word: **measured** (section 4.1):
+  `0x037F`, `0x027F` with `CRT_fp8.o`. The cutover's first build still
+  asserts the word on its game thread.
 - Whether anything of ours depends on the ANSI code page through the
   toolchain's runtime. **Audited on 2026-10-10:**
   [`code-page-audit.md`](code-page-audit.md) - the "C" locale holds (no
   `setlocale` in `src/` or either binary's imports), no game text meets a
   code page, the install path is reached only relatively; the cache folder
   stays ANSI until state 3 (its section 4); two log / launcher repairs.
+
+## 11. The main thread's stack, measured (2026-10-10)
+
+`src/hook/stackwatch.cpp`, at start-up after `InjectAll`, on the DLL's
+thread while the game's main thread is still suspended at its first
+instruction. The main thread is the one whose suspended context has the
+entry point `0x5BA057` in `eax` (Toolhelp's thread list, `GetThreadContext`;
+the log says which rule found it); its TEB comes from
+`NtQueryInformationThread(ThreadBasicInformation)`, checked on the DLL's
+own thread against `fs:[0x18]`; the words are `NT_TIB`'s `StackBase` +0x04
+and `StackLimit` +0x08 and `DeallocationStack` +0xE0C. Headless:
+
+    BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' <ini-less dir>/bof3x-launcher.exe --game <game> --no-config
+
+    stack: header reserve 0x10000 commit 0x10000; main thread 11108 (eax = entry) base 0x000F0000
+      limit 0x000E0000 dealloc 0x000B0000 (reserved 0x40000 bytes, committed 0x10000,
+      below it 0x2000 bytes committed guard)
+    stack: main thread's first context: eip 0x76EFC000 eax 0x005BA057 (entry 0x005BA057)
+      esp 0x000EFFF0 (0x10 below base); x87 control word 0x027F, MXCSR 0x00001F80
+    stack: main thread's reservation by region: 0x000B0000+0x2E000 reserve/0x0,
+      0x000DE000+0x2000 commit/0x104, 0x000E0000+0x10000 commit/0x4
+
+The same addresses on every run of 2026-10-10 (six).
+
+### 11.1 Why 0x40000: Windows' floor
+
+The header asks 0x10000 / 0x10000; Windows reserved 0x40000. A probe of our
+toolchain (scratch: an i686 program printing its own TEB's `StackBase -
+DeallocationStack`, linked `-Xlinker --stack -Xlinker <reserve>,<commit>`,
+run on this machine, Windows 11 26200, WoW64) gives the rule:
+
+| Header reserve, commit | Reserved |
+|---|---|
+| 0x8000, 0x1000 | 0x40000 |
+| 0x10000, 0x1000 | 0x40000 |
+| **0x10000, 0x10000** (`BOF3.exe`'s) | **0x40000** |
+| 0x20000, 0x10000 / 0x20000, 0x20000 / 0x30000, 0x30000 | 0x40000 |
+| 0x3F000, 0x3F000 | 0x40000 |
+| 0x40000, 0x10000 | 0x40000 |
+| 0x41000, 0x41000 | 0x100000 |
+| 0x50000, 0x1000 / 0x50000, 0x40000 | 0x50000 |
+| 0x50000, 0x50000 | 0x100000 |
+| 0x61000, 0x1000 | 0x70000 |
+| 0x100000, 0x1000 / 0x100000, 0x100000 | 0x100000 |
+| 0x110000, 0x110000 | 0x200000 |
+
+That is: the reserve is raised to a **0x40000 floor**, rounded to 64 KB,
+and only then, if the commit reaches it, rounded up to 1 MB beyond the
+commit. `BOF3.exe`'s commit (0x10000) is below the floor, so it gets the
+floor and no more. The commit is honoured as asked (0x10000), and two guard
+pages (`PAGE_READWRITE | PAGE_GUARD`, 0x104) sit under it. Where the floor
+lives (the loader's, WoW64's or the kernel's) is not measured; the numbers
+are this machine's, and a Windows that dropped the floor would hand
+`BOF3.exe` 64 KB - see 11.2 for why that would not run.
+
+### 11.2 The arithmetic: what the arena needs
+
+`Task_StackTop` is only set at run time, so the requirement is computed from
+the frames between the thread's start and `Task_SetStackBase`:
+
+- **Above the entry**: the thread starts with `esp` 0x10 below `StackBase`
+  (`0x000EFFF0`, the first context); Windows' thread-start frames then call
+  the entry point - their depth is in the live line (11.4), not here.
+- **Capcom's entry `0x5BA057`** (capstone): `push ebp`, the SEH frame's
+  three pushes (`-1`, the scope table `0x5D8D38`, `_except_handler3`
+  `0x5BC7E8`) and the old `fs:[0]`, `sub esp, 0x58`, three registers:
+  **0x78 bytes**; then `WinMain`'s four arguments and the return address:
+  **0x14**.
+- **`WinMain`**: Capcom's `0x4FCB00` is `sub esp, 0xC4` and four registers
+  (0xD4); **ours** (`_Game_WinMain@16` in `bof3x.dll`, `llvm-objdump`) is
+  `push ebp; mov ebp, esp`, three registers, `and esp, -16`, `sub esp,
+  0x160`: 0x170 plus up to 0xC of alignment.
+- **`Game_Init`**: its return address (4); it ends in a tail jump to
+  `Task_SetStackBase`, so the arrival `esp` is `Game_Init`'s entry `esp`.
+
+So `Task_SetStackBase` arrives **0x164 bytes below the entry's `esp` under
+Capcom's `WinMain`, 0x200..0x20C under ours**, plus the thread-start frames
+and their 0x10. `Task_StackTop` is 0x4000 below that, and the slices take
+0x4000 each below it:
+
+| Down to | Below `StackBase` (ours, before the thread-start frames) |
+|---|---|
+| `Task_StackTop` | about 0x4210 |
+| slices 0..2 (every `Task_Create` caller passes 0..2, [`task_sched.md`](task_sched.md)) | about 0x10210 |
+| all four slices | about 0x14210 |
+
+**The header's 64 KB cannot be the whole story**: even three slices end
+past 0x10000, and the fourth lies wholly beyond it. Windows' 0x40000 holds
+the four with about 0x2B000 to spare (less the guard pages and whatever the
+deepest call below a slice takes). The commit matters too: the initial
+0x10000 holds slices 0 and 1 and all but the lowest ~0x210 bytes of slice 2;
+slice 2's bottom and slice 3's top fall in the two guard pages
+(0x10000..0x12000 below `StackBase`). Windows grows a stack only through its
+guard page - a first touch below it faults (why compilers probe frames over
+a page) - and every slice's first touch is `Task_Create`'s entry store at
+its top, inside the commit or the guard. Today that holds by margin of the
+commit, not by design.
+
+### 11.3 For state 3
+
+- **Reserve 0x40000 or more** for the game thread. The toolchain's default
+  is 0x100000 reserve, 0x1000 commit (`llvm-objdump -p` of the probe), so
+  the reserve is already enough.
+- **Commit 0x10000 or more**, or touch the arena top-down before the first
+  `Task_Create`: with the toolchain's 0x1000 commit, `Task_Create(1)`'s
+  store at about 0x8200 below `StackBase` lies past the guard page unless
+  something earlier on the thread already went that deep (today's
+  `Fmv_Play` / `Display_Setup` may; nothing promises it). Link with
+  `-Xlinker --stack -Xlinker 0x100000,0x10000`, or run the game on a fiber
+  or thread created with a stated commit.
+- The live depth (11.4) says how much of the reserve a run uses; the
+  reserve is fixed then with that number and a margin.
+
+### 11.4 `BOF3X_STACKWATCH=1`: the depth a run uses
+
+Instrumentation (`src/hook/stackwatch.cpp`), off by default; any value but
+`1` is a `Fatal`. Armed, it adds:
+
+- **at start-up**, a check of the armed path on the DLL's own thread:
+  `Task_SetStackBase` called once with `ecx` / `edx` planted - it must log,
+  leave `eax` = the `Task_StackTop` it stored and keep the two - then
+  `Task_StackTop` put back as it was (the game sets it itself):
+  `stackwatch: armed: ... (the armed path checked on this thread: eax =
+  Task_StackTop, ecx and edx kept)`. That line's own `Task_SetStackBase`
+  line names the DLL's thread and says `OUTSIDE the main thread's
+  reservation`, as it should;
+- **at `Task_SetStackBase`** (ours, `task_sched.cpp`: a byte test before
+  the original's three instructions; armed, a call after the store with
+  `pushfl` / `pushal` around it, so `eax`, the flags and every other
+  register leave as the original's): the caller's return address, the
+  arrival `esp` and its depth below `StackBase` - **the `WinMain` depth
+  11.2 could only bound** - `Task_StackTop`, the slices' bottom against the
+  reservation, and the committed low end now. On the main thread's first
+  call it copies what the committed part of the slices holds, so the exit
+  can tell later writes from earlier ones (WinMain's callees before
+  `Game_Init` - the AVIs, the display set-up - leave their frames there);
+- **at exit** (`DllMain`'s detach, on the thread that called `ExitProcess`):
+  the committed run under `StackBase` again (`VirtualQuery`, a page at a
+  time; and the TEB's `StackLimit` when the exit is on the main thread) -
+  the guard moves down as pages commit, so **`StackBase` less the committed
+  low end is the deepest page any code on the thread touched**; the deepest
+  non-zero dword (the same, to the dword: committed stack pages start
+  zero); and per slice whether it lies in the committed range and **the
+  deepest dword that changed since the copy**, i.e. how much of its 0x4000
+  bytes a task (or a `WinMain` callee reaching below `Task_StackTop`) used.
+
+Headless, the switch parses and the start-up lines log (exit 0; `2` gives
+`FATAL: BOF3X_STACKWATCH wants 1, got "2"`, exit 3). **The
+`Task_SetStackBase` and exit numbers are owed to the next route run**, e.g.
+the owner's recorded route with `BOF3X_STACKWATCH=1` added; the exit line
+needs a normal quit (a `Fatal` or the crash reporter ends the process
+without the detach). Not covered: the render fiber (`RunOnFiber`) has its
+own 1 MB stack and is not watched; `BOF3X_ORIGINAL=Task_SetStackBase`
+leaves Capcom's and loses the start line.
+

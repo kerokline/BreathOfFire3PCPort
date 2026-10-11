@@ -33,6 +33,7 @@
 #include "game/task_sched_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/stackwatch.h"
 
 namespace task_sched {
 namespace {
@@ -110,10 +111,28 @@ extern "C" __attribute__((naked)) void __cdecl Task_BackToScheduler(void) {
 
 // original 0x5A9907: the top of the stack arena, 0x4000 below esp as it
 // arrives (the return address on top). eax is left that value.
+// BOF3X_STACKWATCH=1 (stackwatch.h) adds a call after the store with every
+// register and the flags saved, so the result is the original's either way;
+// the test before the first instruction sets flags the subl then overwrites.
 extern "C" __attribute__((naked)) void __cdecl Task_SetStackBase(void) {
-    asm("movl %esp, %eax\n\t"
+    asm("cmpb $0, _StackWatch_Armed\n\t"
+        "jne .Ltask_sched_setbase_watch\n\t"
+        "movl %esp, %eax\n\t"
         "subl $0x4000, %eax\n\t"
         "movl %eax, 0x66C858\n\t"          // Task_StackTop
+        "ret\n"
+        ".Ltask_sched_setbase_watch:\n\t"
+        "movl %esp, %eax\n\t"
+        "subl $0x4000, %eax\n\t"
+        "movl %eax, 0x66C858\n\t"          // Task_StackTop
+        "pushfl\n\t"
+        "pushal\n\t"
+        "leal 36(%esp), %ecx\n\t"          // the arrival esp
+        "pushl %ecx\n\t"
+        "call _StackWatch_AtSetStackBase\n\t"
+        "addl $4, %esp\n\t"
+        "popal\n\t"
+        "popfl\n\t"
         "ret");
 }
 
