@@ -48,6 +48,11 @@ void LogFlush() {
     if (g_log != INVALID_HANDLE_VALUE) FlushFileBuffers(g_log);
 }
 
+Utf8Path::Utf8Path(const wchar_t* path) {
+    if (WideCharToMultiByte(CP_UTF8, 0, path, -1, text, sizeof text, nullptr, nullptr) == 0)
+        std::snprintf(text, sizeof text, "(a path over %u UTF-8 bytes)", static_cast<unsigned>(sizeof text - 1));
+}
+
 void Log(const char* fmt, ...) {
     char buf[1024];
     va_list ap;

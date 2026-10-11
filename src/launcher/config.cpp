@@ -441,7 +441,16 @@ std::wstring ConfigCacheDataRoot(const Config& cfg) {
     const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, MAX_PATH);
     std::wstring out;
     if (n > 0 && n < MAX_PATH) out.assign(root, n);
-    else if (n == 0) for (char c : cfg.cache) out += static_cast<wchar_t>(static_cast<unsigned char>(c));
+    else if (n == 0 && !cfg.cache.empty()) {
+        // The ini's bytes are in the ANSI code page, as SetEnvironmentVariableA
+        // hands them to the DLL and the dialog shows them (FromAnsi) - not one
+        // byte a character as Latin-1, which named another folder wherever the
+        // code page is not Latin-1: every non-ASCII path under 936 (GBK), and
+        // 0x80..0x9F under 1252 (docs/code-page-audit.md).
+        const int w = MultiByteToWideChar(CP_ACP, 0, cfg.cache.data(), static_cast<int>(cfg.cache.size()), nullptr, 0);
+        out.resize(static_cast<size_t>(w > 0 ? w : 0));
+        if (w > 0) MultiByteToWideChar(CP_ACP, 0, cfg.cache.data(), static_cast<int>(cfg.cache.size()), out.data(), w);
+    }
     while (out.size() > 1 && (out.back() == L'\\' || out.back() == L'/')) out.pop_back();
     return out;
 }

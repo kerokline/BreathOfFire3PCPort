@@ -15,6 +15,16 @@ void Log(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 // half not, without knowing which half (CLAUDE.md rule 4).
 [[noreturn]] void Fatal(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 
+// A wide path for a log line, as UTF-8: Log("... %s", Utf8Path(path).text).
+// Not %ls - the toolchain's printf converts %ls through the "C" locale, which
+// has no character above U+00FF, so a DLL folder named in Chinese made
+// vsnprintf answer -1 and the whole line was lost (docs/code-page-audit.md).
+// The log is bytes; SDL's pad names reach it as UTF-8 already.
+struct Utf8Path {
+    explicit Utf8Path(const wchar_t* path);
+    char text[3 * 260 + 1];  // MAX_PATH UTF-16 units, at most three bytes each
+};
+
 }  // namespace bof3
 
 // One log line the first time control reaches this point, then nothing. The
