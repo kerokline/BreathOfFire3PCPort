@@ -71,15 +71,18 @@ code page audited, the seven mid-function pointers read, and two music defects o
       cursor) and seeks both paths back to it - the sequenced path by a silent fast-forward of the synth (`Spu::Skip`,
       about 240 ms a minute skipped; the reverb empty for the first half second), the MP3 path by decoding and dropping.
       The resume's fade is `music_resume::kResumeFadeFrames` (10) for the owner to tune against their PlayStation.
-      The full self-test narrow and wide exit 0, 10,087 ours. **Owed the owner's ear:** `musicStopCheck.txt` under the
-      cache's music and under `BOF3X_MUSIC=mp3` with `BOF3X_MUSIC_LOG=1` (`remember track 91` near frame 1726, `resume`
-      near 2838).
+      The full self-test narrow and wide exit 0, 10,087 ours. **Replayed headless on the final build** (`analysis/shots/musicstop_1010/final_cache`,
+      `final_mp3`): both paths log `remember track 91 at sample 479809` at frame 1726 and `resume track 91` at 2838 at
+      that sample (the ring 36,287 samples ahead, subtracted), and again at 3189 / 3695. **Owed the owner's ear**, and
+      the Chinese combat route from this build is identical to the Capcom pair on all 2,561 ticks.
     - **State 2 proved on the night of 2026-10-11** ([`state2-proof.md`](state2-proof.md)): 550 starts not ours armed over
       the ten routes and the attract sequence; 37 entered, every one at logic frame 0 - the C runtime's start-up chain
       (36) and DirectSoundCreate's import thunk from our `Snd_Init` - nothing of Capcom's after the hand-off. The 2026-10-05
-      run had 198 running. **Still owed:** the stack's exit line (a run ended by a normal quit), and the state hash's
-      two-build check under `en-US` (the pair `en_combat_sh3_orig` / `_origb` recorded with `31e52cb5`'s build; ours from
-      the final build is the second half).
+      run had 198 running. **The state hash's two-build check passed** ([`state-hash.md`](state-hash.md) 7): ours from
+      two builds identical on every page but the enemy-records page `0x93C000` from tick 514 of combat - **a difference of
+      ours between two builds, unexplained, a dump at tick 514 is the next step.** An all-original pair under `en-US` is
+      not a reference for ours (the overlay's text pointers); under an overlay the reference is a previous build of ours.
+      **Still owed:** the stack's exit line (a run ended by a normal quit; `input_run.py` kills the game).
     - **The fanfare's loop** (DIV-0081 amended): the owner's A/B against the disc found every loop right but `165`, which
       rewound to the file's start; its measured row ships as `gen_loop_table.py`'s `OWNER_APPROVED` (40 rows).
     - **The owner's calls, open:** D240 (`kEosBytes = 0`), the launcher box for `BOF3X_MP3`, the resume's fade length,

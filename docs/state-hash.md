@@ -373,17 +373,28 @@ a normalised run there from tick 1.
 writes flags 0, so a run can still be matched against a raw reference under
 an overlay recorded with the same build; any value but `0` or `1` aborts.
 
-**Owed (tomorrow's quiet machine):**
-1. Two runs under `BOF3X_LANG=en-US` from **two different builds** - for
-   example a pair `--original "*,-Game_Clock"` with this branch's build and
-   ours with `main`'s once this is merged, or any later build - on the
-   combat route: identical on `0x653000`, `0x663000`, `0x669000`,
-   `0x66A000`, `0x66B000` from tick 1, where `BOF3SH2` differed from tick 1.
-   The log of each should show about 73 normalised slots (69 on Capcom's
-   side).
-2. Then record the overlay pairs once more under `BOF3SH3`; from then on
-   they should outlive builds as the Chinese pairs do.
-3. If a page of the five still differs: a dump at its first tick on both
-   sides, `bytes`, and the word is either a pointer of ours outside a slot
-   (point 5 above: hashed raw by design - extend the slots or accept) or a
-   text that differs between the builds (a real difference).
+**Measured the same night (2026-10-11, 01:00; `analysis/statehash/en_combat_sh3_*.sh`,
+the reports in `analysis/calltrace/platform_1011/statehash_ours*.txt`):**
+1. **Two builds of ours agree.** The combat route under `BOF3X_LANG=en-US`,
+   `BOF3X_OPT=none`, `BOF3X_LAYERING=0`, the skip list on, from the build of
+   `31e52cb5` (`oursA`) and from the build of `91c45f7b` (`oursB`, the battle
+   resume merged - a different DLL layout; both logs say `tick 1: 101 of
+   Capcom's pointer slots hold a pointer of ours`): **identical on every page
+   and tick but two** - `0x93C000` (`EnemyWorkingRecords+0x620`) from tick 514
+   and `0x93B000` from 2,502. The five overlay pages are identical from tick 1,
+   which is what `BOF3SH3` was for. The enemy-records page is the one the
+   offline measurement above already saw between builds; **not a pointer -
+   a difference of ours between two builds of the same code, unexplained:**
+   a dump at tick 514 on both sides is the next step (a stale read, or a
+   value that depends on the DLL's layout).
+2. **An all-original pair under `en-US` is not a reference for ours.** The
+   pair (`--original "*,-Game_Clock"`) agrees with itself on every page, but
+   ours differs from it on 77 pages from tick 1 - the overlay's text-pointer
+   pages and everything downstream of English text (the VRAM shadow's glyph
+   uploads from tick 178, the draw records from 227) - so under an overlay the
+   reference is **a previous build of ours**, as point 1 shows it can be.
+   A first cut of the three runs went out without `BOF3X_STATEHASH_SKIP` and
+   differed on 145 pages from tick 0: the skip list is part of the command,
+   not the build.
+3. Still to do: record the overlay pairs under `BOF3SH3` from a build of ours
+   when a route needs one; the Chinese pairs stay as they are.
