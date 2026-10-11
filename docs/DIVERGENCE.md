@@ -4648,7 +4648,7 @@ designed in rather than bolted on.
   rewound and the frames before the loop start discarded, so the samples
   after the jump are the first pass's bit for bit - with a crossfade at the
   join. A track without a row rewinds as before. **The table as it ships
-  (2026-10-10, second cut: 39 rows)** of the 156 looping tracks
+  (2026-10-10, second cut: 39 rows; 40 with the owner-approved row the same night)** of the 156 looping tracks
   ([`bgm-comparison.md`](bgm-comparison.md) section 11.2;
   [`music-open-ends.md`](music-open-ends.md) 3 for the second cut):
   - **31 full** (`001 003 013 014 036 037 039 047 051 060 061 062 063 064
@@ -4662,6 +4662,19 @@ designed in rather than bolted on.
     material standing in for the body's missing tail (0.07..8.1 s), with a
     5.8 ms crossfade. In time and in phase
     with the disc's loop; not the disc's notes for that stretch.
+  - **1 owner-approved below the gate** (`165`, the battle fanfare; added
+    2026-10-10 night, `gen_loop_table.py`'s `OWNER_APPROVED`): the measured
+    shifted row - a loop back to 2.0 s, after the trumpet intro, period 22.65 s,
+    stand-in 0.978 over 0.04 s - refused only on loop correlation 0.787 under
+    0.80, because the held voices carry across the loop as they do on the disc.
+    The owner, A/B against the disc's music: the attract, areas 091 / 093 and
+    the combat loops all right, "the fanfare was the only difference I noticed -
+    it loops back to the start, instead of several seconds into the song (after
+    the trumpet bit)". The gate stands for every other row; this one is the
+    owner's ear over the number. The owner also noted the disc's seams "bleed"
+    (release tails across the loop) where the MP3's cut is harsher - the long
+    crossfade of [`music-open-ends.md`](music-open-ends.md) 4 is the measured
+    answer, not built (an idea, not a defect).
   - **The gates** (`tools/bgm/measure_loops.py` `gate()`): every row's period
     correlation >= 0.8 and an alignment of 10+ windows within 50 samples (512
     on the onset envelope); a shifted row's stand-in must also correlate

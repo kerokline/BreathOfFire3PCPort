@@ -260,7 +260,7 @@ their correlation was measured at the wrong lag. After the second cut:
 | ship as ordinary full rows | `037 084 109 130` |
 | *shortened* (no whole body in the file at the true period) | `023 035 052 101` |
 | still refused on correlation, full | `002 006 016 020 041 083 086 095 121 137 161` |
-| still refused on correlation, shifted | `026 046 149 165` |
+| still refused on correlation, shifted | `026 046 149 165` - **`165` ships anyway since 2026-10-10 night** (the owner's ear; `gen_loop_table.py` `OWNER_APPROVED`, DIV-0081) |
 
 **Why their waveforms never repeat**: our own sequencer does not repeat them
 either. Two passes of the synth's output at the sequence's period, best NCC

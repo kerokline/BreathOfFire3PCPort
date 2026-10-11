@@ -16,6 +16,15 @@ stops the table, never silently shifts it.
 import json, os, sys
 from bgm_paths import PC, LOOPS_JSON
 
+# Rows the measurement excluded that ship anyway, on the owner's ear (DIV-0081's
+# amendment of 2026-10-10): track -> why. A row here must still be a measured
+# "full" or "shifted" row with its positions; only the gate's verdict is overruled.
+OWNER_APPROVED = {
+    165: "the battle fanfare: the owner, 2026-10-10 - it must loop back after its trumpet intro (2.0 s), not to the "
+         "file's start; refused only on loop correlation 0.787 under the 0.80 gate (held voices across the loop, as "
+         "on the disc), the stand-in 0.978 over 0.04 s",
+}
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(os.path.dirname(os.path.dirname(HERE)), "src", "game", "music_loops_table.inc")
 
@@ -24,8 +33,11 @@ def main():
     table = json.load(open(LOOPS_JSON))
     rows = []
     for k, r in sorted(table.items(), key=lambda kv: int(kv[0])):
-        if r.get("excluded"):
+        approved = int(k) in OWNER_APPROVED
+        if r.get("excluded") and not approved:
             continue
+        if approved:
+            assert r.get("case") in ("full", "shifted") and "start" in r and "end" in r, (k, "an approved row must be measured")
         fade = int(r.get("fade", 0))
         if r["samples"] != r["frames"] * 1152:
             sys.exit("track %s: the decode is %d samples, %d frames * 1152 = %d - ffmpeg trimmed an encoder "
@@ -38,6 +50,8 @@ def main():
         how = r.get("method", "render") + ", " + r["case"]
         if r["case"] == "shifted":
             how += " (stand-in %.3f over %.2f s)" % (r["stand_in_ncc"], r["stand_in_s"])
+        if approved:
+            how += ", OWNER-APPROVED below the gate (%s)" % r.get("why", "excluded")
         rows.append("    {%3d, %8d, %8d, %8d, %3d},  // %s: %s, body %.3f s, confidence %.3f%s" % (
             int(k), r["bytes"], r["start"], r["end"], fade, r["file"], how, (r["end"] - r["start"]) / 44100.0,
             r["confidence"], ", short of a whole body by %d samples" % r["short_by"] if r.get("short_by") else ""))
