@@ -48,8 +48,10 @@ code page audited, the seven mid-function pointers read, and two music defects o
       `tools/exe_midfunc_pointers.py`): the stub page needs nothing for them; a `decide_pointers` rule is proposed, not applied.
     - **The state hash is address-independent** ([`state-hash.md`](state-hash.md) 7, `BOF3SH3`): Capcom's 26,189 pointer
       slots in `.data` are hashed by the text they name when they point into our DLL (the brief's offset-from-base fails:
-      the DLL is ASLR'd and its layout moves per build - measured). Existing pairs stay valid offline; **owed live:** two
-      combat runs under `en-US` from two builds identical on the five overlay pages, then the overlay pairs re-recorded.
+      the DLL is ASLR'd and its layout moves per build - measured). Existing pairs stay valid offline. **The overlay pairs are recorded** (2026-10-11 morning, `en_<route>_sh3a` / `_sh3b`,
+      [`state-hash.md`](state-hash.md) 7 item 4): identical or sound-page noise on six routes, and `Sound_Channels`' heap
+      pointers on four - the same noise the Chinese pairs carry, read by `check` as such; a skip-list entry waits for the
+      list's next change.
       `BOF3X_STATEHASH_RAW=1` turns it off.
     - **The main thread's stack measured** ([`crt-startup.md`](crt-startup.md) 4.1, 11): Windows gives 256 KB (a 0x40000
       floor), the header's 64 KB commit; the four task slices need more than 64 KB, so state 3 links with reserve

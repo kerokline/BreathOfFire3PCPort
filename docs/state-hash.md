@@ -246,6 +246,11 @@ ours run of a route that lists the saves wants it.
   is meant to outlive builds too; that is measured offline and owed live.
 - **After a merge wave:** one run of ours per route, `check` against the pair.
   Exit 0 is the bar; a reported page goes through section 2's loop.
+- **Known and not skipped:** `Sound_Channels` `0x6BC8C8` (23 DirectSound
+  buffer pointers, heap addresses that differ by run - section 7's item 4,
+  measured 2026-10-11): both sides of a pair differ there over the same
+  ticks on routes with a looping voice, so `check` reads it as noise; to be
+  added to the skip list with the next change of the list, not alone.
 - **Known and not skipped:** DIV-0073 - after the masters' model has drawn,
   `Gte_Matrix2`'s bytes `0x7DE4E6..0x7DE4FF` are zeros in ours and stale stack
   in the original. No route recorded so far opens that screen.
@@ -448,5 +453,24 @@ the reports in `analysis/calltrace/platform_1011/statehash_ours*.txt`):**
    run of the unpadded rebuild (`sh3`) and one of a build whose pad the
    compiler dropped (`sh5`, the image unchanged) were identical too, with the
    raw word equal, which proves nothing more than `sh2`.
-4. Still to do: record the overlay pairs under `BOF3SH3` from a build of ours
-   when a route needs one; the Chinese pairs stay as they are.
+4. **The overlay pairs recorded 2026-10-11 morning** as `en_<route>_sh3a` /
+   `_sh3b`: two runs of ours per route under `en-US` from one build (`main`
+   `105a0c77` plus the F9 recipe's instrumentation, 10,088 ours; `BOF3X_OPT=none`,
+   `BOF3X_LAYERING=0`, the ini-less launcher, the display settings of the
+   `cn_*_orig2` pairs, the shop with `--slot0-hold`). The pair is identical on
+   every tick of menu_screens, field_menu, worldMapAndAreaTransition and
+   dragonTransform; combat, shop and whelpBoss differ only on the sound page
+   `0x7DE000` at one tick (whelpBoss eight), section 6's noise; and caughFish
+   (641 ticks from 1044), masterAndManillo (327 from 944), cutsceneAndNue (180
+   from 475) and whelpBoss (625 from 2574) differ on page `0x6BC000`. **That page
+   is `Sound_Channels`** (`0x6BC8C8`, 23 words: a looping voice's DirectSound
+   buffer pointer, kept to stop it by): raw dumps of two more caughFish runs at
+   ticks 1044 and 1500 name one word, `0x6BC918` (`Sound_Channels[20]`), holding
+   a heap address that differs by run, and nothing else on the page outside the
+   skip list. The Chinese pair `cn_caughFish_orig2` / `_orig2b` disagrees on the
+   same page over the same ticks, so `check` already treats it as noise and
+   every check of 2026-10-10 passed through that rule; it is the same class as
+   `Sound_Banks`' buffer pointers, which the skip list holds. Not added to the
+   skip list, because a changed list invalidates every pair (section 6); the
+   next time the list changes for another reason, `0x6BC8C8 92` goes in with it.
+   The Chinese pairs stay as they are.
