@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-10 night: PRs #49 and #50 merged; `platform/state2-prework` holds the prework for states 2 and 3 - five agents merged - and the night's music fixes from the owner's route (DIV-0028 amended, DIV-0092); **up next: the PR from this branch, then state 3 - our own executable** - items 00 and 1 below)
+**Status:** IN PROGRESS (2026-10-11: PR #51 merged the prework for states 2 and 3; the morning closed what it left - the stack's exit line, the resources section, the overlay pairs, the decoder's listen, DIV-0093 - and the owner's calls on the decoder; **up next: state 3, our own executable - item 0 below, the design brief first**)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -36,7 +36,38 @@ code page audited, the seven mid-function pointers read, and two music defects o
 
 ## Pick up here
 
-00. **`platform/state2-prework` (2026-10-10 night, off `main` `a30f1916`; not pushed, no PR yet).** What "finishing the exe"
+0. **State 3 - our own executable: the design brief, then the first build.** Everything it needs is read; nothing of
+    it is built but `BOF3X_EXEIMAGE` ([`exe-import-engine.md`](exe-import-engine.md) 4.4, the data map exercised in
+    place). The brief is one doc, `docs/state3-design.md`, written before any code, answering from the reads already
+    made:
+    - **what the executable is**: a 32-bit `/FIXED` image at a base that leaves `0x400000..0x93F000` free, reserving that
+      range and mapping `base/exe/data.bin` over `.data` with `.bss` zeroed to `0x93D6EC` and `.rdata` from the same
+      source ([`exe-import-engine.md`](exe-import-engine.md) 4.3, [`exe-resources.md`](exe-resources.md): the two data
+      sections are sufficient; our own icon; the IAT's 109 dwords stay as dead bytes and every `call [0x5C4xxx]` of ours is
+      rebound to our own imports first);
+    - **the entry-stub page** at Capcom's function starts for the 9,142 `.data` code pointers
+      ([`exe-import-engine.md`](exe-import-engine.md) 4.2 (b): 6,211 targets are starts, the smallest gap 11 bytes; the
+      seven mid-function words are numbers, [`exe-code-pointers-midfunc.md`](exe-code-pointers-midfunc.md)); what the
+      page does for the decoder's eight (`minimp3` behind the seam, DIV-0091), `Crt_ftol` and `Crt_GetPtd`
+      (`tools/owned_sweep.py`'s remainder);
+    - **what the start-up must reproduce** - behaviour, not data ([`crt-startup.md`](crt-startup.md) 9's table, one row
+      a decision): the x87 control word `0x027F` set and asserted (our toolchain's start-up leaves `0x037F`), the heap
+      and the runtime's per-thread data dropped, the handle table / `stdio` / `environ` / `argv` dropped, our own
+      top-level exception handling;
+    - **the stack**: reserve >= `0x40000`, commit >= `0x10000` (11.3), against the measured depth of 2026-10-11 (11.4:
+      deepest dword `0xD578` below base on the F9 route, the initial commit never grown, slice 3 untouched);
+    - **the code page**: the cache folder's path goes wide with the executable ([`code-page-audit.md`](code-page-audit.md));
+    - **testing across the cutover** ([`platform-layers-plan.md`](platform-layers-plan.md) 3's last paragraph): the state
+      hash is address-independent (`BOF3SH3`) and the overlay pairs exist (`en_<route>_sh3a` / `_sh3b`, 2026-10-11), so
+      the check is build N against build N + 1 in any language, with Capcom's exe still runnable as its own process for
+      a Chinese pair; the self-tests headless on the new executable before any route;
+    - **what the first build does and does not do**: map, stub, start, reach the title - the FMVs, the display, the
+      sound - with the DLL's code linked in as is; the launcher's role after it (a config dialog over an exe of ours, no
+      injection); the data-only cache (`BOF3X_CACHE`) as the install's data source later, not in the first build.
+    Then one agent builds it on a branch (`platform/state3`), headless self-tests first, the attract sequence against
+    `attract_r14_orig` / `_origb` on the state hash, the ten routes against the overlay pairs, before the owner plays it.
+
+00. ~~**`platform/state2-prework`**~~ - merged as PR #51 (2026-10-11 morning). What "finishing the exe"
     is: states 2 and 3 of [`platform-layers-plan.md`](platform-layers-plan.md) 3. The converters, the per-thread data and
     the start-up are not takeovers - they drop at the cutover ([`crt-startup.md`](crt-startup.md) 9). Merged on the
     branch, one agent each, every self-test headless (the owner was playing):
