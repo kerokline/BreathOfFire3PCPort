@@ -253,6 +253,10 @@ owner's ear (section 5).
 
 Everything in section 1's table beyond the counts: which rows are game code,
 which are dead under ours, the runtime's called entry points, the decoder's
-lineage and seam beyond the names in `symbols.toml`, and whether mapping the
-data sections alone is sufficient (the resources section and anything the
-start-up code initialises before `WinMain` are unread).
+lineage and seam beyond the names in `symbols.toml`. ~~Whether mapping the
+data sections alone is sufficient~~ - **answered 2026-10-11**: the start-up
+half in [`crt-startup.md`](crt-startup.md), the rest of the file in
+[`exe-resources.md`](exe-resources.md) (`.rsrc` is one icon group read only
+by our own `WinMain`; no other data directory exists but the import table
+and IAT, which our executable replaces with its own). Mapping `.rdata` and
+`.data`, with `.bss` zeroed to `0x93D6EC`, is sufficient.

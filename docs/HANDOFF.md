@@ -90,7 +90,12 @@ code page audited, the seven mid-function pointers read, and two music defects o
       to the unpadded one on all 2,561 ticks of combat under `en-US` while the raw word differs. Every older pair stays
       valid (the words hold an exe pointer without an overlay). An all-original pair under `en-US` is
       not a reference for ours (the overlay's text pointers); under an overlay the reference is a previous build of ours.
-      **Still owed:** the stack's exit line (a run ended by a normal quit; `input_run.py` kills the game).
+      **The stack's exit line, measured 2026-10-11 morning** ([`crt-startup.md`](crt-startup.md) 11.4) on the owner's
+      `f9ExitMode.txt` - the F9 quit route, the first recipe that ends in a normal exit (the recipe language's `hold f9 4`
+      and `quit`, [`input-script.md`](input-script.md) 3): deepest dword 0xD578 below base, the initial 0x10000 commit never
+      grown, slice 3 untouched. **The resources section read the same morning** ([`exe-resources.md`](exe-resources.md)):
+      one icon group, read only by our `WinMain`; no other data directory but the imports; mapping `.rdata` + `.data` is
+      sufficient - plan section 6's last unread item.
     - **The fanfare's loop** (DIV-0081 amended): the owner's A/B against the disc found every loop right but `165`, which
       rewound to the file's start; its measured row ships as `gen_loop_table.py`'s `OWNER_APPROVED` (40 rows).
     - **The owner's calls, open:** D240 (`kEosBytes = 0`), the launcher box for `BOF3X_MP3`, ~~the resume's fade length~~ (30 frames, heard),
