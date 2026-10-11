@@ -17,8 +17,7 @@
 // load the same (32-bit) kernel32 - true within one boot session.
 #include <windows.h>
 
-#include <bcrypt.h>
-
+#include "common/sha256.h"
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
 #include "launcher/exe_image.h"
@@ -32,10 +31,6 @@
 #include <vector>
 
 namespace {
-
-// fixtures.toml build "pc-zh" / symbols.toml [meta].sha256.
-constexpr char kExpectedSha256[] =
-    "15984158e0badb4b2f9471c1e9003bb18b2ab11aff47af2376f9ebcd31dfb8cb";
 
 // The suspended game process, while there is one that has not been resumed.
 HANDLE g_child = nullptr;
@@ -81,39 +76,11 @@ std::wstring OwnDirectory() {
     return path.substr(0, path.find_last_of(L"\\/"));
 }
 
-// The file's SHA-256 as lowercase hex, the form kExpectedSha256 is written in.
-// Any I/O or CNG failure Die()s.
+// The file's SHA-256 as lowercase hex (common/sha256.cpp, the engine's routine
+// too). Any I/O or CNG failure Die()s.
 std::string Sha256Hex(const std::wstring& path) {
-    HANDLE file = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file == INVALID_HANDLE_VALUE) Die(L"cannot open %ls (%lu)", path.c_str(), GetLastError());
-
-    BCRYPT_ALG_HANDLE alg = nullptr;
-    BCRYPT_HASH_HANDLE hash = nullptr;
-    if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, nullptr, 0) < 0 ||
-        BCryptCreateHash(alg, &hash, nullptr, 0, nullptr, 0, 0) < 0)
-        Die(L"cannot initialise SHA-256");
-
-    std::vector<unsigned char> buf(1 << 16);
-    for (;;) {
-        DWORD got = 0;
-        if (!ReadFile(file, buf.data(), static_cast<DWORD>(buf.size()), &got, nullptr))
-            Die(L"read error on %ls (%lu)", path.c_str(), GetLastError());
-        if (got == 0) break;
-        if (BCryptHashData(hash, buf.data(), got, 0) < 0) Die(L"SHA-256 update failed");
-    }
-    unsigned char digest[32];
-    if (BCryptFinishHash(hash, digest, sizeof digest, 0) < 0) Die(L"SHA-256 finish failed");
-    BCryptDestroyHash(hash);
-    BCryptCloseAlgorithmProvider(alg, 0);
-    CloseHandle(file);
-
-    static const char kHex[] = "0123456789abcdef";
-    std::string hex;
-    for (unsigned char b : digest) {
-        hex += kHex[b >> 4];
-        hex += kHex[b & 15];
-    }
+    std::string hex, why;
+    if (!bof3x::Sha256Hex(path.c_str(), hex, why)) Die(L"cannot hash %ls: %hs", path.c_str(), why.c_str());
     return hex;
 }
 
@@ -228,11 +195,11 @@ int wmain(int argc, wchar_t** argv) {
     if (!FileExists(dll)) Die(L"%ls is missing; it belongs next to this launcher.", dll.c_str());
 
     std::string sha = Sha256Hex(exe);
-    if (sha != kExpectedSha256)
+    if (sha != bof3x::kExpectedSha256)
         Die(L"%ls is not the build this project targets.\n\nsha256   %hs\nexpected %hs\n\n"
             L"Every address bof3x patches is specific to that one file; refusing to start. "
             L"If this is an uncatalogued release, see fixtures.toml.",
-            exe.c_str(), sha.c_str(), kExpectedSha256);
+            exe.c_str(), sha.c_str(), bof3x::kExpectedSha256);
 
     // The default key table, from the exe itself rather than a copy of it
     // (docs/exe-table-audit.md): before the settings, whose defaults use it.

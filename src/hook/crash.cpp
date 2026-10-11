@@ -10,6 +10,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/host.h"
 #include "hook/log.h"
 #include "hook/statehash.h"
 
@@ -237,29 +238,24 @@ DWORD WINAPI SelfTest(LPVOID seconds) {
     return static_cast<DWORD>(*nowhere);
 }
 
-void ImageRange(const void* module, std::uint32_t* lo, std::uint32_t* hi, const char* section) {
+// Our DLL's extent, from its own headers.
+void ImageRange(const void* module, std::uint32_t* lo, std::uint32_t* hi) {
     auto* base = static_cast<const std::uint8_t*>(module);
     auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
     auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + dos->e_lfanew);
     auto b = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(base));
     *lo = b;
     *hi = b + nt->OptionalHeader.SizeOfImage;
-    if (!section) return;
-    const IMAGE_SECTION_HEADER* sec = IMAGE_FIRST_SECTION(nt);
-    for (unsigned s = 0; s < nt->FileHeader.NumberOfSections; ++s, ++sec) {
-        if (std::strncmp(reinterpret_cast<const char*>(sec->Name), section, 8) != 0) continue;
-        *lo = b + sec->VirtualAddress;
-        *hi = *lo + sec->Misc.VirtualSize;
-        return;
-    }
-    Fatal("crash reporter: BOF3.exe has no %s section", section);
 }
 
 }  // namespace
 
 void Crash_Start(void* dll_module) {
-    ImageRange(GetModuleHandleW(nullptr), &g_text_lo, &g_text_hi, ".text");
-    ImageRange(dll_module, &g_dll_lo, &g_dll_hi, nullptr);
+    // Capcom's code range as this host maps it: BOF3.exe's .text, or the
+    // stub page (host.h) - a return address into it is a jmp of ours or int3.
+    g_text_lo = CodeLo();
+    g_text_hi = CodeHi();
+    ImageRange(dll_module, &g_dll_lo, &g_dll_hi);
 
     DWORD len = GetModuleFileNameW(static_cast<HMODULE>(dll_module), g_dump_path, MAX_PATH);
     if (len < 4 || len + 32 > MAX_PATH) Fatal("crash reporter: DLL path unusable for dump files");

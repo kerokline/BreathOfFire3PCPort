@@ -10,6 +10,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
+#include "hook/host.h"
 #include "hook/log.h"
 
 namespace bof3 {
@@ -295,18 +296,14 @@ LONG CALLBACK OnException(EXCEPTION_POINTERS* info) {
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 
+// BOF3.exe's .text (host.h). The tracer is the hosted build's: in the exe
+// host every entry it would arm is int3 or a jmp of ours, and an int3 of the
+// fill would be taken for its own and resumed into forever, so
+// RefuseHostedSwitches (exe_host.cpp) stops BOF3X_CALLTRACE there first.
 void TextRange(std::uint32_t* lo, std::uint32_t* hi) {
-    auto* base = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(image::kBase));
-    auto* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
-    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + dos->e_lfanew);
-    const IMAGE_SECTION_HEADER* sec = IMAGE_FIRST_SECTION(nt);
-    for (unsigned s = 0; s < nt->FileHeader.NumberOfSections; ++s, ++sec) {
-        if (std::memcmp(sec->Name, ".text", 6) != 0) continue;
-        *lo = image::kBase + sec->VirtualAddress;
-        *hi = *lo + sec->Misc.VirtualSize;
-        return;
-    }
-    Fatal("calltrace: BOF3.exe has no .text section");
+    if (IsExeHost()) Fatal("calltrace: the call trace needs Capcom's code, which bof3x.exe does not map");
+    *lo = CodeLo();
+    *hi = CodeHi();
 }
 
 }  // namespace

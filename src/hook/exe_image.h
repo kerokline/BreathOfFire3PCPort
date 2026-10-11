@@ -5,6 +5,8 @@
 // map, without changing what the game runs.
 #pragma once
 
+#include <cstdint>
+
 namespace bof3 {
 
 // BOF3X_EXEIMAGE=<cache> (the directory importer.py build / exe_tables.py
@@ -18,5 +20,12 @@ namespace bof3 {
 // copied: its unfilled words are not the PC's. Runs before InjectAll, while
 // .data is still the loader's.
 void ExeImage_Check();
+
+// The exe host (docs/state3-design.md section 1.4): BOF3X_EXEIMAGE=<cache> is
+// the SOURCE of .data rather than a check. data.toml's image must be `size`
+// bytes at `va` with its .bss to `bss_end`, built from BOF3.exe (pc-zh) - a
+// disc-built image is refused; data.bin is then copied to `to`. False,
+// copying nothing, when the variable is unset.
+bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32_t bss_end);
 
 }  // namespace bof3
