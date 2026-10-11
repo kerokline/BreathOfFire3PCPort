@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include <cstdint>
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -18,7 +19,8 @@
 //   header   "BOF3SH3\0", u32 base, u32 pages, u32 page size, u32 skip ranges,
 //            u32 skip list hash (FNV-1a over each range's address and length
 //            in the list's order; 0 without a list), u32 flags (bit 0: our
-//            pointers normalised, below; 0 under BOF3X_STATEHASH_RAW=1)
+//            pointers normalised, below; 0 under BOF3X_STATEHASH_RAW=1;
+//            bit 1: the run-time slots below are normalised too, 2026-10-11)
 //   record   u32 tick, u32 Frame_Counter, u32 recipe frame, u32 n,
 //            then n times (u32 page index, u32 hash)
 //
@@ -83,6 +85,22 @@ constexpr std::uint32_t kExeHi = 0x93F000;
 // still sees the entry (his address against ours).
 constexpr std::uint32_t kTagCode = 0x80000000u;
 constexpr std::uint32_t kContentMax = 256;
+
+// Words Capcom's code fills at run time with Msg_SystemPtr's result, zero
+// when the census runs and so not slots of his: the battle message ring
+// 0x93C2C4 (16 entries of 8 bytes, +0 the text pointer; battle_actor_copies.cpp
+// queues the item under the cursor's description there) and the battle
+// result's current message 0x93B8E4 (battle_result.cpp). Under a language
+// overlay the pointer names MsgPool_Relocate's static pool in our DLL
+// (DIV-0007), at the same offset in every build and a different address:
+// two builds of ours on the combat route differed on those two pages from
+// the first battle message on (docs/state-hash.md section 7, measured 3,
+// 2026-10-11), so they join the slots. Without an overlay they hold a
+// pointer into MessagePools in BOF3.exe, hashed raw as before.
+constexpr std::uint32_t kMsgRing = 0x93C2C4;
+constexpr std::uint32_t kMsgRingEntries = 16;
+constexpr std::uint32_t kMsgRingStride = 8;
+constexpr std::uint32_t kMsgCurrent = 0x93B8E4;
 
 // A section of ours a pointer can name: every one the loader keeps. The
 // discardable ones (.reloc and the DWARF sections, 41 of the image's 94 MB in
@@ -268,6 +286,20 @@ void StateHash_BeforeInjects(void* dll_module) {
         const std::uint32_t w = WordAt(kBase + off);
         if (w >= kExeLo && w < kExeHi) g_sites.push_back(off);
     }
+    // The run-time slots (above) join the list, kept ascending; one that the
+    // scan already listed (a word not zero at the census) is not doubled.
+    std::uint32_t runtime_added = 0;
+    auto add_site = [&](std::uint32_t va) {
+        if (va < kBase || va + 4 > kEnd || (va & 3))
+            Fatal("statehash: run-time slot 0x%08lX is not an aligned word of .data", (unsigned long)va);
+        const std::uint32_t off = va - kBase;
+        const auto it = std::lower_bound(g_sites.begin(), g_sites.end(), off);
+        if (it != g_sites.end() && *it == off) return;
+        g_sites.insert(it, off);
+        ++runtime_added;
+    };
+    for (std::uint32_t e = 0; e < kMsgRingEntries; ++e) add_site(kMsgRing + e * kMsgRingStride);
+    add_site(kMsgCurrent);
     std::size_t k = 0;
     for (std::uint32_t i = 0; i <= kPages; ++i) {
         while (k < g_sites.size() && g_sites[k] < i * kPage) ++k;
@@ -275,8 +307,8 @@ void StateHash_BeforeInjects(void* dll_module) {
     }
     g_census = true;
     Log("statehash   %lu aligned words of .data hold a pointer into BOF3.exe's image as mapped: Capcom's pointer "
-        "slots; %s",
-        (unsigned long)g_sites.size(),
+        "slots, and %lu run-time slots the battle's messages fill (%lu in all); %s",
+        (unsigned long)(g_sites.size() - runtime_added), (unsigned long)runtime_added, (unsigned long)g_sites.size(),
         g_normalise ? "a slot holding a pointer into our image is hashed by what it names"
                     : "BOF3X_STATEHASH_RAW=1: hashed raw, as BOF3SH2 did");
     Census("before the injects");
@@ -328,7 +360,7 @@ bool StateHash_Start() {
                 for (int b = 0; b < 4; ++b) skip_hash = (skip_hash ^ ((w >> (8 * b)) & 0xFF)) * 16777619u;
     }
     Put(skip_hash);
-    Put(g_normalise ? 1u : 0u);
+    Put(g_normalise ? 3u : 0u);   // bit 0 the slots, bit 1 the run-time slots with them
     g_last.assign(kPages, 0);
     Log("statehash   %lu pages of .data from 0x%lX, a record a logic frame to %s; %u skip ranges, %u dump ticks, "
         "our pointers %s",

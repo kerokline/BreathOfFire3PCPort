@@ -1,6 +1,6 @@
 # The state hash
 
-**Status:** WORKING (2026-10-05; every reference pair recorded under the 168-range skip list at `main` `2df90d9`, section 6; the shop route's difference was the runner's, section 5; `BOF3SH3`, our pointers in Capcom's slots hashed by what they name, 2026-10-10, section 7 - measured offline, the cross-build pair under an overlay owed live)
+**Status:** WORKING (2026-10-05; every reference pair recorded under the 168-range skip list at `main` `2df90d9`, section 6; the shop route's difference was the runner's, section 5; `BOF3SH3`, our pointers in Capcom's slots hashed by what they name, 2026-10-10, section 7 - the cross-build pair under an overlay measured live 2026-10-11, and the 17 run-time slots of the battle's messages added the same morning, flags bit 1)
 
 A regression check that compares two runs by **what the game's memory held,
 frame for frame**, whoever's code wrote it. Built before round fourteen
@@ -356,7 +356,9 @@ normalised, a line each time the number changes (`statehash   tick N: K of
 Capcom's pointer slots hold a pointer of ours`).
 
 **The header.** `BOF3SH3\0` adds a `u32` of flags after the skip list hash,
-bit 0 set when the normalisation is on. `tools/statehash.py` reads all three
+bit 0 set when the normalisation is on, bit 1 (2026-10-11) when the run-time
+slots of measured point 3 below are normalised with the census's (every run
+from that day on; the writer sets both or neither). `tools/statehash.py` reads all three
 versions; `info` says which way a run hashed our pointers. A normalised run
 beside an unnormalised one (a `BOF3SH2` file, or `BOF3X_STATEHASH_RAW=1`) is
 **compared, with a printed note**, not refused: without an overlay the two
@@ -396,5 +398,55 @@ the reports in `analysis/calltrace/platform_1011/statehash_ours*.txt`):**
    A first cut of the three runs went out without `BOF3X_STATEHASH_SKIP` and
    differed on 145 pages from tick 0: the skip list is part of the command,
    not the build.
-3. Still to do: record the overlay pairs under `BOF3SH3` from a build of ours
+3. **The enemy-records pages, explained (2026-10-11 morning; the dumps
+   `analysis/statehash/en_combat_d514_ours{A,B}.sh.{513,514,600}.bin` and
+   `en_combat_d2502_ours{A,B}.sh.{2501,2502,2560}.bin` from the same two
+   launcher copies, the pair re-run twice and differing on the same two pages
+   from the same ticks).** Neither page is the enemy records: `0x93C000` is
+   the battle message ring `0x93C2C4` (16 entries of 8 bytes, +0 the text
+   pointer; `battle_actor_copies.cpp` queues the item under the cursor's
+   description at tick 514) and `0x93B000` is `0x93B8E4`, the battle result's
+   current message (`battle_result.cpp`, `Msg_SystemPtr(5)` at tick 2502).
+   Each word holds what `Msg_SystemPtr` returned: under an overlay a pointer
+   into `MsgPool_Relocate`'s static pool in our DLL (DIV-0007), at the **same
+   offset in both builds** (`pool+0x10d6` at 514, `+0x2c27` at 600,
+   `+0x19c` at 2502; the five ring entries filled by 2501 likewise) - the same
+   text, at a build-dependent address. The words are zero when the census
+   runs, so they were not Capcom's slots and were hashed raw: the class point 5
+   above names ("shows as a difference between builds, not hidden"), seen.
+   Capcom's own run stores an arena pointer there (`MessagePools`, inside
+   `BOF3.exe`), which is why the Chinese pairs never saw it.
+   **Fixed the same morning (flags bit 1):** the 17 words join the slots as
+   *run-time slots* - `0x93C2C4 + 8 i` (16) and `0x93B8E4`, a named list in
+   `statehash.cpp`, inserted into the census's ascending list after the scan
+   (one the scan already listed is not doubled; the start-up line counts
+   them: `26189 ... Capcom's pointer slots, and 17 run-time slots the
+   battle's messages fill (26206 in all)`). The nine call sites in `src/game`
+   that take `Msg_SystemPtr`'s pointer are `battle_actor_copies.cpp` 349 and
+   `battle_result.cpp` 123 and 284 (these two words) and `magic_fx_reached.cpp`,
+   `menu_draw_helpers.cpp`, `menu_windows.cpp`, which draw from the pointer
+   without storing it in `.data` - the place to look when a route reports
+   another page of this class. The reader says which way a run hashed them
+   (`info`: "the battle message words with them" / "raw (before 2026-10-11)")
+   and prints a note when a comparison mixes the two: such runs are identical
+   without an overlay (the words hold an exe pointer then, hashed raw either
+   way), so every pair of before stays valid; under an overlay the older run
+   differs on those two pages from the first battle message. Measured: the
+   headless self-test (`'*'`, `BOF3X_STATEHASH=1`) exit 0, `inject: 10087
+   ours`, the census after the injects 12 as before; the combat route under
+   `en-US` from two launcher copies of the build identical on all 2,561 ticks
+   (`en_combat_rt_sh1` / `_sh2`; both copies loaded at `0x5CA80000`, so that
+   pair shows determinism only - every copy of one build loaded there that
+   morning, and a copy with its preferred base changed and dynamic base
+   cleared never got as far as `DllMain`, not pursued). **The proof is a
+   throwaway build with a 0x6000-byte kept array ahead of the pool** in
+   `msg_pool.cpp` (reverted after the build; the image grew from
+   `..0x628F4000` to `..0x628FA000`, the pool moved by 0x6000): its run
+   `en_combat_rt_sh6` is **identical to `sh1` on all 2,561 ticks**, while the
+   raw dumps at tick 600 differ in the ring word's second byte (`0x93C2C5`
+   `3c` against `9c`) - the same text at another address, hashed alike. A
+   run of the unpadded rebuild (`sh3`) and one of a build whose pad the
+   compiler dropped (`sh5`, the image unchanged) were identical too, with the
+   raw word equal, which proves nothing more than `sh2`.
+4. Still to do: record the overlay pairs under `BOF3SH3` from a build of ours
    when a route needs one; the Chinese pairs stay as they are.

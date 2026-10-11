@@ -42,7 +42,12 @@ class Run:
         self.skip_hash = struct.unpack_from('<I', d, 24)[0] if self.version >= 2 else None
         # BOF3SH3 adds flags, bit 0: our pointers in Capcom's slots hashed by
         # what they name (docs/state-hash.md section 7); before it, always raw
-        self.normalised = bool(struct.unpack_from('<I', d, 28)[0] & 1) if self.version >= 3 else False
+        flags = struct.unpack_from('<I', d, 28)[0] if self.version >= 3 else 0
+        self.normalised = bool(flags & 1)
+        # bit 1 (2026-10-11): the run-time slots the battle's messages fill
+        # (0x93C2C4's ring, 0x93B8E4) normalised with them; a run without it
+        # hashes those words raw and differs there under an overlay
+        self.runtime_slots = bool(flags & 2)
         self.path = path
         self.keys = []      # per record: the alignment key
         self.fc = []        # per record: Frame_Counter
@@ -169,6 +174,12 @@ def same_headers(runs):
         print(f'note: {raw} hashed our pointers raw (BOF3SH2, or BOF3X_STATEHASH_RAW=1) and the others by what they '
               'name: identical without a language overlay; under one the overlay\'s tables differ from tick 1 '
               '(docs/state-hash.md section 7) - record the reference again rather than read those pages')
+    rt = [r.runtime_slots for r in runs]
+    if all(norm) and any(rt) and not all(rt):
+        old = ', '.join(r.path for r in runs if not r.runtime_slots)
+        print(f'note: {old} hashed the battle message words (0x93C2C4, 0x93B8E4) raw and the others by what they '
+              'name: identical without a language overlay; under one, pages 0x93B000 and 0x93C000 differ from the '
+              'first battle message (docs/state-hash.md section 7, measured 3)')
 
 
 def cmd_info(a):
@@ -178,6 +189,8 @@ def cmd_info(a):
     h = 'no skip list hash (BOF3SH1)' if r.skip_hash is None else f'skip list hash {r.skip_hash:08X}'
     h += ', our pointers ' + ('hashed by what they name' if r.normalised else
                               'raw (BOF3X_STATEHASH_RAW=1)' if r.version >= 3 else f'raw (BOF3SH{r.version})')
+    if r.normalised:
+        h += ', the battle message words ' + ('with them' if r.runtime_slots else 'raw (before 2026-10-11)')
     print(f'{a.run}: {len(r.recs)} records, ticks {r.keys[0]}..{r.keys[-1]}, Frame_Counter {r.fc[0]}..{r.fc[-1]}, '
           f'{r.pages} pages of 0x{r.page:X} from 0x{r.base:X}, {r.skips} skip ranges, {h}')
     busy = {}
