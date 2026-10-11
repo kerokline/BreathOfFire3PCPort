@@ -21,3 +21,4 @@ The saves on this machine (2026-09-26), for the record - not their contents:
 | `adult_ryu.DAT` | slot 5: adult Ryu, Lv 38, a US conversion (menu square, confirm cross, cancel triangle) | `field_menu`, `menu_screens`, `field_view`, `camera_rotate` |
 | `town.DAT` | slot 3: the town of the owner's shop and world-map routes | `shop`, `shop_ab`, `backdrop_kinds`, `worldMapAndAreaTransition`, `_ab`, `worldmap_sliver` |
 | `combat.DAT` | slot 0 as of 2026-09-26 07:41: the F12 field save the combat route was recorded from (2026-09-23) - if slot 0 had been re-saved since, this is that later save and the route wants re-importing | `combat`, `combat_ab` |
+| `eldritchGene.DAT` | slot 0 as of 2026-10-08 22:02, imported by the owner as `eldrichGene` and renamed with the recipe on 2026-10-10: the save before the gene stone's scene | `eldritchGene`, `eldritchGene_ab` |
