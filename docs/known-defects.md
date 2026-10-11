@@ -6593,7 +6593,7 @@ on purpose, to keep the stream's logic as the original's under the swap)
 and the self-test's expectation; a ledger entry, since it changes what is
 heard. Not done: the owner's call, with DIV-0091's listen.
 
-## D241 — Battle music runs on after a fight ends, and the area's music does not resume (the owner's report; not looked at)
+## D241 — Battle music runs on after a fight ends and the area's never resumes; the title music through the load screen: a stalled fade (ours, DIV-0028 amended) and a dead resume (the port's, DIV-0092) - both fixed 2026-10-10 night, the owner's ear owed
 
 **Found:** the owner, 2026-10-10 evening, in play: "our game doesn't
 'end' songs where I expect (compared to psx). The battle music will
@@ -6613,6 +6613,37 @@ review's fix for a song change into a smaller bank. A route: the owner to
 record a fight from a save with `BOF3X_RECORD`, or any battle route of
 `tools/recipes/` replayed with the music log (`DIV-0087` lines, and the
 `Music_Play` call trace).
+
+**Cause (2026-10-10 night) - ours, not the port's and not the sequenced
+engine's.** The owner's route `tools/recipes/musicStopCheck.txt` (from the
+`eldritchGene` save: the title into the load screen, two areas, a fight and
+back) replayed three ways with a new `BOF3X_MUSIC_LOG=1` line per music
+command (`analysis/shots/musicstop_1010/`): ours with the cache's music and
+ours with the MP3s both show `Music_FadeOut(16)` at frame 467,
+`Music_FadeOutStop(10)` at frame 483 and then **no `Music_Stop` until the
+next `Music_Play`** at frame 913 (every `Music_Stop` in both logs is the
+release inside `Music_Start`); the fight's end and the fanfare's end the
+same. Capcom's code on the same route stopped the title music on time (the
+owner's ear). DIV-0028's once-a-frame step watched the float frame deadline
+`0x6BC628` for a new frame, and DIV-0047's WinMain (2026-09-24) never writes
+it: every fade took one step and stalled, so no stopping fade reached its
+`Music_Stop`. Fixed in `Sound_Tick`: the step keys on `Frame_Counter`
+(DIV-0028's amendment). The 2026-09-23 confirmation of DIV-0028 in game
+predates DIV-0047 by a day. The second half of the report - the area's
+music not resuming - was not reproduced on this route: the game asked for
+the area's track (`Music_Play(93)` at frame 3841) and it played; whether
+the owner's fight was a different case is still theirs to say.
+
+**The second half, found later the same night (DIV-0092):** the resume
+`GameMode5_Leave` asks for is `Music_Play(Music_Track)`, and by then the
+fanfare's stopping fade has marked the track `0xFF`, so Capcom's PC never
+resumed the field's music after a fight at all - the PSX restarts the area's
+song from its table. The owner heard Capcom's run stay silent after the
+fight. The same route showed it: no `Music_Play` between the
+fanfare's stop (frame 2804) and the next fight (3189). Ours now plays the
+area's track `0x904CD0` there, and on a load of a save whose track byte is
+`0xFF` (the owner's F12 save `eldritchGene`, which loaded silent under both
+codes). The owner's ear is owed on both.
 
 ## D242 — The dragon gene at the lighthouse's pedestal is drawn clipped by the floor (the owner's report; not looked at)
 

@@ -2,7 +2,8 @@
 // areas (0..5, 7, 8, 10, 12, 13, 15) touch that symbols.toml has no name for,
 // and the areas' own .data tables, read in place. Every call they make is to
 // a named function through the area harness (AH_CALL): Capcom's
-// MoveCmd_Move, Crt_sprintf and Rand, ours the rest. docs/area_w0a.md.
+// Crt_sprintf and Rand, ours the rest (MoveCmd_Move too since 2026-10-10).
+// docs/area_w0a.md.
 #pragma once
 
 #include <cstdint>

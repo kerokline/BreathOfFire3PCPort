@@ -40,3 +40,4 @@
     {144,  1026926,    29237,  2152560, 128},  // 144.DAT: render, full, body 48.148 s, confidence 0.992
     {157,  1645506,   803126,  4535168, 256},  // 157.DAT: render, shifted (stand-in 0.933 over 0.07 s), body 84.627 s, confidence 0.882, short of a whole body by 2833 samples
     {164,   789943,   439599,  1311046, 128},  // 164.DAT: render, full, body 19.761 s, confidence 0.977
+    {165,   394554,    88237,  1087232, 256},  // 165.DAT: render, shifted (stand-in 0.978 over 0.04 s), OWNER-APPROVED below the gate (loop correlation 0.787 under 0.80), body 22.653 s, confidence 0.787, short of a whole body by 1591 samples

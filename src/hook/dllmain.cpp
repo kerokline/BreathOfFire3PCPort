@@ -4,7 +4,9 @@
 //
 // Order: the log first (Fatal writes to it), the image check before anything
 // that trusts an address, and the tracer after InjectAll, which it needs to
-// know what is owned (calltrace.h). BOF3X_SELFTEST_ONLY ends the
+// know what is owned (calltrace.h). The state hash reads .data on both sides
+// of InjectAll (statehash.h): its pointer slots before any of ours has
+// written there. BOF3X_SELFTEST_ONLY ends the
 // process after the injects, and Fatal skips its message box.
 #include <windows.h>
 
@@ -18,6 +20,8 @@
 #include "hook/inject_all.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
+#include "hook/stackwatch.h"
+#include "hook/statehash.h"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {
@@ -36,7 +40,10 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
             std::swprintf(name, 64, L"Local\\bof3x_unattended_%lu", GetCurrentProcessId());
             CreateEventW(nullptr, TRUE, FALSE, name);
         }
+        bof3::StateHash_BeforeInjects(module);   // BOF3X_STATEHASH: .data as the loader mapped it
         bof3::InjectAll();
+        bof3::StateHash_AfterInjects();
+        bof3::StackWatch_Start();   // the main thread's stack and the x87 word; BOF3X_STACKWATCH
         if (GetEnvironmentVariableA("BOF3X_SELFTEST_ONLY", nullptr, 0) > 0) {
             // Every inject and start-up self-test has run; the game never starts.
             bof3::Log("self-test only: done, ending the process");
@@ -51,6 +58,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         // Our streams are still open here: ExitProcess detaches this DLL
         // before the C runtime it loaded.
         bof3::InputScript_Stop();
+        bof3::StackWatch_Exit();
         bof3::LogClose();
     }
     return TRUE;

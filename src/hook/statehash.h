@@ -13,6 +13,18 @@
 
 namespace bof3 {
 
+// Called by DllMain before InjectAll, with our module: reads our image's
+// extent from its PE headers and records which aligned words of .data hold a
+// pointer into BOF3.exe's image as the loader mapped it - Capcom's pointer
+// slots, the only words the hash normalises (docs/state-hash.md section 7).
+// Logs the census: the words of .data whose value already lies in our image.
+// Does nothing unless BOF3X_STATEHASH is set.
+void StateHash_BeforeInjects(void* dll_module);
+
+// Called by DllMain after InjectAll: the same census again, the words our
+// injects wrote. Does nothing unless BOF3X_STATEHASH is set.
+void StateHash_AfterInjects();
+
 // BOF3X_STATEHASH names the output file. BOF3X_STATEHASH_SKIP names a list of
 // byte ranges hashed as zero; BOF3X_STATEHASH_DUMP a comma-separated list of
 // ticks at which all of .data is also written raw, beside the output file.

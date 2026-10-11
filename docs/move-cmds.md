@@ -8,6 +8,11 @@ negative controls, 74 refused by a count and 2 that change nothing. **Through th
 batch `ab24`.** No divergence; two latent defects written down
 ([`known-defects.md`](known-defects.md) D14, D15).
 
+**2026-10-10: a sixteenth, `MoveCmd_Move` `0x578C10`** - the last function
+of the game's own code that was still Capcom's (section 8). Fuzzed (0
+mismatches, 14 controls refused), self-tested narrow and wide; not live-run,
+no state-hash run.
+
 **The live batch, 2026-09-22 (`ab24`, `analysis/validate_ab24.sh`):** the whole third round - groups H, J, K, L and M, 137 functions, 466 ours - checked at once, original against ours: the field, new-game, field-menu and menu-screens capture pairs identical (4, 9, 7, 5 of each), the 9-minute attract 55 of 55 (and 55 of 55 against `ab22`'s ours), the same attract in English 55 of 55, the oracle identical at all 7,478 compared frames, the memory dump identical, and the frame hash identical on all 10,063 frames (`ab24_orig` / `ab24_oursb`, beside an original-vs-original pair identical on 10,062).
 
 The third parallel round's group L ([`takeover-queue-round3.md`](takeover-queue-round3.md)):
@@ -25,6 +30,7 @@ counts are `hidden_b`'s, `analysis/calltrace/hidden_b/bof3x.callcounts.tsv`).
 | `0x518B00` | `Sprite_SetPoseWait` | `0x16` | `FUN_801A3764` (gap44) | 83 | `[3] = [1]`, `[1] = 5` |
 | `0x573400` | `MoveCmd_MoveKind2` | `0xED` | `FUN_801C6DF4` (call) | 41 | the kind-2 object's move |
 | `0x5734F0` | `Kind2_Place` | `0x66` | `FUN_801C7014` (call-anchored) | 12 | the kind-2 object placed and grounded |
+| `0x578C10` | `MoveCmd_Move` (2026-10-10, section 8) | `0xF5` | `FUN_801ACBA8` (call; not re-read) | not measured | a step's move of any other object: count, velocity, the rise to the ground |
 | `0x578D10` | `MoveCmd_OpF7` | `0xA4` | `FUN_801ACD68` (call) | 6 | op `F7`'s timed move to a point on the ground |
 | `0x578DC0` | `MoveCmd_HandlePosition` | `0xEA` | `FUN_801ACF30` (read on both) | 6 | where a handle's object stands, plus an attachment offset |
 | `0x5792A0` | `MoveCmd_Attach` | `0xE8` | `FUN_801AD768` (call) | 12 | op `F8`, attach ([`movement-script.md`](movement-script.md) §2) |
@@ -298,6 +304,7 @@ jump table into `0x57C3E0`'s neighbours). The other twelve are as listed.
 005190A0 1F9
 00519890 57
 00573400 ED
+00578C10 F5
 005734F0 66
 00578D10 A4
 00578DC0 EA
@@ -313,3 +320,144 @@ jump table into `0x57C3E0`'s neighbours). The other twelve are as listed.
 
 `0057C310`'s `D0` includes its jump table (`0x57C3A4..0x57C3DF`); the code
 alone is `0x91`.
+
+## 8. `MoveCmd_Move`, taken 2026-10-10
+
+Until this date `MoveCmd_Move` `0x578C10` was the one function of the game's
+own code our code still called as Capcom's: `symbols.toml` had its
+`[[func]]` (the prologue read in round three) without `impl`, so every
+`AH_CALL(MoveCmd_Move)` / `SH_CALL(MoveCmd_Move)` - nine area modules and
+`EffectKind32_Throw` (field_c1) - and the callee tables of the movement
+script's interpreter (`move_script.cpp`) and the field objects
+(`field_objects.cpp`, `object_kinds.cpp`) bound to Capcom's address. It was
+missing from `analysis/pc_funcs.json` (that list misses starts it did not
+walk to), had no detour, and `inject: N ours` did not count it, since that
+counts `impl`s only. `tools/owned_sweep.py` (8.2) is the check that lists
+such a function.
+
+**The read** (`python tools/pe_disasm.py 0x578C10:90`, capstone to the last
+instruction): `0x578C10..0x578D04`, `0xF5` bytes, then nops to `MoveCmd_OpF7`
+at `0x578D10`. Cdecl, `(object, direction)`; two calls, `0x578CBE`
+`AreaMap_Slope` and `0x578CD2` `AreaMap_Elevation`; every jump internal. The
+PSX twin is `FUN_801ACBA8` (`psx_pair` call; not re-read for this).
+
+1. `speed = Field_MoveSpeeds[object +4]`, the byte unmasked.
+2. `Sprite_Current +9 = 0x20` for directions 2 and 6 (the direction's low
+   byte), else `0x10`; then `+9 = +9 / speed` (`idiv`; a speed of 0 faults).
+3. `+0xC = MoveCmd_F9Steps[direction * 2] * speed`, `+0x10 =
+   MoveCmd_F9Steps[direction * 2 + 1] * speed` (`imul`, wrapping; the
+   direction unmasked, `(direction & 0xFF) << 3` bytes). `0x6696DC` was
+   `move_cmds_callees.h`'s unnamed `kKind2Steps`; round twelve had already
+   named it `MoveCmd_F9Steps`, and both moves now use that name.
+4. The landing: `x = +0xC * +9 + +0x34`, `z = +0x10 * +9 + +0x38`.
+5. Unless bit 7 of `object +0`: `ground = AreaMap_Slope(x, z, direction)`,
+   and when it leaves `DamageScratch`'s byte non-zero (sloped ground,
+   [`kind2-object.md`](kind2-object.md) section 7) `ground =
+   AreaMap_Elevation(x, z)` instead; then `+0x14 = ((s16) ground - (s16)
+   +0x3E) / +9` (`idiv`), both re-read through `Sprite_Current` after the
+   calls. On flat ground the answer is `AreaMap_Slope`'s own return, the
+   flat case's height.
+6. `Sprite_Current +0 |= 0x10`, always. `eax` is left holding
+   `Sprite_Current`; no caller reads it (`void`).
+
+`Field_JumpSetUp` `0x534610` is the same shape with other callees
+(`0x5725C0`, `MapView_GroundAt`), and `MoveCmd_MoveKind2` is the kind-2
+object's version.
+
+**Ours** (`move_cmds.cpp`) is the same term for term. Kept as the original
+has it: the speed index and the direction unmasked; the signed divisions;
+the 16-bit ground and height; `+9` and `+0x3E` read again after the calls;
+`object +0` read after the velocity is stored. **Two differences, neither
+reachable by a valid input:** a divisor of 0 - a speed of 0 (table entry 0),
+or a frame count of 0 (a speed above `0x10`, `0x20` on the diagonals, which
+only an index past the table gives) - aborts by name where the original
+raises the divide fault (the owner's ruling of 2026-09-26, no DIVERGENCE
+entry: [`takeover-queue-round9.md`](takeover-queue-round9.md)); and the
+original pushes its whole direction dword to `AreaMap_Slope` where ours
+passes the byte, which is all `AreaMap_Slope` reads (`area_slope.cpp`).
+
+**The harnesses.** `MoveCmd_Move` now binds to ours, so the stand-in rows that
+named it as Capcom's were switched to key by ours with Capcom's address
+kept: `area_w0a_fuzz.cpp` (`KeyOf(&::MoveCmd_Move)`), the `W1C`, `W1F`,
+`W2D`, `W3D`, `W3E`, `W3F`, `W4E`, `W4F` rows (`*_THEIRS` to `*_OURS`),
+`field_c1_fuzz.cpp` (`FC1_OURS`) and `scenario_harness.cpp` (`FIELD_OURS`).
+The clone-based fuzzes (`field_objects`, `object_kinds`, the area clones'
+`CallSite` rows) re-aim Capcom's call sites by address and needed nothing.
+
+### 8.1 The fuzz and its controls
+
+`move_cmds_fuzz.cpp` clones `0x578C10` for `0xF5` bytes with both calls
+re-aimed: `0xAE` to a new `AreaMap_Slope` stand-in, `0xC2` to the existing
+elevation one. The slope stand-in records `(x, z, direction & 0xFF)`,
+answers a high half of 0, sign-extended or random, leaves `DamageScratch`'s
+byte 0, 1 or another non-zero byte (a third of the time each), and a third
+of the time each rewrites `+9` (never to 0) and `+0x3E`, so that a read
+moved before the call shows. `DamageScratch`'s four bytes joined the
+compared state. Inputs: the object is the fuzz's context buffer, bit 7 of
+`+0` half the time; the speed index 1..5 three times in four, else any byte
+whose table byte divides (non-zero, and with the ground asked one that
+leaves a count); directions 0..7, 2 and 6 again, 8, 9, `0x82`, `0xFF` and
+random, with stale upper bytes. Rounds rose from 28,000 to 30,000 to keep
+2,000 a function.
+
+**Result:** `move_cmds self-test: 30000 rounds (2000 per function, 15
+functions), 26765 calls to the stand-ins, 0 MISMATCHES; Math_Ratan2 20000
+rounds under three control words, 0 MISMATCHES`.
+
+**Controls**, one planted bug each in `MoveCmd_Move`, built and run with
+`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=move_cmds` from an ini-less copy (the
+scratchpad's `controls.py`, not committed). **14 planted, 14 refused**;
+mismatching rounds of `MoveCmd_Move`'s 2,000:
+
+| | control | refused |
+|---|---|---|
+| M1 | only direction 2 doubles | 239 |
+| M2 | `+9` not divided by the speed | 1,395 |
+| M3 | the x unit is the z one | 1,745 |
+| M4 | bit 6 of `object +0` for bit 7 | mismatches from round 29 (12 logged), then ours' abort on a count of 0 ends the run before the summary |
+| M5 | the elevation always, never the slope's own answer | 363 |
+| M6 | the scratch byte compared with 1, not 0 | 322 |
+| M7 | the height unsigned | 525 |
+| M8 | `+9` not read again after the calls | 322 |
+| M9 | flag `0x20` | 1,496 |
+| M10 | the direction masked `& 7` for the units | 729 |
+| M11 | the rise divided unsigned | 449 |
+| M12 | the ground's whole dword, not its low 16 bits | 516 |
+| M13 | the landing one frame's step | 695 |
+| M14 | the slope asked with `direction & 7` | 384 |
+
+M6 and M8 are refused only because the stand-in draws a scratch byte other
+than 0 and 1 and rewrites `+9`: without those draws they would pass.
+
+### 8.2 Verification
+
+Built in the worktree (`cmake --preset i686 && cmake --build build`), run from
+an ini-less copy of the launcher and DLL:
+`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' bof3x-launcher.exe --game .../bof3 --no-config`.
+
+- narrow: exit 0, `inject: 10087 ours, 0 left original by BOF3X_ORIGINAL` (one more than 10,086), no mismatch in any group.
+- `BOF3X_WIDE=1` (`patch ON Widescreen` in the log): exit 0, the same `inject:` line, no mismatch.
+
+`python tools/owned_sweep.py` after the takeover - every harness call macro
+(`AH_` / `BH_` / `MH_` / `SH_CALL`), every row of an array typed
+`*::CallSite`, and every bare use of the name of a `[[func]]` without `impl`:
+
+```
+owned_sweep: 15346 harness call macros (6 through a pointer), 28469 CallSite rows; 10 callee(s) not ours
+  0x5adf00 Mp3_Create .. 0x5b0d50 Mp3_MemoryIo: [[func]] without impl (eight, sound.cpp)
+  0x5b9550 Crt_ftol: [[func]] without impl (21 file(s))
+  0x5bad64 Crt_GetPtd: [[func]] without impl (2 file(s))
+```
+
+The decoder's eight are DIV-0091's, reached only under `BOF3X_MP3=original`;
+`Crt_ftol` is a clone's callee in 21 fuzzes (ours inline it). **`Crt_GetPtd`
+`0x5BAD64` is one more than expected**: `crt_rest.cpp`'s `Rand` seed
+instrument for the map_cells live check calls it, as its `symbols.toml`
+entry records - a known use, reported, not taken here. The six "through a
+pointer" are macros over a local function pointer or a template parameter
+(`effect_2a.cpp`, `magic_s16.cpp`, `magic_s18.cpp`, `rest_1e.cpp`).
+
+**Not verified:** no live route was run (the owner was playing on the
+machine), and no state-hash A/B run (`BOF3X_STATEHASH`, `tools/statehash.py`)
+was made; which recorded routes reach `MoveCmd_Move` was not measured. The
+PSX twin was not re-read.

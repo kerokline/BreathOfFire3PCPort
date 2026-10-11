@@ -278,7 +278,7 @@ const ah::Callee kCallees[] = {
     {W2D_OURS(Sprite_SetAnimation), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     {W2D_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W2D_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},
-    {W2D_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
+    {W2D_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     {W2D_OURS(MoveScript_SetTurnTarget), 1, {kAll}, ah::Answer::kFlag, 0, 0, {}, &MovesScriptObject},
     {W2D_OURS(KeyItem_Has), 1, {kAll}, ah::Answer::kFlag, 0, 0},
     {W2D_OURS(Kind2_Place), 1, {kU8}, ah::Answer::kGarbage, 0, 0},

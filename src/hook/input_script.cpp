@@ -324,7 +324,7 @@ void SaveShot(const Step& s) {
     for (char c : s.text) path += static_cast<wchar_t>(static_cast<unsigned char>(c));
     path += L".bmp";
     const bool ok = render::SaveFrame(path.c_str());
-    Log("input       shot %s %s %ls", s.text.c_str(), ok ? "saved to" : "NOT saved:", path.c_str());
+    Log("input       shot %s %s %s", s.text.c_str(), ok ? "saved to" : "NOT saved:", Utf8Path(path.c_str()).text);
 }
 
 // A frozen shot. Called from the latch at the top of WinMain's loop, where the
@@ -687,7 +687,7 @@ void InputScript_Start() {
     const DWORD dn = GetEnvironmentVariableW(L"BOF3X_SHOT_DIR", dir, MAX_PATH);
     if (dn > 0 && dn < MAX_PATH) {
         g_shot_dir = dir;
-        Log("input       shots are written by the game to %ls (BOF3X_SHOT_DIR)", dir);
+        Log("input       shots are written by the game to %s (BOF3X_SHOT_DIR)", Utf8Path(dir).text);
     }
     char wait[8];
     if (GetEnvironmentVariableA("BOF3X_SHOT_WAIT", wait, sizeof wait)) {

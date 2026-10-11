@@ -46,6 +46,20 @@ bool Active();
 // as the MP3 path does at its end of stream.
 void Decode(unsigned char* dst, int size);
 
+// The music's resume after a battle (DIV-0092, docs/music-seq-engine.md
+// section 8). Fold: `heard`, a sample of the synth's stream since Begin, as
+// the same point of the song inside its first pass and first loop: past the
+// second loop-end jump the song repeats with the measured period (the jumps'
+// spacing), so the position is taken back by whole periods. The synth's
+// current song; while it is still the one playing.
+std::uint32_t Fold(std::uint32_t heard);
+// After Begin: the song advanced `frames` samples without a sample mixed
+// (psx::MusicSynth::FastForward), so the stream Decode renders next is the
+// one from the top at that sample - but for the reverb's return, which
+// starts from nothing. False when the song ended on the way (a once-only
+// song asked past its end); the caller then starts it again from the top.
+bool FastForward(std::uint32_t frames);
+
 // Music_SetVolume for the synth's stream: the game's 0..127 as DirectSound
 // hundredths of a decibel by libsnd's sequence-volume law - the volume
 // truncated toward zero, below 1 taken as 1 (_SsVmSetSeqVol), above 127 as

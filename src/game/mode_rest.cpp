@@ -23,7 +23,9 @@
 #include <cstdint>
 
 #include "bof3/symbols.gen.h"
+#include "game/mode_flow.h"
 #include "game/mode_rest_callees.h"
+#include "game/music_resume.h"
 #include "game/sound_rest.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
@@ -288,6 +290,10 @@ extern "C" void __cdecl GameMode5_Load(void) {
     SH_CALL(Field_PartyLoad)(1);
     SH_CALL(Encounter_PartyAtPlaces)();
     BattleFrames();
+    // DIV-0092: the field's song and where it is heard, before the battle's
+    // music takes over - our DLL's state, nothing written to the game's;
+    // nothing remembered with the switch off (Capcom's rule, and the fuzz).
+    music_resume::Remember();
     if (!(At(at::kBattleFlags)[0] & 0x40) && Music_Track != 0xFF) SH_CALL(Music_FadeOutStop)(0xA);
     unsigned track;
     const unsigned char event = At(at::kEventBattle)[0];
@@ -361,9 +367,22 @@ extern "C" void __cdecl GameMode5_Leave(void) {
             SH_CALL(MapView_SetElevation)(static_cast<int>(height));
         }
         if (!(At(at::kBattleFlags)[0] & 0x40) && !(At(at::kBattleFlags2)[0] & 8)) {
-            const unsigned char track = Music_Track;
-            if (track != 0xFF) SH_CALL(Music_Play)(track, 0xA);
+            unsigned char track = Music_Track;
+            // DIV-0092: by now the fanfare's stopping fade (BattleEnd_ExitHook)
+            // has left the track 0xFF, so Capcom's Music_Play(Music_Track) never
+            // ran and the field came back silent; the PSX restarts the area's
+            // song from its table. Ours plays the area's own track.
+            // When that is the song the battle took over, it resumes where it
+            // was heard (GameMode5_Load's Remember), as the PlayStation's does,
+            // over music_resume's own fade.
+            bool resume = false;
+            if (track == 0xFF && mode_flow::g_area_track_fallback) {
+                track = At(at::kAreaTrack)[0];
+                resume = track != 0xFF && music_resume::Arm(track);
+            }
+            if (track != 0xFF) SH_CALL(Music_Play)(track, resume ? music_resume::kResumeFadeFrames : 0xA);
         }
+        music_resume::Forget();  // a remembered position is used here or not at all
         At(at::kBattleFlags)[0] = 0;
         At(at::kEventBattle)[0] = 0;
         SH_CALL(Field_ZoneCounterRoll)(0);
@@ -404,6 +423,14 @@ extern "C" void __cdecl GameMode6_Run(void) {
 
 void ModeRest_Inject() {
     if (bof3::WantsShadow("mode_rest")) mode_rest::SelfTest();
+    {
+        // DIV-0092: armed here because ModeFlow_Inject (and its fuzz of
+        // GameMode_Start) ran earlier in InjectAll; both fuzzes see Capcom's rule.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("AreaTrackFallback",
+                         static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&mode_flow::g_area_track_fallback)), was, is, 4);
+        bof3::Log("DIV-0092    the field's music after a battle, and after a load of a save without a track, is the area's own (on unless the line above says OFF)");
+    }
     BOF3_INJECT(GameMode3_Run);
     BOF3_INJECT(GameMode3_Enter);
     BOF3_INJECT(GameMode3_Leave);

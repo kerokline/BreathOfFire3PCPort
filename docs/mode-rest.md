@@ -185,6 +185,8 @@ order): `Draw_OtSlot` 6; `Field_PartyLoad(0)`; `Party_PlacesByList`;
 `MapView_SetElevation(AreaMap_Elevation(Field_Kind2X, Field_Kind2Z))`; the
 field's track again - `Music_Play(Music_Track, 0xA)` - unless `0x904AE5`
 bit 6 (read again after the elevation), `0x904AE8` bit 3 or the track 0xFF;
+(**DIV-0092**, 2026-10-10: the track is always 0xFF here after the fanfare's
+stopping fade, so the port never resumed; ours plays the area's `0x904CD0`)
 `0x904AE5` and the event battle 0; `Field_ZoneCounterRoll(0)`;
 `Field_AfterBattleTally`. Either way `Party_ScriptTicks` and the two frames;
 after the first branch `Game_Mode` 2, `Game_Step` 0, `Field_Request` 0.

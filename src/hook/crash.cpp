@@ -180,11 +180,11 @@ void Report() {
             BOOL ok = g_write_dump(GetCurrentProcess(), GetCurrentProcessId(), f, type, &mei, nullptr, nullptr);
             CloseHandle(f);
             if (ok)
-                Log("CRASH %ld: dump written: %ls", (long)n, g_dump_path);
+                Log("CRASH %ld: dump written: %s", (long)n, Utf8Path(g_dump_path).text);
             else
                 Log("CRASH %ld: MiniDumpWriteDump failed, error 0x%08lX", (long)n, GetLastError());
         } else {
-            Log("CRASH %ld: cannot create %ls, error %lu", (long)n, g_dump_path, GetLastError());
+            Log("CRASH %ld: cannot create %s, error %lu", (long)n, Utf8Path(g_dump_path).text, GetLastError());
         }
     } else {
         Log("CRASH %ld: no dump - dbghelp.dll did not load", (long)n);

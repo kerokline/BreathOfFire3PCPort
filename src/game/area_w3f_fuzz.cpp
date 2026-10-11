@@ -301,7 +301,7 @@ const ah::Callee kCallees[] = {
     {W3F_OURS(Kind2_Place), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {W3F_OURS(Transition_Start), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {W3F_OURS(MoveCmd_MoveKind2), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
-    {W3F_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
+    {W3F_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     {W3F_OURS(Item_NamePtr), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &NameEffect},
     {W3F_OURS(MapView_GroundAt), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &GroundEffect},
     {W3F_OURS(Field_LeaderStepTick), 0, {}, ah::Answer::kFlag, 0, 0, {}, &MovesCurrent},

@@ -261,7 +261,7 @@ const ah::Callee kCallees[] = {
     {W1C_OURS(ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W1C_OURS(ScriptFlags_Clear40), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W1C_OURS(MoveScript_ObjectKind), 0, {}, ah::Answer::kGarbage, 0, 0, {}, &KindAnswer},
-    {W1C_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
+    {W1C_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     {W1C_OURS(MoveCmd_MoveKind2), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     {W1C_OURS(Field_JumpSetUp), 0, {}, ah::Answer::kGarbage, 0, 0},
     {W1C_OURS(Field_JumpCamera), 0, {}, ah::Answer::kGarbage, 0, 0},

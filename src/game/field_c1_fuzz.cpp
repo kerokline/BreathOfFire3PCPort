@@ -299,7 +299,7 @@ const sh::Callee kCallees[] = {
     {FC1_OURS(AreaMap_ByteAt), 2, {0xFFFF, 0xFFFF}, sh::Answer::kByte, 0, 0xFF, {}, &CellByte},
     {FC1_OURS(AreaMap_Elevation), 2, {kAll, kAll}, kG, 0, 0, {}, &Ground},
     {FC1_OURS(AreaMap_Slope), 3, {kAll, kAll, 0xFF}, kG, 0, 0, {}, &Slope},             // n the direction's byte (area_slope.cpp)
-    {"MoveCmd_Move", KeyOf(MoveCmd_Move), KeyOf(MoveCmd_Move), 2, {0, 0xFF}, kG, 0, 0, {}, &Mover},
+    {FC1_OURS(MoveCmd_Move), 2, {0, 0xFF}, kG, 0, 0, {}, &Mover},
     {FC1_OURS(Sprite_FindFree), 0, {}, sh::Answer::kByte, 0, 0x1D, {}, &FreeSprite},
     {FC1_OURS(Sprite_ObjectAt), 3, {kAll, kAll, kAll}, sh::Answer::kByte, 0, 0x21, {}, &FoundObject},
     {FC1_OURS(Party_MemberAt), 3, {kAll, kAll, kAll}, sh::Answer::kByte, 0, 2, {}, &FoundMember},

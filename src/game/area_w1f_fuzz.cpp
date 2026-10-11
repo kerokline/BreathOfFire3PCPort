@@ -349,7 +349,7 @@ const ah::Callee kCallees[] = {
     {W1F_OURS(Menu_DrawOutline), 5, {kAll, kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
     {W1F_OURS(Gfx_CommitPrim), 2, {kAll, kAll}, ah::Answer::kGarbage, 0, 0, {}, &CommitEffect},
     {W1F_OURS(Crt_sprintf), 4, {kAll, kAll, kAll, kAll}, ah::Answer::kGarbage, 0, 0},
-    {W1F_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {W1F_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     // standard ones listed again: what the callee reads, or what the caller reads after
     {W1F_OURS(Text_DrawAt), 5, {kAll, kAll, kU8, kAll, kAll}, ah::Answer::kGarbage, 0, 0},   // the colour's upper bytes are the original's stack
     {W1F_OURS(Inventory_CountUsed), 1, {kAll}, ah::Answer::kGarbage, 0, 0, {}, &CountEffect},

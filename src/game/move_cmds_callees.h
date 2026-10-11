@@ -1,6 +1,6 @@
 // Internal to move_cmds.cpp and move_cmds_fuzz.cpp: the addresses the
 // movement commands touch that have no name in symbols.toml, and every call
-// the fifteen functions make - through pointers, so that the start-up fuzz can
+// the sixteen functions make - through pointers, so that the start-up fuzz can
 // stand recording functions in for them, for the originals' copies and for
 // ours alike. Several callees are ours in this module (Math_Ratan2 under
 // Party_MoveMember, the object kind, the detach and the move under the attach
@@ -15,10 +15,8 @@
 namespace move_cmds {
 
 // --- Addresses without a name --------------------------------------------
-// The kind-2 object's per-direction step, two dwords (x, z) per direction:
-// MoveCmd_MoveKind2 reads [dir * 8] and [dir * 8 + 4]. The PSX 0x80182438
-// (FUN_801C6DF4's -0x7FE7DBC8), 0xD4 bytes before Field_DirectionSteps.
-constexpr std::uint32_t kKind2Steps = 0x6696DC;
+// (The per-direction step pair 0x6696DC, kKind2Steps here until 2026-10-10,
+// is symbols.toml's MoveCmd_F9Steps, named by round twelve.)
 // The dword MoveCmd_HandlePosition keeps Sprite_Current in while it points
 // Sprite_Current at the handle's object - the PSX scratchpad's 0x1F800010,
 // which the PC also names MapView_CornerPtr for MapView_Build's use of it.
@@ -52,6 +50,7 @@ struct Callees {
     long* (__cdecl* handle_position)(long*, unsigned char, unsigned char);  // MoveCmd_HandlePosition (ours)
     void (__cdecl* partyset_load)(unsigned, unsigned, unsigned, unsigned);  // PartySet_Load
     unsigned char (__cdecl* party_join)(unsigned);                          // Party_Join
+    long (__cdecl* slope)(long, long, unsigned long);                       // AreaMap_Slope (ours)
 };
 extern const Callees kOriginals;
 extern Callees g;

@@ -331,6 +331,14 @@ scripts over `exe-pointers.tsv`, `symbols.toml` and `BOF3.exe`):
   decoder (8), the C runtime (6), `Gfx_PackRgb`, `MoveCmd_Move`,
   `Fmv_EnterFullscreen` - state 2's work. **The smallest gap between two
   starts is 11 bytes**, so a five-byte jump fits at every start.
+- **2026-10-10: 12 without `impl`.** `MoveCmd_Move` `0x578C10` is ours
+  (`move_cmds.cpp`, [`move-cmds.md`](move-cmds.md) section 8), as are four of
+  the six C runtime entries since the count above; the twelve left are the
+  MP3 decoder (8, DIV-0091), `Crt_ftol`, `Crt_GetPtd`, `Fmv_EnterFullscreen`
+  and `Gfx_PackRgb`. `tools/owned_sweep.py` lists which of them our code
+  still names or calls: the decoder's eight (`sound.cpp`'s table, reached only
+  under `BOF3X_MP3=original`), `Crt_ftol` (fuzz clones' callee rows) and
+  `Crt_GetPtd` (`crt_rest.cpp`'s `Rand` seed instrument).
 
 ### 4.2 Two ways, and the choice
 
@@ -354,7 +362,8 @@ means today; nothing is rewritten, nothing compares differently, and a
 pointer-shaped number that is not a pointer is left alone because nothing
 touches it. Needed: the 17 functions without `impl` owned first (state 2);
 the 7 placed mid-function words read (a missing `[[func]]` start, or a label
-our function does not need); a stub at any further address the tracer sees
+our function does not need - read 2026-10-10: neither, all seven are numbers,
+[`exe-code-pointers-midfunc.md`](exe-code-pointers-midfunc.md)); a stub at any further address the tracer sees
 reached; the page made read-execute after writing. Cost: 1.8 MB of address
 space (`0x401000..0x5C4000`), 50 KB of stubs.
 
@@ -419,8 +428,13 @@ the image the importer wrote.
 2. **The 147 `.bss` and 63 `.rdata` pointer words**: no disc map of either;
    the engine's own layout, held.
 3. **The code pointers** (9,142 words): section 4.2 (b) - the 17 functions
-   without `impl` (state 2), the 7 placed mid-function words read, then the
-   stub page in our own executable. Not started. The decoder's eight are
+   without `impl` (state 2), then the stub page in our own executable. The
+   7 placed mid-function words are read (2026-10-10,
+   [`exe-code-pointers-midfunc.md`](exe-code-pointers-midfunc.md),
+   `tools/exe_midfunc_pointers.py`): all seven are numbers that
+   `exe-pointers.tsv` misclasses (a title sprite's size, box positions, a
+   lift, credits text, area record bytes), so the page needs nothing for
+   them; no missing start, no takeover gap. The page itself not started. The decoder's eight are
    to be minimp3 behind the music seam ([`mp3-decoder-choice.md`](mp3-decoder-choice.md),
    the owner 2026-10-10).
 4. **`c_dfDIKeyboard`** from the SDK in state 3 (one more `.rdata` read

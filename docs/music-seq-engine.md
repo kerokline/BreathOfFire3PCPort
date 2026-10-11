@@ -191,3 +191,79 @@ under the project's C++20.
   127 vs the PSX's 97; the 42-character cache-root limit set by
   `File_Open`'s 0x50-byte retry buffer. `music_seq::Arm` is wired in
   `inject_all.cpp` after `music_loops::Arm`."
+
+## 8. The resume after a battle (DIV-0092, 2026-10-10 night)
+
+The owner's PlayStation resumes the field's song after a fight where it left
+off. DIV-0092's fallback (`GameMode5_Leave`) now does the same on both music
+paths. The shared part (the position taken, the ring's lead, the switch) is
+in [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0092 and `src/game/music_resume.h`.
+This section covers the sequenced path. The MP3's is
+[`mp3-decoder.md`](mp3-decoder.md) section 6.
+
+**The position.** It is a sample of the synth's stream since `Begin` (the
+`Play`). Music_Decode renders exactly `size / 4` frames a call until a
+once-only song ends, so the stream's sample index and
+`MusicSynth::SamplesSincePlay()` are the same count. `music_seq::Fold` maps
+a heard sample back into the first pass and loop. The synth records the
+sample (since `Play`) of its first and last loop-end jumps. Once two jumps
+have happened, a point past the first jump is taken back by whole periods,
+the jumps' mean spacing. A song's loop-end jumps fall on VSync ticks, so the
+spacing can vary by a sample between loops. The folded point is then within
+a sample of the same place in the music. Without the fold, the fast-forward
+would grow with the time spent in the area.
+
+**The fast-forward.** `music_seq::FastForward(n)` calls
+`psx::MusicSynth::FastForward(n)` after `Begin`. That is `Render`'s own loop
+(the same VSync ticks at the same samples, the sequencer's events and every
+SPU register write as `Render` makes them), with `Spu::Skip` in place of
+`Spu::Render`. Skip steps every voice per sample: the key-on latency and key
+off (`LatchKeys`, now shared with `Render`), the ADSR envelope, both volume
+sweeps, the pitch counter, and the block walk with its ADPCM decode, loop
+flags, forced release and ENDX. It does not interpolate, mix, write the
+capture buffers or run the reverb. So the sequencer's view (each voice's
+ENVX at the flush, what `_SsVmAlloc` reads) is exactly `Render`'s. The notes
+that should be sounding are keyed on, with their envelopes where they would
+be, not started fresh. At the end the reverb unit is cleared
+(`Spu::ClearReverb`: the work area from ESA and the resampler histories).
+Without that, the fanfare's last reverb would return under the field's
+song. Pitch modulation would need the outputs, so Skip aborts if PMON is set.
+The music never sets it: `Reset` clears it and nothing writes it again. A
+once-only song that reaches `Ended()` during the fast-forward returns false.
+`Music_Start` then calls `Begin` again and the song starts from the top.
+
+**What differs from the render from the top: only the reverb's return.**
+Measured with `synth_render --skip 60 --seconds 20` against `--seconds 80`
+from the top, on the cache's songs 91, 0 and 1 (`analysis/cache/pc-plus-us`,
+scratch WAVs only). The RMS difference is 230 to 330 against a signal of
+500 to 3,400 in the first half second, 2 to 4 from 0.5 to 2 s, and 0 (bit
+identical) from 2 s to the end. The cost is 230 to 250 ms per minute
+skipped on this machine, with the host build (i686 llvm-mingw, CMake
+Release; the DLL is RelWithDebInfo). That is about 250 times real time,
+against 55 for a full render. The fold caps the skip at the song's intro
+plus one loop: under a second for anything up to four minutes. It is paid
+once, in `Music_Start`, while the field reloads.
+
+**Self-test** (`BOF3X_SHADOW=sound`, `music_seq::SelfTest` part 6). A
+synthetic looping song on a bank without reverb is pending
+(`music_resume::Pend`) at sample 30,318, where two notes sound.
+`Music_LoadFile` and `Music_Start` fast-forward to it on a synth of its own.
+The next 55,296 samples from `Music_CreateBuffer`'s stand-in and
+`Music_Decode` equal, bit for bit, an oracle's render from the top at that
+sample. A once-only song pending 30 s past its end is run to its end and
+started again (the oracle does the same and must report the end). `Fold` on
+a synth after six one-second loops takes a point 221,639 samples in back to
+44,727, inside the first loop. The period is 44,228 samples (60 VSyncs).
+
+**Not verified.** Nothing has been heard. The owner's route
+`tools/recipes/musicStopCheck.txt` replayed with
+`BOF3X_CACHE=<repo>/analysis/cache/pc-plus-us BOF3X_MUSIC_LOG=1` should log
+`remember track 91 at sample S` at the fight's start (frame 1726 in
+`analysis/shots/musicstop_1010`) and `resume track 91 at sample S` when
+`GameMode5_Leave` restarts it (frame 2838). It should then sound like the
+PlayStation: the song picks up where it was, with a half-second fade in
+(`music_resume::kResumeFadeFrames`, 30 frames: the owner heard the 10-frame
+first cut on 2026-10-11, "sounds great", and asked for the longer fade so the
+song does not seem to start so close to the battle music's end). Unheard: the
+first half second's reverb (it starts empty), and the hitch, if any, of the
+fast-forward.

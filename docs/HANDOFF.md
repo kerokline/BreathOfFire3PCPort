@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-10 afternoon: the testing catch-up run at the machine and the four no-owner items built by four agents, all merged on `cleanup/testing-catchup-1010` with `main` merged in - built, `'*'` 1,064 lines 0 mismatches, the state hash identical to Capcom's; **up next: the PR, then the owner's eye and ear**, items 0 and 1 below)
+**Status:** IN PROGRESS (2026-10-10 night: PRs #49 and #50 merged; `platform/state2-prework` holds the prework for states 2 and 3 - five agents merged - and the night's music fixes from the owner's route (DIV-0028 amended, DIV-0092); **up next: the PR from this branch, then state 3 - our own executable** - items 00 and 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -30,61 +30,74 @@ saves and re-recorded) **and four agents built the no-owner items** (item 0: the
 step 8's engine half; a disc-only language build, DIV-0090; the music measurement's open ends and the tooling,
 DIV-0081's second cut), merged one at a time on `cleanup/testing-catchup-1010`. Nothing of it has been played or
 heard. The regression check is the state hash ([`state-hash.md`](state-hash.md); references in `analysis/statehash`,
-the route pairs now `cn_<route>_orig2` / `_orig2b`).
+the route pairs now `cn_<route>_orig2` / `_orig2b`). **PRs #49 and #50 merged on 2026-10-10 night** (`main` `a30f1916`); the night's work is on
+`platform/state2-prework` (item 00): `MoveCmd_Move` taken (10,087 ours), the state hash normalised, the stack measured, the
+code page audited, the seven mid-function pointers read, and two music defects of the owner's route fixed.
 
 ## Pick up here
 
-00. **The MP3 decoder (DIV-0091, `platform/mp3-decoder`, 2026-10-10 evening; [`mp3-decoder.md`](mp3-decoder.md)):**
-    built, compared against Capcom's decoder on every MP3 (same shape; ffmpeg sides with ours), `sound` and `'*'`
-    headless. **Owed the owner's ear:** a fight and its fanfare, a town, a once-only song's end, a looping track,
-    with `BOF3X_MP3=original` as the A/B. **The owner's calls:** D240 (Capcom's stale end-of-stream count - 26 ms of
-    stale music at every rewind of an unmeasured loop; the fix is `kEosBytes = 0` and a ledger entry) and D241 (their
-    report of battle music running on after a fight, catalogued, configuration unknown). **Done the same evening** on
-    `crt/allocator` (over this branch and `crt/atoi-and-startup`): the C runtime's remainder - `Crt_atoi` and
-    `Crt_sscanf` exact over both formats that reach it (`Cfg_Load`'s and the decoder's `%lx@%lx`, which
-    `BOF3X_MP3=original` still needs), `malloc` / `calloc` / `free` the toolchain's as a set, no guard needed
-    ([`crt-rest.md`](crt-rest.md) 2.6, 2.7), `docs/crt-startup.md` read for state 3; `inject: 10086 ours`, `'*'`
-    narrow and wide. **The owner's first start of this build crashed** (no cache, the MP3 path): minimp3's 13 KB
-    stack scratch on a 16 KB task-stack slice - `Mp3_Decode` now runs on a 256 KB stack of its own
-    ([`mp3-decoder.md`](mp3-decoder.md) 1); seen: the title and three minutes of the attract sequence through the
-    MP3s, eight tracks, no crash. **Lesson for every module:** code called from a task has 16 KB of stack. **One PR, from
-    `crt/allocator`** (which contains `platform/mp3-decoder` and `crt/atoi-and-startup`; the owner's call, 2026-10-10). **Held by the owner:** state
-    2's tracer proof (armed on `0x5AB7E0..0x5B8DA0`, and now the runtime's heap range) - "we'll hold the tracer proof
-    till later" (2026-10-10). A launcher box for `BOF3X_MP3` beside `music=`.
-
-
-0. **The catch-up branch, `cleanup/testing-catchup-1010`** (2026-10-10 afternoon; its worktree is the
-   session-`ba6f0f72` scratchpad's `cu/`, because the main checkout was another session's that day). On it, merged one
-   at a time with a build after each and `main` (PR #48) merged last:
-   - **The engine reads the importer's cache** (DIV-0089, [`cache-read.md`](cache-read.md)): with `BOF3X_CACHE` set,
-     `LoadDatFile`, `Snd_LoadBankFile` and `Sound_LoadStream` open the cache's `base/dat` + `loc/zh-CN/dat` (in the
-     manifest's slot order - base-then-zh is wrong in `FIRST.DAT`), `loc/<tag>`, `opt/<layer>` and `base/snd` before
-     the install's; `BOF3X_CACHE_DATA=0` keeps the cache for the music only; `tools/cache_walk.py` restates the walk
-     and `importer.py check` runs it. Proved offline against `install` (742 of 742), not played.
-   - **Step 8's engine half begun** ([`exe-import-engine.md`](exe-import-engine.md)): the data-pointer rebuild (the
-     map run backwards: JP 7,138 of 9,959 words, the image 90.4 % the PC's, `recipes/exe-rebuild.tsv`), the
-     pointer-keyed places (`exe-places.tsv`, 403 more bytes), `.rdata`'s 44 constants the engine's own
-     (`src/game/rdata_consts.*`, verified against the exe at start-up), state 3's design chosen (an entry-stub page),
-     and `BOF3X_EXEIMAGE=<cache>` laying `base/exe/data.bin` over `.data` after a byte check. Left: its section 5.
-   - **A disc-only language build** (DIV-0090, [`loc-build-disc-only.md`](loc-build-disc-only.md)): `loc_build.py all
-     --disc D --cache CACHE` from a cache with no PC install; the PC path byte-identical (verified: 247 of 247 en-US).
-     Disc-only differs in the font (the port's 2,376 glyphs blank), 31 area blocks' Japanese template slots, the
-     village board sheet (not built). **A defect found in the PC build:** 34 French and 11 German messages stay
-     Chinese though the discs translate them (a slot-table size compared against the PC's) - the owner's call.
-   - **The music measurement's open ends** ([`music-open-ends.md`](music-open-ends.md)): the five low songs were the
-     oracle's window (now 1.000 but 94 at 0.986, the allocator's steal timing); R1 settled (no `+32`, `vag.py` agrees);
-     **DIV-0081's second cut: 4 of the 37 shipped loop rows looped at a period the sequence does not have** (064 and
-     076 cut their sixteenth bar; 131 and 070 short) - the table is 39 rows with each period pinned to the
-     sequence's pass length (`tools/bgm/seq_periods.py`), 070 / 131 refused; the 23 that never repeat measured (a
-     long-fade row would be a new kind, not built); the near-full files best left on the rewind, numbers in section 5.
-   - **Tooling:** `importer.py verify` hashes `base/bgm/` against `fixtures/bgm.tsv`; the music host suite runs on
-     Windows and in CI (I35); the launcher dialog has Music, Cache folder and "PSP extras" boxes
-     ([`launcher-settings.md`](launcher-settings.md) 3.1; `dialog_test.py` all ok, the host suite 48 checks - one of
-     them planted for a merge-resolution slip that lost a backslash in the installed-layer pattern); the sound effects
-     measured against the SPU model, not built ([`sound-import.md`](sound-import.md) 10).
-   Verified at the tip: `'*'` narrow 1,064 lines 0 mismatches, `inject: 10081 ours`, `rdata: 44 constants ... equal`;
-   `ledger_check` 90 entries; `importer.py check` 0 errors in five parts. **Next: the PR** (every commit signed off -
-   read `git log --format=%B main..HEAD`), then the four agents' worktrees (`.claude/worktrees/agent-*`) can go.
+00. **`platform/state2-prework` (2026-10-10 night, off `main` `a30f1916`; not pushed, no PR yet).** What "finishing the exe"
+    is: states 2 and 3 of [`platform-layers-plan.md`](platform-layers-plan.md) 3. The converters, the per-thread data and
+    the start-up are not takeovers - they drop at the cutover ([`crt-startup.md`](crt-startup.md) 9). Merged on the
+    branch, one agent each, every self-test headless (the owner was playing):
+    - **`MoveCmd_Move` `0x578C10` taken** ([`move-cmds.md`](move-cmds.md) 8): the one game function still Capcom's,
+      called by address from nine area groups and absent from `pc_funcs.json`'s 2,952; `inject: 10087 ours`.
+      `tools/owned_sweep.py` finds any call target without an `impl`; its remainder is the decoder's eight (`BOF3X_MP3=original`
+      only), `Crt_ftol` (inlined) and `Crt_GetPtd` (the map_cells check) - all expected.
+    - **The seven placed mid-function code pointers are numbers**, not pointers ([`exe-code-pointers-midfunc.md`](exe-code-pointers-midfunc.md);
+      `tools/exe_midfunc_pointers.py`): the stub page needs nothing for them; a `decide_pointers` rule is proposed, not applied.
+    - **The state hash is address-independent** ([`state-hash.md`](state-hash.md) 7, `BOF3SH3`): Capcom's 26,189 pointer
+      slots in `.data` are hashed by the text they name when they point into our DLL (the brief's offset-from-base fails:
+      the DLL is ASLR'd and its layout moves per build - measured). Existing pairs stay valid offline; **owed live:** two
+      combat runs under `en-US` from two builds identical on the five overlay pages, then the overlay pairs re-recorded.
+      `BOF3X_STATEHASH_RAW=1` turns it off.
+    - **The main thread's stack measured** ([`crt-startup.md`](crt-startup.md) 4.1, 11): Windows gives 256 KB (a 0x40000
+      floor), the header's 64 KB commit; the four task slices need more than 64 KB, so state 3 links with reserve
+      >= 0x40000 and commit >= 0x10000. **Our toolchain's start-up sets the x87 word to 0x037F** (`_fpreset` as `fninit`);
+      state 3 links `CRT_fp8.o` or sets 0x027F itself. `BOF3X_STACKWATCH=1` logs the depth a run uses - **owed a route run.**
+    - **The code page audit** ([`code-page-audit.md`](code-page-audit.md)): no `setlocale` anywhere, the install path safe
+      (relative opens), two repairs (log lines with wide paths were lost; the launcher widened `cache=` wrongly); the
+      cache folder stays ANSI until state 3.
+    - **Two music defects from the owner's route `musicStopCheck.txt`** (the eldritchGene save; replays in
+      `analysis/shots/musicstop_1010/`): **DIV-0028 amended** - since DIV-0047 (2026-09-24) every fade took one step and
+      stalled, because the step watched the float deadline our WinMain never writes; a stopping fade never stopped (D241's
+      first half, the title through the load screen). Keyed on `Frame_Counter` now; `BOF3X_MUSIC_LOG=1` logs every music
+      command with caller and frame. **DIV-0092** - the port never resumed the field's music after a fight (`GameMode5_Leave`
+      plays `Music_Track`, 0xFF by then; the owner heard Capcom's stay silent) and a save with no track (the F12 save) loaded
+      silent; both fall back to the area's track `0x904CD0`. The owner on the fixed replay: "that sounds correct now".
+    - **The battle resume, merged** (`music/battle-resume`, DIV-0092 amended; [`music-seq-engine.md`](music-seq-engine.md) 8,
+      [`mp3-decoder.md`](mp3-decoder.md) 6): the PSX resumes the field song where it left off (the owner's fact); ours
+      remembers the heard position in DLL state when a battle takes the song over (the ring's lead measured from the play
+      cursor) and seeks both paths back to it - the sequenced path by a silent fast-forward of the synth (`Spu::Skip`,
+      about 240 ms a minute skipped; the reverb empty for the first half second), the MP3 path by decoding and dropping.
+      The resume's fade is `music_resume::kResumeFadeFrames`: 10 at first; **the owner heard it on the morning of 2026-10-11
+      ("sounds great") and asked for half a second - 30 now, heard: "excellent"**. The fanfare's loop (DIV-0081, `165`)
+      the owner heard on the MP3 path the same morning: "much better".
+      The full self-test narrow and wide exit 0, 10,087 ours. **Replayed headless on the final build** (`analysis/shots/musicstop_1010/final_cache`,
+      `final_mp3`): both paths log `remember track 91 at sample 479809` at frame 1726 and `resume track 91` at 2838 at
+      that sample (the ring 36,287 samples ahead, subtracted), and again at 3189 / 3695. **Owed the owner's ear**, and
+      the Chinese combat route from this build is identical to the Capcom pair on all 2,561 ticks.
+    - **State 2 proved on the night of 2026-10-11** ([`state2-proof.md`](state2-proof.md)): 550 starts not ours armed over
+      the ten routes and the attract sequence; 37 entered, every one at logic frame 0 - the C runtime's start-up chain
+      (36) and DirectSoundCreate's import thunk from our `Snd_Init` - nothing of Capcom's after the hand-off. The 2026-10-05
+      run had 198 running. **The state hash's two-build check passed** ([`state-hash.md`](state-hash.md) 7): ours from
+      two builds identical on every page but the enemy-records page `0x93C000` from tick 514 of combat - **explained on the
+      morning of 2026-10-11** ([`state-hash.md`](state-hash.md) 7, measured point 3): the battle message ring `0x93C2C4` and the
+      result message `0x93B8E4` hold `Msg_SystemPtr`'s pointer into the relocated pool (DIV-0007), the same offset in both
+      builds, a build-dependent address in words that were zero at the census; not a defect. **Fixed the same morning at the
+      owner's word:** the 17 words are run-time slots of the census (flags bit 1; `statehash.py info` says which way a run
+      hashed them), the self-test exit 0 at 10,087 ours, and a build whose pool was moved by a throwaway pad is identical
+      to the unpadded one on all 2,561 ticks of combat under `en-US` while the raw word differs. Every older pair stays
+      valid (the words hold an exe pointer without an overlay). An all-original pair under `en-US` is
+      not a reference for ours (the overlay's text pointers); under an overlay the reference is a previous build of ours.
+      **Still owed:** the stack's exit line (a run ended by a normal quit; `input_run.py` kills the game).
+    - **The fanfare's loop** (DIV-0081 amended): the owner's A/B against the disc found every loop right but `165`, which
+      rewound to the file's start; its measured row ships as `gen_loop_table.py`'s `OWNER_APPROVED` (40 rows).
+    - **The owner's calls, open:** D240 (`kEosBytes = 0`), the launcher box for `BOF3X_MP3`, ~~the resume's fade length~~ (30 frames, heard),
+      the decoder listen (the title, three minutes of attract, and tonight's route through the cache's music heard; the
+      MP3 A/B not yet).
+0. ~~The catch-up branch~~ - merged as PR #49 (2026-10-10 afternoon); its agents' worktrees under `.claude/worktrees/agent-*`
+   and the older scratchpad worktrees can go (`git worktree list`).
 1. **The owner's eye and ear** - [`owner-review.md`](owner-review.md) is the one list; new since the morning:
    - **the listen:** DIV-0087 (a cache: `BOF3X_CACHE=<repo>/analysis/cache/pc-plus-us`, built 2026-10-10 from the PC
      install, the US disc and both PSP images) - the title, a town, a fight and its fanfare, a once-only song, a
