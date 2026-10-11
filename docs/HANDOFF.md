@@ -100,7 +100,7 @@ code page audited, the seven mid-function pointers read, and two music defects o
       sufficient - plan section 6's last unread item.
     - **The fanfare's loop** (DIV-0081 amended): the owner's A/B against the disc found every loop right but `165`, which
       rewound to the file's start; its measured row ships as `gen_loop_table.py`'s `OWNER_APPROVED` (40 rows).
-    - **The owner's calls, open:** D240 (`kEosBytes = 0`), ~~the launcher box for `BOF3X_MP3`~~ (no box: the owner, 2026-10-11), ~~the resume's fade length~~ (30 frames, heard),
+    - **The owner's calls, open:** ~~D240~~ (`kEosBytes = 0`, DIV-0093, 2026-10-11), ~~the launcher box for `BOF3X_MP3`~~ (no box: the owner, 2026-10-11), ~~the resume's fade length~~ (30 frames, heard),
       ~~the decoder listen~~ (the MP3 A/B heard 2026-10-11 as six WAV pairs: no difference, the levels identical -
       DIV-0091's entry).
 0. ~~The catch-up branch~~ - merged as PR #49 (2026-10-10 afternoon); its agents' worktrees under `.claude/worktrees/agent-*`

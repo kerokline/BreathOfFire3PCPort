@@ -148,7 +148,9 @@ file, -58 at the worst. **Heard 2026-10-11** - the owner, on six songs as WAV pa
    dump, six songs): no audible difference, the levels identical. What the
    in-game A/B under `BOF3X_MP3=original` would add is the seams (DIV-0081's
    loops, D240's end), which the owner has heard on our path in play.
-2. **D240's fix** - the owner's call: a ledger entry, `kEosBytes = 0` in
+2. ~~**D240's fix**~~ - done 2026-10-11 as DIV-0093 (`kEosBytes = 0`; the owner:
+   zeros, as the other stale-byte decisions; the self-test exit 0). As planned:
+   a ledger entry, `kEosBytes = 0` in
    `mp3.cpp`, and the self-test's expectation.
 3. **The C runtime's remainder - done the same evening** on `crt/allocator`
    ([`crt-rest.md`](crt-rest.md) 2.6, 2.7): `malloc` / `calloc` / `free` the

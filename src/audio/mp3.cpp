@@ -51,10 +51,14 @@ static_assert(offsetof(Frame, bytes) == 8, "the frame's bytes are read at frame 
 // Capcom's decoder writes nothing to `out` and leaves the last frame's count,
 // 4,608, in place (measured on all 177 files, docs/mp3-decoder.md 2), so
 // Music_Decode's `filled` steps over 1,152 samples it never wrote at every
-// rewind and before a once-only track's zeros (known-defects.md D240). Ours
-// stores the same, so the stream's logic is unchanged by the swap; the
-// defect is the owner's call, not this entry's.
-constexpr std::uint32_t kEosBytes = 1152 * 4;
+// rewind and before a once-only track's zeros (known-defects.md D240).
+// DIVERGENCE DIV-0093: ours stores 0 - nothing was written, nothing is
+// counted - so a rewind continues from the last sample decoded and a
+// once-only track's zeros begin where its music ends (the owner, 2026-10-11:
+// zeros, as our other stale-byte decisions). kCapcomEosBytes is what the
+// comparison expects of Capcom's side.
+constexpr std::uint32_t kEosBytes = 0;
+constexpr std::uint32_t kCapcomEosBytes = 1152 * 4;
 
 // 44,100 Hz stereo, 1,152 samples a frame: what every frame of the game's
 // files decodes to (docs/bgm-comparison.md 6.1).
@@ -455,7 +459,8 @@ bool CompareFile(const char* path, std::FILE* tsv, Diff* diff, Run* capcom, Run*
     const std::uint32_t walked = WalkFrames(data.data(), data.size());
     const bool shape = capcom->opened == ours->opened && capcom->frames == ours->frames &&
                        capcom->frame_bytes == ours->frame_bytes && capcom->uniform == ours->uniform &&
-                       capcom->eos_bytes == ours->eos_bytes && capcom->replay_identical && ours->replay_identical &&
+                       capcom->eos_bytes == kCapcomEosBytes && ours->eos_bytes == kEosBytes &&   // DIV-0093: the one planned difference
+                       capcom->replay_identical && ours->replay_identical &&
                        capcom->frames == walked;
     if (tsv)
         std::fprintf(tsv, "%s\t%u\t%u\t%u\t%u\t%u\t%u\t%s\t%u\t%s\t%d\t%d\t%u\t%u\t%u\t%.4f\t%u\t%u\t%u\t%s\n",

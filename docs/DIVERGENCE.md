@@ -5511,3 +5511,47 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=GameMode5_Leave,GameMode_Start`. There is no runtime
   switch for the resume alone (the restart from the top under the fallback
   would be a code change: no `Arm` in `GameMode5_Leave`).
+
+### The MP3 decoder's end-of-stream count is zero, not the last frame's
+
+- **ID:** DIV-0093 (the next free number on 2026-10-11; renumber at the
+  merge if another branch has taken it)
+- **Date:** 2026-10-11
+- **Subsystem:** music (the MP3 path's decoder, `src/audio/mp3.cpp`
+  `DecodeFrame`, behind `Music_Decode` `0x5A6F30`'s seam - DIV-0091)
+- **Tier:** Sensible - a stale-byte repair, as the port's other stale-byte
+  decisions (D192's zeros, DIV-0073's zeroed `Gte_Matrix2`).
+- **Original behaviour:** at the end of an MP3 stream Capcom's `Mp3_Decode`
+  `0x5AFC40` returns `0xFFFFFDFE`, writes nothing to the output, and leaves
+  the last frame's byte count, 4,608, at `[[decoder + 0x14] + 8]`.
+  `Music_Decode` reads that count after every call, the end included, and
+  adds it to `filled`: on a looping track the rewind continues 1,152 samples
+  past the last sample written, so the 4,608 bytes before it are whatever
+  `Music_Staging` held from its previous fill, the music 0.418 s earlier,
+  played for 26 ms at the seam; on a once-only track 26 ms of that stale
+  music precede the silence ([`known-defects.md`](known-defects.md) D240,
+  measured on all 177 files by DIV-0091's comparison). DIV-0081's measured
+  loops never reach the end of a stream; every other looping track and
+  every once-only one has it. DIV-0091 mirrored the count on purpose, to
+  keep the stream's logic unchanged by the decoder swap.
+- **New behaviour:** ours stores 0 at the end of the stream: nothing was
+  written, nothing is counted. A rewind continues from the last sample
+  decoded and a once-only track's zeros begin where its music ends.
+  `Music_Decode` is untouched; the one-line change is `kEosBytes = 0` in
+  `src/audio/mp3.cpp`, with `kCapcomEosBytes` (4,608) kept for what the
+  comparison expects of Capcom's side.
+- **Rationale:** the owner, 2026-10-11: "My instinct says to have it become
+  zeros, to match our implementation in other stale-byte decisions." The
+  26 ms were never music the composer placed there; they were the staging
+  buffer's leftovers.
+- **Verification:** the DIV-0091 self-test (`BOF3X_SHADOW=sound`, headless
+  on the build of 2026-10-11): `BGM\001.DAT` 782 frames of 4,608 bytes, as
+  many as the header walk counts, **0 stored at the end of the stream**, the
+  replay after `Seek(0)` identical over all 782 frames; game process exit 0,
+  `inject: 10087 ours`. `BOF3X_MP3_COMPARE`'s shape test now expects the one
+  planned difference (Capcom's 4,608 against ours 0) and reports every
+  other difference as before. Not heard: the seam of a looping track that
+  reaches its end (none of the owner's routes so far does; the 26 ms were
+  not reported by ear before either).
+- **Reversible?** `BOF3X_MP3=original` (Capcom's decoder, its count with it)
+  until the cutover; after it the constant.
