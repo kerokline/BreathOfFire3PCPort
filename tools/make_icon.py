@@ -200,7 +200,7 @@ def main():
     i = sub.add_parser("ico", help="one icon, cropped square, as a Windows .ico")
     i.add_argument("--game", default="bof3")
     i.add_argument("--icon", type=int, required=True)
-    i.add_argument("--crop", choices=["top", "centre", "bottom"], default="centre",
+    i.add_argument("--crop", choices=["top", "centre", "bottom"], default="centre",   # centre: the owner's choice for the whelp, 2026-10-11
                    help="which 8 rows of the 48 go: top drops the top 8, bottom the bottom 8")
     i.add_argument("--vram", default=None, help="as for sheet")
     i.add_argument("--out", required=True)
