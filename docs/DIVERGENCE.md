@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 90 entries, DIV-0001..0090, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 91 entries, DIV-0001..0091, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5304,3 +5304,52 @@ designed in rather than bolted on.
 - **Reversible?** build the layer with the PC install among the sources
   (`importer.py build --source bof3/DAT --source bof3/BOF3.exe ...`, or
   `loc_build.py all --game`).
+
+### The MP3 decoder is minimp3, not the library Capcom linked
+
+- **ID:** DIV-0091 (the next free number on 2026-10-10 evening; renumber at
+  the merge if another branch has taken it)
+- **Date:** 2026-10-10
+- **Subsystem:** music (the MP3 path: `Music_OpenDecoder` `0x5A6D60`,
+  `Music_Decode` `0x5A6F30`, `Music_Release` `0x5A70A0`, `music_loops`'
+  `LoopFrame`, all ours in `src/game/sound.cpp`; the decoder behind them,
+  `src/audio/mp3.cpp` over `third_party/minimp3/minimp3.h`;
+  [`mp3-decoder.md`](mp3-decoder.md))
+- **Tier:** Sensible - the same stream decoded by a decoder we may publish,
+  more accurately.
+- **Original behaviour:** the eight decoder entries `Mp3_Create` `0x5ADF00`
+  .. `Mp3_Destroy` `0x5B0630` of a statically linked MPEG-1 layer III
+  library of unknown lineage (200 functions, `0x5AB7E0..0x5B8DA0`, 55.5 KB)
+  decode `BGM\*.DAT` and the eleven MP3s of `SND\` a frame at a time into
+  the streaming ring. Measured on all 177 files ([`mp3-decoder.md`](mp3-decoder.md)
+  section 2): every frame 1,152 stereo samples, as many frames as the file
+  holds, `Seek(0)` a bit-exact restart, nothing written at the end of the
+  stream and the last frame's byte count left there (D240); its samples
+  within one unit of ffmpeg's on most frames and off by up to 370 of 32,767
+  in some (one channel of a frame at a time - its own decoding fault).
+- **New behaviour:** the same eight entries answered by minimp3
+  (`ea99364f`, CC0; [`THIRD_PARTY.md`](THIRD_PARTY.md) section 3) through
+  the callee table, with the seam's shape kept - the frame's count at
+  `[[decoder + 0x14] + 8]`, the `%X@%X` name, the 4,608 left at the end as
+  the original leaves it - and memory from the toolchain's heap. Same frame
+  count, same frame size, same restart on every file; the samples within
+  one unit of ffmpeg's on every sample of the three files measured against
+  it, so the 3.38 % of samples that differ from Capcom's are Capcom's
+  errors corrected. Capcom's decoder is no longer called by anything of
+  ours; its 200 functions stay in the image until the cutover.
+- **Rationale:** [`platform-layers-plan.md`](platform-layers-plan.md)
+  section 2.4 and state 2 - no code of Capcom's may run, and a player with
+  the PC install alone still needs the MP3s; the choice of decoder in
+  [`mp3-decoder-choice.md`](mp3-decoder-choice.md) (the owner, 2026-10-10).
+- **Also in the PSX version?** No MP3 on the PlayStation: its music is the
+  SPU's sequences (DIV-0087 renders those from the disc). The PC's MP3s are
+  the port's own re-encode of the disc's music.
+- **Verification:** `BOF3X_MP3_COMPARE` over the 177 files, 177 the same
+  shape (the table in [`mp3-decoder.md`](mp3-decoder.md) 2);
+  `BOF3X_SHADOW=sound`'s `DIV-0091 self-test` line; `'*'` narrow and wide
+  headless. The state hash is unaffected (`Music_Staging` is skipped).
+  **Not heard: the owner's listen is owed** (a fight and its fanfare, a
+  town, a once-only song's end, a looping track, under `BOF3X_MP3=original`
+  as the A/B).
+- **Reversible?** `BOF3X_MP3=original` (no launcher box yet); the decoder's
+  code is untouched in the image.

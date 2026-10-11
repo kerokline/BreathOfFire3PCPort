@@ -7,9 +7,10 @@
 //   - Rand runs as a byte-copy whose one call, Crt_GetPtd at its entry, is
 //     re-aimed at a stand-in answering a per-thread block of our own, its
 //     seed word (+0x14) set alike with ours;
-//   - sprintf, strncpy and _stricmp are leaves of the runtime that touch none
-//     of that (sprintf's string FILE is on its own stack; _stricmp's locale
-//     word 0x7DEC18 is 0 until a setlocale, and the game has none) and run as
+//   - atoi (over atol), sprintf, strncpy and _stricmp are leaves of the
+//     runtime that touch none of that (sprintf's string FILE is on its own
+//     stack; _stricmp's locale word 0x7DEC18 is 0 until a setlocale, and the
+//     game has none; atol reads only the image's "C" _pctype) and run as
 //     Capcom's own, called at their addresses while the entries are intact;
 //   - _findfirst / _findnext and the file layer reach the runtime's locks and
 //     heap and cannot run here: ours are checked against Windows' own
@@ -21,7 +22,10 @@
 #include <io.h>
 #include <windows.h>
 
+#include <cstdarg>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -368,6 +372,119 @@ void FuzzStrings() {
 }
 
 // =============================================================================
+// atoi
+// =============================================================================
+
+// Capcom's atoi (0x5B9A9B over atol 0x5B9A10) runs here: with __mb_cur_max
+// 0x675064 at the image's 1 it reads only the image's "C" _pctype table, no
+// per-thread data, lock or heap (crt_rest.cpp). Strings from parts: leading
+// bytes (the six spaces, and near misses - 0x1C..0x1F, 0x85, 0xA0, 0x08, 0x0E),
+// a sign run (none, '-', '+', or two), more spaces, a digit run of 0..24
+// (leading zeros often; past 10 digits wraps 2^31 and 2^32), then a
+// terminator (NUL, a letter, '.', a space, a sign, a high byte).
+const char* const kAtoiEdges[] = {
+    "", " ", "-", "+", "+-1", "-+1", "--1", "- 1", "+ 1", "0", "-0", "+0", "00000000000000000000001",
+    "2147483647", "2147483648", "-2147483648", "-2147483649", "4294967295", "4294967296", "4294967297",
+    "-4294967295", "-4294967296", "8589934593", "99999999999999999999", "-99999999999999999999",
+    "\t\n\v\f\r 42", "\x1C" "42", "\x85" "42", "\xA0" "42", "42abc", "4 2", "12 34", "1\r\n", "\xB5\xDA" "7",
+};
+
+void AtoiString(unsigned round, char* s) {
+    if (round < sizeof kAtoiEdges / sizeof kAtoiEdges[0]) {
+        std::strcpy(s, kAtoiEdges[round]);
+        return;
+    }
+    static const char kSpace[] = "\t\n\v\f\r     ";
+    static const char kNear[] = "\x08\x0E\x1C\x1D\x1E\x1F\x85\xA0";
+    static const char kTerm[] = "\0a.Z -+\x80\xFF/:";
+    char* p = s;
+    for (unsigned n = Next() % 4; n; --n)
+        *p++ = Next() % 6 ? kSpace[Next() % (sizeof kSpace - 1)] : kNear[Next() % (sizeof kNear - 1)];
+    switch (Next() % 8) {
+    case 0: case 1: *p++ = '-'; break;
+    case 2: *p++ = '+'; break;
+    case 3: *p++ = "+-"[Next() % 2], *p++ = "+-"[Next() % 2]; break;
+    default: break;
+    }
+    if (Next() % 10 == 0) *p++ = kSpace[Next() % (sizeof kSpace - 1)];
+    const unsigned digits = Next() % 3 == 0 ? 9 + Next() % 4 : Next() % 25;   // around 2^31 / 2^32 a third of the time
+    for (unsigned i = 0; i < digits; ++i)
+        *p++ = static_cast<char>(i == 0 && Next() % 3 == 0 ? '0' : '0' + Next() % 10);
+    *p++ = kTerm[Next() % (sizeof kTerm - 1)];
+    *p++ = '7';   // a digit after the terminator, which must not be read
+    *p = 0;
+}
+
+// The planted bugs.
+int __cdecl PlantedSaturate(const char* s) {   // the total clamped, as a strtol would
+    while (*s == ' ' || (*s >= 0x09 && *s <= 0x0D)) ++s;
+    const bool neg = *s == '-';
+    if (*s == '-' || *s == '+') ++s;
+    std::int64_t t = 0;
+    while (*s >= '0' && *s <= '9') {
+        t = t * 10 + (*s++ - '0');
+        if (t > 0x80000000LL) t = 0x80000000LL;
+    }
+    if (neg) t = -t;
+    if (t > 0x7FFFFFFF) t = 0x7FFFFFFF;
+    return static_cast<int>(t);
+}
+int __cdecl PlantedNarrowSpace(const char* s) {   // only ' ' and '\t' skipped
+    while (*s == ' ' || *s == '\t') ++s;
+    if (*s == '\n' || *s == '\v' || *s == '\f' || *s == '\r') return 0;
+    return ::Crt_atoi(s);
+}
+int __cdecl PlantedNoPlus(const char* s) {   // '+' not taken as a sign
+    const char* p = s;
+    while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) ++p;
+    return *p == '+' ? 0 : ::Crt_atoi(s);
+}
+int __cdecl PlantedSpaceAfterSign(const char* s) {   // spaces skipped after the sign too
+    char t[0x40];
+    char* q = t;
+    const char* p = s;
+    while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) *q++ = *p++;
+    if (*p == '-' || *p == '+') {
+        *q++ = *p++;
+        while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) ++p;
+    }
+    std::strcpy(q, p);
+    return ::Crt_atoi(t);
+}
+int __cdecl ToolchainAtoi(const char* s) { return std::atoi(s); }
+
+using AtoiFn = int (__cdecl*)(const char*);
+unsigned CompareAtoi(AtoiFn ours, unsigned rounds, bool log) {
+    const AtoiFn theirs = bof3::orig::Crt_atoi;
+    unsigned differ = 0;
+    const U saved = g_rand;
+    for (unsigned round = 0; round < rounds; ++round) {
+        char s[0x40];
+        AtoiString(round, s);
+        const int a = theirs(s), b = ours(s);
+        if (a != b) {
+            ++differ;
+            if (log) Mismatch("atoi", round, static_cast<U>(a), static_cast<U>(b));
+        }
+    }
+    g_rand = saved;
+    return differ;
+}
+
+void FuzzAtoi() {
+    constexpr unsigned kRounds = 200000;
+    const unsigned before = g_bad;
+    CompareAtoi(&::Crt_atoi, kRounds, true);
+    bof3::Log("shadow      crt_rest self-test: atoi %u rounds (%u edge strings first), %u MISMATCHES", kRounds,
+              static_cast<unsigned>(sizeof kAtoiEdges / sizeof kAtoiEdges[0]), g_bad - before);
+    ControlRefused("atoi, saturating", CompareAtoi(&PlantedSaturate, kRounds, false));
+    ControlRefused("atoi, only ' ' and tab as spaces", CompareAtoi(&PlantedNarrowSpace, kRounds, false));
+    ControlRefused("atoi, no '+'", CompareAtoi(&PlantedNoPlus, kRounds, false));
+    ControlRefused("atoi, spaces after the sign", CompareAtoi(&PlantedSpaceAfterSign, kRounds, false));
+    ControlRefused("atoi, the toolchain's", CompareAtoi(&ToolchainAtoi, kRounds, false));
+}
+
+// =============================================================================
 // _findfirst / _findnext, against Windows'
 // =============================================================================
 
@@ -478,10 +595,211 @@ void FuzzFiles() {
 
 }  // namespace
 
+// =============================================================================
+// sscanf
+// =============================================================================
+
+// Capcom's sscanf (0x5B9AA6 over _input 0x5BCF64) runs here on a string FILE
+// of the stack, as atol does, reading the image's "C" _pctype table. Strings
+// of two numbers in Cfg_Load's "%d %d": each from the atoi parts (spaces and
+// near misses, a sign run, digits of 0..24 with wraps past 2^31 and 2^32),
+// joined by spaces, a tab, nothing, or a letter, and a tail; edge strings
+// first.
+const char* const kScanEdges[] = {
+    "", " ", "1", "1 2", "-1 +2", " \t 12 \r\n 34 \n", "1\t2", "12", "1x2", "x 2", "+ 1 2", "- -1", "1 -", "1 +",
+    "4294967296 4294967297", "2147483648 -2147483649", "00000000000000000001 2", "1 2 3", "1,2", "1.5 2", "0x10 2",
+    "\x1C" "1 2", "\xA0" "1 2", "1 \xA0" "2", "- 1 2", "+1+2", "1\v2", "1 2abc",
+};
+
+// The decoder's "%lx@%lx": the size@address name Music_OpenDecoder formats
+// (Crt_sprintf's "%X@%X") and its variations - lower case, a "0x" prefix, a
+// sign, spaces, a missing or doubled '@', junk, and the empty cases.
+const char* const kHexEdges[] = {
+    "", " ", "@", "1@", "@1", "4FB3D@7DE400", "4fb3d@7de400", "0x4FB3D@0x7DE400", "0X10@0x20", "0x@1", "0xg@1",
+    "-1@-2", "+1@+2", "- 1@2", " 1 @ 2", "1 @2", "1@ 2", "FFFFFFFF@100000000", "123456789@1", "1@@2", "1@2@3",
+    "g@1", "1@g", "1@2x", "1x@2", "\t1@2", "1@\t2", "0@0", "00000000000000001@2", "abcdefABCDEF@fedcba",
+};
+
+void HexString(unsigned round, char* s) {
+    if (round < sizeof kHexEdges / sizeof kHexEdges[0]) {
+        std::strcpy(s, kHexEdges[round]);
+        return;
+    }
+    static const char kDigits[] = "0123456789abcdefABCDEF";
+    char* p = s;
+    if (Next() % 16 == 0) {   // nothing, or whitespace alone (the -1 answer), or a lone sign or '@'
+        for (unsigned n = Next() % 4; n; --n) *p++ = "\t\n\v\f\r "[Next() % 6];
+        if (Next() % 3 == 0) *p++ = "+-@"[Next() % 3];
+        *p = 0;
+        return;
+    }
+    for (int k = 0; k < 2; ++k) {
+        for (unsigned n = Next() % 4 == 0 ? Next() % 3 : 0; n; --n) *p++ = "\t\n\v\f\r "[Next() % 6];
+        if (Next() % 6 == 0) *p++ = "+-"[Next() % 2];
+        if (Next() % 4 == 0) *p++ = '0', *p++ = "xX"[Next() % 2];
+        const unsigned digits = Next() % 5 == 0 ? Next() % 12 : 1 + Next() % 8;
+        for (unsigned i = 0; i < digits; ++i) *p++ = kDigits[Next() % (sizeof kDigits - 1)];
+        if (k == 0) {
+            switch (Next() % 10) {
+            case 0: break;                       // no '@'
+            case 1: *p++ = ' '; *p++ = '@'; break;
+            case 2: *p++ = '@'; *p++ = '@'; break;
+            default: *p++ = '@'; break;
+            }
+        }
+    }
+    if (Next() % 4 == 0) *p++ = " g@x\n"[Next() % 5];
+    *p = 0;
+}
+
+void ScanString(unsigned round, char* s) {
+    if (round < sizeof kScanEdges / sizeof kScanEdges[0]) {
+        std::strcpy(s, kScanEdges[round]);
+        return;
+    }
+    static const char kJoin[] = " \t\n,x ";
+    char* p = s;
+    if (Next() % 16 == 0) {   // nothing, or whitespace alone (the -1 answer), or a lone sign
+        for (unsigned n = Next() % 4; n; --n) *p++ = "\t\n\v\f\r "[Next() % 6];
+        if (Next() % 3 == 0) *p++ = "+-"[Next() % 2];
+        *p = 0;
+        return;
+    }
+    for (int k = 0; k < 2; ++k) {
+        char part[0x40];
+        AtoiString(1000 + Next(), part);          // never an edge string: the random shape
+        part[std::strlen(part) - 1] = 0;         // without AtoiString's digit after the terminator
+        if (Next() % 4 == 0) part[std::strlen(part) - 1] = 0;   // sometimes no terminator at all
+        std::strcpy(p, part);
+        p += std::strlen(p);
+        if (k == 0 && Next() % 5) *p++ = kJoin[Next() % (sizeof kJoin - 1)];
+    }
+    if (Next() % 3 == 0) *p++ = " 7q\n"[Next() % 4];
+    *p = 0;
+}
+
+// The planted bugs.
+int __cdecl PlantedScanNoEof(const char* s, const char* fmt, ...) {   // 0 where the original answers -1
+    std::va_list args;
+    va_start(args, fmt);
+    void* const a = va_arg(args, void*);
+    void* const b = va_arg(args, void*);
+    va_end(args);
+    const int r = ::Crt_sscanf(s, fmt, a, b);
+    return r < 0 ? 0 : r;
+}
+int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the toolchain's sscanf
+    std::va_list args;
+    va_start(args, fmt);
+    void* const a = va_arg(args, void*);
+    void* const b = va_arg(args, void*);
+    va_end(args);
+    unsigned long x = 0, y = 0;
+    const int r = std::strcmp(fmt, "%d %d") == 0 ? std::sscanf(s, "%d %d", reinterpret_cast<int*>(&x), reinterpret_cast<int*>(&y))
+                                                 : std::sscanf(s, "%lx@%lx", &x, &y);
+    if (r >= 1) std::memcpy(a, &x, 4);
+    if (r >= 2) std::memcpy(b, &y, 4);
+    return r;
+}
+
+using ScanFn = int (__cdecl*)(const char*, const char*, ...);
+// hex false: Cfg_Load's format at 0x65DAD0; true: the decoder's at 0x672854.
+unsigned CompareScan(ScanFn ours, unsigned rounds, bool log, bool hex = false) {
+    const ScanFn theirs = reinterpret_cast<ScanFn>(bof3::orig::Crt_sscanf);
+    const char* const fmt = reinterpret_cast<const char*>(hex ? 0x672854 : 0x65DAD0);
+    unsigned differ = 0;
+    const U saved = g_rand;
+    for (unsigned round = 0; round < rounds; ++round) {
+        char s[0x100];
+        if (hex) HexString(round, s);
+        else ScanString(round, s);
+        // Cfg_Load's byte pointers one apart: the second write lands over the first's upper bytes
+        alignas(4) unsigned char ta[8], oa[8];
+        std::memset(ta, 0xC3, sizeof ta);
+        std::memset(oa, 0xC3, sizeof oa);
+        const int a = theirs(s, fmt, ta, ta + 1), b = ours(s, fmt, oa, oa + 1);
+        if (a != b || std::memcmp(ta, oa, sizeof ta) != 0) {
+            ++differ;
+            if (log) Mismatch(hex ? "sscanf %lx@%lx" : "sscanf", round, static_cast<U>(a), static_cast<U>(b));
+        }
+    }
+    g_rand = saved;
+    return differ;
+}
+
+void FuzzSscanf() {
+    constexpr unsigned kRounds = 200000;
+    const unsigned before = g_bad;
+    if (std::strcmp(reinterpret_cast<const char*>(0x65DAD0), "%d %d") != 0)
+        bof3::Fatal("crt_rest self-test: the format at 0x65DAD0 is not \"%%d %%d\"");
+    CompareScan(&::Crt_sscanf, kRounds, true);
+    bof3::Log("shadow      crt_rest self-test: sscanf \"%%d %%d\" %u rounds (%u edge strings first), %u MISMATCHES",
+              kRounds, static_cast<unsigned>(sizeof kScanEdges / sizeof kScanEdges[0]), g_bad - before);
+    ControlRefused("sscanf, 0 for an empty string", CompareScan(&PlantedScanNoEof, kRounds, false));
+    ControlRefused("sscanf, the toolchain's", CompareScan(&PlantedScanSaturate, kRounds, false));
+    const unsigned before_hex = g_bad;
+    if (std::strcmp(reinterpret_cast<const char*>(0x672854), "%lx@%lx") != 0)
+        bof3::Fatal("crt_rest self-test: the format at 0x672854 is not \"%%lx@%%lx\"");
+    CompareScan(&::Crt_sscanf, kRounds, true, true);
+    bof3::Log("shadow      crt_rest self-test: sscanf \"%%lx@%%lx\" %u rounds (%u edge strings first), %u MISMATCHES",
+              kRounds, static_cast<unsigned>(sizeof kHexEdges / sizeof kHexEdges[0]), g_bad - before_hex);
+    ControlRefused("sscanf %lx@%lx, 0 for an empty string", CompareScan(&PlantedScanNoEof, kRounds, false, true));
+    ControlRefused("sscanf %lx@%lx, the toolchain's", CompareScan(&PlantedScanSaturate, kRounds, false, true));
+}
+
+// =============================================================================
+// The heap
+// =============================================================================
+
+// Capcom's cannot run here (its heap is made by the start-up, after the
+// inject): ours alone, through the entries by name - blocks of 0..0x10000
+// bytes from malloc and calloc, calloc's zeroed, each written through and
+// read back, freed in another order, free(null) a no-op; a request past
+// 0xFFFFFFE0 refused as the original refuses it.
+void FuzzHeap() {
+    const unsigned before = g_bad;
+    constexpr unsigned kBlocks = 64;
+    unsigned char* blocks[kBlocks];
+    unsigned sizes[kBlocks];
+    for (unsigned round = 0; round < 200; ++round) {
+        for (unsigned i = 0; i < kBlocks; ++i) {
+            sizes[i] = Next() % 8 == 0 ? 0 : Next() % 3 == 0 ? Next() % 0x10000 : Next() % 0x100;
+            const bool zeroed = Next() % 2 == 0;
+            blocks[i] = static_cast<unsigned char*>(zeroed ? ::Crt_calloc(1, sizes[i]) : ::Crt_malloc(sizes[i]));
+            if (blocks[i] == nullptr) {
+                Mismatch("heap, a null block", round * kBlocks + i, sizes[i], 0);
+                continue;
+            }
+            if (zeroed)
+                for (unsigned k = 0; k < sizes[i]; ++k)
+                    if (blocks[i][k] != 0) {
+                        Mismatch("heap, calloc not zeroed", round * kBlocks + i, k, blocks[i][k]);
+                        break;
+                    }
+            for (unsigned k = 0; k < sizes[i]; ++k) blocks[i][k] = static_cast<unsigned char>(i + k);
+        }
+        for (unsigned i = 0; i < kBlocks; ++i)
+            for (unsigned k = 0; k < sizes[i]; ++k)
+                if (blocks[i][k] != static_cast<unsigned char>(i + k)) {
+                    Mismatch("heap, a block overwritten", round * kBlocks + i, k, blocks[i][k]);
+                    break;
+                }
+        for (unsigned i = 0; i < kBlocks; ++i) ::Crt_free(blocks[(i * 37 + round) % kBlocks]);
+    }
+    ::Crt_free(nullptr);
+    if (::Crt_malloc(0xFFFFFFF0u) != nullptr) Mismatch("heap, a request past 0xFFFFFFE0 granted", 0, 0, 1);
+    if (::Crt_calloc(0x10000, 0x10000) != nullptr) Mismatch("heap, calloc of 2^32 bytes granted", 0, 0, 1);
+    bof3::Log("shadow      crt_rest self-test: heap 200 rounds of 64 blocks through malloc / calloc / free, %u MISMATCHES",
+              g_bad - before);
+}
+
 void SelfTest() {
     FuzzRand();
     FuzzSprintf();
     FuzzStrings();
+    FuzzAtoi();
+    FuzzSscanf();
+    FuzzHeap();
     FuzzFind();
     FuzzFiles();
     bof3::Log("shadow      crt_rest self-test: %u MISMATCHES in all", g_bad);

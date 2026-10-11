@@ -5,6 +5,8 @@
 //   Rand          0x5B93D2  reimplemented exactly: the MSVC 6 generator, its
 //                           seed a static of ours starting at 1 as the CRT's
 //                           per-thread one does (_initptd 0x5BAD51);
+//   Crt_atoi      0x5B9A9B  reimplemented exactly: MSVC 6's atol, its total
+//                           wrapping modulo 2^32;
 //   Crt_sprintf   0x5B9380  ours, over exactly the conversions the game's
 //                           formats use, Fatal on any other;
 //   Crt_strncpy   0x5B9450, Crt_stricmp 0x5C2B40, Crt_findfirst 0x5B979A,
@@ -13,7 +15,8 @@
 //                           thin named functions over our toolchain's.
 //
 // Left for the cutover (the executable's): Crt_malloc / Crt_free, Crt_GetPtd,
-// Crt_atoi, Crt_sscanf, _ftol, start-up. docs/crt-rest.md section 3 says why.
+// Crt_sscanf, _ftol, start-up (docs/crt-startup.md). docs/crt-rest.md
+// section 3 says why.
 //
 // Every prototype is symbols.gen.h's (symbols.toml); this header declares the
 // module's inject, its fuzz and the randlog's hooks.

@@ -52,6 +52,8 @@
 // loop, which is why the loop's locals stay small).
 #include "game/win_main.h"
 
+#include "audio/mp3.h"
+
 #include "game/game_clock.h"
 
 #include <windows.h>
@@ -476,6 +478,7 @@ extern "C" long __stdcall Game_WndProc(void* hwnd_, unsigned int msg, unsigned i
 
 extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /*cmdline*/, int /*show*/) {
     HINSTANCE hinstance = static_cast<HINSTANCE>(hinstance_);
+    mp3dec::CompareAtStart();  // DIV-0091: BOF3X_MP3_COMPARE - the runtime's heap exists from here
     g_loop_ours = true;
     {
         char text[32];

@@ -107,6 +107,25 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## Reported by the owner, for a cleanup session
 
+- **The lighthouse's gene scene, two defects** (the owner, 2026-10-10
+  evening): `tools/recipes/eldritchGene.txt` with its save `eldritchGene.DAT`
+  - the gene stone's pedestal (a glowing sphere over a stone altar) and the
+  words that send the party to town. **D242**: the dragon gene's sprite
+  sits clipped by the pedestal's floor, only its top showing under the
+  sphere (the `_ab` copy's `f02700`); **D243**: the lighthouse's light rays
+  before the big screen flash are not drawn. Not looked at; where to start
+  is in [`known-defects.md`](known-defects.md).
+
+- **Battle music runs on after a fight, the area's music does not resume**
+  (the owner, 2026-10-10 evening: "our game doesn't 'end' songs where I
+  expect (compared to psx). The battle music will continue after battle
+  ends, and the area music won't resume"). Catalogued as
+  [`known-defects.md`](known-defects.md) D241 with where to start (the PSX
+  twin's end-of-battle `Music_Play`, then the PC's path; whether the
+  cache's music or the MP3s was playing). Not looked at. Needs a route or
+  the configuration: which music source, and whether `BOF3X_ORIGINAL='*'`
+  does the same.
+
 - **Garr drawn over the campfire in a campfire cutscene** (the owner,
   2026-10-07 midday, catalogued for later: "in a campfire cutscene (not
   regular camp), garr's sprite was rendered over the fire instead of

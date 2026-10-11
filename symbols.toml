@@ -840,17 +840,18 @@ pc = 0x5B9A9B
 name = "Crt_atoi"
 ret = "int"
 params = "const char *s"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05, 4 instructions: pushes its argument, calls 0x5B9A10, pops - MSVC6 atoi as a wrapper over atol. Callers Cfg_Load 0x4FD094 (line 1) and 0x4FD0A8 (line 0) (docs/shell.md)."
+evidence = "disasm 2026-10-05, 4 instructions: pushes its argument, calls 0x5B9A10, pops - MSVC6 atoi as a wrapper over atol. Callers Cfg_Load 0x4FD094 (line 1) and 0x4FD0A8 (line 0) (docs/shell.md). Ours since 2026-10-10 (crt_rest.cpp, docs/crt-rest.md section 2.7): atol 0x5B9A10..0x5B9A9A read to its ret - spaces by _pctype & 8 (__mb_cur_max 0x675064 = 1 and _pctype 0x674E58 -> 0x674E62 never written, so 0x09..0x0D and 0x20), one '-' or '+', digits by _pctype & 4 accumulated `ebx = ebx * 10 + c - 0x30` with no overflow test (wraps modulo 2^32), neg for '-'. Fuzzed 200,000 rounds against Capcom's at its address (34 edge strings first: overflow past 2^31 and 2^32, every space, near-miss bytes, sign runs, terminators, empty), 0 mismatches; five controls refused, the toolchain's atoi among them. atol's other callers 0x5C05CE / 0x5C05FC / 0x5C0627 are the runtime's own and keep Capcom's atol."
 
 [[func]]
 pc = 0x5B9AA6
 name = "Crt_sscanf"
 ret = "int"
 params = "const char *s, const char *fmt, ..."
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05: cdecl, ebp frame with a 0x20-byte string FILE on the stack (_flag 0x49 at ebp - 0x14, the base and pointer the string, the count from 0x5BDA20 strlen), then the input engine 0x5BCF64 over the arguments from ebp + 0x10 - MSVC6 sscanf. Callers Cfg_Load 0x4FD085 (the %d %d literal 0x65DAD0) and Mp3_MemoryIo (HANDOFF Traps, the engine counted by characters)."
-
+evidence = "disasm 2026-10-05: cdecl, ebp frame with a 0x20-byte string FILE on the stack (_flag 0x49 at ebp - 0x14, the base and pointer the string, the count from 0x5BDA20 strlen), then the input engine 0x5BCF64 over the arguments from ebp + 0x10 - MSVC6 sscanf. Callers Cfg_Load 0x4FD085 (the %d %d literal 0x65DAD0) and Mp3_MemoryIo (HANDOFF Traps, the engine counted by characters). Taken 2026-10-10 (docs/crt-rest.md section 2.7): ours over the two formats that reach it, Cfg_Load's %d %d and the decoder's %lx@%lx at 0x672854 / 0x6728C8 (Capcom's decoder under BOF3X_MP3=original), fuzzed against Capcom's at this address 200,000 rounds each - the input engine's %d and %lx: the C table's whitespace skipped, one sign, a 0x prefix wanting a digit, digits wrapping modulo 2^32, four bytes written at the pointer; the format's @ matched exactly; -1 when the string ends before the first value."
 [[func]]
 pc = 0x5B9E65
 name = "Crt_fwrite"
@@ -917,17 +918,26 @@ pc = 0x5B9660
 name = "Crt_malloc"
 ret = "void *"
 params = "unsigned size"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode). Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): the MP3 decoder calls it 19 times and the runtime 19, and an inject would move them all; ours call it by name, one heap with them."
-
+evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode). Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): the MP3 decoder calls it 19 times and the runtime 19, and an inject would move them all; ours call it by name, one heap with them. Taken 2026-10-10 with DIV-0091 (docs/crt-rest.md section 2.6): the toolchain's malloc, injected with calloc 0x5BA221 and free as a set, so every pair - the decoder's under BOF3X_MP3=original and the runtime's start-up, which runs after the inject - stays inside one heap; E8 scan 2026-10-10: 46 call sites, 8 game (ours), 19 decoder, 19 runtime."
 [[func]]
 pc = 0x5B9577
 name = "Crt_free"
 ret = "void"
 params = "void *ptr"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc. Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): Mp3_Destroy 0x5B0630 frees through it (0x5B071D, 0x5B072D) the blocks Mp3_Create took from the runtime's calloc 0x5BA221, so the toolchain's free cannot stand at this entry while the decoder runs."
+evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc. Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): Mp3_Destroy 0x5B0630 frees through it (0x5B071D, 0x5B072D) the blocks Mp3_Create took from the runtime's calloc 0x5BA221, so the toolchain's free cannot stand at this entry while the decoder runs. Taken 2026-10-10 with DIV-0091 (docs/crt-rest.md section 2.6): the toolchain's free, injected with malloc and calloc 0x5BA221 as a set; E8 scan 2026-10-10: 59 call sites, 8 game (ours), 41 decoder, 10 runtime."
 
+[[func]]
+pc = 0x5BA221
+name = "Crt_calloc"
+ret = "void *"
+params = "unsigned count, unsigned size"
+impl = "src/game/crt_rest.cpp"
+status = "evidence"
+evidence = "capstone 2026-10-10, 0x5BA221: SEH-framed (handler 0x5BC7E8), cdecl; esi = count * size (imul, 32 bits), refused above 0xFFFFFFE0, 0 taken as 1, rounded up to 16; the small-block path only when __active_heap 0x93D6E4 is 3 (never: docs/crt-startup.md section 3), else the runtime's heap - MSVC6 calloc.c. Callers (E8 scan): the MP3 decoder's 6 (Mp3_Create 0x5ADF20..0x5ADF90 and its kin) and the runtime's 4 (_mtinit 0x5BAD17, _getptd 0x5BAD84, the stdio set-up 0x5BCB39 / 0x5BCB52); none of ours. Taken 2026-10-10 with malloc and free as a set (docs/crt-rest.md section 2.6): the toolchain's calloc."
 [[func]]
 pc = 0x59EA70
 name = "Gfx_LoadImage"
@@ -8457,6 +8467,7 @@ ret = "int"
 params = "void **decoder"
 status = "hypothesis"
 evidence = "call site 0x5A6D68 (Music_OpenDecoder), 2026-09-22: stdcall (ret 4 at 0x5AE142), writes the handle through its argument; non-zero is failure. The MP3 decoder (0x5AB000..0x5B9380, unidentified library) is out of scope; named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AE160
@@ -8466,6 +8477,7 @@ ret = "int"
 params = "void *decoder, void *io"
 status = "hypothesis"
 evidence = "call site 0x5A6D8B, 2026-09-22: stdcall (ret 8); tests entries +8..+0x18 of the table and copies it into a Crt_malloc of 0x38 bytes (0x5AE231), so the caller's local may die. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AE6A0
@@ -8475,6 +8487,7 @@ ret = "int"
 params = "void *decoder, const char *name, int mode"
 status = "hypothesis"
 evidence = "call site 0x5A6DB8, 2026-09-22: stdcall (ret 0xC), (decoder, the name size@address, -1); non-zero is failure. The memory table's open 0x5B0DB0 parses the name back with sscanf. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AE820
@@ -8484,6 +8497,7 @@ ret = "int"
 params = "void *decoder"
 status = "hypothesis"
 evidence = "call site 0x5A6DCC, 2026-09-22: stdcall (ret 4); 0 is success. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AEBA0
@@ -8493,6 +8507,7 @@ ret = "int"
 params = "void *decoder, int position"
 status = "hypothesis"
 evidence = "call site 0x5A6F73 (Music_Decode), 2026-09-22: stdcall (ret 8), (decoder, 0) at the end of a looping track; decoding then carries on from the start (docs/asset-loading-path.md section 1a). Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5AFC40
@@ -8502,6 +8517,7 @@ ret = "int"
 params = "void *decoder, void *out"
 status = "hypothesis"
 evidence = "call site 0x5A6F4D (Music_Decode), 2026-09-22: stdcall (ret 8); decodes a frame to out, whose size the caller reads at [[decoder + 0x14] + 8]; 0xFFFFFDFE is end of stream. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5B0630
@@ -8511,6 +8527,7 @@ ret = "int"
 params = "void *decoder"
 status = "hypothesis"
 evidence = "call site 0x5A712B (Music_Release), 2026-09-22: stdcall (ret 4 at 0x5B07F4); the result is not read. Named by the use."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]
 pc = 0x5B0D50
@@ -8520,6 +8537,7 @@ ret = "int"
 params = "void *io"
 status = "evidence"
 evidence = "disasm 2026-09-22, 0x5B0D50..0x5B0DA2 (whole): stdcall (ret 4), writes ten function pointers 0x5B0DB0..0x5B1160 and a 0 - exactly 0x2C bytes - and returns 0. The first, 0x5B0DB0, sscanfs a name; with Music_OpenDecoder's size@address name, a table that reads the stream from memory."
+note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[data]]
 pc = 0x6BC8C8

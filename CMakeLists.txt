@@ -182,6 +182,7 @@ add_library(bof3x SHARED
   src/audio/spu.cpp
   src/audio/seq.cpp
   src/audio/song.cpp
+  src/audio/mp3.cpp
   src/game/d3d_draw_fuzz.cpp
   src/game/d3d_list.cpp
   src/game/d3d_list_fuzz.cpp
@@ -669,7 +670,7 @@ add_library(bof3x SHARED
   src/game/crt_rest.cpp
   src/game/crt_rest_fuzz.cpp)
 add_dependencies(bof3x bof3x_symbols)
-target_include_directories(bof3x PRIVATE src "${_gen_dir}")
+target_include_directories(bof3x PRIVATE src third_party "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # The Direct3D 11 render backend (docs/render-backend.md): the OS's own
 # libraries, nothing vendored; the shader compiler is d3dcompiler_47.dll.

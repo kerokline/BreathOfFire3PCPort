@@ -48,6 +48,7 @@
 #include "game/widescreen.h"
 #include "game/d3d_lines.h"
 #include "game/music_loops.h"
+#include "audio/mp3.h"
 #include "game/music_seq.h"
 #include "game/battle_actions.h"
 #include "game/battle_flow.h"
@@ -1429,6 +1430,8 @@ void InjectAll() {
                                 // after every module's self-test, which all compared the original's rewind
     dat_cache::Arm();           // DIV-0089: DAT\ and SND\ from the cache where it has them (BOF3X_CACHE,
                                 // BOF3X_CACHE_DATA) - after every module's self-test, which all read the install's
+    mp3dec::Arm();              // DIV-0091: the MP3s through minimp3 (BOF3X_MP3) - after every module's self-test,
+                                // which all compared Capcom's decoder (audio/mp3.h)
     music_seq::Arm();           // DIV-0087: the cache's songs through the sequencer (BOF3X_CACHE, BOF3X_MUSIC) - after
                                 // every module's self-test, which all compared the MP3 path
     DrawPool_Grow();            // DIV-0062: the draw-item pool doubled - LAST, after every module's self-test,

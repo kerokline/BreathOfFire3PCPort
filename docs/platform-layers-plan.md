@@ -92,7 +92,13 @@ toolchain's runtime or to a small function of ours:
 (`tools/pe_xref.py` over our own call-by-address constants; the tracer with
 only that range armed over every route).
 
-### 2.4 The MP3 decoder (200 starts, 55.5 KB) - not scheduled; its shape waits on I23 (section 5)
+### 2.4 The MP3 decoder (200 starts, 55.5 KB) - done 2026-10-10 as DIV-0091
+
+**Done:** minimp3 behind the seam, the comparison over all 177 files, the
+owner's listen owed ([`mp3-decoder.md`](mp3-decoder.md)). The music
+investigation of section 5 (I23) ran first and settled two paths (DIV-0087
+for the disc's sequences, the MP3s kept), which is why a decoder was still
+needed. The text below is the plan as written.
 
 `BGM/*.DAT` are bare MPEG streams and the decoder is a third party's, linked
 in. [`media-stack-survey.md`](media-stack-survey.md) judged replacing it
@@ -201,7 +207,9 @@ state hash's doc) - a small piece of work to do before it is needed.
    catalogue never held (game modes 3..6), 10,065 ours; the software path
    settled original-only. The state hash is its live check.
 3. **The runtime boundary** (section 2.3) - `rand` first, because the
-   recipes hang on it.
+   recipes hang on it. **Done** by 2026-10-10 evening ([`crt-rest.md`](crt-rest.md)):
+   19 entries ours, `_getptd` and the start-up left for the cutover
+   ([`crt-startup.md`](crt-startup.md) says what it must reproduce).
 4. **The music investigation** (I23; section 5), which decides what section
    2.4 becomes, and the decoder's replacement or removal that follows from
    it.
