@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 94 entries, DIV-0001..0094, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 95 entries, DIV-0001..0095, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5613,7 +5613,7 @@ designed in rather than bolted on.
   nobody handles ends with our crash report and `Fatal`'s box and exit
   code 3, not a silent `_exit`; the launcher no longer suspends, reserves
   or injects; Capcom's icon is not loaded (ours, a placeholder until the
-  owner's artwork); `.rsrc` and the import descriptors are not mapped. What
+  owner's artwork - since DIV-0095 generated from the game's own data); `.rsrc` and the import descriptors are not mapped. What
   is **new to the process**: the code page is UTF-8 (the manifest's
   `activeCodePage`, so a cache folder of any name works - section 9 of the
   brief), `longPathAware` and themed message boxes (common controls 6) are
@@ -5652,3 +5652,52 @@ designed in rather than bolted on.
   `BOF3X_MP3=original` is set, which `bof3x.exe` refuses. The hosted build
   stays the shadow fuzz's and the reference pairs' home until a later state
   retires it.
+
+### The executable's icon, drawn from the game's own data on the player's machine
+
+- **ID:** DIV-0095 (the next free number on 2026-10-11; renumber at the
+  merge if another branch has taken it)
+- **Date:** 2026-10-11
+- **Subsystem:** platform (`src/hook/exe_icon.cpp`, called from
+  `Game_WinMain`'s loop, `src/game/win_main.cpp`; the launcher's move of
+  `bof3x.exe.new`, `src/launcher/launcher.cpp`; [`exe-icon.md`](exe-icon.md))
+- **Tier:** Sensible - Windows' chrome, not the game: nothing in play changes.
+- **Original behaviour:** `BOF3.exe`'s window class loads Capcom's icon
+  `BOF3_ICON` from his `.rsrc` (`Game_WinMain` `0x4FCB00`, `LoadIconA`);
+  Explorer, the taskbar and Alt-Tab show it. Under DIV-0094 `bof3x.exe`
+  carried a plain placeholder under the same name instead (rule 1: Capcom's
+  artwork is not shipped).
+- **New behaviour:** in the exe host, once a drawn frame shows the VRAM
+  shadow holding the save slot's party sheet and its CLUT (the title's load
+  screen, the field menu - the same bytes on two drawn frames running), the
+  engine renders icon 10 of `Menu_DrawBigIcon`'s table (`0x66367C`: the
+  whelp, its centre 40 x 40 of 40 x 48) exactly as `tools/make_icon.py`
+  does, sets it as the window's big and small icons (`WM_SETICON`) and the
+  window class's (Alt-Tab), and - once an install, a worker thread, any
+  failure one log line - writes `bof3x.exe.new` (the group `BOF3_ICON`
+  with 16, 24, 32, 48 and 256 px images) and the `bof3x.icon` stamp beside
+  `bof3x.exe`. The launcher moves the new file into place at its next start
+  when the stamp says it was made from the `bof3x.exe` present. Before that
+  frame, and on a first run until the launcher's next start, the
+  placeholder shows. Nothing of the picture is shipped: it exists only on
+  the player's machine, from the player's data.
+- **Rationale:** the owner, 2026-10-11: the icon is ours, not Capcom's
+  file (rule 1), and generated on the player's machine from the game's own
+  data rather than supplied; the whelp, the centre crop. The menu's CLUTs
+  arrive by the compressed upload path, not as image chunks (measured,
+  `make_icon.py`'s docstring), so the picture can only be cut once the game
+  has uploaded them.
+- **Also in the PSX version?** Not applicable: the PlayStation has no window
+  or file icon; the sprite is the save slot's party icon there as here.
+- **Verification:** the self-test from a dump of the VRAM shadow at the load
+  screen (`BOF3X_ICON_VRAM`, `BOF3X_ICON_REF`): all 69,696 pixels of the
+  five images identical to `make_icon.py`'s `whelp_centre.ico`, the
+  rewritten executable's sections and headers unchanged but `.rsrc` and its
+  self-test exit 0; a live load-screen run (`input_run.py`, headless) wrote
+  a `bof3x.exe.new` byte-identical to the self-test's, and the next run's
+  launcher moved it into place and the game ran from it
+  ([`exe-icon.md`](exe-icon.md) section 4). Not yet: the owner's eye on the
+  window, the taskbar and Explorer.
+- **Reversible?** No switch. The hosted build (`--host bof3`) keeps
+  Capcom's icon from his `.rsrc`; deleting `bof3x.icon` and putting the
+  built `bof3x.exe` back restores the placeholder until the next load screen.

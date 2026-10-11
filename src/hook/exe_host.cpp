@@ -16,7 +16,8 @@
 //     jmps (and DrawPool_Reserve takes .pool); DirectSoundCreate's thunk;
 //     the census after; .stub checked to hold nothing but those; then
 //     read-execute
-//  7. the unhandled-exception filter; Game_WinMain on this thread
+//  7. the unhandled-exception filter; Game_WinMain on this thread (whose
+//     loop generates the icon, DIV-0095, exe_icon.h)
 #include "hook/exe_host.h"
 
 #include <windows.h>
@@ -32,6 +33,7 @@
 #include "hook/crash.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
+#include "hook/exe_icon.h"
 #include "hook/exe_image.h"
 #include "hook/exe_layout.h"
 #include "hook/host.h"
@@ -394,10 +396,12 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     CodeBytes_Report("after InjectAll");
     StackWatch_Start();
     if (EnvSet("BOF3X_SELFTEST_ONLY")) {
+        ExeIcon_SelfTest();   // DIV-0095: only with BOF3X_ICON_VRAM; .data (the icon table) is copied by now
         Log("self-test only: done, ending the process");
         LogClose();
         TerminateProcess(GetCurrentProcess(), 0);
     }
+    if (EnvSet("BOF3X_ICON_VRAM")) Log("DIV-0095    icon: BOF3X_ICON_VRAM is a self-test switch (BOF3X_SELFTEST_ONLY); ignored");
     CallTrace_Start(module);   // refused above when asked for; a no-op here otherwise
     InputScript_Start();
     draw_order::Start();

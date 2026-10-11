@@ -475,6 +475,12 @@ The five calls, with the owner's answers of the same day:
    owner: `bof3x.exe`** (confirmed 2026-10-11).
 2. **The icon.** Ours, not Capcom's (rule 1). **The owner will supply the
    artwork**; the first build ships a plain placeholder until it arrives.
+   **Changed the same day:** the icon is not supplied but generated on the
+   player's machine from the game's own data - the whelp of the save slot's
+   party icons, cut from the VRAM shadow once the game has uploaded it, set
+   on the window at once and written into `bof3x.exe` once an install
+   (DIV-0095, [`exe-icon.md`](exe-icon.md)). The placeholder shows until
+   then.
 3. **UTF-8** (section 9): **now, both halves** - the manifest line in the
    executable and the launcher's ini and environment half in the same
    build.

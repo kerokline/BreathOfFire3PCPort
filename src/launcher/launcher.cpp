@@ -25,6 +25,7 @@
 // load the same (32-bit) kernel32 - true within one boot session.
 #include <windows.h>
 
+#include "common/icon_stamp.h"
 #include "common/sha256.h"
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
@@ -101,6 +102,35 @@ std::string Sha256Hex(const std::wstring& path) {
     std::string hex, why;
     if (!bof3x::Sha256Hex(path.c_str(), hex, why)) Die(L"cannot hash %ls: %hs", path.c_str(), why.c_str());
     return hex;
+}
+
+// DIV-0095: the icon the engine generated from the game's data
+// (docs/exe-icon.md). bof3x.exe cannot rewrite its own file while it runs, so
+// it writes bof3x.exe.new and the bof3x.icon stamp beside itself, and the
+// move is made here, before bof3x.exe starts. Only when bof3x.exe is still
+// the file the engine copied and the new file is the one it verified: a
+// stale copy (bof3x.exe rebuilt or replaced since) is deleted instead, and
+// the engine makes a fresh one at its next run. Never stops the launcher.
+void InstallGeneratedIcon(const std::wstring& ours) {
+    const std::wstring pending = ours + L".new";
+    if (!FileExists(pending)) return;
+    bof3x::IconStamp stamp;
+    std::string current, written, why;
+    const bool have_stamp = bof3x::IconStampRead(OwnDirectory() + L"\\bof3x.icon", stamp);
+    if (!have_stamp || !bof3x::Sha256Hex(ours.c_str(), current, why) || !bof3x::Sha256Hex(pending.c_str(), written, why) ||
+        current != stamp.from || written != stamp.to) {
+        DeleteFileW(pending.c_str());
+        std::fwprintf(stderr, L"bof3x-launcher: %ls is not the icon written for this bof3x.exe (%hs); deleted - the "
+                              L"game writes a fresh one\n",
+                      pending.c_str(), !have_stamp ? "no bof3x.icon stamp" : !why.empty() ? why.c_str() : "the stamp does not match");
+        return;
+    }
+    if (!MoveFileExW(pending.c_str(), ours.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        std::fwprintf(stderr, L"bof3x-launcher: cannot move %ls into place (error %lu); kept for the next start\n",
+                      pending.c_str(), GetLastError());
+        return;
+    }
+    std::wprintf(L"bof3x-launcher: bof3x.exe now carries the icon generated from the game's data (DIV-0095)\n");
 }
 
 // DIV-0062: the draw-item pool's room. The pool's items are linked into the
@@ -230,6 +260,7 @@ int wmain(int argc, wchar_t** argv) {
     if (!hosted && !FileExists(ours))
         Die(L"%ls is missing; it belongs next to this launcher (or start the hosted build with --host bof3).",
             ours.c_str());
+    if (FileExists(ours)) InstallGeneratedIcon(ours);
 
     std::string sha = Sha256Hex(exe);
     if (sha != bof3x::kExpectedSha256)

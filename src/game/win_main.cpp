@@ -68,6 +68,7 @@
 #include "game/fmv_play.h"
 #include "game/pause_text.h"
 #include "hook/detour.h"
+#include "hook/exe_icon.h"
 #include "hook/input_script.h"
 #include "hook/run_speed.h"
 #include "hook/log.h"
@@ -667,6 +668,9 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
                         QueryPerformanceCounter(&q1);
                         draw_ticks += q1.QuadPart - q0.QuadPart;
                     }
+                    // DIV-0095: the exe host's icon, once the VRAM shadow holds
+                    // its sheet; on this thread, which owns the window.
+                    bof3::ExeIcon_Frame(hwnd);
                 }
                 // The wait: Sound_Tick on every spin, at least once a frame.
                 for (;;) {
