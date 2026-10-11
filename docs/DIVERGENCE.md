@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 92 entries, DIV-0001..0092, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 94 entries, DIV-0001..0094, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5559,3 +5559,84 @@ designed in rather than bolted on.
   end (the 26 ms were not reported by ear before either).
 - **Reversible?** `BOF3X_MP3=original` (Capcom's decoder, its count with it)
   until the cutover; after it the constant.
+
+### The game runs as our own executable
+
+- **ID:** DIV-0094 (the next free number on 2026-10-11; renumber at the
+  merge if another branch has taken it)
+- **Date:** 2026-10-11
+- **Subsystem:** the platform under the game: the process, its start-up and
+  its loader (`bof3x.exe`, written by `tools/make_exe.py` from
+  `src/hook/exe_layout.h`; `Engine_Main`, `src/hook/exe_host.cpp`; the
+  launcher's default, `src/launcher/launcher.cpp`;
+  [`state3-design.md`](state3-design.md), [`state3-build.md`](state3-build.md))
+- **Tier:** Sensible - the same game, on a platform we can change, with
+  nothing of Capcom's code in the process.
+- **Original behaviour:** the player starts `BOF3.exe`, Capcom's image at
+  `0x400000`. The loader maps its `.text`, `.rdata`, `.data` and `.rsrc`,
+  binds its 109 import slots and runs the Visual C++ 6 runtime's start-up
+  ([`crt-startup.md`](crt-startup.md) 9): the Windows version words, the
+  heap, the per-thread data, the locks, the floating-point conversion hooks,
+  `_adjust_fdiv`, the low-level I/O table, `stdio`, the command-line,
+  environment and multibyte tables, the C initialisers, the signal filter,
+  the x87 word `0x027F`, an SEH frame whose `__except` ends the process
+  silently, the runtime's R6xxx message boxes - then `WinMain`. Under the
+  port so far the launcher created that process suspended, reserved the
+  draw-item pool's room in it (DIV-0062) and injected `bof3x.dll`, which
+  wrote a jmp over each of 10,087 of Capcom's function starts.
+- **New behaviour:** the launcher starts `bof3x.exe`, an image of ours based
+  at `0x400000` whose sections span Capcom's range: `.stub`
+  (`0x401000..0x5C4000`, `int3` but for the 10,087 jmps to our functions and
+  `DirectSoundCreate`'s thunk), `.game` (`.rdata` and `.data` copied from the
+  player's own `BOF3.exe`, SHA-256-verified, never written to disk; `.bss`
+  zero), `.pool` (DIV-0062's 2,048 draw items). It imports `bof3x.dll`,
+  whose `Engine_Main` binds the fourteen import slots our code still calls
+  through, sets and asserts the x87 word `0x027F`, makes `.stub`
+  read-execute and calls `Game_WinMain` on the main thread, its answer the
+  exit code. What the platform **no longer does**: map or run any code of
+  Capcom's (his start-up, and the twelve `[[func]]` starts still without an
+  `impl` - the MP3 decoder's eight among them - land on `int3`); the runtime's heap, per-thread data, locks,
+  I/O and `stdio` tables, environment and multibyte tables, initialisers,
+  signal filter and R6xxx boxes (none read by the game); an exception
+  nobody handles ends with our crash report and `Fatal`'s box and exit
+  code 3, not a silent `_exit`; the launcher no longer suspends, reserves
+  or injects; Capcom's icon is not loaded (ours, a placeholder until the
+  owner's artwork); `.rsrc` and the import descriptors are not mapped. What
+  is **new to the process**: the code page is UTF-8 (the manifest's
+  `activeCodePage`, so a cache folder of any name works - section 9 of the
+  brief), `longPathAware` and themed message boxes (common controls 6) are
+  declared; the stack header is reserve `0x100000` / commit `0x10000`
+  (`BOF3.exe`'s asked `0x10000` / `0x10000` and Windows gave its 256 KB
+  floor). The process is named `bof3x.exe`. **Kept as `BOF3.exe` had it:**
+  base `0x400000`, no relocations, subsystem 4.0, no DEP or ASLR opt-in, no
+  `dpiAware` (the window scales on a high-DPI desktop as before), no
+  `setlocale`, the command line past the program name as `_wincmdln` gave
+  it, the show flag from `STARTUPINFO`, the window title (DIV-0039).
+- **Rationale:** [`platform-layers-plan.md`](platform-layers-plan.md)
+  section 3, state 3: the game no longer needs Capcom's executable to run,
+  only his data, and the platform becomes ours to change (64 bits, another
+  system, the engine folded into one file - later states). The owner's five
+  calls, 2026-10-11 ([`state3-design.md`](state3-design.md) section 10):
+  `bof3x.exe`; the icon the owner's to supply; UTF-8 both halves now; the
+  player's file first, the cache's `data.bin` under `BOF3X_EXEIMAGE`; this
+  entry, tier Sensible.
+- **Also in the PSX version?** Not applicable: the PlayStation has no
+  executable start-up of this kind; the PC port's own runtime and loader
+  are what is replaced, and no game behaviour is meant to change.
+- **Verification:** both hosts' headless self-tests ([`state3-build.md`](state3-build.md)
+  section 3: the exe host exit 0 - layout, data copy, slots, x87, 10,087
+  injects, `.stub` holding nothing but them; the hosted fuzz under
+  `BOF3X_SHADOW='*'` with no mismatch); the attract sequence on the state
+  hash, 2026-10-11 (section 3.1): the hosted run of the same build identical
+  to `attract_r14_orig` / `_origb` on all 10,305 ticks, the exe-host run
+  identical to both but on the two `.bss` pages `0x93C000` / `0x93D000`,
+  where every differing byte is a variable Capcom's runtime start-up wrote
+  and the game never reads (the multibyte tables, the I/O tables, `_crtheap`,
+  `_acmdln`) - the platform's work this entry drops, measured. Not yet: the
+  ten routes, the stack watch on the F9 route, the owner's eye in play.
+- **Reversible?** `bof3x-launcher --host bof3` starts the player's `BOF3.exe`
+  with the DLL injected, as before - and is chosen without `--host` when
+  `BOF3X_ORIGINAL`, `BOF3X_SHADOW`, `BOF3X_CALLTRACE` or
+  `BOF3X_MP3=original` is set, which `bof3x.exe` refuses. The hosted build
+  stays the shadow fuzz's and the reference pairs' home until a later state
+  retires it.
