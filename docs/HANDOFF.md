@@ -47,8 +47,8 @@ the route pairs now `cn_<route>_orig2` / `_orig2b`).
     narrow and wide. **The owner's first start of this build crashed** (no cache, the MP3 path): minimp3's 13 KB
     stack scratch on a 16 KB task-stack slice - `Mp3_Decode` now runs on a 256 KB stack of its own
     ([`mp3-decoder.md`](mp3-decoder.md) 1); seen: the title and three minutes of the attract sequence through the
-    MP3s, eight tracks, no crash. **Lesson for every module:** code called from a task has 16 KB of stack. **Merge order:**
-    `platform/mp3-decoder`, then `crt/allocator` (which contains `crt/atoi-and-startup`). **Held by the owner:** state
+    MP3s, eight tracks, no crash. **Lesson for every module:** code called from a task has 16 KB of stack. **One PR, from
+    `crt/allocator`** (which contains `platform/mp3-decoder` and `crt/atoi-and-startup`; the owner's call, 2026-10-10). **Held by the owner:** state
     2's tracer proof (armed on `0x5AB7E0..0x5B8DA0`, and now the runtime's heap range) - "we'll hold the tracer proof
     till later" (2026-10-10). A launcher box for `BOF3X_MP3` beside `music=`.
 
