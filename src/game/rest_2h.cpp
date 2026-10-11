@@ -48,6 +48,7 @@
 #include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace rest_2h {
 std::uint32_t g_master_bound = at::kMasterBound;
@@ -122,7 +123,7 @@ const unsigned char* Text(U address) { return At(address); }
 const unsigned char* Message(unsigned id) { return SH_CALL(Msg_SystemPtr)(id & 0xFFFF); }
 
 // Where an E8 site reaches now: the site + 5 + its rel32.
-U SiteTarget(U site) { return site + 5 + L(site + 1); }
+U SiteTarget(U site) { return bof3::CodeCallTarget(site); }
 
 void PutFloat(unsigned char* at, std::int32_t v) {
     const float f = static_cast<float>(v);
@@ -391,7 +392,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MasterListRu
 // call, as the original's `cmp word [eax + 4], cx` does, so BOF3X_ORIGINAL=
 // Widescreen still restores -120 (Rest2H_Inject checks the opcode).
 extern "C" void __cdecl MasterWin_SlideOut(void) {
-    const auto bound = static_cast<short>(Word(At(rest_2h::g_master_bound)));
+    const auto bound = static_cast<short>(bof3::CodeWord(rest_2h::g_master_bound));
     Slide(4, -0x20, bound, true, bound);
 }
 
@@ -866,11 +867,11 @@ extern "C" void __cdecl Cfg_SetKeyTable(const void* table) {
 void Rest2H_Inject() {
     // MasterWin_SlideOut reads its bound back from the original's `mov ecx,
     // imm32` (B9): anything else there means the site moved.
-    if (B(at::kMasterBoundMov) != 0xB9)
+    if (bof3::CodeByte(at::kMasterBoundMov) != 0xB9)
         bof3::Fatal("rest_2h: 0x%X holds 0x%02X, not MasterWin_SlideOut's mov ecx", (unsigned)at::kMasterBoundMov,
-                    B(at::kMasterBoundMov));
+                    bof3::CodeByte(at::kMasterBoundMov));
     bof3::Log("rest_2h: MasterWin_SlideOut's bound %d (0x59C136; -120 unless DIV-0041 widened it)",
-              static_cast<int>(static_cast<short>(Word(At(at::kMasterBound)))));
+              static_cast<int>(static_cast<short>(bof3::CodeWord(at::kMasterBound))));
     if (bof3::WantsShadow("rest_2h")) rest_2h::SelfTest();
     rest_2h::g_master_title_live = true;   // DIV-0059, from here on
     // DIVERGENCE DIV-0083: a Latin language overlay only, as DIV-0059's switch.

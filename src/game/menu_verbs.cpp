@@ -28,6 +28,7 @@
 #include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -138,7 +139,7 @@ void MenuVerbs_Inject() {
 // original would call - read back from the call site itself, so it is
 // whatever RetargetCall did, BOF3X_ORIGINAL=MenuVerbs included.
 MenuVerbs_LabelFn MenuVerbs_ActiveLabel() {
-    const auto* site = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kRowLabelCall));
+    const auto* site = bof3::CodeBytes(kRowLabelCall, 5);
     std::int32_t rel;
     std::memcpy(&rel, site + 1, sizeof rel);
     const std::uint32_t target = kRowLabelCall + 5 + static_cast<std::uint32_t>(rel);
