@@ -5411,12 +5411,55 @@ designed in rather than bolted on.
   nothing when that is `0xFF` too). A save that holds a track still plays
   that track, as before. One switch, `g_area_track_fallback`, armed in
   `ModeRest_Inject` after both modules' fuzzes, which run Capcom's rule.
+  **Amended 2026-10-10 night: the song resumes where it left off.** In case
+  1, when the area's track is the song the battle took over, it picks up
+  where it was heard instead of starting from the top
+  (`src/game/music_resume.h`):
+  - **Taken.** `GameMode5_Load`, before the battle's `Music_FadeOutStop` and
+    `Music_Play`, calls `music_resume::Remember`. It records the track
+    playing (`Music_Track`, when the stream is the BGM file `Music_Play`
+    started) and the sample *heard*. The ring is two halves of 0x12000 bytes
+    (18,432 samples, 0.418 s). The stream sample each half starts with is
+    kept as `Music_CreateBuffer` and `Music_Pump` write it, and DirectSound's
+    `GetCurrentPosition` gives the play cursor. The heard sample is that
+    half's first sample plus the cursor's offset into it. This takes out
+    exactly the 0.42 to 0.84 s the decoder runs ahead of the ear, and the
+    lead is logged. The point is folded into the song's first pass and loop:
+    the measured loop row, the rewind period, or the synth's loop-end jumps.
+  - **Used.** In `GameMode5_Leave`'s fallback, `music_resume::Arm(track)`
+    makes the position pending when it is for that track. Then
+    `Music_Play(track, music_resume::kResumeFadeFrames)` (10 frames today,
+    one named constant, because the owner is comparing the transition with
+    the PlayStation). Its `Music_Start` advances the new stream to the point
+    before the first half is decoded. The sequenced song is fast-forwarded
+    without a sample mixed (`MusicSynth::FastForward` over `Spu::Skip`): the
+    sequencer's events, the keys and the envelopes are as a render from the
+    top would leave them, and the reverb starts empty
+    ([`music-seq-engine.md`](music-seq-engine.md) 8). The MP3 is decoded
+    from the top and the samples dropped, which is the measured loop's own
+    seek ([`mp3-decoder.md`](mp3-decoder.md) 6). A position is used once
+    and then cleared (`music_resume::Forget` after the leave's music). A
+    different track, a once-only song asked past its end, or nothing
+    remembered starts from the top, as before, over Capcom's 0xA frames.
+    The load of a save (case 2) stays a fresh start.
+  - **Where it lives.** The position is the DLL's own state (statics in
+    `sound.cpp`), never game memory, so the state hash and the save files
+    do not see it. With the switch off nothing is remembered, and
+    `Remember` returns before reading anything.
+  - Under `BOF3X_MUSIC_LOG=1`, one line each:
+    `music_log   fN remember track T at sample S (heard H; W written, the ring L samples ahead)`
+    and `music_log   fN resume track T at sample S`.
 - **Rationale:** the owner, 2026-10-10: "The battle music will continue
   after battle ends, and the area music won't resume" (compared to the
   PlayStation), and on the quicksave: "this seems to have the effect of not
   loading the area's music. Can we fix that?" The PSX twin rule
   ([`HANDOFF.md`](HANDOFF.md) traps): the PSX resumes, so case 1 is a port
   repair; case 2 cannot arise on the PSX, so it is this project's choice.
+  The resume: the owner, 2026-10-10 night, from their PlayStation copy:
+  "The original psx had a true resume - the song would pick up where it
+  left off, not restart." DIV-0092 as first built restarted the song from
+  the top (frame 2838 of the owner's route log), which the owner heard as
+  wrong.
 - **Also in the PSX version?** Case 1 no - the PSX restarts the area's song
   at a battle's end (not read in its overlay here: the main executable has
   `nop`s at the twin's address `0x80198F48`; the claim rests on D241's and
@@ -5431,5 +5474,25 @@ designed in rather than bolted on.
   after the fight). What `0x904CD0` holds for the quicksave's area is the
   zone's answer, which may differ from the track an event had set when the
   save was written - accepted.
+  The resume: `BOF3X_SHADOW=sound` checks both paths against the stream
+  from the top. On the MP3 path a stand-in decoder is resumed at folded
+  points (a rewinding track, a once-only track past its end, a measured
+  loop and its crossfade) and must match sample for sample. On the
+  sequenced path a synthetic song resumed through `Music_Start` must equal
+  an oracle's render from the top bit for bit, on a bank without reverb.
+  The test also checks the heard sample from a stand-in play cursor,
+  nothing remembered with the switch off, and use once and only for the
+  remembered track. The full `'*'` self-test, narrow and wide, exits 0 with
+  0 mismatches. On the cache's songs 91, 0 and 1 (host `synth_render
+  --skip`), a fast-forward of 60 s differs from the render from the top only
+  in the reverb's return: about -20 dB for half a second, then bit
+  identical from 2 s. It costs about 240 ms per minute skipped. **Not
+  heard: the owner's ear is the measure.** The route is
+  `tools/recipes/musicStopCheck.txt`, replayed with
+  `BOF3X_CACHE=<repo>/analysis/cache/pc-plus-us` and then with
+  `BOF3X_MUSIC=mp3`, under `BOF3X_MUSIC_LOG=1`.
 - **Reversible?** `BOF3X_ORIGINAL=AreaTrackFallback` (Capcom's rule in
-  ours), or `BOF3X_ORIGINAL=GameMode5_Leave,GameMode_Start`.
+  ours, and no position remembered), or
+  `BOF3X_ORIGINAL=GameMode5_Leave,GameMode_Start`. There is no runtime
+  switch for the resume alone (the restart from the top under the fallback
+  would be a code change: no `Arm` in `GameMode5_Leave`).

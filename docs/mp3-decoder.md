@@ -165,6 +165,62 @@ aborts on each). Which decoding case Capcom's library gets wrong. The
 `eos_kind` classification saw only "nothing"; the other kinds are untested
 code.
 
+## 6. The resume after a battle: the seek (DIV-0092, 2026-10-10 night)
+
+The field's song resumes after a fight where it was heard, as on the owner's
+PlayStation. [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0092 and
+`src/game/music_resume.h` cover the shared part. On the MP3 path the
+position is a sample of the stream `Music_Decode` hands out. The MP3 path
+has no position seek. Both decoders take `Seek(0)` alone (ours aborts on
+any other position, and Capcom's meaning for one is unmeasured), so the
+resume uses the measured loop table's own mechanism: decode from the top
+and throw the samples away. Decoding from the top leaves the decoder as the
+first pass left it, bit reservoir and overlap included. The samples after
+the skip are therefore the first pass's, bit for bit.
+
+- **Where.** `Music_Start`, after the decoder is opened and `LoopBegin` has
+  looked up the track's measured row, and before `Music_CreateBuffer`
+  decodes the first half. `ResumeSkip` calls `Music_Decode` itself into a
+  scratch half, so every rule of the stream applies unchanged: the
+  original's rewind at the end of the stream, D240's 1,152 uncounted
+  samples, and the measured loop's jump and crossfade. During the skip
+  `Music_Loops` is the new track's (the original sets it only after the
+  first half); it is put back afterwards.
+- **The fold** (`FoldMp3` in `sound.cpp`, at `Remember`). A measured loop
+  repeats `start..end` after `end`, its first `fade` samples blended with
+  the end's. A point past `end` is taken to `start + k`, or to `end + k`
+  inside the blend. A track the original rewinds repeats every
+  `(frames + 1) * 1,152` samples: its frames counted by `mp3dec::CountFrames`
+  (the header walk of section 3), plus D240's step. The original's path
+  decodes whole frames into the caller's buffer, so its point is taken down
+  to a frame's start, 26 ms at most. A once-only track is not folded: when
+  the skip meets its end (`Music_Finished`), the decoder is rewound
+  (`Seek(0)`, `LoopBegin` again) and the track starts from the top.
+- **The cost.** Decoding is bounded by one pass, plus one loop for a
+  measured row. It has not been timed in the game. Section 2's corpus run
+  decodes all 177 files through both decoders in about 25 s, so a few
+  minutes of one track is a fraction of a second.
+- **Self-test** (`BOF3X_SHADOW=sound`, `music_resume::SelfTest` in
+  `sound.cpp`). It uses the loop check's stand-in decoder (every sample
+  carries its index, 40 frames). The stream resumed at a folded point
+  equals the stream from the top at the point heard, sample for sample,
+  except the phantom step's samples, which are whatever the buffer held.
+  Four cases are checked: a rewinding track inside its first pass and three
+  passes on, a once-only track past its end (from the top), and a measured
+  loop two loops on and inside its crossfade. The remembering is checked
+  through a stand-in buffer. The heard sample is the play cursor's half's
+  first sample plus the cursor's offset. Nothing is remembered with
+  DIV-0092's switch off. A remembered position is used once, and only for
+  its own track.
+- **Not verified.** Nothing has been heard, and the skip's time in the game
+  is unmeasured. The route is `tools/recipes/musicStopCheck.txt` under
+  `BOF3X_MUSIC=mp3 BOF3X_MUSIC_LOG=1`: `remember track 91 ...` at the fight,
+  `resume track 91 at sample S` when the field returns. The ear decides
+  whether the song picks up where it left off. The folding of a rewinding
+  track trusts that the decoder makes as many frames as the header walk
+  counts (section 3 checks that for `001.DAT` only). If the counts
+  disagreed, each pass folded away would move the point by a frame.
+
 ## Commands
 
 ```
