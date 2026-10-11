@@ -210,7 +210,10 @@ sees hosted. The readers call `CodeBytes` / `CodeByte` / `CodeWord` /
 `CodeLong` / `CodeCallTarget`; no behaviour changes in either host. The
 exe-host self-test's store after `InjectAll`: 43 reads, 450 bytes (the
 config text's sites and the title widths join it when FIRST.DAT and
-START.DAT load).
+START.DAT load). **The owner, 2026-10-11: the store stays as it is** until
+the disc-only round replaces it - that round makes each operand a value of
+ours because a disc has no PC operands to read, which is the brief's
+"variable of ours" arrived at from the other side.
 
 **The inventory's self-test** (`CheckStub`, after `InjectAll`): every byte
 of `.stub` is `int3` but the 10,087 jmps and the thunk's six; a write of
@@ -354,8 +357,9 @@ The routes and the stack watch above; then the owner plays it. Beyond the
 brief: the attract check re-run with the skip list's new entries;
 the fifteen software-renderer handlers `d3d_list.cpp` names without a
 `[[func]]` (int3 in the exe host); `attract_watch.py`'s rand count; the
-owner's icon - since generated, not supplied (below); the owner's call on
-`dpiAware` (section 2.1).
+owner's icon - since generated, not supplied (below); `dpiAware` - declared,
+the owner's call of 2026-10-11 (section 2.1); the operand store - kept until
+the disc-only round, the owner's call the same day.
 
 **The icon is generated, not supplied** (DIV-0095, [`exe-icon.md`](exe-icon.md),
 the owner's decision of 2026-10-11, after this build): the placeholder
