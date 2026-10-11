@@ -366,5 +366,8 @@ toolchain's since 2026-10-06, so under ours this chain does not run.
 - The toolchain's own start-up control word in our executable (section 4):
   a one-line check in the cutover's first build.
 - Whether anything of ours depends on the ANSI code page through the
-  toolchain's runtime (our code is narrow-string `A` calls throughout; not
-  audited here).
+  toolchain's runtime. **Audited on 2026-10-10:**
+  [`code-page-audit.md`](code-page-audit.md) - the "C" locale holds (no
+  `setlocale` in `src/` or either binary's imports), no game text meets a
+  code page, the install path is reached only relatively; the cache folder
+  stays ANSI until state 3 (its section 4); two log / launcher repairs.
