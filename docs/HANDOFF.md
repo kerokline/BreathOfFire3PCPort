@@ -38,8 +38,14 @@ code page audited, the seven mid-function pointers read, and two music defects o
 
 0. **State 3 - our own executable: the design brief, then the first build.** Everything it needs is read; nothing of
     it is built but `BOF3X_EXEIMAGE` ([`exe-import-engine.md`](exe-import-engine.md) 4.4, the data map exercised in
-    place). The brief is one doc, `docs/state3-design.md`, written before any code, answering from the reads already
-    made:
+    place). **The brief is written** (2026-10-11 late morning, on `platform/state3`): [`state3-design.md`](state3-design.md).
+    It answers the questions below and adds what the morning's read found - the image must be based at `0x400000`
+    and span Capcom's range itself (a run-time reservation comes after the heap is placed), the engine stays
+    `bof3x.dll` and is imported rather than injected, `DirectSoundCreate`'s thunk `0x5ACBBC` and fourteen import slots
+    need binding, and about 70 `PatchBytes` / `RetargetCall` sites plus one direct read still touch Capcom's code bytes
+    inside functions that are ours (its section 7, the build's worklist). **Its section 10 holds five calls for the
+    owner** (name, icon, UTF-8 timing, data-source order, a ledger entry); none blocks the build agent. The
+    questions it was asked:
     - **what the executable is**: a 32-bit `/FIXED` image at a base that leaves `0x400000..0x93F000` free, reserving that
       range and mapping `base/exe/data.bin` over `.data` with `.bss` zeroed to `0x93D6EC` and `.rdata` from the same
       source ([`exe-import-engine.md`](exe-import-engine.md) 4.3, [`exe-resources.md`](exe-resources.md): the two data
