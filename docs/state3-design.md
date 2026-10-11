@@ -472,7 +472,7 @@ The five calls, with the owner's answers of the same day:
 
 1. **The executable's file name and window title.** Recommended `bof3x.exe`
    beside the launcher, the window title unchanged (DIV-0039's). **The
-   owner: the name is fine** - read as `bof3x.exe`; see the note below.
+   owner: `bof3x.exe`** (confirmed 2026-10-11).
 2. **The icon.** Ours, not Capcom's (rule 1). **The owner will supply the
    artwork**; the first build ships a plain placeholder until it arrives.
 3. **UTF-8** (section 9): **now, both halves** - the manifest line in the
@@ -483,13 +483,6 @@ The five calls, with the owner's answers of the same day:
 5. **A ledger entry**, tier Sensible, "the game runs as our own executable",
    listing what the platform under the game no longer does. **Agreed**; the
    build writes it as the next free `DIV-` number at its merge.
-
-*Note on the name:* the owner wrote `bof3.exe`. The player's own file is
-`BOF3.exe`, and Windows file and process names are case-insensitive: the two
-would be told apart only by directory, and every tool that lists the game by
-image name (`tasklist IMAGENAME eq BOF3.exe` in `recipe_saves.py`,
-`Get-Process BOF3` in `attract_run.py`) would see both as one. The brief
-keeps `bof3x.exe` unless the owner confirms `bof3.exe` knowing that.
 
 ## 11. What the first build does and does not do
 

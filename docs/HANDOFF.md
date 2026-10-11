@@ -43,8 +43,7 @@ code page audited, the seven mid-function pointers read, and two music defects o
     and span Capcom's range itself (a run-time reservation comes after the heap is placed), the engine stays
     `bof3x.dll` and is imported rather than injected, `DirectSoundCreate`'s thunk `0x5ACBBC` and fourteen import slots
     need binding, and about 70 `PatchBytes` / `RetargetCall` sites plus one direct read still touch Capcom's code bytes
-    inside functions that are ours (its section 7, the build's worklist). **Its section 10's five calls are answered** (the owner, 2026-10-11: `bof3x.exe` - the owner wrote `bof3.exe`, the
-    note there says why the brief keeps the `x` pending a word; the icon is the owner's to supply; UTF-8 both halves now;
+    inside functions that are ours (its section 7, the build's worklist). **Its section 10's five calls are answered** (the owner, 2026-10-11: `bof3x.exe`; the icon is the owner's to supply; UTF-8 both halves now;
     the data-source order and the ledger entry as recommended), so the build agent can start. The
     questions it was asked:
     - **what the executable is**: a 32-bit `/FIXED` image at a base that leaves `0x400000..0x93F000` free, reserving that
