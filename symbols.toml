@@ -849,9 +849,9 @@ pc = 0x5B9AA6
 name = "Crt_sscanf"
 ret = "int"
 params = "const char *s, const char *fmt, ..."
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05: cdecl, ebp frame with a 0x20-byte string FILE on the stack (_flag 0x49 at ebp - 0x14, the base and pointer the string, the count from 0x5BDA20 strlen), then the input engine 0x5BCF64 over the arguments from ebp + 0x10 - MSVC6 sscanf. Callers Cfg_Load 0x4FD085 (the %d %d literal 0x65DAD0) and Mp3_MemoryIo (HANDOFF Traps, the engine counted by characters)."
-
+evidence = "disasm 2026-10-05: cdecl, ebp frame with a 0x20-byte string FILE on the stack (_flag 0x49 at ebp - 0x14, the base and pointer the string, the count from 0x5BDA20 strlen), then the input engine 0x5BCF64 over the arguments from ebp + 0x10 - MSVC6 sscanf. Callers Cfg_Load 0x4FD085 (the %d %d literal 0x65DAD0) and Mp3_MemoryIo (HANDOFF Traps, the engine counted by characters). Taken 2026-10-10 (docs/crt-rest.md section 2.7): ours over Cfg_Load's one format, fuzzed against Capcom's at this address - the input engine's %d: the C table's whitespace skipped, one sign, digits wrapping modulo 2^32, four bytes written at the pointer; -1 when the string ends before the first value."
 [[func]]
 pc = 0x5B9E65
 name = "Crt_fwrite"
@@ -918,17 +918,26 @@ pc = 0x5B9660
 name = "Crt_malloc"
 ret = "void *"
 params = "unsigned size"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode). Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): the MP3 decoder calls it 19 times and the runtime 19, and an inject would move them all; ours call it by name, one heap with them."
-
+evidence = "disasm 2026-09-19: pushes the dword at 0x7DE9D0 and its argument and calls 0x5B9672, which fails requests above 0xFFFFFFE0 (_HEAP_MAXREQ), calls the allocator 0x5B969E, and on a null result consults that pushed mode word before retrying through a handler. MSVC6 malloc.c: malloc(n) = _nh_malloc(n, _newmode). Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): the MP3 decoder calls it 19 times and the runtime 19, and an inject would move them all; ours call it by name, one heap with them. Taken 2026-10-10 with DIV-0091 (docs/crt-rest.md section 2.6): the toolchain's malloc, injected with calloc 0x5BA221 and free as a set, so every pair - the decoder's under BOF3X_MP3=original and the runtime's start-up, which runs after the inject - stays inside one heap; E8 scan 2026-10-10: 46 call sites, 8 game (ours), 19 decoder, 19 runtime."
 [[func]]
 pc = 0x5B9577
 name = "Crt_free"
 ret = "void"
 params = "void *ptr"
+impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc. Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): Mp3_Destroy 0x5B0630 frees through it (0x5B071D, 0x5B072D) the blocks Mp3_Create took from the runtime's calloc 0x5BA221, so the toolchain's free cannot stand at this entry while the decoder runs."
+evidence = "disasm 2026-09-19: SEH-framed (handler 0x5BC7E8) routine taking one pointer; called by Crt_fclose's inner 0x5B99C4 on FILE+0x1C (_tmpfname), which fclose.c releases with free, and by LoadDatFile and the BGM loader 0x587A20 on buffers obtained from Crt_malloc. Left the executable's until the cutover (capstone 2026-10-06, docs/crt-rest.md section 2.6): Mp3_Destroy 0x5B0630 frees through it (0x5B071D, 0x5B072D) the blocks Mp3_Create took from the runtime's calloc 0x5BA221, so the toolchain's free cannot stand at this entry while the decoder runs. Taken 2026-10-10 with DIV-0091 (docs/crt-rest.md section 2.6): the toolchain's free, injected with malloc and calloc 0x5BA221 as a set; E8 scan 2026-10-10: 59 call sites, 8 game (ours), 41 decoder, 10 runtime."
 
+[[func]]
+pc = 0x5BA221
+name = "Crt_calloc"
+ret = "void *"
+params = "unsigned count, unsigned size"
+impl = "src/game/crt_rest.cpp"
+status = "evidence"
+evidence = "capstone 2026-10-10, 0x5BA221: SEH-framed (handler 0x5BC7E8), cdecl; esi = count * size (imul, 32 bits), refused above 0xFFFFFFE0, 0 taken as 1, rounded up to 16; the small-block path only when __active_heap 0x93D6E4 is 3 (never: docs/crt-startup.md section 3), else the runtime's heap - MSVC6 calloc.c. Callers (E8 scan): the MP3 decoder's 6 (Mp3_Create 0x5ADF20..0x5ADF90 and its kin) and the runtime's 4 (_mtinit 0x5BAD17, _getptd 0x5BAD84, the stdio set-up 0x5BCB39 / 0x5BCB52); none of ours. Taken 2026-10-10 with malloc and free as a set (docs/crt-rest.md section 2.6): the toolchain's calloc."
 [[func]]
 pc = 0x59EA70
 name = "Gfx_LoadImage"

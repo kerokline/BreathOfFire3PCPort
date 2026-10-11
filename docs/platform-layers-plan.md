@@ -207,7 +207,9 @@ state hash's doc) - a small piece of work to do before it is needed.
    catalogue never held (game modes 3..6), 10,065 ours; the software path
    settled original-only. The state hash is its live check.
 3. **The runtime boundary** (section 2.3) - `rand` first, because the
-   recipes hang on it.
+   recipes hang on it. **Done** by 2026-10-10 evening ([`crt-rest.md`](crt-rest.md)):
+   19 entries ours, `_getptd` and the start-up left for the cutover
+   ([`crt-startup.md`](crt-startup.md) says what it must reproduce).
 4. **The music investigation** (I23; section 5), which decides what section
    2.4 becomes, and the decoder's replacement or removal that follows from
    it.

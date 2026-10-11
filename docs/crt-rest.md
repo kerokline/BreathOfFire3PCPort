@@ -14,9 +14,16 @@ planted bugs all refused (section 4). Six entries left for the cutover, each
 with its reason (section 3). Headless only: not yet live-checked (section 6).
 
 **2026-10-10, on `crt/atoi-and-startup` from `432bada8`:** `Crt_atoi` taken,
-reimplemented exactly (section 2.7) - **15 entries ours**, 10,081 -> 10,082;
-five left. The runtime's start-up, which the cutover replaces, is read in
+reimplemented exactly (section 2.7) - **15 entries ours**, 10,081 -> 10,082.
+The runtime's start-up, which the cutover replaces, is read in
 [`crt-startup.md`](crt-startup.md).
+
+**2026-10-10 evening, on `crt/allocator` over DIV-0091 ([`mp3-decoder.md`](mp3-decoder.md)):**
+with the MP3 decoder ours, `Crt_malloc`, `Crt_free` and the runtime's `calloc`
+`0x5BA221` (new to `symbols.toml` as `Crt_calloc`) bound to the toolchain's as a
+set, and `Crt_sscanf` ours over `Cfg_Load`'s one format, fuzzed against Capcom's
+(sections 2.6, 2.7) - **19 entries ours**, 10,082 -> 10,086. **Two left**, both
+the cutover's: `Crt_GetPtd` and `_ftol` (which nothing calls any more).
 
 The plan's rule (section 2.3 there): the unit of work is the entry the game
 calls, not Microsoft's runtime behind it, which is neither decompiled nor
@@ -47,10 +54,11 @@ round fourteen and the platform round), the MP3 decoder `0x5AB7E0..0x5B8DA0`
 | `0x5C35D6` `Crt_filelength` | `_filelength` | 1 | - | - | toolchain's (2.4) |
 | `0x5B9ADA` `Crt_fgets` | `fgets` | 2 | - | - | toolchain's, with the file layer (2.4) |
 | `0x5B9550` `Crt_ftol` (named here) | `_ftol` | 253 | 15 | - | left: ours never calls it (2.5) |
-| `0x5B9660` `Crt_malloc` / `0x5B9577` `Crt_free` | | 8 / 8 | 19 / 41 | 19 / 10 | left (2.6) |
+| `0x5B9660` `Crt_malloc` / `0x5B9577` `Crt_free` | | 8 / 8 | 19 / 41 | 19 / 10 | ours, the toolchain's (2.6) |
+| `0x5BA221` `Crt_calloc` | | 0 | 6 | 4 | ours, the toolchain's (2.6; added 2026-10-10) |
 | `0x5BAD64` `Crt_GetPtd` | `_getptd` | - | - | 4 | left (2.7) |
 | `0x5B9A9B` `Crt_atoi` | `atoi` (MSVC 6's `atol`) | 2 | - | - | ours, exact (2.7) |
-| `0x5B9AA6` `Crt_sscanf` | `sscanf` | 1 | 2 | - | left (2.7) |
+| `0x5B9AA6` `Crt_sscanf` | `sscanf` | 1 | 2 | - | ours, over `%d %d` (2.7) |
 | `0x5BA057` | the entry point | - | - | - | the executable's until the cutover |
 
 `Crt_atoi`, `Crt_sscanf` and `Crt_fgets` are not in the read pass's
@@ -236,45 +244,98 @@ body's x87 state identical, each group's fuzz at 0) is what they already
 meet. `_ftol` stays the executable's, called by the decoder (15 sites), and
 is named in `symbols.toml` (register convention, no signature).
 
-### 2.6 `Crt_malloc` / `Crt_free` - left for the cutover; **unblocked 2026-10-10 by DIV-0091**
+### 2.6 `Crt_malloc` / `Crt_free` / `Crt_calloc` - the toolchain's, as a set (2026-10-10 evening)
 
-**Since DIV-0091 the decoder is ours and allocates from the toolchain's heap**
-([`mp3-decoder.md`](mp3-decoder.md) 1), so the pairing below holds only
-under `BOF3X_MP3=original`; the rebinding of this pair can go ahead with
-that guard (the next C runtime group). The reading below is as it was.
+**Why they waited.** The decoder paired the runtime's allocators across
+entries: `Mp3_Create` `0x5ADF00` took its object from `malloc` (`0x5ADF04`)
+and five blocks from `calloc` `0x5BA221` (`0x5ADF20..0x5ADF90`), and
+`Mp3_Destroy` `0x5B0630` freed them through `free` (`0x5B071D`, `0x5B072D`)
+- 19 `malloc`, 6 `calloc` and 41 `free` sites in the decoder in all. An
+inject of `free` alone would have handed `calloc`'s blocks to the
+toolchain's `free`: a crash on the first track change. With the decoder
+ours (DIV-0091, its memory the toolchain's `new` / `delete`) that pairing is
+reached only under `BOF3X_MP3=original`, and it is answered the same way the
+runtime's own is: **the three move together.**
 
-**The decoder pairs the runtime's allocators across entries.**
-`Mp3_Create` `0x5ADF00` takes its object from `malloc` (`0x5ADF04`) and five
-blocks from the runtime's `calloc` `0x5BA221` (`0x5ADF20..0x5ADF90`, stored
-at object +4..+0x14), and `Mp3_Destroy` `0x5B0630` frees object +0x10 and
-+0x14 through `Crt_free` (`0x5B071D`, `0x5B072D`); 19 `malloc` and 41 `free`
-sites in the decoder in all. `calloc` is not `malloc`: it allocates from the
-runtime's heap directly. An inject at `0x5B9577` would hand those blocks to
-our toolchain's `free` - a crash on the first track change. And the entry
-is shared: an inject moves every caller, the decoder's and the runtime's
-own (`fclose`'s buffer, start-up) with ours. So the entries stay Capcom's
-while the decoder runs, and ours keep calling them by name (one heap for
-everything, as now). **Ours' sites:** `LoadDatFile` and its walk
-(`dat_load.cpp`), `Snd_LoadBankFile` (`save_menu.cpp`), `Music_LoadFile` /
-`Music_Start` / `Music_Release` (`sound.cpp`), the sample records
-(`display_env.cpp`), the CLUT rows (`gfx_clut.cpp`, `Gfx_ClutPixels`,
-`Gfx_ConvertRow`), `Font_SetGlyphData` (`gfx_image.cpp`), the teardown's
-frees (`psx_rest.cpp`), `TextAdvance_Set`, `TextPairs_Apply`. Every block
-ours allocates is freed by ours or never; the decoder only reads
-`Music_Data` - so at the cutover, when the decoder is replaced, the pair can
-bind to the toolchain's at once.
+**The set, by an E8 / `call [slot]` scan of `.text` on 2026-10-10** (a
+capstone sweep with data skipping; `tools/pe_xref.py` indexes data
+addresses, not calls):
 
-### 2.7 `Crt_GetPtd`, `Crt_sscanf` - left; `Crt_atoi` - reimplemented exactly
+| Entry | Sites | Game (ours) | Decoder | Runtime |
+|---|--:|--:|--:|--:|
+| `malloc` `0x5B9660` | 46 | 8 | 19 | 19 |
+| `free` `0x5B9577` | 59 | 8 | 41 | 10 |
+| `calloc` `0x5BA221` | 10 | 0 | 6 | 4 |
+| `_heap_alloc` `0x5B969E` (direct) | 1 | 0 | 0 | 1 (`malloc`'s own body) |
+| `HeapAlloc` import `0x5C4090` | 7 | 0 | 0 | 7 |
+| `HeapReAlloc` import `0x5C40F0` | 4 | 0 | 0 | 4 |
+| `HeapFree` import `0x5C408C` | 5 | 0 | 0 | 5 |
+
+Every allocation the decoder or the game makes goes through one of the three
+entries, so once all three are the toolchain's every pair is inside one heap,
+whoever the caller is: the decoder's under `BOF3X_MP3=original`, Capcom's
+clones of game functions under `BOF3X_ORIGINAL`, and **the runtime's own
+start-up, which runs after the inject** (the DLL is loaded before the entry
+point, [`SCAFFOLDING.md`](SCAFFOLDING.md)): `_mtinit`'s and `_getptd`'s
+per-thread block (`0x5BAD17`, `0x5BAD84`), the stdio set-up's two
+(`0x5BCB39`, `0x5BCB52`), the environment's, the command line's and the
+locks' `malloc`s ([`crt-startup.md`](crt-startup.md) sections 3..5) now come
+from the toolchain's heap and are freed, where they are freed, by the
+toolchain's `free`. The runtime's `_crtheap` is still created by
+`_heap_init` and then holds nothing.
+
+**The paths not moved, and why they are not reached.** The direct
+`HeapAlloc` / `HeapReAlloc` / `HeapFree` sites are the small-block heap
+(never set up: `__active_heap` is 1 on every Windows the game runs on,
+[`crt-startup.md`](crt-startup.md) section 3), `malloc`'s and `free`'s own
+bodies (behind the injected entries), and the `realloc` family
+`0x5C2F8E..0x5C3500`. `realloc` has one caller, `0x5C2AB5` in `0x5C2A26`'s
+function, whose callers are the family itself and `0x5C2564`'s function,
+whose one caller is `0x5C043E` in `_tzset` `0x5C040D` - reached only from
+`_findfirst`'s time conversion, which is ours since step 3 (section 2.3;
+[`crt-startup.md`](crt-startup.md) section 7). So no block crosses between
+the heaps.
+
+**The contract kept** (`crt_rest.cpp`): a usable block or null; MSVC 6
+rounds a request up to 16 bytes, asks 16 for 0 and refuses one above
+`0xFFFFFFE0` (`_HEAP_MAXREQ`), `calloc` multiplies its arguments in 32 bits;
+the toolchain's answers the same requests with its own granularity - no
+caller of ours or of the decoder reads a block past what it asked for
+(`Mp3_Create`'s sizes are its own constants). **Ours' sites by name:**
+`LoadDatFile` and its walk (`dat_load.cpp`), `Snd_LoadBankFile`
+(`save_menu.cpp`), `Music_LoadFile` / `Music_Start` / `Music_Release`
+(`sound.cpp`), the sample records (`display_env.cpp`), the CLUT rows
+(`gfx_clut.cpp`), `Font_SetGlyphData` (`gfx_image.cpp`), the teardown's
+frees (`psx_rest.cpp`), `TextAdvance_Set`, `TextPairs_Apply`, the cache
+reader (`dat_cache.cpp`) - each now the toolchain's by the name's binding,
+and the eight game sites of Capcom's clones by the inject.
+
+### 2.7 `Crt_GetPtd` - left; `Crt_atoi` and `Crt_sscanf` - reimplemented exactly
 
 - **`Crt_GetPtd`** `0x5BAD64`: the per-thread data stays the executable's
   until the cutover (the plan). Ours reaches it only from
   `crt_rest::RandSeedCell` when `Rand` is left original (the map_cells live
   check); its four callers otherwise are the runtime's (`errno`'s accessors
   `0x5BCA43` / `0x5BCA4C`, `0x5BE874`) and Capcom's `Rand`.
-- **`Crt_sscanf`** `0x5B9AA6`: `Cfg_Load`'s `%d %d` and the decoder's
-  `Mp3_MemoryIo` (twice). The entry is the decoder's too, and the frame
-  hash counts its engine by characters (HANDOFF, Traps); left with the
-  decoder.
+- **`Crt_sscanf`** `0x5B9AA6`: **ours since 2026-10-10 evening**, over the
+  one format left in the executable that reaches it - `Cfg_Load`'s `"%d %d"`
+  `0x65DAD0` (the decoder's `Mp3_MemoryIo`, which scanned the memory name
+  with it, is gone with DIV-0091); any other format is fatal (rule 4). The
+  entry builds a string `FILE` on its stack and runs MSVC 6's input engine
+  `_input` `0x5BCF64`; what that engine does for `%d` was written from the
+  disassembly's shape and **fuzzed against Capcom's at its address** (the
+  engine reads only the image's "C" `_pctype` table and the stack `FILE`,
+  so it runs before its runtime starts, as `atol` does): the input's
+  whitespace (`0x09..0x0D`, `0x20`) skipped; one optional `-` or `+`;
+  digits `0..9` accumulated in 32 bits with no overflow test - the value
+  wraps modulo 2^32, negated for `-`; four bytes written at the argument's
+  pointer (`Cfg_Load`'s are byte pointers one apart, so the second lands
+  over the first's upper three bytes: the fuzz passes the same); nothing
+  written and the scan stopped when no digit follows; the format's space
+  skips the input's whitespace; the answer is the number of values written,
+  **or -1 when the string ended before the first was read** (whitespace
+  alone, or empty - the toolchain's `sscanf` answers -1 there too, but
+  saturates the digits: its control is refused in 22,037 of 200,000 rounds).
 - **`Crt_atoi`** `0x5B9A9B` (`Cfg_Load`, two sites `0x4FD094`, `0x4FD0A8`):
   **ours since 2026-10-10, exact.** The entry is `push [esp + 4]; call
   0x5B9A10; pop ecx; ret` - MSVC 6's `atoi` over `atol`. `atol`
@@ -311,26 +372,26 @@ bind to the toolchain's at once.
 
 ## 3. The two tables
 
-**Taken (15):**
+**Taken (19):**
 
 | Entry | Ours | Verified |
 |---|---|---|
 | `Rand` `0x5B93D2` | the generator, a static seed from 1 | 100,000 rounds + 20,000 from 1 against a copy, 2 controls |
 | `Crt_sprintf` `0x5B9380` | `%d` / `%X` with `0` and width <= 8, `%s`; `Fatal` else | 47 formats x 3,000 against Capcom's, 5 controls |
 | `Crt_atoi` `0x5B9A9B` | MSVC 6's `atol`: "C" spaces, one sign, a total wrapping modulo 2^32 | 200,000 rounds against Capcom's (34 edge strings first), 5 controls |
+| `Crt_sscanf` `0x5B9AA6` | `"%d %d"` as the input engine scans it: "C" spaces, one sign, a total wrapping modulo 2^32, -1 before the first value; `Fatal` on any other format | 200,000 rounds against Capcom's (28 edge strings first), 2 controls |
+| `Crt_malloc` `0x5B9660`, `Crt_calloc` `0x5BA221`, `Crt_free` `0x5B9577` | the toolchain's, as a set | 200 rounds of 64 blocks written through, read back, freed out of order; `calloc` zeroed; `free(null)`; requests past `0xFFFFFFE0` refused (Capcom's heap does not exist before its runtime) |
 | `Crt_strncpy` `0x5B9450` | toolchain `strncpy` | 60,000 rounds at every alignment, 2 controls |
 | `Crt_stricmp` `0x5C2B40` | the sign of toolchain `_stricmp` | 60,000 rounds, 3 controls |
 | `Crt_findfirst` `0x5B979A`, `Crt_findnext` `0x5B9867` | toolchain `_findfirst32` / `_findnext32` | layout `static_assert`s; 1,776 matches over 5 patterns against `FindFirstFileA` / `FindNextFileA` |
 | `Crt_fopen` `0x5B9B6D`, `Crt_fclose` `0x5B9993`, `Crt_fread` `0x5B9D4E`, `Crt_fwrite` `0x5B9E65`, `Crt_fseek` `0x5B9F9E`, `Crt_fileno` `0x5C3660`, `Crt_filelength` `0x5C35D6`, `Crt_fgets` `0x5B9ADA` | the toolchain's | a written file read back at 400 random offsets, its length, a failed open, `fgets` on CRLF lines (Capcom's cannot run before its runtime) |
 
-**Left for the cutover (five; ours still reach all but `_ftol`):**
+**Left for the cutover (two):**
 
 | Entry | Ours' callers | Why |
 |---|---|---|
-| `Crt_malloc` `0x5B9660`, `Crt_free` `0x5B9577` | section 2.6 | the decoder pairs `calloc` with `free`; one heap while it runs |
-| `Crt_GetPtd` `0x5BAD64` | `crt_rest::RandSeedCell`, with `Rand` left original | the per-thread data is the executable's until the cutover |
-| `Crt_sscanf` `0x5B9AA6` | `Cfg_Load` | the decoder's `Mp3_MemoryIo` uses the same entry |
-| `Crt_ftol` `0x5B9550` | none on a game path (2.5) | the decoder's; ours inline it |
+| `Crt_GetPtd` `0x5BAD64` | `crt_rest::RandSeedCell`, with `Rand` left original | the per-thread data is the executable's until the cutover ([`crt-startup.md`](crt-startup.md) section 3) |
+| `Crt_ftol` `0x5B9550` | none (2.5) | no caller is left since DIV-0091 took the decoder's 15 sites; ours inline it; goes with the image |
 
 ## 4. Verification
 
@@ -385,6 +446,22 @@ ours, 0 left original by BOF3X_ORIGINAL`:
   `_filelength(_fileno())`, `fgets` with Cfg_Load's `n` of 0x14 over CRLF
   lines (one longer than 0x13), the end, and an open of nothing: 0.
 
+- **`sscanf`** (2026-10-10 evening): Capcom's at its address against ours on
+  `Cfg_Load`'s format over strings of two numbers built from the `atoi`
+  fuzz's parts (spaces and near misses, a sign run, 0..24 digits with wraps
+  past 2^31 and 2^32) joined by a space, a tab, a newline, a comma, a letter
+  or nothing, with a tail; one in sixteen empty, whitespace alone or a lone
+  sign (the -1 answer); 28 edge strings first (`"1 2"`, `"-1 +2"`, `"1x2"`,
+  `"x 2"`, `"+ 1 2"`, `"4294967296 4294967297"`, `"0x10 2"`, `"1,2"`, ...).
+  The answer and the eight bytes under the two pointers, one apart as
+  `Cfg_Load` passes them, compared: 200,000 rounds, 0. Controls: 0 for an
+  empty string (refused in 12,486), the toolchain's `sscanf` (20,715).
+- **The heap** (2026-10-10 evening): ours alone (section 2.6) - 200 rounds
+  of 64 blocks of 0..0x10000 bytes from `malloc` or `calloc`, `calloc`'s
+  checked zeroed, each written through and read back after all are
+  allocated, freed in another order; `free(null)`; `malloc(0xFFFFFFF0)` and
+  `calloc(0x10000, 0x10000)` null. 0.
+
 `BOF3X_SHADOW='*'` narrow and wide: section 7.
 
 ## 5. The exit test
@@ -403,7 +480,7 @@ ones left. Two scans after the work:
   sites) - none a call.
 - **The DLL**, every instruction of `bof3x.dll`'s `.text` with an immediate
   or displacement in the range, by function (`llvm-nm`): outside self-tests,
-  fuzz initialisers and the injects only `Crt_malloc` / `Crt_free` by name
+  fuzz initialisers and the injects only `Crt_malloc` / `Crt_free` by name (ours since the evening of 2026-10-10)
   (`WalkDatFile`, `TextAdvance_Set`, `TextPairs_Apply`, `Font_SetGlyphData`,
   `Gfx_ClutPixels`, `Gfx_ConvertRow`; the callee tables of `display_env`,
   `save_menu`, `sound`, `psx_rest` hold them as data),
@@ -457,3 +534,9 @@ At `b31536d5` (`Crt_atoi` ours): `BOF3X_SHADOW=crt_rest` and then `'*'`
 narrow and `BOF3X_WIDE=1`, each from an ini-less launcher copy, exit 0,
 `inject: 10082 ours, 0 left original by BOF3X_ORIGINAL`, 1,066 mismatch
 lines in each `'*'` log, every one a zero.
+
+At the tip of `crt/allocator` (2026-10-10 evening, over DIV-0091 and
+`b31536d5`): `BOF3X_SHADOW=crt_rest` exit 0 (`sscanf` 200,000 rounds and
+the heap, 0 mismatches), then `'*'` narrow and `BOF3X_WIDE=1`, each from an
+ini-less launcher copy, exit 0, `inject: 10086 ours, 0 left original by
+BOF3X_ORIGINAL`, no mismatch line but zeros.

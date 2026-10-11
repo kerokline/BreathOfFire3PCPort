@@ -136,12 +136,11 @@ file, -58 at the worst; the owner's ear is the measure that remains.
    `BOF3X_MP3=original` as the A/B.
 2. **D240's fix** - the owner's call: a ledger entry, `kEosBytes = 0` in
    `mp3.cpp`, and the self-test's expectation.
-3. **The C runtime's remainder** ([`crt-rest.md`](crt-rest.md) 2.6, 2.7):
-   `Crt_malloc` / `Crt_free` and the decoder's `calloc` lose their reason to
-   stay Capcom's; `Crt_sscanf`'s second caller and `_ftol`'s 15 decoder
-   sites are gone with it. Guard: under `BOF3X_MP3=original` Capcom's
-   decoder still frees through `Crt_free`, so the allocator's rebinding must
-   stay off then.
+3. **The C runtime's remainder - done the same evening** on `crt/allocator`
+   ([`crt-rest.md`](crt-rest.md) 2.6, 2.7): `malloc` / `calloc` / `free` the
+   toolchain's as a set (no guard needed: with all three moved, Capcom's
+   decoder under `BOF3X_MP3=original` pairs inside one heap too), `sscanf`
+   ours over `Cfg_Load`'s format; `_ftol` has no caller left.
 4. **State 2's proof** ([`platform-layers-plan.md`](platform-layers-plan.md)
    section 3): the tracer armed on `0x5AB7E0..0x5B8DA0` over the attract
    sequence and the routes should now record nothing.

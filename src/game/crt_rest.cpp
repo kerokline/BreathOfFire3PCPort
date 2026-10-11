@@ -1,7 +1,8 @@
 // The C runtime's entry points the game calls: rand and atoi reimplemented
-// exactly, sprintf over the conversions the game's formats use, and the string, search
-// and file entries bound to our toolchain's runtime through thin named
-// functions (docs/crt-rest.md; docs/platform-layers-plan.md section 2.3).
+// exactly, sprintf and sscanf over the conversions the game's formats use,
+// and the string, search, file and heap entries bound to our toolchain's
+// runtime through thin named functions (docs/crt-rest.md;
+// docs/platform-layers-plan.md section 2.3).
 //
 // Microsoft's runtime behind the entries is not decompiled and not ours to
 // publish; what is ours is the contract each entry keeps with its callers,
@@ -19,6 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
@@ -299,6 +301,74 @@ extern "C" char* __cdecl Crt_fgets(char* buf, int n, void* stream) {
     return std::fgets(buf, n, static_cast<std::FILE*>(stream));
 }
 
+// original 0x5B9660 / 0x5BA221 / 0x5B9577: malloc, calloc and free of MSVC
+// 6's heap - on every Windows the game runs on today HeapAlloc / HeapFree on
+// the runtime's own heap, the request rounded up to 16 bytes, a request of 0
+// asking 16, one above 0xFFFFFFE0 refused (docs/crt-startup.md section 3;
+// calloc multiplies its two arguments in 32 bits and zero-fills). The
+// toolchain's three, which keep the same contract for every caller: a block
+// to use and to free, or null. Bound as a set, because a block is freed by
+// whichever free its allocator pairs with - the three move together, and the
+// callers that are not ours (the MP3 decoder's 19 mallocs, 6 callocs and 41
+// frees under BOF3X_MP3=original; the runtime's own start-up, which runs
+// after the inject) pair inside the set too. The runtime's realloc 0x5C2F8E
+// and its direct HeapAlloc / HeapReAlloc paths are not moved: nothing reaches
+// them (docs/crt-rest.md section 2.6).
+extern "C" void* __cdecl Crt_malloc(unsigned size) { return std::malloc(size); }
+extern "C" void* __cdecl Crt_calloc(unsigned count, unsigned size) { return std::calloc(count, size); }
+extern "C" void __cdecl Crt_free(void* ptr) { std::free(ptr); }
+
+// original 0x5B9AA6: sscanf, MSVC 6's _input 0x5BCF64 over a string FILE.
+// One format in the executable reaches it, Cfg_Load's "%d %d" 0x65DAD0 (the
+// decoder's Mp3_MemoryIo was the other caller, gone with DIV-0091): any other
+// format is fatal (rule 4). The engine's "%d", read from the disassembly and
+// fuzzed against Capcom's (crt_rest_fuzz.cpp): the input's whitespace (the
+// "C" table's 0x09..0x0D and 0x20) skipped; one optional '-' or '+'; digits
+// '0'..'9' accumulated in 32 bits with no overflow test, so the value wraps
+// modulo 2^32, negated for '-'; written as four bytes at the argument's
+// pointer (Cfg_Load's are byte pointers one apart); nothing written and the
+// scan stopped when no digit follows. The format's space skips the input's
+// whitespace. The answer is the number of values written, or -1 when the
+// string ended before the first was read.
+namespace {
+
+bool ScanInt(const unsigned char*& p, std::uint32_t* out, bool* ended) {
+    while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) ++p;
+    if (*p == 0) {
+        *ended = true;
+        return false;
+    }
+    const unsigned char sign = *p;
+    if (sign == '-' || sign == '+') ++p;
+    if (!(*p >= '0' && *p <= '9')) {
+        *ended = *p == 0;
+        return false;
+    }
+    std::uint32_t total = 0;
+    while (*p >= '0' && *p <= '9') total = total * 10u + static_cast<std::uint32_t>(*p++ - '0');
+    *out = sign == '-' ? 0u - total : total;
+    return true;
+}
+
+}  // namespace
+
+extern "C" int __cdecl Crt_sscanf(const char* s, const char* fmt, ...) {
+    if (std::strcmp(fmt, "%d %d") != 0) bof3::Fatal("Crt_sscanf: the format \"%s\" is not Cfg_Load's \"%%d %%d\"", fmt);
+    std::va_list args;
+    va_start(args, fmt);
+    void* const a = va_arg(args, void*);
+    void* const b = va_arg(args, void*);
+    va_end(args);
+    const auto* p = reinterpret_cast<const unsigned char*>(s);
+    std::uint32_t v;
+    bool ended = false;
+    if (!ScanInt(p, &v, &ended)) return ended ? -1 : 0;
+    std::memcpy(a, &v, 4);
+    if (!ScanInt(p, &v, &ended)) return 1;
+    std::memcpy(b, &v, 4);
+    return 2;
+}
+
 void CrtRest_Inject() {
     if (bof3::WantsShadow("crt_rest")) crt_rest::SelfTest();
     // The randlog's copy of Capcom's Rand, made only when a recipe or a
@@ -319,6 +389,10 @@ void CrtRest_Inject() {
     BOF3_INJECT(Crt_sprintf);
     BOF3_INJECT(Crt_strncpy);
     BOF3_INJECT(Crt_atoi);
+    BOF3_INJECT(Crt_sscanf);
+    BOF3_INJECT(Crt_malloc);
+    BOF3_INJECT(Crt_calloc);
+    BOF3_INJECT(Crt_free);
     BOF3_INJECT(Crt_stricmp);
     BOF3_INJECT(Crt_findfirst);
     BOF3_INJECT(Crt_findnext);

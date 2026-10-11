@@ -22,7 +22,9 @@
 #include <io.h>
 #include <windows.h>
 
+#include <cstdarg>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 
@@ -593,11 +595,159 @@ void FuzzFiles() {
 
 }  // namespace
 
+// =============================================================================
+// sscanf
+// =============================================================================
+
+// Capcom's sscanf (0x5B9AA6 over _input 0x5BCF64) runs here on a string FILE
+// of the stack, as atol does, reading the image's "C" _pctype table. Strings
+// of two numbers in Cfg_Load's "%d %d": each from the atoi parts (spaces and
+// near misses, a sign run, digits of 0..24 with wraps past 2^31 and 2^32),
+// joined by spaces, a tab, nothing, or a letter, and a tail; edge strings
+// first.
+const char* const kScanEdges[] = {
+    "", " ", "1", "1 2", "-1 +2", " \t 12 \r\n 34 \n", "1\t2", "12", "1x2", "x 2", "+ 1 2", "- -1", "1 -", "1 +",
+    "4294967296 4294967297", "2147483648 -2147483649", "00000000000000000001 2", "1 2 3", "1,2", "1.5 2", "0x10 2",
+    "\x1C" "1 2", "\xA0" "1 2", "1 \xA0" "2", "- 1 2", "+1+2", "1\v2", "1 2abc",
+};
+
+void ScanString(unsigned round, char* s) {
+    if (round < sizeof kScanEdges / sizeof kScanEdges[0]) {
+        std::strcpy(s, kScanEdges[round]);
+        return;
+    }
+    static const char kJoin[] = " \t\n,x ";
+    char* p = s;
+    if (Next() % 16 == 0) {   // nothing, or whitespace alone (the -1 answer), or a lone sign
+        for (unsigned n = Next() % 4; n; --n) *p++ = "\t\n\v\f\r "[Next() % 6];
+        if (Next() % 3 == 0) *p++ = "+-"[Next() % 2];
+        *p = 0;
+        return;
+    }
+    for (int k = 0; k < 2; ++k) {
+        char part[0x40];
+        AtoiString(1000 + Next(), part);          // never an edge string: the random shape
+        part[std::strlen(part) - 1] = 0;         // without AtoiString's digit after the terminator
+        if (Next() % 4 == 0) part[std::strlen(part) - 1] = 0;   // sometimes no terminator at all
+        std::strcpy(p, part);
+        p += std::strlen(p);
+        if (k == 0 && Next() % 5) *p++ = kJoin[Next() % (sizeof kJoin - 1)];
+    }
+    if (Next() % 3 == 0) *p++ = " 7q\n"[Next() % 4];
+    *p = 0;
+}
+
+// The planted bugs.
+int __cdecl PlantedScanNoEof(const char* s, const char* fmt, ...) {   // 0 where the original answers -1
+    std::va_list args;
+    va_start(args, fmt);
+    void* const a = va_arg(args, void*);
+    void* const b = va_arg(args, void*);
+    va_end(args);
+    const int r = ::Crt_sscanf(s, fmt, a, b);
+    return r < 0 ? 0 : r;
+}
+int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the toolchain's sscanf
+    std::va_list args;
+    va_start(args, fmt);
+    void* const a = va_arg(args, void*);
+    void* const b = va_arg(args, void*);
+    va_end(args);
+    int x = 0, y = 0;
+    const int r = std::sscanf(s, fmt, &x, &y);
+    if (r >= 1) std::memcpy(a, &x, 4);
+    if (r >= 2) std::memcpy(b, &y, 4);
+    return r;
+}
+
+using ScanFn = int (__cdecl*)(const char*, const char*, ...);
+unsigned CompareScan(ScanFn ours, unsigned rounds, bool log) {
+    const ScanFn theirs = reinterpret_cast<ScanFn>(bof3::orig::Crt_sscanf);
+    const char* const fmt = reinterpret_cast<const char*>(0x65DAD0);   // Cfg_Load's "%d %d"
+    unsigned differ = 0;
+    const U saved = g_rand;
+    for (unsigned round = 0; round < rounds; ++round) {
+        char s[0x100];
+        ScanString(round, s);
+        // Cfg_Load's byte pointers one apart: the second write lands over the first's upper bytes
+        alignas(4) unsigned char ta[8], oa[8];
+        std::memset(ta, 0xC3, sizeof ta);
+        std::memset(oa, 0xC3, sizeof oa);
+        const int a = theirs(s, fmt, ta, ta + 1), b = ours(s, fmt, oa, oa + 1);
+        if (a != b || std::memcmp(ta, oa, sizeof ta) != 0) {
+            ++differ;
+            if (log) Mismatch("sscanf", round, static_cast<U>(a), static_cast<U>(b));
+        }
+    }
+    g_rand = saved;
+    return differ;
+}
+
+void FuzzSscanf() {
+    constexpr unsigned kRounds = 200000;
+    const unsigned before = g_bad;
+    if (std::strcmp(reinterpret_cast<const char*>(0x65DAD0), "%d %d") != 0)
+        bof3::Fatal("crt_rest self-test: the format at 0x65DAD0 is not \"%%d %%d\"");
+    CompareScan(&::Crt_sscanf, kRounds, true);
+    bof3::Log("shadow      crt_rest self-test: sscanf \"%%d %%d\" %u rounds (%u edge strings first), %u MISMATCHES",
+              kRounds, static_cast<unsigned>(sizeof kScanEdges / sizeof kScanEdges[0]), g_bad - before);
+    ControlRefused("sscanf, 0 for an empty string", CompareScan(&PlantedScanNoEof, kRounds, false));
+    ControlRefused("sscanf, the toolchain's", CompareScan(&PlantedScanSaturate, kRounds, false));
+}
+
+// =============================================================================
+// The heap
+// =============================================================================
+
+// Capcom's cannot run here (its heap is made by the start-up, after the
+// inject): ours alone, through the entries by name - blocks of 0..0x10000
+// bytes from malloc and calloc, calloc's zeroed, each written through and
+// read back, freed in another order, free(null) a no-op; a request past
+// 0xFFFFFFE0 refused as the original refuses it.
+void FuzzHeap() {
+    const unsigned before = g_bad;
+    constexpr unsigned kBlocks = 64;
+    unsigned char* blocks[kBlocks];
+    unsigned sizes[kBlocks];
+    for (unsigned round = 0; round < 200; ++round) {
+        for (unsigned i = 0; i < kBlocks; ++i) {
+            sizes[i] = Next() % 8 == 0 ? 0 : Next() % 3 == 0 ? Next() % 0x10000 : Next() % 0x100;
+            const bool zeroed = Next() % 2 == 0;
+            blocks[i] = static_cast<unsigned char*>(zeroed ? ::Crt_calloc(1, sizes[i]) : ::Crt_malloc(sizes[i]));
+            if (blocks[i] == nullptr) {
+                Mismatch("heap, a null block", round * kBlocks + i, sizes[i], 0);
+                continue;
+            }
+            if (zeroed)
+                for (unsigned k = 0; k < sizes[i]; ++k)
+                    if (blocks[i][k] != 0) {
+                        Mismatch("heap, calloc not zeroed", round * kBlocks + i, k, blocks[i][k]);
+                        break;
+                    }
+            for (unsigned k = 0; k < sizes[i]; ++k) blocks[i][k] = static_cast<unsigned char>(i + k);
+        }
+        for (unsigned i = 0; i < kBlocks; ++i)
+            for (unsigned k = 0; k < sizes[i]; ++k)
+                if (blocks[i][k] != static_cast<unsigned char>(i + k)) {
+                    Mismatch("heap, a block overwritten", round * kBlocks + i, k, blocks[i][k]);
+                    break;
+                }
+        for (unsigned i = 0; i < kBlocks; ++i) ::Crt_free(blocks[(i * 37 + round) % kBlocks]);
+    }
+    ::Crt_free(nullptr);
+    if (::Crt_malloc(0xFFFFFFF0u) != nullptr) Mismatch("heap, a request past 0xFFFFFFE0 granted", 0, 0, 1);
+    if (::Crt_calloc(0x10000, 0x10000) != nullptr) Mismatch("heap, calloc of 2^32 bytes granted", 0, 0, 1);
+    bof3::Log("shadow      crt_rest self-test: heap 200 rounds of 64 blocks through malloc / calloc / free, %u MISMATCHES",
+              g_bad - before);
+}
+
 void SelfTest() {
     FuzzRand();
     FuzzSprintf();
     FuzzStrings();
     FuzzAtoi();
+    FuzzSscanf();
+    FuzzHeap();
     FuzzFind();
     FuzzFiles();
     bof3::Log("shadow      crt_rest self-test: %u MISMATCHES in all", g_bad);

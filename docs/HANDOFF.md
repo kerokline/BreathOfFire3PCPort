@@ -17,8 +17,8 @@ the investigation docs; anything durable moves to `STATUS.md`.
 **10,081 functions are ours on `main`** (`inject: 10081 ours, 0 left original`; `gen_symbols.py` says 10,082
 because it counts one more `impl` row than `inject` detours - a counting difference, not a function). The game's own
 code is all ours since the platform round's step 3 ([`platform-round-2.md`](platform-round-2.md), PR #43); what is
-still Capcom's in `BOF3.exe` is the runtime's start-up, allocator and per-thread data and the software renderer's
-converters - **the MP3 decoder is ours since the evening of 2026-10-10** (`platform/mp3-decoder`, DIV-0091,
+still Capcom's in `BOF3.exe` is the runtime's start-up and per-thread data and the software renderer's
+converters - **the MP3 decoder and the runtime's allocator are ours since the evening of 2026-10-10** (`platform/mp3-decoder`, DIV-0091,
 [`mp3-decoder.md`](mp3-decoder.md): minimp3 behind the seam, compared on all 177 files, not heard). The week of 2026-10-06..10 merged six PRs: #43 (step 3, the region / music / bridge
 investigations, DIV-0077..0085), #44 (the unified-data round: the importer, the exe tables by build, the BCP 47 tags,
 DIV-0086), #45 (`loc_build all --discs`), #46 (step 9, the PlayStation's music from the disc, DIV-0087), #47 (the
@@ -39,11 +39,13 @@ the route pairs now `cn_<route>_orig2` / `_orig2b`).
     headless. **Owed the owner's ear:** a fight and its fanfare, a town, a once-only song's end, a looping track,
     with `BOF3X_MP3=original` as the A/B. **The owner's calls:** D240 (Capcom's stale end-of-stream count - 26 ms of
     stale music at every rewind of an unmeasured loop; the fix is `kEosBytes = 0` and a ledger entry) and D241 (their
-    report of battle music running on after a fight, catalogued, configuration unknown). **Then, no owner needed:**
-    the C runtime's remainder - `Crt_malloc` / `Crt_free` / `calloc` to the toolchain's, guarded off under
-    `BOF3X_MP3=original` ([`crt-rest.md`](crt-rest.md) 2.6), `Crt_sscanf`, and `_ftol`'s decoder sites gone;
-    `crt/atoi-and-startup` (an Opus agent, launched the same evening) has `Crt_atoi` and `docs/crt-startup.md`; then
-    state 2's proof with the tracer armed on `0x5AB7E0..0x5B8DA0`. A launcher box for `BOF3X_MP3` beside `music=`.
+    report of battle music running on after a fight, catalogued, configuration unknown). **Done the same evening** on
+    `crt/allocator` (over this branch and `crt/atoi-and-startup`): the C runtime's remainder - `Crt_atoi` and
+    `Crt_sscanf` exact, `malloc` / `calloc` / `free` the toolchain's as a set, no guard needed ([`crt-rest.md`](crt-rest.md)
+    2.6, 2.7), `docs/crt-startup.md` read for state 3; `inject: 10086 ours`, `'*'` narrow and wide. **Merge order:**
+    `platform/mp3-decoder`, then `crt/allocator` (which contains `crt/atoi-and-startup`). **Held by the owner:** state
+    2's tracer proof (armed on `0x5AB7E0..0x5B8DA0`, and now the runtime's heap range) - "we'll hold the tracer proof
+    till later" (2026-10-10). A launcher box for `BOF3X_MP3` beside `music=`.
 
 
 0. **The catch-up branch, `cleanup/testing-catchup-1010`** (2026-10-10 afternoon; its worktree is the
