@@ -35,11 +35,37 @@ u =ctypes.WinDLL('user32')
 
 OURS = None   # the pid of the game our launcher started (launch()); the helpers below act on it alone
 
+# The game's two process names (docs/state3-design.md section 6.3): the
+# player's own BOF3.exe with bof3x.dll injected (--host bof3), and bof3x.exe,
+# our own executable (the launcher's default since state 3). Listed by name
+# only to find a pid; ended by pid only, never by image name - other
+# checkouts' self-tests run beside these scripts.
+GAME_IMAGES = ('BOF3.exe', 'bof3x.exe')
+
+# The switches that need Capcom's code, which only the hosted build maps
+# (src/hook/exe_host.cpp refuses each): a run that sets one goes --host bof3.
+HOSTED_ONLY = ('BOF3X_ORIGINAL', 'BOF3X_SHADOW', 'BOF3X_CALLTRACE')
+
+
+def is_game_row(row):
+    """A tasklist CSV row of one of GAME_IMAGES."""
+    name = row.split('","')[0].strip('"').lower()
+    return name in (n.lower() for n in GAME_IMAGES)
+
 
 def pid_alive(pid):
     out = subprocess.run(['tasklist', '/FI', f'PID eq {pid}', '/FO', 'CSV', '/NH'],
                          capture_output=True, text=True).stdout
-    return 'BOF3' in out
+    return any(is_game_row(row) for row in out.splitlines())
+
+
+def host_for(env, host=None):
+    """The launcher's --host for a run: as asked, else bof3 when `env` sets a
+    hosted-only switch (BOF3X_MP3=original included), else exe."""
+    if host:
+        return host
+    hosted = any(env.get(k) for k in HOSTED_ONLY) or env.get('BOF3X_MP3') == 'original'
+    return 'bof3' if hosted else 'exe'
 
 
 def game_pid():
@@ -58,10 +84,11 @@ def kill_game():
 
 
 def kill_stale(launcher):
-    """Kill a leftover game whose bof3x.dll came from the given launcher's directory
-    (a crashed earlier run of these scripts), and no other BOF3.exe."""
+    """Kill a leftover game - BOF3.exe or bof3x.exe - whose bof3x.dll came from
+    the given launcher's directory (a crashed earlier run of these scripts), and
+    no other; by pid."""
     want = os.path.normcase(os.path.dirname(os.path.abspath(launcher)))
-    ps = ("Get-Process BOF3 -ErrorAction SilentlyContinue | ForEach-Object { "
+    ps = ("Get-Process -Name BOF3,bof3x -ErrorAction SilentlyContinue | ForEach-Object { "
           "$m = $_.Modules | Where-Object { $_.ModuleName -eq 'bof3x.dll' } | Select-Object -First 1; "
           "if ($m) { '{0}|{1}' -f $_.Id, $m.FileName } }")
     out = subprocess.run(['powershell', '-NoProfile', '-Command', ps], capture_output=True, text=True).stdout
@@ -72,13 +99,16 @@ def kill_stale(launcher):
             subprocess.run(['taskkill', '/F', '/PID', pid], capture_output=True)
 
 
-def launch(launcher, game, env):
+def launch(launcher, game, env, host=None):
     """Start the game through the launcher and remember its pid. A retired
     language code in `env` or the launcher's bof3x.ini stops here, not at the
-    launcher's message box (DIV-0005)."""
+    launcher's message box (DIV-0005). `host`: exe or bof3 (host_for decides
+    when None)."""
     global OURS
     language_tags.refuse_retired_run(launcher, env)
-    r = subprocess.run([launcher, '--game', game, '--no-config'], env=env, capture_output=True, text=True)
+    host = host_for(env, host)
+    print(f'  host: {host} ({"bof3x.exe" if host == "exe" else "BOF3.exe, hosted"})')
+    r = subprocess.run([launcher, '--game', game, '--no-config', '--host', host], env=env, capture_output=True, text=True)
     sys.stdout.write(r.stdout)
     m = re.search(r'\(pid (\d+)\)', r.stdout)
     if r.returncode != 0 or not m:
@@ -156,6 +186,8 @@ def main():
                          'and the oracle reads memory, not pixels')
     ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
                     help='another copy of the launcher, with its own bof3x.ini and bof3x.dll beside it')
+    ap.add_argument('--host', choices=('exe', 'bof3'), default=None,
+                    help='bof3x.exe (exe) or the hosted BOF3.exe (bof3); default bof3 with --original, else exe')
     a = ap.parse_args()
 
     # DIV-0033 lives in our WndProc: under Capcom's the loop freezes the moment
@@ -184,7 +216,7 @@ def main():
     # take the settings file's values without a human touching them
     # (docs/launcher-settings.md section 4).
     started, status = time.time(), 'failed'
-    launch(launcher, a.game, env)
+    launch(launcher, a.game, env, a.host)
 
     stop = threading.Event()
     if not a.no_front:

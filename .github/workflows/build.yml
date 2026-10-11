@@ -1,4 +1,4 @@
-# Build bof3x.dll and bof3x-launcher.exe on every push to main and every pull
+# Build bof3x.dll, bof3x.exe and bof3x-launcher.exe on every push to main and every pull
 # request, with the project's one supported toolchain (docs/SCAFFOLDING.md
 # section 4): llvm-mingw, i686, pinned to the release the build is verified
 # with. Cross-compiled on Linux: the toolchain is the same, and the runner is
@@ -80,16 +80,25 @@ jobs:
       # The DLL is injected by path into a process whose DLL search order we
       # do not control, so it is linked -static (CMakeLists.txt): it may import
       # system DLLs only. Fail if a toolchain runtime DLL or SDL3.dll crept in.
+      # bof3x.exe (tools/make_exe.py, docs/state3-design.md section 6.4) imports
+      # exactly two: KERNEL32.dll and bof3x.dll, the one non-system DLL allowed,
+      # found beside it by the loader. The build has already verified its
+      # section table (make_exe.py), so a wrong layout fails before this step.
       - name: Check imports
         run: |
           set -euo pipefail
           readobj="$LLVM_MINGW_ROOT/bin/llvm-readobj"
           fail=0
-          for f in build/bof3x.dll build/bof3x-launcher.exe; do
+          for f in build/bof3x.dll build/bof3x-launcher.exe build/bof3x.exe; do
             echo "== $f"
             "$readobj" --file-headers "$f" | grep -E '^\s*(Format|Arch):'
             "$readobj" --coff-imports "$f" | sed -n 's/^ *Name: \(.*\.dll\)$/\1/Ip' | sort -uf | tee imports.txt
-            if grep -iE '^(lib.*|sdl3)\.dll$' imports.txt; then
+            if [ "$f" = build/bof3x.exe ]; then
+              if [ "$(tr 'A-Z' 'a-z' < imports.txt | tr '\n' ' ')" != "bof3x.dll kernel32.dll " ]; then
+                echo "::error file=tools/make_exe.py::$f must import KERNEL32.dll and bof3x.dll alone (above)"
+                fail=1
+              fi
+            elif grep -iE '^(lib.*|sdl3|bof3x)\.dll$' imports.txt; then
               echo "::error file=CMakeLists.txt::$f imports a non-system DLL (above); it must link -static"
               fail=1
             fi
@@ -105,5 +114,6 @@ jobs:
           path: |
             build/bof3x.dll
             build/bof3x-launcher.exe
+            build/bof3x.exe
           if-no-files-found: error
           retention-days: 14

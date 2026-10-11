@@ -46,10 +46,14 @@ def find_game(wait=0.0):
     t0 = time.time()
     want = os.environ.get('BOF3X_RUN_PID')   # attract_run.py names the game it started
     while True:
-        out = subprocess.run(['tasklist', '/FI', f'PID eq {want}' if want else 'IMAGENAME eq BOF3.exe', '/FO', 'CSV', '/NH'],
-                             capture_output=True, text=True).stdout
-        if 'BOF3' in out:
-            return int(out.split(',')[1].strip('"'))
+        # By the pid attract_run.py started, else the one game of either name
+        # (BOF3.exe hosted, bof3x.exe ours: docs/state3-design.md section 6.3).
+        filters = [f'PID eq {want}'] if want else ['IMAGENAME eq BOF3.exe', 'IMAGENAME eq bof3x.exe']
+        for f in filters:
+            out = subprocess.run(['tasklist', '/FI', f, '/FO', 'CSV', '/NH'], capture_output=True, text=True).stdout
+            rows = [r for r in out.splitlines() if r.lower().startswith(('"bof3.exe"', '"bof3x.exe"'))]
+            if rows:
+                return int(rows[0].split('","')[1])
         if time.time() - t0 >= wait:
             sys.exit('BOF3.exe is not running')
         time.sleep(0.05)
