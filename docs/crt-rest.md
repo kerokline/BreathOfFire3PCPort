@@ -318,24 +318,36 @@ and the eight game sites of Capcom's clones by the inject.
   check); its four callers otherwise are the runtime's (`errno`'s accessors
   `0x5BCA43` / `0x5BCA4C`, `0x5BE874`) and Capcom's `Rand`.
 - **`Crt_sscanf`** `0x5B9AA6`: **ours since 2026-10-10 evening**, over the
-  one format left in the executable that reaches it - `Cfg_Load`'s `"%d %d"`
-  `0x65DAD0` (the decoder's `Mp3_MemoryIo`, which scanned the memory name
-  with it, is gone with DIV-0091); any other format is fatal (rule 4). The
-  entry builds a string `FILE` on its stack and runs MSVC 6's input engine
-  `_input` `0x5BCF64`; what that engine does for `%d` was written from the
-  disassembly's shape and **fuzzed against Capcom's at its address** (the
-  engine reads only the image's "C" `_pctype` table and the stack `FILE`,
-  so it runs before its runtime starts, as `atol` does): the input's
-  whitespace (`0x09..0x0D`, `0x20`) skipped; one optional `-` or `+`;
-  digits `0..9` accumulated in 32 bits with no overflow test - the value
-  wraps modulo 2^32, negated for `-`; four bytes written at the argument's
-  pointer (`Cfg_Load`'s are byte pointers one apart, so the second lands
-  over the first's upper three bytes: the fuzz passes the same); nothing
-  written and the scan stopped when no digit follows; the format's space
-  skips the input's whitespace; the answer is the number of values written,
-  **or -1 when the string ended before the first was read** (whitespace
-  alone, or empty - the toolchain's `sscanf` answers -1 there too, but
-  saturates the digits: its control is refused in 22,037 of 200,000 rounds).
+  two formats in the executable that reach it - `Cfg_Load`'s `"%d %d"`
+  `0x65DAD0`, and the decoder's `"%lx@%lx"` (`0x672854`, `0x6728C8`:
+  `Mp3_MemoryIo`'s open reading the `size@address` name back), which
+  Capcom's decoder still uses under `BOF3X_MP3=original` and in DIV-0091's
+  comparison (a first cut handled the first alone and the comparison's run
+  was its `Fatal`); any other format is fatal (rule 4). The entry builds a
+  string `FILE` on its stack and runs MSVC 6's input engine `_input`
+  `0x5BCF64`; what that engine does was written from the disassembly's
+  shape and **fuzzed against Capcom's at its address** (the engine reads
+  only the image's "C" `_pctype` table and the stack `FILE`, so it runs
+  before its runtime starts, as `atol` does):
+  - `%d`: the input's whitespace (`0x09..0x0D`, `0x20`) skipped; one
+    optional `-` or `+`; digits `0..9` accumulated in 32 bits with no
+    overflow test - the value wraps modulo 2^32, negated for `-`; nothing
+    written and the scan stopped when no digit follows;
+  - `%lx`: the same whitespace and sign; after a leading `0`, an optional
+    `0x` / `0X` **which must be followed by a hex digit or the conversion
+    fails** (`"0x@1"` answers 0 - the fuzz's catch, 1,351 rounds of a first
+    cut that took `0x` as the value 0); hex digits of either case, the same
+    wrap and negation;
+  - the format's space skips the input's whitespace; its `@` must be the
+    very next input byte, no skipping, else the scan stops there.
+
+  Each value is four bytes written at the argument's pointer (`Cfg_Load`'s
+  are byte pointers one apart, so the second lands over the first's upper
+  three bytes: the fuzz passes the same); the answer is the number of
+  values written, **or -1 when the string ended before the first was read**
+  (whitespace alone, or empty - the toolchain's `sscanf` answers -1 there
+  too, but saturates the digits: its control is refused in 20,715 of
+  200,000 rounds on `"%d %d"`, 234 on `"%lx@%lx"`).
 - **`Crt_atoi`** `0x5B9A9B` (`Cfg_Load`, two sites `0x4FD094`, `0x4FD0A8`):
   **ours since 2026-10-10, exact.** The entry is `push [esp + 4]; call
   0x5B9A10; pop ecx; ret` - MSVC 6's `atoi` over `atol`. `atol`
@@ -379,7 +391,7 @@ and the eight game sites of Capcom's clones by the inject.
 | `Rand` `0x5B93D2` | the generator, a static seed from 1 | 100,000 rounds + 20,000 from 1 against a copy, 2 controls |
 | `Crt_sprintf` `0x5B9380` | `%d` / `%X` with `0` and width <= 8, `%s`; `Fatal` else | 47 formats x 3,000 against Capcom's, 5 controls |
 | `Crt_atoi` `0x5B9A9B` | MSVC 6's `atol`: "C" spaces, one sign, a total wrapping modulo 2^32 | 200,000 rounds against Capcom's (34 edge strings first), 5 controls |
-| `Crt_sscanf` `0x5B9AA6` | `"%d %d"` as the input engine scans it: "C" spaces, one sign, a total wrapping modulo 2^32, -1 before the first value; `Fatal` on any other format | 200,000 rounds against Capcom's (28 edge strings first), 2 controls |
+| `Crt_sscanf` `0x5B9AA6` | `"%d %d"` and `"%lx@%lx"` as the input engine scans them: "C" spaces, one sign, `0x` wanting a digit, a total wrapping modulo 2^32, -1 before the first value; `Fatal` on any other format | 200,000 rounds against Capcom's per format (28 and 30 edge strings first), 2 controls each |
 | `Crt_malloc` `0x5B9660`, `Crt_calloc` `0x5BA221`, `Crt_free` `0x5B9577` | the toolchain's, as a set | 200 rounds of 64 blocks written through, read back, freed out of order; `calloc` zeroed; `free(null)`; requests past `0xFFFFFFE0` refused (Capcom's heap does not exist before its runtime) |
 | `Crt_strncpy` `0x5B9450` | toolchain `strncpy` | 60,000 rounds at every alignment, 2 controls |
 | `Crt_stricmp` `0x5C2B40` | the sign of toolchain `_stricmp` | 60,000 rounds, 3 controls |
@@ -455,7 +467,13 @@ ours, 0 left original by BOF3X_ORIGINAL`:
   `"x 2"`, `"+ 1 2"`, `"4294967296 4294967297"`, `"0x10 2"`, `"1,2"`, ...).
   The answer and the eight bytes under the two pointers, one apart as
   `Cfg_Load` passes them, compared: 200,000 rounds, 0. Controls: 0 for an
-  empty string (refused in 12,486), the toolchain's `sscanf` (20,715).
+  empty string (refused in 12,486), the toolchain's `sscanf` (20,715). Then
+  the decoder's `"%lx@%lx"` over hex pairs - either case, a `0x` prefix,
+  signs, spaces, a missing or doubled `@`, junk, the empty cases; 30 edge
+  strings first (`"4FB3D@7DE400"`, `"0x4FB3D@0x7DE400"`, `"0x@1"`,
+  `"0xg@1"`, `"1 @ 2"`, `"FFFFFFFF@100000000"`, ...): 200,000 rounds, 0
+  (after the `0x` rule above). Controls: 0 for an empty string (11,194), the
+  toolchain's (234).
 - **The heap** (2026-10-10 evening): ours alone (section 2.6) - 200 rounds
   of 64 blocks of 0..0x10000 bytes from `malloc` or `calloc`, `calloc`'s
   checked zeroed, each written through and read back after all are
@@ -539,4 +557,6 @@ At the tip of `crt/allocator` (2026-10-10 evening, over DIV-0091 and
 `b31536d5`): `BOF3X_SHADOW=crt_rest` exit 0 (`sscanf` 200,000 rounds and
 the heap, 0 mismatches), then `'*'` narrow and `BOF3X_WIDE=1`, each from an
 ini-less launcher copy, exit 0, `inject: 10086 ours, 0 left original by
-BOF3X_ORIGINAL`, no mismatch line but zeros.
+BOF3X_ORIGINAL`, no mismatch line but zeros. Then again at the tip with
+`Crt_sscanf`'s second format and the decoder's own stack: `crt_rest` 0,
+`'*'` narrow and wide exit 0 at `inject: 10086 ours`.

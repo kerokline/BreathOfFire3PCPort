@@ -319,33 +319,63 @@ extern "C" void* __cdecl Crt_calloc(unsigned count, unsigned size) { return std:
 extern "C" void __cdecl Crt_free(void* ptr) { std::free(ptr); }
 
 // original 0x5B9AA6: sscanf, MSVC 6's _input 0x5BCF64 over a string FILE.
-// One format in the executable reaches it, Cfg_Load's "%d %d" 0x65DAD0 (the
-// decoder's Mp3_MemoryIo was the other caller, gone with DIV-0091): any other
-// format is fatal (rule 4). The engine's "%d", read from the disassembly and
-// fuzzed against Capcom's (crt_rest_fuzz.cpp): the input's whitespace (the
-// "C" table's 0x09..0x0D and 0x20) skipped; one optional '-' or '+'; digits
-// '0'..'9' accumulated in 32 bits with no overflow test, so the value wraps
-// modulo 2^32, negated for '-'; written as four bytes at the argument's
-// pointer (Cfg_Load's are byte pointers one apart); nothing written and the
-// scan stopped when no digit follows. The format's space skips the input's
-// whitespace. The answer is the number of values written, or -1 when the
-// string ended before the first was read.
+// Two formats in the executable reach it: Cfg_Load's "%d %d" 0x65DAD0, and
+// the MP3 decoder's "%lx@%lx" (0x672854, 0x6728C8 - Mp3_MemoryIo's open
+// reading the size@address name back), which Capcom's decoder still uses
+// under BOF3X_MP3=original and in DIV-0091's comparison. Any other format is
+// fatal (rule 4). The engine's conversions, read from the disassembly's shape
+// and fuzzed against Capcom's (crt_rest_fuzz.cpp):
+//   - "%d": the input's whitespace (the "C" table's 0x09..0x0D and 0x20)
+//     skipped; one optional '-' or '+'; digits '0'..'9' accumulated in 32
+//     bits with no overflow test, so the value wraps modulo 2^32, negated for
+//     '-'; nothing written and the scan stopped when no digit follows;
+//   - "%lx": the same whitespace and sign; an optional "0x" / "0X" after a
+//     leading '0'; hex digits of either case, the same wrap and negation;
+//   - a space in the format skips the input's whitespace; the '@' must be
+//     the very next byte (no skipping), else the scan stops.
+// Each value is written as four bytes at the argument's pointer (Cfg_Load's
+// are byte pointers one apart). The answer is the number of values written,
+// or -1 when the string ended before the first was read.
 namespace {
 
-bool ScanInt(const unsigned char*& p, std::uint32_t* out, bool* ended) {
-    while (*p == ' ' || (*p >= 0x09 && *p <= 0x0D)) ++p;
+inline bool Space(unsigned char c) { return c == ' ' || (c >= 0x09 && c <= 0x0D); }
+inline int HexDigit(unsigned char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+// One %d (hex false) or %lx (hex true) conversion at p; p is left after it.
+bool ScanNumber(const unsigned char*& p, bool hex, std::uint32_t* out, bool* ended) {
+    while (Space(*p)) ++p;
     if (*p == 0) {
         *ended = true;
         return false;
     }
     const unsigned char sign = *p;
     if (sign == '-' || sign == '+') ++p;
-    if (!(*p >= '0' && *p <= '9')) {
-        *ended = *p == 0;
-        return false;
-    }
     std::uint32_t total = 0;
-    while (*p >= '0' && *p <= '9') total = total * 10u + static_cast<std::uint32_t>(*p++ - '0');
+    if (!hex) {
+        if (!(*p >= '0' && *p <= '9')) {
+            *ended = *p == 0;
+            return false;
+        }
+        while (*p >= '0' && *p <= '9') total = total * 10u + static_cast<std::uint32_t>(*p++ - '0');
+    } else {
+        if (HexDigit(*p) < 0) {
+            *ended = *p == 0;
+            return false;
+        }
+        if (*p == '0' && (p[1] == 'x' || p[1] == 'X')) {
+            p += 2;
+            if (HexDigit(*p) < 0) {   // "0x" with no digit after it: the conversion fails (fuzzed: "0x@1" answers 0)
+                *ended = *p == 0;
+                return false;
+            }
+        }
+        for (int d; (d = HexDigit(*p)) >= 0; ++p) total = total * 16u + static_cast<std::uint32_t>(d);
+    }
     *out = sign == '-' ? 0u - total : total;
     return true;
 }
@@ -353,7 +383,9 @@ bool ScanInt(const unsigned char*& p, std::uint32_t* out, bool* ended) {
 }  // namespace
 
 extern "C" int __cdecl Crt_sscanf(const char* s, const char* fmt, ...) {
-    if (std::strcmp(fmt, "%d %d") != 0) bof3::Fatal("Crt_sscanf: the format \"%s\" is not Cfg_Load's \"%%d %%d\"", fmt);
+    const bool decimal = std::strcmp(fmt, "%d %d") == 0;
+    if (!decimal && std::strcmp(fmt, "%lx@%lx") != 0)
+        bof3::Fatal("Crt_sscanf: the format \"%s\" is neither Cfg_Load's \"%%d %%d\" nor the decoder's \"%%lx@%%lx\"", fmt);
     std::va_list args;
     va_start(args, fmt);
     void* const a = va_arg(args, void*);
@@ -362,9 +394,13 @@ extern "C" int __cdecl Crt_sscanf(const char* s, const char* fmt, ...) {
     const auto* p = reinterpret_cast<const unsigned char*>(s);
     std::uint32_t v;
     bool ended = false;
-    if (!ScanInt(p, &v, &ended)) return ended ? -1 : 0;
+    if (!ScanNumber(p, !decimal, &v, &ended)) return ended ? -1 : 0;
     std::memcpy(a, &v, 4);
-    if (!ScanInt(p, &v, &ended)) return 1;
+    if (!decimal) {
+        if (*p != '@') return 1;
+        ++p;
+    }
+    if (!ScanNumber(p, !decimal, &v, &ended)) return 1;
     std::memcpy(b, &v, 4);
     return 2;
 }

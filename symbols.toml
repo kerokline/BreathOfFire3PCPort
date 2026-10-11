@@ -851,7 +851,7 @@ ret = "int"
 params = "const char *s, const char *fmt, ..."
 impl = "src/game/crt_rest.cpp"
 status = "evidence"
-evidence = "disasm 2026-10-05: cdecl, ebp frame with a 0x20-byte string FILE on the stack (_flag 0x49 at ebp - 0x14, the base and pointer the string, the count from 0x5BDA20 strlen), then the input engine 0x5BCF64 over the arguments from ebp + 0x10 - MSVC6 sscanf. Callers Cfg_Load 0x4FD085 (the %d %d literal 0x65DAD0) and Mp3_MemoryIo (HANDOFF Traps, the engine counted by characters). Taken 2026-10-10 (docs/crt-rest.md section 2.7): ours over Cfg_Load's one format, fuzzed against Capcom's at this address - the input engine's %d: the C table's whitespace skipped, one sign, digits wrapping modulo 2^32, four bytes written at the pointer; -1 when the string ends before the first value."
+evidence = "disasm 2026-10-05: cdecl, ebp frame with a 0x20-byte string FILE on the stack (_flag 0x49 at ebp - 0x14, the base and pointer the string, the count from 0x5BDA20 strlen), then the input engine 0x5BCF64 over the arguments from ebp + 0x10 - MSVC6 sscanf. Callers Cfg_Load 0x4FD085 (the %d %d literal 0x65DAD0) and Mp3_MemoryIo (HANDOFF Traps, the engine counted by characters). Taken 2026-10-10 (docs/crt-rest.md section 2.7): ours over the two formats that reach it, Cfg_Load's %d %d and the decoder's %lx@%lx at 0x672854 / 0x6728C8 (Capcom's decoder under BOF3X_MP3=original), fuzzed against Capcom's at this address 200,000 rounds each - the input engine's %d and %lx: the C table's whitespace skipped, one sign, a 0x prefix wanting a digit, digits wrapping modulo 2^32, four bytes written at the pointer; the format's @ matched exactly; -1 when the string ends before the first value."
 [[func]]
 pc = 0x5B9E65
 name = "Crt_fwrite"

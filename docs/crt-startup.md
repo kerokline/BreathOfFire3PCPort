@@ -356,7 +356,13 @@ toolchain's since 2026-10-06, so under ours this chain does not run.
 
 ## 10. Not measured
 
-- The main thread's effective stack size (section 8).
+- The main thread's effective stack size (section 8). **Measured in effect
+  on 2026-10-10 evening** ([`mp3-decoder.md`](mp3-decoder.md) 1): the game's
+  tasks run on 16 KB slices of it, and a 13 KB frame of ours on one slice
+  overran into the next task's context - so any code of ours called from a
+  task keeps its frames small or brings its own stack, as the decoder now
+  does; state 3's main stack is for WinMain's own depth plus the four
+  slices.
 - The toolchain's own start-up control word in our executable (section 4):
   a one-line check in the cutover's first build.
 - Whether anything of ours depends on the ANSI code page through the

@@ -43,6 +43,17 @@ and it is the less accurate of the two.
   `calloc`: the reason `Crt_malloc` and `Crt_free` stayed Capcom's
   ([`crt-rest.md`](crt-rest.md) section 2.6) is gone once the decoder is
   ours.
+- **`Mp3_Decode` runs on a stack of its own** (a 256 KB block, a guard page
+  under it, esp switched around the one call). minimp3 keeps its decoding
+  scratch on the stack - some 13 KB a call - where Capcom's decoder kept its
+  state in heap blocks, and the game's tasks run on 16 KB slices of the main
+  thread's stack below WinMain's frame (`Task_SetStackBase`,
+  [`task_sched.md`](task_sched.md)); the title's `Music_Play` is on one.
+  **Found by the owner the same evening**, starting the game with no cache
+  (the MP3 path): an access violation at a float bit pattern with every
+  register a float - the scratch had run through the slice into the next
+  task's saved context. The comparison from WinMain never saw it (a shallow
+  frame). Seen fixed: the title and the attract sequence through the MP3s.
 - A stream that is not 44,100 Hz stereo is fatal (the ring is built for
   that format and Capcom's behaviour on another is unmeasured); the game's
   177 files are all that format.
@@ -147,7 +158,8 @@ file, -58 at the worst; the owner's ear is the measure that remains.
 
 ## 5. Not verified
 
-Nothing heard. Capcom's behaviour on a stream that is not 44,100 Hz stereo,
+Nothing heard - but seen: the title and the attract sequence play through
+the MP3s with no cache (2026-10-10 evening, after the stack fix above). Capcom's behaviour on a stream that is not 44,100 Hz stereo,
 on a `mode` other than `-1`, on a seek to a position other than 0 (ours
 aborts on each). Which decoding case Capcom's library gets wrong. The
 `eos_kind` classification saw only "nothing"; the other kinds are untested

@@ -41,8 +41,13 @@ the route pairs now `cn_<route>_orig2` / `_orig2b`).
     stale music at every rewind of an unmeasured loop; the fix is `kEosBytes = 0` and a ledger entry) and D241 (their
     report of battle music running on after a fight, catalogued, configuration unknown). **Done the same evening** on
     `crt/allocator` (over this branch and `crt/atoi-and-startup`): the C runtime's remainder - `Crt_atoi` and
-    `Crt_sscanf` exact, `malloc` / `calloc` / `free` the toolchain's as a set, no guard needed ([`crt-rest.md`](crt-rest.md)
-    2.6, 2.7), `docs/crt-startup.md` read for state 3; `inject: 10086 ours`, `'*'` narrow and wide. **Merge order:**
+    `Crt_sscanf` exact over both formats that reach it (`Cfg_Load`'s and the decoder's `%lx@%lx`, which
+    `BOF3X_MP3=original` still needs), `malloc` / `calloc` / `free` the toolchain's as a set, no guard needed
+    ([`crt-rest.md`](crt-rest.md) 2.6, 2.7), `docs/crt-startup.md` read for state 3; `inject: 10086 ours`, `'*'`
+    narrow and wide. **The owner's first start of this build crashed** (no cache, the MP3 path): minimp3's 13 KB
+    stack scratch on a 16 KB task-stack slice - `Mp3_Decode` now runs on a 256 KB stack of its own
+    ([`mp3-decoder.md`](mp3-decoder.md) 1); seen: the title and three minutes of the attract sequence through the
+    MP3s, eight tracks, no crash. **Lesson for every module:** code called from a task has 16 KB of stack. **Merge order:**
     `platform/mp3-decoder`, then `crt/allocator` (which contains `crt/atoi-and-startup`). **Held by the owner:** state
     2's tracer proof (armed on `0x5AB7E0..0x5B8DA0`, and now the runtime's heap range) - "we'll hold the tracer proof
     till later" (2026-10-10). A launcher box for `BOF3X_MP3` beside `music=`.

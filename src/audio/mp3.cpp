@@ -139,7 +139,50 @@ int __stdcall Start(void* decoder) {
 // One frame to `out`; its bytes stored; kEndOfStream once the file holds no
 // more frames. minimp3 reports a frame with no samples for bytes it skipped
 // (none in the game's files, which are bare streams); those are passed over.
+//
+// On a stack of its own. mp3dec_decode_frame keeps its scratch
+// (mp3dec_scratch_t: the granule buffers, the synthesis window, the bit
+// reservoir - some 13 KB) on the stack, where Capcom's decoder kept its state
+// in heap blocks; and the game's tasks run on 16 KB slices of the main
+// thread's stack below WinMain's frame (Task_SetStackBase, docs/task_sched.md),
+// the title's Music_Play among them. A decode there overran the slice into
+// the next task's saved context (2026-10-10, the owner's crash at a float
+// bit pattern with every register a float). So DecodeFrame runs with esp on
+// a 256 KB block of ours, switched in and out around the one call.
+namespace {
+
+constexpr std::uint32_t kStackBytes = 256 * 1024;
+unsigned char* g_stack;
+
+int __stdcall DecodeFrame(void* decoder, void* out);
+
+}  // namespace
+
 int __stdcall Decode(void* decoder, void* out) {
+    if (!g_stack) {
+        g_stack = static_cast<unsigned char*>(VirtualAlloc(nullptr, kStackBytes, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+        if (!g_stack) bof3::Fatal("DIV-0091: no memory for the decoder's stack");
+        DWORD old;
+        VirtualProtect(g_stack, 4096, PAGE_NOACCESS, &old);  // a guard page under it: an overrun faults, never wanders
+    }
+    const std::uint32_t top = (reinterpret_cast<std::uintptr_t>(g_stack) + kStackBytes - 16) & ~15u;
+    int result;
+    asm volatile(
+        "movl %%esp, %%esi\n\t"
+        "movl %[top], %%esp\n\t"
+        "pushl %[out]\n\t"
+        "pushl %[dec]\n\t"
+        "call *%[fn]\n\t"
+        "movl %%esi, %%esp\n\t"
+        : "=a"(result)
+        : [top] "r"(top), [out] "r"(out), [dec] "r"(decoder), [fn] "r"(&DecodeFrame)
+        : "esi", "ecx", "edx", "memory", "cc");
+    return result;
+}
+
+namespace {
+
+int __stdcall DecodeFrame(void* decoder, void* out) {
     Decoder* d = D(decoder);
     if (!d->started) bof3::Fatal("DIV-0091: Mp3_Decode before Mp3_Start");
     for (;;) {
@@ -164,6 +207,8 @@ int __stdcall Decode(void* decoder, void* out) {
         return 0;
     }
 }
+
+}  // namespace
 
 // Position 0 only: the file's first frame with the decoder's state reset,
 // which is decoding from the start again (mp3-decoder-choice.md 3's rule).

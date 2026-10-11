@@ -611,6 +611,47 @@ const char* const kScanEdges[] = {
     "\x1C" "1 2", "\xA0" "1 2", "1 \xA0" "2", "- 1 2", "+1+2", "1\v2", "1 2abc",
 };
 
+// The decoder's "%lx@%lx": the size@address name Music_OpenDecoder formats
+// (Crt_sprintf's "%X@%X") and its variations - lower case, a "0x" prefix, a
+// sign, spaces, a missing or doubled '@', junk, and the empty cases.
+const char* const kHexEdges[] = {
+    "", " ", "@", "1@", "@1", "4FB3D@7DE400", "4fb3d@7de400", "0x4FB3D@0x7DE400", "0X10@0x20", "0x@1", "0xg@1",
+    "-1@-2", "+1@+2", "- 1@2", " 1 @ 2", "1 @2", "1@ 2", "FFFFFFFF@100000000", "123456789@1", "1@@2", "1@2@3",
+    "g@1", "1@g", "1@2x", "1x@2", "\t1@2", "1@\t2", "0@0", "00000000000000001@2", "abcdefABCDEF@fedcba",
+};
+
+void HexString(unsigned round, char* s) {
+    if (round < sizeof kHexEdges / sizeof kHexEdges[0]) {
+        std::strcpy(s, kHexEdges[round]);
+        return;
+    }
+    static const char kDigits[] = "0123456789abcdefABCDEF";
+    char* p = s;
+    if (Next() % 16 == 0) {   // nothing, or whitespace alone (the -1 answer), or a lone sign or '@'
+        for (unsigned n = Next() % 4; n; --n) *p++ = "\t\n\v\f\r "[Next() % 6];
+        if (Next() % 3 == 0) *p++ = "+-@"[Next() % 3];
+        *p = 0;
+        return;
+    }
+    for (int k = 0; k < 2; ++k) {
+        for (unsigned n = Next() % 4 == 0 ? Next() % 3 : 0; n; --n) *p++ = "\t\n\v\f\r "[Next() % 6];
+        if (Next() % 6 == 0) *p++ = "+-"[Next() % 2];
+        if (Next() % 4 == 0) *p++ = '0', *p++ = "xX"[Next() % 2];
+        const unsigned digits = Next() % 5 == 0 ? Next() % 12 : 1 + Next() % 8;
+        for (unsigned i = 0; i < digits; ++i) *p++ = kDigits[Next() % (sizeof kDigits - 1)];
+        if (k == 0) {
+            switch (Next() % 10) {
+            case 0: break;                       // no '@'
+            case 1: *p++ = ' '; *p++ = '@'; break;
+            case 2: *p++ = '@'; *p++ = '@'; break;
+            default: *p++ = '@'; break;
+            }
+        }
+    }
+    if (Next() % 4 == 0) *p++ = " g@x\n"[Next() % 5];
+    *p = 0;
+}
+
 void ScanString(unsigned round, char* s) {
     if (round < sizeof kScanEdges / sizeof kScanEdges[0]) {
         std::strcpy(s, kScanEdges[round]);
@@ -653,22 +694,25 @@ int __cdecl PlantedScanSaturate(const char* s, const char* fmt, ...) {   // the 
     void* const a = va_arg(args, void*);
     void* const b = va_arg(args, void*);
     va_end(args);
-    int x = 0, y = 0;
-    const int r = std::sscanf(s, fmt, &x, &y);
+    unsigned long x = 0, y = 0;
+    const int r = std::strcmp(fmt, "%d %d") == 0 ? std::sscanf(s, "%d %d", reinterpret_cast<int*>(&x), reinterpret_cast<int*>(&y))
+                                                 : std::sscanf(s, "%lx@%lx", &x, &y);
     if (r >= 1) std::memcpy(a, &x, 4);
     if (r >= 2) std::memcpy(b, &y, 4);
     return r;
 }
 
 using ScanFn = int (__cdecl*)(const char*, const char*, ...);
-unsigned CompareScan(ScanFn ours, unsigned rounds, bool log) {
+// hex false: Cfg_Load's format at 0x65DAD0; true: the decoder's at 0x672854.
+unsigned CompareScan(ScanFn ours, unsigned rounds, bool log, bool hex = false) {
     const ScanFn theirs = reinterpret_cast<ScanFn>(bof3::orig::Crt_sscanf);
-    const char* const fmt = reinterpret_cast<const char*>(0x65DAD0);   // Cfg_Load's "%d %d"
+    const char* const fmt = reinterpret_cast<const char*>(hex ? 0x672854 : 0x65DAD0);
     unsigned differ = 0;
     const U saved = g_rand;
     for (unsigned round = 0; round < rounds; ++round) {
         char s[0x100];
-        ScanString(round, s);
+        if (hex) HexString(round, s);
+        else ScanString(round, s);
         // Cfg_Load's byte pointers one apart: the second write lands over the first's upper bytes
         alignas(4) unsigned char ta[8], oa[8];
         std::memset(ta, 0xC3, sizeof ta);
@@ -676,7 +720,7 @@ unsigned CompareScan(ScanFn ours, unsigned rounds, bool log) {
         const int a = theirs(s, fmt, ta, ta + 1), b = ours(s, fmt, oa, oa + 1);
         if (a != b || std::memcmp(ta, oa, sizeof ta) != 0) {
             ++differ;
-            if (log) Mismatch("sscanf", round, static_cast<U>(a), static_cast<U>(b));
+            if (log) Mismatch(hex ? "sscanf %lx@%lx" : "sscanf", round, static_cast<U>(a), static_cast<U>(b));
         }
     }
     g_rand = saved;
@@ -693,6 +737,14 @@ void FuzzSscanf() {
               kRounds, static_cast<unsigned>(sizeof kScanEdges / sizeof kScanEdges[0]), g_bad - before);
     ControlRefused("sscanf, 0 for an empty string", CompareScan(&PlantedScanNoEof, kRounds, false));
     ControlRefused("sscanf, the toolchain's", CompareScan(&PlantedScanSaturate, kRounds, false));
+    const unsigned before_hex = g_bad;
+    if (std::strcmp(reinterpret_cast<const char*>(0x672854), "%lx@%lx") != 0)
+        bof3::Fatal("crt_rest self-test: the format at 0x672854 is not \"%%lx@%%lx\"");
+    CompareScan(&::Crt_sscanf, kRounds, true, true);
+    bof3::Log("shadow      crt_rest self-test: sscanf \"%%lx@%%lx\" %u rounds (%u edge strings first), %u MISMATCHES",
+              kRounds, static_cast<unsigned>(sizeof kHexEdges / sizeof kHexEdges[0]), g_bad - before_hex);
+    ControlRefused("sscanf %lx@%lx, 0 for an empty string", CompareScan(&PlantedScanNoEof, kRounds, false, true));
+    ControlRefused("sscanf %lx@%lx, the toolchain's", CompareScan(&PlantedScanSaturate, kRounds, false, true));
 }
 
 // =============================================================================
