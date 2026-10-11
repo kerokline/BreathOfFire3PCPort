@@ -8,6 +8,19 @@
 #include <vector>
 
 namespace bof3x {
+namespace {
+
+std::string Hex(const unsigned char (&digest)[32]) {
+    static const char kHex[] = "0123456789abcdef";
+    std::string hex;
+    for (unsigned char b : digest) {
+        hex += kHex[b >> 4];
+        hex += kHex[b & 15];
+    }
+    return hex;
+}
+
+}  // namespace
 
 bool Sha256Hex(const wchar_t* path, std::string& hex, std::string& why) {
     HANDLE file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -45,13 +58,22 @@ bool Sha256Hex(const wchar_t* path, std::string& hex, std::string& why) {
     if (alg) BCryptCloseAlgorithmProvider(alg, 0);
     CloseHandle(file);
     if (!ok) return false;
-    static const char kHex[] = "0123456789abcdef";
-    hex.clear();
-    for (unsigned char b : digest) {
-        hex += kHex[b >> 4];
-        hex += kHex[b & 15];
-    }
+    hex = Hex(digest);
     return true;
+}
+
+bool Sha256HexBytes(const void* data, std::size_t size, std::string& hex) {
+    BCRYPT_ALG_HANDLE alg = nullptr;
+    BCRYPT_HASH_HANDLE hash = nullptr;
+    unsigned char digest[32];
+    const bool ok = BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, nullptr, 0) >= 0 &&
+                    BCryptCreateHash(alg, &hash, nullptr, 0, nullptr, 0, 0) >= 0 &&
+                    BCryptHashData(hash, static_cast<PUCHAR>(const_cast<void*>(data)), static_cast<ULONG>(size), 0) >= 0 &&
+                    BCryptFinishHash(hash, digest, sizeof digest, 0) >= 0;
+    if (hash) BCryptDestroyHash(hash);
+    if (alg) BCryptCloseAlgorithmProvider(alg, 0);
+    if (ok) hex = Hex(digest);
+    return ok;
 }
 
 }  // namespace bof3x
