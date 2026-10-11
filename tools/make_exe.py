@@ -47,12 +47,13 @@ ENGINE = ('bof3x.dll', ['Engine_Main'])
 # draw_pool_room.h's kStamp, with its NUL: what DrawPool_Reserve looks for.
 POOL_STAMP = b'BOF3X-DRAWPOOL-2048\0'
 
-# The launcher's declarations (src/launcher/launcher.manifest) less dpiAware,
-# plus the code page and long paths (docs/state3-design.md section 9).
-# dpiAware is left out on purpose: BOF3.exe has no manifest, so Windows
-# scales its 640 x 480 window on a high-DPI desktop; declaring the process
-# DPI-aware would change the window's size on screen, a behaviour change the
-# brief did not intend (docs/state3-build.md section 2.1).
+# The launcher's declarations (src/launcher/launcher.manifest) plus the code
+# page and long paths (docs/state3-design.md section 9) and, since the owner's
+# call of 2026-10-11, DPI awareness (per-monitor v2 with the v1 fallback):
+# BOF3.exe has no manifest, so Windows stretched its window on a scaled
+# desktop and blurred the picture after our renderer drew it; aware, the
+# window gets real pixels and DIV-0036's default k follows the scale
+# (DisplaySetup_WindowedScale), so the window opens the same apparent size.
 MANIFEST = b'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
   <assemblyIdentity type="win32" name="bof3x" version="1.0.0.0" processorArchitecture="x86"/>
@@ -65,6 +66,8 @@ MANIFEST = b'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   </dependency>
   <application xmlns="urn:schemas-microsoft-com:asm.v3">
     <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
       <activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>
       <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>
     </windowsSettings>
@@ -366,6 +369,7 @@ def verify(layout, out_path, dll_path):
     manifest = res.get((24, 1, 0), b'')
     for needle in (b'<activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>',
                    b'<longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>',
+                   b'<dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>',
                    b'Microsoft.Windows.Common-Controls'):
         if needle not in manifest:
             bad.append(f'manifest lacks {needle.decode()}')

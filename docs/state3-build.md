@@ -98,14 +98,14 @@ Three choices the brief did not spell out, made to keep behaviour:
   `BOF3.exe`'s (llvm-readobj, 2026-10-11): below 6.0 Windows keeps the old
   window-frame metrics the game's window was laid out under, and no DEP or
   ASLR opt-in changes from the hosted process.
-- **The manifest leaves out `dpiAware`.** The brief (sections 1.3 and 9) asks
-  for "the common-controls and DPI declarations the launcher already
-  carries". `BOF3.exe` has no manifest, so Windows scales its 640 x 480
-  window on a high-DPI desktop; declaring the process DPI-aware would make
-  the window physically smaller there - a visible change no entry covers.
-  Common controls 6 (themed message boxes), `activeCodePage` UTF-8 and
-  `longPathAware` are declared. Adding the line is one edit in
-  `make_exe.py` if the owner wants it.
+- **The manifest declares DPI awareness** (per-monitor v2, the v1 line as
+  the fallback) since the owner's call of 2026-10-11 - the first build left
+  it out because `BOF3.exe` has no manifest and the brief had not decided
+  it. DIV-0036 is amended: the default windowed k follows the display's
+  scale (twice the scale rounded down, never below 2), so the window opens
+  the same apparent size as the stretched one did, now sharp. Common
+  controls 6 (themed message boxes), `activeCodePage` UTF-8 and
+  `longPathAware` are declared too.
 - **The program name is skipped in `Engine_Main`** (`PastProgramName`, C++),
   not in the hand-assembled entry: the same `_wincmdln` rule, reviewable.
 
@@ -312,9 +312,17 @@ at tick 0 on both sides. The runtime's other start-up words (the TLS index
 `0x672950`, `_iob`, the locks, the version words, `_pgmptr`'s string) differ
 too in the dumps but lie in the skip list's ranges. **So the exe host plays
 the attract sequence as the hosted build and as Capcom's code do, but for
-the runtime's start-up data it no longer writes**; the reference pairs want
-those two pages in the skip list (or a fresh pair recorded in the exe host)
-before the check can read exit 0 across the cutover.
+the runtime's start-up data it no longer writes**. **Added to the skip list
+the same day** (`tools/statehash_skip.txt`, by variable, not by page - the
+first page also holds the enemy records and the battle message ring): the
+multibyte code-page word and its two tables, `_nhandle` with the environment
+and code-page words beside it, `_nstream`; `__pioinfo`, `__piob` and the heap
+and command-line words were in the list already as noise. The differing
+ranges at tick 0 and at tick 5000 are the same (`statehash.py bytes` on the
+dumps, 2026-10-11); `Sound_Channels` went in with them
+([`state-hash.md`](state-hash.md) 7 item 4). The check across the cutover
+is owed a run with the new list - the attract sequence in the exe host
+against `attract_r14_orig` / `_origb` - in the next away batch.
 
 The exe-host run took more logic frames in the same 360 s (10,789 against
 10,318); the hash aligns by tick, so the count does not enter the
@@ -343,7 +351,7 @@ at `0x672950`, which no start-up writes now. The state hash does not use it.
 ## 4. What section 11 leaves
 
 The routes and the stack watch above; then the owner plays it. Beyond the
-brief: the two CRT pages in the state hash's skip list (or new references);
+brief: the attract check re-run with the skip list's new entries;
 the fifteen software-renderer handlers `d3d_list.cpp` names without a
 `[[func]]` (int3 in the exe host); `attract_watch.py`'s rand count; the
 owner's icon; the owner's call on `dpiAware` (section 2.1).

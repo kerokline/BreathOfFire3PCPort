@@ -1918,6 +1918,15 @@ designed in rather than bolted on.
   from the top-left (reached by F8 back to a window from a borderless start).
   DIV-0010's far texture edge follows k (`SprtDraw_SetScale`, the same
   derivation). One `DIV-0036` log line gives the k and why.
+  **Amended 2026-10-11 (state 3, DIV-0094):** `bof3x.exe` declares itself
+  DPI-aware (per-monitor v2) - `BOF3.exe` never did, so on a scaled desktop
+  Windows stretched its whole window after the picture was drawn and blurred
+  it. Aware, the window gets real pixels, and the default k when `scale=` is
+  unset follows the display: twice the scale rounded down, never below 2 -
+  100 % and 125 % open at k = 2, 150 % and 175 % at k = 3, 200 % at k = 4 -
+  so the window opens the same apparent size as before and the player
+  resizes from there (the owner's rule, 2026-10-11). The hosted build is
+  told 96 dpi and keeps k = 2. `DisplaySetup_WindowedScale`.
 - **Rationale:** the owner's rule, 2026-09-23: "windowed options should be
   the available fixed k values, fullscreen uses largest k that will fit", k
   picked at start-up only. Polygon edges and 3D geometry are then drawn at

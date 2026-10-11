@@ -316,9 +316,35 @@ extern "C" int __cdecl Display_Setup(void* hwnd_, int* fullscreen, int* device, 
     return 0;
 }
 
+// The default k follows the display's scale (the owner, 2026-10-11, with
+// DPI awareness declared in bof3x.exe's manifest - DIV-0036 amended): twice
+// the scale, rounded down, never below 2 - so 100 % and 125 % open at k = 2,
+// 150 % and 175 % at k = 3, 200 % at k = 4, and the window is the same
+// apparent size on every desktop. An unaware process (the hosted build,
+// BOF3.exe has no manifest) is told 96 dpi and keeps k = 2.
+unsigned DefaultWindowedScale() {
+    unsigned dpi = 96;
+    if (HMODULE user32 = GetModuleHandleA("user32.dll")) {
+        using Fn = UINT(WINAPI*)();
+        if (auto fn = reinterpret_cast<Fn>(reinterpret_cast<void*>(GetProcAddress(user32, "GetDpiForSystem"))))
+            dpi = fn();   // Windows 10 1607 and later; absent, the system dc below
+    }
+    if (dpi == 96) {
+        if (HDC dc = GetDC(nullptr)) {
+            dpi = static_cast<unsigned>(GetDeviceCaps(dc, LOGPIXELSX));
+            ReleaseDC(nullptr, dc);
+        }
+    }
+    unsigned k = (2 * dpi) / 96;
+    if (k < 2) k = 2;
+    if (k > kMaxScale) k = kMaxScale;
+    if (k != 2) bof3::Log("DIV-0036    windowed default k = %u from %u dpi (%u %%)", k, dpi, dpi * 100 / 96);
+    return k;
+}
+
 unsigned DisplaySetup_WindowedScale() {
     char text[32];
-    if (GetEnvironmentVariableA("BOF3X_SCALE", text, sizeof text) == 0) return 2;
+    if (GetEnvironmentVariableA("BOF3X_SCALE", text, sizeof text) == 0) return DefaultWindowedScale();
     U k = 0;
     for (const char* p = text; *p >= '0' && *p <= '9'; ++p) k = k * 10 + static_cast<U>(*p - '0');
     if (k < 1 || k > kMaxScale) bof3::Fatal("BOF3X_SCALE=%s: an integer 1..%u", text, kMaxScale);
