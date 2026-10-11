@@ -23,6 +23,8 @@
 
 namespace mode_flow {
 
+std::uint32_t g_area_track_fallback = 0;  // DIV-0092; 1 through PatchBytes("AreaTrackFallback") in ModeRest_Inject
+
 using move_script::At;
 using move_script::Long;
 using move_script::SetLong;
@@ -338,7 +340,14 @@ extern "C" void __cdecl GameMode_Start(void) {
     Game_AreaNumber = 0xFFFF;
     g.change_area(area, x, z, flags);
     const unsigned char* const clock = At(at::kClock);
-    if (clock[3] != 0 || clock[2] != 0 || clock[1] != 0 || clock[0] != 0) At(at::kAreaTrack)[0] = At(at::kMusicTrack)[0];
+    if (clock[3] != 0 || clock[2] != 0 || clock[1] != 0 || clock[0] != 0) {
+        // DIV-0092: a loaded game plays the track the save holds; a save with no
+        // track (0xFF - the port's F12 save, written while the music was off)
+        // keeps the one Field_ChangeArea just chose from the area's zone instead
+        // of silence. Capcom's rule copies the 0xFF.
+        const unsigned char saved = At(at::kMusicTrack)[0];
+        if (!(mode_flow::g_area_track_fallback && saved == 0xFF)) At(at::kAreaTrack)[0] = saved;
+    }
     At(at::kMusicTrack)[0] = 0xFF;
     Game_Mode = 1;
 }

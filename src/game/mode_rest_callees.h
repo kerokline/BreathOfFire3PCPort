@@ -51,6 +51,7 @@ constexpr U kCameraTurnByte = 0x905B82;    // u8: 0x10 when mode 4 ends (CameraT
 // --- mode 5 (the battle) -----------------------------------------------------------
 constexpr U kBattleFlags = 0x904AE5;       // u8: EventBattle_Records +0's flags (Field_StartEventBattle)
 constexpr U kBattleFlags2 = 0x904AE8;      // u8: bit 3 keeps the field's music off after the battle
+constexpr U kAreaTrack = 0x904CD0;         // u8: the area's track Field_ChangeArea chose (mode_flow kAreaTrack); DIV-0092
 constexpr U kBattleFlags3 = 0x904AE9;      // u8: zeroed at steps 3 and 4
 constexpr U kFormation = 0x904AAC;         // dword read, its low byte the formation (rest_3g_callees.h)
 constexpr U kApproach = 0x656AA4;          // s8 pairs by the formation byte: x (+0) and z (+1) steps (image .data, after GameMode5_Steps)

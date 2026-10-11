@@ -6593,7 +6593,7 @@ on purpose, to keep the stream's logic as the original's under the swap)
 and the self-test's expectation; a ledger entry, since it changes what is
 heard. Not done: the owner's call, with DIV-0091's listen.
 
-## D241 — Battle music runs on after a fight ends, and the title music through the load screen: ours, every fade stalled after one step (the owner's report; cause found and fixed 2026-10-10 night, DIV-0028 amended)
+## D241 — Battle music runs on after a fight ends and the area's never resumes; the title music through the load screen: a stalled fade (ours, DIV-0028 amended) and a dead resume (the port's, DIV-0092) - both fixed 2026-10-10 night, the owner's ear owed
 
 **Found:** the owner, 2026-10-10 evening, in play: "our game doesn't
 'end' songs where I expect (compared to psx). The battle music will
@@ -6633,6 +6633,17 @@ predates DIV-0047 by a day. The second half of the report - the area's
 music not resuming - was not reproduced on this route: the game asked for
 the area's track (`Music_Play(93)` at frame 3841) and it played; whether
 the owner's fight was a different case is still theirs to say.
+
+**The second half, found later the same night (DIV-0092):** the resume
+`GameMode5_Leave` asks for is `Music_Play(Music_Track)`, and by then the
+fanfare's stopping fade has marked the track `0xFF`, so Capcom's PC never
+resumed the field's music after a fight at all - the PSX restarts the area's
+song from its table. The owner heard Capcom's run stay silent after the
+fight. The same route showed it: no `Music_Play` between the
+fanfare's stop (frame 2804) and the next fight (3189). Ours now plays the
+area's track `0x904CD0` there, and on a load of a save whose track byte is
+`0xFF` (the owner's F12 save `eldritchGene`, which loaded silent under both
+codes). The owner's ear is owed on both.
 
 ## D242 — The dragon gene at the lighthouse's pedestal is drawn clipped by the floor (the owner's report; not looked at)
 

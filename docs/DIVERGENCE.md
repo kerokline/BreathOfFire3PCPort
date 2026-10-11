@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 91 entries, DIV-0001..0091, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 92 entries, DIV-0001..0092, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5369,3 +5369,67 @@ designed in rather than bolted on.
   as the A/B).
 - **Reversible?** `BOF3X_MP3=original` (no launcher box yet); the decoder's
   code is untouched in the image.
+
+### The field's music after a battle, and after a load of a save without a track, is the area's own
+
+- **ID:** DIV-0092 (the next free number on 2026-10-10 night; renumber at
+  the merge if another branch has taken it)
+- **Date:** 2026-10-10
+- **Subsystem:** the field's music (`GameMode5_Leave` `0x496150`,
+  `src/game/mode_rest.cpp`; `GameMode_Start` `0x495840`,
+  `src/game/mode_flow.cpp`; the area's track byte `0x904CD0`, written by
+  `Area_TrackFor` `0x5953B0` from the area's zone on every
+  `Field_ChangeArea`)
+- **Tier:** Sensible - the PlayStation's behaviour where the port left
+  silence.
+- **Original behaviour:** two cases, one rule each.
+  1. **After a battle.** `BattleEnd_ExitHook` `0x4317B0` stops the fanfare
+     with `Music_FadeOutStop(10)`, whose end marks the track byte `0x904131`
+     `0xFF`. `GameMode5_Leave`, frames later once the field has reloaded,
+     restarts "the field's track" as `Music_Play(Music_Track, 0xA)` - unless
+     the track is `0xFF`. It always is by then, so the call never ran and
+     the field came back silent until the next area change (**confirmed by
+     the owner's ear on Capcom's code, 2026-10-10 night**: "capcom also
+     failed to restart the area music after combat"). The PSX ends a
+     fight by playing the area's song again from its table
+     ([`known-defects.md`](known-defects.md) D241 cites `0x80162610`; the same
+     rewrite as `Scena16_End`'s, [`field-modes.md`](field-modes.md) 4, where
+     the PSX restarts the area's track from `0x8015DDF4`).
+  2. **After a load.** `GameMode_Start`, for a loaded game (the play clock
+     not zero), overwrites the area's track `0x904CD0` - which
+     `Field_ChangeArea` has just chosen from the area's zone - with the
+     track byte the save block holds, and `Area_Enter` plays that. A save
+     written while no track was playing holds `0xFF`, and the area loads in
+     silence. Saves at save points always hold a track; the port's F12 save
+     (`Save_QuickWrite`, anywhere, any time) can hold `0xFF` - the owner's
+     `eldritchGene` save does (byte `0x751` of the block, read 2026-10-10),
+     most likely written while the stuck fade (DIV-0028's amendment) or case
+     1 had the track marked stopped. Capcom's code loads it silent too (the
+     owner's ear, 2026-10-10 night).
+- **New behaviour:** in both places, when the track Capcom's rule would
+  play is `0xFF`, the area's own track `0x904CD0` is played instead (still
+  nothing when that is `0xFF` too). A save that holds a track still plays
+  that track, as before. One switch, `g_area_track_fallback`, armed in
+  `ModeRest_Inject` after both modules' fuzzes, which run Capcom's rule.
+- **Rationale:** the owner, 2026-10-10: "The battle music will continue
+  after battle ends, and the area music won't resume" (compared to the
+  PlayStation), and on the quicksave: "this seems to have the effect of not
+  loading the area's music. Can we fix that?" The PSX twin rule
+  ([`HANDOFF.md`](HANDOFF.md) traps): the PSX resumes, so case 1 is a port
+  repair; case 2 cannot arise on the PSX, so it is this project's choice.
+- **Also in the PSX version?** Case 1 no - the PSX restarts the area's song
+  at a battle's end (not read in its overlay here: the main executable has
+  `nop`s at the twin's address `0x80198F48`; the claim rests on D241's and
+  `field-modes.md`'s readings). Case 2 cannot happen there.
+- **Verification:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=mode_flow,mode_rest,sound`
+  exit 0 (the fuzzes run Capcom's rule, the switch armed after them). The
+  owner's route `tools/recipes/musicStopCheck.txt` under `BOF3X_MUSIC_LOG=1`
+  before the fix: after the fanfare's `Music_FadeOutStop` at frame 2804 no
+  `Music_Play` until the second fight's at 3189; after the load, the first
+  `Music_Play` is the first room change's (`Area_Enter`, frame 913). After
+  the fix: the owner's ear, owed (the loaded area's music and the field's
+  after the fight). What `0x904CD0` holds for the quicksave's area is the
+  zone's answer, which may differ from the track an event had set when the
+  save was written - accepted.
+- **Reversible?** `BOF3X_ORIGINAL=AreaTrackFallback` (Capcom's rule in
+  ours), or `BOF3X_ORIGINAL=GameMode5_Leave,GameMode_Start`.

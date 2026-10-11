@@ -146,6 +146,8 @@ byte `+3`, x `+4`, z `+8` - `Field_ScriptFlags2 |= 0x4040`, eight bytes zeroed
 `Field_ChangeArea(area, x, z, flags)`. With the play clock not at 0:00:00:00 -
 a loaded game - the area's wanted track `0x904CD0` is set to the one playing;
 the playing track byte goes `0xFF`; mode 1.
+**DIV-0092 (2026-10-10):** when the save's track is `0xFF` ours keeps the
+track `Field_ChangeArea` chose from the zone, so the area is not silent.
 
 **Mode 1, `GameMode_Enter`:** bit 3 of `Field_ScriptFlags2` off, then
 `Area_Enter` with `Field_ChangeArea`'s four cells. Input flag bit 3 (from the
