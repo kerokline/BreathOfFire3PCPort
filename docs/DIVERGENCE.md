@@ -5378,8 +5378,11 @@ designed in rather than bolted on.
   `BOF3X_SHADOW=sound`'s `DIV-0091 self-test` line; `'*'` narrow and wide
   headless. The state hash is unaffected (`Music_Staging` is skipped).
   **Heard 2026-10-11** - the owner, on six songs as WAV pairs from `BOF3X_MP3_DUMP` (the town theme 000, 045, 086, the title 141, the battle theme 153, the fanfare 165; `analysis/bgm/listen2/`): "all sound pretty similar to me ... maybe slight variations in volume, but it could just be placebo". It is: the pairs' RMS levels agree to 0.0001 dB and their peaks to 0.006 dB on every song (the decoders' difference is -68 dBFS at the median file).
-- **Reversible?** `BOF3X_MP3=original` (no launcher box yet); the decoder's
-  code is untouched in the image.
+- **Reversible?** `BOF3X_MP3=original` - **deliberately not a launcher box** (the
+  owner, 2026-10-11, after the listen: no reason to keep a player-facing option
+  for Capcom's decoder; and the switch dies at state 3's cutover, which maps
+  none of Capcom's code, so a box would outlive its use by a session). The
+  decoder's code is untouched in the image until then.
 
 ### The field's music after a battle, and after a load of a save without a track, is the area's own
 

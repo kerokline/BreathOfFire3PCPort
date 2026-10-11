@@ -23,7 +23,9 @@ and it is the less accurate of the two.
   callee table by `mp3dec::Arm()` after every module's self-test
   (`inject_all.cpp`, beside DIV-0087's). Nothing is injected at Capcom's
   addresses: the decoder's 200 functions are simply no longer called. Under
-  `BOF3X_MP3=original` the table keeps Capcom's (the A/B); under
+  `BOF3X_MP3=original` the table keeps Capcom's (the A/B - an agent's and the
+  owner's switch, deliberately not a launcher box: the owner, 2026-10-11, and it
+  dies at the cutover); under
   `BOF3X_ORIGINAL` naming `Music_Decode` or `Music_OpenDecoder`, Capcom's
   own callers run and call Capcom's decoder directly, as before.
 - **The seam's shape is kept, not redesigned.** Every caller of ours reads
