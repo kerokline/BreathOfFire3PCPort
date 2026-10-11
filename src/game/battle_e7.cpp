@@ -42,6 +42,7 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -602,7 +603,7 @@ extern "C" void __cdecl GeneWin_ListSlideOut(void) {
     BH_CALL(GeneWin_DrawList)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v <= S16(W(At(at::kListOutBound)))) {
+    if (v <= S16(bof3::CodeWord(at::kListOutBound))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -668,7 +669,7 @@ extern "C" void __cdecl GeneWin_List2SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= S16(W(At(at::kList2OutBound)))) {
+    if (v >= S16(bof3::CodeWord(at::kList2OutBound))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -709,7 +710,7 @@ extern "C" void __cdecl GeneWin_List3SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= S16(W(At(at::kList3OutBound)))) {
+    if (v >= S16(bof3::CodeWord(at::kList3OutBound))) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -857,10 +858,11 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
 namespace {
 void CheckSlideBound(U operand, int original) {
     const int wide = original < 0 ? original - static_cast<int>(Widescreen_Live()) : original + static_cast<int>(Widescreen_Live());
-    const int bound = S16(W(At(operand)));
-    if (At(operand - 2)[0] != 0x66 || At(operand - 1)[0] != 0x3D || (bound != original && bound != wide))
+    const std::uint8_t* const insn = bof3::CodeBytes(operand - 2, 4);
+    const int bound = S16(bof3::CodeWord(operand));
+    if (insn[0] != 0x66 || insn[1] != 0x3D || (bound != original && bound != wide))
         bof3::Fatal("battle_e7: 0x%X should be `cmp ax, %d` (or %d, DIV-0041), holds %02X %02X then %d", operand - 2, original,
-                    wide, At(operand - 2)[0], At(operand - 1)[0], bound);
+                    wide, insn[0], insn[1], bound);
 }
 }  // namespace
 

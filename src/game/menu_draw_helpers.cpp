@@ -51,6 +51,7 @@
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace menu_draw_helpers {
 
@@ -230,7 +231,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatsR
 // call, as the original's `cmp word [eax + 4], cx` does, so the divergence is
 // kept and BOF3X_ORIGINAL=Widescreen still restores -150.
 extern "C" void __cdecl MenuWin_SlideOutLeft(void) {
-    const short bound = static_cast<short>(Word(At(g.slide_left_bound)));
+    const short bound = static_cast<short>(bof3::CodeWord(g.slide_left_bound));
     SlideX(-0x20, bound, true, bound);
 }
 
@@ -346,11 +347,11 @@ extern "C" void __cdecl BattleMenuWin_SkillListSlideIn(void) { SlideX(-0x20, 0x5
 void MenuDrawHelpers_Inject() {
     // The bound ours reads back must still be the operand of the original's
     // `mov ecx, imm32` (B9): anything else there means the site moved.
-    if (At(at::kSlideLeftMov)[0] != 0xB9)
+    if (bof3::CodeByte(at::kSlideLeftMov) != 0xB9)
         bof3::Fatal("menu_draw_helpers: 0x%X holds 0x%02X, not MenuWin_SlideOutLeft's mov ecx",
-                    static_cast<unsigned>(at::kSlideLeftMov), At(at::kSlideLeftMov)[0]);
+                    static_cast<unsigned>(at::kSlideLeftMov), bof3::CodeByte(at::kSlideLeftMov));
     bof3::Log("menu_draw_helpers: MenuWin_SlideOutLeft's bound %d (0x59B446; -150 unless DIV-0041 widened it)",
-              static_cast<int>(static_cast<short>(Word(At(at::kSlideLeftBound)))));
+              static_cast<int>(static_cast<short>(bof3::CodeWord(at::kSlideLeftBound))));
     if (bof3::WantsShadow("menu_draw_helpers")) menu_draw_helpers::SelfTest();
     // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
     // compares the original's line; a Latin overlay only (DIV-0056).

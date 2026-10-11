@@ -1,24 +1,31 @@
-// bof3x-launcher: start the player's own BOF3.exe with bof3x.dll loaded.
+// bof3x-launcher: the settings, then the game - our own bof3x.exe by default,
+// or the player's own BOF3.exe with bof3x.dll injected (--host bof3).
 //
 //   bof3x-launcher [--game <dir containing BOF3.exe>] [--config|--no-config]
-//                  [-- <args for the game>]
+//                  [--host exe|bof3] [-- <args for the game>]
 //
 // The game directory is, in order: --game, the BOF3_GAME_DIR environment
 // variable, the current directory, then ./bof3.
 //
-// The original file is never modified and never copied (CLAUDE.md rule 1): the
-// process is created suspended, a remote thread runs LoadLibraryW on our DLL,
-// and only then is the game's main thread resumed - so every detour is in place
-// before the entry point runs. Technique as described in
-// docs/prior-art/tr1x.md section 2.1; implemented from that description.
+// --host exe (the default, docs/state3-design.md section 8): bof3x.exe, beside
+// this launcher, started with the game directory as its current directory -
+// no suspension, no reservation, no remote thread; the executable imports
+// bof3x.dll and maps the player's data itself (src/hook/exe_host.cpp).
+//
+// --host bof3: the hosted build, kept for the shadow fuzz, the A/B switch and
+// the reference pairs - and chosen without --host when the environment sets
+// a switch only it can serve (HostedOnlyAsked). The original file is never modified and never copied
+// (CLAUDE.md rule 1): the process is created suspended, a remote thread runs
+// LoadLibraryW on our DLL, and only then is the game's main thread resumed - so
+// every detour is in place before the entry point runs. Technique as described
+// in docs/prior-art/tr1x.md section 2.1; implemented from that description.
 //
 // Must be built 32-bit, like the DLL: the remote thread's start address is OUR
 // kernel32!LoadLibraryW, which is only the target's too when both processes
 // load the same (32-bit) kernel32 - true within one boot session.
 #include <windows.h>
 
-#include <bcrypt.h>
-
+#include "common/sha256.h"
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
 #include "launcher/exe_image.h"
@@ -27,15 +34,12 @@
 
 #include <cstdio>
 #include <cwchar>
+#include <initializer_list>
 #include <cstdint>
 #include <string>
 #include <vector>
 
 namespace {
-
-// fixtures.toml build "pc-zh" / symbols.toml [meta].sha256.
-constexpr char kExpectedSha256[] =
-    "15984158e0badb4b2f9471c1e9003bb18b2ab11aff47af2376f9ebcd31dfb8cb";
 
 // The suspended game process, while there is one that has not been resumed.
 HANDLE g_child = nullptr;
@@ -46,6 +50,16 @@ HANDLE g_child = nullptr;
 // passed, 3 a Fatal). Lets several checkouts self-test at once
 // (docs/SCAFFOLDING.md section 2).
 bool SelfTestOnly() { return GetEnvironmentVariableW(L"BOF3X_SELFTEST_ONLY", nullptr, 0) > 0; }
+
+// The switches that need Capcom's code, which only the hosted build maps
+// (src/hook/exe_host.cpp RefuseHostedSwitches).
+bool HostedOnlyAsked() {
+    for (const wchar_t* name : {L"BOF3X_ORIGINAL", L"BOF3X_SHADOW", L"BOF3X_CALLTRACE"})
+        if (GetEnvironmentVariableW(name, nullptr, 0) > 0) return true;
+    wchar_t mp3[16] = {};
+    const DWORD n = GetEnvironmentVariableW(L"BOF3X_MP3", mp3, 16);
+    return n > 0 && n < 16 && std::wcscmp(mp3, L"original") == 0;
+}
 
 // Every failure path: ends a suspended game process if there is one, reports
 // on stderr and in a message box, and exits 1.
@@ -81,39 +95,11 @@ std::wstring OwnDirectory() {
     return path.substr(0, path.find_last_of(L"\\/"));
 }
 
-// The file's SHA-256 as lowercase hex, the form kExpectedSha256 is written in.
-// Any I/O or CNG failure Die()s.
+// The file's SHA-256 as lowercase hex (common/sha256.cpp, the engine's routine
+// too). Any I/O or CNG failure Die()s.
 std::string Sha256Hex(const std::wstring& path) {
-    HANDLE file = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file == INVALID_HANDLE_VALUE) Die(L"cannot open %ls (%lu)", path.c_str(), GetLastError());
-
-    BCRYPT_ALG_HANDLE alg = nullptr;
-    BCRYPT_HASH_HANDLE hash = nullptr;
-    if (BCryptOpenAlgorithmProvider(&alg, BCRYPT_SHA256_ALGORITHM, nullptr, 0) < 0 ||
-        BCryptCreateHash(alg, &hash, nullptr, 0, nullptr, 0, 0) < 0)
-        Die(L"cannot initialise SHA-256");
-
-    std::vector<unsigned char> buf(1 << 16);
-    for (;;) {
-        DWORD got = 0;
-        if (!ReadFile(file, buf.data(), static_cast<DWORD>(buf.size()), &got, nullptr))
-            Die(L"read error on %ls (%lu)", path.c_str(), GetLastError());
-        if (got == 0) break;
-        if (BCryptHashData(hash, buf.data(), got, 0) < 0) Die(L"SHA-256 update failed");
-    }
-    unsigned char digest[32];
-    if (BCryptFinishHash(hash, digest, sizeof digest, 0) < 0) Die(L"SHA-256 finish failed");
-    BCryptDestroyHash(hash);
-    BCryptCloseAlgorithmProvider(alg, 0);
-    CloseHandle(file);
-
-    static const char kHex[] = "0123456789abcdef";
-    std::string hex;
-    for (unsigned char b : digest) {
-        hex += kHex[b >> 4];
-        hex += kHex[b & 15];
-    }
+    std::string hex, why;
+    if (!bof3x::Sha256Hex(path.c_str(), hex, why)) Die(L"cannot hash %ls: %hs", path.c_str(), why.c_str());
     return hex;
 }
 
@@ -190,10 +176,16 @@ int wmain(int argc, wchar_t** argv) {
     // window every time" is unticked); --no-config suppresses it, which is
     // what the scripted runs in docs/HANDOFF.md want.
     int want_dialog = -1;
+    int host_asked = -1;   // --host: 0 exe, 1 bof3; -1 not given
     for (int i = 1; i < argc; ++i) {
         std::wstring arg = argv[i];
         if (arg == L"--game" && i + 1 < argc) {
             game_dir = argv[++i];
+        } else if (arg == L"--host" && i + 1 < argc) {
+            const std::wstring host = argv[++i];
+            if (host == L"bof3") host_asked = 1;
+            else if (host == L"exe") host_asked = 0;
+            else Die(L"--host %ls: exe (bof3x.exe, the default) or bof3 (BOF3.exe, hosted)", host.c_str());
         } else if (arg == L"--config") {
             want_dialog = 1;
         } else if (arg == L"--no-config") {
@@ -206,7 +198,7 @@ int wmain(int argc, wchar_t** argv) {
             }
         } else {
             Die(L"unknown argument: %ls\nusage: bof3x-launcher [--game <dir>] "
-                L"[--config|--no-config] [-- <game args>]",
+                L"[--config|--no-config] [--host exe|bof3] [-- <game args>]",
                 arg.c_str());
         }
     }
@@ -226,13 +218,25 @@ int wmain(int argc, wchar_t** argv) {
 
     std::wstring dll = OwnDirectory() + L"\\bof3x.dll";
     if (!FileExists(dll)) Die(L"%ls is missing; it belongs next to this launcher.", dll.c_str());
+    // Not given: our own executable - unless the environment asks for what
+    // only the hosted build has (Capcom's code: the A/B switch, the shadow
+    // fuzz, the call trace, Capcom's MP3 decoder; bof3x.exe refuses each), so
+    // the documented self-test and A/B commands keep their meaning.
+    const bool hosted = host_asked >= 0 ? host_asked == 1 : HostedOnlyAsked();
+    if (host_asked < 0 && hosted)
+        std::fwprintf(stderr, L"bof3x-launcher: a hosted-only switch is set (BOF3X_ORIGINAL, BOF3X_SHADOW, "
+                              L"BOF3X_CALLTRACE or BOF3X_MP3=original): starting the hosted build, as --host bof3\n");
+    const std::wstring ours = OwnDirectory() + L"\\bof3x.exe";
+    if (!hosted && !FileExists(ours))
+        Die(L"%ls is missing; it belongs next to this launcher (or start the hosted build with --host bof3).",
+            ours.c_str());
 
     std::string sha = Sha256Hex(exe);
-    if (sha != kExpectedSha256)
+    if (sha != bof3x::kExpectedSha256)
         Die(L"%ls is not the build this project targets.\n\nsha256   %hs\nexpected %hs\n\n"
             L"Every address bof3x patches is specific to that one file; refusing to start. "
             L"If this is an uncatalogued release, see fixtures.toml.",
-            exe.c_str(), sha.c_str(), kExpectedSha256);
+            exe.c_str(), sha.c_str(), bof3x::kExpectedSha256);
 
     // The default key table, from the exe itself rather than a copy of it
     // (docs/exe-table-audit.md): before the settings, whose defaults use it.
@@ -284,10 +288,33 @@ int wmain(int argc, wchar_t** argv) {
             L"own input. Check that the game directory is writable.", cfg_error.c_str());
     bof3x::ConfigApplyEnvironment(game_dir, cfg);
 
-    std::wstring cmdline = L"\"" + exe + L"\"" + game_args;
     STARTUPINFOW si{};
     si.cb = sizeof si;
     PROCESS_INFORMATION pi{};
+    if (!hosted) {
+        // Our own executable: the game directory as its current directory, as
+        // BOF3.exe's (it opens DAT\, BGM\, SND\ and BOF3.exe itself by
+        // relative path); nothing else to do from here - it maps the player's
+        // data, binds its imports and starts the game on its own main thread.
+        std::wstring line = L"\"" + ours + L"\"" + game_args;
+        if (!CreateProcessW(ours.c_str(), line.data(), nullptr, nullptr, FALSE, 0, nullptr, game_dir.c_str(), &si, &pi))
+            Die(L"CreateProcess failed for %ls (%lu)", ours.c_str(), GetLastError());
+        if (SelfTestOnly()) {   // as the hosted path: the pid, then the game process's exit code
+            std::fwprintf(stderr, L"bof3x-launcher: self-test only, game pid %lu (bof3x.exe)\n", pi.dwProcessId);
+            std::fflush(stderr);
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            DWORD code = 1;
+            GetExitCodeProcess(pi.hProcess, &code);
+            std::fwprintf(stderr, L"bof3x-launcher: self-test only, game process exit code %lu\n", code);
+            ExitProcess(code);
+        }
+        std::wprintf(L"bof3x-launcher: started %ls (pid %lu)\n", ours.c_str(), pi.dwProcessId);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        return 0;
+    }
+
+    std::wstring cmdline = L"\"" + exe + L"\"" + game_args;
     // Current directory = the game directory: BOF3.exe opens DAT\, BGM\ and SND\
     // by relative path.
     if (!CreateProcessW(exe.c_str(), cmdline.data(), nullptr, nullptr, FALSE, CREATE_SUSPENDED,

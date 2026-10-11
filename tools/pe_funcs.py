@@ -13,22 +13,7 @@ never committed (CLAUDE.md rule 1).
 import argparse, json, struct, sys, collections
 import capstone
 
-def parse_pe(data):
-    pe = struct.unpack_from('<I', data, 0x3C)[0]
-    assert data[pe:pe+4] == b'PE\0\0', 'not a PE'
-    nsec, = struct.unpack_from('<H', data, pe + 6)
-    optsz, = struct.unpack_from('<H', data, pe + 20)
-    opt = pe + 24
-    entry, = struct.unpack_from('<I', data, opt + 16)
-    base, = struct.unpack_from('<I', data, opt + 28)
-    secs = []
-    off = opt + optsz
-    for i in range(nsec):
-        s = off + i * 40
-        name = data[s:s+8].rstrip(b'\0').decode('latin1')
-        vsz, va, rsz, raw = struct.unpack_from('<IIII', data, s + 8)
-        secs.append(dict(name=name, va=base + va, vsz=vsz, raw=raw, rsz=rsz))
-    return base, base + entry, secs
+from pe_read import parse_pe   # the project's PE parser, capstone-free
 
 # Instructions whose immediate is a code address, not a value.
 BRANCHY = {'call', 'jmp'} | {'j' + c for c in

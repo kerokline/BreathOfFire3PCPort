@@ -19,7 +19,8 @@
 namespace bof3 {
 
 // Refuses to continue unless the main module is the exact BOF3.exe that
-// symbols.toml describes. Call once, before any Inject.
+// symbols.toml describes. Call once, before any Inject - in the hosted build
+// (host.h); the exe host checks its own layout instead (exe_host.cpp).
 void VerifyImage();
 
 // enabled:  original -> ours. Every caller in the game reaches our function.
@@ -49,7 +50,9 @@ void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
 // Replaces `count` bytes of original code or data in place: for a divergence
 // that is an operand - a constant the original pushes - and nothing else.
 // Refuses unless the bytes there are `expected`. BOF3X_ORIGINAL=<name> leaves
-// them alone.
+// them alone. In the exe host an operand inside Capcom's code range is
+// patched in the code-byte store (code_bytes.h), as is a RetargetCall's
+// site; our readers of either use CodeBytes.
 void PatchBytes(const char* name, std::uint32_t at, const std::uint8_t* expected,
                 const std::uint8_t* replacement, std::uint32_t count);
 
@@ -96,6 +99,11 @@ bool IsOwned(std::uint32_t original);
 // false for one BOF3X_ORIGINAL left as Capcom's code. For the call trace's
 // BOF3X_CALLTRACE_REACH, which arms those.
 bool IsEnabled(std::uint32_t original);
+
+// Every address passed to Inject, in order: [0, OwnedCount()). For the exe
+// host's check that .stub holds nothing but the jmps (exe_host.cpp).
+int OwnedCount();
+std::uint32_t OwnedAddress(int i);
 
 // Summary line for the log once every module has registered.
 void InjectReport();

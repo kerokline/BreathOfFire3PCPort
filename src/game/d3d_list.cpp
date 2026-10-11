@@ -11,6 +11,7 @@
 #include "game/d3d_list_callees.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace d3d_list {
 
@@ -98,7 +99,7 @@ void MoveImage(U p) {
 void Dispatch(U p, bool software) {
     const U index = (At(p + 7)[0] & 0xFCu) - 0x20u;
     if (index > (software ? 0xD0u : 0xD4u)) return;
-    const U entry = At((software ? kSoftBytes : kD3dBytes) + index)[0];
+    const U entry = (software ? bof3::CodeBytes(kSoftBytes, 0xD1) : bof3::CodeBytes(kD3dBytes, 0xD5))[index];
     if (entry < kHandlers) {
         (software ? g.soft : g.d3d)[entry](At(p));
         return;

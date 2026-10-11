@@ -99,6 +99,7 @@
 
 #include "game/text_advance.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -284,7 +285,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         // (the owner's gameover recipe, 2026-09-30: the second load aborted
         // here), so that address is the slot's too.
         std::uint32_t named;
-        std::memcpy(&named, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(slot.named_at)), sizeof named);
+        std::memcpy(&named, bof3::CodeBytes(slot.named_at, sizeof named), sizeof named);   // a push operand, or a table in .data
         const auto ours = t->buffers ? static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i])) : slot.va;
         const std::uint32_t expect = slot.expect ? slot.expect : slot.va;
         if (named != expect && named != ours)

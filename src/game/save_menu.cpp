@@ -34,6 +34,7 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace save_menu {
 
@@ -573,7 +574,7 @@ extern "C" void __cdecl TitleMenu_DrawRows(unsigned glow) {
 // still take effect with the code ours.
 extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
     const U r = row & 0xFF;
-    const U width = Byte(at::kRowWidths[r < 3 ? r : 0]);
+    const U width = bof3::CodeByte(at::kRowWidths[r < 3 ? r : 0]);
     // A row past 2 reads the stack beyond the three bytes in the original:
     // nothing calls it so, and ours refuses rather than invent a width.
     if (r >= 3) bof3::Fatal("TitleMenu_DrawRow: row %u, the original reads past its width table", (unsigned)r);

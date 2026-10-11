@@ -37,6 +37,7 @@
 #include <cstring>
 
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -48,7 +49,7 @@ constexpr std::uint32_t kWhelpSlot = 0x669CE0;
 constexpr std::uint32_t kWhelpSlotRoom = 8;
 
 bool CodeReads(std::uint32_t at, const std::uint8_t* bytes, std::size_t n) {
-    return std::memcmp(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(at)), bytes, n) == 0;
+    return std::memcmp(bof3::CodeBytes(at, static_cast<std::uint32_t>(n)), bytes, n) == 0;
 }
 
 }  // namespace

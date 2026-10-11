@@ -120,6 +120,16 @@ half a second:
 
     BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config
 
+**Two hosts since state 3** ([`state3-build.md`](state3-build.md)): the
+launcher starts our own `bof3x.exe` by default and the hosted `BOF3.exe`
+with `--host bof3` - or without `--host` when `BOF3X_SHADOW`,
+`BOF3X_ORIGINAL`, `BOF3X_CALLTRACE` or `BOF3X_MP3=original` is set, since
+`bof3x.exe` maps no code of Capcom's and refuses each; so the command above
+still runs the hosted fuzz. The exe host's own self-test is the same command
+without `BOF3X_SHADOW` (or with `--host exe`): the layout, the data copy,
+the fourteen slot bindings, the x87 word, every inject and the check that
+`.stub` holds nothing but the jmps. The build is green when both pass.
+
 `BOF3X_EXEIMAGE=<cache>` (2026-10-10, [`exe-import-engine.md`](exe-import-engine.md) section 4.3)
 runs before `InjectAll`: the cache's `base/exe/data.bin` is checked against
 the running `.data` byte for byte, laid over it when the image came from the

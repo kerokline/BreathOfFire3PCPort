@@ -46,6 +46,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -615,7 +616,7 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
         std::memcpy(Buf(), summary, 4);
         Buf()[4] = summary[4];
         std::memcpy(Buf() + 5, summary + 0x16, 4);
-        const unsigned char inset = At(at::kNameInsetSite)[0];
+        const unsigned char inset = bof3::CodeByte(at::kNameInsetSite);
         if (inset != 0x13 && inset != 0x15)
             bof3::Fatal("Menu_DrawSaveSlot: the name's inset byte at 0x%X is 0x%02X, neither Capcom's 0x13 nor DIV-0029's 0x15",
                         (unsigned)at::kNameInsetSite, (unsigned)inset);

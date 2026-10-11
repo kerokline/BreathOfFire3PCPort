@@ -40,6 +40,7 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -107,9 +108,9 @@ void Slide(unsigned off, int step, short bound, Past past) {
     Rec()[3] = 0;
 }
 // A bound DIV-0041 widens: the imm32 of `mov ecx, imm32` (its low word is cx).
-short Imm32Bound(U operand) { return static_cast<short>(Long(At(operand))); }
+short Imm32Bound(U operand) { return static_cast<short>(bof3::CodeLong(operand)); }
 // The imm16 of `cmp cx, imm16`.
-short Imm16Bound(U operand) { return static_cast<short>(Word(At(operand))); }
+short Imm16Bound(U operand) { return static_cast<short>(bof3::CodeWord(operand)); }
 
 }  // namespace
 
@@ -567,9 +568,9 @@ extern "C" void __cdecl MenuList_SlideLeftTo150(void) { Slide(4, -0x20, 0x96, Pa
 namespace {
 void CheckBound(U operand, unsigned size, int original) {
     const int wide = original < 0 ? original - static_cast<int>(Widescreen_Live()) : original + static_cast<int>(Widescreen_Live());
-    const bool op = size == 4 ? At(operand - 1)[0] == 0xB9
-                              : At(operand - 3)[0] == 0x66 && At(operand - 2)[0] == 0x81 && At(operand - 1)[0] == 0xF9;
-    const int bound = size == 4 ? static_cast<int>(Long(At(operand))) : static_cast<int>(static_cast<short>(Word(At(operand))));
+    const std::uint8_t* const insn = bof3::CodeBytes(operand - 3, 3 + size);
+    const bool op = size == 4 ? insn[2] == 0xB9 : insn[0] == 0x66 && insn[1] == 0x81 && insn[2] == 0xF9;
+    const int bound = size == 4 ? static_cast<int>(bof3::CodeLong(operand)) : static_cast<int>(static_cast<short>(bof3::CodeWord(operand)));
     if (!op || (bound != original && bound != wide))
         bof3::Fatal("rest_2g: the operand at 0x%X should be the bound %d (or %d, DIV-0041), holds %d", operand, original, wide,
                     bound);
