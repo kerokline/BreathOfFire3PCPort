@@ -97,6 +97,15 @@ public:
     // left/right 16-bit samples.
     void Render(std::int16_t* stereo, int frames);
 
+    // Not hardware: Render's voice state advanced `frames` samples without
+    // its sound - keys, envelopes, volume sweeps, pitch counters, block walks
+    // and ENDX exactly as Render leaves them; no interpolation, mix, capture
+    // or reverb. Aborts with pitch modulation on. For the music's resume
+    // (docs/music-seq-engine.md section 8).
+    void Skip(int frames);
+    // Not hardware: the reverb work area and its resampler histories zeroed.
+    void ClearReverb();
+
     // Not hardware: voices outside the mask still run but are left out of the
     // mix (dry and reverb input) - for a host tool's per-voice stems. Reset
     // sets all ones.
@@ -141,6 +150,7 @@ private:
     };
 
     void CheckVoice(int v) const;
+    void LatchKeys();
     void KeyOnVoice(Voice& voice);
     void LoadBlock(Voice& voice);
     void FinishBlock(Voice& voice, int v);

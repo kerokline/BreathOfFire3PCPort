@@ -50,12 +50,14 @@ constexpr unsigned kHalf = 0x12000;
 constexpr unsigned kQueryInterface = 0x00, kRelease = 0x08;
 constexpr unsigned kCreateSoundBuffer = 0x0C;          // IDirectSound
 constexpr unsigned kSetNotificationPositions = 0x0C;   // IDirectSoundNotify
+constexpr unsigned kGetCurrentPosition = 0x10;  // IDirectSoundBuffer (the music's resume, not the originals')
 constexpr unsigned kGetStatus = 0x24, kLock = 0x2C, kPlay = 0x30, kSetCurrentPosition = 0x34, kSetVolume = 0x3C,
                    kSetFrequency = 0x44, kStop = 0x48, kUnlock = 0x4C, kRestore = 0x50;   // IDirectSoundBuffer
 constexpr long kBufferLost = static_cast<long>(0x88780096u);   // DSERR_BUFFERLOST
 
 using ComCall = long (__stdcall*)(void*);
 using ComStatus = long (__stdcall*)(void*, unsigned long*);
+using ComPosition = long (__stdcall*)(void*, unsigned long*, unsigned long*);
 using ComValue = long (__stdcall*)(void*, unsigned long);
 using ComPlay = long (__stdcall*)(void*, unsigned long, unsigned long, unsigned long);
 using ComLock = long (__stdcall*)(void*, unsigned long, unsigned long, void**, unsigned long*, void**, unsigned long*,

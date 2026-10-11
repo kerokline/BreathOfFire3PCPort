@@ -407,6 +407,14 @@ std::uint32_t WalkFrames(const std::uint8_t* b, std::size_t n) {
     return frames;
 }
 
+}  // namespace
+
+std::uint32_t CountFrames(const void* file, std::uint32_t size) {
+    return WalkFrames(static_cast<const std::uint8_t*>(file), size);
+}
+
+namespace {
+
 // BOF3X_MP3_DUMP=<dir> with BOF3X_MP3_DUMP_FILES=<name,name,...>: the two
 // decoders' PCM of the named files written there, raw 16-bit stereo, for a
 // third decoder's verdict (docs/mp3-decoder.md 2).

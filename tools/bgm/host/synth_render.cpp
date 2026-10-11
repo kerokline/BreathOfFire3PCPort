@@ -3,6 +3,7 @@
 //   synth_render --cache <dir> --song N --out file.wav [--seconds S]
 //                [--volume V] [--frames F] [--loops L] [--pre S] [--trace]
 //                [--ticks FILE] [--envx] [--phase P] [--offsets FILE] [--solo V]
+//                [--skip S]
 //
 // <dir> is the cache root holding base/bgm/NNN.DAT and base/bgm/bank/NAME.DAT.
 // --volume / --frames are Music_Play's crescendo (the title: 100 over 8);
@@ -16,9 +17,13 @@
 // where the first VSync falls in the first sample, in 1/256 sample;
 // --offsets reads "tick delay" lines (delay in 1/256 sample) and delays those
 // VSyncs (an experiment on the interrupt latency, libsnd-reading.md 9);
-// --solo mixes only voice V (0..23), the others running unheard (a stem). The WAV is 44,100 Hz
+// --solo mixes only voice V (0..23), the others running unheard (a stem).
+// --skip fast-forwards S seconds after Play without mixing (MusicSynth::
+// FastForward, the music's resume - docs/music-seq-engine.md section 8) and
+// prints how long that took; the WAV is what follows. The WAV is 44,100 Hz
 // 16-bit stereo. Game data stays where the cache is; the WAV is derived from it
 // and belongs in scratch, never the repo.
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -79,7 +84,7 @@ int TickOffset(std::uint64_t tick, void*) {
 void Usage() {
     std::fprintf(stderr,
                  "usage: synth_render --cache DIR --song N --out FILE.wav [--seconds S] [--volume V] [--frames F]\n"
-                 "                    [--loops L] [--pre S] [--trace] [--ticks FILE] [--phase P] [--offsets FILE]\n"
+                 "                    [--loops L] [--pre S] [--skip S] [--trace] [--ticks FILE] [--phase P] [--offsets FILE]\n"
                  "                    [--solo V]\n");
     std::exit(2);
 }
@@ -89,7 +94,7 @@ void Usage() {
 int main(int argc, char** argv) {
     std::string cache, out, ticks, offsets;
     int song_no = -1, volume = 100, frames = 8, loops = 1, phase = 0, solo = -1;
-    double seconds = 60.0, pre = 0.0;
+    double seconds = 60.0, pre = 0.0, skip = 0.0;
     bool trace = false;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -105,6 +110,7 @@ int main(int argc, char** argv) {
         else if (a == "--frames") frames = std::atoi(next());
         else if (a == "--loops") loops = std::atoi(next());
         else if (a == "--pre") pre = std::atof(next());
+        else if (a == "--skip") skip = std::atof(next());
         else if (a == "--trace") trace = true;
         else if (a == "--ticks") ticks = next();
         else if (a == "--phase") phase = std::atoi(next());
@@ -164,6 +170,12 @@ int main(int argc, char** argv) {
         done = n;
     }
     synth.Play(song, volume, frames, loops);
+    if (skip > 0) {
+        const auto t0 = std::chrono::steady_clock::now();
+        const bool on = synth.FastForward(static_cast<std::uint64_t>(skip * rate));
+        const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+        std::fprintf(stderr, "skip %.3f s: %.1f ms (%s)\n", skip, ms, on ? "playing" : "the song ended on the way");
+    }
     int jumps = 0;
     const long chunk = 4096;
     while (done < total) {
