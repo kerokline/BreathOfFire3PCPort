@@ -163,7 +163,7 @@ std::uint32_t FindFree(const std::uint32_t*, std::uint32_t answer) {
 }
 
 const ah::Callee kCallees[] = {
-    {"MoveCmd_Move", kMove, kMove, 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
+    {"MoveCmd_Move", kMove, KeyOf(&::MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     {"Effect_FindFree", bof3::addr::Effect_FindFree, KeyOf(&::Effect_FindFree), 0, {}, ah::Answer::kByte, 0, 0x13, {}, &FindFree},
     {"Kind2_Place", bof3::addr::Kind2_Place, KeyOf(&::Kind2_Place), 1, {kU8}, ah::Answer::kGarbage, 0, 0},
     {"ScriptFlags_Set40", bof3::addr::ScriptFlags_Set40, KeyOf(&::ScriptFlags_Set40), 0, {}, ah::Answer::kGarbage, 0, 0},

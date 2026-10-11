@@ -251,7 +251,7 @@ const ah::Callee kCallees[] = {
     {W3E_OURS(Flags_Toggle), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0},
     {W3E_OURS(Flags_Test), 2, {kAll, kU8}, ah::Answer::kBool, 0, 0, {}, &FlagsTestEffect},
     {W3E_OURS(MoveCmd_TestFB), 2, {kU16, kU16}, ah::Answer::kFlag, 0, 0},
-    {W3E_THEIRS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
+    {W3E_OURS(MoveCmd_Move), 2, {kAll, kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},
     {W3E_OURS(MoveCmd_MoveKind2), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     {W3E_OURS(Sprite_FaceDirection), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesCurrent},
     {W3E_OURS(Sprite_SetAnimation), 1, {kU8}, ah::Answer::kGarbage, 0, 0, {}, &MovesScriptObject},

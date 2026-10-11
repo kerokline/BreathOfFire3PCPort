@@ -1,4 +1,4 @@
-// BOF3X_SHADOW=move_cmds: a differential fuzz of the fifteen movement commands
+// BOF3X_SHADOW=move_cmds: a differential fuzz of the sixteen movement commands
 // against byte-copies of Capcom's, once at start-up (docs/move-cmds.md section
 // 3). Every call out of a copy is re-aimed at a recording stand-in - the calls
 // between the fifteen included, so each function is tested alone - and
@@ -125,8 +125,31 @@ unsigned char __cdecl StubPartyJoin(unsigned member) {
     return static_cast<unsigned char>(h >> 24);
 }
 
+// AreaMap_Slope: its answer (high half 0, sign-extended or anything) and
+// DamageScratch's byte - 0, 1 or any other non-zero byte - as the caller reads
+// them; it records the direction's low byte, all the real one reads (the
+// original pushes the whole dword). It also rewrites the frame count +9 (never
+// to 0) and the height +0x3E a third of the time each, so that a caller
+// reading them before the call, not after as the original does, shows.
+long __cdecl StubSlope(long x, long z, unsigned long direction) {
+    Record(12, static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(z), direction & 0xFF);
+    const std::uint32_t h = Hash();
+    switch ((h >> 4) % 3) {
+    case 0: Scratch()[0] = 0; break;
+    case 1: Scratch()[0] = 1; break;
+    default: Scratch()[0] = static_cast<unsigned char>(1 + (h >> 24) % 255); break;
+    }
+    if ((h >> 6) % 3 == 0) Sprite_Current[9] = static_cast<unsigned char>(1 + (h >> 12) % 255);
+    if ((h >> 8) % 3 == 0) SetWord(Sprite_Current + 0x3E, h >> 16);
+    switch (h % 3) {
+    case 0: return static_cast<long>((h >> 9) & 0xFFFF);
+    case 1: return static_cast<short>(h >> 9);
+    default: return static_cast<long>(h * 0x2545F491u);
+    }
+}
+
 const Callees kStubs = {StubElevation, StubRatan2, StubContextReset, StubSetElevation, StubAttachOffset, StubKind,
-                        StubDetach, StubAttachMove, StubHandlePosition, StubPartySetLoad, StubPartyJoin};
+                        StubDetach, StubAttachMove, StubHandlePosition, StubPartySetLoad, StubPartyJoin, StubSlope};
 
 const void* StubFor(std::uint32_t target) {
     const auto f = [](auto p) { return reinterpret_cast<const void*>(p); };
@@ -142,6 +165,7 @@ const void* StubFor(std::uint32_t target) {
     case 0x578DC0: return f(&StubHandlePosition);
     case 0x5367E0: return f(&StubPartySetLoad);
     case 0x533EF0: return f(&StubPartyJoin);
+    case 0x5722D0: return f(&StubSlope);
     case 0x5B9550: return nullptr;   // the CRT's _ftol: the copy keeps it
     default: bof3::Fatal("move_cmds: no stand-in for a call to 0x%X", (unsigned)target); return nullptr;
     }
@@ -162,10 +186,12 @@ constexpr Call kDetachCalls[] = {{0x9, 0x57C840}};
 constexpr Call kAttachMoveCalls[] = {{0x28, 0x578DC0}};
 constexpr Call kPartyResetCalls[] = {{0xC, 0x5367E0}, {0x4D, 0x533EF0}};
 constexpr Call kRatan2Calls[] = {{0x16, 0x5B9550}};
+// MoveCmd_Move, capstone 2026-10-10: 0x578CBE AreaMap_Slope, 0x578CD2 AreaMap_Elevation.
+constexpr Call kMoveCalls[] = {{0xAE, 0x5722D0}, {0xC2, 0x5720C0}};
 
 enum Fn : unsigned {
     kMoveMember, kPoseWait, kMoveKind2, kPlace, kOpF7, kHandle, kAttach, kDetach, kAttachMove, kFindLabel, kVariable,
-    kObjectKind, kPeek, kPartyReset, kRatan2, kCount
+    kObjectKind, kPeek, kPartyReset, kMove, kRatan2, kCount
 };
 constexpr unsigned kFuzzed = kRatan2;   // the round-robin ones; Math_Ratan2 has its own loop
 const Clone kClones[kCount] = {
@@ -183,6 +209,7 @@ const Clone kClones[kCount] = {
     {"MoveScript_ObjectKind", 0x57C840, 0x52, nullptr, 0},
     {"Sprite_ScriptPeek", 0x57CDC0, 0x4E, nullptr, 0},
     {"Scena16_PartyReset", 0x519890, 0x57, kPartyResetCalls, 2},
+    {"MoveCmd_Move", 0x578C10, 0xF5, kMoveCalls, 2},
     {"Math_Ratan2", 0x5A7A70, 0x1B, kRatan2Calls, 1},
 };
 // MoveScript_Variable's `jmp [eax*4 + 0x57C3A4]` at +0xE (its operand at
@@ -206,6 +233,7 @@ const void* Ours(unsigned k) {
     case kObjectKind: return f(&MoveScript_ObjectKind);
     case kPeek: return f(&Sprite_ScriptPeek);
     case kPartyReset: return f(&Scena16_PartyReset);
+    case kMove: return f(&MoveCmd_Move);
     default: return f(&Math_Ratan2);
     }
 }
@@ -227,9 +255,10 @@ const Region kRegions[] = {
     {kCounters, 4},
     {kNameIndex, 1},
     {kStoryFlags, 4},
+    {bof3::addr::DamageScratch, 4},             // AreaMap_Slope's answer byte
 };
 constexpr unsigned kRegionBytes = Sprite_Kind2_count + Sprite_Objects_count + Sprite_ObjectsExtra_count +
-                                  MoveScript_PartyRecords_count + 2 + 4 + 8 + 4 + 7 + 1 + 0x12 + 4 + 1 + 4;
+                                  MoveScript_PartyRecords_count + 2 + 4 + 8 + 4 + 7 + 1 + 0x12 + 4 + 1 + 4 + 4;
 
 struct State {
     unsigned char memory[kRegionBytes];
@@ -354,7 +383,7 @@ struct Args { std::uint32_t a[5]; };
 std::uint32_t Run(const void* fn, unsigned k, const Args& x) {
     void* const p = const_cast<void*>(fn);
     switch (k) {
-    case kMoveMember: reinterpret_cast<Fn2>(p)(x.a[0], x.a[1]); return 0;
+    case kMoveMember: case kMove: reinterpret_cast<Fn2>(p)(x.a[0], x.a[1]); return 0;
     case kPoseWait: reinterpret_cast<Fn1>(p)(x.a[0]); return 0;
     case kMoveKind2: case kPlace: case kAttachMove: reinterpret_cast<Fn1>(p)(x.a[0]); return 0;
     case kOpF7: reinterpret_cast<Fn4>(p)(x.a[0], x.a[1], x.a[2], x.a[3]); return 0;
@@ -488,6 +517,30 @@ Args Generate(unsigned k, State& input) {
     }
     case kPartyReset:
         break;
+    case kMove: {
+        // The object: g_context, its +0 bit 7 (no ground) half the time; its
+        // speed index mostly 1..5, else any byte whose table byte divides -
+        // a non-zero speed, and with the ground asked one that leaves the
+        // frame count non-zero (0x10 / speed; 0x20 on the diagonals). Speed
+        // 0 faults on both sides (and ours aborts); not generated.
+        const unsigned char direction = Pick({0, 1, 2, 3, 4, 5, 6, 7, 2, 6, 8, 9, 0x82, 0xFF});
+        g_context[0] = static_cast<unsigned char>(Next() % 2 ? g_context[0] | 0x80 : g_context[0] & 0x7F);
+        const unsigned base = (direction == 2 || direction == 6) ? 0x20 : 0x10;
+        unsigned char index;
+        if (Next() % 4) {
+            index = static_cast<unsigned char>(1 + Next() % 5);
+        } else {
+            for (;;) {
+                index = static_cast<unsigned char>(Next());
+                const unsigned char speed = Field_MoveSpeeds[index];
+                if (speed != 0 && ((g_context[0] & 0x80) || base / speed != 0)) break;
+            }
+        }
+        g_context[4] = index;
+        x.a[0] = Address(g_context);
+        x.a[1] = Stale(direction);
+        break;
+    }
     }
     return x;
 }
@@ -559,7 +612,7 @@ void SelfTest() {
     }
     Relocate(clones[kVariable], kClones[kVariable].base, kClones[kVariable].size, kVariableTable);
 
-    constexpr unsigned kRounds = 28000, kRatanRounds = 20000;
+    constexpr unsigned kRounds = 30000, kRatanRounds = 20000;
     unsigned region_bytes = 0;
     for (const Region& r : kRegions) region_bytes += r.size;
     if (region_bytes != kRegionBytes) bof3::Fatal("move_cmds: regions are %u bytes, the state holds %u", region_bytes, kRegionBytes);
@@ -593,7 +646,7 @@ void SelfTest() {
     g = kOriginals;
     Apply(saved);
     const unsigned ratan_bad = FuzzRatan2(clones[kRatan2], kRatanRounds);
-    bof3::Log("shadow      move_cmds self-test: %u rounds (%u per function, 14 functions), %u calls to the stand-ins, %u MISMATCHES; "
+    bof3::Log("shadow      move_cmds self-test: %u rounds (%u per function, 15 functions), %u calls to the stand-ins, %u MISMATCHES; "
               "Math_Ratan2 %u rounds under three control words, %u MISMATCHES",
               kRounds, per[0], calls, bad, kRatanRounds, ratan_bad);
     for (unsigned k = 0; k < kFuzzed; ++k)

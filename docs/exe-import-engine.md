@@ -331,6 +331,14 @@ scripts over `exe-pointers.tsv`, `symbols.toml` and `BOF3.exe`):
   decoder (8), the C runtime (6), `Gfx_PackRgb`, `MoveCmd_Move`,
   `Fmv_EnterFullscreen` - state 2's work. **The smallest gap between two
   starts is 11 bytes**, so a five-byte jump fits at every start.
+- **2026-10-10: 12 without `impl`.** `MoveCmd_Move` `0x578C10` is ours
+  (`move_cmds.cpp`, [`move-cmds.md`](move-cmds.md) section 8), as are four of
+  the six C runtime entries since the count above; the twelve left are the
+  MP3 decoder (8, DIV-0091), `Crt_ftol`, `Crt_GetPtd`, `Fmv_EnterFullscreen`
+  and `Gfx_PackRgb`. `tools/owned_sweep.py` lists which of them our code
+  still names or calls: the decoder's eight (`sound.cpp`'s table, reached only
+  under `BOF3X_MP3=original`), `Crt_ftol` (fuzz clones' callee rows) and
+  `Crt_GetPtd` (`crt_rest.cpp`'s `Rand` seed instrument).
 
 ### 4.2 Two ways, and the choice
 
