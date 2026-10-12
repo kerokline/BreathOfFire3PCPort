@@ -100,6 +100,34 @@ and the exe host's self-test after each; the full validations in section 4.
 
 ## 4. The validations, batched
 
+### 4.1 The gate's first pair, read (2026-10-12)
+
+IN's attract pair (the scratch disc-only install against the real install with
+`analysis/cache/pc-plus-us`, both `en-US`, `BOF3X_OPT=none`, the gate skip
+list) differs on 94 pages from tick 1. A read-only agent placed every
+differing cache chunk where `LoadDatFile` puts it (images as 32x32 tiles into
+the VRAM shadow, kind 0 at `0x803580`+tag) without running the game; each
+placement gave exactly the observed page set (`gate-reading.md` in the
+session scratchpad). Two disc-only runs are identical but at tick 0 (the
+missing `BOF3.CFG`), so every difference is systematic.
+
+| Pages | Ticks | Cause |
+|---|---|---|
+| VRAM rows 16-22 and 60-71 (9 pages) | 1 to end | `FIRST`'s kanji sheet is the disc's stand-in in the en-US layer - DIV-0097 |
+| 28 VRAM pages | 2-1311, 5719-7028 | `DEMO` slot 2, the language page from the US disc - DIV-0089's stand-ins |
+| `0x813000`, `0x83A000..0x85F000` | from 1310 | `PL27A`, the disc's own arena - DIV-0096 |
+| `0x8C3000` / `0x8C4000`, `0x8D3000..0x8D9000` | from 1310 | `AREA004`'s walls and the 920-byte re-texture - DIV-0080's "Western disc alone" case (the PC reference ran without `area4-walls`; with it only `0x8D5000..0x8D9000` would remain) |
+| `0x802000`, `0x92B000`; windows on `0x801000`, `0x905000`, `0x938000` | from 1310; 1313-1613, 7030-7330 | arena pointers and, probably, a draw-count change from the edited scripts - DIV-0096 (by mechanism, not to the byte) |
+| `0x904000` | from 1310 | **unexplained**: starts on the `PL27A` load tick; wants dumps around ticks 1305 and 1320 on both sides and `statehash.py bytes` |
+| `0x7DE000`, `0x937000` | tick 3 | noise (two reference runs of the same code differ there) |
+| **`0x903000`** | **1 to end** | **a defect:** `Boot_Task` (`0x496B60`) copies `0x656AEC..0x656B00` (18 bytes) into the field button map (`Field_MenuButton`, `Field_ConfirmButtons`, `Field_CancelButtons`); the range is a `game-value` gap (`GameMode11_Steps+0xC`), zero in a disc-built image, so a New Game on a disc-only install likely starts with every action unbound (only `Boot_Task`, `LoadMenu_Apply` and the Config screen write the words). **Held as a rule of the engine like the key table - the BD group, `disc-only/button-defaults`, launched 2026-10-12 afternoon.** |
+
+Not exercised by this gate: `START` is not loaded in the attract, so DIV-0096's
+`START` arena and DIV-0097's `START` atlas stand-in wait for a route that
+boots through it.
+
+### 4.2 The batch
+
 (filled at the end: the hosted `'*'` narrow and wide, the exe host's
 self-test, the gate's state-hash pair, the attract and the routes against the
 existing pairs)
