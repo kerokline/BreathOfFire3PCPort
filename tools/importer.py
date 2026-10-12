@@ -1565,7 +1565,7 @@ def cmd_install(a):
     import shutil
     for tag in a.lang:
         language_tags.refuse_retired(tag, "--lang")
-    if a.base:
+    if getattr(a, "base", False):          # cache_walk.py check calls this with the layer arguments only
         install_base(a.cache, a.game)
     dat_dir = os.path.join(a.game, "DAT")
     if not os.path.isfile(os.path.join(dat_dir, "FIRST.DAT")):
