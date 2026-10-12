@@ -227,7 +227,7 @@ builds, `over_psx = "switch"`. What changed to carry them:
 | C2, against the original with real callees | `rest_3g` `CheckPspMyriaItem`: a copy of `0x494570` whose three calls go to the real `0x494920` / `0x4946C0` / `0x494F00`, against ours off and on; 4,000 random states (objects, enemy records, the area's enemy data, the battle globals, the area 198 or not, the event 0x37 or not) | 2,010 placed an actor, 658 of them in area 198 under 0x37; off byte for byte; on, the original's state plus the word: **0 mismatches** |
 | The controls | one build with three planted faults: C1 tested on the pre-hook event byte; C1 with bit 2 masked off in the round start; C2 stored before the data copy. `BOF3X_SHADOW` set to each module (rest_3g with `BOF3X_R3G_ONLY=Battle_PlaceBossActor`) | **3 of 3 refused**: 185, 355 and 658 mismatches, each a Fatal |
 | The switch | headless, `BOF3X_SHADOW=psp_code`, six cases | the PSP-JP cache (`psp_im/c/new_pspjp`, `base_policy "psp"`): both on, "the default". The US cache (`new_us`, `"psx"`): both off. `BOF3X_PSP=duel-loss`: duel-loss only. `=duel-loss,bogus`: Fatal naming "bogus", exit 3. The PSP cache with `=none`: both off. `=myria-item,duel-loss`: both on |
-| The hosted `'*'` narrow | `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, launcher, `bof3x.exe` and DLL in an ini-less scratch folder, `--game` the PC install, `--no-config` | see the note below |
+| The hosted `'*'` narrow | `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, launcher, `bof3x.exe` and DLL in an ini-less scratch folder, `--game` the PC install, `--no-config` | game process exit 0, `inject: 10087 ours`, `self-test only: done`; every shadow's summary 0 mismatches (no line reports a non-zero count), the four DIV F lines as above |
 | The exe host, PSX disc-only | a copy of PN's `g_us` (`install --base` from the coordinator's `ref_us`), `BOF3X_CACHE` = `BOF3X_EXEIMAGE` = `ref_us`, `BOF3X_LANG=en-US` | exit 0, `inject: 10088 ours`, "duel-loss off, myria-item off (the default: the cache's manifest has no base_policy)" |
 | The exe host, PSP-only | a copy of PN's `g_psp`, with IM's PSP-EU cache `new_pspeu` (`base_policy "psp"`), `en-150` | exit 0, `inject: 10088 ours`, "duel-loss on, myria-item on (the default: the cache's base_policy is psp)" |
 | The launcher host suite | `cmake -S tools/launcher_host ...`, `config_tests.exe` | **137 checks, 0 failures**, `TestCodeMembers` included (PSP-only, PSX-only, PC + PSX + PSP, no cache; `SuitesPspEdit` untouched, either side, partial, a foreign name kept; the `psp=` round trip) |
@@ -271,8 +271,10 @@ was taken over or given up. `PspCode_Inject` is not a detour.
   `+3..+6`, so the data suite's two new lines are invisible to it but break
   nothing it checks. The layout (lines at y 212, a reason three lines high) is
   unseen.
-- **The `'*'` hosted run** is described under "For the other files" if it
-  had not finished when this page was written.
+- **The hosted run's 10087 against the exe host's 10088** was not compared
+  with the base tip's hosted count; this branch adds no detour.
+- **The switch cases** (section 4, "The switch") ran on the controls' build,
+  whose plants touched only the three battle functions, not `psp_code`.
 - The pad on the new member lines: they are static text, not tab stops.
 
 ## For the other files
