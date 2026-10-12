@@ -60,6 +60,33 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## To review in play
 
+**The disc-only round (2026-10-12, [`disc-only-round.md`](disc-only-round.md)) - a build from the US disc alone, nothing of the PC's:**
+
+- **A key press in `bof3x.exe`.** RD found the keyboard has been dead in the
+  exe host since state 3 (Capcom's DirectInput object table lay in `.text`,
+  `int3` there; the SDK's `c_dfDIKeyboard` replaces it). Start `bof3x.exe`
+  through the launcher and press any bound key on the title screen; the
+  pad was never affected.
+- **The disc-only install itself** ([`disc-only-install.md`](disc-only-install.md)):
+  `importer.py build --source "<US cue>" --lang en-US --out <cache>`,
+  `install --base` into an empty directory, the launcher with `cache=` and
+  no `BOF3.exe` there. Play the title, a field, a fight, a menu, a save.
+  Known gaps to look for (DIV-0100's doc, section 4: 3,358 bytes of Capcom's
+  game values no disc carries are zero): the wrong effect file on a spell or
+  item (`Magic_Rows`), the dragon-form sets, the equipment and experience
+  panels' numbers, the ending roll. What you see decides the first item under
+  "Decisions".
+- **DIV-0096, the eleven arenas as the disc's:** member 2's field sprites and
+  member 1's battle sprite may differ by a part in some animations; walk and
+  fight with member 2 in the party on the disc-only install.
+- **DIV-0097, the disc's own images:** the four area pages (`AREA104`, `127`,
+  `134`, `164`), the faerie village sheet, and the French and German sheets
+  under a FR-only or DE-only cache.
+- **DIV-0099, the Capcom logo from the disc:** with ffmpeg on the machine the
+  movie plays at start from the converted AVI - look (30 fps, doubled 320 x
+  240) and listen (44.1 kHz from the disc's XA); nobody has played it in the
+  game.
+
 0. **The game from the cache** (DIV-0089, 2026-10-10,
    [`cache-read.md`](cache-read.md) section 9). **At the machine:** with
    `BOF3X_CACHE=<a cache built with the PC's DAT>` (or the ini's `cache=`)
@@ -285,6 +312,34 @@ where the reading behind it is. Nothing here is a divergence until it is in
   of these and needs no separate reading.
 
 ## Decisions the measurements raised
+
+- **The Capcom game values no disc carries** (2026-10-12, NB and IN of the
+  disc-only round; [`exe-engine-own.md`](exe-engine-own.md),
+  [`disc-only-install.md`](disc-only-install.md) 4): JP 1,622 / US 2,135
+  bytes in 456 ranges - `Effect_HpDamageVariance+0xB8` (468), `Magic_Rows+0x4`
+  (300), `Equip_SlotIcons+0x50` (131), `EventBattle_Records+0xE0` (82) the
+  largest - exist in no shape on any disc. Rule 1 says they are not copied,
+  so a disc-built image maps them as zero (logged; `BOF3X_EXEIMAGE_STRICT=1`
+  refuses). The choices: accept the gaps as the disc-only build's (a ledger
+  entry naming what they break), derive each by a rule where one exists
+  (none read yet), or require the PC's exe for those tables (a cache built
+  with it carries them). Your call after the play above.
+- **The faerie village's label group writes names one record late** (LG,
+  2026-10-12; [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4; DIV-0064's
+  group 16): the PC record is name first at `0x653200`, `labels.cpp` writes
+  name r to `0x653214+20r`, so record 0 is never named and the "unnamed"
+  record 59 is the area-limit table. A `labels.cpp` + `loc_build.py` fix
+  changes the PC path's output: a ledger entry if you say fix it. (Whether
+  a player sees it: the village's member list - look there first.)
+- **The porting house's logo movie** (`LOGOS.AVI`, the second of `Fmv_Play`'s
+  two calls; no disc counterpart): you asked 2026-10-12 whether there is a
+  reason to keep it; none technical was found (it is the porting house's
+  branding, not Capcom's game; the sibling's fidelity invariant is not ours).
+  Drop it from our build by default with a ledger entry, or keep it on the
+  PC-install path?
+- **Six doubtful `.bss` words CP holds as pointers** (24 bytes,
+  `exe-import-engine.md` 7.2) and **DIV-0055's 94 plate bytes** with no
+  transform (the PSX source unmeasured): small, listed so they are not lost.
 
 - **34 French and 11 German messages the PC build leaves Chinese** (2026-10-10,
   [`loc-build-disc-only.md`](loc-build-disc-only.md), the disc-only build's
