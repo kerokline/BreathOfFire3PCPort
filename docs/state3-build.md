@@ -600,7 +600,22 @@ slices' copy. 11.3's rule stands under the exe host's header: commit
    or `Game_Clock` (DIV-0022) can reach; and the pair re-recorded, the
    morning's kept beside it as `_old`, so the route has a reference that
    matches the machine as it is. Not state 3's: the exe host and the hosted
-   build agree tick for tick.
+   build agree tick for tick. **Two more exclusions the same night:** the
+   track is the same (the owner's question - the pages that name the track
+   and the file position, `0x904000`, `0x665000`, `0x6BD000`, do not differ
+   under `en-US`; only the buffer page `0x7DE000`, always noise); and the
+   game logs of the pair and of tonight's run are **identical line for line**
+   (17,781 lines each, volatile numbers stripped), so nothing the engine
+   logs - loads, injects, patches, pad, music path, window - differs. By the
+   recipe, the fight ends and the walk begins about tick 6660 (`hold right`,
+   `up+right 71` ... after the last `circle`), so the difference at 6985 is
+   some 300 ticks into that walk, where the pages' `Field_EdgeBits`,
+   `CameraTurn_*`, `MapView_Origin` and `Camera_Angles` say a map edge or a
+   camera turn is reached - not the battle's end and not the music resume.
+   **For the re-recorded pair:** record it with `BOF3X_STATEHASH_DUMP=6984,6990,7100`
+   so the next shift, if one comes, can be read byte for byte against a
+   reference dump; tonight's dumps of ticks 6984 / 6990 / 7100 are in the
+   build's `away/`.
 
 ### 5.5 Not done yet
 
