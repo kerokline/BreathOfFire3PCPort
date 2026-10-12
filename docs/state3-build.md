@@ -353,8 +353,11 @@ at `0x672950`, which no start-up writes now. The state hash does not use it.
 
 ## 4. What section 11 leaves
 
-The routes and the stack watch above; then the owner plays it. Beyond the
-brief: the attract check re-run with the skip list's new entries;
+The routes, the stack watch, the cache as the `.data` source and the attract
+check with the skip list's new entries ran in the away batch (section 5).
+Owed from it: the four Chinese route pairs DIV-0092 made stale (5.4 item 1),
+finding 2's pointer words (the owner's call on the hash) and what 5.5 lists.
+Then the owner plays it. Beyond the brief:
 the fifteen software-renderer handlers `d3d_list.cpp` names without a
 `[[func]]` (int3 in the exe host); `attract_watch.py`'s rand count; the
 owner's icon - since generated, not supplied (below); `dpiAware` - declared,
@@ -369,3 +372,159 @@ screen or the field menu has uploaded the whelp's sheet and CLUT, the file's
 through `bof3x.exe.new`, which the launcher moves into place at its next
 start. The build's verification above still checks the placeholder's three
 resources; the rewritten file is checked by the engine itself.
+
+## 5. The away batch (2026-10-11)
+
+The owner was away. One game at a time, every run `--no-front`, from an
+ini-less copy of `build/` (`build/away/launch/`: launcher, DLL, exe), the
+player's game `--game C:/Users/kerok/Documents/GitHub/BreathOfFire3PCPort/bof3`,
+the outputs in `build/away/` (gitignored, not committed), the references the
+main checkout's `analysis/statehash/` (read only). Every run:
+`BOF3X_STATEHASH=<run>.sh BOF3X_STATEHASH_SKIP=tools/statehash_skip.txt
+BOF3X_OPT=none`. The attract runs: `python tools/attract_run.py --out
+<run>.tsv --minutes 6 --no-front --host exe|bof3 --launcher <copy>`. The
+routes: `python tools/input_run.py tools/recipes/<route>.txt --out <run>
+--minutes <ticks/3600 + 6> --no-front --host exe|bof3 --launcher <copy>
+[--lang en-US] --env BOF3X_STATEHASH=... --env BOF3X_STATEHASH_SKIP=...
+--env BOF3X_OPT=none --env BOF3X_LAYERING=0` (the shop also `--slot0-hold`).
+No run crashed (no `CRASH` or `FATAL` line in any output), none hung, none
+was killed; every route ended `recipe done` and `end: done`, runner exit 0.
+Defender left the launcher alone.
+
+### 5.1 Three ways the brief did not hold
+
+1. **The stock `check` refused every comparison.** This branch's skip list
+   has **173** ranges (hash `2C491AB2`): `87ec7d9a` added the runtime's
+   start-up words and `Sound_Channels`. Every reference - `attract_r14_*`,
+   `cn_<route>_orig2*`, `en_<route>_sh3*` - was hashed under **168**
+   (`13375623`), and `statehash.py check` exits 1 on each (`skips is 173,
+   ... has 168 - the runs were not hashed alike ...; record a new pair`). A
+   page's hash depends on the list only where a range lies on it, so the
+   added ranges leave every page but three hashing alike under both lists:
+   `0x6BC000` (`Sound_Channels`), `0x93C000` and `0x93D000` (the runtime's
+   words). The checks below are the stock `check`'s logic with those three
+   pages left out (a scratch `xcheck.py` in the session's scratchpad, not
+   committed; section 5.6 puts the rule in the tool). For the three pages,
+   the same tree was run **hosted** (`--host bof3`) under the 173-range list
+   and diffed against the exe host with the stock `statehash.py diff` - the
+   cutover's own question, page for page.
+2. **`input_run.py` does not pin `BOF3X_LAYERING=0`.** `attract_run.py` does,
+   and the pairs were recorded with it (DIV-0071 is on by default), so every
+   route here passes it with `--env`. The shop route, as its pairs, ran with
+   `--slot0-hold`.
+3. **Five logs were lost** to a bug in the batch's own script: its
+   wait-for-exit loop overwrote the run-name variable, so the log copy went
+   to `build/away/.log` and was overwritten. Lost: the first attract run's
+   and the `cn_` combat, menu_screens, field_menu and
+   worldMapAndAreaTransition logs (caughFish's was recovered). Their `.sh`
+   and `.out` files are whole; nothing below rests on those logs.
+
+### 5.2 The results
+
+"Against the pair" is the check of 5.1 item 1 on 865 pages; "exe/hosted" is
+`statehash.py diff <run>_hosted.sh <run>_exe.sh`, all 868 pages under 173
+ranges. The tick-3 pages (`0x7BB000..0x7BF000` the VRAM shadow, `0x7DE000`,
+`0x937000`) are the noise the attract pair itself shows at tick 3 (an upload
+landing a frame later).
+
+| Run | Exit | Ticks | Against the pair (865 pages) | Exe/hosted (868 pages) |
+|---|--:|--:|---|---|
+| attract, exe host | 0 | 10,787 frames in 360 s | `attract_r14_orig` / `_origb`: identical on all 10,305 ticks | identical on all 10,305 ticks (hosted: 10,317 frames) |
+| attract, exe host, `BOF3X_EXEIMAGE=<main>/analysis/cache/pc-plus-us` | 0 | 10,788 frames | identical on all 10,305 ticks | identical to the plain exe run on all 11,137 ticks |
+| cn combat | 0 | 2,561 | `cn_combat_orig2` / `_orig2b`: `0x7DE000` at tick 227 only (noise) | tick-3 noise; `0x7DE000` at 227 |
+| cn menu_screens | 0 | 1,729 | music pages from 752 (finding 1); tick-3 noise | tick-3 noise only |
+| cn field_menu | 0 | 1,409 | music pages from 752 (finding 1) | identical |
+| cn worldMapAndAreaTransition | 0 | 2,113 | identical | identical |
+| cn caughFish | 0 | 3,841 | identical (`0x6BC000` noise in the pair) | identical |
+| cn masterAndManillo | 0 | 5,505 | identical | identical |
+| cn dragonTransform | 0 | 4,289 | music pages from 332 (finding 1) | identical |
+| cn cutsceneAndNue | 0 | 7,361 | music pages from 204 (finding 1) | identical |
+| cn shop | 0 | 3,137 | identical | identical |
+| cn whelpBoss | 0 | 13,121 | identical (`0x6BC000` noise in the pair) | tick-3 noise only, over 13,185 ticks |
+| en combat | 0 | 2,561 | `en_combat_sh3a` / `_sh3b`: identical | identical |
+| en menu_screens | 0 | 1,729 | identical | identical |
+| en field_menu | 0 | 1,409 | identical | identical |
+| en worldMapAndAreaTransition | 0 | 2,113 | identical | identical |
+| en caughFish | 0 | 3,841 | `0x7E1000` from 832 (finding 2) | the same (finding 2) |
+| en masterAndManillo | 0 | 5,505 | `0x7E1000` from 715 (finding 2) | the same (finding 2) |
+| en dragonTransform | 0 | 4,289 | `0x93B000` 2474..3162, 331 ticks (finding 2) | the same (finding 2) |
+| en cutsceneAndNue | 0 | 7,361 | `0x93B000` from 5506 (finding 2); `0x905000` from 6985, `0x7E0000` and `0x929000` 6986..7023 (finding 3) | tick-3 noise; `0x93B000` from 5506 |
+| en shop | 0 | 3,137 | `0x7DE000` from 565 (finding 2) | the same (finding 2) |
+| en whelpBoss | 0 | 13,121 | `0x93B000` from 1002 (finding 2) | the same (finding 2) |
+| F9 quit, `BOF3X_STACKWATCH=1` | 0 | recipe frame 404 | - | 5.3 |
+
+The hosted en runs differ from the en pairs on the same pages as the exe
+runs. The cache run's log: `BOF3X_EXEIMAGE: .data at 0x5DA000 from
+base/exe/data.bin (pc-zh), 638976 bytes: the source in the exe host`. The
+route wall times are the same in both hosts to 0.5 s (the runners'
+`analysis/run_times.tsv` - the worktree's, their `ROOT`); the attract's
+360 s again held more logic frames in the exe host (10,787 against 10,317),
+as in 3.1.
+
+### 5.3 The stack watch on the F9 route, beside [`crt-startup.md`](crt-startup.md) 11.4
+
+`input_run.py tools/recipes/f9ExitMode.txt ... --host exe --env
+BOF3X_STACKWATCH=1`; the log's `stack:` and `stackwatch` lines:
+
+| | exe host (this batch) | hosted (11.4) |
+|---|---|---|
+| the stack | reserve `0x100000`, commit `0x10000`; base `0x1B0000`, low `0xB0000` | reservation `0x40000`, base `0xF0000`, commit `0x10000` |
+| `Engine_Main`'s `esp` | `0x508` below base, x87 `0x027F` | - |
+| `Task_SetStackBase`'s arrival `esp` | `0x314` below base, twice, the same | `0x294` below base, twice |
+| the slices' bottom | `0x14314` below base, inside | `0x14294` below base |
+| committed at exit | `0x1A0000..0x1B0000` = `0x10000`, unchanged; guard `0x2000` | `0x10000`, unchanged |
+| deepest non-zero dword | **`0xD5F8`** below base (`0x2A08` to spare) | `0xD578` |
+| slices 0 / 1 / 2 / 3 used | `0x2398` / `0x1354` / `0x12E4` (partly committed) / 0 (reserved) | `0x2B14` / `0x1334` / `0x12E4` / 0 |
+
+In the exe host the armed check's call runs on the main thread (no other
+thread exists then); `stackwatch.cpp` already keeps that call from taking the
+slices' copy. 11.3's rule stands under the exe host's header: commit
+`0x10000`, the deepest use `0xD5F8`.
+
+### 5.4 Findings
+
+1. **The music pages on four Chinese routes are DIV-0092, not the exe
+   host.** `0x904000` (`Music_Track`), `0x665000` (`Music_LoadedTrack`),
+   `0x6BD000` (`Music_File*`) and `0x7DE000` differ from `cn_*_orig2` from the
+   route's save load on (menu_screens and field_menu 752, dragonTransform 332,
+   cutsceneAndNue 204), in the exe host **and** in the hosted build of this
+   tree (`cn_<route>_hosted`: the same pages and ticks). The hosted run with
+   `--original AreaTrackFallback` (DIV-0092's switch) is identical to the pair
+   on all 1,409 ticks of field_menu and all 4,289 of dragonTransform
+   (`o_cn_*_hosted`). The pairs were recorded 2026-10-10 afternoon, DIV-0092
+   that night. So these four pairs want recording again, or their check run
+   with `BOF3X_ORIGINAL=AreaTrackFallback`.
+2. **Pointers of ours hashed raw (state-hash.md 7, point 5's class).** The
+   DLL loaded at `0x5C800000` in the exe host and at `0x5C5F0000` hosted (each
+   log's `statehash   our image` line), so a word holding a pointer into our
+   text that is not one of the census's slots differs between the hosts, and
+   between the pair's launches and ours. Dumps of both hosts
+   (`BOF3X_STATEHASH_DUMP`, `statehash.py bytes`, runs `d_en_*`) show exactly
+   these words on the reported pages, each at the same offset into our image
+   on both sides:
+   - **`Effect_Objects` records 7, 8 and 9, `+0x50` / `+0x54`** (`0x7E15B0`,
+     `0x7E1630`, `0x7E16B0`; caughFish ticks 900 and 2000): `0x5D96689D`
+     against `0x5D75689D`, both our base plus `0x116689D` - a text pointer.
+   - **`0x93B908`**, a second word of the battle result's message beside the
+     run-time slot `0x93B8E4` (dragonTransform tick 2500: `0x5D950756`
+     against `0x5D740756`). At tick 3000 the word that differs raw is
+     `0x93B8E4`, which is normalised, and that tick is identical.
+   - **`MsgBoxState` `+0xC`, `+0x10`, `+0x14`** (`0x7DEE4C..0x7DEE57`: the
+     box's string and stepper pointers; shop ticks 600 and 2000). Nothing
+     else on `0x7DE000` outside the skip list differs.
+
+   Not a difference of the game. They are candidates for the run-time slot
+   list of state-hash.md 7 (measured 3) - a change of the hash, the owner's
+   call.
+3. **en-US cutsceneAndNue, `0x905000` / `0x7E0000` / `0x929000` from tick
+   6985:** the same in both hosts (absent from exe/hosted), absent on the
+   Chinese route - so either a difference between this build and the pairs'
+   (`105a0c77`) or another raw pointer. 5.5 reads it.
+
+### 5.5 Not done yet
+
+- Finding 3's reading: the dump run `d_en_cutsceneAndNue_exe` (ticks 6984,
+  6990, 7100) was still running when this was written.
+- `statehash.py`'s rule for a skip list that only adds ranges (5.1 item 1).
+- The four Chinese pairs of finding 1 and finding 2's words: the owner's.
+- Anything seen or heard: the batch was unattended.
