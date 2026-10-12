@@ -164,6 +164,10 @@ void SinTable(std::uint8_t* at, std::uint32_t size) {
     }
 }
 
+void PadName(std::uint8_t* at, std::uint32_t size) {
+    Strings(at, size, {"Microsoft SideWinder game pad"});   // DInput_EnumJoystick's product name, compared case-blind
+}
+
 struct Row {
     ExeOwnRegion region;
     void (*fill)(std::uint8_t* at, std::uint32_t size);
@@ -188,6 +192,7 @@ constexpr Row kRows[] = {
     {{0x66B928, 0x66BC3F, "the DirectX error messages, the caption, the file layer's formats"}, DisplayStrings},
     {{0x66BC40, 0x66BC58, "Gpu_OtTerminator and Gte_IdentityRotation"}, GpuGteConstants},
     {{0x66BC58, 0x66C45A, "Math_SinTable (a rule)"}, SinTable},
+    {{0x66C7B0, 0x66C7CE, "the pad looked for by product name"}, PadName},
 };
 // end regions
 // clang-format on

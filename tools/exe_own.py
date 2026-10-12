@@ -22,6 +22,7 @@ class -
     python tools/exe_own.py measure --game DIR --disc DISC [--disc DISC ...] --out analysis/exe_own
     python tools/exe_own.py gen        # src/hook/exe_own_names.inc from recipes/pc-zh.toml, pc-zh.snd.toml
     python tools/exe_own.py check      # the include up to date; exe_own.cpp's regions well-formed (CI)
+    python tools/exe_own.py text_words # exe-pointers.tsv's words inside the held strings: text, CP's to skip
 
 The measurement's output is derived from the player's files and goes under analysis/
 (CLAUDE.md rule 1); the tool and its rules hold addresses, names and counts only.
@@ -48,7 +49,7 @@ NAMES_INC = os.path.join(ROOT, "src", "hook", "exe_own_names.inc")
 DAT_RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 SND_RECIPE = os.path.join(ROOT, "recipes", "pc-zh.snd.toml")
 XREF = "analysis/pc_xref.json"
-KEY_TABLE = (0x66C648, 0x66C7D0)        # Key_TableDefault: RD's (a rule of the engine and the launcher)
+KEY_TABLE = (0x66C648, 0x66C6C8)        # Key_TableDefault (64 halfwords): RD's (a rule of the engine and the launcher)
 
 
 def fail(msg):
@@ -63,26 +64,43 @@ def fail(msg):
 # disc-unplaced by the disc search. Addresses and words only.
 
 REGIONS = [
-    (0x64F368, 0x6528A8, "port-platform", "Dat_FileNames: the DAT/ file table, its 742 names and the DAT directory format"),
-    (0x6528A8, 0x652A00, "port-platform", "the CD-image probe names and the BGM/SND formats beside the file table"),
+    (0x64F368, 0x6528AC, "port-platform", "Dat_FileNames: the DAT/ file table's names, the DAT directory format, the save files' pattern"),
     (0x6531F4, 0x6536E0, "language", "the page-format and glyph tables rest_4e.cpp names (exe-import-engine.md 3.2)"),
     (0x6536F8, 0x653808, "language", "the config screen's labels (ConfigScreen_OpenStates+): text in the port's code page"),
-    (0x653808, 0x653830, "port-platform", "the config screen's key letters and their columns (the keyboard's)"),
-    (0x65DA4C, 0x65DAE8, "port-platform", "WinMain's strings: save / frame-rate messages, AVI and icon names, BOF3.CFG"),
-    (0x6645B0, 0x666FC6, "port-platform", "Sound_LoadStream's three name tables, their 891 SND/ names, the SND and BGM formats"),
+    (0x65DA44, 0x65DAE8, "port-platform", "Game_WinMain's and Cfg_Load's initial values and strings"),
+    (0x664068, 0x664078, "port-platform", "the save file's name format (FieldSave_Write, Save_QuickWrite)"),
+    (0x6653BC, 0x666FC6, "port-platform", "Sound_LoadStream's 891 SND/ names, Music_LoadedTrack, the SND and BGM formats"),
     (0x669CCC, 0x66A450, "language", "the battle command labels, the community's member names, Menu_Verbs, pause lines"),
-    (0x66B5D8, 0x66B6AC, "port-platform", "the AVI player's MCI command strings"),
-    (0x66B708, 0x66BC56, "port-platform", "the display / sound / file layer: screen rect, alpha-op cache, DirectX error strings, OT end, GTE identity"),
-    (0x66C460, 0x66C648, "port-platform", "Math_SinTable's tail: PSX libgte's rsin table, computed"),
-    (KEY_TABLE[0], KEY_TABLE[1], "rule", "Key_TableDefault: the RD group's (a rule of the engine and the launcher)"),
-    (0x66C858, 0x675A00, "unread", "the original MP3 decoder's data (Xaudio): DIV-0091 replaced the decoder, nothing of ours reads it"),
+    (0x66B5D8, 0x66B6A8, "port-platform", "the AVI player's MCI command strings (Fmv_Play, Fmv_WndProc)"),
+    (0x66B708, 0x66BC58, "port-platform", "the display / sound / file layer's rect, caches, error strings and formats; the OT end; the GTE identity"),
+    (0x66BC58, 0x66C45C, "rule", "Math_SinTable: PSX libgte's quarter-wave sine, computed"),
+    (0x66C45C, KEY_TABLE[0], "unread", "a table of (DirectInput scan code, key name): no instruction and no word of the "
+                                       "exe's file names it"),
+    (KEY_TABLE[0], KEY_TABLE[1], "rule (RD)", "Key_TableDefault: the RD group's, a rule of the engine and the launcher"),
+    (KEY_TABLE[1], 0x66C7B0, "unread", "the key names: only the unread table above points at them"),
+    (0x66C7B0, 0x66C7D0, "port-platform", "the pad DInput_EnumJoystick looks for by product name"),
+    (0x66C858, 0x675A00, "unread", "past Task_StackTop: the hand-assembled renderer's tables, the original MP3 decoder's "
+                                   "(Xaudio) data and the C runtime's - read only by Capcom code the exe host never runs"),
+]
+
+# Bytes inside a region above whose class differs from the region's (checked first).
+BYTES = [
+    (0x65DA50, 0x65DA54, "unread", "a dword initialised 1 that no instruction and no pointer word names"),
+    (0x65DA78, 0x65DA84, "language", "the window title, in the port's code page (GBK)"),
+    (0x65DA98, 0x65DAB8, "language", "Game_WinMain's two message-box texts, in GBK"),
+    (0x66B71C, 0x66B720, "unread", "a dword initialised 1 that no instruction names"),
+    (0x66B724, 0x66B928, "unread", "16 records {0.01f, 10.0f, -1}: no instruction, no word of the exe's file names them"),
 ]
 
 NAME_RULES = (
     ("port-relaid", r"(DriftUV|PlateAnims|Record8Anims)$"),
-    ("language", r"(Messages?[AB]?|Text|TextPointers|Names|NameTable_|Labels?|Verbs|Lines|Format|Glyph|Font|Choices|ChoiceMessages|ScriptMessages)$|^NameTable_|^Pause_Lines|^Commu.*Names"),
-    ("port-platform", r"^(Cfg_|Window_|D3d|Gfx_|File_|Cursor_|Snd_|Sound|Music_|DInput|Key_|Dat_)"),
+    ("language", r"(Messages?[AB]?|Text|TextPointers|Names|Labels?|Verbs|Lines|Format|Glyph|Font|Choices|ChoiceMessages|ScriptMessages)$|^NameTable_|^Pause_Lines|^Commu.*Names"),
 )
+
+# A word recipes/exe-pointers.tsv calls a pointer inside a region exe_own.cpp
+# holds is text (a pointer-shaped run of four characters no disc places): the
+# fill writes it, verified equal to the PC's at every start, and CP's layout
+# leaves it alone (`check` counts them; `text_words` lists them).
 
 
 def region_class(lo):
@@ -90,6 +108,13 @@ def region_class(lo):
         if a <= lo < b:
             return cls, why
     return None, None
+
+
+def byte_class(x):
+    for a, b, cls, why in BYTES:
+        if a <= x < b:
+            return cls
+    return None
 
 
 # ------------------------------------------------------------------ inputs
@@ -233,28 +258,41 @@ def cmd_measure(a):
                     cls, why = "disc-unplaced", "%d of %d 16-byte windows on the disc verbatim" % (found, tried)
                 else:
                     cls, why = "game-value", "%d of %d windows on the disc" % (found, tried)
-            nz_held = sum(1 for x in range(lo, hi) if x in held_set and x not in ptr and pc[x - DATA_LO])
-            rows.append(dict(lo=lo, hi=hi, nonzero=nz, held=nz_held, symbol="%s+0x%X" % (sym, lo - base),
-                             cls=cls, why=why, src=",".join(names[:4]) + ("..." if len(names) > 4 else ""),
+            # Byte by byte: held by exe_own.cpp, else the BYTES row's class, else the region's.
+            per = collections.Counter()
+            for x in range(lo, hi):
+                if x in ptr or not pc[x - DATA_LO]:
+                    continue
+                per["held" if x in held_set else (byte_class(x) or cls)] += 1
+            text_words = sorted({x & ~3 for x in range(lo, hi) if x in ptr and x in held_set})
+            rows.append(dict(lo=lo, hi=hi, nonzero=nz, held=per["held"], symbol="%s+0x%X" % (sym, lo - base),
+                             cls=cls, bytes=",".join("%s:%d" % kv for kv in sorted(per.items())),
+                             text_words=len(text_words), why=why,
+                             src=",".join(names[:4]) + ("..." if len(names) > 4 else ""),
                              capcom=",".join("%s(%d)" % kv for kv in fns.most_common(3)), ptr_in=pin,
-                             disc="%d/%d" % (found, tried)))
+                             disc="%d/%d" % (found, tried), per=per, tw=text_words))
         with open(os.path.join(out, "%s.own.tsv" % bid), "w", newline="\n", encoding="utf-8") as f:
-            cols = ["lo", "hi", "nonzero", "held", "cls", "symbol", "src", "capcom", "ptr_in", "disc", "why"]
+            cols = ["lo", "hi", "nonzero", "held", "cls", "bytes", "text_words", "symbol", "src", "capcom", "ptr_in",
+                    "disc", "why"]
             f.write("\t".join(cols) + "\n")
             for r in rows:
                 f.write("\t".join(("0x%06X" % r[c]) if c in ("lo", "hi") else str(r[c]) for c in cols) + "\n")
-        by = collections.defaultdict(lambda: [0, 0, 0])
+        by = collections.defaultdict(lambda: [0, 0])          # byte class -> [regions, bytes]
         for r in rows:
-            by[r["cls"]][0] += 1
-            by[r["cls"]][1] += r["nonzero"]
-            by[r["cls"]][2] += r["held"]
+            for c, n in r["per"].items():
+                by[c][0] += 1
+                by[c][1] += n
         total = sum(r["nonzero"] for r in rows)
-        summary[bid] = {"regions": len(rows), "nonzero": total, "held": sum(r["held"] for r in rows),
-                        "by_class": {c: {"regions": v[0], "nonzero": v[1], "held": v[2]} for c, v in sorted(by.items())}}
-        print("%s: %d regions, %d non-zero number bytes no disc carries, %d held by exe_own.cpp" %
-              (bid, len(rows), total, summary[bid]["held"]))
+        tw = sorted({w for r in rows for w in r["tw"]})
+        summary[bid] = {"regions": len(rows), "nonzero": total, "held": by["held"][1] if "held" in by else 0,
+                        "text_words": ["0x%06X" % w for w in tw],
+                        "by_class": {c: {"regions": v[0], "bytes": v[1]} for c, v in sorted(by.items())},
+                        "by_region_class": {c: sum(r["nonzero"] for r in rows if r["cls"] == c)
+                                            for c in sorted({r["cls"] for r in rows})}}
+        print("%s: %d regions, %d non-zero number bytes no disc carries; by byte:" % (bid, len(rows), total))
         for c, v in sorted(by.items(), key=lambda kv: -kv[1][1]):
-            print("   %-14s %4d regions %6d bytes, %6d held" % (c, v[0], v[1], v[2]))
+            print("   %-14s %6d bytes in %4d regions" % (c, v[1], v[0]))
+        print("   + %d pointer-shaped words of exe-pointers.tsv inside the held strings (text, held)" % len(tw))
     with open(os.path.join(out, "summary.json"), "w") as f:
         json.dump(summary, f, indent=1)
     print("-> %s" % out)
@@ -333,15 +371,18 @@ def check():
         if lo < end or hi <= lo or hi > DATA_HI:
             errs.append("exe_own.cpp: %s 0x%06X..0x%06X is out of order, empty or outside .data" % (name, lo, hi))
         end = max(end, hi)
-        p = [x for x in range(lo, hi) if x in ptr]
-        if p:
-            errs.append("exe_own.cpp: %s 0x%06X..0x%06X holds %d bytes of exe-pointers.tsv's pointer words "
-                        "(the first 0x%06X): those are CP's" % (name, lo, hi, len(p), p[0]))
         if lo < KEY_TABLE[1] and hi > KEY_TABLE[0]:
             errs.append("exe_own.cpp: %s overlaps Key_TableDefault (RD's)" % name)
-        if region_class(lo)[0] != "port-platform":
-            errs.append("exe_own.cpp: %s 0x%06X is not in a port-platform region of exe_own.py's REGIONS" % (name, lo))
+        if region_class(lo)[0] not in ("port-platform", "rule"):
+            errs.append("exe_own.cpp: %s 0x%06X is not in a port-platform or rule region of exe_own.py's REGIONS" %
+                        (name, lo))
     return errs
+
+
+def text_words():
+    """exe-pointers.tsv's words inside exe_own.cpp's regions: [(word, region name)]."""
+    ptr = pointer_bytes()
+    return [(w, name) for lo, hi, name in own_regions() for w in range(lo & ~3, hi, 4) if w in ptr]
 
 
 def cmd_check(a):
@@ -351,8 +392,16 @@ def cmd_check(a):
     if errs:
         sys.exit(1)
     regions = own_regions()
-    print("exe_own: %d regions, %d bytes; exe_own_names.inc matches the recipes" %
-          (len(regions), sum(hi - lo for lo, hi, _ in regions)))
+    print("exe_own: %d regions, %d bytes; exe_own_names.inc matches the recipes; %d words exe-pointers.tsv "
+          "calls pointers are text inside them (`text_words` lists them)" %
+          (len(regions), sum(hi - lo for lo, hi, _ in regions), len(text_words())))
+
+
+def cmd_text_words(a):
+    by = collections.Counter(name for _, name in text_words())
+    for w, name in text_words():
+        print("0x%06X	%s" % (w, name))
+    print("# %d words: %s" % (sum(by.values()), dict(by)), file=sys.stderr)
 
 
 def main():
@@ -367,6 +416,7 @@ def main():
     p.set_defaults(fn=cmd_measure)
     sub.add_parser("gen").set_defaults(fn=cmd_gen)
     sub.add_parser("check").set_defaults(fn=cmd_check)
+    sub.add_parser("text_words").set_defaults(fn=cmd_text_words)
     a = ap.parse_args()
     a.fn(a)
 
