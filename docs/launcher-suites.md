@@ -2,10 +2,11 @@
 
 **Status:** BUILT (2026-10-12, the PSP-only round's group LT, branch `psp/lt`
 off `psp/round` `668a9b67`). Driven by script against three fake manifests
-(section 5); **not seen by the owner**. The manifest keys it reads,
-`base_policy` and `exe_tables_from`, are written by no build yet: SI and IM
-add them in this round (section 3.1). The audio and data suites' engine half
-is TG's, in wave two (section 7).
+(section 5), and once against a real PSP-only cache built with SI's branch;
+**not seen by the owner**. Of the manifest keys it reads, `base_policy` is
+written by SI's branch (`psp/si` `1d72d999`), and `exe_tables_from` by
+nothing yet (IM's; section 3.1). The audio and data suites' engine half is
+TG's, in wave two (section 7).
 
 The owner's calls of 2026-10-10 ([`psp-only-build.md`](psp-only-build.md) 6
 and 7) asked for three toggles in the launcher, **audio**, **graphics** and
@@ -111,8 +112,11 @@ section 6, which is the owner's to settle.
 
 - `[[source]] build`: the builds the cache was made from, distinct, in order;
 - `[build] base_policy`: `"psp"` or `"psx"`. SI writes it (the round's
-  contract, [`psp-only-round.md`](psp-only-round.md) 4). **Absent means
-  `psx`**: a cache from before this round has no `[build]` table;
+  contract, [`psp-only-round.md`](psp-only-round.md) 4): on `psp/si`
+  `1d72d999`, `psp_standins.manifest_lines` puts the table right after
+  `[meta]` in every cache, with `standins_sha256` under `psp` (not read
+  here). **Absent means `psx`**: a cache from before this round has no
+  `[build]` table;
 - `[build] exe_tables_from`: one build id or a one-line list of them. IM
   writes it. When absent, the page uses `[exe] build`;
 - the `bgm` rows' first source build (`base/bgm/`), and `[snd] build`
@@ -166,6 +170,8 @@ the keys, never the chunk rows, as the contract says.
   built yet." No layer of PlayStation data over a PSP base exists or is
   planned in this round.
 - **Members** show whether the cache holds the PSP's version:
+  - a member whose `from` builds are not among the sources is not this
+    base's: "needs psp-eu" for the English renames on a PSP-JP base;
   - music needs `bgm` rows from a PSP build ("no songs in this cache" before
     MS stage B);
   - effects need `[snd]` from a PSP build;
@@ -219,9 +225,12 @@ All without a game run (the brief's rule), on this machine, 2026-10-12.
 |---|---|---|
 | the catalogue | `python tools/suites.py check`; `python tools/importer.py check` | 0 errors; exit 0 (742 files, 3,582 chunks, `opt.toml` 6 layers, 0 errors) |
 | the i686 build | `cmake --preset i686 && cmake --build build` | clean, no warning in `src/launcher/` |
-| host suite | `cmake -S tools/launcher_host -B <scratch>/lh -G Ninja -DCMAKE_CXX_COMPILER=clang++`, `config_tests.exe` | **113 checks, 0 failures** (at `668a9b67`: 50 checks, 2 failures, below) |
+| host suite | `cmake -S tools/launcher_host -B <scratch>/lh -G Ninja -DCMAKE_CXX_COMPILER=clang++`, `config_tests.exe` | **114 checks, 0 failures** (at `668a9b67`: 50 checks, 2 failures, below) |
 | the dialog | `python tools/launcher_host/dialog_test.py build/bof3x-launcher.exe <install>/BOF3.exe` | **35 checks, all ok** (at `668a9b67`: no dialog, below) |
-| PC and PSX paths | `refs_lt.sh` (LT scratch): JP + PC, US alone and European alone built with this branch's tools against the coordinator's `ref_*` (built with `668a9b67`'s) | see the report; `recipes/exe-gaps.tsv` untouched (`git diff 668a9b67 -- recipes/exe-gaps.tsv` empty) |
+| the checker refuses | `neg_suites.py` (LT scratch): seven mutations of the toml (a fourth suite, a PSX build in `from`, `from` not the layer's `on`, a layer in no suite, `engine` without `why`, an `opt` member not `layer`, the default layer in a suite) | 7 of 7 refused; the toml as committed 0 errors |
+| PC and PSX paths | `refs_lt.sh` (LT scratch): JP + PC, US alone and European alone built with this branch's tools against the coordinator's `ref_*` (built with `668a9b67`'s); every file but `manifest.toml` hashed, and the manifest diffed without its `built =` line | JP + PC 2,126 files, US 1,873, European 1,865: every tree identical, 0 manifest lines differ; `recipes/exe-gaps.tsv` untouched (`git diff 668a9b67 -- recipes/exe-gaps.tsv` empty) |
+| hosted self-test | `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' <copy>/bof3x-launcher.exe --game <install> --no-config`, an ini-less copy | exit 0 (the DLL is unchanged; the launcher's path is exercised) |
+| exe host self-test, PSX disc-only | `importer.py install --base --cache ref_us --game <scratch>/g_us`, then `BOF3X_SELFTEST_ONLY=1`, `BOF3X_CACHE` = `BOF3X_EXEIMAGE` = `ref_us`, the copy with `--no-config` | exit 0; `inject: 10087 ours`; `self-test only: done`; `exe_own: 17 regions ... filled over a disc-built image` |
 | ledger | `python tools/ledger_check.py` | 101 entries, 0 errors, 2 notes (DIV E is not in the ledger yet) |
 
 The host suite's new checks (`config_tests.cpp`, `TestManifest` and
@@ -267,7 +276,7 @@ The host suite's new checks (`config_tests.cpp`, `TestManifest` and
   greyed, and the launcher takes `.data` from the cache.
 - **PSP-only install, no `BOF3.exe`:** the note says the PSP's base, every
   suite is the PSP's with the PlayStation's greyed and the five discs named,
-  every member is present, and clicks write nothing.
+  every member is present but the English renames ("needs psp-eu": the fake cache is PSP-JP's), and clicks write nothing.
 - **No cache, `psp-art` in `DAT\`:** graphics is offered, and choosing it
   writes `psp-art,area4-walls`.
 
@@ -332,15 +341,23 @@ to add.
 
 ## 8. Not verified
 
-- **The manifest keys as SI and IM write them.** Read as the round doc fixes
-  them: a `[build]` table, `base_policy` a string `psp` / `psx`, and
-  `exe_tables_from` a build id or a list. If IM writes a table or another
-  shape, the page greys everything and names the key: it is loud, not wrong,
-  but it wants a one-line change in `ManifestParse`.
-- **A real PSP-only cache.** None exists yet: SI, MS and IM have not merged.
-  The fake manifests are modelled on `analysis/cache/pc-plus-us/manifest.toml`
-  (the owner's) and on `write_manifest`. The `bgm` row form for a PSP source
-  (`psp-jp:<how>:...`) is assumed from the PSX's.
+- **`exe_tables_from` as IM writes it.** It is read as the round doc fixes
+  it: a key of the `[build]` table, a build id or a list. If IM writes
+  another shape, the page greys everything and names the key: loud, not
+  wrong, but a one-line change in `ManifestParse`. Until IM, the tables
+  member falls back to `[exe] build`.
+- **A complete PSP-only cache.** Checked once against SI's real cache:
+  `importer.py build --source <PSP-JP iso>` run from a `git archive` of
+  `psp/si` `1d72d999` (`real_si.py`, LT scratch). The note read "This
+  install's base is the PSP's; the cache is built from psp-jp". Every suite
+  was the PSP's with the PlayStation's greyed and the five discs named.
+  Music read "no songs in this cache" (no `base/bgm` before MS stage B). The
+  English renames read "needs psp-eu". The rest were the base's, and an
+  untouched Play left `opt=` empty. The `bgm` row form for a PSP source
+  (`psp-jp:<how>:...`) is still assumed from the PSX's; MS writes it. The
+  fake manifests are modelled on the owner's
+  `analysis/cache/pc-plus-us/manifest.toml`, on `write_manifest`, and on
+  SI's `[build]` table.
 - **The owner's eye.** The layout: the dialog is now 560 x 309 dialog units,
   about 996 x 618 pixels at 96 DPI as captured. Also the wording. The left
   column's two longest notes ("...draws with Direct3D 11.", "...stretches to
@@ -410,7 +427,7 @@ extras" boxes are replaced by the three suites. `opt=` is unchanged, and an
 > | [`launcher-suites.md`](launcher-suites.md) | The launcher's three suites - graphics, audio, data, each the PlayStation's version or the PSP's (the owner's calls of 2026-10-10): `recipes/suites.toml` and `tools/suites.py` (checked in `importer.py check`, generated into the launcher), availability from the cache's `manifest.toml` (`base_policy`, `exe_tables_from`), greyed sides naming the discs, the PSP-only inverse, `opt=` as the ini's record; the membership proposals; what TG lifts. DIV E. BUILT. |
 
 **`docs/STATUS.md`:** the PSP-only round's LT: the launcher's three suites
-built and scripted (113 host checks, 35 dialog checks); the owner's eye on
+built and scripted (114 host checks, 35 dialog checks); the owner's eye on
 the page and the membership calls (`launcher-suites.md` 6) owed.
 
 **`docs/HANDOFF.md`:**

@@ -253,7 +253,10 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
                 ms.note = L"see the note above";
             } else if (psp_base) {
                 std::wstring note;
-                if (m.kind == Kind::kBgm) note = base_note(man.bgm_build, L"songs");
+                // A member of another PSP build than the cache's (the English
+                // renames on a PSP-JP base) is not this base's.
+                if (!have) note = L"needs " + OrList(from);
+                else if (m.kind == Kind::kBgm) note = base_note(man.bgm_build, L"songs");
                 else if (m.kind == Kind::kSnd) note = base_note(man.snd_build, L"effects");
                 else if (m.kind == Kind::kExe) {
                     std::string psp;

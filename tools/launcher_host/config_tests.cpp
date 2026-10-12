@@ -217,29 +217,31 @@ void TestCacheCodePage() {
 // Three fake manifests as tools/importer.py writes them - PSP-only, PSX-only,
 // and PC + PSX + PSP - with the [build] keys the round's contract fixes
 // (docs/psp-only-round.md section 4: base_policy from SI, exe_tables_from from
-// IM), which no build writes yet. Builds, names and made-up hashes only.
+// IM). The [build] table sits right after [meta], as SI's
+// psp_standins.manifest_lines writes it (psp/si 1d72d999, standins_sha256 under
+// psp); exe_tables_from in it is IM's, not written yet. Builds, names and
+// made-up hashes only.
 
 const char kManifestPspOnly[] =
     "# The cache's provenance\n[meta]\ntarget = \"pc-zh\"\nbuilt = \"2026-10-12T00:00:00\"\n\n"
+    "[build]\nbase_policy = \"psp\"\nstandins_sha256 = \"66\"\nexe_tables_from = \"psp-jp\"\n\n"
     "[[source]]\nbuild = \"psp-jp\"\npath = \"Breath of Fire III (PSP) (Japan).iso\"\n\n"
-    "[build]\nbase_policy = \"psp\"\nexe_tables_from = \"psp-jp\"\n\n"
     "[cache]\nassets = [\n  [\"AREA000.DAT\", 0, \"base\", \"psp-jp:own:WORLD00/AREA000.EMI#7\", \"00\"],\n]\n"
     "bgm = [\n  [\"base/bgm/000.DAT\", \"psp-jp:ppms:SOUND/BGM.BIN#0\", \"11\"],\n]\n\n"
     "[snd]\nbuild = \"psp-jp\"\nhow = \"psp-at3\"\nffmpeg = \"ffmpeg version 9.0.1\"\nfiles = [\n  [\"MAGIC/000_00.WAV\", \"22\"],\n]\n\n"
     "[exe]\nbuild = \"psp-jp\"\nfile = \"base/exe/data.bin\"\nsha256 = \"33\"\n";
 const char kManifestPsxOnly[] =
-    "[meta]\ntarget = \"pc-zh\"\n\n[[source]]\nbuild = \"psx-us\"\npath = \"Breath of Fire III (USA).cue\"\n\n"
-    "[build]\nbase_policy = \"psx\"\nexe_tables_from = \"psx-us\"\n\n"
+    "[meta]\ntarget = \"pc-zh\"\n\n[build]\nbase_policy = \"psx\"\nexe_tables_from = \"psx-us\"\n\n"
+    "[[source]]\nbuild = \"psx-us\"\npath = \"Breath of Fire III (USA).cue\"\n\n"
     "[cache]\nassets = [\n  [\"AREA000.DAT\", 0, \"base\", \"psx-us:copy\", \"00\"],\n]\n"
     "bgm = [\n  [\"base/bgm/000.DAT\", \"psx-us:seq:BGM000.EMI#1\", \"11\"],\n]\n\n"
     "[exe]\nbuild = \"psx-us\"\nfile = \"base/exe/data.bin\"\nsha256 = \"33\"\n";
 const char kManifestAll[] =
-    "[meta]\ntarget = \"pc-zh\"\n\n"
+    "[meta]\ntarget = \"pc-zh\"\n\n[build]\nbase_policy = \"psx\"\nexe_tables_from = [\"pc-zh\"]\n\n"
     "[[source]]\nbuild = \"pc-zh\"\npath = \"DAT\"\n\n[[source]]\nbuild = \"pc-zh\"\npath = \"BOF3.exe\"\n\n"
     "[[source]]\nbuild = \"psx-us\"\npath = \"Breath of Fire III (USA).cue\"\n\n"
     "[[source]]\nbuild = \"psp-eu\"\npath = \"Breath of Fire III (PSP) (Europe).iso\"\n\n"
     "[[source]]\nbuild = \"psp-jp\"\npath = \"Breath of Fire III (PSP) (Japan).iso\"\n\n"
-    "[build]\nbase_policy = \"psx\"\nexe_tables_from = [\"pc-zh\"]\n\n"
     "[cache]\nassets = [\n  [\"AREA000.DAT\", 0, \"base\", \"pc-zh:chunk\", \"00\"],\n]\n"
     "opt_recipe_sha256 = \"44\"\nopt = [\n  [\"AREA067.DAT\", \"opt/psp-art\", 0, \"psp-eu:copy:WORLD01/AREA067.EMI#6@192\", \"55\"],\n]\n"
     "bgm = [\n  [\"base/bgm/000.DAT\", \"psx-us:seq:BGM000.EMI#1\", \"11\"],\n]\n\n"
@@ -324,6 +326,9 @@ void TestSuites() {
     Check(Member(Suite(v, "audio"), "psp-music").available && Member(Suite(v, "audio"), "psp-effects").available,
           "PSP-only: the cache's songs and effects are the PSP's");
     Check(Member(Suite(v, "data"), "psp-tables").available, "PSP-only: exe_tables_from psp-jp, the tables the PSP's");
+    Check(Member(Suite(v, "data"), "psp-names-ja-JP").available && !Member(Suite(v, "data"), "psp-names-en-150").available &&
+              Narrow(Member(Suite(v, "data"), "psp-names-en-150").note) == "needs psp-eu",
+          "PSP-JP base: the Japanese renames the base's, the English ones need psp-eu");
     // Before MS stage B: a PSP-only cache with no base/bgm.
     std::string no_bgm = kManifestPspOnly;
     no_bgm.replace(no_bgm.find("bgm = ["), no_bgm.find("]\n\n[snd]") + 2 - no_bgm.find("bgm = ["), "");

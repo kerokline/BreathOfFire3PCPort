@@ -40,13 +40,14 @@ MANIFEST = {
     "psp-only": """[meta]
 target = "pc-zh"
 
+[build]
+base_policy = "psp"
+standins_sha256 = "66"
+exe_tables_from = "psp-jp"
+
 [[source]]
 build = "psp-jp"
 path = "Breath of Fire III (PSP) (Japan).iso"
-
-[build]
-base_policy = "psp"
-exe_tables_from = "psp-jp"
 
 [cache]
 assets = [
@@ -70,13 +71,13 @@ file = "base/exe/data.bin"
     "psx-only": """[meta]
 target = "pc-zh"
 
-[[source]]
-build = "psx-us"
-path = "Breath of Fire III (USA).cue"
-
 [build]
 base_policy = "psx"
 exe_tables_from = "psx-us"
+
+[[source]]
+build = "psx-us"
+path = "Breath of Fire III (USA).cue"
 
 [cache]
 assets = [
@@ -92,6 +93,10 @@ file = "base/exe/data.bin"
 """,
     "all": """[meta]
 target = "pc-zh"
+
+[build]
+base_policy = "psx"
+exe_tables_from = ["pc-zh"]
 
 [[source]]
 build = "pc-zh"
@@ -112,10 +117,6 @@ path = "Breath of Fire III (PSP) (Europe).iso"
 [[source]]
 build = "psp-jp"
 path = "Breath of Fire III (PSP) (Japan).iso"
-
-[build]
-base_policy = "psx"
-exe_tables_from = ["pc-zh"]
 
 [cache]
 assets = [
@@ -348,8 +349,9 @@ def main():
     report("  the reason names the PlayStation discs",
            all("needs a PlayStation disc (psx-jp, psx-us, psx-fr, psx-de or psx-eu-en)" in s["why"]
                for s in st["suites"].values()), st["suites"]["graphics"]["why"])
-    report("  every member the base's, none greyed",
-           all(m[1] for s in st["suites"].values() for m in s["members"]), str(st["suites"]["audio"]["members"]))
+    report("  every member the base's but the English renames (psp-eu's, the cache psp-jp's)",
+           [m for s in st["suites"].values() for m in s["members"] if not m[1]] == [("English renames", False)]
+           and "English renames: needs psp-eu" in st["suites"]["data"]["why"], st["suites"]["data"]["why"])
     report("  clicks write nothing: opt= stays empty", lines(ini)["opt"] == "", lines(ini)["opt"])
 
     # ---- A PC install with no cache, psp-art installed in DAT\ (the PSP extras' path).
