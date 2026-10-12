@@ -55,6 +55,9 @@ jobs:
       - name: The type-1 decompressor's self-test (no game data)
         run: python tools/type1.py selftest
 
+      - name: The language converters' self-test (no game data)
+        run: python tools/loc_build.py selftest
+
       - name: The importer's recipe against fixtures/ (no game data)
         run: python tools/importer.py check
 

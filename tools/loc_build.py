@@ -672,6 +672,26 @@ def message_end(buf, i):
         i += 2 if (b & 0x80 or b in ARG1) else 1
 
 
+def table_after_bad_head(donor):
+    """A slot count for a block whose first slots point outside it: the
+    smallest offset into the block of the slots before it, / 2, or 0.
+
+    The French disc's AREA004 text section (0x80010000, 1,008 bytes) is the
+    one such block on the five discs (docs/loc-build-disc-only.md 4.5): its
+    first seven words are 0x312A and six 0x3F3D, past its end, and from slot 7
+    on the table is an ascending one whose first offset, 0x200, puts the end
+    of the table at 256 slots - the US and German counts. convert_block points
+    the slots before at that first message: the German table's slots 0..7
+    all point at its first message, the US's at it and at offsets into it."""
+    low, i = len(donor) + 1, 0
+    while 2 * (i + 1) <= min(low, len(donor)):
+        w = struct.unpack_from("<H", donor, 2 * i)[0]
+        if 2 * (i + 1) <= w <= len(donor) and not w & 1:
+            low = min(low, w)
+        i += 1
+    return low // 2 if low <= len(donor) else 0
+
+
 def convert_block(donor, base, room):
     """A donor text block -> a PC one. Slots whose donor message is not
     English keep the PC file's own message.
@@ -685,10 +705,21 @@ def convert_block(donor, base, room):
     496 slots)."""
     if base is None:
         n = struct.unpack_from("<H", donor, 0)[0] // 2 if len(donor) >= 2 else 0
+        bad_head = not n or 2 * n > len(donor)
+        if bad_head:
+            n = table_after_bad_head(donor)
         if not n or 2 * n > len(donor):
             raise ValueError("disc-only: the donor block's slot table (%d slots) does not fit its %d bytes, "
                              "and there is no PC block to take the count from" % (n, len(donor)))
-        d_offs = struct.unpack_from("<%dH" % n, donor, 0)
+        d_offs = list(struct.unpack_from("<%dH" % n, donor, 0))
+        if bad_head:
+            # The head slots past the block's end point at its first message,
+            # as the German table's first eight do (and the US's, by offsets
+            # into that message): table_after_bad_head.
+            for slot in range(n):
+                if 2 * n <= d_offs[slot] <= len(donor):
+                    break
+                d_offs[slot] = 2 * n
         body, placed, table, kept = bytearray(), {}, [], 0
         for slot in range(n):
             off = d_offs[slot]
@@ -1351,9 +1382,6 @@ def convert_verbs(game, donor):
     for i in range(VERB_COUNT):
         raw = donor[starts[i]:donor.index(b"\0", starts[i])]
         enc = [encode_char(c) for c in raw]
-        if not raw and tag == 16:        # a faerie record kept as shipped
-            payload += b"\0"
-            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("verbs: verb %d holds a code English does not have: %s" % (i, raw.hex(" ")))
         out = b"".join(enc)
@@ -1388,9 +1416,6 @@ def convert_char_names(game, donor):
         us = records[k]
         raw = us[:CHAR_NAME_US].split(b"\x00")[0]
         enc = [encode_char(c) for c in raw]
-        if not raw and tag == 16:        # a faerie record kept as shipped
-            payload += b"\0"
-            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("names: character %d holds a code English does not have: %s" % (k, raw.hex(" ")))
         out = b"".join(enc)
@@ -1421,9 +1446,6 @@ def convert_merchant(game, disc):
             continue
         raw = blob[at + 12:at + 12 + MERCHANT_US_SLOT].split(b"\x00")[0]
         enc = [encode_char(c) for c in raw]
-        if not raw and tag == 16:        # a faerie record kept as shipped
-            payload += b"\0"
-            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("merchant: %s holds a code English does not have: %s" % (name, raw.hex(" ")))
         out = b"".join(enc)
@@ -1453,9 +1475,6 @@ def convert_battle_commands(game, donor):
         slot = donor[at - (BATTLE_COUNT - i) * BATTLE_ROOM:at - (BATTLE_COUNT - i - 1) * BATTLE_ROOM]
         raw = slot.split(b"\0")[0]
         enc = [encode_char(c) for c in raw]
-        if not raw and tag == 16:        # a faerie record kept as shipped
-            payload += b"\0"
-            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("battle: label %d holds a code English does not have: %s" % (i, slot.hex(" ")))
         out = b"".join(enc)
@@ -2290,6 +2309,12 @@ TITLE_NEW, TITLE_LOAD = (0, 0, 130), (0, 16, 140)       # x, y, width of the two
 # Letter boxes (x0, x1 inclusive, y of the 16-row band) the third row is cut from.
 TITLE_LETTER = {"N": (1, 16, 0), "E": (19, 32, 0), "G": (64, 79, 0), "L": (1, 15, 16), "O": (16, 32, 16)}
 TITLE_SHADOW = 15
+# The two 16-row bands those boxes are in (rows 0..31 of the US sheet, as
+# texels): the French and German START.EMI sheets carry them too, whole,
+# 128 rows down (measured 2026-10-12: rows 128..159 of both equal the US
+# sheet's rows 0..31 texel for texel), so a French or German disc has the
+# letters CONFIG is cut from without an English disc. First 16 hex digits.
+TITLE_LETTERS_SHA256 = "6ef65d0ead08aed0"
 
 
 def tiles_to_rows(data, tiles_w):
@@ -2373,6 +2398,16 @@ def title_c(sheet):
     return cell
 
 
+def title_letters(sheet):
+    """The sheet's rows from the measured letters' bands (TITLE_LETTERS_SHA256)
+    on, so that TITLE_LETTER's boxes find them; None if it has no such band."""
+    for y0 in range(0, len(sheet) - TITLE_BAND + 1, 8):
+        band = bytes(v for y in range(y0, y0 + TITLE_BAND) for v in sheet[y])
+        if hashlib.sha256(band).hexdigest().startswith(TITLE_LETTERS_SHA256):
+            return sheet[y0:]
+    return None
+
+
 def build_title(args, disc):
     """NEW GAME and LOAD GAME as the disc has them, and CONFIG cut from their letters."""
     found = disc.find("START.EMI")
@@ -2397,10 +2432,11 @@ def build_title(args, disc):
         for y in range(TITLE_CAP):
             page[TITLE_BAND * i + top + y][:w] = sheet[y0 + y][x0:x0 + w]
         widths.append(w)
-    if not measured:
-        # The third row is the port's, and no disc's letters were measured
-        # but the US sheet's (the French and German sheets lack the letters
-        # for CONFIG anyway): take it from the English page already built
+    letters = sheet if measured else title_letters(sheet)
+    if letters is None:
+        # The third row is the port's, and this sheet does not carry the
+        # bands the letters were measured on (the French and German sheets
+        # do, 128 rows down: title_letters): take it from the English page already built
         # from the US disc, an English overlay's START.DAT beside the shipped
         # file (`en-US.`, `en-150.`: the US and EU-English pages are
         # byte-identical, 2026-10-08) - the owner's choice, 2026-09-29: each
@@ -2429,8 +2465,11 @@ def build_title(args, disc):
         print("title menu: this disc's two rows (%d and %d wide), CONFIG from %s (%d)" % (widths[0], widths[1], en_names[0], widths[2]))
         return [(1, TITLE_TAG, rows_to_tiles(page, 2)), (TITLE_KIND, 0, bytes(widths))]
     # CONFIG. Gaps in columns, by eye against NEW GAME's own spacing.
-    word = ((title_c(sheet), 1), (title_letter(sheet, "O"), 1), (title_letter(sheet, "N"), 2),
-            (title_f(sheet), 0), (title_stem(sheet), 2), (title_letter(sheet, "G"), 0))
+    if not measured:
+        print("title menu: this disc's two rows (%d and %d wide), CONFIG from its own English letters "
+              "(%d rows down)" % (widths[0], widths[1], len(sheet) - len(letters)))
+    word = ((title_c(letters), 1), (title_letter(letters, "O"), 1), (title_letter(letters, "N"), 2),
+            (title_f(letters), 0), (title_stem(letters), 2), (title_letter(letters, "G"), 0))
     pen = 1
     for cell, gap in word:
         for y, row in enumerate(cell):
@@ -2470,11 +2509,19 @@ def build_village_sheet(game, disc):
         if not found or base is None:
             continue
         if base[0] is None:
-            # Disc-only: the sheet is the PC's loc/zh-CN chunk, and the disc's
-            # differs from it outside the label rows too (rows 96..175, the
-            # board's frame pieces the PC's draws place: 2,136 bytes in both
-            # files on the US disc) - so no sheet is built from the disc alone.
-            skipped.append(name)
+            # Disc-only: the sheet is the PC's loc/zh-CN chunk, which differs
+            # from the disc's outside the label rows too - in pixel rows
+            # 96..191, where the port cleared the PlayStation's empty cells
+            # and laid a strip of the sheet's own icons for its draws. That
+            # re-layout is a rule (RELAID, relay_sheet), so the disc's sheet
+            # re-laid is the PC's with the disc's labels - and, on a French or
+            # German disc, the disc's other repaints too
+            # (docs/loc-build-disc-only.md 4.3).
+            donor = [sec for dest, sec in emi_sections(disc.read(found[0])) if dest == VILLAGE_SHEET_TAG]
+            if not donor or len(donor[0]) != VILLAGE_SHEET_SIZE:
+                skipped.append(name)
+                continue
+            out[name + ".DAT"] = [(1, VILLAGE_SHEET_TAG, relay_sheet(VILLAGE_SHEET_TAG, donor[0]))]
             continue
         pc = [base[0]]
         donor = [sec for dest, sec in emi_sections(disc.read(found[0])) if dest == VILLAGE_SHEET_TAG]
@@ -2557,6 +2604,158 @@ def build_plates(game, disc):
                                  % (area, key[1], len(s), pc[key][1]))
         out[area + ".DAT"] = [(k, t, s) for (k, t), s in sorted(donor.items())]
     return out
+
+
+# ---------------------------------------------------------------- the port's sheets, re-laid from a disc's
+
+# Two of the port's loc/zh-CN images are a PlayStation sheet re-laid, not new
+# art (docs/loc-build-disc-only.md 4.3 and 4.6, measured 2026-10-12 against
+# the JP, US, EU, French and German discs): the sheet at VRAM (896, 256) -
+# the glyph atlas of thirteen modules, the faerie village's board sheet among
+# them - and the one at (960, 0), the ending / kanji sheet of ENDKANJI and
+# FIRST. Each is 64 x 256 halfwords at 4 bits, stored as 32 x 32-halfword
+# tiles (0x800 bytes, 128 pixels a row) left to right, then down. Against the
+# JP disc's section of the same dest, the port's sheet differs only where
+# it cleared the PlayStation's pixels (rectangles, `clear`) and laid a strip
+# of the sheet's own 16 x 16 icons, which sit at a pitch of 16 on the
+# PlayStation's, at a pitch of 20 for its draws (`strip`: count, from, to).
+# Applied to the JP disc's section the rule gives the port's chunk byte for
+# byte; applied to a Western disc's, the port's except where that disc
+# repainted outside the rule's rectangles (its words). Pixel coordinates
+# only - the port's layout, no pixel of either sheet (CLAUDE.md rule 1).
+SHEET_TILE, SHEET_TILE_W = 0x800, 128          # bytes, pixels a tile row (32 halfwords at 4 bits)
+RELAID = {
+    0x1C080200: {"clear": ((0, 96, 240, 48), (0, 96, 120, 96)),
+                 "strip": (8, (120, 208), (0, 100))},
+    0x1E000200: {"clear": ((0, 72, 256, 84), (0, 72, 204, 136), (0, 72, 105, 144), (227, 72, 29, 136),
+                           (0, 168, 256, 40), (239, 219, 17, 30), (160, 224, 96, 24), (0, 232, 52, 8),
+                           (56, 232, 200, 16)),
+                 "strip": (12, (56, 232), (0, 80))},
+}
+ICON, ICON_PITCH, STRIP_PITCH = 16, 16, 20
+
+
+def sheet_pixels(tag, body):
+    """A kind-1 4-bit sheet as rows of pixel values, from its tiles."""
+    tiles_w = (tag >> 8) & 0xFF
+    w = tiles_w * SHEET_TILE_W
+    rows = [bytearray(w) for _ in range(len(body) // SHEET_TILE // tiles_w * 32)]
+    for t in range(len(body) // SHEET_TILE):
+        x0, y0 = (t % tiles_w) * SHEET_TILE_W, (t // tiles_w) * 32
+        for y in range(32):
+            line = body[t * SHEET_TILE + y * 64:t * SHEET_TILE + y * 64 + 64]
+            row = rows[y0 + y]
+            for i, b in enumerate(line):
+                row[x0 + 2 * i], row[x0 + 2 * i + 1] = b & 15, b >> 4
+    return rows
+
+
+def sheet_body(tag, rows):
+    tiles_w = (tag >> 8) & 0xFF
+    out = bytearray()
+    for t in range(len(rows) // 32 * tiles_w):
+        x0, y0 = (t % tiles_w) * SHEET_TILE_W, (t // tiles_w) * 32
+        for y in range(32):
+            row = rows[y0 + y]
+            out += bytes(row[x0 + 2 * i] | row[x0 + 2 * i + 1] << 4 for i in range(64))
+    return bytes(out)
+
+
+def relay_sheet(tag, body):
+    """A disc's section of dest `tag` re-laid as the port laid its own (RELAID)."""
+    rule = RELAID[tag]
+    src = sheet_pixels(tag, body)
+    rows = [bytearray(r) for r in src]
+    for x, y, w, h in rule["clear"]:
+        for yy in range(y, y + h):
+            rows[yy][x:x + w] = bytes(w)
+    count, (sx, sy), (dx, dy) = rule["strip"]
+    for i in range(count):
+        a, b = sx + ICON_PITCH * i, dx + STRIP_PITCH * i
+        for yy in range(ICON):
+            rows[dy + yy][b:b + ICON] = src[sy + yy][a:a + ICON]
+    return sheet_body(tag, rows)
+
+
+def relaid_region(tag):
+    """The pixels relay_sheet writes, as a set of (x, y)."""
+    rule, out = RELAID[tag], set()
+    for x, y, w, h in rule["clear"]:
+        out.update((xx, yy) for yy in range(y, y + h) for xx in range(x, x + w))
+    count, _, (dx, dy) = rule["strip"]
+    for i in range(count):
+        out.update((dx + STRIP_PITCH * i + xx, dy + yy) for yy in range(ICON) for xx in range(ICON))
+    return out
+
+
+def check_relaid(game, disc):
+    """Against the PC install: the rule gives the port's chunk on every pixel it
+    writes, from this disc's section - so a wrong rectangle cannot survive a PC
+    build. [(tag, container)] checked; a SystemExit on a difference."""
+    done = []
+    for tag, name in ((0x1C080200, "STATUS"), (0x1E000200, "ENDKANJI")):
+        found = disc.find(name + ".EMI")
+        pc = chunk_of(game, name + ".DAT", 1, tag)
+        if not found or pc is None or pc[0] is None:
+            continue
+        donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == tag]
+        if not donor or len(donor[0]) != len(pc[0]):
+            raise SystemExit("re-laid sheets: %s has no section of dest 0x%X the PC's size" % (name, tag))
+        got, want = sheet_pixels(tag, relay_sheet(tag, donor[0])), sheet_pixels(tag, pc[0])
+        bad = sum(1 for x, y in relaid_region(tag) if got[y][x] != want[y][x])
+        if bad:
+            raise SystemExit("re-laid sheets: %s 0x%X: the rule differs from the port's sheet in %d pixels"
+                             % (name, tag, bad))
+        done.append((tag, name))
+    return done
+
+
+def vram_rect(tag, size):
+    """(x, y, w, h) in halfwords of a kind-1 chunk, as LoadDatFile places it."""
+    w = ((tag >> 8) & 0xFF) * 32
+    return (tag >> 24) * 32, ((tag >> 16) & 0xFF) * 32, w, size // 2 // w
+
+
+def covers(a, b):
+    """Whether rectangle a covers rectangle b wholly, and whether they meet at all."""
+    ax, ay, aw, ah = a
+    bx, by, bw, bh = b
+    meet = ax < bx + bw and bx < ax + aw and ay < by + bh and by < ay + ah
+    return ax <= bx and ay <= by and ax + aw >= bx + bw and ay + ah >= by + bh, meet
+
+
+def build_standins(game, disc, overlays):
+    """Disc-only: {name: [(kind, tag, payload)]} for each loc/zh-CN image no
+    builder above replaced - the disc's own section of the same dest, re-laid
+    where the port re-laid it (RELAID) - and [(name, tag, why)] left out.
+
+    The overlay walks after the container's base chunks, so a stand-in must be
+    what the PC's slot order leaves: one that a later base chunk covers wholly
+    (FIRST.DAT's atlas, under 0x1A080400) is left out, as the PC's end state
+    has none of it; one a later chunk only partly covers would need cutting,
+    and stops the build (none does)."""
+    out, left = {}, []
+    for name in game.names():
+        rows = game.chunks(name) or ()
+        for slot, (kind, tag, body, size) in enumerate(rows):
+            if kind != 1 or game.recipe[name][slot]["layer"] != "loc/zh-CN":
+                continue
+            if any(k == kind and t == tag for k, t, _ in overlays.get(name, ())):
+                continue
+            mine = vram_rect(tag, size)
+            later = [covers(vram_rect(t, n), mine) for k, t, b, n in rows[slot + 1:] if k == 1]
+            if any(whole for whole, _ in later):
+                left.append((name, tag, "covered by a later slot"))
+                continue
+            if any(meet for _, meet in later):
+                raise SystemExit("stand-ins: %s 0x%X is partly covered by a later slot" % (name, tag))
+            found = disc.find(os.path.splitext(name)[0] + ".EMI")
+            donor = [s for dest, s in emi_sections(disc.read(found[0])) if dest == tag] if found else []
+            if len(donor) != 1 or len(donor[0]) != size:
+                left.append((name, tag, "no section of that dest and size on the disc"))
+                continue
+            out.setdefault(name, []).append((1, tag, relay_sheet(tag, donor[0]) if tag in RELAID else donor[0]))
+    return out, left
 
 
 def reset_donor():
@@ -2827,6 +3026,18 @@ def build_all(args, disc_path):
         for name, chunks in plates.items():
             overlays.setdefault(name, []).extend(chunks)
         print("place plates: %d world maps" % len(plates))
+        if src.disc_only:
+            standins, left = build_standins(src, disc, overlays)
+            for name, chunks in standins.items():
+                overlays.setdefault(name, []).extend(chunks)
+            print("stand-ins: %d (%s)%s" % (sum(len(c) for c in standins.values()), ", ".join(
+                "%s 0x%X%s" % (n, t, " re-laid" if t in RELAID else "")
+                for n, cs in sorted(standins.items()) for _, t, _ in cs),
+                "".join("; left out: %s 0x%X, %s" % e for e in left)))
+        else:
+            checked = check_relaid(src, disc)
+            print("re-laid sheets: the rule is the port's on its pixels (%s)"
+                  % ", ".join("%s 0x%X" % (n, t) for t, n in checked))
     if donor_ja and ja_pairs:
         overlays["FIRST.DAT"] = ja_pair_chunks(overlays["FIRST.DAT"])
         print("pair codes: %d from glyph 0x%X (DIV-0057)" % (len(ja_pairs), PAIR_AT))
@@ -2873,6 +3084,141 @@ def cmd_sheet(args):
     print("wrote", args.out)
 
 
+def selftest_empty_records():
+    """Each of the four record converters, on a record holding an empty
+    string, stops with its own message (a SystemExit naming the converter;
+    the verbs' placement refuses an empty string before encoding it),
+    not a NameError: the faerie branch of `label_chunk` was copied into them
+    once with no `tag` bound (docs/loc-build-disc-only.md 7.6). The anchors
+    are pinned to a synthetic blob of zeros; no game data."""
+    global find_anchor, same_anchor
+    saved = find_anchor, same_anchor
+    reset_donor()
+
+    class Disc:
+        files = {"BIN/WORLD/WORLD00.EMI": None}
+
+        def read(self, name):
+            return bytes(64)
+
+    verbs = bytes(64) + b"".join(struct.pack("<I", 0x80010000 + 4 * i) for i in range(VERB_COUNT))
+    cases = (("verbs", lambda: convert_verbs(None, verbs)),     # an empty verb has no placement
+             ("names", lambda: convert_char_names(None, bytes(CHAR_STRIDE * CHAR_COUNT + 16))),
+             ("merchant", lambda: convert_merchant(None, Disc())),
+             ("battle", lambda: convert_battle_commands(None, bytes(BATTLE_COUNT * BATTLE_ROOM + 16))))
+    anchors = {"verb sets": len(verbs), "char tail 0": CHAR_NAME_US, "merchant": 0, "battle boxes": BATTLE_COUNT * BATTLE_ROOM}
+    try:
+        find_anchor = lambda game, blob, name, start=0, end=None: anchors[name]   # noqa: E731
+        same_anchor = lambda game, name, got: True                                 # noqa: E731
+        for what, run in cases:
+            try:
+                got = run()
+            except SystemExit as e:
+                if not str(e).startswith(what + ":"):
+                    raise SystemExit("selftest: %s stopped with another converter's message: %s" % (what, e))
+                print("  %-8s empty string: %s" % (what, e))
+                continue
+            raise SystemExit("selftest: %s converted an empty string: %r" % (what, got))
+    finally:
+        find_anchor, same_anchor = saved
+
+
+def cmd_cover(args):
+    """Which of the recipe's loc/zh-CN chunks a language layer replaces
+    (docs/loc-build-disc-only.md 7.1): a chunk of the same kind and tag in the
+    layer's container, the enemy names by any record of their table; a kind-1
+    image that a later base slot of its container covers wholly needs none
+    (build_standins). Counts by what, and every chunk left."""
+    import collections
+    import tomllib
+    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "recipes", "pc-zh.toml"), "rb") as f:
+        recipe = {r["name"]: r["chunks"] for r in tomllib.load(f)["file"]}
+    layer = args.layer or os.path.join(args.cache, "loc", args.lang, "dat")
+    have, left = collections.Counter(), []
+    total = collections.Counter()
+    for name, rows in sorted(recipe.items()):
+        path = os.path.join(layer, name)
+        got = set()
+        if os.path.exists(path):
+            blob, chunks = dat.load(path)
+            got = {(c.kind, c.tag) for c in chunks}
+        for slot, c in enumerate(rows):
+            if c["layer"] == "loc/zh-CN":
+                what = c.get("what", c["class"])
+                hit = (c["kind"], c["tag"]) in got
+                if not hit and c["kind"] == 1:
+                    mine = vram_rect(c["tag"], c["size"])
+                    hit = any(covers(vram_rect(d["tag"], d["size"]), mine)[0]
+                              for d in rows[slot + 1:] if d["kind"] == 1)
+                    what += (" (covered by a later slot)" if hit else "")
+            elif c.get("names") == "loc/zh-CN":
+                what = "enemy names"
+                hit = any(k == 0 and c["tag"] < t < c["tag"] + c["size"] for k, t in got)
+            else:
+                continue
+            total[what] += 1
+            if hit:
+                have[what] += 1
+            else:
+                left.append((name, c["kind"], c["tag"], what))
+    print("%s: %d of %d loc/zh-CN chunks replaced" % (layer, sum(have.values()), sum(total.values())))
+    for what in sorted(total):
+        print("  %4d of %4d  %s" % (have[what], total[what], what))
+    for name, kind, tag, what in left:
+        print("  left: %-12s kind %d tag 0x%08X  %s" % (name, kind, tag, what))
+    return 0
+
+
+def selftest_rules():
+    """The disc-only rules on synthetic bytes (no game data): a sheet's tiles
+    and pixels round-trip; relay_sheet clears its rectangles and lays the
+    strip from the sheet as it was; a block whose head slots point past its
+    end gets its count from the first in-block offset, and those slots its
+    first message."""
+    import random
+    rnd = random.Random(16)
+    for tag in RELAID:
+        body = bytes(rnd.randrange(256) for _ in range(0x8000))
+        if sheet_body(tag, sheet_pixels(tag, body)) != body:
+            raise SystemExit("selftest: sheet 0x%X does not round-trip" % tag)
+        src, got = sheet_pixels(tag, body), sheet_pixels(tag, relay_sheet(tag, body))
+        rule = RELAID[tag]
+        count, (sx, sy), (dx, dy) = rule["strip"]
+        strip = {(dx + STRIP_PITCH * i + x, dy + y): src[sy + y][sx + ICON_PITCH * i + x]
+                 for i in range(count) for y in range(ICON) for x in range(ICON)}
+        region = relaid_region(tag)
+        for y, row in enumerate(got):
+            for x, v in enumerate(row):
+                want = strip.get((x, y), 0 if (x, y) in region else src[y][x])
+                if v != want:
+                    raise SystemExit("selftest: relay_sheet 0x%X pixel (%d, %d)" % (tag, x, y))
+    print("  re-laid sheets: %s round-trip and re-lay" % ", ".join("0x%X" % t for t in RELAID))
+    msgs = [b"A\0", b"BC\0", b"\0"]
+    n = 6
+    offs, body = [], bytearray()
+    for m in msgs:
+        offs.append(2 * n + len(body))
+        body += m
+    head = [0x3F3D, 0x3F3D]                      # two slots past the end
+    table = head + offs + [offs[-1]]
+    block = struct.pack("<%dH" % n, *table) + bytes(body)
+    if table_after_bad_head(block) != n:
+        raise SystemExit("selftest: table_after_bad_head gave %d, wanted %d" % (table_after_bad_head(block), n))
+    reset_donor()
+    out, _ = convert_block(block, None, TEXT_ROOM)
+    o = struct.unpack_from("<%dH" % n, out)
+    if o[0] != o[1] or o[1] != o[2] or out[o[0]:out.index(b"\0", o[0])] != b"A":
+        raise SystemExit("selftest: the bad head's slots do not point at the first message")
+    print("  a slot table with a bad head: %d slots, the head at the first message" % n)
+
+
+def cmd_selftest(args):
+    selftest_empty_records()
+    selftest_rules()
+    print("loc_build selftest: ok")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -2901,11 +3247,18 @@ def main():
         if name == "all":
             s.add_argument("--only")
         s.set_defaults(fn=fn)
+    s = sub.add_parser("cover", help="which loc/zh-CN chunks a cache's language layer replaces")
+    s.add_argument("--cache", required=True)
+    s.add_argument("--lang", required=True)
+    s.add_argument("--layer", help="the layer's dat/ directory, if not the cache's loc/<lang>/dat")
+    s.set_defaults(fn=cmd_cover)
+    s = sub.add_parser("selftest", help="the converters' synthetic checks (no game data)")
+    s.set_defaults(fn=cmd_selftest)
     s = sub.add_parser("anchors", help="print PC_SHA's entries anew from a PC install's BOF3.exe")
     s.add_argument("--game", required=True)
     s.set_defaults(fn=cmd_anchors)
     args = ap.parse_args()
-    if args.cmd == "anchors":
+    if args.cmd in ("anchors", "selftest", "cover"):
         return args.fn(args)
     args.lang_given = args.lang is not None
     if args.cmd == "all" and not args.disc and not args.discs:
