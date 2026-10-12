@@ -9,7 +9,6 @@ build	lo	hi	how	kind	symbol
 psx-jp	0x5DC7A4	0x5DC7B7	gap	disc-unplaced	Area01_Handlers+0x50
 psx-jp	0x5DF6EC	0x5DF6F5	language	language	Area05_MessagesB
 psx-jp	0x5E10BC	0x5E10C0	language	language	Area08_ChoiceMessages
-psx-jp	0x5E10C0	0x5E10C5	language	language	Area08_MessageFormat
 psx-jp	0x5E23F4	0x5E23FC	language	language	Area10_MessagesB
 psx-jp	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-jp	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
@@ -262,17 +261,6 @@ psx-jp	0x653698	0x65369C	gap	language-zero	CommuRank_Modes+0x524
 psx-jp	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
 psx-jp	0x6536AC	0x6536BB	gap	language-zero	CommuRank_Modes+0x538
 psx-jp	0x6536F8	0x65382D	language	language	ConfigScreen_OpenStates+0x24
-psx-jp	0x653928	0x65392C	gap	game-value	WorldMap_Records+0x18
-psx-jp	0x653944	0x653948	gap	game-value	WorldMap_Records+0x34
-psx-jp	0x653960	0x653964	gap	game-value	WorldMap_Records+0x50
-psx-jp	0x65397C	0x653980	gap	game-value	WorldMap_Records+0x6C
-psx-jp	0x653998	0x65399C	gap	game-value	WorldMap_Records+0x88
-psx-jp	0x6539B4	0x6539B8	gap	game-value	WorldMap_Records+0xA4
-psx-jp	0x6539CC	0x6539D4	gap	game-value	WorldMap_Records+0xBC
-psx-jp	0x6539EC	0x6539F0	gap	game-value	WorldMap_Records+0xDC
-psx-jp	0x653A08	0x653A0C	gap	game-value	WorldMap_Records+0xF8
-psx-jp	0x653A24	0x653A28	gap	game-value	WorldMap_Records+0x114
-psx-jp	0x653A40	0x653A41	gap	game-value	WorldMap_Records+0x130
 psx-jp	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-jp	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psx-jp	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -299,7 +287,6 @@ psx-jp	0x6544A8	0x6544B0	gap	game-value	EffectKind6B_Frame
 psx-jp	0x6544EC	0x65450C	gap	disc-unplaced	EffectKind44_SparkColours
 psx-jp	0x6545EC	0x6545FC	gap	disc-unplaced	EffectKind49_V3States+0xC
 psx-jp	0x65460C	0x65461C	gap	disc-unplaced	EffectKind49_V4States+0x10
-psx-jp	0x654900	0x654904	gap	game-value	EffectKind5E_States+0x54
 psx-jp	0x6549E8	0x6549EC	gap	game-value	EffectKind65_ShakeSteps
 psx-jp	0x654A9C	0x654AA0	gap	game-value	EffectKind6D_States+0x48
 psx-jp	0x654AB0	0x654AB8	gap	game-value	EffectKind6F_States+0x10
@@ -380,7 +367,6 @@ psx-jp	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-jp	0x6637E0	0x6637E3	gap	game-value	Equip_SlotIcons+0x180
 psx-jp	0x66386C	0x663872	gap	game-value	Menu_ButtonSets+0x30
 psx-jp	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
-psx-jp	0x6641DC	0x6641E0	gap	game-value	ShopResist_States+0x20
 psx-jp	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30
 psx-jp	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
 psx-jp	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
@@ -408,7 +394,6 @@ psx-jp	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-jp	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-jp	0x66ADBA	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72A
 psx-jp	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
-psx-jp	0x66AF89	0x66AF94	gap	game-value	Win2_TitleBoxStates+0x89
 psx-jp	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
 psx-jp	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psx-jp	0x66C460	0x66C464	unread	unread	Math_SinTable+0x808
@@ -516,7 +501,6 @@ psx-jp	0x675614	0x675A00	unread	unread	Task_StackTop+0x8DBC
 psx-us	0x5DC7A4	0x5DC7B7	gap	disc-unplaced	Area01_Handlers+0x50
 psx-us	0x5DF6EC	0x5DF6F5	language	language	Area05_MessagesB
 psx-us	0x5E10BC	0x5E10C0	language	language	Area08_ChoiceMessages
-psx-us	0x5E10C0	0x5E10C5	language	language	Area08_MessageFormat
 psx-us	0x5E23F4	0x5E23FC	language	language	Area10_MessagesB
 psx-us	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-us	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
@@ -778,17 +762,6 @@ psx-us	0x653698	0x65369C	gap	language-zero	CommuRank_Modes+0x524
 psx-us	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
 psx-us	0x6536F8	0x653830	language	language	ConfigScreen_OpenStates+0x24
 psx-us	0x65385E	0x65385F	gap	game-value	Title_Sprites+0xE
-psx-us	0x653928	0x65392C	gap	game-value	WorldMap_Records+0x18
-psx-us	0x653944	0x653948	gap	game-value	WorldMap_Records+0x34
-psx-us	0x653960	0x653964	gap	game-value	WorldMap_Records+0x50
-psx-us	0x65397C	0x653980	gap	game-value	WorldMap_Records+0x6C
-psx-us	0x653998	0x65399C	gap	game-value	WorldMap_Records+0x88
-psx-us	0x6539B4	0x6539B8	gap	game-value	WorldMap_Records+0xA4
-psx-us	0x6539CC	0x6539D4	gap	game-value	WorldMap_Records+0xBC
-psx-us	0x6539EC	0x6539F0	gap	game-value	WorldMap_Records+0xDC
-psx-us	0x653A08	0x653A0C	gap	game-value	WorldMap_Records+0xF8
-psx-us	0x653A24	0x653A28	gap	game-value	WorldMap_Records+0x114
-psx-us	0x653A40	0x653A41	gap	game-value	WorldMap_Records+0x130
 psx-us	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-us	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psx-us	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -915,7 +888,6 @@ psx-us	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-us	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-us	0x663866	0x663872	gap	game-value	Menu_ButtonSets+0x2A
 psx-us	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
-psx-us	0x6641DC	0x6641E0	gap	game-value	ShopResist_States+0x20
 psx-us	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-us	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
 psx-us	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
@@ -943,7 +915,6 @@ psx-us	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-us	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-us	0x66ADBD	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72D
 psx-us	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
-psx-us	0x66AF8B	0x66AF94	gap	game-value	Win2_TitleBoxStates+0x8B
 psx-us	0x66B468	0x66B46E	gap	game-value	MasterWin_Requirements+0x44
 psx-us	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
 psx-us	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
@@ -1052,7 +1023,6 @@ psx-us	0x675614	0x675A00	unread	unread	Task_StackTop+0x8DBC
 psx-eu-en	0x5DC7A4	0x5DC7B7	gap	disc-unplaced	Area01_Handlers+0x50
 psx-eu-en	0x5DF6EC	0x5DF6F5	language	language	Area05_MessagesB
 psx-eu-en	0x5E10BC	0x5E10C0	language	language	Area08_ChoiceMessages
-psx-eu-en	0x5E10C0	0x5E10C5	language	language	Area08_MessageFormat
 psx-eu-en	0x5E23F4	0x5E23FC	language	language	Area10_MessagesB
 psx-eu-en	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-eu-en	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
@@ -1313,17 +1283,6 @@ psx-eu-en	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
 psx-eu-en	0x6536AC	0x6536BB	gap	language-zero	CommuRank_Modes+0x538
 psx-eu-en	0x6536F8	0x653830	language	language	ConfigScreen_OpenStates+0x24
 psx-eu-en	0x65385E	0x65385F	gap	game-value	Title_Sprites+0xE
-psx-eu-en	0x653928	0x65392C	gap	game-value	WorldMap_Records+0x18
-psx-eu-en	0x653944	0x653948	gap	game-value	WorldMap_Records+0x34
-psx-eu-en	0x653960	0x653964	gap	game-value	WorldMap_Records+0x50
-psx-eu-en	0x65397C	0x653980	gap	game-value	WorldMap_Records+0x6C
-psx-eu-en	0x653998	0x65399C	gap	game-value	WorldMap_Records+0x88
-psx-eu-en	0x6539B4	0x6539B8	gap	game-value	WorldMap_Records+0xA4
-psx-eu-en	0x6539CC	0x6539D4	gap	game-value	WorldMap_Records+0xBC
-psx-eu-en	0x6539EC	0x6539F0	gap	game-value	WorldMap_Records+0xDC
-psx-eu-en	0x653A08	0x653A0C	gap	game-value	WorldMap_Records+0xF8
-psx-eu-en	0x653A24	0x653A28	gap	game-value	WorldMap_Records+0x114
-psx-eu-en	0x653A40	0x653A41	gap	game-value	WorldMap_Records+0x130
 psx-eu-en	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-eu-en	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psx-eu-en	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -1449,7 +1408,6 @@ psx-eu-en	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-eu-en	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-eu-en	0x663866	0x663872	gap	game-value	Menu_ButtonSets+0x2A
 psx-eu-en	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
-psx-eu-en	0x6641DC	0x6641E0	gap	game-value	ShopResist_States+0x20
 psx-eu-en	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-eu-en	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
 psx-eu-en	0x669CCC	0x669CD4	gap	language-zero	Encounter_SlotChance+0x1C
@@ -1477,7 +1435,6 @@ psx-eu-en	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-eu-en	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-eu-en	0x66ADBB	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72B
 psx-eu-en	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
-psx-eu-en	0x66AF8A	0x66AF94	gap	game-value	Win2_TitleBoxStates+0x8A
 psx-eu-en	0x66B468	0x66B46E	gap	game-value	MasterWin_Requirements+0x44
 psx-eu-en	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
 psx-eu-en	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
@@ -1586,7 +1543,6 @@ psx-eu-en	0x675614	0x675A00	unread	unread	Task_StackTop+0x8DBC
 psx-fr	0x5DC7A4	0x5DC7B7	gap	disc-unplaced	Area01_Handlers+0x50
 psx-fr	0x5DF6EC	0x5DF6F5	language	language	Area05_MessagesB
 psx-fr	0x5E10BC	0x5E10C0	language	language	Area08_ChoiceMessages
-psx-fr	0x5E10C0	0x5E10C5	language	language	Area08_MessageFormat
 psx-fr	0x5E23F4	0x5E23FC	language	language	Area10_MessagesB
 psx-fr	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-fr	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
@@ -1846,17 +1802,6 @@ psx-fr	0x653698	0x65369C	gap	language-zero	CommuRank_Modes+0x524
 psx-fr	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
 psx-fr	0x6536F8	0x653830	language	language	ConfigScreen_OpenStates+0x24
 psx-fr	0x65385E	0x65385F	gap	game-value	Title_Sprites+0xE
-psx-fr	0x653928	0x65392C	gap	game-value	WorldMap_Records+0x18
-psx-fr	0x653944	0x653948	gap	game-value	WorldMap_Records+0x34
-psx-fr	0x653960	0x653964	gap	game-value	WorldMap_Records+0x50
-psx-fr	0x65397C	0x653980	gap	game-value	WorldMap_Records+0x6C
-psx-fr	0x653998	0x65399C	gap	game-value	WorldMap_Records+0x88
-psx-fr	0x6539B4	0x6539B8	gap	game-value	WorldMap_Records+0xA4
-psx-fr	0x6539CC	0x6539D4	gap	game-value	WorldMap_Records+0xBC
-psx-fr	0x6539EC	0x6539F0	gap	game-value	WorldMap_Records+0xDC
-psx-fr	0x653A08	0x653A0C	gap	game-value	WorldMap_Records+0xF8
-psx-fr	0x653A24	0x653A28	gap	game-value	WorldMap_Records+0x114
-psx-fr	0x653A40	0x653A41	gap	game-value	WorldMap_Records+0x130
 psx-fr	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-fr	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psx-fr	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -1983,7 +1928,6 @@ psx-fr	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-fr	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-fr	0x663866	0x663872	gap	game-value	Menu_ButtonSets+0x2A
 psx-fr	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
-psx-fr	0x6641DC	0x6641E0	gap	game-value	ShopResist_States+0x20
 psx-fr	0x664288	0x664298	gap	game-value	SharedList_SortSteps+0xC
 psx-fr	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-fr	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
@@ -2012,7 +1956,6 @@ psx-fr	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-fr	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-fr	0x66ADBA	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72A
 psx-fr	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
-psx-fr	0x66AF89	0x66AF94	gap	game-value	Win2_TitleBoxStates+0x89
 psx-fr	0x66B1F1	0x66B1F8	gap	game-value	MenuList_GeneWinSteps+0x25
 psx-fr	0x66B468	0x66B46E	gap	game-value	MasterWin_Requirements+0x44
 psx-fr	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
@@ -2122,7 +2065,6 @@ psx-fr	0x675614	0x675A00	unread	unread	Task_StackTop+0x8DBC
 psx-de	0x5DC7A4	0x5DC7B7	gap	disc-unplaced	Area01_Handlers+0x50
 psx-de	0x5DF6EC	0x5DF6F5	language	language	Area05_MessagesB
 psx-de	0x5E10BC	0x5E10C0	language	language	Area08_ChoiceMessages
-psx-de	0x5E10C0	0x5E10C5	language	language	Area08_MessageFormat
 psx-de	0x5E23F4	0x5E23FC	language	language	Area10_MessagesB
 psx-de	0x5E72CC	0x5E72CD	language	language	Area21_Messages+0x8
 psx-de	0x5EC5EC	0x5EC5F0	gap	game-value	Area26_EffectKinds+0x4
@@ -2383,17 +2325,6 @@ psx-de	0x653698	0x65369C	gap	language-zero	CommuRank_Modes+0x524
 psx-de	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
 psx-de	0x6536F8	0x653830	language	language	ConfigScreen_OpenStates+0x24
 psx-de	0x65385E	0x65385F	gap	game-value	Title_Sprites+0xE
-psx-de	0x653928	0x65392C	gap	game-value	WorldMap_Records+0x18
-psx-de	0x653944	0x653948	gap	game-value	WorldMap_Records+0x34
-psx-de	0x653960	0x653964	gap	game-value	WorldMap_Records+0x50
-psx-de	0x65397C	0x653980	gap	game-value	WorldMap_Records+0x6C
-psx-de	0x653998	0x65399C	gap	game-value	WorldMap_Records+0x88
-psx-de	0x6539B4	0x6539B8	gap	game-value	WorldMap_Records+0xA4
-psx-de	0x6539CC	0x6539D4	gap	game-value	WorldMap_Records+0xBC
-psx-de	0x6539EC	0x6539F0	gap	game-value	WorldMap_Records+0xDC
-psx-de	0x653A08	0x653A0C	gap	game-value	WorldMap_Records+0xF8
-psx-de	0x653A24	0x653A28	gap	game-value	WorldMap_Records+0x114
-psx-de	0x653A40	0x653A41	gap	game-value	WorldMap_Records+0x130
 psx-de	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psx-de	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psx-de	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -2519,7 +2450,6 @@ psx-de	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-de	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-de	0x663866	0x663872	gap	game-value	Menu_ButtonSets+0x2A
 psx-de	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
-psx-de	0x6641DC	0x6641E0	gap	game-value	ShopResist_States+0x20
 psx-de	0x664288	0x664298	gap	game-value	SharedList_SortSteps+0xC
 psx-de	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-de	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
@@ -2548,7 +2478,6 @@ psx-de	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-de	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psx-de	0x66ADBA	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72A
 psx-de	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
-psx-de	0x66AF89	0x66AF94	gap	game-value	Win2_TitleBoxStates+0x89
 psx-de	0x66B1F3	0x66B1F8	gap	game-value	MenuList_GeneWinSteps+0x27
 psx-de	0x66B468	0x66B46E	gap	game-value	MasterWin_Requirements+0x44
 psx-de	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
@@ -2658,7 +2587,6 @@ psx-de	0x675614	0x675A00	unread	unread	Task_StackTop+0x8DBC
 psp-jp	0x5DE8D0	0x5DE8D4	language	language	Area04_Choices+0x38
 psp-jp	0x5DFD34	0x5DFD3D	language	language	Area05_MessagesB+0x648
 psp-jp	0x5E10BC	0x5E10C0	language	language	Area08_ChoiceMessages
-psp-jp	0x5E10C0	0x5E10C5	language	language	Area08_MessageFormat
 psp-jp	0x5E1ABA	0x5E1AC0	language	language	Area08_MessageFormat+0x9FA
 psp-jp	0x5E1AC4	0x5E1AC8	language	language	Area08_MessageFormat+0xA04
 psp-jp	0x5E23F4	0x5E23FC	language	language	Area10_MessagesB
@@ -2881,17 +2809,6 @@ psp-jp	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psp-jp	0x653698	0x65369C	gap	language-zero	CommuRank_Modes+0x524
 psp-jp	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
 psp-jp	0x6536F8	0x65382D	language	language	ConfigScreen_OpenStates+0x24
-psp-jp	0x653928	0x65392C	gap	game-value	WorldMap_Records+0x18
-psp-jp	0x653944	0x653948	gap	game-value	WorldMap_Records+0x34
-psp-jp	0x653960	0x653964	gap	game-value	WorldMap_Records+0x50
-psp-jp	0x65397C	0x653980	gap	game-value	WorldMap_Records+0x6C
-psp-jp	0x653998	0x65399C	gap	game-value	WorldMap_Records+0x88
-psp-jp	0x6539B4	0x6539B8	gap	game-value	WorldMap_Records+0xA4
-psp-jp	0x6539CC	0x6539D4	gap	game-value	WorldMap_Records+0xBC
-psp-jp	0x6539EC	0x6539F0	gap	game-value	WorldMap_Records+0xDC
-psp-jp	0x653A08	0x653A0C	gap	game-value	WorldMap_Records+0xF8
-psp-jp	0x653A24	0x653A28	gap	game-value	WorldMap_Records+0x114
-psp-jp	0x653A40	0x653A41	gap	game-value	WorldMap_Records+0x130
 psp-jp	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psp-jp	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psp-jp	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -2918,7 +2835,6 @@ psp-jp	0x6544A8	0x6544B0	gap	game-value	EffectKind6B_Frame
 psp-jp	0x6544EC	0x65450C	gap	disc-unplaced	EffectKind44_SparkColours
 psp-jp	0x6545EC	0x6545FC	gap	disc-unplaced	EffectKind49_V3States+0xC
 psp-jp	0x65460C	0x65461B	gap	disc-unplaced	EffectKind49_V4States+0x10
-psp-jp	0x654900	0x654904	gap	game-value	EffectKind5E_States+0x54
 psp-jp	0x6549E8	0x6549EC	gap	game-value	EffectKind65_ShakeSteps
 psp-jp	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psp-jp	0x654D85	0x654D9C	gap	game-value	EffectKind86_States+0x11
@@ -2995,7 +2911,6 @@ psp-jp	0x66386C	0x663872	gap	game-value	Menu_ButtonSets+0x30
 psp-jp	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psp-jp	0x663B1C	0x663B28	gap	game-value	EventScript_OpLengths+0x10
 psp-jp	0x663B28	0x663B30	gap	game-value	Sprite_ScreenMargins
-psp-jp	0x6641DC	0x6641E0	gap	game-value	ShopResist_States+0x20
 psp-jp	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30
 psp-jp	0x667518	0x66751F	gap	game-value	ConfigMenu_Steps+0xC
 psp-jp	0x669739	0x66973C	gap	game-value	Char_WhelpSlot+0x3
@@ -3026,7 +2941,6 @@ psp-jp	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psp-jp	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
 psp-jp	0x66ADD8	0x66ADF7	gap	game-value	Fish_Kinds+0x748
 psp-jp	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
-psp-jp	0x66AF8C	0x66AF94	gap	game-value	Win2_TitleBoxStates+0x8C
 psp-jp	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
 psp-jp	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
 psp-jp	0x66C45C	0x66C464	unread	unread	Math_SinTable+0x804
@@ -3134,7 +3048,6 @@ psp-jp	0x675614	0x675A00	unread	unread	Task_StackTop+0x8DBC
 psp-eu	0x5DE8D0	0x5DE8D4	language	language	Area04_Choices+0x38
 psp-eu	0x5DFD34	0x5DFD3D	language	language	Area05_MessagesB+0x648
 psp-eu	0x5E10BC	0x5E10C0	language	language	Area08_ChoiceMessages
-psp-eu	0x5E10C0	0x5E10C5	language	language	Area08_MessageFormat
 psp-eu	0x5E1ABA	0x5E1AC0	language	language	Area08_MessageFormat+0x9FA
 psp-eu	0x5E1AC4	0x5E1AC8	language	language	Area08_MessageFormat+0xA04
 psp-eu	0x5E23F4	0x5E23FC	language	language	Area10_MessagesB
@@ -3362,17 +3275,6 @@ psp-eu	0x653688	0x653698	language	language	CommuRank_Modes+0x514
 psp-eu	0x653698	0x65369C	gap	language-zero	CommuRank_Modes+0x524
 psp-eu	0x65369C	0x6536AC	language	language	CommuRank_Modes+0x528
 psp-eu	0x6536F8	0x65382D	language	language	ConfigScreen_OpenStates+0x24
-psp-eu	0x653928	0x65392C	gap	game-value	WorldMap_Records+0x18
-psp-eu	0x653944	0x653948	gap	game-value	WorldMap_Records+0x34
-psp-eu	0x653960	0x653964	gap	game-value	WorldMap_Records+0x50
-psp-eu	0x65397C	0x653980	gap	game-value	WorldMap_Records+0x6C
-psp-eu	0x653998	0x65399C	gap	game-value	WorldMap_Records+0x88
-psp-eu	0x6539B4	0x6539B8	gap	game-value	WorldMap_Records+0xA4
-psp-eu	0x6539CC	0x6539D4	gap	game-value	WorldMap_Records+0xBC
-psp-eu	0x6539EC	0x6539F0	gap	game-value	WorldMap_Records+0xDC
-psp-eu	0x653A08	0x653A0C	gap	game-value	WorldMap_Records+0xF8
-psp-eu	0x653A24	0x653A28	gap	game-value	WorldMap_Records+0x114
-psp-eu	0x653A40	0x653A41	gap	game-value	WorldMap_Records+0x130
 psp-eu	0x653B9C	0x653BA0	gap	game-value	EffectKind0D_States+0x24
 psp-eu	0x653BA4	0x653BA8	gap	game-value	EffectKind0D_States+0x2C
 psp-eu	0x653BAC	0x653BB0	gap	game-value	EffectKind0D_States+0x34
@@ -3400,7 +3302,6 @@ psp-eu	0x6544A8	0x6544B0	gap	game-value	EffectKind6B_Frame
 psp-eu	0x6544EC	0x65450C	gap	disc-unplaced	EffectKind44_SparkColours
 psp-eu	0x6545EC	0x6545FC	gap	disc-unplaced	EffectKind49_V3States+0xC
 psp-eu	0x65460C	0x65461B	gap	disc-unplaced	EffectKind49_V4States+0x10
-psp-eu	0x654900	0x654904	gap	game-value	EffectKind5E_States+0x54
 psp-eu	0x6549E8	0x6549EC	gap	game-value	EffectKind65_ShakeSteps
 psp-eu	0x654AF8	0x654AFB	gap	game-value	EffectKind75_States+0xC
 psp-eu	0x654D85	0x654D9C	gap	game-value	EffectKind86_States+0x11
@@ -3507,7 +3408,6 @@ psp-eu	0x66386C	0x663872	gap	game-value	Menu_ButtonSets+0x30
 psp-eu	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psp-eu	0x663B1C	0x663B28	gap	game-value	EventScript_OpLengths+0x10
 psp-eu	0x663B28	0x663B30	gap	game-value	Sprite_ScreenMargins
-psp-eu	0x6641DC	0x6641E0	gap	game-value	ShopResist_States+0x20
 psp-eu	0x6671EC	0x6671F1	gap	game-value	Music_LoadedTrack+0x1E30
 psp-eu	0x667518	0x66751F	gap	game-value	ConfigMenu_Steps+0xC
 psp-eu	0x669739	0x66973C	gap	game-value	Char_WhelpSlot+0x3
@@ -3538,7 +3438,6 @@ psp-eu	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psp-eu	0x66A420	0x66A444	language	language	Pause_LinesGame+0x8
 psp-eu	0x66ADD8	0x66ADF7	gap	game-value	Fish_Kinds+0x748
 psp-eu	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
-psp-eu	0x66AF8C	0x66AF94	gap	game-value	Win2_TitleBoxStates+0x8C
 psp-eu	0x66B1DA	0x66B1F0	gap	disc-unplaced	MenuList_GeneWinSteps+0xE
 psp-eu	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
 psp-eu	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
