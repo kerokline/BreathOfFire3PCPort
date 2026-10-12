@@ -125,7 +125,12 @@ disc's `BATTLE.EMI#15`, `GAME.EMI#0` and `BATE.EMI#0`, a PSP disc's
 measure`, `exe_tables.py gaps` over the seven discs, 2026-10-12): the US
 image's gaps are **351 ranges, 4,085 bytes, game-value 1,323** of the PC's
 non-zero bytes (from 453 / 5,411 / 2,183 before the fills;
-`disc-gap-fills.md` 1.1 has every build).
+`disc-gap-fills.md` 1.1 has every build). Since the visual findings' fills
+of the same evening ([`visual-findings-1012.md`](visual-findings-1012.md):
+the battle equip icons and categories, the menus' number formats and the
+play-time colon, the result window's icons, read from the disc's overlays)
+the US image's gaps are **329 ranges, 3,819 bytes, game-value 1,262**; the
+save slot number's `"%X"` and the empty slot's text stay zero.
 
 None of it is copied (CLAUDE.md rule 1); whether a disc-only build accepts
 it, derives the values by a rule, or asks for the PC's exe for those tables

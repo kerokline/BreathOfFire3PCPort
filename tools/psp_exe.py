@@ -26,6 +26,19 @@ image:
              three s16 (x, z) spots on the disc, a 16-byte name on the PC; the spots are
              copied, the names left to the language layer
 
+Two more since 2026-10-12 evening (the owner's visual findings, docs/visual-findings-1012.md):
+
+    twin     a short run the disc carries verbatim in the overlay whose code reads it, at
+             another place than the map's: TWINS below names each run and that file; the
+             run is the first copy in the file's sections (found by BOF3.exe's bytes at
+             recipe time, as the wheel's place is) and copied byte for byte. Every disc build
+    msets    the zone music sets (Area_ZoneTrack's records, MUSIC_SETS): on a PSP disc the
+             records' lists are packed in BOOT.BIN, found by its relocations (the one run of
+             as many records as the PC's, each a relocated pointer at +0 and a count at +4,
+             the pointers rising and ending before the run); the counts and each list's
+             3-byte entries are copied to the PC's places, which the layout's pointer words
+             name. PSP builds only (a PSX disc's boot EXE is placed by the map)
+
 The file numbering. A disc names a file by its index in the disc's file table; the PSP's
 BOOT.BIN holds that table as 0x40-byte path records (found by the disc's own paths). The
 PC names a DAT/ file by its index in Dat_FileNames (symbols.toml), whose words
@@ -66,7 +79,52 @@ sys.path.insert(0, TOOLS)
 PSP = ("psp-jp", "psp-eu")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
-RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap")   # widen<k>: the disc's name is k bytes
+RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide")   # widen<k>: the disc's name is k bytes
+# twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
+# image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
+# is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
+# (the PSX builds place it already, exe-places.tsv, and a twin there would split that place).
+# Addresses and names only.
+TWINS = [
+    (0x64AE18, 0x64AE28, "BATTLE/BATTLE.EMI", "the BATE equipment screen's slot icons and categories"),
+    (0x64E31C, 0x64E324, "BATTLE/BATTLE.EMI", "the battle windows' '/' and ':' texts"),
+    (0x64E328, 0x64E334, "BATTLE/BATTLE.EMI", "the party's ability bonus by level class (s16 x 6)"),
+    (0x64E4E4, 0x64E4FC, "BATTLE/BATTLE.EMI", "the battle item command's slot categories and the facing step pairs", PSP),
+    (0x64E524, 0x64E52A, "BATTLE/BATTLE.EMI", "Escape_Chance's row", PSP),
+    (0x654830, 0x65483A, "ETC/START.EMI", "the save slot's play-time format"),
+    (0x6639A8, 0x6639B0, "ETC/START.EMI", "a figure's maximum format"),
+    (0x6639B0, 0x6639B8, "ETC/START.EMI", "a figure's current format"),
+    (0x6639B8, 0x6639C1, "ETC/START.EMI", "the EXP panel's text for no next level"),
+    (0x6639C4, 0x6639C8, "ETC/START.EMI", "the EXP value's format"),
+    (0x6639C8, 0x6639D0, "ETC/START.EMI", "the count format 'n / total'"),
+    (0x6639D0, 0x6639D4, "ETC/START.EMI", "the save slot's play-time colon"),
+    (0x66A49C, 0x66A4AC, "ETC/GAME.EMI", "Item_IconByKind (the item-trade screen's icons)"),
+    (0x66AF24, 0x66AF34, "ETC/GAME.EMI", "the battle result window's icon by item kind"),
+    (0x66B5B4, 0x66B5C4, "BATTLE/BATTLE.EMI", "the battle menu equipment window's slot icons and categories"),
+    (0x653EC0, 0x653EC5, "ETC/GAME.EMI", "the item list's count format"),
+    (0x64ADD0, 0x64ADD6, "ETC/BATE.EMI", "the result tally's step per count"),
+    (0x64E3DE, 0x64E3EB, "BATTLE/BATTLE.EMI", "Battle_WakeRoll's chances (with the placed table before them)"),
+    (0x656A34, 0x656A44, "BATTLE/BATTLE.EMI", "Battle_OpenEnemyNames' column places by layout"),
+    (0x656AA4, 0x656AAC, "ETC/GAME.EMI", "GameMode5_Turn's approach pairs (the battle's view centre step)"),
+    # the world maps' own tables, each from its area's overlay (docs/visual-findings-1012.md 7)
+    (0x5E5FF0, 0x5E6008, "WORLD00/AREA016.EMI", "Area16_Buttons"),
+    (0x5E6024, 0x5E602C, "WORLD00/AREA016.EMI", "Area16_Record8Anims"),
+    (0x5E6034, 0x5E603E, "WORLD00/AREA016.EMI", "Area16_DriftUV"),
+    (0x5F76E8, 0x5F7700, "WORLD01/AREA045.EMI", "Area45_Buttons"),
+    (0x5F771C, 0x5F7724, "WORLD01/AREA045.EMI", "Area45_Record8Anims"),
+    (0x5F772C, 0x5F7736, "WORLD01/AREA045.EMI", "Area45_DriftUV"),
+    (0x604914, 0x60492C, "WORLD01/AREA065.EMI", "Area65_Buttons"),
+    (0x604948, 0x604950, "WORLD01/AREA065.EMI", "Area65_Record8Anims"),
+    (0x6126E4, 0x6126EC, "WORLD02/AREA087.EMI", "Area87_Record8Anims"),
+    (0x613060, 0x613068, "WORLD02/AREA088.EMI", "Area88_Record8Anims"),
+]
+# unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
+# 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
+# (docs/psp-widescreen.md 3a row 5): put back by the rule x + 32 left of the centre (160),
+# x - 32 right of it. Addresses only; the PSP's values are read from its disc.
+UNWIDE = [0x66AE10 + 4 * e for e in (3, 4, 5, 6)]
+_BASE_IMAGE = {}            # bid -> (image, owner) of the recipe's base image (psxmap_rows)
+MUSIC_SETS = 0x669A48       # Area_ZoneTrack's 8-byte records (window_task.cpp: a list pointer, a count)
 PSX_MAP = "psx-jp"          # psxmap: the map whose segments a PSP disc's same files are read by
 _RECIPE_BASE = False        # True while `recipe` builds the image the fills are found against
 DATA_LO, DATA_HI = 0x5DA000, 0x676000
@@ -391,9 +449,27 @@ def build_fill(row, disc, elf, rule, srcs):
         for i in range((hi - lo) // 28):
             out[28 * i + 16:28 * i + 28] = blob[at + (k + 12) * i + k:at + (k + 12) * i + k + 12]
             mask[28 * i + 16:28 * i + 28] = [True] * 12
-    elif rl == "psxmap":
+    elif rl in ("psxmap", "twin"):
         out[:] = blob[at:at + hi - lo]
         mask = [True] * (hi - lo)
+    elif rl == "msets":
+        # A list is its entries and the bytes after them up to the next list (Area_ZoneTrack
+        # reads the entry past the last as the fallback): the disc's span, as far as the
+        # PC's room for it reaches.
+        sets = music_sets_layout()
+        recs = [struct.unpack_from("<II", blob, at + 8 * i) for i in range(len(sets))]
+        disc_ends = [p for p, _ in recs[1:]] + [at]
+        pc_ends = sorted({l for _, l in sets} | {sets[0][0]})
+        for i, (rec, lst) in enumerate(sets):
+            p, n = recs[i]
+            room = min(e for e in pc_ends if e > lst) - lst
+            span = min(disc_ends[i] - p, room)
+            if not (lo <= lst and rec + 8 <= hi and n < 0x100 and 3 * n < span):
+                fail("%s: BOOT.BIN 0x%X record %d does not fit the PC's music sets" % (row["build"], row["addr"], i))
+            out[rec + 4 - lo:rec + 8 - lo] = struct.pack("<I", n)
+            mask[rec + 4 - lo:rec + 8 - lo] = [True] * 4
+            out[lst - lo:lst - lo + span] = blob[p:p + span]
+            mask[lst - lo:lst - lo + span] = [True] * span
     else:
         fail("exe-psp.tsv: unknown rule %s" % rl)
     return lo, bytes(out), mask
@@ -427,6 +503,8 @@ def fill(disc, bid, owner, rows=None, srcs=None):
     rule = id_rule(disc_ids(disc, bid, srcs, elf))
     out = []
     for row in rows:
+        if row["rule"] == "unwide":
+            continue                                  # applied after the fills (unwide)
         lo, raw, mask = build_fill(row, disc, elf, rule, srcs)
         where = "%s%s:%s" % (row["file"], "" if row["section"] is None else "#%d" % row["section"], row["rule"])
         i = 0
@@ -487,6 +565,24 @@ def find_rows(disc, bid, pc):
     if w:
         rows.append({"build": bid, "rule": "widen%d" % w[5], "pc": w[0], "pc_end": w[1], "file": w[3],
                      "section": w[4], "addr": w[2]})
+    for tlo, thi, tfile, _, *only in TWINS:
+        if only and bid not in only[0]:
+            continue
+        t = twin_place(srcs, pc, tlo, thi, tfile)
+        if t:
+            rows.append({"build": bid, "rule": "twin", "pc": tlo, "pc_end": thi, "file": tfile, "section": t[0],
+                         "addr": t[1]})
+        else:
+            print("  %s twin 0x%06X..0x%06X: not in %s" % (bid, tlo, thi, tfile))
+    if psp:
+        m = msets_place(elf)
+        sets = music_sets_layout()
+        if m is not None:
+            rows.append({"build": bid, "rule": "msets", "pc": min(l for _, l in sets), "pc_end": sets[-1][0] + 8,
+                         "file": "BOOT.BIN", "section": None, "addr": m})
+        else:
+            print("  %s msets: no single run of %d records in BOOT.BIN" % (bid, len(sets)))
+    rows.sort(key=lambda r: r["pc"])
     kept = []
     for r in rows:
         lo_, raw, mask = build_fill(r, disc, elf, rule, srcs)
@@ -504,7 +600,48 @@ def find_rows(disc, bid, pc):
     print("  %s psxmap: %d runs, %d bytes (%d of them non-zero on the PC) from the PSP's own files at %s's places" % (
         bid, len(psx), sum(r["filled"] for r in psx),
         sum(1 for r in psx for x in range(r["pc"], r["pc_end"]) if pc[x - DATA_LO]), PSX_MAP))
-    return sorted(kept + psx, key=lambda r: r["pc"])
+    rows = kept + psx
+    u = unwide_row(bid, pc)
+    if u:
+        rows.append(u)
+    return sorted(rows, key=lambda r: r["pc"])
+
+
+def unwide_bytes(img, owner):
+    """UNWIDE applied to an image's placed bytes: [(pc, 2 bytes)], or None when a word
+    is not placed."""
+    out = []
+    for a in UNWIDE:
+        if owner[a - DATA_LO] is None or owner[a + 1 - DATA_LO] is None:
+            return None
+        x, = struct.unpack_from("<h", img, a - DATA_LO)
+        out.append((a, struct.pack("<h", x + 32 if x < 160 else x - 32)))
+    return out
+
+
+def unwide_row(bid, pc):
+    """The unwide row for a PSP build, written only when the rule gives BOF3.exe's bytes
+    from the image the other rules build (psxmap_rows keeps it)."""
+    img, owner = _BASE_IMAGE[bid]
+    got = unwide_bytes(img, owner)
+    if got is None or any(raw != pc[a - DATA_LO:a - DATA_LO + 2] for a, raw in got):
+        print("  %s unwide: not BOF3.exe's, no row" % bid)
+        return None
+    print("  %s unwide: %d side placements back to the 4:3 frame, 0 not BOF3.exe's" % (bid, len(got)))
+    return {"build": bid, "rule": "unwide", "pc": UNWIDE[0], "pc_end": UNWIDE[-1] + 2, "file": "-",
+            "section": None, "addr": 0, "filled": 2 * len(got)}
+
+
+def unwide(bid, img, owner, rows=None):
+    """A PSP build's image: the PSP's 16:9 re-framing undone (UNWIDE), when the recipe has
+    the build's unwide row. [(pc, bytes, where, address)] for exe_tables.disc_image."""
+    rows = load_recipe()[bid] if rows is None else rows
+    if _RECIPE_BASE or not any(r["rule"] == "unwide" for r in rows):
+        return []
+    got = unwide_bytes(img, owner)
+    if got is None:
+        fail("%s: the message box's side placements are not placed; the unwide row does not apply" % bid)
+    return [(a, raw, "unwide", 0) for a, raw in got]
 
 
 def psxmap_rows(disc, bid, pc, srcs, taken):
@@ -518,10 +655,11 @@ def psxmap_rows(disc, bid, pc, srcs, taken):
     import psp_exe as imported      # exe_tables' copy (this file may be running as __main__)
     imported._RECIPE_BASE = True
     try:
-        _, owner, _, _, _ = exe_tables.disc_built(disc, bid, exe_tables.load_pointers(),
-                                                  exe_tables.load_rebuild_refused()[bid])
+        img, owner, _, _, _ = exe_tables.disc_built(disc, bid, exe_tables.load_pointers(),
+                                                    exe_tables.load_rebuild_refused()[bid])
     finally:
         imported._RECIPE_BASE = False
+    _BASE_IMAGE[bid] = (img, owner)
     skip = set(taken) | exe_tables.own_bytes()
     gaps, _ = exe_tables.load_gaps()
     skip.update(x for lo, hi, how, _, _ in gaps.get(bid, []) if how == "language" for x in range(lo, hi))
@@ -592,6 +730,55 @@ def wheel_place_psx(srcs, pc):
     return lo, lo + 28 * n, addr, f, s, k
 
 
+@functools.lru_cache(None)
+def music_sets_layout():
+    """[(record address, its list's address)] for Area_ZoneTrack's records: the layout's
+    data pointer words at MUSIC_SETS + 8 i, as long as they run (recipes/exe-layout.tsv)."""
+    import exe_tables
+    words = {a: int(t, 16) for a, k, t in exe_tables.load_layout() if k == "data"}
+    out, a = [], MUSIC_SETS
+    while a in words:
+        out.append((a, words[a]))
+        a += 8
+    if not out:
+        fail("exe-layout.tsv has no pointer word at the music sets 0x%X" % MUSIC_SETS)
+    return out
+
+
+def msets_place(elf):
+    """BOOT.BIN's music-set records, by its relocations: the one run in .data of as many
+    8-byte records as the PC's whose +0 word is relocated and points before the run,
+    rising, and whose +4 word is a count 1..255 that fits before the next list. The
+    address or None."""
+    n = len(music_sets_layout())
+    dlo, dhi = elf.span(".data")
+    dp = elf.data_pointers
+    hits = []
+    for a in range(dlo, dhi - 8 * n, 4):
+        if not all(a + 8 * i in dp for i in range(n)):
+            continue
+        rec = [struct.unpack_from("<II", elf.img, a + 8 * i) for i in range(n)]
+        if all(1 <= c < 0x100 for _, c in rec) and all(dlo <= p < a for p, _ in rec) \
+                and all(rec[i][0] + 3 * rec[i][1] <= rec[i + 1][0] for i in range(n - 1)) \
+                and rec[-1][0] + 3 * rec[-1][1] <= a:
+            hits.append(a)
+    if len(hits) != 1:
+        return None
+    return hits[0]
+
+
+def twin_place(srcs, pc, lo, hi, file):
+    """The first copy of BOF3.exe's [lo, hi) in `file`'s sections, in section order:
+    (section, disc address) or None."""
+    nd = pc[lo - DATA_LO:hi - DATA_LO]
+    for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
+        if f == file:
+            at = blob.find(nd)
+            if at >= 0:
+                return s, base + at
+    return None
+
+
 def write_recipe(rows):
     lines = ["# recipes/exe-psp.tsv - GENERATED by `tools/psp_exe.py recipe`; do not edit.",
              "# The game values a disc carries in another shape than BOF3.exe's (docs/psp-image.md,",
@@ -599,7 +786,9 @@ def write_recipe(rows):
              "# from `file` (BOOT.BIN or an EMI and its section) at `addr` - rows8 (Magic_Rows' file ids),",
              "# pairs (EventBattle_Records' file array), holes (Effect_HpDamageVariance's set-file tables),",
              "# widen<k> (the formation wheel's spots, the disc's name k bytes), psxmap (a PSP disc's own EMI",
-             "# at the PSX-JP map's place) - and how many bytes it fills. A row is written only when every",
+             "# at the PSX-JP map's place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),",
+             "# msets (the zone music sets from BOOT.BIN's packed lists) - and how many bytes it fills.",
+             "# A row is written only when every",
              "# byte equals BOF3.exe's.",
              "# Addresses and counts only (CLAUDE.md rule 1).",
              "\t".join(COLS)]
@@ -739,10 +928,12 @@ def check():
             last = r["pc_end"]
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n}.get(r["rule"])
+            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "twin": n}.get(r["rule"])
+            if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
+                errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes filled, the rule fills %d" % (bid, r["pc"], r["filled"], want))
-            if r["rule"] != "rows8" and any(x in ptr for x in range(r["pc"], r["pc_end"])):
+            if r["rule"] not in ("rows8", "msets") and any(x in ptr for x in range(r["pc"], r["pc_end"])):
                 errs.append("exe-psp.tsv: %s 0x%06X: over a pointer word" % (bid, r["pc"]))
     try:
         ids, null = pc_file_ids()
