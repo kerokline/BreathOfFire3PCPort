@@ -342,8 +342,11 @@ All from this branch's tools; the scripts are in `psp_ms/`.
   disc's song does", Stop, Close. On the US PSX cache, PSX enabled and PSP
   greyed with its reason. Not heard.
 - **Headless self-test** (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, the
-  launcher, `bof3x.exe` and the DLL in an ini-less scratch folder):
-  SELFTEST_RESULT.
+  launcher, `bof3x.exe` and the DLL in an ini-less scratch folder, `--game`
+  the PC install, `--no-config`): the hosted build (a shadow switch selects
+  it), game process exit 0, launcher exit 0, about 15 minutes. The exe host's
+  self-test on a PSX disc-only install was not run: this branch changes the
+  launcher's Jukebox only, nothing the DLL or `bof3x.exe` holds.
 
 ## 8. Not verified
 
