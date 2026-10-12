@@ -61,7 +61,7 @@ sys.path.insert(0, TOOLS)
 PSP = ("psp-jp", "psp-eu")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
-RULES = ("rows8", "pairs", "holes", "widen8", "psxmap")
+RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap")   # widen<k>: the disc's name is k bytes
 PSX_MAP = "psx-jp"          # psxmap: the map whose segments a PSP disc's same files are read by
 _RECIPE_BASE = False        # True while `recipe` builds the image the fills are found against
 DATA_LO, DATA_HI = 0x5DA000, 0x676000
@@ -159,6 +159,38 @@ def file_table(elf, paths):
     if on_disc * 10 < len(out) * 9:
         fail("BOOT.BIN's path table: only %d of %d records name a file on the disc" % (on_disc, len(out)))
     return out
+
+
+def lba_table(disc, srcs):
+    """[path by disc file id] on a PSX disc: the boot EXE's table of start sectors, one
+    u32 per disc file - found as the longest run of aligned words in the boot EXE each
+    of which is the start sector of a file on the disc (the disc's own directory) -
+    each sector named by its file. The leading BIN/ is dropped, as BOOT.BIN's names
+    have no such folder."""
+    by_lba = {lba: p for p, (lba, size) in disc.files.items()}
+    base, blob = srcs[("BOOT", None)]
+    best = (0, 0)
+    a = 0
+    while a + 4 <= len(blob):
+        n = 0
+        while a + 4 * (n + 1) <= len(blob) and struct.unpack_from("<I", blob, a + 4 * n)[0] in by_lba:
+            n += 1
+        if n > best[1]:
+            best = (a, n)
+        a += 4 * max(n, 1)
+    a, n = best
+    if n < len(by_lba) // 2:
+        fail("the boot EXE holds no table of the disc's start sectors (the longest run: %d of %d files)" % (n, len(by_lba)))
+    paths = [by_lba[struct.unpack_from("<I", blob, a + 4 * i)[0]] for i in range(n)]
+    return [p[4:] if p.startswith("BIN/") else p for p in paths]
+
+
+def disc_ids(disc, bid, srcs, elf=None):
+    """[path by disc file id]: BOOT.BIN's path records on a PSP disc, the boot EXE's
+    sector table on a PSX one."""
+    if bid in PSP:
+        return file_table(elf or boot_bin(disc), disc_paths(disc))
+    return lba_table(disc, srcs)
 
 
 # ------------------------------------------------------------------ the PC's file ids
@@ -264,6 +296,35 @@ def find_rows8(elf):
     return hits[0], rows
 
 
+def find_rows8_psx(srcs, file):
+    """Magic_Rows on a PSX disc: in the sections of `file` (the battle engine's, the
+    file exe_maps places Effect_HpDamageVariance from), the one run of exactly the
+    PC's row count of stride-8 rows whose +4 word is a main-RAM code address
+    (4-aligned, 0x80010000..0x80200000) and whose +0 word is no such address.
+    (section, address, rows)."""
+    rows = data_symbol("Magic_Rows")["count"] // 2
+    hits = []
+    for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
+        if f != file:
+            continue
+
+        def row(a):
+            w0, w4 = struct.unpack_from("<II", blob, a)
+            return 0x80010000 <= w4 < 0x80200000 and w4 % 4 == 0 and not 0x80000000 <= w0 < 0x80200000
+        for phase in (0, 4):
+            a = phase
+            while a + 8 <= len(blob):
+                n = 0
+                while a + 8 * (n + 1) <= len(blob) and row(a + 8 * n):
+                    n += 1
+                if n == rows:
+                    hits.append((s, base + a))
+                a += 8 * max(n, 1)
+    if len(hits) != 1:
+        fail("%s: %d runs of %d code-pointer rows (want one)" % (file, len(hits), rows))
+    return hits[0][0], hits[0][1], rows
+
+
 def event_place(bid):
     """BOOT.BIN's u16 file array of EventBattle_Records: the catalogued table's place
     in this build + its count x stride (on the PC the (file, track) pairs follow it at
@@ -271,10 +332,11 @@ def event_place(bid):
     import tables
     cat, syms, _ = tables.load()
     t = next(t for t in cat["table"] if t.get("symbol") == "EventBattle_Records")
-    row = next((p for p in t.get("psx", []) if p["build"] == bid and p["file"] == "BOOT.BIN"), None)
-    if row is None:
-        fail("tables.toml has no BOOT.BIN place of EventBattle_Records for %s" % bid)
-    return syms[t["symbol"]], row["addr"], t["count"], t["stride"]
+    rows = [p for p in t.get("psx", []) if p["build"] == bid]
+    rows.sort(key=lambda p: p["file"] != "BOOT.BIN")          # on a PSP disc the ELF's copy
+    if not rows:
+        fail("tables.toml has no place of EventBattle_Records for %s" % bid)
+    return syms[t["symbol"]], rows[0]["file"], rows[0].get("section"), rows[0]["addr"], t["count"], t["stride"]
 
 
 def hole_segments(bid, lo):
@@ -301,8 +363,11 @@ def build_fill(row, disc, elf, rule, srcs):
     out, mask = bytearray(hi - lo), [False] * (hi - lo)
     if rl == "rows8":
         for r in range((hi - lo) // 8):
-            if (at + 8 * r + 4) not in elf.data_pointers or (at + 8 * r) in elf.data_pointers:
-                fail("%s: BOOT.BIN 0x%X row %d is no code-pointer row" % (row["build"], row["addr"], r))
+            w0, w4 = struct.unpack_from("<II", blob, at + 8 * r)
+            ok = ((at + 8 * r + 4) in elf.data_pointers and (at + 8 * r) not in elf.data_pointers) if elf else \
+                (0x80010000 <= w4 < 0x80200000 and not 0x80000000 <= w0 < 0x80200000)
+            if not ok:
+                fail("%s: %s 0x%X row %d is no code-pointer row" % (row["build"], row["file"], row["addr"], r))
             f, x = struct.unpack_from("<HH", blob, at + 8 * r)
             struct.pack_into("<HH", out, 8 * r, map_ids(rule, f), x)
             mask[8 * r:8 * r + 4] = [True] * 4
@@ -316,9 +381,10 @@ def build_fill(row, disc, elf, rule, srcs):
             v, = struct.unpack_from("<H", blob, at + 2 * i)
             struct.pack_into("<H", out, 2 * i, map_ids(rule, v, keep=(0,)))
             mask[2 * i:2 * i + 2] = [True] * 2
-    elif rl == "widen8":
+    elif rl.startswith("widen"):
+        k = int(rl[5:])                                   # the disc's name width; its entry k + 12
         for i in range((hi - lo) // 28):
-            out[28 * i + 16:28 * i + 28] = blob[at + 20 * i + 8:at + 20 * i + 20]
+            out[28 * i + 16:28 * i + 28] = blob[at + (k + 12) * i + k:at + (k + 12) * i + k + 12]
             mask[28 * i + 16:28 * i + 28] = [True] * 12
     elif rl == "psxmap":
         out[:] = blob[at:at + hi - lo]
@@ -349,11 +415,11 @@ def fill(disc, bid, owner, rows=None, srcs=None):
     has filled yet. No row for another build. `srcs`: exe_twins.sources as
     {(file, section): (base, bytes)}, if the caller has it."""
     rows = load_recipe()[bid] if rows is None else rows
-    if bid not in PSP or not rows or _RECIPE_BASE:
+    if not rows or _RECIPE_BASE:
         return []
-    elf = boot_bin(disc)
-    rule = id_rule(file_table(elf, disc_paths(disc)))
+    elf = boot_bin(disc) if bid in PSP else None
     srcs = sources_of(disc) if srcs is None else srcs
+    rule = id_rule(disc_ids(disc, bid, srcs, elf))
     out = []
     for row in rows:
         lo, raw, mask = build_fill(row, disc, elf, rule, srcs)
@@ -376,21 +442,31 @@ def fill(disc, bid, owner, rows=None, srcs=None):
 def find_rows(disc, bid, pc):
     """Every fill this build's disc gives, located by the rules above and kept only
     where its bytes equal BOF3.exe's: recipe rows."""
-    elf = boot_bin(disc)
-    table = file_table(elf, disc_paths(disc))
-    rule = id_rule(table)
+    psp = bid in PSP
+    elf = boot_bin(disc) if psp else None
     srcs = sources_of(disc)
+    table = disc_ids(disc, bid, srcs, elf)
+    rule = id_rule(table)
+    print("  %s: %d disc file ids, %d with a PC file id" % (bid, len(table), len(rule)))
     rows = []
-    a, n = find_rows8(elf)
     sym = data_symbol("Magic_Rows")
-    rows.append({"build": bid, "rule": "rows8", "pc": sym["pc"], "pc_end": sym["pc"] + 8 * n, "file": "BOOT.BIN",
-                 "section": None, "addr": a})
-    pcs, place, count, stride = event_place(bid)
-    elf_rec = place
-    n_files = 1 + max(elf.img[elf_rec + stride * i + 3] for i in range(count))
-    rows.append({"build": bid, "rule": "pairs", "pc": pcs + count * stride, "pc_end": pcs + count * stride + 4 * n_files,
-                 "file": "BOOT.BIN", "section": None, "addr": place + count * stride})
     hv = data_symbol("Effect_HpDamageVariance")
+    if psp:
+        a, n = find_rows8(elf)
+        f8, s8 = "BOOT.BIN", None
+    else:
+        import tables
+        seg = next(r for r in tables.read_map(os.path.join(tables.MAPS, bid + ".tsv"))
+                   if r["pc"] <= hv["pc"] < r["pc_end"])
+        s8, a, n = find_rows8_psx(srcs, seg["file"])
+        f8 = seg["file"]
+    rows.append({"build": bid, "rule": "rows8", "pc": sym["pc"], "pc_end": sym["pc"] + 8 * n, "file": f8,
+                 "section": s8, "addr": a})
+    pcs, ef, es, place, count, stride = event_place(bid)
+    eb, eblob = (0, elf.img) if ef == "BOOT.BIN" else srcs[(ef, es)]
+    n_files = 1 + max(eblob[place - eb + stride * i + 3] for i in range(count))
+    rows.append({"build": bid, "rule": "pairs", "pc": pcs + count * stride, "pc_end": pcs + count * stride + 4 * n_files,
+                 "file": ef, "section": es, "addr": place + count * stride})
     lo = hv["pc"] + 2 * hv["count"]                       # the records after the s16 table
     import exe_tables
     targets = sorted({int(t, 16) for a_, k, t in exe_tables.load_layout() if lo <= a_ < lo + 0x100 and k == "data"})
@@ -402,10 +478,10 @@ def find_rows(disc, bid, pc):
         f, s, addr, _ = h
         rows.append({"build": bid, "rule": "holes", "pc": first, "pc_end": last + span, "file": f, "section": s,
                      "addr": addr})
-    w = wheel_place(elf, pc)
+    w = wheel_place(elf, pc) if psp else wheel_place_psx(srcs, pc)
     if w:
-        rows.append({"build": bid, "rule": "widen8", "pc": w[0], "pc_end": w[1], "file": "BOOT.BIN", "section": None,
-                     "addr": w[2]})
+        rows.append({"build": bid, "rule": "widen%d" % w[5], "pc": w[0], "pc_end": w[1], "file": w[3],
+                     "section": w[4], "addr": w[2]})
     kept = []
     for r in rows:
         lo_, raw, mask = build_fill(r, disc, elf, rule, srcs)
@@ -416,6 +492,8 @@ def find_rows(disc, bid, pc):
             r["addr"], r["filled"], len(bad)))
         if not bad:
             kept.append(r)
+    if not psp:
+        return kept
     taken = {x for r in kept for x in range(r["pc"], r["pc_end"])}
     psx = psxmap_rows(disc, bid, pc, srcs, taken)
     print("  %s psxmap: %d runs, %d bytes (%d of them non-zero on the PC) from the PSP's own files at %s's places" % (
@@ -430,15 +508,15 @@ def psxmap_rows(disc, bid, pc, srcs, taken):
     a segment - not an engine-own byte, not a language range of exe-gaps.tsv, not a
     rule's - read from the PSP's file at the same address, kept only when the whole
     run equals BOF3.exe's and holds a non-zero byte."""
-    global _RECIPE_BASE
     import exe_tables
     import tables
-    _RECIPE_BASE = True
+    import psp_exe as imported      # exe_tables' copy (this file may be running as __main__)
+    imported._RECIPE_BASE = True
     try:
         _, owner, _, _, _ = exe_tables.disc_built(disc, bid, exe_tables.load_pointers(),
                                                   exe_tables.load_rebuild_refused()[bid])
     finally:
-        _RECIPE_BASE = False
+        imported._RECIPE_BASE = False
     skip = set(taken) | exe_tables.own_bytes()
     gaps, _ = exe_tables.load_gaps()
     skip.update(x for lo, hi, how, _, _ in gaps.get(bid, []) if how == "language" for x in range(lo, hi))
@@ -484,7 +562,29 @@ def wheel_place(elf, pc):
         return None
     if len({elf.img[h:h + 20 * n] for h in hits}) != 1:
         fail("BOOT.BIN's copies of the formation wheel differ")
-    return lo, lo + 28 * n, hits[0]
+    return lo, lo + 28 * n, hits[0], "BOOT.BIN", None, 8
+
+
+def wheel_place_psx(srcs, pc):
+    """The formation wheel on a PSX disc: as wheel_place, in the EMIs (each menu
+    overlay carries a copy, found by BOF3.exe's spots at recipe time); the first in
+    path order, all copies' spots equal. (pc, pc_end, address, file, section) or None."""
+    sym = data_symbol("Equip_SlotIcons")
+    lo = sym["pc"] + 0x50
+    n = 10
+    spots = [pc[lo + 28 * i + 16 - DATA_LO:lo + 28 * i + 28 - DATA_LO] for i in range(n)]
+    hits = []
+    for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
+        a = blob.find(spots[0])
+        while a >= 0:
+            for k in (8, 10, 12):                         # the disc's name width (the stride less the spots)
+                if a >= k and all(blob[a + (k + 12) * i:a + (k + 12) * i + 12] == spots[i] for i in range(n)):
+                    hits.append((f, s, base + a - k, k))
+            a = blob.find(spots[0], a + 1)
+    if not hits:
+        return None
+    f, s, addr, k = hits[0]
+    return lo, lo + 28 * n, addr, f, s, k
 
 
 def write_recipe(rows):
@@ -509,8 +609,6 @@ def cmd_recipe(a):
     pc, _ = exe_tables.pc_data(os.path.join(a.game, "BOF3.exe"))
     rows = []
     for bid, disc in exe_tables.discs(a.disc):
-        if bid not in PSP:
-            fail("%s is not a PSP disc" % bid)
         rows += find_rows(disc, bid, pc)
     write_recipe(rows)
     print("-> %s: %d rows" % (os.path.relpath(RECIPE, ROOT), len(rows)))
@@ -624,17 +722,17 @@ def check():
     for p, n, _ in exe_tables.load_pointers():
         ptr.update(range(p, p + 4 * n))
     for bid, rs in rows.items():
-        if bid not in PSP:
-            errs.append("exe-psp.tsv: rows for %s, not a PSP build" % bid)
+        if bid not in exe_tables.ORDER:
+            errs.append("exe-psp.tsv: rows for %s, not a disc build" % bid)
         last = DATA_LO
         for r in rs:
             n = r["pc_end"] - r["pc"]
             if r["rule"] not in RULES or not (DATA_LO <= r["pc"] < r["pc_end"] <= DATA_HI) or r["pc"] < last:
                 errs.append("exe-psp.tsv: %s 0x%06X: unknown rule, outside .data or out of order" % (bid, r["pc"]))
             last = r["pc_end"]
-            if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28}.get(r["rule"], 1):
+            if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "psxmap": n}.get(r["rule"])
+            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n}.get(r["rule"])
             if want is not None and r["filled"] != want:
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes filled, the rule fills %d" % (bid, r["pc"], r["filled"], want))
             if r["rule"] != "rows8" and any(x in ptr for x in range(r["pc"], r["pc_end"])):
