@@ -123,6 +123,25 @@ def run_tool(cmd, log):
 
 # --- prepare ------------------------------------------------------------------
 
+def tools_hash():
+    """A hash of the importer's tools and recipes (this harness's own files
+    left out): a cache built by other tools is rebuilt, since what a build
+    writes (the exe image's places and gaps, the stand-ins) moves with them."""
+    h = hashlib.sha256()
+    for d, skip in (('tools', 'abc_'), ('recipes', 'abc-')):
+        base = os.path.join(ROOT, d)
+        for f in sorted(os.listdir(base)):
+            p = os.path.join(base, f)
+            if f.startswith(skip) or not os.path.isfile(p):
+                continue
+            if d == 'tools' and not f.endswith('.py'):
+                continue
+            h.update(f.encode())
+            with open(p, 'rb') as fh:
+                h.update(fh.read().replace(b'\r\n', b'\n'))
+    return h.hexdigest()[:16]
+
+
 def prepare_cache(i, logs):
     cache = i['cache']
     if not i['build']:
@@ -130,7 +149,8 @@ def prepare_cache(i, logs):
             sys.exit(f'{i["name"]}: cache {cache} has no manifest.toml and the install names no build')
         print(f'  cache {cache}: used as it is')
         return
-    want = {'sources': i['build'], 'lang': i.get('build_lang', []), 'opt': i.get('build_opt', [])}
+    want = {'sources': i['build'], 'lang': i.get('build_lang', []), 'opt': i.get('build_opt', []),
+            'tools': tools_hash()}
     st = os.path.join(cache, '.abc_build.json')
     have = stamp_read(st)
     if have and have.get('want') == want and os.path.exists(os.path.join(cache, 'manifest.toml')):
@@ -338,11 +358,30 @@ def run_one(cfg, i, recipe, out, a):
     if a.speed != 1:
         cmd += ['--speed', str(a.speed)]
     print(f'{i["name"]}: {route_name(a.route)} -> {out}')
-    t0 = time.time()
     runlog = os.path.join(out, '_run.txt')
-    with open(runlog, 'w', encoding='utf-8') as fh:
-        r = subprocess.run(cmd, cwd=ROOT, env=env, stdout=fh, stderr=subprocess.STDOUT)
-    wall = time.time() - t0
+    for attempt in (1, 2):
+        t0 = time.time()
+        with open(runlog, 'w', encoding='utf-8') as fh:
+            r = subprocess.run(cmd, cwd=ROOT, env=env, stdout=fh, stderr=subprocess.STDOUT)
+        wall = time.time() - t0
+        # input_run asks tasklist whether the game lives; when process
+        # creation fails (2026-10-12, two harnesses' games at once: the
+        # runner itself exited 0xC0000142) it reads "exited" and leaves the
+        # game up. Whatever the runner said, no game of this launcher folder
+        # outlives its run - ended by pid (attract_run.kill_stale).
+        stale = end_stale(launcher)
+        text = open(runlog, encoding='utf-8', errors='replace').read()
+        if (r.returncode & 0xFFFFFFFF) == 0xC0000142 or (stale and 'end: game exited' in text):
+            print(f'  attempt {attempt}: the runner could not start or follow the game '
+                  f'(exit 0x{r.returncode & 0xFFFFFFFF:X}{", a game left running and ended" if stale else ""})')
+            if attempt == 1:
+                restore_slot0(i['game'])
+                for f in glob.glob(os.path.join(out, '*')):
+                    if os.path.basename(f) != '_run.txt':
+                        os.remove(f)
+                time.sleep(10)
+                continue
+        break
     log = os.path.join(i['launcher'], 'bof3x.log')
     if os.path.exists(log):
         shutil.copy2(log, os.path.join(out, 'bof3x.log'))
@@ -373,6 +412,30 @@ def run_one(cfg, i, recipe, out, a):
             if 'FATAL' in line or line.startswith('end:') or 'launcher failed' in line:
                 print('  ' + line)
     return meta
+
+
+def end_stale(launcher):
+    """End any game whose bof3x.dll is this launcher folder's, by pid; True
+    when there was one."""
+    import attract_run
+    want = os.path.normcase(os.path.dirname(os.path.abspath(launcher)))
+    ps = ("Get-Process -Name BOF3,bof3x -ErrorAction SilentlyContinue | ForEach-Object { "
+          "$m = $_.Modules | Where-Object { $_.ModuleName -eq 'bof3x.dll' } | Select-Object -First 1; "
+          "if ($m) { '{0}|{1}' -f $_.Id, $m.FileName } }")
+    out = subprocess.run(['powershell', '-NoProfile', '-Command', ps], capture_output=True, text=True).stdout
+    found = any(os.path.normcase(os.path.dirname(l.partition('|')[2].strip())) == want
+                for l in out.splitlines() if '|' in l)
+    if found:
+        attract_run.kill_stale(launcher)
+    return found
+
+
+def restore_slot0(game):
+    """A run cut short leaves the recipe save in slot 0 and a lock: put back
+    what was there (recipe_saves.py restore)."""
+    if os.path.isdir(os.path.join(game, '.recipe_slot0')):
+        subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'recipe_saves.py'), 'restore', '--game', game],
+                       cwd=ROOT, capture_output=True)
 
 
 def git_head():

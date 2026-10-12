@@ -150,21 +150,27 @@ def moved(a, b, box, scale, tol=TOL, reach=(16, 8)):
         ax1, ay1 = min(x1, w - dx), min(y1, h - dy)
         if (ax1 - ax0) * (ay1 - ay0) * 2 < area:
             return None
-        pa = ga[ay0:ay1, ax0:ax1]
-        pb = gb[ay0 + dy:ay1 + dy, ax0 + dx:ax1 + dx]
+        pa = ga[ay0:ay1:2, ax0:ax1]       # every second row: half the cost, the same answer for a shift
+        pb = gb[ay0 + dy:ay1 + dy:2, ax0 + dx:ax1 + dx]
         return float((np.abs(pa - pb).max(axis=2) > tol).mean())
 
     base = miss(0, 0)
     if not base:
         return None
     best, at = base, None
-    for dy in range(-reach[1], reach[1] + 1):
-        for dx in range(-reach[0], reach[0] + 1):
+
+    def look(cands):
+        nonlocal best, at
+        for dx, dy in cands:
             if dx == 0 and dy == 0:
                 continue
             m = miss(dx, dy)
             if m is not None and m < best:
                 best, at = m, (dx, dy)
+
+    # every offset: a coarse grid misses an odd shift (12 is no better than 0
+    # for a picture moved 13), and this is the costly part of a comparison
+    look((dx, dy) for dy in range(-reach[1], reach[1] + 1) for dx in range(-reach[0], reach[0] + 1))
     return list(at) if at and best * 2 < base else None
 
 
