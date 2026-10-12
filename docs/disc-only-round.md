@@ -149,6 +149,45 @@ probe's condition and a log line, which no run here reaches.
 | `worldMapAndAreaTransition`, `whelpBoss`, `menu_screens`, `field_menu` | five VRAM-shadow pages, `0x7DE000` and `0x937000` at tick 3 only (an upload landing a frame late: the loaded machine); `menu_screens` / `field_menu` also `0x7DE000` for most of the run - the DIV-0092 staleness `state3-build.md` 5.4 names for these two |
 | `dragonTransform`, `cutsceneAndNue` | `0x904000` (`Music_Track`), `0x665000`, `0x6BD000` (`Music_*`), `0x7DE000` from a battle's end - **the four Chinese pairs stale since DIV-0092**, as `state3-build.md` 5.4 found; re-record them (`--original "*,-Game_Clock"`, `BOF3X_OPT=none`) - not this round's |
 
-**The quiet re-run** (the build at the BD merge, nothing else on the machine):
-the attract and `combat`, `menu_screens`, `field_menu`,
-`worldMapAndAreaTransition`, `whelpBoss` - results below when done.
+**The batch's gate pair was not a gate** (read page by page, `gate-reading-2.md`):
+`batch.sh` set `BOF3X_LANG=en-US` in the environment, which `attract_run.py`
+overrides with its own `--lang` (default `original`), so both sides played
+under the port's Chinese layer - which a disc-only cache does not have by
+design - and the disc side stalled in area 4's message box (message 8 never
+closes); the 349 pages are 81 of absent Chinese chunks, 185 knock-on from
+the stall, and the by-source classes of 4.1. **Found by it:** a disc-only
+install started under `original` plays with no text and nothing refuses it -
+the LX group (`disc-only/language-refusal`): refused loudly in the launcher
+and the engine, the install's default its disc's own language.
+
+**The re-run** (the BD build; the LX group built beside it, so not quiet
+either): the attract **identical to its pair on all 10,305 ticks**;
+`menu_screens` and `field_menu` the DIV-0092 staleness (`Music_*` pages from
+tick 752); `combat` and `worldMapAndAreaTransition` the five VRAM pages at
+tick 3 only; `whelpBoss` a seven-tick window at 7177-7754 inside the build.
+A truly quiet re-run of `combat` and `worldMapAndAreaTransition` is owed
+before the tick-3 pages are called noise (4.4).
+
+### 4.3 The gate, corrected (2026-10-12, the BD build, `--lang en-US` as the tool's argument)
+
+`g2_pcus` (the PC-plus-US cache on the real install) against `g2_us` (the
+disc-only install), the gate skip list, dumps at ticks 1309 / 1310 / 1312 /
+1330 on both sides (`build/end2/` of the round worktree): **97 pages over
+11,009 ticks**, read page by page and, where the dumps reach, to the byte
+(`gate-reading-3.md`):
+
+| Cause | Pages |
+|---|---|
+| DIV-0097 (the disc's own images) | 9 |
+| DIV-0089 (`DEMO`'s stand-in) | 28 |
+| DIV-0096 (`PL27A`'s arena 39; `0x802000` / `0x92B000` to the byte: pointers moved by +0x160, the arena's size) | 41 |
+| DIV-0080 (the walls and the re-texture; `0x938000` to the byte: a cell-texture nibble) | 10 |
+| probably DIV-0080 (`0x801000`, `0x905000`: a draw count 8 against 6 in the same window; not settled to the source) | 2 |
+| **a second gap of the button map's kind:** `0x904000` from tick 1310 is two bytes of `Cond_Flags` (`+0xA0` 0x08, `+0xA3` 0x0A on the PC, zero on the disc side: flags 3, 0x19, 0x1B), written by `Scenario_SubInit` `0x56D8C0` from `0x662CD8..0x662CE8` - a `game-value` gap in every build; the PSX twin's table is cited in `GAME.EMI` (`0x801C94A4`), so the disc may carry it unplaced - **the SF group, `disc-only/story-flag-seed`** | 1 |
+| `0x903000`: the difference from tick 1 is **gone** (the BD fix holds); a 62-tick window at 1545-1607 and 7262-7324 the old difference hid - a dump at about tick 1550 on both sides would settle it | 1 |
+| noise (`0x7C1000..0x7C3000`, `0x7DE000`, `0x937000`: two-tick windows at 1311 and 4051, a CLUT-area upload landing a tick apart - the pattern the references show at tick 3) | 5 |
+
+### 4.4 Owed before the PR
+
+The quiet re-run of `combat` and `worldMapAndAreaTransition`; the LX and SF
+merges, then the gate pair once more with a dump near tick 1550.
