@@ -233,10 +233,13 @@ From the round's reports, the owner's answers:
    settled. `BOSS027` is `BOSS025`'s image, and that module runs fights 25
    and 26 in area 92 (the developers' name translates as "Gomorrah at
    night"), but set-up 27's own area and enemies are not found. A read-only
-   search is running.
+   search is running. **Found:** the duel between Beyd and Zig, chapter 6
+   run 9 (`Scena06_Run09` starts event battle 0x1B), area 92. **The
+   owner's answer:** a member of the launcher's PSX / PSP page, on by default
+   under a PSP base (group PB, DIV F).
 3. **C2, an enemy's agility forced to 791:** this is set-up 55, which our
-   records label **Myria**, in area 198. Whether to take it is open, until
-   the owner has seen what it is.
+   records label **Myria**, in area 198. **The owner's answer:** like C1, a
+   member of the PSX / PSP page, on by default under a PSP base (PB).
 4. **The PSP-only mode** (CD2 / CD3, the fishing area and the title
    menu): probably fishing. It is left until the owner is back.
 5. **The suites' membership:** LT's proposals are accepted as built. The
