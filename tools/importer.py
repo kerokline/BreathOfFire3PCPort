@@ -772,20 +772,25 @@ def cmd_build(a):
     print("manifest: %s" % os.path.join(a.out, "manifest.toml"))
 
 
-def resolve_languages(asked, sources):
+def resolve_languages(asked, sources, psp=False):
     """Each --lang to (tag, donor): a tag (`en-150`) is the PSX disc whose
     fixtures.toml tag it is, exactly (docs/importer.md section 5,
     docs/importer-transforms.md section 7). The bare codes of before
     2026-10-08 (`en`, fr, de, ja) are retired and refused (DIV-0005,
-    tools/language_tags.py). tools/loc_build.py reads PSX discs only."""
+    tools/language_tags.py). tools/loc_build.py reads PSX discs over the PC
+    install, and with `psp` (a disc-only build) a PSP disc too, after any PSX
+    disc of the same tag (docs/loc-build-psp.md)."""
     donors = [s for s in sources if isinstance(s, DiscSource) and s.id.startswith("psx-")]
+    if psp:
+        donors += [s for s in sources if isinstance(s, DiscSource) and s.id.startswith("psp-")]
     out = {}
     for want in asked:
         language_tags.refuse_retired(want, "--lang")
         d = next((s for s in donors if tag_of(s.id) == want), None)
         if not d:
             have = ", ".join("%s (%s)" % (s.id, tag_of(s.id)) for s in donors) or "none"
-            raise SystemExit("--lang %s: no PSX disc given carries it; the discs given: %s" % (want, have))
+            raise SystemExit("--lang %s: no %s disc given carries it; the discs given: %s"
+                             % (want, "PSX or PSP" if psp else "PSX", have))
         out[tag_of(d.id)] = d
     return sorted(out.items(), key=lambda kv: (primary(kv[0]) != "en", kv[0]))
 
@@ -863,7 +868,7 @@ def build_languages_disc_only(asked, sources, out):
     """loc/<tag>/ from the donor disc against the cache's own base/ (DiscCache)."""
     import subprocess
     assets = []
-    for tag, donor in resolve_languages(asked, sources):
+    for tag, donor in resolve_languages(asked, sources, psp=True):
         d = os.path.join(out, "loc", tag, "dat")
         if os.path.isdir(d):            # a rebuild: no container of an earlier layer left behind
             for f in os.listdir(d):
