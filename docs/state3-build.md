@@ -580,7 +580,27 @@ slices' copy. 11.3's rule stands under the exe host's header: commit
    with the owner at the machine, or the pair re-recorded now and checked
    against the evening's runs; and a read of what in the Nue fight's state
    at tick 6985 could depend on the clock (`Game_Clock`, DIV-0022, or the
-   render count).
+   render count). **The same evening, the owner at the desk:** the route run
+   again on `main`'s build differs at the same ticks on the same pages - so
+   attendance and the display are cleared too - and the five captures of
+   that run are pixel-identical to the pair's (`sunset_tint` 601,
+   `night_house` 1501, `dialogue` 2401, `equip_window` 4501, `nue_attack`
+   6001), so the overlay's text and the route's course are the same to
+   frame 6001. The owner says the 17:09 overlay rewrite was theirs (a
+   rebuild while testing the jukebox branch; the bytes equal the cache's).
+   **Where this stands:** every run since the afternoon agrees with every
+   other, the morning's two agree with each other, and nothing named here
+   differs between the two days. The pages hold draw state (`Gfx_BufferIndex`,
+   `Gfx_PacketNext`, the ordering-table pointers) and the fight's bytes;
+   the loop renders when early and skips when late, so a render skipped at
+   a deterministic tick - a long frame at the fight's start, say, that the
+   file cache's state makes longer or shorter - would show exactly this
+   shape on pages the hash sees. A hypothesis, not a measurement. **Open:**
+   a read of what the fight's frames at 6985..7023 do that the render count
+   or `Game_Clock` (DIV-0022) can reach; and the pair re-recorded, the
+   morning's kept beside it as `_old`, so the route has a reference that
+   matches the machine as it is. Not state 3's: the exe host and the hosted
+   build agree tick for tick.
 
 ### 5.5 Not done yet
 
