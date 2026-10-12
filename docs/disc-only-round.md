@@ -1,9 +1,13 @@
 # The disc-only round: a playable build from a PlayStation disc alone
 
-**Status:** IN PROGRESS (staged 2026-10-12 morning from `main` `39bd3740`, PR #54;
-the owner's "what is next" of 2026-10-11, [`HANDOFF.md`](HANDOFF.md) item 0).
-Six agent groups in parallel on stage A, one on stage B after they merge, the
-validations batched at the end (section 4). Nothing pushed.
+**Status:** MEASURED (2026-10-12, one day: staged in the morning from `main`
+`39bd3740`, PR #54, the owner's "what is next" of 2026-10-11; six groups in
+parallel on stage A, two on stage B, three fixes from the gate's readings and
+the review, merged one at a time - section 3; the validations batched at the
+end - section 4; the PR from the branch's tip). **A US PlayStation disc alone
+now gives a cache the engine maps and plays with no `BOF3.exe` present**, and
+the gate's every page is a ledger entry of this round or the references' own
+noise.
 
 ## 0. What the round is for
 
@@ -219,3 +223,36 @@ round's code differs between a disc-built image and the PC-built one.**
 331-334) - so this is not the batch's load. The discriminator (combat on
 the round's hosted build and its exe host, dumps at ticks 2..4, against the
 pair and against each other) - 4.5.
+
+### 4.5 The tick-3 difference is the icon's first run, not the round's
+
+`combat` on the round's **hosted** build (`--host bof3`): **identical to the
+Chinese pair on all 2,561 ticks** - the tree's game code is right. The same
+recipe in the **exe host**, first run from a fresh launcher copy: the five
+VRAM pages, `0x7DE000`, `0x937000` at tick 3; against the hosted run's dump
+at tick 3 the differing bytes are `Gfx_ClutRows` (one more row in use and
+its texture pointers), the sound heap's pointers and the task stacks - the
+load screen's first frames with one more CLUT upload. The launcher copy had
+just written `bof3x.icon` and `bof3x.exe.new`: **DIV-0095's icon generation**
+(the whelp cut from the VRAM shadow once the load screen has uploaded its
+sheet and CLUT, exe host only). **The second exe-host run in the same
+directory: identical to the pair on all 2,561 ticks.** So every tick-3 page
+of 4.2 and 4.4 is the first runs of a fresh copy (the batch's first four
+routes differed, the later ones were identical; `end3` and `end4` were fresh
+copies), not the round's code. HANDOFF's traps carry it: run the exe host
+once from a fresh launcher copy before recording with it.
+
+## 5. What the round leaves
+
+- The owner's calls of section 2 and [`owner-review.md`](owner-review.md):
+  the game values no disc carries (DIV-0101, provisional), the US release's
+  button assignment, the porting house's logos, the faerie label group, the
+  six `.bss` words, DIV-0055's plates.
+- The review's notes not acted on ([`disc-only-round-review.md`](disc-only-round-review.md)
+  2): the hosted checks comparing parallel arrays rather than the fields the
+  readers use; `exe_image.cpp` reading `BOF3X_EXEIMAGE` with the ANSI API.
+- The four stale Chinese pairs (DIV-0092) to re-record; the PSP builds keep
+  the two rows SF placed on the PSX ones; a PSP-only build still lacks the
+  14 arenas (AR's `OWN_FROM` is the PSX discs').
+- Not played by anyone: the disc-only install, the movie in the game, a key
+  press in `bof3x.exe`, the disc's arenas and images.

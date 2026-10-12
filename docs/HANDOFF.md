@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-11 evening: **state 3 is built** - `bof3x.exe`, our own executable, on `platform/state3`, both hosts' self-tests green, the away batch run; **up next: the PR, then the owner's eye on the icon and the window, then the disc-only round** - item 0 below)
+**Status:** IN PROGRESS (2026-10-12 evening: **the disc-only round is done** on `platform/disc-only-round` - a US disc alone gives a build `bof3x.exe` maps and plays with no `BOF3.exe`; the PR is open; **up next: the owner's play of the disc-only install and the calls it raised, then the PSP-only round** - item 0 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -36,39 +36,26 @@ code page audited, the seven mid-function pointers read, and two music defects o
 
 ## Pick up here
 
-0. **State 3 is built: `bof3x.exe` on `platform/state3`** (2026-10-11, the brief [`state3-design.md`](state3-design.md),
-    the build and every check [`state3-build.md`](state3-build.md), the icon [`exe-icon.md`](exe-icon.md); DIV-0094 the
-    cutover, DIV-0095 the icon, DIV-0036 amended for DPI; the PR is next, from the branch's tip - every commit signed off).
-    What it is: an 8 KB image of ours based at `0x400000` whose sections occupy Capcom's range (the heap lands there
-    on 20 of 20 runs when the image is elsewhere - `state3-build.md` 1), written by `tools/make_exe.py` and verified
-    at build time; the engine stays `bof3x.dll`, imported, not injected, with `Engine_Main` mapping `.rdata` / `.data`
-    from the player's file (or `BOF3X_EXEIMAGE`'s cache), binding fourteen import slots and `DirectSoundCreate`'s
-    thunk, filling the stub page with `int3`, letting `InjectAll` write the 10,087 jumps, setting x87 `0x027F`; the
-    ~450 bytes of Capcom's operands our screens read back live in a data store (`CodeBytes`) **until the disc-only
-    round replaces them (the owner)**. The launcher starts `bof3x.exe` by default, `--host bof3` the hosted build,
-    which stays the fuzz harness (no Capcom bytes in the exe host: `BOF3X_SHADOW`, `BOF3X_ORIGINAL`,
-    `BOF3X_CALLTRACE`, `BOF3X_MP3=original` are Fatals there). The whelp icon is generated in the exe host from the
-    game's own data and written into the exe once (DIV-0095; `tools/make_icon.py` is the offline twin).
-    **The away batch** (`state3-build.md` 5): every run replayed; the exe host identical to the hosted build on every
-    page of the attract sequence and the ten Chinese routes; the cache as `.data` source identical; the F9 stack
-    numbers within bytes of the hosted ones. Three findings, none the exe host's: **(1)** four Chinese pairs
-    (`menu_screens`, `field_menu`, `dragonTransform`, `cutsceneAndNue`) are stale since DIV-0092 - re-record them
-    (`--original "*,-Game_Clock"`, `BOF3X_OPT=none`, `BOF3X_LAYERING=0`) or check with `--original AreaTrackFallback`;
-    **(2)** three raw pointer words of ours (`Effect_Objects[7..9]+0x50/+0x54`, `0x93B908`, `MsgBoxState+0xC..+0x14`)
-    differ by host under `en-US` - adding them to the run-time slot list is a hash change, **the owner's call**;
-    **(3)** `en-US` `cutsceneAndNue` differs from its pairs on three draw-state pages from tick 6985 - **on `main`'s
-    build too** (measured 2026-10-11 evening, so it is one of the eight commits since `105a0c77`, not state 3's; the
-    bisection's answer is in `state3-build.md` 5.4 if it finished). The skip list grew by five ranges (the runtime's
-    start-up variables, `Sound_Channels`), and `statehash.py` now compares a run whose list only adds ranges
-    (`state-hash.md` 4). **Owed the owner's eye:** two starts through the launcher (the second shows the whelp on the
-    title bar, taskbar, Alt-Tab and in Explorer); the window's size on their display under the new k rule; a play.
-    **Traps paid for in the batch:** `input_run.py` does not set `BOF3X_LAYERING=0` (pass it; `attract_run.py` does);
-    the Rand clone Fatal in the exe host (fixed); `--launcher` wants an absolute path.
-    Then **the disc-only round** ([`state3-design.md`](state3-design.md)'s successor; the owner's "what is next",
-    2026-10-11): the code pointers and the unplaced pointer words held as layout, the ~22 KB no disc carries as the
-    engine's own, the operand store's bytes as values of ours, the default key table as a rule, the language gaps of
-    [`loc-build-disc-only.md`](loc-build-disc-only.md); the gate is the state hash of a disc-built image against the
-    PC-built one with `data.toml`'s ranges as the skip list.
+0. **The disc-only round is done** (2026-10-12, [`disc-only-round.md`](disc-only-round.md); the branch
+    `platform/disc-only-round`, pushed, the PR from its tip; the review before it
+    [`disc-only-round-review.md`](disc-only-round-review.md), its six gating items fixed). State 3 (`bof3x.exe`,
+    PR #53, [`state3-build.md`](state3-build.md)) is `main`'s since 2026-10-12 morning with the event-battle music
+    fix (PR #54). What the round built, group by group, is the round doc's section 3; the validations its section
+    4; what it leaves its section 5. In one line: `importer.py build --source "<US cue>" --lang en-US --out
+    <cache>`, `importer.py install --base --cache <cache> --game <empty dir>`, the launcher with `cache=` there,
+    and the game runs with nothing of the PC's ([`disc-only-install.md`](disc-only-install.md) is the player's
+    page). **Nobody has played it.** The owner's items are in [`owner-review.md`](owner-review.md): the play
+    itself (what the 2,183 bytes of Capcom's game values no disc carries break - DIV-0101, provisional, the first
+    "Decisions" item), a key press in `bof3x.exe` (the keyboard was dead there since state 3: Capcom's DirectInput
+    object table lay in `.text`; RD replaced it with the SDK's), the movie from the disc in the game, the disc's
+    arenas (DIV-0096) and images (DIV-0097), the US release's button assignment (the port took Japan's), the
+    porting house's logos (keep or drop), the faerie label group's off-by-one. Then **the PSP-only round**, staged
+    2026-10-12 on `psp/round` by another session ([`psp-only-round.md`](psp-only-round.md), briefs in
+    `analysis/psp_round/`) on the assumption this round landed: check its section 1 against the round doc first
+    (the PSP builds keep two gap rows the PSX builds lost; a PSP-only build still lacks the 14 arenas).
+    **Debts of the round:** the four Chinese pairs stale since DIV-0092 (`menu_screens`, `field_menu`,
+    `dragonTransform`, `cutsceneAndNue`: re-record with `--original "*,-Game_Clock"`, `BOF3X_OPT=none`); the
+    review's two notes not acted on (round doc section 5); `exe_image.cpp`'s ANSI read of `BOF3X_EXEIMAGE`.
 
 00. ~~**`platform/state2-prework`**~~ - merged as PR #51 (2026-10-11 morning). What "finishing the exe"
     is: states 2 and 3 of [`platform-layers-plan.md`](platform-layers-plan.md) 3. The converters, the per-thread data and
@@ -767,6 +754,15 @@ _Verified 2026-09-24._
   build/bof3x-launcher.exe --game <dir> --no-config` - exit 0 passed, 3 a
   Fatal ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). Shadow names per module
   are in each module's doc; comma-separated lists work.
+- **A disc-only install** (2026-10-12, [`disc-only-install.md`](disc-only-install.md)): `python tools/importer.py
+  build --source "CDImage/Breath of Fire III (USA).cue" --lang en-US --out <cache>` (about 3.5 minutes with the
+  movie; ffmpeg on the PATH or `BOF3X_FFMPEG`), `python tools/importer.py install --base --cache <cache> --game
+  <empty dir>`, then the launcher with `cache=<cache>` in its ini (or `BOF3X_CACHE`) and `--game <that dir>`: no
+  `BOF3.exe` needed, `BOF3X_EXEIMAGE` set from the cache by the launcher. The exe host's self-test from such an
+  install: `BOF3X_SELFTEST_ONLY=1 BOF3X_EXEIMAGE=<cache> BOF3X_CACHE=<cache> BOF3X_LANG=en-US <copy>/bof3x-launcher.exe
+  --game <dir> --no-config`. The gate: `python tools/exe_tables.py gate-skip --cache <cache> --game bof3` writes
+  `<cache>/base/exe/gate-skip.txt`; two attract runs under it (`attract_run.py ... --lang en-US`, one from the
+  disc-only install, one from the real install with `analysis/cache/pc-plus-us`) and `statehash.py diff`.
 - **Oracle:** `attract_run.py --out ref.tsv --original "*,-Game_Clock"`, the
   same without `--original`, then `attract_diff.py ref.tsv new.tsv`
   ([`attract-mode.md`](attract-mode.md) §6).
@@ -815,10 +811,11 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-`platform/state3` (item 0) is the branch to PR; its worktree is the session-`3186ef2f` scratchpad's `s3/` (with
-`build/`, the away batch's outputs under `build/away/`, the ini-less launcher copies `st_*`). `tooling/exe-icon`
-is merged into it. The bisection worktree `bis/` (c0d099d2, for finding 3) and the older agent worktrees under
-`.claude/worktrees/agent-*` can go. **Other sessions work in the main checkout**: check `git status` and the branch
+`platform/disc-only-round` (item 0) is pushed and in its PR; its worktree is the session-`24422d10` scratchpad's
+`r/round/` (with `build/`, the batch's outputs under `build/end*/`, the final US cache `r/end/cache-us-final`, the
+disc-only scratch install `r/in_scratch/install-us`, the eleven group worktrees `r/<code>/` and their branches
+`disc-only/*`, the briefs `r/common.md` + `r/brief_*.md`, the gate readings `r/gate-reading*.md`). The older
+worktrees (`s3/`, `bis/`, `.claude/worktrees/agent-*`) can go. **Other sessions work in the main checkout**: check `git status` and the branch
 before a commit there, and never build in `build/` while its game runs.
 
 Local only, gitignored, worth keeping:
@@ -847,6 +844,19 @@ Local only, gitignored, worth keeping:
 
 ## Traps already paid for
 
+- **`attract_run.py` overrides `BOF3X_LANG` with its own `--lang`, default `original`** (2026-10-12): the round's end
+  batch set the language in the environment and both gate runs played under the port's Chinese - which a disc-only
+  cache does not have - so the disc side stalled in area 4's text box and 349 pages differed. Pass `--lang en-US`
+  to the tool. Since DIV-0102 such a start is refused loudly instead.
+- **The exe host's first run from a fresh launcher copy differs at tick 3** (2026-10-12, round doc 4.5): DIV-0095's
+  icon generation at the load screen (one more CLUT row, `bof3x.icon` and `bof3x.exe.new` written) puts five
+  VRAM-shadow pages, `0x7DE000` and `0x937000` a tick apart from the pair; the second run in the same directory is
+  identical on every tick. Run the exe host once from a fresh copy before recording with it.
+- **MCI refuses a movie whose full path is about 160 characters** (error 304; the 8.3 form opens; the PC's own AVI
+  has the same limit): keep a disc-only install's path short.
+- **A disc-built image maps 2,183 bytes of Capcom's game values as zero** (DIV-0101, `BOF3X_EXEIMAGE_STRICT=1`
+  refuses): a disc-only route that behaves oddly may be one of them (`recipes/exe-gaps.tsv`, the gap lines in the
+  log); the two the attract reached are fixed (the button map, the story-flag seed).
 - **`'*'` under a Latin overlay stops at `field_c1`** (2026-10-10, the morning's trap read right): `BOF3X_LANG=en-US`
   (en-150, fr-FR, de-DE) re-aims `Config_DrawRowLabel + 0x9F` through the `ConfigText` patch and the clone check
   refuses it after 979 lines. `ja-JP` passes whole. The language self-test is `BOF3X_SHADOW='*,-field_c1'` (the list
