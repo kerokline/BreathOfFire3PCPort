@@ -231,6 +231,11 @@ build or a PSP build. A PSP value means the image carries the PSP's
 
 ## 5. Beside a PSX disc, and a PSX disc alone
 
+**Superseded 2026-10-12** by the owner's "let's go ahead and fill them": every
+PSX build now takes the four fills from its own disc
+([`disc-gap-fills.md`](disc-gap-fills.md)). The measurements below are the
+ones that led there.
+
 ### 5.1 The same rows over a PSX-built image (`psp_exe.py beside`, PSP-JP)
 
 | PSX image | rows8 | holes | pairs | widen8 | psxmap | differ |
