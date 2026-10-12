@@ -13,6 +13,8 @@
 #   tools/importer.py check the importer's recipes against fixtures/ (with
 #                           seq.py's round trip and fixtures/bgm.tsv's shape)
 #                           and exe_tables.py check
+#   tools/exe_own.py check  exe_own.cpp's regions well-formed, its generated
+#                           name lists equal to recipes/pc-zh*.toml's
 #   tools/bgm/host          the SPU model's and the sequencer's unit tests
 #                           (spu_tests, seq_tests) on synthetic samples and songs
 #   tools/lift/selftest.sh  the x86 -> C lifter prototype against its
@@ -60,6 +62,9 @@ jobs:
 
       - name: The importer's recipe against fixtures/ (no game data)
         run: python tools/importer.py check
+
+      - name: The engine's own .data regions and their names against the recipes (no game data)
+        run: python tools/exe_own.py check
 
   music-host:
     # The SPU model and libsnd's sequencer (src/audio/) built with the system

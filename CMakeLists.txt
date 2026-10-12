@@ -77,6 +77,7 @@ add_library(bof3x SHARED
   src/common/icon_stamp.cpp
   src/hook/detour.cpp
   src/hook/exe_image.cpp
+  src/hook/exe_own.cpp
   src/hook/calltrace.cpp
   src/hook/input_script.cpp
   src/hook/statehash.cpp

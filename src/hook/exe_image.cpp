@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "hook/exe_layout.h"
+#include "hook/exe_own.h"
 #include "hook/log.h"
 
 namespace bof3 {
@@ -165,6 +166,11 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
         Fatal("BOF3X_EXEIMAGE: data.toml's ranges end at 0x%X, not 0x%X", (unsigned)covered, (unsigned)(va + size));
     const std::vector<unsigned char> bin = ReadBin(exe_dir + im.file, im.size);
     std::memcpy(to, bin.data(), im.size);
+    // The bytes no disc carries that are the engine's own (exe_own.h): checked
+    // against the image before they are written, so that a pc-zh image proves
+    // them; over a pc-zh image the fill changes nothing.
+    ExeOwn_Verify(bin.data(), "base/exe/data.bin (pc-zh)");
+    ExeOwn_Fill(static_cast<std::uint8_t*>(to));
     Log("BOF3X_EXEIMAGE: .data at 0x%X from base/exe/data.bin (pc-zh), %u bytes: the source in the exe host",
         (unsigned)va, (unsigned)im.size);
     return true;
