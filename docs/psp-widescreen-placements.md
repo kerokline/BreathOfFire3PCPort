@@ -347,6 +347,20 @@ came from.
 6. **The field menu's time and money boxes** stay centred-relative on the
    PSP too (section 3), so ours already matches it - confirm nothing to do.
 
+### 6.1 Answered by the owner (2026-10-12, evening)
+
+1. **(a) only.** The crop is still no, so there is no "PSP framing" setting
+   and (b) is not built.
+2. **The message-box side placements move in wide mode** (to 92 and 279 at
+   53 columns, by the PSP's rule). 4:3 is unchanged.
+3. **The Area104 / Area121 HUD is anchored to the right edge** in wide mode.
+4. **The SCENA17 ending keeps the letterbox** (wide black bars), not the
+   PSP's crop and zoom.
+5. **Growing the tile ring** (28x56 to 33x58, as the PSP did) is wanted, but
+   later: IDEAS I37. The inset approach stays for now.
+6. **The time and money boxes:** the owner will check on the PSP. They stay
+   as they are until then.
+
 ## 7. What was not verified
 
 - Nothing was seen in play, on the PSP or on ours. Every "what it is" and
