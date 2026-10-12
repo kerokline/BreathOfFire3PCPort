@@ -163,6 +163,19 @@ no PSX twin of theirs is among the PSP's 47 fill functions.
 - **Every 319.0 / 320.0 in `.text` is in a function of ours** (section 2), so
   any further fill the owner's eye finds is a change to our source.
 
+## 5.1 The owner's answers (2026-10-12, night)
+
+- **`EffectKindA8_DrawBar` (the red bars) is widened.** The owner: "If psp
+  widened the a8 bar, let's widen it too". This lifts the hold of 2026-10-04
+  in DIV-0041. Commit `0d3bcd8b` stays.
+- **`CommuDraw_Reveal`: WA's version stays** (both the gradient band and the
+  black tile widened). The owner: "I assume some psp draws will leave 16 row
+  bands since we are not cropping the same".
+- **The rule this gives later widening work:** the PSP crops 12 rows top and
+  bottom (384 x 216 of its 384 x 240 frame, `psp-widescreen.md` 2.4), and we
+  do not crop. Where a PSP widening relied on that crop to hide an edge, ours
+  widens over the full height, not only the PSP's extent.
+
 ## 6. What only captures can confirm (for the A/B/C screenshot harness)
 
 Narrow is proved by the fuzzes; the wide picture is not seen. For each, the
