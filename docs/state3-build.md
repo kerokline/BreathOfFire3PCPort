@@ -405,10 +405,11 @@ Defender left the launcher alone.
    `0x6BC000` (`Sound_Channels`), `0x93C000` and `0x93D000` (the runtime's
    words). The checks below are the stock `check`'s logic with those three
    pages left out (a scratch `xcheck.py` in the session's scratchpad, not
-   committed; section 5.6 puts the rule in the tool). For the three pages,
+   committed). For the three pages,
    the same tree was run **hosted** (`--host bof3`) under the 173-range list
    and diffed against the exe host with the stock `statehash.py diff` - the
-   cutover's own question, page for page.
+   cutover's own question, page for page. **Since the same day the stock
+   tool does this** (5.6).
 2. **`input_run.py` does not pin `BOF3X_LAYERING=0`.** `attract_run.py` does,
    and the pairs were recorded with it (DIV-0071 is on by default), so every
    route here passes it with `--env`. The shop route, as its pairs, ran with
@@ -547,6 +548,20 @@ slices' copy. 11.3's rule stands under the exe host's header: commit
 ### 5.5 Not done yet
 
 - Finding 3's cause: a run of the pairs' build, or a bisection.
-- `statehash.py`'s rule for a skip list that only adds ranges (5.1 item 1).
 - The four Chinese pairs of finding 1 and finding 2's words: the owner's.
 - Anything seen or heard: the batch was unattended.
+
+### 5.6 `statehash.py` compares a list that only adds ranges
+
+`tools/statehash.py`'s `check` and `diff` now compare a run whose skip list
+adds ranges to the references' on every page no added range touches. They
+name the pages they leave out and refuse every other difference of lists, or
+any difference under `--strict` ([`state-hash.md`](state-hash.md) section 4).
+`python tools/statehash.py check analysis/statehash/attract_r14_orig.sh
+attract_r14_origb.sh build/away/attract_exe.sh`: the note names `0x6BC000`
+(`0x6BC8C8 92`), `0x93C000` (`0x93C35C 4`, `0x93C380 516`, `0x93C6A0 12`)
+and `0x93D000` (`0x93D6C0 4`); then `identical on all 10305 compared ticks`,
+**exit 0**. With `--strict`, exit 1. On synthetic runs (the lists through
+`--skip-list`), a range removed, a length changed and a NEW list narrower than
+the references' are each refused. The same `check` on `cn_combat_exe` reports
+`0x7DE000` at tick 227 alone, as 5.2 has it.
