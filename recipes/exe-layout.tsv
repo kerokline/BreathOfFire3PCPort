@@ -14492,7 +14492,7 @@ pc	kind	target
 0x65C3A8	code	FxDim_Hold
 0x65C3AC	code	FxDim_Up
 0x65DA58	number	-
-0x65DA68	data	0x642520
+0x65DA68	number	-
 0x65DAE8	code	EffectKind18_04_Start
 0x65DAEC	code	EffectKind18_04_Shut
 0x65DAF0	code	EffectKind18_04_Swing
