@@ -196,7 +196,10 @@ under the project's C++20.
 
 The owner's PlayStation resumes the field's song after a fight where it left
 off. DIV-0092's fallback (`GameMode5_Leave`) now does the same on both music
-paths. The shared part (the position taken, the ring's lead, the switch) is
+paths - **after a random encounter only** (the second amendment, 2026-10-11:
+after an event battle the PlayStation starts the area's own song - the
+zone's table track, not the current-track byte - from its top, heard on
+mednafen after the Nue fight, so ours does too). The shared part (the position taken, the ring's lead, the switch) is
 in [`DIVERGENCE.md`](DIVERGENCE.md) DIV-0092 and `src/game/music_resume.h`.
 This section covers the sequenced path. The MP3's is
 [`mp3-decoder.md`](mp3-decoder.md) section 6.

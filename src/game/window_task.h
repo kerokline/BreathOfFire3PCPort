@@ -7,3 +7,9 @@
 #pragma once
 
 void WindowTask_Inject();
+
+// The track an area's zone record names: byte +6 itself when +7 is zero, else
+// the first flagged entry of the music set +6 names (the table part of
+// Area_PickMusic, which the area change runs; DIV-0092's second amendment
+// runs it for the leader's zone after an event battle).
+unsigned char Area_ZoneTrack(const unsigned char* zone);

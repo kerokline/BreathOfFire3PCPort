@@ -165,18 +165,18 @@ extern "C" void __cdecl Area_PickMusic(unsigned x, unsigned z, unsigned area) {
         At(at::kAreaTrack)[0] = At(at::kMusicTrack)[0];
         return;
     }
-    const unsigned char* const zone = g.zone_at(x, z, area);
-    if (zone[7] == 0) {
-        At(at::kAreaTrack)[0] = zone[6];
-        return;
-    }
+    At(at::kAreaTrack)[0] = Area_ZoneTrack(g.zone_at(x, z, area));
+}
+
+unsigned char Area_ZoneTrack(const unsigned char* zone) {
+    if (zone[7] == 0) return zone[6];
     const std::uint32_t set = at::kMusicSets + static_cast<std::uint32_t>(zone[6]) * 8u;
     const unsigned count = At(set)[4];
     const unsigned char* entry;
     std::memcpy(&entry, At(set), sizeof entry);
     for (unsigned i = 0; i < count; ++i, entry += 3)
         if (g.flags_test(Cond_Flags + entry[1] * 8u, entry[2]) != 0) break;
-    At(at::kAreaTrack)[0] = entry[0];
+    return entry[0];
 }
 
 // original 0x595450 (PSX 0x801A1498): the first of area `area`'s 8-byte zone
