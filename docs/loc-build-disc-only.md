@@ -422,6 +422,12 @@ letters, identically).
 (5.2's 213 identical containers for en-US less the seven areas that now
 carry a stand-in beside their text, plus the two village sheets, is 208.)
 
+The three caches rebuilt end to end (`importer.py build --source <cue> --lang
+<tag>`, then `verify`): `loc/<tag>` 254 containers each, identical to the
+layers measured here; `base/` 727 (US), 719 (FR, DE) containers held, 0
+problems; the run's one problem is `opt/area4-walls`' slot 6 (7.6, the
+parent's too).
+
 **The `loc/zh-CN` chunks a layer replaces** (`loc_build.py cover`, the
 method of 7.1's `zh_cover.py` as a command; a kind-1 image wholly covered by
 a later base slot counts as needing none):
