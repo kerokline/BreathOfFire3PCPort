@@ -219,6 +219,38 @@ entry:
    PSX-only install does not. That asymmetry stands unless the disc-only
    call on the PSX's jingles changes it.
 
+### 7.1 Answered by the owner (2026-10-12, afternoon)
+
+From the round's reports, the owner's answers:
+
+1. **The game-value gaps: fill them.** IM found four of the tables
+   (`Magic_Rows`' effect files, the dragon set files, `EventBattle_Records`'
+   battle files, the formation wheel's spots) on every disc in the disc's own
+   numbering. They are filled by rule for PSX disc-only installs too, not
+   only PSP ones. IM's second branch, `psp/im2`, amends DIV-0101.
+2. **C1, boss set-up 27 not ending on a loss** (CD1,
+   `psp-code-diff-battle.md`): the owner asked which fight it is. It is not
+   settled. `BOSS027` is `BOSS025`'s image, and that module runs fights 25
+   and 26 in area 92 (the developers' name translates as "Gomorrah at
+   night"), but set-up 27's own area and enemies are not found. A read-only
+   search is running.
+3. **C2, an enemy's agility forced to 791:** this is set-up 55, which our
+   records label **Myria**, in area 198. Whether to take it is open, until
+   the owner has seen what it is.
+4. **The PSP-only mode** (CD2 / CD3, the fishing area and the title
+   menu): probably fishing. It is left until the owner is back.
+5. **The suites' membership:** LT's proposals are accepted as built. The
+   name layers go under data. The button-label page is left out beside a
+   PSX base. P8 goes under data.
+6. **The PSP's music:** the restored stereo width is fine. No narrow-pan
+   bank form is wanted.
+7. **The PSP-EU Config screen:** deferred. The owner will look on an
+   emulator at what the PSP originally drew.
+8. **The dropped tone:** keep the rule, and make it toggleable. The toggle
+   is a checkbox on the Jukebox screen (the owner's suggestion), turning on
+   an `opt/` layer with the PSP's one-tone bank. The default is the restored
+   chord. This is TG's.
+
 ## 8. The scratch, for whoever launches
 
 The briefs are in `analysis/psp_round/` in the main checkout, which is
