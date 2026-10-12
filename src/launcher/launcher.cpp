@@ -12,8 +12,9 @@
 // no suspension, no reservation, no remote thread; the executable imports
 // bof3x.dll and maps the player's data itself (src/hook/exe_host.cpp).
 // BOF3.exe is optional there when the settings name a cache (cache= or
-// BOF3X_CACHE): a disc-built install, whose .data the cache holds (the
-// launcher sets BOF3X_EXEIMAGE to it unless the environment already does).
+// BOF3X_CACHE) or the environment sets BOF3X_EXEIMAGE: a disc-built install,
+// whose .data the cache holds (the launcher sets BOF3X_EXEIMAGE to the
+// settings' cache unless the environment already does).
 //
 // --host bof3: the hosted build, kept for the shadow fuzz, the A/B switch and
 // the reference pairs - and chosen without --host when the environment sets
@@ -336,12 +337,13 @@ int wmain(int argc, wchar_t** argv) {
     if (!exe_present) {
         // A disc-built install: the cache is the .data source (BOF3X_EXEIMAGE,
         // docs/exe-import-engine.md section 4.4), nothing is read from a file.
-        // Without a cache the refusal is the one there always was.
+        // BOF3X_EXEIMAGE already set names it; else the settings' cache does.
+        // Without either the refusal is the one there always was.
         const std::wstring cache = bof3x::ConfigCacheDataRoot(cfg);
-        if (cache.empty())
-            Die(L"no BOF3.exe in %ls.\nPoint --game or BOF3_GAME_DIR at your own install.", game_dir.c_str());
         wchar_t set[4];
         const bool image_set = GetEnvironmentVariableW(L"BOF3X_EXEIMAGE", set, 4) > 0;
+        if (cache.empty() && !image_set)
+            Die(L"no BOF3.exe in %ls.\nPoint --game or BOF3_GAME_DIR at your own install.", game_dir.c_str());
         if (!image_set) SetEnvironmentVariableW(L"BOF3X_EXEIMAGE", cache.c_str());
         std::fwprintf(stderr, L"bof3x-launcher: no BOF3.exe in %ls: a disc-built install - no hash check, the default "
                               L"keys by the engine's rule, .data from %ls\n",
