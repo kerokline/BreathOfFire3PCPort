@@ -58,6 +58,7 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import dat          # noqa: E402
 import exe_tables   # noqa: E402
+import psp_exe      # noqa: E402  (the manifest's exe_tables_from, docs/psp-image.md)
 import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
@@ -892,6 +893,7 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
              "built = %s" % toml_str(datetime.datetime.now().isoformat(timespec="seconds")),
              ""]
     lines += psp_standins.manifest_lines(sources)     # [build] base_policy: the launcher's key (LT)
+    lines[-1:-1] = psp_exe.manifest_build(exe)        # [build] exe_tables_from, in the same table (docs/psp-image.md)
     for s in sources:
         lines += ["[[source]]", "build = %s" % toml_str(s.id), "path = %s" % toml_str(os.path.basename(os.path.normpath(s.path))), ""]
     lines += ["[cache]", "assets = ["]          # a table of its own, not the last [[source]]'s

@@ -602,12 +602,14 @@ def cmd_beside(a):
 
 # ------------------------------------------------------------------ the manifest
 
-def manifest_build(exe_build):
+def manifest_build(exe):
     """The manifest's [build] keys this module owns (docs/psp-only-round.md 4, the
     contract with LT): `exe_tables_from`, the build base/exe/ was made from - pc-zh,
     a PSX build, or a PSP build (whose image carries the PSP's tables: roster index
-    6's level table, consumable 87, and recipes/exe-psp.tsv's fills)."""
-    return ["", "[build]", 'exe_tables_from = "%s"' % exe_build]
+    6's level table, consumable 87, and recipes/exe-psp.tsv's fills).
+    The line goes inside the one [build] table psp_standins.manifest_lines opens;
+    `exe` is importer.cmd_build's (build, sha256), or None when no base/exe/ was made."""
+    return ['exe_tables_from = "%s"' % exe[0]] if exe else []
 
 
 # ------------------------------------------------------------------ check
