@@ -1351,9 +1351,6 @@ def convert_verbs(game, donor):
     for i in range(VERB_COUNT):
         raw = donor[starts[i]:donor.index(b"\0", starts[i])]
         enc = [encode_char(c) for c in raw]
-        if not raw and tag == 16:        # a faerie record kept as shipped
-            payload += b"\0"
-            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("verbs: verb %d holds a code English does not have: %s" % (i, raw.hex(" ")))
         out = b"".join(enc)
@@ -1388,9 +1385,6 @@ def convert_char_names(game, donor):
         us = records[k]
         raw = us[:CHAR_NAME_US].split(b"\x00")[0]
         enc = [encode_char(c) for c in raw]
-        if not raw and tag == 16:        # a faerie record kept as shipped
-            payload += b"\0"
-            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("names: character %d holds a code English does not have: %s" % (k, raw.hex(" ")))
         out = b"".join(enc)
@@ -1421,9 +1415,6 @@ def convert_merchant(game, disc):
             continue
         raw = blob[at + 12:at + 12 + MERCHANT_US_SLOT].split(b"\x00")[0]
         enc = [encode_char(c) for c in raw]
-        if not raw and tag == 16:        # a faerie record kept as shipped
-            payload += b"\0"
-            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("merchant: %s holds a code English does not have: %s" % (name, raw.hex(" ")))
         out = b"".join(enc)
@@ -1453,9 +1444,6 @@ def convert_battle_commands(game, donor):
         slot = donor[at - (BATTLE_COUNT - i) * BATTLE_ROOM:at - (BATTLE_COUNT - i - 1) * BATTLE_ROOM]
         raw = slot.split(b"\0")[0]
         enc = [encode_char(c) for c in raw]
-        if not raw and tag == 16:        # a faerie record kept as shipped
-            payload += b"\0"
-            continue
         if not raw or any(e is None for e in enc):
             raise SystemExit("battle: label %d holds a code English does not have: %s" % (i, slot.hex(" ")))
         out = b"".join(enc)
@@ -2873,6 +2861,51 @@ def cmd_sheet(args):
     print("wrote", args.out)
 
 
+def selftest_empty_records():
+    """Each of the four record converters, on a record holding an empty
+    string, stops with its own message (a SystemExit naming the converter;
+    the verbs' placement refuses an empty string before encoding it),
+    not a NameError: the faerie branch of `label_chunk` was copied into them
+    once with no `tag` bound (docs/loc-build-disc-only.md 7.6). The anchors
+    are pinned to a synthetic blob of zeros; no game data."""
+    global find_anchor, same_anchor
+    saved = find_anchor, same_anchor
+    reset_donor()
+
+    class Disc:
+        files = {"BIN/WORLD/WORLD00.EMI": None}
+
+        def read(self, name):
+            return bytes(64)
+
+    verbs = bytes(64) + b"".join(struct.pack("<I", 0x80010000 + 4 * i) for i in range(VERB_COUNT))
+    cases = (("verbs", lambda: convert_verbs(None, verbs)),     # an empty verb has no placement
+             ("names", lambda: convert_char_names(None, bytes(CHAR_STRIDE * CHAR_COUNT + 16))),
+             ("merchant", lambda: convert_merchant(None, Disc())),
+             ("battle", lambda: convert_battle_commands(None, bytes(BATTLE_COUNT * BATTLE_ROOM + 16))))
+    anchors = {"verb sets": len(verbs), "char tail 0": CHAR_NAME_US, "merchant": 0, "battle boxes": BATTLE_COUNT * BATTLE_ROOM}
+    try:
+        find_anchor = lambda game, blob, name, start=0, end=None: anchors[name]   # noqa: E731
+        same_anchor = lambda game, name, got: True                                 # noqa: E731
+        for what, run in cases:
+            try:
+                got = run()
+            except SystemExit as e:
+                if not str(e).startswith(what + ":"):
+                    raise SystemExit("selftest: %s stopped with another converter's message: %s" % (what, e))
+                print("  %-8s empty string: %s" % (what, e))
+                continue
+            raise SystemExit("selftest: %s converted an empty string: %r" % (what, got))
+    finally:
+        find_anchor, same_anchor = saved
+
+
+def cmd_selftest(args):
+    selftest_empty_records()
+    print("loc_build selftest: ok")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -2901,11 +2934,13 @@ def main():
         if name == "all":
             s.add_argument("--only")
         s.set_defaults(fn=fn)
+    s = sub.add_parser("selftest", help="the converters' synthetic checks (no game data)")
+    s.set_defaults(fn=cmd_selftest)
     s = sub.add_parser("anchors", help="print PC_SHA's entries anew from a PC install's BOF3.exe")
     s.add_argument("--game", required=True)
     s.set_defaults(fn=cmd_anchors)
     args = ap.parse_args()
-    if args.cmd == "anchors":
+    if args.cmd in ("anchors", "selftest"):
         return args.fn(args)
     args.lang_given = args.lang is not None
     if args.cmd == "all" and not args.disc and not args.discs:
