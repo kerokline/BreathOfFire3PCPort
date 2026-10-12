@@ -6,7 +6,9 @@ reads a PSP disc's songs and writes them in the form `base/bgm/` stores. It
 reproduces the 2026-10-10 measurement in code and adds a render A/B. Stage B
 is still to come: the importer writing `base/bgm/` from a PSP source, paired
 with MB's banks. Nothing in `src/` or the importer changed. No game bytes
-appear here, only counts, hashes, offsets and rules (rule 1).
+appear here, only counts, hashes, offsets and rules (rule 1). `psp_ms/` below
+is the scratch folder of session `3d54deba` (its probes, the render script and
+`measure_jp.json` / `ab_180.json`).
 
 ## 0. The answer
 
@@ -29,8 +31,8 @@ appear here, only counts, hashes, offsets and rules (rule 1).
   bends (870 of them in the 56 songs) are resets to centre, and 728 of those
   follow a bend that was not centre. Each one therefore snaps any
   still-sounding voice of that program back to pitch. **Rendered through our
-  sequencer, most of the 56 do sound different (section 4.2):** the songs are
-  not an encoding difference, they are the PSP's own music.
+  sequencer, 50 of the 56 differ from the PSX render (section 4.2).** The songs
+  are not an encoding difference; they are the PSP's own music.
 
 ## 1. What was built
 
@@ -51,9 +53,11 @@ belongs to stage B (section 6).
 
 ## 2. The format, as measured
 
-`python tools/ppms.py check` holds the layout as a test. The counts below
-come from scratch census scripts over all 81 files of both PSP discs
-(`psp_ms/probe3.py` and the inline probes in the session scratchpad):
+`read_ppms` refuses anything outside this layout, and `measure` reads all 81
+files (the 166 songs name all 81 `BGM` EMIs, as `fixtures/bgm.tsv`'s 81 banks
+per build show). So the layout holds on both PSPs. `check` holds it as a
+synthetic test. The counts come from the census script `psp_ms/probe3.py`
+(PSP-JP against PSX-JP, all 324 sub-songs) in the session scratchpad:
 
 - **`pPMS` header:** the magic, then the section's size (81 of 81), then the
   end of the table, which is `0x10 + 16 x` the sub-song count (81 of 81),
@@ -194,7 +198,31 @@ scratch cache whose banks are the same PSX banks, 180 s each, and compares
 the two WAVs sample for sample. Both sides use the same bank, so only the
 sequence differs.
 
-RENDER_TABLE
+`diff` is the energy of the sample difference relative to the PSX render's,
+in dB. No song aborted (all 186 renders exited 0).
+
+| Class | Songs | Identical for 180 s | Differ | `diff`, min / median / max | First difference |
+|---|---:|---:|---:|---|---|
+| Rhythm field only | 4 | **4** (18 34 38 77) | 0 | | |
+| Order within a tick | 5 | **3** (75 80 98) | 2 | 145 -55.3, 152 -60.6 dB | 34.5 s, 60.6 s |
+| Pitch bend only | 56 | **6** (8 28 37 102 107 165) | **50** | -52.7 / -29.8 / -16.2 dB | 0.1 to 110.9 s |
+| Controllers | 11 | 0 | 11 | -25.9 / -20.5 / -15.7 dB | 0.3 to 111.0 s |
+| Setup moved (31) | 1 | 0 | 1 | -19.0 dB | 0.2 s |
+| Notes | 16 | 0 | 16 | -47.1 / -23.5 / +3.4 dB | 0.02 to 57.7 s |
+
+**So the 56 bend-only songs are not an encoding difference on the PSX
+driver's model: 50 of them render differently.** The level of the difference
+runs from -16 dB (65: a quarter of the signal's amplitude) to -53 dB (90).
+Only 6 are identical for the first three minutes, and so are 7 of the other
+37 songs. Song 157 differs at +3.4 dB from the first note, because its tempo
+and start moved and the two renders drift apart. Song 121 is at -6.8 dB from
+57.7 s. Song 45's channel move costs nothing until 43.3 s and is -35 dB
+after that: libsnd keys a voice by program, not channel, so the move matters
+only where the channels' volume and pan differ.
+
+The A/B is exact, not perceptual. Whether -40 dB of retuned release tail is
+heard is the owner's ear. The renders are scratch (game data) and are
+deleted after each comparison. `ab_180.json` keeps the numbers.
 
 ## 5. Owner's calls this meets
 
@@ -239,6 +267,9 @@ RENDER_TABLE
 - **The PSP's own player was not read.** Section 4.1's guess about why the
   PSP added the resets stays a guess. What the PSP itself sounds like is not
   what our sequencer plays from these files. Ours is the PSX driver's model.
+- **The A/B covers each song's first 180 s.** The 13 identical songs are
+  identical for that span only. A difference past it, beyond a loop, was not
+  looked for.
 - **The renders use the PSX's banks.** With MB's PSP banks (the volume and pan
   merge) every song will differ again. That is stage B's and V1.4's
   measurement.
@@ -268,7 +299,9 @@ PSP's music":**
 > **Why.** The owner's call of 2026-10-10 (`psp-only-build.md` 7, call 2): a
 > PSP-only install uses the PSP's audio as it is. There is no PSX original to
 > fall back on.
-> **Audible.** Rendered through our sequencer, RENDER_AUDIBLE. Unheard.
+> **Audible.** Rendered through our sequencer on the PSX's banks, 80 of the 93
+> songs that are not byte-identical differ from the PSX render within 180 s,
+> 50 of them the bend-only songs (`psp-music.md` 4.2). Unheard.
 
 **`docs/README.md` row:** "[`psp-music.md`](psp-music.md) | The PSP's songs
 (`pPMS`, a table of SMFs) inverted to the cache's song form by
@@ -277,7 +310,7 @@ byte-identical to the PSX-built, the rest classed (rhythm 4, order 5, bend
 56, controllers 11, setup 1, notes 16; tempos 22, 157). PSP-JP = PSP-EU. The
 PSX driver neither resets nor remembers the bend at key-on (`_SsVmKeyOn` ->
 `note2pitch`, disassembled), so the PSP's 728 resets after a real bend retune
-sounding voices. The render A/B result. Stage B (the importer, with MB's
+sounding voices: 50 of the 56 render differently through our sequencer. Stage B (the importer, with MB's
 banks) to come. IN PROGRESS."
 
 **STATUS.md:** "MS stage A (2026-10-12): `tools/ppms.py` reads the PSP's
