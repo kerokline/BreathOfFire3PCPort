@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-12 evening: **the disc-only round is done** on `platform/disc-only-round` - a US disc alone gives a build `bof3x.exe` maps and plays with no `BOF3.exe`; the PR is open; **up next: the owner's play of the disc-only install and the calls it raised, then the PSP-only round** - item 0 below)
+**Status:** IN PROGRESS (2026-10-12 night: **the PSP-only round is merged on `psp/round`** and its ledger on `psp/ledger`; the code review's fixes (RF) and the end batch (EB) are running; the PR follows RF, the ledger and a rebase onto `main`, which took the disc-only round as PR #55 - item 0 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -36,26 +36,42 @@ code page audited, the seven mid-function pointers read, and two music defects o
 
 ## Pick up here
 
-0. **The disc-only round is done** (2026-10-12, [`disc-only-round.md`](disc-only-round.md); the branch
-    `platform/disc-only-round`, pushed, the PR from its tip; the review before it
-    [`disc-only-round-review.md`](disc-only-round-review.md), its six gating items fixed). State 3 (`bof3x.exe`,
-    PR #53, [`state3-build.md`](state3-build.md)) is `main`'s since 2026-10-12 morning with the event-battle music
-    fix (PR #54). What the round built, group by group, is the round doc's section 3; the validations its section
-    4; what it leaves its section 5. In one line: `importer.py build --source "<US cue>" --lang en-US --out
-    <cache>`, `importer.py install --base --cache <cache> --game <empty dir>`, the launcher with `cache=` there,
-    and the game runs with nothing of the PC's ([`disc-only-install.md`](disc-only-install.md) is the player's
-    page). **Nobody has played it.** The owner's items are in [`owner-review.md`](owner-review.md): the play
-    itself (what the 2,183 bytes of Capcom's game values no disc carries break - DIV-0101, provisional, the first
-    "Decisions" item), a key press in `bof3x.exe` (the keyboard was dead there since state 3: Capcom's DirectInput
-    object table lay in `.text`; RD replaced it with the SDK's), the movie from the disc in the game, the disc's
-    arenas (DIV-0096) and images (DIV-0097), the US release's button assignment (the port took Japan's), the
-    porting house's logos (keep or drop), the faerie label group's off-by-one. Then **the PSP-only round**, staged
-    2026-10-12 on `psp/round` by another session ([`psp-only-round.md`](psp-only-round.md), briefs in
-    `analysis/psp_round/`) on the assumption this round landed: check its section 1 against the round doc first
-    (the PSP builds keep two gap rows the PSX builds lost; a PSP-only build still lacks the 14 arenas).
-    **Debts of the round:** the four Chinese pairs stale since DIV-0092 (`menu_screens`, `field_menu`,
-    `dragonTransform`, `cutsceneAndNue`: re-record with `--original "*,-Game_Clock"`, `BOF3X_OPT=none`); the
-    review's two notes not acted on (round doc section 5); `exe_image.cpp`'s ANSI read of `BOF3X_EXEIMAGE`.
+0. **The PSP-only round is merged on `psp/round`; the PR waits on two branches and a rebase** (2026-10-12 evening,
+    [`psp-only-round.md`](psp-only-round.md), briefs in `analysis/psp_round/` of the main checkout). Every group is
+    in (`psp/round` `88817a07`: SI, IM, MB, MS, LG, CD, PN, LT, then MS-B, CD-B, TG, IM2 and PB), and the coordinator's
+    paperwork is on **`psp/ledger`** (DIV-0103..0113 and six amendments, D244..D250, the README rows, this item, STATUS,
+    owner-review). Before the PR, in this order:
+    - **Merge `psp/review-fixes` (RF)** - the owner's code review of 2026-10-12, seven findings, fixed in parallel from
+      the same tip (groups.md "RF"): hosted runs refusing the data suite's `psp-tables`, a failed import leaving
+      unlisted layers, `BOF3X_CACHE_DATA=0` and the music layer, one manifest reader for `base_policy`, and three
+      small ones. RF also edits `src/`, so merging it beside `psp/ledger` (which renamed the placeholders `DIV F` /
+      `TG-n` in comments and log strings only) may conflict line by line: keep RF's code and the numbered strings.
+    - **Merge `psp/ledger`**, then `python tools/ledger_check.py` (113 entries, 0 errors on the branch).
+    - **The end batch (EB)** - V1..V3 of the round doc's section 6 (the PSP-only caches counted; the attract and routes
+      of a PSP-EU `en-150` install against the European disc's PSX disc-only install; captures through
+      `recipe_shots.py`; the launcher page and the Jukebox by `dialog_test.py` on a PSP-only, a PSX-only and a PC + PSX
+      + PSP cache) was **running** when this was written; its results and its contact sheet go to the round doc's
+      section 6 and to [`owner-review.md`](owner-review.md)'s entry for the round.
+    - **Rebase onto `main`.** `psp/round` sits on the disc-only round's `98c17e8b`; `main` (`035f40b6`, PR #55) has
+      eleven commits more, among them **DIV-0102** (a disc-only install refuses the port's Chinese) and the
+      story-flag seed's place in `GAME.EMI`. `psp/ledger` already numbers after DIV-0102 and carries `main`'s ledger,
+      STATUS, HANDOFF, owner-review and `disc-only-install.md` (its first commit), so those take `psp/ledger`'s side;
+      a trial merge of `main` conflicts in `recipes/exe-gaps.tsv`, `recipes/exe.toml` (regenerate both with the
+      merged tools) and `src/launcher/config_dialog.cpp` (DIV-0102's Language box against LT's suites). After it:
+      re-measure the gap counts (`disc-only-install.md` 3 gives IM2's on the old base and the arithmetic), re-check
+      D249 and the Language box against DIV-0102, and the PC / PSX caches against fresh references.
+    - Small, left by the paperwork pass: PB's sentence for the data suite's `what` in `recipes/suites.toml` (a
+      launcher string, "and its two battle rules ...", `psp-battle-changes.md` "For the other files"), and
+      `launcher-suites.md` sections 2 and 4's paragraph on the `code` kind and `psp=`.
+
+    **Owed the owner** ([`owner-review.md`](owner-review.md), the round's entry): the eye (the PSP stand-ins' look,
+    the PSP's logo movie at SSIM 0.868, the launcher page, the Jukebox and its chord box), the ear (the PSP's music,
+    song 22, the effects and the jingles), play (the Beyd-Zig duel - DIV-0108's `duel-loss` may stall a lost duel -
+    Myria's item, a level-up of roster index 6 with the PSP's table), and two calls still open (the PSP-EU Config
+    screen, D246, deferred to an emulator; the PSP-only mode, probably fishing). **The disc-only round** (PR #55,
+    `main`) is still unplayed too: its items are in the same file, and its debts (the four Chinese pairs stale since
+    DIV-0092; `exe_image.cpp`'s ANSI read of `BOF3X_EXEIMAGE`) are [`disc-only-round.md`](disc-only-round.md)
+    section 5's.
 
 00. ~~**`platform/state2-prework`**~~ - merged as PR #51 (2026-10-11 morning). What "finishing the exe"
     is: states 2 and 3 of [`platform-layers-plan.md`](platform-layers-plan.md) 3. The converters, the per-thread data and
@@ -811,7 +827,12 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-`platform/disc-only-round` (item 0) is pushed and in its PR; its worktree is the session-`24422d10` scratchpad's
+**The PSP-only round** (item 0): `psp/round` and the group branches `psp/<group>` (`psp/ledger`, `psp/review-fixes`
+included) are local, not pushed; the agents' worktrees are under `.claude/worktrees/agent-*` and the round session's
+scratchpad (`3d54deba`: `psp_<group>/` scratch, the reference caches under `psp_coord/ref_*`). The briefs, the merge
+script and the end batch's brief are in `analysis/psp_round/` of the main checkout.
+
+`platform/disc-only-round` is `main`'s since PR #55 (`035f40b6`); its worktree is the session-`24422d10` scratchpad's
 `r/round/` (with `build/`, the batch's outputs under `build/end*/`, the final US cache `r/end/cache-us-final`, the
 disc-only scratch install `r/in_scratch/install-us`, the eleven group worktrees `r/<code>/` and their branches
 `disc-only/*`, the briefs `r/common.md` + `r/brief_*.md`, the gate readings `r/gate-reading*.md`). The older
@@ -843,6 +864,13 @@ Local only, gitignored, worth keeping:
   PSP images. Never commit; extract to scratch.
 
 ## Traps already paid for
+
+- **A round branch cut before a PR merged numbers its ledger against the wrong tip** (2026-10-12): `psp/round` sits on
+  `98c17e8b`, and `main` took DIV-0102 after it, so numbering from the branch's DIV-0101 would have collided at the
+  rebase. `psp/ledger` took `main`'s ledger first and numbered from DIV-0103. Check that `main` is an ancestor of
+  the branch (`merge-base --is-ancestor`) before numbering.
+- **`dialog_test.py` needs a `bof3x.exe` beside the launcher** since state 3, or the dialog never opens (LT placed a
+  stand-in); and the Jukebox's `IDD_MUSIC` grew 36 dialog units for the chord box (TG), which moved its buttons.
 
 - **`attract_run.py` overrides `BOF3X_LANG` with its own `--lang`, default `original`** (2026-10-12): the round's end
   batch set the language in the environment and both gate runs played under the port's Chinese - which a disc-only
