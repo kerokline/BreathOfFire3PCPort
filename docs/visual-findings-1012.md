@@ -23,11 +23,19 @@ guesses.
 | **C** the save menu's numbers and "space buffer" | the menu's number formats are zero on every disc-built image: the figure pair `"%3d/   "` / `"   /%3d"`, the `--------` no-next-level text, `"%8d"`, `"%3d/%3d"`, the save slot's play-time colon (`"  :"` - two spaces, the buffer that puts the colon between the hours and the minutes) and the play-time format itself. The leading spaces are **Capcom's** (the PSX's `START.EMI#8` has them byte for byte), not a Latin-text buffer of ours. The empty slot's own text (`0x669CCC`) and the slot number's `"%X"` stay zero: no disc carries either | every disc-only install | filled (`twin`, from `START.EMI#8`) except `0x669CCC` and `"%X"`; options in 3.3 |
 | **D** the PSP's data framed for its 480 x 272 screen | of the three widescreen values the PSP keeps in data (WS's survey), only `MsgBox_PlacementTable` entries 3..6 (x -32 / +32, y unchanged) reach a PSP-built image; the tile size entry 11 is already the PC's there, SCENA17's letterbox is code. `Title_Sprites` entry 10 and the title / demo pages are the PSP's own title art, not placement | PSP-only installs | the side placements put back to the 4:3 frame at import (`unwide`); the PSP image now equals the PSX's there |
 
-The gaps per build (`recipes/exe-gaps.tsv`, `gapcount.py`): PSX-US 354 to
-**345** ranges, 4,129 to 4,027 bytes, game-value bytes the PC has non-zero
-1,336 to **1,288**; PSX-JP 333 to 323 (793 to 745); PSX-EU-en 352 to 343
-(1,332 to 1,284); FR 354 to 345; DE 355 to 345; PSP-JP 319 to **294** (744 to
-681); PSP-EU 352 to **325** (800 to 731).
+The gaps per build (`recipes/exe-gaps.tsv`, `gapcount.py`, against
+`psp/round` `6c2ae0c9`, which has `main`'s `GAME.EMI` place): ranges / range
+bytes / game-value bytes the PC has non-zero
+
+| Build | before | after |
+|---|---|---|
+| `psx-jp` | 330 / 3,281 / 789 | **320 / 3,162 / 741** |
+| `psx-us` | 351 / 4,085 / 1,323 | **342 / 3,983 / 1,275** |
+| `psx-eu-en` | 349 / 4,069 / 1,319 | **340 / 3,967 / 1,271** |
+| `psx-fr` | 351 / 4,157 / 1,350 | **342 / 4,055 / 1,302** |
+| `psx-de` | 352 / 4,173 / 1,351 | **342 / 4,051 / 1,303** |
+| `psp-jp` | 316 / 2,897 / 740 | **291 / 2,592 / 677** |
+| `psp-eu` | 351 / 3,112 / 791 | **324 / 2,777 / 722** |
 
 ## 1. A: the combatants shifted left
 
@@ -360,15 +368,15 @@ and `0x66AE1C..0x66AE28`'s four (numbers the image now holds as the PC's);
 | `importer.py check`, `exe_tables.py check`, `psp_exe.py check` | 0 errors (`exe_tables`: 18,837 pointer words, the layout 19,278 words, 441 numbers) |
 | `ledger_check.py` | 113 entries, 0 errors, 2 notes (the drafts below are not in the ledger) |
 | `psp_exe.py recipe`, seven discs | every row "0 not BOF3.exe's"; `msets` 173 bytes on both PSP builds; `unwide` "4 side placements back to the 4:3 frame" on both |
-| The PC path: `exe_tables.py build --source bof3/BOF3.exe` against `psp_coord/ref_jppc` | `data.bin` and `data.toml` byte-identical |
-| The PSX-EU image (`exe_tables.py build`, new tools) against the end batch's `c_psxeu` (`bytecheck.py`) | 74 bytes changed, **all inside the old gap rows**, all now `BOF3.exe`'s; 613,051 to 613,125 bytes equal to the PC's |
-| The PSP-EU image against `c_pspeu` | 197 bytes changed, all now `BOF3.exe`'s: 191 inside the old gap rows and 6 the `unwide` bytes; 611,575 to 611,772 equal |
+| The PC path: `exe_tables.py build --source bof3/BOF3.exe` against `psp_coord/ref_jppc` (rebuilt at `d2afc98f`), after the merge | `data.bin` and `data.toml` byte-identical |
+| The PSX-EU image (`exe_tables.py build`, the tools before the merge) against the end batch's `c_psxeu` (`bytecheck.py`) | 74 bytes changed, **all inside the old gap rows**, all now `BOF3.exe`'s; 613,051 to 613,125 bytes equal to the PC's |
+| The PSP-EU image against `c_pspeu` (the same) | 197 bytes changed, all now `BOF3.exe`'s: 191 inside the old gap rows and 6 the `unwide` bytes; 611,575 to 611,772 equal. (The end batch's caches are gone since; not repeated after the merge) |
 | D's byte check: PSP-EU against PSX-EU, new images | equal at `0x66AE1C..0x66AE2A` and at `0x64E294..0x64E296` |
 | `recipes/exe-gaps.tsv`'s PSX rows | only removed or shrunk in the filled ranges; the one row that changes shape is `0x6639D0..0x6639D8` to `0x6639D4..0x6639D8` (`"%X"`, still a gap); no new row |
-| exe host self-test, PSX disc-only scratch install `C:\b3g` (IM2's US cache, the new US image) | exit 0; `exe_own: 17 regions ... no BOF3.exe to verify them against`; `inject: 10088 ours`; `self-test only: done`; `place 659 ranges 6238 bytes`, `gap 345 ranges 4027 bytes` |
-| exe host self-test, the real install, the new US image | exit 0; `628057 of 638976 bytes equal; every class that must equal does` (IM2: 627,983); no `place` range differs from `BOF3.exe`; `inject: 10087 ours` |
-| exe host self-test, PSP-only scratch install `psp_pn\g_psp` (the end batch's `c_pspeu` cache, read only; the new PSP-EU image; `BOF3X_LANG=en-150`) | exit 0; `inject: 10088 ours`; `self-test only: done`; `place 573 ranges 5615 bytes`, `gap 325 ranges 2797 bytes` |
-| exe host self-test, the real install, the new PSP-EU image | exit 0; `628715 of 638976 bytes equal; every class that must equal does`; no `place` range differs |
+| After the merge (`6c2ae0c9`, the merged build): exe host self-test, PSX disc-only scratch install `C:\b3g` (IM2's US cache, the new US image) | exit 0; `inject: 10088 ours`; `self-test only: done`; `place 661 ranges 6262 bytes`, `gap 342 ranges 3983 bytes` |
+| exe host self-test, the real install, the new US image | exit 0; `628070 of 638976 bytes equal; every class that must equal does` (IM2 after main: 627,996); no `place` range differs from `BOF3.exe`; `inject: 10087 ours` |
+| exe host self-test, PSP-EU-only scratch install `C:\b3p` (TG's `new_pspeu` cache; the new PSP-EU image; `BOF3X_LANG=en-150`) | exit 0; `inject: 10088 ours`; `self-test only: done`; `place 573 ranges 5615 bytes`, `gap 324 ranges 2777 bytes` |
+| exe host self-test, the real install, the new PSP-EU image | exit 0; `628724 of 638976 bytes equal; every class that must equal does`; no `place` range differs |
 
 Commands: `regen.sh` (`exe_tables.py recipe`, `psp_exe.py recipe`,
 `exe_tables.py recipe`, `exe_own.py measure`, `exe_tables.py gaps` over the

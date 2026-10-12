@@ -120,12 +120,17 @@ effect files, the dragon set files, `EventBattle_Records`' battle files and
 the formation wheel's spots are read from the disc's own tables (a PSX
 disc's `BATTLE.EMI#15`, `GAME.EMI#0` and `BATE.EMI#0`, a PSP disc's
 `BOOT.BIN`) through the file-id rule, every filled byte equal to
-`BOF3.exe`'s. Measured on the PSP-only round's base, which predates the
-`GAME.EMI` place above: the US image's gaps **456 to 354 ranges, 5,455 to
-4,129 bytes, game-value 2,196 to 1,336** (`disc-gap-fills.md` 1). With that
-place as well, by arithmetic and not measured: 351 ranges, 4,085 bytes,
-game-value 1,323 - to be re-measured (`exe_tables.py gaps`) once
-`psp/round` is rebased onto `main`.
+`BOF3.exe`'s. With the `GAME.EMI` place above as well, measured after
+`main` was merged into the PSP round (`exe_tables.py recipe`, `exe_own.py
+measure`, `exe_tables.py gaps` over the seven discs, 2026-10-12): the US
+image's gaps are **351 ranges, 4,085 bytes, game-value 1,323** of the PC's
+non-zero bytes (from 453 / 5,411 / 2,183 before the fills;
+`disc-gap-fills.md` 1.1 has every build). Since the visual findings' fills
+of the same evening ([`visual-findings-1012.md`](visual-findings-1012.md):
+the battle equip icons and categories, the menus' number formats and the
+play-time colon, the result window's icons, read from the disc's overlays)
+the US image's gaps are **342 ranges, 3,983 bytes, game-value 1,275**; the
+save slot number's `"%X"` and the empty slot's text stay zero.
 
 None of it is copied (CLAUDE.md rule 1); whether a disc-only build accepts
 it, derives the values by a rule, or asks for the PC's exe for those tables
