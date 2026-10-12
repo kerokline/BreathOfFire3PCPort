@@ -194,4 +194,28 @@ disc-only install), the gate skip list, dumps at ticks 1309 / 1310 / 1312 /
 The US cache rebuilt from the tip (SF's places, FM's movie), its gate skip
 list, then with nothing else on the machine: `combat` and
 `worldMapAndAreaTransition` against their pairs, and the gate pair once more
-with dumps at ticks 1310, 1550 and 1560 - results below when done.
+with dumps at ticks 1310, 1550 and 1560.
+
+**The cache** (`r/end/cache-us-final`): built in 3 m 34 s with the movie
+(`CAPCOM.AVI` from `psx-us`, ffmpeg 9.0.1); `verify` 0 problems but the
+pre-existing `opt/area4-walls` `AREA004.DAT` slot 6 line (HANDOFF item 4);
+the gate skip list the committed one plus 1,219 ranges, 48,911 bytes (gap
+5,411, language 2,904, map 104, unread 37,427, widen 3,065).
+
+**The gate, final** (`g3_pcus` against `g3_us`, `--lang en-US`): **96 pages
+over 10,945 ticks** - 4.3's 97 less `0x904000`, which is gone (the SF place
+holds); `0x903000`'s 63-tick windows (1545-1607, 7262-7324) are one word,
+`Scratch_Swap` `0x90385C`, the area-map draw-table sort's exchange scratch
+(`DrawTable_Sort`, `AreaMap_Frame`'s cell rebuild - `symbols.toml`), in the
+area-4 scenes where DIV-0080's walls change the cells drawn: the same
+region as the two draw-count pages, explained by mechanism. Every page of
+the final pair is a ledger entry of this round (DIV-0096, DIV-0097,
+DIV-0089, DIV-0080) or the references' own noise pattern; **nothing of the
+round's code differs between a disc-built image and the PC-built one.**
+
+**The two routes with the machine quiet:** `combat` and
+`worldMapAndAreaTransition` still differ from their Chinese pairs at tick 3
+(five VRAM-shadow pages, `0x7DE000`, `0x937000`; `worldMap` again at
+331-334) - so this is not the batch's load. The discriminator (combat on
+the round's hosted build and its exe host, dumps at ticks 2..4, against the
+pair and against each other) - 4.5.
