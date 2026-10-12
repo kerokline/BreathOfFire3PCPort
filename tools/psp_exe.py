@@ -101,6 +101,22 @@ TWINS = [
     (0x66A49C, 0x66A4AC, "ETC/GAME.EMI", "Item_IconByKind (the item-trade screen's icons)"),
     (0x66AF24, 0x66AF34, "ETC/GAME.EMI", "the battle result window's icon by item kind"),
     (0x66B5B4, 0x66B5C4, "BATTLE/BATTLE.EMI", "the battle menu equipment window's slot icons and categories"),
+    (0x653EC0, 0x653EC5, "ETC/GAME.EMI", "the item list's count format"),
+    (0x64ADD0, 0x64ADD6, "ETC/BATE.EMI", "the result tally's step per count"),
+    (0x64E3DE, 0x64E3EB, "BATTLE/BATTLE.EMI", "Battle_WakeRoll's chances (with the placed table before them)"),
+    (0x656A34, 0x656A44, "BATTLE/BATTLE.EMI", "Battle_OpenEnemyNames' column places by layout"),
+    (0x656AA4, 0x656AAC, "ETC/GAME.EMI", "GameMode5_Turn's approach pairs (the battle's view centre step)"),
+    # the world maps' own tables, each from its area's overlay (docs/visual-findings-1012.md 7)
+    (0x5E5FF0, 0x5E6008, "WORLD00/AREA016.EMI", "Area16_Buttons"),
+    (0x5E6024, 0x5E602C, "WORLD00/AREA016.EMI", "Area16_Record8Anims"),
+    (0x5E6034, 0x5E603E, "WORLD00/AREA016.EMI", "Area16_DriftUV"),
+    (0x5F76E8, 0x5F7700, "WORLD01/AREA045.EMI", "Area45_Buttons"),
+    (0x5F771C, 0x5F7724, "WORLD01/AREA045.EMI", "Area45_Record8Anims"),
+    (0x5F772C, 0x5F7736, "WORLD01/AREA045.EMI", "Area45_DriftUV"),
+    (0x604914, 0x60492C, "WORLD01/AREA065.EMI", "Area65_Buttons"),
+    (0x604948, 0x604950, "WORLD01/AREA065.EMI", "Area65_Record8Anims"),
+    (0x6126E4, 0x6126EC, "WORLD02/AREA087.EMI", "Area87_Record8Anims"),
+    (0x613060, 0x613068, "WORLD02/AREA088.EMI", "Area88_Record8Anims"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges

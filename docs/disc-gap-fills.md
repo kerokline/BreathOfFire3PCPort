@@ -89,9 +89,9 @@ disc's own `GAME.EMI` at PSX-JP's place. PSP-EU keeps both as gaps; its
 
 **Since VF's fills** (`twin`, `msets`, `unwide`,
 [`visual-findings-1012.md`](visual-findings-1012.md) 5, on `6c2ae0c9`):
-PSX-JP 320 ranges / 3,162 bytes / game-value 741; **PSX-US 342 / 3,983 /
-1,275**; PSX-EU-en 340 / 3,967 / 1,271; FR 342 / 4,055 / 1,302; DE 342 /
-4,051 / 1,303; PSP-JP 291 / 2,592 / 677; PSP-EU 324 / 2,777 / 722.
+PSX-JP 307 ranges / 2,998 bytes / game-value 728; **PSX-US 329 / 3,819 /
+1,262**; PSX-EU-en 327 / 3,803 / 1,258; FR 329 / 3,891 / 1,285; DE 329 /
+3,887 / 1,286; PSP-JP 278 / 2,432 / 664; PSP-EU 311 / 2,612 / 709.
 
 The merge's checks (headless, an ini-less copy of the merged launcher):
 - **The exe host on the US image over the real install:** exit 0, `place

@@ -18,7 +18,7 @@ guesses.
 
 | | Cause | Installs | Done here |
 |---|---|---|---|
-| **A** combatants shifted left, an enemy partly off screen | **Not the formation table.** The lead's `Formation_SlotVectors`+0x106.. is not that table: it ends at +0xF0 (30 rows), and the PSP gap there is the zone music sets (`Area_ZoneTrack`'s lists and counts, `0x6699B8..0x669AC0`). No geometric byte of either image differs from the PC's in the encounter tables. The leading cause is **known defect D56**: the port's `Encounter_OnScreen` accepts a combatant left of (or above) the screen, where the PSX refuses it - an asymmetry that matches "off the left" | every install, the PC's included (D56 is code, not data) | the music sets filled on PSP builds (`msets`), and two PSP-EU battle runs (`twin`); D56 left as an owner's option (1.3) |
+| **A** combatants shifted left, an enemy partly off screen (EB: on both disc-only installs, not on the PC's) | **Three gaps of the encounter mode, on every disc-built image** (section 1.4): `GameMode5_Turn`'s approach pairs `0x656AA4` (the battle's view centre is not stepped toward the enemies: the scene sits lower right, the Gooey off the left edge), `Battle_OpenEnemyNames`' column places `0x656A34` (the name box at the top-left corner), and the turn order's percent row `0x64E328` (the party's ability bonus 0 at level classes 0 and 1: Teepo before Ryu). **Not D56**, not the enemy records (equal to the PC's but the names), not the formation table: the lead's `Formation_SlotVectors`+0x106.. is the zone music sets on the PSP image (1.1)| every disc-only install, PSX and PSP | the three filled (`twin`), with two more battle tables (wake chances, tally steps); the music sets on PSP builds (`msets`), two PSP-EU battle runs. D56 stays an owner's option (1.3) |
 | **B** the battle equip screen's slot icons all one glyph | the equipment window's six slot icons **and categories** (`0x66B5B4`, 16 bytes) and the BATE equip screen's copy (`0x64AE18`) are zero on every disc-built image: every slot draws icon 0 and names its item from category 0 | every disc-only install, PSX and PSP | filled (`twin`, from the disc's `BATTLE.EMI#15`), every byte `BOF3.exe`'s |
 | **C** the save menu's numbers and "space buffer" | the menu's number formats are zero on every disc-built image: the figure pair `"%3d/   "` / `"   /%3d"`, the `--------` no-next-level text, `"%8d"`, `"%3d/%3d"`, the save slot's play-time colon (`"  :"` - two spaces, the buffer that puts the colon between the hours and the minutes) and the play-time format itself. The leading spaces are **Capcom's** (the PSX's `START.EMI#8` has them byte for byte), not a Latin-text buffer of ours. The empty slot's own text (`0x669CCC`) and the slot number's `"%X"` stay zero: no disc carries either | every disc-only install | filled (`twin`, from `START.EMI#8`) except `0x669CCC` and `"%X"`; options in 3.3 |
 | **D** the PSP's data framed for its 480 x 272 screen | of the three widescreen values the PSP keeps in data (WS's survey), only `MsgBox_PlacementTable` entries 3..6 (x -32 / +32, y unchanged) reach a PSP-built image; the tile size entry 11 is already the PC's there, SCENA17's letterbox is code. `Title_Sprites` entry 10 and the title / demo pages are the PSP's own title art, not placement | PSP-only installs | the side placements put back to the 4:3 frame at import (`unwide`); the PSP image now equals the PSX's there |
@@ -29,13 +29,13 @@ bytes / game-value bytes the PC has non-zero
 
 | Build | before | after |
 |---|---|---|
-| `psx-jp` | 330 / 3,281 / 789 | **320 / 3,162 / 741** |
-| `psx-us` | 351 / 4,085 / 1,323 | **342 / 3,983 / 1,275** |
-| `psx-eu-en` | 349 / 4,069 / 1,319 | **340 / 3,967 / 1,271** |
-| `psx-fr` | 351 / 4,157 / 1,350 | **342 / 4,055 / 1,302** |
-| `psx-de` | 352 / 4,173 / 1,351 | **342 / 4,051 / 1,303** |
-| `psp-jp` | 316 / 2,897 / 740 | **291 / 2,592 / 677** |
-| `psp-eu` | 351 / 3,112 / 791 | **324 / 2,777 / 722** |
+| `psx-jp` | 330 / 3,281 / 789 | **307 / 2,998 / 728** |
+| `psx-us` | 351 / 4,085 / 1,323 | **329 / 3,819 / 1,262** |
+| `psx-eu-en` | 349 / 4,069 / 1,319 | **327 / 3,803 / 1,258** |
+| `psx-fr` | 351 / 4,157 / 1,350 | **329 / 3,891 / 1,285** |
+| `psx-de` | 352 / 4,173 / 1,351 | **329 / 3,887 / 1,286** |
+| `psp-jp` | 316 / 2,897 / 740 | **278 / 2,432 / 664** |
+| `psp-eu` | 351 / 3,112 / 791 | **311 / 2,612 / 709** |
 
 ## 1. A: the combatants shifted left
 
@@ -88,7 +88,7 @@ PSX-JP's addresses; PSP-EU's battle module sits 0x3000 higher, so it missed):
 Both are on the PSP disc verbatim in `BATTLE/BATTLE.EMI#15`; filled by
 `twin` (section 5).
 
-### 1.3 The leading cause: D56, the left edge the port does not test
+### 1.3 D56, the left edge the port does not test (first reading; superseded by 1.4)
 
 `Encounter_Place` places the party and the enemies and then requires every
 combatant's footprint on screen through `Encounter_OnScreen` `0x5928F0`
@@ -115,6 +115,73 @@ combatant's projected footprint at x < 0 when it was placed (a
 `BOF3X_STATEHASH_DUMP` of the encounter frame, or `mem_watch.py` on the
 slots `0x939F00` and the members' spots `0x7E06E0` at the battle's start,
 projected), and on which install.
+
+### 1.4 After the end batch's captures: the cause
+
+EB's `pairs/battle_three.png` (the combat route, frames 480 and 1740: the
+PC install, PSP-EU and the European PSX disc-only install) and AB's
+`eu_combat` sheets (the PC install under `en-150` too, so not the language):
+on both disc-only installs the party sits lower right, the Gooey is never
+drawn (off the left edge), its name box is at the top-left corner, and Teepo
+acts before Ryu (the owner: Flare is Teepo's, Heal is Ryu's - the turn
+order, not the enemy's action). The PC install has none of it. Read and
+measured:
+
+- **The view centre.** AB's report puts the battle in mode 5, area 29:
+  `GameMode5` is the encounter mode (`GameMode5_Steps` `0x656A84`).
+  `GameMode5_Turn` (`mode_rest.cpp`, original `0x495EC0`) steps the upper
+  words of `Field_Kind2X` / `_Kind2Z` - the fight's centre, which
+  `Encounter_AimCamera` aims at - by the s8 pair `0x656AA4[formation * 2]`
+  (`kApproach`). Those 8 bytes (`GameMode5_Steps+0x20` in `exe-gaps.tsv`,
+  `game-value`) were zero on all seven builds, so the centre stays at the
+  party: the camera aims short of the enemies, the party lands lower right
+  and the Gooey off the left edge, where D56 lets it stand.
+- **The name box.** `Battle_OpenEnemyNames` (`battle_sprites.cpp`, original
+  `0x494A80`) takes the name column's x, y from `0x656A34` by the layout
+  byte (`kNamePlaces`). Those 16 bytes (`Boss_SetupTable+0xE0`,
+  `disc-unplaced`) were zero on all seven builds: the box at (0, 0).
+- **The turn order.** `Battle_BuildTurnOrder` (`battle_damage.md` 4): party
+  value = agility + bonus x percent / 100, the percent from the s16 row
+  `0x64E328` by level class (`kTurnPercent`: 100, 125, 150, 200, 250 in
+  shape). Its first two words (classes 0 and 1) were zero on all seven
+  builds (`Battle_CommandBoxes+0x60`, `disc-unplaced`): a low-level party
+  member's ability bonus counts for nothing, so a member with a higher bare
+  agility goes first. Already filled by this branch's first `twin` set.
+
+**Measured against the coordinator's questions:**
+- (1) The actors' stats: the enemy records of area 29 (`0xC2000`) in a US,
+  a European and a PSP-EU disc-built cache equal the PC's `DAT\AREA029.DAT`
+  except the name bytes (+0x00..+0x09 of each 0x8C record; `enemycmp.py`,
+  `locchunks.py`; the language layer's name chunks sit at `0xC2048 + k x
+  0x8C`, the PC's stride). So no record is read at a wrong offset, no
+  ability list or other index differs - in particular **no off-by-one on
+  our side**; the sibling's keying question (`enemy_ai_data.md` 3) was not
+  met here and is not settled by this. The party's stats come from the
+  save and `Char_RecalcStats` over the item tables (placed, the PC's).
+- (2) `Char_DefaultRecords`: the bytes the disc-built images differ in are
+  record offsets 0..8 only - the names (58 bytes on PSX-EU and US, 37 on
+  PSP-EU; `x_*` images against `BOF3.exe`). `NewGame_InitCharacters` alone
+  copies the records (a new game); a loaded save does not read them.
+- (3) What else the sort reads: the agility words, the level-class rows
+  `0x64E374` and the enemies' jitter `0x64E334` (placed, the PC's), and
+  `Rand`.
+- Also equal to the PC's on both images: every encounter table
+  (`0x6698B0..0x669CC0`, `0x660B00..0x660B60`).
+
+**Filled** (`twin`): `0x656AA4..0x656AAC` from `ETC/GAME.EMI#0` (the PSX's
+`GameMode5_Steps` + 0x20 there: `0x801C8B6C` on JP, the PSX twin's table
+`0x801C8B4C` + 8 words) and `0x656A34..0x656A44` from `BATTLE/BATTLE.EMI#15`,
+every byte `BOF3.exe`'s, on all seven builds. With them, two more battle
+tables zero on every build: `Battle_WakeRoll`'s chances `0x64E3E8`
+(`kWakeChance`: a sleeper never woke by the roll) from `BATTLE.EMI#3`, and
+the result tally's steps `0x64ADD0` (`kTallyStep`) from `ETC/BATE.EMI#0`.
+Still zero: `GameMode3_Steps+0xC` `0x656A80`, the facing jitter
+`GameMode3_Leave` reads (`Rand & 3`): its PC bytes are in no `GAME.EMI`.
+
+**What only a capture can confirm:** the combat route's battle on a
+rebuilt disc-only cache - the Gooey in view, its name box beside it, Ryu
+before Teepo - matching the PC install frame for frame (AB's harness).
+D56 stays an owner's option for the left edge in general.
 
 ## 2. B: the battle equip screen's slot icons
 
@@ -182,9 +249,12 @@ Also filled with them, the same class of item-icon table:
 - `0x66A49C..0x66A4AC`, `Item_IconByKind` (the item-trade screen,
   `effect_1g.cpp`): a gap on JP and German only. From `ETC/GAME.EMI#0`.
 
-**What only a capture can confirm:** the six icons in the battle equip
-window and the drop window's icons on a rebuilt disc-only cache, and
-whether the slot names were wrong before.
+**EB's capture** (`pairs/nue_equip.png`, cutsceneAndNue's equip window,
+both disc-only installs): six flames, and the names wrong as 2.2 read them
+- the weapon slot shows "Sea Bream" (the weapon's id read as a consumable),
+the other five "Nothing". That is the window this fix covers
+(`0x66B5B4`): icons and categories both. **Only a capture confirms** the
+fix on a rebuilt cache.
 
 ## 3. C: the save menu's numbers and the space buffer
 
@@ -253,9 +323,19 @@ chooser) are in code and apply to every install with a language
 overlay, disc-only included. The buffer the owner remembers is in these
 format strings, which a disc-only image lacked.
 
-**What only a capture can confirm:** the save menu on a rebuilt disc-only
-cache: slot numbers absent (until 3.3's `"%X"` is decided), times with
-their colons, figures and counts drawn.
+**EB's capture** (`pairs/battle_three.png`, frame 1740): the battle item
+list's counts draw as stray glyphs - "Jr" where the PC draws "× 2", "JK"
+where it draws "5/128". Those are three formats: the item row's count
+`"*%2d"` (`0x653EC0`, `Menu_DrawItemRow`'s `kFmtCount`; the `*` is the
+font's ×), the list's `"%3d/%3d"` (`0x6639C8`) and the battle windows'
+`/` and `:` (`0x64E31C`). All three were gaps on every build; the last two
+are 3.3's fills, and `0x653EC0..0x653EC5` is a `twin` from `ETC/GAME.EMI`
+since (the rest of that gap row, `0x653EA0..0x653EC0`, stays: a fishing
+label set). Why a zero format drew "Jr" rather than nothing was not read.
+
+**What only a capture can confirm:** the save menu and the item counts on a
+rebuilt disc-only cache: slot numbers absent (until 3.3's `"%X"` is
+decided), times with their colons, figures and counts drawn.
 
 ## 4. D: the PSP's data framed for 480 x 272
 
@@ -329,7 +409,9 @@ options the coordinator asked to cost, for the record:
   it is (addresses and names only); `recipe` finds the first copy of
   `BOF3.exe`'s bytes in that file's sections, as the formation wheel's place
   is found (`psp-image.md` 2), and the import copies the player's disc bytes
-  from there. Every disc build.
+  from there. Every disc build. Since the end batch's findings also the item
+  row's count format, the world maps' tables (6.1) and the encounter mode's
+  and the battle's tables (1.4); 28 rows per PSX build, 30 per PSP build.
 - **`msets`**: the zone music sets on a PSP disc. `BOOT.BIN`'s `.data` holds
   the 15 records as relocated list pointers with counts, the lists packed
   (3-byte entries, no padding); found by its relocations alone (the one run
@@ -373,10 +455,10 @@ and `0x66AE1C..0x66AE28`'s four (numbers the image now holds as the PC's);
 | The PSP-EU image against `c_pspeu` (the same) | 197 bytes changed, all now `BOF3.exe`'s: 191 inside the old gap rows and 6 the `unwide` bytes; 611,575 to 611,772 equal. (The end batch's caches are gone since; not repeated after the merge) |
 | D's byte check: PSP-EU against PSX-EU, new images | equal at `0x66AE1C..0x66AE2A` and at `0x64E294..0x64E296` |
 | `recipes/exe-gaps.tsv`'s PSX rows | only removed or shrunk in the filled ranges; the one row that changes shape is `0x6639D0..0x6639D8` to `0x6639D4..0x6639D8` (`"%X"`, still a gap); no new row |
-| After the merge (`6c2ae0c9`, the merged build): exe host self-test, PSX disc-only scratch install `C:\b3g` (IM2's US cache, the new US image) | exit 0; `inject: 10088 ours`; `self-test only: done`; `place 661 ranges 6262 bytes`, `gap 342 ranges 3983 bytes` |
-| exe host self-test, the real install, the new US image | exit 0; `628070 of 638976 bytes equal; every class that must equal does` (IM2 after main: 627,996); no `place` range differs from `BOF3.exe`; `inject: 10087 ours` |
-| exe host self-test, PSP-EU-only scratch install `C:\b3p` (TG's `new_pspeu` cache; the new PSP-EU image; `BOF3X_LANG=en-150`) | exit 0; `inject: 10088 ours`; `self-test only: done`; `place 573 ranges 5615 bytes`, `gap 324 ranges 2777 bytes` |
-| exe host self-test, the real install, the new PSP-EU image | exit 0; `628724 of 638976 bytes equal; every class that must equal does`; no `place` range differs |
+| After the merge (`6c2ae0c9`, the merged build): exe host self-test, PSX disc-only scratch install `C:\b3g` (IM2's US cache, the new US image) | exit 0; `inject: 10088 ours`; `self-test only: done`; `place 675 ranges 6424 bytes`, `gap 329 ranges 3819 bytes` |
+| exe host self-test, the real install, the new US image | exit 0; `628157 of 638976 bytes equal; every class that must equal does` (IM2 after main: 627,996); no `place` range differs from `BOF3.exe`; `inject: 10087 ours` |
+| exe host self-test, PSP-EU-only scratch install `C:\b3p` (TG's `new_pspeu` cache; the new PSP-EU image; `BOF3X_LANG=en-150`) | exit 0; `inject: 10088 ours`; `self-test only: done`; `place 587 ranges 5777 bytes`, `gap 311 ranges 2612 bytes` |
+| exe host self-test, the real install, the new PSP-EU image | exit 0; `628811 of 638976 bytes equal; every class that must equal does`; no `place` range differs |
 
 Commands: `regen.sh` (`exe_tables.py recipe`, `psp_exe.py recipe`,
 `exe_tables.py recipe`, `exe_own.py measure`, `exe_tables.py gaps` over the
@@ -389,13 +471,53 @@ discs and `BOF3.exe`; none of that output is in the tree. Not run: a full
 built and compared directly), the launcher host suite and `dialog_test`
 (no launcher change), `BOF3X_SHADOW='*'` (no `src/` change).
 
+## 6.1 Areas 16 and 45: the crash on entry (EB's defect 2)
+
+EB: `caughFish` (area 16) and `masterAndManillo` (area 45) stop on both
+disc-only installs at area entry - `MoveCmd_AttachOffset`
+(`field_objects.cpp` 265) reading a null `+0x0C` vector table of the area's
+descriptor (`psp_eb\rt\caughFish_b1.log`: `CRASH 0: reading 0x00000000`,
+area `0x10`, task 0 state 2; `symstack.py` names the frames, roughly:
+`Field_Frame` <- `Field_WaitTransition` <- `GameMode_Enter`).
+
+Read: `Area_Descriptors[16]` (`0x5E5DE8`) and `[45]` (`0x5F74A0`) have a
+null `+0x0C` **in `BOF3.exe` too** (`Area_Descriptors[4]` has one), so the
+PC never calls `MoveCmd_AttachOffset` in those areas; on a disc-only
+install something there does (an attached object: `Field_ObjectFollow`, or
+an effect's `+0x1C` attachment, `effect_1a` / `effect_2f` / `field_c3`).
+What the two areas share on every disc-built image are gaps in their own
+tables: `Area16_Buttons` / `Area45_Buttons` (`disc-unplaced`, the legend's
+key search), `Area16_DriftUV` / `Area45_DriftUV` (`port-relaid`) and, on
+some builds, `Area*_Record8Anims` (`port-relaid`: an animation and `+0x2A`
+per record-8 object - zero picks animation 0 of bank `0x46`). The same
+tables of areas 65, 87 and 88 (world maps the routes do not enter) were
+gaps too.
+
+**Filled** where the area's own overlay carries them verbatim (`twin`,
+pinned to `WORLDnn/AREAnnn.EMI#13`): `Area16_Buttons`, `_Record8Anims`,
+`_DriftUV`; `Area45_Buttons`, `_Record8Anims`, `_DriftUV`; `Area65_Buttons`,
+`_Record8Anims`; `Area87_Record8Anims`; `Area88_Record8Anims` - every byte
+`BOF3.exe`'s, on every build where the overlay holds them (the recipe run:
+"0 not BOF3.exe's"). Not on any disc in their PC shape, so still gaps:
+`WorldMap33_DriftUV+0xA`, `Area65_DriftUV`, `Area87_DriftUV`,
+`Area88_DriftUV` and its `+0x78` (the port's re-laid drift textures,
+DIV-0055's class).
+
+**Not verified:** that these fills stop the crash. The headless self-test
+does not enter an area, and no live run was allowed. A zero
+`Record8Anims` picking an animation that attaches is the likeliest of the
+three (its object is placed at the leader on entry, `Area16_Record8Place`);
+if the crash survives, the next step is a probe on `MoveCmd_AttachOffset`'s
+callers in area 16 (which object, its type and `+0x1C`) on a disc-only
+install, against the PC's.
+
 ## 7. Not verified
 
 - **No capture, no play.** Which install showed A, B and C; what icon 0
   looks like; whether the battle equip names were wrong; what the owner's
   "0 or -" was. Each section's last paragraph says what to capture.
-- A's cause is a reading (D56's asymmetry), not a measurement of the
-  owner's fight.
+- A's cause (1.4) is read from the code and the bytes and matches EB's and
+  AB's captures point for point; the fix itself is not yet seen in a run.
 - The music sets' effect on a PSP-only install (track 0's entry in zones
   with a set) is read from `Area_ZoneTrack`, not heard.
 - D's framing is measured as bytes and deltas, and the side placements are
@@ -422,7 +544,12 @@ Not edited here; the coordinator folds them in and numbers them.
   (`BATTLE.EMI#15`), the battle windows' `/` and `:` texts and the party's
   ability-bonus row (`BATTLE.EMI#3`), the menus' figure, count, EXP and
   play-time formats and the play-time colon (`START.EMI#8`), the result
-  window's and the trade screen's icon-by-kind tables (`GAME.EMI#0`); on
+  window's and the trade screen's icon-by-kind tables and the item row's
+  count format (`GAME.EMI#0`), the encounter mode's approach pairs
+  (`GAME.EMI#0`), the enemy name column's places and the wake chances
+  (`BATTLE.EMI`), the result tally's steps (`BATE.EMI#0`), the world maps'
+  buttons, drift and record-8 animation tables (each area's own
+  `AREAnnn.EMI#13`); on
   PSP builds also the zone music sets (`msets`, from `BOOT.BIN` by its
   relocations) and, on PSP-EU, the battle item command's categories, the
   facing step pairs and `Escape_Chance`'s row. Every filled byte equals
@@ -430,10 +557,13 @@ Not edited here; the coordinator folds them in and numbers them.
   slot's text (no disc carries either).
 - Verification: as section 6 of that doc.
 
-**Known defect, for numbering** (or an amendment of D56): the owner's
-"combatants shifted left, an enemy partly off screen" (2026-10-12) is read
-as D56 (`Encounter_OnScreen` lacks the PSX's left / top bounds), on every
-install; not confirmed by a capture.
+**Known defect, for numbering (fixed here):** on every disc-only install
+the encounter's view centre was not stepped (`0x656AA4` zero), the enemy
+name box sat at the top-left (`0x656A34`), the turn order dropped a low
+level party member's ability bonus (`0x64E328`), a sleeper never woke by
+the roll (`0x64E3E8`) and the result tally had no steps (`0x64ADD0`) -
+the owner's "combatants shifted left" and EB's defect 3. D56 is unchanged
+and stays the owner's call (DIV E).
 
 **DIV E (proposed, not built; the owner's call)** - *An encounter refuses a
 combatant left of or above the screen, as the PlayStation does.*

@@ -129,7 +129,7 @@ non-zero bytes (from 453 / 5,411 / 2,183 before the fills;
 of the same evening ([`visual-findings-1012.md`](visual-findings-1012.md):
 the battle equip icons and categories, the menus' number formats and the
 play-time colon, the result window's icons, read from the disc's overlays)
-the US image's gaps are **342 ranges, 3,983 bytes, game-value 1,275**; the
+the US image's gaps are **329 ranges, 3,819 bytes, game-value 1,262**; the
 save slot number's `"%X"` and the empty slot's text stay zero.
 
 None of it is copied (CLAUDE.md rule 1); whether a disc-only build accepts
