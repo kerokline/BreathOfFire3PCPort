@@ -1,8 +1,10 @@
 # The A/B/C install harness: the same route, three installs, compared by picture
 
-**Status:** BUILT (2026-10-12, the PSP-only round's group AB, branch
+**Status:** MEASURED (2026-10-12, the PSP-only round's group AB, branch
 `psp/abc-harness`); the comparison tested offline on earlier frames and
-synthetic ones; the live check is section 7.
+synthetic ones (section 7), then live on the eu triple: the attract
+sequence, combat before and after VF's data fixes, cutsceneAndNue, shop
+(section 8). Not seen by the owner.
 
 The owner, 2026-10-12: "we should probably set up a harness to a/b/c test
 the full install / psx only / psp only recipes, it would quickly reveal
@@ -184,12 +186,63 @@ tagged by the known entries' `pages`, as section 5 of the report.
 | `abc_compare.py` on `analysis/shots/combat_a`, `combat_b` and a synthetic C (frames 10.. a band of 128 rows moved 12 game pixels left, two frames with a 16 x 16 orange square, the last frame missing) | 43 frames, 3 pairs, 3 sheets, 17 s. A-C: first differs 660 (frame 10), the band `0,148-320,212` found **moved -12,+0** in every frame, the square `20,20-36,36` as its own region, 1 missing. A-B (two runs of ours from 2026-09-23): 20 pixels in every frame, two 4 x 4 corners at the bottom - a difference between those runs, not the harness |
 | the report on that, laid out as a run (`analysis`-style logs with mode and area, EB's `c_psxeu` / `c_pspeu` manifests for the rules) | the field frames of B-C in area 4 matched `psp-area-art` (AREA004's base chunks differ between the two caches), the moved band stayed unexplained in the same frames for A-C and B-C, a scene split at the tick it was put in |
 
-The live runs: see the report of the end of this group (section 8 is filled
-in after "go live").
+## 8. Live (2026-10-12 evening, the eu triple, `--every 30`)
 
-## 8. Live
+Headless first: the hosted `BOF3X_SHADOW='*'` self-test from the ini-less
+launcher copy, exit 0, `inject: 10087 ours`, every `MISMATCHES` line 0; the
+exe host's self-test on the PSX-EU disc-only install, exit 0, 10,088 ours.
+The self-tests end before `InputScript_Start`, so `BOF3X_SHOT_EVERY` is
+checked by the live runs only: every run wrote its timed frames (366 for
+the attract's 11,000 frames, 87 for combat) and a `frame ... mode M area A`
+line for each.
 
-(Filled after the live check.)
+| Run | Wall | Compare | Pairs: frames differing / compared |
+|---|---|---|---|
+| attract, eu triple (tip `07eae8e4`'s parent build, caches of `8fdd1f36`'s tools) | 391 + 396 + 378 s | 294 s | A-B 61/366, A-C 285, B-C 285 |
+| attract, psp-eu twice (after the `6c2ae0c9` merge) | 400 + 414 s | 19 s | **2 of 366** (8160: a character's pose; 10320: the camera) - the attract is not frame-exact run to run at those two ticks |
+| combat, eu triple, before VF (`6c2ae0c9` merged) | 108 + 97 + 112 s | 94 s | A-B 80/87, A-C 81, B-C 15 |
+| combat, eu triple, after VF (`psp/round` `9c5bd99f` merged, caches rebuilt) | 128 + 97 + 125 s | 13 s | **A-B 7/87, A-C 19, B-C 15** |
+| cutsceneAndNue, eu triple (before VF) | 268 + 260 + 272 s | 135 s | A-B 95/252, A-C 207, B-C 205; the PSP side parts from tick 6750 |
+| shop, eu triple (before VF) | 122 + 116 + 115 s | 45 s | A-B 39/105, A-C 87, B-C 84 |
+
+What the pictures showed (each from the report's unexplained spans, opened
+and looked at; descriptions are what is drawn, not game facts):
+
+- **Battle, both disc-only installs, before VF:** the battle scene sits
+  lower right with the enemy off the left edge and its name box at the top
+  left, the HP bars in place (97% of pixels in 74 battle frames). After VF's
+  data fixes: the battle frames equal the PC's but one.
+- **The load screen, both disc-only installs (after VF too):** the slot
+  numbers gone, each empty slot showing `) 16`, a stray glyph after `Ryu`;
+  before VF the TIME read `1` for `00:16`. On the PC install with the
+  `en-150` layer the empty slots read the port's Chinese empty-record word.
+- **"You gain 3 EXP!"**: the number missing on both disc-only installs
+  (after VF; region `96,20-144,36`).
+- **The battle Equip window (cutsceneAndNue's `equip_window`), both
+  disc-only installs, before VF:** the equipped weapon named `Sea Bream`
+  with flame icons on every row, and the count `JK` where the PC has
+  `2/128`; the shop's item counts drawn as `50` outside the window.
+- **The PSP install:** the title page is the PSP's own logo with a
+  `FISHING ver.` line and two `TM` marks, wider than the frame (its right
+  edge cut); the message box drawn at the top left where the others draw it
+  at the bottom; the battle's shoulder labels `L` / `R` at the scroll bars;
+  the Nue fight parting from the others from about tick 4530 (different
+  actions, a longer fight; the scene key parts at 6750).
+- **The PC install against the PSX-EU disc:** the title's `®` mark,
+  present on the PC, absent on the disc-only install (`260,128-272,140`).
+
+What the live check taught the tool (fixed on this branch): a cache built by
+older tools is rebuilt (the stamp carries a hash of the importer's tools);
+input_run read a game as exited when `tasklist` itself could not start
+(another harness's games running, `0xC0000142`), and left it running - a run
+now ends any game of its launcher folder by pid, restores slot 0 and tries
+once more. Not fixed, written here: the scene key (mode, area) did not see
+the shop route part - the PC side reached the inn's save menu at 3000 while
+the PSX side was a black fade and the PSP side still in the inn's dialogue,
+all mode 7 area 7 - so a pair that differs a great deal inside one scene
+may be a drift, and the frames say so before the key does; and `moved`
+labelled a line with a missing digit as moved 8 pixels (the rest of the
+line matched at that offset).
 
 ## 9. What it cannot see
 
