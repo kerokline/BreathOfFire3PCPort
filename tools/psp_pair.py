@@ -2,6 +2,9 @@
 """Pair the sibling's named PSX functions with their twins in the PSP's BOOT.BIN.
 
     python tools/psp_pair.py pair --psp-jp ISO [--psp-eu ISO] [--check-eu] --out <scratch>/pairs.json
+    python tools/psp_pair.py diff --psp-jp ISO [--psp-eu ISO] --out <scratch>/diff.json [--md <scratch>/table.md]
+
+docs/psp-code-diff.md has the measurements; `diff` is described at diff_pair.
 
 The PSP ELF is a native compile of the PSX boot EXE and its overlays by a
 different compiler (docs/psp-stallion.md 3.1): registers, scheduling and
@@ -46,7 +49,8 @@ every stored word pointing at a stack-frame prologue. The captures'
 static-discovery lists are not used: they hold case labels, and so does
 names/functions.toml (24 names), which pair through their containing
 function. PSP: jal targets and .data code pointers. On both, a function ends
-at the first `jr ra` (or tail `j`) that no forward branch passes, and the code
+at the first `jr ra` (or tail `j`) that no forward branch passes - past a
+jump table, at a `jr ra` followed by a stack-frame prologue - and the code
 after it starts a new function unless it is padding.
 
 Reads the sibling checkout (--sibling) and the player's PSP disc images
@@ -155,6 +159,11 @@ def bounds(space, starts):
                 switch = True
             if w == JR_RA and maxbr <= x + 4 and not switch:
                 end = x + 8; break
+            # past a jump table the targets are unknown: a stack-frame prologue right
+            # after the return still starts the next function
+            if w == JR_RA and switch and x + 12 <= nxt and space.word(x + 8) >> 16 == 0x27BD \
+                    and space.word(x + 8) & 0x8000:
+                end = x + 8; break
             x += 4
         out[s] = min(end, nxt)
     return out
@@ -205,7 +214,7 @@ def const_norm(v):
 
 
 class Func:
-    __slots__ = ('key', 'space', 'start', 'end', 'n', 'consts', 'fields', 'calls', 'refs', 'fptrs', 'stubs', 'mhash')
+    __slots__ = ('key', 'space', 'start', 'end', 'n', 'consts', 'fields', 'calls', 'refs', 'fptrs', 'stubs', 'mhash', 'callargs', 'mults', 'gte')
 
     def __init__(self, key, space, start, end):
         self.key, self.space, self.start, self.end = key, space, start, end
@@ -214,7 +223,8 @@ class Func:
 def extract(f, space, is_psp, resolve, is_code_addr):
     """Constants, field offsets, ordered callees and ordered globals of one function."""
     consts, fields = collections.Counter(), collections.Counter()
-    calls, refs, fptrs = [], [], []
+    calls, refs, fptrs, callargs, mults = [], [], [], [], []
+    gte = 0              # PSX: GTE (cop2) instructions; PSP: VFPU ones
     regs = {}            # reg -> ('A', address) | ('K', value)
     mw = []              # the words, intra-function jumps relative: equal copies hash equal.
     # Copies must be equal in their address fields too (same callees, same data): on the
@@ -237,6 +247,8 @@ def extract(f, space, is_psp, resolve, is_code_addr):
             continue
         n += 1
         op = w >> 26
+        if (not is_psp and op in (0x12, 0x32, 0x3A)) or (is_psp and op in (0x18, 0x19, 0x1B, 0x34, 0x36, 0x37, 0x3C, 0x3E, 0x3F)):
+            gte += 1
         rs, rt = (w >> 21) & 31, (w >> 16) & 31
         imm = w & 0xFFFF
         if op == 2 and f.start <= (((x + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)) < f.end:
@@ -246,6 +258,14 @@ def extract(f, space, is_psp, resolve, is_code_addr):
         if op == 3:
             t = ((x + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
             calls.append(resolve(t))
+            # the call's constant arguments (a0..a3, the delay slot's li included): a
+            # platform call's arguments are the platform's, set aside by the diff
+            args = [regs[r][1] for r in (4, 5, 6, 7) if r in regs and regs[r][0] == 'K' and regs[r][1]]
+            if x + 8 <= f.end:
+                d = space.word(x + 4)
+                if d >> 26 in (0x09, 0x0D) and (d >> 21) & 31 == ZERO and 4 <= (d >> 16) & 31 <= 7 and d & 0xFFFF:
+                    args.append(d & 0xFFFF if d >> 26 == 0x0D else simm(d))
+            callargs.append((calls[-1], tuple(args)))
         elif op == 2:
             t = ((x + 4) & 0xF0000000) | ((w & 0x3FFFFFF) << 2)
             if not (f.start <= t < f.end):
@@ -266,7 +286,7 @@ def extract(f, space, is_psp, resolve, is_code_addr):
                 consts[val] += 1
             continue
         if op in (0x08, 0x09, 0x0D) and rs in regs and regs[rs][0] == 'A' and \
-                (not is_psp or x in space.addr_lo):
+                (not is_psp or x in space.addr_lo or op in (0x08, 0x09)):   # base + member offset
             a = regs[rs][1] + (imm if op == 0x0D else simm(w))
             a &= 0xFFFFFFFF
             if rt != rs:
@@ -313,6 +333,13 @@ def extract(f, space, is_psp, resolve, is_code_addr):
             if op in LOADS:
                 flush(rt); regs.pop(rt, None)
             continue
+        if op == 0 and w & 63 in (0x18, 0x19):          # mult by a constant: the PSX shifts and adds instead
+            for r in (rs, rt):
+                if r in regs and regs[r][0] == 'K' and consts.get(regs[r][1]):
+                    consts[regs[r][1]] -= 1
+                    if not consts[regs[r][1]]:
+                        del consts[regs[r][1]]
+                    mults.append(regs[r][1])
         if op == 0 and w & 63 in (0x20, 0x21, 0x25):   # add / addu / or: base + index
             rd = (w >> 11) & 31
             ra_, rb_ = regs.get(rs), regs.get(rt)
@@ -333,6 +360,8 @@ def extract(f, space, is_psp, resolve, is_code_addr):
     for r in list(pend):
         flush(r)
     f.n, f.consts, f.fields, f.calls, f.refs, f.fptrs = n, consts, fields, calls, refs, fptrs
+    f.callargs, f.mults = callargs, mults
+    f.gte = gte
     f.mhash = hash((0 if is_psp else space.lo, tuple(mw)))
 
 
@@ -358,6 +387,10 @@ class Psx:
                 self.lib.add(('boot', f['pc']))
         self.code_lo = min(s for s in boot_starts if s >= 0x80100000)
         self.code_hi = max(boot_starts) + 0x400
+        # the Psy-Q libraries are linked as one block at the end of the boot EXE: from
+        # the first function the sibling notes as Psy-Q library code on, all of it
+        self.lib_lo = min(f['pc'] for f in tomllib.load(open(sib + 'symbols.toml', 'rb'))['func']
+                          if f['note'].startswith('Psy-Q L'))
         ov_starts = collections.defaultdict(set)
         for f in tomllib.load(open(sib + 'names/functions.toml', 'rb'))['function']:
             self.names[(f['overlay'], f['pc'])] = (f['name'], 'names/functions.toml')
@@ -418,10 +451,16 @@ class Psx:
         if self.code_lo <= t < self.code_hi:
             return ('boot', t)
         if space != 'boot':
-            for m in self.by_file[self.caps[space]['source_file']]:
-                o = self.spaces[m]
-                if m != space and o.lo <= t < o.hi:
-                    return (m, t)
+            src = self.caps[space]['source_file']
+            fam = src.split('/')[1]
+            # the same file's other sections, then the resident module: BATTLE.EMI
+            # under the battle families, GAME.EMI under the rest
+            resident = 'BIN/BATTLE/BATTLE.EMI' if fam in ('BATTLE', 'BMAGIC', 'BOSS') else 'BIN/ETC/GAME.EMI'
+            for f in (src, resident):
+                for m in self.by_file[f]:
+                    o = self.spaces[m]
+                    if m != space and o.lo <= t < o.hi:
+                        return (m, t)
         return None
 
     def functions(self):
@@ -437,6 +476,7 @@ class Psx:
                     continue
                 out[(name, s)] = Func((name, s), name, s, b[s])
         self.functions_keys = set(out)
+        self.lib |= set(k for k in out if k[0] == 'boot' and k[1] >= self.lib_lo)
         # a name that is not a start lies inside a function: say which
         self.inside = {}
         by_space = collections.defaultdict(list)
@@ -866,7 +906,7 @@ class Matcher:
     def gapfill(self):
         """Pair inside the gaps between paired neighbours: the PSP keeps a module's order.
 
-        For each PSX space, the paired functions in address order whose twins also rise
+        Along each family (order()), the paired functions in link order whose twins also rise
         (a longest increasing run) are anchors. Between two anchors, equal counts pair by
         position when each pair is not dissimilar; otherwise an order-keeping alignment
         within the window."""
@@ -1056,6 +1096,256 @@ def cmd_pair(a):
     print('wrote', a.out)
 
 
+# ---------------------------------------------------------------- the diff
+
+# The data whose consumers the round asked about first (docs/psp-only-round.md 3,
+# CD). PSX-JP addresses: tables.toml (exp_table), psp_stallion.py JP_TABLES
+# (consumables, 14-byte records), region_diff sections of BPLCHAR/RYUD00 #3 and
+# BPLD012 #3 / #7 (Ryu's form data; the arenas' load area, up to RYUD's).
+PRIORITY = [
+    ('exp_table', 0x801CC068, 0x801CC068 + 5544),
+    ('consumables', 0x801C995C, 0x801C995C + 92 * 14),
+    ('RYUD form data', 0x8007280C, 0x8007280C + 0x1B000),
+    ('arena load area', 0x80033800, 0x8007280C),
+]
+# Constants the PSP's widescreen work introduced (docs/psp-widescreen.md 3a): the
+# widened culls' bounds as compiled (an slti's bound is the kept bound + 1), the
+# side message box placements, and the full-frame rectangle's -32 / 384 / 352.
+WIDESCREEN = {-96, 417, -231, 552, -81, 402, -32, 384, 352, 113, 258}
+
+
+def fmt_c(c, limit=8):
+    items = sorted(c.items(), key=lambda kv: str(kv[0]))
+    out = []
+    for v, n in items[:limit]:
+        if isinstance(v, tuple):
+            t = 'w%d%+d' % v
+        elif -1000 < v < 1000:
+            t = '%d' % v
+        else:
+            t = '%#x' % (v & 0xFFFFFFFF)
+        out.append(t + ('x%d' % n if n > 1 else ''))
+    return ' '.join(out) + (' ...' if len(items) > limit else '')
+
+
+def psx_ram_offset(v):
+    """A PSP constant that is a PSX RAM address less 0x80000000: the PSP keeps the EMI
+    sections at their PSX offsets in one buffer (0x33800 for 0x80033800, the arenas'
+    load area), so these are addresses, not values."""
+    return isinstance(v, int) and 0x10000 <= v < 0x200000 and v & 0xFF == 0
+
+
+def soft(v):
+    """A constant a compiler is free to make or unmake: a bit mask (2^k - 1) or a power
+    of two (Allegrex's ext / ins / seb / min / max take them as fields or not at all)."""
+    if not isinstance(v, int) or v <= 0:
+        return False
+    return v & (v + 1) == 0 or v & (v - 1) == 0
+
+
+def diff_pair(m, psx, jp, a, b, platform_b):
+    """One pair's differences: kinds, a short detail line, and a score.
+
+    Compared as sets after normalising what the two compilers do differently
+    (measured on the pairs psp-stallion.md reads as identical, all 'same' here):
+      - constants as a set (the PSP loads a constant once where the PSX reloads it),
+        the trivial ones apart (0xFF, 1, -1...), masks and powers of two not scored,
+        c against c + 1, c - 1 or -c cancelled (a bound moved by one, a subtraction), and
+        against its own low 16 or (for a negative) 8 bits (0xBF and -65 clear one bit),
+        multipliers dropped (the PSX shifts and adds), a PSP constant that is a PSX
+        RAM offset dropped, and the constant arguments of a platform call on either side
+        dropped on both;
+      - paired callees as a set; a difference only in small callees (40
+        instructions or fewer, which one compiler inlines) is listed, not scored;
+      - globals, scored only when each side has a mapped one the other lacks;
+      - field offsets are listed, never scored: the PSP's base registers shift them.
+    Calls into the PSX's Psy-Q library and into the PSP's platform layer are set
+    aside, and so is a PSX function using the GTE once it differs."""
+    fa, fb = m.A[a], m.B[b]
+    kinds, det = [], []
+    plat_a = lambda c: c in psx.lib
+    plat_b = lambda c: jp.is_stub(c) or c in platform_b or m.rep_b.get(c, c) in platform_b
+
+    pargs = set(v for t, args in fa.callargs if plat_a(t) for v in args) | \
+        set(v for t, args in fb.callargs if plat_b(t) for v in args)
+
+    def norm(f, psp):
+        return set(v for v, n in f.consts.items() if v not in TRIVIAL and v not in pargs
+                   and not (psp and psx_ram_offset(v)))
+    ca, cb = norm(fa, False), norm(fb, True)
+    minus, plus = ca - cb, cb - ca
+    for v in sorted(minus, key=str):
+        if not isinstance(v, int):
+            continue
+        for w in sorted(plus, key=str):
+            if isinstance(w, int) and (abs(v - w) == 1 or v == -w or (v - w) & 0xFFFF == 0 or
+                                       ((v < 0 or w < 0) and min(abs(v), abs(w)) <= 0xFF and (v - w) & 0xFF == 0)):
+                minus.discard(v); plus.discard(w)
+                break
+    score = 0
+    if minus or plus:
+        det.append('const -[%s] +[%s]' % (fmt_c(collections.Counter(minus)), fmt_c(collections.Counter(plus))))
+        hard = [v for v in minus | plus if not soft(v) and v not in WIDESCREEN]
+        if plus & WIDESCREEN:
+            kinds.append('widescreen')
+        if hard:
+            kinds.append('consts')
+            score += len(hard)
+    fm, fp = set(fa.fields) - set(fb.fields), set(fb.fields) - set(fa.fields)
+    if fm or fp:
+        det.append('field -[%s] +[%s]' % (fmt_c(collections.Counter(fm)), fmt_c(collections.Counter(fp))))
+    la = [c for c in fa.calls if plat_a(c)]
+    lb = [c for c in fb.calls if plat_b(c)]
+    ka = set(m.a2b[c] for c in fa.calls if c in m.a2b and not plat_a(c))
+    kb = set(c for c in fb.calls if c in m.b2a and not plat_b(c))
+    ua = len(set(c for c in fa.calls if c not in m.a2b and not plat_a(c)))
+    ub = len(set(c for c in fb.calls if c not in m.b2a and not plat_b(c)))
+    if ka != kb or ua != ub:
+        def nm(y):
+            return psx.names.get(m.b2a.get(y), ('',))[0] or '%x' % y
+        det.append('calls -[%s] +[%s]%s' % (' '.join(sorted(nm(c) for c in ka - kb)),
+                                            ' '.join(sorted(nm(c) for c in kb - ka)),
+                                            ' unpaired %d/%d' % (ua, ub) if ua or ub else ''))
+        big = [c for c in ka ^ kb if m.B[c].n > 40]
+        if big or abs(ua - ub) > 1:
+            kinds.append('calls')
+            score += 2 * len(big) + max(0, abs(ua - ub) - 1)
+        else:
+            kinds.append('inline')
+    if bool(la) != bool(lb):
+        kinds.append('platform')
+    if fa.gte:
+        kinds.append('gte')
+    ra = set(m.map_ref_a(r) for r in fa.refs) - {None}
+    rb = set(r for r in fb.refs if r in m.gb_set)
+    if ra - rb and rb - ra:
+        kinds.append('globals')
+        det.append('globals %d only PSX, %d only PSP' % (len(ra - rb), len(rb - ra)))
+        score += min(len(ra - rb), len(rb - ra))
+    return kinds, '; '.join(det), score
+
+
+def verdict(kinds, score):
+    """same / minor (score 1) / differs (2 or more) / widescreen / platform."""
+    if 'widescreen' in kinds and (score < 2 or 'gte' in kinds):
+        return 'widescreen'
+    if score == 0:
+        return 'platform' if 'platform' in kinds else 'same'
+    if 'gte' in kinds or ('platform' in kinds and kinds.count('calls') and 'consts' not in kinds):
+        return 'platform'
+    return 'differs' if score >= 2 else 'minor'
+
+
+BATTLE_FAMILIES = ('BATTLE', 'BMAGIC', 'BOSS')
+BATTLE_PREFIXES = ('Battle', 'BattleResult', 'Magic', 'Effect', 'Enemy', 'EnemyAI', 'Boss', 'Attack', 'Escape',
+                   'Formation', 'Examine', 'HUD', 'BattleMenu', 'BattleBanner', 'Skill', 'AutoBattle', 'Defend')
+
+
+def half_of(psx, k, callers):
+    """'battle' (battle and effects) or 'field' (field, menus, items, system): a battle
+    family's overlay, a battle name, or a boot function only battle code calls."""
+    if k[0] != 'boot':
+        return 'battle' if psx.order(k)[0] in BATTLE_FAMILIES else 'field'
+    if psx.names.get(k, ('',))[0].split('_')[0] in BATTLE_PREFIXES:
+        return 'battle'
+    fams = set(psx.order(c)[0] for c in callers.get(k, ()))
+    return 'battle' if fams and fams <= set(BATTLE_FAMILIES) else 'field'
+
+
+def platform_layer(m, psx, jp, B):
+    """The PSP's platform layer: functions that call the system's stubs, the twins of
+    the PSX's library functions, and - to a fixed point - unpaired PSP functions that
+    call into either."""
+    plat = set(m.a2b[k] for k in psx.lib if k in m.a2b) | set(k for k, f in B.items() if f.stubs)
+    while True:
+        add = set(k for k, f in B.items() if k not in plat and m.rep_b.get(k, k) not in m.b2a
+                  and any(c in plat for c in f.calls))
+        if not add:
+            return plat
+        plat |= add
+
+
+def cmd_diff(a):
+    psx, A, jp, B, m, full, j2e, eu, E = build(a)
+    platform_b = platform_layer(m, psx, jp, B)
+    callers = collections.defaultdict(set)
+    for k, f in A.items():
+        for c in f.calls:
+            callers[c].add(k)
+    ncopies = collections.Counter(m.rep_a.values())
+    label_of = {}
+    for x, y in psx.inside.items():
+        label_of.setdefault(y, psx.names[x][0] + ' (label)')
+    rows, seen = [], set()
+    for k in sorted(A, key=psx.order):
+        r = m.rep_a.get(k, k)
+        if r not in m.a2b or r in seen:
+            continue
+        seen.add(r)
+        b = m.a2b[r]
+        kinds, det, score = diff_pair(m, psx, jp, r, b, platform_b)
+        prio = [label for label, lo, hi in PRIORITY if any(lo <= x < hi for x in A[r].refs)]
+        if 'consumables' in prio and 87 in A[r].consts:
+            prio.append('the constant 87')
+        name = psx.names.get(r, ('',))[0] or label_of.get(r, '')
+        rows.append(dict(psx=key_str(r), file=psx.file_of(r[0]), name=name, lib=r in psx.lib,
+                         copies=max(0, ncopies.get(r, 1) - 1), psp_jp='%08x' % b,
+                         psp_eu='%08x' % j2e[b] if b in j2e else None, how=m.how[r], n_psx=A[r].n, n_psp=B[b].n,
+                         kinds=kinds, score=score, verdict=verdict(kinds, score), detail=det, priority=prio,
+                         half=half_of(psx, r, callers)))
+    tally = collections.Counter((x['half'], x['verdict']) for x in rows)
+    print('pairs (each copy class once): %d' % len(rows))
+    for h in ('battle', 'field'):
+        print('  %-6s %s' % (h, ', '.join('%s %d' % (v, tally[(h, v)]) for v in ('same', 'minor', 'differs', 'widescreen', 'platform'))))
+    named = [x for x in rows if x['name'] and not x['lib']]
+    print('named game pairs: %d; differs %d' % (len(named), sum(1 for x in named if x['verdict'] == 'differs')))
+    for label, _, _ in PRIORITY + [('the constant 87', 0, 0)]:
+        hits = [x for x in rows if label in x['priority']]
+        print('priority %-18s %3d paired readers; differs %d' % (label, len(hits), sum(1 for x in hits if x['verdict'] == 'differs')))
+    json.dump(dict(rows=rows), open(a.out, 'w'), indent=0)
+    print('wrote', a.out)
+    if a.md:
+        write_md(rows, a.md)
+
+
+def md_row(x):
+    size = (x['n_psp'] + 1) / (x['n_psx'] + 1)
+    flag = ' (size %.1fx)' % size if not 0.6 <= size <= 1.7 else ''
+    det = x['detail'].replace('|', '/')
+    return '| `%s` %s%s | %s | `%s` | `%s` | %s | %d/%d%s | %d | %s |' % (
+        x['psx'].split(':')[1], x['file'].replace('BIN/', ''), ' +%d copies' % x['copies'] if x['copies'] else '',
+        x['name'] or '', x['psp_jp'], x['psp_eu'] or '-', x['how'], x['n_psx'], x['n_psp'], flag, x['score'],
+        det if len(det) <= 160 else det[:157] + '...')
+
+
+HEAD = ['| PSX (file) | name | PSP-JP | PSP-EU | paired by | instr. PSX/PSP | score | differs in |',
+        '|---|---|---|---|---|---|---|---|']
+
+
+def write_md(rows, path):
+    """The doc's tables: the priority readers, then the differing pairs by half,
+    named ones first, then by score."""
+    out = ['#### The priority data\'s paired readers (every verdict)\n']
+    out.append('| data | PSX (file) | name | PSP-JP | PSP-EU | verdict | score | differs in |')
+    out.append('|---|---|---|---|---|---|---|---|')
+    for label, _, _ in PRIORITY + [('the constant 87', 0, 0)]:
+        for x in rows:
+            if label in x['priority']:
+                out.append('| %s | `%s` %s | %s | `%s` | `%s` | %s | %d | %s |' % (
+                    label, x['psx'].split(':')[1], x['file'].replace('BIN/', ''), x['name'], x['psp_jp'],
+                    x['psp_eu'] or '-', x['verdict'], x['score'], x['detail'].replace('|', '/')[:160]))
+    out.append('')
+    for h, title in (('battle', 'Battle and effects'), ('field', 'Field, menus, items and system')):
+        d = [x for x in rows if x['half'] == h and x['verdict'] == 'differs']
+        d.sort(key=lambda x: (not x['name'], -x['score'], x['file'], x['psx']))
+        out.append('#### %s: %d differing pairs\n' % (title, len(d)))
+        out += HEAD
+        out += [md_row(x) for x in d]
+        out.append('')
+    open(path, 'w', encoding='utf-8').write('\n'.join(out) + '\n')
+    print('wrote', path)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest='cmd', required=True)
@@ -1065,13 +1355,22 @@ def main():
     p.add_argument('--check-eu', action='store_true', help='also pair PSX->EU independently and measure agreement')
     p.add_argument('--out', required=True)
     p.add_argument('--sibling', default=find_sibling())
+    p = sub.add_parser('diff')
+    p.add_argument('--psp-jp', required=True)
+    p.add_argument('--psp-eu')
+    p.add_argument('--out', required=True)
+    p.add_argument('--md', help='write the doc tables here')
+    p.add_argument('--sibling', default=find_sibling())
     a = ap.parse_args()
+    a.check_eu = getattr(a, 'check_eu', False)
     if not a.sibling:
         sys.exit('no sibling checkout found; pass --sibling')
     if not a.sibling.endswith(('/', '\\')):
         a.sibling += os.sep
     if a.cmd == 'pair':
         cmd_pair(a)
+    elif a.cmd == 'diff':
+        cmd_diff(a)
 
 
 if __name__ == '__main__':
