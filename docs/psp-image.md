@@ -265,11 +265,20 @@ these four: the disc's own tables through the id rule.
 |---|---|
 | `python tools/importer.py check` | 0 errors (`exe_tables check`: 8 builds, 0 errors, incl. `psp_exe.check`) |
 | `python tools/ledger_check.py` | 101 entries, 0 errors, 2 notes |
-| JP + PC, US alone, European alone: caches from `668a9b67`'s tools against this branch's, every file but the manifest | SELFTEST_CACHES |
-| manifests | SELFTEST_MANIFEST |
-| PSP-JP / PSP-EU caches | SELFTEST_PSPCACHES |
-| exe host self-test, the real install, `BOF3X_EXEIMAGE` = the PSP-JP cache | SELFTEST_REAL |
-| exe host self-test, the PSP-EU cache | SELFTEST_REAL_EU |
+| JP + PC, US alone, European alone: `importer.py build` with `668a9b67`'s tools and with this branch's (SI merged), every file but the manifest hashed | **unchanged**, all three |
+| the manifests, `built =` aside | only the `[build]` table differs (SI's `base_policy` and this `exe_tables_from`: `pc-zh`, `psx-us`, `psx-eu-en`); all parse as TOML |
+| `importer.py build`, PSP-JP alone and PSP-EU alone | exit 0; `exe_tables_from = "psp-jp"` / `"psp-eu"` in the one `[build]` table; `base/exe/` equal to `exe_tables.py build`'s; `verify`: layout 14,512 of 14,512, 0 problems |
+| exe host self-test (`BOF3X_SELFTEST_ONLY=1`, a launcher copy in an ini-less scratch folder), the real install, `BOF3X_EXEIMAGE` = the PSP-JP image | exit 0; `place 543 ranges 5299 bytes`, `gap 319 ranges 2925 bytes` (each logged); against `BOF3.exe`: `628587 of 638976 bytes equal; every class that must equal does`; **no `place` range differs**; `inject: 10087 ours`; `self-test only: done` |
+| the same, the PSP-EU image | exit 0; `place 527 / 5296`, `gap 352 / 3132`; `628518 of 638976`, every must-equal class equal, no `place` range differs |
+
+**PSP-JP's and PSP-EU's `base/exe/` differ** (SI's observation: both files):
+`data.toml` by its ranges' sources, and `data.bin` in 124 bytes - 89 where
+one build's `psxmap` reaches a run the other's does not (JP fills
+`Area_CellHooks`, `BattleItemCmd_EquipSideSteps`, `MenuList_GeneWinSteps`,
+`EffectKind34_V0Areas`, `GameMode11_Steps`, `Escape_WinSteps` and four plate
+tables; EU one plate table: each filled side equals the PC's, the other is
+zero), 23 in `Char_DefaultRecords`' names (language), and 12 in
+`SimoonDust_Offsets` (each build's misplaced jump table, section 1).
 
 ## 7. Commands and scratch
 
