@@ -10,7 +10,8 @@ void FieldS_Inject();
 
 namespace field_s {
 // Where the original's call at 0x581313 (in PartyForm_DrawReserve's body)
-// reaches now: Menu_DrawFrame under DIV-0011, the empty 0x4DF820 without it.
+// reaches now: Menu_DrawFrame under DIV-0011, the empty 0x4DF820 without it
+// (menu_frame.cpp's value, MenuFrame_Draw; the site is not read).
 std::uint32_t FrameCallTarget();
 
 // BOF3X_SHADOW=field_s: the start-up fuzz, field_s_fuzz.cpp. Clones every

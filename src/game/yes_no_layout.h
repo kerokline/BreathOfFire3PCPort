@@ -3,6 +3,8 @@
 // language overlay. See src/game/yes_no_layout.cpp and docs/glyph-draw.md.
 #pragma once
 
+#include <cstdint>
+
 // DIV-0027, and DIV-0029's save-slot name inset with it. Only with BOF3X_LANG
 // set, not "original", and not a full-width language (DIV-0056). Also the
 // master's "Is this OK?" prompt (MasterScreen_AskYesNo 0x586D20, two calls re-aimed,
@@ -15,6 +17,16 @@ void YesNoLayout_Inject();
 using YesNoLayout_LineFn = const unsigned char* (__cdecl*)(unsigned id);
 YesNoLayout_LineFn YesNoLayout_ActiveLine();
 bool YesNoLayout_StopsMoved();
+
+// The rest of what YesNoLayout_Inject put into Capcom's code, as values of
+// ours (docs/operand-store.md), for our reimplementations of the functions
+// that held it: what MasterScreen_AskYesNo's two calls reach (0x586E78:
+// Text_DrawAt 0x516B30 or MasterAsk_Line; 0x586E97: Menu_DrawHand 0x5905D0 or
+// MasterAsk_Hand; rest_2d.cpp), and the save slot's name inset (the disp8 at
+// 0x576A48: 0x13, DIV-0029's 0x15; field_o.cpp).
+std::uint32_t YesNoLayout_MasterLineDraw();
+std::uint32_t YesNoLayout_MasterHandDraw();
+unsigned char YesNoLayout_SaveNameInset();
 
 // DIV-0027 (amended 2026-10-03, group YN): the same layout for a prompt that
 // carries its own answers - a question, spaces, then the two answer words at

@@ -19,8 +19,9 @@
 void Rest2H_Inject();
 
 namespace rest_2h {
-// Where MasterWin_SlideOut reads its bound: the imm32 at 0x59C136 (DIV-0041
-// widens it); the fuzz aims it at its own copy's immediate.
+// Where MasterWin_SlideOut reads its bound: widescreen.cpp's value for the
+// imm32 at 0x59C136 (DIV-0041 widens it; Widescreen_SlideOperand); the fuzz
+// aims it at its own copy's immediate.
 extern std::uint32_t g_master_bound;
 // BOF3X_SHADOW=rest_2h: the start-up fuzz, rest_2h_fuzz.cpp. Clones the 36
 // originals before Rest2H_Inject patches them.

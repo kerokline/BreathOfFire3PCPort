@@ -28,8 +28,8 @@
 //
 // Every call goes through the harness (SH_CALL), so the start-up fuzz stands
 // recorders in for ours as for the originals' copies. No divergence: each is
-// a faithful replacement (Menu_DrawSaveSlot reads DIV-0029's byte back, as
-// Menu_YesNo reads DIV-0027's). The unchecked indexes the originals make are
+// a faithful replacement (Menu_DrawSaveSlot reads DIV-0029's byte as
+// yes_no_layout.cpp holds it, as Menu_YesNo reads DIV-0027's). The unchecked indexes the originals make are
 // reproduced; where the original would jump to what is not code or divide by
 // zero, ours aborts with a message (docs/field_o.md section 6).
 #include "game/field_o.h"
@@ -44,9 +44,9 @@
 #include "game/list_title.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -598,9 +598,9 @@ extern "C" void __cdecl Menu_DrawItemPanel(unsigned char* panel) {
 // y + 0x12, 0, level, +0x10); without one the text 0x669CCC at (x + 0x13,
 // y + 2). Then the frame pieces 0x663584 (flags 2 when +0x14 is set, else 0)
 // and, with +0x14 set, piece 0x3D at (x + 0x32, y + 0x16).
-// The inset is the disp8 at 0x576A48 read back - 0x13 as Capcom shipped it,
-// 0x15 under DIV-0029 (YesNoLayout_Inject patches those bytes), anything else
-// a Fatal - as Menu_YesNo reads DIV-0027's patch back.
+// The inset is the disp8 at 0x576A48 - 0x13 as Capcom shipped it, 0x15 under
+// DIV-0029 (YesNoLayout_Inject patches those bytes) - as yes_no_layout.cpp
+// holds it (YesNoLayout_SaveNameInset; docs/operand-store.md).
 extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const unsigned char* summary) {
     SH_CALL(Menu_DrawBox)(x + 8, y, 0xC8, 0x30, 0, Style());
     Sprintf(at::kFmtSlot, slot & 0xFF);
@@ -616,10 +616,7 @@ extern "C" void __cdecl Menu_DrawSaveSlot(unsigned slot, int x, int y, const uns
         std::memcpy(Buf(), summary, 4);
         Buf()[4] = summary[4];
         std::memcpy(Buf() + 5, summary + 0x16, 4);
-        const unsigned char inset = bof3::CodeByte(at::kNameInsetSite);
-        if (inset != 0x13 && inset != 0x15)
-            bof3::Fatal("Menu_DrawSaveSlot: the name's inset byte at 0x%X is 0x%02X, neither Capcom's 0x13 nor DIV-0029's 0x15",
-                        (unsigned)at::kNameInsetSite, (unsigned)inset);
+        const unsigned char inset = YesNoLayout_SaveNameInset();   // the disp8 at at::kNameInsetSite: 0x13, DIV-0029's 0x15
         SH_CALL(Text_DrawAt)(x + inset, y + 2, 0, 5, Buf());
         Sprintf(at::kFmtLevel, static_cast<unsigned>(summary[8]));
         SH_CALL(Text_DrawFont8)(x + 0x1F, y + 0x18, 0, Buf());

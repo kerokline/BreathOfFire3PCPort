@@ -26,9 +26,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
 #include "game/text_advance.h"
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -127,24 +127,23 @@ void BattleCommands_Apply(std::uint32_t tag, const std::uint8_t* payload, std::u
     ApplySlots(kBattleTable, tag, payload, size);
 }
 
+namespace {
+// What the call at kRowLabelCall reaches in this build (MenuVerbs_ActiveLabel):
+// a value of ours, never read from the site (docs/operand-store.md).
+std::uint32_t g_label_call = kTextDrawAt;
+}  // namespace
+
 void MenuVerbs_Inject() {
+    bof3::OperandCall("DIV-0018 menu verb label", kRowLabelCall, &g_label_call);
     // A Latin language overlay only: BOF3X_LANG set, not "original" (as
     // every Latin layout tests it, Lang_Latin), and not a full-width language.
     if (!Lang_Latin()) return;   // DIV-0056: full-width verbs centre as the original does
-    bof3::RetargetCall("MenuVerbs", kRowLabelCall, kTextDrawAt, reinterpret_cast<void*>(&MenuVerbs_DrawLabel));
+    if (bof3::RetargetCall("MenuVerbs", kRowLabelCall, kTextDrawAt, reinterpret_cast<void*>(&MenuVerbs_DrawLabel)))
+        g_label_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MenuVerbs_DrawLabel));
 }
 
 // Menu_DrawButtonRow 0x574890 is ours since the sixth round
 // (src/game/menu_windows.cpp): it asks here which label draw the patched
-// original would call - read back from the call site itself, so it is
-// whatever RetargetCall did, BOF3X_ORIGINAL=MenuVerbs included.
-MenuVerbs_LabelFn MenuVerbs_ActiveLabel() {
-    const auto* site = bof3::CodeBytes(kRowLabelCall, 5);
-    std::int32_t rel;
-    std::memcpy(&rel, site + 1, sizeof rel);
-    const std::uint32_t target = kRowLabelCall + 5 + static_cast<std::uint32_t>(rel);
-    const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MenuVerbs_DrawLabel));
-    if (site[0] != 0xE8 || (target != kTextDrawAt && target != ours))
-        bof3::Fatal("MenuVerbs: 0x%08X is not a call to Text_DrawAt or to ours", (unsigned)kRowLabelCall);
-    return target == ours ? &MenuVerbs_DrawLabel : nullptr;
-}
+// original would call - the value above, which is whatever RetargetCall
+// did, BOF3X_ORIGINAL=MenuVerbs included.
+MenuVerbs_LabelFn MenuVerbs_ActiveLabel() { return g_label_call == kTextDrawAt ? nullptr : &MenuVerbs_DrawLabel; }

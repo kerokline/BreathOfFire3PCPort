@@ -24,9 +24,9 @@
 #include "game/move_script_bytes.h"
 #include "game/rest_2d_callees.h"
 #include "game/scenario_harness.h"
+#include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -116,23 +116,17 @@ const unsigned char* MessageText(U message) {
 const unsigned char* PickLine(U message) { return SH_CALL(Text_DrawAt)(0x1B, 0x13, 0, 0xFF, MessageText(message)); }
 
 // DIV-0027's two sites in Capcom's body of MasterScreen_AskYesNo: the line
-// (Text_DrawAt) and the hand (Menu_DrawHand), re-aimed by YesNoLayout_Inject
-// under a Latin overlay. Ours calls where each reaches now.
-constexpr U kAskLineSite = 0x586E78;
-constexpr U kAskHandSite = 0x586E97;
-U SiteTarget(U site) {
-    const unsigned char* const p = bof3::CodeBytes(site, 5);
-    if (p[0] != 0xE8) bof3::Fatal("MasterScreen_AskYesNo: 0x%X is not a call (DIV-0027's site)", static_cast<unsigned>(site));
-    return bof3::CodeCallTarget(site);
-}
+// (Text_DrawAt, 0x586E78) and the hand (Menu_DrawHand, 0x586E97), re-aimed by
+// YesNoLayout_Inject under a Latin overlay. Ours calls where each reaches now,
+// as yes_no_layout.cpp holds it (docs/operand-store.md).
 const unsigned char* AskLine(U message) {
-    const U target = SiteTarget(kAskLineSite);
+    const U target = YesNoLayout_MasterLineDraw();
     using Fn = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
     if (target == bof3::addr::Text_DrawAt) return SH_CALL(Text_DrawAt)(0x1B, 0x13, 0, 0xFF, MessageText(message));
     return reinterpret_cast<Fn>(static_cast<std::uintptr_t>(target))(0x1B, 0x13, 0, 0xFF, MessageText(message));
 }
 void AskHand(U x) {
-    const U target = SiteTarget(kAskHandSite);
+    const U target = YesNoLayout_MasterHandDraw();
     using Fn = void (__cdecl*)(int, int, int);
     if (target == bof3::addr::Menu_DrawHand) {
         SH_CALL(Menu_DrawHand)(static_cast<int>(x), 0x15, 0);

@@ -29,7 +29,6 @@
 #include "bof3/symbols.gen.h"
 #include "common/sha256.h"
 #include "hook/calltrace.h"
-#include "hook/code_bytes.h"
 #include "hook/crash.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -160,8 +159,6 @@ void CopyData(std::uint32_t* text_raw, std::uint32_t* text_size) {
         Fatal("data: BOF3.exe's sections (.text 0x%X +0x%X, .rdata 0x%X +0x%X, .data 0x%X +0x%X to 0x%X) are not the "
               "ones exe_layout.h was written for", (unsigned)text.va, (unsigned)text.raw_size, (unsigned)rdata.va,
               (unsigned)rdata.raw_size, (unsigned)data.va, (unsigned)data.raw_size, (unsigned)(data.va + data.vsize));
-    *text_raw = text.raw;
-    *text_size = text.raw_size;
 
     // .game is a zero-filled section: asserted, not trusted, before the copy.
     const auto* game = static_cast<const std::uint8_t*>(At(kGameVa));
@@ -281,8 +278,8 @@ void WriteThunk() {
 
 // The inventory's self-test (docs/state3-design.md section 7): nothing of
 // ours wrote .stub but Inject's jmps and the thunk. A PatchBytes or a
-// RetargetCall into Capcom's code goes to the code-byte store in this host
-// (code_bytes.h), so every other byte must still be int3.
+// RetargetCall into Capcom's code writes nothing in this host
+// (docs/operand-store.md), so every other byte must still be int3.
 void CheckStub() {
     const auto* page = static_cast<const std::uint8_t*>(At(kStubVa));
     static std::uint8_t mine[kStubSize];   // 1: written by a jmp or the thunk
@@ -375,7 +372,6 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     CheckLayout();
     std::uint32_t text_raw = 0, text_size = 0;
     CopyData(&text_raw, &text_size);
-    CodeBytes_Open(g_exe, text_raw, text_size);
     BindSlots();
     SetX87();
 
@@ -393,7 +389,6 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     StateHash_AfterInjects();
     CheckStub();
     ProtectStub();
-    CodeBytes_Report("after InjectAll");
     StackWatch_Start();
     if (EnvSet("BOF3X_SELFTEST_ONLY")) {
         ExeIcon_SelfTest();   // DIV-0095: only with BOF3X_ICON_VRAM; .data (the icon table) is copied by now

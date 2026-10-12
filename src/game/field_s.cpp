@@ -56,7 +56,7 @@
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
+#include "game/menu_frame.h"
 
 namespace {
 
@@ -192,7 +192,7 @@ unsigned char ScrollList(U repeat, U cur, U top, U moving) {
 
 }  // namespace
 
-std::uint32_t field_s::FrameCallTarget() { return bof3::CodeCallTarget(at::kFrameSite); }
+std::uint32_t field_s::FrameCallTarget() { return MenuFrame_Draw(); }
 
 // ===========================================================================
 // The field save's confirm (FieldSave_States[3]) and the rest sequence

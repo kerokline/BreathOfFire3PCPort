@@ -580,6 +580,7 @@ void SelfTest() {
     for (unsigned id = 0; id < 256; ++id)
         if (Mem(at::kMemberMap + id)[0] < 8) g_good_ids[g_good_n++] = static_cast<unsigned char>(id);
     // MasterWin_SlideOut reads its bound from the copy's immediate
+    const std::uint32_t master_bound_was = g_master_bound;
     g_master_bound = Key(g_r2h_slide_copy) + 6;
 
     // BOF3X_R2H_ONLY: the clones whose name contains it (a control's run)
@@ -600,7 +601,7 @@ void SelfTest() {
     g.args = [](unsigned k, U* a) { Args(s_index[k], a); };
     g.field = true;
     sh::Run(g);
-    g_master_bound = at::kMasterBound;
+    g_master_bound = master_bound_was;
 }
 
 }  // namespace rest_2h
