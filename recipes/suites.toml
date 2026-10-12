@@ -1,0 +1,116 @@
+# recipes/suites.toml - the launcher's three suites (docs/launcher-suites.md; the
+# owner's calls of 2026-10-10, docs/psp-only-build.md section 7 item 3).
+#
+# Hand-written. tools/suites.py checks it (`importer.py check` runs that) and
+# generates the launcher's table from it (`suites.py gen`, a build step): edit
+# this file, never the generated header.
+#
+# A suite is one toggle: the PlayStation's version of a set of differences or
+# the PSP's, all together. Its members are what the toggle moves. Each member
+# names the builds it comes from (`from`, fixtures.toml ids) and how it reaches
+# the game when the install's base is the PlayStation's (`over_psx`):
+#
+#   layer   an opt/ layer of recipes/opt.toml (`layer`), played through opt= and
+#           BOF3X_OPT (DIV-0086): selectable today
+#   engine  its engine half is not built yet (the round's group TG: opt/ layers
+#           for base/bgm and base/snd, a chunk kind for base/exe): listed,
+#           greyed with `why`, never selectable
+#   none    no layer exists or is planned: listed, greyed with `why`
+#
+# When the base is the PSP's (the manifest's [build] base_policy = "psp", a
+# PSP-only install), every member is the base and the PlayStation's version is
+# the greyed side. `kind` says where a member lives in the cache: opt (opt/
+# <layer>/), bgm (base/bgm/), snd (base/snd/), exe (base/exe/'s tables), base
+# (base/ chunks; the PSP's stand-ins).
+#
+# Which suite carries the names layers, Ryu's form data (P8) and the button
+# page are the owner's open calls (docs/psp-only-round.md section 7 item 3);
+# the placement below is the proposal in docs/launcher-suites.md section 6.
+# No game data: names, ids and builds only.
+
+[[suite]]
+id = "graphics"
+label = "Graphics"
+what = "the PSP's art: Stallion's palettes (P6), the area tiles and palettes it redrew or blanked, its map-band edits"
+
+[[suite.member]]
+id = "psp-art"
+label = "Stallion's palettes"
+kind = "opt"
+layer = "psp-art"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-tiles"
+label = "area tiles and palettes"
+kind = "opt"
+layer = "psp-tiles"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-maps"
+label = "map bands"
+kind = "opt"
+layer = "psp-maps"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite]]
+id = "audio"
+label = "Audio"
+what = "the PSP's music (its own sequences and banks) and its effects, voices and jingles (ATRAC3plus, decoded by the player's ffmpeg)"
+
+[[suite.member]]
+id = "psp-music"
+label = "music"
+kind = "bgm"
+from = ["psp-jp", "psp-eu"]
+over_psx = "engine"
+why = "needs the engine half (TG)"
+
+[[suite.member]]
+id = "psp-effects"
+label = "effects, voices, jingles"
+kind = "snd"
+from = ["psp-jp", "psp-eu"]
+over_psx = "engine"
+why = "needs the engine half (TG)"
+
+[[suite]]
+id = "data"
+label = "Data"
+what = "the PSP's game data: roster index 6's level table and consumable 87, its item and ability renames, Ryu's form data (P8)"
+
+[[suite.member]]
+id = "psp-tables"
+label = "level table and item 87"
+kind = "exe"
+from = ["psp-jp", "psp-eu"]
+over_psx = "engine"
+why = "needs the engine half (TG)"
+
+[[suite.member]]
+id = "psp-names-en-150"
+label = "English renames"
+kind = "opt"
+layer = "psp-names-en-150"
+from = ["psp-eu"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-names-ja-JP"
+label = "Japanese renames"
+kind = "opt"
+layer = "psp-names-ja-JP"
+from = ["psp-jp"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-ryu-forms"
+label = "Ryu's forms (P8)"
+kind = "base"
+from = ["psp-jp", "psp-eu"]
+over_psx = "none"
+why = "no layer yet (unrendered)"

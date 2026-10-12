@@ -19,18 +19,21 @@
 #include "input/pad_sdl.h"
 #include "launcher/music_player.h"
 #include "launcher/resource.h"
+#include "launcher/suites.h"
 
 namespace bof3x {
 namespace {
 
 struct DialogState {
-    Config* cfg;
+    Config* cfg = nullptr;
     // The overlay languages found in DAT\ (ConfigLanguagesAvailable): the
     // Language box holds "Original" and then these, in this order.
     std::vector<std::string> languages;
     std::wstring game_dir;
-    // kPspLayers[i] installed in DAT\ (ConfigOptInstalled): only those get a box.
-    bool installed[std::size(kPspLayers)] = {};
+    // The three suites as the page last showed them (SuitesRefresh), and the
+    // player's choice for each: -1 untouched, 0 the PlayStation's, 1 the PSP's.
+    std::vector<SuiteState> suites;
+    std::vector<int> choice = std::vector<int>(std::size(suites_gen::kSuites), -1);
 };
 
 // ---- DIV-0087: the music source and the cache folder --------------------------
@@ -98,14 +101,18 @@ void BrowseCache(HWND dlg) {
     if (SUCCEEDED(co)) CoUninitialize();
 }
 
-// ---- DIV-0086: the PSP extras --------------------------------------------------
+// ---- The three suites (docs/launcher-suites.md) ----------------------------------
 //
-// One box per installed kPspLayers entry, packed from the group's top; a text
-// layer's box only while the Language box holds its language (the DLL refuses
-// it under another, and the launcher leaves it off: ConfigOptPlayable). A
-// hidden box keeps its tick and is read back like the others, so switching the
-// language and back loses nothing; a layer the boxes do not offer stays in
-// opt= as it was (ConfigOptEdit).
+// Graphics, audio and data, each the PlayStation's version or the PSP's
+// (recipes/suites.toml). Every suite is shown whatever the install; a side the
+// install cannot play is greyed with the discs that would enable it, and on a
+// PSP base (the manifest's base_policy = "psp") it is the PlayStation's side
+// that is greyed. A member is greyed when choosing its suite cannot play it,
+// and the reason line says why. The page reads the cache named in the box as
+// it stands, so typing or browsing to another cache redraws it; a choice is
+// written as opt= only on Play (SuitesOptEdit), and an untouched page writes
+// opt= back as it was read. (Until 2026-10-12 this place held the "PSP extras"
+// boxes, one per installed layer; the suites carry the same layers.)
 
 int Selected(HWND dlg, int id);  // below, with the combo box helpers
 
@@ -116,32 +123,114 @@ std::string LanguageChosen(HWND dlg, const DialogState& state) {
                : std::string();
 }
 
-void OptLayout(HWND dlg, const DialogState& state) {
-    const std::string language = LanguageChosen(dlg, state);
-    RECT first{14, 245, 266, 10};
-    MapDialogRect(dlg, &first);
-    RECT step{0, 0, 0, 11};
-    MapDialogRect(dlg, &step);
-    int shown = 0, installed = 0;
-    for (size_t i = 0; i < std::size(kPspLayers); ++i) {
-        HWND box = GetDlgItem(dlg, IDC_OPT0 + static_cast<int>(i));
-        const char* tag = LayerLanguage(kPspLayers[i].name);
-        const bool show = state.installed[i] && (!tag || SamePrimaryLanguage(language.c_str(), tag));
-        installed += state.installed[i];
-        if (show) {
-            SetWindowPos(box, nullptr, first.left, first.top + shown * step.bottom, first.right, first.bottom,
-                         SWP_NOZORDER | SWP_NOACTIVATE);
-            ++shown;
-        }
-        ShowWindow(box, show ? SW_SHOW : SW_HIDE);
+// The cache the game will be given: BOF3X_CACHE when the environment has it
+// (it wins at start, ConfigCacheDataRoot), else the box as it stands, trimmed as
+// ConfigLoad trims a line, without trailing separators.
+std::wstring DialogCacheRoot(HWND dlg) {
+    wchar_t root[MAX_PATH];
+    const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, MAX_PATH);
+    std::wstring w;
+    if (n > 0 && n < MAX_PATH) {
+        w.assign(root, n);
+    } else {
+        w = DialogText(dlg, IDC_CACHE);
+        const size_t b = w.find_first_not_of(L" \t"), e = w.find_last_not_of(L" \t");
+        w = b == std::wstring::npos ? std::wstring() : w.substr(b, e - b + 1);
     }
-    const wchar_t* note = L"";
-    if (installed == 0)
-        note = L"No PSP layer is installed. tools/importer.py build and install make them from the player's PSP disc.";
-    else if (shown == 0)
-        note = L"The layers installed are another language's text; choose that language to offer them.";
-    SetDlgItemTextW(dlg, IDC_OPTNOTE, note);
-    ShowWindow(GetDlgItem(dlg, IDC_OPTNOTE), shown == 0 ? SW_SHOW : SW_HIDE);
+    while (w.size() > 1 && (w.back() == L'\\' || w.back() == L'/')) w.pop_back();
+    return w;
+}
+
+// Where the DLL finds layers in the cache: none under BOF3X_CACHE_DATA=0
+// (the cache for the music only), as ConfigCacheDataRoot.
+std::wstring DialogDataRoot(HWND dlg) {
+    wchar_t text[4];
+    const DWORD m = GetEnvironmentVariableW(L"BOF3X_CACHE_DATA", text, 4);
+    if (m == 1 && text[0] == L'0') return std::wstring();
+    return DialogCacheRoot(dlg);
+}
+
+std::wstring WideAscii(const std::string& s) {
+    std::wstring w;
+    for (unsigned char c : s) w += static_cast<wchar_t>(c);
+    return w;
+}
+
+void SuitesRefresh(HWND dlg, DialogState& state) {
+    const std::wstring cache = DialogCacheRoot(dlg), data = DialogDataRoot(dlg), game = state.game_dir;
+    SuiteInputs in;
+    in.manifest = ManifestRead(cache);
+    in.installed = [game, data](const char* layer) { return ConfigOptInstalled(game, layer, data); };
+    in.language = LanguageChosen(dlg, state);
+    in.opt = state.cfg->opt;
+    in.defaults = ConfigOptDefaultInstalled(game, data);
+    state.suites = SuitesEvaluate(in);
+
+    std::wstring note;
+    if (!in.manifest.error.empty()) {
+        note = WideAscii(in.manifest.error) + L": the suites cannot be offered.";
+    } else if (!in.manifest.present) {
+        note = cache.empty() ? L"No cache named: the PSP's versions need one. Layers installed in DAT\\ still count."
+                             : L"No manifest.toml in the cache folder (tools/importer.py build writes one).";
+    } else {
+        std::wstring from;
+        for (size_t i = 0; i < in.manifest.sources.size(); ++i)
+            from += (i ? L", " : L"") + WideAscii(in.manifest.sources[i]);
+        note = std::wstring(in.manifest.base_policy == "psp" ? L"This install's base is the PSP's"
+                                                             : L"This install's base is the PlayStation's") +
+               L"; the cache is built from " + (from.empty() ? std::wstring(L"no source") : from) + L".";
+    }
+    SetDlgItemTextW(dlg, IDC_SUITENOTE, note.c_str());
+
+    for (size_t i = 0; i < state.suites.size(); ++i) {
+        const SuiteState& s = state.suites[i];
+        const int base = IDC_SUITE0 + kSuiteStride * static_cast<int>(i);
+        SetDlgItemTextW(dlg, base + kSuiteLabel, (std::wstring(s.info->label) + L":").c_str());
+        SetDlgItemTextW(dlg, base + kSuitePsx, s.psp_base ? L"PlayStation" : L"PlayStation (the base)");
+        SetDlgItemTextW(dlg, base + kSuitePsp, s.psp_base ? L"PSP (the base)" : L"PSP");
+        EnableWindow(GetDlgItem(dlg, base + kSuitePsx), s.psx_enabled);
+        EnableWindow(GetDlgItem(dlg, base + kSuitePsp), s.psp_enabled);
+        int& choice = state.choice[i];
+        if ((choice == 0 && !s.psx_enabled) || (choice == 1 && !s.psp_enabled)) choice = -1;
+        const int shown = choice >= 0 ? choice : s.side == SuiteSide::kPsx ? 0 : s.side == SuiteSide::kPsp ? 1 : -1;
+        CheckDlgButton(dlg, base + kSuitePsx, shown == 0 ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(dlg, base + kSuitePsp, shown == 1 ? BST_CHECKED : BST_UNCHECKED);
+
+        // The members, greyed when the PSP's version cannot play them here; and
+        // the reasons, the same reason said once for the members that share it.
+        std::vector<std::pair<std::wstring, std::wstring>> notes;   // note, the members it is about
+        for (int k = 0; k < kSuiteMembers; ++k) {
+            HWND line = GetDlgItem(dlg, base + kSuiteMember0 + k);
+            if (static_cast<size_t>(k) >= s.members.size()) {
+                SetWindowTextW(line, L"");
+                ShowWindow(line, SW_HIDE);
+                continue;
+            }
+            const SuiteMemberState& m = s.members[static_cast<size_t>(k)];
+            SetWindowTextW(line, m.info->label);
+            EnableWindow(line, m.available);
+            ShowWindow(line, SW_SHOW);
+            if (m.note.empty()) continue;
+            auto it = std::find_if(notes.begin(), notes.end(), [&](const auto& n) { return n.first == m.note; });
+            if (it == notes.end()) notes.emplace_back(m.note, m.info->label);
+            else it->second += std::wstring(L", ") + m.info->label;
+        }
+        std::wstring why;
+        if (!s.psx_enabled && !s.psx_why.empty()) why += s.psx_why + L" ";
+        if (!s.psp_enabled && !s.psp_why.empty() && s.psp_why != s.psx_why) why += s.psp_why + L" ";
+        if (shown < 0) why += L"bof3x.ini's opt= plays part of this suite: kept as written until a version is chosen. ";
+        for (const auto& [n, who] : notes) why += who + L": " + n + L". ";
+        if (!why.empty()) why.pop_back();
+        SetDlgItemTextW(dlg, base + kSuiteWhy, why.c_str());
+    }
+}
+
+// A suite's radio: the player's choice, written on Play.
+bool SuiteRadioClicked(DialogState& state, int id) {
+    const int at = id - IDC_SUITE0, i = at / kSuiteStride, k = at % kSuiteStride;
+    if (at < 0 || static_cast<size_t>(i) >= state.choice.size() || (k != kSuitePsx && k != kSuitePsp)) return false;
+    state.choice[static_cast<size_t>(i)] = k == kSuitePsp ? 1 : 0;
+    return true;
 }
 
 const wchar_t* LanguageLabel(const std::string& code) {
@@ -236,7 +325,7 @@ void Tick(HWND dlg) {
 
 }  // namespace padnav
 
-void Populate(HWND dlg, const DialogState& state) {
+void Populate(HWND dlg, DialogState& state) {
     const Config& cfg = *state.cfg;
 
     AddItem(dlg, IDC_LANGUAGE, L"Chinese (PC script)");
@@ -279,23 +368,9 @@ void Populate(HWND dlg, const DialogState& state) {
     SetDlgItemTextW(dlg, IDC_CACHE, ConfigFromUtf8(cfg.cache).c_str());
     CacheNote(dlg);
 
-    // A box is ticked when opt= plays its layer now (an empty opt= the
-    // default layers, none of which is a PSP layer).
-    const std::string wanted = cfg.opt == "none" ? std::string() : cfg.opt;
-    for (size_t i = 0; i < std::size(kPspLayers); ++i) {
-        const int id = IDC_OPT0 + static_cast<int>(i);
-        SetDlgItemTextW(dlg, id, kPspLayers[i].label);
-        bool on = false;
-        size_t at = 0;
-        while (at <= wanted.size()) {
-            size_t end = wanted.find(',', at);
-            if (end == std::string::npos) end = wanted.size();
-            on = on || wanted.compare(at, end - at, kPspLayers[i].name) == 0;
-            at = end + 1;
-        }
-        CheckDlgButton(dlg, id, on ? BST_CHECKED : BST_UNCHECKED);
-    }
-    OptLayout(dlg, state);
+    // Each suite's side as opt= plays it now (an empty opt= the default
+    // layers, none of which is a suite's).
+    SuitesRefresh(dlg, state);
 
     CheckDlgButton(dlg, IDC_SHOW, cfg.show_launcher ? BST_CHECKED : BST_UNCHECKED);
 }
@@ -324,11 +399,9 @@ void ReadBack(HWND dlg, const DialogState& state) {
     if (Selected(dlg, IDC_MUSIC) == 1) cfg.music = "mp3";
     else if (cfg.music != "seq") cfg.music.clear();
 
-    std::vector<std::pair<std::string, bool>> boxes;
-    for (size_t i = 0; i < std::size(kPspLayers); ++i)
-        if (state.installed[i])
-            boxes.emplace_back(kPspLayers[i].name, IsDlgButtonChecked(dlg, IDC_OPT0 + static_cast<int>(i)) == BST_CHECKED);
-    cfg.opt = ConfigOptEdit(cfg.opt, ConfigOptDefaultInstalled(state.game_dir, ConfigCacheDataRoot(*state.cfg)), boxes);
+    // The suites: a choice moves its layers in opt=; none chosen, opt= as read.
+    cfg.opt = SuitesOptEdit(cfg.opt, ConfigOptDefaultInstalled(state.game_dir, DialogDataRoot(dlg)), state.suites,
+                            state.choice);
 }
 
 // The cache box as the ini's UTF-8 bytes, trimmed as ConfigLoad trims a line.
@@ -881,11 +954,15 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDC_LANGUAGE:
             if (HIWORD(wp) == CBN_SELCHANGE) {
                 auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-                OptLayout(dlg, *state);
+                SuitesRefresh(dlg, *state);   // a names layer's note follows the language
             }
             return TRUE;
         case IDC_CACHE:
-            if (HIWORD(wp) == EN_CHANGE) CacheNote(dlg);
+            if (HIWORD(wp) == EN_CHANGE) {
+                CacheNote(dlg);
+                auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+                if (state && state->cfg) SuitesRefresh(dlg, *state);   // another cache, another manifest
+            }
             return TRUE;
         case IDC_CACHEBROWSE:
             BrowseCache(dlg);
@@ -918,6 +995,10 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             return TRUE;
         }
         default:
+            if (HIWORD(wp) == BN_CLICKED) {
+                auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+                if (SuiteRadioClicked(*state, LOWORD(wp))) return TRUE;
+            }
             break;
         }
         break;
@@ -933,9 +1014,10 @@ bool ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     INITCOMMONCONTROLSEX icc{sizeof icc, ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES};
     InitCommonControlsEx(&icc);
 
-    DialogState state{&cfg, ConfigLanguagesAvailable(game_dir, ConfigCacheDataRoot(cfg)), game_dir};
-    for (size_t i = 0; i < std::size(kPspLayers); ++i)
-        state.installed[i] = ConfigOptInstalled(game_dir, kPspLayers[i].name, ConfigCacheDataRoot(cfg));  // DIV-0089: or the cache's
+    DialogState state;
+    state.cfg = &cfg;
+    state.languages = ConfigLanguagesAvailable(game_dir, ConfigCacheDataRoot(cfg));
+    state.game_dir = game_dir;
     padnav::SetMap(cfg.bindings.pad);
     const INT_PTR result = DialogBoxParamW(GetModuleHandleW(nullptr),
                                            MAKEINTRESOURCEW(IDD_CONFIG), nullptr, Proc,

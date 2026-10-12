@@ -1,15 +1,19 @@
-// Host tests for the launcher's settings (src/launcher/config.cpp): the ini's
-// round trip through ConfigLoad / ConfigSave, and ConfigOptEdit - what the
-// settings dialog's "PSP extras" boxes make of an `opt=` line. No game data;
-// a Windows host (config.cpp is Win32). docs/launcher-settings.md section 3.
+// Host tests for the launcher's settings (src/launcher/config.cpp, suites.cpp):
+// the ini's round trip through ConfigLoad / ConfigSave, ConfigOptEdit, and the
+// three suites - what the settings dialog makes of a cache's manifest.toml and
+// of an `opt=` line (docs/launcher-suites.md). No game data; a Windows host
+// (config.cpp is Win32). docs/launcher-settings.md section 3.
 //
 //   cmake -S tools/launcher_host -B <scratch>/lh -G Ninja -DCMAKE_CXX_COMPILER=clang++
 //   cmake --build <scratch>/lh && <scratch>/lh/config_tests.exe
 #include "launcher/config.h"
+#include "launcher/suites.h"
 
 #include <windows.h>
 
+#include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -99,7 +103,7 @@ void TestOptEdit() {
         {"a box on over none: the walls stay off", "none", walls, {{"psp-art", true}}, "psp-art"},
         {"the last box off: none", "psp-art", walls, {{"psp-art", false}}, "none"},
         {"a box off, the walls listed stay", "area4-walls,psp-art", walls, {{"psp-art", false}}, "area4-walls"},
-        {"kPspLayers' order, a name the boxes lack kept after", "foo,psp-maps", none,
+        {"the suites' order, a name the boxes lack kept after", "foo,psp-maps", none,
          {{"psp-art", true}, {"psp-maps", true}}, "psp-art,psp-maps,foo"},
         {"a layer not offered (not installed) kept", "psp-names-ja-JP,psp-maps", none, {{"psp-maps", false}},
          "psp-names-ja-JP"},
@@ -197,16 +201,236 @@ void TestCacheCodePage() {
     const std::wstring tiles = cache + L"\\opt\\psp-tiles\\dat\\AREA000.DAT";
     WriteAll(tiles, "");
     bof3x::Config cfg;
-    cfg.cache = std::string(atmp) + bytes + "\\";
+    // Through ConfigLoad's reading of the line (ConfigCacheFromIni): since state 3
+    // Config::cache holds UTF-8, and an older ini's ANSI bytes are read once as
+    // the code page. (Until 2026-10-12 this set the ANSI bytes straight into
+    // Config::cache, which state 3 made UTF-8 - two stale failures since.)
+    cfg.cache = bof3x::ConfigCacheFromIni(std::string(atmp) + bytes + "\\");
     Check(bof3x::ConfigCacheDataRoot(cfg) == cache, "cache= widened through the ANSI code page");
     Check(bof3x::ConfigOptInstalled(game, "psp-tiles", bof3x::ConfigCacheDataRoot(cfg)),
           "a layer in a cache named outside Latin-1: installed (DIV-0089)");
     DeleteFileW(tiles.c_str());
 }
 
+// ---- The three suites (src/launcher/suites.cpp, docs/launcher-suites.md) -----------
+//
+// Three fake manifests as tools/importer.py writes them - PSP-only, PSX-only,
+// and PC + PSX + PSP - with the [build] keys the round's contract fixes
+// (docs/psp-only-round.md section 4: base_policy from SI, exe_tables_from from
+// IM). The [build] table sits right after [meta], as SI's
+// psp_standins.manifest_lines writes it (psp/si 1d72d999, standins_sha256 under
+// psp); exe_tables_from in it is IM's, not written yet. Builds, names and
+// made-up hashes only.
+
+const char kManifestPspOnly[] =
+    "# The cache's provenance\n[meta]\ntarget = \"pc-zh\"\nbuilt = \"2026-10-12T00:00:00\"\n\n"
+    "[build]\nbase_policy = \"psp\"\nstandins_sha256 = \"66\"\nexe_tables_from = \"psp-jp\"\n\n"
+    "[[source]]\nbuild = \"psp-jp\"\npath = \"Breath of Fire III (PSP) (Japan).iso\"\n\n"
+    "[cache]\nassets = [\n  [\"AREA000.DAT\", 0, \"base\", \"psp-jp:own:WORLD00/AREA000.EMI#7\", \"00\"],\n]\n"
+    "bgm = [\n  [\"base/bgm/000.DAT\", \"psp-jp:ppms:SOUND/BGM.BIN#0\", \"11\"],\n]\n\n"
+    "[snd]\nbuild = \"psp-jp\"\nhow = \"psp-at3\"\nffmpeg = \"ffmpeg version 9.0.1\"\nfiles = [\n  [\"MAGIC/000_00.WAV\", \"22\"],\n]\n\n"
+    "[exe]\nbuild = \"psp-jp\"\nfile = \"base/exe/data.bin\"\nsha256 = \"33\"\n";
+const char kManifestPsxOnly[] =
+    "[meta]\ntarget = \"pc-zh\"\n\n[build]\nbase_policy = \"psx\"\nexe_tables_from = \"psx-us\"\n\n"
+    "[[source]]\nbuild = \"psx-us\"\npath = \"Breath of Fire III (USA).cue\"\n\n"
+    "[cache]\nassets = [\n  [\"AREA000.DAT\", 0, \"base\", \"psx-us:copy\", \"00\"],\n]\n"
+    "bgm = [\n  [\"base/bgm/000.DAT\", \"psx-us:seq:BGM000.EMI#1\", \"11\"],\n]\n\n"
+    "[exe]\nbuild = \"psx-us\"\nfile = \"base/exe/data.bin\"\nsha256 = \"33\"\n";
+const char kManifestAll[] =
+    "[meta]\ntarget = \"pc-zh\"\n\n[build]\nbase_policy = \"psx\"\nexe_tables_from = [\"pc-zh\"]\n\n"
+    "[[source]]\nbuild = \"pc-zh\"\npath = \"DAT\"\n\n[[source]]\nbuild = \"pc-zh\"\npath = \"BOF3.exe\"\n\n"
+    "[[source]]\nbuild = \"psx-us\"\npath = \"Breath of Fire III (USA).cue\"\n\n"
+    "[[source]]\nbuild = \"psp-eu\"\npath = \"Breath of Fire III (PSP) (Europe).iso\"\n\n"
+    "[[source]]\nbuild = \"psp-jp\"\npath = \"Breath of Fire III (PSP) (Japan).iso\"\n\n"
+    "[cache]\nassets = [\n  [\"AREA000.DAT\", 0, \"base\", \"pc-zh:chunk\", \"00\"],\n]\n"
+    "opt_recipe_sha256 = \"44\"\nopt = [\n  [\"AREA067.DAT\", \"opt/psp-art\", 0, \"psp-eu:copy:WORLD01/AREA067.EMI#6@192\", \"55\"],\n]\n"
+    "bgm = [\n  [\"base/bgm/000.DAT\", \"psx-us:seq:BGM000.EMI#1\", \"11\"],\n]\n\n"
+    "[exe]\nbuild = \"pc-zh\"\nfile = \"base/exe/data.bin\"\nsha256 = \"33\"\n";
+
+std::string Narrow(const std::wstring& w) {
+    std::string s;
+    for (wchar_t c : w) s += c < 128 ? static_cast<char>(c) : '?';
+    return s;
+}
+
+const bof3x::SuiteState& Suite(const std::vector<bof3x::SuiteState>& v, const char* id) {
+    for (const bof3x::SuiteState& s : v)
+        if (std::string(s.info->id) == id) return s;
+    std::printf("  no suite %s\n", id);
+    std::exit(2);
+}
+
+const bof3x::SuiteMemberState& Member(const bof3x::SuiteState& s, const char* id) {
+    for (const bof3x::SuiteMemberState& m : s.members)
+        if (std::string(m.info->id) == id) return m;
+    std::printf("  no member %s\n", id);
+    std::exit(2);
+}
+
+bof3x::SuiteInputs Inputs(const char* manifest, std::vector<std::string> installed, std::string language,
+                          std::string opt, std::vector<std::string> defaults) {
+    bof3x::SuiteInputs in;
+    if (manifest) in.manifest = bof3x::ManifestParse(manifest);
+    in.installed = [installed](const char* layer) {
+        return std::find(installed.begin(), installed.end(), layer) != installed.end();
+    };
+    in.language = language;
+    in.opt = opt;
+    in.defaults = defaults;
+    return in;
+}
+
+void TestManifest() {
+    const bof3x::CacheManifest a = bof3x::ManifestParse(kManifestAll);
+    Check(a.present && a.error.empty(), "the PC + PSX + PSP manifest reads");
+    Check(a.sources == std::vector<std::string>{"pc-zh", "psx-us", "psp-eu", "psp-jp"}, "its sources, distinct, in order");
+    Check(a.base_policy == "psx", "base_policy psx", a.base_policy);
+    Check(a.exe_tables_from == std::vector<std::string>{"pc-zh"}, "exe_tables_from as a list");
+    Check(a.bgm_build == "psx-us", "base/bgm's build from bgm's first row", a.bgm_build);
+    Check(a.snd_build.empty(), "no [snd]");
+    const bof3x::CacheManifest p = bof3x::ManifestParse(kManifestPspOnly);
+    Check(p.base_policy == "psp" && p.exe_tables_from == std::vector<std::string>{"psp-jp"} && p.snd_build == "psp-jp" &&
+              p.bgm_build == "psp-jp",
+          "the PSP-only manifest: policy, tables, snd, bgm");
+    // Before this round: no [build] table. The policy is absent (read as psx),
+    // the tables are [exe]'s build.
+    const bof3x::CacheManifest old =
+        bof3x::ManifestParse("[[source]]\nbuild = \"psx-us\"\n[exe]\nbuild = \"psx-us\"\nfile = \"base/exe/data.bin\"\n");
+    Check(old.error.empty() && old.base_policy.empty() && old.exe_tables_from == std::vector<std::string>{"psx-us"},
+          "a manifest without [build]: no policy, the tables [exe]'s build");
+    Check(!bof3x::ManifestParse("[build]\nbase_policy = \"pc\"\n").error.empty(), "base_policy \"pc\": an error");
+    Check(!bof3x::ManifestParse("[build]\nbase_policy = psp\n").error.empty(), "base_policy unquoted: an error");
+    Check(!bof3x::ManifestParse("[build]\nexe_tables_from = 3\n").error.empty(), "exe_tables_from = 3: an error");
+    Check(!bof3x::ManifestParse("[build]\nexe_tables_from = [\"psp-jp\", 3]\n").error.empty(),
+          "exe_tables_from with a number in its list: an error");
+    // A [[source]] build key elsewhere is not a source.
+    Check(bof3x::ManifestParse("[exe]\nbuild = \"pc-zh\"\n[snd]\nbuild = \"psp-eu\"\n").sources.empty(),
+          "[exe] and [snd] builds are not sources");
+    Check(!bof3x::ManifestRead(L"").present, "no cache: no manifest");
+}
+
+void TestSuites() {
+    using bof3x::SuiteSide;
+    const std::vector<std::string> walls{"area4-walls"};
+
+    // 1. PSP-only: every suite's base is the PSP's; the PlayStation's is greyed, naming a PSX disc.
+    std::vector<bof3x::SuiteState> v = bof3x::SuitesEvaluate(Inputs(kManifestPspOnly, {}, "ja-JP", "", {}));
+    Check(v.size() == 3, "three suites");
+    for (const bof3x::SuiteState& s : v) {
+        Check(s.psp_base && s.psp_enabled && !s.psx_enabled && s.side == SuiteSide::kPsp,
+              (std::string("PSP-only: ") + s.info->id + " is the PSP's, the PlayStation's greyed").c_str());
+        Check(Narrow(s.psx_why).find("needs a PlayStation disc (psx-jp, psx-us, psx-fr, psx-de or psx-eu-en)") !=
+                  std::string::npos,
+              "  the reason names the PlayStation discs", Narrow(s.psx_why));
+    }
+    Check(Member(Suite(v, "audio"), "psp-music").available && Member(Suite(v, "audio"), "psp-effects").available,
+          "PSP-only: the cache's songs and effects are the PSP's");
+    Check(Member(Suite(v, "data"), "psp-tables").available, "PSP-only: exe_tables_from psp-jp, the tables the PSP's");
+    Check(Member(Suite(v, "data"), "psp-names-ja-JP").available && !Member(Suite(v, "data"), "psp-names-en-150").available &&
+              Narrow(Member(Suite(v, "data"), "psp-names-en-150").note) == "needs psp-eu",
+          "PSP-JP base: the Japanese renames the base's, the English ones need psp-eu");
+    // Before MS stage B: a PSP-only cache with no base/bgm.
+    std::string no_bgm = kManifestPspOnly;
+    no_bgm.replace(no_bgm.find("bgm = ["), no_bgm.find("]\n\n[snd]") + 2 - no_bgm.find("bgm = ["), "");
+    v = bof3x::SuitesEvaluate(Inputs(no_bgm.c_str(), {}, "", "", {}));
+    Check(!Member(Suite(v, "audio"), "psp-music").available &&
+              Narrow(Member(Suite(v, "audio"), "psp-music").note) == "no songs in this cache",
+          "PSP-only without base/bgm: the music member says so", Narrow(Member(Suite(v, "audio"), "psp-music").note));
+    // An untouched page, or a choice, never edits opt= on a PSP base.
+    Check(bof3x::SuitesOptEdit("", {}, v, {0, 1, 0}) == "", "PSP-only: a choice writes nothing");
+
+    // 2. PSX-only: the PlayStation's is the base; every PSP side greyed, naming a PSP disc.
+    v = bof3x::SuitesEvaluate(Inputs(kManifestPsxOnly, {}, "en-US", "", walls));
+    for (const bof3x::SuiteState& s : v) {
+        Check(!s.psp_base && s.psx_enabled && !s.psp_enabled && s.side == SuiteSide::kPsx,
+              (std::string("PSX-only: ") + s.info->id + " the PlayStation's, the PSP's greyed").c_str());
+        Check(Narrow(s.psp_why).find("needs a PSP disc (psp-jp or psp-eu)") != std::string::npos,
+              "  the reason names the PSP discs", Narrow(s.psp_why));
+    }
+    Check(Narrow(Member(Suite(v, "data"), "psp-names-en-150").note) == "needs psp-eu", "  the English renames need psp-eu",
+          Narrow(Member(Suite(v, "data"), "psp-names-en-150").note));
+    Check(bof3x::SuitesOptEdit("", walls, v, {1, 1, 1}) == "", "PSX-only: a greyed PSP side writes nothing");
+
+    // 3. PC + PSX + PSP, the cache holding psp-art, psp-tiles and the English renames; Chinese played.
+    const std::vector<std::string> have{"psp-art", "psp-tiles", "psp-names-en-150"};
+    v = bof3x::SuitesEvaluate(Inputs(kManifestAll, have, "original", "", walls));
+    const bof3x::SuiteState& g = Suite(v, "graphics");
+    Check(g.psx_enabled && g.psp_enabled && g.side == SuiteSide::kPsx, "all three: graphics offered, the PlayStation's on");
+    Check(g.layers_on == std::vector<std::string>{"psp-art", "psp-tiles"}, "  the PSP's adds the two layers built");
+    Check(!Member(g, "psp-maps").available &&
+              Narrow(Member(g, "psp-maps").note) == "not in the cache (build with --opt psp-maps)",
+          "  psp-maps greyed: not built", Narrow(Member(g, "psp-maps").note));
+    const bof3x::SuiteState& au = Suite(v, "audio");
+    Check(au.psx_enabled && !au.psp_enabled, "all three: audio's PSP side greyed (the engine half, TG)");
+    Check(Narrow(Member(au, "psp-music").note) == "needs the engine half (TG)", "  with the reason",
+          Narrow(Member(au, "psp-music").note));
+    Check(Narrow(au.psp_why) == "Nothing of the PSP's plays beside this base yet.", "  and the side's", Narrow(au.psp_why));
+    const bof3x::SuiteState& d = Suite(v, "data");
+    Check(d.psp_enabled && d.layers_on == std::vector<std::string>{"psp-names-en-150"},
+          "all three: data offered for the English renames alone");
+    Check(!Member(d, "psp-tables").available && !Member(d, "psp-ryu-forms").available &&
+              Narrow(Member(d, "psp-ryu-forms").note) == "no layer yet (unrendered)",
+          "  the tables (TG) and Ryu's forms (no layer) greyed");
+    Check(Narrow(Member(d, "psp-names-en-150").note) == "plays under English text only",
+          "  the renames say they play under English text only", Narrow(Member(d, "psp-names-en-150").note));
+    Check(Narrow(Member(d, "psp-names-ja-JP").note) == "not in the cache (build with --opt psp-names-ja-JP)",
+          "  the Japanese renames: not built");
+    // The ini: untouched, the PSP's graphics, the PSP's data, back to the PlayStation's.
+    Check(bof3x::SuitesOptEdit("", walls, v, {-1, -1, -1}) == "", "untouched: opt= empty stays empty");
+    Check(bof3x::SuitesOptEdit("", walls, v, {1, -1, -1}) == "psp-art,psp-tiles,area4-walls",
+          "the PSP's graphics over an empty opt=: its layers, the walls kept", bof3x::SuitesOptEdit("", walls, v, {1, -1, -1}));
+    Check(bof3x::SuitesOptEdit("", walls, v, {1, 1, 1}) == "psp-art,psp-tiles,psp-names-en-150,area4-walls",
+          "the PSP's graphics and data (audio greyed)", bof3x::SuitesOptEdit("", walls, v, {1, 1, 1}));
+    Check(bof3x::SuitesOptEdit("", walls, v, {0, 0, 0}) == "", "the PlayStation's chosen where it already is: unchanged");
+    v = bof3x::SuitesEvaluate(Inputs(kManifestAll, have, "en-US", "psp-art,psp-tiles,area4-walls", walls));
+    Check(Suite(v, "graphics").side == SuiteSide::kPsp, "opt= with both graphics layers: the PSP's");
+    Check(Member(Suite(v, "data"), "psp-names-en-150").note.empty(), "under en-US the renames play, no note");
+    Check(bof3x::SuitesOptEdit("psp-art,psp-tiles,area4-walls", walls, v, {0, -1, -1}) == "area4-walls",
+          "back to the PlayStation's graphics: the walls stay");
+    Check(bof3x::SuitesOptEdit("psp-art,psp-tiles", walls, v, {0, -1, -1}) == "none",
+          "the PlayStation's graphics over a list without the walls: none");
+    // A list from the PSP extras boxes: one layer of the suite is a partial suite, kept as written.
+    v = bof3x::SuitesEvaluate(Inputs(kManifestAll, have, "original", "psp-art,area4-walls", walls));
+    Check(Suite(v, "graphics").side == SuiteSide::kMixed, "opt=psp-art alone: graphics partial");
+    Check(bof3x::SuitesOptEdit("psp-art,area4-walls", walls, v, {-1, -1, -1}) == "psp-art,area4-walls",
+          "  untouched, kept byte for byte");
+    Check(bof3x::SuitesOptEdit("psp-art,area4-walls", walls, v, {1, -1, -1}) == "psp-art,psp-tiles,area4-walls",
+          "  the PSP's chosen: the suite whole");
+    // A layer named in opt= but not installed (psp-maps) is removed by the PlayStation's choice, kept otherwise.
+    v = bof3x::SuitesEvaluate(Inputs(kManifestAll, have, "original", "psp-maps,mod-x", walls));
+    Check(Suite(v, "graphics").side == SuiteSide::kMixed, "opt= naming an uninstalled member: partial");
+    Check(bof3x::SuitesOptEdit("psp-maps,mod-x", walls, v, {-1, 1, -1}) == "psp-maps,mod-x",
+          "  another suite's greyed choice leaves the line alone");
+    Check(bof3x::SuitesOptEdit("psp-maps,mod-x", walls, v, {0, -1, -1}) == "mod-x",
+          "  the PlayStation's graphics removes it, a mod's layer kept");
+
+    // 4. No cache: the layers installed in DAT\ are their own evidence (the PSP extras' install path).
+    v = bof3x::SuitesEvaluate(Inputs(nullptr, {"psp-art"}, "", "", walls));
+    Check(Suite(v, "graphics").psp_enabled && Suite(v, "graphics").layers_on == std::vector<std::string>{"psp-art"},
+          "no cache, psp-art in DAT\\: graphics offered for it");
+    Check(!Suite(v, "audio").psp_enabled &&
+              Narrow(Suite(v, "audio").psp_why).find("in a cache named in Cache folder") != std::string::npos,
+          "no cache: audio's PSP side names the PSP discs and the cache", Narrow(Suite(v, "audio").psp_why));
+
+    // 5. A manifest the page cannot read: every side greyed with the reason.
+    v = bof3x::SuitesEvaluate(Inputs("[build]\nbase_policy = \"pc\"\n", have, "", "", walls));
+    for (const bof3x::SuiteState& s : v)
+        Check(!s.psx_enabled && !s.psp_enabled && Narrow(s.psx_why).find("base_policy") != std::string::npos,
+              (std::string("bad base_policy: ") + s.info->id + " greyed with the reason").c_str());
+
+    // The order a written list takes: the suites' layers as recipes/suites.toml has them.
+    Check(bof3x::SuiteLayers() ==
+              std::vector<std::string>{"psp-art", "psp-tiles", "psp-maps", "psp-names-en-150", "psp-names-ja-JP"},
+          "SuiteLayers: the catalogue's order");
+}
+
 }  // namespace
 
 int main() {
+    std::printf("cache manifest\n");
+    TestManifest();
+    std::printf("suites\n");
+    TestSuites();
     std::printf("opt edit\n");
     TestOptEdit();
     std::printf("installed layers\n");

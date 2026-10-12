@@ -2109,6 +2109,8 @@ def cmd_check(a):
     serrs += ["psp_fmv.py: " + e for e in psp_fmv.check()]
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
     werrs = cache_walk.check()
+    import suites                                      # the launcher's suites against opt.toml and fixtures.toml
+    werrs += ["suites.py: " + e for e in suites.check()]
     for e in (errs + oerrs + serrs + werrs)[:30]:
         print("ERROR", e)
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
