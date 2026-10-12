@@ -5494,13 +5494,27 @@ designed in rather than bolted on.
   half matches for a save taken inside a scripted silence; and **after the
   Nue event battle the PlayStation starts the area's song from its top**,
   where ours resumed it mid-song, because there the pre-boss song *is* the
-  area's track (the music log of the replay: `Music_Play(29)` by the script
-  at frame 3458, `remember track 29` at 4240, `resume track 29` at 6726).
+  current-track byte's song (the music log of the replay: `Music_Play(29)`
+  by the script at frame 3458, `remember track 29` at 4240, `resume track
+  29` at 6726; the zone's table says 27).
 - **Second amendment (2026-10-11 night):** after an **event battle**
   (`Field_StartEventBattle`'s byte `0x904AAA`, which `GameMode5_Leave`
-  clears after use) the area's track starts from its top with Capcom's fade
-  (`0xA`); the resume is for random encounters only. One `DIV-0092    event
-  battle N over` log line says so. The random-encounter resume itself rests
+  clears after use) the **area's own song from its table** starts from its
+  top with Capcom's fade (`0xA`) - the zone record of the leader's cell,
+  read as `Area_PickMusic` reads it on an area change (`Area_ZoneTrack`),
+  **not** the current-track byte `0x904CD0`, which the script's own
+  `Music_Play` had left at 29 where the zone's table says 27 (the owner:
+  27 is what the load starts and what mednafen plays after the fight; a
+  first cut played 29 from its top and the owner heard the difference).
+  The resume is for random encounters only. One `DIV-0092    event battle N
+  over` log line names both tracks. **Heard, 2026-10-11 night:** the
+  `cutsceneAndNue` replay on this build, the owner listening - "music starts
+  fresh with the area track"; the log `event battle 2 over: the zone's
+  track 27 from its top (the current byte held 29)`, `Music_Play(27, 10)` at
+  frame 6726. Headless `BOF3X_SHADOW=mode_rest,sound,mode_flow,window_task`
+  exit 0, 0 mismatches. A script's own music call after the battle still
+  takes precedence, as on the PlayStation: the leave plays before the field
+  resumes, and a later `Music_Play` replaces it. The random-encounter resume itself rests
   on the owner's earlier listening and is on the owner's list to confirm
   from the same save.
 - **Verification:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=mode_flow,mode_rest,sound`
