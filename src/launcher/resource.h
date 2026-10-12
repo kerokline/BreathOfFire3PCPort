@@ -24,7 +24,8 @@
 // The three suites (docs/launcher-suites.md; until 2026-10-12 the PSP extras'
 // boxes, 1018..1024). Suite i's controls are IDC_SUITE0 + kSuiteStride * i
 // plus: the label, the PlayStation radio, the PSP radio, four member lines,
-// the reason.
+// the reason; the data suite also two more member lines at +8 and +9 (its
+// two code members, DIV F draft).
 #define IDC_SUITENOTE   1018
 #define IDC_SUITEGROUP  1019
 #define IDC_SUITE0      1040
@@ -33,8 +34,9 @@
 #define kSuitePsx       1
 #define kSuitePsp       2
 #define kSuiteMember0   3
-#define kSuiteMembers   4
+#define kSuiteMembers   6
 #define kSuiteWhy       7
+#define kSuiteMember4   8
 
 // The SatPixie look's options dialog (DIV-0043).
 #define IDD_SATPIXIE     101

@@ -16,7 +16,10 @@ and turned into the launcher's table.
 - every opt/ layer but the default ones (area4-walls, a repair: DIV-0080) is in
   exactly one suite, so no layer goes unoffered;
 - a member that cannot be selected beside a PlayStation base says why;
-- at most four members a suite, the places the dialog has for them.
+- a `code` member (the PSP's battle rules, DIV F draft: src/game/psp_code.h) names
+  one of the engine's switch items (`code`, CODES) and plays through bof3x.ini's
+  psp= / BOF3X_PSP (over_psx "switch");
+- at most as many members a suite as the dialog has places for (MEMBERS_MAX).
 
 `gen` writes the same catalogue as C++ constants (namespace bof3x::suites_gen),
 with fixtures.toml's role for every build, so the launcher knows a PSP disc from a
@@ -32,11 +35,13 @@ PSP_LAYERS = os.path.join(ROOT, "recipes", "psp-layers.toml")   # tools/psp_laye
 FIXTURES = os.path.join(ROOT, "fixtures.toml")
 
 SUITE_IDS = ["graphics", "audio", "data"]          # the owner's three, in the page's order
-KINDS = {"opt": "kOpt", "bgm": "kBgm", "snd": "kSnd", "exe": "kExe", "base": "kBase"}
-OVER = {"layer": "kLayer", "engine": "kEngine", "none": "kNone"}
+KINDS = {"opt": "kOpt", "bgm": "kBgm", "snd": "kSnd", "exe": "kExe", "base": "kBase", "code": "kCode"}
+OVER = {"layer": "kLayer", "engine": "kEngine", "none": "kNone", "switch": "kSwitch"}
+# The engine's BOF3X_PSP items (src/game/psp_code.cpp kItems): a `code` member names one.
+CODES = ["duel-loss", "myria-item"]
 ROLES = {"pc-port": "kPc", "psx-disc": "kPsx", "psp-disc": "kPsp"}
 DEFAULT_LAYERS = {"area4-walls"}                   # importer.py DEFAULT_OPT; config.h kOptDefault
-MEMBERS_MAX = 4                                    # launcher.rc: four member lines per suite
+MEMBERS_MAX = {"graphics": 4, "audio": 4, "data": 6}   # launcher.rc: the member lines each suite has
 
 
 def _load(path):
@@ -76,14 +81,15 @@ def check(suites=None, opt=None, fixtures=None, psp_layers=None):
     ids = [s.get("id") for s in cat.get("suite", [])]
     if ids != SUITE_IDS:
         errs.append("suites: %s, not the owner's three %s in that order" % (ids, SUITE_IDS))
-    seen, placed = set(), {}
+    seen, placed, codes_placed = set(), {}, {}
     for s in cat.get("suite", []):
         for key in ("label", "what"):
             if not isinstance(s.get(key), str) or not s[key] or not _printable(s[key]):
                 errs.append("suite %s: `%s` missing or not printable ASCII" % (s.get("id"), key))
-        if not s.get("member") or len(s["member"]) > MEMBERS_MAX:
-            errs.append("suite %s: %d members, not 1..%d (the dialog's four places a suite)"
-                        % (s.get("id"), len(s.get("member") or []), MEMBERS_MAX))
+        places = MEMBERS_MAX.get(s.get("id"), 0)
+        if not s.get("member") or len(s["member"]) > places:
+            errs.append("suite %s: %d members, not 1..%d (the dialog's places for it)"
+                        % (s.get("id"), len(s.get("member") or []), places))
         for m in s.get("member", []):
             mid = m.get("id")
             where = "suite %s member %s" % (s.get("id"), mid)
@@ -106,8 +112,19 @@ def check(suites=None, opt=None, fixtures=None, psp_layers=None):
                 elif builds[b] != "psp-disc":
                     errs.append("%s: build %s is not a PSP disc (a suite's other side is the PlayStation's)" % (where, b))
             why = m.get("why")
-            if (over == "layer") != (why is None):
-                errs.append("%s: `why` is wanted exactly when over_psx is not \"layer\"" % where)
+            if (over in ("layer", "switch")) != (why is None):
+                errs.append("%s: `why` is wanted exactly when over_psx is neither \"layer\" nor \"switch\"" % where)
+            code = m.get("code")
+            if (kind == "code") != (code is not None):
+                errs.append("%s: `code` is wanted exactly for kind code" % where)
+            if (kind == "code") != (over == "switch"):
+                errs.append("%s: over_psx \"switch\" is exactly kind code's (it plays through psp=)" % where)
+            if code is not None:
+                if code not in CODES:
+                    errs.append("%s: code %r is not one of the engine's BOF3X_PSP items %s" % (where, code, CODES))
+                elif code in codes_placed:
+                    errs.append("%s: code %s already in suite %s" % (where, code, codes_placed[code]))
+                codes_placed[code] = s.get("id")
             if why is not None and (not why or not _printable(why)):
                 errs.append("%s: why not printable ASCII" % where)
             layer = m.get("layer")
@@ -136,6 +153,9 @@ def check(suites=None, opt=None, fixtures=None, psp_layers=None):
     for name in layers:
         if name not in DEFAULT_LAYERS and name not in placed and name not in jukebox:
             errs.append("opt.toml layer %s is in no suite" % name)
+    for code in CODES:
+        if code not in codes_placed:
+            errs.append("the engine's BOF3X_PSP item %s is in no suite" % code)
     return errs
 
 
@@ -150,8 +170,8 @@ def generate(suites=None, fixtures=None):
            "// edit recipes/suites.toml (docs/launcher-suites.md). Names, ids and builds only: no game data.",
            "#pragma once", "", "namespace bof3x::suites_gen {", "",
            "enum class Role { kPc, kPsx, kPsp };",
-           "enum class Kind { kOpt, kBgm, kSnd, kExe, kBase };",
-           "enum class OverPsx { kLayer, kEngine, kNone };", "",
+           "enum class Kind { kOpt, kBgm, kSnd, kExe, kBase, kCode };",
+           "enum class OverPsx { kLayer, kEngine, kNone, kSwitch };", "",
            "struct BuildInfo {", "    const char* id;", "    Role role;", "};",
            "// fixtures.toml's builds, in its order.",
            "inline constexpr BuildInfo kBuilds[] = {"]
@@ -165,16 +185,18 @@ def generate(suites=None, fixtures=None):
         out.append('    {"%s", %s, %s},' % (s["id"], _w(s["label"]), _w(s["what"])))
     out += ["};", "",
             "// `from`: comma-separated build ids. `layer`: the opt/ layer, or nullptr. `why`: the",
-            "// greyed reason beside a PlayStation base, or nullptr when it plays today.",
+            "// greyed reason beside a PlayStation base, or nullptr when it plays today. `code`: a",
+            "// kCode member's BOF3X_PSP item (bof3x.ini psp=), or nullptr.",
             "struct MemberInfo {", "    int suite;", "    const char* id;", "    const wchar_t* label;", "    Kind kind;",
-            "    const char* layer;", "    const char* from;", "    OverPsx over_psx;", "    const wchar_t* why;", "};",
+            "    const char* layer;", "    const char* from;", "    OverPsx over_psx;", "    const wchar_t* why;",
+            "    const char* code;", "};",
             "inline constexpr MemberInfo kMembers[] = {"]
     for i, s in enumerate(cat["suite"]):
         for m in s["member"]:
-            out.append('    {%d, "%s", %s, Kind::%s, %s, "%s", OverPsx::%s, %s},' % (
+            out.append('    {%d, "%s", %s, Kind::%s, %s, "%s", OverPsx::%s, %s, %s},' % (
                 i, m["id"], _w(m["label"]), KINDS[m["kind"]],
                 '"%s"' % m["layer"] if "layer" in m else "nullptr", ",".join(m["from"]), OVER[m["over_psx"]],
-                _w(m["why"]) if "why" in m else "nullptr"))
+                _w(m["why"]) if "why" in m else "nullptr", '"%s"' % m["code"] if "code" in m else "nullptr"))
     out += ["};", "", "}  // namespace bof3x::suites_gen", ""]
     return "\n".join(out)
 

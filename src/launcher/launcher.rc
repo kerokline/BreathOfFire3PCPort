@@ -46,7 +46,8 @@ BEGIN
     // The three suites (docs/launcher-suites.md, recipes/suites.toml): each the PlayStation's
     // version of a set of differences or the PSP's. Suite i's ids are 1040 + 10 i plus: 0 the
     // label, 1 the PlayStation radio, 2 the PSP radio, 3..6 the member lines, 7 the reason
-    // (resource.h). They replaced the PSP extras boxes on 2026-10-12.
+    // (resource.h). They replaced the PSP extras boxes on 2026-10-12. The data suite has two
+    // more member lines, 8 and 9 (its code members, DIV F draft), its reason three lines high.
     GROUPBOX        "Versions: the PlayStation's or the PSP's", IDC_SUITEGROUP, 290, 7, 263, 246
     LTEXT           "", IDC_SUITENOTE, 298, 19, 248, 18
     LTEXT           "", 1040, 298, 41, 40, 9
@@ -72,7 +73,9 @@ BEGIN
     LTEXT           "", 1064, 428, 194, 118, 9
     LTEXT           "", 1065, 306, 203, 118, 9
     LTEXT           "", 1066, 428, 203, 118, 9
-    LTEXT           "", 1067, 306, 213, 244, 36
+    LTEXT           "", 1068, 306, 212, 118, 9
+    LTEXT           "", 1069, 428, 212, 118, 9
+    LTEXT           "", 1067, 306, 222, 244, 27
 
     AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 261, 200, 10, WS_GROUP | WS_TABSTOP
     LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",

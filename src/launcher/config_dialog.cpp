@@ -163,6 +163,7 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
     in.installed = [game, data](const char* layer) { return ConfigOptInstalled(game, layer, data); };
     in.language = LanguageChosen(dlg, state);
     in.opt = state.cfg->opt;
+    in.psp = state.cfg->psp;
     in.defaults = ConfigOptDefaultInstalled(game, data);
     state.suites = SuitesEvaluate(in);
 
@@ -200,7 +201,9 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
         // the reasons, the same reason said once for the members that share it.
         std::vector<std::pair<std::wstring, std::wstring>> notes;   // note, the members it is about
         for (int k = 0; k < kSuiteMembers; ++k) {
-            HWND line = GetDlgItem(dlg, base + kSuiteMember0 + k);
+            // Lines 0..3 every suite has; 4..5 the data suite alone (resource.h).
+            HWND line = GetDlgItem(dlg, base + (k < 4 ? kSuiteMember0 + k : kSuiteMember4 + (k - 4)));
+            if (!line) continue;
             if (static_cast<size_t>(k) >= s.members.size()) {
                 SetWindowTextW(line, L"");
                 ShowWindow(line, SW_HIDE);
@@ -218,7 +221,7 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
         std::wstring why;
         if (!s.psx_enabled && !s.psx_why.empty()) why += s.psx_why + L" ";
         if (!s.psp_enabled && !s.psp_why.empty() && s.psp_why != s.psx_why) why += s.psp_why + L" ";
-        if (shown < 0) why += L"bof3x.ini's opt= plays part of this suite: kept as written until a version is chosen. ";
+        if (shown < 0) why += L"bof3x.ini's opt= and psp= play part of this suite: kept as written until a version is chosen. ";
         for (const auto& [n, who] : notes) why += who + L": " + n + L". ";
         if (!why.empty()) why.pop_back();
         SetDlgItemTextW(dlg, base + kSuiteWhy, why.c_str());
@@ -402,6 +405,7 @@ void ReadBack(HWND dlg, const DialogState& state) {
     // The suites: a choice moves its layers in opt=; none chosen, opt= as read.
     cfg.opt = SuitesOptEdit(cfg.opt, ConfigOptDefaultInstalled(state.game_dir, DialogDataRoot(dlg)), state.suites,
                             state.choice);
+    cfg.psp = SuitesPspEdit(cfg.psp, state.suites, state.choice);   // DIV F (draft): the code members
 }
 
 // The cache box as the ini's UTF-8 bytes, trimmed as ConfigLoad trims a line.

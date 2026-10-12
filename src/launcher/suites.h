@@ -9,7 +9,9 @@
 // The ini has no line of its own for a suite: a suite is the opt/ layers it
 // moves, so the dialog writes it as opt= (DIV-0086) through ConfigOptEdit,
 // and an untouched page writes opt= back byte for byte. music= stays the
-// choice between the cache's songs and the PC's MP3s (DIV-0087).
+// choice between the cache's songs and the PC's MP3s (DIV-0087). A `code`
+// member (the PSP's battle rules, DIV F draft) is an item of psp= instead,
+// written by SuitesPspEdit on the same terms.
 #pragma once
 
 #include <functional>
@@ -63,6 +65,8 @@ struct SuiteState {
     std::vector<SuiteMemberState> members;
     std::vector<std::string> layers_on;   // choosing the PSP's version adds these (the members installed)
     std::vector<std::string> layers_all;  // choosing the PlayStation's removes these (every member layer)
+    std::vector<std::string> codes_on;    // choosing the PSP's adds these psp= items (the members it can play)
+    std::vector<std::string> codes_all;   // choosing the PlayStation's removes these (every code member)
 };
 
 struct SuiteInputs {
@@ -73,6 +77,7 @@ struct SuiteInputs {
     std::string language;                // the Language box's tag; "" or "original" for none
     std::string opt;                     // the ini's opt= as read
     std::vector<std::string> defaults;   // ConfigOptDefaultInstalled
+    std::string psp;                     // the ini's psp= as read (DIV F draft): "", "none" or a list
 };
 
 // Every suite of the catalogue, in its order, whatever the install.
@@ -88,6 +93,19 @@ std::string SuitesOptEdit(const std::string& opt, const std::vector<std::string>
 // The opt/ layers of the catalogue, in its order: the order a list the dialog
 // writes puts them in (ConfigOptEdit).
 std::vector<std::string> SuiteLayers();
+
+// psp= after the page (DIV F draft; src/game/psp_code.h). The same choices as
+// SuitesOptEdit's: beside a PlayStation base the PSP's adds the suite's
+// playable code items, the PlayStation's removes all of the suite's. An
+// untouched page, or nothing changed, returns `psp` byte for byte. Otherwise
+// the items in the catalogue's order, then any other name `psp` had; "none"
+// when nothing is left and the line named something, "" when it was empty.
+// On a PSP base nothing is written: there the empty line's default is on.
+std::string SuitesPspEdit(const std::string& psp, const std::vector<SuiteState>& suites, const std::vector<int>& choice);
+
+// The items psp= turns on: "" is the default (every code item on a PSP base,
+// none otherwise), "none" none, else the comma-separated list.
+std::vector<std::string> SuitesPspPlayed(const std::string& psp, bool psp_base);
 
 // DIVERGENCE TG-5 (docs/launcher-suites.md section 9; the owner, 2026-10-12):
 // the Jukebox's checkbox for the battle chord as the PSP plays it, one tone -

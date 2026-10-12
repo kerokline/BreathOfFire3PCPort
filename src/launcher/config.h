@@ -77,6 +77,13 @@ struct Config {
     // (SuitesOptEdit -> ConfigOptEdit), so a save after an untouched dialog
     // writes back what was read and never pins the default.
     std::string opt;
+    // DIV F (draft; src/game/psp_code.h): the PSP's two battle rules,
+    // BOF3X_PSP's list - duel-loss, myria-item - or "none". Empty (the
+    // default): on when the cache's base is the PSP's, off otherwise; the DLL
+    // decides. Kept as written; the DLL refuses a name it does not know. The
+    // data suite's two code members change it only when the suite's choice is
+    // changed (SuitesPspEdit).
+    std::string psp;
     // DIV-0087: the importer's cache root (BOF3X_CACHE), whose base\bgm songs
     // play through the sequencer, and the music source (BOF3X_MUSIC: "seq",
     // the cache's song where it has one, or "mp3"). Empty: unset, the default

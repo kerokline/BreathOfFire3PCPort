@@ -140,6 +140,7 @@ void TestRoundTrip() {
              "[bof3x]\r\n"
              "language=original\r\n"
              "opt=psp-art,area4-walls\r\n"
+             "psp=myria-item\r\n"
              "cache=  D:\\Games\\bof3 cache\\  \r\n"
              "music=seq\r\n"
              "filter=point\r\n");
@@ -149,21 +150,25 @@ void TestRoundTrip() {
     Check(c1.cache == "D:\\Games\\bof3 cache\\", "cache= trimmed as a line is, the path kept", c1.cache);
     Check(c1.music == "seq", "music=seq kept as seq", c1.music);
     Check(c1.opt == "psp-art,area4-walls", "opt= kept", c1.opt);
+    Check(c1.psp == "myria-item", "psp= kept (DIV F draft)", c1.psp);
     Check(bof3x::ConfigSave(b, c1), "save");
     const std::string first = ReadAll(b);
     Check(first.find("\r\ncache=D:\\Games\\bof3 cache\\\r\n") != std::string::npos, "the cache= line written");
     Check(first.find("\r\nmusic=seq\r\n") != std::string::npos, "the music= line written");
     Check(first.find("\r\nopt=psp-art,area4-walls\r\n") != std::string::npos, "the opt= line written");
+    Check(first.find("\r\npsp=myria-item\r\n") != std::string::npos, "the psp= line written");
     bof3x::Config c2;
     Check(bof3x::ConfigLoad(b, c2, err) && err.empty(), "load the saved ini");
-    Check(c2.cache == c1.cache && c2.music == c1.music && c2.opt == c1.opt, "the three survive a second load");
+    Check(c2.cache == c1.cache && c2.music == c1.music && c2.opt == c1.opt && c2.psp == c1.psp,
+          "the four survive a second load");
     Check(bof3x::ConfigSave(b, c2), "save again");
     Check(ReadAll(b) == first, "a second save is byte-identical");
     // An empty music= and cache= stay empty, and music= that is neither seq nor
     // mp3 is dropped to the default as before.
-    WriteAll(a, "[bof3x]\r\nmusic=\r\ncache=\r\nopt=\r\n");
+    WriteAll(a, "[bof3x]\r\nmusic=\r\ncache=\r\nopt=\r\npsp=\r\n");
     bof3x::Config c3;
-    Check(bof3x::ConfigLoad(a, c3, err) && c3.music.empty() && c3.cache.empty() && c3.opt.empty(), "empty lines stay empty");
+    Check(bof3x::ConfigLoad(a, c3, err) && c3.music.empty() && c3.cache.empty() && c3.opt.empty() && c3.psp.empty(),
+          "empty lines stay empty");
     WriteAll(a, "[bof3x]\r\nmusic=MP3\r\n");
     bof3x::Config c4;
     Check(bof3x::ConfigLoad(a, c4, err) && c4.music.empty(), "music=MP3 (not a value) is the default", c4.music);
@@ -488,11 +493,84 @@ void TestChord() {
 
 }  // namespace
 
+// DIV F (draft): the data suite's two code members, the PSP's battle rules,
+// played through psp= rather than opt=.
+void TestCodeMembers() {
+    using bof3x::SuiteSide;
+    const std::vector<std::string> walls{"area4-walls"};
+    const std::vector<std::string> codes{"duel-loss", "myria-item"};
+    // PSP-only (PSP-JP): both the base's, on by default; psp=none notes them off; a choice writes nothing.
+    std::vector<bof3x::SuiteState> v = bof3x::SuitesEvaluate(Inputs(kManifestPspOnly, {}, "ja-JP", "", {}));
+    const bof3x::SuiteState& d0 = Suite(v, "data");
+    Check(Member(d0, "psp-duel-loss").available && Member(d0, "psp-duel-loss").note.empty() &&
+              Member(d0, "psp-myria-item").available && Member(d0, "psp-myria-item").note.empty(),
+          "PSP-only: the two battle rules the base's, on (psp= empty)");
+    Check(d0.codes_all == codes && d0.codes_on.empty(), "  every code member listed; none to add on a PSP base");
+    Check(bof3x::SuitesPspEdit("", v, {0, 1, 0}) == "" && bof3x::SuitesPspEdit("none", v, {0, 0, 0}) == "none",
+          "PSP-only: a choice writes nothing to psp=");
+    bof3x::SuiteInputs off = Inputs(kManifestPspOnly, {}, "ja-JP", "", {});
+    off.psp = "none";
+    v = bof3x::SuitesEvaluate(off);
+    Check(Narrow(Member(Suite(v, "data"), "psp-duel-loss").note) == "off in bof3x.ini's psp=",
+          "PSP-only with psp=none: the members say they are off", Narrow(Member(Suite(v, "data"), "psp-duel-loss").note));
+
+    // PSX-only: greyed, naming the PSP discs; the PSP side stays greyed.
+    v = bof3x::SuitesEvaluate(Inputs(kManifestPsxOnly, {}, "en-US", "", walls));
+    Check(!Member(Suite(v, "data"), "psp-duel-loss").available &&
+              Narrow(Member(Suite(v, "data"), "psp-duel-loss").note) == "needs psp-jp or psp-eu" &&
+              !Suite(v, "data").psp_enabled,
+          "PSX-only: the battle rules greyed, needing a PSP disc", Narrow(Member(Suite(v, "data"), "psp-duel-loss").note));
+    Check(bof3x::SuitesPspEdit("", v, {1, 1, 1}) == "", "  a greyed side writes nothing");
+
+    // PC + PSX + PSP: offered beside the PlayStation base, off by default.
+    const std::vector<std::string> have{"psp-art", "psp-tiles", "psp-names-en-150"};
+    v = bof3x::SuitesEvaluate(Inputs(kManifestAll, have, "original", "", walls));
+    const bof3x::SuiteState& d = Suite(v, "data");
+    Check(d.psp_enabled && d.codes_on == codes && d.side == SuiteSide::kPsx &&
+              Member(d, "psp-duel-loss").available && Member(d, "psp-myria-item").available,
+          "all three: the battle rules playable beside a PlayStation base, the PlayStation's on");
+    Check(Member(d, "psp-duel-loss").note.empty(), "  off by default beside a PlayStation base, no note",
+          Narrow(Member(d, "psp-duel-loss").note));
+    Check(bof3x::SuitesPspEdit("", v, {-1, -1, -1}) == "", "untouched: psp= empty stays empty");
+    Check(bof3x::SuitesPspEdit("", v, {1, -1, 1}) == "duel-loss,myria-item", "the PSP's data: both rules",
+          bof3x::SuitesPspEdit("", v, {1, -1, 1}));
+    Check(bof3x::SuitesPspEdit("", v, {1, -1, -1}) == "", "the PSP's graphics alone: psp= untouched");
+    Check(bof3x::SuitesPspEdit("", v, {-1, -1, 0}) == "", "the PlayStation's data over an empty psp=: still empty");
+    Check(bof3x::SuitesOptEdit("", walls, v, {-1, -1, 1}) == "psp-names-en-150,area4-walls",
+          "  and opt= gets the data suite's layer as before", bof3x::SuitesOptEdit("", walls, v, {-1, -1, 1}));
+    // Both lines read: the layer and both rules on is the PSP's; a rule off is partial.
+    bof3x::SuiteInputs in = Inputs(kManifestAll, have, "en-US", "psp-names-en-150,area4-walls", walls);
+    in.psp = "myria-item,duel-loss";
+    v = bof3x::SuitesEvaluate(in);
+    Check(Suite(v, "data").side == SuiteSide::kPsp && Member(Suite(v, "data"), "psp-duel-loss").note.empty(),
+          "opt= with the renames and psp= with both rules: the PSP's data");
+    Check(bof3x::SuitesPspEdit("myria-item,duel-loss", v, {-1, -1, 1}) == "myria-item,duel-loss",
+          "  the PSP's chosen where it is: psp= byte for byte");
+    Check(bof3x::SuitesPspEdit("myria-item,duel-loss", v, {-1, -1, 0}) == "none", "  the PlayStation's: none");
+    in.psp = "duel-loss";
+    v = bof3x::SuitesEvaluate(in);
+    Check(Suite(v, "data").side == SuiteSide::kMixed, "psp= with one rule: data partial");
+    Check(bof3x::SuitesPspEdit("duel-loss", v, {-1, -1, 1}) == "duel-loss,myria-item", "  the PSP's: both, in order");
+    Check(bof3x::SuitesPspEdit("duel-loss,mod-y", v, {-1, -1, 0}) == "mod-y", "  a name of no member is kept");
+
+    // No cache: no evidence of a PSP disc for code; greyed.
+    v = bof3x::SuitesEvaluate(Inputs(nullptr, {"psp-art"}, "", "", walls));
+    Check(!Member(Suite(v, "data"), "psp-myria-item").available && Suite(v, "data").codes_on.empty(),
+          "no cache: the battle rules greyed");
+
+    Check(bof3x::SuitesPspPlayed("", true) == codes && bof3x::SuitesPspPlayed("", false).empty() &&
+              bof3x::SuitesPspPlayed("none", true).empty() &&
+              bof3x::SuitesPspPlayed("myria-item", false) == std::vector<std::string>{"myria-item"},
+          "SuitesPspPlayed: the default by the base, none, a list");
+}
+
 int main() {
     std::printf("cache manifest\n");
     TestManifest();
     std::printf("suites\n");
     TestSuites();
+    std::printf("code members (DIV F draft)\n");
+    TestCodeMembers();
     std::printf("jukebox chord\n");
     TestChord();
     std::printf("opt edit\n");

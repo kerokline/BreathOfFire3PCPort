@@ -219,10 +219,12 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
     for (const suites_gen::BuildInfo& b : suites_gen::kBuilds)
         if (b.role == Role::kPsx) psx_discs.push_back(b.id);
 
-    // What opt= plays now, as ConfigOptWanted reads it.
+    // What opt= plays now, as ConfigOptWanted reads it; and psp=, as the DLL
+    // reads BOF3X_PSP (src/game/psp_code.cpp).
     std::vector<std::string> played;
     if (in.opt.empty()) played = in.defaults;
     else if (in.opt != "none") played = SplitComma(in.opt);
+    const std::vector<std::string> codes_played = SuitesPspPlayed(in.psp, psp_base);
 
     // The base's own version of a member that lives outside opt/: present, or why not.
     auto base_note = [&](const std::string& build, const wchar_t* what) -> std::wstring {
@@ -249,8 +251,17 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
                 if (!Contains(wanted_discs, b)) wanted_discs.push_back(b);
             }
             if (m.layer) s.layers_all.push_back(m.layer);
+            if (m.code) s.codes_all.push_back(m.code);
             if (!man.error.empty()) {
                 ms.note = L"see the note above";
+            } else if (m.kind == Kind::kCode) {
+                // The PSP's battle rules (DIV F draft): code of ours, the disc
+                // only the evidence that the player has the PSP's version.
+                ms.available = have;
+                if (!have) ms.note = L"needs " + OrList(from);
+                else if (psp_base && !Contains(codes_played, m.code)) ms.note = L"off in bof3x.ini's psp=";
+                if (have && !psp_base) s.codes_on.push_back(m.code);
+                any_from = any_from || have;
             } else if (psp_base) {
                 std::wstring note;
                 // A member of another PSP build than the cache's (the English
@@ -293,9 +304,11 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
         }
 
         // What opt= plays of this suite.
-        bool any_played = false, all_on = !s.layers_on.empty();
+        bool any_played = false, all_on = !s.layers_on.empty() || !s.codes_on.empty();
         for (const std::string& l : s.layers_all) any_played = any_played || Contains(played, l);
         for (const std::string& l : s.layers_on) all_on = all_on && Contains(played, l);
+        for (const std::string& c : s.codes_all) any_played = any_played || Contains(codes_played, c);
+        for (const std::string& c : s.codes_on) all_on = all_on && Contains(codes_played, c);
         s.side = !any_played ? SuiteSide::kPsx : all_on ? SuiteSide::kPsp : SuiteSide::kMixed;
 
         if (!man.error.empty()) {
@@ -307,7 +320,7 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
                                 : L"The PlayStation's version needs a PlayStation disc (" + OrList(psx_discs) + L").";
         } else {
             s.psx_enabled = true;
-            s.psp_enabled = !s.layers_on.empty();
+            s.psp_enabled = !s.layers_on.empty() || !s.codes_on.empty();
             if (!s.psp_enabled)
                 s.psp_why = !any_from ? L"The PSP's version needs a PSP disc (" + OrList(wanted_discs) + L")" +
                                             (man.present ? L"." : L" in a cache named in Cache folder.")
@@ -356,6 +369,42 @@ std::string SuitesOptEdit(const std::string& opt, const std::vector<std::string>
             for (const std::string& l : s.layers_all) boxes.emplace_back(l, false);
     }
     return ConfigOptEdit(opt, defaults, boxes);
+}
+
+std::vector<std::string> SuitesPspPlayed(const std::string& psp, bool psp_base) {
+    std::vector<std::string> out;
+    if (psp == "none") return out;
+    if (!psp.empty()) return SplitComma(psp);
+    if (psp_base)
+        for (const suites_gen::MemberInfo& m : suites_gen::kMembers)
+            if (m.code) out.push_back(m.code);
+    return out;
+}
+
+std::string SuitesPspEdit(const std::string& psp, const std::vector<SuiteState>& suites, const std::vector<int>& choice) {
+    std::vector<std::string> now = SuitesPspPlayed(psp, false), want = now;
+    for (size_t i = 0; i < suites.size() && i < choice.size(); ++i) {
+        const SuiteState& s = suites[i];
+        if (s.psp_base || choice[i] < 0) continue;
+        if (choice[i] == 1 && s.psp_enabled)
+            for (const std::string& c : s.codes_on)
+                if (!Contains(want, c)) want.push_back(c);
+        if (choice[i] == 0 && s.psx_enabled)
+            for (const std::string& c : s.codes_all) want.erase(std::remove(want.begin(), want.end(), c), want.end());
+    }
+    bool same = want.size() == now.size();
+    for (const std::string& c : want) same = same && Contains(now, c);
+    if (same) return psp;
+    std::string out;
+    for (const suites_gen::MemberInfo& m : suites_gen::kMembers)
+        if (m.code && Contains(want, m.code)) out += (out.empty() ? "" : ",") + std::string(m.code);
+    for (const std::string& c : want) {
+        bool known = false;
+        for (const suites_gen::MemberInfo& m : suites_gen::kMembers) known = known || (m.code && c == m.code);
+        if (!known) out += (out.empty() ? "" : ",") + c;
+    }
+    if (out.empty()) return psp.empty() ? std::string() : std::string("none");
+    return out;
 }
 
 }  // namespace bof3x

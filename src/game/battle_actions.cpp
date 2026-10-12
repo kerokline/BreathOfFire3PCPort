@@ -21,6 +21,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_actions_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/psp_code.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -608,6 +609,11 @@ extern "C" void __cdecl BattleAction_EnemyMessages(void) {
 // As the original has it: 0x904AAA is read before the first hook and again
 // before the last; the flags word is re-read after Battle_ClearActingFlags;
 // the hook with 5 comes on the swap's path and on the plain one alike.
+//
+// DIV F (draft, psp_code.h): with the PSP's duel-loss on, an end byte with bit
+// 0 set and bit 2 clear in event battle 0x1B does not end the battle - the
+// PSP's added test (PSP-JP 0x11DFA4), which reads the event byte again after
+// the hook, as here. Off, the original's test alone.
 extern "C" void __cdecl BattleAction_End(void) {
     if ((B(at::kRoundFlags) & 4) == 0) return;
     if (Word(At(at::kPending)) != 0) return;
@@ -616,7 +622,7 @@ extern "C" void __cdecl BattleAction_End(void) {
     SetB(at::kStep, 0);
     SetB(at::kSub, 0);
     if (event != 0) EventHook(0);
-    if (B(at::kBattleEnd) != 0) {
+    if (B(at::kBattleEnd) != 0 && !psp_code::DuelLossGoesOn(B(at::kEventBattle), B(at::kBattleEnd))) {
         SetB(at::kPhase, 4);
         SetB(at::kStep, 2);
         return;
