@@ -69,6 +69,7 @@ REBUILD = os.path.join(ROOT, "recipes", "exe-rebuild.tsv")
 PLACES = os.path.join(ROOT, "recipes", "exe-places.tsv")
 PLACE_COLS = ["build", "pc", "pc_end", "file", "section", "addr", "agree", "keys"]
 LAYOUT = os.path.join(ROOT, "recipes", "exe-layout.tsv")
+PSP_FILLS = os.path.join(ROOT, "recipes", "exe-psp.tsv")    # tools/psp_exe.py's (docs/psp-image.md)
 LAYOUT_COLS = ["pc", "kind", "target"]
 KIND = {"text": "code", "data": "data", "bss": "bss", "rdata": "rdata"}    # exe-pointers.tsv's `to` -> the layout's kind
 TEXT_LO = 0x401000
@@ -382,6 +383,9 @@ def disc_image(disc, bid, places=()):
             put(lo, out, "widen", where, p["addr"])          # a widened range's `from` is its table's start
         else:
             put(lo, tables.psx_bytes(disc, p, hi - lo), "table", where, p["addr"])
+    import psp_exe   # a PSP build: the game values its disc carries in another shape (docs/psp-image.md)
+    for lo, raw, where, addr in psp_exe.fill(disc, bid, owner, srcs=src):
+        put(lo, raw, "place", where, addr)
     return img, owner, ranges
 
 
@@ -1293,6 +1297,8 @@ def cmd_recipe(a):
              'rebuild_sha256 = "%s"' % sha(open(REBUILD, "rb").read()),
              'places = "exe-places.tsv"',
              'places_sha256 = "%s"' % sha(open(PLACES, "rb").read()),
+             'psp = "exe-psp.tsv"',
+             'psp_sha256 = "%s"' % sha(open(PSP_FILLS, "rb").read()),
              'layout = "exe-layout.tsv"',
              'layout_sha256 = "%s"' % sha(open(LAYOUT, "rb").read()),
              "layout_numbers = %d" % len(numbers),
@@ -1734,6 +1740,11 @@ def cmd_check(a):
             last = r["pc_end"]
     errs += check_layout(rec)
     errs += check_gaps(rec)
+    import psp_exe
+    with open(PSP_FILLS, "rb") as f:
+        if sha(f.read()) != rec["meta"].get("psp_sha256"):
+            errs.append("exe-psp.tsv: not the file recipes/exe.toml was generated with")
+    errs += psp_exe.check()
     _, _, builds = tables.load()
     keys = ("placed_equal", "placed_differ", "pointer_pc_zero", "pointer_pc_nonzero", "none_pc_zero", "none_pc_nonzero",
             "rebuilt_equal", "layout_equal", "own_pc_zero", "own_pc_nonzero")
