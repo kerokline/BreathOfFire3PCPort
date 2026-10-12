@@ -1165,17 +1165,26 @@ extern "C" void __cdecl EffectKindA8_StartBar(void) {
 // (0x80, 0, 0), then from y +4 red to y (+4 + (Frame_Counter & 1) + +3) black;
 // each committed 0x44 to slot 7. The depths are Gpu_SetPolyG4's (0.01). Also called by
 // E4F's EffectKindB0_StepBars.
+//
+// DIV-0041: the bars run from Widescreen_FillX() to 320 + the columns - the
+// PSP's -32..352 (its twin, SCE15EF2 0x801D1414 / SCE15EF3 0x801D2424, paired
+// by shape in psp-widescreen-a.md section 2) - the original's 0..320 while
+// the fills are unarmed, as the fuzz compares. This takes the owner's hold of
+// 2026-10-04 ("to be looked at in game") under the answer of 2026-10-12 that
+// the full-frame fills the PSP widened are stretched.
 extern "C" void __cdecl EffectKindA8_DrawBar(const unsigned char* bar) {
     const U f = Frame_Counter & 1u;
+    const U left = std::bit_cast<U>(Widescreen_FillX());
+    const U right = std::bit_cast<U>(Widescreen_FillRight(320.0f));   // 0x43A00000 unarmed
     unsigned char* p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 0);
-    SetUL(p + 8, 0);
+    SetUL(p + 8, left);
     StF(p + 0xC, I(static_cast<U>(SW(bar + 4)) - bar[3] - f));
-    SetUL(p + 0x18, 0x43A00000u);
-    SetUL(p + 0x28, 0);
+    SetUL(p + 0x18, right);
+    SetUL(p + 0x28, left);
     StF(p + 0x1C, I(static_cast<U>(SW(bar + 4)) - bar[3] - f));
-    SetUL(p + 0x38, 0x43A00000u);
+    SetUL(p + 0x38, right);
     StF(p + 0x2C, I(static_cast<U>(SW(bar + 4))));
     StF(p + 0x3C, I(static_cast<U>(SW(bar + 4))));
     p[4] = 0;
@@ -1194,12 +1203,12 @@ extern "C" void __cdecl EffectKindA8_DrawBar(const unsigned char* bar) {
     p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 0);
-    SetUL(p + 8, 0);
-    SetUL(p + 0x18, 0x43A00000u);
+    SetUL(p + 8, left);
+    SetUL(p + 0x18, right);
     StF(p + 0xC, I(static_cast<U>(SW(bar + 4))));
-    SetUL(p + 0x28, 0);
+    SetUL(p + 0x28, left);
     StF(p + 0x1C, I(static_cast<U>(SW(bar + 4))));
-    SetUL(p + 0x38, 0x43A00000u);
+    SetUL(p + 0x38, right);
     StF(p + 0x2C, I(bar[3] + f + static_cast<U>(SW(bar + 4))));
     p[4] = 0x80;
     p[5] = 0;
