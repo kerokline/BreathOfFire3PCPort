@@ -158,19 +158,20 @@ Corlett; some comments are signed "YK". There is no licence text.
 ### 4.3 Hidden songs
 
 The owner marks a row `same-notes` when it is the same song as another, or too like one to be worth
-listing (2026-10-12). The Jukebox drops those songs from both sources' lists, which leaves 131 PSX
-songs and 132 PC songs. Each is still a song the game plays; the mark only keeps it out of the list.
+listing (2026-10-12). The Jukebox drops those songs from both sources' lists, which leaves 129 PSX
+songs and 130 PC songs. Each is still a song the game plays; the mark only keeps it out of the list.
 
-Five box tracks are still shared by more than one listed song. They are left as they are; each is
+Three box tracks are still shared by more than one listed song. They are left as they are; each is
 the owner's to hide or keep:
 
 | Box track | Songs |
 |---|---|
-| 5-11 | 151, 153, 165 (151 and 153 are one file) |
 | 5-13 | 086, 166 |
 | 5-27 | 009, 125 |
 | 6-13 | 102, 106 |
-| 7-5 | 056, 090 |
+
+The owner hid 153 (the disc's file for it is identical to 151's) and 090 (056's notes on other
+channels) on 2026-10-12.
 
 ## 5. Checks
 

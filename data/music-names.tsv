@@ -8,7 +8,8 @@
 #            psf = the zophar PSF rip's title (unsourced); same-notes = hidden from the Jukebox:						
 #            too like another song, or the same one (a titled song's events under another bank).						
 # box_disc, box_track, box_title   the collector's box soundtrack discs (the owner's catalogue).						
-# note       measurements and clashes.						
+# note       measurements and clashes; they describe the data only. Every row is independent:						
+#            marking one same-notes hides that song alone.						
 #						
 # song	name	box_disc	box_track	box_title	source	note
 000	Country Living	5	7	Country Living	game	faerie village music menu row 0
@@ -101,7 +102,7 @@
 087	Interlude	6	18	Interlude	same-notes	same notes as 044
 088	Neverending Game	5	27	The Game Continues	same-notes	088, 125 and 148 share one tune
 089	Waves and Seagulls 1				kk	
-090	Dangerous Feeling	7	5	The Touch of Danger	game	056 with its channels moved
+090	Dangerous Feeling	7	5	The Touch of Danger	same-notes	notes match 056, channels moved
 091	Technology	6	4	Technology	game	faerie village music menu row 12
 092	Half Asleep	5	23	Half Asleep	same-notes	same notes as 001
 093	Waves and Seagulls 2				kk	
@@ -162,9 +163,9 @@
 148	Neverending Game	5	27	The Game Continues	same-notes	088, 125 and 148 share one tune
 149	Wind 3				kk	
 150	Stairs - Ending	7	22	Stairs - Ending	ossb	psf "Ending"
-151	Do Your Best!	5	11	Do Your Best!	ossb	151 and 153 are one file, psf "Fight!"
+151	Do Your Best!	5	11	Do Your Best!	ossb	151 and 153: identical files on the disc, psf "Fight!"
 152	DONDEN	5	33	DONDEN	ossb	psf "Decisive Battle"
-153	Do Your Best!	5	11	Do Your Best!	ossb	151 and 153 are one file, psf "Fight!"
+153	Do Your Best!	5	11	Do Your Best!	same-notes	151 and 153: identical files on the disc, psf "Fight!"
 154	ODORO	6	9	ODORO	ossb	psf "Ghost Battle"
 155	Battle in the Coming Days	7	8	Battle in the Coming Days	ossb	psf "Everyday Battle"
 156	Dragon Asymmetry	7	16	Dragon Asymmetry	ossb	psf "Conflict of Dragons"
@@ -176,5 +177,5 @@
 162	Maternal Zone	7	20	Maternal Zone	ossb	psf "Myria"
 163	Half Asleep	5	23	Half Asleep	same-notes	same notes as 001
 164	Tail of a Shark	6	20	Tail of a Shark	same-notes	same notes as 099
-165	Victory Dance	5	11	Victory Dance	ossb	psf "Victory!"
+165	Victory Dance	5	12	Victory Dance	ossb	psf "Victory!"
 166	Like a Loser (Alternate)	5	13	Like a Loser	kk	PC file only; no PSX song
