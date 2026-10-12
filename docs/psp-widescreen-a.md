@@ -210,11 +210,11 @@ frame's edges:
 | Check | Result |
 |---|---|
 | `cmake --preset i686 && cmake --build build` | exit 0; no new warning in a touched file (the one left, `magic_s06.cpp` `kF320` unused, was there before) |
-| hosted, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, launcher copy `--no-config`, narrow | see the report section below |
-| the same with `BOF3X_WIDE=1` | see below |
-| exe host on a PSX disc-only scratch install (US cache built here, `install --base`), narrow and wide | see below |
-| `python tools/importer.py check` | see below |
-| `python tools/ledger_check.py` | see below |
+| hosted, `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, an ini-less copy of the launcher, `bof3x.exe` and the DLL, `--game` the PC install, `--no-config`, narrow, at the branch tip | game process exit 0; 1,073 self-test lines at `0 MISMATCHES`, none other; `inject: 10087 ours`; `self-test only: done`. Every touched module among them (`magic_s06`, `magic_c3`, `magic_s15`, `magic_s24`, `magic_s25`, `magic_s30`, `magic_s31`, `magic_s34`, `magic_s38`, `effect_2c`, `effect_6c`, `rest_3f`, `rest_4d`, `area_w2e`, `area_w3b`, `area_w4b`, `battle_e4`, `battle_window_draw`, `window_task`) |
+| the same with `BOF3X_WIDE=1` | game process exit 0; 1,073 at `0 MISMATCHES`, none other; `DIV-0041 full-frame fills at (-53, 0) 426 x 240`; `inject: 10087 ours`; done |
+| exe host (`bof3x.exe`) on a PSX disc-only scratch install - a US cache built here (`importer.py build --source "...(USA).cue" --lang en-US`) and `install --base`, `BOF3X_CACHE` = the cache, `BOF3X_LANG=en-US`, no shadow (hosted-only) - narrow and `BOF3X_WIDE=1` | both: game process exit 0, `inject: 10088 ours`, `self-test only: done`; wide logs the fills' line |
+| `python tools/importer.py check` | exit 0 (the importer is not touched) |
+| `python tools/ledger_check.py` | 113 entries, 0 errors, 2 notes (no draft of this doc is in the ledger yet, so none is owed to the coordinator's insert) |
 
 ## 8. What was not verified
 
