@@ -319,11 +319,13 @@
 #include "game/crt_rest.h"
 #include "game/game_last.h"
 #include "hook/detour.h"
+#include "hook/exe_own.h"
 
 namespace bof3 {
 
 void InjectAll() {
     rdata::Verify();            // first: the engine's copies of .rdata's constants against BOF3.exe's, before any fuzz reads one
+    ExeOwn_CheckAtStart();      // the engine's own .data bytes (exe_own.h) against BOF3.exe's, while .data is still the PC's
     DrawPool_Reserve();         // DIV-0062: the draw-item pool's room below 16 MB, before anything else is placed
     SpriteRecords_Inject();     // first: its fuzz runs the original call tree, so none of it may be patched yet
     MapCells_Inject();          // likewise

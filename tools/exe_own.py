@@ -276,6 +276,8 @@ def snd_names():
         rows = tomllib.load(f)["file"]
     by = collections.defaultdict(dict)
     for r in rows:
+        if r["kind"] < 0:                  # a file no stream id names (019_02, dir1)
+            continue
         if r["id"] in by[r["kind"]] and by[r["kind"]][r["id"]] != r["name"]:
             fail("pc-zh.snd.toml: kind %d id %d named twice" % (r["kind"], r["id"]))
         by[r["kind"]][r["id"]] = r["name"]
