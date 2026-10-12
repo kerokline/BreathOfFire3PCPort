@@ -2,8 +2,8 @@
 // docs/exe-engine-own.md). Every region is defined by what it means - the
 // file names the recipes already list, the strings the port's Windows layer
 // passes, initial values, two computed tables, the default field buttons
-// by name - never as a copy of the exe's bytes (CLAUDE.md rule 1). Each is verified against BOF3.exe's .data
-// at every start (ExeOwn_CheckAtStart).
+// by name - never as a copy of the exe's bytes (CLAUDE.md rule 1). Each is
+// verified against BOF3.exe's .data at every start (ExeOwn_CheckAtStart).
 #include "hook/exe_own.h"
 
 #include <cmath>
