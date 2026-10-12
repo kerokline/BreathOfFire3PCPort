@@ -34,7 +34,6 @@
 #include "game/rdata_consts.h"
 #include "game/shell.h"
 #include "hook/calltrace.h"
-#include "hook/code_bytes.h"
 #include "hook/crash.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -304,8 +303,8 @@ void WriteThunk() {
 
 // The inventory's self-test (docs/state3-design.md section 7): nothing of
 // ours wrote .stub but Inject's jmps and the thunk. A PatchBytes or a
-// RetargetCall into Capcom's code goes to the code-byte store in this host
-// (code_bytes.h), so every other byte must still be int3.
+// RetargetCall into Capcom's code writes nothing in this host
+// (docs/operand-store.md), so every other byte must still be int3.
 void CheckStub() {
     const auto* page = static_cast<const std::uint8_t*>(At(kStubVa));
     static std::uint8_t mine[kStubSize];   // 1: written by a jmp or the thunk
@@ -397,7 +396,6 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     RefuseHostedSwitches();
     CheckLayout();
     CopyData();
-    if (ExeFile_Present()) CodeBytes_Open(g_exe, g_text.raw, g_text.raw_size);   // without the file a read is a Fatal (code_bytes.cpp)
     BindSlots();
     SetX87();
 
@@ -415,7 +413,6 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     StateHash_AfterInjects();
     CheckStub();
     ProtectStub();
-    CodeBytes_Report("after InjectAll");
     StackWatch_Start();
     if (EnvSet("BOF3X_SELFTEST_ONLY")) {
         ExeIcon_SelfTest();   // DIV-0095: only with BOF3X_ICON_VRAM; .data (the icon table) is copied by now

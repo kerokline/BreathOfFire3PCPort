@@ -48,10 +48,10 @@
 #include "game/menu_draw_helpers_callees.h"
 #include "game/lang_layout.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "game/yes_no_layout.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace menu_draw_helpers {
 
@@ -59,7 +59,7 @@ const Callees kOriginals = {
     Menu_DrawTitleBox,  Msg_SystemPtr,       Text_DrawAt,        Menu_DrawButtonRow,       Menu_DrawMoneyBox,
     Menu_DrawCursorBox, Shop_DrawMemberStats, Menu_DrawEquipPanel, Shop_DrawBuyList,       Shop_DrawBuyDetail,
     Menu_DrawItemList,  Shop_DrawSellDetail, Menu_DrawHand,      BattleMenu_DrawItemList, BattleMenu_DrawSkillList,
-    at::kSlideLeftBound,
+    static_cast<U>(reinterpret_cast<std::uintptr_t>(Widescreen_SlideOperand(at::kSlideLeftBound))),
 };
 Callees g = kOriginals;
 
@@ -227,11 +227,13 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatsR
 // bound and the step +3 = 0 - the window off the left edge.
 //
 // The bound is the imm32 at 0x59B446, which Widescreen_Inject (DIV-0041)
-// moves out by its columns; ours reads the low word of it there at every
-// call, as the original's `cmp word [eax + 4], cx` does, so the divergence is
-// kept and BOF3X_ORIGINAL=Widescreen still restores -150.
+// moves out by its columns; ours reads the low word of widescreen.cpp's value
+// for it (g.slide_left_bound's address; a fuzz points that at a clone's
+// immediate) at every call, as the original's `cmp word [eax + 4], cx` reads
+// the operand, so the divergence is kept and BOF3X_ORIGINAL=Widescreen still
+// restores -150.
 extern "C" void __cdecl MenuWin_SlideOutLeft(void) {
-    const short bound = static_cast<short>(bof3::CodeWord(g.slide_left_bound));
+    const short bound = static_cast<short>(Word(At(g.slide_left_bound)));
     SlideX(-0x20, bound, true, bound);
 }
 
@@ -345,13 +347,8 @@ extern "C" void __cdecl BattleMenuWin_SkillListSlideIn(void) { SlideX(-0x20, 0x5
 // ===========================================================================
 
 void MenuDrawHelpers_Inject() {
-    // The bound ours reads back must still be the operand of the original's
-    // `mov ecx, imm32` (B9): anything else there means the site moved.
-    if (bof3::CodeByte(at::kSlideLeftMov) != 0xB9)
-        bof3::Fatal("menu_draw_helpers: 0x%X holds 0x%02X, not MenuWin_SlideOutLeft's mov ecx",
-                    static_cast<unsigned>(at::kSlideLeftMov), bof3::CodeByte(at::kSlideLeftMov));
     bof3::Log("menu_draw_helpers: MenuWin_SlideOutLeft's bound %d (0x59B446; -150 unless DIV-0041 widened it)",
-              static_cast<int>(static_cast<short>(bof3::CodeWord(at::kSlideLeftBound))));
+              static_cast<int>(Widescreen_SlideBound(at::kSlideLeftBound)));
     if (bof3::WantsShadow("menu_draw_helpers")) menu_draw_helpers::SelfTest();
     // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which
     // compares the original's line; a Latin overlay only (DIV-0056).

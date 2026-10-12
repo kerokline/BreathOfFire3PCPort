@@ -6,7 +6,7 @@
 // and anything it already draws past its edges - 3D geometry, scrolling
 // layers - lands in the side bands. What this file holds is the game side:
 // the culls that were tuned to a 320-wide view and now pop at the new edges,
-// and the menu boxes that slid off the old edges (kSlides, below).
+// and the menu boxes that slid off the old edges (g_slides, below).
 //
 // The survey build (widescreen.md section 3e) widens the two the PSP widened:
 //   - the terrain cull in MapView_Build (ours): [-50, 370] to [-150, 470],
@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -70,12 +71,13 @@ struct Site {
     U at;          // the 4-byte operand of an fcomp dword ptr [mem] in 0x510780
     U rdata;       // the .rdata float it names in the original
     float* ours;   // the copy it names when the view is wide
+    U now;         // the address it names in this build (Widescreen_RangeOperand): rdata, or ours once patched
 };
-const Site kSites[] = {
-    {0x51097E, 0x5C4240, &g_wide_lo},     // fcomp [-200.0], wide x range, low
-    {0x510991, 0x5C423C, &g_wide_hi},     // fcomp [520.0], wide x range, high
-    {0x5109BB, 0x5C4234, &g_narrow_lo},   // fcomp [-50.0], narrow x range, low
-    {0x5109D2, 0x5C4230, &g_narrow_hi},   // fcomp [370.0], narrow x range, high
+Site g_sites[] = {
+    {0x51097E, 0x5C4240, &g_wide_lo, 0x5C4240},       // fcomp [-200.0], wide x range, low
+    {0x510991, 0x5C423C, &g_wide_hi, 0x5C423C},       // fcomp [520.0], wide x range, high
+    {0x5109BB, 0x5C4234, &g_narrow_lo, 0x5C4234},     // fcomp [-50.0], narrow x range, low
+    {0x5109D2, 0x5C4230, &g_narrow_hi, 0x5C4230},     // fcomp [370.0], narrow x range, high
 };
 
 // The menu boxes that slide off the screen's edge - the field menu's time
@@ -88,29 +90,46 @@ const Site kSites[] = {
 // added, so the box clears the new edge as it cleared the old. The bound is
 // an immediate: `mov ecx, imm32` (9 sites) or `cmp cx / ax, imm16` (5).
 // Scan and disassembly 2026-09-23 (widescreen.md section 5).
+// Every one of the fourteen is in a function that is ours now, and ours reads
+// the bound from `now` (Widescreen_SlideBound), the value this file writes -
+// never the operand (docs/operand-store.md); hosted, Operands_Check compares
+// the two.
 struct Slide {
-    U at;        // the immediate's first byte
-    U size;      // 2 or 4
-    int bound;   // the original's; negative slides off the left, positive off the right
+    U at;               // the immediate's first byte
+    U size;             // 2 or 4
+    int bound;          // the original's; negative slides off the left, positive off the right
+    std::int32_t now;   // the bound in this build: `bound`, or the widened one once patched (an imm16's in its low word)
 };
-const Slide kSlides[] = {
-    {0X596926, 4, -170},
-    {0X599CC6, 4, -300},
-    {0X599DF6, 4, -100},
-    {0X59A136, 4, -180},
-    {0X59A2B6, 4, -110},
-    {0X59A586, 4, -200},
-    {0X59B446, 4, -150},   // read back by MenuWin_SlideOutLeft, ours since 2026-09-25 (menu_draw_helpers.cpp)
-    {0X59C136, 4, -120},
-    {0X59A5E6, 4, 320},
-    {0X598A08, 2, 322},
-    {0X598A1C, 2, -190},
-    {0X599061, 2, -165},
-    {0X599451, 2, 347},
-    {0X599551, 2, 323},
+Slide g_slides[] = {
+    {0X596926, 4, -170, -170},
+    {0X599CC6, 4, -300, -300},
+    {0X599DF6, 4, -100, -100},
+    {0X59A136, 4, -180, -180},
+    {0X59A2B6, 4, -110, -110},
+    {0X59A586, 4, -200, -200},
+    {0X59B446, 4, -150, -150},   // MenuWin_SlideOutLeft's (menu_draw_helpers.cpp)
+    {0X59C136, 4, -120, -120},
+    {0X59A5E6, 4, 320, 320},
+    {0X598A08, 2, 322, 322},
+    {0X598A1C, 2, -190, -190},
+    {0X599061, 2, -165, -165},
+    {0X599451, 2, 347, 347},
+    {0X599551, 2, 323, 323},
 };
 
 }  // namespace
+
+const std::int32_t* Widescreen_SlideOperand(unsigned at) {
+    for (const Slide& s : g_slides)
+        if (s.at == at) return &s.now;
+    bof3::Fatal("widescreen: 0x%X is not one of DIV-0041's slide bounds", at);
+}
+
+U Widescreen_RangeOperand(unsigned at) {
+    for (const Site& s : g_sites)
+        if (s.at == at) return s.now;
+    bof3::Fatal("widescreen: 0x%X is not one of DIV-0041's area-map range operands", at);
+}
 
 unsigned Widescreen_Columns() {
     static int columns = -1;
@@ -124,15 +143,19 @@ unsigned Widescreen_Columns() {
 }
 
 void Widescreen_Inject() {
+    // The values of ours, against the operands they stand for (the hosted
+    // check, code_bytes.h): narrow or wide, patched or not.
+    for (const Site& s : g_sites) bof3::Operand("DIV-0041 area-map range", s.at, &s.now, 4);
+    for (const Slide& s : g_slides) bof3::Operand("DIV-0041 slide bound", s.at, &s.now, s.size);
     if (Widescreen_Columns() == 0) return;
-    for (const Site& s : kSites) {
+    for (Site& s : g_sites) {
         std::uint8_t expected[4], replacement[4];
         const U ours = static_cast<U>(reinterpret_cast<std::uintptr_t>(s.ours));
         std::memcpy(expected, &s.rdata, 4);
         std::memcpy(replacement, &ours, 4);
-        bof3::PatchBytes("Widescreen", s.at, expected, replacement, 4);
+        if (bof3::PatchBytes("Widescreen", s.at, expected, replacement, 4)) s.now = ours;
     }
-    for (const Slide& s : kSlides) {
+    for (Slide& s : g_slides) {
         std::uint8_t expected[4], replacement[4];
         const int wide = s.bound < 0 ? s.bound - static_cast<int>(kColumns) : s.bound + static_cast<int>(kColumns);
         if (s.size == 4) {
@@ -143,7 +166,7 @@ void Widescreen_Inject() {
             std::memcpy(expected, &e, 2);
             std::memcpy(replacement, &w, 2);
         }
-        bof3::PatchBytes("Widescreen", s.at, expected, replacement, s.size);
+        if (bof3::PatchBytes("Widescreen", s.at, expected, replacement, s.size)) s.now = wide;
     }
     g_live = kColumns;
     U terrain_margin = kTerrainMargin;

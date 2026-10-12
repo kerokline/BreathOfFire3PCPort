@@ -36,6 +36,7 @@
 #include "game/list_title.h"
 #include "game/text_advance.h"
 #include "game/battle_draw_callees.h"
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -269,7 +270,11 @@ extern "C" const unsigned char* __cdecl ListTitle_DrawAt(int x, int y, int colou
 }
 }  // namespace
 
+// What kTitleCallA and kTitleCallB call now (ListTitle_SiteDraw).
+U g_title_site_draw = kTextDrawAt;
+
 int ListTitle_X(const unsigned char* label, int n) { return ListTitleX(label, n); }
+std::uint32_t ListTitle_SiteDraw() { return g_title_site_draw; }
 bool ListTitle_Centring() { return g_list_title_centre != 0; }
 
 extern "C" void __cdecl BattleMenu_DrawItemList(unsigned char* w) {
@@ -450,6 +455,8 @@ extern "C" void __cdecl AreaMap_TintClut(int level) {
 }
 
 void BattleDraw_Inject() {
+    bof3::OperandCall("DIV-0059 list title draw", kTitleCallA, &g_title_site_draw);
+    bof3::OperandCall("DIV-0059 list title draw", kTitleCallB, &g_title_site_draw);
     if (bof3::WantsShadow("battle_draw")) battle_draw::SelfTest();
     // DIVERGENCE DIV-0059: a Latin language overlay only, as MenuLists_Inject
     // tests it for DIV-0058.
@@ -460,10 +467,12 @@ void BattleDraw_Inject() {
                              static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_list_title_centre)),
                              &was, &is, 1);
             bof3::Log("DIV-0059    list titles centred on their width: %s", g_list_title_centre ? "on" : "off");
-            bof3::RetargetCall("BattleListTitleCentre", kTitleCallA, kTextDrawAt,
-                               reinterpret_cast<void*>(&ListTitle_DrawAt));
-            bof3::RetargetCall("BattleListTitleCentre", kTitleCallB, kTextDrawAt,
-                               reinterpret_cast<void*>(&ListTitle_DrawAt));
+            const bool a = bof3::RetargetCall("BattleListTitleCentre", kTitleCallA, kTextDrawAt,
+                                              reinterpret_cast<void*>(&ListTitle_DrawAt));
+            const bool b = bof3::RetargetCall("BattleListTitleCentre", kTitleCallB, kTextDrawAt,
+                                              reinterpret_cast<void*>(&ListTitle_DrawAt));
+            if (a != b) bof3::Fatal("DIV-0059: one title call re-aimed and not the other");   // one name: both or neither
+            if (a) g_title_site_draw = static_cast<U>(reinterpret_cast<std::uintptr_t>(&ListTitle_DrawAt));
         }
     }
     BOF3_INJECT(D3d_DrawPolyG3);

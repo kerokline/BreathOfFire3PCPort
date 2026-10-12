@@ -31,7 +31,7 @@
 // Everything here is a faithful replacement: no DIVERGENCE.md entry is owed.
 // One divergence has patch sites inside these bodies and survives in ours:
 // DIV-0041 (widescreen.cpp) widens the bounds of MenuSlide_LeftOff and
-// MenuSlide_RightOff; ours reads the bound from the operand it patches.
+// MenuSlide_RightOff; ours reads the bound as widescreen.cpp holds it.
 #include "game/menu_lists.h"
 
 #include <windows.h>
@@ -47,7 +47,6 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace menu_lists {
 
@@ -592,39 +591,21 @@ extern "C" void __cdecl MenuSlide_DownTo16(void) { SlideY(0x10, 0x10, true); }
 // original 0x59A580: left 0x20 a frame to x -200 (off the left); the bound is
 // the operand DIV-0041 widens by the columns added (-253 in the wide view).
 extern "C" void __cdecl MenuSlide_LeftOff(void) {
-    SlideX(-0x20, static_cast<short>(bof3::CodeLong(at::kLeftOffBound)), false);
+    SlideX(-0x20, Widescreen_SlideBound(at::kLeftOffBound), false);
 }
 // original 0x59A5B0: right 0x20 a frame to x 0x11.
 extern "C" void __cdecl MenuSlide_RightTo17(void) { SlideX(0x20, 0x11, true); }
 // original 0x59A5E0: right 0x20 a frame to x 0x140 (off the right); DIV-0041
 // widens the bound (373).
 extern "C" void __cdecl MenuSlide_RightOff(void) {
-    SlideX(0x20, static_cast<short>(bof3::CodeLong(at::kRightOffBound)), true);
+    SlideX(0x20, Widescreen_SlideBound(at::kRightOffBound), true);
 }
 // original 0x59A680: down 0x10 a frame to y 0x26.
 extern "C" void __cdecl MenuSlide_DownTo38(void) { SlideY(0x10, 0x26, true); }
 
 // ===========================================================================
 
-// DIV-0041's two patch sites inside our bodies: MenuSlide_LeftOff and
-// MenuSlide_RightOff read their bound from the imm32 of the original's `mov
-// ecx, imm32` (widescreen.cpp kSlides, 0x59A586 and 0x59A5E6), so that the
-// widened bound survives our takeover. Refused unless the byte before each is
-// that instruction's B9 and the bound is the original's or the widened one.
-namespace {
-void CheckSlideBound(std::uint32_t operand, int original) {
-    const int wide = original < 0 ? original - static_cast<int>(Widescreen_Live()) : original + static_cast<int>(Widescreen_Live());
-    const std::uint8_t* const insn = bof3::CodeBytes(operand - 1, 5);
-    const int bound = static_cast<int>(bof3::CodeLong(operand));
-    if (insn[0] != 0xB9 || (bound != original && bound != wide))
-        bof3::Fatal("menu_lists: 0x%X should be `mov ecx, %d` (or %d, DIV-0041), holds %02X then %d", operand - 1, original, wide,
-                    insn[0], bound);
-}
-}  // namespace
-
 void MenuLists_Inject() {
-    CheckSlideBound(at::kLeftOffBound, -200);
-    CheckSlideBound(at::kRightOffBound, 320);
     if (bof3::WantsShadow("menu_lists")) menu_lists::SelfTest();
     // DIVERGENCE DIV-0058: a Latin language overlay only - BOF3X_LANG set,
     // not "original", not a full-width language (as MenuVerbs_Inject

@@ -38,12 +38,12 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/config_text.h"
 #include "game/field_c1_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -146,8 +146,9 @@ void MarkObject(unsigned char found, const char* who) {
 //
 // DIV-0015 and DIV-0017 (config_text.cpp) rewrite this function's operands in
 // the original's code: the six label immediates, the two 0x3A anchors, the
-// large branch's `len * 6` and its call. Ours reads each of them from the
-// original's bytes at every call, so the patches hold for ours unchanged. The
+// large branch's `len * 6` and its call. Ours reads each as config_text.cpp
+// holds it (ConfigText_Operands; docs/operand-store.md) at every call, so the
+// patches hold for ours unchanged. The
 // box's y and height take the fourth argument's low byte where the original
 // takes eax's low word with its caller's upper half (the caller's x): the box
 // reads the low words only (Menu_DrawBox, menu_windows.cpp).
@@ -158,25 +159,18 @@ extern "C" void __cdecl Config_DrawRowLabel(int x, int y, unsigned row, unsigned
     const unsigned r = row & 0xFF;
     if (r >= 6)
         bof3::Fatal("Config_DrawRowLabel: row %u - the original reads its own stack frame past the six labels", r);
-    const auto* const label =
-        reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(bof3::CodeLong(at::kRowLabelOperands + 8u * r)));
+    const ConfigTextOperands& ops = ConfigText_Operands();   // at::kRowLabelOperands .. kRowAnchorSmall, as config_text.cpp holds them
+    const auto* const label = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(ops.label[r]));
     const int len = static_cast<int>(std::strlen(reinterpret_cast<const char*>(label)));
     if (s == 3) {
-        static const unsigned char kSix[] = {0x8D, 0x0C, 0x49, 0xD1, 0xE1};   // lea ecx,[ecx+ecx*2] / shl ecx,1
-        static const unsigned char kFour[] = {0xC1, 0xE1, 0x02, 0x90, 0x90};  // DIV-0017: shl ecx,2 / nop / nop
-        int width;
-        const std::uint8_t* const code = bof3::CodeBytes(at::kRowLabelWidth, sizeof kSix);
-        if (std::memcmp(code, kSix, sizeof kSix) == 0) width = len * 6;
-        else if (std::memcmp(code, kFour, sizeof kFour) == 0) width = len * 4;
-        else bof3::Fatal("Config_DrawRowLabel: the width code at 0x%X is neither the original's nor DIV-0017's",
-                         (unsigned)at::kRowLabelWidth);
-        const int anchor = static_cast<signed char>(bof3::CodeByte(at::kRowAnchorBig));
-        const U big = bof3::CodeCallTarget(at::kRowBigCall);
+        const int width = ops.label_x4 ? len * 4 : len * 6;   // DIV-0017's shl ecx,2, or the original's lea / shl 1
+        const int anchor = ops.anchor;
+        const U big = ops.big_draw;
         using Draw = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
         SH_AT(Draw, big)(x - width + anchor, y - 1, 0, 0xFF, label);
         if (At(0x929F02)[0] != 1) SH_CALL(Menu_DrawHand)(x + 4, y, 0);
     } else {
-        const int anchor = static_cast<signed char>(bof3::CodeByte(at::kRowAnchorSmall));
+        const int anchor = ops.anchor;
         SH_CALL(Text_DrawSmall)(x - len * 4 + anchor, y + 1, 0, 0xFF, label);
     }
     unsigned char* const prim = Gfx_PacketNext;

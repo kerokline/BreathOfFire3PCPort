@@ -5,6 +5,8 @@
 // BOF3X_WIDE=1 turns it on; off, nothing here changes anything.
 #pragma once
 
+#include <cstdint>
+
 // Extra columns each side of the 320-wide view: 53 under BOF3X_WIDE=1, 0
 // otherwise. Read once from the environment; any other value is Fatal.
 unsigned Widescreen_Columns();
@@ -27,6 +29,21 @@ extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 // owner's bridge, 2026-10-06). 0 before Widescreen_Inject and when the view
 // is not wide; BOF3X_WIDE_INSET=N moves it for tuning.
 unsigned Widescreen_InsetColumns();
+
+// DIV-0041's operands as this build holds them (docs/operand-store.md): what
+// our functions that held them read, never Capcom's code. Both are the
+// original's until Widescreen_Inject patches, then the widened ones (still the
+// original's under BOF3X_ORIGINAL=Widescreen). Fatal for an address that is
+// not one of the fourteen slide bounds / the four range operands.
+//   Widescreen_SlideOperand: the bound at `at` as an int32 (an imm16 site's in
+//     its low word), for a reader that takes its bound through an address (a
+//     fuzz points that at a clone's immediate); Widescreen_SlideBound its low
+//     word, as the originals' `cmp word`, `cmp cx` / `cmp ax` read it.
+//   Widescreen_RangeOperand: the address of the float the `fcomp` at `at`
+//     names - .rdata's, or this file's wider copy.
+const std::int32_t* Widescreen_SlideOperand(unsigned at);
+inline short Widescreen_SlideBound(unsigned at) { return static_cast<short>(*Widescreen_SlideOperand(at)); }
+std::uint32_t Widescreen_RangeOperand(unsigned at);
 
 // Re-aims the four x-range constants of AreaMapBD_BuildView 0x510780 (ours,
 // R3G's; it reads them back) at wider copies, moves the menu boxes' fourteen slide-off bounds

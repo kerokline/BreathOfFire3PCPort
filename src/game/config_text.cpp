@@ -43,6 +43,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -86,6 +87,31 @@ constexpr LabelSite kLabelSites[kLabels] = {
     {0x461832, 0x669F0C}, {0x46183A, 0x669F18}, {0x461842, 0x669F24},
     {0x46184A, 0x669F2C}, {0x461852, 0x669F34}, {0x46185A, 0x669F3C},
 };
+
+// The values of ours (ConfigText_Operands), the original's until a patch goes
+// in; and, for the hosted check, the bytes of each multi-byte patch as they
+// stand (the original's, then the replacement).
+ConfigTextOperands g_ops = {
+    {0x669F0C, 0x669F18, 0x669F24, 0x669F2C, 0x669F34, 0x669F3C},
+    0x3A, false, false, 0x516B30, 0x516B30, false, 0x20, 0x68, true, 0xC,
+};
+std::uint8_t g_anchor_now = 0x3A;
+std::uint8_t g_label_w_now[5] = {0x8D, 0x0C, 0x49, 0xD1, 0xE1};
+std::uint8_t g_option_w_now[3] = {0x8D, 0x04, 0x40};
+std::uint8_t g_name_w_now[3] = {0x8D, 0x04, 0x49};
+std::uint8_t g_edge_now[3] = {0x83, 0xC1, 0x20};
+std::uint8_t g_box_now[2] = {0x6A, 0x68};
+std::uint8_t g_cell2_now[6] = {0x8B, 0x35, 0x70, 0x06, 0x7E, 0x00};
+std::uint8_t g_esp_now[3] = {0x83, 0xC4, 0x44};
+std::uint8_t g_frame_now[3] = {0x6A, 0x0C, 0x32};
+
+// PatchBytes, the bytes kept in `now` when they go in.
+bool Patch(const char* name, std::uint32_t at, const std::uint8_t* was, const std::uint8_t* is, std::uint32_t n,
+           std::uint8_t* now) {
+    if (!bof3::PatchBytes(name, at, was, is, n)) return false;
+    std::memcpy(now, is, n);
+    return true;
+}
 
 // Reads one NUL-terminated string out of the payload. Returns nullptr when the
 // payload ends first, which the caller treats as a malformed chunk.
@@ -267,13 +293,33 @@ void ConfigText_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint3
         const auto ours = static_cast<std::uint32_t>(
             reinterpret_cast<std::uintptr_t>(g_labels[i]));
         std::memcpy(replacement, &ours, 4);
-        bof3::PatchBytes("ConfigText", kLabelSites[i].at, expected, replacement, 4);
+        if (bof3::PatchBytes("ConfigText", kLabelSites[i].at, expected, replacement, 4)) g_ops.label[i] = ours;
     }
+    bof3::Operands_Check("DIV-0015's Config labels");
     bof3::Log("DIV-0015: Config screen - %u labels, %u options, %u controller names",
               (unsigned)kLabels, (unsigned)kRecords, (unsigned)kCtrl);
 }
 
+const ConfigTextOperands& ConfigText_Operands() { return g_ops; }
+
 void ConfigText_Inject() {
+    // The values of ours against the operands they stand for (code_bytes.h),
+    // whether or not the patches below go in.
+    for (std::uint32_t i = 0; i < kLabels; ++i) bof3::Operand("DIV-0015 Config label", kLabelSites[i].at, &g_ops.label[i], 4);
+    bof3::Operand("DIV-0017 Config label anchor", 0x46189D, &g_anchor_now, 1);
+    bof3::Operand("DIV-0017 Config label anchor", 0x4618ED, &g_anchor_now, 1);
+    bof3::Operand("DIV-0017 Config label width", 0x461894, g_label_w_now, sizeof g_label_w_now);
+    bof3::Operand("DIV-0017 Config option width", 0x4619E1, g_option_w_now, sizeof g_option_w_now);
+    bof3::OperandCall("DIV-0017 Config selected draw", kBigLabelCall, &g_ops.big_draw);
+    bof3::OperandCall("DIV-0017 Config selected draw", kBigOptionCall, &g_ops.big_draw);
+    bof3::OperandCall("DIV-0026 controller name draw", kCtrlNameCall, &g_ops.name_draw);
+    bof3::Operand("DIV-0026 controller name width", 0x461B36, g_name_w_now, sizeof g_name_w_now);
+    bof3::Operand("DIV-0026 controller name edge", 0x461B3F, g_edge_now, sizeof g_edge_now);
+    bof3::Operand("DIV-0051 controller box width", 0x461B06, g_box_now, sizeof g_box_now);
+    bof3::Operand("DIV-0051 controller second cell", 0x461BAC, g_cell2_now, sizeof g_cell2_now);
+    bof3::Operand("DIV-0051 controller second cell", 0x461BE9, g_esp_now, sizeof g_esp_now);
+    bof3::Operand("DIV-0051 controller frame", 0x461A61, g_frame_now, sizeof g_frame_now);
+
     // Layout only, and only under a language overlay: with the shipped Chinese
     // text every number below is right as it stands.
     // Lang_Latin: set, not "original", not full-width (DIV-0056). Until
@@ -296,7 +342,9 @@ void ConfigText_Inject() {
     // is what settled it.
     static const std::uint8_t anchor_was[] = {0x3A};
     static const std::uint8_t anchor_is[] = {0x5F};
-    bof3::PatchBytes("ConfigText", 0x46189D, anchor_was, anchor_is, 1);   // Config_DrawRowLabel 0x461800 big path
+    // One name for every patch of this block: all go in, or none
+    // (BOF3X_ORIGINAL=ConfigText), so one answer sets every value.
+    const bool on = bof3::PatchBytes("ConfigText", 0x46189D, anchor_was, anchor_is, 1);   // Config_DrawRowLabel 0x461800 big path
     bof3::PatchBytes("ConfigText", 0x4618ED, anchor_was, anchor_is, 1);   // Config_DrawRowLabel 0x461800 small path
 
     // --- the selected row (DIV-0017) ----------------------------------------
@@ -314,10 +362,17 @@ void ConfigText_Inject() {
                        reinterpret_cast<void*>(&ConfigText_DrawSelected));
     static const std::uint8_t label_was[] = {0x8D, 0x0C, 0x49, 0xD1, 0xE1};
     static const std::uint8_t label_is[] = {0xC1, 0xE1, 0x02, 0x90, 0x90};
-    bof3::PatchBytes("ConfigText", 0x461894, label_was, label_is, 5);
+    Patch("ConfigText", 0x461894, label_was, label_is, 5, g_label_w_now);
     static const std::uint8_t option_was[] = {0x8D, 0x04, 0x40};
     static const std::uint8_t option_is[] = {0xD1, 0xE0, 0x90};
-    bof3::PatchBytes("ConfigText", 0x4619E1, option_was, option_is, 3);
+    Patch("ConfigText", 0x4619E1, option_was, option_is, 3, g_option_w_now);
+    if (on) {
+        g_anchor_now = anchor_is[0];
+        g_ops.anchor = anchor_is[0];
+        g_ops.label_x4 = true;
+        g_ops.option_x8 = true;
+        g_ops.big_draw = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&ConfigText_DrawSelected));
+    }
 
     // --- the controller panel (DIV-0026) ------------------------------------
     // Config_DrawControllerRow draws each of the six names through the large Text_DrawAt at
@@ -336,11 +391,12 @@ void ConfigText_Inject() {
     // 2026-09-29 the Lang_Latin test at the top makes that exception for
     // every patch here (docs/glyph-draw.md section 8 had it for this one).
     {
-        bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt,
-                           reinterpret_cast<void*>(&ConfigText_DrawSelected));
+        // One name again: all of the controller panel's go in, or none.
+        const bool ctrl_on = bof3::RetargetCall("ConfigController", kCtrlNameCall, kTextDrawAt,
+                                                reinterpret_cast<void*>(&ConfigText_DrawSelected));
         static const std::uint8_t ctrl_was[] = {0x8D, 0x04, 0x49};
         static const std::uint8_t ctrl_is[] = {0x8D, 0x04, 0x09};
-        bof3::PatchBytes("ConfigController", 0x461B36, ctrl_was, ctrl_is, 3);
+        Patch("ConfigController", 0x461B36, ctrl_was, ctrl_is, 3, g_name_w_now);
 
         // The owner's second look, 2026-09-23 (in game, English): "Change"
         // and "Action" still began left of the panel's frame, and the rows ran
@@ -353,7 +409,7 @@ void ConfigText_Inject() {
         // in game, so one cell more (owner, 2026-09-23).
         static const std::uint8_t edge_was[] = {0x83, 0xC1, 0x20};
         static const std::uint8_t edge_is[] = {0x83, 0xC1, 0x36};
-        bof3::PatchBytes("ConfigController", 0x461B3F, edge_was, edge_is, 3);
+        Patch("ConfigController", 0x461B3F, edge_was, edge_is, 3, g_edge_now);
         // DIV-0051 (2026-09-24, the owner's choice: the PlayStation's one
         // column): the frame from DIV-0026's 0xF cells to 0xD (below), the
         // row's dark box from
@@ -365,18 +421,26 @@ void ConfigText_Inject() {
         // and becomes `add esp, 0x38` - and the cell's contents ours.
         static const std::uint8_t box_was[] = {0x6A, 0x68};
         static const std::uint8_t box_is[] = {0x6A, 0x58};   // the owner: half a glyph shorter than 0x60
-        bof3::PatchBytes("ConfigController", 0x461B06, box_was, box_is, 2);
+        Patch("ConfigController", 0x461B06, box_was, box_is, 2, g_box_now);
         static const std::uint8_t cell2_was[] = {0x8B, 0x35, 0x70, 0x06, 0x7E, 0x00};
         static const std::uint8_t cell2_is[] = {0xEB, 0x3B, 0x90, 0x90, 0x90, 0x90};
-        bof3::PatchBytes("ConfigController", 0x461BAC, cell2_was, cell2_is, 6);
+        Patch("ConfigController", 0x461BAC, cell2_was, cell2_is, 6, g_cell2_now);
         static const std::uint8_t esp_was[] = {0x83, 0xC4, 0x44};
         static const std::uint8_t esp_is[] = {0x83, 0xC4, 0x38};
-        bof3::PatchBytes("ConfigController", 0x461BE9, esp_was, esp_is, 3);
+        Patch("ConfigController", 0x461BE9, esp_was, esp_is, 3, g_esp_now);
         // The frame from DIV-0026's 0xF cells to 0xD: 0x68 px from the panel's
         // x, three past the row box's end at panel x + 0x65.
         static const std::uint8_t frame_was[] = {0x6A, 0x0C, 0x32};
         static const std::uint8_t frame_is[] = {0x6A, 0x0D, 0x32};   // the owner: a cell past the box, as at the left
-        bof3::PatchBytes("ConfigController", 0x461A61, frame_was, frame_is, 3);
+        Patch("ConfigController", 0x461A61, frame_was, frame_is, 3, g_frame_now);
+        if (ctrl_on) {
+            g_ops.name_draw = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&ConfigText_DrawSelected));
+            g_ops.name_x4 = true;
+            g_ops.name_edge = edge_is[2];
+            g_ops.box_width = box_is[1];
+            g_ops.second_cell = false;
+            g_ops.frame_w = frame_is[1];
+        }
         bof3::Inject("Config_DrawControllerCell", bof3::addr::Config_DrawControllerCell,
                      reinterpret_cast<void*>(&Config_DrawControllerCell));
     }

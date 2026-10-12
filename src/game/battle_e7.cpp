@@ -27,7 +27,7 @@
 // described in docs/battle_e7.md section 7, never fixed). One divergence has
 // patch sites inside these bodies and survives in ours: DIV-0041
 // (widescreen.cpp) widens the three list slide-outs' bounds; ours reads each
-// bound from the operand it patches. Every call goes
+// bound as widescreen.cpp holds it (docs/operand-store.md). Every call goes
 // through the harness (BH_CALL / BH_AT), so the start-up fuzz can stand
 // recorders in for the callees.
 #include "game/battle_e7.h"
@@ -42,7 +42,6 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -598,12 +597,12 @@ extern "C" void __cdecl GeneWin_ListSlideIn(void) {
 
 // original 0x599050: the list slides left by 0x20, after its draw; at +4 <=
 // -0xA5 (signed) the window is freed instead (a tail jump). The bound is the
-// operand DIV-0041 widens (-0xDA in the wide view), read there.
+// operand DIV-0041 widens (-0xDA in the wide view), as widescreen.cpp holds it.
 extern "C" void __cdecl GeneWin_ListSlideOut(void) {
     BH_CALL(GeneWin_DrawList)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v <= S16(bof3::CodeWord(at::kListOutBound))) {
+    if (v <= Widescreen_SlideBound(at::kListOutBound)) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -669,7 +668,7 @@ extern "C" void __cdecl GeneWin_List2SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= S16(bof3::CodeWord(at::kList2OutBound))) {
+    if (v >= Widescreen_SlideBound(at::kList2OutBound)) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -710,7 +709,7 @@ extern "C" void __cdecl GeneWin_List3SlideOut(void) {
     BH_CALL(GeneWin_DrawList2)();
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= S16(bof3::CodeWord(at::kList3OutBound))) {
+    if (v >= Widescreen_SlideBound(at::kList3OutBound)) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -851,25 +850,7 @@ extern "C" void __cdecl BattleEquipWin_Draw(U member, U x, U y, U set, U flags, 
 
 // ============================================================================
 
-// DIV-0041's three patch sites inside our bodies: the slide-outs read their
-// bound from the imm16 of the original's `cmp ax, imm16` (widescreen.cpp
-// kSlides). Refused unless the two bytes before each are that instruction's
-// 66 3D and the bound is the original's or the widened one.
-namespace {
-void CheckSlideBound(U operand, int original) {
-    const int wide = original < 0 ? original - static_cast<int>(Widescreen_Live()) : original + static_cast<int>(Widescreen_Live());
-    const std::uint8_t* const insn = bof3::CodeBytes(operand - 2, 4);
-    const int bound = S16(bof3::CodeWord(operand));
-    if (insn[0] != 0x66 || insn[1] != 0x3D || (bound != original && bound != wide))
-        bof3::Fatal("battle_e7: 0x%X should be `cmp ax, %d` (or %d, DIV-0041), holds %02X %02X then %d", operand - 2, original,
-                    wide, insn[0], insn[1], bound);
-}
-}  // namespace
-
 void BattleE7_Inject() {
-    CheckSlideBound(at::kListOutBound, -0xA5);
-    CheckSlideBound(at::kList2OutBound, 0x15B);
-    CheckSlideBound(at::kList3OutBound, 0x143);
     if (bof3::WantsShadow("battle_e7")) battle_e7::SelfTest();
     // DIVERGENCE DIV-0065: after the self-test, which compares the original's rows.
     {

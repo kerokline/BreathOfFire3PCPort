@@ -1,143 +1,159 @@
 #include "hook/code_bytes.h"
 
-#include <windows.h>
-
 #include <cstring>
-#include <vector>
 
-#include "hook/exe_layout.h"
+#include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
 
 namespace bof3 {
 namespace {
 
-using exe_layout::kStubSize;
-using exe_layout::kStubVa;
+enum class Kind : std::uint8_t { Bytes, Call, Rule };
 
-HANDLE g_file = INVALID_HANDLE_VALUE;
-std::uint32_t g_text_offset = 0, g_text_raw = 0;
-std::uint8_t* g_store = nullptr;          // kStubSize reserved; pages committed as loaded
-std::vector<std::uint8_t> g_loaded;       // a bit a byte of .stub: held in the store
-std::uint32_t g_ranges = 0, g_bytes = 0;  // loads, and bytes loaded
-
-CRITICAL_SECTION g_lock;   // initialised by CodeBytes_Open, before any read can reach Held
-
-// Every range asked for, once loaded: a read inside one of them needs no lock
-// and no walk of the bits (the draw dispatch reads its byte table per
-// primitive). Append-only: an entry is written before the count that
-// publishes it.
-struct Span {
-    std::uint32_t lo, hi;
+struct Entry {
+    const char* site;
+    std::uint32_t va, n;
+    Kind kind;
+    const std::uint8_t* ours;     // Bytes: n bytes; Call: a std::uint32_t target
+    std::uint8_t held[64];        // OperandExpect's copy
+    bool (*same)();               // Rule
+    bool under_jmp;               // under a jmp of ours: compared before it went in (or never, if registered after)
+    bool compared;                // compared at least once
 };
-constexpr unsigned kMaxSpans = 512;
-Span g_spans[kMaxSpans];
-volatile LONG g_span_count = 0;
 
-bool Spanned(std::uint32_t off, std::uint32_t n) {
-    const LONG count = g_span_count;
-    for (LONG i = 0; i < count; ++i)
-        if (off >= g_spans[i].lo && off + n <= g_spans[i].hi) return true;
+// The inventory: about forty sites, each registered once (the chunk paths
+// register again on a second load and are ignored).
+constexpr unsigned kMax = 256;
+Entry g_entries[kMax];
+unsigned g_count = 0;
+bool g_late = false;   // InjectAll is done: a new entry is checked as it comes
+
+Entry* Add(const char* site, std::uint32_t va, std::uint32_t n, Kind kind) {
+    if (n == 0 || n > 0x1000) Fatal("operands: %s at 0x%08X: %u bytes", site, (unsigned)va, (unsigned)n);
+    for (unsigned i = 0; i < g_count; ++i)
+        if (g_entries[i].va == va && g_entries[i].n == n && std::strcmp(g_entries[i].site, site) == 0) return nullptr;
+    if (g_count == kMax) Fatal("operands: more than %u values of ours; raise kMax", kMax);
+    Entry& e = g_entries[g_count++];
+    e.site = site;
+    e.va = va;
+    e.n = n;
+    e.kind = kind;
+    return &e;
+}
+
+// Whether [va, va + n) overlaps the five bytes of a jmp of ours at a function start.
+bool UnderJmp(std::uint32_t va, std::uint32_t n) {
+    for (int i = 0; i < OwnedCount(); ++i) {
+        const std::uint32_t a = OwnedAddress(i);
+        if (a < va + n && a + 5 > va && IsEnabled(a)) return true;
+    }
     return false;
 }
 
-bool Loaded(std::uint32_t off) { return (g_loaded[off >> 3] >> (off & 7)) & 1; }
-void MarkLoaded(std::uint32_t off) { g_loaded[off >> 3] = static_cast<std::uint8_t>(g_loaded[off >> 3] | 1u << (off & 7)); }
+const std::uint8_t* Code(std::uint32_t va) { return reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(va)); }
 
-// The exe host's bytes of [va, va + n), loaded from the file where not yet held.
-std::uint8_t* Held(std::uint32_t va, std::uint32_t n) {
-    if (g_file == INVALID_HANDLE_VALUE)
-        Fatal("codebytes: 0x%08X read before the player's BOF3.exe was opened (Engine_Main's order)", (unsigned)va);
-    if (n == 0 || va < kStubVa || va + n > kStubVa + kStubSize || va + n < va)
-        Fatal("codebytes: 0x%08X + %u is not inside Capcom's code range", (unsigned)va, (unsigned)n);
-    const std::uint32_t off = va - kStubVa;
-    if (Spanned(off, n)) return g_store + off;
-    EnterCriticalSection(&g_lock);
-    std::uint32_t missing = 0;
-    for (std::uint32_t i = 0; i < n; ++i) missing += !Loaded(off + i);
-    if (missing) {
-        const std::uint32_t page_lo = off & ~0xFFFu, page_hi = (off + n + 0xFFF) & ~0xFFFu;
-        if (!VirtualAlloc(g_store + page_lo, page_hi - page_lo, MEM_COMMIT, PAGE_READWRITE))
-            Fatal("codebytes: cannot commit the store at +0x%X, error %lu", (unsigned)page_lo, GetLastError());
-        if (off + n > g_text_raw)
-            Fatal("codebytes: 0x%08X + %u lies past .text's file bytes (0x%X)", (unsigned)va, (unsigned)n, (unsigned)g_text_raw);
-        std::vector<std::uint8_t> file(n);
-        LARGE_INTEGER at;
-        at.QuadPart = static_cast<LONGLONG>(g_text_offset) + off;
-        DWORD got = 0;
-        if (!SetFilePointerEx(g_file, at, nullptr, FILE_BEGIN) || !ReadFile(g_file, file.data(), n, &got, nullptr) ||
-            got != n)
-            Fatal("codebytes: cannot read 0x%08X + %u from BOF3.exe, error %lu", (unsigned)va, (unsigned)n, GetLastError());
-        // Only the bytes not held yet: a byte a patch wrote keeps the patch.
-        for (std::uint32_t i = 0; i < n; ++i) {
-            if (Loaded(off + i)) continue;
-            g_store[off + i] = file[i];
-            MarkLoaded(off + i);
-        }
-        ++g_ranges;
-        g_bytes += missing;
-        Log("codebytes   0x%08X + %u read from BOF3.exe (%u new bytes; the store holds %u in %u reads)", (unsigned)va,
-            (unsigned)n, (unsigned)missing, (unsigned)g_bytes, (unsigned)g_ranges);
+void CheckOne(Entry& e) {
+    e.compared = true;
+    if (!InCode(e.va) || !InCode(e.va + e.n - 1))
+        Fatal("operands: %s names 0x%08X + %u, outside Capcom's code", e.site, (unsigned)e.va, (unsigned)e.n);
+    switch (e.kind) {
+    case Kind::Bytes:
+        for (std::uint32_t k = 0; k < e.n; ++k)
+            if (Code(e.va)[k] != e.ours[k])
+                Fatal("operands: %s - the code at 0x%08X holds 0x%02X, our value 0x%02X (%u bytes from 0x%08X)", e.site,
+                      (unsigned)(e.va + k), Code(e.va)[k], e.ours[k], (unsigned)e.n, (unsigned)e.va);
+        return;
+    case Kind::Call: {
+        std::uint32_t target, rel;
+        std::memcpy(&target, e.ours, 4);
+        std::memcpy(&rel, Code(e.va) + 1, 4);
+        if (Code(e.va)[0] != 0xE8 || e.va + 5 + rel != target)
+            Fatal("operands: %s - 0x%08X is not a call to 0x%08X, our value (0x%02X, reaching 0x%08X)", e.site,
+                  (unsigned)e.va, (unsigned)target, Code(e.va)[0], (unsigned)(e.va + 5 + rel));
+        return;
     }
-    if (!Spanned(off, n)) {
-        if (g_span_count == static_cast<LONG>(kMaxSpans))
-            Fatal("codebytes: more than %u distinct ranges read; raise kMaxSpans", kMaxSpans);
-        g_spans[g_span_count] = {off, off + n};
-        InterlockedIncrement(&g_span_count);
+    case Kind::Rule:
+        if (!e.same()) Fatal("operands: %s - the code at 0x%08X + %u is not what our rule holds", e.site, (unsigned)e.va, (unsigned)e.n);
+        return;
     }
-    LeaveCriticalSection(&g_lock);
-    return g_store + off;
+}
+
+void Late(Entry* e) {
+    if (!e || IsExeHost()) return;
+    if (UnderJmp(e->va, e->n)) {
+        e->under_jmp = true;   // its bytes are our jmp's already: nothing to compare
+        return;
+    }
+    if (g_late) CheckOne(*e);
 }
 
 }  // namespace
 
-void CodeBytes_Open(void* file, std::uint32_t text_file_offset, std::uint32_t text_raw_size) {
-    if (g_file != INVALID_HANDLE_VALUE) Fatal("codebytes: opened twice");
-    InitializeCriticalSection(&g_lock);
-    g_file = static_cast<HANDLE>(file);
-    g_text_offset = text_file_offset;
-    g_text_raw = text_raw_size;
-    g_store = static_cast<std::uint8_t*>(VirtualAlloc(nullptr, kStubSize, MEM_RESERVE, PAGE_READWRITE));
-    if (!g_store) Fatal("codebytes: cannot reserve the store (0x%X bytes), error %lu", (unsigned)kStubSize, GetLastError());
-    g_loaded.assign(kStubSize / 8, 0);
-    Log("codebytes   the store for Capcom's code bytes our code reads: %p (BOF3.exe's .text at file offset 0x%X, "
-        "0x%X bytes)", static_cast<void*>(g_store), (unsigned)text_file_offset, (unsigned)text_raw_size);
+void Operand(const char* site, std::uint32_t va, const void* ours, std::uint32_t n) {
+    Entry* e = Add(site, va, n, Kind::Bytes);
+    if (e) e->ours = static_cast<const std::uint8_t*>(ours);
+    Late(e);
 }
 
-const std::uint8_t* CodeBytes(std::uint32_t va, std::uint32_t n) {
-    if (!IsExeHost() || va < kStubVa || va >= kStubVa + kStubSize)
-        return reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(va));
-    return Held(va, n);
+void OperandExpect(const char* site, std::uint32_t va, const void* bytes, std::uint32_t n) {
+    if (n > sizeof g_entries[0].held) Fatal("operands: %s at 0x%08X: %u bytes, above the %u held", site, (unsigned)va, (unsigned)n, (unsigned)sizeof g_entries[0].held);
+    Entry* e = Add(site, va, n, Kind::Bytes);
+    if (e) {
+        std::memcpy(e->held, bytes, n);
+        e->ours = e->held;
+    }
+    Late(e);
 }
 
-std::uint8_t* CodeBytesForWrite(std::uint32_t va, std::uint32_t n) {
-    if (!IsExeHost()) Fatal("codebytes: a write to the store at 0x%08X in the hosted build", (unsigned)va);
-    return Held(va, n);
+void OperandCall(const char* site, std::uint32_t va, const std::uint32_t* target) {
+    Entry* e = Add(site, va, 5, Kind::Call);
+    if (e) e->ours = reinterpret_cast<const std::uint8_t*>(target);
+    Late(e);
 }
 
-void CodeBytes_Report(const char* when) {
-    if (!IsExeHost()) return;
-    Log("codebytes   %s: %u reads, %u bytes of BOF3.exe's .text held as data (none of it at its address, none "
-        "executable)", when, (unsigned)g_ranges, (unsigned)g_bytes);
+void OperandRule(const char* site, std::uint32_t va, std::uint32_t n, bool (*same)()) {
+    Entry* e = Add(site, va, n, Kind::Rule);
+    if (e) e->same = same;
+    Late(e);
 }
 
-std::uint16_t CodeWord(std::uint32_t va) {
-    std::uint16_t v;
-    std::memcpy(&v, CodeBytes(va, 2), 2);
-    return v;
+void Operands_BeforeJmp(std::uint32_t at) {
+    if (IsExeHost()) return;
+    for (unsigned i = 0; i < g_count; ++i) {
+        Entry& e = g_entries[i];
+        if (e.under_jmp || !(at < e.va + e.n && at + 5 > e.va)) continue;
+        CheckOne(e);
+        e.under_jmp = true;
+    }
 }
 
-std::uint32_t CodeLong(std::uint32_t va) {
-    std::uint32_t v;
-    std::memcpy(&v, CodeBytes(va, 4), 4);
-    return v;
-}
-
-std::uint32_t CodeCallTarget(std::uint32_t site) {
-    const std::uint8_t* p = CodeBytes(site, 5);
-    std::uint32_t rel;
-    std::memcpy(&rel, p + 1, 4);
-    return site + 5 + rel;
+void Operands_Check(const char* when) {
+    std::uint32_t bytes = 0;
+    for (unsigned i = 0; i < g_count; ++i) bytes += g_entries[i].n;
+    if (IsExeHost()) {
+        if (!g_late)
+            Log("operands    %s: %u values of ours stand for %u bytes of Capcom's code (docs/operand-store.md); "
+                "none read, there is no code to compare in this host", when, g_count, (unsigned)bytes);
+        g_late = true;
+        return;
+    }
+    unsigned now = 0, before = 0, never = 0;
+    for (unsigned i = 0; i < g_count; ++i) {
+        Entry& e = g_entries[i];
+        if (!e.under_jmp) {
+            CheckOne(e);
+            ++now;
+        } else if (e.compared) {
+            ++before;
+        } else {
+            ++never;
+            if (!g_late) Log("operands    %s at 0x%08X + %u: registered under a jmp of ours, never compared", e.site, (unsigned)e.va, (unsigned)e.n);
+        }
+    }
+    Log("operands    %s: %u values of ours (%u bytes) - %u equal to the patched code at their addresses now, %u "
+        "before a jmp of ours covered them, %u never compared", when, g_count, (unsigned)bytes, now, before, never);
+    g_late = true;
 }
 
 }  // namespace bof3
