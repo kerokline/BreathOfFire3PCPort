@@ -35,9 +35,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -83,6 +83,19 @@ constexpr std::uint32_t kStatByVariant = 0x65C39C;
 // Magic088_Variant's byte table (in .text, after its jump table): the jump
 // table's index by the ability id - 0x1E, 0xA3 entries.
 constexpr std::uint32_t kVariantIndex = 0x4C488C;
+
+// That table as the switch it was compiled from - the function's logic, ours
+// since the function is (docs/operand-store.md): by the ability id - 0x1E,
+// the ids 0x1E, 0x58 and 0xBE take case 0, 0x1F, 0x59 and 0xBF case 1, 0x5A
+// and 0xC0 case 2; every other id of the 0xA3 case 3.
+unsigned VariantCase(unsigned k) {
+    switch (k) {
+    case 0x00: case 0x3A: case 0xA0: return 0;
+    case 0x01: case 0x3B: case 0xA1: return 1;
+    case 0x3C: case 0xA2: return 2;
+    default: return 3;
+    }
+}
 
 // The effect's scratch (words 0x903850..0x90385E, Scratch_Swap among them)
 // and the vertex scratch (Prim_VertexScratch: SVECTORs 8 bytes apart).
@@ -764,7 +777,7 @@ S20_EXPORT void __cdecl Magic088_Apply(void) {
 
 // original 0x4C4830: the variant, by the ability id (word 0x904B80). With the
 // side byte 0x904B35 at 4: ids 0x1E..0xC0 index a byte table in .text
-// (0x4C488C, read in place) choosing one of four answers - 1, 2, 0, 3 - and
+// (0x4C488C; ours is VariantCase) choosing one of four answers - 1, 2, 0, 3 - and
 // any other id is 3. On the other side: id 0x112 becomes 0x5A and answers 0,
 // any other 3. Only al is defined.
 S20_EXPORT unsigned char __cdecl Magic088_Variant(void) {
@@ -772,7 +785,7 @@ S20_EXPORT unsigned char __cdecl Magic088_Variant(void) {
     if (Mem(kSide)[0] == 4) {
         const unsigned k = Word(id) - 0x1Eu;
         if (k > 0xA2) return 3;
-        const unsigned char variant = bof3::CodeBytes(kVariantIndex, 0xA3)[k];
+        const unsigned variant = VariantCase(k);
         switch (variant) {
         case 0: return 1;
         case 1: return 2;
@@ -1299,6 +1312,11 @@ S20_EXPORT unsigned char __cdecl Magic092_PoolAlloc(void) {
 }
 
 void MagicS20_Inject() {
+    {
+        static std::uint8_t index[0xA3];   // VariantCase as the compiler's byte table, for the hosted check
+        for (unsigned k = 0; k < sizeof index; ++k) index[k] = static_cast<std::uint8_t>(VariantCase(k));
+        bof3::Operand("Magic088_Variant byte table", kVariantIndex, index, sizeof index);
+    }
     if (bof3::WantsShadow("magic_s20")) magic_s20::SelfTest();
     BOF3_INJECT(Magic087_Task);
     BOF3_INJECT(Magic087_Start);

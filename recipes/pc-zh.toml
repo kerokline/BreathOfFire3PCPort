@@ -2,7 +2,7 @@
 # Every chunk of the PC port's 742 DAT/ containers, in file order: kind, tag, size,
 # the sha256 of its payload, the cache layer it belongs to, why, and every held build
 # that carries it byte for byte - [build, how, EMI, section] with how `copy`,
-# `type1` (tools/type1.py), `widen`, `icons` or `ryud` (importer.py's transforms) -
+# `type1` (tools/type1.py), `widen`, `icons`, `ryud` or `hold` (importer.py's transforms) -
 # and last the PC install itself, [pc-zh, chunk, index]. `base` / `names`: the
 # enemy table's stats and where its names go; `own`: a disc's own section that
 # stands in when no source carries the chunk (docs/importer-transforms.md).
@@ -10,7 +10,7 @@
 
 [meta]
 target = "pc-zh"
-generated = 2026-10-08
+generated = 2026-10-12
 builds = ["pc-zh", "psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de", "psp-jp", "psp-eu"]
 classes = "psx-jp_vs_pc-zh.json"
 pairs = ["psx-jp_vs_psx-de.json", "psx-jp_vs_psx-eu-en.json", "psx-jp_vs_psx-fr.json", "psx-jp_vs_psx-us.json"]
@@ -3855,7 +3855,7 @@ name = "BPLD012.DAT"
 chunks = [
   { kind = 2, tag = 0x00000003, size = 104648, sha256 = "6a03ffca5d8038e6e7def28875b51cac12beccefff54de097a3f5a5c62435717", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
   { kind = 2, tag = 0x00000004, size = 108848, sha256 = "09389fdce168fd21218073fdca385290409d4cb8282d8fa0e0bbd31238e17f33", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 368652, sha256 = "af3f2982883b1679459c1464c176c34b4c67cff74ef495ade1347c4d0e6ba461", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 368652, sha256 = "af3f2982883b1679459c1464c176c34b4c67cff74ef495ade1347c4d0e6ba461", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:BPLCHAR/BPLD012.EMI#7:ba59937f16f436c8424e39a62f52e41c7cc53d96c6fe0d75fc6b1f74e5a8396f", "psx-us:BPLCHAR/BPLD012.EMI#7:ba59937f16f436c8424e39a62f52e41c7cc53d96c6fe0d75fc6b1f74e5a8396f", "psx-eu-en:BPLCHAR/BPLD012.EMI#7:ba59937f16f436c8424e39a62f52e41c7cc53d96c6fe0d75fc6b1f74e5a8396f", "psx-fr:BPLCHAR/BPLD012.EMI#7:ba59937f16f436c8424e39a62f52e41c7cc53d96c6fe0d75fc6b1f74e5a8396f", "psx-de:BPLCHAR/BPLD012.EMI#7:ba59937f16f436c8424e39a62f52e41c7cc53d96c6fe0d75fc6b1f74e5a8396f"], own_why = "arena" },
   { kind = 2, tag = 0x00000005, size = 108400, sha256 = "eabc4934afc3bd30eeacdf8cd211256d47c7c67b0b3bf76a9c70f0249c0efe03", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
 ]
 
@@ -3864,7 +3864,7 @@ name = "BPLD015.DAT"
 chunks = [
   { kind = 2, tag = 0x00000003, size = 104648, sha256 = "6a03ffca5d8038e6e7def28875b51cac12beccefff54de097a3f5a5c62435717", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
   { kind = 2, tag = 0x00000004, size = 108848, sha256 = "09389fdce168fd21218073fdca385290409d4cb8282d8fa0e0bbd31238e17f33", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 331788, sha256 = "60583b4848cf53ca00fe4b374acd4fc7cafed9d54406b5353ae1a8eb8b53ec42", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 331788, sha256 = "60583b4848cf53ca00fe4b374acd4fc7cafed9d54406b5353ae1a8eb8b53ec42", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:BPLCHAR/BPLD015.EMI#7:a4f6d7385c3bd7b8d8f829967c49340a3019a53fc4037c14ab5e6980f66c7433", "psx-us:BPLCHAR/BPLD015.EMI#7:a4f6d7385c3bd7b8d8f829967c49340a3019a53fc4037c14ab5e6980f66c7433", "psx-eu-en:BPLCHAR/BPLD015.EMI#7:a4f6d7385c3bd7b8d8f829967c49340a3019a53fc4037c14ab5e6980f66c7433", "psx-fr:BPLCHAR/BPLD015.EMI#7:a4f6d7385c3bd7b8d8f829967c49340a3019a53fc4037c14ab5e6980f66c7433", "psx-de:BPLCHAR/BPLD015.EMI#7:a4f6d7385c3bd7b8d8f829967c49340a3019a53fc4037c14ab5e6980f66c7433"], own_why = "arena" },
   { kind = 2, tag = 0x00000005, size = 107448, sha256 = "ba211c81da5863e8fdebcde3b2c326bf371975d9a6a677b15eada4e43939ab34", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
 ]
 
@@ -3873,7 +3873,7 @@ name = "BPLD016.DAT"
 chunks = [
   { kind = 2, tag = 0x00000003, size = 104648, sha256 = "6a03ffca5d8038e6e7def28875b51cac12beccefff54de097a3f5a5c62435717", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
   { kind = 2, tag = 0x00000004, size = 108848, sha256 = "09389fdce168fd21218073fdca385290409d4cb8282d8fa0e0bbd31238e17f33", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 331788, sha256 = "491e48df39843c9bcdd75adc52613c987aa7f804b04917a741c7a0037ebc5cb4", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 331788, sha256 = "491e48df39843c9bcdd75adc52613c987aa7f804b04917a741c7a0037ebc5cb4", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:BPLCHAR/BPLD016.EMI#7:3619604492f959646273fd52af0b7a4e9505365e5c60e8431037c16e623b4324", "psx-us:BPLCHAR/BPLD016.EMI#7:3619604492f959646273fd52af0b7a4e9505365e5c60e8431037c16e623b4324", "psx-eu-en:BPLCHAR/BPLD016.EMI#7:3619604492f959646273fd52af0b7a4e9505365e5c60e8431037c16e623b4324", "psx-fr:BPLCHAR/BPLD016.EMI#7:3619604492f959646273fd52af0b7a4e9505365e5c60e8431037c16e623b4324", "psx-de:BPLCHAR/BPLD016.EMI#7:3619604492f959646273fd52af0b7a4e9505365e5c60e8431037c16e623b4324"], own_why = "arena" },
   { kind = 2, tag = 0x00000005, size = 108120, sha256 = "202850b2b6ba68ec72287aa8879f09e5a69944064c829559c0e37891bd44dc73", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
 ]
 
@@ -3954,7 +3954,7 @@ name = "BPLD27A.DAT"
 chunks = [
   { kind = 2, tag = 0x00000003, size = 108400, sha256 = "eabc4934afc3bd30eeacdf8cd211256d47c7c67b0b3bf76a9c70f0249c0efe03", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
   { kind = 2, tag = 0x00000004, size = 101064, sha256 = "66b34f2dd5114e4445cfa88e8222c707a4f773d099b217c908a2fdaf173edeb1", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 269856, sha256 = "5e98ecaa2f5fc3b54499e252b1871c36f8c33b9a39cd1d01887305e7a9c2c064", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 269856, sha256 = "5e98ecaa2f5fc3b54499e252b1871c36f8c33b9a39cd1d01887305e7a9c2c064", layer = "base", class = "pc-hold", what = "type 1 decoded, the second of member A's two four-step loops held 8 ticks a step as the port has it (arena-edits.md 4)", emi = "BPLCHAR/BPLD27A.EMI#7", on = ["psx-jp:hold", "psx-us:hold", "psx-eu-en:hold", "psx-fr:hold", "psx-de:hold"] },
   { kind = 2, tag = 0x00000005, size = 72720, sha256 = "c71d9eaa77db83c808de68946b9729f5a8c289692278d9bff043fbbd43d18fd5", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
 ]
 
@@ -4122,7 +4122,7 @@ name = "BPLU27A.DAT"
 chunks = [
   { kind = 2, tag = 0x00000003, size = 108400, sha256 = "eabc4934afc3bd30eeacdf8cd211256d47c7c67b0b3bf76a9c70f0249c0efe03", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
   { kind = 2, tag = 0x00000004, size = 101064, sha256 = "66b34f2dd5114e4445cfa88e8222c707a4f773d099b217c908a2fdaf173edeb1", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 275460, sha256 = "573efa98881c4d1d44d62118690efbccc97c2f5b8bfa2c0bcf16c14516700389", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 275460, sha256 = "573efa98881c4d1d44d62118690efbccc97c2f5b8bfa2c0bcf16c14516700389", layer = "base", class = "pc-hold", what = "type 1 decoded, the second of member A's two four-step loops held 8 ticks a step as the port has it (arena-edits.md 4)", emi = "BPLCHAR/BPLU27A.EMI#7", on = ["psx-jp:hold", "psx-us:hold", "psx-eu-en:hold", "psx-fr:hold", "psx-de:hold"] },
   { kind = 2, tag = 0x00000005, size = 72720, sha256 = "c71d9eaa77db83c808de68946b9729f5a8c289692278d9bff043fbbd43d18fd5", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
 ]
 
@@ -6949,7 +6949,7 @@ chunks = [
 name = "PL012.DAT"
 chunks = [
   { kind = 2, tag = 0x00000001, size = 220136, sha256 = "4b807642e4d966111341a1ede1a1fe2f6380e24835f117013b8cc7d93cda68c8", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 360060, sha256 = "1ae69a30213a22939ebd134aa4482d74e14d209ae83135b2c1665309591d05d5", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 360060, sha256 = "1ae69a30213a22939ebd134aa4482d74e14d209ae83135b2c1665309591d05d5", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb", "psx-us:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb", "psx-eu-en:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb", "psx-fr:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb", "psx-de:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb"], own_why = "arena" },
 ]
 
 [[file]]
@@ -6970,14 +6970,14 @@ chunks = [
 name = "PL025.DAT"
 chunks = [
   { kind = 2, tag = 0x00000001, size = 213472, sha256 = "f69918d88942b151566037ebfa49f10505e3401de0492461aef47197d10743af", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 408564, sha256 = "82a6f39cff42d657fdffda6e001bf8f2ed8b841ace83480fb176f6c6fb628a9d", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 408564, sha256 = "82a6f39cff42d657fdffda6e001bf8f2ed8b841ace83480fb176f6c6fb628a9d", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:PLCHAR/PL025.EMI#3:54dcec3665b55e28aec66ece39aa1ac4e2cf4a8b005e064768f9023a15b4b07a", "psx-us:PLCHAR/PL025.EMI#3:54dcec3665b55e28aec66ece39aa1ac4e2cf4a8b005e064768f9023a15b4b07a", "psx-eu-en:PLCHAR/PL025.EMI#3:54dcec3665b55e28aec66ece39aa1ac4e2cf4a8b005e064768f9023a15b4b07a", "psx-fr:PLCHAR/PL025.EMI#3:54dcec3665b55e28aec66ece39aa1ac4e2cf4a8b005e064768f9023a15b4b07a", "psx-de:PLCHAR/PL025.EMI#3:54dcec3665b55e28aec66ece39aa1ac4e2cf4a8b005e064768f9023a15b4b07a"], own_why = "arena" },
 ]
 
 [[file]]
 name = "PL026.DAT"
 chunks = [
   { kind = 2, tag = 0x00000001, size = 199024, sha256 = "155ee6d31e22bcfbf6f3444b0af124625cb10cbeaf7eace9b018a884d364f92b", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 339028, sha256 = "f0c61f6028f34abd01a7ec5971cd57e1dd59e0faef71edd7cad8b7e2a545b7fc", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 339028, sha256 = "f0c61f6028f34abd01a7ec5971cd57e1dd59e0faef71edd7cad8b7e2a545b7fc", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:PLCHAR/PL026.EMI#3:6f23d95876bca60d9dc17f1732996b86bbca34a7b5b86bbb35a4c7a607275e65", "psx-us:PLCHAR/PL026.EMI#3:6f23d95876bca60d9dc17f1732996b86bbca34a7b5b86bbb35a4c7a607275e65", "psx-eu-en:PLCHAR/PL026.EMI#3:6f23d95876bca60d9dc17f1732996b86bbca34a7b5b86bbb35a4c7a607275e65", "psx-fr:PLCHAR/PL026.EMI#3:6f23d95876bca60d9dc17f1732996b86bbca34a7b5b86bbb35a4c7a607275e65", "psx-de:PLCHAR/PL026.EMI#3:6f23d95876bca60d9dc17f1732996b86bbca34a7b5b86bbb35a4c7a607275e65"], own_why = "arena" },
 ]
 
 [[file]]
@@ -6998,35 +6998,35 @@ chunks = [
 name = "PL247.DAT"
 chunks = [
   { kind = 2, tag = 0x00000001, size = 213472, sha256 = "9f92ed449d4aa47a29833571de062fea8f4f6bbd3c4996e26aeb0e3840a53e1e", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 408044, sha256 = "002dcd3360a69c85fa5b96696024694ea5ccc2d1600889732d40c72de7e5c2ff", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 408044, sha256 = "002dcd3360a69c85fa5b96696024694ea5ccc2d1600889732d40c72de7e5c2ff", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:PLCHAR/PL247.EMI#3:86a9f33f492d334b58e7c2d439e56b1fe0aa050402517406bf029c714b7da3b8", "psx-us:PLCHAR/PL247.EMI#3:86a9f33f492d334b58e7c2d439e56b1fe0aa050402517406bf029c714b7da3b8", "psx-eu-en:PLCHAR/PL247.EMI#3:86a9f33f492d334b58e7c2d439e56b1fe0aa050402517406bf029c714b7da3b8", "psx-fr:PLCHAR/PL247.EMI#3:86a9f33f492d334b58e7c2d439e56b1fe0aa050402517406bf029c714b7da3b8", "psx-de:PLCHAR/PL247.EMI#3:86a9f33f492d334b58e7c2d439e56b1fe0aa050402517406bf029c714b7da3b8"], own_why = "arena" },
 ]
 
 [[file]]
 name = "PL257.DAT"
 chunks = [
   { kind = 2, tag = 0x00000001, size = 213472, sha256 = "9f92ed449d4aa47a29833571de062fea8f4f6bbd3c4996e26aeb0e3840a53e1e", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 406548, sha256 = "e4b15249f621c4af064382ce67dcbd6f376e113b3ca6211d6b7532956be6acae", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 406548, sha256 = "e4b15249f621c4af064382ce67dcbd6f376e113b3ca6211d6b7532956be6acae", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:PLCHAR/PL257.EMI#3:ca3c75e0bf2388f343e6d8eb44e81c7644a064e8e6ac2bc0586d437d3824af66", "psx-us:PLCHAR/PL257.EMI#3:ca3c75e0bf2388f343e6d8eb44e81c7644a064e8e6ac2bc0586d437d3824af66", "psx-eu-en:PLCHAR/PL257.EMI#3:ca3c75e0bf2388f343e6d8eb44e81c7644a064e8e6ac2bc0586d437d3824af66", "psx-fr:PLCHAR/PL257.EMI#3:ca3c75e0bf2388f343e6d8eb44e81c7644a064e8e6ac2bc0586d437d3824af66", "psx-de:PLCHAR/PL257.EMI#3:ca3c75e0bf2388f343e6d8eb44e81c7644a064e8e6ac2bc0586d437d3824af66"], own_why = "arena" },
 ]
 
 [[file]]
 name = "PL267.DAT"
 chunks = [
   { kind = 2, tag = 0x00000001, size = 199024, sha256 = "755d0f306f766092d1ef68d5c6b5f6444c5fcdafb2895941b6d4fd83d44d43a1", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 337012, sha256 = "71537ca631dbe0869493e3875811d69fb0683382edc0217918dc0cbf2354fcac", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 337012, sha256 = "71537ca631dbe0869493e3875811d69fb0683382edc0217918dc0cbf2354fcac", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:PLCHAR/PL267.EMI#3:879bf1d5ba4a3dc00bc9df17ecc0d080d28e2ecbdbd52053857bc37e18aff810", "psx-us:PLCHAR/PL267.EMI#3:879bf1d5ba4a3dc00bc9df17ecc0d080d28e2ecbdbd52053857bc37e18aff810", "psx-eu-en:PLCHAR/PL267.EMI#3:879bf1d5ba4a3dc00bc9df17ecc0d080d28e2ecbdbd52053857bc37e18aff810", "psx-fr:PLCHAR/PL267.EMI#3:879bf1d5ba4a3dc00bc9df17ecc0d080d28e2ecbdbd52053857bc37e18aff810", "psx-de:PLCHAR/PL267.EMI#3:879bf1d5ba4a3dc00bc9df17ecc0d080d28e2ecbdbd52053857bc37e18aff810"], own_why = "arena" },
 ]
 
 [[file]]
 name = "PL278.DAT"
 chunks = [
   { kind = 2, tag = 0x00000001, size = 220136, sha256 = "c0e13cf14ec32f1a7870dc4be1252a828f79409b76456bf53f5446d291b3fde8", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 392468, sha256 = "ff9a764849e5dcc6a9a59d63d0aab53e023c80a426668a2dfe951928050cfa01", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 392468, sha256 = "ff9a764849e5dcc6a9a59d63d0aab53e023c80a426668a2dfe951928050cfa01", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:PLCHAR/PL278.EMI#3:6ada73856a37ef3960f7835051346891af12421f0cc4fcc1a07819db54135360", "psx-us:PLCHAR/PL278.EMI#3:6ada73856a37ef3960f7835051346891af12421f0cc4fcc1a07819db54135360", "psx-eu-en:PLCHAR/PL278.EMI#3:6ada73856a37ef3960f7835051346891af12421f0cc4fcc1a07819db54135360", "psx-fr:PLCHAR/PL278.EMI#3:6ada73856a37ef3960f7835051346891af12421f0cc4fcc1a07819db54135360", "psx-de:PLCHAR/PL278.EMI#3:6ada73856a37ef3960f7835051346891af12421f0cc4fcc1a07819db54135360"], own_why = "arena" },
 ]
 
 [[file]]
 name = "PL27A.DAT"
 chunks = [
   { kind = 2, tag = 0x00000001, size = 220136, sha256 = "c0e13cf14ec32f1a7870dc4be1252a828f79409b76456bf53f5446d291b3fde8", layer = "base", class = "bank", what = "audio bank: the disc's VAG samples as WAV (step 6, wave-from-vag)" },
-  { kind = 0, tag = 0x00010000, size = 309784, sha256 = "080b2c1d173a644a244ea7dfffc74838f8287f8670fab0f7b8013509274059f5", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 309784, sha256 = "080b2c1d173a644a244ea7dfffc74838f8287f8670fab0f7b8013509274059f5", layer = "base", class = "pc-edit", what = "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)", own = ["psx-jp:PLCHAR/PL27A.EMI#3:6354990ef95ae7f1bc476e614698c9acd41948a6d0ddb5a5107989a4332e8778", "psx-us:PLCHAR/PL27A.EMI#3:6354990ef95ae7f1bc476e614698c9acd41948a6d0ddb5a5107989a4332e8778", "psx-eu-en:PLCHAR/PL27A.EMI#3:6354990ef95ae7f1bc476e614698c9acd41948a6d0ddb5a5107989a4332e8778", "psx-fr:PLCHAR/PL27A.EMI#3:6354990ef95ae7f1bc476e614698c9acd41948a6d0ddb5a5107989a4332e8778", "psx-de:PLCHAR/PL27A.EMI#3:6354990ef95ae7f1bc476e614698c9acd41948a6d0ddb5a5107989a4332e8778"], own_why = "arena" },
 ]
 
 [[file]]
@@ -7293,7 +7293,7 @@ chunks = [
   { kind = 1, tag = 0x1A080200, size = 32768, sha256 = "0cf5ef90802f620701919bef9d97f2b0cb86951c0855dda8f27ef5f9a014a841", layer = "base", class = "disc", emi = "ETC/START.EMI#4", on = ["psx-jp:copy", "psx-us:copy", "psx-eu-en:copy", "psx-fr:copy", "psx-de:copy"] },
   { kind = 1, tag = 0x1C000200, size = 32768, sha256 = "22ee3554d122f9b6c3884e627ee0ec5c6f5955f71f40485f0e20da87ee816ea7", layer = "loc/zh-CN", class = "text", what = "the title menu page" },
   { kind = 0, tag = 0x00008600, size = 512, sha256 = "6c7062b7a9cee41fc118beb533e53ab24393293fd416103241ea2a8bf4041ce7", layer = "base", class = "disc", emi = "ETC/START.EMI#6", on = ["psx-jp:copy", "psx-us:copy", "psx-eu-en:copy", "psx-fr:copy", "psx-de:copy"] },
-  { kind = 0, tag = 0x00010000, size = 360060, sha256 = "1ae69a30213a22939ebd134aa4482d74e14d209ae83135b2c1665309591d05d5", layer = "base", class = "pc-edit", what = "type 1 decoded, then edited by the port (type1-compression.md section 3)" },
+  { kind = 0, tag = 0x00010000, size = 360060, sha256 = "1ae69a30213a22939ebd134aa4482d74e14d209ae83135b2c1665309591d05d5", layer = "base", class = "pc-edit", what = "PL012's PC arena, which the port gives START (arena-edits.md 5)", own = ["psx-jp:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb", "psx-us:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb", "psx-eu-en:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb", "psx-fr:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb", "psx-de:PLCHAR/PL012.EMI#3:2d6959f4f515ec9c432feb50499ef1c266270f0274caee80ea55f61e67914efb"], own_why = "start-arena" },
   { kind = 1, tag = 0x0A000200, size = 32768, sha256 = "2269d4d35e2e206c80c2e4cc0bbb89093a21eb9657ebbbb731feedda78e50009", layer = "base", class = "disc", emi = "ETC/START.EMI#10", on = ["psx-jp:copy", "psx-us:copy", "psx-eu-en:copy", "psx-fr:copy", "psx-de:copy", "psp-jp:copy", "psp-eu:copy"] },
 ]
 

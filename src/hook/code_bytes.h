@@ -1,51 +1,64 @@
-// Our code's reads of Capcom's code bytes, in either host
-// (docs/state3-build.md section 2.3).
+// The values of ours that stand for bytes of Capcom's code
+// (docs/operand-store.md; docs/state3-build.md section 2.3).
 //
-// Some of our implementations read bytes that live inside BOF3.exe's .text:
-// an operand a divergence patched (the slide bounds DIV-0041 widens, the
-// title menu's widths DIV-0014 writes, the config row's label operands), the
-// target of a call a RetargetCall re-aimed (which frame or text draw a
-// screen uses), or a table the compiler put in the code (a jump table's byte
-// index). The brief (state3-design.md section 7) counted one such read; the
-// build found about forty.
+// Some of our implementations need what an instruction of Capcom's held: an
+// operand a divergence patched (the slide bounds DIV-0041 widens, the title
+// menu's widths DIV-0014 writes, the Config row's operands), the target of a
+// call a RetargetCall re-aimed (which frame or text draw a screen uses), or a
+// table the compiler put in the code (a jump table's byte index). Until the
+// disc-only round they read those bytes back - hosted from the code itself,
+// in the exe host from a store filled from the player's BOF3.exe. Now each
+// is a value of ours, owned where it belongs: a patched operand by the
+// divergence that patches it (which knows what it wrote), a re-aimed call by
+// the divergence that re-aims it (which draw, from RetargetCall's answer), a
+// compiler table by our reimplementation of the function that held it (its
+// logic, as a switch or a rule). Every reader is the same code in both hosts
+// and reads no byte of Capcom's code.
 //
-// Hosted, those bytes are Capcom's, mapped, and PatchBytes / RetargetCall
-// write them in place: CodeBytes(va) is va. In the exe host .stub is int3,
-// so the same bytes are held by a store of ours: read from the player's
-// BOF3.exe (the file the engine copied .rdata and .data from) on first use,
-// at a stable address, never executable, never at 0x401000.. - and
-// PatchBytes / RetargetCall write the store instead of the code, so every
-// reader sees exactly what it sees hosted. Nothing of ours writes .stub but
-// Inject (exe_host.cpp's self-test asserts it).
-//
-// Outside the code range CodeBytes is the address itself in both hosts, so a
-// reader whose address may be either (labels.cpp's witnesses) can use it.
+// What is left here is the hosted check that keeps that honest: each owner
+// registers its value against the address it stands for, and
+// Operands_Check, hosted, compares every one with the code at that address
+// (the patched code: PatchBytes and RetargetCall still write Capcom's code
+// hosted) - a difference is a Fatal naming the site. In the exe host there
+// is no code to compare and the same table is only the inventory of what used
+// to be read: Operands_Check logs it and reads nothing.
 #pragma once
 
 #include <cstdint>
 
 namespace bof3 {
 
-// `n` bytes at `va` as this host holds them. In the exe host the first read
-// of a range loads it from the player's file and logs it once.
-const std::uint8_t* CodeBytes(std::uint32_t va, std::uint32_t n);
+// `n` bytes at `ours` are our value for the n bytes of Capcom's code
+// at `va`. Read through the pointer at each check, so a value that changes
+// when a patch goes in (or a late chunk arrives) stays one entry. A second
+// registration of the same site and address is ignored.
+void Operand(const char* site, std::uint32_t va, const void* ours, std::uint32_t n);
 
-// The same, writable: for PatchBytes and RetargetCall in the exe host only.
-std::uint8_t* CodeBytesForWrite(std::uint32_t va, std::uint32_t n);
+// The same for a value that never changes: the n bytes (at most 64) are copied.
+void OperandExpect(const char* site, std::uint32_t va, const void* bytes, std::uint32_t n);
 
-// The exe host's file: the player's BOF3.exe, open for reading, and its
-// .text section's file offset and size. Called once by Engine_Main before
-// InjectAll.
-void CodeBytes_Open(void* file, std::uint32_t text_file_offset, std::uint32_t text_raw_size);
+// The E8 rel32 call at `va`: our value is the address it calls, read through
+// `target` at each check.
+void OperandCall(const char* site, std::uint32_t va, const std::uint32_t* target);
 
-// One log line: how many ranges and bytes the store holds.
-void CodeBytes_Report(const char* when);
+// A table our code holds as a rule rather than as bytes (field_blocked's cell
+// kinds, which pick between two outcomes through three cases): `same`, run
+// hosted at each check, compares the rule with the n bytes at va.
+void OperandRule(const char* site, std::uint32_t va, std::uint32_t n, bool (*same)());
 
-// Little-endian reads through CodeBytes.
-inline std::uint8_t CodeByte(std::uint32_t va) { return CodeBytes(va, 1)[0]; }
-std::uint16_t CodeWord(std::uint32_t va);
-std::uint32_t CodeLong(std::uint32_t va);
-// The target of the E8 rel32 call at `site`: site + 5 + rel32.
-std::uint32_t CodeCallTarget(std::uint32_t site);
+// Hosted: every entry compared with Capcom's code now; a difference is a
+// Fatal naming the site and the first byte. Exe host: one log line, the
+// inventory's count; nothing read. Called after InjectAll (InjectReport) and
+// after each late patch (the overlay chunks that arrive with FIRST.DAT and
+// START.DAT).
+//
+// A site inside the first five bytes of a function of ours is overwritten by
+// its jmp (Menu_YesNo 0x5747D0's call at 0x5747D2): Inject calls
+// Operands_BeforeJmp first, which compares every entry under those bytes
+// while the code still holds them, and the later checks pass over it. An
+// entry registered after its jmp went in cannot be compared at all; the
+// check counts those and names them in the log.
+void Operands_Check(const char* when);
+void Operands_BeforeJmp(std::uint32_t at);
 
 }  // namespace bof3

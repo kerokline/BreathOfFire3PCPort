@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <cstdlib>
 
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 // Cheats, the same three the archival sibling offers as mods (its
 // docs/EXP_BOOST.md and docs/STEAL.md), as launcher settings here.
@@ -55,8 +55,11 @@
 namespace {
 
 std::uint32_t g_exp = 1, g_zenny = 1;
-std::uint32_t g_pilfer_mask = 0xFF;   // the byte at kPilferMaskImm once Cheats_Inject has run
-std::uint32_t g_steal_mask = 0xFF;    // the byte at kStealMaskImm, the same
+// The roll masks: the imm32 at kPilferMaskImm / kStealMaskImm in this build -
+// 0xFF, or 0 once DIV-0046's patch goes in. Values of ours, never read from
+// the code (docs/operand-store.md); hosted, Operands_Check compares them.
+std::uint32_t g_pilfer_mask = 0xFF;
+std::uint32_t g_steal_mask = 0xFF;
 
 constexpr long kMultiplierMax = 10;   // the owner, 2026-10-02: 50 was humorously large
 
@@ -90,12 +93,8 @@ void Cheats_Inject() {
     g_zenny = Multiplier("BOF3X_ZENNY");
     if (g_exp != 1 || g_zenny != 1) bof3::Log("DIV-0045    EXP x%lu, zenny x%lu (BOF3X_EXP, BOF3X_ZENNY)", (unsigned long)g_exp, (unsigned long)g_zenny);
 
-    struct RollMasks {   // on every return below: the masks as the bodies now hold them
-        ~RollMasks() {
-            g_pilfer_mask = bof3::CodeByte(kPilferMaskImm);
-            g_steal_mask = bof3::CodeByte(kStealMaskImm);
-        }
-    } roll_masks;
+    bof3::Operand("DIV-0046 Pilfer roll mask", kPilferMaskImm, &g_pilfer_mask, 4);
+    bof3::Operand("DIV-0046 Steal roll mask", kStealMaskImm, &g_steal_mask, 4);
     char text[8];
     const DWORD n = GetEnvironmentVariableA("BOF3X_STEAL", text, sizeof text);
     if (n == 0) return;
@@ -103,8 +102,8 @@ void Cheats_Inject() {
     if (text[0] == '0') return;
     const std::uint8_t pilfer_was[] = {0xFF, 0x00, 0x00, 0x00, 0x3B, 0xC7}, pilfer_is[] = {0x00, 0x00, 0x00, 0x00, 0x3B, 0xC7};
     const std::uint8_t steal_was[] = {0xFF, 0x00, 0x00, 0x00, 0x3B, 0xC6}, steal_is[] = {0x00, 0x00, 0x00, 0x00, 0x3B, 0xC6};
-    bof3::PatchBytes("Cheat_StealAlways", kPilferMaskImm, pilfer_was, pilfer_is, 6);
-    bof3::PatchBytes("Cheat_StealAlways", kStealMaskImm, steal_was, steal_is, 6);
+    if (bof3::PatchBytes("Cheat_StealAlways", kPilferMaskImm, pilfer_was, pilfer_is, 6)) g_pilfer_mask = 0;
+    if (bof3::PatchBytes("Cheat_StealAlways", kStealMaskImm, steal_was, steal_is, 6)) g_steal_mask = 0;
     bof3::Log("DIV-0046    steal always succeeds (BOF3X_STEAL)");
 }
 

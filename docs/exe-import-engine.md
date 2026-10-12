@@ -2,7 +2,8 @@
 
 **Status:** IN PROGRESS (verified 2026-10-10, on the owner's machine: the
 seven held discs and `BOF3.exe`, headless self-tests only; branch
-`catchup/step8-engine`)
+`catchup/step8-engine`; section 7 measured 2026-10-12, branch
+`disc-only/pointers`)
 
 Unified-data step 8's engine half - [`exe-import.md`](exe-import.md) section 6's
 worklist, taken in the order [`HANDOFF.md`](HANDOFF.md) gives: the data-pointer
@@ -198,7 +199,93 @@ unchanged by construction (the same bits from another address); the full
 
 Left as the exe's: the import slots, `c_dfDIKeyboard`, and the GUID-free
 helpers that compare `.rdata` bytes in the fuzz files (`glyph_draw_fuzz.cpp`
-reads `0x5C4618` raw to check the original's value).
+reads `0x5C4618` raw to check the original's value). Since the disc-only
+round, section 2.2.
+
+### 2.2 What is left of the file (disc-only round, group RD, 2026-10-12)
+
+**The exe host reads no byte of `.rdata` from `BOF3.exe`.** `exe_host.cpp`
+step 3 no longer copies the section; `rdata::Map` writes the 44 constants
+at their PC addresses and, at `DInput_KeyboardFormat` `0x5C4948`, the SDK's
+`DIDATAFORMAT` header; `BindSlots` writes the 14 import slots. The rest of
+`0x5C4000..0x5DA000` stays zero. What else could read it, measured:
+
+- **The 63 `.data` words that point into `.rdata`** (`recipes/exe-pointers.tsv`,
+  class `rdata`, read against `BOF3.exe` with a session script):
+  all 63 are Capcom's C runtime's - printf's two
+  `(null)` strings (`0x672948`, `0x67294C`), the 18 `R6xxx` / math-error
+  message pointers (`0x675134..0x6751BC`) and the 43 locale day and month
+  names and formats (`0x675528..0x6755D0`). No line of `src/` names any of
+  the three runs (a grep for `0x6729xx`, `0x6751xx`, `0x6755xx`), and the
+  runtime they belong to is not ours to run.
+- **The import slots**: every IAT address `src/` names is one of the 14
+  `BindSlots` binds (state3-build.md 2.2's list, the grep repeated:
+  `0x5C4014..0x5C4174`, each named twice - the slot table and its one
+  reader); none reads a neighbouring slot.
+- **The four floats only Capcom's code reads** (`0x5C4230..0x5C4240`):
+  `widescreen.cpp` and `rest_3g_callees.h` name them in comments and compare
+  the operands that name them (code-byte reads, OP's), never their values.
+  Nothing to hold.
+- **The fuzz files' raw reads** (`glyph_draw_fuzz.cpp`'s `0x5C4618`, the
+  shell fuzz's clones): only under `BOF3X_SHADOW`, which the exe host
+  refuses at step 1. Hosted only, as before.
+
+**`c_dfDIKeyboard` is the SDK's**, linked from llvm-mingw's `libdinput.a`
+(with `GUID_Key` from `libdxguid.a`; static data, no import of
+`dinput.dll`). `pad_read.cpp` passes `rdata::KeyboardFormat()` in both hosts.
+`rdata::Verify` compares it with Capcom's: the header's five counts
+(`0x18`, `0x10`, `DIDF_RELAXIS`, 256, 256) and each of the 256 objects'
+offset, type, flags and GUID by value - `rdata: the keyboard format is the
+SDK's c_dfDIKeyboard, equal to BOF3.exe's at 0x5C4948 (its 256 objects at
+0x5ACBD0, their GUIDs by value)` in every self-test below. **Capcom's object
+table is at `0x5ACBD0`, inside `.text`** (the header's `rgodf`, read from the
+file; `symbols.toml`'s `0x5AC850` was wrong and is corrected), so in the exe
+host as merged in PR #53 the header copied from the file pointed at
+`.stub`'s int3 fill. A scratch program (session 24422d10) measured what
+DirectInput 7 does with such a table: `SetDataFormat` `E_INVALIDARG`,
+`Acquire` `E_INVALIDARG`, `GetDeviceState` `DIERR_NOTINITIALIZED`, against
+`DI_OK` three times for the SDK's. So `bof3x.exe` has had no DirectInput
+keyboard since state 3 (the pad, through SDL, and the input script were
+unaffected); this round's change restores it. A live check is owed: a key
+press in `bof3x.exe`.
+
+**The verifications against the file have one predicate**, `ExeFile_Present()`
+(`hook/exe_host.h`): always true hosted; in the exe host, whether the game
+directory held `BOF3.exe` at start. `ExeFile_Read(va, to, n)` reads the
+file's `.text`, `.rdata` or `.data` by address (exe host only). Without the
+file `rdata::Verify` and the key table say in the log that they did not
+compare.
+
+**`BOF3.exe` is optional in the exe host** when `BOF3X_EXEIMAGE` names the
+`.data` source: no hash, no reads, `data: no BOF3.exe in <dir>: a
+disc-built install - .data from BOF3X_EXEIMAGE's cache, nothing read from
+the file, and the checks against it skipped`. Without the file and without
+the variable, a Fatal. What still needs the file in this branch: the
+code-byte store (`code_bytes.cpp`, 43 reads, OP's), whose first read is a
+Fatal without it.
+
+**The default key table is a rule** (the owner, 2026-10-11):
+`input::DefaultKeys()` (`src/input/bindings.cpp`), 24 entries by `DIK_` name
+(docs/controls.md section 1). `Shell_MapDefaultKeys` writes it to
+`Key_TableDefault` `0x66C648` at map time (the exe host after `.data` is
+placed; hosted in `Shell_Inject`, before the fuzz), after comparing it with
+the file's 0x80 bytes when there is one; `Cfg_SetDefaultKeys` copies the
+rule; the shell fuzz holds the region at the rule. **`0x66C648..0x66C6C8`
+is the engine's own** - for NB's list and a disc-built image's skip ranges.
+
+Self-tests (ini-less copies of this branch's build, headless):
+
+| Run | Exit | Log |
+|---|---|---|
+| exe host, the real install | 0 | `keys: Key_TableDefault 0x66C648 written from the engine's rule (24 keys), equal to BOF3.exe's`; both `rdata:` lines; `inject: 10087 ours` |
+| exe host, `BOF3X_EXEIMAGE` = `analysis/cache/pc-plus-us` (pc-zh) | 0 | the same, `.data ... from BOF3X_EXEIMAGE's data.bin` |
+| exe host, a scratch game directory with `DAT/` (a junction) and no `BOF3.exe`, the same cache | 3 | `data: no BOF3.exe ...`; `keys: ... no BOF3.exe to compare it with`; `rdata: ... no BOF3.exe to compare them with`; then `FATAL: codebytes: 0x00497A22 read before the player's BOF3.exe was opened` - the store, OP's |
+| the same with the store pointed at the real file (a scratch build, not committed) | 0 | `inject: 10087 ours`, `self-test only: done`: the store is the only read of the file left |
+| hosted, `BOF3X_SHADOW=shell,pad_read,field_blocked` | 0 | `shell self-test: 21000 rounds ..., 0 MISMATCHES`; `pad_read shadow: 20000 rounds, 0 differ`; `field_blocked self-test: 45000 rounds ..., 0 MISMATCHES` |
+
+The launcher (`--no-config`, the real install, `BOF3X_SELFTEST_ONLY`) prints
+the 24 keys it compared: `the default key table, 24 keys by the engine's
+rule, equal to BOF3.exe's: Up=up Down=down ... Numpad3=down+right`.
 
 ## 3. The addresses no disc carries
 
@@ -385,7 +472,9 @@ which a disc cannot give: the engine holds them as layout, like
 already listed as `exe-import.md` 8's call 4, now for code pointers too),
 the refused and unrebuilt data pointers, and the 22,331 non-zero bytes no
 disc carries (JP). Until those are held, a disc-built image is not
-runnable, and `BOF3X_EXEIMAGE` refuses to lay one over `.data`.
+runnable, and `BOF3X_EXEIMAGE` refuses to lay one over `.data`. **Held since
+the disc-only round** (section 7, [`exe-engine-own.md`](exe-engine-own.md));
+the exe host maps a disc-built image (4.4, steps 5..8).
 
 ### 4.4 The first step, built: `BOF3X_EXEIMAGE`
 
@@ -404,7 +493,45 @@ of ours writes `.data`). `BOF3X_EXEIMAGE=<cache>` (the directory
 4. Built from `BOF3.exe` (`build = "pc-zh"`): every byte must be equal - a
    Fatal naming the first difference otherwise - and the image is then
    copied over `.data`, changing no byte: the map step, exercised. A
-   disc-built image is compared and logged, never copied.
+   disc-built image is compared and logged, never copied - **in the hosted
+   build**; `bof3x.exe` maps it (steps 5..8).
+
+**The exe host, a disc-built image (the disc-only round, IN, 2026-10-12).**
+The refusal is gone. `ExeImage_Source` (`exe_host.cpp`'s `CopyData`) checks
+instead:
+
+5. Every range of `data.toml` is a class the loader accounts for
+   (`kClasses` in `exe_image.cpp`): `map`, `place`, `table`, `widen`,
+   `rebuilt`, `layout`, `own`, and for what no disc fills, as
+   `recipes/exe-gaps.tsv` names it (`exe_tables.py gaps`, from
+   `exe_own.py measure` on the seven discs): `language` (a language layer's
+   handlers write it or our code reads around it,
+   [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4), `unread`
+   (nothing the exe host runs reads it), `keys` (`Key_TableDefault`, the
+   engine's rule), `gap` (zero where the PC has a value: Capcom's game values
+   no disc carries, bytes on the disc the places miss, DIV-0055's plates, LG's
+   eight language addresses - `from` names the kind and symbol), and `none`
+   (the PC's bytes are zero there too, by the table). A `pointer` range, or an
+   image written before the table (no `gaps =` line), is a Fatal: its `none`
+   could hide a PC value (the no-stub rule).
+6. The copy, then `ExeOwn_Fill` (NB's regions); each `gap` range logged once
+   with its symbol and size, the counts by class logged;
+   `BOF3X_EXEIMAGE_STRICT=1` makes the first gap a Fatal.
+7. `Shell_MapDefaultKeys` (RD's), then `ExeImage_CompareWithFile`: with
+   `BOF3.exe` there, the filled image against the file's `.data`, every
+   differing range logged with its class; a difference in `none`, `own`,
+   `keys`, `layout`, `rebuilt` or `exe` is a Fatal - so with the file present
+   the table's completeness is proved, not assumed. Without the file, a line
+   says it did not compare.
+8. `ExeOwn_CheckAtStart` (InjectAll step 2) verifies the regions against the
+   file's `.data` when a disc image is mapped (against the running image it
+   would compare the fill with itself), and says so without the file.
+
+The table `recipes/exe-gaps.tsv`, per build (US): 663 rows; the PC's non-zero
+bytes there `gap` 3,358 (game-value 2,196, disc-unplaced 818, language-zero
+238, port-relaid 106), `language` 1,394, `unread` 3,932, `keys` 48.
+`exe_tables.py check` (CI) holds it to the recipe's disc builds, in order,
+inside `.data`, clear of the engine's regions and every pointer word.
 
 Self-tested headless (`BOF3X_SELFTEST_ONLY=1`, no ini):
 
@@ -419,15 +546,52 @@ unset nothing runs; with it set, the only write is the same bytes). It is
 the check the state hash's A/B will want too: an image the engine maps is
 the image the importer wrote.
 
+Self-tested headless, the exe host (2026-10-12, `disc-only/integration`):
+
+| Install, cache | Exit | Log |
+|---|---|---|
+| the real install, the US cache (`psx-us`) | 0 | `gap 456 ranges 5455 bytes`; `against BOF3.exe`: `map` 13 ranges / 104 bytes differ, `widen` 6 / 3,065 (the blank names), `language` 99 / 1,394, `unread` 107 / 3,932, `gap` the rest; every must-equal class 0; `627123 of 638976 bytes equal`; `exe_own ... each equal to BOF3.exe's .data (the file; the running .data is a disc-built image)` |
+| the disc-only scratch install (no `BOF3.exe`), the US cache as `BOF3X_CACHE` and `BOF3X_EXEIMAGE`, `BOF3X_LANG=en-US` | 0 | `no BOF3.exe to compare the disc-built image with`; `exe_own: 17 regions, 20866 bytes filled over a disc-built image; no BOF3.exe to verify them against`; `inject: 10088 ours` |
+| the real install, `analysis/cache/pc-plus-us` (pc-zh) | 0 | unchanged: `exe_own ... each equal to base/exe/data.bin (pc-zh)`, `inject: 10087 ours` |
+| hosted, `BOF3X_SHADOW=shell,exe_own,dat_cache`, the US cache | 0 | compared, not mapped: `612176 of 638976` (the hosted build's line, with the new classes counted) |
+
+The gate's skip list: `exe_tables.py gate-skip --cache <disc-built cache>
+--game <dir with BOF3.exe>` writes `<cache>/base/exe/gate-skip.txt`, the
+committed `tools/statehash_skip.txt` plus every range whose bytes the
+disc-built image does not share with the PC's at the map: the `language`,
+`unread` and `gap` ranges whole, and the runs of `map` / `place` / `table` /
+`widen` bytes that differ from the file's (US: 1,222 ranges, 48,955 bytes).
+The engine-filled `layout`, `own` and `keys` are left hashed: step 7 proves
+them equal at the map, and skipping them would blind the hash to the game's
+own writes there (`Music_LoadedTrack`, the config words); `--with-filled`
+adds them.
+
+The gate's pair (2026-10-12, attract, 6 minutes, details in
+[`disc-only-install.md`](disc-only-install.md) 5): the disc-only install
+against the PC-plus-US cache over the real install, the same scenes; the
+state hash identical at tick 0 and first differs at tick 1 (the VRAM shadow
+and page `0x903000`), then the field scene's pages from tick 1310 - the data
+the two sources load, not the `.data` image, which the skip list covers.
+
 ## 5. What is left
 
-1. **The data pointers that do not rebuild** (JP 2,821 of 9,959): the
+1. ~~**The data pointers that do not rebuild** (JP 2,821 of 9,959): the
    file layer's 1,641 are the engine's own; the 117 pooled zero objects are
    layout (hold them, as `exe-pointers.tsv` holds addresses - the owner's
-   call 4 of `exe-import.md` 8); the rest wait on more places.
-2. **The 147 `.bss` and 63 `.rdata` pointer words**: no disc map of either;
-   the engine's own layout, held.
-3. **The code pointers** (9,142 words): section 4.2 (b) - the 17 functions
+   call 4 of `exe-import.md` 8); the rest wait on more places.~~ Held as
+   layout (section 7, 2026-10-12): every one of the 9,959 is in
+   `recipes/exe-layout.tsv`, and a disc build fills the ones it does not
+   rebuild from there (JP 2,819, US 2,998). More places still shrink what
+   the rebuild leaves to the table, and are no longer needed for it.
+2. ~~**The 147 `.bss` and 63 `.rdata` pointer words**: no disc map of either;
+   the engine's own layout, held.~~ Held (section 7): the 63 `.rdata` and
+   35 `.bss` words that are pointers; the other 112 `.bss`-shaped words are
+   numbers (section 7.2), no longer in `exe-pointers.tsv`.
+3. **The code pointers** (9,142 words): ~~as `.data` words, unfilled in a
+   disc build~~ - held as layout (section 7): the 8,673 words at a
+   `[[func]]` start by name and 111 at function starts the catalogue lacks
+   by address; the other 358 are numbers (section 7.2). Still open: section
+   4.2 (b) - the 17 functions
    without `impl` (state 2), then the stub page in our own executable. The
    7 placed mid-function words are read (2026-10-10,
    [`exe-code-pointers-midfunc.md`](exe-code-pointers-midfunc.md),
@@ -437,9 +601,8 @@ the image the importer wrote.
    them; no missing start, no takeover gap. The page itself not started. The decoder's eight are
    to be minimp3 behind the music seam ([`mp3-decoder-choice.md`](mp3-decoder-choice.md),
    the owner 2026-10-10).
-4. **`c_dfDIKeyboard`** from the SDK in state 3 (one more `.rdata` read
-   that the engine can own: `libdinput`'s object, verified against the
-   exe's like 2.1); the import slots go with the executable.
+4. ~~**`c_dfDIKeyboard`** from the SDK in state 3~~ - done in the
+   disc-only round (section 2.2); the import slots go with the executable.
 5. **The 436 addresses `src/` reads that no disc carries** (JP): 183 are
    language data (3.2); the platform groups are the engine's; the effect
    state tables want function twins (3.3: the image's own code-pointer pairs
@@ -471,6 +634,181 @@ The section 3.2 "before" ran `xref` with `exe_tables.disc_built` replaced by
 `disc_image` + `mask` (a session script); section 3.3's reach and section
 4.1's counts are session scripts over the same inputs (`analysis/pc_xref.json`,
 `exe-pointers.tsv`, `symbols.toml`).
+
+## 7. The layout table (the disc-only round, CP, 2026-10-12)
+
+The owner's call of 2026-10-11 ([`disc-only-round.md`](disc-only-round.md)
+section 0): the pointer words no disc places or rebuilds are **held as
+layout** - addresses, like `exe-pointers.tsv` and `symbols.toml`, never
+values. Measured on the seven held discs and `BOF3.exe` (branch
+`disc-only/pointers`); the commands are section 6's plus `verify`.
+
+### 7.1 `recipes/exe-layout.tsv`
+
+A new file, not an extension of `exe-pointers.tsv`: that file's rows are runs
+(`pc`, `words`, `to`) and a target per word does not fit a run. One row per
+word, `pc  kind  target`, generated by `recipe` from `BOF3.exe`,
+`exe-pointers.tsv`'s decision and `symbols.toml`:
+
+| kind | words | target |
+|---|---:|---|
+| `code` | 8,784 | 8,673 by `[[func]]` name (6,211 functions); 111 by address (90 function starts the catalogue lacks: the C runtime's after `Crt_GetPtd`, the blitters' after `Gfx_PackRgb`, 3 at the head of `.data`) |
+| `data` | 9,959 | a `.data` address |
+| `rdata` | 63 | a `.rdata` address (`0x5D8DBC..0x5D9340`, the C runtime's strings) |
+| `bss` | 35 | a `.bss` address (the inventory lists 9, the C runtime's 15, `Field_MoveSpeeds` 5, 6 others) |
+| `number` | 471 | none: a pointer-shaped word the recipe now classes a number (7.2) |
+
+The table holds **every** pointer word, not only those a build leaves
+unfilled: so the table itself depends on no disc, and every rebuilt word is a
+cross-check - `apply_layout` stops the build if a word the disc rebuilt is
+not the table's target (none is, on any of the seven).
+
+`disc_built` (and so `build`, `xref`, `measure`) applies it after the
+rebuild: every pointer word still unfilled gets its target, as one `layout`
+range in `data.toml`. `check` (CI, no game data): the hash in `exe.toml`;
+rows in order, aligned, inside `.data`; the pointer rows exactly
+`exe-pointers.tsv`'s words with their kind; no `number` row among them;
+every code name a `[[func]]`, every code address in `.text` and no
+`[[func]]` start, as many as `exe.toml`'s `layout_code_unnamed` (111); every
+other target inside its section (`.bss` to `bss_end`); and per build,
+rebuilt + layout words = every pointer word, no pointer byte unfilled.
+`verify` on a disc-built cache reads each `layout` word of `data.bin`
+against the table: `layout 11880 of 11880 words recipes/exe-layout.tsv's
+targets; pointer words unfilled: 0` (US), `11701 of 11701` (JP).
+
+### 7.2 The pointer-shaped words that are numbers
+
+`decide_pointers` called a pointer-shaped word a pointer whenever no disc
+could test it. Read, three kinds are not:
+
+**Into `.text`** (`code_numbers`, reading `BOF3.exe`'s `.text` with
+capstone): a code pointer points at a function start - a `[[func]]` start,
+or an instruction boundary (a linear sweep from the `[[func]]` start below)
+right after a `ret` or `int3`. Of the 469 words into the middle of a
+function ([`exe-code-pointers-midfunc.md`](exe-code-pointers-midfunc.md)),
+**111 are pointers** (every one right after a `ret`) and **358 numbers**:
+349 *not an instruction boundary* (the 312 `DAT\0` extensions of
+`Dat_FileNames`, key names, the C runtime's `PST` / `PDT`), 9 *inside a
+function* (two small halfwords: the title sprite's size, the list box and
+message box positions; `DEL`, `INS`, `LID`). The seven words that doc read are
+among the 358, so a disc now places them (`placed_differ` grows by their
+misplaced segments: JP 3,139 to 3,143). The rule is applied whether or not
+a disc places the word; at a `[[func]]` start nothing is decided by shape
+(the effect state tables' starts look like halfword pairs and are pointers).
+
+**Into `.bss`** (`bss_numbers`; no disc maps `.bss`): a pointer to a `.bss`
+variable is 4-aligned - every one the C runtime and the inventory lists hold
+is. 112 of the 147 are numbers: 75 *not 4-aligned* (packed bytes of the area
+tables' 12-byte rows: `Area110_Weights`, `Area117_SpawnKinds2`,
+`Area143_EffectStates`, ...), 19 *two small halfwords*
+(`MsgBox_PlacementTable`, `Title_Sprites`, `EffectKind36_Frames`, the C
+runtime's character-type flags), 4 *text* (`pen`, `%lx`, `der`), 14 *a column
+of numbers* (aligned by chance where the same column holds such numbers
+either side). **Six held as `bss` pointers are doubtful** - `0x5E1AC0`,
+`0x61AB60`, `0x620404` (an area table's aligned word each) and `0x6542F0`,
+`0x65432C`, `0x654C08` (colour-shaped): 24 bytes, a reading owed; if they
+are numbers the table holds 24 bytes of Capcom's values.
+
+**Inside the engine's own regions** (`own_numbers`): the NB group's
+`src/hook/exe_own.cpp` regions ([`exe-engine-own.md`](exe-engine-own.md))
+are strings the engine fill writes; a pointer-shaped word inside them is
+text (319 words of the old `exe-pointers.tsv`; the rules above had already
+classed 318). Read through `tools/exe_own.py`'s `own_regions` when that tool
+is in the tree.
+
+`exe-pointers.tsv`: 19,311 words to **18,840**. The `data` words are not
+reclassed: a disc tests most, the rebuild proves 7,139 (JP), and shape
+cannot tell a string pointer (unaligned, printable bytes) from text.
+
+### 7.3 `data.toml`'s classes
+
+Two new `how`s: `layout` (filled from the table; `from` is `exe-layout.tsv`)
+and `own` (unfilled: the bytes of an `exe_own.cpp` region, which the engine
+fills; ahead of `pointer` and `none`). On a disc build `pointer` no longer
+occurs. **`src/hook/exe_image.cpp` must learn both** (IN's, one line: its
+`Count by[]` table) - today it stops with `unknown how "layout"`; with the
+line added (a local build, not committed) the hosted self-test of the US
+cache logs `layout 47520 of 47520 bytes equal`, `own 3913 of 18812`, `none
+40326 of 49058`, `compared, not mapped: 612176 of 638976` (from 576,301).
+
+### 7.4 Places by bytes
+
+`find_places` keys a region no pointer keys by a 16-byte window of its
+numbers (no pointer word, six distinct byte values; up to eight windows),
+searched in the files of the region's placed neighbours and taken when it is
+found exactly once; the stretch must agree on 24 bytes or more around the
+window (`keys` 0 in `exe-places.tsv`). JP 9 places more, 662 number bytes
+(of the 1,026 [`exe-engine-own.md`](exe-engine-own.md) 4.4 found on the
+disc); `placed_differ` unchanged by it on every build.
+
+**A window between two code pointers** (story-flag seed, 2026-10-12): a
+16-byte window of numbers with no pointer word, a code pointer word on
+either side and more than one byte value (`code_windows`) is a key too,
+matched only where the build's words either side are code addresses, and
+tried whenever no pointer key places the region (before, a region whose
+pointer votes went to a place that placed nothing was left). It found
+`Scenario_SubInit`'s 16-byte story-flag seed (`0x662CD8`, between the two
+code pointers of the dispatch table `0x662CD0` and `Field_ModeTailKinds`):
+the region `0x662C68..0x662F28` mixes `SHOP.EMI`'s words, the scenario
+data pointers and `GAME.EMI`'s run, and its code-pointer votes went to
+`SHOP.EMI`, where that run does not agree. One place per PlayStation
+build, `0x662CA4..0x662F24` from `ETC/GAME.EMI#0` (JP `0x801C9470`, US
+`0x801C8478`; the seed at JP `0x801C94A4`, the twin `title_states.cpp`
+cites, right after the PSX table's own two entries `0x801A8C34` /
+`0x801A8CB4`), 32 bytes agreeing, 4 keys; it carries the seed and the 8
+bytes at `0x662DE8` (`FieldTail_DropInMove`'s table), both byte-identical
+to the PC's, so their two `game-value` rows leave `exe-gaps.tsv` on those
+five builds (US: 455 gap ranges to 453, 2,187 game-value non-zero bytes to
+2,183). Nothing else moved: `placed_differ` unchanged, `identical` +4 on
+each. The PSP builds' `GAME.EMI` holds the same run with PSX-range code
+words (`0x801A8C34`), which `code_word`'s PSP range excludes: widening it
+moved some 20 other PSP places (one `AREA104.EMI` run placed five times),
+so it was not taken and the PSP builds keep both rows.
+
+### 7.5 Before and after, per build
+
+`exe.toml`'s counts at `6e6b4f3b` and now (bytes of the 638,976):
+
+| Build | pointer (unfilled) | layout | none, PC non-zero | own, PC non-zero | placed_differ | identical to the PC's |
+|---|---:|---:|---:|---:|---:|---:|
+| `psx-jp` | 48,692 to **0** | 46,804 (11,701 words) | 22,331 to 8,071 | 14,899 | 3,139 to 3,143 | 577,657 to **612,863** |
+| `psx-us` | 49,408 to **0** | 47,520 (11,880) | 23,013 to 8,732 | 14,899 | 3,162 to 3,169 | 576,417 to 612,176 |
+| `psx-eu-en` | 49,660 to **0** | 47,772 (11,943) | 23,001 to 8,720 | 14,899 | 3,160 to 3,166 | 576,242 to 612,191 |
+| `psx-fr` | 49,676 to **0** | 47,788 (11,947) | 23,065 to 8,784 | 14,899 | 3,162 to 3,168 | 576,164 to 612,125 |
+| `psx-de` | 49,684 to **0** | 47,796 (11,949) | 23,081 to 8,800 | 14,899 | 3,159 to 3,165 | 576,145 to 612,112 |
+| `psp-jp` | 59,936 to **0** | 58,048 (14,512) | 24,779 to 8,767 | 16,895 | 3,384 to 3,397 | 566,574 to 609,917 |
+| `psp-eu` | 59,852 to **0** | 57,964 (14,491) | 24,820 to 8,808 | 16,895 | 3,348 to 3,361 | 566,631 to 609,912 |
+
+Per build the layout fills the words the rebuild does not: 8,784 code, 98
+`.bss` / `.rdata`, and the data words not rebuilt (JP 2,819; US 2,998; PSP-JP
+5,630). The bytes still unfilled, by region (JP, PC non-zero, a session
+script over `disc_built`): pointer words nowhere; `none` - game data 4,453
+(from 11,087), the language regions 1,445 (LG's / NB's, unchanged), the C
+runtime past `Task_StackTop` 2,168 (2,117 and the numbers 7.2 moved), the
+sound-name table's tail 5; `own` - the file layer 8,622, the rest of
+`exe_own.cpp`'s regions 6,277.
+
+### 7.6 Not done, and for the coordinator
+
+- The recipe was generated with the NB group's `tools/exe_own.py` and
+  `src/hook/exe_own.cpp` (`disc-only/engine-own`, `b59a7b34`) in the tree,
+  as the merged tree will have them. On this branch alone `check`, `build`
+  and `verify` pass (the image's bytes do not depend on them: `own` and
+  `none` are both unfilled), but a `recipe` re-run without them would move
+  the one word `own_numbers` alone settles and the `own` counts. Re-run
+  `recipe` after the merge if NB's regions change.
+- `exe_image.cpp` (7.3); the exe host still refuses a disc-built image
+  (`ExeImage_Source`), IN's.
+- The six doubtful `.bss` words (7.2).
+- The 111 code words at starts the catalogue lacks have no `[[func]]`, so
+  the stub page has no stub there; nothing of ours reads those `.data` words
+  (the C runtime's tables, the blitters' jump table), so nothing is reached
+  through them in the exe host - a fact to keep if that changes.
+- `measure` and `xref` refuse an `--out` whose path merely begins with the
+  worktree's path (a sibling directory such as `cp_scratch`): a string
+  prefix test; not changed here.
+- No ledger entry: no game behaviour changes (a disc-built image is not
+  mapped yet; a PC-built cache is byte-identical as before).
 
 ## For the other files
 

@@ -17,7 +17,8 @@ namespace bof3x {
 bool ExeImageRead(const std::wstring& exe, std::uint32_t va, std::uint32_t size, std::vector<unsigned char>& out,
                   std::string& why);
 
-// Key_TableDefault, as input::KeysFromTable reads it.
+// Key_TableDefault, as input::KeysFromTable reads it: what the launcher
+// compares the engine's rule (input::DefaultKeys) with when the file is there.
 bool ExeDefaultKeys(const std::wstring& exe, std::vector<input::KeyBinding>& keys, std::string& why);
 
 }  // namespace bof3x

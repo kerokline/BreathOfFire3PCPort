@@ -90,6 +90,9 @@ in the order the file name lists them. The digits are the members.
 | `BPLD012`, `BPLD015`, `BPLD016` | same size; **the same 1,949 words, at the same offsets and with the same values, differ in all three**, all between `+0x1B018` and `+0x2A4DC`, inside member 1's block (`0x1B00C..0x3600C`). Read as `u16`s the changes are small deltas (most often -16, -8, +8, -0x1000, +10) - offsets or coordinates adjusted, not content moved | word diff, the three files' diff lists compared |
 | `BPLD27A`, `BPLU27A` | two adjacent words in the last block (4 bytes), the same edit in both | word diff |
 
+**Read 2026-10-12: [`arena-edits.md`](arena-edits.md)** - only animation scripts changed; 27A is now a rule, the
+rest a disc's own arena from a disc alone.
+
 Not read: what member 2's 352 bytes are, and what the `BPLD01x` and `27A`
 edits fix. That is a reading for the PC executable (which consumes the arenas)
 before the importer decides between applying them as a rule (the DIV-0080 form),

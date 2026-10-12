@@ -14,10 +14,12 @@
 #include "game/language_tags.h"
 #include "game/map_layers.h"
 #include "game/menu_verbs.h"
+#include "hook/exe_host.h"
 
 #include <windows.h>
 
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -524,6 +526,35 @@ void CacheSelfTest() {
               index, name.c_str(), name2.c_str());
 }
 
+// DIV-0102 (docs/disc-only-install.md): the port's own Chinese text
+// is in the PC's DAT\ alone. With BOF3X_LANG unset or "original" it plays
+// from a PC install (BOF3.exe in the game directory: its DAT\ is the port's,
+// and `importer.py install --base` refuses such a directory) or from the
+// cache's loc\zh-CN layer (built from the PC's DAT\); otherwise - a
+// disc-only install - every Chinese chunk is missing and the game would play
+// without text, so it is refused here, naming the languages the install and
+// the cache hold. The launcher's rule is the same (ConfigOriginalAvailable).
+void RefuseOriginalWithoutChinese() {
+    if (g_lang[0] || bof3::ExeFile_Present() || dat_cache::HasLayer("loc", "zh-CN")) return;
+    std::string held;
+    for (const char* tag : bof3x::kLanguageTags) {
+        char pattern[32];
+        std::snprintf(pattern, sizeof pattern, "DAT\\%s.*.DAT", tag);
+        WIN32_FIND_DATAA fd;
+        const HANDLE h = FindFirstFileA(pattern, &fd);
+        const bool installed = h != INVALID_HANDLE_VALUE;
+        if (installed) FindClose(h);
+        if (!installed && !dat_cache::HasLayer("loc", tag)) continue;
+        if (!held.empty()) held += ", ";
+        held += tag;
+    }
+    bof3::Fatal("DIV-0102: BOF3X_LANG is unset or \"original\" (the port's Chinese text), but this is a "
+                "disc-only install: no BOF3.exe in the game directory and no loc\\zh-CN layer in the cache%s, so "
+                "there is no Chinese text to play. Set BOF3X_LANG (bof3x.ini's language=) to a language it holds: %s",
+                dat_cache::Root() ? "" : " (no BOF3X_CACHE)",
+                held.empty() ? "none - build one: importer.py build --lang <tag>, install --lang <tag>" : held.c_str());
+}
+
 }  // namespace
 
 void DatLoad_Inject() {
@@ -538,6 +569,7 @@ void DatLoad_Inject() {
     // DAT\en.* is no overlay this project builds any more.
     if (const char* use = bof3x::RetiredLanguageReplacement(g_lang))
         bof3::Fatal("DIV-0005: BOF3X_LANG=%s is retired; use %s", g_lang, use);
+    RefuseOriginalWithoutChinese();  // DIV-0102
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
     ReadOptLayers();

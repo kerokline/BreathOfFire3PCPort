@@ -9,3 +9,11 @@
 // 0x5888D0 holds as immediates. Aborts on any other tag or size, or a zero
 // width.
 void TitleMenu_SetWidths(std::uint32_t tag, const std::uint8_t* widths, std::uint32_t size);
+
+// The width of title menu row `row` (0..2) in this build: the original's 0x60,
+// 0x80, 0x40, or the chunk's once its patch went in - a value of ours, for our
+// TitleMenu_DrawRow (save_menu.cpp), never read from 0x5888D0's immediates
+// (docs/operand-store.md). TitleMenu_Operands registers the three against
+// those immediates for the hosted check (SaveMenu_Inject calls it).
+unsigned TitleMenu_Width(unsigned row);
+void TitleMenu_Operands();

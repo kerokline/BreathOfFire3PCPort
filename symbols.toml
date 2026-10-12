@@ -1646,7 +1646,7 @@ name = "DInput_KeyboardFormat"
 ctype = "unsigned char"
 count = 24
 status = "evidence"
-evidence = "bytes 2026-09-24: a DIDATAFORMAT {dwSize 0x18, dwObjSize 0x10, dwFlags DIDF_RELAXIS (2), dwDataSize 256, dwNumObjs 256, rgodf 0x5AC850} = c_dfDIKeyboard; pushed by DInput_Init 0x5A95E8 as SetDataFormat's argument. In .rdata."
+evidence = "bytes 2026-09-24: a DIDATAFORMAT {dwSize 0x18, dwObjSize 0x10, dwFlags DIDF_RELAXIS (2), dwDataSize 256, dwNumObjs 256, rgodf 0x5ACBD0} = c_dfDIKeyboard; pushed by DInput_Init 0x5A95E8 as SetDataFormat's argument. In .rdata; its object table is in .text (rgodf read again from the file 2026-10-12: 0x5ACBD0, not 0x5AC850 as first written). Since the disc-only round the engine passes the SDK's c_dfDIKeyboard, verified equal (docs/exe-import-engine.md section 2.2)."
 
 [[func]]
 pc = 0x461C00

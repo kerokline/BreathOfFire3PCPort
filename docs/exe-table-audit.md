@@ -203,7 +203,10 @@ For the owner to confirm. None has been done.
   `symbols.gen.h`). `input::KeysFromTable` parses it and `SetDefaultKeys`
   hands it to `Bindings::Defaults()`. An unreadable table is a `Die`. In the
   game, `Defaults().keys` is now empty; nothing there reads it (`pad_read.cpp`
-  uses only `.pad`).
+  uses only `.pad`). **Superseded 2026-10-12** (the disc-only round): the
+  table is a rule of the engine (`input::DefaultKeys`, the owner's call of
+  2026-10-11), which the launcher and the engine compare with the file's
+  when it is there ([`exe-import-engine.md`](exe-import-engine.md) 2.2).
 - **V2 fixed.** The fuzz snapshots `Steal_RateTable` from the image at the
   start of `SelfTest`, the `worldmap_area_fuzz.cpp` pattern. The values in
   `cheats.cpp`'s comment are replaced by a reference. The table is Capcom's
@@ -212,7 +215,9 @@ For the owner to confirm. None has been done.
 - **?1 fixed.** `field_blocked.cpp` reads the blocking nibbles from the
   switch tables at `0x518660` / `0x518654` on first use. The structural checks
   (an index above 2, a jump target other than the two case bodies) are still
-  Fatals.
+  Fatals. *Superseded 2026-10-12 (the disc-only round, a disc has no `.text`
+  to read): the switch is held as code (`NibbleBlocks`) and the two tables
+  are compared with it hosted - [`operand-store.md`](operand-store.md).*
 - **?2 and ?3 kept as code.** Reading them in place would mean decoding
   instructions, not reading a table. `kCategory`'s values are case-body
   immediates. The area lists would need the switch's bounds decoded from

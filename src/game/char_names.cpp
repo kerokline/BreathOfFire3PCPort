@@ -10,9 +10,11 @@
 //
 // So the English names go into those eight fields once, when FIRST.DAT loads,
 // and New Game hands them on. Before any write, the two instructions that
-// read the table, and the whelp's reset copy below, are checked for the
-// addresses they read: if they are not the ones this file was written
-// against, the game stops (Fatal) before anything is written.
+// read the table, and the whelp's reset copy below, are registered with the
+// addresses they read (code_bytes.h): hosted, where Capcom's code is mapped,
+// one that is not what this file was written against stops the game (Fatal)
+// before anything is written; in the exe host there is no code to read and
+// the entries are the inventory's (docs/operand-store.md).
 //
 // The whelp's name has one more home: 0x42E09D copies five bytes from the
 // 8-byte slot 0x669CE0 into character 7's name at some event - a reset of the
@@ -48,8 +50,9 @@ constexpr std::uint32_t kNameRoom = 9;
 constexpr std::uint32_t kWhelpSlot = 0x669CE0;
 constexpr std::uint32_t kWhelpSlotRoom = 8;
 
-bool CodeReads(std::uint32_t at, const std::uint8_t* bytes, std::size_t n) {
-    return std::memcmp(bof3::CodeBytes(at, static_cast<std::uint32_t>(n)), bytes, n) == 0;
+// What New Game's code at `at` must hold (`bytes`), for the hosted check.
+void CodeReads(const char* what, std::uint32_t at, const std::uint8_t* bytes, std::size_t n) {
+    bof3::OperandExpect(what, at, bytes, static_cast<std::uint32_t>(n));
 }
 
 }  // namespace
@@ -61,9 +64,9 @@ void CharNames_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32
     static const std::uint8_t kLoop[] = {0x8D, 0xB5, 0x90, 0xB3, 0x64, 0x00};
     static const std::uint8_t kWhelp[] = {0xBE, 0x0C, 0xB8, 0x64, 0x00};
     static const std::uint8_t kReset[] = {0x68, 0xE0, 0x9C, 0x66, 0x00};
-    if (!CodeReads(0x437834, kLoop, sizeof kLoop) || !CodeReads(0x437891, kWhelp, sizeof kWhelp) ||
-        !CodeReads(0x42E09D, kReset, sizeof kReset))
-        bof3::Fatal("character names: New Game does not read the records this build expects");
+    CodeReads("DIV-0020 New Game's records", 0x437834, kLoop, sizeof kLoop);
+    CodeReads("DIV-0020 New Game's whelp record", 0x437891, kWhelp, sizeof kWhelp);
+    CodeReads("DIV-0020 the whelp's name reset", 0x42E09D, kReset, sizeof kReset);
     static_assert(kRecords + 7 * kStride == 0x64B80C, "the whelp's record follows the seven");
 
     const std::uint8_t* p = payload;
@@ -99,8 +102,7 @@ void CharNames_ApplyMerchant(std::uint32_t tag, const std::uint8_t* payload, std
     // mov ecx, dword ptr [0x669CD8] in the battle's copy
     static const std::uint8_t kBattleCopy[] = {0x8B, 0x0D, 0xD8, 0x9C, 0x66, 0x00};
     if (tag != 0) bof3::Fatal("merchant name chunk tag is 0x%X, expected 0", (unsigned)tag);
-    if (!CodeReads(0x52D1EC, kBattleCopy, sizeof kBattleCopy))
-        bof3::Fatal("merchant name: the battle does not read the slot this build expects");
+    CodeReads("DIV-0020 the battle's merchant name", 0x52D1EC, kBattleCopy, sizeof kBattleCopy);
     if (size < 2 || size > kRoom || payload[size - 1] != 0 || std::strlen(reinterpret_cast<const char*>(payload)) != size - 1)
         bof3::Fatal("merchant name chunk: %u bytes is not one name of at most %u with its NUL", (unsigned)size,
                     (unsigned)kRoom);

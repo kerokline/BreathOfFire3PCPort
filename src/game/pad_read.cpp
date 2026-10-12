@@ -251,13 +251,14 @@ extern "C" void __cdecl DInput_Init(void* hinstance, void* hwnd) {
     }
     DInput_Object = di;
     LPDIRECTINPUTDEVICEA kb = nullptr;
-    // The data format is the exe's own copy, the one the original passes
-    // (0x5C4948 = c_dfDIKeyboard: dwSize 0x18, dwObjSize 0x10, DIDF_RELAXIS,
-    // 256 bytes, 256 objects); the GUID (0x5C4828 = GUID_SysKeyboard) is the
-    // engine's copy of the same 16 bytes (rdata_consts.h).
+    // The data format is the SDK's c_dfDIKeyboard, which rdata::Verify finds
+    // equal to the one the original passes (0x5C4948: dwSize 0x18, dwObjSize
+    // 0x10, DIDF_RELAXIS, 256 bytes, 256 objects, their table at 0x5ACBD0 in
+    // .text - int3 in the exe host); the GUID (0x5C4828 = GUID_SysKeyboard)
+    // is the engine's copy of the same 16 bytes (rdata_consts.h).
     constexpr rdata::Const kKeyboardGuid{0x5C4828};   // DInput_KeyboardGuid
     const GUID& guid = *reinterpret_cast<const GUID*>(static_cast<std::uintptr_t>(kKeyboardGuid));
-    const DIDATAFORMAT* format = reinterpret_cast<const DIDATAFORMAT*>(DInput_KeyboardFormat);
+    const DIDATAFORMAT* format = rdata::KeyboardFormat();
     if (di->CreateDevice(guid, &kb, nullptr) == DI_OK && kb) {
         // CreateDevice (vtable +0xC), then SetDataFormat (+0x2C),
         // SetCooperativeLevel (+0x34) and Acquire (+0x1C): 0x5A95CC..0x5A960C.

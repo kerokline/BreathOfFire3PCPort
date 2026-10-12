@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 // DIVERGENCE DIV-0059: the item and skill lists' title centred on its real
 // width under a Latin language overlay. src/game/battle_draw.cpp has the
 // switch (g_list_title_centre, patched at inject under the name
@@ -15,3 +17,10 @@ int ListTitle_X(const unsigned char* label, int n);
 // list whose title has another centre than x + 78 (the master list's x + 0x3A,
 // src/game/rest_2h.cpp) asks this and centres on its own.
 bool ListTitle_Centring();
+
+// What the two title calls DIV-0059 re-aims in Capcom's list draws
+// (0x596D13 in Win2_DrawItemList, 0x59DEFA in 0x59DBF0) call in this build:
+// Text_DrawAt 0x516B30, or ListTitle_DrawAt once BattleDraw_Inject re-aimed
+// them. A value of ours (docs/operand-store.md): our reimplementations of
+// those draws call it, never reading the call site.
+std::uint32_t ListTitle_SiteDraw();

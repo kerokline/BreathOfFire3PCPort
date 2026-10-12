@@ -97,35 +97,36 @@ void Inject(const char* name, std::uint32_t original, void* ours, bool instrumen
         ++g_disabled;
         Log("inject  OFF  %-24s ours %p -> original 0x%08X", name, ours, (unsigned)original);
     } else {
+        Operands_BeforeJmp(original);   // hosted: values of ours under these five bytes, compared while the code holds them
         WriteJmp(name, orig, mine);
         ++g_enabled;
         Log("inject  ON   %-24s original 0x%08X -> ours %p", name, (unsigned)original, ours);
     }
 }
 
-void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours, bool instrument) {
-    // The exe host has no Capcom code at `site`: the call is re-aimed in the
-    // code-byte store (code_bytes.h), where the readers of the site - which
-    // frame or text draw a screen of ours uses - find it as they do hosted.
-    // The displacement is the one the call would hold at `site`.
-    const bool store = IsExeHost();
-    if (store && !InCode(site)) Fatal("%s: RetargetCall at 0x%08X, outside Capcom's code", name, (unsigned)site);
-    auto* at = store ? CodeBytesForWrite(site, kJmpLen) : reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
-    std::int32_t rel;
-    std::memcpy(&rel, at + 1, sizeof rel);
-    // E8 rel32 is CALL; only the displacement is rewritten below.
-    if (at[0] != 0xE8 || site + kJmpLen + static_cast<std::uint32_t>(rel) != expected)
-        Fatal("%s: 0x%08X is not a call to 0x%08X", name, (unsigned)site, (unsigned)expected);
+bool RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours, bool instrument) {
+    // The exe host has no Capcom code at `site`: nothing is written. The
+    // divergence that re-aims the call keeps which draw it chose as a value of
+    // its own from this answer, and its screens read that
+    // (docs/operand-store.md); hosted, Operands_Check compares it with the call.
+    const bool exe = IsExeHost();
+    if (exe && !InCode(site)) Fatal("%s: RetargetCall at 0x%08X, outside Capcom's code", name, (unsigned)site);
+    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
+    std::int32_t rel = 0;
+    if (!exe) {
+        std::memcpy(&rel, at + 1, sizeof rel);
+        // E8 rel32 is CALL; only the displacement is rewritten below.
+        if (at[0] != 0xE8 || site + kJmpLen + static_cast<std::uint32_t>(rel) != expected)
+            Fatal("%s: 0x%08X is not a call to 0x%08X", name, (unsigned)site, (unsigned)expected);
+    }
     if (!instrument && WantsOriginal(name)) {
         Log("retarget OFF %-24s call at 0x%08X left on 0x%08X", name, (unsigned)site, (unsigned)expected);
-        return;
+        return false;
     }
-    if (store) {
-        rel = static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(ours)) - (site + kJmpLen));
-        std::memcpy(at + 1, &rel, sizeof rel);
-        Log("retarget ON  %-24s call at 0x%08X: 0x%08X -> ours %p (the code-byte store)", name, (unsigned)site,
-            (unsigned)expected, ours);
-        return;
+    if (exe) {
+        Log("retarget ON  %-24s call at 0x%08X: 0x%08X -> ours %p (a value of ours; no code in this host)", name,
+            (unsigned)site, (unsigned)expected, ours);
+        return true;
     }
     DWORD old = 0;
     if (!VirtualProtect(at, kJmpLen, PAGE_EXECUTE_READWRITE, &old))
@@ -136,27 +137,31 @@ void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
     VirtualProtect(at, kJmpLen, old, &ignored);
     FlushInstructionCache(GetCurrentProcess(), at, kJmpLen);
     Log("retarget ON  %-24s call at 0x%08X: 0x%08X -> ours %p", name, (unsigned)site, (unsigned)expected, ours);
+    return true;
 }
 
-void PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* expected,
+bool PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* expected,
                 const std::uint8_t* replacement, std::uint32_t count) {
-    // An operand inside Capcom's code, in the exe host: patched in the
-    // code-byte store, where our readers of it look (code_bytes.h). .stub
-    // itself is never written but by Inject (exe_host.cpp's CheckStub).
-    const bool store = IsExeHost() && (InCode(address) || InCode(address + count - 1));
-    if (store && !(InCode(address) && InCode(address + count - 1)))
+    // An operand inside Capcom's code, in the exe host: nothing to write. The
+    // divergence keeps the value it writes as its own from this answer, and
+    // our readers read that (docs/operand-store.md); .stub itself is never
+    // written but by Inject (exe_host.cpp's CheckStub). Outside the code range
+    // (a .data byte, a switch of ours) the write is the same in both hosts.
+    const bool code = InCode(address) || InCode(address + count - 1);
+    const bool exe = IsExeHost() && code;
+    if (exe && !(InCode(address) && InCode(address + count - 1)))
         Fatal("%s: %u bytes at 0x%08X straddle the end of Capcom's code", name, (unsigned)count, (unsigned)address);
-    auto* at = store ? CodeBytesForWrite(address, count) : reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(address));
-    if (std::memcmp(at, expected, count) != 0)
+    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(address));
+    if (!exe && std::memcmp(at, expected, count) != 0)
         Fatal("%s: the %u bytes at 0x%08X are not the ones expected", name, (unsigned)count, (unsigned)address);
     if (WantsOriginal(name)) {
         Log("patch   OFF  %-24s %u bytes at 0x%08X left alone", name, (unsigned)count, (unsigned)address);
-        return;
+        return false;
     }
-    if (store) {
-        std::memcpy(at, replacement, count);
-        Log("patch   ON   %-24s %u bytes at 0x%08X (the code-byte store)", name, (unsigned)count, (unsigned)address);
-        return;
+    if (exe) {
+        Log("patch   ON   %-24s %u bytes at 0x%08X (a value of ours; no code in this host)", name, (unsigned)count,
+            (unsigned)address);
+        return true;
     }
     DWORD old = 0;
     if (!VirtualProtect(at, count, PAGE_EXECUTE_READWRITE, &old))
@@ -166,6 +171,7 @@ void PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* exp
     VirtualProtect(at, count, old, &ignored);
     FlushInstructionCache(GetCurrentProcess(), at, count);
     Log("patch   ON   %-24s %u bytes at 0x%08X", name, (unsigned)count, (unsigned)address);
+    return true;
 }
 
 void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
@@ -255,6 +261,7 @@ bool IsEnabled(std::uint32_t original) {
 
 void InjectReport() {
     Log("inject: %d ours, %d left original by BOF3X_ORIGINAL", g_enabled, g_disabled);
+    Operands_Check("after InjectAll");
 }
 
 }  // namespace bof3

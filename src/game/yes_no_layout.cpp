@@ -49,9 +49,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
 #include "game/text_advance.h"
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -307,27 +307,58 @@ void SelfTest() {
               (unsigned)(sizeof kCases / sizeof kCases[0]), (unsigned)(sizeof kTails / sizeof kTails[0]));
 }
 
+// What YesNoLayout_Inject put into Capcom's code, as values of ours
+// (docs/operand-store.md): our Menu_YesNo, MasterScreen_AskYesNo and save
+// slot panel read these, never the code; hosted, Operands_Check compares.
+// The 15 bytes from 0x5747F0 to the shift: the three patched instructions
+// with the two pushes between them (6A 00, 6A 18) that PatchBytes leaves.
+constexpr std::uint8_t kStopsMoved[15] = {0xB9, 0x12, 0x01, 0x00, 0x00, 0x6A, 0x00, 0x6B, 0xC0, 0x38, 0x6A, 0x18, 0x90, 0x90, 0x90};
+std::uint32_t g_line_call = kMsgSystemPtr;    // what the call at kLineCall reaches
+std::uint8_t g_stops[15] = {   // the original's until the patches go in
+    0xB9, 0xFE, 0x00, 0x00, 0x00, 0x6A, 0x00, 0x8D, 0x04, 0xC0, 0x6A, 0x18, 0xC1, 0xE0, 0x02};
+bool g_stops_moved = false;
+std::uint32_t g_master_line_call = kTextDrawAt, g_master_hand_call = kMenuDrawHand;
+std::uint8_t g_name_inset = 0x13;              // the disp8 at 0x576A48: Capcom's 0x13, DIV-0029's 0x15
+
 }  // namespace
 
+std::uint32_t YesNoLayout_MasterLineDraw() { return g_master_line_call; }
+std::uint32_t YesNoLayout_MasterHandDraw() { return g_master_hand_call; }
+unsigned char YesNoLayout_SaveNameInset() { return g_name_inset; }
+
 void YesNoLayout_Inject() {
+    bof3::OperandCall("DIV-0027 yes / no line", kLineCall, &g_line_call);
+    bof3::Operand("DIV-0027 yes / no stops", 0x5747F0, g_stops, sizeof g_stops);
+    bof3::OperandCall("DIV-0027 master's line", kMasterLineCall, &g_master_line_call);
+    bof3::OperandCall("DIV-0027 master's hand", kMasterHandCall, &g_master_hand_call);
+    bof3::Operand("DIV-0029 save name inset", 0x576A48, &g_name_inset, 1);
     if (bof3::WantsShadow("yes_no_layout")) SelfTest();
     if (!Lang_Latin()) return;   // DIV-0056: the original's stops were fitted to full-width words
 
-    bof3::RetargetCall("YesNoLayout", kLineCall, kMsgSystemPtr, reinterpret_cast<void*>(&YesNo_Line));
+    // One name: the four go in together or not at all (BOF3X_ORIGINAL=YesNoLayout).
+    const bool line = bof3::RetargetCall("YesNoLayout", kLineCall, kMsgSystemPtr, reinterpret_cast<void*>(&YesNo_Line));
     static const std::uint8_t stop_was[] = {0xB9, 0xFE, 0x00, 0x00, 0x00};
     static const std::uint8_t stop_is[] = {0xB9, 0x12, 0x01, 0x00, 0x00};
-    bof3::PatchBytes("YesNoLayout", 0x5747F0, stop_was, stop_is, 5);
+    const bool stop = bof3::PatchBytes("YesNoLayout", 0x5747F0, stop_was, stop_is, 5);
     static const std::uint8_t step_was[] = {0x8D, 0x04, 0xC0};
     static const std::uint8_t step_is[] = {0x6B, 0xC0, 0x38};
-    bof3::PatchBytes("YesNoLayout", 0x5747F7, step_was, step_is, 3);
+    const bool step = bof3::PatchBytes("YesNoLayout", 0x5747F7, step_was, step_is, 3);
     static const std::uint8_t shift_was[] = {0xC1, 0xE0, 0x02};
     static const std::uint8_t shift_is[] = {0x90, 0x90, 0x90};
-    bof3::PatchBytes("YesNoLayout", 0x5747FC, shift_was, shift_is, 3);
+    const bool shift = bof3::PatchBytes("YesNoLayout", 0x5747FC, shift_was, shift_is, 3);
+    if (line != stop || stop != step || step != shift) bof3::Fatal("DIV-0027: Menu_YesNo's four patches went in apart");
+    if (line) {
+        g_line_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&YesNo_Line));
+        std::memcpy(g_stops, kStopsMoved, sizeof g_stops);
+        g_stops_moved = true;
+    }
     bof3::Log("DIV-0027    Yes / No: %u spaces into the gap, hand stops 218 and 274 (on unless the lines above say OFF)", kMoved);
 
     // DIV-0027, amended 2026-10-03: the master's "Is this OK?" (0x586D20).
-    bof3::RetargetCall("MasterAskLayout", kMasterLineCall, kTextDrawAt, reinterpret_cast<void*>(&MasterAsk_Line));
-    bof3::RetargetCall("MasterAskLayout", kMasterHandCall, kMenuDrawHand, reinterpret_cast<void*>(&MasterAsk_Hand));
+    if (bof3::RetargetCall("MasterAskLayout", kMasterLineCall, kTextDrawAt, reinterpret_cast<void*>(&MasterAsk_Line)))
+        g_master_line_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MasterAsk_Line));
+    if (bof3::RetargetCall("MasterAskLayout", kMasterHandCall, kMenuDrawHand, reinterpret_cast<void*>(&MasterAsk_Hand)))
+        g_master_hand_call = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&MasterAsk_Hand));
     bof3::Log("DIV-0027    the master's prompt: its answers re-spaced, the hand two units left of each (on unless the "
               "lines above say OFF)");
 
@@ -344,33 +375,16 @@ void YesNoLayout_Inject() {
     // well inside the name box.
     static const std::uint8_t name_was[] = {0x8D, 0x45, 0x13};
     static const std::uint8_t name_is[] = {0x8D, 0x45, 0x15};
-    bof3::PatchBytes("SaveNameInset", 0x576A46, name_was, name_is, 3);
+    if (bof3::PatchBytes("SaveNameInset", 0x576A46, name_was, name_is, 3)) g_name_inset = 0x15;
     bof3::Log("DIV-0029    save slot names at x + 0x15 (on unless the line above says OFF)");
 }
 
 // Menu_YesNo 0x5747D0 is ours since the sixth round (src/game/menu_windows.cpp):
-// it asks here what YesNoLayout_Inject put into Capcom's body - read back from
-// the bytes themselves, so it is whatever went in, BOF3X_ORIGINAL=YesNoLayout
-// and the language included.
+// it asks here what YesNoLayout_Inject put into Capcom's body - the values
+// above, so it is whatever went in, BOF3X_ORIGINAL=YesNoLayout and the
+// language included.
 YesNoLayout_LineFn YesNoLayout_ActiveLine() {
-    const auto* site = bof3::CodeBytes(kLineCall, 5);
-    std::int32_t rel;
-    std::memcpy(&rel, site + 1, sizeof rel);
-    const std::uint32_t target = kLineCall + 5 + static_cast<std::uint32_t>(rel);
-    const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&YesNo_Line));
-    if (site[0] != 0xE8 || (target != kMsgSystemPtr && target != ours))
-        bof3::Fatal("YesNoLayout: 0x%08X is not a call to Msg_SystemPtr or to ours", (unsigned)kLineCall);
-    return target == ours ? &YesNo_Line : nullptr;
+    return g_line_call == kMsgSystemPtr ? nullptr : &YesNo_Line;
 }
 
-// The 15 bytes from 0x5747F0 to the shift: the three patched instructions
-// with the two pushes between them (6A 00, 6A 18) that PatchBytes leaves.
-bool YesNoLayout_StopsMoved() {
-    const auto* at = bof3::CodeBytes(0x5747F0, 15);
-    static const std::uint8_t moved[] = {0xB9, 0x12, 0x01, 0x00, 0x00, 0x6A, 0x00, 0x6B, 0xC0, 0x38, 0x6A, 0x18, 0x90, 0x90, 0x90};
-    static const std::uint8_t original[] = {0xB9, 0xFE, 0x00, 0x00, 0x00, 0x6A, 0x00, 0x8D, 0x04, 0xC0, 0x6A, 0x18, 0xC1, 0xE0, 0x02};
-    if (std::memcmp(at, moved, sizeof moved) == 0) return true;
-    if (std::memcmp(at, original, sizeof original) == 0) return false;
-    bof3::Fatal("YesNoLayout: the hand's stops at 0x5747F0 are neither the original's nor DIV-0027's");
-    return false;
-}
+bool YesNoLayout_StopsMoved() { return g_stops_moved; }

@@ -1022,7 +1022,8 @@ extern "C" void __cdecl Area167_SetByteFE10(void) { Cond_ByteFE = 0x10; }
 // original 0x4260F0 (Field_ModeTailKinds[32] 0x662D68; armed by area 167's
 // choices, arrive hook, cell hook and init): a switch on the s8 0x9039F4 -
 // above 0x20 (unsigned) nothing - through the byte table 0x426440 in the code
-// (read in place: 33 cases, 0..0xD) and a jump table of fourteen:
+// (33 cases, 0..0xD; ours holds it as the switch it was compiled from,
+// Tail32Case, docs/operand-store.md) and a jump table of fourteen:
 //   0: Party_DropIn(0), state 1.
 //   1: variable 6 0x18: kind, state 0; flag 0x46 set; Field_ChangeArea(0x95,
 //      0x80000, 0xC0000, 0x81).
@@ -1049,12 +1050,36 @@ extern "C" void __cdecl Area167_SetByteFE10(void) { Cond_ByteFE = 0x10; }
 //      Field_ChangeArea(0xA8, 0x150000, 0x40000, 7), Field_ScriptFlags2 bit 6
 //      set (a byte or), kind and state 0.
 // The other states (2..4, 7..9, 0xD..0x13, 0x16, 0x17, 0x19..0x1D) do nothing.
-// Ours aborts on a case byte past the fourteen (the table is code bytes: it
-// cannot happen but by a changed exe).
+namespace {
+// Tail kind 32's case by state: the switch the compiler turned into the
+// 33-byte index at at::kTail32Index - this function's logic, ours since the
+// function is (the brief of the disc-only round, docs/operand-store.md). 13
+// is the cases that do nothing. AreaW4a_Inject registers the bytes this
+// gives against the index for the hosted check.
+unsigned Tail32Case(std::int32_t state) {
+    switch (state) {
+    case 0x00: return 0;
+    case 0x01: return 1;
+    case 0x05: return 2;
+    case 0x06: return 3;
+    case 0x0A: return 4;
+    case 0x0B: return 5;
+    case 0x0C: return 6;
+    case 0x14: return 7;
+    case 0x15: return 8;
+    case 0x18: return 9;
+    case 0x1E: return 10;
+    case 0x1F: return 11;
+    case 0x20: return 12;
+    default: return 13;
+    }
+}
+}  // namespace
+
 extern "C" void __cdecl Area167_Tail32(void) {
     const auto state = static_cast<std::int32_t>(static_cast<signed char>(B(at::kTailState)));
     if (static_cast<U>(state) > 0x20) return;
-    const unsigned which = bof3::CodeBytes(at::kTail32Index, 0x21)[state];   // code bytes: the store in the exe host
+    const unsigned which = Tail32Case(state);
     switch (which) {
     case 0:
         AH_CALL(Party_DropIn)(0);
@@ -1149,7 +1174,7 @@ extern "C" void __cdecl Area167_Tail32(void) {
     case 13:
         return;
     default:
-        bof3::Fatal("Area167_Tail32: case byte %u (state %d) is past the fourteen-entry jump table 0x426408", which, state);
+        bof3::Fatal("Area167_Tail32: case %u (state %d) is past the fourteen-entry jump table 0x426408", which, state);
     }
 }
 
@@ -1199,6 +1224,11 @@ extern "C" void __cdecl Area167_Init(void) {
 // ===========================================================================
 
 void AreaW4a_Inject() {
+    {
+        static std::uint8_t index[0x21];   // Tail32Case as the compiler's byte index, for the hosted check
+        for (std::int32_t s = 0; s < 0x21; ++s) index[s] = static_cast<std::uint8_t>(Tail32Case(s));
+        bof3::Operand("Area167_Tail32 case index", at::kTail32Index, index, sizeof index);
+    }
     if (bof3::WantsShadow("area_w4a")) area_w4a::SelfTest();
     BOF3_INJECT(Area152_Init);
     BOF3_INJECT(Area152_PlaceMessage);

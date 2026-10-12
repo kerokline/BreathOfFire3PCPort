@@ -296,6 +296,33 @@ void DrawPool_Grow() {
     // found the room (the launcher's stamped block, or a free region below
     // 16 MB); none leaves the original's pool, said loudly, rather than a link
     // that truncates (the first build of this crashed in Gfx_DrawOTag).
+    //
+    // The sites below, as values of ours (docs/operand-store.md): what each
+    // immediate names in this build, the original's until the switch, and the
+    // item bound 0x400 at 0x51087F (AreaMapBD_BuildView's, ours, reads
+    // draw_pool::Count() for it and Items() for 0x5109FC's); hosted,
+    // Operands_Check compares them with the patched code.
+    struct Site {
+        std::uint32_t at;       // where the 4-byte immediate sits
+        std::uint32_t was;      // the original's value there
+        std::uint32_t offset;   // into the item: 0, 0x7E or 0x8E
+    };
+    static const Site kSites[] = {
+        {0x486EBD, 0x905E80, 0},    {0x509930, 0x905E80, 0},    {0x5109FC, 0x905E80, 0},
+        {0x51242A, 0x905E80, 0},    {0x512607, 0x905E80, 0},    {0x5139C2, 0x905E80, 0},
+        {0x513BAC, 0x905E80, 0},    {0x513C41, 0x905E80, 0},    {0x5098F4, 0x905EFE, 0x7E},
+        {0x5098FB, 0x905EFE, 0x7E}, {0x513B9B, 0x905EFE, 0x7E}, {0x509909, 0x905F0E, 0x8E},
+        {0x509910, 0x905F0E, 0x8E},
+    };
+    constexpr unsigned kSiteCount = sizeof kSites / sizeof kSites[0];
+    static std::uint32_t site_now[kSiteCount];
+    static std::uint16_t bound_now = 0x400;
+    static_assert(kCount == 0x800, "the bound's patch writes 0x800");
+    for (unsigned i = 0; i < kSiteCount; ++i) {
+        site_now[i] = kSites[i].was;
+        bof3::Operand("DIV-0062 draw-item array", kSites[i].at, &site_now[i], 4);
+    }
+    bof3::Operand("DIV-0062 draw-item bound", 0x51087F, &bound_now, 2);
     unsigned char* const items = g_low_items;
     if (!items) {
         bof3::Log("DIV-0062    no free %u KB below 16 MB for the draw-item pool: the original's 1,024 items stay", kBytes / 1024);
@@ -330,32 +357,27 @@ void DrawPool_Grow() {
     static unsigned short free_list[kCount];
     for (unsigned i = 0; i < kCount; ++i) free_list[i] = static_cast<unsigned short>(i);
     const auto base = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(items));
-    struct Site {
-        std::uint32_t at;       // where the 4-byte immediate sits
-        std::uint32_t was;      // the original's value there
-        std::uint32_t offset;   // into the item: 0, 0x7E or 0x8E
-    };
-    static const Site kSites[] = {
-        {0x486EBD, 0x905E80, 0},    {0x509930, 0x905E80, 0},    {0x5109FC, 0x905E80, 0},
-        {0x51242A, 0x905E80, 0},    {0x512607, 0x905E80, 0},    {0x5139C2, 0x905E80, 0},
-        {0x513BAC, 0x905E80, 0},    {0x513C41, 0x905E80, 0},    {0x5098F4, 0x905EFE, 0x7E},
-        {0x5098FB, 0x905EFE, 0x7E}, {0x513B9B, 0x905EFE, 0x7E}, {0x509909, 0x905F0E, 0x8E},
-        {0x509910, 0x905F0E, 0x8E},
-    };
-    for (const Site& s : kSites) {
+    unsigned on = 0;
+    for (unsigned i = 0; i < kSiteCount; ++i) {
+        const Site& s = kSites[i];
         std::uint8_t was[4], is[4];
         const std::uint32_t now = base + s.offset;
         std::memcpy(was, &s.was, 4);
         std::memcpy(is, &now, 4);
-        bof3::PatchBytes("DrawPool", s.at, was, is, 4);
+        if (bof3::PatchBytes("DrawPool", s.at, was, is, 4)) {
+            site_now[i] = now;
+            ++on;
+        }
     }
     static const std::uint8_t was16[2] = {0x00, 0x04}, is16[2] = {0x00, 0x08};
-    bof3::PatchBytes("DrawPool", 0x51087F, was16, is16, 2);
+    if (bof3::PatchBytes("DrawPool", 0x51087F, was16, is16, 2)) {
+        bound_now = 0x800;
+        ++on;
+    }
     // BOF3X_ORIGINAL=DrawPool: PatchBytes left every site alone (and said so);
-    // read the first back, and leave the arrays the original's too.
-    std::uint32_t first;
-    std::memcpy(&first, bof3::CodeBytes(kSites[0].at, 4), 4);
-    if (first == kSites[0].was) return;
+    // leave the arrays the original's too. One name: all or none.
+    if (on == 0) return;
+    if (on != kSiteCount + 1) bof3::Fatal("DIV-0062: %u of the %u draw-item sites patched", on, kSiteCount + 1);
     draw_pool::g_items = items;
     draw_pool::g_free = free_list;
     draw_pool::g_count = kCount;

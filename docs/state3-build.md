@@ -231,6 +231,14 @@ What the scan cannot see: a read through a pointer computed at run time
 path, they land on `int3` in the exe host - a `CRASH` line, rule 4's loud
 abort, not a silent fork. Not run.
 
+**The store is gone (2026-10-12, the disc-only round):** each of these reads
+is a value of ours now, owned by the divergence that patches or re-aims the
+site or by our reimplementation of the function whose table it was;
+`PatchBytes` / `RetargetCall` write nothing in the exe host and answer
+whether they went in; `code_bytes.*` is a hosted check that compares every
+value with the patched code (77 values, 1,310 bytes). The sites, their values
+and the check: [`operand-store.md`](operand-store.md).
+
 ### 2.4 The launcher and the code page
 
 `bof3x-launcher` starts `bof3x.exe` by default (beside itself, the game

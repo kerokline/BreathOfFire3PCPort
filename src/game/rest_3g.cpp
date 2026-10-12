@@ -24,8 +24,9 @@
 // replacement. Where the original jumps through a step table past its end or
 // indexes past a table, ours aborts with a message (docs/rest_3g.md section 7).
 // AreaMapBD_BuildView reads its draw-item array, its item bound and its four
-// cull bounds from the operands DIV-0062 and DIV-0041 patch, as the original
-// does.
+// cull bounds as DIV-0062 (draw_pool.h) and DIV-0041 (widescreen.h) hold the
+// operands they patch, as the original reads the operands
+// (docs/operand-store.md).
 #include "game/rest_3g.h"
 
 #include <cstdint>
@@ -35,9 +36,11 @@
 #include "game/move_script_bytes.h"
 #include "game/rest_3g_callees.h"
 #include "game/scenario_harness.h"
+#include "game/draw_pool.h"
+#include "game/widescreen.h"
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -780,8 +783,16 @@ extern "C" void __cdecl AreaMap_FrameAreaBD(void) {
 }
 
 namespace {
-// The float a patched `fcomp dword ptr [mem]` operand names.
-float Bound(U operand_at) { return Fl(bof3::CodeLong(operand_at)); }
+// The two y bounds' operands, which nothing patches: the .rdata floats 120.0
+// and 121.0 they name - the function's own, ours since the function is.
+constexpr U kWideYFloat = 0x5C4244, kNarrowYFloat = 0x5C4238;
+// The float an `fcomp dword ptr [mem]` operand names: the two above, or
+// DIV-0041's four as widescreen.cpp holds them.
+float Bound(U operand_at) {
+    if (operand_at == at::kWideYAt) return Fl(kWideYFloat);
+    if (operand_at == at::kNarrowYAt) return Fl(kNarrowYFloat);
+    return Fl(Widescreen_RangeOperand(operand_at));
+}
 }  // namespace
 
 // original 0x510780 (AreaMap_FrameAreaBD's, with MapView_Redraw): area 0xBD's
@@ -832,7 +843,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
     for (U row = 0; I(row) < I(row_bound); ++row) {
         U col_bound = row == 0 ? columns : UL(at::kColumns);
         for (U col = 0; I(col) < I(col_bound); ++col, col_bound = UL(at::kColumns)) {
-            if (DrawItemPool_Top >= bof3::CodeWord(at::kTopBoundAt)) continue;
+            if (DrawItemPool_Top >= draw_pool::Count()) continue;   // at::kTopBoundAt: 0x400, DIV-0062's 0x800
             const U a = static_cast<U>(S8(rec[2])) * row;
             const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8(rec[1])) * col + static_cast<U>(S16(At(at::kOriginX)));
             const U b = static_cast<U>(S8(rec[5])) * (row + 1u);
@@ -861,7 +872,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             if (!keep) continue;
 
             const unsigned top = DrawItemPool_Top;
-            unsigned char* const item = At(bof3::CodeLong(at::kItemsAt) + top * 0x90u);
+            unsigned char* const item = draw_pool::Items() + top * 0x90u;   // at::kItemsAt: DIV-0062's array once grown
             DrawItemPool_Top = static_cast<unsigned short>(top + 1);
             {
                 const U offset = Word(AreaMap_Header + 2);
@@ -954,6 +965,8 @@ extern "C" int __cdecl EffectKind0F_CharCount(const unsigned char* text) {
 }
 
 void Rest3G_Inject() {
+    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kWideYAt, &kWideYFloat, 4);
+    bof3::OperandExpect("AreaMapBD_BuildView y bound", at::kNarrowYAt, &kNarrowYFloat, 4);
     if (bof3::WantsShadow("rest_3g")) rest_3g::SelfTest();
     BOF3_INJECT(EffectKindAC_Start);
     BOF3_INJECT(EffectKindAC_FadeIn);

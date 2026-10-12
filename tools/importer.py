@@ -26,8 +26,8 @@ A chunk no disc carries keeps the PC install as its only source; its class
 (region_diff.py's, PC against JP) decides its layer. Besides `copy` and
 `type1`, three transforms make a disc a source of what the port changed
 (`widen` the enemy tables, whose names go to the language layer; `icons`;
-`ryud`), and a PSX disc's own section can stand in (`own`) where the PC kept
-Japan's language or drew its own art - docs/importer-transforms.md (step 3).
+`ryud`; `hold`, docs/arena-edits.md), and a PSX disc's own section can stand in (`own`) where the PC kept
+Japan's language or drew its own art, or edited an arena - docs/importer-transforms.md (step 3).
 `build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
 PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
 step 8; from a disc the data pointers rebuilt by the map run backwards,
@@ -244,8 +244,46 @@ def ryud_byte(s):
     return s[:RYUD_BYTE] + bytes([RYUD_IS]) + s[RYUD_BYTE + 1:]
 
 
+# The 27A arenas' loop (docs/arena-edits.md section 4). An arena is three u32
+# offsets, one bank per party member in the order its name's digits list them;
+# a bank opens with four u32 offsets - images, palette, scripts, frame entries
+# (Sprite_SetFrameQueueUpload reads [0], [8], [0xC]) - and its scripts are a
+# u16 offset table, each script `frames, steps`, then (hold, frame) per step
+# (sprite-draw-order.md, the animation script). Member A's bank in BPLD27A and
+# BPLU27A holds two identical scripts, a loop of four frames at four ticks a
+# step on every disc; the port held the second of them eight ticks a step - the
+# arenas' only difference from the disc's decode.
+HOLD_FILES, HOLD_BANK, HOLD_STEPS, HOLD_WAS, HOLD_IS = ("BPLD27A", "BPLU27A"), 2, 4, 4, 8   # bank 2: member A
+
+
+def arena_bank(a, k):
+    """(start, end) of the k-th bank of a decoded arena."""
+    at = struct.unpack_from("<3I", a, 0)
+    return at[k], (at[k + 1] if k < 2 else len(a))
+
+
+def hold_loop(s):
+    """A PSX disc's 27A arena, decoded, with the second of member A's two
+    four-step loops held HOLD_IS ticks a step; None when it is not that shape."""
+    try:
+        a = bytearray(type1.decode(s))
+    except type1.Type1Error:
+        return None
+    lo, hi = arena_bank(a, HOLD_BANK)
+    scripts = lo + struct.unpack_from("<I", a, lo + 8)[0]
+    n = struct.unpack_from("<H", a, scripts)[0] // 2
+    loops = [scripts + o for o in struct.unpack_from("<%dH" % n, a, scripts)
+             if a[scripts + o:scripts + o + 2] == bytes([HOLD_STEPS, HOLD_STEPS])
+             and all(a[scripts + o + 2 + 2 * i:scripts + o + 4 + 2 * i] == bytes([HOLD_WAS, i]) for i in range(HOLD_STEPS))]
+    if len(loops) != 2 or a[loops[0]:loops[0] + 2 + 2 * HOLD_STEPS] != a[loops[1]:loops[1] + 2 + 2 * HOLD_STEPS]             or not lo < loops[0] < loops[1] < hi:
+        return None
+    for i in range(HOLD_STEPS):
+        a[loops[1] + 2 + 2 * i] = HOLD_IS
+    return bytes(a)
+
+
 TRANSFORMS = {"copy": lambda s: s, "type1": type1.decode, "widen": widen_enemies,
-              "icons": respace_icons, "ryud": ryud_byte}
+              "icons": respace_icons, "ryud": ryud_byte, "hold": hold_loop}
 
 
 def open_source(path):
@@ -273,7 +311,8 @@ def disc_index(src):
                 idx[sha(type1.decode(b))].append(("type1", key, i))
             for how, wanted in (("widen", dest & 0x7FFFFFFF == ENEMY_DEST),
                                 ("icons", t == 3 and dest == ICON_PAGE and stem == "FIRST"),
-                                ("ryud", stem in RYUD_FILES)):
+                                ("ryud", stem in RYUD_FILES),
+                                ("hold", t == 1 and stem in HOLD_FILES and src.id.startswith("psx-"))):
                 out = TRANSFORMS[how](b) if wanted else None
                 if out is not None:
                     idx[sha(out)].append((how, key, i))
@@ -330,8 +369,10 @@ def why_pc_only(stem, c, cls):
     if cls is None:
         return "unpaired", "no census pair"
     k, what = cls[0], cls[1]
+    if k == "layout" and stem in ARENA_FROM:
+        return "pc-edit", "PL012's PC arena, which the port gives START (arena-edits.md 5)"
     if k == "layout" and stem in TYPE1_EDITS:
-        return "pc-edit", "type 1 decoded, then edited by the port (type1-compression.md section 3)"
+        return "pc-edit", "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)"
     return k, what
 
 
@@ -350,8 +391,13 @@ OWN_WHY = {
     "page-clut": "the palette the disc's own repainted area page is drawn with",
     "div-0080": "AREA004's map band and placement map as every later disc has them: DIV-0080's walls already in",
     "port-art": "the disc's own dial page, the PlayStation's buttons where the port drew its keyboard legend",
+    "arena": "the disc's own arena, decoded: the members' animation scripts as the PlayStation has them, where the port edited them",
+    "start-arena": "PL012's arena, decoded from the disc, as the PC gives START (the port's choice)",
 }
 OWN_FROM = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de")
+# The port-edited arenas (docs/arena-edits.md): the stand-in is a type-1
+# section, so it is decoded; START's is PL012's, as the PC has it.
+OWN_TYPE1, ARENA_FROM = ("arena", "start-arena"), {"START": "PL012"}
 
 
 def load_pairs(region_dir, discs):
@@ -376,6 +422,8 @@ def load_pairs(region_dir, discs):
 def own_sections(c, k, jp_at, carried, discs, pairs, stem):
     """[(build, EMI key, section, sha256, why)] for each PSX disc that lacks the
     chunk but carries its own form of it (OWN_WHY)."""
+    if k == "pc-edit":
+        return arena_owns(discs, carried, stem)
     out = []
     for s in discs:
         if s.id not in OWN_FROM or s.id in carried or not jp_at:
@@ -404,6 +452,23 @@ def own_sections(c, k, jp_at, carried, discs, pairs, stem):
         if c.kind == 1 and (t != 3 or dest != c.tag):
             continue
         out.append((s.id, key, i, sha(b), why))
+    return out
+
+
+def arena_owns(discs, carried, stem):
+    """The stand-ins of a port-edited arena: each PSX disc's one type-1 section
+    of the same-named EMI (PL012's for START), hashed as decoded."""
+    out = []
+    want = ARENA_FROM.get(stem, stem)
+    for s in discs:
+        if s.id not in OWN_FROM or s.id in carried:
+            continue
+        found = [(key, i, b) for key in sorted(s.build.emis) if key.rsplit("/", 1)[-1][:-4] == want
+                 for i, t, dest, b in s.sections(key).values() if t == type1.TYPE1]
+        if len(found) != 1:
+            raise SystemExit("%s: %d type-1 sections named %s on %s" % (stem, len(found), want, s.id))
+        key, i, b = found[0]
+        out.append((s.id, key, i, sha(type1.decode(b)), "start-arena" if stem in ARENA_FROM else "arena"))
     return out
 
 
@@ -454,6 +519,8 @@ def cmd_recipes(a):
                     k, what = "pc-icons", "the item-type icons respaced 24 to 32 px by the port (respace-icons)"
                 elif "ryud" in hows:
                     k, what = "pc-byte", "the disc's section with the PC's one byte at +0x7ACE (region-diff.md 9)"
+                elif "hold" in hows:
+                    k, what = "pc-hold", "type 1 decoded, the second of member A's two four-step loops held 8 ticks a step as the port has it (arena-edits.md 4)"
             else:
                 k, what = why_pc_only(stem, c, row)
                 layer = "loc/" + tag_of(TARGET) if (k in TEXT_CLASSES or c.kind == 3) else "base"
@@ -493,7 +560,7 @@ def cmd_recipes(a):
         "# Every chunk of the PC port's 742 DAT/ containers, in file order: kind, tag, size,",
         "# the sha256 of its payload, the cache layer it belongs to, why, and every held build",
         "# that carries it byte for byte - [build, how, EMI, section] with how `copy`,",
-        "# `type1` (tools/type1.py), `widen`, `icons` or `ryud` (importer.py's transforms) -",
+        "# `type1` (tools/type1.py), `widen`, `icons`, `ryud` or `hold` (importer.py's transforms) -",
         "# and last the PC install itself, [pc-zh, chunk, index]. `base` / `names`: the",
         "# enemy table's stats and where its names go; `own`: a disc's own section that",
         "# stands in when no source carries the chunk (docs/importer-transforms.md).",
@@ -557,7 +624,7 @@ def chunk_bytes(kind, tag, body):
 # Why a chunk is still missing, by (layer, class): the build's report.
 MISSING_WHY = {
     "bank": "audio banks, the disc's VAG samples as WAV: step 6 (wave-from-vag); from a PSP disc all but one bank in 16 containers, whose dropped tone only a PSX disc or the PC carries (psp-only-build.md 2.1)",
-    "pc-edit": "the port's edits to type-1 arenas, unread (type1-compression.md 3): the PC install only",
+    "pc-edit": "the port's edits to type-1 arenas (arena-edits.md): the PC install, or a PSX disc's own arena standing in",
     "art": "the port's dial page: the PC install, or a PSX disc whose own page stands in",
     "enemy-names": "the enemy tables' Chinese names",
 }
@@ -597,7 +664,7 @@ def get_chunk(f, slot, ch, chunked):
         for b, key, sec, h in owns_of(ch):
             if b != s.id:
                 continue
-            body = s.get(f["name"], slot, ("copy", key, sec))
+            body = s.get(f["name"], slot, ("type1" if ch.get("own_why") in OWN_TYPE1 else "copy", key, sec))
             if sha(body) != h:
                 raise SystemExit("%s chunk %d from %s's own section: hash differs from the recipe" % (f["name"], slot, b))
             return s.id, ("own", key, sec), body, None
@@ -670,6 +737,7 @@ def cmd_build(a):
     opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
                    psp_snd)
+    fmv_build(sources, a.out)       # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
@@ -1417,6 +1485,73 @@ def check_opt(path=None):
 
 # ---------------------------------------------------------------- install
 
+def install_base(cache, game):
+    """A disc-only install (docs/disc-only-install.md): the game directory laid
+    from the cache alone, as the PC's install lays it - DAT/NAME.DAT for every
+    container the cache has a chunk of, its base/ and loc/zh-CN/ chunks in the
+    manifest's slot order and then the zh file's names (DIV-0089's walk, so the
+    engine reads the same chunks from DAT/ as from the cache), a slot whose layer
+    the cache lacks left out (a disc-only cache has no Chinese text; the
+    language layer installed over it carries the text; a container with no
+    chunk the cache has - AFLDKWA, wholly Chinese - written empty for the layer
+    to fill); SND/ the cache's
+    base/snd; BGM/ empty (the music is the cache's base/bgm, DIV-0087). Refuses
+    a directory holding BOF3.exe: a PC install keeps its own files."""
+    import shutil
+    if os.path.isfile(os.path.join(game, "BOF3.exe")):
+        raise SystemExit("--base: %s holds BOF3.exe - a PC install keeps its own DAT/; --base lays a disc-only one"
+                         % game)
+    man = os.path.join(cache, "manifest.toml")
+    if not os.path.isfile(man):
+        raise SystemExit("--base: %s has no manifest.toml (importer.py build writes it)" % cache)
+    with open(man, "rb") as fh:
+        assets = tomllib.load(fh)["cache"]["assets"]
+    order = collections.OrderedDict()
+    for name, slot, layer, where, _ in assets:
+        if where.split(":")[1:2] == ["names"]:
+            continue
+        order.setdefault(name, []).append(layer)
+    dat_dir = os.path.join(game, "DAT")
+    os.makedirs(dat_dir, exist_ok=True)
+    written, partial, none = 0, [], []
+    for name, layers in order.items():
+        files, at, parts, left = {}, collections.Counter(), [], 0
+        for layer in set(layers):
+            p = os.path.join(cache, *layer.split("/"), "dat", name)
+            files[layer] = dat.load(p) if os.path.isfile(p) else None
+        for layer in layers:
+            got = files[layer]
+            if got is None:
+                left += 1
+                continue
+            blob, chunks = got
+            c = chunks[at[layer]]
+            at[layer] += 1
+            parts.append(blob[c.offset - 16:c.offset + c.size])
+        for layer, got in files.items():           # past the layer's slots: the enemy names
+            if got is not None:
+                blob, chunks = got
+                parts += [blob[c.offset - 16:c.offset + c.size] for c in chunks[at[layer]:]]
+        if not parts:
+            none.append(name)     # every chunk a layer's the cache lacks: an empty container the overlay fills
+        with open(os.path.join(dat_dir, name), "wb") as fh:
+            fh.write(b"".join(parts))
+        written += 1
+        if left and parts:
+            partial.append(name)
+    snd_src, snd_dir = os.path.join(cache, "base", "snd"), os.path.join(game, "SND")
+    os.makedirs(snd_dir, exist_ok=True)
+    snd = sorted(os.listdir(snd_src)) if os.path.isdir(snd_src) else []
+    for f in snd:
+        shutil.copyfile(os.path.join(snd_src, f), os.path.join(snd_dir, f))
+    os.makedirs(os.path.join(game, "BGM"), exist_ok=True)
+    print("base: DAT/ %d containers (%d without the slots of a layer the cache lacks - the Chinese text a language "
+          "layer replaces; %d with no chunk at all, written empty for the language layer to fill: %s), SND/ %d "
+          "files, BGM/ empty (the music is the cache's base/bgm, played with cache= / BOF3X_CACHE)"
+          % (written, len(partial), len(none),
+                                                                  ", ".join(none) or "none", len(snd)))
+
+
 def cmd_install(a):
     """Copy a cache's layers into a game's DAT/ under the overlay names the
     engine walks: loc/<tag>/dat/NAME.DAT as DAT/<tag>.NAME.DAT (DIV-0005),
@@ -1431,6 +1566,8 @@ def cmd_install(a):
     import shutil
     for tag in a.lang:
         language_tags.refuse_retired(tag, "--lang")
+    if getattr(a, "base", False):          # cache_walk.py check calls this with the layer arguments only
+        install_base(a.cache, a.game)
     dat_dir = os.path.join(a.game, "DAT")
     if not os.path.isfile(os.path.join(dat_dir, "FIRST.DAT")):
         raise SystemExit("%s: no DAT/FIRST.DAT - not a game directory" % a.game)
@@ -1464,6 +1601,15 @@ def cmd_install(a):
     # Overlays under a retired bare code (DAT/en.*.DAT, DIV-0005) are not
     # this install's to remove; it says they are dead weight.
     language_tags.note_retired_overlays(dat_dir)
+    # DIV-0102: an install with no Chinese text (no BOF3.exe, no
+    # loc/zh-CN in the cache) is refused `original` by the launcher and the
+    # engine; it says which languages it holds and which the launcher plays.
+    if not language_tags.original_available(a.game, a.cache):
+        held = language_tags.languages_held(a.game, a.cache)
+        print("languages: no Chinese text (a disc-only install; DIV-0102) - language=original is refused; %s"
+              % ("held: %s, the launcher's default %s" % (", ".join(held), held[0]) if held else
+                 "no language layer held: install one with --lang <tag>, or the game cannot start"))
+    fmv_install(a.cache, a.game)
 
 
 # ---------------------------------------------------------------- presets
@@ -1603,6 +1749,7 @@ def cmd_verify(a):
     rc = 1 if bad else 0
     rc |= verify_bgm(a.cache)
     rc |= verify_opt(a.cache, a.opt_recipe)
+    rc |= fmv_verify(a.cache)
     if a.overlays:
         rc |= verify_overlays(a.cache, a.overlays)
     return rc
@@ -1698,6 +1845,180 @@ def verify_overlays(cache, theirs):
             print("   ", n)
         rc |= bool(differ or ours ^ inst)
     return rc
+
+
+# ---------------------------------------------------------------- the disc's movie
+#
+# docs/fmv-import.md. Fmv_Play (src/game/fmv_play.cpp) opens CAPCOM.AVI through
+# MCI, from the game directory (the working directory) and then the disc root;
+# a PlayStation disc carries the same logo as one MDEC stream, LOGO/CAPCOM30.STR.
+# The player's ffmpeg converts it at import (the owner, 2026-10-12; no decoder in
+# the engine) into the form DIV-0001 made the PC's file: Cinepak video, which
+# Windows still decodes (iccvid.dll), and 16-bit PCM. 640 x 480, the PC file's
+# size, by doubling each pixel; 30 frames a second, the stream's own timing
+# (ffmpeg's psxstr demuxer stamps 15, so the rate is given); 44.1 kHz, the XA's
+# 37.8 kHz resampled to a rate every wave device takes. The trailing silent
+# channel-0 sector is not mapped. The same 1,155 sectors on all five PSX discs.
+
+FMV_NAME, FMV_STR = "CAPCOM.AVI", "LOGO/CAPCOM30.STR"
+FMV_DIR = os.path.join("base", "fmv")
+# sha256 of the 1,155 sectors' subheader-to-end bytes (raw[16:2352]; the header
+# before it holds the sector's address, which differs per disc): measured
+# 2026-10-12 on the JP, US, EU, FR and DE images, all equal (docs/fmv-import.md 1).
+FMV_SOURCE_SHA256 = "c496080be2e134dba766e89a52bacbae7616239e1e26fe9d0c1242a92d12e915"
+FMV_ARGS = ["-f", "psxstr", "-r", "30", "-i", None, "-map", "0:v:0", "-map", "0:a:0",
+            "-vf", "scale=640:480:flags=neighbor", "-c:v", "cinepak", "-c:a", "pcm_s16le", "-ar", "44100",
+            "-fflags", "+bitexact", "-flags:v", "+bitexact", "-f", "avi"]
+
+
+def fmv_build(sources, out):
+    """build's movie row: base/fmv/CAPCOM.AVI from the first PSX disc among the
+    sources, by the player's ffmpeg, and an [fmv] table appended to the
+    manifest (the source sectors' hash, the ffmpeg, the file's hash; or why it
+    was not written). No PSX disc: nothing, and no table."""
+    import subprocess
+    import psx_disc
+    disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
+    if disc is None:
+        return
+    d = os.path.join(out, FMV_DIR)
+    dst = os.path.join(d, FMV_NAME)
+    if os.path.exists(dst):
+        os.remove(dst)          # never a stale movie beside a manifest that does not name it
+    # Nothing here fails the build: a cooked image, a disc without the file, no
+    # ffmpeg or one that cannot run all leave a `skipped` row (review item 1).
+    row = {"build": disc.id, "source": FMV_STR}
+    image = psx_disc.Disc(disc.path)
+    secs, src_sha = [], None
+    if not image.raw:
+        row["skipped"] = ("%s is a cooked image (2,048-byte sectors): the movie's raw sectors are not in it; "
+                          "a raw (2,352-byte sector) image carries them" % os.path.basename(disc.path))
+    elif FMV_STR.upper() not in image.files:
+        row["skipped"] = "no %s on %s" % (FMV_STR, disc.id)
+    else:
+        secs = xa.sectors(image, FMV_STR)
+        src_sha = sha(b"".join(raw[16:] for _, raw in secs))
+        row["source_sha256"] = src_sha
+    ffmpeg = at3.find_ffmpeg()
+    if "skipped" in row:
+        pass
+    elif src_sha != FMV_SOURCE_SHA256:
+        row["skipped"] = "%s on %s is not the stream docs/fmv-import.md measured" % (FMV_STR, disc.id)
+    elif not ffmpeg:
+        row["skipped"] = ("no ffmpeg on the PATH or in BOF3X_FFMPEG: the disc's logo movie is an MDEC stream, "
+                          "which only the player's ffmpeg converts")
+    else:
+        os.makedirs(d, exist_ok=True)
+        tmp, part = dst + ".str.tmp", dst + ".part"
+        for stale in (tmp, part):
+            if os.path.exists(stale):
+                os.remove(stale)
+        with open(tmp, "wb") as fh:
+            fh.write(b"".join(raw for _, raw in secs))
+        print("  base/fmv  converting %s from %s with the player's ffmpeg (about two minutes)" % (FMV_STR, disc.id))
+        # ffmpeg writes a temporary name, renamed on success only, so a
+        # conversion cut short leaves no half movie for install to copy
+        # (review item 6); the .avi suffix tells ffmpeg the container.
+        part = dst + ".part.avi"
+        args = [tmp if x is None else x for x in FMV_ARGS]
+        why = None
+        try:
+            r = subprocess.run([ffmpeg, "-v", "error", "-y"] + args + [part], capture_output=True)
+            if r.returncode != 0 or not os.path.isfile(part):
+                why = "ffmpeg could not convert it: %s" % r.stderr.decode(errors="replace").strip()[-200:]
+        except OSError as e:
+            why = "ffmpeg (%s) could not run: %s" % (ffmpeg, e)
+        finally:
+            for stale in (tmp,) + ((part,) if why else ()):
+                if os.path.exists(stale):
+                    os.remove(stale)
+        if why:
+            row["skipped"] = why
+        else:
+            os.replace(part, dst)
+            with open(dst, "rb") as fh:
+                row.update(ffmpeg=at3.ffmpeg_version(ffmpeg), file=FMV_DIR.replace(os.sep, "/") + "/" + FMV_NAME,
+                           sha256=sha(fh.read()))
+    lines = ["", "# base/fmv/: the disc's logo movie converted by the player's ffmpeg (docs/fmv-import.md).", "[fmv]"]
+    lines += ["%s = %s" % (k, toml_str(v)) for k, v in row.items()]
+    with open(os.path.join(out, "manifest.toml"), "a", newline="\n", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+    if "skipped" in row:
+        print("  base/fmv  not written: %s" % row["skipped"])
+    else:
+        print("  base/fmv  from %s: %s (%s)" % (disc.id, FMV_NAME, row["ffmpeg"]))
+
+
+def fmv_avi_header(body):
+    """(width, height, frames, video fourcc) from an AVI's avih and first strh, or None."""
+    if body[:4] != b"RIFF" or body[8:12] != b"AVI ":
+        return None
+    at, strh = body.find(b"avih"), body.find(b"strh")
+    if at < 0 or strh < 0:
+        return None
+    frames = struct.unpack_from("<I", body, at + 8 + 16)[0]
+    w, h = struct.unpack_from("<II", body, at + 8 + 32)
+    return w, h, frames, body[strh + 12:strh + 16].decode("latin1")
+
+
+def fmv_verify(cache):
+    """verify's movie row: present (the file the manifest recorded, an AVI of
+    the form fmv_build writes) or absent and why. Absent is not a problem: a
+    cache with no PSX disc, or a player with no ffmpeg, has no movie."""
+    with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
+        row = tomllib.load(fh).get("fmv")
+    held = os.path.isfile(os.path.join(cache, FMV_DIR, FMV_NAME))
+    if row is None or "skipped" in row:
+        why = "no PSX disc among the sources" if row is None else row["skipped"]
+        print("  base/fmv/: absent - %s%s" % (why, "; but a %s is there the manifest does not name" % FMV_NAME
+                                             if held else ""))
+        return 1 if held else 0
+    errs, hdr = [], None
+    if row["source_sha256"] != FMV_SOURCE_SHA256:
+        errs.append("its source is not the stream docs/fmv-import.md measured")
+    if not held:
+        errs.append("%s: missing" % row["file"])
+    else:
+        with open(os.path.join(cache, row["file"]), "rb") as fh:
+            body = fh.read()
+        if sha(body) != row["sha256"]:
+            errs.append("%s: not the file the manifest recorded" % row["file"])
+        hdr = fmv_avi_header(body)
+        if hdr is None or hdr[:2] != (640, 480) or hdr[3] != "cvid":
+            errs.append("%s: not a 640 x 480 Cinepak AVI (%s)" % (row["file"], hdr))
+    print("  base/fmv/: %s from %s (%s); %s" % (FMV_NAME, row["build"], row.get("ffmpeg", "?"),
+                                               "; ".join(errs) if errs else
+                                               "present, %d x %d, %d frames, %s, as recorded" % hdr))
+    return 1 if errs else 0
+
+
+def fmv_install(cache, game):
+    """install's movie row: base/fmv/CAPCOM.AVI to the game directory, where
+    Fmv_Play opens it, unless the directory holds one already (the PC's, under
+    any case): the player's file is kept."""
+    import shutil
+    src = os.path.join(cache, FMV_DIR, FMV_NAME)
+    if not os.path.isfile(src):
+        return
+    # Only the movie the manifest recorded, whole (review item 6): a file a
+    # cut-short build left beside a row that does not name it is not installed.
+    with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
+        row = tomllib.load(fh).get("fmv")
+    if row is None or "skipped" in row or "sha256" not in row:
+        print("fmv: %s in the cache is not the manifest's (a build cut short?): not installed; rebuild the cache"
+              % FMV_NAME)
+        return
+    with open(src, "rb") as fh:
+        if sha(fh.read()) != row["sha256"]:
+            print("fmv: %s in the cache is not the file the manifest recorded: not installed; rebuild the cache"
+                  % FMV_NAME)
+            return
+    have = [f for f in os.listdir(game) if f.upper() == FMV_NAME]
+    if have:
+        print("fmv: %s kept (the game directory's own; remove it to install the disc's)" % have[0])
+        return
+    shutil.copyfile(src, os.path.join(game, FMV_NAME))
+    print("fmv: %s, the disc's logo movie, installed" % FMV_NAME)
 
 
 # ---------------------------------------------------------------- identify, check
@@ -1801,6 +2122,8 @@ def main():
     p = s.add_parser("install")
     p.add_argument("--cache", required=True)
     p.add_argument("--game", required=True, help="a game directory: its DAT/ receives the overlays")
+    p.add_argument("--base", action="store_true",
+                   help="a disc-only install: lay DAT/, SND/ and BGM/ from the cache first (no BOF3.exe there)")
     p.add_argument("--lang", action="append", default=[], help="a loc/<tag>/ layer to install (repeat)")
     p.add_argument("--opt", action="append", default=[], help="an opt/<name>/ layer to install (repeat)")
     p.add_argument("--no-opt", action="append", default=[],

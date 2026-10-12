@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 95 entries, DIV-0001..0095, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 102 entries, DIV-0001..0102, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5343,6 +5343,14 @@ designed in rather than bolted on.
   (`importer.py build --source bof3/DAT --source bof3/BOF3.exe ...`, or
   `loc_build.py all --game`).
 
+  **Amended 2026-10-12 (the disc-only round, [`loc-build-disc-only.md`](loc-build-disc-only.md) 4.3, 4.5, 4.7):**
+  "no village sheet, no text for French `AREA004`, no title page from a
+  French or German disc without an English one" is no longer so: the village
+  sheet and the other seventeen images are the disc's own (DIV-0097), the
+  French `AREA004` block is built (DIV-0098), and a French or German disc's
+  title page cuts CONFIG from its own sheet's letters, byte-identical to the
+  PC-built layers' (no player difference, so no entry of its own).
+
 ### The MP3 decoder is minimp3, not the library Capcom linked
 
 - **ID:** DIV-0091 (the next free number on 2026-10-10 evening; renumber at
@@ -5730,3 +5738,265 @@ designed in rather than bolted on.
 - **Reversible?** No switch. The hosted build (`--host bof3`) keeps
   Capcom's icon from his `.rsrc`; deleting `bof3x.icon` and putting the
   built `bof3x.exe` back restores the placeholder until the next load screen.
+
+### A disc-only cache's party animation scripts are the disc's own
+
+- **ID:** DIV-0096
+- **Date:** 2026-10-12
+- **Subsystem:** data import (`tools/importer.py` `own_why = "arena"` /
+  `"start-arena"`, `recipes/pc-zh.toml`; drawn by `Sprite_SetFrameQueueUpload`
+  and the animation script functions; [`arena-edits.md`](arena-edits.md))
+- **Tier:** Sensible - the disc's own data where the port's hand edit cannot
+  be carried.
+- **Original behaviour:** the PC port ships its own edit of 10 of member 2's
+  69 animation scripts in the eight `PL` arenas that hold member 2 (parts
+  moved by one or two in their byte 1, parts added, three unstepped frames
+  dropped - net 352 bytes shorter) and of 1 of member 1's 17 battle scripts
+  in `BPLD012` / `015` / `016` (two parts added); `START` carries `PL012`'s
+  arena with that edit. In every edited bank the images, palette and frame
+  entries are unchanged (`arena-edits.md` section 2).
+- **New behaviour:** a cache built without the PC's `DAT/` takes each of
+  those 11 arenas from the player's PSX disc, decoded as the PlayStation has
+  it, without the port's edit; `START` takes that disc's `PL012` arena. With
+  the PC's `DAT/` among the sources nothing changes (byte-identical). The
+  `27A` pair (the port held the second of two identical 4-step loops 8 ticks
+  a step instead of 4) is a rule (`hold`) and owes no entry: its output is
+  the PC's chunk byte for byte.
+- **Rationale:** the edit is the port's hand-made content, not derivable
+  from the disc; carrying it would mean carrying the port's bytes (hard rule
+  1, [`LICENSING.md`](LICENSING.md) section 3). The consumers are the
+  PlayStation's code and run the unedited data. The disc-only round
+  ([`disc-only-round.md`](disc-only-round.md)), 2026-10-12.
+- **Also in the PSX version?** The disc's scripts are the PlayStation's own;
+  the port's edit is what a disc-only player does not get.
+- **Verification:** a US disc alone writes 741 of 741 `base/` containers
+  (from 727); JP 741 of 741; the PC + US + PSP build byte-identical on all
+  2,125 files; hosted `BOF3X_SHADOW=sprite_pose,sprite_anim,field_event,battle_sprites`
+  0 mismatches. **Not seen:** member 2's field sprites and member 1's battle
+  sprite may differ from the PC's by a part in those animations - the
+  owner's eye ([`owner-review.md`](owner-review.md)).
+- **Reversible?** Build with the PC's `DAT/` as a source.
+
+### A disc-only layer stands in the disc's own images where the port's art showed
+
+- **ID:** DIV-0097
+- **Date:** 2026-10-12
+- **Subsystem:** text and art (`tools/loc_build.py all --cache`:
+  `build_standins`, `RELAID` / `relay_sheet`; [`loc-build-disc-only.md`](loc-build-disc-only.md)
+  sections 4 and 5)
+- **Tier:** Sensible - the disc's own paint laid where the port's draws read.
+- **Original behaviour:** over the PC install every language layer leaves
+  eighteen images of `loc/zh-CN` to the port's files - the glyph atlas of
+  eleven modules (`AREA030`, `AREA089`, `AREA129`, `BATE`, `COMMU02B`,
+  `FIRST`, `SHISU`, `SHOP`, `SISYOU`, `START`, `STATUS`), the kanji sheet of
+  `ENDKANJI` / `FIRST`, the area pages of `AREA104`, `127`, `134`, `164` -
+  and a disc-only cache (DIV-0090) had none of them, nor the village sheet.
+  The port's atlas and kanji sheet are the PlayStation's sheet (stored as
+  tiles) with rectangles cleared and a strip of the sheet's own 16x16 icons
+  re-laid at a pitch of 20; the village sheet's rows 96..175 are empty
+  PlayStation cells the port cleared for its strip.
+- **New behaviour:** a disc-only layer writes each as the disc's section of
+  the same dest, the atlas and the kanji sheet re-laid by the port's own
+  rule (coordinates only), which gives the port's chunk byte for byte from
+  the JP disc; the village sheet the same way. The player sees the port's
+  layout with the disc's paint where the disc repainted (US: the village
+  labels; French and German: their words, also on the village sheet where the
+  PC-built layer keeps the port's), and on the four area pages the
+  PlayStation's paint where the PC shows the port's. `FIRST.DAT`'s atlas is
+  left out (a later base slot covers it on the PC too). Over the PC install
+  nothing changes (byte-identical, five tags).
+- **Rationale:** the disc-only install has no port art; the disc's own is
+  what that release shows, laid where the port's draws read. The disc-only
+  round, 2026-10-12.
+- **Also in the PSX version?** The paint is each disc's own; the layout is
+  the port's.
+- **Verification:** `check_relaid` on five discs (the rule reproduces the
+  port's chunk); the US village sheet identical to DIV-0088's; coverage of
+  the 475 `loc/zh-CN` chunks 363 / 361 / 362 -> 381 for US / FR / DE. Not
+  played: the four area pages and the French and German sheets are owed the
+  owner's eye.
+- **Reversible?** Build with the PC's `DAT/` as a source.
+
+### French AREA004's first seven message slots, disc-only
+
+- **ID:** DIV-0098
+- **Date:** 2026-10-12
+- **Subsystem:** text (`tools/loc_build.py` `table_after_bad_head`;
+  [`loc-build-disc-only.md`](loc-build-disc-only.md) 4.5)
+- **Tier:** Sensible - the choice the other discs' tables make.
+- **Original behaviour:** the French disc's `AREA004` slot table starts with
+  seven words past its block's end; the disc-only build skipped the block (no
+  text for area 4), and the PC-built `fr-FR` layer keeps two of the port's
+  messages (464 and 440 bytes) in slots 0..6.
+- **New behaviour:** a disc-only block whose head slots point past its end
+  takes its count from the first in-block offset (256) and points those
+  slots at its first message, as the German table does. Slots 7..255 equal
+  the PC-built layer's.
+- **Rationale:** the US and German tables point those slots at the same
+  first message; an empty message would be the only other choice.
+- **Also in the PSX version?** On the French PlayStation those slots read
+  past the block.
+- **Verification:** the FR-only layer's `AREA004` built, slots 7..255
+  identical to the PC-built layer; not played - which of slots 0..6 the event
+  script names is not read.
+- **Reversible?** Build with the PC's `DAT/` as a source.
+
+### A disc-only install shows the disc's Capcom logo movie, converted at import
+
+- **ID:** DIV-0099
+- **Date:** 2026-10-12
+- **Subsystem:** FMV (`tools/importer.py` "the disc's movie": `fmv_build` /
+  `fmv_verify` / `fmv_install`; played by `Fmv_Play` through MCI as before;
+  [`fmv-import.md`](fmv-import.md))
+- **Tier:** Sensible - the movie Capcom made, from the player's disc.
+- **Original behaviour:** the PC port plays `CAPCOM.AVI` from its install
+  (shipped as Indeo 5, 640 x 480, 15 fps, 113 frames, PCM 22.05 kHz stereo,
+  7.53 s; DIV-0001 re-encoded it to Cinepak, 112 frames). The PlayStation
+  release plays `LOGO/CAPCOM30.STR` through its MDEC (320 x 240, 30 fps, 231
+  frames, 7.70 s; XA 37.8 kHz stereo). Every PSX disc carries the file,
+  byte-identical from the subheader on.
+- **New behaviour:** a cache built from a PSX disc holds `base/fmv/CAPCOM.AVI`,
+  converted by the player's ffmpeg from that stream (Cinepak, 640 x 480 by
+  pixel doubling, 30 fps, 231 frames, PCM 44.1 kHz stereo; `-r 30` because
+  ffmpeg's `psxstr` demuxer stamps 15), and `install` puts it where
+  `Fmv_Play` opens it when the game directory has no `CAPCOM.AVI` of its own.
+  A PC install keeps the PC's file; a PC install whose `CAPCOM.AVI` stayed on
+  the CD gets the disc's converted movie in its game directory when the cache
+  had a PSX source (and `Disc_Probe`'s local test is then satisfied by it).
+  `install` copies only the movie the manifest recorded, whole (its hash).
+  The player of a disc-only install sees
+  the disc's logo: twice the frames per second, a 320 x 240 picture doubled
+  rather than the PC's 640 x 480 master, about 0.2 s longer, audio at
+  44.1 kHz from the disc's 37.8 kHz source, and Cinepak's loss (SSIM 0.970
+  against the direct decode; the PC's re-encode 0.990). Without ffmpeg there
+  is no movie (DIV-0100).
+- **Rationale:** rule 1 - a disc-only build carries none of the PC's files,
+  and the disc's own stream is the movie Capcom made. Converting at import
+  keeps the engine's MCI path unchanged and puts no decoder in the engine
+  (the owner, 2026-10-12, after `fmv-sibling.md`'s reading: the sibling's
+  decoder is Beetle's, GPL, and the disc has one movie); the player's ffmpeg
+  does the work as for the PSP's effects, so nothing is vendored.
+- **Also in the PSX version?** The movie is the PSX version's; the
+  difference is from the PC port's file.
+- **Verification:** 32-bit Video for Windows decodes 231 of 231 frames; MCI
+  with the game's own `open avivideo!` string reports 7,700 ms, frame rate
+  30,000, and plays to frame 231, the PC's own file the control. **Not
+  played in the game, not heard** - the owner's eye and ear. Found: MCI
+  error 304 on a full path of about 160 characters (the 8.3 form opens; the
+  PC's own movie has the same limit).
+- **Reversible?** A `capcom.avi` in the game directory is never replaced;
+  delete the converted one to go without.
+
+### A disc-only install starts without the movie the disc probe looks for
+
+- **ID:** DIV-0100
+- **Date:** 2026-10-12
+- **Subsystem:** start-up (`src/game/win_main.cpp`, `Disc_Probe` `0x5A72C0`;
+  `src/game/fmv_play.cpp`; [`disc-only-install.md`](disc-only-install.md)
+  section 6)
+- **Tier:** Sensible - the probe asked whether the game was installed; a
+  mapped disc image answers it.
+- **Original behaviour:** `Game_WinMain` calls `Disc_Probe("CAPCOM.AVI",
+  "BOF3.EXE")`: the movie in the game directory, else `BOF3.EXE` at the root
+  of a CD drive C..L; neither, the insert-the-disc box (DIV-0039's text) and
+  exit code 1. A movie `Fmv_Play` cannot open is skipped (MCI answers 304
+  for a missing file too), silently.
+- **New behaviour:** the same probe; when it fails under `bof3x.exe` with a
+  disc-built image of `.data` mapped (`BOF3X_EXEIMAGE`, no `BOF3.exe`), the
+  game starts as a local install (the CD root empty, as the probe's local
+  branch leaves it), logged once. A missing movie is skipped as before, now
+  logged once per file. Every other case unchanged: the hosted build, and
+  the exe host over the PC's `.data`, still refuse. A disc-only install
+  without ffmpeg has no movie; `LOGOS.AVI` (the porting house's) has no disc
+  counterpart either way.
+- **Rationale:** a disc-only install has `CAPCOM.AVI` only when the player's
+  ffmpeg converted the disc's movie (DIV-0099); the movie is not what makes
+  it an install. The disc-only round, 2026-10-12.
+- **Also in the PSX version?** No probe: the PlayStation boots its disc.
+- **Verification:** built; the self-tests do not reach `Game_WinMain`; the
+  attract run from the scratch install (no AVI) starts the game and plays
+  the same scenes as the PC-plus-US run (`disc-only-install.md` section 5).
+- **Reversible?** Put a `BOF3.exe` or a `CAPCOM.AVI` in the game directory
+  and the original probe decides.
+
+### A disc-built image runs with the game values no disc carries as zero (provisional)
+
+- **ID:** DIV-0101
+- **Date:** 2026-10-12
+- **Subsystem:** the exe image (`src/hook/exe_image.cpp`, `recipes/exe-gaps.tsv`'s
+  `gap` class; [`disc-only-install.md`](disc-only-install.md) section 4,
+  [`exe-engine-own.md`](exe-engine-own.md))
+- **Tier:** Sensible - provisional: the owner's call is open ([`owner-review.md`](owner-review.md)
+  "Decisions", the first item); this entry records what the build does
+  meanwhile so that the behaviour is not an unledgered fork (rule 2).
+- **Original behaviour:** `BOF3.exe`'s `.data` holds, in 456 ranges (US;
+  3,358 non-zero bytes), tables that exist in no shape on any PlayStation
+  disc: Capcom's game values that the port's build laid out (the largest
+  `Effect_HpDamageVariance+0xB8`, 468 bytes; `Magic_Rows+0x4`, 300;
+  `Equip_SlotIcons+0x50`, 131; `EventBattle_Records+0xE0`, 82), the disc's
+  bytes the maps do not place (818), eight language addresses (238), and
+  DIV-0055's re-laid plates (106).
+- **New behaviour:** a disc-built image (`BOF3X_EXEIMAGE` from a cache with no
+  PC source) maps those ranges as zero, logs each once at start, and runs;
+  `BOF3X_EXEIMAGE_STRICT=1` refuses the image instead. With the PC's exe
+  among the cache's sources, or the PC's file beside the game, nothing
+  changes. Read from the code, not played: each spell's or item's effect file
+  number reads 0 (`Magic_Rows`: the wrong effect file - the most visible),
+  the dragon-form set files load wrong, the ending roll's steps are zero, the
+  equipment and experience panels draw zeros, one mode's per-record words are
+  zero. The field button map was one of these ranges until the BD group held
+  it as a rule (a New Game would have started with every action unbound).
+- **Rationale:** rule 1 forbids copying the values into the repository; the
+  disc-only build runs so that the owner can see what the gaps break and
+  decide between accepting them, deriving each by a rule, and requiring the
+  PC's exe for those tables. Until then the permissive default is the
+  measuring instrument; strict is one switch away.
+- **Also in the PSX version?** Not applicable: the PlayStation's own
+  executable carries its tables; the PC port's layout of them is what no disc
+  has.
+- **Verification:** the exe host's self-test from the scratch install with
+  no `BOF3.exe` (exit 0, 10,088 ours); the gate's attract pair (the
+  disc-only install runs the same scenes as the PC-plus-US run); the game
+  values' effect in play not seen.
+- **Reversible?** `BOF3X_EXEIMAGE_STRICT=1`; a cache built with the PC's exe
+  among its sources carries every range.
+
+### A disc-only install refuses the port's Chinese text instead of playing without text
+
+- **ID:** DIV-0102
+- **Date:** 2026-10-12
+- **Subsystem:** language (`src/launcher/config.cpp` `ConfigResolveLanguage` /
+  `ConfigOriginalAvailable`, the launcher's dialog; `src/game/dat_load.cpp`
+  `RefuseOriginalWithoutChinese`; `tools/language_tags.py` `original_available`,
+  reported by `importer.py install`; [`disc-only-install.md`](disc-only-install.md)
+  section 2 and 6)
+- **Tier:** Sensible - rule 4: a start that cannot have its text says so.
+- **Original behaviour:** the port has one language, its Chinese, in `DAT\`;
+  every install had it, and `original` (the port's script) is the default
+  language of ours (DIV-0005's tags) for a PC install.
+- **New behaviour:** `original` (`BOF3X_LANG` unset or `original`,
+  `language=original`) needs `BOF3.exe` in the game directory or the cache's
+  `loc\zh-CN` layer - the two facts that mean the port's text is there.
+  Without either, a disc-only install: the launcher refuses `original` and any
+  language not held, before the dialog, with a message naming the languages
+  held; the dialog does not offer "Chinese (PC script)" and says why; the
+  default is the first language held in the engine's list (`en-US` from a US
+  disc); and the engine's `DatLoad_Inject` stops with a Fatal naming the same
+  languages when such a request reaches it past the launcher. A PC install is
+  unchanged.
+- **Rationale:** the round's end batch started a disc-only install under
+  `original` by mistake (the attract tool's own `--lang` default) and the game
+  read every Chinese chunk as missing, played with no text, and the attract
+  sequence stalled in area 4's message box (message 8 never closed; read from
+  the run's message columns, not seen on screen). The text is the PC's alone,
+  so it cannot be made; the start can say so. The disc-only round, 2026-10-12.
+- **Also in the PSX version?** No: each disc carries its own text.
+- **Verification:** `disc-only-install.md` section 5's rows of 2026-10-12: the
+  launcher's refusal under `original` and `fr-FR` against the US-only install
+  (naming `en-US`), its start under `en-US` and with no language (exit 0,
+  10,088 ours), `bof3x.exe` run directly under `original` (exit 3, the Fatal),
+  the real install unchanged under all three (exit 0), hosted `shell` 0
+  mismatches. Harnesses: `tools/attract_run.py` defaults `--lang` to
+  `original`, so a run against a disc-only install must pass `--lang`.
+- **Reversible?** A PC install, or a cache built with the PC's `DAT\` among
+  its sources, holds the Chinese layer and `original` plays as before.

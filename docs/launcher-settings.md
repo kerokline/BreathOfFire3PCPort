@@ -93,6 +93,20 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 The game process inherits the launcher's environment, so the first two needed
 no new channel and **no change to the DLL at all**.
 
+**A game directory with no `BOF3.exe`** (the disc-only round, 2026-10-12):
+accepted when `cache=` / `BOF3X_CACHE` names a cache (and `BOF3X_CACHE_DATA`
+is not `0`) or the environment already sets `BOF3X_EXEIMAGE` - a disc-built
+install. The hash check and the key table's comparison are skipped (the
+default keys are the engine's rule, [`controls.md`](controls.md) section 1),
+`BOF3X_EXEIMAGE` is set to the cache unless the environment set it, and
+stderr says so: `no BOF3.exe in <dir>: a disc-built install - no hash check,
+the default keys by the engine's rule, .data from <cache>`. Without a cache
+the refusal is the old one (`no BOF3.exe in <dir>. Point --game or
+BOF3_GAME_DIR at your own install.`), and the hosted build (`--host bof3`,
+or a hosted-only switch) still needs the file and says why. With the file
+there, everything is checked as before
+([`exe-import-engine.md`](exe-import-engine.md) 2.2).
+
 ### 3.1 The Music, Cache folder and PSP extras boxes (2026-10-10)
 
 The ini's `music=`, `cache=` and `opt=` lines existed before the boxes did
@@ -289,6 +303,23 @@ Edit the line to the tag (`en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`) and
 delete any `DAT\en.*.DAT` (`fr.`, `de.`, `ja.`) overlays: nothing reads them.
 Silently dropping the player's choice was the worse surprise, and guessing
 it (which English?) the next; saying so once, loudly, is neither.
+
+**An install without the Chinese text (DIV-0102, 2026-10-12).** The
+port's Chinese is in the PC's `DAT\` alone, so `original` plays only from a
+PC install (`BOF3.exe` in the game directory) or with a cache holding
+`loc\zh-CN` (built from the PC's `DAT\`); a disc-only install
+([`disc-only-install.md`](disc-only-install.md)) has neither. There the
+Language box does not offer "Chinese (PC script)" - it lists the languages
+held (`DAT\<tag>.*` or the cache's `loc\<tag>\`) and its note says Chinese
+is the PC install's only - and the launcher, before the dialog as for a
+retired code, stops on `BOF3X_LANG=original`, on `language=original` in the
+ini, and on a tag (from either) that is not held, with a message box naming
+the languages held. With neither naming a language the default is the first
+held, in the box's order (`en-US` first; from a US disc it is the only one),
+said on stderr; the dialog's choice is checked again after it closes, under
+the cache folder it may have changed. A PC install is unchanged.
+`ConfigOriginalAvailable` / `ConfigResolveLanguage`
+(`src/launcher/config.cpp`); the DLL's Fatal is the same rule.
 
 ## 5. What is not offered, and why
 

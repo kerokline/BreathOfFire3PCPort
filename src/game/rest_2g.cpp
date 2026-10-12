@@ -25,8 +25,8 @@
 // unmasked byte that stays inside the image (kind 10's sizes, kind 15's rows
 // and texts, the EXP table) ours reads the same bytes in place. One divergence
 // has patch sites inside these bodies and survives in ours: DIV-0041
-// (widescreen.cpp kSlides) widens six slide bounds; ours reads each from the
-// operand it patches. Every call goes through the harness (SH_CALL / SH_AT),
+// (widescreen.cpp g_slides) widens six slide bounds; ours reads each as
+// widescreen.cpp holds it. Every call goes through the harness (SH_CALL / SH_AT),
 // so the start-up fuzz can stand recorders in for the callees; the current
 // record 0x905B84 is re-read wherever the original re-reads it.
 #include "game/rest_2g.h"
@@ -40,7 +40,6 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -107,10 +106,11 @@ void Slide(unsigned off, int step, short bound, Past past) {
     SetWord(r + off, static_cast<std::uint16_t>(bound));
     Rec()[3] = 0;
 }
-// A bound DIV-0041 widens: the imm32 of `mov ecx, imm32` (its low word is cx).
-short Imm32Bound(U operand) { return static_cast<short>(bof3::CodeLong(operand)); }
-// The imm16 of `cmp cx, imm16`.
-short Imm16Bound(U operand) { return static_cast<short>(bof3::CodeWord(operand)); }
+// A bound DIV-0041 widens, as widescreen.cpp holds it (docs/operand-store.md):
+// the imm32 of `mov ecx, imm32` (its low word is cx), or the imm16 of `cmp cx,
+// imm16`.
+short Imm32Bound(U operand) { return Widescreen_SlideBound(operand); }
+short Imm16Bound(U operand) { return Widescreen_SlideBound(operand); }
 
 }  // namespace
 
@@ -561,29 +561,7 @@ extern "C" void __cdecl MenuList_SlideLeftTo150(void) { Slide(4, -0x20, 0x96, Pa
 
 // ===========================================================================
 
-// DIV-0041's six patch sites inside our bodies: the slides read their bound
-// from the operand widescreen.cpp's kSlides patches. Refused unless the bytes
-// before each are the instruction's (`mov ecx, imm32` B9, `cmp cx, imm16` 66
-// 81 F9) and the bound is the original's or the widened one.
-namespace {
-void CheckBound(U operand, unsigned size, int original) {
-    const int wide = original < 0 ? original - static_cast<int>(Widescreen_Live()) : original + static_cast<int>(Widescreen_Live());
-    const std::uint8_t* const insn = bof3::CodeBytes(operand - 3, 3 + size);
-    const bool op = size == 4 ? insn[2] == 0xB9 : insn[0] == 0x66 && insn[1] == 0x81 && insn[2] == 0xF9;
-    const int bound = size == 4 ? static_cast<int>(bof3::CodeLong(operand)) : static_cast<int>(static_cast<short>(bof3::CodeWord(operand)));
-    if (!op || (bound != original && bound != wide))
-        bof3::Fatal("rest_2g: the operand at 0x%X should be the bound %d (or %d, DIV-0041), holds %d", operand, original, wide,
-                    bound);
-}
-}  // namespace
-
 void Rest2G_Inject() {
-    CheckBound(at::kLeftOff300Bound, 4, -300);
-    CheckBound(at::kLeftOff100Bound, 4, -100);
-    CheckBound(at::kLeftOff180Bound, 4, -180);
-    CheckBound(at::kLeftOff110Bound, 4, -110);
-    CheckBound(at::kGridOutRight, 2, 0x142);
-    CheckBound(at::kGridOutLeft, 2, -0xBE);
     if (bof3::WantsShadow("rest_2g")) rest_2g::SelfTest();
     BOF3_INJECT(BattleResultWin_LevelUpStates);
     BOF3_INJECT(BattleResultWin_ExpToNext);

@@ -42,16 +42,17 @@
 #include "bof3/symbols.gen.h"
 #include "game/lang_layout.h"
 #include "game/list_title.h"
+#include "game/menu_frame.h"
 #include "game/move_script_bytes.h"
 #include "game/rest_2h_callees.h"
 #include "game/scenario_harness.h"
 #include "game/text_advance.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace rest_2h {
-std::uint32_t g_master_bound = at::kMasterBound;
+std::uint32_t g_master_bound = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Widescreen_SlideOperand(at::kMasterBound)));
 // DIVERGENCE DIV-0059: the master list's title centred on the width its pen
 // covers, under a Latin overlay (ListTitle_Centring). Set by Rest2H_Inject
 // after the fuzz, which compares with the original's 6 * count arithmetic.
@@ -122,8 +123,6 @@ const char* Format(U address) { return reinterpret_cast<const char*>(At(address)
 const unsigned char* Text(U address) { return At(address); }
 const unsigned char* Message(unsigned id) { return SH_CALL(Msg_SystemPtr)(id & 0xFFFF); }
 
-// Where an E8 site reaches now: the site + 5 + its rel32.
-U SiteTarget(U site) { return bof3::CodeCallTarget(site); }
 
 void PutFloat(unsigned char* at, std::int32_t v) {
     const float f = static_cast<float>(v);
@@ -163,7 +162,7 @@ void Pieces(int x, int y, U list) { SH_CALL(Menu_DrawPieces)(x, y, Text(list), 1
 // reads the byte); obj +4, +6, +0xA and +0x20 are read once after the first
 // call, the count again at each row's end.
 extern "C" void __cdecl MenuList_ReserveWinDraw(unsigned char* obj) {
-    SH_AT(void (__cdecl*)(int, int, int, int), SiteTarget(at::kFrameSite))(X(obj), Y(obj), 0x12, 0x15);
+    SH_AT(void (__cdecl*)(int, int, int, int), MenuFrame_Draw())(X(obj), Y(obj), 0x12, 0x15);
     const int x7 = X(obj) + 7;
     int y = Y(obj) + 6;
     if (obj[0xA] == 0) return;
@@ -388,11 +387,12 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MasterListRu
 
 // original 0x59C130, kind 15 step 1: x -= 0x20; below the bound (-120), x = the
 // bound and step 0. The bound is the imm32 at 0x59C136, which Widescreen_Inject
-// (DIV-0041) moves out by its columns; ours reads its low word there at every
-// call, as the original's `cmp word [eax + 4], cx` does, so BOF3X_ORIGINAL=
-// Widescreen still restores -120 (Rest2H_Inject checks the opcode).
+// (DIV-0041) moves out by its columns; ours reads the low word of
+// widescreen.cpp's value for it (g_master_bound's address) at every call, as
+// the original's `cmp word [eax + 4], cx` reads the operand, so BOF3X_ORIGINAL=
+// Widescreen still restores -120.
 extern "C" void __cdecl MasterWin_SlideOut(void) {
-    const auto bound = static_cast<short>(bof3::CodeWord(rest_2h::g_master_bound));
+    const auto bound = static_cast<short>(Word(At(rest_2h::g_master_bound)));
     Slide(4, -0x20, bound, true, bound);
 }
 
@@ -783,7 +783,7 @@ extern "C" void __cdecl BattleEquipWin_DrawItems(unsigned char* w) {
     const unsigned char* const title = At(L(at::kUseTitles + 4 * title_cat));
     const unsigned char length = SH_CALL(Text_CharCount)(title);
     using DrawAt = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
-    SH_AT(DrawAt, SiteTarget(at::kTitleSite))(6 * (0xD - static_cast<int>(length)) + X(w), title_y, 0, 0x10, title);
+    SH_AT(DrawAt, ListTitle_SiteDraw())(6 * (0xD - static_cast<int>(length)) + X(w), title_y, 0, 0x10, title);
     SH_CALL(Crt_sprintf)(PrintBuf(), Format(at::kFmtCount), static_cast<unsigned>(n), 0x80u);
     SH_CALL(Text_DrawFont8)(X(w) + 0x55, Y(w) + 0x7A, 0, Text(at::kPrintBuf));
     Pieces(X(w), Y(w), at::kUsePiecesA);
@@ -865,13 +865,8 @@ extern "C" void __cdecl Cfg_SetKeyTable(const void* table) {
 // ===========================================================================
 
 void Rest2H_Inject() {
-    // MasterWin_SlideOut reads its bound back from the original's `mov ecx,
-    // imm32` (B9): anything else there means the site moved.
-    if (bof3::CodeByte(at::kMasterBoundMov) != 0xB9)
-        bof3::Fatal("rest_2h: 0x%X holds 0x%02X, not MasterWin_SlideOut's mov ecx", (unsigned)at::kMasterBoundMov,
-                    bof3::CodeByte(at::kMasterBoundMov));
     bof3::Log("rest_2h: MasterWin_SlideOut's bound %d (0x59C136; -120 unless DIV-0041 widened it)",
-              static_cast<int>(static_cast<short>(bof3::CodeWord(at::kMasterBound))));
+              static_cast<int>(Widescreen_SlideBound(at::kMasterBound)));
     if (bof3::WantsShadow("rest_2h")) rest_2h::SelfTest();
     rest_2h::g_master_title_live = true;   // DIV-0059, from here on
     // DIVERGENCE DIV-0083: a Latin language overlay only, as DIV-0059's switch.
