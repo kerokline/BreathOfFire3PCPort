@@ -1485,6 +1485,73 @@ def check_opt(path=None):
 
 # ---------------------------------------------------------------- install
 
+def install_base(cache, game):
+    """A disc-only install (docs/disc-only-install.md): the game directory laid
+    from the cache alone, as the PC's install lays it - DAT/NAME.DAT for every
+    container the cache has a chunk of, its base/ and loc/zh-CN/ chunks in the
+    manifest's slot order and then the zh file's names (DIV-0089's walk, so the
+    engine reads the same chunks from DAT/ as from the cache), a slot whose layer
+    the cache lacks left out (a disc-only cache has no Chinese text; the
+    language layer installed over it carries the text; a container with no
+    chunk the cache has - AFLDKWA, wholly Chinese - written empty for the layer
+    to fill); SND/ the cache's
+    base/snd; BGM/ empty (the music is the cache's base/bgm, DIV-0087). Refuses
+    a directory holding BOF3.exe: a PC install keeps its own files."""
+    import shutil
+    if os.path.isfile(os.path.join(game, "BOF3.exe")):
+        raise SystemExit("--base: %s holds BOF3.exe - a PC install keeps its own DAT/; --base lays a disc-only one"
+                         % game)
+    man = os.path.join(cache, "manifest.toml")
+    if not os.path.isfile(man):
+        raise SystemExit("--base: %s has no manifest.toml (importer.py build writes it)" % cache)
+    with open(man, "rb") as fh:
+        assets = tomllib.load(fh)["cache"]["assets"]
+    order = collections.OrderedDict()
+    for name, slot, layer, where, _ in assets:
+        if where.split(":")[1:2] == ["names"]:
+            continue
+        order.setdefault(name, []).append(layer)
+    dat_dir = os.path.join(game, "DAT")
+    os.makedirs(dat_dir, exist_ok=True)
+    written, partial, none = 0, [], []
+    for name, layers in order.items():
+        files, at, parts, left = {}, collections.Counter(), [], 0
+        for layer in set(layers):
+            p = os.path.join(cache, *layer.split("/"), "dat", name)
+            files[layer] = dat.load(p) if os.path.isfile(p) else None
+        for layer in layers:
+            got = files[layer]
+            if got is None:
+                left += 1
+                continue
+            blob, chunks = got
+            c = chunks[at[layer]]
+            at[layer] += 1
+            parts.append(blob[c.offset - 16:c.offset + c.size])
+        for layer, got in files.items():           # past the layer's slots: the enemy names
+            if got is not None:
+                blob, chunks = got
+                parts += [blob[c.offset - 16:c.offset + c.size] for c in chunks[at[layer]:]]
+        if not parts:
+            none.append(name)     # every chunk a layer's the cache lacks: an empty container the overlay fills
+        with open(os.path.join(dat_dir, name), "wb") as fh:
+            fh.write(b"".join(parts))
+        written += 1
+        if left and parts:
+            partial.append(name)
+    snd_src, snd_dir = os.path.join(cache, "base", "snd"), os.path.join(game, "SND")
+    os.makedirs(snd_dir, exist_ok=True)
+    snd = sorted(os.listdir(snd_src)) if os.path.isdir(snd_src) else []
+    for f in snd:
+        shutil.copyfile(os.path.join(snd_src, f), os.path.join(snd_dir, f))
+    os.makedirs(os.path.join(game, "BGM"), exist_ok=True)
+    print("base: DAT/ %d containers (%d without the slots of a layer the cache lacks - the Chinese text a language "
+          "layer replaces; %d with no chunk at all, written empty for the language layer to fill: %s), SND/ %d "
+          "files, BGM/ empty (the music is the cache's base/bgm, played with cache= / BOF3X_CACHE)"
+          % (written, len(partial), len(none),
+                                                                  ", ".join(none) or "none", len(snd)))
+
+
 def cmd_install(a):
     """Copy a cache's layers into a game's DAT/ under the overlay names the
     engine walks: loc/<tag>/dat/NAME.DAT as DAT/<tag>.NAME.DAT (DIV-0005),
@@ -1499,6 +1566,8 @@ def cmd_install(a):
     import shutil
     for tag in a.lang:
         language_tags.refuse_retired(tag, "--lang")
+    if getattr(a, "base", False):          # cache_walk.py check calls this with the layer arguments only
+        install_base(a.cache, a.game)
     dat_dir = os.path.join(a.game, "DAT")
     if not os.path.isfile(os.path.join(dat_dir, "FIRST.DAT")):
         raise SystemExit("%s: no DAT/FIRST.DAT - not a game directory" % a.game)
@@ -2004,6 +2073,8 @@ def main():
     p = s.add_parser("install")
     p.add_argument("--cache", required=True)
     p.add_argument("--game", required=True, help="a game directory: its DAT/ receives the overlays")
+    p.add_argument("--base", action="store_true",
+                   help="a disc-only install: lay DAT/, SND/ and BGM/ from the cache first (no BOF3.exe there)")
     p.add_argument("--lang", action="append", default=[], help="a loc/<tag>/ layer to install (repeat)")
     p.add_argument("--opt", action="append", default=[], help="an opt/<name>/ layer to install (repeat)")
     p.add_argument("--no-opt", action="append", default=[],

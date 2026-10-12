@@ -69,6 +69,7 @@
 #include "game/pause_text.h"
 #include "hook/detour.h"
 #include "hook/exe_icon.h"
+#include "hook/exe_image.h"
 #include "hook/input_script.h"
 #include "hook/run_speed.h"
 #include "hook/log.h"
@@ -505,8 +506,18 @@ extern "C" int __stdcall Game_WinMain(void* hinstance_, void* /*hprev*/, char* /
     }
 
     if (!bof3::orig::Disc_Probe(Str(kStrCapcomAvi), Str(kStrBof3Exe))) {
-        MessageBoxA(nullptr, kInsertDisc, kError, MB_ICONHAND);   // DIV-0039
-        return 1;
+        // DIVERGENCE DIV-TBD-IN-1: the probe's local test is CAPCOM.AVI in the
+        // game directory; a disc-only install (.data from a disc-built cache,
+        // docs/disc-only-install.md) has the movie only when the importer
+        // could convert it. Such an install is local whatever the probe says:
+        // the root left empty, as the probe's local branch leaves it.
+        if (!bof3::ExeImage_DiscMapped()) {
+            MessageBoxA(nullptr, kInsertDisc, kError, MB_ICONHAND);   // DIV-0039
+            return 1;
+        }
+        File_CdRoot()[0] = 0;
+        bof3::Log("DIV-TBD-IN-1 no CAPCOM.AVI and no PC disc: a disc-only install (BOF3X_EXEIMAGE's disc-built image) "
+                  "starts as a local install, the CD root empty");
     }
     Game_HInstance = hinstance;
 

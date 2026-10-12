@@ -472,7 +472,9 @@ which a disc cannot give: the engine holds them as layout, like
 already listed as `exe-import.md` 8's call 4, now for code pointers too),
 the refused and unrebuilt data pointers, and the 22,331 non-zero bytes no
 disc carries (JP). Until those are held, a disc-built image is not
-runnable, and `BOF3X_EXEIMAGE` refuses to lay one over `.data`.
+runnable, and `BOF3X_EXEIMAGE` refuses to lay one over `.data`. **Held since
+the disc-only round** (section 7, [`exe-engine-own.md`](exe-engine-own.md));
+the exe host maps a disc-built image (4.4, steps 5..8).
 
 ### 4.4 The first step, built: `BOF3X_EXEIMAGE`
 
@@ -491,7 +493,45 @@ of ours writes `.data`). `BOF3X_EXEIMAGE=<cache>` (the directory
 4. Built from `BOF3.exe` (`build = "pc-zh"`): every byte must be equal - a
    Fatal naming the first difference otherwise - and the image is then
    copied over `.data`, changing no byte: the map step, exercised. A
-   disc-built image is compared and logged, never copied.
+   disc-built image is compared and logged, never copied - **in the hosted
+   build**; `bof3x.exe` maps it (steps 5..8).
+
+**The exe host, a disc-built image (the disc-only round, IN, 2026-10-12).**
+The refusal is gone. `ExeImage_Source` (`exe_host.cpp`'s `CopyData`) checks
+instead:
+
+5. Every range of `data.toml` is a class the loader accounts for
+   (`kClasses` in `exe_image.cpp`): `map`, `place`, `table`, `widen`,
+   `rebuilt`, `layout`, `own`, and for what no disc fills, as
+   `recipes/exe-gaps.tsv` names it (`exe_tables.py gaps`, from
+   `exe_own.py measure` on the seven discs): `language` (a language layer's
+   handlers write it or our code reads around it,
+   [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4), `unread`
+   (nothing the exe host runs reads it), `keys` (`Key_TableDefault`, the
+   engine's rule), `gap` (zero where the PC has a value: Capcom's game values
+   no disc carries, bytes on the disc the places miss, DIV-0055's plates, LG's
+   eight language addresses - `from` names the kind and symbol), and `none`
+   (the PC's bytes are zero there too, by the table). A `pointer` range, or an
+   image written before the table (no `gaps =` line), is a Fatal: its `none`
+   could hide a PC value (the no-stub rule).
+6. The copy, then `ExeOwn_Fill` (NB's regions); each `gap` range logged once
+   with its symbol and size, the counts by class logged;
+   `BOF3X_EXEIMAGE_STRICT=1` makes the first gap a Fatal.
+7. `Shell_MapDefaultKeys` (RD's), then `ExeImage_CompareWithFile`: with
+   `BOF3.exe` there, the filled image against the file's `.data`, every
+   differing range logged with its class; a difference in `none`, `own`,
+   `keys`, `layout`, `rebuilt` or `exe` is a Fatal - so with the file present
+   the table's completeness is proved, not assumed. Without the file, a line
+   says it did not compare.
+8. `ExeOwn_CheckAtStart` (InjectAll step 2) verifies the regions against the
+   file's `.data` when a disc image is mapped (against the running image it
+   would compare the fill with itself), and says so without the file.
+
+The table `recipes/exe-gaps.tsv`, per build (US): 663 rows; the PC's non-zero
+bytes there `gap` 3,358 (game-value 2,196, disc-unplaced 818, language-zero
+238, port-relaid 106), `language` 1,394, `unread` 3,932, `keys` 48.
+`exe_tables.py check` (CI) holds it to the recipe's disc builds, in order,
+inside `.data`, clear of the engine's regions and every pointer word.
 
 Self-tested headless (`BOF3X_SELFTEST_ONLY=1`, no ini):
 
@@ -505,6 +545,33 @@ It is a verification, not a divergence: no ledger entry (with the switch
 unset nothing runs; with it set, the only write is the same bytes). It is
 the check the state hash's A/B will want too: an image the engine maps is
 the image the importer wrote.
+
+Self-tested headless, the exe host (2026-10-12, `disc-only/integration`):
+
+| Install, cache | Exit | Log |
+|---|---|---|
+| the real install, the US cache (`psx-us`) | 0 | `gap 456 ranges 5455 bytes`; `against BOF3.exe`: `map` 13 ranges / 104 bytes differ, `widen` 6 / 3,065 (the blank names), `language` 99 / 1,394, `unread` 107 / 3,932, `gap` the rest; every must-equal class 0; `627123 of 638976 bytes equal`; `exe_own ... each equal to BOF3.exe's .data (the file; the running .data is a disc-built image)` |
+| the disc-only scratch install (no `BOF3.exe`), the US cache as `BOF3X_CACHE` and `BOF3X_EXEIMAGE`, `BOF3X_LANG=en-US` | 0 | `no BOF3.exe to compare the disc-built image with`; `exe_own: 17 regions, 20866 bytes filled over a disc-built image; no BOF3.exe to verify them against`; `inject: 10088 ours` |
+| the real install, `analysis/cache/pc-plus-us` (pc-zh) | 0 | unchanged: `exe_own ... each equal to base/exe/data.bin (pc-zh)`, `inject: 10087 ours` |
+| hosted, `BOF3X_SHADOW=shell,exe_own,dat_cache`, the US cache | 0 | compared, not mapped: `612176 of 638976` (the hosted build's line, with the new classes counted) |
+
+The gate's skip list: `exe_tables.py gate-skip --cache <disc-built cache>
+--game <dir with BOF3.exe>` writes `<cache>/base/exe/gate-skip.txt`, the
+committed `tools/statehash_skip.txt` plus every range whose bytes the
+disc-built image does not share with the PC's at the map: the `language`,
+`unread` and `gap` ranges whole, and the runs of `map` / `place` / `table` /
+`widen` bytes that differ from the file's (US: 1,222 ranges, 48,955 bytes).
+The engine-filled `layout`, `own` and `keys` are left hashed: step 7 proves
+them equal at the map, and skipping them would blind the hash to the game's
+own writes there (`Music_LoadedTrack`, the config words); `--with-filled`
+adds them.
+
+The gate's pair (2026-10-12, attract, 6 minutes, details in
+[`disc-only-install.md`](disc-only-install.md) 5): the disc-only install
+against the PC-plus-US cache over the real install, the same scenes; the
+state hash identical at tick 0 and first differs at tick 1 (the VRAM shadow
+and page `0x903000`), then the field scene's pages from tick 1310 - the data
+the two sources load, not the `.data` image, which the skip list covers.
 
 ## 5. What is left
 
