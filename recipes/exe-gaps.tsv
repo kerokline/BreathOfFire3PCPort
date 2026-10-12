@@ -439,7 +439,6 @@ psx-jp	0x655214	0x655220	gap	game-value	EffectKindA0_States+0x30
 psx-jp	0x656A34	0x656A44	gap	disc-unplaced	Boss_SetupTable+0xE0
 psx-jp	0x656A80	0x656A84	gap	game-value	GameMode3_Steps+0xC
 psx-jp	0x656AA4	0x656AAC	gap	game-value	GameMode5_Steps+0x20
-psx-jp	0x656AEC	0x656AF0	gap	disc-unplaced	GameMode11_Steps+0xC
 psx-jp	0x65A5EC	0x65A5F4	gap	game-value	MindSword_BladeRadii
 psx-jp	0x65A608	0x65A62C	gap	game-value	ChlorineCloud_Offsets
 psx-jp	0x65A678	0x65A67C	gap	game-value	SnapWave_FacingPhase
@@ -1088,7 +1087,6 @@ psx-us	0x655214	0x655220	gap	game-value	EffectKindA0_States+0x30
 psx-us	0x656A34	0x656A44	gap	disc-unplaced	Boss_SetupTable+0xE0
 psx-us	0x656A80	0x656A84	gap	game-value	GameMode3_Steps+0xC
 psx-us	0x656AA4	0x656AAC	gap	game-value	GameMode5_Steps+0x20
-psx-us	0x656AEC	0x656B00	gap	game-value	GameMode11_Steps+0xC
 psx-us	0x65A5EC	0x65A5F4	gap	game-value	MindSword_BladeRadii
 psx-us	0x65A608	0x65A62C	gap	game-value	ChlorineCloud_Offsets
 psx-us	0x65A678	0x65A67C	gap	game-value	SnapWave_FacingPhase
@@ -1750,7 +1748,6 @@ psx-eu-en	0x655214	0x655220	gap	game-value	EffectKindA0_States+0x30
 psx-eu-en	0x656A34	0x656A44	gap	disc-unplaced	Boss_SetupTable+0xE0
 psx-eu-en	0x656A80	0x656A84	gap	game-value	GameMode3_Steps+0xC
 psx-eu-en	0x656AA4	0x656AAC	gap	game-value	GameMode5_Steps+0x20
-psx-eu-en	0x656AEC	0x656B00	gap	game-value	GameMode11_Steps+0xC
 psx-eu-en	0x65A5EC	0x65A5F4	gap	game-value	MindSword_BladeRadii
 psx-eu-en	0x65A608	0x65A62C	gap	game-value	ChlorineCloud_Offsets
 psx-eu-en	0x65A678	0x65A67C	gap	game-value	SnapWave_FacingPhase
@@ -2410,7 +2407,6 @@ psx-fr	0x655214	0x655220	gap	game-value	EffectKindA0_States+0x30
 psx-fr	0x656A34	0x656A44	gap	disc-unplaced	Boss_SetupTable+0xE0
 psx-fr	0x656A80	0x656A84	gap	game-value	GameMode3_Steps+0xC
 psx-fr	0x656AA4	0x656AAC	gap	game-value	GameMode5_Steps+0x20
-psx-fr	0x656AEC	0x656B00	gap	game-value	GameMode11_Steps+0xC
 psx-fr	0x65A5EC	0x65A5F4	gap	game-value	MindSword_BladeRadii
 psx-fr	0x65A608	0x65A62C	gap	game-value	ChlorineCloud_Offsets
 psx-fr	0x65A678	0x65A67C	gap	game-value	SnapWave_FacingPhase
@@ -3073,7 +3069,6 @@ psx-de	0x655214	0x655220	gap	game-value	EffectKindA0_States+0x30
 psx-de	0x656A34	0x656A44	gap	disc-unplaced	Boss_SetupTable+0xE0
 psx-de	0x656A80	0x656A84	gap	game-value	GameMode3_Steps+0xC
 psx-de	0x656AA4	0x656AAC	gap	game-value	GameMode5_Steps+0x20
-psx-de	0x656AEC	0x656B00	gap	game-value	GameMode11_Steps+0xC
 psx-de	0x65A5EC	0x65A5F4	gap	game-value	MindSword_BladeRadii
 psx-de	0x65A608	0x65A62C	gap	game-value	ChlorineCloud_Offsets
 psx-de	0x65A678	0x65A67C	gap	game-value	SnapWave_FacingPhase
@@ -3732,7 +3727,6 @@ psp-jp	0x655214	0x655220	gap	game-value	EffectKindA0_States+0x30
 psp-jp	0x656A34	0x656A44	gap	disc-unplaced	Boss_SetupTable+0xE0
 psp-jp	0x656A80	0x656A84	gap	game-value	GameMode3_Steps+0xC
 psp-jp	0x656AA4	0x656AAC	gap	game-value	GameMode5_Steps+0x20
-psp-jp	0x656AEC	0x656AF0	gap	disc-unplaced	GameMode11_Steps+0xC
 psp-jp	0x658F08	0x658F48	gap	disc-unplaced	ItemUse_HandlerIndex+0xD0
 psp-jp	0x65A5EC	0x65A5F4	gap	game-value	MindSword_BladeRadii
 psp-jp	0x65A608	0x65A62C	gap	game-value	ChlorineCloud_Offsets
@@ -4442,7 +4436,6 @@ psp-eu	0x655214	0x655220	gap	game-value	EffectKindA0_States+0x30
 psp-eu	0x656A34	0x656A44	gap	disc-unplaced	Boss_SetupTable+0xE0
 psp-eu	0x656A80	0x656A84	gap	game-value	GameMode3_Steps+0xC
 psp-eu	0x656AA4	0x656AAC	gap	game-value	GameMode5_Steps+0x20
-psp-eu	0x656AEC	0x656B00	gap	game-value	GameMode11_Steps+0xC
 psp-eu	0x658F08	0x658F48	gap	disc-unplaced	ItemUse_HandlerIndex+0xD0
 psp-eu	0x65A5EC	0x65A5F4	gap	game-value	MindSword_BladeRadii
 psp-eu	0x65A608	0x65A62C	gap	game-value	ChlorineCloud_Offsets
