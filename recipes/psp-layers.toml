@@ -1,0 +1,68 @@
+# recipes/psp-layers.toml - the suites' engine half (docs/launcher-suites.md section 9;
+# tools/psp_layers.py): the PSP's content as opt/ layers beside a PlayStation base, for
+# the launcher's audio and data suites (recipes/suites.toml).
+#
+# Hand-written: names, parts and rules only, no game data (CLAUDE.md rule 1). The
+# bytes come from the player's own PSP disc at build time (`importer.py build --opt
+# NAME`); recipes/opt.toml is generated and holds the DAT layers cut chunk by chunk,
+# so these live here. tools/suites.py check reads this file beside opt.toml.
+#
+# A layer's `part` is the tree under opt/<name>/ and the engine seam that reads it
+# when BOF3X_OPT (the ini's opt=) names the layer:
+#   bgm   opt/<name>/bgm/NNN.DAT and bgm/bank/NAME.DAT, base/bgm's form (seq-format.md):
+#         Music_LoadFile's seam (DIV-0087, src/game/music_seq.cpp)
+#   snd   opt/<name>/snd/NAME.DAT, base/snd's form: Sound_LoadStream (DIV-0089,
+#         src/game/dat_cache.cpp SoundPath)
+#   exe   opt/<name>/exe/place.toml + place.bin: byte ranges of .data laid over the
+#         image at map time, in the exe host only (src/hook/exe_image.cpp)
+#   dat   opt/<name>/dat/NAME.DAT, ordinary containers: LoadDatFile (DIV-0086)
+# `from` is the builds that carry it (PSP discs, fixtures.toml ids); a layer is built
+# only beside a PlayStation base (manifest base_policy "psx") - on a PSP base it is
+# the base already.
+
+[[layer]]
+name = "psp-music"
+part = "bgm"
+from = ["psp-jp", "psp-eu"]
+what = "the PSP's 166 songs and the 81 banks they name, tools/ppms.py's base/bgm (docs/psp-music.md), beside a PlayStation disc's"
+
+[[layer]]
+name = "psp-snd"
+part = "snd"
+from = ["psp-jp", "psp-eu"]
+what = "the PSP's effects, voices and jingles, decoded from ATRAC3plus by the player's ffmpeg (tools/at3.py, docs/psp-install.md)"
+
+[[layer]]
+name = "psp-tables"
+part = "exe"
+from = ["psp-jp", "psp-eu"]
+what = "the PSP's level table and consumable records over .data: every record of the tables below, every field but a name, from the PSP-built image (docs/psp-image.md)"
+# tables.toml keys. The ranges are the tables' records by rule (symbols.toml's PC
+# address, the count and stride); a record's name field is left out (it is a
+# language's glyph codes, DIV-0008), every other byte taken.
+tables = ["exp_table", "consumables"]
+
+[[layer]]
+name = "psp-ryu-forms"
+part = "dat"
+from = ["psp-jp", "psp-eu"]
+what = "P8, Ryu's forms: RYUD00..03 and the 15 BPLD / BRTD arenas the PSP changed, the chunks a PSP-only base stands in (docs/psp-stand-ins.md 4.4)"
+# recipes/psp-standins.toml's rows of these pc-zh.toml classes whose output is not
+# the PC's chunk: the 14 type1 arenas, BPLD27A with the port's hold, RYUD00..03 with
+# the port's byte. check holds the selection to `count`.
+standins = ["type1", "pc-byte", "pc-hold"]
+count = 19
+
+[[layer]]
+name = "psp-chord-one-tone"
+part = "dat"
+from = ["psp-jp", "psp-eu"]
+what = "the battle effects bank whose chord's second tone the PSP dropped, as the PSP plays it (one tone): tools/vag.py's bank without psp_dropped_tone's rule (docs/psp-music-banks.md 5)"
+# The bank chunks the dropped-tone rule restores (vag.psp_dropped_tone finds the
+# case on the PSP's own sections), in the PSP's one-tone form. Not a suite's: the
+# Jukebox's checkbox (the owner, 2026-10-12); off by default, so every base plays
+# the restored chord. Built whenever a PSP disc is a source, on any base (`auto`).
+banks = "dropped-tone"
+count = 16
+auto = true
+suite = "jukebox"

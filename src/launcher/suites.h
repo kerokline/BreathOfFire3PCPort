@@ -89,4 +89,20 @@ std::string SuitesOptEdit(const std::string& opt, const std::vector<std::string>
 // writes puts them in (ConfigOptEdit).
 std::vector<std::string> SuiteLayers();
 
+// DIVERGENCE TG-5 (docs/launcher-suites.md section 9; the owner, 2026-10-12):
+// the Jukebox's checkbox for the battle chord as the PSP plays it, one tone -
+// the layer recipes/psp-layers.toml builds whenever a PSP disc is a source, in
+// no suite. Off by default: every base plays the restored chord (vag.py's
+// dropped-tone rule). Written as opt= through ConfigOptEdit.
+inline constexpr char kChordLayer[] = "psp-chord-one-tone";
+struct ChordState {
+    bool enabled = false;   // the box can be changed
+    bool checked = false;   // opt= plays the layer
+    std::wstring why;       // why the box is greyed
+};
+// `installed`: ConfigOptInstalled(kChordLayer); `opt` the ini's opt= as it
+// stands, `defaults` ConfigOptDefaultInstalled. Pure, for the host tests.
+ChordState ChordEvaluate(const CacheManifest& manifest, bool installed, const std::string& opt,
+                         const std::vector<std::string>& defaults);
+
 }  // namespace bof3x

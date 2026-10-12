@@ -318,6 +318,32 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
     return out;
 }
 
+ChordState ChordEvaluate(const CacheManifest& man, bool installed, const std::string& opt,
+                         const std::vector<std::string>& defaults) {
+    ChordState c;
+    std::vector<std::string> played;
+    if (opt.empty()) played = defaults;
+    else if (opt != "none") played = SplitComma(opt);
+    c.checked = installed && Contains(played, kChordLayer);
+    std::vector<std::string> psp;
+    for (const suites_gen::BuildInfo& b : suites_gen::kBuilds)
+        if (b.role == Role::kPsp) psp.push_back(b.id);
+    bool have = false;
+    for (const std::string& b : man.sources) have = have || IsRole(b, Role::kPsp);
+    if (!man.error.empty()) {
+        c.why = Wide(man.error);
+    } else if (installed) {
+        c.enabled = true;   // with no manifest an installed layer is its own evidence, as the suites take it
+    } else if (!man.present) {
+        c.why = L"Needs a cache built with a PSP disc (" + OrList(psp) + L") in Cache folder.";
+    } else if (!have) {
+        c.why = L"Needs a PSP disc (" + OrList(psp) + L") among the cache's sources.";
+    } else {
+        c.why = L"Not in this cache: build it again (the importer writes it whenever a PSP disc is a source).";
+    }
+    return c;
+}
+
 std::string SuitesOptEdit(const std::string& opt, const std::vector<std::string>& defaults,
                           const std::vector<SuiteState>& suites, const std::vector<int>& choice) {
     std::vector<std::pair<std::string, bool>> boxes;

@@ -66,6 +66,22 @@ bool Armed();
 // layer, the cache's layer is the one played, whole.
 bool HasLayer(const char* kind, const char* layer);
 
+// DIVERGENCE TG-1, TG-2, TG-3 (docs/launcher-suites.md section 9): an optional
+// layer may carry parts besides dat\ - "bgm" (songs and banks, Music_LoadFile's
+// seam, music_seq.cpp), "snd" (Sound_LoadStream's files, SoundPath below) and
+// "exe" (ranges of .data the exe host lays, exe_image.cpp). Configured and
+// <root>\opt\<layer>\<part> holds a .DAT (exe: exe\place.toml).
+bool HasLayerPart(const char* layer, const char* part);
+
+// The optional layers BOF3X_OPT names, in its order, once DatLoad_Inject has
+// read and checked them (dat_load.cpp ReadOptLayers). SoundPath and the music
+// seam ask only these.
+void SetOptLayers(const char (*names)[24], int count);
+
+// The named layers whose cache has `part` ("bgm", "snd"), in BOF3X_OPT's order;
+// a later one lands on top of an earlier one, as the DAT layers do.
+std::vector<std::string> LayersWith(const char* part);
+
 // Where one overlay of DAT\NAME comes from - the precedence alone, so that the
 // self-test can hold it to `install`'s:
 //   not armed, or the cache lacks the layer: the install's DAT\<layer>.NAME;
@@ -84,8 +100,10 @@ void LayerPath(char* out, std::size_t cap, const char* kind, const char* layer, 
 // not armed or the cache does not hold it whole: the caller reads DAT\<name>.
 bool WalkShipped(const char* name, ChunkFn fn, void* ctx);
 
-// Sound_LoadStream's file: when armed and <root>\base\snd\<name>.DAT exists,
-// its path into `out` and true; false otherwise (the caller formats SND\).
+// Sound_LoadStream's file: when armed, <root>\opt\<layer>\snd\<name>.DAT of the
+// last named layer with a snd part that has it (TG-2), else
+// <root>\base\snd\<name>.DAT when it exists: its path into `out` and true;
+// false otherwise (the caller formats SND\).
 bool SoundPath(const char* name, char* out, std::size_t cap);
 
 // --- the self-tests' seam ----------------------------------------------------

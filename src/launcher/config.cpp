@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <cwchar>
 #include <string>
 #include <vector>
 
@@ -28,7 +29,12 @@ bool CacheHasLayer(const std::wstring& cache, const wchar_t* kind, const char* n
     if (cache.empty()) return false;
     std::wstring pattern = cache + L"\\" + kind + L"\\";
     for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
-    return AnyMatch(pattern + L"\\dat\\*.DAT");
+    if (AnyMatch(pattern + L"\\dat\\*.DAT")) return true;
+    // TG (docs/launcher-suites.md 9): an optional layer of songs, sound files or
+    // .data ranges - the DLL's own test (dat_cache::HasLayerPart)
+    return std::wcscmp(kind, L"opt") == 0 &&
+           (AnyMatch(pattern + L"\\bgm\\*.DAT") || AnyMatch(pattern + L"\\snd\\*.DAT") ||
+            AnyMatch(pattern + L"\\exe\\place.toml"));
 }
 
 // Whole file as bytes, or false if it cannot be opened. Absent is not an error
@@ -623,8 +629,8 @@ bool ConfigOptValid(const std::string& opt, std::string& why) {
         if (end == opt.size()) break;
         at = end + 1;
     }
-    if (names.size() > 8) {   // dat_load.cpp kOptMax
-        why = "more than 8 layers";
+    if (names.size() > 16) {   // dat_load.cpp kOptMax (8 until the suites' engine half, 2026-10-12)
+        why = "more than 16 layers";
         return false;
     }
     return true;

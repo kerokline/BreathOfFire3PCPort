@@ -67,6 +67,7 @@ import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
 import ppms         # noqa: E402  (base/bgm/ from a PSP disc, docs/psp-music.md)
 import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
+import psp_layers   # noqa: E402  (the suites' engine half: opt/ layers beside a PSX base, docs/launcher-suites.md 9)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 TARGET = "pc-zh"
@@ -692,6 +693,7 @@ def cmd_build(a):
         a.lang, a.opt = a.lang + [x for x in lang if x not in a.lang], a.opt + [x for x in opt if x not in a.opt]
     discs = {s.id for s in sources if isinstance(s, DiscSource)}
     a.opt = default_opt(a.opt, a.no_opt, lambda name: bool(discs & set(DEFAULT_OPT[name])))
+    a.opt, tg_opt = psp_layers.take(a.opt, sources)     # recipes/psp-layers.toml's layers, not opt.toml's
     print("sources, in order: %s" % ", ".join("%s (%s)" % (s.id, s.path) for s in sources))
     chunked = [s for s in sources if not isinstance(s, ExeSource)]
     assets, missing, used = [], collections.Counter(), collections.Counter()
@@ -749,6 +751,7 @@ def cmd_build(a):
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
                    psp_snd)
     fmv_build(sources, a.out)       # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
+    psp_layers.build(tg_opt, sources, a.out)   # opt/psp-music etc.; its [psp_layers] after that
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
@@ -1395,6 +1398,9 @@ def verify_opt(cache, path=None):
     rc = 0
     for name in sorted(os.listdir(d)):
         bad, chunks_ok, comp_ok, comp_absent = [], 0, 0, 0
+        if psp_layers.is_layer(name):    # recipes/psp-layers.toml's: its own check
+            rc |= psp_layers.verify_layer(cache, name)
+            continue
         if name not in layers:
             print("verify opt/%s: not a layer recipes/opt.toml knows" % name)
             rc = 1
@@ -1599,6 +1605,7 @@ def cmd_install(a):
     if not os.path.isfile(os.path.join(dat_dir, "FIRST.DAT")):
         raise SystemExit("%s: no DAT/FIRST.DAT - not a game directory" % a.game)
     opt = default_opt(a.opt, a.no_opt, lambda name: os.path.isdir(os.path.join(a.cache, "opt", name, "dat")))
+    psp_layers.refuse_install(opt, a.cache)     # a bgm / snd / exe layer is the cache's alone
     for name in a.no_opt:
         old = [f for f in os.listdir(dat_dir) if f.startswith(name + ".")]
         for f in old:
@@ -2148,8 +2155,9 @@ def main():
                         "bare en/fr/de/ja are retired, DIV-0005); needs the PC's DAT/, BOF3.exe and that disc")
     p.add_argument("--opt", action="append", default=[],
                    help="an optional layer to build (repeat): %s; needs a PSP disc, area4-walls a US, European, "
-                        "French or German PSX disc, and is built by default when one is given (docs/opt-layers.md)"
-                        % ", ".join(OPT_LAYERS))
+                        "French or German PSX disc, and is built by default when one is given (docs/opt-layers.md); "
+                        "beside a PlayStation base also %s (docs/launcher-suites.md 9)"
+                        % (", ".join(OPT_LAYERS), ", ".join(psp_layers.load())))
     p.add_argument("--no-opt", action="append", default=[],
                    help="a default layer not to build (repeat): %s" % ", ".join(DEFAULT_OPT))
     p.add_argument("--preset", help="a named source order plus layers: %s; the sources are still given "
