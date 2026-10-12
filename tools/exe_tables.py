@@ -513,32 +513,10 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     if o % 4 == 0:
                         hits[k, w].append(base + o)
                     o = blob.find(pat, o + 1)
-        new = []
-        for lo, hi in regions:
-            votes = {"data": collections.Counter(), "text": collections.Counter()}
-            for a in range(lo + (-lo % 4), hi - 3, 4):
-                for f in keys.get(a, ()):
-                    for k in byfile[f[0]]:
-                        for h in hits.get((k, f[1]), ()):
-                            votes[cls[a]][k, h - a] += 1
-            win = None
-            if not votes["data"] and not votes["text"]:
-                # no key: a 16-byte window of numbers found once in the files the neighbours come from
-                near = {ranges[owner[x - DATA_LO]][3].split("#")[0]
-                        for x in (lo - 1, hi) if DATA_LO <= x < DATA_HI and owner[x - DATA_LO] is not None}
-                for w in byte_windows(pc, cls, lo, hi)[:8]:
-                    pat = pc[w - DATA_LO:w - DATA_LO + 16]
-                    found = [(k, base + o - w) for f in sorted(near) for k in byfile[f]
-                             for base, blob in [srcs[k]] for o in finds(blob, pat)]
-                    if len(found) == 1:
-                        win, votes["bytes"] = w, collections.Counter(found)
-                        break
-            # the data pointers' place when they have one: a code pointer of a
-            # resident or much-shared function votes for many places
-            top = (votes["data"] or votes["text"] or votes.get("bytes") or collections.Counter()).most_common(2)
-            if not top or (len(top) > 1 and top[1][1] == top[0][1]):
-                continue
-            (k, delta), _ = top[0]
+        def stretches(lo, hi, place, win):
+            """The stretches of [lo, hi) at `place` (section, displacement) that
+            disagree nowhere and are keyed enough to place (step 3)."""
+            (k, delta), out = place, []
             base, blob = srcs[k]
             res = []
             for a in range(lo, hi):
@@ -568,9 +546,42 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     eq = sum(1 for v2 in res[s0:i2] if v2)
                     nk = sum(1 for a in range(a0 + (-a0 % 4), a1 - 3, 4) if a in keys)
                     if nk >= 2 or (nk >= 1 and eq >= 16) or (win is not None and a0 <= win and win + 16 <= a1 and eq >= 24):
-                        new.append({"pc": a0, "pc_end": a1, "file": k[0], "section": k[1],
+                        out.append({"pc": a0, "pc_end": a1, "file": k[0], "section": k[1],
                                     "addr": a0 + delta, "agree": eq, "keys": nk})
                 s0 = i2 + 1
+            return out
+        new = []
+        for lo, hi in regions:
+            votes = {"data": collections.Counter(), "text": collections.Counter()}
+            for a in range(lo + (-lo % 4), hi - 3, 4):
+                for f in keys.get(a, ()):
+                    for k in byfile[f[0]]:
+                        for h in hits.get((k, f[1]), ()):
+                            votes[cls[a]][k, h - a] += 1
+            # the data pointers' place when they have one: a code pointer of a
+            # resident or much-shared function votes for many places
+            top = (votes["data"] or votes["text"] or collections.Counter()).most_common(2)
+            got = []
+            if top and not (len(top) > 1 and top[1][1] == top[0][1]):
+                got = stretches(lo, hi, top[0][0], None)
+            if not got:
+                # no key, or none that places: a 16-byte window of numbers found once in the
+                # files the neighbours come from - any window when no pointer keys the region
+                # (section 7.4), a window between two code pointers either way
+                near = {ranges[owner[x - DATA_LO]][3].split("#")[0]
+                        for x in (lo - 1, hi) if DATA_LO <= x < DATA_HI and owner[x - DATA_LO] is not None}
+                ws = [] if top else [(w, False) for w in byte_windows(pc, cls, lo, hi)[:8]]
+                for w, anchored in ws + [(w, True) for w in code_windows(pc, cls, lo, hi)[:8]]:
+                    pat = pc[w - DATA_LO:w - DATA_LO + 16]
+                    found = [(k, base + o - w) for f in sorted(near) for k in byfile[f]
+                             for base, blob in [srcs[k]] for o in finds(blob, pat)
+                             if not anchored or (o >= 4 and o + 20 <= len(blob)
+                                                 and code_word(struct.unpack_from("<I", blob, o - 4)[0], psp)
+                                                 and code_word(struct.unpack_from("<I", blob, o + 16)[0], psp))]
+                    if len(found) == 1:
+                        got = stretches(lo, hi, found[0], w)
+                        break
+            new += got
         if not new:
             break
         rows = sorted(rows + new, key=lambda r: r["pc"])
@@ -589,6 +600,18 @@ def byte_windows(pc, cls, lo, hi):
         else:
             a += 4
     return out
+
+
+def code_windows(pc, cls, lo, hi):
+    """The 4-aligned 16-byte windows of [lo, hi) with no pointer word in them, a
+    code pointer word on either side and not one byte value throughout - keys
+    of numbers too uniform for byte_windows, matched only where the build's
+    words either side are code addresses too (docs/exe-import-engine.md
+    section 7.4)."""
+    return [a for a in range(lo + (-lo % 4), hi - 15, 4)
+            if cls.get(a - 4) == "text" and cls.get(a + 16) == "text"
+            and not any(a + j in cls for j in range(0, 16, 4))
+            and len(set(pc[a - DATA_LO:a - DATA_LO + 16])) >= 2]
 
 
 def finds(blob, pat):
