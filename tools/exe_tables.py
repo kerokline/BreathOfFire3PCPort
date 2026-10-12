@@ -32,6 +32,8 @@ and is listed.
     python tools/exe_tables.py measure --game DIR --disc DISC [...] --out analysis/exe_import
     python tools/exe_tables.py xref    --game DIR --disc DISC [...] --out analysis/exe_import
     python tools/exe_tables.py verify  --cache CACHE
+    python tools/exe_tables.py gaps    --game DIR --measure DIR         # recipes/exe-gaps.tsv
+    python tools/exe_tables.py gate-skip --cache CACHE --game DIR [--out FILE]   # the gate's BOF3X_STATEHASH_SKIP
     python tools/exe_tables.py check                                    # the recipe alone (CI)
 
 `recipe` needs the PC's executable and the discs: it decides which of the
@@ -796,6 +798,175 @@ def spans(owner, ranges):
     return out
 
 
+# ------------------------------------------------------------------ the bytes no disc gives: classed by address
+#
+# recipes/exe-gaps.tsv (the disc-only round, IN; docs/exe-import-engine.md
+# section 4.4): per build, every run of a disc-built image's unfilled bytes
+# that is not the engine's own (`own`) and holds a byte the PC's .data has
+# non-zero, with the class tools/exe_own.py's measurement gives it
+# (docs/exe-engine-own.md section 3). A `none` range of data.toml is then a
+# range where the PC's bytes are zero too - the loader's zero is exact - and
+# every other unfilled byte is named: `language` (a language layer's handlers
+# write it or our code reads around it, docs/loc-build-disc-only.md 5.4),
+# `unread` (nothing the exe host runs reads it), `keys` (Key_TableDefault, the
+# engine's rule), or `gap` (zero where the PC has a value: Capcom's game
+# values no disc carries, bytes on the disc the places miss, DIV-0055's
+# re-laid plates, and the eight language addresses no layer reaches). The
+# table holds addresses, classes and symbol names only (CLAUDE.md rule 1).
+GAPS = os.path.join(ROOT, "recipes", "exe-gaps.tsv")
+GAP_COLS = ["build", "lo", "hi", "how", "kind", "symbol"]
+GAP_HOWS = ("gap", "language", "unread", "keys")
+GAP_KINDS = {"gap": ("game-value", "disc-unplaced", "port-relaid", "language-zero", "port-platform", "rule"),
+             "language": ("language",), "unread": ("unread",), "keys": ("rule",)}
+# The eight language addresses that stay zero on a disc-only image (LG,
+# docs/loc-build-disc-only.md 5.4): (address, bytes or None for the PC's
+# string to its NUL, what). The faerie records' stats are 60 records of 20.
+LANGUAGE_ZERO = ([(0x6531F4, None, "the ranked lists' page counter format"),
+                  (0x653200, 16, "faerie record 0's name field")]
+                 + [(0x653210 + 20 * r, 4, "a faerie record's four stats") for r in range(60)]
+                 + [(0x6536B0, 11, "the faerie village areas' limits (areas 175..185)"),
+                    (0x669CCC, None, "the empty save slot's text"),
+                    (0x669CE8, 5, "the name EquipOpen copies over character record 7's"),
+                    (0x66A094, None, "a one-glyph word after a count"),
+                    (0x66A098, None, "a menu's title")])
+
+
+def language_zero(pc):
+    """The bytes of LANGUAGE_ZERO, from the PC's image for the string lengths."""
+    out = set()
+    for a, n, _ in LANGUAGE_ZERO:
+        if n is None:
+            n = pc.index(b"\0", a - DATA_LO) - (a - DATA_LO)
+        out.update(range(a, a + max(n, 1)))
+    return out
+
+
+def load_gaps(path=GAPS):
+    """({build: [(lo, hi, how, kind, symbol)]}, [the builds its `# measured:` line
+    names]) from recipes/exe-gaps.tsv."""
+    rows, measured = collections.defaultdict(list), []
+    if not os.path.exists(path):
+        return rows, measured
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.rstrip("\n")
+            if line.startswith("# measured:"):
+                measured = line.split(":", 1)[1].split()
+            if line.startswith("#") or line.split("\t") == GAP_COLS:
+                continue
+            bid, lo, hi, how, kind, sym = line.split("\t")
+            rows[bid].append((int(lo, 16), int(hi, 16), how, kind, sym))
+    return rows, measured
+
+
+def gap_rows(pc, bid, segs):
+    """One build's rows: `segs` is exe_own.py measure's <bid>.own.tsv as [(lo, hi,
+    cls)] (the segment's class from its readers and the disc search); each byte
+    classed as that tool classes it (held, then its BYTES row, then its REGIONS
+    row, then the segment's), the language bytes of LANGUAGE_ZERO a gap, and
+    the runs of one class holding a non-zero PC byte kept."""
+    import exe_own
+    held = own_bytes()
+    lz = language_zero(pc)
+    data = sorted((e["pc"], e["name"]) for e in exe_own.data_symbols()[0])
+    dpcs = [p for p, _ in data]
+
+    def what(x, seg_cls):
+        if x in held:
+            return None
+        cls = exe_own.byte_class(x) or exe_own.region_class(x)[0] or seg_cls
+        if cls == "language":
+            return ("gap", "language-zero") if x in lz else ("language", "language")
+        if cls == "rule (RD)":
+            return ("keys", "rule")
+        if cls == "unread":
+            return ("unread", "unread")
+        if cls in ("game-value", "disc-unplaced", "port-relaid", "port-platform", "rule"):
+            return ("gap", cls)     # "rule", "port-platform": in such a region of exe_own.py's, but not held
+        fail("%s 0x%06X: class %s has no data.toml class" % (bid, x, cls))
+
+    out = []
+    for lo, hi, seg_cls in segs:
+        x = lo
+        while x < hi:
+            c = what(x, seg_cls)
+            y = x
+            while y < hi and what(y, seg_cls) == c:
+                y += 1
+            if c is not None and any(pc[i - DATA_LO] for i in range(x, y)):
+                k = bisect.bisect_right(dpcs, x) - 1
+                if k < 0:
+                    sym = "0x%06X" % x
+                elif data[k][0] == x:
+                    sym = data[k][1]
+                else:
+                    sym = "%s+0x%X" % (data[k][1], x - data[k][0])
+                out.append((x, y, c[0], c[1], sym))
+            x = y
+    return out
+
+
+def cmd_gaps(a):
+    """recipes/exe-gaps.tsv from exe_own.py measure's per-build tables (its --out)
+    and the PC's .data (for which bytes are non-zero, and the string lengths)."""
+    pc, _ = pc_data(os.path.join(a.game, "BOF3.exe"))
+    builds = [b for b in ORDER if os.path.exists(os.path.join(a.measure, "%s.own.tsv" % b))]
+    if not builds:
+        fail("%s holds no <build>.own.tsv (tools/exe_own.py measure --out)" % a.measure)
+    lines = ["# recipes/exe-gaps.tsv - GENERATED by `tools/exe_tables.py gaps`; do not edit.",
+             "# Per build, the runs of a disc-built image of .data that no disc fills and the engine",
+             "# does not fill (docs/exe-import-engine.md 4.4) holding a byte the PC's has non-zero, classed",
+             "# by tools/exe_own.py's measurement (docs/exe-engine-own.md 3). data.toml names them with `how`;",
+             "# an unfilled range outside every row is `none`: the PC's bytes there are zero as well.",
+             "# Addresses, classes and symbol names only (CLAUDE.md rule 1).",
+             "# measured: " + " ".join(builds),
+             "\t".join(GAP_COLS)]
+    for bid in builds:
+        segs = []
+        with open(os.path.join(a.measure, "%s.own.tsv" % bid), encoding="utf-8") as f:
+            cols = f.readline().rstrip("\n").split("\t")
+            for line in f:
+                r = dict(zip(cols, line.rstrip("\n").split("\t")))
+                segs.append((int(r["lo"], 16), int(r["hi"], 16), r["cls"]))
+        rows = gap_rows(pc, bid, segs)
+        by = collections.Counter()
+        for lo, hi, how, kind, sym in rows:
+            by[how, kind] += sum(1 for i in range(lo, hi) if pc[i - DATA_LO])
+            lines.append("%s\t0x%06X\t0x%06X\t%s\t%s\t%s" % (bid, lo, hi, how, kind, sym))
+        print("%s: %d rows; PC non-zero bytes by class: %s" % (bid, len(rows), ", ".join(
+            "%s/%s %d" % (h, k, n) for (h, k), n in sorted(by.items()))))
+    with open(GAPS, "w", newline="\n", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    print("-> %s" % os.path.relpath(GAPS, ROOT))
+
+
+def check_gaps(rec):
+    """recipes/exe-gaps.tsv alone: the builds it measured are recipes/exe.toml's
+    disc builds, its rows in order, inside .data, of a known class, clear of the
+    engine's own regions and of every pointer word."""
+    if not os.path.exists(GAPS):
+        return ["exe-gaps.tsv: absent (tools/exe_tables.py gaps)"]
+    errs = []
+    rows, measured = load_gaps()
+    discs_ = sorted(b for b in rec["build"] if b != PC)
+    if sorted(measured) != discs_:
+        errs.append("exe-gaps.tsv: measured %s, recipes/exe.toml's disc builds are %s" % (measured, discs_))
+    own = own_bytes()
+    ptr = set()
+    for p, w, _ in load_pointers():
+        ptr.update(range(p, p + 4 * w))
+    for bid, rs in rows.items():
+        if bid not in measured:
+            errs.append("exe-gaps.tsv: rows for %s, which the measured line does not name" % bid)
+        last = DATA_LO
+        for lo, hi, how, kind, sym in rs:
+            if lo < last or hi <= lo or hi > DATA_HI or how not in GAP_HOWS or kind not in GAP_KINDS[how]:
+                errs.append("exe-gaps.tsv: %s 0x%06X: out of order, empty, outside .data or of no known class" % (bid, lo))
+            if any(x in own or x in ptr for x in range(lo, hi)):
+                errs.append("exe-gaps.tsv: %s 0x%06X: over an engine-own region or a pointer word" % (bid, lo))
+            last = hi
+    return errs
+
 # ------------------------------------------------------------------ base/exe/
 
 def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=None):
@@ -815,7 +986,11 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
              "# disc's own word gives by the map run backwards; `from` is that word), `layout` (a",
              "# pointer word no disc places or rebuilds, filled from recipes/exe-layout.tsv: the PC's",
              "# layout, held as addresses), `own` (no disc carries it; the engine fills it itself,",
-             "# src/hook/exe_own.cpp's regions: unfilled here), `none` (no disc carries it: unfilled).",
+             "# src/hook/exe_own.cpp's regions: unfilled here), and for what no disc carries, unfilled,",
+             "# by recipes/exe-gaps.tsv: `language` (a language layer's handlers write it or our code reads",
+             "# around it), `unread` (nothing the exe host runs reads it), `keys` (Key_TableDefault, the",
+             "# engine's rule), `gap` (zero where the PC has a value; `from` is its kind and symbol), and",
+             "# `none` (the PC's bytes are zero there too).",
              "", "[image]", 'file = "data.bin"', "va = 0x%06X" % DATA_LO, "size = %d" % len(img),
              "bss_end = 0x%06X" % bss_end, 'sha256 = "%s"' % sha(img), 'build = "%s"' % bid,
              'source = %s' % json.dumps(os.path.basename(os.path.normpath(source))),
@@ -826,7 +1001,17 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
         ptr, own = set(), own_bytes()
         for pc, words, _ in pointers:
             ptr.update(range(pc, pc + 4 * words))
-        kind = lambda x: "own" if x in own else "pointer" if x in ptr else "none"
+        gaps, measured = load_gaps()
+        if bid not in measured:
+            fail("recipes/exe-gaps.tsv has not measured %s: run exe_own.py measure and exe_tables.py gaps" % bid)
+        lines.insert(lines.index("ranges = ["), 'gaps = "recipes/exe-gaps.tsv"')
+        lines.insert(lines.index("ranges = ["), "")
+        gap = {}
+        for lo, hi, how, gkind, sym in gaps[bid]:
+            for x in range(lo, hi):
+                gap[x] = (how, "%s %s" % (gkind, sym) if how == "gap" else sym)
+        kind = lambda x: "own" if x in own else "pointer" if x in ptr else gap.get(x, ("none", ""))[0]
+        gap_from = lambda x: gap.get(x, ("none", ""))[1] if kind(x) in GAP_HOWS else ""
         for lo, hi, k in spans(owner, ranges):
             if k is not None and ranges[k][2] == "layout":
                 lines.append('  [0x%06X, 0x%06X, "layout", "%s"],' % (lo, hi, ranges[k][3]))
@@ -838,11 +1023,11 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
                 continue
             p = lo                                      # an unfilled run: pointer words and the rest
             while p < hi:
-                kp = kind(p)
+                kp, wp = kind(p), gap_from(p)
                 q = p
-                while q < hi and kind(q) == kp:
+                while q < hi and kind(q) == kp and gap_from(q) == wp:
                     q += 1
-                lines.append('  [0x%06X, 0x%06X, "%s", ""],' % (p, q, kp))
+                lines.append('  [0x%06X, 0x%06X, "%s", "%s"],' % (p, q, kp, wp))
                 p = q
     lines.append("]")
     with open(os.path.join(d, "data.toml"), "w", newline="\n", encoding="utf-8") as f:
@@ -907,6 +1092,69 @@ def verify_cache(cache, info=None):
                         % (len(words) - len(bad), len(words), left))
     return errs
 
+
+# ------------------------------------------------------------------ the gate's skip list
+
+SKIP_FILE = os.path.join(ROOT, "tools", "statehash_skip.txt")
+GATE_NOT_PC = ("language", "unread", "gap")           # data.toml classes whose bytes are not the PC's at the map
+GATE_FILLED = ("layout", "own", "keys")                # the PC's bytes at the map (ExeImage_CompareWithFile's Fatal)
+GATE_PLACED = ("map", "place", "table", "widen")       # the disc's bytes: skipped where they differ from the PC's
+
+
+def gate_skip(cache, exe, with_filled=False):
+    """The state hash's skip list for the gate (docs/state-hash.md 4; the
+    disc-only round): tools/statehash_skip.txt as committed, then every range of
+    the cache's disc-built image whose bytes the PC-built image does not share
+    at the map - the classes that are not the PC's bytes (language, unread,
+    gap) whole, and the runs of a disc-placed range whose bytes differ from the
+    PC's .data (`exe`, BOF3.exe). With `with_filled` also the ranges the engine
+    fills with the PC's bytes (layout, own, keys), which the brief's list names
+    and the map proves equal. (text, ranges added, {class: bytes})."""
+    d = os.path.join(cache, "base", "exe")
+    with open(os.path.join(d, "data.toml"), "rb") as f:
+        meta = tomllib.load(f)["image"]
+    if meta["build"] == PC:
+        fail("%s is built from BOF3.exe: its image is the PC's; the gate wants a disc-built cache" % cache)
+    if "gaps" not in meta:
+        fail("%s was built before recipes/exe-gaps.tsv: rebuild it" % cache)
+    with open(os.path.join(d, meta["file"]), "rb") as f:
+        img = f.read()
+    pc, _ = pc_data(exe)
+    with open(SKIP_FILE, encoding="utf-8") as f:
+        text = f.read()
+    added, by = [], collections.Counter()
+    whole = GATE_NOT_PC + (GATE_FILLED if with_filled else ())
+    for lo, hi, how, src in meta["ranges"]:
+        if how in whole:
+            added.append((lo, hi, "%s %s" % (how, src) if src else how))
+            by[how] += hi - lo
+        elif how in GATE_PLACED:
+            x = lo
+            while x < hi:
+                if img[x - DATA_LO] == pc[x - DATA_LO]:
+                    x += 1
+                    continue
+                y = x
+                while y < hi and img[y - DATA_LO] != pc[y - DATA_LO]:
+                    y += 1
+                added.append((x, y, "%s, the disc's bytes differ from the PC's" % how))
+                by[how] += y - x
+                x = y
+    lines = [text.rstrip("\n"), "",
+             "# --- the gate (tools/exe_tables.py gate-skip, the disc-only round): %s's image (%s)"
+             % (os.path.basename(os.path.normpath(cache)), meta["build"]),
+             "# against the PC's, every range whose bytes differ at the map; the ranges above are the committed list."]
+    lines += ["0x%06X %-7d # gate  %s" % (lo, hi - lo, why) for lo, hi, why in added]
+    return "\n".join(lines) + "\n", added, by
+
+
+def cmd_gate_skip(a):
+    text, added, by = gate_skip(a.cache, os.path.join(a.game, "BOF3.exe"), a.with_filled)
+    out = a.out or os.path.join(a.cache, "base", "exe", "gate-skip.txt")
+    with open(out, "w", newline="\n", encoding="utf-8") as f:
+        f.write(text)
+    print("gate-skip: the committed list plus %d ranges, %d bytes (%s) -> %s"
+          % (len(added), sum(by.values()), ", ".join("%s %d" % kv for kv in sorted(by.items())), out))
 
 # ------------------------------------------------------------------ the generator
 
@@ -1481,6 +1729,7 @@ def cmd_check(a):
                             % (bid, r["pc"]))
             last = r["pc_end"]
     errs += check_layout(rec)
+    errs += check_gaps(rec)
     _, _, builds = tables.load()
     keys = ("placed_equal", "placed_differ", "pointer_pc_zero", "pointer_pc_nonzero", "none_pc_zero", "none_pc_nonzero",
             "rebuilt_equal", "layout_equal", "own_pc_zero", "own_pc_nonzero")
@@ -1551,6 +1800,17 @@ def main():
     p = sub.add_parser("verify")
     p.add_argument("--cache", required=True)
     p.set_defaults(fn=cmd_verify)
+    p = sub.add_parser("gaps")
+    p.add_argument("--game", required=True, help="the directory holding BOF3.exe")
+    p.add_argument("--measure", required=True, help="tools/exe_own.py measure's --out (its <build>.own.tsv)")
+    p.set_defaults(fn=cmd_gaps)
+    p = sub.add_parser("gate-skip")
+    p.add_argument("--cache", required=True, help="a disc-built cache")
+    p.add_argument("--game", required=True, help="the directory holding BOF3.exe (the PC's .data to compare with)")
+    p.add_argument("--out", help="default <cache>/base/exe/gate-skip.txt")
+    p.add_argument("--with-filled", action="store_true",
+                   help="also skip the ranges the engine fills with the PC's bytes (layout, own, keys)")
+    p.set_defaults(fn=cmd_gate_skip)
     sub.add_parser("check").set_defaults(fn=cmd_check)
     a = ap.parse_args()
     return a.fn(a)

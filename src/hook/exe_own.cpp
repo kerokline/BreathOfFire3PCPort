@@ -12,6 +12,8 @@
 #include <vector>
 
 #include "hook/detour.h"
+#include "hook/exe_host.h"
+#include "hook/exe_image.h"
 #include "hook/exe_layout.h"
 #include "hook/log.h"
 
@@ -252,6 +254,20 @@ void ExeOwn_Verify(const std::uint8_t* pc_data, const char* against) {
 
 void ExeOwn_CheckAtStart() {
     const auto* live = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kDataVa));
+    // A disc-built image mapped (the disc-only round, IN): the running .data
+    // holds the fill itself, so the regions are verified against the file's
+    // .data when the file is there, and cannot be without it.
+    if (ExeImage_DiscMapped()) {
+        if (!ExeFile_Present()) {
+            Log("exe_own: %u regions, %u bytes filled over a disc-built image; no BOF3.exe to verify them against",
+                (unsigned)kCount, (unsigned)HeldBytes());
+            return;
+        }
+        std::vector<std::uint8_t> file(kDataBytes);
+        ExeFile_Read(kDataVa, file.data(), kDataBytes);
+        ExeOwn_Verify(file.data(), "BOF3.exe's .data (the file; the running .data is a disc-built image)");
+        return;
+    }
     ExeOwn_Verify(live, "BOF3.exe's .data");
     if (!WantsShadow("exe_own")) return;
     // The self-test: into a zeroed image the fill writes the regions' bytes,

@@ -32,6 +32,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/display_setup.h"
@@ -81,6 +82,23 @@ RECT Destination(LONG cw, LONG ch) {
     return {x, y, w, h};   // right = width, bottom = height, as MCI's "put" takes them
 }
 
+// A movie MCI cannot open - a disc-only install has no AVIs (docs/disc-only-
+// install.md), and LOGOS.AVI has no disc counterpart at all - is skipped and
+// the game goes on, exactly as the original's two failed opens return; the
+// original said nothing, this says it once per file name a process.
+void LogNotOpened(const char* filename, MCIERROR first, MCIERROR root) {
+    static char seen[4][64];
+    static unsigned count = 0;
+    for (unsigned i = 0; i < count; ++i)
+        if (std::strncmp(seen[i], filename, sizeof seen[i] - 1) == 0) return;
+    if (count < 4) std::snprintf(seen[count++], sizeof seen[0], "%s", filename);
+    char why[128] = "";
+    if (!mciGetErrorStringA(root, why, sizeof why)) std::snprintf(why, sizeof why, "MCI error %lu", root);
+    bof3::Log("fmv: %s not opened (MCI %lu, then %lu under the CD root %s: %s): skipped, the game goes on as the "
+              "original does when the open fails",
+              filename, static_cast<unsigned long>(first), static_cast<unsigned long>(root), File_CdRoot(), why);
+}
+
 }  // namespace
 
 extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscreen) {
@@ -89,9 +107,12 @@ extern "C" void __cdecl Fmv_Play(const char* filename, void* hwnd_, int fullscre
     Fmv_Playing = 0;
 
     Crt_sprintf(command, Str(kFmtOpen), filename);
-    if (mciSendStringA(command, nullptr, 0, nullptr) != 0) {
+    if (const MCIERROR first = mciSendStringA(command, nullptr, 0, nullptr)) {
         Crt_sprintf(command, Str(kFmtOpenRoot), File_CdRoot(), filename);
-        if (mciSendStringA(command, nullptr, 0, nullptr) != 0) return;
+        if (const MCIERROR root = mciSendStringA(command, nullptr, 0, nullptr)) {
+            LogNotOpened(filename, first, root);
+            return;
+        }
     }
 
     (void)fullscreen;   // DIV-0035: no Fmv_EnterFullscreen, whatever it says
