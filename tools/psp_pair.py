@@ -17,7 +17,9 @@ pairing therefore works on what a compiler keeps:
     a lui / ori pair as one 32-bit value, a division reciprocal as its divisor;
   - field offsets: load / store offsets on a base that is not sp and not a
     tracked global address, with the access width;
-  - callees and code pointers, in order of first use, once paired;
+  - callees and code pointers, in order of first use, once paired (an overlay's
+    call resolves into its own file, then the resident BATTLE.EMI and GAME.EMI;
+    a call clobbers registers only after its delay slot);
   - globals: the data addresses a function reads or writes (an indexed access
     counts as its array's base), once a PSX address has a learned PSP twin.
 
@@ -43,8 +45,9 @@ by unique relocation-masked words, then by order between those anchors.
 --check-eu also pairs PSX -> PSP-EU independently and counts agreement: a
 consistency measure, not a precision one (both sides share the method).
 
-Function starts. PSX: the sibling's analysis/functions.tsv and symbols.toml
-for the boot EXE; the captures' header and engine entries; every jal target;
+Function starts. PSX: the sibling's analysis/functions.tsv (without its
+'low' and 'data' rows, blobs that would stretch the boot EXE's code range over
+GAME.EMI) and symbols.toml for the boot EXE; the captures' header and engine entries; every jal target;
 every stored word pointing at a stack-frame prologue. The captures'
 static-discovery lists are not used: they hold case labels, and so does
 names/functions.toml (24 names), which pair through their containing
@@ -241,7 +244,12 @@ def extract(f, space, is_psp, resolve, is_code_addr):
             else:
                 refs.append(a)
 
+    clobber_at = None    # a call clobbers the caller-saved registers after its delay slot
     for x in range(f.start, f.end, 4):
+        if clobber_at is not None and x >= clobber_at:
+            for r in CALLER_SAVED:
+                flush(r); regs.pop(r, None)
+            clobber_at = None
         w = space.word(x)
         if w == 0:
             continue
@@ -350,7 +358,9 @@ def extract(f, space, is_psp, resolve, is_code_addr):
                 flush(rd)
                 regs[rd] = ('A', base)      # an element of the array at base
                 continue
-        for r in written(w):
+        if op == 3:
+            clobber_at = x + 8
+        for r in (written(w) if op != 3 else ()):
             if r:
                 flush(r); regs.pop(r, None)
         if op == 0:   # an address register used as an operand escapes
@@ -378,7 +388,9 @@ class Psx:
         boot_starts = set()
         for line in open(sib + 'analysis/functions.tsv'):
             p = line.split('\t')
-            if line.startswith('0x') and len(p) > 3 and p[3] != 'data':
+            # 'low' rows are blobs (the overlay region, zero fill): kept out, or the boot
+            # EXE's code range would swallow GAME.EMI's
+            if line.startswith('0x') and len(p) > 3 and p[3] not in ('data', 'low'):
                 boot_starts.add(int(p[0], 16))
         for f in tomllib.load(open(sib + 'symbols.toml', 'rb'))['func']:
             boot_starts.add(f['pc'])
@@ -453,10 +465,11 @@ class Psx:
         if space != 'boot':
             src = self.caps[space]['source_file']
             fam = src.split('/')[1]
-            # the same file's other sections, then the resident module: BATTLE.EMI
-            # under the battle families, GAME.EMI under the rest
-            resident = 'BIN/BATTLE/BATTLE.EMI' if fam in ('BATTLE', 'BMAGIC', 'BOSS') else 'BIN/ETC/GAME.EMI'
-            for f in (src, resident):
+            # the same file's other sections, then the resident modules: BATTLE.EMI
+            # under the battle families, GAME.EMI under all
+            # GAME.EMI stays resident under a battle as well
+            resident = ('BIN/BATTLE/BATTLE.EMI', 'BIN/ETC/GAME.EMI') if fam in ('BATTLE', 'BMAGIC', 'BOSS')                 else ('BIN/ETC/GAME.EMI',)
+            for f in (src,) + resident:
                 for m in self.by_file[f]:
                     o = self.spaces[m]
                     if m != space and o.lo <= t < o.hi:
@@ -1152,6 +1165,7 @@ def diff_pair(m, psx, jp, a, b, platform_b):
         the trivial ones apart (0xFF, 1, -1...), masks and powers of two not scored,
         c against c + 1, c - 1 or -c cancelled (a bound moved by one, a subtraction), and
         against its own low 16 or (for a negative) 8 bits (0xBF and -65 clear one bit),
+        and against a power-of-two multiple (one reciprocal serves x / 25 and x / 100),
         multipliers dropped (the PSX shifts and adds), a PSP constant that is a PSX
         RAM offset dropped, and the constant arguments of a platform call on either side
         dropped on both;
@@ -1169,16 +1183,22 @@ def diff_pair(m, psx, jp, a, b, platform_b):
     pargs = set(v for t, args in fa.callargs if plat_a(t) for v in args) | \
         set(v for t, args in fb.callargs if plat_b(t) for v in args)
 
+    arefs = set(fa.refs)
+
     def norm(f, psp):
         return set(v for v, n in f.consts.items() if v not in TRIVIAL and v not in pargs
-                   and not (psp and psx_ram_offset(v)))
+                   and not (psp and (psx_ram_offset(v) or (0x10000 <= v < 0x200000 and (v | 0x80000000) in arefs))))
     ca, cb = norm(fa, False), norm(fb, True)
     minus, plus = ca - cb, cb - ca
     for v in sorted(minus, key=str):
         if not isinstance(v, int):
             continue
         for w in sorted(plus, key=str):
-            if isinstance(w, int) and (abs(v - w) == 1 or v == -w or (v - w) & 0xFFFF == 0 or
+            if not isinstance(w, int):
+                continue
+            ratio = max(abs(v), abs(w)) // max(1, min(abs(v), abs(w)))
+            if (abs(v - w) == 1 or v == -w or (v - w) & 0xFFFF == 0 or
+                                       (v > 0 and w > 0 and max(v, w) % min(v, w) == 0 and ratio & (ratio - 1) == 0) or
                                        ((v < 0 or w < 0) and min(abs(v), abs(w)) <= 0xFF and (v - w) & 0xFF == 0)):
                 minus.discard(v); plus.discard(w)
                 break
