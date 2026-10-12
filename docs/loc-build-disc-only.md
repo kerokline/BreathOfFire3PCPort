@@ -598,7 +598,7 @@ tables above say what each counted.
 
 ## 9. Ledger entries to draft (for the coordinator)
 
-**DIV-TBD-LG-1 - A disc-only layer stands in the disc's own images where the
+**DIV-0097 - A disc-only layer stands in the disc's own images where the
 port's art showed.**
 - Original: over the PC install every language layer leaves eighteen images
   of `loc/zh-CN` to the port's files - the glyph atlas of eleven modules, the
@@ -624,7 +624,7 @@ port's art showed.**
   sheet identical to DIV-0088's). Not played. Owed the owner's eye: the
   four area pages and the French and German sheets.
 
-**DIV-TBD-LG-2 - French `AREA004`'s first seven message slots, disc-only.**
+**DIV-0098 - French `AREA004`'s first seven message slots, disc-only.**
 - Original: the French disc's table starts with seven words past its block's
   end; the disc-only build skipped the block (no text for area 4), and the
   PC-built `fr-FR` layer keeps two of the port's messages (464 and 440

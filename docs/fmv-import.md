@@ -186,7 +186,7 @@ the stream is plain PCM, which the PC's file also is, at a different rate).
 
 ## 6. Ledger text (for the coordinator to number)
 
-**DIV-TBD-FM-1 - A disc-only install shows the disc's Capcom logo movie,
+**DIV-0099 - A disc-only install shows the disc's Capcom logo movie,
 re-encoded at import**
 
 - **Original behaviour:** the PC port plays `CAPCOM.AVI` from its install

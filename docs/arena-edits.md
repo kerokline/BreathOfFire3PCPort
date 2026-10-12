@@ -132,7 +132,7 @@ slot 6`, is the same at `6e6b4f3b`: not this change's.
 
 ## 7. Ledger entry (draft)
 
-**DIV-TBD-AR-1** - a disc-only cache's party animation scripts.
+**DIV-0096** - a disc-only cache's party animation scripts.
 
 - **Subsystem:** the arenas as imported (`tools/importer.py` `own_why =
   "arena"` / `"start-arena"`, `recipes/pc-zh.toml`); drawn by
