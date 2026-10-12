@@ -120,3 +120,26 @@ scripts over the same inputs (`exe_twins.sources` for the disc file).
   as numbers only by rule, not by reading.
 - The 127 `.rdata` words into `.text`: only counted (no target a `[[func]]`
   start), not read.
+
+## 6. The 462 words no disc places, read (2026-10-12)
+
+Section 5's third item, settled by the disc-only round
+([`exe-import-engine.md`](exe-import-engine.md) section 7.2):
+`exe_tables.code_numbers` sweeps `.text` from the `[[func]]` start below each
+target and calls a word into the middle of a function a pointer only when its
+target is an instruction boundary right after a `ret` or `int3` - a function
+start the catalogue lacks. Of the 469 (the 7 above and the 462):
+
+| | words | targets | what |
+|---|---:|---:|---|
+| pointers: a start after `ret` | 111 | 90 | `0x5DA00C`, `0x5DA010`, `0x5DA01C` (the C runtime's, at the head of `.data`); 98 into `0x5AA7D3..0x5AC9F5` (a jump table of the blitters after `Gfx_PackRgb`, which is 0x37 bytes); 10 into the C runtime after `Crt_GetPtd` / `Rand` (`0x5B93F4`, `0x5BE78C`, `0x5BFFF5` x6, ...) |
+| numbers: not an instruction boundary | 349 | | the 312 `DAT\0` of `Dat_FileNames`; key names (`END`, `TAB`, `IFT`); `PST` / `PDT`; `C:\`; text and halfword pairs in area tables; five of the seven above |
+| numbers: a boundary inside a function | 9 | | two small halfwords (`0x500080`, `0x500060`, `0x500058`, `0x580057`, `0x4FFFFF`, `0x50FF80`) and the text `DEL`, `INS`, `LID`; two of the seven above |
+
+The 111 are held by address in `recipes/exe-layout.tsv` (its `code` rows
+whose target is no `[[func]]` name; `exe.toml`'s `layout_code_unnamed`); the
+358 are its `number` rows and left `exe-pointers.tsv`. The boundary sweep
+and the `ret` test were cross-read against the disassembly at seven of the
+targets (`0x5BFFF5`, `0x5BE78C`, `0x5B93F4`, `0x5B940B`, `0x5BCB17`,
+`0x5C17A6`: each follows a `ret`; `0x5BA2E8`: inside a code-page table of
+the C runtime, a number).

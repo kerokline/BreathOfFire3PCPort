@@ -22,11 +22,13 @@ build's address, never the PC's - but the pointers into .data the map run
 backwards gives exactly (the disc's word, an address in that build, through
 the segment that places it to the PC address), which are written back; the
 words the rule would get wrong on a build are listed in recipes/exe-rebuild.tsv
-and stay unfilled (docs/exe-import-engine.md section 1). What no disc carries
-stays zero and is listed.
+and stay unfilled (docs/exe-import-engine.md section 1). Every pointer word
+still unfilled then gets its target from recipes/exe-layout.tsv, the PC's
+pointer layout held as addresses (section 7). What no disc carries stays zero
+and is listed.
 
     python tools/exe_tables.py build   --source PATH --out CACHE        # BOF3.exe or a disc
-    python tools/exe_tables.py recipe  --game DIR --disc DISC [...]     # recipes/exe.toml + exe-pointers.tsv
+    python tools/exe_tables.py recipe  --game DIR --disc DISC [...]     # recipes/exe.toml + exe-*.tsv
     python tools/exe_tables.py measure --game DIR --disc DISC [...] --out analysis/exe_import
     python tools/exe_tables.py xref    --game DIR --disc DISC [...] --out analysis/exe_import
     python tools/exe_tables.py verify  --cache CACHE
@@ -64,6 +66,10 @@ POINTERS = os.path.join(ROOT, "recipes", "exe-pointers.tsv")
 REBUILD = os.path.join(ROOT, "recipes", "exe-rebuild.tsv")
 PLACES = os.path.join(ROOT, "recipes", "exe-places.tsv")
 PLACE_COLS = ["build", "pc", "pc_end", "file", "section", "addr", "agree", "keys"]
+LAYOUT = os.path.join(ROOT, "recipes", "exe-layout.tsv")
+LAYOUT_COLS = ["pc", "kind", "target"]
+KIND = {"text": "code", "data": "data", "bss": "bss", "rdata": "rdata"}    # exe-pointers.tsv's `to` -> the layout's kind
+TEXT_LO = 0x401000
 PC = "pc-zh"
 ORDER = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de", "psp-jp", "psp-eu")
 
@@ -125,6 +131,111 @@ def target_class(v):
     return "text" if v < RDATA_LO else "rdata" if v < 0x5DA000 else "data" if v < DATA_HI else "bss"
 
 
+def func_starts():
+    """{pc: name} of symbols.toml's [[func]] starts."""
+    with open(os.path.join(ROOT, "symbols.toml"), "rb") as f:
+        return {e["pc"]: e["name"] for e in tomllib.load(f).get("func", [])}
+
+
+def own_bytes():
+    """The PC addresses the engine fills itself (the NB group's src/hook/exe_own.cpp
+    regions, read through tools/exe_own.py's own_regions; docs/exe-engine-own.md):
+    a set, empty where that tool is not in the tree."""
+    try:
+        import exe_own
+    except ImportError:
+        return set()
+    return {x for lo, hi, _ in exe_own.own_regions() for x in range(lo, hi)}
+
+
+def own_numbers(pc):
+    """The PC's pointer-shaped words inside the engine's own regions: text the
+    engine fill writes (docs/exe-engine-own.md), never pointers. {pc address: why}."""
+    own = own_bytes()
+    return {a: "text in an engine-own region" for a in pointer_words(pc) if any(a + k in own for k in range(4))}
+
+
+def code_numbers(exe, pc):
+    """The PC's pointer-shaped words into .text that are numbers, not pointers
+    (docs/exe-import-engine.md section 7.2): {pc address: why}. A code pointer
+    points at a function start - a symbols.toml [[func]] start, or an
+    instruction boundary right after a `ret` or `int3` (a start the catalogue
+    lacks: the C runtime's and the blitters' after `Gfx_PackRgb`). Any other
+    value into .text is a number that looks like an address (text such as
+    `DAT\\0`, two small halfwords such as a box's x and y): `not an instruction
+    boundary` by a linear capstone sweep from the [[func]] start below it, or
+    `inside a function` (a boundary, not after a `ret` / `int3`). Needs
+    BOF3.exe's .text; decided whether or not a disc places the word."""
+    from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+    tva, _, traw, trsz = pe_sections(exe)[".text"]
+    starts = func_starts()
+    order = sorted(starts)
+    words = collections.defaultdict(list)          # the [[func]] start below -> [(word, target)]
+    for a in pointer_words(pc):
+        v = struct.unpack_from("<I", pc, a - DATA_LO)[0]
+        if TEXT_LO <= v < RDATA_LO and v not in starts:
+            words[order[bisect.bisect_right(order, v) - 1]].append((a, v))
+    md = Cs(CS_ARCH_X86, CS_MODE_32)
+    out = {}
+    for st, ws in words.items():
+        want = {v for _, v in ws}
+        prev, seen, at, end = {}, set(), st, max(want)
+        last = None
+        while at <= end:                               # the linear sweep: a byte capstone refuses is skipped
+            ins = next(md.disasm(exe[traw + at - tva:traw + at - tva + 16], at), None)
+            if at in want:
+                seen.add(at)
+                prev[at] = last
+            if ins is None:
+                last, at = None, at + 1
+                continue
+            last, at = ins.mnemonic, at + ins.size
+        for a, v in ws:
+            if v not in seen:
+                out[a] = "not an instruction boundary"
+            elif prev[v] not in ("ret", "int3"):
+                out[a] = "inside a function"
+    return out
+
+
+def bss_numbers(pc):
+    """The PC's pointer-shaped words into .bss that are numbers, not pointers
+    (docs/exe-import-engine.md section 7.2): {pc address: why}. No disc maps
+    .bss, so no disc tests these words; a pointer to a .bss variable is
+    4-aligned (every one the C runtime's data and the inventory lists hold is),
+    so a word into .bss is a number when it is `not 4-aligned` (packed bytes of
+    a record, such as the area tables' 12-byte rows), `two small halfwords` (each
+    below 0x100 or from 0xFF00: an x and a y, a width and a height - the
+    `MsgBox_PlacementTable` and `Title_Sprites` entries that
+    docs/exe-code-pointers-midfunc.md read), `text` (printable characters to a
+    NUL: the C runtime's `pen`, `%lx`), or `a column of numbers` (aligned by
+    chance in a record table whose column holds such numbers either side)."""
+    out = {}
+    for a in pointer_words(pc):
+        v = struct.unpack_from("<I", pc, a - DATA_LO)[0]
+        if target_class(v) != "bss":
+            continue
+        b = pc[a - DATA_LO:a - DATA_LO + 4]
+        n = len(b.rstrip(b"\0"))
+        if v % 4:
+            out[a] = "not 4-aligned"
+        elif all(h < 0x100 or h >= 0xFF00 for h in (v & 0xFFFF, v >> 16)):
+            out[a] = "two small halfwords"
+        elif n >= 2 and all(0x20 <= c < 0x7F for c in b[:n]):
+            out[a] = "text"
+    # A word aligned by chance in a record table's column of such numbers: two
+    # words of the same column (a stride of 8..32 bytes, on one side or both)
+    # are numbers by the rules above.
+    shape = set(out)
+    for a in pointer_words(pc):
+        if a in out or target_class(struct.unpack_from("<I", pc, a - DATA_LO)[0]) != "bss":
+            continue
+        if any((a - s in shape and a + s in shape) or (a + s in shape and a + 2 * s in shape)
+               or (a - s in shape and a - 2 * s in shape) for s in range(8, 36, 4)):
+            out[a] = "a column of numbers"
+    return out
+
+
 # ------------------------------------------------------------------ the recipe files
 
 def load_pointers(path=POINTERS):
@@ -142,6 +253,67 @@ def load_pointers(path=POINTERS):
 def load_recipe(path=RECIPE):
     with open(path, "rb") as f:
         return tomllib.load(f)
+
+
+def layout_rows(pc, pointers, numbers):
+    """recipes/exe-layout.tsv's rows (docs/exe-import-engine.md section 7): every
+    pointer word of `pointers` with its kind and its target as an address of the
+    PC's layout - a [[func]] start by its symbols.toml name, any other target as
+    the address - and every word `numbers` classes a number (kind `number`,
+    no target: its bytes are not the layout's to hold)."""
+    starts = func_starts()
+    rows = []
+    for p, n, cls in pointers:
+        for a in range(p, p + 4 * n, 4):
+            v = struct.unpack_from("<I", pc, a - DATA_LO)[0]
+            rows.append((a, KIND[cls], starts[v] if cls == "text" and v in starts else "0x%06X" % v))
+    rows += [(a, "number", "-") for a in numbers]
+    return sorted(rows)
+
+
+def write_layout(rows):
+    with open(LAYOUT, "w", newline="\n") as f:
+        f.write("# recipes/exe-layout.tsv - GENERATED by `tools/exe_tables.py recipe`; do not edit.\n"
+                "# The pointer words of BOF3.exe's initialised .data held as layout (docs/exe-import-engine.md\n"
+                "# section 7): the word at `pc` holds `target`, an address of the PC's layout - a symbols.toml\n"
+                "# [[func]] start by name, any other target as the address. `kind`: code / data / bss / rdata, the\n"
+                "# section the target is in; `number`, a word exe_tables.code_numbers / bss_numbers class a number\n"
+                "# that looks like an address into .text or .bss (no target: not the layout's to hold). A disc\n"
+                "# build fills every pointer word no disc places or rebuilds from here. Addresses only\n"
+                "# (CLAUDE.md rule 1).\n")
+        f.write("\t".join(LAYOUT_COLS) + "\n")
+        for a, kind, t in rows:
+            f.write("0x%06X\t%s\t%s\n" % (a, kind, t))
+
+
+def load_layout(path=LAYOUT):
+    """[(pc, kind, target)] from recipes/exe-layout.tsv, target as written."""
+    with open(path, encoding="utf-8") as f:
+        lines = [l.rstrip("\n") for l in f if not l.startswith("#")]
+    if not lines or lines[0].split("\t") != LAYOUT_COLS:
+        fail("exe-layout.tsv: the column line is not %s" % "\t".join(LAYOUT_COLS))
+    out = []
+    for l in lines[1:]:
+        a, kind, t = l.split("\t")
+        out.append((int(a, 16), kind, t))
+    return out
+
+
+def layout_values(rows=None):
+    """{pc address: the word's value} for the layout's pointer words, a [[func]]
+    name resolved through symbols.toml."""
+    names = {n: a for a, n in func_starts().items()}
+    out = {}
+    for a, kind, t in (load_layout() if rows is None else rows):
+        if kind == "number":
+            continue
+        if t.startswith("0x"):
+            out[a] = int(t, 16)
+        elif t in names:
+            out[a] = names[t]
+        else:
+            fail("exe-layout.tsv: 0x%06X's target %s is no symbols.toml [[func]]; rerun `recipe`" % (a, t))
+    return out
 
 
 # ------------------------------------------------------------------ the disc side
@@ -343,9 +515,21 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     for k in byfile[f[0]]:
                         for h in hits.get((k, f[1]), ()):
                             votes[cls[a]][k, h - a] += 1
+            win = None
+            if not votes["data"] and not votes["text"]:
+                # no key: a 16-byte window of numbers found once in the files the neighbours come from
+                near = {ranges[owner[x - DATA_LO]][3].split("#")[0]
+                        for x in (lo - 1, hi) if DATA_LO <= x < DATA_HI and owner[x - DATA_LO] is not None}
+                for w in byte_windows(pc, cls, lo, hi)[:8]:
+                    pat = pc[w - DATA_LO:w - DATA_LO + 16]
+                    found = [(k, base + o - w) for f in sorted(near) for k in byfile[f]
+                             for base, blob in [srcs[k]] for o in finds(blob, pat)]
+                    if len(found) == 1:
+                        win, votes["bytes"] = w, collections.Counter(found)
+                        break
             # the data pointers' place when they have one: a code pointer of a
             # resident or much-shared function votes for many places
-            top = (votes["data"] or votes["text"]).most_common(2)
+            top = (votes["data"] or votes["text"] or votes.get("bytes") or collections.Counter()).most_common(2)
             if not top or (len(top) > 1 and top[1][1] == top[0][1]):
                 continue
             (k, delta), _ = top[0]
@@ -377,7 +561,7 @@ def find_places(pc, disc, bid, pointers, rounds=8):
                     a0, a1 = lo + s0, lo + i2
                     eq = sum(1 for v2 in res[s0:i2] if v2)
                     nk = sum(1 for a in range(a0 + (-a0 % 4), a1 - 3, 4) if a in keys)
-                    if nk >= 2 or (nk >= 1 and eq >= 16):
+                    if nk >= 2 or (nk >= 1 and eq >= 16) or (win is not None and a0 <= win and win + 16 <= a1 and eq >= 24):
                         new.append({"pc": a0, "pc_end": a1, "file": k[0], "section": k[1],
                                     "addr": a0 + delta, "agree": eq, "keys": nk})
                 s0 = i2 + 1
@@ -387,14 +571,37 @@ def find_places(pc, disc, bid, pointers, rounds=8):
     return rows
 
 
+def byte_windows(pc, cls, lo, hi):
+    """The 4-aligned 16-byte windows of [lo, hi) with no pointer word in them and
+    at least six different byte values, not overlapping - keys of numbers for a
+    region no pointer keys (docs/exe-import-engine.md section 7.4)."""
+    out, a = [], lo + (-lo % 4)
+    while a <= hi - 16:
+        if not any(a + j in cls for j in range(0, 16, 4)) and len(set(pc[a - DATA_LO:a - DATA_LO + 16])) >= 6:
+            out.append(a)
+            a += 16
+        else:
+            a += 4
+    return out
+
+
+def finds(blob, pat):
+    out, o = [], blob.find(pat)
+    while o >= 0:
+        out.append(o)
+        o = blob.find(pat, o + 1)
+    return out
+
+
 def write_places(places):
     with open(PLACES, "w", newline="\n") as f:
         f.write("# recipes/exe-places.tsv - GENERATED by `tools/exe_tables.py recipe`; do not edit.\n"
                 "# What exe_maps/ left unplaced, placed by the PC's own data pointers (docs/exe-import-engine.md\n"
                 "# section 3): [pc, pc_end) is the build's `file` / `section` from `addr` on, as in\n"
                 "# exe_maps/; `agree` bytes compared equal (numbers equal, data pointers the target's\n"
-                "# address in the build), `keys` data pointers voted for the place. Addresses and\n"
-                "# counts only (CLAUDE.md rule 1).\n")
+                "# address in the build), `keys` data pointers voted for the place; `keys` 0 is a place\n"
+                "# a 16-byte window of numbers found once in a neighbour's file (section 7.4), at least\n"
+                "# 24 bytes agreeing. Addresses and counts only (CLAUDE.md rule 1).\n")
         f.write("\t".join(PLACE_COLS) + "\n")
         for bid in ORDER:
             for r in places.get(bid, ()):
@@ -505,15 +712,37 @@ def apply_rebuild(img, owner, ranges, rebuilt, refused):
     return n
 
 
+def apply_layout(img, owner, ranges, values):
+    """Fill every pointer word still unfilled after the rebuild from the layout
+    (recipes/exe-layout.tsv, docs/exe-import-engine.md section 7): one `layout`
+    range. A rebuilt word must already hold the layout's value (the disc's own
+    word, run backwards, agrees with the PC's layout) - a difference stops the
+    build. Returns the words written."""
+    k, n = len(ranges), 0
+    ranges.append([DATA_LO, DATA_HI, "layout", "exe-layout.tsv", 0])
+    for a in sorted(values):
+        o = a - DATA_LO
+        ks = {owner[o + j] for j in range(4)}
+        if ks == {None}:
+            struct.pack_into("<I", img, o, values[a])
+            owner[o:o + 4] = [k] * 4
+            n += 1
+        elif struct.unpack_from("<I", img, o)[0] != values[a] or len(ks) != 1 or ranges[ks.pop()][2] != "rebuilt":
+            fail("0x%06X: a pointer word of exe-layout.tsv is placed or rebuilt to another value; rerun `recipe`" % a)
+    return n
+
+
 def disc_built(disc, bid, pointers, refused):
     """The disc's image as base/exe/ holds it: placed, the pointer words
     masked, the data pointers the rule rebuilds written back but those the
-    recipe refuses for this build. (image, owner, ranges, rebuilt, outcomes)."""
+    recipe refuses for this build, then every pointer word still unfilled from
+    the layout table. (image, owner, ranges, rebuilt, outcomes)."""
     img, owner, ranges = disc_image(disc, bid, load_places().get(bid, ()))
     rebuilt, c, _ = rebuild_candidates(img, owner, ranges, pointers)
     mask(img, owner, pointers)
     c["refused"] = sum(1 for a in rebuilt if a in refused)
     c["written"] = apply_rebuild(img, owner, ranges, rebuilt, refused)
+    c["layout"] = apply_layout(img, owner, ranges, layout_values())
     return img, owner, ranges, rebuilt, c
 
 
@@ -583,8 +812,10 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
              "# `table` (a tables.toml table at its recorded place), `widen` (a name table, the",
              "# disc's numbers at the PC's offsets, the 16-byte name blank), `pointer` (a pointer",
              "# word of the PC's: unfilled, never copied), `rebuilt` (a pointer word into .data the",
-             "# disc's own word gives by the map run backwards; `from` is that word), `none` (no",
-             "# disc carries it: unfilled).",
+             "# disc's own word gives by the map run backwards; `from` is that word), `layout` (a",
+             "# pointer word no disc places or rebuilds, filled from recipes/exe-layout.tsv: the PC's",
+             "# layout, held as addresses), `own` (no disc carries it; the engine fills it itself,",
+             "# src/hook/exe_own.cpp's regions: unfilled here), `none` (no disc carries it: unfilled).",
              "", "[image]", 'file = "data.bin"', "va = 0x%06X" % DATA_LO, "size = %d" % len(img),
              "bss_end = 0x%06X" % bss_end, 'sha256 = "%s"' % sha(img), 'build = "%s"' % bid,
              'source = %s' % json.dumps(os.path.basename(os.path.normpath(source))),
@@ -592,10 +823,14 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
     if owner is None:
         lines.append('  [0x%06X, 0x%06X, "exe", ".data"],' % (DATA_LO, DATA_HI))
     else:
-        ptr = set()
+        ptr, own = set(), own_bytes()
         for pc, words, _ in pointers:
             ptr.update(range(pc, pc + 4 * words))
+        kind = lambda x: "own" if x in own else "pointer" if x in ptr else "none"
         for lo, hi, k in spans(owner, ranges):
+            if k is not None and ranges[k][2] == "layout":
+                lines.append('  [0x%06X, 0x%06X, "layout", "%s"],' % (lo, hi, ranges[k][3]))
+                continue
             if k is not None:
                 rpc, _, how, where, addr = ranges[k]
                 at = addr if how == "widen" else addr + lo - rpc
@@ -603,11 +838,11 @@ def write_exe(out, bid, source, img, bss_end, ranges=None, owner=None, pointers=
                 continue
             p = lo                                      # an unfilled run: pointer words and the rest
             while p < hi:
-                is_ptr = p in ptr
+                kp = kind(p)
                 q = p
-                while q < hi and (q in ptr) == is_ptr:
+                while q < hi and kind(q) == kp:
                     q += 1
-                lines.append('  [0x%06X, 0x%06X, "%s", ""],' % (p, q, "pointer" if is_ptr else "none"))
+                lines.append('  [0x%06X, 0x%06X, "%s", ""],' % (p, q, kp))
                 p = q
     lines.append("]")
     with open(os.path.join(d, "data.toml"), "w", newline="\n", encoding="utf-8") as f:
@@ -633,17 +868,21 @@ def build_from(path, bid, out):
     return bid, h
 
 
-def verify_cache(cache):
+def verify_cache(cache, info=None):
     """base/exe/data.bin against data.toml's hash and the recipe's for its build:
     BOF3.exe's .data when the PC was the source, the recorded disc-built image
-    otherwise. Returns a list of problems."""
+    otherwise, and on a disc build every `layout` word against
+    recipes/exe-layout.tsv's target. Returns a list of problems; `info`, a list,
+    gets the layout's count."""
     d = os.path.join(cache, "base", "exe")
     if not os.path.exists(os.path.join(d, "data.toml")):
         return ["base/exe/: absent"]
     with open(os.path.join(d, "data.toml"), "rb") as f:
-        img = tomllib.load(f)["image"]
+        meta = tomllib.load(f)
+    img = meta["image"]
     with open(os.path.join(d, img["file"]), "rb") as f:
-        h = sha(f.read())
+        raw = f.read()
+    h = sha(raw)
     rec = load_recipe()["build"].get(img["build"])
     errs = []
     if h != img["sha256"]:
@@ -652,6 +891,20 @@ def verify_cache(cache):
         errs.append("base/exe/: build %s has no image in recipes/exe.toml" % img["build"])
     elif h != rec["sha256"]:
         errs.append("base/exe/%s: not the %s image recipes/exe.toml records" % (img["file"], img["build"]))
+    if img["build"] != PC:                       # the layout's words: each the table's target
+        values = layout_values()
+        words = [a for lo, hi, how, _ in meta["image"]["ranges"] if how == "layout" for a in range(lo, hi, 4)]
+        bad = [a for a in words if a not in values or struct.unpack_from("<I", raw, a - DATA_LO)[0] != values[a]]
+        left = sum(hi - lo for lo, hi, how, _ in meta["image"]["ranges"] if how == "pointer") // 4
+        if bad:
+            errs.append("base/exe/: %d layout words are not recipes/exe-layout.tsv's target, the first 0x%06X" % (len(bad), bad[0]))
+        if rec is not None and len(words) != rec.get("layout_words"):
+            errs.append("base/exe/: %d layout words, recipes/exe.toml says %s" % (len(words), rec.get("layout_words")))
+        if left:
+            errs.append("base/exe/: %d pointer words left unfilled" % left)
+        if info is not None:
+            info.append("layout %d of %d words recipes/exe-layout.tsv's targets; pointer words unfilled: %d"
+                        % (len(words) - len(bad), len(words), left))
     return errs
 
 
@@ -668,13 +921,17 @@ def discs(paths):
     return out
 
 
-def decide_pointers(pc, images):
+def decide_pointers(pc, images, numbers=()):
     """The PC's pointer-shaped words that are pointers: all but those every
     build that places them holds equal to the PC's (a number that only looks
-    like an address). [(pc, words, class)] runs, split by the class of what
-    they point at."""
+    like an address), and those `numbers` (code_numbers, bss_numbers) classes
+    numbers by reading .text or by a .bss address's shape - which settles the
+    words no disc tests instead of calling them pointers by default. [(pc, words, class)] runs, split by the
+    class of what they point at."""
     words = []
     for a in pointer_words(pc):
+        if a in numbers:
+            continue
         o = a - DATA_LO
         placed = [img[o:o + 4] for img, owner, _ in images if all(owner[i] is not None for i in range(o, o + 4))]
         if placed and all(w == pc[o:o + 4] for w in placed):
@@ -694,25 +951,39 @@ def counts(pc, img, owner, ranges, pointers):
     ptr = set()
     for a, n, _ in pointers:
         ptr.update(range(a - DATA_LO, a - DATA_LO + 4 * n))
+    own = {x - DATA_LO for x in own_bytes()}
     c = collections.Counter()
     for i in range(len(pc)):
         if owner[i] is None:
-            c["pointer" if i in ptr else "none", "pc-zero" if pc[i] == 0 else "pc-nonzero"] += 1
+            c["own" if i in own else "pointer" if i in ptr else "none", "pc-zero" if pc[i] == 0 else "pc-nonzero"] += 1
         else:
-            c["rebuilt" if ranges[owner[i]][2] == "rebuilt" else "placed",
+            how = ranges[owner[i]][2]
+            c["rebuilt" if how == "rebuilt" else "layout" if how == "layout" else "placed",
               "equal" if img[i] == pc[i] else "differ"] += 1
     return c
 
 
 def cmd_recipe(a):
     pc, bss_end = pc_data(os.path.join(a.game, "BOF3.exe"))
+    with open(os.path.join(a.game, "BOF3.exe"), "rb") as f:
+        numbers = code_numbers(f.read(), pc)
+    numbers.update(bss_numbers(pc))
+    numbers.update(own_numbers(pc))
+    print("%d pointer-shaped words into .text or .bss are numbers: %s" % (len(numbers),
+                                                                         dict(collections.Counter(numbers.values()))))
     images = []
     for bid, disc in discs(a.disc):
         img, owner, ranges = disc_image(disc, bid)
         images.append((img, owner, ranges))
         print("%s: %d ranges, %d bytes placed before the pointer mask" % (bid, len(ranges), sum(o is not None for o in owner)))
-    pointers = decide_pointers(pc, images)
+    pointers = decide_pointers(pc, images, numbers)
     cand = len(pointer_words(pc))
+    # The layout's `number` rows: the words code_numbers / bss_numbers settle that the discs
+    # alone would have called pointers (the rest every disc already holds equal).
+    words = lambda runs: {p + 4 * k for p, n, _ in runs for k in range(n)}
+    numbers = sorted(words(decide_pointers(pc, images)) - words(pointers))
+    write_layout(layout_rows(pc, pointers, numbers))
+    values = layout_values()
     # The places by data pointer come after the pointer decision, which stays the
     # maps' alone, so exe-pointers.tsv does not move with them.
     places = {}
@@ -749,7 +1020,9 @@ def cmd_recipe(a):
                 "# `pc` whose value points into the PC image (`to`: the section it points at). A disc's\n"
                 "# word there is its own build's address, so base/exe/ leaves them unfilled; the PC's\n"
                 "# pointer-shaped words every disc that places them holds equal are numbers, not\n"
-                "# pointers, and are not listed. Addresses and counts only (CLAUDE.md rule 1).\n"
+                "# pointers, and are not listed, nor are the words into .text that are no function start\n"
+                "# and the words into .bss that cannot be a variable's address (exe_tables.code_numbers,\n"
+                "# bss_numbers; exe-layout.tsv's `number` rows). Addresses and counts only (CLAUDE.md rule 1).\n"
                 "pc\twords\tto\n")
         for p, n, cls in pointers:
             f.write("0x%06X\t%d\t%s\n" % (p, n, cls))
@@ -767,13 +1040,20 @@ def cmd_recipe(a):
              'rebuild = "exe-rebuild.tsv"',
              'rebuild_sha256 = "%s"' % sha(open(REBUILD, "rb").read()),
              'places = "exe-places.tsv"',
-             'places_sha256 = "%s"' % sha(open(PLACES, "rb").read()), "",
+             'places_sha256 = "%s"' % sha(open(PLACES, "rb").read()),
+             'layout = "exe-layout.tsv"',
+             'layout_sha256 = "%s"' % sha(open(LAYOUT, "rb").read()),
+             "layout_numbers = %d" % len(numbers),
+             "layout_code_unnamed = %d" % sum(1 for _, k, t in load_layout() if k == "code" and t.startswith("0x")), "",
              "[build.%s]" % PC, 'sha256 = "%s"' % sha(pc), "bss_end = 0x%06X" % bss_end, ""]
     for (bid, _), (img, owner, ranges) in zip(discs(a.disc), images):
         rebuilt, _, _ = rebuild_candidates(img, owner, ranges, pointers)
         mask(img, owner, pointers)
         apply_rebuild(img, owner, ranges, rebuilt, set(refused[bid]))
+        nl = apply_layout(img, owner, ranges, values)
         c = counts(pc, img, owner, ranges, pointers)
+        if c["layout", "differ"]:
+            fail("%s: %d layout bytes differ from the PC's" % (bid, c["layout", "differ"]))
         o = outcomes[bid]
         lines += ["[build.%s]" % bid, 'sha256 = "%s"' % sha(img),
                   "ranges = %d" % len(ranges),
@@ -781,7 +1061,9 @@ def cmd_recipe(a):
                   "placed_equal = %d" % c["placed", "equal"], "placed_differ = %d" % c["placed", "differ"],
                   "pointer_pc_zero = %d" % c["pointer", "pc-zero"], "pointer_pc_nonzero = %d" % c["pointer", "pc-nonzero"],
                   "none_pc_zero = %d" % c["none", "pc-zero"], "none_pc_nonzero = %d" % c["none", "pc-nonzero"],
+                  "own_pc_zero = %d" % c["own", "pc-zero"], "own_pc_nonzero = %d" % c["own", "pc-nonzero"],
                   "rebuilt_equal = %d" % c["rebuilt", "equal"],
+                  "layout_equal = %d" % c["layout", "equal"], "layout_words = %d" % nl,
                   "rebuild_words = %d" % o["rebuilt"], "rebuild_refused = %d" % len(refused[bid]),
                   "rebuild_ambiguous = %d" % o["ambiguous"], "rebuild_target_unplaced = %d" % o["target unplaced"],
                   "rebuild_word_unplaced = %d" % (o["word unplaced"] + o["word split"]),
@@ -930,6 +1212,7 @@ def cmd_measure(a):
         rb = rebuild_report(bid, pc, img, owner, ranges, pointers, refused[bid], syms, out)
         mask(img, owner, pointers)
         apply_rebuild(img, owner, ranges, rb.pop("_rebuilt"), refused[bid])
+        apply_layout(img, owner, ranges, layout_values())
         if sha(img) != load_recipe()["build"][bid]["sha256"]:
             fail("%s: the image is not the one recipes/exe.toml records; rerun `recipe`" % bid)
         c = counts(pc, img, owner, ranges, pointers)
@@ -1091,6 +1374,61 @@ def cmd_xref(a):
     print("-> %s" % os.path.join(out, "src_addresses.tsv"))
 
 
+def check_layout(rec):
+    """recipes/exe-layout.tsv alone: it hashes as recipes/exe.toml records, its
+    rows are in order, 4-aligned and inside .data; its pointer rows are exactly
+    exe-pointers.tsv's words with the kind of their `to`, and its `number` rows
+    none of them; every code target a [[func]] start by name, or (the starts the
+    catalogue lacks, docs/exe-code-pointers-midfunc.md section 6) an address in
+    .text that is no [[func]] start, as many as the recipe counts; every other
+    target inside its kind's section of the image (.rdata, .data, .bss)."""
+    errs = []
+    with open(LAYOUT, "rb") as f:
+        if sha(f.read()) != rec["meta"].get("layout_sha256"):
+            errs.append("exe-layout.tsv: not the file recipes/exe.toml was generated with")
+    rows = load_layout()
+    want = {}
+    for p, w, cls in load_pointers():
+        for a in range(p, p + 4 * w, 4):
+            want[a] = KIND[cls]
+    names = {n: a for a, n in func_starts().items()}
+    bss_end = rec["build"][PC]["bss_end"]
+    span = {"rdata": (RDATA_LO, DATA_LO), "data": (DATA_LO, DATA_HI), "bss": (DATA_HI, bss_end)}
+    last, unnamed, numbers, seen = DATA_LO - 4, 0, 0, set()
+    for a, kind, t in rows:
+        if a <= last or a % 4 or a + 4 > DATA_HI:
+            errs.append("exe-layout.tsv: 0x%06X out of order, unaligned or outside .data" % a)
+        last = a
+        if kind == "number":
+            numbers += 1
+            if a in want or t != "-":
+                errs.append("exe-layout.tsv: 0x%06X: a number that exe-pointers.tsv lists, or with a target" % a)
+            continue
+        seen.add(a)
+        if want.get(a) != kind:
+            errs.append("exe-layout.tsv: 0x%06X is %s, exe-pointers.tsv says %s" % (a, kind, want.get(a)))
+        if kind == "code":
+            if t.startswith("0x"):
+                unnamed += 1
+                v = int(t, 16)
+                if not TEXT_LO <= v < RDATA_LO or v in names.values():
+                    errs.append("exe-layout.tsv: 0x%06X: code target %s outside .text or a [[func]] start by address" % (a, t))
+            elif t not in names:
+                errs.append("exe-layout.tsv: 0x%06X: code target %s is no symbols.toml [[func]]" % (a, t))
+        elif kind in span:
+            v = int(t, 16)
+            if not span[kind][0] <= v < span[kind][1]:
+                errs.append("exe-layout.tsv: 0x%06X: %s target %s outside its section" % (a, kind, t))
+        else:
+            errs.append("exe-layout.tsv: 0x%06X: kind %s" % (a, kind))
+    if set(want) - seen:
+        errs.append("exe-layout.tsv: %d pointer words of exe-pointers.tsv not held" % len(set(want) - seen))
+    if numbers != rec["meta"].get("layout_numbers") or unnamed != rec["meta"].get("layout_code_unnamed"):
+        errs.append("exe-layout.tsv: %d numbers and %d unnamed code targets, the recipe says %s and %s"
+                    % (numbers, unnamed, rec["meta"].get("layout_numbers"), rec["meta"].get("layout_code_unnamed")))
+    return errs
+
+
 def cmd_check(a):
     """recipes/exe.toml and exe-pointers.tsv alone: the pointer list hashes as
     the recipe says, its runs are in order inside .data, every build is
@@ -1137,14 +1475,15 @@ def cmd_check(a):
         last = DATA_LO
         for r in rows:
             i = bisect.bisect_right(st, r["pc_end"] - 1) - 1
-            if (r["pc"] < last or r["pc_end"] <= r["pc"] or r["pc_end"] > DATA_HI or r["keys"] < 1
+            if (r["pc"] < last or r["pc_end"] <= r["pc"] or r["pc_end"] > DATA_HI or (r["keys"] < 1 and r["agree"] < 24)
                     or (i >= 0 and segs[i]["pc_end"] > r["pc"])):
                 errs.append("exe-places.tsv: %s 0x%06X: out of order, empty, outside .data, keyless or over a map segment"
                             % (bid, r["pc"]))
             last = r["pc_end"]
+    errs += check_layout(rec)
     _, _, builds = tables.load()
     keys = ("placed_equal", "placed_differ", "pointer_pc_zero", "pointer_pc_nonzero", "none_pc_zero", "none_pc_nonzero",
-            "rebuilt_equal")
+            "rebuilt_equal", "layout_equal", "own_pc_zero", "own_pc_nonzero")
     for bid, b in rec["build"].items():
         if bid not in builds:
             errs.append("build %s: not in fixtures.toml" % bid)
@@ -1154,10 +1493,17 @@ def cmd_check(a):
             errs.append("build %s: the counts add to %d, not %d" % (bid, sum(b.get(k, 0) for k in keys), rec["meta"]["size"]))
         if bid != PC and b.get("rebuilt_equal", 0) != 4 * (b.get("rebuild_words", 0) - b.get("rebuild_refused", 0)):
             errs.append("build %s: %d rebuilt bytes, not 4 x (rebuilt - refused) words" % (bid, b.get("rebuilt_equal", 0)))
+        if bid != PC and (b.get("layout_equal") != 4 * b.get("layout_words", -1)
+                          or b.get("rebuilt_equal", 0) // 4 + b.get("layout_words", 0) != rec["meta"]["pointer_words"]
+                          or b.get("pointer_pc_zero", 0) + b.get("pointer_pc_nonzero", 0)):
+            errs.append("build %s: the rebuilt and layout words are not every pointer word, or a pointer byte is "
+                        "left unfilled" % bid)
     for e in errs:
         print("error: " + e)
     print("exe_tables check: %d builds, %d pointer words in %d runs, %d refused rebuilds, the rule's round trip, "
-          "%d error(s)" % (len(rec["build"]), n, len(load_pointers()), sum(len(x) for x in refused.values()), len(errs)))
+          "the layout (%d words, %d numbers), %d error(s)" % (len(rec["build"]), n, len(load_pointers()),
+                                                            sum(len(x) for x in refused.values()), len(load_layout()),
+                                                            rec["meta"].get("layout_numbers", 0), len(errs)))
     return 1 if errs else 0
 
 
@@ -1171,9 +1517,12 @@ def cmd_build(a):
 
 
 def cmd_verify(a):
-    errs = verify_cache(a.cache)
+    info = []
+    errs = verify_cache(a.cache, info)
     for e in errs:
         print("error: " + e)
+    for i in info:
+        print("verify base/exe/: " + i)
     print("verify base/exe/: %d problem(s)" % len(errs))
     return 1 if errs else 0
 
