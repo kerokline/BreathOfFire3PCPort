@@ -495,8 +495,6 @@ psx-jp	0x660F94	0x660F98	gap	game-value	Scena03_Bob4
 psx-jp	0x660F98	0x660F9C	gap	game-value	Scena03_Bob2
 psx-jp	0x660FFC	0x661000	gap	game-value	Scena04_Quake
 psx-jp	0x661000	0x661004	gap	game-value	Scena04_TremorSteps
-psx-jp	0x662CD8	0x662CE8	gap	game-value	Scenario_Hooks+0x58
-psx-jp	0x662DE8	0x662DF0	gap	game-value	Field_ModeTailKinds+0x100
 psx-jp	0x6636B0	0x6637C7	gap	game-value	Equip_SlotIcons+0x50
 psx-jp	0x6637E0	0x6637E3	gap	game-value	Equip_SlotIcons+0x180
 psx-jp	0x66386C	0x663872	gap	game-value	Menu_ButtonSets+0x30
@@ -1157,8 +1155,6 @@ psx-us	0x6629F1	0x662A01	gap	game-value	Scena17_EndSteps+0x925
 psx-us	0x662A1C	0x662A24	gap	game-value	Scena17_EndSteps+0x950
 psx-us	0x662A5C	0x662A7E	gap	game-value	Scena17_EndSteps+0x990
 psx-us	0x662AC5	0x662AEA	gap	disc-unplaced	Scena17_EndSteps+0x9F9
-psx-us	0x662CD8	0x662CE8	gap	game-value	Scenario_Hooks+0x58
-psx-us	0x662DE8	0x662DF0	gap	game-value	Field_ModeTailKinds+0x100
 psx-us	0x6636B0	0x6637C7	gap	game-value	Equip_SlotIcons+0x50
 psx-us	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-us	0x663866	0x663872	gap	game-value	Menu_ButtonSets+0x2A
@@ -1817,8 +1813,6 @@ psx-eu-en	0x6629F1	0x662A01	gap	game-value	Scena17_EndSteps+0x925
 psx-eu-en	0x662A1C	0x662A24	gap	game-value	Scena17_EndSteps+0x950
 psx-eu-en	0x662A5C	0x662A7E	gap	game-value	Scena17_EndSteps+0x990
 psx-eu-en	0x662AC5	0x662AEA	gap	disc-unplaced	Scena17_EndSteps+0x9F9
-psx-eu-en	0x662CD8	0x662CE8	gap	game-value	Scenario_Hooks+0x58
-psx-eu-en	0x662DE8	0x662DF0	gap	game-value	Field_ModeTailKinds+0x100
 psx-eu-en	0x6636B0	0x6637C7	gap	game-value	Equip_SlotIcons+0x50
 psx-eu-en	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
 psx-eu-en	0x663866	0x663872	gap	game-value	Menu_ButtonSets+0x2A
@@ -2476,8 +2470,6 @@ psx-fr	0x6629F1	0x662A01	gap	game-value	Scena17_EndSteps+0x925
 psx-fr	0x662A1C	0x662A24	gap	game-value	Scena17_EndSteps+0x950
 psx-fr	0x662A5C	0x662A7E	gap	game-value	Scena17_EndSteps+0x990
 psx-fr	0x662AC5	0x662AEA	gap	disc-unplaced	Scena17_EndSteps+0x9F9
-psx-fr	0x662CD8	0x662CE8	gap	game-value	Scenario_Hooks+0x58
-psx-fr	0x662DE8	0x662DF0	gap	game-value	Field_ModeTailKinds+0x100
 psx-fr	0x663670	0x663678	gap	game-value	Equip_SlotIcons+0x10
 psx-fr	0x6636B0	0x6637C7	gap	game-value	Equip_SlotIcons+0x50
 psx-fr	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
@@ -3138,8 +3130,6 @@ psx-de	0x6629F1	0x662A01	gap	game-value	Scena17_EndSteps+0x925
 psx-de	0x662A1C	0x662A24	gap	game-value	Scena17_EndSteps+0x950
 psx-de	0x662A5C	0x662A7E	gap	game-value	Scena17_EndSteps+0x990
 psx-de	0x662AC5	0x662AEA	gap	disc-unplaced	Scena17_EndSteps+0x9F9
-psx-de	0x662CD8	0x662CE8	gap	game-value	Scenario_Hooks+0x58
-psx-de	0x662DE8	0x662DF0	gap	game-value	Field_ModeTailKinds+0x100
 psx-de	0x663660	0x663677	gap	game-value	Equip_SlotIcons
 psx-de	0x6636B0	0x6637C7	gap	game-value	Equip_SlotIcons+0x50
 psx-de	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
