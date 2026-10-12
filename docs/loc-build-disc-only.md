@@ -440,6 +440,60 @@ The 94 enemy tables left are the PC-built layer's too: their records carry
 no name to write (`convert_enemy_names` writes a chunk per named record).
 Pools 44 of 44, the font and the text CLUT 1 of 1, in every column.
 
+### 5.4 The exe image's language bytes from a US disc alone
+
+[`exe-import-engine.md`](exe-import-engine.md) 3.2 counted 183 addresses `src/`
+reads in `0x669CCC..0x66A450` and `0x6531F4..0x6536E0` that no disc carries
+(JP). Re-measured on the US disc (`exe_tables.py xref`, 2026-10-12): **182**,
+all `none`. A language layer does not write the image (`base/exe/data.bin`);
+its FIRST.DAT chunks are applied into `.data` at load by the engine's
+handlers (`dat_load.cpp` `TakeChunk`, kinds 5..16). Read handler by handler
+against the 182 (a read-only pass over `src/`, `analysis/pc_xref.json` and
+the image; per-address table in scratch `lang182_class.tsv`), with the US
+layer of 5.3, which carries every one of those chunks:
+
+| | Addresses | How |
+|---|---:|---|
+| written in place by a handler | 83 | labels groups 1, 2, 5, 6, 8, 9, 11, 12, 16 (`labels.cpp` 296-297); battle commands `0x669D28` and the verbs `0x66A228..` (`menu_verbs.cpp` 112-114); the merchant `0x669CD8` and the whelp's slot `0x669CE0` (`char_names.cpp`) |
+| read through ours, the bytes unread | 91 | re-aimed pointer tables (battle messages `0x669D7C..0x669DD8`, labels groups 3, 4, 7, 13, fishing, the controller names `0x66A338..`); patched operands (the config row labels `0x669F0C..0x669F3C`, the pause lines `0x66A3F0`, `0x66A404`, `0x66A420`, `0x66A434`); our draws through `Labels_Slot` (groups 14, 15); `0x66A1F8` not drawn under a Latin overlay (DIV-0083) |
+| **stay zero** | **8** | below |
+
+The eight, by what reads them and what a zero shows (none crashes):
+
+| Address | What | Read by | A zero |
+|---|---|---|---|
+| `0x6531F4` | the format string `%d/%d` | `CommuRank_Show` (`rest_4e.cpp`, `kPageFormat`) via sprintf | the ranked lists' page counter blank. The engine's own by meaning - a format string - so NB's class, not a language layer's |
+| `0x653200` | faerie record 0's name field (base of the 60 x 20 records: a 16-byte name, then four stats) | `CommuSim_AddRecord` (`rest_4a.cpp` 747), the entry's default name (`rest_4d.cpp`) | faerie 0 nameless; see the defect below |
+| `0x653210` (+ 20 r) | the faeries' four stat bytes | the community's ticks (`rest_4a.cpp`), the bars (`rest_4b.cpp`, `rest_4e.cpp`) | every bar 0 and the simulation's traits 0. Game values, on the disc (COMMU00's nine-byte records carry the same four bytes, the "faerie stats" anchor), but no chunk kind carries them: an engine handler would be needed |
+| `0x653601` (read at + area, `0x6536B0..0x6536BA`) | a byte a faerie-village area (175..185) | `rest_4b.cpp` (five readers) | every area's limit 0: placements refused. Game values; not language |
+| `0x669CCC` | the empty save slot's text | `field_o.cpp` 633 | blank |
+| `0x669CE8` | a five-byte name `EquipOpen` copies over character record 7's | `battle_e1.cpp` 313 | that name blank until `EquipLeave` restores it from `0x669CE0` |
+| `0x66A094` | a one-glyph word after a count | `effect_2g.cpp` 789 | blank |
+| `0x66A098` | a menu's title | `rest_3e.cpp` 1127 (sprintf `%s`) | blank |
+
+None is closable in `loc_build.py` alone: a layer reaches `.data` only
+through a handler, and these have none. `0x669CCC`, `0x669CE8`, `0x66A094`,
+`0x66A098` are text a new label group could carry (a `src/` change, listed
+for the coordinator); `0x6531F4` is the engine's own; `0x653210`'s stats and
+`0x6536B0..`'s limits are game values a disc carries but no layer does.
+
+**A defect found on the way (labels group 16, DIV-0064), not changed here.**
+The PC's faerie record is the name first: `kRecordTraits = 0x653200`,
+"+0x10..+0x13 read by the ticks" (`rest_4a_callees.h`), and the image agrees
+(a glyph string at `0x653200`, the stats `03 02 02 03` at `0x653210`, the
+next name at `0x653214`). `convert_labels` pairs the disc's record r (a
+five-byte name, then the stats that equal the PC's record r) with the PC's
+stats at `0x653210 + 20 r`, and `labels.cpp` writes name r to `0x653214 + 20 r`
+- record r + 1's name field. So faerie r + 1 shows faerie r's name, record
+0's name is never written, and the "sixtieth record whose PC name field
+holds no glyph string" (`FAERIE_UNNAMED`) is the area-limit table above,
+`0x6536B0` (`01 01 02 03 03 04 05 05 06 07 08`): skipping it is what keeps
+the write from clobbering that table. The fix is `src/game/labels.cpp`'s
+group-16 slots at `0x653200 + 20 r` and the name check at + 0 in
+`loc_build.py` (`FAERIE_UNNAMED` empty): a `src/` change and a change of the
+PC path's output, so the coordinator's and the owner's. Whether the owner's
+fairyVillage route showed shifted names was not looked at.
+
 ## 6. Can the game tell?
 
 Nobody can play a disc-only cache yet: the engine still reads the PC's `DAT/`
@@ -535,3 +589,52 @@ The scratch scripts that measured this (`cmp_base.py`, `trace_exe.py`,
 `zh_cover.py`, `misc.py`) are not committed; each is a few lines over
 `tools/dat.py`, `tools/font_pc.py` and `loc_build`'s own functions, and the
 tables above say what each counted.
+
+## 9. Ledger entries to draft (for the coordinator)
+
+**DIV-TBD-LG-1 - A disc-only layer stands in the disc's own images where the
+port's art showed.**
+- Original: over the PC install every language layer leaves eighteen images
+  of `loc/zh-CN` to the port's files - the glyph atlas of eleven modules, the
+  kanji sheet of `ENDKANJI` / `FIRST`, the area pages of `AREA104`, `127`,
+  `134`, `164` - and a disc-only cache (DIV-0090) had none of them, nor the
+  village sheet.
+- New: `loc_build.py all --cache` writes each as the disc's section of the
+  same dest; the atlas and the kanji sheet re-laid by the port's own rule
+  (`RELAID`: rectangles cleared, a strip of the sheet's icons at a pitch of
+  20), which gives the port's chunk byte for byte from the JP disc; the
+  village sheet the same way. The player sees the port's layout with the
+  disc's paint where the disc repainted (US: the village labels; French and
+  German: their words, also on the village sheet where the PC-built layer
+  keeps the port's), and on the four area pages the PlayStation's paint
+  where the PC shows the port's. Over the PC install nothing changes
+  (byte-identical, five tags). `FIRST.DAT`'s atlas is left out (a later
+  slot covers it on the PC too).
+- Why: the disc-only install has no port art; the disc's own is what that
+  release shows, laid where the port's draws read.
+- Also in the PSX version? The paint is each disc's own; the layout is the
+  port's.
+- Verification: section 5.3 (`check_relaid` on five discs; the US village
+  sheet identical to DIV-0088's). Not played. Owed the owner's eye: the
+  four area pages and the French and German sheets.
+
+**DIV-TBD-LG-2 - French `AREA004`'s first seven message slots, disc-only.**
+- Original: the French disc's table starts with seven words past its block's
+  end; the disc-only build skipped the block (no text for area 4), and the
+  PC-built `fr-FR` layer keeps two of the port's messages (464 and 440
+  bytes) in slots 0..6.
+- New: a disc-only block whose head slots point past its end takes its count
+  from the first in-block offset and points those slots at its first
+  message, as the German table does (`table_after_bad_head`). Slots 7..255
+  equal the PC-built layer's.
+- Why: the US and German tables point those slots at the same first message;
+  an empty message would be the only other choice.
+- Also in the PSX version? On the French PlayStation those slots read past
+  the block. Not played; which of slots 0..6 the event script names is not
+  read.
+
+**DIV-0090, amend:** "no village sheet, no text for French `AREA004`, no
+title page from a French or German disc without an English one" is no
+longer so (4.3, 4.5, 4.7); the French and German title pages from their
+own sheets are byte-identical to the PC-built layers' (no player
+difference, so no entry of its own).
