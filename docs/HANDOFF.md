@@ -139,9 +139,9 @@ code page audited, the seven mid-function pointers read, and two music defects o
       DIV-0091's entry).
 0. ~~The catch-up branch~~ - merged as PR #49 (2026-10-10 afternoon); its agents' worktrees under `.claude/worktrees/agent-*`
    and the older scratchpad worktrees can go (`git worktree list`).
-0. **The PSP-only round is staged** ([`psp-only-round.md`](psp-only-round.md), branch `psp/round`, 2026-10-12): nine
-   wave-one groups, briefs in `analysis/psp_round/`, not launched. Its last check (a start with no `BOF3.exe`) waits on
-   the disc-only round below; section 6 asks the owner which runs first.
+0. **The PSP-only round is staged** ([`psp-only-round.md`](psp-only-round.md), branch `psp/round`, 2026-10-12): eight
+   wave-one groups, briefs in `analysis/psp_round/`, not launched. **It runs after the PSX disc-only round** (the owner,
+   2026-10-12) and is written as if that round has landed; check its section 1 against that round's record first.
 1. **The owner's eye and ear** - [`owner-review.md`](owner-review.md) is the one list; new since the morning:
    - **the listen:** DIV-0087 (a cache: `BOF3X_CACHE=<repo>/analysis/cache/pc-plus-us`, built 2026-10-10 from the PC
      install, the US disc and both PSP images) - the title, a town, a fight and its fanfare, a once-only song, a

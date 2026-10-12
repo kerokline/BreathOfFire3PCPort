@@ -3,8 +3,11 @@
 **Status:** STAGED (2026-10-12). Nothing launched, nothing measured here. This
 plan regroups [`psp-only-build.md`](psp-only-build.md)'s sections 3, 5 and 8
 into groups that can run in parallel, with every live check held for one batch
-at the end. Base `main` `54911be6` (PRs #52 and #53 merged); round branch
-`psp/round`.
+at the end.
+
+**It runs after the PSX disc-only round** (the owner, 2026-10-12), and is
+written as if that round has landed. The base is `main` after that round's
+merge, and the round branch is `psp/round`, rebased onto it at launch.
 
 The owner asked, 2026-10-12, for the work a PSP-only install requires,
 staged as a round in the way the capture rounds were. That means parallel
@@ -18,222 +21,225 @@ owner's calls of 2026-10-10 govern
 
 ## 0. The answer in one paragraph
 
-Nine groups can start now, and none of them needs another group's output to
-start. Four are importer work on separate modules:
+The disc-only round makes a PSX disc alone a playable install: our
+executable, `.data` from the cache's `base/exe/`, no `BOF3.exe`, no `DAT\`,
+`SND\`, `BGM\` or AVIs, and a language layer without the PC's bytes. This
+round is then the PSP's difference on that path.
+
+Eight groups can start at once, and none needs another's output to start.
+Four are importer work on separate modules:
 - **SI**, the stand-ins;
-- **EX**, the exe from `BOOT.BIN`;
+- **EX**, a PSP `base/exe/` that meets the disc-only round's image contract;
 - **MB**, the music banks and the dropped tone;
 - **MS**, the sequences.
 
-Two are text and reading work:
-- **LG**, the PSP's language layers;
-- **AR**, the port's 14 arena edits.
-
-One is a reading pass in two stages, **CD**, the PSP code diff. One is engine
-work, **NI**, the engine with no install. One is the launcher, **LT**, the
-three suites.
+Then there is **LG**, the PSP's language layers on the disc-only round's
+language path, and **CD**, the PSP code diff, in two stages. **PN** covers
+the PSP's start on the disc-only path: its jingles, logos and effects.
+**LT** is the launcher's three suites.
 
 Three things wait for wave one's merges:
-- MS's stage B, which writes `base/bgm/` once MB's banks exist;
-- CD's stage B, which runs two readers over the pairing that stage A builds;
+- MS's stage B, which writes `base/bgm/`;
+- CD's stage B, which runs two readers;
 - **TG**, the suites' engine half.
 
-Every check that needs the game runs once at the end, with the owner away
-(section 5). **One thing is outside this round and gates the last check.** A
-start with no `BOF3.exe` at all needs the disc-only round (HANDOFF item 0): the
-data pointers held as layout, the 22 KB no disc carries, and the operand
-store as values. Until that lands, the batch runs the PSP's data over the
-player's `BOF3.exe` as the `.data` source. That checks everything but the
-exe image itself.
+The end batch is a true PSP-only start: no `BOF3.exe`, no PC file. Its
+reference is the PSX disc-only install of the same language (section 5).
 
-## 1. What "required" means here
+## 1. What the disc-only round is assumed to have delivered
 
-A PSP-only player has a PSP disc and nothing else. The install must build,
-start and play from that disc, and the launcher must show the right suites.
-The list is from [`psp-only-build.md`](psp-only-build.md), with what has
-landed since 2026-10-10 struck out:
+The coordinator checks each line against that round's record before launch.
+A line that does not hold becomes a group here.
+
+| Assumed landed | Used here by |
+|---|---|
+| `bof3x.exe` starts with `.data` mapped from the cache's `base/exe/`, with the unplaced pointer words and code pointers held as layout, the ~22 KB no disc carries as the engine's own, and the operand store's bytes as values | EX, PN, the end batch |
+| The gate: the state hash of a disc-built image against the PC-built one, with `data.toml`'s ranges as the skip list | EX, the end batch |
+| A start with no `BOF3.exe`, `DAT\`, `SND\`, `BGM\` or AVIs: every file the engine opens comes from the cache, or is a named Fatal | PN |
+| The PSX's logo handled (the `STR`, or skipped) and the jingles from a PSX disc | PN (the PSP's form of each) |
+| The disc-only language layer complete (`loc-build-disc-only.md` 7: the `zh-CN` chunks no layer replaced, the slot counts, the `NameError`s) | LG |
+| **The 14 port-edited arenas (`pc-edit`) settled**, because a PSX-only install cannot play without them | SI (the PSP's arenas take the same rule) |
+| The default key table as a rule | nothing PSP-specific |
+
+## 2. What is left for the PSP
 
 | # | Needed | From | Group |
 |---|---|---|---|
-| 1 | `base/` complete from a PSP disc: the ~270 stand-ins (2.2), and the `icons` and dial rules reading the PSP's section | 5 step 2, call 1 | **SI** |
+| 1 | `base/` complete from a PSP disc: the ~270 stand-ins (2.2), the `icons` and dial rules reading the PSP's section, and the `pc-edit` rule applied to the PSP's arenas | 5 step 2, call 1 | **SI** |
 | 2 | Ryu's form data (`RYUD00..03`, the 14 `type1` arenas, P8) as the PSP's own | 1, 2.2 | **SI** (data); **CD** (the code that reads it) |
 | 3 | The 16 containers whose bank lost its second tone | 2.1 | **MB** |
 | 4 | The PSP's music: `pPMS` to the sequence form, and the 81 music banks to the form the sequencer plays | 2.1, 5 step 5 | **MS**, **MB** |
-| 5 | `base/exe/` from `BOOT.BIN`: the data pointers rebuilt through a map of the ELF's own copies (59 % today), `sin_table` by rule, and the PSP's `exp_table` and consumable 87 as base | 2.3, `exe-import-engine.md` 5.7 | **EX** |
-| 6 | The language layers from a PSP disc: `ja-JP` from PSP-JP, `en-150` from PSP-EU, with names from `BOOT.BIN` | 2.4 | **LG** |
-| 7 | The 14 port-edited arenas (`pc-edit`). Every disc-only build needs them, so they are not PSP-specific; they are here because no round holds them | 3.2 | **AR** |
-| 8 | The engine with no install: no `DAT\`, `SND\`, `BGM\` or AVIs. The jingles' MP3s and the PSP's effects from `base/snd/`, the logos, and every other file it opens | 2.5, 8, `cache-read.md` 5 | **NI** |
-| 9 | The launcher's three suites, greyed by source, inverted for a PSP-only install | 6, call 3 | **LT**, then **TG** |
-| 10 | Whether the PSP's data runs on our code, and the code toggles if any | 4, I32 | **CD** |
-| 11 | ~~The PSP's banks (885 / 901), effects, voice and jingles~~ | 8 | done 2026-10-10 |
-| 12 | Our own executable, and `.data` from the cache | 3.1 | ~~state 3~~ done; **the disc-only round** for the rest |
+| 5 | A PSP `base/exe/` that passes the disc-only round's image contract. Its data pointers rebuild through a map of the ELF's own copies (59 % today; the rest held as layout, by that round's mechanism). `sin_table` is built by rule, and the PSP's `exp_table` and consumable 87 are the base | 2.3, `exe-import-engine.md` 5.7 | **EX** |
+| 6 | The language layers from a PSP disc: `ja-JP` from PSP-JP, `en-150` from PSP-EU. The names come from `BOOT.BIN`, not `GAME.EMI` | 2.4 | **LG** |
+| 7 | The PSP's start on the disc-only path. The 11 jingles are at3's MP3s. The logo is the PSP's `PMF`, or skipped. The effects are the ATRAC3plus decodes, now heard in play (their ledger entry is owed). `WHISTLE` is not imported | 2.1.1, 2.5, 8 | **PN** |
+| 8 | The launcher's three suites, greyed by source, inverted for a PSP-only install | 6, call 3 | **LT**, then **TG** |
+| 9 | Whether the PSP's data runs on our code, and the code toggles if any | 4, I32 | **CD** |
+| 10 | ~~The PSP's banks (885 / 901), effects, voice and jingles~~ | 8 | done 2026-10-10 |
 
 Not required, and left out: a clean-room ATRAC3plus decoder (I36, low
-priority); `OTHER/WHISTLE`; the PSP's logo `PMF` (NI asks the owner, section
-6); the "deeper choice" screen.
+priority) and the "deeper choice" screen.
 
-## 2. The groups
+## 3. The groups
 
 | Group | Wave | What | Writes (new files are the group's own) | Touches shared | DIV drafted |
 |---|---|---|---|---|---|
-| **SI** | 1 | The PSP-only base policy; the `own` stand-ins from a PSP section for the ~270 chunks; the `icons` and dial rules on the PSP's sections; P8's data as stand-ins | `tools/psp_standins.py`, `docs/psp-stand-ins.md` | `tools/importer.py` (one call site), `recipes/pc-zh.toml` (regenerated; **SI alone**) | A: the PSP-only base |
-| **EX** | 1 | The ELF's own-copies map and the pointer rebuild on PSP; `sin_table` by rule, proved byte-identical on the PC's and every PSX build; the PSP tables recorded as base in the manifest | `tools/psp_exe.py`, `docs/psp-exe.md` | `tools/importer.py` (one call site), `recipes/exe*.tsv` / `exe.toml` (**EX alone**) | B: the PSP's level table and consumable 87 |
+| **SI** | 1 | The PSP-only base policy; the `own` stand-ins from a PSP section for the ~270 chunks; the `icons` and dial rules on the PSP's sections; P8's data as stand-ins; the disc-only round's `pc-edit` rule run on the PSP's arenas | `tools/psp_standins.py`, `docs/psp-stand-ins.md` | `tools/importer.py` (one call site), `recipes/pc-zh.toml` (regenerated; **SI alone**) | A: the PSP-only base |
+| **EX** | 1 | The ELF's own-copies map and the pointer rebuild on PSP; what still does not rebuild, held by the disc-only round's mechanism; `sin_table` by rule, proved byte-identical on the PC's and every PSX build; the PSP tables as base. Then a PSP `base/exe/` that maps and starts headless | `tools/psp_exe.py`, `docs/psp-exe.md` | `tools/importer.py` (one call site), `recipes/exe*` (**EX alone**); the engine's image loader only if the PSP needs a case it lacks | B: the PSP's level table and consumable 87 |
 | **MB** | 1 | `PPHD` music banks to VAB (the volume/pan merge inverted as far as it goes: a proposed rule); the dropped tone of the 16 containers by rule, or refused with the reason | `tools/vag.py` (**MB alone**), `docs/psp-music-banks.md` | none | (in C) |
 | **MS** | 1 + 2 | Stage A: `pPMS` to the sequence form, measured (73 exact, the classes). Stage B, after MB merges: the importer writes `base/bgm/` from a PSP source when no PSX disc is given; `verify` on it | `tools/ppms.py`, `docs/psp-music.md` | `tools/importer.py` (stage B, one call site) | C: the PSP's music as base |
-| **LG** | 1 | `loc_build all` against PSP-JP and PSP-EU: the names from `BOOT.BIN`, the font from the disc's atlas (DIV-0090's route), every container; diffed against the `psx-jp` and `psx-eu-en` layers | `docs/loc-build-psp.md` | `tools/loc_build.py` (**LG alone**) | amends DIV-0090 |
-| **AR** | 1 | Read the 14 arena edits: what each fixes, and whether our code depends on the edited layout. Propose a rule, a recipe, or "the disc's decode, ledgered". No output change | `docs/pc-edit-arenas.md`, a reading script | none | none (a proposal) |
-| **CD** | 1 + 2 | Stage A: pair the sibling's named PSX functions with their PSP twins (`psp-stallion.md` 3.1's method), and diff the pairs with widescreen and platform set aside. Stage B: two readers over the halves (CD1 battle and effects; CD2 field, menus, items, system). Priority questions: the consumers of `RYUD`, the button-label page, `exp_table` and consumable 87 | `tools/psp_pair.py`, `docs/psp-code-diff.md` | none | none (a list) |
-| **NI** | 1 | Every file the engine opens, enumerated; the engine started from the cache alone (a temp game folder with no `DAT\`, `SND\`, `BGM\` or AVIs); the 11 jingles' MP3s from `base/snd/`; the logos when no AVI exists; a missing file a Fatal that names the importer, not a crash; a self-test of the no-install path | `src/` (the file seams), `docs/no-install-start.md` | `src/game/fmv_play.cpp`, `dat_cache`, `Sound_LoadStream` | D: the logos with no AVI; amends DIV-0089 (the PSP's effects heard) |
+| **LG** | 1 | The disc-only round's language build run against PSP-JP and PSP-EU: the names from `BOOT.BIN`, every container, diffed against the `psx-jp` and `psx-eu-en` layers | `docs/loc-build-psp.md` | `tools/loc_build.py` (**LG alone**) | amends DIV-0090 |
+| **CD** | 1 + 2 | Stage A: pair the sibling's named PSX functions with their PSP twins (`psp-stallion.md` 3.1's method), and diff the pairs with widescreen and platform set aside. Stage B: two readers (CD1 battle and effects; CD2 field, menus, items, system). Priority questions: the consumers of `RYUD`, the button-label page, `exp_table` and consumable 87 | `tools/psp_pair.py`, `docs/psp-code-diff.md` | none | none (a list) |
+| **PN** | 1 | The PSP's start on the disc-only path: what a PSP cache holds against what that start reads, file by file; the jingles from at3's MP3s; the logo (`PMF` or skipped); the effects' ledger entry; a headless self-test from a PSP-only cache with no PC file | `src/` (the seams the disc-only round left), `docs/psp-start.md` | `src/game/fmv_play.cpp`, the cache seams | D: the PSP's effects and logo in play (amends DIV-0089) |
 | **LT** | 1 | The launcher's options page: a catalogue (`recipes/opt.toml` plus a suites table), availability from the cache's manifest, the three suites greyed with the discs that would enable them, the PSP-only inverse. Replaces the "PSP extras" boxes. A suite whose engine half is not built yet is greyed with that reason, never selectable | `src/launcher/`, `recipes/suites.toml`, `docs/launcher-suites.md` | `config.cpp`, `config_dialog.cpp` (**LT alone**) | E: three suites replace the extras (amends DIV-0086) |
-| **TG** | 2 | The suites' engine half: `opt/` layers for `base/bgm/` and `base/snd/`, and a chunk kind for the exe tables, so that audio and data work with a PSX disc present; LT's greyed reasons lifted | `src/`, `docs/launcher-suites.md` section | `dat_cache`, the music seam | amends E |
+| **TG** | 2 | The suites' engine half: `opt/` layers for `base/bgm/` and `base/snd/`, and a chunk kind for the exe tables, so that audio and data work with a PSX disc present; LT's greyed reasons lifted | `src/`, `docs/launcher-suites.md` section | the cache seams, the music seam | amends E |
 
-Wave one has nine agents. Wave two is MS stage B (the same agent, by
+Wave one has eight agents. Wave two is MS stage B (the same agent, by
 SendMessage), CD stage B (CD continues as CD1, and one new agent is CD2), and
-TG (new). That is two new agents.
+TG (new).
 
 **Why this split.** The shared files are the ones that collided in earlier
 rounds: `tools/importer.py`, the recipes, `DIVERGENCE.md`, `README.md` and the
 launcher's two dialog files. Each one has a single owner or a single call
 site. `vag.py` is MB's alone, so MS waits for MB through a stated contract
-(section 3), not a shared edit. Agents draft their ledger entries in their own
-doc's "For DIVERGENCE.md" section. The coordinator inserts them and numbers
-them (section 4).
+(section 4), not a shared edit. EX and PN may both want the engine's image or
+cache code. EX touches it only for a PSP-specific case; PN touches only the
+file seams. If both need the same function, the coordinator decides at the
+first report. Agents draft their ledger entries in their own doc. The
+coordinator inserts them and numbers them (section 5).
 
-## 3. Contracts between groups
+## 4. Contracts between groups
 
 - **MB to MS:** `vag.psp_music_vab(pphd: bytes, pbvc: bytes) -> (vh: bytes,
   vb: bytes)`, in the form `seq.py` / `base/bgm` already pairs with a song.
-  MS stage A does not need it: it measures sequences alone. MS stage B starts
-  from the round tip after MB merges.
+  MS stage A does not need it. MS stage B starts from the round tip after MB
+  merges.
 - **SI to LT, and EX to LT:** the manifest records the base policy (`psp` or
-  `psx`) and, per chunk class, the build that supplied it. LT reads the
-  policy, not the chunk rows. SI and EX each add one key to the manifest's
-  `[build]` table; the key names are fixed here as `base_policy` (SI) and
-  `exe_tables_from` (EX).
-- **CD to SI:** if CD finds that our code cannot run on the PSP's `RYUD` or
-  arena layout, SI's P8 stand-ins become a refusal. CD reports this as soon as
-  it is known, before the doc is finished. The coordinator relays it.
-- **AR to everyone:** AR changes no output. Its proposal goes to the owner.
+  `psx`) and, per chunk class, the build that supplied it. The `[build]` keys
+  are `base_policy` (SI) and `exe_tables_from` (EX).
+- **CD to SI, and CD to EX:** if CD finds that our code cannot run on the
+  PSP's `RYUD`, arena or table layout, the matching stand-in becomes a
+  refusal. CD reports this as soon as it is known. The coordinator relays it.
+- **EX and SI to PN:** PN's PSP-only self-test needs a PSP cache with
+  `base/exe/`. Until EX merges, PN tests with the PSP's `base/` over the
+  PSX-built `base/exe/`, and says so.
 
-## 4. Merge order and the coordinator's jobs
+## 5. Merge order and the coordinator's jobs
 
-Order: **AR, CD-A** (docs and a tool), then **EX, MB, SI, LG, MS-A**
-(importer), then **NI** (engine), then **LT** (launcher). Wave two follows:
-**MS-B, CD-B, TG**.
+Order: **CD-A** (a tool and a doc), then **EX, MB, SI, LG, MS-A** (importer),
+then **PN** (engine), then **LT** (launcher). Wave two follows: **MS-B, CD-B,
+TG**.
 
-After each merge, in the verify worktree:
+After each merge, in the verify worktree (`analysis/psp_round/merge_psp.sh`):
 - `python tools/importer.py check`.
-- The PC path unchanged: JP + PC 742 of 742 byte-identical, and the US-only
-  cache identical to the base's except the build time. Hash the manifests.
+- The PC and PSX paths unchanged: JP + PC, and the US disc alone, identical to
+  the reference caches built once from the base. Hash the file lists.
 - `python tools/ledger_check.py`.
 - If `src/` changed: the i686 build, and the headless self-test `'*'` narrow
   (wide at the end).
 - If `src/launcher/` changed: the launcher host suite and `dialog_test`.
 
-These are all offline or headless. None needs the owner's machine.
+These are all offline or headless.
 
 The coordinator's own jobs:
 - DIV numbers. A to E are drafted as letters. At the first merge that needs
-  one, take the next free id. On 2026-10-12, DIV-0095 is the last, and PR #54
-  only amends DIV-0092.
+  one, take the next free id after the disc-only round's.
 - One `docs/README.md` row per new doc.
 - `psp-only-build.md`'s section 5 struck through as steps land.
 - Known-defect numbers: agents describe defects, the coordinator numbers them.
 
-## 5. The validations batched at the end
+## 6. The validations batched at the end
 
-Run once, after the last merge, from the round tip's build in its own folder.
-`--launcher` takes an absolute path. Pass `BOF3X_LAYERING=0` to `input_run.py`.
-Use a clean launcher folder with no `bof3x.ini`.
+Run once, after the last merge, from the round tip's build in a clean folder.
+The folder holds `bof3x.exe`, the DLL and the launcher only: no `BOF3.exe`, no
+`bof3x.ini`, and no PC file of any kind. `--launcher` takes an absolute path.
+Pass `BOF3X_LAYERING=0` to `input_run.py`.
 
 **V1, offline and integrated** (any time):
 1. `importer.py build --source <PSP-JP iso> --lang ja-JP`, and the same for
-   PSP-EU with `en-150`. Containers written, against the target: 741 less the
-   14 `pc-edit`, unless AR's rule landed, and less the 16 banks, unless MB's
-   rule landed. Also `verify`, the manifest's policy keys, and `base/bgm/`'s
-   166.
-2. Both PSP caches byte-identical in every shared file (a cache-wide hash
-   list).
-3. The PC and PSX paths unchanged (section 4's hash, once more on the tip).
+   PSP-EU with `en-150`. The target is all 741 containers, less the 16 banks
+   if MB's rule did not land. Also `verify`, the manifest's policy keys,
+   `base/bgm/`'s 166, `base/snd/`'s 891, and `base/exe/`.
+2. Both PSP caches byte-identical in every shared file.
+3. The PC and PSX paths unchanged (section 5's hash, once more on the tip).
 4. The music, offline. The 166 PSP-built songs rendered by the sequencer's
    offline render (the music measurement's tooling, `music-open-ends.md`)
    against the PSX-built. The 73 exact songs must render identically. The
    others are reported by class (2.1).
 5. `ledger_check`, and `'*'` narrow and wide.
 
-**V2, headless with the owner away.** Use `BOF3X_CACHE=<PSP-EU cache>`,
-`BOF3X_OPT=none`, and `BOF3.exe` as the `.data` source:
-1. **The attract sequence**, run twice. Against the PC-built cache's run, the
-   state hash differs only on the pages the stand-ins and the PSP's tables
-   drive. List the pages and name each.
-2. **The ten routes** under `en-150`. The bar is not identity: a route must
-   finish without a Fatal. Where it parts from the `en_<route>_sh3a` pair,
-   name the tick and the cause. A level-up that reads roster index 6's table
-   is the expected one.
-3. **No install:** the attract from a folder holding only the launcher, the
-   DLL, `bof3x.exe` and `BOF3.exe`. No `DAT\`, `SND\`, `BGM\` or AVIs.
-4. **Captures for the owner's eye**, through `tools/recipe_shots.py` (never
+**V2, the image gate** (headless): the state hash of the PSP-built image
+against the PC-built one. The skip list is the disc-only round's, plus the
+PSP's ledgered tables (`exp_table`, consumable 87). Every other difference is
+named.
+
+**V3, live with the owner away.** The reference is the **PSX disc-only
+install of the same language**: PSP-EU `en-150` against the European PSX
+disc's disc-only cache. Each side gets `BOF3X_OPT=none`.
+1. **The attract sequence**, twice per side. The state hash differs only on
+   the pages the stand-ins and the PSP's tables drive. List and name each.
+2. **The ten routes** under `en-150`, on both sides. A PSP run must finish
+   without a Fatal. Where it parts from the PSX run, name the tick and the
+   cause. A level-up that reads roster index 6's table is the expected one.
+   The PSX disc-only side is checked against itself first (two runs), since
+   `en-150` routes are untried.
+3. **Captures for the owner's eye**, through `tools/recipe_shots.py` (never
    hand-added shots): the stand-in areas a route reaches, the battle menu (the
-   button-label page), and the title.
-5. **The launcher**, by script: the options page on a PSP-only cache, a
+   button-label page), and the title, PSP against PSX side by side.
+4. **The launcher**, by script: the options page on a PSP-only cache, a
    PSX-only cache and a PC + PSX + PSP cache. Each suite's state and greyed
    reason. The jukebox's PSP column now lit.
 
-**V3, the owner's**, gathered into [`owner-review.md`](owner-review.md) as one
+**V4, the owner's**, gathered into [`owner-review.md`](owner-review.md) as one
 entry:
-- Eye: V2.4's sheet, and the options page on their display.
-- Ear: the 16 note-changed songs, the 2 tempo songs and song 31 under the PSP
-  build; a fight with the dropped-tone bank; a few effects and a jingle from
-  ATRAC3plus.
-- A play under the PSP-EU cache.
+- Eye: V3.3's sheet, and the options page on their display.
+- Ear: the 16 note-changed songs, the 2 tempo songs and song 31; a fight
+  with the dropped-tone bank; effects and a jingle from ATRAC3plus; the
+  logo.
+- A play from the PSP-only install.
 
-**V4, after the disc-only round lands** (not this round's gate): a start with
-no `BOF3.exe`. Then the state hash of a PSP-built image against the PC-built
-one, with `data.toml`'s ranges plus the ledgered PSP tables as the skip list.
+## 7. For the owner (none blocks the launch)
 
-## 6. For the owner (none blocks the launch)
-
-1. **The disc-only round beside this one?** It is HANDOFF item 0 and V4's
-   gate. Its groups (the pointers as layout, the 22 KB, the operand store, the
-   key table) touch `src/` and `tools/exe_*`. EX touches `tools/exe_*` too.
-   Running both together means about 14 agents and two importer owners.
-   **Recommended: this round's wave one first, the disc-only round as its own
-   round after EX merges.**
-2. **The logos with no AVI** (NI): skip them (recommended), or play the PSP's
-   `PMF` (a decoder question, like ATRAC3plus).
-3. **The music banks' volume/pan merge** (MB): the PSP folded each tone's
+1. **The PSP's logo** (PN): play the `PMF` (a decoder question, like
+   ATRAC3plus), skip it, or do whatever the disc-only round chose for the
+   PSX's `STR`. Recommended: match the disc-only round.
+2. **The music banks' volume/pan merge** (MB): the PSP folded each tone's
    volume and pan into its program's and squeezed pan about 3:1. MB proposes
-   an inverse; the owner hears it in V3.
-4. **The suites' membership** (LT proposes):
+   an inverse; the owner hears it in V4.
+3. **The suites' membership** (LT proposes):
    - Which suite carries the PSP's name layers: data, or the language choice?
-   - Is the PSP's button-label page in graphics, or left out? (It shows the
-     PSP's buttons.)
+   - Is the PSP's button-label page in graphics, or left out?
    - Does P8, Ryu's forms, go under data or graphics?
-5. **The 14 arenas** (AR): which outcome.
-6. **The 16 banks** (MB): a rule if one exists, otherwise a PSP-only install
+4. **The 16 banks** (MB): a rule if one exists, otherwise a PSP-only install
    ships without that chord's second tone, as the PSP itself does.
 
-## 7. The scratch, for whoever launches
+## 8. The scratch, for whoever launches
 
 The briefs are in `analysis/psp_round/` in the main checkout, which is
 gitignored and survives sessions:
 - `brief_common.md`, shared by every agent;
 - `groups.md`, one section per group;
-- `merge_psp.sh`, section 4's merge and checks for one group branch.
+- `merge_psp.sh`, section 5's merge and checks.
 
-Each brief wants `<TIP>` set to the round tip at launch. Branches are
-`psp/<group lowercase>`, worktrees under the session's scratchpad, and each
-agent resets onto `<TIP>` first. The round's verify worktree is the
-coordinator's.
+Before launch:
+- Check section 1 against the disc-only round's record.
+- Rebase `psp/round` onto the `main` that holds it.
+- Set `<TIP>` and `<DISC_ONLY_DOC>` (that round's doc) in the briefs.
+- Build the reference caches `ref_jppc`, `ref_us` and `ref_eu` with the
+  base's tools.
 
-## 8. Not verified
+Branches are `psp/<group lowercase>`, worktrees under the session's
+scratchpad, and each agent resets onto `<TIP>` first.
 
-- The sizes are `psp-only-build.md`'s estimates, not measured. MS + MB is 4
-  to 6 days by that estimate, which is more than one usage window.
-  Rate-limit cuts are resumable by SendMessage.
+## 9. Not verified
+
+- Section 1 is an assumption about a round not yet run.
+- The sizes are `psp-only-build.md`'s estimates. MS + MB is 4 to 6 days by
+  that estimate, which is more than one usage window. Rate-limit cuts are
+  resumable by SendMessage.
 - Whether CD's pairing method scales from the boss module to 2.9 MB of
   `.text`.
-- Whether the ten routes survive a language other than the one they were
-  recorded under. The `en-US` pairs say yes for `en-US`; `en-150` is untried.
-- Whether NI's no-install folder needs anything else of the PC's: a save
-  folder, `bof3x.ini`, `DIR1`. That is NI's first measurement.
+- Whether the ten routes replay under `en-150`. V3.2 checks the PSX side
+  against itself first.
+- Whether the disc-only round's held-as-layout mechanism fits the PSP's
+  pointer remainder, which is larger than any PSX build's. This is EX's first
+  measurement.
