@@ -53,9 +53,9 @@ the path alone.
 ## 3. The bytes no disc carries (US)
 
 `recipes/exe-gaps.tsv` classes them per build; `bof3x.log` lists each `gap`
-range once at start (`BOF3X_EXEIMAGE  gap ...`). For the US image: 456 gap
-ranges, 5,455 bytes, of which the PC has 3,358 non-zero - Capcom game values
-no disc carries in any shape found (2,196 non-zero bytes, 322 ranges),
+range once at start (`BOF3X_EXEIMAGE  gap ...`). For the US image: 455 gap
+ranges, 5,435 bytes, of which the PC has 3,349 non-zero - Capcom game values
+no disc carries in any shape found (2,187 non-zero bytes, 321 ranges),
 bytes on the disc the places miss (818, 53), DIV-0055's re-laid plates (106,
 17) and the eight language addresses no layer writes (238, 64). Read from
 the code (`analysis/pc_xref.json`, `symbols.toml`), **not played**; what a
@@ -68,6 +68,12 @@ zero there does:
 | `Scena17_EndSteps`+0x364 318 bytes and eleven smaller pieces | `Scena17_EndTask`'s step table and the ending roll that follows it | the ending's roll data zero |
 | `Equip_SlotIcons`+0x50, 279 bytes | the equipment and experience panels (`Menu_DrawEquipPanel`, `Menu_DrawExpPanel`, `Menu_DrawBigIcon`) by symbol | numbers those panels draw with, zero |
 | `EventBattle_Records`+0xE0, 163 bytes | `GameMode5_Load` (`mov ax, word [edx*4 + 0x64DECC]`) | that mode's per-record words zero |
+
+The field button map's defaults (`0x656AEC..0x656B00`, which `Boot_Task`
+copies to `0x903580`: zero there meant a New Game with every action
+unbound) left this list on 2026-10-12: they are a rule of the engine now,
+the default button of each action by name ([`controls.md`](controls.md)
+2.1), held in `exe_own.cpp` and verified against `BOF3.exe` when it is there.
 
 None of it is copied (CLAUDE.md rule 1); whether a disc-only build accepts
 it, derives the values by a rule, or asks for the PC's exe for those tables

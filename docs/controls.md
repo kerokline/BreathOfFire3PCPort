@@ -118,6 +118,66 @@ So "the second column I don't quite understand" is the PC team's addition:
 which keyboard key *defaults* to that PlayStation button. Their column is
 the right idea, done statically.
 
+### 2.1 The default field buttons are a rule of the engine (2026-10-12)
+
+The six words are the first of **nine pad words** at `0x903580..0x903592`
+(word 2 `Field_MenuButton`, 7 `Field_ConfirmButtons`, 8
+`Field_CancelButtons`). `Boot_Task` (`0x496B60`, `src/game/mode_flow.cpp`)
+copies their defaults from `0x656AEC` (18 bytes, `0x496BB8..0x496C25`).
+No disc carries that range in the PC's shape. A disc-built image of a
+Western disc therefore had zeros there (`recipes/exe-gaps.tsv`'s
+`game-value` row, read without running in the gate's attract pair). So a
+New Game on a disc-only install would probably have started with every
+action unbound (not played). Loading a save restores the words. Since the
+disc-only round, the defaults are **a rule of the engine**, the same way
+`Key_TableDefault` is (section 1). `FieldButtonDefaults` in
+`src/hook/exe_own.cpp` names each word's button by `input::Action`
+(`src/input/bindings.h`), plus a zero padding halfword. It is one of the
+engine's own regions (`0x656AEC..0x656B00`; [`exe-engine-own.md`](exe-engine-own.md)
+2). It is written at map time and verified byte for byte against
+`BOF3.exe`'s `.data` at every start when the file is there (a Fatal on a
+difference).
+
+| Word | Action | Default button |
+|---|---|---|
+| 0 | Speak | circle, with L2 and R2 |
+| 1 | Move | square |
+| 2 | Menu (`Field_MenuButton`) | triangle |
+| 3 | View | R1 |
+| 4 | Change | L1 |
+| 5 | none of the Config screen's lines; no instruction reads it alone (`LoadMenu_Apply` and the save writer move it with its neighbours) | select |
+| 6 | Action | cross |
+| 7 | confirm (`Field_ConfirmButtons`) | circle, with L2 and R2 |
+| 8 | cancel (`Field_CancelButtons`) | cross |
+
+Each part of the rule rests on a measurement:
+
+- **The PC's own code agrees with the rule.** The Config screen's `Init` (`0x460FDE..0x46100B`)
+  writes words 0, 1, 6, 2, 3, 4 as immediates, each equal to the rule.
+  `LoadMenu_Apply`'s Start-held reset (`0x588629..0x588670`) writes all
+  nine as immediates. Its only difference is circle alone in words 0 and 7,
+  with no L2 or R2. The Config screen's rebinding clears L2 and R2 from
+  words 0 and 7 and ORs them back in (`0x461485` / `0x46148C`, `0x46152D` /
+  `0x461534`). That is where "with L2 and R2" comes from.
+- **The PlayStation has the same defaults, in its own executable.** The JP
+  `SLPS_009.90`'s `Boot_Init` (`0x8014E974`; the sibling's
+  `symbols.toml`) copies nine halfwords from `0x8017FEE4` to `0x80145AB0`.
+  Read from the sibling's `disc/SLPS_009.90`, they equal the rule. So they
+  are a Capcom game value (the Japanese release's default assignment), not
+  the port's.
+- **The US release's assignment is a different one.** The US disc's
+  `SLUS_004.22` copies them from `0x8017F56C` (`lui 0x8018` / `addiu -0xA94`
+  at `0x8014EB24`, its `Boot_Init`). Read there, in the same order, it gives
+  cross for Speak and confirm (with L2 and R2), circle for Move, square for
+  Menu, triangle for Action and cancel, and the same R1, L1 and select.
+  This fits the `symbols.toml` measurement of save 5 (`Field_MenuButton`
+  square, confirm cross with L2 and R2, cancel triangle). The PC port took
+  the Japanese assignment. The engine's rule is the PC's, because it must
+  equal `BOF3.exe` when the file is present. So a US-disc-only install
+  starts with the Japanese buttons, as the PC does. Offering the US
+  release's assignment on a Western install would be a divergence, and is
+  for the owner to decide.
+
 ## 3. What is wrong today, in one list
 
 1. Modern pads: d-pad dead, L2 unreachable, button order scrambled, and
