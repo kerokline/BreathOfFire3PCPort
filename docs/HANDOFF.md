@@ -139,8 +139,8 @@ code page audited, the seven mid-function pointers read, and two music defects o
       DIV-0091's entry).
 0. ~~The catch-up branch~~ - merged as PR #49 (2026-10-10 afternoon); its agents' worktrees under `.claude/worktrees/agent-*`
    and the older scratchpad worktrees can go (`git worktree list`).
-0. **The PSP-only round is staged** ([`psp-only-round.md`](psp-only-round.md), branch `psp/round` on the disc-only
-   round's tip `944f170d`, 2026-10-12): eight wave-one groups, briefs in `analysis/psp_round/`, not launched. It runs
+0. **The PSP-only round is running** ([`psp-only-round.md`](psp-only-round.md), branch `psp/round` on the disc-only
+   round's tip `98c17e8b`, 2026-10-12): eight wave-one groups launched, briefs in `analysis/psp_round/`. It runs
    after the PSX disc-only round and builds on its decisions (section 1); rebase onto `main` once that round merges.
 1. **The owner's eye and ear** - [`owner-review.md`](owner-review.md) is the one list; new since the morning:
    - **the listen:** DIV-0087 (a cache: `BOF3X_CACHE=<repo>/analysis/cache/pc-plus-us`, built 2026-10-10 from the PC

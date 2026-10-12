@@ -1,13 +1,13 @@
 # The PSP-only round: a working install from the player's PSP disc alone
 
-**Status:** STAGED (2026-10-12). Nothing launched. This plan regroups
+**Status:** IN PROGRESS (2026-10-12): wave one launched from `platform/disc-only-round` `98c17e8b`, after its code review's six gating items (the owner: "go ahead and start against a latest pull from the branch"). This plan regroups
 [`psp-only-build.md`](psp-only-build.md)'s sections 3, 5 and 8 into groups
 that can run in parallel, with every live check held for one batch at the
 end.
 
 **It runs after the PSX disc-only round** (the owner, 2026-10-12) and builds on
 that round's decisions. They are read from `platform/disc-only-round` at
-`944f170d`: all eight merges in, its section 4's validations running
+`98c17e8b`: all eight merges in, and its review's gating items fixed
 ([`disc-only-round.md`](disc-only-round.md),
 [`disc-only-install.md`](disc-only-install.md)). The round branch `psp/round`
 sits on that tip and is rebased onto `main` once the disc-only round merges.
@@ -61,7 +61,7 @@ disc-only install of the same language, built by that round's steps.
 | **The install** (IN, [`disc-only-install.md`](disc-only-install.md), DIV-0100): `install --base` lays out `DAT\`, `SND\` and an empty `BGM\`; a missing movie is skipped; the disc probe passes with a disc image mapped. **The 11 jingles are not there** on a PSX-only install (an owner's call) | A PSP-only install **has** the jingles: at3 writes them as MP3s. PN takes them into `install --base`. `BGM\` stays empty, since the sequences come from `base/bgm` (MS) |
 | The key table as a rule; `.rdata` from the engine; `BOF3.exe` optional (RD) | Nothing PSP-specific |
 
-Ledger numbers: the disc-only round took DIV-0096..0100. This round's
+Ledger numbers: the disc-only round took DIV-0096..0101 (0101, the gaps, provisional). This round's
 drafts, A to E, take the next free ids at merge.
 
 ## 2. What is left for the PSP
@@ -240,8 +240,7 @@ scratchpad, and each agent resets onto `<TIP>` first.
 
 ## 9. Not verified
 
-- Section 1 reads `platform/disc-only-round` at `944f170d`, before its section
-  4 validations. A validation finding there can move this plan.
+- Section 1 reads `platform/disc-only-round` at `98c17e8b`. A later finding there can move this plan.
 - The sizes are `psp-only-build.md`'s estimates. MS + MB is 4 to 6 days by
   that estimate, which is more than one usage window. Rate-limit cuts are
   resumable by SendMessage.
