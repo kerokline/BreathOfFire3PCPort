@@ -991,7 +991,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             std::wstring cache = DialogText(dlg, IDC_CACHE);
             const size_t b = cache.find_first_not_of(L" \t"), e = cache.find_last_not_of(L" \t");
             cache = b == std::wstring::npos ? std::wstring() : cache.substr(b, e - b + 1);
-            MusicPlayerRun(dlg, state->game_dir, cache);
+            MusicPlayerRun(dlg, state->game_dir, cache, DialogDataRoot(dlg), &state->cfg->opt);   // TG-5: the chord box edits opt=
             return TRUE;
         }
         default:

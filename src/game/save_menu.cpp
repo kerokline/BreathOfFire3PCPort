@@ -30,6 +30,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/dat_cache.h"
+#include "game/dat_load.h"
 #include "game/save_menu_callees.h"
 #include "game/title_menu.h"
 #include "game/widescreen.h"
@@ -164,10 +165,19 @@ void TakeBank(void*, const dat_cache::Chunk& c, std::uint8_t* payload) {
     if (c.kind == 2) g.load_bank(c.tag, payload, static_cast<U>(c.size));
 }
 }  // namespace
+//
+// DIVERGENCE TG-5: then each optional layer's DAT\<name> (BOF3X_OPT, by
+// LoadDatFile's precedence), its kind-2 chunks to Snd_LoadBank too, so a
+// layer's bank (psp-chord-one-tone) replaces the container's here as it does
+// in LoadDatFile. No layer named: nothing more.
 extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
     const U name = Long(at::kDatNames + index * 4);
     if (name == 0) return;
-    if (dat_cache::WalkShipped(reinterpret_cast<const char*>(At(name)), TakeBank, nullptr)) return;  // DIV-0089
+    const char* const text = reinterpret_cast<const char*>(At(name));
+    if (dat_cache::WalkShipped(text, TakeBank, nullptr)) {  // DIV-0089
+        DatLoad_OptLayerChunks(text, TakeBank);             // TG-5
+        return;
+    }
     char path[0x28];
     g.sprintf(path, reinterpret_cast<const char*>(At(at::kDatFormat)), reinterpret_cast<const char*>(At(name)));
     const int handle = g.file_open(path, 0, 0);
@@ -186,6 +196,7 @@ extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
         } while (offset < size);
     }
     g.free(data);
+    DatLoad_OptLayerChunks(text, TakeBank);  // TG-5
 }
 
 // 0x454820 (docs/save-files.md). File_Open(path, 0, 0), -1 on failure;
