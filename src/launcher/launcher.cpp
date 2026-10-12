@@ -313,6 +313,9 @@ int wmain(int argc, wchar_t** argv) {
         if (!why.empty()) Die(L"%hs\n\n%ls", why.c_str(), ini.c_str());
         if (!had_ini) bof3x::ConfigSeedFromGameCfg(game_dir, cfg);
         if (!bof3x::ConfigCheckEnvironmentLanguage(why)) Die(L"%hs", why.c_str());
+        // DIV-TBD-LX-1: "original" on an install without the Chinese text is
+        // refused here, before the dialog; the default becomes a language held.
+        if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
         // DIV-0086 / DIV-0080: a bad opt= is refused, not dropped - dropped, it
         // would read as empty and play the default layers the player may have
         // meant to turn off.
@@ -329,6 +332,8 @@ int wmain(int argc, wchar_t** argv) {
         const bool play = bof3x::ConfigDialogRun(game_dir, cfg);
         bof3x::input::PadSdl_Stop();
         if (!play) return 0;   // closed: start nothing
+        std::string why;   // DIV-TBD-LX-1: the dialog's choice, under the cache it may have changed
+        if (!bof3x::ConfigResolveLanguage(game_dir, cfg, why)) Die(L"%hs", why.c_str());
         if (!bof3x::ConfigSave(ini, cfg))
             std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n",
                           ini.c_str());
