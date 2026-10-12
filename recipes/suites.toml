@@ -118,7 +118,7 @@ layer = "psp-ryu-forms"
 from = ["psp-jp", "psp-eu"]
 over_psx = "layer"
 
-# The PSP's two battle rules (DIV F draft, docs/psp-battle-changes.md): code in
+# The PSP's two battle rules (DIV-0108, docs/psp-battle-changes.md): code in
 # the engine, not data from a disc, switched by bof3x.ini's psp= (BOF3X_PSP;
 # src/game/psp_code.h). On by default on a PSP base, off otherwise; the suite's
 # choice writes psp= as a layer member's writes opt=. `from` is the builds whose

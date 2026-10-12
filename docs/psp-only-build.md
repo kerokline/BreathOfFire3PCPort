@@ -1,6 +1,8 @@
 # A build from a PSP disc alone: how close we are, and the PSP toggles
 
-**Status:** IN PROGRESS (2026-10-10). Measured first: the importer run on each
+**Status:** IN PROGRESS (2026-10-10; section 5's steps all landed by
+2026-10-12, the PSX disc-only round and the PSP-only round,
+[`psp-only-round.md`](psp-only-round.md): struck there with where each went). Measured first: the importer run on each
 disc alone, plus two measurement agents (banks and music, sound effects), with
 scripts in the session scratchpad. Then the two audio steps were built the same
 day in `tools/` (section 8): the PSP's banks and its effects, voice and jingles.
@@ -74,9 +76,9 @@ What either PSP disc lacks, as the importer reports it (PSP-JP; PSP-EU in bracke
 | Asset | From a PSX disc | From a PSP disc |
 |---|---|---|
 | The 901 bank chunks (`vag.py`) | 901 / 901 byte-identical | **885 / 901** byte-identical, both PSPs. The `PPHD` layout is read: `PPPG` programs, `PPTN` tones with centre, fine, min / max, mode and ADSR, `PPVA` sample offsets into `pBVC`. A synthetic VH and VB fed to the unchanged `vag.bank` reproduce the PC's chunks. **About 60 lines and half a day** with the importer hook |
-| The other 16 | | One bank, shared by 16 battle containers (`BPLD/BPLU 015, 025, 056, 257, 457, 567, 578`, `BRTD/BRTU457`). A chord plays two tones of program 1. The PSP's converter declared only one tone and dropped the second slot (VAG 5), whose samples are still in `pBVC`. Those four fields are not on the PSP disc. **Source: the PC or a PSX disc, or a hand rule**. The PSP may lose that sound in play (unchecked) |
+| The other 16 | | One bank, shared by 16 battle containers (`BPLD/BPLU 015, 025, 056, 257, 457, 567, 578`, `BRTD/BRTU457`). A chord plays two tones of program 1. The PSP's converter declared only one tone and dropped the second slot (VAG 5), whose samples are still in `pBVC`. Those four fields are not on the PSP disc. **Source: the PC or a PSX disc, or a hand rule**. The PSP may lose that sound in play (unchecked). **2026-10-12: derived by rule from the PSP's own data** ([`psp-music-banks.md`](psp-music-banks.md) 5; 901 of 901) |
 | The 166 songs (`base/bgm`) | 166 | By inverting `pPMS` (ticks / 10 where 480, tempo from the tick-0 metas, the loop controllers remapped, note-offs back to velocity 0): **73 byte-identical**, 4 more where only the rhythm field differs. The rest: 5 reorder within a tick, 56 pitch-bend only, 11 controllers, 1 setup moved, **16 notes differ, 2 tempos differ** (22: 128 to 126 BPM, unlisted; 157: 79 to 82) |
-| The 81 music banks | 81 | **0 can be byte-identical.** The PSP merges each tone's volume and pan with its program's and squeezes pan about 3:1. Program mvol, priority, mode and the VAB master volume are gone, as are 11,802 tone slots past each program's count. Samples are 1,195 / 1,195 verbatim, and pitch, ADSR and range are exact |
+| The 81 music banks | 81 | **0 can be byte-identical.** The PSP merges each tone's volume and pan with its program's and squeezes pan about 3:1. Program mvol, priority, mode and the VAB master volume are gone, as are 11,802 tone slots past each program's count. Samples are 1,195 / 1,195 verbatim, and pitch, ADSR and range are exact. **2026-10-12: read, with the merge inverted** (`vag.psp_music_vab`, [`psp-music-banks.md`](psp-music-banks.md)) |
 | The 880 effects and 11 jingles | 880 / 880 (`wave-from-xa`) | **Section 2.1.1** |
 
 So for music, a PSP-only install takes the **PSP's own music**. That means a
@@ -176,13 +178,13 @@ borrows the PC's font and the exe's name, verb and config tables
 ([`importer-transforms.md`](importer-transforms.md) 8). For the PSP there is
 more. Its names live in `BOOT.BIN`, not `GAME.EMI`, and `loc_build all` has
 never been validated against a PSP disc. PSP-EU's English is `en-150` with
-the PSP's edits (P9 and others, region-diff 5.3), and PSP-JP's is `ja-JP`.
+the PSP's edits (P9 and others, region-diff 5.3), and PSP-JP's is `ja-JP`. **Validated 2026-10-12** ([`loc-build-psp.md`](loc-build-psp.md), DIV-0090 amended): both layers build from a PSP disc alone, less two `en-150` chunks (D246, D247).
 
 ### 2.5 Video
 
 None to speak of. The game has no story FMV. The PC ships two logo AVIs
 (DIV-0001), the PSX `LOGO/CAPCOM30.STR`, and the PSP one `PSMF/CAPLOGO.PMF`.
-A PSP-only install can skip the logos or play the PMF; neither blocks a build.
+A PSP-only install can skip the logos or play the PMF; neither blocks a build. **2026-10-12:** the PMF is converted at import ([`psp-install.md`](psp-install.md) 2, DIV-0106); ffmpeg has no PSMF demuxer, so the video comes by its MPEG-PS read and the audio by `psp_fmv.py`'s demux.
 
 ## 3. What every disc-only build still needs (not PSP-specific)
 
@@ -233,12 +235,12 @@ could be small.
 | Step | What | Size | Gives |
 |---|---|---|---|
 | 1 | ~~`psp-unwrap` for banks: the PPHD reader into `vag.bank`~~ **done 2026-10-10** (section 8) | half a day | 885 / 901 banks from a PSP disc |
-| 2 | The `icons` and dial rules reading the PSP's sections; the PSP's `own` stand-ins behind a PSP-only flag (a DIV) | a day | `base/` complete from a PSP disc except the 16 + 14 |
-| 3 | The PSP ELF code diff (I32's code half) | a reading round | the list of code toggles, or proof there are few |
-| 4 | The launcher's options page: every layer and option listed from a catalogue, each with its source builds; greyed when the manifest has none | 1-2 days | goal 2's UI for the data layers that exist |
-| 5 | The PSP music: a PSP-native bank and `pPMS` reader, then `psp-music` | 4-6 days | PSP-only music, and the music toggle |
-| 6 | ~~Effects by the player's ffmpeg at import, with the onset shift~~ **done 2026-10-10** (section 8; a DIV when the engine reads `base/snd/`); `sin_table` by rule; the PSP data pointers | 1-2 days left | PSP-only sound and `base/exe/` |
-| 7 | The shared items in section 3: `pc-edit` read, a disc-only language layer, state 3 | rounds | **any** disc-only build, the PSP's included |
+| 2 | ~~The `icons` and dial rules reading the PSP's sections; the PSP's `own` stand-ins behind a PSP-only flag (a DIV)~~ **done 2026-10-12** ([`psp-stand-ins.md`](psp-stand-ins.md), DIV-0103; the 14 arenas from a PSP source too, the 16 banks by MB's rule) | a day | `base/` complete from a PSP disc |
+| 3 | ~~The PSP ELF code diff (I32's code half)~~ **done 2026-10-12** ([`psp-code-diff.md`](psp-code-diff.md) and its three stage-B halves: two battle changes, C1 and C2, now switches, DIV-0108; a PSP-only mode left for the owner) | a reading round | the list of code toggles, or proof there are few |
+| 4 | ~~The launcher's options page: every layer and option listed from a catalogue, each with its source builds; greyed when the manifest has none~~ **done 2026-10-12** ([`launcher-suites.md`](launcher-suites.md): the three suites, DIV-0107; the engine half, DIV-0109..0113) | 1-2 days | goal 2's UI for the data layers that exist |
+| 5 | ~~The PSP music: a PSP-native bank and `pPMS` reader, then `psp-music`~~ **done 2026-10-12** ([`psp-music.md`](psp-music.md), [`psp-music-banks.md`](psp-music-banks.md), DIV-0105; the layer DIV-0109) | 4-6 days | PSP-only music, and the music toggle |
+| 6 | ~~Effects by the player's ffmpeg at import, with the onset shift~~ **done 2026-10-10** (section 8; DIV-0106 now that the engine reads `base/snd/`); ~~`sin_table` by rule; the PSP data pointers~~ **done 2026-10-12** by the disc-only round (the engine's own bytes, the pointers by layout) | 1-2 days left | PSP-only sound and `base/exe/` |
+| 7 | ~~The shared items in section 3: `pc-edit` read, a disc-only language layer, state 3~~ **done** (state 3 2026-10-11; the arenas, [`arena-edits.md`](arena-edits.md), and the disc-only layer, DIV-0090, 2026-10-12; a PSP donor, [`loc-build-psp.md`](loc-build-psp.md)) | rounds | **any** disc-only build, the PSP's included |
 
 Steps 1, 2 and 4 are useful now even with a PC install present. Step 4
 delivers the owner's "see what another disc would add" on the five layers
@@ -353,6 +355,9 @@ the build says why. Measured with ffmpeg 9.0.1:
   `pc-zh.snd.toml`, every clip once, each in its folder at the right rate and
   length. 0 errors.
 
-Still to do for PSP-only audio: the engine reading `base/snd/` (and `install`
-copying it), the 16 banks, and the PSP's music (step 5). `OTHER/WHISTLE.AT3`
+~~Still to do for PSP-only audio: the engine reading `base/snd/` (and `install`
+copying it), the 16 banks, and the PSP's music (step 5).~~ All done by
+2026-10-12: the engine reads `base/snd/` (DIV-0089), `install --base` copies
+it with the jingles as bare MP3 frame streams ([`psp-install.md`](psp-install.md),
+DIV-0106), the 16 banks by MB's rule (DIV-0103), the music (DIV-0105). `OTHER/WHISTLE.AT3`
 is PSP-only and not imported.

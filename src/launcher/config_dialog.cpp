@@ -412,7 +412,7 @@ void ReadBack(HWND dlg, const DialogState& state) {
     if (state.chord >= 0) extra.emplace_back(kChordLayer, state.chord == 1);
     cfg.opt = SuitesOptEdit(cfg.opt, ConfigOptDefaultInstalled(state.game_dir, DialogDataRoot(dlg)), state.suites,
                             state.choice, extra);
-    cfg.psp = SuitesPspEdit(cfg.psp, state.suites, state.choice);   // DIV F (draft): the code members
+    cfg.psp = SuitesPspEdit(cfg.psp, state.suites, state.choice);   // DIV-0108: the code members
 }
 
 // The cache box as the ini's UTF-8 bytes, trimmed as ConfigLoad trims a line.

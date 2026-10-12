@@ -47,7 +47,7 @@ BEGIN
     // version of a set of differences or the PSP's. Suite i's ids are 1040 + 10 i plus: 0 the
     // label, 1 the PlayStation radio, 2 the PSP radio, 3..6 the member lines, 7 the reason
     // (resource.h). They replaced the PSP extras boxes on 2026-10-12. The data suite has two
-    // more member lines, 8 and 9 (its code members, DIV F draft), its reason three lines high.
+    // more member lines, 8 and 9 (its code members, DIV-0108), its reason three lines high.
     GROUPBOX        "Versions: the PlayStation's or the PSP's", IDC_SUITEGROUP, 290, 7, 263, 246
     LTEXT           "", IDC_SUITENOTE, 298, 19, 248, 18
     LTEXT           "", 1040, 298, 41, 40, 9

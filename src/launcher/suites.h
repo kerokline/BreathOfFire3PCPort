@@ -10,7 +10,7 @@
 // moves, so the dialog writes it as opt= (DIV-0086) through ConfigOptEdit,
 // and an untouched page writes opt= back byte for byte. music= stays the
 // choice between the cache's songs and the PC's MP3s (DIV-0087). A `code`
-// member (the PSP's battle rules, DIV F draft) is an item of psp= instead,
+// member (the PSP's battle rules, DIV-0108) is an item of psp= instead,
 // written by SuitesPspEdit on the same terms.
 #pragma once
 
@@ -63,7 +63,7 @@ struct SuiteInputs {
     std::string language;                // the Language box's tag; "" or "original" for none
     std::string opt;                     // the ini's opt= as read
     std::vector<std::string> defaults;   // ConfigOptDefaultInstalled
-    std::string psp;                     // the ini's psp= as read (DIV F draft): "", "none" or a list
+    std::string psp;                     // the ini's psp= as read (DIV-0108): "", "none" or a list
 };
 
 // Every suite of the catalogue, in its order, whatever the install.
@@ -83,7 +83,7 @@ std::string SuitesOptEdit(const std::string& opt, const std::vector<std::string>
 // writes puts them in (ConfigOptEdit).
 std::vector<std::string> SuiteLayers();
 
-// psp= after the page (DIV F draft; src/game/psp_code.h). The same choices as
+// psp= after the page (DIV-0108; src/game/psp_code.h). The same choices as
 // SuitesOptEdit's: beside a PlayStation base the PSP's adds the suite's
 // playable code items, the PlayStation's removes all of the suite's. An
 // untouched page, or nothing changed, returns `psp` byte for byte. Otherwise
@@ -96,7 +96,7 @@ std::string SuitesPspEdit(const std::string& psp, const std::vector<SuiteState>&
 // none otherwise), "none" none, else the comma-separated list.
 std::vector<std::string> SuitesPspPlayed(const std::string& psp, bool psp_base);
 
-// DIVERGENCE TG-5 (docs/launcher-suites.md section 9; the owner, 2026-10-12):
+// DIVERGENCE DIV-0113 (docs/launcher-suites.md section 9; the owner, 2026-10-12):
 // the Jukebox's checkbox for the battle chord as the PSP plays it, one tone -
 // the layer recipes/psp-layers.toml builds whenever a PSP disc is a source, in
 // no suite. Off by default: every base plays the restored chord (vag.py's

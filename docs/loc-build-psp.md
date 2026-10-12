@@ -375,6 +375,8 @@ each counted.
 
 ## For the other files
 
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): DIV-0090 and DIV-0097 amended, the font rule folded into DIV-0090's amendment; section 8's defects are **D246**, **D247** and **D248**; the README row, STATUS, HANDOFF and owner-review (the Config screen: deferred to an emulator, the owner) are in.
+
 **DIV-0090, amend** (a PSP disc as the donor):
 
 > **Amended 2026-10-12 (the PSP-only round, [`loc-build-psp.md`](loc-build-psp.md)):**

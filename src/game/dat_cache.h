@@ -70,7 +70,7 @@ bool Armed();
 // 2026-10-12; the launcher asks the same).
 bool HasLayer(const char* kind, const char* layer);
 
-// DIVERGENCE TG-1, TG-2, TG-3 (docs/launcher-suites.md section 9): an optional
+// DIVERGENCE DIV-0109, DIV-0110, DIV-0111 (docs/launcher-suites.md section 9): an optional
 // layer may carry parts besides dat\ - "bgm" (songs and banks, Music_LoadFile's
 // seam, music_seq.cpp), "snd" (Sound_LoadStream's files, SoundPath below) and
 // "exe" (ranges of .data the exe host lays, exe_image.cpp). True when the
@@ -110,7 +110,7 @@ void LayerPath(char* out, std::size_t cap, const char* kind, const char* layer, 
 bool WalkShipped(const char* name, ChunkFn fn, void* ctx);
 
 // Sound_LoadStream's file: when armed, <root>\opt\<layer>\snd\<name>.DAT of the
-// last named layer with a snd part that has it (TG-2), else
+// last named layer with a snd part that has it (DIV-0110), else
 // <root>\base\snd\<name>.DAT when it exists: its path into `out` and true;
 // false otherwise (the caller formats SND\).
 bool SoundPath(const char* name, char* out, std::size_t cap);

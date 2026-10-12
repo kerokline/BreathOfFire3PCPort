@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 101 entries, DIV-0001..0101, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 113 entries, DIV-0001..0113, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5024,6 +5024,15 @@ designed in rather than bolted on.
   `BOF3X_ORIGINAL=LoadDatFile` runs Capcom's loader, which
   walks neither overlay.
 
+  **Amended 2026-10-12 (the PSP-only round, DIV-0107 and DIV-0109..0113,
+  [`launcher-suites.md`](launcher-suites.md)):** the launcher's "PSP extras"
+  boxes are replaced by the three suites (DIV-0107); `opt=` is unchanged, and
+  an `opt=` written by the boxes reads as a partial suite, kept as written. A
+  layer may now hold `bgm\`, `snd\` or `exe\` trees in the cache as well as
+  `dat\` (DIV-0109..0111), read from the cache only (`install --opt` refuses
+  them), and a layer's banks reach `Snd_LoadBankFile` too (DIV-0113). The
+  limit of "more than 8" layers is 16 (`kOptMax`; `ConfigOptValid` follows).
+
 ### The cache's songs synthesised from the disc's sequence, the MP3 the fallback
 
 - **ID:** DIV-0087
@@ -5170,6 +5179,11 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_MUSIC=mp3` (or `music=mp3`); unset `BOF3X_CACHE`
   (or empty `cache=`); no cache, no change.
 
+  **Amended 2026-10-12 (the PSP-only round, DIV-0109):** a layer named in
+  `BOF3X_OPT` with a `bgm` part is looked in before `base\bgm` (the last
+  named first), and a song's bank is held by its file path, not its name.
+  A PSP-only cache's `base\bgm` is the PSP's own music (DIV-0105).
+
 ### The faerie village's board buttons from the disc's own paint
 
 - **ID:** DIV-0088
@@ -5299,6 +5313,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_CACHE_DATA=0` (the cache for the music only), or
   unset `BOF3X_CACHE`; `BOF3X_ORIGINAL=LoadDatFile` (and the other two) runs
   Capcom's readers, which read only the install.
+
+  **Amended 2026-10-12 (the PSP-only round, DIV-0110 and DIV-0113):**
+  `Sound_LoadStream` takes a named layer's `snd\` file before `base\snd`'s,
+  and `Snd_LoadBankFile` a named layer's banks after the shipped file's,
+  when a named layer carries one.
+
 ### A language layer built from the disc alone keeps nothing of the port's
 
 - **ID:** DIV-0090
@@ -5350,6 +5370,22 @@ designed in rather than bolted on.
   French `AREA004` block is built (DIV-0098), and a French or German disc's
   title page cuts CONFIG from its own sheet's letters, byte-identical to the
   PC-built layers' (no player difference, so no entry of its own).
+
+  **Amended 2026-10-12 (the PSP-only round, group LG, [`loc-build-psp.md`](loc-build-psp.md)):**
+  a PSP disc alone builds the layer too (`importer.py build --source <PSP iso>
+  --lang ja-JP` or `en-150`), its names and the exe's strings from
+  `BOOT.BIN`: 254 containers from either PSP disc. Against the PSX layer of
+  the same tag it differs only in the PSP's own text, names and font tile
+  (`loc-build-psp.md` 5.2, 5.3). Two `en-150` chunks are not built from
+  PSP-EU: the Config screen's text (the PSP's screen has other rows) and
+  label group 14; their addresses draw blank (D246, D247). **The font run
+  takes dialogue-only cells:** `latin_extension` counted an accented cell
+  past 0x93 only with ink in both the 12 px and the 8 x 8 sets; ink in the
+  12 px set is now enough, and PSP-EU's three cells 0x94..0x96 are appended
+  with their UI cells blank - PSP-EU's ending text uses them, and without
+  them two messages of `AREA199` were empty. No PSX sheet has such a cell:
+  every PSX and PC-path layer is byte-identical (section 5.1). Not played.
+  Over the PC install nothing changes.
 
 ### The MP3 decoder is minimp3, not the library Capcom linked
 
@@ -5817,6 +5853,13 @@ designed in rather than bolted on.
   owner's eye.
 - **Reversible?** Build with the PC's `DAT/` as a source.
 
+  **Amended 2026-10-12 (the PSP-only round, [`loc-build-psp.md`](loc-build-psp.md) 4):**
+  from a PSP disc the same 16 stand-ins and 2 village sheets are the PSP's
+  sections re-laid by the same rule: the rule's rectangles and strip fall on
+  the PSP's sheets as on the PSX's. The PSP repainted one icon of the strip's
+  source row, which the laid strip then carries (242 pixels against the PSX
+  layer), and, on PSP-JP, one kanji-sheet glyph outside the rule. Not seen.
+
 ### French AREA004's first seven message slots, disc-only
 
 - **ID:** DIV-0098
@@ -5960,3 +6003,520 @@ designed in rather than bolted on.
   values' effect in play not seen.
 - **Reversible?** `BOF3X_EXEIMAGE_STRICT=1`; a cache built with the PC's exe
   among its sources carries every range.
+
+  **Amended 2026-10-12 (the owner: "let's go ahead and fill them",
+  `psp-only-round.md` 7.1 item 1; the PSP-only round, groups IM and IM2,
+  [`disc-gap-fills.md`](disc-gap-fills.md), [`psp-image.md`](psp-image.md)):**
+  four of the gaps are no longer zero on any disc-built image, PSX or PSP.
+  `Magic_Rows`' effect files, `Effect_HpDamageVariance`'s dragon set-file
+  tables, `EventBattle_Records`' battle files and the formation wheel's
+  spots are read from the disc's own tables - a PSX disc's `BATTLE.EMI#15`,
+  `GAME.EMI#0` and `BATE.EMI#0`, a PSP disc's `BOOT.BIN` and
+  `BATTLE.EMI#15` - the disc's file ids turned into the PC's by the file-id
+  rule (the disc's file table to path to `Dat_FileNames`' slot, all in the
+  tree as addresses and names), the wheel widened from the disc's 8- or
+  10-byte names. Every filled byte equals `BOF3.exe`'s, on all seven builds
+  (`recipes/exe-psp.tsv`, kept only so): 860 more bytes of the PC's per
+  build; per PSX build 102 fewer gap ranges, game-value bytes US 2,196 to
+  1,336 and JP 1,653 to 793 (measured on the round's base, before main's
+  `GAME.EMI` place of the story-flag seed, which takes 13 more from US).
+  Still zero: the event battles' track half (the port's own MP3 numbering),
+  the formation names (language), and the rest of `disc-gap-fills.md` 3's
+  list - so the entry stays provisional for those. Verification:
+  `psp_exe.py recipe` (0 bytes off the PC's on every row); the exe host's
+  self-test over the real install (no `place` range differs from
+  `BOF3.exe`) and on a scratch disc-only install (exit 0); not played.
+
+### A disc-only install refuses the port's Chinese text instead of playing without text
+
+- **ID:** DIV-0102
+- **Date:** 2026-10-12
+- **Subsystem:** language (`src/launcher/config.cpp` `ConfigResolveLanguage` /
+  `ConfigOriginalAvailable`, the launcher's dialog; `src/game/dat_load.cpp`
+  `RefuseOriginalWithoutChinese`; `tools/language_tags.py` `original_available`,
+  reported by `importer.py install`; [`disc-only-install.md`](disc-only-install.md)
+  section 2 and 6)
+- **Tier:** Sensible - rule 4: a start that cannot have its text says so.
+- **Original behaviour:** the port has one language, its Chinese, in `DAT\`;
+  every install had it, and `original` (the port's script) is the default
+  language of ours (DIV-0005's tags) for a PC install.
+- **New behaviour:** `original` (`BOF3X_LANG` unset or `original`,
+  `language=original`) needs `BOF3.exe` in the game directory or the cache's
+  `loc\zh-CN` layer - the two facts that mean the port's text is there.
+  Without either, a disc-only install: the launcher refuses `original` and any
+  language not held, before the dialog, with a message naming the languages
+  held; the dialog does not offer "Chinese (PC script)" and says why; the
+  default is the first language held in the engine's list (`en-US` from a US
+  disc); and the engine's `DatLoad_Inject` stops with a Fatal naming the same
+  languages when such a request reaches it past the launcher. A PC install is
+  unchanged.
+- **Rationale:** the round's end batch started a disc-only install under
+  `original` by mistake (the attract tool's own `--lang` default) and the game
+  read every Chinese chunk as missing, played with no text, and the attract
+  sequence stalled in area 4's message box (message 8 never closed; read from
+  the run's message columns, not seen on screen). The text is the PC's alone,
+  so it cannot be made; the start can say so. The disc-only round, 2026-10-12.
+- **Also in the PSX version?** No: each disc carries its own text.
+- **Verification:** `disc-only-install.md` section 5's rows of 2026-10-12: the
+  launcher's refusal under `original` and `fr-FR` against the US-only install
+  (naming `en-US`), its start under `en-US` and with no language (exit 0,
+  10,088 ours), `bof3x.exe` run directly under `original` (exit 3, the Fatal),
+  the real install unchanged under all three (exit 0), hosted `shell` 0
+  mismatches. Harnesses: `tools/attract_run.py` defaults `--lang` to
+  `original`, so a run against a disc-only install must pass `--lang`.
+- **Reversible?** A PC install, or a cache built with the PC's `DAT\` among
+  its sources, holds the Chinese layer and `original` plays as before.
+
+### A PSP-only install's base is the PSP's own sections
+
+- **ID:** DIV-0103
+- **Date:** 2026-10-12
+- **Subsystem:** data import (`tools/psp_standins.py`, `recipes/psp-standins.toml`,
+  the one call in `tools/importer.py` `get_chunk`; the manifest's `[build]
+  base_policy`; [`psp-stand-ins.md`](psp-stand-ins.md); the PSP-only round,
+  [`psp-only-round.md`](psp-only-round.md), group SI; the dropped tone,
+  [`psp-music-banks.md`](psp-music-banks.md) 5, group MB)
+- **Tier:** Sensible - the release the player owns is the base when it is the
+  only one; nothing of the PlayStation's is there to fall back on.
+- **Original behaviour:** the PC port ships the PlayStation's data in `DAT/`
+  with its own edits. A cache built from a PSP disc alone had no source for
+  about 270 `base/` chunks the PSP does not carry in the PC's form and wrote
+  519 of 741 containers (`psp-only-build.md` 8). The plan's data policy
+  ([`unified-data-plan.md`](unified-data-plan.md) 7) keeps a later release's
+  content off by default.
+- **New behaviour:** when every source is a PSP disc (`base_policy = "psp"`),
+  each `base/` chunk no source carries is the PSP's own section at the same
+  place: its area pages, palettes, map bands and UI page (206 containers),
+  Ryu's form data (P8: `RYUD00..03` with the port's `0x7ACE` byte, 14 arenas,
+  and `BPLD27A` with the port's hold), PSP-EU's own language plates and pages
+  (22), the PSP's dial page where the port drew its legend (16), and the 11
+  port-edited arenas and `START` as the PSP ships them (the PSX disc's
+  decode, so DIV-0096 describes them unchanged). `BPLU27A` and `FIRST`'s
+  icons are the PC's bytes, by the port's rules. **One exception, the
+  dropped tone:** the effects bank shared by 16 battle containers (`BPLD` /
+  `BPLU` 015, 025, 056, 257, 457, 567, 578, `BRTD` / `BRTU` 457) declares on
+  the PSP one silent tone for a chord the PlayStation and the PC sound with
+  a second tone past the count (sample 5); the PSP-only base restores that
+  tone by a rule read from the PSP's own sections (a chord one slot past a
+  program whose declared tones are all silent, and exactly one sample no
+  tone references), so the 16 chunks are the PC's byte for byte and the base
+  plays the PlayStation's chord. The PSP's one tone is an option (DIV-0113).
+  With the PC's `DAT/` or a PSX disc among the sources nothing changes
+  (`base_policy = "psx"`).
+- **Rationale:** the owner's call of 2026-10-10 (`psp-only-build.md` 7, call
+  1): for a PSP-only player there is no PlayStation original to fall back
+  on, so the PSP's content changes are the base, and the PlayStation's look
+  is the option a PSX disc enables. This inverts the plan's data policy for
+  PSP-only installs only. The chord: the PSP's converter kept a program's
+  declared tones only and lost a sound that was meant to play; the owner
+  (`psp-only-round.md` 7.1 item 8): keep the rule, the PSP's one tone a
+  toggle.
+- **Also in the PSX version?** No: the PSX's own data is the PC's base; these
+  are the PSP's sections. The chord: the PSX plays both tones; whether the
+  PSP plays the second is unchecked.
+- **Verification:** `importer.py build` and `verify` from each PSP disc alone:
+  725 of 741 containers with SI's stand-ins (253 stand-ins on PSP-JP, 275 on
+  PSP-EU), 0 problems; with MB's rule `se_check.py` gives 901 of 901 banks
+  equal to PSX-JP's chunks on each PSP (885 before), the rule firing on the
+  16 groups only; MS stage B, on the merged tools, 741 `base` containers. The
+  PC and PSX paths byte-identical (JP + PC 2,125 files, US 1,872, Europe
+  1,864) but for the manifest's new `[build]` table. **Not seen:** the PSP's
+  area art, UI page, dial and title pages and Ryu's forms as our engine draws
+  them, and whether a tile the PSP blanked shows as a hole (the end batch's
+  captures, the owner's eye).
+- **Reversible?** Add a PSX disc to the sources (`base_policy = "psx"`), or
+  the PC's `DAT/`.
+
+### A PSP-built image of `.data` carries the PSP's level table and consumable 87
+
+- **ID:** DIV-0104
+- **Date:** 2026-10-12
+- **Subsystem:** the exe image (`tools/psp_exe.py`, `tools/exe_tables.py`
+  `build_from`; the manifest's `[build] exe_tables_from`;
+  [`psp-image.md`](psp-image.md); the PSP-only round, group IM)
+- **Tier:** Extension - a balance change (roster index 6's level table) and
+  an item flag, taken as the base of a PSP-only install.
+- **Original behaviour:** `BOF3.exe`'s `.data` holds the PlayStation's
+  `Char_ExpTable` (every PSX build equal) and consumable 87 as the
+  PlayStation has it.
+- **New behaviour:** an image built from a PSP disc (`exe_tables_from` a PSP
+  build: a PSP-only install) holds `BOOT.BIN`'s: roster index 6's 99 rows of
+  `exp_table` (249 bytes: the EXP and stat-gain bytes, not the learnt
+  abilities) and consumable 87's one differing byte. With a PSX disc or the
+  PC's exe first, nothing changes. Beside a PlayStation base the same bytes
+  are an option (DIV-0111).
+- **Rationale:** the owner's call of 2026-10-10, the PSP's data as the base
+  of a PSP-only install ([`psp-only-build.md`](psp-only-build.md) 7).
+- **Also in the PSX version?** No: these are the PSP's changes; every PSX disc
+  holds the PC's values.
+- **Verification:** `exe_tables.py measure` names exactly these two among the
+  tables (`exe_table differs 249 bytes in records 629..`, `consumables
+  differs 1 bytes in record 87`); CD's diff found nothing that stops our code
+  running on either ([`psp-code-diff.md`](psp-code-diff.md) 6). Not played:
+  a level-up of roster index 6 is the check.
+- **Reversible?** A PSX disc among the sources, or the PC's exe.
+
+### A PSP-only install plays the PSP's music: its sequences and its banks
+
+- **ID:** DIV-0105
+- **Date:** 2026-10-12
+- **Subsystem:** music (`tools/ppms.py`, `tools/vag.py` `psp_music_vab`, the
+  importer's `base/bgm/` from a PSP source; played by DIV-0087's sequencer
+  unchanged; the Jukebox's PSP source; [`psp-music.md`](psp-music.md),
+  [`psp-music-banks.md`](psp-music-banks.md); the PSP-only round, groups MS
+  and MB)
+- **Tier:** Sensible - the release the player owns; its re-authored music is
+  what it plays.
+- **Original behaviour:** the PC port plays its MP3s. With a cache (DIV-0087)
+  the songs are the PSX disc's sequences on the PSX's banks, through
+  `psx::MusicSynth`. The PSP re-authored all 166 songs as Standard MIDI
+  Files (`pPMS`): 73 carry the PSX's events exactly; the others differ in
+  notes (16), controllers (11), pitch-bend resets (56), the setup of song 31,
+  event order within a tick (5), the rhythm field (4) and two tempos (22,
+  157). Its music banks merge each tone's volume with its program's and the
+  VAB master's (`(tv * pm * bm * 32) // 127**2`), and its pan is
+  `(tp + mp + 64) // 3`, a third of the PSX's spread.
+- **New behaviour:** when the player gives a PSP disc and no PSX disc, the
+  importer writes `base/bgm/` from the PSP: the songs inverted to the cache's
+  song form (format only - every note, bend and controller is the PSP's),
+  and the banks with the merge inverted: master and program volumes 127,
+  each tone's volume the merged one rounded, program pans 64, each tone's pan
+  `3p - 128`; samples, pitch, range, ADSR and mode the PSP's, which are the
+  PSX's. The sequencer plays them unchanged. The Jukebox lists them as the
+  PSP disc's.
+- **Rationale:** the owner's call (`psp-only-build.md` 7, call 2): a PSP-only
+  install uses the PSP's audio as it is; there is no PSX original to fall
+  back on. Of the merge, the inverse undoes what the conversion lost, where
+  playing the squeezed pan as it is would narrow the image; the owner
+  (`psp-only-round.md` 7.1 item 6): the restored stereo width is fine, no
+  narrow-pan form wanted.
+- **Also in the PSX version?** No: the PSX plays its own sequences and the
+  unmerged bank fields. The PSX driver neither resets nor remembers a bend at
+  key-on (`_SsVmKeyOn` -> `note2pitch`, disassembled), so the PSP's 728
+  centre resets after a real bend retune voices still sounding: the bend-only
+  songs are real differences, not encoding.
+- **Verification:** `ppms.py check`, `vag.py check`; `importer.py verify`
+  against `fixtures/bgm-psp.tsv` (247 of 247, both PSPs); the song A/B on the
+  PSX banks: 80 of the 93 songs that are not byte-identical differ within
+  180 s, 50 of them bend-only (`psp-music.md` 4.2); the banks against the
+  PSX-built: 166 songs, SNR median 41.9 dB, one song at 16.8 dB (22, whose
+  bank has its own program pans), level within half a decibel
+  (`psp-music-banks.md` 3); all 166 render on the PSP banks with no abort.
+  **Not heard** (the owner's ear: the 16 note songs, 22 and 157, 31).
+- **Reversible?** A PSX disc among the sources builds the PSX's songs and
+  banks; `BOF3X_MUSIC=mp3` has no MP3s to play on a PSP-only install. Beside
+  a PlayStation base the PSP's music is an option (DIV-0109).
+
+### A PSP-only install has the PSP's effects, voices, jingles and logo movie
+
+- **ID:** DIV-0106
+- **Date:** 2026-10-12
+- **Subsystem:** sound streams and FMV (`tools/at3.py`, `tools/psp_fmv.py`,
+  `importer.py build` and `install --base`; read by DIV-0089's
+  `Sound_LoadStream` seam and DIV-0099's `Fmv_Play` path unchanged;
+  [`psp-install.md`](psp-install.md); the PSP-only round, group PN)
+- **Tier:** Sensible - the release the player owns, decoded by the player's
+  own ffmpeg.
+- **Original behaviour:** the PC port plays its own `SND\` (875 effects and 5
+  voices as 22.05 kHz mono WAVs, the 11 jingles as bare 128 kbit/s MP3s) and
+  its own `CAPCOM.AVI` (DIV-0001's Cinepak, 15 fps, 112 frames). A PSX
+  disc-only install has the disc's exact effects, no jingles and the disc's
+  movie (DIV-0099).
+- **New behaviour:** an install built from a PSP disc alone (`importer.py
+  build` with no PSX disc and no PC source, then `install --base`) has:
+  the 880 effects and voices decoded from the PSP's ATRAC3plus by the
+  player's ffmpeg, each cut at its measured onset (shifted up to 250 ms to
+  where the PC's clip starts) and padded to the PC file's length; the 11
+  jingles, which a PSX-only install lacks, re-encoded from the PSP's
+  ATRAC3plus to bare 128 kbit/s stereo MP3s in the PC's form (2 or 3 frames
+  longer than the PC's); and the PSP's logo movie (`PSMF/CAPLOGO.PMF`, H.264
+  480 x 272 with ATRAC3plus) re-encoded at import as `CAPCOM.AVI`: Cinepak
+  640 x 480 (the PSP's frame scaled back to the PlayStation's 4:3 by
+  lanczos), 30000/1001 fps, 231 frames, 7.708 s, PCM 44.1 kHz stereo aligned
+  by the stream's time stamps (ffmpeg has no PSMF demuxer: the video by its
+  MPEG-PS read, the audio by our demux). Without ffmpeg none of them is
+  written, with the reason in the build's output and the manifest; the
+  install then has no `SND\` effects and no movie (DIV-0100 starts it).
+- **Rationale:** the owner's calls of 2026-10-10 (`psp-only-build.md` 7: a
+  PSP-only install uses the PSP's audio as it is; the effects decoded by the
+  player's own ffmpeg, nothing vendored, since no permissive ATRAC3plus
+  decoder exists, [`LICENSING.md`](LICENSING.md) 4) and of 2026-10-12 (the
+  logo by the player's ffmpeg at import, as DIV-0099). Rule 1: a PSP-only
+  install carries no PC file.
+- **Also in the PSX version?** No: the PSX plays its XA and MDEC; these are
+  the PSP release's lossy re-encodes, and ours of them.
+- **Verification:** built from both PSP discs (byte-identical outputs);
+  against the PSX's XA the effects correlate at median 0.998 (min 0.990),
+  SNR median 24.9 dB (16.9 .. 30.0), the voices 19-25 dB, the jingles 0.995-0.9996
+  and 20-31 dB; the movie's Cinepak loss SSIM 0.868 / PSNR 34.6 dB against
+  the direct decode; `verify` 0 problems; the exe host's headless self-test
+  from the PSP-EU install exit 0 (`psp-install.md` 1-5). **Not heard, not
+  seen**; MCI not run on this movie (30000/1001 fps, where DIV-0099's was 30).
+- **Reversible?** A PSX disc among the sources gives the PSX's exact files
+  instead; a PC install's own files are never replaced. Beside a PlayStation
+  base the PSP's effects and jingles are an option (DIV-0110).
+
+### The launcher offers three suites, the PSP's or the PlayStation's, in place of the PSP extras
+
+- **ID:** DIV-0107
+- **Date:** 2026-10-12
+- **Subsystem:** launcher (`src/launcher/suites.cpp`, `config_dialog.cpp`,
+  `launcher.rc`; `recipes/suites.toml`, `tools/suites.py`;
+  [`launcher-suites.md`](launcher-suites.md); the PSP-only round, groups LT
+  and TG)
+- **Tier:** Sensible - a choice of which release's presentation and data to
+  play, made before the game starts; what the suites move is the layers
+  (DIV-0086, DIV-0109..0113) and the PSP's battle rules (DIV-0108), off
+  beside a PlayStation base unless chosen.
+- **Original behaviour:** the 2001 port has no settings program (`START.EXE`
+  is an autorun shell, [`launcher-settings.md`](launcher-settings.md) 1) and
+  carries no PSP content. Until this entry our launcher offered DIV-0086's
+  layers as a "PSP extras" box per installed layer.
+- **New behaviour:** the settings dialog lists three suites from
+  `recipes/suites.toml`: graphics (`psp-art`, `psp-tiles`, `psp-maps`), audio
+  (the PSP's music; its effects, voices and jingles) and data (the level
+  table and item 87; the English and Japanese renames; Ryu's forms, P8; the
+  PSP's two battle rules). Each is the PlayStation's version or the PSP's,
+  chosen whole, whatever the install. A side the cache's `manifest.toml`
+  cannot provide is greyed, naming the discs that would enable it. Every
+  member is a layer beside a PlayStation base (`recipes/opt.toml`'s, or
+  `recipes/psp-layers.toml`'s: the music, the effects, the exe tables, P8 -
+  DIV-0109..0112) or a code member (DIV-0108's `psp=`); a layer not in the
+  cache is greyed with `build with --opt NAME`. Under the manifest's
+  `base_policy = "psp"` it inverts: the PSP's is the base, and the
+  PlayStation's is greyed, naming a PlayStation disc. The choice is written
+  as `opt=`'s layers and `psp=`'s rules (no other new ini key); an untouched
+  page writes both lines back byte for byte, and `music=` keeps its meaning.
+  `opt=` takes up to 16 layers (8 before); an `opt=` written by the old
+  boxes reads as a partial suite, kept as written.
+- **Rationale:** the owner's calls of 2026-10-10
+  ([`psp-only-build.md`](psp-only-build.md) 7): three toggles, every option
+  listed, greyed by source; a PSP-only install the other way round. The
+  membership as LT proposed it (the owner, `psp-only-round.md` 7.1 item 5):
+  the name layers and P8 under data, the button-label page left out.
+- **Also in the PSX version?** No: the PlayStation release has no launcher
+  and no PSP content.
+- **Verification:** the launcher host suite (`config_tests.exe`, 137 checks
+  with PB's code members, 0 failures); `dialog_test.py`'s three fake caches
+  (35 checks at LT's merge); `suites.py check` in `importer.py check`. **Not
+  seen:** the page on the owner's display (the end batch's captures).
+- **Reversible?** Each suite's PlayStation side, or `opt=none` / an `opt=`
+  list and `psp=none` in `bof3x.ini`; a PSP base has no PlayStation side to
+  choose until a PSX disc is added.
+
+### The PSP's two battle rules, behind a switch
+
+- **ID:** DIV-0108
+- **Date:** 2026-10-12
+- **Subsystem:** battle (`src/game/psp_code.*`; `BattleAction_End`
+  `0x430010`, `BattleRoundEnd_NextRound` `0x431090`, `Battle_PlaceBossActor`
+  `0x494570`; `BOF3X_PSP` / `bof3x.ini` `psp=`; the data suite's two code
+  members, `recipes/suites.toml`; [`psp-battle-changes.md`](psp-battle-changes.md);
+  the PSP-only round, group PB, from CD1's reading
+  [`psp-code-diff-battle.md`](psp-code-diff-battle.md))
+- **Tier:** Extension - the PSP's own changes to play, taken as options. C1
+  may turn out to be Intent (a repair of a PlayStation fault) once the owner
+  has played the fight.
+- **Original behaviour:** the PC port and the PlayStation end a battle
+  whenever the battle-end byte `0x904AE8` is non-zero, in the turn step
+  (`BattleAction_End`, PSX `0x801D43BC`) and the round start
+  (`BattleRoundEnd_NextRound`, PSX `0x801D653C`); and a boss actor placed as
+  an enemy (`Battle_PlaceBossActor`, PSX `0x800A8F4C`) keeps the enemy data's
+  first item word `+0xA8` (the item a steal takes and the first drop rolls).
+  The PSP's `BOOT.BIN` adds, in both releases: **(C1, `duel-loss`)** in event
+  battle 0x1B - the duel between Beyd and Zig, chapter 6 run 9
+  (`Scena06_Run09` starts it), area 92 - an end byte with bit 0 set and bit 2
+  clear does not end the battle (PSP-JP `0x11DFA4` and `0x11F36C`; PSP-EU
+  `0x11DC14` and `0x11EFDC`); **(C2, `myria-item`)** in area 198 under event
+  battle 0x37 (set-up 55, which our records label Myria) the placed enemy's
+  item word becomes 0x317 after its data is copied (PSP-JP
+  `0x141570..0x141598`, PSP-EU `0x14133C..0x141364`; the PSP's `+0x98` is
+  ours `+0xA8`, its enemy data copy `0x141BA0` read field by field). 0x317 is
+  accessory 0x17, "Ivory Charm" by the sibling's `names/items.toml`. Read
+  with capstone ([`psp-battle-changes.md`](psp-battle-changes.md) 2; CD1's
+  first reading took `+0x98` for agility, corrected there).
+- **New behaviour:** both rules reproduced in our three functions under one
+  switch item per rule, `BOF3X_PSP` / `psp=` (`duel-loss`, `myria-item`,
+  `none`). Unset, both are on when the cache's manifest says `[build]
+  base_policy = "psp"` (a PSP-only install) and off otherwise. The
+  launcher's data suite carries them as two code members, and its choice
+  writes `psp=`.
+- **Rationale:** the owner, 2026-10-12 (`psp-only-round.md` 7.1 items 2 and
+  3): both "worth keeping as a toggle in the launcher psx vs psp area -
+  leaving them as default for psp-only installs makes sense". A PSP-only
+  install plays as the PSP did; any other plays as the PlayStation and the PC
+  did, unless the player chooses the PSP's.
+- **Also in the PSX version?** No: the PSX twins have neither test (CD1, the
+  constants 0x1B-with-the-end-byte and 791 searched in every function of
+  both sides). C1's PSX twin of `Boss27_Event` is uncaptured, so whether the
+  PSP's C1 repairs a PSX fault is open (the owner's, in play).
+- **Known and accepted:** with `duel-loss` on, a party loss in the duel lasts
+  until `Boss27_Event`'s other path sets bit 2 (`boss_sf.md`'s reading): a
+  scripted end or a stall, to be judged in play. Only
+  `Battle_PlaceBossActor` gets C2; `Battle_SetupEnemy` has no store on
+  either side.
+- **Verification:** the shadows off and on (`battle_actions`,
+  `battle_turn_steps`, `rest_3g` with the real callees: 0 mismatches; 3 of 3
+  planted faults refused); the switch's six cases headless; the hosted `'*'`
+  narrow exit 0; the exe host on a PSX disc-only and a PSP-only install exit
+  0 (`psp-battle-changes.md` 4). **Not seen in play:** the duel lost with
+  `duel-loss` on, and what Myria carries with `myria-item` on.
+- **Reversible?** `BOF3X_PSP=none` or `psp=none` turns both off; with both
+  off the three functions are the original's byte for byte (the battle
+  modules' shadows, off and on).
+
+### The PSP's music as a layer beside a PlayStation disc's
+
+- **ID:** DIV-0109
+- **Date:** 2026-10-12
+- **Subsystem:** music (`src/game/music_seq.cpp`, DIV-0087's
+  `Music_LoadFile` seam; `tools/psp_layers.py`, `recipes/psp-layers.toml`;
+  the Jukebox's PSP column, `src/launcher/music_player.cpp`;
+  [`launcher-suites.md`](launcher-suites.md) 9; the PSP-only round, group TG)
+- **Tier:** Sensible - a later release's content, off unless chosen
+  (DIV-0086's rule for layers).
+- **Original behaviour:** the port plays its MP3s; with DIV-0087, the cache's
+  `base\bgm` (one disc's songs).
+- **New behaviour:** with `opt=` naming `psp-music` (the audio suite's PSP
+  side), a track is the layer's `opt\psp-music\bgm\NNN.DAT` on its own
+  `bank\` when it has one, else `base\bgm`'s, else the MP3. A song's bank is
+  held by its file path, not its name (the PSP's banks are named as the
+  PSX's). Arming checks every song and bank of the layer at start-up as it
+  checks `base\bgm`, and no longer needs `base\bgm` when a named layer has
+  songs; a root too long for the layer's bank paths is a Fatal naming the
+  layer. `BOF3X_MUSIC=mp3` still plays every MP3. The Jukebox lists the
+  layer's songs as the PSP source beside a PlayStation disc's.
+- **Rationale:** the owner's calls of 2026-10-10 (three suites, the PSP's
+  audio a choice beside a PSX base); the songs are DIV-0105's.
+- **Also in the PSX version?** No: the PSP's own sequences
+  ([`psp-music.md`](psp-music.md): 93 of 166 differ).
+- **Verification:** the DIV-0109 self-test of `BOF3X_SHADOW=sound` (a named
+  layer's song on its own bank before `base\bgm`'s; a base song on a bank
+  named as the layer's: the control); the exe host on a PSX disc-only
+  install with the layer: its 166 songs and 81 banks checked, exit 0. **Not
+  heard.**
+- **Reversible?** The audio suite's PlayStation side, or `opt=` without the
+  layer.
+
+### The PSP's effects, voices and jingles as a layer
+
+- **ID:** DIV-0110
+- **Date:** 2026-10-12
+- **Subsystem:** sound streams (`src/game/dat_cache.cpp` `SoundPath`,
+  DIV-0089's `Sound_LoadStream` seam; [`launcher-suites.md`](launcher-suites.md)
+  9; the PSP-only round, group TG)
+- **Tier:** Sensible - a later release's content, off unless chosen.
+- **Original behaviour:** `SND\NAME.DAT` (with DIV-0089, `base\snd` first).
+- **New behaviour:** with `opt=` naming `psp-snd`, the named layers with a
+  `snd` part, last first, then `base\snd`, then `SND\`: the layer's
+  `opt\psp-snd\snd\NAME.DAT` holds the PSP's ATRAC3plus clips as decoded by
+  the player's ffmpeg (DIV-0106), and the 11 jingles - which a PSX-only
+  install otherwise lacks. A layer without a file leaves it to the one under
+  it. Over a PC install the cache's files win where both exist (DIV-0089),
+  so the PC's own MP3 jingles are replaced by the PSP's while the layer is
+  on.
+- **Rationale:** as DIV-0109; DIV-0106 is the same audio as a PSP-only base.
+- **Also in the PSX version?** No.
+- **Verification:** the DIV-0110 self-test of `BOF3X_SHADOW=dat_cache` (two
+  named layers, the top layer's stream, the one under it, an unnamed
+  layer's refused); the exe host with the layer, exit 0. **Not heard.**
+- **Reversible?** The audio suite's PlayStation side, or `opt=` without the
+  layer.
+
+### The PSP's level table and consumable 87 laid over .data
+
+- **ID:** DIV-0111
+- **Date:** 2026-10-12
+- **Subsystem:** the exe host's data mapping (`src/hook/exe_image.cpp`
+  `ExeImage_LayOptTables`, `exe_host.cpp` `CopyData`;
+  [`launcher-suites.md`](launcher-suites.md) 9; the PSP-only round, group TG)
+- **Tier:** Extension - a balance change (roster index 6's level table,
+  [`opt-layers.md`](opt-layers.md) 3), chosen by the player; DIV-0104 makes
+  it a PSP-only install's base.
+- **Original behaviour:** `.data` as `BOF3.exe` (or the disc-built image)
+  holds it: the PlayStation's tables.
+- **New behaviour:** with `opt=` naming `psp-tables`, the exe host lays
+  `opt\psp-tables\exe\place.bin` over `.data` at map time, after the image
+  is in place and filled and before it is compared with the file: every
+  record of `exp_table` and `consumables`, names left out, from the
+  PSP-built image. Over the PC's, the US disc's and the European disc's
+  images it changes exactly 250 bytes: 249 of roster index 6's rows and 1 of
+  consumable 87. Refused with a Fatal naming the file: a `place.toml` not in
+  `psp_layers.py`'s shape, ranges out of order or outside `.data`, a byte
+  count that differs, a `place.bin` whose sha256 is not the toml's, and,
+  over a disc-built image, a range on a class that must equal the PC's. The
+  hosted build refuses the layer (its `.data` is Capcom's, the A/B and
+  shadow reference).
+- **Rationale:** the owner's data suite; the bytes are DIV-0104's.
+- **Also in the PSX version?** No: the PSP's changes.
+- **Verification:** `exe_cmp.py` (the layer laid as the exe host lays it,
+  against the PSP-built image: 250 bytes change, 0 outside the ranges); the
+  DIV-0111 self-test on synthetic files (5 controls refused); the exe host
+  over the PC's `.data` and a disc-built one: `250 of them differ`; a
+  flipped byte of `place.bin`: exit 3. **Not played:** a level-up of roster
+  index 6.
+- **Reversible?** The data suite's PlayStation side, or `opt=` without the
+  layer.
+
+### Ryu's forms (P8) as a layer
+
+- **ID:** DIV-0112
+- **Date:** 2026-10-12
+- **Subsystem:** data (`LoadDatFile`, DIV-0086's walk; no new code;
+  `recipes/psp-layers.toml`'s `psp-ryu-forms`; the PSP-only round, group TG)
+- **Tier:** Sensible - presentation and form data the PSP changed; CD settled
+  that our code runs it ([`psp-code-diff.md`](psp-code-diff.md)).
+- **Original behaviour:** the PlayStation's arenas and `RYUD` sections (the
+  PC's chunks).
+- **New behaviour:** with `opt=` naming `psp-ryu-forms`, the 19 chunks a
+  PSP-only base stands in (DIV-0103): `RYUD00..03` with the port's byte, 14
+  type-1 arenas, `BPLD27A` with the port's hold, each at the PC's kind, tag
+  and size. The arenas' tag resets `Gfx_UploadQueueCount` again, which
+  changes nothing: in each of the 19 containers only banks follow the arena.
+- **Rationale:** the owner's data suite (P8 under data, `psp-only-round.md`
+  7.1 item 5).
+- **Also in the PSX version?** No.
+- **Verification:** `verify_layer` (each chunk against the PC's kind, tag and
+  size and SI's hash); PSP-JP and PSP-EU give identical layers; the hosted
+  self-test with the layer named, exit 0. **Not seen:** Ryu's forms in
+  battle.
+- **Reversible?** The data suite's PlayStation side, or `opt=` without the
+  layer.
+
+### The battle chord as the PSP plays it, and a layer's banks in Snd_LoadBankFile
+
+- **ID:** DIV-0113
+- **Date:** 2026-10-12
+- **Subsystem:** sound banks (`src/game/save_menu.cpp` `Snd_LoadBankFile`,
+  `dat_load.cpp` `DatLoad_OptLayerChunks`); the launcher's Jukebox
+  (`music_player.cpp`, `suites.cpp` `ChordEvaluate`, `launcher.rc`);
+  [`launcher-suites.md`](launcher-suites.md) 9.6; the PSP-only round, group
+  TG)
+- **Tier:** Sensible - a choice, off by default.
+- **Original behaviour:** `Snd_LoadBankFile` loads a container's banks from
+  the shipped file only, so a layer's bank applied when `LoadDatFile` loaded
+  the container and not when a scene loader asked for its banks. The
+  PlayStation's (and the PC's) battle effects bank in 16 containers keys a
+  chord of two tones; the PSP's drops the second, and every base plays the
+  restored chord (DIV-0103).
+- **New behaviour:** `Snd_LoadBankFile` also loads the kind-2 chunks of each
+  named layer's file for the container, after the shipped file
+  (`LoadDatFile`'s precedence; `Snd_LoadBank` frees and replaces a slot's
+  bank as when the original loads one over another), only when a named layer
+  carries a bank at all (read at injection, logged; with none, the function
+  is the original's). The layer `psp-chord-one-tone`, built whenever a PSP
+  disc is a source on any base, holds those 16 banks as the PSP plays them;
+  the Jukebox's box "Battle chord as the PSP plays it (one tone)" puts it in
+  `opt=`. Off by default; greyed with the reason when no cache is named, the
+  cache has no PSP source, or it lacks the layer.
+- **Rationale:** the owner, 2026-10-12 (`psp-only-round.md` 7.1 item 8): the
+  dropped tone toggle-able, on the Jukebox, the restored chord the default.
+- **Also in the PSX version?** No: the PSX plays two tones.
+- **Verification:** the launcher host suite's `ChordEvaluate` (six states);
+  `verify_layer` (each chunk against a bank tag of its container, the
+  one-tone form different from the PC's chunk); the hosted `'*'` and the
+  exe host with the layer named, exit 0 (a first build without the bank gate
+  crashed the hosted run in `Snd_LoadBankFile`'s shadow fuzz, fixed before
+  the merge). **Not heard;** the Jukebox does not play it (an effect, not a
+  song).
+- **Reversible?** The box, or `opt=` without the layer.

@@ -100,8 +100,8 @@ measure`, `pdiff.py` scratch):
 
 | Symbol | PSX-JP | PSP-JP | PSP-EU | What |
 |---|---:|---:|---:|---|
-| `Char_ExpTable` (`exp_table`) | 0 | 249 | 249 | expected: roster index 6's 99 rows, the PSP's own (DIV B) |
-| `NameTable_Consumables` | 532 | 533 | 533 | the blank names (widen), and **consumable 87**'s one byte: expected (DIV B) |
+| `Char_ExpTable` (`exp_table`) | 0 | 249 | 249 | expected: roster index 6's 99 rows, the PSP's own (DIV-0104) |
+| `NameTable_Consumables` | 532 | 533 | 533 | the blank names (widen), and **consumable 87**'s one byte: expected (DIV-0104) |
 | the other five `NameTable_*` | 2,533 | 2,533 | 2,533 | the blank names (widen) |
 | `Char_DefaultRecords` | 51 | 51 | 15 | the eight character names at the disc's width (known, `exe-tables-by-build.md` 6) |
 | `SimoonDust_Offsets` | 0 | 18 | 18 | **a misplacement**: the map's `BOOT.BIN` run reaches seven words `BOOT.BIN`'s relocations mark as `.text` pointers (a jump table); the PC holds numbers there (`relplaced.py`) |
@@ -315,9 +315,11 @@ tree.
 
 ## For the other files
 
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): DIV B is **DIV-0104**; the note for DIV-0101 went into DIV-0101's amendment with IM2's; `SimoonDust_Offsets` is known defect **D245**; the README row, STATUS, HANDOFF and owner-review are in.
+
 Not edited here; the coordinator folds them in.
 
-**DIV B - A PSP-built image of `.data` carries the PSP's level table and
+**DIV-0104 - A PSP-built image of `.data` carries the PSP's level table and
 consumable 87.**
 - Original: `BOF3.exe`'s `.data` holds the PSX's `Char_ExpTable` (every PSX
   build equal) and consumable 87 as the PSX has it.

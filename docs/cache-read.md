@@ -5,7 +5,9 @@ Built with llvm-mingw, no warnings; `BOF3X_SHADOW=dat_cache` and the full
 `'*'` self-test exit 0; the start-up check run headless against a real cache
 and four synthetic ones; the walk proved offline against `importer.py install`
 on all 742 containers. **Not run:** any live play with `BOF3X_CACHE` set -
-the owner's, section 9)
+the owner's, section 9. **2026-10-12:** `Sound_LoadStream` takes a named
+layer's `snd\` first (DIV-0110) and `Snd_LoadBankFile` a named layer's banks
+(DIV-0113), [`launcher-suites.md`](launcher-suites.md) 9.2)
 
 [`unified-data-plan.md`](unified-data-plan.md) section 7 and step 6's open
 end ([`sound-import.md`](sound-import.md) section 7): until now the engine read

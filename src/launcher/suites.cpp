@@ -125,7 +125,7 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in) {
             if (!man.error.empty()) {
                 ms.note = L"see the note above";
             } else if (m.kind == Kind::kCode) {
-                // The PSP's battle rules (DIV F draft): code of ours, the disc
+                // The PSP's battle rules (DIV-0108): code of ours, the disc
                 // only the evidence that the player has the PSP's version.
                 ms.available = have;
                 if (!have) ms.note = L"needs " + OrList(from);

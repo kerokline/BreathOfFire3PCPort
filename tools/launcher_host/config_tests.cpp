@@ -150,7 +150,7 @@ void TestRoundTrip() {
     Check(c1.cache == "D:\\Games\\bof3 cache\\", "cache= trimmed as a line is, the path kept", c1.cache);
     Check(c1.music == "seq", "music=seq kept as seq", c1.music);
     Check(c1.opt == "psp-art,area4-walls", "opt= kept", c1.opt);
-    Check(c1.psp == "myria-item", "psp= kept (DIV F draft)", c1.psp);
+    Check(c1.psp == "myria-item", "psp= kept (DIV-0108)", c1.psp);
     Check(bof3x::ConfigSave(b, c1), "save");
     const std::string first = ReadAll(b);
     Check(first.find("\r\ncache=D:\\Games\\bof3 cache\\\r\n") != std::string::npos, "the cache= line written");
@@ -466,7 +466,7 @@ void TestSuites() {
           "SuiteLayers: the catalogue's order");
 }
 
-// TG-5: the Jukebox's battle-chord box (ChordEvaluate).
+// DIV-0113: the Jukebox's battle-chord box (ChordEvaluate).
 void TestChord() {
     const std::vector<std::string> walls{"area4-walls"};
     bof3x::ChordState c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestAll), true, "", walls);
@@ -493,7 +493,7 @@ void TestChord() {
 
 }  // namespace
 
-// DIV F (draft): the data suite's two code members, the PSP's battle rules,
+// DIV-0108: the data suite's two code members, the PSP's battle rules,
 // played through psp= rather than opt=.
 void TestCodeMembers() {
     using bof3x::SuiteSide;
@@ -807,7 +807,7 @@ int main() {
     TestPspValid();
     std::printf("suites\n");
     TestSuites();
-    std::printf("code members (DIV F draft)\n");
+    std::printf("code members (DIV-0108)\n");
     TestCodeMembers();
     std::printf("jukebox chord\n");
     TestChord();

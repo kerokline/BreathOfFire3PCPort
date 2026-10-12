@@ -25,7 +25,7 @@
 // boxes, 1018..1024). Suite i's controls are IDC_SUITE0 + kSuiteStride * i
 // plus: the label, the PlayStation radio, the PSP radio, four member lines,
 // the reason; the data suite also two more member lines at +8 and +9 (its
-// two code members, DIV F draft).
+// two code members, DIV-0108).
 #define IDC_SUITENOTE   1018
 #define IDC_SUITEGROUP  1019
 #define IDC_SUITE0      1040
@@ -98,5 +98,5 @@
 #define IDC_MP_STOP     1505
 #define IDC_MP_NOTE     1506
 #define IDC_MP_STATUS   1507
-#define IDC_MP_CHORD    1508   // TG-5: the battle chord as the PSP plays it (opt= psp-chord-one-tone)
+#define IDC_MP_CHORD    1508   // DIV-0113: the battle chord as the PSP plays it (opt= psp-chord-one-tone)
 #define IDC_MP_CHORD_NOTE 1509

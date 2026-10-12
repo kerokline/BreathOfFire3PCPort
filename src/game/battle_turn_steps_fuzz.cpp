@@ -91,7 +91,7 @@ std::uint32_t Watch() {
     return h;
 }
 
-// DIV F (psp_code.h): the switch-on pass runs the original with the PSP's
+// DIV-0108 (psp_code.h): the switch-on pass runs the original with the PSP's
 // duel-loss applied where the PSP applies it - after the hook with 2, when it
 // does not answer 0xFF, on the bytes it left (StubHookEventPsp): an end byte
 // the rule lets the battle go on with is shown to the original as 0, and put
@@ -226,7 +226,7 @@ unsigned __cdecl StubHookEvent(int n) {
     Disturb();
     return (Hash() & ~0xFFu) | ((Hash() >> 6) % 3 == 0 ? 0xFFu : (Hash() >> 9) & 0xFE);
 }
-// DIV F: the hook as the original sees it with the PSP's duel-loss.
+// DIV-0108: the hook as the original sees it with the PSP's duel-loss.
 unsigned __cdecl StubHookEventPsp(int n) {
     const unsigned r = StubHookEvent(n);
     if (n == 2 && (r & 0xFF) != 0xFF && psp_code::DuelLossGoesOn(B(at::kEventBattle), B(at::kBattleEnd))) {
@@ -637,7 +637,7 @@ void SelfTest() {
         if (c.table.entries) move_script::Relocate(clones[k], c.base, c.size, c.table);
     }
 
-    // DIV F: the main comparison with the PSP's changes off - today's
+    // DIV-0108: the main comparison with the PSP's changes off - today's
     // behaviour, byte for byte - whatever BOF3X_PSP or the cache says.
     const unsigned psp_saved = psp_code::Force(0);
 
@@ -689,7 +689,7 @@ void SelfTest() {
         }
     }
 
-    // DIV F: BattleRoundEnd_NextRound again with the PSP's changes on. Ours
+    // DIV-0108: BattleRoundEnd_NextRound again with the PSP's changes on. Ours
     // against the original with the PSP's test applied after the hook
     // (StubHookEventPsp); every other byte as before. Half the rounds in event
     // battle 0x1B, the end byte from its low three bits' eight cases.
@@ -728,16 +728,16 @@ void SelfTest() {
             Capture(pass == 0 ? their_out : pass == 1 ? our_out : plain_out);
         }
         if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0) {
-            if (++psp_bad <= 12) bof3::Log("shadow      battle_turn_steps DIV F MISMATCH: round %u", round);
+            if (++psp_bad <= 12) bof3::Log("shadow      battle_turn_steps DIV-0108 MISMATCH: round %u", round);
         }
         if (std::memcmp(&plain_out, &our_out, sizeof our_out) != 0) ++psp_changed;
     }
     psp_code::Force(psp_saved);
-    bof3::Log("shadow      battle_turn_steps DIV F (duel-loss on): BattleRoundEnd_NextRound %u rounds, the PSP's test "
+    bof3::Log("shadow      battle_turn_steps DIV-0108 (duel-loss on): BattleRoundEnd_NextRound %u rounds, the PSP's test "
               "applied %u times, ours differs from the plain original in %u, %u MISMATCHES against the original with "
               "the PSP's test",
               kPspRounds, g_psp_fired, psp_changed, psp_bad);
-    if (g_psp_fired == 0 || psp_changed == 0) bof3::Fatal("battle_turn_steps DIV F: the switch-on pass never reached the PSP's test");
+    if (g_psp_fired == 0 || psp_changed == 0) bof3::Fatal("battle_turn_steps DIV-0108: the switch-on pass never reached the PSP's test");
     if (psp_bad) bof3::Fatal("BattleRoundEnd_NextRound with duel-loss on differs from the PSP's rule in %u rounds", psp_bad);
 
     g = kOriginals;

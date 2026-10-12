@@ -233,7 +233,7 @@ All without a game run (the brief's rule), on this machine, 2026-10-12.
 | PC and PSX paths | `refs_lt.sh` (LT scratch): JP + PC, US alone and European alone built with this branch's tools against the coordinator's `ref_*` (built with `668a9b67`'s); every file but `manifest.toml` hashed, and the manifest diffed without its `built =` line | JP + PC 2,126 files, US 1,873, European 1,865: every tree identical, 0 manifest lines differ; `recipes/exe-gaps.tsv` untouched (`git diff 668a9b67 -- recipes/exe-gaps.tsv` empty) |
 | hosted self-test | `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' <copy>/bof3x-launcher.exe --game <install> --no-config`, an ini-less copy | exit 0 (the DLL is unchanged; the launcher's path is exercised) |
 | exe host self-test, PSX disc-only | `importer.py install --base --cache ref_us --game <scratch>/g_us`, then `BOF3X_SELFTEST_ONLY=1`, `BOF3X_CACHE` = `BOF3X_EXEIMAGE` = `ref_us`, the copy with `--no-config` | exit 0; `inject: 10087 ours`; `self-test only: done`; `exe_own: 17 regions ... filled over a disc-built image` |
-| ledger | `python tools/ledger_check.py` | 101 entries, 0 errors, 2 notes (DIV E is not in the ledger yet) |
+| ledger | `python tools/ledger_check.py` | 101 entries, 0 errors, 2 notes (DIV-0107 is not in the ledger yet) |
 
 The host suite's new checks (`config_tests.cpp`, `TestManifest` and
 `TestSuites`) run the three fake manifests in memory:
@@ -435,7 +435,7 @@ layer's part (`bgm`, `snd`, `exe`; a `dat` layer's member is `opt`, or `base`
 where a PSP base stands it in, P8); every TG layer is in exactly one suite
 but the Jukebox's (`suite = "jukebox"`), which must be in none.
 
-### 9.2 The engine's seams (ledger drafts TG-1 to TG-5)
+### 9.2 The engine's seams (DIV-0109 to DIV-0113)
 
 All are reached only when `BOF3X_OPT` (the ini's `opt=`) names the layer and
 the cache (`BOF3X_CACHE`, not under `BOF3X_CACHE_DATA=0`) holds its part:
@@ -450,7 +450,7 @@ the cache (`BOF3X_CACHE`, not under `BOF3X_CACHE_DATA=0`) holds its part:
   **`kOptMax` is 16** (it was 8): all three suites' PSP sides with the walls
   name nine layers, eleven with the other renames and the chord;
   `ConfigOptValid` follows (`more than 16 layers`).
-- **TG-1, the music** (`music_seq.cpp`, DIV-0087's `Music_LoadFile` seam):
+- **DIV-0109, the music** (`music_seq.cpp`, DIV-0087's `Music_LoadFile` seam):
   `Arm` takes the named layers with a `bgm` part, checks every song and bank
   of each at start-up as it checks `base\bgm`, and `LoadFile` looks for a
   track in the last named layer first, then the earlier ones, then
@@ -462,12 +462,12 @@ the cache (`BOF3X_CACHE`, not under `BOF3X_CACHE_DATA=0`) holds its part:
   songs are not played either. Arming no longer needs `base\bgm` when a
   named layer has songs. A root too long for `<root>\opt\<layer>\bgm\bank\`
   + 15 + `.DAT` is a Fatal naming the layer.
-- **TG-2, effects, voices, jingles** (`dat_cache.cpp` `SoundPath`, DIV-0089's
+- **DIV-0110, effects, voices, jingles** (`dat_cache.cpp` `SoundPath`, DIV-0089's
   `Sound_LoadStream` seam): armed, the named layers with a `snd` part, last
   first, then `base\snd`, then `SND\`. A layer without a file leaves it to
   the one under it. Over a PSX-only install this brings the 11 jingles a
   PSX-only install lacks (`psp-install.md` 3; the round's section 7 item 5).
-- **TG-3, the exe tables** (`exe_image.cpp` `ExeImage_LayOptTables`, called
+- **DIV-0111, the exe tables** (`exe_image.cpp` `ExeImage_LayOptTables`, called
   by the exe host's `CopyData` after `.data` is in place - the file's, or
   `BOF3X_EXEIMAGE`'s and filled - and before `ExeImage_CompareWithFile`):
   each named layer with `exe\place.toml`, in `BOF3X_OPT`'s order, is laid
@@ -480,12 +480,12 @@ the cache (`BOF3X_CACHE`, not under `BOF3X_CACHE_DATA=0`) holds its part:
   bof3x.exe lays (the exe host); the hosted build (--host bof3) runs
   Capcom's .data as loaded". The hosted build is the A/B and shadow
   reference, and its `.data` stays the loader's.
-- **TG-4, P8** (no new seam): an ordinary DAT layer through DIV-0086's walk.
+- **DIV-0112, P8** (no new seam): an ordinary DAT layer through DIV-0086's walk.
   Each chunk is kind 0 at the arena's tag, the whole arena; the arenas' tag
   `0x10000` resets `Gfx_UploadQueueCount` again, which changes nothing,
   since in each of the 19 containers the only chunks after the arena are
   banks (`recipes/pc-zh.toml`; a bank queues no upload).
-- **TG-5, a layer's bank** (`save_menu.cpp` `Snd_LoadBankFile`, through
+- **DIV-0113, a layer's bank** (`save_menu.cpp` `Snd_LoadBankFile`, through
   `dat_load.cpp` `DatLoad_OptLayerChunks`): the original loads a
   container's kind-2 chunks from the shipped file alone, so a layer's bank
   would apply when `LoadDatFile` loads the container and not when a scene
@@ -531,14 +531,14 @@ All on this machine, 2026-10-12, headless (no game window). Scripts in
 | refusals at build | `--opt psp-music` from PSP-EU alone; `--opt psp-tables` from the US disc alone | each refused in a second, naming why (a PSP base; no PSP disc) |
 | install | `install --opt psp-music`; `install --opt psp-ryu-forms --opt psp-chord-one-tone` | refused, naming `cache=` / `opt=`; 35 files as `DAT\<layer>.*.DAT` |
 | the i686 build | `cmake --preset i686 && cmake --build build` | clean, no warning in a file changed here |
-| hosted self-test | `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, an ini-less copy, the PC install (which names `area4-walls` by default) | exit 0, `inject: 10087 ours`; the TG-1, TG-2 and TG-3 self-tests logged |
-| hosted, the tables named | `--host bof3`, `BOF3X_OPT=psp-tables` | exit 3: "TG-3: ... only bof3x.exe lays (the exe host)" |
+| hosted self-test | `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, an ini-less copy, the PC install (which names `area4-walls` by default) | exit 0, `inject: 10087 ours`; the DIV-0109, DIV-0110 and DIV-0111 self-tests logged |
+| hosted, the tables named | `--host bof3`, `BOF3X_OPT=psp-tables` | exit 3: "DIV-0111: ... only bof3x.exe lays (the exe host)" |
 | hosted, the other layers | `--host bof3`, `BOF3X_OPT=psp-music,psp-snd,psp-ryu-forms,psp-chord-one-tone`, the PC + US + PSP-EU cache | exit 0 |
-| exe host, PSX disc-only install | `install --base` from a US + PSP-EU cache; `BOF3X_CACHE` = that cache (the launcher sets `BOF3X_EXEIMAGE`); `BOF3X_OPT` each of `none`, `psp-music`, `psp-snd`, `psp-tables`, `psp-ryu-forms`, `psp-chord-one-tone`, then all five with `area4-walls` | exit 0 every time; `exe_own: 17 regions ... filled over a disc-built image`; `inject: 10087 ours`; with the tables: `TG-3 ... 250 of them differ` over `psx-us`; with the music: the layer's 166 songs and 81 banks checked, then base's |
-| exe host, a PC install | the PC install, the PC + US + PSP-EU cache, all five layers | exit 0; `TG-3 ... 250 of them differ` over the file's `.data` |
+| exe host, PSX disc-only install | `install --base` from a US + PSP-EU cache; `BOF3X_CACHE` = that cache (the launcher sets `BOF3X_EXEIMAGE`); `BOF3X_OPT` each of `none`, `psp-music`, `psp-snd`, `psp-tables`, `psp-ryu-forms`, `psp-chord-one-tone`, then all five with `area4-walls` | exit 0 every time; `exe_own: 17 regions ... filled over a disc-built image`; `inject: 10087 ours`; with the tables: `DIV-0111 ... 250 of them differ` over `psx-us`; with the music: the layer's 166 songs and 81 banks checked, then base's |
+| exe host, a PC install | the PC install, the PC + US + PSP-EU cache, all five layers | exit 0; `DIV-0111 ... 250 of them differ` over the file's `.data` |
 | exe host, a damaged layer | one byte of `place.bin` flipped (restored after) | exit 3: "place.bin is not the file place.toml's sha256 names" |
 | launcher host suite | `cmake -S tools/launcher_host -B build/lh -G Ninja -DCMAKE_CXX_COMPILER=clang++`, `config_tests.exe` | **136 checks, 0 failures** (114 before): the parts counted as the DLL counts them, every suite offered with TG's layers, `opt=` of nine and eleven layers valid and seventeen refused, the chord box's six states |
-| ledger | `python tools/ledger_check.py` | 101 entries, 0 errors, 2 notes (TG-1..5 and DIV E are not in the ledger yet) |
+| ledger | `python tools/ledger_check.py` | 101 entries, 0 errors, 2 notes (DIV-0109..0113 and DIV-0107 are not in the ledger yet) |
 
 ### 9.5 The suites now
 
@@ -574,7 +574,7 @@ asked for it to be toggle-able, on the Jukebox screen:
   layer (built before this round). `ChordEvaluate` (`suites.cpp`) decides,
   pure, for the host tests.
 - **The engine**: the layer's banks reach `Snd_LoadBank` from both loaders
-  (TG-5).
+  (DIV-0113).
 - **Not heard**, and the Jukebox does not play it: it is an effect, not a
   song. The box only sets what the game plays.
 
@@ -608,7 +608,7 @@ data: names, counts and hashes.
 |---|---|---|---|---|
 | 1 | Hosted runs stopped when the data suite was the PSP's (`psp-tables` in `opt=`, refused by the hosted build at start) | `ConfigApplyEnvironment(..., hosted)`: the launcher leaves out of the `BOF3X_OPT` it sets every layer whose part the hosted build refuses (`kHostedRefusesParts` = `exe`), by the recipe's part (`suites.gen.h` `kLayerParts`, from `recipes/psp-layers.toml`) or the cache tree's (`ConfigOptHosted`), with one stderr line naming them. A hand-set `BOF3X_OPT` is untouched: the engine's refusal stays | host suite `TestHostedOpt`: the data suite's PSP side written over an empty `opt=` (`psp-tables,psp-names-en-150,psp-ryu-forms`), then `BOF3X_OPT` for bof3x.exe (`psp-tables,psp-ryu-forms`) and for the hosted build (`psp-ryu-forms`); a mod's layer with `exe\place.toml` dropped by its tree; `run1.sh`: the hosted `'*'` self-test through the launcher with that ini | host suite passes; `run1.sh` (the PC install, the PC + US + PSP-EU cache): exit 0, `inject: 10087 ours`, the launcher's line "cannot take psp-tables ... left out of BOF3X_OPT", `psp-ryu-forms` the one layer (the renames not in that cache). At the tip the same ini passes `psp-tables` and the hosted build stops at start (9.4, "hosted, the tables named": exit 3) |
 | 2 | A failed import left layers on disk without manifest rows, offered and played | `psp_layers.build`: each layer built in `out/.psp_layer_<name>_*` and renamed into `opt/` whole; a failure removes it, and the `[psp_layers]` table is written whatever happens with the rows of every layer in place. The engine (`dat_cache::HasLayer`, `HasLayerPart`), the launcher (`CacheHasLayer`) and the Jukebox's PSP column offer an `opt/` layer only when the manifest lists it (`[cache] opt` or `[psp_layers]` rows; no manifest: the tree, as before). `verify` reports an unlisted `opt/` folder as a problem | `rf_inject.py`: a US + PSP-EU build with `--opt psp-music --opt psp-snd`, `psp-snd`'s builder failing; `run2.sh` over both caches; host suite `TestListedLayers`; the `dat_cache` self-test's listing case and its control | the tip's tools: `opt/psp-music` (247 files) on disk, no `[psp_layers]` table; this branch's: the same tree, listed, `verify` 0 problems for it. Over the tip's cache: `verify` "opt/psp-music: on disk, not listed"; the launcher drops `psp-music` ("not there, nor in the cache's opt\"), a hand-set `BOF3X_OPT=psp-music` exits 3 naming the manifest; over this branch's cache both play it (`songs from ...opt\psp-music\bgm first`) |
-| 3 | `BOF3X_CACHE_DATA=0` could not play the music layer | a layer's `bgm` part is read whenever the cache is the music's: `dat_cache` keeps the root as the music's under `0` (and its manifest's listing), `HasLayerPart(bgm)` answers there; the launcher asks `bgm` of `ConfigCacheRoot`. `snd` (effects, voices, jingles) and the chord's `dat` banks stay on the data side ([`cache-read.md`](cache-read.md) 6) | the `dat_cache` self-test's music-only case (bgm found, snd and exe not; the rule before refused as its control), under `BOF3X_SHADOW=sound,dat_cache` with `BOF3X_CACHE_DATA` 0 and 1 (`run3.sh`), and the music seam's own self-test in the same runs; host suite `TestMusicOnly` | both settings exit 0 with `TG-1 ... songs from ...opt\psp-music\bgm first`; the exe host through the launcher (`run3b.sh`, `opt=psp-music,psp-snd`): under 0 `BOF3X_OPT` is `psp-music` alone, under 1 both |
+| 3 | `BOF3X_CACHE_DATA=0` could not play the music layer | a layer's `bgm` part is read whenever the cache is the music's: `dat_cache` keeps the root as the music's under `0` (and its manifest's listing), `HasLayerPart(bgm)` answers there; the launcher asks `bgm` of `ConfigCacheRoot`. `snd` (effects, voices, jingles) and the chord's `dat` banks stay on the data side ([`cache-read.md`](cache-read.md) 6) | the `dat_cache` self-test's music-only case (bgm found, snd and exe not; the rule before refused as its control), under `BOF3X_SHADOW=sound,dat_cache` with `BOF3X_CACHE_DATA` 0 and 1 (`run3.sh`), and the music seam's own self-test in the same runs; host suite `TestMusicOnly` | both settings exit 0 with `DIV-0109 ... songs from ...opt\psp-music\bgm first`; the exe host through the launcher (`run3b.sh`, `opt=psp-music,psp-snd`): under 0 `BOF3X_OPT` is `psp-music` alone, under 1 both |
 | 4 | The game and the launcher read `base_policy` by different rules (and the Jukebox by a third) | one reader, `src/common/cache_manifest.*`, linked by the DLL and the launcher: `base_policy` (exactly `psp` / `psx`, absent `psx`), `exe_tables_from`, the bgm row's build, `[snd]`, the listing. Anything else is one sentence (`ManifestRefusal`): the launcher stops on it before the game starts, the DLL (`psp_code.cpp`) Fatals with it | host suite `TestOneReader` (good, absent, seven misspellings); `run4.sh`: `bof3x.exe` started alone and the launcher, over six one-file caches | `psp`, `psx`, absent: exit 0 both, the DLL's default as the policy says; `"PSP"`, `psp` unquoted, `exe_tables_from = 3`: the DLL exit 3 and the launcher exit 1, the same sentence |
 | 5 | The Jukebox built a broken path for a second music member | `suites.py check` refuses a second `bgm` member, naming the Jukebox's one column; `ListPsp` takes the first member and stops | `neg_bgm.py`: a second `bgm` member added to audio | refused with the reason; the committed toml 0 errors |
 | 6 | Ticking and unticking the chord box wrote a default `opt=` where the line was empty | the box records a choice (`-1` / `0` / `1`); `opt=` is made once on Play from the line as read with the suites' choices (`SuitesOptEdit`'s `extra`), so a choice back where it started writes the line byte for byte | host suite `TestChordRoundTrip`: the old two edits give `area4-walls` over an empty line; now `""`, `none`, `area4-walls`, `psp-art,area4-walls` each come back byte for byte | passes |
@@ -650,13 +650,15 @@ suite covers the rule only).
 
 ## For the other files
 
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): DIV E is **DIV-0107**, written with TG's amendment in it; DIV-0086 amended; the README row, STATUS, HANDOFF and owner-review are in. `launcher-settings.md` and `opt-layers.md` got pointers to this doc.
+
 For the coordinator to fold in. These edits are not made here.
 
-**DIV E** (amends DIV-0086's launcher box; number it at merge):
+**DIV-0107** (amends DIV-0086's launcher box; drafted as DIV E, numbered 2026-10-12):
 
 > ### The launcher offers three suites, the PSP's or the PlayStation's, in place of the PSP extras
 >
-> - **ID:** DIV E
+> - **ID:** DIV-0107
 > - **Date:** 2026-10-12
 > - **Subsystem:** launcher (`src/launcher/suites.cpp`, `config_dialog.cpp`, `launcher.rc`; `recipes/suites.toml`, `tools/suites.py`)
 > - **Tier:** Sensible - a choice of which release's presentation and data to play, made before the game starts; what the suites move is DIV-0086's layers (and, once TG lands, its own entries), off beside a PlayStation base unless chosen.
@@ -666,7 +668,7 @@ For the coordinator to fold in. These edits are not made here.
 > - **Also in the PSX version?** no - the PlayStation release has no launcher and no PSP content.
 > - **Reversible?** yes: each suite's PlayStation side, or `opt=none` / an `opt=` list in `bof3x.ini`; a PSP base has no PlayStation side to choose until one is built.
 
-**DIV-0086:** an "Amended 2026-10-12 (DIV E)" line. The launcher's "PSP
+**DIV-0086:** an "Amended 2026-10-12 (DIV-0107)" line. The launcher's "PSP
 extras" boxes are replaced by the three suites. `opt=` is unchanged, and an
 `opt=` written by the boxes reads as a partial suite, kept as written.
 
@@ -684,7 +686,7 @@ extras" boxes are replaced by the three suites. `opt=` is unchanged, and an
   (the suites write their layers here).
 
 **`docs/opt-layers.md`:**
-- Section 5's launcher bullet: "the dialog's three suites (DIV E,
+- Section 5's launcher bullet: "the dialog's three suites (DIV-0107,
   `launcher-suites.md`) in place of the PSP extras group".
 - "The owner's calls", item 3: superseded by the suites.
 
@@ -700,7 +702,7 @@ extras" boxes are replaced by the three suites. `opt=` is unchanged, and an
 
 **`docs/README.md`:** a row:
 
-> | [`launcher-suites.md`](launcher-suites.md) | The launcher's three suites - graphics, audio, data, each the PlayStation's version or the PSP's (the owner's calls of 2026-10-10): `recipes/suites.toml` and `tools/suites.py` (checked in `importer.py check`, generated into the launcher), availability from the cache's `manifest.toml` (`base_policy`, `exe_tables_from`), greyed sides naming the discs, the PSP-only inverse, `opt=` as the ini's record; the membership proposals; what TG lifts. DIV E. BUILT. |
+> | [`launcher-suites.md`](launcher-suites.md) | The launcher's three suites - graphics, audio, data, each the PlayStation's version or the PSP's (the owner's calls of 2026-10-10): `recipes/suites.toml` and `tools/suites.py` (checked in `importer.py check`, generated into the launcher), availability from the cache's `manifest.toml` (`base_policy`, `exe_tables_from`), greyed sides naming the discs, the PSP-only inverse, `opt=` as the ini's record; the membership proposals; what TG lifts. DIV-0107. BUILT. |
 
 **`docs/STATUS.md`:** the PSP-only round's LT: the launcher's three suites
 built and scripted (114 host checks, 35 dialog checks); the owner's eye on
@@ -721,22 +723,22 @@ the page and the membership calls (`launcher-suites.md` 6) owed.
 
 ## For the other files (TG, the engine half)
 
-For the coordinator to fold in; not edited here. The ledger drafts are
-letters TG-1 to TG-5; the code cites them as `TG-1` .. `TG-5` (renumber at
-merge: `dat_cache.h`, `dat_cache.cpp`, `dat_load.cpp`, `dat_load.h`,
+For the coordinator to fold in; not edited here. The ledger drafts were
+TG-1 to TG-5, numbered DIV-0109 to DIV-0113 on 2026-10-12, and the code's
+citations renamed with them (`dat_cache.h`, `dat_cache.cpp`, `dat_load.cpp`, `dat_load.h`,
 `music_seq.cpp`, `save_menu.cpp`, `exe_image.h`, `exe_image.cpp`,
 `exe_host.cpp`, `suites.h`, `resource.h`).
 
-**DIV E, amended** (the suites; LT's draft above): the "New behaviour"
+**DIV-0107, amended** (the suites; LT's draft above): the "New behaviour"
 sentence "A member whose engine half is not built (audio and the tables
 beside a PlayStation base, until TG) or that has no layer (P8) is greyed with
 that reason" becomes: "Every member is a layer beside a PlayStation base
 (`recipes/opt.toml`'s, or `recipes/psp-layers.toml`'s: the music, the
-effects, the exe tables, P8 - TG-1 to TG-4); one not in the cache is greyed
+effects, the exe tables, P8 - DIV-0109 to DIV-0112); one not in the cache is greyed
 with `build with --opt NAME`." Add: "`opt=` takes up to 16 layers (8
 before)."
 
-**TG-1 - The PSP's music as a layer beside a PlayStation disc's**
+**DIV-0109 - The PSP's music as a layer beside a PlayStation disc's**
 - **Subsystem:** music (`src/game/music_seq.cpp`, DIV-0087's seam; `tools/psp_layers.py`, `recipes/psp-layers.toml`)
 - **Tier:** Sensible - a later release's content, off unless chosen (DIV-0086's rule for layers).
 - **Original behaviour:** the port plays its MP3s; with DIV-0087, the cache's `base\bgm` (one disc's songs).
@@ -745,25 +747,25 @@ before)."
 - **Also in the PSX version?** no - the PSP's own sequences (`psp-music.md`: 93 of 166 differ).
 - **Reversible?** yes: the audio suite's PlayStation side, or `opt=` without the layer.
 
-**TG-2 - The PSP's effects, voices and jingles as a layer**
+**DIV-0110 - The PSP's effects, voices and jingles as a layer**
 - **Subsystem:** sound streams (`dat_cache.cpp` `SoundPath`, DIV-0089's `Sound_LoadStream` seam)
 - **Tier:** Sensible.
 - **Original behaviour:** `SND\NAME.DAT` (with DIV-0089, `base\snd` first).
 - **New behaviour:** with `opt=` naming `psp-snd`, the layer's `opt\psp-snd\snd\NAME.DAT` before `base\snd` and `SND\`: the PSP's ATRAC3plus clips as decoded by the player's ffmpeg, and the 11 jingles - which a PSX-only install otherwise lacks.
-- **Rationale:** as TG-1; DIV D (PN) is the same audio as a PSP-only base.
+- **Rationale:** as DIV-0109; DIV-0106 (PN) is the same audio as a PSP-only base.
 - **Also in the PSX version?** no.
-- **Reversible?** yes, as TG-1.
+- **Reversible?** yes, as DIV-0109.
 
-**TG-3 - The PSP's level table and consumable 87 laid over .data**
+**DIV-0111 - The PSP's level table and consumable 87 laid over .data**
 - **Subsystem:** the exe host's data mapping (`src/hook/exe_image.cpp` `ExeImage_LayOptTables`, `exe_host.cpp` `CopyData`)
-- **Tier:** Extension - a balance change (roster index 6's level table, `opt-layers.md` 3), chosen by the player; IM's DIV B makes it a PSP-only install's base.
+- **Tier:** Extension - a balance change (roster index 6's level table, `opt-layers.md` 3), chosen by the player; IM's DIV-0104 makes it a PSP-only install's base.
 - **Original behaviour:** `.data` as `BOF3.exe` (or the disc-built image) holds it: the PSX's tables.
 - **New behaviour:** with `opt=` naming `psp-tables`, the exe host lays `opt\psp-tables\exe\place.bin` over `.data` at map time: every record of `exp_table` and `consumables`, names left out, from the PSP-built image. Over the PC's, the US disc's and the European disc's images it changes exactly 250 bytes: 249 of roster index 6's rows and 1 of consumable 87. The hosted build refuses the layer (its `.data` is Capcom's, the reference).
-- **Rationale:** the owner's data suite; `docs/launcher-suites.md` 9, `psp-image.md` (DIV B).
+- **Rationale:** the owner's data suite; `docs/launcher-suites.md` 9, `psp-image.md` (DIV-0104).
 - **Also in the PSX version?** no - the PSP's changes.
 - **Reversible?** yes: the data suite's PlayStation side.
 
-**TG-4 - Ryu's forms (P8) as a layer**
+**DIV-0112 - Ryu's forms (P8) as a layer**
 - **Subsystem:** data (`LoadDatFile`, DIV-0086's walk; no new code)
 - **Tier:** Sensible (presentation and form data the PSP changed; CD settled that our code runs it, `psp-code-diff.md`).
 - **Original behaviour:** the PSX's arenas and `RYUD` sections (the PC's chunks).
@@ -772,7 +774,7 @@ before)."
 - **Also in the PSX version?** no.
 - **Reversible?** yes.
 
-**TG-5 - The battle chord as the PSP plays it, and a layer's banks in `Snd_LoadBankFile`**
+**DIV-0113 - The battle chord as the PSP plays it, and a layer's banks in `Snd_LoadBankFile`**
 - **Subsystem:** sound banks (`save_menu.cpp` `Snd_LoadBankFile`, `dat_load.cpp` `DatLoad_OptLayerChunks`); the launcher's Jukebox (`music_player.cpp`, `suites.cpp` `ChordEvaluate`, `launcher.rc`)
 - **Tier:** Sensible - a choice, off by default.
 - **Original behaviour:** `Snd_LoadBankFile` loads a container's banks from the shipped file only. The PSX's (and the PC's) battle effects bank in 16 containers keys a chord of two tones; the PSP's drops the second, and every base plays the restored chord (MB's rule).
@@ -782,10 +784,10 @@ before)."
 - **Reversible?** yes: the box, or `opt=` without the layer.
 
 **DIV-0086:** an "Amended 2026-10-12 (TG)" line: a layer may hold `bgm\`,
-`snd\` or `exe\` trees as well as `dat\` (TG-1..3), read from the cache only
+`snd\` or `exe\` trees as well as `dat\` (DIV-0109..0111), read from the cache only
 (`install --opt` refuses them); `kOptMax` 16.
 
-**DIV-0087 / DIV-0089:** an "Amended 2026-10-12 (TG-1 / TG-2)" line each,
+**DIV-0087 / DIV-0089:** an "Amended 2026-10-12 (DIV-0109 / DIV-0110)" line each,
 pointing here.
 
 **`docs/opt-layers.md`:** section 3's last paragraph (the level table and
@@ -798,14 +800,14 @@ cache shows the PSP's songs from the `psp-music` layer (9.3); the chord box
 (9.6).
 
 **`docs/cache-read.md`:** section 5: `Sound_LoadStream` takes a named
-layer's `snd\` first (TG-2); `Snd_LoadBankFile` a named layer's banks
-(TG-5).
+layer's `snd\` first (DIV-0110); `Snd_LoadBankFile` a named layer's banks
+(DIV-0113).
 
 **`docs/psp-music-banks.md`:** section 5's last paragraph: the dropped tone
-is now the owner's toggle (TG-5), default the restored chord.
+is now the owner's toggle (DIV-0113), default the restored chord.
 
 **`docs/README.md`:** `launcher-suites.md`'s row: "... what TG lifts; the
-engine half built (section 9: `recipes/psp-layers.toml`, TG-1..5, the
+engine half built (section 9: `recipes/psp-layers.toml`, DIV-0109..0113, the
 Jukebox's chord box)".
 
 **`docs/STATUS.md`:** the PSP-only round's TG: the suites' engine half -

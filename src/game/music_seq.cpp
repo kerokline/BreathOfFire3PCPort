@@ -53,7 +53,7 @@ bool FileExists(const char* path) {
 struct State {
     unsigned char armed = 0;       // BOF3X_MUSIC seq and a cache with base\bgm (or a named layer's bgm)
     char root[kRootMax + 1] = {};  // BOF3X_CACHE, no trailing separator
-    // TG-1: the bgm directories of the layers BOF3X_OPT names that have one
+    // DIV-0109: the bgm directories of the layers BOF3X_OPT names that have one
     // (<root>\opt\<layer>\bgm), in its order; a song is looked for in the last
     // first, then base\bgm. A song's bank is its own directory's bank\.
     std::vector<std::string> layer_dirs;
@@ -205,7 +205,7 @@ void CheckCache(const char* dir) {
 bool LoadFile(unsigned track) {
     if (!g_s.armed) return false;
     char path[kPathMax + 1];
-    // TG-1: the named layers' bgm first, the last listed first, then base\bgm
+    // DIV-0109: the named layers' bgm first, the last listed first, then base\bgm
     std::string dir;
     for (std::size_t i = g_s.layer_dirs.size(); i-- > 0 && dir.empty();) {
         std::snprintf(path, sizeof path, "%s\\%03u.DAT", g_s.layer_dirs[i].c_str(), track);
@@ -364,13 +364,13 @@ void Arm() {
     std::snprintf(bgm, sizeof bgm, "%s\\base\\bgm", root);
     const DWORD b = GetFileAttributesA(bgm);
     const bool base = b != INVALID_FILE_ATTRIBUTES && (b & FILE_ATTRIBUTE_DIRECTORY);
-    // TG-1: the layers BOF3X_OPT names with a bgm part (DatLoad_Inject read
+    // DIV-0109: the layers BOF3X_OPT names with a bgm part (DatLoad_Inject read
     // and checked them; dat_cache answers for the same root, BOF3X_CACHE)
     std::vector<std::string> layers;
     for (const std::string& l : dat_cache::LayersWith("bgm")) {
         // its longest path: <root>\opt\<layer>\bgm\bank\ + a 15-character bank + .DAT
         if (len + sizeof "\\opt\\" - 1 + l.size() + sizeof "\\bgm\\bank\\" - 1 + 15 + sizeof ".DAT" - 1 > kPathMax)
-            bof3::Fatal("TG-1: BOF3X_CACHE=%s with layer %s: its banks' paths would pass MAX_PATH; a shorter cache "
+            bof3::Fatal("DIV-0109: BOF3X_CACHE=%s with layer %s: its banks' paths would pass MAX_PATH; a shorter cache "
                         "path, or leave %s out of BOF3X_OPT", root, l.c_str(), l.c_str());
         layers.push_back(std::string(root) + "\\opt\\" + l + "\\bgm");
     }
@@ -390,7 +390,7 @@ void Arm() {
     if (base) CheckCache(bgm);
     g_s.armed = 1;
     for (const std::string& d : layers)
-        bof3::Log("TG-1        songs from %s first, where it has the song (the layer named in BOF3X_OPT)", d.c_str());
+        bof3::Log("DIV-0109    songs from %s first, where it has the song (the layer named in BOF3X_OPT)", d.c_str());
     bof3::Log("DIV-0087    music from the cache where it has the song: %s\\base\\bgm (BOF3X_MUSIC=mp3 for the MP3s)",
               root);
 }
@@ -812,13 +812,13 @@ void SelfTest() {
     g_s.synth = game_synth;
     delete looper;
 
-    // 7. TG-1, a layer's bgm (BOF3X_OPT naming it): song 7 is in the layer as
+    // 7. DIV-0109, a layer's bgm (BOF3X_OPT naming it): song 7 is in the layer as
     // well as in base\bgm, on a bank of the same name in the layer's own
     // bank\ (the bank without reverb, under base's name) - the layer's song
     // and the layer's bank are read and played, the oracle's on that bank;
     // base's 007.DAT not opened (base first would open it). Then song 11,
     // which only base has, on base's SELFTEST: the bank held bears the same
-    // name, and a seam that kept a bank by its name (as before TG-1) would
+    // name, and a seam that kept a bank by its name (as before DIV-0109) would
     // play the layer's - base's must be read again and the samples be the
     // oracle's on it. Then song 10, base's on its own bank.
     const std::vector<std::uint8_t> lay_bank = TestBank("SELFTEST", 1, false), lay_song = TestSong(7, true, "SELFTEST");
@@ -884,10 +884,10 @@ void SelfTest() {
                     load8 ? "ok" : "WRONG", end8 ? "ok" : "WRONG", cut, frames8, to_big ? "ok" : "WRONG",
                     to_small ? "ok" : "WRONG", fallback ? "ok" : "WRONG", mp3 ? "ok" : "WRONG", released ? "ok" : "WRONG");
     if (!layer_song || !layer_name_twin || !layer_under)
-        bof3::Fatal("TG-1 self-test: a layer's song and bank %s; a base song on a bank named as the layer's %s; a base "
+        bof3::Fatal("DIV-0109 self-test: a layer's song and bank %s; a base song on a bank named as the layer's %s; a base "
                     "song under the layer %s",
                     layer_song ? "ok" : "WRONG", layer_name_twin ? "ok" : "WRONG", layer_under ? "ok" : "WRONG");
-    bof3::Log("shadow      TG-1 self-test: a named layer's song and its own bank played before base\\bgm's, equal to "
+    bof3::Log("shadow      DIV-0109 self-test: a named layer's song and its own bank played before base\\bgm's, equal to "
               "the oracle's; a base song on a bank bearing the layer bank's name read from base again; a song only "
               "base has from base");
     bof3::Log("shadow      DIV-0087 self-test: a synthetic looping song through Music_LoadFile / Music_Start / "

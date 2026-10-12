@@ -568,7 +568,7 @@ std::vector<std::string> LayersWith(const char* part) {
 
 bool SoundPath(const char* name, char* out, std::size_t cap) {
     if (!g_c.armed) return false;
-    // TG-2: the named layers' snd\, the last first, as a later layer lands on
+    // DIV-0110: the named layers' snd\, the last first, as a later layer lands on
     // top; a layer without the file leaves it to the one before, then to
     // base\snd.
     for (std::size_t i = g_c.snd.size(); i-- > 0;) {
@@ -900,7 +900,7 @@ void SelfTest() {
     const bool layer = Path("opt\\psp-art\\dat\\AREA067.DAT") == path && HasLayer("loc", "en-US") &&
                        HasLayer("loc", "zh-CN") && !HasLayer("loc", "fr-FR") && !HasLayer("opt", "psp-art") &&
                        !HasLayer("loc", "");
-    // TG-2 and the parts: two named layers with a snd part (lay-s, then lay-t,
+    // DIV-0110 and the parts: two named layers with a snd part (lay-s, then lay-t,
     // which lands on top), one with bgm, one with exe, one with none; a third
     // snd layer not named. Each stream from the last named layer that has it,
     // else base\snd; the controls - the first layer winning, a layer's
@@ -1044,7 +1044,7 @@ void SelfTest() {
         !snd || !layer || !snd_unarmed || !pick || !missed.empty() || !snd_layered || snd_controls != 2 || !snd_cleared)
         bof3::Fatal("DIV-0089 self-test: index %s, counts %s, controls refused %u of 5, walk %s (naive %s), base %s, "
                     "fallback %s, unarmed %s, sound %s, layers %s, sound unarmed %s, precedence %s; not refused: %s; "
-                    "TG-2: the parts %s, the top layer's stream %s, the layer under it %s, an unnamed layer's %s, "
+                    "DIV-0110: the parts %s, the top layer's stream %s, the layer under it %s, an unnamed layer's %s, "
                     "%u of 2 controls refused, no layer named %s",
                     parsed.empty() ? "ok" : parsed.c_str(), counts ? "ok" : "WRONG", refused, mix ? "ok" : "WRONG",
                     naive_refused ? "refused" : "NOT REFUSED", base ? "ok" : "WRONG", fallback ? "ok" : "WRONG",
@@ -1052,7 +1052,7 @@ void SelfTest() {
                     snd_unarmed ? "ok" : "WRONG", pick ? "ok" : "WRONG", missed.empty() ? "none" : missed.c_str(),
                     parts ? "ok" : "WRONG", top ? "ok" : "WRONG", under ? "ok" : "WRONG", unnamed ? "ok" : "WRONG",
                     snd_controls, snd_cleared ? "ok" : "WRONG");
-    bof3::Log("shadow      TG-2 self-test: a layer's parts (snd, bgm, exe) found; Sound_LoadStream's file from the last "
+    bof3::Log("shadow      DIV-0110 self-test: a layer's parts (snd, bgm, exe) found; Sound_LoadStream's file from the last "
               "named layer that has it, then the one under it, then base\\snd, an unnamed layer's never; 2 controls "
               "refused (the first layer winning, the last layer alone)");
     bof3::Log("shadow      DIV-0089 self-test: a synthetic manifest parsed to 5 containers (3 held whole, 2 in part), "

@@ -237,7 +237,11 @@ ran there too; DIV-0080's walls are now the `area4-walls` layer.)
   extras" group** (2026-10-10, the owner's call 3 below): a box for each
   installed `psp-*` layer, a names layer's only while its language is
   chosen; it changes `opt=` only when a box is changed
-  ([`launcher-settings.md`](launcher-settings.md) 3.1).
+  ([`launcher-settings.md`](launcher-settings.md) 3.1). **Since 2026-10-12
+  the dialog's three suites** (DIV-0107, [`launcher-suites.md`](launcher-suites.md))
+  in place of the PSP extras group; the list's limit is 16 layers, and the
+  level table and consumable 87 (section 3) and P8 are layers of their own
+  (`recipes/psp-layers.toml`, DIV-0111, DIV-0112).
 - **The default (2026-10-10, DIV-0080).** An empty `opt=` - the default,
   and what a launcher with no `bof3x.ini` has - names the default layers
   that are installed (`kOptDefault` in `src/launcher/config.h`: today only

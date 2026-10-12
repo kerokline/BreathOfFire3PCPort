@@ -418,7 +418,7 @@ void Disturb(U h) {
     }
 }
 
-// DIV F (psp_code.h): Battle_PlaceBossActor with the PSP's myria-item, against
+// DIV-0108 (psp_code.h): Battle_PlaceBossActor with the PSP's myria-item, against
 // Capcom's code with its three calls left to the real callees (BossActor_Find,
 // Battle_CopyEnemyData, Battle_SetEnemyOffset - the same functions on both
 // sides, whichever owns them). Each round from one random state - the 30 field
@@ -464,8 +464,8 @@ void CheckPspMyriaItem() {
                                      {0x11B, reinterpret_cast<const void*>(0x494F00), 0x494F00}};
     using Place = void(__cdecl*)(unsigned, unsigned, unsigned);
     const Place original =
-        reinterpret_cast<Place>(bof3::CloneOriginal("Battle_PlaceBossActor DIV F", 0x494570, 0x145, calls, 3));
-    if (!original) bof3::Fatal("rest_3g DIV F: could not copy Battle_PlaceBossActor");
+        reinterpret_cast<Place>(bof3::CloneOriginal("Battle_PlaceBossActor DIV-0108", 0x494570, 0x145, calls, 3));
+    if (!original) bof3::Fatal("rest_3g DIV-0108: could not copy Battle_PlaceBossActor");
 
     capture(saved);
     const unsigned psp_saved = psp_code::Force(0);
@@ -517,23 +517,23 @@ void CheckPspMyriaItem() {
             ++stored;
         }
         if (std::memcmp(&theirs, &on, sizeof theirs) != 0) {
-            if (++bad <= 8) bof3::Log("shadow      rest_3g DIV F MISMATCH: round %u (slot %u, count %u, kind %u)", rounds, slot, count, kind);
+            if (++bad <= 8) bof3::Log("shadow      rest_3g DIV-0108 MISMATCH: round %u (slot %u, count %u, kind %u)", rounds, slot, count, kind);
         }
     }
     apply(saved);
     psp_code::Force(psp_saved);
-    bof3::Log("shadow      rest_3g DIV F Battle_PlaceBossActor (myria-item): %u rounds against the original with the real "
+    bof3::Log("shadow      rest_3g DIV-0108 Battle_PlaceBossActor (myria-item): %u rounds against the original with the real "
               "callees, %u placed an actor, %u of them in area 198 under event 0x37 (the word stored); switch off "
               "byte for byte, on the original's plus the word: %u MISMATCHES",
               rounds, placed, stored, bad);
-    if (stored == 0 || placed == stored) bof3::Fatal("rest_3g DIV F: the check never reached both sides of the PSP's test");
+    if (stored == 0 || placed == stored) bof3::Fatal("rest_3g DIV-0108: the check never reached both sides of the PSP's test");
     if (bad) bof3::Fatal("Battle_PlaceBossActor with the PSP's myria-item differs from its rule in %u rounds", bad);
 }
 
 }  // namespace
 
 void SelfTest() {
-    // DIV F: the harness compares ours with the original with the PSP's
+    // DIV-0108: the harness compares ours with the original with the PSP's
     // changes off, whatever BOF3X_PSP or the cache says; CheckPspMyriaItem
     // then holds the switch's two sides.
     const unsigned psp_saved = psp_code::Force(0);
