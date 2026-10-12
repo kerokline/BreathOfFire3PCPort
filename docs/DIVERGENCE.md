@@ -5487,7 +5487,14 @@ designed in rather than bolted on.
 - **Also in the PSX version?** Case 1 no - the PSX restarts the area's song
   at a battle's end (not read in its overlay here: the main executable has
   `nop`s at the twin's address `0x80198F48`; the claim rests on D241's and
-  `field-modes.md`'s readings). Case 2 cannot happen there.
+  `field-modes.md`'s readings). Case 2 cannot happen there. **Heard on the
+  PlayStation, 2026-10-11 night:** the owner loaded the `cutsceneAndNue`
+  route's save (made inside the sunset cutscene, where the script had
+  stopped the music; converted with `save_convert.py pc2psx` into a copy of
+  their US card) in mednafen - the area's music starts on that load there
+  too. So the load half matches the PlayStation for a save taken inside a
+  scripted silence; the question came from the owner hearing music in the
+  cabin on the PC during that route's replay.
 - **Verification:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=mode_flow,mode_rest,sound`
   exit 0 (the fuzzes run Capcom's rule, the switch armed after them). The
   owner's route `tools/recipes/musicStopCheck.txt` under `BOF3X_MUSIC_LOG=1`
