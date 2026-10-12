@@ -121,6 +121,12 @@ the PSX discs): the PSP ships these arenas decompressed, and 3 of the 13
 ([`type1-compression.md`](type1-compression.md) 2); a PSP-only build still
 lacks the 14 ([`psp-only-build.md`](psp-only-build.md)).
 
+Self-tests of the consumers read (no code changed; the record that nothing
+moved), from an ini-less copy of this branch's build:
+`BOF3X_SHADOW=sprite_pose,sprite_anim,field_event,battle_sprites`, exit 0,
+`inject: 10087 ours, 0 left original`, `self-test only: done`, 37 of 37
+result lines `0 MISMATCHES`.
+
 The disc-only verify's one other problem line, `opt/area4-walls AREA004.DAT
 slot 6`, is the same at `6e6b4f3b`: not this change's.
 

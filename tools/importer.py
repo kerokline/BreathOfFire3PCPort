@@ -26,8 +26,8 @@ A chunk no disc carries keeps the PC install as its only source; its class
 (region_diff.py's, PC against JP) decides its layer. Besides `copy` and
 `type1`, three transforms make a disc a source of what the port changed
 (`widen` the enemy tables, whose names go to the language layer; `icons`;
-`ryud`), and a PSX disc's own section can stand in (`own`) where the PC kept
-Japan's language or drew its own art - docs/importer-transforms.md (step 3).
+`ryud`; `hold`, docs/arena-edits.md), and a PSX disc's own section can stand in (`own`) where the PC kept
+Japan's language or drew its own art, or edited an arena - docs/importer-transforms.md (step 3).
 `build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
 PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
 step 8; from a disc the data pointers rebuilt by the map run backwards,
