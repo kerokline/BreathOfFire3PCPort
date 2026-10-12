@@ -65,20 +65,26 @@ launcher, and the player reads that copy. Edit the repo's file: every build refr
 
 - **Format:** UTF-8, tab-separated, `#` lines are comments.
 - **Columns:** `song name box_disc box_track box_title source note`.
-  - The Jukebox shows `box_title` where it is set, else `name`.
+  - The Jukebox shows `box_title` where it is set, else `name`, with the spaces at either end trimmed.
+  - A row whose `source` is `same-notes` is **not listed** (section 4.3).
   - A line whose first field is not a three-digit song number is skipped.
 - **Committing it is the owner's call of 2026-10-11.** The box's track titles are public, and the
   file holds only our mapping of titles to song numbers, no audio.
-- **The box:** the collector's box has three named soundtrack discs. The owner's titles from them
-  go in the `box_*` columns and replace the provisional names.
-- **`name` is provisional**, seeded 2026-10-11 with 134 of 167 rows named. Its `source` says where
-  each came from:
-  - `game`: the faerie village's music menu, US disc (section 4.1).
-  - `psf`: the zophar rip, unsourced (section 4.2).
-  - `same-notes`: a titled song's events under another bank.
+- **Filled in by the owner on 2026-10-12.** The titles come from the collector's box, the *Breath of
+  Fire Original Soundtrack Special Box*, discs 5–7. 133 rows have a `box_title`.
+- **`source`**, as the owner set it:
+
+  | `source` | Meaning | Rows |
+  |---|---|--:|
+  | `ossb` | the box's own track | 57 |
+  | `game` | the faerie village's music menu, US disc (section 4.1); these rows carry box titles too | 41 |
+  | `kk` | the owner's name from listening, mostly sound effects | 30 |
+  | `psf` | the zophar rip, unsourced (section 4.2) | 4 |
+  | `same-notes` | hidden | 35 |
+
 - **`note`** holds the measurements and the clashes. The ripper's own comments are not carried over.
 
-The provisional names come from two measured sources.
+The first names came from two measured sources.
 
 ### 4.1 The faerie village's music menu (the game's own titles)
 
@@ -149,6 +155,23 @@ Corlett; some comments are signed "YK". There is no licence text.
 - The game's "Neverending Game" is song 125, which has no PSF.
 - Songs 74 and 51 share their events under different banks; the game's menu names 51.
 
+### 4.3 Hidden songs
+
+The owner marks a row `same-notes` when it is the same song as another, or too like one to be worth
+listing (2026-10-12). The Jukebox drops those songs from both sources' lists, which leaves 131 PSX
+songs and 132 PC songs. Each is still a song the game plays; the mark only keeps it out of the list.
+
+Five box tracks are still shared by more than one listed song. They are left as they are; each is
+the owner's to hide or keep:
+
+| Box track | Songs |
+|---|---|
+| 5-11 | 151, 153, 165 (151 and 153 are one file) |
+| 5-13 | 086, 166 |
+| 5-27 | 009, 125 |
+| 6-13 | 102, 106 |
+| 7-5 | 056, 090 |
+
 ## 5. Checks
 
 **Scripted, 2026-10-11.** The launcher was started with `--config`, and messages were posted to
@@ -162,6 +185,7 @@ the dialogs, looking windows up by the launcher's own process ID.
   - PC 004N: once.
 - **Stop and Close:** both work; the launcher exited 0.
 - **Names:** loaded from the catalogue, and a `box_title` shown over its row's `name` (song 51, a test row).
+- **Hidden rows (2026-10-12):** with the owner's catalogue, 131 PSX and 132 PC songs listed; the first, last and three middle entries carry box titles; play, stop and close as before.
 
 **Owed:**
 

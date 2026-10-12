@@ -332,6 +332,7 @@ struct State {
     std::vector<Entry> songs[kSources];
     std::wstring why[kSources];  // why a source is greyed
     std::vector<std::wstring> names;  // music-names.tsv: index = song number
+    std::vector<bool> hidden;         // music-names.tsv rows marked same-notes
     int source = -1;
     Output out;
     bool open = false;
@@ -432,8 +433,10 @@ void ListPc(State& s) {
 // by the build: the catalogue of names (docs/music-player.md section 4).
 // UTF-8, tab-separated, # comments; the columns are
 //   song  name  box_disc  box_track  box_title  source  note
-// and a song shows its box title where it has one, else its name. A line
-// whose first field is not a three-digit song number is skipped.
+// and a song shows its box title where it has one, else its name; a song
+// whose source is same-notes is not listed (the owner's mark, 2026-10-12, for
+// one too like another). A line whose first field is not a three-digit song
+// number is skipped.
 std::wstring Wide(const std::string& u8) {
     const int w = MultiByteToWideChar(CP_UTF8, 0, u8.c_str(), static_cast<int>(u8.size()), nullptr, 0);
     std::wstring wide(static_cast<std::size_t>(w), L'\0');
@@ -469,11 +472,18 @@ void LoadNames(State& s) {
         }
         const std::string& song = field[0];
         if (song.size() != 3 || song.find_first_not_of("0123456789") != std::string::npos) continue;
+        const unsigned number = static_cast<unsigned>(std::strtoul(song.c_str(), nullptr, 10));
+        // the owner's mark for a song too like another to list (2026-10-12)
+        if (field.size() > 5 && field[5] == "same-notes") {
+            if (number >= s.hidden.size()) s.hidden.resize(number + 1);
+            s.hidden[number] = true;
+        }
         std::string name;
         if (field.size() > 4 && !field[4].empty()) name = field[4];  // the box's title
         else if (field.size() > 1) name = field[1];
-        if (name.empty()) continue;
-        const unsigned number = static_cast<unsigned>(std::strtoul(song.c_str(), nullptr, 10));
+        const std::size_t b = name.find_first_not_of(' '), e = name.find_last_not_of(' ');
+        if (b == std::string::npos) continue;
+        name = name.substr(b, e - b + 1);
         if (number >= s.names.size()) s.names.resize(number + 1);
         s.names[number] = Wide(name);
     }
@@ -635,6 +645,12 @@ void MusicPlayerRun(HWND owner, const std::wstring& game_dir, const std::wstring
     ListPc(s);
     for (std::vector<Entry>& v : s.songs) Sort(v);
     LoadNames(s);
+    for (std::vector<Entry>& v : s.songs) {
+        std::size_t kept = 0;
+        for (const Entry& e : v)
+            if (!(e.number < s.hidden.size() && s.hidden[e.number])) v[kept++] = e;
+        v.resize(kept);
+    }
     SetCursor(was);
     DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_MUSIC), owner, Proc, reinterpret_cast<LPARAM>(&s));
 }
