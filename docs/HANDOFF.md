@@ -73,6 +73,14 @@ code page audited, the seven mid-function pointers read, and two music defects o
     DIV-0092; `exe_image.cpp`'s ANSI read of `BOF3X_EXEIMAGE`) are [`disc-only-round.md`](disc-only-round.md)
     section 5's.
 
+0. **Next up after the PSP-only round: the disc-data preference inventory** (the owner, 2026-10-12 night: "let's put this as
+   a next up action - I agree a inventory pass is what's needed"). The owner prefers the PlayStation's data where both the PC
+   install and a disc carry a chunk ("another reason to preference the psx data when possible" - prompted by the PC title's
+   (R), which the PSX title does not have). Today a PC + disc cache takes the PC's chunks wherever the PC has them (only the
+   music follows the disc, the owner's 2026-10-08 call). The pass: a reading task, no output change - list every `base/` chunk
+   whose PC form differs from the disc's, classed as a port repair (keep), port-specific art the PC needs (the dial page's
+   keyboard legend, the re-laid icons - keep), or a port cosmetic change (the (R) - take the disc's), each with a proposed rule;
+   the owner decides from the list; then a ledger entry and the importer's base policy change, as the music decision was.
 00. ~~**`platform/state2-prework`**~~ - merged as PR #51 (2026-10-11 morning). What "finishing the exe"
     is: states 2 and 3 of [`platform-layers-plan.md`](platform-layers-plan.md) 3. The converters, the per-thread data and
     the start-up are not takeovers - they drop at the cutover ([`crt-startup.md`](crt-startup.md) 9). Merged on the
