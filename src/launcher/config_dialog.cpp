@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "input/pad_sdl.h"
+#include "launcher/music_player.h"
 #include "launcher/resource.h"
 
 namespace bof3x {
@@ -905,6 +906,15 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDC_CONTROLS: {
             auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
             ControlsOptions(dlg, state->cfg->bindings);
+            return TRUE;
+        }
+        case IDC_MUSICPLAYER: {
+            // the cache folder as the box has it now, saved or not
+            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            std::wstring cache = DialogText(dlg, IDC_CACHE);
+            const size_t b = cache.find_first_not_of(L" \t"), e = cache.find_last_not_of(L" \t");
+            cache = b == std::wstring::npos ? std::wstring() : cache.substr(b, e - b + 1);
+            MusicPlayerRun(dlg, state->game_dir, cache);
             return TRUE;
         }
         default:

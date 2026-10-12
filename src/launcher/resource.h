@@ -73,3 +73,16 @@
 #define IDD_CAPTURE      104
 #define IDC_CP_PROMPT   1400
 #define IDC_CP_CLEAR    1401
+
+// The music player (docs/music-player.md). The three source buttons are
+// consecutive for CheckRadioButton.
+#define IDC_MUSICPLAYER 1030
+#define IDD_MUSIC        105
+#define IDC_MP_PSX      1500
+#define IDC_MP_PSP      1501
+#define IDC_MP_PC       1502
+#define IDC_MP_SONG     1503
+#define IDC_MP_PLAY     1504
+#define IDC_MP_STOP     1505
+#define IDC_MP_NOTE     1506
+#define IDC_MP_STATUS   1507

@@ -723,6 +723,10 @@ add_executable(bof3x_launcher
   src/launcher/config.cpp
   src/launcher/config_dialog.cpp
   src/launcher/exe_image.cpp
+  src/launcher/music_player.cpp
+  src/audio/spu.cpp
+  src/audio/seq.cpp
+  src/audio/song.cpp
   src/common/sha256.cpp
   src/common/icon_stamp.cpp
   src/input/bindings.cpp
@@ -730,12 +734,21 @@ add_executable(bof3x_launcher
   src/launcher/launcher.rc)
 # symbols.gen.h for exe_image.cpp alone: Key_TableDefault is read out of the
 # player's BOF3.exe, not copied (docs/exe-table-audit.md).
-target_include_directories(bof3x_launcher PRIVATE src "${_gen_dir}")
+target_include_directories(bof3x_launcher PRIVATE src third_party "${_gen_dir}")
 add_dependencies(bof3x_launcher bof3x_symbols)
 # SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
 # dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
 # and circle as navigation.
 # shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW).
-target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 shell32 ole32 SDL3::SDL3-static)
+target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 shell32 ole32 winmm SDL3::SDL3-static)
 target_link_options(bof3x_launcher PRIVATE -municode)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")
+# The Jukebox's names (docs/music-player.md section 4), beside the launcher.
+# Edit data/music-names.tsv, not the copy: every build refreshes it.
+# A rule of its own, so an edit to the file alone is copied too.
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/music-names.tsv"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/data/music-names.tsv" "${CMAKE_BINARY_DIR}/music-names.tsv"
+  DEPENDS "${CMAKE_SOURCE_DIR}/data/music-names.tsv"
+  VERBATIM)
+add_custom_target(bof3x_music_names DEPENDS "${CMAKE_BINARY_DIR}/music-names.tsv")
+add_dependencies(bof3x_launcher bof3x_music_names)

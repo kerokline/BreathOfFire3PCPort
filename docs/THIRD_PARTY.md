@@ -98,7 +98,9 @@ freely, subject to the following restrictions:
 dedicated to the public domain under CC0 1.0 - the choice is in
 [`mp3-decoder-choice.md`](mp3-decoder-choice.md), its use in
 [`mp3-decoder.md`](mp3-decoder.md). It is included once, from
-`src/audio/mp3.cpp`. CC0 asks for nothing; the dedication is reproduced
+`src/audio/mp3.cpp` in the DLL, and once more from
+`src/launcher/music_player.cpp` in the launcher (the Jukebox,
+[`music-player.md`](music-player.md)). CC0 asks for nothing; the dedication is reproduced
 here all the same, from the repository's `LICENSE` file as fetched
 2026-10-10 (also at `third_party/minimp3/LICENSE`):
 
