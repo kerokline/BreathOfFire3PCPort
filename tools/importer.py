@@ -737,6 +737,7 @@ def cmd_build(a):
     opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
                    psp_snd)
+    fmv_build(sources, a.out)       # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
@@ -1531,6 +1532,7 @@ def cmd_install(a):
     # Overlays under a retired bare code (DAT/en.*.DAT, DIV-0005) are not
     # this install's to remove; it says they are dead weight.
     language_tags.note_retired_overlays(dat_dir)
+    fmv_install(a.cache, a.game)
 
 
 # ---------------------------------------------------------------- presets
@@ -1670,6 +1672,7 @@ def cmd_verify(a):
     rc = 1 if bad else 0
     rc |= verify_bgm(a.cache)
     rc |= verify_opt(a.cache, a.opt_recipe)
+    rc |= fmv_verify(a.cache)
     if a.overlays:
         rc |= verify_overlays(a.cache, a.overlays)
     return rc
@@ -1765,6 +1768,139 @@ def verify_overlays(cache, theirs):
             print("   ", n)
         rc |= bool(differ or ours ^ inst)
     return rc
+
+
+# ---------------------------------------------------------------- the disc's movie
+#
+# docs/fmv-import.md. Fmv_Play (src/game/fmv_play.cpp) opens CAPCOM.AVI through
+# MCI, from the game directory (the working directory) and then the disc root;
+# a PlayStation disc carries the same logo as one MDEC stream, LOGO/CAPCOM30.STR.
+# The player's ffmpeg converts it at import (the owner, 2026-10-12; no decoder in
+# the engine) into the form DIV-0001 made the PC's file: Cinepak video, which
+# Windows still decodes (iccvid.dll), and 16-bit PCM. 640 x 480, the PC file's
+# size, by doubling each pixel; 30 frames a second, the stream's own timing
+# (ffmpeg's psxstr demuxer stamps 15, so the rate is given); 44.1 kHz, the XA's
+# 37.8 kHz resampled to a rate every wave device takes. The trailing silent
+# channel-0 sector is not mapped. The same 1,155 sectors on all five PSX discs.
+
+FMV_NAME, FMV_STR = "CAPCOM.AVI", "LOGO/CAPCOM30.STR"
+FMV_DIR = os.path.join("base", "fmv")
+# sha256 of the 1,155 sectors' subheader-to-end bytes (raw[16:2352]; the header
+# before it holds the sector's address, which differs per disc): measured
+# 2026-10-12 on the JP, US, EU, FR and DE images, all equal (docs/fmv-import.md 1).
+FMV_SOURCE_SHA256 = "c496080be2e134dba766e89a52bacbae7616239e1e26fe9d0c1242a92d12e915"
+FMV_ARGS = ["-f", "psxstr", "-r", "30", "-i", None, "-map", "0:v:0", "-map", "0:a:0",
+            "-vf", "scale=640:480:flags=neighbor", "-c:v", "cinepak", "-c:a", "pcm_s16le", "-ar", "44100",
+            "-fflags", "+bitexact", "-flags:v", "+bitexact", "-f", "avi"]
+
+
+def fmv_build(sources, out):
+    """build's movie row: base/fmv/CAPCOM.AVI from the first PSX disc among the
+    sources, by the player's ffmpeg, and an [fmv] table appended to the
+    manifest (the source sectors' hash, the ffmpeg, the file's hash; or why it
+    was not written). No PSX disc: nothing, and no table."""
+    import subprocess
+    import psx_disc
+    disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
+    if disc is None:
+        return
+    d = os.path.join(out, FMV_DIR)
+    dst = os.path.join(d, FMV_NAME)
+    if os.path.exists(dst):
+        os.remove(dst)          # never a stale movie beside a manifest that does not name it
+    secs = xa.sectors(psx_disc.Disc(disc.path), FMV_STR)
+    src_sha = sha(b"".join(raw[16:] for _, raw in secs))
+    row = {"build": disc.id, "source": FMV_STR, "source_sha256": src_sha}
+    ffmpeg = at3.find_ffmpeg()
+    if src_sha != FMV_SOURCE_SHA256:
+        row["skipped"] = "%s on %s is not the stream docs/fmv-import.md measured" % (FMV_STR, disc.id)
+    elif not ffmpeg:
+        row["skipped"] = ("no ffmpeg on the PATH or in BOF3X_FFMPEG: the disc's logo movie is an MDEC stream, "
+                          "which only the player's ffmpeg converts")
+    else:
+        os.makedirs(d, exist_ok=True)
+        tmp = dst + ".str.tmp"
+        with open(tmp, "wb") as fh:
+            fh.write(b"".join(raw for _, raw in secs))
+        print("  base/fmv  converting %s from %s with the player's ffmpeg (about two minutes)" % (FMV_STR, disc.id))
+        args = [tmp if x is None else x for x in FMV_ARGS]
+        r = subprocess.run([ffmpeg, "-v", "error", "-y"] + args + [dst], capture_output=True)
+        os.remove(tmp)
+        if r.returncode != 0 or not os.path.isfile(dst):
+            if os.path.exists(dst):
+                os.remove(dst)
+            row["skipped"] = "ffmpeg could not convert it: %s" % r.stderr.decode(errors="replace").strip()[-200:]
+        else:
+            with open(dst, "rb") as fh:
+                row.update(ffmpeg=at3.ffmpeg_version(ffmpeg), file=FMV_DIR.replace(os.sep, "/") + "/" + FMV_NAME,
+                           sha256=sha(fh.read()))
+    lines = ["", "# base/fmv/: the disc's logo movie converted by the player's ffmpeg (docs/fmv-import.md).", "[fmv]"]
+    lines += ["%s = %s" % (k, toml_str(v)) for k, v in row.items()]
+    with open(os.path.join(out, "manifest.toml"), "a", newline="\n", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+    if "skipped" in row:
+        print("  base/fmv  not written: %s" % row["skipped"])
+    else:
+        print("  base/fmv  from %s: %s (%s)" % (disc.id, FMV_NAME, row["ffmpeg"]))
+
+
+def fmv_avi_header(body):
+    """(width, height, frames, video fourcc) from an AVI's avih and first strh, or None."""
+    if body[:4] != b"RIFF" or body[8:12] != b"AVI ":
+        return None
+    at, strh = body.find(b"avih"), body.find(b"strh")
+    if at < 0 or strh < 0:
+        return None
+    frames = struct.unpack_from("<I", body, at + 8 + 16)[0]
+    w, h = struct.unpack_from("<II", body, at + 8 + 32)
+    return w, h, frames, body[strh + 12:strh + 16].decode("latin1")
+
+
+def fmv_verify(cache):
+    """verify's movie row: present (the file the manifest recorded, an AVI of
+    the form fmv_build writes) or absent and why. Absent is not a problem: a
+    cache with no PSX disc, or a player with no ffmpeg, has no movie."""
+    with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
+        row = tomllib.load(fh).get("fmv")
+    held = os.path.isfile(os.path.join(cache, FMV_DIR, FMV_NAME))
+    if row is None or "skipped" in row:
+        why = "no PSX disc among the sources" if row is None else row["skipped"]
+        print("  base/fmv/: absent - %s%s" % (why, "; but a %s is there the manifest does not name" % FMV_NAME
+                                             if held else ""))
+        return 1 if held else 0
+    errs, hdr = [], None
+    if row["source_sha256"] != FMV_SOURCE_SHA256:
+        errs.append("its source is not the stream docs/fmv-import.md measured")
+    if not held:
+        errs.append("%s: missing" % row["file"])
+    else:
+        with open(os.path.join(cache, row["file"]), "rb") as fh:
+            body = fh.read()
+        if sha(body) != row["sha256"]:
+            errs.append("%s: not the file the manifest recorded" % row["file"])
+        hdr = fmv_avi_header(body)
+        if hdr is None or hdr[:2] != (640, 480) or hdr[3] != "cvid":
+            errs.append("%s: not a 640 x 480 Cinepak AVI (%s)" % (row["file"], hdr))
+    print("  base/fmv/: %s from %s (%s); %s" % (FMV_NAME, row["build"], row.get("ffmpeg", "?"),
+                                               "; ".join(errs) if errs else
+                                               "present, %d x %d, %d frames, %s, as recorded" % hdr))
+    return 1 if errs else 0
+
+
+def fmv_install(cache, game):
+    """install's movie row: base/fmv/CAPCOM.AVI to the game directory, where
+    Fmv_Play opens it, unless the directory holds one already (the PC's, under
+    any case): the player's file is kept."""
+    import shutil
+    src = os.path.join(cache, FMV_DIR, FMV_NAME)
+    if not os.path.isfile(src):
+        return
+    have = [f for f in os.listdir(game) if f.upper() == FMV_NAME]
+    if have:
+        print("fmv: %s kept (the game directory's own; remove it to install the disc's)" % have[0])
+        return
+    shutil.copyfile(src, os.path.join(game, FMV_NAME))
+    print("fmv: %s, the disc's logo movie, installed" % FMV_NAME)
 
 
 # ---------------------------------------------------------------- identify, check
