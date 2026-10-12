@@ -93,6 +93,20 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 The game process inherits the launcher's environment, so the first two needed
 no new channel and **no change to the DLL at all**.
 
+**A game directory with no `BOF3.exe`** (the disc-only round, 2026-10-12):
+accepted when `cache=` / `BOF3X_CACHE` names a cache (and `BOF3X_CACHE_DATA`
+is not `0`) or the environment already sets `BOF3X_EXEIMAGE` - a disc-built
+install. The hash check and the key table's comparison are skipped (the
+default keys are the engine's rule, [`controls.md`](controls.md) section 1),
+`BOF3X_EXEIMAGE` is set to the cache unless the environment set it, and
+stderr says so: `no BOF3.exe in <dir>: a disc-built install - no hash check,
+the default keys by the engine's rule, .data from <cache>`. Without a cache
+the refusal is the old one (`no BOF3.exe in <dir>. Point --game or
+BOF3_GAME_DIR at your own install.`), and the hosted build (`--host bof3`,
+or a hosted-only switch) still needs the file and says why. With the file
+there, everything is checked as before
+([`exe-import-engine.md`](exe-import-engine.md) 2.2).
+
 ### 3.1 The Music, Cache folder and PSP extras boxes (2026-10-10)
 
 The ini's `music=`, `cache=` and `opt=` lines existed before the boxes did

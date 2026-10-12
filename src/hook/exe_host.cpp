@@ -7,9 +7,12 @@
 //     refused: BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_MP3=original,
 //     BOF3X_CALLTRACE
 //  2. the layout: our sections where exe_layout.h puts them
-//  3. the data: the player's BOF3.exe by SHA-256, its .rdata and .data
-//     copied into .game (.data from BOF3X_EXEIMAGE's cache when set), the
-//     .bss asserted zero
+//  3. the data: the player's BOF3.exe by SHA-256 when it is there (optional
+//     with BOF3X_EXEIMAGE set: a disc-built install has none); .rdata the
+//     engine's own (rdata::Map: the 44 constants and the keyboard format;
+//     the slots in 4), nothing of it from the file; .data from
+//     BOF3X_EXEIMAGE's cache when set, else the file's; the default key
+//     table written from the engine's rule; the .bss asserted zero
 //  4. the fourteen import slots our code calls through, bound and read back
 //  5. the x87 control word 0x027F, read back; MXCSR logged
 //  6. .stub filled with int3; the state hash's census; InjectAll writes the
@@ -28,6 +31,8 @@
 
 #include "bof3/symbols.gen.h"
 #include "common/sha256.h"
+#include "game/rdata_consts.h"
+#include "game/shell.h"
 #include "hook/calltrace.h"
 #include "hook/code_bytes.h"
 #include "hook/crash.h"
@@ -104,7 +109,8 @@ struct FileSection {
     std::uint32_t va = 0, vsize = 0, raw = 0, raw_size = 0;
 };
 
-HANDLE g_exe = INVALID_HANDLE_VALUE;   // the player's BOF3.exe, read-only, for the process's life
+HANDLE g_exe = INVALID_HANDLE_VALUE;   // the player's BOF3.exe, read-only, for the process's life; none: no file
+FileSection g_text, g_rdata, g_data;   // its sections, when it is there
 
 void ReadAt(std::uint32_t offset, void* to, std::uint32_t n, const char* what) {
     LARGE_INTEGER at;
@@ -135,14 +141,24 @@ FileSection Section(const char* want) {
     Fatal("data: BOF3.exe has no %s section", want);
 }
 
-void CopyData(std::uint32_t* text_raw, std::uint32_t* text_size) {
+// The player's BOF3.exe: hashed, opened and its sections checked when the
+// game directory holds it. Without it, BOF3X_EXEIMAGE must name the .data
+// source (a disc-built install, docs/disc-only-round.md): nothing is read
+// from a file, and every verification against it says so.
+void OpenExe() {
     wchar_t dir[MAX_PATH];
     const DWORD n = GetCurrentDirectoryW(MAX_PATH - 10, dir);
     if (n == 0 || n >= MAX_PATH - 10) Fatal("data: the current directory is unusable");
     const std::wstring path = std::wstring(dir) + L"\\BOF3.exe";
-    if (GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES)
-        Fatal("data: no BOF3.exe in %s. bof3x.exe runs with the game's directory as its current directory "
-              "(bof3x-launcher starts it so); it reads the player's own BOF3.exe there.", Utf8Path(dir).text);
+    if (GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES) {
+        if (!EnvSet("BOF3X_EXEIMAGE"))
+            Fatal("data: no BOF3.exe in %s and BOF3X_EXEIMAGE unset. bof3x.exe runs with the game's directory as its "
+                  "current directory (bof3x-launcher starts it so); .data comes from the player's own BOF3.exe there, "
+                  "or from the cache BOF3X_EXEIMAGE names.", Utf8Path(dir).text);
+        Log("data: no BOF3.exe in %s: a disc-built install - .data from BOF3X_EXEIMAGE's cache, nothing read from "
+            "the file, and the checks against it skipped", Utf8Path(dir).text);
+        return;
+    }
 
     // The hash before any byte of the file is used.
     std::string sha, why;
@@ -154,32 +170,39 @@ void CopyData(std::uint32_t* text_raw, std::uint32_t* text_size) {
     if (g_exe == INVALID_HANDLE_VALUE) Fatal("data: cannot open %s, error %lu", Utf8Path(path.c_str()).text, GetLastError());
     Log("data: %s, sha256 %s (the build symbols.toml describes)", Utf8Path(path.c_str()).text, sha.c_str());
 
-    const FileSection text = Section(".text"), rdata = Section(".rdata"), data = Section(".data");
-    if (text.va != kStubVa || text.raw_size > kStubSize || rdata.va != kRdataVa || rdata.raw_size != kRdataBytes ||
-        data.va != kDataVa || data.raw_size != kDataBytes || data.va + data.vsize != kBssEnd)
+    g_text = Section(".text");
+    g_rdata = Section(".rdata");
+    g_data = Section(".data");
+    if (g_text.va != kStubVa || g_text.raw_size > kStubSize || g_rdata.va != kRdataVa || g_rdata.raw_size != kRdataBytes ||
+        g_data.va != kDataVa || g_data.raw_size != kDataBytes || g_data.va + g_data.vsize != kBssEnd)
         Fatal("data: BOF3.exe's sections (.text 0x%X +0x%X, .rdata 0x%X +0x%X, .data 0x%X +0x%X to 0x%X) are not the "
-              "ones exe_layout.h was written for", (unsigned)text.va, (unsigned)text.raw_size, (unsigned)rdata.va,
-              (unsigned)rdata.raw_size, (unsigned)data.va, (unsigned)data.raw_size, (unsigned)(data.va + data.vsize));
-    *text_raw = text.raw;
-    *text_size = text.raw_size;
+              "ones exe_layout.h was written for", (unsigned)g_text.va, (unsigned)g_text.raw_size, (unsigned)g_rdata.va,
+              (unsigned)g_rdata.raw_size, (unsigned)g_data.va, (unsigned)g_data.raw_size, (unsigned)(g_data.va + g_data.vsize));
+}
+
+void CopyData() {
+    OpenExe();
 
     // .game is a zero-filled section: asserted, not trusted, before the copy.
     const auto* game = static_cast<const std::uint8_t*>(At(kGameVa));
     for (std::uint32_t i = 0; i < kGameSize; ++i)
         if (game[i]) Fatal("data: .game is not zero at 0x%08X before the copy", (unsigned)(kGameVa + i));
 
-    ReadAt(rdata.raw, At(kRdataVa), kRdataBytes, ".rdata");
+    // .rdata: the engine's own, none of it from the file (rdata_consts.h);
+    // the import slots are bound in step 4.
+    rdata::Map();
     const bool from_cache = ExeImage_Source(At(kDataVa), kDataVa, kDataBytes, kBssEnd);
-    if (!from_cache) ReadAt(data.raw, At(kDataVa), kDataBytes, ".data");
+    if (!from_cache) ReadAt(g_data.raw, At(kDataVa), kDataBytes, ".data");
+    Shell_MapDefaultKeys();   // Key_TableDefault from the engine's rule, against the file's when it is there
 
     // .bss: the original loader zeroed it, and so did ours - asserted, to
     // Capcom's .rsrc's end.
     for (std::uint32_t a = kDataVa + kDataBytes; a < kGameVa + kGameSize; ++a)
         if (*static_cast<const std::uint8_t*>(At(a))) Fatal("data: .bss is not zero at 0x%08X after the copy", (unsigned)a);
-    Log("data: .rdata 0x%08X + 0x%X bytes from the file (its section's file bytes: 0x%X), .data 0x%08X + 0x%X bytes "
-        "from %s (its file bytes: 0x%X); .bss zero 0x%08X..0x%08X (virtual end 0x%08X)",
-        (unsigned)kRdataVa, (unsigned)kRdataBytes, (unsigned)rdata.raw_size, (unsigned)kDataVa, (unsigned)kDataBytes,
-        from_cache ? "BOF3X_EXEIMAGE's data.bin" : "the file", (unsigned)data.raw_size, (unsigned)(kDataVa + kDataBytes),
+    Log("data: .rdata 0x%08X + 0x%X bytes the engine's (none from the file), .data 0x%08X + 0x%X bytes from %s; .bss "
+        "zero 0x%08X..0x%08X (virtual end 0x%08X)",
+        (unsigned)kRdataVa, (unsigned)kRdataBytes, (unsigned)kDataVa, (unsigned)kDataBytes,
+        from_cache ? "BOF3X_EXEIMAGE's data.bin" : "the file", (unsigned)(kDataVa + kDataBytes),
         (unsigned)(kGameVa + kGameSize), (unsigned)kBssEnd);
 }
 
@@ -373,9 +396,8 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
 
     RefuseHostedSwitches();
     CheckLayout();
-    std::uint32_t text_raw = 0, text_size = 0;
-    CopyData(&text_raw, &text_size);
-    CodeBytes_Open(g_exe, text_raw, text_size);
+    CopyData();
+    if (ExeFile_Present()) CodeBytes_Open(g_exe, g_text.raw, g_text.raw_size);   // without the file a read is a Fatal (code_bytes.cpp)
     BindSlots();
     SetX87();
 
@@ -412,3 +434,21 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     Log("Engine_Main: Game_WinMain returned %d, the exit code", code);
     return code;
 }
+
+namespace bof3 {
+
+bool ExeFile_Present() { return !IsExeHost() || g_exe != INVALID_HANDLE_VALUE; }
+
+void ExeFile_Read(std::uint32_t va, void* to, std::uint32_t n) {
+    if (!IsExeHost()) Fatal("ExeFile_Read(0x%08X) in the hosted build: Capcom's image is mapped, read it there", (unsigned)va);
+    if (g_exe == INVALID_HANDLE_VALUE) Fatal("ExeFile_Read(0x%08X): there is no BOF3.exe (ask ExeFile_Present first)", (unsigned)va);
+    for (const FileSection* s : {&g_text, &g_rdata, &g_data})
+        if (va >= s->va && va + n <= s->va + s->raw_size && va + n >= va) {
+            ReadAt(s->raw + (va - s->va), to, n, "a verification's bytes");
+            return;
+        }
+    Fatal("ExeFile_Read(0x%08X + %u): not inside the initialised bytes of BOF3.exe's .text, .rdata or .data", (unsigned)va,
+          (unsigned)n);
+}
+
+}  // namespace bof3

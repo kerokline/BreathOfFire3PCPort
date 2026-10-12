@@ -2,7 +2,8 @@
 // PlayStation button (docs/controls.md section 4.2). Shared by the launcher,
 // which stores them in bof3x.ini and edits them in its Controls dialog, and
 // by the DLL, which receives them as BOF3X_KEYS / BOF3X_PAD and applies them
-// in src/game/pad_read.cpp (DIV-0050). Plain C++, no Windows headers.
+// in src/game/pad_read.cpp (DIV-0050). Plain C++, no Windows headers (the
+// .cpp takes the DIK_ names of the default table from dinput.h).
 //
 // Two text forms, one grammar: `name=action[+action]` items separated by
 // `sep`, where a key item's name is a key's (below) and a pad item's name is
@@ -89,10 +90,9 @@ struct Bindings {
     std::vector<PadBinding> pad;
     Layout layout = Layout::kPositional;
 
-    // The original's default key table as SetDefaultKeys was given it (the
-    // launcher reads Key_TableDefault out of the player's BOF3.exe; empty
-    // until then, and in the game, which needs only the pad) and the DIV-0050
-    // pad map.
+    // The original's default key table, DefaultKeys() (the engine's rule,
+    // equal to Key_TableDefault in the player's BOF3.exe where there is one),
+    // and the DIV-0050 pad map.
     static Bindings Defaults();
     bool operator==(const Bindings& o) const;
     bool operator!=(const Bindings& o) const { return !(*this == o); }
@@ -105,9 +105,20 @@ constexpr int kKeyTableMax = 32;
 // is not a DIK scancode (above 0xFF), which means the bytes are not the table.
 bool KeysFromTable(const unsigned char* table, size_t bytes, std::vector<KeyBinding>& out);
 
-// What Defaults().keys is from now on. Not a copy in our source: the table
-// is the exe's (docs/exe-table-audit.md).
-void SetDefaultKeys(const std::vector<KeyBinding>& keys);
+// The default key table as a rule (the owner, 2026-10-11; docs/controls.md
+// section 1): for each PlayStation button, the port's keys by DirectInput
+// key name - the arrows and the keypad the directions (the keypad's corners
+// the diagonals), Z X C V triangle cross square circle, A Q S W L1 L2 R1 R2,
+// Enter start, right Shift select, Esc cross, Space circle. 24 entries, in the
+// order Key_TableDefault 0x66C648 holds them.
+constexpr int kDefaultKeyCount = 24;
+const std::vector<KeyBinding>& DefaultKeys();
+
+// The same as Key_TableDefault's bytes: `bytes` (at most kKeyTableMax * 4)
+// of (u16 key, u16 bits) pairs, the entries past the rule's zero. What the
+// engine writes at 0x66C648 and compares with the player's BOF3.exe, and what
+// the launcher compares with the file.
+void DefaultKeyTable(unsigned char* out, size_t bytes);
 
 // `name=action` items separated by `sep`. Parse* accept unknown items by
 // skipping them and return how many items were understood (a `name=none`

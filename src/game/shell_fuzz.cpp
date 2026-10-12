@@ -29,6 +29,7 @@
 #include "game/shell_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "input/bindings.h"
 
 #define SHELL_STR2(x) #x
 #define SHELL_STR(x) SHELL_STR2(x)
@@ -441,6 +442,10 @@ void RandomLine(char* line) {
 void Generate(unsigned k, U* args, unsigned* coverage) {
     for (const Region& r : kRegions)
         for (U a = r.at; a < r.at + r.bytes; ++a) At(a)[0] = static_cast<unsigned char>(Next() % 3 ? Next() : 0);
+    // Key_TableDefault is the engine's rule (Shell_MapDefaultKeys writes it
+    // at map time, Cfg_SetDefaultKeys copies the rule): held at it, not
+    // randomised, as in every run.
+    bof3x::input::DefaultKeyTable(At(kKeyTableDefault), 0x80);
     for (unsigned i = 0; i < kEnvBytes; ++i) g_env[i] = static_cast<unsigned char>(Next());
     for (U a = g_top - kSeedBelow; a < g_top + kAbove; ++a) At(a)[0] = static_cast<unsigned char>(Next());
     std::memset(args, 0, 5 * sizeof(U));
