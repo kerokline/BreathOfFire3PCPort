@@ -62,6 +62,45 @@ numbers), the formation names (language), the area and effect tables of
 PSP-JP `BOOT.BIN` carries the last of these verbatim (`psp-image.md` 5.1);
 it is not taken into a PSX build here.
 
+### 1.1 After `main` was merged (2026-10-12, `psp/main-merge`)
+
+`main`'s `GAME.EMI` place (the story-flag seed `0x662CD8` and `0x662DE8`,
+[`exe-import-engine.md`](exe-import-engine.md) 7.4) and the four fills
+together, measured with the merged tools (`exe_tables.py recipe`,
+`psp_exe.py recipe`, `exe_own.py measure`, `exe_tables.py gaps`, the seven
+discs). Every fill row still writes 0 bytes off `BOF3.exe`'s.
+
+| Build | gap ranges | gap bytes (rows) | game-value, PC non-zero | identical to the PC's |
+|---|---:|---:|---:|---:|
+| `psx-jp` | 330 | 3,281 | 789 | 613,727 |
+| `psx-us` | **351** | **4,085** | **1,323** | 613,040 |
+| `psx-eu-en` | 349 | 4,069 | 1,319 | 613,055 |
+| `psx-fr` | 351 | 4,157 | 1,350 | 612,989 |
+| `psx-de` | 352 | 4,173 | 1,351 | 612,976 |
+| `psp-jp` | 316 | 2,897 | 740 | 611,648 |
+| `psp-eu` | 351 | 3,112 | 791 | 611,575 |
+
+The PSX builds lose 3 ranges each to `main`'s place, and 13 game-value bytes
+on the Western builds (4 on JP), as `disc-only-install.md` 3's
+arithmetic said for US. **PSP-JP loses them too**: its
+`psxmap` rows (89 runs now, from 87) read the two runs from the PSP-JP
+disc's own `GAME.EMI` at PSX-JP's place. PSP-EU keeps both as gaps; its
+`GAME.EMI` does not hold them there.
+
+The merge's checks (headless, an ini-less copy of the merged launcher):
+- **The exe host on the US image over the real install:** exit 0, `place
+  649 ranges 6153 bytes`, `gap 351 ranges 4085 bytes`. Against `BOF3.exe`,
+  `627996 of 638976 bytes equal; every class that must equal does`, and no
+  `place` range differs.
+- **The same on a US disc-only install** (`C:\\b3g`, `--lang en-US`): exit 0.
+- **On a PSP-EU-only install** (`C:\\b3p`, `--lang en-150`): exit 0, `place
+  527 / 5296`, `gap 351 / 3112`.
+- **Caches built with `main`'s own tools (`035f40b6`) against the merged
+  ones:** the JP + PC cache differs only in `manifest.toml`'s `[build]`
+  table. The US and European caches differ in `base/exe/data.bin`,
+  `base/exe/data.toml` and `manifest.toml` (the `[build]` table and
+  `[exe]`'s sha256), and nothing else.
+
 ## 2. Checks
 
 | Check | Result |
