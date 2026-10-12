@@ -62,7 +62,12 @@ Briefs: `<session 24422d10 scratchpad>/r/common.md` + `brief_*.md`.
 
 ## 3. Merges
 
-(filled as groups merge: branch, tip, what the merge needed)
+One at a time onto `platform/disc-only-round`, in a scratch worktree; the build
+and the exe host's self-test after each; the full validations in section 4.
+
+| # | Group | Branch, tip | Merge | What it brought |
+|---|---|---|---|---|
+| 1 | RD | `disc-only/rdata-and-keys` `62b2b06a` | `eaae3db8`, clean | `.rdata` from the engine (`rdata::Map`: the 44 constants, the SDK's `c_dfDIKeyboard` at `0x5C4948`, the 14 bound slots; the 63 `.data` words into `.rdata` are all the C runtime's, read by nothing of ours); the default key table as a rule (`input::DefaultKeys()`, 24 `DIK_` names, written to `0x66C648` at map time, compared with the file's when present); `BOF3.exe` optional (`bof3::ExeFile_Present()`; the launcher accepts an install with no file when a cache is named and sets `BOF3X_EXEIMAGE` from it). **Found:** the keyboard has been dead in `bof3x.exe` since state 3 - Capcom's keyboard object table lies in `.text` at `0x5ACBD0` (the int3 fill in the exe host; DirectInput 7 rejects it: `SetDataFormat` / `Acquire` `E_INVALIDARG`), the SDK's format is accepted; a live key press in `bof3x.exe` is owed. `symbols.toml`: `DInput_KeyboardFormat`'s object table corrected to `0x5ACBD0`. |
 
 ## 4. The validations, batched
 
