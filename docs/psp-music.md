@@ -1,12 +1,14 @@
 # The PSP's music: `pPMS` to the cache's song form
 
 **Status:** IN PROGRESS (2026-10-12), group MS of the PSP-only round
-([`psp-only-round.md`](psp-only-round.md)). Stage A is done: `tools/ppms.py`
-reads a PSP disc's songs and writes them in the form `base/bgm/` stores. It
-reproduces the 2026-10-10 measurement in code and adds a render A/B. Stage B
-is still to come: the importer writing `base/bgm/` from a PSP source, paired
-with MB's banks. Nothing in `src/` or the importer changed. No game bytes
-appear here, only counts, hashes, offsets and rules (rule 1). `psp_ms/` below
+([`psp-only-round.md`](psp-only-round.md)), both stages built. Stage A:
+`tools/ppms.py` reads a PSP disc's songs and writes them in the form
+`base/bgm/` stores; it reproduces the 2026-10-10 measurement in code and adds
+a render A/B (sections 1-4). Stage B: the importer writes `base/bgm/` from a
+PSP disc alone, paired with MB's banks, `verify` checks it against
+`fixtures/bgm-psp.tsv`, and the Jukebox lists it as the PSP disc's (sections
+6-7). Nothing has been heard. No game bytes appear here, only counts, hashes,
+offsets and rules (rule 1). `psp_ms/` below
 is the scratch folder of session `3d54deba` (its probes, the render script and
 `measure_jp.json` / `ab_180.json`).
 
@@ -33,6 +35,12 @@ is the scratch folder of session `3d54deba` (its probes, the render script and
   still-sounding voice of that program back to pitch. **Rendered through our
   sequencer, 50 of the 56 differ from the PSX render (section 4.2).** The songs
   are not an encoding difference; they are the PSP's own music.
+- **Stage B: a PSP disc alone now gives `base/bgm/`.** 166 songs and 81 banks
+  (MB's inverse), 247 files, identical from PSP-JP and PSP-EU, `verify` 0
+  problems against `fixtures/bgm-psp.tsv`. A PSP-only build writes 741 `base`
+  containers. Every song renders on the PSP banks without an abort, and the
+  Jukebox lights its PSP source on such a cache. The PC and PSX caches are
+  unchanged.
 
 ## 1. What was built
 
@@ -43,13 +51,12 @@ is the scratch folder of session `3d54deba` (its probes, the render script and
 | `read_ppms(section)` | The `pPMS` table and its SMFs; anything outside the measured layout is refused |
 | `invert(sub)` | One SMF as `seq.read_sep` gives a PSX sub-song. `seq.song_bytes` then writes it unchanged (`seq-format.md` 1) |
 | `songs(disc)`, `file_paths(disc)` | The PSP's song table (`tables.toml` `songs`, the `psp-jp` / `psp-eu` rows in `BOOT.BIN`) and `BOOT.BIN`'s path table, which the song table's file ids index |
-| `song_files(iso)` | The 166 song files, `(song, bank name, bytes)`. This is what stage B writes under `base/bgm/` |
+| `song_files(iso)` | The 166 song files, `(song, bank name, bytes, the pPMS's section index)`; `build` writes them under `base/bgm/` |
 | `measure --disc ISO --psx CUE [--json]` | Each PSP-built song against the PSX-built one, with its class and the inversion's rule counts |
 | `dump --disc ISO --song N` | One inverted song, printed the way `seq.py dump` prints it |
 | `check` | A synthetic round trip with no game data: `seq.py`'s synthetic SEP is put into the PSP's form at divisions 480 and 48 and inverted back, and the refusals are tried. 0 errors |
 
-`check` is not yet called from `importer.py check`, because the importer
-belongs to stage B (section 6).
+Stage B's additions (`build`, `importer_bgm`, the fixture) are in section 6.
 
 ## 2. The format, as measured
 
@@ -229,91 +236,198 @@ deleted after each comparison. `ab_180.json` keeps the numbers.
 - **Call 2, 2026-10-10** (`psp-only-build.md` 7): a PSP-only install plays the
   PSP's music as it is. `song_files` gives the PSP's own songs. The inversion
   changes format only (ticks, metas, note-offs, the loop pair, the end tick)
-  and keeps every note, bend and controller the PSP has.
+  and keeps every note, bend and controller the PSP has. With a PSX disc among
+  the sources, the PSX's songs stay the base (`importer_bgm` returns nothing).
 - **Game data in code, 2026-10-10:** nothing is copied. The song table is
   read from `BOOT.BIN` at `tables.toml`'s recorded place, and the path table
   is found by shape. The only constants are the format's own (divisions,
-  magic, loop values) and `seq.py`'s song 165 rule.
-- **The jukebox's PSP column** (`music-player.md` 3) stays greyed until stage
-  B lands, as before.
+  magic, loop values) and `seq.py`'s song 165 rule. The fixture holds hashes
+  and sizes only.
+- **Every option listed, greyed by source** (2026-10-10): the Jukebox's PSP
+  source is lit for a PSP-only cache and greyed, with the reason, otherwise
+  (section 6.3).
+- **The Jukebox plays the PSP's volume merge "as the PSP has it"** (the owner,
+  2026-10-11, `music-player.md` 3). **Partly met, an owner's question.** The
+  cache's PSP banks are MB's inverse (`psp-music-banks.md` 3): each tone's
+  merged volume is kept, so the loudness is the PSP's, but the pan is
+  un-squeezed (`3p - 128`), so the stereo image is the PSX's width, not the
+  PSP's. The Jukebox plays what the cache holds. Playing the PSP's squeezed
+  pan would need a second bank form; it is not built.
 
-## 6. What stage B needs
+## 6. Stage B: what was built
 
-- **MB's merge:** `vag.psp_music_vab(pphd, pbvc) -> (vh, vb)`, the contract
-  in `psp-only-round.md` 4. Each song's bank is its EMI's (`song_files` gives
-  the name), and `seq.parse_vab` / `bank_bytes` write it as `seq.build` does.
-- **The importer:** one call site in `build`. When no PSX disc is given and a
-  PSP disc is, call `ppms.importer_bgm(sources, out)` (to be added, mirroring
-  `seq.importer_bgm`). The manifest's `[bgm]` build record names `psp-jp` /
-  `psp-eu` and the method. `ppms.check()` goes beside `seq.check()` in
-  `importer.py check`.
-- **`verify`:** a fixture of the PSP build's song and bank hashes, as
-  `fixtures/bgm.tsv` has per PSX build. JP and EU are identical (section 3),
-  so one set of rows serves both. A second check could read each song back
-  through `seq.read_song` and the `pPMS` independently.
-- **The jukebox:** `ListPsp` can list a cache whose `[bgm]` record is a PSP
-  build. A cache holds one `base/bgm`, so a PC + PSX + PSP install still has
-  only the PSX's songs there. A PSP column beside a PSX one needs a second
-  tree (an `opt/` layer, TG's half), which is not stage B's job.
-- **Not decided here:** whether a PSP-only cache's `base/bgm` takes the PSP's
-  setup and loop bytes as they are. That is call 2's reading, and this doc
-  takes it so.
+### 6.1 `ppms.py`
 
-## 7. Not verified
+| Function / command | What it does |
+|---|---|
+| `build(iso, out)`, `build --disc ISO --out CACHE` | `base/bgm/`: the 166 songs and the 81 banks they name. A bank is `seq.bank_bytes(name, seq.parse_vab(*vag.psp_music_vab(pphd, pbvc)))`, MB's contract; a `ValueError` from it ends the build naming the EMI. Returns `seq.build`'s shape |
+| `importer_bgm(sources, out)` | The importer's hook: the first PSP disc, only when no PSX disc is among the sources |
+| `fixture --disc ISO [--disc ISO]` | `fixtures/bgm-psp.tsv`: per PSP build, each file's path, size, section and hash (`fixtures/bgm.tsv`'s format) |
+| `check_fixture(builds)` | Its shape, no game data: PSP builds of `fixtures.toml`, 166 songs each, exactly the banks they name, the format versions |
 
-- **No song has been heard.** The render A/B shows where the samples differ,
-  not whether an ear can tell. The owner's ear on the 16 note songs, the 2
-  tempo songs and song 31 is V4's (`psp-only-round.md` 6).
+Manifest rows: `["base/bgm/000.DAT", "psp-jp:ppms:BGM000.EMI#<i>", <sha256>]`
+for a song (the `pPMS` section) and `"psp-jp:psp-vab:NAME.EMI#<i>,<j>"` for a
+bank (`PPHD`, `pBVC`). The build id opens the source, so LT's launcher reads
+it from the first row, as the coordinator's contract says.
+
+### 6.2 `importer.py` (shared; the lines added)
+
+- `build`: one call site, `bgm = seq.importer_bgm(...) or
+  ppms.importer_bgm(...)`. The manifest's `bgm` rows and the build's summary
+  line take either (the summary names `ppms.py` for a PSP build).
+- `verify_bgm`: `fix.update(ppms.load_fixture())`, so a PSP build's rows are
+  checked against `fixtures/bgm-psp.tsv` as a PSX build's are against
+  `fixtures/bgm.tsv`. (Its printed line still says `fixtures/bgm.tsv`.)
+- `check`: `ppms.check()` and `ppms.check_fixture(builds)` beside `seq.check()`.
+- The manifest writer is unchanged, so a PC or PSX cache's manifest is too.
+
+### 6.3 The Jukebox (`src/launcher/music_player.cpp`)
+
+`CacheBgmBuild` reads the build id that opens the source of the manifest's
+first `bgm` row. A cache holds one `base\bgm`:
+- a PSP build: the PSP source lists the cache's songs and plays them through
+  the same `SeqStream` (the same form, the same sequencer); the PSX source is
+  greyed, "The cache's songs are the PSP disc's";
+- anything else (or no manifest): as before for the PSX source; the PSP
+  source is greyed, "a cache built from a PSP disc alone holds them".
+
+The old `Fatal` for a PSP `Play` is gone with the reason for it. A PC + PSX +
+PSP install still shows only the PSX's songs: a PSP column beside a PSX one
+needs a second tree (an `opt/` layer, TG's half).
+
+## 7. Stage B: what was measured
+
+All from this branch's tools; the scripts are in `psp_ms/`.
+
+- **PSP-only builds** (`stageb_psp.sh`: `importer.py build --source <PSP iso>
+  --out <scratch>`, then `verify`), both exit 0:
+
+  | | PSP-JP | PSP-EU |
+  |---|---|---|
+  | `base` containers written | **741** | **741** |
+  | `base/bgm` | 247 files (166 songs, 81 banks), `ppms.py` | the same |
+  | `verify` | 741 held, 0 problems; `base/bgm` 247 of 247 as the fixture, 0 problems | the same |
+
+  `--lang ja-JP` / `en-150` refuse on a PSP source (no PSX disc carries it):
+  the PSP's language layers are LG's.
+- **PSP-JP and PSP-EU:** the 247 files identical (the fixture's hashes, and
+  the two caches' `base/bgm` compared). 73 of the 166 songs equal the PSX
+  fixture's, as section 3 found; 0 of the 81 banks do (MB's inverse, by
+  design).
+- **Every PSP song plays on the PSP banks:** `render_all_psp.py`, the host
+  `synth_render` on the PSP-only cache, 30 s each: 166 of 166 rendered, no
+  abort.
+- **The PC and PSX paths unchanged** (`stageb_builds.sh`, `cmp_refs.py`,
+  against `psp_coord/ref_*`): JP + PC 2,126 files, US 1,873, EU 1,865, every
+  file byte-identical. The manifests differ only in the build time and the
+  `[build] base_policy = "psx"` table SI's merge added (on the round tip
+  before this branch, not this change). `recipes/` untouched.
+- `importer.py check` exit 0 (0 errors with `ppms` added); `ledger_check` 0
+  errors.
+- **i686 build** (llvm-mingw, `cmake --preset i686 && cmake --build build`):
+  0 warnings in `music_player.cpp` (the warnings in the log are SDL's and
+  other files', none new).
+- **Launcher host suite** (`tools/launcher_host`, `config_tests`): 48 of 50;
+  the two failures are the code-page tests of `config.cpp` (`cache=` widened
+  through the ANSI code page), a file this branch does not touch.
+- **`dialog_test`:** the repo's script finds no dialog. Since state 3, the
+  launcher refuses to start without `bof3x.exe` beside it, and the script's
+  scratch install has only a dummy DLL. A scratch copy that also writes a
+  dummy `bof3x.exe` (`dialog_test_exe.py`): **all 19 checks ok**. The repo's
+  script needs that one line; it is not this group's file.
+- **The Jukebox, by script** (`jukebox_test.py`, the built launcher in a
+  scratch install, `cache=` in its ini): on the PSP-JP cache, PSX greyed, PSP
+  enabled, 166 songs listed (no catalogue beside the scratch launcher, so no
+  hidden rows), Play on 000 "Playing 000 from the PSP disc: looping as the
+  disc's song does", Stop, Close. On the US PSX cache, PSX enabled and PSP
+  greyed with its reason. Not heard.
+- **Headless self-test** (`BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, the
+  launcher, `bof3x.exe` and the DLL in an ini-less scratch folder):
+  SELFTEST_RESULT.
+
+## 8. Not verified
+
+- **No song has been heard**, on either bank form. The render A/B (section
+  4.2) is exact, not perceptual. The owner's ear on the 16 note songs, the 2
+  tempo songs, song 31 and song 22 (MB's program-pan case) is V4's
+  (`psp-only-round.md` 6).
 - **The PSP's own player was not read.** Section 4.1's guess about why the
-  PSP added the resets stays a guess. What the PSP itself sounds like is not
-  what our sequencer plays from these files. Ours is the PSX driver's model.
-- **The A/B covers each song's first 180 s.** The 13 identical songs are
-  identical for that span only. A difference past it, beyond a loop, was not
-  looked for.
-- **The renders use the PSX's banks.** With MB's PSP banks (the volume and pan
-  merge) every song will differ again. That is stage B's and V1.4's
-  measurement.
-- **The sequencer's slow-mode abort** (a tempo change into libsnd's slow mode)
-  cannot trigger: the PSP has no tempo past tick 0. The render ran every
-  song without an abort (section 4.2).
-- `importer.py check` and `ledger_check.py` pass (0 errors). The importer and
-  `src/` are untouched, so the PC and PSX path checks are moot for stage A.
+  PSP added the resets stays a guess.
+- **The A/B covers each song's first 180 s**, and used the PSX's banks. On
+  the PSP banks only "renders without an abort" was checked here; MB's
+  `psp-music-banks.md` 3 has the SNR of the inverse.
+- **The game was not run on a PSP-only cache.** The engine's start-up check
+  (`music-seq-engine.md` 3) reads the same files the host render does, so it
+  should pass; V2 / V3 will show it.
+- **The Jukebox's catalogue** (`music-names.tsv`) was not beside the scratch
+  launcher; the hidden rows apply to the PSP list as to the others (the same
+  filter).
 
-## 8. For the other files
+## 9. For the other files
 
 **DIV C (draft; the coordinator numbers it), "A PSP-only install plays the
-PSP's music":**
+PSP's music: its sequences and its banks".** MB's draft (`psp-music-banks.md`
+9) is folded in here; the dropped tone stays MB's separate bullet or entry.
 
-> **What the original did.** The PC port plays its MP3s. With a cache
-> (DIV-0087), the songs are the PSX disc's sequences through `psx::MusicSynth`.
-> The PSP re-authored all 166 songs as Standard MIDI Files (`pPMS`). 73 of
-> them carry the PSX's events exactly. The others differ in notes (16),
-> controllers (11), pitch-bend resets (56), the setup of song 31, event order
-> within a tick (5) and two tempos.
-> **What this does.** When the player gives a PSP disc and no PSX disc, the
-> importer writes `base/bgm/` from the PSP's songs (`tools/ppms.py`,
-> [`psp-music.md`](psp-music.md)), inverted to the cache's song form, with the
-> PSP's music banks (`vag.psp_music_vab`, MB). The sequencer, the PSX driver's
-> model, plays them unchanged. With a PSX disc present, the PSX's songs stay
-> the base.
-> **Why.** The owner's call of 2026-10-10 (`psp-only-build.md` 7, call 2): a
-> PSP-only install uses the PSP's audio as it is. There is no PSX original to
-> fall back on.
-> **Audible.** Rendered through our sequencer on the PSX's banks, 80 of the 93
-> songs that are not byte-identical differ from the PSX render within 180 s,
-> 50 of them the bend-only songs (`psp-music.md` 4.2). Unheard.
+> - **Original behaviour.** The PC port plays its MP3s. With a cache
+>   (DIV-0087), the songs are the PSX disc's sequences on the PSX's banks,
+>   through `psx::MusicSynth`. The PSP re-authored all 166 songs as Standard
+>   MIDI Files (`pPMS`): 73 carry the PSX's events exactly; the others differ
+>   in notes (16), controllers (11), pitch-bend resets (56), the setup of song
+>   31, event order within a tick (5), the rhythm field (4) and two tempos
+>   (22, 157). Its music banks merge each tone's volume with its program's and
+>   the VAB master's (`(tv * pm * bm * 32) // 127**2`), and its pan is
+>   `(tp + mp + 64) // 3`, a third of the PSX's spread.
+> - **New behaviour.** When the player gives a PSP disc and no PSX disc, the
+>   importer writes `base/bgm/` from the PSP: the songs inverted to the
+>   cache's song form (`tools/ppms.py`, [`psp-music.md`](psp-music.md); format
+>   only - every note, bend and controller is the PSP's), and the banks with
+>   the merge inverted (`vag.psp_music_vab`,
+>   [`psp-music-banks.md`](psp-music-banks.md)): master and program volumes
+>   127, each tone's volume the merged one rounded, program pans 64, each
+>   tone's pan `3p - 128`; samples, pitch, range, ADSR and mode the PSP's,
+>   which are the PSX's. The sequencer, the PSX driver's model, plays them
+>   unchanged. The Jukebox lists them as the PSP disc's.
+> - **Rationale.** The owner's call (`psp-only-build.md` 7, call 2): a
+>   PSP-only install uses the PSP's audio as it is; there is no PSX original
+>   to fall back on. Of the merge, the inverse undoes what the conversion
+>   lost, where playing the squeezed pan as it is would narrow the image.
+> - **Also in the PSX version?** No: the PSX plays its own sequences and the
+>   unmerged bank fields. The PSX driver neither resets nor remembers a bend
+>   at key-on (`_SsVmKeyOn` -> `note2pitch`, disassembled), so the PSP's 728
+>   centre resets after a real bend retune voices still sounding.
+> - **Verification.** `ppms.py check`, `vag.py check`; `importer.py verify`
+>   against `fixtures/bgm-psp.tsv` (247 of 247, both PSPs); the song A/B on
+>   the PSX banks: 80 of the 93 songs that are not byte-identical differ
+>   within 180 s, 50 of them the bend-only songs (`psp-music.md` 4.2); the
+>   banks against the PSX-built: 166 songs, SNR median 41.9 dB, one song at
+>   16.8 dB (22), level within half a decibel (`psp-music-banks.md` 3); all
+>   166 render on the PSP banks with no abort. Not heard.
+> - **Reversible?** A PSX disc among the sources builds the PSX's songs and
+>   banks. With both discs, the PSP's music as an option is TG's `opt/` half.
 
 **`docs/README.md` row:** "[`psp-music.md`](psp-music.md) | The PSP's songs
 (`pPMS`, a table of SMFs) inverted to the cache's song form by
-`tools/ppms.py`. The song and path tables come from `BOOT.BIN`. 73 of 166
+`tools/ppms.py`; the song and path tables from `BOOT.BIN`. 73 of 166
 byte-identical to the PSX-built, the rest classed (rhythm 4, order 5, bend
-56, controllers 11, setup 1, notes 16; tempos 22, 157). PSP-JP = PSP-EU. The
+56, controllers 11, setup 1, notes 16; tempos 22, 157); PSP-JP = PSP-EU. The
 PSX driver neither resets nor remembers the bend at key-on (`_SsVmKeyOn` ->
-`note2pitch`, disassembled), so the PSP's 728 resets after a real bend retune
-sounding voices: 50 of the 56 render differently through our sequencer. Stage B (the importer, with MB's
-banks) to come. IN PROGRESS."
+`note2pitch`, disassembled): 50 of the 56 bend-only songs render differently
+through our sequencer. Stage B: the importer writes `base/bgm/` from a PSP
+disc alone with MB's banks (247 files, `fixtures/bgm-psp.tsv`, verify 0
+problems), and the Jukebox lists them as the PSP disc's. MEASURED; not
+heard."
 
-**STATUS.md:** "MS stage A (2026-10-12): `tools/ppms.py` reads the PSP's
-songs from the disc alone and reproduces the 73-identical measurement. The
-bend-only songs are audible differences on the PSX driver's model, not an
-encoding. [`psp-music.md`](psp-music.md)."
+**STATUS.md:** "MS (2026-10-12): a PSP-only build writes `base/bgm/` - the
+PSP's 166 songs (`tools/ppms.py`) on its 81 banks (MB's inverse) - and the
+Jukebox lights its PSP source on such a cache. The bend-only songs are real
+differences on the PSX driver's model. [`psp-music.md`](psp-music.md)."
+
+**HANDOFF.md / owner-review.md:** the owner's ear (V4) on the PSP's music from
+a PSP-only cache through the Jukebox: the 16 note songs, 22 and 157 (tempo),
+31; and the question of section 5, whether the Jukebox should play the PSP's
+squeezed pan "as the PSP has it" rather than the inverse.
+
+**`tools/launcher_host/dialog_test.py`** (whoever owns it): `setup` should also
+write a dummy `bof3x.exe` beside the launcher, or the dialog never opens (the
+state-3 launcher's check).

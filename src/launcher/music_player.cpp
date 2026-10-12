@@ -6,8 +6,9 @@
 // Three sources, each a radio button greyed when the install lacks it (the
 // Config screen's rule): the PlayStation disc's songs as tools/seq.py wrote
 // them into the cache (base\bgm\NNN.DAT and its bank), played by the engine's
-// own sequencer (src/audio/seq.h, DIV-0087's player); the PSP disc's, whose
-// import is not built (docs/psp-only-build.md section 2.1, step 5); and the PC
+// own sequencer (src/audio/seq.h, DIV-0087's player); the PSP disc's, when the
+// cache was built from a PSP disc alone (tools/ppms.py, docs/psp-music.md: the
+// same form, the same player; the manifest's bgm rows name the build); and the PC
 // port's MP3s in BGM\, decoded by minimp3 and looped at DIV-0081's measured
 // points where the table has a row, else rewound to the file's start as the
 // port does. A song number is the game's: song N is the PC's file N and the
@@ -375,12 +376,34 @@ std::wstring CacheMusicRoot(const std::wstring& cache) {
     return cache;
 }
 
-void ListPsx(State& s) {
-    const std::wstring root = CacheMusicRoot(s.cache);
-    if (root.empty()) {
-        s.why[kPsx] = L"No cache folder is set: the importer writes the disc's songs into one (docs/seq-import.md).";
-        return;
-    }
+// The build the cache's base\bgm came from: the build id that opens the source
+// of the manifest's first `bgm` row (`["base/bgm/000.DAT", "psp-jp:ppms:...", ...]`,
+// tools/importer.py write_manifest), or "" when the manifest has no such row.
+// A PSP build's songs are tools/ppms.py's (docs/psp-music.md); any other's are
+// a PlayStation disc's (tools/seq.py). A cache holds one base\bgm.
+std::string CacheBgmBuild(const std::wstring& root) {
+    const std::wstring path = root + L"\\manifest.toml";
+    if (GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES) return "";
+    const std::vector<std::uint8_t> bytes = ReadWhole(path);
+    const std::string text(bytes.begin(), bytes.end());
+    std::size_t at = text.find("\nbgm = [");
+    if (at == std::string::npos) return "";
+    at = text.find('\n', at + 1);
+    if (at == std::string::npos) return "";
+    // the row: its first string is the file, its second the source
+    const std::size_t open1 = text.find('"', at);
+    const std::size_t close1 = open1 == std::string::npos ? open1 : text.find('"', open1 + 1);
+    const std::size_t q = close1 == std::string::npos ? close1 : text.find('"', close1 + 1);
+    if (q == std::string::npos) return "";
+    const std::size_t colon = text.find(':', q + 1), close = text.find('"', q + 1);
+    if (colon == std::string::npos || close == std::string::npos || colon > close) return "";
+    return text.substr(q + 1, colon - q - 1);
+}
+
+bool IsPspBuild(const std::string& build) { return build.compare(0, 4, "psp-") == 0; }
+
+// The cache's base\bgm\NNN.DAT songs into `source`'s list.
+void ListCacheSongs(State& s, const std::wstring& root, int source) {
     const std::wstring dir = root + L"\\base\\bgm\\";
     EachFile(dir, [&](const wchar_t* name) {
         bool once = false;
@@ -399,18 +422,43 @@ void ListPsx(State& s) {
         wchar_t where[64];
         std::swprintf(where, 64, L"%hs.EMI sub %u", song.bank.c_str(), song.sub);
         e.where = where;
-        s.songs[kPsx].push_back(e);
+        s.songs[source].push_back(e);
     });
+}
+
+void ListPsx(State& s) {
+    const std::wstring root = CacheMusicRoot(s.cache);
+    if (root.empty()) {
+        s.why[kPsx] = L"No cache folder is set: the importer writes the disc's songs into one (docs/seq-import.md).";
+        return;
+    }
+    if (IsPspBuild(CacheBgmBuild(root))) {
+        s.why[kPsx] = L"The cache's songs are the PSP disc's: build the cache with a PlayStation disc for these.";
+        return;
+    }
+    ListCacheSongs(s, root, kPsx);
     if (s.songs[kPsx].empty())
         s.why[kPsx] = L"The cache folder holds no songs (base\\bgm\\): run tools/seq.py with a PlayStation disc.";
 }
 
 void ListPsp(State& s) {
-    // docs/psp-only-build.md section 2.1: the PSP's songs (pPMS) and banks
-    // (PPHD / pBVC, volumes merged as the PSP has them - the owner's call,
-    // 2026-10-11) have no importer or player yet. When they do, this lists
-    // the cache's PSP songs and kPsp gets its Stream.
-    s.why[kPsp] = L"Not imported yet: the PSP's songs need their own bank reader (docs/psp-only-build.md, step 5).";
+    // docs/psp-music.md: a cache built from a PSP disc and no PlayStation disc
+    // holds the PSP's songs (tools/ppms.py, pPMS inverted) and banks
+    // (vag.psp_music_vab, the volume / pan merge inverted) in base\bgm, in the
+    // PlayStation's form, so the same sequencer plays them. A cache holds one
+    // base\bgm: with a PlayStation disc among the sources it is the disc's.
+    const std::wstring root = CacheMusicRoot(s.cache);
+    if (root.empty()) {
+        s.why[kPsp] = L"No cache folder is set: the importer writes a PSP disc's songs into one (docs/psp-music.md).";
+        return;
+    }
+    if (!IsPspBuild(CacheBgmBuild(root))) {
+        s.why[kPsp] = L"The cache's songs are not the PSP disc's: a cache built from a PSP disc alone holds them "
+                      L"(docs/psp-music.md).";
+        return;
+    }
+    ListCacheSongs(s, root, kPsp);
+    if (s.songs[kPsp].empty()) s.why[kPsp] = L"The cache's manifest names the PSP's songs, but base\\bgm\\ holds none.";
 }
 
 void ListPc(State& s) {
@@ -522,18 +570,17 @@ void Play(HWND dlg, State& s) {
     HCURSOR was = SetCursor(LoadCursorA(nullptr, IDC_WAIT));
     std::unique_ptr<Stream> stream;
     std::wstring how;
-    if (s.source == kPsx) {
+    if (s.source == kPsx || s.source == kPsp) {
+        // both are the cache's base\bgm in the PlayStation's form (docs/psp-music.md)
         const std::wstring root = CacheMusicRoot(s.cache);
         stream.reset(new SeqStream(e->path, root + L"\\base\\bgm\\bank\\"));
         how = e->loops ? L"looping as the disc's song does" : L"once, as in the game";
-    } else if (s.source == kPc) {
+    } else {
         auto* mp3 = new Mp3Stream(e->path, e->number, e->loops);
         stream.reset(mp3);
         how = !e->loops ? L"once, as in the game"
               : mp3->Measured() ? L"looping at its measured points (DIV-0081)"
                                 : L"looping from the file's start, as the port does";
-    } else {
-        Fatal(L"the PSP's songs have no player yet (docs/psp-only-build.md step 5)");
     }
     s.out.Set(std::move(stream));
     SetCursor(was);

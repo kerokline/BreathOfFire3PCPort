@@ -46,6 +46,10 @@ The song table is the PSP's own: tables.toml's `songs` row for the build, in
 found by shape: the longest run of records that each name a file of the
 disc's data folder). Song 165 is `BGMBAT00.EMI` sub 1, as on the PSX (seq.py).
 
+    python tools/ppms.py build   --disc ISO --out CACHE         (CACHE/base/bgm/: the songs, and their banks by
+                                                             vag.psp_music_vab; what importer.py build does
+                                                             with a PSP disc and no PSX disc)
+    python tools/ppms.py fixture --disc ISO [--disc ISO ...]   (fixtures/bgm-psp.tsv: what build writes, hashes)
     python tools/ppms.py dump    --disc ISO --song N            (the inverted song, as seq.py dump prints it)
     python tools/ppms.py measure --disc ISO --psx CUE [--json OUT]
                                                              (each song against the PSX disc's: the classes)
@@ -62,6 +66,7 @@ import struct
 import sys
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import psx_disc     # noqa: E402
 import region_diff  # noqa: E402
@@ -296,29 +301,155 @@ def songs(disc, bid=None):
     return out
 
 
-def song_files(disc_path, bid=None, st=None):
-    """(build id, [(song number, bank name, song file bytes)]) for the 166
-    songs of a PSP disc. The bank of each is its EMI's, and stage B pairs it."""
+def _music(build, key):
+    """An EMI's three music sections: {6, 10, 7: (section index, bytes)}."""
+    kinds = collections.defaultdict(list)
+    for i, ty, _, body in build.sections(key):
+        kinds[ty].append((i, body))
+    if any(len(kinds[k]) != 1 for k in (6, 10, 7)):
+        raise SystemExit("%s: not one bank header, song table and bank body" % key)
+    return {k: kinds[k][0] for k in (6, 10, 7)}
+
+
+def song_files(disc_path, bid=None, st=None, with_banks=False):
+    """(build id, [(song number, bank name, song file bytes, the pPMS's section
+    index)]) for the 166 songs of a PSP disc; with `with_banks`, a third item
+    {bank name: (EMI key, its music sections)} for the EMIs the songs name."""
     build = region_diff.Build("psp", disc_path)
     bid = bid or disc_build_id(build.disc)
     st = st if st is not None else collections.Counter()
-    seps, out = {}, []
+    secs, seps, out = {}, {}, []
     for s in songs(build.disc, bid):
         if s["emi"] not in seps:
             if s["emi"] not in build.emis:
                 raise SystemExit("song %d: %s is not on the disc" % (s["song"], s["emi"]))
-            kinds = collections.defaultdict(list)
-            for i, ty, _, body in build.sections(s["emi"]):
-                kinds[ty].append(body)
-            if any(len(kinds[k]) != 1 for k in (6, 10, 7)):
-                raise SystemExit("%s: not one bank header, song table and bank body" % s["emi"])
-            seps[s["emi"]] = read_ppms(kinds[10][0])
+            secs[s["name"]] = (s["emi"], _music(build, s["emi"]))
+            seps[s["emi"]] = read_ppms(secs[s["name"]][1][10][1])
         subs = seps[s["emi"]]
         if s["sub"] >= len(subs):
             raise SystemExit("song %d: %s has no sub-song %d" % (s["song"], s["emi"], s["sub"]))
         sub = invert(subs[s["sub"]], st)
-        out.append((s["song"], s["name"], seq.song_bytes(s["song"], s["name"], s["sub"], sub)))
-    return bid, out
+        out.append((s["song"], s["name"], seq.song_bytes(s["song"], s["name"], s["sub"], sub),
+                    secs[s["name"]][1][10][0]))
+    return (bid, out, secs) if with_banks else (bid, out)
+
+
+def bank_file(name, sections):
+    """base/bgm/bank/NAME.DAT from an EMI's PSP music sections: MB's
+    `vag.psp_music_vab` (the volume / pan merge inverted, psp-music-banks.md 3),
+    then seq.py's reader and writer, as for a PSX disc's VAB."""
+    import vag
+    vh, vb = vag.psp_music_vab(sections[6][1], sections[7][1])
+    return seq.bank_bytes(name, seq.parse_vab(vh, vb))
+
+
+# ---------------------------------------------------------------- build (base/bgm/ from a PSP disc)
+
+def build(disc_path, out, bid=None):
+    """base/bgm/ under `out` from a PSP disc: the 166 songs and the 81 banks
+    they name. Returns (build id, [(path under out, source, sha256)], stats),
+    seq.build's shape, so the manifest's `bgm` rows and `verify` take either.
+    A song's source is `<build>:ppms:NAME.EMI#i` (the pPMS section), a bank's
+    `<build>:psp-vab:NAME.EMI#i,j` (PPHD, pBVC)."""
+    st = collections.Counter()
+    bid, files, secs = song_files(disc_path, bid, st, with_banks=True)
+    os.makedirs(os.path.join(out, "base", "bgm", "bank"), exist_ok=True)
+    rows = []
+    for n, name, body, i in files:
+        rel = "base/bgm/%03d.DAT" % n
+        rows.append((rel, "%s:ppms:%s.EMI#%d" % (bid, name, i), seq._write(out, rel, body)))
+    for name in sorted(secs):
+        key, m = secs[name]
+        try:
+            body = bank_file(name, m)
+        except ValueError as e:
+            raise SystemExit("%s: %s" % (key, e))
+        rel = "base/bgm/bank/%s.DAT" % name
+        rows.append((rel, "%s:psp-vab:%s.EMI#%d,%d" % (bid, name, m[6][0], m[7][0]), seq._write(out, rel, body)))
+    st["songs"], st["banks"] = len(files), len(secs)
+    return bid, rows, st
+
+
+def importer_bgm(sources, out):
+    """tools/importer.py build's hook, after seq.importer_bgm: base/bgm/ from the
+    first PSP disc among the player's sources when no PSX disc is among them
+    (a PSX disc's music stays the base, psp-only-build.md 7 call 2). Returns
+    (build id, rows) or None."""
+    if any(s.id.startswith("psx-") and hasattr(s, "build") for s in sources):
+        return None
+    disc = next((s for s in sources if s.id.startswith("psp-") and hasattr(s, "build")), None)
+    if disc is None:
+        return None
+    bid, rows, _ = build(disc.path, out, disc.id)
+    return bid, rows
+
+
+def cmd_build(a):
+    bid, rows, st = build(a.disc, a.out)
+    print("%s: %d songs, %d banks -> %s" % (bid, st["songs"], st["banks"], os.path.join(a.out, "base", "bgm")))
+
+
+# ---------------------------------------------------------------- the fixture
+
+# fixtures/bgm-psp.tsv: for each PSP build, every file `build` writes from its
+# disc, in fixtures/bgm.tsv's format (seq.py): hashes and sizes only (rule 1),
+# so that importer.py verify proves a PSP-built base/bgm/ with no disc.
+FIXTURE = os.path.join(ROOT, "fixtures", "bgm-psp.tsv")
+
+
+def cmd_fixture(a):
+    import tempfile
+    rows = []
+    for path in a.disc:
+        with tempfile.TemporaryDirectory() as tmp:
+            bid, got, _ = build(path, tmp)
+            for rel, where, h in got:
+                rows.append((bid, rel, os.path.getsize(os.path.join(tmp, rel)), where.split(":", 2)[2], h))
+        print("%s: %d files" % (bid, len(got)))
+    builds = sorted({r[0] for r in rows})
+    if len(builds) != len(a.disc):
+        raise SystemExit("two discs of one build: %s" % ", ".join(builds))
+    with open(a.out, "w", newline="\n", encoding="utf-8") as f:
+        f.write("# The files tools/ppms.py build writes under base/bgm/ from each PSP disc (ppms.py fixture):\n"
+                "# build, path, size, the EMI section(s) it is made from, sha256. importer.py verify\n"
+                "# checks a PSP-built cache's base/bgm/ against its build's rows; check, this file's shape.\n")
+        f.write(seq.FIXTURE_HEAD % (seq.SONG_VERSION, seq.BANK_VERSION) + "\n")
+        for r in sorted(rows):
+            f.write("%s\t%s\t%d\t%s\t%s\n" % r)
+    print("%s: %d rows, %s" % (a.out, len(rows), ", ".join(builds)))
+
+
+def load_fixture():
+    """{build: {path: (size, source, sha256)}} of fixtures/bgm-psp.tsv ({} if absent)."""
+    return seq.load_fixture(FIXTURE)[0] if os.path.exists(FIXTURE) else {}
+
+
+def check_fixture(builds):
+    """fixtures/bgm-psp.tsv's shape, no game data: seq.py's format versions,
+    PSP builds of fixtures.toml, each the 166 songs and exactly the banks they
+    name, every row well formed. Returns the errors."""
+    if not os.path.exists(FIXTURE):
+        return ["bgm-psp.tsv: missing"]
+    rows, versions = seq.load_fixture(FIXTURE)
+    errs = []
+    if versions != (seq.SONG_VERSION, seq.BANK_VERSION):
+        errs.append("bgm-psp.tsv: written for song / bank format %s, seq.py writes %d / %d - regenerate it "
+                    "(ppms.py fixture)" % (versions, seq.SONG_VERSION, seq.BANK_VERSION))
+    want = {"base/bgm/%03d.DAT" % i for i in range(seq.SONGS + 1)}
+    for bid, files in sorted(rows.items()):
+        if bid not in builds or not bid.startswith("psp-"):
+            errs.append("bgm-psp.tsv: build %s is not a PSP build of fixtures.toml" % bid)
+        got = {r for r in files if not r.startswith("base/bgm/bank/")}
+        if got != want:
+            errs.append("bgm-psp.tsv %s: %d song files, not the %d of 000..%03d" % (bid, len(got), len(want), seq.SONGS))
+        banks = {r for r in files if r.startswith("base/bgm/bank/")}
+        named = {"base/bgm/bank/%s.DAT" % files[r][1].split(".EMI")[0] for r in got}
+        if banks != named:
+            errs.append("bgm-psp.tsv %s: the banks are not the ones the songs name" % bid)
+        for r, (size, where, h) in files.items():
+            if size <= 0 or len(h) != 64 or any(c not in "0123456789abcdef" for c in h) or ".EMI#" not in where:
+                errs.append("bgm-psp.tsv %s %s: a malformed row" % (bid, r))
+    return errs
 
 
 # ---------------------------------------------------------------- measure (needs a PSX disc too)
@@ -365,7 +496,7 @@ def measure(psp_path, psx_path):
         sub = seq.read_sep(secs[s["sep"]][3])[s["sub"]]
         theirs[s["song"]] = seq.song_bytes(s["song"], s["name"], s["sub"], sub)
     res = {}
-    for n, name, body in mine:
+    for n, name, body, _ in mine:
         if body == theirs[n]:
             res[n] = ("identical", {})
         else:
@@ -397,7 +528,7 @@ def cmd_measure(a):
 
 def cmd_dump(a):
     _, rows = song_files(a.disc)
-    body = next(b for n, _, b in rows if n == a.song)
+    body = next(r[2] for r in rows if r[0] == a.song)
     print("\n".join(seq.dump_lines(body)))
 
 
@@ -534,9 +665,16 @@ def main():
     p.add_argument("--disc", required=True, help="a PSP disc")
     p.add_argument("--psx", required=True, help="a PSX disc")
     p.add_argument("--json")
+    p = s.add_parser("build", help="CACHE/base/bgm/ from a PSP disc: the songs and their banks")
+    p.add_argument("--disc", required=True)
+    p.add_argument("--out", required=True)
+    p = s.add_parser("fixture", help="fixtures/bgm-psp.tsv: the hashes of what build writes from each PSP disc")
+    p.add_argument("--disc", action="append", required=True)
+    p.add_argument("--out", default=FIXTURE)
     s.add_parser("check", help="the synthetic round trip (no game data)")
     a = ap.parse_args()
-    sys.exit({"dump": cmd_dump, "measure": cmd_measure, "check": cmd_check}[a.cmd](a) or 0)
+    sys.exit({"dump": cmd_dump, "measure": cmd_measure, "check": cmd_check, "build": cmd_build,
+              "fixture": cmd_fixture}[a.cmd](a) or 0)
 
 
 if __name__ == "__main__":
