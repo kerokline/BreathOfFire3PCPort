@@ -212,7 +212,9 @@ For the owner to confirm. None has been done.
 - **?1 fixed.** `field_blocked.cpp` reads the blocking nibbles from the
   switch tables at `0x518660` / `0x518654` on first use. The structural checks
   (an index above 2, a jump target other than the two case bodies) are still
-  Fatals.
+  Fatals. *Superseded 2026-10-12 (the disc-only round, a disc has no `.text`
+  to read): the switch is held as code (`NibbleBlocks`) and the two tables
+  are compared with it hosted - [`operand-store.md`](operand-store.md).*
 - **?2 and ?3 kept as code.** Reading them in place would mean decoding
   instructions, not reading a table. `kCategory`'s values are case-body
   immediates. The area lists would need the switch's bounds decoded from
