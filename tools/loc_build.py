@@ -680,8 +680,9 @@ def table_after_bad_head(donor):
     one such block on the five discs (docs/loc-build-disc-only.md 4.5): its
     first seven words are 0x312A and six 0x3F3D, past its end, and from slot 7
     on the table is an ascending one whose first offset, 0x200, puts the end
-    of the table at 256 slots - the US and German counts. The slots before
-    are empty messages, as every slot pointing outside its block is."""
+    of the table at 256 slots - the US and German counts. convert_block points
+    the slots before at that first message: the German table's slots 0..7
+    all point at its first message, the US's at it and at offsets into it."""
     low, i = len(donor) + 1, 0
     while 2 * (i + 1) <= min(low, len(donor)):
         w = struct.unpack_from("<H", donor, 2 * i)[0]
@@ -704,12 +705,21 @@ def convert_block(donor, base, room):
     496 slots)."""
     if base is None:
         n = struct.unpack_from("<H", donor, 0)[0] // 2 if len(donor) >= 2 else 0
-        if not n or 2 * n > len(donor):
+        bad_head = not n or 2 * n > len(donor)
+        if bad_head:
             n = table_after_bad_head(donor)
         if not n or 2 * n > len(donor):
             raise ValueError("disc-only: the donor block's slot table (%d slots) does not fit its %d bytes, "
                              "and there is no PC block to take the count from" % (n, len(donor)))
-        d_offs = struct.unpack_from("<%dH" % n, donor, 0)
+        d_offs = list(struct.unpack_from("<%dH" % n, donor, 0))
+        if bad_head:
+            # The head slots past the block's end point at its first message,
+            # as the German table's first eight do (and the US's, by offsets
+            # into that message): table_after_bad_head.
+            for slot in range(n):
+                if 2 * n <= d_offs[slot] <= len(donor):
+                    break
+                d_offs[slot] = 2 * n
         body, placed, table, kept = bytearray(), {}, [], 0
         for slot in range(n):
             off = d_offs[slot]
@@ -3113,8 +3123,98 @@ def selftest_empty_records():
         find_anchor, same_anchor = saved
 
 
+def cmd_cover(args):
+    """Which of the recipe's loc/zh-CN chunks a language layer replaces
+    (docs/loc-build-disc-only.md 7.1): a chunk of the same kind and tag in the
+    layer's container, the enemy names by any record of their table; a kind-1
+    image that a later base slot of its container covers wholly needs none
+    (build_standins). Counts by what, and every chunk left."""
+    import collections
+    import tomllib
+    with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "recipes", "pc-zh.toml"), "rb") as f:
+        recipe = {r["name"]: r["chunks"] for r in tomllib.load(f)["file"]}
+    layer = args.layer or os.path.join(args.cache, "loc", args.lang, "dat")
+    have, left = collections.Counter(), []
+    total = collections.Counter()
+    for name, rows in sorted(recipe.items()):
+        path = os.path.join(layer, name)
+        got = set()
+        if os.path.exists(path):
+            blob, chunks = dat.load(path)
+            got = {(c.kind, c.tag) for c in chunks}
+        for slot, c in enumerate(rows):
+            if c["layer"] == "loc/zh-CN":
+                what = c.get("what", c["class"])
+                hit = (c["kind"], c["tag"]) in got
+                if not hit and c["kind"] == 1:
+                    mine = vram_rect(c["tag"], c["size"])
+                    hit = any(covers(vram_rect(d["tag"], d["size"]), mine)[0]
+                              for d in rows[slot + 1:] if d["kind"] == 1)
+                    what += (" (covered by a later slot)" if hit else "")
+            elif c.get("names") == "loc/zh-CN":
+                what = "enemy names"
+                hit = any(k == 0 and c["tag"] < t < c["tag"] + c["size"] for k, t in got)
+            else:
+                continue
+            total[what] += 1
+            if hit:
+                have[what] += 1
+            else:
+                left.append((name, c["kind"], c["tag"], what))
+    print("%s: %d of %d loc/zh-CN chunks replaced" % (layer, sum(have.values()), sum(total.values())))
+    for what in sorted(total):
+        print("  %4d of %4d  %s" % (have[what], total[what], what))
+    for name, kind, tag, what in left:
+        print("  left: %-12s kind %d tag 0x%08X  %s" % (name, kind, tag, what))
+    return 0
+
+
+def selftest_rules():
+    """The disc-only rules on synthetic bytes (no game data): a sheet's tiles
+    and pixels round-trip; relay_sheet clears its rectangles and lays the
+    strip from the sheet as it was; a block whose head slots point past its
+    end gets its count from the first in-block offset, and those slots its
+    first message."""
+    import random
+    rnd = random.Random(16)
+    for tag in RELAID:
+        body = bytes(rnd.randrange(256) for _ in range(0x8000))
+        if sheet_body(tag, sheet_pixels(tag, body)) != body:
+            raise SystemExit("selftest: sheet 0x%X does not round-trip" % tag)
+        src, got = sheet_pixels(tag, body), sheet_pixels(tag, relay_sheet(tag, body))
+        rule = RELAID[tag]
+        count, (sx, sy), (dx, dy) = rule["strip"]
+        strip = {(dx + STRIP_PITCH * i + x, dy + y): src[sy + y][sx + ICON_PITCH * i + x]
+                 for i in range(count) for y in range(ICON) for x in range(ICON)}
+        region = relaid_region(tag)
+        for y, row in enumerate(got):
+            for x, v in enumerate(row):
+                want = strip.get((x, y), 0 if (x, y) in region else src[y][x])
+                if v != want:
+                    raise SystemExit("selftest: relay_sheet 0x%X pixel (%d, %d)" % (tag, x, y))
+    print("  re-laid sheets: %s round-trip and re-lay" % ", ".join("0x%X" % t for t in RELAID))
+    msgs = [b"A\0", b"BC\0", b"\0"]
+    n = 6
+    offs, body = [], bytearray()
+    for m in msgs:
+        offs.append(2 * n + len(body))
+        body += m
+    head = [0x3F3D, 0x3F3D]                      # two slots past the end
+    table = head + offs + [offs[-1]]
+    block = struct.pack("<%dH" % n, *table) + bytes(body)
+    if table_after_bad_head(block) != n:
+        raise SystemExit("selftest: table_after_bad_head gave %d, wanted %d" % (table_after_bad_head(block), n))
+    reset_donor()
+    out, _ = convert_block(block, None, TEXT_ROOM)
+    o = struct.unpack_from("<%dH" % n, out)
+    if o[0] != o[1] or o[1] != o[2] or out[o[0]:out.index(b"\0", o[0])] != b"A":
+        raise SystemExit("selftest: the bad head's slots do not point at the first message")
+    print("  a slot table with a bad head: %d slots, the head at the first message" % n)
+
+
 def cmd_selftest(args):
     selftest_empty_records()
+    selftest_rules()
     print("loc_build selftest: ok")
     return 0
 
@@ -3147,13 +3247,18 @@ def main():
         if name == "all":
             s.add_argument("--only")
         s.set_defaults(fn=fn)
+    s = sub.add_parser("cover", help="which loc/zh-CN chunks a cache's language layer replaces")
+    s.add_argument("--cache", required=True)
+    s.add_argument("--lang", required=True)
+    s.add_argument("--layer", help="the layer's dat/ directory, if not the cache's loc/<lang>/dat")
+    s.set_defaults(fn=cmd_cover)
     s = sub.add_parser("selftest", help="the converters' synthetic checks (no game data)")
     s.set_defaults(fn=cmd_selftest)
     s = sub.add_parser("anchors", help="print PC_SHA's entries anew from a PC install's BOF3.exe")
     s.add_argument("--game", required=True)
     s.set_defaults(fn=cmd_anchors)
     args = ap.parse_args()
-    if args.cmd in ("anchors", "selftest"):
+    if args.cmd in ("anchors", "selftest", "cover"):
         return args.fn(args)
     args.lang_given = args.lang is not None
     if args.cmd == "all" and not args.disc and not args.discs:
