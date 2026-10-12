@@ -2063,6 +2063,8 @@ def cmd_check(a):
     serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
     werrs = cache_walk.check()
+    import suites                                      # the launcher's suites against opt.toml and fixtures.toml
+    werrs += ["suites.py: " + e for e in suites.check()]
     for e in (errs + oerrs + serrs + werrs)[:30]:
         print("ERROR", e)
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"

@@ -45,6 +45,21 @@ add_custom_command(
   VERBATIM)
 add_custom_target(bof3x_symbols DEPENDS "${_gen_hdr}")
 
+# --- recipes/suites.toml -> launcher/suites.gen.h ----------------------------
+# The launcher's three suites (docs/launcher-suites.md): the catalogue, checked
+# against recipes/opt.toml and fixtures.toml, as C++ constants.
+set(_suites_hdr "${_gen_dir}/launcher/suites.gen.h")
+add_custom_command(
+  OUTPUT "${_suites_hdr}"
+  COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/suites.py" gen --out "${_suites_hdr}"
+  DEPENDS "${CMAKE_SOURCE_DIR}/recipes/suites.toml"
+          "${CMAKE_SOURCE_DIR}/recipes/opt.toml"
+          "${CMAKE_SOURCE_DIR}/fixtures.toml"
+          "${CMAKE_SOURCE_DIR}/tools/suites.py"
+  COMMENT "Generating launcher/suites.gen.h from recipes/suites.toml"
+  VERBATIM)
+add_custom_target(bof3x_suites DEPENDS "${_suites_hdr}")
+
 # --- SDL3, for the pad (DIV-0050, docs/controls.md) ------------------------
 # Fetched at configure time and built static into the DLL: the joystick and
 # gamepad layers only, no video, audio or render. zlib licence
@@ -728,6 +743,7 @@ add_executable(bof3x_launcher
   src/launcher/config_dialog.cpp
   src/launcher/exe_image.cpp
   src/launcher/music_player.cpp
+  src/launcher/suites.cpp
   src/audio/spu.cpp
   src/audio/seq.cpp
   src/audio/song.cpp
@@ -739,7 +755,7 @@ add_executable(bof3x_launcher
 # symbols.gen.h for exe_image.cpp alone: Key_TableDefault is read out of the
 # player's BOF3.exe, not copied (docs/exe-table-audit.md).
 target_include_directories(bof3x_launcher PRIVATE src third_party "${_gen_dir}")
-add_dependencies(bof3x_launcher bof3x_symbols)
+add_dependencies(bof3x_launcher bof3x_symbols bof3x_suites)
 # SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
 # dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
 # and circle as navigation.

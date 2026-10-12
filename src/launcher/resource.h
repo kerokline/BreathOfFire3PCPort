@@ -16,15 +16,25 @@
 #define IDC_LOOKOPTIONS 1011
 #define IDC_CHEATS      1012
 #define IDC_CONTROLS    1013
-// The music (DIV-0087) and the PSP extras (DIV-0086, docs/opt-layers.md):
-// IDC_OPT0 + i is kPspLayers[i]'s box.
+// The music (DIV-0087).
 #define IDC_MUSIC       1014
 #define IDC_CACHE       1015
 #define IDC_CACHEBROWSE 1016
 #define IDC_CACHENOTE   1017
-#define IDC_OPTNOTE     1018
-#define IDC_OPTGROUP    1019
-#define IDC_OPT0        1020
+// The three suites (docs/launcher-suites.md; until 2026-10-12 the PSP extras'
+// boxes, 1018..1024). Suite i's controls are IDC_SUITE0 + kSuiteStride * i
+// plus: the label, the PlayStation radio, the PSP radio, four member lines,
+// the reason.
+#define IDC_SUITENOTE   1018
+#define IDC_SUITEGROUP  1019
+#define IDC_SUITE0      1040
+#define kSuiteStride    10
+#define kSuiteLabel     0
+#define kSuitePsx       1
+#define kSuitePsp       2
+#define kSuiteMember0   3
+#define kSuiteMembers   4
+#define kSuiteWhy       7
 
 // The SatPixie look's options dialog (DIV-0043).
 #define IDD_SATPIXIE     101

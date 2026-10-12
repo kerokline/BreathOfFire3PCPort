@@ -2,6 +2,8 @@
 
 #include <windows.h>
 
+#include "launcher/suites.h"
+
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -216,7 +218,8 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# optional layers, comma-separated, in the order they land (DIV-0086, docs/opt-layers.md): psp-art,\r\n";
     out += "# psp-tiles, psp-maps, psp-names-en-150, psp-names-ja-JP, area4-walls (DIV-0080, from a Western PSX disc);\r\n";
     out += "# tools/importer.py install puts them in the game's DAT folder. Empty: area4-walls when installed;\r\n";
-    out += "# none: no layer\r\n";
+    out += "# none: no layer. The dialog's three suites (graphics, audio, data: recipes/suites.toml) write their\r\n";
+    out += "# layers here; a suite is its layers, so this line is the whole record of them\r\n";
     out += "opt=" + cfg.opt + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
@@ -573,9 +576,8 @@ std::string ConfigOptEdit(const std::string& opt, const std::vector<std::string>
     }
     if (!changed) return opt;
     if (played.empty()) return "none";
-    // kPspLayers' order, then kOptDefault's, then the rest as `opt` had them.
-    std::vector<std::string> order;
-    for (const OptLayerInfo& l : kPspLayers) order.push_back(l.name);
+    // The suites' order, then kOptDefault's, then the rest as `opt` had them.
+    std::vector<std::string> order = SuiteLayers();
     for (const char* l : kOptDefault) order.push_back(l);
     std::string out;
     auto put = [&](const std::string& n) {
