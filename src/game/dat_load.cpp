@@ -526,7 +526,7 @@ void CacheSelfTest() {
               index, name.c_str(), name2.c_str());
 }
 
-// DIV-TBD-LX-1 (docs/disc-only-install.md): the port's own Chinese text
+// DIV-0102 (docs/disc-only-install.md): the port's own Chinese text
 // is in the PC's DAT\ alone. With BOF3X_LANG unset or "original" it plays
 // from a PC install (BOF3.exe in the game directory: its DAT\ is the port's,
 // and `importer.py install --base` refuses such a directory) or from the
@@ -548,7 +548,7 @@ void RefuseOriginalWithoutChinese() {
         if (!held.empty()) held += ", ";
         held += tag;
     }
-    bof3::Fatal("DIV-TBD-LX-1: BOF3X_LANG is unset or \"original\" (the port's Chinese text), but this is a "
+    bof3::Fatal("DIV-0102: BOF3X_LANG is unset or \"original\" (the port's Chinese text), but this is a "
                 "disc-only install: no BOF3.exe in the game directory and no loc\\zh-CN layer in the cache%s, so "
                 "there is no Chinese text to play. Set BOF3X_LANG (bof3x.ini's language=) to a language it holds: %s",
                 dat_cache::Root() ? "" : " (no BOF3X_CACHE)",
@@ -569,7 +569,7 @@ void DatLoad_Inject() {
     // DAT\en.* is no overlay this project builds any more.
     if (const char* use = bof3x::RetiredLanguageReplacement(g_lang))
         bof3::Fatal("DIV-0005: BOF3X_LANG=%s is retired; use %s", g_lang, use);
-    RefuseOriginalWithoutChinese();  // DIV-TBD-LX-1
+    RefuseOriginalWithoutChinese();  // DIV-0102
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
     ReadOptLayers();

@@ -649,7 +649,7 @@ bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::strin
     const std::string why =
         "This is a disc-only install: no BOF3.exe in the game directory and no loc\\zh-CN layer in the cache" +
         std::string(cache.empty() ? " (no cache= or BOF3X_CACHE)" : "") +
-        ", so the port's Chinese text is not there and the game would play without text (DIV-TBD-LX-1).\n\n" +
+        ", so the port's Chinese text is not there and the game would play without text (DIV-0102).\n\n" +
         (held.empty() ? std::string("It holds no language layer: build one (tools/importer.py build --lang <tag>, "
                                     "install --lang <tag>).")
                       : "The languages it holds: " + list + ".");
@@ -678,7 +678,7 @@ bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::strin
     }
     cfg.language = held.front();
     std::fprintf(stderr, "bof3x-launcher: a disc-only install, no Chinese text: language %s, the first it holds "
-                 "(DIV-TBD-LX-1)\n", cfg.language.c_str());
+                 "(DIV-0102)\n", cfg.language.c_str());
     return true;
 }
 

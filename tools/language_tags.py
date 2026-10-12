@@ -76,7 +76,7 @@ def note_retired_overlays(dat_dir):
 
 
 def original_available(game, cache=None):
-    """DIV-TBD-LX-1 (docs/disc-only-install.md): whether `original`, the port's
+    """DIV-0102 (docs/disc-only-install.md): whether `original`, the port's
     Chinese text, can be played from `game` with `cache` as the data cache:
     BOF3.exe in the game directory (a PC install - its DAT/ is the port's;
     `importer.py install --base` refuses such a directory) or the cache's

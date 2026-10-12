@@ -29,7 +29,7 @@ struct DialogState {
     // Language box holds "Original" and then these, in this order.
     std::vector<std::string> languages;
     std::wstring game_dir;
-    // DIV-TBD-LX-1: whether "Chinese (PC script)" is offered (ConfigOriginalAvailable);
+    // DIV-0102: whether "Chinese (PC script)" is offered (ConfigOriginalAvailable);
     // without it the box holds the languages alone, and its note says why.
     bool original = true;
     // kPspLayers[i] installed in DAT\ (ConfigOptInstalled): only those get a box.
@@ -249,7 +249,7 @@ void Populate(HWND dlg, const DialogState& state) {
         if (state.languages[i] == cfg.language) selected = static_cast<int>(i) + (state.original ? 1 : 0);
     }
     if (!state.original) {
-        // DIV-TBD-LX-1: a disc-only install has no Chinese text to offer.
+        // DIV-0102: a disc-only install has no Chinese text to offer.
         SetDlgItemTextW(dlg, IDC_LANGNOTE, state.languages.empty()
                                                ? L"No Chinese (PC only), no layer: importer.py --lang."
                                                : L"Chinese (PC script): the PC install's only.");
@@ -317,7 +317,7 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.language = lang >= 1 && static_cast<size_t>(lang) <= state.languages.size()
                        ? state.languages[static_cast<size_t>(lang) - 1]
                        : kLanguageOriginal;
-    cfg.language_named = true;   // the box's choice (DIV-TBD-LX-1)
+    cfg.language_named = true;   // the box's choice (DIV-0102)
     const int look = Selected(dlg, IDC_FILTER);
     cfg.filter = look >= 1 ? Filter::kPoint : Filter::kLinear;
     cfg.satpixie = look == 2;
@@ -943,7 +943,7 @@ bool ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     InitCommonControlsEx(&icc);
 
     DialogState state{&cfg, ConfigLanguagesAvailable(game_dir, ConfigCacheDataRoot(cfg)), game_dir};
-    state.original = ConfigOriginalAvailable(game_dir, ConfigCacheDataRoot(cfg));  // DIV-TBD-LX-1
+    state.original = ConfigOriginalAvailable(game_dir, ConfigCacheDataRoot(cfg));  // DIV-0102
     for (size_t i = 0; i < std::size(kPspLayers); ++i)
         state.installed[i] = ConfigOptInstalled(game_dir, kPspLayers[i].name, ConfigCacheDataRoot(cfg));  // DIV-0089: or the cache's
     padnav::SetMap(cfg.bindings.pad);

@@ -68,7 +68,7 @@ struct Config {
     // Whether bof3x.ini named the language (a language= line) or the dialog
     // chose it, as against the default above: on a disc-only install the
     // default becomes the first language held, a named "original" is refused
-    // (ConfigResolveLanguage, DIV-TBD-LX-1).
+    // (ConfigResolveLanguage, DIV-0102).
     bool language_named = false;
     // DIV-0086: the optional layers (docs/opt-layers.md), BOF3X_OPT's
     // comma-separated list, in the order they land: psp-art, psp-tiles,
@@ -282,14 +282,14 @@ bool ConfigOptValid(const std::string& opt, std::string& why);
 // True for "original" or a tag in kLanguages.
 bool ConfigLanguageKnown(const std::string& code);
 
-// DIV-TBD-LX-1 (docs/disc-only-install.md): whether "original", the port's
+// DIV-0102 (docs/disc-only-install.md): whether "original", the port's
 // Chinese text, can be played: `game_dir` is a PC install (BOF3.exe there -
 // its DAT\ is the port's; `importer.py install --base` refuses such a
 // directory) or `cache` (ConfigCacheDataRoot) holds loc\zh-CN, built from the
 // PC's DAT\. The DLL's rule too (dat_load.cpp RefuseOriginalWithoutChinese).
 bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& cache);
 
-// DIV-TBD-LX-1: the language on an install without the Chinese text, before
+// DIV-0102: the language on an install without the Chinese text, before
 // and after the dialog. A PC install (ConfigOriginalAvailable): true, nothing
 // changed. Otherwise false with `error` naming the languages held when
 // BOF3X_LANG says "original" or a tag not held, when bof3x.ini's language=
