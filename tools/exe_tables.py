@@ -180,6 +180,44 @@ def code_numbers(exe, pc):
     return out
 
 
+def bss_numbers(pc):
+    """The PC's pointer-shaped words into .bss that are numbers, not pointers
+    (docs/exe-import-engine.md section 7.2): {pc address: why}. No disc maps
+    .bss, so no disc tests these words; a pointer to a .bss variable is
+    4-aligned (every one the C runtime's data and the inventory lists hold is),
+    so a word into .bss is a number when it is `not 4-aligned` (packed bytes of
+    a record, such as the area tables' 12-byte rows), `two small halfwords` (each
+    below 0x100 or from 0xFF00: an x and a y, a width and a height - the
+    `MsgBox_PlacementTable` and `Title_Sprites` entries that
+    docs/exe-code-pointers-midfunc.md read), `text` (printable characters to a
+    NUL: the C runtime's `pen`, `%lx`), or `a column of numbers` (aligned by
+    chance in a record table whose column holds such numbers either side)."""
+    out = {}
+    for a in pointer_words(pc):
+        v = struct.unpack_from("<I", pc, a - DATA_LO)[0]
+        if target_class(v) != "bss":
+            continue
+        b = pc[a - DATA_LO:a - DATA_LO + 4]
+        n = len(b.rstrip(b"\0"))
+        if v % 4:
+            out[a] = "not 4-aligned"
+        elif all(h < 0x100 or h >= 0xFF00 for h in (v & 0xFFFF, v >> 16)):
+            out[a] = "two small halfwords"
+        elif n >= 2 and all(0x20 <= c < 0x7F for c in b[:n]):
+            out[a] = "text"
+    # A word aligned by chance in a record table's column of such numbers: two
+    # words of the same column (a stride of 8..32 bytes, on one side or both)
+    # are numbers by the rules above.
+    shape = set(out)
+    for a in pointer_words(pc):
+        if a in out or target_class(struct.unpack_from("<I", pc, a - DATA_LO)[0]) != "bss":
+            continue
+        if any((a - s in shape and a + s in shape) or (a + s in shape and a + 2 * s in shape)
+               or (a - s in shape and a - 2 * s in shape) for s in range(8, 36, 4)):
+            out[a] = "a column of numbers"
+    return out
+
+
 # ------------------------------------------------------------------ the recipe files
 
 def load_pointers(path=POINTERS):
@@ -221,9 +259,10 @@ def write_layout(rows):
                 "# The pointer words of BOF3.exe's initialised .data held as layout (docs/exe-import-engine.md\n"
                 "# section 7): the word at `pc` holds `target`, an address of the PC's layout - a symbols.toml\n"
                 "# [[func]] start by name, any other target as the address. `kind`: code / data / bss / rdata, the\n"
-                "# section the target is in; `number`, a word exe_tables.code_numbers classes a number that looks\n"
-                "# like an address into .text (no target: not the layout's to hold). A disc build fills every\n"
-                "# pointer word no disc places or rebuilds from here. Addresses only (CLAUDE.md rule 1).\n")
+                "# section the target is in; `number`, a word exe_tables.code_numbers / bss_numbers class a number\n"
+                "# that looks like an address into .text or .bss (no target: not the layout's to hold). A disc\n"
+                "# build fills every pointer word no disc places or rebuilds from here. Addresses only\n"
+                "# (CLAUDE.md rule 1).\n")
         f.write("\t".join(LAYOUT_COLS) + "\n")
         for a, kind, t in rows:
             f.write("0x%06X\t%s\t%s\n" % (a, kind, t))
@@ -830,9 +869,9 @@ def discs(paths):
 def decide_pointers(pc, images, numbers=()):
     """The PC's pointer-shaped words that are pointers: all but those every
     build that places them holds equal to the PC's (a number that only looks
-    like an address), and those `numbers` (code_numbers) classes numbers by
-    reading .text - which settles the words into .text no disc tests instead of
-    calling them pointers by default. [(pc, words, class)] runs, split by the
+    like an address), and those `numbers` (code_numbers, bss_numbers) classes
+    numbers by reading .text or by a .bss address's shape - which settles the
+    words no disc tests instead of calling them pointers by default. [(pc, words, class)] runs, split by the
     class of what they point at."""
     words = []
     for a in pointer_words(pc):
@@ -872,7 +911,9 @@ def cmd_recipe(a):
     pc, bss_end = pc_data(os.path.join(a.game, "BOF3.exe"))
     with open(os.path.join(a.game, "BOF3.exe"), "rb") as f:
         numbers = code_numbers(f.read(), pc)
-    print("%d pointer-shaped words into .text are numbers: %s" % (len(numbers), dict(collections.Counter(numbers.values()))))
+    numbers.update(bss_numbers(pc))
+    print("%d pointer-shaped words into .text or .bss are numbers: %s" % (len(numbers),
+                                                                         dict(collections.Counter(numbers.values()))))
     images = []
     for bid, disc in discs(a.disc):
         img, owner, ranges = disc_image(disc, bid)
@@ -880,7 +921,7 @@ def cmd_recipe(a):
         print("%s: %d ranges, %d bytes placed before the pointer mask" % (bid, len(ranges), sum(o is not None for o in owner)))
     pointers = decide_pointers(pc, images, numbers)
     cand = len(pointer_words(pc))
-    # The layout's `number` rows: the words code_numbers settles that the discs
+    # The layout's `number` rows: the words code_numbers / bss_numbers settle that the discs
     # alone would have called pointers (the rest every disc already holds equal).
     words = lambda runs: {p + 4 * k for p, n, _ in runs for k in range(n)}
     numbers = sorted(words(decide_pointers(pc, images)) - words(pointers))
@@ -923,8 +964,8 @@ def cmd_recipe(a):
                 "# word there is its own build's address, so base/exe/ leaves them unfilled; the PC's\n"
                 "# pointer-shaped words every disc that places them holds equal are numbers, not\n"
                 "# pointers, and are not listed, nor are the words into .text that are no function start\n"
-                "# (exe_tables.code_numbers; exe-layout.tsv's `number` rows). Addresses and counts only\n"
-                "# (CLAUDE.md rule 1).\n"
+                "# and the words into .bss that cannot be a variable's address (exe_tables.code_numbers,\n"
+                "# bss_numbers; exe-layout.tsv's `number` rows). Addresses and counts only (CLAUDE.md rule 1).\n"
                 "pc\twords\tto\n")
         for p, n, cls in pointers:
             f.write("0x%06X\t%d\t%s\n" % (p, n, cls))

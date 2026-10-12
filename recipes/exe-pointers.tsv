@@ -4,8 +4,8 @@
 # word there is its own build's address, so base/exe/ leaves them unfilled; the PC's
 # pointer-shaped words every disc that places them holds equal are numbers, not
 # pointers, and are not listed, nor are the words into .text that are no function start
-# (exe_tables.code_numbers; exe-layout.tsv's `number` rows). Addresses and counts only
-# (CLAUDE.md rule 1).
+# and the words into .bss that cannot be a variable's address (exe_tables.code_numbers,
+# bss_numbers; exe-layout.tsv's `number` rows). Addresses and counts only (CLAUDE.md rule 1).
 pc	words	to
 0x5DA00C	2	text
 0x5DA01C	1	text
@@ -89,7 +89,6 @@ pc	words	to
 0x5E0388	5	data
 0x5E03A4	1	data
 0x5E03B4	1	data
-0x5E08C4	1	bss
 0x5E0B58	14	data
 0x5E0BC0	3	data
 0x5E0FB0	25	data
@@ -1043,23 +1042,6 @@ pc	words	to
 0x61E810	1	data
 0x61E818	1	data
 0x61E848	1	text
-0x61E850	1	bss
-0x61E85C	1	bss
-0x61E868	1	bss
-0x61E874	1	bss
-0x61E880	1	bss
-0x61E88C	1	bss
-0x61E898	1	bss
-0x61E8A4	1	bss
-0x61E8B0	1	bss
-0x61E8BC	1	bss
-0x61E8C8	1	bss
-0x61E8D4	1	bss
-0x61E8E0	1	bss
-0x61E8EC	1	bss
-0x61E8F8	1	bss
-0x61E904	1	bss
-0x61E910	1	bss
 0x61E9EC	4	data
 0x61EA7C	11	data
 0x61EAB8	1	data
@@ -1072,7 +1054,6 @@ pc	words	to
 0x61FB6C	1	data
 0x61FB74	1	data
 0x61FB78	1	text
-0x61FBD0	1	bss
 0x61FD44	2	data
 0x61FED0	12	data
 0x61FF10	1	data
@@ -1090,8 +1071,6 @@ pc	words	to
 0x620010	5	data
 0x620030	1	data
 0x620044	1	data
-0x620058	1	bss
-0x620064	1	bss
 0x6200B4	1	data
 0x6200F4	2	data
 0x620100	3	data
@@ -1108,11 +1087,7 @@ pc	words	to
 0x620310	15	text
 0x6203BC	3	text
 0x6203E0	2	text
-0x6203F8	1	bss
 0x620404	1	bss
-0x620410	1	bss
-0x62041C	1	bss
-0x620428	1	bss
 0x62048C	1	data
 0x6205D0	8	data
 0x6205F0	2	text
@@ -1125,20 +1100,6 @@ pc	words	to
 0x620654	1	data
 0x62065C	1	data
 0x620664	2	text
-0x6206A4	1	bss
-0x6206B0	1	bss
-0x6206BC	1	bss
-0x6206C8	1	bss
-0x6206D4	1	bss
-0x6206E0	1	bss
-0x6206EC	1	bss
-0x6206F8	1	bss
-0x620704	1	bss
-0x620710	1	bss
-0x62071C	1	bss
-0x620728	1	bss
-0x620734	1	bss
-0x620740	1	bss
 0x6207FC	1	data
 0x620FDC	64	data
 0x6210E8	1	data
@@ -1190,13 +1151,11 @@ pc	words	to
 0x62460C	1	data
 0x624614	1	data
 0x62461C	2	text
-0x624624	2	bss
 0x62462C	15	text
 0x6246D8	3	text
 0x6246FC	9	text
 0x624744	1	data
 0x624758	1	data
-0x6255B4	2	bss
 0x6255C4	4	data
 0x6255D8	1	data
 0x6255E8	1	data
@@ -1243,15 +1202,6 @@ pc	words	to
 0x627B10	1	data
 0x627B18	1	data
 0x627B28	1	data
-0x627B78	1	bss
-0x627B84	1	bss
-0x627B90	1	bss
-0x627B9C	1	bss
-0x627BA8	1	bss
-0x627BB4	1	bss
-0x627BC0	1	bss
-0x627BCC	1	bss
-0x627BD8	1	bss
 0x628234	13	data
 0x628334	10	data
 0x628584	22	data
@@ -1302,7 +1252,6 @@ pc	words	to
 0x62C128	1	data
 0x62C130	5	data
 0x62C15C	1	data
-0x62C298	1	bss
 0x62C2EC	3	data
 0x62C790	12	data
 0x62C85C	12	data
@@ -1389,17 +1338,6 @@ pc	words	to
 0x630CB4	1	data
 0x630CBC	1	data
 0x630CD0	2	text
-0x630CD8	1	bss
-0x630CE4	1	bss
-0x630CF0	1	bss
-0x630CFC	1	bss
-0x630D08	1	bss
-0x630D14	1	bss
-0x630D20	1	bss
-0x630D2C	1	bss
-0x630D38	1	bss
-0x630D44	1	bss
-0x630D50	1	bss
 0x631124	15	data
 0x631678	30	data
 0x63171C	2	data
@@ -1410,20 +1348,6 @@ pc	words	to
 0x63179C	1	data
 0x6317A4	1	data
 0x6317AC	1	data
-0x6317B8	1	bss
-0x6317C4	1	bss
-0x6317D0	1	bss
-0x6317DC	1	bss
-0x6317E8	1	bss
-0x6317F4	1	bss
-0x631800	1	bss
-0x63180C	1	bss
-0x631818	1	bss
-0x631824	1	bss
-0x631830	1	bss
-0x63183C	1	bss
-0x631848	1	bss
-0x631854	1	bss
 0x6319EC	7	data
 0x631E1C	33	data
 0x631EF0	3	data
@@ -1795,7 +1719,6 @@ pc	words	to
 0x645A80	1	data
 0x645A90	1	data
 0x645AA4	1	data
-0x645B78	1	bss
 0x645B88	1	data
 0x6464E4	28	data
 0x646AEC	76	data
@@ -2108,7 +2031,6 @@ pc	words	to
 0x64E074	31	text
 0x64E118	12	text
 0x64E324	1	data
-0x64E328	1	bss
 0x64E3EC	62	text
 0x64E4FC	10	text
 0x64E72C	4	data
@@ -2148,7 +2070,6 @@ pc	words	to
 0x653150	12	text
 0x6536C0	8	text
 0x653830	8	text
-0x6538AC	1	bss
 0x653910	5	text
 0x653924	1	data
 0x65392C	5	text
@@ -2198,7 +2119,6 @@ pc	words	to
 0x653EDC	25	text
 0x653F58	3	text
 0x653F68	3	text
-0x653F8C	3	bss
 0x653F98	3	text
 0x653FBC	24	text
 0x654028	177	text
@@ -2222,7 +2142,6 @@ pc	words	to
 0x654798	5	text
 0x6547C0	28	text
 0x65483C	7	text
-0x65487C	1	bss
 0x654898	9	text
 0x654904	16	text
 0x654958	36	text
@@ -2245,7 +2164,6 @@ pc	words	to
 0x655170	26	text
 0x6551E4	9	text
 0x655210	1	data
-0x655214	1	bss
 0x655220	35	text
 0x6552BC	224	text
 0x6565CC	3	data
@@ -2269,14 +2187,12 @@ pc	words	to
 0x656A44	15	text
 0x656A84	8	text
 0x656AAC	16	text
-0x656AEC	1	bss
 0x656B00	9	bss
 0x658DB0	34	text
 0x65A4F0	2	text
 0x65A524	11	text
 0x65A5CC	8	text
 0x65A5F4	5	text
-0x65A61C	1	bss
 0x65A62C	19	text
 0x65A67C	7	text
 0x65A69C	7	text
@@ -2329,15 +2245,12 @@ pc	words	to
 0x65BB28	20	text
 0x65BB80	35	text
 0x65BC1C	24	text
-0x65BC7C	2	bss
 0x65BC84	1	data
 0x65BC88	20	text
 0x65BCE8	5	text
 0x65BD0C	3	text
 0x65BD58	46	text
-0x65BE24	1	bss
 0x65BE34	7	text
-0x65BE64	1	bss
 0x65BE74	11	text
 0x65BEC0	16	text
 0x65BF18	10	text
@@ -2653,8 +2566,6 @@ pc	words	to
 0x66A4D0	1	data
 0x66A4D8	1	data
 0x66A4E0	1	data
-0x66ADCC	1	bss
-0x66AE24	2	bss
 0x66AE40	13	text
 0x66AEC8	18	text
 0x66AF10	5	data
@@ -2674,7 +2585,6 @@ pc	words	to
 0x66B58C	10	data
 0x66B5C4	5	data
 0x66B6AC	23	data
-0x66BC18	1	bss
 0x66C464	1	data
 0x66C46C	1	data
 0x66C474	1	data
@@ -2735,7 +2645,6 @@ pc	words	to
 0x66C62C	1	data
 0x66C634	1	data
 0x66C63C	1	data
-0x66C660	1	bss
 0x6722BC	2	text
 0x6722C8	6	text
 0x6722E4	30	text
@@ -2749,10 +2658,6 @@ pc	words	to
 0x672674	1	data
 0x672728	1	data
 0x67273C	1	data
-0x6727B8	1	bss
-0x672840	1	bss
-0x672858	1	bss
-0x6728CC	1	bss
 0x672930	3	text
 0x672940	1	text
 0x672948	2	rdata
@@ -2766,9 +2671,6 @@ pc	words	to
 0x674BD8	1	bss
 0x674BE0	1	bss
 0x674E58	2	data
-0x674EC0	5	bss
-0x674EE4	3	bss
-0x674F24	3	bss
 0x675134	1	rdata
 0x67513C	1	rdata
 0x675144	1	rdata
