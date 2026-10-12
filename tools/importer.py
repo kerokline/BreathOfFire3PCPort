@@ -26,8 +26,8 @@ A chunk no disc carries keeps the PC install as its only source; its class
 (region_diff.py's, PC against JP) decides its layer. Besides `copy` and
 `type1`, three transforms make a disc a source of what the port changed
 (`widen` the enemy tables, whose names go to the language layer; `icons`;
-`ryud`), and a PSX disc's own section can stand in (`own`) where the PC kept
-Japan's language or drew its own art - docs/importer-transforms.md (step 3).
+`ryud`; `hold`, docs/arena-edits.md), and a PSX disc's own section can stand in (`own`) where the PC kept
+Japan's language or drew its own art, or edited an arena - docs/importer-transforms.md (step 3).
 `build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
 PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
 step 8; from a disc the data pointers rebuilt by the map run backwards,
@@ -244,8 +244,46 @@ def ryud_byte(s):
     return s[:RYUD_BYTE] + bytes([RYUD_IS]) + s[RYUD_BYTE + 1:]
 
 
+# The 27A arenas' loop (docs/arena-edits.md section 4). An arena is three u32
+# offsets, one bank per party member in the order its name's digits list them;
+# a bank opens with four u32 offsets - images, palette, scripts, frame entries
+# (Sprite_SetFrameQueueUpload reads [0], [8], [0xC]) - and its scripts are a
+# u16 offset table, each script `frames, steps`, then (hold, frame) per step
+# (sprite-draw-order.md, the animation script). Member A's bank in BPLD27A and
+# BPLU27A holds two identical scripts, a loop of four frames at four ticks a
+# step on every disc; the port held the second of them eight ticks a step - the
+# arenas' only difference from the disc's decode.
+HOLD_FILES, HOLD_BANK, HOLD_STEPS, HOLD_WAS, HOLD_IS = ("BPLD27A", "BPLU27A"), 2, 4, 4, 8   # bank 2: member A
+
+
+def arena_bank(a, k):
+    """(start, end) of the k-th bank of a decoded arena."""
+    at = struct.unpack_from("<3I", a, 0)
+    return at[k], (at[k + 1] if k < 2 else len(a))
+
+
+def hold_loop(s):
+    """A PSX disc's 27A arena, decoded, with the second of member A's two
+    four-step loops held HOLD_IS ticks a step; None when it is not that shape."""
+    try:
+        a = bytearray(type1.decode(s))
+    except type1.Type1Error:
+        return None
+    lo, hi = arena_bank(a, HOLD_BANK)
+    scripts = lo + struct.unpack_from("<I", a, lo + 8)[0]
+    n = struct.unpack_from("<H", a, scripts)[0] // 2
+    loops = [scripts + o for o in struct.unpack_from("<%dH" % n, a, scripts)
+             if a[scripts + o:scripts + o + 2] == bytes([HOLD_STEPS, HOLD_STEPS])
+             and all(a[scripts + o + 2 + 2 * i:scripts + o + 4 + 2 * i] == bytes([HOLD_WAS, i]) for i in range(HOLD_STEPS))]
+    if len(loops) != 2 or a[loops[0]:loops[0] + 2 + 2 * HOLD_STEPS] != a[loops[1]:loops[1] + 2 + 2 * HOLD_STEPS]             or not lo < loops[0] < loops[1] < hi:
+        return None
+    for i in range(HOLD_STEPS):
+        a[loops[1] + 2 + 2 * i] = HOLD_IS
+    return bytes(a)
+
+
 TRANSFORMS = {"copy": lambda s: s, "type1": type1.decode, "widen": widen_enemies,
-              "icons": respace_icons, "ryud": ryud_byte}
+              "icons": respace_icons, "ryud": ryud_byte, "hold": hold_loop}
 
 
 def open_source(path):
@@ -273,7 +311,8 @@ def disc_index(src):
                 idx[sha(type1.decode(b))].append(("type1", key, i))
             for how, wanted in (("widen", dest & 0x7FFFFFFF == ENEMY_DEST),
                                 ("icons", t == 3 and dest == ICON_PAGE and stem == "FIRST"),
-                                ("ryud", stem in RYUD_FILES)):
+                                ("ryud", stem in RYUD_FILES),
+                                ("hold", t == 1 and stem in HOLD_FILES and src.id.startswith("psx-"))):
                 out = TRANSFORMS[how](b) if wanted else None
                 if out is not None:
                     idx[sha(out)].append((how, key, i))
@@ -330,8 +369,10 @@ def why_pc_only(stem, c, cls):
     if cls is None:
         return "unpaired", "no census pair"
     k, what = cls[0], cls[1]
+    if k == "layout" and stem in ARENA_FROM:
+        return "pc-edit", "PL012's PC arena, which the port gives START (arena-edits.md 5)"
     if k == "layout" and stem in TYPE1_EDITS:
-        return "pc-edit", "type 1 decoded, then edited by the port (type1-compression.md section 3)"
+        return "pc-edit", "type 1 decoded, then members' animation scripts edited by the port (arena-edits.md)"
     return k, what
 
 
@@ -350,8 +391,13 @@ OWN_WHY = {
     "page-clut": "the palette the disc's own repainted area page is drawn with",
     "div-0080": "AREA004's map band and placement map as every later disc has them: DIV-0080's walls already in",
     "port-art": "the disc's own dial page, the PlayStation's buttons where the port drew its keyboard legend",
+    "arena": "the disc's own arena, decoded: the members' animation scripts as the PlayStation has them, where the port edited them",
+    "start-arena": "PL012's arena, decoded from the disc, as the PC gives START (the port's choice)",
 }
 OWN_FROM = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de")
+# The port-edited arenas (docs/arena-edits.md): the stand-in is a type-1
+# section, so it is decoded; START's is PL012's, as the PC has it.
+OWN_TYPE1, ARENA_FROM = ("arena", "start-arena"), {"START": "PL012"}
 
 
 def load_pairs(region_dir, discs):
@@ -376,6 +422,8 @@ def load_pairs(region_dir, discs):
 def own_sections(c, k, jp_at, carried, discs, pairs, stem):
     """[(build, EMI key, section, sha256, why)] for each PSX disc that lacks the
     chunk but carries its own form of it (OWN_WHY)."""
+    if k == "pc-edit":
+        return arena_owns(discs, carried, stem)
     out = []
     for s in discs:
         if s.id not in OWN_FROM or s.id in carried or not jp_at:
@@ -404,6 +452,23 @@ def own_sections(c, k, jp_at, carried, discs, pairs, stem):
         if c.kind == 1 and (t != 3 or dest != c.tag):
             continue
         out.append((s.id, key, i, sha(b), why))
+    return out
+
+
+def arena_owns(discs, carried, stem):
+    """The stand-ins of a port-edited arena: each PSX disc's one type-1 section
+    of the same-named EMI (PL012's for START), hashed as decoded."""
+    out = []
+    want = ARENA_FROM.get(stem, stem)
+    for s in discs:
+        if s.id not in OWN_FROM or s.id in carried:
+            continue
+        found = [(key, i, b) for key in sorted(s.build.emis) if key.rsplit("/", 1)[-1][:-4] == want
+                 for i, t, dest, b in s.sections(key).values() if t == type1.TYPE1]
+        if len(found) != 1:
+            raise SystemExit("%s: %d type-1 sections named %s on %s" % (stem, len(found), want, s.id))
+        key, i, b = found[0]
+        out.append((s.id, key, i, sha(type1.decode(b)), "start-arena" if stem in ARENA_FROM else "arena"))
     return out
 
 
@@ -454,6 +519,8 @@ def cmd_recipes(a):
                     k, what = "pc-icons", "the item-type icons respaced 24 to 32 px by the port (respace-icons)"
                 elif "ryud" in hows:
                     k, what = "pc-byte", "the disc's section with the PC's one byte at +0x7ACE (region-diff.md 9)"
+                elif "hold" in hows:
+                    k, what = "pc-hold", "type 1 decoded, the second of member A's two four-step loops held 8 ticks a step as the port has it (arena-edits.md 4)"
             else:
                 k, what = why_pc_only(stem, c, row)
                 layer = "loc/" + tag_of(TARGET) if (k in TEXT_CLASSES or c.kind == 3) else "base"
@@ -493,7 +560,7 @@ def cmd_recipes(a):
         "# Every chunk of the PC port's 742 DAT/ containers, in file order: kind, tag, size,",
         "# the sha256 of its payload, the cache layer it belongs to, why, and every held build",
         "# that carries it byte for byte - [build, how, EMI, section] with how `copy`,",
-        "# `type1` (tools/type1.py), `widen`, `icons` or `ryud` (importer.py's transforms) -",
+        "# `type1` (tools/type1.py), `widen`, `icons`, `ryud` or `hold` (importer.py's transforms) -",
         "# and last the PC install itself, [pc-zh, chunk, index]. `base` / `names`: the",
         "# enemy table's stats and where its names go; `own`: a disc's own section that",
         "# stands in when no source carries the chunk (docs/importer-transforms.md).",
@@ -557,7 +624,7 @@ def chunk_bytes(kind, tag, body):
 # Why a chunk is still missing, by (layer, class): the build's report.
 MISSING_WHY = {
     "bank": "audio banks, the disc's VAG samples as WAV: step 6 (wave-from-vag); from a PSP disc all but one bank in 16 containers, whose dropped tone only a PSX disc or the PC carries (psp-only-build.md 2.1)",
-    "pc-edit": "the port's edits to type-1 arenas, unread (type1-compression.md 3): the PC install only",
+    "pc-edit": "the port's edits to type-1 arenas (arena-edits.md): the PC install, or a PSX disc's own arena standing in",
     "art": "the port's dial page: the PC install, or a PSX disc whose own page stands in",
     "enemy-names": "the enemy tables' Chinese names",
 }
@@ -597,7 +664,7 @@ def get_chunk(f, slot, ch, chunked):
         for b, key, sec, h in owns_of(ch):
             if b != s.id:
                 continue
-            body = s.get(f["name"], slot, ("copy", key, sec))
+            body = s.get(f["name"], slot, ("type1" if ch.get("own_why") in OWN_TYPE1 else "copy", key, sec))
             if sha(body) != h:
                 raise SystemExit("%s chunk %d from %s's own section: hash differs from the recipe" % (f["name"], slot, b))
             return s.id, ("own", key, sec), body, None
