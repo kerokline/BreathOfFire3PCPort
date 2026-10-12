@@ -566,6 +566,13 @@ them equal at the map, and skipping them would blind the hash to the game's
 own writes there (`Music_LoadedTrack`, the config words); `--with-filled`
 adds them.
 
+The gate's pair (2026-10-12, attract, 6 minutes, details in
+[`disc-only-install.md`](disc-only-install.md) 5): the disc-only install
+against the PC-plus-US cache over the real install, the same scenes; the
+state hash identical at tick 0 and first differs at tick 1 (the VRAM shadow
+and page `0x903000`), then the field scene's pages from tick 1310 - the data
+the two sources load, not the `.data` image, which the skip list covers.
+
 ## 5. What is left
 
 1. ~~**The data pointers that do not rebuild** (JP 2,821 of 9,959): the
