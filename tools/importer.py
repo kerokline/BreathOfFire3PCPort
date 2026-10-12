@@ -64,6 +64,7 @@ import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
 import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
+import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 TARGET = "pc-zh"
@@ -266,9 +267,16 @@ def hold_loop(s):
     """A PSX disc's 27A arena, decoded, with the second of member A's two
     four-step loops held HOLD_IS ticks a step; None when it is not that shape."""
     try:
-        a = bytearray(type1.decode(s))
+        a = type1.decode(s)
     except type1.Type1Error:
         return None
+    return hold_arena(a)
+
+
+def hold_arena(d):
+    """hold_loop on an arena already decompressed (a PSP disc's, which ships it
+    so; tools/psp_standins.py); None when it is not that shape."""
+    a = bytearray(d)
     lo, hi = arena_bank(a, HOLD_BANK)
     scripts = lo + struct.unpack_from("<I", a, lo + 8)[0]
     n = struct.unpack_from("<H", a, scripts)[0] // 2
@@ -668,7 +676,8 @@ def get_chunk(f, slot, ch, chunked):
             if sha(body) != h:
                 raise SystemExit("%s chunk %d from %s's own section: hash differs from the recipe" % (f["name"], slot, b))
             return s.id, ("own", key, sec), body, None
-    return None
+    # PSP discs alone (base_policy psp): the PSP's own section (docs/psp-stand-ins.md)
+    return psp_standins.stand_in(f, slot, ch, chunked)
 
 
 def cmd_build(a):
@@ -882,6 +891,7 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
              "recipe_sha256 = %s" % toml_str(rsha),
              "built = %s" % toml_str(datetime.datetime.now().isoformat(timespec="seconds")),
              ""]
+    lines += psp_standins.manifest_lines(sources)     # [build] base_policy: the launcher's key (LT)
     for s in sources:
         lines += ["[[source]]", "build = %s" % toml_str(s.id), "path = %s" % toml_str(os.path.basename(os.path.normpath(s.path))), ""]
     lines += ["[cache]", "assets = ["]          # a table of its own, not the last [[source]]'s
@@ -2061,6 +2071,7 @@ def cmd_check(a):
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
     serrs += ["seq.py: " + e for e in seq.check_fixture(builds)]   # fixtures/bgm.tsv's shape and format versions
     serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
+    serrs += ["psp_standins.py: " + e for e in psp_standins.check(recipe=a.recipe)]   # recipes/psp-standins.toml
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
     werrs = cache_walk.check()
     for e in (errs + oerrs + serrs + werrs)[:30]:
@@ -2068,7 +2079,7 @@ def cmd_check(a):
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
           % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
              len(oerrs)))
-    print("seq / at3 check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, recipes/psp.snd.toml, %d error(s)" % len(serrs))
+    print("seq / at3 check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, recipes/psp.snd.toml, recipes/psp-standins.toml, %d error(s)" % len(serrs))
     print("cache_walk check: the engine's cache walk against install on a synthetic cache, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
     return exe_tables.cmd_check(a) | (1 if errs else 0)
