@@ -741,6 +741,30 @@ window (`keys` 0 in `exe-places.tsv`). JP 9 places more, 662 number bytes
 (of the 1,026 [`exe-engine-own.md`](exe-engine-own.md) 4.4 found on the
 disc); `placed_differ` unchanged by it on every build.
 
+**A window between two code pointers** (story-flag seed, 2026-10-12): a
+16-byte window of numbers with no pointer word, a code pointer word on
+either side and more than one byte value (`code_windows`) is a key too,
+matched only where the build's words either side are code addresses, and
+tried whenever no pointer key places the region (before, a region whose
+pointer votes went to a place that placed nothing was left). It found
+`Scenario_SubInit`'s 16-byte story-flag seed (`0x662CD8`, between the two
+code pointers of the dispatch table `0x662CD0` and `Field_ModeTailKinds`):
+the region `0x662C68..0x662F28` mixes `SHOP.EMI`'s words, the scenario
+data pointers and `GAME.EMI`'s run, and its code-pointer votes went to
+`SHOP.EMI`, where that run does not agree. One place per PlayStation
+build, `0x662CA4..0x662F24` from `ETC/GAME.EMI#0` (JP `0x801C9470`, US
+`0x801C8478`; the seed at JP `0x801C94A4`, the twin `title_states.cpp`
+cites, right after the PSX table's own two entries `0x801A8C34` /
+`0x801A8CB4`), 32 bytes agreeing, 4 keys; it carries the seed and the 8
+bytes at `0x662DE8` (`FieldTail_DropInMove`'s table), both byte-identical
+to the PC's, so their two `game-value` rows leave `exe-gaps.tsv` on those
+five builds (US: 455 gap ranges to 453, 2,187 game-value non-zero bytes to
+2,183). Nothing else moved: `placed_differ` unchanged, `identical` +4 on
+each. The PSP builds' `GAME.EMI` holds the same run with PSX-range code
+words (`0x801A8C34`), which `code_word`'s PSP range excludes: widening it
+moved some 20 other PSP places (one `AREA104.EMI` run placed five times),
+so it was not taken and the PSP builds keep both rows.
+
 ### 7.5 Before and after, per build
 
 `exe.toml`'s counts at `6e6b4f3b` and now (bytes of the 638,976):

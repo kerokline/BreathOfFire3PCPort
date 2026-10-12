@@ -648,6 +648,29 @@ the end batch's; its fake manifest changed here and was not run); anything
 played or heard; a hosted run whose ini names a mod's exe layer (the host
 suite covers the rule only).
 
+## 11. `main`'s DIV-0102 beside the suites (the merge of 2026-10-12)
+
+`main` (PR #55) changed the same dialog: on an install with neither
+`BOF3.exe` nor the cache's `loc\zh-CN`, the Language box drops "Chinese (PC
+script)" and its note says why (DIV-0102). The merge (`psp/main-merge`)
+keeps both. `DialogState` holds the suites, the player's choices and the
+chord as before, and also `original` (`ConfigOriginalAvailable`). `Populate`,
+`LanguageChosen` and `ReadBack` count the box's entries from 1 when the
+Chinese is not offered. The `installed[]` flags of `main`'s PSP-extras boxes
+are gone with the boxes, which the suites replaced.
+
+Measured on the merge (headless, an ini-less copy of the launcher, a US
+disc-only install at `C:\b3g` built with `--lang en-US`):
+- `BOF3X_LANG` unset: `a disc-only install, no Chinese text: language en-US,
+  the first it holds (DIV-0102)`, then exit 0.
+- `BOF3X_LANG=fr-FR` (no layer held): the launcher refuses with "The
+  languages it holds: en-US.", exit 1.
+
+So on a PSP-only install the Language box defaults to the first language it
+holds, not the Chinese (D250's note); the launcher host suite has 215
+checks, 0 failures. The box itself was not driven (no `dialog_test.py`: the
+end batch was playing live).
+
 ## For the other files
 
 **Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): DIV E is **DIV-0107**, written with TG's amendment in it; DIV-0086 amended; the README row, STATUS, HANDOFF and owner-review are in. `launcher-settings.md` and `opt-layers.md` got pointers to this doc.

@@ -36,6 +36,9 @@ struct DialogState {
     std::vector<int> choice = std::vector<int>(std::size(suites_gen::kSuites), -1);
     // The Jukebox's battle-chord box (MusicPlayerRun): -1 untouched, 0 off, 1 on.
     int chord = -1;
+    // DIV-0102: whether "Chinese (PC script)" is offered (ConfigOriginalAvailable);
+    // without it the box holds the languages alone, and its note says why.
+    bool original = true;
 };
 
 // ---- DIV-0087: the music source and the cache folder --------------------------
@@ -119,7 +122,7 @@ void BrowseCache(HWND dlg) {
 int Selected(HWND dlg, int id);  // below, with the combo box helpers
 
 std::string LanguageChosen(HWND dlg, const DialogState& state) {
-    const int lang = Selected(dlg, IDC_LANGUAGE);
+    const int lang = Selected(dlg, IDC_LANGUAGE) + (state.original ? 0 : 1);
     return lang >= 1 && static_cast<size_t>(lang) <= state.languages.size()
                ? state.languages[static_cast<size_t>(lang) - 1]
                : std::string();
@@ -334,13 +337,18 @@ void Tick(HWND dlg) {
 void Populate(HWND dlg, DialogState& state) {
     const Config& cfg = *state.cfg;
 
-    AddItem(dlg, IDC_LANGUAGE, L"Chinese (PC script)");
+    if (state.original) AddItem(dlg, IDC_LANGUAGE, L"Chinese (PC script)");
     int selected = 0;
     for (size_t i = 0; i < state.languages.size(); ++i) {
         AddItem(dlg, IDC_LANGUAGE, LanguageLabel(state.languages[i]));
-        if (state.languages[i] == cfg.language) selected = static_cast<int>(i) + 1;
+        if (state.languages[i] == cfg.language) selected = static_cast<int>(i) + (state.original ? 1 : 0);
     }
-    if (state.languages.empty()) {
+    if (!state.original) {
+        // DIV-0102: a disc-only install has no Chinese text to offer.
+        SetDlgItemTextW(dlg, IDC_LANGNOTE, state.languages.empty()
+                                               ? L"No Chinese (PC only), no layer: importer.py --lang."
+                                               : L"Chinese (PC script): the PC install's only.");
+    } else if (state.languages.empty()) {
         // Offering an option that cannot work is worse than explaining why it
         // is missing. The overlays are built, not shipped.
         SetDlgItemTextW(dlg, IDC_LANGNOTE,
@@ -386,10 +394,11 @@ void Populate(HWND dlg, DialogState& state) {
 // Direct3D, 0 Software (config.h, Cfg_RenderMode).
 void ReadBack(HWND dlg, const DialogState& state) {
     Config& cfg = *state.cfg;
-    const int lang = Selected(dlg, IDC_LANGUAGE);
+    const int lang = Selected(dlg, IDC_LANGUAGE) + (state.original ? 0 : 1);
     cfg.language = lang >= 1 && static_cast<size_t>(lang) <= state.languages.size()
                        ? state.languages[static_cast<size_t>(lang) - 1]
                        : kLanguageOriginal;
+    cfg.language_named = true;   // the box's choice (DIV-0102)
     const int look = Selected(dlg, IDC_FILTER);
     cfg.filter = look >= 1 ? Filter::kPoint : Filter::kLinear;
     cfg.satpixie = look == 2;
@@ -1029,6 +1038,7 @@ bool ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     state.cfg = &cfg;
     state.languages = ConfigLanguagesAvailable(game_dir, ConfigCacheDataRoot(cfg));
     state.game_dir = game_dir;
+    state.original = ConfigOriginalAvailable(game_dir, ConfigCacheDataRoot(cfg));  // DIV-0102
     padnav::SetMap(cfg.bindings.pad);
     const INT_PTR result = DialogBoxParamW(GetModuleHandleW(nullptr),
                                            MAKEINTRESOURCEW(IDD_CONFIG), nullptr, Proc,

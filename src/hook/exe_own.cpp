@@ -1,9 +1,9 @@
 // The .data bytes no disc carries that are the port's own (exe_own.h;
 // docs/exe-engine-own.md). Every region is defined by what it means - the
 // file names the recipes already list, the strings the port's Windows layer
-// passes, initial values, two computed tables - never as a copy of the
-// exe's bytes (CLAUDE.md rule 1). Each is verified against BOF3.exe's .data
-// at every start (ExeOwn_CheckAtStart).
+// passes, initial values, two computed tables, the default field buttons
+// by name - never as a copy of the exe's bytes (CLAUDE.md rule 1). Each is
+// verified against BOF3.exe's .data at every start (ExeOwn_CheckAtStart).
 #include "hook/exe_own.h"
 
 #include <cmath>
@@ -16,6 +16,7 @@
 #include "hook/exe_image.h"
 #include "hook/exe_layout.h"
 #include "hook/log.h"
+#include "input/bindings.h"
 
 namespace bof3 {
 namespace {
@@ -69,6 +70,28 @@ void Words(std::uint8_t* at, std::uint32_t size, std::initializer_list<std::uint
         std::memcpy(at, &w, 4);
         at += 4;
     }
+}
+
+void FieldButtonDefaults(std::uint8_t* at, std::uint32_t size) {
+    // The field's button map Boot_Task copies to 0x903580 (nine pad words;
+    // docs/controls.md section 2.1): the PlayStation button of each action,
+    // the Japanese release's assignment (circle speaks and confirms, cross
+    // acts and cancels), which the Config screen's Init writes for its six
+    // lines too. Speak and confirm carry L2 and R2 as well, as the Config
+    // screen's rebinding ORs them back in. Then a zero padding halfword.
+    using namespace bof3x::input;
+    constexpr std::uint16_t kSpeak = kCircle | kL2 | kR2;   // word 0
+    constexpr std::uint16_t kMove = kSquare;                // word 1
+    constexpr std::uint16_t kMenu = kTriangle;              // word 2, Field_MenuButton
+    constexpr std::uint16_t kView = kR1;                    // word 3
+    constexpr std::uint16_t kChange = kL1;                  // word 4
+    constexpr std::uint16_t kWord5 = kSelect;               // word 5: no line of the Config screen, no reader alone
+    constexpr std::uint16_t kAction = kCross;               // word 6
+    constexpr std::uint16_t kConfirm = kCircle | kL2 | kR2; // word 7, Field_ConfirmButtons
+    constexpr std::uint16_t kCancel = kCross;               // word 8, Field_CancelButtons
+    const std::uint16_t words[10] = {kSpeak, kMove, kMenu, kView, kChange, kWord5, kAction, kConfirm, kCancel, 0};
+    if (size != sizeof words) Fatal("exe_own: the field button map's region is %u bytes", (unsigned)size);
+    std::memcpy(at, words, sizeof words);
 }
 
 void DatNames(std::uint8_t* at, std::uint32_t size) {
@@ -180,6 +203,7 @@ struct Row {
 constexpr Row kRows[] = {
     {{0x64FFE4, 0x652894, "Dat_FileNames' 742 names (recipes/pc-zh.toml)"}, DatNames},
     {{0x652894, 0x6528A9, "the DAT directory format and the save files' pattern"}, DatFormats},
+    {{0x656AEC, 0x656B00, "the field button map's defaults Boot_Task copies (a rule)"}, FieldButtonDefaults},
     {{0x65DA44, 0x65DA50, "Cfg_Fullscreen, Cfg_RenderMode, Cursor_Hidden: 1"}, CfgInitial},
     {{0x65DA54, 0x65DA76, "WinMain's messages and the logo AVI's name"}, WinMainMessages},
     {{0x65DA84, 0x65DA96, "the window class and the icon's name"}, WindowNames},
