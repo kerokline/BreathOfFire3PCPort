@@ -83,9 +83,9 @@ it past the launcher (a harness: `tools/attract_run.py` defaults `--lang` to
 ## 3. The bytes no disc carries (US)
 
 `recipes/exe-gaps.tsv` classes them per build; `bof3x.log` lists each `gap`
-range once at start (`BOF3X_EXEIMAGE  gap ...`). For the US image: 455 gap
-ranges, 5,435 bytes, of which the PC has 3,349 non-zero - Capcom game values
-no disc carries in any shape found (2,187 non-zero bytes, 321 ranges),
+range once at start (`BOF3X_EXEIMAGE  gap ...`). For the US image: 453 gap
+ranges, 5,411 bytes, of which the PC has 3,345 non-zero - Capcom game values
+no disc carries in any shape found (2,183 non-zero bytes, 319 ranges),
 bytes on the disc the places miss (818, 53), DIV-0055's re-laid plates (106,
 17) and the eight language addresses no layer writes (238, 64). Read from
 the code (`analysis/pc_xref.json`, `symbols.toml`), **not played**; what a
@@ -104,6 +104,14 @@ copies to `0x903580`: zero there meant a New Game with every action
 unbound) left this list on 2026-10-12: they are a rule of the engine now,
 the default button of each action by name ([`controls.md`](controls.md)
 2.1), held in `exe_own.cpp` and verified against `BOF3.exe` when it is there.
+
+So did the 16 bytes `Scenario_SubInit` copies into the story flags when a
+scenario starts (`0x662CD8`, zero there: flags 3, 0x19 and 0x1B clear at
+every scenario start) and the 8 at `0x662DE8` (`FieldTail_DropInMove`'s
+`Party_DropIn` argument table): the PlayStation's `GAME.EMI` carries both,
+byte-identical, and `find_places` now places that run on the five
+PlayStation builds ([`exe-import-engine.md`](exe-import-engine.md) 7.4). The
+PSP builds keep both as gaps.
 
 None of it is copied (CLAUDE.md rule 1); whether a disc-only build accepts
 it, derives the values by a rule, or asks for the PC's exe for those tables
