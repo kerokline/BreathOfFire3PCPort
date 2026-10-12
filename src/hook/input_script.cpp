@@ -410,6 +410,31 @@ void Freeze(const Step& s) {
     GameClock_Resume();
 }
 
+// BOF3X_SHOT_EVERY=N (tools/abc_run.py, docs/abc-harness.md): besides the
+// recipe's own `shot` steps, the frame presented before every recipe frame
+// that is a multiple of N is written to BOF3X_SHOT_DIR as t<FRAME>.bmp, with
+// the game's mode and area logged beside it. Nothing waits for a driver: the
+// game writes the file itself, with the clock paused for the write so the
+// frame deadline has no debt to replay, and InputScript_ShotPending has the
+// frame before drawn even when late - so the picture is the same frame on
+// every run, and the recipe's inputs and frames are untouched. Instrumentation
+// like the `shot` step: off unless set, no ledger entry.
+unsigned g_every = 0;
+
+void SaveTimed() {
+    if (g_shot_dir.empty() || g_every == 0 || g_frame % g_every != 0) return;
+    char name[16];
+    std::snprintf(name, sizeof name, "t%06u", g_frame);
+    std::wstring path = g_shot_dir + L"\\";
+    for (const char* c = name; *c; ++c) path += static_cast<wchar_t>(*c);
+    path += L".bmp";
+    const bool clock = GameClock_Pause();
+    const bool ok = render::SaveFrame(path.c_str());
+    if (clock) GameClock_Resume();
+    Log("input       frame %s %s mode %u area %u (Frame_Counter %u)", name, ok ? "saved" : "NOT saved",
+        (unsigned)Game_Mode, (unsigned)Game_AreaNumber, g_last_frame);
+}
+
 unsigned short g_step_buttons = 0;   // the current Press/Hold step's, read as it starts
 
 void Advance() {
@@ -582,6 +607,7 @@ void __cdecl ScriptedLatch() {
         ++g_frame;
         RandCountFrame();
         if (!g_active) return;
+        SaveTimed();
     }
     Input_Held = g_cur;
     Input_Previous = g_prev;
@@ -828,6 +854,16 @@ void InputScript_Start() {
         g_shot_dir = dir;
         Log("input       shots are written by the game to %s (BOF3X_SHOT_DIR)", Utf8Path(dir).text);
     }
+    char every[16];
+    const DWORD en = GetEnvironmentVariableA("BOF3X_SHOT_EVERY", every, sizeof every);
+    if (en > 0 && en < sizeof every) {
+        char* end = nullptr;
+        const unsigned long v = std::strtoul(every, &end, 10);
+        if (!end || *end || v == 0 || v > 1000000) Fatal("BOF3X_SHOT_EVERY: '%s' is not a frame count (1..1000000)", every);
+        if (g_shot_dir.empty()) Fatal("BOF3X_SHOT_EVERY needs BOF3X_SHOT_DIR: the game writes the frames there");
+        g_every = static_cast<unsigned>(v);
+        Log("input       a frame every %u recipe frames to the shot directory (BOF3X_SHOT_EVERY)", g_every);
+    }
     char wait[8];
     if (GetEnvironmentVariableA("BOF3X_SHOT_WAIT", wait, sizeof wait)) {
         // Named for the process, so the driver can find it by pid.
@@ -845,7 +881,10 @@ void InputScript_Start() {
 }
 
 bool InputScript_ShotPending() {
-    return g_active && g_scripted && g_index < g_steps.size() && g_steps[g_index].kind == Kind::Shot;
+    if (!g_active || !g_scripted) return false;
+    if (g_index < g_steps.size() && g_steps[g_index].kind == Kind::Shot) return true;
+    // BOF3X_SHOT_EVERY: the next latch writes the frame this pass draws
+    return g_every != 0 && (g_frame + 1) % g_every == 0;
 }
 
 void InputScript_Latch() {

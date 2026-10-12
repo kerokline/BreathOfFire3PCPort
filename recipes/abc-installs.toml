@@ -1,0 +1,100 @@
+# The installs the A/B/C harness compares (tools/abc_run.py,
+# docs/abc-harness.md 2). Add your own: a [[install]] entry, then a name in a
+# [set.NAME]. Nothing here is game data - paths and switches only; the
+# caches and installs are built from the player's own files into the
+# harness's root (`abc_run.py prepare`).
+#
+# Placeholders: {root} the harness's root (--root, default ~/abc - keep it
+# short: MCI fails on a movie path near 160 characters), {main} the main
+# checkout (the one holding bof3/ and CDImage/, found through git from a
+# worktree), {pc} [paths] pc_game, {discs} [paths] discs.
+#
+# Per install:
+#   kind      "pc": a copy of the PC install (BOF3.exe, DAT\, SND\, BGM\, the
+#             movies; never the saves), its language from the cache's loc layer
+#             "base": `importer.py install --base` from the cache (a disc-only install)
+#             "use": an existing game folder, used as it is (prepare checks it)
+#   cache     the cache folder; `build` the importer's sources (in order) and
+#             `build_lang` / `build_opt` its --lang / --opt; a cache with no
+#             `build` must exist already
+#   lang      BOF3X_LANG for the run (and install --base's --lang)
+#   traits    what the known differences (recipes/abc-known.toml) key on
+#   exeimage  true: BOF3X_EXEIMAGE = the cache (no BOF3.exe in the folder)
+#   env       anything else, for the run; every run also gets BOF3X_OPT=none
+#             and BOF3X_LAYERING=0 unless an install says otherwise
+#   launcher  a folder holding bof3x-launcher.exe, bof3x.dll, bof3x.exe and
+#             no bof3x.ini (default {root}/L, refreshed from the build by prepare)
+
+[paths]
+pc_game = "{main}/bof3"
+discs = "{main}/CDImage"
+
+[defaults]
+cfg = "{pc}/BOF3.CFG"          # the same BOF3.CFG copied into every game folder
+recipe_saves = "{main}/tools/recipe_saves"
+
+[set.eu]
+what = "the default triple, en-150: the PC install, the European PSX disc alone, the PSP-EU disc alone"
+installs = ["pc-en150", "psx-eu", "psp-eu"]
+
+[set.us]
+what = "en-US: the PC install against the US PSX disc alone"
+installs = ["pc-enus", "psx-us"]
+
+[[install]]
+name = "pc-en150"
+what = "the PC install with the cache's en-150 layer (PC DAT\\ + BOF3.exe + the European disc)"
+kind = "pc"
+game = "{root}/g_pc"
+cache = "{root}/c_pc_eu"
+build = ["{pc}/DAT", "{pc}/BOF3.exe", "{discs}/Breath of Fire III (Europe).cue"]
+build_lang = ["en-150"]
+lang = "en-150"
+traits = ["pc", "en-150"]
+
+[[install]]
+name = "psx-eu"
+what = "the European PSX disc alone (install --base)"
+kind = "base"
+game = "{root}/g_psxeu"
+cache = "{root}/c_psxeu"
+build = ["{discs}/Breath of Fire III (Europe).cue"]
+build_lang = ["en-150"]
+lang = "en-150"
+exeimage = true
+traits = ["psx", "en-150"]
+
+[[install]]
+name = "psp-eu"
+what = "the PSP-EU disc alone (install --base)"
+kind = "base"
+game = "{root}/g_pspeu"
+cache = "{root}/c_pspeu"
+build = ["{discs}/Breath of Fire III (PSP) (Europe).iso"]
+build_lang = ["en-150"]
+lang = "en-150"
+exeimage = true
+traits = ["psp", "en-150"]
+
+[[install]]
+name = "pc-enus"
+what = "the PC install with the cache's en-US layer (PC DAT\\ + BOF3.exe + the US disc)"
+kind = "pc"
+game = "{root}/g_pc"
+cache = "{root}/c_pc_us"
+build = ["{pc}/DAT", "{pc}/BOF3.exe", "{discs}/Breath of Fire III (USA).cue"]
+build_lang = ["en-US"]
+lang = "en-US"
+traits = ["pc", "en-US"]
+
+[[install]]
+name = "psx-us"
+what = "the US PSX disc alone (install --base)"
+kind = "base"
+game = "{root}/g_psxus"
+cache = "{root}/c_psxus"
+build = ["{discs}/Breath of Fire III (USA).cue"]
+build_lang = ["en-US"]
+lang = "en-US"
+exeimage = true
+traits = ["psx", "en-US"]

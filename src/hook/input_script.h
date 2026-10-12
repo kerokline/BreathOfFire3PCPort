@@ -13,7 +13,8 @@ namespace bof3 {
 
 // BOF3X_INPUT names a recipe file to play; BOF3X_RECORD a file to record to
 // (both set is fatal). BOF3X_SHOT_DIR and BOF3X_SHOT_WAIT shape a recipe's
-// `shot` steps (input_script.cpp). Call after InjectAll.
+// `shot` steps; BOF3X_SHOT_EVERY=N adds a frame every N recipe frames
+// (input_script.cpp, docs/abc-harness.md). Call after InjectAll.
 void InputScript_Start();
 
 // Writes the recorder's open run - the hold or wait still going when the
@@ -42,6 +43,7 @@ unsigned InputScript_Frame();
 // True from the latch that enters a recipe's `shot` step until the shot is
 // taken: WinMain's loop draws those frames even when it is running late
 // (BOF3X_SPEED, a stall), so the frame a shot saves is the one it names.
+// Also true on the pass before each frame BOF3X_SHOT_EVERY writes.
 bool InputScript_ShotPending();
 
 }  // namespace bof3
