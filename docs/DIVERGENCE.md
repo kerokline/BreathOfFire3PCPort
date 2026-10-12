@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 101 entries, DIV-0001..0101, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 102 entries, DIV-0001..0102, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5960,3 +5960,43 @@ designed in rather than bolted on.
   values' effect in play not seen.
 - **Reversible?** `BOF3X_EXEIMAGE_STRICT=1`; a cache built with the PC's exe
   among its sources carries every range.
+
+### A disc-only install refuses the port's Chinese text instead of playing without text
+
+- **ID:** DIV-0102
+- **Date:** 2026-10-12
+- **Subsystem:** language (`src/launcher/config.cpp` `ConfigResolveLanguage` /
+  `ConfigOriginalAvailable`, the launcher's dialog; `src/game/dat_load.cpp`
+  `RefuseOriginalWithoutChinese`; `tools/language_tags.py` `original_available`,
+  reported by `importer.py install`; [`disc-only-install.md`](disc-only-install.md)
+  section 2 and 6)
+- **Tier:** Sensible - rule 4: a start that cannot have its text says so.
+- **Original behaviour:** the port has one language, its Chinese, in `DAT\`;
+  every install had it, and `original` (the port's script) is the default
+  language of ours (DIV-0005's tags) for a PC install.
+- **New behaviour:** `original` (`BOF3X_LANG` unset or `original`,
+  `language=original`) needs `BOF3.exe` in the game directory or the cache's
+  `loc\zh-CN` layer - the two facts that mean the port's text is there.
+  Without either, a disc-only install: the launcher refuses `original` and any
+  language not held, before the dialog, with a message naming the languages
+  held; the dialog does not offer "Chinese (PC script)" and says why; the
+  default is the first language held in the engine's list (`en-US` from a US
+  disc); and the engine's `DatLoad_Inject` stops with a Fatal naming the same
+  languages when such a request reaches it past the launcher. A PC install is
+  unchanged.
+- **Rationale:** the round's end batch started a disc-only install under
+  `original` by mistake (the attract tool's own `--lang` default) and the game
+  read every Chinese chunk as missing, played with no text, and the attract
+  sequence stalled in area 4's message box (message 8 never closed; read from
+  the run's message columns, not seen on screen). The text is the PC's alone,
+  so it cannot be made; the start can say so. The disc-only round, 2026-10-12.
+- **Also in the PSX version?** No: each disc carries its own text.
+- **Verification:** `disc-only-install.md` section 5's rows of 2026-10-12: the
+  launcher's refusal under `original` and `fr-FR` against the US-only install
+  (naming `en-US`), its start under `en-US` and with no language (exit 0,
+  10,088 ours), `bof3x.exe` run directly under `original` (exit 3, the Fatal),
+  the real install unchanged under all three (exit 0), hosted `shell` 0
+  mismatches. Harnesses: `tools/attract_run.py` defaults `--lang` to
+  `original`, so a run against a disc-only install must pass `--lang`.
+- **Reversible?** A PC install, or a cache built with the PC's `DAT\` among
+  its sources, holds the Chinese layer and `original` plays as before.

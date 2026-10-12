@@ -304,7 +304,7 @@ delete any `DAT\en.*.DAT` (`fr.`, `de.`, `ja.`) overlays: nothing reads them.
 Silently dropping the player's choice was the worse surprise, and guessing
 it (which English?) the next; saying so once, loudly, is neither.
 
-**An install without the Chinese text (DIV-TBD-LX-1, 2026-10-12).** The
+**An install without the Chinese text (DIV-0102, 2026-10-12).** The
 port's Chinese is in the PC's `DAT\` alone, so `original` plays only from a
 PC install (`BOF3.exe` in the game directory) or with a cache holding
 `loc\zh-CN` (built from the PC's `DAT\`); a disc-only install

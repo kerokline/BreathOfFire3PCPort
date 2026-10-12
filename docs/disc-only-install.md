@@ -40,7 +40,7 @@ first in the dialog's order: `en-US` from a US disc), does not offer
 languages held - when `BOF3X_LANG` or `language=` asks for `original` or for
 a language not installed; `install` says the same in its last lines. Before
 2026-10-12 such a start played with every Chinese chunk missing: no text,
-and the attract sequence stalled in area 4's message box (DIV-TBD-LX-1).
+and the attract sequence stalled in area 4's message box (DIV-0102).
 
 `install --base` refuses a directory holding `BOF3.exe`: a PC install keeps
 its own files. Keep the paths short: MCI fails to open a movie whose full
@@ -53,14 +53,14 @@ the path alone.
 | | A disc-only install |
 |---|---|
 | The game's data (`DAT\`) | the disc's: 741 containers from `base/`, the 14 port-edited arenas the disc's own or by rule ([`arena-edits.md`](arena-edits.md)); 252 containers lack the port's Chinese text slots and take the text from the language layer; `AFLDKWA.DAT`, wholly Chinese on the PC, is written empty for the layer to fill |
-| The language | the disc's, as a layer built from the disc alone (DIV-0090, [`loc-build-disc-only.md`](loc-build-disc-only.md)); the launcher's default here (`en-US` from a US disc). `original` (the port's Chinese) is refused: the shipped text slots are absent (DIV-TBD-LX-1, below) |
+| The language | the disc's, as a layer built from the disc alone (DIV-0090, [`loc-build-disc-only.md`](loc-build-disc-only.md)); the launcher's default here (`en-US` from a US disc). `original` (the port's Chinese) is refused: the shipped text slots are absent (DIV-0102, below) |
 | The music | the disc's sequences through the engine's sequencer (DIV-0087, `base/bgm`); no MP3s - `BGM\` is empty. The 11 jingles the PC plays as MP3s are not there (an owner's call, `owner-review.md`) |
 | The sound effects | the disc's, as `SND\` (880 files, byte-identical to the PC's) |
 | The exe's tables (`.data`) | from the disc (`base/exe/data.bin`), the pointer words by layout, the port's own bytes filled by the engine; what no disc carries is zero (section 3) |
 | The opening movies | `CAPCOM.AVI` only when the importer could convert the disc's movie with the player's ffmpeg (FM, `base/fmv/`); `LOGOS.AVI`, the porting house's logos, has no disc counterpart. A movie that is not there is skipped and the game goes on (section 4) |
 | The keyboard defaults | the engine's rule (`input::DefaultKeys`), the same 24 keys |
 
-**Which languages an install has, and the refusal (DIV-TBD-LX-1).** One
+**Which languages an install has, and the refusal (DIV-0102).** One
 rule, the same in the launcher (`ConfigOriginalAvailable`,
 `src/launcher/config.cpp`), the engine (`RefuseOriginalWithoutChinese`,
 `src/game/dat_load.cpp`) and the tools (`original_available`,
@@ -136,7 +136,7 @@ there, the probe passes as it always did.
 | exe host self-test, the scratch install, `BOF3X_CACHE` + `BOF3X_EXEIMAGE` = the US cache, `BOF3X_LANG=en-US` | exit 0, `inject: 10088 ours`, `self-test only: done`; `exe_own: ... filled over a disc-built image; no BOF3.exe to verify them against`; `DIV-0089 ... 488 of the manifest's 742 containers held whole, 253 in part (those from the install's DAT\)` |
 | exe host self-test, the real install, `BOF3X_EXEIMAGE` = the US cache | exit 0; against the file after the fills: `627123 of 638976 bytes equal`; differing only in `map` (13 ranges, 104 bytes), `widen` (6, 3,065: the blank names), `language` (99, 1,394), `unread` (107, 3,932) and `gap`; every must-equal class equal |
 | the attract sequence, 6 minutes, `--no-front`, `BOF3X_OPT=none`, `BOF3X_LANG=en-US`, under `<cache-us>/base/exe/gate-skip.txt`: the scratch install (US cache, no AVI, the real install's `BOF3.CFG` copied in) against the real install with `analysis/cache/pc-plus-us` | both start (no AVI: `DIV-0100` and two `fmv: ... not opened (MCI 304 ...)` lines - MCI answers 304, "the filename is invalid", for a missing file too) and run the same scenes in the same order, two cycles (10,789 / 11,201 ticks). `statehash.py diff`: tick 0 identical; **first difference tick 1**, 94 pages: the VRAM shadow (10 pages from tick 1, 28 from tick 2 - the disc's art and stand-ins where the PC's install has the port's) and the page `0x903000`; `Snd_*` at tick 3 only; from tick 1310 (the first field scene) the sprite, CLUT-strip and area-map pages. Not read to the byte (a `BOF3X_STATEHASH_DUMP` pair is the next step). Without `BOF3.CFG` the run differs at tick 0 too (`Cfg_*`, the display scale): a disc-only install starts with the config's defaults |
-| DIV-TBD-LX-1, 2026-10-12 (branch `disc-only/language-refusal`), headless, IN's scratch install and `cache-us` (`BOF3X_CACHE`), launcher `--no-config` from an ini-less copy | `BOF3X_LANG=original`: refused before the game starts, message box and stderr naming "The languages it holds: en-US"; `BOF3X_LANG=fr-FR`: refused, "is not built here"; `BOF3X_LANG=en-US`: exit 0, `inject: 10088 ours`, `self-test only: done`; no `BOF3X_LANG`: `language en-US, the first it holds`, exit 0, the same `inject:` line; `bof3x.exe` started directly (past the launcher) with `BOF3X_LANG=original`: exit 3, the engine's `FATAL: DIV-TBD-LX-1 ... a language it holds: en-US`. The real install: exe host exit 0 without `BOF3X_LANG`, with `original` (`inject: 10087 ours`) and with `en-US` (10088); hosted `BOF3X_SHADOW=shell` exit 0 |
+| DIV-0102, 2026-10-12 (branch `disc-only/language-refusal`), headless, IN's scratch install and `cache-us` (`BOF3X_CACHE`), launcher `--no-config` from an ini-less copy | `BOF3X_LANG=original`: refused before the game starts, message box and stderr naming "The languages it holds: en-US"; `BOF3X_LANG=fr-FR`: refused, "is not built here"; `BOF3X_LANG=en-US`: exit 0, `inject: 10088 ours`, `self-test only: done`; no `BOF3X_LANG`: `language en-US, the first it holds`, exit 0, the same `inject:` line; `bof3x.exe` started directly (past the launcher) with `BOF3X_LANG=original`: exit 3, the engine's `FATAL: DIV-0102 ... a language it holds: en-US`. The real install: exe host exit 0 without `BOF3X_LANG`, with `original` (`inject: 10087 ours`) and with `en-US` (10088); hosted `BOF3X_SHADOW=shell` exit 0 |
 
 ## 6. Ledger (for the coordinator)
 
@@ -157,7 +157,7 @@ probe looks for.**
 - Verification: built; the self-tests do not reach `Game_WinMain`; the attract
   run from the scratch install (no AVI) starts the game (section 5).
 
-**DIV-TBD-LX-1 - A disc-only install refuses the port's Chinese text
+**DIV-0102 - A disc-only install refuses the port's Chinese text
 instead of playing without text.**
 - Original: the port has one language, its Chinese, in `DAT\`; every
   install had it.
