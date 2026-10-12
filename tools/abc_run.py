@@ -385,7 +385,7 @@ def git_head():
 
 def run(cfg, installs, a):
     name = route_name(a.route)
-    rdir = os.path.join(cfg.root, 'runs', f'{a.set}_{name}')
+    rdir = os.path.join(cfg.root, 'runs', f'{a.tag or a.set}_{name}')
     os.makedirs(rdir, exist_ok=True)
     recipe = recipe_for(a.route, rdir, a.frames)
     metas = []
@@ -429,7 +429,7 @@ def statehash_pairs(sides, out, known):
 
 def compare(cfg, installs, a):
     name = route_name(a.route)
-    rdir = os.path.join(cfg.root, 'runs', f'{a.set}_{name}')
+    rdir = os.path.join(cfg.root, 'runs', f'{a.tag or a.set}_{name}')
     keys = 'ABCDEFGH'
     sides = []
     for k, i in zip(keys, installs):
@@ -444,7 +444,7 @@ def compare(cfg, installs, a):
     result = abc_compare.compare(sides, out, known, name, a.tol, a.min_pixels, a.sheet_rows)
     sh = statehash_pairs(sides, out, known) if any(os.path.exists(os.path.join(s.path, 'run.sh'))
                                                    for s in sides) else {}
-    report = os.path.join(cfg.root, f'report_{a.set}_{name}.md')
+    report = os.path.join(cfg.root, f'report_{a.tag or a.set}_{name}.md')
     write_report(report, result, sides, known, sh, rdir, a)
     print(f'report: {report}')
     return report
@@ -639,6 +639,7 @@ def main():
     ap.add_argument('--known', default=KNOWN)
     ap.add_argument('--set', default='eu')
     ap.add_argument('--only', help='comma-separated install names instead of the set\'s')
+    ap.add_argument('--tag', help='name the run folder and report by this instead of the set (a repeat, a subset)')
     ap.add_argument('--route', default='attract', help='"attract", or a recipe (a path, or a name in tools/recipes)')
     ap.add_argument('--every', type=int, default=EVERY, help=f'a timed frame every N recipe frames (default {EVERY})')
     ap.add_argument('--frames', type=int, default=ATTRACT_FRAMES, help='the attract route\'s length in recipe frames')
