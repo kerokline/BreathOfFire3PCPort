@@ -31,7 +31,8 @@ struct Image {
 // data.toml's classes (tools/exe_tables.py write_exe), what the engine does
 // with each in a disc-built image, and whether the bytes must then equal the
 // PC's .data (the comparison when BOF3.exe is there too):
-//   exe, map, place, table, widen  copied (a disc's numbers may differ: logged)
+//   map, place, table, widen       copied (a disc's numbers may differ: logged)
+//   exe                            copied; must equal the file's when it is there (only a pc-zh image has it)
 //   rebuilt, layout                copied; the PC's pointer by construction (must equal)
 //   own                            filled by ExeOwn_Fill after the copy (must equal)
 //   keys                           Key_TableDefault, written by Shell_MapDefaultKeys (must equal)

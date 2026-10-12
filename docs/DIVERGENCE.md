@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 100 entries, DIV-0001..0100, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 101 entries, DIV-0001..0101, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -5343,8 +5343,6 @@ designed in rather than bolted on.
   (`importer.py build --source bof3/DAT --source bof3/BOF3.exe ...`, or
   `loc_build.py all --game`).
 
-### The MP3 decoder is minimp3, not the library Capcom linked
-
   **Amended 2026-10-12 (the disc-only round, [`loc-build-disc-only.md`](loc-build-disc-only.md) 4.3, 4.5, 4.7):**
   "no village sheet, no text for French `AREA004`, no title page from a
   French or German disc without an English one" is no longer so: the village
@@ -5352,6 +5350,8 @@ designed in rather than bolted on.
   French `AREA004` block is built (DIV-0098), and a French or German disc's
   title page cuts CONFIG from its own sheet's letters, byte-identical to the
   PC-built layers' (no player difference, so no entry of its own).
+
+### The MP3 decoder is minimp3, not the library Capcom linked
 
 - **ID:** DIV-0091 (the next free number on 2026-10-10 evening; renumber at
   the merge if another branch has taken it)
@@ -5860,7 +5860,11 @@ designed in rather than bolted on.
   pixel doubling, 30 fps, 231 frames, PCM 44.1 kHz stereo; `-r 30` because
   ffmpeg's `psxstr` demuxer stamps 15), and `install` puts it where
   `Fmv_Play` opens it when the game directory has no `CAPCOM.AVI` of its own.
-  A PC install keeps the PC's file. The player of a disc-only install sees
+  A PC install keeps the PC's file; a PC install whose `CAPCOM.AVI` stayed on
+  the CD gets the disc's converted movie in its game directory when the cache
+  had a PSX source (and `Disc_Probe`'s local test is then satisfied by it).
+  `install` copies only the movie the manifest recorded, whole (its hash).
+  The player of a disc-only install sees
   the disc's logo: twice the frames per second, a 320 x 240 picture doubled
   rather than the PC's 640 x 480 master, about 0.2 s longer, audio at
   44.1 kHz from the disc's 37.8 kHz source, and Cinepak's loss (SSIM 0.970
@@ -5915,3 +5919,44 @@ designed in rather than bolted on.
 - **Reversible?** Put a `BOF3.exe` or a `CAPCOM.AVI` in the game directory
   and the original probe decides.
 
+### A disc-built image runs with the game values no disc carries as zero (provisional)
+
+- **ID:** DIV-0101
+- **Date:** 2026-10-12
+- **Subsystem:** the exe image (`src/hook/exe_image.cpp`, `recipes/exe-gaps.tsv`'s
+  `gap` class; [`disc-only-install.md`](disc-only-install.md) section 4,
+  [`exe-engine-own.md`](exe-engine-own.md))
+- **Tier:** Sensible - provisional: the owner's call is open ([`owner-review.md`](owner-review.md)
+  "Decisions", the first item); this entry records what the build does
+  meanwhile so that the behaviour is not an unledgered fork (rule 2).
+- **Original behaviour:** `BOF3.exe`'s `.data` holds, in 456 ranges (US;
+  3,358 non-zero bytes), tables that exist in no shape on any PlayStation
+  disc: Capcom's game values that the port's build laid out (the largest
+  `Effect_HpDamageVariance+0xB8`, 468 bytes; `Magic_Rows+0x4`, 300;
+  `Equip_SlotIcons+0x50`, 131; `EventBattle_Records+0xE0`, 82), the disc's
+  bytes the maps do not place (818), eight language addresses (238), and
+  DIV-0055's re-laid plates (106).
+- **New behaviour:** a disc-built image (`BOF3X_EXEIMAGE` from a cache with no
+  PC source) maps those ranges as zero, logs each once at start, and runs;
+  `BOF3X_EXEIMAGE_STRICT=1` refuses the image instead. With the PC's exe
+  among the cache's sources, or the PC's file beside the game, nothing
+  changes. Read from the code, not played: each spell's or item's effect file
+  number reads 0 (`Magic_Rows`: the wrong effect file - the most visible),
+  the dragon-form set files load wrong, the ending roll's steps are zero, the
+  equipment and experience panels draw zeros, one mode's per-record words are
+  zero. The field button map was one of these ranges until the BD group held
+  it as a rule (a New Game would have started with every action unbound).
+- **Rationale:** rule 1 forbids copying the values into the repository; the
+  disc-only build runs so that the owner can see what the gaps break and
+  decide between accepting them, deriving each by a rule, and requiring the
+  PC's exe for those tables. Until then the permissive default is the
+  measuring instrument; strict is one switch away.
+- **Also in the PSX version?** Not applicable: the PlayStation's own
+  executable carries its tables; the PC port's layout of them is what no disc
+  has.
+- **Verification:** the exe host's self-test from the scratch install with
+  no `BOF3.exe` (exit 0, 10,088 ours); the gate's attract pair (the
+  disc-only install runs the same scenes as the PC-plus-US run); the game
+  values' effect in play not seen.
+- **Reversible?** `BOF3X_EXEIMAGE_STRICT=1`; a cache built with the PC's exe
+  among its sources carries every range.

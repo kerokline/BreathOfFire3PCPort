@@ -366,6 +366,15 @@ def check():
     regions = own_regions()
     if not regions:
         errs.append("src/hook/exe_own.cpp: no regions")
+    else:
+        # Every row of the table must be one own_regions() read (a row written
+        # another way would be held by the engine and unknown to the tools).
+        with open(OWN_CPP, encoding="utf-8") as f:
+            block = re.search(r"// regions:\n(.*?)// end regions", f.read(), re.S).group(1)
+        rows = sum(1 for line in block.splitlines() if line.strip().startswith("{"))
+        if rows != len(regions):
+            errs.append("src/hook/exe_own.cpp: %d rows in the region table, %d read by own_regions()" %
+                        (rows, len(regions)))
     ptr = pointer_bytes()
     end = DATA_LO
     for lo, hi, name in regions:

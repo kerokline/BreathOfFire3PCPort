@@ -148,7 +148,7 @@ void Operands_Check(const char* when) {
             ++before;
         } else {
             ++never;
-            if (!g_late) Log("operands    %s at 0x%08X + %u: registered under a jmp of ours, never compared", e.site, (unsigned)e.va, (unsigned)e.n);
+            Log("operands    %s at 0x%08X + %u: registered under a jmp of ours, never compared", e.site, (unsigned)e.va, (unsigned)e.n);
         }
     }
     Log("operands    %s: %u values of ours (%u bytes) - %u equal to the patched code at their addresses now, %u "

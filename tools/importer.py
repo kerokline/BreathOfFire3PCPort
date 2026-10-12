@@ -1877,29 +1877,57 @@ def fmv_build(sources, out):
     dst = os.path.join(d, FMV_NAME)
     if os.path.exists(dst):
         os.remove(dst)          # never a stale movie beside a manifest that does not name it
-    secs = xa.sectors(psx_disc.Disc(disc.path), FMV_STR)
-    src_sha = sha(b"".join(raw[16:] for _, raw in secs))
-    row = {"build": disc.id, "source": FMV_STR, "source_sha256": src_sha}
+    # Nothing here fails the build: a cooked image, a disc without the file, no
+    # ffmpeg or one that cannot run all leave a `skipped` row (review item 1).
+    row = {"build": disc.id, "source": FMV_STR}
+    image = psx_disc.Disc(disc.path)
+    secs, src_sha = [], None
+    if not image.raw:
+        row["skipped"] = ("%s is a cooked image (2,048-byte sectors): the movie's raw sectors are not in it; "
+                          "a raw (2,352-byte sector) image carries them" % os.path.basename(disc.path))
+    elif FMV_STR.upper() not in image.files:
+        row["skipped"] = "no %s on %s" % (FMV_STR, disc.id)
+    else:
+        secs = xa.sectors(image, FMV_STR)
+        src_sha = sha(b"".join(raw[16:] for _, raw in secs))
+        row["source_sha256"] = src_sha
     ffmpeg = at3.find_ffmpeg()
-    if src_sha != FMV_SOURCE_SHA256:
+    if "skipped" in row:
+        pass
+    elif src_sha != FMV_SOURCE_SHA256:
         row["skipped"] = "%s on %s is not the stream docs/fmv-import.md measured" % (FMV_STR, disc.id)
     elif not ffmpeg:
         row["skipped"] = ("no ffmpeg on the PATH or in BOF3X_FFMPEG: the disc's logo movie is an MDEC stream, "
                           "which only the player's ffmpeg converts")
     else:
         os.makedirs(d, exist_ok=True)
-        tmp = dst + ".str.tmp"
+        tmp, part = dst + ".str.tmp", dst + ".part"
+        for stale in (tmp, part):
+            if os.path.exists(stale):
+                os.remove(stale)
         with open(tmp, "wb") as fh:
             fh.write(b"".join(raw for _, raw in secs))
         print("  base/fmv  converting %s from %s with the player's ffmpeg (about two minutes)" % (FMV_STR, disc.id))
+        # ffmpeg writes a temporary name, renamed on success only, so a
+        # conversion cut short leaves no half movie for install to copy
+        # (review item 6); the .avi suffix tells ffmpeg the container.
+        part = dst + ".part.avi"
         args = [tmp if x is None else x for x in FMV_ARGS]
-        r = subprocess.run([ffmpeg, "-v", "error", "-y"] + args + [dst], capture_output=True)
-        os.remove(tmp)
-        if r.returncode != 0 or not os.path.isfile(dst):
-            if os.path.exists(dst):
-                os.remove(dst)
-            row["skipped"] = "ffmpeg could not convert it: %s" % r.stderr.decode(errors="replace").strip()[-200:]
+        why = None
+        try:
+            r = subprocess.run([ffmpeg, "-v", "error", "-y"] + args + [part], capture_output=True)
+            if r.returncode != 0 or not os.path.isfile(part):
+                why = "ffmpeg could not convert it: %s" % r.stderr.decode(errors="replace").strip()[-200:]
+        except OSError as e:
+            why = "ffmpeg (%s) could not run: %s" % (ffmpeg, e)
+        finally:
+            for stale in (tmp,) + ((part,) if why else ()):
+                if os.path.exists(stale):
+                    os.remove(stale)
+        if why:
+            row["skipped"] = why
         else:
+            os.replace(part, dst)
             with open(dst, "rb") as fh:
                 row.update(ffmpeg=at3.ffmpeg_version(ffmpeg), file=FMV_DIR.replace(os.sep, "/") + "/" + FMV_NAME,
                            sha256=sha(fh.read()))
@@ -1964,6 +1992,19 @@ def fmv_install(cache, game):
     src = os.path.join(cache, FMV_DIR, FMV_NAME)
     if not os.path.isfile(src):
         return
+    # Only the movie the manifest recorded, whole (review item 6): a file a
+    # cut-short build left beside a row that does not name it is not installed.
+    with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
+        row = tomllib.load(fh).get("fmv")
+    if row is None or "skipped" in row or "sha256" not in row:
+        print("fmv: %s in the cache is not the manifest's (a build cut short?): not installed; rebuild the cache"
+              % FMV_NAME)
+        return
+    with open(src, "rb") as fh:
+        if sha(fh.read()) != row["sha256"]:
+            print("fmv: %s in the cache is not the file the manifest recorded: not installed; rebuild the cache"
+                  % FMV_NAME)
+            return
     have = [f for f in os.listdir(game) if f.upper() == FMV_NAME]
     if have:
         print("fmv: %s kept (the game directory's own; remove it to install the disc's)" % have[0])

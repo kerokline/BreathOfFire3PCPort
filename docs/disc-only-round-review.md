@@ -1,6 +1,6 @@
 # The disc-only round: code review before the PR
 
-**Status:** OPEN (2026-10-12) - a review of `platform/disc-only-round` at
+**Status:** ACTED ON (2026-10-12 afternoon; the six gating items and the small ones below fixed on the branch - the commit after this file's; the hosted-check and ANSI notes left, listed in `disc-only-round.md` section 5) - a review of `platform/disc-only-round` at
 `944f170d` against `main` `39bd3740`, for the session finishing the round to
 act on before the PR. Strike an item here when it is fixed (with the commit),
 or move it to [`owner-review.md`](owner-review.md) if it is the owner's call.
@@ -16,7 +16,7 @@ self-test under the exe host, no route. Every non-merge commit is signed off.
 
 ## 1. Gating
 
-1. **A cooked `.iso` now makes `build` fail.** `tools/importer.py` `fmv_build`
+1. **A cooked `.iso` now makes `build` fail.** ~~fixed~~ (cooked image, missing file and an ffmpeg that cannot run are `skipped` rows; the temporary removed) `tools/importer.py` `fmv_build`
    (line 1880) calls `xa.sectors(psx_disc.Disc(disc.path), FMV_STR)` for
    every PSX disc source; `xa.sectors` raises `SystemExit("XA needs a raw
    (2,352-byte sector) image")` on a cooked image (`tools/xa.py` line 65).
@@ -27,7 +27,7 @@ self-test under the exe host, no route. Every non-merge commit is signed off.
    `subprocess.run` raising `OSError` (an ffmpeg that cannot execute), which
    also leaves `CAPCOM.AVI.str.tmp` behind.
 
-2. **DIV-0100 says more than the code does.** The entry says the probe's
+2. **DIV-0100 says more than the code does.** ~~fixed~~ (`&& !ExeFile_Present()` added: the code says what DIV-0100 says) The entry says the probe's
    bypass applies with a disc-built image mapped and no `BOF3.exe`;
    `src/game/win_main.cpp` line 514 tests `ExeImage_DiscMapped()` alone, and
    `g_disc_mapped` is set whether or not the file is present
@@ -37,7 +37,7 @@ self-test under the exe host, no route. Every non-merge commit is signed off.
    starts where the original shows the insert-the-disc box. Either add
    `&& !ExeFile_Present()` to the condition or correct the entry.
 
-3. **The gaps mapped as zero by default, with no ledger entry.** A
+3. **The gaps mapped as zero by default, with no ledger entry.** ~~fixed~~ (DIV-0101, provisional, names what the gaps break) A
    disc-built image runs with the US image's 3,358 PC bytes of `gap` ranges
    as zero (`Magic_Rows`' effect file numbers - the wrong effect file - the
    dragon-form sets, the ending roll's steps); only
@@ -46,18 +46,18 @@ self-test under the exe host, no route. Every non-merge commit is signed off.
    item) is open. Rule 2: a provisional entry naming what the gaps break, or
    strict as the default until the call is made.
 
-4. **`DIV-TBD-IN-1` never renumbered.** `src/game/win_main.cpp` lines 509 (the
+4. **`DIV-TBD-IN-1` never renumbered.** ~~fixed~~ (`DIV-0100` in `win_main.cpp`) `src/game/win_main.cpp` lines 509 (the
    comment) and 519 (the log line) carry the placeholder; the ledger entry is
    DIV-0100, which nothing in `src/` cites. The only `DIV-TBD` left in
    `src/`, `tools/`, `docs/` and `recipes/`.
 
-5. **DIV-0090's amendment sits in DIV-0091.** `docs/DIVERGENCE.md` about line
+5. **DIV-0090's amendment sits in DIV-0091.** ~~fixed~~ (the amendment moved into DIV-0090) `docs/DIVERGENCE.md` about line
    5348: the "Amended 2026-10-12" paragraph follows the heading `### The MP3
    decoder is minimp3, not the library Capcom linked` and precedes `- **ID:**
    DIV-0091`, so it reads as DIV-0091's; DIV-0090's own text still says what
    DIV-0097 / DIV-0098 made false. Move it up into DIV-0090.
 
-6. **A partial movie is installed, then sticks.** `fmv_build` has ffmpeg
+6. **A partial movie is installed, then sticks.** ~~fixed~~ (ffmpeg writes `.part.avi`, renamed on success; `fmv_install` copies only the manifest's file by hash) `fmv_build` has ffmpeg
    write straight to `base/fmv/CAPCOM.AVI`; `fmv_install` copies the file
    because it exists, never reading the manifest's `[fmv]` row or its
    sha256. A conversion cut short (Ctrl-C in the two minutes, ffmpeg killed)

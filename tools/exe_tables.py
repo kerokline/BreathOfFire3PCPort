@@ -142,11 +142,11 @@ def func_starts():
 def own_bytes():
     """The PC addresses the engine fills itself (the NB group's src/hook/exe_own.cpp
     regions, read through tools/exe_own.py's own_regions; docs/exe-engine-own.md):
-    a set, empty where that tool is not in the tree."""
+    a set; a tree without that tool stops here (the own class cannot be guessed)."""
     try:
         import exe_own
     except ImportError:
-        return set()
+        raise SystemExit("tools/exe_own.py is needed for the own class: " + str(sys.exc_info()[1]))
     return {x for lo, hi, _ in exe_own.own_regions() for x in range(lo, hi)}
 
 
@@ -222,6 +222,10 @@ def bss_numbers(pc):
         if v % 4:
             out[a] = "not 4-aligned"
         elif all(h < 0x100 or h >= 0xFF00 for h in (v & 0xFFFF, v >> 16)):
+            # Every .bss address is 0x676000..0x93D6EC, so the high halfword always
+            # passes: what this tests is the low one - a pointer within 0x100 bytes
+            # of a 64 KiB boundary would be classed a number (none of today's hits
+            # is one: IN's "every class that must equal, equal" on the real install).
             out[a] = "two small halfwords"
         elif n >= 2 and all(0x20 <= c < 0x7F for c in b[:n]):
             out[a] = "text"
