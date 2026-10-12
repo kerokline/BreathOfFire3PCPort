@@ -100,6 +100,7 @@
 #include "game/text_advance.h"
 #include "hook/log.h"
 #include "hook/code_bytes.h"
+#include "hook/host.h"
 
 namespace {
 
@@ -284,13 +285,20 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         // buffer: the title's FIRST.DAT is loaded again after a game over
         // (the owner's gameover recipe, 2026-09-30: the second load aborted
         // here), so that address is the slot's too.
-        std::uint32_t named;
-        std::memcpy(&named, bof3::CodeBytes(slot.named_at, sizeof named), sizeof named);   // a push operand, or a table in .data
+        // A push operand in Capcom's code is registered for the hosted check
+        // (code_bytes.h; nothing of ours re-aims one) - in the exe host there
+        // is no code to read; a table in .data is read, in either host.
         const auto ours = t->buffers ? static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i])) : slot.va;
         const std::uint32_t expect = slot.expect ? slot.expect : slot.va;
-        if (named != expect && named != ours)
-            bof3::Fatal("%s: 0x%08X holds 0x%08X, expected 0x%08X", t->what, (unsigned)slot.named_at,
-                        (unsigned)named, (unsigned)expect);
+        if (bof3::InCode(slot.named_at)) {
+            bof3::OperandExpect(t->what, slot.named_at, &expect, sizeof expect);
+        } else {
+            std::uint32_t named;
+            std::memcpy(&named, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(slot.named_at)), sizeof named);
+            if (named != expect && named != ours)
+                bof3::Fatal("%s: 0x%08X holds 0x%08X, expected 0x%08X", t->what, (unsigned)slot.named_at,
+                            (unsigned)named, (unsigned)expect);
+        }
         if (len == 0) continue;   // the overlay's builder had no string that fits: as shipped
         auto* dest = t->buffers ? t->buffers[i] : reinterpret_cast<char*>(static_cast<std::uintptr_t>(slot.va));
         std::memset(dest, 0, room);

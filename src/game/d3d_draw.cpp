@@ -515,6 +515,7 @@ void D3dDraw_Inject() {
         d3d_draw::SelfTest();
         d3d_list::SelfTest();
     }
+    d3d_list::Operands();   // Gfx_DrawOTag's byte tables, ours, against the code's (docs/operand-store.md)
     BOF3_INJECT(Gfx_DrawOTag);
     BOF3_INJECT(D3d_PrimColor);
     BOF3_INJECT(D3d_SetBlend);

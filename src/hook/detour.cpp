@@ -97,6 +97,7 @@ void Inject(const char* name, std::uint32_t original, void* ours, bool instrumen
         ++g_disabled;
         Log("inject  OFF  %-24s ours %p -> original 0x%08X", name, ours, (unsigned)original);
     } else {
+        Operands_BeforeJmp(original);   // hosted: values of ours under these five bytes, compared while the code holds them
         WriteJmp(name, orig, mine);
         ++g_enabled;
         Log("inject  ON   %-24s original 0x%08X -> ours %p", name, (unsigned)original, ours);

@@ -28,13 +28,13 @@
 
 namespace bof3 {
 
-// `n` bytes (1..64) at `ours` are our value for the n bytes of Capcom's code
+// `n` bytes at `ours` are our value for the n bytes of Capcom's code
 // at `va`. Read through the pointer at each check, so a value that changes
 // when a patch goes in (or a late chunk arrives) stays one entry. A second
 // registration of the same site and address is ignored.
 void Operand(const char* site, std::uint32_t va, const void* ours, std::uint32_t n);
 
-// The same for a value that never changes: the n bytes are copied.
+// The same for a value that never changes: the n bytes (at most 64) are copied.
 void OperandExpect(const char* site, std::uint32_t va, const void* bytes, std::uint32_t n);
 
 // The E8 rel32 call at `va`: our value is the address it calls, read through
@@ -51,6 +51,14 @@ void OperandRule(const char* site, std::uint32_t va, std::uint32_t n, bool (*sam
 // inventory's count; nothing read. Called after InjectAll (InjectReport) and
 // after each late patch (the overlay chunks that arrive with FIRST.DAT and
 // START.DAT).
+//
+// A site inside the first five bytes of a function of ours is overwritten by
+// its jmp (Menu_YesNo 0x5747D0's call at 0x5747D2): Inject calls
+// Operands_BeforeJmp first, which compares every entry under those bytes
+// while the code still holds them, and the later checks pass over it. An
+// entry registered after its jmp went in cannot be compared at all; the
+// check counts those and names them in the log.
 void Operands_Check(const char* when);
+void Operands_BeforeJmp(std::uint32_t at);
 
 }  // namespace bof3

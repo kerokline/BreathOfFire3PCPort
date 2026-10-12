@@ -35,9 +35,9 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 // Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
 // bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
@@ -80,6 +80,27 @@ constexpr std::uint32_t kStrikeTints = 0x65A584;   // MAGIC004: 3 bytes a kind
 constexpr std::uint32_t kFxDelays = 0x65A5A8;      // bytes: the effect's sound delay, by kind
 constexpr std::uint32_t kStrikeSounds = 0x65A5B4;  // words: the hit sound, by kind (0 none)
 constexpr std::uint32_t kKindIndex = 0x49C0CC;     // .text: ElemStrike_Kind's byte table, 0x99 entries
+
+// ElemStrike_Kind's case by the ability word less 4: the switch the compiler
+// made the byte table at kKindIndex of - the function's logic, ours since the
+// function is (docs/operand-store.md). Eleven abilities have a case of their
+// own (0..10); every other index, and any past the table, is case 11.
+unsigned KindCase(std::uint32_t index) {
+    switch (index) {
+    case 0x00: return 0;
+    case 0x01: return 1;
+    case 0x03: return 2;
+    case 0x19: return 3;
+    case 0x2D: return 4;
+    case 0x81: return 5;
+    case 0x82: return 6;
+    case 0x83: return 7;
+    case 0x84: return 8;
+    case 0x97: return 9;
+    case 0x98: return 10;
+    default: return 11;
+    }
+}
 
 unsigned char* Sc() { return Sprite_Current; }
 unsigned char* Owner() { return Pointer(at::kOwner); }
@@ -900,7 +921,7 @@ S02_EXPORT void __cdecl ElemStrike_Kind(void) {
     static constexpr unsigned char kCases[12][2] = {{0, 0}, {1, 1}, {0, 2},   {1, 3},   {0, 4}, {1, 8},
                                                     {1, 9}, {1, 0xA}, {1, 0xB}, {1, 5}, {0, 6}, {0, 7}};
     const std::uint32_t index = (static_cast<std::uint32_t>(Long(Mem(kAbility))) & 0xFFFF) - 4u;
-    const unsigned c = index > 0x98 ? 11u : bof3::CodeBytes(kKindIndex, 0x99)[index];
+    const unsigned c = KindCase(index);   // past 0x98 the last case, as the original's bound
     if (c >= 12) PastTable("ElemStrike_Kind", c, 12);
     Sc()[3] = kCases[c][0];
     Sc()[4] = kCases[c][1];
@@ -1003,6 +1024,11 @@ S02_EXPORT void __cdecl ElemStrikeFx_Play(void) {
 }
 
 void MagicS02_Inject() {
+    {
+        static std::uint8_t index[0x99];   // KindCase as the compiler's byte table, for the hosted check
+        for (std::uint32_t i = 0; i < sizeof index; ++i) index[i] = static_cast<std::uint8_t>(KindCase(i));
+        bof3::Operand("ElemStrike_Kind byte table", kKindIndex, index, sizeof index);
+    }
     if (bof3::WantsShadow("magic_s02")) magic_s02::SelfTest();
     BOF3_INJECT(SuperCombo_Task);
     BOF3_INJECT(SuperCombo_Start);

@@ -26,9 +26,9 @@
 
 #include <cstring>
 
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace {
 
@@ -36,25 +36,40 @@ constexpr std::uint32_t kRowCount = 3;
 constexpr std::uint32_t kInsnSize = 5;
 constexpr std::uint32_t kInsnAt[kRowCount] = {0x5888E4, 0x5888E9, 0x5888EE};
 
-std::uint8_t g_now[kRowCount] = {0x60, 0x80, 0x40};  // the original's
+// The widths in this build (TitleMenu_Width): the original's until a chunk's
+// patch goes in, then the chunk's. A value of ours - our TitleMenu_DrawRow
+// (save_menu.cpp) reads it, never the immediate (docs/operand-store.md).
+std::uint8_t g_now[kRowCount] = {0x60, 0x80, 0x40};
 
 }  // namespace
+
+void TitleMenu_Operands() {
+    for (std::uint32_t i = 0; i < kRowCount; ++i)
+        bof3::Operand("DIV-0014 title menu width", kInsnAt[i] + kInsnSize - 1, &g_now[i], 1);
+}
+
+unsigned TitleMenu_Width(unsigned row) {
+    if (row >= kRowCount) bof3::Fatal("TitleMenu_Width: row %u of %u", row, (unsigned)kRowCount);
+    return g_now[row];
+}
 
 void TitleMenu_SetWidths(std::uint32_t tag, const std::uint8_t* widths, std::uint32_t size) {
     if (tag != 0 || size != kRowCount)
         bof3::Fatal("title menu chunk: tag 0x%08X, %u bytes - wants tag 0 and 3", (unsigned)tag, (unsigned)size);
+    unsigned on = 0;
     for (std::uint32_t i = 0; i < kRowCount; ++i) {
         if (widths[i] == 0) bof3::Fatal("title menu chunk: row %u has no width", (unsigned)i);
         // The whole instruction, so that a wrong address cannot pass for the right one.
         const auto slot = static_cast<std::uint8_t>(0x10 + i);
         const std::uint8_t was[kInsnSize] = {0xC6, 0x44, 0x24, slot, g_now[i]};
         const std::uint8_t is[kInsnSize] = {0xC6, 0x44, 0x24, slot, widths[i]};
-        bof3::PatchBytes("TitleMenu_Widths", kInsnAt[i], was, is, kInsnSize);
+        on += bof3::PatchBytes("TitleMenu_Widths", kInsnAt[i], was, is, kInsnSize) ? 1 : 0;
     }
     // PatchBytes leaves the bytes alone under BOF3X_ORIGINAL, every time alike,
     // so g_now only moves when the code did.
-    const auto* first = bof3::CodeBytes(kInsnAt[0], kInsnSize);
-    if (first[kInsnSize - 1] == widths[0]) std::memcpy(g_now, widths, kRowCount);
+    if (on == kRowCount) std::memcpy(g_now, widths, kRowCount);
+    else if (on != 0) bof3::Fatal("DIV-0014: %u of the %u title menu widths patched", on, (unsigned)kRowCount);
+    bof3::Operands_Check("DIV-0014's title menu widths");
     bof3::Log("DIV-0014: title menu rows %u, %u, %u wide", (unsigned)widths[0], (unsigned)widths[1],
               (unsigned)widths[2]);
 }

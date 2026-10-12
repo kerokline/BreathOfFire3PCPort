@@ -36,12 +36,25 @@ static_assert(kObjectSize * kExtra == Sprite_ObjectsExtra_count);
 
 // The high nibbles of an AreaMap_Bytes cell that stop a step, a bit each. The
 // original looks the nibble up in a byte table at 0x518660 (0 or 2: open,
-// 1: blocked) and jumps through 0x518654; FieldBlocked_Inject reads the mask
-// from both (ReadCellTable, below) before it installs anything, so the list
-// is the image's, not a copy of it (docs/exe-table-audit.md).
-std::uint16_t ReadCellTable();
+// 1: blocked) and jumps through 0x518654: the switch it was compiled from,
+// the function's logic, ours since AreaMap_CellBlocked is (the disc-only
+// round's rule for a table the compiler put in the code, docs/operand-store.md;
+// it was read from the image until then, docs/exe-table-audit.md). Hosted,
+// FieldBlocked_Inject registers CellTableIsOurs, which reads both tables and
+// compares, for Operands_Check.
+bool NibbleBlocks(unsigned nibble) {
+    switch (nibble) {
+    case 0x1: case 0x2: case 0x3: case 0x4: case 0x5: case 0xA: case 0xB: case 0xF: return true;
+    default: return false;
+    }
+}
 std::uint16_t BlockingNibbles() {
-    static const std::uint16_t mask = ReadCellTable();   // read once, whoever asks first
+    static const std::uint16_t mask = [] {
+        std::uint16_t m = 0;
+        for (unsigned nibble = 0; nibble < 16; ++nibble)
+            if (NibbleBlocks(nibble)) m = static_cast<std::uint16_t>(m | 1u << nibble);
+        return m;
+    }();
     return mask;
 }
 
@@ -617,26 +630,27 @@ void SelfTest(void* const (&theirs)[kCount]) {
     if (bad) bof3::Fatal("the blocked-ahead test differs from the original in %u of %u self-test rounds", bad, kRounds);
 }
 
-// The original's cell table: for each high nibble, the byte at 0x518660 +
-// nibble * 0x10 picks an entry of 0x518654, which is the `mov al, 1` at
-// 0x51864D or the `xor al, al` at 0x518650. Anything else is a Fatal.
-std::uint16_t ReadCellTable() {
-    std::uint16_t mask = 0;
+// The hosted check of NibbleBlocks against the original's cell table: for
+// each high nibble, the byte at 0x518660 + nibble * 0x10 picks an entry of
+// 0x518654, which is the `mov al, 1` at 0x51864D or the `xor al, al` at
+// 0x518650. Run hosted only (Operands_Check), where the code is mapped.
+bool CellTableIsOurs() {
+    const auto* const bytes = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(0x518660));
+    const auto* const jumps = reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(0x518654));
     for (unsigned nibble = 0; nibble < 16; ++nibble) {
-        const unsigned char index = bof3::CodeBytes(0x518660, 0x100)[nibble * 0x10];
-        if (index > 2) bof3::Fatal("field_blocked: cell table entry %u is %u", nibble, index);
+        const unsigned char index = bytes[nibble * 0x10];
+        if (index > 2) return false;
         std::uint32_t target;
-        std::memcpy(&target, bof3::CodeBytes(0x518654, 0xC) + index * 4, sizeof target);
-        if (target == 0x51864D) mask = static_cast<std::uint16_t>(mask | 1u << nibble);
-        else if (target != 0x518650) bof3::Fatal("field_blocked: cell jump table entry %u is 0x%X", index, (unsigned)target);
+        std::memcpy(&target, jumps + index * 4, sizeof target);
+        if (target != (NibbleBlocks(nibble) ? 0x51864Du : 0x518650u)) return false;
     }
-    return mask;
+    return true;
 }
 
 }  // namespace
 
 void FieldBlocked_Inject() {
-    BlockingNibbles();   // a table that is not the expected shape is a Fatal now, not mid-game
+    bof3::OperandRule("AreaMap_CellBlocked cell table", 0x518654, 0x10C, &CellTableIsOurs);
     if (bof3::WantsShadow("field_blocked")) {
         void* clones[kCount];
         for (unsigned k = 0; k < kCount; ++k) {

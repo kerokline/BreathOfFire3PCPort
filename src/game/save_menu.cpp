@@ -31,10 +31,10 @@
 #include "bof3/symbols.gen.h"
 #include "game/dat_cache.h"
 #include "game/save_menu_callees.h"
+#include "game/title_menu.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
-#include "hook/code_bytes.h"
 
 namespace save_menu {
 
@@ -569,12 +569,12 @@ extern "C" void __cdecl TitleMenu_DrawRows(unsigned glow) {
 // call left on the stack, a 0.
 //
 // The widths are the immediates of the original's three `mov byte [esp +
-// 0x1x], w` (0x5888E4..0x5888F2), read from the image: DIV-0014
-// (title_menu.cpp) writes the English widths there, and this is where they
-// still take effect with the code ours.
+// 0x1x], w` (0x5888E4..0x5888F2), as title_menu.cpp holds them: DIV-0014
+// writes the English widths there, and this is where they still take effect
+// with the code ours (docs/operand-store.md).
 extern "C" void __cdecl TitleMenu_DrawRow(int y, unsigned row, unsigned glow) {
     const U r = row & 0xFF;
-    const U width = bof3::CodeByte(at::kRowWidths[r < 3 ? r : 0]);
+    const U width = TitleMenu_Width(r < 3 ? r : 0);   // at::kRowWidths[r], as title_menu.cpp holds it
     // A row past 2 reads the stack beyond the three bytes in the original:
     // nothing calls it so, and ours refuses rather than invent a width.
     if (r >= 3) bof3::Fatal("TitleMenu_DrawRow: row %u, the original reads past its width table", (unsigned)r);
@@ -1284,6 +1284,7 @@ void CacheSoundSelfTest() {
 }  // namespace
 
 void SaveMenu_Inject() {
+    TitleMenu_Operands();   // DIV-0014's widths, which our TitleMenu_DrawRow reads, against their immediates
     if (bof3::WantsShadow("dat_cache")) CacheSoundSelfTest();
     if (bof3::WantsShadow("save_menu")) save_menu::SelfTest();
     BOF3_INJECT(Snd_LoadBankFile);

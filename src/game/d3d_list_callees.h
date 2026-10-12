@@ -39,5 +39,9 @@ extern const Callees kOriginals;
 extern Callees g;
 
 void SelfTest();   // d3d_list_fuzz.cpp
+// The two byte index tables as d3d_list.cpp holds them (Entry, a switch),
+// registered against kSoftBytes / kD3dBytes for the hosted check
+// (docs/operand-store.md). D3dDraw_Inject calls it.
+void Operands();
 
 }  // namespace d3d_list

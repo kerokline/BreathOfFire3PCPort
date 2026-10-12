@@ -2,6 +2,7 @@
 
 #include <cstring>
 
+#include "hook/detour.h"
 #include "hook/host.h"
 #include "hook/log.h"
 
@@ -17,6 +18,8 @@ struct Entry {
     const std::uint8_t* ours;     // Bytes: n bytes; Call: a std::uint32_t target
     std::uint8_t held[64];        // OperandExpect's copy
     bool (*same)();               // Rule
+    bool under_jmp;               // under a jmp of ours: compared before it went in (or never, if registered after)
+    bool compared;                // compared at least once
 };
 
 // The inventory: about forty sites, each registered once (the chunk paths
@@ -27,7 +30,7 @@ unsigned g_count = 0;
 bool g_late = false;   // InjectAll is done: a new entry is checked as it comes
 
 Entry* Add(const char* site, std::uint32_t va, std::uint32_t n, Kind kind) {
-    if (n == 0 || n > sizeof g_entries[0].held) Fatal("operands: %s at 0x%08X: %u bytes (1..64)", site, (unsigned)va, (unsigned)n);
+    if (n == 0 || n > 0x1000) Fatal("operands: %s at 0x%08X: %u bytes", site, (unsigned)va, (unsigned)n);
     for (unsigned i = 0; i < g_count; ++i)
         if (g_entries[i].va == va && g_entries[i].n == n && std::strcmp(g_entries[i].site, site) == 0) return nullptr;
     if (g_count == kMax) Fatal("operands: more than %u values of ours; raise kMax", kMax);
@@ -39,9 +42,19 @@ Entry* Add(const char* site, std::uint32_t va, std::uint32_t n, Kind kind) {
     return &e;
 }
 
+// Whether [va, va + n) overlaps the five bytes of a jmp of ours at a function start.
+bool UnderJmp(std::uint32_t va, std::uint32_t n) {
+    for (int i = 0; i < OwnedCount(); ++i) {
+        const std::uint32_t a = OwnedAddress(i);
+        if (a < va + n && a + 5 > va && IsEnabled(a)) return true;
+    }
+    return false;
+}
+
 const std::uint8_t* Code(std::uint32_t va) { return reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(va)); }
 
-void CheckOne(const Entry& e) {
+void CheckOne(Entry& e) {
+    e.compared = true;
     if (!InCode(e.va) || !InCode(e.va + e.n - 1))
         Fatal("operands: %s names 0x%08X + %u, outside Capcom's code", e.site, (unsigned)e.va, (unsigned)e.n);
     switch (e.kind) {
@@ -66,8 +79,13 @@ void CheckOne(const Entry& e) {
     }
 }
 
-void Late(const Entry* e) {
-    if (e && g_late && !IsExeHost()) CheckOne(*e);
+void Late(Entry* e) {
+    if (!e || IsExeHost()) return;
+    if (UnderJmp(e->va, e->n)) {
+        e->under_jmp = true;   // its bytes are our jmp's already: nothing to compare
+        return;
+    }
+    if (g_late) CheckOne(*e);
 }
 
 }  // namespace
@@ -79,6 +97,7 @@ void Operand(const char* site, std::uint32_t va, const void* ours, std::uint32_t
 }
 
 void OperandExpect(const char* site, std::uint32_t va, const void* bytes, std::uint32_t n) {
+    if (n > sizeof g_entries[0].held) Fatal("operands: %s at 0x%08X: %u bytes, above the %u held", site, (unsigned)va, (unsigned)n, (unsigned)sizeof g_entries[0].held);
     Entry* e = Add(site, va, n, Kind::Bytes);
     if (e) {
         std::memcpy(e->held, bytes, n);
@@ -99,6 +118,16 @@ void OperandRule(const char* site, std::uint32_t va, std::uint32_t n, bool (*sam
     Late(e);
 }
 
+void Operands_BeforeJmp(std::uint32_t at) {
+    if (IsExeHost()) return;
+    for (unsigned i = 0; i < g_count; ++i) {
+        Entry& e = g_entries[i];
+        if (e.under_jmp || !(at < e.va + e.n && at + 5 > e.va)) continue;
+        CheckOne(e);
+        e.under_jmp = true;
+    }
+}
+
 void Operands_Check(const char* when) {
     std::uint32_t bytes = 0;
     for (unsigned i = 0; i < g_count; ++i) bytes += g_entries[i].n;
@@ -109,9 +138,21 @@ void Operands_Check(const char* when) {
         g_late = true;
         return;
     }
-    for (unsigned i = 0; i < g_count; ++i) CheckOne(g_entries[i]);
-    Log("operands    %s: %u values of ours (%u bytes) equal to the patched code at their addresses", when, g_count,
-        (unsigned)bytes);
+    unsigned now = 0, before = 0, never = 0;
+    for (unsigned i = 0; i < g_count; ++i) {
+        Entry& e = g_entries[i];
+        if (!e.under_jmp) {
+            CheckOne(e);
+            ++now;
+        } else if (e.compared) {
+            ++before;
+        } else {
+            ++never;
+            if (!g_late) Log("operands    %s at 0x%08X + %u: registered under a jmp of ours, never compared", e.site, (unsigned)e.va, (unsigned)e.n);
+        }
+    }
+    Log("operands    %s: %u values of ours (%u bytes) - %u equal to the patched code at their addresses now, %u "
+        "before a jmp of ours covered them, %u never compared", when, g_count, (unsigned)bytes, now, before, never);
     g_late = true;
 }
 

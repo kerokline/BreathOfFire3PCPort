@@ -134,7 +134,7 @@ FileSection Section(const char* want) {
     Fatal("data: BOF3.exe has no %s section", want);
 }
 
-void CopyData(std::uint32_t* text_raw, std::uint32_t* text_size) {
+void CopyData(std::uint32_t* /*text_raw: the code-byte store's, gone*/, std::uint32_t* /*text_size*/) {
     wchar_t dir[MAX_PATH];
     const DWORD n = GetCurrentDirectoryW(MAX_PATH - 10, dir);
     if (n == 0 || n >= MAX_PATH - 10) Fatal("data: the current directory is unusable");
