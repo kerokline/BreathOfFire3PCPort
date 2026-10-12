@@ -554,14 +554,37 @@ slices' copy. 11.3's rule stands under the exe host's header: commit
    commits since `105a0c77` only one other touches code that runs in play:
    `7d162e4f`, the input script's keyboard keys and quit step, one line in
    `Game_WinMain`'s loop (`InputScript_PausedLatch`) and `input_script.cpp`.
-   The pairs' own commit was built and run last (its result below, if the
-   session reached it): if it matches the pairs, `7d162e4f` is the cause; if
-   it differs too, the pairs' environment or data moved since the morning
-   (the install's `DAT/` or a save), not the code.
+   **The pairs' own commit `105a0c77`, built and run the same way, differs
+   the same way too** - so the code is cleared entirely. Then the inputs,
+   each checked: the install's tagged overlays were all rewritten at 17:09
+   that day (by no agent of this session; another session or the owner),
+   but all 247 `en-US` files are byte-identical to the cache's layer
+   (`analysis/cache/pc-plus-us/loc/en-US`) the morning's install also came
+   from; the base `DAT/` files, `BOF3.CFG` and every save slot are older than
+   the pairs; the recipe, its save `nue.DAT`, the shot handling (five shots,
+   all frozen, at the same frames, `recipe done at 7421` on both) and the
+   runners are unchanged; the morning's launcher directory was ini-less like
+   today's, with no `bof3x.window`; every `DIV-` and path line of the two
+   game logs is identical but the load-address census. What changes at tick
+   6985 in today's dumps (6984 against 6990) is the fight's own state -
+   `Draw_SortOnX+0x1D..+0x2A` ("the battle bytes", [`mode-rest.md`](mode-rest.md)
+   section 272's row), `Gfx_PacketNext`, `Gfx_OtPointers`, `Gfx_UnpackNext`
+   - with the Rand log and the inputs identical to the pairs' throughout.
+   **What is left is something the game reads from the machine**, stable
+   within a morning and within an evening but not between them: wall-clock
+   pacing or the display's state (the pairs were recorded with the owner at
+   the desk; every run of the evening was unattended with the screen
+   asleep). It is not a state 3 matter - the exe host and the hosted build
+   agree on this route tick for tick - but it is a reference-stability
+   matter for the route. **The experiment that settles it:** this route once
+   with the owner at the machine, or the pair re-recorded now and checked
+   against the evening's runs; and a read of what in the Nue fight's state
+   at tick 6985 could depend on the clock (`Game_Clock`, DIV-0022, or the
+   render count).
 
 ### 5.5 Not done yet
 
-- Finding 3's cause: a run of the pairs' build, or a bisection.
+- Finding 3's cause: code, data, saves and settings cleared (5.4); a run with the owner present, or the pair re-recorded, decides between the clock and the display.
 - The four Chinese pairs of finding 1 and finding 2's words: the owner's.
 - Anything seen or heard: the batch was unattended.
 
