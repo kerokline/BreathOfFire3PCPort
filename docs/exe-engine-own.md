@@ -89,6 +89,7 @@ The classes:
 |---|---|---:|---:|---:|---:|
 | `0x64FFE4..0x652894` | `Dat_FileNames`' 742 names (`recipes/pc-zh.toml`) | 10,416 | 7,520 | 312 | 7,520 |
 | `0x652894..0x6528A9` | the DAT directory format and the save files' pattern | 21 | 18 | 0 | 18 |
+| `0x656AEC..0x656B00` | the field button map's defaults `Boot_Task` copies (a rule: [`controls.md`](controls.md) 2.1; added 2026-10-12) | 20 | 9 | 0 | 2 |
 | `0x65DA44..0x65DA50` | `Cfg_Fullscreen`, `Cfg_RenderMode`, `Cursor_Hidden`: 1 | 12 | 3 | 0 | 3 |
 | `0x65DA54..0x65DA76` | WinMain's messages and the logo AVI's name | 34 | 25 | 2 | 25 |
 | `0x65DA84..0x65DA96` | the window class and the icon's name | 18 | 13 | 0 | 13 |
@@ -104,13 +105,19 @@ The classes:
 | `0x66BC40..0x66BC58` | `Gpu_OtTerminator` and `Gte_IdentityRotation` | 24 | 7 | 0 | 7 |
 | `0x66BC58..0x66C45A` | `Math_SinTable` (a rule) | 2,050 | 1,996 | 0 | 0 |
 | `0x66C7B0..0x66C7CE` | the pad `DInput_EnumJoystick` looks for by product name | 30 | 29 | 0 | 29 |
-| total | 17 regions | 20,866 | 15,938 | 319 | 13,942 |
+| total | 18 regions | 20,886 | 15,947 | 319 | 13,944 |
 
 "Text words": words inside the region that `exe-pointers.tsv` calls pointers -
 four characters of a string that happen to read as an address in the image
 and that no disc places, so the pointer decision kept them (`exe_own.py
 text_words` lists all 319). They are numbers; the fill writes them, and the
 verification proves them equal to the PC's.
+
+The button map's defaults (added after this group, 2026-10-12) are a game
+rule rather than the port's platform bytes: the JP disc places 16 of their
+20 bytes, the Western discs none (their boot EXEs hold a different
+assignment), so a Western disc-only image had zeros there. Held by button
+name, not copied ([`controls.md`](controls.md) 2.1).
 
 `Math_SinTable` is placed from the JP disc's boot EXE already (0 unfilled), but
 held anyway: it is a rule (`round(4096 sin(2 pi i / 4096))`, i = 0..1024,

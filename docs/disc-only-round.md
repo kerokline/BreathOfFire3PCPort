@@ -1,9 +1,13 @@
 # The disc-only round: a playable build from a PlayStation disc alone
 
-**Status:** IN PROGRESS (staged 2026-10-12 morning from `main` `39bd3740`, PR #54;
-the owner's "what is next" of 2026-10-11, [`HANDOFF.md`](HANDOFF.md) item 0).
-Six agent groups in parallel on stage A, one on stage B after they merge, the
-validations batched at the end (section 4). Nothing pushed.
+**Status:** MEASURED (2026-10-12, one day: staged in the morning from `main`
+`39bd3740`, PR #54, the owner's "what is next" of 2026-10-11; six groups in
+parallel on stage A, two on stage B, three fixes from the gate's readings and
+the review, merged one at a time - section 3; the validations batched at the
+end - section 4; the PR from the branch's tip). **A US PlayStation disc alone
+now gives a cache the engine maps and plays with no `BOF3.exe` present**, and
+the gate's every page is a ledger entry of this round or the references' own
+noise.
 
 ## 0. What the round is for
 
@@ -97,6 +101,9 @@ and the exe host's self-test after each; the full validations in section 4.
 | 6 | CP | `disc-only/pointers` `23f993df` | `d74a870d`, clean | `recipes/exe-layout.tsv`, one row per pointer word (`pc kind target`; code 8,784 - 8,673 by `[[func]]` name, 111 by address - data 9,959, rdata 63, bss 35, number 471), written by `recipe`, checked by `check`, applied by `disc_built` as one `layout` range after the rebuild (a rebuilt word disagreeing with the table stops the build; none does); the 462 + 7 mid-function words, the `.bss` words and NB's text words classed by rules (`code_numbers`: a pointer only at a `[[func]]` start or an instruction boundary after `ret` / `int3`; `bss_numbers`; `own_numbers`), `exe-pointers.tsv` 19,311 -> 18,840 words; `data.toml` classes `layout` and `own` (NB's regions, over `pointer` and `none`); byte-window keys for the places (JP +9 places, +662 bytes). **Unfilled pointer bytes JP / US: 48,692 / 49,408 -> 0 / 0**; `none` with PC bytes non-zero 22,331 / 23,013 -> 8,071 / 8,732; bytes identical to the PC's 577,657 / 576,417 -> 612,863 / 612,176 of 638,976. Six doubtful `.bss` words held as pointers (24 bytes, doc 7.2); 111 code targets with no `[[func]]` and no stub, read by nothing of ours. `exe_image.cpp`'s `Count by[]` still lacks `layout` / `own` (IN's). No ledger entry. |
 | 7 | FM | `disc-only/fmv` `c0968241` (stage B) | clean | the disc's one movie, `LOGO/CAPCOM30.STR` (every PSX disc, 1,155 sectors, byte-identical from the subheader on; 320x240, 231 frames at 30 fps from the sector timing, 7.70 s; XA 37.8 kHz stereo), converted by the player's ffmpeg at `importer.py build` into `base/fmv/CAPCOM.AVI` - Cinepak as DIV-0001's, 640x480 by pixel doubling, 30 fps (`-r 30`: ffmpeg's `psxstr` demuxer stamps 15), PCM 44.1 kHz; the PC's own `capcom.avi` is Cinepak 640x480 15 fps 112 frames, PCM 22.05 kHz; SSIM 0.970 against a direct decode (the PC's re-encode 0.990); about 2 minutes; `install` copies it unless a `capcom.avi` is there; no ffmpeg: a logged skip, recorded for `verify` ([`fmv-import.md`](fmv-import.md), **DIV-0099**). Verified outside the game: 32-bit Video for Windows decodes 231 of 231 frames, MCI with the game's own `open avivideo!` string plays to frame 231. **Not played in the game, not heard.** Found: MCI error 304 on a full path of about 160 characters (the 8.3 form opens; the PC's own movie has the same limit); `Disc_Probe` `0x5A72C0` tests for `CAPCOM.AVI` as "local install" (IN's). |
 | 8 | IN | `disc-only/integration` `e75694b1` (stage B) | clean | `recipes/exe-gaps.tsv` (`exe_tables.py gaps`, from `exe_own.py measure` on all seven discs: addresses, classes, symbols) classes every unfilled byte where the PC has a value as `language`, `unread`, `keys` or `gap` (game-value, disc-unplaced, port-relaid, LG's eight as `language-zero`); the importer writes the classes into `data.toml`, so `none` now means zero on the PC too; **`exe_image.cpp` maps a disc-built image** (a `pointer` range or an old cache refused; the engine's regions filled; each gap logged once; `BOF3X_EXEIMAGE_STRICT=1` refuses any gap), `ExeImage_CompareWithFile` when the file is present (a Fatal if `none`, `own`, `keys`, `layout`, `rebuilt` or `exe` differ); `importer.py install --base` lays out `DAT/` (742), `SND/` (880), an empty `BGM/`; a missing movie skipped as the port does, logged once; `Disc_Probe`'s "local install" test (`CAPCOM.AVI`) satisfied by a mapped disc image (`win_main.cpp`, **DIV-0100**); `exe_tables.py gate-skip` writes the gate's list (the committed list + 1,222 ranges, 48,955 bytes; `layout` / `own` / `keys` stay hashed since the map step proves them equal - a departure from the brief, right) ([`disc-only-install.md`](disc-only-install.md)). Measured: the real install with the US cache 627,123 of 638,976 bytes equal to the file, every class that must equal equal; **the scratch install with no `BOF3.exe` under `en-US`: self-test exit 0, 10,088 ours**. US gaps: 456 ranges, 3,358 PC bytes (game-value 2,196, disc-unplaced 818, language-zero 238, port-relaid 106); read, not played: `Magic_Rows` (each effect's file number 0, the wrong effect file - the most visible), the dragon-form set files, the ending roll's steps, the equipment / experience panels' numbers, one mode's per-record words. **The gate's attract pair: identical at tick 0 (with the real install's `BOF3.CFG`), the VRAM shadow and `0x903000` from tick 1, sprites / CLUT strip / area map from tick 1310 - not yet read to the byte** (section 4). |
+| 9 | BD | `disc-only/button-defaults` `3e83f7cc` (after the gate reading, 4.1) | clean | the field button map's 18 default bytes at `0x656AEC` (nine pad words: speak = circle + L2 + R2, move = square, menu = triangle, view = R1, change = L1, select, action = cross, confirm = circle + L2 + R2, cancel = cross; two zero bytes) held as an engine rule (`FieldButtonDefaults` in `exe_own.cpp`, each word by `input::Action`; `exe_own.py`'s 18th region; 7 gap rows gone, `exe.toml` updated, the image hashes unchanged). Read: Config Init `0x460FDE..0x46100B` and `LoadMenu_Apply`'s Start-held reset write the same values; the Japanese PlayStation's `Boot_Init` copies nine identical halfwords from `0x8017FEE4` - Capcom's default, not the port's; **the US PlayStation's (`SLUS_004.22`, `0x8014EB24`, from `0x8017F56C`) is a different assignment** (cross speaks and confirms, triangle acts and cancels, circle moves, square opens the menu - the `symbols.toml` save-5 measurement): the PC port took the Japanese one, so a US disc-only install starts with the Japanese buttons - **the owner's call** whether a Western install offers the US assignment (a DIV). Self-tests: exe host with the file and the PC cache (`18 regions, 20886 bytes ... each equal`), the real install with a fresh US `base/exe/` (627,132 of 638,976 equal), the no-exe scratch install (10,088 ours), hosted `exe_own,shell,mode_flow` 0 mismatches. No ledger entry. |
+| 10 | LX | `disc-only/language-refusal` `1940675c` (after the batch's invalid gate, 4.2) | clean | a language the install cannot play is refused: `original` needs `BOF3.exe` in the game directory or the cache's `loc\zh-CN` layer (one rule in the launcher's `ConfigOriginalAvailable`, the engine's `RefuseOriginalWithoutChinese` in `DatLoad_Inject`, the tools' `language_tags.original_available`); refused before the dialog with the languages held named, the dialog without "Chinese (PC script)", the default the first language held (`en-US` from a US disc), the engine's Fatal as the last line; a PC install unchanged. **DIV-0102.** Measured against IN's install: `original` and `fr-FR` refused, `en-US` and no language exit 0 (10,088 ours), `bof3x.exe` run directly under `original` exit 3; the real install exit 0 under all three. `attract_run.py` defaults `--lang` to `original`: pass it. |
+| 11 | SF | `disc-only/story-flag-seed` `c3e01f40` (after the corrected gate, 4.3) | clean | the 16 bytes `Scenario_SubInit` copies into `Cond_Flags` are on every disc, byte-identical to the PC's, in `ETC/GAME.EMI#0` right after the dispatch table's two entries (JP `0x801C94A4`, US `0x801C84AC`, EU / DE `0x801C8730`, FR `0x801C8734`, the PSPs too): disc data the places missed, not a game value. `find_places` gains the `code_windows` key (16 number bytes between two code-pointer words, tried where no pointer key places a region): `0x662CA4..0x662F24` placed from `GAME.EMI#0` on every PSX build, `0x662DE8..DF0` (`FieldTail_DropInMove`'s table) with it; two `game-value` rows gone from each PSX build (`identical` +4), the PSPs keep both (their `GAME.EMI` uses PSX-range code words; widening the key moved 20 unrelated places - reverted). No ledger entry: the PC's behaviour restored. |
 
 ## 4. The validations, batched
 
@@ -126,8 +133,126 @@ Not exercised by this gate: `START` is not loaded in the attract, so DIV-0096's
 `START` arena and DIV-0097's `START` atlas stand-in wait for a route that
 boots through it.
 
-### 4.2 The batch
+### 4.2 The batch (2026-10-12, 10:06-12:09, the build at `5ac7f151`)
 
-(filled at the end: the hosted `'*'` narrow and wide, the exe host's
-self-test, the gate's state-hash pair, the attract and the routes against the
-existing pairs)
+One chain (`r/end/batch.sh` in the session scratchpad), from an ini-less copy
+of the round's build, `--no-front`, `BOF3X_OPT=none`, `BOF3X_LAYERING=0`.
+**The machine was not quiet:** the review's fixes were built and the BD group
+built and ran its self-tests beside it, which the chain guards only at each
+run's start. The binaries are the pre-review-fix build; the fixes change the
+probe's condition and a log line, which no run here reaches.
+
+| Run | Result |
+|---|---|
+| hosted `BOF3X_SHADOW='*'` narrow | exit 0, 15 min, `inject: 10087 ours`, 0 non-zero `MISMATCHES` lines |
+| hosted `'*'` wide (`BOF3X_WIDE=1`) | exit 0, 16 min, 0 mismatches |
+| hosted `'*,-field_c1'` under `en-US` | exit 0, 15 min, 10,088 ours, 0 mismatches |
+| the exe host: the file; the PC-plus-US cache; the US-only cache | exit 0 each, 10,087 ours |
+| **the gate**: the attract on the disc-only install (`gate_us`) against the PC-plus-US cache on the real install (`gate_pcus`), the gate skip list, `en-US` | **349 pages differ from tick 1** (the VRAM shadow from `0x6CA000`, `AreaMap_Corners`' pages from tick 3855, ...): the by-source differences 4.1 read on IN's pair, on a longer run; **two disc-only runs identical on all 11,649 ticks** (`gate_us` / `gate_usb`): the disc-only build is deterministic. A page-by-page reading of this pair against 4.1's categories is owed. |
+| the attract against `attract_r14_orig` / `_origb` | 2 pages: `0x7DE000` (the sound page) on 4 ticks, `0x7C9000` (`D3d_ScaleY` / `Font_TexCache`) on 2 ticks at 1561-1562 - the loaded machine's noise of `state-hash.md` 4 |
+| `caughFish`, `masterAndManillo`, `shop` against `cn_<route>_orig2` / `_orig2b` | **identical on every tick** (3,841 / 5,505 / 3,137) |
+| `combat` | `0x7DE000` on 2 ticks (227, 1233): the sound page's one-tick noise |
+| `worldMapAndAreaTransition`, `whelpBoss`, `menu_screens`, `field_menu` | five VRAM-shadow pages, `0x7DE000` and `0x937000` at tick 3 only (an upload landing a frame late: the loaded machine); `menu_screens` / `field_menu` also `0x7DE000` for most of the run - the DIV-0092 staleness `state3-build.md` 5.4 names for these two |
+| `dragonTransform`, `cutsceneAndNue` | `0x904000` (`Music_Track`), `0x665000`, `0x6BD000` (`Music_*`), `0x7DE000` from a battle's end - **the four Chinese pairs stale since DIV-0092**, as `state3-build.md` 5.4 found; re-record them (`--original "*,-Game_Clock"`, `BOF3X_OPT=none`) - not this round's |
+
+**The batch's gate pair was not a gate** (read page by page, `gate-reading-2.md`):
+`batch.sh` set `BOF3X_LANG=en-US` in the environment, which `attract_run.py`
+overrides with its own `--lang` (default `original`), so both sides played
+under the port's Chinese layer - which a disc-only cache does not have by
+design - and the disc side stalled in area 4's message box (message 8 never
+closes); the 349 pages are 81 of absent Chinese chunks, 185 knock-on from
+the stall, and the by-source classes of 4.1. **Found by it:** a disc-only
+install started under `original` plays with no text and nothing refuses it -
+the LX group (`disc-only/language-refusal`): refused loudly in the launcher
+and the engine, the install's default its disc's own language.
+
+**The re-run** (the BD build; the LX group built beside it, so not quiet
+either): the attract **identical to its pair on all 10,305 ticks**;
+`menu_screens` and `field_menu` the DIV-0092 staleness (`Music_*` pages from
+tick 752); `combat` and `worldMapAndAreaTransition` the five VRAM pages at
+tick 3 only; `whelpBoss` a seven-tick window at 7177-7754 inside the build.
+A truly quiet re-run of `combat` and `worldMapAndAreaTransition` is owed
+before the tick-3 pages are called noise (4.4).
+
+### 4.3 The gate, corrected (2026-10-12, the BD build, `--lang en-US` as the tool's argument)
+
+`g2_pcus` (the PC-plus-US cache on the real install) against `g2_us` (the
+disc-only install), the gate skip list, dumps at ticks 1309 / 1310 / 1312 /
+1330 on both sides (`build/end2/` of the round worktree): **97 pages over
+11,009 ticks**, read page by page and, where the dumps reach, to the byte
+(`gate-reading-3.md`):
+
+| Cause | Pages |
+|---|---|
+| DIV-0097 (the disc's own images) | 9 |
+| DIV-0089 (`DEMO`'s stand-in) | 28 |
+| DIV-0096 (`PL27A`'s arena 39; `0x802000` / `0x92B000` to the byte: pointers moved by +0x160, the arena's size) | 41 |
+| DIV-0080 (the walls and the re-texture; `0x938000` to the byte: a cell-texture nibble) | 10 |
+| probably DIV-0080 (`0x801000`, `0x905000`: a draw count 8 against 6 in the same window; not settled to the source) | 2 |
+| **a second gap of the button map's kind:** `0x904000` from tick 1310 is two bytes of `Cond_Flags` (`+0xA0` 0x08, `+0xA3` 0x0A on the PC, zero on the disc side: flags 3, 0x19, 0x1B), written by `Scenario_SubInit` `0x56D8C0` from `0x662CD8..0x662CE8` - a `game-value` gap in every build; the PSX twin's table is cited in `GAME.EMI` (`0x801C94A4`), so the disc may carry it unplaced - **the SF group, `disc-only/story-flag-seed`: placed from the disc (merge 11)** | 1 |
+| `0x903000`: the difference from tick 1 is **gone** (the BD fix holds); a 62-tick window at 1545-1607 and 7262-7324 the old difference hid - a dump at about tick 1550 on both sides would settle it | 1 |
+| noise (`0x7C1000..0x7C3000`, `0x7DE000`, `0x937000`: two-tick windows at 1311 and 4051, a CLUT-area upload landing a tick apart - the pattern the references show at tick 3) | 5 |
+
+### 4.4 The final chain (the tip after the SF merge)
+
+The US cache rebuilt from the tip (SF's places, FM's movie), its gate skip
+list, then with nothing else on the machine: `combat` and
+`worldMapAndAreaTransition` against their pairs, and the gate pair once more
+with dumps at ticks 1310, 1550 and 1560.
+
+**The cache** (`r/end/cache-us-final`): built in 3 m 34 s with the movie
+(`CAPCOM.AVI` from `psx-us`, ffmpeg 9.0.1); `verify` 0 problems but the
+pre-existing `opt/area4-walls` `AREA004.DAT` slot 6 line (HANDOFF item 4);
+the gate skip list the committed one plus 1,219 ranges, 48,911 bytes (gap
+5,411, language 2,904, map 104, unread 37,427, widen 3,065).
+
+**The gate, final** (`g3_pcus` against `g3_us`, `--lang en-US`): **96 pages
+over 10,945 ticks** - 4.3's 97 less `0x904000`, which is gone (the SF place
+holds); `0x903000`'s 63-tick windows (1545-1607, 7262-7324) are one word,
+`Scratch_Swap` `0x90385C`, the area-map draw-table sort's exchange scratch
+(`DrawTable_Sort`, `AreaMap_Frame`'s cell rebuild - `symbols.toml`), in the
+area-4 scenes where DIV-0080's walls change the cells drawn: the same
+region as the two draw-count pages, explained by mechanism. Every page of
+the final pair is a ledger entry of this round (DIV-0096, DIV-0097,
+DIV-0089, DIV-0080) or the references' own noise pattern; **nothing of the
+round's code differs between a disc-built image and the PC-built one.**
+
+**The two routes with the machine quiet:** `combat` and
+`worldMapAndAreaTransition` still differ from their Chinese pairs at tick 3
+(five VRAM-shadow pages, `0x7DE000`, `0x937000`; `worldMap` again at
+331-334) - so this is not the batch's load. The discriminator (combat on
+the round's hosted build and its exe host, dumps at ticks 2..4, against the
+pair and against each other) - 4.5.
+
+### 4.5 The tick-3 difference is the icon's first run, not the round's
+
+`combat` on the round's **hosted** build (`--host bof3`): **identical to the
+Chinese pair on all 2,561 ticks** - the tree's game code is right. The same
+recipe in the **exe host**, first run from a fresh launcher copy: the five
+VRAM pages, `0x7DE000`, `0x937000` at tick 3; against the hosted run's dump
+at tick 3 the differing bytes are `Gfx_ClutRows` (one more row in use and
+its texture pointers), the sound heap's pointers and the task stacks - the
+load screen's first frames with one more CLUT upload. The launcher copy had
+just written `bof3x.icon` and `bof3x.exe.new`: **DIV-0095's icon generation**
+(the whelp cut from the VRAM shadow once the load screen has uploaded its
+sheet and CLUT, exe host only). **The second exe-host run in the same
+directory: identical to the pair on all 2,561 ticks.** So every tick-3 page
+of 4.2 and 4.4 is the first runs of a fresh copy (the batch's first four
+routes differed, the later ones were identical; `end3` and `end4` were fresh
+copies), not the round's code. HANDOFF's traps carry it: run the exe host
+once from a fresh launcher copy before recording with it.
+
+## 5. What the round leaves
+
+- The owner's calls of section 2 and [`owner-review.md`](owner-review.md):
+  the game values no disc carries (DIV-0101, provisional), the US release's
+  button assignment, the porting house's logos, the faerie label group, the
+  six `.bss` words, DIV-0055's plates.
+- The review's notes not acted on ([`disc-only-round-review.md`](disc-only-round-review.md)
+  2): the hosted checks comparing parallel arrays rather than the fields the
+  readers use; `exe_image.cpp` reading `BOF3X_EXEIMAGE` with the ANSI API.
+- The four stale Chinese pairs (DIV-0092) to re-record; the PSP builds keep
+  the two rows SF placed on the PSX ones; a PSP-only build still lacks the
+  14 arenas (AR's `OWN_FROM` is the PSX discs').
+- Not played by anyone: the disc-only install, the movie in the game, a key
+  press in `bof3x.exe`, the disc's arenas and images.

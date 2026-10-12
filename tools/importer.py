@@ -1636,6 +1636,14 @@ def cmd_install(a):
     # Overlays under a retired bare code (DAT/en.*.DAT, DIV-0005) are not
     # this install's to remove; it says they are dead weight.
     language_tags.note_retired_overlays(dat_dir)
+    # DIV-0102: an install with no Chinese text (no BOF3.exe, no
+    # loc/zh-CN in the cache) is refused `original` by the launcher and the
+    # engine; it says which languages it holds and which the launcher plays.
+    if not language_tags.original_available(a.game, a.cache):
+        held = language_tags.languages_held(a.game, a.cache)
+        print("languages: no Chinese text (a disc-only install; DIV-0102) - language=original is refused; %s"
+              % ("held: %s, the launcher's default %s" % (", ".join(held), held[0]) if held else
+                 "no language layer held: install one with --lang <tag>, or the game cannot start"))
     fmv_install(a.cache, a.game)
 
 
