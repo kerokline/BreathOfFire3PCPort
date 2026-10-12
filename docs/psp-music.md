@@ -368,7 +368,9 @@ All from this branch's tools; the scripts are in `psp_ms/`.
 
 ## 9. For the other files
 
-**DIV C (draft; the coordinator numbers it), "A PSP-only install plays the
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): DIV C is **DIV-0105**, MB's text folded in; the README row, STATUS and owner-review (the ear) are in; the `dialog_test.py` note is HANDOFF's trap.
+
+**DIV-0105 (drafted as DIV C, numbered 2026-10-12), "A PSP-only install plays the
 PSP's music: its sequences and its banks".** MB's draft (`psp-music-banks.md`
 9) is folded in here; the dropped tone stays MB's separate bullet or entry.
 

@@ -610,7 +610,7 @@ extern "C" void __cdecl BattleAction_EnemyMessages(void) {
 // before the last; the flags word is re-read after Battle_ClearActingFlags;
 // the hook with 5 comes on the swap's path and on the plain one alike.
 //
-// DIV F (draft, psp_code.h): with the PSP's duel-loss on, an end byte with bit
+// DIV-0108 (psp_code.h): with the PSP's duel-loss on, an end byte with bit
 // 0 set and bit 2 clear in event battle 0x1B does not end the battle - the
 // PSP's added test (PSP-JP 0x11DFA4), which reads the event byte again after
 // the hook, as here. Off, the original's test alone.

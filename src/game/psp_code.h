@@ -1,4 +1,4 @@
-// DIVERGENCE DIV F (draft; the PSP-only round's group PB, docs/psp-battle-changes.md):
+// DIVERGENCE DIV-0108 (the PSP-only round's group PB, docs/psp-battle-changes.md):
 // two battle rules the PSP's code adds to the PlayStation's, each behind its
 // own switch. Read once at start-up (PspCode_Inject):
 //

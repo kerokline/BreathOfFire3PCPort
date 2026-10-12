@@ -253,7 +253,7 @@ that chord's second tone, which the PSP itself may not play. Whether the PSP
 plays it is unchecked; it is the owner's ear on a PSP. This makes the
 PSP-only install's bank the PC's and the PSX's, not the PSP's: a divergence
 from the PSP-only policy (the PSP's audio as it is, `psp-only-build.md` 7
-item 2). It is drafted as part of C below.
+item 2). It is drafted as part of C below; in the ledger it is DIV-0103's one exception (the restored chord as a PSP-only base), and the owner made the PSP's one tone a toggle on the Jukebox (DIV-0113, `psp-chord-one-tone`), the restored chord the default.
 
 ## 6. The contract for MS
 
@@ -325,6 +325,8 @@ tables `r_*.json`, the host build `hb/`). The caches and renders are game
 data and stay there.
 
 ## 9. For the other files
+
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): The part of C is in **DIV-0105**; the dropped tone is DIV-0103's one exception (the restored chord as the base) and its toggle DIV-0113; the README row, `psp-only-build.md` 2.1 and 8, STATUS and owner-review are in. The importer's class description (`tools/importer.py`) is left to its owner.
 
 ### DIVERGENCE.md: part of draft C (the PSP's music as base; MS owns C)
 

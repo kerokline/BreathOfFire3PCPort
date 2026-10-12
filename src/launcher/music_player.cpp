@@ -9,7 +9,7 @@
 // own sequencer (src/audio/seq.h, DIV-0087's player); the PSP disc's, when the
 // cache was built from a PSP disc alone (tools/ppms.py, docs/psp-music.md: the
 // same form, the same player; the manifest's bgm rows name the build), or from
-// the psp-music layer's opt\psp-music\bgm beside a PlayStation disc's (TG-1,
+// the psp-music layer's opt\psp-music\bgm beside a PlayStation disc's (DIV-0109,
 // docs/launcher-suites.md 9.3); and the PC
 // port's MP3s in BGM\, decoded by minimp3 and looped at DIV-0081's measured
 // points where the table has a row, else rewound to the file's start as the
@@ -335,7 +335,7 @@ struct Entry {
 
 struct State {
     std::wstring game_dir, cache;
-    // TG-5: the battle-chord box, over the settings' opt=
+    // DIV-0113: the battle-chord box, over the settings' opt=
     std::wstring data_root;
     std::string* opt = nullptr;
     ChordState chord;
@@ -463,7 +463,7 @@ void ListPsp(State& s) {
         return;
     }
     if (!IsPspBuild(CacheBgmBuild(root))) {
-        // TG-1: beside a PlayStation disc's songs, the PSP's are the music
+        // DIV-0109: beside a PlayStation disc's songs, the PSP's are the music
         // layer's tree (recipes/suites.toml's bgm member names it), the same
         // form, played from its own bank\.
         std::wstring layer;
@@ -591,7 +591,7 @@ void Play(HWND dlg, State& s) {
     std::wstring how;
     if (s.source == kPsx || s.source == kPsp) {
         // both are the cache's base\bgm in the PlayStation's form (docs/psp-music.md)
-        stream.reset(new SeqStream(e->path, e->bank_dir));   // the song's own directory's bank (TG-1)
+        stream.reset(new SeqStream(e->path, e->bank_dir));   // the song's own directory's bank (DIV-0109)
         how = e->loops ? L"looping as the disc's song does" : L"once, as in the game";
     } else {
         auto* mp3 = new Mp3Stream(e->path, e->number, e->loops);
@@ -648,7 +648,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         }
         EnableWindow(GetDlgItem(dlg, IDC_MP_PLAY), first >= 0 && s->open);
         EnableWindow(GetDlgItem(dlg, IDC_MP_STOP), first >= 0 && s->open);
-        // TG-5: the battle chord, as opt= plays it; greyed with the reason
+        // DIV-0113: the battle chord, as opt= plays it; greyed with the reason
         CheckDlgButton(dlg, IDC_MP_CHORD, s->chord.checked ? BST_CHECKED : BST_UNCHECKED);
         EnableWindow(GetDlgItem(dlg, IDC_MP_CHORD), s->chord.enabled && s->opt);
         SetDlgItemTextW(dlg, IDC_MP_CHORD_NOTE,

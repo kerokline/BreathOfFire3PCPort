@@ -9,7 +9,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
-// DIV F (draft): the PSP's two battle rules and their switch. What each rule
+// DIV-0108: the PSP's two battle rules and their switch. What each rule
 // is, and the PSP instructions it reproduces, is in psp_code.h and
 // docs/psp-battle-changes.md; this file holds the switch and the rules' own
 // self-test.
@@ -69,7 +69,7 @@ std::string BasePolicy(std::string& where) {
         const std::string value = Trim(line.substr(eq + 1));
         if (value == "\"psp\"") return "psp";
         if (value == "\"psx\"") return "psx";
-        bof3::Fatal("DIV F: %s's [build] base_policy is %s, neither \"psp\" nor \"psx\"", where.c_str(), value.c_str());
+        bof3::Fatal("DIV-0108: %s's [build] base_policy is %s, neither \"psp\" nor \"psx\"", where.c_str(), value.c_str());
     }
     return std::string();
 }
@@ -79,7 +79,7 @@ bool FromEnvironment(unsigned& mask) {
     char list[128];
     const DWORD n = GetEnvironmentVariableA("BOF3X_PSP", list, sizeof list);
     if (n == 0) return false;
-    if (n >= sizeof list) bof3::Fatal("DIV F: BOF3X_PSP is %lu characters; at most %u", n, (unsigned)sizeof list - 1);
+    if (n >= sizeof list) bof3::Fatal("DIV-0108: BOF3X_PSP is %lu characters; at most %u", n, (unsigned)sizeof list - 1);
     mask = 0;
     if (std::strcmp(list, "none") == 0) return true;
     const char* p = list;
@@ -90,9 +90,9 @@ bool FromEnvironment(unsigned& mask) {
         for (const Item& it : kItems)
             if (std::strlen(it.name) == len && std::strncmp(it.name, p, len) == 0) bit = it.bit;
         if (bit == 0)
-            bof3::Fatal("DIV F: BOF3X_PSP names \"%.*s\"; the PSP's changes are duel-loss and myria-item, or none",
+            bof3::Fatal("DIV-0108: BOF3X_PSP names \"%.*s\"; the PSP's changes are duel-loss and myria-item, or none",
                         static_cast<int>(len), p);
-        if (mask & bit) bof3::Fatal("DIV F: BOF3X_PSP names %.*s twice", static_cast<int>(len), p);
+        if (mask & bit) bof3::Fatal("DIV-0108: BOF3X_PSP names %.*s twice", static_cast<int>(len), p);
         mask |= bit;
         if (!comma) break;
         p = comma + 1;
@@ -179,6 +179,6 @@ void PspCode_Inject() {
                                 : "the default: the cache's manifest has no base_policy";
     }
     psp_code::Force(mask);
-    bof3::Log("DIV F       the PSP's battle changes: duel-loss %s, myria-item %s (%s)", mask & psp_code::kDuelLoss ? "on" : "off",
+    bof3::Log("DIV-0108    the PSP's battle changes: duel-loss %s, myria-item %s (%s)", mask & psp_code::kDuelLoss ? "on" : "off",
               mask & psp_code::kMyriaItem ? "on" : "off", why);
 }

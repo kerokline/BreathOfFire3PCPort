@@ -30,7 +30,7 @@ bool CacheHasLayer(const std::wstring& cache, const wchar_t* kind, const char* n
     std::wstring pattern = cache + L"\\" + kind + L"\\";
     for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
     if (AnyMatch(pattern + L"\\dat\\*.DAT")) return true;
-    // TG (docs/launcher-suites.md 9): an optional layer of songs, sound files or
+    // DIV-0109..0111 (docs/launcher-suites.md 9): an optional layer of songs, sound files or
     // .data ranges - the DLL's own test (dat_cache::HasLayerPart)
     return std::wcscmp(kind, L"opt") == 0 &&
            (AnyMatch(pattern + L"\\bgm\\*.DAT") || AnyMatch(pattern + L"\\snd\\*.DAT") ||
@@ -129,7 +129,7 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             // the default layers instead, so the launcher refuses it
             // (ConfigOptValid) rather than this file guessing.
             cfg.opt = value;
-        } else if (key == "psp") {  // DIV F (draft): kept as written, the DLL refuses an unknown name
+        } else if (key == "psp") {  // DIV-0108: kept as written, the DLL refuses an unknown name
             cfg.psp = value;
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
             cfg.cache = ConfigCacheFromIni(value);   // UTF-8 (state 3); an older ini's ANSI bytes once
@@ -229,7 +229,7 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# none: no layer. The dialog's three suites (graphics, audio, data: recipes/suites.toml) write their\r\n";
     out += "# layers here; a suite is its layers, so this line is the whole record of them\r\n";
     out += "opt=" + cfg.opt + "\r\n";
-    out += "# the PSP's battle rules (DIV F draft, docs/psp-battle-changes.md): duel-loss, myria-item, or none;\r\n";
+    out += "# the PSP's battle rules (DIV-0108, docs/psp-battle-changes.md): duel-loss, myria-item, or none;\r\n";
     out += "# empty: on when the cache's base is the PSP's, else off. The data suite writes them here\r\n";
     out += "psp=" + cfg.psp + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
@@ -334,7 +334,7 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
         }
     }
 
-    // DIV F (draft): the PSP's battle rules as the ini lists them; empty leaves
+    // DIV-0108: the PSP's battle rules as the ini lists them; empty leaves
     // the DLL its default (the cache's base_policy). The DLL checks the names.
     if (GetEnvironmentVariableW(L"BOF3X_PSP", existing, 64) == 0 && !cfg.psp.empty())
         SetEnvironmentVariableA("BOF3X_PSP", cfg.psp.c_str());

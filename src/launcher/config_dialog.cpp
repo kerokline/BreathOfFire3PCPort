@@ -405,7 +405,7 @@ void ReadBack(HWND dlg, const DialogState& state) {
     // The suites: a choice moves its layers in opt=; none chosen, opt= as read.
     cfg.opt = SuitesOptEdit(cfg.opt, ConfigOptDefaultInstalled(state.game_dir, DialogDataRoot(dlg)), state.suites,
                             state.choice);
-    cfg.psp = SuitesPspEdit(cfg.psp, state.suites, state.choice);   // DIV F (draft): the code members
+    cfg.psp = SuitesPspEdit(cfg.psp, state.suites, state.choice);   // DIV-0108: the code members
 }
 
 // The cache box as the ini's UTF-8 bytes, trimmed as ConfigLoad trims a line.
@@ -995,7 +995,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             std::wstring cache = DialogText(dlg, IDC_CACHE);
             const size_t b = cache.find_first_not_of(L" \t"), e = cache.find_last_not_of(L" \t");
             cache = b == std::wstring::npos ? std::wstring() : cache.substr(b, e - b + 1);
-            MusicPlayerRun(dlg, state->game_dir, cache, DialogDataRoot(dlg), &state->cfg->opt);   // TG-5: the chord box edits opt=
+            MusicPlayerRun(dlg, state->game_dir, cache, DialogDataRoot(dlg), &state->cfg->opt);   // DIV-0113: the chord box edits opt=
             return TRUE;
         }
         default:

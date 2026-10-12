@@ -37,7 +37,7 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
 // then not the PC's, and a check against the PC's reads the file instead.
 bool ExeImage_DiscMapped();
 
-// DIVERGENCE TG-3 (docs/launcher-suites.md section 9): the exe host, after
+// DIVERGENCE DIV-0111 (docs/launcher-suites.md section 9): the exe host, after
 // .data is in place (the file's or BOF3X_EXEIMAGE's, filled) and before the
 // compare below: each layer BOF3X_OPT names whose cache (BOF3X_CACHE, not
 // under BOF3X_CACHE_DATA=0) has opt\<layer>\exe\place.toml is laid over .data

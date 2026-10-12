@@ -16,7 +16,7 @@ and turned into the launcher's table.
 - every opt/ layer but the default ones (area4-walls, a repair: DIV-0080) is in
   exactly one suite, so no layer goes unoffered;
 - a member that cannot be selected beside a PlayStation base says why;
-- a `code` member (the PSP's battle rules, DIV F draft: src/game/psp_code.h) names
+- a `code` member (the PSP's battle rules, DIV-0108: src/game/psp_code.h) names
   one of the engine's switch items (`code`, CODES) and plays through bof3x.ini's
   psp= / BOF3X_PSP (over_psx "switch");
 - at most as many members a suite as the dialog has places for (MEMBERS_MAX).

@@ -823,6 +823,8 @@ cut at 260 characters.
 
 ## 6. For the other files (the coordinator's)
 
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): The README row is in.
+
 - **`docs/README.md`, one row:** `psp-code-diff-field-1.md` | Stage B of the
   PSP code diff, field half rows 1..454 (2026-10-12): 264 encoding, 127
   platform, 33 content, 25 mispairs, 5 unresolved. The content is 11 single

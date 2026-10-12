@@ -273,7 +273,9 @@ The self-tests do not open the 222 missing containers, play a sound or reach
 
 ## 7. For the other files
 
-### DIV D - the PSP's effects, jingles and logo in a PSP-only install
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): DIV D is **DIV-0106**; the defect is **D244**; the README row and `psp-only-build.md` 2.5 and 8 are in.
+
+### DIV-0106 - the PSP's effects, jingles and logo in a PSP-only install
 
 - **Original behaviour:** the PC port plays its own `SND\` (875 effects and
   5 voices as 22.05 kHz mono WAVs, the 11 jingles as bare 128 kbit/s MP3s)

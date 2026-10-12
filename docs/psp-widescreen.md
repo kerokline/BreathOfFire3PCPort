@@ -1,7 +1,7 @@
 # The PSP release's 16:9 — what the ELF shows
 
 **Status:** DRAFT — verified 2026-09-23 against `BOOT.BIN` of `psp-eu`
-(`fixtures.toml`; the placement table also checked on `psp-jp`).
+(`fixtures.toml`; the placement table also checked on `psp-jp`). 3a's rows 8..12 were added 2026-10-12 from the PSP-only round's code diff (CD1, CD3), read there with `tools/psp_pair.py`, not re-read here; the same diff's field half 1 classes more widescreen sites as `P-ws` ([`psp-code-diff-field-1.md`](psp-code-diff-field-1.md): the field renderer's tile grid 28 x 56 -> 33 x 58, overlay full-screen quads), and ten more effect functions carry #6's rectangle (`psp-code-diff-battle.md` 0).
 
 This is the "first step" of [`display-overhaul.md`](display-overhaul.md) §4d.
 It reads the PSP build's code and data and reports what Capcom changed to fill
@@ -248,6 +248,11 @@ divide `0x9d24c` of §2.2) as the PSX's `lwc2` / `cop2 0x0180001` (RTPS) /
 | 5 | `MsgBox_PlacementTable` entries 3..6 (x of the side placements; y unchanged) | `0x801802BC`: `145, 226, 145, 226` (JP; US `SLUS_004.22` file `0xe9944` identical) | `0x66AE10`: `145, 226, 145, 226` | **`113, 258, 113, 258`** (`.data` `0x2df0e0`; `psp-jp` identical at file `0x2df970`) | bytes `71 00 56 00 02 01 56 00 71 00 82 00 02 01 82 00`; reader `0x138a8` (in `0x13838`) keeps the `(x + 0x23) << 4` arithmetic |
 | 6 | Full-frame fills and fades: the `(0, 0, 320, 240)` rectangles | e.g. tile `(0, 0, 320, 240)` | — | **`(-32, 0, 384, 240)`** | 16 sites pair `-32` with `240`, 21 pair `384` with `240`, 10 pair `352` with `240` within four instructions; e.g. `000567b8 addiu a0,-0x20; sh a0,8(s1); ori a0,0x180; sh a0,0xc(s1); ori a1,0xf0` (in `0x56728`), `00007768`..`00007784` (in the frame function `0x76d8`), `0003413c ori s4,0x160; 00034140 addiu s5,-0x20` (in `0x340c0`) |
 | 7 | The presentation rectangle and x shift themselves (§2.3, §2.4) | — | — | `+32` per vertex; `(0, 12, 384, 216)` → 480 x 272 | `0xa0264` and 50 more; `0xa349c`..`0xa34b8` |
+| 8 | A full-screen effect mesh: MAGIC064 `0x801f103c`, MAGIC102 `0x801eec80`, and their helper `BATTLE.EMI#15` `0x800ac020` (the PSP code diff, [`psp-code-diff-battle.md`](psp-code-diff-battle.md) 0) | 28 x 56 cells (strides `0x70`, `0x38`); the helper bounds a column by 56 | not read | **33 x 58** (strides `0x84`, `0x42`); 58 | PSP `0x178834`, `0x19de14`, `0x1487d4` |
+| 9 | A sprite cull: MAGIC105 `0x801efcf0` (3b says the sprite culls were left; this one was not) | x `[-64, 384]` | not read | **x `[-96, 416]`**, y unchanged | PSP `0x1a3340` |
+| 10 | AREA172's 64 x 32 sprite (`WORLD04/AREA172.EMI#13` `0x801f4de0`, `0x801f4e68`; [`psp-code-diff-field-2.md`](psp-code-diff-field-2.md) rows 466, 467) | at (220, 200) | not read | **at (256, 190)**, inside the 384 x 216 window of 2.4 | PSP `0x262594`, `0x26260c` |
+| 11 | The terrain strip ring beside `MapView_Build` (`0x80153758`; field-2 row 478; #1 is the cull, this the buffer) | 56 entries, rows wrap at 28, stride 112 bytes | not read | **58 entries, 33 rows, 132 bytes** | PSP `0xcd98` |
+| 12 | SHOP's left clamps (`ETC/SHOP.EMI#0` `0x801e3b70`, `0x801e4130`; field-2 rows 567, 568) | -170, -120 | not read | **-202, -152** (the -32 visible edge) | PSP `0x1ff1ac`, `0x1ff474` |
 
 The pairing of #3/#4 with the PC function rests on structure: both project a
 point, test a y-derived value to choose the wide or the narrow x range, and

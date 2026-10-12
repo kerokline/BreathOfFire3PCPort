@@ -83,7 +83,7 @@ it past the launcher (a harness: `tools/attract_run.py` defaults `--lang` to
 ## 3. The bytes no disc carries (US)
 
 `recipes/exe-gaps.tsv` classes them per build; `bof3x.log` lists each `gap`
-range once at start (`BOF3X_EXEIMAGE  gap ...`). For the US image: 453 gap
+range once at start (`BOF3X_EXEIMAGE  gap ...`). For the US image, before the four fills below: 453 gap
 ranges, 5,411 bytes, of which the PC has 3,345 non-zero - Capcom game values
 no disc carries in any shape found (2,183 non-zero bytes, 319 ranges),
 bytes on the disc the places miss (818, 53), DIV-0055's re-laid plates (106,
@@ -93,11 +93,11 @@ zero there does:
 
 | Range (US) | Read by | A zero |
 |---|---|---|
-| `Magic_Rows` +0x8.. (151 rows, the 4 bytes beside each row's code pointer: the u16 DAT file of a spell's effect) | `Magic_LoadForItem`, `Magic_LoadForAbility`, `BattleAction_EffectPreload` (`cmp word [ecx*8 + 0x64C2B8], 0xFFFF`) | every row names file 0 instead of its effect file or `0xFFFF` (none): a spell or item effect loads the wrong file. Likely the most visible gap - any battle magic |
-| `Effect_HpDamageVariance`+0xE0, 525 bytes (halfword tables behind the eight records at `0x64E9BC`) | `Kaiser_LoadSetFile`, `Accession_LoadFormA` / `B`, `BattleFxRestore_LoadDat` (through the records' pointers) | the dragon forms' set-file numbers zero: a transformation loads the wrong set |
+| `Magic_Rows` +0x8.. (151 rows, the 4 bytes beside each row's code pointer: the u16 DAT file of a spell's effect) | `Magic_LoadForItem`, `Magic_LoadForAbility`, `BattleAction_EffectPreload` (`cmp word [ecx*8 + 0x64C2B8], 0xFFFF`) | every row names file 0 instead of its effect file or `0xFFFF` (none): a spell or item effect loads the wrong file. Likely the most visible gap - any battle magic. **Filled since 2026-10-12** (below) |
+| `Effect_HpDamageVariance`+0xE0, 525 bytes (halfword tables behind the eight records at `0x64E9BC`) | `Kaiser_LoadSetFile`, `Accession_LoadFormA` / `B`, `BattleFxRestore_LoadDat` (through the records' pointers) | the dragon forms' set-file numbers zero: a transformation loads the wrong set. **Filled since 2026-10-12** |
 | `Scena17_EndSteps`+0x364 318 bytes and eleven smaller pieces | `Scena17_EndTask`'s step table and the ending roll that follows it | the ending's roll data zero |
-| `Equip_SlotIcons`+0x50, 279 bytes | the equipment and experience panels (`Menu_DrawEquipPanel`, `Menu_DrawExpPanel`, `Menu_DrawBigIcon`) by symbol | numbers those panels draw with, zero |
-| `EventBattle_Records`+0xE0, 163 bytes | `GameMode5_Load` (`mov ax, word [edx*4 + 0x64DECC]`) | that mode's per-record words zero |
+| `Equip_SlotIcons`+0x50, 279 bytes | the equipment and experience panels (`Menu_DrawEquipPanel`, `Menu_DrawExpPanel`, `Menu_DrawBigIcon`) by symbol | numbers those panels draw with, zero. **The formation wheel's spots (120 of the 279) filled since 2026-10-12**; the names stay zero |
+| `EventBattle_Records`+0xE0, 163 bytes | `GameMode5_Load` (`mov ax, word [edx*4 + 0x64DECC]`) | that mode's per-record words zero. **The battle-file half (82 of the 163) filled since 2026-10-12**; the track half (the port's MP3 numbering) stays zero |
 
 The field button map's defaults (`0x656AEC..0x656B00`, which `Boot_Task`
 copies to `0x903580`: zero there meant a New Game with every action
@@ -112,6 +112,20 @@ every scenario start) and the 8 at `0x662DE8` (`FieldTail_DropInMove`'s
 byte-identical, and `find_places` now places that run on the five
 PlayStation builds ([`exe-import-engine.md`](exe-import-engine.md) 7.4). The
 PSP builds keep both as gaps.
+
+**Four filled on every disc build since 2026-10-12** (the owner: "let's go
+ahead and fill them"; the PSP-only round's IM2,
+[`disc-gap-fills.md`](disc-gap-fills.md), DIV-0101 amended): `Magic_Rows`'
+effect files, the dragon set files, `EventBattle_Records`' battle files and
+the formation wheel's spots are read from the disc's own tables (a PSX
+disc's `BATTLE.EMI#15`, `GAME.EMI#0` and `BATE.EMI#0`, a PSP disc's
+`BOOT.BIN`) through the file-id rule, every filled byte equal to
+`BOF3.exe`'s. Measured on the PSP-only round's base, which predates the
+`GAME.EMI` place above: the US image's gaps **456 to 354 ranges, 5,455 to
+4,129 bytes, game-value 2,196 to 1,336** (`disc-gap-fills.md` 1). With that
+place as well, by arithmetic and not measured: 351 ranges, 4,085 bytes,
+game-value 1,323 - to be re-measured (`exe_tables.py gaps`) once
+`psp/round` is rebased onto `main`.
 
 None of it is copied (CLAUDE.md rule 1); whether a disc-only build accepts
 it, derives the values by a rule, or asks for the PC's exe for those tables

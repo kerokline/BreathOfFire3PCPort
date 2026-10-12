@@ -5,7 +5,7 @@
 
 void DatLoad_Inject();
 
-// DIVERGENCE TG-5 (docs/launcher-suites.md section 9): DAT\<name>'s optional
+// DIVERGENCE DIV-0113 (docs/launcher-suites.md section 9): DAT\<name>'s optional
 // layers (BOF3X_OPT), each by LoadDatFile's own precedence (the cache's
 // opt\<layer>\dat\<name>, or the install's DAT\<layer>.<name>), their chunks
 // handed to `fn` instead of LoadDatFile's switch. Snd_LoadBankFile takes the

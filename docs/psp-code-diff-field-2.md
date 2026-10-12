@@ -656,6 +656,8 @@ numbers are the section 7 table's, counted from its first row.
 
 ## 5. For the other files (the coordinator's)
 
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): The README row and the `psp-widescreen.md` 3a rows are in.
+
 - **`docs/README.md`, one row:** `psp-code-diff-field-2.md` | Stage B of
   the PSP code diff, field half rows 455..908 (2026-10-12): 9 content, 85
   platform, 360 encoding. Content: AREA068's message-box handler (master

@@ -1,6 +1,6 @@
 # The PSP-only round: a working install from the player's PSP disc alone
 
-**Status:** IN PROGRESS (2026-10-12): wave one launched from `platform/disc-only-round` `98c17e8b`, after its code review's six gating items (the owner: "go ahead and start against a latest pull from the branch"). This plan regroups
+**Status:** IN PROGRESS (2026-10-12, evening: every group merged on `psp/round` `88817a07`, the ledger numbered on `psp/ledger`; the code review's fixes (RF) and the end batch (EB) running). Wave one launched from `platform/disc-only-round` `98c17e8b`, after its code review's six gating items (the owner: "go ahead and start against a latest pull from the branch"). This plan regroups
 [`psp-only-build.md`](psp-only-build.md)'s sections 3, 5 and 8 into groups
 that can run in parallel, with every live check held for one batch at the
 end.
@@ -61,8 +61,9 @@ disc-only install of the same language, built by that round's steps.
 | **The install** (IN, [`disc-only-install.md`](disc-only-install.md), DIV-0100): `install --base` lays out `DAT\`, `SND\` and an empty `BGM\`; a missing movie is skipped; the disc probe passes with a disc image mapped. **The 11 jingles are not there** on a PSX-only install (an owner's call) | A PSP-only install **has** the jingles: at3 writes them as MP3s. PN takes them into `install --base`. `BGM\` stays empty, since the sequences come from `base/bgm` (MS) |
 | The key table as a rule; `.rdata` from the engine; `BOF3.exe` optional (RD) | Nothing PSP-specific |
 
-Ledger numbers: the disc-only round took DIV-0096..0101 (0101, the gaps, provisional). This round's
-drafts, A to E, take the next free ids at merge.
+Ledger numbers: the disc-only round took DIV-0096..0101 (0101, the gaps, provisional), and
+`main` DIV-0102 with it. This round's drafts were numbered on 2026-10-12 (the coordinator's
+pass, `psp/ledger`): A to F are DIV-0103..0108, TG-1 to TG-5 DIV-0109..0113.
 
 ## 2. What is left for the PSP
 
@@ -236,10 +237,14 @@ From the round's reports, the owner's answers:
    search is running. **Found:** the duel between Beyd and Zig, chapter 6
    run 9 (`Scena06_Run09` starts event battle 0x1B), area 92. **The
    owner's answer:** a member of the launcher's PSX / PSP page, on by default
-   under a PSP base (group PB, DIV F).
+   under a PSP base (group PB, DIV-0108).
 3. **C2, an enemy's agility forced to 791:** this is set-up 55, which our
    records label **Myria**, in area 198. **The owner's answer:** like C1, a
    member of the PSX / PSP page, on by default under a PSP base (PB).
+   **Corrected by PB** ([`psp-battle-changes.md`](psp-battle-changes.md)
+   2.2): the word is not agility but Myria's first item word (the PSP's
+   `+0x98`, ours `+0xA8`), set to item 0x317 - "Ivory Charm" by the
+   sibling's names. DIV-0108 (`myria-item`).
 4. **The PSP-only mode** (CD2 / CD3, the fishing area and the title
    menu): probably fishing. It is left until the owner is back.
 5. **The suites' membership:** LT's proposals are accepted as built. The

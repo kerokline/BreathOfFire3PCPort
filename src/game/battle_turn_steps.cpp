@@ -238,7 +238,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Statu
 // The member index goes out as a byte (the original's local slot carries the
 // caller's upper bits, which Battle_ActorIsOut masks off).
 //
-// DIV F (draft, psp_code.h): with the PSP's duel-loss on, an end byte with bit
+// DIV-0108 (psp_code.h): with the PSP's duel-loss on, an end byte with bit
 // 0 set and bit 2 clear in event battle 0x1B is not the battle's end - the
 // PSP's added test (PSP-JP 0x11F36C), after the hook. Off, the original's.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextRound() {

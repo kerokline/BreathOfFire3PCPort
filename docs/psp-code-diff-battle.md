@@ -10,8 +10,8 @@ Nothing here has been seen in play. The field half is CD2's and CD3's.
 
 | # | Where (PSX-JP; PSP-JP / PSP-EU) | What the PSP does that the PSX does not | Suite | Evidence |
 |---|---|---|---|---|
-| C1 | `BATTLE.EMI#3` `0x801d43bc` (the turn step, row 33) and `0x801d653c` (the round start, row 213); PSP-JP `0x11df2c` / `0x11f2f4`, PSP-EU `0x11db9c` / `0x11ef64` | Both check the battle-end byte (PSX `0x80146324`, the PC's `0x904AE8`) and end the battle when it is non-zero. The PSP inserts one test first: **with boss set-up 27** (`0x801462E6` = `0x1B`), **end bit 0 set and bit 2 clear, the battle goes on** as if nothing had ended. Bit 0 is "the loss" in the boss end hooks' reading (`symbols.toml`, fight 1's end hook); set-up 27's event hook (`Boss27_Event`, [`boss_sf.md`](boss_sf.md)) is what sets bit 2. So in that fight the PSP no longer ends on a party loss unless the event hook has set bit 2 | data (a battle rule; there is no code suite) | read side by side, both functions, both PSP releases |
-| C2 | `BATTLE.EMI#15` `0x800a8f4c` (an enemy's entry, row 47); PSP-JP `0x141414`, PSP-EU `0x1411e0` | After the enemy's set-up (`0x800a9148`, PSP `0x141ba0`) and before the next call, the PSP adds: **in area 198 (`0xC6`) with boss set-up 55 (`0x37`), the enemy record's `+0x98` is set to 791 (`0x317`)**. `+0x98` is the actor's agility (`src/game/battle_damage.cpp`: the turn order sorts on it). The area is PSX `0x80143F00` by the learned data map; the constant 791 occurs in no PSX function and in this one PSP function | data (a balance change) | read side by side; `791` searched in every function of both sides |
+| C1 | `BATTLE.EMI#3` `0x801d43bc` (the turn step, row 33) and `0x801d653c` (the round start, row 213); PSP-JP `0x11df2c` / `0x11f2f4`, PSP-EU `0x11db9c` / `0x11ef64` | Both check the battle-end byte (PSX `0x80146324`, the PC's `0x904AE8`) and end the battle when it is non-zero. The PSP inserts one test first: **with boss set-up 27** (`0x801462E6` = `0x1B`), **end bit 0 set and bit 2 clear, the battle goes on** as if nothing had ended. Bit 0 is "the loss" in the boss end hooks' reading (`symbols.toml`, fight 1's end hook); set-up 27's event hook (`Boss27_Event`, [`boss_sf.md`](boss_sf.md)) is what sets bit 2. So in that fight the PSP no longer ends on a party loss unless the event hook has set bit 2 | data (a code member, `psp=`; DIV-0108) | read side by side, both functions, both PSP releases |
+| C2 | `BATTLE.EMI#15` `0x800a8f4c` (an enemy's entry, row 47); PSP-JP `0x141414`, PSP-EU `0x1411e0` | After the enemy's set-up (`0x800a9148`, PSP `0x141ba0`) and before the next call, the PSP adds: **in area 198 (`0xC6`) with boss set-up 55 (`0x37`), the enemy record's `+0x98` is set to 791 (`0x317`)**. `+0x98` is the actor's agility (`src/game/battle_damage.cpp`: the turn order sorts on it). **Corrected 2026-10-12 (PB, [`psp-battle-changes.md`](psp-battle-changes.md) 2.2):** `+0x98` is the PSP's offset of the enemy's first item word, ours `+0xA8` (the item a steal takes and the first drop rolls), not agility; 0x317 is accessory 0x17, "Ivory Charm" by the sibling's `names/items.toml`. The area is PSX `0x80143F00` by the learned data map; the constant 791 occurs in no PSX function and in this one PSP function | data (a code member, `psp=`; DIV-0108) | read side by side; `791` searched in every function of both sides |
 
 What the fight in area 198 under set-up 55, and set-up 27's fight, are in play
 is the owner's to say: this doc does not name them. Neither change has a PSX
@@ -165,11 +165,13 @@ The unsettled rows:
 
 ## 6. For the other files (the coordinator's)
 
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): The README row, owner-review (C1 and C2, answered: DIV-0108) and the `psp-widescreen.md` 3a rows are in; C2's reading is corrected in section 0 (PB).
+
 - **`docs/README.md`, one row:** `psp-code-diff-battle.md` | The PSP code
   diff's battle and effects half, stage B (2026-10-12): the 317 differing
   pairs classed. Two content changes:
   - boss set-up 27 does not end on a loss without its event bit;
-  - area 198 with set-up 55 forces an enemy's agility to 791.
+  - area 198 with set-up 55 sets an enemy's first item word to 0x317 (read as agility here first; corrected by PB).
 
   Also four widescreen changes psp-widescreen.md 3a lacks (an effect mesh, a
   sprite cull). The priority answers are in section 1: `RYUD`, the arenas,
@@ -237,7 +239,7 @@ uses the labels of section 2.
 | 44 | `8009bae0` BATTLE/BATTLE.EMI#15 |  | `0012f6bc` | encoding | rerun | the delay-slot, resident-module and reciprocal fixes of this round make the pair minor |
 | 45 | `8009cae8` BATTLE/BATTLE.EMI#15 |  | `0013056c` | encoding | calls | call lists align one to one; globals the data map lacks |
 | 46 | `8009ed24` BATTLE/BATTLE.EMI#15 |  | `00131d14` | encoding | calls | call lists align one to one; globals the data map lacks |
-| 47 | `800a8f4c` BATTLE/BATTLE.EMI#15 |  | `00141414` | CONTENT | read | area 198 with boss set-up 55: the enemy's agility forced to 791: see the content table |
+| 47 | `800a8f4c` BATTLE/BATTLE.EMI#15 |  | `00141414` | CONTENT | read | area 198 with boss set-up 55: the enemy's first item word set to 0x317 (first read as agility; corrected by PB): see the content table |
 | 48 | `801e0af8` BATTLE/BATTLE.EMI#3 |  | `0013c108` | encoding | calls | call lists align one to one; globals the data map lacks |
 | 49 | `801ef818` BMAGIC/MAGIC144.EMI#3 |  | `001925d8` | encoding | scan | the same compare set on both sides (compare scan); the differences are offsets, struct copies, packet sizes or folded indices |
 | 50 | `800a09a0` BATTLE/BATTLE.EMI#15 |  | `00133058` | encoding | read | stat / 5 by reciprocal on the PSX, stat * 100 / 500 on the PSP; chance product / 10000 the same |

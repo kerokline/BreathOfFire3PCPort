@@ -243,7 +243,9 @@ untouched.
 
 ## For the other files
 
-### DIV A (draft): a PSP-only install's base is the PSP's
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): DIV A is **DIV-0103**, with MB's dropped tone folded in as its one exception; the README row, `psp-only-build.md` 5 and the STATUS row are in.
+
+### DIV-0103: a PSP-only install's base is the PSP's
 
 - **Subsystem:** the importer's base (`tools/psp_standins.py`,
   `recipes/psp-standins.toml`, the one call in `tools/importer.py`
@@ -288,4 +290,4 @@ Step 2 done: `base/` complete from a PSP disc except the 16 banks.
 ### For `docs/STATUS.md`
 
 A PSP disc alone builds 725 of 741 `base/` containers (the PSP's own sections
-as base, DIV A); the 16 left wait on MB's dropped tone.
+as base, DIV-0103); the 16 left wait on MB's dropped tone.

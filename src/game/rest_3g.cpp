@@ -330,7 +330,7 @@ extern "C" void __cdecl Battle_PlaceBossActors(void) {
 // Battle_CopyEnemyData(count, kind), Battle_SetEnemyOffset(count, kind's byte);
 // the record's +0x8F 0; the actor's +0 | 0x40; 0x904AB2 up.
 //
-// DIV F (draft, psp_code.h): with the PSP's myria-item on, in area 198 under
+// DIV-0108 (psp_code.h): with the PSP's myria-item on, in area 198 under
 // event battle 0x37 the record's item word +0xA8 is 0x317 after
 // Battle_CopyEnemyData - the PSP's added store (PSP-JP 0x141570..0x141598,
 // its +0x98), which reads the area and the event byte after that call, as

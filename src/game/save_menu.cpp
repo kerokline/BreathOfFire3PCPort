@@ -166,7 +166,7 @@ void TakeBank(void*, const dat_cache::Chunk& c, std::uint8_t* payload) {
 }
 }  // namespace
 //
-// DIVERGENCE TG-5: then each optional layer's DAT\<name> (BOF3X_OPT, by
+// DIVERGENCE DIV-0113: then each optional layer's DAT\<name> (BOF3X_OPT, by
 // LoadDatFile's precedence), its kind-2 chunks to Snd_LoadBank too, so a
 // layer's bank (psp-chord-one-tone) replaces the container's here as it does
 // in LoadDatFile. No layer named: nothing more.
@@ -175,7 +175,7 @@ extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
     if (name == 0) return;
     const char* const text = reinterpret_cast<const char*>(At(name));
     if (dat_cache::WalkShipped(text, TakeBank, nullptr)) {  // DIV-0089
-        DatLoad_OptLayerChunks(text, TakeBank);             // TG-5
+        DatLoad_OptLayerChunks(text, TakeBank);             // DIV-0113
         return;
     }
     char path[0x28];
@@ -196,7 +196,7 @@ extern "C" void __cdecl Snd_LoadBankFile(unsigned index) {
         } while (offset < size);
     }
     g.free(data);
-    DatLoad_OptLayerChunks(text, TakeBank);  // TG-5
+    DatLoad_OptLayerChunks(text, TakeBank);  // DIV-0113
 }
 
 // 0x454820 (docs/save-files.md). File_Open(path, 0, 0), -1 on failure;

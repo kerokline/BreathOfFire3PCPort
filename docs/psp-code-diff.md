@@ -1546,6 +1546,8 @@ callee counts, globals). Named functions first, then by score.
 
 ## 9. For the other files (the coordinator's)
 
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): The README row is in.
+
 - **`docs/README.md`, one row:** `psp-code-diff.md` | The PSP-only round's
   code diff, stage A (2026-10-12): `tools/psp_pair.py` pairs 9,624 of 13,134
   PSX functions (139 of 175 named game functions) with `BOOT.BIN` across the

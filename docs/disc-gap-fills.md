@@ -87,6 +87,8 @@ it is not taken into a PSX build here.
 
 ## For the other files
 
+**Folded in 2026-10-12** (the coordinator's pass, branch `psp/ledger`): DIV-0101's amendment, `disc-only-install.md` 3, the README row, STATUS, HANDOFF and owner-review are in.
+
 Not edited here; the coordinator folds them in.
 
 **DIV-0101, amended** (the disc-only round's gaps entry, provisional). Add

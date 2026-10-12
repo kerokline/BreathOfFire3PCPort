@@ -77,7 +77,7 @@ struct Config {
     // (SuitesOptEdit -> ConfigOptEdit), so a save after an untouched dialog
     // writes back what was read and never pins the default.
     std::string opt;
-    // DIV F (draft; src/game/psp_code.h): the PSP's two battle rules,
+    // DIV-0108 (src/game/psp_code.h): the PSP's two battle rules,
     // BOF3X_PSP's list - duel-loss, myria-item - or "none". Empty (the
     // default): on when the cache's base is the PSP's, off otherwise; the DLL
     // decides. Kept as written; the DLL refuses a name it does not know. The

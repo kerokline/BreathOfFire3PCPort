@@ -222,7 +222,7 @@ extern "C" void __cdecl LoadDatFile(int file_index) {
 }
 
 namespace {
-// TG-5: whether a named layer carries a bank (a kind-2 chunk) at all, read
+// DIV-0113: whether a named layer carries a bank (a kind-2 chunk) at all, read
 // once at injection from its files' headers; Snd_LoadBankFile walks the layers
 // only then, so with no such layer it does exactly what it did (and its
 // shadow comparison against the original stays a like-for-like one).
@@ -403,7 +403,7 @@ void ReadOptLayers() {
         Crt_sprintf(pattern, "DAT\\%s.*.DAT", name);
         WIN32_FIND_DATAA fd;
         const HANDLE h = FindFirstFileA(pattern, &fd);
-        // TG-1..3 (docs/launcher-suites.md 9): a layer may be only songs, sound
+        // DIV-0109..0111 (docs/launcher-suites.md 9): a layer may be only songs, sound
         // files or .data ranges, which the cache alone holds (importer.py
         // install refuses them)
         const bool parts = dat_cache::HasLayerPart(name, "bgm") || dat_cache::HasLayerPart(name, "snd") ||
@@ -414,11 +414,11 @@ void ReadOptLayers() {
                         name, pattern, name, dat_cache::Root() ? " and no " : "",
                         dat_cache::Root() ? dat_cache::Root() : "",
                         dat_cache::Root() ? "\\opt\\<layer>\\ with dat, bgm, snd or exe" : "");
-        // TG-3: .data ranges are laid by the exe host at map time
+        // DIV-0111: .data ranges are laid by the exe host at map time
         // (exe_image.cpp); the hosted build keeps the loader's .data, Capcom's,
         // as the reference its A/B switch and shadow tests compare against.
         if (dat_cache::HasLayerPart(name, "exe") && !bof3::IsExeHost())
-            bof3::Fatal("TG-3: BOF3X_OPT names %s, whose .data ranges only bof3x.exe lays (the exe host); the hosted "
+            bof3::Fatal("DIV-0111: BOF3X_OPT names %s, whose .data ranges only bof3x.exe lays (the exe host); the hosted "
                         "build (--host bof3) runs Capcom's .data as loaded - leave %s out of BOF3X_OPT for it",
                         name, name);
         if (const char* tag = bof3x::LayerLanguage(name)) {
@@ -604,7 +604,7 @@ void DatLoad_Inject() {
     if (bof3::WantsShadow("dat_cache")) {
         dat_cache::SelfTest();
         CacheSelfTest();
-        bof3::ExeImage_OptSelfTest();  // TG-3's reader (the exe host lays it; this tests it on synthetic files)
+        bof3::ExeImage_OptSelfTest();  // DIV-0111's reader (the exe host lays it; this tests it on synthetic files)
     }
     dat_cache::Configure();  // DIV-0089: before the layers are read, whose test it answers too
     const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", g_lang, sizeof g_lang);
@@ -616,19 +616,19 @@ void DatLoad_Inject() {
     if (g_lang[0]) MsgPool_Relocate();  // DIV-0007: English text runs past the pool's place
     if (g_lang[0]) bof3::Log("DIV-0005: language overlays DAT\\%s.*.DAT", g_lang);
     ReadOptLayers();
-    dat_cache::SetOptLayers(g_opt, g_opt_count);  // TG-1, TG-2: the music seam and Sound_LoadStream ask these
+    dat_cache::SetOptLayers(g_opt, g_opt_count);  // DIV-0109, DIV-0110: the music seam and Sound_LoadStream ask these
     for (int i = 0; i < g_opt_count; ++i) bof3::Log("DIV-0086: optional layer %d, DAT\\%s.*.DAT", i + 1, g_opt[i]);
     for (int i = 0; i < g_opt_count; ++i)
         for (const char* part : {"bgm", "snd", "exe"})
             if (dat_cache::HasLayerPart(g_opt[i], part))
-                bof3::Log("TG          layer %s: the cache's opt\\%s\\%s (%s)", g_opt[i], g_opt[i], part,
+                bof3::Log("DIV-0086    layer %s: the cache's opt\\%s\\%s (%s)", g_opt[i], g_opt[i], part,
                           part[0] == 'b' ? "songs and banks, before base\\bgm"
                           : part[0] == 's' ? "Sound_LoadStream's files, before base\\snd"
                                            : ".data ranges, laid by the exe host");
     if (g_lang[0]) g_lang_cached = dat_cache::HasLayer("loc", g_lang);  // DIV-0089
     for (int i = 0; i < g_opt_count; ++i) g_opt_cached[i] = dat_cache::HasLayer("opt", g_opt[i]);
-    g_opt_banks = OptLayersHaveBanks();  // TG-5
-    if (g_opt_banks) bof3::Log("TG-5        a named layer carries a sound bank: Snd_LoadBankFile walks the layers too");
+    g_opt_banks = OptLayersHaveBanks();  // DIV-0113
+    if (g_opt_banks) bof3::Log("DIV-0113    a named layer carries a sound bank: Snd_LoadBankFile walks the layers too");
     if (dat_cache::Root()) {
         if (g_lang[0])
             bof3::Log("DIV-0089    language %s: %s", g_lang, g_lang_cached ? "the cache's loc layer" : "the install's");

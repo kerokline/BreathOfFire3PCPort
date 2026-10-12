@@ -264,7 +264,7 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
 
 bool ExeImage_DiscMapped() { return g_disc_mapped; }
 
-// --- TG-3: the exe tables layer ----------------------------------------------
+// --- DIV-0111: the exe tables layer ----------------------------------------------
 namespace {
 
 struct OptRange {
@@ -397,9 +397,9 @@ void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size) {
         if (!ReadText(dir + "place.toml", &text)) continue;   // no exe part
         OptTables t;
         std::string why;
-        if (!ParseOptTables(text, &t, &why)) Fatal("TG-3: %splace.toml: %s", dir.c_str(), why.c_str());
+        if (!ParseOptTables(text, &t, &why)) Fatal("DIV-0111: %splace.toml: %s", dir.c_str(), why.c_str());
         FILE* f = std::fopen((dir + t.file).c_str(), "rb");
-        if (!f) Fatal("TG-3: %s%s does not open", dir.c_str(), t.file.c_str());
+        if (!f) Fatal("DIV-0111: %s%s does not open", dir.c_str(), t.file.c_str());
         std::vector<unsigned char> bin;
         unsigned char buf[4096];
         std::size_t got;
@@ -407,8 +407,8 @@ void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size) {
         std::fclose(f);
         const long changed = LayOptTables(t, bin, static_cast<unsigned char*>(to), va, size,
                                           g_disc_mapped ? &g_mapped : nullptr, &why);
-        if (changed < 0) Fatal("TG-3: layer %s (%s): %s", layer.c_str(), dir.c_str(), why.c_str());
-        Log("TG-3        layer %s: %u ranges, %u bytes of the %s image's .data laid over .data (%s); %ld of them "
+        if (changed < 0) Fatal("DIV-0111: layer %s (%s): %s", layer.c_str(), dir.c_str(), why.c_str());
+        Log("DIV-0111    layer %s: %u ranges, %u bytes of the %s image's .data laid over .data (%s); %ld of them "
             "differ from what was there",
             layer.c_str(), (unsigned)t.ranges.size(), (unsigned)t.bytes, t.build.c_str(),
             g_disc_mapped ? g_mapped.build.c_str() : "the file's or a pc-zh image", changed);
@@ -420,7 +420,7 @@ void ExeImage_OptSelfTest() {
     constexpr std::uint32_t kVa = 0x1000, kSize = 64;
     std::vector<unsigned char> bin = {1, 2, 3, 4, 5, 6};
     std::string hex;
-    if (!bof3x::Sha256HexBytes(bin.data(), bin.size(), hex)) Fatal("TG-3 self-test: no SHA-256");
+    if (!bof3x::Sha256HexBytes(bin.data(), bin.size(), hex)) Fatal("DIV-0111 self-test: no SHA-256");
     const std::string good = "build = \"psp-xx\"\nimage_sha256 = \"x\"\nfile = \"place.bin\"\nsha256 = \"" + hex +
                              "\"\nbytes = 6\n\nranges = [\n  [0x001004, 0x001008, \"a\"],\n  [0x001010, 0x001012, \"b\"],\n]\n";
     OptTables t;
@@ -464,9 +464,9 @@ void ExeImage_OptSelfTest() {
     OptTables v;
     const bool over_disc = ParseOptTables(good, &v, &why) && LayOptTables(v, bin, d2.data(), kVa, kSize, &im, &why) == 6;
     if (!parsed || !laid || refused != 5 || !over_disc)
-        Fatal("TG-3 self-test: parse %s, laid %s (%ld changed), over a disc image's table class %s, %u of 5 controls "
+        Fatal("DIV-0111 self-test: parse %s, laid %s (%ld changed), over a disc image's table class %s, %u of 5 controls "
               "refused", parsed ? "ok" : "WRONG", laid ? "ok" : "WRONG", changed, over_disc ? "ok" : "WRONG", refused);
-    Log("shadow      TG-3 self-test: a place.toml parsed, its two ranges laid (5 bytes changed, one already the "
+    Log("shadow      DIV-0111 self-test: a place.toml parsed, its two ranges laid (5 bytes changed, one already the "
         "layer's), and over a disc image's table class; 5 controls refused with nothing laid (a wrong hash, a range "
         "outside .data, ranges out of order, a byte count that differs, a range on a must-equal class)");
 }
