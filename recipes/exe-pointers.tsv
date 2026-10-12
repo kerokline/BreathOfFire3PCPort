@@ -2489,9 +2489,6 @@ pc	words	to
 0x663290	14	text
 0x6637E4	22	data
 0x663970	14	data
-0x6639AC	1	data
-0x6639C4	1	data
-0x6639CC	1	data
 0x663AFC	4	text
 0x663B30	10	text
 0x663B5C	14	text
