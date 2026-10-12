@@ -195,7 +195,7 @@ def _vab_cues(g):
 # at +8, the count less one at +0x14, records from +0x18. `PPVA` +0x14 the count less
 # one, from +0x20 one (offset in `pBVC`, rate, size, -1) per sample.
 #
-# A `PPTN` record is 24 words (0x60 bytes, every bank of both PSP discs). Read
+# A `PPTN` record is 24 words (0x60 bytes, every music bank of both PSPs). Read
 # against the PSX-JP VAB of all 119 music banks, 2,939 tones (psp-music-banks.md 2):
 #   2      the VAG less one (-1: sample 0, silent)
 #   6, 7   lowest and highest note          8      the tone's mode (bit 2 reverb)
