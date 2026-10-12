@@ -10,11 +10,12 @@
 # names the builds it comes from (`from`, fixtures.toml ids) and how it reaches
 # the game when the install's base is the PlayStation's (`over_psx`):
 #
-#   layer   an opt/ layer of recipes/opt.toml (`layer`), played through opt= and
-#           BOF3X_OPT (DIV-0086): selectable today
-#   engine  its engine half is not built yet (the round's group TG: opt/ layers
-#           for base/bgm and base/snd, a chunk kind for base/exe): listed,
-#           greyed with `why`, never selectable
+#   layer   an opt/ layer (`layer`) of recipes/opt.toml, or of recipes/psp-layers.toml
+#           (the engine half: the music, the effects, the exe tables, P8;
+#           docs/launcher-suites.md 9), played through opt= and BOF3X_OPT
+#           (DIV-0086): selectable when the cache holds it
+#   engine  its engine half is not built: listed, greyed with `why`, never
+#           selectable (no member since the engine half, 2026-10-12)
 #   none    no layer exists or is planned: listed, greyed with `why`
 #   switch  (kind code only) a rule in the engine's code, played through psp= and
 #           BOF3X_PSP (`code` names the item, src/game/psp_code.h): selectable today
@@ -68,17 +69,17 @@ what = "the PSP's music (its own sequences and banks) and its effects, voices an
 id = "psp-music"
 label = "music"
 kind = "bgm"
+layer = "psp-music"
 from = ["psp-jp", "psp-eu"]
-over_psx = "engine"
-why = "needs the engine half (TG)"
+over_psx = "layer"
 
 [[suite.member]]
 id = "psp-effects"
 label = "effects, voices, jingles"
 kind = "snd"
+layer = "psp-snd"
 from = ["psp-jp", "psp-eu"]
-over_psx = "engine"
-why = "needs the engine half (TG)"
+over_psx = "layer"
 
 [[suite]]
 id = "data"
@@ -89,9 +90,9 @@ what = "the PSP's game data: roster index 6's level table and consumable 87, its
 id = "psp-tables"
 label = "level table and item 87"
 kind = "exe"
+layer = "psp-tables"
 from = ["psp-jp", "psp-eu"]
-over_psx = "engine"
-why = "needs the engine half (TG)"
+over_psx = "layer"
 
 [[suite.member]]
 id = "psp-names-en-150"
@@ -113,9 +114,9 @@ over_psx = "layer"
 id = "psp-ryu-forms"
 label = "Ryu's forms (P8)"
 kind = "base"
+layer = "psp-ryu-forms"
 from = ["psp-jp", "psp-eu"]
-over_psx = "none"
-why = "no layer yet (unrendered)"
+over_psx = "layer"
 
 # The PSP's two battle rules (DIV F draft, docs/psp-battle-changes.md): code in
 # the engine, not data from a disc, switched by bof3x.ini's psp= (BOF3X_PSP;

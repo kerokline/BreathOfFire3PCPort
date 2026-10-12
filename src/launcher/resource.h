@@ -98,3 +98,5 @@
 #define IDC_MP_STOP     1505
 #define IDC_MP_NOTE     1506
 #define IDC_MP_STATUS   1507
+#define IDC_MP_CHORD    1508   // TG-5: the battle chord as the PSP plays it (opt= psp-chord-one-tone)
+#define IDC_MP_CHORD_NOTE 1509

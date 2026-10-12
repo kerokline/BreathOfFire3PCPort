@@ -103,6 +103,9 @@ struct State {
     Index index;
     unsigned held = 0, part = 0, own = 0;
     Io io{};
+    // TG: the layers BOF3X_OPT names (SetOptLayers), in its order, and those
+    // of them with a snd part (asked once there, not at every stream)
+    std::vector<std::string> opt, snd;
 };
 State g_c;
 
@@ -480,8 +483,46 @@ bool WalkShipped(const char* name, ChunkFn fn, void* ctx) {
     return true;
 }
 
+bool HasLayerPart(const char* layer, const char* part) {
+    if (!g_c.configured || !layer || !layer[0]) return false;
+    char dir[kPathMax + 1];
+    Join(dir, sizeof dir, g_c.root, "opt\\", layer, "");
+    char sub[kPathMax + 1];
+    if (std::strcmp(part, "exe") == 0) {
+        Join(sub, sizeof sub, dir, "exe\\place.toml", "", "");
+        return g_c.io.exists(sub);
+    }
+    Join(sub, sizeof sub, dir, part, "", "");
+    return g_c.io.layer_dir(sub);
+}
+
+void SetOptLayers(const char (*names)[24], int count) {
+    g_c.opt.clear();
+    g_c.snd.clear();
+    for (int i = 0; i < count; ++i) {
+        g_c.opt.emplace_back(names[i]);
+        if (HasLayerPart(names[i], "snd")) g_c.snd.emplace_back(names[i]);
+    }
+}
+
+std::vector<std::string> LayersWith(const char* part) {
+    std::vector<std::string> out;
+    for (const std::string& l : g_c.opt)
+        if (HasLayerPart(l.c_str(), part)) out.push_back(l);
+    return out;
+}
+
 bool SoundPath(const char* name, char* out, std::size_t cap) {
     if (!g_c.armed) return false;
+    // TG-2: the named layers' snd\, the last first, as a later layer lands on
+    // top; a layer without the file leaves it to the one before, then to
+    // base\snd.
+    for (std::size_t i = g_c.snd.size(); i-- > 0;) {
+        char dir[kPathMax + 1];
+        Join(dir, sizeof dir, g_c.root, "opt\\", g_c.snd[i].c_str(), "\\snd");
+        Join(out, cap, dir, name, ".DAT", "");
+        if (g_c.io.exists(out)) return true;
+    }
     Join(out, cap, g_c.root, "base\\snd\\", name, ".DAT");
     return g_c.io.exists(out);
 }
@@ -805,6 +846,45 @@ void SelfTest() {
     const bool layer = Path("opt\\psp-art\\dat\\AREA067.DAT") == path && HasLayer("loc", "en-US") &&
                        HasLayer("loc", "zh-CN") && !HasLayer("loc", "fr-FR") && !HasLayer("opt", "psp-art") &&
                        !HasLayer("loc", "");
+    // TG-2 and the parts: two named layers with a snd part (lay-s, then lay-t,
+    // which lands on top), one with bgm, one with exe, one with none; a third
+    // snd layer not named. Each stream from the last named layer that has it,
+    // else base\snd; the controls - the first layer winning, a layer's
+    // missing file ending the search - must disagree.
+    files.push_back({Path("opt\\lay-s\\snd\\ABC.DAT"), {5}});
+    files.push_back({Path("opt\\lay-s\\snd\\DEF.DAT"), {6}});
+    files.push_back({Path("opt\\lay-t\\snd\\ABC.DAT"), {7}});
+    files.push_back({Path("opt\\lay-u\\snd\\GHI.DAT"), {8}});
+    files.push_back({Path("opt\\lay-m\\bgm\\001.DAT"), {9}});
+    files.push_back({Path("opt\\lay-e\\exe\\place.toml"), {10}});
+    const char named[5][24] = {"lay-s", "lay-t", "lay-m", "lay-e", "lay-n"};
+    SetOptLayers(named, 5);
+    const std::vector<std::string> snd_layers = LayersWith("snd"), bgm_layers = LayersWith("bgm");
+    const bool parts = HasLayerPart("lay-s", "snd") && !HasLayerPart("lay-s", "bgm") && HasLayerPart("lay-m", "bgm") &&
+                       HasLayerPart("lay-e", "exe") && !HasLayerPart("lay-m", "exe") && !HasLayerPart("lay-n", "snd") &&
+                       snd_layers.size() == 2 && snd_layers[0] == "lay-s" && snd_layers[1] == "lay-t" &&
+                       bgm_layers.size() == 1 && bgm_layers[0] == "lay-m";
+    const bool top = SoundPath("abc", path, sizeof path) && Path("opt\\lay-t\\snd\\abc.DAT") == path;
+    const bool under = SoundPath("def", path, sizeof path) && Path("opt\\lay-s\\snd\\def.DAT") == path;
+    const bool unnamed = !SoundPath("ghi", path, sizeof path);
+    const bool snd_layered = parts && top && under && unnamed;
+    // The controls on the same files: the first named layer winning (abc
+    // would be lay-s's), and the last snd layer alone before base\snd (def
+    // would be base's, which has none: not found).
+    const auto control = [&](bool first_wins, const char* name) {
+        const std::size_t n = g_c.snd.size();
+        for (std::size_t k = 0; k < (first_wins ? n : (n ? 1 : 0)); ++k) {
+            const std::string& l = g_c.snd[first_wins ? k : n - 1];
+            const std::string p = Path(("opt\\" + l + "\\snd\\" + name + ".DAT").c_str());
+            if (g_c.io.exists(p.c_str())) return p;
+        }
+        const std::string p = Path((std::string("base\\snd\\") + name + ".DAT").c_str());
+        return g_c.io.exists(p.c_str()) ? p : std::string();
+    };
+    const unsigned snd_controls = (control(true, "abc") != Path("opt\\lay-t\\snd\\abc.DAT")) +
+                                  (control(false, "def") != Path("opt\\lay-s\\snd\\def.DAT"));
+    SetOptLayers(named, 0);
+    const bool snd_cleared = SoundPath("abc", path, sizeof path) && Path("base\\snd\\abc.DAT") == path;
     TestSetArmed(false);
     const bool snd_unarmed = !SoundPath("ABC", path, sizeof path);
     TestEnd();
@@ -864,13 +944,20 @@ void SelfTest() {
     g_topened = nullptr;
 
     if (!parsed.empty() || !counts || refused != 5 || !mix || !naive_refused || !base || !fallback || !unarmed ||
-        !snd || !layer || !snd_unarmed || !pick || !missed.empty())
+        !snd || !layer || !snd_unarmed || !pick || !missed.empty() || !snd_layered || snd_controls != 2 || !snd_cleared)
         bof3::Fatal("DIV-0089 self-test: index %s, counts %s, controls refused %u of 5, walk %s (naive %s), base %s, "
-                    "fallback %s, unarmed %s, sound %s, layers %s, sound unarmed %s, precedence %s; not refused: %s",
+                    "fallback %s, unarmed %s, sound %s, layers %s, sound unarmed %s, precedence %s; not refused: %s; "
+                    "TG-2: the parts %s, the top layer's stream %s, the layer under it %s, an unnamed layer's %s, "
+                    "%u of 2 controls refused, no layer named %s",
                     parsed.empty() ? "ok" : parsed.c_str(), counts ? "ok" : "WRONG", refused, mix ? "ok" : "WRONG",
                     naive_refused ? "refused" : "NOT REFUSED", base ? "ok" : "WRONG", fallback ? "ok" : "WRONG",
                     unarmed ? "ok" : "WRONG", snd ? "ok" : "WRONG", layer ? "ok" : "WRONG",
-                    snd_unarmed ? "ok" : "WRONG", pick ? "ok" : "WRONG", missed.empty() ? "none" : missed.c_str());
+                    snd_unarmed ? "ok" : "WRONG", pick ? "ok" : "WRONG", missed.empty() ? "none" : missed.c_str(),
+                    parts ? "ok" : "WRONG", top ? "ok" : "WRONG", under ? "ok" : "WRONG", unnamed ? "ok" : "WRONG",
+                    snd_controls, snd_cleared ? "ok" : "WRONG");
+    bof3::Log("shadow      TG-2 self-test: a layer's parts (snd, bgm, exe) found; Sound_LoadStream's file from the last "
+              "named layer that has it, then the one under it, then base\\snd, an unnamed layer's never; 2 controls "
+              "refused (the first layer winning, the last layer alone)");
     bof3::Log("shadow      DIV-0089 self-test: a synthetic manifest parsed to 5 containers (3 held whole, 2 in part), "
               "MIX walked in the PC's slot order with the names last, the paths and layers, the overlay precedence "
               "against install's; 5 controls refused (by-layer order, widen and a sourceless row ignored, a mixing "

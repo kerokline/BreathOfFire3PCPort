@@ -81,6 +81,20 @@ void TestInstalled() {
     Check(bof3x::ConfigOptWanted(game, "") == "area4-walls", "empty opt= plays area4-walls", bof3x::ConfigOptWanted(game, ""));
     Check(bof3x::ConfigOptWanted(game, "none").empty(), "opt=none plays nothing");
     DeleteFileW(art.c_str()); DeleteFileW(walls.c_str()); DeleteFileW(tiles.c_str());
+    // TG: a layer of songs, sound files or .data ranges counts as the DLL counts it (dat_cache::HasLayerPart)
+    struct Part { const char* layer; const wchar_t* sub; const wchar_t* file; } parts[] = {
+        {"psp-music", L"bgm", L"000.DAT"}, {"psp-snd", L"snd", L"ABC.DAT"}, {"psp-tables", L"exe", L"place.toml"}};
+    for (const Part& pt : parts) {
+        std::wstring dir = cache + L"\\opt\\";
+        for (const char* c = pt.layer; *c; ++c) dir += static_cast<wchar_t>(*c);
+        CreateDirectoryW(dir.c_str(), nullptr);
+        dir += std::wstring(L"\\") + pt.sub;
+        CreateDirectoryW(dir.c_str(), nullptr);
+        Check(!bof3x::ConfigOptInstalled(game, pt.layer, cache), (std::string(pt.layer) + ": an empty part is no layer").c_str());
+        WriteAll(dir + L"\\" + pt.file, "");
+        Check(bof3x::ConfigOptInstalled(game, pt.layer, cache), (std::string(pt.layer) + ": the cache's part counts").c_str());
+        DeleteFileW((dir + L"\\" + pt.file).c_str());
+    }
 }
 
 void TestOptEdit() {
@@ -366,16 +380,16 @@ void TestSuites() {
               Narrow(Member(g, "psp-maps").note) == "not in the cache (build with --opt psp-maps)",
           "  psp-maps greyed: not built", Narrow(Member(g, "psp-maps").note));
     const bof3x::SuiteState& au = Suite(v, "audio");
-    Check(au.psx_enabled && !au.psp_enabled, "all three: audio's PSP side greyed (the engine half, TG)");
-    Check(Narrow(Member(au, "psp-music").note) == "needs the engine half (TG)", "  with the reason",
+    Check(au.psx_enabled && !au.psp_enabled, "all three: audio's PSP side greyed (its layers not built)");
+    Check(Narrow(Member(au, "psp-music").note) == "not in the cache (build with --opt psp-music)", "  with the reason",
           Narrow(Member(au, "psp-music").note));
     Check(Narrow(au.psp_why) == "Nothing of the PSP's plays beside this base yet.", "  and the side's", Narrow(au.psp_why));
     const bof3x::SuiteState& d = Suite(v, "data");
     Check(d.psp_enabled && d.layers_on == std::vector<std::string>{"psp-names-en-150"},
           "all three: data offered for the English renames alone");
     Check(!Member(d, "psp-tables").available && !Member(d, "psp-ryu-forms").available &&
-              Narrow(Member(d, "psp-ryu-forms").note) == "no layer yet (unrendered)",
-          "  the tables (TG) and Ryu's forms (no layer) greyed");
+              Narrow(Member(d, "psp-ryu-forms").note) == "not in the cache (build with --opt psp-ryu-forms)",
+          "  the tables and Ryu's forms greyed: not built", Narrow(Member(d, "psp-ryu-forms").note));
     Check(Narrow(Member(d, "psp-names-en-150").note) == "plays under English text only",
           "  the renames say they play under English text only", Narrow(Member(d, "psp-names-en-150").note));
     Check(Narrow(Member(d, "psp-names-ja-JP").note) == "not in the cache (build with --opt psp-names-ja-JP)",
@@ -423,10 +437,58 @@ void TestSuites() {
         Check(!s.psx_enabled && !s.psp_enabled && Narrow(s.psx_why).find("base_policy") != std::string::npos,
               (std::string("bad base_policy: ") + s.info->id + " greyed with the reason").c_str());
 
+    // 6. TG: every engine-half layer in the cache (recipes/psp-layers.toml) beside the PlayStation's base.
+    const std::vector<std::string> tg{"psp-art", "psp-tiles", "psp-maps", "psp-music", "psp-snd", "psp-tables",
+                                      "psp-names-en-150", "psp-ryu-forms"};
+    v = bof3x::SuitesEvaluate(Inputs(kManifestAll, tg, "en-US", "", walls));
+    Check(Suite(v, "audio").psp_enabled && Suite(v, "audio").layers_on == std::vector<std::string>{"psp-music", "psp-snd"},
+          "TG: audio offered, its two layers");
+    Check(Suite(v, "data").layers_on == std::vector<std::string>{"psp-tables", "psp-names-en-150", "psp-ryu-forms"},
+          "TG: data offered for the tables, the renames and Ryu's forms");
+    const std::string all = bof3x::SuitesOptEdit("", walls, v, {1, 1, 1});
+    Check(all == "psp-art,psp-tiles,psp-maps,psp-music,psp-snd,psp-tables,psp-names-en-150,psp-ryu-forms,area4-walls",
+          "TG: every suite's PSP side, in the catalogue's order, the walls last", all);
+    std::string why;
+    Check(bof3x::ConfigOptValid(all, why), "  a valid opt= of nine layers (kOptMax 16 since TG)", why);
+    Check(bof3x::ConfigOptValid(all + ",psp-names-ja-JP,psp-chord-one-tone", why), "  eleven layers valid", why);
+    Check(!bof3x::ConfigOptValid("a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q", why) && why == "more than 16 layers",
+          "  seventeen refused", why);
+    Check(bof3x::SuitesOptEdit(all, walls, v, {-1, 0, -1}) ==
+              "psp-art,psp-tiles,psp-maps,psp-tables,psp-names-en-150,psp-ryu-forms,area4-walls",
+          "TG: back to the PlayStation's audio removes its two layers");
+    v = bof3x::SuitesEvaluate(Inputs(kManifestPspOnly, {}, "ja-JP", "", {}));
+    Check(Member(Suite(v, "data"), "psp-ryu-forms").available, "TG, PSP-only: Ryu's forms the base's");
+
     // The order a written list takes: the suites' layers as recipes/suites.toml has them.
-    Check(bof3x::SuiteLayers() ==
-              std::vector<std::string>{"psp-art", "psp-tiles", "psp-maps", "psp-names-en-150", "psp-names-ja-JP"},
+    Check(bof3x::SuiteLayers() == std::vector<std::string>{"psp-art", "psp-tiles", "psp-maps", "psp-music", "psp-snd",
+                                                         "psp-tables", "psp-names-en-150", "psp-names-ja-JP",
+                                                         "psp-ryu-forms"},
           "SuiteLayers: the catalogue's order");
+}
+
+// TG-5: the Jukebox's battle-chord box (ChordEvaluate).
+void TestChord() {
+    const std::vector<std::string> walls{"area4-walls"};
+    bof3x::ChordState c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestAll), true, "", walls);
+    Check(c.enabled && !c.checked, "chord: in the cache, opt= empty: offered, off (the restored chord)");
+    c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestAll), true, "psp-chord-one-tone,area4-walls", walls);
+    Check(c.enabled && c.checked, "chord: opt= names it: checked");
+    c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestAll), false, "", walls);
+    Check(!c.enabled && Narrow(c.why).find("build it again") != std::string::npos, "chord: a PSP source, not built",
+          Narrow(c.why));
+    c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestPsxOnly), false, "", walls);
+    Check(!c.enabled && Narrow(c.why).find("Needs a PSP disc (psp-jp or psp-eu)") != std::string::npos,
+          "chord: PSX-only greyed, naming the PSP discs", Narrow(c.why));
+    c = bof3x::ChordEvaluate(bof3x::CacheManifest{}, false, "", walls);
+    Check(!c.enabled && Narrow(c.why).find("Cache folder") != std::string::npos, "chord: no cache", Narrow(c.why));
+    c = bof3x::ChordEvaluate(bof3x::ManifestParse(kManifestPspOnly), true, "none", {});
+    Check(c.enabled && !c.checked, "chord: PSP-only, opt=none: offered, off");
+    using Boxes = std::vector<std::pair<std::string, bool>>;
+    Check(bof3x::ConfigOptEdit("", walls, Boxes{{bof3x::kChordLayer, true}}) == "area4-walls,psp-chord-one-tone",
+          "chord on over an empty opt=: the walls kept, the chord after them");
+    Check(bof3x::ConfigOptEdit("area4-walls,psp-chord-one-tone", walls, Boxes{{bof3x::kChordLayer, false}}) ==
+              "area4-walls",
+          "chord off again");
 }
 
 }  // namespace
@@ -509,6 +571,8 @@ int main() {
     TestSuites();
     std::printf("code members (DIV F draft)\n");
     TestCodeMembers();
+    std::printf("jukebox chord\n");
+    TestChord();
     std::printf("opt edit\n");
     TestOptEdit();
     std::printf("installed layers\n");

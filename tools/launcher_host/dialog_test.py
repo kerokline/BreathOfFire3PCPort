@@ -280,8 +280,8 @@ def main():
     report("  graphics: psp-maps (not built) greyed, art and tiles not",
            g["members"] == [("Stallion's palettes", True), ("area tiles and palettes", True), ("map bands", False)]
            and "--opt psp-maps" in g["why"], str(g["members"]) + " " + g["why"])
-    report("  audio: the PSP's greyed, the reason the engine half (TG)",
-           a["psp"][:2] == (False, 0) and "TG" in a["why"] and not any(m[1] for m in a["members"]), a["why"])
+    report("  audio: the PSP's greyed, its layers not built (TG's, --opt psp-music / psp-snd)",
+           a["psp"][:2] == (False, 0) and "--opt psp-music" in a["why"] and not any(m[1] for m in a["members"]), a["why"])
     report("  data: the PSP's offered (the renames), tables and P8 greyed",
            d["psp"][0] and [m[1] for m in d["members"]] == [False, True, False, False]
            and "plays under English" in d["why"], str(d["members"]) + " " + d["why"])

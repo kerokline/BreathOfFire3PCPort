@@ -261,7 +261,7 @@ BEGIN
 END
 
 // The music player (docs/music-player.md): a source greyed when the install lacks it.
-IDD_MUSIC DIALOGEX 0, 0, 320, 150
+IDD_MUSIC DIALOGEX 0, 0, 320, 186
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Jukebox"
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -276,7 +276,11 @@ BEGIN
     COMBOBOX        IDC_MP_SONG, 40, 78, 273, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | WS_GROUP
     LTEXT           "", IDC_MP_STATUS, 7, 98, 306, 18
 
-    PUSHBUTTON      "&Play", IDC_MP_PLAY, 7, 129, 52, 14
-    PUSHBUTTON      "S&top", IDC_MP_STOP, 63, 129, 52, 14
-    DEFPUSHBUTTON   "Close", IDCANCEL, 261, 129, 52, 14
+    GROUPBOX        "In the game (a sound effect, not a song)", -1, 7, 118, 306, 42
+    AUTOCHECKBOX    "&Battle chord as the PSP plays it (one tone)", IDC_MP_CHORD, 14, 130, 290, 10, WS_TABSTOP | WS_GROUP
+    LTEXT           "", IDC_MP_CHORD_NOTE, 14, 142, 296, 16
+
+    PUSHBUTTON      "&Play", IDC_MP_PLAY, 7, 165, 52, 14
+    PUSHBUTTON      "S&top", IDC_MP_STOP, 63, 165, 52, 14
+    DEFPUSHBUTTON   "Close", IDCANCEL, 261, 165, 52, 14
 END

@@ -263,7 +263,7 @@ std::string ConfigOptEdit(const std::string& opt, const std::vector<std::string>
 
 // Whether an ini's `opt=` value can be honoured: empty, "none", or a
 // comma-separated list of distinct names of letters, digits and '-' (at most
-// 8, each 1..23 characters, as the DLL's ReadOptLayers takes them), none of
+// 16, each 1..23 characters, as the DLL's ReadOptLayers takes them), none of
 // them "none" or "original". On false `why` says what is wrong; the launcher
 // refuses to start rather than fall back to the default layers.
 bool ConfigOptValid(const std::string& opt, std::string& why);

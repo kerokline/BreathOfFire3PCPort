@@ -6,7 +6,9 @@ off `psp/round` `668a9b67`). Driven by script against three fake manifests
 **not seen by the owner**. Of the manifest keys it reads, `base_policy` is
 written by SI's branch (`psp/si` `1d72d999`), and `exe_tables_from` by
 nothing yet (IM's; section 3.1). The audio and data suites' engine half is
-TG's, in wave two (section 7).
+TG's, in wave two (section 7). **Engine half BUILT** (2026-10-12, group TG,
+branch `psp/tg` off `psp/round` `958b01b9`, section 9): every member is now a
+layer; headless self-tests only, **not played and not heard**.
 
 The owner's calls of 2026-10-10 ([`psp-only-build.md`](psp-only-build.md) 6
 and 7) asked for three toggles in the launcher, **audio**, **graphics** and
@@ -324,6 +326,10 @@ host suite's own:
 
 ## 7. What TG lifts (wave two)
 
+*Done 2026-10-12: section 9. The catalogue table in section 2 and the
+expectations in section 5 are as LT built them; section 9.5 is the catalogue
+now.*
+
 TG builds the engine half: `opt/` layers for `base/bgm/` and `base/snd/`, and
 a chunk kind for the exe tables. When each exists:
 
@@ -371,6 +377,226 @@ to add.
 - Whether the owner wants the suites to carry anything beyond the layers that
   exist (P13's logo, P14's title menu, P15's wording, `SCENA17`): none has a
   layer, so none is listed.
+
+## 9. The engine half (TG, wave two)
+
+The PSP-only round's group TG, branch `psp/tg` off the round tip `958b01b9`
+(wave one merged). Every member section 7 left greyed is now an `opt/` layer,
+so beside a PlayStation base the page offers it as it offers the graphics:
+`recipes/suites.toml` changed only in the four members' `over_psx` / `layer`
+/ `why` fields, and `SuitesEvaluate` is unchanged. The owner's later call of
+the same day adds a fifth layer, the battle chord as the PSP plays it, which
+is not a suite's but the Jukebox's (9.6). No game data here, in the recipe or
+in the code: names, counts, addresses and hashes (CLAUDE.md rule 1).
+
+### 9.1 The layers: `recipes/psp-layers.toml`, `tools/psp_layers.py`
+
+`recipes/opt.toml` is generated and holds DAT chunks cut sub-range by
+sub-range, so these layers have a hand-written recipe of their own. It holds
+names, parts and rules only. A layer's **part** is the tree under
+`opt/<name>/` and the engine seam that reads it:
+
+| Layer | Part | What it holds | Rule (no copied value) | Built from |
+|---|---|---|---|---|
+| `psp-music` | `bgm` | `opt/psp-music/bgm/NNN.DAT` and `bgm/bank/NAME.DAT`, `base/bgm`'s form | `ppms.build` (MS stage B; MB's banks), moved under the layer | the first PSP disc among the sources |
+| `psp-snd` | `snd` | `opt/psp-snd/snd/NAME.DAT`: 880 effects and voices as WAVs, the 11 jingles as MP3s | `at3.build`, the player's ffmpeg (PN) | the same; no ffmpeg, or a clip skipped: refused (a layer is whole or not at all) |
+| `psp-tables` | `exe` | `opt/psp-tables/exe/place.toml` (ranges, sha256) and `place.bin` (their bytes) | every record of `tables.toml`'s `exp_table` and `consumables`, by `symbols.toml`'s PC address, count and stride, less a record's name field (a language's glyph codes); bytes from the PSP-built image (`exe_tables.build_from`), each one a class a disc gave (`map`, `place`, `table`, `widen`) | the same |
+| `psp-ryu-forms` | `dat` | 19 containers of one chunk each: `RYUD00..03` and the 15 `BPLD` / `BRTD` arenas (P8) | `recipes/psp-standins.toml`'s rows of the classes `type1`, `pc-byte`, `pc-hold` whose output is not the PC's chunk (SI's stand-ins, hashed against SI's rows), at the PC's kind, tag and size | the same |
+| `psp-chord-one-tone` | `dat` | 16 containers of one kind-2 chunk: the shared battle effects bank in the PSP's own one-tone form (9.6) | every kind-2 chunk whose PSP group is the case `vag.psp_dropped_tone` restores, built by `vag.psp_vab` without the cue table; the restored form is held to the PC's chunk's hash, the one-tone form must differ | built **whenever a PSP disc is a source, on any base** (`auto`) |
+
+`importer.py build --opt NAME` builds the first four, beside a PlayStation
+base only: under `base_policy = "psp"` the base is the PSP's already, and a
+`bgm` or `snd` layer also wants a PSX disc among the sources (without one
+`base/bgm` and `base/snd` are the PSP's, or absent). Each refusal names why.
+The manifest gets a `[psp_layers]` table after everything else the importer
+writes (`[fmv]` included): `recipe_sha256` and one row a file, `[layer, path,
+source, sha256]`. Neither the launcher's `ManifestParse` nor `dat_cache`'s
+parser reads it (the first has no key it knows there; the second stops at
+`[cache] assets`' closing bracket).
+
+The importer's call sites (`tools/importer.py`, all one-liners into
+`psp_layers`): `build` splits `--opt` (`take`) and builds after the
+manifest; `verify_opt` hands a TG layer to `verify_layer`; `install`
+refuses `--opt` of a `bgm`, `snd` or `exe` layer (`refuse_install`: the
+engine reads those from the cache only); the `--opt` help names them.
+`verify_layer` checks every file against the manifest's row, then by part:
+a `bgm` layer against `fixtures/bgm-psp.tsv` (what `ppms.py` makes of that
+build), an `exe` layer's ranges against the rule and its image against
+`recipes/exe.toml`'s hash for the build, a P8 container's one chunk against
+the PC's kind, tag and size and SI's hash, a chord container's one chunk
+against a bank tag of that container. `psp_layers.check` (run by `suites.py
+check`, so by `importer.py check`): known parts, PSP builds, names the
+engine takes and `opt.toml` does not have, the exe rule's ranges in order
+inside `.data`, P8's rule selecting exactly 19 rows.
+
+`tools/suites.py check` reads the recipe beside `opt.toml`: a member whose
+layer is TG's has `over_psx = "layer"`, its `from` the layer's, its kind the
+layer's part (`bgm`, `snd`, `exe`; a `dat` layer's member is `opt`, or `base`
+where a PSP base stands it in, P8); every TG layer is in exactly one suite
+but the Jukebox's (`suite = "jukebox"`), which must be in none.
+
+### 9.2 The engine's seams (ledger drafts TG-1 to TG-5)
+
+All are reached only when `BOF3X_OPT` (the ini's `opt=`) names the layer and
+the cache (`BOF3X_CACHE`, not under `BOF3X_CACHE_DATA=0`) holds its part:
+`opt=` off is today's behaviour, byte for byte.
+
+- **Which layers exist** (`dat_load.cpp` `ReadOptLayers`): a layer counts
+  when `DAT\<layer>.*.DAT` exists, or the cache has `opt\<layer>\dat\`, or
+  (new) `opt\<layer>\bgm\*.DAT`, `snd\*.DAT` or `exe\place.toml`
+  (`dat_cache::HasLayerPart`); the launcher's `CacheHasLayer` asks the same
+  (`config.cpp`), so the page and the DLL agree. After the check,
+  `dat_cache::SetOptLayers` hands the list to the seams below.
+  **`kOptMax` is 16** (it was 8): all three suites' PSP sides with the walls
+  name nine layers, eleven with the other renames and the chord;
+  `ConfigOptValid` follows (`more than 16 layers`).
+- **TG-1, the music** (`music_seq.cpp`, DIV-0087's `Music_LoadFile` seam):
+  `Arm` takes the named layers with a `bgm` part, checks every song and bank
+  of each at start-up as it checks `base\bgm`, and `LoadFile` looks for a
+  track in the last named layer first, then the earlier ones, then
+  `base\bgm`, then the MP3. A song's bank comes from **its own directory's**
+  `bank\`, and the bank held is now known by its file path, not its name:
+  the PSP's banks are named as the PSX's, and keyed by name a base song
+  would have played on the layer's bank (the self-test's control case).
+  `BOF3X_MUSIC=mp3` still plays every MP3, with a line saying the layer's
+  songs are not played either. Arming no longer needs `base\bgm` when a
+  named layer has songs. A root too long for `<root>\opt\<layer>\bgm\bank\`
+  + 15 + `.DAT` is a Fatal naming the layer.
+- **TG-2, effects, voices, jingles** (`dat_cache.cpp` `SoundPath`, DIV-0089's
+  `Sound_LoadStream` seam): armed, the named layers with a `snd` part, last
+  first, then `base\snd`, then `SND\`. A layer without a file leaves it to
+  the one under it. Over a PSX-only install this brings the 11 jingles a
+  PSX-only install lacks (`psp-install.md` 3; the round's section 7 item 5).
+- **TG-3, the exe tables** (`exe_image.cpp` `ExeImage_LayOptTables`, called
+  by the exe host's `CopyData` after `.data` is in place - the file's, or
+  `BOF3X_EXEIMAGE`'s and filled - and before `ExeImage_CompareWithFile`):
+  each named layer with `exe\place.toml`, in `BOF3X_OPT`'s order, is laid
+  over `.data`. Refused (Fatal, naming the file): a `place.toml` not in
+  `psp_layers.py`'s shape, ranges out of order or outside `.data`, a byte
+  count that differs, a `place.bin` whose sha256 is not the toml's, and,
+  over a disc-built image, a range on a class that must equal the PC's
+  (`layout`, `own`, `keys`, ...). The log names the bytes that changed.
+  **The hosted build refuses it**: `ReadOptLayers` stops with "only
+  bof3x.exe lays (the exe host); the hosted build (--host bof3) runs
+  Capcom's .data as loaded". The hosted build is the A/B and shadow
+  reference, and its `.data` stays the loader's.
+- **TG-4, P8** (no new seam): an ordinary DAT layer through DIV-0086's walk.
+  Each chunk is kind 0 at the arena's tag, the whole arena; the arenas' tag
+  `0x10000` resets `Gfx_UploadQueueCount` again, which changes nothing,
+  since in each of the 19 containers the only chunks after the arena are
+  banks (`recipes/pc-zh.toml`; a bank queues no upload).
+- **TG-5, a layer's bank** (`save_menu.cpp` `Snd_LoadBankFile`, through
+  `dat_load.cpp` `DatLoad_OptLayerChunks`): the original loads a
+  container's kind-2 chunks from the shipped file alone, so a layer's bank
+  would apply when `LoadDatFile` loads the container and not when a scene
+  loader asks for its banks. Now, after the shipped file, each named layer's
+  file for that container (`LoadDatFile`'s precedence) gives its kind-2
+  chunks too; `Snd_LoadBank` frees and replaces a slot's bank, as when the
+  original loads one over another. Only when a named layer carries a bank at
+  all (read from its files' headers at injection, logged): with none, the
+  function is the original's, and its shadow comparison stays like for
+  like. (A first build without that gate crashed the hosted `'*'` run in
+  `Snd_LoadBankFile`'s shadow fuzz, `area4-walls` being named by default:
+  the fuzz's names walked the real file layer.)
+
+**The PSX's banks need nothing else.** MB measured the PSP's 901 effects
+banks equal to the PSX-JP chunks (901 of 901 on each PSP, with the
+dropped-tone rule; 885 without), and the PSX-JP chunks are the PC's
+(`psp-music-banks.md` 5): there is no other PSP bank to lay. The one
+difference is the chord, which the owner made a toggle (9.6).
+
+### 9.3 The Jukebox's PSP column
+
+`music_player.cpp` `ListPsp`: when the cache's `base\bgm` is not the PSP's,
+the PSP source lists `<cache>\opt\<music layer>\bgm\` (the layer named by
+`suites.toml`'s `bgm` member), and every song plays on its own directory's
+`bank\` (`Entry::bank_dir`), so the PSX and PSP columns sit side by side on
+a PC + PSX + PSP cache. A PSP-only cache is as before (`base\bgm`).
+
+### 9.4 Measured
+
+All on this machine, 2026-10-12, headless (no game window). Scripts in
+`<scratchpad>/psp_tg/`.
+
+| What | Command | Result |
+|---|---|---|
+| the recipes | `python tools/psp_layers.py check`; `python tools/suites.py check`; `python tools/importer.py check` | 5 layers, 0 errors; 0 errors; exit 0 (742 files, 3,582 chunks, `opt.toml` 6 layers, 0 errors) |
+| the checkers refuse | `neg_tg.py`: 12 mutations (a member back to `engine`, the wrong kind, `from` not the layer's, a `bgm` member on an `opt.toml` layer, the chord layer in a suite, a TG layer in no suite, one from a PSX disc, an unknown part, P8's count, an unknown table, a TG name that is an `opt.toml` one, a banks rule) | 12 of 12 refused; the committed files 0 errors |
+| PC + US + PSP-EU | `build` with `--opt psp-music --opt psp-snd --opt psp-tables --opt psp-ryu-forms`, against the same build by `958b01b9`'s tools (`treecmp.py`) | 2,126 files identical; 1,175 new, all under `opt/`: `psp-music` 247 (166 songs, 81 banks), `psp-snd` 891, `psp-tables` 2, `psp-ryu-forms` 19, `psp-chord-one-tone` 16; the manifest: 0 lines removed, 1,182 added (the `[psp_layers]` table); 218 s against 150 s |
+| `verify` on it | `importer.py verify --cache` | 742 of 742 composed, 0 problems; each of the five TG layers 0 problems, `area4-walls` as before |
+| PSP-EU alone | `build`, against `958b01b9`'s tools | 1,882 files identical; 16 new (`psp-chord-one-tone`, built on every base); manifest 0 removed, 23 added; `verify` 0 problems |
+| the PC and PSX paths | JP + PC, US alone, European alone against the coordinator's `ref_*` (built with `668a9b67`'s tools) | 2,125, 1,872 and 1,864 files: every one identical; the manifests differ only by the `[build]` table (`base_policy`, `exe_tables_from`) that wave one (SI, IM) added, no line of TG's; `recipes/exe-gaps.tsv` untouched |
+| the exe tables, by bytes | `exe_cmp.py`: `place.bin` laid over each image at `place.toml`'s ranges, as `ExeImage_LayOptTables` lays it, against the PSP-built image | over the PC's, the US disc's and the European disc's images: **250 bytes change**, 0 outside the ranges (249 in `exp_table` roster index 6, 1 in consumable 87); in the ranges every byte equals the PSP image's; the layer is 93 ranges, 6,096 bytes |
+| PSP-JP against PSP-EU | the same layers cut from each disc (`layers_only.py`) | `psp-tables` and `psp-ryu-forms` byte-identical |
+| refusals at build | `--opt psp-music` from PSP-EU alone; `--opt psp-tables` from the US disc alone | each refused in a second, naming why (a PSP base; no PSP disc) |
+| install | `install --opt psp-music`; `install --opt psp-ryu-forms --opt psp-chord-one-tone` | refused, naming `cache=` / `opt=`; 35 files as `DAT\<layer>.*.DAT` |
+| the i686 build | `cmake --preset i686 && cmake --build build` | clean, no warning in a file changed here |
+| hosted self-test | `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'`, an ini-less copy, the PC install (which names `area4-walls` by default) | exit 0, `inject: 10087 ours`; the TG-1, TG-2 and TG-3 self-tests logged |
+| hosted, the tables named | `--host bof3`, `BOF3X_OPT=psp-tables` | exit 3: "TG-3: ... only bof3x.exe lays (the exe host)" |
+| hosted, the other layers | `--host bof3`, `BOF3X_OPT=psp-music,psp-snd,psp-ryu-forms,psp-chord-one-tone`, the PC + US + PSP-EU cache | exit 0 |
+| exe host, PSX disc-only install | `install --base` from a US + PSP-EU cache; `BOF3X_CACHE` = that cache (the launcher sets `BOF3X_EXEIMAGE`); `BOF3X_OPT` each of `none`, `psp-music`, `psp-snd`, `psp-tables`, `psp-ryu-forms`, `psp-chord-one-tone`, then all five with `area4-walls` | exit 0 every time; `exe_own: 17 regions ... filled over a disc-built image`; `inject: 10087 ours`; with the tables: `TG-3 ... 250 of them differ` over `psx-us`; with the music: the layer's 166 songs and 81 banks checked, then base's |
+| exe host, a PC install | the PC install, the PC + US + PSP-EU cache, all five layers | exit 0; `TG-3 ... 250 of them differ` over the file's `.data` |
+| exe host, a damaged layer | one byte of `place.bin` flipped (restored after) | exit 3: "place.bin is not the file place.toml's sha256 names" |
+| launcher host suite | `cmake -S tools/launcher_host -B build/lh -G Ninja -DCMAKE_CXX_COMPILER=clang++`, `config_tests.exe` | **136 checks, 0 failures** (114 before): the parts counted as the DLL counts them, every suite offered with TG's layers, `opt=` of nine and eleven layers valid and seventeen refused, the chord box's six states |
+| ledger | `python tools/ledger_check.py` | 101 entries, 0 errors, 2 notes (TG-1..5 and DIV E are not in the ledger yet) |
+
+### 9.5 The suites now
+
+| Suite | Member | Beside a PlayStation base | On a PSP base |
+|---|---|---|---|
+| audio | music | layer `psp-music` | `base/bgm` |
+| | effects, voices, jingles | layer `psp-snd` | `base/snd` |
+| data | level table and item 87 | layer `psp-tables` (the exe host only) | `base/exe` (`exe_tables_from`) |
+| | Ryu's forms (P8) | layer `psp-ryu-forms` | the base's stand-ins (kind `base`) |
+
+The owner's calls of 2026-10-12 (relayed by the coordinator): LT's three
+membership proposals stand as built (section 6: the renames and P8 under
+data, the button page left out), and the PSP music's restored stereo width
+is fine (no narrow-pan bank form).
+
+### 9.6 The battle chord (the owner, 2026-10-12)
+
+One effects bank, shared by 16 containers (`BPLD` / `BPLU` 015, 025, 056,
+257, 457, 567, 578 and `BRTD` / `BRTU` 457), keys a chord whose second tone
+the PSP's bank dropped; MB's rule restores it from the PSP's own `pBVC`, so
+every base plays the PlayStation's chord (`psp-music-banks.md` 5). The owner
+asked for it to be toggle-able, on the Jukebox screen:
+
+- **The layer** `psp-chord-one-tone`: those 16 bank chunks as the PSP plays
+  them, one tone. Built on every cache with a PSP source, PSX or PSP base.
+- **The box** (`IDD_MUSIC`, under the song list): "Battle chord as the PSP
+  plays it (one tone)", in a group "In the game (a sound effect, not a
+  song)". Its state is `opt=`'s: checking it adds the layer through
+  `ConfigOptEdit`, unchecking removes it, and the line is written with the
+  rest on Play. **Off by default**: the restored chord on every base. Greyed,
+  with the reason under it, when no cache is named, when the cache has no
+  PSP source (naming `psp-jp or psp-eu`), or when it has one but not the
+  layer (built before this round). `ChordEvaluate` (`suites.cpp`) decides,
+  pure, for the host tests.
+- **The engine**: the layer's banks reach `Snd_LoadBank` from both loaders
+  (TG-5).
+- **Not heard**, and the Jukebox does not play it: it is an effect, not a
+  song. The box only sets what the game plays.
+
+### 9.7 Not verified
+
+- **Nothing played or heard.** No live run: the PSP's songs and effects
+  under a PSX base, the chord, the level table at a level-up of roster index
+  6, consumable 87, Ryu's forms in battle. The self-tests drive the seams on
+  synthetic files; the exe host's self-test lays the real tables.
+- **The Jukebox and the dialog by script** (`dialog_test.py`): the
+  coordinator's end batch. The new controls compile and the host suite
+  checks `ChordEvaluate`; the dialog itself was not opened. One expectation
+  of `dialog_test.py` was changed to match: audio's greyed reason on the PC +
+  PSX + PSP fake cache is now `--opt psp-music` (not built), not "the engine
+  half (TG)". It does not drive the Jukebox.
+- **`psp-snd` over a PC install's `SND\`**: the cache's files win where both
+  exist (DIV-0089), so the PC's own MP3 jingles are replaced by the PSP's
+  re-encoded ones when the layer is on. Measured only as paths.
+- **Start-up time** with a `bgm` layer: Arm parses another 247 files.
+- **A cache built by `--opt` with PSP-JP and PSP-EU both**: the first PSP
+  disc in the player's order is used; JP and EU gave identical `psp-tables`
+  and `psp-ryu-forms` layers (9.4).
 
 ## For the other files
 
@@ -442,3 +668,106 @@ the page and the membership calls (`launcher-suites.md` 6) owed.
   launcher on the owner's display: the layout, the wording, and the partial
   state.
 - **Call:** the three membership questions, section 6.
+
+## For the other files (TG, the engine half)
+
+For the coordinator to fold in; not edited here. The ledger drafts are
+letters TG-1 to TG-5; the code cites them as `TG-1` .. `TG-5` (renumber at
+merge: `dat_cache.h`, `dat_cache.cpp`, `dat_load.cpp`, `dat_load.h`,
+`music_seq.cpp`, `save_menu.cpp`, `exe_image.h`, `exe_image.cpp`,
+`exe_host.cpp`, `suites.h`, `resource.h`).
+
+**DIV E, amended** (the suites; LT's draft above): the "New behaviour"
+sentence "A member whose engine half is not built (audio and the tables
+beside a PlayStation base, until TG) or that has no layer (P8) is greyed with
+that reason" becomes: "Every member is a layer beside a PlayStation base
+(`recipes/opt.toml`'s, or `recipes/psp-layers.toml`'s: the music, the
+effects, the exe tables, P8 - TG-1 to TG-4); one not in the cache is greyed
+with `build with --opt NAME`." Add: "`opt=` takes up to 16 layers (8
+before)."
+
+**TG-1 - The PSP's music as a layer beside a PlayStation disc's**
+- **Subsystem:** music (`src/game/music_seq.cpp`, DIV-0087's seam; `tools/psp_layers.py`, `recipes/psp-layers.toml`)
+- **Tier:** Sensible - a later release's content, off unless chosen (DIV-0086's rule for layers).
+- **Original behaviour:** the port plays its MP3s; with DIV-0087, the cache's `base\bgm` (one disc's songs).
+- **New behaviour:** with `opt=` naming `psp-music` (the audio suite's PSP side), a track is the layer's `opt\psp-music\bgm\NNN.DAT` on its own `bank\` when it has one, else `base\bgm`'s, else the MP3. A song's bank is held by its file, not its name. `BOF3X_MUSIC=mp3` still plays the MP3s.
+- **Rationale:** the owner's calls of 2026-10-10 (three suites, the PSP's audio a choice beside a PSX base); `docs/launcher-suites.md` 9.
+- **Also in the PSX version?** no - the PSP's own sequences (`psp-music.md`: 93 of 166 differ).
+- **Reversible?** yes: the audio suite's PlayStation side, or `opt=` without the layer.
+
+**TG-2 - The PSP's effects, voices and jingles as a layer**
+- **Subsystem:** sound streams (`dat_cache.cpp` `SoundPath`, DIV-0089's `Sound_LoadStream` seam)
+- **Tier:** Sensible.
+- **Original behaviour:** `SND\NAME.DAT` (with DIV-0089, `base\snd` first).
+- **New behaviour:** with `opt=` naming `psp-snd`, the layer's `opt\psp-snd\snd\NAME.DAT` before `base\snd` and `SND\`: the PSP's ATRAC3plus clips as decoded by the player's ffmpeg, and the 11 jingles - which a PSX-only install otherwise lacks.
+- **Rationale:** as TG-1; DIV D (PN) is the same audio as a PSP-only base.
+- **Also in the PSX version?** no.
+- **Reversible?** yes, as TG-1.
+
+**TG-3 - The PSP's level table and consumable 87 laid over .data**
+- **Subsystem:** the exe host's data mapping (`src/hook/exe_image.cpp` `ExeImage_LayOptTables`, `exe_host.cpp` `CopyData`)
+- **Tier:** Extension - a balance change (roster index 6's level table, `opt-layers.md` 3), chosen by the player; IM's DIV B makes it a PSP-only install's base.
+- **Original behaviour:** `.data` as `BOF3.exe` (or the disc-built image) holds it: the PSX's tables.
+- **New behaviour:** with `opt=` naming `psp-tables`, the exe host lays `opt\psp-tables\exe\place.bin` over `.data` at map time: every record of `exp_table` and `consumables`, names left out, from the PSP-built image. Over the PC's, the US disc's and the European disc's images it changes exactly 250 bytes: 249 of roster index 6's rows and 1 of consumable 87. The hosted build refuses the layer (its `.data` is Capcom's, the reference).
+- **Rationale:** the owner's data suite; `docs/launcher-suites.md` 9, `psp-image.md` (DIV B).
+- **Also in the PSX version?** no - the PSP's changes.
+- **Reversible?** yes: the data suite's PlayStation side.
+
+**TG-4 - Ryu's forms (P8) as a layer**
+- **Subsystem:** data (`LoadDatFile`, DIV-0086's walk; no new code)
+- **Tier:** Sensible (presentation and form data the PSP changed; CD settled that our code runs it, `psp-code-diff.md`).
+- **Original behaviour:** the PSX's arenas and `RYUD` sections (the PC's chunks).
+- **New behaviour:** with `opt=` naming `psp-ryu-forms`, the 19 chunks a PSP-only base stands in (SI): `RYUD00..03` with the port's byte, 14 type-1 arenas, `BPLD27A` with the port's hold.
+- **Rationale:** the owner's data suite (P8 under data, 2026-10-12).
+- **Also in the PSX version?** no.
+- **Reversible?** yes.
+
+**TG-5 - The battle chord as the PSP plays it, and a layer's banks in `Snd_LoadBankFile`**
+- **Subsystem:** sound banks (`save_menu.cpp` `Snd_LoadBankFile`, `dat_load.cpp` `DatLoad_OptLayerChunks`); the launcher's Jukebox (`music_player.cpp`, `suites.cpp` `ChordEvaluate`, `launcher.rc`)
+- **Tier:** Sensible - a choice, off by default.
+- **Original behaviour:** `Snd_LoadBankFile` loads a container's banks from the shipped file only. The PSX's (and the PC's) battle effects bank in 16 containers keys a chord of two tones; the PSP's drops the second, and every base plays the restored chord (MB's rule).
+- **New behaviour:** `Snd_LoadBankFile` also loads the kind-2 chunks of each named layer's file for the container, when a named layer carries a bank at all. The layer `psp-chord-one-tone` (built whenever a PSP disc is a source) holds those 16 banks as the PSP plays them; the Jukebox's box "Battle chord as the PSP plays it (one tone)" puts it in `opt=`. Off by default.
+- **Rationale:** the owner, 2026-10-12: the dropped tone toggle-able, on the Jukebox.
+- **Also in the PSX version?** no - the PSX plays two tones.
+- **Reversible?** yes: the box, or `opt=` without the layer.
+
+**DIV-0086:** an "Amended 2026-10-12 (TG)" line: a layer may hold `bgm\`,
+`snd\` or `exe\` trees as well as `dat\` (TG-1..3), read from the cache only
+(`install --opt` refuses them); `kOptMax` 16.
+
+**DIV-0087 / DIV-0089:** an "Amended 2026-10-12 (TG-1 / TG-2)" line each,
+pointing here.
+
+**`docs/opt-layers.md`:** section 3's last paragraph (the level table and
+consumable 87 "wait on a chunk kind") and owner's call 5 (P8, the tables):
+built, `launcher-suites.md` 9. Section 5: the list's limit is 383
+characters and 16 layers.
+
+**`docs/music-player.md`:** section 3 and 6.3's last line: a PC + PSX + PSP
+cache shows the PSP's songs from the `psp-music` layer (9.3); the chord box
+(9.6).
+
+**`docs/cache-read.md`:** section 5: `Sound_LoadStream` takes a named
+layer's `snd\` first (TG-2); `Snd_LoadBankFile` a named layer's banks
+(TG-5).
+
+**`docs/psp-music-banks.md`:** section 5's last paragraph: the dropped tone
+is now the owner's toggle (TG-5), default the restored chord.
+
+**`docs/README.md`:** `launcher-suites.md`'s row: "... what TG lifts; the
+engine half built (section 9: `recipes/psp-layers.toml`, TG-1..5, the
+Jukebox's chord box)".
+
+**`docs/STATUS.md`:** the PSP-only round's TG: the suites' engine half -
+`psp-music`, `psp-snd`, `psp-tables` (exe host only), `psp-ryu-forms`, and
+the Jukebox's battle-chord toggle `psp-chord-one-tone`; self-tested, not
+played or heard.
+
+**`docs/HANDOFF.md`:** V3/V4 additions: a level-up of roster index 6 with
+`psp-tables` on; the audio suite on a PC + PSX + PSP install by ear; the
+chord box on and off in a fight with one of the 16 characters' forms. Trap:
+`dialog_test.py`'s Jukebox (IDD_MUSIC grew 36 units; its buttons moved).
+
+**`docs/owner-review.md`, one entry:** ear - the PSP's songs and effects
+beside the PlayStation's (the audio suite), the chord one tone against two;
+eye - the Jukebox's new box and its wording.
