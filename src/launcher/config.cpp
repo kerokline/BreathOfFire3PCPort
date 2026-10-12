@@ -123,6 +123,8 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             // the default layers instead, so the launcher refuses it
             // (ConfigOptValid) rather than this file guessing.
             cfg.opt = value;
+        } else if (key == "psp") {  // DIV F (draft): kept as written, the DLL refuses an unknown name
+            cfg.psp = value;
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
             cfg.cache = ConfigCacheFromIni(value);   // UTF-8 (state 3); an older ini's ANSI bytes once
         } else if (key == "music") {  // DIV-0087
@@ -221,6 +223,9 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "# none: no layer. The dialog's three suites (graphics, audio, data: recipes/suites.toml) write their\r\n";
     out += "# layers here; a suite is its layers, so this line is the whole record of them\r\n";
     out += "opt=" + cfg.opt + "\r\n";
+    out += "# the PSP's battle rules (DIV F draft, docs/psp-battle-changes.md): duel-loss, myria-item, or none;\r\n";
+    out += "# empty: on when the cache's base is the PSP's, else off. The data suite writes them here\r\n";
+    out += "psp=" + cfg.psp + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
     out += "# seq (the cache's song where it has one, the default) | mp3 (the PC's files always)\r\n";
@@ -322,6 +327,11 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
             if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
         }
     }
+
+    // DIV F (draft): the PSP's battle rules as the ini lists them; empty leaves
+    // the DLL its default (the cache's base_policy). The DLL checks the names.
+    if (GetEnvironmentVariableW(L"BOF3X_PSP", existing, 64) == 0 && !cfg.psp.empty())
+        SetEnvironmentVariableA("BOF3X_PSP", cfg.psp.c_str());
 
     // DIV-0087: the cache root and the music source, as the ini has them; the
     // dll checks both.

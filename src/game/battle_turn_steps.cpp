@@ -29,6 +29,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_turn_steps_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/psp_code.h"
 #include "hook/detour.h"
 
 namespace battle_turn_steps {
@@ -236,6 +237,10 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_Statu
 // rule out to state 2; round flag 8 cleared, 0x904AE4 zeroed, phase 1 from 0.
 // The member index goes out as a byte (the original's local slot carries the
 // caller's upper bits, which Battle_ActorIsOut masks off).
+//
+// DIV F (draft, psp_code.h): with the PSP's duel-loss on, an end byte with bit
+// 0 set and bit 2 clear in event battle 0x1B is not the battle's end - the
+// PSP's added test (PSP-JP 0x11F36C), after the hook. Off, the original's.
 extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextRound() {
     for (unsigned i = 0x10; i < 0x18; ++i)
         if (Long(At(0x803500 + i * 4)) != 0) return;
@@ -244,7 +249,7 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl BattleRoundEnd_NextR
             static_cast<std::uintptr_t>(static_cast<std::uint32_t>(Long(At(at::kHookEvent)))));
         if ((hook(2) & 0xFF) == 0xFF) return;
     }
-    if (B(at::kBattleEnd) != 0) {
+    if (B(at::kBattleEnd) != 0 && !psp_code::DuelLossGoesOn(B(at::kEventBattle), B(at::kBattleEnd))) {
         B(at::kRoundFlags) &= 0xEF;
         for (unsigned w : {0u, 3u, 1u, 11u, 10u, 9u, 8u, 7u, 6u, 5u, 4u}) B(at::kWindows + w * at::kWindowStride) = 0;
         B(at::kPhase) = 5;

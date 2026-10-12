@@ -37,6 +37,7 @@
 #include "game/rest_3g_callees.h"
 #include "game/scenario_harness.h"
 #include "game/draw_pool.h"
+#include "game/psp_code.h"
 #include "game/widescreen.h"
 #include "hook/code_bytes.h"
 #include "hook/detour.h"
@@ -328,6 +329,12 @@ extern "C" void __cdecl Battle_PlaceBossActors(void) {
 // +7, +0x2B 0, +8 the formation byte 0x904AAC ^ 2, +0x48 0;
 // Battle_CopyEnemyData(count, kind), Battle_SetEnemyOffset(count, kind's byte);
 // the record's +0x8F 0; the actor's +0 | 0x40; 0x904AB2 up.
+//
+// DIV F (draft, psp_code.h): with the PSP's myria-item on, in area 198 under
+// event battle 0x37 the record's item word +0xA8 is 0x317 after
+// Battle_CopyEnemyData - the PSP's added store (PSP-JP 0x141570..0x141598,
+// its +0x98), which reads the area and the event byte after that call, as
+// here. Off, nothing.
 extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, unsigned kind) {
     unsigned char* const actor = SH_CALL(BossActor_Find)(slot);
     if (!actor) return;
@@ -362,6 +369,7 @@ extern "C" void __cdecl Battle_PlaceBossActor(unsigned slot, unsigned count, uns
     s[8] = static_cast<unsigned char>(At(at::kFormation)[0] ^ 2);
     s[0x48] = 0;
     SH_CALL(Battle_CopyEnemyData)(count, kind);
+    psp_code::MyriaItem(At(at::kEnemies + at::kEnemyStride * n), Game_AreaNumber, At(at::kEventBattle)[0]);
     SH_CALL(Battle_SetEnemyOffset)(count, kind & 0xFF);
     At(at::kEnemies + at::kEnemyStride * n + 0x8F)[0] = 0;
     actor[0] = static_cast<unsigned char>(actor[0] | 0x40);

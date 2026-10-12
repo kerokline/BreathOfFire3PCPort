@@ -16,12 +16,14 @@
 #           for base/bgm and base/snd, a chunk kind for base/exe): listed,
 #           greyed with `why`, never selectable
 #   none    no layer exists or is planned: listed, greyed with `why`
+#   switch  (kind code only) a rule in the engine's code, played through psp= and
+#           BOF3X_PSP (`code` names the item, src/game/psp_code.h): selectable today
 #
 # When the base is the PSP's (the manifest's [build] base_policy = "psp", a
 # PSP-only install), every member is the base and the PlayStation's version is
 # the greyed side. `kind` says where a member lives in the cache: opt (opt/
 # <layer>/), bgm (base/bgm/), snd (base/snd/), exe (base/exe/'s tables), base
-# (base/ chunks; the PSP's stand-ins).
+# (base/ chunks; the PSP's stand-ins), code (the engine's switch, no cache file).
 #
 # Which suite carries the names layers, Ryu's form data (P8) and the button
 # page are the owner's open calls (docs/psp-only-round.md section 7 item 3);
@@ -114,3 +116,24 @@ kind = "base"
 from = ["psp-jp", "psp-eu"]
 over_psx = "none"
 why = "no layer yet (unrendered)"
+
+# The PSP's two battle rules (DIV F draft, docs/psp-battle-changes.md): code in
+# the engine, not data from a disc, switched by bof3x.ini's psp= (BOF3X_PSP;
+# src/game/psp_code.h). On by default on a PSP base, off otherwise; the suite's
+# choice writes psp= as a layer member's writes opt=. `from` is the builds whose
+# code has the rule (both PSP releases, read side by side).
+[[suite.member]]
+id = "psp-duel-loss"
+label = "fight 27: a loss goes on"
+kind = "code"
+code = "duel-loss"
+from = ["psp-jp", "psp-eu"]
+over_psx = "switch"
+
+[[suite.member]]
+id = "psp-myria-item"
+label = "fight 55: Myria's item"
+kind = "code"
+code = "myria-item"
+from = ["psp-jp", "psp-eu"]
+over_psx = "switch"
