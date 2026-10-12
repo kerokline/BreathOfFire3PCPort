@@ -9,7 +9,9 @@
 // maps no .rdata). The other 21 - the import address table, the DirectInput
 // keyboard data format, four floats only Capcom's code reads (widescreen.cpp
 // checks the operands that name them), three literals that are no .rdata
-// read - are listed in the doc with why they stay.
+// read - are listed in the doc with why they stay. The keyboard format is the
+// SDK's c_dfDIKeyboard since the disc-only round (KeyboardFormat below), and
+// in the exe host nothing of .rdata comes from the file (Map).
 //
 // Each constant keeps its PC address, a load-bearing constant (CLAUDE.md
 // rule 3): it names the copy it replaces. A `Const` converts to the address
@@ -18,12 +20,15 @@
 // consteval and refuses, at compile time, an address this table does not
 // hold. While the game is hosted, Verify() (InjectAll's first step) compares
 // every copy with BOF3.exe's own bytes and stops with a Fatal on any
-// difference, so holding them is a verification, not a divergence.
+// difference, so holding them is a verification, not a divergence. In the exe
+// host the comparison reads the player's file, when there is one.
 #pragma once
 
 #include <array>
 #include <bit>
 #include <cstdint>
+
+struct _DIDATAFORMAT;   // dinput.h's DIDATAFORMAT
 
 namespace rdata {
 
@@ -134,8 +139,23 @@ struct Const {
     }
 };
 
-// Every copy against BOF3.exe's .rdata in the running image; a Fatal on the
-// first difference. InjectAll's first step, before any fuzz reads one.
+// Every copy, and KeyboardFormat's header and 256 objects (their GUIDs by
+// value), against BOF3.exe's: the running image hosted, the player's file in
+// the exe host (ExeFile_Present; without the file, logged as not compared).
+// A Fatal on the first difference. InjectAll's first step, before any fuzz
+// reads one.
 void Verify();
+
+// The exe host's .rdata (exe_host.cpp step 3), none of it from the file: the
+// 44 copies written at their PC addresses, and at DInput_KeyboardFormat
+// 0x5C4948 the SDK's DIDATAFORMAT header (its object table the SDK's, in our
+// image). The import slots are BindSlots'. Everything else in .rdata stays
+// zero: nothing of ours reads it (docs/exe-import-engine.md section 2.2).
+void Map();
+
+// The keyboard's DirectInput data format: the SDK's c_dfDIKeyboard (libdinput),
+// which Verify finds equal to Capcom's at 0x5C4948 - whose object table is at
+// 0x5ACBD0, inside .text, so the exe host's int3 fill cannot hold it.
+const ::_DIDATAFORMAT* KeyboardFormat();
 
 }  // namespace rdata

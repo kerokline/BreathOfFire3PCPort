@@ -1,8 +1,14 @@
 #include "input/bindings.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define DIRECTINPUT_VERSION 0x0700
+#include <windows.h>
+#include <dinput.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iterator>
 
 namespace bof3x::input {
 namespace {
@@ -197,14 +203,39 @@ bool KeysFromTable(const unsigned char* table, size_t bytes, std::vector<KeyBind
 }
 
 namespace {
-std::vector<KeyBinding> g_default_keys;   // SetDefaultKeys'
+// The rule, by button: the keys of each, in Key_TableDefault's order.
+constexpr KeyBinding kDefaultRule[] = {
+    {DIK_UP, kUp},          {DIK_DOWN, kDown},        {DIK_LEFT, kLeft},       {DIK_RIGHT, kRight},
+    {DIK_Z, kTriangle},     {DIK_X, kCross},          {DIK_C, kSquare},        {DIK_V, kCircle},
+    {DIK_A, kL1},           {DIK_Q, kL2},             {DIK_S, kR1},            {DIK_W, kR2},
+    {DIK_RETURN, kStart},   {DIK_RSHIFT, kSelect},    {DIK_ESCAPE, kCross},    {DIK_SPACE, kCircle},
+    {DIK_NUMPAD8, kUp},     {DIK_NUMPAD2, kDown},     {DIK_NUMPAD4, kLeft},    {DIK_NUMPAD6, kRight},
+    {DIK_NUMPAD9, kUp | kRight}, {DIK_NUMPAD1, kDown | kLeft}, {DIK_NUMPAD7, kUp | kLeft},
+    {DIK_NUMPAD3, kDown | kRight},
+};
+static_assert(sizeof kDefaultRule / sizeof kDefaultRule[0] == kDefaultKeyCount, "the rule's 24 entries");
 }  // namespace
 
-void SetDefaultKeys(const std::vector<KeyBinding>& keys) { g_default_keys = keys; }
+const std::vector<KeyBinding>& DefaultKeys() {
+    static const std::vector<KeyBinding> keys(std::begin(kDefaultRule), std::end(kDefaultRule));
+    return keys;
+}
+
+void DefaultKeyTable(unsigned char* out, size_t bytes) {
+    std::memset(out, 0, bytes);
+    size_t at = 0;
+    for (const KeyBinding& k : DefaultKeys()) {
+        if (at + 4 > bytes) break;
+        out[at] = k.dik;
+        out[at + 2] = static_cast<unsigned char>(k.bits);
+        out[at + 3] = static_cast<unsigned char>(k.bits >> 8);
+        at += 4;
+    }
+}
 
 Bindings Bindings::Defaults() {
     Bindings b;
-    b.keys = g_default_keys;   // Key_TableDefault 0x66C648 in order (docs/controls.md section 1)
+    b.keys = DefaultKeys();   // Key_TableDefault 0x66C648's 24 entries, as a rule (docs/controls.md section 1)
     b.pad = {
         {PadInput::kSouth, kCross},    {PadInput::kEast, kCircle},     {PadInput::kWest, kSquare},
         {PadInput::kNorth, kTriangle}, {PadInput::kLb, kL1},           {PadInput::kRb, kR1},

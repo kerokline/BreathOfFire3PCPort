@@ -683,7 +683,10 @@ set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # libraries, nothing vendored; the shader compiler is d3dcompiler_47.dll.
 # ole32 and windowscodecs: DIV-0095's icon - WIC encodes its 256 px PNG and
 # the self-test decodes the .ico files (src/hook/exe_icon.cpp).
-target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs SDL3::SDL3-static)
+# dinput and dxguid: the SDK's c_dfDIKeyboard and its GUID_Key, static data
+# (src/game/rdata_consts.cpp); no import of dinput.dll, which pad_read.cpp
+# loads itself.
+target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs dinput dxguid SDL3::SDL3-static)
 
 # --- bof3x.exe, our own executable (docs/state3-design.md section 1.3) ------
 # Written by tools/make_exe.py, not linked: lld will not place a section

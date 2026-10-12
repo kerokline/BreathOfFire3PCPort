@@ -23,7 +23,10 @@
 #include "bof3/symbols.gen.h"
 #include "game/shell_callees.h"
 #include "hook/detour.h"
+#include "hook/exe_host.h"
+#include "hook/host.h"
 #include "hook/log.h"
+#include "input/bindings.h"
 
 // A C symbol as the assembler sees it (i686 mingw prefixes an underscore).
 #define SHELL_STR2(x) #x
@@ -62,7 +65,6 @@ U Long(U address) {
     std::memcpy(&v, At(address), sizeof v);
     return v;
 }
-void PutLong(U address, U v) { std::memcpy(At(address), &v, sizeof v); }
 
 }  // namespace
 }  // namespace shell
@@ -140,9 +142,38 @@ extern "C" __attribute__((naked)) void __cdecl Cfg_Load(void) {
 }
 
 // original 0x5A9880; sole caller Cfg_Load. The 32 dwords of Key_TableDefault
-// to Key_Table, first to last (rep movsd; the two do not overlap).
+// to Key_Table, first to last (rep movsd; the two do not overlap) - the
+// table as the engine's rule makes it (input::DefaultKeyTable), which
+// Shell_MapDefaultKeys found equal to BOF3.exe's where there is a file.
 extern "C" void __cdecl Cfg_SetDefaultKeys(void) {
-    for (U i = 0; i < 0x20; ++i) PutLong(kKeyTable + 4 * i, Long(kKeyTableDefault + 4 * i));
+    unsigned char rule[0x80];
+    bof3x::input::DefaultKeyTable(rule, sizeof rule);
+    std::memcpy(At(kKeyTable), rule, sizeof rule);
+}
+
+// Key_TableDefault 0x66C648 written from the engine's rule at map time, so
+// that Capcom's code paths that read it (hosted, under BOF3X_ORIGINAL, and the
+// shell fuzz's clone) see it too; first compared with BOF3.exe's 0x80 bytes -
+// the mapped image's hosted, the player's file in the exe host - when there
+// is one. The region is then the engine's own (docs/disc-only-round.md, RD).
+void Shell_MapDefaultKeys() {
+    unsigned char rule[0x80], theirs[0x80];
+    bof3x::input::DefaultKeyTable(rule, sizeof rule);
+    const bool present = bof3::ExeFile_Present();
+    if (present) {
+        if (bof3::IsExeHost()) bof3::ExeFile_Read(kKeyTableDefault, theirs, sizeof theirs);
+        else std::memcpy(theirs, At(kKeyTableDefault), sizeof theirs);
+        for (unsigned i = 0; i < sizeof rule; i += 4)
+            if (std::memcmp(rule + i, theirs + i, 4) != 0)
+                bof3::Fatal("keys: the default key table's entry %u is key 0x%02X%02X bits 0x%02X%02X by the engine's "
+                            "rule, key 0x%02X%02X bits 0x%02X%02X in BOF3.exe at 0x%06X", i / 4, rule[i + 1], rule[i],
+                            rule[i + 3], rule[i + 2], theirs[i + 1], theirs[i], theirs[i + 3], theirs[i + 2],
+                            (unsigned)(kKeyTableDefault + i));
+    }
+    std::memcpy(At(kKeyTableDefault), rule, sizeof rule);
+    bof3::Log("keys: Key_TableDefault 0x%06X written from the engine's rule (%u keys)%s", (unsigned)kKeyTableDefault,
+              (unsigned)bof3x::input::DefaultKeys().size(),
+              present ? ", equal to BOF3.exe's" : "; no BOF3.exe to compare it with");
 }
 
 // original 0x4FC6A0; called once a pass of WinMain's message loop
@@ -257,6 +288,7 @@ extern "C" void __cdecl Gfx_LinkOTags(void) {
 }
 
 void Shell_Inject() {
+    if (!bof3::IsExeHost()) Shell_MapDefaultKeys();   // the exe host's is at map time (exe_host.cpp step 3)
     if (bof3::WantsShadow("shell")) shell::SelfTest();
     // DIVERGENCE DIV-0078: after the self-test, which compares Capcom's frame.
     {
