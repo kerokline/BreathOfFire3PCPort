@@ -356,7 +356,8 @@ at `0x672950`, which no start-up writes now. The state hash does not use it.
 The routes, the stack watch, the cache as the `.data` source and the attract
 check with the skip list's new entries ran in the away batch (section 5).
 Owed from it: the four Chinese route pairs DIV-0092 made stale (5.4 item 1),
-finding 2's pointer words (the owner's call on the hash) and what 5.5 lists.
+finding 2's pointer words (the owner's call on the hash), finding 3's cause
+(a build difference since `105a0c77` under `en-US`) and what 5.5 lists.
 Then the owner plays it. Beyond the brief:
 the fifteen software-renderer handlers `d3d_list.cpp` names without a
 `[[func]]` (int3 in the exe host); `attract_watch.py`'s rand count; the
@@ -517,14 +518,35 @@ slices' copy. 11.3's rule stands under the exe host's header: commit
    list of state-hash.md 7 (measured 3) - a change of the hash, the owner's
    call.
 3. **en-US cutsceneAndNue, `0x905000` / `0x7E0000` / `0x929000` from tick
-   6985:** the same in both hosts (absent from exe/hosted), absent on the
-   Chinese route - so either a difference between this build and the pairs'
-   (`105a0c77`) or another raw pointer. 5.5 reads it.
+   6985: a difference between this build and the pairs' (`105a0c77`), not
+   finding 2's class; its cause not found.** The same in both hosts (absent
+   from exe/hosted), absent on the Chinese route. A third exe run with
+   `BOF3X_STATEHASH_DUMP=6984,6990,7100` (`d_en_cutsceneAndNue_exe`) hashes
+   like the first but for `0x7DE000` at one tick (5037), so the run is
+   repeatable. On its dumps, the three pages hold **no aligned word inside a
+   section of ours a pointer can name** (`0x5C801000..0x5FEA9010`, the log's
+   `statehash   our image` line) at any of the three ticks: the one aligned
+   word inside our image, `0x905C68` = `0x616E694E`, is the text "Nina" and
+   lies past those sections; the other values in range are unaligned byte
+   data (`MapView_Cells`, `MoveScript_TintRecords`, `Sprite_OverlayList`).
+   What changes on the pages between 6984 and 6990 is draw state
+   (`statehash.py bytes` on the two dumps: `Gfx_PacketNext` `0x7E0670`,
+   `Draw_SortOnX` `0x905BC5..0x905BD1`, `Gfx_OtPointers` `0x929EA4`,
+   `Gfx_UnpackNext` `0x929F02`). The pair's own game log
+   (`analysis/statehash/en_cutsceneAndNue_sh3a.log`) and this run's agree
+   line for line on every `randlog`, `input`, `save` and file-open line (7,503
+   lines each, the paths aside), so the same frames, the same random draws,
+   the same files - the BGM order 141N, 027, 029, 155, 165, 029 included. Not
+   the icon: DIV-0095 generated it at `Frame_Counter` 95. No dump of the pair's
+   build exists, so `statehash.py bytes` across the builds was not possible;
+   the next step is one run of a `105a0c77` build with the same dump ticks,
+   or a bisection over the 33 commits since it (57 files under `src/`,
+   among them the `CodeBytes` reads in `src/game` and DIV-0093). Not fixed
+   here.
 
 ### 5.5 Not done yet
 
-- Finding 3's reading: the dump run `d_en_cutsceneAndNue_exe` (ticks 6984,
-  6990, 7100) was still running when this was written.
+- Finding 3's cause: a run of the pairs' build, or a bisection.
 - `statehash.py`'s rule for a skip list that only adds ranges (5.1 item 1).
 - The four Chinese pairs of finding 1 and finding 2's words: the owner's.
 - Anything seen or heard: the batch was unattended.
