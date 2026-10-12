@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-11: PR #51 merged the prework for states 2 and 3; the morning closed what it left - the stack's exit line, the resources section, the overlay pairs, the decoder's listen, DIV-0093 - and the owner's calls on the decoder; **up next: state 3, our own executable - item 0 below, the design brief first**)
+**Status:** IN PROGRESS (2026-10-11 evening: **state 3 is built** - `bof3x.exe`, our own executable, on `platform/state3`, both hosts' self-tests green, the away batch run; **up next: the PR, then the owner's eye on the icon and the window, then the disc-only round** - item 0 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -36,42 +36,39 @@ code page audited, the seven mid-function pointers read, and two music defects o
 
 ## Pick up here
 
-0. **State 3 - our own executable: the design brief, then the first build.** Everything it needs is read; nothing of
-    it is built but `BOF3X_EXEIMAGE` ([`exe-import-engine.md`](exe-import-engine.md) 4.4, the data map exercised in
-    place). **The brief is written** (2026-10-11 late morning, on `platform/state3`): [`state3-design.md`](state3-design.md).
-    It answers the questions below and adds what the morning's read found - the image must be based at `0x400000`
-    and span Capcom's range itself (a run-time reservation comes after the heap is placed), the engine stays
-    `bof3x.dll` and is imported rather than injected, `DirectSoundCreate`'s thunk `0x5ACBBC` and fourteen import slots
-    need binding, and about 70 `PatchBytes` / `RetargetCall` sites plus one direct read still touch Capcom's code bytes
-    inside functions that are ours (its section 7, the build's worklist). **Its section 10's five calls are answered** (the owner, 2026-10-11: `bof3x.exe`; the icon is the owner's to supply; UTF-8 both halves now;
-    the data-source order and the ledger entry as recommended), so the build agent can start. The
-    questions it was asked:
-    - **what the executable is**: a 32-bit `/FIXED` image at a base that leaves `0x400000..0x93F000` free, reserving that
-      range and mapping `base/exe/data.bin` over `.data` with `.bss` zeroed to `0x93D6EC` and `.rdata` from the same
-      source ([`exe-import-engine.md`](exe-import-engine.md) 4.3, [`exe-resources.md`](exe-resources.md): the two data
-      sections are sufficient; our own icon; the IAT's 109 dwords stay as dead bytes and every `call [0x5C4xxx]` of ours is
-      rebound to our own imports first);
-    - **the entry-stub page** at Capcom's function starts for the 9,142 `.data` code pointers
-      ([`exe-import-engine.md`](exe-import-engine.md) 4.2 (b): 6,211 targets are starts, the smallest gap 11 bytes; the
-      seven mid-function words are numbers, [`exe-code-pointers-midfunc.md`](exe-code-pointers-midfunc.md)); what the
-      page does for the decoder's eight (`minimp3` behind the seam, DIV-0091), `Crt_ftol` and `Crt_GetPtd`
-      (`tools/owned_sweep.py`'s remainder);
-    - **what the start-up must reproduce** - behaviour, not data ([`crt-startup.md`](crt-startup.md) 9's table, one row
-      a decision): the x87 control word `0x027F` set and asserted (our toolchain's start-up leaves `0x037F`), the heap
-      and the runtime's per-thread data dropped, the handle table / `stdio` / `environ` / `argv` dropped, our own
-      top-level exception handling;
-    - **the stack**: reserve >= `0x40000`, commit >= `0x10000` (11.3), against the measured depth of 2026-10-11 (11.4:
-      deepest dword `0xD578` below base on the F9 route, the initial commit never grown, slice 3 untouched);
-    - **the code page**: the cache folder's path goes wide with the executable ([`code-page-audit.md`](code-page-audit.md));
-    - **testing across the cutover** ([`platform-layers-plan.md`](platform-layers-plan.md) 3's last paragraph): the state
-      hash is address-independent (`BOF3SH3`) and the overlay pairs exist (`en_<route>_sh3a` / `_sh3b`, 2026-10-11), so
-      the check is build N against build N + 1 in any language, with Capcom's exe still runnable as its own process for
-      a Chinese pair; the self-tests headless on the new executable before any route;
-    - **what the first build does and does not do**: map, stub, start, reach the title - the FMVs, the display, the
-      sound - with the DLL's code linked in as is; the launcher's role after it (a config dialog over an exe of ours, no
-      injection); the data-only cache (`BOF3X_CACHE`) as the install's data source later, not in the first build.
-    Then one agent builds it on a branch (`platform/state3`), headless self-tests first, the attract sequence against
-    `attract_r14_orig` / `_origb` on the state hash, the ten routes against the overlay pairs, before the owner plays it.
+0. **State 3 is built: `bof3x.exe` on `platform/state3`** (2026-10-11, the brief [`state3-design.md`](state3-design.md),
+    the build and every check [`state3-build.md`](state3-build.md), the icon [`exe-icon.md`](exe-icon.md); DIV-0094 the
+    cutover, DIV-0095 the icon, DIV-0036 amended for DPI; the PR is next, from the branch's tip - every commit signed off).
+    What it is: an 8 KB image of ours based at `0x400000` whose sections occupy Capcom's range (the heap lands there
+    on 20 of 20 runs when the image is elsewhere - `state3-build.md` 1), written by `tools/make_exe.py` and verified
+    at build time; the engine stays `bof3x.dll`, imported, not injected, with `Engine_Main` mapping `.rdata` / `.data`
+    from the player's file (or `BOF3X_EXEIMAGE`'s cache), binding fourteen import slots and `DirectSoundCreate`'s
+    thunk, filling the stub page with `int3`, letting `InjectAll` write the 10,087 jumps, setting x87 `0x027F`; the
+    ~450 bytes of Capcom's operands our screens read back live in a data store (`CodeBytes`) **until the disc-only
+    round replaces them (the owner)**. The launcher starts `bof3x.exe` by default, `--host bof3` the hosted build,
+    which stays the fuzz harness (no Capcom bytes in the exe host: `BOF3X_SHADOW`, `BOF3X_ORIGINAL`,
+    `BOF3X_CALLTRACE`, `BOF3X_MP3=original` are Fatals there). The whelp icon is generated in the exe host from the
+    game's own data and written into the exe once (DIV-0095; `tools/make_icon.py` is the offline twin).
+    **The away batch** (`state3-build.md` 5): every run replayed; the exe host identical to the hosted build on every
+    page of the attract sequence and the ten Chinese routes; the cache as `.data` source identical; the F9 stack
+    numbers within bytes of the hosted ones. Three findings, none the exe host's: **(1)** four Chinese pairs
+    (`menu_screens`, `field_menu`, `dragonTransform`, `cutsceneAndNue`) are stale since DIV-0092 - re-record them
+    (`--original "*,-Game_Clock"`, `BOF3X_OPT=none`, `BOF3X_LAYERING=0`) or check with `--original AreaTrackFallback`;
+    **(2)** three raw pointer words of ours (`Effect_Objects[7..9]+0x50/+0x54`, `0x93B908`, `MsgBoxState+0xC..+0x14`)
+    differ by host under `en-US` - adding them to the run-time slot list is a hash change, **the owner's call**;
+    **(3)** `en-US` `cutsceneAndNue` differs from its pairs on three draw-state pages from tick 6985 - **on `main`'s
+    build too** (measured 2026-10-11 evening, so it is one of the eight commits since `105a0c77`, not state 3's; the
+    bisection's answer is in `state3-build.md` 5.4 if it finished). The skip list grew by five ranges (the runtime's
+    start-up variables, `Sound_Channels`), and `statehash.py` now compares a run whose list only adds ranges
+    (`state-hash.md` 4). **Owed the owner's eye:** two starts through the launcher (the second shows the whelp on the
+    title bar, taskbar, Alt-Tab and in Explorer); the window's size on their display under the new k rule; a play.
+    **Traps paid for in the batch:** `input_run.py` does not set `BOF3X_LAYERING=0` (pass it; `attract_run.py` does);
+    the Rand clone Fatal in the exe host (fixed); `--launcher` wants an absolute path.
+    Then **the disc-only round** ([`state3-design.md`](state3-design.md)'s successor; the owner's "what is next",
+    2026-10-11): the code pointers and the unplaced pointer words held as layout, the ~22 KB no disc carries as the
+    engine's own, the operand store's bytes as values of ours, the default key table as a rule, the language gaps of
+    [`loc-build-disc-only.md`](loc-build-disc-only.md); the gate is the state hash of a disc-built image against the
+    PC-built one with `data.toml`'s ranges as the skip list.
 
 00. ~~**`platform/state2-prework`**~~ - merged as PR #51 (2026-10-11 morning). What "finishing the exe"
     is: states 2 and 3 of [`platform-layers-plan.md`](platform-layers-plan.md) 3. The converters, the per-thread data and
@@ -818,13 +815,11 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-`cleanup/testing-catchup-1010` (item 0) is the branch to PR; its worktree is the session-`ba6f0f72` scratchpad's
-`cu/` (with `build/`, the launcher host build `lh_cu/`, the chain scripts and their `.out` files, the launcher copies
-`launcher/` - `main`'s tip, ini-less - and `launcher_cu/` - the branch's). The four agents' branches `catchup/cache-read`,
-`catchup/step8-engine`, `catchup/loc-disc-only`, `catchup/music-tooling` and their `.claude/worktrees/agent-*` are
-merged and can go once the PR does. **Other sessions work in the main checkout** (on 2026-10-10 it was on
-`analysis/psp-only-build`, PR #48, while this ran): check `git status` and the branch before a commit there, and never
-build in `build/` while its game runs.
+`platform/state3` (item 0) is the branch to PR; its worktree is the session-`3186ef2f` scratchpad's `s3/` (with
+`build/`, the away batch's outputs under `build/away/`, the ini-less launcher copies `st_*`). `tooling/exe-icon`
+is merged into it. The bisection worktree `bis/` (c0d099d2, for finding 3) and the older agent worktrees under
+`.claude/worktrees/agent-*` can go. **Other sessions work in the main checkout**: check `git status` and the branch
+before a commit there, and never build in `build/` while its game runs.
 
 Local only, gitignored, worth keeping:
 
