@@ -7,6 +7,7 @@
 
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 // Cheats, the same three the archival sibling offers as mods (its
 // docs/EXP_BOOST.md and docs/STEAL.md), as launcher settings here.
@@ -91,8 +92,8 @@ void Cheats_Inject() {
 
     struct RollMasks {   // on every return below: the masks as the bodies now hold them
         ~RollMasks() {
-            g_pilfer_mask = *reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kPilferMaskImm));
-            g_steal_mask = *reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kStealMaskImm));
+            g_pilfer_mask = bof3::CodeByte(kPilferMaskImm);
+            g_steal_mask = bof3::CodeByte(kStealMaskImm);
         }
     } roll_masks;
     char text[8];

@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include "hook/host.h"
 #include "hook/log.h"
 
 extern "C" volatile unsigned char StackWatch_Armed = 0;
@@ -47,6 +48,10 @@ DWORD g_main_id;
 std::uint32_t g_teb;
 std::uint32_t g_base;      // StackBase: the top, exclusive
 std::uint32_t g_dealloc;   // DeallocationStack: the reservation's low end
+
+// True while StackWatch_Start's own check calls Task_SetStackBase: in the exe
+// host that call is on the main thread, and must not take the slices' copy.
+bool g_checking = false;
 
 // The slices' committed bytes as Task_SetStackBase first saw them.
 std::uint32_t g_snap_lo;   // the low end of what was copied
@@ -196,14 +201,19 @@ void StackWatch_Start() {
     const std::uint32_t commit = nt->OptionalHeader.SizeOfStackCommit;
     const std::uint32_t entry = nt->OptionalHeader.ImageBase + nt->OptionalHeader.AddressOfEntryPoint;
 
-    // This thread's words, the launcher's CreateRemoteThread: Windows' new
-    // thread defaults, as the main thread starts with them too.
+    // This thread's words. Hosted, the launcher's CreateRemoteThread: Windows'
+    // new thread defaults, as the main thread starts with them too. In the
+    // exe host this is the main thread, after Engine_Main set 0x027F.
     unsigned short cw;
     unsigned mxcsr;
     asm volatile("fnstcw %0" : "=m"(cw));
     asm volatile("stmxcsr %0" : "=m"(mxcsr));
-    Log("fpu: injected thread %lu at InjectAll: x87 control word 0x%04X, MXCSR 0x%08X (not the game thread)",
-        GetCurrentThreadId(), cw, mxcsr);
+    if (IsExeHost())
+        Log("fpu: the main thread %lu after InjectAll: x87 control word 0x%04X, MXCSR 0x%08X (the game thread, exe host)",
+            GetCurrentThreadId(), cw, mxcsr);
+    else
+        Log("fpu: injected thread %lu at InjectAll: x87 control word 0x%04X, MXCSR 0x%08X (not the game thread)",
+            GetCurrentThreadId(), cw, mxcsr);
 
     // BOF3X_STACKWATCH=1 asks for the measurement, so a failure to make it
     // is then a Fatal; without it the lines are informational and a failure
@@ -219,10 +229,25 @@ void StackWatch_Start() {
     // The TEB query checked on this thread, whose TEB is known.
     const std::uint32_t own = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(NtCurrentTeb()));
     const std::uint32_t queried = TebOf(GetCurrentThread());
-    const MainThread main = FindMain(entry);
-    HANDLE h = main.id ? OpenThread(THREAD_QUERY_INFORMATION, FALSE, main.id) : nullptr;
-    g_teb = h ? TebOf(h) : 0;
-    if (h) CloseHandle(h);
+    // Hosted, the main thread is found among the suspended process's
+    // threads; in the exe host it is this one - Engine_Main runs on it, as
+    // Capcom's entry ran on it (docs/state3-design.md section 5).
+    MainThread main;
+    if (IsExeHost()) {
+        main.id = GetCurrentThreadId();
+        main.how = "this thread, Engine_Main's";
+        main.context = true;
+        main.eip = entry;
+        asm volatile("movl %%esp, %0" : "=r"(main.esp));
+        main.cw = cw;
+        main.mxcsr = mxcsr;
+        g_teb = own;
+    } else {
+        main = FindMain(entry);
+        HANDLE h = main.id ? OpenThread(THREAD_QUERY_INFORMATION, FALSE, main.id) : nullptr;
+        g_teb = h ? TebOf(h) : 0;
+        if (h) CloseHandle(h);
+    }
     if (queried != own || !g_teb) {
         if (want)
             Fatal("stack: no main thread TEB (thread %lu, TEB 0x%08X; this thread's query 0x%08X, fs:[0x18] 0x%08X)",
@@ -244,7 +269,11 @@ void StackWatch_Start() {
         (unsigned)g_dealloc, (unsigned)(g_base - g_dealloc), (unsigned)(g_base - limit), (unsigned)guard,
         state == MEM_COMMIT ? "committed" : state == MEM_RESERVE ? "reserved" : "free",
         (protect & PAGE_GUARD) ? " guard" : "");
-    if (main.context)
+    if (main.context && IsExeHost())
+        Log("stack: the main thread in Engine_Main: esp 0x%08X (0x%X below base; the image entry 0x%08X called Engine_Main); "
+            "x87 control word 0x%04X, MXCSR 0x%08X",
+            (unsigned)main.esp, (unsigned)(g_base - main.esp), (unsigned)entry, main.cw, main.mxcsr);
+    else if (main.context)
         Log("stack: main thread's first context: eip 0x%08X eax 0x%08X (entry 0x%08X) esp 0x%08X (0x%X below base); "
             "x87 control word 0x%04X, MXCSR 0x%08X",
             (unsigned)main.eip, (unsigned)main.eax, (unsigned)entry, (unsigned)main.esp, (unsigned)(g_base - main.esp),
@@ -259,6 +288,7 @@ void StackWatch_Start() {
         // runs: it logs, leaves eax = Task_StackTop as stored, keeps the other
         // registers; Task_StackTop is put back (the game sets it itself).
         const std::uint32_t saved = Long(kTaskStackTop);
+        g_checking = true;
         std::uint32_t eax, ecx, edx;
         asm volatile("movl $0x11111111, %%ecx\n\t"
                      "movl $0x22222222, %%edx\n\t"
@@ -268,6 +298,7 @@ void StackWatch_Start() {
                      : "=a"(eax), "=m"(ecx), "=m"(edx)
                      :
                      : "ecx", "edx", "cc", "memory");
+        g_checking = false;
         const std::uint32_t stored = Long(kTaskStackTop);
         std::memcpy(reinterpret_cast<void*>(static_cast<std::uintptr_t>(kTaskStackTop)), &saved, sizeof saved);
         if (eax != stored || ecx != 0x11111111u || edx != 0x22222222u)
@@ -340,7 +371,7 @@ extern "C" void __cdecl StackWatch_AtSetStackBase(unsigned long arrival_esp) {
         bottom >= g_dealloc + 0x1000 && esp <= g_base ? "inside" : "OUTSIDE the main thread's reservation", (unsigned)low, (unsigned)(g_base - low));
     // The first call on the main thread (StackWatch_Start's check runs on the
     // injected one): the slices' committed bytes as they are before any task.
-    if (!g_snap && low && GetCurrentThreadId() == g_main_id) {
+    if (!g_snap && !g_checking && low && GetCurrentThreadId() == g_main_id) {
         g_snap_lo = bottom > low ? bottom : low;
         g_snap_hi = top;
         if (g_snap_lo < g_snap_hi) {

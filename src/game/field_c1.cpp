@@ -43,6 +43,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -158,23 +159,24 @@ extern "C" void __cdecl Config_DrawRowLabel(int x, int y, unsigned row, unsigned
     if (r >= 6)
         bof3::Fatal("Config_DrawRowLabel: row %u - the original reads its own stack frame past the six labels", r);
     const auto* const label =
-        reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(L(At(at::kRowLabelOperands + 8u * r))));
+        reinterpret_cast<const unsigned char*>(static_cast<std::uintptr_t>(bof3::CodeLong(at::kRowLabelOperands + 8u * r)));
     const int len = static_cast<int>(std::strlen(reinterpret_cast<const char*>(label)));
     if (s == 3) {
         static const unsigned char kSix[] = {0x8D, 0x0C, 0x49, 0xD1, 0xE1};   // lea ecx,[ecx+ecx*2] / shl ecx,1
         static const unsigned char kFour[] = {0xC1, 0xE1, 0x02, 0x90, 0x90};  // DIV-0017: shl ecx,2 / nop / nop
         int width;
-        if (std::memcmp(At(at::kRowLabelWidth), kSix, sizeof kSix) == 0) width = len * 6;
-        else if (std::memcmp(At(at::kRowLabelWidth), kFour, sizeof kFour) == 0) width = len * 4;
+        const std::uint8_t* const code = bof3::CodeBytes(at::kRowLabelWidth, sizeof kSix);
+        if (std::memcmp(code, kSix, sizeof kSix) == 0) width = len * 6;
+        else if (std::memcmp(code, kFour, sizeof kFour) == 0) width = len * 4;
         else bof3::Fatal("Config_DrawRowLabel: the width code at 0x%X is neither the original's nor DIV-0017's",
                          (unsigned)at::kRowLabelWidth);
-        const int anchor = static_cast<signed char>(At(at::kRowAnchorBig)[0]);
-        const U big = at::kRowBigCall + 5u + L(At(at::kRowBigCall + 1));
+        const int anchor = static_cast<signed char>(bof3::CodeByte(at::kRowAnchorBig));
+        const U big = bof3::CodeCallTarget(at::kRowBigCall);
         using Draw = const unsigned char* (__cdecl*)(int, int, int, int, const unsigned char*);
         SH_AT(Draw, big)(x - width + anchor, y - 1, 0, 0xFF, label);
         if (At(0x929F02)[0] != 1) SH_CALL(Menu_DrawHand)(x + 4, y, 0);
     } else {
-        const int anchor = static_cast<signed char>(At(at::kRowAnchorSmall)[0]);
+        const int anchor = static_cast<signed char>(bof3::CodeByte(at::kRowAnchorSmall));
         SH_CALL(Text_DrawSmall)(x - len * 4 + anchor, y + 1, 0, 0xFF, label);
     }
     unsigned char* const prim = Gfx_PacketNext;

@@ -1,6 +1,13 @@
-// bof3x.dll entry point. Loaded into BOF3.exe by bof3x-launcher while the
+// bof3x.dll entry point, in either host (hook/host.h).
+//
+// Hosted: loaded into BOF3.exe by bof3x-launcher --host bof3 while the
 // process is still suspended, so everything here runs before the game's entry
 // point 0x5BA057 and no game thread can be inside a function we patch.
+//
+// The exe host: imported by bof3x.exe. DllMain only opens the log and tells
+// the hosts apart; the start-up runs in Engine_Main (exe_host.cpp), which the
+// executable's entry calls on the main thread once the loader is done - not
+// under the loader lock (docs/state3-design.md section 4).
 //
 // Order: the log first (Fatal writes to it), the image check before anything
 // that trusts an address, and the tracer after InjectAll, which it needs to
@@ -17,6 +24,7 @@
 #include "hook/detour.h"
 #include "hook/exe_image.h"
 #include "hook/draw_order.h"
+#include "hook/host.h"
 #include "hook/inject_all.h"
 #include "hook/input_script.h"
 #include "hook/log.h"
@@ -28,6 +36,8 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         DisableThreadLibraryCalls(module);
         bof3::LogOpen(module);
         bof3::Log("bof3x attached to process %lu", GetCurrentProcessId());
+        bof3::DetectHost();
+        if (bof3::IsExeHost()) return TRUE;   // Engine_Main does the rest
         bof3::VerifyImage();
         bof3::ExeImage_Check();   // BOF3X_EXEIMAGE: before anything of ours writes .data
         bof3::Crash_Start(module);

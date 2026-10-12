@@ -195,3 +195,12 @@
 0x7DE47E 2       # ours   Gte_Vertices[5]'s top half: DIV-0023
 0x66A418 8       # ours   Pause_LinesGame's two pointers: DIV-0038, the English lines are in our DLL (a language overlay only)
 0x66A448 8       # ours   Pause_LinesTitle's two pointers: DIV-0038
+# State 3 (2026-10-11, docs/state3-build.md 3.1): the C runtime's start-up data the exe host never writes
+# (docs/crt-startup.md 9's "drop" rows), read by nobody in the game. Raw dumps of the attract sequence at
+# ticks 0 and 5000, hosted against the exe host of one build: the same bytes both times, all inside these.
+0x93C35C 4       # ours   the multibyte code page word (__initmbctable)
+0x93C380 516     # ours   the two multibyte classification tables, 0x93C380..0x93C584 (_setmbcp)
+0x93C6A0 12      # ours   _nhandle, the environment word 0x93C6A4, the code-page word 0x93C6A8
+0x93D6C0 4       # ours   _nstream (__initstdio)
+# docs/state-hash.md 7 item 4: the looping voice's DirectSound pointers, noise on four of the overlay routes.
+0x6BC8C8 92      # noise  Sound_Channels' 23 words: a looping voice's DirectSound buffer and heap pointers

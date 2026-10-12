@@ -37,6 +37,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -780,7 +781,7 @@ extern "C" void __cdecl AreaMap_FrameAreaBD(void) {
 
 namespace {
 // The float a patched `fcomp dword ptr [mem]` operand names.
-float Bound(U operand_at) { return Fl(UL(operand_at)); }
+float Bound(U operand_at) { return Fl(bof3::CodeLong(operand_at)); }
 }  // namespace
 
 // original 0x510780 (AreaMap_FrameAreaBD's, with MapView_Redraw): area 0xBD's
@@ -831,7 +832,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
     for (U row = 0; I(row) < I(row_bound); ++row) {
         U col_bound = row == 0 ? columns : UL(at::kColumns);
         for (U col = 0; I(col) < I(col_bound); ++col, col_bound = UL(at::kColumns)) {
-            if (DrawItemPool_Top >= Word(At(at::kTopBoundAt))) continue;
+            if (DrawItemPool_Top >= bof3::CodeWord(at::kTopBoundAt)) continue;
             const U a = static_cast<U>(S8(rec[2])) * row;
             const U x = static_cast<U>(I(a) / 2) + static_cast<U>(S8(rec[1])) * col + static_cast<U>(S16(At(at::kOriginX)));
             const U b = static_cast<U>(S8(rec[5])) * (row + 1u);
@@ -860,7 +861,7 @@ extern "C" void __cdecl AreaMapBD_BuildView(void) {
             if (!keep) continue;
 
             const unsigned top = DrawItemPool_Top;
-            unsigned char* const item = At(UL(at::kItemsAt) + top * 0x90u);
+            unsigned char* const item = At(bof3::CodeLong(at::kItemsAt) + top * 0x90u);
             DrawItemPool_Top = static_cast<unsigned short>(top + 1);
             {
                 const U offset = Word(AreaMap_Header + 2);

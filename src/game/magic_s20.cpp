@@ -37,6 +37,7 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -771,12 +772,13 @@ S20_EXPORT unsigned char __cdecl Magic088_Variant(void) {
     if (Mem(kSide)[0] == 4) {
         const unsigned k = Word(id) - 0x1Eu;
         if (k > 0xA2) return 3;
-        switch (Mem(kVariantIndex)[k]) {
+        const unsigned char variant = bof3::CodeBytes(kVariantIndex, 0xA3)[k];
+        switch (variant) {
         case 0: return 1;
         case 1: return 2;
         case 2: return 0;
         case 3: return 3;
-        default: bof3::Fatal("Magic088_Variant: index %u past the four-entry jump table", (unsigned)Mem(kVariantIndex)[k]);
+        default: bof3::Fatal("Magic088_Variant: index %u past the four-entry jump table", (unsigned)variant);
         }
     }
     if (Word(id) != 0x112) return 3;

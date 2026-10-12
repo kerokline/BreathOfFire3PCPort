@@ -35,11 +35,14 @@ STATE = {0: 'free', 1: 'sleeping', 2: 'runnable'}
 
 
 def find_game():
-    out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq BOF3.exe', '/FO', 'CSV', '/NH'],
-                         capture_output=True, text=True).stdout
-    if 'BOF3' not in out:
-        sys.exit('BOF3.exe is not running')
-    return int(out.split(',')[1].strip('"'))
+    """The running game's pid: BOF3.exe (hosted) or bof3x.exe (ours)."""
+    for image in ('BOF3.exe', 'bof3x.exe'):
+        out = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq {image}', '/FO', 'CSV', '/NH'],
+                             capture_output=True, text=True).stdout
+        rows = [r for r in out.splitlines() if r.lower().startswith('"%s"' % image.lower())]
+        if rows:
+            return int(rows[0].split('","')[1])
+    sys.exit('neither BOF3.exe nor bof3x.exe is running')
 
 
 class Game:

@@ -185,6 +185,19 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
 // from, for the three functions below.
 std::wstring ConfigCacheDataRoot(const Config& cfg);
 
+// The cache path's encoding (docs/state3-design.md section 9, the owner's
+// "both halves", 2026-10-11): Config::cache holds UTF-8, in the ini and in
+// memory; the launcher hands it to the game wide (SetEnvironmentVariableW),
+// and bof3x.exe, whose manifest makes its code page UTF-8, reads it back as
+// the same bytes. The hosted build (BOF3.exe, the ANSI code page) still
+// receives it through the code page, as before.
+std::wstring ConfigFromUtf8(const std::string& s);
+std::string ConfigToUtf8(const std::wstring& w);
+// An ini's cache= value as read: UTF-8 kept; bytes that are not valid UTF-8
+// are an ini an earlier launcher wrote in the ANSI code page, read once as
+// that code page and held (and saved) as UTF-8 from then on.
+std::string ConfigCacheFromIni(const std::string& raw);
+
 // The tags of kLanguages whose DAT\<tag>.* overlays exist in `game_dir`, or
 // (DIV-0089) whose <cache>\loc\<tag>\dat\ holds a .DAT, in kLanguages' order -
 // i.e. which languages tools/loc_build.py has built. The dialog offers only

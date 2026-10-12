@@ -147,6 +147,28 @@ checks with the machine quiet**, as the frame hash's always were, and read a
 reported page that is also in the `--noise` list as noise until a dump says
 otherwise.
 
+**A skip list that only adds ranges (2026-10-11).** A page's hash depends on
+the skip list only where a range lies on it, so a run hashed under a list
+that adds ranges to the references' list hashes every other page exactly as
+they do. `check` and `diff` therefore compare such runs rather than refuse
+them. The run under test (`check`'s NEW, `diff`'s B) may add ranges; the
+reference side must share one list, and every range of that list must be in
+the new one. The tool finds both lists by their header hash, among the
+committed versions of `tools/statehash_skip.txt` (`git log`) and any
+`--skip-list FILE`. It prints a note naming each page an added range touches,
+with the ranges, and leaves those pages out of the comparison. A range
+removed or changed, a list it cannot find, or a `BOF3SH1` file is refused as
+before, and `--strict` refuses any difference. Measured on the away batch of
+state 3 ([`state3-build.md`](state3-build.md) 5): the list went from **168**
+ranges to **173** (`87ec7d9a`: the runtime's start-up words and
+`Sound_Channels`). The five added ranges touch three pages: `0x6BC000`,
+`0x93C000` and `0x93D000`. `check attract_r14_orig.sh attract_r14_origb.sh
+attract_exe.sh` (the exe host, 173 ranges) exits 0, identical on all 10,305
+ticks of the other 865 pages; with `--strict` it exits 1. A left-out page is
+not checked, so a change on one of those three pages needs another reference:
+a pair recorded under the new list, or, across the cutover, the hosted build
+of the same tree under it (state3-build.md 5.1).
+
 ## 5. What the first runs found, and what is open
 
 Nothing new, which is the result wanted of a reference at a verified tip. Once

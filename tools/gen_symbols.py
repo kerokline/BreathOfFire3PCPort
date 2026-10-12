@@ -67,6 +67,9 @@ def main():
     w(f'inline constexpr std::uint32_t kBase = {meta["image_base"]:#x};')
     w(f'inline constexpr std::uint32_t kTimestamp = {meta["pe_timestamp"]:#x};')
     w(f'inline constexpr std::uint32_t kSizeOfImage = {meta["size_of_image"]:#x};')
+    w(f'inline constexpr std::uint32_t kTextVa = {meta["text_va"]:#x};')
+    w(f'inline constexpr std::uint32_t kTextSize = {meta["text_size"]:#x};')
+    w(f'inline constexpr char kSha256[] = "{meta["sha256"]}";')
     w('}  // namespace bof3::image')
     w('')
 

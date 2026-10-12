@@ -41,6 +41,7 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -1053,7 +1054,7 @@ extern "C" void __cdecl Area167_SetByteFE10(void) { Cond_ByteFE = 0x10; }
 extern "C" void __cdecl Area167_Tail32(void) {
     const auto state = static_cast<std::int32_t>(static_cast<signed char>(B(at::kTailState)));
     if (static_cast<U>(state) > 0x20) return;
-    const unsigned which = B(at::kTail32Index + static_cast<U>(state));
+    const unsigned which = bof3::CodeBytes(at::kTail32Index, 0x21)[state];   // code bytes: the store in the exe host
     switch (which) {
     case 0:
         AH_CALL(Party_DropIn)(0);

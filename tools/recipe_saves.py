@@ -110,14 +110,18 @@ def unattended(pid):
 
 
 def games_running():
-    """Pids of every BOF3.exe on the machine, whoever started it."""
-    out = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq BOF3.exe', '/FO', 'CSV', '/NH'],
-                         capture_output=True, text=True).stdout
-    return [int(row.split('","')[1]) for row in out.splitlines() if row.startswith('"BOF3.exe"')]
+    """Pids of every game on the machine, whoever started it: BOF3.exe (hosted)
+    and bof3x.exe (ours, docs/state3-design.md section 6.3)."""
+    pids = []
+    for image in ('BOF3.exe', 'bof3x.exe'):
+        out = subprocess.run(['tasklist', '/FI', f'IMAGENAME eq {image}', '/FO', 'CSV', '/NH'],
+                             capture_output=True, text=True).stdout
+        pids += [int(row.split('","')[1]) for row in out.splitlines() if row.lower().startswith('"%s"' % image.lower())]
+    return pids
 
 
 def players_games():
-    """The BOF3.exe processes that are somebody's game, not a scripted run."""
+    """The game processes that are somebody's game, not a scripted run."""
     return [p for p in games_running() if not unattended(p)]
 
 

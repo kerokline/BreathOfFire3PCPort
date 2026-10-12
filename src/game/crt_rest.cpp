@@ -25,6 +25,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "hook/detour.h"
+#include "hook/host.h"
 #include "hook/log.h"
 
 namespace crt_rest {
@@ -411,10 +412,14 @@ void CrtRest_Inject() {
     // recording may ask for the count and the tracer does not hold Rand's
     // entry (input_script.cpp RandCountStart) - before the inject, which
     // CloneOriginal refuses to follow. Used only if BOF3X_ORIGINAL leaves
-    // Rand to Capcom; its one call, Crt_GetPtd at its entry, is kept.
+    // Rand to Capcom; its one call, Crt_GetPtd at its entry, is kept. Not in
+    // the exe host: no code of Capcom's is mapped to copy, and BOF3X_ORIGINAL
+    // is refused there, so Rand is always ours and RandCount_Start never
+    // reads the copy (without this every recipe run of bof3x.exe stopped
+    // here, 2026-10-11).
     if ((GetEnvironmentVariableA("BOF3X_INPUT", nullptr, 0) > 0 ||
          GetEnvironmentVariableA("BOF3X_RECORD", nullptr, 0) > 0) &&
-        GetEnvironmentVariableA("BOF3X_CALLTRACE", nullptr, 0) == 0) {
+        GetEnvironmentVariableA("BOF3X_CALLTRACE", nullptr, 0) == 0 && !bof3::IsExeHost()) {
         constexpr std::uint32_t kRandSize = 0x22;
         const auto get_ptd = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(Crt_GetPtd));   // still Capcom's
         const bof3::CloneCall calls[] = {{0, nullptr, get_ptd}};
