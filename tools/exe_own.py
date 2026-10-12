@@ -258,12 +258,13 @@ def cmd_measure(a):
                     cls, why = "disc-unplaced", "%d of %d 16-byte windows on the disc verbatim" % (found, tried)
                 else:
                     cls, why = "game-value", "%d of %d windows on the disc" % (found, tried)
-            # Byte by byte: held by exe_own.cpp, else the BYTES row's class, else the region's.
+            # Byte by byte: held by exe_own.cpp, else the BYTES row's class, else the REGIONS row's
+            # holding the byte, else the segment's.
             per = collections.Counter()
             for x in range(lo, hi):
                 if x in ptr or not pc[x - DATA_LO]:
                     continue
-                per["held" if x in held_set else (byte_class(x) or cls)] += 1
+                per["held" if x in held_set else (byte_class(x) or region_class(x)[0] or cls)] += 1
             text_words = sorted({x & ~3 for x in range(lo, hi) if x in ptr and x in held_set})
             rows.append(dict(lo=lo, hi=hi, nonzero=nz, held=per["held"], symbol="%s+0x%X" % (sym, lo - base),
                              cls=cls, bytes=",".join("%s:%d" % kv for kv in sorted(per.items())),
