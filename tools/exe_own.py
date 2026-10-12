@@ -67,6 +67,8 @@ REGIONS = [
     (0x64F368, 0x6528AC, "port-platform", "Dat_FileNames: the DAT/ file table's names, the DAT directory format, the save files' pattern"),
     (0x6531F4, 0x6536E0, "language", "the page-format and glyph tables rest_4e.cpp names (exe-import-engine.md 3.2)"),
     (0x6536F8, 0x653808, "language", "the config screen's labels (ConfigScreen_OpenStates+): text in the port's code page"),
+    (0x656AEC, 0x656B00, "rule", "the field button map's defaults Boot_Task copies: the default button of each action, "
+                                 "by name (docs/controls.md 2.1)"),
     (0x65DA44, 0x65DAE8, "port-platform", "Game_WinMain's and Cfg_Load's initial values and strings"),
     (0x664068, 0x664078, "port-platform", "the save file's name format (FieldSave_Write, Save_QuickWrite)"),
     (0x6653BC, 0x666FC6, "port-platform", "Sound_LoadStream's 891 SND/ names, Music_LoadedTrack, the SND and BGM formats"),
