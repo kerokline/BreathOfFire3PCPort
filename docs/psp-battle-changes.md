@@ -36,8 +36,12 @@ under event battle 0x37 (set-up 55, which our records label Myria,
 to 0x317 right after copying the enemy's data. That is the word a steal takes
 and the first drop rolls (section 2.2). 0x317 reads as category 3
 (accessories), index 0x17. The sibling's `names/items.toml` labels that
-accessory "Ivory Charm" (its US name). What the PlayStation's data held there
-for Myria was not read.
+accessory "Ivory Charm" (its US name). **What the PlayStation holds there** (read 2026-10-12 by the coordinator from
+`AREA198.EMI` section `0x800E4000`, record 0, enemy data `+0x2C`, on the US and JP
+discs): item word 0x0017, class byte 1 - consumable 0x17, "Napalm" by the same
+names. So the PSP keeps the index and changes only the category; the class byte
+(the drop and steal behaviour) is not touched. Not in the fan wiki's list of PSP
+changes as far as the owner knows (IDEAS I32, P17).
 
 ## 2. What the PSP's code does, read
 

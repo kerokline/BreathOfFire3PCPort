@@ -96,7 +96,7 @@ where the reading behind it is. Nothing here is a divergence until it is in
 - **C1** is the duel between Beyd and Zig (chapter 6 run 9, event battle 0x1B, area 92) and **C2** is
   set-up 55, Myria, in area 198 - **corrected by PB**: the PSP sets Myria's first item word (the PSP's `+0x98`,
   ours `+0xA8`: the item a steal takes and the first drop rolls) to item 0x317, "Ivory Charm" by the sibling's
-  names, not an agility. Both are members of the launcher's data suite, on by default under a PSP base
+  names, not an agility; the PSX holds consumable 0x17, "Napalm", there (same index, category changed; IDEAS P17). The owner, 2026-10-12: keep it a toggle. Both are members of the launcher's data suite, on by default under a PSP base
   (DIV-0108, [`psp-battle-changes.md`](psp-battle-changes.md)).
 - **The suites' membership** as LT proposed: the name layers and P8 under data, the button-label page left out
   beside a PSX base (DIV-0107).
