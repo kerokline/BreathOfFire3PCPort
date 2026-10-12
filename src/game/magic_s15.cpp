@@ -30,6 +30,7 @@
 // (the live-target divide, docs/takeover-queue-round9.md section 6).
 #include "game/magic_s15.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -37,6 +38,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -527,24 +529,27 @@ S15_EXPORT void __cdecl ChillFlash_Draw(void) {
     unsigned char* const p = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyG4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
-    constexpr std::int32_t kRight = 0x439F8000;    // 319.0f
     constexpr std::int32_t kBottom = 0x436F0000;   // 239.0f
+    // DIV-0041: x from Widescreen_FillX() to 319 + the columns (the PSP's
+    // -32..351); 0..319 while the fills are unarmed, as the fuzz compares.
+    const auto left = std::bit_cast<std::int32_t>(Widescreen_FillX());
+    const auto right = std::bit_cast<std::int32_t>(Widescreen_FillRight(319.0f));
     if (Owner()[8] & 1) {
-        SetLong(p + 8, 0);
+        SetLong(p + 8, left);
         SetLong(p + 0xC, 0);
-        SetLong(p + 0x18, kRight);
+        SetLong(p + 0x18, right);
         SetLong(p + 0x1C, 0);
-        SetLong(p + 0x28, 0);
+        SetLong(p + 0x28, left);
         SetLong(p + 0x2C, kBottom);
-        SetLong(p + 0x38, kRight);
+        SetLong(p + 0x38, right);
     } else {
-        SetLong(p + 8, kRight);
+        SetLong(p + 8, right);
         SetLong(p + 0xC, 0);
-        SetLong(p + 0x18, 0);
+        SetLong(p + 0x18, left);
         SetLong(p + 0x1C, 0);
-        SetLong(p + 0x28, kRight);
+        SetLong(p + 0x28, right);
         SetLong(p + 0x2C, kBottom);
-        SetLong(p + 0x38, 0);
+        SetLong(p + 0x38, left);
     }
     SetLong(p + 0x3C, kBottom);
     {

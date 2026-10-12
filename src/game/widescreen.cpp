@@ -44,6 +44,14 @@ bool g_fills_armed;
 unsigned Widescreen_Fill() { return g_fills_armed ? g_live : 0; }
 float Widescreen_FillX() { return 0.0f - static_cast<float>(Widescreen_Fill()); }
 float Widescreen_FillWidth() { return 320.0f + 2.0f * static_cast<float>(Widescreen_Fill()); }
+float Widescreen_FillRight(float edge) { return edge + static_cast<float>(Widescreen_Fill()); }
+int Widescreen_Anchor() { return static_cast<int>(Widescreen_Fill()); }
+void Widescreen_BattleTile(unsigned size, int& x, int& w) {
+    if (size != kWidescreenFullFrameTile) return;
+    const int c = static_cast<int>(Widescreen_Fill());
+    if (x == 0) x = -c;
+    w += 2 * c;
+}
 void Widescreen_ArmFills() {
     g_fills_armed = true;
     if (g_live) bof3::Log("DIV-0041    full-frame fills at (%.0f, 0) %.0f x 240", Widescreen_FillX(), Widescreen_FillWidth());

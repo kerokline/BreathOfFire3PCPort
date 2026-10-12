@@ -26,12 +26,14 @@
 // null table entry (docs/magic_s30.md section 8).
 #include "game/magic_s30.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -859,14 +861,18 @@ S30_EXPORT void __cdecl KaiserFlash_Draw(void) {
     unsigned char* const p = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyF4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
-    constexpr std::int32_t kRight = 0x439F8000, kBottom = 0x436F0000;   // 319.0f, 239.0f
-    SetLong(p + 8, 0);
+    constexpr std::int32_t kBottom = 0x436F0000;   // 239.0f
+    // DIV-0041: x from Widescreen_FillX() to 319 + the columns (the PSP's
+    // -32..351); 0..319 while the fills are unarmed, as the fuzz compares.
+    const auto left = std::bit_cast<std::int32_t>(Widescreen_FillX());
+    const auto right = std::bit_cast<std::int32_t>(Widescreen_FillRight(319.0f));
+    SetLong(p + 8, left);
     SetLong(p + 0xC, 0);
-    SetLong(p + 0x14, kRight);
+    SetLong(p + 0x14, right);
     SetLong(p + 0x18, 0);
-    SetLong(p + 0x20, 0);
+    SetLong(p + 0x20, left);
     SetLong(p + 0x24, kBottom);
-    SetLong(p + 0x2C, kRight);
+    SetLong(p + 0x2C, right);
     SetLong(p + 0x30, kBottom);
     const auto shade = static_cast<unsigned char>(Sc()[9] * 15);
     p[4] = shade;

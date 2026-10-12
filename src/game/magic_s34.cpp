@@ -31,6 +31,7 @@
 // it (docs/magic_fx_reached.md section 3, the precedent).
 #include "game/magic_s34.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -38,6 +39,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -317,8 +319,8 @@ static_assert(sizeof(Matrix) == 0x20, "MATRIX layout");
 
 // --- MAGIC161 -------------------------------------------------------------------
 
-// The raw floats of TimedBlow_DrawFlash's corners: 319.0, 120.0 and 359.0.
-constexpr std::int32_t kRight = 0x439F8000;
+// The raw floats of TimedBlow_DrawFlash's corners: 120.0 and 359.0 (its 319.0
+// is Widescreen_FillRight(319.0f), DIV-0041).
 constexpr std::int32_t kMiddle = 0x42F00000;
 constexpr std::int32_t kBottom = 0x43B38000;
 
@@ -761,7 +763,9 @@ S34_EXPORT void __cdecl BattleFx_ScriptToEnd(void) {
 // semi-transparent gouraud quads over the screen, (0, 0)..(319, 120) and
 // (0, 120)..(319, 359), red (0xC0, 0x60, 0x60) at the top and bottom edges
 // and +9 x (0xC, 6, 6) where they meet; a closing draw-mode packet (tpage
-// 0x15). The corners are float constants.
+// 0x15). The corners are float constants. Under DIV-0041 x runs from
+// Widescreen_FillX() to 319 + the columns (the PSP's -32..351); 0..319 while
+// the fills are unarmed, as the fuzz compares.
 S34_EXPORT void __cdecl TimedBlow_DrawFlash(void) {
     DrawMode(0x35);
     MH_CALL(Gfx_CommitPrim)(1, 0xC);
@@ -769,14 +773,16 @@ S34_EXPORT void __cdecl TimedBlow_DrawFlash(void) {
     unsigned char* p = Gfx_PacketNext;
     const auto edge = static_cast<unsigned char>(n * 0xCu);
     const auto mid = static_cast<unsigned char>(n * 6u);
+    const auto left = std::bit_cast<std::int32_t>(Widescreen_FillX());
+    const auto right = std::bit_cast<std::int32_t>(Widescreen_FillRight(319.0f));
     MH_CALL(Gpu_SetPolyG4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
-    SetLong(p + 0x18, kRight);
-    SetLong(p + 0x38, kRight);
-    SetLong(p + 8, 0);
+    SetLong(p + 0x18, right);
+    SetLong(p + 0x38, right);
+    SetLong(p + 8, left);
     SetLong(p + 0xC, 0);
     SetLong(p + 0x1C, 0);
-    SetLong(p + 0x28, 0);
+    SetLong(p + 0x28, left);
     SetLong(p + 0x2C, kMiddle);
     SetLong(p + 0x3C, kMiddle);
     Shade(p, 4, 0xC0, 0x60);
@@ -789,12 +795,12 @@ S34_EXPORT void __cdecl TimedBlow_DrawFlash(void) {
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
     SetLong(p + 0x2C, kBottom);
     SetLong(p + 0x3C, kBottom);
-    SetLong(p + 8, 0);
+    SetLong(p + 8, left);
     SetLong(p + 0xC, kMiddle);
-    SetLong(p + 0x18, kRight);
+    SetLong(p + 0x18, right);
     SetLong(p + 0x1C, kMiddle);
-    SetLong(p + 0x28, 0);
-    SetLong(p + 0x38, kRight);
+    SetLong(p + 0x28, left);
+    SetLong(p + 0x38, right);
     Shade(p, 4, edge, mid);
     Shade(p, 0x14, edge, mid);
     Shade(p, 0x24, 0xC0, 0x60);

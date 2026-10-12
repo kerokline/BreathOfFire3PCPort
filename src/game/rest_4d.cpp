@@ -20,6 +20,7 @@
 // the value with a clean upper half.
 #include "game/rest_4d.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -27,6 +28,7 @@
 #include "game/move_script_bytes.h"
 #include "game/rest_4d_callees.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -403,6 +405,11 @@ extern "C" void __cdecl CommuDraw_Pick(void) {
 // tpage (1, 2, 0x140, 0)) from black at y = 0x675F95 to white at y + 0x10,
 // across x 0..320, and a black TILE from y + 0x10, 320 wide, 0xE0 - y high.
 // 0x675F95 one more, three more while a button is held; the step on at 0xC8.
+// DIV-0041: both run from Widescreen_FillX() over the wide frame (the
+// gradient to 320 + the columns, the tile Widescreen_FillWidth() wide); the
+// original's 0..320 while the fills are unarmed, as the fuzz compares. The
+// PSP widened the tile only (-32, 384 wide) and left the gradient 320 wide;
+// ours widens both, so no 16-row strip is left unshaded in the bands.
 extern "C" void __cdecl CommuDraw_Reveal(void) {
     SH_CALL(CommuDraw_DrawTitle)();
     const unsigned tpage = SH_CALL(Gpu_GetTPage)(1, 2, 0x140, 0) & 0xFFFF;
@@ -411,10 +418,12 @@ extern "C" void __cdecl CommuDraw_Reveal(void) {
     unsigned char* p = Gfx_PacketNext;
     SH_CALL(Gpu_SetPolyG4)(p);
     SH_CALL(Gpu_SetSemiTrans)(p, 1);
-    PutL(p + 8, 0);
-    PutL(p + 0x18, 0x43A00000u);   // 320.0
-    PutL(p + 0x28, 0);
-    PutL(p + 0x38, 0x43A00000u);
+    const U left = std::bit_cast<U>(Widescreen_FillX());
+    const U right = std::bit_cast<U>(Widescreen_FillRight(320.0f));   // 0x43A00000, 320.0 unarmed
+    PutL(p + 8, left);
+    PutL(p + 0x18, right);
+    PutL(p + 0x28, left);
+    PutL(p + 0x38, right);
     PutF(p + 0xC, static_cast<float>(static_cast<int>(B(at::kCount))));
     PutF(p + 0x1C, static_cast<float>(static_cast<int>(B(at::kCount))));
     PutF(p + 0x2C, static_cast<float>(static_cast<int>(B(at::kCount)) + 0x10));
@@ -434,8 +443,8 @@ extern "C" void __cdecl CommuDraw_Reveal(void) {
     SH_CALL(Gfx_CommitPrim)(0, 0x44);
     p = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile)(p);
-    PutL(p + 8, 0);
-    PutL(p + 0x14, 0x43A00000u);
+    PutL(p + 8, left);
+    PutL(p + 0x14, std::bit_cast<U>(Widescreen_FillWidth()));
     PutF(p + 0xC, static_cast<float>(static_cast<int>(B(at::kCount)) + 0x10));
     PutF(p + 0x18, static_cast<float>(0xE0 - static_cast<int>(B(at::kCount))));
     p[4] = 0;

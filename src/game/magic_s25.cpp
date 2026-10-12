@@ -36,6 +36,7 @@
 // matrix from uninitialised stack).
 #include "game/magic_s25.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -43,6 +44,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1326,16 +1328,21 @@ S25_EXPORT void __cdecl SpellRagnarok_FadeOut(void) {
 // original 0x4D55C0: two screen-wide gouraud quads (0..319 x 0..120, 0..319 x
 // 120..359) in grey +0xA * 15 (the word 0x903854; +9 * 15 is stored there
 // first and overwritten), semi-transparent under tpage 0x35, 0x15 after,
-// slot 1.
+// slot 1. Under DIV-0041 x runs from Widescreen_FillX() to 319 + the columns
+// (the PSP's rule for its 319-wide fills, -32..351); 0..319 while the fills
+// are unarmed, so the fuzz compares the original's.
 S25_EXPORT void __cdecl SpellRagnarok_DrawScreenTint(void) {
-    constexpr std::int32_t k120 = 0x42F00000, k319 = 0x439F8000, k359 = 0x43B38000;   // 120.0f, 319.0f, 359.0f
+    constexpr std::int32_t k120 = 0x42F00000, k359 = 0x43B38000;   // 120.0f, 359.0f
+    const auto x0 = std::bit_cast<std::int32_t>(Widescreen_FillX());
+    const auto k319 = std::bit_cast<std::int32_t>(Widescreen_FillRight(319.0f));
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, 0x35, 0);
     MH_CALL(Gfx_CommitPrim)(1, 0xC);
     const unsigned char* const sc = Sprite_Current;
     unsigned char* p = Gfx_PacketNext;
     SetWord(S(4), sc[9] * 15u);
     SetWord(S(4), sc[0xA] * 15u);
-    const std::int32_t corners[2][8] = {{0, 0, k319, 0, 0, k120, k319, k120}, {0, k120, k319, k120, 0, k359, k319, k359}};
+    const std::int32_t corners[2][8] = {{x0, 0, k319, 0, x0, k120, k319, k120},
+                                        {x0, k120, k319, k120, x0, k359, k319, k359}};
     for (const auto& c : corners) {
         MH_CALL(Gpu_SetPolyG4)(p);
         MH_CALL(Gpu_SetSemiTrans)(p, 1);
