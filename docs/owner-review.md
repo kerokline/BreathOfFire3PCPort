@@ -337,6 +337,14 @@ where the reading behind it is. Nothing here is a divergence until it is in
   branding, not Capcom's game; the sibling's fidelity invariant is not ours).
   Drop it from our build by default with a ledger entry, or keep it on the
   PC-install path?
+- **The US PlayStation's default button assignment** (BD, 2026-10-12,
+  [`controls.md`](controls.md) 2.1): the PC port took the Japanese release's
+  defaults (circle speaks and confirms, cross acts and cancels, square moves,
+  triangle opens the menu); the US release (`SLUS_004.22`) ships a different
+  one (cross speaks and confirms, triangle acts and cancels, circle moves,
+  square opens the menu). A US disc-only install starts with the Japanese
+  buttons today. Offer the US assignment on a Western install (a ledger
+  entry, a launcher option or by the cache's language), or keep the port's?
 - **Six doubtful `.bss` words CP holds as pointers** (24 bytes,
   `exe-import-engine.md` 7.2) and **DIV-0055's 94 plate bytes** with no
   transform (the PSX source unmeasured): small, listed so they are not lost.
