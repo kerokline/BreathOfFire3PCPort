@@ -198,7 +198,93 @@ unchanged by construction (the same bits from another address); the full
 
 Left as the exe's: the import slots, `c_dfDIKeyboard`, and the GUID-free
 helpers that compare `.rdata` bytes in the fuzz files (`glyph_draw_fuzz.cpp`
-reads `0x5C4618` raw to check the original's value).
+reads `0x5C4618` raw to check the original's value). Since the disc-only
+round, section 2.2.
+
+### 2.2 What is left of the file (disc-only round, group RD, 2026-10-12)
+
+**The exe host reads no byte of `.rdata` from `BOF3.exe`.** `exe_host.cpp`
+step 3 no longer copies the section; `rdata::Map` writes the 44 constants
+at their PC addresses and, at `DInput_KeyboardFormat` `0x5C4948`, the SDK's
+`DIDATAFORMAT` header; `BindSlots` writes the 14 import slots. The rest of
+`0x5C4000..0x5DA000` stays zero. What else could read it, measured:
+
+- **The 63 `.data` words that point into `.rdata`** (`recipes/exe-pointers.tsv`,
+  class `rdata`, read against `BOF3.exe` with a session script):
+  all 63 are Capcom's C runtime's - printf's two
+  `(null)` strings (`0x672948`, `0x67294C`), the 18 `R6xxx` / math-error
+  message pointers (`0x675134..0x6751BC`) and the 43 locale day and month
+  names and formats (`0x675528..0x6755D0`). No line of `src/` names any of
+  the three runs (a grep for `0x6729xx`, `0x6751xx`, `0x6755xx`), and the
+  runtime they belong to is not ours to run.
+- **The import slots**: every IAT address `src/` names is one of the 14
+  `BindSlots` binds (state3-build.md 2.2's list, the grep repeated:
+  `0x5C4014..0x5C4174`, each named twice - the slot table and its one
+  reader); none reads a neighbouring slot.
+- **The four floats only Capcom's code reads** (`0x5C4230..0x5C4240`):
+  `widescreen.cpp` and `rest_3g_callees.h` name them in comments and compare
+  the operands that name them (code-byte reads, OP's), never their values.
+  Nothing to hold.
+- **The fuzz files' raw reads** (`glyph_draw_fuzz.cpp`'s `0x5C4618`, the
+  shell fuzz's clones): only under `BOF3X_SHADOW`, which the exe host
+  refuses at step 1. Hosted only, as before.
+
+**`c_dfDIKeyboard` is the SDK's**, linked from llvm-mingw's `libdinput.a`
+(with `GUID_Key` from `libdxguid.a`; static data, no import of
+`dinput.dll`). `pad_read.cpp` passes `rdata::KeyboardFormat()` in both hosts.
+`rdata::Verify` compares it with Capcom's: the header's five counts
+(`0x18`, `0x10`, `DIDF_RELAXIS`, 256, 256) and each of the 256 objects'
+offset, type, flags and GUID by value - `rdata: the keyboard format is the
+SDK's c_dfDIKeyboard, equal to BOF3.exe's at 0x5C4948 (its 256 objects at
+0x5ACBD0, their GUIDs by value)` in every self-test below. **Capcom's object
+table is at `0x5ACBD0`, inside `.text`** (the header's `rgodf`, read from the
+file; `symbols.toml`'s `0x5AC850` was wrong and is corrected), so in the exe
+host as merged in PR #53 the header copied from the file pointed at
+`.stub`'s int3 fill. A scratch program (session 24422d10) measured what
+DirectInput 7 does with such a table: `SetDataFormat` `E_INVALIDARG`,
+`Acquire` `E_INVALIDARG`, `GetDeviceState` `DIERR_NOTINITIALIZED`, against
+`DI_OK` three times for the SDK's. So `bof3x.exe` has had no DirectInput
+keyboard since state 3 (the pad, through SDL, and the input script were
+unaffected); this round's change restores it. A live check is owed: a key
+press in `bof3x.exe`.
+
+**The verifications against the file have one predicate**, `ExeFile_Present()`
+(`hook/exe_host.h`): always true hosted; in the exe host, whether the game
+directory held `BOF3.exe` at start. `ExeFile_Read(va, to, n)` reads the
+file's `.text`, `.rdata` or `.data` by address (exe host only). Without the
+file `rdata::Verify` and the key table say in the log that they did not
+compare.
+
+**`BOF3.exe` is optional in the exe host** when `BOF3X_EXEIMAGE` names the
+`.data` source: no hash, no reads, `data: no BOF3.exe in <dir>: a
+disc-built install - .data from BOF3X_EXEIMAGE's cache, nothing read from
+the file, and the checks against it skipped`. Without the file and without
+the variable, a Fatal. What still needs the file in this branch: the
+code-byte store (`code_bytes.cpp`, 43 reads, OP's), whose first read is a
+Fatal without it.
+
+**The default key table is a rule** (the owner, 2026-10-11):
+`input::DefaultKeys()` (`src/input/bindings.cpp`), 24 entries by `DIK_` name
+(docs/controls.md section 1). `Shell_MapDefaultKeys` writes it to
+`Key_TableDefault` `0x66C648` at map time (the exe host after `.data` is
+placed; hosted in `Shell_Inject`, before the fuzz), after comparing it with
+the file's 0x80 bytes when there is one; `Cfg_SetDefaultKeys` copies the
+rule; the shell fuzz holds the region at the rule. **`0x66C648..0x66C6C8`
+is the engine's own** - for NB's list and a disc-built image's skip ranges.
+
+Self-tests (ini-less copies of this branch's build, headless):
+
+| Run | Exit | Log |
+|---|---|---|
+| exe host, the real install | 0 | `keys: Key_TableDefault 0x66C648 written from the engine's rule (24 keys), equal to BOF3.exe's`; both `rdata:` lines; `inject: 10087 ours` |
+| exe host, `BOF3X_EXEIMAGE` = `analysis/cache/pc-plus-us` (pc-zh) | 0 | the same, `.data ... from BOF3X_EXEIMAGE's data.bin` |
+| exe host, a scratch game directory with `DAT/` (a junction) and no `BOF3.exe`, the same cache | 3 | `data: no BOF3.exe ...`; `keys: ... no BOF3.exe to compare it with`; `rdata: ... no BOF3.exe to compare them with`; then `FATAL: codebytes: 0x00497A22 read before the player's BOF3.exe was opened` - the store, OP's |
+| the same with the store pointed at the real file (a scratch build, not committed) | 0 | `inject: 10087 ours`, `self-test only: done`: the store is the only read of the file left |
+| hosted, `BOF3X_SHADOW=shell,pad_read,field_blocked` | 0 | `shell self-test: 21000 rounds ..., 0 MISMATCHES`; `pad_read shadow: 20000 rounds, 0 differ`; `field_blocked self-test: 45000 rounds ..., 0 MISMATCHES` |
+
+The launcher (`--no-config`, the real install, `BOF3X_SELFTEST_ONLY`) prints
+the 24 keys it compared: `the default key table, 24 keys by the engine's
+rule, equal to BOF3.exe's: Up=up Down=down ... Numpad3=down+right`.
 
 ## 3. The addresses no disc carries
 
@@ -437,9 +523,8 @@ the image the importer wrote.
    them; no missing start, no takeover gap. The page itself not started. The decoder's eight are
    to be minimp3 behind the music seam ([`mp3-decoder-choice.md`](mp3-decoder-choice.md),
    the owner 2026-10-10).
-4. **`c_dfDIKeyboard`** from the SDK in state 3 (one more `.rdata` read
-   that the engine can own: `libdinput`'s object, verified against the
-   exe's like 2.1); the import slots go with the executable.
+4. ~~**`c_dfDIKeyboard`** from the SDK in state 3~~ - done in the
+   disc-only round (section 2.2); the import slots go with the executable.
 5. **The 436 addresses `src/` reads that no disc carries** (JP): 183 are
    language data (3.2); the platform groups are the engine's; the effect
    state tables want function twins (3.3: the image's own code-pointer pairs

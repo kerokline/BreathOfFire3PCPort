@@ -52,6 +52,16 @@ nothing on screen follows it (§2). The default has 24 entries, 8 free:
 16..19 keypad 8 2 4 6 the directions; 20..23 keypad 9 1 7 3 the diagonals
 ```
 
+**The default table is a rule of the engine** since the disc-only round
+(the owner's call, 2026-10-11): `input::DefaultKeys()` in
+`src/input/bindings.cpp` names each entry by its `DIK_` key and its
+PlayStation button(s), in the order above - so a disc-built install, which
+has no `BOF3.exe` to read `0x66C648` from, has the same defaults. The
+launcher compares the rule with the file's table when the file is there (a
+refusal on a difference) and otherwise uses the rule; the engine writes it
+to `0x66C648` at start, after the same comparison, and `Cfg_SetDefaultKeys`
+copies the rule ([`exe-import-engine.md`](exe-import-engine.md) 2.2).
+
 The word `Pad_Read` returns is the joystick's OR the keyboard's; `Input_Latch`
 `0x4FC6A0` (sole caller) turns it into `Input_Held` / `Input_Previous` /
 `Input_Pressed`. That is the whole input path: **one leaf function with no
