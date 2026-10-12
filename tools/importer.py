@@ -65,6 +65,7 @@ import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
 import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
+import ppms         # noqa: E402  (base/bgm/ from a PSP disc, docs/psp-music.md)
 import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
@@ -735,7 +736,7 @@ def cmd_build(a):
             written[layer] += 1
     snd = xa.importer_snd(sources, a.out)
     psp_snd = None if snd else at3.importer_snd(sources, a.out)     # no PSX disc: the PSP's, by the player's ffmpeg
-    bgm = seq.importer_bgm(sources, a.out)
+    bgm = seq.importer_bgm(sources, a.out) or ppms.importer_bgm(sources, a.out)   # no PSX disc: the PSP's (psp-music.md)
     # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc.
     # Before the languages: a disc-only language layer is built against it.
     exe_src = next((s for s in sources if isinstance(s, ExeSource)), None) or \
@@ -759,7 +760,7 @@ def cmd_build(a):
     for why in (psp_snd[3] if psp_snd else []):
         print("  base/snd  not written: %s" % why)
     if bgm:
-        print("  base/bgm  from %s: %d files (seq.py)" % (bgm[0], len(bgm[1])))
+        print("  base/bgm  from %s: %d files (%s)" % (bgm[0], len(bgm[1]), "ppms.py" if bgm[0].startswith("psp-") else "seq.py"))
     if missing:
         print("  missing (no source given carries them):")
         for (layer, k), n in sorted(missing.items()):
@@ -1813,6 +1814,7 @@ def verify_bgm(cache):
         if b not in banks:
             errs.append("%s: its bank %s is not in the cache" % (rel, b))
     fix, _ = seq.load_fixture() if os.path.exists(seq.FIXTURE) else ({}, None)
+    fix.update(ppms.load_fixture())      # a PSP build's rows: fixtures/bgm-psp.tsv (ppms.py)
     against = []
     for bid in sorted(builds):
         want = fix.get(bid)
@@ -2103,6 +2105,7 @@ def cmd_check(a):
     oerrs = check_opt(a.opt_recipe)
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
     serrs += ["seq.py: " + e for e in seq.check_fixture(builds)]   # fixtures/bgm.tsv's shape and format versions
+    serrs += ["ppms.py: " + e for e in ppms.check() + ppms.check_fixture(builds)]   # pPMS round trip, bgm-psp.tsv
     serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
     serrs += ["psp_standins.py: " + e for e in psp_standins.check(recipe=a.recipe)]   # recipes/psp-standins.toml
     import psp_fmv                                     # the PSP's logo movie: the PSMF demux on a synthetic file
@@ -2116,7 +2119,8 @@ def cmd_check(a):
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
           % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
              len(oerrs)))
-    print("seq / at3 / psp_fmv check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, recipes/psp.snd.toml, "
+    print("seq / ppms / at3 / psp_fmv check: synthetic SEP, pPMS and VAB round trips, fixtures/bgm.tsv and "
+          "bgm-psp.tsv, recipes/psp.snd.toml, "
           "recipes/psp-standins.toml, a synthetic PSMF, %d error(s)" % len(serrs))
     print("cache_walk check: the engine's cache walk against install on a synthetic cache, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
