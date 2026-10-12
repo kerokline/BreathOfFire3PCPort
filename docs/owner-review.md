@@ -74,7 +74,7 @@ where the reading behind it is. Nothing here is a divergence until it is in
   Known gaps to look for (DIV-0100's doc, section 4: 3,358 bytes of Capcom's
   game values no disc carries are zero): the wrong effect file on a spell or
   item (`Magic_Rows`), the dragon-form sets, the equipment and experience
-  panels' numbers, the ending roll. What you see decides the first item under
+  panels' numbers, the ending roll (the first two and parts of the panels' and the event battles' tables filled by rule since 2026-10-12, DIV-0101 amended). What you see decides the first item under
   "Decisions".
 - **DIV-0096, the eleven arenas as the disc's:** member 2's field sprites and
   member 1's battle sprite may differ by a part in some animations; walk and
@@ -86,6 +86,52 @@ where the reading behind it is. Nothing here is a divergence until it is in
   movie plays at start from the converted AVI - look (30 fps, doubled 320 x
   240) and listen (44.1 kHz from the disc's XA); nobody has played it in the
   game.
+
+**The PSP-only round (2026-10-12, [`psp-only-round.md`](psp-only-round.md)) - a build from a PSP disc alone, and the PSP's content as suites beside a PlayStation disc:**
+
+*Answered (2026-10-12 afternoon, `psp-only-round.md` 7.1; recorded where they belong):*
+- **The game-value gaps: fill them** - the four largest (`Magic_Rows`' effect files, the dragon set files,
+  `EventBattle_Records`' battle files, the formation wheel's spots) are filled by rule on every disc build, PSX
+  too (DIV-0101 amended, [`disc-gap-fills.md`](disc-gap-fills.md)); the rest stays open under "Decisions".
+- **C1** is the duel between Beyd and Zig (chapter 6 run 9, event battle 0x1B, area 92) and **C2** is
+  set-up 55, Myria, in area 198 - **corrected by PB**: the PSP sets Myria's first item word (the PSP's `+0x98`,
+  ours `+0xA8`: the item a steal takes and the first drop rolls) to item 0x317, "Ivory Charm" by the sibling's
+  names, not an agility. Both are members of the launcher's data suite, on by default under a PSP base
+  (DIV-0108, [`psp-battle-changes.md`](psp-battle-changes.md)).
+- **The suites' membership** as LT proposed: the name layers and P8 under data, the button-label page left out
+  beside a PSX base (DIV-0107).
+- **The PSP's music:** the restored stereo width is fine; no narrow-pan bank form (DIV-0105).
+- **The dropped tone:** the rule kept, the PSP's one tone a box on the Jukebox, the restored chord the default
+  (DIV-0103, DIV-0113).
+- **The PSP-EU Config screen:** deferred - you will look on an emulator at what the PSP drew (D246, below).
+- **The PSP-only mode** (CD2 / CD3: a new menu choice and 22 hooks run in AREA030, probably fishing): left until
+  you are back (below).
+
+*What the end batch (EB) will put in front of you* - running when this was written; its results go to the round
+doc's section 6: **a contact sheet** of the PSP-only install against the PSX disc-only install of the same
+language (`recipe_shots.py`: the stand-in areas a route reaches, the battle menu, the title, the logo), and
+**launcher captures** of the options page on a PSP-only, a PSX-only and a PC + PSX + PSP cache, and of the
+Jukebox.
+
+- **The eye.** The PSP stand-ins' look as a PSP-only base: the PSP's area tiles (653 blanked - look for holes),
+  its UI page with the shoulder-button labels, its dial and title pages, Ryu's forms (DIV-0103). The PSP's logo
+  movie converted at import (Cinepak SSIM 0.868 against the direct decode, 30000/1001 fps, the PSP's frame
+  scaled back to 4:3; DIV-0106). The launcher page: the three suites, their greyed reasons and wording, the
+  layout (LT: 560 x 309 dialog units; two older notes clipped). The Jukebox: the PSP column, and the chord box
+  and its wording ("Battle chord as the PSP plays it (one tone)").
+- **The ear.** The PSP's music from a PSP-only cache or the `psp-music` layer through the Jukebox: the 16
+  note-changed songs, 22 (128 to 126 bpm, and the one bank the inverse cannot split: 16.8 dB) and 157 (tempo),
+  31 (its setup); the effects and voices from ATRAC3plus, and the 11 jingles re-encoded (DIV-0105, DIV-0106).
+  The chord one tone against two, in a fight with one of the 16 containers' characters (`BPLD` 015, 025, 056,
+  257, 457, 567, 578; DIV-0113).
+- **Play.** From a PSP-only install with the defaults: **the Beyd-Zig duel, lost** - with `duel-loss` on, a
+  party loss lasts until `Boss27_Event`'s other path sets bit 2, so it may stall (a scripted end the PSP meant,
+  or a stall; the PlayStation's twin is uncaptured, so C1 may also be a repair - DIV-0108's tier waits on this);
+  **Myria** in area 198 - steal from her, or see the drop, with `myria-item` on and off; a battle with magic
+  (the filled `Magic_Rows`); a level-up of roster index 6 (the PSP's table, DIV-0104 / DIV-0111).
+- **Still open.** The PSP-EU Config screen (D246: blank, take the PSP's matching words, or our own English
+  rows - after your emulator look). The PSP-only mode (probably fishing): adopt it as a layer of ours, or
+  leave it.
 
 0. **The game from the cache** (DIV-0089, 2026-10-10,
    [`cache-read.md`](cache-read.md) section 9). **At the machine:** with
@@ -323,7 +369,12 @@ where the reading behind it is. Nothing here is a divergence until it is in
   refuses). The choices: accept the gaps as the disc-only build's (a ledger
   entry naming what they break), derive each by a rule where one exists
   (none read yet), or require the PC's exe for those tables (a cache built
-  with it carries them). Your call after the play above.
+  with it carries them). Your call after the play above. **Answered in part
+  (2026-10-12, the PSP-only round): "fill them"** - the four largest are
+  filled by rule from every disc (DIV-0101 amended,
+  [`disc-gap-fills.md`](disc-gap-fills.md)); what is left (the event
+  battles' track half, the formation names, the long tail of section 3
+  there) is still this call.
 - **The faerie village's label group writes names one record late** (LG,
   2026-10-12; [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4; DIV-0064's
   group 16): the PC record is name first at `0x653200`, `labels.cpp` writes
