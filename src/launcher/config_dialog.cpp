@@ -34,6 +34,8 @@ struct DialogState {
     // player's choice for each: -1 untouched, 0 the PlayStation's, 1 the PSP's.
     std::vector<SuiteState> suites;
     std::vector<int> choice = std::vector<int>(std::size(suites_gen::kSuites), -1);
+    // The Jukebox's battle-chord box (MusicPlayerRun): -1 untouched, 0 off, 1 on.
+    int chord = -1;
 };
 
 // ---- DIV-0087: the music source and the cache folder --------------------------
@@ -160,7 +162,8 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
     const std::wstring cache = DialogCacheRoot(dlg), data = DialogDataRoot(dlg), game = state.game_dir;
     SuiteInputs in;
     in.manifest = ManifestRead(cache);
-    in.installed = [game, data](const char* layer) { return ConfigOptInstalled(game, layer, data); };
+    // a layer's songs from the cache the music reads, under BOF3X_CACHE_DATA=0 too
+    in.installed = [game, data, cache](const char* layer) { return ConfigOptInstalled(game, layer, data, cache); };
     in.language = LanguageChosen(dlg, state);
     in.opt = state.cfg->opt;
     in.psp = state.cfg->psp;
@@ -403,8 +406,12 @@ void ReadBack(HWND dlg, const DialogState& state) {
     else if (cfg.music != "seq") cfg.music.clear();
 
     // The suites: a choice moves its layers in opt=; none chosen, opt= as read.
+    // The Jukebox's chord box with them, in one edit of the line as read: a
+    // choice that returns to where it started writes opt= back byte for byte.
+    std::vector<std::pair<std::string, bool>> extra;
+    if (state.chord >= 0) extra.emplace_back(kChordLayer, state.chord == 1);
     cfg.opt = SuitesOptEdit(cfg.opt, ConfigOptDefaultInstalled(state.game_dir, DialogDataRoot(dlg)), state.suites,
-                            state.choice);
+                            state.choice, extra);
     cfg.psp = SuitesPspEdit(cfg.psp, state.suites, state.choice);   // DIV F (draft): the code members
 }
 
@@ -995,7 +1002,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             std::wstring cache = DialogText(dlg, IDC_CACHE);
             const size_t b = cache.find_first_not_of(L" \t"), e = cache.find_last_not_of(L" \t");
             cache = b == std::wstring::npos ? std::wstring() : cache.substr(b, e - b + 1);
-            MusicPlayerRun(dlg, state->game_dir, cache, DialogDataRoot(dlg), &state->cfg->opt);   // TG-5: the chord box edits opt=
+            MusicPlayerRun(dlg, state->game_dir, cache, DialogDataRoot(dlg), &state->cfg->opt, &state->chord);
             return TRUE;
         }
         default:

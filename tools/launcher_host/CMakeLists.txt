@@ -18,9 +18,10 @@ set(_suites_hdr "${CMAKE_BINARY_DIR}/gen/launcher/suites.gen.h")
 add_custom_command(
   OUTPUT "${_suites_hdr}"
   COMMAND "${BOF3X_PYTHON}" "${REPO}/tools/suites.py" gen --out "${_suites_hdr}"
-  DEPENDS "${REPO}/recipes/suites.toml" "${REPO}/recipes/opt.toml" "${REPO}/fixtures.toml" "${REPO}/tools/suites.py"
+  DEPENDS "${REPO}/recipes/suites.toml" "${REPO}/recipes/opt.toml" "${REPO}/recipes/psp-layers.toml" "${REPO}/fixtures.toml" "${REPO}/tools/suites.py"
   VERBATIM)
 add_executable(config_tests config_tests.cpp ${REPO_SRC}/launcher/config.cpp ${REPO_SRC}/launcher/suites.cpp
+               ${REPO_SRC}/common/cache_manifest.cpp
                ${REPO_SRC}/input/bindings.cpp "${_suites_hdr}")
 target_include_directories(config_tests PRIVATE ${REPO_SRC} "${CMAKE_BINARY_DIR}/gen")
 target_compile_options(config_tests PRIVATE -Wall -Wextra)

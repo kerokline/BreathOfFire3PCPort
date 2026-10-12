@@ -564,9 +564,247 @@ void TestCodeMembers() {
           "SuitesPspPlayed: the default by the base, none, a list");
 }
 
+// ---- the code review of 2026-10-12 (psp/review-fixes) ----------------------
+
+// A directory and its parents.
+void MakeDirs(const std::wstring& path) {
+    for (size_t at = path.find(L'\\', 3); at != std::wstring::npos; at = path.find(L'\\', at + 1))
+        CreateDirectoryW(path.substr(0, at).c_str(), nullptr);
+    CreateDirectoryW(path.c_str(), nullptr);
+}
+
+std::wstring WideOf(const char* s) {
+    std::wstring w;
+    for (const char* c = s; *c; ++c) w += static_cast<wchar_t>(*c);
+    return w;
+}
+
+// A cache on disk: `trees` as opt\<layer>\<part>\<file> (one file each), and a
+// manifest.toml when `manifest` is not null.
+std::wstring FakeCache(const wchar_t* name, const std::vector<std::pair<const char*, const wchar_t*>>& trees,
+                       const char* manifest) {
+    const std::wstring cache = Temp(name);
+    MakeDirs(cache);
+    DeleteFileW((cache + L"\\manifest.toml").c_str());
+    for (const auto& [layer, part] : trees) {
+        const std::wstring dir = cache + L"\\opt\\" + WideOf(layer) + L"\\" + part;
+        MakeDirs(dir);
+        WriteAll(dir + (std::wcscmp(part, L"exe") == 0 ? L"\\place.toml" : L"\\001.DAT"), "");
+    }
+    if (manifest) WriteAll(cache + L"\\manifest.toml", manifest);
+    return cache;
+}
+
+std::string Env(const char* name) {
+    char buf[1024];
+    const DWORD n = GetEnvironmentVariableA(name, buf, sizeof buf);
+    return n == 0 || n >= sizeof buf ? std::string() : std::string(buf, n);
+}
+
+void ClearEnv() {
+    for (const char* v : {"BOF3X_OPT", "BOF3X_CACHE", "BOF3X_CACHE_DATA", "BOF3X_LANG", "BOF3X_PSP", "BOF3X_MUSIC"})
+        SetEnvironmentVariableA(v, nullptr);
+}
+
+// The PC + US + PSP-EU cache as importer.py build --opt writes it: base_policy
+// psx, an opt.toml layer in [cache] opt, and the suites' engine half in
+// [psp_layers]. Rows abridged to what the reader takes.
+const char kManifestLayers[] =
+    "[meta]\ntarget = \"pc-zh\"\n\n[build]\nbase_policy = \"psx\"\nexe_tables_from = \"pc-zh\"\n\n"
+    "[[source]]\nbuild = \"pc-zh\"\npath = \"DAT\"\n\n[[source]]\nbuild = \"psx-us\"\npath = \"us.cue\"\n\n"
+    "[[source]]\nbuild = \"psp-eu\"\npath = \"eu.iso\"\n\n"
+    "[cache]\nassets = [\n  [\"A.DAT\", 0, \"base\", \"pc-zh:chunk\", \"h\"],\n]\n"
+    "opt = [\n  [\"AREA004.DAT\", \"opt/area4-walls\", 0, \"psx-us:copy:WORLD00/AREA004.EMI#8@0\", \"h\"],\n"
+    "  [\"ITEM.DAT\", \"opt/psp-names-en-150\", 0, \"psp-eu:name:items#1\", \"h\"],\n]\n"
+    "bgm = [\n  [\"base/bgm/000.DAT\", \"psx-us:seq:BGM000.EMI#1\", \"h\"],\n]\n\n"
+    "[exe]\nbuild = \"pc-zh\"\n\n[psp_layers]\nrecipe_sha256 = \"h\"\nrows = [\n"
+    "  [\"psp-music\", \"opt/psp-music/bgm/001.DAT\", \"psp-eu:ppms:BGM000.EMI#1\", \"h\"],\n"
+    "  [\"psp-snd\", \"opt/psp-snd/snd/001.DAT\", \"psp-eu:psp-at3\", \"h\"],\n"
+    "  [\"psp-tables\", \"opt/psp-tables/exe/place.toml\", \"psp-eu:exe:h\", \"h\"],\n"
+    "  [\"psp-ryu-forms\", \"opt/psp-ryu-forms/dat/001.DAT\", \"psp-eu:type1:RYUD#1\", \"h\"],\n]\n";
+
+// Finding 1: a hosted start with the data suite on the PSP's side. The suite
+// writes psp-tables into opt=, and the hosted build refuses that layer at
+// start (dat_load.cpp ReadOptLayers): the launcher leaves it out, by part.
+void TestHostedOpt() {
+    const std::wstring game = Temp(L"bof3x_rf_game");
+    MakeDirs(game + L"\\DAT");
+    const std::wstring cache = FakeCache(L"bof3x_rf_cache_all",
+                                         {{"psp-music", L"bgm"}, {"psp-snd", L"snd"}, {"psp-tables", L"exe"},
+                                          {"psp-ryu-forms", L"dat"}, {"psp-names-en-150", L"dat"}},
+                                         kManifestLayers);
+    // the data suite's PSP side, as the dialog writes it over an empty opt=
+    bof3x::SuiteInputs in;
+    in.manifest = bof3x::ManifestRead(cache);
+    in.installed = [&](const char* layer) { return bof3x::ConfigOptInstalled(game, layer, cache); };
+    in.language = "en-150";
+    const std::vector<bof3x::SuiteState> v = bof3x::SuitesEvaluate(in);
+    bof3x::Config cfg;
+    cfg.cache = bof3x::ConfigToUtf8(cache);
+    cfg.opt = bof3x::SuitesOptEdit("", {}, v, {-1, -1, 1});
+    Check(cfg.opt == "psp-tables,psp-names-en-150,psp-ryu-forms", "hosted: the data suite's PSP side in opt=", cfg.opt);
+
+    ClearEnv();
+    bof3x::ConfigApplyEnvironment(game, cfg, false);
+    Check(Env("BOF3X_OPT") == "psp-tables,psp-ryu-forms", "hosted: bof3x.exe gets the tables (the text layer left off "
+                                                          "under the original text)", Env("BOF3X_OPT"));
+    ClearEnv();
+    bof3x::ConfigApplyEnvironment(game, cfg, true);
+    Check(Env("BOF3X_OPT") == "psp-ryu-forms", "hosted: the hosted build does not get psp-tables (an exe part)",
+          Env("BOF3X_OPT"));
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_OPT", "psp-tables");
+    bof3x::ConfigApplyEnvironment(game, cfg, true);
+    Check(Env("BOF3X_OPT") == "psp-tables", "hosted: a hand-set BOF3X_OPT is the DLL's to refuse, untouched");
+    ClearEnv();
+
+    std::vector<std::string> dropped;
+    Check(bof3x::ConfigOptHosted("psp-art,psp-tables,area4-walls", std::wstring(), dropped) == "psp-art,area4-walls" &&
+              dropped == std::vector<std::string>{"psp-tables"},
+          "ConfigOptHosted: psp-tables dropped by its recipe part, no cache needed");
+    // a layer no recipe names, whose cache tree has an exe part: the DLL's test
+    const std::wstring mod = FakeCache(L"bof3x_rf_cache_mod", {{"mod-x", L"exe"}, {"mod-y", L"dat"}}, nullptr);
+    dropped.clear();
+    Check(bof3x::ConfigOptHosted("mod-y,mod-x", mod, dropped) == "mod-y" && dropped == std::vector<std::string>{"mod-x"},
+          "ConfigOptHosted: a mod's layer with exe\\place.toml dropped by the cache's tree");
+    dropped.clear();
+    Check(bof3x::ConfigOptHosted("psp-music,psp-snd,psp-ryu-forms,psp-chord-one-tone", cache, dropped) ==
+                  "psp-music,psp-snd,psp-ryu-forms,psp-chord-one-tone" && dropped.empty(),
+          "ConfigOptHosted: the bgm, snd and dat layers kept (the hosted build takes them)");
+}
+
+// Finding 2: a layer tree the manifest does not list (a build that stopped
+// part-way) is not offered; with no manifest, the tree is its own evidence.
+void TestListedLayers() {
+    const std::wstring game = Temp(L"bof3x_rf_game");
+    const char partial[] =  // only psp-music's rows were written
+        "[build]\nbase_policy = \"psx\"\n[[source]]\nbuild = \"psp-eu\"\n[psp_layers]\nrows = [\n"
+        "  [\"psp-music\", \"opt/psp-music/bgm/001.DAT\", \"psp-eu:ppms:B#1\", \"h\"],\n]\n";
+    const std::wstring cache = FakeCache(L"bof3x_rf_cache_partial", {{"psp-music", L"bgm"}, {"psp-snd", L"snd"},
+                                                                     {"psp-tables", L"exe"}, {"psp-art", L"dat"}},
+                                         partial);
+    const bof3x::CacheManifest m = bof3x::ManifestParse(partial);
+    Check(m.opt_layers == std::vector<std::string>{"psp-music"}, "listing: [psp_layers] rows read");
+    Check(bof3x::ManifestParse(kManifestLayers).opt_layers ==
+              std::vector<std::string>{"area4-walls", "psp-names-en-150", "psp-music", "psp-snd", "psp-tables",
+                                       "psp-ryu-forms"},
+          "listing: [cache] opt and [psp_layers] rows, distinct, in order");
+    Check(bof3x::ConfigOptInstalled(game, "psp-music", cache), "listing: a listed layer is offered");
+    for (const char* l : {"psp-snd", "psp-tables", "psp-art"})
+        Check(!bof3x::ConfigOptInstalled(game, l, cache), (std::string("listing: unlisted ") + l + " not offered").c_str());
+    const std::string played = bof3x::ConfigOptPlayable(game, "psp-music,psp-snd,psp-tables", "", cache);
+    Check(played == "psp-music", "listing: ConfigOptPlayable drops the unlisted layers", played);
+    DeleteFileW((cache + L"\\manifest.toml").c_str());
+    Check(bof3x::ConfigOptInstalled(game, "psp-snd", cache), "no manifest: the tree is its own evidence, as before");
+}
+
+// Finding 3: BOF3X_CACHE_DATA=0, the cache for the music only. A layer's bgm
+// part is still the music's; its snd part and the chord's banks are the data's.
+void TestMusicOnly() {
+    const std::wstring game = Temp(L"bof3x_rf_game");
+    const std::wstring cache = FakeCache(L"bof3x_rf_cache_all2",
+                                         {{"psp-music", L"bgm"}, {"psp-snd", L"snd"}, {"psp-chord-one-tone", L"dat"}},
+                                         nullptr);
+    Check(bof3x::ConfigOptInstalled(game, "psp-music", std::wstring(), cache),
+          "music only: psp-music's bgm from the music's cache");
+    Check(!bof3x::ConfigOptInstalled(game, "psp-snd", std::wstring(), cache) &&
+              !bof3x::ConfigOptInstalled(game, "psp-chord-one-tone", std::wstring(), cache),
+          "music only: psp-snd and the chord's banks are the data's, not offered");
+    bof3x::Config cfg;
+    cfg.cache = bof3x::ConfigToUtf8(cache);
+    cfg.opt = "psp-music,psp-snd,psp-chord-one-tone";
+    ClearEnv();
+    SetEnvironmentVariableA("BOF3X_CACHE_DATA", "0");
+    Check(bof3x::ConfigCacheDataRoot(cfg).empty() && bof3x::ConfigCacheRoot(cfg) == cache,
+          "music only: no data root, the cache root kept");
+    bof3x::ConfigApplyEnvironment(game, cfg, false);
+    Check(Env("BOF3X_OPT") == "psp-music", "music only: BOF3X_OPT names the music layer alone", Env("BOF3X_OPT"));
+    ClearEnv();
+    bof3x::ConfigApplyEnvironment(game, cfg, false);
+    Check(Env("BOF3X_OPT") == "psp-music,psp-snd,psp-chord-one-tone", "the data too: all three", Env("BOF3X_OPT"));
+    ClearEnv();
+}
+
+// Finding 4: one manifest reader. Good, absent and misspelled values; the
+// refusal text the launcher stops on and the DLL Fatals with
+// (common/cache_manifest.h ManifestRefusal, both sides).
+void TestOneReader() {
+    for (const char* good : {"psp", "psx"}) {
+        const bof3x::CacheManifest m =
+            bof3x::ManifestParse(std::string("[build]\nbase_policy = \"") + good + "\"\n");
+        Check(m.error.empty() && m.base_policy == good, (std::string("base_policy \"") + good + "\" read").c_str());
+    }
+    Check(bof3x::ManifestPspBase(bof3x::ManifestParse("[build]\nbase_policy = \"psp\"\n")) &&
+              !bof3x::ManifestPspBase(bof3x::ManifestParse("[meta]\ntarget = \"pc-zh\"\n")) &&
+              !bof3x::ManifestPspBase(bof3x::CacheManifest{}),
+          "absent base_policy (and no manifest) is psx");
+    for (const char* bad : {"\"PSP\"", "\"ps\"", "psp", "\"psp \"", "\"\"", "[\"psp\"]", "\"psp\", \"psx\""}) {
+        const bof3x::CacheManifest m = bof3x::ManifestParse(std::string("[build]\nbase_policy = ") + bad + "\n");
+        const std::string r = bof3x::ManifestRefusal(m, "C:\\c\\manifest.toml");
+        Check(!m.error.empty() && !bof3x::ManifestPspBase(m) &&
+                  r.find(std::string("manifest.toml's [build] base_policy is ") + bad +
+                         ", neither \"psp\" nor \"psx\" (C:\\c\\manifest.toml)") == 0,
+              (std::string("base_policy = ") + bad + " refused, the same sentence for both").c_str(), r);
+    }
+    Check(bof3x::ManifestRefusal(bof3x::ManifestParse("[build]\nbase_policy = \"psp\"\n"), "x").empty(),
+          "no refusal for a good manifest");
+    // The bgm row's build and [snd] as the Jukebox and the page read them.
+    const bof3x::CacheManifest l = bof3x::ManifestParse(kManifestLayers);
+    Check(l.bgm_build == "psx-us" && l.snd_build.empty() && l.exe_tables_from == std::vector<std::string>{"pc-zh"},
+          "the bgm row's build, [snd], exe_tables_from from one reader");
+    // The launcher stops up front on a bad manifest: ManifestRead of the file.
+    const std::wstring cache = FakeCache(L"bof3x_rf_cache_bad", {}, "[build]\nbase_policy = \"PSP\"\n");
+    Check(!bof3x::ManifestRead(cache).error.empty(), "ManifestRead: the file's misspelling is the error");
+}
+
+// Finding 6: the Jukebox's chord box ticked and unticked writes opt= back byte
+// for byte (LT's rule: an untouched page writes the line as read).
+void TestChordRoundTrip() {
+    const std::vector<std::string> walls{"area4-walls"};
+    const std::vector<bof3x::SuiteState> v = bof3x::SuitesEvaluate(Inputs(kManifestAll, {}, "original", "", walls));
+    using Boxes = std::vector<std::pair<std::string, bool>>;
+    // what the box did before: two edits in turn, the second over the first's line
+    const std::string twice = bof3x::ConfigOptEdit(bof3x::ConfigOptEdit("", walls, Boxes{{bof3x::kChordLayer, true}}),
+                                                   walls, Boxes{{bof3x::kChordLayer, false}});
+    Check(twice == "area4-walls", "the old way: on then off over an empty line wrote the default (the bug)", twice);
+    // now a choice, made once on Play from the line as read
+    for (const char* line : {"", "none", "area4-walls", "psp-art,area4-walls"}) {
+        const std::string back = bof3x::SuitesOptEdit(line, walls, v, {-1, -1, -1}, Boxes{{bof3x::kChordLayer, false}});
+        Check(back == line, (std::string("chord on then off: opt=") + line + " byte for byte").c_str(), back);
+    }
+    Check(bof3x::SuitesOptEdit("", walls, v, {-1, -1, -1}, Boxes{{bof3x::kChordLayer, true}}) ==
+              "area4-walls,psp-chord-one-tone",
+          "chord on over an empty line: the walls kept, the chord after them");
+    Check(bof3x::SuitesOptEdit("area4-walls,psp-chord-one-tone", walls, v, {-1, -1, -1},
+                               Boxes{{bof3x::kChordLayer, true}}) == "area4-walls,psp-chord-one-tone",
+          "chord left on where the line had it: byte for byte");
+}
+
+// Finding 7: psp= checked up front by the DLL's rule, as opt= is.
+void TestPspValid() {
+    std::string why;
+    for (const char* good : {"", "none", "duel-loss", "myria-item", "myria-item,duel-loss"})
+        Check(bof3x::ConfigPspValid(good, why), (std::string("psp=") + good + " valid").c_str(), why);
+    for (const char* bad : {"duel-los", "Duel-loss", "duel-loss,", ",duel-loss", "duel-loss,,myria-item",
+                            "duel-loss,duel-loss", "none,duel-loss", "duel-loss myria-item", "original", " "}) {
+        why.clear();
+        Check(!bof3x::ConfigPspValid(bad, why) && !why.empty(), (std::string("psp=") + bad + " refused").c_str());
+    }
+    why.clear();
+    bof3x::ConfigPspValid("duel-los", why);
+    Check(why == "\"duel-los\" is not one of the PSP's changes (duel-loss, myria-item)", "the reason names the items", why);
+}
+
 int main() {
     std::printf("cache manifest\n");
     TestManifest();
+    std::printf("review fixes: hosted opt=, listed layers, music only, one reader, chord round trip, psp=\n");
+    TestHostedOpt();
+    TestListedLayers();
+    TestMusicOnly();
+    TestOneReader();
+    TestChordRoundTrip();
+    TestPspValid();
     std::printf("suites\n");
     TestSuites();
     std::printf("code members (DIV F draft)\n");

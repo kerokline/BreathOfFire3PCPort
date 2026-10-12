@@ -335,9 +335,11 @@ struct Entry {
 
 struct State {
     std::wstring game_dir, cache;
-    // TG-5: the battle-chord box, over the settings' opt=
+    // TG-5: the battle-chord box, over the settings' opt= as read; the
+    // player's choice goes back through `chord_choice` (-1 untouched, 0 off,
+    // 1 on), which the settings dialog writes with the suites on Play
     std::wstring data_root;
-    std::string* opt = nullptr;
+    int* chord_choice = nullptr;
     ChordState chord;
     std::vector<Entry> songs[kSources];
     std::wstring why[kSources];  // why a source is greyed
@@ -387,27 +389,11 @@ std::wstring CacheMusicRoot(const std::wstring& cache) {
 
 // The build the cache's base\bgm came from: the build id that opens the source
 // of the manifest's first `bgm` row (`["base/bgm/000.DAT", "psp-jp:ppms:...", ...]`,
-// tools/importer.py write_manifest), or "" when the manifest has no such row.
+// tools/importer.py write_manifest), or "" when the manifest has no such row:
+// the one manifest reader the DLL shares (common/cache_manifest.h).
 // A PSP build's songs are tools/ppms.py's (docs/psp-music.md); any other's are
 // a PlayStation disc's (tools/seq.py). A cache holds one base\bgm.
-std::string CacheBgmBuild(const std::wstring& root) {
-    const std::wstring path = root + L"\\manifest.toml";
-    if (GetFileAttributesW(path.c_str()) == INVALID_FILE_ATTRIBUTES) return "";
-    const std::vector<std::uint8_t> bytes = ReadWhole(path);
-    const std::string text(bytes.begin(), bytes.end());
-    std::size_t at = text.find("\nbgm = [");
-    if (at == std::string::npos) return "";
-    at = text.find('\n', at + 1);
-    if (at == std::string::npos) return "";
-    // the row: its first string is the file, its second the source
-    const std::size_t open1 = text.find('"', at);
-    const std::size_t close1 = open1 == std::string::npos ? open1 : text.find('"', open1 + 1);
-    const std::size_t q = close1 == std::string::npos ? close1 : text.find('"', close1 + 1);
-    if (q == std::string::npos) return "";
-    const std::size_t colon = text.find(':', q + 1), close = text.find('"', q + 1);
-    if (colon == std::string::npos || close == std::string::npos || colon > close) return "";
-    return text.substr(q + 1, colon - q - 1);
-}
+std::string CacheBgmBuild(const std::wstring& root) { return ManifestRead(root).bgm_build; }
 
 bool IsPspBuild(const std::string& build) { return build.compare(0, 4, "psp-") == 0; }
 
@@ -466,11 +452,16 @@ void ListPsp(State& s) {
         // TG-1: beside a PlayStation disc's songs, the PSP's are the music
         // layer's tree (recipes/suites.toml's bgm member names it), the same
         // form, played from its own bank\.
-        std::wstring layer;
+        // One music member: tools/suites.py check refuses a second (this column
+        // lists one layer). The layer only when the manifest lists it (or there
+        // is none), as the game takes it (common/cache_manifest.h).
+        const char* name = nullptr;
         for (const suites_gen::MemberInfo& m : suites_gen::kMembers)
-            if (m.kind == suites_gen::Kind::kBgm && m.layer)
-                for (const char* c = m.layer; *c; ++c) layer += static_cast<wchar_t>(*c);
-        if (!layer.empty()) ListCacheSongs(s, root + L"\\opt\\" + layer + L"\\bgm\\", kPsp);
+            if (!name && m.kind == suites_gen::Kind::kBgm && m.layer) name = m.layer;
+        std::wstring layer;
+        for (const char* c = name ? name : ""; *c; ++c) layer += static_cast<wchar_t>(*c);
+        if (name && ManifestOffersLayer(ManifestRead(root), name))
+            ListCacheSongs(s, root + L"\\opt\\" + layer + L"\\bgm\\", kPsp);
         if (s.songs[kPsp].empty())
             s.why[kPsp] = L"The cache's songs are not the PSP disc's: a cache built from a PSP disc alone holds them, "
                           L"or one built with --opt " + layer + L" beside a PlayStation disc (docs/psp-music.md).";
@@ -650,7 +641,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         EnableWindow(GetDlgItem(dlg, IDC_MP_STOP), first >= 0 && s->open);
         // TG-5: the battle chord, as opt= plays it; greyed with the reason
         CheckDlgButton(dlg, IDC_MP_CHORD, s->chord.checked ? BST_CHECKED : BST_UNCHECKED);
-        EnableWindow(GetDlgItem(dlg, IDC_MP_CHORD), s->chord.enabled && s->opt);
+        EnableWindow(GetDlgItem(dlg, IDC_MP_CHORD), s->chord.enabled && s->chord_choice);
         SetDlgItemTextW(dlg, IDC_MP_CHORD_NOTE,
                         s->chord.enabled ? L"Off: the chord's second tone restored, as the PlayStation plays it. "
                                            L"Written to opt= on Play."
@@ -688,10 +679,12 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             Stop(dlg, *s);
             return TRUE;
         case IDC_MP_CHORD:
-            if (HIWORD(wp) == BN_CLICKED && s->opt && s->chord.enabled) {
+            if (HIWORD(wp) == BN_CLICKED && s->chord_choice && s->chord.enabled) {
+                // a choice, not an edit: opt= is made once on Play from the line
+                // as read (SuitesOptEdit), so ticking and unticking writes it
+                // back byte for byte
                 const bool on = IsDlgButtonChecked(dlg, IDC_MP_CHORD) == BST_CHECKED;
-                *s->opt = ConfigOptEdit(*s->opt, ConfigOptDefaultInstalled(s->game_dir, s->data_root),
-                                        {{kChordLayer, on}});
+                *s->chord_choice = on ? 1 : 0;
                 s->chord.checked = on;
             }
             return TRUE;
@@ -715,15 +708,16 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 }  // namespace
 
 void MusicPlayerRun(HWND owner, const std::wstring& game_dir, const std::wstring& cache,
-                    const std::wstring& data_root, std::string* opt) {
+                    const std::wstring& data_root, const std::string* opt, int* chord_choice) {
     psx::SetMusicAbortHook(MusicAbort);
     State s;
     s.game_dir = game_dir;
     s.cache = cache;
     s.data_root = data_root;
-    s.opt = opt;
+    s.chord_choice = opt ? chord_choice : nullptr;
     s.chord = ChordEvaluate(ManifestRead(CacheMusicRoot(cache)), ConfigOptInstalled(game_dir, kChordLayer, data_root),
                             opt ? *opt : std::string(), ConfigOptDefaultInstalled(game_dir, data_root));
+    if (s.chord_choice && *s.chord_choice >= 0 && s.chord.enabled) s.chord.checked = *s.chord_choice == 1;
     HCURSOR was = SetCursor(LoadCursorA(nullptr, IDC_WAIT));
     ListPsx(s);
     ListPsp(s);

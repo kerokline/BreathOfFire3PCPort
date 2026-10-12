@@ -54,6 +54,7 @@ add_custom_command(
   COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/suites.py" gen --out "${_suites_hdr}"
   DEPENDS "${CMAKE_SOURCE_DIR}/recipes/suites.toml"
           "${CMAKE_SOURCE_DIR}/recipes/opt.toml"
+          "${CMAKE_SOURCE_DIR}/recipes/psp-layers.toml"
           "${CMAKE_SOURCE_DIR}/fixtures.toml"
           "${CMAKE_SOURCE_DIR}/tools/suites.py"
   COMMENT "Generating launcher/suites.gen.h from recipes/suites.toml"
@@ -90,6 +91,7 @@ add_library(bof3x SHARED
   src/hook/code_bytes.cpp
   src/common/sha256.cpp
   src/common/icon_stamp.cpp
+  src/common/cache_manifest.cpp
   src/hook/detour.cpp
   src/hook/exe_image.cpp
   src/hook/exe_own.cpp
@@ -750,6 +752,7 @@ add_executable(bof3x_launcher
   src/audio/song.cpp
   src/common/sha256.cpp
   src/common/icon_stamp.cpp
+  src/common/cache_manifest.cpp
   src/input/bindings.cpp
   src/input/pad_sdl.cpp
   src/launcher/launcher.rc)
