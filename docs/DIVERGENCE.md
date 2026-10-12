@@ -5494,7 +5494,17 @@ designed in rather than bolted on.
   their US card) in mednafen - the area's music starts on that load there
   too. So the load half matches the PlayStation for a save taken inside a
   scripted silence; the question came from the owner hearing music in the
-  cabin on the PC during that route's replay.
+  cabin on the PC during that route's replay. **Open, the same night:** on
+  mednafen, after the Nue boss battle of that route, the PlayStation
+  *starts* the area's song from its beginning - it does not resume the
+  pre-battle position the way the amendment below says it does, from the
+  owner's earlier listening. The two observations fit if the rule differs
+  by battle kind (an event or boss battle restarts, a random encounter
+  resumes); ours resumes after every battle. **To settle:** the owner, from
+  the same save on mednafen, a random encounter after the fight - resume or
+  restart; then the twin read of the battle-end path for the two kinds. If
+  the boss case restarts, the resume gets a condition and this entry a
+  second amendment.
 - **Verification:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=mode_flow,mode_rest,sound`
   exit 0 (the fuzzes run Capcom's rule, the switch armed after them). The
   owner's route `tools/recipes/musicStopCheck.txt` under `BOF3X_MUSIC_LOG=1`
