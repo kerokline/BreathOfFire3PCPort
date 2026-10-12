@@ -543,7 +543,21 @@ slices' copy. 11.3's rule stands under the exe host's header: commit
    the next step is one run of a `105a0c77` build with the same dump ticks,
    or a bisection over the 33 commits since it (57 files under `src/`,
    among them the `CodeBytes` reads in `src/game` and DIV-0093). Not fixed
-   here.
+   here. **Narrowed the same evening** (the main checkout's launcher, ini-less
+   copies, `--lang en-US --no-front --env BOF3X_OPT=none --env
+   BOF3X_LAYERING=0`, the stock `check` against `en_cutsceneAndNue_sh3a` /
+   `_sh3b`): **`main`'s own build (`a5946f64`, hosted) differs the same way** -
+   `0x905000` from 6985, `0x7E0000` and `0x929000` 6986..7023, plus
+   `0x93B000` from 5506 (finding 2's word) - so it is not state 3's; and
+   **the commit before DIV-0093 (`c0d099d2`, built in a scratch worktree)
+   differs the same way too**, so DIV-0093 is not the cause. Of the eight
+   commits since `105a0c77` only one other touches code that runs in play:
+   `7d162e4f`, the input script's keyboard keys and quit step, one line in
+   `Game_WinMain`'s loop (`InputScript_PausedLatch`) and `input_script.cpp`.
+   The pairs' own commit was built and run last (its result below, if the
+   session reached it): if it matches the pairs, `7d162e4f` is the cause; if
+   it differs too, the pairs' environment or data moved since the morning
+   (the install's `DAT/` or a save), not the code.
 
 ### 5.5 Not done yet
 
