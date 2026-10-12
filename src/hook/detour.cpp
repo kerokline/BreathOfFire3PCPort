@@ -5,6 +5,8 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "hook/code_bytes.h"
+#include "hook/host.h"
 #include "hook/log.h"
 
 namespace bof3 {
@@ -84,6 +86,9 @@ void VerifyImage() {
 void Inject(const char* name, std::uint32_t original, void* ours, bool instrument) {
     auto* orig = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(original));
     auto* mine = static_cast<std::uint8_t*>(ours);
+    // In the exe host the jmp is written on the int3 page (.stub), the only
+    // writes that page takes (exe_host.cpp's CheckStub).
+    if (!InCode(original)) Fatal("%s: Inject at 0x%08X, outside Capcom's code range", name, (unsigned)original);
     if (g_enabled + g_disabled == kMaxOwned) Fatal("%s: more than %d injected functions", name, kMaxOwned);
     g_owned[g_enabled + g_disabled] = original;
     g_owned_on[g_enabled + g_disabled] = instrument || !WantsOriginal(name);
@@ -99,7 +104,13 @@ void Inject(const char* name, std::uint32_t original, void* ours, bool instrumen
 }
 
 void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, void* ours, bool instrument) {
-    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
+    // The exe host has no Capcom code at `site`: the call is re-aimed in the
+    // code-byte store (code_bytes.h), where the readers of the site - which
+    // frame or text draw a screen of ours uses - find it as they do hosted.
+    // The displacement is the one the call would hold at `site`.
+    const bool store = IsExeHost();
+    if (store && !InCode(site)) Fatal("%s: RetargetCall at 0x%08X, outside Capcom's code", name, (unsigned)site);
+    auto* at = store ? CodeBytesForWrite(site, kJmpLen) : reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(site));
     std::int32_t rel;
     std::memcpy(&rel, at + 1, sizeof rel);
     // E8 rel32 is CALL; only the displacement is rewritten below.
@@ -107,6 +118,13 @@ void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
         Fatal("%s: 0x%08X is not a call to 0x%08X", name, (unsigned)site, (unsigned)expected);
     if (!instrument && WantsOriginal(name)) {
         Log("retarget OFF %-24s call at 0x%08X left on 0x%08X", name, (unsigned)site, (unsigned)expected);
+        return;
+    }
+    if (store) {
+        rel = static_cast<std::int32_t>(static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(ours)) - (site + kJmpLen));
+        std::memcpy(at + 1, &rel, sizeof rel);
+        Log("retarget ON  %-24s call at 0x%08X: 0x%08X -> ours %p (the code-byte store)", name, (unsigned)site,
+            (unsigned)expected, ours);
         return;
     }
     DWORD old = 0;
@@ -122,11 +140,22 @@ void RetargetCall(const char* name, std::uint32_t site, std::uint32_t expected, 
 
 void PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* expected,
                 const std::uint8_t* replacement, std::uint32_t count) {
-    auto* at = reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(address));
+    // An operand inside Capcom's code, in the exe host: patched in the
+    // code-byte store, where our readers of it look (code_bytes.h). .stub
+    // itself is never written but by Inject (exe_host.cpp's CheckStub).
+    const bool store = IsExeHost() && (InCode(address) || InCode(address + count - 1));
+    if (store && !(InCode(address) && InCode(address + count - 1)))
+        Fatal("%s: %u bytes at 0x%08X straddle the end of Capcom's code", name, (unsigned)count, (unsigned)address);
+    auto* at = store ? CodeBytesForWrite(address, count) : reinterpret_cast<std::uint8_t*>(static_cast<std::uintptr_t>(address));
     if (std::memcmp(at, expected, count) != 0)
         Fatal("%s: the %u bytes at 0x%08X are not the ones expected", name, (unsigned)count, (unsigned)address);
     if (WantsOriginal(name)) {
         Log("patch   OFF  %-24s %u bytes at 0x%08X left alone", name, (unsigned)count, (unsigned)address);
+        return;
+    }
+    if (store) {
+        std::memcpy(at, replacement, count);
+        Log("patch   ON   %-24s %u bytes at 0x%08X (the code-byte store)", name, (unsigned)count, (unsigned)address);
         return;
     }
     DWORD old = 0;
@@ -141,6 +170,10 @@ void PatchBytes(const char* name, std::uint32_t address, const std::uint8_t* exp
 
 void* CloneOriginal(const char* name, std::uint32_t original, std::uint32_t size,
                     const CloneCall* calls, int n_calls) {
+    // RefuseHostedSwitches (exe_host.cpp) stops BOF3X_SHADOW before this can
+    // be reached in the exe host; a clone asked for without it is a module
+    // that clones outside the fuzz, and there is nothing to copy.
+    if (IsExeHost()) Fatal("%s: CloneOriginal(0x%08X) in bof3x.exe, which maps no code of Capcom's to copy", name, (unsigned)original);
     auto* orig = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(original));
     if (IsOwned(original)) Fatal("%s: CloneOriginal after Inject - the entry is already a jmp", name);
     // A tracer or debugger patch at the entry would be copied as a relative
@@ -209,6 +242,10 @@ bool IsOwned(std::uint32_t original) {
         if (g_owned[i] == original) return true;
     return false;
 }
+
+int OwnedCount() { return g_enabled + g_disabled; }
+
+std::uint32_t OwnedAddress(int i) { return g_owned[i]; }
 
 bool IsEnabled(std::uint32_t original) {
     for (int i = 0; i < g_enabled + g_disabled; ++i)

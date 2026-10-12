@@ -51,6 +51,7 @@
 #include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -352,7 +353,7 @@ void YesNoLayout_Inject() {
 // the bytes themselves, so it is whatever went in, BOF3X_ORIGINAL=YesNoLayout
 // and the language included.
 YesNoLayout_LineFn YesNoLayout_ActiveLine() {
-    const auto* site = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(kLineCall));
+    const auto* site = bof3::CodeBytes(kLineCall, 5);
     std::int32_t rel;
     std::memcpy(&rel, site + 1, sizeof rel);
     const std::uint32_t target = kLineCall + 5 + static_cast<std::uint32_t>(rel);
@@ -365,7 +366,7 @@ YesNoLayout_LineFn YesNoLayout_ActiveLine() {
 // The 15 bytes from 0x5747F0 to the shift: the three patched instructions
 // with the two pushes between them (6A 00, 6A 18) that PatchBytes leaves.
 bool YesNoLayout_StopsMoved() {
-    const auto* at = reinterpret_cast<const std::uint8_t*>(static_cast<std::uintptr_t>(0x5747F0));
+    const auto* at = bof3::CodeBytes(0x5747F0, 15);
     static const std::uint8_t moved[] = {0xB9, 0x12, 0x01, 0x00, 0x00, 0x6A, 0x00, 0x6B, 0xC0, 0x38, 0x6A, 0x18, 0x90, 0x90, 0x90};
     static const std::uint8_t original[] = {0xB9, 0xFE, 0x00, 0x00, 0x00, 0x6A, 0x00, 0x8D, 0x04, 0xC0, 0x6A, 0x18, 0xC1, 0xE0, 0x02};
     if (std::memcmp(at, moved, sizeof moved) == 0) return true;

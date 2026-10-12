@@ -8,7 +8,10 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/draw_pool_room.h"
+#include "hook/code_bytes.h"
 #include "hook/detour.h"
+#include "hook/exe_layout.h"
+#include "hook/host.h"
 #include "hook/log.h"
 
 namespace draw_pool {
@@ -241,8 +244,19 @@ unsigned char* g_low_items = nullptr;
 void DrawPool_Reserve() {
     using namespace draw_pool_room;
     unsigned char* items = nullptr;
+    // The exe host: our image's .pool section, the one candidate - placed by
+    // the loader below 16 MB, stamped by the file (tools/make_exe.py).
+    if (bof3::IsExeHost()) {
+        static_assert(bof3::exe_layout::kPoolSize == kBytes && bof3::exe_layout::kPoolVa + kBytes <= 0x1000000,
+                      ".pool holds the 2,048 items below 16 MB");
+        auto* p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(bof3::exe_layout::kPoolVa));
+        if (std::memcmp(p, kStamp, sizeof kStamp) != 0)
+            bof3::Fatal("DIV-0062: bof3x.exe's .pool at 0x%08X does not carry the stamp", (unsigned)bof3::exe_layout::kPoolVa);
+        items = p;
+    }
     // The launcher's block, stamped, at one of the candidates (launcher.cpp).
     for (std::uint32_t at : kCandidates) {
+        if (items) break;
         MEMORY_BASIC_INFORMATION mbi;
         auto* p = reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(at));
         if (VirtualQuery(p, &mbi, sizeof mbi) == 0) continue;
@@ -340,7 +354,7 @@ void DrawPool_Grow() {
     // BOF3X_ORIGINAL=DrawPool: PatchBytes left every site alone (and said so);
     // read the first back, and leave the arrays the original's too.
     std::uint32_t first;
-    std::memcpy(&first, reinterpret_cast<const void*>(static_cast<std::uintptr_t>(kSites[0].at)), 4);
+    std::memcpy(&first, bof3::CodeBytes(kSites[0].at, 4), 4);
     if (first == kSites[0].was) return;
     draw_pool::g_items = items;
     draw_pool::g_free = free_list;

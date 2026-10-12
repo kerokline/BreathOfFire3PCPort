@@ -69,6 +69,12 @@ FetchContent_MakeAvailable(SDL3)
 # --- the injected DLL --------------------------------------------------------
 add_library(bof3x SHARED
   src/hook/dllmain.cpp
+  src/hook/host.cpp
+  src/hook/exe_host.cpp
+  src/hook/exe_icon.cpp
+  src/hook/code_bytes.cpp
+  src/common/sha256.cpp
+  src/common/icon_stamp.cpp
   src/hook/detour.cpp
   src/hook/exe_image.cpp
   src/hook/calltrace.cpp
@@ -675,7 +681,37 @@ target_include_directories(bof3x PRIVATE src third_party "${_gen_dir}")
 set_target_properties(bof3x PROPERTIES PREFIX "" OUTPUT_NAME "bof3x")
 # The Direct3D 11 render backend (docs/render-backend.md): the OS's own
 # libraries, nothing vendored; the shader compiler is d3dcompiler_47.dll.
-target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm SDL3::SDL3-static)
+# ole32 and windowscodecs: DIV-0095's icon - WIC encodes its 256 px PNG and
+# the self-test decodes the .ico files (src/hook/exe_icon.cpp).
+target_link_libraries(bof3x PRIVATE d3d11 dxgi d3dcompiler_47 uuid winmm bcrypt ole32 windowscodecs SDL3::SDL3-static)
+
+# --- bof3x.exe, our own executable (docs/state3-design.md section 1.3) ------
+# Written by tools/make_exe.py, not linked: lld will not place a section
+# before .text (docs/state3-build.md section 1.2). Based at 0x400000 and
+# spanning Capcom's range, it imports bof3x.dll!Engine_Main. The script reads
+# the layout from src/hook/exe_layout.h - the table the engine reads too -
+# and verifies what it wrote (section table, base, no relocations, stack,
+# imports, resources, and the DLL's Engine_Main export) with tools/pe_read.py;
+# a mismatch deletes the output and fails the build.
+# The target depends on a stamp, not on bof3x.exe itself: CMake reads a
+# DEPENDS path named <target>.exe as the target `bof3x` (the DLL) and drops
+# the file rule (measured 2026-10-11: the command never ran).
+set(_exe_out "${CMAKE_BINARY_DIR}/bof3x.exe")
+set(_exe_stamp "${CMAKE_BINARY_DIR}/bof3x_exe.verified")
+add_custom_command(
+  OUTPUT "${_exe_out}" "${_exe_stamp}"
+  COMMAND "${BOF3X_PYTHON}" "${CMAKE_SOURCE_DIR}/tools/make_exe.py"
+          --layout "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
+          --dll "$<TARGET_FILE:bof3x>"
+          --out "${_exe_out}"
+  COMMAND "${CMAKE_COMMAND}" -E touch "${_exe_stamp}"
+  DEPENDS bof3x
+          "${CMAKE_SOURCE_DIR}/tools/make_exe.py"
+          "${CMAKE_SOURCE_DIR}/tools/pe_read.py"
+          "${CMAKE_SOURCE_DIR}/src/hook/exe_layout.h"
+  COMMENT "Writing and verifying bof3x.exe (tools/make_exe.py)"
+  VERBATIM)
+add_custom_target(bof3x_exe ALL DEPENDS "${_exe_stamp}")
 
 # --- the launcher ------------------------------------------------------------
 # The settings dialog is a Win32 DIALOGEX resource driven by DialogBoxParam:
@@ -687,6 +723,8 @@ add_executable(bof3x_launcher
   src/launcher/config.cpp
   src/launcher/config_dialog.cpp
   src/launcher/exe_image.cpp
+  src/common/sha256.cpp
+  src/common/icon_stamp.cpp
   src/input/bindings.cpp
   src/input/pad_sdl.cpp
   src/launcher/launcher.rc)

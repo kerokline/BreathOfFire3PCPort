@@ -37,6 +37,7 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 // Rebound 2026-09-29 (round twelve group BE4, docs/battle_e4.md section 9): the constants here naming BE4's functions read
 // bof3::addr::<Name>; the values are unchanged (the fuzz keys on them).
@@ -899,7 +900,7 @@ S02_EXPORT void __cdecl ElemStrike_Kind(void) {
     static constexpr unsigned char kCases[12][2] = {{0, 0}, {1, 1}, {0, 2},   {1, 3},   {0, 4}, {1, 8},
                                                     {1, 9}, {1, 0xA}, {1, 0xB}, {1, 5}, {0, 6}, {0, 7}};
     const std::uint32_t index = (static_cast<std::uint32_t>(Long(Mem(kAbility))) & 0xFFFF) - 4u;
-    const unsigned c = index > 0x98 ? 11u : Mem(kKindIndex)[index];
+    const unsigned c = index > 0x98 ? 11u : bof3::CodeBytes(kKindIndex, 0x99)[index];
     if (c >= 12) PastTable("ElemStrike_Kind", c, 12);
     Sc()[3] = kCases[c][0];
     Sc()[4] = kCases[c][1];

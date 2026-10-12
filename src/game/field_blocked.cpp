@@ -21,6 +21,7 @@
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -622,10 +623,10 @@ void SelfTest(void* const (&theirs)[kCount]) {
 std::uint16_t ReadCellTable() {
     std::uint16_t mask = 0;
     for (unsigned nibble = 0; nibble < 16; ++nibble) {
-        const unsigned char index = At(0x518660 + nibble * 0x10)[0];
+        const unsigned char index = bof3::CodeBytes(0x518660, 0x100)[nibble * 0x10];
         if (index > 2) bof3::Fatal("field_blocked: cell table entry %u is %u", nibble, index);
         std::uint32_t target;
-        std::memcpy(&target, At(0x518654 + index * 4), sizeof target);
+        std::memcpy(&target, bof3::CodeBytes(0x518654, 0xC) + index * 4, sizeof target);
         if (target == 0x51864D) mask = static_cast<std::uint16_t>(mask | 1u << nibble);
         else if (target != 0x518650) bof3::Fatal("field_blocked: cell jump table entry %u is 0x%X", index, (unsigned)target);
     }

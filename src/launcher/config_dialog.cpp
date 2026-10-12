@@ -37,29 +37,10 @@ struct DialogState {
 // The ini's music= and cache= lines as a hand edit has them. The Music box's
 // first entry is the default, which an empty music= and music=seq both mean:
 // it keeps whichever the ini said, and writes nothing new unless the box moved.
-// The cache path is the ini's bytes in the ANSI code page, as the launcher
-// hands them to the game (SetEnvironmentVariableA) and the DLL reads them
-// (GetEnvironmentVariableA, music_seq.cpp Arm).
-
-std::wstring FromAnsi(const std::string& s) {
-    if (s.empty()) return std::wstring();
-    const int n = MultiByteToWideChar(CP_ACP, 0, s.data(), static_cast<int>(s.size()), nullptr, 0);
-    std::wstring w(static_cast<size_t>(n), L'\0');
-    MultiByteToWideChar(CP_ACP, 0, s.data(), static_cast<int>(s.size()), w.data(), n);
-    return w;
-}
-
-// False when the ANSI code page cannot hold `w`.
-bool ToAnsi(const std::wstring& w, std::string& out) {
-    out.clear();
-    if (w.empty()) return true;
-    BOOL lossy = FALSE;
-    const int n = WideCharToMultiByte(CP_ACP, 0, w.data(), static_cast<int>(w.size()), nullptr, 0, nullptr, &lossy);
-    if (n <= 0 || lossy) return false;
-    out.resize(static_cast<size_t>(n));
-    WideCharToMultiByte(CP_ACP, 0, w.data(), static_cast<int>(w.size()), out.data(), n, nullptr, &lossy);
-    return !lossy;
-}
+// The cache path is UTF-8, in the ini and in Config (ConfigCacheFromIni); the
+// launcher hands it to the game wide, and bof3x.exe - its code page UTF-8 by
+// its manifest - reads the same bytes (GetEnvironmentVariableA, music_seq.cpp
+// Arm). Any folder name can be given (docs/state3-design.md section 9).
 
 std::wstring DialogText(HWND dlg, int id) {
     const int n = GetWindowTextLengthW(GetDlgItem(dlg, id));
@@ -72,26 +53,25 @@ std::wstring DialogText(HWND dlg, int id) {
 // What the game will make of the folder, said under the box: the DLL's own
 // tests (music_seq.cpp Arm), so the note never promises what the game refuses.
 // The 226 is its kRootMax: MAX_PATH - 1 less the longest path it builds
-// (\base\bgm\bank\ + a 15-character bank name + .DAT).
+// (\base\bgm\bank\ + a 15-character bank name + .DAT), counted as the DLL
+// counts it - in the UTF-8 bytes it receives, up to three a character.
 void CacheNote(HWND dlg) {
     std::wstring w = DialogText(dlg, IDC_CACHE);
     const size_t b = w.find_first_not_of(L" \t"), e = w.find_last_not_of(L" \t");
     w = b == std::wstring::npos ? std::wstring() : w.substr(b, e - b + 1);   // ConfigLoad trims
-    std::string a;
     const wchar_t* note = L"";
     if (w.empty()) {
         note = L"No cache: the PC's MP3s play.";
-    } else if (!ToAnsi(w, a)) {
-        note = L"This path has characters the game cannot be given; choose another.";
     } else {
-        while (a.size() > 1 && (a.back() == '\\' || a.back() == '/')) a.pop_back();
-        const DWORD at = GetFileAttributesA(a.c_str());
+        while (w.size() > 1 && (w.back() == L'\\' || w.back() == L'/')) w.pop_back();
+        const std::string a = ConfigToUtf8(w);
+        const DWORD at = GetFileAttributesW(w.c_str());
         if (at == INVALID_FILE_ATTRIBUTES || !(at & FILE_ATTRIBUTE_DIRECTORY))
             note = L"Not a folder: the game will stop at start-up.";
         else if (a.size() > MAX_PATH - 1 - (sizeof "\\base\\bgm\\bank\\" - 1 + 15 + sizeof ".DAT" - 1))
-            note = L"Over 226 characters: the game will stop at start-up.";
+            note = L"Over 226 bytes as UTF-8: the game will stop at start-up.";
         else {
-            const DWORD bg = GetFileAttributesA((a + "\\base\\bgm").c_str());
+            const DWORD bg = GetFileAttributesW((w + L"\\base\\bgm").c_str());
             note = bg != INVALID_FILE_ATTRIBUTES && (bg & FILE_ATTRIBUTE_DIRECTORY)
                        ? L"Holds base\\bgm: the disc's songs play where it has them."
                        : L"No base\\bgm in it: the PC's MP3s play.";
@@ -295,7 +275,7 @@ void Populate(HWND dlg, const DialogState& state) {
     AddItem(dlg, IDC_MUSIC, L"The disc's songs where the cache has them (default)");
     AddItem(dlg, IDC_MUSIC, L"The PC's MP3s always");
     Select(dlg, IDC_MUSIC, cfg.music == "mp3" ? 1 : 0);
-    SetDlgItemTextW(dlg, IDC_CACHE, FromAnsi(cfg.cache).c_str());
+    SetDlgItemTextW(dlg, IDC_CACHE, ConfigFromUtf8(cfg.cache).c_str());
     CacheNote(dlg);
 
     // A box is ticked when opt= plays its layer now (an empty opt= the
@@ -350,21 +330,14 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.opt = ConfigOptEdit(cfg.opt, ConfigOptDefaultInstalled(state.game_dir, ConfigCacheDataRoot(*state.cfg)), boxes);
 }
 
-// The cache box as the ini's bytes, trimmed as ConfigLoad trims a line; false
-// (and the dialog stays open) when the ANSI code page cannot hold it.
-bool ReadCache(HWND dlg, Config& cfg) {
+// The cache box as the ini's UTF-8 bytes, trimmed as ConfigLoad trims a line.
+// Every path can be held since state 3: the refusal for characters the ANSI
+// code page lacked is gone.
+void ReadCache(HWND dlg, Config& cfg) {
     std::wstring w = DialogText(dlg, IDC_CACHE);
     const size_t b = w.find_first_not_of(L" \t"), e = w.find_last_not_of(L" \t");
     w = b == std::wstring::npos ? std::wstring() : w.substr(b, e - b + 1);
-    std::string a;
-    if (!ToAnsi(w, a)) {
-        MessageBoxW(dlg, L"The cache folder's path has characters the game cannot be given (the ANSI code page "
-                    L"holds no such character). Choose a folder whose path has none.",
-                    L"bof3x-launcher", MB_OK | MB_ICONWARNING);
-        return false;
-    }
-    cfg.cache = a;
-    return true;
+    cfg.cache = ConfigToUtf8(w);
 }
 
 // ---- DIV-0043: the SatPixie options dialog ----------------------------------
@@ -896,7 +869,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         switch (LOWORD(wp)) {
         case IDOK: {
             auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-            if (!ReadCache(dlg, *state->cfg)) return TRUE;
+            ReadCache(dlg, *state->cfg);
             ReadBack(dlg, *state);
             EndDialog(dlg, 1);
             return TRUE;

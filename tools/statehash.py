@@ -17,6 +17,13 @@ bytes  two raw dumps (BOF3X_STATEHASH_DUMP) compared byte for byte: the
        differing ranges with their symbols, and with --skip-out a skip list
        (BOF3X_STATEHASH_SKIP) of them to review - never feed it back unread.
 
+Runs hashed under different skip lists are refused, except where the run
+under test (check's NEW, diff's B) only adds ranges to the reference's:
+then every page none of the added ranges touches is compared, and those
+pages are named and left out (2026-10-11; --strict refuses anyway; the lists
+are found by their header hash among the committed versions of
+tools/statehash_skip.txt and --skip-list files).
+
 A BOF3SH3 file (2026-10-10) hashes our pointers in Capcom's pointer slots by
 what they name; one beside an older or BOF3X_STATEHASH_RAW=1 file is compared
 with a note (docs/state-hash.md section 7).
@@ -149,19 +156,124 @@ def report(per_page, run, total, what):
         print(f'0x{a:06X} {f:7d} {l:7d} {c:7d}  {names_in(a, a + run.page)}')
 
 
-def same_headers(runs):
+SKIP_FILE = 'tools/statehash_skip.txt'
+_lists = None
+
+
+def parse_skips(text):
+    """A skip list's (address, length) ranges in file order, read as
+    statehash.cpp's LoadSkips reads them: '#' starts a comment, a blank line is
+    skipped, every other line is ADDRESS LENGTH."""
+    out = []
+    for line in text.splitlines():
+        words = line.split('#', 1)[0].split()
+        if words:
+            out.append((int(words[0], 0), int(words[1], 0)))
+    return out
+
+
+def skip_hash(ranges):
+    """The header's skip list hash: FNV-1a over each range's address and
+    length as little-endian u32s, 0 for an empty list (statehash.cpp)."""
+    if not ranges:
+        return 0
+    h = 2166136261
+    for at_, ln in ranges:
+        for w in (at_, ln):
+            for b in range(4):
+                h = ((h ^ ((w >> (8 * b)) & 0xFF)) * 16777619) & 0xFFFFFFFF
+    return h
+
+
+def known_lists(extra=()):
+    """{(count, hash): ranges} for every skip list the tool can name: the
+    working tree's tools/statehash_skip.txt, every committed version of it
+    (git log), and the files given with --skip-list."""
+    global _lists
+    if _lists is None:
+        import subprocess
+        texts = []
+        try:
+            texts.append(open(os.path.join(ROOT, SKIP_FILE), encoding='utf-8').read())
+        except OSError:
+            pass
+        try:
+            revs = subprocess.run(['git', '-C', ROOT, 'log', '--format=%H', '--', SKIP_FILE],
+                                  capture_output=True, text=True, check=True).stdout.split()
+            for rev in revs:
+                texts.append(subprocess.run(['git', '-C', ROOT, 'show', f'{rev}:{SKIP_FILE}'],
+                                            capture_output=True, encoding='utf-8').stdout)
+        except (OSError, subprocess.CalledProcessError):
+            pass
+        _lists = {}
+        for t in texts:
+            r = parse_skips(t)
+            _lists.setdefault((len(r), skip_hash(r)), r)
+    for path in extra:
+        r = parse_skips(open(path, encoding='utf-8').read())
+        _lists[(len(r), skip_hash(r))] = r
+    return _lists
+
+
+def same_headers(runs, strict=False, skip_lists=()):
     """Refuse runs that were not hashed alike: a page holding a range one run
     skipped and another did not differs at every tick, which `check` would call
-    noise and never compare (round fourteen's review, item 3)."""
+    noise and never compare (round fourteen's review, item 3).
+
+    One exception (2026-10-11, docs/state-hash.md section 4): when the lists
+    differ only by ranges the run under test (the last) adds - the reference
+    side shares one list and every range of it is in the new one - every page none of the added ranges touches hashes alike under both
+    lists and is compared; the pages they touch are left out and named. The
+    lists are found by their header hash among the committed versions of the
+    skip list and the --skip-list files. --strict refuses as before.
+    Returns the set of page indices to leave out."""
     first = runs[0]
     for r in runs[1:]:
-        for what in ('base', 'pages', 'page', 'skips'):
+        for what in ('base', 'pages', 'page'):
             if getattr(r, what) != getattr(first, what):
                 sys.exit(f'{r.path}: {what} is {getattr(r, what)}, {first.path} has {getattr(first, what)} - '
-                         'the runs were not hashed alike (another BOF3X_STATEHASH_SKIP list?); record a new pair')
-        if r.skip_hash is not None and first.skip_hash is not None and r.skip_hash != first.skip_hash:
-            sys.exit(f"{r.path}: its skip list (hash {r.skip_hash:08X}) is not {first.path}'s ({first.skip_hash:08X}), "
-                     'though both have the same number of ranges; record a new pair')
+                         'the runs were not hashed alike; record a new pair')
+    keys = [(r.skips, r.skip_hash) for r in runs]
+    if any(r.skip_hash is None for r in runs):
+        # a BOF3SH1 file: the lists are compared by their length only, as before
+        keys = [(r.skips, None) for r in runs]
+    if len(set(keys)) == 1:
+        return set()
+    a, b = next((x, y) for x, y in zip(runs, runs[1:] + runs[:1]) if (x.skips, x.skip_hash) != (y.skips, y.skip_hash))
+    if strict or any(r.skip_hash is None for r in runs):
+        why = '--strict' if strict else 'a BOF3SH1 file has no list hash'
+        sys.exit(f"{b.path}: its skip list ({b.skips} ranges, hash {b.skip_hash or 0:08X}) is not {a.path}'s "
+                 f'({a.skips}, {a.skip_hash or 0:08X}) and {why}: the runs were not hashed alike; record a new pair')
+    lists = known_lists(skip_lists)
+    missing = [r for r in runs if (r.skips, r.skip_hash) not in lists]
+    if missing:
+        m = missing[0]
+        sys.exit(f'{m.path}: its skip list ({m.skips} ranges, hash {m.skip_hash:08X}) is no committed version of '
+                 f"{SKIP_FILE} and no --skip-list file, and the runs' lists differ: record a new pair, or name the "
+                 'list with --skip-list')
+    sets = [set(lists[k]) for k in keys]
+    # the run under test is the last (check's NEW, diff's B); the others are
+    # the reference side and must share one list, every range of it in NEW's
+    wide = len(runs) - 1
+    older = list(range(wide))
+    if len({frozenset(sets[i]) for i in older}) != 1 or not sets[0] < sets[wide]:
+        sys.exit(f'{runs[older[0]].path} and {runs[wide].path}: the skip lists differ by more than added ranges '
+                 '(a range removed or changed): the runs were not hashed alike; record a new pair')
+    added = sorted(sets[wide] - sets[older[0]])
+    out = {}
+    for at_, ln in added:
+        for pg in range((at_ - first.base) // first.page, (at_ + ln - 1 - first.base) // first.page + 1):
+            out.setdefault(pg, []).append((at_, ln))
+    print(f'note: {runs[wide].path} was hashed under {len(sets[wide])} skip ranges and '
+          + ', '.join(runs[i].path for i in older) + f' under {len(sets[older[0]])}, all of them in it; '
+          f'the {len(added)} added ranges touch {len(out)} pages, left out here (every other page hashes alike '
+          'under both lists; --strict refuses instead):')
+    for pg, rs in sorted(out.items()):
+        a0 = first.base + pg * first.page
+        print(f'  0x{a0:06X}  ' + ', '.join(f'0x{x:06X} {n} ({at(x)})' for x, n in rs))
+    return set(out)
+
+
     known = [r.skip_hash is not None for r in runs]
     if first.skips and any(known) and not all(known):
         print('note: a run here predates the skip list hash (BOF3SH1): the lists are compared by their length only')
@@ -202,13 +314,13 @@ def cmd_info(a):
 
 def cmd_diff(a):
     ra, rb = Run(a.a, a.align), Run(a.b, a.align)
-    same_headers([ra, rb])
+    out = same_headers([ra, rb], a.strict, a.skip_list)
     per, total = {}, 0
     for k, (sa, sb) in walk([ra, rb], a.lo, a.hi):
         total += 1
         if sa != sb:
             for p in range(ra.pages):
-                if sa[p] != sb[p]:
+                if sa[p] != sb[p] and p not in out:
                     v = per.get(p)
                     per[p] = (k, k, 1) if v is None else (v[0], k, v[2] + 1)
     report(per, ra, total, 'diff')
@@ -217,13 +329,15 @@ def cmd_diff(a):
 
 def cmd_check(a):
     ref, refb, new = Run(a.ref, a.align), Run(a.refb, a.align), Run(a.new, a.align)
-    same_headers([ref, refb, new])
+    out = same_headers([ref, refb, new], a.strict, a.skip_list)
     noise, per, total = {}, {}, 0
     for k, (sr, sb, sn) in walk([ref, refb, new], a.lo, a.hi):
         total += 1
         if sr == sb == sn:
             continue
         for p in range(ref.pages):
+            if p in out:
+                continue
             if sr[p] != sb[p]:
                 v = noise.get(p)
                 noise[p] = (k, k, 1) if v is None else (v[0], k, v[2] + 1)
@@ -280,6 +394,10 @@ def main():
         p.add_argument('--from', dest='lo', type=int, default=0)
         p.add_argument('--to', dest='hi', type=int, default=None)
         p.add_argument('--align', choices=['tick', 'recipe'], default='tick')
+        p.add_argument('--strict', action='store_true',
+                       help='refuse runs hashed under different skip lists, even when one only adds ranges')
+        p.add_argument('--skip-list', action='append', default=[], metavar='FILE',
+                       help='a skip list to know by its header hash, besides the committed versions of ' + SKIP_FILE)
 
     p = sub.add_parser('info'); p.add_argument('run'); p.set_defaults(fn=cmd_info)
     p = sub.add_parser('diff'); p.add_argument('a'); p.add_argument('b'); window(p); p.set_defaults(fn=cmd_diff)

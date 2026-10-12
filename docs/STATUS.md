@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-11)
+**Status:** IN PROGRESS (2026-10-11 evening)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -386,6 +386,19 @@ What is established:
   in-game binding screen is deferred ([`IDEAS.md`](IDEAS.md) I20).
 - Four comparable projects surveyed for what they learned the hard way
   ([`prior-art/`](prior-art/)).
+
+**State 3 is built (2026-10-11 afternoon and evening, `platform/state3`, the PR next):** `bof3x.exe`, an 8 KB image of
+ours based at `0x400000` whose sections occupy Capcom's range, written by `tools/make_exe.py` and verified at build time,
+imports `bof3x.dll` instead of being injected with it; `Engine_Main` maps `.rdata` and `.data` from the player's file or
+the cache, binds the import slots, fills the stub page with `int3` and lets `InjectAll` write the jumps, sets x87
+`0x027F`, and calls our `WinMain` on the main thread - no code of Capcom's is mapped ([`state3-design.md`](state3-design.md)
+the brief, [`state3-build.md`](state3-build.md) the build and its checks, DIV-0094). The hosted build stays the fuzz
+harness. The exe declares DPI awareness with DIV-0036's k from the display scale; the whelp portrait becomes its icon on
+the player's machine (DIV-0095, [`exe-icon.md`](exe-icon.md)). **The away batch:** the exe host identical to the hosted
+build on every page of the attract sequence and the ten Chinese routes; three findings, none the exe host's (four
+Chinese pairs stale since DIV-0092; three raw pointer words of ours under `en-US`; one `en-US` route differing from its
+pairs on `main`'s build too). **The owner has not yet seen it run.** Next: the disc-only round, which removes the last
+reads of `BOF3.exe` ([`HANDOFF.md`](HANDOFF.md) item 0).
 
 ## The immediate order of work
 

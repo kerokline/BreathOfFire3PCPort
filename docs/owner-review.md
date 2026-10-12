@@ -13,6 +13,16 @@ Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
 
+## To listen to, on the PlayStation (2026-10-11 night)
+
+- **Resume or restart after a random encounter.** From the `cutsceneAndNue`
+  save in mednafen (the US disc's port 1 card, slot 1, placed beside the
+  sibling's saves), after the Nue fight: walk into a random encounter and
+  listen to whether the area's song comes back where it left off or from its
+  start. The Nue boss restarted it (the owner, 2026-10-11); DIV-0092's
+  amendment says the PlayStation resumes. The answer decides whether the
+  resume gets a battle-kind condition.
+
 ## To listen to (the music investigation, 2026-10-06)
 
 - **The listening set is ready**: `analysis/bgm/listen/README.txt` says the order

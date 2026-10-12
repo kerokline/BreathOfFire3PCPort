@@ -131,6 +131,8 @@ def main():
                     help='BOF3X_LANG, an overlay tag, e.g. en-US (the bare en/fr/de/ja are retired, DIV-0005; '
                          'a recipe recorded under the bare `en` plays under en-US)')
     ap.add_argument('--original', default=None, metavar='LIST', help='BOF3X_ORIGINAL')
+    ap.add_argument('--host', choices=('exe', 'bof3'), default=None,
+                    help='bof3x.exe (exe) or the hosted BOF3.exe (bof3); default bof3 with --original, else exe')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
     ap.add_argument('--speed', type=int, default=1, metavar='N',
                     help='BOF3X_SPEED: N logic frames per frame of wall time (1..64). The recipe is frame-indexed, '
@@ -203,7 +205,7 @@ def run(a, env, slot0):
     word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
     logs the save loaded: the file is not read again after that."""
     started, frames = time.time(), ''
-    launch(a.launcher, a.game, env)
+    launch(a.launcher, a.game, env, a.host)
 
     stop = threading.Event()
     if not a.no_front:

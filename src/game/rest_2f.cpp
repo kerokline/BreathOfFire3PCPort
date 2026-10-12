@@ -32,6 +32,7 @@
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -1336,7 +1337,7 @@ extern "C" void __cdecl Win2_ItemList(void) {
 // the bound of its `mov ecx, -170` (s16), held there with +3 0. DIV-0041
 // widens the bound (widescreen.cpp kSlides); ours reads it from the operand.
 extern "C" void __cdecl MenuSlide_LeftOff170(void) {
-    const auto bound = static_cast<short>(Long(At(kLeftOff170Bound)));
+    const auto bound = static_cast<short>(bof3::CodeLong(kLeftOff170Bound));
     unsigned char* const moved = Cur();
     SetWord(moved + 4, Word(moved + 4) + 0xFFE0u);
     unsigned char* const r = Cur();
@@ -1511,18 +1512,19 @@ namespace {
 // widened one (as menu_lists.cpp's CheckSlideBound).
 void CheckLeftOff170() {
     const int wide = -170 - static_cast<int>(Widescreen_Live());
-    const int bound = Long(At(kLeftOff170Bound));
-    if (At(kLeftOff170Bound - 1)[0] != 0xB9 || (bound != -170 && bound != wide))
+    const std::uint8_t* const insn = bof3::CodeBytes(kLeftOff170Bound - 1, 5);
+    const int bound = static_cast<int>(bof3::CodeLong(kLeftOff170Bound));
+    if (insn[0] != 0xB9 || (bound != -170 && bound != wide))
         bof3::Fatal("rest_2f: 0x%X should be `mov ecx, -170` (or %d, DIV-0041), holds %02X then %d", kLeftOff170Bound - 1, wide,
-                    At(kLeftOff170Bound - 1)[0], bound);
+                    insn[0], bound);
 }
 // DIV-0059's site inside Win2_DrawItemList: an E8 reaching Text_DrawAt, or the
 // ListTitle_DrawAt BattleDraw_Inject put there. A site that is not E8 is
 // refused; the target is not checked.
 U ReadTitleCall() {
-    const unsigned char* const site = At(kTitleCall);
+    const unsigned char* const site = bof3::CodeBytes(kTitleCall, 5);
     if (site[0] != 0xE8) bof3::Fatal("rest_2f: 0x%X is not a call (%02X)", kTitleCall, site[0]);
-    const U target = kTitleCall + 5u + static_cast<U>(Long(site + 1));
+    const U target = bof3::CodeCallTarget(kTitleCall);
     return target;
 }
 }  // namespace

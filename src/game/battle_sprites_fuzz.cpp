@@ -384,6 +384,21 @@ const Raw kOurs[kFunctions] = {
 
 using FnPtr = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
 
+// Both sides of a round are called from this one call instruction, so they
+// see the same stack above their arguments. Two functions read past them:
+// Battle_OpenEnemyNames' eight-kinds walk reads the return address as list
+// entry 8 (its high word that entry's count), and Sprite_SetTint takes a
+// fifth argument the harness never passed. The two passes of the round loop,
+// unrolled by the compiler, had two call sites: in the build of 2026-10-11
+// they straddled a 64 KB boundary (0x1019FFD1 / 0x101A00E8) and every
+// eight-kinds round differed in the measured column - a fact of the layout,
+// not of either side. Here both see one return address, and a fifth dword
+// that is the round's own (derived from its arguments), the same for both.
+using FnPtr5 = std::uint32_t (__cdecl*)(std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t, std::uint32_t);
+__attribute__((noinline)) std::uint32_t CallSide(FnPtr fn, const std::uint32_t (&a)[4]) {
+    return reinterpret_cast<FnPtr5>(fn)(a[0], a[1], a[2], a[3], a[1] ^ a[2] ^ 0x5A5A5A5Au);
+}
+
 // --- the state ------------------------------------------------------------------
 
 struct Span { std::uint32_t at, size; unsigned region; };
@@ -635,7 +650,7 @@ Result RunOne(unsigned f, void* theirs, unsigned rounds) {
         for (int pass = 0; pass < 2; ++pass) {
             Apply(input, c.regions);
             const FnPtr fn = reinterpret_cast<FnPtr>(const_cast<void*>(pass ? kOurs[f] : theirs));
-            const std::uint32_t result = fn(a[0], a[1], a[2], a[3]) & c.result_mask;
+            const std::uint32_t result = CallSide(fn, a) & c.result_mask;
             State& out = pass ? our_out : their_out;
             Capture(out, c.regions);
             out.result = result;

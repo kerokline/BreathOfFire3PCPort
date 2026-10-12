@@ -122,7 +122,7 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             // (ConfigOptValid) rather than this file guessing.
             cfg.opt = value;
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
-            cfg.cache = value;
+            cfg.cache = ConfigCacheFromIni(value);   // UTF-8 (state 3); an older ini's ANSI bytes once
         } else if (key == "music") {  // DIV-0087
             if (value == "seq" || value == "mp3" || value.empty()) cfg.music = value;
         } else if (key == "filter") {
@@ -323,7 +323,7 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
     // DIV-0087: the cache root and the music source, as the ini has them; the
     // dll checks both.
     if (GetEnvironmentVariableW(L"BOF3X_CACHE", existing, 64) == 0 && !cfg.cache.empty())
-        SetEnvironmentVariableA("BOF3X_CACHE", cfg.cache.c_str());
+        SetEnvironmentVariableW(L"BOF3X_CACHE", ConfigFromUtf8(cfg.cache).c_str());   // the character, not the bytes
     if (GetEnvironmentVariableW(L"BOF3X_MUSIC", existing, 64) == 0 && !cfg.music.empty())
         SetEnvironmentVariableA("BOF3X_MUSIC", cfg.music.c_str());
 
@@ -442,17 +442,39 @@ std::wstring ConfigCacheDataRoot(const Config& cfg) {
     std::wstring out;
     if (n > 0 && n < MAX_PATH) out.assign(root, n);
     else if (n == 0 && !cfg.cache.empty()) {
-        // The ini's bytes are in the ANSI code page, as SetEnvironmentVariableA
-        // hands them to the DLL and the dialog shows them (FromAnsi) - not one
-        // byte a character as Latin-1, which named another folder wherever the
-        // code page is not Latin-1: every non-ASCII path under 936 (GBK), and
-        // 0x80..0x9F under 1252 (docs/code-page-audit.md).
-        const int w = MultiByteToWideChar(CP_ACP, 0, cfg.cache.data(), static_cast<int>(cfg.cache.size()), nullptr, 0);
-        out.resize(static_cast<size_t>(w > 0 ? w : 0));
-        if (w > 0) MultiByteToWideChar(CP_ACP, 0, cfg.cache.data(), static_cast<int>(cfg.cache.size()), out.data(), w);
+        // Config::cache is UTF-8 (ConfigCacheFromIni), as the launcher hands
+        // it to the game wide - not the ANSI code page, which could not hold
+        // every folder name (docs/code-page-audit.md section 4).
+        out = ConfigFromUtf8(cfg.cache);
     }
     while (out.size() > 1 && (out.back() == L'\\' || out.back() == L'/')) out.pop_back();
     return out;
+}
+
+std::wstring ConfigFromUtf8(const std::string& s) {
+    if (s.empty()) return std::wstring();
+    const int n = MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), nullptr, 0);
+    std::wstring w(static_cast<size_t>(n > 0 ? n : 0), L'\0');
+    if (n > 0) MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), w.data(), n);
+    return w;
+}
+
+std::string ConfigToUtf8(const std::wstring& w) {
+    if (w.empty()) return std::string();
+    const int n = WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), nullptr, 0, nullptr, nullptr);
+    std::string s(static_cast<size_t>(n > 0 ? n : 0), '\0');
+    if (n > 0) WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()), s.data(), n, nullptr, nullptr);
+    return s;
+}
+
+std::string ConfigCacheFromIni(const std::string& raw) {
+    if (raw.empty()) return raw;
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, raw.data(), static_cast<int>(raw.size()), nullptr, 0) > 0)
+        return raw;   // valid UTF-8 (ASCII included): as written
+    const int n = MultiByteToWideChar(CP_ACP, 0, raw.data(), static_cast<int>(raw.size()), nullptr, 0);
+    std::wstring w(static_cast<size_t>(n > 0 ? n : 0), L'\0');
+    if (n > 0) MultiByteToWideChar(CP_ACP, 0, raw.data(), static_cast<int>(raw.size()), w.data(), n);
+    return ConfigToUtf8(w);
 }
 
 std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir, const std::wstring& cache) {

@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "hook/exe_layout.h"
 #include "hook/log.h"
 
 namespace bof3 {
@@ -68,20 +69,14 @@ std::vector<unsigned char> ReadBin(const std::string& path, std::uint32_t size) 
     return out;
 }
 
-// The running image's .data: (address, initialised size, virtual size).
+// BOF3.exe's .data: (address, initialised size, virtual size) - its section
+// table's values (exe_layout.h), where this read the running image's header
+// before the exe host existed; the exe host checks them against the
+// player's file before copying (exe_host.cpp).
 void LiveData(std::uint32_t& va, std::uint32_t& raw, std::uint32_t& vsz) {
-    auto* base = reinterpret_cast<const unsigned char*>(GetModuleHandleW(nullptr));
-    auto* nt = reinterpret_cast<const IMAGE_NT_HEADERS32*>(base + reinterpret_cast<const IMAGE_DOS_HEADER*>(base)->e_lfanew);
-    const IMAGE_SECTION_HEADER* s = IMAGE_FIRST_SECTION(nt);
-    for (unsigned i = 0; i < nt->FileHeader.NumberOfSections; ++i, ++s) {
-        if (std::memcmp(s->Name, ".data\0\0\0", 8) == 0) {
-            va = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(base)) + s->VirtualAddress;
-            raw = s->SizeOfRawData;
-            vsz = s->Misc.VirtualSize;
-            return;
-        }
-    }
-    Fatal("BOF3X_EXEIMAGE: the running image has no .data section");
+    va = exe_layout::kDataVa;
+    raw = exe_layout::kDataBytes;
+    vsz = exe_layout::kBssEnd - exe_layout::kDataVa;
 }
 
 }  // namespace
@@ -143,6 +138,36 @@ void ExeImage_Check() {
             "(a disc-built image leaves pointer words and what no disc carries unfilled)",
             im.build.c_str(), (unsigned)equal, (unsigned)im.size);
     }
+}
+
+bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32_t bss_end) {
+    char dir[MAX_PATH];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_EXEIMAGE", dir, sizeof dir);
+    if (n == 0) return false;
+    if (n >= sizeof dir) Fatal("BOF3X_EXEIMAGE: the path is longer than %u", (unsigned)sizeof dir);
+    const std::string exe_dir = std::string(dir) + "\\base\\exe\\";
+    const Image im = ReadToml(exe_dir + "data.toml");
+    if (im.va != va || im.size != size || im.bss_end != bss_end)
+        Fatal("BOF3X_EXEIMAGE: data.toml's image is 0x%X + 0x%X (zero to 0x%X), BOF3.exe's .data 0x%X + 0x%X (to 0x%X)",
+              (unsigned)im.va, (unsigned)im.size, (unsigned)im.bss_end, (unsigned)va, (unsigned)size, (unsigned)bss_end);
+    // A disc-built image leaves the code pointers and what no disc carries
+    // unfilled (docs/exe-import-engine.md section 4.3): not runnable.
+    if (im.build != "pc-zh")
+        Fatal("BOF3X_EXEIMAGE: %s is built from %s, not from BOF3.exe (pc-zh): a disc-built image is not runnable",
+              exe_dir.c_str(), im.build.c_str());
+    std::uint32_t covered = va;
+    for (const Range& r : im.ranges) {
+        if (r.lo != covered || r.hi <= r.lo || r.hi > va + size)
+            Fatal("BOF3X_EXEIMAGE: data.toml's ranges do not cover the image in order at 0x%X", (unsigned)r.lo);
+        covered = r.hi;
+    }
+    if (covered != va + size)
+        Fatal("BOF3X_EXEIMAGE: data.toml's ranges end at 0x%X, not 0x%X", (unsigned)covered, (unsigned)(va + size));
+    const std::vector<unsigned char> bin = ReadBin(exe_dir + im.file, im.size);
+    std::memcpy(to, bin.data(), im.size);
+    Log("BOF3X_EXEIMAGE: .data at 0x%X from base/exe/data.bin (pc-zh), %u bytes: the source in the exe host",
+        (unsigned)va, (unsigned)im.size);
+    return true;
 }
 
 }  // namespace bof3

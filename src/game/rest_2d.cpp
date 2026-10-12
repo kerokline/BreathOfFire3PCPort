@@ -26,6 +26,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -120,9 +121,9 @@ const unsigned char* PickLine(U message) { return SH_CALL(Text_DrawAt)(0x1B, 0x1
 constexpr U kAskLineSite = 0x586E78;
 constexpr U kAskHandSite = 0x586E97;
 U SiteTarget(U site) {
-    const unsigned char* const p = At(site);
+    const unsigned char* const p = bof3::CodeBytes(site, 5);
     if (p[0] != 0xE8) bof3::Fatal("MasterScreen_AskYesNo: 0x%X is not a call (DIV-0027's site)", static_cast<unsigned>(site));
-    return site + 5 + static_cast<U>(Long(p + 1));
+    return bof3::CodeCallTarget(site);
 }
 const unsigned char* AskLine(U message) {
     const U target = SiteTarget(kAskLineSite);

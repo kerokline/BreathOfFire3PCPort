@@ -37,6 +37,7 @@
 #include "game/scenario_harness.h"
 #include "hook/detour.h"
 #include "hook/log.h"
+#include "hook/code_bytes.h"
 
 namespace {
 
@@ -64,7 +65,7 @@ U Key(const void* p) { return static_cast<U>(reinterpret_cast<std::uintptr_t>(p)
 U Sar(U v, unsigned n) { return static_cast<U>(static_cast<std::int32_t>(v) >> n); }
 // Where a call site sends its call now: Capcom's callee, or what a divergence
 // re-aimed it at (bof3::RetargetCall).
-U SiteTarget(U site) { return site + 5 + L(site + 1); }
+U SiteTarget(U site) { return bof3::CodeCallTarget(site); }
 
 // --- x87 as the original has it (rest_3f.cpp's form): `fld dword` through inline
 // assembly, every operation in long double, `fstp dword` out.
@@ -531,8 +532,9 @@ extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsign
             static const unsigned char kTwelve[] = {0x8D, 0x04, 0x40};   // lea eax,[eax+eax*2]
             static const unsigned char kEight[] = {0xD1, 0xE0, 0x90};    // DIV-0017: shl eax,1 / nop
             U width;
-            if (std::memcmp(At(at::kOptionWidth), kTwelve, sizeof kTwelve) == 0) width = n * 12u;
-            else if (std::memcmp(At(at::kOptionWidth), kEight, sizeof kEight) == 0) width = n * 8u;
+            const std::uint8_t* const code = bof3::CodeBytes(at::kOptionWidth, sizeof kTwelve);
+            if (std::memcmp(code, kTwelve, sizeof kTwelve) == 0) width = n * 12u;
+            else if (std::memcmp(code, kEight, sizeof kEight) == 0) width = n * 8u;
             else bof3::Fatal("Config_DrawRowOptions: the width code at 0x%X is neither the original's nor DIV-0017's",
                              (unsigned)at::kOptionWidth);
             const U xc = rx - width / 2 + static_cast<U>(x) + 0x74;
@@ -554,8 +556,8 @@ extern "C" void __cdecl Config_DrawRowOptions(int x, int y, unsigned row, unsign
 // row in the y argument's low byte) and Config_DrawControllerCell(x + 0x58, y',
 // the button word 0x903580 + 2 * {0, 1, 6, 2, 3, 4}[row] under y's high half).
 extern "C" void __cdecl Config_DrawControllerPanel(int x, int y) {
-    const int w = static_cast<signed char>(B(at::kPadFrameW));
-    const int h = static_cast<signed char>(B(at::kPadFrameH));
+    const int w = static_cast<signed char>(bof3::CodeByte(at::kPadFrameW));
+    const int h = static_cast<signed char>(bof3::CodeByte(at::kPadFrameH));
     SH_AT(Frame, SiteTarget(at::kPadFrameSite))(x, y, w, h);
     static const unsigned char kWords[6] = {0, 1, 6, 2, 3, 4};
     const U hi = static_cast<U>(y);
@@ -578,7 +580,7 @@ extern "C" void __cdecl Config_DrawControllerPanel(int x, int y) {
 // with the first's two y floats copied as dwords.
 extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
     const unsigned char style = B(at::kStyle);
-    SH_CALL(Menu_DrawBox)(x, y, B(at::kPadBoxWidth), 0x10, 0, style);
+    SH_CALL(Menu_DrawBox)(x, y, bof3::CodeByte(at::kPadBoxWidth), 0x10, 0, style);
     const U r = static_cast<U>(row) & 0xFF;
     if (r >= at::kPadNameCount)
         bof3::Fatal("Config_DrawControllerRow: row %u, past the six names of 0x%X - the original reads the dword after "
@@ -587,13 +589,14 @@ extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
     const auto* const name = At(L(at::kPadNames + 4 * r));
     const U len = static_cast<U>(std::strlen(reinterpret_cast<const char*>(name)));
     U k;
-    const unsigned char sib = At(at::kPadNameWidth)[2];
-    if (At(at::kPadNameWidth)[0] == 0x8D && At(at::kPadNameWidth)[1] == 0x04 && sib == 0x49) k = 6;
-    else if (At(at::kPadNameWidth)[0] == 0x8D && At(at::kPadNameWidth)[1] == 0x04 && sib == 0x09) k = 4;
+    const std::uint8_t* const lea = bof3::CodeBytes(at::kPadNameWidth, 3);
+    const unsigned char sib = lea[2];
+    if (lea[0] == 0x8D && lea[1] == 0x04 && sib == 0x49) k = 6;
+    else if (lea[0] == 0x8D && lea[1] == 0x04 && sib == 0x09) k = 4;
     else
         bof3::Fatal("Config_DrawControllerRow: the width code at 0x%X is neither the original's nor DIV-0026's",
                     (unsigned)at::kPadNameWidth);
-    const int edge = static_cast<signed char>(B(at::kPadNameEdge));
+    const int edge = static_cast<signed char>(bof3::CodeByte(at::kPadNameEdge));
     SH_AT(DrawText, SiteTarget(at::kPadNameSite))(x - static_cast<int>(len * k) + edge, y + 1, 0, 0xFF, name);
     unsigned char* const prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetLineF2)(prim);
@@ -611,8 +614,9 @@ extern "C" void __cdecl Config_DrawControllerRow(int x, int y, int row) {
     SH_CALL(Gfx_CommitPrim)(1, 0x20);
     static const unsigned char kSecond[] = {0x8B, 0x35, 0x70, 0x06, 0x7E, 0x00};   // mov esi, [Gfx_PacketNext]
     static const unsigned char kSkip[] = {0xEB, 0x3B, 0x90, 0x90, 0x90, 0x90};     // DIV-0051: jmp over the second cell
-    if (std::memcmp(At(at::kPadSecondCell), kSkip, sizeof kSkip) == 0) return;
-    if (std::memcmp(At(at::kPadSecondCell), kSecond, sizeof kSecond) != 0)
+    const std::uint8_t* const second = bof3::CodeBytes(at::kPadSecondCell, sizeof kSecond);
+    if (std::memcmp(second, kSkip, sizeof kSkip) == 0) return;
+    if (std::memcmp(second, kSecond, sizeof kSecond) != 0)
         bof3::Fatal("Config_DrawControllerRow: the code at 0x%X is neither the original's nor DIV-0051's",
                     (unsigned)at::kPadSecondCell);
     unsigned char* const prim2 = Gfx_PacketNext;
