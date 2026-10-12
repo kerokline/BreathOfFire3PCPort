@@ -36,6 +36,7 @@
 // start-up fuzz can stand recorders in for the callees.
 #include "game/area_w2e.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -47,6 +48,7 @@
 #include "game/area_harness.h"
 #include "game/area_w2e_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -915,7 +917,9 @@ extern "C" void __cdecl Area104_Kind5CFollow(void) {
 // 0xD8..0xE0; u and CLUT from a two-entry stack table by (bar & 0xFF) - bar 0
 // u 0x98, CLUT 0x780B; bar 1 u 0x90, CLUT 0x780E - u to u + 4; tpage 0xF,
 // colour 0x80 x 3; Gfx_CommitPrim(2, 0x48). A bar past 1 reads the caller's
-// return address as the table in the original: ours aborts.
+// return address as the table in the original: ours aborts. DIV-0041: right-
+// anchored in the wide picture, x + Widescreen_Anchor() (the PSP's 228 -> 260;
+// the owner's answer of 2026-10-12), with its frame (Area121_GaugeSprite).
 extern "C" void __cdecl Area104_DrawGauge(U width, U bar) {
     static const unsigned char kTable[4] = {0xB0, 0x98, 0xE0, 0x90};
     unsigned char* const prim = Gfx_PacketNext;
@@ -924,8 +928,9 @@ extern "C" void __cdecl Area104_DrawGauge(U width, U bar) {
     if (i >= 4) bof3::Fatal("Area104_DrawGauge: bar %u is past its 2-entry table", static_cast<unsigned>(bar & 0xFF));
     const unsigned char u = kTable[i + 1];
     SetWord(prim + 0x16, 0x7800u | static_cast<U>(kTable[i] >> 4));
-    const float left = 228.0f;
-    const float right = static_cast<float>(static_cast<std::int32_t>(width & 0xFF)) + 228.0f;
+    const float anchor = static_cast<float>(Widescreen_Anchor());
+    const float left = 228.0f + anchor;
+    const float right = static_cast<float>(static_cast<std::int32_t>(width & 0xFF)) + 228.0f + anchor;
     const float top = 29.0f, bottom = 39.0f;
     std::memcpy(prim + 0x08, &left, 4);
     std::memcpy(prim + 0x28, &left, 4);
@@ -1161,7 +1166,7 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
     const std::int32_t dx = S16(At(at::kLeaderCellWordX)) - 0x25;
     const std::int32_t dz = S16(At(at::kLeaderCellWordZ)) - 0x2D;
     const std::int32_t cx = static_cast<std::int32_t>(static_cast<U>(AH_CALL(Math_Cos)(0x200)) * static_cast<U>(dx - dz)) >> 12;
-    const std::int32_t sx = cx + 0xFA;
+    const std::int32_t sx = cx + 0xFA + Widescreen_Anchor();   // DIV-0041: with the panel (the PSP's 250 -> 282)
     const std::int32_t cz = static_cast<std::int32_t>(static_cast<U>(AH_CALL(Math_Cos)(0x200)) * static_cast<U>(dz + dx)) >> 12;
     const std::int32_t sy = cz + 0xAF;
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x3E, 0);
@@ -1205,22 +1210,28 @@ extern "C" void __cdecl Area104_Kind6ACountdown(void) {
 // Area104_PanelTris 0x61BC44 (0x5A7570, semi-transparent, colour (0, 0, 0xB8),
 // each vertex's x and y from the row's s16 words as floats, Gfx_CommitPrim(2,
 // 0x2C)). Every eighth frame the live CLUT word 0x811446 = 0x109F (Frame_Counter
-// bit 3) or 8, and Gfx_ClutStripDirty + 1.
+// bit 3) or 8, and Gfx_ClutStripDirty + 1. DIV-0041: the panel is anchored
+// to the right edge in the wide picture - every x (the quad's and the
+// triangles') + Widescreen_Anchor(), as the PSP moves the quad's 210 / 255 /
+// 300 by 32 and the triangle table's x by 32 at load; the countdown's box and
+// text stay centred, as there. 0 unarmed or narrow.
 extern "C" void __cdecl Area104_DrawPanel(void) {
     unsigned char* const quad = Gfx_PacketNext;
     AH_CALL(Gpu_SetPolyFT4)(quad);
     AH_CALL(Gpu_SetSemiTrans)(quad, 1);
     quad[0x24] = quad[0x44] = quad[0x35] = quad[0x45] = 0x40;
     const auto put = [](unsigned char* p, U bits) { std::memcpy(p, &bits, 4); };
-    put(quad + 0x08, 0x437F0000);   // 255.0
-    put(quad + 0x38, 0x437F0000);
+    const int anchor = Widescreen_Anchor();
+    const auto putx = [&](unsigned char* p, float x) { put(p, std::bit_cast<U>(x + static_cast<float>(anchor))); };
+    putx(quad + 0x08, 255.0f);   // 0x437F0000 unanchored
+    putx(quad + 0x38, 255.0f);
     put(quad + 0x1C, 0x43330000);   // 179.0
     put(quad + 0x2C, 0x43330000);
     SetWord(quad + 0x26, 0x1E);
     SetWord(quad + 0x16, 0x7BC6);
     quad[0x14] = quad[0x34] = quad[0x15] = quad[0x25] = 0;
-    put(quad + 0x18, 0x43960000);   // 300.0
-    put(quad + 0x28, 0x43520000);   // 210.0
+    putx(quad + 0x18, 300.0f);   // 0x43960000 unanchored
+    putx(quad + 0x28, 210.0f);   // 0x43520000 unanchored
     put(quad + 0x0C, 0x43060000);   // 134.0
     put(quad + 0x3C, 0x43600000);   // 224.0
     quad[4] = quad[5] = quad[6] = 0x80;
@@ -1232,7 +1243,7 @@ extern "C" void __cdecl Area104_DrawPanel(void) {
         AH_CALL(Gpu_SetSemiTrans)(prim, 1);
         static const unsigned kOffsets[6] = {0x08, 0x14, 0x20, 0x0C, 0x18, 0x24};
         for (unsigned w = 0; w < 6; ++w) {
-            const float f = static_cast<float>(S16(At(row + w * 2)));
+            const float f = static_cast<float>(S16(At(row + w * 2)) + (w < 3 ? anchor : 0));   // words 0..2 are x
             if (w == 5) {
                 prim[4] = 0;
                 prim[5] = 0;

@@ -31,6 +31,7 @@
 // are read in place by any index, as the originals read them.
 #include "game/magic_s38.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -38,6 +39,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -81,7 +83,8 @@ constexpr unsigned kShards = 32;
 constexpr std::uint32_t kRecordPool = 0x6BAD60;     // MeteorStrike_RecordPool, 48
 constexpr unsigned kRecords = 48;
 
-constexpr std::int32_t kRight = 0x439F8000;    // 319.0f
+// The fills' bottom edge; their 319.0 right edges are Widescreen_FillRight
+// (DIV-0041).
 constexpr std::int32_t kBottom = 0x436F0000;   // 239.0f
 
 unsigned char* Sc() { return Sprite_Current; }
@@ -328,22 +331,26 @@ S38_EXPORT void __cdecl TempestFlash_Draw(void) {
     unsigned char* const p = Gfx_PacketNext;
     MH_CALL(Gpu_SetPolyG4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, 1);
+    // DIV-0041: x from Widescreen_FillX() to 319 + the columns (the PSP's
+    // -32..351); 0..319 while the fills are unarmed, as the fuzz compares.
+    const auto left = std::bit_cast<std::int32_t>(Widescreen_FillX());
+    const auto right = std::bit_cast<std::int32_t>(Widescreen_FillRight(319.0f));
     if (Owner()[8] & 1) {
-        SetLong(p + 8, 0);
+        SetLong(p + 8, left);
         SetLong(p + 0xC, 0);
-        SetLong(p + 0x18, kRight);
+        SetLong(p + 0x18, right);
         SetLong(p + 0x1C, 0);
-        SetLong(p + 0x28, 0);
+        SetLong(p + 0x28, left);
         SetLong(p + 0x2C, kBottom);
-        SetLong(p + 0x38, kRight);
+        SetLong(p + 0x38, right);
     } else {
-        SetLong(p + 8, kRight);
+        SetLong(p + 8, right);
         SetLong(p + 0xC, 0);
-        SetLong(p + 0x18, 0);
+        SetLong(p + 0x18, left);
         SetLong(p + 0x1C, 0);
-        SetLong(p + 0x28, kRight);
+        SetLong(p + 0x28, right);
         SetLong(p + 0x2C, kBottom);
-        SetLong(p + 0x38, 0);
+        SetLong(p + 0x38, left);
     }
     SetLong(p + 0x3C, kBottom);
     {
@@ -780,7 +787,9 @@ S38_EXPORT void __cdecl Magic225Veil_DrawBurst(int x, int y, int radius, int kin
 
 // original 0x4F9980: the shade - one flat quad over the whole screen, grey
 // (+0xA + 1) x 15 (Scratch_Swap), semi-transparent by +0xB (its abr, and the
-// tpage ((+0xB & 3) << 5) | 0x15), on the veil's layer.
+// tpage ((+0xB & 3) << 5) | 0x15), on the veil's layer. Under DIV-0041 its x
+// runs from Widescreen_FillX() to 319 + the columns (the PSP's -32..351);
+// 0..319 while the fills are unarmed, so the fuzz compares the original's.
 S38_EXPORT void __cdecl Magic225Veil_DrawShade(void) {
     MH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 1, ((Sc()[0xB] & 3u) << 5) | 0x15u, 0);
     MH_CALL(Gfx_CommitPrim)(Sc()[0x29], 0xC);
@@ -788,13 +797,15 @@ S38_EXPORT void __cdecl Magic225Veil_DrawShade(void) {
     MH_CALL(Gpu_SetPolyF4)(p);
     MH_CALL(Gpu_SetSemiTrans)(p, Sc()[0xB]);
     SetSD(0xC, (static_cast<std::uint32_t>(Sc()[0xA]) + 1) * 15);
-    SetLong(p + 8, 0);
+    const auto left = std::bit_cast<std::int32_t>(Widescreen_FillX());
+    const auto right = std::bit_cast<std::int32_t>(Widescreen_FillRight(319.0f));
+    SetLong(p + 8, left);
     SetLong(p + 0xC, 0);
-    SetLong(p + 0x14, kRight);
+    SetLong(p + 0x14, right);
     SetLong(p + 0x18, 0);
-    SetLong(p + 0x20, 0);
+    SetLong(p + 0x20, left);
     SetLong(p + 0x24, kBottom);
-    SetLong(p + 0x2C, kRight);
+    SetLong(p + 0x2C, right);
     SetLong(p + 0x30, kBottom);
     p[4] = SB(0xC);
     p[5] = SB(0xC);

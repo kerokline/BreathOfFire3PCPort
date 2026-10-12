@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_window_draw_callees.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -217,14 +218,17 @@ extern "C" void __cdecl BattleWin_DrawQuadF4(int x, int y, int shape, int shade)
 
 // original 0x444900 (PSX 0x801D9C50): a TILE at (s16 x, s16 y) of size
 // `size` - u16 w, u16 h of the 4-byte records at 0x64E268 - coloured and
-// made semi-transparent as BattleWin_DrawQuadF4.
+// made semi-transparent as BattleWin_DrawQuadF4. DIV-0041: size 11, the
+// full-frame tile, over the wide frame (Widescreen_BattleTile).
 extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
     unsigned char* const p = Next();
     g.set_tile(p);
-    Put(p + 0x08, F(S16(static_cast<std::uint32_t>(x))));
-    Put(p + 0x0C, F(S16(static_cast<std::uint32_t>(y))));
     const unsigned char* const t = At(at::kTileSizes + ((static_cast<unsigned>(size) & 0xFF) << 2));
-    Put(p + 0x14, F(Word(t)));
+    int sx = S16(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
+    Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
+    Put(p + 0x08, F(sx));
+    Put(p + 0x0C, F(S16(static_cast<std::uint32_t>(y))));
+    Put(p + 0x14, F(w));
     Put(p + 0x18, F(Word(t + 2)));
     const unsigned row = static_cast<unsigned>(shade) & 0xFF;
     ShadeColour(p, row);
@@ -234,14 +238,16 @@ extern "C" void __cdecl BattleWin_DrawTile(int x, int y, int size, int shade) {
 
 // original 0x4449E0 (PSX 0x801D9D8C): the same tile in a given 15-bit colour -
 // as the PlayStation has it, r from bits 10..14 and b from bits 0..4 - made
-// semi-transparent by `abe`'s bit 0.
+// semi-transparent by `abe`'s bit 0. DIV-0041: size 11 as BattleWin_DrawTile.
 extern "C" void __cdecl BattleWin_DrawTileRgb(int x, int y, int size, int colour, int abe) {
     unsigned char* const p = Next();
     g.set_tile(p);
-    Put(p + 0x08, F(S16(static_cast<std::uint32_t>(x))));
-    Put(p + 0x0C, F(S16(static_cast<std::uint32_t>(y))));
     const unsigned char* const t = At(at::kTileSizes + ((static_cast<unsigned>(size) & 0xFF) << 2));
-    Put(p + 0x14, F(Word(t)));
+    int sx = S16(static_cast<std::uint32_t>(x)), w = static_cast<int>(Word(t));
+    Widescreen_BattleTile(static_cast<unsigned>(size) & 0xFF, sx, w);
+    Put(p + 0x08, F(sx));
+    Put(p + 0x0C, F(S16(static_cast<std::uint32_t>(y))));
+    Put(p + 0x14, F(w));
     Put(p + 0x18, F(Word(t + 2)));
     const auto c = static_cast<std::uint32_t>(colour);
     p[4] = static_cast<unsigned char>(((c >> 10) & 0x1F) << 3);

@@ -361,6 +361,13 @@ came from.
 6. **The time and money boxes:** the owner will check on the PSP. They stay
    as they are until then.
 
+**Built** (2026-10-12, group WA): [`psp-widescreen-a.md`](psp-widescreen-a.md) -
+(a) at 53 columns, the 25 unpaired fill functions of 2.2 paired (15 already
+wide, 9 widened, one with no PC twin found), and two corrections to this reading: the
+PSP framed the dialogue box's own tables `0x66ADD8` / `0x66ADE8` too (2.6
+lists only `MsgBox_PlacementTable`), and the gauge's frame moves inside its
+sprite function. The ending's letterbox (2.7) stays, as answered.
+
 ## 7. What was not verified
 
 - Nothing was seen in play, on the PSP or on ours. Every "what it is" and

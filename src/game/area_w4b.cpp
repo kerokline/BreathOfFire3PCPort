@@ -1085,10 +1085,18 @@ extern "C" void __cdecl Area172_EffectA5Start(void) {
     e[1] = 1;
 }
 
+// The 64 x 32 panel's x for effect kind 0xA5's two states: 0xDC, and under
+// DIV-0041 0xDC + Widescreen_Anchor() - anchored to the right edge, keeping
+// the original's 36 columns to it. The PSP moved it (220, 200) -> (256, 190)
+// (psp-widescreen-placements.md 2.6): +36 for its 32 columns, near enough the
+// same anchor, and -10 rows to keep it inside its 216-row crop, which ours
+// does not have - so y stays 0xC8. 0xDC unarmed or narrow.
+static int PanelX() { return 0xDC + Widescreen_Anchor(); }
+
 // original 0x428240 (Area172_EffectStates[1]): the word +0x2E + 10; above
 // 0x190 (signed): the byte after MoveScript_Var7 + 1 and state 2. Then
 // Area172_DrawPanel(0xDC, 0xC8) and Area172_DrawShade(+0x2E, 0xC8) (the word
-// read again after the first draw).
+// read again after the first draw). DIV-0041: the panel's x is PanelX().
 extern "C" void __cdecl Area172_EffectA5Grow(void) {
     unsigned char* const e = Sprite_Current;
     AddWord(e + 0x2E, 10);
@@ -1096,12 +1104,13 @@ extern "C" void __cdecl Area172_EffectA5Grow(void) {
         B(at::kVar7b) = static_cast<unsigned char>(B(at::kVar7b) + 1);
         e[1] = 2;
     }
-    AH_CALL(Area172_DrawPanel)(0xDC, 0xC8);
+    AH_CALL(Area172_DrawPanel)(PanelX(), 0xC8);
     AH_CALL(Area172_DrawShade)(static_cast<int>(Word(Sprite_Current + 0x2E)), 0xC8);
 }
 
-// original 0x428290 (Area172_EffectStates[2]): Area172_DrawPanel(0xDC, 0xC8).
-extern "C" void __cdecl Area172_EffectA5Hold(void) { AH_CALL(Area172_DrawPanel)(0xDC, 0xC8); }
+// original 0x428290 (Area172_EffectStates[2]): Area172_DrawPanel(0xDC, 0xC8);
+// DIV-0041: the x is PanelX().
+extern "C" void __cdecl Area172_EffectA5Hold(void) { AH_CALL(Area172_DrawPanel)(PanelX(), 0xC8); }
 
 // original 0x4282B0 (called by effect kind 0xA5's states 1 and 2): a POLY_FT4
 // at Gfx_PacketNext, the arguments' low words signed: (x, y)..(x + 0x40, y +

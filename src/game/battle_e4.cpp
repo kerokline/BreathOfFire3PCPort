@@ -29,6 +29,7 @@
 // recorders in for the callees.
 #include "game/battle_e4.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -36,6 +37,7 @@
 #include "game/battle_e4_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -226,10 +228,12 @@ const unsigned char* OptionMessage(unsigned base) { return BH_CALL(Msg_SystemPtr
 
 // original 0x444660 (PSX 0x801D98D0, gap44): the whole screen dimmed - a TILE
 // at (0, 0) of 960.0 x 240.0 in grey 0x28, semi-transparent (mode 1), after
-// the draw mode for the page (0x3C0, 0). BE1's 0x42EE00 calls it.
+// the draw mode for the page (0x3C0, 0). BE1's 0x42EE00 calls it. DIV-0041:
+// its x from Widescreen_FillX(), as the PSP's -32 (the 960 already reaches
+// past the right edge); 0 while the fills are unarmed, as the fuzz compares.
 extern "C" void __cdecl BattleWin_DimScreen(void) {
     unsigned char* const p = TileHead();
-    SetLong(p + 8, 0);
+    SetLong(p + 8, std::bit_cast<std::int32_t>(Widescreen_FillX()));
     SetLong(p + 0xC, 0);
     SetLong(p + 0x14, 0x44700000);   // 960.0f
     SetLong(p + 0x18, 0x43700000);   // 240.0f
@@ -242,13 +246,16 @@ extern "C" void __cdecl BattleWin_DimScreen(void) {
 
 // original 0x4446E0 (PSX 0x801D997C, gap44): BattleWin_DrawTile's tile (s16 x,
 // s16 y; w, h the u16 pair of 0x64E268 by the size byte) in the colour of the
-// three bytes 0x903850..0x903852, semi-transparent (mode 1).
+// three bytes 0x903850..0x903852, semi-transparent (mode 1). DIV-0041: size
+// 11 as BattleWin_DrawTile (Widescreen_BattleTile).
 extern "C" void __cdecl BattleWin_DrawTileTint(int x, int y, int size) {
     unsigned char* const p = TileHead();
-    PutFloat(p + 8, S16(static_cast<U>(x)));
-    PutFloat(p + 0xC, S16(static_cast<U>(y)));
     const unsigned char* const t = At(at::kTileSizes + (Low(static_cast<U>(size)) << 2));
-    PutFloat(p + 0x14, Word(t));
+    int sx = S16(static_cast<U>(x)), w = static_cast<int>(Word(t));
+    Widescreen_BattleTile(Low(static_cast<U>(size)), sx, w);
+    PutFloat(p + 8, sx);
+    PutFloat(p + 0xC, S16(static_cast<U>(y)));
+    PutFloat(p + 0x14, w);
     PutFloat(p + 0x18, Word(t + 2));
     p[4] = B(at::kTint);
     p[5] = B(at::kTint + 1);

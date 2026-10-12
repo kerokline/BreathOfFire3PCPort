@@ -1140,13 +1140,16 @@ extern "C" void __cdecl Area121_Kind5CFollow(void) {
 // (Gpu_SetDrawMode(prim, 0, 0, 0x9C, 0)) committed to slot 2; at
 // Gfx_PacketNext (read again) a SPRT: x and y as floats of the arguments' low
 // words, u 0, v (n << 5) + 0x78 (a byte), 0x50 x 0x20, CLUT 0x7B80, colour 0x80
-// x 3; Gfx_CommitPrim(2, 0x1C).
+// x 3; Gfx_CommitPrim(2, 0x1C). DIV-0041: the gauge's frame is anchored to
+// the right edge in the wide picture - x + Widescreen_Anchor(), as the PSP
+// adds 32 here (its twin's `addiu x, x, 0x20`, JP 0x24407C) - with its bars
+// (Area104_DrawGauge); the owner's answer of 2026-10-12. 0 unarmed or narrow.
 extern "C" void __cdecl Area121_GaugeSprite(int x, int y, unsigned n) {
     AH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x9C, 0);
     AH_CALL(Gfx_CommitPrim)(2, 0xC);
     unsigned char* const prim = Gfx_PacketNext;
     AH_CALL(Gpu_SetSprt)(prim);
-    const float fx = static_cast<float>(static_cast<short>(x));
+    const float fx = static_cast<float>(static_cast<short>(x) + Widescreen_Anchor());
     const float fy = static_cast<float>(static_cast<short>(y));
     std::memcpy(prim + 8, &fx, 4);
     prim[0x15] = static_cast<unsigned char>((n << 5) + 0x78);
