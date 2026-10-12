@@ -10441,7 +10441,6 @@ pc	kind	target
 0x64E140	code	BattleObj_SpecialCue
 0x64E144	code	BattleObj_SpecialWait
 0x64E324	data	0x643325
-0x64E328	number	-
 0x64E3E8	number	-
 0x64E3EC	code	BattleTarget_ShowPrompt
 0x64E3F0	code	BattleTarget_PickDispatch
@@ -16916,9 +16915,6 @@ pc	kind	target
 0x66399C	data	0x66A130
 0x6639A0	data	0x66A138
 0x6639A4	data	0x66A140
-0x6639AC	data	0x643325
-0x6639C4	data	0x643825
-0x6639CC	data	0x643325
 0x663AFC	code	MoveCmd_Op88Start
 0x663B00	code	MoveCmd_Op88Fade
 0x663B04	code	MoveCmd_Op87Start
@@ -18700,10 +18696,6 @@ pc	kind	target
 0x66ADC4	number	-
 0x66ADC8	number	-
 0x66ADCC	number	-
-0x66AE1C	number	-
-0x66AE20	number	-
-0x66AE24	number	-
-0x66AE28	number	-
 0x66AE40	code	MenuWin_Hand
 0x66AE44	code	Win1_TitleStrip
 0x66AE48	code	Win1_ButtonRow
