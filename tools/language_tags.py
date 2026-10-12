@@ -73,3 +73,32 @@ def note_retired_overlays(dat_dir):
               % (dat_dir, len(old), "s" if len(codes) > 1 else "", ", ".join(codes),
                  ", ".join("%s.*.DAT" % c for c in codes)))
     return old
+
+
+def original_available(game, cache=None):
+    """DIV-TBD-LX-1 (docs/disc-only-install.md): whether `original`, the port's
+    Chinese text, can be played from `game` with `cache` as the data cache:
+    BOF3.exe in the game directory (a PC install - its DAT/ is the port's;
+    `importer.py install --base` refuses such a directory) or the cache's
+    loc/zh-CN/dat/ holding a .DAT (built from the PC's DAT/). The launcher's
+    rule (config.cpp ConfigOriginalAvailable) and the DLL's (dat_load.cpp
+    RefuseOriginalWithoutChinese)."""
+    if os.path.isfile(os.path.join(game, "BOF3.exe")):
+        return True
+    d = os.path.join(cache, "loc", "zh-CN", "dat") if cache else None
+    return bool(d and os.path.isdir(d) and any(f.upper().endswith(".DAT") for f in os.listdir(d)))
+
+
+def languages_held(game, cache=None):
+    """The tags whose layer is installed in `game`'s DAT/ (<tag>.*.DAT) or
+    built in `cache` (loc/<tag>/dat/), in TAGS' order - the launcher's
+    ConfigLanguagesAvailable."""
+    dat_dir = os.path.join(game, "DAT")
+    names = os.listdir(dat_dir) if os.path.isdir(dat_dir) else []
+    out = []
+    for tag in TAGS:
+        d = os.path.join(cache, "loc", tag, "dat") if cache else None
+        if any(f.startswith(tag + ".") and f.upper().endswith(".DAT") for f in names) or \
+                (d and os.path.isdir(d) and any(f.upper().endswith(".DAT") for f in os.listdir(d))):
+            out.append(tag)
+    return out

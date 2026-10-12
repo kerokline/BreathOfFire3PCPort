@@ -304,6 +304,23 @@ delete any `DAT\en.*.DAT` (`fr.`, `de.`, `ja.`) overlays: nothing reads them.
 Silently dropping the player's choice was the worse surprise, and guessing
 it (which English?) the next; saying so once, loudly, is neither.
 
+**An install without the Chinese text (DIV-TBD-LX-1, 2026-10-12).** The
+port's Chinese is in the PC's `DAT\` alone, so `original` plays only from a
+PC install (`BOF3.exe` in the game directory) or with a cache holding
+`loc\zh-CN` (built from the PC's `DAT\`); a disc-only install
+([`disc-only-install.md`](disc-only-install.md)) has neither. There the
+Language box does not offer "Chinese (PC script)" - it lists the languages
+held (`DAT\<tag>.*` or the cache's `loc\<tag>\`) and its note says Chinese
+is the PC install's only - and the launcher, before the dialog as for a
+retired code, stops on `BOF3X_LANG=original`, on `language=original` in the
+ini, and on a tag (from either) that is not held, with a message box naming
+the languages held. With neither naming a language the default is the first
+held, in the box's order (`en-US` first; from a US disc it is the only one),
+said on stderr; the dialog's choice is checked again after it closes, under
+the cache folder it may have changed. A PC install is unchanged.
+`ConfigOriginalAvailable` / `ConfigResolveLanguage`
+(`src/launcher/config.cpp`); the DLL's Fatal is the same rule.
+
 ## 5. What is not offered, and why
 
 - **Resolution** was a disabled box showing `640 x 480` until the Direct3D 11
