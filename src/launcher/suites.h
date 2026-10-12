@@ -16,31 +16,17 @@
 
 #include <functional>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "common/cache_manifest.h"
 #include "launcher/suites.gen.h"
 
 namespace bof3x {
 
-// The cache's manifest.toml, as far as the suites read it. Absent keys stay
-// empty. A value the page cannot honour sets `error`; the page then greys every
-// suite with it rather than guess.
-struct CacheManifest {
-    bool present = false;                        // the file was read
-    std::vector<std::string> sources;            // [[source]] build, distinct, in order
-    std::string base_policy;                     // [build] base_policy: "psp", "psx", or "" (absent: psx)
-    std::vector<std::string> exe_tables_from;    // [build] exe_tables_from (a build or a list); else [exe] build
-    std::string bgm_build;                       // the build of bgm's first row (base/bgm/), or ""
-    std::string snd_build;                       // [snd] build (base/snd/), or ""
-    std::string error;
-};
-
-// The subset of TOML the importer writes (tools/importer.py write_manifest):
-// table headers, `key = "string"`, `key = ["a", "b"]` on one line, multi-line
-// arrays of rows. Pure, for the host tests.
-CacheManifest ManifestParse(const std::string& text);
-// <cache>\manifest.toml; `present` false when there is no cache or no file.
-CacheManifest ManifestRead(const std::wstring& cache);
+// The cache's manifest.toml: CacheManifest, ManifestParse and ManifestRead are
+// src/common/cache_manifest.h's, the one reader the DLL shares (base_policy,
+// exe_tables_from, the bgm row's build, [snd], the layers listed).
 
 // fixtures.toml's role of a build id, through the generated table; false for
 // an id it does not hold.
@@ -86,9 +72,12 @@ std::vector<SuiteState> SuitesEvaluate(const SuiteInputs& in);
 // opt= after the page. `choice[i]` is -1 for a suite left as it was, 0 for
 // the PlayStation's version, 1 for the PSP's. Only a choice beside a
 // PlayStation base, on an enabled side, changes anything; the rest is
-// ConfigOptEdit's (an untouched page returns `opt` byte for byte).
+// ConfigOptEdit's (an untouched page returns `opt` byte for byte). `extra`:
+// further boxes made in the same edit - the Jukebox's chord box - so that a
+// box changed and changed back leaves the line as read.
 std::string SuitesOptEdit(const std::string& opt, const std::vector<std::string>& defaults,
-                          const std::vector<SuiteState>& suites, const std::vector<int>& choice);
+                          const std::vector<SuiteState>& suites, const std::vector<int>& choice,
+                          const std::vector<std::pair<std::string, bool>>& extra = {});
 
 // The opt/ layers of the catalogue, in its order: the order a list the dialog
 // writes puts them in (ConfigOptEdit).

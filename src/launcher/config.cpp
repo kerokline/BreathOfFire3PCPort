@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <cwchar>
 #include <string>
 #include <vector>
@@ -23,18 +24,60 @@ bool AnyMatch(const std::wstring& pattern) {
     return true;
 }
 
+// The cache's manifest through the one reader the DLL shares
+// (common/cache_manifest.h), read again only when the file changes: the
+// dialog asks for a layer many times over a manifest of some megabytes.
+const CacheManifest& CachedManifest(const std::wstring& cache) {
+    static std::wstring s_root;
+    static FILETIME s_time{};
+    static ULONGLONG s_size = ~0ull;
+    static bool s_read = false;
+    static CacheManifest s_man;
+    WIN32_FILE_ATTRIBUTE_DATA a{};
+    const bool there = !cache.empty() &&
+                       GetFileAttributesExW((cache + L"\\manifest.toml").c_str(), GetFileExInfoStandard, &a);
+    const ULONGLONG size = there ? (static_cast<ULONGLONG>(a.nFileSizeHigh) << 32) | a.nFileSizeLow : ~0ull;
+    if (!s_read || cache != s_root || size != s_size || CompareFileTime(&a.ftLastWriteTime, &s_time) != 0) {
+        s_read = true;
+        s_root = cache;
+        s_size = size;
+        s_time = a.ftLastWriteTime;
+        s_man = there ? ManifestRead(cache) : CacheManifest();
+    }
+    return s_man;
+}
+
+// <cache>\opt\<name>\<part> holds a .DAT (exe: exe\place.toml) - the DLL's
+// own test (dat_cache::HasLayerPart), the manifest's listing included.
+bool CacheHasLayerPart(const std::wstring& cache, const char* name, const wchar_t* part) {
+    if (cache.empty() || !ManifestOffersLayer(CachedManifest(cache), name)) return false;
+    std::wstring pattern = cache + L"\\opt\\";
+    for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
+    pattern += L"\\";
+    pattern += part;
+    return AnyMatch(pattern + (std::wcscmp(part, L"exe") == 0 ? L"\\place.toml" : L"\\*.DAT"));
+}
+
 // DIV-0089: <cache>\<kind>\<name>\dat\ holds a .DAT - the DLL's own test
-// (dat_cache::HasLayer).
-bool CacheHasLayer(const std::wstring& cache, const wchar_t* kind, const char* name) {
+// (dat_cache::HasLayer). An opt\ layer counts only when the cache's manifest
+// lists it, or the cache has no manifest (the code review of 2026-10-12: a
+// build that stopped part-way left layers with no rows, which were offered and
+// played unverified). `music` is the cache the music reads - BOF3X_CACHE
+// whatever BOF3X_CACHE_DATA says (docs/cache-read.md 6) - where a layer's bgm
+// part is asked; the other parts are asked in `cache`, empty under
+// BOF3X_CACHE_DATA=0. An empty `music` is `cache`.
+bool CacheHasLayer(const std::wstring& cache, const wchar_t* kind, const char* name,
+                   const std::wstring& music = std::wstring()) {
+    const bool opt = std::wcscmp(kind, L"opt") == 0;
+    // TG (docs/launcher-suites.md 9): an optional layer of songs, sound files or
+    // .data ranges - the DLL's own test (dat_cache::HasLayerPart)
+    if (opt && CacheHasLayerPart(music.empty() ? cache : music, name, L"bgm")) return true;
     if (cache.empty()) return false;
+    if (opt && !ManifestOffersLayer(CachedManifest(cache), name)) return false;
     std::wstring pattern = cache + L"\\" + kind + L"\\";
     for (const char* c = name; *c; ++c) pattern += static_cast<wchar_t>(*c);
     if (AnyMatch(pattern + L"\\dat\\*.DAT")) return true;
-    // TG (docs/launcher-suites.md 9): an optional layer of songs, sound files or
-    // .data ranges - the DLL's own test (dat_cache::HasLayerPart)
-    return std::wcscmp(kind, L"opt") == 0 &&
-           (AnyMatch(pattern + L"\\bgm\\*.DAT") || AnyMatch(pattern + L"\\snd\\*.DAT") ||
-            AnyMatch(pattern + L"\\exe\\place.toml"));
+    return opt && (CacheHasLayerPart(cache, name, L"snd") || CacheHasLayerPart(cache, name, L"exe"));
 }
 
 // Whole file as bytes, or false if it cannot be opened. Absent is not an error
@@ -297,11 +340,12 @@ std::string SatpixieLine(const Config::Satpixie& sp, const char* prefix, const c
     return out;
 }
 
-void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
+void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, bool hosted) {
     wchar_t existing[64];
     // DIV-0089: where the DLL will find layers besides DAT\ (before BOF3X_CACHE
-    // is set below; the environment's wins over the ini's, as there).
-    const std::wstring cache = ConfigCacheDataRoot(cfg);
+    // is set below; the environment's wins over the ini's, as there), and
+    // where the music finds a layer's songs (under BOF3X_CACHE_DATA=0 too).
+    const std::wstring cache = ConfigCacheDataRoot(cfg), music = ConfigCacheRoot(cfg);
 
     // Only a language whose overlay is in DAT\ - the dialog offers no other,
     // but a hand-edited or carried-over bof3x.ini can name one never built,
@@ -329,7 +373,22 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg) {
             char played[8];  // as the DLL reads it (dat_load.cpp g_lang): longer is none
             const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", played, sizeof played);
             const std::string language = (n == 0 || n >= sizeof played) ? std::string() : std::string(played, n);
-            const std::string playable = ConfigOptPlayable(game_dir, wanted, language, cache);
+            std::string playable = ConfigOptPlayable(game_dir, wanted, language, cache, music);
+            if (hosted) {
+                // The hosted build refuses a layer with an exe part at
+                // start (dat_load.cpp ReadOptLayers); the launcher knows it is
+                // starting it, so such a layer - the data suite's PSP side
+                // names one - is left out here rather than stopping every
+                // shadow test and A/B run on an ini that chose that suite.
+                std::vector<std::string> dropped;
+                playable = ConfigOptHosted(playable, cache, dropped);
+                std::string names;
+                for (const std::string& d : dropped) names += (names.empty() ? "" : ", ") + d;
+                if (!dropped.empty())
+                    std::fprintf(stderr, "bof3x-launcher: the hosted build runs Capcom's .data as loaded, so it cannot "
+                                 "take %s (an exe part: .data ranges only bof3x.exe lays); left out of BOF3X_OPT "
+                                 "for this run\n", names.c_str());
+            }
             if (!playable.empty()) SetEnvironmentVariableA("BOF3X_OPT", playable.c_str());
         }
     }
@@ -456,6 +515,10 @@ std::wstring ConfigCacheDataRoot(const Config& cfg) {
     wchar_t text[4];
     const DWORD m = GetEnvironmentVariableW(L"BOF3X_CACHE_DATA", text, 4);
     if (m == 1 && text[0] == L'0') return std::wstring();  // the cache for the music only
+    return ConfigCacheRoot(cfg);
+}
+
+std::wstring ConfigCacheRoot(const Config& cfg) {
     wchar_t root[MAX_PATH];
     const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, MAX_PATH);
     std::wstring out;
@@ -509,7 +572,7 @@ std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir, 
 }
 
 std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language,
-                              const std::wstring& cache) {
+                              const std::wstring& cache, const std::wstring& music) {
     std::string out;
     size_t at = 0;
     while (at <= opt.size()) {
@@ -521,9 +584,12 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
         std::wstring pattern = game_dir + L"\\DAT\\";
         for (char c : layer) pattern += static_cast<wchar_t>(c);
         pattern += L".*";
-        if (!AnyMatch(pattern) && !CacheHasLayer(cache, L"opt", layer.c_str())) {  // DIV-0089: or the cache's
+        if (!AnyMatch(pattern) && !CacheHasLayer(cache, L"opt", layer.c_str(), music)) {  // DIV-0089: or the cache's
             std::fprintf(stderr, "bof3x-launcher: bof3x.ini asks for layer %s, but DAT\\%s.* is not there%s\n",
-                         layer.c_str(), layer.c_str(), cache.empty() ? "" : ", nor in the cache's opt\\");
+                         layer.c_str(), layer.c_str(),
+                         !cache.empty()   ? ", nor in the cache's opt\\ as its manifest lists it"
+                         : !music.empty() ? " (BOF3X_CACHE_DATA=0: of the cache's layers only a music part is read)"
+                                          : "");
             continue;
         }
         // The DLL's own test (dat_load.cpp ReadOptLayers), so what passes
@@ -540,11 +606,12 @@ std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& o
     return out;
 }
 
-bool ConfigOptInstalled(const std::wstring& game_dir, const char* layer, const std::wstring& cache) {
+bool ConfigOptInstalled(const std::wstring& game_dir, const char* layer, const std::wstring& cache,
+                        const std::wstring& music) {
     std::wstring pattern = game_dir + L"\\DAT\\";
     for (const char* c = layer; *c; ++c) pattern += static_cast<wchar_t>(*c);
     pattern += L".*.DAT";   // the DLL's own pattern (dat_load.cpp ReadOptLayers)
-    return AnyMatch(pattern) || CacheHasLayer(cache, L"opt", layer);  // DIV-0089: or the cache's
+    return AnyMatch(pattern) || CacheHasLayer(cache, L"opt", layer, music);  // DIV-0089: or the cache's
 }
 
 std::vector<std::string> ConfigOptDefaultInstalled(const std::wstring& game_dir, const std::wstring& cache) {
@@ -642,6 +709,66 @@ bool ConfigOptValid(const std::string& opt, std::string& why) {
     if (names.size() > 16) {   // dat_load.cpp kOptMax (8 until the suites' engine half, 2026-10-12)
         why = "more than 16 layers";
         return false;
+    }
+    return true;
+}
+
+std::string ConfigOptHosted(const std::string& list, const std::wstring& cache, std::vector<std::string>& dropped) {
+    std::string out;
+    size_t at = 0;
+    while (at <= list.size()) {
+        size_t end = list.find(',', at);
+        if (end == std::string::npos) end = list.size();
+        const std::string layer = list.substr(at, end - at);
+        at = end + 1;
+        if (layer.empty()) continue;
+        bool refused = false;
+        for (const char* part : kHostedRefusesParts) {
+            // the recipe's part kind (recipes/psp-layers.toml), then the cache's
+            // tree as the DLL tests it (a layer no recipe of ours names)
+            for (const suites_gen::LayerPart& lp : suites_gen::kLayerParts)
+                refused = refused || (layer == lp.layer && std::strcmp(lp.part, part) == 0);
+            std::wstring wpart;
+            for (const char* c = part; *c; ++c) wpart += static_cast<wchar_t>(*c);
+            refused = refused || CacheHasLayerPart(cache, layer.c_str(), wpart.c_str());
+        }
+        if (refused) {
+            dropped.push_back(layer);
+            continue;
+        }
+        if (!out.empty()) out += ',';
+        out += layer;
+    }
+    return out;
+}
+
+bool ConfigPspValid(const std::string& psp, std::string& why) {
+    if (psp.empty() || psp == "none") return true;
+    if (psp.size() > 127) {   // psp_code.cpp FromEnvironment's buffer
+        why = "longer than 127 characters";
+        return false;
+    }
+    std::vector<std::string> known, seen;
+    for (const suites_gen::MemberInfo& m : suites_gen::kMembers)
+        if (m.code) known.push_back(m.code);
+    std::string items;
+    for (const std::string& k : known) items += (items.empty() ? "" : ", ") + k;
+    size_t at = 0;
+    for (;;) {
+        const size_t end = std::min(psp.find(',', at), psp.size());
+        const std::string name = psp.substr(at, end - at);
+        if (std::find(known.begin(), known.end(), name) == known.end()) {
+            why = name.empty() ? std::string("an empty item (two commas, or one at an end)")
+                               : "\"" + name + "\" is not one of the PSP's changes (" + items + ")";
+            return false;
+        }
+        if (std::find(seen.begin(), seen.end(), name) != seen.end()) {
+            why = name + " named twice";
+            return false;
+        }
+        seen.push_back(name);
+        if (end == psp.size()) break;
+        at = end + 1;
     }
     return true;
 }

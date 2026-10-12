@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "common/cache_manifest.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -106,8 +107,34 @@ struct State {
     // TG: the layers BOF3X_OPT names (SetOptLayers), in its order, and those
     // of them with a snd part (asked once there, not at every stream)
     std::vector<std::string> opt, snd;
+    // The opt/ layers the manifest lists (common/cache_manifest.h), when there
+    // is a manifest: a layer tree it does not list is not offered - a build that
+    // stopped part-way left trees without rows (the code review of 2026-10-12).
+    bool listing = false;
+    std::vector<std::string> listed;
+    // BOF3X_CACHE under BOF3X_CACHE_DATA=0: the cache for the music only
+    // (docs/cache-read.md 6), where a named layer's bgm part is still read
+    // (the music layer's seam, docs/launcher-suites.md 9.2; its snd, exe and dat
+    // parts are the data's). Empty otherwise.
+    std::string music_root;
 };
 State g_c;
+
+// The manifest's listing of opt/ layers, through the one reader the launcher
+// shares (it reads the [build] keys too; only the listing is taken here).
+void SetListing(const std::string& text) {
+    const bof3x::CacheManifest m = bof3x::ManifestParse(text);
+    g_c.listing = true;
+    g_c.listed = m.opt_layers;
+}
+
+// A layer of opt/ may be offered: no manifest, or one that lists it.
+bool Listed(const char* layer) {
+    if (!g_c.listing) return true;
+    for (const std::string& l : g_c.listed)
+        if (l == layer) return true;
+    return false;
+}
 
 void Join(char* out, std::size_t cap, const char* a, const char* b, const char* c, const char* d) {
     const int n = std::snprintf(out, cap, "%s\\%s%s%s", a, b, c, d);
@@ -366,12 +393,30 @@ void Configure() {
     const DWORD n = GetEnvironmentVariableA("BOF3X_CACHE", root, sizeof root);
     if (n >= sizeof root) bof3::Fatal("DIV-0089: BOF3X_CACHE is %lu characters", static_cast<unsigned long>(n));
     if (n == 0) return;  // no cache: the install's files, as the original's
-    if (m != 0 && mode[0] == '0') {
-        bof3::Log("DIV-0089    BOF3X_CACHE_DATA=0: DAT\\ and SND\\ from the install (the cache for the music only)");
-        return;
-    }
     std::size_t len = n;
     while (len > 1 && (root[len - 1] == '\\' || root[len - 1] == '/')) root[--len] = 0;
+    if (m != 0 && mode[0] == '0') {
+        // The cache for the music only: still where a named layer's songs are
+        // (HasLayerPart's bgm, the music seam's), and its manifest's listing
+        // still says which layers it offers. Not a directory, or too long: the
+        // music seam's own refusals (music_seq.cpp Arm).
+        g_c.music_root = root;
+        const std::string manifest = g_c.music_root + "\\manifest.toml";
+        const HANDLE f = CreateFileA(manifest.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                                     FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (f != INVALID_HANDLE_VALUE) {
+            std::string text;
+            std::vector<char> buf(65536);
+            DWORD got = 0;
+            while (ReadFile(f, buf.data(), static_cast<DWORD>(buf.size()), &got, nullptr) && got > 0)
+                text.append(buf.data(), got);
+            CloseHandle(f);
+            SetListing(text);
+        }
+        bof3::Log("DIV-0089    BOF3X_CACHE_DATA=0: DAT\\ and SND\\ from the install (the cache for the music only: "
+                  "base\\bgm and a named layer's bgm\\)");
+        return;
+    }
     const DWORD a = GetFileAttributesA(root);
     if (a == INVALID_FILE_ATTRIBUTES || !(a & FILE_ATTRIBUTE_DIRECTORY))
         bof3::Fatal("DIV-0089: BOF3X_CACHE=%s is not a directory", root);
@@ -402,6 +447,7 @@ void Configure() {
     CloseHandle(h);
     if (!ok || got != size.QuadPart) bof3::Fatal("DIV-0089: %s: read %lu of %lld bytes", path, got, size.QuadPart);
     if (std::strlen(text.data()) != got) bof3::Fatal("DIV-0089: %s holds a NUL byte", path);
+    SetListing(text.data());
     char error[512];
     if (!Parse(text.data(), &g_c.index, error, sizeof error)) bof3::Fatal("DIV-0089: %s\\%s", g_c.root, error);
     if (!Check(&g_c.index, error, sizeof error)) bof3::Fatal("DIV-0089: the cache's %s", error);
@@ -430,6 +476,7 @@ bool Armed() { return g_c.armed; }
 
 bool HasLayer(const char* kind, const char* layer) {
     if (!g_c.configured || !layer || !layer[0]) return false;
+    if (std::strcmp(kind, "opt") == 0 && !Listed(layer)) return false;   // a tree the manifest does not list
     char dir[kPathMax + 1];
     Join(dir, sizeof dir, g_c.root, kind, "\\", layer);
     const std::size_t n = std::strlen(dir);
@@ -484,9 +531,16 @@ bool WalkShipped(const char* name, ChunkFn fn, void* ctx) {
 }
 
 bool HasLayerPart(const char* layer, const char* part) {
-    if (!g_c.configured || !layer || !layer[0]) return false;
+    if (!layer || !layer[0]) return false;
+    // The music's part is read whenever the cache is in use for music, under
+    // BOF3X_CACHE_DATA=0 too (docs/cache-read.md 6, "the cache for the music
+    // only"); the effects (snd), the .data ranges (exe) and the chord's banks
+    // (dat) are the data's, read only when the cache is configured for it.
+    const bool music = std::strcmp(part, "bgm") == 0;
+    const char* root = g_c.configured ? g_c.root : music && !g_c.music_root.empty() ? g_c.music_root.c_str() : nullptr;
+    if (!root || !Listed(layer)) return false;
     char dir[kPathMax + 1];
-    Join(dir, sizeof dir, g_c.root, "opt\\", layer, "");
+    Join(dir, sizeof dir, root, "opt\\", layer, "");
     char sub[kPathMax + 1];
     if (std::strcmp(part, "exe") == 0) {
         Join(sub, sizeof sub, dir, "exe\\place.toml", "", "");
@@ -883,6 +937,49 @@ void SelfTest() {
     };
     const unsigned snd_controls = (control(true, "abc") != Path("opt\\lay-t\\snd\\abc.DAT")) +
                                   (control(false, "def") != Path("opt\\lay-s\\snd\\def.DAT"));
+
+    // The manifest's listing (the code review of 2026-10-12: a build that
+    // stopped part-way left layer trees without rows, offered and played
+    // unverified). A manifest listing lay-s (an opt.toml row), lay-m and lay-e
+    // ([psp_layers] rows) - not lay-t, whose tree is there - offers no lay-t:
+    // abc is lay-s's now. Then the cache for the music only
+    // (BOF3X_CACHE_DATA=0, docs/cache-read.md 6): a named layer's bgm part is
+    // still found, its snd and exe parts are not, and no stream is the cache's.
+    // Controls: the listing ignored (lay-t's tree its own evidence) and the
+    // music part asked only of a configured cache (the rule before this fix)
+    // must each disagree.
+    SetListing("[cache]\nopt = [\n  [\"AREA004.DAT\", \"opt/lay-s\", 0, \"psx-us:copy:A.EMI#8@0\", \"h\"],\n]\n"
+               "[psp_layers]\nrecipe_sha256 = \"h\"\nrows = [\n"
+               "  [\"lay-m\", \"opt/lay-m/bgm/001.DAT\", \"psp-eu:ppms:B.EMI#1\", \"h\"],\n"
+               "  [\"lay-e\", \"opt/lay-e/exe/place.toml\", \"psp-eu:exe:h\", \"h\"],\n]\n");
+    SetOptLayers(named, 5);
+    const std::vector<std::string> listed_snd = LayersWith("snd");
+    const bool listed = HasLayerPart("lay-s", "snd") && !HasLayerPart("lay-t", "snd") && HasLayerPart("lay-m", "bgm") &&
+                        HasLayerPart("lay-e", "exe") && listed_snd.size() == 1 && listed_snd[0] == "lay-s" &&
+                        SoundPath("abc", path, sizeof path) && Path("opt\\lay-s\\snd\\abc.DAT") == path;
+    g_c.listing = false;
+    const bool unlisted_control = HasLayerPart("lay-t", "snd");   // the tree alone: offered
+    g_c.listing = true;
+    const std::string root_was = g_c.root;
+    g_c.configured = false;   // as Configure leaves it under BOF3X_CACHE_DATA=0
+    g_c.music_root = root_was;
+    SetOptLayers(named, 5);
+    const std::vector<std::string> music_bgm = LayersWith("bgm"), music_snd = LayersWith("snd");
+    const bool music_only = music_bgm.size() == 1 && music_bgm[0] == "lay-m" && music_snd.empty() &&
+                            !HasLayerPart("lay-e", "exe") && !HasLayerPart("lay-s", "snd") && !HasLayer("opt", "lay-s");
+    g_c.music_root.clear();   // the rule before: every part asked of a configured cache alone
+    const bool music_control = !HasLayerPart("lay-m", "bgm");
+    g_c.configured = true;
+    g_c.listing = false;
+    g_c.listed.clear();
+    if (!listed || !unlisted_control || !music_only || !music_control)
+        bof3::Fatal("DIV-0089 self-test: a manifest's listing %s (the listing ignored %s); the cache for the music only: "
+                    "a layer's bgm part alone %s (asked of a configured cache only %s)",
+                    listed ? "ok" : "WRONG", unlisted_control ? "refused" : "NOT REFUSED", music_only ? "ok" : "WRONG",
+                    music_control ? "refused" : "NOT REFUSED");
+    bof3::Log("shadow      DIV-0089 self-test: only the layers the manifest lists offered (an unlisted tree with a "
+              "snd part not; the listing ignored refused); under BOF3X_CACHE_DATA=0 a named layer's bgm part found and "
+              "its snd and exe parts not (asked of a configured cache only refused)");
     SetOptLayers(named, 0);
     const bool snd_cleared = SoundPath("abc", path, sizeof path) && Path("base\\snd\\abc.DAT") == path;
     TestSetArmed(false);

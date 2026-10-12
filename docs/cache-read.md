@@ -190,7 +190,12 @@ seam; not made.
   also checked as it is built.
 - `BOF3X_CACHE_DATA`: unset or `1`, the cache's `DAT\` and `SND\` files as
   above; `0`, the cache for the music only - the behaviour before this
-  change; anything else fatal. No ini key yet.
+  change; anything else fatal. No ini key yet. **Music** here is everything
+  the music seam reads (DIV-0087): `base\bgm` and, since 2026-10-12, a named
+  `opt\` layer's `bgm\` (the PSP's music layer; [`launcher-suites.md`](launcher-suites.md)
+  10, finding 3). A layer's `snd\` (effects, voices, jingles: `Sound_LoadStream`'s
+  files) and its `dat\` (the battle chord's banks, through `Snd_LoadBankFile`)
+  are data, on the other side of the switch, as `base\snd` and `base\dat` are.
 - Log lines: one at injection for the check (`DIV-0089    the cache ...
   checked: N of the manifest's M containers held whole, P in part`), one per
   layer (`the cache's loc layer` / `the install's`), one when armed. The

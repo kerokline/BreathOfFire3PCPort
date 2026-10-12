@@ -6,6 +6,7 @@
 #include <cstring>
 #include <string>
 
+#include "common/cache_manifest.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -25,53 +26,23 @@ struct Item {
 };
 constexpr Item kItems[] = {{"duel-loss", kDuelLoss}, {"myria-item", kMyriaItem}};
 
-std::string Trim(const std::string& s) {
-    const size_t b = s.find_first_not_of(" \t\r");
-    if (b == std::string::npos) return std::string();
-    return s.substr(b, s.find_last_not_of(" \t\r") - b + 1);
-}
-
-// The cache's [build] base_policy, as the launcher reads it (src/launcher/
-// suites.cpp ManifestParse): "psp", "psx", or "" (no cache, no manifest, no
-// key). Any other value is a Fatal - the launcher greys its suites with the
-// same complaint, and the default cannot be guessed.
+// The cache's [build] base_policy through the one manifest reader the
+// launcher shares (common/cache_manifest.h): "psp", "psx", or "" (no cache,
+// no manifest, no key). A manifest the reader refuses - a base_policy that
+// is neither, an exe_tables_from that is not a build or a list - is a Fatal
+// with the reader's own sentence, the one the launcher stops on before the
+// game starts (ManifestRefusal): the default cannot be guessed.
 std::string BasePolicy(std::string& where) {
     wchar_t root[1024];
     const DWORD n = GetEnvironmentVariableW(L"BOF3X_CACHE", root, 1024);
     if (n == 0 || n >= 1024) return std::string();
     std::wstring path(root, n);
     while (!path.empty() && (path.back() == L'\\' || path.back() == L'/')) path.pop_back();
-    path += L"\\manifest.toml";
-    where = bof3::Utf8Path(path.c_str()).text;
-    const HANDLE f = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
-                                 FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (f == INVALID_HANDLE_VALUE) return std::string();
-    std::string text;
-    char buf[65536];
-    DWORD got = 0;
-    while (ReadFile(f, buf, sizeof buf, &got, nullptr) && got > 0) text.append(buf, got);
-    CloseHandle(f);
-    std::string table;
-    size_t at = 0;
-    while (at < text.size()) {
-        size_t end = text.find('\n', at);
-        if (end == std::string::npos) end = text.size();
-        const std::string line = Trim(text.substr(at, end - at));
-        at = end + 1;
-        if (line.empty() || line[0] == '#') continue;
-        if (line[0] == '[') {
-            table = line;
-            continue;
-        }
-        if (table != "[build]") continue;
-        const size_t eq = line.find('=');
-        if (eq == std::string::npos || Trim(line.substr(0, eq)) != "base_policy") continue;
-        const std::string value = Trim(line.substr(eq + 1));
-        if (value == "\"psp\"") return "psp";
-        if (value == "\"psx\"") return "psx";
-        bof3::Fatal("DIV F: %s's [build] base_policy is %s, neither \"psp\" nor \"psx\"", where.c_str(), value.c_str());
-    }
-    return std::string();
+    where = bof3::Utf8Path((path + L"\\manifest.toml").c_str()).text;
+    const bof3x::CacheManifest m = bof3x::ManifestRead(path);
+    if (!m.present) return std::string();
+    if (!m.error.empty()) bof3::Fatal("DIV F: %s", bof3x::ManifestRefusal(m, where).c_str());
+    return m.base_policy;
 }
 
 // BOF3X_PSP as a mask, or false when it is unset.

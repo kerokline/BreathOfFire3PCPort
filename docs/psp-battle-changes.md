@@ -184,6 +184,15 @@ holds under `BOF3X_CACHE_DATA=0` as well. The launcher's `psp=` line is passed
 on as `BOF3X_PSP` when it is not empty and the environment does not already
 set it (`ConfigApplyEnvironment`). An empty line leaves the DLL its default.
 
+*Since the code review of 2026-10-12* ([`launcher-suites.md`](launcher-suites.md)
+10): the manifest is read by the one reader the launcher shares
+(`src/common/cache_manifest.h`), which refuses a `base_policy` (or an
+`exe_tables_from`) it cannot honour with one sentence - the launcher stops on
+it before the game starts, the DLL Fatals with it for a hand-set
+`BOF3X_CACHE`. And the launcher refuses a mistyped `psp=` up front
+(`ConfigPspValid`, the DLL's rule), as it refuses a bad `opt=`; the DLL's
+check stays for a hand-set `BOF3X_PSP`.
+
 **The launcher's two members** (the data suite, `recipes/suites.toml`):
 `psp-duel-loss` ("fight 27: a loss goes on") and `psp-myria-item` ("fight 55:
 Myria's item"), `kind = "code"`, `code` naming the item, `from` both PSP

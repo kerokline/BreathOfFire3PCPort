@@ -171,7 +171,23 @@ bool ConfigSave(const std::wstring& path, const Config& cfg);
 // keep overriding whatever the file says.
 // The language is exported only when its overlay is in <game_dir>\DAT
 // (ConfigLanguagesAvailable), as the dialog offers it.
-void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg);
+// `hosted`: the launcher is starting the hosted build (--host bof3, or a
+// hosted-only switch), which refuses a layer with an exe part (the exe tables:
+// bof3x.exe lays .data ranges); every such layer is left out of the BOF3X_OPT
+// it sets (ConfigOptHosted), with one line naming them. A BOF3X_OPT already in
+// the environment is the DLL's to refuse, as before.
+void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, bool hosted = false);
+
+// The parts of an optional layer the hosted build cannot take: "exe" (the exe tables,
+// dat_load.cpp ReadOptLayers' refusal). The engine's rule, by part kind.
+inline constexpr const char* kHostedRefusesParts[] = {"exe"};
+
+// `list` (comma-separated, BOF3X_OPT's form) less every layer the hosted build
+// refuses: one whose part in recipes/psp-layers.toml (suites.gen.h
+// kLayerParts) is in kHostedRefusesParts, or whose cache tree has such a part
+// (the DLL's own test, dat_cache::HasLayerPart; a layer no recipe names).
+// `dropped` gets their names, in order.
+std::string ConfigOptHosted(const std::string& list, const std::wstring& cache, std::vector<std::string>& dropped);
 
 // Reads display and renderer OUT of <game_dir>\BOF3.CFG into `cfg`. Called
 // when there is no settings file yet, so that a first run adopts whatever the
@@ -192,6 +208,12 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
 // BOF3X_CACHE_DATA=0 (the cache for the music only). Where a layer can come
 // from, for the three functions below.
 std::wstring ConfigCacheDataRoot(const Config& cfg);
+
+// The cache the game is given at all - BOF3X_CACHE when the environment has
+// it, else the ini's cache= - whatever BOF3X_CACHE_DATA says: the music's
+// (DIV-0087; a layer's bgm part) and the manifest's, whose base_policy
+// the DLL reads under either setting.
+std::wstring ConfigCacheRoot(const Config& cfg);
 
 // The cache path's encoding (docs/state3-design.md section 9, the owner's
 // "both halves", 2026-10-11): Config::cache holds UTF-8, in the ini and in
@@ -220,8 +242,12 @@ std::vector<std::string> ConfigLanguagesAvailable(const std::wstring& game_dir,
 // language - `language` being what the game is actually given as BOF3X_LANG,
 // empty or "original" for none, under which no text layer plays. Each layer
 // dropped is said on stderr; the DLL refuses either case at start-up.
+// `music` (ConfigCacheRoot; empty: `cache`) is where a layer's bgm part is
+// looked for: under BOF3X_CACHE_DATA=0 `cache` is empty and the cache is
+// still the music's. A cache's layer counts only when its manifest
+// lists it (or it has none).
 std::string ConfigOptPlayable(const std::wstring& game_dir, const std::string& opt, const std::string& language,
-                              const std::wstring& cache = std::wstring());
+                              const std::wstring& cache = std::wstring(), const std::wstring& music = std::wstring());
 
 // The layers played when the ini's `opt=` is empty and BOF3X_OPT is unset,
 // each only when its DAT\<layer>.*.DAT is installed or (DIV-0089) the cache
@@ -239,7 +265,8 @@ std::string ConfigOptWanted(const std::wstring& game_dir, const std::string& opt
 // Whether DAT\<layer>.*.DAT is in `game_dir` (the DLL's own test,
 // dat_load.cpp ReadOptLayers).
 bool ConfigOptInstalled(const std::wstring& game_dir, const char* layer,
-                        const std::wstring& cache = std::wstring());  // DIV-0089: or the cache holds it
+                        const std::wstring& cache = std::wstring(),    // DIV-0089: or the cache holds it
+                        const std::wstring& music = std::wstring());   // its bgm part, as ConfigOptPlayable
 
 // The kOptDefault layers installed in `game_dir`, in kOptDefault's order -
 // what an empty `opt=` names.
@@ -267,6 +294,14 @@ std::string ConfigOptEdit(const std::string& opt, const std::vector<std::string>
 // them "none" or "original". On false `why` says what is wrong; the launcher
 // refuses to start rather than fall back to the default layers.
 bool ConfigOptValid(const std::string& opt, std::string& why);
+
+// Whether an ini's `psp=` value (the PSP's battle rules) can be honoured, by the DLL's
+// own rule (psp_code.cpp FromEnvironment): empty (the default by the cache's
+// base), "none", or a comma-separated list of distinct items of the engine's
+// (recipes/suites.toml's code members: duel-loss, myria-item). On false `why`
+// says what is wrong; the launcher refuses to start, as for opt=, rather than
+// start a game that stops on it inside.
+bool ConfigPspValid(const std::string& psp, std::string& why);
 
 // True for "original" or a tag in kLanguages.
 bool ConfigLanguageKnown(const std::string& code);

@@ -413,7 +413,7 @@ void ReadOptLayers() {
             bof3::Fatal("DIV-0086: BOF3X_OPT names %s, but there is no %s (tools/importer.py install --opt %s)%s%s%s",
                         name, pattern, name, dat_cache::Root() ? " and no " : "",
                         dat_cache::Root() ? dat_cache::Root() : "",
-                        dat_cache::Root() ? "\\opt\\<layer>\\ with dat, bgm, snd or exe" : "");
+                        dat_cache::Root() ? "\\opt\\<layer>\\ with dat, bgm, snd or exe that its manifest lists" : "");
         // TG-3: .data ranges are laid by the exe host at map time
         // (exe_image.cpp); the hosted build keeps the loader's .data, Capcom's,
         // as the reference its A/B switch and shadow tests compare against.

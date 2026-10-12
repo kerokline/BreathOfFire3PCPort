@@ -124,6 +124,9 @@ assets = [
 ]
 opt = [
   ["AREA067.DAT", "opt/psp-art", 0, "psp-eu:copy:WORLD01/AREA067.EMI#6@192", "55"],
+  ["AREA067.DAT", "opt/psp-tiles", 0, "psp-eu:copy:WORLD01/AREA067.EMI#6@192", "55"],
+  ["AREA067.DAT", "opt/psp-names-en-150", 0, "psp-eu:copy:WORLD01/AREA067.EMI#6@192", "55"],
+  ["AREA067.DAT", "opt/area4-walls", 0, "psx-us:copy:WORLD00/AREA004.EMI#8@0", "55"],
 ]
 bgm = [
   ["base/bgm/000.DAT", "psx-us:seq:BGM000.EMI#1", "11"],
@@ -134,7 +137,9 @@ build = "pc-zh"
 file = "base/exe/data.bin"
 """,
 }
-# The layers each cache was built with (opt\<layer>\dat\<file>), and the game's DAT\ files.
+# The layers each cache was built with (opt\<layer>\dat\<file>), and the game's DAT\ files. Each
+# is listed in its manifest's [cache] opt rows above, as importer.py writes it: since the code
+# review of 2026-10-12 a layer tree the manifest does not list is not offered.
 CACHE_LAYERS = {"psp-only": [], "psx-only": [], "all": ["psp-art", "psp-tiles", "psp-names-en-150", "area4-walls"]}
 
 SCR = tempfile.mkdtemp(prefix="bof3x_dialog_")

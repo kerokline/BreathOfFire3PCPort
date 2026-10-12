@@ -294,30 +294,68 @@ def build_banks(name, layer, disc, out):
 def build(asked, sources, out):
     """Each layer asked for into out/opt/<name>/, and each `auto` layer whenever
     a PSP disc it lists is a source (on any base); then the manifest's
-    [psp_layers] table appended. A layer is written whole or not at all."""
+    [psp_layers] table appended. A layer is written whole or not at all.
+
+    Each layer is built in a folder of its own beside the cache's opt/
+    (out/.psp_layer_<name>_*) and renamed into place only when it is whole; a
+    failure removes its folder and any opt/<name>/ an earlier build left. The
+    manifest's table is written whatever happens, with the rows of every layer
+    that is in place, before a failure goes on: what is on disk under opt/ from
+    here is exactly what the manifest lists, which is what the game and the
+    launcher offer (common/cache_manifest.h) and what `verify` holds it to.
+    (The code review of 2026-10-12: a failure in the second layer left the
+    first in the cache with no row, offered and played unverified.)"""
     layers = load()
     asked = list(asked) + [n for n, l in layers.items() if l.get("auto") and n not in asked and _psp(l, sources)]
     if not asked:
         return []
-    rows = []
-    for name in asked:
-        layer = layers[name]
-        if not layer.get("auto"):
-            _refuse_on_psp_base(name, layer, sources)
-        disc = _psp(layer, sources)
-        if disc is None:
-            raise SystemExit("--opt %s: needs a PSP disc (%s) among the sources" % (name, " or ".join(layer["from"])))
-        part = layer["part"]
-        if part == "bgm":
-            rows += build_bgm(name, layer, disc, out)
-        elif part == "snd":
-            rows += build_snd(name, layer, disc, out)
-        elif part == "exe":
-            rows += build_exe(name, layer, disc, out)
-        elif "banks" in layer:
-            rows += build_banks(name, layer, disc, out)
-        else:
-            rows += build_dat(name, layer, sources, out)
+    rows, placed = [], []
+    try:
+        for name in asked:
+            layer = layers[name]
+            if not layer.get("auto"):
+                _refuse_on_psp_base(name, layer, sources)
+            disc = _psp(layer, sources)
+            if disc is None:
+                raise SystemExit("--opt %s: needs a PSP disc (%s) among the sources" % (name, " or ".join(layer["from"])))
+            final = os.path.join(out, "opt", name)
+            stage = tempfile.mkdtemp(dir=out, prefix=".psp_layer_%s_" % name)
+            try:
+                got = _build_one(name, layer, disc, sources, stage)
+                if os.path.isdir(final):
+                    shutil.rmtree(final)
+                os.makedirs(os.path.join(out, "opt"), exist_ok=True)
+                os.replace(os.path.join(stage, "opt", name), final)
+            except BaseException:
+                if os.path.isdir(final):        # an earlier build's tree: not this build's, and unlisted now
+                    shutil.rmtree(final)
+                print("  opt/%-16s not built: removed; the manifest lists %s" % (name, ", ".join(placed) or "no layer of this recipe"))
+                raise
+            finally:
+                shutil.rmtree(stage, ignore_errors=True)
+            rows += got
+            placed.append(name)
+    finally:
+        if rows:
+            _append_table(out, rows)
+    return rows
+
+
+def _build_one(name, layer, disc, sources, out):
+    """One layer into out/opt/<name>/ (`out` the layer's own staging folder)."""
+    part = layer["part"]
+    if part == "bgm":
+        return build_bgm(name, layer, disc, out)
+    if part == "snd":
+        return build_snd(name, layer, disc, out)
+    if part == "exe":
+        return build_exe(name, layer, disc, out)
+    if "banks" in layer:
+        return build_banks(name, layer, disc, out)
+    return build_dat(name, layer, sources, out)
+
+
+def _append_table(out, rows):
     lines = ["", "# opt/ layers beside a PlayStation base (tools/psp_layers.py, recipes/psp-layers.toml,",
              "# docs/launcher-suites.md 9): each file's layer, path, source and hash.",
              "[%s]" % MANIFEST_TABLE, "recipe_sha256 = %s" % json.dumps(_recipe_sha()), "rows = ["]
@@ -325,7 +363,35 @@ def build(asked, sources, out):
     lines.append("]")
     with open(os.path.join(out, "manifest.toml"), "a", newline="\n", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
-    return rows
+
+
+def listed(cache):
+    """The opt/ layers the cache's manifest lists - its [cache] opt rows'
+    opt/<layer> and its [psp_layers] rows' layers - as common/cache_manifest.h
+    reads them; None when there is no manifest."""
+    path = os.path.join(cache, "manifest.toml")
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as fh:
+        man = tomllib.load(fh)
+    names = {r[1][len("opt/"):] for r in man.get("cache", {}).get("opt", []) if str(r[1]).startswith("opt/")}
+    names |= {r[0] for r in man.get(MANIFEST_TABLE, {}).get("rows", [])}
+    return names
+
+
+def verify_listed(cache):
+    """An opt/<layer>/ folder the manifest does not list: a problem - the game
+    and the launcher do not offer it (a build that stopped part-way). Returns
+    the names, printing each."""
+    names = listed(cache)
+    d = os.path.join(cache, "opt")
+    if names is None or not os.path.isdir(d):
+        return []
+    bad = sorted(n for n in os.listdir(d) if os.path.isdir(os.path.join(d, n)) and n not in names)
+    for n in bad:
+        print("verify opt/%s: on disk, not listed in the manifest (a build that stopped part-way?); the game and the "
+              "launcher do not offer it - 1 problem" % n)
+    return bad
 
 
 def _recipe_sha():

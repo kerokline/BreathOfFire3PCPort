@@ -63,14 +63,23 @@ bool Armed();
 // Configured (armed or not) and <root>\<kind>\<layer>\dat holds a .DAT:
 // `kind` "loc" (a language tag) or "opt" (an optional layer). The question
 // `importer.py install` answers by copying the layer: when the cache has the
-// layer, the cache's layer is the one played, whole.
+// layer, the cache's layer is the one played, whole. An opt\ layer counts only
+// when the cache's manifest lists it ([cache] opt or [psp_layers] rows,
+// common/cache_manifest.h), or the cache has no manifest: a build that
+// stopped part-way leaves no layer to play unverified (the code review of
+// 2026-10-12; the launcher asks the same).
 bool HasLayer(const char* kind, const char* layer);
 
 // DIVERGENCE TG-1, TG-2, TG-3 (docs/launcher-suites.md section 9): an optional
 // layer may carry parts besides dat\ - "bgm" (songs and banks, Music_LoadFile's
 // seam, music_seq.cpp), "snd" (Sound_LoadStream's files, SoundPath below) and
-// "exe" (ranges of .data the exe host lays, exe_image.cpp). Configured and
-// <root>\opt\<layer>\<part> holds a .DAT (exe: exe\place.toml).
+// "exe" (ranges of .data the exe host lays, exe_image.cpp). True when the
+// <root>\opt\<layer>\<part> holds a .DAT (exe: exe\place.toml), and the
+// manifest lists the layer (as HasLayer). The bgm part is the music's: it is
+// read whenever the cache is in use for music, under BOF3X_CACHE_DATA=0 too
+// ("the cache for the music only", docs/cache-read.md 6); the snd, exe and dat
+// parts - the effects, the .data ranges, the chord's banks - are the data's,
+// and only a configured cache has them.
 bool HasLayerPart(const char* layer, const char* part);
 
 // The optional layers BOF3X_OPT names, in its order, once DatLoad_Inject has

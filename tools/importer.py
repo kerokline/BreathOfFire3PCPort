@@ -1395,8 +1395,9 @@ def verify_opt(cache, path=None):
     rec = {f["name"]: f for f in load_recipe()["file"]}
     with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
         man = {(n, l, i): h for n, l, i, w, h in tomllib.load(fh)["cache"].get("opt", [])}
-    rc = 0
-    for name in sorted(os.listdir(d)):
+    unlisted = psp_layers.verify_listed(cache)   # a folder the manifest does not list: a problem, not offered
+    rc = 1 if unlisted else 0
+    for name in sorted(n for n in os.listdir(d) if n not in unlisted):
         bad, chunks_ok, comp_ok, comp_absent = [], 0, 0, 0
         if psp_layers.is_layer(name):    # recipes/psp-layers.toml's: its own check
             rc |= psp_layers.verify_layer(cache, name)

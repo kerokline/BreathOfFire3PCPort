@@ -598,6 +598,56 @@ asked for it to be toggle-able, on the Jukebox screen:
   disc in the player's order is used; JP and EU gave identical `psp-tables`
   and `psp-ryu-forms` layers (9.4).
 
+## 10. The code review's fixes (2026-10-12, group RF)
+
+The owner's code review of the round tip (`psp/round` `88817a07`), fixed on
+`psp/review-fixes`. Headless only; scripts in `<scratchpad>/psp_rf/`. No game
+data: names, counts and hashes.
+
+| # | Finding | What changed | The check that catches it | Result |
+|---|---|---|---|---|
+| 1 | Hosted runs stopped when the data suite was the PSP's (`psp-tables` in `opt=`, refused by the hosted build at start) | `ConfigApplyEnvironment(..., hosted)`: the launcher leaves out of the `BOF3X_OPT` it sets every layer whose part the hosted build refuses (`kHostedRefusesParts` = `exe`), by the recipe's part (`suites.gen.h` `kLayerParts`, from `recipes/psp-layers.toml`) or the cache tree's (`ConfigOptHosted`), with one stderr line naming them. A hand-set `BOF3X_OPT` is untouched: the engine's refusal stays | host suite `TestHostedOpt`: the data suite's PSP side written over an empty `opt=` (`psp-tables,psp-names-en-150,psp-ryu-forms`), then `BOF3X_OPT` for bof3x.exe (`psp-tables,psp-ryu-forms`) and for the hosted build (`psp-ryu-forms`); a mod's layer with `exe\place.toml` dropped by its tree; `run1.sh`: the hosted `'*'` self-test through the launcher with that ini | host suite passes; `run1.sh` (the PC install, the PC + US + PSP-EU cache): exit 0, `inject: 10087 ours`, the launcher's line "cannot take psp-tables ... left out of BOF3X_OPT", `psp-ryu-forms` the one layer (the renames not in that cache). At the tip the same ini passes `psp-tables` and the hosted build stops at start (9.4, "hosted, the tables named": exit 3) |
+| 2 | A failed import left layers on disk without manifest rows, offered and played | `psp_layers.build`: each layer built in `out/.psp_layer_<name>_*` and renamed into `opt/` whole; a failure removes it, and the `[psp_layers]` table is written whatever happens with the rows of every layer in place. The engine (`dat_cache::HasLayer`, `HasLayerPart`), the launcher (`CacheHasLayer`) and the Jukebox's PSP column offer an `opt/` layer only when the manifest lists it (`[cache] opt` or `[psp_layers]` rows; no manifest: the tree, as before). `verify` reports an unlisted `opt/` folder as a problem | `rf_inject.py`: a US + PSP-EU build with `--opt psp-music --opt psp-snd`, `psp-snd`'s builder failing; `run2.sh` over both caches; host suite `TestListedLayers`; the `dat_cache` self-test's listing case and its control | the tip's tools: `opt/psp-music` (247 files) on disk, no `[psp_layers]` table; this branch's: the same tree, listed, `verify` 0 problems for it. Over the tip's cache: `verify` "opt/psp-music: on disk, not listed"; the launcher drops `psp-music` ("not there, nor in the cache's opt\"), a hand-set `BOF3X_OPT=psp-music` exits 3 naming the manifest; over this branch's cache both play it (`songs from ...opt\psp-music\bgm first`) |
+| 3 | `BOF3X_CACHE_DATA=0` could not play the music layer | a layer's `bgm` part is read whenever the cache is the music's: `dat_cache` keeps the root as the music's under `0` (and its manifest's listing), `HasLayerPart(bgm)` answers there; the launcher asks `bgm` of `ConfigCacheRoot`. `snd` (effects, voices, jingles) and the chord's `dat` banks stay on the data side ([`cache-read.md`](cache-read.md) 6) | the `dat_cache` self-test's music-only case (bgm found, snd and exe not; the rule before refused as its control), under `BOF3X_SHADOW=sound,dat_cache` with `BOF3X_CACHE_DATA` 0 and 1 (`run3.sh`), and the music seam's own self-test in the same runs; host suite `TestMusicOnly` | both settings exit 0 with `TG-1 ... songs from ...opt\psp-music\bgm first`; the exe host through the launcher (`run3b.sh`, `opt=psp-music,psp-snd`): under 0 `BOF3X_OPT` is `psp-music` alone, under 1 both |
+| 4 | The game and the launcher read `base_policy` by different rules (and the Jukebox by a third) | one reader, `src/common/cache_manifest.*`, linked by the DLL and the launcher: `base_policy` (exactly `psp` / `psx`, absent `psx`), `exe_tables_from`, the bgm row's build, `[snd]`, the listing. Anything else is one sentence (`ManifestRefusal`): the launcher stops on it before the game starts, the DLL (`psp_code.cpp`) Fatals with it | host suite `TestOneReader` (good, absent, seven misspellings); `run4.sh`: `bof3x.exe` started alone and the launcher, over six one-file caches | `psp`, `psx`, absent: exit 0 both, the DLL's default as the policy says; `"PSP"`, `psp` unquoted, `exe_tables_from = 3`: the DLL exit 3 and the launcher exit 1, the same sentence |
+| 5 | The Jukebox built a broken path for a second music member | `suites.py check` refuses a second `bgm` member, naming the Jukebox's one column; `ListPsp` takes the first member and stops | `neg_bgm.py`: a second `bgm` member added to audio | refused with the reason; the committed toml 0 errors |
+| 6 | Ticking and unticking the chord box wrote a default `opt=` where the line was empty | the box records a choice (`-1` / `0` / `1`); `opt=` is made once on Play from the line as read with the suites' choices (`SuitesOptEdit`'s `extra`), so a choice back where it started writes the line byte for byte | host suite `TestChordRoundTrip`: the old two edits give `area4-walls` over an empty line; now `""`, `none`, `area4-walls`, `psp-art,area4-walls` each come back byte for byte | passes |
+| 7 | A mistyped `psp=` started the game and failed inside it | `ConfigPspValid` (the DLL's rule: empty, `none`, or distinct items of the engine's) checked up front as `opt=` is; the DLL keeps its check | host suite `TestPspValid`; `run7.sh` | `duel-loss` exit 0 (`duel-loss on`); `duel-los`, `duel-loss,duel-loss`, `none,myria-item` exit 1 naming the fault |
+
+Also changed: the launcher's `Die` shows no message box under
+`BOF3X_SELFTEST_ONLY` (as the DLL's `Fatal`), so its up-front refusals can be
+run headless; `dialog_test.py`'s PC + PSX + PSP fake manifest lists the four
+layers its tree holds (it listed `psp-art` alone, and finding 2 would have
+greyed the others). The message for a layer the launcher drops now names the
+manifest, or under `BOF3X_CACHE_DATA=0` that only a music part is read.
+
+**Checks** (this machine, 2026-10-12):
+
+| Check | Result |
+|---|---|
+| the i686 build | clean, no warning |
+| launcher host suite (`lh.sh`) | **215 checks, 0 failures** |
+| `importer.py check`; `suites.py check`; `psp_layers.py check` | exit 0; 0 errors; 5 layers, 0 errors |
+| `ledger_check.py` | 101 entries, 0 errors, 2 notes (as at the tip) |
+| hosted `'*'`, the PC install, an ini-less copy (`run_checks.sh`) | exit 0, `inject: 10087 ours`, no shadow reporting a mismatch |
+| exe host, PSX disc-only (a copy of PN's `g_us`, the coordinator's `ref_us`, `en-US`) | exit 0, `inject: 10088 ours`, `exe_own: 17 regions ... filled over a disc-built image`, the battle rules off (`base_policy is psx`) |
+| exe host, PSP-only (a copy of PN's `g_psp`, TG's PSP-EU cache, `en-150`) | exit 0, `inject: 10088 ours`, the battle rules on (`base_policy is psp`) |
+| the PC and PSX paths (`refs.sh`): JP + PC, US alone, Europe alone against `psp_coord/ref_*` | 2,126, 1,873 and 1,865 files, every file identical; the JP + PC manifest differs only by wave one's `[build]` table (its reference predates IM2; US and Europe were rebuilt after it), not a line of this branch's; `recipes/exe-gaps.tsv` untouched |
+
+`run1.sh` ran on a build whose launcher line still said "TG-3"; the final
+build's says the same without the placeholder, and the code is otherwise the
+same.
+
+**Found, not fixed:** `importer.py verify` on a US + PSP-EU cache reports
+`opt/area4-walls`: "AREA004.DAT slot 6: composed with the layer, not the
+recipe's" (1 of 2 base chunks), with the round tip's own tools on the tip's
+build as well (`tipverify.sh`): older than these fixes, not looked into.
+
+**Not verified:** the dialog and the Jukebox by script (`dialog_test.py` is
+the end batch's; its fake manifest changed here and was not run); anything
+played or heard; a hosted run whose ini names a mod's exe layer (the host
+suite covers the rule only).
+
 ## For the other files
 
 For the coordinator to fold in. These edits are not made here.
