@@ -1513,12 +1513,14 @@ def install_base(cache, game):
         order.setdefault(name, []).append(layer)
     dat_dir = os.path.join(game, "DAT")
     os.makedirs(dat_dir, exist_ok=True)
-    written, partial, none = 0, [], []
+    written, partial, none, no_base = 0, [], [], []
     for name, layers in order.items():
         files, at, parts, left = {}, collections.Counter(), [], 0
         for layer in set(layers):
             p = os.path.join(cache, *layer.split("/"), "dat", name)
             files[layer] = dat.load(p) if os.path.isfile(p) else None
+        if "base" in files and files["base"] is None:
+            no_base.append(name)    # base/ lacks it: no language layer fills that (docs/psp-install.md 1)
         for layer in layers:
             got = files[layer]
             if got is None:
@@ -1550,6 +1552,13 @@ def install_base(cache, game):
           "files, BGM/ empty (the music is the cache's base/bgm, played with cache= / BOF3X_CACHE)"
           % (written, len(partial), len(none),
                                                                   ", ".join(none) or "none", len(snd)))
+    if no_base:
+        # A cache whose base/ is incomplete (a PSP disc alone, until its
+        # stand-ins: docs/psp-install.md 1): those containers are written from
+        # what the cache has, but the game will not find their base chunks.
+        print("base: WARNING - %d of the %d containers have no base/ file in this cache, so their base chunks are "
+              "missing from DAT/ (not text a language layer replaces): %s%s"
+              % (len(no_base), written, ", ".join(no_base[:8]), ", ..." if len(no_base) > 8 else ""))
 
 
 def cmd_install(a):
@@ -1867,16 +1876,24 @@ def fmv_build(sources, out):
     """build's movie row: base/fmv/CAPCOM.AVI from the first PSX disc among the
     sources, by the player's ffmpeg, and an [fmv] table appended to the
     manifest (the source sectors' hash, the ffmpeg, the file's hash; or why it
-    was not written). No PSX disc: nothing, and no table."""
+    was not written). No PSX disc and no PC source: the first PSP disc's
+    CAPLOGO.PMF instead (tools/psp_fmv.py); otherwise nothing, and no table."""
     import subprocess
     import psx_disc
     disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
-    if disc is None:
+    # The PSP's movie only where nothing else gives one: no PSX disc and no PC
+    # install (whose own capcom.avi install keeps).
+    psp = None if any(s.id.startswith("pc-") for s in sources) else         next((s for s in sources if s.id.startswith("psp-") and hasattr(s, "build")), None)
+    if disc is None and psp is None:
         return
     d = os.path.join(out, FMV_DIR)
     dst = os.path.join(d, FMV_NAME)
     if os.path.exists(dst):
         os.remove(dst)          # never a stale movie beside a manifest that does not name it
+    if disc is None:            # the PSP case: CAPLOGO.PMF (tools/psp_fmv.py, docs/psp-install.md 2)
+        import psp_fmv
+        fmv_record(out, psp_fmv.convert(psp.id, psp.path, dst, at3.find_ffmpeg()))
+        return
     # Nothing here fails the build: a cooked image, a disc without the file, no
     # ffmpeg or one that cannot run all leave a `skipped` row (review item 1).
     row = {"build": disc.id, "source": FMV_STR}
@@ -1931,6 +1948,11 @@ def fmv_build(sources, out):
             with open(dst, "rb") as fh:
                 row.update(ffmpeg=at3.ffmpeg_version(ffmpeg), file=FMV_DIR.replace(os.sep, "/") + "/" + FMV_NAME,
                            sha256=sha(fh.read()))
+    fmv_record(out, row)
+
+
+def fmv_record(out, row):
+    """The [fmv] table appended to the manifest, and build's line."""
     lines = ["", "# base/fmv/: the disc's logo movie converted by the player's ffmpeg (docs/fmv-import.md).", "[fmv]"]
     lines += ["%s = %s" % (k, toml_str(v)) for k, v in row.items()]
     with open(os.path.join(out, "manifest.toml"), "a", newline="\n", encoding="utf-8") as fh:
@@ -1938,7 +1960,7 @@ def fmv_build(sources, out):
     if "skipped" in row:
         print("  base/fmv  not written: %s" % row["skipped"])
     else:
-        print("  base/fmv  from %s: %s (%s)" % (disc.id, FMV_NAME, row["ffmpeg"]))
+        print("  base/fmv  from %s: %s (%s)" % (row["build"], FMV_NAME, row["ffmpeg"]))
 
 
 def fmv_avi_header(body):
@@ -1961,12 +1983,16 @@ def fmv_verify(cache):
         row = tomllib.load(fh).get("fmv")
     held = os.path.isfile(os.path.join(cache, FMV_DIR, FMV_NAME))
     if row is None or "skipped" in row:
-        why = "no PSX disc among the sources" if row is None else row["skipped"]
+        why = "no PSX or PSP disc among the sources" if row is None else row["skipped"]
         print("  base/fmv/: absent - %s%s" % (why, "; but a %s is there the manifest does not name" % FMV_NAME
                                              if held else ""))
         return 1 if held else 0
     errs, hdr = [], None
-    if row["source_sha256"] != FMV_SOURCE_SHA256:
+    if row["build"].startswith("psp-"):         # the PSP case (tools/psp_fmv.py)
+        import psp_fmv
+        if row["source_sha256"] != psp_fmv.SOURCE_SHA256:
+            errs.append("its source is not the PMF docs/psp-install.md measured")
+    elif row["source_sha256"] != FMV_SOURCE_SHA256:
         errs.append("its source is not the stream docs/fmv-import.md measured")
     if not held:
         errs.append("%s: missing" % row["file"])
@@ -2061,6 +2087,8 @@ def cmd_check(a):
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
     serrs += ["seq.py: " + e for e in seq.check_fixture(builds)]   # fixtures/bgm.tsv's shape and format versions
     serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
+    import psp_fmv                                     # the PSP's logo movie: the PSMF demux on a synthetic file
+    serrs += ["psp_fmv.py: " + e for e in psp_fmv.check()]
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
     werrs = cache_walk.check()
     for e in (errs + oerrs + serrs + werrs)[:30]:
@@ -2068,7 +2096,8 @@ def cmd_check(a):
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
           % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
              len(oerrs)))
-    print("seq / at3 check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, recipes/psp.snd.toml, %d error(s)" % len(serrs))
+    print("seq / at3 / psp_fmv check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, recipes/psp.snd.toml, "
+          "a synthetic PSMF, %d error(s)" % len(serrs))
     print("cache_walk check: the engine's cache walk against install on a synthetic cache, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
     return exe_tables.cmd_check(a) | (1 if errs else 0)
