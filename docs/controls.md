@@ -178,6 +178,23 @@ Each part of the rule rests on a measurement:
   release's assignment on a Western install would be a divergence, and is
   for the owner to decide.
 
+Verified with headless self-tests on 2026-10-12. Each exited 0 with
+`self-test only: done`.
+
+- The exe host with `BOF3.exe`, and with `analysis/cache/pc-plus-us`: `exe_own: 18 regions,
+  20886 bytes ... each equal to BOF3.exe's .data`.
+- The real install with a fresh US `base/exe/` (`exe_tables.py build`): the
+  range is classed `own`, and 455 `gap` ranges are left (456 before).
+  `627132 of 638976 bytes equal` (627,123 before, so the nine non-zero
+  bytes), and every class that must equal does.
+- The disc-only scratch install with no `BOF3.exe`, with the IN group's
+  cache and with the fresh one: `inject: 10088 ours`. The IN cache was built
+  before this change, so its `data.toml` still logs the range as a `gap`, but
+  the fill writes over it. A cache rebuilt from this recipe classes it `own`.
+- Hosted, `BOF3X_SHADOW=exe_own,shell,mode_flow`: `exe_own self-test: a fill
+  into a zeroed image writes 16904 non-zero bytes in 18 regions, each the
+  PC's`, and `mode_flow` and `shell` report 0 mismatches.
+
 ## 3. What is wrong today, in one list
 
 1. Modern pads: d-pad dead, L2 unreachable, button order scrambled, and
