@@ -112,6 +112,7 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
         if (key == "language") {
             if (ConfigLanguageKnown(value)) {
                 cfg.language = value;
+                cfg.language_named = true;
             } else if (const char* use = RetiredLanguageReplacement(value.c_str())) {
                 // DIV-0005: retired, not mapped; the launcher stops on it.
                 error = "bof3x.ini's language=" + value + " is retired; use " + use + " (DIV-0005)";
@@ -633,6 +634,52 @@ bool ConfigLanguageKnown(const std::string& code) {
     for (const LanguageInfo& lang : kLanguages)
         if (code == lang.code) return true;
     return false;
+}
+
+bool ConfigOriginalAvailable(const std::wstring& game_dir, const std::wstring& cache) {
+    return AnyMatch(game_dir + L"\\BOF3.exe") || CacheHasLayer(cache, L"loc", "zh-CN");
+}
+
+bool ConfigResolveLanguage(const std::wstring& game_dir, Config& cfg, std::string& error) {
+    const std::wstring cache = ConfigCacheDataRoot(cfg);
+    if (ConfigOriginalAvailable(game_dir, cache)) return true;
+    const std::vector<std::string> held = ConfigLanguagesAvailable(game_dir, cache);
+    std::string list;
+    for (const std::string& tag : held) list += (list.empty() ? "" : ", ") + tag;
+    const std::string why =
+        "This is a disc-only install: no BOF3.exe in the game directory and no loc\\zh-CN layer in the cache" +
+        std::string(cache.empty() ? " (no cache= or BOF3X_CACHE)" : "") +
+        ", so the port's Chinese text is not there and the game would play without text (DIV-TBD-LX-1).\n\n" +
+        (held.empty() ? std::string("It holds no language layer: build one (tools/importer.py build --lang <tag>, "
+                                    "install --lang <tag>).")
+                      : "The languages it holds: " + list + ".");
+    char lang[16];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    if (n > 0) {
+        if (n >= sizeof lang || std::string(lang) == kLanguageOriginal) {
+            error = std::string("BOF3X_LANG=") + (n >= sizeof lang ? "(too long, read as original)" : lang) +
+                    " asks for the port's Chinese text.\n\n" + why;
+            return false;
+        }
+        if (std::find(held.begin(), held.end(), lang) != held.end()) return true;
+        error = std::string("BOF3X_LANG=") + lang + " is not built here.\n\n" + why;
+        return false;
+    }
+    if (cfg.language_named) {
+        if (std::find(held.begin(), held.end(), cfg.language) != held.end()) return true;
+        error = "bof3x.ini's language=" + cfg.language +
+                (cfg.language == kLanguageOriginal ? " asks for the port's Chinese text.\n\n" : " is not built here.\n\n") +
+                why;
+        return false;
+    }
+    if (held.empty()) {
+        error = why;
+        return false;
+    }
+    cfg.language = held.front();
+    std::fprintf(stderr, "bof3x-launcher: a disc-only install, no Chinese text: language %s, the first it holds "
+                 "(DIV-TBD-LX-1)\n", cfg.language.c_str());
+    return true;
 }
 
 bool ConfigCheckEnvironmentLanguage(std::string& error) {
