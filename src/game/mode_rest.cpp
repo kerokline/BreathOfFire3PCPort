@@ -378,7 +378,15 @@ extern "C" void __cdecl GameMode5_Leave(void) {
             bool resume = false;
             if (track == 0xFF && mode_flow::g_area_track_fallback) {
                 track = At(at::kAreaTrack)[0];
-                resume = track != 0xFF && music_resume::Arm(track);
+                // DIV-0092, second amendment (2026-10-11): after an event battle
+                // (Field_StartEventBattle's byte, cleared below) the area's song
+                // starts from its top, as the PlayStation's does after the Nue
+                // fight (the owner, mednafen) - even when it is the very song the
+                // battle took over, as it was there. Only a random encounter resumes.
+                const unsigned char event = At(at::kEventBattle)[0];
+                resume = track != 0xFF && event == 0 && music_resume::Arm(track);
+                if (track != 0xFF && event != 0)
+                    bof3::Log("DIV-0092    event battle %u over: the area's track %u from its top, no resume", event, track);
             }
             if (track != 0xFF) SH_CALL(Music_Play)(track, resume ? music_resume::kResumeFadeFrames : 0xA);
         }

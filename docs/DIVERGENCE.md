@@ -5488,23 +5488,21 @@ designed in rather than bolted on.
   at a battle's end (not read in its overlay here: the main executable has
   `nop`s at the twin's address `0x80198F48`; the claim rests on D241's and
   `field-modes.md`'s readings). Case 2 cannot happen there. **Heard on the
-  PlayStation, 2026-10-11 night:** the owner loaded the `cutsceneAndNue`
-  route's save (made inside the sunset cutscene, where the script had
-  stopped the music; converted with `save_convert.py pc2psx` into a copy of
-  their US card) in mednafen - the area's music starts on that load there
-  too. So the load half matches the PlayStation for a save taken inside a
-  scripted silence; the question came from the owner hearing music in the
-  cabin on the PC during that route's replay. **Open, the same night:** on
-  mednafen, after the Nue boss battle of that route, the PlayStation
-  *starts* the area's song from its beginning - it does not resume the
-  pre-battle position the way the amendment below says it does, from the
-  owner's earlier listening. The two observations fit if the rule differs
-  by battle kind (an event or boss battle restarts, a random encounter
-  resumes); ours resumes after every battle. **To settle:** the owner, from
-  the same save on mednafen, a random encounter after the fight - resume or
-  restart; then the twin read of the battle-end path for the two kinds. If
-  the boss case restarts, the resume gets a condition and this entry a
-  second amendment.
+  PlayStation, 2026-10-11 night (the owner, mednafen, the `cutsceneAndNue`
+  route's save converted with `save_convert.py pc2psx` into a copy of their
+  US card):** the area's music starts on that load there too - the load
+  half matches for a save taken inside a scripted silence; and **after the
+  Nue event battle the PlayStation starts the area's song from its top**,
+  where ours resumed it mid-song, because there the pre-boss song *is* the
+  area's track (the music log of the replay: `Music_Play(29)` by the script
+  at frame 3458, `remember track 29` at 4240, `resume track 29` at 6726).
+- **Second amendment (2026-10-11 night):** after an **event battle**
+  (`Field_StartEventBattle`'s byte `0x904AAA`, which `GameMode5_Leave`
+  clears after use) the area's track starts from its top with Capcom's fade
+  (`0xA`); the resume is for random encounters only. One `DIV-0092    event
+  battle N over` log line says so. The random-encounter resume itself rests
+  on the owner's earlier listening and is on the owner's list to confirm
+  from the same save.
 - **Verification:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=mode_flow,mode_rest,sound`
   exit 0 (the fuzzes run Capcom's rule, the switch armed after them). The
   owner's route `tools/recipes/musicStopCheck.txt` under `BOF3X_MUSIC_LOG=1`
