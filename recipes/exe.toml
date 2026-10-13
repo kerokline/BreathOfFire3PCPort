@@ -17,10 +17,10 @@ rebuild_sha256 = "50a23a57d94adebee7137ca3d28f7bae71e1153101fd713e27528beccf3db0
 places = "exe-places.tsv"
 places_sha256 = "0fb3540bb89208bd88515e3cd68210b0abf854630b795ed6e8cc957e96366ab5"
 psp = "exe-psp.tsv"
-psp_sha256 = "5dd986045d76d03f532ba1cdb91c022e69ffe39cef94ac23058adfb4437ffd53"
+psp_sha256 = "d423e0fdf3561297f4e8ebe4cb61f9460f4d6ed92c9263c3bd595af97b53ce61"
 layout = "exe-layout.tsv"
-layout_sha256 = "b23772e2501123e87129384521cb35e92c3afae6d6f201fdb4c518e09dcb9c19"
-layout_numbers = 388
+layout_sha256 = "0f37fee54b748edd1f2db3664689c905724e765d8a0607dcc9f534cd2236a793"
+layout_numbers = 385
 layout_code_unnamed = 111
 
 [build.pc-zh]
@@ -51,16 +51,16 @@ rebuild_word_unplaced = 2021
 identical = 614099
 
 [build.psx-us]
-sha256 = "2101058a65bf793d8e90f601185160cc27a8e85834a6e2aef475796e38f8fedb"
-ranges = 8119
+sha256 = "048f838b9679d9c2316fd82e9a0f18428220c133f2377067679e22f210b3bc9b"
+ranges = 8120
 places = 196
 placed_by_pointer = 12953
-placed_equal = 494578
+placed_equal = 494605
 placed_differ = 3169
 pointer_pc_zero = 0
 pointer_pc_nonzero = 0
-none_pc_zero = 39569
-none_pc_nonzero = 7496
+none_pc_zero = 39556
+none_pc_nonzero = 7482
 own_pc_zero = 3924
 own_pc_nonzero = 14908
 rebuilt_equal = 27840
@@ -71,19 +71,19 @@ rebuild_refused = 191
 rebuild_ambiguous = 95
 rebuild_target_unplaced = 648
 rebuild_word_unplaced = 2059
-identical = 613403
+identical = 613417
 
 [build.psx-eu-en]
-sha256 = "2dc5a99820628621fc4fc151caa931958313557dd6106c858ec384ac003e23e7"
-ranges = 8056
+sha256 = "e1f17802bc4f4f746c928f10ff779df3f6a6b7879b06bc25f12261314556e69e"
+ranges = 8057
 places = 200
 placed_by_pointer = 12367
-placed_equal = 494281
+placed_equal = 494309
 placed_differ = 3166
 pointer_pc_zero = 0
 pointer_pc_nonzero = 0
-none_pc_zero = 39872
-none_pc_nonzero = 7493
+none_pc_zero = 39858
+none_pc_nonzero = 7479
 own_pc_zero = 3924
 own_pc_nonzero = 14908
 rebuilt_equal = 27588
@@ -94,19 +94,19 @@ rebuild_refused = 195
 rebuild_ambiguous = 97
 rebuild_target_unplaced = 629
 rebuild_word_unplaced = 2135
-identical = 613409
+identical = 613423
 
 [build.psx-fr]
-sha256 = "222695d484c804a740cda3a139aaa853c49582b6d6d7fcb53453b6c1709be63c"
-ranges = 8045
+sha256 = "6f7135b3803171dbb8a95bd6d26f906b9d7138bc2c4dd1720ab49ca5eebf08a5"
+ranges = 8046
 places = 199
 placed_by_pointer = 12343
-placed_equal = 494193
+placed_equal = 494221
 placed_differ = 3168
 pointer_pc_zero = 0
 pointer_pc_nonzero = 0
-none_pc_zero = 39893
-none_pc_nonzero = 7557
+none_pc_zero = 39879
+none_pc_nonzero = 7543
 own_pc_zero = 3925
 own_pc_nonzero = 14908
 rebuilt_equal = 27572
@@ -117,19 +117,19 @@ rebuild_refused = 195
 rebuild_ambiguous = 96
 rebuild_target_unplaced = 628
 rebuild_word_unplaced = 2141
-identical = 613343
+identical = 613357
 
 [build.psx-de]
-sha256 = "b11d2b5ec9648a2ffecafbd5c5e898b9ff634fd6b433ddad70a65ef1be083e45"
-ranges = 8049
+sha256 = "c4c27555777d3a7670c358d4c6926b8587b3e7ae218eb42ddfa86210eff6e1cc"
+ranges = 8050
 places = 199
 placed_by_pointer = 12343
-placed_equal = 494202
+placed_equal = 494230
 placed_differ = 3165
 pointer_pc_zero = 0
 pointer_pc_nonzero = 0
-none_pc_zero = 39888
-none_pc_nonzero = 7557
+none_pc_zero = 39874
+none_pc_nonzero = 7543
 own_pc_zero = 3924
 own_pc_nonzero = 14908
 rebuilt_equal = 27564
@@ -140,7 +140,7 @@ rebuild_refused = 195
 rebuild_ambiguous = 96
 rebuild_target_unplaced = 630
 rebuild_word_unplaced = 2141
-identical = 613346
+identical = 613360
 
 [build.psp-jp]
 sha256 = "5448bf4fcf48d4d40998e5ebd0344b5e4ddbda08fcae7317a09fc756f1d6ae7c"

@@ -102,6 +102,7 @@ TWINS = [
     (0x66AF24, 0x66AF34, "ETC/GAME.EMI", "the battle result window's icon by item kind"),
     (0x66B5B4, 0x66B5C4, "BATTLE/BATTLE.EMI", "the battle menu equipment window's slot icons and categories"),
     (0x653EC0, 0x653EC5, "ETC/GAME.EMI", "the item list's count format"),
+    (0x66ADBC, 0x66ADD8, "ETC/GAME.EMI", "the walk poses by direction and Area_ClassifyPending's world-map areas"),
     (0x5E10C0, 0x5E10C3, "BATTLE/BATL_END.EMI", "the number format '%d' (the result's EXP, zenny; Area08_MessageFormat)"),
     (0x654900, 0x654903, "BATTLE/BATL_END.EMI", "the '%s' format of battle_e7's ability lines"),
     (0x6641DC, 0x6641E1, "ETC/SHOP.EMI", "the shop's cost format"),

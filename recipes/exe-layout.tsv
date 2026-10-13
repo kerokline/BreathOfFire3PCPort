@@ -18636,9 +18636,6 @@ pc	kind	target
 0x66A4D0	data	0x66A4B4
 0x66A4D8	data	0x66A4B8
 0x66A4E0	data	0x66A4C0
-0x66ADC4	number	-
-0x66ADC8	number	-
-0x66ADCC	number	-
 0x66AE40	code	MenuWin_Hand
 0x66AE44	code	Win1_TitleStrip
 0x66AE48	code	Win1_ButtonRow

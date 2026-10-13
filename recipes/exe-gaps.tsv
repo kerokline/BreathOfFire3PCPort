@@ -853,7 +853,6 @@ psx-us	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psx-us	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psx-us	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-us	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
-psx-us	0x66ADBD	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72D
 psx-us	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
 psx-us	0x66B468	0x66B46E	gap	game-value	MasterWin_Requirements+0x44
 psx-us	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
@@ -1345,7 +1344,6 @@ psx-eu-en	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psx-eu-en	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psx-eu-en	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-eu-en	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
-psx-eu-en	0x66ADBB	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72B
 psx-eu-en	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
 psx-eu-en	0x66B468	0x66B46E	gap	game-value	MasterWin_Requirements+0x44
 psx-eu-en	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
@@ -1837,7 +1835,6 @@ psx-fr	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psx-fr	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psx-fr	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-fr	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
-psx-fr	0x66ADBA	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72A
 psx-fr	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
 psx-fr	0x66B1F1	0x66B1F8	gap	game-value	MenuList_GeneWinSteps+0x25
 psx-fr	0x66B468	0x66B46E	gap	game-value	MasterWin_Requirements+0x44
@@ -2330,7 +2327,6 @@ psx-de	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psx-de	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psx-de	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psx-de	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
-psx-de	0x66ADBA	0x66ADD8	gap	disc-unplaced	Fish_Kinds+0x72A
 psx-de	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
 psx-de	0x66B1F3	0x66B1F8	gap	game-value	MenuList_GeneWinSteps+0x27
 psx-de	0x66B468	0x66B46E	gap	game-value	MasterWin_Requirements+0x44
