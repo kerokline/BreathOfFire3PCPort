@@ -6,7 +6,8 @@
 # widen<k> (the formation wheel's spots, the disc's name k bytes), psxmap (a PSP disc's own EMI
 # at the PSX-JP map's place; pspmap: the same segment at this disc's own place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),
 # msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from
-# COMMU00's 9-byte records) - and how many bytes it fills.
+# COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit) - and how
+# many bytes it fills.
 # A row is written only when every
 # byte equals BOF3.exe's.
 # Addresses and counts only (CLAUDE.md rule 1).
@@ -523,6 +524,7 @@ psx-us	twin	0x65EC54	0x65EC64	WORLD04/AREA169.EMI	13	0x801F3AA4	16
 psx-us	twin	0x65EC74	0x65EC80	WORLD02/AREA105.EMI	13	0x801F3330	12
 psx-us	twin	0x660D5C	0x660D68	SCENARIO/SCENA02.EMI	0	0x801FE268	12
 psx-us	widen8	0x6636B0	0x6637C8	ETC/BATE.EMI	0	0x801D0C50	120
+psx-us	verb	0x663866	0x663867	ETC/STATUS.EMI	0	0x801ECB06	1
 psx-us	twin	0x66386C	0x663872	ETC/STATUS.EMI	0	0x801ECB24	6
 psx-us	twin	0x6639A8	0x6639B0	ETC/START.EMI	8	0x801D0C58	8
 psx-us	twin	0x6639B0	0x6639B8	ETC/START.EMI	8	0x801D0C50	8
@@ -792,6 +794,7 @@ psx-eu-en	twin	0x65EC54	0x65EC64	WORLD04/AREA169.EMI	13	0x801F3AA4	16
 psx-eu-en	twin	0x65EC74	0x65EC80	WORLD02/AREA105.EMI	13	0x801F3330	12
 psx-eu-en	twin	0x660D5C	0x660D68	SCENARIO/SCENA02.EMI	0	0x801FE268	12
 psx-eu-en	widen8	0x6636B0	0x6637C8	ETC/BATE.EMI	0	0x801D0C50	120
+psx-eu-en	verb	0x663866	0x663867	ETC/STATUS.EMI	0	0x801ECB06	1
 psx-eu-en	twin	0x66386C	0x663872	ETC/STATUS.EMI	0	0x801ECB24	6
 psx-eu-en	twin	0x6639A8	0x6639B0	ETC/START.EMI	8	0x801D0C58	8
 psx-eu-en	twin	0x6639B0	0x6639B8	ETC/START.EMI	8	0x801D0C50	8
@@ -1059,6 +1062,7 @@ psx-fr	twin	0x65EC54	0x65EC64	WORLD04/AREA169.EMI	13	0x801F3AA4	16
 psx-fr	twin	0x65EC74	0x65EC80	WORLD02/AREA105.EMI	13	0x801F3330	12
 psx-fr	twin	0x660D5C	0x660D68	SCENARIO/SCENA02.EMI	0	0x801FE268	12
 psx-fr	widen8	0x6636B0	0x6637C8	ETC/BATE.EMI	0	0x801D0C50	120
+psx-fr	verb	0x663866	0x663867	ETC/STATUS.EMI	0	0x801EC952	1
 psx-fr	twin	0x66386C	0x663872	ETC/STATUS.EMI	0	0x801EC970	6
 psx-fr	twin	0x6639A8	0x6639B0	ETC/START.EMI	8	0x801D0C58	8
 psx-fr	twin	0x6639B0	0x6639B8	ETC/START.EMI	8	0x801D0C50	8
@@ -1323,6 +1327,7 @@ psx-de	twin	0x65EC54	0x65EC64	WORLD04/AREA169.EMI	13	0x801F3AA4	16
 psx-de	twin	0x65EC74	0x65EC80	WORLD02/AREA105.EMI	13	0x801F3330	12
 psx-de	twin	0x660D5C	0x660D68	SCENARIO/SCENA02.EMI	0	0x801FE268	12
 psx-de	widen10	0x6636B0	0x6637C8	ETC/BATE.EMI	0	0x801D0C50	120
+psx-de	verb	0x663866	0x663867	ETC/STATUS.EMI	0	0x801EC9BE	1
 psx-de	twin	0x66386C	0x663872	ETC/STATUS.EMI	0	0x801EC9DC	6
 psx-de	twin	0x6639A8	0x6639B0	ETC/START.EMI	8	0x801D0C58	8
 psx-de	twin	0x6639B0	0x6639B8	ETC/START.EMI	8	0x801D0C50	8

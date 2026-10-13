@@ -41,7 +41,9 @@ Two more since 2026-10-12 evening (the owner's visual findings, docs/visual-find
 
 And wmrec, boxxy and cellhk (the constants below say what each reads; cellhk since
 2026-10-13, docs/visual-findings-1012.md 10), faerie (2026-10-13,
-docs/abc-sweep-1013-village.md 2): a field copied between record tables of different strides, and
+docs/abc-sweep-1013-village.md 2): a field copied between record tables of different strides,
+verb (2026-10-13, the owner's call, docs/abc-sweep-1013-village.md 4.1): one byte the Western
+discs give a verb the port lacks, mapped to the port's, and
 pspmap (2026-10-13, docs/exe-image-twins-1013.md
 3): a psxmap run the PSP disc's file holds elsewhere than PSX-JP's place, read at the place
 PSX-JP's own bytes either side of it put it in this disc's file (own_place; the recipe
@@ -90,7 +92,7 @@ PSX = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
 RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk",
-         "faerie", "pspmap")   # widen<k>: the disc's name is k bytes
+         "faerie", "pspmap", "verb")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
@@ -235,6 +237,21 @@ CH_RECORDS, CH_COUNT, CH_STRIDE, CH_AREA = 0x662F28, 28, 8, 0
 FA_RECORDS, FA_COUNT, FA_STRIDE, FA_FIELD = 0x653200, 60, 0x14, 0x10
 FA_FILE, FA_DISC_STRIDE, FA_DISC_FIELD = "ETC/COMMU00.EMI", 9, 5
 FA_END = FA_RECORDS + FA_STRIDE * (FA_COUNT - 1) + FA_FIELD      # 0x6536AC: the area-limit run's start
+# verb: Menu_ButtonSets (0x66383C, nine 5-byte records: a count, up to four indices into the
+# verb table Menu_DrawButtons labels them from). Set 8 is (2, 0x14, 0x0B) on the PC and the
+# JP-shaped discs; the US, European, French and German releases gave its second button a verb
+# of their own, the 23rd of their 23-entry table (index 0x16, `End`), where the port's 22-entry
+# table has none - index 0x16 would read past the PC's pointer table into Menu_ButtonSets
+# itself, so the map refuses the disc's byte and the image held 0 (`Knd` / `Use`). The owner's
+# call (2026-10-13, docs/abc-sweep-1013-village.md 4.1 option 1): keep the port's `Quit`. The
+# rule maps the Western discs' 23rd verb to the PC's `Quit` (index 0x0B) for that one byte and
+# refuses any other disc byte; the record is found by sets 0..7, which every disc carries
+# verbatim, in VERB_FILE (the file the next twin row, 0x66386C, is read from). DIV-0101's
+# amendment of 2026-10-13.
+VERB_SETS, VERB_SET, VERB_SLOT = 0x66383C, 8, 2          # set 8's second verb: 0x663866
+VERB_AT = VERB_SETS + 5 * VERB_SET + VERB_SLOT
+VERB_FILE, VERB_WEST, VERB_PORT = "ETC/STATUS.EMI", 0x16, 0x0B   # the Western 23rd verb -> the port's Quit
+VERB_BUILDS = ("psx-us", "psx-eu-en", "psx-fr", "psx-de")
 # boxxy: the dialogue box's two position tables (window_task.cpp kBoxXY 0x66ADD8, kBoxAltXY
 # 0x66ADE8: 7 x (u8 x, u8 y) and two zero bytes each). The PSP's BOOT.BIN holds them as 7 x
 # (s16 x, s16 y), the two tables 0x1C apart, with entries 3..6 framed for its 384-wide view:
@@ -596,6 +613,10 @@ def build_fill(row, disc, elf, rule, srcs):
             o, d = FA_STRIDE * i + FA_FIELD, FA_DISC_STRIDE * i + FA_DISC_FIELD
             out[o:o + 4] = blob[at + d:at + d + 4]
             mask[o:o + 4] = [True] * 4
+    elif rl == "verb":
+        if hi - lo != 1 or lo != VERB_AT or blob[at] != VERB_WEST:
+            fail("%s: %s 0x%X is not set 8's Western 23rd verb (0x%02X)" % (row["build"], row["file"], row["addr"], VERB_WEST))
+        out[0], mask[0] = VERB_PORT, True
     elif rl == "msets":
         # A list is its entries and the bytes after them up to the next list (Area_ZoneTrack
         # reads the entry past the last as the fallback): the disc's span, as far as the
@@ -733,6 +754,12 @@ def find_rows(disc, bid, pc, ref_srcs=None):
                      "file": fa[0], "section": fa[1], "addr": fa[2]})
     else:
         print("  %s faerie: the faeries' trait records not found in %s" % (bid, FA_FILE))
+    v = verb_place(srcs, pc) if bid in VERB_BUILDS else None
+    if v:
+        rows.append({"build": bid, "rule": "verb", "pc": VERB_AT, "pc_end": VERB_AT + 1, "file": VERB_FILE,
+                     "section": v[0], "addr": v[1]})
+    elif bid in VERB_BUILDS:
+        print("  %s verb: set 8 with the 23rd verb not found in %s" % (bid, VERB_FILE))
     if psp:
         ch = records_place(srcs, pc, "ETC/GAME.EMI", CH_RECORDS, CH_COUNT, CH_STRIDE, CH_AREA)
         if ch:
@@ -1054,6 +1081,23 @@ def records_place(srcs, pc, file, records, count, stride, field, disc_stride=Non
     return None
 
 
+def verb_place(srcs, pc):
+    """VERB_FILE's copy of Menu_ButtonSets whose sets 0..7 are BOF3.exe's and whose set 8
+    is (2, 0x14, VERB_WEST): (section, the disc address of set 8's second verb) or None."""
+    sets = pc[VERB_SETS - DATA_LO:VERB_SETS + 5 * VERB_SET - DATA_LO]
+    head = pc[VERB_AT - VERB_SLOT - DATA_LO:VERB_AT - DATA_LO]
+    for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
+        if f != VERB_FILE:
+            continue
+        a = blob.find(sets)
+        while a >= 0:
+            b = a + len(sets)
+            if blob[b:b + VERB_SLOT] == head and blob[b + VERB_SLOT] == VERB_WEST:
+                return s, base + b + VERB_SLOT
+            a = blob.find(sets, a + 1)
+    return None
+
+
 def faerie_records(n):
     """How many trait records' stats a faerie row of n bytes from FA_RECORDS covers."""
     return (n - FA_FIELD - 4) // FA_STRIDE + 1 if n >= FA_FIELD + 4 else 0
@@ -1083,7 +1127,8 @@ def write_recipe(rows):
              "# widen<k> (the formation wheel's spots, the disc's name k bytes), psxmap (a PSP disc's own EMI",
              "# at the PSX-JP map's place; pspmap: the same segment at this disc's own place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),",
              "# msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from",
-             "# COMMU00's 9-byte records) - and how many bytes it fills.",
+             "# COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit) - and how",
+             "# many bytes it fills.",
              "# A row is written only when every",
              "# byte equals BOF3.exe's.",
              "# Addresses and counts only (CLAUDE.md rule 1).",
@@ -1229,13 +1274,16 @@ def check():
             last = r["pc_end"]
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES}.get(r["rule"])
+            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES, "verb": n}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes filled, the rule fills %d" % (bid, r["pc"], r["filled"], want))
             if r["rule"] == "cellhk" and (bid not in PSP or r["pc"] != CH_RECORDS):
                 errs.append("exe-psp.tsv: %s 0x%06X: a cellhk row off the rule" % (bid, r["pc"]))
+            if r["rule"] == "verb" and (bid not in VERB_BUILDS
+                                        or (r["pc"], r["pc_end"], r["file"]) != (VERB_AT, VERB_AT + 1, VERB_FILE)):
+                errs.append("exe-psp.tsv: %s 0x%06X: a verb row off the rule" % (bid, r["pc"]))
             if r["rule"] == "faerie" and (r["pc"], r["pc_end"], r["file"]) != (FA_RECORDS, FA_END, FA_FILE):
                 errs.append("exe-psp.tsv: %s 0x%06X: a faerie row off the rule" % (bid, r["pc"]))
             if r["rule"] not in ("rows8", "msets", "wmrec", "cellhk") and any(x in ptr for x in range(r["pc"], r["pc_end"])):

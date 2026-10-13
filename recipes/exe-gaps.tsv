@@ -642,7 +642,6 @@ psx-us	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-us	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-us	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-us	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
-psx-us	0x663866	0x66386C	unread	unread	Menu_ButtonSets+0x2A
 psx-us	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-us	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-us	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
@@ -1037,7 +1036,6 @@ psx-eu-en	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-eu-en	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-eu-en	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-eu-en	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
-psx-eu-en	0x663866	0x66386C	unread	unread	Menu_ButtonSets+0x2A
 psx-eu-en	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-eu-en	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
 psx-eu-en	0x669868	0x669883	gap	game-value	Field_MoveSpeeds+0x78
@@ -1433,7 +1431,6 @@ psx-fr	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-fr	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-fr	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-fr	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
-psx-fr	0x663866	0x66386C	unread	unread	Menu_ButtonSets+0x2A
 psx-fr	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-fr	0x664288	0x664298	gap	game-value	SharedList_SortSteps+0xC
 psx-fr	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
@@ -1834,7 +1831,6 @@ psx-de	0x663774	0x663784	gap	game-value	Equip_SlotIcons+0x114
 psx-de	0x663790	0x6637A0	gap	game-value	Equip_SlotIcons+0x130
 psx-de	0x6637AC	0x6637BC	gap	game-value	Equip_SlotIcons+0x14C
 psx-de	0x6637E0	0x6637E4	gap	game-value	Equip_SlotIcons+0x180
-psx-de	0x663866	0x66386C	unread	unread	Menu_ButtonSets+0x2A
 psx-de	0x6639D4	0x6639D8	gap	game-value	Menu_ButtonSets+0x198
 psx-de	0x664288	0x664298	gap	game-value	SharedList_SortSteps+0xC
 psx-de	0x6671EC	0x6671F4	gap	game-value	Music_LoadedTrack+0x1E30
