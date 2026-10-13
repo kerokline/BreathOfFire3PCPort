@@ -1,6 +1,7 @@
 # The hidden-start scan: every table dispatch and every extent, against the code
 
-**Status:** MEASURED (2026-10-06) - the platform round's step 3 batch, group
+**Status:** MEASURED (2026-10-06; section 8 added 2026-10-13: `pe_funcs.py`
+and `pe_hidden.py` fixed and their lists regenerated) - the platform round's step 3 batch, group
 SCAN, from `phase-3/platform-round-2` at `f18b9d9c`. The scan
 [`mode-rest.md`](mode-rest.md) section 0 proposed and did not run, built as
 `tools/pe_jumptables.py` and run over all of `.text` (`0x401000..0x5C3668`);
@@ -298,6 +299,97 @@ with the hand size, the catalogue's, the flow's and which source.
   undecodable byte; a dropped call target kept) would change
   `pc_funcs.json` / `pc_hidden.json` and so the tracer's entry lists - not
   done, since nothing downstream reads them for the count any more.
+  **Fixed 2026-10-13, section 8.**
 - `Mp3_Create`'s evidence ("the MP3 decoder (0x5AB000..0x5B9380)") has the
   decoder's start wrong by section 4.2; left as written (hard rule 3), noted
-  here.
+  here. **Corrected 2026-10-13** by an appended sentence (the address and
+  the original words kept): the decoder's lowest code is `0x5ADEA0`, a helper
+  called 17 times, every call from decoder code (`0x5B4DFF..0x5B8F6C`, a
+  byte scan of every `E8` / `E9`), as [`labelling-pass.md`](labelling-pass.md)
+  measured by closure; `Mp3_Create` `0x5ADF00` is its lowest entry called
+  from outside (once, `0x5A6D68`). "The decoder starts at `0x5ADF00`" in
+  4.2 is that entry, not the range's start.
+
+## 8. The two tools fixed (2026-10-13, `away/1013-tooling`)
+
+Section 1's two faults, fixed in the tools themselves; `BOF3.exe` is the
+player's 2001-04-18 build, `bof3/BOF3.exe` of the main checkout.
+
+**`pe_funcs.py`.** Its own sweep already restarted one byte past an
+undecodable byte (the `stray bytes` count); it now records each one's
+address (`stray_at` in the JSON, the first twelve runs printed): **119
+bytes in 91 runs**, the first `0x40F394`, `0x40F3C1`, `0x495BB5` (section
+1's), `0x495BC6`, `0x49F10D`, then the scenario band. The fault was the
+other one: a call target the sweep decoded across was dropped. Each is now
+decoded from itself until it meets a boundary of the sweep again, and the
+overlapping sweep instructions are replaced; new targets in the re-read code
+go round again. A target is taken when it is 16-aligned (every game function
+starts on 16) or when control flow from the entry before one of its calls
+reaches that call - a guard measured necessary: the sweep also decodes
+`call`s out of data, and `0x420324`, inside an inline table in
+`Area141_ShadeUpStep`'s extent, aims at `0x42452B`, the middle of the real
+`mov dl, [eax + 0x636A84]` at `0x42452A` (`capstone` on both sites, scratch
+`t_site.py`). Flow alone was tried first and refused 30 real starts whose
+callers sit in jump-table cases, which no direct flow reaches (the area
+hooks `Area_StepHook` `0x56E050` calls, `Scena10_Shake`'s 58 calls).
+
+| `python tools/pe_funcs.py --exe <main>/bof3/BOF3.exe --out <scratch>` | before | after |
+|---|--:|--:|
+| instructions | 591,984 | 591,954 |
+| distinct call targets | 3,004 | 3,004 |
+| functions | 2,952 | **3,004** |
+| entries lost | - | 0 |
+
+The 52 re-anchored targets, each checked against `symbols.toml`: **45 are
+catalogued `[[func]]` starts** (`Item_UseFlags` `0x591810`, 18 calls, the
+one section 4.1 found; `Transition_Start` `0x495040`, 298 calls;
+`MoveCmd_Move` `0x578C10`, 33; `Scena10_Shake` `0x55AAD0`, 58; ...), 5 are
+16-aligned starts inside the MP3 decoder `0x5B4120`, `0x5B4230`,
+`0x5B7820`, `0x5B8FA0`, `0x5B9260` (section 4.2's decoder targets), and 2
+are the runtime's unaligned code, taken by flow: `0x5BAC34` (4 calls) and
+`0x5C210C` (`push ebp; mov ebp, esp` after a dword table). Refused, listed
+in `not_reanchored`: `0x42452B` alone. `unanchored` (a target that does not
+decode at all): none.
+
+**`pe_hidden.py scan`.** It read each extent with one `disasm` call and so
+ended at the first undecodable byte. It now restarts one byte on (`sweep`)
+and prints each extent where that happened. Run on the old extents first, to
+separate the two fixes; the old tool's output on them equals
+`analysis/calltrace/entries_hidden.txt` (2026-09-21) line for line.
+
+| `pe_hidden.py scan` | hidden entries | extents | jump tables dropped | extents with undecodable bytes |
+|---|--:|--:|--:|--:|
+| old tool, old extents (= the 2026-09-21 list) | 7,294 | 769 | 44 | (not reported) |
+| new tool, old extents | 7,492 | 771 | 56 | 29 (119 bytes) - section 1's 29 |
+| new tool, new extents | 7,492 | 787 | 56 | 30 (118 bytes) |
+
+Against the 2026-09-21 list the new one has **199 more entries and one
+fewer; 39 sizes change** (cut at a new start). Of the 199, **116 are
+catalogued starts**: eleven of section 1's thirteen mode functions
+(`GameMode3_Leave` `0x495C50` through `GameMode6_Run` `0x496230`) among
+them. `GameMode3_Run` `0x495BB0` and `GameMode3_Enter` `0x495BC0` are still
+missed: after the restart at `0x495BB6` the sweep is out of step again until
+past them (a second undecodable byte at `0x495BC6`). The other 83 are not
+function starts: 82 are referenced only from `.text` inside their own host
+extent - jump-table case labels of the scenario functions (`0x5397F0` in
+`Scena00_Run11` +0x220, `0x53CD00` in `Scena01_Scene11` +0x20, ...) - and
+one (`0x40F3D0`, `Area79_ChoiceCounter8or9` +0x20) has no reference. The old
+list already held 242 such entries (own-extent references only, not
+catalogued); the rule (section 1) cannot tell a case label after a `jmp`
+and padding from a start, and `classify` / `plus` keep only what a trace
+reaches. The one lost: `Area52_SpawnEffect48B` `0x40A9C0`, now inside the
+re-anchored `Area52_SpawnEffect48BJump` `0x40A940`'s extent, whose tail
+`jmp` to it is a branch inside the extent - the rule's stated exclusion. It
+is catalogued, so nothing depends on the list for it.
+
+**The lists.** Regenerated beside the old ones, not over them:
+`analysis/pc_funcs_1013.json`, `analysis/pc_hidden_1013.json`,
+`analysis/calltrace/entries_hidden_1013.txt` (game-derived, gitignored, so
+nothing to commit - the docstrings' rule 1). The 2026-09-21 / 09-22 files
+stay where other tools (`boss_rows.py`, `area_rows.py`, `entries_audit.py`,
+...) and other agents read them today; replacing them is one `copy` once
+those rows' authors agree. `entries.txt` and `entries_plus_hidden.txt`
+(the tracer's lists) are built from these by `calltrace.py` /
+`pe_hidden.py plus` and were not rebuilt: nothing downstream reads them for
+the count any more (section 7); the tracer's working list is
+`entries_logic.txt`.

@@ -4,7 +4,9 @@
 `psp/abc-harness`); the comparison tested offline on earlier frames and
 synthetic ones (section 7), then live on the eu triple: the attract
 sequence, combat before and after VF's data fixes, cutsceneAndNue, shop
-(section 8). Not seen by the owner.
+(section 8). Not seen by the owner. Amended 2026-10-13 (`away/1013-tooling`):
+the save every side loads is decided before the first run (section 3a), and
+`prepare` names a process holding the launcher copy (section 2).
 
 The owner, 2026-10-12: "we should probably set up a harness to a/b/c test
 the full install / psx only / psp only recipes, it would quickly reveal
@@ -34,7 +36,8 @@ recipe frames, default 30: one a second of game time), `--frames` (the
 attract route's length, default 11,000), `--only a,b` (installs instead of
 the set's), `--statehash` (section 6), `--speed` (`BOF3X_SPEED`, default 1),
 `--tol` / `--min-pixels` (section 4), `--build` (where `prepare` takes the
-launcher, DLL and exe; default this checkout's `build/`).
+launcher, DLL and exe; default this checkout's `build/`), `--save NAME` /
+`--no-save` (the save every side loads, section 3a).
 
 What lands under the root: `c_*` caches, `g_*` game folders, `L\` the
 ini-less launcher, `logs\` the importer's output, `runs\<set>_<route>\<install>\`
@@ -66,6 +69,16 @@ make. It copies the same `BOF3.CFG` (`[defaults] cfg`, the PC install's) into
 every game folder: without it a disc-only install starts on the config's
 defaults and differs at tick 0 (`disc-only-install.md` 5).
 
+Before it refreshes the launcher copy `<root>\L`, `prepare` asks which
+processes run from it (`users_of`: a `BOF3` / `bof3x` / `bof3x-launcher`
+process whose exe is under `L\`, or whose `bof3x.dll` is `L\`'s) and refuses
+with their pids and paths. Before 2026-10-13 it copied anyway and stopped
+part way with WinError 32 when another harness's game held the DLL, leaving
+the copy half refreshed. Tested on a stand-in (a copy of `PING.EXE` named
+`bof3x.exe`, running from a scratch `L` folder): refused with its pid; the
+same folder name plus one letter found nothing (the prefix test is by whole
+folder).
+
 ## 3. A run
 
 Sequential, one game at a time, each through `tools/input_run.py` with
@@ -77,6 +90,44 @@ the cache for a disc-only install, `BOF3X_RECIPE_SAVES` = the main
 checkout's `tools/recipe_saves`, the install's `BOF3X_LANG`, and nothing
 else of the caller's `BOF3X_*` environment. The attract route is a recipe
 written into the run folder: `wait N`, no input.
+
+### 3a. The save every side loads
+
+`input_run.py` puts a recipe's save in slot 0 when the recipe names it in a
+`# save NAME` header; a recipe without one loads whatever each install's own
+slot 0 holds, and the sides can start from different saves (the 2026-10-13
+sweep's `fairyVillage`, [`abc-sweep-1012.md`](abc-sweep-1012.md) 7). Since
+2026-10-13 `run` and `all` decide the save once, before `prepare` and before
+the first side:
+
+- the recipe has a header: as before - the header's save, checked to exist
+  in `BOF3X_RECIPE_SAVES` (the main checkout's `tools/recipe_saves`) or this
+  checkout's;
+- `--save NAME`: that save on every side, passed on as `input_run.py --save`
+  (it overrides a header);
+- `--no-save`: the recipe loads no save (title-only, NEW GAME); each
+  install's slot 0 is left alone (`input_run.py --no-save`);
+- none of these: refused, the message naming the three fixes. The attract
+  route (the harness's own `wait N` recipe) needs none.
+
+Measured (2026-10-13, a scratch root with no launcher copy, so each run
+stops at the launcher check after the save is decided): `--route
+fairyVillage` refused, exit 1; `--save nosuch` refused naming both folders;
+`--save fairyVillage` printed `slot 0: fairyVillage.DAT on every side
+(--save)`; `--route combat` (header) printed `combat.DAT ... (the recipe's
+header)`; `--route load_list --no-save` passed; `all --route fairyVillage`
+refused before `prepare` started. Of the 51 recipes in `tools/recipes`, 17
+have no header (`grep -L "^# save" tools/recipes/*.txt`): 6 written by
+hand that stay on the title or start a NEW GAME (`attract_cycle`,
+`battle_commands`, `config_controller`, `config_screen`, `load_list`,
+`title_timeline`: `--no-save`; `load_list` draws each install's own slot
+list, so its sides differ by design) and 11 `BOF3X_RECORD` routes. Seven of
+those have a save of the same name in the main checkout's
+`tools/recipe_saves` (`bridgeWalk`, `fairyVillage`, `identify`,
+`ninaWalkBehindBlock`, `stallion`, `tarmanLogic`, `vaccinationAndFireScene`);
+`combatGroup`, `dragonMenu`, `fairyVillageNews` and `sortScreens` have none,
+so which save they were recorded from is the owner's to say. The recipes
+themselves are unchanged: adding the headers is a separate edit.
 
 **The timed frames: `BOF3X_SHOT_EVERY=N`** (new, `src/hook/input_script.cpp`).
 With a recipe playing and `BOF3X_SHOT_DIR` set, at the latch of every recipe
@@ -282,8 +333,10 @@ changes no game behaviour.
 
 **Trap (2026-10-13, the sweep):** a recipe with no `# save` header (`fairyVillage`)
 loads whatever each install's slot 0 holds, so the three sides can start from
-different saves. Until the harness refuses such a recipe or takes `--save`,
-add the header in a scratch copy ([`abc-sweep-1012.md`](abc-sweep-1012.md) 7).
+different saves ([`abc-sweep-1012.md`](abc-sweep-1012.md) 7). **Closed
+2026-10-13:** the harness refuses such a recipe unless `--save NAME` or
+`--no-save` is given (section 3a), and `prepare` refuses while a process runs
+from `L\` instead of failing with WinError 32 (section 2).
 
 **Trap (2026-10-13):** `input_run.py` can read a `recipe done` line left in
 `L\bof3x.log` by the previous run and report the new run done at once, with no

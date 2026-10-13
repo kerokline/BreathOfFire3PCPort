@@ -64,6 +64,27 @@ class Image:
         return struct.unpack_from('<I', self.data, self.off(va))[0]
 
 
+def sweep(md, code, va):
+    """Every instruction of a linear sweep of `code` at `va`, and the
+    addresses of the bytes it could not decode. capstone's disasm ends at the
+    first such byte without a word; until 2026-10-13 this scan took that as
+    the extent's end, and 29 extents (76,512 bytes of game code) were never
+    examined - GameMode3_Run 0x495BB0 and the twelve after it among them
+    (docs/hidden-start-scan.md section 1). The sweep now starts again one
+    byte on."""
+    out, stray, pos = [], [], 0
+    while pos < len(code):
+        got = False
+        for ins in md.disasm(code[pos:], va + pos):
+            out.append(ins)
+            pos = ins.address - va + ins.size
+            got = True
+        if not got:
+            stray.append(va + pos)
+            pos += 1
+    return out, stray
+
+
 def cmd_scan(a):
     img = Image(a.exe)
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
@@ -78,11 +99,13 @@ def cmd_scan(a):
             if img.in_text(x):
                 ptrs[x].append((s['name'], s['va'] + i))
 
-    found, tables = [], 0
+    found, tables, stops = [], 0, []
     for f in funcs:
         e, size = f['entry'], f['size']
         code = img.data[img.off(e):img.off(e) + size]
-        insns = list(md.disasm(code, e))
+        insns, stray = sweep(md, code, e)
+        if stray:
+            stops.append((e, stray))
         targets = set()
         for ins in insns:
             if ins.mnemonic.startswith('j') or ins.mnemonic == 'call':
@@ -122,6 +145,9 @@ def cmd_scan(a):
     print(f'{len(found)} hidden entries in {len({h["host"] for h in found})} extents '
           f'({tables} jump tables dropped); {sum(1 for h in found if h["refs"])} have a pointer '
           f'in the image -> {a.out}, {a.entries}')
+    print(f'undecodable: {sum(len(s) for _, s in stops)} bytes in {len(stops)} extents, the sweep resumed past '
+          f'each: ' + ', '.join(f'0x{e:X} at ' + ','.join(f'0x{x:X}' for x in s[:3]) + ('...' if len(s) > 3 else '')
+                                for e, s in stops[:10]) + (f', ... ({len(stops) - 10} more extents)' if len(stops) > 10 else ''))
 
 
 def cmd_classify(a):
