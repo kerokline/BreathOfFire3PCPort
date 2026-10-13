@@ -128,6 +128,14 @@ those have a save of the same name in the main checkout's
 `combatGroup`, `dragonMenu`, `fairyVillageNews` and `sortScreens` have none,
 so which save they were recorded from is the owner's to say. The recipes
 themselves are unchanged: adding the headers is a separate edit.
+**2026-10-13:** at the owner's guess, `fairyVillageNews` and `dragonMenu`
+were played with `input_run.py --save fairyVillage --lang en-US` and
+`BOF3X_SHOT_EVERY=60`. Both reached `recipe done` at their last frame (763 and
+2150) with no FATAL, and their frames show the same route as the 2026-10-10
+captures `analysis/shots/news_loc4` and `dragonmenu_loc2`. Both now carry
+`# save fairyVillage`. A rerun of `fairyVillageNews` from the header alone
+gave the same bytes as the `--save` run in all 12 frames. `combatGroup` and
+`sortScreens` still have no header.
 
 **The timed frames: `BOF3X_SHOT_EVERY=N`** (new, `src/hook/input_script.cpp`).
 With a recipe playing and `BOF3X_SHOT_DIR` set, at the latch of every recipe
