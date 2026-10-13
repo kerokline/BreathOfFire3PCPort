@@ -267,7 +267,7 @@ afterwards: the class should be empty.
   - `docs/README.md` rows: each group adds its own; keep both sides when
     merging.
 - Ledger: groups draft lettered entries, A, B and so on. The coordinator
-  numbers them from **DIV-0115** after the merges. Defects are described, not
+  numbers them after the merges, from the first free number (0115 at staging). Defects are described, not
   numbered: the D-numbers collide, so the coordinator numbers them.
 - Every commit `git commit -s` (CLAUDE.md rule 7). No game data in any doc,
   dialogue lines included: describe the scene, do not quote it (rule 1).
