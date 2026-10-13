@@ -38,6 +38,14 @@ areas = [0]
 box = [260, 128, 272, 140]
 
 [[known]]
+id = "pc-map-legend"
+ledger = "none: the port's own art, which no disc carries (docs/importer-transforms.md 5, the dial page: a note, not a divergence)"
+what = "the world map's legend panel: the PC port's keyboard legend (SPACE / X / ENTER) where a disc-only install draws the disc's buttons and words (Enter / Guide / Camp on the US disc)"
+pair_trait = "pc"
+areas = [33, 65]          # the world-map areas a route has shown it in (abc-sweep-1013-us.md 3); add others when seen
+box = [64, 16, 124, 60]
+
+[[known]]
 id = "psp-title"
 ledger = "DIV-0103 (its amendment: the install takes the PSP's own title page, Title_Sprites entry 10 kept as the PSP's; D256 the framing, the owner's look)"
 what = "a PSP-only install draws the PSP's title page (its logo, the fishing-version line, the TM marks) where the others draw the PlayStation's or the port's"
