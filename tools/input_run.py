@@ -134,6 +134,10 @@ def main():
     ap.add_argument('--host', choices=('exe', 'bof3'), default=None,
                     help='bof3x.exe (exe) or the hosted BOF3.exe (bof3); default bof3 with --original, else exe')
     ap.add_argument('--env', action='append', default=[], metavar='K=V', help='any other variable')
+    ap.add_argument('--wide', choices=('0', '1', '2'), default=None,
+                    help="BOF3X_WIDE for the run: 0 the original's 320 x 240, 1 the 16:9 picture (426 x 240), "
+                         "2 the 21:9 picture (560 x 240; DIV-0041, docs/ultrawide-frame.md). Unset, the "
+                         "launcher's bof3x.ini decides (wide=), as before")
     ap.add_argument('--speed', type=int, default=1, metavar='N',
                     help='BOF3X_SPEED: N logic frames per frame of wall time (1..64). The recipe is frame-indexed, '
                          'so it replays the same; shots are still drawn. Late frames are not drawn, so do not '
@@ -170,6 +174,8 @@ def main():
     env = dict(os.environ)
     for k in ('BOF3X_ORIGINAL', 'BOF3X_LANG', 'BOF3X_INPUT'):
         env.pop(k, None)
+    if a.wide is not None:
+        env['BOF3X_WIDE'] = a.wide   # set, it wins over the ini's wide= (the launcher fills only an unset one)
     env['BOF3X_INPUT'] = recipe
     env['BOF3X_SHOT_WAIT'] = '1'
     env['BOF3X_SHOT_DIR'] = os.path.abspath(a.out)

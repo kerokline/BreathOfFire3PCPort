@@ -368,7 +368,11 @@ void Populate(HWND dlg, DialogState& state) {
     AddItem(dlg, IDC_DISPLAY, L"Windowed - resizable, F8 toggles");
     Select(dlg, IDC_DISPLAY, cfg.display == Display::kWindowed ? 1 : 0);
     CheckDlgButton(dlg, IDC_BACKGROUND, cfg.background ? BST_CHECKED : BST_UNCHECKED);
-    CheckDlgButton(dlg, IDC_WIDE, cfg.wide ? BST_CHECKED : BST_UNCHECKED);
+    // DIV-0041: the picture's width, the box's index the ini's wide= (0, 1, 2).
+    AddItem(dlg, IDC_WIDE, L"Off - 320 x 240, the original's 4:3");
+    AddItem(dlg, IDC_WIDE, L"16:9 - 426 x 240, 53 columns a side");
+    AddItem(dlg, IDC_WIDE, L"21:9 - 560 x 240, 120 columns a side");
+    Select(dlg, IDC_WIDE, cfg.wide == 1 || cfg.wide == 2 ? cfg.wide : 0);
 
     CheckDlgButton(dlg, IDC_SNAP, cfg.snap ? BST_CHECKED : BST_UNCHECKED);
 
@@ -406,7 +410,8 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.renderer = Selected(dlg, IDC_RENDERER) == 1 ? 0 : 1;
     cfg.snap = IsDlgButtonChecked(dlg, IDC_SNAP) == BST_CHECKED;
     cfg.background = IsDlgButtonChecked(dlg, IDC_BACKGROUND) == BST_CHECKED;
-    cfg.wide = IsDlgButtonChecked(dlg, IDC_WIDE) == BST_CHECKED;
+    const int wide = Selected(dlg, IDC_WIDE);
+    cfg.wide = wide == 1 || wide == 2 ? wide : 0;
     cfg.show_launcher = IsDlgButtonChecked(dlg, IDC_SHOW) == BST_CHECKED;
 
     // The Music box: its first entry keeps an empty music= or a music=seq as

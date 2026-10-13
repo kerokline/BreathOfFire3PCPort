@@ -20,7 +20,7 @@ struct Options {
     void* hwnd;            // the game's window
     U logical_w, logical_h;   // the view the game draws, in its own pixels: 320 x 240
     U scale;               // integer scale k: the target is (logical_w + 2 pad_x) k x logical_h k
-    U pad_x;               // columns each side of the view, in the game's pixels: 53 wide (DIV-0041), else 0
+    U pad_x;               // columns each side of the view, in the game's pixels: 53 at 16:9 and 120 at 21:9 (DIV-0041), else 0
     bool point_filter;     // the present pass: nearest (true) or bilinear
     bool vsync;
     bool snap;             // DIV-0042: the present scales the target by a whole number (true) or fits it to the client
