@@ -1,7 +1,8 @@
 # The hidden-start scan: every table dispatch and every extent, against the code
 
 **Status:** MEASURED (2026-10-06; section 8 added 2026-10-13: `pe_funcs.py`
-and `pe_hidden.py` fixed and their lists regenerated) - the platform round's step 3 batch, group
+and `pe_hidden.py` fixed and their lists regenerated, then put in place of
+the old ones the same day, with the tracer's lists rebuilt from them) - the platform round's step 3 batch, group
 SCAN, from `phase-3/platform-round-2` at `f18b9d9c`. The scan
 [`mode-rest.md`](mode-rest.md) section 0 proposed and did not run, built as
 `tools/pe_jumptables.py` and run over all of `.text` (`0x401000..0x5C3668`);
@@ -393,3 +394,77 @@ those rows' authors agree. `entries.txt` and `entries_plus_hidden.txt`
 `pe_hidden.py plus` and were not rebuilt: nothing downstream reads them for
 the count any more (section 7); the tracer's working list is
 `entries_logic.txt`.
+
+**Replaced on 2026-10-13 (`away/1013-recipes`, at the owner's word: "go
+ahead with the entry list replace. Tools will get updated if needed").** In
+the main checkout's `analysis/`, each original was kept as `<name>_pre1013.<ext>`,
+then `pc_funcs_1013.json` was copied over `pc_funcs.json` and
+`pc_hidden_1013.json` over `pc_hidden.json`. `entries_hidden.txt` was written again by
+`pe_hidden.py scan` over the replaced `pc_funcs.json`: the `.json` came out
+equal to `pc_hidden_1013.json` byte for byte, and the `.txt` equals
+`entries_hidden_1013.txt` except that its header names `pc_funcs.json`. Then
+everything derived from them was rebuilt, with the same `_pre1013` copy kept of each:
+
+| File | Command (cwd the main checkout) | Before | After |
+|---|---|--:|--:|
+| `calltrace/entries.txt` | `calltrace.py entries` | 2,936 (16 dropped) | **2,988** (the same 16 dropped) |
+| `pc_hidden_reached.json` | `pe_hidden.py classify analysis/calltrace/hidden_a/bof3x.calltrace.tsv` | 89 | 89, the same entries; two sizes cut by new starts (`0x4959F0` 0x85B to 0x260, `0x577B80` 0x48D to 0x4B) |
+| `calltrace/entries_plus_hidden.txt` | `pe_hidden.py plus --also 571BE0,571D30,571E20` | 3,028 (767 cut) | **3,080** (785 cut) |
+| `pc_xref.json` | `pe_xref.py --build` | 7,601 addresses, 88,969 hits | the same addresses and hits; 3,321 hits name a closer owning function |
+
+Controls run first on the old files. `calltrace.py entries` over
+`pc_funcs_pre1013.json` gives the old `entries.txt` line for line. `classify`
+with the old hidden list gives the old `pc_hidden_reached.json` byte for byte.
+`plus --also` over the old three gives the old `entries_plus_hidden.txt` with
+one difference: `0x571E20` now gets the scan's size `0x1C7`, where the
+hand-added line said `0x1D0`. That extra was padding: `0x1D0` reaches the next function at `0x571FF0`,
+and `0x1C7` stops at the host extent's last byte, the size
+[`area-backdrop.md`](area-backdrop.md) gives.
+
+**Two tools changed.**
+- **`calltrace.py entries`** dropped all 52 re-anchored starts as `after
+  missing`, which is why `entries.txt` stayed at 2,936. The tracer arms an
+  entry only when the instruction before it ends a function, and that test
+  uses the one linear sweep that decoded across these starts. What precedes
+  each is a switch's inline table (the bytes before `0x495040`, `0x591810`,
+  `0x55AAD0` and `0x578C10` are case pointers into `.text`; those before
+  `0x40A940` and `0x40E120` are byte index tables), not an instruction, so
+  decoding again from the start listed before them does not help either. Tried and measured: it still dropped all 52.
+  The tool now keeps an entry that is `missing` when `pc_funcs.json`'s
+  `reanchored` lists it, and says how many it kept that way (52).
+- **`pe_hidden.py plus --also HEX[,HEX]`** lists hidden starts the reach trace
+  never entered, each with the scan's size, and refuses one that is not a
+  hidden start (`--also 571BE1` exits 1 and names it). The three
+  `AreaMap_HeaderPass` handlers had been appended to `entries_plus_hidden.txt`
+  by hand on 2026-09-23, and every `plus` run dropped them
+  ([`world-map.md`](world-map.md)); the command above keeps them.
+
+**Every reader run once on the replaced lists**, outputs to scratch (never
+over `analysis/`'s files): `remaining_catalog.py`, `calltrace.py report`
+(the `hidden_a` trace), `attract_catalog.py` (`hidden_b`), `area_rows.py
+--no-write`, `band_rows.py --groups`, `boss_rows.py --no-write`,
+`crash_report.py`, `entries_audit.py`, `label_runs.py`, `magic_rows.py` and
+`scenario_rows.py` (each given a scratch `--analysis` holding copies of the lists),
+`pe_jumptables.py`, `pe_xref.py`, `platform_reach.py`, `psx_pair.py areas`,
+`scenario_roots.py`, `text_scan.py`: all exit 0. `exe_own.py measure` (JP
+and US discs) writes the same bytes under the new `pc_xref.json` as under
+the old one. Not run: `task_stacks.py`, which samples a running game's
+threads. `analysis/consolidate_entries.py` reads only `entries_logic.txt`.
+
+**Not rebuilt, and why.** `pc_hidden_reached.json` is still the reach of
+the 2026-09-21 `hidden_a` trace, which armed only the old list's 7,294 starts:
+the 199 starts this scan added have never been traced. A new reach needs a
+live all-calls trace, and that is blocked by the next paragraph.
+
+**The all-calls tracer stalls a hosted run whatever its list** (a defect for
+the coordinator to number). `input_run.py tools/recipes/fairyVillageNews.txt
+--lang en-US --original "*,-Game_Clock" --env BOF3X_CALLTRACE=<list> --env
+BOF3X_CALLTRACE_MODE=all --env BOF3X_OPT=none`, from an ini-less launcher
+copy at this branch's build: with the new `entries_plus_hidden.txt` the log
+says `calltrace: 374 entries armed ..., 2706 left unarmed as owned`, and with
+`entries_plus_hidden_pre1013.txt` `367 ... 2661`. Both then time out with no
+recipe frame played and `bof3x.calltrace.tsv` holding only its header. The
+log's last line is `retarget ON InputScript`. The same command without
+`BOF3X_CALLTRACE` reaches `done`. So the lists are read and armed, but no
+trace of either list ran on 2026-10-13. When the tracer last worked
+under the current DLL was not measured.
