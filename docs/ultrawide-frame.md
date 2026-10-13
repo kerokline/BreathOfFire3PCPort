@@ -164,13 +164,43 @@ and `labels.cpp`'s, untouched).
 
 - **The self-tests**, `BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original
   BOF3X_SHADOW='*'` from an ini-less copy of the launcher, `bof3x.exe` and
-  the DLL (`--game <main checkout>/bof3 --no-config`): RESULTS
+  the DLL (`--game <main checkout>/bof3 --no-config`; script
+  `<scratchpad>/uw_uw/selftests.ps1`), **exit 0 all three times**, each
+  `inject: 10087 ours, 0 left original by BOF3X_ORIGINAL`:
+
+  | `BOF3X_WIDE` | Exit | Log lines | Time | DIV-0041 lines |
+  |---|---|---|---|---|
+  | unset | 0 | 27,987 | 1,310 s | the width rules' line only (narrow returns before patching); slide bounds read back -150 / -120 |
+  | 1 | 0 | 28,007 | 1,353 s | `widescreen: 53 columns a side (426 x 240); terrain cull [-150, 470]; area-map frame ranges [-252, 572] and [-102, 422]; menu backdrop 1 pair(s) more a side; cell inset asked 3 lower a side (ceil(columns / 20)), applied 3`; `full-frame fills at (-53, 0) 426 x 240`; 18 `patch ON Widescreen`; slide bounds read back -203 / -173 |
+  | 2 | 0 | 28,007 | 1,060 s | `widescreen: 120 columns a side (560 x 240); terrain cull [-217, 537]; area-map frame ranges [-319, 639] and [-169, 489]; menu backdrop 2 pair(s) more a side; cell inset asked 6 lower a side (ceil(columns / 20)), applied 6 - the original's largest inset is 6, so the whole 28-column ring is walked`; `full-frame fills at (-120, 0) 560 x 240`; 18 `patch ON Widescreen`; slide bounds read back -270 / -240 |
+
+  In all three: `DIV-0041    the width rules: at 53 columns the 16:9
+  constants (terrain margin 100, inset 3, backdrop pair 1, ranges [-252,
+  572] / [-102, 422], 14 slide bounds); at 120: terrain margin 167, inset 6,
+  backdrop pairs 2, ranges [-319, 639] / [-169, 489], slide bounds
+  -420..467` and `effect_1g: DIV-0041 backdrop spans checked for 0..224
+  columns (edges, coverage, no stretch, phase; 53: the 16:9 quads, 120: 4
+  quads)`. The 16:9 run's values are the ones the 16:9 build logged before
+  (`widescreen.md` 5, DIV-0041: `[-150, 470]`, `[-252, 572]`, `[-102,
+  422]`, inset 3, `(-53, 0) 426 x 240`).
 - **The launcher host suite** (`tools/launcher_host`, clang++): 234 checks,
   0 failures, the new `TestWide` among them (`wide=` 0, 1, 2 read, written
   back and exported; a set `BOF3X_WIDE` kept; `3`, `-1`, `21:9`, `true`
   read as 0).
-- **`dialog_test.py`**: DIALOG
-- **`tools/ledger_check.py`**: LEDGER
+- **`dialog_test.py`** (this build's launcher, the main checkout's
+  `bof3/BOF3.exe`): every step to the PC + PSX + PSP install's end passes,
+  the four new Widescreen steps among them (`wide=0`, `1`, `2`: three
+  entries, the ini's entry shown, written back; 21:9 picked over `wide=1`
+  writes `wide=2`). It then stops at the disc-only installs' first step, "no
+  dialog: ... a disc-only install ... holds no language layer" (DIV-0102's
+  refusal). **That failure is the round tip's, not this branch's:** the
+  launcher built from `6b4c97cc` (`git archive` into the scratchpad,
+  `--target bof3x_launcher`) with its own `dialog_test.py` stops at the same
+  step with the same message. The fake disc-only cache wants a language
+  layer; not this group's to fix (described here, not numbered).
+- **`tools/ledger_check.py`**: 114 ledger entries, 0 errors, 2 notes. The
+  draft DIV A (section 9) is not in the ledger, so nothing of it is checked
+  yet.
 
 ## 7. What was not verified
 
