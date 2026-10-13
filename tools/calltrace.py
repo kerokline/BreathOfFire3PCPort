@@ -91,16 +91,29 @@ def cmd_entries(a):
     d, entries = load_funcs(a.funcs)
     size = {f['entry']: f['size'] for f in d['functions']}
     prev = previous_mnemonics(a.exe)
-    keep, drop = [], []
+    # A call target the one linear sweep decoded across is no boundary of it
+    # ('missing'). pe_funcs.py re-anchors those since 2026-10-13 and lists them
+    # (`reanchored`, docs/hidden-start-scan.md section 8: 52, Transition_Start
+    # 0x495040 and Item_UseFlags 0x591810 among them), each decoded from
+    # itself and taken only when 16-aligned or reached by flow. What precedes
+    # each is a switch's inline table (the reason the sweep fell out of step),
+    # not an instruction, so the test below cannot pass it; the entry itself
+    # is code, and arming it writes into code. Kept on pe_funcs.py's word.
+    reanchored = {r['target'] for r in d.get('reanchored', [])}
+    keep, drop, kept_re = [], [], 0
     for e in entries:
         p = prev.get(e, 'missing')
+        if p == 'missing' and e in reanchored:
+            keep.append((e, p))
+            kept_re += 1
+            continue
         (keep if p is None or p in ENDS_FUNCTION else drop).append((e, p))
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     with open(a.out, 'w', newline='\n') as f:
         f.write(f'# {len(keep)} function entries of {d["exe"]}, from {a.funcs}\n')
         for e, _ in keep:
             f.write(f'{e:08X} {size[e]:X}\n')
-    print(f'{len(keep)} entries -> {a.out}')
+    print(f'{len(keep)} entries -> {a.out} ({kept_re} of them re-anchored by pe_funcs.py, after an inline table)')
     print(f'{len(drop)} dropped, not preceded by a function end:')
     for e, p in drop:
         print(f'  0x{e:08X}  after {p}')
