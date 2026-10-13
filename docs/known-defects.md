@@ -1355,7 +1355,7 @@ by 16 bits in `Battle_SetupEnemy` `0x494320` but by 8 in
 `Battle_CopyEnemyData` `0x4946C0`; `ClutMap_Mark` `0x454DF0`'s release
 writes over the last scratch cell when the owner is not found; and
 `Sprite_SetClutStp` `0x4551A0` divides by zero for a CLUT kind of 5 or more.
-## D56 — `Encounter_OnScreen` lost the PSX's lower bounds (PC only, latent)
+## D56 — `Encounter_OnScreen` lost the PSX's lower bounds (PC only; fixed by DIV-XXXX)
 
 **Found:** group BI, 2026-09-24 ([`inventory_ops.md`](inventory_ops.md)),
 `Encounter_OnScreen` `0x5928F0`. Read, not seen. The PSX compares the
@@ -1374,6 +1374,15 @@ placement can change from the first battle on, so every battle route and
 state-hash reference after it is re-recorded; the fuzz compares the
 original's bounds, so the new test would ride behind a flag set after the
 self-test (DIV-0065's pattern). A ledger entry if taken.
+
+**2026-10-13: fixed by DIV-XXXX** (the owner's call that morning;
+[`d56-encounter-bounds.md`](d56-encounter-bounds.md)). The twin read again:
+GAME.EMI `0x801C805C`, `lhu` then `sltiu 0x140` / `sltiu 0xF0` at
+`0x801C80D4` / `0x801C80E8`. Ours refuses a corner below 0 behind a flag set
+after the self-test; `BOF3X_ORIGINAL=EncounterOnScreenLowerBounds` keeps the
+port's bounds. None of nine battle routes reaches such a placement (the A/B
+and the state hash, the doc's section 3); a crafted run shows it
+(`analysis/shots/d56_before`, `d56_after`).
 
 ## D57 — The encounter placement's small faults, as the PSX has them (latent)
 

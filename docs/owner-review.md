@@ -152,10 +152,10 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   **Myria** in area 198 - steal from her, or see the drop, with `myria-item` on and off; a battle with magic
   (the filled `Magic_Rows`); a level-up of roster index 6 (the PSP's table, DIV-0104 / DIV-0111).
 - **Still open (the follow-up round, [`HANDOFF.md`](HANDOFF.md)).**
-  - **D56's repair** (proposed, not built): the PSX's test in `Encounter_OnScreen` (the projected corner as
-    unsigned shorts against 319 / 239), so a fight cannot start with a combatant off the left or top edge. A port
-    repair by the twin rule, but every battle route and state-hash reference after it is re-recorded. Take it or
-    leave D56 latent.
+  - **D56's repair** (built 2026-10-13 as DIV-XXXX, [`d56-encounter-bounds.md`](d56-encounter-bounds.md)): a
+    fight no longer starts with a combatant off the left or top edge. Look at `analysis/shots/d56_before` and
+    `d56_after` frame 500 (a crafted camera shift: the Gooey off screen, then refused); in play, nothing to see
+    unless an encounter would have placed an enemy off the left - none of nine battle routes does.
   - **The save slot number's `"%X"`** (D254): no disc carries it, so the load screen draws `) 16` and stale glyphs.
     Leave it, or give the engine its own two-byte format (recommended).
   - **The jingles on a PSX-only install** (D255: the inn's screen stays black longer without `OYASUMI`): the
