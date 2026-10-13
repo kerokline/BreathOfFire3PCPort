@@ -69,12 +69,17 @@ Then the fold-in (three docs commits: the ledger's DIV-0101 amendment, D266..D28
    Western title mark). Each answer goes to the ledger or the defect list; then the rows to the policy mechanism
    (`recipes/prefer.toml`).
 
-3. **The regression signal** ([`d56-encounter-bounds.md`](d56-encounter-bounds.md) 6): today's build against
-   Capcom's `cn_cutsceneAndNue_orig2` pair differs on page `0x905000` (`CameraTurn_Steps`, `Field_EdgeBits`,
-   `CameraTurn_Angles`, ...) from tick 136 to the end, and on the music pages (`Music_Track`, `Music_LoadedTrack`,
-   `Music_File*`) over ticks 204..1,032, in both hosts, flag on or off; the 2026-10-10 run `cu1010x` was clean, so
-   something merged since moved it. Next: `BOF3X_STATEHASH_DUMP` at tick 136 on both sides and `statehash.py bytes`.
-   D271 (the all-Capcom `Rand` parting on the same route) may be the same cause.
+3. **The Nue state-hash signal - settled, not a regression** ([`nue-regression-1013.md`](nue-regression-1013.md)):
+   page `0x905000` was the save-slot records (`0x905BC0`, filled at tick 136) after today's recipes rewrote slots -
+   the reference pair had gone stale, Capcom's own side differed the same way; re-recorded as
+   `cn_cutsceneAndNue_orig2` / `_orig2b` (the old pair kept as `_pre1013`). The music pages are DIV-0092 by design
+   (the load at frame 204 and the event battle at 7,394); checked with `--original AreaTrackFallback`, ours at the
+   tip is identical to Capcom's on all 7,361 ticks. `Rand` identical on all 7,422 frames, so D271 is not this.
+   **Left:** the other nine `cn_<route>_orig2` pairs are stale the same way (measured on `cn_combat_on_b`, 07:46,
+   after the slot-6 rewrite) - about 45 minutes on a quiet machine to re-record, per [`state-hash.md`](state-hash.md)
+   6; any recipe that writes a slot stales them again (slot 6 is `balioAndSunder_2`'s by design), so a fixed staged
+   save list in `input_run.py` is the durable fix (a design change, the owner's call). `bossAndFlash` meets DIV-0092
+   too (event battle 8, track 33) and has no pair.
 
 4. **Open technical items, no owner needed:**
    - **The all-calls tracer stalls** a hosted run before any recipe frame (D276,
