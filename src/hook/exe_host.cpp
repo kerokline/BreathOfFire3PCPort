@@ -46,6 +46,7 @@
 #include "hook/log.h"
 #include "hook/stackwatch.h"
 #include "hook/statehash.h"
+#include "hook/wav_dump.h"
 
 namespace bof3 {
 namespace {
@@ -424,6 +425,7 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     }
     if (EnvSet("BOF3X_ICON_VRAM")) Log("DIV-0095    icon: BOF3X_ICON_VRAM is a self-test switch (BOF3X_SELFTEST_ONLY); ignored");
     CallTrace_Start(module);   // refused above when asked for; a no-op here otherwise
+    WavDump_Start();   // BOF3X_WAV_DIR: after BindSlots filled 0x5C4014, before the latch (wav_dump.h)
     InputScript_Start();
     draw_order::Start();
     SetUnhandledExceptionFilter(Unhandled);

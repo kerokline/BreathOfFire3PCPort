@@ -1,0 +1,31 @@
+# Written by the WAV agent, 2026-10-13 (docs/wav-dump.md 4): DIV-0081's loop rows heard through the game's own
+# path. From the combat save, the opening of combat.txt's route to the field (the owner's recording, 2026-09-23),
+# then the party stands still while `music` steps play three songs, each long enough for two joins whether the
+# measured loop or the file's own rewind is in force: 064 (rows end at 32.63 s, the file at 64.2 s), 076 (32.63 s,
+# the file at 40.1 s), 037 (12.86 s, the file at 44.9 s). Play it with BOF3X_MUSIC_LOOPS unset and =0, BOF3X_MUSIC=mp3,
+# and BOF3X_WAV_DIR (input_run.py --wav). About 10,300 frames: give input_run.py --minutes 8.
+# save combat
+wait 59
+hold start 5
+wait 95
+hold start 6
+wait 43
+hold r2 3
+wait 59
+hold r2 5
+wait 25
+hold r2 5
+wait 66
+until 0x66C7E8 u16 == 2 timeout 900
+wait 90
+mark 064 from its start
+music 64
+wait 4050
+mark 076 from its start
+music 76
+wait 2700
+mark 037 from its start
+music 37
+wait 2850
+mark done
+end
