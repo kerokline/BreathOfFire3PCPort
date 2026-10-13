@@ -1108,6 +1108,7 @@ def anchor_pieces(name):
         "village rows": [(LABEL_VILLAGE_ROWS, LABEL_VILLAGE_ROWS_LEN)],
         "village rects": [(LABEL_VILLAGE_RECTS, LABEL_VILLAGE_RECTS_LEN)],
         "village kinds": [(LABEL_VILLAGE_KINDS, LABEL_VILLAGE_KINDS_LEN)],
+        "village draws": [(LABEL_VILLAGE_DRAWS, LABEL_VILLAGE_DRAWS_LEN)],
         "faerie stat 0": [(FAERIE_TRAITS, 4)],
         "faerie stats": [(FAERIE_TRAITS + FAERIE_STRIDE * r, 4) for r in range(FAERIE_COUNT)],
         "fish rows": [(FISH_ROWS, FISH_ROWS_LEN)],
@@ -1144,6 +1145,7 @@ PC_SHA = {   # measured 2026-10-10 from the catalogued BOF3.exe (pc-zh); `loc_bu
     "village rows": "2f7dbbfd3c47aca0262b45b79b984c1f4c09e8b8a08d3bb30b72b07d9d2001ea",
     "village rects": "2a876d9960a822d13d0ff20bc03f51ab82a5c9e99dafdfa27176be74c8cba4f5",
     "village kinds": "86edc365dbd7e4f155187a6a953e3d4a3c53209e5caf65dd9699b5cf2ae14bd6",
+    "village draws": "dacebb658cae366ff12389c5e5ef4a01e54d13371f98436e4bc902eb269ee28a",   # 2026-10-13
     "faerie stat 0": "f4a1f368908311763fa2bb8141c0615019783aa727e077441117c83d0c3c6816",
     "faerie stats": "253445f72876405c1d232e8634ead180729f7c18ab4cdeacdde0b75532f0b3f6",
     "fish rows": "da3afd1fdbe1a1867fa5a0f146518d5975ac37d3bee2ccff3ae10f32d5b54a9b",
@@ -1738,6 +1740,8 @@ LABEL_GENE_HEAD, LABEL_GENE_HEAD_LEN, LABEL_GENE_TAIL, LABEL_GENE_TAIL_LEN = 0x6
 LABEL_VILLAGE_ROWS, LABEL_VILLAGE_ROWS_LEN, LABEL_VILLAGE_LISTS = 0x652C6C, 32, 20
 LABEL_VILLAGE_RECTS, LABEL_VILLAGE_RECTS_LEN = 0x652D04, 72
 LABEL_VILLAGE_KINDS, LABEL_VILLAGE_KINDS_LEN = 0x653180, 12
+# CommuDraw_ShowSteps' categories (8 x 9 bytes, rest_4d.cpp): BOOT.BIN's stake title ends before them
+LABEL_VILLAGE_DRAWS, LABEL_VILLAGE_DRAWS_LEN = 0x652DEC, 32
 IDENTIFY_WORDS = (bytes([SPACE_IN]), bytes([SPACE_IN]))     # a space each: the US panel draws no heading (the wiki capture, 2026-10-10)
 FAERIE_TRAITS, FAERIE_COUNT, FAERIE_STRIDE, FAERIE_DISC_STRIDE = 0x653210, 60, 20, 9
 LABEL_ROOMS = {1: (8, 8), 2: (8, 8, 8, 8), 3: (16,) * 5, 4: (16,) * 5, 5: (8, 8, 8, 8), 6: (8, 4),
@@ -2225,11 +2229,34 @@ def convert_labels_psp(game, boot, verbs):
         chunks.append(label_chunk(13, lists, report))
     else:
         missing("village lists", "%d runs of twenty 8-byte slots, wanted one" % len(runs))
-    # 14: the village's words. The plural and singular pairs end at the kind
-    # table as on the PSX, in slots of 7 here; the money title follows the
-    # rectangles; the stake title is not beside it in BOOT.BIN (measured: it
-    # follows a table of another screen's words), so the group is left out.
-    missing("village words", "the hi-lo game's stake title is not after its money title in BOOT.BIN")
+    # 14: the village's words (D247 / D265, docs/abc-sweep-1013-village.md 3).
+    # The culture label is list 13's seventh choice of the second list, as on
+    # the PSX; the plural and singular pairs end at the kind table as on the
+    # PSX, two copies, in slots of 7 here; the money title follows the
+    # rectangles. The stake title is not beside it in BOOT.BIN: it is the first
+    # word after the pointer table that ends before CommuDraw's categories
+    # (LABEL_VILLAGE_DRAWS) - the name entry's words' table, then `Pot`, NUL,
+    # the zenny code, as the PSX's 8-byte slot has it.
+    kinds = find_anchor(game, boot, "village kinds")
+    pair = next((s[:2] for stride in range(5, 9)
+                 for s in [slots_before(boot, kinds, stride, 4) if kinds >= 0 else None]
+                 if s and s[:2] == s[2:]), None)
+    rects = find_anchor(game, boot, "village rects")
+    money = boot[rects + LABEL_VILLAGE_RECTS_LEN:rects + LABEL_VILLAGE_RECTS_LEN + 8].split(b"\0")[0] \
+        if rects >= 0 else b""
+    draws = find_anchor(game, boot, "village draws")
+    stake = b""
+    if draws >= 0:
+        p = draws & ~3
+        while p > draws - 64 and not label_pointers(boot, p - 4, 1):
+            p -= 4
+        if label_pointers(boot, p - 4, 1):
+            stake = boot[p:boot.find(b"\0", p)]
+    words = [lists[16]] + pair + [money, stake] if lists and pair else None
+    if words and all(w and len(w) < 8 and all(is_word_byte(c) for c in w) for w in words):
+        chunks.append(label_chunk(14, words, report))
+    else:
+        missing("village words", "no culture choice, plural pair, money title or stake title (%s)" % words)
     if not donor_ja:
         chunks.append(label_chunk(15, list(IDENTIFY_WORDS), report))
     # 16: the faeries, as convert_labels finds them (records of 9, the stats the PC's).

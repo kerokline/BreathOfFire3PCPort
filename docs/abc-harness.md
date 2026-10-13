@@ -342,3 +342,7 @@ from `L\` instead of failing with WinError 32 (section 2).
 `L\bof3x.log` by the previous run and report the new run done at once, with no
 frames ("done at frame 5519" after 1 s). Re-run that side alone; a run that ends
 in seconds with no frames is this ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)).
+**Closed 2026-10-13:** a stale `FATAL` line did the same to two sides at once
+(the PC and PSX-EU sides "FATAL" in 3 s, reading the 00:58 PSP-EU crash's log);
+`input_run.py` now removes the launcher directory's `bof3x.log` before it
+launches ([`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 4).

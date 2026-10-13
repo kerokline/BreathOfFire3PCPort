@@ -5449,6 +5449,17 @@ designed in rather than bolted on.
   every PSX and PC-path layer is byte-identical (section 5.1). Not played.
   Over the PC install nothing changes.
 
+  **Amended 2026-10-13 (the faerie village, [`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 3):**
+  label group 14 is built from PSP-EU too: `BOOT.BIN`'s stake title is the
+  first word after the pointer table that ends before CommuDraw's category
+  table (`0x652DEC`, an anchor held as its hash), and the group's payload is
+  byte-identical to the PSX-EU layer's (`Culture`, `faeries` / `faery`, `Cash`
+  and the zenny code, `Pot`). The board's culture label, the ranked lists'
+  heading word and the hi-lo game's titles no longer draw blank on a PSP-EU
+  install (D247, D265); the culture label seen in `fairyVillage`, the other
+  three on no route yet. The Config screen's text (D246)
+  is still not built.
+
 ### The MP3 decoder is minimp3, not the library Capcom linked
 
 - **ID:** DIV-0091 (the next free number on 2026-10-10 evening; renumber at
@@ -6154,6 +6165,25 @@ designed in rather than bolted on.
   `importer.py check`, `exe_tables.py check`, `psp_exe.py check` clean; the
   exe host on the PSP-EU-only and PSX-EU-only installs exit 0 (10,088 ours);
   `fairyVillage` to its last frame on all three `eu` installs.
+- Amended 2026-10-13, morning (the faerie village's stats,
+  [`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 2): another gap
+  class closes, a `language-zero` one by a new rule shape, `faerie`: the four
+  stat bytes of each of the sixty faerie trait records (`0x653200 + 20 r +
+  0x10`, read by the community's ticks and the board's bars) were zero on every
+  disc-built image, so the bars drew black, the food counter read 34 where the
+  PC's reads 84 and the village simulated with zero traits (D264).
+  `ETC/COMMU00.EMI#0` carries the same stats in sixty 9-byte records (a 5-byte
+  name, the stats at +5) on every disc; the rule copies them record for record,
+  found at recipe time by all sixty stat words in order (`records_place` with
+  the disc's own stride). The names stay the language layer's. Every filled
+  byte equals `BOF3.exe`'s. Verification: the row "236 bytes, 0 not
+  BOF3.exe's" on all seven discs; `recipes/exe-gaps.tsv` loses 59 rows a build;
+  `importer.py check` / `verify`, `exe_tables.py check`, `psp_exe.py check`
+  clean; the exe host on the PSP-EU-only and PSX-EU-only installs exit 0
+  (10,088 ours); `fairyVillage` on the three `eu` installs: of the 134 village
+  frames, PC against PSX-EU differs only at the ranked list's page counter
+  (`0x6531F4`, engine-own, known) and the stat bars, food counter and pop-ups
+  are equal on all three.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
