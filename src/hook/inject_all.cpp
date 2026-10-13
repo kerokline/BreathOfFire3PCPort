@@ -1,5 +1,6 @@
 #include "hook/inject_all.h"
 
+#include "game/band_census.h"
 #include "game/config_text.h"
 #include "game/rdata_consts.h"
 #include "game/dat_cache.h"
@@ -1426,6 +1427,8 @@ void InjectAll() {
                                 // module's self-test, which all compared the original's order (layering.h)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
+    band_census::Inject();      // BOF3X_BANDLOG, an instrument (docs/band-census.md): armed after every module's self-test,
+                                // whose stand-in sprites Sprite_UpdateScreen must not hand it; reads Widescreen_Live
     d3d_lines::Arm();           // DIV-0079: the six LINE handlers draw quads of the scale's width (BOF3X_LINES) - after
                                 // every module's self-test, which all compared the original's line strip (d3d_lines.h)
     map_layers::ArmSideDup();   // DIV-0085: a side face gained at run time takes the cell's one side word (BOF3X_SIDE_DUP;
