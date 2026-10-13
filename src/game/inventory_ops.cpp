@@ -286,6 +286,22 @@ extern "C" long __cdecl Encounter_Project(long x, long z, long y, unsigned long*
 // shorts, so a corner left of or above the screen fails there too; the PC's
 // floats accept one (docs/inventory_ops.md section 5). A NaN passes the
 // corners and fails the last test, as the x87 compares have it.
+//
+// DIVERGENCE DIV-0116 (D56): the PSX's lower bounds restored. Its twin,
+// GAME.EMI 0x801C805C, loads each corner's screen x and y with lhu and tests
+// sltiu 0x140 / sltiu 0xF0 (0x801C80D4, 0x801C80E8), so a corner left of or
+// above the screen - a negative short - is refused as well; the port's float
+// compares kept only the upper bounds. Once the flag is on, a corner whose
+// screen x or y is below 0 is refused too (a NaN still passes, as the upper
+// tests let it). InventoryOps_Inject sets it after the self-test, whose fuzz
+// compares the original's bounds; BOF3X_ORIGINAL=EncounterOnScreenLowerBounds
+// keeps ours with the port's bounds (docs/d56-encounter-bounds.md). Once the
+// self-test is past, a corner below 0 is logged either way ("D56 ... refused"
+// or "... passed, the port's bounds"), so a run shows where the two part; the
+// log changes nothing the game reads.
+unsigned char g_on_screen_lower_bounds = 0;
+bool g_on_screen_log = false;
+
 extern "C" unsigned char __cdecl Encounter_OnScreen(long x, long z, unsigned size, unsigned margin) {
     i32 a = Shl(static_cast<i32>((size & 0xFF) + 1), 14);
     i32 b = a;
@@ -296,6 +312,14 @@ extern "C" unsigned char __cdecl Encounter_OnScreen(long x, long z, unsigned siz
         g.project(px, pz, y, reinterpret_cast<unsigned long*>(sxy));
         if (sxy[0] >= 320.0f) return 0;
         if (sxy[1] >= 240.0f) return 0;
+        if (sxy[0] < 0.0f || sxy[1] < 0.0f) {
+            if (g_on_screen_log)
+                bof3::Log("D56         Encounter_OnScreen(%ld, %ld, size %u, margin %u) corner %u at (%.1f, %.1f): %s",
+                          x, z, size & 0xFF, margin & 0xFF, static_cast<unsigned>(t), static_cast<double>(sxy[0]),
+                          static_cast<double>(sxy[1]),
+                          g_on_screen_lower_bounds ? "refused (DIV-0116)" : "passed, the port's bounds");
+            if (g_on_screen_lower_bounds) return 0;
+        }
         const i32 na = Neg(a);
         a = b;
         b = na;
@@ -828,6 +852,15 @@ extern "C" unsigned char __cdecl Encounter_PartyScriptOnce(void) {
 
 void InventoryOps_Inject() {
     if (bof3::WantsShadow("inventory_ops")) inventory_ops::SelfTest();
+    // DIVERGENCE DIV-0116 (D56): after the self-test, which compares the original's bounds.
+    {
+        static const std::uint8_t was = 0, is = 1;
+        if (bof3::PatchBytes("EncounterOnScreenLowerBounds",
+                             static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&g_on_screen_lower_bounds)),
+                             &was, &is, 1))
+            bof3::Log("DIV-0116    the encounter's on-screen test refuses a corner left of or above the screen (D56)");
+        g_on_screen_log = true;
+    }
     BOF3_INJECT(Encounter_PlaceParty);
     BOF3_INJECT(Encounter_PlaceMember);
     BOF3_INJECT(Encounter_MemberClear);

@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 115 entries, DIV-0001..0115, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 116 entries, DIV-0001..0116, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -6869,3 +6869,64 @@ designed in rather than bolted on.
   not rendered: the loop has not been seen at either speed.
 - **Reversible?** Build the cache without the JP disc among its sources, or
   with `importer.py build --prefer <a file with no rows>`.
+### An encounter refuses a combatant left of or above the screen, as the PlayStation does
+
+- **ID:** DIV-0116
+- **Date:** 2026-10-13
+- **Subsystem:** field (the random encounter's placement: `Encounter_OnScreen`
+  `0x5928F0`, ours since round seven's group BI, `src/game/inventory_ops.cpp`;
+  its one caller `Encounter_Place` `0x591F30`, `src/game/field_hidden.cpp`;
+  [`d56-encounter-bounds.md`](d56-encounter-bounds.md), known defect D56)
+- **Tier:** Intent - a port defect; the PlayStation shows what was meant.
+- **Original behaviour:** after the party and the enemies are placed and the
+  camera aimed, `Encounter_Place` asks `Encounter_OnScreen` of each member
+  (margin 0x20) and each active enemy slot (its kind's `+0x86` / `+0x87`): the
+  footprint's four corners projected, refused if a screen x is 320.0 or more
+  or a screen y 240.0 or more (x87 float compares). A corner at x < 0 or
+  y < 0 passes. A member refused cancels the encounter for that step; an enemy
+  refused drops its slot (no slot left cancels it). So on the PC a fight can
+  start with an enemy partly or wholly off the left or top edge and never off
+  the right or bottom.
+- **PlayStation:** the twin, GAME.EMI section 0 `0x801C805C` (JP disc,
+  `disc_ls.py --extract BIN/ETC/GAME.EMI`, capstone), loads each projected
+  corner's x with `lhu $v0, 0x10($sp)` and tests `sltiu $v0, $v0, 0x140`
+  (`0x801C80D4`, bytes `4001422c`), and y with `lhu $v0, 0x12($sp)` /
+  `sltiu $v0, $v0, 0xf0` (`0x801C80E8`, `f000422c`): unsigned, so a negative
+  short is refused too - x and y must lie in 0..319 and 0..239. Its callers
+  `0x801C72A4` (a member, `a3 = 0x20`) and `0x801C7310` (an enemy slot; a
+  refusal stores 0 to the slot's active byte and decrements `0x801CE050`)
+  are the PC's `Encounter_Place` branch for branch. The PC's float compares
+  kept only the upper bounds: the port's.
+- **New behaviour:** a corner whose screen x or y is below 0.0 is refused
+  too, so the PC's test is the PlayStation's (a NaN passes, as the upper
+  compares let it). The test sits behind a byte flag that
+  `InventoryOps_Inject` sets (`PatchBytes EncounterOnScreenLowerBounds`)
+  after the module's self-test, whose fuzz compares the original's bounds
+  (DIV-0065's pattern). Once the self-test is past, every corner below 0 is
+  logged, `D56 Encounter_OnScreen(x, z, size, margin) corner k at (sx, sy):
+  refused (DIV-0116)` - or "passed, the port's bounds" with the flag off - so a
+  run shows where the two part; the log changes nothing the game reads.
+- **Rationale:** the owner, 2026-10-13: build D56's repair, a restoration of
+  the PC's lost guard. A combatant the camera cannot see is a fight the
+  player cannot read (visual-findings-1012 1.4 shows the look: a name box
+  for an enemy that is never drawn).
+- **Also in the PSX version?** No - the PlayStation refuses such a corner;
+  this entry restores it.
+- **Cost:** any encounter whose placement put a corner left of or above the
+  screen now loses that enemy (or the encounter for that step, and the walk
+  goes on to the next due step), so the random draws and everything after can
+  differ from that encounter on. Measured on nine battle routes: no route
+  reaches such a placement, so none differs
+  ([`d56-encounter-bounds.md`](d56-encounter-bounds.md) 3).
+- **Verification:** `BOF3X_SHADOW='*'` headless self-test exit 0
+  (`inventory_ops` 50,000 rounds, 0 mismatches, the flag set after it;
+  `inject: 10087 ours`). The A/B and the state hash in the doc's section 3.
+  A crafted capture (the combat route with `Camera_ShiftX` poked to -512
+  before its encounter): with the flag off the Gooey is placed with all four
+  corners at x -40 .. -62 and the fight starts with it off screen; with it
+  on, that encounter is refused and the next one starts with one enemy on
+  screen (`analysis/shots/d56_before`, `d56_after`, frame 500). Owed: the
+  owner's eye in play.
+- **Reversible?** `BOF3X_ORIGINAL=EncounterOnScreenLowerBounds` keeps ours with
+  the port's bounds; `BOF3X_ORIGINAL=Encounter_OnScreen` runs Capcom's
+  function.
