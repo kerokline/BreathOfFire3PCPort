@@ -1606,7 +1606,27 @@ GROUPS = (       # what an address no disc carries is, by its symbol's name
 )
 
 
-def group_of(name, ext, near_ptr):
+# What an address is by where it lies, before its symbol's name is asked
+# (docs/exe-import-engine.md 5 item 6; docs/exe-chinese-remaining.md 4): the
+# exe's string pool and the community block hold the text and names a
+# language layer carries, whatever the symbol a raw address is named after
+# says; past a state, step or kind table (a raw address named after one) are
+# the numbers a region of code pointers keeps unplaced until those pointers
+# pair - function twins.
+REGIONS = (
+    (0x669CCC, 0x66A450, "language: the exe's string pool"),
+    (0x6531F4, 0x6536E0, "language: the community block (format, faerie records, area limits)"),
+)
+CODE_TABLES = ("beside a code-pointer table: numbers its unpaired code pointers keep unplaced (want function twins)",
+               r"(States|StateTable|Steps|Kinds|Handlers)$")
+
+
+def group_of(name, ext, near_ptr, at=None):
+    for lo, hi, g in REGIONS:
+        if at is not None and lo <= at < hi:
+            return g
+    if re.search(CODE_TABLES[1], name.split("+")[0]):
+        return CODE_TABLES[0]
     for g, rx in GROUPS:
         if re.search(rx, name.split("+")[0]):
             return g
@@ -1642,7 +1662,7 @@ def cmd_xref(a):
         f.write("addr\tkind\tname\textent\tgroup\t%s\n" % "\t".join(bids))
         for v in sorted(addrs):
             k, n, ext = addrs[v]
-            f.write("0x%06X\t%s\t%s\t%d\t%s\t%s\n" % (v, k, n, ext, group_of(n, ext, near[v]), "\t".join(per[b][v] for b in bids)))
+            f.write("0x%06X\t%s\t%s\t%d\t%s\t%s\n" % (v, k, n, ext, group_of(n, ext, near[v], v), "\t".join(per[b][v] for b in bids)))
     for kind in ("symbol", "raw"):
         print("== %s addresses (%d)" % (kind, sum(1 for x in addrs.values() if x[0] == kind)))
         cls = sorted({per[b][v] for b in bids for v in addrs if addrs[v][0] == kind})
@@ -1652,7 +1672,7 @@ def cmd_xref(a):
                                                 for b in bids)))
     first = bids[0]
     for want in ("none", "none+pointer", "partly", "differs", "differs+pointer"):
-        g = collections.Counter(group_of(addrs[v][1], addrs[v][2], near[v]) for v in addrs if per[first][v] == want)
+        g = collections.Counter(group_of(addrs[v][1], addrs[v][2], near[v], v) for v in addrs if per[first][v] == want)
         print("== %s on %s, by group: %s" % (want, first, dict(g.most_common())))
     print("-> %s" % os.path.join(out, "src_addresses.tsv"))
 
