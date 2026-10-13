@@ -6769,6 +6769,12 @@ equal the PSX-EU layer's. **Where to start:** where the four words sit in
 `BOOT.BIN` (group 14 on the PSX is DIV-0064's English), and whether a rule
 of section 3.2 reaches them.
 
+**Fixed 2026-10-13** ([`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 3): the stake title
+is the first word after the pointer table that ends before CommuDraw's category table (`0x652DEC`),
+and the other four were where LG found them; the PSP-EU group's payload is byte-identical to the
+PSX-EU layer's. Seen: the culture label (D265); the heading word and the hi-lo titles on no route yet.
+DIV-0090's PSP amendment amended.
+
 ## D248 — A disc-only Japanese layer leaves 177 language addresses zero (ours, the language build; not the PSP's)
 
 **Found:** the PSP-only round's group LG, 2026-10-12
@@ -7095,7 +7101,7 @@ draws the label from `0x66AF38`, a gap on every build; a `twin` row from `BATTLE
 label and the 14 bytes after it are one run on every disc. After: the label region from 616 differing
 pixels to 0.
 
-## D264 — On the disc-only installs the faerie village's stats are zero: black stat bars, food 34 where the PC shows 84, the simulation's traits zero (ours, the exe image's gaps; open)
+## D264 — On the disc-only installs the faerie village's stats are zero: black stat bars, food 34 where the PC shows 84, the simulation's traits zero (ours, the exe image's gaps; fixed by DIV-0101's amendment)
 
 **Found:** the D260..D263 fixes' run, 2026-10-13 ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)
 3; already listed as a gap in [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4): the faerie
@@ -7105,7 +7111,17 @@ village simulates with zero traits - it plays differently, not only looks differ
 **Where to start:** `COMMU00`'s nine-byte records carry the values in another shape; filling the PC's
 layout needs a new rule (not a `twin`), every byte checked against `BOF3.exe`'s.
 
-## D265 — On a PSP-EU install the "Culture" label beside the village board's counter is blank (ours; open)
+**Fixed 2026-10-13** ([`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 2): a new rule shape
+in `tools/psp_exe.py`, `faerie`, copies each record's four stats from `ETC/COMMU00.EMI#0`'s sixty 9-byte
+records (the stats at +5), found by all sixty in order; "236 bytes, 0 not BOF3.exe's" on all seven discs.
+`fairyVillage` (`C:\Users\kerok\ab\runs\vil2_fairyVillage`): food 84, the bars and the faeries'
+pop-ups equal to the PC's on both disc-only installs; DIV-0101 amended.
+
+## D265 — On a PSP-EU install the "Culture" label beside the village board's counter is blank (ours, the language build; fixed with D247)
 
 **Found:** the same run, 2026-10-13 ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3): PSP-EU
 only; not traced. The board's `"%d/%d"` page counter (`0x6531F4`, engine-own) is a separate, known gap.
+
+**Fixed 2026-10-13** ([`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 3): it is D247 seen in
+play - label group 14 was not built from PSP-EU, and `Culture` is its first slot. `convert_labels_psp`
+builds the group now; `fairyVillage` draws `Culture` on all three `eu` installs.

@@ -205,6 +205,13 @@ def run(a, env, slot0):
     word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
     logs the save loaded: the file is not read again after that."""
     started, frames = time.time(), ''
+    # The previous run's log would be read as this one's until the game
+    # rewrites it: its `done` or `FATAL` line ended two harness runs at once
+    # (docs/abc-sweep-1012-fixes.md 3.5, docs/abc-sweep-1013-village.md 4).
+    try:
+        os.remove(LOG)
+    except FileNotFoundError:
+        pass
     launch(a.launcher, a.game, env, a.host)
 
     stop = threading.Event()
