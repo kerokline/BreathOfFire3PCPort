@@ -42,7 +42,7 @@ one `bool` and a branch.
   puts the waiting pair at screen x 38, inside the 4:3 view (PD's figure).
 - **The 21:9 hide** is one call in `Sprite_Draw`, after the cull and bit 7,
   and the census's new `hidden` column reads the same decision.
-- **Self-tests:** `BOF3X_SHADOW=wide_staging`, 72,899 checks, 0 mismatches
+- **Self-tests:** `BOF3X_SHADOW=wide_staging`, 79,025 checks, 0 mismatches
   (the rule, the table, narrow applying nothing, the hide's decision at the
   band edges, and the rewrite engine on six real rows); ten planted
   changes, all refused (section 9). The `'*'` runs at `BOF3X_WIDE` unset,
@@ -349,7 +349,7 @@ ini-less scratch folder (`uw_st/st.sh`), `BOF3X_SELFTEST_ONLY=1
 BOF3X_LANG=original`, `--game bof3 --no-config`, the branch as committed.
 
 - **`BOF3X_SHADOW=wide_staging`, `BOF3X_WIDE=2`:** exit 0;
-  `shadow      wide_staging self-test: 72899 checks, 0 mismatches`;
+  `shadow      wide_staging self-test: 79025 checks, 0 mismatches`;
   `DIV-D/E     the wide staging on: 24 of 24 rows armed at 120 columns (0
   left original)`; `DIV-F       the 21:9 hide on: ...`.
 - **Ten planted changes, all refused** (`uw_st/controls.py`: the change
@@ -364,7 +364,7 @@ BOF3X_LANG=original`, `--game bof3 --no-config`, the branch as committed.
 
 | `BOF3X_WIDE` | Exit | `inject:` | `DIV-0041` lines | This group's lines |
 |---|---|---|---|---|
-| unset | 0 | `10087 ours, 0 left original by BOF3X_ORIGINAL` | none | `wide_staging self-test: 72899 checks, 0 mismatches`; no arm line (0 columns: nothing armed) |
+| unset | 0 | `10087 ours, 0 left original by BOF3X_ORIGINAL` | none | `wide_staging self-test: 79025 checks, 0 mismatches`; no arm line (0 columns: nothing armed) |
 | `1` | 0 | the same | `widescreen: 53 columns a side (426 x 240); terrain cull [-150, 470]; ...`, `full-frame fills at (-53, 0) 426 x 240` | the self-test as above; `the wide staging on: 24 of 24 rows armed at 53 columns (0 left original)`; `the 21:9 hide off: the view is not wider than 16:9` |
 | `2` | 0 | the same | `widescreen: 120 columns a side (560 x 240); terrain cull [-217, 537]; ...`, `full-frame fills at (-120, 0) 560 x 240` | the self-test; `24 of 24 rows armed at 120 columns`; `the 21:9 hide on` |
 
