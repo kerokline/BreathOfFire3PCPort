@@ -33,6 +33,7 @@
 #include "game/battle_e6_callees.h"
 #include "game/boss_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1001,8 +1002,11 @@ extern "C" void __cdecl MapCell_DrawTexQuads(const unsigned char* record, unsign
         BH_CALL(Gte_Rtps)();
         unsigned char* const prim = Gfx_PacketNext;
         BH_CALL(Gte_StoreScreenXY)(reinterpret_cast<unsigned long*>(prim + 8));
-        if (!(F(prim + 8) > F(At(at::kScreenXLo)))) continue;
-        if (!(F(prim + 8) < F(At(at::kScreenXHi)))) continue;
+        // DIV-0041 (UC2): the x bounds moved out by the columns; .rdata's
+        // floats stay Capcom's (their code reads them too).
+        const float fill = static_cast<float>(Widescreen_Fill());
+        if (!(F(prim + 8) > F(At(at::kScreenXLo)) - fill)) continue;
+        if (!(F(prim + 8) < F(At(at::kScreenXHi)) + fill)) continue;
         if (!(F(prim + 0xC) > F(At(at::kScreenYLo)))) continue;
         if (!(F(prim + 0xC) < F(At(at::kScreenYHi)))) continue;
         BH_CALL(Gpu_SetPolyFT4)(prim);
@@ -1143,8 +1147,9 @@ extern "C" void __cdecl MapCell_DrawGroundSprite(const unsigned char* record, un
     long p = 0;
     unsigned char* const screen = At(at::kScreenXY);
     const long z = BH_AT(Pers, bof3::addr::Gte_RotTransPers)(point, screen, &p);
-    if (!(F(screen) >= F(At(at::kSpriteXLo)))) return;
-    if (F(screen) > F(At(at::kSpriteXHi))) return;
+    const float fill = static_cast<float>(Widescreen_Fill());   // DIV-0041 (UC2): x out by the columns
+    if (!(F(screen) >= F(At(at::kSpriteXLo)) - fill)) return;
+    if (F(screen) > F(At(at::kSpriteXHi)) + fill) return;
     if (!(F(screen + 4) >= F(At(at::kScreenYLo)))) return;
     if (F(screen + 4) > F(At(at::kScreenYHi))) return;
     if (z == 0) return;
