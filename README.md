@@ -18,14 +18,16 @@ release whose correctness criterion is "matches original hardware". The two
 projects have deliberately opposite invariants, and that is what makes them good
 collaborators rather than competitors. See [`docs/PLAN.md`](docs/PLAN.md) §6.
 
-> **Status: playable in English, French, German and Japanese, and being
-> replaced one function at a time.** A launcher starts your own copy of the
-> game with our DLL inside it, and **6,891 of the port's functions now run as
-> our C++** — the field, menus, text and the world map; every spell, every
-> scenario chapter, every area overlay and every boss fight; and the battle
-> and field engines' resident code — each checked against Capcom's original
-> before it was switched on. That is about two-thirds of the ~10,200
-> functions in the binary; the rest still runs as Capcom shipped it.
+> **Status: every function of the game's own code is ours, and it no longer
+> needs Capcom's executable to run.** All 10,088 functions the engine replaces
+> run as our C++, each checked against Capcom's original before it was switched
+> on. Our own `bof3x.exe` loads the game with no code of Capcom's mapped at all
+> (state 3, [`docs/state3-build.md`](docs/state3-build.md)). The game can be
+> installed from the 2001 PC port, from a PlayStation disc alone, or from a PSP
+> disc alone. It is playable in English, French, German and Japanese.
+>
+> The disc-only and PSP-only installs are new (October 2026) and have been
+> run by scripts and watched, not yet played through by hand.
 >
 > What is true today is in [`docs/STATUS.md`](docs/STATUS.md); every document
 > is indexed in [`docs/README.md`](docs/README.md); every deliberate change to
@@ -42,8 +44,24 @@ made reachable. Most are switches in the launcher; the originals stay available.
   menu, the battle commands and banners, the world map's place plates
   (DIV-0005..0009, 0013..0020, 0052, 0053, 0055). **French, German and
   Japanese** the same way from those discs (DIV-0054, DIV-0056, DIV-0057),
-  less tested so far. Some labels and headers, the Japanese mode's
-  menu strings, and text painted into artwork are still Chinese.
+  less tested so far; the faerie village's board and lists in English too
+  (DIV-0064, DIV-0088). A few labels and some text painted into artwork are
+  still Chinese on the PC install.
+- **Install from what you own**: the importer builds one cache from any mix
+  of the PC port, the US, European, French, German or Japanese PlayStation
+  disc, and the European or Japanese PSP disc. A PlayStation disc alone or a
+  PSP disc alone is a complete install, with no PC files at all (DIV-0096..0106,
+  [`docs/disc-only-install.md`](docs/disc-only-install.md)).
+- **Music**: the PlayStation's own sequenced music played from your disc by our
+  synthesiser (DIV-0087), or the PC's MP3s, which now loop where the
+  PlayStation's songs loop instead of rewinding to the start (DIV-0081). After
+  a random battle the field song resumes where it left off, as the PlayStation
+  does (DIV-0092).
+- **The PSP's version, piece by piece**: the launcher's suites choose the
+  PlayStation's or the PSP's graphics, audio and data, each separately, and
+  the PSP's two battle-rule changes are switches (DIV-0107..0113).
+- **A Jukebox** in the launcher: every song from each source you have, named
+  from the official soundtrack box set.
 - **Display**: a Direct3D 11 renderer in place of DirectDraw (DIV-0031); a
   resizable window or borderless fullscreen with no display-mode change
   (DIV-0032, F8 toggles); integer scaling, snapped to whole multiples or
@@ -65,7 +83,9 @@ made reachable. Most are switches in the launcher; the originals stay available.
   (DIV-0044).
 - **Conveniences**: keep running while the window is not in front
   (DIV-0033); F1 toggles double speed (DIV-0048); optional EXP / zenny
-  multipliers and steal-always (DIV-0045, DIV-0046).
+  multipliers and steal-always (DIV-0045, DIV-0046); the walls of area 4 taken
+  from a Western PlayStation disc (DIV-0080); an opt-in fix for a sprite's feet
+  drawn under a raised floor (DIV-0071, `BOF3X_LAYERING=1`).
 
 In game: **F1** double speed · **F8** window / fullscreen · **F9** pause (twice
 to return to the title, as the original) · **F11** save a screenshot beside
@@ -73,14 +93,17 @@ the DLL · **F12** Capcom's own quicksave to slot 0.
 
 ## Building and running
 
-You need a legally owned copy of the Chinese PC port (`BOF3.exe`, 2001-04-18).
-The launcher checks its SHA-256 and refuses any other build; the game files are
-never modified.
+You need a legally owned copy of the game: the Chinese PC port (`BOF3.exe`,
+2001-04-18 - the launcher checks its SHA-256 and refuses any other build), or
+a PlayStation or PSP disc image of *Breath of Fire III*. Nothing you own is
+modified; everything the game reads is built on your machine from your own
+copies.
 
 **Toolchain:** [llvm-mingw](https://github.com/mstorsjo/llvm-mingw) targeting
-i686 (the only supported compiler — no MSVC, no MSYS2), `cmake` ≥ 3.25,
-`ninja`, and `python` ≥ 3.11. The first configure needs the network: SDL3 is
-fetched at a pinned tag and built static.
+i686 (the only supported compiler - no MSVC, no MSYS2), `cmake` >= 3.25,
+`ninja`, and `python` >= 3.11. The first configure needs the network: SDL3 is
+fetched at a pinned tag and built static. `ffmpeg` on `PATH` is optional; the
+importer uses it for the opening movie and for the PSP's sound.
 
 ```bash
 cmake --preset i686
@@ -90,8 +113,10 @@ cmake --preset i686
 cmake --build build
 ```
 
-This produces `build/bof3x-launcher.exe` and `build/bof3x.dll`, which must stay
-side by side. Run the launcher and point it at your install:
+This produces `build/bof3x-launcher.exe`, `build/bof3x.dll` and
+`build/bof3x.exe`, which must stay side by side.
+
+**From the PC port.** Run the launcher and point it at your install:
 
 ```bash
 build/bof3x-launcher.exe --game "C:/Games/BOF3"
@@ -100,26 +125,44 @@ build/bof3x-launcher.exe --game "C:/Games/BOF3"
 The game directory can also come from `BOF3_GAME_DIR`, or the current
 directory. The launcher shows its settings dialog first (`--config` forces it,
 `--no-config` skips it) and keeps its settings in `bof3x.ini` beside itself;
-the game's log is `bof3x.log`, in the same place. Details:
+the game's log is `bof3x.log`, in the same place. It starts our `bof3x.exe`;
+`--host bof3` starts your `BOF3.exe` with our DLL injected instead, the way
+the project ran before October 2026. Details:
 [`docs/SCAFFOLDING.md`](docs/SCAFFOLDING.md) §4 and
 [`docs/launcher-settings.md`](docs/launcher-settings.md).
 
-**English** needs one more step, run once, reading your own US PlayStation disc
-image and writing overlay files into the game's `DAT\` folder (for the
-European English, French, German or Japanese, give that disc instead; the
-overlays are named by the disc's language tag - `en-US`, `en-150`, `fr-FR`,
-`de-DE`, `ja-JP` - and `--lang` overrides it):
+**English and the other languages** come from a PlayStation disc. The importer
+builds a cache from your PC install and the disc, and the launcher reads it
+(the Cache folder box, or `cache=` in `bof3x.ini`). The preset for the US disc
+is below; `pc-plus-eu-en-text`, `pc-plus-fr-text`, `pc-plus-de-text` and
+`pc-plus-jp-text` take the other discs:
 
 ```bash
-python tools/loc_build.py all --disc "path/to/your US disc.cue" --game "C:/Games/BOF3"
+python tools/importer.py build --preset pc-plus-us-text --source "C:/Games/BOF3/DAT" --source "C:/Games/BOF3/BOF3.exe" --source "path/to/your US disc.cue" --out "C:/bof3-cache"
 ```
 
-Then pick the language in the launcher's Language box. See
-[`docs/dialogue-localisation.md`](docs/dialogue-localisation.md).
+Then pick the language in the launcher's Language box. Add a PSP disc as one
+more `--source` for the PSP's art, music and data as options. See
+[`docs/importer.md`](docs/importer.md) and
+[`docs/launcher-suites.md`](docs/launcher-suites.md).
 
-**The Capcom logo video** shipped as Indeo 5, which Windows no longer decodes.
-Re-encoding it to Cinepak fixes it; the one-line `ffmpeg` command is in
-[`docs/DIVERGENCE.md`](docs/DIVERGENCE.md) DIV-0001.
+**From a PlayStation or PSP disc alone**, with no PC files: build the cache
+from the disc, lay a game directory from it, and point the launcher at both.
+Full steps and what such an install lacks are in
+[`docs/disc-only-install.md`](docs/disc-only-install.md):
+
+```bash
+python tools/importer.py build --source "path/to/your disc.cue" --lang en-US --out "C:/bof3-cache"
+```
+
+```bash
+python tools/importer.py install --base --cache "C:/bof3-cache" --game "C:/bof3-game" --lang en-US
+```
+
+**The Capcom logo video** on the PC port shipped as Indeo 5, which Windows no
+longer decodes. Re-encoding it to Cinepak fixes it; the one-line `ffmpeg`
+command is in [`docs/DIVERGENCE.md`](docs/DIVERGENCE.md) DIV-0001. A
+disc-only install converts the disc's own movie instead (DIV-0099).
 
 ## What the target is
 
@@ -128,7 +171,7 @@ The shipped `BOF3.exe` (2,584,576 bytes, 2001-04-18), measured:
 - 32-bit x86, MSVC 6.0, no packing, fixed image base `0x400000` — **native code,
   there is no CPU to emulate**
 - ~590,900 instructions in `.text`; ~2,950 functions found by static
-  discovery, roughly 10,200 in all once functions reached only through a
+  discovery, 10,246 starts in all once functions reached only through a
   pointer are counted ([`docs/attract-remaining.md`](docs/attract-remaining.md) §3)
 - **101 imported symbols across 7 DLLs** — DirectDraw, DirectSound, DirectInput,
   MCI, user32/gdi32, and the MSVC6 CRT. The entire host platform to reimplement
@@ -146,8 +189,11 @@ project's deliverable is deliberate divergence.
 Instead, **incremental decompilation into a hybrid binary**, the OpenRCT2 /
 OpenLoco model: load the original executable in-process, replace one function at
 a time with readable C++, delete original code paths as subsystems complete. The
-game stays playable at every commit; when the last function is replaced, the
-original binary is no longer needed.
+game stayed playable at every commit. The last of the game's own functions was
+replaced in October 2026, and since then our `bof3x.exe` runs the game without
+Capcom's executable. It reads only the data tables, from the player's
+`BOF3.exe` or from a disc
+([`docs/platform-layers-plan.md`](docs/platform-layers-plan.md)).
 
 Every takeover is checked before it counts: a differential fuzz against a
 byte-copy of Capcom's function with negative controls, then live runs against
@@ -174,15 +220,16 @@ port, one of the 1997 PlayStation release. None is built on another.
 
 ## Legal
 
-You need a legally owned copy of the Chinese PC port, and for English, of the
-US PlayStation release. **No game data is distributed here and none may be
+You need a legally owned copy of the game: the Chinese PC port, or the
+PlayStation or PSP release, and for a language the PC port lacks, that
+release's disc. **No game data is distributed here and none may be
 committed** — see [`.gitignore`](.gitignore). Everything built from game data
 is built on the player's machine from the player's own copies.
 
 This repository is licensed under [PolyForm Noncommercial 1.0.0](LICENSE).
 It is an independent interoperability and preservation effort, not affiliated
 with or endorsed by Capcom. Third-party code it carries (SDL3, the SatPixie
-shader) is listed with its notices in
+shader, minimp3) is listed with its notices in
 [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md).
 
 [`docs/LICENSING.md`](docs/LICENSING.md) explains why that licence and what
