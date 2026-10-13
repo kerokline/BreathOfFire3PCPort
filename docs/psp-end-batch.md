@@ -70,6 +70,8 @@ jingles: 11 the same shape, max |delta| 1, worst RMS 0.036.
 
 ## Defects (described, not numbered)
 
+**Numbered 2026-10-12, night** (the coordinator's second pass): 1 fixed by `main`'s button-map rule, merged (no entry); 2 is **D253**; 3 **D251**; 4 and 5 **D252**; 6 **D256**; 7 **D257**. (The `DIV F` log lines above are DIV-0108's, as logged before the numbering.)
+
 1. **The round tip lacks main's button-map rule**: `0x656AEC` (the field
    button map Boot_Task copies) is a gap on every Western disc image, so at
    the title only Start confirms and a recorded route never loads its save.

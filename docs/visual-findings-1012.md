@@ -108,7 +108,7 @@ Not done: the fix is a divergence (the PSX's lower bounds restored), a
 change of every encounter's placement, so of every recorded battle route and
 statehash reference from the first encounter on. The owner's call (the
 psx-twin rule says PC-only, so a port repair), drafted in "For the other
-files" as DIV E.
+files" as DIV E (not a ledger entry: a proposal, D56 and owner-review).
 
 **What only a capture can confirm:** that the owner's fight had a
 combatant's projected footprint at x < 0 when it was placed (a
@@ -649,6 +649,8 @@ caches were read only.
 
 ## For the other files
 
+**Folded in 2026-10-12, night** (the coordinator's second pass, branch `psp/ledger2`): DIV-0101's two amendments and DIV-0103's (unwide, boxxy) are in the ledger; DIV E is **not** a ledger entry - a proposal, recorded in D56 and owner-review; DIV F is **DIV-0114**. The fixed defect is **D251** (with **D252** the icons and formats, **D253** the areas 16 / 45 crash); section 9's load screen, inn and title are **D254**, **D255**, **D256**. `psp-image.md`'s row corrected; `disc-only-install.md` 3 was already updated; README row, owner-review and HANDOFF (the follow-up round, section 9 one line each) are in.
+
 Not edited here; the coordinator folds them in and numbers them.
 
 **DIV-0101, amended again** (the gaps entry). Add after IM2's amendment:
@@ -679,7 +681,7 @@ name box sat at the top-left (`0x656A34`), the turn order dropped a low
 level party member's ability bonus (`0x64E328`), a sleeper never woke by
 the roll (`0x64E3E8`) and the result tally had no steps (`0x64ADD0`) -
 the owner's "combatants shifted left" and EB's defect 3. D56 is unchanged
-and stays the owner's call (DIV E).
+and stays the owner's call (DIV E: D56 updated, not ledgered). This defect is D251.
 
 **DIV E (proposed, not built; the owner's call)** - *An encounter refuses a
 combatant left of or above the screen, as the PlayStation does.*
@@ -740,7 +742,7 @@ area's own overlay), the walk poses and the world-map area list, and the
 put back from the 384-wide frame (x -/+ 32 undone) into the PC's u8 layout,
 every byte `BOF3.exe`'s.
 
-**DIV F (proposed; the coordinator numbers):** *The PC port's title page.*
+**DIV F (proposed; numbered DIV-0114, worded as the disc-only install's divergence from the port's title):** *The PC port's title page.*
 - Original: the PlayStation's title page and `Title_Sprites` (the owner: no
   (R) mark).
 - New (the port, 2001): its own title page `0x1A080400` (`DEMO.DAT` /

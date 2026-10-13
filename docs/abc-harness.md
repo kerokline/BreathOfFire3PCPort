@@ -260,6 +260,8 @@ line matched at that offset).
 
 ## For the other files
 
+**Folded in 2026-10-12, night** (the coordinator's second pass, branch `psp/ledger2`): The README row and `input-script.md` 3's sentence are in; no ledger entry, as drafted.
+
 ### `docs/README.md`
 
 One row: `abc-harness.md` - the A/B/C install harness: one route on the PC

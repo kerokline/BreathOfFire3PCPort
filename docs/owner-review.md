@@ -107,11 +107,26 @@ where the reading behind it is. Nothing here is a divergence until it is in
 - **The PSP-only mode** (CD2 / CD3: a new menu choice and 22 hooks run in AREA030, probably fishing): left until
   you are back (below).
 
-*What the end batch (EB) will put in front of you* - running when this was written; its results go to the round
-doc's section 6: **a contact sheet** of the PSP-only install against the PSX disc-only install of the same
-language (`recipe_shots.py`: the stand-in areas a route reaches, the battle menu, the title, the logo), and
-**launcher captures** of the options page on a PSP-only, a PSX-only and a PC + PSX + PSP cache, and of the
-Jukebox.
+*Answered the same night (2026-10-12; recorded where they belong):*
+- **Widescreen: option (a) only** ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 6.1, built by
+  WA, DIV-0041 amended): the PSP's per-element choices at our 53 columns; no crop, so no "PSP framing" setting.
+  **The message boxes and the areas 104 / 121 HUD anchored** to the edges in wide mode (this reverses your
+  "the dialogue boxes seem ok" of 2026-09-23); **the ending keeps its letterbox**; **the tile ring** grown as the
+  PSP did is wanted later (IDEAS I37, the inset approach for now); **the A8 bars widened** ("If psp widened the a8
+  bar, let's widen it too" - the hold of 2026-10-04 lifted); **WA's reveal kept** (both primitives widened: "I
+  assume some psp draws will leave 16 row bands since we are not cropping the same"), and from it the rule: where a
+  PSP widening relied on its crop, ours widens over the full height.
+- **Myria's item:** the PlayStation holds "Napalm" (consumable 0x17), the PSP "Ivory Charm" (accessory 0x17) - keep
+  it a toggle (`myria-item`, DIV-0108 amended).
+- **The disc's data preferred** where the PC install and a disc both carry a chunk (prompted by the PC title's (R),
+  DIV-0114): the disc-data preference inventory is next ([`HANDOFF.md`](HANDOFF.md)).
+
+*What the end batch and the harness put in front of you* ([`psp-end-batch.md`](psp-end-batch.md),
+[`abc-harness.md`](abc-harness.md)): **a contact sheet** of the PSP-only install against the PSX disc-only install
+(`psp_eb/contact_sheet.png` in the round's scratch), **launcher captures** of the options page on the three caches
+and the Jukebox (`psp_eb/lcap/`), and AB's PC / PSX-EU / PSP-EU picture comparisons (`report_vf2_*.md`). The
+visual findings you reported from the live runs are fixed as gaps of every disc-built image (D251 the battle
+framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash), not yet seen by you since.
 
 - **The eye.** The PSP stand-ins' look as a PSP-only base: the PSP's area tiles (653 blanked - look for holes),
   its UI page with the shoulder-button labels, its dial and title pages, Ryu's forms (DIV-0103). The PSP's logo
@@ -129,9 +144,21 @@ Jukebox.
   or a stall; the PlayStation's twin is uncaptured, so C1 may also be a repair - DIV-0108's tier waits on this);
   **Myria** in area 198 - steal from her, or see the drop, with `myria-item` on and off; a battle with magic
   (the filled `Magic_Rows`); a level-up of roster index 6 (the PSP's table, DIV-0104 / DIV-0111).
-- **Still open.** The PSP-EU Config screen (D246: blank, take the PSP's matching words, or our own English
-  rows - after your emulator look). The PSP-only mode (probably fishing): adopt it as a layer of ours, or
-  leave it.
+- **Still open (the follow-up round, [`HANDOFF.md`](HANDOFF.md)).**
+  - **D56's repair** (proposed, not built): the PSX's test in `Encounter_OnScreen` (the projected corner as
+    unsigned shorts against 319 / 239), so a fight cannot start with a combatant off the left or top edge. A port
+    repair by the twin rule, but every battle route and state-hash reference after it is re-recorded. Take it or
+    leave D56 latent.
+  - **The save slot number's `"%X"`** (D254): no disc carries it, so the load screen draws `) 16` and stale glyphs.
+    Leave it, or give the engine its own two-byte format (recommended).
+  - **The jingles on a PSX-only install** (D255: the inn's screen stays black longer without `OYASUMI`): the
+    disc's XA as the jingle, or the failed stream ending the wait.
+  - **The PSP title's framing** (D256): look at a PSP-EU title capture.
+  - **The field menu's time and money boxes** in wide mode: you check on the PSP; unchanged until then.
+  - **The PSP-EU Config screen** (D246: blank, take the PSP's matching words, or our own English rows - after your
+    emulator look).
+  - **The PAL banks** (D257): take a PAL disc's eight area banks for a PAL disc-only install, or not.
+  - **The PSP-only mode** (probably fishing): adopt it as a layer of ours, or leave it.
 
 0. **The game from the cache** (DIV-0089, 2026-10-10,
    [`cache-read.md`](cache-read.md) section 9). **At the machine:** with

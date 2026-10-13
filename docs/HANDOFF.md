@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-12 night: **the PSP-only round is merged on `psp/round`** and its ledger on `psp/ledger`; the code review's fixes (RF) and the end batch (EB) are running; the PR follows RF, the ledger and a rebase onto `main`, which took the disc-only round as PR #55 - item 0 below)
+**Status:** IN PROGRESS (2026-10-12 night: **the PSP-only round is ready for its PR** - `psp/round` with every group, RF, `main`, the end batch, the harness, WA and VF; the second paperwork pass on `psp/ledger2`; next the follow-up round (disc-only and PSP polish) and the disc-data preference inventory - item 0 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -36,42 +36,53 @@ code page audited, the seven mid-function pointers read, and two music defects o
 
 ## Pick up here
 
-0. **The PSP-only round is merged on `psp/round`; the PR waits on two branches and a rebase** (2026-10-12 evening,
-    [`psp-only-round.md`](psp-only-round.md), briefs in `analysis/psp_round/` of the main checkout). Every group is
-    in (`psp/round` `88817a07`: SI, IM, MB, MS, LG, CD, PN, LT, then MS-B, CD-B, TG, IM2 and PB), and the coordinator's
-    paperwork is on **`psp/ledger`** (DIV-0103..0113 and six amendments, D244..D250, the README rows, this item, STATUS,
-    owner-review). Before the PR, in this order:
-    - **Merge `psp/review-fixes` (RF)** - the owner's code review of 2026-10-12, seven findings, fixed in parallel from
-      the same tip (groups.md "RF"): hosted runs refusing the data suite's `psp-tables`, a failed import leaving
-      unlisted layers, `BOF3X_CACHE_DATA=0` and the music layer, one manifest reader for `base_policy`, and three
-      small ones. RF also edits `src/`, so merging it beside `psp/ledger` (which renamed the placeholders `DIV F` /
-      `TG-n` in comments and log strings only) may conflict line by line: keep RF's code and the numbered strings.
-    - **Merge `psp/ledger`**, then `python tools/ledger_check.py` (113 entries, 0 errors on the branch).
-    - **The end batch (EB)** - V1..V3 of the round doc's section 6 (the PSP-only caches counted; the attract and routes
-      of a PSP-EU `en-150` install against the European disc's PSX disc-only install; captures through
-      `recipe_shots.py`; the launcher page and the Jukebox by `dialog_test.py` on a PSP-only, a PSX-only and a PC + PSX
-      + PSP cache) was **running** when this was written; its results and its contact sheet go to the round doc's
-      section 6 and to [`owner-review.md`](owner-review.md)'s entry for the round.
-    - **Rebase onto `main`.** `psp/round` sits on the disc-only round's `98c17e8b`; `main` (`035f40b6`, PR #55) has
-      eleven commits more, among them **DIV-0102** (a disc-only install refuses the port's Chinese) and the
-      story-flag seed's place in `GAME.EMI`. `psp/ledger` already numbers after DIV-0102 and carries `main`'s ledger,
-      STATUS, HANDOFF, owner-review and `disc-only-install.md` (its first commit), so those take `psp/ledger`'s side;
-      a trial merge of `main` conflicts in `recipes/exe-gaps.tsv`, `recipes/exe.toml` (regenerate both with the
-      merged tools) and `src/launcher/config_dialog.cpp` (DIV-0102's Language box against LT's suites). After it:
-      re-measure the gap counts (`disc-only-install.md` 3 gives IM2's on the old base and the arithmetic), re-check
-      D249 and the Language box against DIV-0102, and the PC / PSX caches against fresh references.
-    - Small, left by the paperwork pass: PB's sentence for the data suite's `what` in `recipes/suites.toml` (a
-      launcher string, "and its two battle rules ...", `psp-battle-changes.md` "For the other files"), and
-      `launcher-suites.md` sections 2 and 4's paragraph on the `code` kind and `psp=`.
+0. **The PSP-only round is ready for its PR** (2026-10-12 night, [`psp-only-round.md`](psp-only-round.md); the owner
+    closed its investigations, and what is left is the follow-up round, item 0 below). `psp/round` holds every group
+    (SI, IM, MB, MS, LG, CD, PN, LT; MS-B, CD-B, TG, IM2, PB), RF's review fixes, `main` (`035f40b6`, PR #55) merged in,
+    the end batch's record ([`psp-end-batch.md`](psp-end-batch.md)), the A/B/C harness ([`abc-harness.md`](abc-harness.md)),
+    WS's survey and WA's option (a) ([`psp-widescreen-placements.md`](psp-widescreen-placements.md),
+    [`psp-widescreen-a.md`](psp-widescreen-a.md)) and VF's two batches and wrap-up
+    ([`visual-findings-1012.md`](visual-findings-1012.md)); the coordinator's second paperwork pass is `psp/ledger2`
+    (DIV-0114, the amendments of DIV-0041, 0101, 0103 and 0108, D251..D257, D56's proposal, README, STATUS,
+    owner-review, this item). **To do:** merge `psp/ledger2`, run `ledger_check` (114 entries, 0 errors) and
+    `importer.py check`, read `git log --format=%B main..psp/round` for the sign-off lines (CLAUDE.md rule 7), push,
+    and open the PR from `psp/round` to `main`. Owed the owner after it, in [`owner-review.md`](owner-review.md)'s
+    round entry: the eye (the PSP stand-ins, the PSP logo, the launcher page, the Jukebox), the ear (the PSP's music,
+    effects and jingles), play (the Beyd-Zig duel under `duel-loss`, Myria's item, a level-up of roster index 6).
+    The disc-only round's own debts are [`disc-only-round.md`](disc-only-round.md) section 5's.
 
-    **Owed the owner** ([`owner-review.md`](owner-review.md), the round's entry): the eye (the PSP stand-ins' look,
-    the PSP's logo movie at SSIM 0.868, the launcher page, the Jukebox and its chord box), the ear (the PSP's music,
-    song 22, the effects and the jingles), play (the Beyd-Zig duel - DIV-0108's `duel-loss` may stall a lost duel -
-    Myria's item, a level-up of roster index 6 with the PSP's table), and two calls still open (the PSP-EU Config
-    screen, D246, deferred to an emulator; the PSP-only mode, probably fishing). **The disc-only round** (PR #55,
-    `main`) is still unplayed too: its items are in the same file, and its debts (the four Chinese pairs stale since
-    DIV-0092; `exe_image.cpp`'s ANSI read of `BOF3X_EXEIMAGE`) are [`disc-only-round.md`](disc-only-round.md)
-    section 5's.
+0. **The follow-up round: disc-only and PSP polish** (staged by nobody yet; the owner's word of 2026-10-12 night). Its
+    parts, each a line:
+    - **VF's open list** ([`visual-findings-1012.md`](visual-findings-1012.md) 9):
+      - masterAndManillo's world-map entry (the walk poses and area list, fixed at `133d72fd`): re-run AB on PC,
+        PSX-EU and PSP-EU;
+      - the load screen's `"%X"` (D254): the owner's call, the engine's own string recommended;
+      - "You gain 3 EXP!" (the `"%d"` filled): see it in AB's combat frame `t002610`;
+      - the PC `en-150` empty-record word `0x669CCC`: the staged localisation PR covers it;
+      - the PSP message boxes at the top left (`boxxy`): re-run AB with the PSP side once `C:\Users\kerok\ab\c_pspeu`
+        is rebuilt;
+      - the PSP title framing (D256): the owner's look at a PSP-EU title capture;
+      - the Nue divergence on PSP from tick ~4530: AB cutsceneAndNue with `--statehash`, PSP against PSX, the first
+        differing battle page (P8 or DIV-0104's level table the candidates);
+      - the inn's black screen on a PSX-only install (D255): the jingles there, or the failed stream ending the wait;
+      - the shop's walking-ahead at t420..450 on PSX-EU: expected fixed by the walk poses, re-run;
+      - twelve more disc-unplaced runs one overlay alone carries: `TWINS` rows drafted, not committed - regenerate and
+        check.
+    - **A harness pass over WA's wide-mode scenes** ([`psp-widescreen-a.md`](psp-widescreen-a.md) 6: the spell flashes,
+      the battle dim, the size-11 tile, area 80's ring, area 189's sky, the areas 104 / 121 gauge and countdown, area
+      172's panel, the message boxes at codes 3..6, the community's reveal, the SCE15EF bars, and the letterbox and
+      the time / money boxes unchanged): AB with `BOF3X_WIDE=1`, the middle 320 columns against the narrow capture.
+    - **The owner's open calls:** D56's repair (proposed, not built: the PSX's unsigned test, every battle reference
+      re-recorded); the `"%X"` slot-number string (engine-own recommended); the jingles on PSX-only installs; the PSP
+      title framing; the field menu's time and money boxes in the wide picture; the PSP-EU Config screen (D246, after
+      the owner's emulator look); the PAL banks (D257).
+    - **Small, left by both paperwork passes:** PB's sentence for the data suite's `what` in `recipes/suites.toml`
+      ("and its two battle rules ..."), and `launcher-suites.md` sections 2 and 4's paragraph on the `code` kind and
+      `psp=`.
+    - **Scratch to clean** (none of it in the tree): the half-built `C:\Users\kerok\ab\c_pspeu` (an interrupted
+      `abc_run.py prepare`, no stamp, so `prepare` refuses it - remove it before the next PSP run); `C:\b3g` and
+      `C:\b3p` (the US disc-only and PSP-EU-only scratch installs); the round's worktrees under
+      `.claude/worktrees/agent-*` once the PR merges.
 
 0. **Next up after the PSP-only round: the disc-data preference inventory** (the owner, 2026-10-12 night: "let's put this as
    a next up action - I agree a inventory pass is what's needed"). The owner prefers the PlayStation's data where both the PC
@@ -835,7 +846,7 @@ _Verified 2026-09-24._
 
 ## In flight / uncommitted
 
-**The PSP-only round** (item 0): `psp/round` and the group branches `psp/<group>` (`psp/ledger`, `psp/review-fixes`
+**The PSP-only round** (item 0): `psp/round` and the group branches `psp/<group>` (`psp/ledger`, `psp/ledger2`, `psp/review-fixes`
 included) are local, not pushed; the agents' worktrees are under `.claude/worktrees/agent-*` and the round session's
 scratchpad (`3d54deba`: `psp_<group>/` scratch, the reference caches under `psp_coord/ref_*`). The briefs, the merge
 script and the end batch's brief are in `analysis/psp_round/` of the main checkout.

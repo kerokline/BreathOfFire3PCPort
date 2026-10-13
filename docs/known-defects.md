@@ -1,6 +1,6 @@
 # Known defects of the port, as observed
 
-**Status:** IN PROGRESS (2026-10-12 — two hundred and forty-seven entries, D1..D250 with D19, D20 and D29 unused; D244..D250 from the PSP-only round, numbered 2026-10-12 from its group docs: our importer's, map's, language build's and launcher's, none Capcom's (D246 the owner's call, deferred to an emulator; D249 narrowed by `main`'s DIV-0102 - the launcher refuses an unheld tag on a disc-only install - and kept for the engine alone and PC installs; D250's Language-box note checked: DIV-0102 fixes it); D242 the dragon gene clipped by the lighthouse pedestal's floor and D243 the lighthouse's light rays before the flash not drawn, the owner's route `eldritchGene.txt`, not looked at; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, fixed by DIV-0093 on 2026-10-11); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
+**Status:** IN PROGRESS (2026-10-12 night — two hundred and fifty-four entries, D1..D257 with D19, D20 and D29 unused; D251..D257 from the PSP-only round's end batch and visual findings: D251 the battle framing, D252 the equip icons and number formats and D253 the areas 16 / 45 crash fixed by DIV-0101's amendment; D254 the load screen's `"%X"` and D255 the inn's missing jingle on a PSX-only install the owner's calls; D256 the PSP title's framing, the owner's look; D257 the PAL banks, the owner's call since 2026-10-08; D56's repair proposed, not built, the owner's call; D244..D250 from the PSP-only round, numbered 2026-10-12 from its group docs: our importer's, map's, language build's and launcher's, none Capcom's (D246 the owner's call, deferred to an emulator; D249 narrowed by `main`'s DIV-0102 - the launcher refuses an unheld tag on a disc-only install - and kept for the engine alone and PC installs; D250's Language-box note checked: DIV-0102 fixes it); D242 the dragon gene clipped by the lighthouse pedestal's floor and D243 the lighthouse's light rays before the flash not drawn, the owner's route `eldritchGene.txt`, not looked at; D240 the MP3 decoder's stale count at the end of a stream (mirrored by DIV-0091, fixed by DIV-0093 on 2026-10-11); D241 the owner's report that battle music runs on after a fight, not looked at; D1 fixed by DIV-0010 (confirmed off a capture 2026-09-21); D2 fixed by DIV-0039; D3 moot since DIV-0031 / DIV-0035 (recurs only under BOF3X_ORIGINAL); D4 fixed by DIV-0004 and confirmed in game; D5 fixed by DIV-0022 and DIV-0047; D6, D7, D9, D11 and D12..D16 latent; D8 and D10 unchecked in game; D17 fixed by DIV-0025 and D26 by DIV-0028 (both confirmed in game 2026-09-23; D17 recurred at scale 4 and DIV-0025 was amended 2026-09-27, confirmed in game the same day); D18, D21..D25, D27, D28 and D30..D40 latent (D38 a candidate); D41 fixed in the backend by DIV-0044 (the owner's look owed); D42 a port change, kept; D43..D57 latent, from the seventh round (D43 and D51 candidates; D44, D47, D53, D56 PC only); D58 fixed under an overlay language by DIV-0051; D59..D88 latent, from the eighth round's reading, 2026-09-25 (D86 fixed by DIV-0058 on 2026-09-27, D87 a candidate; D59, D66 and D68 abort in ours where the original would crash); D89..D132 latent, from the ninth round's spell overlays and scheduler, 2026-09-25..27 (D102, D103 and D129 candidates; D89's stack tables, D91, D92 in part, D94 in part, D97 in part, D100 in part, D104, D106, D107 in part and D132 abort in ours where the original would crash or run wild; the rest faithful); D133..D161 latent, from the tenth round's chapter banks and area blocks, 2026-09-27..28 (D133 in most groups, D135 in some, D136's `Area_Descriptors` reads, D137 and D150 abort in ours where the original would run past, fault or crash; D138 and D145 PC only; the rest faithful); D162..D173 latent, from the eleventh round's boss band, 2026-09-28 (D166 a candidate, D167 a question for the owner, D168 owes a PSX comparison; D162, D163, D164 and D170 abort in ours where the original would jump wild, write past the pool or near address 0; the rest faithful); D174 fixed 2026-09-29; D175..D196 latent, from the twelfth round's battle engine and field remainder, numbered 2026-10-01 from the fourteen group docs (D181 a crash candidate, D184, D187 and D194 the owner's questions; D175 in most groups, D176 in eleven of twelve places, D177, D183, D186, D190 and parts of D178 and D196 abort in ours where the original would jump wild, write past the pool, fault, hang or read off the stack; D192 passes zeros for the original's frame; the rest faithful); D197 fixed by DIV-0070; D198 the port's, seen at scale 4, not fixed; D199 fixed by DIV-0071; D200..D238 latent, from the thirteenth round's effect engine, numbered 2026-10-03 from the thirty-seven group docs (D200..D214 the round's common classes, one entry each; D221, D222, D226 and D231 for the owner's eye, D224 and D225 the owner's questions; D200, D206 in part, D207, D208 in part, D216, D218, D220, D222, D225, D229, D230 and D233 abort in ours where the original would jump wild, write past the pool, fault, hang or read a stray pointer; D227 and D228 the original's, replaced in ours by DIV-0068 and DIV-0072; D226 and D231 PC only; the rest faithful))
 
 Things the 2001 port does wrong on a current machine, written down when seen so
 that "we broke this" and "it shipped like this" stay distinguishable
@@ -1363,6 +1363,17 @@ projected corners as unsigned shorts against 320 and 240, which rejects a
 corner left of or above the screen as well; the port compares floats
 against 320 and 240 only, so such a corner passes. Kept faithful; a fix
 would be a ledger entry.
+
+**2026-10-12, the PSP-only round** ([`visual-findings-1012.md`](visual-findings-1012.md)
+1.3, 1.4): the owner's "combatants shifted left" was first read as this, and
+is not - it was D251, fixed. D56 stays latent, PC only (the psx-twin rule: a
+port repair). **A repair is proposed, not built - the owner's call:** the
+PSX's test (`FUN_801C805C`: the projected corner as unsigned shorts against
+319 / 239), so the left and top edges refuse too. Its cost: every encounter
+placement can change from the first battle on, so every battle route and
+state-hash reference after it is re-recorded; the fuzz compares the
+original's bounds, so the new test would ride behind a flag set after the
+self-test (DIV-0065's pattern). A ledger entry if taken.
 
 ## D57 — The encounter placement's small faults, as the PSX has them (latent)
 
@@ -6845,3 +6856,133 @@ entry of its own. **Checked after the merge (2026-10-12):** it holds.
 
 The Music box's MP3 entry and the cache notes are this entry's alone and
 unchanged.
+
+## D251 — A disc-built image's battle opened framed wrong: the view centre not stepped, the enemy name box at the top left, a low-level member's ability bonus dropped (ours, the exe image's gaps; fixed by DIV-0101's amendment)
+
+**Found:** the owner, 2026-10-12, watching the end batch's live disc-only
+installs ("combatants shifted left", an enemy partly off screen); EB's
+defect 3 ([`psp-end-batch.md`](psp-end-batch.md): combat frame 480, the
+party lower right, the enemy off the left edge, its name box at the top
+left, on both the PSP-EU and the PSX-EU disc-only installs, not on the PC's).
+
+**Cause** ([`visual-findings-1012.md`](visual-findings-1012.md) 1.4): five
+tables zero on every disc-built image - `GameMode5_Turn`'s approach pairs
+`0x656AA4` (the battle's view centre was not stepped toward the enemies),
+`Battle_OpenEnemyNames`' column places `0x656A34` (the name box at the
+top-left corner), the turn order's percent row `0x64E328` (the party's
+ability bonus 0 at level classes 0 and 1), the wake chances `0x64E3E8` (a
+sleeper never woke by the roll) and the result tally's steps `0x64ADD0`.
+Not D56, not the enemy records, not the formation table.
+
+**Fixed 2026-10-12** by VF's `twin` fills (DIV-0101 amended): every byte
+read from the disc's own overlay and equal to `BOF3.exe`'s. AB's harness
+after it: combat 81 of 87 frames equal to the PC's (the rest the load
+screen's `"%X"`, D254, and the title, DIV-0114). Not seen by the owner since.
+
+## D252 — A disc-built image's equip slot icons all one glyph, item counts as stray glyphs, the dragon list's AP costs 0 and the save menu's numbers without their formats (ours, the exe image's gaps; fixed by DIV-0101's amendment)
+
+**Found:** the owner, 2026-10-12 (the battle equip screen's slot icons; the
+save menu's numbers and "space buffer"); EB's defects 4 and 5
+([`psp-end-batch.md`](psp-end-batch.md): the icons all flames in
+cutsceneAndNue's equip window; the `x 2` and `5/128` drawn as stray glyphs,
+the dragon list's AP costs all 0), on both disc-only installs.
+
+**Cause** ([`visual-findings-1012.md`](visual-findings-1012.md) 2, 3, 8):
+zero on every disc-built image - the equipment window's six slot icons and
+categories `0x66B5B4` and the BATE screen's copy `0x64AE18` (every slot drew
+icon 0 and named its item from category 0); the menus' formats (`"%3d/   "` /
+`"   /%3d"`, `"%8d"`, `"%3d/%3d"`, the no-next-level text, the play-time
+format and its colon `"  :"`, whose leading spaces are Capcom's, the PSX's
+`START.EMI#8` byte for byte); the item row's count format, `"AP%2d"`,
+`"%3dZ"`, `"*%2d"` and the result's `"%d"`.
+
+**Fixed 2026-10-12** by VF's `twin` fills (DIV-0101 amended), every byte
+`BOF3.exe`'s. Not filled, no disc carries them: the save slot number's
+`"%X"` (D254) and the empty slot's text `0x669CCC`. "You gain 3 EXP!" (the
+`"%d"`) not yet seen in a run.
+
+## D253 — Areas 16 and 45 crashed on entry on every disc-only install (ours, the exe image's gaps; fixed by DIV-0101's amendment, `wmrec`)
+
+**Found:** EB, 2026-10-12 ([`psp-end-batch.md`](psp-end-batch.md) defect 2):
+the routes caughFish (area 16) and masterAndManillo (area 45) stopped on
+both disc-only installs at area entry, `MoveCmd_AttachOffset`
+(`field_objects.cpp` 265) reading the null `+0x0C` vector table of the
+area's descriptor (`CRASH 0: reading 0x00000000`).
+
+**Cause** ([`visual-findings-1012.md`](visual-findings-1012.md) 6.1, 8):
+`WorldMap_Records`' area words (`+0x18` of eleven 0x1C-byte records,
+`0x653910`) were zero on every disc build, so `WorldMap_RecordIndex` never
+found a world map and answered 11, the "none" index, whose dwords are
+`EffectKind01_States`: the world map ran effect kind 1, whose draw calls
+`MoveCmd_AttachOffset` with a descriptor whose `+0x0C` is null in
+`BOF3.exe` too (`llvm-symbolizer`: `MoveCmd_AttachOffset` <-
+`EffectKind01_Draw` <- `Field_Frame` <- `Field_WaitTransition` <-
+`GameMode_Enter`).
+
+**Fixed 2026-10-12** by `wmrec` (the words from `GAME.EMI#0`'s table of the
+same shape; DIV-0101 amended). AB after it: both routes run to their end on
+PSX-EU. masterAndManillo's world-map entry (transition 1 where the PC takes
+11, the walk poses and area list) fixed after that run and **not re-run**;
+the PSP-EU side not run.
+
+## D254 — The load screen's slot numbers on a disc-only install: `"%X"` is missing, so the slot draws nothing or the previous slot's tail (ours, a gap no disc fills; the owner's call)
+
+**Found:** AB's harness, 2026-10-12 ([`visual-findings-1012.md`](visual-findings-1012.md)
+9; [`abc-harness.md`](abc-harness.md)): on the PSX-EU disc-only install the
+load screen draws `) 16` and a stray glyph after "Ryu" where the PC draws
+the slot number.
+
+**Established:** all three are the missing `"%X"` at `0x6639D4`, a gap on
+every disc-built image (no disc carries the string): `Crt_sprintf` writes
+only a NUL, and `Text_DrawFont8` - Capcom's quirk - stops on the byte
+*after* a NUL, so it draws the stale tail of the previous slot's text
+(`dumps/*.174.bin`: `0x904BA0` "2\0" on the PC, "\0" then "3.." on PSX-EU).
+**The owner's call:** leave it, or give the engine its own format string
+(an `exe_own` region, recommended by VF; a two-byte constant of ours, not
+Capcom's table).
+
+## D255 — On a PSX-only install the inn's screen stays black longer: the jingle `OYASUMI` is not there (ours, the install's missing jingles; the owner's open call)
+
+**Found:** AB's harness, 2026-10-12, the shop route on the PSX-EU disc-only
+install, ticks 2880..3150 ([`visual-findings-1012.md`](visual-findings-1012.md)
+9): the inn's black screen holds longer than on the PC's.
+
+**Established:** not data in `.data`: the inn opens `SND\OYASUMI.DAT` (the
+kind-0 jingle, the port's MP3 of the disc's `S_XA00.STR`), which a PSX
+disc-only install lacks - the 11 jingles are the PC's MP3s and the PSP's,
+not a PSX disc's (`disc-only-install.md` 2) - and the log has `open ...
+FAILED` (`runs/vf2_shop/psx-eu/bof3x.log`); the wait runs on until
+something else ends it. A PSP-only install has the jingles (DIV-0106). Not
+seen by the owner. **Where to start:** the owner's open call on the jingles
+for a PSX-only install (`sound-import.md` 7: the disc's XA stream as the
+jingle), or the failed stream made to end the wait at once (a DIV).
+
+## D256 — A PSP-only install's title is the PSP's fishing-version logo, its tiles misaligned in our 4:3 frame (ours; the owner's look owed)
+
+**Found:** EB, 2026-10-12 ([`psp-end-batch.md`](psp-end-batch.md) defect 6),
+on the PSP-EU-only install's title.
+
+**Established:** the PSP's own title page and its `Title_Sprites` entry 10
+(a source rectangle into that page) are kept as the PSP's in a PSP-only
+base (DIV-0103's amendment; `visual-findings-1012.md` 4.2); whether the
+PSP's title art reads right through the PSP's rectangles in our 4:3 frame
+was not rendered. Whether the logo is "the fishing version's" is EB's
+reading of the capture, not checked. **Next:** the owner's look at a PSP-EU
+title capture; then take the PSP's title framing apart (which rectangles
+the PSP's 384-wide view needs) or keep a PlayStation title on a PSP base.
+
+## D257 — A European PSX disc alone builds 733 of 741 containers: eight area banks are the PAL swap (the owner's open call)
+
+**Found:** EB, 2026-10-12 ([`psp-end-batch.md`](psp-end-batch.md) V1 and
+defect 7): `importer.py build` from the European PSX disc alone with
+`--lang en-150` writes 733 containers; `AREA100`, `112`, `135`, `138`,
+`147`, `168`, `170` and `188` have no source (the coordinator's `ref_eu`
+the same).
+
+**Established:** known since 2026-10-08 ([`sound-import.md`](sound-import.md)
+2 and 7, [`region-diff.md`](region-diff.md) 8.4): a PAL disc's bank for those
+eight areas is a sample swap, built faithfully but not to the recipe's hash,
+so it is refused. What a European disc-only install does in those areas
+(their bank absent from the container) was not run. Recorded here because no entry tracked it. **The
+owner's call** (`sound-import.md` 7 item 1): take the PAL banks for a PAL
+disc-only install (a ledger entry), or not.

@@ -105,7 +105,7 @@ measure`, `pdiff.py` scratch):
 | the other five `NameTable_*` | 2,533 | 2,533 | 2,533 | the blank names (widen) |
 | `Char_DefaultRecords` | 51 | 51 | 15 | the eight character names at the disc's width (known, `exe-tables-by-build.md` 6) |
 | `SimoonDust_Offsets` | 0 | 18 | 18 | **a misplacement**: the map's `BOOT.BIN` run reaches seven words `BOOT.BIN`'s relocations mark as `.text` pointers (a jump table); the PC holds numbers there (`relplaced.py`) |
-| `MsgBox_PlacementTable` | 0 | 6 | 6 | two box positions, each x 32 less and y 32 more: a PSP layout change (a guess: the wider screen, `psp-widescreen.md`) |
+| `MsgBox_PlacementTable` | 0 | 6 | 6 | entries 3..6, the side placements: 3 and 5 x -32, 4 and 6 x +32, y unchanged - the PSP's 16:9 framing (**corrected 2026-10-12**: first read here as "x 32 less and y 32 more"; VF's `imgdiff.py` and WS agree); since VF the import undoes them (`unwide`, DIV-0103's amendment) |
 | `Scena17_EndSteps` | 0 | 3 | 3 | three text bytes of the ending's steps |
 | `Title_Sprites` | 0 | 1 | 1 | one byte of a title sprite's record (a guess: the PSP's title layout) |
 | `Area07_Handlers`, `Area25_Handlers` | 0, 21 | 1, 1 | 1, 1 | one byte each where the PC has zero (PSX-JP's 21 are its known AREA026 shift) |

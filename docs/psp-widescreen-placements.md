@@ -387,6 +387,8 @@ sprite function. The ending's letterbox (2.7) stays, as answered.
 
 ## 8. For the other files
 
+**Folded in 2026-10-12, night** (the coordinator's second pass, branch `psp/ledger2`): The README row, `psp-widescreen.md` 2.2 / 3a / 5, `widescreen.md` 5 and `psp-image.md` 1 are in; (a) became DIV-0041's amendment (WA), (c) DIV-0103's (VF); (b) not taken.
+
 - **`docs/README.md`, one row:** `psp-widescreen-placements.md` | The PSP's
   16:9 placements site by site against DIV-0041 (2026-10-12, group WS):
   ~95 sites in six kinds; 19 already handled the PSP's way, the ring

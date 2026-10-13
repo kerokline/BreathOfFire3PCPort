@@ -222,7 +222,7 @@ logged as its hold starts and nothing waits. With `BOF3X_ORIGINAL=Game_Clock`
 the freeze still works, but the pause is replayed unrendered afterwards, and
 the log says so.
 
-**The game writes its own captures** (2026-09-24). `input_run.py` sets
+**The game writes its own captures** (2026-09-24; since 2026-10-12 also `BOF3X_SHOT_EVERY=N` with `BOF3X_SHOT_DIR`: a `t<FRAME>.bmp` every N recipe frames, logged `input frame tNNNNNN saved mode M area A`, no input or frame moved - [`abc-harness.md`](abc-harness.md) 3). `input_run.py` sets
 `BOF3X_SHOT_DIR` to its `--out` directory, and at each shot the DLL writes
 `NAME.bmp` there itself - the render target read back through a staging
 copy (`render::SaveFrame`, `src/render/render_d3d11.cpp`): the frame as the
