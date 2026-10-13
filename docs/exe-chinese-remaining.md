@@ -322,9 +322,19 @@ that is left is the exe's, sections 3 and 7 - and on a disc-only image those
 strings are zero bytes (5.4 of that doc), so they draw nothing rather than
 Chinese.
 
-**Not reached:** the German and Japanese caches (built in the same run,
-finishing after this was written), so `de-DE` and `ja-JP` are not re-measured
-here; 5.3's figures stand for them.
+**The German and Japanese caches** (built in the same run, finishing after
+the first draft of this section; measured by the same scripts after the
+branch's hand-back, added 2026-10-13):
+
+- **de-DE** (DE alone): `cover` 381 of 475 `loc/zh-CN` chunks replaced, the
+  same 94 enemy-name tables left; containers 254 disc-only / 247 PC-built /
+  198 identical; the village sheet built, 309 bytes differing from the
+  PC-built one (the German disc's own repaints, as French 4.3); the `AREA004`
+  text block identical.
+- **ja-JP** (JP alone): `cover` 381 of 475 replaced, the same 94 left.
+
+So the verdict holds for all four discs measured: none of the three gaps is
+still one.
 
 ## 7. What would fill the rest (for the coordinator)
 

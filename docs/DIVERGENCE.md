@@ -6207,6 +6207,32 @@ designed in rather than bolted on.
   `psp_exe.py`, `exe_tables.py`, `importer.py check` clean;
   the exe host on a PSX-EU-only and a PSP-EU-only install exit 0 (10,088 ours,
   `BOF3X_EXEIMAGE gap` 247 and 220 ranges); not played.
+- Amended 2026-10-13, afternoon (set 8's verb, the owner's call on
+  [`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 4.1, option 1:
+  "keep `Quit`"; [`disc-data-inventory.md`](disc-data-inventory.md) 9.3): one
+  byte that no Western PSX disc carries in the PC's shape is filled by a rule,
+  `verb`. `Menu_ButtonSets` set 8 (`0x663864`) is `(2, 0x14, 0x0B)` on the PC
+  and the JP-shaped discs; the US, European, French and German discs give its
+  second button their own 23rd verb (`0x16`, `End`), which the port's 22-entry
+  verb table does not have, so the map refused the byte and the image held 0
+  (the button would read `Use`). The rule finds the disc's record by sets 0..7
+  verbatim in `ETC/STATUS.EMI`, requires the disc's byte to be `0x16`, and
+  writes the port's `Quit` (`0x0B`) at `0x663866` - a mapping of the disc's
+  verb to the PC's, not a copied value; the row is kept only because the
+  result equals `BOF3.exe`'s. The Western releases' own `End` (a 23rd verb
+  in the engine) was the alternative; the owner chose the port's word.
+  Verification: `psp_exe.py recipe` over the seven discs
+  (scratch `policy/regen_r1.log`): one `verb` row on each of US, EU-English,
+  FR and DE, "1 bytes, 0 not BOF3.exe's"; `recipes/exe-gaps.tsv` loses the
+  four `unread` rows `0x663866..0x66386C` (the five bytes after the verb were
+  already the PC's zeros); `exe.toml`'s four Western images change by that
+  one byte each (`placed_equal` + 1). Planted faults (scratch `negverb.py`):
+  a `verb` row on PSX-JP, a two-byte row, another file - each refused by
+  `psp_exe.py check`; a disc byte other than `0x16` refused by the rule. A
+  PSX-EU-only install (`importer.py build --source <EU cue> --lang en-150`,
+  `install --base`): the image holds `02 14 0B` at set 8; the exe host's
+  self-test exit 0, `inject: 10088 ours`. `psp_exe.py`, `exe_tables.py`,
+  `importer.py check` clean. Not played: no route reaches set 8.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -6742,27 +6768,104 @@ designed in rather than bolted on.
   `pc-title-mark` rule, [`abc-harness.md`](abc-harness.md))
 - **Tier:** Sensible - the release the player owns; recorded so that the
   port's own change has a ledger answer.
-- **Original behaviour:** the PC port (2001) draws its own title page: the
-  page `0x1A080400` in `DEMO.DAT` and `FIRST.DAT` differs from the US disc's
-  section in 5,062 bytes and carries a registered mark, which the
-  PlayStation's title does not have (the owner), and `Title_Sprites` entry
-  1's width is 10 where every disc has 12 (`pcvsdisc.py`). That is the
-  porting house's change, not ours (`SHARED_SOURCE.md` 3's kind).
+- **Original behaviour:** the PC port (2001) draws the **Japanese**
+  PlayStation's title unchanged: the copyright page `0x1A080400` of
+  `DEMO.DAT` is byte-identical to the JP and European-English discs' (the US
+  disc's own adds a Capcom U.S.A. line, 5,062 bytes in 9 tiles; `FIRST.DAT`'s
+  page at that tag is every disc's); the registered mark is `Title_Sprites`
+  entry 1 (10 wide) on the glyph page `FIRST.DAT` `0x1E000200`, both JP's.
+  The US and European discs draw a ™ there (entry 1 12 wide, their own page).
+  Not the porting house's change
+  ([`disc-data-inventory.md`](disc-data-inventory.md) 4.1, corrected
+  2026-10-13).
+
+  *Corrected 2026-10-13.* This paragraph first said the page and the (R)
+  were the port's own and that "every disc has 12" for entry 1's width; the
+  inventory pass rendered each source's page and read each disc's
+  `Title_Sprites`: the JP disc and PSP-JP have the PC's 10 and draw the (R).
+  The owner's call the same day (inventory Q4): **a PC install keeps Japan's
+  (R) title** - "the JP psx disc makes most sense to use as default for
+  graphics if there's ever a simple divergence, just for consistency sake"
+  (the base policy, DIV-XXXX) - so no Western-title entry is written.
 - **New behaviour:** a disc-only install - a cache with no PC source - draws
-  the disc's title page from the disc, without the mark; `Title_Sprites` is
-  a gap there (zero), so no mark is drawn either way. A PSP-only install
+  the disc's title page from the disc. A Western disc's install draws **no
+  mark at all** (neither the PC's (R) nor its own ™), because `Title_Sprites`
+  entry 1's width (`0x65385E`) is a gap of the disc-built image (zero); once
+  that gap is filled it draws the disc's ™. A JP disc-only install places the
+  width and draws the (R), as the JP release does. A PSP-only install
   draws the PSP's own title page and `Title_Sprites` entry 10 (DIV-0103).
   A PC install, or a cache with the PC's `DAT/` among its sources, keeps the
-  port's title.
+  PC's title (Japan's).
 - **Rationale:** rule 1 - a disc-only install carries none of the PC's
   files, and the disc's own title is what that release shows. Whether a PC
-  install should draw the PlayStation's title is the owner's call, part of
-  the disc-data preference inventory (the owner, 2026-10-12: the PlayStation's
-  data where both exist).
-- **Also in the PSX version?** The disc's title is the PlayStation's own; the
-  difference is the port's.
+  install should draw the PlayStation's title was the owner's call, part of
+  the disc-data preference inventory; answered 2026-10-13: it already does -
+  Japan's, which stays the default (inventory Q4, see the correction above).
+- **Also in the PSX version?** Yes: the PC's title is the JP disc's; a
+  Western disc's title differs by region (™, and the US notice's third line),
+  not by the port.
 - **Verification:** AB's harness: the PC against the PSX-EU disc-only
   install differ on the title by the `pc-title-mark` region, classed by that
   rule; not ledgered before. The PSP title's framing in our 4:3 frame is
   open (D256).
 - **Reversible?** Build with the PC's `DAT/` as a source.
+
+### Prefer the Japanese PlayStation disc's data over a port change the owner has decided; the 27A arenas' held loop first
+
+- **ID:** DIV-XXXX
+- **Date:** 2026-10-13
+- **Subsystem:** assets (`tools/importer.py` `preferred` / `get_chunk`, the
+  new `recipes/prefer.toml`; first members `BPLD27A.DAT` and `BPLU27A.DAT`
+  kind 0 `0x10000`; the engine reads the cache's `base/` since DIV-0089;
+  [`disc-data-inventory.md`](disc-data-inventory.md) 2 row P6, 9)
+- **Tier:** Sensible - the PlayStation's presentation where the port
+  changed it for no reason the PC's platform gives; nothing changes in play.
+- **Original behaviour:** the PC port's `base/` is the Japanese PlayStation
+  release's except 35 chunks the port changed (inventory 0 and 2). One is the
+  27A battle arenas: in member A's bank of `BPLD27A` and `BPLU27A`, the
+  PlayStation has two identical four-step loops, both at 4 ticks a step; the
+  port holds the second at 8 ticks a step, so it plays at half speed - 4
+  bytes in each file (`0x41C88..0x41C8E`, `0x42E60..0x42E66`;
+  [`arena-edits.md`](arena-edits.md) 2). Measured again 2026-10-13 (session
+  scratch `policy/hash27a.py`): the type-1 decode of `BPLCHAR/BPLD27A.EMI#7`
+  and `BPLU27A.EMI#7` is byte-identical on all five PSX discs (JP, US,
+  EU-English, FR, DE) and differs from the PC's chunk in exactly those 4
+  bytes. Before this entry every cache took the port's bytes, a disc-only one
+  included: the importer's `hold` rule rebuilt them from any PSX disc. Which
+  animation the loop is was not read or rendered.
+- **New behaviour:** `recipes/prefer.toml` lists the chunks whose disc form
+  the base policy takes. For each row, when a disc the row names (`from`) is
+  among the build's sources - in any position of the player's order - the
+  importer takes that disc's section through the row's transform, hashes it
+  against the row, and writes it in `base/` ahead of the PC's chunk; the
+  manifest records it as `<build>:prefer:<EMI#section>`, `verify` checks it
+  against the row, and `check` checks the table's shape against the recipe.
+  The first two rows: the 27A arenas from `psx-jp` (`type1`), so both loops
+  play at the disc's 4 ticks. Where no named disc is a source nothing
+  changes: a PC + US cache takes the PC's chunk (the US disc carries the same
+  decode, but the row names Japan's), and a US disc-only install the `hold`
+  rule's port bytes. A PC install with no cache is the port's.
+- **Rationale:** the owner, 2026-10-13: "the JP psx disc makes most sense to
+  use as default for graphics if there's ever a simple divergence, just for
+  consistency sake". And on the 27A loop (inventory Q2), take the disc's: the
+  PlayStation tied music playback to frame timing and the PC does not, so
+  the port's half-speed copy cannot be a correct fix here. The policy is the
+  mechanism; each further member is the owner's call on that chunk. Not
+  members (2026-10-13): the 11 hand-edited arenas and Ryu's byte (Q1 / Q3,
+  to be rendered first), the dock legend (Q5), the wrap clicks (Q6); the
+  title needs none (Japan's is the PC's, DIV-0114 as corrected).
+- **Also in the PSX version?** Yes: this is every PSX disc's loop.
+- **Verification:** `importer.py build` from the PC's `DAT/` and `BOF3.exe`
+  with the JP disc (`c_pcjp`), with the US disc (`c_pcus`), and with US then
+  JP (`c_pcusjp`), each `verify` 0 problems
+  ([`disc-data-inventory.md`](disc-data-inventory.md) 9.2): with the JP disc
+  the two chunks are `psx-jp:prefer:BPLCHAR/BPL?27A.EMI#7` at the disc's
+  hashes and 740 of 742 containers stay the PC's; with US alone both are
+  `pc-zh:chunk` and 742 of 742 are the PC's. `get_chunk` over six source
+  orders (scratch `quick27a.py`); planted faults (scratch `neg27a.py`): a
+  wrong hash refused by the build, the PC's hash / another section / a PSP
+  build / no such chunk / an unknown transform refused by `importer.py
+  check`. `importer.py check`, `exe_tables.py check` 0 errors. Not played,
+  not rendered: the loop has not been seen at either speed.
+- **Reversible?** Build the cache without the JP disc among its sources, or
+  with `importer.py build --prefer <a file with no rows>`.

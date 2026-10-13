@@ -30,8 +30,8 @@ area_data = "loc"         # only where the area's loc/en-150 chunks differ betwe
 
 [[known]]
 id = "pc-title-mark"
-ledger = "none yet: the PC port's own title art (docs/visual-findings-1012.md 4.4)"
-what = "the PC port's title page draws a registered mark the PlayStation's does not (the owner, 2026-10-12: no (R) on the original PSX)"
+ledger = "DIV-0114 (corrected 2026-10-13, docs/disc-data-inventory.md 4.1): the PC's title is the Japanese release's"
+what = "the Japanese release's (R) (the PC's) against a Western disc's TM - while Title_Sprites entry 1's width is a gap of the disc-built image, against no mark"
 pair_trait = "pc"
 modes = [0]
 areas = [0]

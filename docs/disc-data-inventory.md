@@ -1,6 +1,6 @@
 # The disc-data inventory: every `base/` chunk the PC holds differently from a disc
 
-**Status:** IN PROGRESS (2026-10-13, measured; the classification's judgement rows wait on the owner)
+**Status:** IN PROGRESS (2026-10-13, measured; Q2 and Q4 answered and built in section 9 - the base policy `recipes/prefer.toml` with the 27A loop its first member, DIV-0114 corrected; Q1, Q3, Q5, Q6 wait on the owner)
 
 HANDOFF item 3, the owner's words of 2026-10-12: "let's put this as a next up
 action - I agree an inventory pass is what's needed". The owner prefers the
@@ -346,6 +346,12 @@ change or a misplacement.
   to see whether its remap is wanted too?
 - **Q6. The wrap clicks (4.6).** The stance says clamp. Is a listen wanted
   first?
+- **Q7 (new, 2026-10-13, section 9.2). The 27A row's discs.** Every PSX disc
+  carries the same 27A decode. Should the row take it from any PSX disc, so
+  that a PC + US cache and a US disc-only install also play the loop at the
+  disc's speed? Today it takes it from Japan's disc only.
+
+Answered 2026-10-13 (section 9.1): **Q2** the disc's; **Q4** Japan's title.
 
 ## 7. The tool: `tools/cache_inventory.py`
 
@@ -386,6 +392,9 @@ this document's; the tool only measures.
 
 ### 8.1 Proposed entry, if the owner answers Q4 "the Western disc's title"
 
+*Not written: the owner answered Q4 "Japan's" on 2026-10-13 (section 9.1).
+Kept as the record of the alternative.*
+
 **DIV-XXXX** - A PC install draws the player's Western disc's title when its
 language layer comes from that disc.
 
@@ -418,6 +427,8 @@ language layer comes from that disc.
   from the PC.
 
 ### 8.2 Amendment to DIV-0114 (a correction; owed whatever Q4's answer)
+
+*Made 2026-10-13 (section 9.1).*
 
 Replace the "Original behaviour" paragraph with:
 
@@ -453,7 +464,134 @@ PC's bytes from a disc and no entry is owed.
 
 The entry is `sound-import.md` 6 item 2's, unchanged.
 
-## 9. The importer base-policy change these imply (not built)
+## 9. Built (2026-10-13, branch `away/1013-policy`)
+
+### 9.1 The owner's answers
+
+- **Q4, the title: Japan's.** The owner's rule: "the JP psx disc makes most
+  sense to use as default for graphics if there's ever a simple divergence,
+  just for consistency sake". A PC install keeps the (R) title it has, so
+  8.1's Western-title entry is not written. Only 8.2's correction is owed,
+  and it is made: DIV-0114's "Original behaviour", "New behaviour" and "Also
+  in the PSX version?"; `recipes/abc-known.toml`'s `pc-title-mark`; and
+  [`visual-findings-1012.md`](visual-findings-1012.md) 8's bullet.
+- **Q2, the 27A held loop: the disc's** (both copies at the same speed). The
+  owner's reasoning: the PlayStation tied music playback to frame timing and
+  the PC does not, so the port's half-speed copy cannot be a correct fix.
+- **The general policy:** JP disc data is the default for simple graphic
+  divergences. Ledgered as DIV-XXXX (8.1 / 8.3's draft, amended to Japan's
+  disc instead of the player's Western one), with the 27A rows as its first
+  members.
+- **Not decided here:** Q1 and Q3 (the 11 arenas and Ryu's byte; another
+  agent renders them first), Q5 (the dock legend, under investigation) and
+  Q6 (the wrap clicks). None of these is a member of the policy yet.
+
+### 9.2 The mechanism: `recipes/prefer.toml`
+
+Section 9.4's draft proposed a generated table. What was built is a
+**hand-kept** table. Each row is an owner's decision on one chunk, and a
+generator cannot make those, so nothing would be gained by generating it.
+`cache_inventory.py` stays the measuring tool.
+
+- **A row** names a chunk of `recipes/pc-zh.toml` by `(file, kind, tag)`,
+  with:
+  - `from`: the disc builds that give the chunk, in preference order;
+  - `emi` and `how`: the section and the transform
+    (`importer.TRANSFORMS`);
+  - `sha256`: the hash of the disc's form;
+  - `why`: the reason.
+
+  Names, indices and hashes only.
+- **`importer.get_chunk`** first asks `preferred`. If the chunk has a row
+  and a build in `from` is among the sources, the importer:
+  - takes that disc's section through `how`, at any place in the player's
+    order;
+  - hashes it against the row and refuses a mismatch;
+  - returns it as `("prefer", EMI, section)`.
+
+  Otherwise `get_chunk` behaves as before.
+- **The manifest** records the row as `<build>:prefer:<EMI#section>` with
+  the body's hash, and `[meta] prefer_sha256` as the table's hash. The
+  engine's cache walk accepts any `how` (DIV-0089, `dat_cache.cpp`
+  `Parse`), so no `src/` change was needed.
+- **`verify`** checks each `prefer` row against the table's hash and its
+  `from`. It counts the container with the stand-ins (not "composed, it is
+  not the PC's"), and prints the policy's line.
+- **`check`** (no game data) checks each row's chunk, layer (`base/`, not
+  an enemy table), builds (PSX builds `fixtures.toml` holds), transform,
+  `emi` (the recipe chunk's own) and hash shape (64 hex, not the PC's own).
+- **The rule says which disc.** `from = ["psx-jp"]` on both rows. So:
+  - a PC + US cache still takes the PC's chunk;
+  - a PC + US + JP cache takes Japan's, whatever the order;
+  - a JP disc-only install takes the disc's form, where the `hold` rule
+    used to give it the port's;
+  - a US disc-only install still gets the port's bytes through `hold`.
+
+**The US disc carries the same bytes.** The type-1 decode of
+`BPLCHAR/BPLD27A.EMI#7` and `BPLU27A.EMI#7` is byte-identical on all five
+PSX discs (JP, US, EU-English, FR, DE). Each differs from the PC's chunk in
+exactly the 4 bytes of section 2 row P6 (scratch `policy/hash27a.py`). So
+`from = ["psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de"]` would give the
+same chunk from any PSX disc, and the owner's reason for Q2 would cover that
+too. It was left at Japan's because the brief and the owner's stated rule
+name Japan's disc. This is the owner's question, Q7 below.
+
+Runs (scratch `policy/`, game-derived, outside the tree):
+
+| Run | Sources | 27A rows in the manifest | `verify` |
+|---|---|---|---|
+| `c_pcjp` | PC `DAT/`, `BOF3.exe`, JP | `psx-jp:prefer:BPLCHAR/BPLD27A.EMI#7` `034da374...`, `BPLU27A.EMI#7` `d06ca99e...` | 0 problems; 740 of 742 containers the PC's, 2 the policy's; "2 chunk(s) in BPLD27A.DAT, BPLU27A.DAT the disc's form" |
+| `c_pcus` | PC, US | `pc-zh:chunk` `5e98ecaa...`, `573efa98...` (the recipe's) | 0 problems; 742 of 742 the PC's |
+| `c_pcusjp` | PC, US, JP (JP last) | as `c_pcjp` | 0 problems; 740 of 742 + 2 |
+
+`quick27a.py` runs `get_chunk` over six orders:
+- (PC, JP), (PC, US, JP) and (JP): the disc's form;
+- (PC, US) and (PC): the PC's chunk;
+- (US): `hold`, the PC's bytes.
+
+`neg27a.py` plants faults:
+- a wrong hash is refused by the build;
+- the PC's hash, another section, a PSP build, no such chunk and an unknown
+  transform are each caught by `check_prefer`.
+
+`importer.py check` and `exe_tables.py check` show 0 errors.
+
+**Not done:** the loop was not rendered or played at either speed. Which
+animation it is (member A of the 27A arena) was not read.
+
+### 9.3 Set 8's verb (`docs/abc-sweep-1013-village.md` 4.1)
+
+The owner: keep `Quit` (option 1). `psp_exe`'s new rule `verb` fills `0x0B`
+at `0x663866`, `Menu_ButtonSets` set 8's second verb, on US, EU-English, FR
+and DE. It maps the Western discs' 23rd verb (`0x16`, `End`, which the port's
+22-entry table lacks) to the port's `Quit`.
+
+How the rule works:
+- It finds the disc's record in `ETC/STATUS.EMI` by sets 0..7 verbatim and
+  set 8's head `(2, 0x14)`.
+- It refuses any disc byte other than `0x16`.
+- The row is kept only because the result equals `BOF3.exe`'s.
+
+DIV-0101 is amended. Regenerated in the documented order (scratch
+`policy/regen.sh`, a copy of the twins agent's, log `regen_r1.log`):
+`exe_tables` recipe, `psp_exe` recipe, `exe_tables` recipe, `exe_own`
+measure, then `exe_tables` gaps over all seven discs.
+
+| Check | Result |
+|---|---|
+| `exe-psp.tsv` | four `verb` rows (STATUS.EMI#0 at `0x801ECB06` US / EU, `0x801EC952` FR, `0x801EC9BE` DE), each "1 bytes, 0 not BOF3.exe's" |
+| `exe-gaps.tsv` | the four `unread` rows `0x663866..0x66386C` gone; the five bytes after the verb were already the PC's zeros |
+| `exe.toml` | the four Western images: `placed_equal` + 1, `none_pc_nonzero` - 1, `identical` + 1; nothing else moves |
+| planted faults (`negverb.py`) | a `verb` row on PSX-JP, a two-byte row, another file: each refused by `psp_exe.py check`; a disc byte `0x0B` refused by the rule |
+| `psp_exe.py check`, `exe_tables.py check`, `importer.py check` | OK / 0 / 0 |
+| PSX-EU-only install (`c_psxeu`, `g_psxeu`, `--lang en-150`) | image set 8 `02 14 0B 00 00`; `verify`: base and `base/exe/` 0 problems, the `opt/area4-walls` "slot 6 composed with the layer" line is HANDOFF item 7's (as in `abc-sweep-1013-village.md` 6); the exe host's self-test **exit 0**, `inject: 10088 ours`, `self-test only: done`, 189 gap ranges logged and none at `0x663866` |
+
+Not played: no route reaches set 8.
+
+### 9.4 The draft as written before the answers
+
+The text below is the proposal as it stood when the questions were open. 9.2
+is what was built from it.
 
 Today `get_chunk` takes, in the player's source order, the first source the
 recipe lists as an exact carrier. The disc's own section (`own`) is a

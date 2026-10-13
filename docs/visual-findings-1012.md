@@ -570,12 +570,16 @@ Built on `psp/round` `05fccd7d` (the harness merged), committed as
   `BATL_END.EMI`), `"AP%2d"` `0x66AF8C` (the gene costs, `BATTLE.EMI`),
   `"%3dZ"` `0x6641DC` (the shop's cost, `SHOP.EMI`), `"*%2d"` `0x653EC0`;
   `"%s"` `0x654900` only on the PSP builds (no PSX copy in `BATL_END.EMI`).
-- **`abc-known`**: `pc-title-mark`, the PC port's (R) on the title (the
-  owner: the PSX has none); the PC's title art is `DEMO.DAT` / `FIRST.DAT`'s
-  page `0x1A080400` (5,062 bytes differ from the US disc's section,
-  `pcvsdisc.py`) and `Title_Sprites` entry 1's width (the port 10, the discs
-  12; a gap, so the disc-only title draws no mark). Not ledgered: the port's
-  title art wants a DIV (draft below).
+- **`abc-known`**: `pc-title-mark`, the (R) on the PC's title against a
+  Western disc-only install's. **Corrected 2026-10-13**
+  ([`disc-data-inventory.md`](disc-data-inventory.md) 4.1): the (R) is not
+  the port's. It is the Japanese PlayStation's mark, which the PC kept: the
+  page `0x1A080400` and `Title_Sprites` entry 1 (10 wide) are JP's, and the
+  JP disc draws the (R). The US and European discs draw a ™ (entry 1 12 wide,
+  their own glyph page); the US notice page differs from the PC's in 5,062
+  bytes because it adds a Capcom U.S.A. line, not because the port redrew it.
+  The disc-only title draws no mark because entry 1's width is a gap of the
+  image. Ledgered as DIV-0114 (corrected the same day).
 
 Checks at `133d72fd`: `importer.py check`, `exe_tables.py check`,
 `psp_exe.py check` 0 errors; `ledger_check` 0 errors; every rule row
