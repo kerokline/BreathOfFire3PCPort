@@ -156,6 +156,34 @@ void WalkOverlay(const char* kind, const char* layer, bool cached, const char* n
 // AreaMap_Header); LoadDatFile then snapshots its side faces (DIV-0085).
 bool g_area_block_loaded;
 
+// BOF3X_DATLOG=1: one log line per file LoadDatFile walks - the shipped file
+// (the install's DAT\NAME or the cache's), each overlay found - with the file
+// index, Frame_Counter, Game_AreaNumber, Game_Mode and the caller's return
+// address (docs/asset-loading-path.md section 8). Instrumentation, read once
+// at injection; off, nothing is logged and nothing else changes.
+bool g_datlog;
+const void* g_datlog_caller;
+int g_datlog_index = -1;
+
+void DatLog(const char* from, const char* path) {
+    static char module[MAX_PATH];  // static: the 16 KB coroutine stack
+    const char* base = "?";
+    auto at = reinterpret_cast<std::uintptr_t>(g_datlog_caller);
+    std::uintptr_t off = at;
+    HMODULE m = nullptr;
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           static_cast<LPCSTR>(g_datlog_caller), &m) &&
+        GetModuleFileNameA(m, module, sizeof module)) {
+        const char* slash = std::strrchr(module, '\\');
+        base = slash ? slash + 1 : module;
+        off = at - reinterpret_cast<std::uintptr_t>(m);
+    }
+    bof3::Log("datlog      f%u area %u mode %u file 0x%03X %s %s caller 0x%08X (%s+0x%X)",
+              static_cast<unsigned>(Frame_Counter), static_cast<unsigned>(Game_AreaNumber),
+              static_cast<unsigned>(Game_Mode), static_cast<unsigned>(g_datlog_index), from, path,
+              static_cast<unsigned>(at), base, static_cast<unsigned>(off));
+}
+
 }  // namespace
 
 // original 0x454590. Reads DAT\<name> whole and walks its chunks.
@@ -196,9 +224,16 @@ bool g_area_block_loaded;
 //     frees the previous one).
 extern "C" void __cdecl LoadDatFile(int file_index) {
     const char* name = Dat_FileNames[file_index];
+    if (g_datlog) {
+        g_datlog_caller = __builtin_return_address(0);
+        g_datlog_index = file_index;
+        if (!name) DatLog("none", "(no name: returns)");
+    }
     if (!name) return;
 
-    if (!dat_cache::WalkShipped(name, g_take, nullptr)) {  // DIV-0089: the cache's when it holds it whole
+    if (dat_cache::WalkShipped(name, g_take, nullptr)) {  // DIV-0089: the cache's when it holds it whole
+        if (g_datlog) DatLog("cache", name);
+    } else {
         char path[0x28];
         Crt_sprintf(path, "DAT\\%s", name);
         WalkDatFile(path);
@@ -265,6 +300,10 @@ bool OptLayersHaveBanks() {
 
 void DatLoad_OptLayerChunks(const char* name, dat_cache::ChunkFn fn) {
     if (!name || !g_opt_banks) return;
+    if (g_datlog) {
+        g_datlog_caller = __builtin_return_address(0);
+        g_datlog_index = -1;  // Snd_LoadBankFile's layers, not a Dat_FileNames index
+    }
     const dat_cache::ChunkFn was = g_take;
     g_take = fn;
     for (int i = 0; i < g_opt_count; ++i) {  // as LoadDatFile's DIV-0086 loop
@@ -283,6 +322,7 @@ namespace {
 void WalkDatFile(const char* path) {
     const int handle = g_io.open(path, 0, 0);
     if (handle == -1) return;
+    if (g_datlog) DatLog("file", path);
 
     const int file_size = g_io.size(handle);
     auto* file = static_cast<std::uint8_t*>(g_io.malloc(file_size));
@@ -668,5 +708,9 @@ void DatLoad_Inject() {
             bof3::Log("DIV-0089    layer %s: %s", g_opt[i], g_opt_cached[i] ? "the cache's opt layer" : "the install's");
     }
     RetiredAreaWallsSwitch();
+    char datlog[4];
+    const DWORD dn = GetEnvironmentVariableA("BOF3X_DATLOG", datlog, sizeof datlog);
+    g_datlog = dn > 0 && dn < sizeof datlog && std::strcmp(datlog, "0") != 0;
+    if (g_datlog) bof3::Log("datlog      BOF3X_DATLOG: a line per file LoadDatFile walks");
     BOF3_INJECT(LoadDatFile);
 }
