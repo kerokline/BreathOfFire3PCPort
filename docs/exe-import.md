@@ -1,7 +1,7 @@
 # `base/exe/`: the exe-resident tables imported into the cache
 
 **Status:** IN PROGRESS (2026-10-08, cloud session; unified-data step 8, the
-importer half - [`unified-data-plan.md`](unified-data-plan.md) section 5
+importer half; the engine half is [`exe-import-engine.md`](exe-import-engine.md) - [`unified-data-plan.md`](unified-data-plan.md) section 5
 step 3 and section 8 row 8. The importer writes `base/exe/` from `BOF3.exe`
 or from any held disc alone and verifies it; the engine half - mapping
 `base/exe/` where `.data` was - waits on the owner's machine and the state

@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-10; 36 entries, I1..I36 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-12; 37 entries, I1..I37 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -46,7 +46,7 @@ rule ([`README.md`](README.md)) here too.
 | Id | Title | Kind | Feasibility | State |
 |---|---|---|---|---|
 | I1 | PSX ↔ PC save file interchange | tooling | MEDIUM | **PSX saves load and play on PC** (owner, 2026-09-19, [`save-interchange.md`](save-interchange.md) §4); only PC→PSX in a real PSX runtime is unchecked |
-| I2 | Selectable localisations from original discs | game behaviour | LOW | **partly built**: English from the player's US disc (DIV-0005..0009, DIV-0013..0020), `BOF3X_LANG`, the launcher's Language box; other languages open; widened into [`ASSET_SOURCES.md`](ASSET_SOURCES.md) |
+| I2 | Selectable localisations from original discs | game behaviour | LOW | **partly built**: English from the player's US disc (DIV-0005..0009, DIV-0013..0020), `BOF3X_LANG`, the launcher's Language box; since 2026-10-10 every held disc's language from the disc (`loc_build all --discs`, DIV-0090; fr-FR, de-DE, ja-JP, en-150); widened into [`ASSET_SOURCES.md`](ASSET_SOURCES.md) |
 | I3 | Crude x86→C lifter as portability accelerator | engine | MEDIUM | **prototype built 2026-09-25**, on a synthetic corpus — [`lifter-feasibility.md`](lifter-feasibility.md); first run on `BOF3.exe` open |
 | I4 | Stacktrace-driven "who called this" work-queue harvester | tooling | LOW | **first-call tracer built 2026-09-19** — [`call-trace.md`](call-trace.md) |
 | I5 | Recover Capcom's `.c` file boundaries from global blocks | tooling | MEDIUM | open |
@@ -67,16 +67,16 @@ rule ([`README.md`](README.md)) here too.
 | I20 | A Config row that opens the physical binding screen in game | — | — | **deferred** by the owner, 2026-09-24 |
 | I21 | Furigana over the Japanese script, drawn by our message box | game behaviour | MEDIUM | open; wants its own branch and playtesting (owner, 2026-09-24) |
 | I22 | Cut content: the unused skills, music, text, the whelp's portrait, Sunder's animation made to loop | game behaviour | MIXED | open; mapped in [`cut-content.md`](cut-content.md) (owner, 2026-09-25) |
-| I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | open; method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26). **Asked for first, 2026-10-04**: the owner wants to hear the MP3s against the sequences before the MP3 decoder's fate is decided ([`platform-layers-plan.md`](platform-layers-plan.md) section 5) |
+| I23 | Music: the PC's MP3s against the disc's sequences | tooling | HIGH | **built** 2026-10-06..11 (DIV-0081 the loops, DIV-0087 the disc's music, DIV-0091 minimp3, heard); method in [`bgm-comparison.md`](bgm-comparison.md) (owner, 2026-09-26). **Asked for first, 2026-10-04**: the owner wants to hear the MP3s against the sequences before the MP3 decoder's fate is decided ([`platform-layers-plan.md`](platform-layers-plan.md) section 5) |
 | I24 | The scenario round: the ~620 chapter-bank functions wave by wave, on the spell round's pattern | engine | HIGH | **built 2026-09-27..28** in round ten's first three waves - every chapter bank ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-scenario.md`](takeover-queue-scenario.md) |
 | I25 | The area round: the area overlays enumerated from their tables | engine | HIGH | **built 2026-09-27..28** in round ten's six waves - every area overlay of worlds 0..4 ours, fuzz-only ([`takeover-queue-round10.md`](takeover-queue-round10.md)); planned in [`takeover-queue-areas.md`](takeover-queue-areas.md) |
 | I26 | The boss round: the BOSS overlays enumerated from the engine's three root sets | engine | HIGH | **done** 2026-09-28: round eleven, 531 functions, [`takeover-queue-round11.md`](takeover-queue-round11.md); the live check per fight and the debts remain |
 | I27 | Round twelve: the field modes and the battle engine, by address band | engine | HIGH | done 2026-09-29: 654 functions in fourteen groups, 6,891 ours, live-checked, [`takeover-queue-round12.md`](takeover-queue-round12.md); planned and cut in [`takeover-queue-field-battle.md`](takeover-queue-field-battle.md) (owner, 2026-09-28): 631 functions, 14 groups, two harness groups |
-| I28 | Round thirteen: the effect-object engine (1,697 functions: the 627 the catalog labels area overlays, which are effect-kind code, and the 1,070 the labelling pass found beside them) | engine | HIGH | planned; [`takeover-queue-round13.md`](takeover-queue-round13.md) section 9 - the owner's scope of 2026-09-29, to be cut with `tools/band_rows.py` at round twelve's tip |
+| I28 | Round thirteen: the effect-object engine (1,697 functions: the 627 the catalog labels area overlays, which are effect-kind code, and the 1,070 the labelling pass found beside them) | engine | HIGH | **done** 2026-10-03/04 (round thirteen, PR #40); [`takeover-queue-round13.md`](takeover-queue-round13.md) section 9 - the owner's scope of 2026-09-29, to be cut with `tools/band_rows.py` at round twelve's tip |
 | I29 | Button prompts drawn from the bindings in force, not from each release's defaults | game behaviour | LOW | open 2026-10-03 (the owner, on the fishing banner; DIV-0069) |
 | I30 | Machine-readable docs: Open Knowledge Format frontmatter and a generated wiki | docs / tooling | HIGH | open; parked until the spec hardens or is validated outside Google (owner, 2026-10-04) |
-| I31 | The platform layers: the C runtime, the MP3 decoder, the renderer's remainder, the small glue layers, and the cutover to our own executable | engine / platform | MIXED | **planned 2026-10-04**, not scheduled - [`platform-layers-plan.md`](platform-layers-plan.md); its first step (a read pass and a reach trace) needs no decision |
-| I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | open 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
+| I31 | The platform layers: the C runtime, the MP3 decoder, the renderer's remainder, the small glue layers, and the cutover to our own executable | engine / platform | MIXED | **built through state 3** (2026-10-12, PRs #49..#53: the C runtime, minimp3, state 2 proved, `bof3x.exe`); the renderer's remainder open - [`platform-layers-plan.md`](platform-layers-plan.md); its first step (a read pass and a reach trace) needs no decision |
+| I32 | The PSP release's game-logic changes, found by measurement and offered as a config toggle | game behaviour | UNKNOWN | **measured, built in part** (the PSP-only round: the code diff `psp-code-diff*.md`, DIV-0108's two switches, PR #56); opened 2026-10-04 (the owner); sixteen leads from players' reports, catalogued in the entry and unmeasured but for the widescreen - the first step is the diff, beside [`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 8's phase 4 item |
 | I33 | Productisation: what stands between our own executable and a finished product - a portable platform layer, mods as cache layers, presets from the ledger, in-game settings, first-run import, saves, the release gate, the commercial audit | engine / product | MIXED | open 2026-10-04 (the owner); three early decisions of shape, the rest after the cutover (I31) |
 | I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
 | I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | built 2026-10-10 (`catchup/music-tooling`): `abort_check.h`, the suite in CI |
@@ -1534,3 +1534,16 @@ may drop whole parts of the decoder and firm up the estimate.
 ### Outcome
 _(2026-10-10) open, low priority (the owner). The player's own ffmpeg stays the
 route until this is picked up._
+
+## I37 — Grow the field's tile ring for wide mode as the PSP did
+
+**Ask (2026-10-12):** the owner, on WS's survey: "I'm interested in growing the
+ring, let's place it as an idea for later". The PSP widened the field's tile
+ring from 28 x 56 to 33 x 58 cells; our wide mode lowers the inset instead
+(DIV-0041).
+**Kind:** display
+**Feasibility:** MEDIUM - 23 sites, about half a week
+([`psp-widescreen-placements.md`](psp-widescreen-placements.md) sections 5 and 6.1).
+
+### Outcome
+_(2026-10-12) open, for later (the owner)._

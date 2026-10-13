@@ -1,6 +1,6 @@
 # The PSP's 16:9 placements, site by site, against our wide mode
 
-**Status:** DRAFT (2026-10-12) - a reading by group WS for the owner's
+**Status:** ACTED ON (the owner's answers in 6.1; option (a) built, [`psp-widescreen-a.md`](psp-widescreen-a.md), PR #56). Originally a DRAFT (2026-10-12) - a reading by group WS for the owner's
 question of 2026-10-12: *"since all the code is ours, maybe it's worth having
 the psp placement of text / enemies / etc. as the widescreen placement?"*
 Nothing in `src/` changed; no game was run. Every PSP fact is from the code

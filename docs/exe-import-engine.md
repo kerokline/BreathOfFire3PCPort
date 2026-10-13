@@ -1,6 +1,6 @@
 # `base/exe/`, the engine half: the data pointers, `.rdata`, the unplaced, the map
 
-**Status:** IN PROGRESS (verified 2026-10-10, on the owner's machine: the
+**Status:** IN PROGRESS (merged: PR #49, section 7 with PR #55; live play owed. Verified 2026-10-10, on the owner's machine: the
 seven held discs and `BOF3.exe`, headless self-tests only; branch
 `catchup/step8-engine`; section 7 measured 2026-10-12, branch
 `disc-only/pointers`)

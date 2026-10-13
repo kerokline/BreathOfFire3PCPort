@@ -2,7 +2,7 @@
 
 **Status:** IN PROGRESS (verified 2026-10-10, a local session without the game
 running: built and diffed for all five held PlayStation releases; the engine
-does not read a cache yet, so nothing here has been played - section 7.
+reads a cache since DIV-0089 and plays disc-only since PR #55, but nothing here has been played - section 7.
 **2026-10-12, the disc-only round's LG group** (branch `disc-only/language`):
 the gaps of section 7 items 1, 2 and 6 closed by rule, measured in 4.3,
 4.5..4.7, 5.3 and 5.4; still not played)

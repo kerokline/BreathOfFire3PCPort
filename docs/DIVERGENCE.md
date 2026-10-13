@@ -4822,7 +4822,8 @@ designed in rather than bolted on.
   `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`: exit 0,
   the stand-in decoder looped exactly in four call patterns, "39 table
   rows in bounds"; the 37-row table built and `'*'` run with the review's
-  tip. **Not yet heard in the game**;
+  tip. **Heard in part** (2026-10-10/11: the attract, combat, `165` on the
+  MP3 path - the amendments above); the second cut's other rows not yet;
   whether replaying the intro's frames at each loop causes a hitch in play
   is unmeasured.
 - **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
@@ -5417,8 +5418,8 @@ designed in rather than bolted on.
   releases' own. The glyphs and the sheet are the port's, so no.
 - **Verification:** built and diffed container by container for en-US,
   en-150, fr-FR, de-DE and ja-JP (`loc-build-disc-only.md` sections 5..6).
-  Not played: the engine does not read a cache yet. **Owed the owner's eye**
-  then: the second suffix (banner message 3) and the blank single-byte
+  Not played (the engine reads a cache since DIV-0089 and plays disc-only
+  since PR #55). **Owed the owner's eye**: the second suffix (banner message 3) and the blank single-byte
   slots.
 - **Reversible?** build the layer with the PC install among the sources
   (`importer.py build --source bof3/DAT --source bof3/BOF3.exe ...`, or

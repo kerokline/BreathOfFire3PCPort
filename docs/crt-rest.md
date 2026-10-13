@@ -1,6 +1,6 @@
 # The C runtime's entry points (platform round, step 3)
 
-**Status:** IN PROGRESS (2026-10-06; `Crt_atoi` 2026-10-10) - step 3 of
+**Status:** MEASURED (merged in PRs #43 and #50; 2026-10-06, `Crt_atoi` 2026-10-10) - step 3 of
 [`platform-layers-plan.md`](platform-layers-plan.md) section 4, on
 `phase-3/plat2-crt` from `f18b9d9c`. **14 entries ours**
 ([`src/game/crt_rest.cpp`](../src/game/crt_rest.cpp), shadow name

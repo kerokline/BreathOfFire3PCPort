@@ -1,6 +1,6 @@
 # Music from the disc: the sequencer, the SPU model, and the cache format
 
-**Status:** PROPOSAL (2026-10-08, a cloud session on
+**Status:** DONE as planned (PR #46, DIV-0087). Originally a PROPOSAL (2026-10-08, a cloud session on
 `audio/sequence-from-disc`) - [`unified-data-plan.md`](unified-data-plan.md)
 step 9, made concrete. Nothing here is built yet except what section 9 lists;
 the owner's calls are in section 8.

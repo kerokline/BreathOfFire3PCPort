@@ -1,6 +1,6 @@
 # The PSP code diff: the sibling's PSX functions paired with `BOOT.BIN`, and where they differ
 
-**Status:** IN PROGRESS (2026-10-12) - stage A of group CD of the PSP-only round
+**Status:** MEASURED (2026-10-12; merged in PR #56; stage B is in [`psp-code-diff-battle.md`](psp-code-diff-battle.md) and the two field docs) - stage A of group CD of the PSP-only round
 ([`psp-only-round.md`](psp-only-round.md) 3) done: the pairing tool, its
 coverage and precision measured, the pairs diffed with the widescreen changes
 and the platform layer set aside, and the differing pairs tabled by half

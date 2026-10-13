@@ -1,6 +1,6 @@
 # Breath of Fire III — Chinese PC Port: renovation & uplift plan
 
-**Status:** DRAFT (2026-09-18; phase 0 note updated 2026-09-19; a progress note in §5 and one line in §6, 2026-09-24; the §5 note brought to round ten, 2026-09-28). Scoping document.
+**Status:** DRAFT (2026-09-18; phase 0 note updated 2026-09-19; a progress note in §5 and one line in §6, 2026-09-24; the §5 note brought to round ten, 2026-09-28; a line for 2026-10-12 in §5). Scoping document.
 
 **Update 2026-09-18:** §8 step 2 — the load-bearing experiment — has been run and
 **passed**, twice (text engine, then battle engine). See [`kinship-probe-text-engine.md`](kinship-probe-text-engine.md).
@@ -358,7 +358,11 @@ Capcom's byte-copy beside ours in the process ([`magic_harness.md`](magic_harnes
 and its two siblings); the boss overlays are the next round. The phase-3
 exit test below is long passed; what remains of Capcom's code is catalogued
 in [`remaining-catalog.md`](remaining-catalog.md) (its counts of 2026-09-25)
-and the round docs' "left original" lists.
+and the round docs' "left original" lists. **As of 2026-10-12:** 10,088 ours
+(the exe host's count), the game's own code all ours since PR #43; state 2
+proved and state 3 built (`bof3x.exe`, no code of Capcom's mapped, PR #53);
+installs from a PlayStation or PSP disc alone (PRs #55, #56).
+[`STATUS.md`](STATUS.md) is authoritative.
 
 ### Phase 0 — Our own scaffolding (weeks)
 Write a minimal loader and detour layer of our own: get code into the process,

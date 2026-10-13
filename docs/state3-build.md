@@ -1,6 +1,6 @@
 # State 3: the first build of our own executable
 
-**Status:** IN PROGRESS (verified 2026-10-11, on `platform/state3` from `5a447d87`; the
+**Status:** MEASURED (merged as PR #53, 2026-10-12; verified 2026-10-11, on `platform/state3` from `5a447d87`; the
 build agent's record against [`state3-design.md`](state3-design.md) - the
 probes, what was built, every check with its command and exit code)
 

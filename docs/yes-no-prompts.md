@@ -1,8 +1,9 @@
 # The yes / no prompts outside Menu_YesNo (DIV-0027 amended)
 
 **Status:** IN PROGRESS (2026-10-03, fix wave group YN, branch `fix/1003-yn`).
-Built and self-tested headless; **nothing seen on screen yet** - the live
-check is section 6, for the coordinator. The masters screen's headers are
+Built and self-tested headless; **the master's prompt seen fixed** on the
+owner's `masterAndManillo.txt` (2026-10-03, DIV-0027, `00228d9f`); the rest of
+section 6's live check not recorded. The masters screen's headers are
 section 5: found, not translated (no US source string located).
 
 DIV-0027 fitted `Menu_YesNo`'s four prompts (save, overwrite, load, "Is this

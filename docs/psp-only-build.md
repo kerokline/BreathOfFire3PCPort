@@ -1,6 +1,6 @@
 # A build from a PSP disc alone: how close we are, and the PSP toggles
 
-**Status:** IN PROGRESS (2026-10-10; section 5's steps all landed by
+**Status:** DONE (2026-10-10; section 5's steps all landed by
 2026-10-12, the PSX disc-only round and the PSP-only round,
 [`psp-only-round.md`](psp-only-round.md): struck there with where each went). Measured first: the importer run on each
 disc alone, plus two measurement agents (banks and music, sound effects), with
