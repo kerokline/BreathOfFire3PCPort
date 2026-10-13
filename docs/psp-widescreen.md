@@ -112,7 +112,7 @@ perspective divide `0x9d24c` (176 bytes), which computes
 `sx = OFX + (x·H)/z` and `sy = OFY + (y·H)/z` with `mult`/`div` and no scale
 (`0x9d29c`..`0x9d2f8`). Two further `SetGeomOffset` callers exist on the PSP
 — `(160, 144)` at `0x681bc` and `(?, 185)` with `SetGeomScreen(300)` at
-`0x26b038` — in code the PSX boot EXE does not contain (its two callers,
+`0x26b038` — in code the PSX boot EXE does not contain (**2026-10-12, WS**, [`psp-widescreen-placements.md`](psp-widescreen-placements.md) 3: they are the AREA060 `(160, 144)` and AREA189 `(160, 185)` overlay twins, whose PSX code passes the same values, so nothing to move) (its two callers,
 `0x8014ad50` and `0x801548d8`, both pass `(160, 120)`); they are recorded
 here as unpaired, not as changes.
 
@@ -253,6 +253,10 @@ divide `0x9d24c` of §2.2) as the PSX's `lwc2` / `cop2 0x0180001` (RTPS) /
 | 10 | AREA172's 64 x 32 sprite (`WORLD04/AREA172.EMI#13` `0x801f4de0`, `0x801f4e68`; [`psp-code-diff-field-2.md`](psp-code-diff-field-2.md) rows 466, 467) | at (220, 200) | not read | **at (256, 190)**, inside the 384 x 216 window of 2.4 | PSP `0x262594`, `0x26260c` |
 | 11 | The terrain strip ring beside `MapView_Build` (`0x80153758`; field-2 row 478; #1 is the cull, this the buffer) | 56 entries, rows wrap at 28, stride 112 bytes | not read | **58 entries, 33 rows, 132 bytes** | PSP `0xcd98` |
 | 12 | SHOP's left clamps (`ETC/SHOP.EMI#0` `0x801e3b70`, `0x801e4130`; field-2 rows 567, 568) | -170, -120 | not read | **-202, -152** (the -32 visible edge) | PSP `0x1ff1ac`, `0x1ff474` |
+| 13 | The battle window's full-frame tile, size table `0x64E268` entry 11 (WS) | 321 x 241, drawn at x 0 | the same | **385 wide, its callers at x -32** | WS's survey, [`psp-widescreen-placements.md`](psp-widescreen-placements.md); ours at 53 columns, DIV-0041 (WA) |
+| 14 | The spell flashes drawn to x 319 (MAGIC004 / 008 / 021 / 111 / 225; #6's class, which the `320.0` scan could not see) | `0..319` | the same | **`-32..351`** | WS; ours `-53..372`, DIV-0041 (WA) |
+| 15 | The charge gauge's +32 inside `Area121_GaugeSprite`'s twin (an `addiu` on an argument register, which an immediates survey cannot see) | - | - | **+32** | WA, [`psp-widescreen-a.md`](psp-widescreen-a.md) 3 |
+| 16 | The dialogue box tables `kBoxXY` `0x66ADD8` / `kBoxAltXY` `0x66ADE8` (eight `(u8 x, u8 y)` each on the PC) | entries 3..6 at x 16 / 104 / 184 | the same | **s16 pairs, entries 3..6 32 further out** (16 -> -16, 104 -> 136, 184 -> 216) | WA 5 (JP file `0x2DF920` / `0x2DF93C`, EU `0x2DF110` / `0x2DF12C`); undone at import (`boxxy`, DIV-0103) |
 
 The pairing of #3/#4 with the PC function rests on structure: both project a
 point, test a y-derived value to choose the wide or the narrow x range, and
@@ -342,5 +346,5 @@ Open, for the owner and for the next pass:
   `bof3ext` patches at `0x588C26`, `0x5881AC`, `0x589F9C`, …) were not paired
   on the PSP; a survey of `ori`/`addiu` immediates in the PSP's menu code
   against those PC values is the next half-day.
-- The PSP's other two `SetGeomOffset` callers (`(160, 144)`, `(?, 185)`) want
-  their PC twins before they can be called unchanged.
+- ~~The PSP's other two `SetGeomOffset` callers (`(160, 144)`, `(?, 185)`) want
+  their PC twins before they can be called unchanged.~~ Closed 2026-10-12: AREA060 and AREA189's overlay twins, the PSX passing the same (WS).

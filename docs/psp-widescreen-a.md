@@ -248,7 +248,9 @@ frame's edges:
 
 ## 9. For the other files
 
-### `docs/DIVERGENCE.md`, DIV-0041 - amendments (DIV A..E of this group)
+**Folded in 2026-10-12, night** (the coordinator's second pass, branch `psp/ledger2`): A..E are one DIV-0041 amendment (E, the letterbox kept, inside it), with 5.1's answers: the A8 bars widened (the 2026-10-04 hold lifted), the reveal kept, the full-height rule; the 2026-09-23 "seem ok" reversal stated. README row, STATUS, HANDOFF (section 6's scenes as the follow-up round's harness pass) and `psp-widescreen.md` 3a rows 13..16 are in.
+
+### `docs/DIVERGENCE.md`, DIV-0041 - amendments (DIV A..E of this group; folded into one DIV-0041 amendment, 2026-10-12)
 
 **A - the full-frame fills the PSP widened (2026-10-12, PSP-only round group
 WA, [`psp-widescreen-a.md`](psp-widescreen-a.md)).** The owner's answer to

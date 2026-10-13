@@ -315,7 +315,7 @@ distance from a screen edge moves outward by 53, as the PSP moved it by 32:
   DIV-0042 there is no fixed k rule to revisit - the window resizes freely
   and k follows it, snapped to whole multiples of the picture or fitted to
   the height.*
-- The two PSP `SetGeomOffset` callers without PC twins (`(160, 144)`,
+- ~~The two PSP `SetGeomOffset` callers without PC twins~~ (closed 2026-10-12: AREA060 and AREA189's overlay twins, the PSX passing the same, [`psp-widescreen-placements.md`](psp-widescreen-placements.md) 3; the 319-wide fills and the size-11 tile, which the `320.0` scan could not see, are DIV-0041's since WA) (`(160, 144)`,
   `(?, 185)`, psp-widescreen §5) - an unmoved projection there would put
   something off-centre by 53.
 - The FMVs stay 4:3 (640 x 480 at an integer scale, DIV-0035); nothing to do.
