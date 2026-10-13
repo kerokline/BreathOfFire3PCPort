@@ -172,6 +172,38 @@ TWINS = [
     (0x658F08, 0x658F48, "BOOT.BIN", "ItemUse_HandlerIndex+0xD0", PSP),
     (0x65DE5F, 0x65DE78, "WORLD02/AREA109.EMI", "EffectKind18_08_States+0x8B", ("psx-eu-en",)),
     (0x65EC54, 0x65EC64, "WORLD04/AREA169.EMI", "EffectKind18Sub3B_States+0x14"),
+    # The game-value runs one file alone carries (docs/exe-image-twins-1013.md 4): the same
+    # finding as the block above for the runs exe_own classes game-value rather than
+    # disc-unplaced, each read in its file by a lui/imm pair into its table. Left out: runs
+    # the file holds more than once with no reader to choose by (Area154_ChoicePairs+0x18C8),
+    # a run that is only the start of another table's copy (EffectKind18Sub38_States+0x10,
+    # inside AREA166's Sub35 run) and BOOT.BIN's ConfigMenu_Steps+0xC (no reader found).
+    (0x617EBC, 0x617EC8, "WORLD02/AREA098.EMI", "Area96_Handlers+0x194 (area 98's)"),
+    (0x63FF40, 0x63FF48, "WORLD04/AREA173.EMI", "Area172_EffectStates+0x100C (area 173's)"),
+    (0x654308, 0x654310, "WORLD01/AREA042.EMI", "EffectKind28_States+0x10"),
+    (0x654344, 0x65434C, "BOOT.BIN", "EffectKind2A_States+0x10", PSP),
+    (0x6544A8, 0x6544B0, "WORLD03/AREA120.EMI", "EffectKind6B_Frame"),
+    (0x654750, 0x654758, "WORLD03/AREA135.EMI", "EffectKind56_States+0x10", ("psx-us", "psx-eu-en", "psx-fr", "psx-de")),
+    (0x654AB0, 0x654AB8, "WORLD03/AREA139.EMI", "EffectKind6F_States+0x10", PSX),
+    (0x655214, 0x655220, "SCENARIO/SCE15EF1.EMI", "EffectKindA0_States+0x30"),
+    (0x65A5EC, 0x65A5F4, "BMAGIC/MAGIC006.EMI", "MindSword_BladeRadii"),
+    (0x65ABF9, 0x65AC00, "BMAGIC/MAGIC064.EMI", "WeretigerStreak_Offsets+0x1"),
+    (0x65AC10, 0x65AC20, "BMAGIC/MAGIC064.EMI", "WeretigerImage_UV"),
+    (0x65B7F5, 0x65B808, "BMAGIC/MAGIC103.EMI", "SimoonDust_Offsets+0x5", ("psx-us", "psx-eu-en", "psx-fr")),
+    (0x65BC7C, 0x65BC84, "BMAGIC/MAGIC130.EMI", "VenomRing_ScreenY"),
+    (0x65C309, 0x65C318, "BMAGIC/MAGIC223.EMI", "TempestGust_Angles+0x1"),
+    (0x65E010, 0x65E018, "WORLD03/AREA117.EMI", "EffectKind18Sub0E_States+0x18"),
+    (0x65E02C, 0x65E034, "WORLD03/AREA117.EMI", "EffectKind18Sub13_States+0x14"),
+    (0x65E8A4, 0x65E8B0, "WORLD03/AREA139.EMI", "EffectKind18Sub27_States+0x14", PSX),
+    (0x65E940, 0x65E948, "WORLD03/AREA140.EMI", "EffectKind18Sub42_States+0x78", PSX),
+    (0x65EB44, 0x65EB50, "WORLD04/AREA158.EMI", "EffectKind18Sub2E_States+0x14", ("psx-eu-en",)),
+    (0x65EB64, 0x65EB6C, "WORLD04/AREA160.EMI", "EffectKind18Sub2F_States+0x14", ("psx-eu-en",)),
+    (0x65EB80, 0x65EB88, "WORLD04/AREA161.EMI", "EffectKind18Sub30_States+0x14", ("psx-us", "psx-fr")),
+    (0x65EBB8, 0x65EBC0, "WORLD04/AREA163.EMI", "EffectKind18Sub32_States+0x14", ("psx-fr",)),
+    (0x65EBEC, 0x65EBF4, "WORLD04/AREA165.EMI", "EffectKind18Sub34_States+0x14"),
+    (0x65EC1C, 0x65EC28, "WORLD04/AREA166.EMI", "EffectKind18Sub35_States+0x14"),
+    (0x65EC74, 0x65EC80, "WORLD02/AREA105.EMI", "EffectKind18Sub40_States+0x10"),
+    (0x660D5C, 0x660D68, "SCENARIO/SCENA02.EMI", "Scena00_ObjectHooks+0x4"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges

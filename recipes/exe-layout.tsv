@@ -12435,7 +12435,6 @@ pc	kind	target
 0x654498	code	Effect_StateRelease
 0x65449C	code	EffectKind5A_Place
 0x6544A0	code	EffectKind42_Glow
-0x6544AC	number	-
 0x6544B0	code	EffectKind43_Start
 0x6544B4	code	EffectKind43_Gather
 0x6544B8	code	EffectKind43_Wait
@@ -12968,7 +12967,6 @@ pc	kind	target
 0x655200	code	EffectKindA0_FlyWait
 0x655204	code	EffectKindA0_Fade
 0x655210	data	0x640030
-0x655214	number	-
 0x655220	code	EffectKindA1_CaptureSprite
 0x655224	code	EffectKindA1_ReadBack
 0x655228	code	EffectKindA1_SplitPixels
@@ -13713,8 +13711,6 @@ pc	kind	target
 0x65AC04	code	WeretigerDim_Down
 0x65AC08	code	WeretigerDim_WaitOwner
 0x65AC0C	code	FxDim_Up
-0x65AC14	number	-
-0x65AC1C	number	-
 0x65AC28	code	StealClone_Task
 0x65AC2C	code	TsunamiWave_Run
 0x65AC30	code	TsunamiRings_Run
@@ -14152,8 +14148,6 @@ pc	kind	target
 0x65BC70	code	VenomRing_Grow
 0x65BC74	code	MagicFx_CountDown9
 0x65BC78	code	BlizzardShard_End
-0x65BC7C	number	-
-0x65BC80	number	-
 0x65BC84	data	0x64006C
 0x65BC88	code	KaiserSprite_Run
 0x65BC8C	code	KaiserFlash_Run
