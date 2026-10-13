@@ -6184,6 +6184,29 @@ designed in rather than bolted on.
   frames, PC against PSX-EU differs only at the ranked list's page counter
   (`0x6531F4`, engine-own, known) and the stat bars, food counter and pop-ups
   are equal on all three.
+- Amended 2026-10-13, morning (the one-file runs and PSP-EU's own layout,
+  [`exe-image-twins-1013.md`](exe-image-twins-1013.md)): 39 more runs no longer
+  zero on the disc-built images that lacked them, each the PC's whole run held
+  by one file of the disc and read there by that overlay's code (`twin`, the
+  builds whose gap it closes): 13 `disc-unplaced` (effect-kind state and frame
+  tables in their area and scenario overlays, `BossGolem_Hooks+0xC`,
+  `Area94_EffectArgsD` from the third of AREA094's copies, and on the PSP
+  builds `ItemUse_HandlerIndex+0xD0` from `BOOT.BIN`) and 26 `game-value` (more
+  effect-kind tables, five spell effects' tables). A new way of finding a
+  place on a PSP disc, `pspmap`: where the PSP disc's file is laid out
+  otherwise than PSX-JP's (PSP-EU's `GAME.EMI` from 0x1000 earlier, parts of
+  `BATTLE.EMI#15` 0x3000 later), a run `psxmap` misses at PSX-JP's address is
+  read at the one place where the PSX-JP disc's own bytes either side of it
+  stand beside BOF3.exe's run - four runs on PSP-EU (`EffectKind34_V0Areas`,
+  `Scenario_Hooks+0x58`, `Field_ModeTailKinds+0x100`,
+  `MenuList_GeneWinSteps+0xE`), none on PSP-JP. Every filled byte equals
+  `BOF3.exe`'s; no byte that was the PC's is lost. Gap ranges (`exe-gaps.tsv`): PSX-EU 282
+  to 247, PSP-EU 251 to 220, PSX-US 282 to 249. No symptom of any of them was
+  observed, so no defect is numbered. Verification: 221 recipe rows (217
+  `twin`, each "0 not BOF3.exe's"; 4 `pspmap`, kept only when equal);
+  `psp_exe.py`, `exe_tables.py`, `importer.py check` clean;
+  the exe host on a PSX-EU-only and a PSP-EU-only install exit 0 (10,088 ours,
+  `BOF3X_EXEIMAGE gap` 247 and 220 ranges); not played.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
