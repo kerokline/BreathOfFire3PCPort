@@ -35,6 +35,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/boss_harness.h"
 #include "game/boss_sf_callees.h"
+#include "game/labels.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -262,13 +263,34 @@ extern "C" void __cdecl Boss26Fx_Wait(void) {
 // Text_DrawFont12(0x92, 0x12, 4, it); the text at [0x669D24] at (0xAA, 0x12).
 // Then with 0x803433 set or 0x904AE9 bit 1, +1 down by one (back to state 0);
 // at phase 5 (0x904AA0) a tail jump to BattleTask_FreeCurrent.
+//
+// DIVERGENCE DIV-XXXX (DIV-0064's group 18): under a language overlay that
+// has written the turn counter, the PlayStation disc's own layout instead -
+// the count at the disc's x, then one word at its x, drawn whole: the
+// plural, or the singular when the disc's test on the turn 0x904B90 says so
+// (the European discs' `turn  left`, the French `Rest   tour`). The layout
+// slot holds the count's x, the word's x, the test ('=' the turn equal to
+// the value, '>' at least it, 'n' none) and the value. US BOSS025.EMI
+// 0x800C3088: the box (0x6B, 0x10), "%2d" of 0x15 - turn at (0x70, 0x12),
+// `turns left` at (0x80, 0x12); French: the words at 0x70, the count at
+// 0x94 between them.
 extern "C" void __cdecl Boss26Fx_DrawCount(void) {
     BH_CALL(BattleWin_DrawMediumBox)(0x6B, 0x10);
-    BH_CALL(Text_DrawAt)(0x7A, 0x12, 0, 4, At(static_cast<U>(Long(At(at::kCountText0)))));
-    const auto left = static_cast<std::int32_t>(0x15u - static_cast<U>(Long(At(at::kTurn))));   // x86's wrap
-    BH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextRow1)), reinterpret_cast<const char*>(At(at::kCountFormat)), left);
-    BH_CALL(Text_DrawFont12)(0x92, 0x12, 4, At(at::kTextRow1));
-    BH_CALL(Text_DrawAt)(0xAA, 0x12, 0, 4, At(static_cast<U>(Long(At(at::kCountText1)))));
+    if (Labels_Written(18)) {
+        const unsigned char* const layout = Labels_Slot(18, 2);
+        const U turn = static_cast<U>(Long(At(at::kTurn)));
+        const auto left = static_cast<std::int32_t>(0x15u - turn);   // x86's wrap
+        BH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextRow1)), reinterpret_cast<const char*>(At(at::kCountFormat)), left);
+        BH_CALL(Text_DrawFont12)(layout[0], 0x12, 4, At(at::kTextRow1));
+        const bool singular = (layout[2] == '=' && turn == layout[3]) || (layout[2] == '>' && turn >= layout[3]);
+        BH_CALL(Text_DrawAt)(layout[1], 0x12, 0, 0xFF, Labels_Slot(18, singular ? 1 : 0));
+    } else {
+        BH_CALL(Text_DrawAt)(0x7A, 0x12, 0, 4, At(static_cast<U>(Long(At(at::kCountText0)))));
+        const auto left = static_cast<std::int32_t>(0x15u - static_cast<U>(Long(At(at::kTurn))));   // x86's wrap
+        BH_CALL(Crt_sprintf)(reinterpret_cast<char*>(At(at::kTextRow1)), reinterpret_cast<const char*>(At(at::kCountFormat)), left);
+        BH_CALL(Text_DrawFont12)(0x92, 0x12, 4, At(at::kTextRow1));
+        BH_CALL(Text_DrawAt)(0xAA, 0x12, 0, 4, At(static_cast<U>(Long(At(at::kCountText1)))));
+    }
     if (B(at::kWindowUp) != 0 || (B(at::kBanner) & 2) != 0) Sprite_Current[1] -= 1;
     if (B(at::kPhase) == 5) BH_CALL(BattleTask_FreeCurrent)();
 }

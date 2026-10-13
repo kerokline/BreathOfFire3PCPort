@@ -202,7 +202,8 @@ def write_sheets(game, found, out):
 # Which overlays carry a key (tools/loc_build.py build_all): kinds 7..12, 15
 # and 16 are built from a Western PlayStation disc only ("Latin": en-US,
 # en-150, fr-FR, de-DE; a Japanese disc leaves them as shipped, a PSP disc
-# builds part of kind 15 and no Config); kind 5 and kind 14 from every disc.
+# builds part of kind 15 and no Config); kind 5 and kind 14 from every disc,
+# and kind 15's group 15 (the Identify panel) from a Japanese disc too.
 LATIN = "Latin"
 ALL = "all"
 
@@ -234,14 +235,6 @@ LEFT = [
      "(loc-build-disc-only.md 5.4, owner-review.md), so this field is never written"),
     (0x669CCC, 0x669CD8, "the empty save slot's word (Menu_DrawSaveSlot)",
      "no word on the US disc: its slot is blank (the staged localisation PR, HANDOFF item 5; D254)"),
-    (0x669CE8, 0x669CF0, "the name BattleExtra_EquipOpen copies over record 7's (EquipLeave restores 0x669CE0's)",
-     "US BATE.EMI: 'Beyd' at 0x801D86F8, right after 'Whelp' at 0x801D86F0 (code 0x801D0F34 / 0x801D1608)"),
-    (0x669D10, 0x669D20, "fight 26's turn counter, a word before and a word after the count (Boss26Fx_DrawCount)",
-     "US BOSS025.EMI and BOSS027.EMI: 'turns left' at 0x800C32A8, drawn after the count '%2d' "
-     "(code 0x800C30B0 / 0x800C30F0) - one word after, none before"),
-    (0x669F44, 0x669F54, "the hi-lo game's three choices behind 0x669F54 (CommuHiLo_DrawChoice, count 2)",
-     "US COMMU02.EMI: 'HIGH' (4 bytes, no NUL), 'LOW', 'SET' at 0x801DAC58, before the 72 bytes of sprite "
-     "rectangles the PC has at 0x652D04"),
     (0x669F70, 0x669FA4, "the seven member names behind 0x669FA4 (CommuName_MemberEntryOut; the renamer DIV-0075 cut)",
      "no table on the US disc: 'Nina' is in no COMMU*.EMI (only START / STATUS's default records and area text)"),
     (0x66A094, 0x66A098, "a one-glyph word after a count (EffectKind55_DrawCount)",
@@ -251,7 +244,8 @@ LEFT = [
      "the reader has no PSX twin"),
     # one glyph each (--singles)
     (0x66A380, 0x66A398, "six element glyphs behind 0x66A398, drawn as 12 x 12 quads by glyph code (Identify_DrawElements)",
-     "not read: the PlayStation routine's element draw (MAGIC060.EMI, beside its WEAK / POINT draw at 0x801EF1E0)"),
+     "JP MAGIC060.EMI draws its own at (0x66, 0x50) on the enemy panel (0x801EF36C); the Western discs' enemy "
+     "panel has no weakness row at all (docs/labels-1013.md 2)"),
     (0x66A3B0, 0x66A3C8, "six glyphs behind Magic080_TextPointers 0x66A3C8, drawn as quads by glyph code (Magic080_DrawText)",
      "not read"),
 ]
@@ -453,7 +447,7 @@ def ledger(img, refs, found, out, analysis, cues):
         key = ""
         for lo, size, k in labels:
             if lo <= va < lo + size:
-                key = k + " [%s]" % LATIN
+                key = k + " [%s]" % (ALL if " group 15 " in k else LATIN)
         for first, stride, count, k in names:
             if not key and first <= va < first + stride * count and (va - first) % stride < 16:
                 key = k + " [%s]" % ALL
