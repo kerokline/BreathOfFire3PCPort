@@ -84,8 +84,9 @@ made reachable. Most are switches in the launcher; the originals stay available.
 - **Conveniences**: keep running while the window is not in front
   (DIV-0033); F1 toggles double speed (DIV-0048); optional EXP / zenny
   multipliers and steal-always (DIV-0045, DIV-0046); the walls of area 4 taken
-  from a Western PlayStation disc (DIV-0080); an opt-in fix for a sprite's feet
-  drawn under a raised floor (DIV-0071, `BOF3X_LAYERING=1`).
+  from a Western PlayStation disc (DIV-0080); a fix for a sprite's feet drawn
+  under a raised floor, on by default (DIV-0071; `BOF3X_LAYERING=0` restores the
+  original order).
 
 In game: **F1** double speed · **F8** window / fullscreen · **F9** pause (twice
 to return to the title, as the original) · **F11** save a screenshot beside
