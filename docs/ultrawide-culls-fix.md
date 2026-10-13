@@ -233,7 +233,21 @@ bof3x-launcher.exe --game bof3 --no-config`, from three ini-less copies of
 the launcher, `bof3x.exe` and the dll (`uw_uc2/l0`, `l1`, `l2`;
 `uw_uc2/selftest.ps1`):
 
-RESULTS
+| `BOF3X_WIDE` | exit | `inject:` | `sprite_draw` flag split | `field_frame` band | any non-zero `MISMATCH` line |
+|---|---|---|---|---|---|
+| unset | 0 | 10087 ours, 0 left original | not run (narrow: no band) | not run | none |
+| 1 | 0 | 10087 ours, 0 left original | 53 columns: 16,000 rounds (6,945 in the band), 0 mismatches; control refused in 4,112 | 4,000 rounds, 425 sprites noted, 0 mismatches; the append ok | none |
+| 2 | 0 | 10087 ours, 0 left original | 120 columns: 16,000 rounds (7,483 in the band), 0 mismatches; control refused in 4,429 | 4,000 rounds, 545 sprites noted, 0 mismatches; the append ok | none |
+
+At every width: `sprite_draw`'s 24,000 narrow rounds 0 mismatches (12,780
+culled, 6,043 drawn); `field_frame` 24,000 rounds 0 (`Sprite_ProjectA` 1,129
+shown / 871 culled); `battle_e6` five self-test lines 0; `effect_5b` 200,000
+rounds 0 (`EffectKind18Sub0D_DrawGlow` reached 12,000 times); `effect_5d`
+208,000 rounds 0. The `DIV-0041` lines: narrow the width-rules line only; at
+`=1` also "53 columns a side (426 x 240) ..." and "full-frame fills at (-53,
+0) 426 x 240"; at `=2` "120 columns a side (560 x 240) ..." and "fills at
+(-120, 0) 560 x 240". `python tools/ledger_check.py`: 114 entries, 0 errors
+(drafts B and C are not in the ledger yet).
 
 ## 5. Not verified
 
