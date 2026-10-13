@@ -215,14 +215,21 @@ def run(a, env, slot0):
     word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
     logs the save loaded: the file is not read again after that."""
     started, frames = time.time(), ''
-    # The previous run's log would be read as this one's until the game
-    # rewrites it: its `done` or `FATAL` line ended two harness runs at once
-    # (docs/abc-sweep-1012-fixes.md 3.5, docs/abc-sweep-1013-village.md 4).
-    # (Also docs/wav-dump.md 5.)
-    try:
-        os.remove(LOG)
-    except OSError:
-        pass
+    # The DLL truncates bof3x.log when it opens it, which is after the launch:
+    # read before that, the previous run's `recipe done` line ended this run at
+    # once with no frames (2026-10-13, the jp sweep's combat on both disc-only
+    # installs; also docs/abc-sweep-1012-fixes.md 3.5, abc-sweep-1013-village.md 4,
+    # wav-dump.md 5). The old log goes first, so every line read is this run's.
+    for _ in range(100):
+        try:
+            os.remove(LOG)
+            break
+        except FileNotFoundError:
+            break
+        except OSError:
+            time.sleep(0.1)
+    else:
+        sys.exit(f'{LOG} cannot be removed: a game of this launcher folder is still running')
     launch(a.launcher, a.game, env, a.host)
 
     stop = threading.Event()
