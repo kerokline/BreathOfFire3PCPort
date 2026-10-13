@@ -52,6 +52,7 @@ environment; a `[set.NAME]` lists installs in column order. Shipped:
 |---|---|---|---|
 | `eu` (default) | `pc-en150`: a copy of the PC install, the cache's `en-150` layer (cache from the PC's `DAT\`, `BOF3.exe` and the European disc) | `psx-eu`: the European PSX disc alone, `install --base` | `psp-eu`: the PSP-EU disc alone, `install --base` |
 | `us` | `pc-enus`: the PC copy with an `en-US` cache (PC + US disc) | `psx-us`: the US disc alone | - |
+| `jp` | `pc-jajp`: the PC copy with a `ja-JP` cache (PC + the Japan disc) | `psx-jp`: the Japan disc alone | `psp-jp`: the PSP-JP disc alone ([`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md)) |
 
 Kinds: `pc` copies the PC install (`BOF3.exe`, `DAT\`, `SND\`, `BGM\`, the
 movies and the small root files - never a save, never `BOF3.CFG`, which is
@@ -149,6 +150,7 @@ Shipped:
 |---|---|---|
 | `psp-area-art` | DIV-0103 | a PSP side against a non-PSP side, in the field (mode 2), in an area whose base chunks differ between the two caches |
 | `psp-area-text` | DIV-0090 (LG's amendment, `loc-build-psp.md` 5.3) | the same, both `en-150`, in an area whose `loc/en-150` chunks differ |
+| `psp-attract-logo` | DIV-0103 (amendment) | a PSP side against a non-PSP side, the attract route only, modes 1 and 4, the box `196,12-320,84`: the title logo the attract's dialogue scenes draw at the top right (2026-10-13, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 5) |
 | `psp-tables` | DIV-0104 | state-hash pages only (`Char_ExpTable`, `NameTable_Consumables`) |
 | `psp-music` | DIV-0105 | state-hash pages only (`Music_`, `Snd_`, `Seq_`) |
 | `logo` | DIV-0099 / DIV-0106 | nothing: the movies play before recipe frame 0 |
@@ -289,3 +291,18 @@ add the header in a scratch copy ([`abc-sweep-1012.md`](abc-sweep-1012.md) 7).
 `L\bof3x.log` by the previous run and report the new run done at once, with no
 frames ("done at frame 5519" after 1 s). Re-run that side alone; a run that ends
 in seconds with no frames is this ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)).
+**Fixed 2026-10-13 (the jp sweep):** the DLL truncates the log only when it
+opens it, after the launch; `input_run.py` now removes the old `bof3x.log`
+before it launches (and stops if it cannot: a game of that launcher folder is
+still running). The jp sweep's combat lost both disc-only sides and its shop the
+PC side to it before the fix, and no run after it
+([`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 1).
+
+**Trap (2026-10-13, the jp sweep):** a recipe that starts at the title with no
+`# save` header presses for a cursor that starts on LOAD GAME, which it does
+only when the folder has a save file. The harness's game folders have none: the
+cursor starts on NEW GAME and LOAD GAME is passed over (inferred from the two
+recipes' outcomes, not read in the code), so `battle_commands`'
+`press up` lands on CONFIG (on all three sides; `config_screen`'s `press down`
+reaches CONFIG either way). Run such a recipe from a scratch copy with that
+press made a `wait 1` (no later frame moves).
