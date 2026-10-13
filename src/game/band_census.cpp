@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "bof3/symbols.gen.h"
+#include "game/wide_staging.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/input_script.h"
@@ -85,6 +86,7 @@ struct Sample {
     unsigned wy;                   // +0x3E, the height
     int script;
     unsigned mask;
+    bool hidden;                   // DIV F's hide leaves it undrawn this frame (wide_staging::WouldHide)
 };
 
 // --- rows ---------------------------------------------------------------------
@@ -103,6 +105,7 @@ struct Row {
     bool scene;
     unsigned mask;
     int script;
+    bool hidden;
 };
 
 struct Track {
@@ -134,10 +137,10 @@ const char* BandName(int cls) { return cls == kLeft169 || cls == kRight169 ? "16
 
 void WriteRow(const Row& r) {
     if (!g_out) return;
-    std::fprintf(g_out, "%u\t%d\t%u\t%s\t%d\t%u\t%08X\t%u\t%u\t%u\t%u\t%u\t%.1f\t%.1f\t%.1f\t%.1f\t%s\t%s\t%s\t%u\t%02X\t%s\n",
+    std::fprintf(g_out, "%u\t%d\t%u\t%s\t%d\t%u\t%08X\t%u\t%u\t%u\t%u\t%u\t%.1f\t%.1f\t%.1f\t%.1f\t%s\t%s\t%s\t%u\t%02X\t%s\t%s\n",
                  r.area, r.chapter, r.mode, kWhoName[r.who], r.index, r.type, r.sprite, r.first, r.last, r.seen, r.rfirst,
                  r.rlast, r.xlo, r.xhi, r.ylo, r.yhi, SideName(r.cls), BandName(r.cls), kParkedName[r.parked],
-                 r.scene ? 1u : 0u, r.mask, kScriptName[r.script]);
+                 r.scene ? 1u : 0u, r.mask, kScriptName[r.script], r.hidden ? "yes" : "no");
     std::fflush(g_out);
 }
 
@@ -159,7 +162,8 @@ void CloseAll() {
 
 bool SameRow(const Row& r, const Sample& s, int cls, int parked, bool scene) {
     return r.area == s.area && r.mode == s.mode && r.chapter == s.chapter && r.who == s.who && r.index == s.index &&
-           r.type == s.type && r.sprite == s.sprite && r.cls == cls && r.parked == parked && r.scene == scene;
+           r.type == s.type && r.sprite == s.sprite && r.cls == cls && r.parked == parked && r.scene == scene &&
+           r.hidden == s.hidden;
 }
 
 void Process(std::uint32_t key, const Sample& s) {
@@ -213,6 +217,7 @@ void Process(std::uint32_t key, const Sample& s) {
         r.scene = scene;
         r.mask = s.mask;
         r.script = s.script;
+        r.hidden = s.hidden;
         return;
     }
     if (s.frame != r.last) ++r.seen;
@@ -336,6 +341,16 @@ void Identify(const unsigned char* s, int& who, int& index) {
 
 }  // namespace
 
+bool ScreenRect(const unsigned char* sprite, float& left, float& right, float& top, float& bottom) {
+    return Rect(sprite, left, right, top, bottom);
+}
+
+unsigned SceneMask() {
+    return (static_cast<unsigned char>(Field_ScriptFlags | Field_ScriptFlags2) & 1u) |
+           ((Field_ScriptFlags & 0x100) ? 2u : 0u) | ((Field_ScriptFlags2 & 0x40) ? 4u : 0u) |
+           (Field_Request == 5 ? 8u : 0u) | (ObjTrio[1] != 1 ? 0x10u : 0u);
+}
+
 Class Classify(float left, float right, float top, float bottom, unsigned columns) {
     if (!(right > left) || !(bottom > top)) return kNotShown;   // NaNs included
     const float c = static_cast<float>(columns);
@@ -361,9 +376,8 @@ void Record(const unsigned char* s) {
     x.wz = Get<std::int32_t>(s, 0x38);
     x.wy = Get<std::uint16_t>(s, 0x3E);
     x.script = x.who == kObj ? ScriptOf(s, x.area) : kNone;
-    x.mask = (static_cast<unsigned char>(Field_ScriptFlags | Field_ScriptFlags2) & 1u) |
-             ((Field_ScriptFlags & 0x100) ? 2u : 0u) | ((Field_ScriptFlags2 & 0x40) ? 4u : 0u) |
-             (Field_Request == 5 ? 8u : 0u) | (ObjTrio[1] != 1 ? 0x10u : 0u);
+    x.mask = SceneMask();
+    x.hidden = wide_staging::WouldHide(s);
     Process(Address(s), x);
 }
 
@@ -652,7 +666,7 @@ void Inject() {
     if (!g_out) bof3::Fatal("BOF3X_BANDLOG: cannot open %s for writing", path);
     std::fprintf(g_out, "# bandlog 1\tcolumns %u\tpark %u\tspan %u\n", g_columns, g_park, g_span);
     std::fprintf(g_out, "# area\tchapter\tmode\twho\tindex\ttype\tsprite\tfirst\tlast\tseen\trfirst\trlast\txlo\txhi\tylo\t"
-                        "yhi\tside\tband\tparked\tscene\tmask\tscript\n");
+                        "yhi\tside\tband\tparked\tscene\tmask\tscript\thidden\n");
     std::fflush(g_out);
     std::atexit(AtExit);
     g_on = true;

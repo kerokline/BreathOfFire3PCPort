@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/wide_staging.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -105,6 +106,7 @@ void Draw() {
         return;
     }
     object[0] &= 0x7F;
+    if (wide_staging::Hide(object)) return;   // DIV F: 21:9, past the 16:9 view in a scene - draw-only, after bit 7
     const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
     const unsigned count = frame[0];
     if (count == 0) return;

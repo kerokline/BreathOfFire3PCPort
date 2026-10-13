@@ -11,6 +11,7 @@
 #include "hook/log.h"
 
 #include "game/move_script_bytes.h"
+#include "game/wide_staging.h"
 
 namespace {
 
@@ -168,6 +169,7 @@ extern "C" unsigned char __cdecl MoveScript_Flow(unsigned char* object, const un
                 result = 0xFF;
             } else {
                 PlaceAndGround(Sprite_Current, script + Pos(object));
+                wide_staging::Placed0D(object, script, Pos(object));   // DIV D: a site's start moved out (wide only)
                 const long h = g.elevation(Long(Sprite_Current + 0x34), Long(Sprite_Current + 0x38));
                 SetWord(Sprite_Current + 0x3E, static_cast<unsigned>(h));
             }
@@ -354,6 +356,7 @@ extern "C" unsigned char __cdecl MoveScript_Step(unsigned char* object, const un
     unsigned char result = MoveScript_Flow(object, script, start);
     const std::uint16_t pos = Pos(object);
     const unsigned char op = script[pos];
+    if (wide_staging::Step(object, script, result)) return result;   // DIV D / E: a site's walk, rewritten (wide only)
     switch (op & 0xF0) {
     case 0x10: case 0x20: case 0x30: case 0x40: {   // move in direction (op - 0x10) >> 3, op & 7 steps
         result = static_cast<unsigned char>(static_cast<unsigned char>(op - 0x10) >> 3);
