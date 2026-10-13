@@ -114,7 +114,11 @@ struct Track {
 
 unsigned g_columns = 0;
 unsigned g_park = 30;    // BOF3X_BANDLOG_PARK: frames without a move before an object counts as parked
-unsigned g_span = 300;   // BOF3X_BANDLOG_SPAN: a row is closed after this many frames (tools/band_census.py rejoins them)
+// BOF3X_BANDLOG_SPAN: a row is closed after this many frames and a new one
+// opened (tools/band_census.py joins them again). The run tools end the game
+// with taskkill /F (attract_run.py kill_game): no exit handler runs, so a row
+// still open then is lost - at most this many frames of it.
+unsigned g_span = 60;
 constexpr unsigned kGap = 2;   // a row (and stillness) survives one frame unseen
 unsigned g_frame = ~0u;
 std::unordered_map<std::uint32_t, Track> g_tracks;
@@ -523,9 +527,10 @@ void SelfTest() {
     g_frame = ~0u;
     g_test_rows.clear();
     // Object A: still at -80 (21:9 only, left) from frame 1 to 100, script at
-    // its end, the leader's control taken (mask 2); a row until it has been
-    // still for 30 frames, then a parked row.
-    for (unsigned f = 1; f <= 100; ++f) Process(1, Make(f, -80.0f, 60.0f, kEnd, 2));
+    // its end, the leader's control taken (mask 2) until frame 60 and given
+    // back after; a row until it has been still for 30 frames, then a parked
+    // row, cut where the scene ends.
+    for (unsigned f = 1; f <= 100; ++f) Process(1, Make(f, -80.0f, 60.0f, kEnd, f <= 60 ? 2u : 0u));
     // Then it walks right, out of the 21:9-only columns into the 16:9 band.
     for (unsigned f = 101; f <= 120; ++f) {
         Sample s = Make(f, -80.0f + 3.0f * (f - 100), 60.0f, kRun, 2);
@@ -538,6 +543,7 @@ void SelfTest() {
         Sample s = Make(f, 400.0f, 100.0f, kWait, 0);
         s.index = 5;
         Process(2, s);
+        if (f % 100 == 0) Process(2, s);   // updated twice in a frame: one frame seen
     }
     // Object C: a party member (no script read) still at 330 from 1 to 50,
     // unseen for 5 frames, then back: two rows, and the stillness restarts.
@@ -558,7 +564,8 @@ void SelfTest() {
     // who_index: who * 100 + index
     static const Want kWant[] = {
         {kObj * 100 + 4, 1, 30, 30, kLeft219, kMoving, true},
-        {kObj * 100 + 4, 31, 100, 70, kLeft219, kParked, true},
+        {kObj * 100 + 4, 31, 60, 30, kLeft219, kParked, true},
+        {kObj * 100 + 4, 61, 100, 40, kLeft219, kParked, false},
         {kObj * 100 + 4, 101, 103, 3, kLeft219, kMoving, true},     // right edge -61, -58, -55: beyond -53
         {kObj * 100 + 4, 104, 120, 17, kLeft169, kMoving, true},    // -52 .. -4: in the 16:9 band
         {kParty * 100 + 1, 1, 30, 30, kRight169, kMoving, true},
@@ -637,7 +644,7 @@ void Inject() {
     if (n == 0) return;
     if (n >= sizeof path) bof3::Fatal("BOF3X_BANDLOG is longer than %u bytes", static_cast<unsigned>(sizeof path));
     g_park = EnvUnsigned("BOF3X_BANDLOG_PARK", 30, 1, 100000);
-    g_span = EnvUnsigned("BOF3X_BANDLOG_SPAN", 300, 1, 1000000);
+    g_span = EnvUnsigned("BOF3X_BANDLOG_SPAN", 60, 1, 1000000);
     if (EnvUnsigned("BOF3X_BANDLOG_VOID", 0, 0, 1) != 0)
         bof3::Fatal("BOF3X_BANDLOG_VOID: the void channel is not built (docs/band-census.md section 5)");
     g_columns = Widescreen_Live();
