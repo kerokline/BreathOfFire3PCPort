@@ -4,7 +4,7 @@
 # from `file` (BOOT.BIN or an EMI and its section) at `addr` - rows8 (Magic_Rows' file ids),
 # pairs (EventBattle_Records' file array), holes (Effect_HpDamageVariance's set-file tables),
 # widen<k> (the formation wheel's spots, the disc's name k bytes), psxmap (a PSP disc's own EMI
-# at the PSX-JP map's place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),
+# at the PSX-JP map's place; pspmap: the same segment at this disc's own place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),
 # msets (the zone music sets from BOOT.BIN's packed lists) - and how many bytes it fills.
 # A row is written only when every
 # byte equals BOF3.exe's.
@@ -1787,6 +1787,7 @@ psp-eu	twin	0x653EC0	0x653EC5	ETC/GAME.EMI	0	0x80195F90	5
 psp-eu	psxmap	0x653F78	0x653F88	SCENARIO/SCENA03.EMI	0	0x801FCF30	16
 psp-eu	twin	0x653F88	0x653F98	SCENARIO/SCENA03.EMI	0	0x801FCF40	16
 psp-eu	psxmap	0x653FA8	0x653FBC	SCENARIO/SCENA03.EMI	0	0x801FCF5C	20
+psp-eu	pspmap	0x65401C	0x654028	ETC/GAME.EMI	0	0x801C8184	12
 psp-eu	twin	0x65436C	0x6543AC	SCENARIO/SCENA04.EMI	0	0x801FA1A4	64
 psp-eu	twin	0x6544EC	0x65450C	WORLD02/AREA080.EMI	13	0x801F3DC4	32
 psp-eu	twin	0x6545EC	0x6545FC	SCENARIO/SCENA07.EMI	0	0x801FDD60	16
@@ -1807,6 +1808,8 @@ psp-eu	psxmap	0x65BC0C	0x65BC1C	BMAGIC/MAGIC126.EMI	3	0x801F1298	16
 psp-eu	psxmap	0x65C364	0x65C368	BMAGIC/MAGIC226.EMI	3	0x801F0C58	4
 psp-eu	psxmap	0x65C368	0x65C36C	BMAGIC/MAGIC226.EMI	3	0x801F0C5C	4
 psp-eu	twin	0x65EC54	0x65EC64	WORLD04/AREA169.EMI	13	0x801F3AA4	16
+psp-eu	pspmap	0x662CD8	0x662CE8	ETC/GAME.EMI	0	0x801C84A4	16
+psp-eu	pspmap	0x662DE8	0x662DF0	ETC/GAME.EMI	0	0x801C85B4	8
 psp-eu	cellhk	0x662F28	0x663008	ETC/GAME.EMI	0	0x801C86F0	112
 psp-eu	twin	0x66313C	0x663145	BOOT.BIN	-	0x002DEF48	9
 psp-eu	twin	0x663234	0x663246	BOOT.BIN	-	0x002DF03C	18
@@ -1832,6 +1835,7 @@ psp-eu	psxmap	0x66AE96	0x66AEC8	ETC/BATE.EMI	0	0x801D88DE	50
 psp-eu	twin	0x66AF24	0x66AF34	ETC/GAME.EMI	0	0x801CC7DC	16
 psp-eu	twin	0x66AF38	0x66AF3C	BATTLE/BATTLE.EMI	15	0x800B6C5C	4
 psp-eu	twin	0x66AF8C	0x66AF92	BATTLE/BATTLE.EMI	15	0x80096A2C	6
+psp-eu	pspmap	0x66B1DA	0x66B1F0	BATTLE/BATTLE.EMI	15	0x800B6CC6	22
 psp-eu	psxmap	0x66B1F0	0x66B1F6	ETC/START.EMI	8	0x801ED584	6
 psp-eu	psxmap	0x66B470	0x66B4A0	ETC/BATE.EMI	0	0x801D8B04	48
 psp-eu	twin	0x66B5B4	0x66B5C4	BATTLE/BATTLE.EMI	15	0x800B6E30	16
