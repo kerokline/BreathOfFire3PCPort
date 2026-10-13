@@ -151,8 +151,11 @@ pointer table past its end, into `Menu_ButtonSets` itself), the map rightly
 refused it, and the image holds 0: a set-8 row would draw `Knd` / `Use`. No
 route reaches set 8 (unseen since 2026-09-21; who opens it is unread).
 
-Not filled, because no disc of those four builds carries the PC's byte and
-the choice is a design one - **for the owner**:
+**Decided and built 2026-10-13 (the owner: keep `Quit`, option 1; branch
+`away/1013-policy`, [`disc-data-inventory.md`](disc-data-inventory.md) 9.3):**
+`psp_exe`'s `verb` rule fills `0x0B` at `0x663866` on the four Western PSX
+builds, mapping the discs' 23rd verb to the port's `Quit`; DIV-0101 amended.
+The choice as it was put:
 1. the port's `Quit`: a one-byte fill of `0x0B` for those builds (a rule that
    maps the disc's 23rd verb to the PC's, written down as such);
 2. the Western releases' `End`: a 23rd verb slot in the engine
@@ -169,7 +172,7 @@ the choice is a design one - **for the owner**:
   the stats filled the names are the one thing of the table still off.
 - The ranked lists' page counter `"%d/%d"` (`0x6531F4`, engine-own) - the five
   village frames that still differ.
-- The verb row of section 4.1.
+- ~~The verb row of section 4.1.~~ Built (4.1, the `verb` rule).
 - PSP-EU's Config text (D246) is still not built.
 
 ## 6. Checks

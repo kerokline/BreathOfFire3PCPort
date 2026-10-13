@@ -28,6 +28,8 @@ A chunk no disc carries keeps the PC install as its only source; its class
 (`widen` the enemy tables, whose names go to the language layer; `icons`;
 `ryud`; `hold`, docs/arena-edits.md), and a PSX disc's own section can stand in (`own`) where the PC kept
 Japan's language or drew its own art, or edited an arena - docs/importer-transforms.md (step 3).
+recipes/prefer.toml lists the port changes the owner has decided to take from a disc instead
+(the base policy, DIV-0115: the JP disc's form where it is a source; docs/disc-data-inventory.md 9).
 `build` also writes base/exe/, BOF3.exe's .data in the PC's layout, from the
 PC's executable or else the first disc (tools/exe_tables.py, docs/exe-import.md,
 step 8; from a disc the data pointers rebuilt by the map run backwards,
@@ -70,6 +72,7 @@ import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
 import psp_layers   # noqa: E402  (the suites' engine half: opt/ layers beside a PSX base, docs/launcher-suites.md 9)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
+PREFER = os.path.join(ROOT, "recipes", "prefer.toml")
 TARGET = "pc-zh"
 # The order a recipe lists a chunk's disc sources in; the player's source
 # order, not this, decides which one is used.
@@ -601,6 +604,75 @@ def load_recipe(path=None):
         return tomllib.load(f)
 
 
+def load_prefer(path=None):
+    """recipes/prefer.toml: {(file, kind, tag): row} - the chunks whose disc form the base
+    policy takes ahead of the PC's (DIV-0115, docs/disc-data-inventory.md 9)."""
+    path = path or PREFER
+    if not os.path.exists(path):
+        return {}
+    with open(path, "rb") as f:
+        rows = tomllib.load(f).get("prefer", [])
+    return {(r["file"], r["kind"], r["tag"]): r for r in rows}
+
+
+def prefer_sha(path=None):
+    path = path or PREFER
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return sha(f.read())
+
+
+def preferred(f, slot, ch, chunked, prefer):
+    """The base policy (recipes/prefer.toml): when the chunk has a row and a disc the row
+    names is among the sources (the row's order), (build, ("prefer", EMI, section), payload,
+    None) - the disc's section through the row's transform, hashed against the row; else None."""
+    row = (prefer or {}).get((f["name"], ch["kind"], ch["tag"]))
+    if not row:
+        return None
+    key, sec = row["emi"].rsplit("#", 1)
+    for b in row["from"]:
+        s = next((x for x in chunked if x.id == b), None)
+        if s is None:
+            continue
+        body = s.get(f["name"], slot, (row["how"], key, int(sec)))
+        if body is None or sha(body) != row["sha256"]:
+            raise SystemExit("%s chunk %d from %s (prefer, %s): hash differs from recipes/prefer.toml"
+                             % (f["name"], slot, b, row["how"]))
+        return s.id, ("prefer", key, int(sec)), body, None
+    return None
+
+
+def check_prefer(rec, path=None):
+    """recipes/prefer.toml's shape against the recipe and fixtures.toml (no game data)."""
+    errs = []
+    try:
+        prefer = load_prefer(path)
+    except (tomllib.TOMLDecodeError, KeyError) as e:
+        return ["prefer.toml: %s" % e]
+    builds = {b["id"] for b in _fixtures()["build"]}
+    chunks = {(f["name"], c["kind"], c["tag"]): c for f in rec["file"] for c in f["chunks"]}
+    for k, r in prefer.items():
+        name = "prefer.toml %s 0x%08X" % (k[0], k[2])
+        c = chunks.get(k)
+        if c is None:
+            errs.append("%s: no such chunk in the recipe" % name)
+            continue
+        if c["layer"] != "base" or "base" in c:
+            errs.append("%s: not a base/ chunk (or an enemy table, whose names are the PC's)" % name)
+        if not r.get("from") or any(b not in builds or not b.startswith("psx-") for b in r["from"]):
+            errs.append("%s: from %s - PSX builds fixtures.toml holds" % (name, r.get("from")))
+        if r.get("how") not in TRANSFORMS or r.get("how") == "copy" and c.get("class") == "type1":
+            errs.append("%s: how %s" % (name, r.get("how")))
+        if r.get("emi") != c.get("emi"):
+            errs.append("%s: emi %s, the recipe's chunk is %s" % (name, r.get("emi"), c.get("emi")))
+        if not re.fullmatch(r"[0-9a-f]{64}", r.get("sha256", "")) or r["sha256"] == c["sha256"]:
+            errs.append("%s: sha256 not a hash, or the PC's own" % name)
+        if not r.get("why"):
+            errs.append("%s: no why" % name)
+    return errs
+
+
 def sources_of(ch):
     """A recipe chunk's sources: (build, how, EMI, section) for each disc,
     then (pc-zh, "chunk", None, None)."""
@@ -642,11 +714,15 @@ MISSING_WHY = {
 FROM_OTHER_BUILDS = "on builds not given (the recipe's `on`); a PSP disc's differ: step 4"
 
 
-def get_chunk(f, slot, ch, chunked):
-    """(build, (how, EMI, section), payload, names) from the first source in the
-    player's order that the recipe lists; else the first stand-in (own) in the
-    player's order; else None. Every payload is hashed against the recipe.
+def get_chunk(f, slot, ch, chunked, prefer=None):
+    """(build, (how, EMI, section), payload, names): the base policy's disc form when
+    recipes/prefer.toml lists the chunk and names a disc given (`prefer`); else from the
+    first source in the player's order that the recipe lists; else the first stand-in
+    (own) in the player's order; else None. Every payload is hashed against the recipe.
     `names` is the enemy table's [(tag, name)] when the PC gave it, else None."""
+    got = preferred(f, slot, ch, chunked, prefer)
+    if got:
+        return got
     want = ch.get("base", ch["sha256"])
     for s in chunked:          # the player's order decides
         for src in sources_of(ch):
@@ -696,13 +772,14 @@ def cmd_build(a):
     a.opt, tg_opt = psp_layers.take(a.opt, sources)     # recipes/psp-layers.toml's layers, not opt.toml's
     print("sources, in order: %s" % ", ".join("%s (%s)" % (s.id, s.path) for s in sources))
     chunked = [s for s in sources if not isinstance(s, ExeSource)]
+    prefer = load_prefer(getattr(a, "prefer", None))
     assets, missing, used = [], collections.Counter(), collections.Counter()
     written, blocked = collections.Counter(), collections.Counter()
     for f in rec["file"]:
         layers, tails = collections.OrderedDict(), collections.defaultdict(list)
         lacks = collections.defaultdict(set)
         for slot, ch in enumerate(f["chunks"]):
-            got = get_chunk(f, slot, ch, chunked)
+            got = get_chunk(f, slot, ch, chunked, prefer)
             layers.setdefault(ch["layer"], [])
             if "names" in ch:
                 layers.setdefault(ch["names"], [])
@@ -713,9 +790,9 @@ def cmd_build(a):
                 assets.append((f["name"], slot, ch["layer"], None, ch["sha256"]))
                 continue
             bid, how, body, names = got
-            used[(bid, ch["layer"], how[0] == "own")] += 1
+            used[(bid, ch["layer"], how[0] if how[0] in ("own", "prefer") else "")] += 1
             layers[ch["layer"]].append(chunk_bytes(ch["kind"], ch["tag"], body))
-            h = ch.get("base", ch["sha256"]) if how[0] != "own" else sha(body)
+            h = ch.get("base", ch["sha256"]) if how[0] not in ("own", "prefer") else sha(body)
             assets.append((f["name"], slot, ch["layer"], (bid,) + how, h))
             if "names" in ch:
                 if names is None:          # from a disc: the stats only
@@ -749,11 +826,13 @@ def cmd_build(a):
     loc_assets = build_languages(a.lang, sources, a.out)
     opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
-                   psp_snd)
+                   psp_snd, getattr(a, "prefer", None))
     fmv_build(sources, a.out)       # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
     psp_layers.build(tg_opt, sources, a.out)   # opt/psp-music etc.; its [psp_layers] after that
     for (bid, layer, own), n in sorted(used.items()):
-        print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
+        print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, {
+            "own": " (its own sections standing in)",
+            "prefer": " (the base policy's disc form, recipes/prefer.toml)"}.get(own, "")))
     for layer, n in sorted(written.items()):
         print("  %-9s %d containers written" % (layer, n))
     if snd:
@@ -890,15 +969,18 @@ def build_languages_disc_only(asked, sources, out):
 
 
 def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_assets=(), opt_recipe=None, exe=None,
-                   bgm=None, psp_snd=None):
+                   bgm=None, psp_snd=None, prefer_path=None):
     with open(recipe_path, "rb") as f:
         rsha = sha(f.read())
+    psha = prefer_sha(prefer_path)
     lines = ["# The cache's provenance, written by tools/importer.py build. Every chunk: its",
              "# container, slot, layer, the build and recipe step it came from (`own`: that",
-             "# disc's own section standing in; `names`: an enemy table's names), its hash.",
+             "# disc's own section standing in; `prefer`: the base policy's disc form,",
+             "# recipes/prefer.toml; `names`: an enemy table's names), its hash.",
              "", "[meta]",
              "target = %s" % toml_str(rec["meta"]["target"]),
-             "recipe_sha256 = %s" % toml_str(rsha),
+             "recipe_sha256 = %s" % toml_str(rsha)] + (
+                 ["prefer_sha256 = %s" % toml_str(psha)] if psha else []) + [
              "built = %s" % toml_str(datetime.datetime.now().isoformat(timespec="seconds")),
              ""]
     lines += psp_standins.manifest_lines(sources)     # [build] base_policy: the launcher's key (LT)
@@ -1715,6 +1797,16 @@ def cmd_verify(a):
         assets = tomllib.load(fh)["cache"]["assets"]
     man = {(n, slot, layer): h for n, slot, layer, where, h in assets}
     own = {n for n, slot, layer, where, h in assets if where.split(":")[1:2] == ["own"]}
+    prefer, pbad = load_prefer(getattr(a, "prefer", None)), []
+    took = {}
+    for n, slot, layer, where, h in assets:
+        if where.split(":")[1:2] == ["prefer"]:
+            took[n] = took.get(n, 0) + 1
+            f = next(f for f in rec["file"] if f["name"] == n)
+            ch = f["chunks"][slot]
+            row = prefer.get((n, ch["kind"], ch["tag"]))
+            if not row or row["sha256"] != h or where.split(":")[0] not in row["from"]:
+                pbad.append("%s slot %d: a `prefer` row recipes/prefer.toml does not give" % (n, slot))
     held, held_ok, owned = 0, [], 0
     ok, bad, absent = 0, [], []
     for f in rec["file"]:
@@ -1761,14 +1853,18 @@ def cmd_verify(a):
         body = b"".join(chunk_bytes(k, t, bytes(p)) for k, t, p in parts)
         if (len(body), sha(body)) == want[f["name"]]:
             ok += 1
-        elif f["name"] in own:
-            owned += 1          # a stand-in: its chunks were checked above
+        elif f["name"] in own or f["name"] in took:
+            owned += 1          # a stand-in or the base policy's disc form: its chunks were checked above
         else:
             bad.append("%s: composed, it is not the PC's" % f["name"])
+    bad += pbad
     print("verify %s: %d containers held, %d problem(s)"
           % (a.cache, held, len(bad)))
     print("  against fixtures/pc-zh.DAT.files.tsv: %d of %d containers byte-identical, %d hold a disc's own "
-          "sections, %d incomplete" % (ok, len(want), owned, len(absent)))
+          "sections or the base policy's form, %d incomplete" % (ok, len(want), owned, len(absent)))
+    if took:
+        print("  the base policy (recipes/prefer.toml): %d chunk(s) in %s the disc's form, each its row's hash%s"
+              % (sum(took.values()), ", ".join(sorted(took)), "" if not pbad else " - NOT: %d" % len(pbad)))
     for n in bad[:20]:
         print("   ", n)
     with open(os.path.join(a.cache, "manifest.toml"), "rb") as fh:
@@ -2118,6 +2214,7 @@ def cmd_check(a):
             for b, key, sec, h in owns_of(c):
                 if b not in OWN_FROM or c["layer"] != "base" or c.get("own_why") not in OWN_WHY or len(h) != 64:
                     errs.append("%s: stand-in %s" % (f["name"], b))
+    errs += check_prefer(rec, getattr(a, "prefer", None))
     oerrs = check_opt(a.opt_recipe)
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
     serrs += ["seq.py: " + e for e in seq.check_fixture(builds)]   # fixtures/bgm.tsv's shape and format versions
@@ -2173,6 +2270,7 @@ def main():
                                     "with --source, in any order" % ", ".join(PRESETS))
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
+    p.add_argument("--prefer", help="the base policy's table (default recipes/prefer.toml)")
     p = s.add_parser("opt-recipes")
     p.add_argument("--dat", required=True, help="the PC port's DAT/ directory")
     p.add_argument("--disc", action="append", default=[], help="the JP, US and both PSP discs, and any other "
@@ -2196,9 +2294,11 @@ def main():
     p.add_argument("--overlays", help="an install's DAT/ whose <lang>.*.DAT overlays the cache's loc/ layers must equal")
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
+    p.add_argument("--prefer")
     p = s.add_parser("check")
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
+    p.add_argument("--prefer")
     a = ap.parse_args()
     fn = {"recipes": cmd_recipes, "identify": cmd_identify, "build": cmd_build, "verify": cmd_verify,
           "check": cmd_check, "opt-recipes": cmd_opt_recipes, "install": cmd_install}[a.cmd]
