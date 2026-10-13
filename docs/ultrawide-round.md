@@ -248,12 +248,26 @@ gets the same fix as 21:9:
 | **Narrow scene** | The bands draw black for the scene's duration: a per-scene pillarbox | scenes where several things depend on the edge | per scene; the most faithful, the least wide |
 | **Leave** | The wider view shows it, and it reads as natural | entrances seen early, mostly | none |
 
-The recommendation, to be confirmed by the census: **hide when parked** as the
-default rule, with a per-scene exception list. It covers sites nobody has found
-yet, and the census can check that it never hides anything inside 320. "Park
-farther" is for the few sites where a hidden actor would pop in at the old
-edge. **ST** builds whatever the owner picks, and EB re-runs the census
-afterwards: the class should be empty.
+**The owner's call (2026-10-13): two layers.**
+
+1. **Fix properly at 16:9.** Every site visible in the 16:9 bands is
+   re-staged per scene: the actor's start, or the point before it hides, moves
+   out past the 16:9 edge, and the walk grows by the same amount so its end
+   point is unchanged. This is "park farther", and it is the shape Capcom used
+   on the PSP (PD, [`ultrawide-staging-psp.md`](ultrawide-staging-psp.md): 9
+   of SS's 56 band rows changed in 7 scenes, none by adding a hide). Each move
+   is written as a rule in the columns, never as copied script bytes.
+2. **A simple hide at 21:9.** Whatever is still visible in the 21:9-only part
+   of the bands, or parked and visible there, is not drawn: "hide when
+   parked", applied only outside the 16:9 view.
+
+Where the PSP re-staged a site, its fix is the model, scaled to 53 columns
+(two of its moves still land inside our bands: area 0 at our 16:9 edge, area
+27 in the 21:9 band). Case zero is the exception to "out". There, the PSP
+brought the pair **into** the 4:3 view, a staging change rather than a move.
+Keeping that or moving them out is still the owner's call. **ST** builds both
+layers, and EB re-runs the census afterwards: the 16:9 band should hold no
+parked actor, and the 21:9 band no visible one.
 
 ## 5. Merge order, ownership, numbering
 
