@@ -36,6 +36,7 @@
 #include "game/effect_5b_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -411,8 +412,9 @@ extern "C" void __cdecl EffectKind18Sub0D_DrawGlow(int column) {
     const long depth = SH_CALL(Gte_RotTransPers)(Vertex(0), reinterpret_cast<unsigned long*>(MapView_ScreenXY), &p);
     const unsigned char* const sx = At(0x903820);
     const unsigned char* const sy = At(0x903824);
-    if (!(F(0x903820) >= F(at::kCullLeft))) return;
-    if (F(0x903820) > F(at::kCullRight)) return;
+    const float fill = static_cast<float>(Widescreen_Fill());   // DIV-0041 (UC2): x out by the columns
+    if (!(F(0x903820) >= F(at::kCullLeft) - fill)) return;
+    if (F(0x903820) > F(at::kCullRight) + fill) return;
     if (!(F(0x903824) >= F(at::kCullTop))) return;
     if (F(0x903824) > F(at::kCullBottom)) return;
     if (depth == 0) return;
