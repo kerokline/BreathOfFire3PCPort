@@ -84,7 +84,7 @@ over_psx = "layer"
 [[suite]]
 id = "data"
 label = "Data"
-what = "the PSP's game data: roster index 6's level table and consumable 87, its item and ability renames, Ryu's form data (P8)"
+what = "the PSP's game data: roster index 6's level table and consumable 87, its item and ability renames, Ryu's form data (P8), and its two battle rules (a loss that goes on in fight 27, Myria's item)"
 
 [[suite.member]]
 id = "psp-tables"

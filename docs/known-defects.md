@@ -6675,8 +6675,8 @@ item is an object sprite on a raised cell, so read how the PSX orders it
 against the altar's top face. Then the two A/Bs: `--original '*'` (Capcom's
 PC order) and DIV-0071's layering switch, since DIV-0071 draws the floor
 under a sprite that was drawn before it and a raised cell's top is exactly
-the case it reasons about ([`layering.md`](layering.md) if present; the
-ledger's DIV-0071 entry otherwise). The route reaches the scene at about
+the case it reasons about ([`sprite-draw-order.md`](sprite-draw-order.md) and the
+ledger's DIV-0071 entry). The route reaches the scene at about
 recipe frame 2,400.
 
 ## D243 — The lighthouse's light rays before the big screen flash are not drawn (the owner's report; not looked at)
@@ -6688,8 +6688,8 @@ unknown**: not yet run with `BOF3X_ORIGINAL='*'`.
 
 **Where to start.** `--original '*'` on the route decides whether Capcom's
 PC port drew the rays at all (then the effect is a kind of ours that stops
-short - round thirteen's effect engine, [`effect-engine.md`](effect-engine.md)
-if present, the round's docs otherwise) or never did (a port omission
+short - round thirteen's effect engine, [`takeover-queue-round13.md`](takeover-queue-round13.md)
+and the `effect_*.md` notes) or never did (a port omission
 against the PlayStation twin, to be read from the PSX's scene script and
 effect kind, and a DIV to restore). The flash is in the `_ab` copy's
 window between `f02400` and `f02700`; `recipe_shots.py --from 2400 --to

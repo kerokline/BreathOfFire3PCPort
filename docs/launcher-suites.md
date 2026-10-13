@@ -67,10 +67,11 @@ has:
 | Key | What |
 |---|---|
 | `id`, `label` | the member's name, and its line on the page |
-| `kind` | where it lives in the cache: `opt` (`opt/<layer>/`), `bgm` (`base/bgm/`), `snd` (`base/snd/`), `exe` (`base/exe/`'s tables), `base` (`base/` chunks: SI's stand-ins) |
+| `kind` | where it lives in the cache: `opt` (`opt/<layer>/`), `bgm` (`base/bgm/`), `snd` (`base/snd/`), `exe` (`base/exe/`'s tables), `base` (`base/` chunks: SI's stand-ins), `code` (a rule in our code, PB's battle switches: no chunk, the ini's `psp=`) |
 | `layer` | for `opt` only: the `recipes/opt.toml` layer |
+| `code` | for `code` only: the switch's name in `psp=` (`duel-loss`, `myria-item`) |
 | `from` | the builds it comes from (fixtures.toml ids; PSP discs only) |
-| `over_psx` | how it reaches the game beside a PlayStation base: `layer` (an `opt/` layer, selectable today), `engine` (its engine half is TG's; greyed), `none` (no layer exists or is planned; greyed) |
+| `over_psx` | how it reaches the game beside a PlayStation base: `layer` (an `opt/` layer, selectable today), `engine` (its engine half is TG's; greyed), `switch` (a `code` member: a `psp=` switch, selectable beside any base), `none` (no layer exists or is planned; greyed) |
 | `why` | the greyed reason, exactly when `over_psx` is not `layer` |
 
 `check` refuses a catalogue that breaks any of these:
@@ -101,6 +102,8 @@ The catalogue as built:
 | | English renames | `opt` `psp-names-en-150` | psp-eu | a layer, today |
 | | Japanese renames | `opt` `psp-names-ja-JP` | psp-jp | a layer, today |
 | | Ryu's forms (P8) | `base` | psp-jp, psp-eu | none: no layer yet (P8 unrendered) |
+| | fight 27: a loss goes on | `code` `duel-loss` | psp-jp, psp-eu | a switch, `psp=` (DIV-0108) |
+| | fight 55: Myria's item | `code` `myria-item` | psp-jp, psp-eu | a switch, `psp=` (DIV-0108) |
 
 The names layers, P8 and the button page are placed by the proposal of
 section 6, which is the owner's to settle.
@@ -213,7 +216,12 @@ order is the same five names in the same order.
 **`music=`** is not a suite. It stays the choice between the cache's songs
 (`seq`, the default) and the PC's MP3s (`mp3`), DIV-0087. On a PSP base the
 cache's songs are the PSP's (MS stage B writes `base/bgm/` from a PSP source),
-so `music=seq` plays the PSP's music with no new value. Beside a PlayStation
+so `music=seq` plays the PSP's music with no new value.
+
+**`psp=`** carries the data suite's two `code` members (DIV-0108):
+`SuitesPspEdit` writes it on `SuitesOptEdit`'s terms, and a suite's side
+reads both lines. Unset, both switches are on for a PSP-only cache and off
+otherwise ([`psp-battle-changes.md`](psp-battle-changes.md)). Beside a PlayStation
 base, the audio suite's PSP side will be TG's `opt/` layers for `base/bgm/`
 and `base/snd/` in `opt=`, not a third `music=` value. So the suites map onto
 today's two lines, and an ini written by this launcher is read by the last
