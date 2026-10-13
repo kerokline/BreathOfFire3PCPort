@@ -29,11 +29,17 @@
 //   not, its frequency, volume and pan.
 // - a buffer made with CTRLPOSITIONNOTIFY (the music's ring) is a stream: its
 //   bytes are queued in the order the game wrote them and played from the
-//   queue. The ring is refilled at the real device's pace, the dump is
-//   clocked by logic frames, and the two drift apart when the machine is
-//   busy; a ring-shaped copy would then read halves already overwritten. The
-//   queue only shifts by the drift, and is resynchronised when it grows past
-//   one and a half rings (logged).
+//   queue, at the logic frames' pace and never skipped. The game refills
+//   the ring when DirectSound's notifications fire - real time - and a
+//   frozen shot or a stall has the pump write two halves at once afterwards,
+//   so a ring-shaped copy read at the frames' pace would read halves already
+//   overwritten (the first cut dropped the queue back to a ring's length
+//   when it grew past one and a half, and two runs of combat.txt then
+//   differed from 19.5 s on: 24,084 samples dropped in one, none in the
+//   other). Played from the queue, the music is the decoder's stream without
+//   the real device's stalls, the same on every run; the queue only grows
+//   (its lead is logged). It runs dry only if the frames outrun the device by
+//   more than the ring holds (BOF3X_SPEED; counted and logged).
 //
 // The clock: each logic frame - WinMain's Frame_Counter 0x937F94 - is
 // round(frames * rate * period) samples from the run's first frame, the
@@ -122,7 +128,8 @@ bool g_started = false;                // the first frame seen
 std::uint32_t g_first_frame = 0, g_next_frame = 0;   // g_next_frame: the first frame not yet mixed
 unsigned g_frames_since_flush = 0;
 double g_frame_ms = kOurFrameMs;
-std::uint64_t g_underrun_samples = 0, g_dropped_samples = 0;
+std::uint64_t g_underrun_samples = 0, g_max_lead = 0;   // g_max_lead: the most samples a stream's queue held unplayed
+bool g_dry = false;                    // the queue ran dry this frame (one log line a stretch)
 unsigned g_created = 0, g_streams = 0, g_plays = 0;
 constexpr unsigned kStatusFrames = 1800;               // a status line a minute
 
@@ -184,8 +191,14 @@ void MixBuffer(Buffer& b, std::size_t at, std::size_t n) {
             const std::size_t i = static_cast<std::size_t>(b.pos);
             if (i + 1 >= have) {   // the device would be playing what the game has not written: count it
                 g_underrun_samples += n - k;
+                if (!g_dry)
+                    Log("wav         stream %p ran dry at Frame_Counter %u (%llu samples so far): silence until the "
+                        "game writes more", b.object, static_cast<unsigned>(Frame_Counter),
+                        static_cast<unsigned long long>(g_underrun_samples));
+                g_dry = true;
                 return;
             }
+            g_dry = false;
             const float frac = static_cast<float>(b.pos - static_cast<double>(i));
             const std::uint8_t* const q = b.queue.data() + b.head;
             for (unsigned c = 0; c < kChannels; ++c) {
@@ -335,9 +348,9 @@ void Advance(std::uint32_t now) {
         }
         if ((g_next_frame + 1 - g_first_frame) % kStatusFrames == 0)
             Log("wav         frame %u: %.1f s written; %u buffers made (%u streams), %u effect plays; %llu samples the "
-                "music's queue ran dry, %llu dropped to catch up",
+                "music's queue ran dry; the queue's lead at most %llu samples",
                 g_next_frame + 1, static_cast<double>(SampleAt(g_next_frame + 1)) / kRate, g_created, g_streams, g_plays,
-                static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_dropped_samples));
+                static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_max_lead));
         if (++g_frames_since_flush >= kFlushFrames) {
             g_frames_since_flush = 0;
             Flush();
@@ -400,18 +413,8 @@ long __stdcall HookUnlock(void* self, void* first, unsigned long first_bytes, vo
         if (b->stream) {
             if (p1) b->queue.insert(b->queue.end(), p1, p1 + first_bytes);
             if (p2) b->queue.insert(b->queue.end(), p2, p2 + second_bytes);
-            const std::size_t unread = b->queue.size() - b->head;
-            if (unread > b->bytes + b->bytes / 2) {
-                // The device played faster than the logic frames went (a
-                // slow or stalled stretch): what it has played the dump never
-                // will. Drop the oldest so one ring is left, as on the device.
-                const std::size_t drop = (unread - b->bytes) / b->block * b->block;
-                b->head += drop;
-                g_dropped_samples += drop / b->block;
-                Log("wav         stream %p: %u samples dropped at Frame_Counter %u (the dump fell behind the device; "
-                    "%llu so far)", self, static_cast<unsigned>(drop / b->block), static_cast<unsigned>(Frame_Counter),
-                    static_cast<unsigned long long>(g_dropped_samples));
-            }
+            const std::size_t lead = (b->queue.size() - b->head) / b->block;
+            if (lead > g_max_lead) g_max_lead = lead;
         } else {
             if (p1 && first_bytes && b->lock_offset + first_bytes <= b->data.size())
                 std::memcpy(b->data.data() + b->lock_offset, p1, first_bytes);
@@ -670,10 +673,10 @@ void WavDump_Stop() {
         CloseHandle(g_file);
         g_file = INVALID_HANDLE_VALUE;
         Log("wav         %s closed: %u frames, %llu samples (%.2f s); %u buffers made, %u of them streams; %llu samples "
-            "the music's queue ran dry, %llu dropped to catch up; %u effect plays",
+            "the music's queue ran dry, its lead at most %llu; %u effect plays",
             Utf8Path(g_path.c_str()).text, g_next_frame - g_first_frame, static_cast<unsigned long long>(g_data_bytes / 4),
             static_cast<double>(g_data_bytes / 4) / kRate, g_created, g_streams,
-            static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_dropped_samples), g_plays);
+            static_cast<unsigned long long>(g_underrun_samples), static_cast<unsigned long long>(g_max_lead), g_plays);
     }
     LeaveCriticalSection(&g_lock);
 }

@@ -56,7 +56,7 @@ def main():
     step = max(1, int(round(a.window * ra)))
     rows, first, count = [], None, 0
     for start in range(0, n, step):
-        x, y = A[start:start + step], B[start:start + step]
+        x, y = A[start:min(n, start + step)], B[start:min(n, start + step)]
         if len(x) == 0:
             break
         la, lb = db(float(np.sqrt(np.mean(x * x)))), db(float(np.sqrt(np.mean(y * y))))
