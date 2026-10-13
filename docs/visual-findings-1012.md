@@ -227,7 +227,8 @@ values are not copied here). So on every disc-only install:
   defect, not only a visual one.
 
 The field's equipment panel reads its own `Equip_SlotIcons` `0x663660`,
-placed on every build, so the field menu is right; only the battle's copies
+placed on every build, so that panel is right (**but not the field Equip
+screen**, which reads another table: D262, `abc-sweep-1012.md` 3.3); only the battle's copies
 were missed.
 
 ### 2.3 Where the disc has them, and the fill
@@ -646,6 +647,154 @@ it wants removing (not allowed to this session) before the next PSP run;
 stopped (the owner's save was absent there, so nothing of the owner's was
 overwritten). The owner's own installs, `C:\b3g`, `C:\b3p` and the scratch
 caches were read only.
+
+## 10. Areas 16 and 45 re-run on every install (2026-10-13, branch `cleanup/abc-crash-1012`)
+
+**Status:** MEASURED (2026-10-12 night to 2026-10-13, one agent, from main
+`a7c7a9e5`; live A/B/C runs in its own harness root `C:\Users\kerok\abx`, the
+owner's `bof3/` and the other harness root `C:\Users\kerok\ab` not touched;
+not played, not seen by the owner).
+
+**The crash does not reproduce.** Both routes run to their last recipe frame
+on all seven install configurations, with no `CRASH` line in any run's
+`bof3x.log` (each run's log, frames and `meta.json` under
+`abx\runs\<tag>_<route>\<install>\`):
+
+| Install | Build, tools | caughFish (area 61 -> 16 -> 30) | masterAndManillo (area 90 -> 45 -> 16 -> 30 -> 16 -> 61) |
+|---|---|---|---|
+| `pc-en150` | `a7c7a9e5` | done at frame 3889, 129 timed frames | done at 5519, 183 |
+| `psx-eu` | `a7c7a9e5` | done at 3889 | done at 5519 |
+| `psp-eu` | `a7c7a9e5` | done at 3889 | done at 5519 |
+| `pc-enus` | `a7c7a9e5` | done at 3889 | done at 5519 |
+| `psx-us` | `a7c7a9e5` | done at 3889 | done at 5519 |
+| `own-pc`: the owner's play setup, copied - the PC install, a copy of `analysis\cache\pc-plus-us`, `en-US`, `BOF3X_OPT=area4-walls`, wide, point filter, SatPixie, mp3 | `a7c7a9e5` | done at 3889 | done at 5519 |
+| `own-psp`: the same with `BOF3X_OPT=psp-art,area4-walls` and `BOF3X_LAYERING=1` | `a7c7a9e5` | done at 3889 | done at 5519 |
+| `pc-en150`, `psx-eu`, `psp-eu` again | this branch's tools (below), caches rebuilt | done at 3889, all three | done at 5519, all three |
+
+Every run's log walks the same areas in the same order (the `frame ...
+mode M area A` lines), and no pair's scenes part (the reports' section 2:
+"None"). So `wmrec` (section 8) holds on PSX-EU, PSX-US and PSP-EU, and
+masterAndManillo's world-map entry no longer parts at tick ~322 (the walk
+poses and area list, `133d72fd`): every pair stays in one scene through
+the whole route. The owner's own setup (the PC's `.data`, so no disc-built
+image is involved) does not crash either. Not checked: the owner's scratch
+disc-only installs `C:\b3g` / `C:\b3p`, whose caches are of the 2026-10-12
+afternoon (before `wmrec`) - if the owner's crash was there, those caches
+want rebuilding with the current tools, not a code change.
+
+### 10.1 What the comparison found instead: the PSP's upright quads
+
+`report_eu_masterAndManillo.md` (A = PC, B = PSX-EU, C = PSP-EU) showed
+area 61 on PSP-EU with **its trees missing** - 25% of the frame differing
+from tick 3720 to the end (A-C, unexplained), while PC and PSX-EU agree
+there. `AREA061.DAT` is the same on all three caches (every chunk's hash in
+the three `manifest.toml` equal), so the difference is the exe image. The
+ranges where the PSX-EU image equals `BOF3.exe`'s `.data` and the PSP-EU
+image does not (`exediff.py`, scratch: 27 ranges, 3,010 bytes) include four
+of `MapCell_DrawUprights`' tables (`0x570210`, symbols.toml), zero on the
+PSP image: `MapCell_UprightCounts` `0x66313C` (zero pairs of quads per
+kind: nothing drawn), `MapCell_UprightV01`, `MapCell_UprightU02`,
+`MapCell_UprightClut`. The same tables draw the world map's trees: in
+caughFish the world-map frames at tick 420 (mode 1) differ B-C by two tree
+boxes; the mode-2 frames after it were matched by `psp-area-art`, whose
+coarse rule swallowed the missing trees (abc-harness.md 5's warning, met).
+
+Where the PSP has them: `BOOT.BIN`'s `.data` holds all nine upright tables
+`0x66313C..0x663280` **packed without the PC's alignment padding** (each
+table's own bytes, in the PC's order, back to back - `findup.py` /
+`dumpup.py`, scratch). The map already places the five whose bytes fill
+their PC slot (`_OffsetsX`, `_OffsetsY`, `_Heights`, `_V23`, `_U13`); the
+four above end in padding on the PC, so the map's segment does not reach
+them. psp-image.md 6 had them as "not found".
+
+**Fixed** (`tools/psp_exe.py`): four `TWINS` rows, PSP builds only, file
+`BOOT.BIN`, each the table's non-padding bytes (`0x66313C..0x663145`,
+`0x663234..0x663246`, `0x66325C..0x663265`, `0x663274..0x66327D`). The
+recipe run finds each inside the packed block on both PSP discs (PSP-EU
+`0x2DEF48..0x2DF07B`, PSP-JP `0x2DF758..`), "0 not BOF3.exe's" on every
+row.
+
+### 10.2 Found beside it: `Area_CellHooks` on PSP-EU
+
+The same diff has `Area_CellHooks` `0x662F28`'s 28 area words zero on the
+PSP-EU image (the code pointers at +4 are the layout's). `Area_CellHook`
+`0x56E670` compares them with `Game_AreaNumber`, so on PSP-EU no area's
+cell hook ran - the switch cells of areas 44, 49, 52, 77, 86 and the
+others (symbols.toml's handlers). PSP-JP had them from `psxmap` (PSX-JP's
+place in `GAME.EMI#0`); PSP-EU's `GAME.EMI` holds the same table 0x1000
+earlier (`findcell.py`, scratch), so `psxmap` at PSX-JP's address missed
+it. Not in the two routes; a gameplay defect of the PSP-EU install.
+
+**Fixed:** a rule `cellhk` beside `wmrec` (the same finder, now
+`records_place`): the area words copied from the disc's own 28-record
+table in `ETC/GAME.EMI`, found by them; PSP builds (the PSX builds place
+the table from their maps). "0 not BOF3.exe's", 112 bytes, both PSP
+builds; PSP-JP's 28 `psxmap` rows there become the one `cellhk` row (same
+bytes).
+
+**The class this suggests, not followed:** `psxmap` reads every PSP file
+at PSX-JP's addresses, and PSP-EU's `GAME.EMI` is laid out differently
+from some point on; other PSX-JP-placed runs of `GAME.EMI` may be missed
+on PSP-EU the same way. Of what is left (below), `EffectKind34_V0Areas`
+`0x65401C` is one: PSP-EU's `GAME.EMI#0` carries it verbatim (one hit).
+
+### 10.3 Regenerated, and the result
+
+`exe_tables.py recipe`, `psp_exe.py recipe`, `exe_tables.py recipe`,
+`exe_own.py measure`, `exe_tables.py gaps`, the seven discs: only the PSP
+rows change - `exe-psp.tsv` +10 rows (`cellhk` and four `twin` per PSP
+build) and PSP-JP's 28 `psxmap` rows at `Area_CellHooks` gone;
+`exe-gaps.tsv` loses PSP-JP's four `MapCell_Upright*` rows and PSP-EU's
+four and 28 `Area_CellHooks` rows, nothing added; `exe.toml` only the two
+PSP builds' hashes and counts.
+
+| After the fix | Result |
+|---|---|
+| PSP-EU image against PSX-EU, where PSX-EU is the PC's and PSP-EU not | 27 ranges / 3,010 bytes to 22 / 2,757: `Area_CellHooks` and the four upright tables gone |
+| eu re-run (`report_eu2_*.md`), masterAndManillo A-C | frames differing 173 to 113; the area 61 spans (ticks 3720..5490) gone; PSP-EU's area 61 has its trees |
+| eu re-run, caughFish B-C | 124 to 121 differing; world-map tick 420 0.01% (17 pixels) |
+| exe host self-test, PSP-EU-only install (`abx\g_pspeu`, the new image) | exit 0; `inject: 10088 ours`; `self-test only: done`; `place 650 ranges 6217 bytes`, `gap 254 ranges 2181 bytes` |
+| exe host self-test, the PC install copy with the new PSP-EU image | exit 0; `629011 of 638976 bytes equal; every class that must equal does` (628,811 before, section 6); no `place` range differs |
+| `BOF3X_SHADOW='*'` self-test, an ini-less launcher copy (`abx\LT`), the PC install copy | exit 0; `inject: 10087 ours`; 1,072 `MISMATCHES` lines, every one 0 |
+| `importer.py check`, `exe_tables.py check`, `psp_exe.py check` | 0 errors / OK |
+| `ledger_check.py` | 114 entries, 0 errors, 2 notes |
+
+### 10.4 What still differs on these two routes
+
+From `report_eu2_*.md`, `report_us_*.md` and `report_own_*.md` (frames
+looked at, not every one):
+
+- **PC against both discs, the world-map legend** (areas 16 and 45, the box
+  at 64,20-124,56): the PC draws its keyboard legend ("SPACE / X / ENTER"
+  with icons), the discs their pad buttons and words. The port's own art,
+  the area's data; no known entry covers PC against disc. Every PC-disc pair.
+- **PC against both discs, the fishing ticker** (area 30, mode 8, the top
+  line): the PC's line lacks the disc's circle-button glyph, so the text is
+  shorter and the scroll sits elsewhere; PSP-EU's own text has "buttons".
+  Text of the language layer and the glyph; not looked into.
+- **PSP-EU, the fishing screen** (area 30, mode 8, the whole frame by a few
+  levels, mean |d| about 4): the PSP's fishing art; `psp-area-art` covers
+  mode 2 only.
+- **The title** (ticks 60..330): the PC's (R) (`pc-title-mark`) and the
+  PSP's own title page, as section 8 and D256 have them.
+- **`own-pc` against `own-psp`**: a few dozen pixels per frame (psp-art and
+  layering), as expected.
+- **Left on PSP-EU's image** (PSX-EU has the PC's bytes there; whether the
+  routes show any is not established): `ItemUse_HandlerIndex+0xD0`
+  (`BOOT.BIN` holds the 63 bytes once), `ConfigMenu_Steps+0xC` (once),
+  `EffectKind34_V0Areas` (`GAME.EMI#0`, once), `MenuList_GeneWinSteps+0xE`,
+  `Scenario_Hooks+0x58`, `Field_ModeTailKinds+0x102` (short runs, many
+  copies: no safe twin), `EventScript_OpLengths+0x15`,
+  `MoveScript_EffectArg+0x48` (not found), single bytes of five areas'
+  choice tables, and `Char_ExpTable` (DIV-0104), `SimoonDust_Offsets`
+  (psp-image.md 1) and `Math_SinTable` (engine-own) as known.
+
+**For the ledger** (the coordinator's to fold in): DIV-0101's gaps entry
+gains an amendment - on PSP builds the four upright tables come from
+`BOOT.BIN`'s packed copy (`twin`) and `Area_CellHooks`' area words from
+`GAME.EMI#0` (`cellhk`), each byte `BOF3.exe`'s; the defects they close
+are PSP-only (the trees of the field and world map; the cell hooks on
+PSP-EU) and want a known-defects row each (the fixed kind, like D253).
 
 ## For the other files
 

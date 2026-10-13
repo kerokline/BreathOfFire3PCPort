@@ -2,8 +2,7 @@
 
 **Status:** IN PROGRESS (2026-10-08, one cloud session: unified-data step 4.
 The five layers built and verified offline from both PSP discs, the loader
-change compiled, the presets and `install` run. **Not run:** the owner's
-llvm-mingw build, the `'*'` self-tests and any look in play - section 8)
+change compiled, the presets and `install` run. **Run since:** the build and `'*'` with `BOF3X_OPT=psp-art`, 2026-10-10 (exit 0); **not yet:** any look in play - section 8)
 
 [`unified-data-plan.md`](unified-data-plan.md) step 4. A later build's
 content change is an `opt/` layer from the player's own disc, off by default

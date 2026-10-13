@@ -11779,7 +11779,6 @@ pc	kind	target
 0x652AEC	code	CommuRank_Dispatch
 0x652AF0	code	CommuTail_LoadSoundBank
 0x652AF4	code	CommuTail26_End
-0x652AF8	number	-
 0x652B0C	code	CommuBoard_Init
 0x652B10	code	CommuBoard_Grid
 0x652B14	code	CommuBoard_ModeDispatch

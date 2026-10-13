@@ -1,6 +1,6 @@
 # bof3x.exe's icon, generated on the player's machine (DIV-0095)
 
-**Status:** IN PROGRESS (verified 2026-10-11 on `tooling/exe-icon`: the self-test against
+**Status:** BUILT (merged with state 3, PR #53; verified 2026-10-11 on `tooling/exe-icon`: the self-test against
 `make_icon.py`'s `.ico`, every pixel; two headless load-screen runs; not yet seen by
 the owner)
 

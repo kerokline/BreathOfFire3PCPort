@@ -1,6 +1,6 @@
 # The PSP's music: `pPMS` to the cache's song form
 
-**Status:** IN PROGRESS (2026-10-12), group MS of the PSP-only round
+**Status:** MEASURED (2026-10-12, merged in PR #56; not heard), group MS of the PSP-only round
 ([`psp-only-round.md`](psp-only-round.md)), both stages built. Stage A:
 `tools/ppms.py` reads a PSP disc's songs and writes them in the form
 `base/bgm/` stores; it reproduces the 2026-10-10 measurement in code and adds

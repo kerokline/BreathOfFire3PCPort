@@ -1,6 +1,6 @@
 # The engine reading the cache: `DAT\`, `SND\` and the layers from the importer's cache
 
-**Status:** IN PROGRESS (2026-10-10, one session on `catchup/cache-read`.
+**Status:** IN PROGRESS (2026-10-10, one session on `catchup/cache-read`, merged in PR #49; live play still owed.
 Built with llvm-mingw, no warnings; `BOF3X_SHADOW=dat_cache` and the full
 `'*'` self-test exit 0; the start-up check run headless against a real cache
 and four synthetic ones; the walk proved offline against `importer.py install`

@@ -4822,7 +4822,8 @@ designed in rather than bolted on.
   `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW=sound`: exit 0,
   the stand-in decoder looped exactly in four call patterns, "39 table
   rows in bounds"; the 37-row table built and `'*'` run with the review's
-  tip. **Not yet heard in the game**;
+  tip. **Heard in part** (2026-10-10/11: the attract, combat, `165` on the
+  MP3 path - the amendments above); the second cut's other rows not yet;
   whether replaying the intro's frames at each loop causes a hitch in play
   is unmeasured.
 - **Reversible?** `BOF3X_MUSIC_LOOPS=0` rewinds every track as the original.
@@ -5417,8 +5418,8 @@ designed in rather than bolted on.
   releases' own. The glyphs and the sheet are the port's, so no.
 - **Verification:** built and diffed container by container for en-US,
   en-150, fr-FR, de-DE and ja-JP (`loc-build-disc-only.md` sections 5..6).
-  Not played: the engine does not read a cache yet. **Owed the owner's eye**
-  then: the second suffix (banner message 3) and the blank single-byte
+  Not played (the engine reads a cache since DIV-0089 and plays disc-only
+  since PR #55). **Owed the owner's eye**: the second suffix (banner message 3) and the blank single-byte
   slots.
 - **Reversible?** build the layer with the PC install among the sources
   (`importer.py build --source bof3/DAT --source bof3/BOF3.exe ...`, or
@@ -6121,6 +6122,38 @@ designed in rather than bolted on.
   the exe host on a US disc-only, a PSP-EU-only and the real install exit 0;
   AB's harness (`abc-harness.md`): caughFish and masterAndManillo no longer
   crash on PSX-EU, combat 81 of 87 frames equal to the PC's.
+- Amended 2026-10-13, night (the areas 16 / 45 re-run,
+  [`visual-findings-1012.md`](visual-findings-1012.md) 10): on PSP builds the
+  four upright-quad tables `MapCell_DrawUprights` `0x570210` reads
+  (`MapCell_UprightCounts` `0x66313C` and its `_V01`, `_U02`, `_Clut`
+  siblings) come from `BOOT.BIN`'s packed copy (`twin`: the PSP packs the nine
+  upright tables without the PC's padding, so the map's segment placed only
+  the five that fill their slot), and on PSP-EU `Area_CellHooks`' 28 area
+  words `0x662F28` from `GAME.EMI#0` (`cellhk`, sharing `wmrec`'s finder
+  `records_place`; PSP-JP had them from `psxmap` at PSX-JP's address, which
+  PSP-EU's `GAME.EMI` holds 0x1000 earlier). Every filled byte equals
+  `BOF3.exe`'s. They close D258 (no trees in the field or on the world map on
+  a PSP build) and D259 (no area cell hooks on PSP-EU). Verification: every
+  rule row "0 not BOF3.exe's"; `importer.py check`, `exe_tables.py check`,
+  `psp_exe.py check` clean; the hosted `'*'` self-test exit 0 and the exe host
+  on the PSP-EU-only install exit 0 (10,088 ours); the PSP-EU image against
+  PSX-EU's 27 ranges / 3,010 bytes to 22 / 2,757; the harness's
+  masterAndManillo PC against PSP-EU 173 to 113 differing frames, area 61's
+  trees seen back.
+- Amended 2026-10-13 (the A/B/C sweep's fixes,
+  [`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3): four more runs no
+  longer zero on a disc-built image, each read verbatim from the overlay whose
+  code reads it (`twin`; `TWINS` gains an optional sixth field picking the
+  n-th copy of a run in its file): the faerie board's help words for kinds 4
+  and 5 / pick rows 0 and 1 (`COMMU01.EMI#7`, every build - D260, the PSP-EU
+  crash), the village's area limits (`COMMU00.EMI#0`, PSX-JP and PSX-EU -
+  D261), the field equipment compare panel's slot icons (`STATUS.EMI#0`, the
+  second of its two copies, every build - D262) and the gene window's `AP`
+  label (`BATTLE.EMI#15`, every build - D263). Every filled byte equals
+  `BOF3.exe`'s. Verification: all 23 new rows "0 not BOF3.exe's";
+  `importer.py check`, `exe_tables.py check`, `psp_exe.py check` clean; the
+  exe host on the PSP-EU-only and PSX-EU-only installs exit 0 (10,088 ours);
+  `fairyVillage` to its last frame on all three `eu` installs.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

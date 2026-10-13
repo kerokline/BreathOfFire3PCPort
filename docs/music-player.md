@@ -1,7 +1,9 @@
 # The launcher's Jukebox: the game's music from each source
 
-**Status:** BUILT (2026-10-11, `launcher/music-player`), driven by script but
-**not yet heard by the owner**. The faerie-menu and PSF measurements in
+**Status:** BUILT (2026-10-11, `launcher/music-player`, merged as PR #52) and
+**in the owner's regular use**: the owner, 2026-10-12 night - "I've been using
+the jukebox mode a lot, it's great"; they catalogued every song against the
+soundtrack box set's official titles (section 4, `data/music-names.tsv`). The faerie-menu and PSF measurements in
 section 4 are STABLE; the names themselves are the owner's catalogue.
 **2026-10-12 (the PSP-only round):** the PSP source is lit - from a PSP-only
 cache's `base\bgm` (DIV-0105), or beside a PlayStation disc's songs from the

@@ -3,7 +3,7 @@
 **Status:** IN PROGRESS (2026-10-12, the PSP-only round's LG group, branch
 `psp/lg`; a local session without the game running). Built and diffed for
 both PSP discs; not played (the engine reads a disc-only cache since state 3,
-but no PSP-only install has been started; the round's V2 and V3 do that).
+PSP-only installs started headless in the end batch's V2 / V3, [`psp-end-batch.md`](psp-end-batch.md); not played).
 
 The disc-only round made `loc_build.py all --cache` build a language layer
 from a PlayStation disc alone ([`loc-build-disc-only.md`](loc-build-disc-only.md)).

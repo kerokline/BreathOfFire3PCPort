@@ -1,6 +1,6 @@
 # The PSP-only round: a working install from the player's PSP disc alone
 
-**Status:** IN PROGRESS (2026-10-12, evening: every group merged on `psp/round` `88817a07`, the ledger numbered on `psp/ledger`; the code review's fixes (RF) and the end batch (EB) running). Wave one launched from `platform/disc-only-round` `98c17e8b`, after its code review's six gating items (the owner: "go ahead and start against a latest pull from the branch"). This plan regroups
+**Status:** DONE (merged as PR #56, 2026-10-12 night: RF, EB, WA and VF merged too). Earlier: (2026-10-12, evening: every group merged on `psp/round` `88817a07`, the ledger numbered on `psp/ledger`; the code review's fixes (RF) and the end batch (EB) running). Wave one launched from `platform/disc-only-round` `98c17e8b`, after its code review's six gating items (the owner: "go ahead and start against a latest pull from the branch"). This plan regroups
 [`psp-only-build.md`](psp-only-build.md)'s sections 3, 5 and 8 into groups
 that can run in parallel, with every live check held for one batch at the
 end.

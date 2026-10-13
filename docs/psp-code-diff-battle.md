@@ -1,6 +1,6 @@
 # The PSP code diff, battle and effects half: what the 317 differing pairs are
 
-**Status:** IN PROGRESS (2026-10-12) - stage B of group CD (CD1) of the
+**Status:** MEASURED (2026-10-12; merged in PR #56) - stage B of group CD (CD1) of the
 PSP-only round: the round's priority questions answered, and the 317
 differing pairs of [`psp-code-diff.md`](psp-code-diff.md) 7's "Battle and
 effects" table classed. Read-only: nothing in `src/` or the importer changed.

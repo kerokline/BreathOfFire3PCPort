@@ -1,6 +1,6 @@
 # The platform layers: what is left after the game's own code, and how to take it
 
-**Status:** PROPOSED (2026-10-04, the owner's ask during round fourteen; counts from the catalog at `aed35f8`, nothing here read function by function; 2026-10-05 the owner agreed the order of section 4, with the audio before state 2's proof; 2026-10-10 the decoder chosen, minimp3, section 2.4)
+**Status:** IN PROGRESS (states 1 to 3 done by 2026-10-12: the C runtime, minimp3, state 2 proved, `bof3x.exe` - PRs #43..#53; the renderer's remainder open). Proposed 2026-10-04 ( the owner's ask during round fourteen; counts from the catalog at `aed35f8`, nothing here read function by function; 2026-10-05 the owner agreed the order of section 4, with the audio before state 2's proof; 2026-10-10 the decoder chosen, minimp3, section 2.4)
 
 Round fourteen ([`takeover-queue-round14.md`](takeover-queue-round14.md))
 takes the remainder of the game's own code. What it leaves in `BOF3.exe` is

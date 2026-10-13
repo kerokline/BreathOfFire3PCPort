@@ -1,6 +1,6 @@
 # The engine seam: the cache's songs through the sequencer (DIV-0087)
 
-**Status:** BUILT, NOT RUN (2026-10-08, group ENG of
+**Status:** BUILT (self-tested with llvm-mingw 2026-10-09 with PR #46, and run since by the cache path and the battle resume; DIV-0087's listen owed). Originally: BUILT, NOT RUN (2026-10-08, group ENG of
 [`sequenced-music-plan.md`](sequenced-music-plan.md) section 9). Compiled with
 GCC 13's `i686-w64-mingw32-g++ -fsyntax-only -Wall -Wextra`. Not yet built
 with llvm-mingw, run, or listened to (section 6).

@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-12 night) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -20,8 +20,9 @@ where the reading behind it is. Nothing here is a divergence until it is in
   sibling's saves), after the Nue fight: walk into a random encounter and
   listen to whether the area's song comes back where it left off or from its
   start. The Nue boss restarted it (the owner, 2026-10-11); DIV-0092's
-  amendment says the PlayStation resumes. The answer decides whether the
-  resume gets a battle-kind condition.
+  amendment says the PlayStation resumes. Event battles restart the area's
+  song since #54 (DIV-0092's second amendment, heard); this listen confirms
+  the random-encounter resume itself.
 
 ## To listen to (the music investigation, 2026-10-06)
 
@@ -60,6 +61,11 @@ where the reading behind it is. Nothing here is a divergence until it is in
 
 ## To review in play
 
+**State 3, `bof3x.exe` (PR #53, 2026-10-12):** the icon generated from the whelp
+portrait (DIV-0095, [`exe-icon.md`](exe-icon.md)), the window and its DPI scale
+(DIV-0094, DIV-0036 amended) - watched only through the end batch's disc-only
+installs so far, never looked at for themselves.
+
 **The disc-only round (2026-10-12, [`disc-only-round.md`](disc-only-round.md)) - a build from the US disc alone, nothing of the PC's:**
 
 - **A key press in `bof3x.exe`.** RD found the keyboard has been dead in the
@@ -72,7 +78,8 @@ where the reading behind it is. Nothing here is a divergence until it is in
   `install --base` into an empty directory, the launcher with `cache=` and
   no `BOF3.exe` there. Play the title, a field, a fight, a menu, a save.
   Known gaps to look for (DIV-0100's doc, section 4: 3,358 bytes of Capcom's
-  game values no disc carries are zero): the wrong effect file on a spell or
+  game values no disc carries were zero at the round's start; after the PSP
+  round's IM2 and VF, PSX-US 285 ranges and 1,141 game-value bytes): the wrong effect file on a spell or
   item (`Magic_Rows`), the dragon-form sets, the equipment and experience
   panels' numbers, the ending roll (the first two and parts of the panels' and the event battles' tables filled by rule since 2026-10-12, DIV-0101 amended). What you see decides the first item under
   "Decisions".

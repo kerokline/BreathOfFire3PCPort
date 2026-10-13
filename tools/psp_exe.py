@@ -30,7 +30,7 @@ Two more since 2026-10-12 evening (the owner's visual findings, docs/visual-find
 
     twin     a short run the disc carries verbatim in the overlay whose code reads it, at
              another place than the map's: TWINS below names each run and that file; the
-             run is the first copy in the file's sections (found by BOF3.exe's bytes at
+             run is the first copy in the file's sections, or the one TWINS names (found by BOF3.exe's bytes at
              recipe time, as the wheel's place is) and copied byte for byte. Every disc build
     msets    the zone music sets (Area_ZoneTrack's records, MUSIC_SETS): on a PSP disc the
              records' lists are packed in BOOT.BIN, found by its relocations (the one run of
@@ -38,6 +38,9 @@ Two more since 2026-10-12 evening (the owner's visual findings, docs/visual-find
              the pointers rising and ending before the run); the counts and each list's
              3-byte entries are copied to the PC's places, which the layout's pointer words
              name. PSP builds only (a PSX disc's boot EXE is placed by the map)
+
+And wmrec, boxxy and cellhk (the constants below say what each reads; cellhk since
+2026-10-13, docs/visual-findings-1012.md 10).
 
 The file numbering. A disc names a file by its index in the disc's file table; the PSP's
 BOOT.BIN holds that table as 0x40-byte path records (found by the disc's own paths). The
@@ -79,11 +82,13 @@ sys.path.insert(0, TOOLS)
 PSP = ("psp-jp", "psp-eu")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
-RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy")   # widen<k>: the disc's name is k bytes
+RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
-# (the PSX builds place it already, exe-places.tsv, and a twin there would split that place).
+# (the PSX builds place it already, exe-places.tsv, and a twin there would split that place;
+# None: every build), and a sixth takes the file's n-th copy (0-based) instead of the first,
+# for a file that holds the run more than once and whose reader reads a later one.
 # Addresses and names only.
 TWINS = [
     (0x64AE18, 0x64AE28, "BATTLE/BATTLE.EMI", "the BATE equipment screen's slot icons and categories"),
@@ -122,6 +127,26 @@ TWINS = [
     (0x604948, 0x604950, "WORLD01/AREA065.EMI", "Area65_Record8Anims"),
     (0x6126E4, 0x6126EC, "WORLD02/AREA087.EMI", "Area87_Record8Anims"),
     (0x613060, 0x613068, "WORLD02/AREA088.EMI", "Area88_Record8Anims"),
+    # MapCell_DrawUprights' tables (the field's upright quads: area 61's trees, the PSP-EU
+    # A/B/C finding of docs/visual-findings-1012.md 10): BOOT.BIN holds the nine tables
+    # 0x66313C..0x663280 packed without the PC's padding, so the four the map leaves zero
+    # are each a run of their own there; the PSX builds place them from the boot EXE.
+    (0x66313C, 0x663145, "BOOT.BIN", "MapCell_UprightCounts", PSP),
+    (0x663234, 0x663246, "BOOT.BIN", "MapCell_UprightV01", PSP),
+    (0x66325C, 0x663265, "BOOT.BIN", "MapCell_UprightU02", PSP),
+    (0x663274, 0x66327D, "BOOT.BIN", "MapCell_UprightClut", PSP),
+    # The A/B/C sweep's fixes (docs/abc-sweep-1012-fixes.md 3): the faerie board's help
+    # messages by kind and pick-list row (CommuBoard_PickHelp / _PickList read 0x652AF0 +
+    # 2 kind and 0x652AF8 + 2 row; the first two words were zero, help 0 drew the area's
+    # message 0 and reached the glyph trap - the PSP-EU crash), the village's area limits
+    # (0x653601 + area: PSX-JP and PSX-EU only, the others' maps place them), the field
+    # equipment compare panel's slot icons (Menu_DrawEquipCompare; STATUS.EMI holds the
+    # panel's copy and the compare's, the compare's second), the gene window's AP label.
+    (0x652AF8, 0x652AFC, "ETC/COMMU01.EMI", "the faerie board's help messages, kinds 4 and 5 (pick rows 0 and 1)"),
+    (0x6536AC, 0x6536BB, "ETC/COMMU00.EMI", "the faerie village's area limits (CommuBoard_PickHelp, rest_4b)",
+     ("psx-jp", "psx-eu-en")),
+    (0x66386C, 0x663872, "ETC/STATUS.EMI", "the field equipment compare panel's slot icons", None, 1),
+    (0x66AF38, 0x66AF3C, "BATTLE/BATTLE.EMI", "the gene window's AP label (GeneWin_DrawGrid)"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
@@ -134,6 +159,12 @@ _BASE_IMAGE = {}            # bid -> (image, owner) of the recipe's base image (
 # are copied from the disc's own record table of the same shape (GAME.EMI#0 on every disc),
 # found by them at recipe time as the wheel's spots are.
 WM_RECORDS, WM_COUNT, WM_STRIDE, WM_AREA = 0x653910, 11, 0x1C, 0x18
+# cellhk: Area_CellHooks (0x662F28, 28 eight-byte records: the area word at +0, a code
+# pointer at +4), read by Area_CellHook 0x56E670 against Game_AreaNumber. The area words are
+# copied from the disc's own table of that shape in GAME.EMI#0, found by them as wmrec's are.
+# PSP builds: psxmap reads PSX-JP's place, which is PSP-JP's GAME.EMI place and not PSP-EU's
+# (its GAME.EMI is laid out 0x1000 earlier there); the PSX builds place it from their maps.
+CH_RECORDS, CH_COUNT, CH_STRIDE, CH_AREA = 0x662F28, 28, 8, 0
 # boxxy: the dialogue box's two position tables (window_task.cpp kBoxXY 0x66ADD8, kBoxAltXY
 # 0x66ADE8: 7 x (u8 x, u8 y) and two zero bytes each). The PSP's BOOT.BIN holds them as 7 x
 # (s16 x, s16 y), the two tables 0x1C apart, with entries 3..6 framed for its 384-wide view:
@@ -485,6 +516,11 @@ def build_fill(row, disc, elf, rule, srcs):
             o = WM_STRIDE * i + WM_AREA
             out[o:o + 4] = blob[at + o:at + o + 4]
             mask[o:o + 4] = [True] * 4
+    elif rl == "cellhk":
+        for i in range((hi - lo) // CH_STRIDE):
+            o = CH_STRIDE * i + CH_AREA
+            out[o:o + 4] = blob[at + o:at + o + 4]
+            mask[o:o + 4] = [True] * 4
     elif rl == "msets":
         # A list is its entries and the bytes after them up to the next list (Area_ZoneTrack
         # reads the entry past the last as the fallback): the disc's span, as far as the
@@ -598,10 +634,12 @@ def find_rows(disc, bid, pc):
     if w:
         rows.append({"build": bid, "rule": "widen%d" % w[5], "pc": w[0], "pc_end": w[1], "file": w[3],
                      "section": w[4], "addr": w[2]})
-    for tlo, thi, tfile, _, *only in TWINS:
-        if only and bid not in only[0]:
+    for tlo, thi, tfile, _, *extra in TWINS:
+        only = extra[0] if extra else None
+        nth = extra[1] if len(extra) > 1 else 0
+        if only and bid not in only:
             continue
-        t = twin_place(srcs, pc, tlo, thi, tfile)
+        t = twin_place(srcs, pc, tlo, thi, tfile, nth)
         if t:
             rows.append({"build": bid, "rule": "twin", "pc": tlo, "pc_end": thi, "file": tfile, "section": t[0],
                          "addr": t[1]})
@@ -615,6 +653,12 @@ def find_rows(disc, bid, pc):
     else:
         print("  %s wmrec: the world maps' record table not found in ETC/GAME.EMI" % bid)
     if psp:
+        ch = records_place(srcs, pc, "ETC/GAME.EMI", CH_RECORDS, CH_COUNT, CH_STRIDE, CH_AREA)
+        if ch:
+            rows.append({"build": bid, "rule": "cellhk", "pc": CH_RECORDS,
+                         "pc_end": CH_RECORDS + CH_COUNT * CH_STRIDE, "file": ch[0], "section": ch[1], "addr": ch[2]})
+        else:
+            print("  %s cellhk: the cell hooks' record table not found in ETC/GAME.EMI" % bid)
         b = boxxy_place(elf, pc)
         if b is not None:
             rows.append({"build": bid, "rule": "boxxy", "pc": BOX_XY, "pc_end": BOX_XY + BOX_TABLES * BOX_PC_STRIDE,
@@ -865,28 +909,38 @@ def wmrec_place(srcs, pc):
     """The disc's world-map record table in ETC/GAME.EMI: the place whose eleven 0x1C-byte
     records hold BOF3.exe's area words at +0x18 (found by them, at recipe time). (file,
     section, address of record 0) or None."""
-    want = [pc[WM_RECORDS + WM_STRIDE * i + WM_AREA - DATA_LO:WM_RECORDS + WM_STRIDE * i + WM_AREA + 4 - DATA_LO]
-            for i in range(WM_COUNT)]
+    return records_place(srcs, pc, "ETC/GAME.EMI", WM_RECORDS, WM_COUNT, WM_STRIDE, WM_AREA)
+
+
+def records_place(srcs, pc, file, records, count, stride, field):
+    """The disc's copy of a PC record table in `file`: the first place whose `count`
+    records of `stride` bytes hold BOF3.exe's 4-byte words at +`field` (wmrec, cellhk).
+    (file, section, address of record 0) or None."""
+    want = [pc[records + stride * i + field - DATA_LO:records + stride * i + field + 4 - DATA_LO]
+            for i in range(count)]
     for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
-        if f != "ETC/GAME.EMI":
+        if f != file:
             continue
         a = blob.find(want[0])
         while a >= 0:
-            if all(blob[a + WM_STRIDE * i:a + WM_STRIDE * i + 4] == want[i] for i in range(WM_COUNT)):
-                return f, s, base + a - WM_AREA
+            if all(blob[a + stride * i:a + stride * i + 4] == want[i] for i in range(count)):
+                return f, s, base + a - field
             a = blob.find(want[0], a + 1)
     return None
 
 
-def twin_place(srcs, pc, lo, hi, file):
-    """The first copy of BOF3.exe's [lo, hi) in `file`'s sections, in section order:
-    (section, disc address) or None."""
+def twin_place(srcs, pc, lo, hi, file, nth=0):
+    """The nth (0: the first) copy of BOF3.exe's [lo, hi) in `file`'s sections, in
+    section and address order: (section, disc address) or None."""
     nd = pc[lo - DATA_LO:hi - DATA_LO]
     for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
         if f == file:
             at = blob.find(nd)
-            if at >= 0:
-                return s, base + at
+            while at >= 0:
+                if nth == 0:
+                    return s, base + at
+                nth -= 1
+                at = blob.find(nd, at + 1)
     return None
 
 
@@ -1039,12 +1093,14 @@ def check():
             last = r["pc_end"]
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "boxxy": 2 * BOX_ENTRIES * BOX_TABLES}.get(r["rule"])
+            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "boxxy": 2 * BOX_ENTRIES * BOX_TABLES}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes filled, the rule fills %d" % (bid, r["pc"], r["filled"], want))
-            if r["rule"] not in ("rows8", "msets", "wmrec") and any(x in ptr for x in range(r["pc"], r["pc_end"])):
+            if r["rule"] == "cellhk" and (bid not in PSP or r["pc"] != CH_RECORDS):
+                errs.append("exe-psp.tsv: %s 0x%06X: a cellhk row off the rule" % (bid, r["pc"]))
+            if r["rule"] not in ("rows8", "msets", "wmrec", "cellhk") and any(x in ptr for x in range(r["pc"], r["pc_end"])):
                 errs.append("exe-psp.tsv: %s 0x%06X: over a pointer word" % (bid, r["pc"]))
     try:
         ids, null = pc_file_ids()
