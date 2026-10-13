@@ -6140,6 +6140,20 @@ designed in rather than bolted on.
   PSX-EU's 27 ranges / 3,010 bytes to 22 / 2,757; the harness's
   masterAndManillo PC against PSP-EU 173 to 113 differing frames, area 61's
   trees seen back.
+- Amended 2026-10-13 (the A/B/C sweep's fixes,
+  [`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3): four more runs no
+  longer zero on a disc-built image, each read verbatim from the overlay whose
+  code reads it (`twin`; `TWINS` gains an optional sixth field picking the
+  n-th copy of a run in its file): the faerie board's help words for kinds 4
+  and 5 / pick rows 0 and 1 (`COMMU01.EMI#7`, every build - D260, the PSP-EU
+  crash), the village's area limits (`COMMU00.EMI#0`, PSX-JP and PSX-EU -
+  D261), the field equipment compare panel's slot icons (`STATUS.EMI#0`, the
+  second of its two copies, every build - D262) and the gene window's `AP`
+  label (`BATTLE.EMI#15`, every build - D263). Every filled byte equals
+  `BOF3.exe`'s. Verification: all 23 new rows "0 not BOF3.exe's";
+  `importer.py check`, `exe_tables.py check`, `psp_exe.py check` clean; the
+  exe host on the PSP-EU-only and PSX-EU-only installs exit 0 (10,088 ours);
+  `fairyVillage` to its last frame on all three `eu` installs.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

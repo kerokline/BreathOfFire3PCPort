@@ -284,3 +284,8 @@ changes no game behaviour.
 loads whatever each install's slot 0 holds, so the three sides can start from
 different saves. Until the harness refuses such a recipe or takes `--save`,
 add the header in a scratch copy ([`abc-sweep-1012.md`](abc-sweep-1012.md) 7).
+
+**Trap (2026-10-13):** `input_run.py` can read a `recipe done` line left in
+`L\bof3x.log` by the previous run and report the new run done at once, with no
+frames ("done at frame 5519" after 1 s). Re-run that side alone; a run that ends
+in seconds with no frames is this ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)).

@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-13: `main` is `a7c7a9e5`, PRs #49..#56 merged; tonight's `cleanup/abc-crash-1012` is unpushed, and D260..D263 are open with an agent on them - item 1 below)
+**Status:** IN PROGRESS (2026-10-13: `main` is `a7c7a9e5`, PRs #49..#56 merged; tonight's `cleanup/abc-crash-1012` is unpushed and ready for its PR, D260..D263 fixed - item 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -26,24 +26,25 @@ Neither install from a disc alone has been played. **Tonight's branch, `cleanup/
 re-run - no crash on any of seven installs, the PSP builds' trees (D258) and PSP-EU's cell hooks (D259) fixed by
 `tools/psp_exe.py` rows, DIV-0101 amended ([`visual-findings-1012.md`](visual-findings-1012.md) 10); and the A/B/C
 sweep ([`abc-sweep-1012.md`](abc-sweep-1012.md): ten routes on the `eu` triple, no regression between builds, the
-PC path's state hash clean on combat, shop and the world-map route). The sweep found four defects, **D260..D263,
-open** ([`known-defects.md`](known-defects.md)); an agent is working on them in a worktree now. The regression
+PC path's state hash clean on combat, shop and the world-map route). The sweep found four defects, **D260..D263**, all
+gaps of the disc-built image and all **fixed** by `twin` rows ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)):
+D260 was a crash a player could reach (PSP-EU, the faerie village); `fairyVillage` now runs to its end on all three
+`eu` installs. Two more seen on that route, D264 (the village's stats zero) and D265, are open. The regression
 check is the state hash ([`state-hash.md`](state-hash.md); the references `cn_<route>_orig2` / `_orig2b` in
 `analysis/statehash`) and, across installs, the A/B/C harness ([`abc-harness.md`](abc-harness.md)).
 
 ## Pick up here
 
-1. **Merge the D260..D263 fix branch when its agent reports, then PR `cleanup/abc-crash-1012`.** The four, all in
-   [`known-defects.md`](known-defects.md) and [`abc-sweep-1012.md`](abc-sweep-1012.md) 3: D260 a PSP-EU install
-   crashes in the faerie village (the board's help line reaches Capcom's glyph trap; a crash a player can reach);
-   D261 the PSX-EU village board draws empty (the area-limit table `0x6536B0` is a gap,
-   `loc-build-disc-only.md` 5.4); D262 the field Equip screen draws one flame icon on every row on both disc-only
-   installs (a table other than `Equip_SlotIcons`, not located); D263 the gene window's `AP` label blank on the
-   disc-only installs (not traced). Merge `--no-ff`, then `ledger_check.py`, `importer.py check`,
-   `exe_tables.py check`, `psp_exe.py check` and a headless `'*'` from an ini-less launcher copy; a DIVERGENCE
-   amendment if a fix fills more of a disc-built image (DIV-0101's form). Then read
-   `git log --format=%B main..HEAD` for a `Signed-off-by` on every commit (CLAUDE.md rule 7; ask the owner before
-   any rewrite), push, and open the PR to `main`.
+1. **Push `cleanup/abc-crash-1012` and open its PR, at the owner's word.** Everything is merged on it: the
+   docs audit and README, the areas 16 / 45 re-run (D258, D259), the sweep, and the D260..D263 fixes
+   ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md); DIV-0101 amended twice). Checked at the tip
+   (2026-10-13): `ledger_check` 114 entries 0 errors, `importer.py check`, `exe_tables.py check`, `psp_exe.py
+   check`, `suites.py check` clean; every one of the 11 non-merge commits signed off (CLAUDE.md rule 7); no `src/`
+   change, so `main`'s build and self-tests stand. The exe host on the PSX-EU-only and PSP-EU-only installs exit 0
+   with the new images. Still open from tonight: **D264** - the village's faerie stats zero on both disc images, so
+   the village simulates differently (a new rule shape from `COMMU00`'s nine-byte records, not a `twin`) - and
+   **D265**, PSP-EU's blank "Culture" label; `Menu_ButtonSets+0x2A` on the PSX builds, now classed `unread`, not
+   looked at.
 
 2. **The follow-up round: disc-only and PSP polish** (not staged; the owner's word of 2026-10-12 night). Closed
    tonight, not to redo: masterAndManillo's world-map entry, "You gain 3 EXP!", the PSP message boxes, the shop's

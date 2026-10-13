@@ -52,6 +52,10 @@ state hash's two-build check under an overlay passed the same morning once the 1
 the slots ([`state-hash.md`](state-hash.md) 7). **Merged since, 2026-10-11..12:** PR #51 (the state-2 prework), #53 (state 3:
 `bof3x.exe`, no code of Capcom's mapped, DIV-0094 / 0095), #52 (the launcher's Jukebox), #54 (the event battle's music
 restart), #55 (the disc-only round, DIV-0096..0102) and #56 (the PSP-only round, DIV-0103..0114) - `main` `a7c7a9e5`.
+**The night of 2026-10-12** (`cleanup/abc-crash-1012`, unpushed): the areas 16 / 45 crash does not reproduce on any of
+seven installs; the A/B/C sweep of ten routes found no regression and four defects of the disc-built image, D260 among
+them a crash (PSP-EU, the faerie village) - all four fixed by `twin` rows, with D258 / D259 (the PSP's trees, PSP-EU's cell
+hooks) ([`abc-sweep-1012.md`](abc-sweep-1012.md), [`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)).
 #54 was heard by the owner (2026-10-11 night); the disc-only and PSP-only installs were watched in the end batch
 (2026-10-12), not played; the Jukebox is in the owner's regular use ("it's great", 2026-10-12 night); state 3's icon and window are not yet looked at
 ([`owner-review.md`](owner-review.md)). The catalogue has 10,246 starts; at round fourteen's cut 1,341

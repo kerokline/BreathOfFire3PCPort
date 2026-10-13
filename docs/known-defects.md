@@ -7017,13 +7017,14 @@ PSP-EU).
 `0x662F28` were zero on the PSP-EU image, so the switch cells of areas 44,
 49, 52, 77, 86 and others did nothing. PSP-JP had them through `psxmap`, which
 reads PSX-JP's `GAME.EMI` address; PSP-EU's holds the table 0x1000 earlier.
-Not on either route, so not seen in a run.
+Not on either areas 16 / 45 route; seen since on `fairyVillage`: the PSP-EU side never showed the
+population board at tick 810 before the fix and shows it at 840 after ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3).
 
 **Fixed 2026-10-13** by `cellhk`, the words from `GAME.EMI#0` (`wmrec`'s
 finder). **Open:** other `psxmap` runs at PSX-JP's addresses may miss on
 PSP-EU for the same reason - a class to sweep.
 
-## D260 — A PSP-EU install crashes in the faerie village: the board's help line reaches the glyph trap (ours, the PSP-EU install's data; open)
+## D260 — A PSP-EU install crashes in the faerie village: the board's help line reaches the glyph trap (ours, the exe image's gaps; fixed by DIV-0101's amendment)
 
 **Found:** the A/B/C sweep, 2026-10-13 night ([`abc-sweep-1012.md`](abc-sweep-1012.md)
 3.1): route `fairyVillage` on the PSP-EU-only install, at about recipe frame
@@ -7040,7 +7041,16 @@ inference from the register); the PSP-EU language layer's village messages
 and the image's village tables against the PSX-EU ones. An agent is on it
 (2026-10-13 night).
 
-## D261 — On a PSX-EU disc-only install the village board's slots draw empty: the area-limit table is a gap (ours, the exe image's gaps; open)
+**Fixed 2026-10-13** ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3): the board's help
+word `0x675F7A` was 0, so the help line drew message 0 of area 177's script pool, a dialogue message
+starting with control byte `0x04`. `CommuBoard_PickList` `0x457DD0` / `CommuBoard_PickHelp` read the
+help words at `0x652AF0`, whose first four bytes were a gap on all seven disc builds (the map placed
+the other 16 from `COMMU01.EMI#7` and missed these behind the PC's code-pointer words). Filled by a
+`twin` row from `ETC/COMMU01.EMI`; PSX-EU had the gap too and escaped only because D261 parted its
+route first; the PC is not affected. The drift before the crash (no population board at tick 810) was
+D259. After: `fairyVillage` runs to its last frame (4719) on all three `eu` installs, no `CRASH`.
+
+## D261 — On a PSX-EU disc-only install the village board's slots draw empty: the area-limit table is a gap (ours, the exe image's gaps; fixed by DIV-0101's amendment)
 
 **Found:** measured in [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4
 (the area-limit bytes, a game value with no chunk kind); its cost seen by the
@@ -7052,7 +7062,12 @@ empty from tick 1350 of `fairyVillage` and the route parts from the PC's at
 **Where to start:** whether a PSX overlay that reads it carries it verbatim
 (a `twin` row); if none does, it stays a gap and the owner's call.
 
-## D262 — The field Equip screen draws one flame icon on every row on both disc-only installs (ours, the exe image's gaps; open)
+**Fixed 2026-10-13** ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3): the table is carried
+verbatim by `ETC/COMMU00.EMI#0` and by section 14 of each village overlay (`AREA175..185.EMI`) on all
+seven discs; only the PSX-JP and PSX-EU maps missed it. A `twin` row for those two builds. After: the
+board draws its two house slots at tick 1350 and the route no longer parts at 3600.
+
+## D262 — The field Equip screen draws one flame icon on every row on both disc-only installs (ours, the exe image's gaps; fixed by DIV-0101's amendment)
 
 **Found:** the sweep, 2026-10-13 night ([`abc-sweep-1012.md`](abc-sweep-1012.md)
 3.3): `menu_screens` frame `t001440` and its `equip` shot, PSX-EU and PSP-EU.
@@ -7061,10 +7076,36 @@ screen reads another table, not yet located. Corrects
 [`visual-findings-1012.md`](visual-findings-1012.md) 2.2, which took that
 table for the whole field menu.
 
-## D263 — The gene window's "AP" label is blank on the disc-only installs (ours, the exe image's gaps; open)
+**Fixed 2026-10-13** ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3): the screen is
+`Menu_DrawEquipCompare` `0x574EC0`, which reads its icons at `0x66386C` (a gap on every build), not
+`0x663660`. `STATUS.EMI#0` holds the six bytes twice; its MIPS code loads the second copy from the
+compare panel's five readers, so a `twin` row takes that copy. After: the equip region of `t001440`
+from 1,470 differing pixels to 0 on every pair.
+
+## D263 — The gene window's "AP" label is blank on the disc-only installs (ours, the exe image's gaps; fixed by DIV-0101's amendment)
 
 **Found:** the sweep, 2026-10-13 night ([`abc-sweep-1012.md`](abc-sweep-1012.md)
 3.4): `dragonTransform`, 101 frames, the region at 200,76-224,88, blank on
 PSX-EU (PSP-EU likely too: B-C does not differ there). The string or table
 not yet traced; the `"AP%2d"` format `0x66AF8C` was filled in section 8 of
 `visual-findings-1012.md`, so it is another.
+
+**Fixed 2026-10-13** ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3): `GeneWin_DrawGrid`
+draws the label from `0x66AF38`, a gap on every build; a `twin` row from `BATTLE.EMI#15`, where the
+label and the 14 bytes after it are one run on every disc. After: the label region from 616 differing
+pixels to 0.
+
+## D264 — On the disc-only installs the faerie village's stats are zero: black stat bars, food 34 where the PC shows 84, the simulation's traits zero (ours, the exe image's gaps; open)
+
+**Found:** the D260..D263 fixes' run, 2026-10-13 ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)
+3; already listed as a gap in [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4): the faerie
+records at `0x653210 + 20*r` are zero on both disc images, so `fairyVillage` draws black stat bars and the
+village simulates with zero traits - it plays differently, not only looks different.
+
+**Where to start:** `COMMU00`'s nine-byte records carry the values in another shape; filling the PC's
+layout needs a new rule (not a `twin`), every byte checked against `BOF3.exe`'s.
+
+## D265 — On a PSP-EU install the "Culture" label beside the village board's counter is blank (ours; open)
+
+**Found:** the same run, 2026-10-13 ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md) 3): PSP-EU
+only; not traced. The board's `"%d/%d"` page counter (`0x6531F4`, engine-own) is a separate, known gap.
