@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 113 entries, DIV-0001..0113, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 114 entries, DIV-0001..0114, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2379,6 +2379,67 @@ designed in rather than bolted on.
   terrain cull's margin past the original's `[-50, 370]` under a wide
   picture: unset it is 100, the `[-150, 470]` above; 0 is the original's
   cull. Narrow it is not read.
+
+  **Amended 2026-10-12 (the PSP-only round, group WA,
+  [`psp-widescreen-a.md`](psp-widescreen-a.md); the owner's answer to
+  [`psp-widescreen-placements.md`](psp-widescreen-placements.md) 6.1: option
+  (a), the PSP release's per-element choices taken at our 53 columns, every
+  value moved by our 53 as the PSP's moved by its 32; narrow, every packet is
+  the original's bit for bit, each function's fuzz comparing it):**
+  - **The full-frame fills the PSP widened.** Fifteen more reach the wide
+    frame's edges: the five spell flashes drawn to x 319 that the `320.0`
+    scan could not see (`Magic008_DrawFlash`, `Magic111Wash_Draw`,
+    `Magic111Flash_Draw`, `Magic225Veil_DrawShade`,
+    `SpellRagnarok_DrawScreenTint`) and five more found by pairing the PSP's
+    unpaired fills (`ChillFlash_Draw`, `KaiserFlash_Draw`, `CoronaFlash_Draw`,
+    `TimedBlow_DrawFlash`, `TempestFlash_Draw`), each `0..319` becoming
+    `-53..372` through `Widescreen_FillRight(319.0f)` (the PSP's `-32..351`);
+    `EffectKind44_RingDraw` (its side runs and two tiles); `BattleWin_DimScreen`
+    (x from `Widescreen_FillX()`); `CommuDraw_Reveal` (its gradient band and
+    its black tile - the PSP widened the tile only; the owner kept both
+    widened: "I assume some psp draws will leave 16 row bands since we are
+    not cropping the same"); `EffectKindA8_DrawBar` (the bars `-53..373`, the
+    PSP's `-32..352`) - **this ends the hold of 2026-10-04 above**, at the
+    owner's word ("If psp widened the a8 bar, let's widen it too"); and area
+    189's sky (`EffectKind18Sub44_Draw`: the textured band continued by a quad
+    each side at the middle's texel rate rather than stretched as the PSP did,
+    the white tile `(-53, 50)` 426 wide, a fourth sky quad so the left band is
+    covered at every camera angle, a flat haze quad each side). Every `319.0f`
+    / `320.0f` operand in `.text` now lies in a function of ours. **The rule
+    for later widening (the owner, 2026-10-12):** the PSP crops 12 rows top and
+    bottom and we do not, so where a PSP widening relied on that crop to hide
+    an edge, ours widens over the full height.
+  - **The battle window's full-frame tile.** Entry 11 of the size table
+    `0x64E268` (321 x 241), the tile the bosses' death flashes and rest_3a's
+    flashes draw at x 0, which the PSP widened to 385 with its callers at -32:
+    applied where the table is read (`BattleWin_DrawTile`, `_DrawTileRgb`,
+    `_DrawTileTint`, via `Widescreen_BattleTile`), size 11 only, the table
+    untouched.
+  - **The mote cull.** `Fx105_MoteDraw`'s x bounds `[-64, 384]` become
+    `[-117, 437]` in the wide picture (the PSP's `[-96, 416]` for 32); y as it
+    was.
+  - **Edge anchors** (`Widescreen_Anchor()`): elements the PSP moved 32 toward
+    an edge move 53 - the charge gauge of areas 104 / 121
+    (`Area104_DrawGauge`'s bars, `Area121_GaugeSprite`'s frame), area 104's
+    countdown panel, its triangles and the leader's ring (the countdown's box
+    and digits stay centred, as on the PSP), area 172's panel (x only), and
+    **the message boxes' side placements** - codes 3 and 5 left, 4 and 6
+    right, in kind 0's tables `kBoxXY` `0x66ADD8` / `kBoxAltXY` `0x66ADE8` and
+    kind 2's `MsgBox_PlacementTable` `0x66AE10`, moved where
+    `window_task.cpp` reads them, never in the tables. This **reverses the
+    owner's "the dialogue boxes seem ok to me" of 2026-09-23**, at the
+    owner's word of 2026-10-12 (message boxes and the HUD anchored). The
+    field menu's time and money boxes are unchanged (the owner's open call).
+  - **Decided, not built: the ending's letterbox stays.** `Scena17_DrawLetterbox`
+    keeps its 320-wide bars; the PSP's crop of the letterboxed picture is not
+    taken (the owner, 2026-10-12).
+  - **Verification:** each function's start-up fuzz against the original
+    (narrow bit for bit); the hosted `'*'` narrow and with `BOF3X_WIDE=1`
+    (1,073 self-test lines, 0 mismatches each); the exe host on a PSX
+    disc-only install narrow and wide, exit 0; **not seen wide** - the scenes for the screenshot harness are
+    `psp-widescreen-a.md` 6. **Reversible:** unset `BOF3X_WIDE`;
+    `BOF3X_ORIGINAL=<function>` for any function above brings back Capcom's
+    narrow-sized draw.
 
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
@@ -6027,6 +6088,40 @@ designed in rather than bolted on.
   self-test over the real install (no `place` range differs from
   `BOF3.exe`) and on a scratch disc-only install (exit 0); not played.
 
+  **Amended again 2026-10-12, evening and night (the owner's visual findings,
+  the PSP-only round's group VF, [`visual-findings-1012.md`](visual-findings-1012.md)):**
+  more runs are no longer zero on any disc-built image, each read verbatim
+  from the overlay whose code reads it (`twin`, `psp_exe.TWINS`): the battle
+  equipment window's slot icons and categories and the BATE screen's copy
+  (`BATTLE.EMI#15`); the battle windows' `/` and `:` texts and the party's
+  ability-bonus row (`BATTLE.EMI#3`); the menus' figure, count, EXP and
+  play-time formats and the play-time colon (`START.EMI#8`); the result
+  window's and the trade screen's icon-by-kind tables, the item row's count
+  format and the encounter mode's approach pairs (`GAME.EMI#0`); the enemy
+  name column's places and the wake chances (`BATTLE.EMI`); the result
+  tally's steps (`BATE.EMI#0`); the world maps' buttons, drift and record-8
+  animation tables (each area's own `AREAnnn.EMI#13`). The second batch:
+  `WorldMap_Records`' area words (`wmrec`, `GAME.EMI#0`: the cause of the
+  area 16 / 45 crash, D253), the first bytes of 30 areas' exit lists (each
+  area's own overlay), the walk poses and the world-map area list
+  (`GAME.EMI#0`), and the formats `"%d"`, `"AP%2d"`, `"%3dZ"`, `"*%2d"`. On
+  PSP builds also the zone music sets (`msets`, from `BOOT.BIN` by its
+  relocations), the dialogue box tables (`boxxy`, DIV-0103's amendment), and
+  on PSP-EU the battle item command's categories, the facing step pairs and
+  `Escape_Chance`'s row. Every filled byte equals `BOF3.exe`'s. These were
+  the owner's "combatants shifted left", the equip icons all one glyph and
+  the save menu's numbers (D251, D252). Still zero: the save slot number's
+  `"%X"` (D254: the engine's own string is the recommendation, the owner's
+  call) and the empty slot's text (no disc carries either), and the long
+  tail of `visual-findings-1012.md` 9. Gaps after both batches (from
+  `psp/round` `6c2ae0c9`): PSX-US 351 to 285 ranges (game-value 1,323 to
+  1,141), PSX-EU 349 to 286, PSP-EU 351 to 286 (791 to 626). Verification:
+  every rule row "0 not BOF3.exe's"; the PC path's image identical to the
+  reference; no byte that was `BOF3.exe`'s lost against the previous images;
+  the exe host on a US disc-only, a PSP-EU-only and the real install exit 0;
+  AB's harness (`abc-harness.md`): caughFish and masterAndManillo no longer
+  crash on PSX-EU, combat 81 of 87 frames equal to the PC's.
+
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
 - **ID:** DIV-0102
@@ -6126,6 +6221,29 @@ designed in rather than bolted on.
   captures, the owner's eye).
 - **Reversible?** Add a PSX disc to the sources (`base_policy = "psx"`), or
   the PC's `DAT/`.
+
+  **Amended 2026-10-12, evening (the PSP-only round's group VF,
+  [`visual-findings-1012.md`](visual-findings-1012.md) 4 and 8; WS's survey,
+  [`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 (c)):
+  the PSP's base without its 16:9 re-framing.** Of the widescreen values the
+  PSP keeps in data, those that reach a PSP-built image of `.data` are put
+  back to the 4:3 frame at import by the PSP's rule undone, so the image
+  equals a PSX-built one there and any widescreen anchoring is DIV-0041's,
+  in code: `MsgBox_PlacementTable` entries 3..6, the side placements, which
+  the PSP moved 32 toward its wider frame's edges (`unwide`: x + 32 left of
+  the centre, x - 32 right of it), and the dialogue box tables `kBoxXY` /
+  `kBoxAltXY` (`boxxy`), which `BOOT.BIN` holds as s16 pairs framed for its
+  384-wide view, read back with entries 3..6 undone (3 and 5 x + 32, 4 and 6
+  x - 32) into the PC's u8 layout. The values come from the player's
+  `BOOT.BIN`; a recipe row is written only when the result equals
+  `BOF3.exe`'s. The battle tile size entry 11 is already the PC's in the PSP
+  image; the ending's letterbox is code. Kept as the PSP's: `Title_Sprites`
+  entry 10, a source rectangle into the PSP's own title page, which the
+  install also takes. Verification: `psp_exe.py recipe` ("0 not BOF3.exe's"
+  on both PSP builds); the PSP-EU image equals the PSX-EU one at
+  `0x66AE1C..0x66AE2A`; the exe host self-test with the PSP-EU image. Not
+  rendered: the PSP-EU message boxes are not yet re-run (they sat at the top
+  left before `boxxy`).
 
 ### A PSP-built image of `.data` carries the PSP's level table and consumable 87
 
@@ -6365,6 +6483,13 @@ designed in rather than bolted on.
   off the three functions are the original's byte for byte (the battle
   modules' shadows, off and on).
 
+  **Amended 2026-10-12, night:** what the PlayStation holds in Myria's item
+  word, read from `AREA198.EMI` section `0x800E4000` (record 0, enemy data
+  `+0x2C`) on the US and JP discs: 0x0017 with class byte 1, consumable 0x17,
+  "Napalm" by the sibling's names - so the PSP keeps the index and changes
+  only the category to an accessory, "Ivory Charm" ([`psp-battle-changes.md`](psp-battle-changes.md)
+  1; IDEAS I32 P17). The owner: keep it a toggle (`myria-item`), as built.
+
 ### The PSP's music as a layer beside a PlayStation disc's
 
 - **ID:** DIV-0109
@@ -6520,3 +6645,38 @@ designed in rather than bolted on.
   the merge). **Not heard;** the Jukebox does not play it (an effect, not a
   song).
 - **Reversible?** The box, or `opt=` without the layer.
+
+### A disc-only install draws the disc's title page, not the PC port's
+
+- **ID:** DIV-0114
+- **Date:** 2026-10-12
+- **Subsystem:** art (the title page `0x1A080400` of `DEMO.DAT` /
+  `FIRST.DAT`, `Title_Sprites`; the importer's base from a disc;
+  [`visual-findings-1012.md`](visual-findings-1012.md) 8, the harness's
+  `pc-title-mark` rule, [`abc-harness.md`](abc-harness.md))
+- **Tier:** Sensible - the release the player owns; recorded so that the
+  port's own change has a ledger answer.
+- **Original behaviour:** the PC port (2001) draws its own title page: the
+  page `0x1A080400` in `DEMO.DAT` and `FIRST.DAT` differs from the US disc's
+  section in 5,062 bytes and carries a registered mark, which the
+  PlayStation's title does not have (the owner), and `Title_Sprites` entry
+  1's width is 10 where every disc has 12 (`pcvsdisc.py`). That is the
+  porting house's change, not ours (`SHARED_SOURCE.md` 3's kind).
+- **New behaviour:** a disc-only install - a cache with no PC source - draws
+  the disc's title page from the disc, without the mark; `Title_Sprites` is
+  a gap there (zero), so no mark is drawn either way. A PSP-only install
+  draws the PSP's own title page and `Title_Sprites` entry 10 (DIV-0103).
+  A PC install, or a cache with the PC's `DAT/` among its sources, keeps the
+  port's title.
+- **Rationale:** rule 1 - a disc-only install carries none of the PC's
+  files, and the disc's own title is what that release shows. Whether a PC
+  install should draw the PlayStation's title is the owner's call, part of
+  the disc-data preference inventory (the owner, 2026-10-12: the PlayStation's
+  data where both exist).
+- **Also in the PSX version?** The disc's title is the PlayStation's own; the
+  difference is the port's.
+- **Verification:** AB's harness: the PC against the PSX-EU disc-only
+  install differ on the title by the `pc-title-mark` region, classed by that
+  rule; not ledgered before. The PSP title's framing in our 4:3 frame is
+  open (D256).
+- **Reversible?** Build with the PC's `DAT/` as a source.
