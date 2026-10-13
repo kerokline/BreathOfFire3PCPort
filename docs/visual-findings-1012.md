@@ -511,6 +511,10 @@ if the crash survives, the next step is a probe on `MoveCmd_AttachOffset`'s
 callers in area 16 (which object, its type and `+0x1C`) on a disc-only
 install, against the PC's.
 
+**Superseded (section 8):** the crash was not these tables but
+`WorldMap_Records`' zero area words; `wmrec` fixed it (AB: both routes run
+to their end on PSX-EU). The table fills above stay: every byte the PC's.
+
 ## 7. Not verified
 
 - **No capture, no play.** Which install showed A, B and C; what icon 0
@@ -530,6 +534,118 @@ install, against the PC's.
   `sweep.py` (scratch) counts which gap rows' bytes appear verbatim on a
   disc - many are short coincidences, so a sweep is no substitute for a
   reader-pinned `TWINS` entry.
+
+## 8. The second batch (AB's reports, 2026-10-12 late; the owner away, live runs allowed)
+
+Built on `psp/round` `05fccd7d` (the harness merged), committed as
+`cfc307a6`, `3f472427`, `5d1b32c1`, `133d72fd`:
+
+- **`wmrec`**: `WorldMap_Records`' area words (+0x18 of eleven 0x1C-byte
+  records, `0x653910`), zero on every disc build, so `WorldMap_RecordIndex`
+  never found a world map and answered 11 - the "none" index, whose dwords
+  are `EffectKind01_States`: the world map ran effect kind 1, whose draw
+  calls `MoveCmd_AttachOffset` with the area descriptor's null `+0x0C`.
+  **That was the area 16 / 45 crash** (`llvm-symbolizer` on AB's
+  `L\bof3x.dll`: `MoveCmd_AttachOffset` <- `EffectKind01_Draw` (`effect_1a.cpp`
+  368) <- `Field_Frame` <- `Field_WaitTransition` <- `GameMode_Enter`). The
+  words come from `GAME.EMI#0`'s own table of the same shape, found by them.
+  AB after it: caughFish and masterAndManillo run to their end on PSX-EU.
+- **`boxxy`**: the dialogue box tables `kBoxXY` `0x66ADD8` / `kBoxAltXY`
+  `0x66ADE8` (WA's lead): a gap on PSP builds (zero: every box at the top
+  left - AB's PSP message boxes). `BOOT.BIN` holds them as s16 pairs with
+  entries 3..6 framed for the 384 view; read back by the rule undone (3 and 5
+  x + 32, 4 and 6 x - 32) into the PC's u8 layout, every byte `BOF3.exe`'s
+  ("0 not BOF3.exe's" on both PSP builds). Not re-run on a PSP install (below).
+- **Link lists** (`twin` rows from `link_rows`): the first three bytes of the
+  exit list (`Area_LinkAt`, descriptor `+0x20`) of 30 areas were zero on
+  every disc build (`links.py`); each list is in its area's own
+  `AREAnnn.EMI#13` verbatim. Area 112's stays short on PSX-EU (open).
+- **Walk poses and the world-map area list** `0x66ADBC..0x66ADD8`
+  (`kWalkPoses`, `Area_ClassifyPending`'s eleven areas): zero on every disc
+  build, so entering a world map took transition 1 where the PC takes 11
+  (the swing-in): the dumps at ticks 310..330 (`dumps/`, `dumpdiff.py`) show
+  `0x937F98` 0x0B on the PC and 0x01 on PSX-EU. From `GAME.EMI#0`.
+- **Formats** (`twin`): `"%d"` `0x5E10C0` (the result's EXP and the zenny,
+  `BATL_END.EMI`), `"AP%2d"` `0x66AF8C` (the gene costs, `BATTLE.EMI`),
+  `"%3dZ"` `0x6641DC` (the shop's cost, `SHOP.EMI`), `"*%2d"` `0x653EC0`;
+  `"%s"` `0x654900` only on the PSP builds (no PSX copy in `BATL_END.EMI`).
+- **`abc-known`**: `pc-title-mark`, the PC port's (R) on the title (the
+  owner: the PSX has none); the PC's title art is `DEMO.DAT` / `FIRST.DAT`'s
+  page `0x1A080400` (5,062 bytes differ from the US disc's section,
+  `pcvsdisc.py`) and `Title_Sprites` entry 1's width (the port 10, the discs
+  12; a gap, so the disc-only title draws no mark). Not ledgered: the port's
+  title art wants a DIV (draft below).
+
+Checks at `133d72fd`: `importer.py check`, `exe_tables.py check`,
+`psp_exe.py check` 0 errors; `ledger_check` 0 errors; every rule row
+"0 not BOF3.exe's"; the PC path's image identical to `ref_jppc`; the new
+images against the previous ones lose no byte that was `BOF3.exe`'s
+(`prevcheck.py`: PSX-US +216, PSX-EU +207, PSP-EU +143, 0 lost); the exe
+host on `C:\b3g`, `C:\b3p` and the real install exit 0, no `place` range
+differing (628,373 / 628,954 bytes equal). Gaps against `6c2ae0c9`:
+PSX-US 351 to **285** ranges (game-value 1,323 to 1,141), PSX-EU 349 to 286,
+PSP-EU 351 to 286 (791 to 626).
+
+AB at `5d1b32c1` (PC against PSX-EU, `report_vf2_*.md`): combat 81 of 87
+frames equal, the rest the load screen's `"%X"` and the title; caughFish
+and masterAndManillo no longer crash; masterAndManillo still parts at tick
+322 (the swing-in, fixed at `133d72fd`, not re-run).
+
+## 9. Open, for the follow-up round
+
+- **Areas 16 / 45 crash:** fixed (`wmrec`, 8); masterAndManillo's world-map
+  entry fixed at `133d72fd` by the area list but **not re-run** - next: AB
+  masterAndManillo on PC / PSX-EU (and PSP-EU).
+- **Load screen (`"%X"`, ") 16", the stray glyph after "Ryu"):** all three
+  are the missing `"%X"` `0x6639D4`: `Crt_sprintf` writes only a NUL, and
+  `Text_DrawFont8` (Capcom's quirk: it stops on the byte *after* a NUL) draws
+  the stale tail of the previous slot's "00 16" (`dumps/*.174.bin`:
+  `0x904BA0` "2\0" on the PC, "\0" then "3.." on PSX-EU). Next: the owner's
+  call on the engine-own string (recommended).
+- **"You gain 3 EXP!":** the number's `"%d"` `0x5E10C0` filled (8); not yet
+  seen in a run - next: AB combat frame `t002610`.
+- **The PC en-150 empty-record word:** `0x669CCC` is the port's Chinese on
+  the PC and no layer writes it (`loc-build-disc-only.md` 5.4's eight); the
+  staged localisation PR (the empty slot blank, as the US disc draws it)
+  covers it. Not touched.
+- **PSP message boxes at the top left:** `boxxy` (8); **not re-run** on
+  PSP-EU - next: AB with the PSP side once `C:\Users\kerok\ab\c_pspeu` is
+  rebuilt (see the note below).
+- **PSP title framing:** the PSP's own title page and `Title_Sprites`
+  rectangles (4.2), kept; next: the owner's look at a PSP-EU title capture.
+- **The Nue divergence (PSP, from tick ~4530):** not investigated past
+  reading: candidates are P8 (Ryu's PSP forms in the arenas, `psp-stand-ins.md`
+  4.4) and DIV-0104's level table changing timing and so `Rand`; next: AB
+  cutsceneAndNue with `--statehash` PSP against PSX, the first differing
+  battle page.
+- **`kBoxXY` / `kBoxAltXY`:** done for the PSP builds (`boxxy`); on PSX they
+  are placed.
+- **The shop drift (PSX-EU, tick 2880..3150):** not data in `.data`: the inn
+  opens `SND\OYASUMI.DAT` (the kind-0 jingle, the port's MP3 of
+  `S_XA00.STR`), which a PSX disc-only install lacks (`open ... FAILED` in
+  `runs/vf2_shop/psx-eu/bof3x.log`), and the screen stays black longer than
+  on the PC. Next: the jingles on a disc-only install (`sound-import.md` 7,
+  the owner's open call), or the stream's failure made to end the wait
+  (a DIV).
+- **Shop t420..450 (PSX-EU walking ahead):** seen at `5d1b32c1` with the
+  walk poses still zero; expected fixed at `133d72fd`; not re-run.
+- **More disc-unplaced runs** one overlay alone carries (twelve, listed by
+  `unplaced.py`: `Area42_Placements+0x28`, `Area72_Weights+0x50` (area 73's),
+  `Area94_EffectArgsD`, `BossGolem_Hooks+0xC`, `EffectKind36_Frames`,
+  `EffectKind2C_States+0xC`, `EffectKind44_SparkColours`, `EffectKind49_V3/V4`,
+  `EffectKind8A_States+0x24`, `EffectKind18_08_States+0x8B`,
+  `EffectKind18Sub3B_States+0x14`): drafted as `TWINS` rows, not committed
+  (not regenerated or checked).
+
+**Left outside the worktree:** the AB caches and installs under
+`C:\Users\kerok\ab` were rebuilt by `abc_run.py prepare` with this branch's
+tools (`c_pc_eu`, `c_psxeu`, `g_psxeu`); `c_pspeu` is a partial build (a
+`prepare` interrupted by me) without its stamp, so `prepare` refuses it -
+it wants removing (not allowed to this session) before the next PSP run;
+`g_pc\BISLPS00.DAT` is the masterAndManillo recipe save from the run I
+stopped (the owner's save was absent there, so nothing of the owner's was
+overwritten). The owner's own installs, `C:\b3g`, `C:\b3p` and the scratch
+caches were read only.
 
 ## For the other files
 
@@ -611,6 +727,29 @@ framing); its text's "the PSP's" image now also carries the `twin` /
 less and y 32 more" is wrong; entries 3 and 5 are x -32, 4 and 6 x +32, y
 unchanged (`imgdiff.py`; WS agrees), and since this branch the import undoes
 them.
+
+**DIV-0101, the second batch (add to the amendment above):** also no
+longer zero on any disc-built image: the world maps' area words
+(`WorldMap_Records`, `wmrec`, `GAME.EMI#0`), the 30 areas' exit lists (each
+area's own overlay), the walk poses and the world-map area list, and the
+`"%d"`, `"AP%2d"`, `"%3dZ"` formats; on PSP builds the dialogue box tables
+(`boxxy`, below). Still zero: `"%X"`, the empty slot's text.
+
+**DIV-0103, the dialogue boxes (add to its amendment):** a PSP base's
+`kBoxXY` / `kBoxAltXY` come from `BOOT.BIN`'s s16 pairs with entries 3..6
+put back from the 384-wide frame (x -/+ 32 undone) into the PC's u8 layout,
+every byte `BOF3.exe`'s.
+
+**DIV F (proposed; the coordinator numbers):** *The PC port's title page.*
+- Original: the PlayStation's title page and `Title_Sprites` (the owner: no
+  (R) mark).
+- New (the port, 2001): its own title page `0x1A080400` (`DEMO.DAT` /
+  `FIRST.DAT`) with a registered mark, and `Title_Sprites` entry 1's width
+  10 where the discs have 12. A disc-only install draws the disc's title.
+- Why: the port's change, recorded so the harness's `pc-title-mark` rule
+  has a ledger entry; whether a PC install should draw the PlayStation's
+  title is the owner's call (the owner prefers the disc's data where both
+  exist; the policy is the coordinator's to take up).
 
 **`docs/disc-only-install.md`** section 3: the list of zeros loses the
 battle equip window's icons and categories, the menu formats and colon, the
