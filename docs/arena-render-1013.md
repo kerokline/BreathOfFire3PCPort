@@ -265,7 +265,7 @@ install gets, since it cannot carry the port's bytes (rule 1,
   w x h x 2 texels, all below 32. As an `importer.py` transform it would be
   `lzss_flag`, applied when the PC is the source and refused if the check
   fails.
-- Ledger (DIV-XXXX, draft):
+- Ledger (DIV-XXXX, draft, not written):
   - **Original behaviour:** the PC port (2001) ships Ryu's form data with one
     flag bit of image 10's LZSS stream set. The stream decodes out of step from
     texel (59, 6), so 332 texels are wrong, 14 outside the palette, and the one

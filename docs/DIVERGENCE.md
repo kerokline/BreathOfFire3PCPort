@@ -6236,6 +6236,16 @@ designed in rather than bolted on.
   `install --base`): the image holds `02 14 0B` at set 8; the exe host's
   self-test exit 0, `inject: 10088 ours`. `psp_exe.py`, `exe_tables.py`,
   `importer.py check` clean. Not played: no route reaches set 8.
+- Amended 2026-10-13 (the us set's sweep,
+  [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md) 4): the faerie ranked lists'
+  page counter format `0x6531F4` (`"%d/%d"`, `CommuRank_Show`'s format, a
+  `language-zero` gap on all seven builds) is no longer zero on a disc-built
+  image, read verbatim from `ETC/COMMU05.EMI#7` (every build, `twin`), where
+  that overlay's own reader loads it; every filled byte equals `BOF3.exe`'s.
+  On a disc-only install the village's ranked lists drew a stale digit where
+  the PC draws `1/2`. Verification: that doc 4.2 (the seven rows "5 bytes, 0
+  not BOF3.exe's"; the checks clean; the exe host on the US disc-only install
+  exit 0; `fairyVillage` reads `1/2` on both sides at 810).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -6872,6 +6882,7 @@ designed in rather than bolted on.
   not rendered: the loop has not been seen at either speed.
 - **Reversible?** Build the cache without the JP disc among its sources, or
   with `importer.py build --prefer <a file with no rows>`.
+
 ### An encounter refuses a combatant left of or above the screen, as the PlayStation does
 
 - **ID:** DIV-0116
@@ -6933,11 +6944,12 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=EncounterOnScreenLowerBounds` keeps ours with
   the port's bounds; `BOF3X_ORIGINAL=Encounter_OnScreen` runs Capcom's
   function.
+
 ### The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label
 
 - **ID:** DIV-0117 (an amendment of DIV-0064 group 15, written as its own
   entry because it adds a heading the group had decided against and changes
-  a Japanese layer; the coordinator numbers it)
+  a Japanese layer)
 - **Date:** 2026-10-13
 - **Subsystem:** battle, the Identify panel (`Identify_DrawMember` /
   `_DrawEnemy`, ours in `src/game/magic_s12.cpp`; DIV-0064 group 15 in

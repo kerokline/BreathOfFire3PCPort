@@ -200,6 +200,8 @@ cache's `loc/`).
 button legend:
 
 - **PC and JP:** □ confirm / × quit / △ view the memo, in Japanese.
+  *Corrected 2026-10-13* ([`key-icons-by-mapping.md`](key-icons-by-mapping.md)
+  9): the first icon is circle, not square - ○ / × / △.
 - **US:** × OK / △ End / □ Memo.
 
 The US legend names **different buttons for the actions**. If it is truthful,
@@ -395,7 +397,7 @@ this document's; the tool only measures.
 *Not written: the owner answered Q4 "Japan's" on 2026-10-13 (section 9.1).
 Kept as the record of the alternative.*
 
-**DIV-XXXX** - A PC install draws the player's Western disc's title when its
+**DIV-XXXX** (draft, not written) - A PC install draws the player's Western disc's title when its
 language layer comes from that disc.
 
 - **Subsystem:** art / exe data (`DEMO.DAT` kind 1 `0x1A080400`, `FIRST.DAT`
