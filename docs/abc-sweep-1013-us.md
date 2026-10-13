@@ -389,5 +389,6 @@ Not edited here; the coordinator folds them in.
   is seven; `exe_tables.py`'s `LANGUAGE_ZERO` keeps the address, as it kept
   `0x6536B0` after D261 (a placed byte is not a gap).
 - **`docs/abc-harness.md`** 9: the stale-log trap is fixed by
-  `input_run.py` (8); the trap line can say so. Section 5's table gains
+  `input_run.py` (8); the trap line can say so, and the gate-skip list a
+  cache rebuild deletes (8) is a line for the traps. Section 5's table gains
   `pc-map-legend`.
