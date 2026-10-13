@@ -6170,7 +6170,7 @@ designed in rather than bolted on.
   stand beside BOF3.exe's run - four runs on PSP-EU (`EffectKind34_V0Areas`,
   `Scenario_Hooks+0x58`, `Field_ModeTailKinds+0x100`,
   `MenuList_GeneWinSteps+0xE`), none on PSP-JP. Every filled byte equals
-  `BOF3.exe`'s; no byte that was lost. Gap ranges (`exe-gaps.tsv`): PSX-EU 282
+  `BOF3.exe`'s; no byte that was the PC's is lost. Gap ranges (`exe-gaps.tsv`): PSX-EU 282
   to 247, PSP-EU 251 to 220, PSX-US 282 to 249. No symptom of any of them was
   observed, so no defect is numbered. Verification: 221 recipe rows (217
   `twin`, each "0 not BOF3.exe's"; 4 `pspmap`, kept only when equal);
