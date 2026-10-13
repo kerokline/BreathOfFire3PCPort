@@ -80,6 +80,7 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 
 PSP = ("psp-jp", "psp-eu")
+PSX = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
 RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk")   # widen<k>: the disc's name is k bytes
@@ -147,6 +148,26 @@ TWINS = [
      ("psx-jp", "psx-eu-en")),
     (0x66386C, 0x663872, "ETC/STATUS.EMI", "the field equipment compare panel's slot icons", None, 1),
     (0x66AF38, 0x66AF3C, "BATTLE/BATTLE.EMI", "the gene window's AP label (GeneWin_DrawGrid)"),
+    # The disc-unplaced runs one file alone carries (docs/exe-image-twins-1013.md 2): each
+    # the PC's whole run found in that file only, on every build whose gap it closes (the
+    # fifth field; the others place it or hold other bytes), and read there by the overlay's own
+    # code (a lui/imm pair into the table, the doc's evidence column). Area94_EffectArgsD is
+    # the third of AREA094's three equal copies (the one its map neighbour's displacement and
+    # its handler +0x3C[8] name); EffectKind49's two runs are SCENA07's two equal copies in
+    # the PC's order, 0x20 apart as on the PC.
+    (0x5F6307, 0x5F6314, "WORLD01/AREA042.EMI", "Area42_Placements' tail"),
+    (0x609470, 0x609487, "WORLD01/AREA073.EMI", "Area72_Weights+0x50 (area 73's)", PSX),
+    (0x616DDC, 0x616DE4, "WORLD02/AREA094.EMI", "Area94_EffectArgsD", None, 2),
+    (0x64D158, 0x64D16A, "BOSS/BOSS022.EMI", "BossGolem_Hooks+0xC"),
+    (0x653F88, 0x653F98, "SCENARIO/SCENA03.EMI", "EffectKind36_Frames"),
+    (0x65436C, 0x6543AC, "SCENARIO/SCENA04.EMI", "EffectKind2C_States+0xC"),
+    (0x6544EC, 0x65450C, "WORLD02/AREA080.EMI", "EffectKind44_SparkColours"),
+    (0x6545EC, 0x6545FC, "SCENARIO/SCENA07.EMI", "EffectKind49_V3States+0xC"),
+    (0x65460C, 0x65461C, "SCENARIO/SCENA07.EMI", "EffectKind49_V4States+0x10", None, 1),
+    (0x654F28, 0x654F38, "WORLD01/AREA068.EMI", "EffectKind8A_States+0x24", PSX),
+    (0x658F08, 0x658F48, "BOOT.BIN", "ItemUse_HandlerIndex+0xD0", PSP),
+    (0x65DE5F, 0x65DE78, "WORLD02/AREA109.EMI", "EffectKind18_08_States+0x8B", ("psx-eu-en",)),
+    (0x65EC54, 0x65EC64, "WORLD04/AREA169.EMI", "EffectKind18Sub3B_States+0x14"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges

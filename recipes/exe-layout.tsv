@@ -12157,9 +12157,6 @@ pc	kind	target
 0x653F68	code	EffectKind14_Start
 0x653F6C	code	EffectKind14_Hold
 0x653F70	code	EffectTwinSprites_Release
-0x653F8C	number	-
-0x653F90	number	-
-0x653F94	number	-
 0x653F98	code	EffectKind3C_Start
 0x653F9C	code	EffectKind3C_Hold
 0x653FA0	code	EffectTwinSprites_Release
@@ -12454,9 +12451,6 @@ pc	kind	target
 0x6544E0	code	EffectKind44_Widen
 0x6544E4	code	EffectKind44_Follow
 0x6544E8	code	EffectKind44_FadeOut
-0x6544F0	number	-
-0x654504	number	-
-0x654508	number	-
 0x65450C	code	EffectKind45_Start
 0x654510	code	EffectKind45_Tune
 0x654514	code	EffectKind45_Aim
