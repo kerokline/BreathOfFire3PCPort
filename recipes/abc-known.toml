@@ -37,6 +37,14 @@ modes = [0]
 areas = [0]
 box = [260, 128, 272, 140]
 
+[[known]]
+id = "psp-title"
+ledger = "DIV-0103 (its amendment: the install takes the PSP's own title page, Title_Sprites entry 10 kept as the PSP's; D256 the framing, the owner's look)"
+what = "a PSP-only install draws the PSP's title page (its logo, the fishing-version line, the TM marks) where the others draw the PlayStation's or the port's"
+pair_trait = "psp"
+modes = [0]               # the title only; the load screen after it (mode 1) stays unexplained
+areas = [0]
+
 # Deliberately not here (each would explain too much by screen alone):
 # - the PSP's UI page (FIRST: its shoulder-button labels) and dial page:
 #   they show in menus and battle, where no scene key says which page is up;
