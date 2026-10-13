@@ -423,8 +423,10 @@ anchors a window.
     hit on Nue, 21:9 a hit on a party member.
   - `whelpBoss`, at **both** widths: between ticks 950 and 980 the leader's
     state (`ObjTrio+1`) is 3 narrow and 6 wide, and one side opens a message
-    and a fight the other does not. Before 950 no game symbol in the dumps
-    differs. **Not traced.** Two candidates, neither checked: the CRT's
+    and a fight the other does not. At 16:9 no game symbol in the dumps
+    differs before 950; at 21:9 one byte does at 950,
+    `EnemyWorkingRecords+0x88` (5 narrow, 7 wide), and the repeat of each
+    width is identical to its first run (`repeat.py`). **Not traced.** Two candidates, neither checked: the CRT's
     `rand` state is in the heap, not in `.data`, so the hash cannot see a
     `Rand` call made only at one width (by a bit-7 reader, or by an effect
     that lives longer off screen) until its result shows; and
