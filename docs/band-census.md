@@ -241,7 +241,19 @@ with `scene 0` while nobody steers.
 
 ## 7. The `'*'` self-tests
 
-(Filled in below once measured.)
+`BOF3X_SHADOW='*'`, `st.sh` as above, the branch at `40294298` (the code as
+committed):
+
+| `BOF3X_WIDE` | Exit | `inject:` | `DIV-0041` lines | Census and `sprite_screen` lines |
+|---|---|---|---|---|
+| unset | 0 | `10087 ours, 0 left original by BOF3X_ORIGINAL` | none | 94,532 checks, 0 mismatches; 20,000 rounds, 0 mismatches |
+| `1` | 0 | `10087 ours, 0 left original by BOF3X_ORIGINAL` | `widescreen: 53 columns a side; terrain cull [-150, 470]; ...` and `full-frame fills at (-53, 0) 426 x 240` | the same |
+| `2` | 3 | - | - | `FATAL: BOF3X_WIDE=2: 1 or 0` - `6b4c97cc`'s `Widescreen_Columns`, before UW's merge |
+
+No line in either log reports a non-zero mismatch count (a search of both
+for `[1-9][0-9]* MISMATCHES`). The `=2` run is the base's answer, not this
+branch's: it is owed again after UW merges, when `Widescreen_Live()` gives
+120 and the census's arm line says `120 columns a side`.
 
 ## 8. For the other files
 
