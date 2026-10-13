@@ -6122,6 +6122,24 @@ designed in rather than bolted on.
   the exe host on a US disc-only, a PSP-EU-only and the real install exit 0;
   AB's harness (`abc-harness.md`): caughFish and masterAndManillo no longer
   crash on PSX-EU, combat 81 of 87 frames equal to the PC's.
+- Amended 2026-10-13, night (the areas 16 / 45 re-run,
+  [`visual-findings-1012.md`](visual-findings-1012.md) 10): on PSP builds the
+  four upright-quad tables `MapCell_DrawUprights` `0x570210` reads
+  (`MapCell_UprightCounts` `0x66313C` and its `_V01`, `_U02`, `_Clut`
+  siblings) come from `BOOT.BIN`'s packed copy (`twin`: the PSP packs the nine
+  upright tables without the PC's padding, so the map's segment placed only
+  the five that fill their slot), and on PSP-EU `Area_CellHooks`' 28 area
+  words `0x662F28` from `GAME.EMI#0` (`cellhk`, sharing `wmrec`'s finder
+  `records_place`; PSP-JP had them from `psxmap` at PSX-JP's address, which
+  PSP-EU's `GAME.EMI` holds 0x1000 earlier). Every filled byte equals
+  `BOF3.exe`'s. They close D258 (no trees in the field or on the world map on
+  a PSP build) and D259 (no area cell hooks on PSP-EU). Verification: every
+  rule row "0 not BOF3.exe's"; `importer.py check`, `exe_tables.py check`,
+  `psp_exe.py check` clean; the hosted `'*'` self-test exit 0 and the exe host
+  on the PSP-EU-only install exit 0 (10,088 ours); the PSP-EU image against
+  PSX-EU's 27 ranges / 3,010 bytes to 22 / 2,757; the harness's
+  masterAndManillo PC against PSP-EU 173 to 113 differing frames, area 61's
+  trees seen back.
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 

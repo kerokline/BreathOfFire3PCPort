@@ -6923,7 +6923,12 @@ found a world map and answered 11, the "none" index, whose dwords are
 same shape; DIV-0101 amended). AB after it: both routes run to their end on
 PSX-EU. masterAndManillo's world-map entry (transition 1 where the PC takes
 11, the walk poses and area list) fixed after that run and **not re-run**;
-the PSP-EU side not run.
+the PSP-EU side not run. **Re-run 2026-10-13 night**
+([`visual-findings-1012.md`](visual-findings-1012.md) 10): both routes run to
+their last frame with no crash on PC-EU, PSX-EU, PSP-EU, PC-US, PSX-US and two
+copies of the owner's play setup; masterAndManillo no longer parts at tick
+~322. The owner's scratch installs `C:\b3g` / `C:\b3p` were built before
+`wmrec` and want rebuilding.
 
 ## D254 — The load screen's slot numbers on a disc-only install: `"%X"` is missing, so the slot draws nothing or the previous slot's tail (ours, a gap no disc fills; the owner's call)
 
@@ -6986,3 +6991,34 @@ so it is refused. What a European disc-only install does in those areas
 (their bank absent from the container) was not run. Recorded here because no entry tracked it. **The
 owner's call** (`sound-import.md` 7 item 1): take the PAL banks for a PAL
 disc-only install (a ledger entry), or not.
+
+## D258 — No trees in the field or on the world map on a PSP-built install (ours, the exe image's gaps; fixed by DIV-0101's amendment)
+
+**Found:** the areas 16 / 45 re-run, 2026-10-13 night
+([`visual-findings-1012.md`](visual-findings-1012.md) 10): masterAndManillo,
+PC against PSP-EU, area 61 drew no trees from tick 3720 to the end (about a
+quarter of every frame), and caughFish's world map at tick 420 none either.
+The harness's `psp-area-art` rule had hidden the field half in mode 2.
+
+**Cause:** four of `MapCell_DrawUprights` `0x570210`'s tables
+(`MapCell_UprightCounts` `0x66313C`, `_V01`, `_U02`, `_Clut`) were zero on
+both PSP images, so no upright quad was drawn; `BOOT.BIN` packs the nine
+tables without the PC's padding and the map placed only the five that fill
+their slot. Not the area's data: `AREA061.DAT`'s chunk hashes are equal in
+all three caches.
+
+**Fixed 2026-10-13** by four `twin` rows from `BOOT.BIN`'s packed copy; the
+re-run's area 61 has its trees (173 to 113 differing frames, PC against
+PSP-EU).
+
+## D259 — No area's cell hook ran on a PSP-EU install (ours, the exe image's gaps; fixed by DIV-0101's amendment)
+
+**Found:** beside D258, the same night: `Area_CellHooks`' 28 area words
+`0x662F28` were zero on the PSP-EU image, so the switch cells of areas 44,
+49, 52, 77, 86 and others did nothing. PSP-JP had them through `psxmap`, which
+reads PSX-JP's `GAME.EMI` address; PSP-EU's holds the table 0x1000 earlier.
+Not on either route, so not seen in a run.
+
+**Fixed 2026-10-13** by `cellhk`, the words from `GAME.EMI#0` (`wmrec`'s
+finder). **Open:** other `psxmap` runs at PSX-JP's addresses may miss on
+PSP-EU for the same reason - a class to sweep.
