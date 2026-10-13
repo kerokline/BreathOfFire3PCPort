@@ -1217,10 +1217,11 @@ extern "C" void __cdecl Menu_DrawBackdrop(unsigned kind) {
     const unsigned k = kind & 0xFF;
     if (k >= 4) return;   // DIV-0030
     const std::uint16_t clut = cluts[k];
-    // DIV-0041: a wide picture gets a pair of columns more each side, from
-    // -0x40 to 0x160, so the pattern covers -53..373; the original's five
-    // pairs from 0 are the middle of the seven.
-    const int extra = Widescreen_Live() ? 1 : 0;
+    // DIV-0041: a wide picture gets ceil(columns / 64) pairs of columns more
+    // each side (Widescreen_BackdropPairs) - at 16:9 one, from -0x40 to 0x160,
+    // so the pattern covers -53..373 and the original's five pairs from 0 are
+    // the middle of the seven; at 21:9 two, -0x80..0x1C0 over -120..440.
+    const int extra = static_cast<int>(Widescreen_BackdropPairs());
     std::int32_t column = -0x40 * extra;
     for (int outer = 0; outer < 5 + 2 * extra; ++outer) {
         const unsigned char* pattern = At(at::kBackdropPattern + At(at::kBackdropStart)[k]);

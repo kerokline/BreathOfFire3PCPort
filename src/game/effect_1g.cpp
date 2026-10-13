@@ -115,30 +115,46 @@ void LeavePrompt() {
 
 }  // namespace
 
-// DIV-0041 (effect_1g.h): the left quad from 0 - columns to 0xA0, its u from
-// (-columns) mod 32, so the texel at column 0 is u 0 mod 32 as in the
-// original; the right one from 0xA0 to 0x140 + columns, u from 0. The page
-// texture is the 32 x 32 window tiled over 256 x 256 (Tex_Convert4 /
-// Tex_Convert8), so any u below 256 repeats the pattern.
-effect_1g::BackdropSpan effect_1g::ItemTrade_BackdropSpan(unsigned half, unsigned columns) {
-    BackdropSpan s;
-    if (half == 0) {
-        const unsigned u0 = (32u - (columns & 31u)) & 31u;
-        const unsigned u1 = u0 + 0xA0u + columns;
-        if (u1 > 0xFFu) bof3::Fatal("ItemTrade_BackdropSpan: %u columns put the left u at %u, past the byte", columns, u1);
-        s.x0 = 0.0f - static_cast<float>(columns);   // not -columns: -0.0f when narrow
-        s.x1 = static_cast<float>(0xA0);
-        s.u0 = static_cast<unsigned char>(u0);
-        s.u1 = static_cast<unsigned char>(u1);
-    } else {
-        const unsigned u1 = 0xA0u + columns;
-        if (u1 > 0xFFu) bof3::Fatal("ItemTrade_BackdropSpan: %u columns put the right u at %u, past the byte", columns, u1);
-        s.x0 = static_cast<float>(0xA0);
-        s.x1 = static_cast<float>(0x140u + columns);
-        s.u0 = 0;
-        s.u1 = static_cast<unsigned char>(u1);
-    }
+// DIV-0041 (effect_1g.h): every quad's u starts at its left x mod 32 and runs
+// one texel a column, so the texel under column x is u x mod 32 as in the
+// original (whose halves start at 0 and 0xA0, both 0 mod 32). The page texture
+// is the 32 x 32 window tiled over 256 x 256 (Tex_Convert4 / Tex_Convert8), so
+// any u below 256 repeats the pattern; a quad wider than that cannot be drawn
+// in one, which is why a wider picture takes four quads (the original's two
+// halves and a band quad each side) instead of two grown halves.
+namespace {
+effect_1g::BackdropSpan Span(int x0, int x1, unsigned columns) {
+    const unsigned u0 = static_cast<unsigned>(x0) & 31u;   // x0 mod 32, for a negative x0 too
+    const unsigned u1 = u0 + static_cast<unsigned>(x1 - x0);
+    if (u1 > 0xFFu) bof3::Fatal("ItemTrade_BackdropSpan: %u columns put a u at %u (x %d..%d), past the byte", columns, u1, x0, x1);
+    effect_1g::BackdropSpan s;
+    s.x0 = 0.0f + static_cast<float>(x0);   // not a bare cast of -columns: 0.0f + keeps -0 out
+    s.x1 = static_cast<float>(x1);
+    s.u0 = static_cast<unsigned char>(u0);
+    s.u1 = static_cast<unsigned char>(u1);
     return s;
+}
+// Whether the two grown halves would each fit the byte: the left's u runs to
+// (-columns mod 32) + 0xA0 + columns, the right's to 0xA0 + columns.
+bool HalvesFit(unsigned columns) {
+    return ((32u - (columns & 31u)) & 31u) + 0xA0u + columns <= 0xFFu && 0xA0u + columns <= 0xFFu;
+}
+}  // namespace
+
+unsigned effect_1g::ItemTrade_BackdropQuads(unsigned columns) { return HalvesFit(columns) ? 2u : 4u; }
+
+effect_1g::BackdropSpan effect_1g::ItemTrade_BackdropSpan(unsigned quad, unsigned columns) {
+    const int c = static_cast<int>(columns);
+    if (HalvesFit(columns)) {
+        if (quad == 0) return Span(-c, 0xA0, columns);
+        if (quad == 1) return Span(0xA0, 0x140 + c, columns);
+    } else {
+        if (quad == 0) return Span(0, 0xA0, columns);
+        if (quad == 1) return Span(0xA0, 0x140, columns);
+        if (quad == 2) return Span(-c, 0, columns);
+        if (quad == 3) return Span(0x140, 0x140 + c, columns);
+    }
+    bof3::Fatal("ItemTrade_BackdropSpan: quad %u of %u for %u columns", quad, ItemTrade_BackdropQuads(columns), columns);
 }
 
 // ============================================================================
@@ -244,7 +260,9 @@ extern "C" void __cdecl ItemTrade_LeaveWait(void) {
 // section 3d): the left quad starts at 0 - columns and the right one ends at
 // 320 + columns, each with its u range grown by the same columns, so the
 // pattern carries on into the bands - more tiles, not a stretch
-// (ItemTrade_BackdropSpan). Off, and while any self-test runs
+// (ItemTrade_BackdropSpan). At 21:9 the grown halves would pass u 255, so the
+// original's two halves are drawn as they are with a band quad each side
+// after them (ItemTrade_BackdropQuads, docs/ultrawide-frame.md). Off, and while any self-test runs
 // (Widescreen_Fill() is 0 until InjectAll arms it), the original's quads.
 extern "C" void __cdecl ItemTrade_DrawBackground(void) {
     unsigned char* rect = Gfx_PacketNext;
@@ -256,10 +274,10 @@ extern "C" void __cdecl ItemTrade_DrawBackground(void) {
     SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, static_cast<unsigned long>(Key(rect)));
     SH_CALL(Gfx_CommitPrim)(7, 0xC);
     const unsigned columns = Widescreen_Fill();
-    for (unsigned half = 0; half < 2; ++half) {
+    for (unsigned quad = 0, quads = effect_1g::ItemTrade_BackdropQuads(columns); quad < quads; ++quad) {
         unsigned char* const prim = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(prim);
-        const effect_1g::BackdropSpan s = effect_1g::ItemTrade_BackdropSpan(half, columns);
+        const effect_1g::BackdropSpan s = effect_1g::ItemTrade_BackdropSpan(quad, columns);
         const float x0 = s.x0, x1 = s.x1, y1 = 240.0f;
         PutFloat(prim + 8, x0);
         SetWord(prim + 0x26, 0x95);

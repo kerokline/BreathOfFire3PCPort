@@ -33,6 +33,8 @@ WM_COMMAND, WM_CLOSE, CB_GETCURSEL, CB_SETCURSEL, BM_GETCHECK, BM_CLICK = 0x111,
 CBN_SELCHANGE = 1
 IDOK = 1
 IDC_LANGUAGE, IDC_MUSIC, IDC_CACHE, IDC_CACHENOTE, IDC_SUITENOTE = 1001, 1014, 1015, 1017, 1018
+IDC_WIDE = 1009   # DIV-0041: off, 16:9, 21:9 (wide= 0, 1, 2; docs/ultrawide-frame.md)
+CB_GETCOUNT = 0x146
 IDC_SUITE0, STRIDE, PSX, PSP, MEMBER0, WHY = 1040, 10, 1, 2, 3, 7
 SUITES = ["graphics", "audio", "data"]
 
@@ -329,6 +331,20 @@ def main():
     report("  the suites redrawn: no manifest there", "No manifest.toml" in st["after"]["note"]
            and not st["after"]["suites"]["graphics"]["psp"][0], st["after"]["note"])
     report("  opt= untouched", l["opt"] == "", l["opt"])
+    # 6b. The Widescreen box (DIV-0041): three entries, wide= shown and written back; 21:9 chosen.
+    for w in ("0", "1", "2"):
+        seen = {}
+        def look(dlg, item, seen=seen):
+            seen["n"] = u.SendMessageW(item(IDC_WIDE), CB_GETCOUNT, 0, 0)
+            seen["sel"] = u.SendMessageW(item(IDC_WIDE), CB_GETCURSEL, 0, 0)
+        st, ini, _ = run("[bof3x]\nopt=\ncache=%s\nwide=%s\n" % (C, w), look)
+        report("wide=%s: three entries, entry %s shown, written back" % (w, w),
+               seen.get("n") == 3 and seen.get("sel") == int(w) and lines(ini).get("wide") == w,
+               "%s %s %s" % (seen.get("n"), seen.get("sel"), lines(ini).get("wide")))
+    def pick21(dlg, item):
+        u.SendMessageW(item(IDC_WIDE), CB_SETCURSEL, 2, 0)
+    st, ini, _ = run("[bof3x]\nopt=\ncache=%s\nwide=1\n" % C, pick21)
+    report("21:9 chosen over wide=1: wide=2", lines(ini).get("wide") == "2", lines(ini).get("wide"))
     # 7. The same game, the PSX-only cache named: every PSP side greyed, naming a PSP disc.
     st, ini, _ = run("[bof3x]\nopt=\ncache=%s\n" % cache_dir("psx-only"), lambda dlg, item: click(item, "graphics", PSP))
     report("PSX-only cache: every PSP side greyed, PlayStation checked",

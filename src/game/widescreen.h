@@ -1,15 +1,53 @@
-// Widescreen (DIVERGENCE DIV-0041, docs/widescreen.md): the picture 426 x 240
-// with the game's 320 x 240 view centred in it - the PSP's approach, every
-// primitive shifted right by 53 columns on the way to the screen, and the
-// culls and edge-anchored elements that the wider view exposes re-authored.
-// BOF3X_WIDE=1 turns it on; off, nothing here changes anything.
+// Widescreen (DIVERGENCE DIV-0041, docs/widescreen.md, docs/ultrawide-frame.md):
+// the picture widened by extra columns each side of the game's 320 x 240 view,
+// the view centred in it - the PSP's approach, every primitive shifted right by
+// the columns on the way to the screen, and the culls and edge-anchored
+// elements that the wider view exposes re-authored. Two widths:
+// BOF3X_WIDE=1 is 16:9, 426 x 240 (53 columns a side); BOF3X_WIDE=2 is 21:9,
+// 560 x 240 (120 a side). Unset or 0, nothing here changes anything.
 #pragma once
 
 #include <cstdint>
 
-// Extra columns each side of the 320-wide view: 53 under BOF3X_WIDE=1, 0
-// otherwise. Read once from the environment; any other value is Fatal.
+// Extra columns each side of the 320-wide view: 53 under BOF3X_WIDE=1, 120
+// under BOF3X_WIDE=2, 0 otherwise. Read once from the environment; any other
+// value is Fatal.
 unsigned Widescreen_Columns();
+
+// The rules every width-dependent value is derived by, in the columns c: each
+// gives the 16:9 build's constant at c = 53 (Widescreen_CheckRules proves it at
+// start-up, and the static_asserts in widescreen.cpp at compile time), so 16:9
+// is what it was and 21:9 follows from the same rule. No per-width table.
+namespace widescreen_rule {
+// The columns a side for a picture `num`:`den` at 240 rows: 240 num / den
+// rounded down to an even width, less 320, halved - 53 for 16:9 (426), 120 for
+// 21:9 (560, exact).
+constexpr unsigned ColumnsForAspect(unsigned num, unsigned den) { return ((240u * num / den) / 2u * 2u - 320u) / 2u; }
+// The terrain cull's margin past the original's [-50, 370]: the columns plus
+// the 47 the owner's eye settled on at 53 (100 = 53 + 47, 2026-09-23). Tuned
+// by eye at 53: the value at 120 (167) is owed the owner's eye.
+constexpr unsigned TerrainMargin(unsigned c) { return c + 47u; }
+// The cell inset lowered by a ring column (two map cells, about 20 screen px at
+// the field camera's usual distance) per 20 columns, rounded up: 3 at 53.
+constexpr unsigned InsetColumns(unsigned c) { return (c + 19u) / 20u; }
+// Menu_DrawBackdrop's extra 64-px column pairs each side: enough to cover c.
+constexpr unsigned BackdropPairs(unsigned c) { return (c + 63u) / 64u; }
+// A slide-off bound moved outward by the columns: a negative one (off the left)
+// down, a positive one (off the right) up.
+constexpr int SlideBound(int bound, unsigned c) {
+    return bound < 0 ? bound - static_cast<int>(c) : bound + static_cast<int>(c);
+}
+// The area-map frame pass's x ranges moved outward by c - 1 (the PSP's 31 for
+// its 32): for c > 0 only.
+constexpr float RangeLo(float lo, unsigned c) { return lo - static_cast<float>(c - 1u); }
+constexpr float RangeHi(float hi, unsigned c) { return hi + static_cast<float>(c - 1u); }
+}  // namespace widescreen_rule
+
+// The start-up property check (docs/ultrawide-frame.md): every rule above at
+// 53 columns against the constant the 16:9 build held, and at 120 the values
+// the 21:9 build takes, logged. Fatal on a difference. Run by Widescreen_Inject
+// whatever the width.
+void Widescreen_CheckRules();
 
 // The columns each side once Widescreen_Inject has run - 0 before it, so a
 // start-up fuzz that runs earlier compares the original's layout - and 0
@@ -18,7 +56,8 @@ unsigned Widescreen_Live();
 
 // The terrain cull of MapView_Build 0x56EC00 (ours, src/game/map_layers.cpp):
 // the kept screen-x interval, -50..370 as the original has it, widened by
-// Widescreen_Inject to -150..470 when the view is wide.
+// Widescreen_Inject by widescreen_rule::TerrainMargin when the view is wide
+// (-150..470 at 53 columns, -217..537 at 120).
 extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 
 // Columns the view's cell inset (map_layers.cpp Inset(), MapView_Inset
@@ -27,8 +66,15 @@ extern float Widescreen_TerrainLo, Widescreen_TerrainHi;
 // the inset trims the 28-column ring to what the 320-wide picture needs, and
 // the 53 extra columns a side fell outside it as a stair-stepped notch (the
 // owner's bridge, 2026-10-06). 0 before Widescreen_Inject and when the view
-// is not wide; BOF3X_WIDE_INSET=N moves it for tuning.
+// is not wide; widescreen_rule::InsetColumns otherwise (3 at 53 columns, 6 at
+// 120); BOF3X_WIDE_INSET=N moves it for tuning. The original's largest inset is
+// 6 (map_layers.cpp Inset(): (0x160 - 0) / 50 - 1), so from 6 on the whole
+// 28-column ring is walked and a wider picture needs a bigger ring (IDEAS I37).
 unsigned Widescreen_InsetColumns();
+// Menu_DrawBackdrop's extra 64-px column pairs each side: 0 until
+// Widescreen_Inject has run and when the view is not wide, else
+// widescreen_rule::BackdropPairs (1 at 53 columns, 2 at 120).
+unsigned Widescreen_BackdropPairs();
 
 // DIV-0041's operands as this build holds them (docs/operand-store.md): what
 // our functions that held them read, never Capcom's code. Both are the

@@ -780,6 +780,38 @@ void TestChordRoundTrip() {
           "chord left on where the line had it: byte for byte");
 }
 
+// DIV-0041, the 21:9 picture (docs/ultrawide-frame.md): wide= 0, 1 or 2 reads,
+// writes back the same, and goes out as BOF3X_WIDE (nothing for 0); a value
+// the DLL would refuse is dropped to the default, as every unknown value is;
+// a BOF3X_WIDE already set (the run tools' --wide) wins over the ini.
+void TestWide() {
+    const std::wstring a = Temp(L"bof3x_config_tests_wide.ini"), game = Temp(L"bof3x_wide_game");
+    MakeDirs(game + L"\\DAT");
+    std::string err;
+    for (int v = 0; v <= 2; ++v) {
+        WriteAll(a, "[bof3x]\r\nwide=" + std::to_string(v) + "\r\n");
+        bof3x::Config c;
+        Check(bof3x::ConfigLoad(a, c, err) && err.empty() && c.wide == v, "wide= read", std::to_string(c.wide));
+        Check(bof3x::ConfigSave(a, c), "save");
+        Check(ReadAll(a).find("\r\nwide=" + std::to_string(v) + "\r\n") != std::string::npos, "the wide= line written");
+        SetEnvironmentVariableA("BOF3X_WIDE", nullptr);
+        bof3x::ConfigApplyEnvironment(game, c, false);
+        Check(Env("BOF3X_WIDE") == (v == 0 ? "" : std::to_string(v)), "BOF3X_WIDE from wide=", Env("BOF3X_WIDE"));
+        SetEnvironmentVariableA("BOF3X_WIDE", "0");
+        bof3x::ConfigApplyEnvironment(game, c, false);
+        Check(Env("BOF3X_WIDE") == "0", "a BOF3X_WIDE already set is kept", Env("BOF3X_WIDE"));
+    }
+    for (const char* bad : {"3", "-1", "21:9", "true"}) {
+        WriteAll(a, std::string("[bof3x]\r\nwide=") + bad + "\r\n");
+        bof3x::Config c;
+        Check(bof3x::ConfigLoad(a, c, err) && c.wide == 0, (std::string("wide=") + bad + " is the default").c_str(),
+              std::to_string(c.wide));
+    }
+    SetEnvironmentVariableA("BOF3X_WIDE", nullptr);
+    ClearEnv();
+    DeleteFileW(a.c_str());
+}
+
 // Finding 7: psp= checked up front by the DLL's rule, as opt= is.
 void TestPspValid() {
     std::string why;
@@ -817,6 +849,8 @@ int main() {
     TestInstalled();
     std::printf("ini round trip\n");
     TestRoundTrip();
+    std::printf("wide= (DIV-0041: off, 16:9, 21:9)\n");
+    TestWide();
     std::printf("cache path code page\n");
     TestCacheCodePage();
     std::printf("%d checks, %d failures\n", g_checks, g_failures);

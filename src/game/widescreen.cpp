@@ -1,7 +1,8 @@
 // Widescreen (DIV-0041, docs/widescreen.md). See widescreen.h.
 //
-// The backend does the picture: the render target is (320 + 2 x 53) k wide,
-// the scene shader adds 53k to every x (render_d3d11.cpp), so the game keeps
+// The backend does the picture: the render target is (320 + 2 c) k wide for c
+// columns a side (53 at 16:9, 120 at 21:9; docs/ultrawide-frame.md), the scene
+// shader adds ck to every x (render_d3d11.cpp), so the game keeps
 // drawing in its own 0..320 space with the projection centre at (160, 120)
 // and anything it already draws past its edges - 3D geometry, scrolling
 // layers - lands in the side bands. What this file holds is the game side:
@@ -9,11 +10,13 @@
 // and the menu boxes that slid off the old edges (g_slides, below).
 //
 // The survey build (widescreen.md section 3e) widens the two the PSP widened:
-//   - the terrain cull in MapView_Build (ours): [-50, 370] to [-150, 470],
-//     wider than the PSP's [-96, 416] (kTerrainMargin says why);
+//   - the terrain cull in MapView_Build (ours): [-50, 370] to [-150, 470] at
+//     53 columns, wider than the PSP's [-96, 416] (widescreen_rule::TerrainMargin
+//     says why), [-217, 537] at 120;
 //   - the area-map frame pass AreaMapBD_BuildView 0x510780 (ours, R3G's; it reads them back): the
 //     wide range [-200, 520] to [-252, 572] and the narrow [-50, 370] to
-//     [-102, 422] - the PSP widened both by 31 for 32 columns; 52 for 53.
+//     [-102, 422] - the PSP widened both by 31 for 32 columns; 52 for 53, 119
+//     for 120 (widescreen_rule::RangeLo / RangeHi).
 // The function reads them through `fcomp dword ptr [0x5C42xx]`: the .rdata
 // floats are shared with MapView_Build's own compares (0x5C4230 / 0x5C4234
 // with 0x56EE14 / 0x56EDFA, both ours now), so the floats stay and the four
@@ -36,9 +39,11 @@ using U = std::uint32_t;
 float Widescreen_TerrainLo = -50.0f, Widescreen_TerrainHi = 370.0f;
 unsigned g_live;
 unsigned g_inset_columns;
+unsigned g_backdrop_pairs;
 
 unsigned Widescreen_Live() { return g_live; }
 unsigned Widescreen_InsetColumns() { return g_inset_columns; }
+unsigned Widescreen_BackdropPairs() { return g_backdrop_pairs; }
 
 bool g_fills_armed;
 unsigned Widescreen_Fill() { return g_fills_armed ? g_live : 0; }
@@ -59,21 +64,30 @@ void Widescreen_ArmFills() {
 
 namespace {
 
-constexpr U kColumns = 53;   // 426 = 240 x 16 / 9 rounded down to even, less 320, halved
-// How far past the original's [-50, 370] the terrain cull keeps cells. The
-// PSP's [-96, 416] kept 14 beyond its 32 columns; 53 + 14 = 67 here still
-// let the map's far corners pop about 20 px in at the top left and right
-// while the attract sequence rotates the map (the owner, 2026-09-23); 100 is
-// the next try.
-constexpr U kTerrainMargin = 100;
-// Columns taken off the view's cell inset each side (Widescreen_InsetColumns):
-// a ring column is two map cells across, about 20 screen px at the field
-// camera's usual distance, so 53 extra px want three (the owner's bridge,
-// 2026-10-06: the cells outside the inset were a stair-stepped notch).
-constexpr U kInsetColumns = 3;
+namespace rule = widescreen_rule;
 
-float g_wide_lo = -200.0f - (kColumns - 1), g_wide_hi = 520.0f + (kColumns - 1);
-float g_narrow_lo = -50.0f - (kColumns - 1), g_narrow_hi = 370.0f + (kColumns - 1);
+// The two widths (BOF3X_WIDE=1 and 2), each by its aspect at 240 rows.
+constexpr U kColumns16x9 = rule::ColumnsForAspect(16, 9);   // 426 = 240 x 16 / 9 rounded down to even
+constexpr U kColumns21x9 = rule::ColumnsForAspect(21, 9);   // 560 = 240 x 21 / 9 exactly (the owner, 2026-10-13)
+
+// The 16:9 build's constants, which the rules must give at 53 (the property
+// check: these are the values the rules replaced, kept as the test's oracle).
+// The terrain cull's margin past the original's [-50, 370]: the PSP's [-96,
+// 416] kept 14 beyond its 32 columns; 53 + 14 = 67 here still let the map's
+// far corners pop about 20 px in at the top left and right while the attract
+// sequence rotates the map (the owner, 2026-09-23); 100 was the next try, and
+// held. The cell inset was lowered by 3 (a ring column is two map cells
+// across, about 20 screen px at the field camera's usual distance; the owner's
+// bridge, 2026-10-06). The menu backdrop drew one more pair a side.
+static_assert(kColumns16x9 == 53 && kColumns21x9 == 120, "the two widths");
+static_assert(rule::TerrainMargin(53) == 100, "the terrain margin tuned by eye at 53");
+static_assert(rule::InsetColumns(53) == 3, "the cell inset lowered by 3 at 53");
+static_assert(rule::BackdropPairs(53) == 1, "one backdrop pair a side at 53");
+static_assert(rule::RangeLo(-200.0f, 53) == -252.0f && rule::RangeHi(520.0f, 53) == 572.0f, "the wide frame range at 53");
+static_assert(rule::RangeLo(-50.0f, 53) == -102.0f && rule::RangeHi(370.0f, 53) == 422.0f, "the narrow frame range at 53");
+
+float g_wide_lo = -200.0f, g_wide_hi = 520.0f;     // set by Widescreen_Inject when wide; named only once patched
+float g_narrow_lo = -50.0f, g_narrow_hi = 370.0f;
 
 struct Site {
     U at;          // the 4-byte operand of an fcomp dword ptr [mem] in 0x510780
@@ -145,9 +159,52 @@ unsigned Widescreen_Columns() {
     char text[16];
     const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE", text, sizeof text);
     if (n == 0 || std::strcmp(text, "0") == 0) columns = 0;
-    else if (n < sizeof text && std::strcmp(text, "1") == 0) columns = kColumns;
-    else bof3::Fatal("BOF3X_WIDE=%s: 1 or 0", n < sizeof text ? text : "...");
+    else if (n < sizeof text && std::strcmp(text, "1") == 0) columns = kColumns16x9;
+    else if (n < sizeof text && std::strcmp(text, "2") == 0) columns = kColumns21x9;
+    else bof3::Fatal("BOF3X_WIDE=%s: 0, 1 (16:9) or 2 (21:9)", n < sizeof text ? text : "...");
     return static_cast<unsigned>(columns);
+}
+
+// The property check (widescreen.h). The 16:9 values are the constants the
+// rules replaced: kTerrainMargin 100, kInsetColumns 3, the backdrop's one pair,
+// the frame ranges [-252, 572] / [-102, 422], and the fourteen slide bounds as
+// Widescreen_Inject patched them with 53 folded in (widescreen.md section 5).
+void Widescreen_CheckRules() {
+    auto bad = [](const char* what, double got, double want) {
+        bof3::Fatal("widescreen: the rule for %s gives %g at 53 columns, the 16:9 build had %g", what, got, want);
+    };
+    if (kColumns16x9 != 53) bad("the 16:9 columns", kColumns16x9, 53);
+    if (kColumns21x9 != 120) bad("the 21:9 columns", kColumns21x9, 120);
+    if (rule::TerrainMargin(53) != 100) bad("the terrain margin", rule::TerrainMargin(53), 100);
+    if (rule::InsetColumns(53) != 3) bad("the cell inset", rule::InsetColumns(53), 3);
+    if (rule::BackdropPairs(53) != 1) bad("the backdrop pairs", rule::BackdropPairs(53), 1);
+    if (rule::RangeLo(-200.0f, 53) != -252.0f) bad("the wide range's low", rule::RangeLo(-200.0f, 53), -252);
+    if (rule::RangeHi(520.0f, 53) != 572.0f) bad("the wide range's high", rule::RangeHi(520.0f, 53), 572);
+    if (rule::RangeLo(-50.0f, 53) != -102.0f) bad("the narrow range's low", rule::RangeLo(-50.0f, 53), -102);
+    if (rule::RangeHi(370.0f, 53) != 422.0f) bad("the narrow range's high", rule::RangeHi(370.0f, 53), 422);
+    // the slide bounds as the 16:9 build wrote them: the original's, 53 out
+    static const int k16x9[] = {-223, -353, -153, -233, -163, -253, -203, -173, 373, 375, -243, -218, 400, 376};
+    static_assert(sizeof k16x9 / sizeof k16x9[0] == sizeof g_slides / sizeof g_slides[0], "one per slide bound");
+    int lowest = 0, highest = 0;
+    for (unsigned i = 0; i < sizeof k16x9 / sizeof k16x9[0]; ++i) {
+        const int got = rule::SlideBound(g_slides[i].bound, 53);
+        if (got != k16x9[i]) bad("a slide bound", got, k16x9[i]);
+        // 21:9: every bound still fits the imm16 its site holds. A box that
+        // steps 0x20 a frame from inside the view reaches it: each reader steps
+        // x monotonically and frees past it or clamps at it (widescreen.md
+        // section 5, docs/ultrawide-frame.md), so it is passed after at most
+        // (|bound| + 320) / 0x20 frames.
+        const int wide = rule::SlideBound(g_slides[i].bound, kColumns21x9);
+        if (wide < -0x8000 || wide > 0x7FFF) bad("a 21:9 slide bound's s16", wide, 0);
+        if (wide < lowest) lowest = wide;
+        if (wide > highest) highest = wide;
+    }
+    bof3::Log("DIV-0041    the width rules: at 53 columns the 16:9 constants (terrain margin 100, inset 3, backdrop "
+              "pair 1, ranges [-252, 572] / [-102, 422], 14 slide bounds); at 120: terrain margin %u, inset %u, backdrop "
+              "pairs %u, ranges [%.0f, %.0f] / [%.0f, %.0f], slide bounds %d..%d",
+              rule::TerrainMargin(kColumns21x9), rule::InsetColumns(kColumns21x9), rule::BackdropPairs(kColumns21x9),
+              rule::RangeLo(-200.0f, kColumns21x9), rule::RangeHi(520.0f, kColumns21x9),
+              rule::RangeLo(-50.0f, kColumns21x9), rule::RangeHi(370.0f, kColumns21x9), lowest, highest);
 }
 
 void Widescreen_Inject() {
@@ -155,7 +212,13 @@ void Widescreen_Inject() {
     // check, code_bytes.h): narrow or wide, patched or not.
     for (const Site& s : g_sites) bof3::Operand("DIV-0041 area-map range", s.at, &s.now, 4);
     for (const Slide& s : g_slides) bof3::Operand("DIV-0041 slide bound", s.at, &s.now, s.size);
-    if (Widescreen_Columns() == 0) return;
+    Widescreen_CheckRules();
+    const U columns = Widescreen_Columns();
+    if (columns == 0) return;
+    g_wide_lo = rule::RangeLo(-200.0f, columns);
+    g_wide_hi = rule::RangeHi(520.0f, columns);
+    g_narrow_lo = rule::RangeLo(-50.0f, columns);
+    g_narrow_hi = rule::RangeHi(370.0f, columns);
     for (Site& s : g_sites) {
         std::uint8_t expected[4], replacement[4];
         const U ours = static_cast<U>(reinterpret_cast<std::uintptr_t>(s.ours));
@@ -165,7 +228,7 @@ void Widescreen_Inject() {
     }
     for (Slide& s : g_slides) {
         std::uint8_t expected[4], replacement[4];
-        const int wide = s.bound < 0 ? s.bound - static_cast<int>(kColumns) : s.bound + static_cast<int>(kColumns);
+        const int wide = rule::SlideBound(s.bound, columns);
         if (s.size == 4) {
             std::memcpy(expected, &s.bound, 4);
             std::memcpy(replacement, &wide, 4);
@@ -176,11 +239,13 @@ void Widescreen_Inject() {
         }
         if (bof3::PatchBytes("Widescreen", s.at, expected, replacement, s.size)) s.now = wide;
     }
-    g_live = kColumns;
-    U terrain_margin = kTerrainMargin;
+    g_live = columns;
+    g_backdrop_pairs = rule::BackdropPairs(columns);
+    U terrain_margin = rule::TerrainMargin(columns);
     {
         // BOF3X_WIDE_TERRAIN=N: the terrain cull's margin past [-50, 370], for
-        // experiments (2026-10-07, the owner's waterfall); 100 unless set (DIV-0041).
+        // experiments (2026-10-07, the owner's waterfall); the rule's unless set
+        // (DIV-0041: 100 at 53 columns, 167 at 120).
         char text[16];
         const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE_TERRAIN", text, sizeof text);
         if (n != 0) {
@@ -193,7 +258,8 @@ void Widescreen_Inject() {
     }
     Widescreen_TerrainLo = -50.0f - static_cast<float>(terrain_margin);
     Widescreen_TerrainHi = 370.0f + static_cast<float>(terrain_margin);
-    g_inset_columns = kInsetColumns;
+    const U inset_asked = rule::InsetColumns(columns);
+    g_inset_columns = inset_asked;
     {
         char text[16];
         const DWORD n = GetEnvironmentVariableA("BOF3X_WIDE_INSET", text, sizeof text);
@@ -205,8 +271,16 @@ void Widescreen_Inject() {
             g_inset_columns = static_cast<U>(v);
         }
     }
-    bof3::Log("DIV-0041    widescreen: %u columns a side; terrain cull [%.0f, %.0f]; area-map frame ranges [%.0f, %.0f] "
-              "and [%.0f, %.0f]; cell inset %u columns lower a side (BOF3X_WIDE, BOF3X_WIDE_INSET)",
-              kColumns, Widescreen_TerrainLo, Widescreen_TerrainHi, g_wide_lo, g_wide_hi, g_narrow_lo, g_narrow_hi,
-              g_inset_columns);
+    // The inset cannot go below 0 (map_layers.cpp Inset()), and the original's
+    // largest is 6, so a lowering of 6 or more walks the whole 28-column ring
+    // whatever the camera: past that, what the ring covers is UC's measurement
+    // and RG's to grow (IDEAS I37).
+    constexpr U kLargestInset = (0x160 - 0) / 50 - 1;   // Inset() head-on (Cond_AngleFB 0x200) at distance 0
+    bof3::Log("DIV-0041    widescreen: %u columns a side (%u x 240); terrain cull [%.0f, %.0f]; area-map frame ranges "
+              "[%.0f, %.0f] and [%.0f, %.0f]; menu backdrop %u pair(s) more a side; cell inset asked %u lower a side "
+              "(ceil(columns / 20)), applied %u%s (BOF3X_WIDE, BOF3X_WIDE_TERRAIN, BOF3X_WIDE_INSET)",
+              columns, 320 + 2 * columns, Widescreen_TerrainLo, Widescreen_TerrainHi, g_wide_lo, g_wide_hi, g_narrow_lo,
+              g_narrow_hi, g_backdrop_pairs, inset_asked, g_inset_columns,
+              g_inset_columns >= kLargestInset ? " - the original's largest inset is 6, so the whole 28-column ring is walked"
+                                               : "");
 }
