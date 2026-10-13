@@ -269,6 +269,31 @@ Keeping that or moving them out is still the owner's call. **ST** builds both
 layers, and EB re-runs the census afterwards: the 16:9 band should hold no
 parked actor, and the 21:9 band no visible one.
 
+## 4a. Stage A's results and the owner's calls on them (2026-10-13)
+
+Stage A is merged: UC ([`ultrawide-culls.md`](ultrawide-culls.md)), SS
+([`ultrawide-staging.md`](ultrawide-staging.md)), BA
+([`band-census.md`](band-census.md)), PD
+([`ultrawide-staging-psp.md`](ultrawide-staging-psp.md)) and UW
+([`ultrawide-frame.md`](ultrawide-frame.md)). The owner's calls on what they
+found:
+
+- **Split the off-screen flag.** `Sprite_Draw`'s cull also sets bit 7 of an
+  object's byte 0, which nine functions of game logic read. Under 16:9 it has
+  decided at the widened bound since 2026-09-30, and that was never ledgered.
+  From here on, drawing uses the wide bounds and bit 7 is set at the
+  original's bound, at every width (UC2).
+- **The six culls that still hold Capcom's values widen at both widths**
+  (UC2), as DIV-0041 has done so far. That is an exception to section 1's
+  "16:9 bit for bit", taken on purpose: four of the six already pop at 16:9.
+- **Case zero copies the PSP's staging in the wide modes.** The pair wait
+  inside the 4:3 view, as on the PSP. This is written as a change to the
+  original's walk in our code, cited to PD, not as copied script bytes.
+  Narrow, the scene is the original's (ST).
+- **The live batch runs now** (EB-1, the "before" census). EB-2 re-runs it
+  after UC2 and ST merge. RG (the ring for far-camera scenes) and the seven
+  areas narrower than 560 wait for the census pictures.
+
 ## 5. Merge order, ownership, numbering
 
 - Stage A: **UW** first, since everything reads its columns. Then BA, then the
