@@ -45,8 +45,9 @@ labels earlier docs already name.
    have 4 PSX twins between them - nothing placeable until the function twins
    exist; the PSP ELF's second map would newly place **187 bytes** on PSP-JP
    (191 on PSP-EU) - measured, recommended against.
-5. **`loc-build-disc-only.md`'s gaps** (section 6): measured on four
-   disc-only caches built today.
+5. **`loc-build-disc-only.md`'s gaps** (section 6): none is still a gap - the village
+   sheet and French `AREA004` build from a disc alone (US, FR re-measured
+   today), and the 94 chunks nothing replaces are nameless enemy tables.
 
 ## 1. The method
 
@@ -81,8 +82,11 @@ one or more). `--ledger` adds, per string:
 
 It writes `<out>/ledger.tsv` (address, bytes, glyphs, class, key or reading,
 readers, `src/` files, referrers) and the sheets of the old scan. Run
-2026-10-13 at `d0d9162a`: `analysis/`-style output in the session's scratch
-(`scan/`, `scan1/` with `--singles`).
+2026-10-13 on this branch (`d0d9162a` + the tool): output in the session's
+scratch (`final/`, `scan1/` with `--singles`), 22 s with the five discs, exit
+0. **The discs are part of the evidence**: without `--disc` the 79 `disc`
+strings have nothing to class them and the run ends `NEW 79`, exit 1
+(checked the same day).
 
 ## 2. The counts
 
@@ -289,7 +293,38 @@ to take or drop (`tools/psp_exe.py` is theirs today; it was not touched).
 
 ## 6. `loc-build-disc-only.md`'s gaps, at today's tip
 
-FILLED BY THE CACHE RUN BELOW.
+HANDOFF item 6 still lists three gaps of that doc - the village sheet,
+French `AREA004`, the Chinese chunks nothing replaces. Its own section 5.3
+closed the first two on 2026-10-12. Re-measured today on this branch: a
+disc-only cache from one disc each (`importer.py build --source <cue> --lang
+<tag>`, then `loc_build.py cover`), and the PC path's layers (`loc_build.py
+all --game` into a scratch game hard-linked to `bof3/`'s 742 shipped
+containers), compared container by container and chunk by chunk (session
+scripts `gaps.py`, `cmp_layers.py`):
+
+| | US alone, en-US | FR alone, fr-FR |
+|---|---|---|
+| `loc/zh-CN` chunks replaced (`cover`) | 381 of 475 | 381 of 475 |
+| left | 94 enemy-name tables | 94 enemy-name tables |
+| containers, disc-only / PC-built / identical | 254 / 247 / 208 | 254 / 247 / 193 |
+| village sheet `COMMU01` / `COMMU05` `0x1C080200` | built; 0 bytes differ from the PC-built | built; 437 bytes differ (the French disc's own repaints, 4.3) |
+| `AREA004` text block | built, identical | built: 1,850 bytes against the PC-built 2,756 (4.5's first seven slots: the PC path keeps two of the port's messages) |
+| kind-15 groups in `FIRST.DAT` | all 16 | all 16 |
+
+**Verdict: none of the three is still a gap.** The village sheet and French
+`AREA004` are built from a disc alone, as 5.3 measured, with the same counts
+today (en-US 208 identical and the same seven stand-in containers; fr-FR
+193). The 94 `loc/zh-CN` chunks nothing replaces are enemy tables whose
+records carry no name - the PC-built layer writes none for them either
+(`convert_enemy_names` writes a chunk per named record), so nothing Chinese
+is drawn from them. HANDOFF's item 6 entry can drop all three. The Chinese
+that is left is the exe's, sections 3 and 7 - and on a disc-only image those
+strings are zero bytes (5.4 of that doc), so they draw nothing rather than
+Chinese.
+
+**Not reached:** the German and Japanese caches (built in the same run,
+finishing after this was written), so `de-DE` and `ja-JP` are not re-measured
+here; 5.3's figures stand for them.
 
 ## 7. What would fill the rest (for the coordinator)
 
