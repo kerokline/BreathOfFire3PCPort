@@ -244,6 +244,15 @@ ours run of a route that lists the saves wants it.
   (`cn_<route>_cu1010n`, `BOF3X_OPT=none`) is identical on every tick of nine
   routes and on all but one tick of whelpBoss (the sound page, tick 3,227;
   a second run identical throughout).
+- **`cn_cutsceneAndNue_orig2` / `_orig2b` re-recorded 2026-10-13** (the same
+  settings, under the current 173-range list, `BOF3SH3`; the 2026-10-10 pair
+  kept as `cn_cutsceneAndNue_orig2_pre1013` / `_orig2b_pre1013`): the old
+  pair had gone stale on `0x905000` - the thirteen save-slot records at
+  `0x905BC0`, 0x1C bytes each - from tick 136, when `BISLPS06.DAT` was
+  rewritten at 07:10 that morning; Capcom's own side differed from it the same
+  way ([`nue-regression-1013.md`](nue-regression-1013.md) 3). The other nine
+  `orig2` pairs are stale the same way from their routes' first save-list
+  read (measured on `combat`: tick 226) and not yet re-recorded.
 - **The reference** is a pair of original runs and is recorded per route once
   per skip list: `analysis/statehash/<route>_orig.sh`, `_origb.sh`. A change of
   the skip list, the recipe, the save or the launcher's settings wants a new
@@ -276,6 +285,24 @@ ours run of a route that lists the saves wants it.
 - **Known and not skipped:** DIV-0073 - after the masters' model has drawn,
   `Gte_Matrix2`'s bytes `0x7DE4E6..0x7DE4FF` are zeros in ours and stale stack
   in the original. No route recorded so far opens that screen.
+- **Known and not skipped:** DIV-0092 (the area's music after a battle and
+  after a load of a save without a track). On `cutsceneAndNue` ours differs
+  from Capcom's pair on `0x904000` (`Music_Track` `0x904131`, the area's
+  track byte `0x904CD0`), `0x665000` (`Music_LoadedTrack`), `0x6BD000`
+  (`Music_File*`, `Music_FadeStops`) over ticks 204..1,032 (the load: the
+  recipe save holds track `0xFF`, ours plays the zone's 27 at frame 204) and
+  7,395 to the end (the Nue event battle over: ours plays 27 at frame 7,394,
+  Capcom's field stays silent), and on the sound page `0x7DE000`
+  (`Snd_BufferDesc`, `Snd_WaveFormat`, `Music_Loops`) over 205..2,736 and
+  7,395 to the end ([`nue-regression-1013.md`](nue-regression-1013.md) 4, the
+  bytes from dumps at 204, 205, 1,100, 2,000 and 7,400). Game state, so not a
+  skip range: **check that route with the divergence off** (`--original
+  AreaTrackFallback`, the hosted build; identical to the pair on all 7,361
+  ticks on 2026-10-13), and read a run with it on as the signature above. The
+  exe host refuses `BOF3X_ORIGINAL`; there, compare with the hosted build of
+  the same tree. Any route that ends a battle back on the field or loads a
+  save without a track meets it too (`bossAndFlash`'s event battle 8, no pair
+  yet).
 - **A new `DIVERGENCE.md` entry that changes state** shows as a page from its
   first tick. Compare with the divergence switched off (`BOF3X_ORIGINAL=<its
   name>`), as the route A/Bs already do with `DIVS`.

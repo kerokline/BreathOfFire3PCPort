@@ -208,3 +208,7 @@ section 3 does.
   fix (PR #54) or the field-music entries; the camera page is not explained
   here. A `BOF3X_STATEHASH_DUMP` at tick 136 on both sides and
   `statehash.py bytes` would name the bytes.
+  **Settled** ([`nue-regression-1013.md`](nue-regression-1013.md)): no
+  regression - `0x905000` was the pair gone stale on the save list (slot 6
+  rewritten 07:10; re-recorded), the music pages DIV-0092; with it off, ours
+  is identical to the new pair on every tick.
