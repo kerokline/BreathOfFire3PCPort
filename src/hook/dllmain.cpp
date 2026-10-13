@@ -30,6 +30,7 @@
 #include "hook/log.h"
 #include "hook/stackwatch.h"
 #include "hook/statehash.h"
+#include "hook/wav_dump.h"
 
 BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
     if (reason == DLL_PROCESS_ATTACH) {
@@ -61,6 +62,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
             TerminateProcess(GetCurrentProcess(), 0);
         }
         bof3::CallTrace_Start(module);
+        bof3::WavDump_Start();   // BOF3X_WAV_DIR: before the latch is placed (wav_dump.h)
         bof3::InputScript_Start();
         draw_order::Start();
     } else if (reason == DLL_PROCESS_DETACH) {
@@ -68,6 +70,7 @@ BOOL WINAPI DllMain(HINSTANCE module, DWORD reason, LPVOID) {
         // Our streams are still open here: ExitProcess detaches this DLL
         // before the C runtime it loaded.
         bof3::InputScript_Stop();
+        bof3::WavDump_Stop();
         bof3::StackWatch_Exit();
         bof3::LogClose();
     }

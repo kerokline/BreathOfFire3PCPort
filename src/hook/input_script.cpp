@@ -17,6 +17,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "hook/statehash.h"
+#include "hook/wav_dump.h"
 #include "render/render_d3d11.h"
 
 // The recipe language (docs/input-script.md has it with examples). One step a
@@ -633,6 +634,7 @@ void __cdecl ScriptedLatch() {
 // unattended recipe run is not affected.
 void DeviceLatch() {
     StateHash_Tick();
+    WavDump_Tick();
     bof3::orig::Input_Latch();
     if (WinMain_InputAllowed()) return;
     Input_Held = Input_Previous = Input_Pressed = 0;
@@ -769,6 +771,15 @@ void RandCountFrame() {
 // the latch as Capcom called it.
 void __cdecl HashedLatch() {
     StateHash_Tick();
+    WavDump_Tick();
+    bof3::orig::Input_Latch();
+}
+
+// BOF3X_WAV_DIR alone, under Capcom's WinMain: the dump's frame, then the
+// latch as Capcom called it (wav_dump.h). Our WinMain reaches the dump
+// through DeviceLatch.
+void __cdecl WavLatch() {
+    WavDump_Tick();
     bof3::orig::Input_Latch();
 }
 
@@ -843,6 +854,7 @@ void InputScript_Start() {
         // runs the latch untouched. Our WinMain reaches the tick through
         // DeviceLatch.
         if (hashing) RetargetCall("StateHash", kLatchCall, kInputLatch, reinterpret_cast<void*>(&HashedLatch), true);
+        else if (WavDump_On()) RetargetCall("WavDump", kLatchCall, kInputLatch, reinterpret_cast<void*>(&WavLatch), true);
         return;
     }
     RandCountStart();
