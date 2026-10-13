@@ -105,9 +105,11 @@ durations above match that within the frames run after a recipe's end. 3,099 of 
 clip in `combat.txt`'s battle (the battle theme near full scale plus effects); DirectSound would have to
 clip them too, or limit.
 
-Self-test: `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less copy, exit 0
-after 1,846 s, every `MISMATCHES` count 0 (`inject: 10087 ours`); the dump arms after the self-tests, so
-it cannot reach them.
+Self-test: `BOF3X_LANG=original BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*'` from an ini-less copy of the
+branch's tip (the `music` step in), exit 0 after 1,593 s, all 1,076 `MISMATCHES` counts 0 (`inject: 10087
+ours`); the first cut's run the same (exit 0, 1,846 s). The dump arms after the self-tests, so it cannot
+reach them. `combat.txt` once more on the tip's build and the new `input_run.py`: equal to the earlier
+run sample for sample (`wav_diff.py`: no window differs).
 
 ## 3. `tools/wav_diff.py`
 
