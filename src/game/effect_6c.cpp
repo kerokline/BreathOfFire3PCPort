@@ -519,33 +519,55 @@ extern "C" void __cdecl EffectKind18Sub44_DrawGlow(int level_word, int x_word) {
 // from (0x1780, 0x1380), one - flag 4 of 0x904000 set - by its distance from
 // (0x1780, 0xE00), placed by Math_Ratan2. The bands are laid out from the
 // cursor as it was after their draw mode (0x44 apart), as the original does.
+//
+// DIV-0041 (psp-widescreen-placements.md 2.2, the owner's answers in 6.1):
+// with the fill columns c > 0 the sky reaches the wide frame's edges - the
+// textured band gets a quad each side, x -c..0 and 320..320 + c, u continuing
+// the middle's rate (255 texels over 320 columns) so the pattern carries on
+// rather than stretching; the white tile runs from Widescreen_FillX() over
+// Widescreen_FillWidth(); one more column of textured quads at x - 0x200 keeps
+// the left band covered at every camera angle (the PSP moved its three by
+// -32 instead, which shifts the pattern under the middle); and the haze bands
+// get a flat quad each side at the outer rows' colour and depth, as sub-kind
+// 0x15's sky does (effect_5c.cpp). With c = 0 - narrow, or any self-test -
+// every packet is the original's.
 extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
+    const U wide = Widescreen_Fill();
     {
         unsigned char* const window = Rect(0x20, 0, 0x20, 0x20);
         SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x95, AddressOf(window));
         SH_CALL(Gfx_CommitPrim)(7, 0xC);
-        unsigned char* const p = Gfx_PacketNext;
-        SH_CALL(Gpu_SetPolyFT4)(p);
-        SH_CALL(Gpu_SetShadeTex)(p, 1);
-        SetUL(p + 0xC, 0x42B40000u);   // 90.0f
-        SetUL(p + 0x1C, 0x42B40000u);
-        SetUL(p + 0x2C, 0x42F40000u);  // 122.0f
-        SetUL(p + 0x3C, 0x42F40000u);
-        SetUL(p + 8, 0);
-        SetUL(p + 0x18, 0x43A00000u);  // 320.0f
-        SetUL(p + 0x28, 0);
-        SetUL(p + 0x38, 0x43A00000u);
-        p[0x14] = 0;
-        p[0x15] = 0;
-        p[0x24] = 0xFF;
-        p[0x25] = 0;
-        p[0x34] = 0;
-        p[0x35] = 0x40;
-        p[0x44] = 0xFF;
-        p[0x45] = 0x40;
-        SetWord(p + 0x26, 0x95);
-        SetWord(p + 0x16, 0x7900);
-        SH_CALL(Gfx_CommitPrim)(7, 0x48);
+        // The band (x0, 90)..(x1, 122), u u0..u1, v 0..0x40.
+        const auto band = [](U x0, U x1, unsigned char u0, unsigned char u1) {
+            unsigned char* const p = Gfx_PacketNext;
+            SH_CALL(Gpu_SetPolyFT4)(p);
+            SH_CALL(Gpu_SetShadeTex)(p, 1);
+            SetUL(p + 0xC, 0x42B40000u);   // 90.0f
+            SetUL(p + 0x1C, 0x42B40000u);
+            SetUL(p + 0x2C, 0x42F40000u);  // 122.0f
+            SetUL(p + 0x3C, 0x42F40000u);
+            SetUL(p + 8, x0);
+            SetUL(p + 0x18, x1);
+            SetUL(p + 0x28, x0);
+            SetUL(p + 0x38, x1);
+            p[0x14] = u0;
+            p[0x15] = 0;
+            p[0x24] = u1;
+            p[0x25] = 0;
+            p[0x34] = u0;
+            p[0x35] = 0x40;
+            p[0x44] = u1;
+            p[0x45] = 0x40;
+            SetWord(p + 0x26, 0x95);
+            SetWord(p + 0x16, 0x7900);
+            SH_CALL(Gfx_CommitPrim)(7, 0x48);
+        };
+        band(0, 0x43A00000u, 0, 0xFF);   // 0.0f, 320.0f
+        if (wide != 0) {
+            const auto texels = static_cast<unsigned char>((wide * 0xFFu + 160u) / 320u);   // 42 for 53
+            band(std::bit_cast<U>(Widescreen_FillX()), 0, static_cast<unsigned char>(0xFFu - texels), 0xFF);
+            band(0x43A00000u, std::bit_cast<U>(Widescreen_FillRight(320.0f)), 0, texels);
+        }
     }
     {
         unsigned char* const window = Rect(0, 0, 0x100, 0x100);
@@ -556,9 +578,9 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetTile)(p);
         SH_CALL(Gpu_SetSemiTrans)(p, 1);
-        SetUL(p + 8, 0);
+        SetUL(p + 8, std::bit_cast<U>(Widescreen_FillX()));       // DIV-0041: 0 unarmed
         SetUL(p + 0xC, 0x42480000u);   // 50.0f
-        SetUL(p + 0x14, 0x43A00000u);  // 320.0f
+        SetUL(p + 0x14, std::bit_cast<U>(Widescreen_FillWidth()));  // 320.0f unarmed
         SetUL(p + 0x18, 0x42200000u);  // 40.0f
         p[4] = p[5] = p[6] = 0xFF;
         SH_CALL(EffectKind18Sub44_Commit)(0x1C);
@@ -606,7 +628,9 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
     for (U row = 0; row < 2; ++row) {
         const U clut = (row + 0x1E6) << 6;
         const unsigned char v0 = static_cast<unsigned char>(row * 0x60), v1 = static_cast<unsigned char>(v0 + 0x5A);
-        for (U column = 0; I(column) < 0x300; column += 0x100) {
+        // DIV-0041: one more column at x - 0x200 when wide (the three reach
+        // only x - 0x100 >= -1 at the largest angle).
+        for (U column = wide != 0 ? 0u - 0x100u : 0u; I(column) < 0x300; column += 0x100) {
             unsigned char* const p = Gfx_PacketNext;
             SH_CALL(Gpu_SetPolyFT4)(p);
             SH_CALL(Gpu_SetShadeTex)(p, 0);
@@ -656,6 +680,32 @@ extern "C" void __cdecl EffectKind18Sub44_Draw(void) {
             p[0x24] = p[0x25] = p[0x26] = 0;
             p[0x34] = p[0x35] = p[0x36] = 0;
             SH_CALL(EffectKind18Sub44_Commit)(0x44);
+        }
+        // DIV-0041: the bands' outer rows carried flat to the wide frame's
+        // edges, each written at the cursor and linked through the commit's
+        // own pool test.
+        if (wide != 0) {
+            for (U side = 0; side < 2; ++side) {
+                unsigned char* const p = Gfx_PacketNext;
+                const U edge = side == 0 ? 0u : 4u;
+                const float x0 = side == 0 ? Widescreen_FillX() : 320.0f;
+                const float x1 = side == 0 ? 0.0f : Widescreen_FillRight(320.0f);
+                SH_CALL(Gpu_SetPolyG4)(p);
+                SH_CALL(Gpu_SetSemiTrans)(p, 1);
+                SetUL(p + 8, std::bit_cast<U>(x0));
+                SetUL(p + 0xC, 0x42B40000u);   // 90.0f
+                SetUL(p + 0x18, std::bit_cast<U>(x1));
+                SetUL(p + 0x1C, 0x42B40000u);
+                SetUL(p + 0x28, std::bit_cast<U>(x0));
+                SetD(p + 0x2C, Fi(*At(at::kSkyYs + edge)));
+                SetUL(p + 0x38, std::bit_cast<U>(x1));
+                SetD(p + 0x3C, Fi(*At(at::kSkyYs + edge)));
+                RowColour(p + 4, row);
+                RowColour(p + 0x14, row);
+                p[0x24] = p[0x25] = p[0x26] = 0;
+                p[0x34] = p[0x35] = p[0x36] = 0;
+                SH_CALL(EffectKind18Sub44_Commit)(0x44);
+            }
         }
     }
     {

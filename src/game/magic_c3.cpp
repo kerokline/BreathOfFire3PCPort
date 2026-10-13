@@ -23,12 +23,14 @@
 // it (docs/magic_fx_reached.md section 3, the precedent).
 #include "game/magic_c3.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
 #include "game/magic_harness.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -482,15 +484,20 @@ unsigned SetAngle(std::uint32_t cell, unsigned byte, unsigned add) {
     return a;
 }
 
+// The quad's corners (0, 0)..(319, 239); under DIV-0041 x runs from
+// Widescreen_FillX() to 319 + the columns (the PSP's -32..351), 0..319 while
+// the fills are unarmed, so the fuzz compares the original's.
 void FullScreen(unsigned char* p, unsigned x1, unsigned y1, unsigned x2, unsigned y2, unsigned x3, unsigned y3) {
-    constexpr std::uint32_t k319 = 0x439F8000, k239 = 0x436F0000;   // 319.0f, 239.0f
-    SetLong(p + 8, 0);
+    constexpr std::uint32_t k239 = 0x436F0000;   // 239.0f
+    const auto left = std::bit_cast<std::int32_t>(Widescreen_FillX());
+    const auto right = std::bit_cast<std::int32_t>(Widescreen_FillRight(319.0f));
+    SetLong(p + 8, left);
     SetLong(p + 0xC, 0);
-    SetLong(p + x1, static_cast<std::int32_t>(k319));
+    SetLong(p + x1, right);
     SetLong(p + y1, 0);
-    SetLong(p + x2, 0);
+    SetLong(p + x2, left);
     SetLong(p + y2, static_cast<std::int32_t>(k239));
-    SetLong(p + x3, static_cast<std::int32_t>(k319));
+    SetLong(p + x3, right);
     SetLong(p + y3, static_cast<std::int32_t>(k239));
 }
 

@@ -29,6 +29,7 @@
 // load the same (32-bit) kernel32 - true within one boot session.
 #include <windows.h>
 
+#include "common/cache_manifest.h"
 #include "common/icon_stamp.h"
 #include "common/sha256.h"
 #include "launcher/config.h"
@@ -67,7 +68,7 @@ bool HostedOnlyAsked() {
 }
 
 // Every failure path: ends a suspended game process if there is one, reports
-// on stderr and in a message box, and exits 1.
+// on stderr and (not under BOF3X_SELFTEST_ONLY) in a message box, and exits 1.
 [[noreturn]] void Die(const wchar_t* fmt, ...) {
     if (g_child) TerminateProcess(g_child, 1);
     wchar_t buf[1024];
@@ -76,7 +77,9 @@ bool HostedOnlyAsked() {
     std::vswprintf(buf, 1024, fmt, ap);
     va_end(ap);
     std::fwprintf(stderr, L"bof3x-launcher: %ls\n", buf);
-    MessageBoxW(nullptr, buf, L"bof3x-launcher", MB_OK | MB_ICONERROR);
+    // A headless self-test shows no window, as the DLL's Fatal shows none
+    // (src/hook/log.cpp): the refusal is on stderr and in the exit code.
+    if (!SelfTestOnly()) MessageBoxW(nullptr, buf, L"bof3x-launcher", MB_OK | MB_ICONERROR);
     ExitProcess(1);
 }
 
@@ -323,6 +326,14 @@ int wmain(int argc, wchar_t** argv) {
             Die(L"%ls says opt=%hs: %hs.\n\nopt= is empty (the default layers installed), none, or a "
                 L"comma-separated list of layer names (docs/launcher-settings.md).",
                 ini.c_str(), cfg.opt.c_str(), why.c_str());
+        // The PSP's battle rules (psp=), refused here by the DLL's own rule
+        // rather than by a game that has started (psp_code.cpp keeps its check
+        // for a hand-set BOF3X_PSP).
+        if (!bof3x::ConfigPspValid(cfg.psp, why))
+            Die(L"%ls says psp=%hs: %hs.\n\npsp= is empty (the default: on when the cache's base is the PSP's), "
+                L"none, or a comma-separated list of the PSP's battle changes, duel-loss and myria-item "
+                L"(docs/psp-battle-changes.md).",
+                ini.c_str(), cfg.psp.c_str(), why.c_str());
     }
 
     if (want_dialog == 1 || (want_dialog == -1 && cfg.show_launcher)) {
@@ -337,6 +348,19 @@ int wmain(int argc, wchar_t** argv) {
         if (!bof3x::ConfigSave(ini, cfg))
             std::fwprintf(stderr, L"bof3x-launcher: cannot write %ls; settings not saved\n",
                           ini.c_str());
+    }
+
+    {
+        // The cache's manifest through the one reader the DLL shares
+        // (common/cache_manifest.h): a base_policy or exe_tables_from it cannot
+        // honour stops the launcher here, with the sentence the DLL would stop
+        // the game on. The cache BOF3X_CACHE or cache= names, whatever
+        // BOF3X_CACHE_DATA says, as the DLL reads base_policy.
+        const std::wstring root = bof3x::ConfigCacheRoot(cfg);
+        const bof3x::CacheManifest manifest = bof3x::ManifestRead(root);
+        if (!manifest.error.empty())
+            Die(L"%ls", bof3x::ConfigFromUtf8(bof3x::ManifestRefusal(manifest, bof3x::ConfigToUtf8(root + L"\\manifest.toml")))
+                            .c_str());
     }
 
     if (!exe_present) {
@@ -359,7 +383,7 @@ int wmain(int argc, wchar_t** argv) {
     if (!SelfTestOnly() && !bof3x::ConfigApplyGameCfg(game_dir, cfg, cfg_error))
         Die(L"%ls\n\nDisplay and renderer are set through that file, which is the game's "
             L"own input. Check that the game directory is writable.", cfg_error.c_str());
-    bof3x::ConfigApplyEnvironment(game_dir, cfg);
+    bof3x::ConfigApplyEnvironment(game_dir, cfg, hosted);   // hosted: no layer that build refuses
 
     STARTUPINFOW si{};
     si.cb = sizeof si;

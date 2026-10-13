@@ -12,7 +12,14 @@
 namespace bof3x {
 
 // Modal over `owner`. `game_dir` holds the PC's BGM\; `cache` is the
-// importer's cache folder (its base\bgm\ the disc's songs), empty for none.
-void MusicPlayerRun(HWND owner, const std::wstring& game_dir, const std::wstring& cache);
+// importer's cache folder (its base\bgm\ the disc's songs, and a PSP disc's in
+// opt\psp-music\bgm\ beside a PlayStation base), empty for none. `data_root`
+// is where the game finds layers (ConfigCacheDataRoot), and `opt` the
+// settings' opt= as read. The battle-chord box records the player's choice in
+// `chord_choice` (-1 untouched, 0 off, 1 on); the settings dialog makes opt=
+// from the line as read and every choice at once, on Play (SuitesOptEdit), so
+// a box ticked and unticked again writes the line back byte for byte.
+void MusicPlayerRun(HWND owner, const std::wstring& game_dir, const std::wstring& cache,
+                    const std::wstring& data_root, const std::string* opt, int* chord_choice);
 
 }  // namespace bof3x

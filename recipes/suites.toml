@@ -1,0 +1,140 @@
+# recipes/suites.toml - the launcher's three suites (docs/launcher-suites.md; the
+# owner's calls of 2026-10-10, docs/psp-only-build.md section 7 item 3).
+#
+# Hand-written. tools/suites.py checks it (`importer.py check` runs that) and
+# generates the launcher's table from it (`suites.py gen`, a build step): edit
+# this file, never the generated header.
+#
+# A suite is one toggle: the PlayStation's version of a set of differences or
+# the PSP's, all together. Its members are what the toggle moves. Each member
+# names the builds it comes from (`from`, fixtures.toml ids) and how it reaches
+# the game when the install's base is the PlayStation's (`over_psx`):
+#
+#   layer   an opt/ layer (`layer`) of recipes/opt.toml, or of recipes/psp-layers.toml
+#           (the engine half: the music, the effects, the exe tables, P8;
+#           docs/launcher-suites.md 9), played through opt= and BOF3X_OPT
+#           (DIV-0086): selectable when the cache holds it
+#   engine  its engine half is not built: listed, greyed with `why`, never
+#           selectable (no member since the engine half, 2026-10-12)
+#   none    no layer exists or is planned: listed, greyed with `why`
+#   switch  (kind code only) a rule in the engine's code, played through psp= and
+#           BOF3X_PSP (`code` names the item, src/game/psp_code.h): selectable today
+#
+# When the base is the PSP's (the manifest's [build] base_policy = "psp", a
+# PSP-only install), every member is the base and the PlayStation's version is
+# the greyed side. `kind` says where a member lives in the cache: opt (opt/
+# <layer>/), bgm (base/bgm/), snd (base/snd/), exe (base/exe/'s tables), base
+# (base/ chunks; the PSP's stand-ins), code (the engine's switch, no cache file).
+#
+# Which suite carries the names layers, Ryu's form data (P8) and the button
+# page are the owner's open calls (docs/psp-only-round.md section 7 item 3);
+# the placement below is the proposal in docs/launcher-suites.md section 6.
+# No game data: names, ids and builds only.
+
+[[suite]]
+id = "graphics"
+label = "Graphics"
+what = "the PSP's art: Stallion's palettes (P6), the area tiles and palettes it redrew or blanked, its map-band edits"
+
+[[suite.member]]
+id = "psp-art"
+label = "Stallion's palettes"
+kind = "opt"
+layer = "psp-art"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-tiles"
+label = "area tiles and palettes"
+kind = "opt"
+layer = "psp-tiles"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-maps"
+label = "map bands"
+kind = "opt"
+layer = "psp-maps"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite]]
+id = "audio"
+label = "Audio"
+what = "the PSP's music (its own sequences and banks) and its effects, voices and jingles (ATRAC3plus, decoded by the player's ffmpeg)"
+
+[[suite.member]]
+id = "psp-music"
+label = "music"
+kind = "bgm"
+layer = "psp-music"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-effects"
+label = "effects, voices, jingles"
+kind = "snd"
+layer = "psp-snd"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite]]
+id = "data"
+label = "Data"
+what = "the PSP's game data: roster index 6's level table and consumable 87, its item and ability renames, Ryu's form data (P8)"
+
+[[suite.member]]
+id = "psp-tables"
+label = "level table and item 87"
+kind = "exe"
+layer = "psp-tables"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-names-en-150"
+label = "English renames"
+kind = "opt"
+layer = "psp-names-en-150"
+from = ["psp-eu"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-names-ja-JP"
+label = "Japanese renames"
+kind = "opt"
+layer = "psp-names-ja-JP"
+from = ["psp-jp"]
+over_psx = "layer"
+
+[[suite.member]]
+id = "psp-ryu-forms"
+label = "Ryu's forms (P8)"
+kind = "base"
+layer = "psp-ryu-forms"
+from = ["psp-jp", "psp-eu"]
+over_psx = "layer"
+
+# The PSP's two battle rules (DIV-0108, docs/psp-battle-changes.md): code in
+# the engine, not data from a disc, switched by bof3x.ini's psp= (BOF3X_PSP;
+# src/game/psp_code.h). On by default on a PSP base, off otherwise; the suite's
+# choice writes psp= as a layer member's writes opt=. `from` is the builds whose
+# code has the rule (both PSP releases, read side by side).
+[[suite.member]]
+id = "psp-duel-loss"
+label = "fight 27: a loss goes on"
+kind = "code"
+code = "duel-loss"
+from = ["psp-jp", "psp-eu"]
+over_psx = "switch"
+
+[[suite.member]]
+id = "psp-myria-item"
+label = "fight 55: Myria's item"
+kind = "code"
+code = "myria-item"
+from = ["psp-jp", "psp-eu"]
+over_psx = "switch"

@@ -16,6 +16,7 @@
 #include "audio/seq.h"
 #include "audio/song.h"
 #include "bof3/symbols.gen.h"
+#include "game/dat_cache.h"
 #include "game/music_resume.h"
 #include "game/sound_callees.h"
 #include "hook/log.h"
@@ -50,8 +51,12 @@ bool FileExists(const char* path) {
 }
 
 struct State {
-    unsigned char armed = 0;       // BOF3X_MUSIC seq and a cache with base\bgm
+    unsigned char armed = 0;       // BOF3X_MUSIC seq and a cache with base\bgm (or a named layer's bgm)
     char root[kRootMax + 1] = {};  // BOF3X_CACHE, no trailing separator
+    // DIV-0109: the bgm directories of the layers BOF3X_OPT names that have one
+    // (<root>\opt\<layer>\bgm), in its order; a song is looked for in the last
+    // first, then base\bgm. A song's bank is its own directory's bank\.
+    std::vector<std::string> layer_dirs;
     bool (*exists)(const char*) = FileExists;
     // The cache song LoadFile put in Music_File (nullptr: Music_File is not one).
     const void* song_file = nullptr;
@@ -60,7 +65,9 @@ struct State {
     bool active = false;           // the stream Music_Start began is the synth's
     psx::Song* song = nullptr;     // the song LoadFile parsed
     psx::Bank* bank = nullptr;     // the bank it wants, parsed
-    std::string synth_bank;        // the bank the synth holds ("" none)
+    std::string bank_path;         // the file `bank` was read from ("" none): a layer's bank may share a base bank's name
+    std::string song_from;         // where the song came from, for the log (base\bgm or opt\<layer>\bgm)
+    std::string synth_bank;        // the bank file the synth holds ("" none)
     psx::MusicSynth* synth = nullptr;
 };
 State g_s;
@@ -136,20 +143,21 @@ void ReadWhole(const char* path, std::vector<std::uint8_t>* out) {
     if (!ok || got != out->size()) bof3::Fatal("DIV-0087: %s: read %lu of %zu bytes", path, got, out->size());
 }
 
-// Every song file the seam could be asked for (base\bgm\NNN.DAT, "%03u" of a
-// track) parsed and checked as LoadFile checks it, and each bank they name
-// once: a damaged cache stops the game at start-up, naming the file, rather
-// than at the scene change that first plays it. A track with no file is not
-// an error - it plays its MP3.
-void CheckCache(const char* root) {
+// Every song file the seam could be asked for in one bgm directory (base\bgm
+// or a layer's, NNN.DAT, "%03u" of a track) parsed and checked as LoadFile
+// checks it, and each bank they name once, from that directory's bank\: a
+// damaged cache stops the game at start-up, naming the file, rather than at
+// the scene change that first plays it. A track with no file is not an error
+// - it plays the song under it, or its MP3.
+void CheckCache(const char* dir) {
     char pattern[kPathMax + 1];
-    std::snprintf(pattern, sizeof pattern, "%s\\base\\bgm\\*.DAT", root);
+    std::snprintf(pattern, sizeof pattern, "%s\\*.DAT", dir);
     WIN32_FIND_DATAA found;
     const HANDLE find = FindFirstFileA(pattern, &found);
     if (find == INVALID_HANDLE_VALUE) {
         const DWORD e = GetLastError();
         if (e != ERROR_FILE_NOT_FOUND) bof3::Fatal("DIV-0087: cannot list %s (error %lu)", pattern, e);
-        bof3::Log("DIV-0087    %s\\base\\bgm holds no song: every track plays its MP3", root);
+        bof3::Log("DIV-0087    %s holds no song", dir);
         return;
     }
     std::vector<std::string> banks;
@@ -166,7 +174,7 @@ void CheckCache(const char* root) {
         std::snprintf(expect, sizeof expect, "%03u.DAT", track);
         if (lstrcmpiA(expect, name) != 0) continue;  // not a name LoadFile builds
         char path[kPathMax + 1];
-        std::snprintf(path, sizeof path, "%s\\base\\bgm\\%s", root, expect);
+        std::snprintf(path, sizeof path, "%s\\%s", dir, expect);
         ReadWhole(path, &bytes);
         psx::Song song;
         g_parsing = path;
@@ -178,7 +186,7 @@ void CheckCache(const char* root) {
         for (const std::string& b : banks) seen = seen || b == song.bank;
         if (seen) continue;
         char bank_path[kPathMax + 1];
-        std::snprintf(bank_path, sizeof bank_path, "%s\\base\\bgm\\bank\\%s.DAT", root, song.bank.c_str());
+        std::snprintf(bank_path, sizeof bank_path, "%s\\bank\\%s.DAT", dir, song.bank.c_str());
         if (!FileExists(bank_path)) bof3::Fatal("DIV-0087: %s wants %s, which is not there", path, bank_path);
         ReadWhole(bank_path, &bytes);
         psx::Bank bank;
@@ -188,7 +196,8 @@ void CheckCache(const char* root) {
     const DWORD e = GetLastError();
     FindClose(find);
     if (e != ERROR_NO_MORE_FILES) bof3::Fatal("DIV-0087: listing %s stopped (error %lu)", pattern, e);
-    bof3::Log("DIV-0087    the cache checked: %u songs and %u banks parse", songs, static_cast<unsigned>(banks.size()));
+    bof3::Log("DIV-0087    the cache checked: %s, %u songs and %u banks parse", dir, songs,
+              static_cast<unsigned>(banks.size()));
 }
 
 }  // namespace
@@ -196,10 +205,19 @@ void CheckCache(const char* root) {
 bool LoadFile(unsigned track) {
     if (!g_s.armed) return false;
     char path[kPathMax + 1];
-    std::snprintf(path, sizeof path, "%s\\base\\bgm\\%03u.DAT", g_s.root, track);
-    if (!g_s.exists(path)) {
-        bof3::Log("DIV-0087    track %03u: not in the cache, its MP3", track);
-        return false;
+    // DIV-0109: the named layers' bgm first, the last listed first, then base\bgm
+    std::string dir;
+    for (std::size_t i = g_s.layer_dirs.size(); i-- > 0 && dir.empty();) {
+        std::snprintf(path, sizeof path, "%s\\%03u.DAT", g_s.layer_dirs[i].c_str(), track);
+        if (g_s.exists(path)) dir = g_s.layer_dirs[i];
+    }
+    if (dir.empty()) {
+        dir = std::string(g_s.root) + "\\base\\bgm";
+        std::snprintf(path, sizeof path, "%s\\%03u.DAT", dir.c_str(), track);
+        if (!g_s.exists(path)) {
+            bof3::Log("DIV-0087    track %03u: not in the cache, its MP3", track);
+            return false;
+        }
     }
     Objects();
     const int handle = g.file_open(path, 0, 0);
@@ -220,13 +238,19 @@ bool LoadFile(unsigned track) {
     psx::LoadSong(static_cast<const std::uint8_t*>(file), static_cast<std::size_t>(size), g_s.song);
     g_parsing = nullptr;
     CheckSong(path, track, *g_s.song);
-    if (g_s.bank->name != g_s.song->bank) {
-        std::snprintf(path, sizeof path, "%s\\base\\bgm\\bank\\%s.DAT", g_s.root, g_s.song->bank.c_str());
+    // The song's bank from its own directory. A layer's bank may bear a base
+    // bank's name (the PSP's are named as the PSX's), so the file, not the
+    // name, says whether the bank held is the one wanted.
+    std::snprintf(path, sizeof path, "%s\\bank\\%s.DAT", dir.c_str(), g_s.song->bank.c_str());
+    if (g_s.bank_path != path) {
         if (!g_s.exists(path)) bof3::Fatal("DIV-0087: song %u wants %s, which is not there", track, path);
         std::vector<std::uint8_t> bytes;
         ReadBank(path, &bytes);
+        g_s.bank_path.clear();
         ParseBank(path, bytes, g_s.song->bank, g_s.bank);
+        g_s.bank_path = path;
     }
+    g_s.song_from = dir.substr(std::strlen(g_s.root) + 1);
     Music_FileLoops = static_cast<int>(g_s.song->flags & 1);
     Music_LoadedTrack = static_cast<int>(track);
     g_s.song_file = file;
@@ -245,9 +269,9 @@ bool IsSong(const void* file, unsigned size) {
 
 void Begin() {
     Objects();
-    if (g_s.synth_bank != g_s.song->bank) {
+    if (g_s.synth_bank != g_s.bank_path) {
         g_s.synth->LoadBank(*g_s.bank);
-        g_s.synth_bank = g_s.bank->name;
+        g_s.synth_bank = g_s.bank_path;
     }
     g_s.synth->SetMono(Mono());
     // At sequence volume 127 from the first tick: a ramp to 1 over one frame
@@ -257,8 +281,8 @@ void Begin() {
     g_s.synth->Play(*g_s.song, 1, 1);
     g_s.synth->SetVolume(127, 127);
     g_s.active = true;
-    bof3::Log("DIV-0087    track %03u from the cache: base\\bgm\\%03u.DAT, bank %s, %s", g_s.track, g_s.track,
-              g_s.song->bank.c_str(), (g_s.song->flags & 1) ? "looping" : "once");
+    bof3::Log("DIV-0087    track %03u from the cache: %s\\%03u.DAT, bank %s, %s", g_s.track, g_s.song_from.c_str(),
+              g_s.track, g_s.song->bank.c_str(), (g_s.song->flags & 1) ? "looping" : "once");
 }
 
 bool Active() { return g_s.active; }
@@ -339,18 +363,34 @@ void Arm() {
     char bgm[MAX_PATH + 16];
     std::snprintf(bgm, sizeof bgm, "%s\\base\\bgm", root);
     const DWORD b = GetFileAttributesA(bgm);
-    if (b == INVALID_FILE_ATTRIBUTES || !(b & FILE_ATTRIBUTE_DIRECTORY)) {
+    const bool base = b != INVALID_FILE_ATTRIBUTES && (b & FILE_ATTRIBUTE_DIRECTORY);
+    // DIV-0109: the layers BOF3X_OPT names with a bgm part (DatLoad_Inject read
+    // and checked them; dat_cache answers for the same root, BOF3X_CACHE)
+    std::vector<std::string> layers;
+    for (const std::string& l : dat_cache::LayersWith("bgm")) {
+        // its longest path: <root>\opt\<layer>\bgm\bank\ + a 15-character bank + .DAT
+        if (len + sizeof "\\opt\\" - 1 + l.size() + sizeof "\\bgm\\bank\\" - 1 + 15 + sizeof ".DAT" - 1 > kPathMax)
+            bof3::Fatal("DIV-0109: BOF3X_CACHE=%s with layer %s: its banks' paths would pass MAX_PATH; a shorter cache "
+                        "path, or leave %s out of BOF3X_OPT", root, l.c_str(), l.c_str());
+        layers.push_back(std::string(root) + "\\opt\\" + l + "\\bgm");
+    }
+    if (!base && layers.empty()) {
         bof3::Log("DIV-0087    BOF3X_CACHE=%s has no base\\bgm: every track plays its MP3", root);
         return;
     }
     if (m != 0 && std::strcmp(mode, "mp3") == 0) {
-        bof3::Log("DIV-0087    BOF3X_MUSIC=mp3: every track plays its MP3 (the cache %s not used for music)", root);
+        bof3::Log("DIV-0087    BOF3X_MUSIC=mp3: every track plays its MP3 (the cache %s not used for music%s)", root,
+                  layers.empty() ? "" : "; the named layers' songs neither: music= chooses the MP3s over every song");
         return;
     }
     std::memcpy(g_s.root, root, len + 1);
+    g_s.layer_dirs = layers;
     Objects();
-    CheckCache(g_s.root);
+    for (const std::string& d : layers) CheckCache(d.c_str());
+    if (base) CheckCache(bgm);
     g_s.armed = 1;
+    for (const std::string& d : layers)
+        bof3::Log("DIV-0109    songs from %s first, where it has the song (the layer named in BOF3X_OPT)", d.c_str());
     bof3::Log("DIV-0087    music from the cache where it has the song: %s\\base\\bgm (BOF3X_MUSIC=mp3 for the MP3s)",
               root);
 }
@@ -608,6 +648,8 @@ void SelfTest() {
     g_s.active = false;
     g_s.synth_bank.clear();
     g_s.bank->name.clear();
+    g_s.bank_path.clear();
+    g_s.layer_dirs.clear();
 
     // 1. A looping song: loaded, started, the first half by Music_CreateBuffer
     // and five more by Music_Decode in 0x12000-byte calls; equal to one Render.
@@ -770,6 +812,34 @@ void SelfTest() {
     g_s.synth = game_synth;
     delete looper;
 
+    // 7. DIV-0109, a layer's bgm (BOF3X_OPT naming it): song 7 is in the layer as
+    // well as in base\bgm, on a bank of the same name in the layer's own
+    // bank\ (the bank without reverb, under base's name) - the layer's song
+    // and the layer's bank are read and played, the oracle's on that bank;
+    // base's 007.DAT not opened (base first would open it). Then song 11,
+    // which only base has, on base's SELFTEST: the bank held bears the same
+    // name, and a seam that kept a bank by its name (as before DIV-0109) would
+    // play the layer's - base's must be read again and the samples be the
+    // oracle's on it. Then song 10, base's on its own bank.
+    const std::vector<std::uint8_t> lay_bank = TestBank("SELFTEST", 1, false), lay_song = TestSong(7, true, "SELFTEST");
+    const std::string lay_dir = std::string(kTestRoot) + "\\opt\\lay-m\\bgm";
+    files.push_back({lay_dir + "\\007.DAT", &lay_song, 0});
+    files.push_back({lay_dir + "\\bank\\SELFTEST.DAT", &lay_bank, 0});
+    const std::size_t lay_song_at = files.size() - 2, lay_bank_at = files.size() - 1;
+    psx::Bank lay;
+    psx::LoadBank(lay_bank.data(), lay_bank.size(), &lay);
+    g_s.layer_dirs = {lay_dir};
+    names.clear();
+    const unsigned base7_opens = files[0].opens;
+    const bool layer_song = change(7, lay_song, lay) && files[lay_song_at].opens == 1 && files[lay_bank_at].opens == 1 &&
+                            files[0].opens == base7_opens && g_s.song_from == "opt\\lay-m\\bgm";
+    const unsigned big_opens = files[5].opens, small_opens = files[2].opens;
+    // song 11 names SELFTEST: base's, read again, not the layer's of the same name
+    const bool layer_name_twin = change(11, after_big, bank) && files[2].opens == small_opens + 1 &&
+                                 files[lay_bank_at].opens == 1 && g_s.song_from == "base\\bgm";
+    const bool layer_under = change(10, on_big, big) && files[5].opens == big_opens + 1 && g_s.song_from == "base\\bgm";
+    g_s.layer_dirs = saved_s.layer_dirs;
+
     Music_Release();
     const bool released = !Active() && !Music_Data;
     delete ref;
@@ -796,6 +866,8 @@ void SelfTest() {
     g_s.active = saved_s.active;
     g_s.synth_bank.clear();  // the synth holds the test's bank: the game's first song loads its own
     g_s.bank->name.clear();
+    g_s.bank_path.clear();
+    g_s.song_from = saved_s.song_from;
     g_files = nullptr;
     g_names = nullptr;
     g_capture = nullptr;
@@ -811,6 +883,13 @@ void SelfTest() {
                     static_cast<unsigned long long>(period), load7 ? "ok" : "WRONG", start7 ? "ok" : "WRONG", same7 ? "ok" : "WRONG", volume ? "ok" : "WRONG",
                     load8 ? "ok" : "WRONG", end8 ? "ok" : "WRONG", cut, frames8, to_big ? "ok" : "WRONG",
                     to_small ? "ok" : "WRONG", fallback ? "ok" : "WRONG", mp3 ? "ok" : "WRONG", released ? "ok" : "WRONG");
+    if (!layer_song || !layer_name_twin || !layer_under)
+        bof3::Fatal("DIV-0109 self-test: a layer's song and bank %s; a base song on a bank named as the layer's %s; a base "
+                    "song under the layer %s",
+                    layer_song ? "ok" : "WRONG", layer_name_twin ? "ok" : "WRONG", layer_under ? "ok" : "WRONG");
+    bof3::Log("shadow      DIV-0109 self-test: a named layer's song and its own bank played before base\\bgm's, equal to "
+              "the oracle's; a base song on a bank bearing the layer bank's name read from base again; a song only "
+              "base has from base");
     bof3::Log("shadow      DIV-0087 self-test: a synthetic looping song through Music_LoadFile / Music_Start / "
               "Music_Decode, %d samples equal to one MusicSynth::Render; the buffer volume by libsnd's law; a once-only "
               "song ended at sample %d with Music_Finished and zeros after, its bank kept; a song on a two-program "

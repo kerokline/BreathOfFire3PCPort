@@ -4,7 +4,10 @@
 the Look box's CRT entries, snap, widescreen, cheats, controls and the pad;
 2026-10-10 the Music and Cache folder boxes and the PSP extras, verified by
 `tools/launcher_host/`, §3.1. §6 is the record of 2026-09-20's verification,
-not re-run since)
+not re-run since. **2026-10-12: the PSP extras boxes are replaced by three
+suites** - graphics, audio, data, each the PlayStation's or the PSP's -
+[`launcher-suites.md`](launcher-suites.md), DIV-0107; §3.1's PSP extras item
+is the record of what they replaced)
 
 `bof3x-launcher` now opens a settings dialog before it starts the game. This
 document says what the shipped `START.EXE` / `SETUP.EXE` are (neither is a
@@ -82,7 +85,7 @@ used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 | Look: SatPixie, and its Options... dialog (2026-09-23) | `BOF3X_PRESENT=satpixie`, `BOF3X_SATPIXIE=name=value,...` | ours — DIV-0043; `crt-look.md` §5 |
 | Snap (2026-09-23) | `BOF3X_SNAP=0` when off | ours — DIV-0042: whole multiples, or the picture fitted to the window's height; the window is resized instead of sized here |
 | Widescreen (2026-09-23) | `BOF3X_WIDE=1` when on | ours — DIV-0041 |
-| Optional layers (2026-10-08): `opt=` in the ini - empty (the default), `none`, or a comma-separated list of `opt/` layer names; since 2026-10-10 the dialog's PSP extras group (§3.1) | `BOF3X_OPT=<list>`, only the layers whose `DAT\<layer>.*` are installed and whose language (a `-<tag>` suffix) is the one played. **Empty** names the default layers that are installed - since 2026-10-10 `area4-walls` (DIV-0080) when `DAT\area4-walls.*.DAT` is there; **`none`** names none; a list is exactly that list (so one without `area4-walls` turns the walls off). A value it cannot honour (a character other than a letter, digit, `-` or `,`, an empty name, `none` in a list, a name twice, more than 8, one over 23 characters) **stops the launcher** with a message rather than falling back to the default | ours — DIV-0086, DIV-0080, [`opt-layers.md`](opt-layers.md) section 5 |
+| Optional layers (2026-10-08): `opt=` in the ini - empty (the default), `none`, or a comma-separated list of `opt/` layer names; since 2026-10-10 the dialog's PSP extras group (§3.1), since 2026-10-12 the dialog's three suites ([`launcher-suites.md`](launcher-suites.md); up to 16 layers) | `BOF3X_OPT=<list>`, only the layers whose `DAT\<layer>.*` are installed and whose language (a `-<tag>` suffix) is the one played. **Empty** names the default layers that are installed - since 2026-10-10 `area4-walls` (DIV-0080) when `DAT\area4-walls.*.DAT` is there; **`none`** names none; a list is exactly that list (so one without `area4-walls` turns the walls off). A value it cannot honour (a character other than a letter, digit, `-` or `,`, an empty name, `none` in a list, a name twice, more than 8, one over 23 characters) **stops the launcher** with a message rather than falling back to the default | ours — DIV-0086, DIV-0080, [`opt-layers.md`](opt-layers.md) section 5 |
 | Cheats... (2026-09-24): EXP and zenny sliders, steal switch | `BOF3X_EXP` / `BOF3X_ZENNY` when not 1, `BOF3X_STEAL=1` when on | ours — DIV-0045, DIV-0046; [`cheats.md`](cheats.md) |
 | (Window size, removed 2026-09-23 evening) | `BOF3X_SCALE`, from `scale=` in the ini, when not 2 | the first window's size only, until the game saves `bof3x.window` (DIV-0042) |
 | Keep running unfocused (2026-09-23) | `BOF3X_BACKGROUND=0` when off | ours — DIV-0033 |

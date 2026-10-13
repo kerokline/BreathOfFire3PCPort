@@ -242,6 +242,139 @@ def emi_sections(blob):
     return out
 
 
+# ---------------------------------------------------------------- a PSP disc (docs/loc-build-psp.md)
+
+# A PSP disc carries the PlayStation's EMIs under PSP_GAME/USRDIR/<region>/
+# where a PSX disc has BIN/, in the same container form but for two header
+# changes (region-diff.md 5.1, region_diff.nd): every RAM destination of a
+# type-0 or type-1 section has bit 31 cleared, and eight type-3 image words
+# have bit 0 set (measured 2026-10-12 over every EMI of PSP-JP against PSX-JP:
+# 2,683 bit-31 words, 8 image words, nothing else). `PspDisc` presents such a
+# disc as a PSX disc: paths under BIN/, and each EMI's section table with both
+# undone, so every reader below sees the PlayStation's destinations. The
+# section bodies are the PSP's own. What it cannot present is the boot EXE:
+# the PSP's names, verbs and tables are in BOOT.BIN, a native ELF (`boot`).
+
+PSP_ROOT = "PSP_GAME/USRDIR/"
+PSP_BOOT = "PSP_GAME/SYSDIR/BOOT.BIN"
+PSP_EMI_TYPE = 0x1C        # a section entry's type, u16 (region_diff.emi_sections_blob)
+
+
+def psp_emi(blob):
+    """An EMI from a PSP disc with its section table as the PlayStation's."""
+    if blob[8:16] != b"MATH_TBL":
+        return blob
+    out = bytearray(blob)
+    count, = struct.unpack_from("<I", blob, 0)
+    for i in range(count):
+        dest, = struct.unpack_from("<I", blob, 0x14 + 16 * i)
+        kind, = struct.unpack_from("<H", blob, PSP_EMI_TYPE + 16 * i)
+        if kind in (0, 1) and 0 < dest < 0x80000000:
+            dest |= 0x80000000
+        elif kind == 3:
+            dest &= ~1
+        struct.pack_into("<I", out, 0x14 + 16 * i, dest)
+    return bytes(out)
+
+
+class PspDisc:
+    """A PSP disc read as a PlayStation one (above). `build` is the fixtures.toml
+    build its UMD_DATA.BIN serial names (psp-jp, psp-eu), `japanese` whether
+    its text is (that build's tag)."""
+    psp = True
+
+    def __init__(self, disc):
+        import importer
+        self.disc = disc
+        roots = sorted({p[len(PSP_ROOT):].split("/", 1)[0] for p in disc.files
+                        if p.startswith(PSP_ROOT) and p.endswith(".EMI")})
+        if len(roots) != 1:
+            raise SystemExit("PSP disc: %d data roots under %s (%s), expected one" % (len(roots), PSP_ROOT, roots))
+        self.root = PSP_ROOT + roots[0] + "/"
+        self.path_of = {"BIN/" + p[len(self.root):]: p for p in disc.files if p.startswith(self.root)}
+        self.files = dict((k, disc.files[v]) for k, v in self.path_of.items())
+        serial = disc.read("UMD_DATA.BIN").split(b"|")[0].decode("ascii", "replace").upper().replace("_", "-")
+        found = [b for b in importer._fixtures()["build"] if b.get("serial", "").upper() == serial
+                 and b.get("role") == "psp-disc"]
+        if len(found) != 1:
+            raise SystemExit("PSP disc %s: fixtures.toml holds no PSP build of that serial" % serial)
+        self.build, self.tag = found[0]["id"], found[0]["tag"]
+        self.japanese = primary(self.tag) == "ja"
+        self._boot = None
+
+    def read(self, name):
+        name = name.upper().replace("\\", "/")
+        blob = self.disc.read(self.path_of.get(name, name))
+        return psp_emi(blob) if name.endswith(".EMI") else blob
+
+    def find(self, basename):
+        b = basename.upper()
+        return sorted(p for p in self.files if p.rsplit("/", 1)[-1] == b)
+
+    def boot(self):
+        """BOOT.BIN's first program header (.text, .rodata, .data at 0): the
+        image the PSP's names and the exe's strings are read from."""
+        if self._boot is None:
+            elf = self.disc.read(PSP_BOOT)
+            if elf[:4] != b"\x7fELF":
+                raise SystemExit("%s is not a plain ELF" % PSP_BOOT)
+            phoff, = struct.unpack_from("<I", elf, 28)
+            _, off, va, _, fs, _, _, _ = struct.unpack_from("<8I", elf, phoff)
+            if va != 0:
+                raise SystemExit("%s: the first program header is at 0x%X, not 0" % (PSP_BOOT, va))
+            self._boot = elf[off:off + fs]
+            shoff, = struct.unpack_from("<I", elf, 32)
+            size, count, names = struct.unpack_from("<HHH", elf, 46)
+            heads = [struct.unpack_from("<10I", elf, shoff + i * size) for i in range(count)]
+            strs = heads[names][4]
+            text = [h for h in heads if elf[strs + h[0]:elf.index(b"\0", strs + h[0])] == b".text"]
+            if len(text) != 1:
+                raise SystemExit("%s: %d .text sections" % (PSP_BOOT, len(text)))
+            self.text_end = text[0][3] + text[0][5]
+        return self._boot
+
+    def pointers(self):
+        """What a pointer to data in BOOT.BIN is: an offset past .text, inside the image."""
+        return (self.text_end, len(self.boot()))
+
+
+def open_disc(path):
+    """A disc image for the converters: a PlayStation disc as it is, a PSP disc
+    through PspDisc."""
+    disc = psx_disc.Disc(path)
+    if "SYSTEM.CNF" not in disc.files and "UMD_DATA.BIN" in disc.files:
+        return PspDisc(disc)
+    return disc
+
+
+def is_psp(disc):
+    return getattr(disc, "psp", False)
+
+
+# What a pointer word in a donor looks like: a PSX overlay's are KSEG0
+# addresses below 2 MB; BOOT.BIN's are link-time offsets into its own image
+# (relocations are applied at load, tools/psp_elf.py), so below its size.
+PSX_POINTERS = (0x80000000, 0x80200000)
+donor_pointers = PSX_POINTERS
+
+
+def is_pointer(v):
+    return donor_pointers[0] <= v < donor_pointers[1]
+
+
+def world_blobs(disc):
+    """(name, bytes) of every module a fishing area's text could be in: each
+    WORLDnn/AREAnnn.EMI of a PlayStation disc; BOOT.BIN alone on a PSP disc,
+    whose EMIs keep the Japanese build's overlays (region-diff.md 5) and whose
+    own code and strings are the ELF's (its pointers then offsets from 0)."""
+    if is_psp(disc):
+        yield PSP_BOOT, disc.boot()
+        return
+    for name in sorted(disc.files):
+        if "/WORLD" in name and name.endswith(".EMI"):
+            yield name, disc.read(name)
+
+
 def donor_sheet(disc):
     """The atlas as rows of nibbles, de-interleaved."""
     raw = emi_sections(disc.read(FONT_EMI))[0][1]
@@ -260,12 +393,14 @@ def donor_sheet(disc):
 def latin_extension(rows):
     """The last code of the donor's accented cells past 0x93, or 0x93 if none.
 
-    A cell counts when it has ink in both sets, and the run stops at the first
-    empty one."""
+    A cell counts when it has ink in the dialogue set, and the run stops at
+    the first empty one. (Until 2026-10-12 it had to have ink in the 8 x 8 set
+    too: the same run on all five PlayStation sheets, which end in a cell
+    empty in both; PSP-EU's adds three dialogue-only cells, 0x94..0x96, which
+    its ending text uses - their UI cells are blank, docs/loc-build-psp.md 3.4.)"""
     last = LAST_CODE
     for code in range(EXT_FIRST, EXT_MAX + 1):
-        if not all(any(v for r in donor_cell(rows, code, y0, h) for v in r)
-                   for y0, h in ((CELLS_Y0, CELL_H), (SMALL_CELLS_Y0, SMALL_CELL_H))):
+        if not any(v for r in donor_cell(rows, code, CELLS_Y0, CELL_H) for v in r):
             break
         last = code
     return last
@@ -470,7 +605,9 @@ def pc_glyph_from_rows(cell):
 # ---------------------------------------------------------------- the text
 
 def is_japanese(disc):
-    """The disc's boot EXE is SLPS_ / SCPS_ - a Japanese build."""
+    """The disc's boot EXE is SLPS_ / SCPS_ - a Japanese build; a PSP disc, its build's tag."""
+    if is_psp(disc):
+        return disc.japanese
     try:
         cnf = disc.read("SYSTEM.CNF")
     except KeyError:
@@ -1355,13 +1492,31 @@ def convert_verbs(game, donor):
     pointer table ends where they begin, and the strings are placed by
     requiring every one of them to start just after a NUL.
     """
+    starts = verb_starts(game, donor)
+    if starts is None:
+        return []
+    payload = bytearray([VERB_COUNT])
+    for i in range(VERB_COUNT):
+        raw = donor[starts[i]:donor.index(b"\0", starts[i])]
+        enc = [encode_char(c) for c in raw]
+        if not raw or any(e is None for e in enc):
+            raise SystemExit("verbs: verb %d holds a code English does not have: %s" % (i, raw.hex(" ")))
+        out = b"".join(enc)
+        if len(out) + 1 > VERB_ROOM:
+            raise SystemExit("verbs: verb %d encodes to %d bytes, the slot holds %d" % (i, len(out) + 1, VERB_ROOM))
+        payload += out + b"\0"
+    return [(KIND_VERBS, 0, bytes(payload))]
+
+
+def verb_starts(game, donor):
+    """Where each verb string starts in `donor`, by its pointer table (convert_verbs), or None."""
     table_end = find_anchor(game, donor, "verb sets")
     if table_end < 0:
-        return []
+        return None
     ptrs = []
     while table_end - 4 * (len(ptrs) + 1) >= 0:
         v = struct.unpack_from("<I", donor, table_end - 4 * (len(ptrs) + 1))[0]
-        if not 0x80000000 <= v < 0x80200000:
+        if not is_pointer(v):
             break
         ptrs.insert(0, v)
     if len(ptrs) < VERB_COUNT or any(b <= a for a, b in zip(ptrs, ptrs[1:])):
@@ -1377,18 +1532,7 @@ def convert_verbs(game, donor):
             break
     else:
         raise SystemExit("verbs: no placement of the strings fits the pointer table")
-
-    payload = bytearray([VERB_COUNT])
-    for i in range(VERB_COUNT):
-        raw = donor[starts[i]:donor.index(b"\0", starts[i])]
-        enc = [encode_char(c) for c in raw]
-        if not raw or any(e is None for e in enc):
-            raise SystemExit("verbs: verb %d holds a code English does not have: %s" % (i, raw.hex(" ")))
-        out = b"".join(enc)
-        if len(out) + 1 > VERB_ROOM:
-            raise SystemExit("verbs: verb %d encodes to %d bytes, the slot holds %d" % (i, len(out) + 1, VERB_ROOM))
-        payload += out + b"\0"
-    return [(KIND_VERBS, 0, bytes(payload))]
+    return starts
 
 
 # The characters' default names (DIV-0020): New Game copies eight 0xA4-byte
@@ -1437,10 +1581,7 @@ MERCHANT_NAME, MERCHANT_ROOM, MERCHANT_ANCHOR, MERCHANT_US_SLOT = 0x669CD8, 8, 0
 
 def convert_merchant(game, disc):
     """[(kind, tag, payload)] for the merchant's name, or [] if no area on `disc` has it."""
-    for name in sorted(disc.files):
-        if "/WORLD" not in name or not name.endswith(".EMI"):
-            continue
-        blob = disc.read(name)
+    for name, blob in world_blobs(disc):
         at = find_anchor(game, blob, "merchant")
         if at < 0:
             continue
@@ -1470,6 +1611,17 @@ def convert_battle_commands(game, donor):
     at = find_anchor(game, donor, "battle boxes")
     if at < BATTLE_COUNT * BATTLE_ROOM:
         return []
+    # The PSX's slots end at the box table; BOOT.BIN's are byte-aligned and
+    # end one NUL before it, the table being s16 (PSP-EU, 2026-10-12). So the
+    # slots end at the first of up to three NULs before the table where
+    # every slot is then a word padded with NULs.
+    def slots_fit(p):
+        slots = [donor[at - p - (BATTLE_COUNT - i) * BATTLE_ROOM:at - p - (BATTLE_COUNT - i - 1) * BATTLE_ROOM]
+                 for i in range(BATTLE_COUNT)]
+        return not any(donor[at - p:at]) and all(s[0] and not s.split(b"\0", 1)[1].strip(b"\0")
+                                                 for s in slots if b"\0" in s)
+    pad = next((p for p in range(4) if slots_fit(p)), 0)
+    at -= pad
     payload = bytearray([BATTLE_COUNT])
     for i in range(BATTLE_COUNT):
         slot = donor[at - (BATTLE_COUNT - i) * BATTLE_ROOM:at - (BATTLE_COUNT - i - 1) * BATTLE_ROOM]
@@ -1602,7 +1754,7 @@ def label_pointers(donor, at, count):
     if at < 0 or at + 4 * count > len(donor):
         return None
     ptrs = struct.unpack_from("<%dI" % count, donor, at)
-    if any(not 0x80000000 <= p < 0x80200000 for p in ptrs) or any(b <= a for a, b in zip(ptrs, ptrs[1:])):
+    if any(not is_pointer(p) for p in ptrs) or any(b <= a for a, b in zip(ptrs, ptrs[1:])):
         return None
     return ptrs
 
@@ -1858,6 +2010,248 @@ def convert_labels(game, start, battle, shop=None, commu=()):
     return chunks, report
 
 
+# The labels from a PSP disc (docs/loc-build-psp.md section 3). The PSP's own
+# code reads them out of BOOT.BIN, which holds the START, STATUS, BATE, SHOP,
+# BATTLE and COMMU modules' data as a native build: the same records and
+# strings, but packed at byte alignment where the PlayStation's overlays pad
+# to four, some fields resized to their English words, and a few blocks
+# moved apart. So an anchor that ends in alignment NULs on the PC matches
+# only without them (`anchor_core`), and the hashed anchors whose PC bytes
+# include such padding (the battle tail, the gene head, the village rows)
+# match nowhere. Each group below is found by the rule measured on PSP-EU's
+# BOOT.BIN (2026-10-12), the only PSP build with Latin text; a group whose
+# rule finds nothing is reported and left out, never guessed.
+
+PSP_NOTE = b"NOTE\0"         # SHOP's Skill Notes word, which the ink label precedes in BOOT.BIN
+
+
+def anchor_core(game, name):
+    """A carried anchor without its leading and trailing NULs, and how many
+    NULs led: (bytes, lead), or (None, 0) where the image does not carry it."""
+    a = anchor(game, name)
+    if a is None:
+        return None, 0
+    return a.strip(b"\0"), len(a) - len(a.lstrip(b"\0"))
+
+
+def find_all(blob, needle):
+    out, i = [], blob.find(needle)
+    while i >= 0:
+        out.append(i)
+        i = blob.find(needle, i + 1)
+    return out
+
+
+def is_word_byte(c):
+    """A text code a label is made of: a letter, digit or sign of the script
+    (0x30 and up; LAST_CODE and the accented codes past it), or the space."""
+    return c >= 0x30
+
+
+def words_after(blob, at, count, reach=16):
+    """`count` NUL-ended words from `at`: before each, up to `reach` bytes that
+    are not text (NULs, a table's numbers) are skipped. None if any is missing."""
+    out, p = [], at
+    for _ in range(count):
+        q = p
+        while q < len(blob) and q - p < reach and not (is_word_byte(blob[q]) and blob[q] != SPACE_IN):
+            q += 1
+        end = blob.find(b"\0", q)
+        word = blob[q:end] if end > q else b""
+        if not word or not all(is_word_byte(c) for c in word):
+            return None
+        out.append(word)
+        p = end + 1
+    return out
+
+
+def slots_before(blob, end, stride, count):
+    """`count` slots of `stride` ending at `end`, each a word from its first
+    byte padded with NULs (or filling it), or None (convert_labels' slot_run)."""
+    start = end - stride * count
+    if start < 0:
+        return None
+    out = []
+    for i in range(count):
+        slot = blob[start + stride * i:start + stride * (i + 1)]
+        word = slot.split(b"\0")[0]
+        if not word or not all(is_word_byte(c) for c in word) or slot[len(word):].strip(b"\0"):
+            return None
+        out.append(word)
+    return out
+
+
+def table_run(blob, at, count, reach=0x100):
+    """`count` strings from `at` named by the first table of `count` ascending
+    pointers after them, the first pointing at `at`: (words, table) or None.
+    label_run with the table 4-aligned in the image rather than from `at`."""
+    t = (at + count + 3) & ~3
+    while t < at + reach:
+        ptrs = label_pointers(blob, t, count)
+        if ptrs and ptrs[0] == at:
+            starts = [at + p - ptrs[0] for p in ptrs]
+            if starts[-1] < t and all(blob[s] for s in starts):
+                return [blob[s:t].split(b"\0")[0] for s in starts], t
+        t += 4
+    return None
+
+
+def village_run(blob):
+    """The village's twenty list words: the one run in `blob` of exactly
+    twenty 8-byte slots, each a word padded with NULs or filling it."""
+    slot = b"(?:" + b"|".join(b"[\\x30-\\xff]{%d}\\x00{%d}" % (n, 8 - n) for n in range(8, 0, -1)) + b")"
+    found = [m.start() for m in re.finditer(b"(?=(" + slot + b"{20}))", blob, re.S)]
+    runs = [a for a in found if a - 8 not in found and a + 8 not in found]   # maximal, not inside a longer run
+    return runs
+
+
+def convert_labels_psp(game, boot, verbs):
+    """[(kind, tag, payload)] and a report from BOOT.BIN, the PSP's labels;
+    `verbs` is where convert_verbs found the menu verbs (verb_starts)."""
+    chunks, report = [], []
+    missing = lambda what, why: report.append("%s: not found in BOOT.BIN (%s)" % (what, why))
+    # 1: the status words, the first two words after the verb sets.
+    vs = find_anchor(game, boot, "verb sets")
+    status = words_after(boot, vs + len(anchor_core(game, "verb sets")[0]), 2) if vs >= 0 else None
+    tail, _ = anchor_core(game, "label tail")
+    tails = find_all(boot, tail) if tail else []
+    # 2: the menu's stats, four 4-byte slots ending at a label tail (the PSX's form).
+    stats = next((s for s in (slots_before(boot, h, 4, 4) for h in tails) if s), None)
+    if status and stats:
+        chunks.append(label_chunk(1, status, report))
+        chunks.append(label_chunk(2, stats, report))
+    else:
+        missing("status words and menu stats", "no two words after the verb sets, or no four 4-byte slots before a label tail")
+    # 4 and 5: BATTLE's skill types, their five pointers, then four 6-byte stat
+    # slots ending at a label tail (the PSX's form, the tail's core for its 16 bytes).
+    skills = None
+    for h in tails:
+        battle = slots_before(boot, h, 6, 4)
+        ptrs = label_pointers(boot, h - 24 - 20, 5) if battle else None
+        found = table_run(boot, ptrs[0], 5) if ptrs else None
+        if found and found[1] == h - 24 - 20:
+            skills = (ptrs[0], found[0], battle)
+            break
+    # 3: the item types, the five strings whose pointer table ends where the skill types begin.
+    types = None
+    if skills:
+        ptrs = label_pointers(boot, skills[0] - 20, 5)
+        found = table_run(boot, ptrs[0], 5) if ptrs else None
+        types = found[0] if found and found[1] == skills[0] - 20 else None
+    if types:
+        chunks.append(label_chunk(3, [w[:16] for w in types], report))
+    else:
+        missing("item types", "no five-pointer table ending at the skill types")
+    if skills:
+        chunks.append(label_chunk(4, [w[:16] for w in skills[1]], report))
+        chunks.append(label_chunk(5, skills[2], report))
+    else:
+        missing("skill types and battle stats", "no five strings, five pointers and four 6-byte slots before a label tail")
+    # 7 and 8: the sort menus (eleven strings) and the Skill Notes sort (four),
+    # each with its pointer table, right after the sort head's core.
+    head, lead = anchor_core(game, "sort head")
+    # A hit with an eleven-string run is the sort menus'; one with four and
+    # no eleven the Skill Notes' (the eleven's table also starts with four).
+    sort = note = None
+    for h in find_all(boot, head) if head else []:
+        eleven = table_run(boot, h + len(head), 11)
+        sort = sort or eleven
+        note = note or (None if eleven else table_run(boot, h + len(head), 4))
+    if sort:
+        chunks.append(label_chunk(7, sort[0], report))
+    else:
+        missing("sort menus", "no eleven strings and their pointers after the sort head")
+    # 6: the master list's title and mark, the first two words after the note sort's table.
+    master = words_after(boot, note[1] + 16, 2) if note else None
+    if master:
+        chunks.append(label_chunk(6, master, report))
+    else:
+        missing("master list", "no two words after the note sort's pointers")
+    if note:
+        chunks.append(label_chunk(8, note[0][:2], report))
+    else:
+        missing("note sort", "no four strings and their pointers after the sort head")
+    # 9: the ink label, the word that ends right before SHOP's NOTE.
+    n = boot.find(b"\0" + PSP_NOTE)
+    ink = boot[boot.rfind(b"\0", 0, n) + 1:n] if n > 0 else b""
+    if ink and all(is_word_byte(c) for c in ink):
+        chunks.append(label_chunk(9, [ink], report))
+    else:
+        missing("ink label", "no word before NOTE")
+    # 10: the formations, as convert_labels finds them: ten records of 20 or
+    # 22 whose pairs are the PC's (pair 0 by its hash, every pair checked).
+    first = lambda at: find_anchor(game, boot, "formation pair 0", at)
+    at, found = first(0), None
+    while at >= 0 and not found:
+        for stride, n in ((20, 7), (22, 8)):
+            base = at - (stride - 12)
+            if base >= 0 and same_anchor(game, "formation pairs", b"".join(
+                    boot[base + stride * i + stride - 12:base + stride * (i + 1)] for i in range(LABEL_FORMATION_COUNT))):
+                found = [boot[base + stride * i:base + stride * i + n].split(b"\0")[0]
+                         for i in range(LABEL_FORMATION_COUNT)]
+                break
+        at = first(at + 1)
+    if found:
+        chunks.append(label_chunk(10, found, report))
+    else:
+        missing("formations", "no run of the PC's ten formation records")
+    # 11: the zenny unit. BOOT.BIN keeps the unit and the full stop right
+    # before the verb strings (the PSX: after the wheel triangle): the unit
+    # is the word two before the first verb, the full stop the one between.
+    unit = None
+    if verbs:
+        stop_at = boot.rfind(b"\0", 0, verbs[0] - 1) + 1
+        unit_at = stop_at - 1
+        while is_word_byte(boot[unit_at - 1]):
+            unit_at -= 1
+        if boot[stop_at:verbs[0] - 1] == b"\x3e" and boot[stop_at - 1] == 0:
+            unit = boot[unit_at:stop_at - 1]
+    if unit and len(unit) < 4:
+        chunks.append(label_chunk(11, [unit], report))
+    else:
+        missing("zenny unit", "no unit and full stop before the verbs")
+    # 12: the gene window's tabs, three slots ending (up to three NULs) before the gene tail.
+    gene = find_anchor(game, boot, "gene tail")
+    tabs = next((t for pad in range(4) for stride in range(4, 9)
+                 for t in [slots_before(boot, gene - pad, stride, 3) if gene >= 0 else None] if t), None)
+    if tabs:
+        chunks.append(label_chunk(12, tabs, report))
+    else:
+        missing("gene tabs", "no three slots before the gene tail")
+    # 13: the village's lists, the one run of twenty 8-byte slots.
+    runs = village_run(boot)
+    lists = slots_before(boot, runs[0] + 160, 8, LABEL_VILLAGE_LISTS) if len(runs) == 1 else None
+    if lists:
+        chunks.append(label_chunk(13, lists, report))
+    else:
+        missing("village lists", "%d runs of twenty 8-byte slots, wanted one" % len(runs))
+    # 14: the village's words. The plural and singular pairs end at the kind
+    # table as on the PSX, in slots of 7 here; the money title follows the
+    # rectangles; the stake title is not beside it in BOOT.BIN (measured: it
+    # follows a table of another screen's words), so the group is left out.
+    missing("village words", "the hi-lo game's stake title is not after its money title in BOOT.BIN")
+    if not donor_ja:
+        chunks.append(label_chunk(15, list(IDENTIFY_WORDS), report))
+    # 16: the faeries, as convert_labels finds them (records of 9, the stats the PC's).
+    first = lambda at: find_anchor(game, boot, "faerie stat 0", at)
+    at, faeries = first(0), None
+    while at >= 5 and faeries is None:
+        base = at - 5
+        if same_anchor(game, "faerie stats", b"".join(
+                boot[base + FAERIE_DISC_STRIDE * r + 5:base + FAERIE_DISC_STRIDE * (r + 1)] for r in range(FAERIE_COUNT))):
+            faeries = [b"" if r in FAERIE_UNNAMED else
+                       boot[base + FAERIE_DISC_STRIDE * r:base + FAERIE_DISC_STRIDE * r + 5].rstrip(b"\xff\0")
+                       for r in range(FAERIE_COUNT)]
+        at = first(at + 1)
+    if faeries:
+        chunks.append(label_chunk(16, faeries, report))
+    else:
+        missing("faerie names", "no sixty 9-byte records with the PC's stats")
+    # In convert_labels' order, so that FIRST.DAT is byte for byte the PSX's where the words are.
+    order = (1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 8, 9)
+    return sorted(chunks, key=lambda c: order.index(c[1])), report
+
+
 # The fishing minigame's text (DIV-0069, src/game/fishing_text.cpp,
 # docs/fishing-text.md). Two groups in BOF3.exe's .data that every overlay left
 # Chinese, one chunk each, the tag the group's number:
@@ -1906,19 +2300,26 @@ def fishing_tab_width(sec, dest, base):
 
 def convert_fishing(game, disc):
     """[(kind, tag, payload)] and a report, from the first fishing module on `disc`."""
-    for name in sorted(disc.files):
-        if "/WORLD" not in name or not name.endswith(".EMI"):
-            continue
-        for dest, sec in emi_sections(disc.read(name)):
+    for name, blob in world_blobs(disc):
+        for dest, sec in ([(0, blob)] if name == PSP_BOOT else emi_sections(blob)):
             r = find_anchor(game, sec, "fish rows")
-            if r < 0 or not dest & 0x80000000:
+            if r < 0 or not (dest & 0x80000000 or name == PSP_BOOT):
                 continue
             chunks, report = [], []
-            first = r - 12 - 12 * FISH_LINE_COUNT
+            # The records end twelve bytes before the rows on a PSX disc; in
+            # BOOT.BIN the rows are byte-aligned and the twelve bytes between
+            # are nine (PSP-EU, 2026-10-12), so the records end 12..9 bytes
+            # before them: the first gap whose label and pause bytes are the PC's.
+            marks_at = lambda first: b"".join(sec[first + 12 * i + 8:first + 12 * i + 10]
+                                              for i in range(FISH_LINE_COUNT))
+            gaps = [12] + ([11, 10, 9] if name == PSP_BOOT else [])
+            first = next((r - g - 12 * FISH_LINE_COUNT for g in gaps
+                          if same_anchor(game, "fish label/pause", marks_at(r - g - 12 * FISH_LINE_COUNT))),
+                         r - 12 - 12 * FISH_LINE_COUNT)
             if first < 0:
                 raise SystemExit("fishing: %s's row table has no line records before it" % name)
             payload = bytearray([FISH_LINE_COUNT])
-            marks = b"".join(sec[first + 12 * i + 8:first + 12 * i + 10] for i in range(FISH_LINE_COUNT))
+            marks = marks_at(first)
             if not same_anchor(game, "fish label/pause", marks):
                 raise SystemExit("fishing: %s's lines' label and pause bytes are not the PC's" % name)
             for i in range(FISH_LINE_COUNT):
@@ -1937,6 +2338,15 @@ def convert_fishing(game, disc):
             q = find_anchor(game, sec, "fish quads")
             base = None if q < 0 else (q + FISH_QUADS_LEN + 3) & ~3
             width = None if base is None else fishing_tab_width(sec, dest, dest + base)
+            if name == PSP_BOOT and q >= 0 and not width:
+                # BOOT.BIN: the labels follow the quads unaligned, fixed-width
+                # and filling it (PSP-EU: three of 4, no NUL), and its code is
+                # the PSP's own, so the width is the run of text over three.
+                base = q + FISH_QUADS_LEN
+                run = base
+                while run < len(sec) and is_word_byte(sec[run]):
+                    run += 1
+                width = (run - base) // 3 if (run - base) % 3 == 0 and 0 < run - base < 3 * FISH_TAB_ROOM else None
             if width:
                 payload = bytearray([3])
                 for i in range(3):
@@ -2910,7 +3320,7 @@ def build_all(args, disc_path):
     else:
         dat_dir(src.game)
         check_anchors(src)      # the disc-only build's hashes are this exe's (PC_SHA)
-    disc = psx_disc.Disc(disc_path)
+    disc = open_disc(disc_path)
     overlays = {"FIRST.DAT": build_font(args, disc)}
     overlays["FIRST.DAT"] += build_pause(args, overlays["FIRST.DAT"])   # after the glyphs it names
     if not args.pc_white:
@@ -2970,6 +3380,15 @@ def build_all(args, disc_path):
                 continue
             overlays.setdefault(name, []).append((0, tag, block))
     start_emi = disc.find("START.EMI")
+    global donor_pointers
+    donor_pointers = PSX_POINTERS
+    read_module = lambda found: disc.read(found[0])
+    if is_psp(disc):
+        # The exe's strings: BOOT.BIN, where the PSP's own code reads them.
+        # The EMIs' overlays are the Japanese build's on both PSP discs.
+        boot = disc.boot()
+        donor_pointers = disc.pointers()
+        read_module = lambda found: boot
     if donor_ja:
         # The exe's own strings (kinds 7..12) are found with the US layouts and
         # drawn through the Latin layout patches; a Japanese overlay leaves
@@ -2978,13 +3397,21 @@ def build_all(args, disc_path):
               "not built for a Japanese disc")
         start_emi = None
     if start_emi and not args.only:
-        cfg = convert_config(disc.read(start_emi[0]))
+        if is_psp(disc):
+            # BOOT.BIN's Config screen is the PSP's own, not the PlayStation's
+            # the PC draws: four labels (no Msg Speed, Sound or Autorun; Button
+            # Config and Delete Data added) over fifteen options, without the
+            # 0..15 row tables convert_config locates it by (docs/loc-build-psp.md 3.2).
+            cfg = []
+            print("config screen: not built from a PSP disc (the PSP's screen has other rows)")
+        else:
+            cfg = convert_config(read_module(start_emi))
+            print("config screen: " + ("6 labels, 17 options, 6 controller names" if cfg else "not found on this disc"))
         overlays["FIRST.DAT"] += cfg
-        print("config screen: " + ("6 labels, 17 options, 6 controller names" if cfg else "not found on this disc"))
-        verbs = convert_verbs(src, disc.read(start_emi[0]))
+        verbs = convert_verbs(src, read_module(start_emi))
         overlays["FIRST.DAT"] += verbs
         print("menu verbs: " + ("%d" % VERB_COUNT if verbs else "not found on this disc"))
-        chars = convert_char_names(src, disc.read(start_emi[0]))
+        chars = convert_char_names(src, read_module(start_emi))
         overlays["FIRST.DAT"] += chars
         print("character names: " + ("%d" % CHAR_COUNT if chars else "not found on this disc"))
         merchant = convert_merchant(src, disc)
@@ -2995,23 +3422,33 @@ def build_all(args, disc_path):
         print("fishing: " + (", ".join(report) if report else "not found on this disc"))
     battle_emi = None if donor_ja else disc.find("BATTLE.EMI")
     if battle_emi and not args.only:
-        cmds = convert_battle_commands(src, disc.read(battle_emi[0]))
+        cmds = convert_battle_commands(src, read_module(battle_emi))
         overlays["FIRST.DAT"] += cmds
         print("battle commands: " + ("%d" % BATTLE_COUNT if cmds else "not found on this disc"))
-        msgs = convert_battle_messages(src, disc.read(battle_emi[0]))
+        msgs = convert_battle_messages(src, read_module(battle_emi))
         overlays["FIRST.DAT"] += msgs
         print("battle messages: " + ("%d" % MESSAGE_COUNT if msgs else "not found on this disc"))
     shop_emi = None if donor_ja else disc.find("SHOP.EMI")
     if (start_emi or battle_emi or shop_emi) and not args.only:
-        commu = [disc.read(p) for p in sorted(disc.files) if re.match(r"(.*/)?COMMU[0-9A-Z]*\.EMI$", p)]
-        labels, report = convert_labels(src, disc.read(start_emi[0]) if start_emi else None,
-                                        disc.read(battle_emi[0]) if battle_emi else None,
-                                        disc.read(shop_emi[0]) if shop_emi else None, commu)
+        commu = [] if is_psp(disc) else \
+            [disc.read(p) for p in sorted(disc.files) if re.match(r"(.*/)?COMMU[0-9A-Z]*\.EMI$", p)]
+        if is_psp(disc):
+            labels, report = convert_labels_psp(src, boot, verb_starts(src, boot))
+        else:
+            labels, report = convert_labels(src, read_module(start_emi) if start_emi else None,
+                                            read_module(battle_emi) if battle_emi else None,
+                                            read_module(shop_emi) if shop_emi else None, commu)
         overlays["FIRST.DAT"] += labels
         print("labels: " + (", ".join(report) if report else "not found on this disc"))
 
     game_emi = disc.find("GAME.EMI")
-    if game_emi and not args.only:
+    if is_psp(disc) and not args.only:
+        # The PSP reads its names out of BOOT.BIN; its GAME.EMI is the PSX's,
+        # kept beside it and the same on both PSP discs (region-diff.md 5.4 P7).
+        names, report = convert_names(src, disc.boot())
+        overlays["FIRST.DAT"] += names
+        print("names (BOOT.BIN): " + ", ".join(report))
+    elif game_emi and not args.only:
         names, report = convert_names(src, emi_sections(disc.read(game_emi[0]))[0][1])
         overlays["FIRST.DAT"] += names
         print("names: " + ", ".join(report))
@@ -3062,7 +3499,7 @@ def cmd_anchors(args):
 
 
 def cmd_export(args):
-    img = export_image(donor_sheet(psx_disc.Disc(args.disc)))
+    img = export_image(donor_sheet(open_disc(args.disc)))
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     img.save(args.out)
     print("wrote %s: %d x %d, cells %d x %d; bring it back at up to 24 x 24 a cell (16 x 24 for 2x)"
@@ -3071,7 +3508,7 @@ def cmd_export(args):
 
 def cmd_sheet(args):
     from PIL import Image
-    rows = donor_sheet(psx_disc.Disc(args.disc))
+    rows = donor_sheet(open_disc(args.disc))
     codes = list(range(FIRST_CODE, LAST_CODE + 1))
     img = Image.new("L", (26 * 20, 26 * ((len(codes) + 19) // 20)), 40)
     for i, code in enumerate(codes):
@@ -3212,9 +3649,46 @@ def selftest_rules():
     print("  a slot table with a bad head: %d slots, the head at the first message" % n)
 
 
+def selftest_psp():
+    """The PSP rules on synthetic bytes (no game data): psp_emi undoes the
+    header changes; words_after, slots_before and table_run read packed
+    strings; village_run finds the one run of twenty 8-byte slots."""
+    global donor_pointers
+    head = bytearray(0x800)
+    struct.pack_into("<I", head, 0, 3)
+    head[8:16] = b"MATH_TBL"
+    for i, (dest, kind) in enumerate(((0x10000, 0), (0x1C080201, 3), (1, 6))):
+        struct.pack_into("<IIIH", head, 0x10 + 16 * i, 0, dest, 0, kind)
+    got = [d for d, _ in emi_sections(psp_emi(bytes(head)))]
+    if got != [0x80010000, 0x1C080200, 1]:
+        raise SystemExit("selftest: psp_emi gave %s" % [hex(d) for d in got])
+    blob = bytearray(b"\x02\x14\x16\0\0" + b"ABCD\0EF\0" + b"GH\0\0IJ\0\0" + b"\0" * 3)
+    if words_after(bytes(blob), 0, 2) != [b"ABCD", b"EF"] or slots_before(bytes(blob), 21, 4, 2) != [b"GH", b"IJ"]:
+        raise SystemExit("selftest: words_after / slots_before")
+    base = 0x1000
+    strings = b"ONE\0TWO\0THREE\0"
+    starts = [0, 4, 8]
+    pad = (-(base + len(strings))) % 4
+    image = bytearray(base) + strings + b"\0" * pad
+    image += struct.pack("<3I", *(base + s for s in starts))
+    saved, donor_pointers = donor_pointers, (base, len(image) + 0x100)
+    try:
+        found = table_run(bytes(image), base, 3)
+    finally:
+        donor_pointers = saved
+    if not found or found[0] != [b"ONE", b"TWO", b"THREE"]:
+        raise SystemExit("selftest: table_run gave %s" % (found,))
+    words = b"".join((b"W%d" % i).ljust(8, b"\0") for i in range(20))
+    village = b"\x01\x02" + words + b"\x05\x02"
+    if village_run(village) != [2]:
+        raise SystemExit("selftest: village_run gave %s" % village_run(village))
+    print("  PSP: section table, packed words and slots, a pointer-named run, the village run")
+
+
 def cmd_selftest(args):
     selftest_empty_records()
     selftest_rules()
+    selftest_psp()
     print("loc_build selftest: ok")
     return 0
 

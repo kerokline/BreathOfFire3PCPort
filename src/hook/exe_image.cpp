@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "common/sha256.h"
 #include "hook/exe_host.h"
 #include "hook/exe_layout.h"
 #include "hook/exe_own.h"
@@ -262,6 +263,213 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
 }
 
 bool ExeImage_DiscMapped() { return g_disc_mapped; }
+
+// --- DIV-0111: the exe tables layer ----------------------------------------------
+namespace {
+
+struct OptRange {
+    std::uint32_t lo, hi;
+    std::string what;
+};
+struct OptTables {
+    std::string build, file, sha256;
+    std::uint32_t bytes = 0;
+    std::vector<OptRange> ranges;
+};
+
+// place.toml as tools/psp_layers.py build_exe writes it: `key = value` lines,
+// then one `[0x.., 0x.., "what"],` line a range. Only that shape; false with
+// `why` otherwise.
+bool ParseOptTables(const std::string& text, OptTables* out, std::string* why) {
+    *out = OptTables{};
+    std::size_t at = 0;
+    while (at < text.size()) {
+        std::size_t end = text.find('\n', at);
+        if (end == std::string::npos) end = text.size();
+        std::string line = text.substr(at, end - at);
+        at = end + 1;
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        const char* p = line.c_str();
+        while (*p == ' ') ++p;
+        unsigned a = 0, b = 0;
+        char s[128] = {};
+        if (std::sscanf(p, "[0x%x, 0x%x, \"%127[^\"]\"]", &a, &b, s) == 3) out->ranges.push_back({a, b, s});
+        else if (std::sscanf(p, "build = \"%127[^\"]\"", s) == 1) out->build = s;
+        else if (std::sscanf(p, "file = \"%127[^\"]\"", s) == 1) out->file = s;
+        else if (std::sscanf(p, "sha256 = \"%127[^\"]\"", s) == 1) out->sha256 = s;
+        else if (std::sscanf(p, "bytes = %u", &a) == 1) out->bytes = a;
+    }
+    if (out->build.empty() || out->file != "place.bin" || out->sha256.size() != 64 || out->ranges.empty()) {
+        *why = "not a place.toml tools/psp_layers.py wrote (build, file = \"place.bin\", sha256, ranges)";
+        return false;
+    }
+    return true;
+}
+
+// The layer's ranges and bytes against .data [va, va + size), the mapped image
+// (when one is: each range's bytes in a class that need not equal the PC's)
+// and laid over `data` (va's byte at data[0]). Returns the bytes that changed,
+// or -1 with `why`, laying nothing.
+long LayOptTables(const OptTables& t, const std::vector<unsigned char>& bin, unsigned char* data, std::uint32_t va,
+                  std::uint32_t size, const Image* mapped, std::string* why) {
+    char msg[256];
+    std::uint32_t total = 0, prev = va;
+    for (const OptRange& r : t.ranges) {
+        if (r.lo < prev || r.hi <= r.lo || r.hi > va + size) {
+            std::snprintf(msg, sizeof msg, "range 0x%X..0x%X (%s) out of order or outside .data 0x%X..0x%X",
+                          (unsigned)r.lo, (unsigned)r.hi, r.what.c_str(), (unsigned)va, (unsigned)(va + size));
+            *why = msg;
+            return -1;
+        }
+        prev = r.hi;
+        total += r.hi - r.lo;
+        if (!mapped) continue;
+        for (const Range& m : mapped->ranges) {
+            if (m.hi <= r.lo || m.lo >= r.hi) continue;
+            if (ClassOf(m)->must_equal) {
+                std::snprintf(msg, sizeof msg, "range 0x%X..0x%X (%s) lies on 0x%X..0x%X, class %s of the mapped %s "
+                              "image, which must equal the PC's", (unsigned)r.lo, (unsigned)r.hi, r.what.c_str(),
+                              (unsigned)m.lo, (unsigned)m.hi, m.how.c_str(), mapped->build.c_str());
+                *why = msg;
+                return -1;
+            }
+        }
+    }
+    if (total != bin.size() || total != t.bytes) {
+        std::snprintf(msg, sizeof msg, "the ranges hold %u bytes, place.bin %u, place.toml says %u", (unsigned)total,
+                      (unsigned)bin.size(), (unsigned)t.bytes);
+        *why = msg;
+        return -1;
+    }
+    std::string hex;
+    if (!bof3x::Sha256HexBytes(bin.data(), bin.size(), hex) || hex != t.sha256) {
+        *why = "place.bin is not the file place.toml's sha256 names";
+        return -1;
+    }
+    long changed = 0;
+    std::size_t off = 0;
+    for (const OptRange& r : t.ranges)
+        for (std::uint32_t a = r.lo; a < r.hi; ++a, ++off) {
+            changed += data[a - va] != bin[off];
+            data[a - va] = bin[off];
+        }
+    return changed;
+}
+
+bool ReadText(const std::string& path, std::string* out) {
+    FILE* f = std::fopen(path.c_str(), "rb");
+    if (!f) return false;
+    out->clear();
+    char buf[4096];
+    std::size_t n;
+    while ((n = std::fread(buf, 1, sizeof buf, f)) > 0) out->append(buf, n);
+    std::fclose(f);
+    return true;
+}
+
+}  // namespace
+
+void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size) {
+    char opt[16 * 24];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_OPT", opt, sizeof opt);
+    if (n == 0 || n >= sizeof opt) return;   // none, or too long: ReadOptLayers refuses it at injection
+    char data_mode[4];
+    const DWORD m = GetEnvironmentVariableA("BOF3X_CACHE_DATA", data_mode, sizeof data_mode);
+    if (m == 1 && data_mode[0] == '0') return;   // the cache for the music only (DIV-0089)
+    char root[MAX_PATH];
+    const DWORD r = GetEnvironmentVariableA("BOF3X_CACHE", root, sizeof root);
+    if (r == 0 || r >= sizeof root) return;
+    std::string base(root, r);
+    while (base.size() > 1 && (base.back() == '\\' || base.back() == '/')) base.pop_back();
+    std::string list(opt, n);
+    std::size_t at = 0;
+    while (at <= list.size()) {
+        std::size_t end = list.find(',', at);
+        if (end == std::string::npos) end = list.size();
+        const std::string layer = list.substr(at, end - at);
+        at = end + 1;
+        // a malformed name is ReadOptLayers' to refuse; only a plain one is a directory here
+        if (layer.empty() || layer.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-") !=
+                                 std::string::npos)
+            continue;
+        const std::string dir = base + "\\opt\\" + layer + "\\exe\\";
+        std::string text;
+        if (!ReadText(dir + "place.toml", &text)) continue;   // no exe part
+        OptTables t;
+        std::string why;
+        if (!ParseOptTables(text, &t, &why)) Fatal("DIV-0111: %splace.toml: %s", dir.c_str(), why.c_str());
+        FILE* f = std::fopen((dir + t.file).c_str(), "rb");
+        if (!f) Fatal("DIV-0111: %s%s does not open", dir.c_str(), t.file.c_str());
+        std::vector<unsigned char> bin;
+        unsigned char buf[4096];
+        std::size_t got;
+        while ((got = std::fread(buf, 1, sizeof buf, f)) > 0) bin.insert(bin.end(), buf, buf + got);
+        std::fclose(f);
+        const long changed = LayOptTables(t, bin, static_cast<unsigned char*>(to), va, size,
+                                          g_disc_mapped ? &g_mapped : nullptr, &why);
+        if (changed < 0) Fatal("DIV-0111: layer %s (%s): %s", layer.c_str(), dir.c_str(), why.c_str());
+        Log("DIV-0111    layer %s: %u ranges, %u bytes of the %s image's .data laid over .data (%s); %ld of them "
+            "differ from what was there",
+            layer.c_str(), (unsigned)t.ranges.size(), (unsigned)t.bytes, t.build.c_str(),
+            g_disc_mapped ? g_mapped.build.c_str() : "the file's or a pc-zh image", changed);
+    }
+}
+
+void ExeImage_OptSelfTest() {
+    // A synthetic .data of 64 bytes at 0x1000 and a layer of two ranges.
+    constexpr std::uint32_t kVa = 0x1000, kSize = 64;
+    std::vector<unsigned char> bin = {1, 2, 3, 4, 5, 6};
+    std::string hex;
+    if (!bof3x::Sha256HexBytes(bin.data(), bin.size(), hex)) Fatal("DIV-0111 self-test: no SHA-256");
+    const std::string good = "build = \"psp-xx\"\nimage_sha256 = \"x\"\nfile = \"place.bin\"\nsha256 = \"" + hex +
+                             "\"\nbytes = 6\n\nranges = [\n  [0x001004, 0x001008, \"a\"],\n  [0x001010, 0x001012, \"b\"],\n]\n";
+    OptTables t;
+    std::string why;
+    std::vector<unsigned char> data(kSize, 0xEE);
+    data[0x10] = 5;   // one byte already the layer's
+    const bool parsed = ParseOptTables(good, &t, &why) && t.ranges.size() == 2 && t.bytes == 6;
+    const long changed = parsed ? LayOptTables(t, bin, data.data(), kVa, kSize, nullptr, &why) : -1;
+    bool laid = changed == 5;
+    for (std::uint32_t i = 0; i < kSize; ++i) {
+        const int want = i >= 4 && i < 8 ? int(i - 3) : i == 0x10 ? 5 : i == 0x11 ? 6 : 0xEE;
+        laid = laid && data[i] == want;
+    }
+    // The controls, each refused with nothing laid.
+    unsigned refused = 0;
+    const auto refuse = [&](std::string text, const std::vector<unsigned char>& b, const Image* mapped) {
+        OptTables u;
+        std::string w;
+        std::vector<unsigned char> d(kSize, 0xEE);
+        const bool no = !ParseOptTables(text, &u, &w) || LayOptTables(u, b, d.data(), kVa, kSize, mapped, &w) < 0;
+        refused += no && d == std::vector<unsigned char>(kSize, 0xEE);
+    };
+    std::vector<unsigned char> other = bin;
+    other[0] ^= 1;
+    refuse(good, other, nullptr);                                                   // a wrong hash
+    std::string outside = good;
+    outside.replace(outside.find("0x001010, 0x001012"), 18, "0x001040, 0x001042");
+    refuse(outside, bin, nullptr);                                                  // outside .data
+    std::string order = good;
+    order.replace(order.find("0x001010, 0x001012"), 18, "0x001002, 0x001004");
+    refuse(order, bin, nullptr);                                                    // out of order
+    std::string count = good;
+    count.replace(count.find("bytes = 6"), 9, "bytes = 7");
+    refuse(count, bin, nullptr);                                                    // a byte count that differs
+    Image im;
+    im.build = "psx-xx";
+    im.ranges = {{0x1000, 0x1010, "map", ""}, {0x1010, 0x1040, "layout", ""}};
+    refuse(good, bin, &im);                                                         // on a must-equal class
+    im.ranges[1].how = "table";
+    std::vector<unsigned char> d2(kSize, 0xEE);
+    OptTables v;
+    const bool over_disc = ParseOptTables(good, &v, &why) && LayOptTables(v, bin, d2.data(), kVa, kSize, &im, &why) == 6;
+    if (!parsed || !laid || refused != 5 || !over_disc)
+        Fatal("DIV-0111 self-test: parse %s, laid %s (%ld changed), over a disc image's table class %s, %u of 5 controls "
+              "refused", parsed ? "ok" : "WRONG", laid ? "ok" : "WRONG", changed, over_disc ? "ok" : "WRONG", refused);
+    Log("shadow      DIV-0111 self-test: a place.toml parsed, its two ranges laid (5 bytes changed, one already the "
+        "layer's), and over a disc image's table class; 5 controls refused with nothing laid (a wrong hash, a range "
+        "outside .data, ranges out of order, a byte count that differs, a range on a must-equal class)");
+}
 
 void ExeImage_CompareWithFile() {
     if (!g_disc_mapped) return;

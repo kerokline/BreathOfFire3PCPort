@@ -63,8 +63,33 @@ bool Armed();
 // Configured (armed or not) and <root>\<kind>\<layer>\dat holds a .DAT:
 // `kind` "loc" (a language tag) or "opt" (an optional layer). The question
 // `importer.py install` answers by copying the layer: when the cache has the
-// layer, the cache's layer is the one played, whole.
+// layer, the cache's layer is the one played, whole. An opt\ layer counts only
+// when the cache's manifest lists it ([cache] opt or [psp_layers] rows,
+// common/cache_manifest.h), or the cache has no manifest: a build that
+// stopped part-way leaves no layer to play unverified (the code review of
+// 2026-10-12; the launcher asks the same).
 bool HasLayer(const char* kind, const char* layer);
+
+// DIVERGENCE DIV-0109, DIV-0110, DIV-0111 (docs/launcher-suites.md section 9): an optional
+// layer may carry parts besides dat\ - "bgm" (songs and banks, Music_LoadFile's
+// seam, music_seq.cpp), "snd" (Sound_LoadStream's files, SoundPath below) and
+// "exe" (ranges of .data the exe host lays, exe_image.cpp). True when the
+// <root>\opt\<layer>\<part> holds a .DAT (exe: exe\place.toml), and the
+// manifest lists the layer (as HasLayer). The bgm part is the music's: it is
+// read whenever the cache is in use for music, under BOF3X_CACHE_DATA=0 too
+// ("the cache for the music only", docs/cache-read.md 6); the snd, exe and dat
+// parts - the effects, the .data ranges, the chord's banks - are the data's,
+// and only a configured cache has them.
+bool HasLayerPart(const char* layer, const char* part);
+
+// The optional layers BOF3X_OPT names, in its order, once DatLoad_Inject has
+// read and checked them (dat_load.cpp ReadOptLayers). SoundPath and the music
+// seam ask only these.
+void SetOptLayers(const char (*names)[24], int count);
+
+// The named layers whose cache has `part` ("bgm", "snd"), in BOF3X_OPT's order;
+// a later one lands on top of an earlier one, as the DAT layers do.
+std::vector<std::string> LayersWith(const char* part);
 
 // Where one overlay of DAT\NAME comes from - the precedence alone, so that the
 // self-test can hold it to `install`'s:
@@ -84,8 +109,10 @@ void LayerPath(char* out, std::size_t cap, const char* kind, const char* layer, 
 // not armed or the cache does not hold it whole: the caller reads DAT\<name>.
 bool WalkShipped(const char* name, ChunkFn fn, void* ctx);
 
-// Sound_LoadStream's file: when armed and <root>\base\snd\<name>.DAT exists,
-// its path into `out` and true; false otherwise (the caller formats SND\).
+// Sound_LoadStream's file: when armed, <root>\opt\<layer>\snd\<name>.DAT of the
+// last named layer with a snd part that has it (DIV-0110), else
+// <root>\base\snd\<name>.DAT when it exists: its path into `out` and true;
+// false otherwise (the caller formats SND\).
 bool SoundPath(const char* name, char* out, std::size_t cap);
 
 // --- the self-tests' seam ----------------------------------------------------

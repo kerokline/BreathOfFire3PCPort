@@ -64,3 +64,28 @@ unsigned Widescreen_Fill();
 float Widescreen_FillX();       // 0.0f - columns: not -columns, which is -0.0f when narrow
 float Widescreen_FillWidth();   // 320.0f + 2 * columns
 void Widescreen_ArmFills();
+
+// The right edge of a full-frame fill the original drew to `edge` (320, or
+// 319 for the fills drawn to the last column - the five magic flashes the
+// `320.0` scan missed, psp-widescreen-placements.md 2.2): edge + the fill
+// columns, as the PSP's 319 -> 351 for 32. Exactly `edge` while the fills
+// are unarmed, so narrow play and every fuzz see the original's float.
+float Widescreen_FillRight(float edge);
+
+// The columns an edge-anchored element moves outward by in the wide picture
+// (the PSP's +-32 for its 32 columns; psp-widescreen-placements.md 2.6, the
+// owner's answers of 2026-10-12 in 6.1): the fill columns, so it is 0 while
+// any self-test runs and 0 for good when the view is narrow. A right-anchored
+// x adds it, a left-anchored one subtracts it; a centred one never reads it.
+int Widescreen_Anchor();
+
+// The battle window's full-frame tile: entry 11 of the size table at
+// 0x64E268 ((321, 241) on the PC), which BattleWin_DrawTile, _DrawTileRgb and
+// _DrawTileTint read and their callers pass with x 0 (the bosses' death
+// flashes, rest_3a's flashes). The PSP widened the entry to 385 and moved the
+// callers' x to -32 (psp-widescreen-placements.md 2.8); the same rule at the
+// table's readers, derived, not copied: for size 11 the width grows by twice
+// the fill columns and an x of 0 becomes -columns. Unarmed or narrow, nothing
+// changes. `x` is the s16 the reader converts, `w` the table's u16.
+constexpr unsigned kWidescreenFullFrameTile = 11;
+void Widescreen_BattleTile(unsigned size, int& x, int& w);

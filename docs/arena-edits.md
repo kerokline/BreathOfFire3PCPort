@@ -115,11 +115,15 @@ and the header. `importer.py check`: 742 files, 3,582 chunks, 0 errors.
 
 742 containers in all; `AFLDKWA.DAT` has only a `loc/zh-CN` chunk, so 741 is
 every `base/` container. Own chunks used from the US disc alone: 41 before, 53
-now (the 11 arenas and `START`). The PSP discs are not stand-ins (`OWN_FROM` is
-the PSX discs): the PSP ships these arenas decompressed, and 3 of the 13
-(`BPLD012` / `015` / `016`) also carry the PSP's own change
-([`type1-compression.md`](type1-compression.md) 2); a PSP-only build still
-lacks the 14 ([`psp-only-build.md`](psp-only-build.md)).
+now (the 11 arenas and `START`). The PSP discs were not stand-ins here (`OWN_FROM` was
+the PSX discs): the PSP ships these arenas decompressed. **Corrected
+2026-10-12** (the PSP-only round's SI, [`psp-stand-ins.md`](psp-stand-ins.md)):
+none of the 13 carries the PSP's own change - each PSP's `BPLD012` / `015` /
+`016`, the 8 `PL` arenas and `PL012` hash equal to the PSX decode
+(`type1.py check --disc JP --psp PSPJP`: the 15 that differ are `BPLD247 257
+267 278 27A 457 467 478 567 578 678` and `BRTD247 457 467 478`, Ryu's form
+data, P8). Since that round a PSP source stands in for all 14, byte for byte
+the PSX disc-only cache's, so DIV-0096 needs no amendment.
 
 Self-tests of the consumers read (no code changed; the record that nothing
 moved), from an ini-less copy of this branch's build:

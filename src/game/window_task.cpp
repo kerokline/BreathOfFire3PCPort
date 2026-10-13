@@ -12,6 +12,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "game/window_task_callees.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -39,6 +40,31 @@ unsigned char* Rec() {
     return reinterpret_cast<unsigned char*>(static_cast<std::uintptr_t>(
         *reinterpret_cast<volatile std::uint32_t*>(static_cast<std::uintptr_t>(at::kCurrent))));
 }
+
+// DIV-0041 (psp-widescreen-placements.md 2.6, the owner's answer of
+// 2026-10-12): the side placements move out to the wide frame's edges. The
+// placement code (0x7DEE6E, as each reader reads it) indexes three tables -
+// kBoxXY and kBoxAltXY for kind 0's wide and narrow message box,
+// MsgBox_PlacementTable for kind 2's box - and in all three entries 3 and 5
+// stand at the left, 4 and 6 at the right, 0..2 centred. The PSP moved
+// exactly those x values by 32 (its BOOT.BIN holds them at -16 / 136 / 216 for
+// the boxes and 113 / 258 for kind 2: scratch boxtab2.py, tsprites.py); ours
+// moves them by Widescreen_Anchor() where the tables are read, never in the
+// tables, so the data stays the 4:3 values on every base. 0 unarmed or narrow.
+int SideShift() {
+    switch (At(at::kPlacement)[0]) {
+    case 3:
+    case 5:
+        return -Widescreen_Anchor();
+    case 4:
+    case 6:
+        return Widescreen_Anchor();
+    default:
+        return 0;
+    }
+}
+// A placement table's x plus the side shift, as the u16 the readers go on with.
+unsigned SideX(unsigned x) { return static_cast<unsigned>(static_cast<int>(x) + SideShift()); }
 
 }  // namespace
 
@@ -311,12 +337,12 @@ extern "C" void __cdecl Window_Kind0Open(void) {
         Rec()[0xD] |= 2;
         Rec()[0xA] = 0x78;
         Rec()[0xB] = 0x36;
-        SetWord(Rec() + 4, (At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u] + 0x3Cu) << 4);
+        SetWord(Rec() + 4, (SideX(At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u]) + 0x3Cu) << 4);
         y = At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u + 1u];
     } else {
         Rec()[0xA] = 0xC8;
         Rec()[0xB] = 0x36;
-        SetWord(Rec() + 4, (At(at::kBoxXY)[At(at::kPlacement)[0] * 2u] + 0x64u) << 4);
+        SetWord(Rec() + 4, (SideX(At(at::kBoxXY)[At(at::kPlacement)[0] * 2u]) + 0x64u) << 4);
         y = At(at::kBoxXY)[At(at::kPlacement)[0] * 2u + 1u];
     }
     SetWord(Rec() + 6, (y + 0x1Bu) << 4);
@@ -335,7 +361,7 @@ extern "C" void __cdecl Window_Kind0Open(void) {
 // and 0x66. It touches neither the flag byte +0xD nor the placement code's
 // two high bits.
 extern "C" void __cdecl Window_Kind2Open(void) {
-    SetWord(Rec() + 4, (Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u)) + 0x23u) << 4);
+    SetWord(Rec() + 4, (SideX(Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u))) + 0x23u) << 4);
     SetWord(Rec() + 6, (Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u + 2u)) + 0x10u) << 4);
     SetWord(Rec() + 0x10, 0);
     SetWord(Rec() + 0x12, 0);
@@ -361,12 +387,12 @@ namespace {
 unsigned SettledX(const unsigned char* r) {
     switch (r[2]) {
     case 0:
-        return ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u]
-                                  : At(at::kBoxXY)[At(at::kPlacement)[0] * 2u]) << 4;
+        return SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u]
+                                       : At(at::kBoxXY)[At(at::kPlacement)[0] * 2u]) << 4;
     case 1:
         return Word(r + 0x18) << 4;
     default:
-        return Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u)) << 4;
+        return SideX(Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u))) << 4;
     }
 }
 unsigned SettledY(const unsigned char* r) {
@@ -471,14 +497,14 @@ extern "C" void __cdecl Window_Shrink(void) {
         unsigned place;
         switch (r[2]) {
         case 0:
-            place = ((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u]
-                                       : At(at::kBoxXY)[At(at::kPlacement)[0] * 2u]) + half;
+            place = SideX((r[0xD] & 2) != 0 ? At(at::kBoxAltXY)[At(at::kPlacement)[0] * 2u]
+                                            : At(at::kBoxXY)[At(at::kPlacement)[0] * 2u]) + half;
             break;
         case 1:
             place = Word(At(at::kSetXY + At(at::kListSet)[0] * 8u)) + half;
             break;
         default:
-            place = Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u)) + half;
+            place = SideX(Word(At(at::kPlaceXY + At(at::kPlacement)[0] * 4u))) + half;
             break;
         }
         SetWord(r + 4, place << 4);

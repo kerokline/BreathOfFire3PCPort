@@ -32,6 +32,7 @@
 // forever, ours aborts with a message (docs/effect_2c.md section 6).
 #include "game/effect_2c.h"
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 
@@ -40,6 +41,7 @@
 #include "game/effect_gte.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -1194,9 +1196,16 @@ extern "C" void __cdecl EffectKind44_RingProject(unsigned char* ring) {
 // centre's projection, else 0), shaded +0x23, committed 0x38 - the lowest and
 // highest screen y met kept (_ftol, from 0 and 0xF0); then two TILEs of
 // 320 across, above the highest (from 0) and below the lowest (to 0xF0), the
-// same shade, committed 0x1C each (their +0x10 not written).
+// same shade, committed 0x1C each (their +0x10 not written). DIV-0041: the
+// runs go to the wide frame's sides (Widescreen_FillX() or 320 + the
+// columns) and the two tiles run from Widescreen_FillX() over
+// Widescreen_FillWidth(), as the PSP's -32 / 352 / 384; the original's 0 /
+// 320 while the fills are unarmed, as the fuzz compares.
 extern "C" void __cdecl EffectKind44_RingDraw(const unsigned char* ring) {
     DrawMode(2, 1, 1);
+    const U left = std::bit_cast<U>(Widescreen_FillX());
+    const U right = std::bit_cast<U>(Widescreen_FillRight(320.0f));
+    const U width = std::bit_cast<U>(Widescreen_FillWidth());
     U lowest = 0;
     U highest = 0xF0;
     const unsigned char* pi = ring + 0x3C;
@@ -1218,7 +1227,7 @@ extern "C" void __cdecl EffectKind44_RingDraw(const unsigned char* ring) {
         StF(prim + 0x30, y);
         StF(prim + 0x24, y);
         const LD middle = (F(pi) + F(pj)) * FAt(at::kHalf);
-        const U side = middle > F(ring + 0x30) ? 0x43A00000u : 0u;   // 320.0 or 0
+        const U side = middle > F(ring + 0x30) ? right : left;   // 320.0 or 0 unarmed
         SetUL(prim + 0x2C, side);
         SetUL(prim + 0x14, side);
         LD z = F(pi + 8);
@@ -1235,9 +1244,9 @@ extern "C" void __cdecl EffectKind44_RingDraw(const unsigned char* ring) {
     unsigned char* prim = Gfx_PacketNext;
     SH_CALL(Gpu_SetTile)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
-    SetUL(prim + 8, 0);
+    SetUL(prim + 8, left);
     SetUL(prim + 0xC, 0);
-    SetUL(prim + 0x14, 0x43A00000u);
+    SetUL(prim + 0x14, width);
     StF(prim + 0x18, I(static_cast<std::int16_t>(highest)));
     prim[6] = prim[5] = prim[4] = ring[0x23];
     SH_CALL(Gfx_CommitPrim)(1, 0x1C);
@@ -1245,8 +1254,8 @@ extern "C" void __cdecl EffectKind44_RingDraw(const unsigned char* ring) {
     SH_CALL(Gpu_SetTile)(prim);
     SH_CALL(Gpu_SetSemiTrans)(prim, 1);
     const std::int32_t below = static_cast<std::int16_t>(lowest);
-    SetUL(prim + 8, 0);
-    SetUL(prim + 0x14, 0x43A00000u);
+    SetUL(prim + 8, left);
+    SetUL(prim + 0x14, width);
     StF(prim + 0xC, I(below));
     StF(prim + 0x18, I(static_cast<std::int32_t>(0xF0u - static_cast<U>(below))));
     prim[6] = prim[5] = prim[4] = ring[0x23];

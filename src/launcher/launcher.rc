@@ -5,7 +5,7 @@
 // dialog is neither Windows 95 grey nor bitmap-blurred on a high-DPI desktop.
 1 RT_MANIFEST "launcher/launcher.manifest"
 
-IDD_CONFIG DIALOGEX 0, 0, 290, 356
+IDD_CONFIG DIALOGEX 0, 0, 560, 309
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Breath of Fire III - bof3x"
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -43,24 +43,49 @@ BEGIN
     PUSHBUTTON      "&Browse...", IDC_CACHEBROWSE, 220, 200, 50, 14
     LTEXT           "", IDC_CACHENOTE, 84, 216, 196, 9
 
-    // DIV-0086: the optional layers from the player's PSP disc (docs/opt-layers.md)
-    GROUPBOX        "PSP extras", IDC_OPTGROUP, 7, 233, 276, 70
-    AUTOCHECKBOX    "", IDC_OPT0, 14, 245, 266, 10
-    AUTOCHECKBOX    "", 1021, 14, 256, 266, 10
-    AUTOCHECKBOX    "", 1022, 14, 267, 266, 10
-    AUTOCHECKBOX    "", 1023, 14, 278, 266, 10
-    AUTOCHECKBOX    "", 1024, 14, 289, 266, 10
-    LTEXT           "", IDC_OPTNOTE, 14, 245, 266, 18
+    // The three suites (docs/launcher-suites.md, recipes/suites.toml): each the PlayStation's
+    // version of a set of differences or the PSP's. Suite i's ids are 1040 + 10 i plus: 0 the
+    // label, 1 the PlayStation radio, 2 the PSP radio, 3..6 the member lines, 7 the reason
+    // (resource.h). They replaced the PSP extras boxes on 2026-10-12. The data suite has two
+    // more member lines, 8 and 9 (its code members, DIV-0108), its reason three lines high.
+    GROUPBOX        "Versions: the PlayStation's or the PSP's", IDC_SUITEGROUP, 290, 7, 263, 246
+    LTEXT           "", IDC_SUITENOTE, 298, 19, 248, 18
+    LTEXT           "", 1040, 298, 41, 40, 9
+    AUTORADIOBUTTON "PlayStation", 1041, 340, 40, 104, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "PSP", 1042, 446, 40, 104, 10, WS_TABSTOP
+    LTEXT           "", 1043, 306, 52, 118, 9, WS_GROUP
+    LTEXT           "", 1044, 428, 52, 118, 9
+    LTEXT           "", 1045, 306, 61, 118, 9
+    LTEXT           "", 1046, 428, 61, 118, 9
+    LTEXT           "", 1047, 306, 71, 244, 36
+    LTEXT           "", 1050, 298, 112, 40, 9
+    AUTORADIOBUTTON "PlayStation", 1051, 340, 111, 104, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "PSP", 1052, 446, 111, 104, 10, WS_TABSTOP
+    LTEXT           "", 1053, 306, 123, 118, 9, WS_GROUP
+    LTEXT           "", 1054, 428, 123, 118, 9
+    LTEXT           "", 1055, 306, 132, 118, 9
+    LTEXT           "", 1056, 428, 132, 118, 9
+    LTEXT           "", 1057, 306, 142, 244, 36
+    LTEXT           "", 1060, 298, 183, 40, 9
+    AUTORADIOBUTTON "PlayStation", 1061, 340, 182, 104, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "PSP", 1062, 446, 182, 104, 10, WS_TABSTOP
+    LTEXT           "", 1063, 306, 194, 118, 9, WS_GROUP
+    LTEXT           "", 1064, 428, 194, 118, 9
+    LTEXT           "", 1065, 306, 203, 118, 9
+    LTEXT           "", 1066, 428, 203, 118, 9
+    LTEXT           "", 1068, 306, 212, 118, 9
+    LTEXT           "", 1069, 428, 212, 118, 9
+    LTEXT           "", 1067, 306, 222, 244, 27
 
-    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 309, 200, 10
+    AUTOCHECKBOX    "&Show this window every time", IDC_SHOW, 14, 261, 200, 10, WS_GROUP | WS_TABSTOP
     LTEXT           "Unticked, the game starts straight away. Run bof3x-launcher --config to bring it back.",
-                    -1, 14, 321, 262, 9
+                    -1, 14, 273, 262, 9
 
-    PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 337, 52, 14
-    PUSHBUTTON      "C&ontrols...", IDC_CONTROLS, 63, 337, 52, 14
-    PUSHBUTTON      "&Jukebox...", IDC_MUSICPLAYER, 119, 337, 48, 14
-    DEFPUSHBUTTON   "&Play", IDOK, 172, 337, 52, 14
-    PUSHBUTTON      "E&xit", IDCANCEL, 230, 337, 52, 14
+    PUSHBUTTON      "&Cheats...", IDC_CHEATS, 7, 289, 52, 14
+    PUSHBUTTON      "C&ontrols...", IDC_CONTROLS, 63, 289, 52, 14
+    PUSHBUTTON      "&Jukebox...", IDC_MUSICPLAYER, 119, 289, 48, 14
+    DEFPUSHBUTTON   "&Play", IDOK, 443, 289, 52, 14
+    PUSHBUTTON      "E&xit", IDCANCEL, 501, 289, 52, 14
 END
 
 // DIV-0045 / DIV-0046: the cheats (docs/cheats.md).
@@ -236,7 +261,7 @@ BEGIN
 END
 
 // The music player (docs/music-player.md): a source greyed when the install lacks it.
-IDD_MUSIC DIALOGEX 0, 0, 320, 150
+IDD_MUSIC DIALOGEX 0, 0, 320, 186
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Jukebox"
 FONT 9, "Segoe UI", 400, 0, 0x1
@@ -251,7 +276,11 @@ BEGIN
     COMBOBOX        IDC_MP_SONG, 40, 78, 273, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | WS_GROUP
     LTEXT           "", IDC_MP_STATUS, 7, 98, 306, 18
 
-    PUSHBUTTON      "&Play", IDC_MP_PLAY, 7, 129, 52, 14
-    PUSHBUTTON      "S&top", IDC_MP_STOP, 63, 129, 52, 14
-    DEFPUSHBUTTON   "Close", IDCANCEL, 261, 129, 52, 14
+    GROUPBOX        "In the game (a sound effect, not a song)", -1, 7, 118, 306, 42
+    AUTOCHECKBOX    "&Battle chord as the PSP plays it (one tone)", IDC_MP_CHORD, 14, 130, 290, 10, WS_TABSTOP | WS_GROUP
+    LTEXT           "", IDC_MP_CHORD_NOTE, 14, 142, 296, 16
+
+    PUSHBUTTON      "&Play", IDC_MP_PLAY, 7, 165, 52, 14
+    PUSHBUTTON      "S&top", IDC_MP_STOP, 63, 165, 52, 14
+    DEFPUSHBUTTON   "Close", IDCANCEL, 261, 165, 52, 14
 END

@@ -37,6 +37,22 @@ bool ExeImage_Source(void* to, std::uint32_t va, std::uint32_t size, std::uint32
 // then not the PC's, and a check against the PC's reads the file instead.
 bool ExeImage_DiscMapped();
 
+// DIVERGENCE DIV-0111 (docs/launcher-suites.md section 9): the exe host, after
+// .data is in place (the file's or BOF3X_EXEIMAGE's, filled) and before the
+// compare below: each layer BOF3X_OPT names whose cache (BOF3X_CACHE, not
+// under BOF3X_CACHE_DATA=0) has opt\<layer>\exe\place.toml is laid over .data
+// at `to`, in BOF3X_OPT's order - place.bin's bytes at the toml's ranges, the
+// file's sha256 and size checked, every range inside .data and, over a
+// disc-built image, in a class that need not equal the PC's. A malformed
+// layer is a Fatal. Nothing when no such layer is named. The hosted build
+// refuses such a layer (dat_load.cpp ReadOptLayers): it keeps Capcom's .data.
+void ExeImage_LayOptTables(void* to, std::uint32_t va, std::uint32_t size);
+
+// BOF3X_SHADOW=dat_cache: the layer's reader and laying on synthetic files in
+// memory, with controls (a wrong hash, a range outside .data, ranges out of
+// order, a byte count that differs, a range over a must-equal class).
+void ExeImage_OptSelfTest();
+
 // After every fill (the engine's own regions, the key table): a mapped
 // disc-built image against the file's .data when BOF3.exe is there, every
 // differing range logged with its class; a difference in a class that must

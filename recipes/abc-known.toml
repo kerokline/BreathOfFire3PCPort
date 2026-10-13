@@ -1,0 +1,76 @@
+# Known differences for the A/B/C install harness (tools/abc_run.py,
+# docs/abc-harness.md 5). Each entry ties a difference the harness may see to
+# the ledger entry that makes it intended. tools/abc_known.py has the
+# condition keys; the rule of the file is **when in doubt, unexplained**: a
+# rule names the narrowest scene and pair it can, and a region no rule
+# matches is listed first in the report.
+#
+# Traits come from recipes/abc-installs.toml: pc, psx, psp, and the language
+# tag. `pair_trait = "psp"` means one side of the pair is a PSP-only install
+# and the other is not.
+
+# --- Frames --------------------------------------------------------------
+
+[[known]]
+id = "psp-area-art"
+ledger = "DIV-0103"
+what = "a PSP-only base draws the PSP's own area pages, palettes and map bands where the PSX's differ"
+pair_trait = "psp"
+modes = [2]               # the field
+area_data = "base"        # only in an area whose AREAnnn.DAT base chunks differ between the two caches
+
+[[known]]
+id = "psp-area-text"
+ledger = "DIV-0090 (amended by LG; loc-build-psp.md 5.3)"
+what = "PSP-EU's en-150 text differs from PSX-EU's in the area's own text (renames, P9, the PSX-EU edits the PSP lacks)"
+pair_trait = "psp"
+both_traits = ["en-150"]
+modes = [2]
+area_data = "loc"         # only where the area's loc/en-150 chunks differ between the caches
+
+[[known]]
+id = "pc-title-mark"
+ledger = "none yet: the PC port's own title art (docs/visual-findings-1012.md 4.4)"
+what = "the PC port's title page draws a registered mark the PlayStation's does not (the owner, 2026-10-12: no (R) on the original PSX)"
+pair_trait = "pc"
+modes = [0]
+areas = [0]
+box = [260, 128, 272, 140]
+
+# Deliberately not here (each would explain too much by screen alone):
+# - the PSP's UI page (FIRST: its shoulder-button labels) and dial page:
+#   they show in menus and battle, where no scene key says which page is up;
+# - the PSP's system-pool text (the 44 pools of loc-build-psp.md 5.3) in
+#   menus and battle;
+# - Ryu's forms (P8) in battle.
+# They are listed as unexplained, and the owner's eye sorts them; when one
+# is settled, add an entry with the narrowest box and tick window seen.
+
+# --- What frames cannot show (state-hash pages, with --statehash) ---------
+
+[[known]]
+id = "psp-tables"
+ledger = "DIV-0104"
+what = "a PSP-built image holds the PSP's Char_ExpTable rows for roster index 6 and consumable 87's byte"
+pair_trait = "psp"
+frames = false
+pages = ["Char_ExpTable", "NameTable_Consumables"]
+
+[[known]]
+id = "psp-music"
+ledger = "DIV-0105"
+what = "a PSP-only install plays the PSP's music: its sequences and banks (the sequencer's state, not seen in a frame)"
+pair_trait = "psp"
+frames = false
+pages = ["Music_", "Snd_", "Seq_"]
+
+# No pc-music entry: with BOF3X_CACHE set, the PC install plays the cache's
+# disc sequences as the disc-only installs do (DIV-0087, music= empty), so
+# the PC and PSX sides share the music; BOF3X_MUSIC=mp3 in a pc install's env
+# would make it a difference, which is then the run's choice, not the ledger's.
+
+[[known]]
+id = "logo"
+ledger = "DIV-0099 / DIV-0106"
+what = "CAPCOM.AVI is the disc's (PSX) or the PSP's movie converted at import, and LOGOS.AVI is the PC's alone; both play before recipe frame 0, so no harness frame shows them"
+frames = false

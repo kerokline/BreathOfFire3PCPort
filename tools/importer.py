@@ -58,12 +58,16 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 import dat          # noqa: E402
 import exe_tables   # noqa: E402
+import psp_exe      # noqa: E402  (the manifest's exe_tables_from, docs/psp-image.md)
 import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
 import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
 import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
+import ppms         # noqa: E402  (base/bgm/ from a PSP disc, docs/psp-music.md)
+import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
+import psp_layers   # noqa: E402  (the suites' engine half: opt/ layers beside a PSX base, docs/launcher-suites.md 9)
 
 RECIPE = os.path.join(ROOT, "recipes", "pc-zh.toml")
 TARGET = "pc-zh"
@@ -266,9 +270,16 @@ def hold_loop(s):
     """A PSX disc's 27A arena, decoded, with the second of member A's two
     four-step loops held HOLD_IS ticks a step; None when it is not that shape."""
     try:
-        a = bytearray(type1.decode(s))
+        a = type1.decode(s)
     except type1.Type1Error:
         return None
+    return hold_arena(a)
+
+
+def hold_arena(d):
+    """hold_loop on an arena already decompressed (a PSP disc's, which ships it
+    so; tools/psp_standins.py); None when it is not that shape."""
+    a = bytearray(d)
     lo, hi = arena_bank(a, HOLD_BANK)
     scripts = lo + struct.unpack_from("<I", a, lo + 8)[0]
     n = struct.unpack_from("<H", a, scripts)[0] // 2
@@ -668,7 +679,8 @@ def get_chunk(f, slot, ch, chunked):
             if sha(body) != h:
                 raise SystemExit("%s chunk %d from %s's own section: hash differs from the recipe" % (f["name"], slot, b))
             return s.id, ("own", key, sec), body, None
-    return None
+    # PSP discs alone (base_policy psp): the PSP's own section (docs/psp-stand-ins.md)
+    return psp_standins.stand_in(f, slot, ch, chunked)
 
 
 def cmd_build(a):
@@ -681,6 +693,7 @@ def cmd_build(a):
         a.lang, a.opt = a.lang + [x for x in lang if x not in a.lang], a.opt + [x for x in opt if x not in a.opt]
     discs = {s.id for s in sources if isinstance(s, DiscSource)}
     a.opt = default_opt(a.opt, a.no_opt, lambda name: bool(discs & set(DEFAULT_OPT[name])))
+    a.opt, tg_opt = psp_layers.take(a.opt, sources)     # recipes/psp-layers.toml's layers, not opt.toml's
     print("sources, in order: %s" % ", ".join("%s (%s)" % (s.id, s.path) for s in sources))
     chunked = [s for s in sources if not isinstance(s, ExeSource)]
     assets, missing, used = [], collections.Counter(), collections.Counter()
@@ -725,7 +738,7 @@ def cmd_build(a):
             written[layer] += 1
     snd = xa.importer_snd(sources, a.out)
     psp_snd = None if snd else at3.importer_snd(sources, a.out)     # no PSX disc: the PSP's, by the player's ffmpeg
-    bgm = seq.importer_bgm(sources, a.out)
+    bgm = seq.importer_bgm(sources, a.out) or ppms.importer_bgm(sources, a.out)   # no PSX disc: the PSP's (psp-music.md)
     # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc.
     # Before the languages: a disc-only language layer is built against it.
     exe_src = next((s for s in sources if isinstance(s, ExeSource)), None) or \
@@ -738,6 +751,7 @@ def cmd_build(a):
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
                    psp_snd)
     fmv_build(sources, a.out)       # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
+    psp_layers.build(tg_opt, sources, a.out)   # opt/psp-music etc.; its [psp_layers] after that
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, " (its own sections standing in)" if own else ""))
     for layer, n in sorted(written.items()):
@@ -749,7 +763,7 @@ def cmd_build(a):
     for why in (psp_snd[3] if psp_snd else []):
         print("  base/snd  not written: %s" % why)
     if bgm:
-        print("  base/bgm  from %s: %d files (seq.py)" % (bgm[0], len(bgm[1])))
+        print("  base/bgm  from %s: %d files (%s)" % (bgm[0], len(bgm[1]), "ppms.py" if bgm[0].startswith("psp-") else "seq.py"))
     if missing:
         print("  missing (no source given carries them):")
         for (layer, k), n in sorted(missing.items()):
@@ -762,20 +776,25 @@ def cmd_build(a):
     print("manifest: %s" % os.path.join(a.out, "manifest.toml"))
 
 
-def resolve_languages(asked, sources):
+def resolve_languages(asked, sources, psp=False):
     """Each --lang to (tag, donor): a tag (`en-150`) is the PSX disc whose
     fixtures.toml tag it is, exactly (docs/importer.md section 5,
     docs/importer-transforms.md section 7). The bare codes of before
     2026-10-08 (`en`, fr, de, ja) are retired and refused (DIV-0005,
-    tools/language_tags.py). tools/loc_build.py reads PSX discs only."""
+    tools/language_tags.py). tools/loc_build.py reads PSX discs over the PC
+    install, and with `psp` (a disc-only build) a PSP disc too, after any PSX
+    disc of the same tag (docs/loc-build-psp.md)."""
     donors = [s for s in sources if isinstance(s, DiscSource) and s.id.startswith("psx-")]
+    if psp:
+        donors += [s for s in sources if isinstance(s, DiscSource) and s.id.startswith("psp-")]
     out = {}
     for want in asked:
         language_tags.refuse_retired(want, "--lang")
         d = next((s for s in donors if tag_of(s.id) == want), None)
         if not d:
             have = ", ".join("%s (%s)" % (s.id, tag_of(s.id)) for s in donors) or "none"
-            raise SystemExit("--lang %s: no PSX disc given carries it; the discs given: %s" % (want, have))
+            raise SystemExit("--lang %s: no %s disc given carries it; the discs given: %s"
+                             % (want, "PSX or PSP" if psp else "PSX", have))
         out[tag_of(d.id)] = d
     return sorted(out.items(), key=lambda kv: (primary(kv[0]) != "en", kv[0]))
 
@@ -853,7 +872,7 @@ def build_languages_disc_only(asked, sources, out):
     """loc/<tag>/ from the donor disc against the cache's own base/ (DiscCache)."""
     import subprocess
     assets = []
-    for tag, donor in resolve_languages(asked, sources):
+    for tag, donor in resolve_languages(asked, sources, psp=True):
         d = os.path.join(out, "loc", tag, "dat")
         if os.path.isdir(d):            # a rebuild: no container of an earlier layer left behind
             for f in os.listdir(d):
@@ -882,6 +901,8 @@ def write_manifest(out, recipe_path, rec, sources, assets, loc_assets=(), opt_as
              "recipe_sha256 = %s" % toml_str(rsha),
              "built = %s" % toml_str(datetime.datetime.now().isoformat(timespec="seconds")),
              ""]
+    lines += psp_standins.manifest_lines(sources)     # [build] base_policy: the launcher's key (LT)
+    lines[-1:-1] = psp_exe.manifest_build(exe)        # [build] exe_tables_from, in the same table (docs/psp-image.md)
     for s in sources:
         lines += ["[[source]]", "build = %s" % toml_str(s.id), "path = %s" % toml_str(os.path.basename(os.path.normpath(s.path))), ""]
     lines += ["[cache]", "assets = ["]          # a table of its own, not the last [[source]]'s
@@ -1374,9 +1395,13 @@ def verify_opt(cache, path=None):
     rec = {f["name"]: f for f in load_recipe()["file"]}
     with open(os.path.join(cache, "manifest.toml"), "rb") as fh:
         man = {(n, l, i): h for n, l, i, w, h in tomllib.load(fh)["cache"].get("opt", [])}
-    rc = 0
-    for name in sorted(os.listdir(d)):
+    unlisted = psp_layers.verify_listed(cache)   # a folder the manifest does not list: a problem, not offered
+    rc = 1 if unlisted else 0
+    for name in sorted(n for n in os.listdir(d) if n not in unlisted):
         bad, chunks_ok, comp_ok, comp_absent = [], 0, 0, 0
+        if psp_layers.is_layer(name):    # recipes/psp-layers.toml's: its own check
+            rc |= psp_layers.verify_layer(cache, name)
+            continue
         if name not in layers:
             print("verify opt/%s: not a layer recipes/opt.toml knows" % name)
             rc = 1
@@ -1513,12 +1538,14 @@ def install_base(cache, game):
         order.setdefault(name, []).append(layer)
     dat_dir = os.path.join(game, "DAT")
     os.makedirs(dat_dir, exist_ok=True)
-    written, partial, none = 0, [], []
+    written, partial, none, no_base = 0, [], [], []
     for name, layers in order.items():
         files, at, parts, left = {}, collections.Counter(), [], 0
         for layer in set(layers):
             p = os.path.join(cache, *layer.split("/"), "dat", name)
             files[layer] = dat.load(p) if os.path.isfile(p) else None
+        if "base" in files and files["base"] is None:
+            no_base.append(name)    # base/ lacks it: no language layer fills that (docs/psp-install.md 1)
         for layer in layers:
             got = files[layer]
             if got is None:
@@ -1550,6 +1577,13 @@ def install_base(cache, game):
           "files, BGM/ empty (the music is the cache's base/bgm, played with cache= / BOF3X_CACHE)"
           % (written, len(partial), len(none),
                                                                   ", ".join(none) or "none", len(snd)))
+    if no_base:
+        # A cache whose base/ is incomplete (a PSP disc alone, until its
+        # stand-ins: docs/psp-install.md 1): those containers are written from
+        # what the cache has, but the game will not find their base chunks.
+        print("base: WARNING - %d of the %d containers have no base/ file in this cache, so their base chunks are "
+              "missing from DAT/ (not text a language layer replaces): %s%s"
+              % (len(no_base), written, ", ".join(no_base[:8]), ", ..." if len(no_base) > 8 else ""))
 
 
 def cmd_install(a):
@@ -1572,6 +1606,7 @@ def cmd_install(a):
     if not os.path.isfile(os.path.join(dat_dir, "FIRST.DAT")):
         raise SystemExit("%s: no DAT/FIRST.DAT - not a game directory" % a.game)
     opt = default_opt(a.opt, a.no_opt, lambda name: os.path.isdir(os.path.join(a.cache, "opt", name, "dat")))
+    psp_layers.refuse_install(opt, a.cache)     # a bgm / snd / exe layer is the cache's alone
     for name in a.no_opt:
         old = [f for f in os.listdir(dat_dir) if f.startswith(name + ".")]
         for f in old:
@@ -1795,6 +1830,7 @@ def verify_bgm(cache):
         if b not in banks:
             errs.append("%s: its bank %s is not in the cache" % (rel, b))
     fix, _ = seq.load_fixture() if os.path.exists(seq.FIXTURE) else ({}, None)
+    fix.update(ppms.load_fixture())      # a PSP build's rows: fixtures/bgm-psp.tsv (ppms.py)
     against = []
     for bid in sorted(builds):
         want = fix.get(bid)
@@ -1875,16 +1911,24 @@ def fmv_build(sources, out):
     """build's movie row: base/fmv/CAPCOM.AVI from the first PSX disc among the
     sources, by the player's ffmpeg, and an [fmv] table appended to the
     manifest (the source sectors' hash, the ffmpeg, the file's hash; or why it
-    was not written). No PSX disc: nothing, and no table."""
+    was not written). No PSX disc and no PC source: the first PSP disc's
+    CAPLOGO.PMF instead (tools/psp_fmv.py); otherwise nothing, and no table."""
     import subprocess
     import psx_disc
     disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
-    if disc is None:
+    # The PSP's movie only where nothing else gives one: no PSX disc and no PC
+    # install (whose own capcom.avi install keeps).
+    psp = None if any(s.id.startswith("pc-") for s in sources) else         next((s for s in sources if s.id.startswith("psp-") and hasattr(s, "build")), None)
+    if disc is None and psp is None:
         return
     d = os.path.join(out, FMV_DIR)
     dst = os.path.join(d, FMV_NAME)
     if os.path.exists(dst):
         os.remove(dst)          # never a stale movie beside a manifest that does not name it
+    if disc is None:            # the PSP case: CAPLOGO.PMF (tools/psp_fmv.py, docs/psp-install.md 2)
+        import psp_fmv
+        fmv_record(out, psp_fmv.convert(psp.id, psp.path, dst, at3.find_ffmpeg()))
+        return
     # Nothing here fails the build: a cooked image, a disc without the file, no
     # ffmpeg or one that cannot run all leave a `skipped` row (review item 1).
     row = {"build": disc.id, "source": FMV_STR}
@@ -1939,6 +1983,11 @@ def fmv_build(sources, out):
             with open(dst, "rb") as fh:
                 row.update(ffmpeg=at3.ffmpeg_version(ffmpeg), file=FMV_DIR.replace(os.sep, "/") + "/" + FMV_NAME,
                            sha256=sha(fh.read()))
+    fmv_record(out, row)
+
+
+def fmv_record(out, row):
+    """The [fmv] table appended to the manifest, and build's line."""
     lines = ["", "# base/fmv/: the disc's logo movie converted by the player's ffmpeg (docs/fmv-import.md).", "[fmv]"]
     lines += ["%s = %s" % (k, toml_str(v)) for k, v in row.items()]
     with open(os.path.join(out, "manifest.toml"), "a", newline="\n", encoding="utf-8") as fh:
@@ -1946,7 +1995,7 @@ def fmv_build(sources, out):
     if "skipped" in row:
         print("  base/fmv  not written: %s" % row["skipped"])
     else:
-        print("  base/fmv  from %s: %s (%s)" % (disc.id, FMV_NAME, row["ffmpeg"]))
+        print("  base/fmv  from %s: %s (%s)" % (row["build"], FMV_NAME, row["ffmpeg"]))
 
 
 def fmv_avi_header(body):
@@ -1969,12 +2018,16 @@ def fmv_verify(cache):
         row = tomllib.load(fh).get("fmv")
     held = os.path.isfile(os.path.join(cache, FMV_DIR, FMV_NAME))
     if row is None or "skipped" in row:
-        why = "no PSX disc among the sources" if row is None else row["skipped"]
+        why = "no PSX or PSP disc among the sources" if row is None else row["skipped"]
         print("  base/fmv/: absent - %s%s" % (why, "; but a %s is there the manifest does not name" % FMV_NAME
                                              if held else ""))
         return 1 if held else 0
     errs, hdr = [], None
-    if row["source_sha256"] != FMV_SOURCE_SHA256:
+    if row["build"].startswith("psp-"):         # the PSP case (tools/psp_fmv.py)
+        import psp_fmv
+        if row["source_sha256"] != psp_fmv.SOURCE_SHA256:
+            errs.append("its source is not the PMF docs/psp-install.md measured")
+    elif row["source_sha256"] != FMV_SOURCE_SHA256:
         errs.append("its source is not the stream docs/fmv-import.md measured")
     if not held:
         errs.append("%s: missing" % row["file"])
@@ -2068,15 +2121,23 @@ def cmd_check(a):
     oerrs = check_opt(a.opt_recipe)
     serrs = ["seq.py: " + e for e in seq.check()]     # base/bgm/'s writer and reader, a synthetic round trip
     serrs += ["seq.py: " + e for e in seq.check_fixture(builds)]   # fixtures/bgm.tsv's shape and format versions
+    serrs += ["ppms.py: " + e for e in ppms.check() + ppms.check_fixture(builds)]   # pPMS round trip, bgm-psp.tsv
     serrs += ["at3.py: " + e for e in at3.check()]   # recipes/psp.snd.toml against the PC's SND/ recipe
+    serrs += ["psp_standins.py: " + e for e in psp_standins.check(recipe=a.recipe)]   # recipes/psp-standins.toml
+    import psp_fmv                                     # the PSP's logo movie: the PSMF demux on a synthetic file
+    serrs += ["psp_fmv.py: " + e for e in psp_fmv.check()]
     import cache_walk                                  # DIV-0089: the engine's cache walk against cmd_install
     werrs = cache_walk.check()
+    import suites                                      # the launcher's suites against opt.toml and fixtures.toml
+    werrs += ["suites.py: " + e for e in suites.check()]
     for e in (errs + oerrs + serrs + werrs)[:30]:
         print("ERROR", e)
     print("importer check: %d files, %d chunks, %d error(s); recipes/opt.toml %d layers, %d error(s)"
           % (len(names), n, len(errs), len(load_opt_recipe(a.opt_recipe)) if os.path.exists(a.opt_recipe or OPT_RECIPE) else 0,
              len(oerrs)))
-    print("seq / at3 check: synthetic SEP and VAB round trip, fixtures/bgm.tsv, recipes/psp.snd.toml, %d error(s)" % len(serrs))
+    print("seq / ppms / at3 / psp_fmv check: synthetic SEP, pPMS and VAB round trips, fixtures/bgm.tsv and "
+          "bgm-psp.tsv, recipes/psp.snd.toml, "
+          "recipes/psp-standins.toml, a synthetic PSMF, %d error(s)" % len(serrs))
     print("cache_walk check: the engine's cache walk against install on a synthetic cache, %d error(s)" % len(werrs))
     errs += oerrs + serrs + werrs
     return exe_tables.cmd_check(a) | (1 if errs else 0)
@@ -2103,8 +2164,9 @@ def main():
                         "bare en/fr/de/ja are retired, DIV-0005); needs the PC's DAT/, BOF3.exe and that disc")
     p.add_argument("--opt", action="append", default=[],
                    help="an optional layer to build (repeat): %s; needs a PSP disc, area4-walls a US, European, "
-                        "French or German PSX disc, and is built by default when one is given (docs/opt-layers.md)"
-                        % ", ".join(OPT_LAYERS))
+                        "French or German PSX disc, and is built by default when one is given (docs/opt-layers.md); "
+                        "beside a PlayStation base also %s (docs/launcher-suites.md 9)"
+                        % (", ".join(OPT_LAYERS), ", ".join(psp_layers.load())))
     p.add_argument("--no-opt", action="append", default=[],
                    help="a default layer not to build (repeat): %s" % ", ".join(DEFAULT_OPT))
     p.add_argument("--preset", help="a named source order plus layers: %s; the sources are still given "

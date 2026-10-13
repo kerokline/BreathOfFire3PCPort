@@ -3,6 +3,11 @@
 **Status:** BUILT (2026-10-11, `launcher/music-player`), driven by script but
 **not yet heard by the owner**. The faerie-menu and PSF measurements in
 section 4 are STABLE; the names themselves are the owner's catalogue.
+**2026-10-12 (the PSP-only round):** the PSP source is lit - from a PSP-only
+cache's `base\bgm` (DIV-0105), or beside a PlayStation disc's songs from the
+`psp-music` layer, each song on its own directory's banks (DIV-0109) - and the
+screen has a box for the battle chord as the PSP plays it (DIV-0113);
+[`launcher-suites.md`](launcher-suites.md) 9.3 and 9.6.
 
 The owner asked for a music player reachable from the launcher, playing the
 songs from whichever of the PSX disc, the PSP disc and the PC port the install

@@ -28,6 +28,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/battle_turn_steps_callees.h"
+#include "game/psp_code.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -90,7 +91,19 @@ std::uint32_t Watch() {
     return h;
 }
 
+// DIV-0108 (psp_code.h): the switch-on pass runs the original with the PSP's
+// duel-loss applied where the PSP applies it - after the hook with 2, when it
+// does not answer 0xFF, on the bytes it left (StubHookEventPsp): an end byte
+// the rule lets the battle go on with is shown to the original as 0, and put
+// back at the next stand-in call before its log entry is taken.
+bool g_psp_pending;
+unsigned char g_psp_end;
+unsigned g_psp_fired;
 void Record(std::uint32_t what, std::uint32_t a = 0, std::uint32_t b = 0, std::uint32_t c = 0) {
+    if (g_psp_pending) {
+        B(at::kBattleEnd) = g_psp_end;
+        g_psp_pending = false;
+    }
     if (g_log_n < kLog) g_log[g_log_n] = {what, a, b, c, Watch()};
     ++g_log_n;
 }
@@ -212,6 +225,17 @@ unsigned __cdecl StubHookEvent(int n) {
     Record(31, static_cast<std::uint32_t>(n));
     Disturb();
     return (Hash() & ~0xFFu) | ((Hash() >> 6) % 3 == 0 ? 0xFFu : (Hash() >> 9) & 0xFE);
+}
+// DIV-0108: the hook as the original sees it with the PSP's duel-loss.
+unsigned __cdecl StubHookEventPsp(int n) {
+    const unsigned r = StubHookEvent(n);
+    if (n == 2 && (r & 0xFF) != 0xFF && psp_code::DuelLossGoesOn(B(at::kEventBattle), B(at::kBattleEnd))) {
+        g_psp_end = B(at::kBattleEnd);
+        g_psp_pending = true;
+        B(at::kBattleEnd) = 0;
+        ++g_psp_fired;
+    }
+    return r;
 }
 void __cdecl StubHookEnd() { Record(32); Disturb(); }
 void __cdecl StubHookExit() { Record(33); Disturb(); }
@@ -416,6 +440,7 @@ void Apply(const State& s) {
     }
     std::memset(g_log, 0, sizeof g_log);
     g_log_n = 0;
+    g_psp_pending = false;
 }
 
 void SetPtr(std::uint32_t at, const void* p) { SetLong(At(at), static_cast<std::int32_t>(Address(p))); }
@@ -612,6 +637,10 @@ void SelfTest() {
         if (c.table.entries) move_script::Relocate(clones[k], c.base, c.size, c.table);
     }
 
+    // DIV-0108: the main comparison with the PSP's changes off - today's
+    // behaviour, byte for byte - whatever BOF3X_PSP or the cache says.
+    const unsigned psp_saved = psp_code::Force(0);
+
     static State saved, input, their_out, our_out;
     std::uint32_t saved_tables[kTableCount][5];
     for (unsigned t = 0; t < kTableCount; ++t)
@@ -659,6 +688,58 @@ void SelfTest() {
             }
         }
     }
+
+    // DIV-0108: BattleRoundEnd_NextRound again with the PSP's changes on. Ours
+    // against the original with the PSP's test applied after the hook
+    // (StubHookEventPsp); every other byte as before. Half the rounds in event
+    // battle 0x1B, the end byte from its low three bits' eight cases.
+    psp_code::Force(psp_code::kAll);
+    unsigned psp_bad = 0, psp_changed = 0;
+    g_psp_fired = 0;
+    constexpr unsigned kPspRounds = 4 * kPerFunction;
+    for (unsigned round = 0; round < kPspRounds; ++round) {
+        for (unsigned i = 0; i < kRegionBytes; i += 4) {
+            const std::uint32_t v = Next();
+            std::memcpy(input.memory + i, &v, kRegionBytes - i < 4 ? kRegionBytes - i : 4);
+        }
+        std::memset(input.log, 0, sizeof input.log);
+        input.log_n = 0;
+        Apply(input);
+        Fix();
+        g_seed = Next();
+        Seed(kNextK);
+        if (Half()) B(at::kEventBattle) = psp_code::kDuelEvent;
+        B(at::kBattleEnd) = static_cast<unsigned char>(Half() ? Next() % 8 : Next());
+        Capture(input);
+
+        static State plain_out;
+        for (int pass = 0; pass < 3; ++pass) {
+            Apply(input);
+            if (pass == 0) SetPtr(at::kHookEvent, reinterpret_cast<const void*>(&StubHookEventPsp));
+            if (pass == 2) psp_code::Force(0);
+            const void* const fn = pass == 1 ? kClones[kNextK].ours : clones[kNextK];
+            reinterpret_cast<Fn>(const_cast<void*>(fn))(0, 0, 0, 0);
+            if (g_psp_pending) {   // the rule fired and nothing called a stand-in after it
+                ++psp_bad;
+                g_psp_pending = false;
+            }
+            SetPtr(at::kHookEvent, reinterpret_cast<const void*>(&StubHookEvent));
+            psp_code::Force(psp_code::kAll);
+            Capture(pass == 0 ? their_out : pass == 1 ? our_out : plain_out);
+        }
+        if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0) {
+            if (++psp_bad <= 12) bof3::Log("shadow      battle_turn_steps DIV-0108 MISMATCH: round %u", round);
+        }
+        if (std::memcmp(&plain_out, &our_out, sizeof our_out) != 0) ++psp_changed;
+    }
+    psp_code::Force(psp_saved);
+    bof3::Log("shadow      battle_turn_steps DIV-0108 (duel-loss on): BattleRoundEnd_NextRound %u rounds, the PSP's test "
+              "applied %u times, ours differs from the plain original in %u, %u MISMATCHES against the original with "
+              "the PSP's test",
+              kPspRounds, g_psp_fired, psp_changed, psp_bad);
+    if (g_psp_fired == 0 || psp_changed == 0) bof3::Fatal("battle_turn_steps DIV-0108: the switch-on pass never reached the PSP's test");
+    if (psp_bad) bof3::Fatal("BattleRoundEnd_NextRound with duel-loss on differs from the PSP's rule in %u rounds", psp_bad);
+
     g = kOriginals;
     Apply(saved);
     for (unsigned t = 0; t < kTableCount; ++t)

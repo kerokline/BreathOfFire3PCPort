@@ -6,8 +6,11 @@
 // Three sources, each a radio button greyed when the install lacks it (the
 // Config screen's rule): the PlayStation disc's songs as tools/seq.py wrote
 // them into the cache (base\bgm\NNN.DAT and its bank), played by the engine's
-// own sequencer (src/audio/seq.h, DIV-0087's player); the PSP disc's, whose
-// import is not built (docs/psp-only-build.md section 2.1, step 5); and the PC
+// own sequencer (src/audio/seq.h, DIV-0087's player); the PSP disc's, when the
+// cache was built from a PSP disc alone (tools/ppms.py, docs/psp-music.md: the
+// same form, the same player; the manifest's bgm rows name the build), or from
+// the psp-music layer's opt\psp-music\bgm beside a PlayStation disc's (DIV-0109,
+// docs/launcher-suites.md 9.3); and the PC
 // port's MP3s in BGM\, decoded by minimp3 and looped at DIV-0081's measured
 // points where the table has a row, else rewound to the file's start as the
 // port does. A song number is the game's: song N is the PC's file N and the
@@ -34,7 +37,9 @@
 #include "audio/seq.h"
 #include "audio/song.h"
 #include "game/music_loops.h"
+#include "launcher/config.h"
 #include "launcher/resource.h"
+#include "launcher/suites.h"
 
 // third_party/minimp3/minimp3.h, verbatim (docs/THIRD_PARTY.md section 3): the
 // launcher's own copy of the implementation, as src/audio/mp3.cpp is the DLL's.
@@ -323,12 +328,19 @@ const SourceInfo kSourceInfo[kSources] = {
 struct Entry {
     unsigned number;
     std::wstring path;   // the song file
+    std::wstring bank_dir;  // its bank\ (the cache's songs): the directory's own, base\bgm or a layer's
     std::wstring where;  // the disc's own name for it
     bool loops;
 };
 
 struct State {
     std::wstring game_dir, cache;
+    // DIV-0113: the battle-chord box, over the settings' opt= as read; the
+    // player's choice goes back through `chord_choice` (-1 untouched, 0 off,
+    // 1 on), which the settings dialog writes with the suites on Play
+    std::wstring data_root;
+    int* chord_choice = nullptr;
+    ChordState chord;
     std::vector<Entry> songs[kSources];
     std::wstring why[kSources];  // why a source is greyed
     std::vector<std::wstring> names;  // music-names.tsv: index = song number
@@ -375,13 +387,19 @@ std::wstring CacheMusicRoot(const std::wstring& cache) {
     return cache;
 }
 
-void ListPsx(State& s) {
-    const std::wstring root = CacheMusicRoot(s.cache);
-    if (root.empty()) {
-        s.why[kPsx] = L"No cache folder is set: the importer writes the disc's songs into one (docs/seq-import.md).";
-        return;
-    }
-    const std::wstring dir = root + L"\\base\\bgm\\";
+// The build the cache's base\bgm came from: the build id that opens the source
+// of the manifest's first `bgm` row (`["base/bgm/000.DAT", "psp-jp:ppms:...", ...]`,
+// tools/importer.py write_manifest), or "" when the manifest has no such row:
+// the one manifest reader the DLL shares (common/cache_manifest.h).
+// A PSP build's songs are tools/ppms.py's (docs/psp-music.md); any other's are
+// a PlayStation disc's (tools/seq.py). A cache holds one base\bgm.
+std::string CacheBgmBuild(const std::wstring& root) { return ManifestRead(root).bgm_build; }
+
+bool IsPspBuild(const std::string& build) { return build.compare(0, 4, "psp-") == 0; }
+
+// The songs of one bgm directory (the cache's base\bgm\, or a layer's
+// opt\<layer>\bgm\) into `source`'s list, each with that directory's bank\.
+void ListCacheSongs(State& s, const std::wstring& dir, int source) {
     EachFile(dir, [&](const wchar_t* name) {
         bool once = false;
         const int n = SongNumber(name, &once);
@@ -389,6 +407,7 @@ void ListPsx(State& s) {
         Entry e;
         e.number = static_cast<unsigned>(n);
         e.path = dir + name;
+        e.bank_dir = dir + L"bank\\";
         const std::vector<std::uint8_t> bytes = ReadWhole(e.path);
         lstrcpynW(g_reading, e.path.c_str(), MAX_PATH);
         psx::Song song;
@@ -399,18 +418,57 @@ void ListPsx(State& s) {
         wchar_t where[64];
         std::swprintf(where, 64, L"%hs.EMI sub %u", song.bank.c_str(), song.sub);
         e.where = where;
-        s.songs[kPsx].push_back(e);
+        s.songs[source].push_back(e);
     });
+}
+
+void ListPsx(State& s) {
+    const std::wstring root = CacheMusicRoot(s.cache);
+    if (root.empty()) {
+        s.why[kPsx] = L"No cache folder is set: the importer writes the disc's songs into one (docs/seq-import.md).";
+        return;
+    }
+    if (IsPspBuild(CacheBgmBuild(root))) {
+        s.why[kPsx] = L"The cache's songs are the PSP disc's: build the cache with a PlayStation disc for these.";
+        return;
+    }
+    ListCacheSongs(s, root + L"\\base\\bgm\\", kPsx);
     if (s.songs[kPsx].empty())
         s.why[kPsx] = L"The cache folder holds no songs (base\\bgm\\): run tools/seq.py with a PlayStation disc.";
 }
 
 void ListPsp(State& s) {
-    // docs/psp-only-build.md section 2.1: the PSP's songs (pPMS) and banks
-    // (PPHD / pBVC, volumes merged as the PSP has them - the owner's call,
-    // 2026-10-11) have no importer or player yet. When they do, this lists
-    // the cache's PSP songs and kPsp gets its Stream.
-    s.why[kPsp] = L"Not imported yet: the PSP's songs need their own bank reader (docs/psp-only-build.md, step 5).";
+    // docs/psp-music.md: a cache built from a PSP disc and no PlayStation disc
+    // holds the PSP's songs (tools/ppms.py, pPMS inverted) and banks
+    // (vag.psp_music_vab, the volume / pan merge inverted) in base\bgm, in the
+    // PlayStation's form, so the same sequencer plays them. A cache holds one
+    // base\bgm: with a PlayStation disc among the sources it is the disc's.
+    const std::wstring root = CacheMusicRoot(s.cache);
+    if (root.empty()) {
+        s.why[kPsp] = L"No cache folder is set: the importer writes a PSP disc's songs into one (docs/psp-music.md).";
+        return;
+    }
+    if (!IsPspBuild(CacheBgmBuild(root))) {
+        // DIV-0109: beside a PlayStation disc's songs, the PSP's are the music
+        // layer's tree (recipes/suites.toml's bgm member names it), the same
+        // form, played from its own bank\.
+        // One music member: tools/suites.py check refuses a second (this column
+        // lists one layer). The layer only when the manifest lists it (or there
+        // is none), as the game takes it (common/cache_manifest.h).
+        const char* name = nullptr;
+        for (const suites_gen::MemberInfo& m : suites_gen::kMembers)
+            if (!name && m.kind == suites_gen::Kind::kBgm && m.layer) name = m.layer;
+        std::wstring layer;
+        for (const char* c = name ? name : ""; *c; ++c) layer += static_cast<wchar_t>(*c);
+        if (name && ManifestOffersLayer(ManifestRead(root), name))
+            ListCacheSongs(s, root + L"\\opt\\" + layer + L"\\bgm\\", kPsp);
+        if (s.songs[kPsp].empty())
+            s.why[kPsp] = L"The cache's songs are not the PSP disc's: a cache built from a PSP disc alone holds them, "
+                          L"or one built with --opt " + layer + L" beside a PlayStation disc (docs/psp-music.md).";
+        return;
+    }
+    ListCacheSongs(s, root + L"\\base\\bgm\\", kPsp);
+    if (s.songs[kPsp].empty()) s.why[kPsp] = L"The cache's manifest names the PSP's songs, but base\\bgm\\ holds none.";
 }
 
 void ListPc(State& s) {
@@ -522,18 +580,16 @@ void Play(HWND dlg, State& s) {
     HCURSOR was = SetCursor(LoadCursorA(nullptr, IDC_WAIT));
     std::unique_ptr<Stream> stream;
     std::wstring how;
-    if (s.source == kPsx) {
-        const std::wstring root = CacheMusicRoot(s.cache);
-        stream.reset(new SeqStream(e->path, root + L"\\base\\bgm\\bank\\"));
+    if (s.source == kPsx || s.source == kPsp) {
+        // both are the cache's base\bgm in the PlayStation's form (docs/psp-music.md)
+        stream.reset(new SeqStream(e->path, e->bank_dir));   // the song's own directory's bank (DIV-0109)
         how = e->loops ? L"looping as the disc's song does" : L"once, as in the game";
-    } else if (s.source == kPc) {
+    } else {
         auto* mp3 = new Mp3Stream(e->path, e->number, e->loops);
         stream.reset(mp3);
         how = !e->loops ? L"once, as in the game"
               : mp3->Measured() ? L"looping at its measured points (DIV-0081)"
                                 : L"looping from the file's start, as the port does";
-    } else {
-        Fatal(L"the PSP's songs have no player yet (docs/psp-only-build.md step 5)");
     }
     s.out.Set(std::move(stream));
     SetCursor(was);
@@ -583,6 +639,13 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         }
         EnableWindow(GetDlgItem(dlg, IDC_MP_PLAY), first >= 0 && s->open);
         EnableWindow(GetDlgItem(dlg, IDC_MP_STOP), first >= 0 && s->open);
+        // DIV-0113: the battle chord, as opt= plays it; greyed with the reason
+        CheckDlgButton(dlg, IDC_MP_CHORD, s->chord.checked ? BST_CHECKED : BST_UNCHECKED);
+        EnableWindow(GetDlgItem(dlg, IDC_MP_CHORD), s->chord.enabled && s->chord_choice);
+        SetDlgItemTextW(dlg, IDC_MP_CHORD_NOTE,
+                        s->chord.enabled ? L"Off: the chord's second tone restored, as the PlayStation plays it. "
+                                           L"Written to opt= on Play."
+                                         : s->chord.why.c_str());
         SetTimer(dlg, kEndTimer, 250, nullptr);
         return TRUE;
     }
@@ -615,6 +678,16 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         case IDC_MP_STOP:
             Stop(dlg, *s);
             return TRUE;
+        case IDC_MP_CHORD:
+            if (HIWORD(wp) == BN_CLICKED && s->chord_choice && s->chord.enabled) {
+                // a choice, not an edit: opt= is made once on Play from the line
+                // as read (SuitesOptEdit), so ticking and unticking writes it
+                // back byte for byte
+                const bool on = IsDlgButtonChecked(dlg, IDC_MP_CHORD) == BST_CHECKED;
+                *s->chord_choice = on ? 1 : 0;
+                s->chord.checked = on;
+            }
+            return TRUE;
         case IDOK:
         case IDCANCEL:
             KillTimer(dlg, kEndTimer);
@@ -634,11 +707,17 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 
 }  // namespace
 
-void MusicPlayerRun(HWND owner, const std::wstring& game_dir, const std::wstring& cache) {
+void MusicPlayerRun(HWND owner, const std::wstring& game_dir, const std::wstring& cache,
+                    const std::wstring& data_root, const std::string* opt, int* chord_choice) {
     psx::SetMusicAbortHook(MusicAbort);
     State s;
     s.game_dir = game_dir;
     s.cache = cache;
+    s.data_root = data_root;
+    s.chord_choice = opt ? chord_choice : nullptr;
+    s.chord = ChordEvaluate(ManifestRead(CacheMusicRoot(cache)), ConfigOptInstalled(game_dir, kChordLayer, data_root),
+                            opt ? *opt : std::string(), ConfigOptDefaultInstalled(game_dir, data_root));
+    if (s.chord_choice && *s.chord_choice >= 0 && s.chord.enabled) s.chord.checked = *s.chord_choice == 1;
     HCURSOR was = SetCursor(LoadCursorA(nullptr, IDC_WAIT));
     ListPsx(s);
     ListPsp(s);

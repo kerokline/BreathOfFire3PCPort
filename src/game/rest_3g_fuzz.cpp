@@ -21,6 +21,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/psp_code.h"
 #include "game/rest_3g.h"
 #include "game/rest_3g_callees.h"
 #include "game/scenario_harness.h"
@@ -417,9 +418,125 @@ void Disturb(U h) {
     }
 }
 
+// DIV-0108 (psp_code.h): Battle_PlaceBossActor with the PSP's myria-item, against
+// Capcom's code with its three calls left to the real callees (BossActor_Find,
+// Battle_CopyEnemyData, Battle_SetEnemyOffset - the same functions on both
+// sides, whichever owns them). Each round from one random state - the 30 field
+// objects, a tagged actor at a random one half the time, the eight enemy
+// records and the area's eight enemy data records, the battle's globals, the
+// area number 198 or not and the event byte 0x37 or not - the original runs,
+// then ours with the switch off, then ours with it on. Off: every byte the
+// same. On: the same but for the placed record's u16 +0xA8, which is 0x317
+// exactly when an actor was placed in area 198 under event battle 0x37.
+void CheckPspMyriaItem() {
+    struct Span { U at, size; };
+    static constexpr Span kSpans[] = {
+        {0x7DEE80, 30 * 0xA4},                          // Sprite_Objects
+        {at::kEnemies, at::kEnemyCount * at::kEnemyStride},
+        {0x8C55C8, 8 * 0x8C},                           // the area's enemy data records
+        {0x904AA0, 0x160},                              // the battle's globals
+        {0x904EFC, 2},                                  // Game_AreaNumber
+    };
+    constexpr U kBytes = 30 * 0xA4 + 8 * 0x128 + 8 * 0x8C + 0x160 + 2;
+    struct State {
+        unsigned char m[kBytes];
+        unsigned char* current;
+    };
+    static State saved, input, theirs, off, on;
+    const auto capture = [](State& st) {
+        U o = 0;
+        for (const Span& sp : kSpans) {
+            std::memcpy(st.m + o, move_script::At(sp.at), sp.size);
+            o += sp.size;
+        }
+        st.current = Sprite_Current;
+    };
+    const auto apply = [](const State& st) {
+        U o = 0;
+        for (const Span& sp : kSpans) {
+            std::memcpy(move_script::At(sp.at), st.m + o, sp.size);
+            o += sp.size;
+        }
+        Sprite_Current = st.current;
+    };
+    const bof3::CloneCall calls[] = {{0x7, reinterpret_cast<const void*>(0x494920), 0x494920},
+                                     {0x10A, reinterpret_cast<const void*>(0x4946C0), 0x4946C0},
+                                     {0x11B, reinterpret_cast<const void*>(0x494F00), 0x494F00}};
+    using Place = void(__cdecl*)(unsigned, unsigned, unsigned);
+    const Place original =
+        reinterpret_cast<Place>(bof3::CloneOriginal("Battle_PlaceBossActor DIV-0108", 0x494570, 0x145, calls, 3));
+    if (!original) bof3::Fatal("rest_3g DIV-0108: could not copy Battle_PlaceBossActor");
+
+    capture(saved);
+    const unsigned psp_saved = psp_code::Force(0);
+    U rng = 0x51ED270Bu;
+    const auto next = [&rng]() { rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5; return rng; };
+    unsigned rounds = 0, placed = 0, stored = 0, bad = 0;
+    for (; rounds < 4000; ++rounds) {
+        for (U i = 0; i < kBytes; ++i) input.m[i] = static_cast<unsigned char>(next());
+        input.current = saved.current;
+        apply(input);
+        const unsigned slot = next() % 8, count = next() % at::kEnemyCount, kind = next() % 8;
+        for (unsigned i = 0; i < 30; ++i) {   // no stray actor carries the tag; half the time one does
+            unsigned char* const o = move_script::At(0x7DEE80 + i * 0xA4);
+            if (o[6] == 7 && o[0x9E] == slot) o[0x9E] = static_cast<unsigned char>(slot + 1);
+        }
+        if (next() & 1) {
+            unsigned char* const o = move_script::At(0x7DEE80 + (next() % 30) * 0xA4);
+            o[6] = 7;
+            o[0x9E] = static_cast<unsigned char>(slot);
+        }
+        SetWord(move_script::At(0x904EFC), (next() & 1) ? psp_code::kMyriaArea : (next() & 1) ? 197 + next() % 3 : next());
+        move_script::At(at::kEventBattle)[0] =
+            static_cast<unsigned char>((next() & 1) ? psp_code::kMyriaEvent : (next() & 1) ? 0x36 + next() % 3 : next());
+        capture(input);
+        const bool cond = Word(move_script::At(0x904EFC)) == psp_code::kMyriaArea &&
+                          move_script::At(at::kEventBattle)[0] == psp_code::kMyriaEvent;
+
+        apply(input);
+        original(slot, count, kind);
+        capture(theirs);
+        apply(input);
+        psp_code::Force(0);
+        Battle_PlaceBossActor(slot, count, kind);
+        capture(off);
+        apply(input);
+        psp_code::Force(psp_code::kAll);
+        Battle_PlaceBossActor(slot, count, kind);
+        capture(on);
+        psp_code::Force(0);
+
+        const bool was_placed = std::memcmp(theirs.m, input.m, kBytes) != 0;
+        placed += was_placed ? 1u : 0u;
+        if (std::memcmp(&theirs, &off, sizeof theirs) != 0) ++bad;
+        // what ours with myria-item on must leave: the original's, the word stored
+        const U word_at = 30 * 0xA4 + count * at::kEnemyStride + psp_code::kItemWordAt;
+        if (was_placed && cond) {
+            theirs.m[word_at] = psp_code::kMyriaItemWord & 0xFF;
+            theirs.m[word_at + 1] = psp_code::kMyriaItemWord >> 8;
+            ++stored;
+        }
+        if (std::memcmp(&theirs, &on, sizeof theirs) != 0) {
+            if (++bad <= 8) bof3::Log("shadow      rest_3g DIV-0108 MISMATCH: round %u (slot %u, count %u, kind %u)", rounds, slot, count, kind);
+        }
+    }
+    apply(saved);
+    psp_code::Force(psp_saved);
+    bof3::Log("shadow      rest_3g DIV-0108 Battle_PlaceBossActor (myria-item): %u rounds against the original with the real "
+              "callees, %u placed an actor, %u of them in area 198 under event 0x37 (the word stored); switch off "
+              "byte for byte, on the original's plus the word: %u MISMATCHES",
+              rounds, placed, stored, bad);
+    if (stored == 0 || placed == stored) bof3::Fatal("rest_3g DIV-0108: the check never reached both sides of the PSP's test");
+    if (bad) bof3::Fatal("Battle_PlaceBossActor with the PSP's myria-item differs from its rule in %u rounds", bad);
+}
+
 }  // namespace
 
 void SelfTest() {
+    // DIV-0108: the harness compares ours with the original with the PSP's
+    // changes off, whatever BOF3X_PSP or the cache says; CheckPspMyriaItem
+    // then holds the switch's two sides.
+    const unsigned psp_saved = psp_code::Force(0);
     // BOF3X_R3G_ONLY: the clones whose name contains it (a control's run)
     static sh::Clone chosen[kCount];
     static unsigned index[kCount];
@@ -451,6 +568,8 @@ void SelfTest() {
         n = 1;
     }
     if (n == 0) bof3::Fatal("rest_3g: BOF3X_R3G_ONLY=%s names no clone", only);
+    psp_code::Force(psp_saved);
+    if (!only || !*only || std::strstr("Battle_PlaceBossActor", only)) CheckPspMyriaItem();
 }
 
 }  // namespace rest_3g
