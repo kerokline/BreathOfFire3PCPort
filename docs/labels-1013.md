@@ -136,8 +136,9 @@ units, session script `rows.py`):
 | `identify_after_ja-JP` | `WEAK POINT` and `ITEM` small; the Japanese name whole; no Chinese heading |
 | `identify_after_original` | the port's panel: `弱点`, `持有物`, `EXP` - as shipped |
 
-The sheet sent with this branch: the session's `cmp_identify_enemy.png`
-(crops of the five overlay runs side by side).
+The sheet: `identify_sheet_1013.png` in the session's scratch (`labels/`),
+frame 900 of every run of this doc - these six, 6.1's and 6.2's three -
+cropped to the panel; for the coordinator to copy to `analysis/shots/`.
 
 ## 2. Fight 26's turn counter (group 18)
 
@@ -214,11 +215,72 @@ Capcom's before an overlay loads); and the code read in sections 2 and 3.
 - `tools/ledger_check.py`: the four new entries fail only on their unnumbered
   `DIV-XXXX` ID lines (4 errors, by design until the coordinator numbers them).
 - `tools/exe_tables.py check`: 0 errors.
-- Self-tests: see section 6.
+- Self-tests: section 6.3.
 
-## 6. Self-tests and the disc-only installs
+## 6. Self-tests, an older overlay, and the disc-only installs
 
-(filled in below as the runs finish)
+### 6.1 An overlay built before the amendment
+
+Group 15's chunk from the base builder holds two strings; the DLL takes a
+chunk of that count (`Table::legacy`), logs it and draws the four words from
+their shipped slots, the PC's own English. Tried with a French layer whose
+group 15 was written in the old form (session script `legacy_build.py`, a
+scratch game directory `game2`) and `identify.txt` under fr-FR: the log
+`DIV-0064: identify words chunk of 2 strings from an older overlay builder:
+the other 4 as shipped (rebuild the overlay with tools/loc_build.py)` and `2
+of 6 identify words`; frame 900 draws `WEAK POINT` and the PC's `ITEM` /
+`EXP` (`identify_legacy_fr`). So an install whose overlays predate this
+branch keeps working, with the English words, until they are rebuilt.
+
+### 6.2 A US-disc-only and a French-disc-only install
+
+`importer.py build --source <cue> --lang <tag> --out <cache>` with this
+branch's tools (the language layer is `loc_build.py`'s disc-only path), then
+`importer.py install --base`; the caches under the scratch junction
+`C:\Users\kerok\lbl13` (a short path for the movie, HANDOFF's MCI trap).
+
+- **US, en-US** (`cus`, 3254 + 53 chunks, `loc/en-US` 254 containers): the
+  layer's `FIRST.DAT` holds group 15's six strings, `Beyd`, the turn
+  counter and `HIGH` / `LOW` / `SET`. `identify.txt` on that install
+  (`--env BOF3X_CACHE=...`, the exe host): the log `6 of 6 identify words`,
+  `1 of 1 guest name`, `3 of 3 turn counter`, `3 of 3 hi-lo choices`, no
+  Fatal - so the two data witnesses (`0x669D20` / `0x669D24`, `0x669F54..5C`)
+  hold their slots' addresses on a disc-built image too. Frame 900
+  (`identify_discus_en`): `WEAK POINT`, `ITEM`, `EXP` drawn.
+- **A gap this showed, not ours:** on the disc-only install the panel's
+  question marks (`?` at `0x65AAC4`, the row `0x65AAC8`) are blank. The US
+  image leaves `0x65AAA8..0x65AAD0` zero (`recipes/exe-gaps.tsv`: `psx-us`
+  `gap` / `game-value`, `TornadoMote_Phases+0x10`): every disc's MAGIC060
+  block has the same strings in another layout (the US adds a zenny slot
+  after `EXP`; `0x801F0B64..0x801F0B98`), so the byte map places none of
+  it. The EXP and `ITEM` labels read the same zero bytes before this branch
+  (so blank there, by the bytes; not captured with the base build); now they
+  come from the layer. The marks would want two `twin` rows (PC
+  `0x65AAC4` <- US `0x801F0B88`, 4 bytes; `0x65AAC8` <- `0x801F0B8C`, 8) -
+  described for the coordinator to number and place, not built here.
+- **French, fr-FR** (`cfr`, the same install steps): the same four log lines,
+  no Fatal; frame 900 (`identify_discfr_fr`) draws `WEAK POINT`, `OBJET`,
+  `EXP`, and the same blank marks.
+
+### 6.3 The self-tests
+
+From ini-less launcher copies over the scratch game directory, headless
+(`BOF3X_SELFTEST_ONLY=1`), the two at once (about 24 minutes each on the
+shared machine):
+
+| Run | Exit | The groups this branch changes |
+|---|---|---|
+| `BOF3X_SHADOW='*,-field_c1'`, `BOF3X_LANG=en-US` | 0 (`inject: 10088 ours`) | `magic_s12` 88,000 rounds, `boss_sf` (six runs), `battle_e1` 246,000, `rest_4c` 360,000: 0 mismatches each |
+| `BOF3X_SHADOW='*'`, `BOF3X_LANG=original` | 0 (`inject: 10087 ours`) | the same four, 0 mismatches each |
+
+The DLL they ran (`6D7820F2...`) is the branch's but for one later change,
+in `Labels_Apply` only (a group with `legacy` counts as written once its
+first slots are, so a word the builder leaves empty still falls back to the
+PC's) - code the self-tests do not reach (it runs when an overlay loads).
+The final DLL (`37670696...`) replayed `identify.txt` under en-US and
+de-DE: frame 900 identical to the earlier runs' (an image difference with
+no bounding box), the four log lines as before; 6.1 and the French
+disc-only run of 6.2 were made with it.
 
 ## 7. Left, and for the owner
 

@@ -167,7 +167,10 @@ struct Table {
     PointerTable tables[5];   // none for a group written in place
     char (*buffers)[kRoom];   // ours, for a repointed group
     bool small;               // drawn by the 8 px draw: Labels_SmallGlyph serves its slots
-    std::uint32_t legacy = 0; // the count an older overlay builder wrote, its strings the first slots (0: none)
+    // The count an older overlay builder wrote, its strings the first slots
+    // (0: none). The slots past it have a shipped string the draw may fall
+    // back on, so the group counts as written once the first `legacy` are.
+    std::uint32_t legacy = 0;
 };
 
 char g_item_types[5][kRoom], g_skill_types[5][kRoom], g_sort_menus[11][kRoom], g_village_lists[20][kRoom],
@@ -324,7 +327,8 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         bof3::Log("DIV-0064: %s chunk of %u strings from an older overlay builder: the other %u as shipped "
                   "(rebuild the overlay with tools/loc_build.py)", t->what, (unsigned)count,
                   (unsigned)(t->count - count));
-    std::uint32_t written = 0;
+    std::uint32_t written = 0, required = 0;
+    const std::uint32_t needed = t->legacy ? t->legacy : t->count;
     for (std::uint32_t i = 0; i < count; ++i) {
         const Slot& slot = t->slots[i];
         const auto* s = reinterpret_cast<const char*>(p);
@@ -362,6 +366,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         std::memset(dest, 0, room);
         std::memcpy(dest, s, len);
         ++written;
+        if (i < needed) ++required;
     }
     if (p != end) bof3::Fatal("%s chunk: %u bytes left over", t->what, (unsigned)(end - p));
     if (t->buffers) {
@@ -381,9 +386,9 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
             }
         }
     }
-    if (t->small && written == count && tag < sizeof g_small_written / sizeof g_small_written[0])
+    if (t->small && required == needed && tag < sizeof g_small_written / sizeof g_small_written[0])
         g_small_written[tag] = true;
-    if (written == count && tag < sizeof g_written / sizeof g_written[0]) g_written[tag] = true;
+    if (required == needed && tag < sizeof g_written / sizeof g_written[0]) g_written[tag] = true;
     bof3::Log("DIV-0064: %u of %u %s", (unsigned)written, (unsigned)t->count, t->what);
 }
 

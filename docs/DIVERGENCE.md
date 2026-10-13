@@ -6803,7 +6803,9 @@ designed in rather than bolted on.
   ja-JP and `original` (`labels-1013.md` 1.4): `WEAK POINT` at rows
   `0x44..0x4A` from x `0x5A`, the item word from row `0x8A` (`ITEM`,
   `OBJET`, `OBJEKT`), `EP` under de-DE, the Chinese panel unchanged under
-  `original`; the self-tests in `labels-1013.md` 5.
+  `original`; on a US-disc-only and a French-disc-only install the same
+  words and log (`labels-1013.md` 6.2); an overlay built before this entry
+  taken and logged (6.1); the self-tests in `labels-1013.md` 6.3.
 - **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
 
 ### Beyd's name from the disc when the battle extra opens its equipment screen
