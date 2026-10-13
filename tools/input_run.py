@@ -215,6 +215,13 @@ def run(a, env, slot0):
     word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
     logs the save loaded: the file is not read again after that."""
     started, frames = time.time(), ''
+    # The log is read from its top: a previous run's `recipe done` still there
+    # would end this run before the new game truncates it (2026-10-13,
+    # docs/wav-dump.md 5).
+    try:
+        os.remove(LOG)
+    except OSError:
+        pass
     launch(a.launcher, a.game, env, a.host)
 
     stop = threading.Event()
