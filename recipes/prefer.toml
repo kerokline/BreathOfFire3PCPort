@@ -1,0 +1,37 @@
+# recipes/prefer.toml - the base policy's preferred disc forms (docs/disc-data-inventory.md 9; DIV-XXXX).
+#
+# The owner's rule (2026-10-13): "the JP psx disc makes most sense to use as default for graphics
+# if there's ever a simple divergence, just for consistency sake". Where the PC's `base/` chunk
+# differs from the Japanese PlayStation disc's by a port change the owner has decided, the cache
+# takes the JP disc's form instead of the PC's - whenever the disc a row names is among the
+# player's sources (`from`, in preference order), and otherwise the PC's chunk as before.
+#
+# Each row names a chunk of recipes/pc-zh.toml by (file, kind, tag), the disc section (`emi`) and
+# the transform (`how`, importer.TRANSFORMS) that give the disc's form, and that form's hash: the
+# build takes the section, hashes the result against `sha256`, and refuses on a mismatch. The
+# manifest records the chunk as `<build>:prefer:<emi>`; `verify` checks it against this file.
+# Names, indices and hashes only - no byte of the game (CLAUDE.md rule 1).
+#
+# A row is added only by the owner's decision on that chunk. Not members (2026-10-13): the 11
+# hand-edited arenas and Ryu's byte (inventory Q1, Q3: to be rendered first), the dock legend
+# (Q5), the wrap clicks (Q6, banks), the title (Q4: Japan's is the PC's already).
+
+[[prefer]]
+file = "BPLD27A.DAT"
+kind = 0
+tag = 0x00010000
+from = ["psx-jp"]
+how = "type1"
+emi = "BPLCHAR/BPLD27A.EMI#7"
+sha256 = "034da3741fb3ea8cdbacfd8115690a2e34ada2e49e18aa208179194a60ec2489"
+why = "P6 (Q2): member A's two identical four-step loops both at 4 ticks a step, as on every PSX disc; the port held the second at 8 (arena-edits.md 2). The owner, 2026-10-13: take the disc's"
+
+[[prefer]]
+file = "BPLU27A.DAT"
+kind = 0
+tag = 0x00010000
+from = ["psx-jp"]
+how = "type1"
+emi = "BPLCHAR/BPLU27A.EMI#7"
+sha256 = "d06ca99e6ff481ec0266f7caf2b164de259eb31499ed1d467f7e05252d4b027a"
+why = "P6 (Q2): as BPLD27A - the 27A battle arena's loop at the disc's speed"
