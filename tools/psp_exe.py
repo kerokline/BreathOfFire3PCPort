@@ -209,6 +209,10 @@ TWINS = [
     (0x65EC1C, 0x65EC28, "WORLD04/AREA166.EMI", "EffectKind18Sub35_States+0x14"),
     (0x65EC74, 0x65EC80, "WORLD02/AREA105.EMI", "EffectKind18Sub40_States+0x10"),
     (0x660D5C, 0x660D68, "SCENARIO/SCENA02.EMI", "Scena00_ObjectHooks+0x4"),
+    # The us set's sweep (docs/abc-sweep-1013-us.md 4): the ranked lists' page counter format
+    # (CommuRank_Show's kPageFormat, rest_4e.cpp); COMMU05.EMI's code section opens with it and
+    # its reader passes it to sprintf with the page + 1 and the count.
+    (0x6531F4, 0x6531F9, "ETC/COMMU05.EMI", "the faerie ranked lists' page counter format (CommuRank_Show)"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
