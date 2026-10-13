@@ -56,7 +56,13 @@ inline bool Hide(const unsigned char* sprite) { return g_hide && HideSite(sprite
 // the game's 320 units, the scene mask (band_census::SceneMask), whether the
 // record is a field object or a party member other than the leader, and
 // whether an exception names it. Exposed for the census's column and the fuzz.
-bool HideDecision(float left, float right, unsigned scene_mask, bool candidate, bool excepted);
+bool HideDecision(float left, float right, unsigned scene_mask, bool field_scene, bool candidate, bool excepted);
+
+// A field scene, as the game tells it from the world map and the attract
+// demo: Game_Mode 2 (the field), not chapter 16 (the demo), and an area
+// WorldMap_RecordIndex finds no world-map record for (11). EB-1's census
+// found the scene mask set on the world map (0C) and in the demo (02).
+bool FieldScene(unsigned game_mode, int chapter, unsigned world_map);
 
 // The census's "hidden" column: F would hide this sprite now (false while F
 // is not armed). Reads the same rectangle Sprite_Draw's call does.

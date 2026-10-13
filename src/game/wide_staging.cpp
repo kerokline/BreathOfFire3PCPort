@@ -171,6 +171,8 @@ struct HideException {
     std::uint8_t field;
     std::uint8_t index;
 };
+constexpr int kAttractChapter = 16;     // Cond_ByteFA of the attract demo (FieldScene below)
+constexpr unsigned kNoWorldMap = 11;    // WorldMap_RecordIndex's "none of the eleven"
 const HideException kHideExceptions[] = {
     {0xFFFF, 0, 0},   // the end of the list
 };
@@ -509,8 +511,25 @@ void PlacedSite(const unsigned char* op) {
 
 // --- F: the hide -------------------------------------------------------------
 
-bool HideDecision(float left, float right, unsigned scene_mask, bool candidate, bool excepted) {
-    if (!candidate || excepted) return false;
+// A field scene, as the game itself tells the three apart (EB-1's census,
+// docs/ultrawide-census-1.md 2.2: the scene mask is also set on the world map,
+// 0C, and through the attract demo, 02):
+//   - Game_Mode 2 is the field: the top-level mode GameMode_Field 0x4959F0
+//     runs as (symbols.toml Game_Mode; 3 menu, 5 battle);
+//   - the world map is an area WorldMap_RecordIndex 0x462A90 finds a record
+//     for (0..10; 11 is "no world map", which 0x56DE30 dispatches its hooks
+//     on - symbols.toml WorldMap_FieldHooks): areas 16, 33, 45, 65, 87, 88,
+//     104, 115, 121, 151 and 152 (WorldMap_Records' byte +0x18, read from
+//     the exe 2026-10-13);
+//   - the attract demo is scenario chapter 16 (Cond_ByteFA 16): the title
+//     starts it with Scenario_Start(0x10) (Title_StateStartDemo 0x462300,
+//     docs/field-modes.md: "chapter 16 is the attract demo").
+bool FieldScene(unsigned game_mode, int chapter, unsigned world_map) {
+    return game_mode == 2 && chapter != kAttractChapter && world_map == kNoWorldMap;
+}
+
+bool HideDecision(float left, float right, unsigned scene_mask, bool field_scene, bool candidate, bool excepted) {
+    if (!candidate || excepted || !field_scene) return false;
     if ((scene_mask & band_census::kSceneMaskBits) == 0) return false;
     // Wholly beyond the 16:9 view: the 16:9 picture's columns, by the rule
     // that gives them (53), not the live width's.
@@ -557,9 +576,10 @@ bool Decide(const unsigned char* sprite) {
     if (!Candidate(sprite, field, index)) return false;
     const unsigned mask = band_census::SceneMask();
     if ((mask & band_census::kSceneMaskBits) == 0) return false;
+    if (!FieldScene(Game_Mode, Cond_ByteFA, WorldMap_RecordIndex() & 0xFFu)) return false;   // each caller takes the low byte
     float left, right, top, bottom;
     if (!band_census::ScreenRect(sprite, left, right, top, bottom)) return false;
-    return HideDecision(left, right, mask, true, Excepted(Game_AreaNumber, field, index));
+    return HideDecision(left, right, mask, true, true, Excepted(Game_AreaNumber, field, index));
 }
 
 }  // namespace
@@ -828,18 +848,60 @@ void SelfTest() {
         };
         for (const Edge& e : kEdges)
             for (unsigned mask = 0; mask < 0x20; ++mask)
-                for (int cand = 0; cand < 2; ++cand)
-                    for (int exc = 0; exc < 2; ++exc) {
-                        const bool want = e.hide && (mask & 0xF) != 0 && cand && !exc;
-                        Check(HideDecision(e.left, e.right, mask, cand != 0, exc != 0) == want, "hide decision",
-                              static_cast<int>(e.left), static_cast<int>(mask));
-                    }
+                for (int fs = 0; fs < 2; ++fs)
+                    for (int cand = 0; cand < 2; ++cand)
+                        for (int exc = 0; exc < 2; ++exc) {
+                            const bool want = e.hide && (mask & 0xF) != 0 && fs && cand && !exc;
+                            Check(HideDecision(e.left, e.right, mask, fs != 0, cand != 0, exc != 0) == want,
+                                  "hide decision", static_cast<int>(e.left), static_cast<int>(mask));
+                        }
         // A sweep of whole x: hidden exactly when the sprite's 24 columns lie past -53 or 373.
         for (int x = -200; x <= 520; ++x) {
             const float l = static_cast<float>(x), r = l + 24.0f;
             const bool want = r <= -c || l >= 320.0f + c;
-            Check(HideDecision(l, r, 1, true, false) == want, "hide sweep", x);
-            Check(!HideDecision(l, r, 0x10, true, false), "the leader's state alone is no scene", x);
+            Check(HideDecision(l, r, 1, true, true, false) == want, "hide sweep", x);
+            Check(!HideDecision(l, r, 0x10, true, true, false), "the leader's state alone is no scene", x);
+        }
+        // The field scene, as the game tells it (EB-1's census: the mask is set on the world map and in the
+        // demo). Every mode 0..15, chapter -1..20 and world-map index 0..12: a field scene only for mode 2,
+        // not chapter 16, index 11.
+        for (unsigned mode = 0; mode < 16; ++mode)
+            for (int chapter = -1; chapter <= 20; ++chapter)
+                for (unsigned wm = 0; wm <= 12; ++wm)
+                    Check(FieldScene(mode, chapter, wm) == (mode == 2 && chapter != 16 && wm == 11), "field scene",
+                          static_cast<int>(mode), chapter * 100 + static_cast<int>(wm));
+        // The census's cases, a sprite wholly past 373 under each: the world map (mask 0C, field mode, an
+        // area with a world-map record) and the attract demo (mask 02, chapter 16) never hide; a town
+        // scene in chapter 7 does.
+        struct Case { unsigned mask, mode; int chapter; unsigned wm; bool hide; const char* what; };
+        static const Case kCases[] = {
+            {0x0C, 2, 7, 0, false, "the world map, area 16 (record 0)"},
+            {0x0C, 2, 7, 2, false, "the world map, area 45 (record 2)"},
+            {0x0C, 2, 3, 10, false, "the world map, area 152 (record 10)"},
+            {0x02, 2, 16, 11, false, "the attract demo (chapter 16)"},
+            {0x1E, 2, 16, 11, false, "the attract demo, every bit"},
+            {0x02, 3, 7, 11, false, "the menu (mode 3)"},
+            {0x02, 5, 7, 11, false, "battle (mode 5)"},
+            {0x02, 2, 7, 11, true, "a field scene, chapter 7"},
+            {0x0C, 2, 2, 11, true, "a field area change in a scene (mask 0C off the world map)"},
+            {0x00, 2, 7, 11, false, "free walking (mask 0)"},
+        };
+        for (const Case& k : kCases)
+            Check(HideDecision(380.0f, 404.0f, k.mask, FieldScene(k.mode, k.chapter, k.wm), true, false) == k.hide,
+                  k.what, static_cast<int>(k.mask), static_cast<int>(k.wm));
+        // The world-map areas are the records' (WorldMap_RecordIndex reads them): 16 and 45, where the
+        // census saw mask 0C, among them; a town (area 7) and case zero's area (175) not.
+        {
+            const unsigned short saved = Game_AreaNumber;
+            for (unsigned area : {16u, 45u}) {
+                Game_AreaNumber = static_cast<unsigned short>(area);
+                Check((WorldMap_RecordIndex() & 0xFFu) < kNoWorldMap, "a world-map area has a record", static_cast<int>(area));
+            }
+            for (unsigned area : {7u, 175u}) {
+                Game_AreaNumber = static_cast<unsigned short>(area);
+                Check((WorldMap_RecordIndex() & 0xFFu) == kNoWorldMap, "a field area has none", static_cast<int>(area));
+            }
+            Game_AreaNumber = saved;
         }
         // The leader is never a candidate; the other two members and the objects are.
         unsigned field = 0, index = 0;

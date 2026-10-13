@@ -258,6 +258,27 @@ building the primitive when:
   (`band_census::SceneMask()`, the four tests the game makes before the
   leader may move; [`band-census.md`](band-census.md) 3) - bit 0x10 alone
   (a menu, an encounter) is not a scene;
+- **and it is a field scene** (`FieldScene()`, added 2026-10-13 after
+  EB-1's census, [`ultrawide-census-1.md`](ultrawide-census-1.md) 2.2, found
+  the scene mask set on the world map, `0C`, and through the attract demo,
+  `02`, where the hide as first keyed would have hidden every band object).
+  The game's own tests, not more mask values: `Game_Mode` 2, the field
+  (`GameMode_Field` `0x4959F0` runs as mode 2; 3 is the menu, 5 battle);
+  `WorldMap_RecordIndex` `0x462A90` is 11, no world-map record for the area
+  (the value `0x56DE30` dispatches its world-map hooks on; the eleven
+  records' areas, read from the exe: 16, 33, 45, 65, 87, 88, 104, 115, 121,
+  151, 152 - 16 and 45 are where the census saw `0C`); and the chapter
+  `Cond_ByteFA` is not 16, the attract demo (`Title_StateStartDemo`
+  `0x462300` starts it with `Scenario_Start(0x10)`;
+  [`field-modes.md`](field-modes.md)). The fuzz runs every mode 0..15,
+  chapter -1..20 and record index 0..12, the census's world-map and demo
+  cases (none hidden), the menu and battle modes, a field scene and free
+  walking, and `WorldMap_RecordIndex` itself on areas 16, 45 (a record), 7
+  and 175 (none): `wide_staging self-test: 79025 checks, 0 mismatches`. A
+  control that drops the world-map test is refused (255 mismatches). Left
+  as the census found it: mask `0C` also shows at a field area change
+  (area 7's entry, `Field_Request` 5); off the world map that still counts
+  as a scene, for the frames of the fade;
 - its rectangle (`band_census::ScreenRect()`, the census's reading of what
   the draw pass draws) lies wholly beyond the 16:9 view: right edge at or
   left of -53, or left edge at or right of 373;
@@ -444,7 +465,9 @@ it).
 - **New behaviour:** at `BOF3X_WIDE=2`, a field object, extra object or
   non-leader party member whose drawn rectangle lies wholly past -53 or
   373, while a scene holds the leader (the census's scene mask, bits
-  1..8), and that no exception names, is not drawn. Bit 7 and every field
+  1..8) in a field scene (`Game_Mode` 2, no world-map record for the area
+  by `WorldMap_RecordIndex`, not the attract demo's chapter 16), and that
+  no exception names, is not drawn. Bit 7 and every field
   the original writes are unchanged; only the primitive is skipped. 16:9
   and narrow are unchanged.
 - **Rationale:** the owner's call (`ultrawide-round.md` 4, layer 2): a
