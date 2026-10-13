@@ -968,9 +968,6 @@ pc	words	to
 0x61AB2C	1	data
 0x61AB30	1	text
 0x61AB40	2	text
-0x61AB48	1	data
-0x61AB54	1	data
-0x61AB60	1	bss
 0x61AD68	5	data
 0x61AFB0	11	data
 0x61AFF0	1	data
@@ -1087,7 +1084,6 @@ pc	words	to
 0x620310	15	text
 0x6203BC	3	text
 0x6203E0	2	text
-0x620404	1	bss
 0x62048C	1	data
 0x6205D0	8	data
 0x6205F0	2	text

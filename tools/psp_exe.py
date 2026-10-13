@@ -79,7 +79,7 @@ sys.path.insert(0, TOOLS)
 PSP = ("psp-jp", "psp-eu")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
-RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide")   # widen<k>: the disc's name is k bytes
+RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
@@ -102,6 +102,11 @@ TWINS = [
     (0x66AF24, 0x66AF34, "ETC/GAME.EMI", "the battle result window's icon by item kind"),
     (0x66B5B4, 0x66B5C4, "BATTLE/BATTLE.EMI", "the battle menu equipment window's slot icons and categories"),
     (0x653EC0, 0x653EC5, "ETC/GAME.EMI", "the item list's count format"),
+    (0x66ADBC, 0x66ADD8, "ETC/GAME.EMI", "the walk poses by direction and Area_ClassifyPending's world-map areas"),
+    (0x5E10C0, 0x5E10C3, "BATTLE/BATL_END.EMI", "the number format '%d' (the result's EXP, zenny; Area08_MessageFormat)"),
+    (0x654900, 0x654903, "BATTLE/BATL_END.EMI", "the '%s' format of battle_e7's ability lines"),
+    (0x6641DC, 0x6641E1, "ETC/SHOP.EMI", "the shop's cost format"),
+    (0x66AF8C, 0x66AF92, "BATTLE/BATTLE.EMI", "the gene list's AP cost format"),
     (0x64ADD0, 0x64ADD6, "ETC/BATE.EMI", "the result tally's step per count"),
     (0x64E3DE, 0x64E3EB, "BATTLE/BATTLE.EMI", "Battle_WakeRoll's chances (with the placed table before them)"),
     (0x656A34, 0x656A44, "BATTLE/BATTLE.EMI", "Battle_OpenEnemyNames' column places by layout"),
@@ -124,6 +129,19 @@ TWINS = [
 # x - 32 right of it. Addresses only; the PSP's values are read from its disc.
 UNWIDE = [0x66AE10 + 4 * e for e in (3, 4, 5, 6)]
 _BASE_IMAGE = {}            # bid -> (image, owner) of the recipe's base image (psxmap_rows)
+# wmrec: WorldMap_Records (0x653910, eleven 0x1C-byte records: five code pointers, a data
+# pointer, the world map's area byte at +0x18), read by WorldMap_RecordIndex; the area bytes
+# are copied from the disc's own record table of the same shape (GAME.EMI#0 on every disc),
+# found by them at recipe time as the wheel's spots are.
+WM_RECORDS, WM_COUNT, WM_STRIDE, WM_AREA = 0x653910, 11, 0x1C, 0x18
+# boxxy: the dialogue box's two position tables (window_task.cpp kBoxXY 0x66ADD8, kBoxAltXY
+# 0x66ADE8: 7 x (u8 x, u8 y) and two zero bytes each). The PSP's BOOT.BIN holds them as 7 x
+# (s16 x, s16 y), the two tables 0x1C apart, with entries 3..6 framed for its 384-wide view:
+# entries 3 and 5 x - 32, 4 and 6 x + 32 (docs/psp-widescreen-a.md). PSP builds: the pairs
+# read back to the 4:3 frame by that rule undone, into the PC's u8 layout; found by the
+# entries the PSP left alone (0..2), the PC's at recipe time.
+BOX_XY, BOX_TABLES, BOX_ENTRIES, BOX_PC_STRIDE, BOX_PSP_STRIDE = 0x66ADD8, 2, 7, 0x10, 0x1C
+BOX_UNWIDE = {3: 32, 4: -32, 5: 32, 6: -32}
 MUSIC_SETS = 0x669A48       # Area_ZoneTrack's 8-byte records (window_task.cpp: a list pointer, a count)
 PSX_MAP = "psx-jp"          # psxmap: the map whose segments a PSP disc's same files are read by
 _RECIPE_BASE = False        # True while `recipe` builds the image the fills are found against
@@ -452,6 +470,21 @@ def build_fill(row, disc, elf, rule, srcs):
     elif rl in ("psxmap", "twin"):
         out[:] = blob[at:at + hi - lo]
         mask = [True] * (hi - lo)
+    elif rl == "boxxy":
+        for t in range(BOX_TABLES):
+            for e in range(BOX_ENTRIES):
+                x, y = struct.unpack_from("<hh", blob, at + BOX_PSP_STRIDE * t + 4 * e)
+                x += BOX_UNWIDE.get(e, 0)
+                if not (0 <= x < 0x100 and 0 <= y < 0x100):
+                    fail("%s: BOOT.BIN 0x%X box %d.%d is off the PC's u8 layout" % (row["build"], row["addr"], t, e))
+                o = BOX_PC_STRIDE * t + 2 * e
+                out[o], out[o + 1] = x, y
+                mask[o:o + 2] = [True, True]
+    elif rl == "wmrec":
+        for i in range((hi - lo) // WM_STRIDE):
+            o = WM_STRIDE * i + WM_AREA
+            out[o:o + 4] = blob[at + o:at + o + 4]
+            mask[o:o + 4] = [True] * 4
     elif rl == "msets":
         # A list is its entries and the bytes after them up to the next list (Area_ZoneTrack
         # reads the entry past the last as the fallback): the disc's span, as far as the
@@ -574,7 +607,20 @@ def find_rows(disc, bid, pc):
                          "addr": t[1]})
         else:
             print("  %s twin 0x%06X..0x%06X: not in %s" % (bid, tlo, thi, tfile))
+    rows += link_rows(bid, srcs, pc)
+    wm = wmrec_place(srcs, pc)
+    if wm:
+        rows.append({"build": bid, "rule": "wmrec", "pc": WM_RECORDS, "pc_end": WM_RECORDS + WM_COUNT * WM_STRIDE,
+                     "file": wm[0], "section": wm[1], "addr": wm[2]})
+    else:
+        print("  %s wmrec: the world maps' record table not found in ETC/GAME.EMI" % bid)
     if psp:
+        b = boxxy_place(elf, pc)
+        if b is not None:
+            rows.append({"build": bid, "rule": "boxxy", "pc": BOX_XY, "pc_end": BOX_XY + BOX_TABLES * BOX_PC_STRIDE,
+                         "file": "BOOT.BIN", "section": None, "addr": b})
+        else:
+            print("  %s boxxy: the dialogue box tables not found in BOOT.BIN" % bid)
         m = msets_place(elf)
         sets = music_sets_layout()
         if m is not None:
@@ -767,6 +813,71 @@ def msets_place(elf):
     return hits[0]
 
 
+def boxxy_place(elf, pc):
+    """BOOT.BIN's dialogue box tables: the one place in .data where both tables' entries
+    0..2 are the PC's pairs as s16, 0x1C apart. The address or None."""
+    keys = [b"".join(struct.pack("<hh", pc[BOX_XY + BOX_PC_STRIDE * t + 2 * e - DATA_LO],
+                                 pc[BOX_XY + BOX_PC_STRIDE * t + 2 * e + 1 - DATA_LO]) for e in range(3))
+            for t in range(BOX_TABLES)]
+    dlo, dhi = elf.span(".data")
+    hits = []
+    a = elf.img.find(keys[0], dlo, dhi)
+    while a >= 0:
+        if elf.img[a + BOX_PSP_STRIDE:a + BOX_PSP_STRIDE + len(keys[1])] == keys[1]:
+            hits.append(a)
+        a = elf.img.find(keys[0], a + 1, dhi)
+    return hits[0] if len(hits) == 1 else None
+
+
+AREA_COUNT, LINK_PTR, LINK_LAST, LINK_SIZE = 200, 0x20, 0x30, 12
+
+
+def link_rows(bid, srcs, pc):
+    """`twin` rows for the areas' link lists (Area_LinkAt, area_entry.cpp: the descriptor's
+    +0x20 list of 12-byte records, +0x30 the last index), each the first copy of the PC's
+    list in the area's own overlay AREAnnn.EMI. The descriptors, pointers and counts are
+    BOF3.exe's addresses and counts; the bytes are the disc's. Only lists the disc carries."""
+    def word(a):
+        return struct.unpack_from("<I", pc, a - DATA_LO)[0]
+    files = {}
+    for f, _s in srcs:
+        m = re.search(r"AREA(\d{3})\.EMI$", f)
+        if m:
+            files.setdefault(int(m.group(1)), f)
+    out = []
+    descriptors = data_symbol("Area_Descriptors")["pc"]
+    for area in range(AREA_COUNT):
+        d = word(descriptors + 4 * area)
+        if not DATA_LO <= d < DATA_HI or area not in files:
+            continue
+        lp = word(d + LINK_PTR)
+        n = pc[d + LINK_LAST - DATA_LO] + 1
+        if not DATA_LO <= lp < DATA_HI or lp + LINK_SIZE * n > DATA_HI:
+            continue
+        t = twin_place(srcs, pc, lp, lp + LINK_SIZE * n, files[area])
+        if t:
+            out.append({"build": bid, "rule": "twin", "pc": lp, "pc_end": lp + LINK_SIZE * n, "file": files[area],
+                        "section": t[0], "addr": t[1]})
+    return out
+
+
+def wmrec_place(srcs, pc):
+    """The disc's world-map record table in ETC/GAME.EMI: the place whose eleven 0x1C-byte
+    records hold BOF3.exe's area words at +0x18 (found by them, at recipe time). (file,
+    section, address of record 0) or None."""
+    want = [pc[WM_RECORDS + WM_STRIDE * i + WM_AREA - DATA_LO:WM_RECORDS + WM_STRIDE * i + WM_AREA + 4 - DATA_LO]
+            for i in range(WM_COUNT)]
+    for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
+        if f != "ETC/GAME.EMI":
+            continue
+        a = blob.find(want[0])
+        while a >= 0:
+            if all(blob[a + WM_STRIDE * i:a + WM_STRIDE * i + 4] == want[i] for i in range(WM_COUNT)):
+                return f, s, base + a - WM_AREA
+            a = blob.find(want[0], a + 1)
+    return None
+
+
 def twin_place(srcs, pc, lo, hi, file):
     """The first copy of BOF3.exe's [lo, hi) in `file`'s sections, in section order:
     (section, disc address) or None."""
@@ -928,12 +1039,12 @@ def check():
             last = r["pc_end"]
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "twin": n}.get(r["rule"])
+            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "boxxy": 2 * BOX_ENTRIES * BOX_TABLES}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes filled, the rule fills %d" % (bid, r["pc"], r["filled"], want))
-            if r["rule"] not in ("rows8", "msets") and any(x in ptr for x in range(r["pc"], r["pc_end"])):
+            if r["rule"] not in ("rows8", "msets", "wmrec") and any(x in ptr for x in range(r["pc"], r["pc_end"])):
                 errs.append("exe-psp.tsv: %s 0x%06X: over a pointer word" % (bid, r["pc"]))
     try:
         ids, null = pc_file_ids()

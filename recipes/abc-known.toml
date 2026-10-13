@@ -28,6 +28,15 @@ both_traits = ["en-150"]
 modes = [2]
 area_data = "loc"         # only where the area's loc/en-150 chunks differ between the caches
 
+[[known]]
+id = "pc-title-mark"
+ledger = "none yet: the PC port's own title art (docs/visual-findings-1012.md 4.4)"
+what = "the PC port's title page draws a registered mark the PlayStation's does not (the owner, 2026-10-12: no (R) on the original PSX)"
+pair_trait = "pc"
+modes = [0]
+areas = [0]
+box = [260, 128, 272, 140]
+
 # Deliberately not here (each would explain too much by screen alone):
 # - the PSP's UI page (FIRST: its shoulder-button labels) and dial page:
 #   they show in menus and battle, where no scene key says which page is up;
