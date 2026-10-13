@@ -341,7 +341,16 @@ BOF3X_LANG=original`, `--game bof3 --no-config`, the branch as committed.
 - **The `'*'` runs** at `BOF3X_WIDE` unset, `=1` and `=2`: see the table
   below (filled from the logs).
 
-PLACEHOLDER_RUNS
+| `BOF3X_WIDE` | Exit | `inject:` | `DIV-0041` lines | This group's lines |
+|---|---|---|---|---|
+| unset | 0 | `10087 ours, 0 left original by BOF3X_ORIGINAL` | none | `wide_staging self-test: 72899 checks, 0 mismatches`; no arm line (0 columns: nothing armed) |
+| `1` | 0 | the same | `widescreen: 53 columns a side (426 x 240); terrain cull [-150, 470]; ...`, `full-frame fills at (-53, 0) 426 x 240` | the self-test as above; `the wide staging on: 24 of 24 rows armed at 53 columns (0 left original)`; `the 21:9 hide off: the view is not wider than 16:9` |
+| `2` | 0 | the same | `widescreen: 120 columns a side (560 x 240); terrain cull [-217, 537]; ...`, `full-frame fills at (-120, 0) 560 x 240` | the self-test; `24 of 24 rows armed at 120 columns`; `the 21:9 hide on` |
+
+In all three: `band_census self-test: 94532 checks ..., 0 MISMATCHES`,
+`sprite_screen self-test: 20000 rounds, ..., 0 MISMATCHES`, and no line in
+any log with a non-zero mismatch count or `FATAL` (a search of the three
+logs).
 
 `python tools/wide_staging_check.py`: 0 problems. `python
 tools/wide_staging_check.py --self-test` and `python tools/band_census.py
