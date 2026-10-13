@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 116 entries, DIV-0001..0116, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 120 entries, DIV-0001..0120, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3844,7 +3844,10 @@ designed in rather than bolted on.
      read through `Labels_Slot` and draw as nothing, and above the items
      they draw the `ITEM` the port still holds beside `EXP` at `0x65AAB4`
      (read by nothing in the port) in the 8 px font, 23 px left of the
-     items' column on the heading's row, as the US does; the target's name,
+     items' column on the heading's row, as the US does (**amended
+     2026-10-13 by DIV-0117**, the Identify panel's small words: the discs
+     draw a small WEAK POINT heading after all, the item word is each disc's
+     own, and the places are the disc routine's); the target's name,
      drawn with the count 5 of five Chinese glyphs, is drawn with 8 (`Fly M`
      -> `Fly Man`). (`Weakness` / `Items`, the builder's own words, stood
      for an hour before the capture.) `Magic080_DrawText` reads the shipped
@@ -6930,3 +6933,170 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=EncounterOnScreenLowerBounds` keeps ours with
   the port's bounds; `BOF3X_ORIGINAL=Encounter_OnScreen` runs Capcom's
   function.
+### The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label
+
+- **ID:** DIV-0117 (an amendment of DIV-0064 group 15, written as its own
+  entry because it adds a heading the group had decided against and changes
+  a Japanese layer; the coordinator numbers it)
+- **Date:** 2026-10-13
+- **Subsystem:** battle, the Identify panel (`Identify_DrawMember` /
+  `_DrawEnemy`, ours in `src/game/magic_s12.cpp`; DIV-0064 group 15 in
+  `src/game/labels.cpp`, chunk kind 15 tag 15 of `tools/loc_build.py`;
+  [`labels-1013.md`](labels-1013.md) 1)
+- **Tier:** Sensible - the release the player owns draws these words; DIV-0064's
+  group 15 rested on a reading that missed them.
+- **Original behaviour:** the PC port draws the headings 弱点 and 持有物
+  (`0x66A3E0` / `0x66A3E8`) centred on the weakness row (y `0x44`) and over
+  the items (y `0x8A`), and the EXP label `0x65AAB0` with the count 3. Under
+  a Latin overlay since DIV-0064 group 15 (2026-10-10): no headings, and the
+  PC's own `ITEM` (`0x65AAB4`, read by nothing in the port) in the 8 px font
+  at (`0x59`, `0x8E`), placed by eye off the owner's wiki capture, in every
+  Latin language. Under a Japanese overlay the Chinese headings, and a
+  target name cut at 5 glyphs.
+- **New behaviour:** under every PlayStation overlay (en-US, en-150, fr-FR,
+  de-DE, and now ja-JP) the overlay's group 15 carries six strings: the two
+  headings' spaces (drawn as nothing, as before), then the four words the
+  disc's `MAGIC060.EMI` draws, found in its routine by the places it draws
+  them: `WEAK` at (`0x5A`, `0x44`) and `POINT` at (`0x80`, `0x44`) in the
+  8 px font where the port draws its weakness heading, the item word at
+  (`0x5A`, `0x8A`) - the French disc's `OBJET`, the German `OBJEKT`, the
+  others `ITEM` - and the EXP label drawn whole (the German `EP`). Both
+  panels draw `WEAK POINT`. A word the builder does not find, and every word
+  of an overlay built before this entry (its chunk has the two headings
+  alone; the DLL takes it and logs it), is the PC's own copy of the
+  Japanese disc's English, which `BOF3.exe` carries beside EXP unread
+  (`WEAK` `0x65AAA8`, `POINT` `0x65AABC`). With no overlay, nothing changes.
+- **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+  4.1 (2026-10-13): restore the heading the PlayStation's way in every overlay
+  language, and fix the French and German `ITEM` (a defect, described in
+  [`labels-1013.md`](labels-1013.md) 1.3).
+- **Also in the PSX version?** The words and places are each disc's own
+  (US `0x801EF1E0..0x801EF2A0`, the small draw `0x801EF76C`). Two differences
+  stay: **the Western discs draw `WEAK POINT` on the party member's panel
+  only** - their enemy panel has no weakness row at all, neither heading nor
+  the element glyphs (US `0x801EF2DC`; only the Japanese disc draws it on
+  both, with the elements at (`0x66`, `0x50`), `0x801EF36C`) - and the PC's
+  enemy panel keeps the row and its six Chinese element glyphs (`0x66A380`,
+  drawn as quads by glyph code), which no layer repaints. Whether a Western
+  layer should drop the enemy's weakness row as the Western discs do is the
+  owner's to decide ([`labels-1013.md`](labels-1013.md) 1.2).
+- **Verification:** `loc_build.py all` on the US, European, French, German
+  and Japanese discs reports `identify words 6` (the readers' words per disc
+  in [`labels-1013.md`](labels-1013.md) 1.1); `loc_build.py selftest`; the
+  log `DIV-0064: 6 of 6 identify words` under all five tags; the owner's
+  `identify.txt` with a shot every 30 frames from 600 (`--save identify`),
+  frame 900, before and after under en-US, and after under fr-FR, de-DE,
+  ja-JP and `original` (`labels-1013.md` 1.4): `WEAK POINT` at rows
+  `0x44..0x4A` from x `0x5A`, the item word from row `0x8A` (`ITEM`,
+  `OBJET`, `OBJEKT`), `EP` under de-DE, the Chinese panel unchanged under
+  `original`; on a US-disc-only and a French-disc-only install the same
+  words and log (`labels-1013.md` 6.2); an overlay built before this entry
+  taken and logged (6.1); the self-tests in `labels-1013.md` 6.3.
+- **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
+
+### Beyd's name from the disc when the battle extra opens its equipment screen
+
+- **ID:** DIV-0118
+- **Date:** 2026-10-13
+- **Subsystem:** battle extra (`BattleExtra_EquipOpen` `0x42DC20`, ours in
+  `src/game/battle_e1.cpp`; DIV-0064's group 17 in `src/game/labels.cpp`,
+  chunk kind 15 tag 17 of `tools/loc_build.py`)
+- **Tier:** Sensible - as DIV-0018: the exe's own strings are the Chinese an
+  overlay leaves.
+- **Original behaviour:** as the equipment screen of fight 26's battle extra
+  opens, `BattleExtra_EquipOpen` copies the five bytes at `0x669CE8` - a
+  Chinese name - over character record 7's (the whelp's slot);
+  `BattleExtra_EquipLeave` copies the whelp's name back from `0x669CE0`
+  (DIV-0020 writes that one). So under a Latin overlay the guest showed the
+  port's Chinese name.
+- **New behaviour:** under a PlayStation overlay the five bytes come from the
+  overlay's string - `Beyd` on the US, European, French and German discs -
+  kept in a buffer of ours (`Labels_Slot(17, 0)`); `0x669CE8` stays as
+  shipped. The builder finds the string by what the disc's twin does: in
+  `BATE.EMI` the copy of 5 bytes (`addiu $a2, $zero, 5`) two calls after
+  the sound `0x102` (US `0x801D0F18..0x801D0F58`, the string `0x801D86F8`
+  right after `Whelp`), the shape of the PC's own function.
+- **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+  section 7 (2026-10-13: build this group this round).
+- **Also in the PSX version?** The same copy of the same five bytes; the
+  name is the disc's.
+- **Verification:** `loc_build.py all` reports `guest name 1` on the four
+  Western discs; `loc_build.py selftest` (a synthetic copy found, one with no
+  sound before it refused); the log `DIV-0064: 1 of 1 guest name`; the
+  `battle_e1` group in the `'*'` self-test (the fuzz runs before an overlay
+  loads). **Not seen in game:** no recipe reaches the duel's equipment
+  screen ([`labels-1013.md`](labels-1013.md) 4).
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=BattleExtra_EquipOpen` (Capcom's copy reads `0x669CE8`).
+
+### Fight 26's turn counter in the disc's words and layout
+
+- **ID:** DIV-0119
+- **Date:** 2026-10-13
+- **Subsystem:** battle, fight 26's count task (`Boss26Fx_DrawCount`
+  `0x43C780`, ours in `src/game/boss_sf.cpp`; DIV-0064's group 18 in
+  `src/game/labels.cpp`, chunk kind 15 tag 18 of `tools/loc_build.py`)
+- **Tier:** Sensible - as DIV-0018.
+- **Original behaviour:** in its box at (`0x6B`, `0x10`) the PC draws a
+  Chinese word through `0x669D20` at (`0x7A`, `0x12`), the count `0x15 - turn`
+  (`%2d`) in the 12 px numerals at `0x92`, and a second Chinese word through
+  `0x669D24` at `0xAA` - under every overlay.
+- **New behaviour:** under a PlayStation overlay, the disc's own: the count
+  at the disc's x and one word at its x, drawn whole - `turns left` after the
+  count at (`0x70`, `0x80`) on the US, European and German discs, the
+  European and German singular `turn  left` beside it, the French
+  `Rest   tours` / `Rest   tour` at `0x70` with the count at `0x94` between
+  its words. The singular follows the disc's test on the turn `0x904B90`:
+  the European disc's when the turn is `0x14` (one left), the French and
+  German when it is `0x14` or more, the US never (it has no singular). The
+  builder reads all of it off `BOSS025.EMI`'s routine (the call drawing the
+  box, the two draws on row `0x12`, the strings loaded between them, the
+  `sltiu` or `beq` on the turn); `BOSS027.EMI` holds the same routine and
+  words on every disc.
+- **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+  section 7 (2026-10-13).
+- **Also in the PSX version?** The words, places and test are each disc's
+  (US `0x800C3088..0x800C3100`; the European, French and German routines in
+  [`labels-1013.md`](labels-1013.md) 2). The German disc's words are the
+  English ones.
+- **Verification:** `loc_build.py all` reports `turn counter 3` on the four
+  Western discs (the layouts in `labels-1013.md` 2); `loc_build.py selftest`;
+  the log `DIV-0064: 3 of 3 turn counter`; the `boss_sf` group in the `'*'`
+  self-test. **Not seen in game:** no recipe reaches fight 26
+  (`labels-1013.md` 4).
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=Boss26Fx_DrawCount`.
+
+### The hi-lo game's three choices from the disc, centred in their boxes
+
+- **ID:** DIV-0120
+- **Date:** 2026-10-13
+- **Subsystem:** the faerie village's first game (`CommuHiLo_DrawChoice`
+  `0x45B1E0`, ours in `src/game/rest_4c.cpp`; DIV-0064's group 19 in
+  `src/game/labels.cpp`, chunk kind 15 tag 19 of `tools/loc_build.py`)
+- **Tier:** Sensible - as DIV-0018.
+- **Original behaviour:** each choice box (`0x2A` x `0x14`) draws its label
+  through `0x669F54` - one or two Chinese glyphs - at (x + `0xB`, y + 3) with
+  the count 2, under every overlay.
+- **New behaviour:** under a PlayStation overlay the label is the disc's word
+  - `HIGH` / `LOW` / `SET` (US, European), `Haut` / `Bas` / `Mise`, `Hoch` /
+  `Tief` / `Setz` - drawn whole and centred in the box as the discs place it
+  (a four-letter word at x + 6, a three-letter one at x + `0xA`: here
+  x + (`0x2C` - its pen width) / 2). The builder takes the three 4-byte slots
+  right before the 72 bytes of sprite rectangles the PC has at `0x652D04`
+  (the anchor group 14 already uses), in `COMMU02.EMI` or PSP-EU's
+  `BOOT.BIN`.
+- **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+  section 7 (2026-10-13).
+- **Also in the PSX version?** The words and places are each disc's
+  (`COMMU02.EMI`, US `0x801D2BD0`). One difference: the US and European
+  routines pass the draw the count 3 when the box's mode is 1 or 2, and the
+  French when it is 1, which by the PC's reading of the count would cut a
+  four-letter word to three letters; ours draws every word whole
+  ([`labels-1013.md`](labels-1013.md) 3).
+- **Verification:** `loc_build.py all` reports `hi-lo choices 3` on the four
+  Western discs; the log `DIV-0064: 3 of 3 hi-lo choices`; the `rest_4c`
+  group in the `'*'` self-test. **Not seen in game:** no recipe reaches the
+  hi-lo game (`labels-1013.md` 4).
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=CommuHiLo_DrawChoice`.

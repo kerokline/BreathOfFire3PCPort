@@ -37,7 +37,11 @@ bool Labels_Written(std::uint32_t tag);
 // Slot `i` of group `tag` as the draw should read it: the overlay's string in
 // our buffer once a chunk has written it, else the shipped slot in
 // BOF3.exe's .data. For the groups our own draws read (14, the village's
-// words), whose slots are not rewritten in place.
+// words; 15, the Identify panel's, whose four small words' shipped slots
+// are the PC's own English; 18, fight 26's turn counter; 19, the hi-lo
+// choices), whose slots are not rewritten in place. A chunk from an older
+// builder that carried only a group's first slots (Table::legacy) still
+// marks the group written; the others read as shipped.
 const unsigned char* Labels_Slot(std::uint32_t tag, std::uint32_t i);
 
 // The widest string of group `tag` as the pen covers it (TextAdvance_Width),

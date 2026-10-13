@@ -36,6 +36,7 @@
 #include "bof3/symbols.gen.h"
 #include "game/battle_e1_callees.h"
 #include "game/boss_harness.h"
+#include "game/labels.h"
 #include "game/move_script_bytes.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
@@ -302,6 +303,10 @@ extern "C" unsigned long __cdecl BattleExtra_EquipOpenDispatch(unsigned long thr
 // Sound_PlayEffect(0x102), 0x42E0E0(), 0x929F04 = 4, 0x929F02 + 1 (read after
 // the calls), and the five bytes 0x669CE8 copied over character record 7's
 // first five.
+//
+// DIVERGENCE DIV-0118 (DIV-0064's group 17): under a language overlay that
+// has written the guest's name, the five bytes come from the overlay's
+// string (BATE.EMI's Beyd) instead of 0x669CE8's shipped Chinese name.
 extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     Backdrop();
     if (Word(At(at::kWaitWord)) != 0) return;
@@ -310,7 +315,10 @@ extern "C" void __cdecl BattleExtra_EquipOpen(void) {
     const unsigned char sub = B(at::kModeSub);
     B(at::kModeTimer) = 4;
     B(at::kModeSub) = static_cast<unsigned char>(sub + 1);
-    Memcpy(at::kGuest, at::kGuestHeadIn, 5);
+    const U name = Labels_Written(17)
+        ? static_cast<U>(reinterpret_cast<std::uintptr_t>(Labels_Slot(17, 0)))
+        : at::kGuestHeadIn;
+    Memcpy(at::kGuest, name, 5);
 }
 
 // original 0x42DC80 (0x64ADEC[2]): the backdrop; 0x929F04 - 1, and at 0:
