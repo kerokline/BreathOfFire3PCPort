@@ -79,7 +79,7 @@ sys.path.insert(0, TOOLS)
 PSP = ("psp-jp", "psp-eu")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
-RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec")   # widen<k>: the disc's name is k bytes
+RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
@@ -133,6 +133,14 @@ _BASE_IMAGE = {}            # bid -> (image, owner) of the recipe's base image (
 # are copied from the disc's own record table of the same shape (GAME.EMI#0 on every disc),
 # found by them at recipe time as the wheel's spots are.
 WM_RECORDS, WM_COUNT, WM_STRIDE, WM_AREA = 0x653910, 11, 0x1C, 0x18
+# boxxy: the dialogue box's two position tables (window_task.cpp kBoxXY 0x66ADD8, kBoxAltXY
+# 0x66ADE8: 7 x (u8 x, u8 y) and two zero bytes each). The PSP's BOOT.BIN holds them as 7 x
+# (s16 x, s16 y), the two tables 0x1C apart, with entries 3..6 framed for its 384-wide view:
+# entries 3 and 5 x - 32, 4 and 6 x + 32 (docs/psp-widescreen-a.md). PSP builds: the pairs
+# read back to the 4:3 frame by that rule undone, into the PC's u8 layout; found by the
+# entries the PSP left alone (0..2), the PC's at recipe time.
+BOX_XY, BOX_TABLES, BOX_ENTRIES, BOX_PC_STRIDE, BOX_PSP_STRIDE = 0x66ADD8, 2, 7, 0x10, 0x1C
+BOX_UNWIDE = {3: 32, 4: -32, 5: 32, 6: -32}
 MUSIC_SETS = 0x669A48       # Area_ZoneTrack's 8-byte records (window_task.cpp: a list pointer, a count)
 PSX_MAP = "psx-jp"          # psxmap: the map whose segments a PSP disc's same files are read by
 _RECIPE_BASE = False        # True while `recipe` builds the image the fills are found against
@@ -461,6 +469,16 @@ def build_fill(row, disc, elf, rule, srcs):
     elif rl in ("psxmap", "twin"):
         out[:] = blob[at:at + hi - lo]
         mask = [True] * (hi - lo)
+    elif rl == "boxxy":
+        for t in range(BOX_TABLES):
+            for e in range(BOX_ENTRIES):
+                x, y = struct.unpack_from("<hh", blob, at + BOX_PSP_STRIDE * t + 4 * e)
+                x += BOX_UNWIDE.get(e, 0)
+                if not (0 <= x < 0x100 and 0 <= y < 0x100):
+                    fail("%s: BOOT.BIN 0x%X box %d.%d is off the PC's u8 layout" % (row["build"], row["addr"], t, e))
+                o = BOX_PC_STRIDE * t + 2 * e
+                out[o], out[o + 1] = x, y
+                mask[o:o + 2] = [True, True]
     elif rl == "wmrec":
         for i in range((hi - lo) // WM_STRIDE):
             o = WM_STRIDE * i + WM_AREA
@@ -595,6 +613,12 @@ def find_rows(disc, bid, pc):
     else:
         print("  %s wmrec: the world maps' record table not found in ETC/GAME.EMI" % bid)
     if psp:
+        b = boxxy_place(elf, pc)
+        if b is not None:
+            rows.append({"build": bid, "rule": "boxxy", "pc": BOX_XY, "pc_end": BOX_XY + BOX_TABLES * BOX_PC_STRIDE,
+                         "file": "BOOT.BIN", "section": None, "addr": b})
+        else:
+            print("  %s boxxy: the dialogue box tables not found in BOOT.BIN" % bid)
         m = msets_place(elf)
         sets = music_sets_layout()
         if m is not None:
@@ -787,6 +811,22 @@ def msets_place(elf):
     return hits[0]
 
 
+def boxxy_place(elf, pc):
+    """BOOT.BIN's dialogue box tables: the one place in .data where both tables' entries
+    0..2 are the PC's pairs as s16, 0x1C apart. The address or None."""
+    keys = [b"".join(struct.pack("<hh", pc[BOX_XY + BOX_PC_STRIDE * t + 2 * e - DATA_LO],
+                                 pc[BOX_XY + BOX_PC_STRIDE * t + 2 * e + 1 - DATA_LO]) for e in range(3))
+            for t in range(BOX_TABLES)]
+    dlo, dhi = elf.span(".data")
+    hits = []
+    a = elf.img.find(keys[0], dlo, dhi)
+    while a >= 0:
+        if elf.img[a + BOX_PSP_STRIDE:a + BOX_PSP_STRIDE + len(keys[1])] == keys[1]:
+            hits.append(a)
+        a = elf.img.find(keys[0], a + 1, dhi)
+    return hits[0] if len(hits) == 1 else None
+
+
 def wmrec_place(srcs, pc):
     """The disc's world-map record table in ETC/GAME.EMI: the place whose eleven 0x1C-byte
     records hold BOF3.exe's area words at +0x18 (found by them, at recipe time). (file,
@@ -965,7 +1005,7 @@ def check():
             last = r["pc_end"]
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE}.get(r["rule"])
+            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "boxxy": 2 * BOX_ENTRIES * BOX_TABLES}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:

@@ -2939,7 +2939,6 @@ psp-jp	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psp-jp	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psp-jp	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psp-jp	0x66A420	0x66A448	language	language	Pause_LinesGame+0x8
-psp-jp	0x66ADD8	0x66ADF7	gap	game-value	Fish_Kinds+0x748
 psp-jp	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
 psp-jp	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
 psp-jp	0x66B724	0x66B928	unread	unread	D3d_AlphaOpCache+0x4
@@ -3436,7 +3435,6 @@ psp-eu	0x66A380	0x66A398	language	language	Menu_Verbs+0x158
 psp-eu	0x66A3B0	0x66A3C8	language	language	Menu_Verbs+0x188
 psp-eu	0x66A3E0	0x66A418	language	language	Magic080_TextPointers+0x18
 psp-eu	0x66A420	0x66A444	language	language	Pause_LinesGame+0x8
-psp-eu	0x66ADD8	0x66ADF7	gap	game-value	Fish_Kinds+0x748
 psp-eu	0x66AF38	0x66AF3C	gap	game-value	Win2_TitleBoxStates+0x38
 psp-eu	0x66B1DA	0x66B1F0	gap	disc-unplaced	MenuList_GeneWinSteps+0xE
 psp-eu	0x66B71C	0x66B720	unread	unread	Gfx_ScreenRect+0x14
