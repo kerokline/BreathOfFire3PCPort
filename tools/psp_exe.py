@@ -606,6 +606,7 @@ def find_rows(disc, bid, pc):
                          "addr": t[1]})
         else:
             print("  %s twin 0x%06X..0x%06X: not in %s" % (bid, tlo, thi, tfile))
+    rows += link_rows(bid, srcs, pc)
     wm = wmrec_place(srcs, pc)
     if wm:
         rows.append({"build": bid, "rule": "wmrec", "pc": WM_RECORDS, "pc_end": WM_RECORDS + WM_COUNT * WM_STRIDE,
@@ -825,6 +826,38 @@ def boxxy_place(elf, pc):
             hits.append(a)
         a = elf.img.find(keys[0], a + 1, dhi)
     return hits[0] if len(hits) == 1 else None
+
+
+AREA_COUNT, LINK_PTR, LINK_LAST, LINK_SIZE = 200, 0x20, 0x30, 12
+
+
+def link_rows(bid, srcs, pc):
+    """`twin` rows for the areas' link lists (Area_LinkAt, area_entry.cpp: the descriptor's
+    +0x20 list of 12-byte records, +0x30 the last index), each the first copy of the PC's
+    list in the area's own overlay AREAnnn.EMI. The descriptors, pointers and counts are
+    BOF3.exe's addresses and counts; the bytes are the disc's. Only lists the disc carries."""
+    def word(a):
+        return struct.unpack_from("<I", pc, a - DATA_LO)[0]
+    files = {}
+    for f, _s in srcs:
+        m = re.search(r"AREA(\d{3})\.EMI$", f)
+        if m:
+            files.setdefault(int(m.group(1)), f)
+    out = []
+    descriptors = data_symbol("Area_Descriptors")["pc"]
+    for area in range(AREA_COUNT):
+        d = word(descriptors + 4 * area)
+        if not DATA_LO <= d < DATA_HI or area not in files:
+            continue
+        lp = word(d + LINK_PTR)
+        n = pc[d + LINK_LAST - DATA_LO] + 1
+        if not DATA_LO <= lp < DATA_HI or lp + LINK_SIZE * n > DATA_HI:
+            continue
+        t = twin_place(srcs, pc, lp, lp + LINK_SIZE * n, files[area])
+        if t:
+            out.append({"build": bid, "rule": "twin", "pc": lp, "pc_end": lp + LINK_SIZE * n, "file": files[area],
+                        "section": t[0], "addr": t[1]})
+    return out
 
 
 def wmrec_place(srcs, pc):
