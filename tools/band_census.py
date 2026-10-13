@@ -34,10 +34,10 @@ import re
 import sys
 
 COLUMNS = ['area', 'chapter', 'mode', 'who', 'index', 'type', 'sprite', 'first', 'last', 'seen', 'rfirst', 'rlast',
-           'xlo', 'xhi', 'ylo', 'yhi', 'side', 'band', 'parked', 'scene', 'mask', 'script']
+           'xlo', 'xhi', 'ylo', 'yhi', 'side', 'band', 'parked', 'scene', 'mask', 'script', 'hidden']
 INTS = {'area', 'chapter', 'mode', 'index', 'type', 'first', 'last', 'seen', 'rfirst', 'rlast', 'scene'}
 FLOATS = {'xlo', 'xhi', 'ylo', 'yhi'}
-KEY = ('area', 'chapter', 'mode', 'who', 'index', 'type', 'sprite', 'side', 'band', 'parked', 'scene')
+KEY = ('area', 'chapter', 'mode', 'who', 'index', 'type', 'sprite', 'side', 'band', 'parked', 'scene', 'hidden')
 JOIN_GAP = 3        # a row continues the one before when it starts within this many frames of its end
 SCENE_GAP = 60      # rows of one area this close in frames belong to one scene
 ORDER = ['parked-scene', 'still-scene', 'parked', 'still', 'passing']
@@ -67,6 +67,7 @@ def parse(lines):
         r = {}
         for k, v in zip(cols, f):
             r[k] = int(v, 16) if k == 'mask' else int(v) if k in INTS else float(v) if k in FLOATS else v
+        r.setdefault('hidden', 'no')   # a log from before DIV F's column (wide_staging.cpp) has none
         rows.append(r)
     return head, rows
 
@@ -142,7 +143,9 @@ def nearest(found, frame):
 
 def describe(r):
     who = f"{r['who']}{r['index']}" if r['index'] >= 0 else r['who']
-    return f"{who} {r['side']} {r['band']} {cls(r)} x {r['xlo']:.0f}..{r['xhi']:.0f} y {r['ylo']:.0f}..{r['yhi']:.0f}"
+    hidden = ' hidden' if r.get('hidden') == 'yes' else ''
+    return (f"{who} {r['side']} {r['band']} {cls(r)}{hidden} x {r['xlo']:.0f}..{r['xhi']:.0f} "
+            f"y {r['ylo']:.0f}..{r['yhi']:.0f}")
 
 
 def table(rows, found, min_frames, show_rows):
@@ -168,12 +171,12 @@ def table(rows, found, min_frames, show_rows):
 def self_test():
     head = '# bandlog 1\tcolumns 120\tpark 30\tspan 60\n# ' + '\t'.join(COLUMNS) + '\n'
 
-    def row(first, last, x=-80.0, parked='yes', scene=1, index=4, area=12, rf=None):
+    def row(first, last, x=-80.0, parked='yes', scene=1, index=4, area=12, rf=None, hidden='no'):
         rf = first + 10 if rf is None else rf
         side, band = ('L', '21:9') if x < -53 else ('L', '16:9') if x < 0 else ('R', '16:9') if x < 373 else ('R', '21:9')
         return '\t'.join(str(v) for v in [area, 2, 3, 'obj', index, 1, '00612340', first, last, last - first + 1, rf,
                                           rf + last - first, x, x + 16, 50.0, 80.0, side, band, parked, scene, '02',
-                                          'end']) + '\n'
+                                          'end', hidden]) + '\n'
     text = (head + row(31, 90) + row(91, 150) + row(151, 170) + row(1, 30, parked='no') +
             row(400, 420, x=330.0, parked='no', scene=0, index=6) + row(600, 640, x=400.0, parked='still', index=7, area=13))
     h, rows = parse(text.splitlines())
@@ -196,6 +199,15 @@ def self_test():
     lines = table(j, found, 1, False)
     if 'parked-scene' not in lines[0] or 'passing' not in lines[1] or 'still-scene' not in lines[2]:
         bad.append(f'classes {lines}')
+    # DIV F's column: a hidden stretch is a row of its own, and a log without the column reads as not hidden
+    h2, rows2 = parse((head + row(31, 90) + row(91, 150, hidden='yes')).splitlines())
+    j2 = join(rows2)
+    if len(j2) != 2 or [r['hidden'] for r in j2] != ['no', 'yes'] or 'hidden' not in describe(j2[1]):
+        bad.append(f"hidden column {[(r['first'], r['hidden']) for r in j2]}")
+    old_head = '# bandlog 1\tcolumns 120\tpark 30\tspan 60\n# ' + '\t'.join(COLUMNS[:-1]) + '\n'
+    h3, rows3 = parse((old_head + row(31, 90).rsplit('\t', 1)[0] + '\n').splitlines())
+    if len(rows3) != 1 or rows3[0]['hidden'] != 'no':
+        bad.append('a log without the hidden column')
     for b in bad:
         print('band_census self-test MISMATCH:', b)
     print(f'band_census self-test: {len(bad)} mismatches')

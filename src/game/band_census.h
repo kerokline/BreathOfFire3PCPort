@@ -34,6 +34,18 @@ enum Class : int {
 };
 Class Classify(float left, float right, float top, float bottom, unsigned columns);
 
+// The rectangle the draw pass draws a sprite record at, in the game's 320 x
+// 240 units (the census's own reading, section 1 of docs/band-census.md);
+// false when Sprite_Draw draws nothing of it. Also read by DIV F's hide
+// (wide_staging.cpp), so the census's "hidden" column and the hide agree.
+bool ScreenRect(const unsigned char* sprite, float& left, float& right, float& top, float& bottom);
+
+// The scene mask, the census's `mask` column: bits 1..8 are the four tests
+// the game makes before the leader may move (a scene holds the leader), 0x10
+// the leader's state not 1 (docs/band-census.md section 3).
+unsigned SceneMask();
+constexpr unsigned kSceneMaskBits = 0xF;
+
 // After every module's self-test (InjectAll): the self-test under
 // BOF3X_SHADOW=band_census, then BOF3X_BANDLOG opened, if set.
 void Inject();
