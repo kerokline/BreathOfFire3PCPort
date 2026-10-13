@@ -125,7 +125,9 @@ its takeover was deferred until a recorded route reached it. **This route
 reaches it**: the sky is on screen in `f00720`..`f01080` (the hill area) and
 `f01500`..`f01800` (the coast). The trace did not count it because it and
 its siblings `0x571D30`, `0x571E20` are absent from `entries_plus_hidden.txt`
-- added by hand on 2026-09-23 with `0x571B40` (local file; `pe_hidden.py plus` regenerates it without them - re-add after). **Taken over** (group 2,
+- added by hand on 2026-09-23 with `0x571B40` (local file; `pe_hidden.py plus` regenerates it without them - re-add after; since
+2026-10-13 `plus --also 571BE0,571D30,571E20` keeps them,
+[`hidden-start-scan.md`](hidden-start-scan.md) 8). **Taken over** (group 2,
 [`area-backdrop.md`](area-backdrop.md)): `AreaMap_DrawBackdrop` with the
 quad's x from -53 to 373 under `Widescreen_Live()` and the original's
 0..320 otherwise, its siblings `AreaMap_TextureCycle` and

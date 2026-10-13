@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 114 entries, DIV-0001..0114, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 120 entries, DIV-0001..0120, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -3844,7 +3844,10 @@ designed in rather than bolted on.
      read through `Labels_Slot` and draw as nothing, and above the items
      they draw the `ITEM` the port still holds beside `EXP` at `0x65AAB4`
      (read by nothing in the port) in the 8 px font, 23 px left of the
-     items' column on the heading's row, as the US does; the target's name,
+     items' column on the heading's row, as the US does (**amended
+     2026-10-13 by DIV-0117**, the Identify panel's small words: the discs
+     draw a small WEAK POINT heading after all, the item word is each disc's
+     own, and the places are the disc routine's); the target's name,
      drawn with the count 5 of five Chinese glyphs, is drawn with 8 (`Fly M`
      -> `Fly Man`). (`Weakness` / `Items`, the builder's own words, stood
      for an hour before the capture.) `Magic080_DrawText` reads the shipped
@@ -5449,6 +5452,17 @@ designed in rather than bolted on.
   every PSX and PC-path layer is byte-identical (section 5.1). Not played.
   Over the PC install nothing changes.
 
+  **Amended 2026-10-13 (the faerie village, [`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 3):**
+  label group 14 is built from PSP-EU too: `BOOT.BIN`'s stake title is the
+  first word after the pointer table that ends before CommuDraw's category
+  table (`0x652DEC`, an anchor held as its hash), and the group's payload is
+  byte-identical to the PSX-EU layer's (`Culture`, `faeries` / `faery`, `Cash`
+  and the zenny code, `Pot`). The board's culture label, the ranked lists'
+  heading word and the hi-lo game's titles no longer draw blank on a PSP-EU
+  install (D247, D265); the culture label seen in `fairyVillage`, the other
+  three on no route yet. The Config screen's text (D246)
+  is still not built.
+
 ### The MP3 decoder is minimp3, not the library Capcom linked
 
 - **ID:** DIV-0091 (the next free number on 2026-10-10 evening; renumber at
@@ -6154,6 +6168,84 @@ designed in rather than bolted on.
   `importer.py check`, `exe_tables.py check`, `psp_exe.py check` clean; the
   exe host on the PSP-EU-only and PSX-EU-only installs exit 0 (10,088 ours);
   `fairyVillage` to its last frame on all three `eu` installs.
+- Amended 2026-10-13, morning (the faerie village's stats,
+  [`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 2): another gap
+  class closes, a `language-zero` one by a new rule shape, `faerie`: the four
+  stat bytes of each of the sixty faerie trait records (`0x653200 + 20 r +
+  0x10`, read by the community's ticks and the board's bars) were zero on every
+  disc-built image, so the bars drew black, the food counter read 34 where the
+  PC's reads 84 and the village simulated with zero traits (D264).
+  `ETC/COMMU00.EMI#0` carries the same stats in sixty 9-byte records (a 5-byte
+  name, the stats at +5) on every disc; the rule copies them record for record,
+  found at recipe time by all sixty stat words in order (`records_place` with
+  the disc's own stride). The names stay the language layer's. Every filled
+  byte equals `BOF3.exe`'s. Verification: the row "236 bytes, 0 not
+  BOF3.exe's" on all seven discs; `recipes/exe-gaps.tsv` loses 59 rows a build;
+  `importer.py check` / `verify`, `exe_tables.py check`, `psp_exe.py check`
+  clean; the exe host on the PSP-EU-only and PSX-EU-only installs exit 0
+  (10,088 ours); `fairyVillage` on the three `eu` installs: of the 134 village
+  frames, PC against PSX-EU differs only at the ranked list's page counter
+  (`0x6531F4`, engine-own, known) and the stat bars, food counter and pop-ups
+  are equal on all three.
+- Amended 2026-10-13, morning (the one-file runs and PSP-EU's own layout,
+  [`exe-image-twins-1013.md`](exe-image-twins-1013.md)): 39 more runs no longer
+  zero on the disc-built images that lacked them, each the PC's whole run held
+  by one file of the disc and read there by that overlay's code (`twin`, the
+  builds whose gap it closes): 13 `disc-unplaced` (effect-kind state and frame
+  tables in their area and scenario overlays, `BossGolem_Hooks+0xC`,
+  `Area94_EffectArgsD` from the third of AREA094's copies, and on the PSP
+  builds `ItemUse_HandlerIndex+0xD0` from `BOOT.BIN`) and 26 `game-value` (more
+  effect-kind tables, five spell effects' tables). A new way of finding a
+  place on a PSP disc, `pspmap`: where the PSP disc's file is laid out
+  otherwise than PSX-JP's (PSP-EU's `GAME.EMI` from 0x1000 earlier, parts of
+  `BATTLE.EMI#15` 0x3000 later), a run `psxmap` misses at PSX-JP's address is
+  read at the one place where the PSX-JP disc's own bytes either side of it
+  stand beside BOF3.exe's run - four runs on PSP-EU (`EffectKind34_V0Areas`,
+  `Scenario_Hooks+0x58`, `Field_ModeTailKinds+0x100`,
+  `MenuList_GeneWinSteps+0xE`), none on PSP-JP. Every filled byte equals
+  `BOF3.exe`'s; no byte that was the PC's is lost. Gap ranges (`exe-gaps.tsv`): PSX-EU 282
+  to 247, PSP-EU 251 to 220, PSX-US 282 to 249. No symptom of any of them was
+  observed, so no defect is numbered. Verification: 221 recipe rows (217
+  `twin`, each "0 not BOF3.exe's"; 4 `pspmap`, kept only when equal);
+  `psp_exe.py`, `exe_tables.py`, `importer.py check` clean;
+  the exe host on a PSX-EU-only and a PSP-EU-only install exit 0 (10,088 ours,
+  `BOF3X_EXEIMAGE gap` 247 and 220 ranges); not played.
+- Amended 2026-10-13, afternoon (set 8's verb, the owner's call on
+  [`abc-sweep-1013-village.md`](abc-sweep-1013-village.md) 4.1, option 1:
+  "keep `Quit`"; [`disc-data-inventory.md`](disc-data-inventory.md) 9.3): one
+  byte that no Western PSX disc carries in the PC's shape is filled by a rule,
+  `verb`. `Menu_ButtonSets` set 8 (`0x663864`) is `(2, 0x14, 0x0B)` on the PC
+  and the JP-shaped discs; the US, European, French and German discs give its
+  second button their own 23rd verb (`0x16`, `End`), which the port's 22-entry
+  verb table does not have, so the map refused the byte and the image held 0
+  (the button would read `Use`). The rule finds the disc's record by sets 0..7
+  verbatim in `ETC/STATUS.EMI`, requires the disc's byte to be `0x16`, and
+  writes the port's `Quit` (`0x0B`) at `0x663866` - a mapping of the disc's
+  verb to the PC's, not a copied value; the row is kept only because the
+  result equals `BOF3.exe`'s. The Western releases' own `End` (a 23rd verb
+  in the engine) was the alternative; the owner chose the port's word.
+  Verification: `psp_exe.py recipe` over the seven discs
+  (scratch `policy/regen_r1.log`): one `verb` row on each of US, EU-English,
+  FR and DE, "1 bytes, 0 not BOF3.exe's"; `recipes/exe-gaps.tsv` loses the
+  four `unread` rows `0x663866..0x66386C` (the five bytes after the verb were
+  already the PC's zeros); `exe.toml`'s four Western images change by that
+  one byte each (`placed_equal` + 1). Planted faults (scratch `negverb.py`):
+  a `verb` row on PSX-JP, a two-byte row, another file - each refused by
+  `psp_exe.py check`; a disc byte other than `0x16` refused by the rule. A
+  PSX-EU-only install (`importer.py build --source <EU cue> --lang en-150`,
+  `install --base`): the image holds `02 14 0B` at set 8; the exe host's
+  self-test exit 0, `inject: 10088 ours`. `psp_exe.py`, `exe_tables.py`,
+  `importer.py check` clean. Not played: no route reaches set 8.
+- Amended 2026-10-13 (the us set's sweep,
+  [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md) 4): the faerie ranked lists'
+  page counter format `0x6531F4` (`"%d/%d"`, `CommuRank_Show`'s format, a
+  `language-zero` gap on all seven builds) is no longer zero on a disc-built
+  image, read verbatim from `ETC/COMMU05.EMI#7` (every build, `twin`), where
+  that overlay's own reader loads it; every filled byte equals `BOF3.exe`'s.
+  On a disc-only install the village's ranked lists drew a stale digit where
+  the PC draws `1/2`. Verification: that doc 4.2 (the seven rows "5 bytes, 0
+  not BOF3.exe's"; the checks clean; the exe host on the US disc-only install
+  exit 0; `fairyVillage` reads `1/2` on both sides at 810).
 
 ### A disc-only install refuses the port's Chinese text instead of playing without text
 
@@ -6689,27 +6781,334 @@ designed in rather than bolted on.
   `pc-title-mark` rule, [`abc-harness.md`](abc-harness.md))
 - **Tier:** Sensible - the release the player owns; recorded so that the
   port's own change has a ledger answer.
-- **Original behaviour:** the PC port (2001) draws its own title page: the
-  page `0x1A080400` in `DEMO.DAT` and `FIRST.DAT` differs from the US disc's
-  section in 5,062 bytes and carries a registered mark, which the
-  PlayStation's title does not have (the owner), and `Title_Sprites` entry
-  1's width is 10 where every disc has 12 (`pcvsdisc.py`). That is the
-  porting house's change, not ours (`SHARED_SOURCE.md` 3's kind).
+- **Original behaviour:** the PC port (2001) draws the **Japanese**
+  PlayStation's title unchanged: the copyright page `0x1A080400` of
+  `DEMO.DAT` is byte-identical to the JP and European-English discs' (the US
+  disc's own adds a Capcom U.S.A. line, 5,062 bytes in 9 tiles; `FIRST.DAT`'s
+  page at that tag is every disc's); the registered mark is `Title_Sprites`
+  entry 1 (10 wide) on the glyph page `FIRST.DAT` `0x1E000200`, both JP's.
+  The US and European discs draw a ™ there (entry 1 12 wide, their own page).
+  Not the porting house's change
+  ([`disc-data-inventory.md`](disc-data-inventory.md) 4.1, corrected
+  2026-10-13).
+
+  *Corrected 2026-10-13.* This paragraph first said the page and the (R)
+  were the port's own and that "every disc has 12" for entry 1's width; the
+  inventory pass rendered each source's page and read each disc's
+  `Title_Sprites`: the JP disc and PSP-JP have the PC's 10 and draw the (R).
+  The owner's call the same day (inventory Q4): **a PC install keeps Japan's
+  (R) title** - "the JP psx disc makes most sense to use as default for
+  graphics if there's ever a simple divergence, just for consistency sake"
+  (the base policy, DIV-0115) - so no Western-title entry is written.
 - **New behaviour:** a disc-only install - a cache with no PC source - draws
-  the disc's title page from the disc, without the mark; `Title_Sprites` is
-  a gap there (zero), so no mark is drawn either way. A PSP-only install
+  the disc's title page from the disc. A Western disc's install draws **no
+  mark at all** (neither the PC's (R) nor its own ™), because `Title_Sprites`
+  entry 1's width (`0x65385E`) is a gap of the disc-built image (zero); once
+  that gap is filled it draws the disc's ™. A JP disc-only install places the
+  width and draws the (R), as the JP release does. A PSP-only install
   draws the PSP's own title page and `Title_Sprites` entry 10 (DIV-0103).
   A PC install, or a cache with the PC's `DAT/` among its sources, keeps the
-  port's title.
+  PC's title (Japan's).
 - **Rationale:** rule 1 - a disc-only install carries none of the PC's
   files, and the disc's own title is what that release shows. Whether a PC
-  install should draw the PlayStation's title is the owner's call, part of
-  the disc-data preference inventory (the owner, 2026-10-12: the PlayStation's
-  data where both exist).
-- **Also in the PSX version?** The disc's title is the PlayStation's own; the
-  difference is the port's.
+  install should draw the PlayStation's title was the owner's call, part of
+  the disc-data preference inventory; answered 2026-10-13: it already does -
+  Japan's, which stays the default (inventory Q4, see the correction above).
+- **Also in the PSX version?** Yes: the PC's title is the JP disc's; a
+  Western disc's title differs by region (™, and the US notice's third line),
+  not by the port.
 - **Verification:** AB's harness: the PC against the PSX-EU disc-only
   install differ on the title by the `pc-title-mark` region, classed by that
   rule; not ledgered before. The PSP title's framing in our 4:3 frame is
   open (D256).
 - **Reversible?** Build with the PC's `DAT/` as a source.
+
+### Prefer the Japanese PlayStation disc's data over a port change the owner has decided; the 27A arenas' held loop first
+
+- **ID:** DIV-0115
+- **Date:** 2026-10-13
+- **Subsystem:** assets (`tools/importer.py` `preferred` / `get_chunk`, the
+  new `recipes/prefer.toml`; first members `BPLD27A.DAT` and `BPLU27A.DAT`
+  kind 0 `0x10000`; the engine reads the cache's `base/` since DIV-0089;
+  [`disc-data-inventory.md`](disc-data-inventory.md) 2 row P6, 9)
+- **Tier:** Sensible - the PlayStation's presentation where the port
+  changed it for no reason the PC's platform gives; nothing changes in play.
+- **Original behaviour:** the PC port's `base/` is the Japanese PlayStation
+  release's except 35 chunks the port changed (inventory 0 and 2). One is the
+  27A battle arenas: in member A's bank of `BPLD27A` and `BPLU27A`, the
+  PlayStation has two identical four-step loops, both at 4 ticks a step; the
+  port holds the second at 8 ticks a step, so it plays at half speed - 4
+  bytes in each file (`0x41C88..0x41C8E`, `0x42E60..0x42E66`;
+  [`arena-edits.md`](arena-edits.md) 2). Measured again 2026-10-13 (session
+  scratch `policy/hash27a.py`): the type-1 decode of `BPLCHAR/BPLD27A.EMI#7`
+  and `BPLU27A.EMI#7` is byte-identical on all five PSX discs (JP, US,
+  EU-English, FR, DE) and differs from the PC's chunk in exactly those 4
+  bytes. Before this entry every cache took the port's bytes, a disc-only one
+  included: the importer's `hold` rule rebuilt them from any PSX disc. Which
+  animation the loop is was not read or rendered.
+- **New behaviour:** `recipes/prefer.toml` lists the chunks whose disc form
+  the base policy takes. For each row, when a disc the row names (`from`) is
+  among the build's sources - in any position of the player's order - the
+  importer takes that disc's section through the row's transform, hashes it
+  against the row, and writes it in `base/` ahead of the PC's chunk; the
+  manifest records it as `<build>:prefer:<EMI#section>`, `verify` checks it
+  against the row, and `check` checks the table's shape against the recipe.
+  The first two rows: the 27A arenas from `psx-jp` (`type1`), so both loops
+  play at the disc's 4 ticks. Where no named disc is a source nothing
+  changes: a PC + US cache takes the PC's chunk (the US disc carries the same
+  decode, but the row names Japan's), and a US disc-only install the `hold`
+  rule's port bytes. A PC install with no cache is the port's.
+- **Rationale:** the owner, 2026-10-13: "the JP psx disc makes most sense to
+  use as default for graphics if there's ever a simple divergence, just for
+  consistency sake". And on the 27A loop (inventory Q2), take the disc's: the
+  PlayStation tied music playback to frame timing and the PC does not, so
+  the port's half-speed copy cannot be a correct fix here. The policy is the
+  mechanism; each further member is the owner's call on that chunk. Not
+  members (2026-10-13): the 11 hand-edited arenas and Ryu's byte (Q1 / Q3,
+  to be rendered first), the dock legend (Q5), the wrap clicks (Q6); the
+  title needs none (Japan's is the PC's, DIV-0114 as corrected).
+- **Also in the PSX version?** Yes: this is every PSX disc's loop.
+- **Verification:** `importer.py build` from the PC's `DAT/` and `BOF3.exe`
+  with the JP disc (`c_pcjp`), with the US disc (`c_pcus`), and with US then
+  JP (`c_pcusjp`), each `verify` 0 problems
+  ([`disc-data-inventory.md`](disc-data-inventory.md) 9.2): with the JP disc
+  the two chunks are `psx-jp:prefer:BPLCHAR/BPL?27A.EMI#7` at the disc's
+  hashes and 740 of 742 containers stay the PC's; with US alone both are
+  `pc-zh:chunk` and 742 of 742 are the PC's. `get_chunk` over six source
+  orders (scratch `quick27a.py`); planted faults (scratch `neg27a.py`): a
+  wrong hash refused by the build, the PC's hash / another section / a PSP
+  build / no such chunk / an unknown transform refused by `importer.py
+  check`. `importer.py check`, `exe_tables.py check` 0 errors. Not played,
+  not rendered: the loop has not been seen at either speed.
+- **Reversible?** Build the cache without the JP disc among its sources, or
+  with `importer.py build --prefer <a file with no rows>`.
+
+### An encounter refuses a combatant left of or above the screen, as the PlayStation does
+
+- **ID:** DIV-0116
+- **Date:** 2026-10-13
+- **Subsystem:** field (the random encounter's placement: `Encounter_OnScreen`
+  `0x5928F0`, ours since round seven's group BI, `src/game/inventory_ops.cpp`;
+  its one caller `Encounter_Place` `0x591F30`, `src/game/field_hidden.cpp`;
+  [`d56-encounter-bounds.md`](d56-encounter-bounds.md), known defect D56)
+- **Tier:** Intent - a port defect; the PlayStation shows what was meant.
+- **Original behaviour:** after the party and the enemies are placed and the
+  camera aimed, `Encounter_Place` asks `Encounter_OnScreen` of each member
+  (margin 0x20) and each active enemy slot (its kind's `+0x86` / `+0x87`): the
+  footprint's four corners projected, refused if a screen x is 320.0 or more
+  or a screen y 240.0 or more (x87 float compares). A corner at x < 0 or
+  y < 0 passes. A member refused cancels the encounter for that step; an enemy
+  refused drops its slot (no slot left cancels it). So on the PC a fight can
+  start with an enemy partly or wholly off the left or top edge and never off
+  the right or bottom.
+- **PlayStation:** the twin, GAME.EMI section 0 `0x801C805C` (JP disc,
+  `disc_ls.py --extract BIN/ETC/GAME.EMI`, capstone), loads each projected
+  corner's x with `lhu $v0, 0x10($sp)` and tests `sltiu $v0, $v0, 0x140`
+  (`0x801C80D4`, bytes `4001422c`), and y with `lhu $v0, 0x12($sp)` /
+  `sltiu $v0, $v0, 0xf0` (`0x801C80E8`, `f000422c`): unsigned, so a negative
+  short is refused too - x and y must lie in 0..319 and 0..239. Its callers
+  `0x801C72A4` (a member, `a3 = 0x20`) and `0x801C7310` (an enemy slot; a
+  refusal stores 0 to the slot's active byte and decrements `0x801CE050`)
+  are the PC's `Encounter_Place` branch for branch. The PC's float compares
+  kept only the upper bounds: the port's.
+- **New behaviour:** a corner whose screen x or y is below 0.0 is refused
+  too, so the PC's test is the PlayStation's (a NaN passes, as the upper
+  compares let it). The test sits behind a byte flag that
+  `InventoryOps_Inject` sets (`PatchBytes EncounterOnScreenLowerBounds`)
+  after the module's self-test, whose fuzz compares the original's bounds
+  (DIV-0065's pattern). Once the self-test is past, every corner below 0 is
+  logged, `D56 Encounter_OnScreen(x, z, size, margin) corner k at (sx, sy):
+  refused (DIV-0116)` - or "passed, the port's bounds" with the flag off - so a
+  run shows where the two part; the log changes nothing the game reads.
+- **Rationale:** the owner, 2026-10-13: build D56's repair, a restoration of
+  the PC's lost guard. A combatant the camera cannot see is a fight the
+  player cannot read (visual-findings-1012 1.4 shows the look: a name box
+  for an enemy that is never drawn).
+- **Also in the PSX version?** No - the PlayStation refuses such a corner;
+  this entry restores it.
+- **Cost:** any encounter whose placement put a corner left of or above the
+  screen now loses that enemy (or the encounter for that step, and the walk
+  goes on to the next due step), so the random draws and everything after can
+  differ from that encounter on. Measured on nine battle routes: no route
+  reaches such a placement, so none differs
+  ([`d56-encounter-bounds.md`](d56-encounter-bounds.md) 3).
+- **Verification:** `BOF3X_SHADOW='*'` headless self-test exit 0
+  (`inventory_ops` 50,000 rounds, 0 mismatches, the flag set after it;
+  `inject: 10087 ours`). The A/B and the state hash in the doc's section 3.
+  A crafted capture (the combat route with `Camera_ShiftX` poked to -512
+  before its encounter): with the flag off the Gooey is placed with all four
+  corners at x -40 .. -62 and the fight starts with it off screen; with it
+  on, that encounter is refused and the next one starts with one enemy on
+  screen (`analysis/shots/d56_before`, `d56_after`, frame 500). Owed: the
+  owner's eye in play.
+- **Reversible?** `BOF3X_ORIGINAL=EncounterOnScreenLowerBounds` keeps ours with
+  the port's bounds; `BOF3X_ORIGINAL=Encounter_OnScreen` runs Capcom's
+  function.
+
+### The Identify panel's small words: WEAK POINT on the weakness row, the disc's own item word and EXP label
+
+- **ID:** DIV-0117 (an amendment of DIV-0064 group 15, written as its own
+  entry because it adds a heading the group had decided against and changes
+  a Japanese layer)
+- **Date:** 2026-10-13
+- **Subsystem:** battle, the Identify panel (`Identify_DrawMember` /
+  `_DrawEnemy`, ours in `src/game/magic_s12.cpp`; DIV-0064 group 15 in
+  `src/game/labels.cpp`, chunk kind 15 tag 15 of `tools/loc_build.py`;
+  [`labels-1013.md`](labels-1013.md) 1)
+- **Tier:** Sensible - the release the player owns draws these words; DIV-0064's
+  group 15 rested on a reading that missed them.
+- **Original behaviour:** the PC port draws the headings 弱点 and 持有物
+  (`0x66A3E0` / `0x66A3E8`) centred on the weakness row (y `0x44`) and over
+  the items (y `0x8A`), and the EXP label `0x65AAB0` with the count 3. Under
+  a Latin overlay since DIV-0064 group 15 (2026-10-10): no headings, and the
+  PC's own `ITEM` (`0x65AAB4`, read by nothing in the port) in the 8 px font
+  at (`0x59`, `0x8E`), placed by eye off the owner's wiki capture, in every
+  Latin language. Under a Japanese overlay the Chinese headings, and a
+  target name cut at 5 glyphs.
+- **New behaviour:** under every PlayStation overlay (en-US, en-150, fr-FR,
+  de-DE, and now ja-JP) the overlay's group 15 carries six strings: the two
+  headings' spaces (drawn as nothing, as before), then the four words the
+  disc's `MAGIC060.EMI` draws, found in its routine by the places it draws
+  them: `WEAK` at (`0x5A`, `0x44`) and `POINT` at (`0x80`, `0x44`) in the
+  8 px font where the port draws its weakness heading, the item word at
+  (`0x5A`, `0x8A`) - the French disc's `OBJET`, the German `OBJEKT`, the
+  others `ITEM` - and the EXP label drawn whole (the German `EP`). Both
+  panels draw `WEAK POINT`. A word the builder does not find, and every word
+  of an overlay built before this entry (its chunk has the two headings
+  alone; the DLL takes it and logs it), is the PC's own copy of the
+  Japanese disc's English, which `BOF3.exe` carries beside EXP unread
+  (`WEAK` `0x65AAA8`, `POINT` `0x65AABC`). With no overlay, nothing changes.
+- **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+  4.1 (2026-10-13): restore the heading the PlayStation's way in every overlay
+  language, and fix the French and German `ITEM` (a defect, described in
+  [`labels-1013.md`](labels-1013.md) 1.3).
+- **Also in the PSX version?** The words and places are each disc's own
+  (US `0x801EF1E0..0x801EF2A0`, the small draw `0x801EF76C`). Two differences
+  stay: **the Western discs draw `WEAK POINT` on the party member's panel
+  only** - their enemy panel has no weakness row at all, neither heading nor
+  the element glyphs (US `0x801EF2DC`; only the Japanese disc draws it on
+  both, with the elements at (`0x66`, `0x50`), `0x801EF36C`) - and the PC's
+  enemy panel keeps the row and its six Chinese element glyphs (`0x66A380`,
+  drawn as quads by glyph code), which no layer repaints. Whether a Western
+  layer should drop the enemy's weakness row as the Western discs do is the
+  owner's to decide ([`labels-1013.md`](labels-1013.md) 1.2).
+- **Verification:** `loc_build.py all` on the US, European, French, German
+  and Japanese discs reports `identify words 6` (the readers' words per disc
+  in [`labels-1013.md`](labels-1013.md) 1.1); `loc_build.py selftest`; the
+  log `DIV-0064: 6 of 6 identify words` under all five tags; the owner's
+  `identify.txt` with a shot every 30 frames from 600 (`--save identify`),
+  frame 900, before and after under en-US, and after under fr-FR, de-DE,
+  ja-JP and `original` (`labels-1013.md` 1.4): `WEAK POINT` at rows
+  `0x44..0x4A` from x `0x5A`, the item word from row `0x8A` (`ITEM`,
+  `OBJET`, `OBJEKT`), `EP` under de-DE, the Chinese panel unchanged under
+  `original`; on a US-disc-only and a French-disc-only install the same
+  words and log (`labels-1013.md` 6.2); an overlay built before this entry
+  taken and logged (6.1); the self-tests in `labels-1013.md` 6.3.
+- **Reversible?** play without `BOF3X_LANG`; the chunk is the overlay's.
+
+### Beyd's name from the disc when the battle extra opens its equipment screen
+
+- **ID:** DIV-0118
+- **Date:** 2026-10-13
+- **Subsystem:** battle extra (`BattleExtra_EquipOpen` `0x42DC20`, ours in
+  `src/game/battle_e1.cpp`; DIV-0064's group 17 in `src/game/labels.cpp`,
+  chunk kind 15 tag 17 of `tools/loc_build.py`)
+- **Tier:** Sensible - as DIV-0018: the exe's own strings are the Chinese an
+  overlay leaves.
+- **Original behaviour:** as the equipment screen of fight 26's battle extra
+  opens, `BattleExtra_EquipOpen` copies the five bytes at `0x669CE8` - a
+  Chinese name - over character record 7's (the whelp's slot);
+  `BattleExtra_EquipLeave` copies the whelp's name back from `0x669CE0`
+  (DIV-0020 writes that one). So under a Latin overlay the guest showed the
+  port's Chinese name.
+- **New behaviour:** under a PlayStation overlay the five bytes come from the
+  overlay's string - `Beyd` on the US, European, French and German discs -
+  kept in a buffer of ours (`Labels_Slot(17, 0)`); `0x669CE8` stays as
+  shipped. The builder finds the string by what the disc's twin does: in
+  `BATE.EMI` the copy of 5 bytes (`addiu $a2, $zero, 5`) two calls after
+  the sound `0x102` (US `0x801D0F18..0x801D0F58`, the string `0x801D86F8`
+  right after `Whelp`), the shape of the PC's own function.
+- **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+  section 7 (2026-10-13: build this group this round).
+- **Also in the PSX version?** The same copy of the same five bytes; the
+  name is the disc's.
+- **Verification:** `loc_build.py all` reports `guest name 1` on the four
+  Western discs; `loc_build.py selftest` (a synthetic copy found, one with no
+  sound before it refused); the log `DIV-0064: 1 of 1 guest name`; the
+  `battle_e1` group in the `'*'` self-test (the fuzz runs before an overlay
+  loads). **Not seen in game:** no recipe reaches the duel's equipment
+  screen ([`labels-1013.md`](labels-1013.md) 4).
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=BattleExtra_EquipOpen` (Capcom's copy reads `0x669CE8`).
+
+### Fight 26's turn counter in the disc's words and layout
+
+- **ID:** DIV-0119
+- **Date:** 2026-10-13
+- **Subsystem:** battle, fight 26's count task (`Boss26Fx_DrawCount`
+  `0x43C780`, ours in `src/game/boss_sf.cpp`; DIV-0064's group 18 in
+  `src/game/labels.cpp`, chunk kind 15 tag 18 of `tools/loc_build.py`)
+- **Tier:** Sensible - as DIV-0018.
+- **Original behaviour:** in its box at (`0x6B`, `0x10`) the PC draws a
+  Chinese word through `0x669D20` at (`0x7A`, `0x12`), the count `0x15 - turn`
+  (`%2d`) in the 12 px numerals at `0x92`, and a second Chinese word through
+  `0x669D24` at `0xAA` - under every overlay.
+- **New behaviour:** under a PlayStation overlay, the disc's own: the count
+  at the disc's x and one word at its x, drawn whole - `turns left` after the
+  count at (`0x70`, `0x80`) on the US, European and German discs, the
+  European and German singular `turn  left` beside it, the French
+  `Rest   tours` / `Rest   tour` at `0x70` with the count at `0x94` between
+  its words. The singular follows the disc's test on the turn `0x904B90`:
+  the European disc's when the turn is `0x14` (one left), the French and
+  German when it is `0x14` or more, the US never (it has no singular). The
+  builder reads all of it off `BOSS025.EMI`'s routine (the call drawing the
+  box, the two draws on row `0x12`, the strings loaded between them, the
+  `sltiu` or `beq` on the turn); `BOSS027.EMI` holds the same routine and
+  words on every disc.
+- **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+  section 7 (2026-10-13).
+- **Also in the PSX version?** The words, places and test are each disc's
+  (US `0x800C3088..0x800C3100`; the European, French and German routines in
+  [`labels-1013.md`](labels-1013.md) 2). The German disc's words are the
+  English ones.
+- **Verification:** `loc_build.py all` reports `turn counter 3` on the four
+  Western discs (the layouts in `labels-1013.md` 2); `loc_build.py selftest`;
+  the log `DIV-0064: 3 of 3 turn counter`; the `boss_sf` group in the `'*'`
+  self-test. **Not seen in game:** no recipe reaches fight 26
+  (`labels-1013.md` 4).
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=Boss26Fx_DrawCount`.
+
+### The hi-lo game's three choices from the disc, centred in their boxes
+
+- **ID:** DIV-0120
+- **Date:** 2026-10-13
+- **Subsystem:** the faerie village's first game (`CommuHiLo_DrawChoice`
+  `0x45B1E0`, ours in `src/game/rest_4c.cpp`; DIV-0064's group 19 in
+  `src/game/labels.cpp`, chunk kind 15 tag 19 of `tools/loc_build.py`)
+- **Tier:** Sensible - as DIV-0018.
+- **Original behaviour:** each choice box (`0x2A` x `0x14`) draws its label
+  through `0x669F54` - one or two Chinese glyphs - at (x + `0xB`, y + 3) with
+  the count 2, under every overlay.
+- **New behaviour:** under a PlayStation overlay the label is the disc's word
+  - `HIGH` / `LOW` / `SET` (US, European), `Haut` / `Bas` / `Mise`, `Hoch` /
+  `Tief` / `Setz` - drawn whole and centred in the box as the discs place it
+  (a four-letter word at x + 6, a three-letter one at x + `0xA`: here
+  x + (`0x2C` - its pen width) / 2). The builder takes the three 4-byte slots
+  right before the 72 bytes of sprite rectangles the PC has at `0x652D04`
+  (the anchor group 14 already uses), in `COMMU02.EMI` or PSP-EU's
+  `BOOT.BIN`.
+- **Rationale:** the owner's call on [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+  section 7 (2026-10-13).
+- **Also in the PSX version?** The words and places are each disc's
+  (`COMMU02.EMI`, US `0x801D2BD0`). One difference: the US and European
+  routines pass the draw the count 3 when the box's mode is 1 or 2, and the
+  French when it is 1, which by the PC's reading of the count would cut a
+  four-letter word to three letters; ours draws every word whole
+  ([`labels-1013.md`](labels-1013.md) 3).
+- **Verification:** `loc_build.py all` reports `hi-lo choices 3` on the four
+  Western discs; the log `DIV-0064: 3 of 3 hi-lo choices`; the `rest_4c`
+  group in the `'*'` self-test. **Not seen in game:** no recipe reaches the
+  hi-lo game (`labels-1013.md` 4).
+- **Reversible?** play without `BOF3X_LANG`, or
+  `BOF3X_ORIGINAL=CommuHiLo_DrawChoice`.

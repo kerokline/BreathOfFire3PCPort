@@ -3,6 +3,7 @@
 
     python tools/input_run.py recipes/config_screen.txt --out analysis/shots/config
     python tools/input_run.py recipes/config_screen.txt --out X --lang en-US --original "*"
+    python tools/input_run.py recipes/combat.txt --out X --no-front --wav analysis/wav   (the audio mix too)
 
 The recipe is played inside the game by bof3x.dll (BOF3X_INPUT,
 src/hook/input_script.cpp; the language is in docs/input-script.md), counted
@@ -143,6 +144,10 @@ def main():
     ap.add_argument('--no-front', action='store_true',
                     help='leave the window where it is: the game writes its own frames (BOF3X_SHOT_DIR) and keeps '
                          'running unfocused (DIV-0033), so nothing needs it on top')
+    ap.add_argument('--wav', default=None, metavar='DIR',
+                    help='BOF3X_WAV_DIR: the game writes its audio mix to DIR/<n>_<label>.wav (docs/wav-dump.md)')
+    ap.add_argument('--wav-label', default=None, metavar='LABEL',
+                    help="BOF3X_WAV_LABEL; default the recipe's name, with _orig when --original is given")
     ap.add_argument('--save', default=None, metavar='NAME',
                     help='the recipe save to put in slot 0 (tools/recipe_saves/NAME.DAT), instead of the one '
                          'the recipe\'s `# save NAME` header names')
@@ -168,7 +173,7 @@ def main():
     kill_stale(a.launcher)
 
     env = dict(os.environ)
-    for k in ('BOF3X_ORIGINAL', 'BOF3X_LANG', 'BOF3X_INPUT'):
+    for k in ('BOF3X_ORIGINAL', 'BOF3X_LANG', 'BOF3X_INPUT', 'BOF3X_WAV_DIR', 'BOF3X_WAV_LABEL'):
         env.pop(k, None)
     env['BOF3X_INPUT'] = recipe
     env['BOF3X_SHOT_WAIT'] = '1'
@@ -182,6 +187,11 @@ def main():
         env['BOF3X_ORIGINAL'] = a.original
     if a.speed != 1:
         env['BOF3X_SPEED'] = str(a.speed)
+    if a.wav:
+        os.makedirs(a.wav, exist_ok=True)
+        env['BOF3X_WAV_DIR'] = os.path.abspath(a.wav)
+        env['BOF3X_WAV_LABEL'] = a.wav_label or (os.path.splitext(os.path.basename(recipe))[0]
+                                                 + ('_orig' if a.original else ''))
     for kv in a.env:
         k, _, v = kv.partition('=')
         env[k] = v
@@ -205,6 +215,21 @@ def run(a, env, slot0):
     word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
     logs the save loaded: the file is not read again after that."""
     started, frames = time.time(), ''
+    # The DLL truncates bof3x.log when it opens it, which is after the launch:
+    # read before that, the previous run's `recipe done` line ended this run at
+    # once with no frames (2026-10-13, the jp sweep's combat on both disc-only
+    # installs; also docs/abc-sweep-1012-fixes.md 3.5, abc-sweep-1013-village.md 4,
+    # wav-dump.md 5). The old log goes first, so every line read is this run's.
+    for _ in range(100):
+        try:
+            os.remove(LOG)
+            break
+        except FileNotFoundError:
+            break
+        except OSError:
+            time.sleep(0.1)
+    else:
+        sys.exit(f'{LOG} cannot be removed: a game of this launcher folder is still running')
     launch(a.launcher, a.game, env, a.host)
 
     stop = threading.Event()

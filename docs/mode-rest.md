@@ -21,12 +21,19 @@ twelve were ours by round fourteen's end. The other four - `0x495BB0`,
 `0x495E60`, `0x495E90`, `0x496230` - and the steps under them had no
 symbol, no `impl`, and no row in any start list:
 
-1. **The host's extent.** `pc_funcs.json` gave `GameMode_Field` `0x4959F0`
+1. **The host's extent.** `pc_hidden.json` gave `GameMode_Field` `0x4959F0`
    an extent of 2,139 bytes (`0x85B`): `0x4959F0 + 0x85B = 0x49624B`, which
-   is exactly the end of mode 6's tail jump at `0x496246`. `pe_funcs.py`
-   found no direct call to any of the thirteen starts between - each is
-   reached only through `.data` (`GameMode_Handlers`, the two step tables
-   below) - so it ran on through them. `GameMode_Field`'s own code is 0x1BC
+   is exactly the end of mode 6's tail jump at `0x496246`. (Corrected
+   2026-10-13: this said `pc_funcs.json`. Measured with `tools/pe_funcs.py`
+   and `pe_hidden.py scan`, the 2026-09-21 lists reproduced line for line:
+   `0x4959F0` is no entry of `pc_funcs.json`; its extent there is
+   `0x495750`'s, `0xAFB` bytes to the same `0x49624B`, and `pc_hidden.json`
+   cut `0x4959F0` out of it - [`hidden-start-scan.md`](hidden-start-scan.md)
+   sections 1 and 8.) `pe_funcs.py` found no direct call to any of the
+   thirteen starts between - each is reached only through `.data`
+   (`GameMode_Handlers`, the two step tables below) - so its extent ran on
+   through them, and `pe_hidden.py`'s sweep of it ended at the undecodable
+   byte `0x495BB5`, before any of them. `GameMode_Field`'s own code is 0x1BC
    bytes (its `symbols.toml` evidence, [`mode-tasks.md`](mode-tasks.md)
    section 3). The same shape hid twelve more starts after it, in
    `GameMode_LookEnd` `0x496250`'s 0x59A (round fourteen's R3G,

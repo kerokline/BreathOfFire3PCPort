@@ -30,12 +30,20 @@ area_data = "loc"         # only where the area's loc/en-150 chunks differ betwe
 
 [[known]]
 id = "pc-title-mark"
-ledger = "none yet: the PC port's own title art (docs/visual-findings-1012.md 4.4)"
-what = "the PC port's title page draws a registered mark the PlayStation's does not (the owner, 2026-10-12: no (R) on the original PSX)"
+ledger = "DIV-0114 (corrected 2026-10-13, docs/disc-data-inventory.md 4.1): the PC's title is the Japanese release's"
+what = "the Japanese release's (R) (the PC's) against a Western disc's TM - while Title_Sprites entry 1's width is a gap of the disc-built image, against no mark"
 pair_trait = "pc"
 modes = [0]
 areas = [0]
 box = [260, 128, 272, 140]
+
+[[known]]
+id = "pc-map-legend"
+ledger = "none: the port's own art, which no disc carries (docs/importer-transforms.md 5, the dial page: a note, not a divergence)"
+what = "the world map's legend panel: the PC port's keyboard legend (SPACE / X / ENTER) where a disc-only install draws the disc's buttons and words (Enter / Guide / Camp on the US disc)"
+pair_trait = "pc"
+areas = [33, 65]          # the world-map areas a route has shown it in (abc-sweep-1013-us.md 3); add others when seen
+box = [64, 16, 124, 60]
 
 [[known]]
 id = "psp-title"
@@ -44,6 +52,15 @@ what = "a PSP-only install draws the PSP's title page (its logo, the fishing-ver
 pair_trait = "psp"
 modes = [0]               # the title only; the load screen after it (mode 1) stays unexplained
 areas = [0]
+
+[[known]]
+id = "psp-attract-logo"
+ledger = "DIV-0103 (its amendment: the PSP's own title art; D256 the framing)"
+what = "the attract sequence's dialogue scenes draw the title logo at the top right; a PSP-only install draws the PSP's logo there (seen on the eu triple 2026-10-12, abc-sweep-1012.md 2, and the jp triple 2026-10-13, abc-sweep-1013-jp.md 2)"
+pair_trait = "psp"
+routes = ["attract"]
+modes = [1, 4]            # the dialogue scenes, and the one load-mode frame between them (9420)
+box = [196, 12, 320, 84]
 
 # Deliberately not here (each would explain too much by screen alone):
 # - the PSP's UI page (FIRST: its shoulder-button labels) and dial page:

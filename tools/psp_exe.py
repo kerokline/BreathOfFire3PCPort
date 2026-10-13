@@ -40,7 +40,14 @@ Two more since 2026-10-12 evening (the owner's visual findings, docs/visual-find
              name. PSP builds only (a PSX disc's boot EXE is placed by the map)
 
 And wmrec, boxxy and cellhk (the constants below say what each reads; cellhk since
-2026-10-13, docs/visual-findings-1012.md 10).
+2026-10-13, docs/visual-findings-1012.md 10), faerie (2026-10-13,
+docs/abc-sweep-1013-village.md 2): a field copied between record tables of different strides,
+verb (2026-10-13, the owner's call, docs/abc-sweep-1013-village.md 4.1): one byte the Western
+discs give a verb the port lacks, mapped to the port's, and
+pspmap (2026-10-13, docs/exe-image-twins-1013.md
+3): a psxmap run the PSP disc's file holds elsewhere than PSX-JP's place, read at the place
+PSX-JP's own bytes either side of it put it in this disc's file (own_place; the recipe
+needs the PSX-JP disc beside the PSP discs).
 
 The file numbering. A disc names a file by its index in the disc's file table; the PSP's
 BOOT.BIN holds that table as 0x40-byte path records (found by the disc's own paths). The
@@ -55,7 +62,8 @@ when the filled bytes equal the PC's) holds each fill's place - addresses and co
 only. exe_tables.disc_image applies them to a PSP build's image (`fill`); exe_tables
 `recipe` then records the image's hash as for any build.
 
-    python tools/psp_exe.py recipe  --game DIR --disc PSP-JP --disc PSP-EU    # recipes/exe-psp.tsv
+    python tools/psp_exe.py recipe  --game DIR --disc PSX-JP [...] --disc PSP-JP --disc PSP-EU  # recipes/exe-psp.tsv
+                                                                               # (every disc build; pspmap reads PSX-JP)
     python tools/psp_exe.py measure --game DIR --disc DISC [...] --out DIR    # the class-by-class comparison
     python tools/psp_exe.py beside  --game DIR --disc PSX --disc PSP           # what a PSP disc would fill in a
                                                                                # PSX-built image (report only)
@@ -80,9 +88,11 @@ ROOT = os.path.dirname(TOOLS)
 sys.path.insert(0, TOOLS)
 
 PSP = ("psp-jp", "psp-eu")
+PSX = ("psx-jp", "psx-us", "psx-eu-en", "psx-fr", "psx-de")
 RECIPE = os.path.join(ROOT, "recipes", "exe-psp.tsv")
 COLS = ["build", "rule", "pc", "pc_end", "file", "section", "addr", "filled"]
-RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk")   # widen<k>: the disc's name is k bytes
+RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "msets", "unwide", "wmrec", "boxxy", "cellhk",
+         "faerie", "pspmap", "verb")   # widen<k>: the disc's name is k bytes
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
@@ -147,6 +157,62 @@ TWINS = [
      ("psx-jp", "psx-eu-en")),
     (0x66386C, 0x663872, "ETC/STATUS.EMI", "the field equipment compare panel's slot icons", None, 1),
     (0x66AF38, 0x66AF3C, "BATTLE/BATTLE.EMI", "the gene window's AP label (GeneWin_DrawGrid)"),
+    # The disc-unplaced runs one file alone carries (docs/exe-image-twins-1013.md 2): each
+    # the PC's whole run found in that file only, on every build whose gap it closes (the
+    # fifth field; the others place it or hold other bytes), and read there by the overlay's own
+    # code (a lui/imm pair into the table, the doc's evidence column). Area94_EffectArgsD is
+    # the third of AREA094's three equal copies (the one its map neighbour's displacement and
+    # its handler +0x3C[8] name); EffectKind49's two runs are SCENA07's two equal copies in
+    # the PC's order, 0x20 apart as on the PC.
+    (0x5F6307, 0x5F6314, "WORLD01/AREA042.EMI", "Area42_Placements' tail"),
+    (0x609470, 0x609487, "WORLD01/AREA073.EMI", "Area72_Weights+0x50 (area 73's)", PSX),
+    (0x616DDC, 0x616DE4, "WORLD02/AREA094.EMI", "Area94_EffectArgsD", None, 2),
+    (0x64D158, 0x64D16A, "BOSS/BOSS022.EMI", "BossGolem_Hooks+0xC"),
+    (0x653F88, 0x653F98, "SCENARIO/SCENA03.EMI", "EffectKind36_Frames"),
+    (0x65436C, 0x6543AC, "SCENARIO/SCENA04.EMI", "EffectKind2C_States+0xC"),
+    (0x6544EC, 0x65450C, "WORLD02/AREA080.EMI", "EffectKind44_SparkColours"),
+    (0x6545EC, 0x6545FC, "SCENARIO/SCENA07.EMI", "EffectKind49_V3States+0xC"),
+    (0x65460C, 0x65461C, "SCENARIO/SCENA07.EMI", "EffectKind49_V4States+0x10", None, 1),
+    (0x654F28, 0x654F38, "WORLD01/AREA068.EMI", "EffectKind8A_States+0x24", PSX),
+    (0x658F08, 0x658F48, "BOOT.BIN", "ItemUse_HandlerIndex+0xD0", PSP),
+    (0x65DE5F, 0x65DE78, "WORLD02/AREA109.EMI", "EffectKind18_08_States+0x8B", ("psx-eu-en",)),
+    (0x65EC54, 0x65EC64, "WORLD04/AREA169.EMI", "EffectKind18Sub3B_States+0x14"),
+    # The game-value runs one file alone carries (docs/exe-image-twins-1013.md 4): the same
+    # finding as the block above for the runs exe_own classes game-value rather than
+    # disc-unplaced, each read in its file by a lui/imm pair into its table. Left out: runs
+    # the file holds more than once with no reader to choose by (Area154_ChoicePairs+0x18C8),
+    # a run that is only the start of another table's copy (EffectKind18Sub38_States+0x10,
+    # inside AREA166's Sub35 run) and BOOT.BIN's ConfigMenu_Steps+0xC (no reader found).
+    (0x617EBC, 0x617EC8, "WORLD02/AREA098.EMI", "Area96_Handlers+0x194 (area 98's)"),
+    (0x63FF40, 0x63FF48, "WORLD04/AREA173.EMI", "Area172_EffectStates+0x100C (area 173's)"),
+    (0x654308, 0x654310, "WORLD01/AREA042.EMI", "EffectKind28_States+0x10"),
+    (0x654344, 0x65434C, "BOOT.BIN", "EffectKind2A_States+0x10", PSP),
+    (0x6544A8, 0x6544B0, "WORLD03/AREA120.EMI", "EffectKind6B_Frame"),
+    (0x654750, 0x654758, "WORLD03/AREA135.EMI", "EffectKind56_States+0x10", ("psx-us", "psx-eu-en", "psx-fr", "psx-de")),
+    (0x654AB0, 0x654AB8, "WORLD03/AREA139.EMI", "EffectKind6F_States+0x10", PSX),
+    (0x655214, 0x655220, "SCENARIO/SCE15EF1.EMI", "EffectKindA0_States+0x30"),
+    (0x65A5EC, 0x65A5F4, "BMAGIC/MAGIC006.EMI", "MindSword_BladeRadii"),
+    (0x65ABF9, 0x65AC00, "BMAGIC/MAGIC064.EMI", "WeretigerStreak_Offsets+0x1"),
+    (0x65AC10, 0x65AC20, "BMAGIC/MAGIC064.EMI", "WeretigerImage_UV"),
+    (0x65B7F5, 0x65B808, "BMAGIC/MAGIC103.EMI", "SimoonDust_Offsets+0x5", ("psx-us", "psx-eu-en", "psx-fr")),
+    (0x65BC7C, 0x65BC84, "BMAGIC/MAGIC130.EMI", "VenomRing_ScreenY"),
+    (0x65C309, 0x65C318, "BMAGIC/MAGIC223.EMI", "TempestGust_Angles+0x1"),
+    (0x65E010, 0x65E018, "WORLD03/AREA117.EMI", "EffectKind18Sub0E_States+0x18"),
+    (0x65E02C, 0x65E034, "WORLD03/AREA117.EMI", "EffectKind18Sub13_States+0x14"),
+    (0x65E8A4, 0x65E8B0, "WORLD03/AREA139.EMI", "EffectKind18Sub27_States+0x14", PSX),
+    (0x65E940, 0x65E948, "WORLD03/AREA140.EMI", "EffectKind18Sub42_States+0x78", PSX),
+    (0x65EB44, 0x65EB50, "WORLD04/AREA158.EMI", "EffectKind18Sub2E_States+0x14", ("psx-eu-en",)),
+    (0x65EB64, 0x65EB6C, "WORLD04/AREA160.EMI", "EffectKind18Sub2F_States+0x14", ("psx-eu-en",)),
+    (0x65EB80, 0x65EB88, "WORLD04/AREA161.EMI", "EffectKind18Sub30_States+0x14", ("psx-us", "psx-fr")),
+    (0x65EBB8, 0x65EBC0, "WORLD04/AREA163.EMI", "EffectKind18Sub32_States+0x14", ("psx-fr",)),
+    (0x65EBEC, 0x65EBF4, "WORLD04/AREA165.EMI", "EffectKind18Sub34_States+0x14"),
+    (0x65EC1C, 0x65EC28, "WORLD04/AREA166.EMI", "EffectKind18Sub35_States+0x14"),
+    (0x65EC74, 0x65EC80, "WORLD02/AREA105.EMI", "EffectKind18Sub40_States+0x10"),
+    (0x660D5C, 0x660D68, "SCENARIO/SCENA02.EMI", "Scena00_ObjectHooks+0x4"),
+    # The us set's sweep (docs/abc-sweep-1013-us.md 4): the ranked lists' page counter format
+    # (CommuRank_Show's kPageFormat, rest_4e.cpp); COMMU05.EMI's code section opens with it and
+    # its reader passes it to sprintf with the page + 1 and the count.
+    (0x6531F4, 0x6531F9, "ETC/COMMU05.EMI", "the faerie ranked lists' page counter format (CommuRank_Show)"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
@@ -165,6 +231,31 @@ WM_RECORDS, WM_COUNT, WM_STRIDE, WM_AREA = 0x653910, 11, 0x1C, 0x18
 # PSP builds: psxmap reads PSX-JP's place, which is PSP-JP's GAME.EMI place and not PSP-EU's
 # (its GAME.EMI is laid out 0x1000 earlier there); the PSX builds place it from their maps.
 CH_RECORDS, CH_COUNT, CH_STRIDE, CH_AREA = 0x662F28, 28, 8, 0
+# faerie: the sixty faeries' trait records (rest_4a_callees.h kRecordTraits 0x653200: 20 bytes
+# each, a name of 16 and the four stat bytes at +0x10 the community's ticks and the board's bars
+# read). ETC/COMMU00.EMI#0 holds the sixty as 9-byte records, a 5-byte name and the same four
+# stats at +5, on every disc (docs/abc-sweep-1013-village.md 2; DIV-0064 16 found them by the
+# stats). The stats are copied record for record, found by them at recipe time (all sixty, in
+# order); the names are the language layer's (labels group 16). Every build: the range stops at
+# record 59's stats, which sit in the area-limit run the maps place (or D261's twin row).
+FA_RECORDS, FA_COUNT, FA_STRIDE, FA_FIELD = 0x653200, 60, 0x14, 0x10
+FA_FILE, FA_DISC_STRIDE, FA_DISC_FIELD = "ETC/COMMU00.EMI", 9, 5
+FA_END = FA_RECORDS + FA_STRIDE * (FA_COUNT - 1) + FA_FIELD      # 0x6536AC: the area-limit run's start
+# verb: Menu_ButtonSets (0x66383C, nine 5-byte records: a count, up to four indices into the
+# verb table Menu_DrawButtons labels them from). Set 8 is (2, 0x14, 0x0B) on the PC and the
+# JP-shaped discs; the US, European, French and German releases gave its second button a verb
+# of their own, the 23rd of their 23-entry table (index 0x16, `End`), where the port's 22-entry
+# table has none - index 0x16 would read past the PC's pointer table into Menu_ButtonSets
+# itself, so the map refuses the disc's byte and the image held 0 (`Knd` / `Use`). The owner's
+# call (2026-10-13, docs/abc-sweep-1013-village.md 4.1 option 1): keep the port's `Quit`. The
+# rule maps the Western discs' 23rd verb to the PC's `Quit` (index 0x0B) for that one byte and
+# refuses any other disc byte; the record is found by sets 0..7, which every disc carries
+# verbatim, in VERB_FILE (the file the next twin row, 0x66386C, is read from). DIV-0101's
+# amendment of 2026-10-13.
+VERB_SETS, VERB_SET, VERB_SLOT = 0x66383C, 8, 2          # set 8's second verb: 0x663866
+VERB_AT = VERB_SETS + 5 * VERB_SET + VERB_SLOT
+VERB_FILE, VERB_WEST, VERB_PORT = "ETC/STATUS.EMI", 0x16, 0x0B   # the Western 23rd verb -> the port's Quit
+VERB_BUILDS = ("psx-us", "psx-eu-en", "psx-fr", "psx-de")
 # boxxy: the dialogue box's two position tables (window_task.cpp kBoxXY 0x66ADD8, kBoxAltXY
 # 0x66ADE8: 7 x (u8 x, u8 y) and two zero bytes each). The PSP's BOOT.BIN holds them as 7 x
 # (s16 x, s16 y), the two tables 0x1C apart, with entries 3..6 framed for its 384-wide view:
@@ -498,7 +589,7 @@ def build_fill(row, disc, elf, rule, srcs):
         for i in range((hi - lo) // 28):
             out[28 * i + 16:28 * i + 28] = blob[at + (k + 12) * i + k:at + (k + 12) * i + k + 12]
             mask[28 * i + 16:28 * i + 28] = [True] * 12
-    elif rl in ("psxmap", "twin"):
+    elif rl in ("psxmap", "pspmap", "twin"):
         out[:] = blob[at:at + hi - lo]
         mask = [True] * (hi - lo)
     elif rl == "boxxy":
@@ -521,6 +612,15 @@ def build_fill(row, disc, elf, rule, srcs):
             o = CH_STRIDE * i + CH_AREA
             out[o:o + 4] = blob[at + o:at + o + 4]
             mask[o:o + 4] = [True] * 4
+    elif rl == "faerie":
+        for i in range(faerie_records(hi - lo)):
+            o, d = FA_STRIDE * i + FA_FIELD, FA_DISC_STRIDE * i + FA_DISC_FIELD
+            out[o:o + 4] = blob[at + d:at + d + 4]
+            mask[o:o + 4] = [True] * 4
+    elif rl == "verb":
+        if hi - lo != 1 or lo != VERB_AT or blob[at] != VERB_WEST:
+            fail("%s: %s 0x%X is not set 8's Western 23rd verb (0x%02X)" % (row["build"], row["file"], row["addr"], VERB_WEST))
+        out[0], mask[0] = VERB_PORT, True
     elif rl == "msets":
         # A list is its entries and the bytes after them up to the next list (Area_ZoneTrack
         # reads the entry past the last as the fallback): the disc's span, as far as the
@@ -591,7 +691,7 @@ def fill(disc, bid, owner, rows=None, srcs=None):
 
 # ------------------------------------------------------------------ recipe
 
-def find_rows(disc, bid, pc):
+def find_rows(disc, bid, pc, ref_srcs=None):
     """Every fill this build's disc gives, located by the rules above and kept only
     where its bytes equal BOF3.exe's: recipe rows."""
     psp = bid in PSP
@@ -652,6 +752,18 @@ def find_rows(disc, bid, pc):
                      "file": wm[0], "section": wm[1], "addr": wm[2]})
     else:
         print("  %s wmrec: the world maps' record table not found in ETC/GAME.EMI" % bid)
+    fa = records_place(srcs, pc, FA_FILE, FA_RECORDS, FA_COUNT, FA_STRIDE, FA_FIELD, FA_DISC_STRIDE, FA_DISC_FIELD)
+    if fa:
+        rows.append({"build": bid, "rule": "faerie", "pc": FA_RECORDS, "pc_end": FA_END,
+                     "file": fa[0], "section": fa[1], "addr": fa[2]})
+    else:
+        print("  %s faerie: the faeries' trait records not found in %s" % (bid, FA_FILE))
+    v = verb_place(srcs, pc) if bid in VERB_BUILDS else None
+    if v:
+        rows.append({"build": bid, "rule": "verb", "pc": VERB_AT, "pc_end": VERB_AT + 1, "file": VERB_FILE,
+                     "section": v[0], "addr": v[1]})
+    elif bid in VERB_BUILDS:
+        print("  %s verb: set 8 with the 23rd verb not found in %s" % (bid, VERB_FILE))
     if psp:
         ch = records_place(srcs, pc, "ETC/GAME.EMI", CH_RECORDS, CH_COUNT, CH_STRIDE, CH_AREA)
         if ch:
@@ -686,10 +798,14 @@ def find_rows(disc, bid, pc):
     if not psp:
         return kept
     taken = {x for r in kept for x in range(r["pc"], r["pc_end"])}
-    psx = psxmap_rows(disc, bid, pc, srcs, taken)
-    print("  %s psxmap: %d runs, %d bytes (%d of them non-zero on the PC) from the PSP's own files at %s's places" % (
-        bid, len(psx), sum(r["filled"] for r in psx),
-        sum(1 for r in psx for x in range(r["pc"], r["pc_end"]) if pc[x - DATA_LO]), PSX_MAP))
+    psx = psxmap_rows(disc, bid, pc, srcs, taken, ref_srcs)
+    for rl, where in (("psxmap", "at %s's places" % PSX_MAP), ("pspmap", "at their own places (%s's segments moved)" % PSX_MAP)):
+        rs = [r for r in psx if r["rule"] == rl]
+        print("  %s %s: %d runs, %d bytes (%d of them non-zero on the PC) from the PSP's own files %s" % (
+            bid, rl, len(rs), sum(r["filled"] for r in rs),
+            sum(1 for r in rs for x in range(r["pc"], r["pc_end"]) if pc[x - DATA_LO]), where))
+        for r in rs if rl == "pspmap" else ():
+            print("  %s pspmap 0x%06X..0x%06X from %s#%s 0x%X" % (bid, r["pc"], r["pc_end"], r["file"], r["section"], r["addr"]))
     rows = kept + psx
     u = unwide_row(bid, pc)
     if u:
@@ -734,7 +850,7 @@ def unwide(bid, img, owner, rows=None):
     return [(a, raw, "unwide", 0) for a, raw in got]
 
 
-def psxmap_rows(disc, bid, pc, srcs, taken):
+def psxmap_rows(disc, bid, pc, srcs, taken, ref_srcs=None):
     """What the PSP build's image leaves unfilled that PSX_MAP's segments (exe_maps,
     exe-places.tsv) place from a file the PSP disc also has: each unfilled run of such
     a segment - not an engine-own byte, not a language range of exe-gaps.tsv, not a
@@ -759,6 +875,7 @@ def psxmap_rows(disc, bid, pc, srcs, taken):
         if (s["file"], s["section"]) not in srcs:
             continue
         base, blob = srcs[(s["file"], s["section"])]
+        ref = ref_srcs.get((s["file"], s["section"])) if ref_srcs else None
         x = s["pc"]
         while x < s["pc_end"]:
             if owner[x - DATA_LO] is not None or x in skip:
@@ -767,12 +884,47 @@ def psxmap_rows(disc, bid, pc, srcs, taken):
             y = x
             while y < s["pc_end"] and owner[y - DATA_LO] is None and y not in skip:
                 y += 1
+            want = pc[x - DATA_LO:y - DATA_LO]
             at = s["addr"] + x - s["pc"] - base
-            if blob[at:at + y - x] == pc[x - DATA_LO:y - DATA_LO] and any(pc[x - DATA_LO:y - DATA_LO]):
-                out.append({"build": bid, "rule": "psxmap", "pc": x, "pc_end": y, "file": s["file"],
-                            "section": s["section"], "addr": s["addr"] + x - s["pc"], "filled": y - x})
+            if any(want):
+                if blob[at:at + y - x] == want:
+                    out.append({"build": bid, "rule": "psxmap", "pc": x, "pc_end": y, "file": s["file"],
+                                "section": s["section"], "addr": s["addr"] + x - s["pc"], "filled": y - x})
+                elif ref is not None:
+                    own = own_place(blob, base, ref[1], s["addr"] + x - s["pc"] - ref[0], want)
+                    if own is not None:
+                        out.append({"build": bid, "rule": "pspmap", "pc": x, "pc_end": y, "file": s["file"],
+                                    "section": s["section"], "addr": own, "filled": y - x})
             x = y
     return out
+
+
+OWN_CTX = 16                # pspmap: the bytes either side of a run that anchor it
+
+
+def own_place(blob, base, ref_blob, ref_at, want):
+    """pspmap: where this PSP disc's copy of a file holds a run that PSX_MAP's disc holds at
+    `ref_at` (an offset into ref_blob, the same file there) when the PSP's file is laid out
+    otherwise (PSP-EU's GAME.EMI from 0x1000 earlier on, docs/exe-image-twins-1013.md 3): the
+    one place whose bytes are BOF3.exe's run `want` with PSX_MAP's disc's OWN_CTX bytes just
+    before it or just after it beside them (a context of at least four distinct values). The
+    disc address, or None when no place or more than one has that."""
+    n = len(want)
+    sides = []
+    before = ref_blob[ref_at - OWN_CTX:ref_at] if ref_at >= OWN_CTX else b""
+    after = ref_blob[ref_at + n:ref_at + n + OWN_CTX]
+    for ctx, off in ((before, OWN_CTX), (after, -n)):
+        if len(ctx) == OWN_CTX and len(set(ctx)) >= 4:
+            sides.append((ctx, off))
+    found = set()
+    for ctx, off in sides:
+        i = blob.find(ctx)
+        while i >= 0:
+            c = i + off
+            if 0 <= c and blob[c:c + n] == want:
+                found.add(c)
+            i = blob.find(ctx, i + 1)
+    return base + found.pop() if len(found) == 1 else None
 
 
 def wheel_place(elf, pc):
@@ -912,10 +1064,14 @@ def wmrec_place(srcs, pc):
     return records_place(srcs, pc, "ETC/GAME.EMI", WM_RECORDS, WM_COUNT, WM_STRIDE, WM_AREA)
 
 
-def records_place(srcs, pc, file, records, count, stride, field):
+def records_place(srcs, pc, file, records, count, stride, field, disc_stride=None, disc_field=None):
     """The disc's copy of a PC record table in `file`: the first place whose `count`
-    records of `stride` bytes hold BOF3.exe's 4-byte words at +`field` (wmrec, cellhk).
-    (file, section, address of record 0) or None."""
+    records of `stride` bytes hold BOF3.exe's 4-byte words at +`field` (wmrec, cellhk) -
+    or, where the disc's records have another shape (faerie), whose records of
+    `disc_stride` bytes hold them at +`disc_field`. (file, section, address of record 0)
+    or None."""
+    ds = stride if disc_stride is None else disc_stride
+    df = field if disc_field is None else disc_field
     want = [pc[records + stride * i + field - DATA_LO:records + stride * i + field + 4 - DATA_LO]
             for i in range(count)]
     for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
@@ -923,10 +1079,32 @@ def records_place(srcs, pc, file, records, count, stride, field):
             continue
         a = blob.find(want[0])
         while a >= 0:
-            if all(blob[a + stride * i:a + stride * i + 4] == want[i] for i in range(count)):
-                return f, s, base + a - field
+            if all(blob[a + ds * i:a + ds * i + 4] == want[i] for i in range(count)):
+                return f, s, base + a - df
             a = blob.find(want[0], a + 1)
     return None
+
+
+def verb_place(srcs, pc):
+    """VERB_FILE's copy of Menu_ButtonSets whose sets 0..7 are BOF3.exe's and whose set 8
+    is (2, 0x14, VERB_WEST): (section, the disc address of set 8's second verb) or None."""
+    sets = pc[VERB_SETS - DATA_LO:VERB_SETS + 5 * VERB_SET - DATA_LO]
+    head = pc[VERB_AT - VERB_SLOT - DATA_LO:VERB_AT - DATA_LO]
+    for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
+        if f != VERB_FILE:
+            continue
+        a = blob.find(sets)
+        while a >= 0:
+            b = a + len(sets)
+            if blob[b:b + VERB_SLOT] == head and blob[b + VERB_SLOT] == VERB_WEST:
+                return s, base + b + VERB_SLOT
+            a = blob.find(sets, a + 1)
+    return None
+
+
+def faerie_records(n):
+    """How many trait records' stats a faerie row of n bytes from FA_RECORDS covers."""
+    return (n - FA_FIELD - 4) // FA_STRIDE + 1 if n >= FA_FIELD + 4 else 0
 
 
 def twin_place(srcs, pc, lo, hi, file, nth=0):
@@ -951,8 +1129,10 @@ def write_recipe(rows):
              "# from `file` (BOOT.BIN or an EMI and its section) at `addr` - rows8 (Magic_Rows' file ids),",
              "# pairs (EventBattle_Records' file array), holes (Effect_HpDamageVariance's set-file tables),",
              "# widen<k> (the formation wheel's spots, the disc's name k bytes), psxmap (a PSP disc's own EMI",
-             "# at the PSX-JP map's place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),",
-             "# msets (the zone music sets from BOOT.BIN's packed lists) - and how many bytes it fills.",
+             "# at the PSX-JP map's place; pspmap: the same segment at this disc's own place), twin (a short run verbatim in its reader's overlay, psp_exe.TWINS),",
+             "# msets (the zone music sets from BOOT.BIN's packed lists), faerie (the faeries' stats from",
+             "# COMMU00's 9-byte records), verb (set 8's Western 23rd verb as the port's Quit) - and how",
+             "# many bytes it fills.",
              "# A row is written only when every",
              "# byte equals BOF3.exe's.",
              "# Addresses and counts only (CLAUDE.md rule 1).",
@@ -969,8 +1149,13 @@ def cmd_recipe(a):
     import exe_tables
     pc, _ = exe_tables.pc_data(os.path.join(a.game, "BOF3.exe"))
     rows = []
-    for bid, disc in exe_tables.discs(a.disc):
-        rows += find_rows(disc, bid, pc)
+    discs = exe_tables.discs(a.disc)
+    ref = dict(discs).get(PSX_MAP)
+    if ref is None and any(bid in PSP for bid, _ in discs):
+        fail("recipe: a PSP build's pspmap rows are found through the %s disc's own bytes; give it too" % PSX_MAP)
+    ref_srcs = sources_of(ref) if ref is not None else None
+    for bid, disc in discs:
+        rows += find_rows(disc, bid, pc, ref_srcs if bid in PSP else None)
     write_recipe(rows)
     print("-> %s: %d rows" % (os.path.relpath(RECIPE, ROOT), len(rows)))
 
@@ -1093,13 +1278,18 @@ def check():
             last = r["pc_end"]
             if n % {"rows8": 8, "pairs": 4, "holes": 2, "widen8": 28, "widen10": 28}.get(r["rule"], 1):
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes do not fit %s" % (bid, r["pc"], n, r["rule"]))
-            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "boxxy": 2 * BOX_ENTRIES * BOX_TABLES}.get(r["rule"])
+            want = {"rows8": n // 2, "pairs": n // 2, "holes": n, "widen8": 12 * n // 28, "widen10": 12 * n // 28, "psxmap": n, "pspmap": n, "twin": n, "wmrec": 4 * n // WM_STRIDE, "cellhk": 4 * n // CH_STRIDE, "faerie": 4 * faerie_records(n), "boxxy": 2 * BOX_ENTRIES * BOX_TABLES, "verb": n}.get(r["rule"])
             if r["rule"] == "unwide" and (bid not in PSP or r["pc"] != UNWIDE[0] or r["filled"] != 2 * len(UNWIDE)):
                 errs.append("exe-psp.tsv: %s 0x%06X: an unwide row off the rule" % (bid, r["pc"]))
             if want is not None and r["filled"] != want:
                 errs.append("exe-psp.tsv: %s 0x%06X: %d bytes filled, the rule fills %d" % (bid, r["pc"], r["filled"], want))
             if r["rule"] == "cellhk" and (bid not in PSP or r["pc"] != CH_RECORDS):
                 errs.append("exe-psp.tsv: %s 0x%06X: a cellhk row off the rule" % (bid, r["pc"]))
+            if r["rule"] == "verb" and (bid not in VERB_BUILDS
+                                        or (r["pc"], r["pc_end"], r["file"]) != (VERB_AT, VERB_AT + 1, VERB_FILE)):
+                errs.append("exe-psp.tsv: %s 0x%06X: a verb row off the rule" % (bid, r["pc"]))
+            if r["rule"] == "faerie" and (r["pc"], r["pc_end"], r["file"]) != (FA_RECORDS, FA_END, FA_FILE):
+                errs.append("exe-psp.tsv: %s 0x%06X: a faerie row off the rule" % (bid, r["pc"]))
             if r["rule"] not in ("rows8", "msets", "wmrec", "cellhk") and any(x in ptr for x in range(r["pc"], r["pc_end"])):
                 errs.append("exe-psp.tsv: %s 0x%06X: over a pointer word" % (bid, r["pc"]))
     try:

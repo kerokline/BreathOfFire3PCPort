@@ -6,6 +6,7 @@ frames, compared picture by picture (docs/abc-harness.md).
     python tools/abc_run.py prepare [--set eu]              # caches, installs, launcher (idempotent, offline)
     python tools/abc_run.py run --set eu --route attract    # the attract sequence on each install, one at a time
     python tools/abc_run.py run --set eu --route tools/recipes/combat.txt
+    python tools/abc_run.py run --set eu --route fairyVillage --save fairyVillage   # a recipe with no `# save` header
     python tools/abc_run.py compare --set eu --route combat # again, from the frames on disk
     python tools/abc_run.py all --set eu --route attract    # prepare, run, compare
 
@@ -250,8 +251,33 @@ def prepare_base(i, logs):
     stamp_write(st, {'want': want, 'installed': time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
+def users_of(folder):
+    """The processes running from a launcher folder: a launcher or game exe
+    under it, or a game whose bof3x.dll is the folder's. [(pid, path)]."""
+    want = os.path.join(os.path.normcase(os.path.abspath(folder)), '')
+    ps = ("Get-Process -Name BOF3,bof3x,bof3x-launcher -ErrorAction SilentlyContinue | ForEach-Object { "
+          "$m = $_.Modules | Where-Object { $_.ModuleName -eq 'bof3x.dll' } | Select-Object -First 1; "
+          "'{0}|{1}|{2}' -f $_.Id, $_.Path, $m.FileName }")
+    out = subprocess.run(['powershell', '-NoProfile', '-Command', ps], capture_output=True, text=True).stdout
+    found = []
+    for line in out.splitlines():
+        pid, _, rest = line.strip().partition('|')
+        for path in rest.split('|'):
+            if pid.isdigit() and path and os.path.normcase(os.path.abspath(path)).startswith(want):
+                found.append((int(pid), path))
+                break
+    return found
+
+
 def prepare_launcher(folder, build):
     os.makedirs(folder, exist_ok=True)
+    busy = users_of(folder)
+    if busy:
+        # copying over a file a running game maps failed with WinError 32 part
+        # way through the set (2026-10-13): name the holder before touching any
+        sys.exit(f'{folder} is in use: ' + '; '.join(f'pid {p} ({path})' for p, path in busy) +
+                 '. prepare refreshes this launcher copy and cannot while a game runs from it - let that run '
+                 'end (another harness on this root?) or end that pid, then prepare again')
     if os.path.exists(os.path.join(folder, 'bof3x.ini')):
         sys.exit(f'{folder} holds a bof3x.ini: the harness wants an ini-less launcher (the play ini\'s '
                  f'cheat.exp=10 and opt= would reach the runs)')
@@ -352,7 +378,7 @@ def run_one(cfg, i, recipe, out, a):
             env['BOF3X_STATEHASH_SKIP'] = os.path.abspath(a.statehash_skip)
     launcher = os.path.join(i['launcher'], 'bof3x-launcher.exe')
     cmd = [sys.executable, os.path.join(ROOT, 'tools', 'input_run.py'), recipe, '--out', out, '--no-front',
-           '--launcher', launcher, '--game', i['game'], '--minutes', str(a.minutes), '--slot0-hold']
+           '--launcher', launcher, '--game', i['game'], '--minutes', str(a.minutes), '--slot0-hold'] + a.save_args
     if i.get('lang'):
         cmd += ['--lang', i['lang']]
     if a.speed != 1:
@@ -446,11 +472,47 @@ def git_head():
         return ''
 
 
+def save_args(cfg, recipe, a):
+    """The input_run.py arguments that decide what slot 0 holds, the same on
+    every side. A recipe with no `# save NAME` header loads whatever each
+    install's own slot 0 holds, so the sides can start from different saves
+    (2026-10-13, fairyVillage): refused unless --save names one or --no-save
+    says the recipe loads none."""
+    import recipe_saves
+    if a.save and a.no_save:
+        sys.exit('--save and --no-save together: pick one')
+    if a.no_save:
+        print("slot 0: --no-save, each install's own slot 0 stays (the recipe must load no save)")
+        return ['--no-save']
+    name = a.save
+    if not name:
+        with open(recipe, encoding='utf-8', errors='replace') as fh:
+            heads = [m for m in map(recipe_saves.HEADER.match, fh) if m]
+        if heads:
+            name = heads[0][1]
+        elif a.route == 'attract':
+            return []                       # the harness's own attract recipe: no input, no load
+        else:
+            sys.exit(f'{recipe} has no `# save NAME` header: each install would load its own slot 0, so the '
+                     f'sides could start from different saves. Fix: add `# save NAME` to the recipe (the save '
+                     f'is tools/recipe_saves/NAME.DAT; `python tools/recipe_saves.py list`), or pass '
+                     f'--save NAME, or --no-save if the recipe loads no save (title-only, NEW GAME)')
+    file = name if name.upper().endswith('.DAT') else name + '.DAT'
+    dirs = [cfg.recipe_saves, recipe_saves.DIR]
+    if not any(os.path.isfile(os.path.join(d, file)) for d in dirs):
+        sys.exit(f'no recipe save {file} in ' + ' or '.join(dirs) +
+                 ' (`python tools/recipe_saves.py import SLOT NAME` makes one)')
+    print(f'slot 0: {file} on every side' + (' (--save)' if a.save else " (the recipe's header)"))
+    return ['--save', name] if a.save else []
+
+
 def run(cfg, installs, a):
     name = route_name(a.route)
     rdir = os.path.join(cfg.root, 'runs', f'{a.tag or a.set}_{name}')
     os.makedirs(rdir, exist_ok=True)
     recipe = recipe_for(a.route, rdir, a.frames)
+    if getattr(a, 'save_args', None) is None:
+        a.save_args = save_args(cfg, recipe, a)
     metas = []
     for i in installs:
         if not os.path.exists(os.path.join(i['launcher'], 'bof3x-launcher.exe')):
@@ -704,6 +766,10 @@ def main():
     ap.add_argument('--only', help='comma-separated install names instead of the set\'s')
     ap.add_argument('--tag', help='name the run folder and report by this instead of the set (a repeat, a subset)')
     ap.add_argument('--route', default='attract', help='"attract", or a recipe (a path, or a name in tools/recipes)')
+    ap.add_argument('--save', metavar='NAME', help="the recipe save every side loads (tools/recipe_saves/NAME.DAT), "
+                    "in place of the recipe's `# save NAME` header; a recipe with neither is refused")
+    ap.add_argument('--no-save', action='store_true', help="the recipe loads no save (title-only, NEW GAME): run it "
+                    "with no header, each install's slot 0 left as it is")
     ap.add_argument('--every', type=int, default=EVERY, help=f'a timed frame every N recipe frames (default {EVERY})')
     ap.add_argument('--frames', type=int, default=ATTRACT_FRAMES, help='the attract route\'s length in recipe frames')
     ap.add_argument('--minutes', type=float, default=15.0, help='per run, before input_run gives up')
@@ -719,6 +785,8 @@ def main():
     installs = cfg.members(a.set, a.only)
     os.makedirs(cfg.root, exist_ok=True)
     t0 = time.time()
+    if a.cmd in ('run', 'all') and a.route != 'attract':
+        a.save_args = save_args(cfg, recipe_for(a.route, None, a.frames), a)   # before `all` prepares
     if a.cmd in ('prepare', 'all'):
         prepare(cfg, installs, a)
     if a.cmd in ('run', 'all'):

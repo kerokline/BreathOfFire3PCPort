@@ -41,6 +41,10 @@ installs = ["pc-en150", "psx-eu", "psp-eu"]
 what = "en-US: the PC install against the US PSX disc alone"
 installs = ["pc-enus", "psx-us"]
 
+[set.jp]
+what = "ja-JP, the one language all three builds carry natively: the PC install with the Japan disc's layer, the Japan PSX disc alone, the PSP-JP disc alone"
+installs = ["pc-jajp", "psx-jp", "psp-jp"]
+
 [[install]]
 name = "pc-en150"
 what = "the PC install with the cache's en-150 layer (PC DAT\\ + BOF3.exe + the European disc)"
@@ -98,3 +102,38 @@ build_lang = ["en-US"]
 lang = "en-US"
 exeimage = true
 traits = ["psx", "en-US"]
+
+[[install]]
+name = "pc-jajp"
+what = "the PC install with the cache's ja-JP layer (PC DAT\\ + BOF3.exe + the Japan disc)"
+kind = "pc"
+game = "{root}/g_pc"
+cache = "{root}/c_pc_jp"
+build = ["{pc}/DAT", "{pc}/BOF3.exe", "{discs}/Breath of Fire III (Japan).cue"]
+build_lang = ["ja-JP"]
+lang = "ja-JP"
+traits = ["pc", "ja-JP"]
+
+[[install]]
+name = "psx-jp"
+what = "the Japan PSX disc alone (install --base)"
+kind = "base"
+game = "{root}/g_psxjp"
+cache = "{root}/c_psxjp"
+build = ["{discs}/Breath of Fire III (Japan).cue"]
+build_lang = ["ja-JP"]
+lang = "ja-JP"
+exeimage = true
+traits = ["psx", "ja-JP"]
+
+[[install]]
+name = "psp-jp"
+what = "the PSP-JP disc alone (install --base)"
+kind = "base"
+game = "{root}/g_pspjp"
+cache = "{root}/c_pspjp"
+build = ["{discs}/Breath of Fire III (PSP) (Japan).iso"]
+build_lang = ["ja-JP"]
+lang = "ja-JP"
+exeimage = true
+traits = ["psp", "ja-JP"]

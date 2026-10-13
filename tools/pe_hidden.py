@@ -9,7 +9,7 @@ becomes the tail of whatever precedes it (docs/attract-remaining.md section 3).
         -> analysis/pc_hidden.json, analysis/calltrace/entries_hidden.txt
     python tools/pe_hidden.py classify analysis/calltrace/hidden_a/bof3x.calltrace.tsv
         -> analysis/pc_hidden_reached.json
-    python tools/pe_hidden.py plus
+    python tools/pe_hidden.py plus [--also 571BE0,571D30,571E20]
         -> analysis/calltrace/entries_plus_hidden.txt
 
 `scan`'s rule: an address inside a recorded extent, 16-aligned, preceded by a
@@ -64,6 +64,27 @@ class Image:
         return struct.unpack_from('<I', self.data, self.off(va))[0]
 
 
+def sweep(md, code, va):
+    """Every instruction of a linear sweep of `code` at `va`, and the
+    addresses of the bytes it could not decode. capstone's disasm ends at the
+    first such byte without a word; until 2026-10-13 this scan took that as
+    the extent's end, and 29 extents (76,512 bytes of game code) were never
+    examined - GameMode3_Run 0x495BB0 and the twelve after it among them
+    (docs/hidden-start-scan.md section 1). The sweep now starts again one
+    byte on."""
+    out, stray, pos = [], [], 0
+    while pos < len(code):
+        got = False
+        for ins in md.disasm(code[pos:], va + pos):
+            out.append(ins)
+            pos = ins.address - va + ins.size
+            got = True
+        if not got:
+            stray.append(va + pos)
+            pos += 1
+    return out, stray
+
+
 def cmd_scan(a):
     img = Image(a.exe)
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
@@ -78,11 +99,13 @@ def cmd_scan(a):
             if img.in_text(x):
                 ptrs[x].append((s['name'], s['va'] + i))
 
-    found, tables = [], 0
+    found, tables, stops = [], 0, []
     for f in funcs:
         e, size = f['entry'], f['size']
         code = img.data[img.off(e):img.off(e) + size]
-        insns = list(md.disasm(code, e))
+        insns, stray = sweep(md, code, e)
+        if stray:
+            stops.append((e, stray))
         targets = set()
         for ins in insns:
             if ins.mnemonic.startswith('j') or ins.mnemonic == 'call':
@@ -122,6 +145,9 @@ def cmd_scan(a):
     print(f'{len(found)} hidden entries in {len({h["host"] for h in found})} extents '
           f'({tables} jump tables dropped); {sum(1 for h in found if h["refs"])} have a pointer '
           f'in the image -> {a.out}, {a.entries}')
+    print(f'undecodable: {sum(len(s) for _, s in stops)} bytes in {len(stops)} extents, the sweep resumed past '
+          f'each: ' + ', '.join(f'0x{e:X} at ' + ','.join(f'0x{x:X}' for x in s[:3]) + ('...' if len(s) > 3 else '')
+                                for e, s in stops[:10]) + (f', ... ({len(stops) - 10} more extents)' if len(stops) > 10 else ''))
 
 
 def cmd_classify(a):
@@ -180,9 +206,21 @@ def cmd_plus(a):
         out[e] = end - e
     for r in reached:
         out[r['entry']] = r['size']
+    # --also: hidden starts to list though the reach trace never entered them.
+    # Until 2026-10-13 such lines were appended by hand and every `plus` run
+    # dropped them (docs/world-map.md: AreaMap_HeaderPass's handlers 0x571BE0,
+    # 0x571D30, 0x571E20, added 2026-09-23). The size is the scan's.
+    by_entry = {h['entry']: h for h in hidden}
+    also = [int(x, 16) for x in (a.also or '').replace(',', ' ').split()]
+    unknown = [x for x in also if x not in by_entry]
+    if unknown:
+        raise SystemExit('--also: not hidden starts in %s: %s' % (a.hidden, ', '.join(f'0x{x:X}' for x in unknown)))
+    for x in also:
+        out[x] = by_entry[x]['size']
     with open(a.out, 'w', newline='\n') as f:
-        f.write(f'# {a.entries} ({len(known)}) plus {len(reached)} reached hidden entries; '
-                f'{cut} known sizes cut at the next hidden start (tools/pe_hidden.py plus)\n')
+        f.write(f'# {a.entries} ({len(known)}) plus {len(reached)} reached hidden entries'
+                + (f' and {len(also)} named by --also ({" ".join(f"{x:X}" for x in also)})' if also else '')
+                + f'; {cut} known sizes cut at the next hidden start (tools/pe_hidden.py plus)\n')
         for e in sorted(out):
             f.write(f'{e:08X} {out[e]:X}\n')
     print(f'{len(out)} entries, {cut} sizes cut -> {a.out}')
@@ -206,6 +244,8 @@ def main():
     p = sub.add_parser('plus')
     p.add_argument('--entries', default='analysis/calltrace/entries.txt')
     p.add_argument('--out', default='analysis/calltrace/entries_plus_hidden.txt')
+    p.add_argument('--also', metavar='HEX[,HEX]',
+                   help='hidden starts to include whether reached or not (the size from --hidden)')
     p.set_defaults(fn=cmd_plus)
     a = ap.parse_args()
     a.fn(a)

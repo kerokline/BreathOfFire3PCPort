@@ -8467,7 +8467,7 @@ cc = "__stdcall"
 ret = "int"
 params = "void **decoder"
 status = "hypothesis"
-evidence = "call site 0x5A6D68 (Music_OpenDecoder), 2026-09-22: stdcall (ret 4 at 0x5AE142), writes the handle through its argument; non-zero is failure. The MP3 decoder (0x5AB000..0x5B9380, unidentified library) is out of scope; named by the use."
+evidence = "call site 0x5A6D68 (Music_OpenDecoder), 2026-09-22: stdcall (ret 4 at 0x5AE142), writes the handle through its argument; non-zero is failure. The MP3 decoder (0x5AB000..0x5B9380, unidentified library) is out of scope; named by the use. Corrected 2026-10-13 (capstone over BOF3.exe and a byte scan of every E8/E9): the decoder's range starts at 0x5ADEA0, not 0x5AB000 - below it lie the software renderer's pixel converters (docs/hidden-start-scan.md 4.2) and, at 0x5ADE90, a jmp through the .rdata import slot 0x5C400C; 0x5ADEA0 is a helper called 17 times, every call from decoder code (0x5B4DFF..0x5B8F6C); this function, 0x5ADF00, is the decoder's lowest entry called from outside it, once, from 0x5A6D68."
 note = "DIV-0091 (2026-10-10): answered by minimp3 through sound::Callees (src/audio/mp3.cpp); nothing of ours calls this address unless BOF3X_MP3=original. Not injected: the decoder's 200 functions leave with the cutover."
 
 [[func]]

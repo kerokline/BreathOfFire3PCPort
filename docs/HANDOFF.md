@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-13: `main` is `a7c7a9e5`, PRs #49..#56 merged; tonight's `cleanup/abc-crash-1012` is unpushed and ready for its PR, D260..D263 fixed - item 1 below)
+**Status:** IN PROGRESS (2026-10-13 night: `main` is `d0d9162a` (PR #57 merged); `platform/more-hardening` holds the away day's fifteen merges and its fold-in, unpushed - the PR at the owner's word, item 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,101 +14,126 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**10,088 functions are ours in the exe host, 10,087 in a hosted run** (the `inject:` line at `a7c7a9e5`); the game's
-own code is all ours since the platform round's step 3 (PR #43). `main` is `a7c7a9e5`, with PRs #49..#56 merged:
-#49 the testing catch-up and the four no-owner items, #50 the runtime's allocator, #51 state 2's prework
-([`state2-proof.md`](state2-proof.md)), #52 the Jukebox ([`music-player.md`](music-player.md) - the owner uses it a
-lot, "it's great", and named every song from the box set), #53 state 3, our own `bof3x.exe`
-([`state3-build.md`](state3-build.md)), #54 the event battle's music restart (heard), #55 the disc-only round
-([`disc-only-round.md`](disc-only-round.md)) and #56 the PSP-only round ([`psp-only-round.md`](psp-only-round.md)).
-Neither install from a disc alone has been played. **Tonight's branch, `cleanup/abc-crash-1012`** (unpushed,
-`git log --oneline main..HEAD`), holds two docs-audit passes and the root README's rewrite; the areas 16 / 45
-re-run - no crash on any of seven installs, the PSP builds' trees (D258) and PSP-EU's cell hooks (D259) fixed by
-`tools/psp_exe.py` rows, DIV-0101 amended ([`visual-findings-1012.md`](visual-findings-1012.md) 10); and the A/B/C
-sweep ([`abc-sweep-1012.md`](abc-sweep-1012.md): ten routes on the `eu` triple, no regression between builds, the
-PC path's state hash clean on combat, shop and the world-map route). The sweep found four defects, **D260..D263**, all
-gaps of the disc-built image and all **fixed** by `twin` rows ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)):
-D260 was a crash a player could reach (PSP-EU, the faerie village); `fairyVillage` now runs to its end on all three
-`eu` installs. Two more seen on that route, D264 (the village's stats zero) and D265, are open. The regression
-check is the state hash ([`state-hash.md`](state-hash.md); the references `cn_<route>_orig2` / `_orig2b` in
-`analysis/statehash`) and, across installs, the A/B/C harness ([`abc-harness.md`](abc-harness.md)).
+**10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged on 2026-10-13: no takeovers); the
+game's own code is all ours since the platform round's step 3 (PR #43). `main` is `d0d9162a`: PRs #49..#57, the last
+the 2026-10-12 night's `cleanup/abc-crash-1012` (the A/B/C sweep and D258..D263's fixes). **On 2026-10-13, the owner
+away, fifteen agent branches (`away/1013-*`) were merged one at a time into `platform/more-hardening`** (unpushed,
+`git log --first-parent --oneline d0d9162a..HEAD`), each with the repository checks and, where `src/` changed, the
+build and the headless self-tests (`'*'` and `en-US`, exit 0 each). They answered most of the disc-data inventory,
+closed the village's stats (D264, D265), built the base policy (DIV-0115), D56's repair (DIV-0116), four label
+groups (DIV-0117..0120), the WAV dump and two A/B/C sweeps (us, jp) and one eye batch - and found 24 defects,
+numbered **D266..D289** at the fold-in ([`known-defects.md`](known-defects.md)), one a crash a player can reach on a
+disc-only Japanese install (D279) and one a hang on every PSX-only install's inn and camp (D255, amended). Nothing
+of the day was played by the owner; the questions it raised are one section of
+[`owner-review.md`](owner-review.md), "2026-10-13, the away day". The regression check is the state hash
+([`state-hash.md`](state-hash.md); the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, across
+installs, the A/B/C harness ([`abc-harness.md`](abc-harness.md)) - and **the state hash shows a signal not yet
+chased** (item 2).
+
+**The day's merges on `platform/more-hardening`**, in order (each merge commit names its branch):
+
+1. the disc-data inventory - [`disc-data-inventory.md`](disc-data-inventory.md), `tools/cache_inventory.py`;
+2. the exe's remaining Chinese - [`exe-chinese-remaining.md`](exe-chinese-remaining.md), `text_scan.py --ledger`;
+3. the harness and tooling hardening - `# save` refusal, `prepare` preflight, `pe_funcs` / `pe_hidden` past
+   undecodable bytes, `BOF3X_DATLOG` ([`hidden-start-scan.md`](hidden-start-scan.md) 8,
+   [`asset-loading-path.md`](asset-loading-path.md) 5, [`abc-harness.md`](abc-harness.md));
+4. the village fixes - D264's `faerie` rule, D265 / D247 ([`abc-sweep-1013-village.md`](abc-sweep-1013-village.md));
+5. the exe-image twins - thirteen one-file rows, `pspmap`, 26 game-value rows (kept)
+   ([`exe-image-twins-1013.md`](exe-image-twins-1013.md));
+6. the arena renders, inventory Q1 / Q3 - [`arena-render-1013.md`](arena-render-1013.md), `tools/arena_render.py`;
+7. the WAV dump, `BOF3X_WAV_DIR`, the `music` step, the listen set - [`wav-dump.md`](wav-dump.md);
+8. the key icons, inventory Q5 - [`key-icons-by-mapping.md`](key-icons-by-mapping.md);
+9. the recipe saves and entry lists - `fairyVillageNews` / `dragonMenu` headers, the lists replaced
+   ([`hidden-start-scan.md`](hidden-start-scan.md) 8);
+10. the disc-data policy - `recipes/prefer.toml`, DIV-0115, DIV-0114 corrected, set 8's `verb` rule
+    ([`disc-data-inventory.md`](disc-data-inventory.md) 9);
+11. the us sweep - [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md), the `0x6531F4` page-counter twin;
+12. D56's repair - DIV-0116 ([`d56-encounter-bounds.md`](d56-encounter-bounds.md));
+13. the labels round - DIV-0117..0120 ([`labels-1013.md`](labels-1013.md));
+14. the jp sweep - [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md), `[set.jp]`;
+15. the eye batch - [`eye-batch-1013.md`](eye-batch-1013.md), `tools/eye_sheet.py`, `wide_seams.py`,
+    `launcher_host/capture_page.py`.
+
+Then the fold-in (three docs commits: the ledger's DIV-0101 amendment, D266..D289, owner-review's section).
 
 ## Pick up here
 
-1. **Push `cleanup/abc-crash-1012` and open its PR, at the owner's word.** Everything is merged on it: the
-   docs audit and README, the areas 16 / 45 re-run (D258, D259), the sweep, and the D260..D263 fixes
-   ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md); DIV-0101 amended twice). Checked at the tip
-   (2026-10-13): `ledger_check` 114 entries 0 errors, `importer.py check`, `exe_tables.py check`, `psp_exe.py
-   check`, `suites.py check` clean; every one of the 11 non-merge commits signed off (CLAUDE.md rule 7); no `src/`
-   change, so `main`'s build and self-tests stand. The exe host on the PSX-EU-only and PSP-EU-only installs exit 0
-   with the new images. Still open from tonight: **D264** - the village's faerie stats zero on both disc images, so
-   the village simulates differently (a new rule shape from `COMMU00`'s nine-byte records, not a `twin`) - and
-   **D265**, PSP-EU's blank "Culture" label; `Menu_ButtonSets+0x2A` on the PSX builds, now classed `unread`, not
-   looked at.
+1. **Push `platform/more-hardening` and open its PR, at the owner's word.** Every commit is signed off; check
+   `git log --format=%B main..HEAD` first (CLAUDE.md rule 7). `ledger_check` 120 entries, 0 errors.
 
-2. **The follow-up round: disc-only and PSP polish** (not staged; the owner's word of 2026-10-12 night). Closed
-   tonight, not to redo: masterAndManillo's world-map entry, "You gain 3 EXP!", the PSP message boxes, the shop's
-   walking-ahead and the PSP's Nue divergence ([`abc-sweep-1012.md`](abc-sweep-1012.md) 4,
-   [`visual-findings-1012.md`](visual-findings-1012.md) 10). Still open:
-   - the load screen's `"%X"` (D254, the engine's own string recommended) and the PC `en-150` empty-record word
-     `0x669CCC` (the staged localisation PR, item 5, covers it);
-   - the inn's black screen on a PSX-only install (D255): the jingles on a disc-only install
-     ([`sound-import.md`](sound-import.md) 7), or the failed stream ending the wait (a DIV);
-   - the PSP title's framing (D256), the owner's look at a PSP-EU title capture;
-   - the twelve disc-unplaced runs one overlay alone carries (`visual-findings-1012.md` 9's list): drafted as
-     `TWINS` rows, not committed - regenerate and check;
-   - what is left on PSP-EU's image (`visual-findings-1012.md` 10.4's list) and the class 10.2 suggests: `psxmap`
-     reads PSP files at PSX-JP's addresses and misses runs PSP-EU's `GAME.EMI` holds elsewhere;
-   - the fishing ticker's text, PC against both discs (10.4; not looked into);
-   - the `us` set, not swept (`abc-sweep-1012.md` 6);
-   - a harness pass over WA's wide-mode scenes ([`psp-widescreen-a.md`](psp-widescreen-a.md) 6): AB with
-     `BOF3X_WIDE=1`, the middle 320 columns against the narrow capture;
-   - the harness refusing a recipe with no `# save` header, or taking `--save` ([`abc-harness.md`](abc-harness.md));
-   - the disc-only round's own leftovers ([`disc-only-round.md`](disc-only-round.md) 5: the review's notes, the four
-     stale Chinese pairs, a PSP-only build's 14 arenas);
-   - the owner's open calls, in [`owner-review.md`](owner-review.md)'s round entry: D56's repair (proposed, not
-     built: every battle reference re-recorded), the jingles on PSX-only installs, the field menu's time and money
-     boxes in the wide picture, the PSP-EU Config screen (D246), the PAL banks (D257).
+2. **The owner's answers** ([`owner-review.md`](owner-review.md), "2026-10-13, the away day"): look (the eye batch
+   q1..q7, the arena sheets, the D56 capture, the labels sheet, the Japanese world map), listen
+   (`analysis/listen-1013` a / b / c), and decide (inventory Q6 / Q7; member 2's bank, Ryu's byte, member 1; the
+   Western weakness row; the hi-lo count; the US title layout; a ja-JP layer for kinds 7..16 and the fishing crash;
+   wide and `Rand`; D255's fix; set 8 confirmed; the key icons' five; the `combatGroup` / `sortScreens` saves; the
+   Western title mark). Each answer goes to the ledger or the defect list; then the rows to the policy mechanism
+   (`recipes/prefer.toml`).
 
-3. **The disc-data preference inventory** (the owner, 2026-10-12 night: "let's put this as a next up action - I
-   agree a inventory pass is what's needed"). The owner prefers the PlayStation's data where both the PC install and
-   a disc carry a chunk (prompted by the PC title's (R), which the PSX title lacks; DIV-0114). Today a PC + disc
-   cache takes the PC's chunks wherever the PC has them; only the music follows the disc (the owner's 2026-10-08
-   call). The pass is a reading task, no output change: every `base/` chunk whose PC form differs from the disc's,
-   classed as a port repair (keep), port-specific art the PC needs (the dial page's keyboard legend, the re-laid
-   icons - keep) or a port cosmetic change (the (R) - take the disc's), each with a proposed rule. The owner decides
-   from the list; then a ledger entry and the importer's base policy, as the music decision was.
+3. **The Nue state-hash signal - settled, not a regression** ([`nue-regression-1013.md`](nue-regression-1013.md)):
+   page `0x905000` was the save-slot records (`0x905BC0`, filled at tick 136) after today's recipes rewrote slots -
+   the reference pair had gone stale, Capcom's own side differed the same way; re-recorded as
+   `cn_cutsceneAndNue_orig2` / `_orig2b` (the old pair kept as `_pre1013`). The music pages are DIV-0092 by design
+   (the load at frame 204 and the event battle at 7,394); checked with `--original AreaTrackFallback`, ours at the
+   tip is identical to Capcom's on all 7,361 ticks. `Rand` identical on all 7,422 frames, so D271 is not this.
+   **Left:** the other nine `cn_<route>_orig2` pairs are stale the same way (measured on `cn_combat_on_b`, 07:46,
+   after the slot-6 rewrite) - about 45 minutes on a quiet machine to re-record, per [`state-hash.md`](state-hash.md)
+   6; any recipe that writes a slot stales them again (slot 6 is `balioAndSunder_2`'s by design), so a fixed staged
+   save list in `input_run.py` is the durable fix (a design change, the owner's call). `bossAndFlash` meets DIV-0092
+   too (event battle 8, track 33) and has no pair.
 
-4. **The owner's eye, ear and play** - [`owner-review.md`](owner-review.md) is the one list: the PSP round's entry
-   (the PSP stand-ins, logo and launcher page; the PSP's music, effects and jingles; the Beyd-Zig duel under
-   `duel-loss`, Myria's item, a level-up of roster index 6), the random-encounter resume on the PlayStation, and the
-   older listens and play checks. Nobody has played a disc-only or PSP-only install. The older owner checks still
-   only in this file are under "Older open items" below; they belong in `owner-review.md`.
+4. **Open technical items, no owner needed:**
+   - **The all-calls tracer stalls** a hosted run before any recipe frame (D276,
+     [`hidden-start-scan.md`](hidden-start-scan.md) 8): `pc_hidden_reached.json` is still the 2026-09-21 reach, the
+     199 new hidden starts untraced. Bisect the DLL.
+   - **The Identify panel's `?` marks** (D278, [`labels-1013.md`](labels-1013.md) 6.2): two `twin` rows,
+     `0x65AAC4` <- US `0x801F0B88` (4 bytes) and `0x65AAC8` <- `0x801F0B8C` (8) - found, not built.
+   - **The Config values** (D282, [`eye-batch-1013.md`](eye-batch-1013.md) 3 item 2): the row tables `0x653808` /
+     `0x653810`, likely a `twin`.
+   - **The image's map faults** D266 (the Western title mark's width, a `twin` from `GAME.EMI#1` - after the owner's
+     yes), D267 (the Meteor Strike chip's lifts) and D268 (`AREA111`'s segment over a twin row)
+     ([`disc-data-inventory.md`](disc-data-inventory.md) 5).
+   - **The US title layout** (D277, [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md) 3.1): waits on the owner's call.
+   - **The JP world map's camera** (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3): the PSX twin read, JP
+     against US `GAME.EMI`'s world-map camera set-up, and a raw dump of `0x905000`'s page at tick 1095. The owner's
+     hypothesis: a change Capcom made after the first Japanese release (the PC and the PSP both draw the wide view).
+   - **Groups 17 and 18 from PSP-EU and ja-JP** ([`labels-1013.md`](labels-1013.md) 7): not built (the layout lives in
+     the PSP's Allegrex code; Japanese names exceed the 5-byte copy).
+   - **The PSP ELF's second map** is not worth building (187 bytes, [`exe-chinese-remaining.md`](exe-chinese-remaining.md)
+     5.4).
+   - **The `_pre1013` entry lists** in `analysis/` (`pc_funcs_pre1013.json`, `pc_hidden_pre1013.json`, ...): kept
+     beside the replaced ones ([`hidden-start-scan.md`](hidden-start-scan.md) 8); remove once nothing reads them.
+   - D270 (`stallion.txt` at `--speed 8`) unclassed; D283..D285 (the wide picture) after the owner's word on D283;
+     D286 (the fishing equip headings) not looked into; D287 (the launcher's clipped lines); D289 (group 16's
+     one-record name shift, a `src/` change).
 
-5. **The staged localisation PR**: the empty save slot blank as the US disc draws it (the `0x669CCC` word above)
-   and IDEAS I34, the name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is
-   the owner's to answer first). Not launched.
+5. **The follow-up round: disc-only and PSP polish** (not staged). Still open: the load screen's `"%X"` (D254, the
+   engine's own string recommended); the inn and camp hang (D255, the owner's choice of fix now required); the PSP
+   title's framing (D256); what is left on PSP-EU's image ([`exe-image-twins-1013.md`](exe-image-twins-1013.md) 6:
+   39 ranges, the `BOOT.BIN`-reader class); the disc-only round's own leftovers
+   ([`disc-only-round.md`](disc-only-round.md) 5); the PSP-EU Config screen (D246) and the PAL banks (D257), the
+   owner's.
 
-6. **Work that needs no owner** (each doc's own list is the authority):
-   [`exe-import-engine.md`](exe-import-engine.md) 5 (the 183 language addresses, the effect state tables' twins, a
-   second map of the PSP ELF's own copies); the disc-only language build's gaps
-   ([`loc-build-disc-only.md`](loc-build-disc-only.md): the village sheet, French `AREA004`, the Chinese chunks
-   nothing replaces); [`cache-read.md`](cache-read.md) 10 (the MP3s in the cache, an ini key for
-   `BOF3X_CACHE_DATA`); the music's long-fade row as a design ([`music-open-ends.md`](music-open-ends.md) 4) and
-   `SsUtKeyOnV` read before the sound effects move; the exe's remaining Chinese - `tools/text_scan.py --all` finds
-   424 strings, 241 at addresses `src/` names, to cross-check against DIV-0064's label tables for the definite list.
+6. **The staged localisation PR**: the empty save slot blank as the US disc draws it (`0x669CCC`) and IDEAS I34, the
+   name entry back ([`name-entry-restoration.md`](name-entry-restoration.md); its section 8 is the owner's to answer
+   first). Not launched.
 
-7. **Small, left over:** the controls still thin ([`round-14-cleanup.md`](round-14-cleanup.md) 4's last
+7. **Work that needs no owner** (each doc's own list is the authority):
+   [`exe-import-engine.md`](exe-import-engine.md) 5's remainder (the effect state tables' twins); [`cache-read.md`](cache-read.md)
+   10 (the MP3s in the cache, an ini key for `BOF3X_CACHE_DATA`); the music's long-fade row as a design
+   ([`music-open-ends.md`](music-open-ends.md) 4) and `SsUtKeyOnV` read before the sound effects move; the loop rows
+   `084`, `109`, `130` not rendered ([`wav-dump.md`](wav-dump.md) 5); the exe's remaining Chinese, the definite list
+   in [`exe-chinese-remaining.md`](exe-chinese-remaining.md) 3 and 7's "left open". The three disc-only language
+   gaps of the old item 6 are closed (that doc 6).
+
+8. **Small, left over:** the controls still thin ([`round-14-cleanup.md`](round-14-cleanup.md) 4's last
    paragraph); the 61 run-time raw calls ([`round-13-cleanup.md`](round-13-cleanup.md) 1.3, a decision); E2E's 19
    `EffectKind48_State7..12_*` names, which E2D's three-state table makes unreachable
-   ([`round-13-review.md`](round-13-review.md) 3); `pe_hidden.py` and `pe_funcs.py` stop silently at an
-   undecodable byte (fixing them regenerates the entry lists); [`mode-rest.md`](mode-rest.md) 0's "pc_funcs.json" is
-   `pc_hidden.json`'s size, and `Mp3_Create`'s evidence puts the decoder at `0x5AB000` where it is `0x5ADF00`; the
-   PSP's eleven map-band changes unread (region-diff 6); Capcom's type-1 routine not located; a one-line log of
-   each file `LoadDatFile` opens (would settle area names); DIV-0041's wider terrain margin as the creator of the
-   bridge's edge cells, unmeasured; `Sprite_FlashClut`'s row mask; seven older hosts still covering an owned start
-   in `entries_logic.txt`; `importer.py verify` on a US-only cache reports `opt/area4-walls` `AREA004.DAT` slot 6
-   "composed with the layer, not the recipe's".
+   ([`round-13-review.md`](round-13-review.md) 3); the PSP's eleven map-band changes unread (region-diff 6); Capcom's
+   type-1 routine not located; DIV-0041's wider terrain margin as the creator of the bridge's edge cells, unmeasured;
+   `Sprite_FlashClut`'s row mask; seven older hosts still covering an owned start in `entries_logic.txt`;
+   `importer.py verify` on a US-only cache reports `opt/area4-walls` `AREA004.DAT` slot 6 "composed with the layer, not
+   the recipe's"; `dragonMenu`'s frame 720 pop-up differs from its reference (together again at 780, probably
+   timing).
 
 **Older open items** (one line each; the pointer holds the detail):
 
@@ -158,7 +183,7 @@ check is the state hash ([`state-hash.md`](state-hash.md); the references `cn_<r
 
 ## How to run things
 
-_Verified 2026-09-24; the disc-only, A/B/C and state-hash lines 2026-10-12..13._
+_Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-10-12..13._
 
 - **Build:** `cmake --preset i686 && cmake --build build` - llvm-mingw's `i686-w64-mingw32-clang++` (the `retcomm`
   toolchain under `~/.local/share`), **not** MSYS2's. The first configure fetches SDL3 (network).
@@ -184,8 +209,21 @@ _Verified 2026-09-24; the disc-only, A/B/C and state-hash lines 2026-10-12..13._
 - **The A/B/C harness** ([`abc-harness.md`](abc-harness.md)): `python tools/abc_run.py prepare --set eu --root <root>`
   builds each install's cache and game directory and the ini-less launcher copy `<root>/L`; `python tools/abc_run.py
   run --set eu --tag T --route R --root <root>` plays a recipe on every install and writes `report_T_R.md`;
-  `abc_compare.py --side A=<run> --side B=<run>` compares two builds' runs of one install. The roots in use:
-  `C:\Users\kerok\ab` and `C:\Users\kerok\abx` (game-derived, never in the tree).
+  `abc_compare.py --side A=<run> --side B=<run>` compares two builds' runs of one install. The roots are
+  game-derived, never in the tree (the sets' roots below).
+- **The WAV dump** ([`wav-dump.md`](wav-dump.md) 2): `BOF3X_WAV_DIR=<dir>` writes the game's audio mix to
+  `<dir>\<n>_<label>.wav` (`BOF3X_WAV_LABEL`, default the recipe's name); `input_run.py --wav <dir> [--wav-label L]`
+  sets both; `tools/wav_diff.py` lines two dumps up. The recipe step `music TRACK [FRAMES]` plays a track
+  (instrumentation, like `poke`). The dump is at 44.1 kHz, not the device's format.
+- **Which files a route loads:** `BOF3X_DATLOG=1` logs one line per file `LoadDatFile` walks, overlays included
+  ([`asset-loading-path.md`](asset-loading-path.md) 5).
+- **A recipe's save:** `input_run.py` (and `abc_run.py run`) take `--save NAME` (that `tools/recipe_saves` save in
+  slot 0 on every side) or `--no-save` (slot 0 left alone); the harness refuses a recipe with no `# save` header
+  unless one is given ([`abc-harness.md`](abc-harness.md) 3a). `input_run.py` removes the launcher directory's old
+  `bof3x.log` before a launch (the stale `recipe done` trap, closed 2026-10-13).
+- **The harness's sets and roots** ([`abc-harness.md`](abc-harness.md) 2): `--set eu` (root `C:\Users\kerok\ab`),
+  `--set us` (`abu`), `--set jp` (`abj`), the eye batch's scratch installs (`abv`), the 2026-10-12 re-run's `abx` -
+  one agent per root.
 - **The state hash** ([`state-hash.md`](state-hash.md)): from an ini-less launcher copy, `BOF3X_OPT=none
   BOF3X_LAYERING=0`, `tools/statehash_skip.txt`; `python tools/input_run.py tools/recipes/R.txt --no-front --game
   <main>/bof3 --launcher <copy>/bof3x-launcher.exe` with `BOF3X_STATEHASH`, then `statehash.py check cn_R_orig2.sh
@@ -226,20 +264,18 @@ _Verified 2026-09-24; the disc-only, A/B/C and state-hash lines 2026-10-12..13._
 
 ## In flight / uncommitted
 
-- **`cleanup/abc-crash-1012`** (the main checkout's branch, unpushed): item 1.
-- **The D260..D263 fix agent** works in a worktree under `.claude/worktrees/` (the locked one, branch
-  `worktree-agent-ae288769dd06909be`, at the time of writing). The two other worktrees there
-  (`abc-sweep-1012`, `worktree-agent-ae1f9da045ac89510`) and the branch `worktree-agent-a8cf04c79e48fa916` are
-  tonight's finished agents', every commit already on this branch; they can go once the fix merges.
-- **Cleaned tonight:** 48 worktrees and 107 merged local branches removed (`psp/ledger2` and the round's group
-  branches among them). Left: `music/event-battle-restart`'s scratch worktree (the session-`3186ef2f` scratchpad's
-  `evb/`), which holds an untracked `cfg.out` - look before removing; and `claude/ecstatic-mccarthy-t8bg37`, an old
-  README-art branch whose content `main` supersedes - deleting it was refused by the permission check, so it is
+- **`platform/more-hardening`** (the main checkout's branch, unpushed): item 1.
+- **The fifteen agent worktrees** under `.claude/worktrees/` (`git worktree list`; two of them locked) and their
+  branches `away/1013-captures`, `-chinese`, `-d56`, `-inventory`, `-jp`, `-keyicons`, `-labels`, `-policy`,
+  `-recipes`, `-render`, `-tooling`, `-twins`, `-us`, `-village`, `-wav`: all merged; removable at the owner's word.
+  Also there from 2026-10-12: `worktree-agent-ae288769dd06909be` (the D260..D263 fix agent's, merged in PR #57).
+- **The junction `C:\Users\kerok\lbl13`** (the labels agent's): safe to delete.
+- **Scratch outside the tree:** the A/B/C roots `C:\Users\kerok\ab`, `abj`, `abu`, `abv`, `abx` (game-derived, never
+  in the tree); the owner's scratch disc-only installs `C:\b3g` (US) and `C:\b3p` (PSP-EU), built before `wmrec` -
+  rebuild with the current tools or remove. A `balioAndSunder_2` run may still be running from the session scratch
+  `d56/L2` (it restores slot 0 when done). Older: `music/event-battle-restart`'s scratch worktree (the
+  session-`3186ef2f` scratchpad's `evb/`, an untracked `cfg.out` - look before removing); `claude/ecstatic-mccarthy-t8bg37`,
   the owner's to delete.
-- **Scratch outside the tree:** the A/B/C roots `C:\Users\kerok\ab` (`c_pspeu` rebuilt tonight with `edc41de3`'s
-  tools, no longer half-built) and `C:\Users\kerok\abx` (the areas 16 / 45 re-run's); the owner's scratch
-  disc-only installs `C:\b3g` (US) and `C:\b3p` (PSP-EU), built before `wmrec` - rebuild with the current tools or
-  remove (`visual-findings-1012.md` 10).
 - **Other sessions work in the main checkout**: check `git status` and the branch before a commit there, and never
   build in `build/` while its game runs.
 
@@ -261,6 +297,17 @@ Local only, gitignored, worth keeping:
 
 _One line each, with a pointer. Add when something costs more than an hour._
 
+- **Capcom's WndProc freezes an unfocused game** (2026-10-13, [`wav-dump.md`](wav-dump.md) 4a): an all-original side
+  run with `--no-front` made 2,404 frames in ten minutes. Such a side wants `--original '*,-Game_Clock,-Game_WndProc'`.
+- **A title-start recipe with no `# save` lands on CONFIG in a harness folder** (2026-10-13,
+  [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md)): the recipe presses for a cursor that starts on LOAD GAME, which it
+  does only when a save exists; the harness's game folders have none. Give it a save or a `--save`.
+- **`abc_run.py prepare` rebuilding a cache deletes `base/exe/gate-skip.txt`** (2026-10-13,
+  [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md) 8): the next `--statehash-skip` run stops at once with `FATAL:
+  BOF3X_STATEHASH_SKIP: cannot open`. Run `exe_tables.py gate-skip` again after any `prepare` that rebuilt a cache.
+- **A TaskStop'd regeneration's children keep running** (2026-10-13): stopping the background task that ran a
+  recipe regeneration (`exe_tables.py` / `psp_exe.py recipe` chains) leaves its `python` children writing the
+  recipes. Check `tasklist` for them and stop each by its exact PID before regenerating again.
 - **A branch from before 2026-10-04 looks unmerged by an ancestry check** (2026-10-13): the DCO rewrite gave 185
   commits new hashes, so `git branch --merged` and `merge-base --is-ancestor` call an old branch unmerged though its
   content is in `main`. Use `git cherry main <branch>` (a `-` line is in `main` by patch) before deleting or merging
@@ -269,7 +316,7 @@ _One line each, with a pointer. Add when something costs more than an hour._
   launcher copy, `bof3x.exe` included, so a game running from `L\` blocks it. Let the run finish (or stop it by its
   exact PID) first.
 - **A recipe without a `# save` header loads each install's own slot 0** (2026-10-13, `fairyVillage`): the harness's
-  three sides can start from different saves. Add the header in a scratch copy ([`abc-harness.md`](abc-harness.md);
+  three sides can start from different saves. Since the tooling merge the harness refuses such a recipe without `--save` / `--no-save`. Add the header in a scratch copy ([`abc-harness.md`](abc-harness.md);
   [`abc-sweep-1012.md`](abc-sweep-1012.md) 1).
 - **Two agents can run games at once only from separate harness roots** (2026-10-13): `kill_stale` ends any game
   started from its own launcher directory, so two runners sharing a root kill each other's games. Give each its own
@@ -496,10 +543,6 @@ _One line each, with a pointer. Add when something costs more than an hour._
 
 ## Waiting on someone else
 
-- **The owner:** [`owner-review.md`](owner-review.md) - the eye, ear and play checks and the open calls (item 4,
-  and item 2's calls). Settled since this section was last written: the battle resume was heard (DIV-0092's
-  amendment, 30 frames), DIV-0076's load screen was seen, and `Cfg_Load`'s overrun was built as DIV-0078 (seen
-  only with a hand-edited `BOF3.CFG`). Still the owner's: the layering in play, DIV-0077's TILE_1 and DIV-0079's
-  lines in play; the camp cells and the POLY_FT3 colour stay parked.
-- **The fix agent** on D260..D263 (item 1).
+- **The owner:** [`owner-review.md`](owner-review.md) - the away day's section (item 2), then the older eye, ear and
+  play checks and open calls. Nobody has played a disc-only or PSP-only install.
 - **TheRealBiggs** - not yet contacted ([`STATUS.md`](STATUS.md) obligations).

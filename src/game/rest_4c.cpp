@@ -29,6 +29,7 @@
 #include "game/labels.h"
 #include "game/rest_4c_callees.h"
 #include "game/scenario_harness.h"
+#include "game/text_advance.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -379,6 +380,13 @@ extern "C" void __cdecl CommuHiLo_Shuffle(void) {
 // piece 0xA and colour 7 - the label Text_DrawAt(x + 0xB, y + 3, colour, 2,
 // 0x669F54[label's low byte]); any other mode nothing more. The label table
 // has 3 entries; ours aborts past them.
+//
+// DIVERGENCE DIV-0120 (DIV-0064's group 19): once a language overlay has
+// written the three choices, the label is the overlay's word (HIGH / LOW /
+// SET, Haut / Bas / Mise, Hoch / Tief / Setz) drawn whole and centred in the
+// 0x2A box as the discs place it - COMMU02.EMI's routine (US 0x801D2BD0)
+// puts a four-letter word at x + 6 and a three-letter one at x + 0xA, the
+// box's middle for 8-px letters, here (0x2C - its pen width) / 2.
 extern "C" void __cdecl CommuHiLo_DrawChoice(int x, int y, unsigned label, unsigned mode) {
     const unsigned style = B(at::kStyle);
     SH_CALL(Menu_DrawBox)(x, y, 0x2A, 0x14, 0, static_cast<int>(style));
@@ -389,6 +397,12 @@ extern "C" void __cdecl CommuHiLo_DrawChoice(int x, int y, unsigned label, unsig
     Piece(x, y, m == 1 ? 9 : 0xA);
     const unsigned i = label & 0xFF;
     Room("CommuHiLo_DrawChoice (0x45B1E0)", "the label", static_cast<int>(i), 0, at::kChoiceLabelsCount - 1);
+    if (Labels_Written(19)) {
+        const unsigned char* const word = Labels_Slot(19, i);
+        const int word_x = x + (0x2C - static_cast<int>(TextAdvance_Width(word))) / 2;
+        SH_CALL(Text_DrawAt)(word_x, y + 3, m == 2 ? 7 : 0, 0xFF, word);
+        return;
+    }
     const auto* const text = reinterpret_cast<const unsigned char*>(
         static_cast<std::uintptr_t>(L(at::kChoiceLabels + 4 * i)));
     SH_CALL(Text_DrawAt)(x + 0xB, y + 3, m == 2 ? 7 : 0, 2, text);
