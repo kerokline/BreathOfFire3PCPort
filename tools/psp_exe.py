@@ -30,7 +30,7 @@ Two more since 2026-10-12 evening (the owner's visual findings, docs/visual-find
 
     twin     a short run the disc carries verbatim in the overlay whose code reads it, at
              another place than the map's: TWINS below names each run and that file; the
-             run is the first copy in the file's sections (found by BOF3.exe's bytes at
+             run is the first copy in the file's sections, or the one TWINS names (found by BOF3.exe's bytes at
              recipe time, as the wheel's place is) and copied byte for byte. Every disc build
     msets    the zone music sets (Area_ZoneTrack's records, MUSIC_SETS): on a PSP disc the
              records' lists are packed in BOOT.BIN, found by its relocations (the one run of
@@ -86,7 +86,9 @@ RULES = ("rows8", "pairs", "holes", "widen8", "widen10", "psxmap", "twin", "mset
 # twin: (PC range, the disc file whose code reads it, what). Each is zero on every disc-built
 # image before this rule (recipes/exe-gaps.tsv), and each file is the one its reader's PSX twin
 # is loaded from (docs/visual-findings-1012.md 2, 3); a fifth field limits a run to those builds
-# (the PSX builds place it already, exe-places.tsv, and a twin there would split that place).
+# (the PSX builds place it already, exe-places.tsv, and a twin there would split that place;
+# None: every build), and a sixth takes the file's n-th copy (0-based) instead of the first,
+# for a file that holds the run more than once and whose reader reads a later one.
 # Addresses and names only.
 TWINS = [
     (0x64AE18, 0x64AE28, "BATTLE/BATTLE.EMI", "the BATE equipment screen's slot icons and categories"),
@@ -133,6 +135,18 @@ TWINS = [
     (0x663234, 0x663246, "BOOT.BIN", "MapCell_UprightV01", PSP),
     (0x66325C, 0x663265, "BOOT.BIN", "MapCell_UprightU02", PSP),
     (0x663274, 0x66327D, "BOOT.BIN", "MapCell_UprightClut", PSP),
+    # The A/B/C sweep's fixes (docs/abc-sweep-1012-fixes.md 3): the faerie board's help
+    # messages by kind and pick-list row (CommuBoard_PickHelp / _PickList read 0x652AF0 +
+    # 2 kind and 0x652AF8 + 2 row; the first two words were zero, help 0 drew the area's
+    # message 0 and reached the glyph trap - the PSP-EU crash), the village's area limits
+    # (0x653601 + area: PSX-JP and PSX-EU only, the others' maps place them), the field
+    # equipment compare panel's slot icons (Menu_DrawEquipCompare; STATUS.EMI holds the
+    # panel's copy and the compare's, the compare's second), the gene window's AP label.
+    (0x652AF8, 0x652AFC, "ETC/COMMU01.EMI", "the faerie board's help messages, kinds 4 and 5 (pick rows 0 and 1)"),
+    (0x6536AC, 0x6536BB, "ETC/COMMU00.EMI", "the faerie village's area limits (CommuBoard_PickHelp, rest_4b)",
+     ("psx-jp", "psx-eu-en")),
+    (0x66386C, 0x663872, "ETC/STATUS.EMI", "the field equipment compare panel's slot icons", None, 1),
+    (0x66AF38, 0x66AF3C, "BATTLE/BATTLE.EMI", "the gene window's AP label (GeneWin_DrawGrid)"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
@@ -620,10 +634,12 @@ def find_rows(disc, bid, pc):
     if w:
         rows.append({"build": bid, "rule": "widen%d" % w[5], "pc": w[0], "pc_end": w[1], "file": w[3],
                      "section": w[4], "addr": w[2]})
-    for tlo, thi, tfile, _, *only in TWINS:
-        if only and bid not in only[0]:
+    for tlo, thi, tfile, _, *extra in TWINS:
+        only = extra[0] if extra else None
+        nth = extra[1] if len(extra) > 1 else 0
+        if only and bid not in only:
             continue
-        t = twin_place(srcs, pc, tlo, thi, tfile)
+        t = twin_place(srcs, pc, tlo, thi, tfile, nth)
         if t:
             rows.append({"build": bid, "rule": "twin", "pc": tlo, "pc_end": thi, "file": tfile, "section": t[0],
                          "addr": t[1]})
@@ -913,15 +929,18 @@ def records_place(srcs, pc, file, records, count, stride, field):
     return None
 
 
-def twin_place(srcs, pc, lo, hi, file):
-    """The first copy of BOF3.exe's [lo, hi) in `file`'s sections, in section order:
-    (section, disc address) or None."""
+def twin_place(srcs, pc, lo, hi, file, nth=0):
+    """The nth (0: the first) copy of BOF3.exe's [lo, hi) in `file`'s sections, in
+    section and address order: (section, disc address) or None."""
     nd = pc[lo - DATA_LO:hi - DATA_LO]
     for (f, s), (base, blob) in sorted(srcs.items(), key=lambda kv: (kv[0][0], kv[0][1] or 0)):
         if f == file:
             at = blob.find(nd)
-            if at >= 0:
-                return s, base + at
+            while at >= 0:
+                if nth == 0:
+                    return s, base + at
+                nth -= 1
+                at = blob.find(nd, at + 1)
     return None
 
 
