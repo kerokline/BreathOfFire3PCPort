@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-13: `main` is `a7c7a9e5`, PRs #49..#56 merged; tonight's `cleanup/abc-crash-1012` is unpushed and ready for its PR, D260..D263 fixed - item 1 below)
+**Status:** IN PROGRESS (2026-10-13: `main` is `d0d9162a`, PRs #49..#57 merged; the ultrawide round staged on `wide/ultrawide-round` - item 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -15,14 +15,13 @@ the investigation docs; anything durable moves to `STATUS.md`.
 ## Where things stand in one paragraph
 
 **10,088 functions are ours in the exe host, 10,087 in a hosted run** (the `inject:` line at `a7c7a9e5`); the game's
-own code is all ours since the platform round's step 3 (PR #43). `main` is `a7c7a9e5`, with PRs #49..#56 merged:
+own code is all ours since the platform round's step 3 (PR #43). `main` is `d0d9162a`, with PRs #49..#57 merged:
 #49 the testing catch-up and the four no-owner items, #50 the runtime's allocator, #51 state 2's prework
 ([`state2-proof.md`](state2-proof.md)), #52 the Jukebox ([`music-player.md`](music-player.md) - the owner uses it a
 lot, "it's great", and named every song from the box set), #53 state 3, our own `bof3x.exe`
 ([`state3-build.md`](state3-build.md)), #54 the event battle's music restart (heard), #55 the disc-only round
 ([`disc-only-round.md`](disc-only-round.md)) and #56 the PSP-only round ([`psp-only-round.md`](psp-only-round.md)).
-Neither install from a disc alone has been played. **Tonight's branch, `cleanup/abc-crash-1012`** (unpushed,
-`git log --oneline main..HEAD`), holds two docs-audit passes and the root README's rewrite; the areas 16 / 45
+Neither install from a disc alone has been played. **PR #57, `cleanup/abc-crash-1012`** (merged 2026-10-13), holds two docs-audit passes and the root README's rewrite; the areas 16 / 45
 re-run - no crash on any of seven installs, the PSP builds' trees (D258) and PSP-EU's cell hooks (D259) fixed by
 `tools/psp_exe.py` rows, DIV-0101 amended ([`visual-findings-1012.md`](visual-findings-1012.md) 10); and the A/B/C
 sweep ([`abc-sweep-1012.md`](abc-sweep-1012.md): ten routes on the `eu` triple, no regression between builds, the
@@ -35,16 +34,14 @@ check is the state hash ([`state-hash.md`](state-hash.md); the references `cn_<r
 
 ## Pick up here
 
-1. **Push `cleanup/abc-crash-1012` and open its PR, at the owner's word.** Everything is merged on it: the
-   docs audit and README, the areas 16 / 45 re-run (D258, D259), the sweep, and the D260..D263 fixes
-   ([`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md); DIV-0101 amended twice). Checked at the tip
-   (2026-10-13): `ledger_check` 114 entries 0 errors, `importer.py check`, `exe_tables.py check`, `psp_exe.py
-   check`, `suites.py check` clean; every one of the 11 non-merge commits signed off (CLAUDE.md rule 7); no `src/`
-   change, so `main`'s build and self-tests stand. The exe host on the PSX-EU-only and PSP-EU-only installs exit 0
-   with the new images. Still open from tonight: **D264** - the village's faerie stats zero on both disc images, so
-   the village simulates differently (a new rule shape from `COMMU00`'s nine-byte records, not a `twin`) - and
-   **D265**, PSP-EU's blank "Culture" label; `Menu_ButtonSets+0x2A` on the PSX builds, now classed `unread`, not
-   looked at.
+1. **The ultrawide round** ([`ultrawide-round.md`](ultrawide-round.md); the owner, 2026-10-13): a fixed 21:9
+   preset, 560 x 240, 120 columns a side, and an audit of the staging the wider view exposes - the owner's case
+   zero is Nina and Momo parked just outside the 320 view in a 16:9 cutscene. Staged, not launched: branch
+   `wide/ultrawide-round`, briefs `analysis/ultrawide/brief_common.md` and `groups.md` (`<TIP>` to fill). Stage A
+   is UW, UC, BA, SS, PD; UW merges first. PR #57 (`cleanup/abc-crash-1012`) is merged; still open from it:
+   **D264** - the village's faerie stats zero on both disc images (a new rule shape from `COMMU00`'s nine-byte
+   records, not a `twin`) - and **D265**, PSP-EU's blank "Culture" label; `Menu_ButtonSets+0x2A` on the PSX
+   builds, classed `unread`, not looked at.
 
 2. **The follow-up round: disc-only and PSP polish** (not staged; the owner's word of 2026-10-12 night). Closed
    tonight, not to redo: masterAndManillo's world-map entry, "You gain 3 EXP!", the PSP message boxes, the shop's
@@ -226,7 +223,7 @@ _Verified 2026-09-24; the disc-only, A/B/C and state-hash lines 2026-10-12..13._
 
 ## In flight / uncommitted
 
-- **`cleanup/abc-crash-1012`** (the main checkout's branch, unpushed): item 1.
+- **`wide/ultrawide-round`** (unpushed, a worktree in session `6d500aac`'s scratchpad `uw/`): item 1. `cleanup/abc-crash-1012` is merged (PR #57); its local branch and the fix agent's locked worktree can go.
 - **The D260..D263 fix agent** works in a worktree under `.claude/worktrees/` (the locked one, branch
   `worktree-agent-ae288769dd06909be`, at the time of writing). The two other worktrees there
   (`abc-sweep-1012`, `worktree-agent-ae1f9da045ac89510`) and the branch `worktree-agent-a8cf04c79e48fa916` are
