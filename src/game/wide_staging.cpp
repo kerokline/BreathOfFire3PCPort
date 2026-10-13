@@ -388,7 +388,9 @@ bool StepSite(unsigned char* context, const unsigned char* script, unsigned char
     Live* l = Find(context);
     if (l && l->running && (l->script != script || l->pos != pos || l->area != Game_AreaNumber)) {
         // The context moved on without us (a scene cut short, an area change): forget the plan.
-        if (l->restore) context[4] = l->speed;
+        // Put the speed back only while it is still the fast one this entry set, in the same area: a context
+        // placed afresh since (an area change) has its own.
+        if (l->restore && l->area == Game_AreaNumber && context[4] == g_fast_index) context[4] = l->speed;
         Drop(l);
         l = nullptr;
     }
@@ -458,7 +460,7 @@ void Placed0DSite(unsigned char* context, const unsigned char* script, unsigned 
         SetLong(sprite + 0x34, Long(sprite + 0x34) - k * dx);
         SetLong(sprite + 0x38, Long(sprite + 0x38) - k * dz);
         Live* l = Take(context);
-        if (l->restore) context[4] = l->speed;
+        if (l->restore && l->area == area && context[4] == g_fast_index) context[4] = l->speed;
         *l = Live{};
         l->context = context;
         l->marked = k != 0;
@@ -495,7 +497,7 @@ void PlacedSite(const unsigned char* op) {
         SetLong(sprite + 0x38, Long(sprite + 0x38) - k * dz);
         SetWord(sprite + 0x3E, static_cast<unsigned>(AreaMap_Elevation(Long(sprite + 0x34), Long(sprite + 0x38))));
         Live* l = Take(context);
-        if (l->restore) context[4] = l->speed;
+        // A placement sets the object afresh: its speed is the op's, never one a stale entry would put back.
         *l = Live{};
         l->context = context;
         l->marked = k != 0;
