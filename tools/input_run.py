@@ -205,12 +205,25 @@ def run(a, env, slot0):
     word. `slot0` (recipe_saves.Slot0 or None) is handed back when the DLL
     logs the save loaded: the file is not read again after that."""
     started, frames = time.time(), ''
+    # The previous run's log is still beside the launcher until the new game
+    # rewrites it, and its `recipe done` / `shot` lines would be read as this
+    # run's: the run then "ends" in seconds with no frames (abc-harness.md,
+    # the stale-log trap, 2026-10-13). Remove it first; if it cannot be
+    # removed, start reading at its end and from 0 again once it is rewritten.
+    pos = 0
+    try:
+        os.remove(LOG)
+    except FileNotFoundError:
+        pass
+    except OSError as e:
+        pos = os.path.getsize(LOG)
+        print(f'log: {LOG} not removed ({e}); reading from byte {pos}')
     launch(a.launcher, a.game, env, a.host)
 
     stop = threading.Event()
     if not a.no_front:
         threading.Thread(target=keep_in_front, args=(stop,), daemon=True).start()
-    status, pos, deadline = None, 0, time.time() + a.minutes * 60
+    status, deadline = None, time.time() + a.minutes * 60
     try:
         exited = False
         while status is None and time.time() < deadline:
@@ -224,6 +237,8 @@ def run(a, env, slot0):
             exited = not game_pid()
             try:
                 with open(LOG, 'rb') as f:
+                    if os.fstat(f.fileno()).st_size < pos:
+                        pos = 0                  # the game rewrote the log
                     f.seek(pos)
                     chunk = f.read()
             except OSError:
