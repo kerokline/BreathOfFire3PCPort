@@ -302,7 +302,13 @@ with the hand size, the catalogue's, the flow's and which source.
   **Fixed 2026-10-13, section 8.**
 - `Mp3_Create`'s evidence ("the MP3 decoder (0x5AB000..0x5B9380)") has the
   decoder's start wrong by section 4.2; left as written (hard rule 3), noted
-  here.
+  here. **Corrected 2026-10-13** by an appended sentence (the address and
+  the original words kept): the decoder's lowest code is `0x5ADEA0`, a helper
+  called 17 times, every call from decoder code (`0x5B4DFF..0x5B8F6C`, a
+  byte scan of every `E8` / `E9`), as [`labelling-pass.md`](labelling-pass.md)
+  measured by closure; `Mp3_Create` `0x5ADF00` is its lowest entry called
+  from outside (once, `0x5A6D68`). "The decoder starts at `0x5ADF00`" in
+  4.2 is that entry, not the range's start.
 
 ## 8. The two tools fixed (2026-10-13, `away/1013-tooling`)
 
