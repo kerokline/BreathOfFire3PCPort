@@ -279,3 +279,8 @@ After "The game writes its own captures": `BOF3X_SHOT_EVERY=N` (with
 
 No ledger entry: `BOF3X_SHOT_EVERY` is instrumentation, off unless set, and
 changes no game behaviour.
+
+**Trap (2026-10-13, the sweep):** a recipe with no `# save` header (`fairyVillage`)
+loads whatever each install's slot 0 holds, so the three sides can start from
+different saves. Until the harness refuses such a recipe or takes `--save`,
+add the header in a scratch copy ([`abc-sweep-1012.md`](abc-sweep-1012.md) 7).

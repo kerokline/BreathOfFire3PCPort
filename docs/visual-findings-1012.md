@@ -227,7 +227,8 @@ values are not copied here). So on every disc-only install:
   defect, not only a visual one.
 
 The field's equipment panel reads its own `Equip_SlotIcons` `0x663660`,
-placed on every build, so the field menu is right; only the battle's copies
+placed on every build, so that panel is right (**but not the field Equip
+screen**, which reads another table: D262, `abc-sweep-1012.md` 3.3); only the battle's copies
 were missed.
 
 ### 2.3 Where the disc has them, and the fill

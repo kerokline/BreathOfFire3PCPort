@@ -7022,3 +7022,49 @@ Not on either route, so not seen in a run.
 **Fixed 2026-10-13** by `cellhk`, the words from `GAME.EMI#0` (`wmrec`'s
 finder). **Open:** other `psxmap` runs at PSX-JP's addresses may miss on
 PSP-EU for the same reason - a class to sweep.
+
+## D260 — A PSP-EU install crashes in the faerie village: the board's help line reaches the glyph trap (ours, the PSP-EU install's data; open)
+
+**Found:** the A/B/C sweep, 2026-10-13 night ([`abc-sweep-1012.md`](abc-sweep-1012.md)
+3.1): route `fairyVillage` on the PSP-EU-only install, at about recipe frame
+1704 in area 177: `CRASH 0: exception 0xC0000096 at bof3x.dll+0x3429A`,
+`ecx 0000FFDE` - Capcom's glyph trap in `Text_DrawString`
+(`text_draw.cpp` 38) <- `Text_DrawAt` <- `CommuBoard_DrawPanel`
+(`rest_4b.cpp` 1197), drawing the board's help line from the message pools.
+The PSP side had parted from the others before it (the population-change
+board never appeared at tick 810). It recurs after D258's fix. Not seen on
+PC-EU or PSX-EU.
+
+**Where to start:** the glyph index -0x22 points at a text byte 0x04 (an
+inference from the register); the PSP-EU language layer's village messages
+and the image's village tables against the PSX-EU ones. An agent is on it
+(2026-10-13 night).
+
+## D261 — On a PSX-EU disc-only install the village board's slots draw empty: the area-limit table is a gap (ours, the exe image's gaps; open)
+
+**Found:** measured in [`loc-build-disc-only.md`](loc-build-disc-only.md) 5.4
+(the area-limit bytes, a game value with no chunk kind); its cost seen by the
+sweep ([`abc-sweep-1012.md`](abc-sweep-1012.md) 3.2): the table at
+`0x6536AC..0x6536BB` is zero in the PSX-EU image, so the board's slots draw
+empty from tick 1350 of `fairyVillage` and the route parts from the PC's at
+3600. PSP-EU maps it from `BOOT.BIN`, equal to the PC's.
+
+**Where to start:** whether a PSX overlay that reads it carries it verbatim
+(a `twin` row); if none does, it stays a gap and the owner's call.
+
+## D262 — The field Equip screen draws one flame icon on every row on both disc-only installs (ours, the exe image's gaps; open)
+
+**Found:** the sweep, 2026-10-13 night ([`abc-sweep-1012.md`](abc-sweep-1012.md)
+3.3): `menu_screens` frame `t001440` and its `equip` shot, PSX-EU and PSP-EU.
+`Equip_SlotIcons` `0x663660` equals the PC's on the PSX-EU image, so the
+screen reads another table, not yet located. Corrects
+[`visual-findings-1012.md`](visual-findings-1012.md) 2.2, which took that
+table for the whole field menu.
+
+## D263 — The gene window's "AP" label is blank on the disc-only installs (ours, the exe image's gaps; open)
+
+**Found:** the sweep, 2026-10-13 night ([`abc-sweep-1012.md`](abc-sweep-1012.md)
+3.4): `dragonTransform`, 101 frames, the region at 200,76-224,88, blank on
+PSX-EU (PSP-EU likely too: B-C does not differ there). The string or table
+not yet traced; the `"AP%2d"` format `0x66AF8C` was filled in section 8 of
+`visual-findings-1012.md`, so it is another.
