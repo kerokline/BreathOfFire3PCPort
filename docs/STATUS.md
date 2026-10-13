@@ -53,7 +53,7 @@ the slots ([`state-hash.md`](state-hash.md) 7). **Merged since, 2026-10-11..12:*
 `bof3x.exe`, no code of Capcom's mapped, DIV-0094 / 0095), #52 (the launcher's Jukebox), #54 (the event battle's music
 restart), #55 (the disc-only round, DIV-0096..0102) and #56 (the PSP-only round, DIV-0103..0114) - `main` `a7c7a9e5`.
 #54 was heard by the owner (2026-10-11 night); the disc-only and PSP-only installs were watched in the end batch
-(2026-10-12), not played; the Jukebox's doc records no listen; state 3's icon and window are not yet looked at
+(2026-10-12), not played; the Jukebox is in the owner's regular use ("it's great", 2026-10-12 night); state 3's icon and window are not yet looked at
 ([`owner-review.md`](owner-review.md)). The catalogue has 10,246 starts; at round fourteen's cut 1,341
 of the game's own functions were left, the rest of what is not ours being
 the platform and library layer (533) and jump-table cases (210) -
