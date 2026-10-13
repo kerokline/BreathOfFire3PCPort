@@ -110,7 +110,6 @@ psx-jp	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
 psx-jp	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
 psx-jp	0x653084	0x653098	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-jp	0x653144	0x653150	gap	game-value	CommuMusic_CloseSteps+0x68
-psx-jp	0x6531F4	0x6531F9	gap	language-zero	CommuRank_Modes+0x80
 psx-jp	0x653200	0x653214	gap	language-zero	CommuRank_Modes+0x8C
 psx-jp	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-jp	0x653224	0x653228	gap	language-zero	CommuRank_Modes+0xB0
@@ -576,7 +575,6 @@ psx-us	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
 psx-us	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
 psx-us	0x653084	0x653098	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-us	0x653144	0x653150	gap	game-value	CommuMusic_CloseSteps+0x68
-psx-us	0x6531F4	0x6531F9	gap	language-zero	CommuRank_Modes+0x80
 psx-us	0x653200	0x653214	gap	language-zero	CommuRank_Modes+0x8C
 psx-us	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-us	0x653224	0x653228	gap	language-zero	CommuRank_Modes+0xB0
@@ -1065,7 +1063,6 @@ psx-eu-en	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
 psx-eu-en	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
 psx-eu-en	0x653084	0x653098	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-eu-en	0x653142	0x653150	gap	game-value	CommuMusic_CloseSteps+0x66
-psx-eu-en	0x6531F4	0x6531F9	gap	language-zero	CommuRank_Modes+0x80
 psx-eu-en	0x653200	0x653214	gap	language-zero	CommuRank_Modes+0x8C
 psx-eu-en	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-eu-en	0x653224	0x653228	gap	language-zero	CommuRank_Modes+0xB0
@@ -1552,7 +1549,6 @@ psx-fr	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
 psx-fr	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
 psx-fr	0x653084	0x653097	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-fr	0x653104	0x653150	gap	disc-unplaced	CommuMusic_CloseSteps+0x28
-psx-fr	0x6531F4	0x6531F9	gap	language-zero	CommuRank_Modes+0x80
 psx-fr	0x653200	0x653214	gap	language-zero	CommuRank_Modes+0x8C
 psx-fr	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-fr	0x653224	0x653228	gap	language-zero	CommuRank_Modes+0xB0
@@ -2043,7 +2039,6 @@ psx-de	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
 psx-de	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
 psx-de	0x653084	0x653098	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psx-de	0x653104	0x653150	gap	disc-unplaced	CommuMusic_CloseSteps+0x28
-psx-de	0x6531F4	0x6531F9	gap	language-zero	CommuRank_Modes+0x80
 psx-de	0x653200	0x653214	gap	language-zero	CommuRank_Modes+0x8C
 psx-de	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psx-de	0x653224	0x653228	gap	language-zero	CommuRank_Modes+0xB0
@@ -2515,7 +2510,6 @@ psp-jp	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
 psp-jp	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
 psp-jp	0x653084	0x653097	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psp-jp	0x653144	0x65314F	gap	game-value	CommuMusic_CloseSteps+0x68
-psp-jp	0x6531F4	0x6531F9	gap	language-zero	CommuRank_Modes+0x80
 psp-jp	0x653200	0x653214	gap	language-zero	CommuRank_Modes+0x8C
 psp-jp	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psp-jp	0x653224	0x653228	gap	language-zero	CommuRank_Modes+0xB0
@@ -2963,7 +2957,6 @@ psp-eu	0x64DF6E	0x64DF6F	gap	game-value	EventBattle_Records+0x182
 psp-eu	0x652CF4	0x652D04	gap	disc-unplaced	CommuHiLo_DealSteps+0x14
 psp-eu	0x653084	0x653097	gap	game-value	CommuName_MemberEntrySteps+0x1B4
 psp-eu	0x653144	0x65314F	gap	game-value	CommuMusic_CloseSteps+0x68
-psp-eu	0x6531F4	0x6531F9	gap	language-zero	CommuRank_Modes+0x80
 psp-eu	0x653200	0x653214	gap	language-zero	CommuRank_Modes+0x8C
 psp-eu	0x653214	0x653224	language	language	CommuRank_Modes+0xA0
 psp-eu	0x653224	0x653228	gap	language-zero	CommuRank_Modes+0xB0

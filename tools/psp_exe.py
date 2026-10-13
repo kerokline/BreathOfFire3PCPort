@@ -147,6 +147,10 @@ TWINS = [
      ("psx-jp", "psx-eu-en")),
     (0x66386C, 0x663872, "ETC/STATUS.EMI", "the field equipment compare panel's slot icons", None, 1),
     (0x66AF38, 0x66AF3C, "BATTLE/BATTLE.EMI", "the gene window's AP label (GeneWin_DrawGrid)"),
+    # The us set's sweep (docs/abc-sweep-1013-us.md 4): the ranked lists' page counter format
+    # (CommuRank_Show's kPageFormat, rest_4e.cpp); COMMU05.EMI's code section opens with it and
+    # its reader passes it to sprintf with the page + 1 and the count.
+    (0x6531F4, 0x6531F9, "ETC/COMMU05.EMI", "the faerie ranked lists' page counter format (CommuRank_Show)"),
 ]
 # unwide: MsgBox_PlacementTable's side placements (entries 3..6, u16 x at +0; the table
 # 0x66AE10, 4-byte entries), which the PSP moved 32 toward its wider frame's edges
