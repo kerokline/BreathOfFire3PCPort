@@ -225,6 +225,10 @@ bool g_case_on[sizeof kCaseZero / sizeof kCaseZero[0]];
 bool g_site_logged[kSiteCount];
 bool g_case_logged[sizeof kCaseZero / sizeof kCaseZero[0]];
 bool g_log_all = false;
+bool g_quiet = false;     // the self-test runs the engine: nothing logged, nothing marked as logged
+// The callees, through pointers so the self-test can stand recorders in.
+void (__cdecl* g_move)(unsigned char*, unsigned char) = MoveCmd_Move;
+int (__cdecl* g_kind)() = MoveScript_ObjectKind;
 unsigned char g_fast_index = 0;   // Field_MoveSpeeds' fastest entry whose speed divides 0x10
 
 // One step of direction `dir` at the context's speed, as MoveCmd_Move and
@@ -296,6 +300,7 @@ Live* Take(unsigned char* context) {
 void Drop(Live* l) { *l = Live{}; }
 
 void Note(int site, int cz, unsigned steps) {
+    if (g_quiet) return;
     if (site >= 0) {
         if (g_site_logged[site] && !g_log_all) return;
         g_site_logged[site] = true;
@@ -401,7 +406,7 @@ bool StepSite(unsigned char* context, const unsigned char* script, unsigned char
     } else {
         Plan plan;
         if (!PlanFor(l, context, script, pos, plan)) return false;
-        if (MoveScript_ObjectKind() == 2) return false;   // the kind-2 object's path: never a site
+        if (g_kind() == 2) return false;   // the kind-2 object's path: never a site
         l = Take(context);
         l->marked = false;   // a kIn mark is spent by the walk it was for
         l->running = true;
@@ -430,7 +435,7 @@ bool StepSite(unsigned char* context, const unsigned char* script, unsigned char
     // the steps go to +7, and a move with steps starts the timed move.
     result = e.dir;
     context[7] = e.steps;
-    if (e.steps != 0) MoveCmd_Move(context, e.dir);
+    if (e.steps != 0) g_move(context, e.dir);
     if (l->next == l->plan.count && l->plan.advance) {
         SetPos(context, l->pos + l->plan.length);   // as the op would have left it (the step's own +1 included)
         Drop(l);
@@ -583,6 +588,185 @@ unsigned EnvUnsigned(const char* name, unsigned fallback, unsigned lo, unsigned 
     return static_cast<unsigned>(v);
 }
 
+// 6. The rewrite engine on the real rows and the real scripts, with a
+//    stand-in script context and sprite, Game_AreaNumber set to the row's
+//    area, and recorders standing in for MoveCmd_Move and MoveScript_ObjectKind
+//    (put back after): what each Step issues, where it leaves the position,
+//    the start a 0D moves, the fast speed and its restore, a blocked first
+//    step issued again, a kIn walk without its moved start left alone, and no
+//    steps at 0 columns.
+struct MoveCall {
+    unsigned char* context;
+    unsigned dir, steps;
+};
+MoveCall g_calls[8];
+unsigned g_call_count = 0;
+int g_test_kind = 1;
+void __cdecl RecordMove(unsigned char* context, unsigned char dir) {
+    if (g_call_count < 8) g_calls[g_call_count] = {context, dir, context[7]};
+    ++g_call_count;
+}
+int __cdecl RecordKind() { return g_test_kind; }
+
+int RowOf(unsigned area, unsigned field, unsigned index, Shape shape) {
+    for (unsigned i = 0; i < kSiteCount; ++i)
+        if (kSites[i].area == area && kSites[i].field == field && kSites[i].index == index && kSites[i].shape == shape)
+            return static_cast<int>(i);
+    return -1;
+}
+
+void EngineTest() {
+    const unsigned saved_area = Game_AreaNumber;
+    unsigned char* const saved_sprite = Sprite_Current;
+    auto* const saved_move = g_move;
+    auto* const saved_kind = g_kind;
+    const unsigned saved_columns = g_columns;
+    const unsigned char saved_fast = g_fast_index;
+    g_move = RecordMove;
+    g_kind = RecordKind;
+    g_test_kind = 1;
+    g_fast_index = 5;
+    g_quiet = true;
+    for (bool& on : g_site_on) on = true;
+    for (bool& on : g_case_on) on = true;
+    alignas(4) static unsigned char sprite[0xA4];
+    alignas(4) static unsigned char context[0x20];
+    Sprite_Current = sprite;
+    auto reset = [&](unsigned pos, unsigned speed_index) {
+        std::memset(sprite, 0, sizeof sprite);
+        std::memset(context, 0, sizeof context);
+        SetPos(context, pos);
+        context[4] = static_cast<unsigned char>(speed_index);
+        g_call_count = 0;
+        for (Live& l : g_live) l = Live{};
+    };
+    auto walk = [&](std::int32_t dx) { SetLong(sprite + 0x34, Long(sprite + 0x34) + dx); };
+    unsigned char result = 0;
+    g_columns = 53;
+
+    // kOut: area 27 +0x10[2], the 7-step walk west then Steps() more, the position past the op after the second.
+    {
+        const int row = RowOf(27, 0x10, 2, kOut);
+        const Site& s = kSites[row];
+        const unsigned char* const script = Pointer(s.script);
+        const unsigned add = Steps(s);
+        Game_AreaNumber = static_cast<unsigned short>(s.area);
+        reset(s.move, 2);
+        Check(StepSite(context, script, result) && result == 7 && context[7] == 7 && Pos(context) == s.move,
+              "kOut: the original's walk first", static_cast<int>(context[7]), static_cast<int>(Pos(context)));
+        Check(StepSite(context, script, result) && context[7] == 7 && g_call_count == 2,
+              "kOut: a blocked first step (the sprite unmoved) is issued again", static_cast<int>(context[7]));
+        walk(-0x38000);
+        Check(StepSite(context, script, result) && result == 7 && context[7] == add && Pos(context) == s.move + 1u,
+              "kOut: then the added steps, and the position past the op", static_cast<int>(context[7]), static_cast<int>(add));
+        Check(g_call_count == 3 && g_calls[2].context == context && g_calls[2].dir == 7 && add >= 1, "kOut: three moves");
+        Check(!StepSite(context, script, result), "kOut: the next op is the original's");
+        // 0 columns: nothing.
+        g_columns = 0;
+        reset(s.move, 2);
+        Check(!StepSite(context, script, result) && g_call_count == 0, "0 columns: no rewrite");
+        g_columns = 53;
+        // The kind-2 object's path is never a site.
+        g_test_kind = 2;
+        reset(s.move, 2);
+        Check(!StepSite(context, script, result) && g_call_count == 0, "kind 2: no rewrite");
+        g_test_kind = 1;
+    }
+    // kIn by a 0D: area 32 +0x10[4]. Without the moved start the walk is the original's; the 0D moves it back
+    // along the walk (direction 1, z - half a cell a step: so z + half a cell a step), then the walk gains the steps.
+    {
+        const int row = RowOf(32, 0x10, 4, kIn);
+        const Site& s = kSites[row];
+        const unsigned char* const script = Pointer(s.script);
+        const unsigned add = Steps(s);
+        Game_AreaNumber = static_cast<unsigned short>(s.area);
+        reset(s.move, 1);
+        Check(!StepSite(context, script, result) && g_call_count == 0, "kIn: no moved start, no rewrite");
+        reset(s.at0d, 1);
+        SetLong(sprite + 0x38, 0x1C0000);
+        Placed0DSite(context, script, s.at0d);
+        Check(Long(sprite + 0x38) == 0x1C0000 + static_cast<std::int32_t>(add) * 0x8000 && Long(sprite + 0x34) == 0,
+              "kIn: the 0D's point moved back by the steps", Long(sprite + 0x38), static_cast<int>(add));
+        SetPos(context, s.move);
+        Check(StepSite(context, script, result) && result == 1 && context[7] == add && Pos(context) == s.move,
+              "kIn: the added steps first", static_cast<int>(context[7]));
+        SetLong(sprite + 0x38, 0x1C0000);
+        Check(StepSite(context, script, result) && context[7] == 14 && Pos(context) == s.move + 3u,
+              "kIn: then the original's 14, past the F2", static_cast<int>(context[7]), static_cast<int>(Pos(context)));
+        Check(context[4] == 1, "kIn: the speed untouched (not a fast row)");
+        SetPos(context, s.move);
+        Check(!StepSite(context, script, result), "kIn: the mark is spent");
+    }
+    // A fast kIn row: area 43 +0x18[3]. The added steps at the fastest speed, the speed put back for the walk.
+    {
+        const int row = RowOf(43, 0x18, 3, kIn);
+        const Site& s = kSites[row];
+        const unsigned char* const script = Pointer(s.script);
+        Game_AreaNumber = static_cast<unsigned short>(s.area);
+        reset(s.at0d, 2);
+        Placed0DSite(context, script, s.at0d);
+        SetPos(context, s.move);
+        Check(s.fast && StepSite(context, script, result) && context[4] == 5, "fast: the added steps at speed index 5",
+              static_cast<int>(context[4]));
+        walk(-0x10000);
+        Check(StepSite(context, script, result) && context[4] == 2 && context[7] == 8 && Pos(context) == s.move + 3u,
+              "fast: the speed put back for the original's 8", static_cast<int>(context[4]), static_cast<int>(context[7]));
+    }
+    // kOutBefore: area 60 +0x18[2], a walk north before the EB, then the EB runs as the original's.
+    {
+        const int row = RowOf(60, 0x18, 2, kOutBefore);
+        const Site& s = kSites[row];
+        const unsigned char* const script = Pointer(s.script);
+        Game_AreaNumber = static_cast<unsigned short>(s.area);
+        reset(s.before, 2);
+        Check(StepSite(context, script, result) && result == 1 && context[7] == Steps(s) && Pos(context) == s.before,
+              "kOutBefore: the walk, the position kept", static_cast<int>(context[7]));
+        walk(0x8000);
+        Check(!StepSite(context, script, result) && Pos(context) == s.before, "kOutBefore: then the EB, the original's");
+    }
+    // Case zero: +0x18[4] +0x060, 21 west then 6 north; +0x08B, 6 south then 15 east.
+    {
+        Game_AreaNumber = kCaseZeroArea;
+        const unsigned char* const script = Pointer(kCaseZeroScripts[0].script);
+        reset(0x060, 2);
+        Check(StepSite(context, script, result) && result == 7 && context[7] == 21 && Pos(context) == 0x060, "case zero: 21 west",
+              static_cast<int>(context[7]));
+        walk(-0x10000);
+        Check(StepSite(context, script, result) && result == 1 && context[7] == 6 && Pos(context) == 0x063,
+              "case zero: then 6 north", static_cast<int>(context[7]));
+        reset(0x08B, 2);
+        Check(StepSite(context, script, result) && result == 5 && context[7] == 6 && Pos(context) == 0x08B,
+              "case zero: 6 south first", static_cast<int>(context[7]));
+        walk(0x10000);
+        Check(StepSite(context, script, result) && result == 3 && context[7] == 15 && Pos(context) == 0x08E,
+              "case zero: then 15 east", static_cast<int>(context[7]));
+        // Another area: nothing.
+        Game_AreaNumber = 174;
+        reset(0x060, 2);
+        Check(!StepSite(context, script, result), "case zero: only in area 175");
+    }
+    // A context that moved on (an area change mid-walk) drops its plan.
+    {
+        const int row = RowOf(27, 0x10, 2, kOut);
+        const Site& s = kSites[row];
+        Game_AreaNumber = static_cast<unsigned short>(s.area);
+        reset(s.move, 2);
+        StepSite(context, Pointer(s.script), result);
+        SetPos(context, 0x002);
+        Check(!StepSite(context, Pointer(s.script), result) && Find(context) == nullptr, "a stale plan is dropped");
+    }
+    for (Live& l : g_live) l = Live{};
+    for (bool& on : g_site_on) on = false;
+    for (bool& on : g_case_on) on = false;
+    Game_AreaNumber = static_cast<unsigned short>(saved_area);
+    Sprite_Current = saved_sprite;
+    g_move = saved_move;
+    g_kind = saved_kind;
+    g_columns = saved_columns;
+    g_fast_index = saved_fast;
+    g_quiet = false;
+}
+
 void SelfTest() {
     g_bad = g_checks = 0;
     // 1. The rule: 0 columns, 0 steps; at any width the steps reach c + 12
@@ -682,6 +866,7 @@ void SelfTest() {
             Check(north == 6 && shorter == -9, "case zero: 6 north twice, 6 south once, 3 fewer steps a walk", north, shorter);
         }
     }
+    EngineTest();
     bof3::Log("shadow      wide_staging self-test: %u checks, %u mismatches", g_checks, g_bad);
 }
 
