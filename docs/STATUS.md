@@ -62,7 +62,7 @@ time - the disc-data inventory and its policy (DIV-0115), D56's repair (DIV-0116
 (DIV-0117..0120), the village's stats, the WAV dump, the us and jp sweeps, an eye batch - and D266..D289 numbered;
 nothing of it played by the owner ([`HANDOFF.md`](HANDOFF.md) lists them; the questions in
 [`owner-review.md`](owner-review.md)).
-**The ultrawide round, 2026-10-13..14** (`wide/ultrawide-round`, pushed for review, PR pending;
+**The ultrawide round, 2026-10-13..14** (`wide/ultrawide-round`, pushed for review, PR #60;
 [`ultrawide-round.md`](ultrawide-round.md) 5a, 5b): a fixed **21:9 mode**, `BOF3X_WIDE=2` (560 x 240, 120 columns a
 side, the launcher's three-way box), beside 16:9. Its census and state hash found the wide picture changing *logic*
 at 16:9 since 2026-09-30, by three causes, now each split so the picture widens and the logic stays Capcom's: the

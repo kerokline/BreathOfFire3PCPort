@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-14: `main` is `11e2cfe9` (PRs #58 and #59 merged); `wide/ultrawide-round` holds the ultrawide round and its fold-in, pushed for review - PR pending, item 1 below)
+**Status:** IN PROGRESS (2026-10-14: `main` is `11e2cfe9` (PRs #58 and #59 merged); `wide/ultrawide-round` holds the ultrawide round and its fold-in, pushed for review - PR #60, item 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -18,7 +18,7 @@ the investigation docs; anything durable moves to `STATUS.md`.
 nothing over); the game's own code is all ours since the platform round's step 3 (PR #43). `main` is `11e2cfe9`:
 PR #58 (`platform/more-hardening`, the away day of 2026-10-13: fifteen agent branches, DIV-0115..0120,
 D266..D289) and PR #59 (DIV-0121, D270's crash held). **The ultrawide round** (`wide/ultrawide-round`, 2026-10-13..14,
-pushed for review, PR pending; [`ultrawide-round.md`](ultrawide-round.md) 5a, 5b) adds a fixed **21:9 mode**
+pushed for review, PR #60; [`ultrawide-round.md`](ultrawide-round.md) 5a, 5b) adds a fixed **21:9 mode**
 (`BOF3X_WIDE=2`, 560 x 240) beside 16:9, and found that the wide picture had been changing *logic* at 16:9 since
 2026-09-30 - the off-screen flag, the band cells' `Rand` (D283) and the windows' slide-off bounds - each now split so
 the picture widens and the logic stays Capcom's: the eleven hash routes and `dolphinBoss` keep narrow's `Rand` and
@@ -46,7 +46,7 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
 
 ## Pick up here
 
-1. **Review and merge the ultrawide round's PR** (PR pending). Every non-merge commit since `main` is signed off
+1. **Review and merge the ultrawide round's PR** (PR #60). Every non-merge commit since `main` is signed off
    (`git log --format=%B main..wide/ultrawide-round`; CLAUDE.md rule 7). `ledger_check` 126 entries, 0 errors; the
    build and the headless `'*'` self-tests at `BOF3X_WIDE` unset, 1 and 2 pass on the fold-in's tip. The round's
    worktrees and `wide/*` branches under `.claude/worktrees/` are removable once it merges.
