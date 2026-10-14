@@ -17,6 +17,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 #include "hook/statehash.h"
+#include "hook/wav_dump.h"
 #include "render/render_d3d11.h"
 
 // The recipe language (docs/input-script.md has it with examples). One step a
@@ -87,7 +88,7 @@ namespace bof3 {
 void RandCountFrame();   // below, outside the anonymous namespace
 namespace {
 
-enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Mark, Key, Quit, End };
+enum class Kind { Wait, Press, Hold, Until, Seek, Shot, Peek, Poke, Music, Mark, Key, Quit, End };
 enum class Op { Eq, Ne, Any, None };
 
 struct Step {
@@ -330,6 +331,17 @@ void Load(const char* path) {
             VirtualQuery(reinterpret_cast<const void*>(static_cast<std::uintptr_t>(st.addr)), &mi, sizeof mi);
             if (!(mi.Protect & (PAGE_READWRITE | PAGE_WRITECOPY | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)))
                 ParseError(line, "address not writable", t[1]);
+        } else if (w == "music") {
+            // music TRACK [FRAMES]: the game's Music_Play(TRACK, FRAMES) called at
+            // this frame, as a script's or a menu's call would (docs/input-script.md
+            // 3) - a chosen song heard through the engine's own path, for the WAV
+            // dump's listen sets (docs/wav-dump.md). FRAMES defaults to 8, the
+            // faerie village's music menu's (CommuMusic_Play 0x45F950).
+            need(2, 3);
+            st.kind = Kind::Music;
+            st.value = Number(line, t[1]);
+            if (st.value > 0xFF) ParseError(line, "a track is 0..255, not", t[1]);
+            st.n = t.size() == 3 ? Number(line, t[2]) : 8;
         } else if (w == "mark") {
             st.kind = Kind::Mark;
             const std::size_t at = s.find_first_not_of(" \t", s.find("mark") + 4);
@@ -542,6 +554,13 @@ unsigned short NextWord() {
             Advance();
             continue;
         }
+        case Kind::Music:
+            // Through the original's entry, so BOF3X_ORIGINAL=Music_Play plays Capcom's.
+            Log("input       music %u (fade %u frames) recipe frame %u (Frame_Counter %u)", (unsigned)s.value, s.n, g_frame,
+                (unsigned)Frame_Counter);
+            bof3::orig::Music_Play(s.value, static_cast<int>(s.n));
+            Advance();
+            continue;
         case Kind::Mark:
             Log("input       mark %s recipe frame %u", s.text.c_str(), g_frame);
             Advance();
@@ -633,6 +652,7 @@ void __cdecl ScriptedLatch() {
 // unattended recipe run is not affected.
 void DeviceLatch() {
     StateHash_Tick();
+    WavDump_Tick();
     bof3::orig::Input_Latch();
     if (WinMain_InputAllowed()) return;
     Input_Held = Input_Previous = Input_Pressed = 0;
@@ -769,6 +789,15 @@ void RandCountFrame() {
 // the latch as Capcom called it.
 void __cdecl HashedLatch() {
     StateHash_Tick();
+    WavDump_Tick();
+    bof3::orig::Input_Latch();
+}
+
+// BOF3X_WAV_DIR alone, under Capcom's WinMain: the dump's frame, then the
+// latch as Capcom called it (wav_dump.h). Our WinMain reaches the dump
+// through DeviceLatch.
+void __cdecl WavLatch() {
+    WavDump_Tick();
     bof3::orig::Input_Latch();
 }
 
@@ -843,6 +872,7 @@ void InputScript_Start() {
         // runs the latch untouched. Our WinMain reaches the tick through
         // DeviceLatch.
         if (hashing) RetargetCall("StateHash", kLatchCall, kInputLatch, reinterpret_cast<void*>(&HashedLatch), true);
+        else if (WavDump_On()) RetargetCall("WavDump", kLatchCall, kInputLatch, reinterpret_cast<void*>(&WavLatch), true);
         return;
     }
     RandCountStart();

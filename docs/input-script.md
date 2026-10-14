@@ -200,6 +200,7 @@ One step per line; `#` starts a comment; buttons join with `+`
 | `until ADDR TYPE OP VALUE [timeout N]` | nothing held until true, checked once a frame. TYPE `u8`/`u16`/`u32`; OP `==` `!=` `&` (any bit) `!&` (no bit). A timeout (default 3,600) FAILS the recipe and hands the pad back |
 | `shot NAME [N [BUTTONS]]` | hold BUTTONS (default nothing) for N frames (default 30) - the battle's command cross shows a command only while its direction is held - then **freeze** the game until the driver has the picture (below). The picture is the frame presented as the hold ends: one exact frame, the same on every run |
 | `peek ADDR TYPE [LABEL]` | log a value |
+| `music TRACK [FRAMES]` | the game's `Music_Play(TRACK, FRAMES)` (default 8, the faerie village's music menu's) called at this frame through the original's entry, logged `input music T (fade F frames)`: a chosen song heard through the engine's own path (2026-10-13, [`wav-dump.md`](wav-dump.md) 4b) |
 | `mark TEXT` | log a line |
 | `hold KEY N` / `key KEY [N]` | a **keyboard** key - `f1`..`f12`, `escape`, `enter`, `space`, or a virtual-key number - held N frames (`key` alone: one): `WM_KEYDOWN` posted to the game window as the step starts, `WM_KEYUP` as it ends, the press as `Game_WndProc` sees a player's (2026-10-11). The recorder writes pad words only, so a route's F9 presses are added by hand in the owner's form, `hold f9 4` / `wait 42`. While the game is paused (F9) WinMain skips the latch; the recipe still advances a step per frame (`InputScript_PausedLatch`, its pad words dropped), so `hold f9 4` / `wait 42` / `hold f9 4` is a pause of 46 frames |
 | `quit [timeout N]` | the game is expected to exit now (F9 twice on the title): the process ending with this step current - or with a key step current whose next step past waits, peeks and marks is `quit`, since F9's second press quits on its key-down - logs `done` from `DllMain`'s detach; N frames (default 600) without an exit FAIL the recipe. An exit with any other step current logs `FAILED` with the line. `input_run.py` reads the log once more after the process is gone, so the detach's line is seen |
@@ -236,6 +237,11 @@ background, `analysis/shots/capture_check`. **F11** writes the same frame by
 hand, `bof3x-frame-<Frame_Counter>.bmp` beside the DLL, "Frame saved" on
 screen. Captures made this way are the target's size (the window's client
 under DIV-0042), so an A/B needs both sides made the same way.
+
+**The game writes its own audio too** (2026-10-13): `BOF3X_WAV_DIR` (`input_run.py --wav DIR`) writes
+the mix the game hands DirectSound - music and effects - to `DIR\<n>_<label>.wav`, clocked by the logic
+frames, so two runs of a recipe line up second for second; `tools/wav_diff.py` says where two differ
+([`wav-dump.md`](wav-dump.md)). Instrumentation like the shots: no ledger entry.
 
 BUTTONS is a PSX button name (`up down left right cross circle square triangle
 l1 l2 r1 r2 start select`) or **`@ADDR`**, the u16 at that address when the

@@ -68,9 +68,20 @@
 //  15  the Identify panel's two headings 弱点 / 持有物 (0x66A3E0 / 0x66A3E8,
 //      Identify_DrawMember / _DrawEnemy in magic_s12.cpp, `push` 0x4B10E5 /
 //      0x4B1191), read by our draws through Labels_Slot: no disc carries a
-//      word for them (the US MAGIC059.EMI and BATTLE.EMI hold no such
-//      strings), so the overlay builder sends its own English, Weakness and
-//      Items, for every Latin disc (2026-10-10, the owner's identify route);
+//      word for them - the discs draw a small heading instead (below) - so
+//      the overlay builder sends a space for each, which draws nothing
+//      (2026-10-10, the owner's identify route; a ja-JP overlay too since
+//      the amendment). Amended (DIVERGENCE DIV-0117, 2026-10-13): four more slots, the
+//      words every PlayStation disc's MAGIC060.EMI draws on the panel in the
+//      small font - WEAK and POINT on the weakness row, the item word above
+//      the items - and the EXP label (US 0x801EF1E0..0x801EF2A0: WEAK at
+//      (0x5A, 0x44), POINT at (0x80, 0x44), ITEM at (0x5A, 0x8A); the French
+//      disc's OBJET, the German's OBJEKT and EP). Their shipped slots are the
+//      PC's own copies of the Japanese disc's words beside EXP at 0x65AAB0
+//      (WEAK 0x65AAA8, ITEM 0x65AAB4, POINT 0x65AABC: read by nothing in the
+//      port), so a slot the overlay leaves empty - or an overlay built before
+//      the amendment, whose chunk has the two headings alone - draws those;
+//      the witness is Identify_DrawMember's push of EXP at 0x4B1150;
 //  16  the faerie village's sixty faeries' names: the 16-byte name field of
 //      each 20-byte trait record at 0x653210 (four stat bytes, then the
 //      name), which CommuSim_AddRecord copies five bytes of into the save's
@@ -79,12 +90,36 @@
 //      witness is CommuEntry_DrawPanel's read of the bars at 0x45E945. The
 //      sixtieth record's name field holds no glyph string on the PC and is
 //      kept as shipped.
+//  17  the name BattleExtra_EquipOpen 0x42DC20 copies over character record
+//      7's as the equipment screen opens (DIVERGENCE DIV-0118, 2026-10-13):
+//      the five bytes at 0x669CE8 (`push` operand at 0x42DC52), Capcom's
+//      copy of 5 as the PlayStation's is - BATE.EMI's Beyd, right after
+//      Whelp, the string its twin's copy (`addiu $a2, $zero, 5` two calls
+//      after the sound 0x102) reads; four letters and a NUL, kept in a
+//      buffer of ours that our BattleExtra_EquipOpen copies from (battle_e1.cpp),
+//      so the .data page is left as shipped;
+//  18  fight 26's turn counter (DIVERGENCE DIV-0119, 2026-10-13): the two
+//      words Boss26Fx_DrawCount draws through 0x669D20 / 0x669D24 (0x669D10
+//      before the count, 0x669D18 after) - BOSS025.EMI's word after the count
+//      (`turns left`), the European discs' singular beside it, the French
+//      disc's `Rest   tours` with the count between its words - kept in
+//      buffers of ours with a third slot, the disc's layout: the count's x,
+//      the words' x, and the singular's test (none, the turn equal to a
+//      value, or at least it) with its value, read off the disc's routine by
+//      the overlay builder;
+//  19  the hi-lo game's three choices (DIVERGENCE DIV-0120, 2026-10-13): the
+//      slots 0x669F44 / 48 / 4C behind 0x669F54 that CommuHiLo_DrawChoice
+//      0x45B1E0 draws with the count 2 - COMMU02.EMI's HIGH / LOW / SET (the
+//      French Haut / Bas / Mise, the German Hoch / Tief / Setz), three 4-byte
+//      slots right before the 72 bytes of sprite rectangles the PC has at
+//      0x652D04; kept in buffers of ours, read by our draw through
+//      Labels_Slot, which centres each in its box as the discs do.
 //
 // Groups 1, 2, 5, 6, 8..12 and 16 are written in place, one byte a letter in the
 // single-byte slots the overlay paints with the dialogue font, so a draw
 // through Text_DrawAt shows them as it shows every other overlay string.
 // Groups 3, 4, 7 and 13 are reached by nothing but their pointer tables (and
-// groups 14 and 15 by our draws alone) (a scan of
+// groups 14, 15, 17, 18 and 19 by our code alone) (a scan of
 // the image for each slot's address, 2026-09-29), so their strings go into
 // buffers of ours, 16 bytes each, and every table is re-aimed: the French
 // disc's ARMEMENT and CAPACITE and the German RUESTUNG are eight letters, one
@@ -132,10 +167,14 @@ struct Table {
     PointerTable tables[5];   // none for a group written in place
     char (*buffers)[kRoom];   // ours, for a repointed group
     bool small;               // drawn by the 8 px draw: Labels_SmallGlyph serves its slots
+    // The count an older overlay builder wrote, its strings the first slots
+    // (0: none). The slots past it have a shipped string the draw may fall
+    // back on, so the group counts as written once the first `legacy` are.
+    std::uint32_t legacy = 0;
 };
 
 char g_item_types[5][kRoom], g_skill_types[5][kRoom], g_sort_menus[11][kRoom], g_village_lists[20][kRoom],
-    g_village_words[5][kRoom], g_identify_words[2][kRoom];
+    g_village_words[5][kRoom], g_identify_words[6][kRoom], g_turn_words[3][kRoom], g_hilo_words[3][kRoom], g_guest_name[1][kRoom];
 
 constexpr std::uint32_t kFormations = 0x6636B0, kFormationBase = 0x573FC6;
 constexpr std::uint32_t kFaeries = 0x653210;   // the trait records: four stats, a name of 16
@@ -182,7 +221,12 @@ constexpr Table kTables[] = {
      {{0x669E68, 0, 10}, {0x669EE0, 10, 10}}, g_village_lists, false},
     {14, "village words", 5, {{0x669E10, 8, 0x459144}, {0x669F08, 4, 0x4607B8}, {0x669F08, 4, 0x4609A6},
                               {0x669F60, 8, 0x45B4BE}, {0x669F68, 8, 0x45B61E}}, {}, g_village_words, false},
-    {15, "identify words", 2, {{0x66A3E0, 8, 0x4B10E6}, {0x66A3E8, 8, 0x4B1192}}, {}, g_identify_words, false},
+    // The four words' shipped slots are the PC's own (see 15 above), witnessed
+    // by the push of EXP at 0x4B1150 that names the block they sit in.
+    {15, "identify words", 6, {{0x66A3E0, 8, 0x4B10E6}, {0x66A3E8, 8, 0x4B1192},
+                               {0x65AAA8, 8, 0x4B1150, 0x65AAB0}, {0x65AABC, 8, 0x4B1150, 0x65AAB0},
+                               {0x65AAB4, 8, 0x4B1150, 0x65AAB0}, {0x65AAB0, 4, 0x4B1150}},
+     {}, g_identify_words, false, 2},
     {16, "faerie names", 60, {
                               {0x653214, 16, 0x45E945, kFaeries},
                               {0x653228, 16, 0x45E945, kFaeries},
@@ -244,6 +288,14 @@ constexpr Table kTables[] = {
                               {0x653688, 16, 0x45E945, kFaeries},
                               {0x65369C, 16, 0x45E945, kFaeries},
                               {0x6536B0, 16, 0x45E945, kFaeries}}, {}, nullptr, false},
+    {17, "guest name", 1, {{0x669CE8, 5, 0x42DC52}}, {}, g_guest_name, false},
+    // The third slot is the layout, four bytes (none zero): the count's x,
+    // the words' x, the singular's test and its value; witnessed by the
+    // second word's pointer as the second slot is.
+    {18, "turn counter", 3, {{0x669D10, 8, 0x669D20}, {0x669D18, 8, 0x669D24}, {0x669D18, 8, 0x669D24}}, {},
+     g_turn_words, false},
+    {19, "hi-lo choices", 3, {{0x669F44, 4, 0x669F54}, {0x669F48, 4, 0x669F58}, {0x669F4C, 8, 0x669F5C}}, {},
+     g_hilo_words, false},
 };
 
 // The overlay's 8 x 8 set: the US disc's code - 0x30 from here, and a letter
@@ -252,9 +304,9 @@ constexpr Table kTables[] = {
 constexpr unsigned kSmallSet = 0xA00;
 
 // The tags whose every slot a chunk has written, for the 8 px draw.
-bool g_small_written[16] = {};
+bool g_small_written[32] = {};
 // The tags whose every slot a chunk has written, any draw (Labels_Written).
-bool g_written[16] = {};
+bool g_written[32] = {};
 
 }  // namespace
 
@@ -265,9 +317,19 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
     if (!t) bof3::Fatal("labels chunk tag is 0x%X, no table of that number", (unsigned)tag);
     const std::uint8_t* p = payload;
     const std::uint8_t* const end = payload + size;
-    if (p >= end || *p++ != t->count) bof3::Fatal("%s chunk: count is not %u", t->what, (unsigned)t->count);
-    std::uint32_t written = 0;
-    for (std::uint32_t i = 0; i < t->count; ++i) {
+    // An older builder's chunk (t->legacy) carries the first slots alone;
+    // the rest keep their shipped strings.
+    const std::uint32_t count = p < end ? *p : 0;
+    if (p >= end || (count != t->count && (t->legacy == 0 || count != t->legacy)))
+        bof3::Fatal("%s chunk: count is not %u", t->what, (unsigned)t->count);
+    ++p;
+    if (count != t->count)
+        bof3::Log("DIV-0064: %s chunk of %u strings from an older overlay builder: the other %u as shipped "
+                  "(rebuild the overlay with tools/loc_build.py)", t->what, (unsigned)count,
+                  (unsigned)(t->count - count));
+    std::uint32_t written = 0, required = 0;
+    const std::uint32_t needed = t->legacy ? t->legacy : t->count;
+    for (std::uint32_t i = 0; i < count; ++i) {
         const Slot& slot = t->slots[i];
         const auto* s = reinterpret_cast<const char*>(p);
         while (p < end && *p) ++p;
@@ -304,6 +366,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         std::memset(dest, 0, room);
         std::memcpy(dest, s, len);
         ++written;
+        if (i < needed) ++required;
     }
     if (p != end) bof3::Fatal("%s chunk: %u bytes left over", t->what, (unsigned)(end - p));
     if (t->buffers) {
@@ -313,6 +376,7 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
         for (const PointerTable& table : t->tables) {
             for (std::uint32_t k = 0; k < table.count; ++k) {
                 const std::uint32_t i = table.first + k;
+                if (i >= count) continue;   // an older chunk's: not sent, so not re-aimed
                 auto* entry = reinterpret_cast<std::uint32_t*>(static_cast<std::uintptr_t>(table.at + 4 * k));
                 const auto ours = static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(t->buffers[i]));
                 if (*entry != t->slots[i].va && *entry != ours)
@@ -322,9 +386,9 @@ void Labels_Apply(std::uint32_t tag, const std::uint8_t* payload, std::uint32_t 
             }
         }
     }
-    if (t->small && written == t->count && tag < sizeof g_small_written / sizeof g_small_written[0])
+    if (t->small && required == needed && tag < sizeof g_small_written / sizeof g_small_written[0])
         g_small_written[tag] = true;
-    if (written == t->count && tag < sizeof g_written / sizeof g_written[0]) g_written[tag] = true;
+    if (required == needed && tag < sizeof g_written / sizeof g_written[0]) g_written[tag] = true;
     bof3::Log("DIV-0064: %u of %u %s", (unsigned)written, (unsigned)t->count, t->what);
 }
 

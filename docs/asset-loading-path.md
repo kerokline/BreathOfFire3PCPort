@@ -1,6 +1,7 @@
 # The asset-loading path: file layer and `LoadDatFile`
 
-**Status:** IN PROGRESS (2026-09-19)
+**Status:** IN PROGRESS (2026-09-19; section 5, the `BOF3X_DATLOG` log and one
+route's files, MEASURED 2026-10-13)
 
 [`HANDOFF.md`](HANDOFF.md) step 1, first pass. Read outward from the anchor the
 `DAT/` work left — `LoadDatFile` `0x454590` — far enough to choose and land the
@@ -469,4 +470,69 @@ bytes: the first call observed was `File_Read(handle=0, size=1176679)`, and
 - The value-sequence search for the dropped non-code PSX sections
   ([`DAT_CONTAINER.md`](DAT_CONTAINER.md) §2).
 - The 32 callers of `LoadDatFile` — which index each passes is the map from
-  game state to file.
+  game state to file. `BOF3X_DATLOG` (§5) logs it per call; one route read.
+
+## 5. The files a route loads: `BOF3X_DATLOG` (2026-10-13)
+
+`BOF3X_DATLOG=1` (`src/game/dat_load.cpp`, read once at injection) logs one
+line per file `LoadDatFile` walks - the shipped file (the install's
+`DAT\NAME`, or the cache's when it holds it whole: `cache NAME`), then each
+language or optional overlay it finds - and a `none` line when the index has
+no name (the original returns there):
+
+```
+datlog      f<Frame_Counter> area <Game_AreaNumber> mode <Game_Mode> file 0x<index> file <path> caller 0x<return address> (<module>+0x<offset>)
+```
+
+The caller is `LoadDatFile`'s return address: since every caller is ours, an
+address in `bof3x.dll` (or `bof3x.exe`), resolved with `llvm-symbolizer
+--obj=<the launcher copy's bof3x.dll>` at `0x10000000 + offset - 1`.
+Instrumentation, off unless set: nothing else changes, so a note here and no
+ledger entry. `Snd_LoadBankFile`'s walk of the optional layers (DIV-0113)
+logs through the same lines with index `0xFFFFFFFF`.
+
+**One route** (`python tools/input_run.py
+tools/recipes/worldMapAndAreaTransition.txt --no-front --lang en-US --game
+<main>/bof3 --launcher <scratch>/L/bof3x-launcher.exe` with `BOF3X_OPT=none
+BOF3X_DATLOG=1`, the exe host, `away/1013-tooling` at its item-2 commit;
+`recipe done at recipe frame 2143`). The 22 lines, overlays folded into their
+file:
+
+| Frame | Area | Mode | Index | File (+ overlay) | Caller |
+|--:|--:|--:|--:|---|---|
+| 0 | 0 | 0 | `0x225` | `FIRST.DAT` + `en-US` | `Boot_Task` |
+| 0 | 0 | 0 | `0x226` | none (no name) | `Title_LoadTask` |
+| 1 | 0 | 0 | `0x136` | `DEMO.DAT` | `Title_StateLoad` |
+| 162 | 0 | 0 | `0x31D` | `START.DAT` + `en-US` | `TitleMode_Load` |
+| 326 | 0 | 1 | `0x2DA` | none (no name) | `PartySet_Select` |
+| 326 | 0 | 1 | `0x2C7` | `PL034.DAT` | `PartySet_Select` |
+| 326 | 0 | 1 | `0x307` | none (no name) | `Scenario_Load` |
+| 329 | 7 | 1 | `0x00A` | `AREA007.DAT` + `en-US` | `Area_Enter` |
+| 638 | 7 | 3 | `0x31E` | `STATUS.DAT` | `GameMode3_Enter` (the field menu) |
+| 1094 | 33 | 1 | `0x024` | `AREA033.DAT` + `en-US` | `Area_Enter` |
+| 1445 | 8 | 1 | `0x00B` | `AREA008.DAT` + `en-US` | `Area_Enter` |
+| 1559 | 33 | 1 | `0x024` | `AREA033.DAT` + `en-US` | `Area_Enter` |
+| 1780 | 7 | 1 | `0x00A` | `AREA007.DAT` + `en-US` | `Area_Enter` |
+| 2004 | 14 | 1 | `0x011` | `AREA014.DAT` + `en-US` | `Area_Enter` |
+
+What it settles:
+
+- **The area number is the file's number, on the PC.** Each `AREAnnn.DAT`
+  is loaded with `Game_AreaNumber` already `nnn` (7, 33, 8, 14), and its
+  `Dat_FileNames` index is `nnn + 3` (`0x00A` for 7, `0x024` for 33). The
+  sibling's `names/places.toml` keys its entries the same way (`id` = the
+  AREA number of `BIN/WORLD00/AREAnnn.EMI`), so for these four areas its
+  names apply to the PC as they stand: 7 McNeil Village (autumn), 8 Cedar
+  Woods (autumn), 14 Farm (`en` from the sibling `AREA013`'s caption, so a
+  hypothesis there) - and **33, the one place of the four the list leaves
+  unnamed** (no `jp`, `caption` or `en`), is the area this route crosses
+  between the village and the woods: the world map this project already
+  calls area 33 (`WorldMap33_Frame*`, [`rest_3a.md`](rest_3a.md),
+  [`area_w0c.md`](area_w0c.md)). That is a name for the sibling's empty row,
+  from the PC's load order and this project's own reading; whether the
+  PlayStation's `AREA033.EMI` is the same map is the sibling's to confirm.
+- Not settled: any area this route does not reach. The log is cheap to leave
+  on for any recipe; a run of the other routes would extend the table.
+- The three `none` lines are indexes whose `Dat_FileNames` entry is null
+  (`0x226`, `0x2DA`, `0x307`): the original returns at once for them too
+  (§2), so those callers ask for a file the PC build does not have.

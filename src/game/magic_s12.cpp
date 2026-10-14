@@ -62,7 +62,6 @@ constexpr std::uint32_t kSeenBits = 0x9040A8;
 // number, one mark, a row of marks, the number format.
 constexpr std::uint32_t kText1 = 0x66A3E0, kText2 = 0x66A3E8, kLabel2 = 0x66A31C;
 constexpr std::uint32_t kLabel1 = 0x65AAB0, kMark = 0x65AAC4, kMarks = 0x65AAC8, kNumberFormat = 0x65AB08;
-constexpr std::uint32_t kItemWord = 0x65AAB4;   // ITEM, beside EXP: read by nothing in the port, the US panel's small label
 // Six pointers to the elements' two-byte glyph codes.
 constexpr std::uint32_t kElementGlyphs = 0x66A398;
 // Celerity_End's byte, and Celerity_ApplyStat's cells: the result record
@@ -196,15 +195,33 @@ void DrawCentredCounted(const unsigned char* text, int y) {
     const unsigned n = CharCount(text) & 0xFFu;
     DrawAt(0xA0 - 6 * static_cast<int>(n), y, static_cast<int>(n), text);
 }
+// DIV-0064 group 15 (amended, DIVERGENCE DIV-0117): what the PlayStation
+// draws in the small font where the port draws heading `i` (0 the weakness
+// row's, 1 the items'), at the discs' own places - every disc's MAGIC060
+// routine (US 0x801EF1E0..0x801EF2A0, its small draw 0x801EF76C):
+// WEAK at (0x5A, 0x44) and POINT at (0x80, 0x44), the item word at
+// (0x5A, 0x8A) - each the overlay's string, else the PC's own copy of the
+// Japanese disc's word beside EXP (Labels_Slot). Before the amendment the
+// item word was drawn at (0x59, y + 4), placed by eye.
+void DrawSmallWords(unsigned i, int y) {
+    const auto small = MH_AT(SmallFn, bof3::addr::Text_DrawSmall);
+    if (i == 0) {
+        small(0x5A, y, 0, 0x10, Labels_Slot(15, 2));
+        small(0x80, y, 0, 0x10, Labels_Slot(15, 3));
+    } else {
+        small(0x5A, y, 0, 0x10, Labels_Slot(15, 4));
+    }
+}
 // DIV-0064 group 15: heading `i` of the Identify panel (0 the weakness
-// word, 1 the items word) - the overlay's string from Labels_Slot once the
-// group is written, centred on 0xA0 by the pen width it covers and drawn
-// whole, else the shipped word at `address` centred by its character count,
-// the count the draw's limit, as the originals have it. Answers what
+// word, 1 the items word) - once the group is written, the discs' small
+// words (above), then the overlay's string from Labels_Slot (a space, which
+// draws nothing) centred on 0xA0 by the pen width it covers and drawn whole;
+// else the shipped word at `address` centred by its character count, the
+// count the draw's limit, as the originals have it. Answers what
 // Text_DrawAt answers (Identify_DrawEnemy passes the upper half on).
 const unsigned char* DrawHeading(unsigned i, std::uint32_t address, int y) {
     if (Labels_Written(15)) {
-        if (i == 1) MH_AT(SmallFn, bof3::addr::Text_DrawSmall)(0x59, y + 4, 0, 0x10, Text(kItemWord));
+        DrawSmallWords(i, y);
         const unsigned char* const text = Labels_Slot(15, i);
         return DrawAt(0xA0 - static_cast<int>(TextAdvance_Width(text)) / 2, y, 0xFF, text);
     }
@@ -219,15 +236,21 @@ const unsigned char* DrawHeading(unsigned i, std::uint32_t address, int y) {
 int NameCount() { return Labels_Written(15) ? 8 : 5; }
 const unsigned char* DrawHeadingCounted(unsigned i, std::uint32_t address, int y, unsigned n) {
     if (Labels_Written(15)) {
-        // The US panel has no headings (the owner's wiki capture, 2026-10-10):
-        // the overlay sends a space for each, and above the items the US
-        // draws the small ITEM label the port still holds at 0x65AAB4 and
-        // never reads - 23 px left of the items' column, on the heading's row.
-        if (i == 1) MH_AT(SmallFn, bof3::addr::Text_DrawSmall)(0x59, y + 4, 0, 0x10, Text(kItemWord));
+        DrawSmallWords(i, y);
         const unsigned char* const text = Labels_Slot(15, i);
         return DrawAt(0xA0 - static_cast<int>(TextAdvance_Width(text)) / 2, y, 0xFF, text);
     }
     return DrawAt(0xA0 - 6 * static_cast<int>(n), y, static_cast<int>(n), Text(address));
+}
+// The EXP label at (0xB0, 0x64): the shipped 0x65AAB0 with the count 3, or
+// once group 15 is written the overlay's word drawn whole (the German disc's
+// EP; the others' EXP, the shipped word, when the overlay left it empty).
+void DrawExpLabel() {
+    if (Labels_Written(15)) {
+        DrawAt(0xB0, 0x64, 0xFF, Labels_Slot(15, 5));
+        return;
+    }
+    DrawAt(0xB0, 0x64, 3, Text(kLabel1));
 }
 
 }  // namespace
@@ -371,7 +394,7 @@ MS12_EXPORT void __cdecl Identify_DrawMember(void) {
     DrawHeading(0, kText1, 0x44);
     DrawAt(0x70, 0x50, 8, Text(kMarks));
     DrawAt(0x9C, 0x64, 1, Text(kMark));
-    DrawAt(0xB0, 0x64, 3, Text(kLabel1));
+    DrawExpLabel();
     DrawAt(0x9C, 0x78, 1, Text(kMark));
     DrawAt(0xB0, 0x78, 1, Text(kLabel2));
     DrawHeading(1, kText2, 0x8A);
@@ -397,7 +420,7 @@ MS12_EXPORT void __cdecl Identify_DrawEnemy(void) {
         char number[12];
         MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(Word(rec + 0x96)));
         DrawAt(0x70, 0x64, 5, reinterpret_cast<const unsigned char*>(number));
-        DrawAt(0xB0, 0x64, 3, Text(kLabel1));
+        DrawExpLabel();
         MH_CALL(Crt_sprintf)(number, reinterpret_cast<const char*>(Text(kNumberFormat)), static_cast<unsigned>(Word(rec + 0x94)));
         DrawAt(0x70, 0x78, 5, reinterpret_cast<const unsigned char*>(number));
         DrawAt(0xB0, 0x78, 1, Text(kLabel2));
@@ -406,7 +429,7 @@ MS12_EXPORT void __cdecl Identify_DrawEnemy(void) {
         DrawHeadingCounted(0, kText1, 0x44, text1);
         DrawAt(0x70, 0x50, 8, Text(kMarks));
         DrawAt(0x9C, 0x64, 1, Text(kMark));
-        DrawAt(0xB0, 0x64, 3, Text(kLabel1));
+        DrawExpLabel();
         DrawAt(0x9C, 0x78, 1, Text(kMark));
         DrawAt(0xB0, 0x78, 1, Text(kLabel2));
     }

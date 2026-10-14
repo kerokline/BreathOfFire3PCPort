@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-12 night) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-13, the away day's section added at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,128 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-13, the away day
+
+Gathered from the day's fifteen merges on `platform/more-hardening`; each item
+wants one line back. The pictures and sounds are game-derived, in the main
+checkout's `analysis/` (never in the tree).
+
+### To look at
+
+- **The eye batch, `analysis/shots/eye-1013/q1..q7`** (one folder a
+  question, each with a `README.md`; [`eye-batch-1013.md`](eye-batch-1013.md) 2):
+  - q1, D256: the PSP title's logo in two pieces with a seam near x 218 and a
+    second, cut ™ - keep the PSP's title on a PSP base, or draw a PlayStation
+    title there?
+  - q2: the PSP logo movie's wordmark about a third taller than the
+    PlayStation's - fine, or wrong? (and the launcher's two clipped lines,
+    D287 - fine to fix?)
+  - q3: the wide picture - anything wrong besides D283..D285 (below, to
+    decide)?
+  - q4: PSP-EU's Config screen blank (D246) - still deferred?
+  - q5: the fishing ticker - the disc's one message at a time against the
+    PC's packed band; the disc's circle glyph against the PC's red ring; PSP's
+    "buttons" - which style?
+  - q6: under ja-JP the Config grid is the port's Chinese (D280) - see "to
+    decide"; the rest equal narrow / wide.
+  - q7, D255: PSX-EU never comes back from the inn's black (now a hang) -
+    see "to decide".
+- **The arena sheets, `analysis/shots/arena-render-1013/`** (`README.md`,
+  `RYUD.md`; [`arena-render-1013.md`](arena-render-1013.md) 2): member 2's
+  nudges and slits (`PL*_seams.png`), member 1's added part (`BPLD*`), Ryu's
+  byte (`RYUD_image10.png`) - the three decisions below.
+- **The D56 capture, `analysis/shots/d56_before` / `d56_after`**, frame 500
+  ([`d56-encounter-bounds.md`](d56-encounter-bounds.md) 4): an enemy off the
+  left edge before, refused after (DIV-0116, on by default) - right?
+- **The labels sheet, `analysis/shots/labels_1013/identify_sheet_1013.png`**
+  ([`labels-1013.md`](labels-1013.md) 1.4): `WEAK POINT`, `ITEM` / `OBJET` /
+  `OBJEKT`, `EP` on the Identify panel (DIV-0117) - placed right?
+- **The Japanese world map**, `C:\Users\kerok\abj\runs\jp1013_worldMapAndAreaTransition`
+  frames 1140..1770 (D281, [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md) 3.3):
+  PSX-JP draws it about a third closer than the PC and PSP-JP. **The owner's
+  note (2026-10-13):** does not remember the Japanese release's map being
+  closer, but it is subtle enough that they would not; since the PC port and
+  the PSP both draw the wide view, the zoom may be a change Capcom made after
+  the initial Japanese release (the European disc drew the wide view in the
+  1012 sweep). Recorded as the owner's hypothesis; the PSX twin read (JP
+  against US `GAME.EMI`'s world-map camera set-up) is the check - anything to
+  add?
+- **Area 65's forest canopy** (`C:\Users\kerok\abu\runsဓ_fairyVillage`, the
+  PC's `AREA065` art against both discs', [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md)
+  3.3) and **bossAndFlash's three boss-effect frames** 3480, 4530,
+  4800..4830 that differ between the installs on both runs
+  (`abu\runsဓ_bossAndFlash`, `u1013r_bossAndFlash`; that doc 9) -
+  anything visibly wrong?
+
+### To listen to
+
+- **`analysis/listen-1013/`** (each folder's `README.txt` says what and when;
+  [`wav-dump.md`](wav-dump.md) 4):
+  - a, `a_random_encounter_resume`: the area's song resuming after a random
+    fight (DIV-0092) against silence (Capcom's rule) - right, as the
+    PlayStation?
+  - b, `b_loop_rows`: loops `064`, `076` and `037` with DIV-0081's table on
+    against off - the joins clean?
+  - c, `c_inn_jingle_psx_only`: the inn on the PC against a US-disc-only
+    install (D255) - which jingle source, if any?
+
+### To decide
+
+- **Inventory Q6, the wrap clicks** ([`disc-data-inventory.md`](disc-data-inventory.md)
+  4.6, 6): clamp as the stance says, or listen first? (Answered "wait" in the
+  morning; still open.)
+- **Inventory Q7, the 27A row's discs** (that doc 9.2): take the 27A loop from
+  any PSX disc (all five decode identical), so a PC + US cache and a Western
+  disc-only install get the disc's speed too - yes or no?
+- **Member 2's field bank** ([`arena-render-1013.md`](arena-render-1013.md) 6):
+  keep the PC's nudges (a repair of Capcom's art: a DIV), take the disc's, or
+  the split (the nudges kept, script 42's part dropped)?
+- **Ryu's byte, D288**: take the disc's (and clear the bit on a PC-only
+  install)?
+- **Member 1's battle bank**: take the disc's?
+- **The Western weakness row** ([`labels-1013.md`](labels-1013.md) 1.2): the
+  Western discs' enemy panel has no weakness row; drop it under a Western
+  layer, or keep it (as now)?
+- **The hi-lo count** (that doc 3): the US / EU draw passes count 3 in the
+  highlighted modes, which by the PC's reading would draw `HIG`; ours draws
+  every word whole. Keep, or does the owner's memory of the PlayStation say
+  otherwise? (And: where does fight 26 / Beyd's duel start, and the hi-lo game -
+  a route for each would let them be seen.)
+- **The US title layout, D277**: draw the US release's three-piece notice on
+  a US-built image (a DIV), or leave it?
+- **A ja-JP layer for kinds 7..16, D280** ([`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md)
+  3.2): build the exe's strings from the Japan disc (the PC's Chinese under
+  ja-JP becomes Japanese; the disc-only install gains Config and a named
+  hero) - yes, and in what scope? **And the fishing crash, D279**: through
+  that layer, or the scroller declining an empty line (a code DIV), or both?
+- **Wide and `Rand`, D283** ([`eye-batch-1013.md`](eye-batch-1013.md) 3 item 3):
+  may the wide picture change the rolls (say so in DIV-0041), or keep the
+  band's emitters off `Rand`?
+- **D255's fix**, now required (it hangs): the disc's XA stream as the
+  jingle on a PSX-only install, or the failed stream ending the wait at once
+  (a DIV) - which?
+- **Set 8's verb: done.** Built as "keep `Quit`" (DIV-0101 amended,
+  [`disc-data-inventory.md`](disc-data-inventory.md) 9.3) - confirm.
+- **The key icons, [`key-icons-by-mapping.md`](key-icons-by-mapping.md) 10's
+  five:** (1) icons that always tell the truth, or the US release's icons as a
+  layout preset? (2) the Western text's icons translated to the PC's buttons,
+  or kept with the US preset? (3) the world map's labels as the disc's words
+  with live glyphs? (4) keyboard glyphs as key names, or the PlayStation
+  shapes? (5) the reached sites first, the dialogue after?
+- **`combatGroup` and `sortScreens`'s saves**: which save were they recorded
+  from (neither has a `# save` header; `fairyVillageNews` and `dragonMenu`
+  were from `fairyVillage`, answered)?
+- **The Western title mark, D266**: the gap the inventory found is still
+  open - fill it by a `twin` row from the disc's `GAME.EMI#1`, so a Western
+  disc-only install draws its ™?
+
+### To know (no answer needed)
+
+- The 26 game-value twin rows (`e84ef241`, [`exe-image-twins-1013.md`](exe-image-twins-1013.md)
+  4) were kept.
+- `dragonMenu`'s frame 720 pop-up differs from its reference and is back
+  together at 780 - probably timing.
 
 ## To listen to, on the PlayStation (2026-10-11 night)
 
@@ -152,10 +274,10 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   **Myria** in area 198 - steal from her, or see the drop, with `myria-item` on and off; a battle with magic
   (the filled `Magic_Rows`); a level-up of roster index 6 (the PSP's table, DIV-0104 / DIV-0111).
 - **Still open (the follow-up round, [`HANDOFF.md`](HANDOFF.md)).**
-  - **D56's repair** (proposed, not built): the PSX's test in `Encounter_OnScreen` (the projected corner as
-    unsigned shorts against 319 / 239), so a fight cannot start with a combatant off the left or top edge. A port
-    repair by the twin rule, but every battle route and state-hash reference after it is re-recorded. Take it or
-    leave D56 latent.
+  - **D56's repair** (built 2026-10-13 as DIV-0116, [`d56-encounter-bounds.md`](d56-encounter-bounds.md)): a
+    fight no longer starts with a combatant off the left or top edge. Look at `analysis/shots/d56_before` and
+    `d56_after` frame 500 (a crafted camera shift: the Gooey off screen, then refused); in play, nothing to see
+    unless an encounter would have placed an enemy off the left - none of nine battle routes does.
   - **The save slot number's `"%X"`** (D254): no disc carries it, so the load screen draws `) 16` and stale glyphs.
     Leave it, or give the engine its own two-byte format (recommended).
   - **The jingles on a PSX-only install** (D255: the inn's screen stays black longer without `OYASUMI`): the

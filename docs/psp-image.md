@@ -176,7 +176,7 @@ other displacements.
 ### 4.1 `tools/psp_exe.py`
 
 ```
-python tools/psp_exe.py recipe  --game DIR --disc PSP-JP --disc PSP-EU    # recipes/exe-psp.tsv (needs BOF3.exe)
+python tools/psp_exe.py recipe  --game DIR --disc PSX-JP [...] --disc PSP-JP --disc PSP-EU  # recipes/exe-psp.tsv (needs BOF3.exe; every disc build, pspmap reads PSX-JP)
 python tools/psp_exe.py measure --game DIR --disc DISC [...] --out DIR    # section 1's comparison
 python tools/psp_exe.py beside  --game DIR --disc PSX [...] --disc PSP     # section 5 (reports only)
 python tools/psp_exe.py check                                              # the recipe alone (CI, via exe_tables check)
