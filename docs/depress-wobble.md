@@ -481,3 +481,12 @@ What the grab does not reach, as built:
   needs a GPU readback, not built."
 - **README:** `depress-wobble.md` is now BUILT (2026-10-13).
 
+
+## 8. The owner's eye (2026-10-14)
+
+The owner looked at section 6's captures (Depress at frame 1140, narrow and
+16:9; fishing at frame 1200, with the grab and without it) and said: "That
+restoration looks perfect." On the fishing pedestal, the owner had noticed
+the difference in play before and taken it for a missing texture. It is the
+same lost frame grab, and the pedestal showing the field's ground is the
+right look.
