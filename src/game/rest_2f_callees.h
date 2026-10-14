@@ -22,8 +22,8 @@ constexpr std::uint32_t kConfigMachine = bof3::addr::ConfigScreen_Run;
 // BattleDraw_Inject re-aims at ListTitle_DrawAt under a Latin overlay
 // (battle_draw.cpp kTitleCallA). Ours calls what the site calls.
 constexpr std::uint32_t kTitleCall = 0x596D13;
-// DIV-0041: the imm32 of MenuSlide_LeftOff170's `mov ecx, -170`, which
-// Widescreen_Inject widens (widescreen.cpp kSlides). Ours reads its bound there.
+// DIV-0041: the imm32 of MenuSlide_LeftOff170's `mov ecx, -170`; ours reads
+// it as widescreen.cpp holds it (g_slides; the faster slide).
 constexpr std::uint32_t kLeftOff170Bound = 0x596926;
 
 }  // namespace rest_2f

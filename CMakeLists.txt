@@ -151,6 +151,9 @@ add_library(bof3x SHARED
   src/game/field_objects.cpp
   src/game/object_kinds.cpp
   src/game/sprite_screen.cpp
+  src/game/band_census.cpp
+  src/game/wide_staging.cpp
+  src/game/wide_rand.cpp
   src/game/field_frame.cpp
   src/game/frame_callees.cpp
   src/game/kind2_object.cpp
@@ -261,6 +264,7 @@ add_library(bof3x SHARED
   src/game/inventory_ops.cpp
   src/game/inventory_ops_fuzz.cpp
   src/render/render_shim.cpp
+  src/render/fb_grab.cpp
   src/render/render_d3d11.cpp
   src/render/satpixie.cpp
   src/game/battle_window_draw.cpp

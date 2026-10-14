@@ -17,6 +17,7 @@
 #include <cstring>
 
 #include "hook/log.h"
+#include "render/fb_grab.h"
 #include "render/satpixie.h"
 
 namespace render {
@@ -72,6 +73,17 @@ struct GpuTexture {
     U width, height;
 };
 
+// DIV-0125 (fb_grab.h): a frame-buffer grab's texture, at the scale it
+// was grabbed. Kept across frames: VRAM keeps a moved picture until it is
+// written over, and the shim's registry says when that is.
+struct GrabSlot {
+    ID3D11Texture2D* texture;
+    ID3D11ShaderResourceView* srv;
+    ID3D11RenderTargetView* rtv;
+    U width, height;
+};
+GrabSlot g_grab_slots[fb_grab::kSlots];
+
 unsigned char* g_scratch;   // a texture's pixels converted to B8G8R8A8
 U g_scratch_bytes;
 
@@ -124,9 +136,11 @@ template <class T> void Release(T*& p) {
 
 const char kSceneShader[] = R"(
 cbuffer FrameConstants : register(b0) { float2 target_size; float2 view_pad; };
-cbuffer DrawConstants : register(b1) { uint flags; uint alpha_ref; uint alpha_func; uint draw_pad; };
+cbuffer DrawConstants : register(b1) { uint flags; uint alpha_ref; uint alpha_func; uint draw_pad; float4 grab0; float4 grab1; };
 Texture2D tex : register(t0);
+Texture2D grab : register(t1);
 SamplerState smp : register(s0);
+SamplerState grab_smp : register(s1);
 struct VSIn { float4 pos : POSITION; float4 diffuse : COLOR0; float4 specular : COLOR1; float2 uv : TEXCOORD0; };
 struct PSIn { float4 pos : SV_Position; float4 diffuse : COLOR0; float4 specular : COLOR1; float2 uv : TEXCOORD0; };
 PSIn VS(VSIn i) {
@@ -143,6 +157,17 @@ float4 PS(PSIn i) : SV_Target {
     float4 c = i.diffuse;
     if (flags & 1u) {
         float4 t = tex.Sample(smp, i.uv);
+        // DIV-0125: where the texel lies in a frame-buffer grab, the
+        // grab's picture (window resolution); black is transparent, as a
+        // 15-bit 0 is on the PlayStation. grab0: the page's origin less the
+        // grab's, and the window the 256 texels tile; grab1: the grab's cells.
+        if (flags & 32u) {
+            float2 cell = fmod(i.uv * 256.0, grab0.zw) + grab0.xy;
+            if (all(cell >= 0.0) && all(cell < grab1.xy)) {
+                float4 g = grab.SampleLevel(grab_smp, cell / grab1.xy, 0);
+                t = float4(g.rgb, any(g.rgb > 0.0) ? 1.0 : 0.0);
+            }
+        }
         if ((flags & 2u) && t.a < 0.5) discard;
         c.rgb *= t.rgb;
         if (flags & 4u) c.a *= t.a;
@@ -409,7 +434,57 @@ bool SameState(const PipeState& a, const PipeState& b) {
     return a.texture == b.texture && a.src_blend == b.src_blend && a.dst_blend == b.dst_blend &&
            a.blend_enable == b.blend_enable && a.alpha_test == b.alpha_test && a.alpha_ref == b.alpha_ref &&
            a.alpha_func == b.alpha_func && a.color_key == b.color_key && a.specular == b.specular &&
-           a.alpha_modulate == b.alpha_modulate && a.point_filter == b.point_filter && a.topology == b.topology;
+           a.alpha_modulate == b.alpha_modulate && a.point_filter == b.point_filter && a.topology == b.topology &&
+           a.grab_slot == b.grab_slot &&
+           (a.grab_slot == 0 || (a.grab_off[0] == b.grab_off[0] && a.grab_off[1] == b.grab_off[1] &&
+                                 a.grab_tile[0] == b.grab_tile[0] && a.grab_tile[1] == b.grab_tile[1] &&
+                                 a.grab_size[0] == b.grab_size[0] && a.grab_size[1] == b.grab_size[1]));
+}
+
+// DIV-0125: copies the picture's (x, y, w, h), in game pixels, from the
+// target into grab slot `slot` at the target's scale - the view's columns
+// moved by the wide pad, so a rectangle reaching into a side band takes the
+// band's picture. What lies outside the target is left transparent black.
+void Grab(const Command& c) {
+    if (c.grab_slot >= static_cast<U>(fb_grab::kSlots)) bof3::Fatal("render: grab slot %u", c.grab_slot);
+    GrabSlot& g = g_grab_slots[c.grab_slot];
+    const int k = static_cast<int>(g_scale);
+    const U w = static_cast<U>(c.grab_w * k), h = static_cast<U>(c.grab_h * k);
+    if (!g.texture || g.width != w || g.height != h) {
+        Release(g.rtv);
+        Release(g.srv);
+        Release(g.texture);
+        D3D11_TEXTURE2D_DESC d = {};
+        d.Width = w;
+        d.Height = h;
+        d.MipLevels = 1;
+        d.ArraySize = 1;
+        d.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+        d.SampleDesc.Count = 1;
+        d.Usage = D3D11_USAGE_DEFAULT;
+        d.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+        Check(g_device->CreateTexture2D(&d, nullptr, &g.texture), "CreateTexture2D (grab)");
+        Check(g_device->CreateShaderResourceView(g.texture, nullptr, &g.srv), "CreateShaderResourceView (grab)");
+        Check(g_device->CreateRenderTargetView(g.texture, nullptr, &g.rtv), "CreateRenderTargetView (grab)");
+        g.width = w;
+        g.height = h;
+    }
+    // The slot may be bound from the draw before; a copy into a bound resource
+    // is what the runtime would unbind anyway.
+    ID3D11ShaderResourceView* none = nullptr;
+    g_ctx->PSSetShaderResources(1, 1, &none);
+    const int x0 = c.grab_x * k + static_cast<int>(g_pad_x), y0 = c.grab_y * k;
+    const int x1 = x0 + static_cast<int>(w), y1 = y0 + static_cast<int>(h);
+    const int cx0 = x0 < 0 ? 0 : x0, cy0 = y0 < 0 ? 0 : y0;
+    const int cx1 = x1 > static_cast<int>(g_target_w) ? static_cast<int>(g_target_w) : x1;
+    const int cy1 = y1 > static_cast<int>(g_target_h) ? static_cast<int>(g_target_h) : y1;
+    if (cx0 != x0 || cy0 != y0 || cx1 != x1 || cy1 != y1) {
+        const float clear[4] = {0, 0, 0, 0};
+        g_ctx->ClearRenderTargetView(g.rtv, clear);
+    }
+    if (cx0 >= cx1 || cy0 >= cy1) return;
+    D3D11_BOX box = {static_cast<UINT>(cx0), static_cast<UINT>(cy0), 0, static_cast<UINT>(cx1), static_cast<UINT>(cy1), 1};
+    g_ctx->CopySubresourceRegion(g.texture, 0, static_cast<UINT>(cx0 - x0), static_cast<UINT>(cy0 - y0), 0, g_target, 0, &box);
 }
 
 // One Draw call in state `s`. The flag word is kSceneShader's `flags`: 1
@@ -418,6 +493,7 @@ bool SameState(const PipeState& a, const PipeState& b) {
 void Draw(const PipeState& s, U first, U count) {
     struct {
         U flags, ref, func, pad;
+        float grab0[4], grab1[4];
     } c = {};
     if (s.texture) c.flags |= 1;
     if (s.texture && s.color_key) c.flags |= 2;
@@ -426,9 +502,26 @@ void Draw(const PipeState& s, U first, U count) {
     if (s.alpha_test) c.flags |= 16;
     c.ref = s.alpha_ref;
     c.func = s.alpha_func;
+    // DIV-0125: a draw of a page that holds a grab samples the grab's
+    // texture there. A slot whose grab has not been copied yet (none in any
+    // frame so far) has no texture and the draw keeps the page's own texels.
+    ID3D11ShaderResourceView* grab_srv = nullptr;
+    if (s.texture && s.grab_slot && g_grab_slots[s.grab_slot - 1].srv) {
+        c.flags |= 32;
+        grab_srv = g_grab_slots[s.grab_slot - 1].srv;
+        c.grab0[0] = s.grab_off[0];
+        c.grab0[1] = s.grab_off[1];
+        c.grab0[2] = s.grab_tile[0];
+        c.grab0[3] = s.grab_tile[1];
+        c.grab1[0] = s.grab_size[0];
+        c.grab1[1] = s.grab_size[1];
+    }
     PutConstants(g_cb_draw, &c, sizeof c);
     ID3D11ShaderResourceView* srv = s.texture ? Bind(s.texture)->srv : nullptr;
     g_ctx->PSSetShaderResources(0, 1, &srv);
+    g_ctx->PSSetShaderResources(1, 1, &grab_srv);
+    ID3D11SamplerState* grab_sampler = s.point_filter ? g_sampler_present_point : g_sampler_present_linear;
+    g_ctx->PSSetSamplers(1, 1, &grab_sampler);
     ID3D11SamplerState* sampler = s.point_filter ? g_sampler_point : g_sampler_linear;
     g_ctx->PSSetSamplers(0, 1, &sampler);
     const float factor[4] = {0, 0, 0, 0};
@@ -478,6 +571,12 @@ void RunFrame(Frame& frame) {
             g_ctx->ClearRenderTargetView(g_target_rtv, rgba);
             continue;
         }
+        if (c.kind == Cmd::kGrab) {   // DIV-0125: the picture so far, before the draws after it
+            if (pending) Draw(state, first, count);
+            pending = false;
+            Grab(c);
+            continue;
+        }
         if (pending && SameState(state, c.state) && first + count == c.first) {
             count += c.count;
             continue;
@@ -491,6 +590,7 @@ void RunFrame(Frame& frame) {
     if (pending) Draw(state, first, count);
     ID3D11ShaderResourceView* none = nullptr;
     g_ctx->PSSetShaderResources(0, 1, &none);
+    g_ctx->PSSetShaderResources(1, 1, &none);
 }
 
 void Show() {
@@ -647,7 +747,7 @@ void InitOnFiber(const Options& options) {
     vb.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     Check(g_device->CreateBuffer(&vb, nullptr, &g_vertices), "CreateBuffer (vertices)");
     g_cb_frame = MakeConstants(16);
-    g_cb_draw = MakeConstants(16);
+    g_cb_draw = MakeConstants(48);
     g_sampler_point = MakeSampler(true, false);
     g_sampler_linear = MakeSampler(false, false);
     g_sampler_present_point = MakeSampler(true, true);

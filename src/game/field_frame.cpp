@@ -13,6 +13,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/move_script_bytes.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -32,6 +33,56 @@ const unsigned char* Record54(const unsigned char* sprite) {
     std::uint32_t p;
     std::memcpy(&p, sprite + 0x54, sizeof p);
     return At(p);
+}
+
+// DIVERGENCE DIV-0041 (ultrawide round, group UC2, docs/ultrawide-culls-fix.md
+// section 2): a type-0x0A sprite in the wide picture's bands. Sprite_ProjectA
+// keeps Capcom's margins for the off-screen flag and for its place on
+// Sprite_DrawList, so every list the original builds is built the same (the
+// list holds 40, and a band sprite taking a slot could push out one the
+// original draws - and that one's flag, which Sprite_Draw writes, would go
+// stale). A sprite the original leaves off the list for x alone, but inside
+// the margins moved out by the columns, is noted here instead, and
+// Field_DrawFrame puts it on the list just before the draw pass, in whatever
+// slots the frame left. Its flag is already set (Sprite_Draw sets it again at
+// its own bound, which lies inside the margins), and the scale dwords +0x40 /
+// +0x44 Sprite_Draw writes are put back after the pass. A model sprite (+0x24
+// bit 6, drawn through Sprite_AddDrawRecords) is not noted: it stays culled
+// at Capcom's margins. Empty while the fills are unarmed (every fuzz).
+struct BandSprite {
+    unsigned char* sprite;
+    unsigned char scale[8];
+};
+BandSprite g_band[0x28];
+unsigned g_band_count, g_band_added;
+int g_band_fill = -1;   // the self-test's columns; -1 is Widescreen_Fill()
+
+void BandNote(unsigned char* sprite) {
+    if (g_band_count < sizeof g_band / sizeof g_band[0]) g_band[g_band_count++].sprite = sprite;
+}
+
+// Just before the draw pass: each noted sprite still flagged off screen, still
+// not a model and not already on the list, appended while the list has room.
+void BandAppend() {
+    g_band_added = 0;
+    for (unsigned i = 0; i < g_band_count; ++i) {
+        BandSprite& b = g_band[i];
+        if (!(b.sprite[0] & 0x80) || (b.sprite[0] & 0x40) || (b.sprite[0x24] & 0x40)) continue;
+        const unsigned char n = Sprite_DrawListCount;
+        if (n >= 0x28) break;
+        bool listed = false;
+        for (unsigned k = 0; k < n; ++k) listed = listed || Sprite_DrawList[k] == b.sprite;
+        if (listed) continue;
+        std::memcpy(b.scale, b.sprite + 0x40, sizeof b.scale);
+        Sprite_DrawList[n] = b.sprite;
+        Sprite_DrawListCount = static_cast<unsigned char>(n + 1);
+        g_band[g_band_added++] = b;
+    }
+    g_band_count = 0;
+}
+void BandRestore() {
+    for (unsigned i = 0; i < g_band_added; ++i) std::memcpy(g_band[i].sprite + 0x40, g_band[i].scale, sizeof g_band[i].scale);
+    g_band_added = 0;
 }
 
 using Handler = void (__cdecl*)(unsigned char*);
@@ -375,6 +426,11 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
     const int x = static_cast<std::int16_t>(Word(sprite + 0x2E)), y = static_cast<std::int16_t>(Word(sprite + 0x30));
     if (x > 0x140 + margin[0] || x < -static_cast<int>(margin[1]) || y > 0xF0 + margin[2] || y < -static_cast<int>(margin[3])) {
         sprite[0] |= 0x80;   // off screen
+        // DIV-0041 (UC2): in the band, drawn after all (BandNote above).
+        const int fill = g_band_fill >= 0 ? g_band_fill : static_cast<int>(Widescreen_Fill());
+        if (fill != 0 && x <= 0x140 + margin[0] + fill && x >= -static_cast<int>(margin[1]) - fill &&
+            y <= 0xF0 + margin[2] && y >= -static_cast<int>(margin[3]))
+            BandNote(sprite);
         return;
     }
     sprite[0] &= 0x7F;
@@ -389,7 +445,9 @@ extern "C" void __cdecl Sprite_ProjectA(void) {
 extern "C" void __cdecl Field_DrawFrame(void) {
     g.header_pass();
     g.overlays();
+    BandAppend();    // DIV-0041 (UC2): the band's type-0x0A sprites, in the slots left
     g.draw_pass();
+    BandRestore();
     Sprite_OverlayListCount = 0;
     Sprite_DrawListCount = 0;
 }
@@ -779,6 +837,82 @@ void SeedObject(unsigned char* o) {
     SetWord(o + 0x9C, Half() ? k9C[Next() % 6] : Next());
 }
 
+// DIV-0041's band (UC2), when the build is wide: Sprite_ProjectA with the
+// band armed at the build's columns against Capcom's, the whole state
+// compared - the band goes only to the side list, so nothing the original
+// keeps may differ - and the side list's append and restore on a list of
+// stand-in objects. Narrow there is no band: not run.
+struct BandCheck {
+    bool run, append_ok;
+    unsigned columns, rounds, noted, bad;
+};
+BandCheck BandSelfTest(void* theirs) {
+    BandCheck out{};
+    out.columns = Widescreen_Columns();
+    if (out.columns == 0) return out;
+    out.run = true;
+    static State input, their_out, our_out;
+    constexpr unsigned kBandRounds = 4000;
+    for (unsigned round = 0; round < kBandRounds; ++round) {
+        auto* bytes = reinterpret_cast<unsigned char*>(&input);
+        for (unsigned i = 0; i < offsetof(State, log); ++i) bytes[i] = static_cast<unsigned char>(Next());
+        input.current = Pool(Next());
+        input.active = Pool(Next());
+        input.state = Pool(Next());
+        Apply(input);
+        g_seed = Next();
+        for (unsigned i = 0; i < kObjects; ++i) SeedObject(Sprite_Objects + i * kObjectBytes);
+        for (unsigned i = 0; i < kExtra; ++i) SeedObject(Sprite_ObjectsExtra + i * kObjectBytes);
+        for (unsigned i = 0; i < 3; ++i) SeedObject(ObjTrio + i * kMemberBytes);
+        Sprite_DrawListCount = static_cast<unsigned char>(Next() % 3 ? 0x25 + Next() % 6 : Next() % 0x29);
+        Draw_OtSlot = static_cast<unsigned char>(Often() ? 4 : Next() % 8);
+        Capture(input);
+        unsigned noted = 0;
+        for (int pass = 0; pass < 2; ++pass) {
+            Apply(input);
+            g_band_count = 0;
+            if (pass) g_band_fill = static_cast<int>(out.columns);
+            reinterpret_cast<void (__cdecl*)()>(pass ? reinterpret_cast<void*>(&Sprite_ProjectA) : theirs)();
+            g_band_fill = -1;
+            if (pass) noted = g_band_count;
+            Capture(pass ? our_out : their_out);
+        }
+        out.noted += noted;
+        g_band_count = 0;
+        if (std::memcmp(&their_out, &our_out, sizeof their_out) != 0 && ++out.bad <= 8)
+            bof3::Log("shadow      field_frame DIV-0041 band MISMATCH: round %u", round);
+        ++out.rounds;
+    }
+
+    // The append: 0x26 entries the frame built, six noted - appended; its
+    // flag cleared since; a model; already listed; appended; no room left.
+    static unsigned char objects[8][kObjectBytes];
+    for (unsigned i = 0; i < 8; ++i) {
+        std::memset(objects[i], 0, kObjectBytes);
+        objects[i][0] = 0x81;
+        for (unsigned k = 0; k < 8; ++k) objects[i][0x40 + k] = static_cast<unsigned char>(0x10 * i + k);
+    }
+    objects[3][0] = 0x01;     // its flag cleared since
+    objects[4][0x24] = 0x40;  // a model
+    for (unsigned i = 0; i < 0x26; ++i) Sprite_DrawList[i] = objects[0];
+    Sprite_DrawList[7] = objects[5];   // already listed
+    Sprite_DrawListCount = 0x26;
+    g_band_count = 0;
+    static const unsigned kNoted[] = {1, 3, 4, 5, 2, 6};
+    for (const unsigned i : kNoted) BandNote(objects[i]);
+    BandAppend();
+    bool ok = Sprite_DrawListCount == 0x28 && Sprite_DrawList[0x26] == objects[1] && Sprite_DrawList[0x27] == objects[2] &&
+              g_band_added == 2 && g_band_count == 0;
+    for (unsigned i = 0; i < 0x26; ++i) ok = ok && Sprite_DrawList[i] == (i == 7 ? objects[5] : objects[0]);
+    for (unsigned i = 0; i < 8; ++i) std::memset(objects[i] + 0x40, 0xEE, 8);   // the draw's scale writes
+    BandRestore();
+    for (unsigned i = 1; i <= 2; ++i)
+        for (unsigned k = 0; k < 8; ++k) ok = ok && objects[i][0x40 + k] == static_cast<unsigned char>(0x10 * i + k);
+    ok = ok && objects[6][0x40] == 0xEE && objects[5][0x40] == 0xEE && g_band_added == 0;   // never appended: untouched
+    out.append_ok = ok;
+    return out;
+}
+
 void SelfTest(void* const (&theirs)[kCount]) {
     constexpr unsigned kRounds = 24000;
     unsigned region_bytes = 0;
@@ -843,9 +977,19 @@ void SelfTest(void* const (&theirs)[kCount]) {
                       kClones[k].name, their_out.log_n, our_out.log_n, first);
         }
     }
+    const BandCheck band = BandSelfTest(theirs[8]);
     g = kOriginals;
     std::memcpy(Field_ObjectHandlers, saved_handlers, sizeof saved_handlers);
     Apply(saved);
+    if (band.run)
+        bof3::Log("shadow      field_frame DIV-0041 band at %u columns: Sprite_ProjectA %u rounds, %u sprites noted for "
+                  "the band, the state compared with Capcom's, %u MISMATCHES; the append %s",
+                  band.columns, band.rounds, band.noted, band.bad, band.append_ok ? "ok" : "WRONG");
+    else
+        bof3::Log("shadow      field_frame DIV-0041 band: not run (narrow: no band)");
+    if (band.bad || (band.run && (!band.append_ok || band.noted == 0)))
+        bof3::Fatal("field_frame: the band's type-0x0A sprites change the original's state (%u of %u rounds, %u noted, "
+                    "append %s)", band.bad, band.rounds, band.noted, band.append_ok ? "ok" : "WRONG");
     bof3::Log("shadow      field_frame self-test: %u rounds (%u per function), %u calls to the stand-ins, %u exchanges in the "
               "sort, Sprite_ProjectA %u shown / %u culled, %u MISMATCHES; the 30 objects, the 4 extra, ObjTrio, "
               "both sprite lists and counts, the flags, counts and draw bytes, the records and the stand-ins' log compared",

@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/wide_staging.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
@@ -84,6 +85,32 @@ extern "C" void __cdecl Sprite_ClutWord(unsigned short* out) {
 // The scale goes through x87 in the original as an integer times 2^-16: the
 // product is exact at any precision, so one rounding to float either way.
 namespace {
+
+// The cull, and the off-screen flag it leaves in bit 7 of byte 0: true when
+// the object is to be drawn. The original has one bound for both, x in
+// [-0x40, 0x180] and y in [-0x40, 0x130]. Ours moves each x end out by its
+// own number of columns: `draw` for the picture, `flag` for the bit.
+//
+// DIVERGENCE DIV-0041 (the off-screen flag split, ultrawide round, group UC2,
+// docs/ultrawide-culls-fix.md section 1): the bit is game logic - nine
+// functions read it to decide what an actor or effect does next
+// (Member_FollowStep, Member_CatchUp, Scena08_Scene4, BossNina_WalkStep,
+// EffectKind32_Arc / _Settle, EffectKind34_V4Move, Area65_Record8Move,
+// Fish_Swim; docs/ultrawide-culls.md section 2) - so it keeps Capcom's bound
+// at every width (Sprite_Draw passes flag 0), and only the picture's cull
+// moves by the columns. From 2026-09-30 until this split the bit moved with
+// the picture under BOF3X_WIDE=1. Narrow, both are 0 and this is the
+// original's test. The self-test's control passes flag = draw to show the fuzz
+// can see the difference.
+bool Cull(unsigned char* object, short x, short y, int draw, int flag) {
+    const bool y_out = y > 0x130 || y < -0x40;
+    if (y_out || x > 0x180 + flag || x < -0x40 - flag) object[0] |= 0x80;
+    else object[0] &= 0x7F;
+    return !(y_out || x > 0x180 + draw || x < -0x40 - draw);
+}
+
+int g_draw_columns = -1, g_flag_columns = -1;   // the self-test's: -1 is Sprite_Draw's own
+
 void Draw() {
     unsigned char* object = Sprite_Current;
     if (object[0] & 0x40) return;
@@ -99,12 +126,9 @@ void Draw() {
         Put<long>(object, 0x44, scale);
     }
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
-    const int cull = static_cast<int>(Widescreen_Fill());   // DIV-0041: the x cull out by the columns
-    if (x > 0x180 + cull || x < -0x40 - cull || y > 0x130 || y < -0x40) {
-        object[0] |= 0x80;
-        return;
-    }
-    object[0] &= 0x7F;
+    const int draw = g_draw_columns >= 0 ? g_draw_columns : static_cast<int>(Widescreen_Fill());
+    if (!Cull(object, x, y, draw, g_flag_columns >= 0 ? g_flag_columns : 0)) return;
+    if (wide_staging::Hide(object)) return;   // DIV-0124: 21:9, past the 16:9 view in a scene - draw-only, after bit 7
     const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
     const unsigned count = frame[0];
     if (count == 0) return;
@@ -388,6 +412,70 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
         }
     }
 
+    // DIV-0041's off-screen flag split (UC2, docs/ultrawide-culls-fix.md): the
+    // fills are unarmed while this runs, so the rounds above compare the
+    // narrow cull. Here the picture's cull is moved by the build's own columns
+    // (Widescreen_Columns: 53 at BOF3X_WIDE=1, 120 at =2) and the flag kept at
+    // 0, as Sprite_Draw runs once armed, and only the object is compared with
+    // Capcom's: bit 7 must be theirs in every round, x biased to both bounds.
+    // The control moves the flag with the picture (the 2026-09-30 build's
+    // behaviour) and must be refused. Narrow there is no band: not run.
+    const int columns = static_cast<int>(Widescreen_Columns());
+    unsigned split_bad = 0, control_refused = 0, band = 0;
+    constexpr unsigned kSplitRounds = 16000;
+    if (columns > 0) {
+        for (unsigned round = 0; round < kSplitRounds; ++round) {
+            auto* bytes = reinterpret_cast<unsigned char*>(&input);
+            for (unsigned i = 0; i < sizeof input; ++i) bytes[i] = static_cast<unsigned char>(next());
+            unsigned char* object = input.object;
+            object[0] &= ~0x40;
+            object[0x48] = static_cast<unsigned char>(next() % 2);
+            Put<long>(object, 0x60, static_cast<long>(next() % 0x4000) + 1);
+            short x;
+            switch (next() % 5) {
+                case 0: x = static_cast<short>(-0x40 - 1 + static_cast<int>(next() % 3)); break;
+                case 1: x = static_cast<short>(0x180 - 1 + static_cast<int>(next() % 3)); break;
+                case 2: x = static_cast<short>(-0x40 - columns - 1 + static_cast<int>(next() % 3)); break;
+                case 3: x = static_cast<short>(0x180 + columns - 1 + static_cast<int>(next() % 3)); break;
+                default: x = static_cast<short>(-0x40 - columns - 2 +
+                                                static_cast<int>(next() % static_cast<unsigned>(0x1C4 + 2 * columns + 4)));
+            }
+            Put<short>(object, 0x2E, x);
+            Put<short>(object, 0x30, edge(-0x40, 0x130));
+            if ((x > 0x180 || x < -0x40) && x <= 0x180 + columns && x >= -0x40 - columns) ++band;
+            const unsigned offset = next() % 0x100;
+            Put<std::uint16_t>(object, 0x5A, static_cast<std::uint16_t>(offset));
+            Put<const unsigned char*>(object, 0x54, g_live.frame);
+            input.frame[offset] = static_cast<unsigned char>(next() % 8);
+            object[0x29] = static_cast<unsigned char>(next() % 8);
+            input.cell_count = next() % kMaxCount;
+            input.current = g_live.object;
+            input.buffer_index = static_cast<unsigned char>(next() % 2);
+            for (unsigned k = 0; k < 8; ++k) input.ot[k] = &g_tails[next() % 8];
+            input.packet_next = Gfx_PacketPools + (next() % 2 ? 0x10000u : 0u) + next() % (0x10000u - kWindow - 0x200u);
+            unsigned char* const window_at = input.packet_next;
+            unsigned char object_out[3][0x80];
+            for (int pass = 0; pass < 3; ++pass) {
+                Apply(input, window_at);
+                if (pass == 0) {
+                    SetControlWord(kGameControlWord);
+                    theirs();
+                    SetControlWord(saved_word);
+                } else {
+                    g_draw_columns = columns;
+                    g_flag_columns = pass == 1 ? 0 : columns;
+                    Sprite_Draw();
+                    g_draw_columns = g_flag_columns = -1;
+                }
+                std::memcpy(object_out[pass], g_live.object, sizeof object_out[pass]);
+            }
+            if (std::memcmp(object_out[0], object_out[1], sizeof object_out[0]) != 0 && ++split_bad <= 8)
+                bof3::Log("shadow      sprite_draw flag split MISMATCH: round %u, x %d y %d: byte 0 %02X / %02X", round, x,
+                          Get<short>(object, 0x30), object_out[0][0], object_out[1][0]);
+            if (std::memcmp(object_out[0], object_out[2], sizeof object_out[0]) != 0) ++control_refused;
+        }
+    }
+
     // Sprite_ClutWord alone: all three bytes it reads, random, and the rest.
     unsigned clut_bad = 0;
     constexpr unsigned kClutRounds = 65536;
@@ -438,9 +526,19 @@ void SelfTest(DrawFn theirs, ClutFn their_clut, DrawFn their_reset, AddFn their_
               "SpriteCell_Add alone: %u rounds, %u MISMATCHES",
               kRounds, hidden, zero_depth, culled, empty, drawn, cells, scaled, full, resets, bad, kWindow, kClutRounds,
               clut_bad, kAddRounds, add_bad);
-    if (bad || clut_bad || add_bad)
+    if (columns > 0)
+        bof3::Log("shadow      sprite_draw DIV-0041 flag split at %d columns: %u rounds (%u in the band), the object "
+                  "compared, %u MISMATCHES; control (the flag moved with the picture) refused in %u",
+                  columns, kSplitRounds, band, split_bad, control_refused);
+    else
+        bof3::Log("shadow      sprite_draw DIV-0041 flag split: not run (narrow: no band)");
+    if (bad || clut_bad || add_bad || split_bad)
         bof3::Fatal("sprite_draw differs from the originals: %u of %u rounds, %u of %u ClutWord rounds, %u of %u Add "
-                    "rounds", bad, kRounds, clut_bad, kClutRounds, add_bad, kAddRounds);
+                    "rounds, %u of %u flag-split rounds", bad, kRounds, clut_bad, kClutRounds, add_bad, kAddRounds,
+                    split_bad, columns > 0 ? kSplitRounds : 0u);
+    if (columns > 0 && control_refused == 0)
+        bof3::Fatal("sprite_draw self-test: the control \"the flag moved with the picture\" was not refused - the "
+                    "fuzz cannot see the split");
 }
 
 }  // namespace

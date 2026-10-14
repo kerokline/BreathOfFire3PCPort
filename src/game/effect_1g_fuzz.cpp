@@ -258,24 +258,51 @@ void ArgsFrom(unsigned k, U* a) { Args(k + g_first, a); }
 // columns in each (no stretch), and the texel under every column of the 426
 // view in the original's phase (u = x mod 32 at x = 0 and x = 0xA0, so the
 // tile under column x is the one the original would put there if it drew it).
+// Since the 21:9 picture (docs/ultrawide-frame.md) the same for every count up
+// to 224, the widest a band quad's byte allows: two quads to 64 columns (16:9's
+// 53 exactly the quads it drew before), four past it (21:9's 120: the
+// original's halves and a band quad each side), the quads together covering
+// -columns..320 + columns once, without a gap or an overlap.
 void CheckWideSpans() {
-    auto bad = [](unsigned columns, unsigned half, const char* what) {
-        bof3::Fatal("effect_1g: ItemTrade_BackdropSpan(%u, %u): %s", half, columns, what);
+    auto bad = [](unsigned columns, unsigned quad, const char* what) {
+        bof3::Fatal("effect_1g: ItemTrade_BackdropSpan(%u, %u): %s", quad, columns, what);
     };
-    for (unsigned columns = 0; columns <= 63; ++columns) {
-        for (unsigned half = 0; half < 2; ++half) {
-            const BackdropSpan s = ItemTrade_BackdropSpan(half, columns);
-            const float left = half == 0 ? 0.0f - static_cast<float>(columns) : 160.0f;
-            const float right = half == 0 ? 160.0f : 320.0f + static_cast<float>(columns);
-            if (s.x0 != left || s.x1 != right) bad(columns, half, "the edges");
-            if (columns == 0 && std::signbit(s.x0)) bad(columns, half, "-0.0 for the original's 0");
-            if (static_cast<float>(s.u1 - s.u0) != s.x1 - s.x0) bad(columns, half, "texels against columns (a stretch)");
-            if (half == 0 && (s.u0 + columns) % 32 != 0) bad(columns, half, "the pattern's phase at column 0");
-            if (half == 1 && s.u0 != 0) bad(columns, half, "the pattern's phase at column 0xA0");
-            if (columns == 0 && (s.u0 != 0 || s.u1 != 0xA0)) bad(columns, half, "the original's u 0..0xA0");
+    constexpr unsigned kWidest = 224;
+    for (unsigned columns = 0; columns <= kWidest; ++columns) {
+        const unsigned quads = ItemTrade_BackdropQuads(columns);
+        if (quads != (columns <= 64 ? 2u : 4u)) bad(columns, quads, "the count of quads");
+        bool covered[320 + 2 * kWidest] = {};
+        for (unsigned quad = 0; quad < quads; ++quad) {
+            const BackdropSpan s = ItemTrade_BackdropSpan(quad, columns);
+            if (std::signbit(s.x0) && s.x0 == 0.0f) bad(columns, quad, "-0.0 for the original's 0");
+            if (s.x0 != std::floor(s.x0) || s.x1 != std::floor(s.x1) || s.x1 <= s.x0) bad(columns, quad, "whole edges");
+            if (static_cast<float>(s.u1 - s.u0) != s.x1 - s.x0) bad(columns, quad, "texels against columns (a stretch)");
+            const int x0 = static_cast<int>(s.x0), x1 = static_cast<int>(s.x1);
+            if ((static_cast<int>(s.u0) - x0) % 32 != 0) bad(columns, quad, "the pattern's phase (u = x mod 32)");
+            if (x0 < -static_cast<int>(columns) || x1 > 320 + static_cast<int>(columns)) bad(columns, quad, "past the picture");
+            for (int x = x0; x < x1; ++x) {
+                bool& c = covered[x + static_cast<int>(columns)];
+                if (c) bad(columns, quad, "two quads over one column");
+                c = true;
+            }
+            if (quads == 2) {   // the grown halves, meeting at 0xA0
+                const float left = quad == 0 ? 0.0f - static_cast<float>(columns) : 160.0f;
+                const float right = quad == 0 ? 160.0f : 320.0f + static_cast<float>(columns);
+                if (s.x0 != left || s.x1 != right) bad(columns, quad, "the edges");
+            } else if (quad < 2 && (s.x0 != 160.0f * static_cast<float>(quad) || s.u0 != 0 || s.u1 != 0xA0)) {
+                bad(columns, quad, "the original's half");
+            }
+            if (columns == 0 && (s.u0 != 0 || s.u1 != 0xA0)) bad(columns, quad, "the original's u 0..0xA0");
+            if (columns == 53 && quad == 0 && (s.x0 != -53.0f || s.x1 != 160.0f || s.u0 != 11 || s.u1 != 224))
+                bad(columns, quad, "the 16:9 left quad (-53..160, u 11..224)");
+            if (columns == 53 && quad == 1 && (s.x0 != 160.0f || s.x1 != 373.0f || s.u0 != 0 || s.u1 != 213))
+                bad(columns, quad, "the 16:9 right quad (160..373, u 0..213)");
         }
+        for (unsigned x = 0; x < 320 + 2 * columns; ++x)
+            if (!covered[x]) bad(columns, x, "a column no quad covers (the second number is the column + columns)");
     }
-    bof3::Log("effect_1g: DIV-0041 backdrop spans checked for 0..63 columns (edges, no stretch, phase)");
+    bof3::Log("effect_1g: DIV-0041 backdrop spans checked for 0..%u columns (edges, coverage, no stretch, phase; "
+              "53: the 16:9 quads, 120: %u quads)", kWidest, ItemTrade_BackdropQuads(120));
 }
 
 }  // namespace

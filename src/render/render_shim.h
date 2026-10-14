@@ -70,10 +70,16 @@ struct Surface {
     U gpu_serial;                  // the TexVersion serial the GPU texture holds
     // DDPIXELFORMAT as GetSurfaceDesc reports it
     U pf_flags, pf_bits, pf_rmask, pf_gmask, pf_bmask, pf_amask;
+    // DIV-0125 (fb_grab.h): a page texture of direct colour, as
+    // D3d_BindTexture last bound it - the VRAM cell its texel (0, 0) comes
+    // from and the texture window its 256 x 256 texels tile.
+    bool direct_page;
+    int page_x, page_y, tile_w, tile_h;
 };
 
-// Command stream, one frame at a time.
-enum class Cmd : U { kClear, kDraw };
+// Command stream, one frame at a time. kGrab (DIV-0125): copy part of
+// the picture drawn so far into a grab slot's texture.
+enum class Cmd : U { kClear, kDraw, kGrab };
 
 struct PipeState {
     TexVersion* texture;     // null: untextured
@@ -87,6 +93,12 @@ struct PipeState {
     bool point_filter;       // MAGFILTER / MINFILTER 1 (point); else linear
     bool flat;               // SHADEMODE 1 (flat): the first vertex's colour over the face
     U topology;              // 0 triangles, 1 lines, 2 points
+    // DIV-0125: 0, or 1 + the grab slot whose texture this draw samples
+    // where its texels fall inside the grab. grab_off is the texture's VRAM
+    // origin less the grab's (cells), grab_tile the texture window the 256
+    // texels tile, grab_size the grab's cells.
+    U grab_slot;
+    float grab_off[2], grab_tile[2], grab_size[2];
 };
 
 struct Command {
@@ -94,6 +106,8 @@ struct Command {
     PipeState state;   // kDraw
     U first, count;    // kDraw: vertices in the frame's vertex array (a list: triangles as 3, lines as 2)
     U color;           // kClear: ARGB
+    int grab_x, grab_y, grab_w, grab_h;   // kGrab: the source in the picture's coordinates (game pixels)
+    U grab_slot;                          // kGrab: the slot it fills
 };
 
 // A D3DTLVERTEX: sx, sy, sz, rhw, diffuse, specular, tu, tv - 0x20 bytes.
@@ -166,5 +180,20 @@ void BeforeWrite(Surface* s);
 // Every surface ever made, live (refs > 0) or released (refs 0, pixels null,
 // `gpu` still to be freed by the GPU side).
 Surface* const* AllSurfaces(U* n);
+
+// --- the frame-buffer grab (DIV-0125, fb_grab.h) ---------------------------
+// Each does nothing unless the backend is the one recording frames
+// (InitShim has run) and BOF3X_FBGRAB is not 0, so Capcom's DirectX 6 path
+// and the start-up self-tests are untouched.
+
+// The walk's move case: a move of (x, y, w, h) - the rectangle as the game
+// built it, before Gfx_MoveImage clips it - to VRAM (to_x, to_y). Records a
+// grab when the source lies in a display buffer.
+void MoveFromFrame(int x, int y, int w, int h, int to_x, int to_y);
+// Gfx_InvalidateTextures: the shadow was written over (x, y, w, h).
+void ShadowWritten(int x, int y, int w, int h);
+// D3d_BindTexture: `texture` (an IDirect3DTexture2) holds a direct-colour
+// page whose texel (0, 0) is VRAM cell (x, y), tiling a w x h window.
+void NoteDirectPage(void* texture, int x, int y, int w, int h);
 
 }  // namespace render

@@ -26,7 +26,7 @@
 // (the owner's rule for an unchecked index, round9 doc section 6; both are
 // described in docs/battle_e7.md section 7, never fixed). One divergence has
 // patch sites inside these bodies and survives in ours: DIV-0041
-// (widescreen.cpp) widens the three list slide-outs' bounds; ours reads each
+// (widescreen.cpp, the faster slide) at the three list slide-outs; ours reads each
 // bound as widescreen.cpp holds it (docs/operand-store.md). Every call goes
 // through the harness (BH_CALL / BH_AT), so the start-up fuzz can stand
 // recorders in for the callees.
@@ -597,12 +597,19 @@ extern "C" void __cdecl GeneWin_ListSlideIn(void) {
 
 // original 0x599050: the list slides left by 0x20, after its draw; at +4 <=
 // -0xA5 (signed) the window is freed instead (a tail jump). The bound is the
-// operand DIV-0041 widens (-0xDA in the wide view), as widescreen.cpp holds it.
+// operand as widescreen.cpp holds it. DIVERGENCE DIV-0041 (amended 2026-10-13,
+// the faster slide): decided by Capcom's bound at every width; in the wide
+// view the draw sees the x on the line to the bound moved out by the columns,
+// and the free test Capcom's x again (Widescreen_SlideDraw / _SlideUndraw,
+// docs/ultrawide-slides.md). The same in the two below.
 extern "C" void __cdecl GeneWin_ListSlideOut(void) {
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kListOutBound));
+    Widescreen_SlideDraw(Win(), bound, -0x20);
     BH_CALL(GeneWin_DrawList)();
+    Widescreen_SlideUndraw(Win());
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v <= Widescreen_SlideBound(at::kListOutBound)) {
+    if (v <= bound) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -663,12 +670,15 @@ extern "C" void __cdecl GeneWin_List2SlideIn(void) {
 }
 
 // original 0x599440: after the draw, right by 0x20; at +4 >= 0x15B the
-// window is freed instead (DIV-0041's operand, 0x190 wide).
+// window is freed instead (DIV-0041's operand; the faster slide as above).
 extern "C" void __cdecl GeneWin_List2SlideOut(void) {
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kList2OutBound));
+    Widescreen_SlideDraw(Win(), bound, 0x20);
     BH_CALL(GeneWin_DrawList2)();
+    Widescreen_SlideUndraw(Win());
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= Widescreen_SlideBound(at::kList2OutBound)) {
+    if (v >= bound) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }
@@ -704,12 +714,15 @@ extern "C" void __cdecl GeneWin_List3SlideIn(void) {
 }
 
 // original 0x599540: after the draw, right by 0x20; at +4 >= 0x143 the
-// window is freed instead (DIV-0041's operand, 0x178 wide).
+// window is freed instead (DIV-0041's operand; the faster slide as above).
 extern "C" void __cdecl GeneWin_List3SlideOut(void) {
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kList3OutBound));
+    Widescreen_SlideDraw(Win(), bound, 0x20);
     BH_CALL(GeneWin_DrawList2)();
+    Widescreen_SlideUndraw(Win());
     unsigned char* const rec = Win();
     const std::int32_t v = S16(W(rec + 4));
-    if (v >= Widescreen_SlideBound(at::kList3OutBound)) {
+    if (v >= bound) {
         BH_CALL(Window_FreeCurrent)();
         return;
     }

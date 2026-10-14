@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/band_census.h"
 #include "game/layering.h"
 #include "game/move_script_bytes.h"
 #include "hook/detour.h"
@@ -116,6 +117,7 @@ extern "C" void __cdecl Sprite_UpdateScreen(void) {
     unsigned char* const drawn = Sprite_Current;
     Sprite_DrawListCount = static_cast<unsigned char>(n + 1);
     Sprite_DrawList[n] = drawn;
+    band_census::Seen(drawn);   // BOF3X_BANDLOG, an instrument: reads only (band_census.h)
     if (drawn[0] & 8) g.dropped(0);
 }
 

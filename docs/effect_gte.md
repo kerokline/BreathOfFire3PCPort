@@ -188,7 +188,9 @@ reproduce is the divide fault of section 5, where ours aborts with a message
 
 ## 5. Latent defects (Capcom's, described, not fixed)
 
-- **`EffectGte_SetDiagonalOne` writes 1, not 0x1000.** (D215) The PSX twin
+- **`EffectGte_SetDiagonalOne` writes 1, not 0x1000.** (D215; seen in play
+  as D243 and restored by DIV-0126, [`lighthouse-rays.md`](lighthouse-rays.md):
+  ours writes 1 only under `BOF3X_ORIGINAL=DiagonalIdentity`.) The PSX twin
   `0x801B0F5C` begins `addiu v0, zero, 0x1000` and stores it on the
   diagonal (read in the sibling's generated overlay code,
   `overlays_static_0170.c`); the PC port stores 1. In the GTE's 4.12 fixed

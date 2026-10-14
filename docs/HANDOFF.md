@@ -1,6 +1,6 @@
 # Handoff — next session
 
-**Status:** IN PROGRESS (2026-10-13 night: `main` is `d0d9162a` (PR #57 merged); `platform/more-hardening` holds the away day's fifteen merges and its fold-in, unpushed - the PR at the owner's word, item 1 below)
+**Status:** IN PROGRESS (2026-10-14: `main` is `11e2cfe9` (PRs #58 and #59 merged); `wide/ultrawide-round` holds the ultrawide round and its fold-in, pushed for review - PR #60, item 1 below)
 
 [`STATUS.md`](STATUS.md) says where the project stands. This file is what to
 pick up, how, and the traps already paid for. It **points at evidence rather
@@ -14,74 +14,74 @@ the investigation docs; anything durable moves to `STATUS.md`.
 
 ## Where things stand in one paragraph
 
-**10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged on 2026-10-13: no takeovers); the
-game's own code is all ours since the platform round's step 3 (PR #43). `main` is `d0d9162a`: PRs #49..#57, the last
-the 2026-10-12 night's `cleanup/abc-crash-1012` (the A/B/C sweep and D258..D263's fixes). **On 2026-10-13, the owner
-away, fifteen agent branches (`away/1013-*`) were merged one at a time into `platform/more-hardening`** (unpushed,
-`git log --first-parent --oneline d0d9162a..HEAD`), each with the repository checks and, where `src/` changed, the
-build and the headless self-tests (`'*'` and `en-US`, exit 0 each). They answered most of the disc-data inventory,
-closed the village's stats (D264, D265), built the base policy (DIV-0115), D56's repair (DIV-0116), four label
-groups (DIV-0117..0120), the WAV dump and two A/B/C sweeps (us, jp) and one eye batch - and found 24 defects,
-numbered **D266..D289** at the fold-in ([`known-defects.md`](known-defects.md)), one a crash a player can reach on a
-disc-only Japanese install (D279) and one a hang on every PSX-only install's inn and camp (D255, amended). Nothing
-of the day was played by the owner; the questions it raised are one section of
-[`owner-review.md`](owner-review.md), "2026-10-13, the away day". The regression check is the state hash
-([`state-hash.md`](state-hash.md); the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, across
-installs, the A/B/C harness ([`abc-harness.md`](abc-harness.md)) - and **the state hash shows a signal not yet
-chased** (item 2).
+**10,088 functions are ours in the exe host, 10,087 in a hosted run** (unchanged: the rounds since have taken
+nothing over); the game's own code is all ours since the platform round's step 3 (PR #43). `main` is `11e2cfe9`:
+PR #58 (`platform/more-hardening`, the away day of 2026-10-13: fifteen agent branches, DIV-0115..0120,
+D266..D289) and PR #59 (DIV-0121, D270's crash held). **The ultrawide round** (`wide/ultrawide-round`, 2026-10-13..14,
+pushed for review, PR #60; [`ultrawide-round.md`](ultrawide-round.md) 5a, 5b) adds a fixed **21:9 mode**
+(`BOF3X_WIDE=2`, 560 x 240) beside 16:9, and found that the wide picture had been changing *logic* at 16:9 since
+2026-09-30 - the off-screen flag, the band cells' `Rand` (D283) and the windows' slide-off bounds - each now split so
+the picture widens and the logic stays Capcom's: the eleven hash routes and `dolphinBoss` keep narrow's `Rand` and
+game pages at 16:9 and 21:9 ([`ultrawide-census-3.md`](ultrawide-census-3.md),
+[`ultrawide-census-4.md`](ultrawide-census-4.md)). It re-stages the scenes' edge actors at 16:9 (DIV-0122), stages
+case zero as the PSP does (DIV-0123), hides what a scene leaves in the 21:9-only columns (DIV-0124), and restored on
+the way Depress's swirl and the fishing pedestal (the frame grab, DIV-0125), the lighthouse's rays (DIV-0126) and the
+camp's fire (DIV-0071 amended). Its drafts are numbered and folded in: DIV-0041 amended five times, DIV-0071 twice,
+DIV-0122..0126 new, defects D290..D301. The regression check is the state hash ([`state-hash.md`](state-hash.md);
+the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, across installs, the A/B/C harness
+([`abc-harness.md`](abc-harness.md)).
 
-**The day's merges on `platform/more-hardening`**, in order (each merge commit names its branch):
+**The round's merges on `wide/ultrawide-round`**, in order (each merge commit names its branch; `git log
+--first-parent --oneline 11e2cfe9..wide/ultrawide-round`):
 
-1. the disc-data inventory - [`disc-data-inventory.md`](disc-data-inventory.md), `tools/cache_inventory.py`;
-2. the exe's remaining Chinese - [`exe-chinese-remaining.md`](exe-chinese-remaining.md), `text_scan.py --ledger`;
-3. the harness and tooling hardening - `# save` refusal, `prepare` preflight, `pe_funcs` / `pe_hidden` past
-   undecodable bytes, `BOF3X_DATLOG` ([`hidden-start-scan.md`](hidden-start-scan.md) 8,
-   [`asset-loading-path.md`](asset-loading-path.md) 5, [`abc-harness.md`](abc-harness.md));
-4. the village fixes - D264's `faerie` rule, D265 / D247 ([`abc-sweep-1013-village.md`](abc-sweep-1013-village.md));
-5. the exe-image twins - thirteen one-file rows, `pspmap`, 26 game-value rows (kept)
-   ([`exe-image-twins-1013.md`](exe-image-twins-1013.md));
-6. the arena renders, inventory Q1 / Q3 - [`arena-render-1013.md`](arena-render-1013.md), `tools/arena_render.py`;
-7. the WAV dump, `BOF3X_WAV_DIR`, the `music` step, the listen set - [`wav-dump.md`](wav-dump.md);
-8. the key icons, inventory Q5 - [`key-icons-by-mapping.md`](key-icons-by-mapping.md);
-9. the recipe saves and entry lists - `fairyVillageNews` / `dragonMenu` headers, the lists replaced
-   ([`hidden-start-scan.md`](hidden-start-scan.md) 8);
-10. the disc-data policy - `recipes/prefer.toml`, DIV-0115, DIV-0114 corrected, set 8's `verb` rule
-    ([`disc-data-inventory.md`](disc-data-inventory.md) 9);
-11. the us sweep - [`abc-sweep-1013-us.md`](abc-sweep-1013-us.md), the `0x6531F4` page-counter twin;
-12. D56's repair - DIV-0116 ([`d56-encounter-bounds.md`](d56-encounter-bounds.md));
-13. the labels round - DIV-0117..0120 ([`labels-1013.md`](labels-1013.md));
-14. the jp sweep - [`abc-sweep-1013-jp.md`](abc-sweep-1013-jp.md), `[set.jp]`;
-15. the eye batch - [`eye-batch-1013.md`](eye-batch-1013.md), `tools/eye_sheet.py`, `wide_seams.py`,
-    `launcher_host/capture_page.py`.
-
-Then the fold-in (three docs commits: the ledger's DIV-0101 amendment, D266..D289, owner-review's section).
+1. stage A - SS the static staging scan, UC the culls at 120, BA the band census, PD the PSP's staging, UW the
+   21:9 frame;
+2. stage B - UC2 the flag split and four culls, ST the staging (16:9 re-staging, case zero, the 21:9 hide), EB-1
+   the "before" census, ST2 the hide keyed on a field scene, EB-2 the hash's two remaining causes;
+3. `main` (PRs #58, #59) merged in, then SL the faster slide, RN the random split, RN2 the patch cells;
+4. the owner's reports met on the way - DP Depress's swirl and its grab, FY the faerie and the bulb's filament,
+   LR the lighthouse's rays, EB-2b census 3, ST3 case zero in the original's frames and the hide in mode 4, EB-3
+   census 4, CF the campfire and the gene crystal;
+5. the fold-in (group LD): the ledger, D290..D301, the README rows, this file, STATUS, owner-review, IDEAS.
 
 ## Pick up here
 
-1. **Push `platform/more-hardening` and open its PR, at the owner's word.** Every commit is signed off; check
-   `git log --format=%B main..HEAD` first (CLAUDE.md rule 7). `ledger_check` 120 entries, 0 errors.
+1. **Review and merge the ultrawide round's PR** (PR #60). Every non-merge commit since `main` is signed off
+   (`git log --format=%B main..wide/ultrawide-round`; CLAUDE.md rule 7). `ledger_check` 126 entries, 0 errors; the
+   build and the headless `'*'` self-tests at `BOF3X_WIDE` unset, 1 and 2 pass on the fold-in's tip. The round's
+   worktrees and `wide/*` branches under `.claude/worktrees/` are removable once it merges.
 
-2. **The owner's answers** ([`owner-review.md`](owner-review.md), "2026-10-13, the away day"): look (the eye batch
-   q1..q7, the arena sheets, the D56 capture, the labels sheet, the Japanese world map), listen
-   (`analysis/listen-1013` a / b / c), and decide (inventory Q6 / Q7; member 2's bank, Ryu's byte, member 1; the
-   Western weakness row; the hi-lo count; the US title layout; a ja-JP layer for kinds 7..16 and the fishing crash;
-   wide and `Rand`; D255's fix; set 8 confirmed; the key icons' five; the `combatGroup` / `sortScreens` saves; the
-   Western title mark). Each answer goes to the ledger or the defect list; then the rows to the policy mechanism
-   (`recipes/prefer.toml`).
+2. **The owner's answers** ([`owner-review.md`](owner-review.md)): first "2026-10-14, the ultrawide round" - look at
+   the faster slide (not yet seen), the 21:9 left message box, the terrain margin 167 at 21:9, two `dolphinBoss` plant
+   frames; decide the remaining 16:9 band rows (census 3's list and ST's 14 sites the shape cannot move: move out,
+   hide or leave), the faerie through the table (D300, Capcom's; FY's rule), the gene crystal (D242, Capcom's,
+   accepted for now), the narrow areas 31 / 90 / 53, the patch cells (D295, leave unless seen), RG - the ring for far
+   cameras (D292, I37), the six other effects the GTE fix changes, effect kind 0x51's grab, the mote and the column's
+   sound (D293, D294), the two sweeps (I38). Then "2026-10-13, the away day": look (the eye batch q1..q7, the arena
+   sheets, the D56 capture, the labels sheet, the Japanese world map), listen (`analysis/listen-1013` a / b / c), and
+   decide (inventory Q6 / Q7; member 2's bank, Ryu's byte, member 1; the Western weakness row; the hi-lo count; the US
+   title layout; a ja-JP layer for kinds 7..16 and the fishing crash; D255's fix; set 8 confirmed; the key icons'
+   five; the `combatGroup` / `sortScreens` saves; the Western title mark). Each answer goes to the ledger or the
+   defect list; then the rows to the policy mechanism (`recipes/prefer.toml`).
 
-3. **The Nue state-hash signal - settled, not a regression** ([`nue-regression-1013.md`](nue-regression-1013.md)):
-   page `0x905000` was the save-slot records (`0x905BC0`, filled at tick 136) after today's recipes rewrote slots -
-   the reference pair had gone stale, Capcom's own side differed the same way; re-recorded as
-   `cn_cutsceneAndNue_orig2` / `_orig2b` (the old pair kept as `_pre1013`). The music pages are DIV-0092 by design
-   (the load at frame 204 and the event battle at 7,394); checked with `--original AreaTrackFallback`, ours at the
-   tip is identical to Capcom's on all 7,361 ticks. `Rand` identical on all 7,422 frames, so D271 is not this.
-   **Left:** the other nine `cn_<route>_orig2` pairs are stale the same way (measured on `cn_combat_on_b`, 07:46,
-   after the slot-6 rewrite) - about 45 minutes on a quiet machine to re-record, per [`state-hash.md`](state-hash.md)
-   6; any recipe that writes a slot stales them again (slot 6 is `balioAndSunder_2`'s by design), so a fixed staged
-   save list in `input_run.py` is the durable fix (a design change, the owner's call). `bossAndFlash` meets DIV-0092
-   too (event battle 8, track 33) and has no pair.
+3. **The stale state-hash pairs** ([`nue-regression-1013.md`](nue-regression-1013.md)): the Nue signal of 2026-10-13
+   was a stale pair (re-recorded as `cn_cutsceneAndNue_orig2` / `_orig2b`) and DIV-0092 by design. **Left:** the
+   other nine `cn_<route>_orig2` pairs are stale the same way (save-slot records in page `0x905000`) - about 45
+   minutes on a quiet machine to re-record, per [`state-hash.md`](state-hash.md) 6; any recipe that writes a slot
+   stales them again (slot 6 is `balioAndSunder_2`'s by design), so a fixed staged save list in `input_run.py` is the
+   durable fix (a design change, the owner's call). The ultrawide round compared wide against ours narrow from the same
+   hour, which sidesteps this. `bossAndFlash` meets DIV-0092 too (event battle 8, track 33) and has no pair.
 
 4. **Open technical items, no owner needed:**
+   - **The ultrawide round's own** ([`ultrawide-round.md`](ultrawide-round.md) 5b and the group docs): the six
+     `# save` headers D298 names (`bridgeWalk`, `fairyVillage`, `identify`, `ninaWalkBehindBlock`, `tarmanLogic`,
+     `vaccinationAndFireScene` take the save of their own name, as census 3's scratch copies did); the band census's
+     two follow-ups (D299: the `field_frame.cpp` hook line for type-`0x0A` sprites, the void channel at the renderer
+     seam) and a `+0x83` column naming a census row's script; a log line for case zero's north steps (census 4 had
+     to read them from dumps); a `gameover` hash at 1 and 2 against narrow for D285; the four CPU readers of the grab
+     (D297, a GPU readback); `inject_all.cpp`'s comments at `MenuDrawHelpers_Inject`, `Rest2G_Inject`,
+     `Rest2H_Inject` and `Rest2F_Inject` still say those modules read DIV-0041's widened slide bound back - since the
+     faster slide they read Capcom's ([`ultrawide-slides.md`](ultrawide-slides.md) 9).
    - **The all-calls tracer stalls** a hosted run before any recipe frame (D276,
      [`hidden-start-scan.md`](hidden-start-scan.md) 8): `pc_hidden_reached.json` is still the 2026-09-21 reach, the
      199 new hidden starts untraced. Bisect the DLL.
@@ -102,9 +102,9 @@ Then the fold-in (three docs commits: the ledger's DIV-0101 amendment, D266..D28
      5.4).
    - **The `_pre1013` entry lists** in `analysis/` (`pc_funcs_pre1013.json`, `pc_hidden_pre1013.json`, ...): kept
      beside the replaced ones ([`hidden-start-scan.md`](hidden-start-scan.md) 8); remove once nothing reads them.
-   - D270 fixed by DIV-0121 (an F12 save in an encounter field: the edge led to area `0xFFFF`; `stallion.txt` now names its save) - the owner's look owed, and whether such a field has another way out; D283..D285 (the wide picture) after the owner's word on D283;
-     D286 (the fishing equip headings) not looked into; D287 (the launcher's clipped lines); D289 (group 16's
-     one-record name shift, a `src/` change).
+   - D270 fixed by DIV-0121 - the owner's look owed, and whether such a field has another way out; D284 (area 23's
+     sky in wide) and D285 (the flash phases, item above) not traced; D286 (the fishing equip headings) not looked
+     into; D287 (the launcher's clipped lines); D289 (group 16's one-record name shift, a `src/` change).
 
 5. **The follow-up round: disc-only and PSP polish** (not staged). Still open: the load screen's `"%X"` (D254, the
    engine's own string recommended); the inn and camp hang (D255, the owner's choice of fix now required); the PSP
@@ -157,8 +157,9 @@ Then the fold-in (three docs commits: the ledger's DIV-0101 amendment, D266..D28
   European pointers leave their block and the accented enemy names over 8 bytes; the turn counter, the Skill Ink
   label, the shop's master / apprentice words and the shop and tactics strings; the seven character-at-a-time
   `Text_DrawAt` callers still at 12 px. Furigana is IDEAS I21. The owner's decision: its own branch and effort.
-- **Widescreen's debts** ([`widescreen.md`](widescreen.md) 4, 5): the oracle and frame hash with `BOF3X_WIDE=1`,
-  the culls of 3b's table, the sky `0x571C85`, the message-box table, the corner pop at margin 100.
+- **Widescreen's debts** ([`widescreen.md`](widescreen.md) 4, 5): the state hash with `BOF3X_WIDE=1` and `=2` is done
+  (the ultrawide round) and 3b's culls are classed ([`ultrawide-culls.md`](ultrawide-culls.md)); left: the sky
+  `0x571C85`, the message-box table, the corner pop at margin 100.
 - **[`new-code-audit.md`](new-code-audit.md)**: eight bugs confirmed by reading and not seen in game, ten unchecked
   reports, six questions; A1 and A2 the owner's. The lifter's first run on `BOF3.exe`
   ([`lifter-feasibility.md`](lifter-feasibility.md) 7).
@@ -264,10 +265,12 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
 
 ## In flight / uncommitted
 
-- **`platform/more-hardening`** (the main checkout's branch, unpushed): item 1.
-- **The fifteen agent worktrees** under `.claude/worktrees/` (`git worktree list`; two of them locked) and their
-  branches `away/1013-captures`, `-chinese`, `-d56`, `-inventory`, `-jp`, `-keyicons`, `-labels`, `-policy`,
-  `-recipes`, `-render`, `-tooling`, `-twins`, `-us`, `-village`, `-wav`: all merged; removable at the owner's word.
+- **`wide/ultrawide-round`** (a worktree in session `6d500aac`'s scratchpad `uw/`), pushed for review: item 1. Its
+  group branches `wide/ba`, `cf`, `dp`, `eb1`, `eb2`, `eb2b`, `eb3`, `fy`, `grab`, `ld`, `lr`, `pd`, `rn`, `rn2`, `sl`,
+  `ss`, `st`, `st2`, `st3`, `uc`, `uc2`, `uw` (most with a worktree under `.claude/worktrees/`): all merged into it;
+  removable once the PR merges.
+- **The fifteen away-day worktrees** under `.claude/worktrees/` and their branches `away/1013-*`: merged in PR #58;
+  removable at the owner's word.
   Also there from 2026-10-12: `worktree-agent-ae288769dd06909be` (the D260..D263 fix agent's, merged in PR #57).
 - **The junction `C:\Users\kerok\lbl13`** (the labels agent's): safe to delete.
 - **Scratch outside the tree:** the A/B/C roots `C:\Users\kerok\ab`, `abj`, `abu`, `abv`, `abx` (game-derived, never

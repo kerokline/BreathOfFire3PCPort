@@ -180,7 +180,7 @@ render::Options ReadOptions(HWND hwnd, bool borderless) {
     o.logical_w = 320;
     o.logical_h = 240;
     o.scale = k;
-    o.pad_x = Widescreen_Columns();   // DIV-0041: the target is (320 + 2 x 53) k wide, the view centred in it
+    o.pad_x = Widescreen_Columns();   // DIV-0041: the target is (320 + 2 c) k wide (c 53 or 120), the view centred in it
     g_scale = k;
     o.point_filter = false;
     if (GetEnvironmentVariableA("BOF3X_FILTER", text, sizeof text) > 0) {
@@ -373,4 +373,31 @@ unsigned DisplaySetup_ScaleForClient(unsigned cw, unsigned ch) {
     return k;
 }
 
-void DisplaySetup_Inject() { BOF3_INJECT(Display_Setup); }
+namespace {
+// The present's k rule at each picture width (DIV-0036 / DIV-0042, the 21:9
+// picture of docs/ultrawide-frame.md): FitScale takes the view's width, so the
+// three widths share it. Checked at start-up on the monitors the docs name:
+// the owner's 3440 x 1440 lands on k = 6 at every width (1920 / 2556 / 3360
+// wide, the full 1440 rows), a 2560 x 1080 21:9 panel on 4 (2240 x 960 at
+// 560), a 1920 x 1080 16:9 one on 4 (1704 x 960 at 426; 560 x 3 = 1680 at
+// 21:9). Fatal on a difference: the rule changed under the widths.
+void CheckFitScale() {
+    struct Case {
+        U view_w, cw, ch, k;
+    };
+    static const Case kCases[] = {
+        {320, 3440, 1440, 6}, {426, 3440, 1440, 6}, {560, 3440, 1440, 6},
+        {560, 2560, 1080, 4}, {426, 1920, 1080, 4}, {560, 1920, 1080, 3},
+        {560, 559, 239, 1},   // a client smaller than one picture: 1, never 0
+    };
+    for (const Case& c : kCases)
+        if (FitScale(c.view_w, c.cw, c.ch) != c.k)
+            bof3::Fatal("display_setup: FitScale(%u, %u, %u) is %u, not %u", c.view_w, c.cw, c.ch,
+                        FitScale(c.view_w, c.cw, c.ch), c.k);
+}
+}  // namespace
+
+void DisplaySetup_Inject() {
+    CheckFitScale();
+    BOF3_INJECT(Display_Setup);
+}

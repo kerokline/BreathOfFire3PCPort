@@ -9,6 +9,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/map_layers_callees.h"
+#include "game/wide_rand.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -195,35 +196,44 @@ extern "C" void __cdecl AreaMap_Frame(void) {
     }
 }
 
-namespace {
-
-// MapView_Build's inset: columns taken off each side of the view by the
-// camera's angle and distance.
-std::uint32_t Inset() {
-    int off_axis = static_cast<short>(Cond_AngleFB) - 0x200;
+// The inset's arithmetic, the globals it reads passed in (map_layers.h).
+map_layers::InsetPair map_layers::ComputeInset(unsigned long angle, short distance, unsigned char input_flags,
+                                               unsigned char byte_fe, unsigned wide_columns) {
+    int off_axis = static_cast<short>(angle) - 0x200;
     if (off_axis < 0) off_axis = -off_axis;
     int inset = (0x160 - off_axis) / 50;
     inset = inset >= 1 ? inset - 1 : 0;
-    const int by_distance = static_cast<int>(Camera_Distance) / 650;   // `far` is a windows.h macro
+    const int by_distance = static_cast<int>(distance) / 650;   // `far` is a windows.h macro
     inset = inset >= by_distance ? inset - by_distance : 0;
-    Scratch_Swap = static_cast<unsigned long>(inset);
-    if (Field_InputFlags & 1) {
-        inset = inset >= 2 ? inset - 2 : 0;
-        Scratch_Swap = static_cast<unsigned long>(inset);
-    }
-    if (Cond_ByteFE == 0x23) {
-        inset = 0;
-        Scratch_Swap = 0;
-    }
+    if (input_flags & 1) inset = inset >= 2 ? inset - 2 : 0;
+    if (byte_fe == 0x23) inset = 0;
+    InsetPair pair;
+    pair.original = static_cast<std::uint32_t>(inset);
     // DIV-0041: the wide picture reaches past the columns the inset keeps
     // (widescreen.h); 0 unless the view is wide, so the fuzz and every
     // narrow run see the original's inset.
-    if (const int wide = static_cast<int>(Widescreen_InsetColumns()); wide != 0) {
-        inset = inset >= wide ? inset - wide : 0;
-        Scratch_Swap = static_cast<unsigned long>(inset);
-    }
+    if (const int wide = static_cast<int>(wide_columns); wide != 0) inset = inset >= wide ? inset - wide : 0;
+    pair.lowered = static_cast<std::uint32_t>(inset);
+    return pair;
+}
+
+namespace {
+
+// MapView_Build's inset: columns taken off each side of the view by the
+// camera's angle and distance. The original stores each step's value in
+// Scratch_Swap as it goes, with no call in between, so only the last store is
+// ever seen: the inset itself, and its low byte in MapView_Inset.
+//
+// DIV-0041's random split (docs/ultrawide-rand.md): the inset before DIV-0041's lowering is
+// noted for DrawLayer_Open, whose cells outside the original's walk draw from
+// a generator of ours; narrow the two are the same and nothing is split.
+std::uint32_t Inset() {
+    const map_layers::InsetPair pair =
+        map_layers::ComputeInset(Cond_AngleFB, Camera_Distance, Field_InputFlags, Cond_ByteFE, Widescreen_InsetColumns());
+    Scratch_Swap = static_cast<unsigned long>(pair.lowered);
     MapView_Inset = static_cast<unsigned char>(Scratch_Swap);
-    return static_cast<std::uint32_t>(inset);
+    wide_rand::NoteInset(pair.original, MapView_Inset);
+    return pair.lowered;
 }
 
 int Columns(std::uint32_t inset) { return static_cast<std::int32_t>((0xEu - inset) << 1); }
