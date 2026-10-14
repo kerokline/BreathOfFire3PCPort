@@ -14,6 +14,7 @@
 #include <cstring>
 
 #include "hook/log.h"
+#include "render/fb_grab.h"
 
 namespace render {
 namespace {
@@ -274,6 +275,29 @@ void AppendCommand(const Command& c) {
     if (g_frame.n_commands >= g_frame.max_commands)
         bof3::Fatal("render: a frame holds more than %u commands", g_frame.max_commands);
     g_frame.commands[g_frame.n_commands++] = c;
+}
+
+// --- the frame-buffer grab (ledger draft I, fb_grab.h) ---------------------------
+
+fb_grab::Registry g_grabs;
+
+bool GrabActive() { return g_frame.commands != nullptr && fb_grab::Enabled(); }
+
+// A textured draw: when its texture is a direct-colour page and a live grab
+// lies inside the page's texels, the draw samples the grab's slot there.
+void GrabFor(PipeState& s) {
+    const Surface* t = s.texture->surface;
+    if (!t->direct_page || g_grabs.Live() == 0) return;
+    fb_grab::Rect dst = {};
+    const int slot = g_grabs.Find({t->page_x, t->page_y, t->tile_w, t->tile_h}, &dst);
+    if (slot < 0) return;
+    s.grab_slot = static_cast<U>(slot) + 1;
+    s.grab_off[0] = static_cast<float>(t->page_x - dst.x);
+    s.grab_off[1] = static_cast<float>(t->page_y - dst.y);
+    s.grab_tile[0] = static_cast<float>(t->tile_w);
+    s.grab_tile[1] = static_cast<float>(t->tile_h);
+    s.grab_size[0] = static_cast<float>(dst.w);
+    s.grab_size[1] = static_cast<float>(dst.h);
 }
 
 Vertex* AppendVertices(U n) {
@@ -706,7 +730,10 @@ long __stdcall Device_DrawPrimitive(void*, U type, U fvf, const void* vertices, 
             v[i].z = kZNearest;
         }
     }
-    if (c.state.texture) c.state.texture->surface->pending_draws++;
+    if (c.state.texture) {
+        c.state.texture->surface->pending_draws++;
+        GrabFor(c.state);
+    }
     AppendCommand(c);
     return kDdOk;
 }
@@ -1004,6 +1031,46 @@ void BeforeWrite(Surface* s) {
     s->pending_draws = 0;
     // The device's bound texture moves to a fresh version, so later draws see the new pixels.
     if (g_state.texture && g_state.texture->surface == s) g_state.texture = Use(s);
+}
+
+void MoveFromFrame(int x, int y, int w, int h, int to_x, int to_y) {
+    if (!GrabActive()) return;
+    fb_grab::Rect local = {};
+    if (!fb_grab::SourceInDisplay(x, y, w, h, &local)) return;
+    const int slot = g_grabs.Record({to_x, to_y, w, h});
+    if (slot < 0) bof3::Fatal("render: more than %d frame-buffer grabs live at once (fb_grab::kSlots)", fb_grab::kSlots);
+    Command c = {};
+    c.kind = Cmd::kGrab;
+    c.grab_x = local.x;
+    c.grab_y = local.y;
+    c.grab_w = local.w;
+    c.grab_h = local.h;
+    c.grab_slot = static_cast<U>(slot);
+    AppendCommand(c);
+    static U logged;
+    if (logged < 8) {
+        ++logged;
+        bof3::Log("fb_grab     move (%d, %d) %d x %d to VRAM (%d, %d): grabbed from the picture at (%d, %d) into slot %d",
+                  x, y, w, h, to_x, to_y, local.x, local.y, slot);
+    }
+}
+
+void ShadowWritten(int x, int y, int w, int h) {
+    if (!GrabActive()) return;
+    g_grabs.Written({x, y, w, h});
+}
+
+void NoteDirectPage(void* texture, int x, int y, int w, int h) {
+    if (!GrabActive() || !texture) return;
+    // Ours only: the interface's first word is our texture table (an entry of
+    // the page cache holds a texture interface or 0, never anything else).
+    if (*static_cast<void* const* const*>(texture) != g_texture_vtable) return;
+    Surface* s = SurfaceOfTexture(texture);
+    s->direct_page = true;
+    s->page_x = x;
+    s->page_y = y;
+    s->tile_w = w;
+    s->tile_h = h;
 }
 
 // For render_d3d11.cpp: every surface, live or released.
