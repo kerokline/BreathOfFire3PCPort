@@ -63,6 +63,7 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
    title layout; a ja-JP layer for kinds 7..16 and the fishing crash; D255's fix; set 8 confirmed; the key icons'
    five; the `combatGroup` / `sortScreens` saves; the Western title mark). Each answer goes to the ledger or the
    defect list; then the rows to the policy mechanism (`recipes/prefer.toml`).
+   Also: **the ending's backdrop** (`wide/ending-backdrop`, DIV-0127, D302, [`ending-backdrop.md`](ending-backdrop.md); unpushed, 2026-10-14): the owner saw the captures and approved; their eye on the mirrored bands in play, then the PR. The launcher page that uses the scene is the week after (the owner's mock-ups first).
 
 3. **The stale state-hash pairs** ([`nue-regression-1013.md`](nue-regression-1013.md)): the Nue signal of 2026-10-13
    was a stale pair (re-recorded as `cn_cutsceneAndNue_orig2` / `_orig2b`) and DIV-0092 by design. **Left:** the

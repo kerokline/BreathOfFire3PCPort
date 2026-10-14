@@ -145,6 +145,11 @@ unsigned Widescreen_Fill();
 float Widescreen_FillX();       // 0.0f - columns: not -columns, which is -0.0f when narrow
 float Widescreen_FillWidth();   // 320.0f + 2 * columns
 void Widescreen_ArmFills();
+// True once Widescreen_ArmFills has run - the self-tests are over and the
+// game is the player's, wide or narrow. A change to a packet that the fuzz
+// must still see as Capcom's, and that narrow play wants too, gates on this
+// (DIV-0127, the ending's sky seam).
+bool Widescreen_FillsArmed();
 
 // The right edge of a full-frame fill the original drew to `edge` (320, or
 // 319 for the fills drawn to the last column - the five magic flashes the
