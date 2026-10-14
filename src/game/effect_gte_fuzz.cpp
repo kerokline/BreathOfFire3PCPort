@@ -289,7 +289,7 @@ void Disturb(U h) {
 
 }  // namespace
 
-// DIV-LR-A (docs/lighthouse-rays.md): run after the switch is armed. 20,000
+// DIV-0126 (docs/lighthouse-rays.md): run after the switch is armed. 20,000
 // matrices of random words, at the offsets the fuzz uses: ours must write the
 // PlayStation twin's nine words (0x1000 on the diagonal, 0 elsewhere - JP
 // GAME.EMI 0x801B0F5C), leave the padding and translation as they were and
@@ -314,12 +314,12 @@ void IdentityCheck() {
         const unsigned at = next() % 8;
         short* const m = buffer + at;
         short* const answer = ::EffectGte_SetDiagonalOne(m);
-        if (answer != m) bof3::Fatal("effect_gte: DIV-LR-A round %u answered %p, not the matrix %p", round, answer, m);
+        if (answer != m) bof3::Fatal("effect_gte: DIV-0126 round %u answered %p, not the matrix %p", round, answer, m);
         for (unsigned i = 0; i < 24; ++i) {
             const bool inside = i >= at && i < at + 9;
             const short want = !inside ? before[i] : ((i - at) % 4 == 0 ? 0x1000 : 0);
             if (buffer[i] != want)
-                bof3::Fatal("effect_gte: DIV-LR-A round %u word %u (matrix at %u) is 0x%04X, want 0x%04X", round, i, at,
+                bof3::Fatal("effect_gte: DIV-0126 round %u word %u (matrix at %u) is 0x%04X, want 0x%04X", round, i, at,
                             static_cast<unsigned>(static_cast<std::uint16_t>(buffer[i])),
                             static_cast<unsigned>(static_cast<std::uint16_t>(want)));
         }
@@ -333,10 +333,10 @@ void IdentityCheck() {
         ::Gte_ApplyMatrixSV(turn, edge, out);
         const long long length2 = 1LL * out[0] * out[0] + 1LL * out[1] * out[1] + 1LL * out[2] * out[2];
         if (length2 < 4055LL * 4055 || length2 > 4137LL * 4137)
-            bof3::Fatal("effect_gte: DIV-LR-A round %u turned edge (%d, %d, %d) is not 4096 long", round, out[0], out[1],
+            bof3::Fatal("effect_gte: DIV-0126 round %u turned edge (%d, %d, %d) is not 4096 long", round, out[0], out[1],
                         out[2]);
     }
-    bof3::Log("effect_gte: DIV-LR-A identity check passed (20000 rounds: the twin's nine words, the edge's length kept)");
+    bof3::Log("effect_gte: DIV-0126 identity check passed (20000 rounds: the twin's nine words, the edge's length kept)");
 }
 
 void SelfTest() {

@@ -37,7 +37,7 @@ float* __cdecl EffectGte_ProjectPoint(const long* point, float* out);
 // set to 1 on the diagonal and 0 elsewhere, in order; the padding and the
 // translation are not touched. Capcom's 1 is NOT the identity - the GTE's one
 // is 0x1000, which is what the PSX twin writes (docs/effect_gte.md section 5).
-// DIV-LR-A: ours writes 0x1000 once the DiagonalIdentity switch is armed
+// DIV-0126: ours writes 0x1000 once the DiagonalIdentity switch is armed
 // (docs/lighthouse-rays.md). Answers in eax the matrix it was handed.
 short* __cdecl EffectGte_SetDiagonalOne(short* matrix);
 
@@ -60,9 +60,9 @@ namespace effect_gte {
 // BOF3X_SHADOW=effect_gte: the start-up fuzz, effect_gte_fuzz.cpp. Clones the
 // four originals before EffectGte_Inject patches them.
 void SelfTest();
-// DIV-LR-A: the switch, 1 when armed (EffectGte_Inject, after SelfTest).
+// DIV-0126: the switch, 1 when armed (EffectGte_Inject, after SelfTest).
 extern std::uint32_t g_identity;
-// DIV-LR-A, BOF3X_SHADOW=effect_gte, after the switch is armed: ours against the
+// DIV-0126, BOF3X_SHADOW=effect_gte, after the switch is armed: ours against the
 // PlayStation twin's rule (0x1000 on the diagonal, 0 elsewhere, the padding and
 // translation untouched, the matrix answered); Fatal on a difference.
 void IdentityCheck();

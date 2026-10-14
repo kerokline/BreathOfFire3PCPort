@@ -1,4 +1,4 @@
-// The frame-buffer grab's GPU-free half (fb_grab.h; ledger draft I).
+// The frame-buffer grab's GPU-free half (fb_grab.h; DIV-0125).
 #include "render/fb_grab.h"
 
 #include <windows.h>
@@ -19,7 +19,7 @@ bool Enabled() {
         else if (n == 1 && text[0] == '1') state = 1;
         else if (n == 1 && text[0] == '0') state = 0;
         else bof3::Fatal("BOF3X_FBGRAB=%s: 0 or 1", n < sizeof text ? text : "...");
-        bof3::Log("fb_grab     the frame-buffer grab (ledger draft I): %s", state ? "on" : "off (BOF3X_FBGRAB=0, Capcom's port)");
+        bof3::Log("fb_grab     the frame-buffer grab (DIV-0125): %s", state ? "on" : "off (BOF3X_FBGRAB=0, Capcom's port)");
     }
     return state != 0;
 }

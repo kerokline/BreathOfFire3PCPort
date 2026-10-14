@@ -107,7 +107,7 @@ extern "C" void __cdecl EventScript_Run(const unsigned char* script) {
 // handler.
 extern "C" const unsigned char* __cdecl EventScript_Op(const unsigned char* at) {
     g.handlers[at[0] >> 4](at);
-    wide_staging::Placed(at);   // DIV D: a site's placement, its start moved out (wide only)
+    wide_staging::Placed(at);   // DIV-0122: a site's placement, its start moved out (wide only)
     return at + EventScript_OpLengths[at[0] >> 4];
 }
 

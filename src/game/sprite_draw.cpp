@@ -128,7 +128,7 @@ void Draw() {
     const short x = Get<short>(object, 0x2E), y = Get<short>(object, 0x30);
     const int draw = g_draw_columns >= 0 ? g_draw_columns : static_cast<int>(Widescreen_Fill());
     if (!Cull(object, x, y, draw, g_flag_columns >= 0 ? g_flag_columns : 0)) return;
-    if (wide_staging::Hide(object)) return;   // DIV F: 21:9, past the 16:9 view in a scene - draw-only, after bit 7
+    if (wide_staging::Hide(object)) return;   // DIV-0124: 21:9, past the 16:9 view in a scene - draw-only, after bit 7
     const unsigned char* frame = Get<const unsigned char*>(object, 0x54) + Get<std::uint16_t>(object, 0x5A);
     const unsigned count = frame[0];
     if (count == 0) return;

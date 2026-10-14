@@ -224,7 +224,7 @@ namespace {
 // Scratch_Swap as it goes, with no call in between, so only the last store is
 // ever seen: the inset itself, and its low byte in MapView_Inset.
 //
-// DIV H (docs/ultrawide-rand.md): the inset before DIV-0041's lowering is
+// DIV-0041's random split (docs/ultrawide-rand.md): the inset before DIV-0041's lowering is
 // noted for DrawLayer_Open, whose cells outside the original's walk draw from
 // a generator of ours; narrow the two are the same and nothing is split.
 std::uint32_t Inset() {

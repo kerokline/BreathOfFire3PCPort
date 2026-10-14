@@ -1,5 +1,5 @@
-// The wide staging (wide_staging.h; docs/wide-staging.md): DIV D, E and F of
-// the ultrawide round, armed only when the view is wide.
+// The wide staging (wide_staging.h; docs/wide-staging.md): DIV-0122, DIV-0123 and DIV-0124
+// of the ultrawide round, armed only when the view is wide.
 #include "game/wide_staging.h"
 
 #include <windows.h>
@@ -311,7 +311,7 @@ Live* Take(unsigned char* context) {
         }
         if (l.frame < oldest->frame) oldest = &l;
     }
-    bof3::Log("DIV-D       the live table is full: an entry from frame %u (context %08X) dropped", oldest->frame,
+    bof3::Log("DIV-0122    the live table is full: an entry from frame %u (context %08X) dropped", oldest->frame,
               Address(oldest->context));
     *oldest = Live{};
     oldest->context = context;
@@ -325,12 +325,12 @@ void Note(int site, int cz, unsigned steps) {
         if (g_site_logged[site] && !g_log_all) return;
         g_site_logged[site] = true;
         const Site& s = kSites[site];
-        bof3::Log("DIV-D       site %d (area %u +0x%02X[%u] +0x%03X): %u steps at %u columns, frame %u", site, s.area,
+        bof3::Log("DIV-0122    site %d (area %u +0x%02X[%u] +0x%03X): %u steps at %u columns, frame %u", site, s.area,
                   s.field, s.index, s.move, steps, g_columns, Frame_Counter);
     } else if (cz >= 0) {
         if (g_case_logged[cz] && !g_log_all) return;
         g_case_logged[cz] = true;
-        bof3::Log("DIV-E       case zero, +0x18[%u] +0x%03X: the PSP's staging, frame %u", kCaseZero[cz].index,
+        bof3::Log("DIV-0123    case zero, +0x18[%u] +0x%03X: the PSP's staging, frame %u", kCaseZero[cz].index,
                   kCaseZero[cz].at, Frame_Counter);
     }
 }
@@ -347,7 +347,7 @@ bool g_cz_have[2];
 bool CaseZeroSplit(unsigned speed, unsigned lost, unsigned need, unsigned& a, unsigned& b) {
     const unsigned fast = g_fast_index ? Field_MoveSpeeds[g_fast_index] : 0;
     if (speed == 0 || 0x10u % speed != 0 || fast == 0 || 0x10u % fast != 0) {
-        bof3::Log("DIV-E       case zero: speed %u (fast %u) gives no whole frames; the walk is the original's", speed, fast);
+        bof3::Log("DIV-0123    case zero: speed %u (fast %u) gives no whole frames; the walk is the original's", speed, fast);
         return false;
     }
     const unsigned f = 0x10u / speed, ff = 0x10u / fast;
@@ -570,7 +570,7 @@ void PlacedSite(const unsigned char* op) {
         // The handler leaves its object current, its home (+0x8C / +0x90) where it put it.
         if (at < objects || at >= objects + 30u * 0xA4u || (at - objects) % 0xA4u != 0 || sprite[0x83] != s.index ||
             Long(sprite + 0x8C) != Long(sprite + 0x34) || Long(sprite + 0x90) != Long(sprite + 0x38)) {
-            bof3::Log("DIV-D       site %u: the placement op at %08X did not leave its object current (%08X); not moved", i,
+            bof3::Log("DIV-0122    site %u: the placement op at %08X did not leave its object current (%08X); not moved", i,
                       a, at);
             return;
         }
@@ -838,7 +838,7 @@ void EngineTest() {
         walk(0x8000);
         Check(!StepSite(context, script, result) && Pos(context) == s.before, "kOutBefore: then the EB, the original's");
     }
-    // Case zero (DIV E): every rewritten walk takes exactly the original's frames (each element's steps times
+    // Case zero (DIV-0123): every rewritten walk takes exactly the original's frames (each element's steps times
     // 0x10 / its speed - MoveCmd_Move's frames a step, Field_ObjectUpdate's next step the frame after), at every
     // speed index 1..5 and with the pair's feet anywhere from row -10 to row 120 when the north walk starts; the
     // north walk ends with the drawn rectangle's bottom at or above row 0 whenever the frames allow it; the east
@@ -1116,7 +1116,7 @@ void Arm() {
                 ++on;
             } else {
                 ++off;
-                bof3::Log("DIV-D       site %u (area %u +0x%02X[%u]) left original: the script is %08X, hash %08X - not the "
+                bof3::Log("DIV-0122    site %u (area %u +0x%02X[%u]) left original: the script is %08X, hash %08X - not the "
                           "bytes the row was measured on (a disc-built install?)",
                           i, s.area, s.field, s.index, Address(script), h);
             }
@@ -1136,18 +1136,18 @@ void Arm() {
                 ++on;
             } else {
                 ++off;
-                bof3::Log("DIV-E       case zero +0x18[%u] +0x%03X left original: not the bytes the row was read on", c.index,
+                bof3::Log("DIV-0123    case zero +0x18[%u] +0x%03X left original: not the bytes the row was read on", c.index,
                           c.at);
             }
         }
         g_staging = on != 0;
     }
     g_hide = hide && g_columns > widescreen_rule::ColumnsForAspect(16, 9);
-    bof3::Log("DIV-D/E     %s: %u of %u rows armed at %u columns (%u left original)%s",
+    bof3::Log("DIV-0122/23 %s: %u of %u rows armed at %u columns (%u left original)%s",
               staging ? "the wide staging on" : "the wide staging off (BOF3X_WIDE_STAGING=0)", on,
               kSiteCount + static_cast<unsigned>(sizeof kCaseZero / sizeof kCaseZero[0]), g_columns, off,
               g_fast_index ? "" : "; no fast speed found");
-    bof3::Log("DIV-F       the 21:9 hide %s", g_hide ? "on: field objects wholly past the 16:9 view are not drawn in a scene"
+    bof3::Log("DIV-0124    the 21:9 hide %s", g_hide ? "on: field objects wholly past the 16:9 view are not drawn in a scene"
                                                      : (hide ? "off: the view is not wider than 16:9" : "off (BOF3X_WIDE_HIDE=0)"));
 }
 

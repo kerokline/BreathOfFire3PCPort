@@ -1,4 +1,4 @@
-// The wide staging (docs/wide-staging.md; ledger drafts DIV D, E and F of the
+// The wide staging (docs/wide-staging.md; DIV-0122, DIV-0123 and DIV-0124 of the
 // ultrawide round): what the wider picture shows of a scene's staging that the
 // original's 320 columns hid, re-staged in the wide modes only. Narrow
 // (BOF3X_WIDE unset or 0) nothing here is armed and every hook is a load of

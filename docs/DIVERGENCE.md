@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 121 entries, DIV-0001..0121, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 126 entries, DIV-0001..0126, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -2079,7 +2079,7 @@ designed in rather than bolted on.
 - **Reversible?** `BOF3X_ORIGINAL=Game_WndProc` (Capcom's window procedure,
   which also brings back the unfocused freeze).
 
-### A 426 x 240 picture: the view widened by 53 columns a side (survey build)
+### A 426 x 240 or 560 x 240 picture: the view widened by 53 or 120 columns a side
 
 - **ID:** DIV-0041
 - **Date:** 2026-09-23
@@ -2440,6 +2440,194 @@ designed in rather than bolted on.
     `psp-widescreen-a.md` 6. **Reversible:** unset `BOF3X_WIDE`;
     `BOF3X_ORIGINAL=<function>` for any function above brings back Capcom's
     narrow-sized draw.
+
+  **Amended 2026-10-13 (the ultrawide round, group UW,
+  [`ultrawide-frame.md`](ultrawide-frame.md)): the wide picture comes in two
+  widths, 426 and 560.** `BOF3X_WIDE=1` is the 16:9 picture as before, 426 x
+  240, 53 columns a side; **`BOF3X_WIDE=2` is the 21:9 picture, 560 x 240,
+  120 columns a side** (240 x 21 / 9 exactly; the owner's choice of
+  2026-10-13: a fixed preset rather than the monitor's width or 32:9). This
+  replaces [`widescreen.md`](widescreen.md) 1's "a 21:9 monitor stays
+  pillarboxed". Everything this entry widens follows the columns: the shift,
+  the target, the fills, anchors and culls of ours, the battle tile. The
+  values that had 53 folded in are rules in the columns (`widescreen_rule`):
+  the terrain cull's margin `c + 47` (100 at 53 as tuned by eye, **167 at
+  120, owed the owner's eye**), the cell inset lowered by `ceil(c / 20)` (3,
+  and 6 - the original's largest inset, so at 21:9 the whole 28-column ring
+  is walked; [`ultrawide-culls.md`](ultrawide-culls.md) 3 measured it to
+  cover 560 at the field camera but not past `Camera_Distance` ~2,200), the
+  menu backdrop's `ceil(c / 64)` extra pairs (1, 2), the area-map frame
+  ranges moved by `c - 1`, the fourteen slide bounds by `c` (drawn only since
+  the faster slide below). Manillo's backdrop draws the original's two halves
+  and a band quad each side from 65 columns on, since the grown halves would
+  pass u 255. The launcher's "Widescreen" box is a three-way choice
+  (`wide=0|1|2`), and the run tools take `--wide 0|1|2`. On the owner's 3440
+  x 1440 the 21:9 picture lands on k = 6, 3360 x 1440 with 40 px of black
+  each side. **Verification:** a start-up property check proves every rule
+  gives the 16:9 build's constant at 53 (`Widescreen_CheckRules`, and
+  `static_assert`s), the backdrop's spans are proved for 0..224 columns,
+  `FitScale` at the three widths; the hosted `'*'` self-tests unset, `=1` and
+  `=2`. Live in the round's census ([`ultrawide-census-1.md`](ultrawide-census-1.md)
+  6): Manillo's backdrop seamless across 560 columns with its middle
+  pixel-identical to 16:9's, the left message box whole at the picture's left
+  edge (game x -104), no ring notch at the edges on the routes run; areas 31,
+  90 and 53, narrower than 560, show black bands. Not played by the owner.
+  **Reversible:** `BOF3X_WIDE=1` (16:9) or unset (narrow); the
+  `BOF3X_ORIGINAL` switches as above.
+
+  **Amended 2026-10-13 (the ultrawide round, group UC2,
+  [`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) section 1): the
+  off-screen flag split from the sprite cull.** `Sprite_Draw` `0x5935B0`
+  sets bit 7 of an object's byte 0 when it culls it, and nine functions of
+  game logic read that bit: `Member_FollowStep` and `Member_CatchUp` (a
+  follower off screen may jump or catch up), `Scena08_Scene4` (waits for an
+  actor to leave), `BossNina_WalkStep` (walks until off screen),
+  `EffectKind32_Arc` / `_Settle`, `EffectKind34_V4Move` and
+  `Area65_Record8Move` (effects that hop, land or free themselves off
+  screen), and `Fish_Swim` (a sound); `Sprite_FindFree` and
+  `Effect_FindFree` test the whole byte for 0 and so read it too
+  ([`ultrawide-culls.md`](ultrawide-culls.md) section 2). **The 2026-09-30
+  object culls above changed logic, not only the picture.** Moving this cull
+  out by the columns meant those decisions were taken at the wide edge under
+  `BOF3X_WIDE=1` (`[-117, 437]`, 53 px past Capcom's) from then until this
+  amendment, and "a cull's margin changes what is drawn, not logic" did not
+  hold for this one. It was never ledgered; the census measured it
+  (`combat`'s `Sprite_Objects[2]` byte 0 `0x81` narrow, `0x01` at 21:9;
+  [`ultrawide-census-1.md`](ultrawide-census-1.md) 5, known-defects D290).
+  *Original behaviour:* one bound `[-64, 384]` for both drawing and the bit.
+  *New behaviour:* the object is drawn within `[-64 - c, 384 + c]` (c the
+  columns: 0, 53 or 120), and bit 7 is set by `[-64, 384]` at every width. In
+  the bands the object is drawn with the bit set, a state the original never
+  produces. Every reader decides as Capcom's code does, narrow, 16:9 and 21:9
+  alike; at 16:9 that is a return to the game before 2026-09-30. *Why:* the
+  owner, 2026-10-13 ([`ultrawide-round.md`](ultrawide-round.md) 4a): widen
+  the picture, not the logic. The PSP also kept this cull at `[-64, 384]`
+  for its 32 columns ([`psp-widescreen.md`](psp-widescreen.md) 3b).
+  *Verification:* `sprite_draw`'s self-test, a second loop at the build's
+  columns (16,000 rounds, x biased to the narrow and wide edges, the object
+  compared with Capcom's clone): 0 mismatches at 53 and at 120; its control,
+  the flag moved with the picture, refused at both widths. Narrow, the loop
+  does not run. Live: `combat`'s byte is `0x81` at 21:9 as narrow, and
+  `caughFish`, `masterAndManillo` and `shop`'s object pages match narrow
+  ([`ultrawide-census-2.md`](ultrawide-census-2.md) 0).
+
+  **Amended 2026-10-13 (the ultrawide round, group UC2,
+  [`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) sections 2 and 3):
+  Capcom's remaining culls.** UC found six screen-x bounds of ours still
+  holding Capcom's values, four of them inside or within 7 px of the 16:9
+  view ([`ultrawide-culls.md`](ultrawide-culls.md) 1b). The owner,
+  2026-10-13: widen them at both widths, as this entry has done so far, an
+  exception to the round's "16:9 bit for bit" taken on purpose. Each was
+  read for whether it gates logic first. *Moved by the columns* (bound minus
+  / plus `Widescreen_Fill()`, compared in our code; `.rdata`'s floats
+  untouched): `MapCell_DrawTexQuads` `0x4CEB40` `(-100, 420)`,
+  `MapCell_DrawGroundSprite` `0x4CF270` and `EffectKind18Sub0D_DrawGlow`
+  `0x4FF610` `[-60, 380]` (x only; at 53 `(-153, 473)` / `[-113, 433]`, at
+  120 `(-220, 540)` / `[-180, 500]`). *`Sprite_ProjectA` `0x57B860`, the
+  draw half only:* the off-screen flag and the place on `Sprite_DrawList`
+  keep `Sprite_ScreenMargins`' margins (`[-80, 400]` / `[-100, 420]`). A
+  sprite culled for x alone but inside the margins moved out by the columns
+  is noted on a side list, and `Field_DrawFrame` `0x592F00` appends it just
+  before the draw pass, into slots the frame left, then puts back the scale
+  dwords `Sprite_Draw` wrote: the original's 40-entry list, every original
+  `Sprite_Draw` call and every flag are unchanged. Model sprites (`+0x24`
+  bit 6) are not noted. *Left at Capcom's because they gate logic:*
+  `EffectKind18Sub1C_OnScreen` `0x505480` `[-20, 340]`, which gates
+  `Sound_PlayEffect(0x200)` (it writes `Sound_Channels` and stops the
+  channel's sound), and `BreathMote_Fly` `0x4DECA0` `(0, 320)`, which gates
+  `BreathMote_DrawRing`, a draw that calls `Rand` (known-defects D293, D294).
+  *Original behaviour:* those bounds at every width. *New behaviour:* the
+  four above drawn into both bands; the two left pop at Capcom's edges,
+  inside both wide views. *Verification:* the three modules' self-tests at
+  0 mismatches at every width (the fills are unarmed during them, so they
+  compare Capcom's bounds); `field_frame`'s band test at 53 and 120
+  (`Sprite_ProjectA` with the band armed against Capcom's clone, the whole
+  state compared, 4,000 rounds, 0 mismatches; the append and restore checked
+  on a fixed case). Not seen in play.
+
+  **Amended 2026-10-13 (the ultrawide round, group SL,
+  [`ultrawide-slides.md`](ultrawide-slides.md)): the faster slide - the
+  slide-off bounds split from the picture.** The fourteen slide-off states of
+  the menu and shop windows (`0x596000..0x59D000`, `widescreen.cpp`
+  `g_slides`) step a window record's x by 0x20 a frame and hold it at a bound
+  just past the 4:3 edge (nine) or free the window past it (five). **The
+  2026-09-23 slide bounds above changed logic, not only the picture.** Each
+  bound moved out by the columns, so in the wide modes a box took longer to
+  hold or be freed - 2 frames at 16:9 and 4 at 21:9 for a short slide - and
+  the game waits on the window: `dragonTransform` and `cutsceneAndNue` left
+  the narrow route by it ([`ultrawide-census-2.md`](ultrawide-census-2.md)
+  3.2, known-defects D291). A parked box's x was also read by another
+  window's state (`MenuList_SlideLeftBesidePanel` `0x59A070` stops beside
+  record 4's x). *Original behaviour:* one bound per state for the hold or
+  free and the picture. *New behaviour:* every state decides by Capcom's
+  bound at every width (the immediates are no longer patched), so the
+  record's x, its state and the free are Capcom's on every frame. In the
+  wide modes the box is drawn on a straight line from where its slide
+  started to the bound moved out by the columns (`widescreen_rule::SlideBound`,
+  unchanged), reaching it on the frame Capcom's x reaches Capcom's bound - a
+  faster slide (at 120 columns 1.55 times Capcom's speed for
+  `MenuSlide_LeftOff` from 17, 1.95 for `MenuSlide_RightOff` from 194) - and
+  a parked box is drawn there. The drawn x is in the record only while the
+  record's own handler draws it: `Field_RunTaskRecords` puts Capcom's x back
+  after each handler, so every other reader sees Capcom's. Off until
+  `Widescreen_ArmFills`, narrow, under `BOF3X_ORIGINAL=Widescreen`, and
+  while `Field_RunTaskRecords` is Capcom's. *Why:* the owner, 2026-10-13:
+  widen the picture, not the logic; the faster slide over freeing at
+  Capcom's bound with the box vanishing in the band. *Verification:* a
+  start-up property check (`Widescreen_CheckSlides`): all fourteen states,
+  1,278 start x each, at 0, 53 and 120 columns - the hold or free frame and
+  every x outside the handler equal narrow's, the drawn x on or past the
+  wide bound on that frame (3,380,148 frames). The six modules' fuzzes at 0
+  mismatches at `BOF3X_WIDE` unset, 1 and 2; their control
+  (`BOF3X_SL_CONTROL=1`, the late free) refused by all six at `=1` and by
+  `battle_e7` at `=2`. Live: `dragonTransform` and `cutsceneAndNue` stay on
+  the narrow route at 16:9 and 21:9 ([`ultrawide-census-3.md`](ultrawide-census-3.md)
+  0). **Owed:** the owner's eye on the faster slide; a box sliding back in
+  starts inside the 21:9 band (known-defects D296). The 2026-09-23 note that
+  "a takeover of a `kSlides` site must read its bound from the operand" no
+  longer holds: the operand is Capcom's at every width.
+
+  **Amended 2026-10-13 (the ultrawide round, group RN,
+  [`ultrawide-rand.md`](ultrawide-rand.md)): the map walk's random split.**
+  **The 2026-10-07 cell inset above changed logic, not only the picture.**
+  Lowering `MapView_Build`'s inset by `ceil(columns / 20)` (3 at 16:9, 6 at
+  21:9) makes `DrawLayer_Open` `0x56FD20` hand `MapCell_Handlers` the cells
+  of columns the original never walks. `MapCell_DrawRising` `0x570660` draws
+  eight squares a cell with one `Rand` each, with no cull. From 2026-10-07
+  until this amendment each such cell moved the CRT stream that encounters,
+  battle damage and town walkers share by 8 calls a frame, and routes left
+  the narrow one: `whelpBoss` at both widths from frame 285, `shop` at 21:9,
+  the world map ([`ultrawide-census-2.md`](ultrawide-census-2.md) 3.1;
+  known-defects D283, area 2's steam vent). *Original behaviour:* every cell
+  the walk reaches calls `Rand`. *New behaviour:* `Inset()` notes the inset
+  Capcom's arithmetic gives before the lowering. `DrawLayer_Open` marks each
+  cell outside the original's walk of its row as a band cell, and
+  `MapCell_DrawRising` takes a band cell's eight numbers from a draw-only
+  generator of ours, `Rand`'s recurrence on a seed of its own that nothing
+  else reads. The original's cells keep Capcom's `Rand` in the original's
+  order, so the band's rising squares still draw and the game's random
+  stream is the narrow one. The inset lowering itself is unchanged. *Why:*
+  the owner, 2026-10-13: split the random; widen the picture, not the
+  logic. *Scope:* `DrawRising` is the only random consumer under the
+  handler table (an image scan of all 17 handlers and their callees). The
+  area patch handlers (kinds `0x24` / `0x25`) also change game state from a
+  band cell and are left as they were, the owner's call ("leave for now";
+  known-defects D295, measured in [`ultrawide-patch-cells.md`](ultrawide-patch-cells.md)).
+  *Verification:* `wide_rand`'s self-test runs ours alone, with stand-in
+  handlers and a recording `Rand`: the boundary at 0 / 53 / 120 columns, over
+  every original inset 0..14, input flag, row parity and view column, 0
+  mismatches; whole-frame fuzzes at four lowerings show Capcom's `Rand` calls
+  equal to the narrow frame's, call for call and cell for cell, 0
+  mismatches; the control (band cells on Capcom's `Rand`) refused at 53 and
+  120. Live: with the flag split and the faster slide, the eleven hash routes
+  keep narrow's `Rand` count on every frame at 16:9 and 21:9 and no game page
+  differs ([`ultrawide-census-3.md`](ultrawide-census-3.md) 0,
+  [`ultrawide-census-4.md`](ultrawide-census-4.md) 0). **Reversible:**
+  `BOF3X_WIDE_INSET=0` (no band: the insets equal, nothing split).
+
+  **The round's re-staging and hide** are entries of their own: DIV-0122
+  (the scenes' edge actors), DIV-0123 (case zero) and DIV-0124 (the 21:9
+  hide).
 
 ### The window resizes freely; the picture snaps to whole multiples or fills the height
 
@@ -4279,6 +4467,53 @@ designed in rather than bolted on.
   bodies and the table items. Verified: the route's eleven captures
   identical to the switch off; `field_view.txt` and
   `worldMapAndAreaTransition_ab.txt` re-run on the refined rule (below).
+- **Amended 2026-10-13 (the ultrawide round, group FY,
+  [`faerie-over-table.md`](faerie-over-table.md) sections 5-7; corrected
+  2026-10-14 by [`campfire-and-crystal.md`](campfire-and-crystal.md)): a model
+  keeps its layer.** A model (`+0x24` bit `0x40`, drawn as depth-sorted quad
+  records) is never moved, and a sprite whose body overlaps a model of its
+  own layer is not moved either: moved, either would leave the depth sort it
+  shares with the model's quads. The case was the model at the lighthouse's
+  pedestal in `eldritchGene.txt` (object `0x802148`), **the lighthouse
+  bulb's filament**: the rule had moved it out of layer 38 and drawn it over
+  the globe's semi-transparent facets instead of inside them. (FY's doc
+  called it the dragon gene; the gene is the crystal of known-defects D242,
+  which this amendment does not touch.) The owner likes the filament's look
+  as fixed. Both log under `BOF3X_LAYERING_LOG=1` ("is a model: layer kept",
+  "beside model ...: kept"). Verified live, narrow, against the rule before
+  the amendment: `field_view.txt` 4 of 4, `worldmap_sliver.txt` 1 of 1,
+  `worldMapAndAreaTransition_ab.txt` 35 of 35, `ninaWalkBehindBlock.txt` 11
+  of 11 and `dolphinBoss.txt` 60 of 60 shots identical; the four pedestal
+  shots differ in the model's box only, which is now the same as with the
+  switch off, and at frame 3,300 the whole frame equals Capcom's.
+- **Amended 2026-10-14 (the ultrawide round, group CF, the owner's campfire
+  report; [`campfire-and-crystal.md`](campfire-and-crystal.md) sections 1-5,
+  known-defects D301): a cell record that drew over the body stops the
+  move.** A cell record stops the rule when what its run drew in the last
+  pass reaches the sprite, as well as when it is anchored within two cells.
+  The camp's fire (a `MapCell_DrawFrames` record, the same in the
+  cutscene's `AREA053` and the field's `AREA090`) is anchored three cells
+  from Garr; the rule drew him three layers later, over the flames, where
+  Capcom's order puts the flames over him. Each run's `POLY_FT4` /
+  `POLY_G4` quads are kept from each pass, up to eight a run (past that,
+  their union box; `DrawLayer_Open` brackets the run, `Gfx_CommitPrim` hands
+  over its primitives, mode 1 only; two generations in a 2,048-entry table,
+  about 1.2 MB), and tested with the lists' convex test (`QuadReaches`).
+  Quads with a point past +/-4,096 and other primitives are left to the
+  proximity test; a run not drawn in the last pass counts as in the way.
+  The amendment only stops moves, so every pixel it changes is the
+  original's order at that spot. The quads are one frame old. Verified live,
+  narrow, against the rule before it: `vaccinationAndFireScene.txt` 29 shots,
+  each differing in the fire's box only; `campingFishing.txt` 50 / 50,
+  `field_view.txt` 4 / 4, `worldmap_sliver.txt` 1 / 1,
+  `worldMapAndAreaTransition_ab.txt` 35 / 35, `ninaWalkBehindBlock.txt`
+  11 / 11 and `eldritchGene.txt` 18 / 18 identical; `dolphinBoss.txt` 58 /
+  60, the other two with plants in front of a character drawn in front again,
+  equal in their boxes to the switch off. Headless `'*'` at `BOF3X_WIDE`
+  unset, 1 and 2: exit 0, every mismatch count 0 (the amendment arms after
+  the self-tests, as DIV-0071 does). The owner has seen it in a replay and
+  approved (2026-10-14). `BOF3X_LAYERING_RECORDS=0` drops this amendment
+  alone (the control).
 - **Reversible?** `BOF3X_LAYERING=0`. `BOF3X_LAYERING_AHEAD`
   (1..8) and `BOF3X_LAYERING_RISE` (0..64) move the two numbers;
   `BOF3X_LAYERING_LOG=1` with a `BOF3X_DRAWORDER` window logs each
@@ -7162,3 +7397,212 @@ designed in rather than bolted on.
   fuzz runs Capcom's rule (the switch `g_edge_no_area` is armed after it).
   **Not seen by the owner.**
 - **Reversible?** `BOF3X_ORIGINAL=EdgeNoArea`.
+
+### The wide modes re-stage the scenes' edge actors
+
+- **ID:** DIV-0122
+- **Date:** 2026-10-13
+- **Subsystem:** field scenes (`src/game/wide_staging.cpp` `kSites`; hooks in
+  `MoveScript_Step`, the flow pass's `0D`, `EventScript_Op`;
+  [`wide-staging.md`](wide-staging.md))
+- **Tier:** Sensible - the wider picture's own consequence, fixed the way
+  Capcom fixed it on the PSP.
+- **Original behaviour:** in the 320-column view, actors a scene starts,
+  parks or ends just past the view's edge are not seen. Under DIV-0041's
+  wider picture, 36 such rows show in the 16:9 band by the static scan
+  ([`ultrawide-staging.md`](ultrawide-staging.md)), among them actors
+  standing at the edge through a conversation and actors popping in or out
+  there.
+- **New behaviour:** in the wide modes only (`Widescreen_Live()` not 0), 18
+  site rows (22 of the scan's rows and one of the PSP diff's,
+  [`ultrawide-staging-psp.md`](ultrawide-staging-psp.md)) move the actor's
+  start out past the live picture's edge, or extend its last walk before a
+  hide or an end past it, by `ceil((columns + 12 - beyond) * 10 / pps10)`
+  steps (capped by the steps to the picture's top), and lengthen the walk by
+  the same steps, so it ends where the original's did. Three rows walk the
+  added steps at the fastest speed, because the actor's next wait is for a
+  clock value close to the walk's. Narrow is the original's. A row whose
+  script bytes differ (a disc-built or PSP-data install) is left original and
+  logged. 14 of the scan's 16:9 rows cannot take this shape (a point the
+  scene ends on, a stationary actor, a walk whose end is itself in the band)
+  and are left for the owner ([`wide-staging.md`](wide-staging.md) 3).
+- **Rationale:** the owner's call of 2026-10-13
+  ([`ultrawide-round.md`](ultrawide-round.md) 4): fix properly at 16:9, park
+  farther. It is the shape Capcom used on the PSP for its 32 columns (9 of the
+  scan's 56 band rows in 7 scenes, starts and exits moved out with the walk
+  lengthened, no hide added), written here as a rule in the columns, never as
+  the PSP's script bytes.
+- **Also in the PSX version?** The PSX has the 320 view, where the original
+  staging is never seen; the PSP has its own re-staging of some of these
+  sites (its data, not ours).
+- **Verification:** `tools/wide_staging_check.py` (each row's address, hash,
+  ops, and the rule's point outside the picture at 53 and 120 by the scan's
+  camera; 0 problems); `BOF3X_SHADOW=wide_staging` (the rule, the table,
+  narrow applying nothing, the engine on six real rows; 0 mismatches) and ten
+  planted controls refused. Live: the census after the fix
+  ([`ultrawide-census-3.md`](ultrawide-census-3.md) 4.2) finds no band row
+  for the re-staged sites the routes reach (site 3 in `bossAndFlash`, sites
+  15..17 in `dolphinBoss`), and `Rand` stays narrow's on both routes
+  ([`ultrawide-census-4.md`](ultrawide-census-4.md) 1). 20 of the 24 armed
+  rows are not reached by any route. **Not played by the owner.**
+- **Reversible?** `BOF3X_WIDE_STAGING=0`, or narrow.
+
+### Case zero takes the PSP's staging in the wide modes
+
+- **ID:** DIV-0123
+- **Date:** 2026-10-13
+- **Subsystem:** area 175, chapter 7 (`Scena07_Scene2`), the party's scene
+  scripts `+0x18[4]` and `[5]` (`wide_staging.cpp` `kCaseZero`;
+  [`wide-staging.md`](wide-staging.md) 5, 5a)
+- **Tier:** Sensible - Capcom's own later staging.
+- **Original behaviour:** the pair walk 24 steps west at clock `0x1B` and
+  wait at screen x -40, in the 16:9 band (the owner's capture, 2026-10-13:
+  two party members standing at the top left of a forest path while the
+  hero is spoken to); later they walk the same way again and 18 / 20 steps
+  east.
+- **New behaviour:** in the wide modes, as the PSP stages it: each west walk
+  is 3 steps shorter and is followed by a walk north; the east walk is
+  preceded by the same walk south, and is 3 shorter. The pair leave the band
+  for the 4:3 view's top, and the route ends where it did. Two departures
+  from the PSP's 6 north / 6 south (revised 2026-10-14,
+  [`wide-staging.md`](wide-staging.md) 5a): each rewritten walk takes exactly
+  the original's frames - the 3 lost steps' frames are spent on the added
+  walk, partly at the actor's speed and the rest at the fastest whole speed,
+  out of view; and the north walk goes far enough to take the drawn
+  rectangle's bottom above the top row (read at run time; 12 steps by the
+  dumps). The PSP crops 12 rows, which hid the pair; we keep 240. Narrow is
+  the original's.
+- **Rationale:** the owner's call ([`ultrawide-round.md`](ultrawide-round.md)
+  4a): copy the PSP's staging, written as a change of the original's steps in
+  our code, cited to the PSP diff
+  ([`ultrawide-staging-psp.md`](ultrawide-staging-psp.md) section 2, rows 53
+  and 54). Game timing stays Capcom's: the PSP's own walk, 3 steps' frames
+  longer, moved `dolphinBoss`'s recorded route
+  ([`ultrawide-census-3.md`](ultrawide-census-3.md) 3.2), which is why the
+  revision keeps the original's frame count.
+- **Also in the PSX version?** The PSX is the original's; the PSP (JP and EU
+  alike) is the model.
+- **Verification:** the scripts' address and hash at the arm; the engine's
+  self-test (each walk's frames equal the original's at speed indices 1..5
+  and feet rows -10..120; north clears row 0 where the frames allow; south
+  equals north; the speed is put back; only in area 175); two controls
+  refused. Live ([`ultrawide-census-4.md`](ultrawide-census-4.md) 1):
+  `dolphinBoss` at 16:9 and 21:9 keeps narrow's `Rand` on all 14,923 frames
+  through the fight; the walks start on narrow's frames and the dialogue
+  matches frame for frame; through the waits the 4:3 middle is
+  pixel-identical to narrow's (no sliver on the top row). **The owner has
+  seen the walk and approved it (2026-10-14).**
+- **Reversible?** `BOF3X_WIDE_STAGING=0`, or narrow.
+
+### At 21:9, a field object past the 16:9 view is not drawn in a scene
+
+- **ID:** DIV-0124
+- **Date:** 2026-10-13
+- **Subsystem:** `Sprite_Draw` `0x5935B0` (ours), one call after its cull and
+  bit 7 (`wide_staging.cpp` `HideSite`; [`wide-staging.md`](wide-staging.md) 6)
+- **Tier:** Sensible - draw-only.
+- **Original behaviour:** no picture wider than 320 columns; under DIV-0041
+  at 21:9, actors parked or passing in the 120 columns past the 16:9 view
+  are drawn during scenes.
+- **New behaviour:** at `BOF3X_WIDE=2`, a field object, extra object or
+  non-leader party member whose drawn rectangle lies wholly past -53 or 373,
+  while a scene holds the leader (the census's scene mask, bits 1..8) in a
+  field scene (`Game_Mode` 2, or 4 - the field with a message open,
+  `GameMode4_Run` `0x495E60`, added 2026-10-14 - no world-map record for the
+  area by `WorldMap_RecordIndex`, not the attract demo's chapter 16), and that
+  no exception names, is not drawn. Bit 7 and every field the original writes
+  are unchanged; only the primitive is skipped. 16:9 and narrow are
+  unchanged.
+- **Rationale:** the owner's call ([`ultrawide-round.md`](ultrawide-round.md)
+  4, layer 2): a simple hide for what is still visible in the 21:9-only part
+  of the bands.
+- **Also in the PSX version?** No wider picture there.
+- **Verification:** the self-test's fuzz of the decision at the band edges,
+  the mask on and off, the leader and an exception excluded (and a sweep of x
+  -200..520); controls refused; the census's `hidden` column records the same
+  decision. Live: 215 rows hidden in field scenes in 13 areas and none on the
+  world map or in the attract demo ([`ultrawide-census-3.md`](ultrawide-census-3.md)
+  4.3); after the mode-4 keying, every field-object row in a scene in
+  `balioAndSunder_2`'s areas 39 and 41 hidden (283 rows) and the leader never
+  ([`ultrawide-census-4.md`](ultrawide-census-4.md) 3). The hash differs from
+  the run without it in draw pages only. **Not played by the owner.**
+- **Reversible?** `BOF3X_WIDE_HIDE=0`, or 16:9.
+
+### A `DR_MOVE` out of the display buffer textures what follows: the frame-buffer grab
+
+- **ID:** DIV-0125
+- **Date:** 2026-10-13
+- **Subsystem:** render (`src/render/fb_grab.{h,cpp}`,
+  `render_shim.{h,cpp}`, `render_d3d11.cpp`; `src/game/d3d_list.cpp`
+  `MoveImage`, `d3d_draw.cpp` `D3d_BindTexture`, `gfx_texcache.cpp`
+  `Gfx_InvalidateTextures`; [`depress-wobble.md`](depress-wobble.md) 6)
+- **Tier:** Intent - the port could not do what the code plainly asks for,
+  and the PlayStation shows what was meant.
+- **Original behaviour:** Capcom's port carries out a `DR_MOVE` as a copy
+  inside its VRAM shadow (`Gfx_MoveImage` `0x59E9A0`), which never holds the
+  rendered frame. Primitives that texture from a move out of the display
+  buffer therefore sample nothing: Depress (`MAGIC109`) draws a solid black
+  sixteen-sided disc over the party's corner for about 144 frames; the
+  fishing panel's pedestal is blank (light grey-white); kind 0x51's column
+  and the ending's frame copy lose their picture.
+- **New behaviour:** the shadow move is unchanged, and the backend also
+  copies that part of the picture drawn so far, at the window's resolution
+  (the owner's call), into a texture. Direct-colour page textures over the
+  destination sample it until the shadow there is written again. Depress
+  shows the PlayStation's whirlpool; the fishing pedestal shows the field's
+  ground. Not reached: sprites of a grabbed page (they take the cell cache),
+  4- and 8-bit pages over a grab, and the four effect states that read the
+  grabbed rectangle back on the CPU (`Gfx_StoreImage`; known-defects D297).
+- **Rationale:** the PlayStation's GPU moves from the frame buffer. The PC's
+  code issues the same moves call for call (the twin of `MAGIC109`,
+  [`depress-wobble.md`](depress-wobble.md) 2), and the owner's PlayStation
+  frame shows the swirl (2a there). A port defect, restored.
+- **Also in the PSX version?** Yes: this is what the PlayStation draws.
+- **Verification:** `BOF3X_SHADOW=fb_grab`: property checks, 0 failures,
+  three controls refused; `'*'` at `BOF3X_WIDE` unset, 1 and 2: exit 0;
+  `depress.txt` narrow and 16:9 and `caughFish.txt` with the grab on and off
+  (6.3, 6.4 there); off is pixel-identical to the black-disc run (20 of 20
+  shots). **The owner, 2026-10-14, on the captures:** "That restoration looks
+  perfect", the fishing pedestal included. Kind 0x51's column and the
+  ending's frame copy are unseen (no recipe reaches them).
+- **Reversible?** `BOF3X_FBGRAB=0`. Also `BOF3X_ORIGINAL=Gfx_DrawOTag` (no grab
+  recorded) or `D3d_BindTexture` (no draw tagged).
+
+### The debris matrix is the GTE's identity: the lighthouse's rays come back
+
+- **ID:** DIV-0126
+- **Date:** 2026-10-14
+- **Subsystem:** the effect engine's GTE helper `EffectGte_SetDiagonalOne`
+  `0x494180` (ours, `src/game/effect_gte.cpp`; [`lighthouse-rays.md`](lighthouse-rays.md))
+- **Tier:** Intent - a restoration: the PlayStation's behaviour, lost in the
+  port.
+- **Original behaviour:** Capcom's PC writes 1 on the matrix's diagonal
+  (`mov edx, 1`). Its seven callers premultiply it by `Gte_RotMatrixX / Y / Z`
+  (each product `>> 12`), so the rotation they build collapses to 0, 1 and -1
+  and every edge it turns becomes 0 or -1 (known-defects D215). Seen in play
+  as D243: kind 0x4B's 32 additive `POLY_G3` rays in the lighthouse (area 77,
+  `eldritchGene.txt`, `Frame_Counter` 872..1057) are drawn as points on the
+  globe; `BOF3X_ORIGINAL` of the six functions involved draws none, its
+  records byte-identical to ours before the change.
+- **New behaviour:** the diagonal is 0x1000, the identity in 4.12; the rays
+  fan out of the globe over the scene, and the six other callers' shards,
+  arms and debris (kinds 0x1E, 0x1F, 0x21, 0x64, 0x72, 0x97, 0xA0) turn by a
+  true rotation. The switch is a word armed through
+  `bof3::PatchBytes("DiagonalIdentity", ...)` after the `effect_gte` fuzz, so
+  the fuzz keeps comparing ours against Capcom's 1s.
+- **Rationale:** the PlayStation twin `0x801B0F5C` (JP `GAME.EMI`) stores
+  0x1000; kind 0x4B's twin (`AREA077.EMI` `0x801F3E04..0x801F4B7C`) is the
+  PC's call for call otherwise. The owner's PlayStation picture shows the
+  rays.
+- **Also in the PSX version?** No - the PSX is what this restores.
+- **Verification:** live ([`lighthouse-rays.md`](lighthouse-rays.md) 4):
+  before, the 32 rays' boxes a tenth of a pixel (`BOF3X_DRAWORDER`) and their
+  edges 0 or -1; after, every edge 4,000+ long and the rays in every capture
+  from recipe frame 882 to 1014. `effect_gte` fuzz 80,000 rounds on Capcom's
+  rule, the armed identity check 20,000 rounds, 5 of 5 controls refused. The
+  21:9 hash of `eldritchGene` keeps narrow's `Rand` (13 pages differ, all
+  picture; [`ultrawide-census-4.md`](ultrawide-census-4.md) 0). **The owner
+  approved the rays (2026-10-14).** The other six callers are not seen in
+  play (no recorded route reaches them).
+- **Reversible?** `BOF3X_ORIGINAL=DiagonalIdentity` (ours writes Capcom's 1s);
+  `BOF3X_ORIGINAL=EffectGte_SetDiagonalOne` (Capcom's function).

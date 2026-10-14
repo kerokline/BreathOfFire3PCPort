@@ -8,7 +8,7 @@
 // Every call out goes through the scenario harness (SH_CALL), so the start-up
 // fuzz can stand recorders in for ours as for the originals' copies. Each is a
 // faithful replacement but one: EffectGte_SetDiagonalOne writes the
-// PlayStation's 0x1000 where Capcom's PC writes 1 (DIV-LR-A,
+// PlayStation's 0x1000 where Capcom's PC writes 1 (DIV-0126,
 // docs/lighthouse-rays.md; BOF3X_ORIGINAL=DiagonalIdentity for the 1s). Where
 // the original divides by a depth that can be 0 (EffectGte_ProjectSize), ours
 // aborts with a message.
@@ -101,7 +101,7 @@ extern "C" float* __cdecl EffectGte_ProjectPoint(const long* point, float* out) 
 }
 
 namespace effect_gte {
-// DIV-LR-A (docs/lighthouse-rays.md): 1 through PatchBytes("DiagonalIdentity")
+// DIV-0126 (docs/lighthouse-rays.md): 1 through PatchBytes("DiagonalIdentity")
 // in EffectGte_Inject, after the fuzz, which runs Capcom's 1s. While 0 the
 // diagonal is Capcom's PC value, 1; set, it is the PlayStation twin's 0x1000.
 std::uint32_t g_identity = 0;
@@ -109,7 +109,7 @@ std::uint32_t g_identity = 0;
 
 // original 0x494180 (0x2F bytes): nine word stores - 1, 0, 0, 0, 1, 0, 0, 0,
 // 1 - at +0..+0x10, in that order. eax is the matrix (loaded first).
-// DIV-LR-A: with the switch armed the diagonal is 0x1000, the GTE's identity in
+// DIV-0126: with the switch armed the diagonal is 0x1000, the GTE's identity in
 // 4.12, which the PlayStation twin 0x801B0F5C stores (`addiu v0, zero, 0x1000`;
 // read in JP GAME.EMI). Capcom's PC 1 collapses the seven callers' turned
 // edges to 0, 1 and -1 (known-defects D215): the lighthouse's rays (D243),
@@ -155,13 +155,13 @@ extern "C" long __cdecl EffectGte_ProjectSize(const long* point, const short* si
 void EffectGte_Inject() {
     if (bof3::WantsShadow("effect_gte")) effect_gte::SelfTest();
     {
-        // DIV-LR-A: armed after the fuzz above, which sees Capcom's 1s.
+        // DIV-0126: armed after the fuzz above, which sees Capcom's 1s.
         const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
         const bool on = bof3::PatchBytes(
             "DiagonalIdentity", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&effect_gte::g_identity)),
             was, is, 4);
         if (on && bof3::WantsShadow("effect_gte")) effect_gte::IdentityCheck();
-        bof3::Log("DIV-LR-A    EffectGte_SetDiagonalOne's diagonal is 0x1000, the PlayStation's identity (on unless the line above says OFF)");
+        bof3::Log("DIV-0126    EffectGte_SetDiagonalOne's diagonal is 0x1000, the PlayStation's identity (on unless the line above says OFF)");
     }
     BOF3_INJECT(EffectGte_LoadMapCamera);
     BOF3_INJECT(EffectGte_ProjectPoint);

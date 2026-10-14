@@ -282,7 +282,7 @@ long D3d_BindTexture(unsigned tpage, unsigned clut) {
             Scene(0x24);
         }
     }
-    // Ledger draft I (render/fb_grab.h), not in the original: a direct-colour
+    // DIV-0125 (render/fb_grab.h), not in the original: a direct-colour
     // page tells the backend which VRAM cells its texels come from - the
     // page's corner moved by Gfx_TexCacheKey's x, y (cells, in this mode), the
     // window w x h its 256 texels tile - so a frame-buffer grab there can be
@@ -528,7 +528,7 @@ void D3dDraw_Inject() {
         d3d_draw::SelfTest();
         d3d_list::SelfTest();
     }
-    if (bof3::WantsShadow("fb_grab")) render::fb_grab::SelfTest();   // ledger draft I
+    if (bof3::WantsShadow("fb_grab")) render::fb_grab::SelfTest();   // DIV-0125
     d3d_list::Operands();   // Gfx_DrawOTag's byte tables, ours, against the code's (docs/operand-store.md)
     BOF3_INJECT(Gfx_DrawOTag);
     BOF3_INJECT(D3d_PrimColor);

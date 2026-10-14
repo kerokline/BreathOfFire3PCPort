@@ -277,7 +277,7 @@ void AppendCommand(const Command& c) {
     g_frame.commands[g_frame.n_commands++] = c;
 }
 
-// --- the frame-buffer grab (ledger draft I, fb_grab.h) ---------------------------
+// --- the frame-buffer grab (DIV-0125, fb_grab.h) ---------------------------
 
 fb_grab::Registry g_grabs;
 

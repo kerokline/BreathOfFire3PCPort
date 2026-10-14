@@ -36,7 +36,7 @@ Class Classify(float left, float right, float top, float bottom, unsigned column
 
 // The rectangle the draw pass draws a sprite record at, in the game's 320 x
 // 240 units (the census's own reading, section 1 of docs/band-census.md);
-// false when Sprite_Draw draws nothing of it. Also read by DIV F's hide
+// false when Sprite_Draw draws nothing of it. Also read by DIV-0124's hide
 // (wide_staging.cpp), so the census's "hidden" column and the hide agree.
 bool ScreenRect(const unsigned char* sprite, float& left, float& right, float& top, float& bottom);
 
