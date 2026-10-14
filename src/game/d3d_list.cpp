@@ -12,6 +12,7 @@
 #include "hook/code_bytes.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
+#include "render/render_shim.h"
 
 namespace d3d_list {
 
@@ -88,9 +89,16 @@ void TexKey(U p) {
     PutLong(kTexKey + 4, Long(key + 4));
 }
 // Codes 0xEC..0xEF: a VRAM move, the rect at +8, the destination +0x10, +0x14.
+// Ledger draft I (render/fb_grab.h), after the original's move and not in
+// it: a move out of a display buffer also has the backend grab that part of
+// the picture drawn so far, as the PlayStation's GPU would have moved it. The
+// rectangle is read before the move, which clips it in place.
 void MoveImage(U p) {
-    g.move_image(reinterpret_cast<short*>(At(p + 8)), static_cast<int>(Long(p + 0x10)),
-                 static_cast<int>(Long(p + 0x14)));
+    auto* rect = reinterpret_cast<short*>(At(p + 8));
+    const int x = rect[0], y = rect[1], w = rect[2], h = rect[3];
+    const int to_x = static_cast<int>(Long(p + 0x10)), to_y = static_cast<int>(Long(p + 0x14));
+    g.move_image(rect, to_x, to_y);
+    render::MoveFromFrame(x, y, w, h, to_x, to_y);
 }
 
 // A primitive's entry by its index, (code & 0xFC) - 0x20: the switch the
