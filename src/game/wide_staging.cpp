@@ -140,10 +140,27 @@ struct CaseZeroOp {
     std::uint8_t index;
     std::uint16_t at;     // an F2 walk in the script
     std::int8_t delta;    // its steps change by this
-    std::uint8_t dir;     // the walk added
-    std::uint8_t steps;
+    std::uint8_t dir;     // the walk added: 1 north after a west walk, 5 south before the east walk
     bool after;           // the added walk follows the F2 (else it comes before)
 };
+// The added walk's steps, chosen at run time (CaseZeroSplit) so that:
+//  - the rewritten op takes exactly the original's frames (the round's rule:
+//    game timing stays Capcom's; EB-2's hash, ultrawide-census-3.md 3.2, found
+//    the PSP's 21 + 6 moving dolphinBoss's recorded route): the 3 steps the
+//    walk loses, 3 * f frames at the actor's own f = 0x10 / speed frames a
+//    step, are spent on the added walk - `a` steps at the actor's speed and
+//    `b` at the fastest (one frame a step), a * f + b = 3 * f;
+//  - north, the pair end wholly above the picture's top row (census 3's
+//    sliver: the PSP crops 12 rows, we keep 240): the steps needed are the
+//    drawn rectangle's bottom row, read when the north walk starts
+//    (band_census::ScreenRect, the same reading the census and the hide use),
+//    over kCaseZeroRise10 / 10 px a step;
+//  - south, the east walk's added steps are the last north walk's of the same
+//    script, so the route ends where the original's does.
+// a is taken as large as the north steps needed allow (the visible part at
+// the actor's own pace), the rest fast, out of view.
+constexpr unsigned kCaseZeroRise10 = 27;   // screen px a north step lifts the pair near the top, x10 (SS's camera,
+                                           // the smallest over 20 steps from the wait point; wide_staging_check.py)
 constexpr std::uint16_t kCaseZeroArea = 175;
 // clang-format off
 const CaseZeroScript kCaseZeroScripts[] = {
@@ -151,12 +168,12 @@ const CaseZeroScript kCaseZeroScripts[] = {
     {5, 0x6420A4, 0x32775E7B, 0x00A0},
 };
 const CaseZeroOp kCaseZero[] = {
-    {4, 0x060, -3, 1, 6, true},    // the first west walk (clock 0x1B): 21 west, then 6 north
-    {4, 0x082, -3, 1, 6, true},    // the second (0x29), the same
-    {4, 0x08B, -3, 5, 6, false},   // the east walk (0x33): 6 south first, then 3 fewer east
-    {5, 0x074, -3, 1, 6, true},
-    {5, 0x094, -3, 1, 6, true},
-    {5, 0x09D, -3, 5, 6, false},
+    {4, 0x060, -3, 1, true},    // the first west walk (clock 0x1B): 21 west, then north off the top
+    {4, 0x082, -3, 1, true},    // the second (0x29), the same
+    {4, 0x08B, -3, 5, false},   // the east walk (0x33): south as far as the last north walk first, then 3 fewer east
+    {5, 0x074, -3, 1, true},
+    {5, 0x094, -3, 1, true},
+    {5, 0x09D, -3, 5, false},
 };
 // clang-format on
 
@@ -253,7 +270,7 @@ struct Element {
     bool fast;
 };
 struct Plan {
-    Element e[2];
+    Element e[3];
     unsigned count;
     bool advance;          // the last element steps past the op; else the op runs after them
     unsigned length;       // the op's length
@@ -272,6 +289,7 @@ struct Live {
     std::int32_t x = 0, z = 0; // the sprite where the last element began
     bool restore = false;
     unsigned char speed = 0;   // the context's speed index before a fast element
+    bool pending = false;      // the plan ended on a fast element: its speed goes back at the next step
     unsigned frame = 0;
 };
 constexpr unsigned kLive = 32;
@@ -315,6 +333,34 @@ void Note(int site, int cz, unsigned steps) {
         bof3::Log("DIV-E       case zero, +0x18[%u] +0x%03X: the PSP's staging, frame %u", kCaseZero[cz].index,
                   kCaseZero[cz].at, Frame_Counter);
     }
+}
+
+// Case zero's added walk: the 3 lost steps' frames, `lost * f` with f the
+// actor's frames a step, spent as `a` steps at its speed and `b` at the
+// fastest whole speed (g_fast_index's, `ff` frames a step): a * f + b * ff =
+// lost * f, with a + b >= need where it can be (else the most there is,
+// a = 0). False when the actor's speed does not divide 0x10 (no whole
+// frames): the walk is then the original's, logged.
+constexpr unsigned kCaseZeroFallback = 6;   // the PSP's 6 when the rectangle cannot be read
+unsigned g_cz_a[2], g_cz_b[2];
+bool g_cz_have[2];
+bool CaseZeroSplit(unsigned speed, unsigned lost, unsigned need, unsigned& a, unsigned& b) {
+    const unsigned fast = g_fast_index ? Field_MoveSpeeds[g_fast_index] : 0;
+    if (speed == 0 || 0x10u % speed != 0 || fast == 0 || 0x10u % fast != 0) {
+        bof3::Log("DIV-E       case zero: speed %u (fast %u) gives no whole frames; the walk is the original's", speed, fast);
+        return false;
+    }
+    const unsigned f = 0x10u / speed, ff = 0x10u / fast;
+    for (unsigned k = lost + 1; k-- > 0;) {   // a = lost .. 0
+        if (((lost - k) * f) % ff != 0) continue;
+        const unsigned bb = (lost - k) * f / ff;
+        if (k + bb >= need || k == 0) {
+            a = k;
+            b = bb;
+            return true;
+        }
+    }
+    return false;
 }
 
 // The plan for the op at the context's position, or false.
@@ -365,15 +411,38 @@ bool PlanFor(const Live* l, const unsigned char* context, const unsigned char* s
             if (own != script) continue;
             unsigned dir, steps, length;
             if (!MoveAt(p, dir, steps, length)) return false;
+            const unsigned slot = c.index == kCaseZeroScripts[0].index ? 0u : 1u;
+            unsigned a = 0, b = 0;
+            if (c.after) {
+                float left, right, top, bottom;
+                const bool seen = band_census::ScreenRect(Sprite_Current, left, right, top, bottom);
+                const unsigned need = !seen ? kCaseZeroFallback
+                                    : bottom <= 0.0f ? 0u
+                                    : static_cast<unsigned>((bottom * 10.0f + kCaseZeroRise10 - 1) / kCaseZeroRise10);
+                if (!CaseZeroSplit(Field_MoveSpeeds[context[4]], static_cast<unsigned>(-c.delta), need, a, b)) return false;
+                g_cz_a[slot] = a;
+                g_cz_b[slot] = b;
+                g_cz_have[slot] = true;
+            } else {
+                if (!g_cz_have[slot]) return false;   // no north walk to undo: the original's east walk
+                a = g_cz_a[slot];
+                b = g_cz_b[slot];
+                g_cz_have[slot] = false;
+            }
             plan = Plan{};
             plan.site = -1;
             plan.cz = static_cast<int>(i);
             plan.length = length;
             const Element walk = {static_cast<unsigned char>(dir), static_cast<unsigned char>(static_cast<int>(steps) + c.delta), false};
-            const Element added = {c.dir, c.steps, false};
-            plan.e[0] = c.after ? walk : added;
-            plan.e[1] = c.after ? added : walk;
-            plan.count = 2;
+            const Element paced = {c.dir, static_cast<unsigned char>(a), false};
+            const Element fast = {c.dir, static_cast<unsigned char>(b), true};
+            // North: the walk, the paced steps, the fast ones (out of view last). South: the fast ones
+            // first (out of view), the paced ones, the walk. Elements of no steps are left out: one would
+            // cost the frame the step takes to come back.
+            const Element order[3] = {c.after ? walk : fast, paced, c.after ? fast : walk};
+            plan.count = 0;
+            for (const Element& e : order)
+                if (e.steps != 0) plan.e[plan.count++] = e;
             plan.advance = true;
             return true;
         }
@@ -388,6 +457,12 @@ bool PlanFor(const Live* l, const unsigned char* context, const unsigned char* s
 bool StepSite(unsigned char* context, const unsigned char* script, unsigned char& result) {
     const unsigned pos = Pos(context);
     Live* l = Find(context);
+    if (l && l->pending) {
+        // A plan that ended on fast steps: they have run, the speed goes back before the next op.
+        if (l->area == Game_AreaNumber && context[4] == g_fast_index) context[4] = l->speed;
+        Drop(l);
+        l = nullptr;
+    }
     if (l && l->running && (l->script != script || l->pos != pos || l->area != Game_AreaNumber)) {
         // The context moved on without us (a scene cut short, an area change): forget the plan.
         // Put the speed back only while it is still the fast one this entry set, in the same area: a context
@@ -442,7 +517,18 @@ bool StepSite(unsigned char* context, const unsigned char* script, unsigned char
     if (e.steps != 0) g_move(context, e.dir);
     if (l->next == l->plan.count && l->plan.advance) {
         SetPos(context, l->pos + l->plan.length);   // as the op would have left it (the step's own +1 included)
-        Drop(l);
+        if (e.fast && l->restore) {
+            const unsigned char speed = l->speed;
+            const unsigned area = l->area;
+            Drop(l);
+            l = Take(context);
+            l->pending = true;
+            l->speed = speed;
+            l->area = area;
+            l->frame = Frame_Counter;
+        } else {
+            Drop(l);
+        }
     }
     return true;
 }
@@ -515,7 +601,13 @@ void PlacedSite(const unsigned char* op) {
 // docs/ultrawide-census-1.md 2.2: the scene mask is also set on the world map,
 // 0C, and through the attract demo, 02):
 //   - Game_Mode 2 is the field: the top-level mode GameMode_Field 0x4959F0
-//     runs as (symbols.toml Game_Mode; 3 menu, 5 battle);
+//     runs as (symbols.toml Game_Mode; 3 menu, 5 battle); and Game_Mode 4
+//     is the field with a message open: GameMode_Field sets it on
+//     Field_Request 2, and GameMode4_Run 0x495E60 (ours, mode_rest.cpp)
+//     runs Field_FrameScripted every frame - the scripted field frame - until
+//     the message cells' bit 1 (0x7DEE44) puts Game_Mode back to 2. Scenes
+//     play through it (EB-2's census 3, ultrawide-census-3.md 4.1: 175 object
+//     rows of areas 39 and 41's long scenes drawn in mode 4);
 //   - the world map is an area WorldMap_RecordIndex 0x462A90 finds a record
 //     for (0..10; 11 is "no world map", which 0x56DE30 dispatches its hooks
 //     on - symbols.toml WorldMap_FieldHooks): areas 16, 33, 45, 65, 87, 88,
@@ -525,7 +617,7 @@ void PlacedSite(const unsigned char* op) {
 //     starts it with Scenario_Start(0x10) (Title_StateStartDemo 0x462300,
 //     docs/field-modes.md: "chapter 16 is the attract demo").
 bool FieldScene(unsigned game_mode, int chapter, unsigned world_map) {
-    return game_mode == 2 && chapter != kAttractChapter && world_map == kNoWorldMap;
+    return (game_mode == 2 || game_mode == 4) && chapter != kAttractChapter && world_map == kNoWorldMap;
 }
 
 bool HideDecision(float left, float right, unsigned scene_mask, bool field_scene, bool candidate, bool excepted) {
@@ -746,26 +838,74 @@ void EngineTest() {
         walk(0x8000);
         Check(!StepSite(context, script, result) && Pos(context) == s.before, "kOutBefore: then the EB, the original's");
     }
-    // Case zero: +0x18[4] +0x060, 21 west then 6 north; +0x08B, 6 south then 15 east.
+    // Case zero (DIV E): every rewritten walk takes exactly the original's frames (each element's steps times
+    // 0x10 / its speed - MoveCmd_Move's frames a step, Field_ObjectUpdate's next step the frame after), at every
+    // speed index 1..5 and with the pair's feet anywhere from row -10 to row 120 when the north walk starts; the
+    // north walk ends with the drawn rectangle's bottom at or above row 0 whenever the frames allow it; the east
+    // walk's south steps are the north walk's; the speed is the actor's again before its next op.
     {
         Game_AreaNumber = kCaseZeroArea;
         const unsigned char* const script = Pointer(kCaseZeroScripts[0].script);
-        reset(0x060, 2);
-        Check(StepSite(context, script, result) && result == 7 && context[7] == 21 && Pos(context) == 0x060, "case zero: 21 west",
-              static_cast<int>(context[7]));
-        walk(-0x10000);
-        Check(StepSite(context, script, result) && result == 1 && context[7] == 6 && Pos(context) == 0x063,
-              "case zero: then 6 north", static_cast<int>(context[7]));
+        auto SetY = [&](float v) { std::memcpy(sprite + 0x78, &v, sizeof v); };
+        auto GetY = [&]() { float v; std::memcpy(&v, sprite + 0x78, sizeof v); return v; };
+        struct Run { unsigned frames, north, south, east, west; bool fast_seen; };
+        auto run = [&](unsigned at, unsigned speed_index, float feet) {
+            Run r{};
+            reset(at, speed_index);
+            SetY(feet - 1.0f);   // no frame table: the rectangle is the point, its bottom the point + 1
+            for (int guard = 0; guard < 8; ++guard) {
+                const unsigned before = Pos(context);
+                if (!StepSite(context, script, result)) break;
+                const unsigned speed = Field_MoveSpeeds[context[4]];
+                if (context[4] == g_fast_index) r.fast_seen = true;
+                r.frames += context[7] * (0x10u / speed);
+                (result == 1 ? r.north : result == 5 ? r.south : result == 3 ? r.east : r.west) += context[7];
+                // the walk's motion: the sprite moves (half a cell a step, a lift of kCaseZeroRise10 / 10 px north)
+                walk(static_cast<std::int32_t>(context[7]) * 0x8000);
+                if (result == 1) SetY(GetY() - context[7] * (kCaseZeroRise10 / 10.0f));
+                if (Pos(context) != before) break;
+            }
+            return r;
+        };
+        for (unsigned speed_index = 1; speed_index <= 5; ++speed_index) {
+            const unsigned f = 0x10u / Field_MoveSpeeds[speed_index];
+            for (int feet = -10; feet <= 120; feet += 5) {
+                g_cz_have[0] = false;
+                const Run west = run(0x060, speed_index, static_cast<float>(feet));
+                Check(west.frames == 24 * f, "case zero: the west walk's frames are the original's 24 steps'",
+                      static_cast<int>(west.frames), static_cast<int>(24 * f));
+                Check(west.west == 21, "case zero: 21 west", static_cast<int>(west.west));
+                const unsigned need = feet <= 0 ? 0u : (static_cast<unsigned>(feet) * 10u + kCaseZeroRise10 - 1) / kCaseZeroRise10;
+                const unsigned most = 3u * f;   // all three steps' frames at one frame a step
+                Check(west.north >= (need < most ? need : most) && west.north >= 1 && west.north <= most,
+                      "case zero: north enough to clear the top row when the frames allow", static_cast<int>(west.north),
+                      static_cast<int>(need));
+                if (need <= most) {
+                    const float bottom = GetY() + 1.0f;
+                    Check(bottom <= 0.0f || need == 0, "case zero: the rectangle's bottom at or above row 0", feet,
+                          static_cast<int>(bottom));
+                }
+                // The speed is the actor's at its next op (the plan may end on fast steps).
+                SetPos(context, 0x063);
+                StepSite(context, script, result);
+                Check(context[4] == speed_index, "case zero: the speed put back", static_cast<int>(context[4]));
+                const unsigned north = west.north;
+                const Run east = run(0x08B, speed_index, 0.0f);
+                Check(east.frames == 18 * f, "case zero: the east walk's frames are the original's 18 steps'",
+                      static_cast<int>(east.frames), static_cast<int>(18 * f));
+                Check(east.south == north && east.east == 15, "case zero: south as far as north, then 15 east",
+                      static_cast<int>(east.south), static_cast<int>(north));
+            }
+        }
+        // No north walk recorded: the east walk is the original's.
+        g_cz_have[0] = false;
         reset(0x08B, 2);
-        Check(StepSite(context, script, result) && result == 5 && context[7] == 6 && Pos(context) == 0x08B,
-              "case zero: 6 south first", static_cast<int>(context[7]));
-        walk(0x10000);
-        Check(StepSite(context, script, result) && result == 3 && context[7] == 15 && Pos(context) == 0x08E,
-              "case zero: then 15 east", static_cast<int>(context[7]));
+        Check(!StepSite(context, script, result), "case zero: no north walk, the original's east walk");
         // Another area: nothing.
         Game_AreaNumber = 174;
         reset(0x060, 2);
         Check(!StepSite(context, script, result), "case zero: only in area 175");
+        g_cz_have[0] = g_cz_have[1] = false;
     }
     // A context that moved on (an area change mid-walk) drops its plan.
     {
@@ -863,12 +1003,13 @@ void SelfTest() {
             Check(!HideDecision(l, r, 0x10, true, true, false), "the leader's state alone is no scene", x);
         }
         // The field scene, as the game tells it (EB-1's census: the mask is set on the world map and in the
-        // demo). Every mode 0..15, chapter -1..20 and world-map index 0..12: a field scene only for mode 2,
+        // demo; census 3: mode 4, the field with a message open). Every mode 0..15, chapter -1..20 and world-map
+        // index 0..12: a field scene only for mode 2 or 4,
         // not chapter 16, index 11.
         for (unsigned mode = 0; mode < 16; ++mode)
             for (int chapter = -1; chapter <= 20; ++chapter)
                 for (unsigned wm = 0; wm <= 12; ++wm)
-                    Check(FieldScene(mode, chapter, wm) == (mode == 2 && chapter != 16 && wm == 11), "field scene",
+                    Check(FieldScene(mode, chapter, wm) == ((mode == 2 || mode == 4) && chapter != 16 && wm == 11), "field scene",
                           static_cast<int>(mode), chapter * 100 + static_cast<int>(wm));
         // The census's cases, a sprite wholly past 373 under each: the world map (mask 0C, field mode, an
         // area with a world-map record) and the attract demo (mask 02, chapter 16) never hide; a town
@@ -883,6 +1024,10 @@ void SelfTest() {
             {0x02, 3, 7, 11, false, "the menu (mode 3)"},
             {0x02, 5, 7, 11, false, "battle (mode 5)"},
             {0x02, 2, 7, 11, true, "a field scene, chapter 7"},
+            {0x02, 4, 3, 11, true, "a field scene with a message open (mode 4), chapter 3 (areas 39 and 41)"},
+            {0x0C, 4, 3, 0, false, "mode 4 on the world map"},
+            {0x02, 4, 16, 11, false, "mode 4 in the demo"},
+            {0x02, 6, 3, 11, false, "mode 6 (Look_PadControl, not the field frame)"},
             {0x0C, 2, 2, 11, true, "a field area change in a scene (mask 0C off the world map)"},
             {0x00, 2, 7, 11, false, "free walking (mask 0)"},
         };
@@ -914,21 +1059,26 @@ void SelfTest() {
         Check(!Candidate(Sprite_Kind2, field, index), "the kind-2 object is not hidden");
         Check(!Excepted(0, 0x10, 0), "the exception list starts empty");
     }
-    // 5. Case zero's rewrite: 3 fewer steps, never below 1, and the added
-    //    walk's displacement undone on the later route (6 north, 6 south).
+    // 5. Case zero's table: each script's two west walks add north, its east walk south; 3 fewer steps a walk.
     {
-        // Per script: the two west walks each gain 6 north and the east walk
-        // 6 south first - the second route's end 6 north of the original's
-        // before the east walk, and every walk still 3 steps or more.
         for (const CaseZeroScript& cs : kCaseZeroScripts) {
-            int north = 0, shorter = 0;
+            int north = 0, south = 0, shorter = 0;
             for (const CaseZeroOp& c : kCaseZero) {
                 if (c.index != cs.index) continue;
-                north += c.dir == 1 ? c.steps : c.dir == 5 ? -static_cast<int>(c.steps) : 0;
+                north += c.dir == 1 && c.after;
+                south += c.dir == 5 && !c.after;
                 shorter += c.delta;
             }
-            Check(north == 6 && shorter == -9, "case zero: 6 north twice, 6 south once, 3 fewer steps a walk", north, shorter);
+            Check(north == 2 && south == 1 && shorter == -9, "case zero: two north, one south, 3 fewer a walk", north, shorter);
         }
+        const unsigned char saved_fast_index = g_fast_index;
+        g_fast_index = 5;
+        unsigned a = 0, b = 0;
+        for (unsigned need = 0; need <= 40; ++need) {
+            Check(CaseZeroSplit(2, 3, need, a, b) && a * 8 + b == 24 && (a + b >= need || a == 0), "the split at speed 2",
+                  static_cast<int>(need), static_cast<int>(a * 100 + b));
+        }
+        g_fast_index = saved_fast_index;
     }
     EngineTest();
     bof3::Log("shadow      wide_staging self-test: %u checks, %u mismatches", g_checks, g_bad);

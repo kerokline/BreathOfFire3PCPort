@@ -86,7 +86,9 @@ def parse(path=SRC):
 
 
 CZ_ROW = re.compile(r'^\s*\{\s*(\d+),\s*(0x[0-9A-Fa-f]+),\s*(0x[0-9A-Fa-f]+),\s*(0x[0-9A-Fa-f]+)\s*\},')
-CZ_OP = re.compile(r'^\s*\{\s*(\d+),\s*(0x[0-9A-Fa-f]+),\s*(-?\d+),\s*(\d+),\s*(\d+),\s*(true|false)\s*\},')
+CZ_OP = re.compile(r'^\s*\{\s*(\d+),\s*(0x[0-9A-Fa-f]+),\s*(-?\d+),\s*(\d+),\s*(true|false)\s*\},')
+CZ_RISE = re.compile(r'kCaseZeroRise10 = (\d+);')
+CZ_SPEED = 2     # the speed index the replay assumes for the pair (the party's is read at run time, not here)
 
 
 def parse_case_zero(path=SRC):
@@ -107,8 +109,7 @@ def parse_case_zero(path=SRC):
             scripts.append(dict(index=int(g[0]), script=int(g[1], 16), hash=int(g[2], 16), span=int(g[3], 16)))
         elif where == 'o' and CZ_OP.match(line):
             g = CZ_OP.match(line).groups()
-            ops.append(dict(index=int(g[0]), at=int(g[1], 16), delta=int(g[2]), dir=int(g[3]), steps=int(g[4]),
-                            after=g[5] == 'true'))
+            ops.append(dict(index=int(g[0]), at=int(g[1], 16), delta=int(g[2]), dir=int(g[3]), after=g[4] == 'true'))
     return scripts, ops
 
 
@@ -130,6 +131,9 @@ def case_zero(cx, measure):
         label = 'party +0x18[%d]@%#x' % (s['index'], p)
         focus, ssrow = focus_for(cx, r, label, None)
         ops_s = ss.reached_ops(cx.img, cx.lmv, p)
+        rise10 = int(CZ_RISE.search(open(SRC, encoding='utf-8').read()).group(1))
+        f = 0x10 // cx.speeds[CZ_SPEED]
+        last_north = None
         pos = [None, None]
         for at, b in ops_s:
             op = b[0]
@@ -148,7 +152,25 @@ def case_zero(cx, measure):
                     print('   PROBLEM: +%#x is not an F2 of 4 steps or more' % at)
                     bad += 1
                 walk = (mv[0], mv[1] + c['delta'])
-                seq = [walk, (c['dir'], c['steps'])] if c['after'] else [(c['dir'], c['steps']), walk]
+                if c['after']:
+                    dx, dz = cx.step_cells(mv[0])
+                    at_turn = (pos[0] + dx * walk[1], pos[1] + dz * walk[1])
+                    q0 = ss.project(at_turn[0] - focus[0], at_turn[1] - focus[1])
+                    ys = [ss.project(at_turn[0] - focus[0], at_turn[1] - 0.5 * k - focus[1])[1] for k in range(21)]
+                    lift = min(ys[k] - ys[k + 1] for k in range(20))
+                    need = 0 if q0[1] <= 0 else -(-int(q0[1] * 10) // rise10)
+                    lost = -c['delta']
+                    n_north = next(k + (lost - k) * f for k in range(lost, -1, -1) if k + (lost - k) * f >= need or k == 0)
+                    print('   +%#05x the turn at sy %.0f: %d north steps needed at %d/10 px (the smallest lift over 20 steps '
+                          'here is %.1f px: kCaseZeroRise10 must not exceed %d); at speed index %d, %d north' % (
+                              at, q0[1], need, rise10, lift, int(lift * 10), CZ_SPEED, n_north))
+                    if rise10 > int(lift * 10):
+                        print('   PROBLEM: kCaseZeroRise10 is above the measured lift')
+                        bad += 1
+                    last_north = n_north
+                    seq = [walk, (c['dir'], n_north)]
+                else:
+                    seq = [(c['dir'], last_north or 0), walk]
             else:
                 seq = [mv]
             for d, n in seq:
