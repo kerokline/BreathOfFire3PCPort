@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 126 entries, DIV-0001..0126, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 127 entries, DIV-0001..0127, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -7606,3 +7606,68 @@ designed in rather than bolted on.
   play (no recorded route reaches them).
 - **Reversible?** `BOF3X_ORIGINAL=DiagonalIdentity` (ours writes Capcom's 1s);
   `BOF3X_ORIGINAL=EffectGte_SetDiagonalOne` (Capcom's function).
+
+### The ending's backdrop: the seam gone, the pictures and the letterbox into the wide bands
+
+- **ID:** DIV-0127
+- **Date:** 2026-10-14
+- **Subsystem:** the ending's backdrop, `EffectKind18Sub61_DrawOverlay`
+  `0x5151A0` (ours, `src/game/effect_6d.cpp`), and its letterbox,
+  `Scena17_DrawLetterbox` `0x56CFF0` (ours, `src/game/scena_sc15.cpp`);
+  [`ending-backdrop.md`](ending-backdrop.md)
+- **Tier:** Intent - the seam is a port artefact (known-defects D302) and the
+  bands are DIV-0041's class, the wide picture the owner chose
+- **Original behaviour:** the ending's desert scene (chapter 17, area 0xC7)
+  is the area's terrain and the party under two paletted pictures drawn in
+  screen space by effect kind 0x18's sub-kind 0x61: a tile over 0..320 x
+  0..256, then eight pieces of the table `0x65F470` - pieces 0 and 1 the
+  cloud sky (256 + 64 columns, 48 rows, page 0x99), pieces 2..7 the far dunes
+  (page 0x97, a 256-wide picture whose first 64 columns are repeated down the
+  last 64 of the screen). The chapter's letterbox is two black tiles 320 x
+  30. Two things follow from the table under the PC's draw: (1) pieces 0 and
+  1 are 48 rows and 64 columns with a `dv` of 48 and (piece 1) a `du` of 64,
+  so the port's texel-centre table (`D3d_TexCoords`, `(i + 0.512) / 256`)
+  samples the row under the strip and the column past it on their last
+  pixel row and column - index 0 of the page, a different blue: a one-pixel
+  line across the picture where the sky meets the dunes and down the sky's
+  last column (D302). (2) Under DIV-0041's wide picture everything stops at
+  the 320 columns: black above the terrain in the band corners, the dunes'
+  picture cut at the old edges, and terrain showing above and below the
+  letterbox at the sides.
+- **New behaviour:** once the fills are armed (`Widescreen_FillsArmed`, after
+  the self-tests, wide or narrow) pieces 0 and 1 are drawn with `du` = w - 1
+  and `dv` = h - 1, the rule piece 0's `du`, pieces 4 and 5 and the port's own
+  fills already follow: the sky's last row and column are its own, the lines
+  gone. Under the wide picture (`Widescreen_Fill()` columns a side) the
+  letterbox tiles are full-frame fills at `(Widescreen_FillX(), y)`
+  `Widescreen_FillWidth()` x 30; the tile runs to the bands; and every piece
+  on the picture's left edge (x 0) or right edge (x + w = 320) gets band
+  pieces beside it: its own rows, mirrored about the edge column, and
+  mirrored again past the piece's width (the 64-wide right pieces under the
+  21:9 preset's 120 columns) - the texel at the edge continues outward, so
+  the sky and the dunes meet the band without a seam. Narrow play draws the
+  original's packets apart from the two pieces' `du` / `dv`; every fuzz and
+  `BOF3X_ORIGINAL` see Capcom's packets bit for bit.
+- **Rationale:** the owner's launcher background is this scene, in the wide
+  picture (2026-10-14: "extend the black bars, extend the background draw to
+  426 instead of 320, and fix the seam line"). Mirroring is the choice that
+  needs no new art and shows no seam; the pictures are 256 wide and Capcom
+  already repeated them for the last 64 columns, so a wider painting through
+  the substituted-art path is the art route, not a code one.
+- **Also in the PSX version?** The seam, no, by the reading: the PlayStation
+  GPU steps its texel coordinate in whole texels from `v0`, so 48 rows from
+  16 show rows 16..63 whatever `v1` says; it is the port's own texel-centre
+  table (DIV-0025's inset, one level up) that makes the overshoot visible.
+  Not measured on the disc. The bands: the PSX picture is 320 wide.
+- **Verification:** captures of the scene from the crafted chapter-17 save
+  (`tools/recipes/ending17.txt`; `ending-backdrop.md` 1), point filter,
+  before and after, at recipe frames 2,469..2,729 (14 shots each): narrow,
+  the only rows that differ are the sky's (game rows 30..47) and the line at
+  row 48 and column 319 is gone; every row outside the sky identical. Wide
+  (`BOF3X_WIDE=1`) and 21:9 (`BOF3X_WIDE=2`): `tools/wide_seams.py` 0 frames
+  at or above 0.2 on either side (14 each; 10 to 13 of 14 before). Headless
+  self-tests `'*'` and `en-US`: [`ending-backdrop.md`](ending-backdrop.md) 5.
+- **Reversible?** `BOF3X_ORIGINAL=EffectKind18Sub61_DrawOverlay` (Capcom's
+  draw: the seam and the 320-wide pictures), `BOF3X_ORIGINAL=Scena17_DrawLetterbox`
+  (the 320-wide bands). Narrow play without the wide picture loses only the
+  seam.

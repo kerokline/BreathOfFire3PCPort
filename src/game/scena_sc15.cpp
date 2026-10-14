@@ -2408,22 +2408,26 @@ SC15_EXPORT void __cdecl Scena17_DrawRays(unsigned radius, unsigned level) {
 }
 
 // original 0x56CFF0: the letterbox: two black TILEs of 320.0 x 30.0, at y 0.0
-// and 210.0, to OT slot 1.
+// and 210.0, to OT slot 1. DIV-0127: under the wide picture the two tiles are
+// full-frame fills, (Widescreen_FillX(), y) Widescreen_FillWidth() x 30 - the
+// rule of DIV-0041's fade tile; 0.0 and 320.0 narrow and in every fuzz.
 SC15_EXPORT void __cdecl Scena17_DrawLetterbox(void) {
+    const uint32_t x = std::bit_cast<uint32_t>(Widescreen_FillX());        // 0x00000000 narrow
+    const uint32_t w = std::bit_cast<uint32_t>(Widescreen_FillWidth());    // 0x43A00000 narrow
     unsigned char* p = Packet();
     SH_CALL(Gpu_SetTile)(p);
     Rgb(p, 4, 0);
-    SetL(p + 8, 0);
+    SetL(p + 8, x);
     SetL(p + 0xC, 0);
-    SetL(p + 0x14, 0x43A00000);
+    SetL(p + 0x14, w);
     SetL(p + 0x18, 0x41F00000);
     Commit(1, 0x1C);
     p = Packet();
     SH_CALL(Gpu_SetTile)(p);
     Rgb(p, 4, 0);
-    SetL(p + 8, 0);
+    SetL(p + 8, x);
     SetL(p + 0xC, 0x43520000);
-    SetL(p + 0x14, 0x43A00000);
+    SetL(p + 0x14, w);
     SetL(p + 0x18, 0x41F00000);
     Commit(1, 0x1C);
 }

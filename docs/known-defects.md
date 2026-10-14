@@ -7775,3 +7775,25 @@ him. Ours, not Capcom's.
 **Status:** fixed by DIV-0071's 2026-10-14 amendment (a cell record whose
 quads in the last pass reach the sprite stops the move). The owner has seen
 it in a replay and approved (2026-10-14).
+
+## D302 — The ending's sky shows a line where it meets the dunes, and down its last column (the port's; fixed by DIV-0127)
+
+**Found:** the owner, on the first renders of the ending's desert scene for
+the launcher background, 2026-10-14 ([`ending-backdrop.md`](ending-backdrop.md) 3).
+
+**Established:** `EffectKind18Sub61_DrawOverlay` `0x5151A0` draws the sky as
+pieces 0 and 1 of the table `0x65F470`, 48 rows and 64 columns with a `dv` of
+48 and (piece 1) a `du` of 64, where the port's own rule (piece 0's `du` of
+255 for 256 columns, pieces 4 and 5, every full-frame fill) is w - 1 and
+h - 1. Through the port's texel-centre table `D3d_TexCoords` (`(i + 0.512) /
+256`) the last pixel row samples texel row 64 and the last column of piece 1
+texel column 64: the row under the strip and the column past it, index 0 of
+the page, a different blue. At scale 2 that is a one-screen-pixel line along
+game row 48 across the width and down column 319 of the sky. The pieces of
+the dunes overshoot too, into their own picture's next row and column, which
+shows nothing. By the reading, the PlayStation GPU's whole-texel stepping
+would show rows 16..63 for the same table; not measured on the disc.
+
+**Fixed** by DIV-0127: the two pieces' `du` and `dv` are w - 1 and h - 1
+once the fills are armed; the fuzz and `BOF3X_ORIGINAL` keep Capcom's
+packets.

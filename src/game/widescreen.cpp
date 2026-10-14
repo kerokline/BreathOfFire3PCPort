@@ -48,6 +48,7 @@ unsigned Widescreen_BackdropPairs() { return g_backdrop_pairs; }
 
 bool g_fills_armed;
 unsigned Widescreen_Fill() { return g_fills_armed ? g_live : 0; }
+bool Widescreen_FillsArmed() { return g_fills_armed; }
 float Widescreen_FillX() { return 0.0f - static_cast<float>(Widescreen_Fill()); }
 float Widescreen_FillWidth() { return 320.0f + 2.0f * static_cast<float>(Widescreen_Fill()); }
 float Widescreen_FillRight(float edge) { return edge + static_cast<float>(Widescreen_Fill()); }

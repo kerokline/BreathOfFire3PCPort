@@ -43,6 +43,7 @@
 #include "game/effect_6d_callees.h"
 #include "game/move_script_bytes.h"
 #include "game/scenario_harness.h"
+#include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/log.h"
 
@@ -572,61 +573,73 @@ extern "C" void __cdecl EffectKind18Sub5D_Close(void) {
 // draw mode (page 0x99, the window 256 x 256) (0xC); the eight pieces of
 // 0x65F470 at their (x, y + y) .. (x + w, y + h + y), their (u, v) .. (u + du,
 // v + dv), their page byte's page and CLUT, committed (0x48).
+//
+// What it is (docs/ending-backdrop.md): the ending's backdrop in area 0xC7 -
+// the two quads a plain tile over the frame, pieces 0 and 1 the cloud sky
+// (256 + 64 wide, 48 tall, page 0x99's rows 16..63 and 64..111), pieces 2..7
+// the far dunes (page 0x97: a 256-wide picture, its right 64 columns repeated
+// down the screen's last 64).
+//
+// DIV-0127 (two changes, both off in every fuzz and under BOF3X_ORIGINAL):
+// - the seam: pieces 0 and 1 are 48 tall with a dv of 48, so the PC's
+//   texel-centre table (D3d_TexCoords, (i + 0.512) / 256) samples texel row 64
+//   on their last pixel row - the row under the sky, index 0 of the page, a
+//   lighter blue - a one-pixel line across the picture where the sky meets
+//   the dunes; piece 1's du of 64 for 64 columns does the same down its last
+//   column. Once the fills are armed (Widescreen_FillsArmed, after the
+//   self-tests; wide or narrow) their du and dv are w - 1 and h - 1, the rule
+//   piece 0's du, pieces 4 and 5 and the port's own fills follow.
+// - the wide picture: with Widescreen_Fill() columns a side, the tile runs to
+//   the bands, and every piece on the left edge (x 0) or the right edge (x + w
+//   320) gets band pieces beside it: the same rows, mirrored about the edge
+//   column (and mirrored again past the piece's width) - the texel at the
+//   edge continues outward - so the sky and the dunes meet the band without
+//   a seam. The pictures are 256 wide and already repeated by Capcom for the
+//   last 64 columns; a wider painting is the art path.
 extern "C" void __cdecl EffectKind18Sub61_DrawOverlay(int y) {
     if ((Draw_PassFlags & 4) == 0) return;
+    const U wide = Widescreen_Fill();
+    const bool armed = Widescreen_FillsArmed();
     {
         const U window = Window(0x10, 0x10);
         SH_CALL(Gpu_SetDrawMode)(Gfx_PacketNext, 0, 0, 0x99, window);
     }
     SH_CALL(Gfx_CommitPrim)(7, 0xC);
     const U f256 = 0x43800000u, f320 = 0x43A00000u;
-    {
+    // A quad of the tile: x0..x1 by 0..256, u0..u1 by v 0..255, page 0x99,
+    // CLUT 0x79C0 - the original's two, then the bands'.
+    const auto Tile = [](U x0_bits, U x1_bits, unsigned char u0, unsigned char u1) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 1);
-        SetUL(p + 8, 0);
+        SetUL(p + 8, x0_bits);
         SetUL(p + 0xC, 0);
-        SetUL(p + 0x18, f256);
+        SetUL(p + 0x18, x1_bits);
         SetUL(p + 0x1C, 0);
-        SetUL(p + 0x28, 0);
-        SetUL(p + 0x2C, f256);
-        SetUL(p + 0x38, f256);
-        SetUL(p + 0x3C, f256);
-        p[0x14] = 0;
+        SetUL(p + 0x28, x0_bits);
+        SetUL(p + 0x2C, 0x43800000u);
+        SetUL(p + 0x38, x1_bits);
+        SetUL(p + 0x3C, 0x43800000u);
+        p[0x14] = u0;
         p[0x15] = 0;
-        p[0x24] = 0xFF;
+        p[0x24] = u1;
         p[0x25] = 0;
-        p[0x34] = 0;
+        p[0x34] = u0;
         p[0x35] = 0xFF;
-        p[0x44] = 0xFF;
+        p[0x44] = u1;
         p[0x45] = 0xFF;
         SetWord(p + 0x26, 0x99);
         SetWord(p + 0x16, 0x79C0);
         SH_CALL(Gfx_CommitPrim)(7, 0x48);
-    }
-    {
-        unsigned char* const p = Gfx_PacketNext;
-        SH_CALL(Gpu_SetPolyFT4)(p);
-        SH_CALL(Gpu_SetShadeTex)(p, 1);
-        SetUL(p + 0x18, f320);
-        SetUL(p + 0x38, f320);
-        SetUL(p + 8, f256);
-        SetUL(p + 0xC, 0);
-        SetUL(p + 0x1C, 0);
-        SetUL(p + 0x28, f256);
-        SetUL(p + 0x2C, f256);
-        SetUL(p + 0x3C, f256);
-        p[0x14] = 0;
-        p[0x15] = 0;
-        p[0x24] = 0x40;
-        p[0x25] = 0;
-        p[0x34] = 0;
-        p[0x35] = 0xFF;
-        p[0x44] = 0x40;
-        p[0x45] = 0xFF;
-        SetWord(p + 0x26, 0x99);
-        SetWord(p + 0x16, 0x79C0);
-        SH_CALL(Gfx_CommitPrim)(7, 0x48);
+    };
+    Tile(0, f256, 0, 0xFF);
+    Tile(f256, f320, 0, 0x40);
+    if (wide != 0) {
+        // The tile repeats every 16 texels (the window), so any u a multiple
+        // of 16 apart from the edge's joins it: 256 - wide .. 256 on the left,
+        // 64 .. 64 + wide on the right.
+        Tile(FloatBits(-I(wide)), 0, static_cast<unsigned char>(256u - wide), 0);
+        Tile(f320, FloatBits(I(320u + wide)), 0x40, static_cast<unsigned char>(0x40u + wide));
     }
     {
         const U window = Window(0, 0x100);
@@ -634,33 +647,86 @@ extern "C" void __cdecl EffectKind18Sub61_DrawOverlay(int y) {
     }
     SH_CALL(Gfx_CommitPrim)(7, 0xC);
     const U dy = static_cast<U>(y);
-    for (U k = 0; k < at::kOverlayCount; ++k) {
-        const unsigned char* const e = At(at::kOverlayPieces + at::kOverlayStride * k);
+    // One piece: x0..x1 by top..bottom (ints as the original's s16 sums),
+    // texels u0..u1 by v0..v1, the page byte's page and CLUT.
+    const auto Piece = [](U x0, U x1, U top, U bottom, unsigned char u0, unsigned char u1, unsigned char v0,
+                          unsigned char v1, unsigned char page) {
         unsigned char* const p = Gfx_PacketNext;
         SH_CALL(Gpu_SetPolyFT4)(p);
         SH_CALL(Gpu_SetShadeTex)(p, 1);
+        SetUL(p + 8, FloatBits(I(x0)));
+        SetUL(p + 0xC, FloatBits(I(top)));
+        SetUL(p + 0x18, FloatBits(I(x1)));
+        SetUL(p + 0x1C, FloatBits(I(top)));
+        SetUL(p + 0x28, FloatBits(I(x0)));
+        SetUL(p + 0x2C, FloatBits(I(bottom)));
+        SetUL(p + 0x38, FloatBits(I(x1)));
+        SetUL(p + 0x3C, FloatBits(I(bottom)));
+        p[0x14] = u0;
+        p[0x15] = v0;
+        p[0x24] = u1;
+        p[0x25] = v0;
+        p[0x34] = u0;
+        p[0x35] = v1;
+        p[0x44] = u1;
+        p[0x45] = v1;
+        SetWord(p + 0x26, ((((static_cast<U>(page) << 7) + 0x140u) >> 6) & 0xFu) | 0x90u);
+        SetWord(p + 0x16, (static_cast<U>(page) + 0x1E5u) << 6);
+        SH_CALL(Gfx_CommitPrim)(7, 0x48);
+    };
+    for (U k = 0; k < at::kOverlayCount; ++k) {
+        const unsigned char* const e = At(at::kOverlayPieces + at::kOverlayStride * k);
         const U x = static_cast<U>(S16(e)), top = static_cast<U>(S16(e + 2)) + dy;
         const U w = static_cast<U>(S16(e + 4)), h = static_cast<U>(S16(e + 6));
         const U bottom = static_cast<U>(S16(e + 2)) + (dy + h);
-        SetUL(p + 8, FloatBits(I(x)));
-        SetUL(p + 0xC, FloatBits(I(top)));
-        SetUL(p + 0x18, FloatBits(I(x + w)));
-        SetUL(p + 0x1C, FloatBits(I(top)));
-        SetUL(p + 0x28, FloatBits(I(x)));
-        SetUL(p + 0x2C, FloatBits(I(bottom)));
-        SetUL(p + 0x38, FloatBits(I(x + w)));
-        SetUL(p + 0x3C, FloatBits(I(bottom)));
-        p[0x14] = e[9];
-        p[0x15] = e[0xA];
-        p[0x24] = static_cast<unsigned char>(e[0xB] + e[9]);
-        p[0x25] = e[0xA];
-        p[0x34] = e[9];
-        p[0x35] = static_cast<unsigned char>(e[0xC] + e[0xA]);
-        p[0x44] = static_cast<unsigned char>(e[0xB] + e[9]);
-        p[0x45] = static_cast<unsigned char>(e[0xC] + e[0xA]);
-        SetWord(p + 0x26, ((((static_cast<U>(e[8]) << 7) + 0x140u) >> 6) & 0xFu) | 0x90u);
-        SetWord(p + 0x16, (static_cast<U>(e[8]) + 0x1E5u) << 6);
-        SH_CALL(Gfx_CommitPrim)(7, 0x48);
+        const unsigned char u = e[9], v = e[0xA];
+        unsigned char du = e[0xB], dv = e[0xC];
+        if (armed && k < 2) {   // DIV-0127: the sky's last row and column are its own
+            du = static_cast<unsigned char>(w - 1);
+            dv = static_cast<unsigned char>(h - 1);
+        }
+        Piece(x, x + w, top, bottom, u, static_cast<unsigned char>(du + u), v, static_cast<unsigned char>(dv + v),
+              e[8]);
+    }
+    if (wide != 0) {
+        // A band beside a piece on the picture's edge: the piece's texels
+        // mirrored about the edge column, and, past the piece's width (the
+        // 64-wide right pieces under 120 columns), mirrored again - so the
+        // texel at the edge continues outward and no run shows a seam. Run
+        // j covers columns j * w .. from the edge; the even runs mirror,
+        // the odd ones read forward. Every span follows the w - 1 rule.
+        for (U k = 0; k < at::kOverlayCount; ++k) {
+            const unsigned char* const e = At(at::kOverlayPieces + at::kOverlayStride * k);
+            const U x = static_cast<U>(S16(e)), top = static_cast<U>(S16(e + 2)) + dy;
+            const U w = static_cast<U>(S16(e + 4)), h = static_cast<U>(S16(e + 6));
+            const U bottom = top + h;
+            const unsigned char u = e[9], v = e[0xA];
+            unsigned char dv = e[0xC];
+            if (k < 2) dv = static_cast<unsigned char>(h - 1);
+            const unsigned char v1 = static_cast<unsigned char>(dv + v);
+            const bool left = x == 0, right = x + w == 320;
+            if (!left && !right) continue;
+            for (U from = 0; from < wide; from += w) {
+                const U n = wide - from < w ? wide - from : w;
+                const bool mirror = ((from / w) & 1u) == 0;
+                if (left) {
+                    const U x0 = 0u - (from + n), x1 = 0u - from;
+                    if (mirror)
+                        Piece(x0, x1, top, bottom, static_cast<unsigned char>(u + n - 1), u, v, v1, e[8]);
+                    else
+                        Piece(x0, x1, top, bottom, static_cast<unsigned char>(u + w - n),
+                              static_cast<unsigned char>(u + w - 1), v, v1, e[8]);
+                }
+                if (right) {
+                    const U x0 = 320u + from, x1 = x0 + n;
+                    if (mirror)
+                        Piece(x0, x1, top, bottom, static_cast<unsigned char>(u + w - 1),
+                              static_cast<unsigned char>(u + w - n), v, v1, e[8]);
+                    else
+                        Piece(x0, x1, top, bottom, u, static_cast<unsigned char>(u + n - 1), v, v1, e[8]);
+                }
+            }
+        }
     }
 }
 

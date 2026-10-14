@@ -1,0 +1,145 @@
+# The ending's desert scene (scenario chapter 17's intro, area 0xC7) from a
+# crafted save: dolphinBoss.DAT with its scenario bytes set to chapter 17,
+# state 0, so Scena17_Start runs on the load. The load route is
+# bossAndFlash.txt's opening. BOF3X_LANG=en-US.
+# save ending17
+wait 53
+hold start 4
+wait 67
+hold start 6
+wait 47
+hold circle 4
+wait 54
+wait 5
+wait 4
+wait 4
+wait 5
+wait 6
+wait 5
+wait 5
+wait 27
+hold circle 5
+wait 85
+hold circle 2
+wait 120
+shot e00 1
+wait 59
+shot e01 1
+wait 59
+shot e02 1
+wait 59
+shot e03 1
+wait 59
+shot e04 1
+wait 59
+shot e05 1
+wait 59
+shot e06 1
+wait 59
+shot e07 1
+wait 59
+shot e08 1
+wait 59
+shot e09 1
+wait 59
+shot e10 1
+wait 59
+shot e11 1
+wait 59
+shot e12 1
+wait 59
+shot e13 1
+wait 59
+shot e14 1
+wait 59
+shot e15 1
+wait 59
+shot e16 1
+wait 59
+shot e17 1
+wait 59
+shot e18 1
+wait 59
+shot e19 1
+wait 59
+shot e20 1
+wait 59
+shot e21 1
+wait 59
+shot e22 1
+wait 59
+shot e23 1
+wait 59
+shot e24 1
+wait 59
+shot e25 1
+wait 59
+shot e26 1
+wait 59
+shot e27 1
+wait 59
+shot e28 1
+wait 59
+shot e29 1
+wait 59
+shot e30 1
+wait 59
+shot e31 1
+wait 59
+shot e32 1
+wait 59
+shot e33 1
+wait 59
+shot e34 1
+wait 59
+shot e35 1
+wait 59
+shot e36 1
+wait 59
+shot e37 1
+wait 59
+shot e38 1
+wait 59
+shot e39 1
+wait 59
+shot e40 1
+wait 59
+shot e41 1
+wait 59
+shot e42 1
+wait 59
+shot e43 1
+wait 59
+shot e44 1
+wait 59
+shot e45 1
+wait 59
+shot e46 1
+wait 59
+shot e47 1
+wait 59
+shot e48 1
+wait 59
+shot e49 1
+wait 59
+shot e50 1
+wait 59
+shot e51 1
+wait 59
+shot e52 1
+wait 59
+shot e53 1
+wait 59
+shot e54 1
+wait 59
+shot e55 1
+wait 59
+shot e56 1
+wait 59
+shot e57 1
+wait 59
+shot e58 1
+wait 59
+shot e59 1
+wait 59
+end
