@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-12; 37 entries, I1..I37 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-14; 38 entries, I1..I38 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -53,7 +53,7 @@ rule ([`README.md`](README.md)) here too.
 | I6 | Demo/attract playback as determinism oracle | tooling | MEDIUM | **built 2026-09-19** (external sampler) — [`attract-mode.md`](attract-mode.md) §6 |
 | I7 | Replace MCI/VFW with a bundled video decoder | platform | LOW | **overtaken 2026-09-23**: the owner chose MCI into the window (DIV-0035); `Fmv_Play` is ours. Stays on the list |
 | I8 | Replace the DirectDraw / `IDirect3D3` presentation layer | platform | LOW | **built 2026-09-23** (DIV-0031) — [`render-backend.md`](render-backend.md) |
-| I9 | Integer-scale the picture and extend the view into the remainder | game behaviour | LOW | **integer scaling built** (DIV-0036, DIV-0042); the wide view built as a fixed 426 x 240 (DIV-0041, survey build), not the `W / k` rule |
+| I9 | Integer-scale the picture and extend the view into the remainder | game behaviour | LOW | **integer scaling built** (DIV-0036, DIV-0042); the wide view built as two fixed presets, 426 x 240 and 560 x 240 (DIV-0041, amended 2026-10-13: [`ultrawide-frame.md`](ultrawide-frame.md)), not the `W / k` rule |
 | I10 | Uses for the call-trace data (seven, ranked) | tooling | MIXED | item 1 **passed 2026-09-19** — [`call-trace.md`](call-trace.md) §7; item 2 (the work queue) **built** — §9 there |
 | I11 | In-process crash reporter | tooling | HIGH | **built 2026-09-19** — [`crash-reporter.md`](crash-reporter.md) |
 | I12 | Let the game run while its window is not in front | tooling | HIGH | **built 2026-09-23** (DIV-0033) |
@@ -81,7 +81,8 @@ rule ([`README.md`](README.md)) here too.
 | I34 | The name entry back: the community's renamer and naming at New Game, from the PlayStation routine ([`name-entry-restoration.md`](name-entry-restoration.md)) | gameplay / localisation | HIGH / MEDIUM | open 2026-10-05 (the owner); researched, deferred to the localisation rework of phases 4 and 5; DIV-0075 ends the hang meanwhile |
 | I35 | The music host suite (`tools/bgm/host`) building and running on the owner's Windows machine, not only a POSIX cloud host | tooling | HIGH | built 2026-10-10 (`catchup/music-tooling`): `abort_check.h`, the suite in CI |
 | I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
-| I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | open 2026-10-12 (the owner: "I'm interested in growing the ring, let's place it as an idea for later") |
+| I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | open 2026-10-12 (the owner: "I'm interested in growing the ring, let's place it as an idea for later"); measured for 21:9 2026-10-13: needed only for far cameras (known-defects D292) |
+| I38 | Draw the two edge sweeps (`EffectKind0D`'s slide, area 172's growing shade) mapped onto the wide picture, so they start and end past its edge in the original's frames ([`wide-staging.md`](wide-staging.md) 8) | display | HIGH | open 2026-10-14, from the ultrawide round: proposed, not built; the owner's call |
 
 ---
 
@@ -339,6 +340,11 @@ view grows by at most one scale step in each axis, so the extension is modest on
 16:9 and large only on ultrawide.
 
 This assumes the game's logical picture is 320x240, as on the PlayStation.
+
+**2026-10-13, the ultrawide round:** the owner chose fixed presets over the
+`W / k` rule - 426 x 240 (16:9) and 560 x 240 (21:9, 120 columns a side; 573
+would have fitted 3440 x 1440): [`ultrawide-frame.md`](ultrawide-frame.md),
+DIV-0041 amended.
 
 **Observed 2026-09-19 (owner's side-by-side screenshots, same room and same
 save prompt, sibling recomp at 3x nearest vs the port's 640x480 window; not
@@ -1547,5 +1553,35 @@ ring from 28 x 56 to 33 x 58 cells; our wide mode lowers the inset instead
 **Feasibility:** MEDIUM - 23 sites, about half a week
 ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) sections 5 and 6.1).
 
+**Measured for 21:9 (2026-10-13, [`ultrawide-culls.md`](ultrawide-culls.md)
+section 3):** the field camera (distance 0) needs no ring growth at 120
+columns - DIV-0041's inset rule reaches inset 0. Scenes at `Camera_Distance`
+above about 2,200 (three areas, effect kind 0x8D) and off-axis yaws over low
+ground do (known-defects D292). 32 columns cover every persistent distance our
+source writes; the PSP's 33 x 58 covers all but kind 0x8D's first frames.
+`Sprite_UpdateScreen`'s layer test `0..0x36` sets the off-screen flag the
+logic reads: a grown ring keeps it, or ledgers it. The round's RG group (this
+idea, built) waits on the owner, after the far-camera scenes are seen.
+
 ### Outcome
 _(2026-10-12) open, for later (the owner)._
+
+## I38 — Draw the two edge sweeps mapped onto the wide picture
+
+**Ask (2026-10-14, from the ultrawide round, [`wide-staging.md`](wide-staging.md)
+section 8):** two effects sweep across the picture and end their state at a
+screen-x bound: `EffectKind0D` (`0x465F30` / `0x466050`; slides in from x 390
+by 30 a frame to 160, holds, slides out to -70, where the record goes idle)
+and `Area172_EffectA5Grow` (`0x428240`; a shade's edge grows to 400, then the
+script goes on). In the wide picture they start or vanish inside the bands
+([`ultrawide-culls.md`](ultrawide-culls.md) rows 14 and 15). Moving their bounds
+would change when the record idles or the script goes on - logic.
+**Kind:** display
+**Feasibility:** HIGH - keep the logic's x and draw it mapped: `[160, 390]`
+onto `[160, 390 + c]` and `[-70, 160]` onto `[-70 - c, 160]` (the same for the
+shade), so each starts and ends past the edge in the original's frames. Needs
+a draw hook in `Sprite_QueueOverlay`'s path. A built version is a DIV-0041
+amendment.
+
+### Outcome
+_(2026-10-14) open: the owner's call (leave, or the mapping)._

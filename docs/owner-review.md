@@ -1,6 +1,6 @@
 # Owner review list - things that want the owner's eye or ear
 
-**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-13, the away day's section added at the top) - started the morning after the platform
+**Status:** IN PROGRESS (2026-10-06; rewritten through 2026-10-14, the ultrawide round's section added at the top) - started the morning after the platform
 round merged (PR #42), from the calls [`platform-round.md`](platform-round.md)
 section 4 and [`round-14-cleanup.md`](round-14-cleanup.md) section 5
 gathered. One list, so the questions only the owner can settle in play are
@@ -12,6 +12,80 @@ strikes.
 Each item says what to do at the machine, what to look or listen for, and
 where the reading behind it is. Nothing here is a divergence until it is in
 [`DIVERGENCE.md`](DIVERGENCE.md).
+
+## 2026-10-14, the ultrawide round
+
+Gathered at the round's fold-in ([`ultrawide-round.md`](ultrawide-round.md)
+5b). The pictures are game-derived, in the main checkout's `analysis/shots/`
+(never in the tree).
+
+### Approved by the owner (struck, 2026-10-14)
+
+- **The lighthouse's rays** (DIV-0126, D243): the rays fan out of the globe
+  again.
+- **Depress's swirl and the fishing pedestal** (DIV-0125): "That restoration
+  looks perfect"; the pedestal shows the field's ground.
+- **Case zero's walk** (DIV-0123): the pair leave by the top and wait out of
+  view, in the original's frames.
+- **The campfire over Garr** (DIV-0071's 2026-10-14 amendment, D301), seen in
+  a replay.
+- **The bulb's filament** at the lighthouse's pedestal (DIV-0071's 2026-10-13
+  amendment): the owner likes its look.
+
+### To look at
+
+- **The faster slide** (DIV-0041, SL; not yet seen): in the wide modes a menu
+  or shop box slides out faster (up to about twice Capcom's speed at 21:9) and
+  is gone on Capcom's frame. A menu with the time and money boxes, a shop, a
+  gene screen. Also whether a box sliding *in* is seen whole in the 21:9 band
+  on its first frames (D296) - fine, or to fix?
+- **The 21:9 left message box** ([`ultrawide-census-1.md`](ultrawide-census-1.md)
+  6.1): a left-placed box draws whole at the picture's left edge (game x -104),
+  the 16:9 placement moved by the columns - right at 21:9, or nearer the
+  middle?
+- **The terrain margin at 21:9** ([`ultrawide-frame.md`](ultrawide-frame.md)):
+  the cull margin is `c + 47`, 167 at 120 columns, a rule from the value tuned
+  by eye at 53 - any corner popping at the edges as the camera turns?
+- **Two `dolphinBoss` plant frames** (f03060, f00720;
+  [`campfire-and-crystal.md`](campfire-and-crystal.md) 5): plants in front of a
+  character are drawn in front again after the campfire's amendment - right?
+
+### To decide
+
+- **The remaining 16:9 band rows**: census 3's list of parked and still rows in
+  scenes ([`ultrawide-census-3.md`](ultrawide-census-3.md) 4.2; sheets
+  `parked-scene_w1_*.png`, `still-scene_w1_*.png` in
+  `analysis/shots/uw_census3/sheets/`) and the 14 sites the re-staging's shape
+  cannot move ([`wide-staging.md`](wide-staging.md) 3: a point a scene ends on,
+  a stationary actor, a walk ending in the band) - per site: move out, hide, or
+  leave?
+- **The faerie through the table** (D300, Capcom's;
+  [`faerie-over-table.md`](faerie-over-table.md) 4): FY's rule (an object
+  standing inside a raised cell drawn after its layer's second list) - build
+  it, after a look at the scene on the PlayStation, or leave Capcom's?
+- **The gene crystal** (D242, Capcom's order; accepted for now): CF's
+  candidate rule ([`campfire-and-crystal.md`](campfire-and-crystal.md) 6) is
+  there if the cut ever bothers you.
+- **The narrow areas** 31, 90 and 53 (narrower than 560 on every row; black
+  bands at every wide width): leave, a per-scene pillarbox, or something else?
+- **The patch cells** (D295, measured in
+  [`ultrawide-patch-cells.md`](ultrawide-patch-cells.md); your word: leave for
+  now) - only if one is ever seen changing early in the band (section 4 there
+  lists the scenes).
+- **RG, the ring for far cameras** (D292, IDEAS I37): needed only for scenes
+  at `Camera_Distance` above about 2,200 and effect kind 0x8D - build I37, or
+  wait for a picture of one?
+- **The six other effects the GTE fix changes** (DIV-0126; kinds 0x1E, 0x1F,
+  0x21, 0x64, 0x72, 0x97, 0xA0): their shards and debris now turn by a true
+  rotation; no route reaches them - look when one does.
+- **Effect kind 0x51's grab** (DIV-0125; areas 34 and 108 at given chapter
+  counters): its column should now show the scene behind it warped, a heat
+  shimmer - unseen, no recipe.
+- **The breath mote and the column's sound** (D293, D294): left at Capcom's
+  bounds because they touch `Rand` and the sound channels - leave, or a DIV
+  each?
+- **The two sweeps** (IDEAS I38): leave, or draw them mapped onto the wide
+  picture?
 
 ## 2026-10-13, the away day
 
@@ -29,8 +103,8 @@ checkout's `analysis/` (never in the tree).
   - q2: the PSP logo movie's wordmark about a third taller than the
     PlayStation's - fine, or wrong? (and the launcher's two clipped lines,
     D287 - fine to fix?)
-  - q3: the wide picture - anything wrong besides D283..D285 (below, to
-    decide)?
+  - q3: the wide picture - anything wrong besides D284 and D285? (D283 is
+    fixed by the random split, 2026-10-13.)
   - q4: PSP-EU's Config screen blank (D246) - still deferred?
   - q5: the fishing ticker - the disc's one message at a time against the
     PC's packed band; the disc's circle glyph against the PC's red ring; PSP's
@@ -107,9 +181,6 @@ checkout's `analysis/` (never in the tree).
   ja-JP becomes Japanese; the disc-only install gains Config and a named
   hero) - yes, and in what scope? **And the fishing crash, D279**: through
   that layer, or the scroller declining an empty line (a code DIV), or both?
-- **Wide and `Rand`, D283** ([`eye-batch-1013.md`](eye-batch-1013.md) 3 item 3):
-  may the wide picture change the rolls (say so in DIV-0041), or keep the
-  band's emitters off `Rand`?
 - **D255's fix**, now required (it hangs): the disc's XA stream as the
   jingle on a PSX-only install, or the failed stream ending the wait at once
   (a DIV) - which?
@@ -346,15 +417,6 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
 
 ## Reported by the owner, for a cleanup session
 
-- **The lighthouse's gene scene, two defects** (the owner, 2026-10-10
-  evening): `tools/recipes/eldritchGene.txt` with its save `eldritchGene.DAT`
-  - the gene stone's pedestal (a glowing sphere over a stone altar) and the
-  words that send the party to town. **D242**: the dragon gene's sprite
-  sits clipped by the pedestal's floor, only its top showing under the
-  sphere (the `_ab` copy's `f02700`); **D243**: the lighthouse's light rays
-  before the big screen flash are not drawn. Not looked at; where to start
-  is in [`known-defects.md`](known-defects.md).
-
 - **Battle music runs on after a fight, the area's music does not resume**
   (the owner, 2026-10-10 evening: "our game doesn't 'end' songs where I
   expect (compared to psx). The battle music will continue after battle
@@ -364,22 +426,6 @@ framing, D252 the equip icons and number formats, D253 the areas 16 / 45 crash),
   cache's music or the MP3s was playing). Not looked at. Needs a route or
   the configuration: which music source, and whether `BOF3X_ORIGINAL='*'`
   does the same.
-
-- **Garr drawn over the campfire in a campfire cutscene** (the owner,
-  2026-10-07 midday, catalogued for later: "in a campfire cutscene (not
-  regular camp), garr's sprite was rendered over the fire instead of
-  behind/under it"; their capture
-  `analysis/shots/owner_reports/campfire_cutscene_garr_over_fire_1007.webp`:
-  the party round the fire at night by the tent, Momo's line "You mean
-  after we came all this", Garr's sprite in front of the flames). Not
-  looked at. Where to start: this is a scripted scene, not the camp menu's
-  screen, so the fire is likely an effect object or a sprite of the scene
-  rather than a map cell - first tell whether it is DIV-0071's layering
-  rule (A/B under `BOF3X_LAYERING=0`), the sprite sort order of the scene
-  (compare `--original '*'`), or Capcom's order on the PlayStation twin
-  (read the PSX scene first, per the twin rule). Needs a route: the owner
-  to record one with `BOF3X_RECORD` from a save before the scene, or name
-  the scene so a save can be found.
 
 - **The sort screens, the formation screen and the camp's Skill Notes**
   (the owner, 2026-10-07 morning, `tools/recipes/sortScreens.txt`: "a few
