@@ -79,8 +79,8 @@ constexpr std::uint32_t kMoneyStates = 0x66B014;   // MenuList_MoneyStates, 3
 constexpr std::uint32_t kTimeStates = 0x66B020;    // MenuList_TimeStates, 3
 constexpr std::uint32_t kIconStates = 0x66B02C;    // MenuList_IconStates, 3
 constexpr std::uint32_t kTitleStates = 0x66B038;   // MenuList_TitleStates, 3
-// The two slide bounds DIV-0041 (widescreen.cpp, kSlides) patches in the
-// originals' code: read from there, so ours holds whatever went in.
+// The two slide bounds of DIV-0041's faster slide (widescreen.cpp g_slides):
+// ours reads each as widescreen.cpp holds it (Capcom's at every width).
 constexpr std::uint32_t kLeftOffBound = 0x59A586;  // imm32 of `mov ecx, -200` in 0x59A580
 constexpr std::uint32_t kRightOffBound = 0x59A5E6; // imm32 of `mov ecx, 0x140` in 0x59A5E0
 

@@ -3,8 +3,8 @@
 // draw a shop or battle-menu panel, and the slides those kinds step through.
 // Each read to its last instruction with capstone against bof3/BOF3.exe
 // (2026-09-25). Faithful but for DIV-0027's shop yes / no line under a Latin
-// overlay (ShopWin_TitleRun, amended 2026-10-03); DIV-0041's widened bound
-// inside MenuWin_SlideOutLeft is read back from the patched immediate. The
+// overlay (ShopWin_TitleRun, amended 2026-10-03); DIV-0041's faster slide
+// at MenuWin_SlideOutLeft (its bound read as widescreen.cpp holds it). The
 // start-up fuzz is menu_draw_helpers_fuzz.cpp.
 //
 //   Window_Handler7Kinds            0x59B220..0x59B231 (0x12)  jmp [0x66B1F8 + kind * 4]
@@ -232,9 +232,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MemberStatsR
 // immediate) at every call, as the original's `cmp word [eax + 4], cx` reads
 // the operand, so the divergence is kept and BOF3X_ORIGINAL=Widescreen still
 // restores -150.
+//
+// DIVERGENCE DIV-0041 (amended 2026-10-13, the faster slide): decided by that
+// bound at every width; in the wide view the box is drawn to the bound moved
+// out by the columns (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MenuWin_SlideOutLeft(void) {
-    const short bound = static_cast<short>(Word(At(g.slide_left_bound)));
+    const short bound = Widescreen_SlideLogic(static_cast<short>(Word(At(g.slide_left_bound))));
+    const short x_read = S(Rec() + 4);
     SlideX(-0x20, bound, true, bound);
+    Widescreen_SlideHeld(Rec(), x_read, bound);
 }
 
 // original 0x59B470, kind 5 step 3: y -= 0x10; below 0x3E, y = 0x3E and step 0.
@@ -347,7 +353,7 @@ extern "C" void __cdecl BattleMenuWin_SkillListSlideIn(void) { SlideX(-0x20, 0x5
 // ===========================================================================
 
 void MenuDrawHelpers_Inject() {
-    bof3::Log("menu_draw_helpers: MenuWin_SlideOutLeft's bound %d (0x59B446; -150 unless DIV-0041 widened it)",
+    bof3::Log("menu_draw_helpers: MenuWin_SlideOutLeft's bound %d (0x59B446; Capcom's -150 at every width since DIV-0041's faster slide)",
               static_cast<int>(Widescreen_SlideBound(at::kSlideLeftBound)));
     if (bof3::WantsShadow("menu_draw_helpers")) menu_draw_helpers::SelfTest();
     // DIVERGENCE DIV-0027 (amended 2026-10-03): after the self-test, which

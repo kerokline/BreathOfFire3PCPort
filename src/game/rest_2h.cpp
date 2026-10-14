@@ -28,8 +28,8 @@
 // its BOF3X_ORIGINAL switch work for ours as for Capcom's body: DIV-0011's
 // Menu_DrawFrame at MenuList_ReserveWinDraw's first call (0x59AA98,
 // menu_frame.cpp), DIV-0059's ListTitle_DrawAt at BattleEquipWin_DrawItems'
-// title (0x59DEFA, battle_draw.cpp, a Latin overlay only). DIV-0041 moves
-// MasterWin_SlideOut's bound (0x59C136); ours reads the immediate there.
+// title (0x59DEFA, battle_draw.cpp, a Latin overlay only). DIV-0041's faster
+// slide at MasterWin_SlideOut (bound 0x59C136, read as widescreen.cpp holds it).
 #include "game/rest_2h.h"
 
 #include <windows.h>
@@ -391,9 +391,15 @@ extern "C" __attribute__((disable_tail_calls)) void __cdecl ShopWin_MasterListRu
 // widescreen.cpp's value for it (g_master_bound's address) at every call, as
 // the original's `cmp word [eax + 4], cx` reads the operand, so BOF3X_ORIGINAL=
 // Widescreen still restores -120.
+//
+// DIVERGENCE DIV-0041 (amended 2026-10-13, the faster slide): decided by that
+// bound at every width; in the wide view the box is drawn to the bound moved
+// out by the columns (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MasterWin_SlideOut(void) {
-    const auto bound = static_cast<short>(Word(At(rest_2h::g_master_bound)));
+    const auto bound = Widescreen_SlideLogic(static_cast<short>(Word(At(rest_2h::g_master_bound))));
+    const auto x_read = static_cast<short>(Word(Rec() + 4));
     Slide(4, -0x20, bound, true, bound);
+    Widescreen_SlideHeld(Rec(), x_read, bound);
 }
 
 // original 0x59C160, kind 15 step 2: x += 0x20; above 0x64, x = 0x64 and step 0.
@@ -865,7 +871,7 @@ extern "C" void __cdecl Cfg_SetKeyTable(const void* table) {
 // ===========================================================================
 
 void Rest2H_Inject() {
-    bof3::Log("rest_2h: MasterWin_SlideOut's bound %d (0x59C136; -120 unless DIV-0041 widened it)",
+    bof3::Log("rest_2h: MasterWin_SlideOut's bound %d (0x59C136; Capcom's -120 at every width since DIV-0041's faster slide)",
               static_cast<int>(Widescreen_SlideBound(at::kMasterBound)));
     if (bof3::WantsShadow("rest_2h")) rest_2h::SelfTest();
     rest_2h::g_master_title_live = true;   // DIV-0059, from here on

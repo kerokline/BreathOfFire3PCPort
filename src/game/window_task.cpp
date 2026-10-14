@@ -246,20 +246,31 @@ extern "C" const unsigned char* __cdecl Area_ZoneAtIn(unsigned x_arg, unsigned z
 // is no bound on byte +1: index 9 of the original's stack table is its own
 // return address. That cannot be reproduced, so ours aborts loudly
 // (CLAUDE.md rule 4) - Window_Alloc is the only thing that sets byte +1.
+//
+// DIVERGENCE DIV-0041 (amended 2026-10-13, the faster slide,
+// docs/ultrawide-slides.md): around each handler, Widescreen_SlideBefore and
+// _SlideAfter - a parked slide-off box drawn at the wide bound, and Capcom's x
+// back in +4 once the handler has drawn. Both do nothing until
+// Widescreen_ArmFills, and when the view is narrow.
 extern "C" void __cdecl Field_RunTaskRecords(void) {
     unsigned pass = At(at::kPass)[0];
     if (pass > 2) return;
     do {
         for (std::uint32_t a = at::kRecords; a < at::kRecordsEnd; a += 0x24) {
             unsigned char* const record = At(a);
-            if (record[0] == 0) continue;
+            if (record[0] == 0) {
+                Widescreen_SlideIdle(record);
+                continue;
+            }
             if (record[0xF] != pass) continue;
             SetLong(At(at::kCurrent), static_cast<std::int32_t>(reinterpret_cast<std::uintptr_t>(record)));
             const unsigned handler = record[1];
             if (handler >= 9)
                 bof3::Fatal("window record %u names handler %u; the original's stack table holds nine",
                             static_cast<unsigned>((a - at::kRecords) / 0x24), handler);
+            Widescreen_SlideBefore(record);
             g.records[handler]();
+            Widescreen_SlideAfter(record);
         }
         ++pass;
     } while (pass <= 2);

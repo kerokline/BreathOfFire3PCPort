@@ -65,7 +65,7 @@ constexpr std::uint32_t kLabelEndPieces = 0x66B0FC;
 constexpr std::uint32_t kLabelTexts = 0x66B12C;
 constexpr std::uint32_t kLabelRows = 0x66B158;
 
-// DIV-0041's patch sites inside this group's bodies (widescreen.cpp kSlides):
+// DIV-0041's slide bounds inside this group's bodies (widescreen.cpp g_slides):
 // the imm32 of `mov ecx, imm32` or the imm16 of `cmp cx, imm16`, read back on
 // every call.
 constexpr std::uint32_t kLeftOff300Bound = 0x599CC6;  // -300 in MenuList_SlideLeftOff300

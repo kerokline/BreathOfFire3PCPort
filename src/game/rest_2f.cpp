@@ -1334,17 +1334,21 @@ extern "C" void __cdecl Win2_ItemList(void) {
 
 // original 0x596920: a slide state (Win2_ItemListStates[1], Win2_EquipCompareStates[1],
 // and two other handlers' tables, 0x66B2E8 and 0x66B570): x - 0x20 a frame to
-// the bound of its `mov ecx, -170` (s16), held there with +3 0. DIV-0041
-// widens the bound (widescreen.cpp g_slides); ours reads widescreen.cpp's value.
+// the bound of its `mov ecx, -170` (s16), held there with +3 0; ours reads
+// widescreen.cpp's value for it (g_slides). DIVERGENCE DIV-0041 (amended
+// 2026-10-13, the faster slide): decided by that bound at every width, the box
+// drawn to the wide one (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MenuSlide_LeftOff170(void) {
-    const auto bound = Widescreen_SlideBound(kLeftOff170Bound);
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(kLeftOff170Bound));
     unsigned char* const moved = Cur();
+    const short x_read = static_cast<short>(Word(moved + 4));
     SetWord(moved + 4, Word(moved + 4) + 0xFFE0u);
     unsigned char* const r = Cur();
     if (static_cast<short>(Word(r + 4)) < bound) {
         SetWord(r + 4, static_cast<std::uint16_t>(bound));
         Cur()[3] = 0;
     }
+    Widescreen_SlideHeld(Cur(), x_read, bound);
 }
 
 // original 0x596950: Win2_ItemListStates[2]: x + 0x20 a frame to 0x50 (s16),

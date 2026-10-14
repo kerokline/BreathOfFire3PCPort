@@ -77,27 +77,62 @@ unsigned Widescreen_InsetColumns();
 unsigned Widescreen_BackdropPairs();
 
 // DIV-0041's operands as this build holds them (docs/operand-store.md): what
-// our functions that held them read, never Capcom's code. Both are the
-// original's until Widescreen_Inject patches, then the widened ones (still the
-// original's under BOF3X_ORIGINAL=Widescreen). Fatal for an address that is
-// not one of the fourteen slide bounds / the four range operands.
+// our functions that held them read, never Capcom's code. Fatal for an address
+// that is not one of the fourteen slide bounds / the four range operands.
 //   Widescreen_SlideOperand: the bound at `at` as an int32 (an imm16 site's in
 //     its low word), for a reader that takes its bound through an address (a
 //     fuzz points that at a clone's immediate); Widescreen_SlideBound its low
-//     word, as the originals' `cmp word`, `cmp cx` / `cmp ax` read it.
+//     word, as the originals' `cmp word`, `cmp cx` / `cmp ax` read it. Always
+//     Capcom's bound since DIV-0041's 2026-10-13 amendment (the faster slide,
+//     docs/ultrawide-slides.md): the window decides by it at every width, and
+//     only the drawn x reaches the wide one (Widescreen_SlideHeld below).
 //   Widescreen_RangeOperand: the address of the float the `fcomp` at `at`
-//     names - .rdata's, or this file's wider copy.
+//     names - .rdata's, or this file's wider copy once Widescreen_Inject has
+//     patched (still .rdata's under BOF3X_ORIGINAL=Widescreen).
 const std::int32_t* Widescreen_SlideOperand(unsigned at);
 inline short Widescreen_SlideBound(unsigned at) { return static_cast<short>(*Widescreen_SlideOperand(at)); }
 std::uint32_t Widescreen_RangeOperand(unsigned at);
 
+// ---------------------------------------------------------------------------
+// The faster slide (DIV-0041 amended 2026-10-13, docs/ultrawide-slides.md).
+//
+// The fourteen slide-off states step a window record's x (+4) by 0x20 a frame
+// and hold it at Capcom's bound (+3 = 0) or free the window past it. They
+// decide by Capcom's bound at every width, so the frame the box holds or is
+// freed on, and every x the game reads, are Capcom's. The picture gets a
+// second x: the box is drawn on a line from where its slide started to the
+// wide bound (widescreen_rule::SlideBound), reaching it on the frame Capcom's
+// x reaches Capcom's bound - a faster slide that clears the wide picture. The
+// drawn x sits in +4 only while the record's own handler draws it:
+// Field_RunTaskRecords (window_task.cpp) puts Capcom's x back after the
+// handler returns. All of it is off until Widescreen_ArmFills (so every fuzz
+// compares Capcom's code), when the view is narrow, under
+// BOF3X_ORIGINAL=Widescreen, and when Field_RunTaskRecords is Capcom's.
+
+// The bound a slide-off state decides by, given the one it read: that one.
+// BOF3X_SL_CONTROL=1 is the fuzz control: the bound moved out by the columns,
+// which is the late free the build before this amendment had; a fuzz at
+// BOF3X_WIDE=1 or 2 must refuse it.
+short Widescreen_SlideLogic(short bound);
+// A holding slide (step, then hold at `bound` with +3 0), after its step:
+// `x_read` the x it read before stepping, +4 the x it left. Records Capcom's
+// x and writes the drawn one into +4 for the draw that follows.
+void Widescreen_SlideHeld(unsigned char* rec, short x_read, short bound);
+// A freeing slide (draw, then free at `bound` or step by `step`): around its
+// draw. Draw writes the drawn x for the x +4 holds; Undraw puts that x back
+// before the free test reads it.
+void Widescreen_SlideDraw(unsigned char* rec, short bound, int step);
+void Widescreen_SlideUndraw(unsigned char* rec);
+// Field_RunTaskRecords' calls around each record's handler, and for a record
+// it skips as free.
+void Widescreen_SlideBefore(unsigned char* rec);
+void Widescreen_SlideAfter(unsigned char* rec);
+void Widescreen_SlideIdle(unsigned char* rec);
+
 // Re-aims the four x-range constants of AreaMapBD_BuildView 0x510780 (ours,
-// R3G's; it reads them back) at wider copies, moves the menu boxes' fourteen slide-off bounds
-// outward by the columns added, and widens the terrain cull above. Placed
-// after the modules whose fuzz compares the original bounds; modules added
-// below it fuzz against the widened ones, so ours of a patched site reads the
-// operand (menu_lists, menu_draw_helpers, battle_e7). Does nothing unless the
-// view is wide.
+// R3G's; it reads them back) at wider copies, turns the faster slide's switch
+// on, and widens the terrain cull above. Placed after the modules whose fuzz
+// compares the original ranges. Does nothing unless the view is wide.
 void Widescreen_Inject();
 
 // The columns each side for a full-frame fill - a fade, a tint, a flash, a
@@ -117,6 +152,15 @@ void Widescreen_ArmFills();
 // columns, as the PSP's 319 -> 351 for 32. Exactly `edge` while the fills
 // are unarmed, so narrow play and every fuzz see the original's float.
 float Widescreen_FillRight(float edge);
+
+// The faster slide's property check (docs/ultrawide-slides.md section 4): at
+// 0, 53 and 120 columns, every one of the fourteen states from every start x
+// in a sweep, through the handler cycle Field_RunTaskRecords gives it (the
+// nine holding states are ours, called; the five freeing ones Capcom's step as
+// read): the frame it holds or frees on and the x outside its handler each
+// frame equal the narrow run's, and the drawn x reaches the wide bound on that
+// frame. Fatal on a difference. Run by Widescreen_ArmFills.
+void Widescreen_CheckSlides();
 
 // The columns an edge-anchored element moves outward by in the wide picture
 // (the PSP's +-32 for its 32 columns; psp-widescreen-placements.md 2.6, the

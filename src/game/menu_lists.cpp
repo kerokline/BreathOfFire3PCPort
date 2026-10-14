@@ -30,8 +30,9 @@
 //
 // Everything here is a faithful replacement: no DIVERGENCE.md entry is owed.
 // One divergence has patch sites inside these bodies and survives in ours:
-// DIV-0041 (widescreen.cpp) widens the bounds of MenuSlide_LeftOff and
-// MenuSlide_RightOff; ours reads the bound as widescreen.cpp holds it.
+// DIV-0041's faster slide (widescreen.cpp) at MenuSlide_LeftOff and
+// MenuSlide_RightOff; ours reads the bound as widescreen.cpp holds it and
+// leaves the drawn x to Widescreen_SlideHeld.
 #include "game/menu_lists.h"
 
 #include <windows.h>
@@ -588,17 +589,26 @@ void SlideX(int step, short bound, bool right) {
 extern "C" void __cdecl MenuSlide_UpOff(void) { SlideY(-0x10, -20, false); }
 // original 0x59A3D0: down 0x10 a frame to y 0x10.
 extern "C" void __cdecl MenuSlide_DownTo16(void) { SlideY(0x10, 0x10, true); }
-// original 0x59A580: left 0x20 a frame to x -200 (off the left); the bound is
-// the operand DIV-0041 widens by the columns added (-253 in the wide view).
+// original 0x59A580: left 0x20 a frame to x -200 (off the left), the bound
+// read as widescreen.cpp holds the operand. DIVERGENCE DIV-0041 (amended
+// 2026-10-13, the faster slide): decided by that bound at every width; in the
+// wide view the box is drawn to the bound moved out by the columns
+// (Widescreen_SlideHeld, docs/ultrawide-slides.md).
 extern "C" void __cdecl MenuSlide_LeftOff(void) {
-    SlideX(-0x20, Widescreen_SlideBound(at::kLeftOffBound), false);
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kLeftOffBound));
+    const short x_read = S(Rec() + 4);
+    SlideX(-0x20, bound, false);
+    Widescreen_SlideHeld(Rec(), x_read, bound);
 }
 // original 0x59A5B0: right 0x20 a frame to x 0x11.
 extern "C" void __cdecl MenuSlide_RightTo17(void) { SlideX(0x20, 0x11, true); }
-// original 0x59A5E0: right 0x20 a frame to x 0x140 (off the right); DIV-0041
-// widens the bound (373).
+// original 0x59A5E0: right 0x20 a frame to x 0x140 (off the right); DIV-0041's
+// faster slide as MenuSlide_LeftOff's.
 extern "C" void __cdecl MenuSlide_RightOff(void) {
-    SlideX(0x20, Widescreen_SlideBound(at::kRightOffBound), true);
+    const short bound = Widescreen_SlideLogic(Widescreen_SlideBound(at::kRightOffBound));
+    const short x_read = S(Rec() + 4);
+    SlideX(0x20, bound, true);
+    Widescreen_SlideHeld(Rec(), x_read, bound);
 }
 // original 0x59A680: down 0x10 a frame to y 0x26.
 extern "C" void __cdecl MenuSlide_DownTo38(void) { SlideY(0x10, 0x26, true); }
