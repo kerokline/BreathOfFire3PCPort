@@ -363,7 +363,7 @@ extern "C" int __cdecl Gfx_TexCacheFind(int page, int clut, int mode) {
 // shadow) with mode 0; 0x59EA5C, after 0x5AA5D6 has been given the shadow and a
 // rect, with mode 1.
 extern "C" void __cdecl Gfx_InvalidateTextures(const short* rect, int mode) {
-    // Ledger draft I (render/fb_grab.h), not in the original: every write of
+    // DIV-0125 (render/fb_grab.h), not in the original: every write of
     // the VRAM shadow passes here, and ends any frame-buffer grab it covers.
     render::ShadowWritten(rect[0], rect[1], rect[2], rect[3]);
     if (g_original_clone) {

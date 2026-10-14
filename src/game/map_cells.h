@@ -9,7 +9,7 @@ void MapCells_Inject();
 
 namespace map_cells {
 
-// DIV H (docs/ultrawide-rand.md): the random number MapCell_DrawRising takes
+// DIV-0041's random split (docs/ultrawide-rand.md): the random number MapCell_DrawRising takes
 // for each of its eight squares - Capcom's Rand, or for a band cell
 // (wide_rand::Band) the draw-only generator, so the wide view's extra cells
 // never move the game's stream.

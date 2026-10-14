@@ -383,7 +383,7 @@ extern "C" void __cdecl DrawLayer_Open(int layer) {
     if (column >= 0x1C) column -= 0x1C;
     int count = (14 - inset) * 2;
     if (count <= 0) return;
-    // DIV H (docs/ultrawide-rand.md): which of this row's cells the original's
+    // DIV-0041's random split (docs/ultrawide-rand.md): which of this row's cells the original's
     // walk - its inset before DIV-0041 lowered it - would not reach; their
     // handlers draw the rising squares from a generator of ours. Narrow, none.
     const wide_rand::Row split(MapView_Inset, Field_InputFlags, row, MapView_Column);

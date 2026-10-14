@@ -1,6 +1,6 @@
 # Status
 
-**Status:** IN PROGRESS (2026-10-13 night)
+**Status:** IN PROGRESS (2026-10-14)
 
 Where the project actually is, what is in flight, and what is blocked.
 [`PLAN.md`](PLAN.md) says what we intend to do and why; this file says what is
@@ -56,11 +56,24 @@ restart), #55 (the disc-only round, DIV-0096..0102) and #56 (the PSP-only round,
 seven installs; the A/B/C sweep of ten routes found no regression and four defects of the disc-built image, D260 among
 them a crash (PSP-EU, the faerie village) - all four fixed by `twin` rows, with D258 / D259 (the PSP's trees, PSP-EU's cell
 hooks) ([`abc-sweep-1012.md`](abc-sweep-1012.md), [`abc-sweep-1012-fixes.md`](abc-sweep-1012-fixes.md)).
-**On 2026-10-13, the owner away** (`platform/more-hardening`, unpushed): fifteen agent branches merged one at a
+**On 2026-10-13, the owner away** (`platform/more-hardening`, merged as PR #58; PR #59, D270's crash held by
+DIV-0121, after it - `main` `11e2cfe9`): fifteen agent branches merged one at a
 time - the disc-data inventory and its policy (DIV-0115), D56's repair (DIV-0116), four label groups
 (DIV-0117..0120), the village's stats, the WAV dump, the us and jp sweeps, an eye batch - and D266..D289 numbered;
 nothing of it played by the owner ([`HANDOFF.md`](HANDOFF.md) lists them; the questions in
 [`owner-review.md`](owner-review.md)).
+**The ultrawide round, 2026-10-13..14** (`wide/ultrawide-round`, pushed for review, PR pending;
+[`ultrawide-round.md`](ultrawide-round.md) 5a, 5b): a fixed **21:9 mode**, `BOF3X_WIDE=2` (560 x 240, 120 columns a
+side, the launcher's three-way box), beside 16:9. Its census and state hash found the wide picture changing *logic*
+at 16:9 since 2026-09-30, by three causes, now each split so the picture widens and the logic stays Capcom's: the
+off-screen flag (bit 7 at Capcom's bound at every width), the band cells' `Rand` (D283) and the windows' slide-off
+bounds (the faster slide) - DIV-0041 amended. With them, the eleven hash routes and `dolphinBoss` keep narrow's
+`Rand` and game pages at 16:9 and 21:9. Also four Capcom culls widened, the 16:9 re-staging of the scenes' edge
+actors (DIV-0122), case zero as the PSP stages it (DIV-0123), the 21:9 hide in field scenes (DIV-0124); and the
+restorations met on the way: Depress's swirl and the fishing pedestal (the frame grab, DIV-0125), the lighthouse's
+rays (the GTE's identity, DIV-0126; D215, D243), the bulb's filament and the camp's fire (DIV-0071 amended twice).
+The owner approved the rays, the swirl and pedestal, case zero's walk and the campfire (2026-10-14); the faster slide
+is not yet seen. Defects D290..D301; the owner's calls in [`owner-review.md`](owner-review.md).
 #54 was heard by the owner (2026-10-11 night); the disc-only and PSP-only installs were watched in the end batch
 (2026-10-12), not played; the Jukebox is in the owner's regular use ("it's great", 2026-10-12 night); state 3's icon and window are not yet looked at
 ([`owner-review.md`](owner-review.md)). The catalogue has 10,246 starts; at round fourteen's cut 1,341

@@ -67,7 +67,7 @@ def parse(lines):
         r = {}
         for k, v in zip(cols, f):
             r[k] = int(v, 16) if k == 'mask' else int(v) if k in INTS else float(v) if k in FLOATS else v
-        r.setdefault('hidden', 'no')   # a log from before DIV F's column (wide_staging.cpp) has none
+        r.setdefault('hidden', 'no')   # a log from before DIV-0124's column (wide_staging.cpp) has none
         rows.append(r)
     return head, rows
 
@@ -199,7 +199,7 @@ def self_test():
     lines = table(j, found, 1, False)
     if 'parked-scene' not in lines[0] or 'passing' not in lines[1] or 'still-scene' not in lines[2]:
         bad.append(f'classes {lines}')
-    # DIV F's column: a hidden stretch is a row of its own, and a log without the column reads as not hidden
+    # DIV-0124's column: a hidden stretch is a row of its own, and a log without the column reads as not hidden
     h2, rows2 = parse((head + row(31, 90) + row(91, 150, hidden='yes')).splitlines())
     j2 = join(rows2)
     if len(j2) != 2 or [r['hidden'] for r in j2] != ['no', 'yes'] or 'hidden' not in describe(j2[1]):

@@ -2,6 +2,13 @@
 
 **Status:** MEASURED (2026-10-13). Two reports, two causes:
 
+**Corrected 2026-10-14** ([`campfire-and-crystal.md`](campfire-and-crystal.md)
+D): the model this doc calls the dragon gene (object `0x802148`, sections
+5-7) is **the lighthouse bulb's filament**. The fix stands as built
+(DIV-0071's 2026-10-13 amendment; the owner likes the filament's look). The
+dragon gene is the crystal at the upper left at the route's start, Capcom's
+order (known-defects D242). The faerie through the table is D300.
+
 - **The faerie and the table** (the owner's `dolphinBoss.txt`): **Capcom's.**
   The same picture with `BOF3X_LAYERING=0` and with Capcom's code; the
   PlayStation's twins of the three functions that decide it order the same

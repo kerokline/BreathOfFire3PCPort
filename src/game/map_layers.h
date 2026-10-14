@@ -29,7 +29,7 @@ void ArmSideDup();
 // Cond_AngleFB, Camera_Distance, Field_InputFlags, Cond_ByteFE - and the
 // columns DIV-0041 lowers it by (Widescreen_InsetColumns): `original` is the
 // value Capcom's code computes, `lowered` the one written to MapView_Inset.
-// Pure: no global is read or written. DIV H (docs/ultrawide-rand.md) reads
+// Pure: no global is read or written. DIV-0041's random split (docs/ultrawide-rand.md) reads
 // both; equal when `wide_columns` is 0.
 struct InsetPair {
     std::uint32_t original, lowered;

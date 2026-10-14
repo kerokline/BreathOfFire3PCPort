@@ -10,6 +10,8 @@ random.** Cells the original walks keep Capcom's `Rand`; cells only the
 lowered inset adds draw from a generator of ours. DIV-0041's inset lowering
 stays as it is (it fixes the owner's bridge notch).
 
+**Numbered at the round's fold-in (2026-10-14):** draft H (section 7) is DIV-0041's 2026-10-13 amendment "the map walk's random split"; the log tag `DIV H` quoted below is now `DIV-0041`; the patch-cell defect is D295.
+
 ## 0. The answer
 
 - **The cause, restated.** DIV-0041 lowers `MapView_Build`'s cell inset by

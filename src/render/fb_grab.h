@@ -1,4 +1,4 @@
-// The frame-buffer grab (ledger draft I, docs/depress-wobble.md section 6).
+// The frame-buffer grab (DIV-0125, docs/depress-wobble.md section 6).
 //
 // On the PlayStation a DR_MOVE whose source lies in the display buffer copies
 // the picture drawn so far into VRAM, and later primitives texture from it:

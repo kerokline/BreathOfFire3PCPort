@@ -73,7 +73,7 @@ struct GpuTexture {
     U width, height;
 };
 
-// Ledger draft I (fb_grab.h): a frame-buffer grab's texture, at the scale it
+// DIV-0125 (fb_grab.h): a frame-buffer grab's texture, at the scale it
 // was grabbed. Kept across frames: VRAM keeps a moved picture until it is
 // written over, and the shim's registry says when that is.
 struct GrabSlot {
@@ -157,7 +157,7 @@ float4 PS(PSIn i) : SV_Target {
     float4 c = i.diffuse;
     if (flags & 1u) {
         float4 t = tex.Sample(smp, i.uv);
-        // Ledger draft I: where the texel lies in a frame-buffer grab, the
+        // DIV-0125: where the texel lies in a frame-buffer grab, the
         // grab's picture (window resolution); black is transparent, as a
         // 15-bit 0 is on the PlayStation. grab0: the page's origin less the
         // grab's, and the window the 256 texels tile; grab1: the grab's cells.
@@ -441,7 +441,7 @@ bool SameState(const PipeState& a, const PipeState& b) {
                                  a.grab_size[0] == b.grab_size[0] && a.grab_size[1] == b.grab_size[1]));
 }
 
-// Ledger draft I: copies the picture's (x, y, w, h), in game pixels, from the
+// DIV-0125: copies the picture's (x, y, w, h), in game pixels, from the
 // target into grab slot `slot` at the target's scale - the view's columns
 // moved by the wide pad, so a rectangle reaching into a side band takes the
 // band's picture. What lies outside the target is left transparent black.
@@ -502,7 +502,7 @@ void Draw(const PipeState& s, U first, U count) {
     if (s.alpha_test) c.flags |= 16;
     c.ref = s.alpha_ref;
     c.func = s.alpha_func;
-    // Ledger draft I: a draw of a page that holds a grab samples the grab's
+    // DIV-0125: a draw of a page that holds a grab samples the grab's
     // texture there. A slot whose grab has not been copied yet (none in any
     // frame so far) has no texture and the draw keeps the page's own texels.
     ID3D11ShaderResourceView* grab_srv = nullptr;
@@ -571,7 +571,7 @@ void RunFrame(Frame& frame) {
             g_ctx->ClearRenderTargetView(g_target_rtv, rgba);
             continue;
         }
-        if (c.kind == Cmd::kGrab) {   // ledger draft I: the picture so far, before the draws after it
+        if (c.kind == Cmd::kGrab) {   // DIV-0125: the picture so far, before the draws after it
             if (pending) Draw(state, first, count);
             pending = false;
             Grab(c);

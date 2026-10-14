@@ -3,6 +3,8 @@
 **Status:** MEASURED (2026-10-14). These are two of the owner's layering
 reports, with two verdicts:
 
+**Numbered at the round's fold-in (2026-10-14):** draft A is DIV-0071's 2026-10-14 amendment; the campfire is D301, the crystal D242.
+
 - **The cutscene campfire drawn under the characters**
   (`vaccinationAndFireScene.txt`): **ours**. It is a side effect of DIV-0071.
   The rule moved Garr three layers later, past the fire, because the fire's

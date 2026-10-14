@@ -230,6 +230,15 @@ mostly above the picture, a head-high sliver at most. What each scene is in
 the story is not read here; the area numbers and the sibling's
 `names/places.toml` are where to start, and the owner says what it is.
 
+## 5a. Did the PSP move anyone? (group PD)
+
+Group PD's diff of the PSX against the PSP for these rows is its own doc,
+[`ultrawide-staging-psp.md`](ultrawide-staging-psp.md): the PSP changed 9 of
+the 56 band rows here (7 scenes), moving starts and exits past its 32-column
+edge with the walk lengthened, and staged case zero's pair inside the view;
+no hide added. Those are the model for DIV-0122 and DIV-0123
+([`wide-staging.md`](wide-staging.md)).
+
 ## 6. What this does not see, and did not verify
 
 - **Checked against a picture: case zero only.** Every other row is a

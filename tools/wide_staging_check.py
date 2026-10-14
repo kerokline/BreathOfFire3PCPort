@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """The wide staging's site table, measured and checked against the executable
-(DIV D, docs/wide-staging.md).
+(DIV-0122, docs/wide-staging.md).
 
     python tools/wide_staging_check.py              # every site: the checks, then the outcome at 53 and 120 columns
     python tools/wide_staging_check.py --measure    # the measured fields of each row (hash, beyond, pps10, top),

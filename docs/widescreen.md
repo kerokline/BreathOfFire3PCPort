@@ -11,8 +11,10 @@ area-map frame pass's ranges. Its findings are §5.
   12 rows cut top and bottom, [`psp-widescreen.md`](psp-widescreen.md)) was
   offered and turned down: "I don't think I want to crop". 426 is 240 x 16/9,
   rounded down to an even number: **53 extra columns a side**, every row kept.
-- **A 21:9 monitor stays pillarboxed.** 426 x 240 at the largest integer
-  scale, black at the sides - no wider view.
+- **A 21:9 monitor** was first left pillarboxed (426 x 240 at the largest
+  integer scale, black at the sides). **Replaced 2026-10-13** by the owner's
+  fixed 21:9 preset: 560 x 240, 120 columns a side, `BOF3X_WIDE=2`
+  ([`ultrawide-frame.md`](ultrawide-frame.md); DIV-0041 amended).
 - DIV-0036's rule (a window's k from the launcher, borderless the largest k
   that fits) "will get re-evaluated" with widescreen: at 426 x 240 the owner's
   3440 x 1440 fits k = 6 (2556 x 1440), full height.

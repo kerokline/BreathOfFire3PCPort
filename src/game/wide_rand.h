@@ -1,4 +1,4 @@
-// DIV H (docs/ultrawide-rand.md, known-defects.md D283): the wide view's map
+// DIV-0041's random split (docs/ultrawide-rand.md, known-defects.md D283): the wide view's map
 // walk split between two random streams. DIV-0041 lowers the cell inset by
 // Widescreen_InsetColumns, so DrawLayer_Open 0x56FD20 hands MapCell_Handlers
 // cells in columns the original never walks. Of the sixteen handlers only

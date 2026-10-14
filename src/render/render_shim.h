@@ -70,14 +70,14 @@ struct Surface {
     U gpu_serial;                  // the TexVersion serial the GPU texture holds
     // DDPIXELFORMAT as GetSurfaceDesc reports it
     U pf_flags, pf_bits, pf_rmask, pf_gmask, pf_bmask, pf_amask;
-    // Ledger draft I (fb_grab.h): a page texture of direct colour, as
+    // DIV-0125 (fb_grab.h): a page texture of direct colour, as
     // D3d_BindTexture last bound it - the VRAM cell its texel (0, 0) comes
     // from and the texture window its 256 x 256 texels tile.
     bool direct_page;
     int page_x, page_y, tile_w, tile_h;
 };
 
-// Command stream, one frame at a time. kGrab (ledger draft I): copy part of
+// Command stream, one frame at a time. kGrab (DIV-0125): copy part of
 // the picture drawn so far into a grab slot's texture.
 enum class Cmd : U { kClear, kDraw, kGrab };
 
@@ -93,7 +93,7 @@ struct PipeState {
     bool point_filter;       // MAGFILTER / MINFILTER 1 (point); else linear
     bool flat;               // SHADEMODE 1 (flat): the first vertex's colour over the face
     U topology;              // 0 triangles, 1 lines, 2 points
-    // Ledger draft I: 0, or 1 + the grab slot whose texture this draw samples
+    // DIV-0125: 0, or 1 + the grab slot whose texture this draw samples
     // where its texels fall inside the grab. grab_off is the texture's VRAM
     // origin less the grab's (cells), grab_tile the texture window the 256
     // texels tile, grab_size the grab's cells.
@@ -181,7 +181,7 @@ void BeforeWrite(Surface* s);
 // `gpu` still to be freed by the GPU side).
 Surface* const* AllSurfaces(U* n);
 
-// --- the frame-buffer grab (ledger draft I, fb_grab.h) ---------------------------
+// --- the frame-buffer grab (DIV-0125, fb_grab.h) ---------------------------
 // Each does nothing unless the backend is the one recording frames
 // (InitShim has run) and BOF3X_FBGRAB is not 0, so Capcom's DirectX 6 path
 // and the start-up self-tests are untouched.

@@ -212,7 +212,7 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
 // hold and each coordinate is stored as its low word; the elevation is halved
 // as an s16, so the header's top half that an off-grid answer carries is lost.
 //
-// DIV H (docs/ultrawide-rand.md): the random number is map_cells::RisingRand's
+// DIV-0041's random split (docs/ultrawide-rand.md): the random number is map_cells::RisingRand's
 // - Capcom's Rand for every cell the original walks, the draw-only generator
 // for a cell only DIV-0041's lowered inset adds. Narrow, always Rand.
 static void DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
@@ -636,7 +636,7 @@ namespace {
 // is what the game keeps. DIV-0023's pad words are taken as
 // the fuzz takes them.
 
-// DIV H: a band cell's rising squares are checked against a clone whose Rand
+// DIV-0041's random split: a band cell's rising squares are checked against a clone whose Rand
 // call is aimed at the draw-only generator, as ours draws them; both seeds are
 // in the compared state, so either side touching the wrong one is a mismatch.
 HandlerFn g_quads_live = nullptr, g_rising_live = nullptr, g_rising_band_live = nullptr;
@@ -649,7 +649,7 @@ struct LiveState {
     unsigned long* ot[8];
     unsigned long tails[8];
     std::uint32_t seed;
-    std::uint32_t band_seed;   // DIV H: the draw-only generator's (wide_rand.h)
+    std::uint32_t band_seed;   // DIV-0041's random split: the draw-only generator's (wide_rand.h)
     unsigned char window[kLiveWindow];
 };
 struct LiveCounts {

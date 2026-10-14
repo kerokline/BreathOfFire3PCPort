@@ -439,7 +439,7 @@ void InjectAll() {
                                 // except that it runs before Widescreen_Inject, so its fuzz compares the
                                 // original's 320-wide backdrop quad
     Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: after the modules above, so their fuzz ran against the original culls
-    wide_rand::Inject();        // DIV H: the map walk's random split - after Widescreen_Inject, whose inset columns its
+    wide_rand::Inject();        // DIV-0041: the map walk's random split - after Widescreen_Inject, whose inset columns its
                                 // log names; its self-test runs ours alone (DrawLayer_Open, stand-in handlers), so
                                 // any later slot would do
     WorldMap_Inject();          // every call of its clones re-aimed at a recorder, its state table rebuilt in the
@@ -1432,7 +1432,7 @@ void InjectAll() {
                                 // module's self-test, which all compared the original's order (layering.h)
     Widescreen_ArmFills();     // DIV-0041 section 3c: the full-frame fills widen from here - after every module's
                                 // self-test, which all compared the original's (0, 0) 320 x 240 (widescreen.h)
-    wide_staging::Inject();     // DIV D / E / F (docs/wide-staging.md): the wide modes' re-staged walks, case zero and
+    wide_staging::Inject();     // DIV-0122 / 0123 / 0124 (docs/wide-staging.md): the wide modes' re-staged walks, case zero and
                                 // the 21:9 hide - armed after every module's self-test, which all ran the original's
                                 // walks and draws (MoveScript_Step's, EventScript_Op's and Sprite_Draw's fuzzes)
     band_census::Inject();      // BOF3X_BANDLOG, an instrument (docs/band-census.md): armed after every module's self-test,

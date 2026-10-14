@@ -6,6 +6,8 @@ round, stage B ([`ultrawide-round.md`](ultrawide-round.md) sections 4 and
 (section 10). **No game was run**: every screen position here is SS's static
 projection, and EB-2's census is the first test against play.
 
+**Numbered at the round's fold-in (2026-10-14):** drafts D, E and F (section 10) are DIV-0122, DIV-0123 and DIV-0124; the log tags `DIV-D/E`, `DIV-D`, `DIV-E` and `DIV-F` quoted below are now `DIV-0122/23`, `DIV-0122`, `DIV-0123` and `DIV-0124`.
+
 The owner's two layers (2026-10-13), and the case-zero call:
 
 1. **16:9, fixed properly (DIV D).** An actor a scene starts, parks or ends

@@ -125,7 +125,7 @@ the three gene-list slide-outs that read them back.
 | 10 | `effect_5b.cpp:410` `EffectKind18Sub0D_DrawGlow` (`at::kCullLeft/Right`, `0x4FF6A1` / `0x4FF6BD`) | `0x4FF610` | `[-60, 380]` on the glow's centre | 60 / **7** / **-60** | **pops at 16:9 already** | drawing |
 | 11 | `effect_5d.cpp:880` `EffectKind18Sub1C_OnScreen` (`0x5C422C` / `0x5C4228`; x at `0x5054E1` / `0x5054F8`, y at `0x50550B` / `0x50551E`) | `0x505480`, `bof3ext`'s "unknown" `0x5054E3` | `[-20, 340]`, x and y both | 20 / **-33** / **-100** | inside both wide views | **a sound only**: `WaitThenSound` plays effect `0x200` when the column is on screen (sub-kinds 0x1C / 0x1D). Not a draw and not game state, but heard |
 | 12 | `field_frame.cpp:376` `Sprite_ProjectA` (`Sprite_ScreenMargins` `0x663B28`, entry by record byte 3 bit 3) | `0x57B860`, type-0x0A sprites' screen update | entry 0 `[-80, 400]`; entry 1 `[-100, 420]` | 80 / 27 / **-40**; 100 / 47 / **-20** | pops at 21:9; entry 0 also at 16:9 for a sprite wider than 54 px | **logic**: sets byte 0 bit 7 and keeps the sprite off `Sprite_DrawList` (section 2) |
-| 13 | `magic_s28.cpp:599` `BreathMote_Fly` (`cmp cx, 0x140` at `0x4DEDBE`) | `0x4DECA0` | `(0, 320)` x, `(0, 240)` y, after the state's step | 0 / **-53** / **-120** | **pops at 16:9 already** (a mote stops being drawn at the old edge) | drawing (the state has stepped already) |
+| 13 | `magic_s28.cpp:599` `BreathMote_Fly` (`cmp cx, 0x140` at `0x4DEDBE`) | `0x4DECA0` | `(0, 320)` x, `(0, 240)` y, after the state's step | 0 / **-53** / **-120** | **pops at 16:9 already** (a mote stops being drawn at the old edge) | logic: the ring draws from `Rand` ([`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) 3; D293) |
 | 14 | `effect_1a.cpp:1256..1315` `EffectKind0D_Start` / `_SlideOut` | `0x465F30`, `0x466050` | starts at x 0x186 (390), slides by -30 to 160, out to `<= -70`, then the record goes idle | 70 / 17 / **-50** both ends | a sweep: at 21:9 it appears inside the right band and vanishes inside the left one; at 16:9 only if the sprite is wider than about 34 px | **logic**: the end bound sets the record's state (`+1 = 0`) |
 | 15 | `area_w4b.cpp:1103` `Area172_EffectA5Grow` | `0x428240`, effect kind 0xA5 of area 172 | the shade's left edge `x - 0x40` sweeps right; at `x > 0x190` (400) state 2 | the shade is dropped with 37 px of it in the 16:9 band, 104 px in the 21:9 band | a sweep; **pops at 16:9 already** | **logic**: the end bound adds one to the script variable after `MoveScript_Var7` and moves the state |
 
@@ -149,6 +149,12 @@ is row 16; PSX `80161ef4` is row 17. In `bof3ext`'s list, `0x4FF6A3` is row
 10 and `0x571366` / `0x5700D1` / `0x570319` are rows 5, 3 and 4.
 
 ## 2. The off-screen flag: where a cull is game logic
+
+*Fold-in note (2026-10-14):* UC2's wider scans add two whole-byte readers of
+the bit, `Sprite_FindFree` and `Effect_FindFree`
+([`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) 1.2). The owner chose the
+split, so draft A of section 9 was dropped: DIV-0041's 2026-10-13 amendment and
+known-defects D290.
 
 `Sprite_Draw` (row 6) ends its cull with `object[0] |= 0x80` and returns; an
 object inside the bounds gets `object[0] &= 0x7F`

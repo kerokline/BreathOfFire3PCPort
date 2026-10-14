@@ -86,7 +86,7 @@ struct Sample {
     unsigned wy;                   // +0x3E, the height
     int script;
     unsigned mask;
-    bool hidden;                   // DIV F's hide leaves it undrawn this frame (wide_staging::WouldHide)
+    bool hidden;                   // DIV-0124's hide leaves it undrawn this frame (wide_staging::WouldHide)
 };
 
 // --- rows ---------------------------------------------------------------------

@@ -89,7 +89,7 @@ void TexKey(U p) {
     PutLong(kTexKey + 4, Long(key + 4));
 }
 // Codes 0xEC..0xEF: a VRAM move, the rect at +8, the destination +0x10, +0x14.
-// Ledger draft I (render/fb_grab.h), after the original's move and not in
+// DIV-0125 (render/fb_grab.h), after the original's move and not in
 // it: a move out of a display buffer also has the backend grab that part of
 // the picture drawn so far, as the PlayStation's GPU would have moved it. The
 // rectangle is read before the move, which clips it in place.

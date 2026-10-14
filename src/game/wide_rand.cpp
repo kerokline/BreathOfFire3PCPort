@@ -10,7 +10,7 @@
 #include "hook/detour.h"
 #include "hook/log.h"
 
-// DIV H (docs/ultrawide-rand.md): see the header.
+// DIV-0041's random split (docs/ultrawide-rand.md): see the header.
 
 namespace wide_rand {
 
@@ -365,10 +365,10 @@ void Inject() {
     if (bof3::WantsShadow("wide_rand")) SelfTest();
     const unsigned wide = Widescreen_InsetColumns();
     if (wide == 0)
-        bof3::Log("DIV H       the map walk's random split: idle (the cell inset is not lowered), every cell on Capcom's "
+        bof3::Log("DIV-0041    the map walk's random split: idle (the cell inset is not lowered), every cell on Capcom's "
                   "Rand");
     else
-        bof3::Log("DIV H       the map walk's random split: cells only the inset lowered by %u adds draw "
+        bof3::Log("DIV-0041    the map walk's random split: cells only the inset lowered by %u adds draw "
                   "MapCell_DrawRising's squares from a generator of ours; the original's cells keep Capcom's Rand",
                   wide);
 }
