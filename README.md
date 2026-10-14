@@ -2,6 +2,7 @@
 
 <!-- game-art -->
 <p align="center">
+<img width="560" height="240" alt="Ending Ultrawide Frame" src="https://github.com/user-attachments/assets/6a5c29a9-35da-4573-9fe9-06ac0ce0a806" />
 <img width="320" height="240" alt="Japanese Diary" src="https://github.com/user-attachments/assets/3859fc66-48c5-4f79-94c4-1b928aa66195" />
 <img width="424" height="240" alt="English Widescreen Start Screen" src="https://github.com/user-attachments/assets/09cf6a77-eb15-44b1-bdfd-733f2033c50d" />
 <img width="424" height="240" alt="French Widescreen Steal" src="https://github.com/user-attachments/assets/4ea0bba0-5c57-4886-b783-79b79dc2e4d3" />
