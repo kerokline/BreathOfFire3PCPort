@@ -91,6 +91,7 @@ Box Corners(std::uint32_t p, unsigned first, unsigned stride, unsigned n) {
 bool BoxOf(std::uint32_t p, unsigned code, Box& out) {
     switch (code & 0xFC) {
     case 0x2C: out = Corners(p, 8, 0x10, 4); return true;     // POLY_FT4
+    case 0x30: out = Corners(p, 8, 0x10, 3); return true;     // POLY_G3 (EffectDebris_Draw's layout)
     case 0x38: out = Corners(p, 8, 0x10, 4); return true;     // POLY_G4
     case 0x3C: out = Corners(p, 8, 0x14, 4); return true;     // POLY_GT4
     case 0x40: out = Corners(p, 8, 0xC, 2); return true;      // LINE_F2
@@ -313,6 +314,12 @@ void LogWalk(const unsigned long* ot) {
                     // A tall textured quad's 0x48 bytes, for comparing runs (2026-10-07).
                     char hex[0x48 * 3 + 1];
                     for (unsigned k = 0; k < 0x48; ++k) std::snprintf(hex + k * 3, 4, "%02X ", Get<std::uint8_t>(p + k));
+                    bof3::Log("draworder     bytes %s", hex);
+                }
+                if ((code & 0xFC) == 0x30) {
+                    // A POLY_G3's 0x34 bytes (the lighthouse's rays, docs/lighthouse-rays.md).
+                    char hex[0x34 * 3 + 1];
+                    for (unsigned k = 0; k < 0x34; ++k) std::snprintf(hex + k * 3, 4, "%02X ", Get<std::uint8_t>(p + k));
                     bof3::Log("draworder     bytes %s", hex);
                 }
             }

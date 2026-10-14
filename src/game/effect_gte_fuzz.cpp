@@ -289,6 +289,56 @@ void Disturb(U h) {
 
 }  // namespace
 
+// DIV-LR-A (docs/lighthouse-rays.md): run after the switch is armed. 20,000
+// matrices of random words, at the offsets the fuzz uses: ours must write the
+// PlayStation twin's nine words (0x1000 on the diagonal, 0 elsewhere - JP
+// GAME.EMI 0x801B0F5C), leave the padding and translation as they were and
+// answer the matrix. Then the use that matters: kind 0x4B's edge (Math_Cos,
+// Math_Sin of 0x20, 0) turned by the matrix of three random angles as
+// EffectKind4B_DebrisInit builds it must keep its length (4096 within 1%),
+// where Capcom's 1s leave it 0 or 1 (D215, D243).
+void IdentityCheck() {
+    if (!g_identity) bof3::Fatal("effect_gte: IdentityCheck run with the DiagonalIdentity switch off");
+    U state = 0x4C52A001u;   // xorshift32: the check draws from its own stream, not the harness's
+    auto next = [&state] {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        return state;
+    };
+    for (unsigned round = 0; round < 20000; ++round) {
+        short buffer[24];
+        for (short& w : buffer) w = static_cast<short>(next());
+        short before[24];
+        std::memcpy(before, buffer, sizeof buffer);
+        const unsigned at = next() % 8;
+        short* const m = buffer + at;
+        short* const answer = ::EffectGte_SetDiagonalOne(m);
+        if (answer != m) bof3::Fatal("effect_gte: DIV-LR-A round %u answered %p, not the matrix %p", round, answer, m);
+        for (unsigned i = 0; i < 24; ++i) {
+            const bool inside = i >= at && i < at + 9;
+            const short want = !inside ? before[i] : ((i - at) % 4 == 0 ? 0x1000 : 0);
+            if (buffer[i] != want)
+                bof3::Fatal("effect_gte: DIV-LR-A round %u word %u (matrix at %u) is 0x%04X, want 0x%04X", round, i, at,
+                            static_cast<unsigned>(static_cast<std::uint16_t>(buffer[i])),
+                            static_cast<unsigned>(static_cast<std::uint16_t>(want)));
+        }
+        short turn[16];   // a whole MATRIX
+        ::EffectGte_SetDiagonalOne(turn);
+        ::Gte_RotMatrixX(static_cast<short>(next() & 0xFFFu), turn);
+        ::Gte_RotMatrixY(-static_cast<int>(static_cast<short>(next() & 0x3FFu)), turn);
+        ::Gte_RotMatrixZ(static_cast<short>(next() & 0xFFFu), turn);
+        const short edge[3] = {static_cast<short>(::Math_Cos(0x20)), static_cast<short>(::Math_Sin(0x20)), 0};
+        short out[3];
+        ::Gte_ApplyMatrixSV(turn, edge, out);
+        const long long length2 = 1LL * out[0] * out[0] + 1LL * out[1] * out[1] + 1LL * out[2] * out[2];
+        if (length2 < 4055LL * 4055 || length2 > 4137LL * 4137)
+            bof3::Fatal("effect_gte: DIV-LR-A round %u turned edge (%d, %d, %d) is not 4096 long", round, out[0], out[1],
+                        out[2]);
+    }
+    bof3::Log("effect_gte: DIV-LR-A identity check passed (20000 rounds: the twin's nine words, the edge's length kept)");
+}
+
 void SelfTest() {
     // BOF3X_EGT_ONLY: the clones whose name contains it (a control's run)
     static sh::Clone chosen[kCount];

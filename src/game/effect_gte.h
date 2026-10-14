@@ -11,6 +11,8 @@
 // integer part in its high word (docs/effect_gte.md section 1).
 #pragma once
 
+#include <cstdint>
+
 extern "C" {
 
 // original 0x494060 (PSX twin 0x801B0E10): the map camera into the GTE. The
@@ -33,9 +35,10 @@ float* __cdecl EffectGte_ProjectPoint(const long* point, float* out);
 
 // original 0x494180 (PSX twin 0x801B0F5C): the nine s16 of a MATRIX's rotation
 // set to 1 on the diagonal and 0 elsewhere, in order; the padding and the
-// translation are not touched. NOT the identity - the GTE's one is 0x1000,
-// which is what the PSX twin writes (docs/effect_gte.md section 5). Answers
-// in eax the matrix it was handed.
+// translation are not touched. Capcom's 1 is NOT the identity - the GTE's one
+// is 0x1000, which is what the PSX twin writes (docs/effect_gte.md section 5).
+// DIV-LR-A: ours writes 0x1000 once the DiagonalIdentity switch is armed
+// (docs/lighthouse-rays.md). Answers in eax the matrix it was handed.
 short* __cdecl EffectGte_SetDiagonalOne(short* matrix);
 
 // original 0x4941E0 (PSX twin 0x801B0FD0): `point` turned into the camera
@@ -57,4 +60,10 @@ namespace effect_gte {
 // BOF3X_SHADOW=effect_gte: the start-up fuzz, effect_gte_fuzz.cpp. Clones the
 // four originals before EffectGte_Inject patches them.
 void SelfTest();
+// DIV-LR-A: the switch, 1 when armed (EffectGte_Inject, after SelfTest).
+extern std::uint32_t g_identity;
+// DIV-LR-A, BOF3X_SHADOW=effect_gte, after the switch is armed: ours against the
+// PlayStation twin's rule (0x1000 on the diagonal, 0 elsewhere, the padding and
+// translation untouched, the matrix answered); Fatal on a difference.
+void IdentityCheck();
 }  // namespace effect_gte
