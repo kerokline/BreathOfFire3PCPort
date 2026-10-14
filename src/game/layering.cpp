@@ -192,8 +192,31 @@ unsigned LayerFor(unsigned index, unsigned layer) {
     const unsigned char* const sprite = Sprite_DrawList[index];
     const float sx = Get<float>(sprite + 0x74), sy = Get<float>(sprite + 0x78);
     if (!(sx > -64.0f && sx < 1024.0f && sy > -64.0f && sy < 512.0f)) return layer;   // NaN included
+    // A model (+0x24 bit 0x40: its quads are records, Sprite_AddDrawRecords)
+    // stays in its layer. The pass sorts the records of a layer's sprites and
+    // models together by depth, so a model moved out of its layer leaves that
+    // sort: the dragon gene drawn over its globe's facets instead of inside
+    // them (known-defects D242, docs/faerie-over-table.md section 6).
+    if (sprite[0x24] & 0x40) {
+        if (g_log && draw_order::Tagging())
+            bof3::Log("DIV-0071    frame %u: sprite %08X is a model: layer %u kept", static_cast<unsigned>(Frame_Counter),
+                      Address(sprite), layer);
+        return layer;
+    }
     const Box feet_box = BoxRound(sprite, kFeetHalfWidth, kFeetAbove, kFeetBelow);
     const Box whole_box = BoxRound(sprite, kBodyHalfWidth, kBodyAbove, kFeetBelow);   // the body and the feet
+    // The same for a sprite beside a model of its own layer: moved, it would
+    // leave the depth sort it shares with the model's quads.
+    for (unsigned other = 0; other < Sprite_DrawListCount; ++other) {
+        const unsigned char* const o = Sprite_DrawList[other];
+        if (other == index || !(o[0x24] & 0x40) || static_cast<unsigned>(Get<std::uint16_t>(o + 0x32) >> 8) != layer) continue;
+        if (Overlap(BoxRound(o, kBodyHalfWidth, kBodyAbove, kBodyBelow), whole_box)) {
+            if (g_log && draw_order::Tagging())
+                bof3::Log("DIV-0071    frame %u: sprite %08X beside model %08X in layer %u: kept",
+                          static_cast<unsigned>(Frame_Counter), Address(sprite), Address(o), layer);
+            return layer;
+        }
+    }
     // The feet in corner units, as the sprite's own key has them.
     const int feet = static_cast<signed char>(Get<std::uint16_t>(sprite + 0x3E) >> 5);
     const int cell_x = Get<std::uint16_t>(sprite + 0x36), cell_z = Get<std::uint16_t>(sprite + 0x3A);
