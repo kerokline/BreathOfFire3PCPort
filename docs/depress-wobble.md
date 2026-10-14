@@ -122,9 +122,38 @@ are under it. That picture is what the PSX grabs and swirls.
 `DR_MOVE` from the frame buffer it is drawing; the PC's equivalent cannot.
 **The defect is the port's.**
 
-The PSX effect was not watched here. The description of the PSX picture
-(the party's corner of the screen twisting, black where the grab was black)
-is read from the code. It agrees with the owner's memory of a wobble.
+The PSX effect was not run here. The owner's PlayStation frame (2a) confirms
+the reading: the party's corner of the screen twisting, darkening to black
+at the centre.
+
+### 2a. The owner's PlayStation reference (2026-10-13)
+
+The owner sent one PlayStation frame of the effect. It is kept in this
+session's scratch and never committed. The battle is against Spectres, with
+Peco, Ryu and Momo in the party. In this layout the party stands at the
+upper right. The frame matches the reading of section 2 point for point:
+
+- **It is local, not the whole screen.** A round whirlpool sits over the
+  party's corner. The stairs, the floor and the Spectres around it are
+  untouched. That is the 168 px box around the task's corner point.
+- **What swirls is the scene itself.** The floor's own tiles are twisted into
+  the spiral, and the party's sprites are smeared into coloured streaks
+  near the centre. That is the `DR_MOVE` of the frame being drawn,
+  redrawn as GT4 bands that are each turned further by the twist.
+- **It darkens towards the centre.** The outer rim blends with the floor,
+  and the middle goes to black. This is the band shading: the outer ring
+  is shaded `0x80`, which is neutral in the PSX's texture modulation, and
+  each band inwards is `0x10` darker, down to 0 at the centre. With the
+  black F4 backing this reads as a hole.
+- **The "translucent" look is not semi-transparency.** No code byte is
+  written after `SetPolyGT4` in the band loop (no `setSemiTrans`; the only
+  stores into the GT4 at `+0x1A`, `+0x16` are the tpage and a y). The
+  quads are opaque. They look translucent because their texture is the
+  floor that was there a moment before, at full brightness at the rim.
+
+**At the same moment the PC draws** the same disc in the same place, solid
+black from rim to centre (f01116..f01188 in both runs). The party's corner
+of the field disappears instead of twisting.
 
 ## 3. Live: the captures
 
@@ -170,8 +199,8 @@ exactly what Capcom's do.
 
 ## 4. What was not verified
 
-- The PlayStation picture was not watched in an emulator. Section 2 is a
-  reading.
+- The PlayStation effect was not run in an emulator. Section 2 is a
+  reading, confirmed by the owner's one PlayStation frame (2a).
 - The shadow's contents at the source rectangle were not dumped. The
   captures show the result (pure black), which an empty texture over black
   F4s gives. A texture of black texels would give the same, so the reading
