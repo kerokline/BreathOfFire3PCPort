@@ -168,8 +168,26 @@ drawn and degenerate.
 
 ## 7. Self-tests
 
-See the report at the end of the session's hand-back for the `inject:` and
-`DIV-0041` lines of the three runs (filled in below once measured).
+`BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original BOF3X_SHADOW='*'
+<copy>/bof3x-launcher.exe --game <main>/bof3 --no-config` from the ini-less
+scratch copy `uw_lr/T` (the build the controls restored; the tip differs
+from it only by a comment in `effect_gte.cpp`), one run at a time:
+
+| `BOF3X_WIDE` | Exit | `inject:` | `DIV-0041` | DIV-LR-A |
+|---|--:|---|---|---|
+| unset | 0 | `10087 ours, 0 left original by BOF3X_ORIGINAL` | the width rules line and the faster slide's check (no widescreen line: narrow) | `identity check passed (20000 rounds ...)`, the switch on |
+| 1 | 0 | the same | `widescreen: 53 columns a side (426 x 240)`, `full-frame fills at (-53, 0) 426 x 240`, the faster slide on at 53 | the same |
+| 2 | 0 | the same | `widescreen: 120 columns a side (560 x 240)`, `full-frame fills at (-120, 0) 560 x 240`, the faster slide on at 120 | the same |
+
+`python tools/ledger_check.py`: 121 entries, 0 errors, 2 notes (DIV-LR-A is
+not in the ledger yet; the coordinator's insert names it).
+
+**The round's rule** (narrow and 16:9 bit for bit as at the round's base):
+DIV-LR-A does change narrow and 16:9 - on purpose, in the seven effects
+section 5 lists, nothing else. It is not a width change; it is a restoration
+the coordinator asked for on this branch. `BOF3X_ORIGINAL=DiagonalIdentity`
+gives the round's base behaviour back exactly (ours then writes Capcom's 1s,
+the fuzz's rule).
 
 ## 8. For the other files
 
