@@ -137,7 +137,8 @@ undone to get the rest.
 The overhaul is invisible to the logic oracles *by construction* and that is
 worth keeping true: an oracle, memory-dump or frame-hash run is at `k = 2`,
 view 320, null shader, and must stay identical to `ab26`'s references. Any
-option that changes game logic (widescreen's cull bounds, camera clamp) is a
+option that changes game logic (widescreen's cull bounds; there is no camera
+clamp, [`ultrawide-culls.md`](ultrawide-culls.md) 5) is a
 toggle, off in `attract_run.py` like the language and the filter are
 ([`launcher-settings.md`](launcher-settings.md) §4).
 
@@ -273,8 +274,9 @@ change, with the evidence of which functions hold it:
    the black screen tiles). Written per element in the ledger.
 4. **Map edges and staging.** Areas barely wider than a screen show the void
    past the edge; actors waiting off-screen for an entrance become visible;
-   spawns pop. Needs a per-area cap on the extension (the camera clamp in
-   `AreaMap_Frame` `0x56E6C0`, ours) and, for staging, either living with it
+   spawns pop. Needs a per-area cap on the extension (first written here as the camera
+   clamp in `AreaMap_Frame` `0x56E6C0`; there is no such clamp,
+   [`ultrawide-culls.md`](ultrawide-culls.md) 5) and, for staging, either living with it
    or a per-scene list. **Unknown until seen**: the first widescreen build
    is a survey tool, not a release.
 5. **Fixed art.** Battle backgrounds, the title, FMV: pillarbox. Battles

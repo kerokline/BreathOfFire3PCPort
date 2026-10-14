@@ -394,8 +394,10 @@ Everything that assumes 320x240, none of it inventoried:
 - **Culling and tile ranges** — what `bof3ext` patched. Field maps draw a fixed
   window of tiles; sprites are culled against the old screen edge.
 - **Map edges.** Many areas are barely larger than one screen. Extending the
-  view shows the void past the edge, so the camera clamp must change per map,
-  or the extension must be capped to what the map has.
+  view shows the void past the edge, so the extension must be capped to what
+  the map has (there is no camera clamp to change,
+  [`ultrawide-culls.md`](ultrawide-culls.md) 5; at 21:9 the census entered
+  three areas narrower than the picture, 31, 90 and 53).
 - **Staging that relies on the screen edge.** Actors waiting just off-screen
   for a cutscene entrance become visible; so do spawn and despawn pops.
 - **Fixed-size full-screen art** — battle backgrounds, the title, fades and

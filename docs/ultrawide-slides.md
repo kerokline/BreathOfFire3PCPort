@@ -5,6 +5,8 @@
 `BOF3X_WIDE` unset, 1 and 2, with a property check over every start and a fuzz
 control per touched module. Nothing here has been seen in play or run live.
 
+**Numbered at the round's fold-in (2026-10-14):** draft G (section 9) is DIV-0041's 2026-10-13 amendment "the faster slide"; the defect it fixes is D291.
+
 This builds the owner's call of 2026-10-13 on EB-2's cause 2
 ([`ultrawide-census-2.md`](ultrawide-census-2.md) section 3.2): **the faster
 slide.** In the wide modes a sliding box clears the wide bound on exactly the

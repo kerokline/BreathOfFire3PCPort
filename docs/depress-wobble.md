@@ -3,6 +3,8 @@
 **Status:** BUILT (2026-10-13, group DP). The finding came first; the
 restoration followed that evening at the owner's call (section 6).
 
+**Numbered at the round's fold-in (2026-10-14):** ledger draft I (section 7) is DIV-0125; the four CPU readers are D297.
+
 The owner's question: in the recorded fight `tools/recipes/depress.txt` (save `depress`, en-US) an enemy
 casts Depress; on the PlayStation the owner remembers "a wobble kind of
 effect" on the screen. Is it broken or missing on the PC release, and on

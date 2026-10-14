@@ -5,6 +5,8 @@
 (DIV-LR-A below, for the coordinator to number), self-tested and recaptured.
 **Not seen by the owner.**
 
+**Numbered at the round's fold-in (2026-10-14):** DIV-LR-A is DIV-0126, and its log lines read `DIV-0126`.
+
 The owner's report (known-defects D243, confirmed 2026-10-13): on
 `tools/recipes/eldritchGene.txt` (save `eldritchGene`, `--lang en-US`), once
 the lighthouse switch is thrown, the PlayStation draws long translucent rays,

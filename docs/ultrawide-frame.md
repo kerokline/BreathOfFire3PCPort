@@ -6,6 +6,8 @@ round ([`ultrawide-round.md`](ultrawide-round.md) section 2 "UW"), branch
 number below is from a build, a self-test or a reading of our source. The
 pictures are EB's (stage B).
 
+**Numbered at the round's fold-in (2026-10-14):** draft A (section 9) is DIV-0041's 2026-10-13 amendment "the wide picture comes in two widths".
+
 ## 0. The answer
 
 - `BOF3X_WIDE=2` gives a **560 x 240** picture, **120 columns a side**, the

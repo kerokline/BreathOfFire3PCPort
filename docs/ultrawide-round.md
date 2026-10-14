@@ -1,8 +1,10 @@
 # The ultrawide round: 21:9, and the staging the wider view exposes
 
-**Status:** STAGED (2026-10-13), not launched. Branch `wide/ultrawide-round` off
-`main` `d0d9162a`; briefs in `analysis/ultrawide/` (gitignored, the main
-checkout's). Nothing in `src/` changed yet.
+**Status:** DONE (staged 2026-10-13, run 2026-10-13..14, folded in
+2026-10-14 with the owner's approval). Branch `wide/ultrawide-round` off
+`main` `d0d9162a`, `main` merged at `82f5b0b2`; briefs in
+`analysis/ultrawide/` (gitignored, the main checkout's). The drafts' numbers
+are section 5a; what the round left for the owner is section 5b.
 
 The owner asked for this on 2026-10-13. There are two parts:
 
@@ -310,6 +312,56 @@ found:
   numbered: the D-numbers collide, so the coordinator numbers them.
 - Every commit `git commit -s` (CLAUDE.md rule 7). No game data in any doc,
   dialogue lines included: describe the scene, do not quote it (rule 1).
+
+## 5a. The drafts, numbered (the fold-in, 2026-10-14)
+
+| Draft | Group, doc | Ledger | Kind |
+|---|---|---|---|
+| A (UW) | [`ultrawide-frame.md`](ultrawide-frame.md) 9 | DIV-0041, amended 2026-10-13: two widths | amendment |
+| A (UC) | [`ultrawide-culls.md`](ultrawide-culls.md) 9 | dropped: the owner chose the split (B) | - |
+| B (UC2) | [`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) 7 | DIV-0041, amended 2026-10-13: the off-screen flag split | amendment |
+| C (UC2) | the same | DIV-0041, amended 2026-10-13: Capcom's remaining culls | amendment |
+| D (ST) | [`wide-staging.md`](wide-staging.md) 10 | **DIV-0122**, the scenes' edge actors re-staged | new |
+| E (ST, ST3) | the same | **DIV-0123**, case zero as the PSP | new |
+| F (ST, ST2, ST3) | the same | **DIV-0124**, the 21:9 hide | new |
+| G (SL) | [`ultrawide-slides.md`](ultrawide-slides.md) 9 | DIV-0041, amended 2026-10-13: the faster slide | amendment |
+| H (RN) | [`ultrawide-rand.md`](ultrawide-rand.md) 7 | DIV-0041, amended 2026-10-13: the random split | amendment |
+| I (DP, the grab) | [`depress-wobble.md`](depress-wobble.md) 7 | **DIV-0125**, the frame-buffer grab | new |
+| FY's A | [`faerie-over-table.md`](faerie-over-table.md) | DIV-0071, amended 2026-10-13: a model keeps its layer (the bulb's filament) | amendment |
+| CF's A | [`campfire-and-crystal.md`](campfire-and-crystal.md) | DIV-0071, amended 2026-10-14: a record's own quads stop the move | amendment |
+| LR-A (LR) | [`lighthouse-rays.md`](lighthouse-rays.md) 8 | **DIV-0126**, the GTE's identity (the lighthouse's rays) | new |
+
+Amendments where the draft corrects or extends what an existing entry
+already does (DIV-0041's widening, DIV-0071's rule); new entries where the
+draft is a behaviour of its own with its own switch (`BOF3X_WIDE_STAGING`,
+`BOF3X_WIDE_HIDE`, `BOF3X_FBGRAB`, `DiagonalIdentity`). The defects found are
+known-defects D290..D301; D215, D242, D243, D283 and D285 were updated.
+
+## 5b. Where the round ended (2026-10-14)
+
+**Built:** the 21:9 frame (`BOF3X_WIDE=2`); three fixes that keep the wide
+modes' logic Capcom's - the off-screen flag split, the faster slide and the
+random split - after the census found the wide picture changing logic at 16:9
+since 2026-09-30; four Capcom culls widened; the 16:9 re-staging, case zero
+and the 21:9 hide; and four restorations met on the way - Depress's swirl and
+the fishing pedestal (the frame grab), the lighthouse's rays (the GTE
+identity), the bulb's filament and the camp's fire (DIV-0071 amended twice).
+**Measured:** the eleven hash routes and `dolphinBoss` keep narrow's `Rand` and
+game pages at 16:9 and 21:9 ([`ultrawide-census-3.md`](ultrawide-census-3.md),
+[`ultrawide-census-4.md`](ultrawide-census-4.md)).
+
+**Approved by the owner (2026-10-14):** the rays, Depress's swirl and the
+fishing pedestal, case zero's walk, the campfire. **Not yet seen:** the faster
+slide.
+
+**Left for the owner** (`owner-review.md`, "2026-10-14, the ultrawide round"):
+the remaining 16:9 band rows (census 3's list and ST's 14 sites the shape
+cannot move: move out, hide or leave); the faerie through the table (D300);
+the gene crystal (D242, accepted for now); the 21:9 left message box; the
+terrain margin 167; the narrow areas 31, 90 and 53; two `dolphinBoss` plant
+frames; the patch cells (D295, leave unless seen); RG, the ring for far
+cameras (D292, I37); the six other effects the GTE fix changes; effect kind
+0x51's grab; the two sweeps (ST 8).
 
 ## 6. What this round does not do
 

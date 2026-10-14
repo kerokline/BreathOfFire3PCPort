@@ -6,6 +6,8 @@ headless at `BOF3X_WIDE` unset, 1 and 2. Nothing here has been seen in play.
 This builds the owner's two calls of section 4a there, from UC's table
 ([`ultrawide-culls.md`](ultrawide-culls.md) section 7):
 
+**Numbered at the round's fold-in (2026-10-14):** draft B (section 7) is DIV-0041's 2026-10-13 amendment "the off-screen flag split", draft C its amendment "Capcom's remaining culls"; the defects are D290, D293 and D294.
+
 - **Split the off-screen flag.** `Sprite_Draw` still draws by the widened
   bounds. Bit 7 of byte 0 is now set by Capcom's `[-64, 384]` at every
   width.
