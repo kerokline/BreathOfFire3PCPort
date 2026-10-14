@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/layering.h"
 #include "game/wide_rand.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -321,6 +322,9 @@ extern "C" void __cdecl Gfx_CommitPrim(unsigned slot, unsigned size) {
     slot &= 0xFF;
     if (draw_order::g_on)   // BOF3X_DRAWORDER, diagnostic only
         draw_order::TagCommit(next, slot, static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(__builtin_return_address(0))));
+    // DIV-0071 (layering.h): what a map cell's record run draws, for the next
+    // pass's verdicts; only while DrawLayer_Open runs a record under mode 1.
+    if (layering::g_in_run) layering::RunPrim(Gfx_PacketNext, size);
     Gpu_LinkPrim(Gfx_OtPointers[slot], next);
     Gfx_OtPointers[slot] = reinterpret_cast<unsigned long*>(Gfx_PacketNext);
     Gfx_PacketNext = Gfx_PacketNext + size;
@@ -396,6 +400,8 @@ extern "C" void __cdecl DrawLayer_Open(int layer) {
         const unsigned b1 = (head >> 8) & 0xFF, b0 = head & 0xFF;
         unsigned char* const end = record + (head >> 16) * 4u - 4u;
         wide_rand::SetBand(split.Band(column));
+        // DIV-0071 (layering.h): the run's drawing recorded, mode 1 only.
+        if (layering::g_mode == layering::kFloor) layering::RunBegin(record);
         while (record != end) {
             std::uint32_t dword;
             std::memcpy(&dword, record, 4);
@@ -405,6 +411,7 @@ extern "C" void __cdecl DrawLayer_Open(int layer) {
             reinterpret_cast<Handler>(static_cast<std::uintptr_t>(MapCell_Handlers[dword >> 24]))(record, b1, b0);
             record += record[2] * 4u;
         }
+        if (layering::g_in_run) layering::RunEnd();
     }
     wide_rand::SetBand(false);
     if (draw_order::g_on) draw_order::Clear();

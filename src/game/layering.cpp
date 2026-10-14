@@ -68,6 +68,9 @@ bool InPool(std::uint32_t prim) {
     return prim >= base && prim < base + draw_pool::Count() * 0x90u && (prim - base) % 0x48u == 0;
 }
 
+bool QuadReaches(const float* x, const float* y, const Box& target);
+constexpr unsigned kRound[4] = {0x08u, 0x18u, 0x38u, 0x28u};   // a quad's perimeter: points 0, 1, 3, 2
+
 // A draw item's quad or a POLY_FT4: four float points at +8, +0x18, +0x28 and
 // +0x38, in strip order. Anything else has no shape here, and counts as in
 // the way (`known` false, the result true).
@@ -76,11 +79,17 @@ bool Reaches(std::uint32_t prim, const Box& target, bool* known = nullptr) {
     if (known) *known = InPool(prim) || p[7] == 0x2C;
     if (!InPool(prim) && p[7] != 0x2C) return true;
     float x[4], y[4];
-    static const unsigned kRound[4] = {0x08u, 0x18u, 0x38u, 0x28u};   // the perimeter: 0, 1, 3, 2
-    Box box = {1e9f, 1e9f, -1e9f, -1e9f};
     for (unsigned k = 0; k < 4; ++k) {
         x[k] = Get<float>(p + kRound[k]);
         y[k] = Get<float>(p + kRound[k] + 4);
+    }
+    return QuadReaches(x, y, target);
+}
+
+// Four points in perimeter order against a box.
+bool QuadReaches(const float* x, const float* y, const Box& target) {
+    Box box = {1e9f, 1e9f, -1e9f, -1e9f};
+    for (unsigned k = 0; k < 4; ++k) {
         if (x[k] < box.x0) box.x0 = x[k];
         if (x[k] > box.x1) box.x1 = x[k];
         if (y[k] < box.y0) box.y0 = y[k];
@@ -181,6 +190,89 @@ bool RecordsClear(unsigned layer, int cell_x, int cell_z) {
     return true;
 }
 
+// What each record run drew, two generations: the pass being drawn fills
+// g_runs[g_pass & 1]; Defer, before the pass draws anything, reads the other,
+// stamped g_pass - 1. A stamp of 0 is never a pass's.
+// A run keeps its quads (POLY_FT4 and POLY_G4, the shapes MapCell_DrawQuads,
+// MapCell_DrawFrames and MapCell_DrawShaded commit), each in perimeter order,
+// up to kQuads; past that, their union box. Any other primitive is not kept,
+// nor a quad with a point off any screen (a vertex behind the eye projects to
+// 1e24 and the like): for those the proximity test (RecordsClear) is all
+// there is, as before this test existed.
+constexpr unsigned kRuns = 2048;   // a power of two; a view names at most 0x38 * 28 = 1,568 runs
+constexpr unsigned kQuads = 8;
+constexpr float kFar = 4096.0f;
+struct Run {
+    std::uint32_t at, stamp;
+    unsigned n;       // quads kept
+    bool overflow;    // more than kQuads: `box` holds the rest
+    Box box;
+    float x[kQuads][4], y[kQuads][4];
+};
+Run g_runs[2][kRuns];
+std::uint32_t g_pass = 1;
+unsigned g_runs_now, g_runs_before;   // runs drawn in this pass, and in the last
+Run* g_run;                           // the run being drawn, or null
+bool g_run_boxes = true;              // BOF3X_LAYERING_RECORDS=0: the proximity test alone (a control)
+
+Run* FindRun(std::uint32_t at, std::uint32_t stamp, bool claim) {
+    Run* const table = g_runs[stamp & 1];
+    for (unsigned i = (at >> 2) * 2654435761u >> 21, n = 0; n < kRuns; ++n, i = (i + 1) & (kRuns - 1)) {
+        if (table[i].stamp != stamp) {
+            if (!claim) return nullptr;
+            table[i].at = at;
+            table[i].stamp = stamp;
+            table[i].n = 0;
+            table[i].overflow = false;
+            table[i].box = {1e9f, 1e9f, -1e9f, -1e9f};
+            ++g_runs_now;
+            return &table[i];
+        }
+        if (table[i].at == at) return &table[i];
+    }
+    return nullptr;
+}
+
+// Whether what `run` drew in the last pass reaches `target`.
+bool RunReaches(const Run& run, const Box& target) {
+    for (unsigned q = 0; q < run.n; ++q)
+        if (QuadReaches(run.x[q], run.y[q], target)) return true;
+    return run.overflow && Overlap(run.box, target);
+}
+
+// The runs DrawLayer_Open walks for `layer` (its row and columns, computed as
+// it computes them): false when one of them drew, in the last pass, a quad
+// that reaches `whole_box`, or was not drawn in the last pass at all.
+bool RunsClear(unsigned layer, const Box& whole_box) {
+    if (!g_run_boxes || g_runs_before == 0) return true;   // nothing recorded: DrawLayer_Open not ours, say
+    int row = MapView_Row + static_cast<int>(layer) + 1;
+    if (row >= 0x38) row -= 0x38;
+    if (row < 0 || row >= 0x38) return false;
+    int inset = MapView_Inset;
+    if (Field_InputFlags & 1) inset = inset >= 2 ? inset - 2 : 0;
+    int column = MapView_Column + inset + (~row & 1);
+    if (column >= 0x1C) column -= 0x1C;
+    for (int count = (14 - inset) * 2; count > 0; --count) {
+        column = column == 0x1B ? 0 : column + 1;
+        if (column < 0 || column >= 0x1C) return false;
+        const unsigned word = MapView_Cells[row * 28 + column];
+        if (word == 0) continue;
+        const std::uint32_t at = Address(AreaMap_Header + (word + (AreaMap_CellBase & 0xFFFFu)) * 4u);
+        const Run* const run = FindRun(at, g_pass - 1, false);
+        if (run == nullptr || RunReaches(*run, whole_box)) {
+            if (g_log && draw_order::Tagging()) {
+                if (run == nullptr)
+                    bof3::Log("DIV-0071      layer %u: the record run at %08X (view column %d) was not drawn last pass", layer, at, column);
+                else
+                    bof3::Log("DIV-0071      layer %u: the record run at %08X (view column %d) drew a quad over the body last "
+                              "pass (%u kept%s)", layer, at, column, run->n, run->overflow ? ", more boxed" : "");
+            }
+            return false;
+        }
+    }
+    return true;
+}
+
 Box BoxRound(const unsigned char* sprite, float half_width, float above, float below) {
     const float x = Get<float>(sprite + 0x74), y = Get<float>(sprite + 0x78);
     return {x - half_width, y - above, x + half_width, y + below};
@@ -243,6 +335,7 @@ unsigned LayerFor(unsigned index, unsigned layer) {
         if (!clear) { g_why = "a sprite or a table item of the layer before"; break; }
         if (!ListClear(next, 0, feet_box, whole_box, feet, kFloorOnly)) { g_why = "the first list: not floor"; break; }
         if (!RecordsClear(next, cell_x, cell_z)) { g_why = "a cell record nearby"; break; }
+        if (!RunsClear(next, whole_box)) { g_why = "what a cell record drew"; break; }
         if (!ListClear(next, 2, feet_box, whole_box, feet, kNothing)) { g_why = "a frame node"; break; }
         drawn_in = next;
     }
@@ -261,6 +354,7 @@ void Arm() {
     g_ahead = EnvInt("BOF3X_LAYERING_AHEAD", g_ahead, 1, 8);
     g_rise = EnvInt("BOF3X_LAYERING_RISE", g_rise, 0, 64);
     g_log = EnvInt("BOF3X_LAYERING_LOG", 0, 0, 1) != 0;
+    g_run_boxes = EnvInt("BOF3X_LAYERING_RECORDS", 1, 0, 1) != 0;
     if (g_mode == kFloor)
         bof3::Log("DIV-0071    on: a sprite is drawn up to %d layers later, over floor only (a lowest corner up to %d "
                   "above the feet is floor)", g_ahead, g_rise);
@@ -270,6 +364,12 @@ void Arm() {
 
 bool Defer() {
     g_moved_n = 0;
+    // A new generation of record runs: the pass about to draw fills it.
+    g_runs_before = g_runs_now;
+    g_runs_now = 0;
+    if (++g_pass == 0) g_pass = 1;   // past 2^32 passes: never stamp 0
+    g_run = nullptr;
+    g_in_run = false;
     if (Draw_OtSlot != 6 || !(Draw_PassFlags & 4) || Gfx_BufferIndex > 1) return false;
     std::memset(g_cell_of, 0, sizeof g_cell_of);
     for (unsigned v = 0; v < kViewCells; ++v) {
@@ -298,6 +398,47 @@ bool Defer() {
 void Restore() {
     for (unsigned i = 0; i < g_moved_n; ++i) std::memcpy(g_moved[i].sprite + 0x32, &g_moved[i].key, 2);
     g_moved_n = 0;
+}
+
+bool g_in_run = false;
+
+void RunBegin(const unsigned char* run) {
+    g_run = FindRun(Address(run), g_pass, true);
+    g_in_run = g_run != nullptr;
+}
+
+// A POLY_FT4 or POLY_G4 (code 0x2C / 0x38, semi-transparency and shading bits
+// aside: four float points at +8, +0x18, +0x28, +0x38, as the handlers'
+// projection writes them) kept as a quad. Anything else is not kept (see Run).
+void RunPrim(const unsigned char* prim, unsigned size) {
+    if (g_run == nullptr || size < 0x44) return;   // a POLY_G4 is committed as 0x44 bytes, a POLY_FT4 as 0x48
+    const unsigned code = prim[7] & 0xFC;
+    if (code != 0x2C && code != 0x38) return;
+    float x[4], y[4];
+    for (unsigned k = 0; k < 4; ++k) {
+        x[k] = Get<float>(prim + kRound[k]);
+        y[k] = Get<float>(prim + kRound[k] + 4);
+        if (!(x[k] > -kFar && x[k] < kFar && y[k] > -kFar && y[k] < kFar)) return;   // NaN included
+    }
+    Run& run = *g_run;
+    if (run.n < kQuads) {
+        std::memcpy(run.x[run.n], x, sizeof x);
+        std::memcpy(run.y[run.n], y, sizeof y);
+        ++run.n;
+        return;
+    }
+    run.overflow = true;
+    for (unsigned k = 0; k < 4; ++k) {
+        if (x[k] < run.box.x0) run.box.x0 = x[k];
+        if (x[k] > run.box.x1) run.box.x1 = x[k];
+        if (y[k] < run.box.y0) run.box.y0 = y[k];
+        if (y[k] > run.box.y1) run.box.y1 = y[k];
+    }
+}
+
+void RunEnd() {
+    g_run = nullptr;
+    g_in_run = false;
 }
 
 }  // namespace layering
