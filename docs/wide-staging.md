@@ -42,7 +42,7 @@ one `bool` and a branch.
   puts the waiting pair at screen x 38, inside the 4:3 view (PD's figure).
 - **The 21:9 hide** is one call in `Sprite_Draw`, after the cull and bit 7,
   and the census's new `hidden` column reads the same decision.
-- **Self-tests:** `BOF3X_SHADOW=wide_staging`, 79,025 checks, 0 mismatches
+- **Self-tests:** `BOF3X_SHADOW=wide_staging`, 79,938 checks, 0 mismatches
   (the rule, the table, narrow applying nothing, the hide's decision at the
   band edges, and the rewrite engine on six real rows); ten planted
   changes, all refused (section 9). The `'*'` runs at `BOF3X_WIDE` unset,
@@ -245,6 +245,67 @@ The extra 6 steps each way are the PSP's own timing; `[4]` steps the clock
 after its walk, `[5]` waits for `0x29`, 13 clock values on (lines spoken
 between).
 
+### 5a. Revised 2026-10-14: the original's frames, and off the top row
+
+EB-2's census 3 ([`ultrawide-census-3.md`](ultrawide-census-3.md) 3)
+found two things. First, the PSP's 21 + 6 steps take 3 steps' frames more
+than the original's 24. Because `[4]` steps the clock after its walk, the
+dialogue started later and `dolphinBoss`'s narrow recording parted from
+about frame 6184 (`Rand` from 10,921). With `BOF3X_WIDE_STAGING=0` it was
+equal on all 14,923 frames. Second, the pair waited just above the top
+edge: a sliver of one sprite's feet stayed on row 0 at game x 25..48.
+The PSP crops 12 rows, which hid them there; we keep all 240.
+
+The round's rule is that game timing stays Capcom's. So each of the three
+rewritten walks (both west walks and the east one) now takes **exactly the
+original's frames**:
+
+- **Where the frames go.** The walk loses 3 steps, which is `3 * f` frames,
+  where `f = 0x10 / speed` is the actor's frames a step (`MoveCmd_Move`).
+  Those frames are spent on the added walk: `a` steps at the actor's own
+  speed, then `b` at the fastest whole speed (`Field_MoveSpeeds` index 5,
+  one frame a step), with `a * f + b = 3 * f`. Elements of no steps are
+  left out, because each would cost a frame. The next element starts the
+  frame after the last one's last step, as the original's next op would.
+- **How far north.** The north walk must take the drawn rectangle's bottom
+  above row 0. `band_census::ScreenRect` is read when the north walk
+  starts. Its bottom row, divided by `kCaseZeroRise10 / 10` px a step,
+  gives the steps needed: 2.7 px, the smallest lift over 20 steps from the
+  turn by SS's camera. `wide_staging_check.py` measures that lift and fails
+  if the constant exceeds it. `a` is taken as large as that allows, so
+  the walk is at the actor's own pace while visible and fast once out of
+  view. If even all-fast steps (`3 * f` of them) are too few, all-fast is
+  used.
+- **Back south.** The east walk's south steps are the last north walk's of
+  the same script (`a` paced after `b` fast), so the route ends where the
+  original's does. With no north walk recorded, the east walk is the
+  original's.
+- **The speed.** A plan that ends on the fast steps puts the actor's speed
+  back at its next step, before its next op.
+
+At speed index 2 (8 frames a step, assumed in the tool's replay; the
+party's is read at run time), the choices are 3, 10, 17 or 24 north steps.
+SS's camera puts the turn at row 31, which needs 12 steps, so 17 are taken.
+The census's real camera sits about 10 rows higher, so 10 may do. The
+cases a speed does not divide 0x10 leave the walk original (logged).
+
+The engine's self-test runs the three walks at speed indices 1..5 with the
+feet at rows -10..120 when the north walk starts. For each run it counts
+every element's steps times `0x10 / speed`:
+
+- west: 24 steps' frames, 21 west;
+- north: enough steps to clear the top row whenever the frames allow, and
+  the rectangle's bottom then at or above row 0;
+- east: 18 steps' frames, the south steps equal to the north ones, 15 east;
+- the speed is the actor's again afterwards.
+
+Result: `wide_staging self-test: 79938 checks, 0 mismatches`. Two controls
+were refused: the fast steps walked at the actor's speed (184 mismatches),
+and the speed not put back (92). **Not verified:** that the party's script
+path (`FieldCore_ScriptMoveNext`) spends exactly `0x10 / speed` frames a
+step and starts the next element the frame after, as `Field_ObjectUpdate`
+does for objects. EB's live `dolphinBoss` hash is the check.
+
 ## 6. The 21:9 hide (DIV F)
 
 At `BOF3X_WIDE=2` (the columns more than the 16:9 picture's 53, by
@@ -263,7 +324,15 @@ building the primitive when:
   the scene mask set on the world map, `0C`, and through the attract demo,
   `02`, where the hide as first keyed would have hidden every band object).
   The game's own tests, not more mask values: `Game_Mode` 2, the field
-  (`GameMode_Field` `0x4959F0` runs as mode 2; 3 is the menu, 5 battle);
+  (`GameMode_Field` `0x4959F0` runs as mode 2; 3 is the menu, 5 battle),
+  **or 4**, the field with a message open (added 2026-10-14). Census 3,
+  [`ultrawide-census-3.md`](ultrawide-census-3.md) 4.1, found 175 object
+  rows and 26 party rows drawn in mode 4 in areas 39 and 41's long scenes.
+  `GameMode_Field` sets mode 4 on `Field_Request` 2. `GameMode4_Run`
+  `0x495E60` (ours, `mode_rest.cpp`; PSX `0x801989D4`) runs
+  `Field_FrameScripted`, the scripted field frame, every frame. Once the
+  message cells' bit 1 (`0x7DEE44`) is set, it puts `Game_Mode` back to 2.
+  Mode 6, `Look_PadControl`, is not the field frame and is not admitted;
   `WorldMap_RecordIndex` `0x462A90` is 11, no world-map record for the area
   (the value `0x56DE30` dispatches its world-map hooks on; the eleven
   records' areas, read from the exe: 16, 33, 45, 65, 87, 88, 104, 115, 121,
@@ -364,7 +433,7 @@ BOF3X_LANG=original`, `--game bof3 --no-config`, the branch as committed.
 
 | `BOF3X_WIDE` | Exit | `inject:` | `DIV-0041` lines | This group's lines |
 |---|---|---|---|---|
-| unset | 0 | `10087 ours, 0 left original by BOF3X_ORIGINAL` | none | `wide_staging self-test: 79025 checks, 0 mismatches`; no arm line (0 columns: nothing armed) |
+| unset | 0 | `10087 ours, 0 left original by BOF3X_ORIGINAL` | none | `wide_staging self-test: 79938 checks, 0 mismatches`; no arm line (0 columns: nothing armed) |
 | `1` | 0 | the same | `widescreen: 53 columns a side (426 x 240); terrain cull [-150, 470]; ...`, `full-frame fills at (-53, 0) 426 x 240` | the self-test as above; `the wide staging on: 24 of 24 rows armed at 53 columns (0 left original)`; `the 21:9 hide off: the view is not wider than 16:9` |
 | `2` | 0 | the same | `widescreen: 120 columns a side (560 x 240); terrain cull [-217, 537]; ...`, `full-frame fills at (-120, 0) 560 x 240` | the self-test; `24 of 24 rows armed at 120 columns`; `the 21:9 hide on` |
 
@@ -437,20 +506,40 @@ it).
 - **Original behaviour:** the pair walk 24 steps west at clock `0x1B` and
   wait at screen x -40, in the 16:9 band (the owner's capture, 2026-10-13);
   later they walk the same way again and 18 / 20 steps east.
-- **New behaviour:** in the wide modes, each west walk is 3 steps shorter
-  and followed by 6 steps north, and the east walk is preceded by 6 steps
-  south and is 3 shorter: the pair wait inside the 4:3 view (x 38 by SS's
-  camera) and the route ends where it did. Narrow is the original's.
+- **New behaviour:** in the wide modes, as the PSP stages it:
+  - each west walk is 3 steps shorter and is followed by a walk north;
+  - the east walk is preceded by the same walk south, and is 3 shorter.
+
+  The pair leave the band for the 4:3 view's top, and the route ends where
+  it did. Two departures from the PSP's 6 north / 6 south (revised
+  2026-10-14, [`wide-staging.md`](wide-staging.md) 5a):
+  - each rewritten walk takes exactly the original's frames: the 3 lost
+    steps' frames are spent on the added walk, partly at the actor's speed
+    and the rest at the fastest whole speed, out of view;
+  - the north walk goes far enough to take the drawn rectangle's bottom
+    above the top row (the rectangle is read at run time). The PSP crops 12
+    rows, which hid the pair; we keep 240.
+
+  Narrow is the original's.
 - **Rationale:** the owner's call (`ultrawide-round.md` 4a): copy the PSP's
   staging, written as a change of the original's steps in our code, cited
   to PD ([`ultrawide-staging-psp.md`](ultrawide-staging-psp.md) section 2,
-  rows 53 and 54).
+  rows 53 and 54). Game timing stays Capcom's: EB-2's hash
+  ([`ultrawide-census-3.md`](ultrawide-census-3.md) 3.2) found the PSP's
+  longer walk moving `dolphinBoss`'s recorded route.
 - **Also in the PSX version?** The PSX is the original's; the PSP (JP and
-  EU alike) is what this copies.
-- **Verification:** the scripts' address and hash at the arm; the
-  engine's self-test (21 west then 6 north, 6 south then 15 east, the
-  position past the op, only in area 175); the check tool's replay of the
-  route. **Not played.**
+  EU alike) is the model. The PSP's own walk takes 3 steps' frames longer
+  than the original's.
+- **Verification:**
+  - the scripts' address and hash at the arm;
+  - the engine's self-test: each walk's frames equal the original's at
+    speed indices 1..5 and feet rows -10..120; north clears row 0 where the
+    frames allow; south equals north; the speed is put back; only in area
+    175;
+  - two controls refused;
+  - the check tool's replay of the route, and the lift constant measured.
+
+  **Not played** since the revision; EB re-runs `dolphinBoss`'s hash.
 - **Reversible?** `BOF3X_WIDE_STAGING=0`, or narrow.
 
 ### F. At 21:9, a field object past the 16:9 view is not drawn in a scene
@@ -465,7 +554,8 @@ it).
 - **New behaviour:** at `BOF3X_WIDE=2`, a field object, extra object or
   non-leader party member whose drawn rectangle lies wholly past -53 or
   373, while a scene holds the leader (the census's scene mask, bits
-  1..8) in a field scene (`Game_Mode` 2, no world-map record for the area
+  1..8) in a field scene (`Game_Mode` 2, or 4 - the field with a message
+  open, `GameMode4_Run` `0x495E60` - no world-map record for the area
   by `WorldMap_RecordIndex`, not the attract demo's chapter 16), and that
   no exception names, is not drawn. Bit 7 and every field
   the original writes are unchanged; only the primitive is skipped. 16:9
