@@ -262,7 +262,12 @@ identical in all four (two identical whole; two differ in a 10 x 4 box at
 Capcom's code at 3,300: **identical, the whole frame**.
 
 Headless: `BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original BOF3X_SHADOW='*'`
-from an ini-less copy, `BOF3X_WIDE` unset, 1 and 2: SELFTEST.
+from an ini-less copy, `BOF3X_WIDE` unset, 1 and 2: exit 0 each, `inject:
+10087 ours, 0 left original`, the DIV-0041 width-rules line and its two
+self-tests (not run narrow; 0 mismatches at 53 and at 120 columns), and no
+mismatch line other than 0 in any of the three logs (1,079 such lines in the
+last). The rule arms after the self-tests, so they show only that nothing
+else moved.
 `python tools/ledger_check.py`: 121 entries, 0 errors, 2 notes.
 
 ## 8. What was not done
