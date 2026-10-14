@@ -24,8 +24,8 @@
 // a message (round9 doc section 6); where it reads data in place by an
 // unmasked byte that stays inside the image (kind 10's sizes, kind 15's rows
 // and texts, the EXP table) ours reads the same bytes in place. One divergence
-// has patch sites inside these bodies and survives in ours: DIV-0041
-// (widescreen.cpp g_slides) widens six slide bounds; ours reads each as
+// has sites inside these bodies and survives in ours: DIV-0041's faster
+// slide (widescreen.cpp g_slides) over six slide bounds; ours reads each as
 // widescreen.cpp holds it. Every call goes through the harness (SH_CALL / SH_AT),
 // so the start-up fuzz can stand recorders in for the callees; the current
 // record 0x905B84 is re-read wherever the original re-reads it.
@@ -106,11 +106,21 @@ void Slide(unsigned off, int step, short bound, Past past) {
     SetWord(r + off, static_cast<std::uint16_t>(bound));
     Rec()[3] = 0;
 }
-// A bound DIV-0041 widens, as widescreen.cpp holds it (docs/operand-store.md):
+// A slide bound of DIV-0041's faster slide, as widescreen.cpp holds it (docs/operand-store.md):
 // the imm32 of `mov ecx, imm32` (its low word is cx), or the imm16 of `cmp cx,
 // imm16`.
-short Imm32Bound(U operand) { return Widescreen_SlideBound(operand); }
-short Imm16Bound(U operand) { return Widescreen_SlideBound(operand); }
+short Imm32Bound(U operand) { return Widescreen_SlideLogic(Widescreen_SlideBound(operand)); }
+short Imm16Bound(U operand) { return Widescreen_SlideLogic(Widescreen_SlideBound(operand)); }
+// DIVERGENCE DIV-0041 (amended 2026-10-13, the faster slide): a slide-off
+// state decides by Capcom's bound at every width (Imm32Bound), and in the wide
+// view the box is drawn to the bound moved out by the columns
+// (Widescreen_SlideHeld, docs/ultrawide-slides.md).
+void SlideOff(int step, U operand, Past past) {
+    const short bound = Imm32Bound(operand);
+    const short x_read = S(Rec() + 4);
+    Slide(4, step, bound, past);
+    Widescreen_SlideHeld(Rec(), x_read, bound);
+}
 
 }  // namespace
 
@@ -219,10 +229,20 @@ extern "C" void __cdecl GeneWin_GridSlideIn(void) {
 // original 0x5989F0: the grid slides out, after its draw: to the right (+0xA
 // 0) by 0x20 until x reaches 0x142, to the left by 0x20 until x is -0xBE or
 // less; there the window is freed instead (a tail jump to Window_FreeCurrent).
-// Both bounds are operands DIV-0041 widens (`cmp cx, imm16` at 0x598A05 /
-// 0x598A19), read there.
+// Both bounds are operands of DIV-0041's faster slide (`cmp cx, imm16` at 0x598A05 /
+// 0x598A19), read there. DIVERGENCE DIV-0041 (amended 2026-10-13, the faster
+// slide): decided by Capcom's bounds at every width; in the wide view the
+// draw sees the x on the line to the bound moved out by the columns, and the
+// free test Capcom's x again (Widescreen_SlideDraw / _SlideUndraw,
+// docs/ultrawide-slides.md).
 extern "C" void __cdecl GeneWin_GridSlideOut(void) {
+    {
+        unsigned char* const w = Rec();
+        const bool right = w[0xA] == 0;
+        Widescreen_SlideDraw(w, Imm16Bound(right ? at::kGridOutRight : at::kGridOutLeft), right ? 0x20 : -0x20);
+    }
     SH_CALL(GeneWin_DrawGrid)();
+    Widescreen_SlideUndraw(Rec());
     unsigned char* const r = Rec();
     const short x = S(r + 4);
     if (r[0xA] == 0) {
@@ -453,8 +473,8 @@ extern "C" void __cdecl MenuList_SlideLeftTo92(void) { Slide(4, -0x20, 0x5C, Pas
 // original 0x599C90 (MenuList_PanelStates[4]): right to x 0x5C.
 extern "C" void __cdecl MenuList_SlideRightTo92(void) { Slide(4, 0x20, 0x5C, Past::kAbove); }
 // original 0x599CC0 (MenuList_PanelStates[7]): left to x -300 or less (off
-// the left); the bound the operand DIV-0041 widens (-353).
-extern "C" void __cdecl MenuList_SlideLeftOff300(void) { Slide(4, -0x20, Imm32Bound(at::kLeftOff300Bound), Past::kAtOrBelow); }
+// the left); the bound the operand of DIV-0041's faster slide.
+extern "C" void __cdecl MenuList_SlideLeftOff300(void) { SlideOff(-0x20, at::kLeftOff300Bound, Past::kAtOrBelow); }
 // original 0x599CF0 (MenuList_PanelStates[8]): right to x 0x11 or more.
 extern "C" void __cdecl MenuList_SlideRightTo17Ge(void) { Slide(4, 0x20, 0x11, Past::kAtOrAbove); }
 // original 0x599D20 (MenuList_PanelStates[10]): left to x 0xB6.
@@ -462,8 +482,8 @@ extern "C" void __cdecl MenuList_SlideLeftTo182(void) { Slide(4, -0x20, 0xB6, Pa
 // original 0x599D90 (MenuList_MoneyStates[2]): left to x 0xC8.
 extern "C" void __cdecl MenuList_SlideLeftTo200(void) { Slide(4, -0x20, 0xC8, Past::kBelow); }
 // original 0x599DF0 (MenuList_TimeStates[1]): left to x -100 (off the left);
-// DIV-0041 widens the bound (-153).
-extern "C" void __cdecl MenuList_SlideLeftOff100(void) { Slide(4, -0x20, Imm32Bound(at::kLeftOff100Bound), Past::kBelow); }
+// DIV-0041's faster slide.
+extern "C" void __cdecl MenuList_SlideLeftOff100(void) { SlideOff(-0x20, at::kLeftOff100Bound, Past::kBelow); }
 // original 0x599E20 (MenuList_TimeStates[2]): right to x 0x10.
 extern "C" void __cdecl MenuList_SlideRightTo16(void) { Slide(4, 0x20, 0x10, Past::kAbove); }
 // original 0x599F70 (MenuList_IconStates[2]): down to y 0x2A.
@@ -504,8 +524,8 @@ extern "C" void __cdecl MenuList_SlideDownToPanelRow(void) {
 }
 
 // original 0x59A130 (MenuList_StatsStates[5]): left to x -180 or less;
-// DIV-0041 widens the bound (-233).
-extern "C" void __cdecl MenuList_SlideLeftOff180(void) { Slide(4, -0x20, Imm32Bound(at::kLeftOff180Bound), Past::kAtOrBelow); }
+// DIV-0041's faster slide.
+extern "C" void __cdecl MenuList_SlideLeftOff180(void) { SlideOff(-0x20, at::kLeftOff180Bound, Past::kAtOrBelow); }
 // original 0x59A160 (MenuList_StatsStates[6]): right to x 0x89 or more.
 extern "C" void __cdecl MenuList_SlideRightTo137Ge(void) { Slide(4, 0x20, 0x89, Past::kAtOrAbove); }
 // original 0x59A1D0 (MenuList_EquipStates[2]): left to x 0xA6.
@@ -514,8 +534,8 @@ extern "C" void __cdecl MenuList_SlideLeftTo166(void) { Slide(4, -0x20, 0xA6, Pa
 // right to x 0x2D.
 extern "C" void __cdecl MenuList_SlideRightTo45(void) { Slide(4, 0x20, 0x2D, Past::kAbove); }
 // original 0x59A2B0 (MenuList_ExpStates[1], MenuList_NextLevelStates[1]): left
-// to x -110; DIV-0041 widens the bound (-163).
-extern "C" void __cdecl MenuList_SlideLeftOff110(void) { Slide(4, -0x20, Imm32Bound(at::kLeftOff110Bound), Past::kBelow); }
+// to x -110; DIV-0041's faster slide.
+extern "C" void __cdecl MenuList_SlideLeftOff110(void) { SlideOff(-0x20, at::kLeftOff110Bound, Past::kBelow); }
 
 // original 0x59A4B0 (MenuList_IconWheelStates[1]): right by 0x20 until x is
 // past 0x140 + 75 (+0xB & 1) - off the right, one column further for an odd
