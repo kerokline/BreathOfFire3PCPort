@@ -102,7 +102,7 @@ Then the fold-in (three docs commits: the ledger's DIV-0101 amendment, D266..D28
      5.4).
    - **The `_pre1013` entry lists** in `analysis/` (`pc_funcs_pre1013.json`, `pc_hidden_pre1013.json`, ...): kept
      beside the replaced ones ([`hidden-start-scan.md`](hidden-start-scan.md) 8); remove once nothing reads them.
-   - D270 (`stallion.txt` at `--speed 8`) unclassed; D283..D285 (the wide picture) after the owner's word on D283;
+   - D270 fixed by DIV-0121 (an F12 save in an encounter field: the edge led to area `0xFFFF`; `stallion.txt` now names its save) - the owner's look owed, and whether such a field has another way out; D283..D285 (the wide picture) after the owner's word on D283;
      D286 (the fishing equip headings) not looked into; D287 (the launcher's clipped lines); D289 (group 16's
      one-record name shift, a `src/` change).
 

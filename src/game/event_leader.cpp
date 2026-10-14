@@ -57,6 +57,10 @@ const Callees kOriginals = {
 };
 Callees g = kOriginals;
 
+// DIV-0121: 1 through PatchBytes("EdgeNoArea") in EventLeader_Inject, after
+// the fuzz, which runs Capcom's rule.
+std::uint32_t g_edge_no_area = 0;
+
 }  // namespace event_leader
 
 using namespace event_leader;
@@ -205,6 +209,14 @@ extern "C" void __cdecl Field_LeaderStepLands(void) {
             const std::uint32_t edge_z = (static_cast<std::uint32_t>(AreaMap_Header[1]) - 3u) << 16;
             if (x == 0x20000 || z == 0x20000 || x == edge_x || z == edge_z) {
                 g.ensure_animation(d);
+                // DIV-0121: the area the edge leads to is the one the party
+                // came from, and a game loaded here came from none (0xFFFF,
+                // GameMode_Start's) - Capcom's code asks for area 0xFFFF and
+                // Area_ZoneAtIn reads a null zone list. The edge holds instead.
+                if (g_edge_no_area && Word(At(at::kEdgeArea)) == 0xFFFF) {
+                    Sprite_Current[2] = 1;
+                    return;
+                }
                 g.change_area(Word(At(at::kEdgeArea)), Long(At(at::kEdgeX)), Long(At(at::kEdgeZ)), 4);
                 Sprite_Current[2] = 1;
                 return;
@@ -922,6 +934,13 @@ extern "C" unsigned char __cdecl Field_CellsBlock(long x, long z, unsigned wide)
 
 void EventLeader_Inject() {
     if (bof3::WantsShadow("event_leader")) event_leader::SelfTest();
+    {
+        // DIV-0121: armed after the fuzz above, which sees Capcom's rule.
+        const std::uint8_t was[] = {0, 0, 0, 0}, is[] = {1, 0, 0, 0};
+        bof3::PatchBytes("EdgeNoArea", static_cast<std::uint32_t>(reinterpret_cast<std::uintptr_t>(&event_leader::g_edge_no_area)),
+                         was, is, 4);
+        bof3::Log("DIV-0121    a map edge that leads to no area (a game loaded in an encounter field) holds (on unless the line above says OFF)");
+    }
     BOF3_INJECT(Field_LeaderStepping);
     BOF3_INJECT(Field_LeaderStepLands);
     BOF3_INJECT(Field_SwapState);

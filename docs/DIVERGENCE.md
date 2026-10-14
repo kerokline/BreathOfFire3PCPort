@@ -1,6 +1,6 @@
 # Divergence ledger
 
-**Status:** IN PROGRESS (opened 2026-09-18; 120 entries, DIV-0001..0120, DIV-0067 withdrawn)
+**Status:** IN PROGRESS (opened 2026-09-18; 121 entries, DIV-0001..0121, DIV-0067 withdrawn)
 
 Every intentional behavioural difference between this project and the original
 Chinese PC port gets an entry here.
@@ -7112,3 +7112,53 @@ designed in rather than bolted on.
   hi-lo game (`labels-1013.md` 4).
 - **Reversible?** play without `BOF3X_LANG`, or
   `BOF3X_ORIGINAL=CommuHiLo_DrawChoice`.
+
+### A map edge that leads to no area holds, instead of crashing
+
+- **ID:** DIV-0121
+- **Date:** 2026-10-13
+- **Subsystem:** where a step lands (`Field_LeaderStepLands` `0x52E580`, ours
+  in `src/game/event_leader.cpp`); the crash it avoids is in
+  `Area_ZoneAtIn` `0x595450` (`src/game/window_task.cpp`)
+- **Tier:** Sensible - a crash in the PC port's own path.
+- **Original behaviour:** in an area whose `Field_InputFlags` has bit 1 (the
+  encounter fields, area 29 among them), a step onto the map's edge calls
+  `Field_ChangeArea(word 0x802290, 0x7E091C, 0x7E0920, 4)` - the area, and
+  the position, the party came from, which `Area_Enter` records on every
+  entry. `GameMode_Start` makes `Game_AreaNumber` `0xFFFF` before it enters
+  a loaded game's area, so in a game loaded in such an area the word is
+  `0xFFFF` and the position 0. `Area_PickMusic` then looks area `0xFFFF` up
+  in the 200-entry zone-list table `0x668D80`: entry `0xFFFF` is
+  `0x6A8D7C`, zero in `.bss`, and `Area_ZoneAtIn` reads address 0. Capcom's
+  six functions (`BOF3X_ORIGINAL=Field_LeaderStepLands,Field_ChangeArea,
+  Area_PickMusic,Area_ZoneAtIn,Area_Enter,GameMode_Start`) crash at the same
+  recipe frame as ours did, at `BOF3.exe+0x195475` (known-defects D270).
+- **New behaviour:** when that word is `0xFFFF` the edge is not an exit: the
+  leader's walk ends there (sprite state 1, as after the edge's own area
+  change) and the party stays in the area. Every other edge, and every edge
+  in a game that entered the area from somewhere, is Capcom's.
+- **Rationale:** a crash. A game can only be loaded in an encounter field
+  through the PC port's F12 save (`Save_QuickWrite`, anywhere, any time - I18),
+  which the input recorder's shots also press; the owner's `combat` save is
+  one, in area 29. There is no area to send the party to - the save block
+  holds neither the world map nor the place on it - so the edge holds. **The
+  party may then have no way out of the field** (the owner's to say whether
+  the field has another); the fuller repair is I18's - F12 refused in such an
+  area, or saving the world-map place it came from.
+- **Also in the PSX version?** The same code: `Field_ChangeArea` `0x801A0A30`,
+  `Area_PickMusic` `0x801A1388` and the zone lookup `0x801A1498` (JP
+  `GAME.EMI`) have no bound on the area either, and entry `0xFFFF` of the
+  PSX table `0x80181ADC` is an instruction word of `GAME.EMI`, `0x90620000`,
+  an unmapped address. Whether a PlayStation save can be made in an
+  encounter field, so that the PSX could reach it, is not established here
+  (no anywhere-save on the disc; the owner's knowledge).
+- **Verification:** `stallion.txt` from the `combat` save at `--speed 8`
+  (the ultrawide census's case, D270): ours before the change and Capcom's
+  six functions both crash at recipe frame 10,726, with `Rand` equal at every
+  frame up to it; ours after it plays the recipe to its end (frame 22,647)
+  with no area file opened after frame 10,726 - the party held in area 29.
+  `stallion.txt` from its own save (the `# save stallion` header it lacked)
+  plays to its end through boss encounter 23 in area 67. The `event_leader`
+  fuzz runs Capcom's rule (the switch `g_edge_no_area` is armed after it).
+  **Not seen by the owner.**
+- **Reversible?** `BOF3X_ORIGINAL=EdgeNoArea`.
