@@ -12,7 +12,11 @@
 // would then be drawn over, where its feet are, is floor: a cell's own quad
 // whose lowest corner is not above the feet. A wall, a side triangle, a cell
 // record, a raised cell or another sprite in the way stops it at the layer
-// before, so whatever hid the feet in the original still does.
+// before, so whatever hid the feet in the original still does. A cell record
+// is in the way when its map cell is within two of the sprite's, or when what
+// its run drew in the last pass reaches the sprite's body (amended
+// 2026-10-14: the camp's fire, a record three cells from Garr, drawn under
+// him; docs/campfire-and-crystal.md).
 //
 // It arms after InjectAll's self-tests, as DIV-0069's and DIV-0041's fills do,
 // so every fuzz compared the original's order.
@@ -35,5 +39,16 @@ void Arm();   // BOF3X_LAYERING parsed; after every module's self-test
 // Sprite_UpdateScreen left them.
 bool Defer();
 void Restore();
+
+// What each map cell's record run drew (docs/campfire-and-crystal.md section
+// 4). DrawLayer_Open's, mode kFloor: RunBegin before a run's first record is
+// handed to its handler, RunEnd after its last. Gfx_CommitPrim's, while
+// g_in_run: RunPrim for each primitive committed. The union of the run's
+// primitives' screen boxes is kept for the next pass's Defer, which stops a
+// sprite at a layer whose runs drew anything over its body last pass.
+extern bool g_in_run;
+void RunBegin(const unsigned char* run);
+void RunPrim(const unsigned char* prim, unsigned size);
+void RunEnd();
 
 }  // namespace layering
