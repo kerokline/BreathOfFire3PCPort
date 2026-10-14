@@ -1,7 +1,9 @@
 # Depress's screen wobble: the PlayStation's swirl, the PC's black disc
 
-**Status:** FINDING (2026-10-13, group DP). The owner's question: in the
-recorded fight `tools/recipes/depress.txt` (save `depress`, en-US) an enemy
+**Status:** BUILT (2026-10-13, group DP). The finding came first; the
+restoration followed that evening at the owner's call (section 6).
+
+The owner's question: in the recorded fight `tools/recipes/depress.txt` (save `depress`, en-US) an enemy
 casts Depress; on the PlayStation the owner remembers "a wobble kind of
 effect" on the screen. Is it broken or missing on the PC release, and on
 ours?
@@ -15,7 +17,9 @@ black sixteen-sided disc, up to 168 game pixels across, over the party for
 about 144 frames. Under the twin-check rule
 ([`psx-twin-check.md`](psx-twin-check.md)) it is **the port's defect**, not
 Capcom's design: restoring it would be a restoration, with a ledger entry.
-Nothing in our code regressed it. The proposal in section 5 is not built.
+Nothing in our code regressed it. The owner chose the restoration, grabbing
+at the window's resolution; it is built (section 6, ledger draft I) and on
+by default, `BOF3X_FBGRAB=0` for Capcom's port.
 
 ## 1. What the effect is (the PC's code, and ours)
 
@@ -210,7 +214,7 @@ exactly what Capcom's do.
 - Capcom's DirectX 6 renderer was not run. Section 1 says why it cannot
   grab either.
 
-## 5. Proposal: a frame grab for `DR_MOVE` (not built)
+## 5. Proposal: a frame grab for `DR_MOVE` (as proposed; section 6 is what was built)
 
 What is missing is that **a `DR_MOVE` whose source lies in the display area
 must copy rendered pixels, at that point in the frame, into a texture that
@@ -268,15 +272,212 @@ rectangle back into particle buffers on the CPU
 ([`d3d-rest.md`](d3d-rest.md) section 6) would need a GPU-to-CPU readback
 as well. That is a larger, separate step.
 
-## 6. For the other files
+## 6. The restoration, built (ledger draft I)
 
-- **HANDOFF / IDEAS (A):** "Depress's swirl (MAGIC109) is missing on the PC
-  port and ours: a `DR_MOVE` from the frame buffer reads the empty VRAM
-  shadow, so a black disc covers the party for about 144 frames. The PSX
-  twin is the same code (the port's defect). Proposal:
-  [`depress-wobble.md`](depress-wobble.md) section 5, a `kGrab` command
-  in the backend (150 to 250 lines). It would also serve three other
-  frame-buffer moves."
-- **Ledger:** none yet. Nothing was changed. If the proposal is built, it
-  needs a restoration entry (section 5, item 4).
-- **README:** an index line for `depress-wobble.md` (FINDING, 2026-10-13).
+The owner's call (2026-10-13): build it, grabbing at the window's
+resolution. It is on by default; `BOF3X_FBGRAB=0` is Capcom's port.
+
+### 6.1 How it works
+
+- **Recording the grab** (`src/game/d3d_list.cpp`, the walk's move case for
+  codes `0xEC..0xEF`). The rectangle is read before `Gfx_MoveImage` clips
+  it in place. The move into the VRAM shadow runs as before, so game code
+  that reads the shadow later reads what it always did. Then
+  `render::MoveFromFrame` decides. If the source lies in a display buffer,
+  the backend appends a `Cmd::kGrab` to the frame:
+  - a display buffer means rows 0..239 or 240..479, with the whole
+    rectangle in one of them, and columns starting left of 320 that reach
+    past 0 (`fb_grab::SourceInDisplay`);
+  - the command carries the rectangle in the picture's coordinates (y less
+    the buffer's 240 rows) and a slot;
+  - either buffer counts as the frame being drawn, because the PC has one
+    render target.
+
+  The command list replays in the walk's order. So the grab sees exactly
+  the ordering-table slots drawn before it, which is the PlayStation's
+  timing.
+- **Where grabs live** (`src/render/fb_grab.{h,cpp}`, `Registry`). Each
+  grab sits in one of 32 slots, keyed by its VRAM destination.
+  - A grab stays until the shadow is written over any part of it.
+    `Gfx_InvalidateTextures` sees every such write and calls
+    `render::ShadowWritten`. On the PlayStation, too, VRAM keeps a moved
+    picture until something overwrites it.
+  - Depress's own next move invalidates last frame's grab before it records
+    the new one.
+  - More than 32 live grabs at once stops the game loudly. None of the four
+    users comes near that: each keeps at most two.
+- **Which draws use it** (`src/game/d3d_draw.cpp` `D3d_BindTexture`, and
+  the shim's `DrawPrimitive`).
+  - For a direct-colour page (tpage bits 7..8 with bit 1 set),
+    `D3d_BindTexture` now tells the shim which VRAM cell the texture's
+    texel (0, 0) comes from: the page's corner plus `Gfx_TexCacheKey`'s x,
+    y. It also passes the window `w x h` that the 256 texels tile, the
+    same arithmetic as `D3d_BuildPageTexture`'s source.
+  - A textured draw whose page meets a live grab is tagged with the grab's
+    slot and the offsets.
+  - Under Capcom's DirectX 6 objects the note does nothing. It checks the
+    texture's table is ours.
+- **Replay** (`src/render/render_d3d11.cpp`).
+  - `kGrab` copies the target's rectangle (`CopySubresourceRegion`) into the
+    slot's texture, sized `w*k x h*k`. Its x is `x*k + pad`, the wide
+    columns moved as every vertex is, so at 16:9 and 21:9 a rectangle
+    reaching into a side band takes the band's picture.
+  - Parts outside the target are left transparent black.
+  - The slot is remade when its size changes, as with `k` after a DIV-0042
+    resize. A persisted grab keeps its old resolution until it is grabbed
+    again; its UVs are normalised, so it still lines up.
+  - A tagged draw binds the slot's texture on `t1`. The scene shader samples
+    it wherever the texel's VRAM cell falls inside the grab:
+    `fmod(uv*256, window) + page origin - grab origin`, divided by the
+    grab's cells. That is continuous, so the grab shows at full window
+    resolution with the page's own UVs.
+  - A grabbed pure-black texel is transparent, as a 15-bit `0` is on the
+    PlayStation. Outside the grab the draw samples the page as before.
+  - The grab sampler clamps and follows the draw's point / linear filter.
+
+None of the four `Gfx_StoreImage` CPU readers was touched. They still read
+the shadow (empty where a grab went), as Capcom's port does:
+`EffectKind6B_States[1]` `0x475EC0`, `EffectKind61_States[1]` `0x480730`,
+`EffectKindA1_ReadBack` `0x490BB0` and `EffectKindA3_ReadBack` `0x491410`.
+
+### 6.2 Checks
+
+- **Property check, `BOF3X_SHADOW=fb_grab`** (`fb_grab::SelfTest`, runs
+  under `'*'`):
+  - `SourceInDisplay` against a cell-by-cell model: 20,000 random
+    rectangles, 2,727 in a buffer;
+  - the registry against a list model of every grab and write in order: 200
+    runs of 200 operations, 16,030 finds, 8,292 that found a grab, 2,673
+    refused full;
+  - fixed cases: Depress's box in both buffers, the fishing strip, the whole
+    frame, a move from x `0x170` (not the frame), a rectangle across the
+    buffers' seam, a re-grab reusing its slot, the page to the left not
+    meeting it.
+
+  Result: `0 FAILURES`.
+
+  Three planted controls were each refused, exit 3 (one at a time, then
+  restored):
+
+  | Control | What was planted | Failures |
+  |---|---|---:|
+  | C1 | `Find` returns the oldest grab | 3,785 |
+  | C2 | the seam test dropped | 3,053 |
+  | C3 | a write drops a grab only if it starts at or before its corner | 37,780 |
+- **The recording side's existing fuzzes** cover the changed functions.
+  `d3d_draw` covers `D3d_BindTexture` (20,000 rounds) and `Gfx_DrawOTag`
+  (30,000 rounds, 54 of 54 table indices). `Gfx_InvalidateTextures` has
+  4,000 rounds. All are 0 mismatches under `'*'`. The new calls are no-ops
+  until the backend records frames, so the fuzzes compare the same game
+  state as before.
+- **Headless self-tests**, `BOF3X_SELFTEST_ONLY=1 BOF3X_LANG=original
+  BOF3X_SHADOW='*'`, from an ini-less copy of this branch's build:
+  - `BOF3X_WIDE` unset: exit 0, `inject: 10087 ours, 0 left original by
+    BOF3X_ORIGINAL`, and the `DIV-0041` width-rule and faster-slide lines
+    as before (3,380,148 frames);
+  - `=1` and `=2`: exit 0 each, with the same `inject:` line. Each logs the `DIV-0041` full-frame fills, `(-53, 0) 426 x 240` and `(-120, 0) 560 x 240`, and the faster slide on, at 53 and 120 columns, and the width-rule and slide-check lines as the unset run;
+  - the `fb_grab` line, 0 failures, appears in all three.
+
+  The three ran on the build made before the controls, and the source after the controls were restored is that build's (`git diff`: no control left).
+
+### 6.3 Live: depress.txt
+
+These are the owner's frames to look at (shot `fNNNNN` = recipe frame
+NNNNN + 1, `analysis/shots/`, gitignored). The shots ran every 8 frames from
+1084 to 1236 (`recipe_shots.py --every 8 --from 1084 --to 1236`, 20
+shots). Each run used `--lang en-US --no-front`, `BOF3X_OPT=none
+BOF3X_FILTER=point`, the launcher copy at scratch `L2`, and `inject: 10088
+ours`.
+
+- **Narrow** (`depress_grab_w0`, 640 x 480, k = 2): the swirl, the field's
+  floor and the party twisted into a whirlpool over the party's corner and
+  darkening to the centre. f01132..f01180 are the full size, and f01140 is
+  the clearest. It matches the owner's PlayStation frame (2a).
+  - f01156 and f01188 are the swing's still points, where the twist passes
+    0, so the picture is barely turned and only darkens.
+  - f01196..f01228 close it, and f01236 is the party again.
+  - The log has `fb_grab move (82, 320) 4 x 4 to VRAM (832, 256): grabbed
+    from the picture at (82, 80)` (Start's 4 x 4), then each frame's box
+    growing by 4 (buffer 0 and 1 alternating).
+  - Against the black-disc run of section 3: the 19 shots with the effect
+    differ only inside the vortex's box, with bounding boxes no larger than
+    (16, 21)..(352, 352) in capture pixels, game 8..176. f01236 is
+    identical.
+- **16:9** (`depress_grab_w1`, 852 x 480, 53 columns a side): the same
+  swirl in the same place over the party, the band's picture where the box
+  reaches into it. f01140 again.
+- **Switch:** `BOF3X_FBGRAB=0` (`depress_grab_off`): 20 of 20 shots are
+  identical to section 3's black-disc run of ours. Off is Capcom's port to
+  the pixel.
+
+### 6.4 The other three moves from the frame
+
+| Move | Grab drawn? | Logic reads the shadow? |
+|---|---|---|
+| `GameMode8_Enter` (fishing; `rest_3g.cpp`): a 64 x 120 strip at x 0, rows 80.. to (`0x340`, `0x100`) | **Yes, live.** `caughFish.txt` was played with the grab on and off (shots every 60 frames, `fish_grab_on` / `_off`). The log shows `move (0, 320) 64 x 120 to VRAM (832, 256): grabbed from the picture at (0, 80)`. In 40 of 64 shots the two runs differ, and only in one place: the round pedestal under Ryu in the fishing panel (capture 72..162 x 376..420). With the grab it shows the field's ground; Capcom's port draws it blank, light grey-white (f01200 is a clear pair). This is presumably the PlayStation's look. **For the owner's eye.** | Unchanged either way: the shadow move still runs. The only readers of (`0x340`, `0x100`) found are the four `Gfx_StoreImage` effects of 6.1, which read the shadow as before; the fishing code reads nothing back |
+| `EffectKind51_DrawMoves` (`effect_2f.cpp`): two 64 x 128 strips beside the effect's point to (`0x340`, `0x100`) and (`0x340`, `0x180`), every frame | By reading, yes: `EffectKind51_DrawColumn` draws its swaying column of gouraud-textured quads from `Gpu_GetTPage(2, 0, 0x340, 0x100)`, a direct-colour page, through `D3d_BindTexture`, so the column now shows the scene behind it warped (a heat-shimmer column). **Not seen live**: kind 0x51 runs in areas 34 and 108 at given chapter counters, and no recipe reaches it | Unchanged: the shadow move still runs; the effect itself only draws |
+| `Scena17_EnterArea` (the ending, `scena_sc15.cpp`): the whole 320 x 240 frame to (`0x2C0`, `0`) | **Unknown.** No consumer of (`0x2C0`, `0`) was found by reading. A `grep` of `0x2C0` finds only the 4- and 8-bit effect pages at (`0x2C0`, `0x100`). If the ending draws it through a page primitive of direct colour it now shows; if through a sprite (the cell-texture path, which `D3d_BindTexture` does not serve), it does not. No recipe reaches the ending | Unchanged: the shadow move still runs; no reader of (`0x2C0`, `0`) found |
+
+What the grab does not reach, as built:
+- **Sprites** (`D3d_DrawSprt*`, `D3d_DrawCellSprite`) of a grabbed page:
+  they take their textures from the cell cache, not from `D3d_BindTexture`.
+- **4- and 8-bit pages** over a grab: they read the grabbed area as indices
+  on the PlayStation, a combination none of the four users draws.
+- **A write that covers only part of a grab** drops the whole grab. The
+  rest of it then shows the shadow (Capcom's look) rather than the rest of
+  the picture.
+
+## 7. For the other files
+
+- **Ledger (I), a restoration:**
+  - **Title:** the frame-buffer grab: a `DR_MOVE` out of the display buffer
+    textures what follows.
+  - **Date:** 2026-10-13.
+  - **Subsystem:** render (`src/render/fb_grab.{h,cpp}`,
+    `render_shim.{h,cpp}`, `render_d3d11.cpp`; `src/game/d3d_list.cpp`
+    `MoveImage`, `d3d_draw.cpp` `D3d_BindTexture`, `gfx_texcache.cpp`
+    `Gfx_InvalidateTextures`; [`depress-wobble.md`](depress-wobble.md)).
+  - **Tier:** Intent. The port could not do what the code plainly asks for,
+    and the PlayStation shows what was meant.
+  - **Original behaviour:** Capcom's port carries out a `DR_MOVE` as a copy
+    inside its VRAM shadow (`Gfx_MoveImage` `0x59E9A0`), which never holds
+    the rendered frame. Primitives that texture from a move out of the
+    display buffer therefore sample nothing:
+    - Depress (`MAGIC109`) draws a solid black disc over the party's
+      corner for about 144 frames;
+    - the fishing panel's pedestal is blank;
+    - kind 0x51's column and the ending's frame copy lose their picture.
+  - **New behaviour:**
+    - The shadow move is unchanged, and the backend also copies that part
+      of the picture drawn so far, at the window's resolution (the
+      owner's call), into a texture.
+    - Direct-colour page textures over the destination sample it until the
+      shadow there is written again.
+    - Depress shows the PlayStation's whirlpool; the fishing pedestal shows
+      the ground.
+    - Off: `BOF3X_FBGRAB=0`. Also `BOF3X_ORIGINAL=Gfx_DrawOTag` (no grab
+      recorded) or `D3d_BindTexture` (no draw tagged).
+  - **Rationale:** the PlayStation's GPU moves from the frame buffer. The
+    PC's code issues the same moves call for call (the twin of `MAGIC109`,
+    section 2), and the owner's PlayStation frame shows the swirl.
+  - **Also in the PSX version?** Yes: this is what the PlayStation draws
+    (section 2a).
+  - **Verification:**
+    - `BOF3X_SHADOW=fb_grab`: property checks, 0 failures, three controls
+      refused;
+    - `'*'` at `BOF3X_WIDE` unset, 1 and 2: exit 0;
+    - `depress.txt` narrow and 16:9 (section 6.3); `caughFish.txt` with the
+      grab on and off;
+    - off is pixel-identical to the black-disc run (20 of 20 shots).
+  - **Reversible?** `BOF3X_FBGRAB=0`.
+- **HANDOFF (A):** "Depress's swirl restored (ledger I, `BOF3X_FBGRAB`):
+  `DR_MOVE` out of the display buffer now grabs the picture for
+  direct-colour pages. The owner's eye is owed on these frames:
+  - `analysis/shots/depress_grab_w0` and `_w1`, f01132..f01180;
+  - the fishing pedestal, `fish_grab_on` against `fish_grab_off`, f01200.
+
+  Kind 0x51's column and the ending's frame copy are unseen (no recipe).
+  The four `Gfx_StoreImage` CPU readers still read the empty shadow; that
+  needs a GPU readback, not built."
+- **README:** `depress-wobble.md` is now BUILT (2026-10-13).
+
