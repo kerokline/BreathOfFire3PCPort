@@ -5,6 +5,7 @@
 
 #include "bof3/symbols.gen.h"
 #include "game/crt_rest.h"
+#include "game/wide_rand.h"
 #include "game/widescreen.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
@@ -49,6 +50,13 @@ void QuadVertex(short* v, std::uint32_t dword, std::uint32_t x0, std::uint32_t y
 }
 
 }  // namespace
+
+int map_cells::RisingRand() { return wide_rand::Band() ? wide_rand::DrawOnly() : g_rand(); }
+map_cells::RandFn map_cells::SwapRand(RandFn rand) {
+    const RandFn was = g_rand;
+    g_rand = rand;
+    return was;
+}
 
 // original 0x56FF00: a record's condition. The high byte of the u16 `code`
 // is the kind, the low byte its operand:
@@ -203,6 +211,10 @@ static void DrawQuads(const unsigned char* record, unsigned b1, unsigned b0) {
 // Kept as the original has it: the arithmetic is 32-bit on whatever b1 and b0
 // hold and each coordinate is stored as its low word; the elevation is halved
 // as an s16, so the header's top half that an off-grid answer carries is lost.
+//
+// DIV H (docs/ultrawide-rand.md): the random number is map_cells::RisingRand's
+// - Capcom's Rand for every cell the original walks, the draw-only generator
+// for a cell only DIV-0041's lowered inset adds. Narrow, always Rand.
 static void DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
     static_cast<void>(record);
     const long elevation = AreaMap_Elevation(static_cast<long>((b1 << 16) - 0x10000u), static_cast<long>(b0 << 16));
@@ -214,7 +226,7 @@ static void DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
         unsigned char* const prim = Gfx_PacketNext;
         Gpu_SetPolyFT4(prim);
         Gpu_SetShadeTex(prim, 0);
-        const std::uint32_t half = (static_cast<std::uint32_t>(g_rand()) & 3u) + 4u * phase + 0x20u + 0x20u * i;
+        const std::uint32_t half = (static_cast<std::uint32_t>(map_cells::RisingRand()) & 3u) + 4u * phase + 0x20u + 0x20u * i;
         int swing = 16 - static_cast<int>((Frame_Counter >> 8) & 0x1Fu);
         if (swing < 0) swing = -swing;
         const auto sway = static_cast<std::uint32_t>(swing * static_cast<int>(phase + 8u * i) / 10);
@@ -624,7 +636,10 @@ namespace {
 // is what the game keeps. DIV-0023's pad words are taken as
 // the fuzz takes them.
 
-HandlerFn g_quads_live = nullptr, g_rising_live = nullptr;
+// DIV H: a band cell's rising squares are checked against a clone whose Rand
+// call is aimed at the draw-only generator, as ours draws them; both seeds are
+// in the compared state, so either side touching the wrong one is a mismatch.
+HandlerFn g_quads_live = nullptr, g_rising_live = nullptr, g_rising_band_live = nullptr;
 constexpr unsigned kLiveGte = 0x380, kLiveWindow = 0x1000;
 
 struct LiveState {
@@ -634,6 +649,7 @@ struct LiveState {
     unsigned long* ot[8];
     unsigned long tails[8];
     std::uint32_t seed;
+    std::uint32_t band_seed;   // DIV H: the draw-only generator's (wide_rand.h)
     unsigned char window[kLiveWindow];
 };
 struct LiveCounts {
@@ -658,6 +674,7 @@ void LiveCapture(LiveState& s, unsigned char* window_at, unsigned window, std::u
         s.tails[k] = tails_at[k] ? *tails_at[k] : 0;
     }
     s.seed = *seed;
+    s.band_seed = *wide_rand::DrawOnlySeed();
     std::memcpy(s.window, window_at, window);
 }
 void LiveApply(const LiveState& s, unsigned char* window_at, unsigned window, std::uint32_t* seed) {
@@ -668,6 +685,7 @@ void LiveApply(const LiveState& s, unsigned char* window_at, unsigned window, st
     for (unsigned k = 0; k < 8; ++k)
         if (s.ot[k]) *s.ot[k] = s.tails[k];
     *seed = s.seed;
+    *wide_rand::DrawOnlySeed() = s.band_seed;
     std::memcpy(window_at, s.window, window);
 }
 
@@ -721,7 +739,7 @@ extern "C" void __cdecl MapCell_DrawQuads(const unsigned char* record, unsigned 
     else DrawQuads(record, b1, b0);
 }
 extern "C" void __cdecl MapCell_DrawRising(const unsigned char* record, unsigned b1, unsigned b0) {
-    if (g_rising_live) Live(1, g_rising_live, DrawRising, record, b1, b0);
+    if (g_rising_live) Live(1, wide_rand::Band() ? g_rising_band_live : g_rising_live, DrawRising, record, b1, b0);
     else DrawRising(record, b1, b0);
 }
 
@@ -768,6 +786,12 @@ void MapCells_Inject() {
         g_rising_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
             "MapCell_DrawRising", bof3::addr::MapCell_DrawRising, 0x20F, live_rising_calls,
             sizeof live_rising_calls / sizeof live_rising_calls[0])));
+        const bof3::CloneCall band_rising_calls[] = {{0x20, elevation}, {0x86, nullptr},  {0x8E, nullptr},
+                                                     {0x93, reinterpret_cast<const void*>(&wide_rand::DrawOnly)},
+                                                     {0x184, nullptr},  {0x199, nullptr}, {0x1C2, nullptr}, {0x1D0, nullptr}};
+        g_rising_band_live = reinterpret_cast<HandlerFn>(const_cast<void*>(bof3::CloneOriginal(
+            "MapCell_DrawRising", bof3::addr::MapCell_DrawRising, 0x20F, band_rising_calls,
+            sizeof band_rising_calls / sizeof band_rising_calls[0])));
     }
     BOF3_INJECT(Area_TestCondition);
     BOF3_INJECT(AreaMap_Elevation);

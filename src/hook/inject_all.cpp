@@ -2,6 +2,7 @@
 
 #include "game/band_census.h"
 #include "game/wide_staging.h"
+#include "game/wide_rand.h"
 #include "game/config_text.h"
 #include "game/rdata_consts.h"
 #include "game/dat_cache.h"
@@ -438,6 +439,9 @@ void InjectAll() {
                                 // except that it runs before Widescreen_Inject, so its fuzz compares the
                                 // original's 320-wide backdrop quad
     Widescreen_Inject();        // DIV-0041, BOF3X_WIDE: after the modules above, so their fuzz ran against the original culls
+    wide_rand::Inject();        // DIV H: the map walk's random split - after Widescreen_Inject, whose inset columns its
+                                // log names; its self-test runs ours alone (DrawLayer_Open, stand-in handlers), so
+                                // any later slot would do
     WorldMap_Inject();          // every call of its clones re-aimed at a recorder, its state table rebuilt in the
                                 // copy; none of its functions goes through a cull, so after Widescreen is fine
     BattleDraw_Inject();        // every call of its clones re-aimed at a recorder, the device a fake: order

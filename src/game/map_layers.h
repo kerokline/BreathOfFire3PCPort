@@ -6,6 +6,8 @@
 // AreaMap_ClutCycle 0x571B40 (an AreaMap_EntryHandlers entry).
 #pragma once
 
+#include <cstdint>
+
 void MapLayers_Inject();
 
 namespace map_layers {
@@ -22,5 +24,17 @@ void SnapshotSides();
 
 // After every module's self-test: reads BOF3X_SIDE_DUP (on unless 0).
 void ArmSideDup();
+
+// MapView_Build's inset (map_layers.cpp Inset()) from the globals it reads -
+// Cond_AngleFB, Camera_Distance, Field_InputFlags, Cond_ByteFE - and the
+// columns DIV-0041 lowers it by (Widescreen_InsetColumns): `original` is the
+// value Capcom's code computes, `lowered` the one written to MapView_Inset.
+// Pure: no global is read or written. DIV H (docs/ultrawide-rand.md) reads
+// both; equal when `wide_columns` is 0.
+struct InsetPair {
+    std::uint32_t original, lowered;
+};
+InsetPair ComputeInset(unsigned long angle, short distance, unsigned char input_flags, unsigned char byte_fe,
+                       unsigned wide_columns);
 
 }  // namespace map_layers

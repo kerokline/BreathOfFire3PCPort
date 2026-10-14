@@ -6,3 +6,18 @@
 
 // Must run before the modules that own any function these call: see the .cpp.
 void MapCells_Inject();
+
+namespace map_cells {
+
+// DIV H (docs/ultrawide-rand.md): the random number MapCell_DrawRising takes
+// for each of its eight squares - Capcom's Rand, or for a band cell
+// (wide_rand::Band) the draw-only generator, so the wide view's extra cells
+// never move the game's stream.
+int RisingRand();
+
+// The self-tests' handle on where RisingRand's Capcom calls go: the previous
+// function comes back.
+using RandFn = int (__cdecl*)(void);
+RandFn SwapRand(RandFn rand);
+
+}  // namespace map_cells

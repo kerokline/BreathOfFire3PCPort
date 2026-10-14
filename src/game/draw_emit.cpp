@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "bof3/symbols.gen.h"
+#include "game/wide_rand.h"
 #include "hook/detour.h"
 #include "hook/draw_order.h"
 #include "hook/log.h"
@@ -378,6 +379,10 @@ extern "C" void __cdecl DrawLayer_Open(int layer) {
     if (column >= 0x1C) column -= 0x1C;
     int count = (14 - inset) * 2;
     if (count <= 0) return;
+    // DIV H (docs/ultrawide-rand.md): which of this row's cells the original's
+    // walk - its inset before DIV-0041 lowered it - would not reach; their
+    // handlers draw the rising squares from a generator of ours. Narrow, none.
+    const wide_rand::Row split(MapView_Inset, Field_InputFlags, row, MapView_Column);
     const int row_base = row * 28;
     using Handler = void (__cdecl*)(unsigned char* record, unsigned b1, unsigned b0);
     for (; count != 0; --count) {
@@ -390,6 +395,7 @@ extern "C" void __cdecl DrawLayer_Open(int layer) {
         std::memcpy(&head, record - 4, 4);
         const unsigned b1 = (head >> 8) & 0xFF, b0 = head & 0xFF;
         unsigned char* const end = record + (head >> 16) * 4u - 4u;
+        wide_rand::SetBand(split.Band(column));
         while (record != end) {
             std::uint32_t dword;
             std::memcpy(&dword, record, 4);
@@ -400,6 +406,7 @@ extern "C" void __cdecl DrawLayer_Open(int layer) {
             record += record[2] * 4u;
         }
     }
+    wide_rand::SetBand(false);
     if (draw_order::g_on) draw_order::Clear();
 }
 
