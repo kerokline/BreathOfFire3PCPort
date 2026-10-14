@@ -67,7 +67,7 @@ present at 16:9 since 2026-09-30 / 10-07:
 - the band cells' `Rand`, which is D283, being split (RN);
 - the slide-off bounds, given a faster slide on Capcom's frame count (SL).
 
-Its ledger drafts are lettered and number from DIV-0122.
+Its ledger drafts are lettered; the coordinator numbers them from the first free number (0122 since PR #59).
 
 1. **Push `platform/more-hardening` and open its PR, at the owner's word.** Every commit is signed off; check
    `git log --format=%B main..HEAD` first (CLAUDE.md rule 7). `ledger_check` 120 entries, 0 errors.
