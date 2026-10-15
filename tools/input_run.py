@@ -49,6 +49,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from attract_run import ROOT, game_pid, kill_game, kill_stale, launch, keep_in_front, log_run_time  # noqa: E402
 import recipe_saves  # noqa: E402
 import language_tags  # noqa: E402  (the retired bare codes, DIV-0005)
+import bof3x_home  # noqa: E402  (a release's home; a checkout keeps the repo defaults)
 
 u = ctypes.WinDLL('user32')
 k32 = ctypes.WinDLL('kernel32', use_last_error=True)
@@ -127,7 +128,7 @@ def main():
     ap.add_argument('--delay', type=float, default=0.4,
                     help='seconds between a shot line and the grab, for the frame to reach the screen; '
                          'the game is frozen meanwhile, so this only has to outlast the compositor')
-    ap.add_argument('--game', default=os.path.join(ROOT, 'bof3'))
+    ap.add_argument('--game', default=bof3x_home.default_game(os.path.join(ROOT, 'bof3')))
     ap.add_argument('--lang', default=None, type=lambda v: language_tags.refuse_retired(v, '--lang'),
                     help='BOF3X_LANG, an overlay tag, e.g. en-US (the bare en/fr/de/ja are retired, DIV-0005; '
                          'a recipe recorded under the bare `en` plays under en-US)')
@@ -143,7 +144,7 @@ def main():
                     help='BOF3X_SPEED: N logic frames per frame of wall time (1..64). The recipe is frame-indexed, '
                          'so it replays the same; shots are still drawn. Late frames are not drawn, so do not '
                          'watch it')
-    ap.add_argument('--launcher', default=os.path.join(ROOT, 'build', 'bof3x-launcher.exe'),
+    ap.add_argument('--launcher', default=os.path.join(bof3x_home.launcher_dir(), 'bof3x-launcher.exe'),
                     help='another copy of the launcher, with its own bof3x.ini, bof3x.dll and bof3x.log beside it')
     ap.add_argument('--no-front', action='store_true',
                     help='leave the window where it is: the game writes its own frames (BOF3X_SHOT_DIR) and keeps '
