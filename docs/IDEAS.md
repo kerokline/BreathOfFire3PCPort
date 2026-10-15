@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-14; 38 entries, I1..I38 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-15; 40 entries, I1..I40 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -83,6 +83,8 @@ rule ([`README.md`](README.md)) here too.
 | I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
 | I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | open 2026-10-12 (the owner: "I'm interested in growing the ring, let's place it as an idea for later"); measured for 21:9 2026-10-13: needed only for far cameras (known-defects D292) |
 | I38 | Draw the two edge sweeps (`EffectKind0D`'s slide, area 172's growing shade) mapped onto the wide picture, so they start and end past its edge in the original's frames ([`wide-staging.md`](wide-staging.md) 8) | display | HIGH | open 2026-10-14, from the ultrawide round: proposed, not built; the owner's call |
+| I39 | Port the importer to C++ inside the launcher, so a release needs no bundled Python ([`install-sources.md`](install-sources.md) 7) | platform | MEDIUM | open 2026-10-15 (the owner: bundle Python now, port later) |
+| I40 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
 
 ---
 
@@ -1585,3 +1587,73 @@ amendment.
 
 ### Outcome
 _(2026-10-14) open: the owner's call (leave, or the mapping)._
+
+## I39 — Port the importer to C++ inside the launcher
+
+**Ask (2026-10-15):** the owner, deciding the alpha release: bundle the
+official embeddable Python with the importer now, and port the importer to
+C++ later, so a release is the launcher and the engine alone.
+**Kind:** platform
+**Feasibility:** MEDIUM   **Gated on:** the owner (priority); nothing technical
+
+### What already exists
+- The contract the launcher calls ([`install-sources.md`](install-sources.md)
+  section 4: `identify --json`, `sources`, `setup --json-progress`); a C++
+  importer behind the same calls changes nothing on the Sources page.
+- Readers already in C++ that the import needs at run time: the DAT
+  container walk and the cache manifest (`src/common/cache_manifest.cpp`),
+  the sequencer's SEQ / VAB reading (`src/audio/`).
+- Every importer output is hashed against a committed recipe or fixture
+  (`recipes/*.toml`, `fixtures/*.tsv`), so a port is checked file by file
+  against the Python one on the owner's discs, unattended.
+
+### What is missing
+- The Python side reached by `setup`: 25 files of `tools/` (measured by
+  `tools/make_release.py`, 17,898 lines on 2026-10-15), of which the large parts are
+  `loc_build.py` (the language layers), `exe_tables.py` / `exe_twins.py`
+  (`base/exe/`), `seq.py` / `ppms.py`, `xa.py` / `at3.py`, `type1.py`, the
+  transforms, and numpy's use in `at3.py`, Pillow's in the font work.
+- capstone is imported by `exe_tables.py`; whether `build` needs it at all
+  is unmeasured.
+
+### First concrete step
+Measure which functions of those 25 files a `setup` actually runs (a
+coverage trace over the three setups in `install-sources.md` section 6), so
+the port's size is counted, not estimated.
+
+### Outcome
+_(2026-10-15) open: the alpha bundles Python (`tools/make_release.py`)._
+
+## I40 — Read CHD and CSO images as sources
+
+**Ask (2026-10-15):** from the Sources page work: players commonly keep
+PlayStation discs as `.chd` (MAME's compressed hunks) and PSP discs as
+`.cso`; today `identify` refuses both with a sentence telling the player to
+convert them back ([`install-sources.md`](install-sources.md) section 4).
+**Kind:** tooling
+**Feasibility:** MEDIUM   **Gated on:** the licensing check below
+
+### What already exists
+- `tools/psx_disc.py` reads any sector-addressed image through one
+  `sector(lba)` method; a reader that yields raw 2,352-byte sectors (CHD) or
+  2,048-byte blocks (CSO) slots in behind it.
+- CSO is a block index plus zlib (or LZ4 for ZSO) blocks: a few dozen lines
+  with the standard library.
+
+### What is missing
+- CHD v5 for CD-ROMs: hunks compressed with zlib, LZMA, FLAC (audio tracks)
+  and Huffman, a CD-specific codec wrapper (`cdzl` / `cdlz` / `cdfl`) and the
+  subcode / ECC rebuild. Python has zlib and lzma; FLAC would need our own
+  decoder or a library - libchdr is BSD-3, readable; whether to vendor it is
+  the owner's call ([`LICENSING.md`](LICENSING.md) section 4).
+- Measured identity: a CHD's raw sectors must hash file by file to the
+  catalogued tree, as a `.bin` does - to be proved on a CHD made from a held
+  disc.
+
+### First concrete step
+Make a CHD of the US disc with `chdman createcd`, list the codecs its hunks
+use, and decide whether the build's needs (the data track's sectors, XA
+included) avoid FLAC entirely.
+
+### Outcome
+_(2026-10-15) open._
