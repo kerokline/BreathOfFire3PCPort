@@ -16,7 +16,7 @@ half: the commands the launcher runs, the folder they write, how a source is
 identified, and what was measured.
 
 The owner's decisions (2026-10-15): bundle python.org's embeddable Python now
-and port the importer to C++ later (IDEAS I39); one home folder beside the
+and port the importer to C++ later (IDEAS I40); one home folder beside the
 launcher; ffmpeg is the player's (on `PATH`, or a located `ffmpeg.exe`), with
 a link to <https://ffmpeg.org/download.html#build-windows>.
 
@@ -111,7 +111,7 @@ link). Every line is flushed.
 | A `.cue` / `.bin` (`psx`) | the ISO 9660 tree file by file against the five PSX manifests | the tree matches and the image is raw (2,352-byte sectors) |
 | A PSP `.iso` (`psp`) | the tree against the two PSP manifests | the tree matches |
 | A `.zip` of any of these | first, without unpacking: a member whose size and sha256 are a catalogued data track or PSP image; else the `.cue` and the data track it names (or the lone `.iso`/`.bin`, or the whole folder holding `BOF3.exe`) unpacked to the temp folder, identified, deleted | as above |
-| `.chd`, `.cso` / `.zso` (by extension or magic) | - | never yet: "not supported yet", convert back (IDEAS I40) |
+| `.chd`, `.cso` / `.zso` (by extension or magic) | - | never yet: "not supported yet", convert back (IDEAS I41) |
 | `.7z`, `.rar`, ... ; `.ecm`, `.pbp`, `.mdf`, `.nrg` ... | - | never: "only .zip archives are read" / "this image format is not read" |
 
 An unmatched disc says what it is when it can: its serial from `SYSTEM.CNF`
@@ -291,7 +291,7 @@ downloads cached.
 
 ## 7. Not done
 
-- The C++ importer (IDEAS I39) and CHD / CSO readers (I40).
+- The C++ importer (IDEAS I40) and CHD / CSO readers (I41).
 - A `.zip` of a PC game folder: written (`unpack_zip` unpacks the folder
   holding `BOF3.exe` whole) but not run - no such zip is held.
 - The Indeo re-encode was measured through `copy_pc` alone, not inside a

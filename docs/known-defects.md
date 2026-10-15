@@ -7616,7 +7616,8 @@ reaches kind 0x8D. Ours (the PSX has no wide view; the PSP grew its ring to 33
 x 58, which covers all but kind 0x8D's first frames).
 
 **Status:** open. The fix is IDEAS I37, the ring grown (RG in the round,
-not built): the owner's call, after the far-camera scenes are seen.
+not built). The owner, 2026-10-15: build I37 now, without waiting for a
+picture of a far-camera scene.
 
 ## D293 — A breath mote is not drawn in the wide bands (ours by design: its draw consumes `Rand`)
 
@@ -7632,9 +7633,10 @@ Capcom culls inside the 16:9 view, the ground sprite and the glow were
 widened (DIV-0041's 2026-10-13 amendment); this and D294 were not. Not seen
 in play.
 
-**Status:** open, left by design. A wide mote would need a ring drawn without
-drawing a number (for example the last frame's radius kept for a mote in the
-band): a change to the effect's look, the owner's call.
+**Status:** left by design - the owner, 2026-10-15: leave (the logic stays
+Capcom's). A wide mote would need a ring drawn without drawing a number (for
+example the last frame's radius kept for a mote in the band); reopen only if
+one is seen.
 
 ## D294 — A column's start-up sound is silent while the column is in a wide band (ours by design: the cull gates sound state)
 
@@ -7648,8 +7650,9 @@ kept by UC2 ([`ultrawide-culls-fix.md`](ultrawide-culls-fix.md) 3),
 bound, so a column visible in either wide band starts silently, as the
 original decides for the narrow view. Not seen in play.
 
-**Status:** open. Hearing the band is one rule (`x` at `-20 - c`, `340 + c`)
-but moves the sound channel state: a DIV of its own, the owner's call.
+**Status:** left by design - the owner, 2026-10-15: leave (the sound channel
+state stays Capcom's). Hearing the band is one rule (`x` at `-20 - c`,
+`340 + c`) and a DIV of its own; reopen only if it is noticed.
 
 ## D295 — A band cell can apply its area patch early (ours, DIV-0041's lowered inset; measured; the owner: leave for now)
 
@@ -7719,9 +7722,12 @@ headers added: six take the save of their own name; `combatGroup` and
 ([`ultrawide-census-3.md`](ultrawide-census-3.md) 1). The harness refuses
 such a recipe unless `--save` is given.
 
-**Status:** open. Adding the six headers is mechanical; which save
-`combatGroup` and `sortScreens` were recorded from is the owner's
-(owner-review, the away day's "to decide").
+**Status:** open for the six headers (mechanical). The owner's two answered
+2026-10-15: `combatGroup` carries `# save combat` (assumed), and `sortScreens`
+`# save vaccinationAndFireScene` - a stand-in, since none of the three saves
+holding its 11,957 zenny matches its first run's 08:20 or its Camp step;
+the sort menus replay the same, the frames from about 1770 on do not
+([`owner-review.md`](owner-review.md)).
 
 ## D299 — The band census does not see type-`0x0A` sprites and calls the world map and the fishing spot scenes (ours, the instrument)
 
@@ -7754,11 +7760,17 @@ with Capcom's code; the PlayStation twins of the three functions that decide
 the order (`FUN_8014D184`, `FUN_80153B8C`, `0x80156844`) order it the same
 way; the placing data are the disc's. Capcom's.
 
-**Status:** open. A rule that reads "on the table" from an object standing
-inside a raised cell is proposed in `faerie-over-table.md` 4 (about thirty
-lines beside DIV-0071's), not built: the owner's call, after the PlayStation
-look of the scene. The gene crystal's cut (D242) is the same class from the
-other side.
+**The PlayStation look (the owner, 2026-10-15):** a let's-play frame of the
+PlayStation release ("...now that the light's on, El?") shows the table's
+front plank over the lower half of the faerie standing on it - the same cut.
+Capcom's on both platforms.
+
+**Status:** open, decided (the owner, 2026-10-15): **fix this scene narrowly**
+- area 175's table faerie only, as an Intent DIV - with a note in that DIV to
+broaden it to FY's general rule (an object standing inside a raised cell drawn
+after its layer's second list, `faerie-over-table.md` 4) if more examples of
+the class turn up. Not built yet. The gene crystal's cut (D242) is the same
+class from the other side and would be the second example.
 
 ## D301 — The camp's fire is drawn under Garr in the cutscene (ours, DIV-0071; fixed by DIV-0071's 2026-10-14 amendment)
 

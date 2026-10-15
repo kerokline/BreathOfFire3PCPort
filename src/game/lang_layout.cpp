@@ -21,3 +21,12 @@ bool Lang_Latin() {
     if (n == 0 || n >= sizeof lang || std::strcmp(lang, "original") == 0) return false;
     return !Lang_FullWidth();
 }
+
+bool Lang_Japanese() {
+    char lang[16];
+    const DWORD n = GetEnvironmentVariableA("BOF3X_LANG", lang, sizeof lang);
+    if (n == 0 || n >= sizeof lang) return false;
+    const char* dash = std::strchr(lang, '-');
+    const size_t primary = dash ? static_cast<size_t>(dash - lang) : std::strlen(lang);
+    return primary == 2 && std::strncmp(lang, "ja", 2) == 0;
+}
