@@ -681,8 +681,8 @@ def swap(h, pairs):
                 os.rename(old, cur)
         for _, new in pairs:
             shutil.rmtree(new, ignore_errors=True)
-        raise SetupError("The previous install could not be replaced (is the game still running?): %s"
-                         % _one_line(e))
+        raise SetupError("The previous install could not be replaced, and is left as it was (is the game still "
+                         "running, or a file in it open?): %s." % (e.strerror or _one_line(e)))
     for _, old in moved:
         shutil.rmtree(old, ignore_errors=True)
 

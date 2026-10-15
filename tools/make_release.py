@@ -72,9 +72,12 @@ ENTRY = ("importer.py", "player_sources.py")
 # What the reached tools read relative to ROOT during identify / sources /
 # setup (build + install), measured 2026-10-15 by an audit hook on every
 # open() under ROOT during setups from a US disc, the PC folder + US disc and
-# a PSP-JP disc (docs/install-sources.md section 6), plus `check`'s inputs
-# that importer.py loads unconditionally. Directories are copied whole.
-DATA = ["fixtures.toml", "fixtures", "recipes", "symbols.toml", "tables.toml", "exe_maps"]
+# a PSP-JP disc (docs/install-sources.md section 6): fixtures.toml, seven
+# fixtures/*.tsv, sixteen recipes/ files, symbols.toml, tables.toml,
+# exe_maps/<build>.tsv and src/hook/exe_own.cpp (psp_exe.py reads its
+# Dat_FileNames pool; the first bundled setup without it stopped there).
+# Directories are copied whole; src/ only that one file, our own code.
+DATA = ["fixtures.toml", "fixtures", "recipes", "symbols.toml", "tables.toml", "exe_maps", "src/hook/exe_own.cpp"]
 # Copied beside the launcher.
 TOP = [("LICENSE", "LICENSE"), ("docs/THIRD_PARTY.md", "THIRD_PARTY.md")]
 BUILD_FILES = ("bof3x-launcher.exe", "bof3x.dll", "bof3x.exe", "music-names.tsv")
@@ -304,8 +307,9 @@ def main():
         for m in tools:
             shutil.copy2(os.path.join(TOOLS, m + ".py"), os.path.join(rt, "tools", m + ".py"))
         for d in DATA:
-            s = os.path.join(ROOT, d)
-            (shutil.copytree if os.path.isdir(s) else shutil.copy2)(s, os.path.join(rt, d))
+            s, t = os.path.join(ROOT, *d.split("/")), os.path.join(rt, *d.split("/"))
+            os.makedirs(os.path.dirname(t), exist_ok=True)
+            (shutil.copytree if os.path.isdir(s) else shutil.copy2)(s, t)
         with open(os.path.join(stage, "README.txt"), "w", encoding="utf-8", newline="\r\n") as f:
             f.write(README.format(version=a.version))
         with open(os.path.join(stage, "THIRD_PARTY_RUNTIME.txt"), "w", encoding="utf-8", newline="\r\n") as f:
