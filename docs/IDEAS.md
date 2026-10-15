@@ -1,6 +1,6 @@
 # Ideas — intake for unscheduled proposals
 
-**Status:** IN PROGRESS (2026-10-14; 38 entries, I1..I38 - see the index for each one's state)
+**Status:** IN PROGRESS (2026-10-15; 39 entries, I1..I39 - see the index for each one's state)
 
 Nothing here is scheduled. This is the intake: an idea lands here with a
 feasibility rating and a first step, and leaves when it is promoted, built, or
@@ -83,6 +83,7 @@ rule ([`README.md`](README.md)) here too.
 | I36 | Our own ATRAC3plus decoder for the PSP's sound effects, voice and jingles, in place of the player's ffmpeg | platform | MEDIUM | open 2026-10-10 (the owner): **low priority** |
 | I37 | Grow the field's tile ring for wide mode as the PSP did (28 x 56 to 33 x 58 cells) instead of lowering the inset ([`psp-widescreen-placements.md`](psp-widescreen-placements.md) 5 and 6.1; 23 sites; about half a week) | display | MEDIUM | open 2026-10-12 (the owner: "I'm interested in growing the ring, let's place it as an idea for later"); measured for 21:9 2026-10-13: needed only for far cameras (known-defects D292) |
 | I38 | Draw the two edge sweeps (`EffectKind0D`'s slide, area 172's growing shade) mapped onto the wide picture, so they start and end past its edge in the original's frames ([`wide-staging.md`](wide-staging.md) 8) | display | HIGH | open 2026-10-14, from the ultrawide round: proposed, not built; the owner's call |
+| I39 | The Identify panel's element icons shaded by how weak the enemy is, not bright / dim | display | HIGH | open 2026-10-15, the owner: an argument for it, not now |
 
 ---
 
@@ -1589,3 +1590,18 @@ amendment.
 _(2026-10-14) open: the owner's call (leave, or the mapping)._
 _(2026-10-15) scheduled: the owner chose the mapping (logic's x kept, the draw
 mapped; a DIV-0041 amendment when built)._
+
+## I39 — Shade the element icons by how weak the enemy is
+
+**Ask (2026-10-15, the owner, on DIV-0128):** "There's maybe an argument to be
+made for some kind of bright -> dark scaling based on how weak they are, but
+for now going with the original brightness settings sounds correct."
+`Identify_DrawElements` reads one resistance byte per element (`+0xBF..0xC4`)
+and draws shade 0x80 at 1 or less (holy: 3 or less), else 0x30; a scale
+would map the byte's range onto the shade instead.
+**Kind:** display
+**Feasibility:** HIGH - one function (`src/game/magic_s12.cpp`); what the
+byte's values mean across enemies wants reading first.
+
+### Outcome
+_(2026-10-15) open: the original's two levels kept for now (the owner)._
