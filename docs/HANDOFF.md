@@ -46,6 +46,14 @@ the references `cn_<route>_orig2` / `_orig2b` in `analysis/statehash`) and, acro
 
 ## Pick up here
 
+0. **The player install and the alpha release** (`install/sources-gui`, 2026-10-15;
+   [`install-sources.md`](install-sources.md), [`releases/README.md`](releases/README.md)). Built and run end to
+   end from the release zip (STATUS); owed: the owner's eye on the Sources page and a play of an install it made
+   (a test install sits at `C:\Users\kerok\bx`, outside the repo), the owner's call on the numpy wheel's bundled
+   GCC runtime (GPL-3.0 with the runtime library exception; only `tools/at3.py` imports numpy) against
+   [`LICENSING.md`](LICENSING.md) section 4, then the PR, and the tag `v0.1.0-alpha.1` only at the owner's word -
+   its notes are [`releases/v0.1.0-alpha.1.md`](releases/v0.1.0-alpha.1.md), and the workflow makes a draft.
+
 1. **Review and merge the ultrawide round's PR** (PR #60). Every non-merge commit since `main` is signed off
    (`git log --format=%B main..wide/ultrawide-round`; CLAUDE.md rule 7). `ledger_check` 126 entries, 0 errors; the
    build and the headless `'*'` self-tests at `BOF3X_WIDE` unset, 1 and 2 pass on the fold-in's tip. The round's
