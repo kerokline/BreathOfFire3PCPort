@@ -37,7 +37,7 @@ import bof3x_home  # noqa: E402  (a release's home; a checkout keeps the repo de
 
 INSTALLS = os.path.join(ROOT, 'recipes', 'abc-installs.toml')
 KNOWN = os.path.join(ROOT, 'recipes', 'abc-known.toml')
-LAUNCHER_FILES = ('bof3x-launcher.exe', 'bof3x.dll', 'bof3x.exe')
+LAUNCHER_FILES = ('bof3x-launcher.exe', 'bof3x-launcher-dev.exe', 'bof3x.dll', 'bof3x.exe')   # -dev: the hosted runs (launcher.cpp ForwardToDevLauncher)
 EVERY = 30            # one frame a second of game time (30 logic frames a second)
 ATTRACT_FRAMES = 11000  # the attract sequence: about one cycle and the title before it
 
@@ -256,7 +256,7 @@ def users_of(folder):
     """The processes running from a launcher folder: a launcher or game exe
     under it, or a game whose bof3x.dll is the folder's. [(pid, path)]."""
     want = os.path.join(os.path.normcase(os.path.abspath(folder)), '')
-    ps = ("Get-Process -Name BOF3,bof3x,bof3x-launcher -ErrorAction SilentlyContinue | ForEach-Object { "
+    ps = ("Get-Process -Name BOF3,bof3x,bof3x-launcher,bof3x-launcher-dev -ErrorAction SilentlyContinue | ForEach-Object { "
           "$m = $_.Modules | Where-Object { $_.ModuleName -eq 'bof3x.dll' } | Select-Object -First 1; "
           "'{0}|{1}|{2}' -f $_.Id, $_.Path, $m.FileName }")
     out = subprocess.run(['powershell', '-NoProfile', '-Command', ps], capture_output=True, text=True).stdout

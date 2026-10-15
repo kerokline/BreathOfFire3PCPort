@@ -145,6 +145,7 @@ void InstallGeneratedIcon(const std::wstring& ours) {
     std::wprintf(L"bof3x-launcher: bof3x.exe now carries the icon generated from the game's data (DIV-0095)\n");
 }
 
+#if BOF3X_HOSTED
 // DIV-0062: the draw-item pool's room. The pool's items are linked into the
 // game's ordering table by 24-bit addresses, so its array must sit below
 // 16 MB - and by the time the DLL runs, the child's low memory is cut up by
@@ -207,6 +208,51 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
         Die(L"the game process could not load %ls.\nSee bof3x.log next to it, if one was written.",
             dll.c_str());
 }
+#else
+// The player's launcher (CMakeLists.txt bof3x_add_launcher): --host bof3 and
+// the hosted-only switches need code that writes into another process, which
+// this launcher does not hold - it hands the whole run to the developer's
+// launcher beside it, with the same arguments, environment and console or
+// pipes, and ends with its exit code, so the harnesses' commands keep their
+// meaning in a checkout. A release ships no developer launcher: it stops here.
+[[noreturn]] void ForwardToDevLauncher(int argc, wchar_t** argv) {
+    const std::wstring dev = OwnDirectory() + L"\\bof3x-launcher-dev.exe";
+    if (!FileExists(dev))
+        Die(L"--host bof3 and the hosted-only switches (BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_CALLTRACE, "
+            L"BOF3X_MP3=original) are the developer launcher's, bof3x-launcher-dev.exe, which a source build "
+            L"writes beside this one; a release does not ship it.");
+    std::wstring line = L"\"" + dev + L"\"";
+    for (int i = 1; i < argc; ++i) line += L" \"" + std::wstring(argv[i]) + L"\"";
+    STARTUPINFOW si{};
+    si.cb = sizeof si;
+    HANDLE in = GetStdHandle(STD_INPUT_HANDLE), out = GetStdHandle(STD_OUTPUT_HANDLE),
+           err = GetStdHandle(STD_ERROR_HANDLE);
+    // Redirected - a harness's pipe or a file, not a console - the developer
+    // launcher writes to the same handles as this one would.
+    auto redirected = [](HANDLE h) {
+        if (!h || h == INVALID_HANDLE_VALUE) return false;
+        const DWORD type = GetFileType(h);
+        return type == FILE_TYPE_PIPE || type == FILE_TYPE_DISK;
+    };
+    const bool piped = redirected(out) && redirected(err);
+    if (piped) {
+        si.dwFlags = STARTF_USESTDHANDLES;
+        si.hStdInput = in;
+        si.hStdOutput = out;
+        si.hStdError = err;
+    }
+    std::fflush(stdout);
+    std::fflush(stderr);
+    PROCESS_INFORMATION pi{};
+    if (!CreateProcessW(dev.c_str(), line.data(), nullptr, nullptr, piped, 0, nullptr, nullptr, &si, &pi))
+        Die(L"CreateProcess failed for %ls (%lu)", dev.c_str(), GetLastError());
+    CloseHandle(pi.hThread);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD code = 1;
+    GetExitCodeProcess(pi.hProcess, &code);
+    ExitProcess(code);
+}
+#endif
 
 // The launcher is a windowed program, so a player who double-clicks it sees
 // its window and no console (docs/launcher-settings.md section 2). Started
@@ -282,6 +328,9 @@ int wmain(int argc, wchar_t** argv) {
     // fuzz, the call trace, Capcom's MP3 decoder; bof3x.exe refuses each), so
     // the documented self-test and A/B commands keep their meaning.
     const bool hosted = host_asked >= 0 ? host_asked == 1 : HostedOnlyAsked();
+#if !BOF3X_HOSTED
+    if (hosted) ForwardToDevLauncher(argc, argv);
+#endif
     if (host_asked < 0 && hosted)
         std::fwprintf(stderr, L"bof3x-launcher: a hosted-only switch is set (BOF3X_ORIGINAL, BOF3X_SHADOW, "
                               L"BOF3X_CALLTRACE or BOF3X_MP3=original): starting the hosted build, as --host bof3\n");
@@ -491,6 +540,7 @@ int wmain(int argc, wchar_t** argv) {
         return 0;
     }
 
+#if BOF3X_HOSTED
     std::wstring cmdline = L"\"" + exe + L"\"" + game_args;
     // Current directory = the game directory: BOF3.exe opens DAT\, BGM\ and SND\
     // by relative path.
@@ -517,4 +567,7 @@ int wmain(int argc, wchar_t** argv) {
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
     return 0;
+#else
+    Die(L"the hosted build reached the player's launcher, which hands it to bof3x-launcher-dev.exe above");
+#endif
 }

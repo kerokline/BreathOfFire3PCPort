@@ -745,8 +745,12 @@ add_custom_target(bof3x_exe ALL DEPENDS "${_exe_stamp}")
 # no toolkit, nothing vendored, so the launcher stays one dependency-free exe
 # (docs/launcher-settings.md section 2).
 enable_language(RC)
-add_executable(bof3x_launcher
-  src/launcher/launcher.cpp
+# Two launchers from one set of sources (docs/launcher-settings.md section 2):
+# bof3x-launcher.exe, the player's, holds no code that writes into another
+# process; bof3x-launcher-dev.exe (BOF3X_HOSTED=1) also starts the hosted build
+# (--host bof3: BOF3.exe with bof3x.dll injected) for the harnesses, and the
+# player's hands such a run to it. The release ships only the player's.
+add_library(bof3x_launcher_parts OBJECT
   src/launcher/config.cpp
   src/launcher/config_dialog.cpp
   src/launcher/exe_image.cpp
@@ -761,23 +765,31 @@ add_executable(bof3x_launcher
   src/common/cache_manifest.cpp
   src/common/home.cpp
   src/input/bindings.cpp
-  src/input/pad_sdl.cpp
-  src/launcher/launcher.rc)
+  src/input/pad_sdl.cpp)
 # symbols.gen.h for exe_image.cpp alone: Key_TableDefault is read out of the
 # player's BOF3.exe, not copied (docs/exe-table-audit.md).
-target_include_directories(bof3x_launcher PRIVATE src third_party "${_gen_dir}")
-add_dependencies(bof3x_launcher bof3x_symbols bof3x_suites)
+target_include_directories(bof3x_launcher_parts PRIVATE src third_party "${_gen_dir}")
+target_link_libraries(bof3x_launcher_parts PRIVATE SDL3::SDL3-static)
+add_dependencies(bof3x_launcher_parts bof3x_symbols bof3x_suites)
+function(bof3x_add_launcher target output hosted)
+  add_executable(${target} src/launcher/launcher.cpp src/launcher/launcher.rc $<TARGET_OBJECTS:bof3x_launcher_parts>)
+  target_compile_definitions(${target} PRIVATE BOF3X_HOSTED=${hosted})
+  target_include_directories(${target} PRIVATE src third_party "${_gen_dir}")
+  add_dependencies(${target} bof3x_symbols bof3x_suites)
 # SDL3 here too, static (docs/launcher-settings.md section 2): the Controls
 # dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
 # and circle as navigation.
 # shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW);
 # comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW);
 # windowscodecs: the title page's picture, decoded by WIC (docs/launcher-settings.md 2a).
-target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static)
-# -mwindows: no console of its own; wmain still the entry, AttachParentConsole
-# (launcher.cpp) writes to the terminal it was started from.
-target_link_options(bof3x_launcher PRIVATE -municode -mwindows)
-set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")
+  target_link_libraries(${target} PRIVATE bcrypt comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static)
+  # -mwindows: no console of its own; wmain still the entry, AttachParentConsole
+  # (launcher.cpp) writes to the terminal it was started from.
+  target_link_options(${target} PRIVATE -municode -mwindows)
+  set_target_properties(${target} PROPERTIES OUTPUT_NAME "${output}")
+endfunction()
+bof3x_add_launcher(bof3x_launcher bof3x-launcher 0)
+bof3x_add_launcher(bof3x_launcher_dev bof3x-launcher-dev 1)
 # The Jukebox's names (docs/music-player.md section 4), beside the launcher.
 # Edit data/music-names.tsv, not the copy: every build refreshes it.
 # A rule of its own, so an edit to the file alone is copied too.
