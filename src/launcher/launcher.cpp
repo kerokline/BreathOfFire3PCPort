@@ -472,6 +472,8 @@ int wmain(int argc, wchar_t** argv) {
         // relative path); nothing else to do from here - it maps the player's
         // data, binds its imports and starts the game on its own main thread.
         std::wstring line = L"\"" + ours + L"\"" + game_args;
+        // Started by us: bof3x.exe started any other way hands over to us (exe_host.cpp HandOffToLauncher).
+        SetEnvironmentVariableW(L"BOF3X_LAUNCHER", L"1");
         if (!CreateProcessW(ours.c_str(), line.data(), nullptr, nullptr, FALSE, 0, nullptr, game_dir.c_str(), &si, &pi))
             Die(L"CreateProcess failed for %ls (%lu)", ours.c_str(), GetLastError());
         if (SelfTestOnly()) {   // as the hosted path: the pid, then the game process's exit code

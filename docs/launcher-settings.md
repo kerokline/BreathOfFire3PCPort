@@ -303,6 +303,19 @@ build/bof3x-launcher.exe --game bof3 --config     # dialog, always
 build/bof3x-launcher.exe --game bof3 --no-config  # never; for scripted runs
 ```
 
+**Double-clicking `bof3x.exe`** (2026-10-15, the owner) starts the game as
+the launcher would: the game is not where the install's folders and settings
+are resolved, so `bof3x.exe` started by anything but the launcher (which sets
+`BOF3X_LAUNCHER`) starts the `bof3x-launcher.exe` beside it with
+`--no-config` and ends (`exe_host.cpp` `HandOffToLauncher`). The game folder,
+the cache, the language and the layers are then the launcher's, from that
+folder's `bof3x.ini` and its `game\` and `cache\`; no settings window. That
+launcher's environment carries `BOF3X_HANDOFF`, so the game never hands over
+twice; with no launcher beside `bof3x.exe`, it starts as before and says what
+it lacks. Checked: `bof3x.exe` started directly in a disc-built install's
+home with `BOF3X_SELFTEST_ONLY=1` - handed over, the launcher's game found
+`game\` and the cache (`.data from BOF3X_EXEIMAGE's cache`), self-test done.
+
 `bof3x.ini` sits **next to the launcher**, not in the game directory — the
 game directory stays the player's, `BOF3.CFG` aside. It is plain text with
 comments and can be hand-edited:

@@ -379,6 +379,39 @@ char* PastProgramName(const char* line) {
     return const_cast<char*>(p);
 }
 
+// bof3x.exe double-clicked, or started by anything but the launcher (which
+// sets BOF3X_LAUNCHER): the game folder, the cache, the language and the
+// layers are the launcher's to resolve from the install's folder and its
+// bof3x.ini, so the bof3x-launcher.exe beside us is started with --no-config
+// - the game straight away, as the launcher would start it - and this
+// process ends (the owner, 2026-10-15). BOF3X_HANDOFF marks that launcher's
+// environment, so a launcher that does not set BOF3X_LAUNCHER cannot loop us.
+// With no launcher beside us, nothing changes: the checks below say what is
+// missing.
+void HandOffToLauncher() {
+    if (EnvSet("BOF3X_LAUNCHER") || EnvSet("BOF3X_HANDOFF")) return;
+    wchar_t self[MAX_PATH];
+    const DWORD n = GetModuleFileNameW(nullptr, self, MAX_PATH);
+    if (n == 0 || n >= MAX_PATH) return;
+    std::wstring dir(self, n);
+    dir.resize(dir.find_last_of(L"\\/") + 1);
+    const std::wstring launcher = dir + L"bof3x-launcher.exe";
+    if (GetFileAttributesW(launcher.c_str()) == INVALID_FILE_ATTRIBUTES) return;
+    SetEnvironmentVariableW(L"BOF3X_HANDOFF", L"1");
+    std::wstring line = L"\"" + launcher + L"\" --no-config";
+    STARTUPINFOW si{};
+    si.cb = sizeof si;
+    PROCESS_INFORMATION pi{};
+    if (!CreateProcessW(launcher.c_str(), line.data(), nullptr, nullptr, FALSE, 0, nullptr, dir.c_str(), &si, &pi))
+        Fatal("bof3x.exe was not started by bof3x-launcher, and starting %ls failed (%lu)", launcher.c_str(), GetLastError());
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    Log("Engine_Main: not started by bof3x-launcher: handed over to %ls --no-config (pid %lu); ending",
+        launcher.c_str(), pi.dwProcessId);
+    LogClose();
+    TerminateProcess(GetCurrentProcess(), 0);
+}
+
 }  // namespace
 }  // namespace bof3
 
@@ -388,6 +421,7 @@ extern "C" __declspec(dllexport) int __cdecl Engine_Main(void* hinstance, const 
     if (entered) Fatal("Engine_Main entered twice");
     entered = true;
     if (!IsExeHost()) Fatal("Engine_Main in the hosted build: only bof3x.exe's entry calls it");
+    HandOffToLauncher();
     HMODULE module = nullptr;
     GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
                        reinterpret_cast<LPCWSTR>(&Engine_Main), &module);
