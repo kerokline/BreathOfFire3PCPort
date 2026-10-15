@@ -86,6 +86,7 @@ rule ([`README.md`](README.md)) here too.
 | I39 | The Identify panel's element icons shaded by how weak the enemy is, not bright / dim | display | HIGH | open 2026-10-15, the owner: an argument for it, not now |
 | I40 | Port the importer to C++ inside the launcher, so a release needs no bundled Python ([`install-sources.md`](install-sources.md) 7) | platform | MEDIUM | open 2026-10-15 (the owner: bundle Python now, port later) |
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
+| I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | open 2026-10-15 (the owner: for later; rebuilding only what changed the biggest win) |
 
 ---
 
@@ -1676,6 +1677,67 @@ convert them back ([`install-sources.md`](install-sources.md) section 4).
 Make a CHD of the US disc with `chdman createcd`, list the codecs its hunks
 use, and decide whether the build's needs (the data track's sectors, XA
 included) avoid FLAC entirely.
+
+### Outcome
+_(2026-10-15) open._
+
+---
+
+## I42 — Make the install faster
+
+**Ask (2026-10-15):** the owner, testing the Sources page by building from
+some sources and then adding more: worth looking for ways to speed the
+install up, for later.
+**Kind:** tooling
+**Feasibility:** MEDIUM   **Gated on:** nothing; the first step is a measurement
+
+### What is measured
+- A setup takes **171 to 249 s** on this machine
+  ([`install-sources.md`](install-sources.md) section 6): the US `.cue` alone
+  243 s, the PC folder with the US `.cue` 177 s, the PSP-JP `.iso` 249 s; a
+  second run over an existing install is barely faster (227, 171, 238 s).
+- **ffmpeg looks like most of it:** the same PSP-JP `.iso` with no ffmpeg on
+  the PATH took **22 s** against 249 s with it - the movie and the PSP's
+  ATRAC3plus audio skipped. The first place to look.
+- **Every add rebuilds the whole install from every listed source**
+  (section 5): a new `cache.new` and `game.new`, swapped in at the end. Adding
+  a third disc to a two-disc install redoes the first two. A `.zip` source is
+  unpacked again each time.
+- Identifying a source is not the slow part: 16-21 s for an image's first
+  read, 1-3 s once it is in the file cache; a `.zip` by its member's hash in
+  under 4 s.
+- Not measured: how a setup's time splits between the base build, each
+  language layer, the movie's conversion (ffmpeg), the PSP's audio
+  (ATRAC3plus by ffmpeg), the copy into `game\` and the swap.
+
+**The owner's read (2026-10-15):** rebuilding only what a new source adds is
+the biggest win - an install needs one intro movie, one copy of the
+PlayStation's music, one copy of most `DAT` files. The log agrees: one
+setup already builds each of those once (a three-source setup,
+`psx-us` + `psx-eu-en` + `psp-eu`: `base/exe from psx-us`, a language layer
+for each disc, `base/fmv converting LOGO/CAPCOM30.STR from psx-us ... (about
+two minutes)`), but **the next add builds all of it again**, though a disc
+added after the base changes none of it. So the work is to keep the base -
+movie, music, the base's `DAT` files - across setups, and build only the new
+source's own layers.
+
+### What could make it faster
+- **Measure first.** Time each step of `setup` in `setup.log` (it already
+  logs the steps), for a disc-only, a PC + disc and a PSP-only install.
+- **Rebuild only what changed** (the owner's pick). The cache is a base and layers
+  ([`ASSET_SOURCES.md`](ASSET_SOURCES.md) section 3). A new source that only
+  adds a language, or the PSP's extras, needs only its own layer built and
+  installed, not the base again - if the cache can say which layers came from
+  which sources.
+- **Convert once.** ffmpeg's output - the movie, the PSP's audio - kept
+  per source (keyed by the source's hash) and reused by every later setup,
+  and the conversions run side by side rather than one after another.
+- **Keep what does not change.** The unpacked `.zip`, the PC folder's copy
+  when the PC source is unchanged.
+- **Run independent work at once.** Each language layer is built on its own
+  (`tools/loc_build.py`), and ffmpeg's conversions are separate processes.
+- Whatever changes, keep the swap: the old install stays working until the
+  new one is complete.
 
 ### Outcome
 _(2026-10-15) open._

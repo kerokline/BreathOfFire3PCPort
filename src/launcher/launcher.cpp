@@ -208,9 +208,27 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
             dll.c_str());
 }
 
+// The launcher is a windowed program, so a player who double-clicks it sees
+// its window and no console (docs/launcher-settings.md section 2). Started
+// from a terminal, it writes its lines there as the console program it was
+// did; started with stdout and stderr redirected (a script's pipe or file),
+// the C runtime already holds those, and nothing changes for the harnesses.
+void AttachParentConsole() {
+    auto redirected = [](DWORD which) {
+        HANDLE h = GetStdHandle(which);
+        return h != nullptr && h != INVALID_HANDLE_VALUE && GetFileType(h) != FILE_TYPE_UNKNOWN;
+    };
+    const bool out = redirected(STD_OUTPUT_HANDLE), err = redirected(STD_ERROR_HANDLE);
+    if (out && err) return;
+    if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;   // double-clicked: no terminal to write to
+    if (!out) std::freopen("CONOUT$", "w", stdout);
+    if (!err) std::freopen("CONOUT$", "w", stderr);
+}
+
 }  // namespace
 
 int wmain(int argc, wchar_t** argv) {
+    AttachParentConsole();
     std::wstring game_dir;
     std::wstring game_args;
     // Neither flag given: the settings file decides, and its default is to

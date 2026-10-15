@@ -1222,8 +1222,8 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         Layout(dlg, *state);
         ShowPage(dlg, *state, g_reopen);
         g_reopen = kPageTitle;
-        // The launcher is a console program, so its window can open behind the
-        // window that started it.
+        // Started from a terminal or a script, the launcher's window can open
+        // behind the window that started it.
         SetForegroundWindow(dlg);
         return FALSE;   // ShowPage set the focus
     }

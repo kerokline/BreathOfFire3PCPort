@@ -774,7 +774,9 @@ add_dependencies(bof3x_launcher bof3x_symbols bof3x_suites)
 # comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW);
 # windowscodecs: the title page's picture, decoded by WIC (docs/launcher-settings.md 2a).
 target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static)
-target_link_options(bof3x_launcher PRIVATE -municode)
+# -mwindows: no console of its own; wmain still the entry, AttachParentConsole
+# (launcher.cpp) writes to the terminal it was started from.
+target_link_options(bof3x_launcher PRIVATE -municode -mwindows)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")
 # The Jukebox's names (docs/music-player.md section 4), beside the launcher.
 # Edit data/music-names.tsv, not the copy: every build refreshes it.
