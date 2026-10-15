@@ -33,6 +33,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import abc_compare  # noqa: E402
 import abc_known  # noqa: E402
+import bof3x_home  # noqa: E402  (a release's home; a checkout keeps the repo defaults)
 
 INSTALLS = os.path.join(ROOT, 'recipes', 'abc-installs.toml')
 KNOWN = os.path.join(ROOT, 'recipes', 'abc-known.toml')
@@ -782,7 +783,7 @@ def main():
                          'install\'s launcher ini decides, as before')
     ap.add_argument('--statehash', action='store_true', help='also record the state hash and diff it per pair (context)')
     ap.add_argument('--statehash-skip', help='BOF3X_STATEHASH_SKIP for every run (e.g. a union of exe_tables.py gate-skip lists)')
-    ap.add_argument('--build', default=os.path.join(ROOT, 'build'), help='where prepare takes the launcher, DLL and exe from')
+    ap.add_argument('--build', default=bof3x_home.launcher_dir(), help='where prepare takes the launcher, DLL and exe from')
     ap.add_argument('--tol', type=int, default=abc_compare.TOL)
     ap.add_argument('--min-pixels', type=int, default=abc_compare.MIN_PIXELS)
     ap.add_argument('--sheet-rows', type=int, default=16)
