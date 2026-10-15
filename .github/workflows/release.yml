@@ -6,11 +6,18 @@
 #
 # The release notes are docs/releases/<tag>.md, written before the tag is
 # pushed; the job stops if that file is missing.
+#
+# A push to main builds the same zip as "latest" (the owner, 2026-10-15: easy
+# to install current builds): the `latest` tag moves to that commit and the
+# published pre-release "latest" gets the new zip, always at
+# releases/download/latest/bof3x-latest-win.zip. It is never marked GitHub's
+# latest release, so a published v* release keeps that.
 name: Release
 
 on:
   push:
     tags: ["v*"]
+    branches: [main]
   workflow_dispatch:
     inputs:
       tag:
@@ -22,7 +29,8 @@ permissions:
 
 concurrency:
   group: release-${{ github.ref }}
-  cancel-in-progress: false
+  # a newer push to main supersedes a latest build still running; a tag's never
+  cancel-in-progress: ${{ github.ref_type == 'branch' }}
 
 env:
   # Keep in step with build.yml (docs/SCAFFOLDING.md section 4).
@@ -31,21 +39,31 @@ env:
 
 jobs:
   release:
-    name: Draft release
+    name: ${{ github.ref_type == 'branch' && 'Latest build' || 'Draft release' }}
     runs-on: ubuntu-24.04
     steps:
       - name: The tag
         run: |
           set -euo pipefail
+          if [ "${{ github.ref_type }}" = branch ]; then
+            # main: the zip is named latest, its README carries the commit
+            echo "TAG=latest" >> "$GITHUB_ENV"
+            echo "VERSION=latest-${GITHUB_SHA::8}" >> "$GITHUB_ENV"
+            echo "REF=$GITHUB_SHA" >> "$GITHUB_ENV"
+            exit 0
+          fi
           tag="${{ github.event.inputs.tag || github.ref_name }}"
           case "$tag" in v*) ;; *) echo "::error::not a release tag: $tag"; exit 1;; esac
           echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "VERSION=$tag" >> "$GITHUB_ENV"
+          echo "REF=$tag" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.TAG }}
+          ref: ${{ env.REF }}
 
       - name: Release notes exist
+        if: env.TAG != 'latest'
         run: |
           test -f "docs/releases/$TAG.md" || {
             echo "::error file=docs/releases/README.md::docs/releases/$TAG.md is missing - write the notes, then tag"
@@ -95,9 +113,10 @@ jobs:
         run: python tools/importer.py check
 
       - name: Lay out the release zip
-        run: python tools/make_release.py --version "$TAG" --build build --out "build/release/bof3x-$TAG-win.zip"
+        run: python tools/make_release.py --version "$VERSION" --build build --out "build/release/bof3x-$TAG-win.zip"
 
       - name: Draft pre-release
+        if: env.TAG != 'latest'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -106,3 +125,30 @@ jobs:
             --draft --prerelease --verify-tag \
             --title "Breath of Fire III - bof3x $TAG" \
             --notes-file "docs/releases/$TAG.md"
+
+      # main: the latest tag moved to this commit, the zip replaced, the notes
+      # naming the commit. Published, not a draft: this is the download link.
+      - name: Latest pre-release
+        if: env.TAG == 'latest'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git tag -f latest "$GITHUB_SHA"
+          git push -f origin latest
+          notes="$RUNNER_TEMP/latest.md"
+          {
+            echo "**The current build of \`main\`** - commit ${GITHUB_SHA::8}, built $(date -u +'%Y-%m-%d %H:%M UTC')."
+            echo
+            echo "Replaced on every push to main: not a release, not checked by hand. For a release, take a"
+            echo "\`v*\` one. The zip holds no game data: unzip it into a folder with a short path, run"
+            echo "\`bof3x-launcher.exe\` and add your own copy of the game on the Sources page"
+            echo "(docs/releases/README.md; the latest release's notes say more)."
+          } > "$notes"
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest "build/release/bof3x-latest-win.zip" --clobber
+            gh release edit latest --prerelease --latest=false --title "Latest build (main)" --notes-file "$notes"
+          else
+            gh release create latest "build/release/bof3x-latest-win.zip" --prerelease --latest=false \
+              --verify-tag --title "Latest build (main)" --notes-file "$notes"
+          fi
