@@ -1,8 +1,10 @@
 # bof3x.exe's icon, generated on the player's machine (DIV-0095)
 
-**Status:** BUILT (merged with state 3, PR #53; verified 2026-10-11 on `tooling/exe-icon`: the self-test against
-`make_icon.py`'s `.ico`, every pixel; two headless load-screen runs; not yet seen by
-the owner)
+**Status:** BUILT, **amended 2026-10-15**: the whelp is the game window's
+icon only; the executables' file icon is our "III" from the build, and nothing
+rewrites an executable any more (section 6, DIV-0095's amendment). Sections
+1-5 are the record of the generated file icon (merged with state 3, PR #53;
+verified 2026-10-11 on `tooling/exe-icon`)
 
 The executable's icon is not shipped. It is cut from the game's own data on
 the player's machine, the first time the game shows the picture, by the
@@ -107,3 +109,36 @@ exe host refuses; it is no longer made there (`src/game/crt_rest.cpp`).
 - A desktop at another DPI: `SM_CXICON` there is still 32 while the process
   is not DPI-aware ([`state3-build.md`](state3-build.md) 2.1); the sizes
   follow whatever it answers.
+
+## 6. Amended 2026-10-15: our icon on the file, the whelp on the window
+
+Windows Defender quarantined `bof3x-launcher.exe` as
+`Behavior:Win32/DefenseEvasion.A!ml` when started from Explorer. The game
+writing a modified copy of its own executable (`bof3x.exe.new`, section 2's
+"File icon" row) for the launcher to move into place and run is the pattern
+such models flag, and a rewritten executable cannot carry a code signature.
+The owner chose an icon of our own instead: bold white "III" in Palatino
+Linotype on a black square.
+
+- `data/icon/bof3x.ico`, committed (our lettering, not Capcom's art), written
+  by `tools/make_brand_icon.py`: 256 px the Palatino Bold glyph; 16, 24, 32
+  and 48 px drawn by hand on whole pixels in the glyph's proportions, where
+  the glyph's fractional stems grey out. The build does not run the script
+  (the release builds on Linux, without the font).
+- `tools/make_exe.py` puts its five images in `bof3x.exe` as `RT_ICON` 1..5
+  and the group `BOF3_ICON` (what `Game_WinMain`'s `LoadIconA` asks for), and
+  verifies them; `launcher.rc` gives both launchers `IDI_BOF3X`, and the
+  launcher's window sets it as its title-bar and taskbar icon.
+- The engine still renders the whelp at the load screen (section 2's "Window
+  icon" row) and sets it on the window; the "File icon" and "Install" rows
+  are gone, with `src/common/icon_stamp.*`. The launcher deletes
+  `bof3x.exe.new`, `bof3x.icon` and `bof3x.icon-work.exe` an older build
+  left beside it.
+- The self-test (section 3) keeps its pixel comparison and the window icons;
+  it no longer writes `bof3x.icon-test.exe`.
+
+Checked 2026-10-15: the three executables' icons as Explorer extracts them
+(`ExtractAssociatedIcon`), "III"; a headless self-test from a disc-built
+install's home, exit 0, an old `bof3x.exe.new` and `bof3x.icon` deleted and
+nothing written; `dialog_test.py`, 27 checks. Not yet: the owner's eye, and
+whether Defender leaves the launcher alone when started from Explorer.

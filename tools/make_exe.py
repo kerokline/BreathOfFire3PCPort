@@ -95,35 +95,34 @@ def read_layout(path):
     return out
 
 
-def placeholder_icon():
-    """A 32 x 32, 32 bpp icon of ours: an ember-orange disc on transparency.
-    A placeholder until the owner's artwork (docs/state3-design.md section 10)."""
-    size = 32
-    pixels = bytearray()
-    mask = bytearray()
-    for y in range(size - 1, -1, -1):   # bottom-up
-        row_mask = 0
-        for x in range(size):
-            dx, dy = x - 15.5, y - 15.5
-            r = (dx * dx + dy * dy) ** 0.5
-            if r <= 14.5:
-                t = r / 14.5
-                red, green, blue = 0xF0, int(0xC0 - 0x80 * t), int(0x40 - 0x30 * t)
-                pixels += bytes((blue, green, red, 0xFF))
-            else:
-                pixels += b'\0\0\0\0'
-                row_mask |= 1 << (31 - x)
-        mask += struct.pack('>I', row_mask)
-    header = struct.pack('<IiiHHIIiiII', 40, size, size * 2, 1, 32, 0, len(pixels) + len(mask), 0, 0, 0, 0)
-    image = header + bytes(pixels) + bytes(mask)
-    group = struct.pack('<HHH', 0, 1, 1) + struct.pack('<BBBBHHIH', size, size, 0, 0, 1, 32, len(image), 1)
-    return image, group
+# Ours: bold white "III" in Palatino on black (tools/make_brand_icon.py, the
+# owner's choice of 2026-10-15), committed, so the executable carries its icon
+# from the build and is never rewritten on the player's machine.
+ICON_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'icon', 'bof3x.ico')
 
 
-def build_rsrc(rva, icon, group, manifest):
-    """A resource tree: RT_ICON 1, RT_GROUP_ICON "BOF3_ICON", RT_MANIFEST 1, language neutral."""
+def brand_icon(path=ICON_FILE):
+    """The .ico's images, each an RT_ICON (ids 1..n), and the RT_GROUP_ICON
+    naming them: an .ico's directory with each entry's file offset replaced
+    by its resource id."""
+    with open(path, 'rb') as f:
+        data = f.read()
+    reserved, kind, count = struct.unpack_from('<HHH', data, 0)
+    if reserved != 0 or kind != 1 or count == 0:
+        sys.exit(f'make_exe: {path} is not an icon file')
+    images, group = [], struct.pack('<HHH', 0, 1, count)
+    for i in range(count):
+        w, h, colours, res, planes, bits, size, at = struct.unpack_from('<BBBBHHII', data, 6 + 16 * i)
+        images.append(data[at:at + size])
+        group += struct.pack('<BBBBHHIH', w, h, colours, res, planes, bits, size, i + 1)
+    return images, group
+
+
+def build_rsrc(rva, icons, group, manifest):
+    """A resource tree: RT_ICON 1..n, RT_GROUP_ICON "BOF3_ICON", RT_MANIFEST 1, language neutral."""
     RT_ICON, RT_GROUP_ICON, RT_MANIFEST = 3, 14, 24
-    types = [(RT_ICON, [(1, icon)]), (RT_GROUP_ICON, [(ICON_NAME, group)]), (RT_MANIFEST, [(1, manifest)])]
+    types = [(RT_ICON, [(i + 1, icon) for i, icon in enumerate(icons)]), (RT_GROUP_ICON, [(ICON_NAME, group)]),
+             (RT_MANIFEST, [(1, manifest)])]
 
     def dir_header(named, ids):
         return struct.pack('<IIHHHH', 0, 0, 0, 0, named, ids)
@@ -132,10 +131,10 @@ def build_rsrc(rva, icon, group, manifest):
     # the data entries, then the name strings, then the data.
     n_names = sum(len(names) for _, names in types)
     root_size = 16 + 8 * len(types)
-    type_dir_size = 16 + 8          # one name each
+    type_dir_sizes = [16 + 8 * len(names) for _, names in types]   # a directory of its names each
     lang_dir_size = 16 + 8          # one language each
     off_type_dirs = root_size
-    off_lang_dirs = off_type_dirs + type_dir_size * len(types)
+    off_lang_dirs = off_type_dirs + sum(type_dir_sizes)
     off_data_entries = off_lang_dirs + lang_dir_size * n_names
     off_strings = off_data_entries + 16 * n_names
     name_str = struct.pack('<H', len(ICON_NAME)) + ICON_NAME.encode('utf-16-le')
@@ -143,7 +142,7 @@ def build_rsrc(rva, icon, group, manifest):
 
     out = bytearray(dir_header(0, len(types)))
     for i, (t, _) in enumerate(types):
-        out += struct.pack('<II', t, 0x80000000 | (off_type_dirs + i * type_dir_size))
+        out += struct.pack('<II', t, 0x80000000 | (off_type_dirs + sum(type_dir_sizes[:i])))
     k = 0
     for t, names in types:
         named = sum(1 for n, _ in names if isinstance(n, str))
@@ -250,8 +249,8 @@ def write(layout, out_path):
     entry = build_entry(base, slots)
     assert len(entry) < SECTION_ALIGN
     rsrc_rva = idata_rva + align(len(idata), SECTION_ALIGN)
-    icon, group = placeholder_icon()
-    rsrc = build_rsrc(rsrc_rva, icon, group, MANIFEST)
+    icons, group = brand_icon()
+    rsrc = build_rsrc(rsrc_rva, icons, group, MANIFEST)
     size_of_image = rsrc_rva + align(len(rsrc), SECTION_ALIGN)
 
     pool_init = POOL_STAMP
@@ -365,7 +364,8 @@ def verify(layout, out_path, dll_path):
     check('imports', pe.imports(), [(d, list(f)) for d, f in (KERNEL32, ENGINE)])
     res = pe.resources()
     keys = sorted(((t, str(n), l) for t, n, l in res))
-    check('resources', keys, [(3, '1', 0), (14, ICON_NAME, 0), (24, '1', 0)])
+    check('resources', keys, sorted([(3, str(i + 1), 0) for i in range(len(brand_icon()[0]))] +
+                                    [(14, ICON_NAME, 0), (24, '1', 0)]))
     manifest = res.get((24, 1, 0), b'')
     for needle in (b'<activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>',
                    b'<longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>',

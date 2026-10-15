@@ -76,6 +76,25 @@ more, SatPixie's Options, Cheats, Controls and its Bind capture, all
 dependency). A dialog resource is what a 2001-era game launcher would have
 used, and here it is also the choice that vendors nothing (`CLAUDE.md` rule 5).
 
+**Two launchers (2026-10-15).** Windows Defender quarantined the launcher as
+`Behavior:Win32/DefenseEvasion.A!ml` when started from Explorer, the day it
+became a windowed program. A windowed program that can write into another
+process (the hosted build's DLL injection: `VirtualAllocEx`,
+`WriteProcessMemory`, `CreateRemoteThread`) is what such models flag. So the
+build makes two from the same sources (`CMakeLists.txt` `bof3x_add_launcher`):
+**`bof3x-launcher.exe`**, the player's, without that code - its imports hold
+none of those functions - and **`bof3x-launcher-dev.exe`** (`BOF3X_HOSTED=1`),
+with it. Given `--host bof3` or a hosted-only switch (`BOF3X_ORIGINAL`,
+`BOF3X_SHADOW`, `BOF3X_CALLTRACE`, `BOF3X_MP3=original`), the player's launcher
+starts the developer's beside it with the same arguments, environment and
+redirected output, and ends with its exit code (`ForwardToDevLauncher`), so
+every documented harness command keeps its meaning; without one beside it -
+a release ships only the player's - it stops with that sentence. Checked: a
+hosted self-test (`BOF3X_SHADOW=EffectKind5B_Fade`) through the player's
+launcher, output to a file and to a pipe - the developer launcher's lines,
+exit 0; with no developer launcher, the refusal and exit 1;
+`dialog_test.py` on the player's, its 27 checks.
+
 ## 2a. The window: a title page and Configure (2026-10-15)
 
 From the owner's two mock-ups. One `DIALOGEX` (`IDD_CONFIG`) with two faces:
@@ -302,6 +321,19 @@ build/bof3x-launcher.exe --game bof3              # dialog, unless hidden
 build/bof3x-launcher.exe --game bof3 --config     # dialog, always
 build/bof3x-launcher.exe --game bof3 --no-config  # never; for scripted runs
 ```
+
+**Double-clicking `bof3x.exe`** (2026-10-15, the owner) starts the game as
+the launcher would: the game is not where the install's folders and settings
+are resolved, so `bof3x.exe` started by anything but the launcher (which sets
+`BOF3X_LAUNCHER`) starts the `bof3x-launcher.exe` beside it with
+`--no-config` and ends (`exe_host.cpp` `HandOffToLauncher`). The game folder,
+the cache, the language and the layers are then the launcher's, from that
+folder's `bof3x.ini` and its `game\` and `cache\`; no settings window. That
+launcher's environment carries `BOF3X_HANDOFF`, so the game never hands over
+twice; with no launcher beside `bof3x.exe`, it starts as before and says what
+it lacks. Checked: `bof3x.exe` started directly in a disc-built install's
+home with `BOF3X_SELFTEST_ONLY=1` - handed over, the launcher's game found
+`game\` and the cache (`.data from BOF3X_EXEIMAGE's cache`), self-test done.
 
 `bof3x.ini` sits **next to the launcher**, not in the game directory — the
 game directory stays the player's, `BOF3.CFG` aside. It is plain text with

@@ -202,7 +202,7 @@ _Verified 2026-09-24; the disc-only, A/B/C, state-hash, WAV and save lines 2026-
   copy with its own `bof3x.ini` (or none: self-tests and references want an ini-less copy, Traps). End a run with
   `taskkill //F //IM BOF3.exe` only for a game you started (the runners do exactly that now,
   [`world-map.md`](world-map.md) §6); batches run detached.
-- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config`:
+- **Self-tests, headless:** `BOF3X_SELFTEST_ONLY=1 BOF3X_SHADOW='*' build/bof3x-launcher.exe --game <dir> --no-config` (a hosted run: the player's launcher hands it to `bof3x-launcher-dev.exe` beside it since 2026-10-15, so a clean launcher copy takes that file too, [`launcher-settings.md`](launcher-settings.md) 2):
   exit 0 passed, 3 a Fatal ([`SCAFFOLDING.md`](SCAFFOLDING.md) §2). Shadow names per module are in each module's
   doc; comma-separated lists work.
 - **A disc-only install** ([`disc-only-install.md`](disc-only-install.md)): `python tools/importer.py build --source

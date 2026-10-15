@@ -1,6 +1,7 @@
-// DIV-0095: bof3x.exe's icon, generated on the player's machine from the
-// game's own data (docs/exe-icon.md). Exe host only: the hosted build keeps
-// Capcom's icon from BOF3.exe's .rsrc.
+// DIV-0095: the game window's icon, generated on the player's machine from
+// the game's own data (docs/exe-icon.md). The executable's file icon is ours
+// from the build (data/icon/bof3x.ico) and is never rewritten (2026-10-15).
+// Exe host only: the hosted build keeps Capcom's icon from BOF3.exe's .rsrc.
 //
 // The picture is the one tools/make_icon.py renders offline: icon 10 of
 // Menu_DrawBigIcon's record table (the whelp, the owner's choice 2026-10-11),
@@ -17,17 +18,16 @@ namespace bof3 {
 // loop). Until the VRAM shadow holds the sheet and CLUT the record names -
 // the same on two drawn frames running - it returns after reading ~500
 // halfwords; then it sets the window's big and small icons and the window
-// class's (Alt-Tab), and starts a worker thread that writes bof3x.exe.new
-// with the icon in its resources and the bof3x.icon stamp, once per install.
-// Nothing in the hosted build. Any failure is one log line; none stops the game.
+// class's (Alt-Tab). Nothing in the hosted build. Any failure is one log
+// line; none stops the game.
 void ExeIcon_Frame(void* hwnd);
 
 // The self-test (BOF3X_SELFTEST_ONLY with BOF3X_ICON_VRAM=<a dump of the
 // VRAM shadow, 1 MB> and BOF3X_ICON_REF=<the expected .ico>): renders the
-// icon from the dump, writes bof3x.icon-test.ico and bof3x.icon-test.exe
-// beside the log, verifies the executable's resources, decodes both .ico
-// files and compares every pixel of the five images with the reference. A
-// mismatch is a Fatal. Called by Engine_Main after the data are copied.
+// icon from the dump, writes bof3x.icon-test.ico beside the log, decodes it
+// and the reference and compares every pixel of the five images, and builds
+// the window icons. A mismatch is a Fatal. Called by Engine_Main after the
+// data are copied.
 void ExeIcon_SelfTest();
 
 }  // namespace bof3

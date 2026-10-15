@@ -34,7 +34,6 @@
 
 #include "common/cache_manifest.h"
 #include "common/home.h"
-#include "common/icon_stamp.h"
 #include "common/sha256.h"
 #include "launcher/config.h"
 #include "launcher/config_dialog.h"
@@ -116,35 +115,22 @@ std::string Sha256Hex(const std::wstring& path) {
     return hex;
 }
 
-// DIV-0095: the icon the engine generated from the game's data
-// (docs/exe-icon.md). bof3x.exe cannot rewrite its own file while it runs, so
-// it writes bof3x.exe.new and the bof3x.icon stamp beside itself, and the
-// move is made here, before bof3x.exe starts. Only when bof3x.exe is still
-// the file the engine copied and the new file is the one it verified: a
-// stale copy (bof3x.exe rebuilt or replaced since) is deleted instead, and
-// the engine makes a fresh one at its next run. Never stops the launcher.
-void InstallGeneratedIcon(const std::wstring& ours) {
-    const std::wstring pending = ours + L".new";
-    if (!FileExists(pending)) return;
-    bof3x::IconStamp stamp;
-    std::string current, written, why;
-    const bool have_stamp = bof3x::IconStampRead(OwnDirectory() + L"\\bof3x.icon", stamp);
-    if (!have_stamp || !bof3x::Sha256Hex(ours.c_str(), current, why) || !bof3x::Sha256Hex(pending.c_str(), written, why) ||
-        current != stamp.from || written != stamp.to) {
-        DeleteFileW(pending.c_str());
-        std::fwprintf(stderr, L"bof3x-launcher: %ls is not the icon written for this bof3x.exe (%hs); deleted - the "
-                              L"game writes a fresh one\n",
-                      pending.c_str(), !have_stamp ? "no bof3x.icon stamp" : !why.empty() ? why.c_str() : "the stamp does not match");
-        return;
+// Until 2026-10-15 the game wrote bof3x.exe.new with an icon generated from
+// the game's data and the bof3x.icon stamp, and the launcher moved the new
+// file over bof3x.exe here (DIV-0095). Rewriting an executable and running it
+// is what Windows Defender took for defence evasion, so bof3x.exe now carries
+// our own icon from the build and is never rewritten. What an older build left
+// behind beside it is deleted; nothing of it is used.
+void RemoveOldIconFiles() {
+    for (const wchar_t* name : {L"\\bof3x.exe.new", L"\\bof3x.icon", L"\\bof3x.icon-work.exe"}) {
+        const std::wstring path = OwnDirectory() + name;
+        if (FileExists(path) && DeleteFileW(path.c_str()))
+            std::fwprintf(stderr, L"bof3x-launcher: %ls, an older build's icon file, deleted (bof3x.exe keeps its own icon)\n",
+                          path.c_str());
     }
-    if (!MoveFileExW(pending.c_str(), ours.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-        std::fwprintf(stderr, L"bof3x-launcher: cannot move %ls into place (error %lu); kept for the next start\n",
-                      pending.c_str(), GetLastError());
-        return;
-    }
-    std::wprintf(L"bof3x-launcher: bof3x.exe now carries the icon generated from the game's data (DIV-0095)\n");
 }
 
+#if BOF3X_HOSTED
 // DIV-0062: the draw-item pool's room. The pool's items are linked into the
 // game's ordering table by 24-bit addresses, so its array must sit below
 // 16 MB - and by the time the DLL runs, the child's low memory is cut up by
@@ -207,10 +193,73 @@ void LoadDllInto(HANDLE process, const std::wstring& dll) {
         Die(L"the game process could not load %ls.\nSee bof3x.log next to it, if one was written.",
             dll.c_str());
 }
+#else
+// The player's launcher (CMakeLists.txt bof3x_add_launcher): --host bof3 and
+// the hosted-only switches need code that writes into another process, which
+// this launcher does not hold - it hands the whole run to the developer's
+// launcher beside it, with the same arguments, environment and console or
+// pipes, and ends with its exit code, so the harnesses' commands keep their
+// meaning in a checkout. A release ships no developer launcher: it stops here.
+[[noreturn]] void ForwardToDevLauncher(int argc, wchar_t** argv) {
+    const std::wstring dev = OwnDirectory() + L"\\bof3x-launcher-dev.exe";
+    if (!FileExists(dev))
+        Die(L"--host bof3 and the hosted-only switches (BOF3X_ORIGINAL, BOF3X_SHADOW, BOF3X_CALLTRACE, "
+            L"BOF3X_MP3=original) are the developer launcher's, bof3x-launcher-dev.exe, which a source build "
+            L"writes beside this one; a release does not ship it.");
+    std::wstring line = L"\"" + dev + L"\"";
+    for (int i = 1; i < argc; ++i) line += L" \"" + std::wstring(argv[i]) + L"\"";
+    STARTUPINFOW si{};
+    si.cb = sizeof si;
+    HANDLE in = GetStdHandle(STD_INPUT_HANDLE), out = GetStdHandle(STD_OUTPUT_HANDLE),
+           err = GetStdHandle(STD_ERROR_HANDLE);
+    // Redirected - a harness's pipe or a file, not a console - the developer
+    // launcher writes to the same handles as this one would.
+    auto redirected = [](HANDLE h) {
+        if (!h || h == INVALID_HANDLE_VALUE) return false;
+        const DWORD type = GetFileType(h);
+        return type == FILE_TYPE_PIPE || type == FILE_TYPE_DISK;
+    };
+    const bool piped = redirected(out) && redirected(err);
+    if (piped) {
+        si.dwFlags = STARTF_USESTDHANDLES;
+        si.hStdInput = in;
+        si.hStdOutput = out;
+        si.hStdError = err;
+    }
+    std::fflush(stdout);
+    std::fflush(stderr);
+    PROCESS_INFORMATION pi{};
+    if (!CreateProcessW(dev.c_str(), line.data(), nullptr, nullptr, piped, 0, nullptr, nullptr, &si, &pi))
+        Die(L"CreateProcess failed for %ls (%lu)", dev.c_str(), GetLastError());
+    CloseHandle(pi.hThread);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD code = 1;
+    GetExitCodeProcess(pi.hProcess, &code);
+    ExitProcess(code);
+}
+#endif
+
+// The launcher is a windowed program, so a player who double-clicks it sees
+// its window and no console (docs/launcher-settings.md section 2). Started
+// from a terminal, it writes its lines there as the console program it was
+// did; started with stdout and stderr redirected (a script's pipe or file),
+// the C runtime already holds those, and nothing changes for the harnesses.
+void AttachParentConsole() {
+    auto redirected = [](DWORD which) {
+        HANDLE h = GetStdHandle(which);
+        return h != nullptr && h != INVALID_HANDLE_VALUE && GetFileType(h) != FILE_TYPE_UNKNOWN;
+    };
+    const bool out = redirected(STD_OUTPUT_HANDLE), err = redirected(STD_ERROR_HANDLE);
+    if (out && err) return;
+    if (!AttachConsole(ATTACH_PARENT_PROCESS)) return;   // double-clicked: no terminal to write to
+    if (!out) std::freopen("CONOUT$", "w", stdout);
+    if (!err) std::freopen("CONOUT$", "w", stderr);
+}
 
 }  // namespace
 
 int wmain(int argc, wchar_t** argv) {
+    AttachParentConsole();
     std::wstring game_dir;
     std::wstring game_args;
     // Neither flag given: the settings file decides, and its default is to
@@ -264,6 +313,9 @@ int wmain(int argc, wchar_t** argv) {
     // fuzz, the call trace, Capcom's MP3 decoder; bof3x.exe refuses each), so
     // the documented self-test and A/B commands keep their meaning.
     const bool hosted = host_asked >= 0 ? host_asked == 1 : HostedOnlyAsked();
+#if !BOF3X_HOSTED
+    if (hosted) ForwardToDevLauncher(argc, argv);
+#endif
     if (host_asked < 0 && hosted)
         std::fwprintf(stderr, L"bof3x-launcher: a hosted-only switch is set (BOF3X_ORIGINAL, BOF3X_SHADOW, "
                               L"BOF3X_CALLTRACE or BOF3X_MP3=original): starting the hosted build, as --host bof3\n");
@@ -271,7 +323,7 @@ int wmain(int argc, wchar_t** argv) {
     if (!hosted && !FileExists(ours))
         Die(L"%ls is missing; it belongs next to this launcher (or start the hosted build with --host bof3).",
             ours.c_str());
-    if (FileExists(ours)) InstallGeneratedIcon(ours);
+    RemoveOldIconFiles();
 
     // Settings. The file lives next to the launcher, not in the game directory,
     // which stays the player's own (CLAUDE.md rule 1) apart from BOF3.CFG -
@@ -454,6 +506,8 @@ int wmain(int argc, wchar_t** argv) {
         // relative path); nothing else to do from here - it maps the player's
         // data, binds its imports and starts the game on its own main thread.
         std::wstring line = L"\"" + ours + L"\"" + game_args;
+        // Started by us: bof3x.exe started any other way hands over to us (exe_host.cpp HandOffToLauncher).
+        SetEnvironmentVariableW(L"BOF3X_LAUNCHER", L"1");
         if (!CreateProcessW(ours.c_str(), line.data(), nullptr, nullptr, FALSE, 0, nullptr, game_dir.c_str(), &si, &pi))
             Die(L"CreateProcess failed for %ls (%lu)", ours.c_str(), GetLastError());
         if (SelfTestOnly()) {   // as the hosted path: the pid, then the game process's exit code
@@ -471,6 +525,7 @@ int wmain(int argc, wchar_t** argv) {
         return 0;
     }
 
+#if BOF3X_HOSTED
     std::wstring cmdline = L"\"" + exe + L"\"" + game_args;
     // Current directory = the game directory: BOF3.exe opens DAT\, BGM\ and SND\
     // by relative path.
@@ -497,4 +552,7 @@ int wmain(int argc, wchar_t** argv) {
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
     return 0;
+#else
+    Die(L"the hosted build reached the player's launcher, which hands it to bof3x-launcher-dev.exe above");
+#endif
 }

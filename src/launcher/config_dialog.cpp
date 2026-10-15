@@ -1220,10 +1220,16 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
         state->cells = CellsFrom(state->cfg->bindings);
         ControlsPopulate(dlg, state->cells);
         Layout(dlg, *state);
+        // The title bar's and the taskbar's icon: the launcher's own (launcher.rc IDI_BOF3X).
+        for (const auto& [which, metric] : {std::pair{ICON_BIG, SM_CXICON}, std::pair{ICON_SMALL, SM_CXSMICON}}) {
+            const int side = GetSystemMetrics(metric);
+            if (HANDLE icon = LoadImageW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_BOF3X), IMAGE_ICON, side, side, 0))
+                SendMessageW(dlg, WM_SETICON, which, reinterpret_cast<LPARAM>(icon));
+        }
         ShowPage(dlg, *state, g_reopen);
         g_reopen = kPageTitle;
-        // The launcher is a console program, so its window can open behind the
-        // window that started it.
+        // Started from a terminal or a script, the launcher's window can open
+        // behind the window that started it.
         SetForegroundWindow(dlg);
         return FALSE;   // ShowPage set the focus
     }

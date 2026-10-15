@@ -5,6 +5,10 @@
 // dialog is neither Windows 95 grey nor bitmap-blurred on a high-DPI desktop.
 1 RT_MANIFEST "launcher/launcher.manifest"
 
+// The icon: ours, bold white "III" in Palatino on black (tools/make_brand_icon.py,
+// the owner's choice of 2026-10-15) - the first icon resource, which Explorer shows.
+IDI_BOF3X ICON "../../data/icon/bof3x.ico"
+
 // The launcher's window (docs/launcher-settings.md section 2a). Two faces: the
 // title page - the picture (IDR_BACKGROUND), the banner and these four buttons -
 // and Configure, the six tabs and Back over the sub-page the tab shows. The

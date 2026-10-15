@@ -119,6 +119,23 @@ def _fresh(d):
     os.makedirs(d)
 
 
+def available(sources):
+    """This recipe's layers the sources can build, in its order: a PSP disc
+    the layer lists among them, and - unless the layer is `auto` - a base
+    that is not the PSP's own (what `take` would otherwise refuse)."""
+    names = []
+    for n, layer in load().items():
+        if _psp(layer, sources) is None:
+            continue
+        if not layer.get("auto"):
+            try:
+                _refuse_on_psp_base(n, layer, sources)
+            except SystemExit:
+                continue
+        names.append(n)
+    return names
+
+
 def _psp(layer, sources):
     """The first PSP disc among the sources that the layer lists."""
     return next((s for s in sources if s.id in layer["from"] and hasattr(s, "build")), None)
@@ -291,7 +308,21 @@ def build_banks(name, layer, disc, out):
     return got
 
 
-def build(asked, sources, out):
+def _layer_key(name, layer, disc, sources):
+    """What a layer reads (build_reuse): its PSP disc; the player's ffmpeg for
+    the sound; every source for a dat layer, which takes chunks from any."""
+    import at3
+    from build_reuse import reuse_key
+    extra = ()
+    if layer["part"] == "snd":
+        ffmpeg = at3.find_ffmpeg()
+        extra = (at3.ffmpeg_version(ffmpeg) if ffmpeg else "no ffmpeg",)
+    elif layer["part"] == "dat" and "banks" not in layer:
+        extra = tuple(s.id for s in sources)
+    return reuse_key("psp-layer", name, disc.id, *extra)
+
+
+def build(asked, sources, out, reuse=None):
     """Each layer asked for into out/opt/<name>/, and each `auto` layer whenever
     a PSP disc it lists is a source (on any base); then the manifest's
     [psp_layers] table appended. A layer is written whole or not at all.
@@ -304,7 +335,11 @@ def build(asked, sources, out):
     here is exactly what the manifest lists, which is what the game and the
     launcher offer (common/cache_manifest.h) and what `verify` holds it to.
     (The code review of 2026-10-12: a failure in the second layer left the
-    first in the cache with no row, offered and played unverified.)"""
+    first in the cache with no row, offered and played unverified.)
+
+    `reuse`: a previous cache whose layer, and its rows, are taken when built
+    under the same key (_layer_key; IDEAS I42)."""
+    from build_reuse import read_rows, reusable, write_key, write_rows
     layers = load()
     asked = list(asked) + [n for n, l in layers.items() if l.get("auto") and n not in asked and _psp(l, sources)]
     if not asked:
@@ -320,8 +355,16 @@ def build(asked, sources, out):
                 raise SystemExit("--opt %s: needs a PSP disc (%s) among the sources" % (name, " or ".join(layer["from"])))
             final = os.path.join(out, "opt", name)
             stage = tempfile.mkdtemp(dir=out, prefix=".psp_layer_%s_" % name)
+            key = _layer_key(name, layer, disc, sources)
+            kept = reusable(reuse, "opt-" + name, key, os.path.join("opt", name))
+            kept_rows = read_rows(reuse, "opt-" + name) if kept else None
             try:
-                got = _build_one(name, layer, disc, sources, stage)
+                if kept_rows is not None:
+                    shutil.copytree(kept, os.path.join(stage, "opt", name))
+                    got = kept_rows
+                    print("  opt/%-16s the previous cache's, built from %s the same way" % (name, disc.id))
+                else:
+                    got = _build_one(name, layer, disc, sources, stage)
                 if os.path.isdir(final):
                     shutil.rmtree(final)
                 os.makedirs(os.path.join(out, "opt"), exist_ok=True)
@@ -333,6 +376,8 @@ def build(asked, sources, out):
                 raise
             finally:
                 shutil.rmtree(stage, ignore_errors=True)
+            write_key(out, "opt-" + name, key)
+            write_rows(out, "opt-" + name, got)
             rows += got
             placed.append(name)
     finally:

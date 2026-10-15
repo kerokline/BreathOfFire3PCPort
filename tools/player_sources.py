@@ -21,6 +21,7 @@ import os
 import re
 import shutil
 import sys
+import time
 import uuid
 import zipfile
 
@@ -449,13 +450,98 @@ def cmd_sources(a):
         return 0
     # add
     tmp = bof3x_home.tmp_dir(h)
-    r = identify(a.path, tmp)
+    if os.path.isdir(a.path) and not _pc_folder_like(a.path):
+        return _add_folder(a.path, h, rows, tmp, a.json)
+    r = _add_one(a.path, rows, tmp)
+    _emit(r, a.json)
+    if r["ok"]:
+        save_sources(h, rows)
+    return 0 if r["ok"] else 1
+
+
+# A folder that is not the PC game's is searched for sources (the owner,
+# 2026-10-15): a folder of disc images, each in a folder of its own or not.
+SCAN_DEPTH = 4                         # folders below the one chosen
+SCAN_EXT = (".cue", ".iso", ".zip")    # and a .bin with no .cue beside it
+# The order a scan adds discs in (the owner, 2026-10-15): the PlayStation's,
+# the USA disc first so that it is a disc-only install's base (section 3),
+# then the PSP's, Europe before Japan. A base already in the list stays the
+# base; anything else (the PC game) comes before them.
+SCAN_ORDER = ("psx-us", "psx-jp", "psx-eu-en", "psx-fr", "psx-de", "psp-eu", "psp-jp")
+
+
+def _pc_folder_like(path):
+    """The folder is, or is meant as, the PC game's: BOF3.exe or DAT in it, or
+    it is a DAT folder. identify_folder's sentences answer those."""
+    return (_child(path, "BOF3.exe", False) is not None or _child(path, "DAT", True) is not None
+            or os.path.basename(os.path.abspath(path)).lower() == "dat")
+
+
+def scan_folder(folder, skip=()):
+    """The sources a folder may hold, in a stable order: each PC game folder
+    (not searched further), and each image - .cue, .iso, .zip, and a .bin with
+    no .cue beside it (a .cue names its own tracks) - down to SCAN_DEPTH
+    folders. Folders under `skip` (the install's own) are left out."""
+    skip = [_norm(x) for x in skip if x]
+    base = len(os.path.abspath(folder).rstrip("\\/").split(os.sep))
+    found = []
+    for root, dirs, files in os.walk(folder):
+        dirs.sort(key=str.lower)
+        here = _norm(root)
+        if any(here == k or here.startswith(k + os.sep) for k in skip):
+            dirs[:] = []
+            continue
+        if _child(root, "BOF3.exe", False) is not None and _child(root, "DAT", True) is not None:
+            found.append(root)
+            dirs[:] = []
+            continue
+        if len(os.path.abspath(root).split(os.sep)) - base >= SCAN_DEPTH:
+            dirs[:] = []
+        cue = any(f.lower().endswith(".cue") for f in files)
+        for f in sorted(files, key=str.lower):
+            ext = os.path.splitext(f)[1].lower()
+            if ext in SCAN_EXT or (ext == ".bin" and not cue):
+                found.append(os.path.join(root, f))
+    return found
+
+
+def _add_folder(folder, h, rows, tmp, as_json):
+    """Every source in the folder that identifies as a catalogued release is
+    added - the first of each release, the rest refused as its duplicates -
+    and each one found says so, a line each. Exit 0 when any was added."""
+    # the install's own folders, never a source (a game\ laid out from the PC copy would look like one)
+    found = scan_folder(folder, [os.path.join(h, d) for d in ("game", "cache", "runtime")])
+    if not found:
+        _emit(result(folder, problem="This folder holds no BOF3.exe and DAT folder, and no disc image (.cue, .iso, "
+                                     ".bin or .zip) in it or the %d folders below it." % SCAN_DEPTH), as_json)
+        return 1
+    print("Found %d possible source%s in %s; checking each against the known releases."
+          % (len(found), "" if len(found) == 1 else "s", folder), flush=True)
+    # Identify every one, then add in SCAN_ORDER (the rest first, as found).
+    ids = [identify(path, tmp) for path in found]
+    rank = lambda i: (SCAN_ORDER.index(ids[i]["build"]) + 1 if ids[i]["build"] in SCAN_ORDER else 0, i)
+    added = 0
+    for i in sorted(range(len(found)), key=rank):
+        r = _add_one(found[i], rows, tmp, ids[i])
+        _emit(r, as_json)
+        if r["ok"]:
+            added += 1
+            save_sources(h, rows)   # each one kept as it is added
+    print("Added %d of the %d found." % (added, len(found)), flush=True)
+    return 0 if added else 1
+
+
+def _add_one(path, rows, tmp, r=None):
+    """identify (unless `r` is its answer already), then add to `rows` (not
+    saved) when usable and not a release already listed: the result as `add`
+    emits it."""
+    r = r or identify(path, tmp)
     if r["ok"] and r["kind"] == "pc-exe":
         # A BOF3.exe chosen in a file dialog: the folder that holds it is the source.
-        parent = os.path.dirname(os.path.abspath(a.path))
+        parent = os.path.dirname(os.path.abspath(path))
         up = identify(parent, tmp)
         if not up["ok"]:
-            r = result(a.path, False, "pc-zh", "pc-exe", r["label"],
+            r = result(path, False, "pc-zh", "pc-exe", r["label"],
                        "BOF3.exe alone cannot make an install, and the folder holding it is not a complete PC "
                        "game: %s" % up["problem"][0].lower() + up["problem"][1:])
         else:
@@ -466,14 +552,11 @@ def cmd_sources(a):
             r = dict(r, ok=False, problem="%s is already a source (%s); remove that one first to use this copy "
                                           "instead." % (r["label"], same["path"]))
     if not r["ok"]:
-        _emit(r, a.json)
-        return 1
+        return r
     rows.append({"path": os.path.normpath(os.path.abspath(r["path"])), "build": r["build"], "kind": r["kind"],
                  "label": r["label"], "added": datetime.datetime.now().isoformat(timespec="seconds")})
-    save_sources(h, rows)
     r["path"] = os.path.normpath(os.path.abspath(r["path"]))
-    _emit(r, a.json)
-    return 0
+    return r
 
 
 # ---------------------------------------------------------------- setup
@@ -559,10 +642,34 @@ def cmd_setup(a):
     return 0
 
 
+class _Times:
+    """setup's own steps' wall times (IDEAS I42), written to setup.log as the
+    build's `time` lines are, and all of them again at the end."""
+
+    def __init__(self, log):
+        self.log, self.rows, self.start = log, [], time.perf_counter()
+
+    @contextlib.contextmanager
+    def step(self, what):
+        t = time.perf_counter()
+        try:
+            yield
+        finally:
+            self.rows.append((what, time.perf_counter() - t))
+            self.log.write("  time      %-28s %7.1f s\n" % self.rows[-1])
+
+    def summary(self):
+        self.log.write("setup times:\n")
+        for what, secs in self.rows:
+            self.log.write("  %-34s %7.1f s\n" % (what, secs))
+        self.log.write("  %-34s %7.1f s\n" % ("total", time.perf_counter() - self.start))
+
+
 def run_setup(a, h, log, progress, total):
     import argparse
     import at3
     imp = _imp()
+    times = _Times(log)
     rows = load_sources(h)
     if not rows:
         raise SetupError("No sources are listed: add the PC game folder, a PlayStation disc or a PSP disc first.")
@@ -621,7 +728,8 @@ def run_setup(a, h, log, progress, total):
             progress("Unpacking %s" % r["label"])
             os.makedirs(tmp, exist_ok=True)
             try:
-                inner, folder = unpack_zip(r["path"], tmp)
+                with times.step("unpack " + r["build"]):
+                    inner, folder = unpack_zip(r["path"], tmp)
             except ValueError as e:
                 raise SetupError(str(e))
             unpacked.append(folder)
@@ -634,18 +742,21 @@ def run_setup(a, h, log, progress, total):
             else:
                 src.append(p)
         progress("Building the data cache from %s (several minutes)" % ", ".join(r["label"] for r in rows))
+        # The install's current cache: what it already made the same way is taken, not made again (IDEAS I42).
+        reuse = cache if os.path.isfile(os.path.join(cache, "manifest.toml")) else None
         ns = argparse.Namespace(source=src, out=new_cache, lang=list(langs), opt=[], no_opt=[], preset=None,
-                                recipe=None, opt_recipe=None, prefer=None)
-        with contextlib.redirect_stdout(_Log(log, echo, on_line)):
+                                recipe=None, opt_recipe=None, prefer=None, reuse=reuse,
+                                psp_available=True)   # every PSP layer, for the suites to offer (the owner, 2026-10-15)
+        with contextlib.redirect_stdout(_Log(log, echo, on_line)), times.step("build (importer.py build)"):
             imp.cmd_build(ns)
         os.makedirs(new_game)
         if pc:
             progress("Copying the PC game's files (the original folder is not changed)")
-            with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)):
+            with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("copy the PC game"):
                 copy_pc(paths.get(pc["path"], pc["path"]), new_game, ffmpeg, log, progress)
         progress("Laying out the game folder" + (" with %s" % ", ".join(langs) if langs else ""))
         ns = argparse.Namespace(cache=new_cache, game=new_game, base=not pc, lang=list(langs), opt=[], no_opt=[])
-        with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)):
+        with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("install (lay out game)"):
             imp.cmd_install(ns)
     except BaseException:
         for p in unpacked:
@@ -657,7 +768,9 @@ def run_setup(a, h, log, progress, total):
         shutil.rmtree(p, ignore_errors=True)
     shutil.rmtree(tmp, ignore_errors=True)
     progress("Replacing the previous install")
-    swap(h, (("game", new_game), ("cache", new_cache)))
+    with times.step("swap into place"):
+        swap(h, (("game", new_game), ("cache", new_cache)))
+    times.summary()
     return game, cache
 
 
