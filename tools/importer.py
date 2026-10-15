@@ -48,6 +48,7 @@ data: it lives outside the repo or under analysis/ (CLAUDE.md rule 1).
 """
 import argparse
 import collections
+import contextlib
 import datetime
 import hashlib
 import json
@@ -55,6 +56,7 @@ import os
 import re
 import struct
 import sys
+import time
 import tomllib
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
@@ -761,6 +763,113 @@ def get_chunk(f, slot, ch, chunked, prefer=None):
     return psp_standins.stand_in(f, slot, ch, chunked)
 
 
+# ---------------------------------------------------------------- reuse (IDEAS I42)
+#
+# A setup that adds a source rebuilds the whole cache. The steps whose inputs
+# did not change - the language layers, the PlayStation's sound effects, the
+# movie (fmv_reusable) - are taken from the previous cache instead. A step's
+# key is a hash of everything it reads: the tools, recipes and fixtures as
+# they are now (so a new release rebuilds everything once), the sources it
+# draws on, and the cache files it builds against. The keys are kept in
+# <cache>/build-keys/, a folder nothing installs or walks.
+
+KEYS_DIR = "build-keys"
+_fingerprint = []
+
+
+def code_fingerprint():
+    """The tools, recipes and fixtures, and the Python running them: a key
+    made under another release never matches."""
+    if not _fingerprint:
+        h = hashlib.sha256(sys.version.encode())
+        for top in (TOOLS, os.path.join(ROOT, "recipes"), os.path.join(ROOT, "fixtures")):
+            for root, dirs, files in os.walk(top):
+                dirs[:] = sorted(d for d in dirs if d != "__pycache__")
+                for f in sorted(files):
+                    if top == TOOLS and not f.endswith(".py"):
+                        continue
+                    p = os.path.join(root, f)
+                    h.update(os.path.relpath(p, ROOT).replace(os.sep, "/").encode() + b"\0")
+                    with open(p, "rb") as fh:
+                        h.update(hashlib.sha256(fh.read()).digest())
+        _fingerprint.append(h.hexdigest())
+    return _fingerprint[0]
+
+
+def tree_digest(d):
+    """Every file under `d` by its path and content, or "none"."""
+    if not os.path.isdir(d):
+        return "none"
+    h = hashlib.sha256()
+    for root, dirs, files in os.walk(d):
+        dirs.sort()
+        for f in sorted(files):
+            p = os.path.join(root, f)
+            h.update(os.path.relpath(p, d).replace(os.sep, "/").encode() + b"\0")
+            with open(p, "rb") as fh:
+                h.update(hashlib.sha256(fh.read()).digest())
+    return h.hexdigest()
+
+
+def reuse_key(*parts):
+    return hashlib.sha256("\0".join((code_fingerprint(),) + tuple(str(p) for p in parts)).encode()).hexdigest()
+
+
+def reusable(reuse, step, key, rel):
+    """The previous cache's `rel` folder when its step was built under the
+    same key, else None."""
+    if not reuse:
+        return None
+    try:
+        with open(os.path.join(reuse, KEYS_DIR, step + ".txt"), encoding="utf-8") as fh:
+            same = fh.read().strip() == key
+    except OSError:
+        return None
+    src = os.path.join(reuse, rel)
+    return src if same and os.path.isdir(src) else None
+
+
+def write_key(out, step, key):
+    os.makedirs(os.path.join(out, KEYS_DIR), exist_ok=True)
+    with open(os.path.join(out, KEYS_DIR, step + ".txt"), "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(key + "\n")
+
+
+def snd_from_psx(sources, out, reuse=None):
+    """xa.importer_snd, or the previous cache's base/snd/ when it was made
+    from the same first PSX disc by the same code."""
+    import shutil
+    disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
+    if disc is None:
+        return None
+    key = reuse_key("snd-xa", disc.id)
+    dst = os.path.join(out, "base", "snd")
+    src = reusable(reuse, "snd", key, os.path.join("base", "snd"))
+    if src:
+        shutil.copytree(src, dst, dirs_exist_ok=True)
+        print("  base/snd  the previous cache's, made from %s the same way (not decoded again)" % disc.id)
+        snd = (disc.id, len(os.listdir(dst)))
+    else:
+        snd = xa.importer_snd(sources, out)
+    write_key(out, "snd", key)
+    return snd
+
+
+@contextlib.contextmanager
+def timed(what):
+    """A build step's wall time, as a `time` line after its own lines
+    (IDEAS I42: where a setup's minutes go). setup.log keeps them."""
+    t = time.perf_counter()
+    try:
+        yield
+    finally:
+        time_line(what, t)
+
+
+def time_line(what, since):
+    print("  time      %-28s %7.1f s" % (what, time.perf_counter() - since), flush=True)
+
+
 def cmd_build(a):
     rec = load_recipe(a.recipe)
     sources = [open_source(p) for p in a.source]
@@ -777,6 +886,7 @@ def cmd_build(a):
     prefer = load_prefer(getattr(a, "prefer", None))
     assets, missing, used = [], collections.Counter(), collections.Counter()
     written, blocked = collections.Counter(), collections.Counter()
+    t_chunks = time.perf_counter()
     for f in rec["file"]:
         layers, tails = collections.OrderedDict(), collections.defaultdict(list)
         lacks = collections.defaultdict(set)
@@ -815,22 +925,31 @@ def cmd_build(a):
             with open(os.path.join(d, f["name"]), "wb") as fh:
                 fh.write(b"".join(parts))
             written[layer] += 1
-    snd = xa.importer_snd(sources, a.out)
-    psp_snd = None if snd else at3.importer_snd(sources, a.out)     # no PSX disc: the PSP's, by the player's ffmpeg
-    bgm = seq.importer_bgm(sources, a.out) or ppms.importer_bgm(sources, a.out)   # no PSX disc: the PSP's (psp-music.md)
+    time_line("base and layer chunks", t_chunks)
+    reuse = getattr(a, "reuse", None)
+    with timed("base/snd"):
+        snd = snd_from_psx(sources, a.out, reuse)
+        psp_snd = None if snd else at3.importer_snd(sources, a.out)     # no PSX disc: the PSP's, by the player's ffmpeg
+    with timed("base/bgm"):
+        bgm = seq.importer_bgm(sources, a.out) or ppms.importer_bgm(sources, a.out)   # no PSX disc: the PSP's (psp-music.md)
     # base/exe/ (docs/exe-import.md): from the PC's executable when given, else the first disc.
     # Before the languages: a disc-only language layer is built against it.
     exe_src = next((s for s in sources if isinstance(s, ExeSource)), None) or \
         next((s for s in sources if isinstance(s, DiscSource)), None)
-    exe = exe_tables.build_from(exe_src.path, exe_src.id, a.out) if exe_src else None
+    with timed("base/exe"):
+        exe = exe_tables.build_from(exe_src.path, exe_src.id, a.out) if exe_src else None
     if exe:
         print("  base/exe  from %-9s data.bin %s" % exe)
-    loc_assets = build_languages(a.lang, sources, a.out)
-    opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
+    with timed("loc (every language)"):
+        loc_assets = build_languages(a.lang, sources, a.out, reuse)
+    with timed("opt"):
+        opt_assets = build_opt(a.opt, sources, a.out, a.opt_recipe)
     write_manifest(a.out, a.recipe or RECIPE, rec, sources, assets, loc_assets, opt_assets, a.opt_recipe, exe, bgm,
                    psp_snd, getattr(a, "prefer", None))
-    fmv_build(sources, a.out)       # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
-    psp_layers.build(tg_opt, sources, a.out)   # opt/psp-music etc.; its [psp_layers] after that
+    with timed("base/fmv"):
+        fmv_build(sources, a.out, reuse)   # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
+    with timed("psp layers"):
+        psp_layers.build(tg_opt, sources, a.out)   # opt/psp-music etc.; its [psp_layers] after that
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, {
             "own": " (its own sections standing in)",
@@ -901,7 +1020,7 @@ def _place(src, dst):
     shutil.copy2(src, dst)
 
 
-def build_languages(asked, sources, out):
+def build_languages(asked, sources, out, reuse=None):
     """loc/<tag>/ for each language asked for, built by tools/loc_build.py
     from its donor disc (resolve_languages) against the PC's own containers
     and BOF3.exe - exactly the overlays it writes into a game's DAT/, so the
@@ -911,7 +1030,11 @@ def build_languages(asked, sources, out):
     With neither the PC's DAT/ nor its BOF3.exe among the sources, the layer is
     built disc-only: `loc_build.py all --cache` against this cache's base/dat/
     and base/exe/, which the build has already written
-    (docs/loc-build-disc-only.md: what differs from the PC build, and why)."""
+    (docs/loc-build-disc-only.md: what differs from the PC build, and why).
+
+    `reuse`: a previous cache whose layer is taken when built under the same
+    key - the donor, the PC sources, the layers built before it in this run
+    (the French and German borrow the English one's row), the code."""
     import shutil
     import subprocess
     import tempfile
@@ -920,7 +1043,7 @@ def build_languages(asked, sources, out):
     if not asked:
         return []
     if not pc and not exe:
-        return build_languages_disc_only(asked, sources, out)
+        return build_languages_disc_only(asked, sources, out, reuse)
     if not (pc and exe):
         raise SystemExit("a language layer is built against the PC's DAT/ and BOF3.exe (give both as sources), "
                          "or against the disc alone (give neither)")
@@ -931,42 +1054,72 @@ def build_languages(asked, sources, out):
         for name in _manifest_rows("fixtures/pc-zh.DAT.files.tsv"):
             _place(os.path.join(pc.path, name), os.path.join(game, "DAT", name))
         for tag, donor in resolve_languages(asked, sources):
-            r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
-                                "--game", game, "--lang", tag], capture_output=True, text=True)
-            if r.returncode:
-                raise SystemExit("loc_build.py --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
+            t = time.perf_counter()
+            key = reuse_key("loc-pc", tag, donor.id, pc.id, exe.id, tree_digest(os.path.join(out, "loc")))
             d = os.path.join(out, "loc", tag, "dat")
-            os.makedirs(d, exist_ok=True)
+            src = reusable(reuse, "loc-" + tag, key, os.path.join("loc", tag, "dat"))
+            if src:
+                # the previous cache's layer, and in the game folder as loc_build would have left it,
+                # for a later layer that reads it (the French and German title menus)
+                shutil.copytree(src, d, dirs_exist_ok=True)
+                for name in os.listdir(d):
+                    shutil.copyfile(os.path.join(d, name), os.path.join(game, "DAT", tag + "." + name))
+            else:
+                r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
+                                    "--game", game, "--lang", tag], capture_output=True, text=True)
+                if r.returncode:
+                    raise SystemExit("loc_build.py --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
+                os.makedirs(d, exist_ok=True)
+                for f in sorted(os.listdir(os.path.join(game, "DAT"))):
+                    if f.startswith(tag + "."):
+                        shutil.copyfile(os.path.join(game, "DAT", f), os.path.join(d, f[len(tag) + 1:]))
             n = 0
-            for f in sorted(os.listdir(os.path.join(game, "DAT"))):
-                if f.startswith(tag + "."):
-                    name = f[len(tag) + 1:]
-                    shutil.copyfile(os.path.join(game, "DAT", f), os.path.join(d, name))
-                    with open(os.path.join(d, name), "rb") as fh:
-                        assets.append((name, "loc/" + tag, "%s:loc_build" % donor.id, sha(fh.read())))
-                    n += 1
-            print("  loc/%-7s from %-9s %d containers (tools/loc_build.py)" % (tag, donor.id, n))
+            for name in sorted(os.listdir(d)):
+                with open(os.path.join(d, name), "rb") as fh:
+                    assets.append((name, "loc/" + tag, "%s:loc_build" % donor.id, sha(fh.read())))
+                n += 1
+            write_key(out, "loc-" + tag, key)
+            print("  loc/%-7s from %-9s %d containers (tools/loc_build.py%s)"
+                  % (tag, donor.id, n, "; the previous cache's, built the same way" if src else ""))
+            time_line("loc/" + tag, t)
     return assets
 
 
-def build_languages_disc_only(asked, sources, out):
-    """loc/<tag>/ from the donor disc against the cache's own base/ (DiscCache)."""
+def build_languages_disc_only(asked, sources, out, reuse=None):
+    """loc/<tag>/ from the donor disc against the cache's own base/ (DiscCache).
+    `reuse`: a previous cache whose layer is taken when built under the same
+    key - the donor, this cache's base/dat/ and base/exe/, the layers built
+    before it in this run, the code."""
+    import shutil
     import subprocess
     assets = []
+    base = None
     for tag, donor in resolve_languages(asked, sources, psp=True):
+        t = time.perf_counter()
         d = os.path.join(out, "loc", tag, "dat")
         if os.path.isdir(d):            # a rebuild: no container of an earlier layer left behind
             for f in os.listdir(d):
                 os.remove(os.path.join(d, f))
-        r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
-                            "--cache", out, "--lang", tag], capture_output=True, text=True)
-        if r.returncode:
-            raise SystemExit("loc_build.py --cache --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
+        if base is None:                # what loc_build reads of this cache (DiscCache)
+            base = (tree_digest(os.path.join(out, "base", "dat")), tree_digest(os.path.join(out, "base", "exe")))
+        others = tree_digest(os.path.join(out, "loc"))
+        key = reuse_key("loc-disc-only", tag, donor.id, *base, others)
+        src = reusable(reuse, "loc-" + tag, key, os.path.join("loc", tag, "dat"))
+        if src:
+            shutil.copytree(src, d, dirs_exist_ok=True)
+        else:
+            r = subprocess.run([sys.executable, os.path.join(TOOLS, "loc_build.py"), "all", "--disc", donor.path,
+                                "--cache", out, "--lang", tag], capture_output=True, text=True)
+            if r.returncode:
+                raise SystemExit("loc_build.py --cache --lang %s failed:\n%s%s" % (tag, r.stdout, r.stderr))
+        write_key(out, "loc-" + tag, key)
         names = sorted(os.listdir(d))
         for name in names:
             with open(os.path.join(d, name), "rb") as fh:
                 assets.append((name, "loc/" + tag, "%s:loc_build-disc-only" % donor.id, sha(fh.read())))
-        print("  loc/%-7s from %-9s %d containers (tools/loc_build.py, disc-only)" % (tag, donor.id, len(names)))
+        print("  loc/%-7s from %-9s %d containers (tools/loc_build.py, disc-only%s)"
+              % (tag, donor.id, len(names), "; the previous cache's, built the same way" if src else ""))
+        time_line("loc/" + tag, t)
     return assets
 
 
@@ -2003,14 +2156,42 @@ FMV_SOURCE_SHA256 = "c496080be2e134dba766e89a52bacbae7616239e1e26fe9d0c1242a92d1
 FMV_ARGS = ["-f", "psxstr", "-r", "30", "-i", None, "-map", "0:v:0", "-map", "0:a:0",
             "-vf", "scale=640:480:flags=neighbor", "-c:v", "cinepak", "-c:a", "pcm_s16le", "-ar", "44100",
             "-fflags", "+bitexact", "-flags:v", "+bitexact", "-f", "avi"]
+# The arguments' fingerprint, in [fmv] as `args`: a cache's movie is reused
+# only when made the same way (fmv_reusable, IDEAS I42).
+FMV_HOW = hashlib.sha256(repr(FMV_ARGS).encode()).hexdigest()[:16]
 
 
-def fmv_build(sources, out):
+def fmv_reusable(reuse, src_sha, version):
+    """The previous cache's movie, when it is the one this build would make:
+    its [fmv] names the same source stream, the same ffmpeg and the same
+    arguments, and the file there still has the hash recorded. Bit-exact
+    arguments (FMV_ARGS) make that the same file a conversion would write, so
+    a setup that adds a source skips the conversion (IDEAS I42). None when
+    any of it differs, or there is no previous cache."""
+    if not reuse:
+        return None
+    try:
+        with open(os.path.join(reuse, "manifest.toml"), "rb") as fh:
+            row = tomllib.load(fh).get("fmv", {})
+    except (OSError, tomllib.TOMLDecodeError):
+        return None
+    path = os.path.join(reuse, FMV_DIR, FMV_NAME)
+    if (row.get("source_sha256") != src_sha or row.get("ffmpeg") != version or row.get("args") != FMV_HOW
+            or not os.path.isfile(path)):
+        return None
+    with open(path, "rb") as fh:
+        return path if sha(fh.read()) == row.get("sha256") else None
+
+
+def fmv_build(sources, out, reuse=None):
     """build's movie row: base/fmv/CAPCOM.AVI from the first PSX disc among the
     sources, by the player's ffmpeg, and an [fmv] table appended to the
     manifest (the source sectors' hash, the ffmpeg, the file's hash; or why it
     was not written). No PSX disc and no PC source: the first PSP disc's
-    CAPLOGO.PMF instead (tools/psp_fmv.py); otherwise nothing, and no table."""
+    CAPLOGO.PMF instead (tools/psp_fmv.py); otherwise nothing, and no table.
+    `reuse`: a previous cache whose movie is taken when fmv_reusable says it
+    is this one."""
+    import shutil
     import subprocess
     import psx_disc
     disc = next((s for s in sources if s.id.startswith("psx-") and hasattr(s, "build")), None)
@@ -2042,6 +2223,8 @@ def fmv_build(sources, out):
         src_sha = sha(b"".join(raw[16:] for _, raw in secs))
         row["source_sha256"] = src_sha
     ffmpeg = at3.find_ffmpeg()
+    version = at3.ffmpeg_version(ffmpeg) if ffmpeg else None
+    kept = fmv_reusable(reuse, src_sha, version) if version and src_sha == FMV_SOURCE_SHA256 else None
     if "skipped" in row:
         pass
     elif src_sha != FMV_SOURCE_SHA256:
@@ -2049,6 +2232,13 @@ def fmv_build(sources, out):
     elif not ffmpeg:
         row["skipped"] = ("no ffmpeg on the PATH or in BOF3X_FFMPEG: the disc's logo movie is an MDEC stream, "
                           "which only the player's ffmpeg converts")
+    elif kept:
+        os.makedirs(d, exist_ok=True)
+        shutil.copyfile(kept, dst)
+        print("  base/fmv  %s from %s: the previous cache's, made the same way (no conversion)" % (FMV_STR, disc.id))
+        with open(dst, "rb") as fh:
+            row.update(ffmpeg=version, file=FMV_DIR.replace(os.sep, "/") + "/" + FMV_NAME,
+                       sha256=sha(fh.read()), args=FMV_HOW)
     else:
         os.makedirs(d, exist_ok=True)
         tmp, part = dst + ".str.tmp", dst + ".part"
@@ -2080,7 +2270,7 @@ def fmv_build(sources, out):
             os.replace(part, dst)
             with open(dst, "rb") as fh:
                 row.update(ffmpeg=at3.ffmpeg_version(ffmpeg), file=FMV_DIR.replace(os.sep, "/") + "/" + FMV_NAME,
-                           sha256=sha(fh.read()))
+                           sha256=sha(fh.read()), args=FMV_HOW)
     fmv_record(out, row)
 
 
@@ -2294,6 +2484,8 @@ def main():
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer", help="the base policy's table (default recipes/prefer.toml)")
+    p.add_argument("--reuse", help="a previous cache: its movie, sound effects and language layers are taken "
+                                   "when made from the same inputs by the same code (IDEAS I42)")
     p = s.add_parser("opt-recipes")
     p.add_argument("--dat", required=True, help="the PC port's DAT/ directory")
     p.add_argument("--disc", action="append", default=[], help="the JP, US and both PSP discs, and any other "

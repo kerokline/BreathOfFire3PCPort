@@ -179,6 +179,41 @@ only when everything succeeded:
    step deletes the new folders. Either way the previous install is left
    working.
 
+**Timings and reuse (2026-10-15, IDEAS I42).** `setup.log` gives each step
+its wall time - a `time` line after the build's own lines for each step, and
+`setup times:` with the total at the end. Measured from the three `.zip`s
+`psx-us`, `psx-eu-en`, `psp-eu`: **285 s**, of it the movie's conversion
+115 s and the two language layers 60 s each (83 % together), the PSX sound
+effects 25 s, the base's chunks 11 s, unpacking, music, the exe's tables and
+the install the rest.
+
+A setup builds from every source again, but takes from the install's
+current cache whatever it would make the same way (`--reuse`, which setup
+passes when the home has a cache): the movie when the previous `[fmv]` names
+the same stream, ffmpeg and arguments (`args`, bit-exact, so the same file);
+`base/snd/` when made from the same first PSX disc; each `loc/<tag>/` when
+its key matches. A key (`importer.py` `reuse_key`) is a hash of everything
+the step reads - the tools, recipes and fixtures and the Python running
+them (so a new release builds everything once), the sources it draws on, and
+for a language layer this cache's `base/dat/` and `base/exe/` and the layers
+built before it in the run (the French and German title menus borrow the
+English one's row). Keys are kept in `<cache>\build-keys\`, which nothing
+installs or walks. Anything that does not match is built as before.
+
+| Setup (the `.zip`s) | Time | Reused |
+|---|---|---|
+| `psx-us` + `psx-eu-en` + `psp-eu`, a new home (no cache to reuse) | 285 s | nothing |
+| `psx-us` + `psx-eu-en`, a new home | 277 s | nothing |
+| then `psp-eu` added | **180 s** | the movie, `base/snd`; not the language layers, rightly: the PSP disc fills one more base chunk (`AREA004.DAT` slot 7, the US disc's own section until then), so `base/dat` - which a disc-only layer is built against - changed |
+| then `psx-fr` added | **89 s** | the movie, `base/snd`, `loc/en-US`, `loc/en-150`; only `loc/fr-FR` built (57 s) |
+| the same four, a new home | 372 s | nothing |
+
+The second row's install was compared file by file with the first's, built
+fresh from the same three sources: **the 2,132 `game\` files identical**;
+the caches differ by the key files, the build time and the movie's new
+`args` field only. The fourth row's against the fifth's: **the 2,386
+`game\` files identical**, the caches by the build time only.
+
 **The languages chosen.** Every PlayStation disc's language (its
 `fixtures.toml` tag: `en-US`, `en-150`, `fr-FR`, `de-DE`, `ja-JP`); without a
 PC folder, every PSP disc's too (a disc-only build reads a PSP disc's text,

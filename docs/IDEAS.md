@@ -86,7 +86,7 @@ rule ([`README.md`](README.md)) here too.
 | I39 | The Identify panel's element icons shaded by how weak the enemy is, not bright / dim | display | HIGH | open 2026-10-15, the owner: an argument for it, not now |
 | I40 | Port the importer to C++ inside the launcher, so a release needs no bundled Python ([`install-sources.md`](install-sources.md) 7) | platform | MEDIUM | open 2026-10-15 (the owner: bundle Python now, port later) |
 | I41 | Read CHD and CSO images as sources (today refused with a sentence; [`install-sources.md`](install-sources.md) 4) | tooling | MEDIUM | open 2026-10-15, from the Sources page work |
-| I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | open 2026-10-15 (the owner: for later; rebuilding only what changed the biggest win) |
+| I42 | Make the install faster: setup rebuilds everything from every source on each add (about 3 to 4 minutes a setup, two of them the movie's conversion; [`install-sources.md`](install-sources.md) 5 and 6) - keep the base (movie, music, its `DAT` files) across setups and build only a new source's layers | tooling | MEDIUM | **partly built** 2026-10-15: every step timed; the movie, PSX sound and language layers reused when unchanged (adding a disc 89 s, not 372); the PSP's conversions left |
 
 ---
 
@@ -1740,4 +1740,15 @@ source's own layers.
   new one is complete.
 
 ### Outcome
-_(2026-10-15) open._
+_(2026-10-15) steps 1 and "rebuild only what changed" built_
+(`install/folder-scan`, [`install-sources.md`](install-sources.md) section 5,
+"Timings and reuse"): `setup.log` times every step; a setup reuses the
+previous cache's movie, PSX sound effects and language layers whenever their
+inputs and the code are unchanged. Adding a fourth disc (France) to a
+three-disc install: 89 s where a fresh build of the four is 372 s, and the two installs are
+identical file for file. Left: the PSP's
+own conversions (its movie and ATRAC3plus audio, for a PSP-only install) are
+not reused yet; adding a PSP disc after the PlayStation ones changes one base
+chunk, so the language layers are rebuilt then (a finer key - only the base
+chunks `loc_build` reads - would keep them); the zips are still unpacked each
+time (about a second each).

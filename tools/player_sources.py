@@ -21,6 +21,7 @@ import os
 import re
 import shutil
 import sys
+import time
 import uuid
 import zipfile
 
@@ -641,10 +642,34 @@ def cmd_setup(a):
     return 0
 
 
+class _Times:
+    """setup's own steps' wall times (IDEAS I42), written to setup.log as the
+    build's `time` lines are, and all of them again at the end."""
+
+    def __init__(self, log):
+        self.log, self.rows, self.start = log, [], time.perf_counter()
+
+    @contextlib.contextmanager
+    def step(self, what):
+        t = time.perf_counter()
+        try:
+            yield
+        finally:
+            self.rows.append((what, time.perf_counter() - t))
+            self.log.write("  time      %-28s %7.1f s\n" % self.rows[-1])
+
+    def summary(self):
+        self.log.write("setup times:\n")
+        for what, secs in self.rows:
+            self.log.write("  %-34s %7.1f s\n" % (what, secs))
+        self.log.write("  %-34s %7.1f s\n" % ("total", time.perf_counter() - self.start))
+
+
 def run_setup(a, h, log, progress, total):
     import argparse
     import at3
     imp = _imp()
+    times = _Times(log)
     rows = load_sources(h)
     if not rows:
         raise SetupError("No sources are listed: add the PC game folder, a PlayStation disc or a PSP disc first.")
@@ -703,7 +728,8 @@ def run_setup(a, h, log, progress, total):
             progress("Unpacking %s" % r["label"])
             os.makedirs(tmp, exist_ok=True)
             try:
-                inner, folder = unpack_zip(r["path"], tmp)
+                with times.step("unpack " + r["build"]):
+                    inner, folder = unpack_zip(r["path"], tmp)
             except ValueError as e:
                 raise SetupError(str(e))
             unpacked.append(folder)
@@ -716,18 +742,20 @@ def run_setup(a, h, log, progress, total):
             else:
                 src.append(p)
         progress("Building the data cache from %s (several minutes)" % ", ".join(r["label"] for r in rows))
+        # The install's current cache: what it already made the same way is taken, not made again (IDEAS I42).
+        reuse = cache if os.path.isfile(os.path.join(cache, "manifest.toml")) else None
         ns = argparse.Namespace(source=src, out=new_cache, lang=list(langs), opt=[], no_opt=[], preset=None,
-                                recipe=None, opt_recipe=None, prefer=None)
-        with contextlib.redirect_stdout(_Log(log, echo, on_line)):
+                                recipe=None, opt_recipe=None, prefer=None, reuse=reuse)
+        with contextlib.redirect_stdout(_Log(log, echo, on_line)), times.step("build (importer.py build)"):
             imp.cmd_build(ns)
         os.makedirs(new_game)
         if pc:
             progress("Copying the PC game's files (the original folder is not changed)")
-            with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)):
+            with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("copy the PC game"):
                 copy_pc(paths.get(pc["path"], pc["path"]), new_game, ffmpeg, log, progress)
         progress("Laying out the game folder" + (" with %s" % ", ".join(langs) if langs else ""))
         ns = argparse.Namespace(cache=new_cache, game=new_game, base=not pc, lang=list(langs), opt=[], no_opt=[])
-        with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)):
+        with contextlib.redirect_stdout(_Log(log, echo, lambda line: None)), times.step("install (lay out game)"):
             imp.cmd_install(ns)
     except BaseException:
         for p in unpacked:
@@ -739,7 +767,9 @@ def run_setup(a, h, log, progress, total):
         shutil.rmtree(p, ignore_errors=True)
     shutil.rmtree(tmp, ignore_errors=True)
     progress("Replacing the previous install")
-    swap(h, (("game", new_game), ("cache", new_cache)))
+    with times.step("swap into place"):
+        swap(h, (("game", new_game), ("cache", new_cache)))
+    times.summary()
     return game, cache
 
 
