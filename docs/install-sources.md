@@ -275,9 +275,10 @@ downloads cached.
 - **numpy's licences:** its wheel bundles OpenBLAS (BSD), the GCC runtime
   library (GPL-3.0 with the GCC Runtime Library Exception) and Microsoft's
   `msvcp140`; `THIRD_PARTY_RUNTIME.txt` says so. Redistributing the runtime
-  is what the exception permits; whether that sits with
-  [`LICENSING.md`](LICENSING.md) section 4 is **the owner's call** - numpy's
-  only use is `at3.py`'s, so it could be replaced if it does not.
+  is what the exception permits. **The owner's call (2026-10-15): keep numpy
+  for now** - it ships beside the importer, is never linked into our code, and
+  goes with the bundled Python when the importer is ported to C++ (IDEAS I40);
+  numpy's only use is `at3.py`'s ([`LICENSING.md`](LICENSING.md) section 4).
 - **The tools:** 25 `.py` files, found by walking every `import` from
   `importer.py` and `player_sources.py` at any depth, plus string literals
   naming a `tools/*.py` (how `importer.py` runs `loc_build.py`); the data under
