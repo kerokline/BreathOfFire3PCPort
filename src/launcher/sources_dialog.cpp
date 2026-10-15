@@ -7,7 +7,10 @@
 // (docs/install-sources.md section 3):
 //
 //   sources --home H list --json      one identify-shaped JSON object a line
-//   sources --home H add PATH --json  one object; exit 0 added, 1 refused
+//   sources --home H add PATH --json  one object; exit 0 added, 1 refused. A
+//                                     folder that is not the PC game's is
+//                                     searched: an object for each source in
+//                                     it, exit 0 when any was added
 //   sources --home H remove PATH      exit 0 removed
 //   setup --home H --json-progress    "progress <done> <total> <text>" lines,
 //                                     then "done game=... cache=..." or
@@ -393,9 +396,13 @@ void OnLine(HWND dlg, State& s, Job job, const std::wstring& wline) {
     }
     if (job == kAdd && IsJsonObject(line)) {
         const std::wstring label = Widen(JsonString(line, "label")), problem = Widen(JsonString(line, "problem"));
-        s.added = JsonTrue(line, "ok");
-        if (s.added) Log(dlg, L"Recognised: " + label + L".");
-        else Log(dlg, L"Not added: " + (problem.empty() ? std::wstring(L"not a release this project knows.") : problem));
+        // A folder of images answers once for each source in it.
+        const std::wstring path = Widen(JsonString(line, "path"));
+        const bool ok = JsonTrue(line, "ok");
+        s.added = s.added || ok;
+        if (ok) Log(dlg, L"Recognised: " + label + L" (" + path + L").");
+        else Log(dlg, L"Not added: " + path + L": " +
+                      (problem.empty() ? std::wstring(L"not a release this project knows.") : problem));
         return;
     }
     if (job == kSetup && line.compare(0, 9, "progress ") == 0) {
@@ -437,7 +444,7 @@ void OnDone(HWND dlg, State& s, Job job, DWORD code) {
             StartSetup(dlg, s);   // added: the install is rebuilt with it at once
             return;
         }
-        Status(dlg, L"That source was not added; see below.");
+        Status(dlg, L"Nothing was added; see below.");
         break;
     case kRemove:
         Status(dlg, code == 0 ? L"Removed. Build the install again for it to take effect." : L"Not removed; see below.");
@@ -486,7 +493,8 @@ void PickFolder(HWND dlg) {
     const HRESULT co = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     BROWSEINFOW bi{};
     bi.hwndOwner = dlg;
-    bi.lpszTitle = L"The PC game's folder (the one holding BOF3.exe and DAT)";
+    bi.lpszTitle = L"The PC game's folder (the one holding BOF3.exe and DAT), or a folder of disc images: "
+                   L"each one that matches a known release is added";
     bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     if (PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi)) {
         wchar_t path[MAX_PATH];
@@ -524,7 +532,7 @@ void Add(HWND dlg, State& s) {
         return;
     }
     s.added = false;
-    Status(dlg, L"Checking the source against the known releases (a disc takes a minute)...");
+    Status(dlg, L"Checking against the known releases (a disc takes a minute; a folder, a minute a disc)...");
     Log(dlg, L"Checking " + path + L"...");
     Start(dlg, s, kAdd, L"sources " + HomeArg(s) + L" add " + Quote(path) + L" --json");
 }

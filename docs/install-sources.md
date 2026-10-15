@@ -83,7 +83,7 @@ warning on stderr) is shown in a log box.
 |---|---|---|
 | `identify --json PATH...` | one JSON object a line per path | 0 all usable, 1 otherwise |
 | `sources --home H list --json` | one identify-shaped object a line, in list order; `ok` false and a `problem` when the path is gone | 0 |
-| `sources --home H add PATH --json` | one identify-shaped object (the stored, absolute path when added) | 0 added, 1 refused |
+| `sources --home H add PATH --json` | one identify-shaped object (the stored, absolute path when added); for a folder that is not the PC game's, a line `Found N possible sources in PATH...`, an object for each, and `Added A of the N found.` | 0 added (any, for a folder), 1 refused |
 | `sources --home H remove PATH` | `removed: PATH` or `not in the list: PATH` | 0 / 1 |
 | `setup --home H --json-progress [--ffmpeg EXE]` | `progress <done> <total> <text>` lines, then `done game=<path> cache=<path>`, or `error <sentence>` | 0 / 1 |
 
@@ -96,6 +96,21 @@ printed. `identify --home H` (optional) unpacks a `.zip` under
 
 `add` of a `BOF3.exe` adds the folder that holds it when that folder is a
 complete PC game (a file dialog's natural pick), and refuses otherwise.
+
+**`add` of a folder of disc images** (the owner, 2026-10-15; the Sources
+page's Folder... button takes either). A folder with neither `BOF3.exe` nor
+`DAT\` in it, and not itself a `DAT` folder, is searched - it and the four
+folders below it - for `.cue`, `.iso` and `.zip` files, a `.bin` with no
+`.cue` beside it (a `.cue` names its own tracks), and PC game folders (added
+whole, not searched inside); the install's own `game\`, `cache\` and
+`runtime\` are left out. Each is identified as above, then added in a fixed
+order - the PC game, then the PlayStation discs USA, Japan, Europe
+(English), France, Germany, then the PSP's Europe, Japan
+(`SCAN_ORDER`, `player_sources.py`) - so that with no PlayStation source yet
+the USA disc becomes a disc-only install's base (section 3); a base already
+listed stays. A second copy of a release (a `.zip` beside its `.cue`) is
+refused as a duplicate, as for a single `add`, and everything refused says
+why on its own line. Nothing in the folder is changed.
 
 `setup` reruns several `progress` lines with the same `<done>` while the
 cache builds (each language layer, the movie's conversion) and warnings as
@@ -206,6 +221,7 @@ unless two are given.
 | `Breath of Fire III (EMU).zophar.zip` (PSF music rips) | refused: no disc image and no game folder in it | under 1 s |
 | EU Track 2 `.bin` (CD audio) | refused: no readable file system | 1.5 s |
 | `CDImage\` (a folder of images) | refused: no BOF3.exe and DAT; choose the image file itself | under 1 s |
+| `CDImage\` again, 2026-10-15, with the folder scan | 17 found; added `psx-us`, `psx-jp`, `psx-eu-en`, `psx-fr`, `psx-de`, `psp-eu`, `psp-jp` in that order; each `.zip` refused as its `.cue`'s or `.iso`'s duplicate, the demo and the PSF rip with their sentences; the same folder again: 0 added | 16 s with the images in the file cache |
 
 **`sources`**: adding the PSP-JP `.iso`, the US `.cue` and `bof3\BOF3.exe`
 in that order listed them PC, PSX, PSP (the exe stored as its folder); the US

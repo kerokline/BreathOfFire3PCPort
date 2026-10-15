@@ -449,13 +449,98 @@ def cmd_sources(a):
         return 0
     # add
     tmp = bof3x_home.tmp_dir(h)
-    r = identify(a.path, tmp)
+    if os.path.isdir(a.path) and not _pc_folder_like(a.path):
+        return _add_folder(a.path, h, rows, tmp, a.json)
+    r = _add_one(a.path, rows, tmp)
+    _emit(r, a.json)
+    if r["ok"]:
+        save_sources(h, rows)
+    return 0 if r["ok"] else 1
+
+
+# A folder that is not the PC game's is searched for sources (the owner,
+# 2026-10-15): a folder of disc images, each in a folder of its own or not.
+SCAN_DEPTH = 4                         # folders below the one chosen
+SCAN_EXT = (".cue", ".iso", ".zip")    # and a .bin with no .cue beside it
+# The order a scan adds discs in (the owner, 2026-10-15): the PlayStation's,
+# the USA disc first so that it is a disc-only install's base (section 3),
+# then the PSP's, Europe before Japan. A base already in the list stays the
+# base; anything else (the PC game) comes before them.
+SCAN_ORDER = ("psx-us", "psx-jp", "psx-eu-en", "psx-fr", "psx-de", "psp-eu", "psp-jp")
+
+
+def _pc_folder_like(path):
+    """The folder is, or is meant as, the PC game's: BOF3.exe or DAT in it, or
+    it is a DAT folder. identify_folder's sentences answer those."""
+    return (_child(path, "BOF3.exe", False) is not None or _child(path, "DAT", True) is not None
+            or os.path.basename(os.path.abspath(path)).lower() == "dat")
+
+
+def scan_folder(folder, skip=()):
+    """The sources a folder may hold, in a stable order: each PC game folder
+    (not searched further), and each image - .cue, .iso, .zip, and a .bin with
+    no .cue beside it (a .cue names its own tracks) - down to SCAN_DEPTH
+    folders. Folders under `skip` (the install's own) are left out."""
+    skip = [_norm(x) for x in skip if x]
+    base = len(os.path.abspath(folder).rstrip("\\/").split(os.sep))
+    found = []
+    for root, dirs, files in os.walk(folder):
+        dirs.sort(key=str.lower)
+        here = _norm(root)
+        if any(here == k or here.startswith(k + os.sep) for k in skip):
+            dirs[:] = []
+            continue
+        if _child(root, "BOF3.exe", False) is not None and _child(root, "DAT", True) is not None:
+            found.append(root)
+            dirs[:] = []
+            continue
+        if len(os.path.abspath(root).split(os.sep)) - base >= SCAN_DEPTH:
+            dirs[:] = []
+        cue = any(f.lower().endswith(".cue") for f in files)
+        for f in sorted(files, key=str.lower):
+            ext = os.path.splitext(f)[1].lower()
+            if ext in SCAN_EXT or (ext == ".bin" and not cue):
+                found.append(os.path.join(root, f))
+    return found
+
+
+def _add_folder(folder, h, rows, tmp, as_json):
+    """Every source in the folder that identifies as a catalogued release is
+    added - the first of each release, the rest refused as its duplicates -
+    and each one found says so, a line each. Exit 0 when any was added."""
+    # the install's own folders, never a source (a game\ laid out from the PC copy would look like one)
+    found = scan_folder(folder, [os.path.join(h, d) for d in ("game", "cache", "runtime")])
+    if not found:
+        _emit(result(folder, problem="This folder holds no BOF3.exe and DAT folder, and no disc image (.cue, .iso, "
+                                     ".bin or .zip) in it or the %d folders below it." % SCAN_DEPTH), as_json)
+        return 1
+    print("Found %d possible source%s in %s; checking each against the known releases."
+          % (len(found), "" if len(found) == 1 else "s", folder), flush=True)
+    # Identify every one, then add in SCAN_ORDER (the rest first, as found).
+    ids = [identify(path, tmp) for path in found]
+    rank = lambda i: (SCAN_ORDER.index(ids[i]["build"]) + 1 if ids[i]["build"] in SCAN_ORDER else 0, i)
+    added = 0
+    for i in sorted(range(len(found)), key=rank):
+        r = _add_one(found[i], rows, tmp, ids[i])
+        _emit(r, as_json)
+        if r["ok"]:
+            added += 1
+            save_sources(h, rows)   # each one kept as it is added
+    print("Added %d of the %d found." % (added, len(found)), flush=True)
+    return 0 if added else 1
+
+
+def _add_one(path, rows, tmp, r=None):
+    """identify (unless `r` is its answer already), then add to `rows` (not
+    saved) when usable and not a release already listed: the result as `add`
+    emits it."""
+    r = r or identify(path, tmp)
     if r["ok"] and r["kind"] == "pc-exe":
         # A BOF3.exe chosen in a file dialog: the folder that holds it is the source.
-        parent = os.path.dirname(os.path.abspath(a.path))
+        parent = os.path.dirname(os.path.abspath(path))
         up = identify(parent, tmp)
         if not up["ok"]:
-            r = result(a.path, False, "pc-zh", "pc-exe", r["label"],
+            r = result(path, False, "pc-zh", "pc-exe", r["label"],
                        "BOF3.exe alone cannot make an install, and the folder holding it is not a complete PC "
                        "game: %s" % up["problem"][0].lower() + up["problem"][1:])
         else:
@@ -466,14 +551,11 @@ def cmd_sources(a):
             r = dict(r, ok=False, problem="%s is already a source (%s); remove that one first to use this copy "
                                           "instead." % (r["label"], same["path"]))
     if not r["ok"]:
-        _emit(r, a.json)
-        return 1
+        return r
     rows.append({"path": os.path.normpath(os.path.abspath(r["path"])), "build": r["build"], "kind": r["kind"],
                  "label": r["label"], "added": datetime.datetime.now().isoformat(timespec="seconds")})
-    save_sources(h, rows)
     r["path"] = os.path.normpath(os.path.abspath(r["path"]))
-    _emit(r, a.json)
-    return 0
+    return r
 
 
 # ---------------------------------------------------------------- setup
