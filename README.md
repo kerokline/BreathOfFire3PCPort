@@ -66,7 +66,7 @@ copies.
 
 The install process is in the progress of being streamlined, for now there
 will be an alpha build packaged with the necessary Python and a quick
-GUI. For the documentation on the scripted process, please refer to [`docs/isntall_process.md`](docs/install_process.md)
+GUI. For the documentation on the scripted process, please refer to [`docs/install_process.md`](docs/install_process.md)
 
 ## Decompilation Target
 
