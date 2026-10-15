@@ -35,6 +35,25 @@ game-data kind or any file whose hash `fixtures.toml` catalogues.
    click. (`workflow_dispatch` with a tag re-runs step 3 for an existing tag,
    e.g. after deleting a bad draft.)
 
+## The latest build (2026-10-15)
+
+Every push to `main` builds the same zip as a release does and publishes it as
+the pre-release **"Latest build (main)"**, tag `latest`, always at the same
+address:
+
+```
+https://github.com/kerokline/BreathOfFire3PCPort/releases/download/latest/bof3x-latest-win.zip
+```
+
+`release.yml`, when run for a branch: the `latest` tag is moved to the commit,
+the zip (`make_release.py --version latest-<commit>`) replaces the one there,
+and the notes name the commit and the time. It is published, not a draft -
+it is the download link for current builds (the owner's ask) - and never
+marked GitHub's latest release, so a published `v*` release keeps that. No
+notes file is needed; a newer push cancels a latest build still running. A
+`v*` tag still makes a draft as in "Cutting one" above. The repository is
+public, so the latest build is too.
+
 ## Building the zip locally
 
 ```
