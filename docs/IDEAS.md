@@ -1593,7 +1593,7 @@ mapped; a DIV-0041 amendment when built)._
 
 ## I39 — Shade the element icons by how weak the enemy is
 
-**Ask (2026-10-15, the owner, on DIV-0128):** "There's maybe an argument to be
+**Ask (2026-10-15, the owner, on the Identify panel's element icons, PR #63):** "There's maybe an argument to be
 made for some kind of bright -> dark scaling based on how weak they are, but
 for now going with the original brightness settings sounds correct."
 `Identify_DrawElements` reads one resistance byte per element (`+0xBF..0xC4`)
