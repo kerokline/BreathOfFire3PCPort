@@ -1,16 +1,9 @@
 # Breath of Fire III — PC Port
 
 <!-- game-art -->
-<p align="center">
-<img width="560" height="240" alt="Ending Ultrawide Frame" src="https://github.com/user-attachments/assets/6a5c29a9-35da-4573-9fe9-06ac0ce0a806" />
-</p>
-<p align ="center">
-<img width="320" height="240" alt="Japanese Diary" src="https://github.com/user-attachments/assets/3859fc66-48c5-4f79-94c4-1b928aa66195" />
-<img width="424" height="240" alt="English Widescreen Start Screen" src="https://github.com/user-attachments/assets/09cf6a77-eb15-44b1-bdfd-733f2033c50d" />
-<img width="424" height="240" alt="French Widescreen Steal" src="https://github.com/user-attachments/assets/4ea0bba0-5c57-4886-b783-79b79dc2e4d3" />
-<img width="320" height="240" alt="Chinese Whelp Fight" src="https://github.com/user-attachments/assets/c0051efb-5307-4a5b-8bb2-e76dafddc19f" /> 
-</p>
-<!-- /game-art -->
+<p align="center"><img width="424" height="240" alt="Widescreen Start Page" src="docs/images/widescreenIntro.png" /></p>
+<p align="center"><img width="560" height="240" alt="Ending Ultrawide Frame" src="docs/images/ultrawideEnding.png" /></p>
+
 
 A renovation / overhaul of the 2001 Chinese PC port of *Breath of Fire III*:
 fix its bugs, modernise its platform, and consolidate QOL features that
@@ -28,6 +21,10 @@ people have been adding over the years (simple cheats, difficulty mods, etc.)
 > status is kept in [`docs/STATUS.md`](docs/STATUS.md); every document
 > is indexed in [`docs/README.md`](docs/README.md); every deliberate change to
 > the game is in [`docs/DIVERGENCE.md`](docs/DIVERGENCE.md). 
+
+<!-- game-art -->
+<p align="center"><img width="560" height="240" alt="Ultrawide Mural" src="docs/images/ultrawideMural.png" /></p>
+<!-- /game-art -->
 
 ## Highlights
 
@@ -56,6 +53,10 @@ Here's a non-exhaustive list of the things that have changed ->
 - **Fixes and QOL Changes**: Oh so many! Take a look at the divergence doc if you'd 
   like to see an exhaustive list of changes that have been made. 
 
+<!-- game-art -->
+<p align ="center"><img width="424" height="240" alt="Japanese Stallion" src="docs/images/widescreenJapaneseStallion.png" /></p>
+<!-- /game-art -->
+
 ## Building and Running
 
 You need a legally owned copy of the game: the Chinese PC port (`BOF3.exe`,
@@ -64,9 +65,14 @@ a PlayStation or PSP disc image of *Breath of Fire III*. Nothing you own is
 modified; everything the game reads is built on your machine from your own
 copies.
 
-The install process is in the progress of being streamlined, for now there
-will be an alpha build packaged with the necessary Python and a quick
-GUI. For the documentation on the scripted process, please refer to [`docs/install_process.md`](docs/install_process.md)
+There is an alpha build packaged with the necessary external Python dependencies
+and a quick GUI. The goal is to sunset it eventually, but it is working for now.
+
+For the documentation on the scripted process, please refer to [`docs/install_process.md`](docs/install_process.md)
+
+<!-- game-art -->
+<p align ="center"><img width="320" height="240" alt="Shroom German" src="docs/images/shroomGerman.png" /></p>
+<!-- /game-art -->
 
 ## Decompilation Target
 
@@ -84,6 +90,10 @@ The shipped `BOF3.exe` (2,584,576 bytes, 2001-04-18), measured:
   which is what lets names and findings transfer from the sibling project
   ([`docs/SHARED_SOURCE.md`](docs/SHARED_SOURCE.md)).
 
+<!-- game-art -->
+<p align ="center"><img width="424" height="240" alt="The Bridge" src="docs/images/widescreenBridge.png" /></p>
+<!-- /game-art -->
+
 ## The Approach
 
 **Incremental decompilation into a hybrid binary**, the OpenRCT2 /
@@ -100,6 +110,10 @@ rely on AI to write code, it won't be generating new assets for the game. I love
 game, every pixel and jazz chord and odd translation choice - I want to keep it 
 itself. If something can't be done without altering assets or drawing new ones, it 
 won't be done.
+
+<!-- game-art -->
+<p align ="center"><img width="320" height="240" alt="French Intro" src="docs/images/frenchIntro.png" /></p>
+<!-- /game-art -->
 
 ## Shoutouts
 
