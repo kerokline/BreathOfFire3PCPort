@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include "launcher/suites.h"
+#include "common/home.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -177,6 +178,8 @@ bool ConfigLoad(const std::wstring& path, Config& cfg, std::string& error) {
             cfg.psp = value;
         } else if (key == "cache") {  // DIV-0087: a path; the dll refuses one that is not a directory
             cfg.cache = ConfigCacheFromIni(value);   // UTF-8 (state 3); an older ini's ANSI bytes once
+        } else if (key == "ffmpeg") {  // the importer's, for the PSP's music (docs/install-sources.md)
+            cfg.ffmpeg = ConfigCacheFromIni(value);
         } else if (key == "music") {  // DIV-0087
             if (value == "seq" || value == "mp3" || value.empty()) cfg.music = value;
         } else if (key == "filter") {
@@ -279,6 +282,8 @@ bool ConfigSave(const std::wstring& path, const Config& cfg) {
     out += "psp=" + cfg.psp + "\r\n";
     out += "# the importer's cache folder; its base\\bgm songs play through the sequencer (DIV-0087, docs/music-seq-engine.md)\r\n";
     out += "cache=" + cfg.cache + "\r\n";
+    out += "# ffmpeg.exe for the importer (the PSP's music); empty: BOF3X_FFMPEG or PATH (docs/install-sources.md)\r\n";
+    out += "ffmpeg=" + cfg.ffmpeg + "\r\n";
     out += "# seq (the cache's song where it has one, the default) | mp3 (the PC's files always)\r\n";
     out += "music=" + cfg.music + "\r\n";
     out += "# linear (the port's own) | point (DIV-0012)\r\n";
@@ -402,8 +407,14 @@ void ConfigApplyEnvironment(const std::wstring& game_dir, const Config& cfg, boo
 
     // DIV-0087: the cache root and the music source, as the ini has them; the
     // dll checks both.
-    if (GetEnvironmentVariableW(L"BOF3X_CACHE", existing, 64) == 0 && !cfg.cache.empty())
-        SetEnvironmentVariableW(L"BOF3X_CACHE", ConfigFromUtf8(cfg.cache).c_str());   // the character, not the bytes
+    // Neither names one: the home's own cache, when the Sources page built it
+    // (ConfigCacheRoot).
+    if (GetEnvironmentVariableW(L"BOF3X_CACHE", existing, 64) == 0) {
+        if (!cfg.cache.empty())
+            SetEnvironmentVariableW(L"BOF3X_CACHE", ConfigFromUtf8(cfg.cache).c_str());   // the character, not the bytes
+        else if (const std::wstring home = HomeCacheDefault(); !home.empty())
+            SetEnvironmentVariableW(L"BOF3X_CACHE", home.c_str());
+    }
     if (GetEnvironmentVariableW(L"BOF3X_MUSIC", existing, 64) == 0 && !cfg.music.empty())
         SetEnvironmentVariableA("BOF3X_MUSIC", cfg.music.c_str());
 
@@ -530,6 +541,11 @@ std::wstring ConfigCacheRoot(const Config& cfg) {
         // it to the game wide - not the ANSI code page, which could not hold
         // every folder name (docs/code-page-audit.md section 4).
         out = ConfigFromUtf8(cfg.cache);
+    } else if (n == 0) {
+        // Neither names one: the home's own cache, when the Sources page has
+        // built it (common/home.h, docs/install-sources.md). Never written to
+        // the ini, so a moved install folder still finds its own.
+        out = HomeCacheDefault();
     }
     while (out.size() > 1 && (out.back() == L'\\' || out.back() == L'/')) out.pop_back();
     return out;

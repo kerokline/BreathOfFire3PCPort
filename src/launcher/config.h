@@ -97,6 +97,10 @@ struct Config {
     // an untouched box writes back what was read.
     std::string cache;
     std::string music;
+    // ffmpeg.exe as the Sources page's Locate... found it (UTF-8), handed to
+    // the importer as BOF3X_FFMPEG for the PSP's music (tools/at3.py); empty:
+    // BOF3X_FFMPEG or PATH. The game never reads it (docs/install-sources.md).
+    std::string ffmpeg;
     Filter filter = Filter::kLinear;
     Display display = Display::kFullscreen;
     // BOF3.CFG line 2, Cfg_RenderMode: Capcom's set-up's device index. 0 is
@@ -217,7 +221,8 @@ bool ConfigApplyGameCfg(const std::wstring& game_dir, const Config& cfg, std::ws
 std::wstring ConfigCacheDataRoot(const Config& cfg);
 
 // The cache the game is given at all - BOF3X_CACHE when the environment has
-// it, else the ini's cache= - whatever BOF3X_CACHE_DATA says: the music's
+// it, else the ini's cache=, else the home's own cache\ when the Sources page
+// built one (common/home.h) - whatever BOF3X_CACHE_DATA says: the music's
 // (DIV-0087; a layer's bgm part) and the manifest's, whose base_policy
 // the DLL reads under either setting.
 std::wstring ConfigCacheRoot(const Config& cfg);

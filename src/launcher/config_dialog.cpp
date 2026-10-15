@@ -16,9 +16,11 @@
 #include <string>
 #include <vector>
 
+#include "common/home.h"
 #include "input/pad_sdl.h"
 #include "launcher/music_player.h"
 #include "launcher/resource.h"
+#include "launcher/sources_dialog.h"
 #include "launcher/suites.h"
 
 namespace bof3x {
@@ -70,7 +72,8 @@ void CacheNote(HWND dlg) {
     w = b == std::wstring::npos ? std::wstring() : w.substr(b, e - b + 1);   // ConfigLoad trims
     const wchar_t* note = L"";
     if (w.empty()) {
-        note = L"No cache: the PC's MP3s play.";
+        note = HomeCacheDefault().empty() ? L"No cache: the PC's MP3s play."
+                                          : L"Empty: this install's own cache (cache\\ in the install folder).";
     } else {
         while (w.size() > 1 && (w.back() == L'\\' || w.back() == L'/')) w.pop_back();
         const std::string a = ConfigToUtf8(w);
@@ -141,6 +144,7 @@ std::wstring DialogCacheRoot(HWND dlg) {
         w = DialogText(dlg, IDC_CACHE);
         const size_t b = w.find_first_not_of(L" \t"), e = w.find_last_not_of(L" \t");
         w = b == std::wstring::npos ? std::wstring() : w.substr(b, e - b + 1);
+        if (w.empty()) w = HomeCacheDefault();   // the home's own, as ConfigCacheRoot
     }
     while (w.size() > 1 && (w.back() == L'\\' || w.back() == L'/')) w.pop_back();
     return w;
@@ -1016,7 +1020,19 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             std::wstring cache = DialogText(dlg, IDC_CACHE);
             const size_t b = cache.find_first_not_of(L" \t"), e = cache.find_last_not_of(L" \t");
             cache = b == std::wstring::npos ? std::wstring() : cache.substr(b, e - b + 1);
+            if (cache.empty()) cache = HomeCacheDefault();   // the home's own, as ConfigCacheRoot
             MusicPlayerRun(dlg, state->game_dir, cache, DialogDataRoot(dlg), &state->cfg->opt, &state->chord);
+            return TRUE;
+        }
+        case IDC_SOURCES: {
+            // A rebuilt install may be another game folder and cache: the
+            // launcher reads them again and reopens this page.
+            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            if (SourcesDialogRun(dlg, *state->cfg, false)) {
+                ReadCache(dlg, *state->cfg);
+                ReadBack(dlg, *state);
+                EndDialog(dlg, kDialogSourcesChanged);
+            }
             return TRUE;
         }
         default:
@@ -1035,7 +1051,7 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 
 }  // namespace
 
-bool ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
+ConfigDialogResult ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     INITCOMMONCONTROLSEX icc{sizeof icc, ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES};
     InitCommonControlsEx(&icc);
 
@@ -1053,9 +1069,9 @@ bool ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
         // than not starting: say so and let them try again.
         MessageBoxW(nullptr, L"The settings dialog could not be created.", L"bof3x-launcher",
                     MB_OK | MB_ICONERROR);
-        return false;
+        return kDialogClosed;
     }
-    return result == 1;
+    return result == kDialogPlay ? kDialogPlay : result == kDialogSourcesChanged ? kDialogSourcesChanged : kDialogClosed;
 }
 
 }  // namespace bof3x

@@ -100,3 +100,22 @@
 #define IDC_MP_STATUS   1507
 #define IDC_MP_CHORD    1508   // DIV-0113: the battle chord as the PSP plays it (opt= psp-chord-one-tone)
 #define IDC_MP_CHORD_NOTE 1509
+
+// The Sources page (docs/install-sources.md), and its button on the settings.
+#define IDC_SOURCES     1031
+#define IDD_SOURCES      106
+#define IDC_SO_INTRO    1600
+#define IDC_SO_LIST     1601
+#define IDC_SO_REMOVE   1602
+#define IDC_SO_PATH     1603
+#define IDC_SO_FILE     1604
+#define IDC_SO_FOLDER   1605
+#define IDC_SO_ADD      1606
+#define IDC_SO_FFNOTE   1607
+#define IDC_SO_FFLOCATE 1608
+#define IDC_SO_FFGET    1609
+#define IDC_SO_PROGRESS 1610
+#define IDC_SO_STATUS   1611
+#define IDC_SO_LOG      1612
+#define IDC_SO_HOME     1613
+#define IDC_SO_BUILD    1614

@@ -6,6 +6,7 @@
 //
 //   cmake -S tools/launcher_host -B <scratch>/lh -G Ninja -DCMAKE_CXX_COMPILER=clang++
 //   cmake --build <scratch>/lh && <scratch>/lh/config_tests.exe
+#include "common/home.h"
 #include "launcher/config.h"
 #include "launcher/suites.h"
 
@@ -827,7 +828,51 @@ void TestPspValid() {
     Check(why == "\"duel-los\" is not one of the PSP's changes (duel-loss, myria-item)", "the reason names the items", why);
 }
 
+// docs/install-sources.md: the home's own game\ and cache\ are defaults only -
+// BOF3X_CACHE and the ini's cache= still win, an empty home offers neither, and
+// the default is never written to the ini. ffmpeg= round-trips.
+void TestHomeDefaults() {
+    const std::wstring home = Temp(L"bof3x_home_test");
+    SetEnvironmentVariableW(L"BOF3X_HOME", home.c_str());
+    CreateDirectoryW(home.c_str(), nullptr);
+    ClearEnv();
+    bof3x::Config cfg;
+    Check(bof3x::HomeDir() == home, "BOF3X_HOME names the home", bof3x::ConfigToUtf8(bof3x::HomeDir()));
+    Check(bof3x::HomeCacheDefault().empty() && bof3x::HomeGameDefault().empty(), "an empty home: no default");
+    Check(bof3x::ConfigCacheRoot(cfg).empty(), "an empty home: no cache");
+    CreateDirectoryW((home + L"\\cache").c_str(), nullptr);
+    Check(bof3x::HomeCacheDefault().empty(), "cache\\ without manifest.toml: no default");
+    WriteAll(home + L"\\cache\\manifest.toml", "[meta]\n");
+    CreateDirectoryW((home + L"\\game").c_str(), nullptr);
+    CreateDirectoryW((home + L"\\game\\DAT").c_str(), nullptr);
+    Check(bof3x::HomeGameDefault() == home + L"\\game", "game\\DAT: the home's game folder");
+    Check(bof3x::ConfigCacheRoot(cfg) == home + L"\\cache", "no env, no ini: the home's cache");
+    const std::wstring game = Temp(L"bof3x_home_game");
+    bof3x::ConfigApplyEnvironment(game, cfg, false);
+    Check(Env("BOF3X_CACHE") == bof3x::ConfigToUtf8(home + L"\\cache"), "the game is given the home's cache",
+          Env("BOF3X_CACHE"));
+    ClearEnv();
+    cfg.cache = "C:\\elsewhere";
+    Check(bof3x::ConfigCacheRoot(cfg) == L"C:\\elsewhere", "the ini's cache= wins");
+    SetEnvironmentVariableW(L"BOF3X_CACHE", L"D:\\env");
+    Check(bof3x::ConfigCacheRoot(cfg) == L"D:\\env", "BOF3X_CACHE wins");
+    ClearEnv();
+    cfg.cache.clear();
+    cfg.ffmpeg = "C:\\tools\\ffmpeg.exe";
+    const std::wstring ini = home + L"\\bof3x.ini";
+    Check(bof3x::ConfigSave(ini, cfg), "save");
+    const std::string text = ReadAll(ini);
+    Check(text.find("\r\ncache=\r\n") != std::string::npos, "the home's cache is not written to the ini");
+    bof3x::Config back;
+    std::string why;
+    bof3x::ConfigLoad(ini, back, why);
+    Check(back.ffmpeg == cfg.ffmpeg, "ffmpeg= round-trips", back.ffmpeg);
+    SetEnvironmentVariableW(L"BOF3X_HOME", nullptr);
+}
+
 int main() {
+    std::printf("home defaults (docs/install-sources.md)\n");
+    TestHomeDefaults();
     std::printf("cache manifest\n");
     TestManifest();
     std::printf("review fixes: hosted opt=, listed layers, music only, one reader, chord round trip, psp=\n");
