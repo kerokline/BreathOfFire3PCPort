@@ -771,8 +771,9 @@ add_dependencies(bof3x_launcher bof3x_symbols bof3x_suites)
 # dialog's capture reads the pad, and the dialogs take the pad's d-pad, cross
 # and circle as navigation.
 # shell32 and ole32: the Cache folder box's Browse... (SHBrowseForFolderW);
-# comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW).
-target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 comdlg32 shell32 ole32 winmm SDL3::SDL3-static)
+# comdlg32: the Sources page's File... and Locate ffmpeg.exe... (GetOpenFileNameW);
+# windowscodecs: the title page's picture, decoded by WIC (docs/launcher-settings.md 2a).
+target_link_libraries(bof3x_launcher PRIVATE bcrypt comctl32 comdlg32 shell32 ole32 windowscodecs winmm SDL3::SDL3-static)
 target_link_options(bof3x_launcher PRIVATE -municode)
 set_target_properties(bof3x_launcher PROPERTIES OUTPUT_NAME "bof3x-launcher")
 # The Jukebox's names (docs/music-player.md section 4), beside the launcher.

@@ -1,7 +1,8 @@
-// The settings dialog: a Win32 DIALOGEX from launcher.rc, shown with
-// DialogBoxParam. No third-party toolkit, which is deliberate - the launcher
-// stays a single dependency-free 32-bit exe, and nothing is vendored
-// (CLAUDE.md rule 5, docs/LICENSING.md section 4).
+// The launcher's window: a Win32 DIALOGEX from launcher.rc, shown with
+// DialogBoxParam - a title page, and Configure, whose tabs are child dialogs
+// (docs/launcher-settings.md section 2a). No third-party toolkit, which is
+// deliberate - the launcher stays a single dependency-free 32-bit exe, and
+// nothing is vendored (CLAUDE.md rule 5, docs/LICENSING.md section 4).
 #include "launcher/config_dialog.h"
 
 #include <windows.h>
@@ -9,6 +10,7 @@
 #include <commctrl.h>
 #include <objbase.h>
 #include <shlobj.h>
+#include <wincodec.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -26,6 +28,38 @@
 namespace bof3x {
 namespace {
 
+// The Controls page's cells (DIV-0050, below with the page's code).
+struct Cells {
+    int key[input::kActionCount][2];   // DIK scancode, or -1
+    int pad[input::kActionCount][2];   // PadInput index, or -1
+    input::Layout layout;
+    std::vector<input::KeyBinding> kept;   // multi-action keys and unnamed scancodes, as loaded
+};
+
+// Configure's tabs, in the order of their buttons (IDC_TAB0 + page).
+enum Page { kPageTitle = -1, kPageSettings, kPageControls, kPageMusic, kPageGame, kPageMods, kPageData, kPageCount };
+
+// The sub-pages, each a child dialog. A tab shows one at a time; a tab with
+// more than one shows a button for each over it (IDC_SUB0 + its place among
+// the tab's), so every page fits the 640 x 480 window at any display scale.
+struct SubPage {
+    int page, templ;
+    const wchar_t* label;   // the sub-tab button's, when the tab has more than one
+};
+constexpr SubPage kSubPages[] = {
+    {kPageSettings, IDD_PAGE_SETTINGS, nullptr},
+    {kPageControls, IDD_PAGE_CONTROLS, L"Directions and buttons"},
+    {kPageControls, IDD_PAGE_CONTROLS2, L"Shoulders, Start and Select"},
+    {kPageMusic, IDD_PAGE_MUSIC, nullptr},
+    {kPageGame, IDD_PAGE_VERSIONS, L"Graphics and audio"},
+    {kPageGame, IDD_PAGE_VERSIONS2, L"Data"},
+    {kPageGame, IDD_PAGE_GAME, L"Cheats"},
+    {kPageMods, IDD_PAGE_MODS, nullptr},   // kept for side-loaded files (IDEAS I33)
+    {kPageData, IDD_PAGE_DATA, nullptr},
+};
+constexpr int kSubPageCount = static_cast<int>(std::size(kSubPages));
+constexpr int kSubTabsMax = 3;   // IDC_SUB0 .. IDC_SUB0 + 2
+
 struct DialogState {
     Config* cfg = nullptr;
     // The overlay languages found in DAT\ (ConfigLanguagesAvailable): the
@@ -41,7 +75,46 @@ struct DialogState {
     // DIV-0102: whether "Chinese (PC script)" is offered (ConfigOriginalAvailable);
     // without it the box holds the languages alone, and its note says why.
     bool original = true;
+
+    // The window (section 2a): the page shown, the sub-pages, and the Controls
+    // and Game Options pages' edits - written to cfg only when touched, so an
+    // untouched window writes bindings and cheats back as they were read.
+    int page = kPageTitle;
+    int sub[kPageCount] = {};             // each tab's sub-page shown, its place among the tab's
+    HWND pages[kSubPageCount] = {};       // kSubPages' order
+    Cells cells{};
+    bool cells_touched = false, cheats_touched = false;
+    // Back applied the pages to cfg: Exit then saves them (kDialogSave).
+    bool applied = false;
+    // The picture, 32-bit top-down pixels, and the scale it is drawn at.
+    std::vector<unsigned char> picture;
+    int picture_w = 0, picture_h = 0;
+    double scale = 1.0;   // the display's: 1 at 100 %, 2 at 200 %
+    HFONT button_font = nullptr;
 };
+
+// A control on the window or on any of its sub-pages: the ids are unique
+// across launcher.rc's pages, so the code that fills and reads them back does
+// not care which tab holds a control.
+HWND Item(HWND dlg, int id) {
+    if (HWND h = GetDlgItem(dlg, id)) return h;
+    for (HWND page = FindWindowExW(dlg, nullptr, L"#32770", nullptr); page;
+         page = FindWindowExW(dlg, page, L"#32770", nullptr))
+        if (HWND h = GetDlgItem(page, id)) return h;
+    return nullptr;
+}
+
+// The sub-page made from a template.
+HWND SubPageOf(const DialogState& state, int templ) {
+    for (int i = 0; i < kSubPageCount; ++i)
+        if (kSubPages[i].templ == templ) return state.pages[i];
+    return nullptr;
+}
+
+void SetText(HWND dlg, int id, const wchar_t* text) { SetWindowTextW(Item(dlg, id), text); }
+void Check(HWND dlg, int id, bool on) { SendMessageW(Item(dlg, id), BM_SETCHECK, on ? BST_CHECKED : BST_UNCHECKED, 0); }
+bool Checked(HWND dlg, int id) { return SendMessageW(Item(dlg, id), BM_GETCHECK, 0, 0) == BST_CHECKED; }
+void Enable(HWND dlg, int id, bool on) { EnableWindow(Item(dlg, id), on); }
 
 // ---- DIV-0087: the music source and the cache folder --------------------------
 //
@@ -54,9 +127,9 @@ struct DialogState {
 // Arm). Any folder name can be given (docs/state3-design.md section 9).
 
 std::wstring DialogText(HWND dlg, int id) {
-    const int n = GetWindowTextLengthW(GetDlgItem(dlg, id));
+    const int n = GetWindowTextLengthW(Item(dlg, id));
     std::wstring w(static_cast<size_t>(n) + 1, L'\0');
-    GetDlgItemTextW(dlg, id, w.data(), n + 1);
+    GetWindowTextW(Item(dlg, id), w.data(), n + 1);
     w.resize(static_cast<size_t>(n));
     return w;
 }
@@ -89,7 +162,7 @@ void CacheNote(HWND dlg) {
                        : L"No base\\bgm in it: the PC's MP3s play.";
         }
     }
-    SetDlgItemTextW(dlg, IDC_CACHENOTE, note);
+    SetText(dlg, IDC_CACHENOTE, note);
 }
 
 void BrowseCache(HWND dlg) {
@@ -101,7 +174,7 @@ void BrowseCache(HWND dlg) {
     if (PIDLIST_ABSOLUTE pidl = SHBrowseForFolderW(&bi)) {
         wchar_t path[MAX_PATH];
         if (SHGetPathFromIDListW(pidl, path)) {
-            SetDlgItemTextW(dlg, IDC_CACHE, path);
+            SetText(dlg, IDC_CACHE, path);
             CacheNote(dlg);
         }
         CoTaskMemFree(pidl);
@@ -191,28 +264,28 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
                                                              : L"This install's base is the PlayStation's") +
                L"; the cache is built from " + (from.empty() ? std::wstring(L"no source") : from) + L".";
     }
-    SetDlgItemTextW(dlg, IDC_SUITENOTE, note.c_str());
+    SetText(dlg, IDC_SUITENOTE, note.c_str());
 
     for (size_t i = 0; i < state.suites.size(); ++i) {
         const SuiteState& s = state.suites[i];
         const int base = IDC_SUITE0 + kSuiteStride * static_cast<int>(i);
-        SetDlgItemTextW(dlg, base + kSuiteLabel, (std::wstring(s.info->label) + L":").c_str());
-        SetDlgItemTextW(dlg, base + kSuitePsx, s.psp_base ? L"PlayStation" : L"PlayStation (the base)");
-        SetDlgItemTextW(dlg, base + kSuitePsp, s.psp_base ? L"PSP (the base)" : L"PSP");
-        EnableWindow(GetDlgItem(dlg, base + kSuitePsx), s.psx_enabled);
-        EnableWindow(GetDlgItem(dlg, base + kSuitePsp), s.psp_enabled);
+        SetText(dlg, base + kSuiteLabel, (std::wstring(s.info->label) + L":").c_str());
+        SetText(dlg, base + kSuitePsx, s.psp_base ? L"PlayStation" : L"PlayStation (the base)");
+        SetText(dlg, base + kSuitePsp, s.psp_base ? L"PSP (the base)" : L"PSP");
+        Enable(dlg, base + kSuitePsx, s.psx_enabled);
+        Enable(dlg, base + kSuitePsp, s.psp_enabled);
         int& choice = state.choice[i];
         if ((choice == 0 && !s.psx_enabled) || (choice == 1 && !s.psp_enabled)) choice = -1;
         const int shown = choice >= 0 ? choice : s.side == SuiteSide::kPsx ? 0 : s.side == SuiteSide::kPsp ? 1 : -1;
-        CheckDlgButton(dlg, base + kSuitePsx, shown == 0 ? BST_CHECKED : BST_UNCHECKED);
-        CheckDlgButton(dlg, base + kSuitePsp, shown == 1 ? BST_CHECKED : BST_UNCHECKED);
+        Check(dlg, base + kSuitePsx, shown == 0);
+        Check(dlg, base + kSuitePsp, shown == 1);
 
         // The members, greyed when the PSP's version cannot play them here; and
         // the reasons, the same reason said once for the members that share it.
         std::vector<std::pair<std::wstring, std::wstring>> notes;   // note, the members it is about
         for (int k = 0; k < kSuiteMembers; ++k) {
             // Lines 0..3 every suite has; 4..5 the data suite alone (resource.h).
-            HWND line = GetDlgItem(dlg, base + (k < 4 ? kSuiteMember0 + k : kSuiteMember4 + (k - 4)));
+            HWND line = Item(dlg, base + (k < 4 ? kSuiteMember0 + k : kSuiteMember4 + (k - 4)));
             if (!line) continue;
             if (static_cast<size_t>(k) >= s.members.size()) {
                 SetWindowTextW(line, L"");
@@ -234,7 +307,7 @@ void SuitesRefresh(HWND dlg, DialogState& state) {
         if (shown < 0) why += L"bof3x.ini's opt= and psp= play part of this suite: kept as written until a version is chosen. ";
         for (const auto& [n, who] : notes) why += who + L": " + n + L". ";
         if (!why.empty()) why.pop_back();
-        SetDlgItemTextW(dlg, base + kSuiteWhy, why.c_str());
+        SetText(dlg, base + kSuiteWhy, why.c_str());
     }
 }
 
@@ -253,15 +326,15 @@ const wchar_t* LanguageLabel(const std::string& code) {
 }
 
 void AddItem(HWND dlg, int id, const wchar_t* text) {
-    SendDlgItemMessageW(dlg, id, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text));
+    SendMessageW(Item(dlg, id), CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(text));
 }
 
 void Select(HWND dlg, int id, int index) {
-    SendDlgItemMessageW(dlg, id, CB_SETCURSEL, static_cast<WPARAM>(index), 0);
+    SendMessageW(Item(dlg, id), CB_SETCURSEL, static_cast<WPARAM>(index), 0);
 }
 
 int Selected(HWND dlg, int id) {
-    return static_cast<int>(SendDlgItemMessageW(dlg, id, CB_GETCURSEL, 0, 0));
+    return static_cast<int>(SendMessageW(Item(dlg, id), CB_GETCURSEL, 0, 0));
 }
 
 // ---- Pad navigation of the dialogs (the owner, 2026-09-24: from the couch) --
@@ -349,16 +422,15 @@ void Populate(HWND dlg, DialogState& state) {
     }
     if (!state.original) {
         // DIV-0102: a disc-only install has no Chinese text to offer.
-        SetDlgItemTextW(dlg, IDC_LANGNOTE, state.languages.empty()
-                                               ? L"No Chinese (PC only), no layer: importer.py --lang."
-                                               : L"Chinese (PC script): the PC install's only.");
+        SetText(dlg, IDC_LANGNOTE, state.languages.empty()
+                                       ? L"No Chinese (PC only), no layer: importer.py --lang."
+                                       : L"Chinese (PC script): the PC install's only.");
     } else if (state.languages.empty()) {
         // Offering an option that cannot work is worse than explaining why it
         // is missing. The overlays are built, not shipped.
-        SetDlgItemTextW(dlg, IDC_LANGNOTE,
-                        L"No DAT\\<lang>.* overlays; build them with tools/loc_build.py.");
+        SetText(dlg, IDC_LANGNOTE, L"No DAT\\<lang>.* overlays; build them with tools/loc_build.py.");
     } else {
-        SetDlgItemTextW(dlg, IDC_LANGNOTE, L"");
+        SetText(dlg, IDC_LANGNOTE, L"");
     }
     Select(dlg, IDC_LANGUAGE, selected);
 
@@ -366,19 +438,19 @@ void Populate(HWND dlg, DialogState& state) {
     AddItem(dlg, IDC_FILTER, L"Sharp - point");
     AddItem(dlg, IDC_FILTER, L"CRT - SatPixie (newpixie fork, MIT)");
     Select(dlg, IDC_FILTER, cfg.satpixie ? 2 : cfg.filter == Filter::kPoint ? 1 : 0);
-    EnableWindow(GetDlgItem(dlg, IDC_LOOKOPTIONS), cfg.satpixie);
+    Enable(dlg, IDC_LOOKOPTIONS, cfg.satpixie);
 
     AddItem(dlg, IDC_DISPLAY, L"Fullscreen - borderless window");
     AddItem(dlg, IDC_DISPLAY, L"Windowed - resizable, F8 toggles");
     Select(dlg, IDC_DISPLAY, cfg.display == Display::kWindowed ? 1 : 0);
-    CheckDlgButton(dlg, IDC_BACKGROUND, cfg.background ? BST_CHECKED : BST_UNCHECKED);
+    Check(dlg, IDC_BACKGROUND, cfg.background);
     // DIV-0041: the picture's width, the box's index the ini's wide= (0, 1, 2).
     AddItem(dlg, IDC_WIDE, L"Off - 320 x 240, the original's 4:3");
     AddItem(dlg, IDC_WIDE, L"16:9 - 426 x 240, 53 columns a side");
     AddItem(dlg, IDC_WIDE, L"21:9 - 560 x 240, 120 columns a side");
     Select(dlg, IDC_WIDE, cfg.wide == 1 || cfg.wide == 2 ? cfg.wide : 0);
 
-    CheckDlgButton(dlg, IDC_SNAP, cfg.snap ? BST_CHECKED : BST_UNCHECKED);
+    Check(dlg, IDC_SNAP, cfg.snap);
 
     AddItem(dlg, IDC_RENDERER, L"Direct3D (default)");
     AddItem(dlg, IDC_RENDERER, L"Software");
@@ -387,14 +459,14 @@ void Populate(HWND dlg, DialogState& state) {
     AddItem(dlg, IDC_MUSIC, L"The disc's songs where the cache has them (default)");
     AddItem(dlg, IDC_MUSIC, L"The PC's MP3s always");
     Select(dlg, IDC_MUSIC, cfg.music == "mp3" ? 1 : 0);
-    SetDlgItemTextW(dlg, IDC_CACHE, ConfigFromUtf8(cfg.cache).c_str());
+    SetText(dlg, IDC_CACHE, ConfigFromUtf8(cfg.cache).c_str());
     CacheNote(dlg);
 
     // Each suite's side as opt= plays it now (an empty opt= the default
     // layers, none of which is a suite's).
     SuitesRefresh(dlg, state);
 
-    CheckDlgButton(dlg, IDC_SHOW, cfg.show_launcher ? BST_CHECKED : BST_UNCHECKED);
+    Check(dlg, IDC_SHOW, cfg.show_launcher);
 }
 
 // The inverse of Populate. Every look but the first takes the point filter
@@ -412,11 +484,11 @@ void ReadBack(HWND dlg, const DialogState& state) {
     cfg.satpixie = look == 2;
     cfg.display = Selected(dlg, IDC_DISPLAY) == 1 ? Display::kWindowed : Display::kFullscreen;
     cfg.renderer = Selected(dlg, IDC_RENDERER) == 1 ? 0 : 1;
-    cfg.snap = IsDlgButtonChecked(dlg, IDC_SNAP) == BST_CHECKED;
-    cfg.background = IsDlgButtonChecked(dlg, IDC_BACKGROUND) == BST_CHECKED;
+    cfg.snap = Checked(dlg, IDC_SNAP);
+    cfg.background = Checked(dlg, IDC_BACKGROUND);
     const int wide = Selected(dlg, IDC_WIDE);
     cfg.wide = wide == 1 || wide == 2 ? wide : 0;
-    cfg.show_launcher = IsDlgButtonChecked(dlg, IDC_SHOW) == BST_CHECKED;
+    cfg.show_launcher = Checked(dlg, IDC_SHOW);
 
     // The Music box: its first entry keeps an empty music= or a music=seq as
     // it was; a move to it from mp3 writes the default, empty.
@@ -563,7 +635,10 @@ void SatpixieOptions(HWND owner, Config::Satpixie& sp) {
     if (r == 1) sp = edit;
 }
 
-// ---- DIV-0045 / DIV-0046: the cheats dialog ---------------------------------
+// ---- DIV-0045 / DIV-0046: the Game Options page's cheats --------------------
+//
+// Read back into cfg only when the page was touched (DialogState), so an ini
+// holding more than the cap is shown as the cap but written back as it was.
 
 struct CheatSlider {
     int id, label;
@@ -580,7 +655,8 @@ void CheatsPopulate(HWND dlg, const Config::Cheats& ch) {
         HWND h = GetDlgItem(dlg, s.id);
         SendMessageW(h, TBM_SETRANGE, TRUE, MAKELPARAM(0, kCheatMultiplierMax));
         SendMessageW(h, TBM_SETTICFREQ, 1, 0);
-        // An ini saved while the cap was 50 may hold more: shown, and saved, as the cap.
+        // An ini saved while the cap was 50 may hold more: shown as the cap, and
+        // saved as the cap once the page is touched.
         const int v = ch.*s.value > kCheatMultiplierMax ? kCheatMultiplierMax : ch.*s.value;
         SendMessageW(h, TBM_SETPOS, TRUE, static_cast<LPARAM>(v));
         SetDlgItemInt(dlg, s.label, static_cast<UINT>(v), FALSE);
@@ -596,71 +672,25 @@ void CheatsReadBack(HWND dlg, Config::Cheats& ch) {
     ch.steal = IsDlgButtonChecked(dlg, IDC_CH_STEAL) == BST_CHECKED;
 }
 
-INT_PTR CALLBACK CheatsProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
-    switch (msg) {
-    case WM_INITDIALOG: {
-        padnav::Attach(dlg);
-        auto* ch = reinterpret_cast<Config::Cheats*>(lp);
-        SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ch));
-        CheatsPopulate(dlg, *ch);
-        return TRUE;
+// A slider on the page moved: show its value. False when it is not one of these.
+bool CheatsSliderMoved(HWND page, HWND h) {
+    for (const CheatSlider& s : kCheatSliders) {
+        if (GetDlgItem(page, s.id) != h) continue;
+        SetDlgItemInt(page, s.label, static_cast<UINT>(SendMessageW(h, TBM_GETPOS, 0, 0)), FALSE);
+        return true;
     }
-    case WM_HSCROLL: {
-        HWND h = reinterpret_cast<HWND>(lp);
-        for (const CheatSlider& s : kCheatSliders) {
-            if (GetDlgItem(dlg, s.id) != h) continue;
-            SetDlgItemInt(dlg, s.label, static_cast<UINT>(SendMessageW(h, TBM_GETPOS, 0, 0)), FALSE);
-        }
-        return TRUE;
-    }
-    case WM_TIMER:
-        if (wp == padnav::kTimer) {
-            padnav::Tick(dlg);
-            return TRUE;
-        }
-        break;
-    case WM_COMMAND:
-        switch (LOWORD(wp)) {
-        case IDOK: {
-            auto* ch = reinterpret_cast<Config::Cheats*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-            CheatsReadBack(dlg, *ch);
-            EndDialog(dlg, 1);
-            return TRUE;
-        }
-        case IDC_CH_DEFAULTS: {
-            Config::Cheats defaults;
-            CheatsPopulate(dlg, defaults);
-            return TRUE;
-        }
-        case IDCANCEL:
-            EndDialog(dlg, 0);
-            return TRUE;
-        default:
-            break;
-        }
-        break;
-    default:
-        break;
-    }
-    return FALSE;
+    return false;
 }
 
-// The cheats dialog over the settings dialog; the settings change only on OK.
-void CheatsOptions(HWND owner, Config::Cheats& ch) {
-    Config::Cheats edit = ch;
-    const INT_PTR r = DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_CHEATS), owner, CheatsProc,
-                                      reinterpret_cast<LPARAM>(&edit));
-    if (r == 1) ch = edit;
-}
-
-// ---- DIV-0050: the Controls dialog (docs/controls.md section 4.2) -----------
+// ---- DIV-0050: the Controls page (docs/controls.md section 4.2) -------------
 //
 // Fourteen rows, one a PlayStation input, each with two key cells and two pad
 // cells; a cell is a button showing its binding. Clicking one opens the
 // capture, which takes the next key (a keyboard hook, so the focus does not
 // matter) or the next pad input that was not already held, and the cell
 // takes it - from whichever cell held it before, so a key means one thing.
-// OK rebuilds the bindings list from the cells. A key entry that names two
+// Play or Back rebuilds the bindings list from the cells, once one has
+// changed (DialogState.cells_touched). A key entry that names two
 // actions at once (the keypad's diagonals in the default table) has no cell,
 // and is kept as it is unless a cell takes its key.
 
@@ -669,13 +699,6 @@ std::wstring Wide(const std::string& s) {
     for (unsigned char c : s) w += static_cast<wchar_t>(c);
     return w;
 }
-
-struct Cells {
-    int key[input::kActionCount][2];   // DIK scancode, or -1
-    int pad[input::kActionCount][2];   // PadInput index, or -1
-    input::Layout layout;
-    std::vector<input::KeyBinding> kept;   // multi-action keys and unnamed scancodes, as loaded
-};
 
 Cells CellsFrom(const input::Bindings& b) {
     Cells c{};
@@ -740,22 +763,23 @@ void BindingsFrom(const Cells& c, input::Bindings& b) {
     b.layout = c.layout;
 }
 
+// `dlg` is the window: the cells are on two sub-pages, found by id (Item).
 void ControlsRefresh(HWND dlg, const Cells& c) {
     for (int row = 0; row < input::kActionCount; ++row) {
         for (int slot = 0; slot < 2; ++slot) {
             const int dik = c.key[row][slot];
-            SetDlgItemTextW(dlg, (slot ? IDC_CT_KEY2 : IDC_CT_KEY1) + row,
-                            dik < 0 ? L"(none)" : Wide(input::KeyName(dik)).c_str());
+            SetText(dlg, (slot ? IDC_CT_KEY2 : IDC_CT_KEY1) + row,
+                    dik < 0 ? L"(none)" : Wide(input::KeyName(dik)).c_str());
             const int in = c.pad[row][slot];
-            SetDlgItemTextW(dlg, (slot ? IDC_CT_PAD2 : IDC_CT_PAD1) + row,
-                            in < 0 ? L"(none)" : Wide(input::PadInputs()[in].label).c_str());
+            SetText(dlg, (slot ? IDC_CT_PAD2 : IDC_CT_PAD1) + row,
+                    in < 0 ? L"(none)" : Wide(input::PadInputs()[in].label).c_str());
         }
     }
 }
 
 void ControlsPopulate(HWND dlg, const Cells& c) {
     ControlsRefresh(dlg, c);
-    SendDlgItemMessageW(dlg, IDC_CT_LAYOUT, CB_RESETCONTENT, 0, 0);
+    SendMessageW(Item(dlg, IDC_CT_LAYOUT), CB_RESETCONTENT, 0, 0);
     AddItem(dlg, IDC_CT_LAYOUT, L"By position - the lower button confirms (Xbox, PlayStation)");
     AddItem(dlg, IDC_CT_LAYOUT, L"Nintendo - the pairs swapped, the right button confirms");
     AddItem(dlg, IDC_CT_LAYOUT, L"Automatic - from the pad's own labels");
@@ -886,137 +910,402 @@ void CaptureInto(HWND owner, Cells& c, int row, int slot, bool key_cell) {
                      c.kept.end());
 }
 
-INT_PTR CALLBACK ControlsProc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
-    switch (msg) {
-    case WM_INITDIALOG: {
-        auto* c = reinterpret_cast<Cells*>(lp);
-        SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(c));
-        ControlsPopulate(dlg, *c);
-        padnav::Attach(dlg);
-        return TRUE;
+// ---- The window (docs/launcher-settings.md section 2a) -----------------------
+//
+// The picture is 640 x 480 with black bands above and below the scene, as the
+// game drew it; the banner sits in the top band and the title page's buttons in
+// the bottom one. Everything is placed in the picture's pixels times the
+// display's scale (the owner, 2026-10-15): 640 x 480 at 100 %, 1280 x 960 at
+// 200 %. The picture is drawn without smoothing at a whole scale and smoothed
+// at a fractional one, where unsmoothed pixels would come out uneven. The
+// sub-pages are dialog units, which Windows scales by the same factor, so
+// they are laid out to fit the window at any scale; one that did not would
+// leave the window larger, the picture centred.
+
+constexpr int kPictureW = 640, kPictureH = 480;
+// Configure's rows, in the picture's pixels: the banner's band, the tabs, the
+// sub-tabs when the tab has them, the page.
+constexpr int kBandH = 60, kTabsY = 70, kTabH = 23, kPageY = kTabsY + kTabH + 8, kSubTabH = 22,
+              kSubPageY = kPageY + kSubTabH + 6, kMargin = 13, kBottom = 8;
+// The title page's buttons, in the picture's pixels (the owner's mock-up, 2026-10-15).
+struct TitleButton {
+    int id, x0, x1;
+};
+constexpr TitleButton kTitleButtons[] = {
+    {IDOK, 236, 324}, {IDC_CONFIGURE, 338, 426}, {IDC_MUSICPLAYER, 439, 527}, {IDCANCEL, 541, 629}};
+constexpr int kTitleButtonY = 440, kTitleButtonH = 23;
+
+// The page the window opens on: the title page, or the Data page again after
+// the Sources page rebuilt the install (kDialogSourcesChanged).
+int g_reopen = kPageTitle;
+
+// The picture's pixels at the display's scale.
+int Px(const DialogState& state, double v) { return static_cast<int>(v * state.scale + 0.5); }
+
+template <typename T>
+void Release(T*& p) {
+    if (p) p->Release();
+    p = nullptr;
+}
+
+// The picture out of the exe's resources (IDR_BACKGROUND), decoded by WIC -
+// Windows' own codecs, nothing vendored - to 32-bit top-down pixels.
+bool LoadPicture(DialogState& state) {
+    HMODULE self = GetModuleHandleW(nullptr);
+    HRSRC res = FindResourceW(self, MAKEINTRESOURCEW(IDR_BACKGROUND), MAKEINTRESOURCEW(10));   // RT_RCDATA
+    HGLOBAL mem = res ? LoadResource(self, res) : nullptr;
+    auto* bytes = static_cast<BYTE*>(mem ? LockResource(mem) : nullptr);
+    if (!bytes) return false;
+    IWICImagingFactory* factory = nullptr;
+    IWICStream* stream = nullptr;
+    IWICBitmapDecoder* decoder = nullptr;
+    IWICBitmapFrameDecode* frame = nullptr;
+    IWICFormatConverter* converter = nullptr;
+    UINT w = 0, h = 0;
+    bool ok = SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                         IID_IWICImagingFactory, reinterpret_cast<void**>(&factory))) &&
+              SUCCEEDED(factory->CreateStream(&stream)) &&
+              SUCCEEDED(stream->InitializeFromMemory(bytes, SizeofResource(self, res))) &&
+              SUCCEEDED(factory->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand, &decoder)) &&
+              SUCCEEDED(decoder->GetFrame(0, &frame)) && SUCCEEDED(factory->CreateFormatConverter(&converter)) &&
+              SUCCEEDED(converter->Initialize(frame, GUID_WICPixelFormat32bppBGR, WICBitmapDitherTypeNone, nullptr,
+                                              0.0, WICBitmapPaletteTypeCustom)) &&
+              SUCCEEDED(converter->GetSize(&w, &h)) && w > 0 && h > 0;
+    if (ok) {
+        state.picture.resize(static_cast<size_t>(w) * h * 4);
+        ok = SUCCEEDED(converter->CopyPixels(nullptr, w * 4, static_cast<UINT>(state.picture.size()), state.picture.data()));
+        state.picture_w = static_cast<int>(w);
+        state.picture_h = static_cast<int>(h);
     }
-    case WM_TIMER:
-        if (wp == padnav::kTimer) {
-            padnav::Tick(dlg);
-            return TRUE;
-        }
-        break;
-    case WM_COMMAND: {
-        auto* c = reinterpret_cast<Cells*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-        const int id = LOWORD(wp);
-        switch (id) {
-        case IDOK:
-            c->layout = static_cast<input::Layout>(Selected(dlg, IDC_CT_LAYOUT) < 0 ? 0 : Selected(dlg, IDC_CT_LAYOUT));
-            EndDialog(dlg, 1);
-            return TRUE;
-        case IDC_CT_DEFAULTS:
-            *c = CellsFrom(input::Bindings::Defaults());
-            ControlsPopulate(dlg, *c);
-            return TRUE;
-        case IDCANCEL:
-            EndDialog(dlg, 0);
-            return TRUE;
-        default:
-            break;
-        }
-        // A cell: four columns 20 ids apart from IDC_CT_KEY1 (KEY1, KEY2,
-        // PAD1, PAD2 - resource.h), id = column base + row.
-        if (id >= IDC_CT_KEY1 && id < IDC_CT_KEY1 + 4 * 20 && HIWORD(wp) == BN_CLICKED) {
-            const int kind = (id - IDC_CT_KEY1) / 20, row = (id - IDC_CT_KEY1) % 20;
-            if (row < input::kActionCount) {
-                CaptureInto(dlg, *c, row, kind & 1, kind < 2);
-                ControlsRefresh(dlg, *c);
-                SetFocus(GetDlgItem(dlg, id));
-                return TRUE;
+    if (!ok) state.picture.clear();
+    Release(converter);
+    Release(frame);
+    Release(decoder);
+    Release(stream);
+    Release(factory);
+    return ok;
+}
+
+// The banner, after the North American logo's arrangement - BREATH and FIRE in
+// capitals, a small OF between them, a taller III - in Palatino Linotype, which
+// every Windows install has (the owner's choice, 2026-10-15). Our own lettering,
+// not the logo's art. The sizes are the picture's pixels, set by eye.
+void Banner(HDC dc, double s, int x) {
+    struct Run {
+        const wchar_t* text;
+        int em, gap;
+    };
+    const Run runs[] = {{L"BREATH", 48, 12}, {L"OF", 26, 10}, {L"FIRE", 48, 12}, {L"III", 58, 0}};
+    SetBkMode(dc, TRANSPARENT);
+    SetTextColor(dc, RGB(255, 255, 255));
+    const UINT align = SetTextAlign(dc, TA_BASELINE | TA_LEFT);
+    const auto px = [s](int v) { return static_cast<int>(v * s + 0.5); };
+    x += px(8);
+    for (const Run& r : runs) {
+        HFONT font = CreateFontW(-px(r.em), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS,
+                                 CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, L"Palatino Linotype");
+        HGDIOBJ old = SelectObject(dc, font);
+        const int n = static_cast<int>(wcslen(r.text));
+        TextOutW(dc, x, px(50), r.text, n);
+        SIZE size{};
+        GetTextExtentPoint32W(dc, r.text, n, &size);
+        x += size.cx + px(r.gap);
+        SelectObject(dc, old);
+        DeleteObject(font);
+    }
+    SetTextAlign(dc, align);
+}
+
+// The window's background: the picture on the title page, the banner's band
+// over the dialog colour on Configure. The controls draw themselves over it.
+void Paint(HWND dlg, const DialogState& state, HDC dc) {
+    RECT client;
+    GetClientRect(dlg, &client);
+    const int pw = Px(state, kPictureW), ph = Px(state, kPictureH), ox = (client.right - pw) / 2;
+    HBRUSH black = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
+    if (state.page == kPageTitle) {
+        FillRect(dc, &client, black);
+        if (!state.picture.empty()) {
+            BITMAPINFO bi{};
+            bi.bmiHeader.biSize = sizeof bi.bmiHeader;
+            bi.bmiHeader.biWidth = state.picture_w;
+            bi.bmiHeader.biHeight = -state.picture_h;   // top-down
+            bi.bmiHeader.biPlanes = 1;
+            bi.bmiHeader.biBitCount = 32;
+            bi.bmiHeader.biCompression = BI_RGB;
+            // unsmoothed at a whole scale; smoothed at a fractional one
+            if (state.scale == static_cast<int>(state.scale)) {
+                SetStretchBltMode(dc, COLORONCOLOR);
+            } else {
+                SetStretchBltMode(dc, HALFTONE);
+                SetBrushOrgEx(dc, 0, 0, nullptr);
             }
+            StretchDIBits(dc, ox, 0, pw, ph, 0, 0, state.picture_w, state.picture_h,
+                          state.picture.data(), &bi, DIB_RGB_COLORS, SRCCOPY);
         }
-        break;
+        Banner(dc, state.scale, ox);
+    } else {
+        RECT band{0, 0, client.right, Px(state, kBandH)}, body{0, Px(state, kBandH), client.right, client.bottom};
+        FillRect(dc, &band, black);
+        FillRect(dc, &body, GetSysColorBrush(COLOR_BTNFACE));
+        Banner(dc, state.scale, 0);
     }
+}
+
+// The window's size and every control's place, once, when it opens.
+void Layout(HWND dlg, DialogState& state) {
+    // The display's scale. The launcher is DPI-aware for the system's DPI
+    // (launcher.manifest), so this is the factor its dialog units take too.
+    HDC screen = GetDC(nullptr);
+    state.scale = GetDeviceCaps(screen, LOGPIXELSX) / 96.0;
+    ReleaseDC(nullptr, screen);
+    const auto px = [&state](double v) { return Px(state, v); };
+
+    // The sub-pages' room, in pixels: a page under sub-tabs starts lower.
+    int need_w = 0, need_h = 0;
+    for (int i = 0; i < kSubPageCount; ++i) {
+        RECT r;
+        GetWindowRect(state.pages[i], &r);
+        const int top = px(kSubPages[i].label ? kSubPageY : kPageY);
+        need_w = std::max(need_w, static_cast<int>(r.right - r.left) + 2 * px(kMargin));
+        need_h = std::max(need_h, top + static_cast<int>(r.bottom - r.top) + px(kBottom));
+    }
+    const int cw = std::max(px(kPictureW), need_w), ch = std::max(px(kPictureH), need_h);
+    if (cw > px(kPictureW) || ch > px(kPictureH))
+        std::fprintf(stderr, "bof3x-launcher: a page needs %d x %d at this scale; the window grows to fit\n", need_w,
+                     need_h);
+    const DWORD style = static_cast<DWORD>(GetWindowLongW(dlg, GWL_STYLE));
+    const DWORD ex = static_cast<DWORD>(GetWindowLongW(dlg, GWL_EXSTYLE));
+    RECT r{0, 0, cw, ch};
+    AdjustWindowRectEx(&r, style, FALSE, ex);
+    MONITORINFO mi{};
+    mi.cbSize = sizeof mi;
+    GetMonitorInfoW(MonitorFromWindow(dlg, MONITOR_DEFAULTTOPRIMARY), &mi);
+    const int work_w = mi.rcWork.right - mi.rcWork.left, work_h = mi.rcWork.bottom - mi.rcWork.top;
+    const int ww = r.right - r.left, wh = r.bottom - r.top;
+    SetWindowPos(dlg, nullptr, mi.rcWork.left + std::max(0, (work_w - ww) / 2),
+                 mi.rcWork.top + std::max(0, (work_h - wh) / 2), ww, wh, SWP_NOZORDER | SWP_NOACTIVATE);
+
+    // The title page's buttons and the tabs in a type that grows with the
+    // picture; the sub-tabs keep the dialog font, as the pages do.
+    state.button_font = CreateFontW(-px(12), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                                    OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH,
+                                    L"Segoe UI");
+    auto place = [&](int id, int x, int y, int w, int h, HFONT font) {
+        HWND b = GetDlgItem(dlg, id);
+        if (font) SendMessageW(b, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
+        SetWindowPos(b, nullptr, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
+    };
+    const int ox = (cw - px(kPictureW)) / 2;
+    for (const TitleButton& b : kTitleButtons)
+        place(b.id, ox + px(b.x0), px(kTitleButtonY), px(b.x1 - b.x0), px(kTitleButtonH), state.button_font);
+
+    // The tabs from the left, each as wide as its label; Back at the right.
+    HDC dc = GetDC(dlg);
+    HGDIOBJ old = SelectObject(dc, state.button_font);
+    auto width = [&](const std::wstring& text, int pad, int least) {
+        SIZE size{};
+        GetTextExtentPoint32W(dc, text.c_str(), static_cast<int>(text.size()), &size);
+        return std::max(static_cast<int>(size.cx) + px(pad), px(least));
+    };
+    int x = px(kMargin);
+    for (int i = 0; i < kPageCount; ++i) {
+        const int w = width(DialogText(dlg, IDC_TAB0 + i), 24, 64);
+        place(IDC_TAB0 + i, x, px(kTabsY), w, px(kTabH), state.button_font);
+        x += w + px(8);
+    }
+    const int back = width(DialogText(dlg, IDC_BACK), 24, 88);
+    place(IDC_BACK, cw - px(kMargin) - back, px(kTabsY), back, px(kTabH), state.button_font);
+    // The sub-tabs, as wide as the longest label any tab gives them (ShowPage sets them).
+    SelectObject(dc, reinterpret_cast<HFONT>(SendMessageW(dlg, WM_GETFONT, 0, 0)));
+    int sub_w = 0;
+    for (const SubPage& p : kSubPages)
+        if (p.label) sub_w = std::max(sub_w, width(p.label, 20, 80));
+    for (int k = 0; k < kSubTabsMax; ++k)
+        place(IDC_SUB0 + k, px(kMargin) + k * (sub_w + px(6)), px(kPageY), sub_w, px(kSubTabH), nullptr);
+    SelectObject(dc, old);
+    ReleaseDC(dlg, dc);
+
+    for (int i = 0; i < kSubPageCount; ++i)
+        SetWindowPos(state.pages[i], nullptr, px(kMargin), px(kSubPages[i].label ? kSubPageY : kPageY), 0, 0,
+                     SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
+// The title page (kPageTitle) or one of Configure's tabs, on the sub-page the
+// tab was left on.
+void ShowPage(HWND dlg, DialogState& state, int page) {
+    state.page = page;
+    const bool title = page == kPageTitle;
+    for (const TitleButton& b : kTitleButtons) ShowWindow(GetDlgItem(dlg, b.id), title ? SW_SHOW : SW_HIDE);
+    for (int i = 0; i < kPageCount; ++i) {
+        ShowWindow(GetDlgItem(dlg, IDC_TAB0 + i), title ? SW_HIDE : SW_SHOW);
+        CheckDlgButton(dlg, IDC_TAB0 + i, i == page ? BST_CHECKED : BST_UNCHECKED);
+    }
+    ShowWindow(GetDlgItem(dlg, IDC_BACK), title ? SW_HIDE : SW_SHOW);
+    int k = 0;   // a sub-page's place among the tab's
+    for (int i = 0; i < kSubPageCount; ++i) {
+        const bool mine = !title && kSubPages[i].page == page;
+        ShowWindow(state.pages[i], mine && k == state.sub[page] ? SW_SHOW : SW_HIDE);
+        if (!mine) continue;
+        if (kSubPages[i].label && k < kSubTabsMax) {
+            SetDlgItemTextW(dlg, IDC_SUB0 + k, kSubPages[i].label);
+            CheckDlgButton(dlg, IDC_SUB0 + k, k == state.sub[page] ? BST_CHECKED : BST_UNCHECKED);
+        }
+        ++k;
+    }
+    for (int j = 0; j < kSubTabsMax; ++j)
+        ShowWindow(GetDlgItem(dlg, IDC_SUB0 + j), k > 1 && j < k ? SW_SHOW : SW_HIDE);
+    SendMessageW(dlg, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(GetDlgItem(dlg, title ? IDOK : IDC_TAB0 + page)), TRUE);
+    // the window and every page and control on it, so nothing shows the face before
+    RedrawWindow(dlg, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN);
+}
+
+// A sub-page's own procedure: what its controls say goes to the window, which
+// knows every control by its id (Item).
+INT_PTR CALLBACK PageProc(HWND page, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+    case WM_INITDIALOG:
+        return FALSE;   // the window decides the focus
+    case WM_COMMAND:
+    case WM_HSCROLL:
+        SendMessageW(GetParent(page), msg, wp, lp);
+        return TRUE;
     default:
         break;
     }
     return FALSE;
 }
 
-// The Controls dialog over the settings dialog; the bindings change only on OK.
-void ControlsOptions(HWND owner, input::Bindings& b) {
-    Cells edit = CellsFrom(b);
-    const INT_PTR r = DialogBoxParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDD_CONTROLS), owner, ControlsProc,
-                                      reinterpret_cast<LPARAM>(&edit));
-    if (r == -1) std::fprintf(stderr, "bof3x-launcher: the Controls dialog could not be created (error %lu)\n", GetLastError());
-    if (r == 1) {
-        BindingsFrom(edit, b);
-        padnav::SetMap(b.pad);
+// Every page into cfg: Play, Back, and before the Sources page rebuilds.
+void ApplyPages(HWND dlg, DialogState& state) {
+    ReadCache(dlg, *state.cfg);
+    ReadBack(dlg, state);
+    if (state.cheats_touched) CheatsReadBack(SubPageOf(state, IDD_PAGE_GAME), state.cfg->cheats);
+    if (state.cells_touched) {
+        const int layout = Selected(dlg, IDC_CT_LAYOUT);
+        state.cells.layout = static_cast<input::Layout>(layout < 0 ? 0 : layout);
+        BindingsFrom(state.cells, state.cfg->bindings);
+        padnav::SetMap(state.cfg->bindings.pad);
     }
 }
 
+// Back to the title page. The pages are applied to cfg, so an Exit from there
+// saves them (kDialogSave); Play would have anyway.
+void Back(HWND dlg, DialogState& state) {
+    ApplyPages(dlg, state);
+    state.applied = true;
+    SuitesRefresh(dlg, state);   // opt= as it now reads
+    ShowPage(dlg, state, kPageTitle);
+}
+
 INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
+    auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
     switch (msg) {
     case WM_INITDIALOG: {
         padnav::Attach(dlg);
-        auto* state = reinterpret_cast<DialogState*>(lp);
+        state = reinterpret_cast<DialogState*>(lp);
         SetWindowLongPtrW(dlg, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(state));
+        for (int i = 0; i < kSubPageCount; ++i) {
+            state->pages[i] = CreateDialogParamW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(kSubPages[i].templ), dlg,
+                                                 PageProc, 0);
+            if (!state->pages[i]) {
+                std::fprintf(stderr, "bof3x-launcher: page %d could not be created (error %lu)\n", i, GetLastError());
+                EndDialog(dlg, -1);
+                return TRUE;
+            }
+        }
+        if (!LoadPicture(*state)) std::fprintf(stderr, "bof3x-launcher: the title page's picture could not be decoded\n");
         Populate(dlg, *state);
-        // The launcher is a console program, so its dialog can open behind the
+        CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), state->cfg->cheats);
+        state->cells = CellsFrom(state->cfg->bindings);
+        ControlsPopulate(dlg, state->cells);
+        Layout(dlg, *state);
+        ShowPage(dlg, *state, g_reopen);
+        g_reopen = kPageTitle;
+        // The launcher is a console program, so its window can open behind the
         // window that started it.
         SetForegroundWindow(dlg);
-        return TRUE;
+        return FALSE;   // ShowPage set the focus
     }
+    case WM_ERASEBKGND:
+        if (!state) break;
+        Paint(dlg, *state, reinterpret_cast<HDC>(wp));
+        SetWindowLongPtrW(dlg, DWLP_MSGRESULT, TRUE);
+        return TRUE;
     case WM_TIMER:
         if (wp == padnav::kTimer) {
             padnav::Tick(dlg);
             return TRUE;
         }
         break;
-    case WM_COMMAND:
-        switch (LOWORD(wp)) {
-        case IDOK: {
-            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-            ReadCache(dlg, *state->cfg);
-            ReadBack(dlg, *state);
-            EndDialog(dlg, 1);
-            return TRUE;
+    case WM_HSCROLL:
+        if (state && CheatsSliderMoved(SubPageOf(*state, IDD_PAGE_GAME), reinterpret_cast<HWND>(lp)))
+            state->cheats_touched = true;
+        return TRUE;
+    case WM_CLOSE:
+        // The caption's close button leaves from either face; Escape and the
+        // pad's circle (IDCANCEL) step back from Configure first.
+        EndDialog(dlg, state && state->applied ? kDialogSave : kDialogClosed);
+        return TRUE;
+    case WM_DESTROY:
+        if (state && state->button_font) {
+            DeleteObject(state->button_font);
+            state->button_font = nullptr;
         }
+        break;
+    case WM_COMMAND: {
+        if (!state) break;
+        const int id = LOWORD(wp);
+        switch (id) {
+        case IDOK:
+            ApplyPages(dlg, *state);
+            EndDialog(dlg, kDialogPlay);
+            return TRUE;
         case IDCANCEL:
-            EndDialog(dlg, 0);
+            if (state->page != kPageTitle) Back(dlg, *state);
+            else EndDialog(dlg, state->applied ? kDialogSave : kDialogClosed);
+            return TRUE;
+        case IDC_CONFIGURE:
+            ShowPage(dlg, *state, kPageSettings);
+            return TRUE;
+        case IDC_BACK:
+            Back(dlg, *state);
             return TRUE;
         case IDC_LANGUAGE:
-            if (HIWORD(wp) == CBN_SELCHANGE) {
-                auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-                SuitesRefresh(dlg, *state);   // a names layer's note follows the language
-            }
+            if (HIWORD(wp) == CBN_SELCHANGE) SuitesRefresh(dlg, *state);   // a names layer's note follows the language
             return TRUE;
         case IDC_CACHE:
             if (HIWORD(wp) == EN_CHANGE) {
                 CacheNote(dlg);
-                auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-                if (state && state->cfg) SuitesRefresh(dlg, *state);   // another cache, another manifest
+                if (state->cfg) SuitesRefresh(dlg, *state);   // another cache, another manifest
             }
             return TRUE;
         case IDC_CACHEBROWSE:
             BrowseCache(dlg);
             return TRUE;
         case IDC_FILTER:
-            if (HIWORD(wp) == CBN_SELCHANGE) EnableWindow(GetDlgItem(dlg, IDC_LOOKOPTIONS), Selected(dlg, IDC_FILTER) == 2);
+            if (HIWORD(wp) == CBN_SELCHANGE) Enable(dlg, IDC_LOOKOPTIONS, Selected(dlg, IDC_FILTER) == 2);
             return TRUE;
-        case IDC_LOOKOPTIONS: {
-            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+        case IDC_LOOKOPTIONS:
             SatpixieOptions(dlg, state->cfg->sp);
             return TRUE;
-        }
-        case IDC_CHEATS: {
-            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-            CheatsOptions(dlg, state->cfg->cheats);
+        case IDC_CH_STEAL:
+            if (HIWORD(wp) == BN_CLICKED) state->cheats_touched = true;
             return TRUE;
-        }
-        case IDC_CONTROLS: {
-            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-            ControlsOptions(dlg, state->cfg->bindings);
+        case IDC_CH_DEFAULTS:
+            CheatsPopulate(SubPageOf(*state, IDD_PAGE_GAME), Config::Cheats{});
+            state->cheats_touched = true;
             return TRUE;
-        }
+        case IDC_CT_LAYOUT:
+            if (HIWORD(wp) == CBN_SELCHANGE) state->cells_touched = true;
+            return TRUE;
+        case IDC_CT_DEFAULTS:
+            state->cells = CellsFrom(input::Bindings::Defaults());
+            ControlsPopulate(dlg, state->cells);
+            state->cells_touched = true;
+            return TRUE;
         case IDC_MUSICPLAYER: {
             // the cache folder as the box has it now, saved or not
-            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
             std::wstring cache = DialogText(dlg, IDC_CACHE);
             const size_t b = cache.find_first_not_of(L" \t"), e = cache.find_last_not_of(L" \t");
             cache = b == std::wstring::npos ? std::wstring() : cache.substr(b, e - b + 1);
@@ -1024,25 +1313,44 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
             MusicPlayerRun(dlg, state->game_dir, cache, DialogDataRoot(dlg), &state->cfg->opt, &state->chord);
             return TRUE;
         }
-        case IDC_SOURCES: {
+        case IDC_SOURCES:
             // A rebuilt install may be another game folder and cache: the
-            // launcher reads them again and reopens this page.
-            auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
+            // launcher reads them again and reopens the window on this page.
             if (SourcesDialogRun(dlg, *state->cfg, false)) {
-                ReadCache(dlg, *state->cfg);
-                ReadBack(dlg, *state);
+                ApplyPages(dlg, *state);
+                g_reopen = kPageData;
                 EndDialog(dlg, kDialogSourcesChanged);
             }
             return TRUE;
-        }
         default:
-            if (HIWORD(wp) == BN_CLICKED) {
-                auto* state = reinterpret_cast<DialogState*>(GetWindowLongPtrW(dlg, GWLP_USERDATA));
-                if (SuiteRadioClicked(*state, LOWORD(wp))) return TRUE;
-            }
             break;
         }
+        if (HIWORD(wp) != BN_CLICKED) break;
+        if (id >= IDC_TAB0 && id < IDC_TAB0 + kPageCount) {
+            ShowPage(dlg, *state, id - IDC_TAB0);
+            return TRUE;
+        }
+        if (id >= IDC_SUB0 && id < IDC_SUB0 + kSubTabsMax && state->page != kPageTitle) {
+            state->sub[state->page] = id - IDC_SUB0;
+            ShowPage(dlg, *state, state->page);
+            SendMessageW(dlg, WM_NEXTDLGCTL, reinterpret_cast<WPARAM>(GetDlgItem(dlg, id)), TRUE);
+            return TRUE;
+        }
+        // A Controls cell: four columns 20 ids apart from IDC_CT_KEY1 (KEY1,
+        // KEY2, PAD1, PAD2 - resource.h), id = column base + row.
+        if (id >= IDC_CT_KEY1 && id < IDC_CT_KEY1 + 4 * 20) {
+            const int kind = (id - IDC_CT_KEY1) / 20, row = (id - IDC_CT_KEY1) % 20;
+            if (row < input::kActionCount) {
+                CaptureInto(dlg, state->cells, row, kind & 1, kind < 2);
+                ControlsRefresh(dlg, state->cells);
+                state->cells_touched = true;
+                SetFocus(Item(dlg, id));
+                return TRUE;
+            }
+        }
+        if (SuiteRadioClicked(*state, id)) return TRUE;
         break;
+    }
     default:
         break;
     }
@@ -1054,6 +1362,8 @@ INT_PTR CALLBACK Proc(HWND dlg, UINT msg, WPARAM wp, LPARAM lp) {
 ConfigDialogResult ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     INITCOMMONCONTROLSEX icc{sizeof icc, ICC_STANDARD_CLASSES | ICC_WIN95_CLASSES};
     InitCommonControlsEx(&icc);
+    // WIC, for the title page's picture.
+    const HRESULT co = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 
     DialogState state;
     state.cfg = &cfg;
@@ -1064,14 +1374,22 @@ ConfigDialogResult ConfigDialogRun(const std::wstring& game_dir, Config& cfg) {
     const INT_PTR result = DialogBoxParamW(GetModuleHandleW(nullptr),
                                            MAKEINTRESOURCEW(IDD_CONFIG), nullptr, Proc,
                                            reinterpret_cast<LPARAM>(&state));
+    if (SUCCEEDED(co)) CoUninitialize();
     if (result == -1) {
         // Starting the game with settings the player never saw would be worse
         // than not starting: say so and let them try again.
-        MessageBoxW(nullptr, L"The settings dialog could not be created.", L"bof3x-launcher",
+        MessageBoxW(nullptr, L"The launcher's window could not be created.", L"bof3x-launcher",
                     MB_OK | MB_ICONERROR);
         return kDialogClosed;
     }
-    return result == kDialogPlay ? kDialogPlay : result == kDialogSourcesChanged ? kDialogSourcesChanged : kDialogClosed;
+    switch (result) {
+    case kDialogPlay:
+    case kDialogSourcesChanged:
+    case kDialogSave:
+        return static_cast<ConfigDialogResult>(result);
+    default:
+        return kDialogClosed;
+    }
 }
 
 }  // namespace bof3x
