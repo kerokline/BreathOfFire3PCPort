@@ -1565,6 +1565,8 @@ idea, built) waits on the owner, after the far-camera scenes are seen.
 
 ### Outcome
 _(2026-10-12) open, for later (the owner)._
+_(2026-10-15) scheduled: the owner, "build I37 now" - the RG group, without
+waiting for a far-camera picture (D292)._
 
 ## I38 — Draw the two edge sweeps mapped onto the wide picture
 
@@ -1585,3 +1587,5 @@ amendment.
 
 ### Outcome
 _(2026-10-14) open: the owner's call (leave, or the mapping)._
+_(2026-10-15) scheduled: the owner chose the mapping (logic's x kept, the draw
+mapped; a DIV-0041 amendment when built)._
