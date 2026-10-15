@@ -158,9 +158,15 @@ only when everything succeeded:
 2. `importer.py build` with every source in the list's order (a PC folder
    gives two: its `DAT\` and its `BOF3.exe`), the language layers below, and
    the default `opt` layers (`area4-walls` whenever a Western PSX disc is
-   there, DIV-0080) - no others: the PSP's layers are the launcher's suites'
-   to choose ([`launcher-suites.md`](launcher-suites.md)). Its own lines go
-   to `H\setup.log`.
+   there, DIV-0080), and **every PSP layer the sources can build**
+   (`--psp-available`, the owner, 2026-10-15: `psp-art`, `psp-tiles`,
+   `psp-maps`, the PSP disc's names layer, `psp-music`, `psp-snd`,
+   `psp-tables`, `psp-ryu-forms`; none on a PSP base, whose base is the PSP's
+   already) - so the launcher's suites
+   ([`launcher-suites.md`](launcher-suites.md)) offer the PSP's side rather
+   than greying it "not in the cache". Built is not played: each stays off
+   until chosen there (`install` installs only the default layers). Until
+   2026-10-15 setup built none of them. Its own lines go to `H\setup.log`.
 3. With a PC folder: copy `BOF3.exe`, the 742 shipped `DAT\` containers,
    `BGM\`, `SND\`, `logos.avi` and `capcom.avi` into the new game folder; the
    player's folder is only read (saves `BISLPS*.DAT` and `BOF3.CFG` are not

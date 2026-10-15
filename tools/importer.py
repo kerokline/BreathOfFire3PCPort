@@ -70,6 +70,7 @@ import type1        # noqa: E402
 import vag          # noqa: E402  (wave-from-vag, docs/sound-import.md)
 import xa           # noqa: E402  (wave-from-xa)
 import at3          # noqa: E402  (psp-at3, docs/psp-only-build.md 2.1.1)
+from build_reuse import reusable, reuse_key, tree_digest, write_key   # noqa: E402  (IDEAS I42)
 import seq          # noqa: E402  (base/bgm/, docs/seq-import.md)
 import ppms         # noqa: E402  (base/bgm/ from a PSP disc, docs/psp-music.md)
 import psp_standins  # noqa: E402  (a PSP-only base, docs/psp-stand-ins.md)
@@ -771,69 +772,7 @@ def get_chunk(f, slot, ch, chunked, prefer=None):
 # key is a hash of everything it reads: the tools, recipes and fixtures as
 # they are now (so a new release rebuilds everything once), the sources it
 # draws on, and the cache files it builds against. The keys are kept in
-# <cache>/build-keys/, a folder nothing installs or walks.
-
-KEYS_DIR = "build-keys"
-_fingerprint = []
-
-
-def code_fingerprint():
-    """The tools, recipes and fixtures, and the Python running them: a key
-    made under another release never matches."""
-    if not _fingerprint:
-        h = hashlib.sha256(sys.version.encode())
-        for top in (TOOLS, os.path.join(ROOT, "recipes"), os.path.join(ROOT, "fixtures")):
-            for root, dirs, files in os.walk(top):
-                dirs[:] = sorted(d for d in dirs if d != "__pycache__")
-                for f in sorted(files):
-                    if top == TOOLS and not f.endswith(".py"):
-                        continue
-                    p = os.path.join(root, f)
-                    h.update(os.path.relpath(p, ROOT).replace(os.sep, "/").encode() + b"\0")
-                    with open(p, "rb") as fh:
-                        h.update(hashlib.sha256(fh.read()).digest())
-        _fingerprint.append(h.hexdigest())
-    return _fingerprint[0]
-
-
-def tree_digest(d):
-    """Every file under `d` by its path and content, or "none"."""
-    if not os.path.isdir(d):
-        return "none"
-    h = hashlib.sha256()
-    for root, dirs, files in os.walk(d):
-        dirs.sort()
-        for f in sorted(files):
-            p = os.path.join(root, f)
-            h.update(os.path.relpath(p, d).replace(os.sep, "/").encode() + b"\0")
-            with open(p, "rb") as fh:
-                h.update(hashlib.sha256(fh.read()).digest())
-    return h.hexdigest()
-
-
-def reuse_key(*parts):
-    return hashlib.sha256("\0".join((code_fingerprint(),) + tuple(str(p) for p in parts)).encode()).hexdigest()
-
-
-def reusable(reuse, step, key, rel):
-    """The previous cache's `rel` folder when its step was built under the
-    same key, else None."""
-    if not reuse:
-        return None
-    try:
-        with open(os.path.join(reuse, KEYS_DIR, step + ".txt"), encoding="utf-8") as fh:
-            same = fh.read().strip() == key
-    except OSError:
-        return None
-    src = os.path.join(reuse, rel)
-    return src if same and os.path.isdir(src) else None
-
-
-def write_key(out, step, key):
-    os.makedirs(os.path.join(out, KEYS_DIR), exist_ok=True)
-    with open(os.path.join(out, KEYS_DIR, step + ".txt"), "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(key + "\n")
-
+# <cache>/build-keys/, a folder nothing installs or walks (tools/build_reuse.py).
 
 def snd_from_psx(sources, out, reuse=None):
     """xa.importer_snd, or the previous cache's base/snd/ when it was made
@@ -879,6 +818,8 @@ def cmd_build(a):
         sources, lang, opt = resolve_preset(a.preset, sources)
         a.lang, a.opt = a.lang + [x for x in lang if x not in a.lang], a.opt + [x for x in opt if x not in a.opt]
     discs = {s.id for s in sources if isinstance(s, DiscSource)}
+    if getattr(a, "psp_available", False):
+        a.opt = a.opt + [n for n in psp_available(sources, a.opt_recipe) if n not in a.opt]
     a.opt = default_opt(a.opt, a.no_opt, lambda name: bool(discs & set(DEFAULT_OPT[name])))
     a.opt, tg_opt = psp_layers.take(a.opt, sources)     # recipes/psp-layers.toml's layers, not opt.toml's
     print("sources, in order: %s" % ", ".join("%s (%s)" % (s.id, s.path) for s in sources))
@@ -949,7 +890,7 @@ def cmd_build(a):
     with timed("base/fmv"):
         fmv_build(sources, a.out, reuse)   # base/fmv/ (docs/fmv-import.md); its [fmv] after the manifest
     with timed("psp layers"):
-        psp_layers.build(tg_opt, sources, a.out)   # opt/psp-music etc.; its [psp_layers] after that
+        psp_layers.build(tg_opt, sources, a.out, reuse)   # opt/psp-music etc.; its [psp_layers] after that
     for (bid, layer, own), n in sorted(used.items()):
         print("  %-9s from %-9s %5d chunks%s" % (layer, bid, n, {
             "own": " (its own sections standing in)",
@@ -1578,6 +1519,22 @@ def opt_payload(s, ch, cache):
     key, sec = ch["emi"].rsplit("#", 1)
     body = s.sections(key)[int(sec)][3]
     return body[ch["at"]:ch["at"] + ch["size"]]
+
+
+def psp_available(sources, path=None):
+    """Every PSP layer these sources can build - recipes/opt.toml's whose every
+    chunk is on a PSP disc among them, then recipes/psp-layers.toml's
+    (psp_layers.available) - and none on a PSP base, whose base is the PSP's
+    already. setup builds them all (--psp-available, the owner, 2026-10-15),
+    so the launcher's suites can offer the PSP's side; none is played until
+    chosen there."""
+    import psp_standins
+    if psp_standins.policy(sources) == "psp":
+        return []
+    ids = {s.id for s in sources if isinstance(s, DiscSource) and s.id in PSP}
+    names = [name for name, layer in load_opt_recipe(path).items() if name.startswith("psp-") and ids
+             and all(ids & set(ch["on"]) for f in layer.get("file", []) for ch in f["chunks"])]
+    return names + psp_layers.available(sources)
 
 
 def build_opt(asked, sources, out, path=None):
@@ -2484,6 +2441,9 @@ def main():
     p.add_argument("--recipe")
     p.add_argument("--opt-recipe")
     p.add_argument("--prefer", help="the base policy's table (default recipes/prefer.toml)")
+    p.add_argument("--psp-available", action="store_true",
+                   help="also every PSP layer the sources can build (not on a PSP base): what setup builds, so the "
+                        "launcher's suites can offer them (docs/install-sources.md 5)")
     p.add_argument("--reuse", help="a previous cache: its movie, sound effects and language layers are taken "
                                    "when made from the same inputs by the same code (IDEAS I42)")
     p = s.add_parser("opt-recipes")

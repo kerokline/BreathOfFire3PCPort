@@ -745,7 +745,8 @@ def run_setup(a, h, log, progress, total):
         # The install's current cache: what it already made the same way is taken, not made again (IDEAS I42).
         reuse = cache if os.path.isfile(os.path.join(cache, "manifest.toml")) else None
         ns = argparse.Namespace(source=src, out=new_cache, lang=list(langs), opt=[], no_opt=[], preset=None,
-                                recipe=None, opt_recipe=None, prefer=None, reuse=reuse)
+                                recipe=None, opt_recipe=None, prefer=None, reuse=reuse,
+                                psp_available=True)   # every PSP layer, for the suites to offer (the owner, 2026-10-15)
         with contextlib.redirect_stdout(_Log(log, echo, on_line)), times.step("build (importer.py build)"):
             imp.cmd_build(ns)
         os.makedirs(new_game)
